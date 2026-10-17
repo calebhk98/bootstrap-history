@@ -36,3 +36,11 @@ with the test kept honest.
   bronze's ask follows. So two things: the 550 aggregate pricing makes the late bronze price ratchet (not yet
   explained: why a price-taking reservation reaches 4 to 5 times cost), and any fast fall of copper shows as a
   ratio above 1 because the cost is read at the same year's inputs. Not fixed; the diagnosis is a lead for 550 and 511.
+- `economy_bronze_market_price`, bisected on `economy-accounting-and-speed` (helper `bronze_multiples(6)` in the
+  test file, one game per commit): years 1 to 6 are inside the bound through the 546 and 558 merges; entry sized
+  to unfilled bids (559) briefly pushes year 4 over; food intake above need (513) pushes year 2 over (traded about
+  3.1 times cost) through households' demand and labour, not through any bronze rule; the aggregate ask markdown
+  (550) adds a lag behind falling copper in years 2 to 6. The late-year spike from 550 is fixed. What is left
+  moves with every change elsewhere, as `economy_innovator_pricing` does (553): the early price over cost is a
+  scarcity price while supply catches up, and it depends on when entry and expansion arrive. The test topic
+  also runs over the time limit. Open; not loosened.
