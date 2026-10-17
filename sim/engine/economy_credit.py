@@ -778,6 +778,13 @@ class CreditMixin:
         return calculate_affordability(
             self.state.household.capital, self.credit_limit(), share)
 
+    def dependants_cost(self):
+        """The part of the living cost that keeps the household's dependants (the household itself, its freedmen and slaves)."""
+        household_state = self.state.household
+        return (self.LIVING_COST_HOUSEHOLD_BASE * self.price_index
+                * (1 + household_state.freedmen * self.LIVING_COST_FREEDMAN_SHARE
+                   + household_state.slaves * self.LIVING_COST_SLAVE_SHARE))
+
     def living_cost(self, _rev=None, _upkeep=None, _capital=None):
         """You have to eat, sleep somewhere, pay tax, and look the part.
 
@@ -823,9 +830,7 @@ class CreditMixin:
         household_state = self.state.household
         capital = household_state.capital if _capital is None else _capital
         base = self.LIVING_COST_BASE_SUBSISTENCE * price_index         # bare subsistence, one person
-        household = (self.LIVING_COST_HOUSEHOLD_BASE * price_index
-                     * (1 + household_state.freedmen * self.LIVING_COST_FREEDMAN_SHARE
-                        + household_state.slaves * self.LIVING_COST_SLAVE_SHARE))
+        household = self.dependants_cost()
         tax = max(0.0, rev) * self.civ["starting_tax_share"]       # the civ's own starting tax share
         status = 0.0
         for _node_id, upkeep_of_status in self.effect_values("living_cost_status"):

@@ -25,6 +25,20 @@ class DebtServiceMixin:
         living = self.living_cost(_rev=revenue, _upkeep=upkeep)
         return revenue - upkeep - living - self.mine_operating_cost()
 
+    def dependants_beyond_means(self, living, revenue, upkeep, mine_cost=0.0):
+        """The part of the dependants' cost a household in arrears cannot carry this year: what its income leaves
+        after upkeep, mine costs, the rest of its living cost and the interest on its arrears, less the share of that
+        surplus that goes to the creditors (DEBT_SERVICE_SHARE_OF_SURPLUS). A household with money keeps them all; one
+        in arrears lives within its income and pays its debt down, so debt does not grow by the gap year after year."""
+        capital = self.state.household.capital
+        if capital >= 0:
+            return 0.0
+        dependants = self.dependants_cost()
+        interest = -capital * self.debt_interest_rate()
+        surplus = revenue - upkeep - mine_cost - (living - dependants) - interest
+        carried = surplus * (1.0 - self.DEBT_SERVICE_SHARE_OF_SURPLUS)
+        return dependants - min(dependants, max(0.0, carried))
+
     def recurring_net(self):
         """Recurring net after the interest arrears cost now."""
         return (self.recurring_net_before_interest()
