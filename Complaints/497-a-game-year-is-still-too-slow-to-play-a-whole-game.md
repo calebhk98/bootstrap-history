@@ -31,6 +31,21 @@ multi-year step saves between years at most every `step_progress.SAVE_INTERVAL_S
 memos and hoisted loops. The labelled approximations are each a `temporary_heuristic`
 (`python3 sim/constants.py --burndown`).
 
+Also done: the cyclic collector stays off while `play` builds and loads the game and runs its first command
+(`cli_interactive.cmd_play`); a saved merchant's price and volume keys are split without a method lookup per
+key (`record._split_keys`); and the market-area partition reads each tile's cost table once instead of
+asking per pair (`market_areas.partition`). All three are exact: stepping one saved game before and after
+gives a save whose parsed content is identical (compare with a sorted-key dump; the raw bytes differ only in
+the order a set is written, which varies from process to process). Measure the fixed per-command cost as CPU
+time of `echo state | python3 sim/simulator.py play --session COPY`, several runs, since wall time on a
+shared machine swings by more than these changes save.
+
+A profile of the load-and-save alone (`echo state | python3 -m cProfile ... play --session FILE`) shows the
+cost spread over five things of similar size: importing the engine (module bodies and the data files read at
+import), parsing the save (the C decoder, near its floor), rebuilding the economy from its record, loading
+the tree and the opening price table (`engine/data.py` `load`), and encoding the save again (the C
+encoder). None has a cheap exact cut left; the way under is one `play` process for many commands (below).
+
 ## Why the rest is hard
 
 A warm profile of `step 3` from a saved game (`python3 -m cProfile ... play --session FILE`) is now flat:

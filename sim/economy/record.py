@@ -125,7 +125,8 @@ def _pair_keys(mapping: Dict[Tuple[str, str], Any]) -> Dict[str, Any]:
 
 
 def _split_keys(mapping: Dict[str, Any]) -> Dict[Tuple[str, str], Any]:
-    return {tuple(key.split(KEY_SEPARATOR, 1)): value for key, value in mapping.items()}
+    splitter = str.split
+    return {tuple(splitter(key, KEY_SEPARATOR, 1)): value for key, value in mapping.items()}
 
 
 def _merchant_record(merchant: Merchant) -> Dict[str, Any]:
