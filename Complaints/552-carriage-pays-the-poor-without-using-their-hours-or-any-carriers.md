@@ -43,10 +43,14 @@ demand for carters, sailors and porters (530).
   in a year has no plan, so is not limited, the next.
 - Carriers are paid at the labour market, before the year's lenders meet, so a merchant with no cash in hand
   could not pay its hired hours and they were not delivered. A merchant now asks, at the year's close, for
-  a one-year working-capital loan for next year's carrier wages (`carriage_hours.wage_loans`), staked as
+  a one-year working-capital loan for next year's carrier wages (`carriage_hours.wage_loans`, sized after the owners took their profit, since the cash left is what pays), staked as
   capital like its other loans. Bids are placed where people live: goods leaving an empty tile are bid for
   in the merchant's home labour area.
-- Open: the carriage rates are priced at the opening wage while the unskilled market wage in a spun-up
-  game is a small fraction of it, so the crew's pay is a small part of each fee and the rest of the fee still
-  goes to the source tile's households. One wage for both is not yet done.
+- One wage: the rates are priced at the wage of the opening (`EconomySetup.carriage_wage`). Each year the
+  carriage table is multiplied (`CarriageTable.set_scale`, no rebuild, exactly one where the wage is the one
+  priced) so that the labour part of a rate, the cheapest mode's crew hours over both legs of the round trip
+  at the emptiness of the returns, is paid at the unskilled market wage of the year averaged over the hours
+  hired; feed, carts and animals keep their price. The crew's pay for a shipment is then that labour part.
+  Not done: port handling hours, the other modes' labour parts (the cheapest mode's share stands for all),
+  and a wage by area (one national average).
 - Tests: `sim/tests/test_economy_carriage_hours.py`.

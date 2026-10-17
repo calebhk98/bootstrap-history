@@ -181,6 +181,29 @@ class OneWageTests(unittest.TestCase):
         self.assertTrue(money_audit.year_report(done.record).ok)
 
 
+class LoanTimingTests(unittest.TestCase):
+    def test_the_wage_loan_is_sized_on_the_cash_left_after_the_owners_took_their_profit(self):
+        seen = []
+        real = economy.close_agents
+
+        def watch(setup, record, view, ledger, area_map):
+            before = len(record.loan_requests)
+            for each in record.merchants.values():
+                if carriage_hours.planned(each):
+                    each.capital_base = 0.0     # all its cash is profit, which goes to the owner at the close
+            real(setup, record, view, ledger, area_map)
+            crew = carriage_hours.crew_for(setup, record)
+            asked = {request.borrower: request.amount for request in record.loan_requests[before:]
+                     if request.borrower in record.merchants}
+            wanted = {request.borrower: request.amount for request in carriage_hours.wage_loans(setup, record, crew)}
+            seen.append((asked, wanted))
+        with mock.patch.object(economy, "close_agents", watch):
+            fixture.run(trading_setup(), 20)
+        self.assertTrue(any(wanted for _asked, wanted in seen), "no merchant needed a loan, so the scenario shows nothing")
+        for asked, wanted in seen:
+            self.assertEqual(asked, wanted)
+
+
 class BidAreaTests(unittest.TestCase):
     def bids(self, populated_tiles):
         who = Merchant("m1", "town", "owner", 1.0)
