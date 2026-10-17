@@ -145,7 +145,7 @@ class ServiceTimingTests(unittest.TestCase):
         record.loans = [dataclasses.replace(loan("loan:new", "l", "b", 100.0), issued_year=5),
                         dataclasses.replace(loan("loan:old", "l", "b", 100.0), issued_year=4)]
         received = lending.service(record, MONEY, 5)
-        self.assertAlmostEqual(received["l"], 100.0 * 0.1 + 100.0 / 4.0)         # the old loan only
+        self.assertAlmostEqual(received["l"], 100.0 * 0.1)         # the old loan only, and its interest only
         new = next(item for item in record.loans if item.loan_id == "loan:new")
         self.assertEqual((new.principal, new.years_left), (100.0, 4.0))
 
