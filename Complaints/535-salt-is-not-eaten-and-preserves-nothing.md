@@ -1,6 +1,6 @@
 # Salt is not eaten and preserves nothing
 
-**Status:** open
+**Status:** partly done. Salt is a need (`data/world/needs.json`, floor and satiation sourced) served by `salt_kg`; `cheese_kg` (milk plus salt, `data/production/40_organics.json`, spoilage in `data/world/spoilage.json`) is the first preserving recipe. Still open: herds' salt need (532), salted fish (530, no fish good) and salted meat (no meat good), and the cheese labour figure (conf D). Test: `sim/tests/test_salt_is_eaten_and_preserves.py`.
 
 Reference (an outside table of ancient supply chains, not code-aware): herders bought salt for their
 flocks, fishers for salting the catch, and states taxed or monopolised it (Han, 530).

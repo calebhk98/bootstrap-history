@@ -45,6 +45,15 @@
    "satiation_basis": "TRANSITIONAL heuristic: spices are bought for taste and to dress plain food, and a household's yearly use is grams, not a budget share; a couple of grams per head a year is an order of magnitude, not a measured figure. A model of taste, and of how far an elite's use exceeds the common people's, would replace it.",
    "effectiveness_basis": "flavouring strength per kg relative to black pepper; taken equal across the spices until a source gives them separately"
   },
+  "salt": {
+   "surplus_budget_share": 0.01,
+   "unit": "kg of salt (sodium chloride)",
+   "subsistence_per_capita_per_year": 1.39,
+   "subsistence_basis": "BIOLOGICAL requirement: the Institute of Medicine Adequate Intake for adult sodium is 1.5 g a day (Dietary Reference Intakes for Water, Potassium, Sodium, Chloride, and Sulfate, National Academies Press, 2005), set to cover sodium lost in sweat by people active in heat. Sodium is 39.3 per cent of sodium chloride by mass (22.99 / 58.44), so 1.5 g of sodium is 3.81 g of salt a day, 3.81 * 365 = 1.39 kg a year. Bare survival needs far less on a cool, idle day; this is the floor for working people in a warm climate. The source was recalled, not re-opened; confidence C.",
+   "satiation_per_capita_per_year": 3.65,
+   "satiation_basis": "BIOLOGICAL limit: typical modern adult intake is about 10 g of salt a day (World Health Organization, Guideline: Sodium intake for adults and children, 2012, reports mean intakes of 9 to 12 g a day in most countries), 10 * 365 = 3.65 kg a year, past which the extra only harms. The source was recalled, not re-opened; confidence C.",
+   "effectiveness_basis": "mass of sodium chloride; rock, solar and brine salt are equal"
+  },
   "water": {
    "surplus_budget_share": 0.01,
    "subsistence_per_capita_per_year": 7300.0,
@@ -156,6 +165,9 @@
   "glass_raw_kg": {"satisfies": {"vessels": 1.0}},
 
   "struck_silver_coin_kg": {"satisfies": {"money": 1.0}, "bought_by_households": false},
+
+  "salt_kg": {"satisfies": {"salt": 1.0}},
+  "cheese_kg": {"satisfies": {"food": 1.2}},
 
   "water_kg": {"satisfies": {"water": 1.0}},
   "water_well_kg": {"satisfies": {"water": 1.0}},

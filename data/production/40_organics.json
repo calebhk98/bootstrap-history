@@ -107,6 +107,23 @@
    "conf": "C",
    "requires_node": null
   },
+  "cheese_kg": {
+   "outputs": {
+    "cheese_kg": 1000.0
+   },
+   "inputs": {
+    "milk_kg": 8000.0,
+    "salt_kg": 20.0
+   },
+   "labour_hours": {
+    "labourer": 250.0
+   },
+   "unit_dimension": "mass",
+   "basis": "per tonne of pressed, salted hard cheese from goat and sheep milk",
+   "yield_basis": "Curdling with rennet, draining the whey, pressing and salting. Hard sheep and goat cheese takes about 6 to 10 kg of milk per kg (milk solids concentrate roughly tenfold as whey is drained; Fox et al., Fundamentals of Cheese Science, 2nd ed., 2017; recalled, not re-opened), taken as 8. Salt is about 2 per cent of the finished cheese by mass (same source), 20 kg a tonne; it draws out moisture and stops spoilage organisms, which is why cheese keeps where milk sours in a day (data/world/spoilage.json). The whey, about 85 per cent of the milk by mass, is not priced. Labour is the dairy work of heating, curdling, draining, pressing and turning; a rough figure, conf D.",
+   "conf": "D",
+   "requires_node": null
+  },
   "wool_kg": {
    "outputs": {
     "wool_kg": 3.0
