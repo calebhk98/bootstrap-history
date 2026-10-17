@@ -26,6 +26,10 @@ mason, merchant, sailor, carter, soldier, scribe. Quarrying is `mason` plus `lab
 | Porter, dockworker | No trade; loading at ports was not traced here. |
 | Shipwright | No ship recipe; ships are a state budget line paying `carpenter` and `sailor` hours (`sim/agents/budget_lines.py`). |
 | Domestic servant | No trade and no need it serves. `sim/agents/group_servants.py` is the state's office-holders and army. |
+| Charcoal burner, forester | No trade; `charcoal_kg` and `firewood_kg` are `labourer` hours (forest stock is 539). |
+| Salt worker | No trade; the salt recipes are `miner` and `labourer` (demand is 535). |
+| Lime burner | No trade; `lime_kg` is `furnaceman` and `labourer` (fuel is 534). Glassblower exists. |
+| Landowner, financier, tax farmer | Actors, not trades: 538. |
 | Priest, diviner | No trade, no need for ritual, no temple object, no sacrificial animal demand. |
 
 Goods the list names that do not exist as goods: fish (the fisher's catch is calories in
