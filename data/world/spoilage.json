@@ -6,6 +6,7 @@
   "hide_kg": {"rate": 3.0, "confidence": "D", "source": "Raw hides putrefy within weeks unless salted or tanned; taken as most lost over a few months."},
   "olive_oil_kg": {"rate": 0.15, "confidence": "D", "source": "Oil turns rancid over a year or two in amphorae; a modest yearly loss."},
   "wine_common_kg": {"rate": 0.2, "confidence": "D", "source": "Ordinary wine turns to vinegar within a year or two unless it is a strong, resinated wine."},
+  "cheese_kg": {"rate": 0.3, "confidence": "D", "source": "Salted, pressed hard cheese ripened in a cool cellar keeps a year or more; rind trimming, mites and drying lose a modest share a year (Fox et al., Fundamentals of Cheese Science, 2nd ed., 2017, on keeping quality of low-moisture salted cheese; recalled, not re-opened)."},
   "silk_cocoon_kg": {"rate": 20.0, "confidence": "D", "source": "Cocoons must be stifled and reeled within weeks or the moth emerges and cuts the thread."},
   "silkworm_eggs_kg": {"rate": 2.0, "confidence": "D", "source": "Eggs hatch with the warmth of spring unless kept cold; held for months at most."}
  }
