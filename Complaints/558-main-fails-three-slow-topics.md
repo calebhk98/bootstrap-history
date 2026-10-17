@@ -7,7 +7,10 @@ Measured on `origin/main` at f0ff751d with `python3 -m sim.tests --slow --only m
 - `market_records_ownership`: "no module outside the market writes a market record" names
   `sim/engine/economy_electricity.py` writing `market_flows`.
 - `economy_tin_dearer_than_copper`: tin shows far cheaper against copper than the labour its recipe embodies
-  (511).
+  (511). Measured again on the 511 branch: tin is above its cost (about four to seven hours of wage a kilogram
+  against about one hour of embodied labour); copper shows six to nine times its smelting cost, so the ratio fails
+  on copper's scarcity price (smelters move 25 percent of capacity a year against growing bronze demand), not on
+  unsold tin or gravel asks. Details and the bisect in 511's second update. Open.
 - `insolvency_whole_game`: a ruined founder's debt climbs past the credit limit once the settlement has run,
   and the founder's cash keeps falling instead of rebuilding (524).
 

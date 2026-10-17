@@ -47,3 +47,31 @@ about 0.7 in year one to under 0.1 and staying there (eight years). Two causes, 
   while tin's sites have room far above its demand, so tin never meets a binding site limit. Whether tin should
   bind depends on the working rate of the tin deposits (`geography.working_rate_tonnes_per_year`) against the
   demand for bronze; re-measure both before acting.
+
+## Update 2: the failing ratio is copper's scarcity price, not tin below its labour
+
+Measured on `fix-511-tin-price` (from `economy-accounting-and-speed`) by stepping `rome_100ad` ten years the way
+`test_economy_tin_dearer_than_copper.py` does (`economy.step(YearInputs(...))`, then `shown_prices_of`; the suite's
+short spin-up). `python3 -m sim.tests --slow --only economy_tin_dearer_than_copper`: shown tin over copper 0.048,
+embodied-labour ratio 0.441. The failure is not caused by tin selling below what it costs to make:
+- Tin shows 0.64 in the first year against a cost per unit (`entry_trial.full_cost_per_unit` at live prices) of
+  0.5 to 0.8, and it stays in 0.6 to 1.5 over the next years. About four to seven hours of the local wage a
+  kilogram; the labour its recipes embody is about one hour. Tin is not below its labour.
+- Gravel (`cassiterite_kg`) sellers hold seeded stock (UK tile: tens of thousands of tonnes, against a few
+  thousand tonnes a year that tin draws), do not run, and mark their expected price down by
+  `UNSOLD_ASK_MARKDOWN_SHARE` a year. It falls from 4.2e-4 per kg to 2.6e-4 by year three, level with the labour
+  that digs a kilogram (1.5 hours a tonne at the tile's labourer wage, 2.4e-4). Then the stock is drawn down and the
+  UK gravel producer leaves the record in year four. No year in ten shows gravel clearly below its labour, so the
+  unsold-ask floor of 507 stage 7 would change nothing in this check: tin is already above that floor.
+- Copper shows 13.2, 14.5, 16.6, 17.8 in years zero to three against smelting costs of 1.1 to 2.8 at every
+  producer (six to nine times cost). Its smelters hold no stock and sell out, so their asks rise; the clearing price
+  rises above every ask because supply is short. Spain, the largest, ran 98 of 336 runs of capacity and moves 25 percent
+  of capacity a year (`OUTPUT_CHANGE_SHARE_PER_YEAR`), so supply cannot follow the demand of bronze (bronze traded
+  rises from 460 t to 1141 t in three years while copper traded goes 278 t, 436 t, 426 t).
+For tin over copper to reach 0.441 with tin near its cost, copper would have to show at about its cost. The relation
+is therefore a copper question (the supply response of smelters against the growth of bronze demand, and whether
+the opening's bronze volumes are in balance with the copper capacity it sets), not a tin or unsold-ask one.
+Bisect: the check passes at `ef5ac9ff` (its own branch) and fails at `d1d2f508` (that branch's merge, ratio 0.078),
+so a change that came in with the merge moved copper; the commits between are mostly unbuildable
+(`git bisect` skipped them), so the first bad one was not isolated.
+Status stays partly. No code change was made; no regression test was added, since no mechanism defect was shown.
