@@ -31,6 +31,12 @@ multi-year step saves between years at most every `step_progress.SAVE_INTERVAL_S
 memos and hoisted loops. The labelled approximations are each a `temporary_heuristic`
 (`python3 sim/constants.py --burndown`).
 
+The idle-ask check in `seller_offers.strategic_offers` reads what a seller sells off the market's book
+(`goods_market.price_and_sold`) instead of clearing the whole market with fills; a view caches each market area
+by name and tile; merchants group their expectations with fewer lookups. All exact (same stepped save).
+What is left in `clear_goods` is the sellers' reservation search (`seller_book`) and the price root-finds under
+it, then book postings and settlement.
+
 ## Why the rest is hard
 
 A warm profile of `step 3` from a saved game (`python3 -m cProfile ... play --session FILE`) is now flat:

@@ -154,7 +154,10 @@ def _candidate_routes(merchant, view, carriage, area_map, held_stock, specs, int
     expected_by_good: dict = {}
     for (good, area_id), price in merchant.expected_prices.items():
         if price is not None:
-            expected_by_good.setdefault(good, {})[area_id] = price
+            by_area = expected_by_good.get(good)
+            if by_area is None:
+                by_area = expected_by_good[good] = {}
+            by_area[area_id] = price
     for good in sorted(set(specs) & set(area_map.goods())):
         areas = area_map.areas(good)
         if len(areas) < 2:
