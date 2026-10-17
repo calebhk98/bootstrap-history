@@ -14,8 +14,9 @@ start outside it, so the quick run stays quick by default.
 
 `--topic-seconds N` (default TOPIC_SECONDS) fails any topic, or quick batch, still running after N seconds and
 stops it with its subprocesses, so a run always ends and names what is too slow. Before the first topic, one
-game of every civilisation is built, so spin-ups are on disk and no topic pays for one. Only the forked
-parallel run enforces the limit.
+game of every civilisation is built, so spin-ups are on disk and no topic pays for one. The forked
+parallel run stops a topic over the limit; the sequential run (`--jobs 1`, or a single topic) cannot stop one
+in-process, so it lets the topic finish and then fails it as timed out, with its seconds against the limit.
 
 `--timing` adds a per-topic table to the summary: wall seconds, share of the run, and how many
 checks each topic bought. It changes nothing about which checks run.
@@ -587,13 +588,20 @@ def main(argv=None):
         topic_costs = _run_topics_parallel(
             [slug for slug in TOPICS if slug in run_now], harness, harness.JOBS)
     else:
+        topic_limit = _parse_topic_seconds(argv)
         for slug in TOPICS:
             if slug in run_now:
                 checks_before = len(harness.CHECKS_RUN)
                 started_at = time.time()
                 _run_topic(slug, harness)
-                topic_costs.append((slug, time.time() - started_at,
+                topic_seconds_used = time.time() - started_at
+                topic_costs.append((slug, topic_seconds_used,
                                     len(harness.CHECKS_RUN) - checks_before))
+                if topic_seconds_used > topic_limit:
+                    message = "%s: %s after %.0fs (--topic-seconds %g; ran to the end in-process)" % (
+                        slug, TIMED_OUT, topic_seconds_used, topic_limit)
+                    print("  " + message)
+                    harness.FAILURES.append(message)
 
     print("=" * 72)
     print("%d checks, %d failures, %.0fs%s"
