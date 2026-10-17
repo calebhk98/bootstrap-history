@@ -89,7 +89,7 @@ def strategic_offers(setup, record, view, bids: Sequence[Bid], offers: Sequence[
         ask = max(offer.reservation_price, 0.0)
         limit = cost * substitution_markup(setup, offer)
         if ask > limit and math.isfinite(limit):
-            sold, _price = seller_pricing.sold_and_price(book, rivals, offer, ask, last_price)
+            sold, _price = seller_pricing.sold_and_price(book, rivals, offer, ask, last_price, buyers)
             if sold < IDLE_SALE_SHARE * offer.quantity:
                 offers[index] = dataclasses.replace(offer, reservation_price=limit)
                 continue
