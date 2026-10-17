@@ -7,7 +7,7 @@
    "unit": "kg wheat equivalent",
    "effectiveness_basis": "food energy per kg relative to wheat grain",
    "satiation_per_capita_per_year": 354.5,
-   "satiation_basis": "BIOLOGICAL limit, not a heuristic: well-fed modern intake, about 3,300 kcal per person per day (FAO food balance sheets: dietary energy supply in 2021 was about 3,460 kcal a head a day in Europe and 3,880 in Northern America, FAO 2023, https://www.fao.org/3/cc8088en/cc8088en.pdf; supply includes household waste, so intake is lower), over the 3,400 kcal per kg of wheat the subsistence figure uses, a year of it: 1.5 times the subsistence quantity. Food beyond it is stored, sold, fed to animals or wasted. Held equal to sim/world/agriculture.py MAXIMUM_INTAKE_MULTIPLE_OF_SUBSISTENCE by a test."
+   "satiation_basis": "BIOLOGICAL limit, not a heuristic: well-fed modern intake, about 3,300 kcal per person per day (FAO food balance sheets: dietary energy supply in 2021 was about 3,460 kcal a head a day in Europe and 3,880 in Northern America, FAO food balance sheets update, https://www.fao.org/3/cc8088en/cc8088en.pdf; supply includes household waste, so intake is lower), over the 3,400 kcal per kg of wheat the subsistence figure uses, a year of it: 1.5 times the subsistence quantity. Food beyond it is stored, sold, fed to animals or wasted. Held equal to sim/world/agriculture.py MAXIMUM_INTAKE_MULTIPLE_OF_SUBSISTENCE by a test."
   },
   "shelter": {
    "subsistence_from_climate": "shelter_m3",
