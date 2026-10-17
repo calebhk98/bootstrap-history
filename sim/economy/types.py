@@ -241,3 +241,4 @@ class Loan:
     collateral_value: float
     arrears: float = 0.0
     issued_year: int = 0
+    arrears_interest: float = 0.0     # the part of arrears that is unpaid interest

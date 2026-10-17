@@ -1,6 +1,6 @@
 # The credit rate clears on bids that cannot borrow, and repaid principal is counted as income
 
-**Status:** open
+**Status:** closed
 
 Found by an outside reviewer reading the repository; both reproduced here.
 
@@ -25,3 +25,16 @@ Found by an outside reviewer reading the repository; both reproduced here.
   reported as unmet.
 - Service transfers split into interest, principal and arrears; only interest (and arrears interest)
   is property income.
+
+## What now happens
+
+- `credit.clear` leaves out of the clearing every request whose ceiling is below zero or below every
+  lender's ask. Such a request is rationed demand: it stays in the returned unmet list (amount untouched)
+  and gets no loan. The base rate is never below zero.
+- `credit.service_split` returns each lender's receipt as a `Receipt` (interest, principal, arrears);
+  `credit.service` keeps its old shape. `Loan.arrears_interest` records which part of arrears is unpaid
+  interest; a payment clears arrears interest, overdue principal, this year's interest, then the
+  installment. `lending.service` returns interest only, so `Economy` adds only interest to
+  `record.property_income`.
+- Tests: `sim/tests/test_economy_credit_rationing_and_service_split.py`. The lending test that expected
+  principal plus interest as the lender's receipt now expects interest only.

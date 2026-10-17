@@ -15,17 +15,15 @@ from .year_goods import _held_stock
 def service(record, money: str, year: int) -> Dict[str, float]:
     """Collect the year's payments at its end, after sales, from loans made in earlier years (a borrower's
     first payment falls due a year after it borrowed). Books the defaults: a lender's loss, a defaulter's
-    record, a merchant's staked capital after what it repaid or was freed of. Returns the money each
-    lender received, which is its income next year."""
+    record, a merchant's staked capital after what it repaid or was freed of. Returns the interest each
+    lender received, which is its income; returned principal is not income."""
     due = [loan for loan in record.loans if loan.issued_year < year]
     if not due:
         return {}
     cash = {loan.borrower: record.book.balance(loan.borrower, money) for loan in due}
-    transfers, serviced, defaults = credit.service(due, cash, year)
+    transfers, serviced, defaults, receipts = credit.service_split(due, cash, year)
     record.book.transfer_many(transfers)
-    received: Dict[str, float] = {}
-    for transfer in transfers:
-        received[transfer.payee] = received.get(transfer.payee, 0.0) + transfer.amount
+    received = {lender: receipt.interest for lender, receipt in receipts.items() if receipt.interest > 0.0}
     owed_before = credit_claims.principal_by_borrower(due)
     owed_after = credit_claims.principal_by_borrower(serviced)
     merchants_credit.stake(record.merchants, {agent: owed_after.get(agent, 0.0) - owed
