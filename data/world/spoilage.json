@@ -3,6 +3,7 @@
  "rates_per_year": {
   "wheat_kg": {"rate": 0.08, "confidence": "C", "source": "Granary loss to pests, rot and rodents, 5-15 per cent a year (the same figure as GRAIN_SPOILAGE_RATE_PER_YEAR in sim/world/agriculture.py)."},
   "milk_kg": {"rate": 300.0, "confidence": "D", "source": "Unpreserved milk sours within a day or two without refrigeration; a rate that loses most of it in a day."},
+  "meat_kg": {"rate": 100.0, "confidence": "D", "source": "Fresh meat without salting, smoking or cold turns in days in warm weather; a rate that loses most of it in a few weeks."},
   "hide_kg": {"rate": 3.0, "confidence": "D", "source": "Raw hides putrefy within weeks unless salted or tanned; taken as most lost over a few months."},
   "olive_oil_kg": {"rate": 0.15, "confidence": "D", "source": "Oil turns rancid over a year or two in amphorae; a modest yearly loss."},
   "wine_common_kg": {"rate": 0.2, "confidence": "D", "source": "Ordinary wine turns to vinegar within a year or two unless it is a strong, resinated wine."},

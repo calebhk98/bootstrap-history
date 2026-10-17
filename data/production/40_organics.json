@@ -91,22 +91,6 @@
    "conf": "C",
    "requires_node": null
   },
-  "milk_kg": {
-   "outputs": {
-    "milk_kg": 1000.0
-   },
-   "inputs": {},
-   "labour_hours": {
-    "labourer": 120.0
-   },
-   "land_hectare_years": 0.99999105,
-   "extracted_from": "pasture",
-   "unit_dimension": "mass",
-   "basis": "per hectare of dairying pasture per year (goats/sheep, the common ancient Mediterranean dairy animals)",
-   "yield_basis": "GROWN via pasture rather than manufactured. An unimproved ancient dairy goat or ewe - no modern breeding for milk yield - gave on the order of 150-250 litres/year across a lactation, far below a modern dairy breed; rough Mediterranean grazing without irrigation or hay supplementation supports perhaps 4-6 such animals per hectare. Taking 5 animals/ha at ~200 kg/animal/yr (milk's density is close enough to water's that kg and litres are used interchangeably here) gives roughly 1000 kg/ha/yr. Labour is milking twice daily through the lactation plus the herding/penning time apportioned to dairying rather than to wool or meat from the same flock. LAND (Complaints/48): the batch is the one hectare-year of pasture the basis states, so land_hectare_years is that hectare in hectare_land's own unit (1 hectare-year, see wheat_kg's own LAND note). TAG: TEMPORARY HEURISTIC (CLAUDE.md 3.4) - this pasture is charged hectare_land's solved rent, which sim/world/land.py sets from the ARABLE margin of cultivation; real pasture was often land unfit for the plough and cheaper at the margin than cropland, so this overstates milk's true land cost until land.py tracks a rent specific to grazing land.",
-   "conf": "C",
-   "requires_node": null
-  },
   "cheese_kg": {
    "outputs": {
     "cheese_kg": 1000.0
@@ -122,22 +106,6 @@
    "basis": "per tonne of pressed, salted hard cheese from goat and sheep milk",
    "yield_basis": "Curdling with rennet, draining the whey, pressing and salting. Hard sheep and goat cheese takes about 6 to 10 kg of milk per kg (milk solids concentrate roughly tenfold as whey is drained; Fox et al., Fundamentals of Cheese Science, 2nd ed., 2017; recalled, not re-opened), taken as 8. Salt is about 2 per cent of the finished cheese by mass (same source), 20 kg a tonne; it draws out moisture and stops spoilage organisms, which is why cheese keeps where milk sours in a day (data/world/spoilage.json). The whey, about 85 per cent of the milk by mass, is not priced. Labour is the dairy work of heating, curdling, draining, pressing and turning; a rough figure, conf D.",
    "conf": "D",
-   "requires_node": null
-  },
-  "wool_kg": {
-   "outputs": {
-    "wool_kg": 3.0
-   },
-   "inputs": {},
-   "labour_hours": {
-    "labourer": 3.0
-   },
-   "land_hectare_years": 0.99999105,
-   "extracted_from": "pasture",
-   "unit_dimension": "mass",
-   "basis": "per hectare of sheep pasture per year, output as kg of raw greasy (unwashed) fleece",
-   "yield_basis": "GROWN, limited by pasture and stocking rate, not a recipe - this is a raw fibre entry with NO spinning or weaving in it; that processing is priced downstream in thread_kg/fabric_kg/cloth_kg so any fibre (this or cotton_kg) can feed the same generic textile chain. Unimproved ancient sheep breeds, before the deliberate selection for fleece weight that only intensifies over the following centuries, clipped on the order of 1.5-2 kg of raw greasy wool a year; rough, unmanured Mediterranean grazing supports perhaps 1.5 such sheep per hectare. That gives roughly 3 kg wool/ha/yr, taken as the output. Labour is shearing (fast - under half an hour a sheep with hand shears once the animal is caught) plus a share of the flock's herding time; the wool is greasy/unwashed as sheared, so scouring losses (lanolin, suint, dirt - commonly a third to half the raw weight) belong to whatever downstream entry first needs clean fibre, not to this one. LAND (Complaints/48): the batch is the one hectare-year of pasture the basis states, converted to land_hectare_years the same way every hectare-basis entry in this file is (1 hectare-year - see wheat_kg's own LAND note). TAG: TEMPORARY HEURISTIC (CLAUDE.md 3.4) - charged hectare_land's solved rent, which is set from the ARABLE margin of cultivation (sim/world/land.py); real sheep pasture was commonly rougher ground than cropland and would earn a lower rent of its own, so this overstates wool's true land cost until land.py distinguishes pasture from arable land.",
-   "conf": "C",
    "requires_node": null
   },
   "cotton_kg": {
@@ -267,21 +235,6 @@
    "unit_dimension": "mass",
    "basis": "per kg of finished rubber tubing",
    "yield_basis": "Manufactured from rubber_kg by warming, rolling/extruding round a mandrel and trimming to shape; the 10% excess over the finished weight is scrap and trim loss. LABELLED HEURISTIC (rule 3.4): a real tubing process vulcanises the rubber with sulphur and heat so it holds its shape and does not perish or turn tacky, and that chemistry is not yet modelled anywhere in this file - no sulphur input, no vulcanisation labour or heat is charged here. This entry prices only the mechanical shaping of UNVULCANISED rubber and should be revisited once a sulphur/vulcanisation chain exists; until then it understates true production cost and, more importantly, overstates how durable/available the good would really be at any tier before vulcanisation is discovered.",
-   "conf": "C",
-   "requires_node": null
-  },
-  "hide_kg": {
-   "outputs": {
-    "hide_kg": 1.0
-   },
-   "inputs": {},
-   "labour_hours": {
-    "labourer": 0.5
-   },
-   "extracted_from": "livestock (a slaughter byproduct of meat and dairy husbandry)",
-   "unit_dimension": "mass",
-   "basis": "per kg of raw, untanned animal hide taken off a slaughtered animal",
-   "yield_basis": "Hide is a JOINT PRODUCT of raising livestock for meat and milk, not a thing grown or made in its own right - the cost of feeding, herding and raising the animal belongs to whatever entry eventually prices meat and milk (milk_kg exists in this file; meat does not yet), and charging the animal's whole upkeep to leather here would double-count that cost the day a meat entry is added. What belongs here is only the MARGINAL step once the animal is already being slaughtered for those other reasons: flaying the carcass and salting or air-drying the hide enough that it survives transport to a tanner, a matter of a skilled butcher's minutes per animal, not a farming season. LABELLED HEURISTIC (rule 3.4): a complete accounting would instead apportion a SHARE of the animal's feed and grazing-land cost to the hide by its relative market value against meat, tallow, bone, gut and horn - the same joint-cost logic the copper_kg example uses when galena ore yields both lead and silver - but that split needs a livestock/meat entry to divide against, and none exists yet in this file. Until one does, this entry understates the true cost of hide by roughly the animal's own keep.",
    "conf": "C",
    "requires_node": null
   },
@@ -586,21 +539,6 @@
    "yield_basis": "Saponification: rendered animal fat boiled for hours with a caustic lye leached from wood ash (potassium carbonate dissolved out of ash with water - this file has no separate tracked 'lye_kg', so wood_ash_kg is used directly as the alkali source, the way it is already a real material the tree consumes elsewhere). Leaching enough usable potash out of ash for a full boil traditionally needs several times the fat's weight in ash, taken here at 3:1; the finished soft soap comes out slightly heavier than the fat that went in because it retains bound water and residual alkali, taken as a 15% gain. Labour is leaching the ash (pouring water through it repeatedly and collecting the lye), then a long stirred boil with the fat over a wood fire until it saponifies and thickens.",
    "conf": "C",
    "requires_node": "hom_soap_soft"
-  },
-  "fat_kg": {
-   "outputs": {
-    "fat_kg": 1.0
-   },
-   "inputs": {},
-   "labour_hours": {
-    "labourer": 0.3
-   },
-   "extracted_from": "livestock (suet and trimmed fat, a slaughter byproduct)",
-   "unit_dimension": "mass",
-   "basis": "per kg of raw, unrendered animal fat",
-   "yield_basis": "A slaughter byproduct priced the same way as hide_kg, bone_kg and bristles_kg: the animal's own keep belongs to a meat entry this file does not yet have, and this entry charges only the marginal butchery labour of trimming fat from the carcass.",
-   "conf": "C",
-   "requires_node": null
   },
   "tallow_kg": {
    "outputs": {

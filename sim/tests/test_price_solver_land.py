@@ -262,12 +262,12 @@ class WhichMaterialsCarryLandTests(unittest.TestCase):
                             "%s should carry a positive land_hectare_years" % material)
 
     def test_livestock_byproducts_and_the_two_not_land_limited_entries_do_not(self):
-        # hide_kg and kin: their own yield_basis declines to charge the
-        # animal's land/feed cost, to avoid double-counting once a meat
-        # entry exists. beeswax_kg and papyrus_sheet: their own yield_basis
+        # bone_kg and kin: their own yield_basis declines to charge the
+        # animal's land/feed cost (hide_kg and fat_kg now come from the herd
+        # recipes, which carry the land). beeswax_kg and papyrus_sheet: their own yield_basis
         # states directly that land is not their binding constraint.
-        excluded = {"hide_kg", "bone_kg", "bristles_kg", "horsehair_kg",
-                   "fat_kg", "manure_kg", "beeswax_kg", "papyrus_sheet"}
+        excluded = {"bone_kg", "bristles_kg", "horsehair_kg",
+                   "manure_kg", "beeswax_kg", "papyrus_sheet"}
         for material in excluded:
             entry = self.production_entries.get(material)
             self.assertIsNotNone(entry, material)

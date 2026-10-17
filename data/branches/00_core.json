@@ -2225,7 +2225,7 @@
       "exp_provisioning_scurvy",
       "exp_openocean_navigation"
     ],
-    "grants": {"draught_animal_kg": 12000},
+    "grants": {"draught_animal_kg": 12000, "cattle_kg": 12500, "goat_kg": 2500, "sheep_kg": 3500},
     "req_any": [],
     "rev_hours": 0,
     "risk": 0.45,

@@ -1,0 +1,118 @@
+{
+ "_note": "Herds: wool, milk, meat, hides, tallow and horn as joint products of a flock or herd on pasture (Complaints/532). Each recipe is a batch of 100 head-years; the figures are the species rows of data/world/living_stock.json.",
+ "materials": {
+  "wool_kg": {
+   "outputs": {
+    "wool_kg": 100.0,
+    "meat_kg": 276.0,
+    "hide_kg": 48.0,
+    "fat_kg": 24.0
+   },
+   "inputs": {
+    "salt_kg": 400.0
+   },
+   "labour_hours": {
+    "labourer": 1700.0
+   },
+   "land_hectare_years": 66.6667,
+   "extracted_from": "pasture",
+   "unit_dimension": "mass",
+   "basis": "per herd of 100 head kept for a year (sheep_kg)",
+   "yield_basis": "SHEEP FLOCK, wool and mutton. A shepherd tends about 150 head (recalled; Varro's De re rustica has flocks of about a hundred, not opened); shearing takes 0.4 hour a head with hand shears; 3 hours to slaughter, flay and joint a carcass. The products come together from one animal-year: a herd cannot give more wool without more hides and meat. Each figure is the species row's in data/world/living_stock.json times 100 head (its source names what was read and what is recalled): the stocking rate sets the land, offtake share x live weight x dressing percentage is the carcass, of which rendered fat is split off as fat_kg and the rest is meat_kg (bone-in), the raw skin is a share of live weight, salt is the lick. The herd is a held living stock that the gate node holds, so a society without the animal cannot make any of this; the herd is not charged as capital because the stock has no production entry yet (Complaints/365, 366). Labour is herding at 2400 hours a herder-year (8 hours, 300 days; recalled) shared among the head a herder tends, plus the work named here. Meat is valued as food at 0.4 of wheat a kilogram in data/world/needs.json (see Complaints/532). Conf D throughout; the cost is split among the outputs by mass, because no sole-output route gives a reference price (sim/engine/joint_allocation.py, retire: Complaints/507).",
+   "conf": "D",
+   "requires_node": "fud_sheep_flock"
+  },
+  "milk_kg": {
+   "outputs": {
+    "milk_kg": 5000.0,
+    "meat_kg": 256.5,
+    "hide_kg": 48.0,
+    "fat_kg": 13.5,
+    "horn_kg": 2.4
+   },
+   "inputs": {
+    "salt_kg": 300.0
+   },
+   "labour_hours": {
+    "labourer": 3272.0
+   },
+   "land_hectare_years": 50.0,
+   "extracted_from": "pasture",
+   "unit_dimension": "mass",
+   "basis": "per herd of 100 head kept for a year (goat_kg)",
+   "yield_basis": "GOAT HERD, milk and kid meat. A herder tends about 150 goats; the half of the herd in milk is milked twice a day for 200 days at 0.08 hour a goat; 3 hours to slaughter, flay and joint a carcass. The products come together from one animal-year: a herd cannot give more wool without more hides and meat. Each figure is the species row's in data/world/living_stock.json times 100 head (its source names what was read and what is recalled): the stocking rate sets the land, offtake share x live weight x dressing percentage is the carcass, of which rendered fat is split off as fat_kg and the rest is meat_kg (bone-in), the raw skin is a share of live weight, salt is the lick. The herd is a held living stock that the gate node holds, so a society without the animal cannot make any of this; the herd is not charged as capital because the stock has no production entry yet (Complaints/365, 366). Labour is herding at 2400 hours a herder-year (8 hours, 300 days; recalled) shared among the head a herder tends, plus the work named here. Meat is valued as food at 0.4 of wheat a kilogram in data/world/needs.json (see Complaints/532). Conf D throughout; the cost is split among the outputs by mass, because no sole-output route gives a reference price (sim/engine/joint_allocation.py, retire: Complaints/507).",
+   "conf": "D",
+   "requires_node": "fud_goat_herd"
+  },
+  "meat_kg": {
+   "outputs": {
+    "meat_kg": 1128.0,
+    "milk_kg": 7337.5,
+    "hide_kg": 175.0,
+    "fat_kg": 72.0,
+    "horn_kg": 5.0
+   },
+   "inputs": {
+    "salt_kg": 1100.0
+   },
+   "labour_hours": {
+    "labourer": 4312.7
+   },
+   "land_hectare_years": 200.0,
+   "extracted_from": "pasture",
+   "unit_dimension": "mass",
+   "basis": "per herd of 100 head kept for a year (cattle_kg)",
+   "yield_basis": "CATTLE HERD, beef, milk and hides. A herder tends about 80 head; the cows that calve (0.5 x 0.587 of the herd) are milked twice a day for 210 days at 0.1 hour a cow; 8 hours to slaughter, flay and joint a carcass. The products come together from one animal-year: a herd cannot give more wool without more hides and meat. Each figure is the species row's in data/world/living_stock.json times 100 head (its source names what was read and what is recalled): the stocking rate sets the land, offtake share x live weight x dressing percentage is the carcass, of which rendered fat is split off as fat_kg and the rest is meat_kg (bone-in), the raw skin is a share of live weight, salt is the lick. The herd is a held living stock that the gate node holds, so a society without the animal cannot make any of this; the herd is not charged as capital because the stock has no production entry yet (Complaints/365, 366). Labour is herding at 2400 hours a herder-year (8 hours, 300 days; recalled) shared among the head a herder tends, plus the work named here. Meat is valued as food at 0.4 of wheat a kilogram in data/world/needs.json (see Complaints/532). Conf D throughout; the cost is split among the outputs by mass, because no sole-output route gives a reference price (sim/engine/joint_allocation.py, retire: Complaints/507).",
+   "conf": "D",
+   "requires_node": "fud_cattle_herd"
+  },
+  "sheep_kg": {
+   "outputs": {
+    "sheep_kg": 17.595
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 24.0
+   },
+   "land_hectare_years": 1.0,
+   "extracted_from": "pasture",
+   "unit_dimension": "mass",
+   "basis": "per hectare of breeding pasture per year, output as kg of live weight added to a herd",
+   "yield_basis": "GROWN. A hectare carries the species' head per hectare at its live weight, and the herd adds its natural increase in a year (rates and sources in data/world/living_stock.json; the products it gives meanwhile are in the herd recipes of this file). Labour is the herder's year (2400 hours, recalled) shared among the 150 head a herder tends, for the head on the hectare. LAND: the batch is one hectare-year, converted to hectare_land's unit as in wheat_kg's LAND note. Conf D. Made only where the herd is already held, so the stock cannot be had without a society that holds it.",
+   "conf": "D",
+   "requires_node": "fud_sheep_flock"
+  },
+  "goat_kg": {
+   "outputs": {
+    "goat_kg": 24.25
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 32.0
+   },
+   "land_hectare_years": 1.0,
+   "extracted_from": "pasture",
+   "unit_dimension": "mass",
+   "basis": "per hectare of breeding pasture per year, output as kg of live weight added to a herd",
+   "yield_basis": "GROWN. A hectare carries the species' head per hectare at its live weight, and the herd adds its natural increase in a year (rates and sources in data/world/living_stock.json; the products it gives meanwhile are in the herd recipes of this file). Labour is the herder's year (2400 hours, recalled) shared among the 150 head a herder tends, for the head on the hectare. LAND: the batch is one hectare-year, converted to hectare_land's unit as in wheat_kg's LAND note. Conf D. Made only where the herd is already held, so the stock cannot be had without a society that holds it.",
+   "conf": "D",
+   "requires_node": "fud_goat_herd"
+  },
+  "cattle_kg": {
+   "outputs": {
+    "cattle_kg": 28.75
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 15.0
+   },
+   "land_hectare_years": 1.0,
+   "extracted_from": "pasture",
+   "unit_dimension": "mass",
+   "basis": "per hectare of breeding pasture per year, output as kg of live weight added to a herd",
+   "yield_basis": "GROWN. A hectare carries the species' head per hectare at its live weight, and the herd adds its natural increase in a year (rates and sources in data/world/living_stock.json; the products it gives meanwhile are in the herd recipes of this file). Labour is the herder's year (2400 hours, recalled) shared among the 80 head a herder tends, for the head on the hectare. LAND: the batch is one hectare-year, converted to hectare_land's unit as in wheat_kg's LAND note. Conf D. Made only where the herd is already held, so the stock cannot be had without a society that holds it.",
+   "conf": "D",
+   "requires_node": "fud_cattle_herd"
+  }
+ }
+}

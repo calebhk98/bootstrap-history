@@ -441,21 +441,6 @@
    "conf": "C",
    "requires_node": "analytical_chemistry"
   },
-  "horn_kg": {
-   "outputs": {
-    "horn_kg": 1.0
-   },
-   "inputs": {},
-   "labour_hours": {
-    "labourer": 0.3
-   },
-   "extracted_from": "livestock (horn sheaths, a slaughter byproduct)",
-   "unit_dimension": "mass",
-   "basis": "per kg of the cleaned raw material",
-   "yield_basis": "Horn sheaths are slaughter offcuts: cattle horn cores are loosened by soaking and the keratin sheath pulled off. The animal's or person's keep is charged elsewhere. Labour is borrowed from bone_kg's 0.3 hours per kg of separating a raw slaughter byproduct; it understates the cleaning work for gut and shell. Conf C.",
-   "conf": "C",
-   "requires_node": null
-  },
   "mat_animal_gut": {
    "outputs": {
     "mat_animal_gut": 1.0
