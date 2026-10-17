@@ -106,6 +106,7 @@ def opening_values(sim):
         "rate": float(sim.economy.base_rate()),
         "carriage": dict(modes),
         "carriage_balanced": sim._freight_mode_costs(0.0, cargo="goods"),
+        "carriage_wage": sim.labour.wage_per_hour(sim.FREIGHT_DRIVER_WAGE_TRADE),
         "carriage_crew": {mode: [rate["crew_trade"], rate["crew_hours_per_tonne_km"]]
                           for mode, rate in carriage_rates(sorted(modes), sim.world_map).items()
                           if "land" in rate["edge_classes"] and not rate.get("needs_improvement")},
@@ -143,6 +144,7 @@ def in_units(opening):
     counted["prices"] = {good: _counted(price / unit) for good, price in opening["prices"].items()}
     counted["wages"] = {trade: _counted(wage / unit) for trade, wage in opening["wages"].items()}
     counted["carriage"] = {mode: _counted(rate / unit) for mode, rate in opening["carriage"].items()}
+    counted["carriage_wage"] = _counted(opening["carriage_wage"] / unit)
     counted["carriage_balanced"] = {mode: _counted(rate / unit) for mode, rate in opening["carriage_balanced"].items()}
     return counted
 
@@ -201,6 +203,7 @@ def build_setup(sim, opening=None, production=None):
         state_agent="state:" + str(civ["id"]), tiles=tiles,
         carriage_rates=dict(opening["carriage"]), carriage_rates_balanced=dict(opening["carriage_balanced"]),
         handling_rates={SEA_MODE: sea_freight.PORT_HANDLING_HOURS_PER_TONNE * wages.get(opening["unskilled_trade"], 0.0)},
+        carriage_wage=float(opening["carriage_wage"]),
         carriage_crew={mode: (str(crew[0]), float(crew[1])) for mode, crew in opening["carriage_crew"].items()},
         held_nodes=tuple(opening["held_nodes"]),
         specs=specs, recipes=recipes, mint_recipe=mint_recipe, basket=basket, trades=trades,

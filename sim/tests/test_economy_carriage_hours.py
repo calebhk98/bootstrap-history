@@ -14,10 +14,10 @@ CREW_HOURS_PER_TONNE_KM = 0.05
 CART_RATE = 0.12                 # dear enough that the fixture's tiles trade ore now and then
 
 
-def trading_setup(crew=True):
+def trading_setup(crew=True, carriage_wage=0.0):
     rates = {"cart": CART_RATE, "pack": 2 * CART_RATE, "sail": CART_RATE / 4}
     crew_modes = {"cart": (fixture.LABOURER, CREW_HOURS_PER_TONNE_KM)} if crew else {}
-    return fixture.small_setup(carriage_rates=rates, carriage_crew=crew_modes)
+    return fixture.small_setup(carriage_rates=rates, carriage_crew=crew_modes, carriage_wage=carriage_wage)
 
 
 def run_watching(setup, years):
@@ -127,7 +127,7 @@ class CrewTests(unittest.TestCase):
     def test_crew_hours_per_money_are_the_modes_hours_over_its_money_rate(self):
         crew = carriage_hours.crew_of(trading_setup())
         self.assertEqual(crew.trades, ((fixture.LABOURER, 1.0),))
-        self.assertAlmostEqual(crew.hours_per_money, CREW_HOURS_PER_TONNE_KM / CART_RATE)
+        self.assertAlmostEqual(crew.hours_per_money, CREW_HOURS_PER_TONNE_KM * 2.0 / CART_RATE)   # carriers return empty: two legs of crew
 
     def test_the_modes_own_crew_trade_is_not_hired_while_carriage_is_bid_in_the_unskilled_trade(self):
         setup = fixture.small_setup(carriage_rates={"cart": CART_RATE}, carriage_crew={"cart": ("carter", 0.1)})
@@ -136,9 +136,49 @@ class CrewTests(unittest.TestCase):
             self.assertEqual(carriage_hours.crew_of(setup).trades, (("carter", 0.75), (fixture.LABOURER, 0.25)))
 
     def test_a_merchant_that_shipped_nothing_has_no_plan_and_bids_nothing(self):
-        record = type("Record", (), {"merchants": {"m": Merchant("m", "a", "owner", 1.0)}, "cohorts": {}})()
+        record = type("Record", (), {"merchants": {"m": Merchant("m", "a", "owner", 1.0)}, "cohorts": {}, "area_imbalance": 1.0})()
         self.assertFalse(carriage_hours.planned(record.merchants["m"]))
         self.assertEqual(carriage_hours.bids(trading_setup(), record), [])
+
+
+class OneWageTests(unittest.TestCase):
+    """The carriage rates were priced at the opening wage; the labour part of a fee follows the market wage the
+    crew is paid, so the crew's pay is that labour part."""
+
+    def priced(self, market_wage):
+        from sim.economy.market_memory import market_key
+        from sim.economy.setup import labour_area
+        setup = trading_setup(carriage_wage=1.0)
+        wages = {market_key(fixture.LABOURER, labour_area(tile)): market_wage for tile in fixture.tiles()}
+        hours = {key: 1000.0 for key in wages}
+        record = type("Record", (), {"memory": type("Memory", (), {"wages": wages})(), "hours_hired": hours,
+                                     "area_imbalance": 1.0})()
+        scale = carriage_hours.wage_scale(setup, record)
+        table = setup.carriage_table()
+        table.set_scale(scale)
+        base = setup.carriage_table().cost_per_tonne(fixture.TOWN, fixture.FARMS)
+        fee = table.cost_per_tonne(fixture.TOWN, fixture.FARMS)
+        hours_needed = fee * carriage_hours.crew_of(setup, scale).hours_per_money
+        return scale, base, fee, hours_needed * market_wage
+
+    def test_wages_unchanged_leave_the_table_exactly_as_priced(self):
+        scale, base, fee, _pay = self.priced(1.0)
+        self.assertEqual((scale, fee), (1.0, base))
+
+    def test_when_the_market_wage_halves_the_labour_part_of_a_fee_halves(self):
+        _scale, base, fee, pay = self.priced(1.0)
+        _scale, _base, cheaper_fee, cheaper_pay = self.priced(0.5)
+        self.assertAlmostEqual(cheaper_pay, pay / 2.0)
+        self.assertAlmostEqual(fee - pay, cheaper_fee - cheaper_pay)      # feed, carts and animals keep their price
+
+    def test_the_crews_pay_is_the_labour_part_of_the_fee(self):
+        _scale, base, _fee, pay = self.priced(0.5)
+        labour_share = CREW_HOURS_PER_TONNE_KM * 2.0 * 1.0 / CART_RATE      # of a fee priced at the opening wage
+        self.assertAlmostEqual(pay, base * labour_share * 0.5)
+
+    def test_money_still_balances_when_the_market_wage_differs_from_the_priced_wage(self):
+        done, _years = run_watching(trading_setup(carriage_wage=3.0), 20)
+        self.assertTrue(money_audit.year_report(done.record).ok)
 
 
 class BidAreaTests(unittest.TestCase):
@@ -146,7 +186,7 @@ class BidAreaTests(unittest.TestCase):
         who = Merchant("m1", "town", "owner", 1.0)
         who.carriage_hours_wanted = {"hills": 40.0, "farms": 10.0}
         cohorts = {tile: type("Cohort", (), {"tile": tile})() for tile in populated_tiles}
-        record = type("Record", (), {"merchants": {"m1": who}, "cohorts": cohorts})()
+        record = type("Record", (), {"merchants": {"m1": who}, "cohorts": cohorts, "area_imbalance": 1.0})()
         return {bid.area: bid.hours for bid in carriage_hours.bids(trading_setup(), record)}
 
     def test_carriers_are_bid_for_where_the_goods_left_when_people_live_there(self):

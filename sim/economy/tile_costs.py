@@ -74,9 +74,26 @@ class CarriageTable:
         self._improvements = dict(improvements or {})
         self._from_source: Dict[TileId, Dict[TileId, float]] = {}
         self._warmed = False    # whether the whole table has been filled (or fetched) already
+        self.scale = 1.0        # multiplier on every cost: the year's wage on the labour part of the rates (set_scale)
+        self._scaled: Dict[TileId, Dict[TileId, float]] = {}
+
+    def set_scale(self, scale: float) -> None:
+        """Multiply every cost by `scale` (1: the costs as searched, the very same answers)."""
+        if scale != self.scale:
+            self.scale = scale
+            self._scaled = {}
 
     def costs_from(self, source: TileId) -> Dict[TileId, float]:
         """Cheapest cost to every given tile reachable from `source` (unreachable tiles are absent)."""
+        found = self._searched_costs_from(source)
+        if self.scale == 1.0:
+            return found
+        scaled = self._scaled.get(source)
+        if scaled is None:
+            scaled = self._scaled[source] = {tile: cost * self.scale for tile, cost in found.items()}
+        return scaled
+
+    def _searched_costs_from(self, source: TileId) -> Dict[TileId, float]:
         cached = self._from_source.get(source)
         if cached is None and not self._warmed:
             self.warm(remember=True)

@@ -26,7 +26,7 @@ def dispatch_merchants(setup, record, carriage, ledger: YearLedger) -> None:
     is not limited. The part of a fee that is not crew pay goes, as wages, to the poorest households of the
     tile the goods leave: a shortcut until carts, ships and animals are capital (Complaints/552)."""
     money = setup.currency_id
-    crew = carriage_hours.crew_of(setup)
+    crew = carriage_hours.crew_for(setup, record)
     carriers = {}
     for cohort in record.cohorts.values():
         held = carriers.get(cohort.tile)

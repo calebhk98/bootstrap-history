@@ -40,6 +40,7 @@ def priced_at_the_margin(sim, opening):
     scaled["prices"] = {good: (value if good == metal else value * scale) for good, value in opening["prices"].items()}
     scaled["wages"] = {trade: value * scale for trade, value in opening["wages"].items()}
     scaled["carriage"] = {mode: value * scale for mode, value in opening["carriage"].items()}
+    scaled["carriage_wage"] = opening["carriage_wage"] * scale
     scaled["carriage_balanced"] = {mode: value * scale for mode, value in opening["carriage_balanced"].items()}
     scaled["coin_worth_scale"] = scale
     return scaled
