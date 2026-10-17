@@ -1,6 +1,6 @@
 # Olives, vines, cotton and tallow come from anywhere, so lighting follows no geography
 
-**Status:** open
+**Status:** partly done. Crops carry climates, the lamp takes a vessel, linen-wick and beeswax lights exist (`sim/tests/test_lighting_inputs.py`). Open: `fat_kg` from herds (532), rush wick (no rush entry), a knowledge gate for olives in the Americas, the smoke/softening quality term, and the Mediterranean-versus-northern spending test.
 
 Reference (an outside summary, not code-aware): in antiquity the Mediterranean, the Near East and
 North Africa lit rooms with pottery lamps burning olive or castor oil; tallow candles smoked, stank
@@ -47,3 +47,8 @@ The light need (`data/world/needs.json`) is met by `light_tallow_candle`, `light
   mechanism for indoor air exists.
 - A test: with climates set, a Mediterranean start spends more on oil lamps than candles and a
   northern one the reverse, measured, not asserted from a rule naming either civilisation (4.7).
+
+## Done
+
+- `olive_oil_kg`, `wine_common_kg`, `cotton_kg` carry `grown_in_climate_classes`; England and Norse no longer solve olive oil or cotton (`python3 -m sim.tests --only lighting_inputs`). Mexica holds olive-suitable tiles, so it still makes olive oil: a climate list cannot say the Americas did not know the tree; that is a knowledge gate (`requires_node`).
+- `wick_linen_m` (from `linen_kg`, an overcount since that entry includes weaving), `light_tallow_candle_linen_wick`, `light_oil_lamp_linen_wick`, `light_beeswax_candle` (from `wax_kg`); `light_oil_lamp` takes `ceramic_kg` as its vessel.
