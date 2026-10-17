@@ -64,3 +64,24 @@ spends) acting through the savings target, not satiation, and a target-income ho
 unless needs get physical limits (food in calories) or the savings wish is matched by an investment demand.
 Directions that follow from this: open households holding the wealth they want (their savings wish already met, so
 the opening's bids spend income), and give saving a user (producers' plant and working capital, lending).
+
+## Measured: counting what households already hold does not close the leak
+
+Tested whether the wealth households already hold (durables in use, land) covers the wealth the savings wish wants.
+No command in the repo measures this (a throwaway probe built Rome, opened it and compared each cohort's wanted
+savings with what it holds; the probes are not kept). Findings on Rome without a spin-up:
+
+- Land is negligible. The opening pays no rent yet; clearing the land market for the producers the opening
+  sizes gives a rent whose capitalised value (rent over the opening rate) is a few hundredths of a year of
+  household income. Households pay no rent on their own plots, so the land they work earns nothing to
+  capitalise; counting it needs plot titles with an imputed value (538), not a rent stream.
+- Durables in use are real but uneven. Summed over cohorts they come near the wanted wealth, but cohort by
+  cohort most hold about a third of the savings wish and a few (the city tile) many times it, which a cap at the
+  savings target cannot use. Counting `min(savings, durables)` covers a bit over half of the wish in total.
+- Effect on the fixed point: with each pass counting the durables the cohort would hold (the stock wanted at
+  that pass), the settled income over the full-employment ceiling barely moves (from about 0.155 to about
+  0.166). The hypothesis is false: the savings wish is far larger than any wealth a household holds, and
+  counting held wealth does not remove it.
+
+Not built. Direction that remains: give saving a user (producers' plant and working capital, lending), or make
+the opening's wish match what the opening households hold.
