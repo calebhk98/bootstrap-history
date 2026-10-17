@@ -41,3 +41,18 @@ marginal land (agri deserti).
   migrating or joining a bandit group (486 stability).
 - A baseline check under 4.2: elite land share over a long run lands in a plausible range and moves
   after a land reform or a labour shock. The range is a validation, not a target.
+
+## Counter-forces (second note from the same source)
+
+Foreclosure alone would drive elite land share to all of it. The same model needs the forces that
+pull it back, each a mechanism rather than a cap:
+
+- Supervision: a landowner's cost of overseers and lost effort rises faster than the land held, so
+  far or large holdings pay less than they yield and are let or sold.
+- Inheritance: estates divide among heirs where the society's rule is partible (Rome, Greece, Han
+  China), which needs owners who die and have children; household cohorts here do neither.
+- Labour scarcity: after a plague or war, landlords compete for tenants with lower rent and debt
+  relief. The labour market already moves wages with scarcity; rent and lease terms would have to
+  follow it.
+- Elite overreach: when a few hold most land, the state's taxpayers and recruits shrink, which can
+  end in revolt or confiscation and redistribution (486 stability, 542 state choices).

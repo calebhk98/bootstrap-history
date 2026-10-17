@@ -33,3 +33,8 @@ no sheep or cattle can still make wool, hides and tallow from the same recipes (
   so `fat_kg` and `hide_kg` follow herds.
 - A meat good that satisfies `food` in `data/world/needs.json`.
 - Herds limited by the living stock a civilisation keeps (365, 366), not by research.
+
+## Second note from the same source
+
+- `draught_animal_kg` (`data/production/94_agri_organics_gaps.json`) is labourer hours with no
+  inputs: no breeding stock, no winter fodder, no drover. It should come from the same herd model.

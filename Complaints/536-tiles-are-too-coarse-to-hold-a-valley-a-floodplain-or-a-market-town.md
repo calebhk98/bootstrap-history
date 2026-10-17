@@ -37,3 +37,11 @@ hinterland cannot differ, and a founder cannot pick one valley over the next.
 - Sub-tile places (market towns, river strips, ports) with their own catchment, or a finer grid where
   a game needs it; the cost in run time is Complaint 497.
 - Related: 483 (tile control), 489 (population is national).
+
+## Second note from the same source
+
+It proposes hexagons (Uber's H3) or Voronoi cells seeded on river basins, a few hundred km2 each, so
+one cell is one day's walk to market. The current grid is already equal-area, so it does not distort
+toward the poles. The note's H3 sizes are off: resolution 5 cells average about 250 km2, resolution 6
+about 36 km2. Cells that small mean hundreds of times more tiles than now, which is a run-time
+question for 497.

@@ -23,3 +23,10 @@ return legs and losses (Complaint 326, closed); its ratio was not measured here.
   validation under 4.2, not a tuning target), so a change to freight physics that breaks it shows.
 - If the money ratio is also off, find which input is wrong (feed per tonne-km, cart load, pace)
   rather than scaling a mode.
+
+## Second note from the same source
+
+It claims the ratio emerges from physics alone (cart friction and feed, river drag, wind for sail plus
+crew and hull wear). Freight here is already built that way (`sim/geography/transport.py`,
+`sea_freight.py`), and the physical ratio measured above does not land on the Edict ratio. That is
+the point of the check: find which physical input is off, do not scale a mode to the target.

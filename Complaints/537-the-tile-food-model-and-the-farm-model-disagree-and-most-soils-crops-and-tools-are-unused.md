@@ -41,3 +41,9 @@ Within the farm model:
 - Crops adopted by the tree for rice and maize; a hoe toolkit.
 - Tile weather applied to the tile's own harvest.
 - Related: 489 (population national, food check partial), 513 (farm labour sized exactly).
+
+## Second note from the same source
+
+- Irrigation on a river strip is free and permanent (`food_irrigation_*` in
+  `data/world/geography/parameters/food.json`); no canals silt up or need clearing labour, so a
+  state that stops maintaining them loses nothing.
