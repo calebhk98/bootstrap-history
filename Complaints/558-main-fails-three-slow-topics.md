@@ -4,8 +4,9 @@
 
 Measured on `origin/main` at f0ff751d with `python3 -m sim.tests --slow --only market_records_ownership,economy_tin_dearer_than_copper,insolvency_whole_game`:
 
-- `market_records_ownership`: "no module outside the market writes a market record" names
-  `sim/engine/economy_electricity.py` writing `market_flows`.
+- ~~`market_records_ownership`: "no module outside the market writes a market record" names
+  `sim/engine/economy_electricity.py` writing `market_flows`.~~ Fixed: the throttle peek saves and
+  restores the flows through `goods_market.snapshot_flows` / `restore_flows`.
 - `economy_tin_dearer_than_copper`: tin shows far cheaper against copper than the labour its recipe embodies
   (511).
 - `insolvency_whole_game`: a ruined founder's debt climbs past the credit limit once the settlement has run,
