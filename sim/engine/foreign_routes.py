@@ -129,7 +129,18 @@ class ForeignRoutesMixin(DomesticHaulMixin):
 
     def _carrier_models(self):
         """{mode: (physical inputs, carrier prices, working days a year, hull loss per 1000 km)}:
-        the carrier unit each mode's inputs describe, priced from this society's prices."""
+        the carrier unit each mode's inputs describe, priced from this society's prices. Kept while the
+        price table, the sea crew's wage, the map and the team size are the same."""
+        prices = self._material_prices()
+        key = (self.labour.wage_per_hour(SEA_CREW_WAGE_TRADE), self.world_map, self.LAND_FREIGHT_TEAM_SIZE)
+        cached = getattr(self, "_carrier_models_cache", None)
+        if cached is not None and cached[0] is prices and cached[1] == key:
+            return cached[2]
+        models = self._build_carrier_models()
+        self._carrier_models_cache = (prices, key, models)
+        return models
+
+    def _build_carrier_models(self):
         vehicle_wood = self._material_price_per_kg(FREIGHT_VEHICLE_MATERIAL) or 0.0
         ox_price = self._material_prices().get("ox", 0.0)
         mule_price = self._material_prices().get("mule", 0.0)

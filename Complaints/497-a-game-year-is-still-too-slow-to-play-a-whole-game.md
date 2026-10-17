@@ -99,3 +99,17 @@ arguments thousands of times a year by `_sea_crew`; it is now memoised. Same ste
 step (wrap `compile_graph` with `time.process_time`) and CPU of `Sim.step()` over several runs. The profile
 after these is again flat: the next items are the many small readers of fixed data (`parameters.parameter`
 and `RateTable.rate` lookups, `_price_tables` per call) and the goods clearing's own arithmetic.
+
+## Carrier models kept between price changes
+
+`_carrier_models` (`engine/foreign_routes.py`) was rebuilt on every call, over a thousand times a year, though
+it depends only on the price table, the sea crew's wage, the map and the team size. It is now kept while those
+are the same objects or values (the rest of the build is `_build_carrier_models`, unchanged). Same stepped
+save before and after (sorted-key dump of `save_state` after three years, identical). Measure with `cProfile`
+over `Sim.step()`: builds fall from the thousand to a handful, and the profile loses a few percent of its
+function calls. Step CPU on the shared machine varies more than the saving, so count the calls.
+
+Checked and left alone: `parameters.parameter` and `RateTable.rate` no longer show any measurable self time in
+the profile. `_price_tables` already returns its kept tables; what remains in it per call is computing the keys
+(the banded market rate and the techniques in use), which is the check itself, so memoising on its inputs
+would save nothing.
