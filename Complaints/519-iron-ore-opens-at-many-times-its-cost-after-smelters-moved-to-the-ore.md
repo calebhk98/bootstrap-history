@@ -1,6 +1,6 @@
 # Sited ores open at many times their making cost
 
-**Status:** open
+**Status:** narrowed to precious ores (silver, gold); the common ores pass
 
 After merge 968974d4 (Complaint 473: weight-losing processors sit at their fixed-site inputs), a Rome opening's
 iron ore trades far above its long-run cost (`economy.agent_prices()["iron_ore_kg"]` against
@@ -79,3 +79,21 @@ by the cost table's price for the coin metal, not the economy's: at the economy'
 swamped the port market and left it with no bids. Every other coin-metal use reads the economy's price
 (`GoodsMarket.home_unit_price`). Move this one onto it when the metal's price is near its cost.
 
+
+## Re-measured (fix-519-sited-ores, on economy-accounting-and-speed)
+
+Measure: `sited_traded_ore_ratios(civilisation)` in `sim/tests/test_sited_ore_price_over_cost.py` (agent price over
+making cost after one step, suite harness; `python3 -m sim.tests --only sited_ore_price_over_cost`).
+
+- Rome: iron ore 3.0, copper ore 1.1, cassiterite 1.0, galena 4.6, gold gravel 0.4, silver ore 28.8.
+- Han: cassiterite 2.4, gold lode ore 12.0. Mexica: no traded sited ore at the first step.
+- Norse: iron ore 3.0, copper ore 2.5. England: iron ore 7.6, copper ore 2.6, galena 10.2, silver ore 50.2.
+
+The common ores (iron, copper, tin, lead) are within a small multiple, so the complaint's iron-ore case is gone
+(producers limited by cash, entry from unfilled bids and cost-priced aggregate producers fixed it). Test
+`test_every_civilisations_common_ores_open_within_a_bounded_multiple_of_their_cost` now passes (bound 15, the
+order of magnitude with headroom for England's galena at just over 10).
+
+Still open: silver ore (Rome, England) and Han's gold lode ore. Silver metal itself trades at tens of times its
+making cost (England 666 against 28, Rome 370 against 21 per kg), and the ore follows it, so this is the precious
+metals' price rather than site room. The all-ores test keeps its expected-failure marker for them.
