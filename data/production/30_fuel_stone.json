@@ -389,6 +389,60 @@
    "conf": "B",
    "requires_node": "mat_lime"
   },
+  "lime_wood_kg": {
+  "outputs": {
+   "lime_kg": 1000.0
+  },
+  "inputs": {
+   "limestone_kg": 1800.0,
+   "firewood_kg": 1530.0
+  },
+  "labour_hours": {
+   "furnaceman": 10.0,
+   "labourer": 8.0
+  },
+  "unit_dimension": "mass",
+  "basis": "per tonne of quicklime (CaO) from limestone calcined in a firewood-fired kiln (the technique Cato's De Agri Cultura describes; lime_kg is the coal-fired technique for the same good)",
+  "yield_basis": "SAME CHEMISTRY AS lime_kg, DIFFERENT FUEL. CaCO3 (100.09 g/mol) -> CaO (56.08 g/mol) + CO2 needs at least 1.785 t of pure limestone per tonne of lime; 1800 kg leaves a small margin for impurity and underburnt core. Heat: the calcination enthalpy is about 178 kJ/mol CaCO3 (NIST-JANAF / CRC Handbook), i.e. 1.78 MJ per kg of limestone or 3.18 MJ per kg of lime, plus roughly 1.4 MJ per kg of lime to bring the charge to about 900 C, theoretical minimum about 4.6 MJ/kg lime (Boynton, Chemistry and Technology of Lime and Limestone, 2nd ed. 1980, puts the modern thermodynamic floor in the same range). A pre-modern intermittent or flare kiln fired from below with wood loses most of its heat in the flue and walls: the same 20% thermal efficiency lime_kg uses (an estimate for traditional kilns, softer than the chemistry) gives about 23 MJ per kg of lime, and air-dried firewood at about 15 MJ/kg (the figure salt_brine_kg uses) then calls for about 1.53 kg of firewood per kg of lime, given as 1530 kg per tonne. Labour: as lime_kg plus the extra stoking and wood handling that a flame-fired kiln needs through a multi-day burn.",
+  "conf": "B",
+  "requires_node": "mat_lime"
+ },
+  "pozzolana_kg": {
+  "outputs": {
+   "pozzolana_kg": 1000.0
+  },
+  "inputs": {},
+  "labour_hours": {
+   "labourer": 4.0
+  },
+  "extracted_from": "volcanic ash and tuff deposit (Campi Flegrei and Vesuvius, Alban Hills, Santorini, Eifel; located_materials 'pozzolana')",
+  "unit_dimension": "mass",
+  "basis": "per tonne of pozzolana (reactive volcanic ash or weathered tuff) dug and screened at the pit",
+  "yield_basis": "EXTRACTED, and only from volcanic districts: the glassy aluminosilicate ash that reacts with lime to set under water forms where explosive volcanism laid down ash beds (Vitruvius 2.6.1 names the country about Baiae and Vesuvius; Pliny NH 35.166 names Puteoli; Jackson et al. 2014, American Mineralogist 99, analyse Roman harbour concrete made with Bay of Naples pozzolana). Where it occurs is declared in data/world/geography/located_materials/located_materials.json, not here. Loose ash needs no blasting or wedging: digging and screening is close to the effort of digging gravel or sand, hence 4 labourer-hours per tonne, a little over gravel_kg's 3 for the screening and the poorer footing of a pit in ash. The labour figure is an estimate (conf C).",
+  "conf": "C",
+  "requires_node": null
+ },
+  "concrete_pozzolanic_kg": {
+  "outputs": {
+   "concrete_pozzolanic_kg": 1000.0
+  },
+  "inputs": {
+   "lime_kg": 72.0,
+   "pozzolana_kg": 310.0,
+   "stone_kg": 500.0,
+   "water_kg": 118.0
+  },
+  "labour_hours": {
+   "labourer": 40.0,
+   "mason": 20.0,
+   "carpenter": 10.0
+  },
+  "unit_dimension": "mass",
+  "basis": "per tonne of Roman hydraulic concrete (opus caementicium) in place: lime-pozzolana mortar packed with rubble, wet, before it sets",
+  "yield_basis": "PROPORTIONS FROM VITRUVIUS, STOICHIOMETRY FOR THE LIME. Vitruvius 2.6.1 and 5.12.2 give two parts pozzolana to one of lime (by volume, lime as slaked putty) for work in water; Jackson et al. 2014 (American Mineralogist 99, Roman harbour concrete) report mortars near one part lime to three of pozzolana by volume, so the range 1:2 to 1:3 is attested. Taking putty at about 1.35 kg/L with about half its mass as Ca(OH)2 and loose pozzolana at about 1.1 kg/L gives, per 500 kg of mortar, 310 kg pozzolana and 190 kg putty = 95 kg Ca(OH)2 + 95 kg water. 95 kg Ca(OH)2 (74.09 g/mol) comes from 72 kg of lime_kg quicklime (CaO 56.08 g/mol: 95 x 56.08/74.09 = 72). The other 500 kg per tonne is caementa (stone_kg: tuff, brick or rubble), about half the mass of Roman mass concrete (Lancaster, Concrete Vaulted Construction in Imperial Rome, 2005). Water 118 kg = 95 kg in the putty, plus a little placement water; inputs sum to the tonne. Labour: ramming caementa in lifts behind timber shuttering; hours are an estimate (conf C). Set strength is not modelled; what the recipe adds is that the hydraulic binder needs a volcanic ash found only in certain districts.",
+  "conf": "C",
+  "requires_node": "mat_pozzolana"
+ },
   "chalk_kg": {
    "outputs": {
     "chalk_kg": 1000.0
