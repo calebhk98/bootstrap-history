@@ -66,3 +66,23 @@ place for. Related: 513 (farm labour sized exactly to feed the people), 434 (nee
   (a household that buys service, a society that pays for ritual), or stay out of scope.
 - A baseline check under 4.2: the occupational distribution of a Rome run falls in a plausible
   range (most households on the land, textiles and building among the largest non-farm trades).
+
+## Regional divergences (second note from the same source)
+
+- **Mexica porters.** Land carriage on foot is a route mode (`sim/geography/routes_rates.py`,
+  `_porter`), but its hours are `labourer` (the `carter` note in `data/world/trades.json` says
+  "porters on foot stay labourers"). In a society without draught animals, porters were one of the
+  largest labour groups and the hiding above makes them invisible.
+- **Obsidian and flint knappers.** `mat_obsidian_blade` is a tree node (`data/branches/00_core.json`)
+  with no recipe, no obsidian good and no knapper trade. The `implements_and_arms` need lists only
+  metals (`data/world/needs.json`), so Mexica tools have no stone route. Whether Mexica households
+  can buy the metals was not checked.
+- **Han salt and iron monopolies.** Stated only in prose (`han_china_100ad.json`, the state and
+  requisition notes); its `state_monopolies` lists only silkworm eggs, and a monopoly there only keeps
+  a good from export (`sim/agents/policy.py`). State works, mine revenue and the state's iron
+  workforce are Complaint 492.
+- **Seasonal labour and corvée.** The flood or winter slack season, when farm hands built canals and
+  monuments under corvée, has no place: farm labour is a yearly total, and corvée exists only in
+  Han prose. This is the same gap as the by-employment above.
+- India (caste, cotton weaving) and Egypt have no civilisation in `data/civilizations/`; nothing to
+  file until one is added.
