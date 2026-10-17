@@ -1439,6 +1439,9 @@ def main():
                                "against coin wear, wage over floor, spin-up settled) for each civilisation's "
                                "full-length opening; reads the shipped openings when current, else computes (minutes)")
     subparser.add_argument("--civs", default="", help="comma-separated civilisation ids (default: all)")
+    subparser.add_argument("--concerns-only", action="store_true",
+                           help="print only the concerns that pay their way (Complaint 528), skipping the checks")
+    subparser.add_argument("--json", action="store_true", help="print the checks and the concern scan as JSON")
     subparser = sub.add_parser("spin-up-trace", help="run a civilisation's hidden spin-up for many years and print the "
                                "price level, the money stock and the mint's strikes by year; slow (minutes)")
     subparser.add_argument("--civ", default="", help="civilisation id (default: the default one)")
