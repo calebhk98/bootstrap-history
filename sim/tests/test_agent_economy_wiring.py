@@ -2,6 +2,7 @@
 come from it and move, money is conserved, the state's tax grain no longer swamps the wheat market
 (Complaint 383), a saved game resumes the same economy, and every civilisation plays on it."""
 from .harness import *  # noqa: F401,F403
+import math
 import os
 import tempfile
 
@@ -19,8 +20,10 @@ def agent_game(civ, seed=1):
 rome = agent_game("rome_100ad")
 check("a game asked for the agent economy runs on it", rome.economy.agent is not None)
 opened = rome.economy.agent.economy().record
-check("after the hidden spin-up households expect stable prices, so the rebased index is not read as inflation",
-      all(cohort.expected_inflation == 0.0 and cohort.last_basket_price_level == 1.0 for cohort in opened.cohorts.values()),
+check("after the hidden spin-up households' last price level is the rebased index, so the rebase is not read as "
+      "inflation; what they expect the spin-up taught them (Complaint 548)",
+      all(cohort.last_basket_price_level == 1.0 and math.isfinite(cohort.expected_inflation)
+          for cohort in opened.cohorts.values()),
       sorted({(cohort.expected_inflation, cohort.last_basket_price_level) for cohort in opened.cohorts.values()})[:3])
 default = sim()
 check("a game that says nothing runs on the agent economy", default.economy.agent is not None)

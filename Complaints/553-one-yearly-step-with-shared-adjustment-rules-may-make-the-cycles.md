@@ -19,3 +19,9 @@ may be where the spin-up's oscillation (473) gets its size and period, rather th
   construction, delivery. A few seasonal phases behind the yearly interface may be enough (494 covers
   mods adding phases).
 - Different adjustment speeds or expectations per producer, so reactions are not all in step.
+
+Evidence (`economy_innovator_pricing`): after an entrant arrives the price alternates up and down a year
+apart, and the largest year-to-year rise sits close to the test's limit in every variant measured,
+including the code before 546 and with the sellers' strategic pricing turned off. The alternation is in
+households: lumpy dividends and a budget set from last year's price swing the year's spending. Print the
+path with `python3 -c "from sim.tests.test_economy_innovator_pricing import rows; [print(r) for r in rows()]"`.
