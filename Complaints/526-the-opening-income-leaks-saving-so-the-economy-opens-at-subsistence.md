@@ -42,26 +42,9 @@ is fixed here, or the failure is shipped with `--allow-failing REASON`.
 `fix-545-opening-grows-its-own`), Rome's food floor is all grown at home, nothing left in market demand is a
 floor, and the leak this issue names drives the settled income toward zero. The two are one fix.
 
-## Measured cause: needs satiate, hours do not
+## Measured cause: the savings wish, not satiation
 
-On a Rome opening (`build_setup(unopened_sim(civ="rome_100ad"))`, then `opening.open_economy`, tracing
-`opening_income.settled_income_per_head`): at the full-employment income, households' bids take only about a
-sixth of income, because every need reaches its satiation limit (`sim/world/need_satiation.py`:
-"every need is satiated: the rest of income is not spent on goods"). The fixed point then settles at about a
-seventh of full employment, so most of the hours households offer are never needed, and the year's labour
-market drives the wage down for decades (473). Saving is not the leak: below satiation, spending is close to
-income each pass. Counting durables in use as wealth was tried and did not move the fixed point.
-
-What it would take: households that have met every need do not offer the hours that would only buy nothing:
-labour supply follows what the household wants to buy and keep (a target income, the backward-bending supply
-of pre-industrial labour), and new goods or wants raise the hours offered (the "industrious revolution", de
-Vries). The hours not offered are leisure, not unemployment, so they do not press the wage down. Test: at the
-opening, hours offered to the market equal the hours the settled demand hires, within a tolerance, and the
-first year's wage stays near the opening wage under no shock.
-
-## Correction: satiation is not the cause (re-measured)
-
-The section above is wrong about satiation. In `data/world/needs.json` only a few needs carry a satiation limit
+In `data/world/needs.json` only a few needs carry a satiation limit
 (ornament, seasoning, water, light, amusement); food, shelter, clothing, implements, warmth and the rest do not, and
 `apply_satiation` moves the freed spending to them by budget weight. On a Rome opening, for each cohort at the
 full-employment income, `need_basket.need_units` places spending equal to the whole income (spending over income is
