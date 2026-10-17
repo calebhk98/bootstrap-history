@@ -111,3 +111,10 @@ no sale shows a price).
 Status stays partly. No code change; the binding constraints are the opening's workforce by trade and seeded
 `last_runs` (year zero), then input makers that never grow from a starved market (flux), then the ore sellers' lagging
 expectation.
+
+## Update 4: entry sized from unfilled bids (559) does not move flux or copper in the short Rome run
+
+`entry_sizing` now counts bids left unfilled at the entrant's full cost (Complaint 559). With `ROME_SPIN_UP_YEARS=2,1`
+flux traded and the copper price are unchanged over five years (copper 2.88, 8.40, 12.44, 13.67, 15.47 before and
+after), because the flux gap is a few kilograms and flux entry is never sized there. The test still fails (0.047
+against 0.441) and reads year zero only. The full-spin-up case was not rerun.
