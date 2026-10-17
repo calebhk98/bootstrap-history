@@ -59,7 +59,7 @@ class SpinUpMoneySupplyTests(unittest.TestCase):
 
     def test_a_game_carries_how_its_spin_up_ended(self):
         result = self.game.economy.spin_up_result()
-        self.assertEqual(sorted(result), ["gap", "settled", "years"])
+        self.assertEqual(sorted(result), ["final", "first_stage", "gap", "gaps", "measured_years", "settled", "years"])
         self.assertIsInstance(result["settled"], bool)
         self.assertGreater(result["years"], 0)
 
