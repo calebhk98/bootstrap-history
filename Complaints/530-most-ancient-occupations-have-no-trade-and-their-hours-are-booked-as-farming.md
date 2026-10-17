@@ -1,0 +1,68 @@
+# Most ancient occupations have no trade, and their hours are booked as farming
+
+**Status:** open
+
+An outside list of the twenty commonest occupations in classical civilisations (Rome, Greece,
+Mesopotamia, Egypt) was checked against the trade registry (`data/world/trades.json`) and the
+`labour_hours` of `data/production/`. The list was written without reading the code; it is a
+validation reference under DESIGN 4.2, not a target to hardcode.
+
+## Covered
+
+Grain farmer (`labourer`, owned by the farm-labour logic), fisher, miner, potter, smith, carpenter,
+mason, merchant, sailor, carter, soldier, scribe. Quarrying is `mason` plus `labourer` (`stone_kg`).
+
+## Missing
+
+| Occupation | What the data does now |
+|---|---|
+| Herder, shepherd | `wool_kg`, `milk_kg`, `hide_kg` are `labourer` hours: herding is not told apart from crop farming. |
+| Vine and olive tender | `wine_common_kg` and `olive_oil_kg` are `labourer` hours and land, with no inputs (no grape or olive crop, no press, no jar) and no `holding_years` for the years before vines and trees bear. |
+| Spinner, weaver | `thread_kg` is `labourer`, `fabric_kg` and `linen_kg` use `artisan`, the generic craft placeholder (`legacy_trade_defaults.GENERIC_CRAFT_TRADE`). Textiles, the largest non-farm work of the period, have no trade. |
+| Fuller, dyer | `cloth_kg` and `dye_kg` are `labourer` hours. |
+| Tanner, leatherworker | `leather_kg` is `labourer` plus `artisan`; no shoes, harness or scabbard goods. |
+| Miller, baker | `flour_kg` is `labourer` hours and is eaten as is (`data/world/needs.json` goods); there is no bread, oven or bakery. |
+| Cook, tavern keeper | No prepared-food good or service, so town households without hearths are not modelled. |
+| Porter, dockworker | No trade; loading at ports was not traced here. |
+| Shipwright | No ship recipe; ships are a state budget line paying `carpenter` and `sailor` hours (`sim/agents/budget_lines.py`). |
+| Domestic servant | No trade and no need it serves. `sim/agents/group_servants.py` is the state's office-holders and army. |
+| Priest, diviner | No trade, no need for ritual, no temple object, no sacrificial animal demand. |
+
+Goods the list names that do not exist as goods: fish (the fisher's catch is calories in
+`sim/labour/food_gathering.py`, not a traded good), garum, bread, amphorae, ships.
+
+## Why it matters
+
+Every `labourer` hour in every recipe is dropped from the non-farm need shares
+(`sim/labour/workforce_spinup.py`, `total_by_trade.pop(FARM_TRADE, None)`). Spinning, fulling,
+dyeing, wine, oil, brick and milling labour therefore never shows up as a non-farm trade, and the
+non-farm workforce is sized from what is left: mostly furnacemen and miners. Measure:
+
+    python3 -c "from sim.tests.harness import sim; lab=sim(civ='rome_100ad').labour; print(sorted(((round(v,3),k) for k,v in lab._non_farm_need_shares().items()), reverse=True))"
+
+At the Rome opening furnacemen and miners together take more than half of non-farm need, and the
+country holds far more furnacemen than masons or potters (`lab.population_report()['trades']`).
+Historically textiles, building and food preparation were the largest non-farm employers.
+
+The farm share is also far below the reference's 80 to 90 percent:
+
+    python3 -c "from sim.tests.harness import sim; print(sim(civ='rome_100ad').labour.farm_share_of_hours())"
+
+The two are different measures (hours needed to grow the food against where people lived and what
+they called their work), so the gap is not by itself a defect. It is the seasonal by-employment the
+real peasant household did (spinning, weaving, herding, carting, building), which the model has no
+place for. Related: 513 (farm labour sized exactly to feed the people), 434 (need shares).
+
+## What it would take
+
+- Trades in `data/world/trades.json` where skill, training or danger differ: weaver, fuller/dyer,
+  tanner, herder, miller/baker, cook, shipwright, porter, domestic servant, priest. Data only: the
+  registry is read without code (4.7).
+- Re-book recipe hours from `labourer` and `artisan` to those trades, and add the missing chains:
+  bread from flour, fuel and an oven; fish as a good from the fishery; garum; amphorae; ships.
+- Separate the farm trade from the unskilled fallback trade, which are one id today (`FARM_TRADE`
+  is `labourer`), so processing and herding hours stop counting as farming.
+- Owner decision: whether domestic service and religion become needs in `data/world/needs.json`
+  (a household that buys service, a society that pays for ritual), or stay out of scope.
+- A baseline check under 4.2: the occupational distribution of a Rome run falls in a plausible
+  range (most households on the land, textiles and building among the largest non-farm trades).
