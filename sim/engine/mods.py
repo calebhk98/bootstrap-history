@@ -70,10 +70,35 @@ def _check_dependency_versions(manifests: Dict[str, ModManifest]) -> None:
                                (manifest.id, dependency, version_range, installed))
 
 
+_ORDERED_BY_DIRECTORY: Dict[str, Any] = {}
+
+
+def _tree_signature(mods_dir: str):
+    """Every file under `mods_dir` with its size and modification time: equal signatures, equal mods."""
+    found = []
+    for root, folders, files in os.walk(mods_dir):
+        folders.sort()
+        for name in sorted(files):
+            status = os.stat(os.path.join(root, name))
+            found.append((os.path.relpath(os.path.join(root, name), mods_dir), status.st_size, status.st_mtime_ns))
+    return tuple(found)
+
+
 def get_ordered_mods(mods_dir: str) -> List[ModManifest]:
-    """Return installed mods in stable dependency order."""
+    """Return installed mods in stable dependency order. Reading and checking every mod is the same work while no
+    file under `mods_dir` changes, so the order is kept per directory until one does."""
     if not os.path.isdir(mods_dir):
         return []
+    key = os.path.abspath(mods_dir)
+    signature = _tree_signature(mods_dir)
+    kept = _ORDERED_BY_DIRECTORY.get(key)
+    if kept is None or kept[0] != signature:
+        kept = (signature, _ordered_mods(mods_dir))
+        _ORDERED_BY_DIRECTORY[key] = kept
+    return list(kept[1])
+
+
+def _ordered_mods(mods_dir: str) -> List[ModManifest]:
     manifests: Dict[str, ModManifest] = {}
     for folder in sorted(os.listdir(mods_dir)):
         manifest_path = os.path.join(mods_dir, folder, "mod.json")

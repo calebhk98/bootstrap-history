@@ -58,3 +58,8 @@ mod directory and mtime cut that topic's steps from about 30 s to about 10 s wit
 Done: `home_cargo_price` plays three years rather than five (one year before the book answers, no step after the last
 year read), 134 s to 84 s. The sequential run (`--jobs 1`, or a single topic) cannot stop a topic in-process; it now
 fails a topic that ran past `--topic-seconds` as timed out after it ends.
+
+`get_ordered_mods` (`sim/engine/mods.py`), which `load_civ` asks on every call, now keeps the installed mods'
+order per directory until a file under it changes, instead of reading and checking every mod each time. A game
+year calls `load_civ` thousands of times; measure the call with
+`python3 -c "import time; from sim.engine.data import load_civ; t=time.time(); [load_civ('rome_100ad') for _ in range(200)]; print(time.time()-t)"`.
