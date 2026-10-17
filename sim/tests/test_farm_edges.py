@@ -261,9 +261,12 @@ class FarmLabourOversupplyTests(unittest.TestCase):
             self.assertGreaterEqual(after, before * (1.0 - ceiling) - 1e-6)
         self.assertLess(shares[10], shares[0] - 0.2)
 
-    def test_the_farm_settles_at_the_share_a_right_sized_farm_has(self):
+    def test_the_farm_settles_between_the_share_that_feeds_need_and_the_share_that_feeds_satiation(self):
+        # Hands stay while a farm hour pays at least the wage (Complaint 513), so the farm settles
+        # between a right-sized farm and one that feeds the people to the satiation level.
         shares, reference_share = _oversupplied_shares()
-        self.assertAlmostEqual(shares[-1], reference_share, delta=0.05)
+        self.assertGreaterEqual(shares[-1], reference_share - 0.05)
+        self.assertLessEqual(shares[-1], reference_share * agriculture.MAXIMUM_INTAKE_MULTIPLE_OF_SUBSISTENCE + 0.05)
 
 
 class ClearingLadderTests(unittest.TestCase):

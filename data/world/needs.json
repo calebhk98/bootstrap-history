@@ -5,7 +5,9 @@
    "surplus_budget_share": 0.30,
    "subsistence_constant": "FOOD_SUBSISTENCE_QUANTITY_KG_PER_CAPITA_PER_YEAR",
    "unit": "kg wheat equivalent",
-   "effectiveness_basis": "food energy per kg relative to wheat grain"
+   "effectiveness_basis": "food energy per kg relative to wheat grain",
+   "satiation_per_capita_per_year": 354.5,
+   "satiation_basis": "BIOLOGICAL limit, not a heuristic: well-fed modern intake, about 3,300 kcal per person per day (FAO food balance sheets, FAOSTAT, dietary energy supply in high-income countries; supply includes household waste), over the 3,400 kcal per kg of wheat the subsistence figure uses, a year of it: 1.5 times the subsistence quantity. Food beyond it is stored, sold, fed to animals or wasted. Held equal to sim/world/agriculture.py MAXIMUM_INTAKE_MULTIPLE_OF_SUBSISTENCE by a test."
   },
   "shelter": {
    "subsistence_from_climate": "shelter_m3",

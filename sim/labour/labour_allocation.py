@@ -9,8 +9,10 @@ import sim.geography.api as geography
 from sim.world import agriculture
 from sim.world import farming_technique
 from sim.world import land
+from sim.labour import farm_intake
 from sim.labour import labour_market
 from sim.labour import trade_data
+from sim.labour import wage_provider
 from sim.labour import workforce_carriage
 from sim.labour import workforce_spinup
 
@@ -208,17 +210,28 @@ class LabourAllocationMixin:
             adult_equivalent_population, technique.crop, None,
             technique.rotation, technique.toolkit)
 
-    def _expected_year_farm_need(self, share_fte, adult_equivalent_population, technique):
-        """Farm workers that just feed the population in an average-weather
-        year on this land, found by repeating the food balance (shortfall
-        calls for hands, surplus frees them) from the population-share
-        workforce."""
-        fte = share_fte
+    def _expected_year_farm_need(self, share_fte, adult_equivalent_population, technique,
+                                 intake_multiple=1.0):
+        """Farm workers that just feed the population (to `intake_multiple` times its need) in an
+        average-weather year on this land, found by repeating the food balance (shortfall calls for
+        hands, surplus frees them) from the population-share workforce."""
+        fte = share_fte * intake_multiple
         for _ in range(FOOD_BALANCE_ITERATIONS):
-            fte = self._food_balance_step(fte, adult_equivalent_population, technique)
+            fte = self._food_balance_step(fte, adult_equivalent_population, technique, intake_multiple)
         return fte
 
-    def _food_balance_step(self, baseline_fte, adult_equivalent_population, technique):
+    def _farm_hour_value_over_wage(self, technique):
+        """What an extra farm hour's food is worth at the staple's price, over an hour of the unskilled
+        wage, both from the agent economy; None while either is missing."""
+        marginal_product = self._world.state.holdings.farm_last_marginal_product
+        wage = self._world.economy_unskilled_wage()
+        prices = self._world.economy.agent_prices()
+        price = prices.get(wage_provider.staple_material(self._world.civ)) if prices else None
+        if not marginal_product or not wage or not price:
+            return None
+        return price * net_marginal_product_kg_per_hour(marginal_product, technique) / wage
+
+    def _food_balance_step(self, baseline_fte, adult_equivalent_population, technique, intake_multiple=1.0):
         hectares_per_worker = agriculture.hectares_cropped_per_farm_worker(
             technique.crop, technique.toolkit)
         hectares_worked = min(self._world.farm_land.hectares, baseline_fte * hectares_per_worker)
@@ -235,7 +248,7 @@ class LabourAllocationMixin:
             weather_multiplier=1.0)
         rebuild_kg = max(0.0, reserve_kg - stock_kg) / RESERVE_REBUILD_YEARS
         balance_kg = (year.gross_harvest_kg - year.seed_sown_kg - year.spoilage_kg
-                      - year.food_demand_kg - rebuild_kg)
+                      - year.food_demand_kg * intake_multiple - rebuild_kg)
         return farm_workers_needed(
             baseline_fte, baseline_fte, max(0.0, -balance_kg),
             year.marginal_product_last_hour_kg_per_hour, self._world.farm_land.hectares,
@@ -254,6 +267,18 @@ class LabourAllocationMixin:
         less the people standing staff hold."""
         people = max(0.0, self._world.population.working_age - self._people_under_arms())
         return people * HOURS_PER_FARM_WORKER_YEAR
+
+    def _kept_farm_workers(self, current_fte, adult_equivalent_population, technique):
+        """Hands that stay on the land past need because food is worth farming for (farm_intake.py)."""
+        value_over_wage = self._farm_hour_value_over_wage(technique)
+        if value_over_wage is None or value_over_wage < 1.0:
+            return 0.0
+        satiation_fte = self._expected_year_farm_need(
+            self._share_farm_fte(adult_equivalent_population, technique), adult_equivalent_population,
+            technique, agriculture.MAXIMUM_INTAKE_MULTIPLE_OF_SUBSISTENCE)
+        land_limit_fte = self._world.farm_land.hectares / agriculture.hectares_cropped_per_farm_worker(
+            technique.crop, technique.toolkit)
+        return farm_intake.kept_farm_workers(current_fte, satiation_fte, land_limit_fte, value_over_wage)
 
     def _allocate_farm_workforce(self, adult_equivalent_population):
         """Farm FTE for this year, after the labour market reacts to last
@@ -280,6 +305,8 @@ class LabourAllocationMixin:
                 holdings.farm_last_marginal_product,
                 self._world.farm_land.hectares, self._clearable_hectares(),
                 technique=technique)
+        need_fte = max(need_fte, self._kept_farm_workers(
+            current_fte, adult_equivalent_population, technique))
         holdings.farm_hours_needed = need_fte * HOURS_PER_FARM_WORKER_YEAR
         economy.society_labour_hours = society_hours(
             total_hours,
