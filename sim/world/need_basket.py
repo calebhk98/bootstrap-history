@@ -38,6 +38,7 @@ class NeedSpec:
     subsistence_per_person: float          # need units a person needs a year whatever the price
     budget_weight: float                   # weight of the need in surplus spending
     goods: Tuple[Tuple[str, float], ...]   # (good, need units one unit of the good gives)
+    share_limits: Tuple[Tuple[str, float], ...] = ()   # (good, largest share of the need's units it can meet)
 
 
 @dataclass(frozen=True)
@@ -65,7 +66,8 @@ def goods_attributes(need_data: Mapping[str, Any],
     merged: Dict[str, Dict[str, Any]] = {}
     for material, attributes in (need_data.get("goods") or {}).items():
         merged[material] = {"satisfies": dict(attributes.get("satisfies") or {}),
-                            "bought_by_households": attributes.get("bought_by_households", True)}
+                            "bought_by_households": attributes.get("bought_by_households", True),
+                            "max_share_of_need": dict(attributes.get("max_share_of_need") or {})}
     for entry in production.values():
         if not entry.get("outputs") or not entry.get("satisfies"):
             continue
@@ -101,17 +103,20 @@ def make_basket(need_data: Mapping[str, Any], production: Mapping[str, Any],
     attributes = goods_attributes(need_data, production)
     civ_values = civ_values or {}
     serving: Dict[str, List[Tuple[str, float]]] = {}
+    limits: Dict[str, List[Tuple[str, float]]] = {}
     for good in sorted(attributes):
         if attributes[good].get("bought_by_households") is False:
             continue
         for need_id, effect in sorted(attributes[good]["satisfies"].items()):
             serving.setdefault(need_id, []).append((good, effect))
+        for need_id, share in sorted((attributes[good].get("max_share_of_need") or {}).items()):
+            limits.setdefault(need_id, []).append((good, float(share)))
     specs = []
     for need_id in sorted(need_data["needs"]):
         data = need_data["needs"][need_id]
         scale = civ_scale(data, civ_values)
         specs.append(NeedSpec(need_id, need_floor(data) * scale, float(data["surplus_budget_share"]) * scale,
-                              tuple(serving.get(need_id, ()))))
+                              tuple(serving.get(need_id, ())), tuple(limits.get(need_id, ()))))
     substitution = (NEED_SUBSTITUTION_ELASTICITY if substitution_elasticity is None
                     else substitution_elasticity)
     if substitution == 1.0:
@@ -152,7 +157,34 @@ def priced_need(spec: NeedSpec, exponent: float, price_of: Callable[[str], Optio
     # need units add up one for one (a calorie is a calorie): a unit costs what the chosen mix pays
     # per unit, between the cheapest and dearest good; substitution shapes only the mix
     units_per_money = math.fsum(share * effect / price for _good, price, effect, share in shares)
+    if spec.share_limits:
+        shares = limited_shares(shares, units_per_money, dict(spec.share_limits))
+        units_per_money = math.fsum(share * effect / price for _good, price, effect, share in shares)
     return PricedNeed(spec, 1.0 / units_per_money, tuple(shares), price_ceilings(shares) if with_ceilings else ())
+
+
+def limited_shares(shares, units_per_money: float, limits: Mapping[str, float]):
+    """The spending shares once each good with a limit meets no more than its share of the need's units: the
+    excess units go to the other goods in the proportions they were bought in. Unchanged when no limit binds."""
+    unit_share = {good: share * effect / price / units_per_money for good, price, effect, share in shares}
+    if not any(good in limits and value > limits[good] + 1e-12 for good, value in unit_share.items()):
+        return shares
+    fixed: Dict[str, float] = {}
+    while True:
+        free = [good for good in unit_share if good not in fixed]
+        free_total = math.fsum(unit_share[good] for good in free)
+        if not free or free_total <= 0.0:
+            break
+        scale = (1.0 - math.fsum(fixed.values())) / free_total
+        over = [good for good in free if good in limits and unit_share[good] * scale > limits[good] + 1e-12]
+        if not over:
+            fixed.update({good: unit_share[good] * scale for good in free})
+            break
+        for good in over:
+            fixed[good] = limits[good]
+    cost_per_unit = math.fsum(fixed.get(good, 0.0) * price / effect for good, price, effect, _share in shares)
+    return [(good, price, effect, fixed.get(good, 0.0) * price / effect / cost_per_unit)
+            for good, price, effect, _share in shares]
 
 
 def price_ceilings(shares) -> Tuple[float, ...]:
