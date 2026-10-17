@@ -12,9 +12,11 @@ from typing import Dict, List, Optional, Tuple
 
 from sim.constants import declare
 
+from .market_memory import market_key
 from .merchants import Merchant
+from .producers_close import WORKING_CAPITAL_PURPOSE
 from .setup import labour_area
-from .types import LabourBid
+from .types import LabourBid, LoanRequest
 
 CARRIAGE_CREW_UNSKILLED_SHARE = declare(
     "CARRIAGE_CREW_UNSKILLED_SHARE", 1.0, kind="temporary_heuristic",
@@ -64,7 +66,9 @@ def bids(setup, record) -> List[LabourBid]:
     crew = crew_of(setup)
     if crew is None:
         return []
-    return [LabourBid(merchant.agent_id, trade, labour_area(tile), hours * share, 1.0 / crew.hours_per_money)
+    populated = {cohort.tile for cohort in record.cohorts.values()}
+    return [LabourBid(merchant.agent_id, trade, labour_area(tile if tile in populated else merchant.home_tile),
+                      hours * share, 1.0 / crew.hours_per_money)      # nobody lives where goods left: carriers come from home
             for merchant in sorted(record.merchants.values(), key=lambda each: each.agent_id)
             for tile, hours in sorted((merchant.carriage_hours_wanted or {}).items()) if hours > 0.0
             for trade, share in crew.trades]
@@ -83,3 +87,23 @@ def hired(ledger, merchant_id: str, trades) -> Dict[str, float]:
                 paid += fill.quantity * fill.price
                 quantity += fill.quantity
     return {"hours": hours, "wage": paid / quantity if quantity > 0.0 else 0.0}
+
+
+def wage_loans(setup, record, crew: Crew) -> List[LoanRequest]:
+    """A one-year loan to each merchant whose carriers' wages for next year's plan its cash will not cover:
+    carriers are paid at the labour market, before the year's lenders meet, so the merchant needs the cash
+    in hand. It offers up to what the hours are worth to it above their wage, as a share of the wage."""
+    money = setup.currency_id
+    ceiling = 1.0 / crew.hours_per_money
+    requests = []
+    for merchant in sorted(record.merchants.values(), key=lambda each: each.agent_id):
+        bill, hours = 0.0, 0.0
+        for tile, wanted in (merchant.carriage_hours_wanted or {}).items():
+            for trade, share in crew.trades:
+                bill += wanted * share * record.memory.wages.get(market_key(trade, labour_area(tile)), 0.0)
+            hours += wanted
+        short = bill - max(0.0, record.book.balance(merchant.agent_id, money))
+        if short > 0.0 and bill > 0.0 and ceiling * hours > bill:
+            requests.append(LoanRequest(merchant.agent_id, money, short, (ceiling * hours - bill) / bill, 1.0, short,
+                                        WORKING_CAPITAL_PURPOSE))
+    return requests

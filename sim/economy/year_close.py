@@ -54,6 +54,8 @@ def dispatch_merchants(setup, record, carriage, ledger: YearLedger) -> None:
         for move in done.moves:
             flow_ledger.record_flow(carried, move.tile, move.receiver_tile,
                                     move.quantity * setup.specs[move.good].unit_mass_kg / KILOGRAMS_PER_TONNE)
+    if crew is not None:
+        record.loan_requests.extend(carriage_hours.wage_loans(setup, record, crew))
     record.carried = carried
 
 

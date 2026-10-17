@@ -62,6 +62,7 @@ def lend_working_capital(setup, record, view) -> None:
         rate_ceiling=capital_market.RATE_CEILING_SHARE * setup.opening_rate)
     record.book.transfer_many(credit.disbursements(loans))
     record.loans.extend(loans)
+    merchants_credit.stake(record.merchants, {loan.borrower: loan.principal for loan in loans})
 
 
 def household_requests(setup, record, view, ledger, priced_by_tile) -> List:

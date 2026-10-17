@@ -41,4 +41,12 @@ demand for carters, sailors and porters (530).
   below). The crew hours are therefore bid in the unskilled trade (`CARRIAGE_CREW_UNSKILLED_SHARE`, a
   labelled heuristic retired by 556), not the mode's carter or sailor trade. A merchant that ships nothing
   in a year has no plan, so is not limited, the next.
+- Carriers are paid at the labour market, before the year's lenders meet, so a merchant with no cash in hand
+  could not pay its hired hours and they were not delivered. A merchant now asks, at the year's close, for
+  a one-year working-capital loan for next year's carrier wages (`carriage_hours.wage_loans`), staked as
+  capital like its other loans. Bids are placed where people live: goods leaving an empty tile are bid for
+  in the merchant's home labour area.
+- Open: the carriage rates are priced at the opening wage while the unskilled market wage in a spun-up
+  game is a small fraction of it, so the crew's pay is a small part of each fee and the rest of the fee still
+  goes to the source tile's households. One wage for both is not yet done.
 - Tests: `sim/tests/test_economy_carriage_hours.py`.

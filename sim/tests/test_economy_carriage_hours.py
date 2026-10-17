@@ -136,9 +136,57 @@ class CrewTests(unittest.TestCase):
             self.assertEqual(carriage_hours.crew_of(setup).trades, (("carter", 0.75), (fixture.LABOURER, 0.25)))
 
     def test_a_merchant_that_shipped_nothing_has_no_plan_and_bids_nothing(self):
-        record = type("Record", (), {"merchants": {"m": Merchant("m", "a", "owner", 1.0)}})()
+        record = type("Record", (), {"merchants": {"m": Merchant("m", "a", "owner", 1.0)}, "cohorts": {}})()
         self.assertFalse(carriage_hours.planned(record.merchants["m"]))
         self.assertEqual(carriage_hours.bids(trading_setup(), record), [])
+
+
+class BidAreaTests(unittest.TestCase):
+    def bids(self, populated_tiles):
+        who = Merchant("m1", "town", "owner", 1.0)
+        who.carriage_hours_wanted = {"hills": 40.0, "farms": 10.0}
+        cohorts = {tile: type("Cohort", (), {"tile": tile})() for tile in populated_tiles}
+        record = type("Record", (), {"merchants": {"m1": who}, "cohorts": cohorts})()
+        return {bid.area: bid.hours for bid in carriage_hours.bids(trading_setup(), record)}
+
+    def test_carriers_are_bid_for_where_the_goods_left_when_people_live_there(self):
+        self.assertEqual(self.bids(["town", "farms", "hills"]), {"work@hills": 40.0, "work@farms": 10.0})
+
+    def test_where_nobody_lives_the_bid_is_placed_where_the_merchant_lives(self):
+        self.assertEqual(self.bids(["town", "farms"]), {"work@town": 40.0, "work@farms": 10.0})
+
+
+class WageLoanTests(unittest.TestCase):
+    """Carriers are paid at the labour market, before lenders meet, so a merchant short of cash borrows its wage bill."""
+
+    def record(self, cash):
+        from sim.economy.accounts import Book
+        from sim.economy.market_memory import market_key
+        from sim.economy.setup import labour_area
+        from sim.economy.types import EDGE_MINT, Transfer
+        book = Book()
+        if cash > 0.0:
+            book.transfer(Transfer(EDGE_MINT, "m1", "coin", cash, "opening"))
+        who = Merchant("m1", "town", "owner", 100.0)
+        who.carriage_hours_wanted = {"town": 100.0}
+        memory = type("Memory", (), {"wages": {market_key(fixture.LABOURER, labour_area("town")): 0.5}})()
+        return type("Record", (), {"merchants": {"m1": who}, "book": book, "memory": memory})()
+
+    def test_a_merchant_without_cash_borrows_the_whole_wage_bill_for_a_year(self):
+        setup = trading_setup()
+        asked = carriage_hours.wage_loans(setup, self.record(0.0), carriage_hours.crew_of(setup))
+        self.assertEqual(len(asked), 1)
+        self.assertAlmostEqual(asked[0].amount, 100.0 * 0.5)
+        self.assertEqual((asked[0].borrower, asked[0].years), ("m1", 1.0))
+
+    def test_a_merchant_borrows_only_what_its_cash_does_not_cover(self):
+        setup = trading_setup()
+        asked = carriage_hours.wage_loans(setup, self.record(20.0), carriage_hours.crew_of(setup))
+        self.assertAlmostEqual(asked[0].amount, 30.0)
+
+    def test_a_merchant_with_cash_enough_asks_for_nothing(self):
+        setup = trading_setup()
+        self.assertEqual(carriage_hours.wage_loans(setup, self.record(80.0), carriage_hours.crew_of(setup)), [])
 
 
 if __name__ == "__main__":
