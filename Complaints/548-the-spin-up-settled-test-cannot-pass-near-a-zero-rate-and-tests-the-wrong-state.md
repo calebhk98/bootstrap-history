@@ -23,3 +23,9 @@ Found by an outside reviewer reading the repository; checked against the code.
   why zeroing is harmless.
 - Order of work, as the reviewer suggests: 546 and 547 first, then the opening (545, 526), then this
   measurement, then adjustment speeds (473).
+
+Reproduced: `python3 sim/simulator.py spin-up-trace --civ rome_100ad --years 60` matches the reviewer's
+table year for year (the trace counts the first simulated year as year 0). The price level swings and
+ends far below the opening, the unskilled wage falls to a small fraction of the seeded wage, and the
+rate falls to a near-zero floor before jumping back. The run takes about an hour on this machine.
+
