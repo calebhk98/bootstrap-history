@@ -26,3 +26,18 @@ opening wage is the value of labour's marginal product, consistent with the hous
 labour market clears near the opening wage in year one. Then delete `opening_income_per_head` (a stated income is
 an outcome, CLAUDE.md 4.1) and remove the fixtures' use of it. Tests: realised year-0 income is within a band of
 the opening figure; the spin-up settles; a more productive technique set opens with a larger surplus.
+
+## Found fixing 546 and 547
+
+Correct accounting moves the opening: with only principal no longer counted as income (547),
+`full_length_opening_checks` fails England's money against coin wear (by a small margin) and two sited-ore
+price checks; adding producers that run only what their cash pays for, with working-capital loans (546),
+clears the ore checks but leaves the Norse unskilled wage below its floor. Each change moves where the
+spin-up's drift stops, which is this issue and 473, not a defect in the change. Measure with
+`python3 -m sim.tests --slow --only full_length_opening_checks --topic-seconds 3000`. The shipped
+openings cannot be regenerated (`python3 sim/simulator.py openings` refuses failing checks) until the opening
+is fixed here, or the failure is shipped with `--allow-failing REASON`.
+
+545 cannot land alone: with own-plot growing in the opening's fixed point (branch
+`fix-545-opening-grows-its-own`), Rome's food floor is all grown at home, nothing left in market demand is a
+floor, and the leak this issue names drives the settled income toward zero. The two are one fix.
