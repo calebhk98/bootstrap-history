@@ -16,3 +16,12 @@ What it would take: one business object (a firm with plants, see 510) in `sim/ag
 every owner; the founder's commands act on the founder's firms through it, and `projects_ventures.py` keeps only
 the founder's choices (what to open, whom to staff it with). A wall test that fails when the engine computes a
 business's crew, upkeep or takings outside that object.
+
+## Economy producers (outside review)
+
+The split is wider than founder against firms: actor businesses run through `sim/agents/business_books.py`
+(takings, upkeep, crew, payments) while the agent economy's `Producer` objects run recipes with their own
+capacity, inputs, workforce, stock and cash, and founder concern output enters the economy through
+`EDGE_LEGACY` (`sim/engine/economy_port_year.py`). Double counting was not established; the risk is a
+constraint enforced on one path and bypassed on the other. Target: owners (founder, firm, state) decide
+what to build and run, and one production machinery runs every plant.

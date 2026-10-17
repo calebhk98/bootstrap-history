@@ -27,3 +27,12 @@ keeps one job, the cost of making a good with given techniques and input prices 
 clearing), used for entry decisions, quotes and the opening's seed prices. Every reader listed above moves
 to the economy's prices through `sim.economy.api`. Measure progress with
 `grep -rn "solved_prices(\|_price_tables()" sim --include=*.py | grep -v tests`.
+
+## Report path (outside review)
+
+`GoodsMarket` (`sim/engine/goods_market_api.py`) quotes from the agent economy, but `GoodsMarket.state`
+returns `Sim.market_state` (`sim/engine/market_clearing.py`), computed from the older `world.market`
+model and its `market_book` capacity and stock, and `GoodsMarket.add_stock` writes to that older stock.
+So one interface reports a different market from the one it trades in. Reports should be derived from
+the same clearing and settlement results as transactions; the cost-of-making answer stays, named as a
+cost estimate. This is the reviewer's suggested first slice of the migration: small and contained.

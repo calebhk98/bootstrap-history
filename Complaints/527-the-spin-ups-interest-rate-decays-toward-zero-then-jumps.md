@@ -13,3 +13,6 @@ What it would take: trace the rate's yearly path and what sets it (saving offere
 capital market's memory), find why it decays geometrically and what makes it jump, and make it clear from the
 year's funds and requests. Test: over a spin-up with no shock the rate moves by at most a bounded share a year, and
 it rises when loan requests exceed funds offered.
+
+Likely cause found since: the clearing uses ceilings below zero from requests that cannot borrow (547).
+The settled test also cannot pass while the rate approaches zero (548).
