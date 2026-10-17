@@ -84,3 +84,18 @@ three stepped years the kept records equal a fresh `load_civ`). Same stepped sav
 dump of `save_state` after three years, identical). Measure with `cProfile` over `Sim.step()` and
 `pstats.print_callers("load_civ")`; any `load_civ` caller still showing counts per year should read through
 `partner_civ`.
+
+## Route graph compiled once per set of modes and improvements; defender search remembered
+
+A profile of one stepped year sorted by self time (`cProfile` over `Sim.step()`, `pstats` sorted by
+`tottime`) put `routes_compile.compile_graph` first among the project's own functions: the route search
+compiles a graph for every distinct set of freight prices (one per good priced, so many per year), and each
+compile re-derived every edge's modes, grades, rates and physical costs, which do not depend on prices. The
+price-independent links are now built once per (modes, improvements) and kept on the map
+(`routes_compile._skeleton`); a compile for a set of prices only scales them, in the same order and with the
+same expressions. `sea_freight.defenders_to_hire` is a pure search over constants, called for the same few
+arguments thousands of times a year by `_sea_crew`; it is now memoised. Same stepped save before and after
+(sorted-key dump of `save_state` after three years, identical). Measure with the compile time inside one
+step (wrap `compile_graph` with `time.process_time`) and CPU of `Sim.step()` over several runs. The profile
+after these is again flat: the next items are the many small readers of fixed data (`parameters.parameter`
+and `RateTable.rate` lookups, `_price_tables` per call) and the goods clearing's own arithmetic.
