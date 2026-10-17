@@ -39,8 +39,7 @@ class GoodsOffers(GoodsImports):
         return round(self._sim.partner_price_level(civilization_id), LEVEL_DECIMALS)
 
     def _route_from(self, civilization_id):
-        from .data import load_civ
-        return self._sim._foreign_route(load_civ(civilization_id))
+        return self._sim._foreign_route(self._sim.partner_civ(civilization_id))
 
     def landed_price(self, material, civilization_id, route=None):
         """Money per unit of a material delivered from a trading partner: its cost to the partner,

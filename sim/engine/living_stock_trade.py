@@ -7,7 +7,6 @@ terms and the route's freight (`partner_quote_per_tonne`), unless its own policy
 """
 from sim.refusal import Refusal, cause_of
 
-from .data import load_civ
 from .material_units import tonnes_per_unit
 
 
@@ -17,7 +16,7 @@ class LivingStockTradeMixin:
         """Units of the material the partner held at its date (its `opening_stock`), less what smugglers
         have since taken. TRANSITIONAL HEURISTIC: the partner's stock is not simulated, so what it can sell
         is what it started with, not what it still has; a partner's own ledger would replace this."""
-        started = float((load_civ(civilization_id).get("opening_stock") or {}).get(material, 0.0))
+        started = float((self.partner_civ(civilization_id).get("opening_stock") or {}).get(material, 0.0))
         return max(0.0, started - self._partner_taken(civilization_id, material))
 
     def stock_purchase_quote(self, material, units, partner=None):
@@ -68,7 +67,7 @@ class LivingStockTradeMixin:
             return False
         self.goods_market.settle_import(
             buyer, self._stock_key(quote["material"]), quote["tonnes"], quote["cost"], "stock bought abroad")
-        coin = load_civ(quote["partner"])["coin_standard"]
+        coin = self.partner_civ(quote["partner"])["coin_standard"]
         coin_price = self.goods_market.home_unit_price(coin["material"])
         if coin_price:
             self._settle_flow(quote["partner"], quote["tonnes"], quote["cost"],

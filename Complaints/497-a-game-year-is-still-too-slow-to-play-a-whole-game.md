@@ -70,3 +70,17 @@ tried and was no faster (it also reads different cache keys).
 - The market-clearing core in compiled code or arrays (adds a build step for players).
 
 Related: 473 (the spin-up does not settle, so a longer spin-up cannot replace shipping it), 464.
+
+## Partner civilisation records read once per game
+
+A profile of one stepped year of a game with a partner outside the agent economy (the setup of the
+`home_cargo_price` topic) found `load_civ` called thousands of times a year, nearly all to read one field of a
+partner (`coin_standard`, `state_capacity`, `opening_stock`, `population`, tiles held, the route). The `Sim` now
+keeps each loaded partner for the game (`Sim.partner_civ`, `sim/engine/partner_civs.py`) and the per-year
+readers go through it: partner coin metal, the foreign-economy facts, foreign supply and mineral share, coin
+carriage, partner spending and coin settlement, the living-stock trade, smuggling and routes, and the goods
+market's route lookup. The shared record is read-only; nothing that reads it writes to it (checked: after
+three stepped years the kept records equal a fresh `load_civ`). Same stepped save before and after (sorted-key
+dump of `save_state` after three years, identical). Measure with `cProfile` over `Sim.step()` and
+`pstats.print_callers("load_civ")`; any `load_civ` caller still showing counts per year should read through
+`partner_civ`.

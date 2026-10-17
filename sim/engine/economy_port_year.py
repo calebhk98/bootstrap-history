@@ -18,7 +18,6 @@ from sim.economy.api import (EDGE_EXTERNAL, EDGE_LEGACY, AgentOrders, Economy, G
                              trade_premium, variable_cost_per_run)
 
 from . import economy_port_actors, economy_port_cargo, economy_port_late, economy_port_sites, material_capacity, solve_cache
-from .data import load_civ
 from .economy_port_key import spin_up_key
 from .economy_port_coin import priced_at_the_margin
 from .economy_port_setup import build_setup, opening_values
@@ -421,7 +420,7 @@ class AgentEconomy(TilePricesMixin):
         sim = self._sim
         total = 0.0
         for partner in partners:
-            standard = load_civ(partner)["coin_standard"]
+            standard = sim.partner_civ(partner)["coin_standard"]
             metal_price = sim._material_prices().get(standard["material"])   # the metal at its cost: its market price (Complaint 519) would size a partner's spending by the opening's mispriced metals
             if not metal_price:
                 continue
@@ -444,7 +443,7 @@ class AgentEconomy(TilePricesMixin):
         volume = economy_api.external_trade_volume(economy)
         imports, exports = (volume - paid_in) / 2.0 * coin, (volume + paid_in) / 2.0 * coin
         for partner in partners:
-            standard = load_civ(partner)["coin_standard"]
+            standard = sim.partner_civ(partner)["coin_standard"]
             metal_price = sim.goods_market.home_unit_price(standard["material"])
             if not metal_price:
                 continue
