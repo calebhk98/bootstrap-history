@@ -207,6 +207,9 @@ class FakeWorld:
 	def trade_materials(self) -> List[str]:
 		return []
 
+	def has_market(self, material: str, place: str) -> bool:
+		return True
+
 	def price_after_cargo(self, material: str, place: str, tonnes: float, landing: bool) -> Optional[float]:
 		return None
 

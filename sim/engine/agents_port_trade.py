@@ -73,6 +73,11 @@ class TradeView:
 						  and material not in refused)
 		return self._once("trade_materials", compute)  # type: ignore[attr-defined,no-any-return]
 
+	def has_market(self, material: str, place: str) -> bool:
+		if place != self._home_place():
+			return True
+		return self._sim.economy.agent_price_response(material, 0.0, 0.0) is not None  # type: ignore[attr-defined,no-any-return]
+
 	def price_at(self, material: str, place: str) -> Optional[float]:
 		return self._prices_per_tonne(place).get(material)
 
