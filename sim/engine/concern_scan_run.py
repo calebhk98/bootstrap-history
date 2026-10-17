@@ -1,7 +1,7 @@
 """Scans the concerns a game's society holds for whether they pay their way (sim/agents/concern_scan.py)."""
 from typing import Any, Dict, List
 
-from sim.agents import concern_scan
+from sim.agents.api import concern_scan
 
 from .agents_port import SimWorld
 
