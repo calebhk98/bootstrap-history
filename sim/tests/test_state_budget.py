@@ -199,8 +199,18 @@ def short_of(unfunded, firms=0, protection=None):
     need = sum(line.money for line in budget.standing_lines(world))
     game.state_treasury().money = need - world.state_revenue() - unfunded
     one_year(game)
+    world = SimWorld(game)
+    household_scale = world.visible_taxpayers()[0][0]
     for firm in game.actors.active_firms():
         firm.workforce["artisan"] = 2000.0  # a firm with a visible staff (its year clears it)
+        # the year spends part of the purse, so set the purse to what makes the firm exactly as visible as the household
+        low, high = 0.0, 1.0e12
+        for _ in range(100):
+            firm.money = (low + high) / 2.0
+            if world.visible_scale_of(firm) < household_scale:
+                low = firm.money
+            else:
+                high = firm.money
     world = SimWorld(game)
     game.state_treasury().seek_shortfall(budget.standing_lines(world), world)
     return game
