@@ -6,7 +6,7 @@ from typing import Dict, Tuple
 from sim.geography.api import flow_ledger
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
-from . import (carriage_hours, currency, expansion_price, households, inventory, merchants, metal_stock, ownership, producer_exit,
+from . import (merchants_transit, carriage_hours, currency, expansion_price, households, inventory, merchants, metal_stock, ownership, producer_exit,
                producers, producers_close, state_budget, taxes)
 from .households_cohort import renewed
 from .market_memory import market_key
@@ -33,6 +33,8 @@ def dispatch_merchants(setup, record, carriage, ledger: YearLedger) -> None:
         if held is None or cohort.income_class < record.cohorts[held].income_class:
             carriers[cohort.tile] = cohort.agent_id
     carried: dict = {}
+    for merchant in sorted(record.merchants.values(), key=lambda each: each.agent_id):
+        record.book.move_many(merchants_transit.advance(merchant, setup.specs))    # hauls on the road for years reach the tile or spoil
     for merchant in sorted(record.merchants.values(), key=lambda each: each.agent_id):
         fills = ledger.buy_fills.get(merchant.agent_id, [])
         if not fills:
@@ -110,7 +112,7 @@ def wear_and_spoilage(setup, record) -> None:
     book.transfer_many(metal_stock.yearly_wear(cash, record.currency))
 
 
-def close_agents(setup, record, view, ledger: YearLedger, area_map) -> None:
+def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage) -> None:
     money = setup.currency_id
     property_income: Dict[str, float] = {}
     traded = {(result.good, result.area): result.quantity for result in ledger.clearings}
@@ -145,12 +147,15 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map) -> None:
             record.expansion_runs[producer_id] = closed.expansion_runs
         record.producers[producer_id] = _with_sales(closed.producer, recipe, ledger)
     prices, volumes = learned_prices(ledger.clearings, record.memory)
+    anchors = {(good, area.area_id): area.anchor_tile for good in area_map.goods() for area in area_map.areas(good)}
     ordered = (sorted(prices.items()), sorted(volumes.items()))
     interest_rate = view.interest_rate(money)
     for merchant in sorted(record.merchants.values(), key=lambda each: each.agent_id):
         transfers = merchants.close_year(merchant, prices, volumes, record.book.balance(merchant.agent_id, money),
                                          _held_stock(record.book, merchant.agent_id), area_map.area_of, money,
-                                         interest_rate, ordered)
+                                         interest_rate, ordered,
+                                         lambda good, area, home=merchant.home_tile: merchants_transit.news_lag(
+                                             carriage, home, anchors[(good, area)]))
         paid = ownership.spread(record, transfers, cohorts_by_tile)
         record.book.transfer_many(paid)
         for transfer in paid:
