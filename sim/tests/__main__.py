@@ -17,6 +17,8 @@ stops it with its subprocesses, so a run always ends and names what is too slow.
 game of every civilisation is built, so spin-ups are on disk and no topic pays for one. The forked
 parallel run stops a topic over the limit; the sequential run (`--jobs 1`, or a single topic) cannot stop one
 in-process, so it lets the topic finish and then fails it as timed out, with its seconds against the limit.
+A topic whose subject is a long run by design sets a module-level `TOPIC_SECONDS = <seconds>` (with a comment
+saying why and what retires it); it runs alone, under that limit when it is longer than `--topic-seconds`.
 
 `--timing` adds a per-topic table to the summary: wall seconds, share of the run, and how many
 checks each topic bought. It changes nothing about which checks run.
@@ -372,7 +374,12 @@ def _split_stopped_batch(slugs, results):
     return unfinished[0], unfinished[1:]
 
 
-def _wait_for_a_worker(running, topic_seconds):
+def _limit_for(slugs, topic_seconds, allowances):
+    """The seconds a worker running these topics may take: the limit, or the longest allowance a topic declares."""
+    return max([topic_seconds] + [(allowances or {}).get(slug, 0.0) for slug in slugs])
+
+
+def _wait_for_a_worker(running, topic_seconds, allowances=None):
     """(pid, wait status, stopped for time) of the next worker to finish; a worker whose current topic is
     past its time is killed with its process group."""
     while True:
@@ -381,7 +388,8 @@ def _wait_for_a_worker(running, topic_seconds):
             return pid, wait_status, pid in running and running[pid][5]
         now = time.time()
         for worker, entry in running.items():
-            if not entry[5] and now - _current_topic_started(entry[4], entry[1]) > topic_seconds:
+            if not entry[5] and now - _current_topic_started(entry[4], entry[1]) > _limit_for(
+                    entry[0], topic_seconds, allowances):
                 running[worker] = entry[:5] + (True,)
                 try:
                     os.killpg(worker, 9)
@@ -394,7 +402,7 @@ def _run_topics_forked(run_now, harness, jobs, topic_seconds):
     """Run topics in children forked from this process, `jobs` at a time: each other topic in a
     child of its own, the quick ones shared out over a few. A child still running after `topic_seconds` is
     stopped and its unfinished topics fail."""
-    quick = set(harness.QUICK_TOPICS)
+    quick = set(harness.QUICK_TOPICS) - set(harness.TOPIC_ALLOWANCES)
     if any(slug not in quick for slug in run_now):
         _warm_starts(harness, jobs)     # quick topics build no game
     seconds_before = _load_topic_seconds()
@@ -416,7 +424,7 @@ def _run_topics_forked(run_now, harness, jobs, topic_seconds):
                 pid, result_path, error_path = _fork_topics(
                     slugs, harness, result_dir, [entry[3] for entry in running.values()])
                 running[pid] = (slugs, result_path, error_path, slot, time.time(), False)
-            pid, wait_status, stopped = _wait_for_a_worker(running, topic_seconds)
+            pid, wait_status, stopped = _wait_for_a_worker(running, topic_seconds, harness.TOPIC_ALLOWANCES)
             if pid not in running:
                 continue
             slugs, result_path, error_path, slot, started_at, _ = running.pop(pid)
@@ -434,7 +442,8 @@ def _run_topics_forked(run_now, harness, jobs, topic_seconds):
                 error_text = ""
             if stopped:
                 topic_started = _current_topic_started(started_at, result_path)
-                error_text = TIMED_OUT + " after %.0fs (--topic-seconds %g)" % (time.time() - topic_started, topic_seconds)
+                error_text = TIMED_OUT + " after %.0fs (--topic-seconds %g)" % (
+                    time.time() - topic_started, _limit_for(slugs, topic_seconds, harness.TOPIC_ALLOWANCES))
                 stopped_slug, never_started = _split_stopped_batch(slugs, results)
                 # Remembered as slow, so the next run starts it first; the topics behind it run in a worker of their own.
                 _save_topic_seconds([(stopped_slug, time.time() - topic_started, 0)])
@@ -597,9 +606,9 @@ def main(argv=None):
                 topic_seconds_used = time.time() - started_at
                 topic_costs.append((slug, topic_seconds_used,
                                     len(harness.CHECKS_RUN) - checks_before))
-                if topic_seconds_used > topic_limit:
+                if topic_seconds_used > _limit_for([slug], topic_limit, harness.TOPIC_ALLOWANCES):
                     message = "%s: %s after %.0fs (--topic-seconds %g; ran to the end in-process)" % (
-                        slug, TIMED_OUT, topic_seconds_used, topic_limit)
+                        slug, TIMED_OUT, topic_seconds_used, _limit_for([slug], topic_limit, harness.TOPIC_ALLOWANCES))
                     print("  " + message)
                     harness.FAILURES.append(message)
 

@@ -63,3 +63,40 @@ fails a topic that ran past `--topic-seconds` as timed out after it ends.
 order per directory until a file under it changes, instead of reading and checking every mod each time. A game
 year calls `load_civ` thousands of times; measure the call with
 `python3 -c "import time; from sim.engine.data import load_civ; t=time.time(); [load_civ('rome_100ad') for _ in range(200)]; print(time.time()-t)"`.
+
+## Step 3: the seven topics that timed out on the full `--slow` run (branch `speed-slow-timeouts`)
+
+Each run alone (`--slow --only T --jobs 1`, warm cache, otherwise idle machine); the full run's timeouts were load
+plus the cold cache, except where noted. Seconds, before to after:
+
+- `farm_edges` 32 alone: load only, no change.
+- `cli_in_process` 198 to 67. The sequence check (two civilisations, save then load, first game again) ran each of
+  four calls twice (in-process, subprocess): it now steps one year rather than two, resumes with a step and a state,
+  and uses `han_china_100ad` and `norse_900ad` (a Rome step costs about 15 s, these a few seconds); the byte-identity
+  check uses `norse_900ad`. Broke `start_fresh` and `restore` in `cli_in_process.py` (leak every module global): the
+  sequence check fails, restored.
+- `real_output` 164 to 32 plus `real_output_cheaper_entry` 68 (split by subject, helpers in `real_output_helpers.py`, 17
+  checks in all as before), and the producers-enter wait is 3 years rather than 5 (2 years fails). Broke
+  `real_output_hours` (adds a count of done nodes) and `admit_techniques` (no entries admitted): both topics fail on
+  the checks they own, restored.
+- `economy_bronze_market_price` 175: eighteen years of `economy.step` by hand, about nine seconds each, mostly
+  `_good_routes` in `sim/economy/merchants.py` (profile: `merchants.py:199` 24 s of 73 s cumulative over three years).
+  It still fails its own check (the 502 ratio, worst traded 3.74 in year 10), which is the open behaviour. Years kept;
+  the topic declares `TOPIC_SECONDS` (see below) until a year costs a fraction of that. Engine fix wanted, not made.
+- `hash_seed_order` 197 cold (about 105 once `backing_margin` is warm): two fresh openings and six-year spin-ups side
+  by side, which is the subject. Declares `TOPIC_SECONDS = 360`.
+- `full_length_opening_checks` is now one topic per civilisation (`test_full_length_opening_checks_<name>.py`, shared
+  `full_length_opening_support.py`), so the runner places five side by side; the original keeps the expected-failure
+  table checks and a check that every civilisation has its topic. On this checkout the shipped openings are stale
+  (a rome run was still computing its opening after five minutes), so each topic is minutes cold.
+- `spin_up_money_supply` reads its 40-year trace through the cache that holds the opening checks' traces
+  (`opening_traces`, keyed on the opening and the source); cold it is 40 years of stepping (about 15 minutes), warm a
+  cache read (tried at two years: 38 s cold, 0.2 s warm, equal rows). Declares `TOPIC_SECONDS = 1800`.
+
+The runner reads a module-level `TOPIC_SECONDS` in a topic file (`sim/tests/discovery.py`); such a topic runs alone and
+under the larger of that and `--topic-seconds`. Only for a topic whose subject is a long run, with the reason and the
+retirement in the comment next to it.
+
+To make the two spin-up topics fast: regenerate the openings (`simulator.py openings --prune`), and make `openings`
+also ship the 40-year money trace (`opening_checks_run.TRACE_CACHE_DIRECTORY` key with `years` 40; today it ships only
+the thirty-year trace the opening checks use).
