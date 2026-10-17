@@ -22,8 +22,8 @@ Within the farm model:
 - Soils (`agriculture.py`): chernozem, desert, arctic and mountain are defined, but the engine uses
   only `DEFAULT_SOIL` (`agriculture_labour.py`), so soil never varies. There is no alluvial, podzol or
   steppe soil and no heavy clay that needs a heavy plough.
-- Rotations: `NILE_FLOOD_RECESSION` (near-zero fallow) is a technique adopted by technology, never
-  tied to floodplain land; outside tests nothing selects it. The tile model gives river land no
+- Rotations: `NILE_FLOOD_RECESSION` (near-zero fallow) is defined in `agriculture.py`, but outside
+  tests nothing selects it, and nothing ties it to floodplain land. The tile model gives river land no
   fallow on its own. Each model handles the Nile its own way.
 - Crops: `RICE` is defined but no tree node adopts it; there is no maize (Complaint 489) and no
   irrigated wheat separate from dry wheat.
