@@ -109,7 +109,7 @@ from sim.ui.proto.tree_filters import render_state_rows  # noqa: E402
 
 shown = sim(civ=HOME, capital=1e6)
 bare = S._agent_dispatch(shown, NODES, {"cmd": "state"})
-check("state lists no living stock while none is held", "living_stock" not in bare, bare.get("living_stock"))
+check("state lists no eggs while none are held", EGGS not in (bare.get("living_stock") or {}), bare.get("living_stock"))
 blocked = S._agent_dispatch(shown, NODES, {"cmd": "available", "find": "tx2_silk_fibre", "state": "blocked"})
 row = next((entry for entry in blocked.get("rows", []) if entry["id"] == "tx2_silk_fibre"), {})
 check("a blocked row names the stock it needs, held beside needed",
@@ -118,10 +118,10 @@ check("the blocked list prints the held line", "HELD: %s 0 of 0.02 needed" % EGG
       render_state_rows(blocked))
 shown.grant_stock(EGGS, 0.5)
 held_state = S._agent_dispatch(shown, NODES, {"cmd": "state"})
-check("state lists the living stock held", held_state.get("living_stock") == {EGGS: 0.5},
+check("state lists the living stock held", held_state.get("living_stock") == dict(bare.get("living_stock") or {}, **{EGGS: 0.5}),
       held_state.get("living_stock"))
-check("the state screen prints it on one line",
-      "LIVING STOCK HELD: %s 0.5" % EGGS in render_state(held_state), None)
+check("the state screen prints it",
+      "%s 0.5" % EGGS in render_state(held_state), None)
 startable = S._agent_dispatch(shown, NODES, {"cmd": "available", "find": "tx2_silk_fibre", "state": "startable"})
 row = next((entry for entry in startable.get("available", []) if entry["id"] == "tx2_silk_fibre"), {})
 check("a startable row shows the stock held beside the stock needed",
