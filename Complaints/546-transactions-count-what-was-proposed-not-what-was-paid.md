@@ -1,6 +1,6 @@
 # Transactions count what was proposed, not what was paid
 
-**Status:** open - all three defects fixed and tested; the settled-fixture topics `economy_service_lives` and `economy_vessel_price_fixture` fail since the producers fix, awaiting a decision (see below)
+**Status:** open - all three defects fixed and tested; producers now ask for working-capital loans; `economy_vessel_price_fixture` (dug input price swing) still fails
 
 Found by an outside reviewer reading the repository; each point checked against the code. Money
 conservation holds (the book balances), which is why the suite passes; these are about which
@@ -31,8 +31,10 @@ Regression tests: `sim/tests/test_economy_delivered_not_proposed.py`.
 
 ## Open
 
-- With affordability applied after smoothing, the test fixture's smelters run short of cash and their
-  output swings for decades (`python3 -m sim.tests --only economy_service_lives,economy_vessel_price_fixture`
-  fails three checks that read a settled fixture). Decide whether working capital should come from credit
-  or the settled-fixture bounds should move.
+- At a year's close a producer whose cash cannot pay the smoothed runs next year's plan will try asks for a
+  one-year loan (purpose `working capital`, no plant) at up to the yearly return of those runs. It takes the
+  producer's single loan slot only when it asks no expansion loan.
+- `economy_vessel_price_fixture` still fails: the fixture's dug clay price crashes in one year and recovers
+  (`python3 -m sim.tests --only economy_vessel_price_fixture`). The diggers' cash is not what limits them
+  there; their runs swing between idle and busy with the price they expect.
 - Re-measure the spin-up (473); it is a long command and has not been run.

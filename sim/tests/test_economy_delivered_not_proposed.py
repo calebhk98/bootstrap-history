@@ -8,7 +8,7 @@ import types
 import unittest
 from unittest import mock
 
-from sim.economy import producers, year_goods
+from sim.economy import producers, producers_close, year_goods
 from sim.economy.accounts import Book
 from sim.economy.market_memory import MarketMemory
 from sim.economy.types import EDGE_MINT, Bid, Fill, GoodsMove, LabourResult, Offer, Transfer
@@ -67,6 +67,29 @@ class DeliveredVolumeTests(unittest.TestCase):
         self.assertLess(delivered, ledger.clearings[0].quantity)
         self.assertAlmostEqual(record.volumes["timber|area"], delivered)
         self.assertAlmostEqual(record.memory.volume_weights["timber|area"], delivered)
+
+
+class WorkingCapitalLoanTests(unittest.TestCase):
+    def test_a_cash_short_producer_with_a_margin_asks_for_a_one_year_loan_for_the_runs_it_could_not_pay(self):
+        producer = farmer(last_runs=10.0)
+        result = producers_close.close_year(producer, FARM, 100.0, 70.0, farm_view(2.0, cash=14.0), worked_runs=10.0)
+        request = result.loan_request
+        self.assertIsNotNone(request)
+        self.assertEqual(request.purpose, producers_close.WORKING_CAPITAL_PURPOSE)
+        self.assertEqual(request.years, 1.0)
+        self.assertGreater(request.amount, 0.0)
+        self.assertGreater(request.maximum_rate, 0.0)
+        self.assertEqual(result.expansion_runs, 0.0)         # it buys no plant
+
+    def test_a_producer_whose_runs_would_not_pay_asks_for_nothing(self):
+        producer = farmer(last_runs=10.0)
+        result = producers_close.close_year(producer, FARM, 100.0, 70.0, farm_view(0.1, cash=14.0), worked_runs=10.0)
+        self.assertIsNone(result.loan_request)
+
+    def test_a_producer_with_cash_for_its_runs_asks_for_nothing(self):
+        producer = farmer(last_runs=10.0)
+        result = producers_close.close_year(producer, FARM, 100.0, 70.0, farm_view(2.0, cash=1e6), worked_runs=10.0)
+        self.assertIsNone(result.loan_request)
 
 
 if __name__ == "__main__":
