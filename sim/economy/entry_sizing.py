@@ -2,7 +2,8 @@
 than the trade he can see in that good's market, nor one his inputs' and plant goods' markets could not
 supply: a smelter planned for twenty runs that can buy a few kilograms of clay never gets its plant. Where
 a market carried nothing last year there is no trade to see, and the newcomer starts on a small trial
-share of the gap. What the size leaves out is not stored: the gap is still there next year and is sized
+share of the gap. Bids that went unfilled at prices the newcomer's cost would meet count with the trade,
+so a market starved by makers too small to supply it can grow. What the size leaves out is not stored: the gap is still there next year and is sized
 again, against a market that has grown with the newcomer's own orders."""
 import math
 from typing import Callable, Mapping, Optional
@@ -44,19 +45,20 @@ def _runs_supported(volume: Optional[float], per_run: float, trial_runs: float) 
 
 
 def sized_runs(recipe: Recipe, good: GoodId, runs_by_gap: float, whole_gap_runs: float, tile: TileId,
-               traded: Optional[Traded], works_at: Optional[TileId] = None) -> float:
+               traded: Optional[Traded], works_at: Optional[TileId] = None, unfilled: float = 0.0) -> float:
     """Yearly runs to build: the share of the gap, held to what the good's market (at `tile`) traded and to
-    what the markets of the recipe's inputs and plant goods carried where it is worked (`works_at`, else `tile`)."""
+    what the markets of the recipe's inputs and plant goods carried where it is worked (`works_at`, else `tile`).
+    `unfilled` is the quantity bids at or above the newcomer's full cost left unfilled: it counts with the trade."""
     if traded is None:
         return runs_by_gap
     trial_runs = ENTRY_SHARE_OF_UNTRADED_DEMAND * whole_gap_runs
     volume = traded(good, tile)
     if volume is None:
         market_runs = math.inf
-    elif volume > 0.0:
-        market_runs = ENTRY_SHARE_OF_TRADED_VOLUME * volume / recipe.outputs[good]
     else:
-        market_runs = trial_runs
+        market_runs = ENTRY_SHARE_OF_TRADED_VOLUME * (volume + unfilled) / recipe.outputs[good]
+        if volume <= 0.0:
+            market_runs = max(trial_runs, market_runs)
     supply_runs = min((_runs_supported(traded(input_good, tile if works_at is None else works_at), per_run, trial_runs)
                        for needs in (recipe.inputs, recipe.plant_goods) for input_good, per_run in needs.items()),
                       default=math.inf)
