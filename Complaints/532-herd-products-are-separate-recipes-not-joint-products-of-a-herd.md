@@ -24,7 +24,7 @@ modelled as research (Complaint 365) with no breeding or purchase (366).
 A good made jointly is mispriced when made alone (the schema's own example is lead and silver from
 galena). Here wool can be expanded without more hides or meat, tallow and parchment
 (`parchment_sheet` takes `hide_kg`) are cheap in societies with few animals, and a Mexica start with
-no sheep or cattle has wool, hides and tallow at the same cost as Rome (see 531 for tallow and light).
+no sheep or cattle can still make wool, hides and tallow from the same recipes (see 531 for tallow and light).
 
 ## What it would take
 
