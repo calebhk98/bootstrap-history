@@ -44,3 +44,6 @@ with the test kept honest.
   moves with every change elsewhere, as `economy_innovator_pricing` does (553): the early price over cost is a
   scarcity price while supply catches up, and it depends on when entry and expansion arrive. The test topic
   also runs over the time limit. Open; not loosened.
+- `real_output` passes on `origin/main` and fails on `economy-accounting-and-speed`: the checks that a new
+  entry's producer lowers the posted price, the founder's bill and raises cleared quantity and real output.
+  Being bisected.
