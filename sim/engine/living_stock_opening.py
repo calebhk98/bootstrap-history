@@ -12,6 +12,11 @@ from .living_stock_growth import kilograms_per_unit
 
 class LivingStockOpeningMixin:
 
+    @property
+    def society_herds(self):
+        """{stock material: units} of the held herd that belongs to the society's producers, not the founder."""
+        return self.state.economy.society_herds
+
     def opening_herd_units(self):
         """{stock material: units} the herd producers keep, before the pasture holds it down."""
         production = production_data()
@@ -30,3 +35,4 @@ class LivingStockOpeningMixin:
         scale = min(1.0, carried / weight) if weight > 0.0 else 1.0
         for material, units in sorted(kept.items()):
             self.grant_stock(material, units * scale)
+            self.society_herds[material] = units * scale
