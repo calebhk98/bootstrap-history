@@ -154,6 +154,14 @@ class InformationLagTests(unittest.TestCase):
                              "coin", 0.0, lag_years=lag)
         self.assertEqual(who.expected_prices[("salt", "far")], 10.0)     # it sees the first year, not the second
 
+    def test_a_market_whose_area_is_gone_from_the_map_is_not_heard_from(self):
+        who = Merchant("m1", "a", "owner", 100.0)
+        merchants.close_year(who, {("salt", "gone"): 10.0, ("salt", "near"): 4.0}, {}, 100.0, {},
+                             lambda good, tile: "near", "coin", 0.0,
+                             lag_years=lambda good, area: 0 if area == "near" else None)
+        self.assertNotIn(("salt", "gone"), who.expected_prices)
+        self.assertEqual(who.expected_prices[("salt", "near")], 4.0)
+
     def test_a_near_price_is_learned_at_once(self):
         who = Merchant("m1", "a", "owner", 100.0)
         merchants.close_year(who, {("salt", "near"): 10.0}, {("salt", "near"): 5.0}, 100.0, {}, lambda good, tile: "near",

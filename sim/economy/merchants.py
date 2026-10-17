@@ -332,17 +332,21 @@ def close_year(merchant: Merchant, prices: Mapping[Tuple[GoodId, AreaId], float]
                held_stock: Mapping[Tuple[GoodId, TileId], float],
                area_of: Callable[[GoodId, TileId], AreaId], currency: CurrencyId,
                interest_rate: float, ordered: Optional[Tuple[Sequence, Sequence]] = None,
-               lag_years: Callable[[GoodId, AreaId], int] = lambda good, area: 0) -> Tuple[Transfer, ...]:
+               lag_years: Callable[[GoodId, AreaId], Optional[int]] = lambda good, area: 0) -> Tuple[Transfer, ...]:
     """Update expectations from this year's clearing prices and volumes (by (good, area)), then settle
     the year's profit (wealth, cash plus stock at expected prices, above the capital base). While
     trading earns more on its capital than the interest rate, the owner takes a share and the rest
     becomes capital; otherwise the owner takes all of it. A loss shrinks the capital. `ordered` is the
     sorted items of `prices` and of `volumes`, for a caller closing many merchants on the same year.
-    A price from a market `lag_years(good, area)` years of news away is learned that many years late."""
+    A price from a market `lag_years(good, area)` years of news away is learned that many years late; a market
+    with no lag (None: its area no longer exists in the current map) is not heard from."""
     if ordered is None:
         ordered = (sorted(prices.items()), sorted(volumes.items()))
     for key, value in ordered[0]:
-        news = merchants_transit.heard(merchant, key, value, lag_years(*key))
+        lag = lag_years(*key)
+        if lag is None:
+            continue
+        news = merchants_transit.heard(merchant, key, value, lag)
         if news is not None:
             _expect(merchant.expected_prices, key, news)
     for key, value in ordered[1]:

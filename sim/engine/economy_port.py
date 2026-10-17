@@ -39,6 +39,10 @@ class EconomyPort:
         """The tile the acting seat buys and sells on: where its household operates from."""
         return self._sim.labour.base_tile()
 
+    def producer_capacities(self):
+        """[(recipe id, capacity in runs)] of every producer in the opened agent economy; empty before it opens."""
+        return self.agent.producer_capacities()
+
     def agent_prices_at(self, tile=None):
         """The agent economy's price of each good on a tile (the acting one by default) in coin, or None while it
         opens: what a buyer or seller there faces. A good the economy has no market for is absent."""

@@ -110,6 +110,11 @@ class AgentEconomy(TilePricesMixin):
         """The saved opening's first-stage result (see `_settle`); empty before the opening is saved."""
         return dict((self.stored.get("record") or {}).get("spin_up_result") or {})
 
+    def producer_capacities(self):
+        if not self.opened():
+            return []
+        return [(producer.recipe_id, producer.capacity_runs) for producer in economy_api.all_producers(self.economy())]
+
     def opened(self) -> bool:
         return self._economy is not None or "record" in self.stored
 

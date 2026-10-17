@@ -4,7 +4,6 @@ A recipe that is a herd's yearly turn states `herd_stock` ({stock material: unit
 economy's opening sizes its producers to the opening's demand; the ledger's living stock starts as those runs times
 what a run keeps, held to the pasture the held tiles carry. One figure, not two: nothing here names a species.
 """
-from sim.economy import api as economy_api
 from sim.geography.api import pasture_capacity_kg, tiles_held
 from sim.labour.api import production_data
 
@@ -15,14 +14,11 @@ class LivingStockOpeningMixin:
 
     def opening_herd_units(self):
         """{stock material: units} the herd producers keep, before the pasture holds it down."""
-        agent = self.economy.agent
-        if agent is None or not agent.opened():
-            return {}
         production = production_data()
         kept = {}
-        for producer in economy_api.all_producers(agent.economy()):
-            for material, units in (production.get(producer.recipe_id, {}).get("herd_stock") or {}).items():
-                kept[material] = kept.get(material, 0.0) + producer.capacity_runs * units
+        for recipe_id, capacity_runs in self.economy.producer_capacities():
+            for material, units in (production.get(recipe_id, {}).get("herd_stock") or {}).items():
+                kept[material] = kept.get(material, 0.0) + capacity_runs * units
         return kept
 
     def grant_opening_herds(self):

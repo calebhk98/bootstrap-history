@@ -26,6 +26,13 @@ def held_value(record, agent, good, price):
     return sum(record.book.holdings(agent)["goods"].get(good, {}).values()) * (price or 0.0)
 
 
+def price_at_capital(economy, good):
+    """The good's price at the capital, or None while it has no market (a good nothing makes has no price)."""
+    if good not in economy.area_map.goods():
+        return None
+    return economy.view().price(good, economy.area_map.area_of(good, economy.setup.capital_tile))
+
+
 def run(civ):
     game = S.Sim(NODES, ORDER, random.Random(1), events=True, manual=False, civ=S.load_civ(civ))
     game.goal, game.done_year = GOAL, {}
@@ -35,8 +42,7 @@ def run(civ):
     for year in range(YEARS + 1):
         if year:
             game.step()
-        view = economy.view()
-        prices = {good: view.price(good, economy.area_map.area_of(good, setup.capital_tile)) for good in (GOLD, SILVER)}
+        prices = {good: price_at_capital(economy, good) for good in (GOLD, SILVER)}
         if prices[GOLD] and prices[SILVER]:
             ratios.append(prices[GOLD] / prices[SILVER])
     return economy, ratios
@@ -49,9 +55,8 @@ for civ_id in CIVILISATIONS:
     print("MEASURE %s: gold to silver price ratio at the capital, median %.2f over %d years with both priced "
           "(min %.2f, max %.2f)" % (civ_id, median, len(ratios), min(ratios, default=float("nan")),
                                      max(ratios, default=float("nan"))))
-    view = economy.view()
     for good in (GOLD, SILVER):
-        price = view.price(good, economy.area_map.area_of(good, setup.capital_tile))
+        price = price_at_capital(economy, good)
         print("MEASURE %s: %s state holds %.0f in value, households hold %.0f"
               % (civ_id, good, held_value(record, setup.state_agent, good, price),
                  sum(held_value(record, cohort.agent_id, good, price) for cohort in record.cohorts.values())))
