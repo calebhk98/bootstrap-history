@@ -55,7 +55,8 @@ def paying_tonnes(world: Any, source: str, destination: str, material: str, term
 
 def gaining_routes(world: Any, material: str, sources: Sequence[str],
 				   destinations_of: Callable[[str], Sequence[str]]) -> Iterator[Tuple[str, str, Dict[str, float]]]:
-	"""(source, destination, terms) for every pair of this material that gains, in source then destination order.
+	"""(source, destination, terms) for every pair of this material that gains, in source then destination order,
+	into a destination that has a market for it.
 	A pair gains only if the destination's price exceeds the source's by at least the share lost on the way, so
 	destinations are found by a sorted search on price and carriage is priced for those alone."""
 	price_of: Dict[str, float] = {}
@@ -81,5 +82,5 @@ def gaining_routes(world: Any, material: str, sources: Sequence[str],
 			if destination == source:
 				continue
 			terms = route_terms(world, source, destination, material)
-			if terms is not None and terms["gain"] > 0.0:
+			if terms is not None and terms["gain"] > 0.0 and world.has_market(material, destination):
 				yield source, destination, terms
