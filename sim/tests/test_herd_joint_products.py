@@ -98,11 +98,17 @@ class HerdRecipesMakeProductsTogether(unittest.TestCase):
             self.assertEqual(row["grows_on"], "pasture")
             self.assertGreater(len(row["source"]), 40)
 
-    def test_meat_feeds_people_less_than_wheat_and_fat_more(self):
+    def test_herd_stock_is_the_live_weight_of_the_head_a_run_keeps(self):
+        for key, (stock, _products) in HERDS.items():
+            self.assertAlmostEqual(self.production[key]["herd_stock"][stock],
+                                   HERD_HEAD * self.rows[stock]["live_weight_kg_per_head"])
+
+    def test_meat_feeds_people_less_than_wheat_and_tallow_is_no_food(self):
         with open(os.path.join(ROOT, "data", "world", "needs.json"), encoding="utf-8") as handle:
             goods = json.load(handle)["goods"]
         meat = goods["meat_kg"]["satisfies"]["food"]
-        self.assertTrue(0.0 < meat < goods["wheat_kg"]["satisfies"]["food"] < goods["fat_kg"]["satisfies"]["food"])
+        self.assertTrue(0.0 < meat < goods["wheat_kg"]["satisfies"]["food"])
+        self.assertNotIn("food", goods["fat_kg"]["satisfies"])
 
 
 class SocietyWithoutTheAnimalCannotMakeItsProducts(unittest.TestCase):
@@ -130,14 +136,6 @@ class SocietyWithoutTheAnimalCannotMakeItsProducts(unittest.TestCase):
             if any(good in HERD_PRODUCTS for good in entry["outputs"]):
                 gate = entry.get("requires_node", None)
                 self.assertTrue(gate is not None and gate not in mexica_techs, key)
-
-    def test_civilisations_with_herds_hold_the_stock_their_gates_need(self):
-        for name, civ in self.civilisations.items():
-            for key, (stock, _products) in HERDS.items():
-                gate = self.production[key]["requires_node"]
-                if gate in civ["starting_techs"]:
-                    needed = self.nodes[gate]["holds"][stock]
-                    self.assertGreaterEqual((civ.get("opening_stock") or {}).get(stock, 0.0), needed, (name, key))
 
 
 if __name__ == "__main__":

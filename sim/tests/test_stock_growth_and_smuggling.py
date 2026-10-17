@@ -133,13 +133,13 @@ check("...and the hours press on the labour market",
 
 # ---- pasture limits the increase ------------------------------------------------------------------
 _shipped_capacity = living_stock_growth.pasture_capacity_kg
-living_stock_growth.pasture_capacity_kg = lambda tile, wild, world_map: 10500.0
+living_stock_growth.pasture_capacity_kg = lambda tile, wild, world_map: 10500.0 if tile == place else 0.0
 tight = Game()
 tight.grant_stock(HERD, 10000.0)
 tight.step_living_stock()
 check("a pasture that carries 500 kg more lets the herd grow by 500 kg less its loss",
       abs(tight.stock_held(HERD) - (10500.0 - 10000.0 * rates["annual_loss"])) < 1e-6, tight.stock_held(HERD))
-living_stock_growth.pasture_capacity_kg = lambda tile, wild, world_map: 9000.0
+living_stock_growth.pasture_capacity_kg = lambda tile, wild, world_map: 9000.0 if tile == place else 0.0
 full = Game()
 full.grant_stock(HERD, 10000.0)
 full.step_living_stock()

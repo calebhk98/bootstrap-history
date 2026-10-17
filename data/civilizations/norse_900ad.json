@@ -275,12 +275,6 @@
     "med_trepanation": "Norse leech-craft worked with smiths tools and bone needles; the Mediterranean kit named as prerequisite is gated behind kt_mediterranean_crafts.",
     "med_wound_suturing": "Norse leech-craft sewed wounds with bone needles and linen or sinew; the Mediterranean kit named as prerequisite is gated behind kt_mediterranean_crafts."
   },
-  "opening_stock": {
-    "cattle_kg": 200000,
-    "goat_kg": 50000,
-    "sheep_kg": 100000
-  },
-  "opening_stock_basis": "Initial conditions: Old World societies kept sheep, goats and cattle from long before this date. The quantities are live weight, estimated, and stand for the herds of the society's modelled tiles, not a count (confidence D); pasture limits how far they grow.",
   "starting_techs": [
     "fud_cattle_herd",
     "fud_goat_herd",
