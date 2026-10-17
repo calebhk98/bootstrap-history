@@ -36,3 +36,25 @@ Topics (warm start, one at a time, `--jobs 1`): `actor_treasury` 178 s to 18 s, 
 `one_goods_market` 260 s to 34 s, `living_stock` over 95 s to 71 s, `early_playtest` 54 s after. `allocate`
 cold 141 s of which a variant game (farm changed before the first step, so its own spin-up) is about 54 s; its
 check needs the unopened start, so it stays. Not re-measured: the rest of the list.
+
+## Step 2: warm measurement (4 cores shared with other agents, `--jobs 2`, so rough)
+
+Command: `python3 -m sim.tests --slow --jobs 2 --timing --only <three to five topics>`, after one warm
+`--only state_arrears`. Seconds, warm. Over 60 s: `farm_edges` 120, `cli_in_process` 114, `economy_bronze_market_price`
+102 (also fails a check: the 502 bronze ratio, not a time failure), `interface_honesty` 92, `shipped_opening_game` 81,
+`affordability_warning` 80, `allocate` 67 (needs the unopened start), `round8g_display` 57, `home_cargo_price` 134 alone.
+Over 30 s: `fog_leaks_and_typed_wording` 49, `regional_weather_wiring` 43, `one_goods_market` 42, `early_playtest` 42,
+`complaint_320_save_round_trip` 41, `cli_menu_options_and_pretty` 40, `people_attrition_scholars` 41, `project_pacing` 40,
+`actor_treasury` 40, `run_reproducibility` 38, `opening_floor_and_thin_trades` 36. Every other topic in the list is under 35 s.
+`real_output` 78 s alone (it timed out only under load). `affordability_and_credit` crashes at about 66 s with
+`KeyError: 'fud_grain_storage_silos'` in its last section (`stopped.active[PACED]`): a behaviour failure, open.
+`full_length_opening_checks` and `spin_up_money_supply` run full spin-ups and need `openings/` regenerated or their subject.
+
+Shared cause found: a step of an opened game spends about two thirds of its time in `load_civ`, which calls
+`get_ordered_mods` and `check_declared_dependencies` (`sim/engine/mods_ids.py`) on every call, thousands of times a year
+(profile of one `home_cargo_price` step: 4610 `load_civ` calls, 33 of 51 s). Remembering `check_declared_dependencies` per
+mod directory and mtime cut that topic's steps from about 30 s to about 10 s with no other change (engine fix, not made here).
+
+Done: `home_cargo_price` plays three years rather than five (one year before the book answers, no step after the last
+year read), 134 s to 84 s. The sequential run (`--jobs 1`, or a single topic) cannot stop a topic in-process; it now
+fails a topic that ran past `--topic-seconds` as timed out after it ends.
