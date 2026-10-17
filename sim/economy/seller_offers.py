@@ -93,17 +93,24 @@ def strategic_offers(setup, record, view, bids: Sequence[Bid], offers: Sequence[
         cost = unit_cost(setup, record, view, offer)
         if cost is None:
             continue
-        if stands_for_many(record, offer):
-            continue
         value = unit_value(offer, cost)
         rivals = offers[:index] + offers[index + 1:]
         ask = max(offer.reservation_price, 0.0)
-        limit = cost * substitution_markup(setup, offer)
+        crowd = stands_for_many(record, offer)
+        # a crowd of price takers earns no markup: the dearest ask it holds when nothing sells is its cost
+        limit = cost if crowd else cost * substitution_markup(setup, offer)
         if ask > limit and math.isfinite(limit):
             sold, _price = seller_pricing.sold_and_price(book, rivals, offer, ask, last_price, buyers)
             if sold < IDLE_SALE_SHARE * offer.quantity:
                 offers[index] = dataclasses.replace(offer, reservation_price=limit)
                 continue
+        if crowd:
+            # unsold stock at an ask above cost: the crowd marks down as its small members would, never below cost
+            if ask > cost and math.isfinite(cost):
+                sold, _price = seller_pricing.sold_and_price(book, rivals, offer, ask, last_price, buyers)
+                if sold < offer.quantity:
+                    offers[index] = dataclasses.replace(offer, reservation_price=max(cost, ask * (1.0 - UNSOLD_ASK_MARKDOWN_SHARE)))
+            continue
         step = UNSOLD_ASK_MARKDOWN_SHARE * (ask if ask > 0.0 else max(last_price or 0.0, 0.0))
         floor = ask * (1.0 - UNSOLD_ASK_MARKDOWN_SHARE)
         choice = seller_pricing.best_reservation(
