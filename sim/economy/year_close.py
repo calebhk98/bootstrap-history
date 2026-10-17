@@ -123,6 +123,8 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map) -> None:
         paid = ownership.spread(record, closed.transfers, cohorts_by_tile)
         record.book.transfer_many(paid)
         worn = producer.capacity_runs - closed.producer.capacity_runs
+        if worn > 0.0:
+            ledger.plant_worn[producer_id] = worn
         if worn > 0.0 and recipe.plant_life_years > 0.0 and revenue > costs:
             record.worn_runs[producer_id] = worn    # a producer covering its costs rebuilds what wore out
         for transfer in paid:

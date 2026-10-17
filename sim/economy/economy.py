@@ -32,6 +32,7 @@ from .year_close import (check_money, close_agents, dispatch_merchants, money_ta
                          remember_basket_price_level, wear_and_spoilage)
 from .year_goods import add_orders, clear_goods, cohort_orders, merchant_orders, state_orders
 from .year_labour import clear_labour, held_share_by_area, labour_offers, outside_option_by_tile
+from .year_accounts import YearAccounts, build as build_accounts, stocks as stocks_held
 from .year_ledger import YearLedger
 from .collection_paused import collection_paused
 from .replaced import replaced
@@ -55,6 +56,7 @@ class YearOutcome:
     conservation_residual: float = 0.0
     state_cash: float = 0.0
     money_audit: Optional[MoneyAudit] = None       # where money entered and left this year
+    accounts: Optional[YearAccounts] = None        # production, use, consumption, investment, stocks; food eaten; real wage
 
 
 def plant_worth_ratio(yearly_return: float, rate: float, life_years: float) -> float:
@@ -133,6 +135,7 @@ class Economy:
         self.__dict__.pop("_port_shares", None)
         self.follow_flows()
         record.book.start_year()
+        stocks_at_start = stocks_held(record.book)
         ledger = YearLedger(import_accounts=frozenset(inputs.import_accounts), export_accounts=frozenset(inputs.export_accounts))
         self._follow_population(inputs)
         self._follow_yields(inputs)
@@ -193,7 +196,7 @@ class Economy:
         wear_and_spoilage(setup, record)
         level = remember_basket_price_level(setup, record)
         record.memory.year += 1
-        return self._outcome(ledger, level, extraction)
+        return self._outcome(ledger, level, extraction, stocks_at_start)
 
     # ---- the year's pieces ------------------------------------------------------------------
     def _follow_population(self, inputs: YearInputs) -> None:
@@ -376,7 +379,7 @@ class Economy:
                                    for good, per_run in sorted(recipe.plant_goods.items()) if per_run * runs * share > 0.0])
             record.producers[producer_id] = producers.with_capacity(producer, producer.capacity_runs + runs * share)
 
-    def _outcome(self, ledger: YearLedger, level: float, extraction) -> YearOutcome:
+    def _outcome(self, ledger: YearLedger, level: float, extraction, stocks_at_start) -> YearOutcome:
         record, setup = self.record, self.setup
         money = setup.currency_id
         wages: Dict[str, list] = {}
@@ -397,10 +400,12 @@ class Economy:
         output: Dict[str, float] = {}
         for (_agent, good), quantity in ledger.output.items():
             output[good] = output.get(good, 0.0) + quantity
-        return YearOutcome(year=record.memory.year, basket_price_level=level, prices=national_prices(record),
+        prices = national_prices(record)
+        return YearOutcome(year=record.memory.year, basket_price_level=level, prices=prices,
                            wages=mean_wages, rate=record.memory.rates.get(money, 0.0),
                            money_supply=record.book.money_supply(money), hunger_by_tile=hunger,
                            output=dict(sorted(output.items())), idle_hours=idle, vacant_hours=vacant, hired_hours=hired,
                            wage_floor_per_hour=ledger.wage_floor_per_hour, extraction=extraction,
                            conservation_residual=check_money(record), money_audit=year_report(record),
-                           state_cash=record.book.balance(setup.state_agent, money))
+                           state_cash=record.book.balance(setup.state_agent, money),
+                           accounts=build_accounts(setup, record, ledger, stocks_at_start, prices, mean_wages))

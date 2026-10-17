@@ -1422,6 +1422,11 @@ def main():
                            "(default: the good backing the currency)")
     subparser.add_argument("--payback", action="store_true", help="also list nodes whose build cost is repaid "
                            "suspiciously fast by net earnings (a diagnostic; it changes nothing)")
+    subparser.add_argument("--accounts", action="store_true", help="print each year's accounts instead of the health "
+                           "figures: production, use, consumption, investment and stock per good, food eaten against "
+                           "need by tile and cohort, the real wage against the opening's basket (Complaint 554)")
+    subparser.add_argument("--session", default=None, help="with --accounts: resume this save instead of a fresh game "
+                           "(it is not written back)")
     subparser = sub.add_parser("baseline-ensemble", help="play several games of a civilisation with no player and store "
                                "their distributions (population, wages, literacy, territory, technologies held by year) "
                                "for the divergence screen to compare against; each game takes a long time")

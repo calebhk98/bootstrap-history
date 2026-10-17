@@ -31,6 +31,7 @@ class YearLedger:
     imports_paid: Dict[Tuple[AgentId, GoodId], float] = field(default_factory=dict)       # money paid to foreign partners
     exports_received: Dict[Tuple[AgentId, GoodId], float] = field(default_factory=dict)   # money received from them
     plant_spend: Dict[AgentId, float] = field(default_factory=dict)    # paid for plant goods, a build not a running cost
+    plant_worn: Dict[AgentId, float] = field(default_factory=dict)     # runs of capacity that wore out this year
     unmet_demand: Dict[Tuple[GoodId, str], float] = field(default_factory=dict)   # (good, area): quantity
     bids_by_market: Dict[Tuple[GoodId, str], list] = field(default_factory=dict)  # (good, area): the year's bids
     import_accounts: frozenset = frozenset()   # accounts whose sales are goods that crossed the border (customs)
