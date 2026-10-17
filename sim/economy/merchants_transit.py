@@ -10,6 +10,7 @@ News of a distant market travels the same way: the merchant hears a price as man
 to that market is held beyond the first.
 """
 import math
+import weakref
 from dataclasses import dataclass
 from typing import List, Mapping, Tuple
 
@@ -61,10 +62,28 @@ def advance(merchant, specs: Mapping[GoodId, GoodSpec]) -> Tuple[GoodsMove, ...]
     return tuple(moves)
 
 
+_years_between: "weakref.WeakKeyDictionary" = weakref.WeakKeyDictionary()
+
+
+def years_between(carriage, from_tile: TileId, to_tile: TileId) -> int:
+    """`years_held` of the days between two tiles, kept per carriage table (its days never change)."""
+    try:
+        memo = _years_between.get(carriage)
+        if memo is None:
+            memo = _years_between[carriage] = {}
+    except TypeError:                      # a carriage that cannot be weakly held is not memoised
+        return years_held(carriage.days_between(from_tile, to_tile))
+    key = (from_tile, to_tile)
+    years = memo.get(key)
+    if years is None:
+        years = memo[key] = years_held(carriage.days_between(from_tile, to_tile))
+    return years
+
+
 def news_lag(carriage, from_tile: TileId, to_tile: TileId) -> int:
     """Years a price at `to_tile` is old when it reaches `from_tile`, beyond the year every price is
     already old when the merchant acts on it: the years the haul between them is held, less the first."""
-    return years_held(carriage.days_between(from_tile, to_tile)) - 1
+    return years_between(carriage, from_tile, to_tile) - 1
 
 
 def heard(merchant, key, price: float, lag: int):

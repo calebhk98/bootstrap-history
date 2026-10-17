@@ -173,6 +173,14 @@ def _candidate_routes(merchant, view, carriage, area_map, held_stock, specs, int
             if by_area is None:
                 by_area = expected_by_good[good] = {}
             by_area[area_id] = price
+    news_current_at: Dict[TileId, bool] = {}     # whether last year's price at a tile has reached the merchant's home
+
+    def news_current(tile: TileId) -> bool:
+        current = news_current_at.get(tile)
+        if current is None:
+            current = news_current_at[tile] = merchants_transit.news_lag(carriage, merchant.home_tile, tile) == 0
+        return current
+
     for good in sorted(set(specs) & set(area_map.goods())):
         areas = area_map.areas(good)
         if len(areas) < 2:
@@ -186,7 +194,7 @@ def _candidate_routes(merchant, view, carriage, area_map, held_stock, specs, int
         # an expectation stands in for last year's price where the merchant has one; without one it sees
         # last year's price only where the news has had time to reach it, and nothing of a farther market
         seen = [expected[area.area_id] if area.area_id in expected
-                else (price if merchants_transit.news_lag(carriage, merchant.home_tile, area.anchor_tile) == 0 else None)
+                else (price if news_current(area.anchor_tile) else None)
                 for area, price in zip(areas, seen)]
         parts.append(merchants_route_memo.routes_for_good(
             carriage, good, areas, spec, tuple(seen), interest_rate,
@@ -199,6 +207,7 @@ def _candidate_routes(merchant, view, carriage, area_map, held_stock, specs, int
 def _good_routes(good, spec, areas, prices, carriage, interest_rate) -> list:
     """The unsorted rows of `_candidate_routes` for one good, given its price in each area."""
     rows = []
+    years_between = merchants_transit.years_between
     interest = max(0.0, interest_rate)
     spoilage = min(1.0, max(0.0, spec.spoilage_per_year))
     keep = 1.0 - spoilage
@@ -213,31 +222,29 @@ def _good_routes(good, spec, areas, prices, carriage, interest_rate) -> list:
         if not price_here or price_here <= 0.0:
             continue
         best = None
-        best_net = None
+        best_net = -math.inf
         best_years = 1
         floor_cost = price_here * (1.0 + interest + MERCHANT_MARGIN_SHARE)
         interest_here = price_here * interest              # the terms of gap_cost_per_unit, hoisted
         margin_here = MERCHANT_MARGIN_SHARE * price_here
-        cost_to = carriage.costs_from(source.anchor_tile)
-        for price_there, kept_there, spoilage_there, anchor_tile, area_id, destination in dearest_first:
+        cost_to_get = carriage.costs_from(source.anchor_tile).get
+        worth_beating = 0.0                                # no cheaper destination can beat this (the best net so far, once positive)
+        for price_there, kept_there, spoilage_there, anchor_tile, _area_id, destination in dearest_first:
             # carriage only adds cost, so no cheaper destination can beat this bound
-            bound = kept_there - floor_cost
-            if bound <= 0.0 or (best_net is not None and bound <= best_net):
+            if kept_there - floor_cost <= worth_beating:
                 break
-            if area_id == source.area_id:
-                continue
-            per_tonne = cost_to.get(anchor_tile, math.inf)
-            if per_tonne == math.inf:
-                continue
+            # the source's own area nets a loss (equal prices, positive margin) and an unreachable tile nets -inf
+            per_tonne = cost_to_get(anchor_tile, math.inf)
             net = price_there - price_here - (per_tonne * unit_mass / KILOGRAMS_PER_TONNE
                                               + interest_here + spoilage_there + margin_here)
             if net > 0.0:       # a haul held more years pays interest and spoilage for each
-                held_years = merchants_transit.years_held(carriage.days_between(source.anchor_tile, anchor_tile))
+                held_years = years_between(carriage, source.anchor_tile, anchor_tile)
                 if held_years > 1:
                     net -= interest_here * (held_years - 1) + price_there * (
                         merchants_transit.lost_share(spec.spoilage_per_year, held_years) - spoilage)
-            if net > 0.0 and (best_net is None or net > best_net):
-                best, best_net, best_years = (destination, per_tonne), net, held_years
+                if net > worth_beating:
+                    best, best_net, best_years = (destination, per_tonne), net, held_years
+                    worth_beating = net
         if best is None:
             continue
         destination, per_tonne = best
@@ -315,7 +322,7 @@ def dispatch(merchant: Merchant, fills: Sequence[Fill], carriage: CarriageTable,
             stranded.append((good, tile, quantity - carried))
         if carried <= 0.0:
             continue
-        years = merchants_transit.years_held(carriage.days_between(tile, route[0]))
+        years = merchants_transit.years_between(carriage, tile, route[0])
         if years > 1:      # the haul outlasts the year: it waits on the road and arrives in the year its days put it in
             merchant.in_transit.append(merchants_transit.Shipment(good, carried, route[0], years - 1))
         moves.append(DeliveredMove(merchant.agent_id, merchants_transit.EDGE_TRANSIT if years > 1 else merchant.agent_id,

@@ -113,3 +113,21 @@ Checked and left alone: `parameters.parameter` and `RateTable.rate` no longer sh
 the profile. `_price_tables` already returns its kept tables; what remains in it per call is computing the keys
 (the banded market rate and the techniques in use), which is the check itself, so memoising on its inputs
 would save nothing.
+
+## Merchant route search: trip years kept per pair, tighter destination loop
+
+In a Rome agent economy stepped on its own (the setup of `economy_bronze_market_price`), `merchants._candidate_routes`
+is about a third to two fifths of a year's CPU, nearly all of it `_good_routes`. Its inputs differ for almost every
+merchant and pass (each merchant's expectations, and the credit and ordering passes see different interest rates), so
+the route memo seldom hits and a larger memo does not help; the cost is the inner loop over destinations. Three
+changes, each exact: the years a haul between two tiles is held (`merchants_transit.years_between`) are kept per
+carriage table instead of recomputed from `days_between` for every destination and every area's news lag; a merchant
+works out once per call which areas' news has reached it; and the destination loop drops the checks that cannot
+fire (the source's own area nets a loss, an unreachable tile nets minus infinity) and tests one threshold instead
+of two. Same stepped saves before and after (sorted-key dump of `save_state` after three stepped years, and the
+shown and traded prices after three `economy.step` years, identical). Measure by wrapping `_candidate_routes` with
+`time.process_time` over several `economy.step` years: its share falls by about a fifth, and a whole year by
+under a tenth. Shared-machine variation in a whole step is larger than that, so compare a replay of recorded
+`_good_routes` arguments, interleaving the old and new function. What remains is the loop itself (one carriage
+lookup per destination examined, per source, per good, per merchant); cutting it further needs fewer distinct
+questions, not a faster answer.
