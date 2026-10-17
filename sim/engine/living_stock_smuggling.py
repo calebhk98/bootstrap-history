@@ -14,7 +14,6 @@ from sim.constants import declare
 from sim.refusal import Refusal, cause_of
 from sim.world import stock_dynamics
 
-from .data import load_civ
 from .material_units import tonnes_per_unit
 from .theft_exposure import visibility_factor
 
@@ -40,7 +39,7 @@ class LivingStockSmugglingMixin:
     def _smuggling_chance(self, civilization_id, material, units):
         """Chance the partner's state finds the taking out: its reach times how much of what it holds goes."""
         holding = max(1e-12, self._partner_holding(civilization_id, material))
-        capacity = float(load_civ(civilization_id).get("state_capacity", self.STATE_CAPACITY_DEFAULT))
+        capacity = float(self.partner_civ(civilization_id).get("state_capacity", self.STATE_CAPACITY_DEFAULT))
         return stock_dynamics.catch_chance(capacity, visibility_factor(units / holding))
 
     def stock_smuggle_quote(self, material, units, partner=None):

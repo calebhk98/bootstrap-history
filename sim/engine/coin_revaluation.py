@@ -7,7 +7,6 @@ change: nothing is indexed or compensated.
 """
 from sim.constants import declare
 
-from .data import load_civ
 
 REVALUATION_YEARLY_SHARE = declare(
     "REVALUATION_YEARLY_SHARE", 0.5, kind="temporary_heuristic",
@@ -33,7 +32,7 @@ class CoinRevaluationMixin:
         return self.civ["coin_standard"]["material"]
 
     def partner_coin_metal(self, civilization_id):
-        return load_civ(civilization_id)["coin_standard"]["material"]
+        return self.partner_civ(civilization_id)["coin_standard"]["material"]
 
     def revalue_coin_metals(self):
         """Record the market ratio of the home coin metal and of each partner's."""

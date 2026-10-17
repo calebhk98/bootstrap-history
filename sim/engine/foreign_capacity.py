@@ -92,7 +92,7 @@ class ForeignCapacityMixin:
         # a curated output is the reference empire's; any other is this society's own capacity
         reference = (self.DEFAULT_POPULATION_100AD if commodity in self.res["empire_output_100ad"]
                      else float(self.civ.get("population") or self.DEFAULT_POPULATION_100AD))
-        scale = float(load_civ(civilization_id).get("population") or 0.0) / reference
+        scale = float(self.partner_civ(civilization_id).get("population") or 0.0) / reference
         return self._national_output_tonnes(commodity) * scale * FOREIGN_OUTPUT_PER_POPULATION_SHARE
 
     def _tracked_mineral(self, commodity):
@@ -101,7 +101,7 @@ class ForeignCapacityMixin:
 
     def _foreign_mineral_share(self, civilization_id, commodity):
         """Share of a mined commodity on the tiles it holds."""
-        return self.geography.held_share(tiles_held(load_civ(civilization_id), self.world_map), commodity)
+        return self.geography.held_share(tiles_held(self.partner_civ(civilization_id), self.world_map), commodity)
 
     def _foreign_can_make(self, civilization_id, material, solved, _seen=None):
         """Whether its techniques and regions supply the material: it holds

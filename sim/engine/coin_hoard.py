@@ -8,7 +8,6 @@ from sim.constants import declare
 
 from sim.labour.api import wage_provider
 
-from .data import load_civ
 from sim.agents.api import edges, ledger
 
 COIN_GUARD_HOURS_PER_TONNE_YEAR = declare(
@@ -71,7 +70,7 @@ class CoinHoardMixin:
     def coin_carriage_units(self, civilization_id, units, home_money_per_partner_coin):
         """Partner coin units the carriers take to move `units` of the partner's coin over the route, by
         the coin's mass; never more than is moved."""
-        kg_per_unit = load_civ(civilization_id)["coin_standard"]["kg_per_unit"]
+        kg_per_unit = self.partner_civ(civilization_id)["coin_standard"]["kg_per_unit"]
         cost = self._coin_carriage_money_per_tonne(civilization_id) * units * kg_per_unit / 1000.0
         return min(units, cost / home_money_per_partner_coin)
 

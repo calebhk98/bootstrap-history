@@ -10,7 +10,6 @@ data; nothing here names one.
 from sim.world import living_stock
 
 from .blockers import blocker_kind
-from .data import load_civ
 from .material_units import tonnes_per_unit
 
 
@@ -81,7 +80,7 @@ class LivingStockMixin:
         price = facts["prices_in_home_money"].get(material)
         if material not in facts["solved_materials"] or not price:
             return None
-        route = self._material_route(load_civ(civilization_id), material, facts["route"])
+        route = self._material_route(self.partner_civ(civilization_id), material, facts["route"])
         if route is None:
             return None
         per_tonne = price / tonnes_per_unit(material) * self.partner_price_level(civilization_id)
