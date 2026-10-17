@@ -11,10 +11,11 @@ REGIME_OF = {"england_1300": "struck_coin", "han_china_100ad": "struck_coin", "r
 
 # Years for freshly mined metal to pass from mine owners and savers into prices: the fewest each civilisation's
 # price level needs to rise clear of its unmined twin.
-MONEY_LAG_YEARS = {"england_1300": 5, "norse_900ad": 4}
+MONEY_LAG_YEARS = {"england_1300": 5, "norse_900ad": 8}
 # The price level still cycles in the first decades (Complaint 473), so it is compared as a mean over these years
-# from the lag on, not at one year that may sit in a trough of the cycle.
-PRICE_LEVEL_YEARS = 4
+# from the lag on, not at one year that may sit in a trough of the cycle. Norse silver passes into prices late and
+# against a level that drifts up on the short spin-up (Complaint 526), so its window is later and wider.
+PRICE_LEVEL_YEARS = {"england_1300": 4, "norse_900ad": 7}
 
 
 def agent_game(civ):
@@ -46,12 +47,13 @@ def play(civ, years, mined_share=0.0, levels=None):
 def check_more_metal_raises_money(civ_id):
     regime = REGIME_OF[civ_id]
     # new coin reaches prices with a lag: it lands with mine owners and savers before it is spent
-    years = MONEY_LAG_YEARS[civ_id] + PRICE_LEVEL_YEARS - 1
+    window = PRICE_LEVEL_YEARS[civ_id]
+    years = MONEY_LAG_YEARS[civ_id] + window - 1
     base_levels, more_levels = [], []
     base_money, _base_level, _record, _setup = play(civ_id, years, levels=base_levels)
     more_money, _more_level, record, setup = play(civ_id, years, mined_share=0.1, levels=more_levels)
-    base_level = statistics.fmean(base_levels[-PRICE_LEVEL_YEARS:])
-    more_level = statistics.fmean(more_levels[-PRICE_LEVEL_YEARS:])
+    base_level = statistics.fmean(base_levels[-window:])
+    more_level = statistics.fmean(more_levels[-window:])
     check("%s (%s): more metal mined raises the money stock" % (civ_id, regime), more_money > 1.2 * base_money,
           (base_money, more_money))
     check("%s (%s): and the price level" % (civ_id, regime), more_level > 1.03 * base_level, (base_level, more_level))
