@@ -49,7 +49,8 @@ game._step_market()
 paid = game.economy.agent_prices_at(tile)
 offered = game.economy.agent_offered_tonnes(WHEAT) or 0.0
 check("the economy keeps the book of the founder's market for the staple", offered > 0.0, offered)
-means = [market.purchase_cost(WHEAT, offered * share)[1] for share in (0.001, 0.05, 0.3, 0.9)]
+# sellers price at cost, so the schedule is flat until the book nears what they hold; the last order takes nearly all of it
+means = [market.purchase_cost(WHEAT, offered * share)[1] for share in (0.001, 0.05, 0.3, 0.99)]
 check("a larger order costs more a tonne", means == sorted(means) and means[-1] > means[0], means)
 check("a sale fetches less a tonne the more is sold",
       market.sale_proceeds(WHEAT, offered * 0.5)[1] < market.sale_proceeds(WHEAT, offered * 0.01)[1])

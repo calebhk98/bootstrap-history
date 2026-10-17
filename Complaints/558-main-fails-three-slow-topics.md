@@ -58,3 +58,11 @@ with the test kept honest.
   the drift. Fix in `sim/tests/test_real_output.py`: the twin is baselined on its own first year, the source
   entry is the incumbents' (`_reference_entry`), and the good is `copper_ore_kg`, whose cleared volume answers a
   cheaper entry by far more than the drift. Every assertion and bound is unchanged. Closed.
+- `purchase_reads_economy_price` passes on `origin/main` and fails on `economy-accounting-and-speed` at "a larger
+  order costs more a tonne" (every mean equal). Bisected (first-parent merges, `python3 -m sim.tests --slow --only
+  purchase_reads_economy_price`): first fails at the merge of `data-532-herd-joint-products`. The engine is not
+  wrong; the fixture was. The staple's supply schedule is flat (sellers price at cost) until the order nears what
+  they hold, then climbs; the fixture's biggest order was a 0.9 share, and the order is priced at slice midpoints,
+  so it reached the climb on `origin/main` but stopped short of it on the branch, where the opening's sellers hold
+  a little more. Fix in `sim/tests/test_purchase_reads_economy_price.py`: the largest order is 0.99 of the book,
+  which walks up the schedule. The assertion is unchanged (means sorted and the last above the first). Closed.
