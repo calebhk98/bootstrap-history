@@ -58,3 +58,26 @@ of pre-industrial labour), and new goods or wants raise the hours offered (the "
 Vries). The hours not offered are leisure, not unemployment, so they do not press the wage down. Test: at the
 opening, hours offered to the market equal the hours the settled demand hires, within a tolerance, and the
 first year's wage stays near the opening wage under no shock.
+
+## Correction: satiation is not the cause (re-measured)
+
+The section above is wrong about satiation. In `data/world/needs.json` only a few needs carry a satiation limit
+(ornament, seasoning, water, light, amusement); food, shelter, clothing, implements, warmth and the rest do not, and
+`apply_satiation` moves the freed spending to them by budget weight. On a Rome opening, for each cohort at the
+full-employment income, `need_basket.need_units` places spending equal to the whole income (spending over income is
+one, per need shares sum to one). So "wanted income" built from satiated spending is unbounded, and hours that
+follow it would not change.
+
+What cuts the spending is the savings wish in `households_orders.goods_orders`: at the opening `_opening_bids`
+gives the cohort cash equal to its income, the wealth it wants to keep (cash buffer plus years of surplus income)
+is many times that, so the drawdown is negative and bounded only by income, and spending falls toward the floors
+while the rest goes to `funds_offers`. The share lost grows with the surplus (the richest cohorts spend least).
+Reproduce: build Rome as `probe526.py` does, set each cohort's `last_year_income` through
+`opening_income.with_income`, and compare `sum(bid.budget)` of `households.goods_orders(cohort, ..., cash,
+income, ...)` against income for `cash = income` and for larger cash; then trace
+`opening_income.settled_income_per_head` pass by pass (value of demand over income per head rises toward one only as
+income falls toward the floors). The fixed point therefore is the original leak of this issue (saving that nothing
+spends) acting through the savings target, not satiation, and a target-income hours rule has nothing to bite on
+unless needs get physical limits (food in calories) or the savings wish is matched by an investment demand.
+Directions that follow from this: open households holding the wealth they want (their savings wish already met, so
+the opening's bids spend income), and give saving a user (producers' plant and working capital, lending).
