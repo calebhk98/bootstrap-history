@@ -12,6 +12,7 @@ from .accounts import Book
 from .households_cohort import Cohort
 from .market_memory import KEY_SEPARATOR, MarketMemory
 from .merchants import Merchant
+from .merchants_transit import Shipment
 from .producers import Producer
 from .record_plain import plain
 from .state_budget import StateBudget
@@ -135,7 +136,9 @@ def _merchant_record(merchant: Merchant) -> Dict[str, Any]:
             "expected_prices": _pair_keys(merchant.expected_prices),
             "expected_volumes": _pair_keys(merchant.expected_volumes),
             "routes": {key: list(value) for key, value in _pair_keys(merchant.routes).items()},
-            "carriage_hours_wanted": merchant.carriage_hours_wanted}
+            "carriage_hours_wanted": merchant.carriage_hours_wanted,
+            "in_transit": [plain(each) for each in merchant.in_transit],
+            "price_history": _pair_keys(merchant.price_history)}
 
 
 def _merchant_from(record: Dict[str, Any]) -> Merchant:
@@ -144,4 +147,6 @@ def _merchant_from(record: Dict[str, Any]) -> Merchant:
                     expected_prices=_split_keys(record["expected_prices"]),
                     expected_volumes=_split_keys(record["expected_volumes"]),
                     routes={key: tuple(value) for key, value in _split_keys(record["routes"]).items()},
-                    carriage_hours_wanted=record["carriage_hours_wanted"])
+                    carriage_hours_wanted=record["carriage_hours_wanted"],
+                    in_transit=[Shipment(**each) for each in record["in_transit"]],
+                    price_history=_split_keys(record["price_history"]))

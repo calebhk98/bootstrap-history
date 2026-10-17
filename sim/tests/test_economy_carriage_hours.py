@@ -186,12 +186,12 @@ class LoanTimingTests(unittest.TestCase):
         seen = []
         real = economy.close_agents
 
-        def watch(setup, record, view, ledger, area_map):
+        def watch(setup, record, view, ledger, area_map, *rest):
             before = len(record.loan_requests)
             for each in record.merchants.values():
                 if carriage_hours.planned(each):
                     each.capital_base = 0.0     # all its cash is profit, which goes to the owner at the close
-            real(setup, record, view, ledger, area_map)
+            real(setup, record, view, ledger, area_map, *rest)
             crew = carriage_hours.crew_for(setup, record)
             asked = {request.borrower: request.amount for request in record.loan_requests[before:]
                      if request.borrower in record.merchants}
