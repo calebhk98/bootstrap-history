@@ -3,7 +3,7 @@
 Part of the port. `long_run_costs.long_run_costs` at the opening wages, the market rate and the opening's rent
 stand-in; no price table, no demand, no income. The economy's markets then move prices off these.
 """
-from . import long_run_costs
+from . import long_run_costs, need_substitutes
 from .prices import default_production_entries, solver_wage_ratios
 
 
@@ -30,4 +30,7 @@ def opening_costs(sim):
     rent_of = long_run_costs.opening_rent_of(techniques, wage_of, sim.civ, production)
     costs = long_run_costs.long_run_costs(techniques, wage_of, float(sim.economy.base_rate()), rent_of, sim.civ,
                                           production)
-    return {good: cost.cost for good, cost in costs.items() if cost.cost > 0.0}
+    # A household good only a technique not yet held makes has no supplier at the opening, so it is seeded no
+    # price that would draw demand to it; a founder's research or a partner's price brings it in.
+    return {good: cost.cost for good, cost in costs.items()
+            if cost.cost > 0.0 and not (cost.provenance == "gated" and need_substitutes.serves_a_need(good))}
