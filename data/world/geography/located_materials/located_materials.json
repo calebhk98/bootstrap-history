@@ -372,6 +372,40 @@
    "note": "Surface seeps. Your entire petroleum industry starts here and needs no drilling."
   },
   {
+   "id": "pozzolana",
+   "places": [
+    {
+     "name": "Pozzuoli, Campi Flegrei, and the Vesuvian country",
+     "lat": 40.83,
+     "lon": 14.12,
+     "source": "Vitruvius, De Architectura 2.6.1: the powder that makes admirable work is found about Baiae and the lands of the municipalities around Mount Vesuvius; Pliny, Natural History 35.166 (Puteoli); Jackson et al. 2014, American Mineralogist 99, on Bay of Naples pozzolana in Roman harbour concrete."
+    },
+    {
+     "name": "Alban Hills (Colli Albani), south-east of Rome",
+     "lat": 41.75,
+     "lon": 12.70,
+     "source": "Pozzolana rossa and the tuffs of the Alban Hills volcanic field supplied Rome's own concrete; Lancaster, Concrete Vaulted Construction in Imperial Rome (2005); Jackson et al. 2014."
+    },
+    {
+     "name": "Santorini (Thera)",
+     "lat": 36.40,
+     "lon": 25.40,
+     "source": "Minoan-eruption ash of Santorini (Theraic earth) is a pozzolana worked on the island from antiquity; Jackson et al. 2014 and the Aegean hydraulic-mortar literature name it as the Greek source."
+    },
+    {
+     "name": "Eifel volcanic field (Brohl and Nette valleys)",
+     "lat": 50.40,
+     "lon": 7.30,
+     "source": "Laacher See trass, a volcanic tuff, was quarried in the Roman Rhineland and ground for hydraulic mortar; conf C, citation to be checked against the Eifel Roman quarry literature."
+    }
+   ],
+   "cost_multiplier": 3,
+   "unlocks": [
+    "mat_pozzolana"
+   ],
+   "note": "Bulk and heavy, so it travels by sea or river; the multiplier is a heuristic standing for freight, to be replaced by the freight model."
+  },
+  {
    "id": "coal",
    "places": [
     {

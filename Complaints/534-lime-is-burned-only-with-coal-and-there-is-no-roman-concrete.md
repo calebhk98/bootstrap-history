@@ -1,6 +1,6 @@
 # Lime is burned only with coal, and there is no Roman concrete
 
-**Status:** open
+**Status:** partly done. Data added: `lime_wood_kg` (firewood-fired lime, 1530 kg firewood per tonne from the calcination enthalpy at 20% kiln efficiency), `pozzolana_kg` (extracted; sited by the `pozzolana` located material at Campi Flegrei/Vesuvius, Alban Hills, Santorini, Eifel), `concrete_pozzolanic_kg` (gated on `mat_pozzolana`; Vitruvius proportions), wired into `civ_dome_roman`. Tests: `sim/tests/test_lime_wood_and_pozzolanic_concrete.py`. Still open: wire harbour, aqueduct and canal-lock nodes (`sea_harbours_pozzolana`, `med_aqueducts_latrines`) to concrete once their masses are sourced; check why coal undercuts firewood at the Rome opening (command above); the 3x pozzolana cost multiplier is a freight stand-in.
 
 Reference (an outside table of ancient supply chains, not code-aware): masons used dressed stone,
 bricks, lime from lime kilns, and pozzolana (volcanic ash) for hydraulic concrete in aqueducts,

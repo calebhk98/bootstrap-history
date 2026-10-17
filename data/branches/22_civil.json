@@ -70,7 +70,9 @@
   "lab": {
    "mason": 300.0
   },
-  "mat": {},
+  "mat": {
+   "concrete_pozzolanic_kg": 4500000.0
+  },
   "up_hours": 0,
   "yrs": 1.5,
   "risk": 0,
