@@ -74,13 +74,24 @@ class Merchant:
     expected_prices: Dict[Tuple[GoodId, AreaId], float] = field(default_factory=dict)
     expected_volumes: Dict[Tuple[GoodId, AreaId], float] = field(default_factory=dict)
     routes: Dict[Tuple[GoodId, TileId], Tuple[TileId, AreaId]] = field(default_factory=dict)   # (good, source tile) -> (destination tile, area)
+    carriage_hours_wanted: Optional[Dict[TileId, float]] = None   # crew hours its shipments needed last year, by source tile: this year's bid for carriers; None until it has shipped
+
+
+@dataclass(frozen=True)
+class CrewHire:
+    """The carriers a merchant hired for the year: crew hours inside a unit of carriage money, the hours
+    hired and their average wage an hour (already paid in the labour market)."""
+    hours_per_money: float
+    hours_hired: Optional[float]     # None: no plan to hire for yet, so the shipments are not limited
+    wage: float
 
 
 @dataclass(frozen=True)
 class Dispatch:
     moves: Tuple[DeliveredMove, ...]
     transfers: Tuple[Transfer, ...]
-    stranded: Tuple[Tuple[GoodId, TileId, float], ...]     # (good, tile, quantity) it could not pay to carry
+    stranded: Tuple[Tuple[GoodId, TileId, float], ...]     # (good, tile, quantity) it could not pay or find carriers to carry
+    crew_hours_wanted: Dict[TileId, float] = field(default_factory=dict)   # by source tile, before any cut for want of carriers
 
 
 def expected_price(merchant: Merchant, view: MarketView, good: GoodId, area: AreaId) -> Optional[float]:
@@ -254,30 +265,48 @@ def shared_room(merchant, good, source, destination, held_stock, own: RouteShare
 def dispatch(merchant: Merchant, fills: Sequence[Fill], carriage: CarriageTable,
              specs: Mapping[GoodId, GoodSpec], currency: CurrencyId, cash: float,
              held_stock: Mapping[Tuple[GoodId, TileId], float],
-             carrier_of: Callable[[TileId], Optional[AgentId]] = lambda _tile: EDGE_CARRIAGE) -> Dispatch:
+             carrier_of: Callable[[TileId], Optional[AgentId]] = lambda _tile: EDGE_CARRIAGE,
+             crew: Optional[CrewHire] = None) -> Dispatch:
     """Carry what the merchant holds on each route's source tile (this year's purchases and older stock)
     to the route's destination, paying carriage from `cash` to `carrier_of(source tile)` (the edge when
-    it names nobody). `fills` are not needed: what settled is what is held."""
-    moves, transfers, stranded = [], [], []
+    it names nobody). `fills` are not needed: what settled is what is held.
+    With `crew`, a shipment's crew hours (its fee times `hours_per_money`) must have been hired: every
+    route is cut by the same share when the hours hired fall short, and the fee is paid less the crew's
+    wages, which the labour market has already paid."""
+    shipments = []
     remaining = max(0.0, cash)
+    wanted: Dict[TileId, float] = {}
     for (good, tile), route in sorted(merchant.routes.items()):
         if route[0] == tile:
             continue
         per_unit = carriage.cost_per_tonne(tile, route[0]) * specs[good].unit_mass_kg / KILOGRAMS_PER_TONNE
+        crew_money = 0.0 if crew is None else min(per_unit, per_unit * crew.hours_per_money * crew.wage)
         quantity = held_stock.get((good, tile), 0.0)
-        affordable = quantity if per_unit <= 0.0 else min(quantity, remaining / per_unit)
-        if affordable < quantity:
-            stranded.append((good, tile, quantity - affordable))
-        if affordable <= 0.0:
+        net_unit = per_unit - crew_money
+        affordable = quantity if net_unit <= 0.0 else min(quantity, remaining / net_unit)
+        hours_unit = 0.0 if crew is None else per_unit * crew.hours_per_money
+        wanted[tile] = wanted.get(tile, 0.0) + quantity * hours_unit
+        shipments.append([good, tile, route, quantity, affordable, per_unit, crew_money, hours_unit])
+        remaining -= affordable * net_unit
+    scale = 1.0
+    if crew is not None:
+        needed = math.fsum(row[4] * row[7] for row in shipments)
+        if crew.hours_hired is not None and needed > crew.hours_hired:
+            scale = max(0.0, crew.hours_hired) / needed
+    moves, transfers, stranded = [], [], []
+    for good, tile, route, quantity, affordable, per_unit, crew_money, _hours_unit in shipments:
+        carried = affordable * scale
+        if carried < quantity:
+            stranded.append((good, tile, quantity - carried))
+        if carried <= 0.0:
             continue
-        moves.append(DeliveredMove(merchant.agent_id, merchant.agent_id, good, tile, affordable,
+        moves.append(DeliveredMove(merchant.agent_id, merchant.agent_id, good, tile, carried,
                                    "carried to market", route[0]))
-        fee = affordable * per_unit
+        fee = carried * (per_unit - crew_money)
         if fee > 0.0:
             transfers.append(Transfer(merchant.agent_id, carrier_of(tile) or EDGE_CARRIAGE, currency, fee,
                                       "carriage of %s" % good))
-            remaining -= fee
-    return Dispatch(tuple(moves), tuple(transfers), tuple(stranded))
+    return Dispatch(tuple(moves), tuple(transfers), tuple(stranded), wanted)
 
 
 def close_year(merchant: Merchant, prices: Mapping[Tuple[GoodId, AreaId], float],
