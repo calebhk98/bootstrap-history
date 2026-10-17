@@ -1,6 +1,6 @@
 # Dozens of slow topics exceed the runner's time limit on a cold cache
 
-**Status:** open
+**Status:** partly - the shared cost is cut (every game build re-opened a whole economy for the coin's margin); re-measure the rest
 
 The runner fails any topic still running after `TOPIC_SECONDS` (`sim/tests/__main__.py`). After an economy
 edit (every price solve and spin-up cache key changes), a full `python3 -m sim.tests --slow --timing` on four
@@ -18,3 +18,21 @@ solves, years stepped that the check does not read) and cut that once, then each
 `unopened_sim`, a shared stepped game, or fewer years, as 464 lists. `full_length_opening_checks` runs full
 spin-ups whenever the shipped openings are stale; it is fast only when `openings/` matches the source.
 Related: 464, 497.
+
+## Shared cause found
+
+Every `Sim` build, spin-up cached or not, ran `priced_at_the_margin` (`sim/engine/economy_port_coin.py`), which
+opened a whole blank economy (`settled_income_per_head`, two passes) only to read the backing good's marginal
+cost. That is most of a game build when the spin-up is on disk, and it was not cached. It is now kept in
+`.cache/backing_margin`, keyed like the spin-up (setup digest and the spin-up's source), and
+`test_backing_margin_cache.py` shows the kept margin equals a fresh opening's. Profile (cold, one `sim()`):
+the opening 150 s of 225 s profiled, 62 s the spin-up; warm, 66 s of 68 s profiled was the margin. Measure:
+`ROME_CACHE_DIR=<dir with only test_topic_seconds.json> python3 -m sim.tests --slow --only <topic> --jobs 1`,
+a second run in the same directory being the warm one a topic sees after the runner's warm start.
+Warm game build: about 24 s before, about 2 s after. A fresh clone's first game still pays the margin once
+unless `openings/` is regenerated (`simulator.py openings`), which now ships `backing_margin` entries too.
+
+Topics (warm start, one at a time, `--jobs 1`): `actor_treasury` 178 s to 18 s, `state_arrears` 139 s to 13 s,
+`one_goods_market` 260 s to 34 s, `living_stock` over 95 s to 71 s, `early_playtest` 54 s after. `allocate`
+cold 141 s of which a variant game (farm changed before the first step, so its own spin-up) is about 54 s; its
+check needs the unopened start, so it stays. Not re-measured: the rest of the list.
