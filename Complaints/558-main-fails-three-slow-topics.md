@@ -10,8 +10,10 @@ Measured on `origin/main` at f0ff751d with `python3 -m sim.tests --slow --only m
 - `economy_tin_dearer_than_copper`: tin shows far cheaper against copper than the labour its recipe embodies
   (511). Measured again on the 511 branch: tin is above its cost (about four to seven hours of wage a kilogram
   against about one hour of embodied labour); copper shows six to nine times its smelting cost, so the ratio fails
-  on copper's scarcity price (smelters move 25 percent of capacity a year against growing bronze demand), not on
-  unsold tin or gravel asks. Details and the bisect in 511's second update. Open.
+  on copper's scarcity price, not on unsold tin or gravel asks. Cash, loans, ore and plant do not bind year zero
+  (the test's only year): the opening's workforce by trade and seeded `last_runs` do (smith hours in Spain are all
+  hired), so a fix belongs with the opening. Later years: starved flux makers never grow (511's third update).
+  Open.
 - `insolvency_whole_game`: fixed (see 524): a household in arrears now lives within its income, so its debt no
   longer climbs past the credit limit and its cash rises.
 

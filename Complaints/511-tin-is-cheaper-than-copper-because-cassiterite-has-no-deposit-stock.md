@@ -75,3 +75,39 @@ Bisect: the check passes at `ef5ac9ff` (its own branch) and fails at `d1d2f508` 
 so a change that came in with the merge moved copper; the commits between are mostly unbuildable
 (`git bisect` skipped them), so the first bad one was not isolated.
 Status stays partly. No code change was made; no regression test was added, since no mechanism defect was shown.
+
+## Update 3: copper's supply is not held by cash, expansion pace or entry; year zero is set by the opening
+
+Measured by stepping `rome_100ad` the way the test does (spying `producers.plan`, `producers.produce`,
+`year_labour.clear_labour` and the entry planners; scripts were throwaway). What was ruled out:
+- Cash and working-capital loans do not bind. Every copper smelter holds tens to hundreds of thousands in cash
+  against a run costing about two thousand; `affordable` in `producers.plan` is never the smallest term.
+- Copper ore does not bind in the first years: the ore producers hold seeded stock and plan zero runs while
+  smelters buy it at a price near their cost of digging. (Later, around year four, the seeded stock is gone, the
+  ore producers' expected price is still below their cost, and Spain's smelter gets about one run of ore: a lag in
+  the ore sellers' expectation, not measured further.)
+- Plant capacity does not bind year zero. Spain has capacity 336 runs; its plan is 182 because the opening seeds
+  `last_runs` at 98 and `within_a_years_change` allows 25 percent of capacity (84) more. But removing that limit
+  (plan 335) leaves year-zero copper at 13.9 against 13.2: the achieved runs stay at 172 because smith hours
+  (40 a run) in the Spain labour area are all hired (bid 11112, offered 11342) and furnaceman and charcoal run out
+  next. The opening's workforce by trade matches the opening's output, so supply cannot rise in year zero by any
+  rule on the producers' side. The test measures year zero only, so entry, expansion and loans cannot change
+  its result; it follows the opening (`opening*.py`, the workforce by trade), another branch's ground.
+- Later years: tripling `EXPANSION_SHARE_PER_YEAR` (0.1 to 0.5) triples capacity by year three
+  (Spain 336 to 497, the others to 3x) and leaves copper at 17.7 in year three (17.8 before): plans are still
+  bounded by last year's achieved runs plus 25 percent of capacity, and by inputs.
+What does bind the smelters outside Spain from year one (4 of 7 producers, about a fifth of planned runs):
+flux (`flux_kg`, crushed limestone). Algeria, Turkey and Italy have flux makers of capacity 0 to 1 run, so they
+buy 0 to 4 runs of flux against 15 to 55 planned (year two: Algeria 17.8 planned, 0.0 achieved). Their
+`last_runs` then collapses and the 25 percent pace rebuilds it only slowly. The flux maker never grows because
+`entry_sizing.sized_runs` caps a newcomer at `ENTRY_SHARE_OF_TRADED_VOLUME` of what the market traded last year
+(Algeria: 32 kg traded, 1.29 runs of gap, built 0.016 runs), and traded volume is small precisely because the
+market was starved. Sizing on traded volume plus the buyers turned away (`share * (volume / output + whole_gap_runs)`)
+raised the flux makers and halved copper in years three and four (17.8 to 8.1, 21.3 to 8.1), still four to five
+times cost, but it contradicts `test_a_gap_far_beyond_the_trade_is_sized_to_the_trade`, which pins the cap as
+deliberate (a phantom gap must not build a works), so it was not kept: a rule that tells a starved market from a
+phantom gap is needed first (the buyers' bids at the entry price against the maker's cost, for the markets where
+no sale shows a price).
+Status stays partly. No code change; the binding constraints are the opening's workforce by trade and seeded
+`last_runs` (year zero), then input makers that never grow from a starved market (flux), then the ore sellers' lagging
+expectation.
