@@ -1,6 +1,6 @@
 # Transactions count what was proposed, not what was paid
 
-**Status:** open - all three defects fixed and tested; producers now ask for working-capital loans; `economy_vessel_price_fixture` (dug input price swing) still fails
+**Status:** closed
 
 Found by an outside reviewer reading the repository; each point checked against the code. Money
 conservation holds (the book balances), which is why the suite passes; these are about which
@@ -20,8 +20,9 @@ quantities drive decisions.
 
 ## What happens now
 
-1. `plan` smooths toward last year's runs first, then limits them to what cash and stock pay for and what
-   unsold output allows; only then does the land cap apply.
+1. `plan` takes the runs the producer chooses (its working plant, less what unsold output allows) at the
+   year's pace of change, then limits them to what its cash and held inputs pay for; the land cap applies
+   last. Working off stock stays inside the smoothing, since it is a choice, not a limit.
 2. `YearLedger.note_labour` counts hours from the wages actually paid. A settlement that paid nothing
    delivers no hours; a caller with no settlement passes `settled=False` to count the fills in full.
 3. `clear_goods` records the volume that changed hands (the goods moves the settlement posted) in
@@ -29,12 +30,10 @@ quantities drive decisions.
 
 Regression tests: `sim/tests/test_economy_delivered_not_proposed.py`.
 
-## Open
+## Working capital
 
-- At a year's close a producer whose cash cannot pay the smoothed runs next year's plan will try asks for a
-  one-year loan (purpose `working capital`, no plant) at up to the yearly return of those runs. It takes the
-  producer's single loan slot only when it asks no expansion loan.
-- `economy_vessel_price_fixture` still fails: the fixture's dug clay price crashes in one year and recovers
-  (`python3 -m sim.tests --only economy_vessel_price_fixture`). The diggers' cash is not what limits them
-  there; their runs swing between idle and busy with the price they expect.
-- Re-measure the spin-up (473); it is a long command and has not been run.
+At a year's close a producer whose cash cannot pay the runs next year's plan will try asks for a one-year
+loan (purpose `working capital`, no plant) at up to the yearly return of those runs
+(`sim/economy/producers_close.py`). It takes the producer's single loan slot only when it asks no expansion
+loan. The spin-up's response is measured with `python3 sim/simulator.py spin-up-trace --civ rome_100ad --years 60`
+(473).
