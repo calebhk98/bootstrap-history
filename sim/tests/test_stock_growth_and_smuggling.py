@@ -17,6 +17,7 @@ from sim.engine.living_stock import LivingStockMixin
 from sim.engine.living_stock_smuggling import LivingStockSmugglingMixin
 from sim.engine.living_stock_trade import LivingStockTradeMixin
 from sim.engine.living_stock_yearly import LivingStockYearlyMixin, stock_rates
+from sim.engine.partner_civs import PartnerCivsMixin
 from sim.engine.material_units import tonnes_per_unit
 from sim.geography.api import open_map, tiles_held
 
@@ -51,7 +52,7 @@ class Market:
         self.pressed[trade] = self.pressed.get(trade, 0.0) + hours
 
 
-class Game(LivingStockMixin, LivingStockTradeMixin, LivingStockSmugglingMixin, LivingStockYearlyMixin):
+class Game(PartnerCivsMixin, LivingStockMixin, LivingStockTradeMixin, LivingStockSmugglingMixin, LivingStockYearlyMixin):
     """Just enough of the game for held stock: the home society is Rome, the partner is Han."""
     STATE_CAPACITY_DEFAULT = 0.7
     partner_refusal = ForeignEconomiesMixin.partner_refusal
