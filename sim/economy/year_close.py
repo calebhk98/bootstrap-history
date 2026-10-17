@@ -200,13 +200,13 @@ def remember_basket_price_level(setup, record) -> float:
 
 
 def rebase_basket_price_level(setup, record) -> None:
-    """Today's prices become the index base (level one) and everyone, the market's memory and each
-    household alike, stops expecting inflation, so the rebase is not read as a jump in prices."""
+    """Today's prices become the index base (level one) and the last level the market's memory and each household
+    compare against becomes one, so the rebase is not read as a jump in prices. Expected inflation is a yearly
+    rate, the same in any base, so it is carried over unchanged."""
     money = setup.currency_id
     record.index_base_prices = national_prices(record)
     record.memory.basket_price_levels[money] = 1.0
-    record.memory.expected_inflation[money] = 0.0
-    record.cohorts = {agent: renewed(cohort, last_basket_price_level=1.0, expected_inflation=0.0)
+    record.cohorts = {agent: renewed(cohort, last_basket_price_level=1.0)
                       for agent, cohort in record.cohorts.items()}
 
 

@@ -23,6 +23,7 @@ from .setup import EconomySetup, TradeSpec, goods_specs
 from .types import (EDGE_CARGO, EDGE_CONSUMPTION, EDGE_EXCHANGE, EDGE_EXTERNAL, EDGE_LEGACY, EDGE_MINT, EDGE_WEAR, Bid,
                     GoodsMove, Offer, SiteLimit, Transfer, external_edge)
 from .unit_cost import variable_cost_per_run
+from .spin_up_state import spin_up_state as year_spin_up_state
 from .year_close import rebase_basket_price_level
 from .year_labour import trade_premium
 from sim.world import capital_market
@@ -36,7 +37,7 @@ __all__ = [
     "variable_cost_per_run", "rebase_basket_price_level", "trade_premium",
     "traded_volumes", "opening_quantities", "wages_by_trade", "wages_by_trade_weighted", "interest_rate", "producers_of",
     "external_trade_net", "external_trade_volume", "account_balance", "account_holdings",
-    "credit_room", "economy_from_record", "blank_economy", "export_record", "economy_book", "finish_spin_up", "note_spin_up_result", "money_year_figures","shown_prices_of",
+    "credit_room", "economy_from_record", "blank_economy", "export_record", "economy_book", "finish_spin_up", "note_spin_up_result", "spin_up_state", "money_year_figures","shown_prices_of",
     "settle_agent_takings", "admit_recipes", "move_goods", "post_transfers", "cohort_incomes", "cohort_land_rents", "land_rent_per_hectare",
     "land_rent_paid_by_tile", "land_rent_at_tile", "country_figures", "idle_hours_by_trade",
 ]
@@ -307,7 +308,8 @@ def begin_spin_up(economy):
 
 
 def finish_spin_up(economy):
-    """Closes the hidden spin-up years: the price level is rebased to one and the clock returns to zero."""
+    """Closes the hidden spin-up years: the price level is rebased to one (expectations of inflation are kept)
+    and the clock returns to zero."""
     rebase_basket_price_level(economy.setup, economy.record)
     economy.record.settling = False
     economy.record.memory.year = 0
@@ -326,8 +328,13 @@ def money_year_figures(economy, outcome):
             "metal_held": sum(quantity for quantity in held.values() if quantity > 0.0)}
 
 
+def spin_up_state(economy, outcome):
+    """The year's real output, hours hired and idle, producers' inventories and unmet need; see spin_up_state.py."""
+    return year_spin_up_state(economy.setup, economy.record, outcome)
+
+
 def note_spin_up_result(economy, result):
-    """Records how the hidden first stage ended ({"settled", "years", "gap"}); it is saved with the opening."""
+    """Records how the hidden spin-up ended (`AgentEconomy.final_result`); it is saved with the opening."""
     economy.record.spin_up_result = dict(result)
 
 

@@ -19,14 +19,19 @@ class _CountingEconomy:
 
     def step(self, inputs):
         self.years += 1
+        return types.SimpleNamespace(basket_price_level=1.0, prices={})
 
 
 class TrimmedStageTests(unittest.TestCase):
     def test_the_stage_runs_its_declared_number_of_years_on_the_economy_it_is_given(self):
         economy = _CountingEconomy()
-        with mock.patch.dict(os.environ, FULL_GAME, clear=True):
-            economy_port_year.AgentEconomy._settle_trimmed(economy, object())
+        with mock.patch.dict(os.environ, FULL_GAME, clear=True), \
+                mock.patch.object(economy_port_year.economy_api, "spin_up_state", lambda economy, outcome: {}), \
+                mock.patch.object(economy_port_year.economy_api, "interest_rate", lambda economy: 0.05):
+            states = economy_port_year.AgentEconomy._settle_trimmed(economy, object(), [])
         self.assertEqual(economy.years, int(economy_port_year.SPIN_UP_TRIMMED_YEARS))
+        # the stage hands back the last years' states for the measurement, not every year's
+        self.assertEqual(len(states), int(economy_port_year.SPIN_UP_MEASURED_YEARS))
 
     def test_the_stage_is_shorter_than_the_first_stage_can_be(self):
         self.assertLess(economy_port_year.SPIN_UP_TRIMMED_YEARS, economy_port_year.SPIN_UP_MAXIMUM_YEARS)
