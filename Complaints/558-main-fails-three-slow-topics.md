@@ -119,7 +119,7 @@ with the test kept honest.
   producers keep is recorded (`society_herds`, set at the grant) and moves with the herd's own growth and loss; only
   growth of head beyond it is billed (`living_stock_yearly.py`). Regression: `opening_herd_growth_unbilled`.
 - `foreign_actor_trade`: "no longer swings from year to year" passes on `origin/main` and fails from the same 532
-  merge. The engine is not wrong; the fixture was. The widest-paying cargo is now millet, a glut of which the partner
-  holds as stock for about five years and then gives way in price once before the cycle repeats (the test's own
-  comment says the glut is held in stock first). Fix in the test: the cargo is the widest-paying good whose eight
-  years of glut stay within what the partner's market takes up. The assertion is unchanged.
+  merge. The widest-paying cargo is now millet, a glut of which the partner holds as stock for about five years
+  and then gives way in price once before the cycle repeats. Choosing a cargo that happens not to swing would fit the
+  test to the case, so the fixture is unchanged and the topic stays failing: the held-then-released glut is a
+  real stock cycle in the partner's market (553). Open.

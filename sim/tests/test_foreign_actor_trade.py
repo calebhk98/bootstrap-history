@@ -113,16 +113,7 @@ def payable(material):
     return paying_tonnes(world, home, PARTNER, material, terms, 1e12 / terms["outlay"], rate)
 
 
-
-
-def glut_within_market(material):
-    """Whether eight years of the cargo, held as the partner's glut stock, stay within what its market takes up:
-    a bigger glut gives its price way once in a cycle of years, which is not what (c) measures."""
-    entry = game._foreign_entry(PARTNER, world.commodity_of(material), game._foreign_economy_facts(PARTNER))
-    return payable(material) * 8 < entry["reference_tonnes"]
-
-
-material = max((pair for pair in candidates if glut_within_market(pair[1])), key=lambda pair: payable(pair[1]))[1]
+material = max(candidates, key=lambda pair: payable(pair[1]))[1]
 check("...and a cargo of the widest-paying good pays", payable(material) > 0.0, material)
 
 
