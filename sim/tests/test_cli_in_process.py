@@ -16,7 +16,7 @@ def _both(arguments, input_text):
 
 _commands = "\n".join(json.dumps(command) for command in
                       [{"cmd": "state"}, {"cmd": "bogus"}, {"cmd": "step"}, {"cmd": "quit"}]) + "\n"
-_real, _local = _both(["agent", "--civ", "rome_100ad"], _commands)
+_real, _local = _both(["agent", "--civ", "norse_900ad"], _commands)
 check("agent: in-process stdout is byte-identical to a real subprocess",
       _local.stdout == _real.stdout and _real.stdout.count("\n") == 4,
       (_real.stdout[:300], _local.stdout[:300]))
@@ -59,7 +59,7 @@ def _json_lines(text):
 
 
 _steps = "\n".join(json.dumps(command) for command in
-                   [{"cmd": "step", "years": 2}, {"cmd": "state"}, {"cmd": "quit"}]) + "\n"
+                   [{"cmd": "step", "years": 1}, {"cmd": "state"}, {"cmd": "quit"}]) + "\n"
 _resume = "\n".join(json.dumps(command) for command in
                     [{"cmd": "state"}, {"cmd": "step"}, {"cmd": "state"}, {"cmd": "quit"}]) + "\n"
 
@@ -67,10 +67,10 @@ _resume = "\n".join(json.dumps(command) for command in
 def _sequence(runner):
     """Each call's exit status and stdout, with the session path made the same for every pass."""
     session_path = os.path.join(tempfile.mkdtemp(), "leak_check.json")
-    calls = [(["agent", "--civ", "rome_100ad", "--seed", "3", "--session", session_path], _steps),
+    calls = [(["agent", "--civ", "han_china_100ad", "--seed", "3", "--session", session_path], _steps),
              (["agent", "--civ", "norse_900ad", "--seed", "3"], _steps),
              (["agent", "--session", session_path], _resume),
-             (["agent", "--civ", "rome_100ad", "--seed", "3"], _steps)]
+             (["agent", "--civ", "han_china_100ad", "--seed", "3"], _steps)]
     outputs = []
     for arguments, text in calls:
         completed = runner(arguments, text)
