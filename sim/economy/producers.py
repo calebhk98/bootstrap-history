@@ -268,9 +268,8 @@ def plan(producer: Producer, recipe: Recipe, view: MarketView, cash: float) -> P
                      * inputs[good] for good, quantity in recipe.inputs.items())
     paid_now = variable - rent                  # rent falls due at the year's end, out of the sales
     affordable = (max(cash, 0.0) + held_value) / paid_now if paid_now > 0.0 else producer.capacity_runs
-    runs = max(0.0, min(producer.capacity_runs * share_working(revenue, variable), affordable,
-                        runs_for_stock(producer, recipe, view, variable, outputs)))
-    runs = within_a_years_change(producer, runs)
+    runs = within_a_years_change(producer, producer.capacity_runs * share_working(revenue, variable))
+    runs = max(0.0, min(runs, affordable, runs_for_stock(producer, recipe, view, variable, outputs)))
     wanted = runs
     if producer.land_run_cap >= 0.0:
         runs = min(runs, producer.land_run_cap)

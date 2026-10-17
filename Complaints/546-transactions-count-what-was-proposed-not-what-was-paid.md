@@ -1,6 +1,6 @@
 # Transactions count what was proposed, not what was paid
 
-**Status:** open
+**Status:** open - all three defects fixed and tested; producers now ask for working-capital loans; `economy_vessel_price_fixture` (dug input price swing) still fails
 
 Found by an outside reviewer reading the repository; each point checked against the code. Money
 conservation holds (the book balances), which is why the suite passes; these are about which
@@ -18,11 +18,23 @@ quantities drive decisions.
    cleared market, records buyers' shortfalls in `ledger.unpaid`, and then stores `result.quantity`, the
    proposed volume, in `record.volumes` and the market memory, which feed expectations and entry.
 
-## What it would take
+## What happens now
 
-- Regression tests first (6, TDD): a cashless producer plans no runs it cannot pay for; a labour
-  settlement that pays nothing delivers no hours; a goods settlement with a shortfall records the
-  delivered volume.
-- Then: apply cash and resource limits after smoothing; count hours from payments made, with an explicit
-  flag for callers that pass no settlement; record delivered quantities.
-- Re-measure the spin-up (473) after each, since each changes behaviour.
+1. `plan` smooths toward last year's runs first, then limits them to what cash and stock pay for and what
+   unsold output allows; only then does the land cap apply.
+2. `YearLedger.note_labour` counts hours from the wages actually paid. A settlement that paid nothing
+   delivers no hours; a caller with no settlement passes `settled=False` to count the fills in full.
+3. `clear_goods` records the volume that changed hands (the goods moves the settlement posted) in
+   `record.volumes` and the market memory, and counts a market as traded only when something was delivered.
+
+Regression tests: `sim/tests/test_economy_delivered_not_proposed.py`.
+
+## Open
+
+- At a year's close a producer whose cash cannot pay the smoothed runs next year's plan will try asks for a
+  one-year loan (purpose `working capital`, no plant) at up to the yearly return of those runs. It takes the
+  producer's single loan slot only when it asks no expansion loan.
+- `economy_vessel_price_fixture` still fails: the fixture's dug clay price crashes in one year and recovers
+  (`python3 -m sim.tests --only economy_vessel_price_fixture`). The diggers' cash is not what limits them
+  there; their runs swing between idle and busy with the price they expect.
+- Re-measure the spin-up (473); it is a long command and has not been run.

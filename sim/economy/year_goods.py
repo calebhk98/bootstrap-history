@@ -20,7 +20,7 @@ from .notional import making_costs
 from .protocols import AgentOrders
 from .recipes import input_depth_order
 from .taxes_bases import YearFacts
-from .types import Bid, Offer
+from .types import Bid, GoodsMove, Offer
 from .entry import unmet_quantity
 from .year_ledger import YearLedger
 
@@ -154,8 +154,10 @@ def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, led
             key = market_key(good, area)
             offers = seller_offers.strategic_offers(setup, record, view, bids, offers, record.memory.prices.get(key))
             result = goods_market.clear(bids, offers, good, area, setup.currency_id, record.memory.prices.get(key))
+            delivered = 0.0
             if result.quantity > 0.0:
                 done_settlement = settlement.settle_goods(record.book, result)
+                delivered = sum(move.quantity for move in done_settlement.postings if isinstance(move, GoodsMove))
                 ledger.note_postings(done_settlement.postings, "sales")
                 ledger.note_plant_purchases(done_settlement.postings, result.price, plant_goods)
                 for shortfall in done_settlement.shortfalls:
@@ -197,10 +199,10 @@ def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, led
                 floor = setup.opening_prices.get(good, signal) * PRICE_MEMORY_FLOOR_SHARE
                 record.memory.prices[key] = max(signal, floor)
                 record.memory.note_usual_price(key)
-            record.volumes[key] = result.quantity
-            record.memory.note_volume(key, result.quantity)
+            record.volumes[key] = delivered
+            record.memory.note_volume(key, delivered)
             cleared.add(key)
-            if result.quantity > 0.0:
+            if delivered > 0.0:
                 traded.add(key)
     for key in sorted(set(record.memory.volume_weights) - cleared):
         record.memory.note_volume(key, 0.0)

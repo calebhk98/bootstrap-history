@@ -49,7 +49,7 @@ def years_of(setup, years, spin_up=0, empty=False):
             continue
         flow = economy.record.book.goods_flow(fixture.METAL)
         income = sum(cohort.last_year_income for cohort in economy.record.cohorts.values())
-        rows.append((household_stock(economy), flow.get("wear", 0.0), flow["output"], income))
+        rows.append((household_stock(economy), flow.get("wear", 0.0), flow.get("output", 0.0), income))
     return rows
 
 

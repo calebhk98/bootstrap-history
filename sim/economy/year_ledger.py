@@ -86,9 +86,10 @@ class YearLedger:
             if fill.side == "buy":
                 self.buy_fills.setdefault(fill.agent, []).append(fill)
 
-    def note_labour(self, result: LabourResult, postings: Iterable[object] = ()) -> None:
+    def note_labour(self, result: LabourResult, postings: Iterable[object] = (), settled: bool = True) -> None:
         """Hours count as hired and sold in proportion to the wages actually paid: hours an employer
-        could not pay for are not delivered, so the workers keep them. Without postings the fills count in full."""
+        could not pay for are not delivered, so the workers keep them, and a settlement that paid nothing
+        delivers no hours. A caller with no settlement passes `settled=False` and the fills count in full."""
         self.labour_results.append(result)
         postings = list(postings)
         paid_by: Dict[AgentId, float] = {}
@@ -97,7 +98,7 @@ class YearLedger:
             if isinstance(posting, Transfer):
                 paid_by[posting.payer] = paid_by.get(posting.payer, 0.0) + posting.amount
                 paid_to[posting.payee] = paid_to.get(posting.payee, 0.0) + posting.amount
-        settled = bool(postings) and result.wage > 0.0
+        settled = settled and result.wage > 0.0
         for fill in result.fills:
             quantity = fill.quantity
             if settled:
