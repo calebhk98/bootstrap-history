@@ -5,13 +5,16 @@ from .harness import *  # noqa: F401,F403
 
 import copy
 
+from sim.economy import api as economy_api
 from sim.engine import market_demand
 from sim.tests import economy_fixture
 from sim.engine.agents_port import SimWorld
 from sim.engine import prices as price_solver
 from sim.engine.data import calculated_goods_prices
 
-GOOD = "fat_kg"
+# A good one single-output, labour-led entry makes, whose cleared volume answers a cheaper entry by more than the
+# world's own year-to-year drift (fat is now a joint product of the herds; a staple's demand barely moves with price).
+GOOD = "copper_ore_kg"
 YEARS_CLOSED = 1   # the market is one agent-economy year to close, so the fewest years that show each property
 YEARS_TO_ENTER = 5   # producers build plant to run a technique over some years before its goods reach the market
 
@@ -37,6 +40,15 @@ def complete(game, node_id):
 def run(game, node_id):
     """A producer runs the node's techniques: only then do they reach a price."""
     game.state.projects.operating.add(node_id)
+
+
+def baseline_the_twin(twin):
+    """The game measures cleared volumes against its first year with the new entry admitted, as any world is
+    measured against its first year; the twin admits no entry, so without a baseline it would sit at its
+    reference while the world's own year-to-year drift moves the game's ratio. It gets its own first year's
+    volume, so the two ratios differ only by what the entry does."""
+    twin.economy.agent.stored["volume_baseline"] = {
+        GOOD: economy_api.traded_volumes(twin.economy.agent.economy())[GOOD]}
 
 
 def close_years(game, years):
@@ -65,7 +77,8 @@ check("...nor output per head", control.real_output_per_head() == twin.real_outp
 # good by it and, some years on, the market clears a larger quantity of it at a lower price than the same society's twin.
 original = price_solver._default_production_entries()
 patched = dict(original)
-source_key = next(key for key, entry in original.items() if GOOD in (entry.get("outputs") or {}))
+# the entry the incumbents make the good by
+source_key = control._reference_entry(GOOD)
 improved = copy.deepcopy(original[source_key])
 improved["labour_hours"] = {trade: hours / 2.0 for trade, hours in improved["labour_hours"].items()}
 improved["requires_node"] = plain
@@ -92,8 +105,11 @@ try:
           all(game.goods_market.household_prices()[material] == price
               for material, price in other_before.items()), other_before)
     twin_years = sim(civ="rome_100ad", capital=1e9)
-    close_years(game, YEARS_TO_ENTER)
-    close_years(twin_years, YEARS_TO_ENTER)
+    close_years(game, 1)
+    close_years(twin_years, 1)
+    baseline_the_twin(twin_years)
+    close_years(game, YEARS_TO_ENTER - 1)
+    close_years(twin_years, YEARS_TO_ENTER - 1)
     check("a producer that makes the good by that entry and sells it lowers the price the market posts",
           game.goods_market.household_prices()[GOOD] < twin_years.goods_market.household_prices()[GOOD],
           (game.goods_market.household_prices()[GOOD], twin_years.goods_market.household_prices()[GOOD]))
