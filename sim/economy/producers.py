@@ -94,6 +94,7 @@ class Producer:
     last_runs: float = -1.0                 # runs it worked last year; below zero before its first year
     land_rent_per_run: float = 0.0          # rent on the land a run works, set yearly by the land market
     land_run_cap: float = -1.0              # runs the land it was granted allows; below zero for no limit
+    workshops: int = 1                      # independent workshops it stands for: each newcomer to its recipe and tile joins it
 
 
 @dataclass(frozen=True)

@@ -1,6 +1,6 @@
 # One producer per tile and recipe prices as a monopolist
 
-**Status:** open
+**Status:** fixed (see Resolution)
 
 Found by an outside reviewer reading the repository; checked against the code.
 
@@ -19,3 +19,7 @@ Found by an outside reviewer reading the repository; checked against the code.
   and exit; strategic pricing only for a producer that really is one owner.
 - A test: splitting one aggregate into many identical small producers leaves the clearing price and
   quantity unchanged within a tolerance.
+
+## Resolution
+
+`Producer.workshops` counts the independent workshops a producer stands for (entry_year.py adds one per newcomer that joins it). `seller_offers.stands_for_many` treats a producer with more than one as a crowd of price takers: it keeps its price-taking reservation and does not search for a profit-maximising reservation or raise its ask. Defensible because workshops joined are separate owners in effect, each too small to move the price, and each unit then sells at the price-taking reservation (its holding value), the competitive schedule. A producer with one workshop (a founder, a firm, a lone owner) stays strategic. Test: `sim/tests/test_economy_aggregate_producer_pricing.py`. Remaining: opening producers that stand for many workshops still count as one.
