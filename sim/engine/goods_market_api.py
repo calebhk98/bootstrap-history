@@ -16,6 +16,7 @@ flows, so they move the clearing price the same way (`sim/world/market.py`); the
 out the asking seat's own orders only, which keep the marginal curves that move a bill as it is filled. The clearing itself
 is in market_clearing.py; who offers what is in goods_market_offers.py.
 """
+import copy
 from sim.world.producer_market import Offer
 
 from . import purchase_rule
@@ -129,6 +130,14 @@ class GoodsMarket(GoodsPricing, GoodsOffers):
         if tonnes > 0:
             drawn = self._sim._market_flows()["drawn"]
             drawn[commodity] = drawn.get(commodity, 0.0) + tonnes
+
+    def snapshot_flows(self):
+        """A copy of this year's flows, to hand back to `restore_flows`."""
+        return copy.deepcopy(self._sim.state.economy.market_flows)
+
+    def restore_flows(self, flows):
+        """Put this year's flows back as `snapshot_flows` took them."""
+        self._sim.state.economy.market_flows = flows
 
     def add_stock(self, material, tonnes):
         """Goods appear in the society's hands (a windfall, a confiscation sold on): they join this

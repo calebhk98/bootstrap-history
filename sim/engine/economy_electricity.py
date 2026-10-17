@@ -533,7 +533,7 @@ class ElectricityMixin:
         would, then the stock it banks, the opening stock it records, the draws it notes and the shortage it counts are put back, so a question
         asked between steps does not change the year that follows."""
         holdings, household = self.state.holdings, self.household
-        saved = (copy.deepcopy(dict(self._material_stock())), copy.deepcopy(self.state.economy.market_flows),
+        saved = (copy.deepcopy(dict(self._material_stock())), self.goods_market.snapshot_flows(),
                  holdings.throttle, holdings.binding, collections.Counter(holdings.shortages),
                  getattr(household, "_stock_throttle_sig", None), getattr(household, "_stock_throttle_cache", None),
                  getattr(household, "_material_demand_cache", None), copy.deepcopy(holdings._material_stock_opening))
@@ -542,7 +542,7 @@ class ElectricityMixin:
         stock, flows, holdings.throttle, holdings.binding, shortages, sig, cache, demand, opening = saved
         self._material_stock().clear()
         self._material_stock().update(stock)
-        self.state.economy.market_flows = flows
+        self.goods_market.restore_flows(flows)
         holdings.shortages.clear()
         holdings.shortages.update(shortages)
         household._stock_throttle_sig = sig
