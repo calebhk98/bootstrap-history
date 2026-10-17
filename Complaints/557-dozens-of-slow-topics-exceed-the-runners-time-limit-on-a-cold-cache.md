@@ -100,3 +100,10 @@ retirement in the comment next to it.
 To make the two spin-up topics fast: regenerate the openings (`simulator.py openings --prune`), and make `openings`
 also ship the 40-year money trace (`opening_checks_run.TRACE_CACHE_DIRECTORY` key with `years` 40; today it ships only
 the thirty-year trace the opening checks use).
+
+Per-topic time allowances were proposed (a module-level `TOPIC_SECONDS` for bronze, `hash_seed_order` and
+`spin_up_money_supply`) and not taken: a topic over the runner's limit fails. Those three stay over it until a
+year is cheaper (bronze: merchants' route search, `sim/economy/merchants.py` `_good_routes`, is the largest
+item of its profile), and until the shipped openings carry the spin-ups and traces they read
+(`python3 sim/simulator.py openings --prune`, plus the 40-year money trace `spin_up_money_supply` keys in the
+opening traces cache).

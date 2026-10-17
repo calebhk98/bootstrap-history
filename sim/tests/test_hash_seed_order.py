@@ -4,9 +4,6 @@ function in fresh interpreters, since a hash seed is fixed at start-up."""
 
 QUICK_TOPIC = True
 
-# The slow check opens two games from a fresh cache under two hash seeds, which is two whole openings and spin-ups
-# side by side; nothing shorter checks the opening's order. Measure with `--slow --only hash_seed_order`.
-TOPIC_SECONDS = 360
 
 import json
 import os

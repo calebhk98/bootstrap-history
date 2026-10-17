@@ -16,10 +16,6 @@ from sim.engine.economy_port_key import SPIN_UP_SOURCE_MODULES, spin_up_key
 from sim.engine.economy_port_setup import build_setup
 from sim.tests import harness
 
-# Forty years of the economy stepped by hand is far past the default limit when the trace is not on disk; once
-# computed it is kept beside the opening checks' traces (keyed on the opening and the source), so a warm run reads it.
-# Measure the cold cost with an empty cache directory: `ROME_CACHE_DIR=<empty> python3 -m sim.tests --slow --only spin_up_money_supply`.
-TOPIC_SECONDS = 1800
 
 YEARS = 40
 DECADE = 10

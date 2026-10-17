@@ -8,9 +8,6 @@ from sim.economy import notional
 from sim.economy.protocols import YearInputs
 from sim.economy.national_prices import national_prices
 
-# Eighteen engine years stepped by hand (about nine seconds each, mostly merchant route search in
-# `sim/economy/merchants.py`); the allowance retires when a year costs a fraction of that.
-TOPIC_SECONDS = 360
 GOOD = "bronze_kg"
 YEARS_PLAYED = 18
 MARKUP_BOUND = 3.0      # a melt's fuel and skilled hours are already in its recipe cost; a markup beyond this is a thin market
