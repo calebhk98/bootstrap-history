@@ -7,8 +7,8 @@ QUICK_TOPIC = True
 import types
 import unittest
 
-from sim.economy import goods_market, seller_offers
-from sim.economy.producers import UNSOLD_ASK_MARKDOWN_SHARE, Producer
+from sim.economy import goods_market, seller_offers, seller_pricing
+from sim.economy.producers import Producer
 from sim.economy.types import Bid, Offer, Recipe
 
 GOOD, AREA, TILE = "grain", "area", "tile"
@@ -82,11 +82,24 @@ class AggregateProducerTests(unittest.TestCase):
                                                 [Offer("whole", GOOD, AREA, TILE, TOTAL, ASK)], 1.0)
         self.assertEqual(chosen[0].reservation_price, ASK)
 
-    def test_an_aggregate_with_unsold_stock_above_its_cost_marks_its_ask_down_by_one_step(self):
+    def test_an_aggregate_with_unsold_stock_above_its_cost_marks_its_ask_down_by_the_share_unsold(self):
         setup, record = game([producer("whole", SHOPS)])
         chosen = seller_offers.strategic_offers(setup, record, View(), demand(),
                                                 [Offer("whole", GOOD, AREA, TILE, TOTAL, 10.0)], 1.0)
-        self.assertAlmostEqual(chosen[0].reservation_price, 10.0 * (1.0 - UNSOLD_ASK_MARKDOWN_SHARE))
+        buyers = goods_market.Buyers(demand(), 1.0)
+        sold, _price = seller_pricing.sold_and_price(demand(), [], Offer("whole", GOOD, AREA, TILE, TOTAL, 10.0), 10.0, 1.0, buyers)
+        unsold_share = 1.0 - sold / TOTAL
+        self.assertGreater(unsold_share, 0.0)
+        cost = seller_offers.unit_cost(setup, record, View(), Offer("whole", GOOD, AREA, TILE, TOTAL, 10.0))
+        self.assertAlmostEqual(chosen[0].reservation_price, 10.0 - unsold_share * (10.0 - cost))
+
+    def test_a_mostly_sold_aggregate_marks_down_by_less_than_a_full_step(self):
+        setup, record = game([producer("whole", SHOPS)])
+        bids = [Bid("buyer", GOOD, AREA, TILE, 0.9 * TOTAL, 0.0, 1.0, 0.5, 1e9)]
+        chosen = seller_offers.strategic_offers(setup, record, View(), bids,
+                                                [Offer("whole", GOOD, AREA, TILE, TOTAL, 10.0)], 1.0)
+        self.assertGreater(chosen[0].reservation_price, 9.0)
+        self.assertLess(chosen[0].reservation_price, 10.0)
 
     def test_an_aggregate_whose_stock_goes_unsold_at_a_high_ask_comes_down_to_its_cost(self):
         setup, record = game([producer("whole", SHOPS)])

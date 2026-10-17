@@ -105,11 +105,12 @@ def strategic_offers(setup, record, view, bids: Sequence[Bid], offers: Sequence[
                 offers[index] = dataclasses.replace(offer, reservation_price=limit)
                 continue
         if crowd:
-            # unsold stock at an ask above cost: the crowd marks down as its small members would, never below cost
+            # unsold stock at an ask above cost: the crowd marks down by the share of its offer left unsold, never below cost
             if ask > cost and math.isfinite(cost):
                 sold, _price = seller_pricing.sold_and_price(book, rivals, offer, ask, last_price, buyers)
-                if sold < offer.quantity:
-                    offers[index] = dataclasses.replace(offer, reservation_price=max(cost, ask * (1.0 - UNSOLD_ASK_MARKDOWN_SHARE)))
+                unsold_share = 1.0 - sold / offer.quantity if offer.quantity > 0.0 else 0.0
+                if unsold_share > 0.0:     # close the gap to cost by the share of the offer left unsold
+                    offers[index] = dataclasses.replace(offer, reservation_price=ask - unsold_share * (ask - cost))
             continue
         step = UNSOLD_ASK_MARKDOWN_SHARE * (ask if ask > 0.0 else max(last_price or 0.0, 0.0))
         floor = ask * (1.0 - UNSOLD_ASK_MARKDOWN_SHARE)
