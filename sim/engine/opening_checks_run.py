@@ -12,7 +12,7 @@ from sim import cache_root
 from sim.engine.economy_port_trace import traded_staple
 import sim.geography.api as geography
 
-from . import economy_port_trace, opening_checks, solve_cache
+from . import concern_scan_run, economy_port_trace, opening_checks, solve_cache
 from .data import load, load_civ
 from .economy_port_key import SPIN_UP_SOURCE_MODULES, spin_up_key
 from .economy_port_setup import build_setup
@@ -87,6 +87,15 @@ def check_game(game, trace=None) -> List[opening_checks.CheckResult]:
 
 def check_civilisation(civ_id: str) -> List[opening_checks.CheckResult]:
     return check_game(open_full_length(civ_id))
+
+
+def check_civilisation_and_concerns(civ_id: str, with_checks: bool = True) -> Tuple[List[opening_checks.CheckResult], dict]:
+    """(the checks, the concern scan) of `civ_id`'s opening. The scan is taken before the game steps and is reported,
+    never a check that can fail (what share should pay is a decision for later); `with_checks=False` skips the
+    checks, which step a year and read the money trace."""
+    game = open_full_length(civ_id)
+    concerns = concern_scan_run.scan_game(game)
+    return (check_game(game) if with_checks else []), concerns
 
 
 def failures(results) -> List[opening_checks.CheckResult]:
