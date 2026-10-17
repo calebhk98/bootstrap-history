@@ -139,6 +139,7 @@ class Economy:
         sites.apply_site_limits(record, setup, inputs.site_limits)
         view = self.view()
         money = setup.currency_id
+        lending.lend_working_capital(setup, record, view)
         plans = {producer_id: producers.plan(producer, setup.recipes[producer.recipe_id], view,
                                              record.book.balance(producer_id, money))
                  for producer_id, producer in sorted(record.producers.items())}
