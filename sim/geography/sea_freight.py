@@ -9,6 +9,7 @@ into money.
 
 Standalone: nothing from `sim/engine/`.
 """
+import functools
 import math
 
 from sim.constants import declare
@@ -164,6 +165,7 @@ def hull_loss_per_thousand_km(crew=None):
     return SEA_WRECK_PER_THOUSAND_KM + PIRATE_ENCOUNTERS_PER_THOUSAND_KM * boarding_loss_share(crew)
 
 
+@functools.lru_cache(maxsize=256)
 def defenders_to_hire(rig_crew, defender_cost_per_day, value_at_risk):
     """Hands to sign on beyond the rig's need: the number that least sums their keep and the expected
     loss of the hull and cargo (`value_at_risk`) over 1000 km sailed, since a larger crew is taken less
