@@ -2,6 +2,7 @@
  "_note": "Staple grains other than wheat, so a civilisation whose people live on another grain can price its subsistence basket (a civilisation file names its `staple`). Each is a GROWN, land-limited entry shaped like wheat_kg: no material inputs, one hectare-year charged against hectare_land.",
  "materials": {
   "millet_kg": {
+   "establishment_workers": 2,
    "outputs": {
     "millet_kg": 900.0
    },

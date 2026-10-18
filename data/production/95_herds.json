@@ -2,6 +2,7 @@
  "_note": "Herds: wool, milk, meat, hides, tallow and horn as joint products of a flock or herd on pasture (Complaints/532). Each recipe is a batch of 100 head-years; the figures are the species rows of data/world/living_stock.json.",
  "materials": {
   "wool_kg": {
+   "establishment_workers": 2,
    "outputs": {
     "wool_kg": 100.0,
     "meat_kg": 276.0,
@@ -51,6 +52,7 @@
    }
   },
   "meat_kg": {
+   "establishment_workers": 2,
    "outputs": {
     "meat_kg": 1128.0,
     "milk_kg": 7337.5,
