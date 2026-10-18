@@ -151,7 +151,8 @@ class CreditMixin:
         years = self.CREDIT_SURPLUS_YEARS_MULTIPLE
         if market_rate > 0:
             years *= min(1.0, self.civ["starting_interest_rate"] / market_rate)
-        serviceable = floor + max(0.0, earning) * years
+        # The running tab carries interest too, so only the earning left after that interest backs new advances.
+        serviceable = floor + max(0.0, earning - floor * market_rate) * years
         # And never more than lenders still hold beyond what everyone else owes them.
         room = self.market_credit_room(self.state.acting_seat)
         return calculate_credit_ceiling(base, floor, serviceable, self.price_index,
