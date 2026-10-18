@@ -96,6 +96,15 @@ class StateBudgetTests(unittest.TestCase):
         self.assertTrue(printing.record.book.check_conservation(1e-9).ok)
         self.assertGreater(printing.record.state_budget.issued_total, 0.0)
 
+    def test_printing_more_raises_the_price_level_more_instead_of_saturating(self):
+        # a bigger real programme must not stop at a few times the control however much is printed
+        supply = opened(True).record.book.money_supply(opened(True).setup.currency_id)
+        control = run(resumed(fiat=True, full_length=True), 4)[-1][1]
+        levels = [run(resumed(StatePolicy(real_spending_target=times * supply, financing_order=("issue",)),
+                              fiat=True, full_length=True), 4)[-1][1] for times in (4.0, 16.0)]
+        self.assertGreater(levels[0], 3.0 * control)
+        self.assertGreater(levels[1], 1.25 * levels[0])
+
     def test_a_struck_coin_is_debased_to_pay_the_deficit_and_money_is_conserved(self):
         economy = opened()
         supply = economy.record.book.money_supply(economy.setup.currency_id)
