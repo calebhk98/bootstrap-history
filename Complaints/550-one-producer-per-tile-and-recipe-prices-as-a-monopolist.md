@@ -25,3 +25,13 @@ Found by an outside reviewer reading the repository; checked against the code.
 `Producer.workshops` counts the independent workshops a producer stands for (entry_year.py adds one per newcomer that joins it). `seller_offers.stands_for_many` treats a producer with more than one as a crowd of price takers: it keeps its price-taking reservation and does not search for a profit-maximising reservation or raise its ask. Defensible because workshops joined are separate owners in effect, each too small to move the price, and each unit then sells at the price-taking reservation (its holding value), the competitive schedule. A producer with one workshop (a founder, a firm, a lone owner) stays strategic. Test: `sim/tests/test_economy_aggregate_producer_pricing.py`. Remaining: opening producers that stand for many workshops still count as one.
 
 Open: opening producers (opening.py `_add_producers`) stand for a whole tile of workshops but start at one. No workplace size exists in the recipe, sites.py or setup (workplaces are named only in comments); deriving one needs a crew or plant-scale datum per recipe, and a labour-years proxy would make a single large mine or furnace look like a crowd. Needs that datum first.
+
+## Workplace sizes: built, measured, reverted
+
+Per-recipe establishment sizes (branch `fix-550-workplace-size`) let the opening count each producer's workshops,
+and a crowd's offer as a rising schedule over its workshops' costs (branch `fix-550-supply-schedule`). Measured on
+Rome, prices of most main goods moved nearer their cost, but the founder's market rate at a test opening rose
+several-fold (savings offered fell and loans asked rose; not traced), a thin sited iron-ore market kept a
+scarcity price far above cost, iron opened at its floor, and `economy_innovator_pricing` swung with the schedule's
+slicing. The merge is reverted on `economy-accounting-and-speed`; both branches are kept. Entry aggregates still
+price as takers.

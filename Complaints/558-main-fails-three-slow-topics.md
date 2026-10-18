@@ -125,10 +125,11 @@ with the test kept honest.
   and then gives way in price once before the cycle repeats. Choosing a cargo that happens not to swing would fit the
   test to the case, so the fixture is unchanged and the topic stays failing: the held-then-released glut is a
   real stock cycle in the partner's market (553). Open.
-- `economy_money_regimes` (england_1300, struck coin: "and the price level") fails after the 550 workplace-size
-  data and passes just before it. The data moves the opening and with it the phase of the price cycle (473): over
+- `economy_money_regimes` (england_1300, struck coin: "and the price level") failed after the 550 workplace-size
+  data (since reverted on this branch; it passes again) and passed just before it. The data moves the opening and with it the phase of the price cycle (473): over
   years 4 to 7 the mined run dips once below its twin, while over fourteen years extra metal raises the price
   level well above the twin. The window is unchanged and the check stays failing until the spin-up settles. Open.
+<<<<<<< HEAD
 - `affordability_and_credit`, `arrears_hours`, `arrears_visibility`, `failure_and_bounty_money` fail from the 550
   workplace-size merge and pass just before it (bisected over the first-parent merges; `arrears_hours` per merge).
   The data moves the opening so the founder's market rate starts several times dearer (read it with
@@ -138,3 +139,11 @@ with the test kept honest.
   `credit_line_effect` states the new bound). (2) Fixture: "in arrears" was set far deeper than the subject needs
   (purse negative), so one year's interest at the dear rate crossed the limit and wiped the project; the arrears
   are now the smallest that make the purse negative, every assertion unchanged.
+=======
+- `stock_growth_and_smuggling` crashed at import: its stand-in `Game` lacked `society_herds`, which the yearly
+  living-stock step now reads (the 532 fix). The stand-in now carries the mixin property and an economy field.
+  `interface_honesty` ran over six minutes: the near-the-limit check started at 75% of the limit, but a year's
+  deficit now carries the household past 100%, so it settled its debt and stepped all fifty years at several
+  seconds each. It starts at 60% (a year's drift lands it past 70%, short of 100%) and the topic takes about
+  half a minute (`python3 -m sim.tests --slow --only interface_honesty --jobs 1`). The assertions are unchanged.
+>>>>>>> fix-smuggling-interface
