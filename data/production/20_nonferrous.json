@@ -2,6 +2,7 @@
  "_note": "NON-FERROUS METALS. Every yield here is grade x recovery, reaction stoichiometry, an alloy's phase-diagram composition, or Faraday's-law electrical energy - never a number backed out of data/prices.json. Entries marked with 'LABELLED HEURISTIC' in yield_basis stand in for chemistry this file does not model step by step (chlorine production for pre-electrolytic aluminium; multi-step caesium and barium refining; galena's shared ore tonnage across its lead/silver/bismuth/selenium by-products) - flagged per CLAUDE.md 3.4 rather than left silent. copper_ore_kg and copper_kg are defined in 00_examples.json and are NOT redefined here. aluminum_oxide_kg is defined elsewhere in data/production/ (a different, natural-corundum sourcing) and is likewise NOT redefined here - aluminium_kg and aluminium_sodium_reduction_kg instead consume bauxite_kg directly, folding the Bayer alumina-refining step into their own numbers. pyrolusite_kg, calamine_kg, galena_kg, cinnabar_kg, bauxite_kg and cryolite_kg were already materials the tree consumes without a production entry and are given one here as intermediates this family needs anyway.",
  "materials": {
   "galena_kg": {
+   "establishment_workers": 20,
    "outputs": {
     "galena_kg": 1000.0
    },
@@ -17,6 +18,7 @@
    "conf": "C"
   },
   "lead_kg": {
+   "establishment_workers": 6,
    "outputs": {
     "lead_kg": 1000.0,
     "silver_kg": 1.606
@@ -57,6 +59,7 @@
    "conf": "C"
   },
   "silver_ore_kg": {
+   "establishment_workers": 20,
    "outputs": {
     "silver_ore_kg": 1000.0
    },
@@ -126,6 +129,7 @@
    "requires_node": "mat_lead"
   },
   "cassiterite_kg": {
+   "establishment_workers": 10,
    "outputs": {
     "cassiterite_kg": 1000.0
    },
@@ -141,6 +145,7 @@
    "conf": "C"
   },
   "tin_kg": {
+   "establishment_workers": 6,
    "outputs": {
     "tin_kg": 1000.0
    },
@@ -160,6 +165,7 @@
    "conf": "D"
   },
   "bronze_kg": {
+   "establishment_workers": 4,
    "outputs": {
     "bronze_kg": 1000.0
    },
@@ -180,6 +186,7 @@
    "conf": "B"
   },
   "calamine_kg": {
+   "establishment_workers": 20,
    "outputs": {
     "calamine_kg": 1000.0
    },
@@ -196,6 +203,7 @@
    "conf": "C"
   },
   "brass_kg": {
+   "establishment_workers": 4,
    "outputs": {
     "brass_kg": 1000.0
    },
@@ -606,6 +614,7 @@
    "conf": "C"
   },
   "platinum_ore_kg": {
+   "establishment_workers": 10,
    "outputs": {
     "platinum_ore_kg": 1000.0
    },
@@ -777,6 +786,7 @@
    "conf": "C"
   },
   "gold_gravel_kg": {
+   "establishment_workers": 10,
    "outputs": {
     "gold_gravel_kg": 1000.0
    },

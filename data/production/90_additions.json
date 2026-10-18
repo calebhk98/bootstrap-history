@@ -2,6 +2,7 @@
  "_note": "Additions closing part of the book-price burndown recorded in the ENDOGENOUS_COSTS_AND_DOMAINS milestones: materials priced in data/prices.json that had NO production entry anywhere in this directory. Every entry here uses only material keys, trades and tech-tree node ids that already exist elsewhere in this directory/tree - no new intermediate material is invented. See each entry's own yield_basis for its physical grounding; nothing here is tuned against data/prices.json's book figure for the same key, per this directory's own governing rule.",
  "materials": {
   "mortar_kg": {
+   "establishment_workers": 4,
    "outputs": {
     "mortar_kg": 1000.0
    },

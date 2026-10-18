@@ -15,6 +15,7 @@ ids. Mapping, field by field:
 `extracted_from` only sets `site_bound`: the recipe runs only where a site is declared (sites.py); which
 site, and its grade, come from outside as a `SiteLimit`. `grown_in_climate_classes` becomes
 `climate_classes`: the recipe runs only on tiles of those climates (sites.climate_allows).
+`establishment_workers` is the crew of one workshop (establishment.py).
 
 Not mapped, and why: `land_hectare_years` (a site's fertility is the producer's yield factor, so rent
 appears as profit); `energy_mj` (the uncosted
@@ -30,7 +31,7 @@ from .types import GoodId, Recipe
 
 ENERGY_CARRIER_FIELDS = ("thermal_mj", "mechanical_mj", "electrical_mj")
 MAPPED_FIELDS = frozenset(("outputs", "inputs", "labour_hours", "capital", "extracted_from",
-                           "grown_in_climate_classes") + ENERGY_CARRIER_FIELDS)
+                           "grown_in_climate_classes", "establishment_workers") + ENERGY_CARRIER_FIELDS)
 
 
 def _basis_output(recipe_id: str, outputs: Mapping[GoodId, float]) -> float:
@@ -68,7 +69,8 @@ def recipe_from_entry(recipe_id: str, entry: Mapping[str, Any]) -> Recipe:
     plant_goods, plant_labour, plant_life = _plant(recipe_id, entry, outputs)
     return Recipe(recipe_id, outputs, inputs, labour, plant_goods, plant_labour, plant_life,
                   site_bound=bool(entry.get("extracted_from")),
-                  climate_classes=tuple(entry.get("grown_in_climate_classes") or ()))
+                  climate_classes=tuple(entry.get("grown_in_climate_classes") or ()),
+                  establishment_workers=float(entry.get("establishment_workers") or 0.0))
 
 
 def recipes_from_production_data(data: Mapping[str, Mapping[str, Any]],

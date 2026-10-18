@@ -39,6 +39,7 @@ Once every material has inputs and a yield, the price of each is the cost of wha
 | `land_hectare_years` | Optional. For a material whose real constraint is GROUND rather than a process (a crop, a fleece, a felled tree) - how many hectare-years of `hectare_land` this recipe's WHOLE BATCH ties up, priced against `hectare_land`'s own solved rent exactly like an ordinary `inputs` entry. See LAND below for the unit, the mechanism, and which materials got it. |
 | `grown_in_climate_classes` | Optional. A list of Koppen-Geiger classes in which this crop is grown. A civilisation whose home regions' tiles (`data/world/geography.json`, `land_tiles`) hold none of them does not make it: the good stays priced (as `mature`) but is not `solved` for that civilisation, so a trade partner whose territory has one can offer it (`sim/engine/crop_climate.py`). Absent means it grows anywhere. Whether a civilisation knows the crop is the separate gate `requires_node`. |
 | `service` | Optional. `true` for an entry that moves or holds matter without making any (hauling, tipping, holding ground): it may consume only labour or `land_hectare_years`. The disposal sink in `99_waste_disposal.json` is made of services (`sim/engine/disposal_cost.py`). |
+| `establishment_workers` | Optional. People working one establishment of this kind (a family farm, a workshop, a mine gang): the size of one owner's unit. The opening divides a tile's capacity by what one establishment works a year (`workers * HOURS_PER_PERSON_YEAR / total labour_hours per run`, `sim/economy/establishment.py`) to say how many independent workshops its producer stands for; a producer of many prices as a crowd of price takers, one of a single workshop prices strategically (Complaint 550). Positive, and the entry needs `labour_hours`. Absent means no datum: the capacity counts as one workshop. Not a labour demand: staffing still comes from `labour_hours`. Sizes and sources: ESTABLISHMENT SIZES below. |
 | `basis` | The quantity the whole entry is quoted per. Say it in words. |
 | `yield_basis` | WHY these numbers, in physical terms. This is the most important field in the entry. An entry whose yield_basis does not survive a metallurgist reading it is a guess wearing a lab coat. |
 | `capital` | Optional. A list of the fixed capital goods this process runs IN rather than consumes making one batch - a furnace, a mill, a chamber, a pan. See CAPITAL below. Omit entirely for a process where capital is not worth separating from labour - see WHICH MATERIALS GOT CAPITAL below for which and why. |
@@ -512,6 +513,25 @@ So the solver's numbers are an **honest lower bound**, and knowing precisely
 which things are missing is worth more than a closer number would be. Do not
 add a fudge factor to close the gap. Capital is now read; rent and energy are
 next, in the order Complaints/32 sets out.
+
+## ESTABLISHMENT SIZES
+
+`establishment_workers` is the crew of one owner's unit, not the largest operation of its kind. Every figure below is the author's estimate from memory of the period literature (confidence C) unless a source is named; none was checked against the sources in this round. The recipes carrying most of Rome's opening output were done first; recipes without a figure count as one workshop.
+
+| class | crew | recipes | basis |
+|---|---|---|---|
+| family farm and herd | 2 | wheat, millet, olive oil, wine, hemp, linen, cotton, oak bark, wool, meat, cheese, draught animals | A peasant household's working adults on a holding it owns or rents. Cato (De agri cultura 10-11) describes the larger estates, an olive farm of 240 iugera with 13 hands and a vineyard of 100 iugera with 16, which are the upper end, not the typical owner. From memory. |
+| woodcutters, clay pit, kiln and small works | 4 | wood, firewood, clay, timber, lime, solar salt, sand, flux, mortar, bronze, brass, tar, flour | A gang or a small workshop of a family and a few hands. From memory; no cited figure. |
+| quarry and mine gang | 20 | stone, dressed stone, limestone, coal, copper, silver, iron, galena, calamine, natron | Concessions leased in small shares (the Vipasca mining regulations, CIL II 5181-5182, Hadrianic) and Laurion work-gangs of enslaved miners. Twenty is a gang size from memory. |
+| alluvial washing | 10 | gold gravel, cassiterite, platinum ore | A washing crew at a stream. From memory. |
+| smelter, brickyard, pottery, masons | 6 | bricks, iron bloom, copper, lead, tin, silver, ceramic, stone and brick walls | A bloomery or smelting crew (smelter, bellows hands, charcoal and ore carriers), a potter's workshop with its kiln, a brickyard. From memory; excavated Roman bloomery and pottery sites suggest a handful of hands. |
+| smith, felt, canvas | 3 | wrought iron, noric steel, felt, canvas | A smith with a striker and a helper; a felter's or sailmaker's shop. From memory. |
+| tannery, glassworks | 5 | leather, raw glass | Pompeii's tanneries were small shops; a glass furnace with its gatherers. From memory. |
+| fuller | 8 | cloth finishing | Pompeii's fullonicae (Flohr, The World of the Fullo, 2013) held a few to a dozen workers. From memory. |
+| loom shop | 2 | fabric, cotton fabric, wicks | A weaver and a helper. From memory. |
+| one person | 1 | thread, human muscle, carried and drawn water | The unit is a person's own hours. |
+
+Add a figure for a recipe only with its class's basis or a better one stated here.
 
 ## Confidence, and what it is actually measuring
 

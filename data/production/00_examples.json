@@ -2,6 +2,7 @@
  "_note": "One entry of each shape. See _SCHEMA.md.",
  "materials": {
   "copper_ore_kg": {
+   "establishment_workers": 20,
    "outputs": {
     "copper_ore_kg": 1000.0
    },
@@ -17,6 +18,7 @@
    "conf": "C"
   },
   "copper_kg": {
+   "establishment_workers": 6,
    "outputs": {
     "copper_kg": 1000.0
    },
@@ -55,6 +57,7 @@
    "conf": "C"
   },
   "timber_m3": {
+   "establishment_workers": 4,
    "outputs": {
     "timber_m3": 1.0
    },

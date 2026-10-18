@@ -2,6 +2,7 @@
  "_note": "Ferrous metals family. See _SCHEMA.md. Two intermediates are introduced here because nothing else owns them: pig_iron_kg (the liquid, high-carbon product of a blast furnace, distinct from cast_iron_kg which is pig iron poured to shape, and from iron_bar_kg which is pig iron fined down to low-carbon wrought iron) and noric_ore_kg (the naturally manganese-bearing ore that made ferrum Noricum better without any deliberate alloying step). charcoal_kg, coal_kg, limestone_kg, flux_kg and lime_kg are referenced as inputs but defined by the fuels/stone family, not here.",
  "materials": {
   "iron_ore_kg": {
+   "establishment_workers": 20,
    "outputs": {
     "iron_ore_kg": 1000.0
    },
@@ -17,6 +18,7 @@
    "conf": "C"
   },
   "iron_bloom_kg": {
+   "establishment_workers": 6,
    "outputs": {
     "iron_bloom_kg": 1000.0
    },
@@ -170,6 +172,7 @@
    "conf": "C"
   },
   "iron_bar_bloomery_kg": {
+   "establishment_workers": 3,
    "outputs": {
     "iron_bar_kg": 1000.0
    },
@@ -188,6 +191,7 @@
    "conf": "C"
   },
   "noric_ore_kg": {
+   "establishment_workers": 20,
    "outputs": {
     "noric_ore_kg": 1000.0
    },
@@ -203,6 +207,7 @@
    "conf": "C"
   },
   "steel_noric_kg": {
+   "establishment_workers": 3,
    "outputs": {
     "steel_noric_kg": 1000.0
    },

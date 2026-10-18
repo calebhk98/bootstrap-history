@@ -2,6 +2,7 @@
  "_note": "Ways of delivering household water beside carrying it from a river or spring (water_kg in 50_chemicals.json): drawing from a dug well and piping from a header through lead. Each is a recipe on the materials and trades that do the work, so plumbers, masons and labourers get need from the water households must have (the water need in data/world/needs.json). Water is drawn where it is used, so each states carriage_km zero: the walking and lifting are already in its labour hours. Figures are order-of-magnitude estimates, confidence C or D, none fitted to a headcount.",
  "materials": {
   "water_well_kg": {
+   "establishment_workers": 1,
    "outputs": {
     "water_well_kg": 1000.0
    },
