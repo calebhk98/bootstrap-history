@@ -125,3 +125,7 @@ with the test kept honest.
   and then gives way in price once before the cycle repeats. Choosing a cargo that happens not to swing would fit the
   test to the case, so the fixture is unchanged and the topic stays failing: the held-then-released glut is a
   real stock cycle in the partner's market (553). Open.
+- `economy_money_regimes` (england_1300, struck coin: "and the price level") fails after the 550 workplace-size
+  data and passes just before it. The data moves the opening and with it the phase of the price cycle (473): over
+  years 4 to 7 the mined run dips once below its twin, while over fourteen years extra metal raises the price
+  level well above the twin. The window is unchanged and the check stays failing until the spin-up settles. Open.
