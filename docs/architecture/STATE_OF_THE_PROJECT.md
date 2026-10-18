@@ -89,8 +89,10 @@ stops, so price and volume checks that read a particular year flip with unrelate
 
 1. **The opening (526, with 473, 527, 545).** Households' savings wish has almost nothing to absorb it at the
    opening, so the opening's income falls toward the floors and the wage drifts down through the spin-up
-   (526 "Measured cause"). The opening finding its own interest rate is the step in progress; saving with an
-   asset to buy is land titles (538). 545 (own-plot food in the opening) can land only with 526: alone it drives
+   (526 "Measured cause"). The opening finding its own interest rate was built (branch `fix-526-opening-rate`)
+   and measured: it lifts the settled income a little and the wage still collapses in the first spin-up years,
+   so it is not merged. Next: the opening wage (`wage_schedule`, anchored on the coin metal's table cost) against
+   what labour earns at the households' own work (473), then saving with an asset to buy, land titles (538). 545 (own-plot food in the opening) can land only with 526: alone it drives
    the settled income toward nothing (branch `fix-545-opening-grows-its-own`).
 2. **Regenerate the shipped openings after the opening is fixed, not before** (owner decision): they are stale,
    so a new game computes its own spin-up, and the topics that read full-length openings fail on time until
