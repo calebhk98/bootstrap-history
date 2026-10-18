@@ -85,3 +85,40 @@ savings with what it holds; the probes are not kept). Findings on Rome without a
 
 Not built. Direction that remains: give saving a user (producers' plant and working capital, lending), or make
 the opening's wish match what the opening households hold.
+
+## Built and measured: the opening finds its rate (branch `fix-526-opening-rate`); the drift remains
+
+`sim/economy/opening_rate.py` finds the rate at which households' funds offered (their goods orders at the
+full-employment income) equal the loans borrowers ask for (producers' working capital beyond the cash they
+hold, merchants' cargo credit, queued requests such as the state's). The civilisation's `rate` is the search's
+upper bound and starting guess; the lowest rate lenders accept (time preference plus expected inflation, and
+the credit market's floor) is its lower bound. `open_economy` opens once to measure, then opens again at the
+found rate. The result is kept in `record.opening_credit` (rate, whether it cleared, saving, requests).
+When saving exceeds requests at every rate the search covers, it reports `clears: false` and opens at the
+lowest rate; that is the case that needs an asset to buy (538). A stated income
+(`opening_income_per_head`) skips the search; the fixtures that state a surplus keep the data rate.
+
+Measured (settled income over the full-employment ceiling, no spin-up; `PYTHONPATH=. python3 <probe>` building
+`build_setup(unopened_sim(civ="rome_100ad"))`, then `opening.open_economy`):
+
+- Rome: rate 0.12 (data) opens at 0.21 of the ceiling with the replacement pass counted as before; the
+  search finds a clearing rate of about 0.064 (saving and requests within 0.5%), where it opens at about 0.27
+  to 0.31 (the two probe runs differ in the replacement pass). Held at fixed rates: 0.12 gives 0.21, 0.08 gives
+  0.28, and 0.064, 0.05, 0.03, 0 give 0.27 each. The gain is about a third and then flat.
+- Small fixture: no clearing rate (saving at full employment is several times the requests at every rate),
+  opens at the lowest rate, settled income over the ceiling 0.0866 before and 0.0868 after.
+
+Why the rate cannot do more: `SAVINGS_RESPONSE_FLOOR` (1.0) holds the wish at the base (two years of surplus
+income) for every real rate below time preference, so below the lowest rate lenders accept the wish is flat and
+no rate there could clear. Lowering the floor was measured (Rome, rate held fixed): floor 0 gives 0.27 at 0.064
+and 0.05, 0.33 at 0.03, 1.00 only at rate 0; floor 0.5 gives 0.47 at rate 0. Rates under the lenders' lowest
+are not rates anyone lends at, so the floor stays; its stated reason (dearth, dowry, old age) is unchanged and
+nothing here supports a lower figure.
+
+The wage still drifts (Rome, `ROME_SPIN_UP_YEARS=2,1`, labourer wage per hour, opening 1.0, game years 1 to 8,
+spin-up cache bypassed for the "before" run): before 0.145, 0.129, 0.117, 0.113, 0.116, 0.136, 0.134, 0.119;
+after 0.129, 0.106, 0.090, 0.078, 0.069, 0.062, 0.056, 0.050. The wage is a tenth of its opening figure by
+year one in both, so the savings leak is not what drives it down; the remaining candidates are 473 (the wage
+schedule against the households' outside option) and the wish itself (two years of surplus per household).
+Small fixture, ten years, mean labourer wage: before 0.075 to 0.022, after 0.075 to 0.023; the rate path
+falls to near zero in both.

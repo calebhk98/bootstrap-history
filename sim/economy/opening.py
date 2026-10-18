@@ -12,7 +12,7 @@ from typing import Dict, List, Mapping, Tuple
 
 from sim.constants import declare
 
-from . import currency, goods_market, opening_income, opening_metal, opening_runs, households, households_store, labour_state, location, location_inputs, mint, opening_stores, ownership, sites, unit_cost
+from . import currency, goods_market, opening_income, opening_metal, opening_rate, opening_runs, households, households_store, labour_state, location, location_inputs, mint, opening_stores, ownership, sites, unit_cost
 from .accounts import Book
 from .market_areas import AreaMap
 from .market_memory import MarketMemory, YearView, market_key
@@ -44,11 +44,28 @@ MERCHANT_CAPITAL_SHARE_OF_OUTPUT = declare(
 
 
 def open_economy(setup: EconomySetup) -> Tuple[EconomyRecord, AreaMap, CarriageTable]:
-    """The opening in two passes: the first leaves a money stock, whose yearly loss of its metal is the demand
-    (the mint's) the second sizes the producers of the backing good to, along with everyone else's."""
+    """The opening in passes. The first opens at the civilisation's rate, which only starts the search for the
+    rate where households' saving meets borrowers' requests (opening_rate.py) and leaves a money stock, whose
+    yearly loss of its metal is the demand (the mint's) the last pass sizes the producers of the backing good
+    to, along with everyone else's."""
     first = _open(setup, 0.0)
+    if setup.opening_income_per_head is not None:      # a stated income has no saving leak to clear
+        replacement = opening_metal.yearly_replacement(setup, first[0])
+        return _open(setup, replacement) if replacement > 0.0 else first
+    search = _find_rate(setup, *first)
+    found = dataclasses.replace(setup, opening_rate=search.rate)
     replacement = opening_metal.yearly_replacement(setup, first[0])
-    return _open(setup, replacement) if replacement > 0.0 else first
+    if replacement <= 0.0 and search.rate == setup.opening_rate:
+        opened = first
+    else:
+        opened = _open(found, replacement)
+    opened[0].opening_credit = opening_rate.summary(search)
+    return opened
+
+
+def _find_rate(setup, record, area_map, carriage):
+    people = math.fsum(cohort.people for cohort in record.cohorts.values())
+    return opening_rate.find_rate(setup, record, area_map, carriage, _full_employment_income_per_head(setup) * people)
 
 
 def _open(setup: EconomySetup, replacement: float) -> Tuple[EconomyRecord, AreaMap, CarriageTable]:

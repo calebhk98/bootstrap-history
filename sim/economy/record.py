@@ -50,6 +50,7 @@ class EconomyRecord:
     area_imbalance: float = 1.0                                          # the return-trip emptiness the market areas were partitioned for (its memory is keyed by those areas)
     settling: bool = False                                               # in the hidden spin-up: households' spending rises as far as their wealth allows
     spin_up_result: Dict[str, Any] = field(default_factory=dict)         # how the hidden first stage ended: settled, years run, last gap (empty: no spin-up ran)
+    opening_credit: Dict[str, Any] = field(default_factory=dict)         # the rate the opening found (opening_rate.py): rate, whether it cleared, saving and requests there
     carried: Dict[str, Dict[str, float]] = field(default_factory=dict)   # tonnes the merchants carried last year: origin tile -> destination tile (sim.geography.flow_ledger)
 
     def to_record(self, skip_currencies=()) -> Dict[str, Any]:
@@ -84,6 +85,7 @@ class EconomyRecord:
             "area_imbalance": self.area_imbalance,
             "carried": {key: dict(row) for key, row in sorted(self.carried.items())},
             "spin_up_result": dict(self.spin_up_result),
+            "opening_credit": dict(self.opening_credit),
         }
 
     @classmethod
@@ -118,6 +120,7 @@ class EconomyRecord:
             area_imbalance=record["area_imbalance"],
             carried={key: dict(row) for key, row in record["carried"].items()},
             spin_up_result=dict(record["spin_up_result"]),
+            opening_credit=dict(record["opening_credit"]),
         )
 
 

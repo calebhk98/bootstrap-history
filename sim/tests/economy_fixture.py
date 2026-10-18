@@ -10,7 +10,7 @@ import contextlib
 import dataclasses
 from unittest import mock
 
-from sim.economy import opening_income
+from sim.economy import opening_income, opening_rate
 from sim.economy.economy import Economy
 from sim.world.need_demand import NEED_SUBSTITUTION_ELASTICITY
 from sim.economy.households_basket import Basket, NeedSpec
@@ -119,6 +119,12 @@ def two_country_setup(**changes) -> EconomySetup:
     return dataclasses.replace(setup, **changes) if changes else setup
 
 
+def data_rate_search(saving_at, requests_at, lowest, guess):
+    """A rate search that keeps the data rate: a fixture that states its households' surplus is not about the
+    rate the settled opening would find (opening_rate.py)."""
+    return opening_rate.RateSearch(guess, False, saving_at(guess), requests_at(guess), guess, lowest)
+
+
 @contextlib.contextmanager
 def surplus_households():
     """Within the block, open economies with households' income at the full-employment ceiling (split by what each
@@ -128,16 +134,18 @@ def surplus_households():
     it can afford, a new drink) or about something that does not depend on how well off it is (where producers sit)
     states that it wants one."""
     with mock.patch.object(opening_income, "settled_income_per_head",
-                           lambda ceiling, _people, _demand_at: (ceiling, 0.0)):
+                           lambda ceiling, _people, _demand_at: (ceiling, 0.0)), \
+            mock.patch.object(opening_rate, "clearing_rate", data_rate_search):
         yield
 
 
 def households_with_a_surplus(test_case):
     """`surplus_households` for the length of `test_case`."""
-    patch = mock.patch.object(opening_income, "settled_income_per_head",
-                              lambda ceiling, _people, _demand_at: (ceiling, 0.0))
-    patch.start()
-    test_case.addCleanup(patch.stop)
+    for patch in (mock.patch.object(opening_income, "settled_income_per_head",
+                                    lambda ceiling, _people, _demand_at: (ceiling, 0.0)),
+                  mock.patch.object(opening_rate, "clearing_rate", data_rate_search)):
+        patch.start()
+        test_case.addCleanup(patch.stop)
 
 
 @contextlib.contextmanager
