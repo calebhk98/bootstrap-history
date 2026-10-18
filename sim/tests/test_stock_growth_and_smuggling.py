@@ -14,6 +14,7 @@ from sim.engine import living_stock_growth, living_stock_smuggling
 from sim.engine.data import load_civ
 from sim.engine.foreign_economies import ForeignEconomiesMixin
 from sim.engine.living_stock import LivingStockMixin
+from sim.engine.living_stock_opening import LivingStockOpeningMixin
 from sim.engine.living_stock_smuggling import LivingStockSmugglingMixin
 from sim.engine.living_stock_trade import LivingStockTradeMixin
 from sim.engine.living_stock_yearly import LivingStockYearlyMixin, stock_rates
@@ -55,6 +56,7 @@ class Market:
 class Game(PartnerCivsMixin, LivingStockMixin, LivingStockTradeMixin, LivingStockSmugglingMixin, LivingStockYearlyMixin):
     """Just enough of the game for held stock: the home society is Rome, the partner is Han."""
     STATE_CAPACITY_DEFAULT = 0.7
+    society_herds = LivingStockOpeningMixin.society_herds
     partner_refusal = ForeignEconomiesMixin.partner_refusal
     partner_government = ForeignEconomiesMixin.partner_government
 
@@ -68,7 +70,7 @@ class Game(PartnerCivsMixin, LivingStockMixin, LivingStockTradeMixin, LivingStoc
         self.goods_market = type("GoodsMarket", (), {"acting": self.purse, "acting_party_id": "founder"})()
         self.state = type("State", (), {
             "scenario": type("Scenario", (), {"year": 100})(),
-            "economy": type("Economy", (), {"wild_stock": {}})(),
+            "economy": type("Economy", (), {"wild_stock": {}, "society_herds": {}})(),
             "household": type("Household", (), {})()})()
         self.actors = ActorRegistry(ActorsState())
         if governed:
