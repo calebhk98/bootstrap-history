@@ -78,5 +78,37 @@ and the engine applies one, both come from one function. What is left, in order:
    test that a mod's goods price themselves.
 
 `grep -l '^\*\*Status:\*\* \(open\|partly\)' Complaints/*.md` lists what
-is still to do. Parked on purpose: issues with status `pinned`
+is still to do.
+
+## Where the economy work stands
+
+The accounting defects an outside review found are fixed (546, 547, 548 closed; 529 closed), and several
+mechanisms moved toward physical inputs (513, 517, 531, 532, 534, 535, 550, 552, 559, 560 partly). What blocks
+the rest is the opening: the hidden spin-up drifts for decades (473), and every change elsewhere moves where it
+stops, so price and volume checks that read a particular year flip with unrelated merges. In order:
+
+1. **The opening (526, with 473, 527, 545).** Households' savings wish has almost nothing to absorb it at the
+   opening, so the opening's income falls toward the floors and the wage drifts down through the spin-up
+   (526 "Measured cause"). The opening finding its own interest rate is the step in progress; saving with an
+   asset to buy is land titles (538). 545 (own-plot food in the opening) can land only with 526: alone it drives
+   the settled income toward nothing (branch `fix-545-opening-grows-its-own`).
+2. **Regenerate the shipped openings after the opening is fixed, not before** (owner decision): they are stale,
+   so a new game computes its own spin-up, and the topics that read full-length openings fail on time until
+   `python3 sim/simulator.py openings --prune` ships them (557, and the 40-year money trace
+   `spin_up_money_supply` keys).
+3. **The slow topics still failing**, each with its cause in 558: tin against copper (511), bronze's early
+   scarcity price, the Norse money regime, printed money reaching prices, the partner's glut cycle (553).
+   Measure with `python3 -m sim.tests --slow --timing`.
+4. **A year's cost (497)**: flat profile; the next cuts are model changes (fewer agents) or compiled clearing.
+
+Rules this work kept, for whoever picks it up:
+
+- A topic over the runner's limit fails; there is no per-topic allowance.
+- When a merge breaks a check, first run it on `origin/main`, then bisect the first-parent merges
+  (`git log --first-parent --oneline origin/main..HEAD`). Change a fixture only to keep its subject (an
+  "equally visible" taxpayer, a baseline measured the same way in both worlds), never to find a window, a good
+  or a bound that happens to pass; a check that fails for a real dynamic stays failing with its cause recorded.
+- Speed changes must leave a stepped game's save byte-identical (sorted keys), with the CPU saving measured.
+- Facts recalled rather than read are marked as such in the data's source fields; check them before relying
+  on them. Parked on purpose: issues with status `pinned`
 (`grep -l '^\*\*Status:\*\* pinned' Complaints/*.md`).
