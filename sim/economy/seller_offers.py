@@ -6,7 +6,8 @@ profit; a producer that does not move the price keeps the reservation `producers
 unit is worth to the seller unsold is the cheaper of replacing it (its variable cost per unit) and holding
 it (its price-taking reservation), so a seller never prices below what a unit costs it to make or keep.
 A producer that stands for several workshops (Producer.workshops above one) is not a seller but a crowd of
-price takers: it keeps the price-taking reservation and neither searches nor raises. A seller that moves the price may also raise its ask above the price-taking one, which holds units back
+price takers: it keeps the price-taking reservation and neither searches nor raises, and offers it as a
+rising schedule over its workshops' costs (crowd_offers.py). A seller that moves the price may also raise its ask above the price-taking one, which holds units back
 (restraint) when the dearer, smaller sale earns more. A change either way is bounded by the share a seller
 already marks its ask down in a year (UNSOLD_ASK_MARKDOWN_SHARE), so an ask moves over the years as the
 book changes and never jumps in one; an ask raised past what buyers pay goes unsold and is marked down
@@ -25,7 +26,7 @@ from typing import List, Optional, Sequence
 
 from sim.constants import declare
 
-from . import entry_trial, goods_market, market_curves, seller_pricing
+from . import crowd_offers, entry_trial, goods_market, market_curves, seller_pricing
 from .producers import UNSOLD_ASK_MARKDOWN_SHARE, expected_output_prices, live_input_prices, live_wages
 from .types import EDGE_EXTERNAL, Bid, Offer
 
@@ -119,4 +120,5 @@ def strategic_offers(setup, record, view, bids: Sequence[Bid], offers: Sequence[
             current=ask, buyers=buyers)
         if choice is not None:
             offers[index] = dataclasses.replace(offer, reservation_price=choice)
-    return offers
+    return [piece for offer in offers for piece in
+            (crowd_offers.schedule(offer) if stands_for_many(record, offer) else (offer,))]

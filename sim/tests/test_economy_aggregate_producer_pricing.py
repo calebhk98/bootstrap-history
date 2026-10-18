@@ -64,6 +64,11 @@ def cleared(producers, quantities, bids=None):
     return result.price, sold
 
 
+def mean_reservation(chosen):
+    """The quantity-weighted reservation of an aggregate's slices."""
+    return sum(each.reservation_price * each.quantity for each in chosen) / sum(each.quantity for each in chosen)
+
+
 class AggregateProducerTests(unittest.TestCase):
     def test_splitting_an_aggregate_into_identical_small_producers_leaves_price_and_quantity(self):
         aggregate_price, aggregate_sold = cleared([producer("whole", SHOPS)], [TOTAL], deep_demand())
@@ -80,7 +85,8 @@ class AggregateProducerTests(unittest.TestCase):
         setup, record = game([producer("whole", SHOPS)])
         chosen = seller_offers.strategic_offers(setup, record, View(), deep_demand(),
                                                 [Offer("whole", GOOD, AREA, TILE, TOTAL, ASK)], 1.0)
-        self.assertEqual(chosen[0].reservation_price, ASK)
+        self.assertAlmostEqual(mean_reservation(chosen), ASK)
+        self.assertAlmostEqual(sum(each.quantity for each in chosen), TOTAL)
 
     def test_an_aggregate_with_unsold_stock_above_its_cost_marks_its_ask_down_by_the_share_unsold(self):
         setup, record = game([producer("whole", SHOPS)])
@@ -91,15 +97,15 @@ class AggregateProducerTests(unittest.TestCase):
         unsold_share = 1.0 - sold / TOTAL
         self.assertGreater(unsold_share, 0.0)
         cost = seller_offers.unit_cost(setup, record, View(), Offer("whole", GOOD, AREA, TILE, TOTAL, 10.0))
-        self.assertAlmostEqual(chosen[0].reservation_price, 10.0 - unsold_share * (10.0 - cost))
+        self.assertAlmostEqual(mean_reservation(chosen), 10.0 - unsold_share * (10.0 - cost))
 
     def test_a_mostly_sold_aggregate_marks_down_by_less_than_a_full_step(self):
         setup, record = game([producer("whole", SHOPS)])
         bids = [Bid("buyer", GOOD, AREA, TILE, 0.9 * TOTAL, 0.0, 1.0, 0.5, 1e9)]
         chosen = seller_offers.strategic_offers(setup, record, View(), bids,
                                                 [Offer("whole", GOOD, AREA, TILE, TOTAL, 10.0)], 1.0)
-        self.assertGreater(chosen[0].reservation_price, 9.0)
-        self.assertLess(chosen[0].reservation_price, 10.0)
+        self.assertGreater(mean_reservation(chosen), 9.0)
+        self.assertLess(mean_reservation(chosen), 10.0)
 
     def test_an_aggregate_whose_stock_goes_unsold_at_a_high_ask_comes_down_to_its_cost(self):
         setup, record = game([producer("whole", SHOPS)])
@@ -107,7 +113,34 @@ class AggregateProducerTests(unittest.TestCase):
         nobody_buys = [Bid("buyer", GOOD, AREA, TILE, 0.0, 0.0, 1.0, 1.0, 0.0)]
         chosen = seller_offers.strategic_offers(setup, record, View(), nobody_buys,
                                                 [Offer("whole", GOOD, AREA, TILE, TOTAL, 5.0 * cost)], 1.0)
-        self.assertAlmostEqual(chosen[0].reservation_price, cost)
+        self.assertAlmostEqual(mean_reservation(chosen), cost)
+
+    def test_an_aggregate_offers_a_rising_schedule_over_its_workshops_costs(self):
+        setup, record = game([producer("whole", SHOPS)])
+        chosen = seller_offers.strategic_offers(setup, record, View(), deep_demand(),
+                                                [Offer("whole", GOOD, AREA, TILE, TOTAL, ASK)], 1.0)
+        asks = [each.reservation_price for each in sorted(chosen, key=lambda each: each.reservation_price)]
+        self.assertGreater(len(asks), 2)
+        self.assertEqual(asks, sorted(set(asks)))
+
+    def test_a_larger_order_from_an_aggregate_pays_more_per_unit(self):
+        def per_unit(wanted):
+            setup, record = game([producer("whole", SHOPS)])
+            bids = [Bid("buyer", GOOD, AREA, TILE, wanted, 0.0, 1.0, 0.5, 1e9)]
+            chosen = seller_offers.strategic_offers(setup, record, View(), bids,
+                                                    [Offer("whole", GOOD, AREA, TILE, TOTAL, ASK)], 1.0)
+            return goods_market.clear(bids, chosen, GOOD, AREA, "", 1.0).price
+        self.assertGreater(per_unit(0.9 * TOTAL), per_unit(0.1 * TOTAL))
+
+    def test_a_sale_into_an_aggregate_lowers_the_price(self):
+        setup, record = game([producer("whole", SHOPS)])
+        bids = [Bid("buyer", GOOD, AREA, TILE, 0.6 * TOTAL, 0.0, 1.0, 0.5, 1e9)]
+        chosen = seller_offers.strategic_offers(setup, record, View(), bids,
+                                                [Offer("whole", GOOD, AREA, TILE, TOTAL, ASK)], 1.0)
+        alone = goods_market.clear(bids, chosen, GOOD, AREA, "", 1.0).price
+        founder = Offer("founder", GOOD, AREA, TILE, 0.3 * TOTAL, 0.0)
+        with_founder = goods_market.clear(bids, chosen + [founder], GOOD, AREA, "", 1.0).price
+        self.assertLess(with_founder, alone)
 
 
 if __name__ == "__main__":
