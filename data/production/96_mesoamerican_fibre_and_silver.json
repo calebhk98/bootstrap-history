@@ -68,7 +68,6 @@
    "requires_node": "tex_backstrap_loom"
   },
   "silver_smelted_native_kg": {
-   "establishment_workers": 6,
    "outputs": {
     "silver_kg": 1000.0
    },

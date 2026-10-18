@@ -147,18 +147,6 @@ def check_carriage_km(where, entry):
     return []
 
 
-def check_establishment_workers(where, entry):
-    """A stated `establishment_workers` is a positive finite crew, and the entry needs labour for it to size anything."""
-    if "establishment_workers" not in entry:
-        return []
-    crew = entry["establishment_workers"]
-    if isinstance(crew, bool) or not isinstance(crew, (int, float)) or not 0 < crew < float("inf"):
-        return ["%s: establishment_workers is %r, not a positive crew size" % (where, crew)]
-    if not any(hours > 0 for hours in (entry.get("labour_hours") or {}).values()):
-        return ["%s: establishment_workers is stated but the entry has no labour_hours to size it against" % where]
-    return []
-
-
 def primary_output(name, entry):
     """The good an entry is named for: its own key when it outputs it, else its first output."""
     outputs = entry.get("outputs") or {}
@@ -492,7 +480,6 @@ def check(entries, known_materials, known_trades, known_nodes=None):
         problems.extend(check_has_source(where, entry))
         problems.extend(check_unit_mass(where, entry))
         problems.extend(check_carriage_km(where, entry))
-        problems.extend(check_establishment_workers(where, entry))
         problems.extend(check_unit_dimension(where, entry))
         problems.extend(check_labour_hours(where, entry, known_trades))
         problems.extend(check_energy_carrier_fields(where, entry))

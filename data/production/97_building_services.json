@@ -2,7 +2,6 @@
  "_note": "Services that turn materials builders already have into what households use: laid walls (shelter is a volume of structure, not a heap of bricks). Each is a recipe on the materials it consumes, so the trades that do the work (mason, carpenter) get labour need from the same household demand that wants the shelter. Every labour figure is an order-of-magnitude estimate of pre-industrial work rates, confidence D, and none is fitted to a target headcount.",
  "materials": {
   "brick_wall_m3": {
-   "establishment_workers": 6,
    "outputs": {
     "brick_wall_m3": 1.0
    },
@@ -25,7 +24,6 @@
    "requires_node": "cap_heat_0700"
   },
   "stone_wall_m3": {
-   "establishment_workers": 6,
    "outputs": {
     "stone_wall_m3": 1.0
    },
@@ -48,7 +46,6 @@
    "requires_node": null
   },
   "timber_frame_m3": {
-   "establishment_workers": 4,
    "outputs": {
     "timber_frame_m3": 1.0
    },

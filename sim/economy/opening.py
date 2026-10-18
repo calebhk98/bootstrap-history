@@ -12,7 +12,7 @@ from typing import Dict, List, Mapping, Tuple
 
 from sim.constants import declare
 
-from . import currency, establishment, goods_market, opening_income, opening_metal, opening_runs, households, households_store, labour_state, location, location_inputs, mint, opening_stores, ownership, sites, unit_cost
+from . import currency, goods_market, opening_income, opening_metal, opening_runs, households, households_store, labour_state, location, location_inputs, mint, opening_stores, ownership, sites, unit_cost
 from .accounts import Book
 from .market_areas import AreaMap
 from .market_memory import MarketMemory, YearView, market_key
@@ -281,8 +281,7 @@ def _place_producers(setup, record, area_map, carriage, final_by_tile, incumbent
 def _add_producers(setup, record, recipe, capacity_by_tile, input_demand, by_limits) -> None:
     """One producer of the recipe on each tile that has people and capacity; its inputs and plant wear are
     the demand later suppliers are placed to meet. `capacity_by_tile` is the runs a year to work; the plant is
-    as much larger as the share of it that works at the opening prices is smaller (opening_income.working_share).
-    A recipe with a stated establishment size opens as that many workshops (establishment.py); others as one."""
+    as much larger as the share of it that works at the opening prices is smaller (opening_income.working_share)."""
     working_share = opening_income.working_share(recipe, setup.opening_prices, setup.opening_wages)
     for tile, capacity in capacity_by_tile.items():
         producer_id = "producer:" + recipe_tile_key(recipe.recipe_id, tile)
@@ -291,7 +290,6 @@ def _add_producers(setup, record, recipe, capacity_by_tile, input_demand, by_lim
         record.producers[producer_id] = Producer(
             agent_id=producer_id, owner=households.cohort_id(tile, _richest_class(record, tile)),
             recipe_id=recipe.recipe_id, tile=tile, capacity_runs=capacity / working_share,
-            workshops=establishment.workshops_for(recipe, capacity),
             expected_sales=capacity / (1.0 + OPENING_SPARE_CAPACITY_SHARE),
             yield_factor=sites.yield_at(recipe, tile, by_limits, setup.yield_factor_by_recipe_tile.get(
                 recipe_tile_key(recipe.recipe_id, tile), 1.0)))

@@ -13,7 +13,6 @@
    "requires_node": null
   },
   "flour_kg_millet": {
-   "establishment_workers": 4,
    "outputs": {"flour_kg": 1000.0},
    "inputs": {"millet_kg": 1040.0},
    "labour_hours": {"labourer": 5.0},

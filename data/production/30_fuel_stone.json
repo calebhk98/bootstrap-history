@@ -2,7 +2,6 @@
  "_note": "FUEL, TIMBER, STONE AND CERAMICS materials. See _SCHEMA.md.",
  "materials": {
   "wood_kg": {
-   "establishment_workers": 4,
    "outputs": {
     "wood_kg": 1000.0
    },
@@ -19,7 +18,6 @@
    "requires_node": null
   },
   "firewood_kg": {
-   "establishment_workers": 4,
    "outputs": {
     "firewood_kg": 1000.0
    },
@@ -70,7 +68,6 @@
    "operated_by": ["en_charcoal_burning", "charcoal_industrial"]
   },
   "coal_kg": {
-   "establishment_workers": 20,
    "outputs": {
     "coal_kg": 1000.0
    },
@@ -280,7 +277,6 @@
    "requires_node": "mat_petroleum_refined"
   },
   "stone_kg": {
-   "establishment_workers": 20,
    "outputs": {
     "stone_kg": 1000.0
    },
@@ -328,7 +324,6 @@
    "requires_node": null
   },
   "stone_blocks": {
-   "establishment_workers": 20,
    "outputs": {
     "stone_blocks": 1.0
    },
@@ -362,7 +357,6 @@
    "requires_node": null
   },
   "limestone_kg": {
-   "establishment_workers": 20,
    "outputs": {
     "limestone_kg": 1000.0
    },
@@ -378,7 +372,6 @@
    "requires_node": null
   },
   "lime_kg": {
-   "establishment_workers": 4,
    "outputs": {
     "lime_kg": 1000.0
    },
@@ -541,7 +534,6 @@
    "requires_node": null
   },
   "sand_kg": {
-   "establishment_workers": 4,
    "outputs": {
     "sand_kg": 1000.0
    },
@@ -557,7 +549,6 @@
    "requires_node": null
   },
   "sand_quartz_kg": {
-   "establishment_workers": 4,
    "outputs": {
     "sand_quartz_kg": 1000.0
    },
@@ -573,7 +564,6 @@
    "requires_node": null
   },
   "clay_kg": {
-   "establishment_workers": 4,
    "outputs": {
     "clay_kg": 1000.0
    },
@@ -589,7 +579,6 @@
    "requires_node": null
   },
   "natron_kg": {
-   "establishment_workers": 20,
    "outputs": {
     "natron_kg": 1000.0
    },
@@ -605,7 +594,6 @@
    "requires_node": null
   },
   "flux_kg": {
-   "establishment_workers": 4,
    "outputs": {
     "flux_kg": 1000.0
    },
@@ -622,7 +610,6 @@
    "requires_node": null
   },
   "glass_raw_kg": {
-   "establishment_workers": 5,
    "outputs": {
     "glass_raw_kg": 1000.0
    },
@@ -660,7 +647,6 @@
    "requires_node": "mat_glass_soda"
   },
   "brick_1000": {
-   "establishment_workers": 6,
    "outputs": {
     "brick_1000": 1.0
    },
@@ -679,7 +665,6 @@
    "requires_node": "cap_heat_0700"
   },
   "ceramic_kg": {
-   "establishment_workers": 6,
    "outputs": {
     "ceramic_kg": 1000.0
    },

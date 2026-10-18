@@ -15,7 +15,6 @@
    "requires_node": null
   },
   "wheat_kg": {
-   "establishment_workers": 2,
    "outputs": {
     "wheat_kg": 577.5
    },
@@ -61,7 +60,6 @@
    "requires_node": null
   },
   "olive_oil_kg": {
-   "establishment_workers": 2,
    "outputs": {
     "olive_oil_kg": 300.0
    },
@@ -85,7 +83,6 @@
    "requires_node": null
   },
   "wine_common_kg": {
-   "establishment_workers": 2,
    "outputs": {
     "wine_common_kg": 2700.0
    },
@@ -111,7 +108,6 @@
    "requires_node": null
   },
   "cheese_kg": {
-   "establishment_workers": 2,
    "outputs": {
     "cheese_kg": 1000.0
    },
@@ -129,7 +125,6 @@
    "requires_node": null
   },
   "cotton_kg": {
-   "establishment_workers": 2,
    "outputs": {
     "cotton_kg": 200.0
    },
@@ -157,7 +152,6 @@
    "requires_node": null
   },
   "hemp_fiber_kg": {
-   "establishment_workers": 2,
    "outputs": {
     "hemp_fiber_kg": 500.0
    },
@@ -174,7 +168,6 @@
    "requires_node": null
   },
   "linen_kg": {
-   "establishment_workers": 2,
    "outputs": {
     "linen_kg": 150.0
    },
@@ -273,7 +266,6 @@
    "requires_node": null
   },
   "leather_kg": {
-   "establishment_workers": 5,
    "outputs": {
     "leather_kg": 1.0
    },
@@ -515,7 +507,6 @@
    "requires_node": null
   },
   "oak_bark_kg": {
-   "establishment_workers": 2,
    "outputs": {
     "oak_bark_kg": 200.0
    },
@@ -652,7 +643,6 @@
    "requires_node": null
   },
   "wick_cotton_m": {
-   "establishment_workers": 2,
    "outputs": {
     "wick_cotton_m": 1.0
    },
@@ -669,7 +659,6 @@
    "requires_node": null
   },
   "thread_kg": {
-   "establishment_workers": 1,
    "outputs": {
     "thread_kg": 1.0
    },
@@ -686,7 +675,6 @@
    "requires_node": "tex_drop_spindle"
   },
   "fabric_kg": {
-   "establishment_workers": 2,
    "outputs": {
     "fabric_kg": 1.0
    },
@@ -703,7 +691,6 @@
    "requires_node": "tex_two_beam_loom"
   },
   "cloth_kg": {
-   "establishment_workers": 8,
    "outputs": {
     "cloth_kg": 1.0
    },
@@ -720,7 +707,6 @@
    "requires_node": "tx2_fulling"
   },
   "canvas_kg": {
-   "establishment_workers": 3,
    "outputs": {
     "canvas_kg": 1.0
    },
@@ -737,7 +723,6 @@
    "requires_node": "tex_two_beam_loom"
   },
   "felt_kg": {
-   "establishment_workers": 3,
    "outputs": {
     "felt_kg": 1.0
    },
@@ -754,7 +739,6 @@
    "requires_node": "tex_felting"
   },
   "cotton_fabric_kg": {
-   "establishment_workers": 2,
    "outputs": {
     "cotton_fabric_kg": 1.0
    },
@@ -925,7 +909,6 @@
    "requires_node": null
   },
   "wick_linen_m": {
-   "establishment_workers": 2,
    "outputs": {
     "wick_linen_m": 1.0
    },

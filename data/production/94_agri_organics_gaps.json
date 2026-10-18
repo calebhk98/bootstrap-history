@@ -34,7 +34,6 @@
    "requires_node": "tx2_ramie_fibre"
   },
   "draught_animal_kg": {
-   "establishment_workers": 2,
    "outputs": {
     "draught_animal_kg": 100.0
    },
@@ -352,7 +351,6 @@
    "requires_node": "met_basic_lining_phosphorus"
   },
   "wood_tar_kg": {
-   "establishment_workers": 4,
    "outputs": {
     "wood_tar_kg": 1000.0,
     "charcoal_kg": 2500.0

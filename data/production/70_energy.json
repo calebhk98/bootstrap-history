@@ -37,7 +37,6 @@
   },
 
   "mechanical_mj_human_muscle": {
-   "establishment_workers": 1,
    "outputs": {
     "mechanical_mj": 0.27
    },

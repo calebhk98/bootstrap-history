@@ -102,7 +102,6 @@ class Recipe:
     plant_life_years: float = 0.0
     climate_classes: Tuple[str, ...] = ()   # climates it can be worked in, from data; empty: any
     site_bound: bool = False         # runs only where a site is declared (sites.py); the economy knows nothing else of it
-    establishment_workers: float = 0.0   # crew of one workshop, farm or gang; 0: not stated (establishment.py)
 
 
 @dataclass(frozen=True)

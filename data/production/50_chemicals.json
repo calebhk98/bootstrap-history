@@ -124,7 +124,6 @@
    "requires_node": "mat_salt"
   },
   "salt_solar_kg": {
-   "establishment_workers": 4,
    "outputs": {
     "salt_kg": 1000.0
    },
@@ -263,7 +262,6 @@
    "requires_node": "tex_dye_madder"
   },
   "water_kg": {
-   "establishment_workers": 1,
    "outputs": {
     "water_kg": 1000.0
    },
