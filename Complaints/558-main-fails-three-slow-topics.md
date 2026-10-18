@@ -97,19 +97,21 @@ with the test kept honest.
   year (`play("norse_900ad", 14, ...)` with and without `mined_share`), so the mean over years 4 to 7 sat in a
   trough. Moving the window until it passes (a later, longer window passes with a thin margin) would fit the test to
   the drift, so the window is unchanged and the topic stays failing until the opening settles (Complaint 526). Open.
-- `economy_state_budget` ("printing to cover a deficit ... can run away"): passes on `origin/main` and through
-  `4379d546`; first fails at the merge `38113d14` (fix-550-aggregate-ask-2: a crowd's ask closes the gap to cost by the
-  share left unsold). NOT fixed, test unchanged. Measured (`resumed(fiat=True)` control against `StatePolicy(real_spending_target=4*supply,
-  financing_order=("issue",))`, eight years): on the suite's short spin-up the no-printing control itself inflates (price
-  level 12 times in eight years with the money supply constant, expected inflation to 0.55; 6.7 times at `4379d546`),
-  and the printing run rises 16.6 times (36 times at `4379d546`), so "3 times the control" fails; printing
-  harder (1 to 12 times the supply) leaves the level at 16 to 27 times, i.e. not driven by the money printed. On the
-  declared-length opening the control is settled (price falls), printing raises the level about 8 times the control,
-  expectations and supply checks pass, but the level saturates near 3 to 5 times even at 100 times the supply, at
-  `4379d546` and on the branch alike. So the old pass came from the short opening's drift (Complaint 526), and the
-  engine shows no runaway on a settled opening: money printed is not reaching prices proportionally (suspect the
-  546 cash-limited producers or the per-year ask adjustment). The assertions need that mechanism, not a looser
-  bound. Open.
+- `economy_state_budget` ("printing to cover a deficit ... can run away"): FIXED on `fix-printed-money-prices`, test
+  unchanged. Cause: the state's goods bids carried its programme as a flexible quantity at the elasticity of
+  substitution (Complaint 502), so in a market where the state's own demand pushed the price up the bid shrank with
+  the price (firewood in the capital's market cleared near 6 times its reference price on a budget that would have
+  paid 30 times; steel and wine the same) and most of what was printed stayed in the treasury: of 2.8e9 issued the
+  first year the state spent about 3.5e8, and it still held 40 percent of the coin after eight years. Not the
+  cause (measured by lifting each on the settled opening, `resumed(fiat=True, full_length=True)`): households'
+  `WEALTH_DRAWDOWN_LIMIT` and `SPENDING_CUT_LIMIT` (printing run 3.67 with both lifted against 3.57), the sold-out
+  ask raise, the hour cap on the state's hiring (lifting it lowers the level, more labour hired). A helicopter drop
+  (every agent's cash doubled or multiplied by ten, no state spending) does pass to prices: about 9 times the
+  control after eight years for ten times the cash. Fix: a stated real spending target (`StatePolicy.real_spending_target`)
+  sets `StateBudget.real_programme`, and its goods bids are floors (bought whatever the price, up to the budget);
+  a budget-led state keeps the substituting bids. Tests: `test_economy_state_need_bids_substitute` (programme
+  bids), `test_economy_state_budget` (a bigger programme raises the level more). Remaining: the state buys in the
+  capital's market only and spends on goods with no sellers (flour), so sub-proportional pass-through to the national index.
 - `auto_hire_buys_room`, `auto_hire_rich_founder`, `round8g_display` (its train/why checks), `arrears_hours` ("no closed
   concern stays shut") pass on `origin/main` and failed on `economy-accounting-and-speed`; one cause. Bisected
   (first-parent merges, the topics together with `--only`): first fails at the merge of `data-532-herd-joint-products`
