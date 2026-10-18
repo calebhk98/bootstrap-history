@@ -141,6 +141,13 @@ check("...and the interest on the whole line stays under what you earn",
       fresh.credit_limit() * fresh.debt_interest_rate() < fresh.revenue(),
       (fresh.credit_limit() * fresh.debt_interest_rate(), fresh.revenue()))
 
+# Money gone dear (whatever the cause) must not let the running tab's own interest push the line past income.
+fresh.market_rate = lambda: 0.5
+check("...and at a dear market rate the interest on the whole line still stays under what you earn",
+      fresh.credit_limit() * fresh.debt_interest_rate() < fresh.revenue(),
+      (fresh.credit_limit() * fresh.debt_interest_rate(), fresh.revenue()))
+del fresh.market_rate
+
 # Status upkeep is conditional on being able to afford it.
 fresh.done.add("citizenship")
 fresh._done_changed()
