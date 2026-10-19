@@ -1,6 +1,6 @@
 # Land never changes hands, and there is no landlord, tenant or lender
 
-**Status:** closed - land titles per tile and holder, pledged for household loans, passed by default with the family staying as tenants, abandoned when rent falls a year behind, and valued as capitalised rent (`sim/economy/titles.py`, `titles_value.py`).
+**Status:** partly - titles, collateral, foreclosure into tenancy and abandonment are built (`test_economy_titles`); the counter-forces (land reform, labour scarcity after plague), the baseline range check, tax farming and bondage are not, and concentration from bad harvests is shown only in a harness, not in a full economy
 
 Reference (an outside design note, not code-aware): land concentration should come from harvest
 shocks and debt, not a typed share. A smallholder short after a bad year borrows from a landowner or
