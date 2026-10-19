@@ -15,3 +15,10 @@ that counts the concerns whose takings at opening prices exceed their running co
 relationship check that a plausible share of the technologies a society already holds pay their way at its opening.
 
 **Measure:** `python3 sim/simulator.py opening-checks --civs rome_100ad --concerns-only` (add `--json` for structured rows) counts, per civilisation, the held concerns whose takings exceed their running cost and lists the payers and the biggest losers. It is reported, never a failing check; it reuses the entry test's figures (`SimWorld.entry_gross`, `business_books.yearly_costs`, `firm_entry.carrying_cost`) in `sim/agents/concern_scan.py`. The relationship check (what share should pay) is still to decide.
+
+## Note (2026-10-19)
+
+After opening prices were limited to goods a start can make (566), `fin_lottery` no longer pays at a Rome opening and
+only a handful of concerns do. `finery_puddling` pays, with takings several times what `origin/main` shows for it; the
+cause is not traced. `sim/tests/test_firm_entry_default_game.py` now uses it. Measure with
+`python3 sim/simulator.py opening-checks --civs rome_100ad --concerns-only`.
