@@ -9,7 +9,7 @@ from typing import Any, Dict, Mapping, Optional, Tuple
 
 from sim.world import capital_market
 
-from . import carriage_hours, credit, credit_claims, currency, labour, land_market, lending, merchants_credit, producers, sites, state_budget, unit_cost
+from . import carriage_hours, credit, credit_claims, currency, equity, labour, land_market, lending, merchants_credit, producers, sites, state_budget, unit_cost
 from .credit_view import CreditView
 from .market_areas import AreaMap
 from .market_areas_follow import follow
@@ -120,7 +120,10 @@ class Economy:
 
     def view(self) -> YearView:
         return CreditView(self.record.memory, self.record.book, self.area_map, self.setup.currency_id, labour_area,
-                          loans=lambda: self.record.loans)
+                          loans=lambda: self.record.loans, equity=self._equity_read)
+
+    def _equity_read(self, view) -> Dict[str, float]:
+        return equity.holdings(self.setup, self.record, view)
 
     def strike_lighter_coin(self, cut_share: float, restrike_share: float) -> None:
         """The issuer of the currency cuts the metal in the coin it strikes again this year (a struck coin only)."""
@@ -184,7 +187,7 @@ class Economy:
         money_taxes(setup, record, view, ledger)
         self._build_plant(plant_runs)
         close_view = CreditView(record.memory, record.book, self.area_map, money, labour_area,
-                                loans=lambda: record.loans)
+                                loans=lambda: record.loans, equity=self._equity_read)
         close_agents(setup, record, close_view, ledger, self.area_map, self.carriage)
         open_entrants(setup, record, close_view, self.area_map, ledger.unmet_demand, self.carriage,
                       ledger.bids_by_market)
@@ -285,6 +288,7 @@ class Economy:
         record.funds_offered = sum(offer.amount for offer in funds if offer.currency == money)
         record.lent_by_borrower = {}
         if not requests:
+            record.expansion_runs = {}      # a working-capital loan struck ahead of the year left no plant to wait for
             if funds:
                 # savings on offer and nobody borrowing: lenders compete the rate down toward the lowest
                 # they will lend at, at the market's usual pace

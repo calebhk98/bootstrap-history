@@ -1,8 +1,9 @@
-"""The market view with the credit market's holdings added: what an agent is owed.
+"""The market view with the credit market's holdings added: what an agent is owed and what it owns of firms.
 
-`claims_of(view, agent, currency)` reads it from any view and gives zero from one that has no loans.
+`claims_of(view, agent, currency)` and `equity_of(view, agent)` read them from any view and give zero from
+one that has no loans or firms.
 """
-from typing import Callable, Sequence
+from typing import Callable, Mapping, Sequence
 
 from .credit_claims import claims_by_lender
 from .market_memory import YearView
@@ -12,9 +13,12 @@ from .types import AgentId, CurrencyId, Loan
 class CreditView(YearView):
     """A `YearView` that also answers `claims`, from the loans as they stand when asked."""
 
-    def __init__(self, *arguments, loans: Callable[[], Sequence[Loan]] = lambda: (), **keywords) -> None:
+    def __init__(self, *arguments, loans: Callable[[], Sequence[Loan]] = lambda: (),
+                 equity: Callable[["CreditView"], Mapping[AgentId, float]] = lambda view: {}, **keywords) -> None:
         super().__init__(*arguments, **keywords)
         self._loans = loans
+        self._equity_of_all = equity      # reads the view once, when first asked, and keeps the answer
+        self._equity = None
         self._claims_seen = None          # (loan list, its length, its last loan) the claims below were summed over
         self._claims: dict = {}           # currency -> claims_by_lender over those loans
 
@@ -28,6 +32,18 @@ class CreditView(YearView):
         if currency not in self._claims:
             self._claims[currency] = claims_by_lender(loans, currency)
         return self._claims[currency].get(agent, 0.0)
+
+
+    def equity(self, agent: AgentId) -> float:
+        """What the agent owns of the firms (equity.py), at the prices this view carries."""
+        if self._equity is None:
+            self._equity = dict(self._equity_of_all(self))
+        return self._equity.get(agent, 0.0)
+
+
+def equity_of(view, agent: AgentId) -> float:
+    reader = getattr(view, "equity", None)
+    return reader(agent) if reader is not None else 0.0
 
 
 def claims_of(view, agent: AgentId, currency: CurrencyId) -> float:
