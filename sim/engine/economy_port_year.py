@@ -692,6 +692,12 @@ class AgentEconomy(TilePricesMixin):
             self._floor_costs[scope] = {need: cost * economy.setup.coin_per_unit for need, cost in costs.items()}
         return dict(self._floor_costs[scope])
 
+    def need_floor_costs_at_tile(self, tile):
+        """What a person's floor of each need costs a year at the prices on one tile, in coin."""
+        economy = self.economy()
+        costs = economy_api.country_figures.tile_need_floor_costs(economy, tile)
+        return {need: cost * economy.setup.coin_per_unit for need, cost in costs.items()}
+
     def land_rent_at_tile(self, tile):
         """Rent per hectare-year on one tile in coin (the mean where none was let there)."""
         return economy_api.land_rent_at_tile(self.economy(), tile) * self._economy.setup.coin_per_unit
