@@ -1,0 +1,138 @@
+{
+ "_doc": "Towns at the start year of one civilisation. Each entry: name, tile (a real tile id of the base map, found by placing lat/lon in the map's equal-area grid), lat, lon, and `sizes`, a list of dated snapshots {year, people, low, high, source, conf}. people is the point figure, low and high the range the literature gives; conf follows the map's letters (A checked against the cited source, B coordinate checked and size approximate, C from memory of a secondary compilation, D a weak guess). A size is an initial condition (cited, never tuned); the engine does not read it. Sizes of ancient and medieval towns differ by a factor of two or more between authors, which `low` and `high` show.",
+ "entries": [
+  {
+   "id": "bh_towns_m8d4:tenochtitlan",
+   "name": "Tenochtitlan",
+   "tile": "mexico_07",
+   "lat": 19.43,
+   "lon": -99.13,
+   "sizes": [
+    {
+     "year": 1500,
+     "people": 200000,
+     "low": 130000,
+     "high": 250000,
+     "source": "Calnek 1976 and Smith, The Aztecs (2012); Chandler, Four Thousand Years of Urban Growth (1987)",
+     "conf": "C"
+    }
+   ],
+   "also_called": [
+    "Tlatelolco",
+    "Mexico City"
+   ],
+   "note": "The island city with Tlatelolco; estimates run from about 130 thousand to 250 thousand."
+  },
+  {
+   "id": "bh_towns_m8d4:texcoco",
+   "name": "Texcoco",
+   "tile": "mexico_07",
+   "lat": 19.51,
+   "lon": -98.88,
+   "sizes": [
+    {
+     "year": 1500,
+     "people": 30000,
+     "low": 25000,
+     "high": 100000,
+     "source": "Smith, The Aztecs (2012)",
+     "conf": "D"
+    }
+   ]
+  },
+  {
+   "id": "bh_towns_m8d4:cholula",
+   "name": "Cholula",
+   "tile": "mexico_07",
+   "lat": 19.06,
+   "lon": -98.3,
+   "sizes": [
+    {
+     "year": 1500,
+     "people": 30000,
+     "low": 20000,
+     "high": 100000,
+     "source": "Smith, The Aztecs (2012)",
+     "conf": "D"
+    }
+   ]
+  },
+  {
+   "id": "bh_towns_m8d4:tlaxcala",
+   "name": "Tlaxcala",
+   "tile": "mexico_07",
+   "lat": 19.32,
+   "lon": -98.2,
+   "sizes": [
+    {
+     "year": 1500,
+     "people": 30000,
+     "low": 20000,
+     "high": 150000,
+     "source": "Smith, The Aztecs (2012); sixteenth-century Spanish reports are higher",
+     "conf": "D"
+    }
+   ]
+  },
+  {
+   "id": "bh_towns_m8d4:tzintzuntzan",
+   "name": "Tzintzuntzan",
+   "tile": "mexico_06",
+   "lat": 19.63,
+   "lon": -101.58,
+   "sizes": [
+    {
+     "year": 1500,
+     "people": 35000,
+     "low": 25000,
+     "high": 50000,
+     "source": "Smith, The Aztecs (2012)",
+     "conf": "D"
+    }
+   ],
+   "also_called": [
+    "Tarascan capital"
+   ]
+  },
+  {
+   "id": "bh_towns_m8d4:zempoala",
+   "name": "Zempoala",
+   "tile": "mexico_07",
+   "lat": 19.44,
+   "lon": -96.4,
+   "sizes": [
+    {
+     "year": 1500,
+     "people": 25000,
+     "low": 10000,
+     "high": 30000,
+     "source": "Spanish reports of 1519; secondary summaries",
+     "conf": "D"
+    }
+   ],
+   "also_called": [
+    "Cempoala"
+   ]
+  },
+  {
+   "id": "bh_towns_m8d4:utatlan",
+   "name": "Utatlan",
+   "tile": "guatemala_01",
+   "lat": 15.0,
+   "lon": -91.2,
+   "sizes": [
+    {
+     "year": 1500,
+     "people": 15000,
+     "low": 10000,
+     "high": 30000,
+     "source": "Highland Maya archaeology, secondary summaries",
+     "conf": "D"
+    }
+   ],
+   "also_called": [
+    "K'umarkaj"
+   ]
+  }
+ ]
+}

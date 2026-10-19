@@ -1,0 +1,141 @@
+{
+ "_doc": "Towns at the start year of one civilisation. Each entry: name, tile (a real tile id of the base map, found by placing lat/lon in the map's equal-area grid), lat, lon, and `sizes`, a list of dated snapshots {year, people, low, high, source, conf}. people is the point figure, low and high the range the literature gives; conf follows the map's letters (A checked against the cited source, B coordinate checked and size approximate, C from memory of a secondary compilation, D a weak guess). A size is an initial condition (cited, never tuned); the engine does not read it. Sizes of ancient and medieval towns differ by a factor of two or more between authors, which `low` and `high` show.",
+ "entries": [
+  {
+   "id": "bh_towns_m8d4:luoyang",
+   "name": "Luoyang",
+   "tile": "china_32",
+   "lat": 34.68,
+   "lon": 112.45,
+   "sizes": [
+    {
+     "year": 100,
+     "people": 500000,
+     "low": 200000,
+     "high": 500000,
+     "source": "Chandler, Four Thousand Years of Urban Growth (1987); Modelski, World Cities: -3000 to 2000 (2003). The Eastern Han capital; the point figure is the high end.",
+     "conf": "C"
+    }
+   ],
+   "also_called": [
+    "Loyang"
+   ]
+  },
+  {
+   "id": "bh_towns_m8d4:changan",
+   "name": "Chang'an",
+   "tile": "china_31",
+   "lat": 34.27,
+   "lon": 108.95,
+   "sizes": [
+    {
+     "year": 100,
+     "people": 200000,
+     "low": 100000,
+     "high": 250000,
+     "source": "Chandler, Four Thousand Years of Urban Growth (1987); Modelski, World Cities: -3000 to 2000 (2003). Western Han capital, past its peak by this date.",
+     "conf": "C"
+    }
+   ],
+   "also_called": [
+    "Xi'an"
+   ]
+  },
+  {
+   "id": "bh_towns_m8d4:chengdu",
+   "name": "Chengdu",
+   "tile": "china_18",
+   "lat": 30.66,
+   "lon": 104.07,
+   "sizes": [
+    {
+     "year": 100,
+     "people": 100000,
+     "low": 50000,
+     "high": 150000,
+     "source": "Modelski, World Cities: -3000 to 2000 (2003)",
+     "conf": "D"
+    }
+   ]
+  },
+  {
+   "id": "bh_towns_m8d4:jiangling",
+   "name": "Jiangling",
+   "tile": "china_20",
+   "lat": 30.35,
+   "lon": 112.2,
+   "sizes": [
+    {
+     "year": 100,
+     "people": 100000,
+     "low": 50000,
+     "high": 200000,
+     "source": "Modelski, World Cities: -3000 to 2000 (2003)",
+     "conf": "D"
+    }
+   ],
+   "also_called": [
+    "Jingzhou"
+   ]
+  },
+  {
+   "id": "bh_towns_m8d4:linzi",
+   "name": "Linzi",
+   "tile": "china_44",
+   "lat": 36.8,
+   "lon": 118.3,
+   "sizes": [
+    {
+     "year": 100,
+     "people": 80000,
+     "low": 50000,
+     "high": 100000,
+     "source": "Modelski, World Cities: -3000 to 2000 (2003); far below its Warring States size",
+     "conf": "D"
+    }
+   ]
+  },
+  {
+   "id": "bh_towns_m8d4:panyu",
+   "name": "Panyu",
+   "tile": "china_05",
+   "lat": 23.13,
+   "lon": 113.26,
+   "sizes": [
+    {
+     "year": 100,
+     "people": 60000,
+     "low": 30000,
+     "high": 100000,
+     "source": "Modelski, World Cities: -3000 to 2000 (2003)",
+     "conf": "D"
+    }
+   ],
+   "also_called": [
+    "Guangzhou",
+    "Canton"
+   ]
+  },
+  {
+   "id": "bh_towns_m8d4:jicheng",
+   "name": "Jicheng",
+   "tile": "china_55",
+   "lat": 39.9,
+   "lon": 116.4,
+   "sizes": [
+    {
+     "year": 100,
+     "people": 40000,
+     "low": 20000,
+     "high": 80000,
+     "source": "Modelski, World Cities: -3000 to 2000 (2003)",
+     "conf": "D"
+    }
+   ],
+   "also_called": [
+    "Ji",
+    "Beijing"
+   ]
+  }
+ ]
+}

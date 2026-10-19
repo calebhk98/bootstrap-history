@@ -1,0 +1,175 @@
+{
+ "_doc": "Towns at the start year of one civilisation. Each entry: name, tile (a real tile id of the base map, found by placing lat/lon in the map's equal-area grid), lat, lon, and `sizes`, a list of dated snapshots {year, people, low, high, source, conf}. people is the point figure, low and high the range the literature gives; conf follows the map's letters (A checked against the cited source, B coordinate checked and size approximate, C from memory of a secondary compilation, D a weak guess). A size is an initial condition (cited, never tuned); the engine does not read it. Sizes of ancient and medieval towns differ by a factor of two or more between authors, which `low` and `high` show.",
+ "entries": [
+  {
+   "id": "bh_towns_m8d4:paris",
+   "name": "Paris",
+   "tile": "france_04",
+   "lat": 48.86,
+   "lon": 2.35,
+   "sizes": [
+    {
+     "year": 1300,
+     "people": 200000,
+     "low": 100000,
+     "high": 200000,
+     "source": "Chandler, Four Thousand Years of Urban Growth (1987); Bairoch, Cities and Economic Development (1988)",
+     "conf": "C"
+    }
+   ]
+  },
+  {
+   "id": "bh_towns_m8d4:london",
+   "name": "London",
+   "tile": "united_kingdom_02",
+   "lat": 51.51,
+   "lon": -0.09,
+   "sizes": [
+    {
+     "year": 1300,
+     "people": 80000,
+     "low": 40000,
+     "high": 100000,
+     "source": "Chandler, Four Thousand Years of Urban Growth (1987); Keene on medieval London",
+     "conf": "C"
+    }
+   ]
+  },
+  {
+   "id": "bh_towns_m8d4:ghent",
+   "name": "Ghent",
+   "tile": "france_04",
+   "lat": 51.05,
+   "lon": 3.72,
+   "sizes": [
+    {
+     "year": 1300,
+     "people": 60000,
+     "low": 50000,
+     "high": 64000,
+     "source": "Bairoch, Cities and Economic Development (1988)",
+     "conf": "C"
+    }
+   ]
+  },
+  {
+   "id": "bh_towns_m8d4:rouen",
+   "name": "Rouen",
+   "tile": "france_04",
+   "lat": 49.44,
+   "lon": 1.1,
+   "sizes": [
+    {
+     "year": 1300,
+     "people": 40000,
+     "low": 30000,
+     "high": 60000,
+     "source": "Bairoch, Cities and Economic Development (1988)",
+     "conf": "D"
+    }
+   ]
+  },
+  {
+   "id": "bh_towns_m8d4:bruges",
+   "name": "Bruges",
+   "tile": "france_04",
+   "lat": 51.2,
+   "lon": 3.22,
+   "sizes": [
+    {
+     "year": 1300,
+     "people": 40000,
+     "low": 35000,
+     "high": 50000,
+     "source": "Bairoch, Cities and Economic Development (1988)",
+     "conf": "C"
+    }
+   ]
+  },
+  {
+   "id": "bh_towns_m8d4:cologne",
+   "name": "Cologne",
+   "tile": "france_05",
+   "lat": 50.94,
+   "lon": 6.96,
+   "sizes": [
+    {
+     "year": 1300,
+     "people": 40000,
+     "low": 35000,
+     "high": 50000,
+     "source": "Bairoch, Cities and Economic Development (1988); nearest tile in the data",
+     "conf": "C"
+    }
+   ]
+  },
+  {
+   "id": "bh_towns_m8d4:bordeaux",
+   "name": "Bordeaux",
+   "tile": "france_01",
+   "lat": 44.84,
+   "lon": -0.58,
+   "sizes": [
+    {
+     "year": 1300,
+     "people": 25000,
+     "low": 20000,
+     "high": 40000,
+     "source": "Bairoch, Cities and Economic Development (1988)",
+     "conf": "D"
+    }
+   ]
+  },
+  {
+   "id": "bh_towns_m8d4:bristol",
+   "name": "Bristol",
+   "tile": "united_kingdom_02",
+   "lat": 51.45,
+   "lon": -2.59,
+   "sizes": [
+    {
+     "year": 1300,
+     "people": 15000,
+     "low": 10000,
+     "high": 20000,
+     "source": "Dyer, Making a Living in the Middle Ages (2002); Bairoch 1988",
+     "conf": "D"
+    }
+   ]
+  },
+  {
+   "id": "bh_towns_m8d4:york",
+   "name": "York",
+   "tile": "united_kingdom_04",
+   "lat": 53.96,
+   "lon": -1.08,
+   "sizes": [
+    {
+     "year": 1300,
+     "people": 12000,
+     "low": 10000,
+     "high": 15000,
+     "source": "Dyer, Making a Living in the Middle Ages (2002); Bairoch 1988",
+     "conf": "D"
+    }
+   ]
+  },
+  {
+   "id": "bh_towns_m8d4:edinburgh",
+   "name": "Edinburgh",
+   "tile": "united_kingdom_04",
+   "lat": 55.95,
+   "lon": -3.19,
+   "sizes": [
+    {
+     "year": 1300,
+     "people": 10000,
+     "low": 5000,
+     "high": 12000,
+     "source": "Secondary summaries of medieval Scottish burghs",
+     "conf": "D"
+    }
+   ]
+  }
+ ]
+}
