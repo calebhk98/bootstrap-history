@@ -35,7 +35,7 @@ def new_game(revenue):
 	game.state.projects.done.add("zz_count")
 	game.state.projects.done_year["zz_count"] = year - 10
 	game.state.projects.operating.add("zz_count")
-	game.state.projects.opened_year["zz_count"] = year - 10
+	game.state.projects.business.set_opened_year("zz_count", year - 10)
 	game._done_changed()
 	return game
 

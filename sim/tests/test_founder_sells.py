@@ -45,7 +45,7 @@ def founder_runs(game, node_id, opened_ago=0):
     projects.done.add(node_id)
     projects.done_year[node_id] = year - opened_ago
     projects.operating.add(node_id)
-    projects.opened_year[node_id] = year - opened_ago
+    projects.business.set_opened_year(node_id, year - opened_ago)
     game._done_changed()
 
 # ---- a concern ------------------------------------------------------------------------------
@@ -69,7 +69,7 @@ check("the founder is paid and the buyer pays the same",
       abs(game.household.capital - capital_before - result["price"]) < 1e-6
       and abs(rich_before - rich.money - result["price"]) < 1e-6)
 check("the concern moves to the buyer", "zz_easy" in rich.concerns
-      and "zz_easy" not in game.state.projects.operating and "zz_easy" not in game.state.projects.opened_year)
+      and "zz_easy" not in game.state.projects.operating and game.state.projects.business.plant_of("zz_easy") is None)
 check("the founder keeps the know-how", "zz_easy" in game.state.projects.done)
 
 with tempfile.TemporaryDirectory() as folder:

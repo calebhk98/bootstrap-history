@@ -28,8 +28,7 @@ def running(node_id, units=1.0, capital=1.0e12):
 
 
 def set_units(game, node_id, units):
-    game.state.governance.inst_units = dict(game.state.governance.inst_units or {})
-    game.state.governance.inst_units[node_id] = units
+    game.state.projects.business.set_size(node_id, units)
     game.household.bump_institution_units_version()
     game._done_changed()
 

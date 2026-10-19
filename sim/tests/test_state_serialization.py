@@ -5,6 +5,7 @@ import random
 import tempfile
 import unittest
 
+from sim.agents.api import Business
 from sim.tests.harness import check
 
 
@@ -35,7 +36,7 @@ def _test_automatic_field_persistence():
 	projects = ProjectsState(
 		active={"arch": proj},
 		done={"stone_cutting"},
-		operating={"stone_cutting"},
+		businesses=[Business.running(["stone_cutting"], opened_year=100)],
 	)
 	econ = EconomyState()
 	holdings = HoldingsState(
@@ -43,7 +44,7 @@ def _test_automatic_field_persistence():
 		forest_ha=120.0,
 		shortages={"charcoal": 3},
 	)
-	gov = GovernanceState(inst_units={"academy": 1.0}, gov=0.5)
+	gov = GovernanceState(gov=0.5)
 	founder = FounderState(founder_alive=True, life_left=28.0)
 	scenario = ScenarioState(year=115)
 	pop = PopulationState(pop_children=20e6, pop_working_age=35e6, pop_elderly=10e6)
@@ -141,7 +142,7 @@ def _test_runtime_type_reconstruction():
 	)
 	projects = ProjectsState(
 		active={"loom": ActiveProjectState(ph_left=20.0)},
-		operating={"spinning_wheel"},
+		businesses=[Business.running(["spinning_wheel"], opened_year=90)],
 		failed_attempts=collections.defaultdict(int, {"steam_engine": 2}),
 	)
 	econ = EconomyState()
@@ -162,8 +163,8 @@ def _test_runtime_type_reconstruction():
 
 	if not isinstance(restored.household.trades_created, set):
 		return False, f"trades_created is not set: {type(restored.household.trades_created)}"
-	if not isinstance(restored.projects.operating, (set, _InvalidatingSet)):
-		return False, f"operating is not set: {type(restored.projects.operating)}"
+	if "spinning_wheel" not in restored.projects.operating or restored.projects.business.opened_year_of("spinning_wheel", 0) != 90:
+		return False, f"the business did not round trip: {restored.projects.business}"
 	if not isinstance(restored.projects.failed_attempts, collections.defaultdict):
 		return False, f"failed_attempts is not defaultdict: {type(restored.projects.failed_attempts)}"
 	if not isinstance(restored.holdings.shortages, collections.Counter):

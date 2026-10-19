@@ -139,7 +139,6 @@ _SUBSYSTEM_MAP: Dict[str, str] = {
 	"_dashboard_history": "holdings",
 
 	# GovernanceState
-	"inst_units": "governance",
 	"gov": "governance",
 
 	# FounderState
@@ -190,7 +189,6 @@ _LAZY_FIELDS: Set[str] = {
 	"_material_stock_ledger",
 	"farm_hectares",
 	"_dashboard_history",
-	"inst_units",
 }
 
 
@@ -224,10 +222,7 @@ class Household(Actor):
 
 		# Wrap mutation-aware collections with callbacks if provided
 		if operating_changed is not None:
-			self._state.projects.operating = _InvalidatingSet(
-				self._state.projects.operating or set(),
-				on_change=operating_changed
-			)
+			self._state.projects.business.watch = operating_changed
 		if active_changed is not None:
 			self._state.projects.active = _InvalidatingDict(
 				{k: ActiveProjectState.from_dict(v if isinstance(v, dict) else v.to_canon_dict(), _on_change=active_changed)
@@ -501,7 +496,7 @@ class Household(Actor):
 			state.governance._inst_units_ver = 0  # type: ignore[attr-defined]
 
 	def opened_year_of(self, node_id: str, default: int) -> int:
-		return (self._state.projects.opened_year or {}).get(node_id, default)
+		return self._state.projects.business.opened_year_of(node_id, default)
 
 	def __getattr__(self, name: str) -> Any:
 		if name.startswith("_state"):

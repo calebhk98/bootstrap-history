@@ -364,7 +364,7 @@ class GoodsMixin:
         for node_id in self._nodes_in_cat(cat):
             if node_id not in projects.operating:
                 continue
-            started = (getattr(projects, "opened_year", None) or {}).get(node_id)
+            started = projects.business.opened_year_of(node_id, None)
             if started is None:
                 started = projects.done_year.get(node_id, scenario.year)
             ages.append(max(0.0, scenario.year - started))

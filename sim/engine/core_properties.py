@@ -644,22 +644,6 @@ class ForwardingPropertiesMixin:
 	# GovernanceState Compatibility Properties
 	# =========================================================================
 
-	@property
-	def inst_units(self):
-		sub = getattr(self.state, "governance", None)
-		if sub is None:
-			raise AttributeError("inst_units")
-		val = getattr(sub, "inst_units", None)
-		if val is None:
-			raise AttributeError("inst_units")
-		return val
-
-	@inst_units.setter
-	def inst_units(self, value):
-		sub = getattr(self.state, "governance", None)
-		if sub is not None:
-			setattr(sub, "inst_units", value)
-
 	# =========================================================================
 	# FounderState Compatibility Properties
 	# =========================================================================

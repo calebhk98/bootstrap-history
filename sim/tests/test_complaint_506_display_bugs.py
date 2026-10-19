@@ -99,7 +99,7 @@ def _sale_game():
     projects.done.add("zz_quoted")
     projects.done_year["zz_quoted"] = year - 5
     projects.operating.add("zz_quoted")
-    projects.opened_year["zz_quoted"] = year - 5
+    projects.business.set_opened_year("zz_quoted", year - 5)
     game._done_changed()
     game.actors.add("firm:rich", ActorRecord(kind="firm", money=1.0e9, knowledge={"zz_quoted"}))
     return game, nodes

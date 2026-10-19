@@ -38,9 +38,7 @@ class StaffingMixin:
         """Shut a work and record why and since when, in one place. Whatever requires it running
         shuts with it unless `cascade` is off."""
         projects = self.state.projects
-        projects.operating.discard(node_id)
-        projects.mothballed.add(node_id)
-        projects.closures[node_id] = {"reason": reason, "year": self.state.scenario.year if year is None else year}
+        projects.business.mothball(node_id, self.state.scenario.year if year is None else year, reason)
         if reason == self.CLOSED_FOR_STAFF:
             projects.ever_closed_for_staff.add(node_id)
         cause_book.record_concern(self, "closure", node_id, reason)
@@ -56,12 +54,7 @@ class StaffingMixin:
 
     def clear_closure(self, node_id, reason=None):
         """Drop a closure record. With a reason, only that reason's record goes."""
-        closures = self.state.projects.closures
-        record = closures.get(node_id)
-        if record is None or (reason is not None and record["reason"] != reason):
-            return False
-        del closures[node_id]
-        return True
+        return self.state.projects.business.forget_reason(node_id, reason)
 
     def staff_closure_age(self, node_id):
         """Years since a staffing closure began, or None if not closed for staff."""
@@ -888,14 +881,13 @@ class StaffingMixin:
         self.pay_edge(edges.EDGE_WORKERS, fee, "known technique restored")
         projects.done.add(node_id)
         self._done_changed()
-        projects.mothballed.discard(node_id)
-        self.clear_closure(node_id)
-        # Back in service means back in OPERATION: restore is what a player
-        # types to reopen something they shut, so it must put it back on the
-        # books rather than leaving it known-but-closed.
+        # Back in service means back in OPERATION: restore is what a player types to reopen something they
+        # shut, so a concern goes back on the books; any other work just stops being shut.
         if self.is_venture(node_id):
-            projects.operating.add(node_id)
+            projects.business.restore(node_id)
             cause_book.record_concern(self, "opening", node_id, "restored")
+        else:
+            projects.business.close_plant(node_id)
         return True, LogLine("restored", "%s back in service for %s%s"
                              % (node_id, money_text(fee, self, grouped=True),
                                 (" (%s)" % _grace_note) if _grace_note else ""),

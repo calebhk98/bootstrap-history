@@ -44,7 +44,7 @@ def founder_runs(game, node_id, opened_ago):
 	projects.done.add(node_id)
 	projects.done_year[node_id] = year - opened_ago
 	projects.operating.add(node_id)
-	projects.opened_year[node_id] = year - opened_ago
+	projects.business.set_opened_year(node_id, year - opened_ago)
 	game._done_changed()
 
 

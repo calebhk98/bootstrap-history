@@ -216,7 +216,7 @@ class SimWorld(BudgetView, SiteView, RevenueView, GroupView, StakeView, Disclosu
 		for node_id in sorted(projects.operating):
 			if node_id in projects.granted or not sim.is_venture(node_id):
 				continue
-			opened = (projects.opened_year or {}).get(node_id, self.year)
+			opened = projects.business.opened_year_of(node_id, self.year)
 			if self.year - opened >= self.proof_years(node_id) and self.concern_margin(node_id) > 0:
 				proven.append(node_id)
 		return proven

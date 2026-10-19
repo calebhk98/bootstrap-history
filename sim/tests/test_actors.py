@@ -50,7 +50,7 @@ def founder_completes(game, node_id, operating=False, opened_ago=0):
     game.state.projects.done_year[node_id] = year - opened_ago
     if operating:
         game.state.projects.operating.add(node_id)
-        game.state.projects.opened_year[node_id] = year - opened_ago
+        game.state.projects.business.set_opened_year(node_id, year - opened_ago)
     game._done_changed()
 
 

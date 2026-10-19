@@ -9,7 +9,8 @@ from collections.abc import MutableSet
 from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, Iterable, Iterator, KeysView, List, Optional
 
-from .business_plant import Plant
+from .business_views import Closures, StateKeys
+from .business_plant import MOTHBALLED, OPERATING, Plant
 
 
 @dataclass
@@ -22,6 +23,7 @@ class Business:
 		self._by_key: Dict[str, Plant] = {plant.entry_key: plant for plant in self.plants}
 		# told after the set of plants changes (not saved; the registry sets it)
 		self.watch: Optional[Callable[[], None]] = None
+		self._views: Dict[str, Any] = {}
 
 	@classmethod
 	def running(cls, entry_keys: Iterable[str], opened_year: Optional[int] = None) -> "Business":
@@ -31,6 +33,23 @@ class Business:
 	def _changed(self) -> None:
 		if self.watch is not None:
 			self.watch()
+
+	def operating(self) -> Any:
+		"""The entries with a plant running, as a set."""
+		return self._view("operating", lambda: StateKeys(self, OPERATING))
+
+	def mothballed(self) -> Any:
+		"""The entries with a switched-off plant, as a set."""
+		return self._view("mothballed", lambda: StateKeys(self, MOTHBALLED))
+
+	def closures(self) -> Any:
+		"""Switched-off plants that record why, as {entry: {"reason", "year"}}."""
+		return self._view("closures", lambda: Closures(self))
+
+	def _view(self, name: str, make: Callable[[], Any]) -> Any:
+		if name not in self._views:
+			self._views[name] = make()
+		return self._views[name]
 
 	# ---- reading ------------------------------------------------------------
 	def entry_keys(self) -> KeysView:
@@ -42,6 +61,10 @@ class Business:
 
 	def sizes(self) -> Dict[str, float]:
 		return {key: plant.size for key, plant in self._by_key.items()}
+
+	def state_of(self, entry_key: str) -> Optional[str]:
+		plant = self._by_key.get(entry_key)
+		return None if plant is None else plant.state
 
 	def opened_year_of(self, entry_key: str, default: int) -> int:
 		plant = self._by_key.get(entry_key)
@@ -61,8 +84,12 @@ class Business:
 
 	# ---- changing -----------------------------------------------------------
 	def open_plant(self, entry_key: str, year: Optional[int]) -> Plant:
-		"""Begin running a plant of the entry from `year`; a plant already running is restarted from `year`."""
+		"""Begin running a plant of the entry from `year`; a plant already running is restarted from `year`,
+		and a mothballed one is brought back with its size and age."""
 		plant = self._by_key.get(entry_key)
+		if plant is not None and plant.state == MOTHBALLED:
+			self.restore(entry_key)
+			return plant
 		if plant is not None:
 			plant.opened_year = year
 			return plant
@@ -71,6 +98,33 @@ class Business:
 		self._by_key[entry_key] = plant
 		self._changed()
 		return plant
+
+	def mothball(self, entry_key: str, year: Optional[int], reason: str) -> Plant:
+		"""Switch the plant off, keeping its size and age; a plant that does not exist yet is made already switched off."""
+		plant = self._by_key.get(entry_key)
+		if plant is None:
+			plant = Plant(entry_key=entry_key)
+			self.plants.append(plant)
+			self._by_key[entry_key] = plant
+		plant.state, plant.since_year, plant.reason = MOTHBALLED, year, reason
+		self._changed()
+		return plant
+
+	def restore(self, entry_key: str) -> Optional[Plant]:
+		"""Switch a mothballed plant back on."""
+		plant = self._by_key.get(entry_key)
+		if plant is not None and plant.state != OPERATING:
+			plant.state, plant.since_year, plant.reason = OPERATING, None, ""
+			self._changed()
+		return plant
+
+	def forget_reason(self, entry_key: str, reason: Optional[str] = None) -> bool:
+		"""Drop the record of why a plant is shut (only that reason's, when one is named)."""
+		plant = self._by_key.get(entry_key)
+		if plant is None or not plant.reason or (reason is not None and plant.reason != reason):
+			return False
+		plant.reason, plant.since_year = "", None
+		return True
 
 	def adopt(self, plant: Plant) -> None:
 		"""Take over a plant, with its size and age, from another business."""
@@ -99,6 +153,18 @@ class Business:
 	def set_size(self, entry_key: str, size: float) -> None:
 		"""Resize a plant. The owner tells the registry, which totals sizes across owners."""
 		self._by_key[entry_key].size = size
+
+	def note_opened_year_if_unknown(self, entry_key: str, year: int) -> None:
+		plant = self._by_key.get(entry_key)
+		if plant is not None and plant.opened_year is None:
+			plant.opened_year = year
+
+	def set_opened_year(self, entry_key: str, year: Optional[int]) -> None:
+		"""Date the plant's opening, running one if the entry has none."""
+		plant = self._by_key.get(entry_key)
+		if plant is None:
+			plant = self.open_plant(entry_key, year)
+		plant.opened_year = year
 
 	def note_crew_found(self, entry_key: str, found: float) -> None:
 		plant = self._by_key.get(entry_key)

@@ -123,7 +123,7 @@ levied = unopened_sim(capital=1.0e9)
 levied.done.add("fin_gambling_house")
 levied._done_changed()
 levied.state.projects.operating.add("fin_gambling_house")
-levied.state.projects.opened_year["fin_gambling_house"] = levied.state.scenario.year - 100
+levied.state.projects.business.set_opened_year("fin_gambling_house", levied.state.scenario.year - 100)
 # the market's room for the output is the agent economy's answer; one open concern's takings are what is measured
 levied.node_output_market_factor = lambda node: 1.0
 due = levied.concern_levy_due()
