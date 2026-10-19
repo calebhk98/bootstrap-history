@@ -1,6 +1,6 @@
 # Carriage pays the poor without using their hours or any carriers
 
-**Status:** partly fixed. Carriage hours are now hired in the labour market (below); carts, ships and animals as capital, travel time and storage along the route stay open.
+**Status:** partly - split into 627, 628, 629, 630, 631, 632 (closes when they do); carriage hours are hired in the labour market, and carts, ships and animals as capital, with dispatch limited by them, stay open
 
 Found by an outside reviewer reading the repository; checked against the code.
 
@@ -67,3 +67,16 @@ demand for carters, sailors and porters (530).
   its carriers and the route's days, with bids or hire for more and wear booked from the service life (merchants are
   not worn today, `inventory.wear_moves` wears cohort holdings only); and an opening endowment of fleets. Several
   sessions in all.
+
+## Split
+
+Children, in order of work:
+
+- 627: Carriage hours count sea and river hauls at the land mode's hours, skip port handling, and use one national wage
+- 628: Storage at stages of a haul is not charged
+- 629: Carts, pack saddles and vessels are not goods and have no service lives
+- 630: Geography's `Rate` does not expose carrier-days, animals per carrier or vehicle wear
+- 631: Merchants have no fleet: dispatch is limited by cash, not by carriers
+- 632: The non-labour part of a carriage fee (feed, carts, ships, animals, losses) goes to the poorest households of the source tile
+
+552 stays `partly`: carriage hours are already hired (see Done).

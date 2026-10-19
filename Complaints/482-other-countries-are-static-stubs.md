@@ -1,6 +1,6 @@
 # Countries other than the home one are static stubs: fixed population, no food, no disease, a one-formula state
 
-**Status:** open
+**Status:** open - split into 590, 591, 592, 593 (closes when they do)
 
 Only the home country runs the full model. Every other country is a `CountryProfile` read through
 `CountryWorld` (`sim/agents/country_view.py`):
@@ -25,3 +25,12 @@ and section 2). Today a country's growth, famine, revenue and war capacity are i
 What it would take: one `Population`, farm and disease state per country, stepped by the code the home
 country uses; retire `ForeignGovernment` in favour of a country-scoped `Government` whose revenue forms
 come from that country's civilisation file. Part of 481.
+
+## Split
+
+Children, in order of work:
+
+- 590: A foreign country's population never changes and its strata grow by their own rule
+- 591: A foreign country has no food or farming: the farm, granary and nutrition chain runs for the home country only
+- 592: A foreign country has no disease: the disease port steps one patch, the home nation
+- 593: ForeignGovernment is one revenue formula: no revenue forms, works, navy, dole, reserve policy or borrowing

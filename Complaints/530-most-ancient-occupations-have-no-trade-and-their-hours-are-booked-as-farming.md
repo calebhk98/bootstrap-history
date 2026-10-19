@@ -1,6 +1,6 @@
 # Most ancient occupations have no trade, and their hours are booked as farming
 
-**Status:** open
+**Status:** open - split into 609, 610, 611, 612, 613, 614, 615, 616, 617, 618, 619 (closes when they do)
 
 An outside list of the twenty commonest occupations in classical civilisations (Rome, Greece,
 Mesopotamia, Egypt) was checked against the trade registry (`data/world/trades.json`) and the
@@ -109,3 +109,21 @@ most such entries are extraction and chemistry, out of scope here. The complaint
 - **Owner decision:** cook and tavern keeper, domestic servant, priest and diviner each need a need or good.
 - **Engine:** porter and dockworker live in the route modes (`sim/geography/routes_rates.py`); `FARM_TRADE` and the
   unskilled fallback are both `labourer` in `sim/labour/legacy_trade_defaults.py` and must be separated.
+
+## Split
+
+Children, in order of work:
+
+- 609: The farm trade and the unskilled fallback trade are one id, so processing and herding hours count as farming
+- 610: Spinners, weavers, fullers and dyers have no trade, though textiles were the largest non-farm work
+- 611: Herders and millers have no trade: herding is not told apart from crop farming
+- 612: Tanners, charcoal burners, lime burners and salt workers have no trade, and leather has no goods
+- 613: Porters and dockworkers have no trade, so the largest labour group of a society without draught animals is hidden
+- 614: There is no bread, oven or bakery, and no cooked food at all
+- 615: Fish is calories, not a good, and there is no salted fish or garum
+- 616: Wine and olive oil have no vine or olive crop, no press and no jar, and no years before trees bear
+- 617: Ships have no recipe and no shipwright: they are a state budget line paying carpenters and sailors
+- 618: The implements need lists only metals, and obsidian blades have no recipe, good or knapper
+- 619: No check that the occupational distribution of a baseline run is plausible
+
+Kept here as decisions, not work: whether domestic service and religion become needs (owner decision), and cook, tavern keeper, servant, priest and diviner, which wait on it. The Han salt and iron monopolies are 492; seasonal labour and corvee are 542 and 600.
