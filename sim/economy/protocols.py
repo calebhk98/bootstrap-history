@@ -78,6 +78,10 @@ class MarketView(Protocol):
     def stock(self, agent: AgentId, good: GoodId, tile: TileId) -> float:
         """The agent's holding of a good on a tile now."""
 
+    def equity(self, agent: AgentId) -> float:
+        """What the agent owns of the firms (net worth by ownership share), in money. A view may omit it
+        (`credit_view.equity_of` then reads zero)."""
+
 
 class Clearing(Protocol):
     """goods_market.clear and labour.clear share this shape."""
