@@ -1,6 +1,6 @@
 # One price owner: the agent economy
 
-**Status:** plan; stage 1 built on branch `507-stage-1-solver-is-cost-only` (2026-10-14), the rest not built. Answers `Complaints/507-prices-and-traded-volumes-have-two-owners.md`
+**Status:** plan; stage 1 built on branch `507-stage-1-solver-is-cost-only` (2026-10-14), stages 2 and 3 built, stage 4 partly built on branch `507-stage-4-traded-volumes-from-the-economy` (2026-10-19), the rest not built. Answers `Complaints/507-prices-and-traded-volumes-have-two-owners.md`
 (owner decision: the agent economy is the only owner of prices and traded volumes; the engine's price solver
 becomes a cost-of-making calculator). Sequel to `ONE_DEMAND_MODEL_PLAN.md` (one household demand kernel) and
 Complaint 115 (one economy). Folds in the price-search half of Complaint 513 (stage 8) and the unsold-stock rule
@@ -320,6 +320,45 @@ Files: `sim/engine/real_output.py`, `market_clearing.py` (`_follow_cleared_volum
 `economy_port.py` (`agent_cleared_ratio`), `economy_port_year.py` (`cleared_ratio`, baseline), `goods_market_api.py`
 (`market_available_tonnes_per_year`), `economy_materials.py` (`_material_market_tonnes`), `labour_port.py`,
 `event_causes.py`, `sim/economy/api.py` (offered quantity read).
+
+**Partly done** (branch `507-stage-4-traded-volumes-from-the-economy`, 2026-10-19). What was built, and what it showed:
+
+- Real output. `real_output.py` reads the economy only: the opening basket is `opening_quantities` valued at
+  `opening_prices_in_hours` (new `sim.economy.api` read: the opening price over the unskilled trade's opening wage);
+  volumes are `traded_volumes`. `stored["volume_baseline"]` now holds the first year every good cleared any (it held
+  late goods only). The plan's per-good ratio (traded over baseline times the opening quantity) swung output per head
+  by multiples, because a good the economy barely trades in its first year has a tiny baseline and a large opening
+  weight (measured: milk and cheese by two orders of magnitude, a candle by tens). So the measure weights a good by
+  what the economy trades of it: real output is one scale times the sum of traded units times opening price, the scale
+  carrying the baseline year onto the opening basket's value (`RealOutputMixin.traded_measure`). Output per head is
+  one in the baseline year by construction, and one before any year has closed.
+- Deleted: `_follow_cleared_volumes`, `traded_ratio`, the `reference_tonnes` split and `commodity` ratios in
+  `real_output`, `agent_cleared_ratio`, `AgentEconomy.cleared_ratio`, `stored["late_goods"]`. The static book keeps its
+  own basket for now (`static_book_basket.py`, the old `base_basket`): `market_demand` and the book's household
+  ratios read it, and it goes with the static book in stage 6.
+- Offered quantity. `quote["market_available_tonnes_per_year"]` is the economy's offered tonnes at the acting tile
+  (`agent_offered_tonnes`) for a home good; a partner's good keeps the carriers' lift; the engine's
+  `_material_market_tonnes` answers only while the economy opens and for the freight and reach callers that still use it
+  (`economy_materials.py` untouched). `GoodsMarket.buy` cuts an order to the offer less what the buyer has already bought
+  that year (`test_purchase_limited_by_offered_volume`).
+- What it showed. (1) The economy's own volumes are not stationary: in a no-intervention run output per head reads
+  one, 0.86, 0.72, 0.73 over the first four years, and goods carrying up to 0.29 of the baseline year's value sit beyond
+  a factor of three of it in the third year (`test_real_output_baseline.py`, bound one third, set from that
+  measure; `python3 -m sim.tests --slow --only real_output_baseline`). This is the unsettled spin-up of stage 2 (473), not
+  the measure. (2) A fall in people without a technique does not leave output per head put: output falls less than
+  the people, since food volumes rise (the survivors eat more of the same land's food) while construction falls; per
+  head read 1.34, 1.26, 1.32, 1.58 over four years after forty in a hundred of the people went. The plan's "a population
+  fall does not raise output per head" is therefore NOT met; the check prints the measure instead of asserting
+  (`test_real_output.py`). It needs the economy's food demand settled, or a decision that the response is wanted.
+  (3) The opening basket is final demand: a technique that cheapens an intermediate (copper ore) no longer moves real
+  output, so `real_output_helpers.GOOD` is a good households buy (stone blocks), whose volume moves little (+0.3% against
+  the twin) while real output and output per head rise. (4) A new good counts only once the economy trades it, which takes
+  producers some years (`test_concern_volume.py` closes three). (5) `test_population_farm_technique.py` runs
+  `advance_society`, which does not close the agent economy's year, so output per head stays one there and the plan's
+  check could not be added to it; a whole-game version belongs with the technique test above.
+- Not done: the founder's sale limit still reads the offered quantity (the book's held tonnes), not the buyers' bid;
+  `economy-check` has no output-per-head guard (the new topic covers it); `labour_port.py`, `event_causes.py` and
+  `economy_port_year.py`'s cleared ratio needed no change beyond the above.
 
 ### Stage 5: cost comparers use the calculator at the economy's prices
 
