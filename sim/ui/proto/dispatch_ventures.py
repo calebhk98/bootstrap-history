@@ -17,7 +17,7 @@ import os
 import tempfile
 
 from sim.engine.ui_port import TRADE_FAMILY, downstream_count
-from sim.engine.ui_port import purchase_budget
+from sim.engine.ui_port import purchase_budget, trades_the_project_waits_for
 from .nodes import _did_you_mean
 from .quantity_units import read_quantity
 from .start_refusal import refusal_fields
@@ -208,6 +208,10 @@ def _cmd_start(sim, nodes, cmd, ended):
             % (node["name"], node["yrs"], "" if node["yrs"] == 1 else "s"))
     if _warn_staff:
         out["but"] = _warn_staff
+    # trade -> years until its first hands (None when nobody is on the way)
+    _waits = trades_the_project_waits_for(sim, node_id)
+    if _waits:
+        out["waits_for_trades"] = _waits
     # BUILD STAFF AND OPERATING STAFF ARE DIFFERENT NUMBERS, and a player
     # can clear the first (checked above, and by start_project itself),
     # pay the whole bill, and only discover the second - venture_hands(),

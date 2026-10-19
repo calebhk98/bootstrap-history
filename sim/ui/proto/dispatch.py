@@ -13,6 +13,7 @@ from . import command_registry, mod_commands
 from .command_registry import command
 from .compact import compact_state, compact_stuck, compact_why
 from .help import _agent_help
+from .field_check import unknown_field_refusal
 from .nodes import NODE_NAME_NORM, _did_you_mean, _norm_name, _resolve_by_name
 from sim.ui.memory import load_state, save_state
 from .score import victory_report
@@ -559,6 +560,10 @@ def _agent_dispatch_inner(sim, nodes, cmd):
                                          + ", ".join(near)) if near else ""), choices=near)}
     command = cmd.get("cmd")
     ended = _agent_end_reason(sim)
+
+    _stray = unknown_field_refusal(cmd)
+    if _stray:
+        return _stray
 
     if command in ("help", "?", "commands"):
         return {"ok": True, "help": _agent_help(sim, cmd.get("topic"))}

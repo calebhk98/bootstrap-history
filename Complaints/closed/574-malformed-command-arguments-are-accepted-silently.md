@@ -1,6 +1,6 @@
 # Malformed command arguments are accepted silently
 
-**Status:** open
+**Status:** closed - a field no command reads is refused with cause unknown_field
 
 Found by an agent playtest (`Complaints/reports/playtest-rome-seed7-agent-100-years-log.md`):
 
@@ -13,3 +13,7 @@ the wrong form, and it then believes a policy is on that is off.
 What it would take: every command validates its fields against its declared arguments (the command registry already
 declares usage, `sim/ui/proto`), and an unknown field is a refusal with `cause: "unknown_field"` naming it. Test: the
 two requests above are refused with that cause.
+
+## Resolution
+
+Before dispatch, `sim/ui/proto/field_check.py` refuses a field that no handler reads and no usage form declares, with cause `unknown_field`, the field, and the fields the command takes (`accepted_fields`). The known fields are found by scanning the handlers, not listed. `help` documents its `topic` field in its usage. Test: `sim/tests/test_unknown_field.py`.

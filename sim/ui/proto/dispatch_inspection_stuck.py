@@ -6,6 +6,7 @@ from sim.engine.ui_port import money_text
 from .saving_plan import saving_reason
 from sim.engine.ui_port import closure
 from .state_waiting import _waiting_on
+from .state_projects import training_in_hand
 from .stuck_advice import calendar_bound_advice, filler_note, lever_line
 
 
@@ -40,6 +41,14 @@ def _stuck_work_in_hand(sim, nodes):
             "each_kind": _kinds,
             **({"each_why_underfunded": _why_underfunded}
                if _why_underfunded else {})}
+
+
+def _stuck_training_in_hand(sim):
+    rows = training_in_hand(sim)
+    if not rows:
+        return None
+    return {"what": "training in hand", "kind": "active", "how_many": len(rows),
+            "each_training": rows}
 
 
 def _stuck_road_to_goal(sim, nodes, _fog):
@@ -84,7 +93,7 @@ def _stuck_started_nothing(sim, _startable, _afford, saving=False):
     # command - whose whole job is "why you are not getting on" - must not
     # report "you have work in hand, money to pay for it and people to do
     # it" when no project is actually active.
-    if sim.active:
+    if sim.active or sim.training:
         return None
     _cheap = (min(_afford or _startable, key=lambda k: sim.project_cost(k))
               if (_afford or _startable) and not saving else None)
@@ -263,6 +272,7 @@ def _cmd_stuck(sim, nodes, cmd, ended):
     _saving = saving_reason(sim)
     _checks = (
         _stuck_work_in_hand(sim, nodes),
+        _stuck_training_in_hand(sim),
         _goal_reason,
         _stuck_started_nothing(sim, _startable, _afford, saving=bool(_saving)),
         _saving,
