@@ -31,6 +31,7 @@ from sim.engine.permanent_benefit import permanent_parts  # noqa: F401
 from sim.engine.projects_completion import FAILED_PREFIX, goal_movement, MINOR_MARK  # noqa: F401
 from sim.engine.projects_exclusions import CATEGORY_PREFIX, TRAIT_PREFIX  # noqa: F401
 from sim.engine.purchase_rule import purchase_budget  # noqa: F401
+from sim.engine.projects_trade_wait import trades_the_project_waits_for  # noqa: F401
 from sim.engine.run_setup import DetRNG, ensure_fixed_hash_seed, load_strategy, topo_stable  # noqa: F401
 from sim.engine.saveload import (  # noqa: F401
     _SET_FIELDS_OF_NODE_IDS as SET_FIELDS_OF_NODE_IDS,

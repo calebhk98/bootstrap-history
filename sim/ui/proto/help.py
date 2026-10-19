@@ -424,7 +424,8 @@ def _agent_help(sim, topic=None):
 command_registry.register_command(
     "help", group="game", aliases=("h", "?", "commands"),
     summary="this index, a topic, or one command's page",
-    usage=["help", "help commands", "help commands <group>", "help commands all limit 20", "help <command>", "help <topic>"],
+    usage=["help", "help commands", "help commands <group>", "help commands all limit 20", "help <command>", "help <topic>",
+           '{"cmd":"help","topic":"sell"}'],
     options={"<command>": "any command or alias: shows its usage, options and description",
              "<topic>": "a topic page; the front page lists them"},
     description="Bare help is the front page. `help commands` is a short index of the "
