@@ -17,13 +17,15 @@ class TileOwnershipMixin:
             for partner in self.partners_in_agent_economy():
                 claims[partner] = tiles_held(load_civ(partner), self.world_map)
             economy.tile_owners, economy.tile_claim_conflicts = tile_owners.seed(claims)
+            tile_owners.seed_controls(economy.tile_owners, self.stores.view("control"))
         return economy.tile_owners
 
     def tile_owner(self, tile_id):
         return tile_owners.owner_of(self.tile_owner_map(), tile_id)
 
     def tile_control(self, tile_id):
-        return tile_owners.control_of(self.tile_owner_map(), tile_id)
+        self.tile_owner_map()   # seeds the owners and their control levels on first use
+        return tile_owners.control_of(self.stores.view("control"), tile_id)
 
     def tiles_owned_by(self, actor_id):
         """Sorted tiles this country or seat owns, at any control level."""
@@ -35,7 +37,7 @@ class TileOwnershipMixin:
 
     def transfer_tile(self, tile_id, to_actor, control=None):
         """Give a tile to a country or seat (None releases it); returns the previous owner."""
-        return tile_owners.transfer(self.tile_owner_map(), tile_id, to_actor, control, self.world_map)
+        return tile_owners.transfer(self.tile_owner_map(), tile_id, to_actor, control, self.world_map, self.stores.view("control"))
 
     def way_owners(self):
         """{key: owner or None} of every built way, read from who owns the tiles it stands on."""

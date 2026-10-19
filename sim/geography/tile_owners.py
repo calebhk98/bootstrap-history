@@ -1,7 +1,8 @@
 """Who owns each tile and how firmly: the owner map every actor's territory is read from.
 
-The map is {tile id: {"owner": actor id, "control": control level}}; an actor is any country or seat. A tile
-has at most one entry, so it has at most one owner. The control levels are data (data/world/control_levels.json).
+The map is {tile id: {"owner": actor id}}; an actor is any country or seat. A tile has at most one entry, so it
+has at most one owner. How firmly it is held is the tile store `control` (sim/engine/mod_stores.py), passed in as
+`controls`; the levels are data (data/world/control_levels.json).
 """
 import functools
 import json
@@ -52,7 +53,7 @@ def seed(claims: Mapping[str, Iterable[str]], level: Optional[str] = None) -> Tu
             if held is not None:
                 conflicts.append({"tile": tile_id, "owner": held["owner"], "claimant": actor})
             else:
-                owners[tile_id] = {"owner": actor, "control": level}
+                owners[tile_id] = {"owner": actor}
     return owners, conflicts
 
 
@@ -61,9 +62,17 @@ def owner_of(owners: Mapping[str, Mapping[str, str]], tile_id: str) -> Optional[
     return entry["owner"] if entry else None
 
 
-def control_of(owners: Mapping[str, Mapping[str, str]], tile_id: str) -> Optional[str]:
-    entry = owners.get(tile_id)
-    return entry["control"] if entry else None
+def control_of(controls: Any, tile_id: str) -> Optional[str]:
+    """The control level the `control` tile store holds for a tile (None when unowned)."""
+    return controls.get(tile_id)
+
+
+def seed_controls(owners: Mapping[str, Any], controls: Any, level: Optional[str] = None) -> None:
+    """Write the seed level to the `controls` store for every owned tile."""
+    level = level or seed_level()
+    _require_level(level)
+    for tile_id in owners:
+        controls.set(tile_id, level)
 
 
 def tiles_of(owners: Mapping[str, Mapping[str, str]], actor: str) -> List[str]:
@@ -72,10 +81,10 @@ def tiles_of(owners: Mapping[str, Mapping[str, str]], actor: str) -> List[str]:
 
 
 def transfer(owners: OwnerMap, tile_id: str, to_actor: Optional[str], level: Optional[str] = None,
-             world_map: Optional[map_source.WorldMap] = None) -> Optional[str]:
-    """Give a tile (and its control level) to an actor, or release it (`to_actor` None); returns the previous
-    owner (None when unowned). The one operation that changes who owns a tile; refuses a tile the map lacks or
-    an unlisted level."""
+             world_map: Optional[map_source.WorldMap] = None, controls: Any = None) -> Optional[str]:
+    """Give a tile (and its control level, written to the `controls` store) to an actor, or release it
+    (`to_actor` None); returns the previous owner (None when unowned). The one operation that changes who owns a
+    tile; refuses a tile the map lacks or an unlisted level."""
     level = level or seed_level()
     _require_level(level)
     if world_map is not None and tile_id not in world_map.tiles:
@@ -84,7 +93,9 @@ def transfer(owners: OwnerMap, tile_id: str, to_actor: Optional[str], level: Opt
     if to_actor is None:
         owners.pop(tile_id, None)
     else:
-        owners[tile_id] = {"owner": to_actor, "control": level}
+        owners[tile_id] = {"owner": to_actor}
+    if controls is not None:
+        controls.set(tile_id, None if to_actor is None else level)
     return previous
 
 
@@ -96,7 +107,7 @@ def way_owner(owners: Mapping[str, Mapping[str, str]], key: str) -> Optional[str
 
 
 def problems(owners: Mapping[str, Mapping[str, str]], claims: Optional[Mapping[str, Iterable[str]]] = None,
-             world_map: Optional[map_source.WorldMap] = None) -> List[Dict[str, Any]]:
+             world_map: Optional[map_source.WorldMap] = None, controls: Any = None) -> List[Dict[str, Any]]:
     """What breaks the one-owner rule, each {cause, tile, ...}: no owner, unknown control level, a tile the map
     lacks, and (given `claims`, each actor's own list of tiles) a tile two actors list (cause "double_claim") or
     one lists that the map gives another (cause "owned_by_other")."""
@@ -105,8 +116,8 @@ def problems(owners: Mapping[str, Mapping[str, str]], claims: Optional[Mapping[s
     for tile_id, entry in sorted(owners.items()):
         if not entry.get("owner"):
             found.append({"cause": "no_owner", "tile": tile_id})
-        if entry.get("control") not in levels:
-            found.append({"cause": "unknown_control", "tile": tile_id, "control": entry.get("control")})
+        if controls is not None and controls.get(tile_id) not in levels:
+            found.append({"cause": "unknown_control", "tile": tile_id, "control": controls.get(tile_id)})
         if world_map is not None and tile_id not in world_map.tiles:
             found.append({"cause": "not_on_map", "tile": tile_id})
     listed: Dict[str, str] = {}
