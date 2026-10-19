@@ -156,3 +156,7 @@ with the test kept honest.
   year, stock gone, yearly pace limit) and from smith hours capped by the trained-substitute wage ceiling. No engine
   defect found; the check is not weakened and stays failing until the opening settles or the labour ceiling is
   revisited.
+- Branch `pm-complaints-burndown`: `sited_ore_price_over_cost`'s common-ores check (green on main) is red. Forest
+  timber as a stock (539) makes iron ore open far above its cost while the opening stocks a year of inputs; the fix
+  (open with a working stock, 519's last section) turns four other cycle-dependent checks red until the spin-up
+  settles (473), so it is held back. One known regression, traded against four.
