@@ -19,6 +19,12 @@ RUN_COST_PER_UNIT = 2.0 * 3.0 + 4.0 * 0.5     # two of metal at three, four hour
 
 
 class View:
+    def interest_rate(self, currency):
+        return 0.0
+
+    def currency_of(self, area):
+        return "coin"
+
     year = 3
 
     def price(self, good, area):
@@ -38,7 +44,7 @@ def game(substitution=SUBSTITUTION):
     recipe = Recipe("melt", {GOOD: 1.0}, {"metal": 2.0}, {"labour": 4.0})
     producer = Producer(SELLER, "lord", "melt", TILE, 10.0)
     basket = types.SimpleNamespace(substitution=substitution)
-    setup = types.SimpleNamespace(recipes={"melt": recipe}, basket_for=lambda tile: basket)
+    setup = types.SimpleNamespace(specs={}, recipes={"melt": recipe}, basket_for=lambda tile: basket)
     record = types.SimpleNamespace(producers={SELLER: producer})
     return setup, record
 

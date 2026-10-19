@@ -16,6 +16,12 @@ COST = 2.0 * 3.0 + 4.0 * 0.5      # two of metal at three, four hours at half
 
 
 class View:
+    def interest_rate(self, currency):
+        return 0.0
+
+    def currency_of(self, area):
+        return "coin"
+
     year = 3
 
     def price(self, good, area):
@@ -35,7 +41,7 @@ def game(*sellers, workshops=1):
     recipe = Recipe("melt", {GOOD: 1.0}, {"metal": 2.0}, {"labour": 4.0})
     producers = {name: Producer(name, "lord", "melt", TILE, 10.0, workshops=workshops) for name in sellers}
     basket = types.SimpleNamespace(substitution=1.0)
-    setup = types.SimpleNamespace(recipes={"melt": recipe}, basket_for=lambda tile: basket)
+    setup = types.SimpleNamespace(specs={}, recipes={"melt": recipe}, basket_for=lambda tile: basket)
     return setup, types.SimpleNamespace(producers=producers)
 
 

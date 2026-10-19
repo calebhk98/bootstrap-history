@@ -67,6 +67,22 @@ def holding_reservation(expected_price: float, interest_rate: float, spoilage_pe
     return (expected_price * surviving - storage_cost_per_unit) / (1.0 + max(interest_rate, -0.99))
 
 
+def queued_holding_value(one_year_reservation: float, stock: float, expected_yearly_sales: float,
+                         interest_rate: float, spoilage_per_year: float) -> float:
+    """What the last unit of `stock` is worth to its holder unsold: it waits behind the units ahead of it
+    for as many years as the stock is of the expected yearly sales, losing a year's spoilage and interest
+    for each year past the first (which `one_year_reservation` already carries). Nothing when no sales
+    are expected, so stock with no buyers in sight is worth only what selling it fetches now."""
+    if expected_yearly_sales <= 0.0 or one_year_reservation <= 0.0:
+        return 0.0
+    surviving = 1.0 - min(1.0, max(0.0, spoilage_per_year))
+    if surviving <= 0.0:
+        return 0.0
+    years_waited = max(0.0, stock / expected_yearly_sales - 1.0)
+    carried = surviving / (1.0 + max(interest_rate, -0.99))
+    return one_year_reservation * carried ** years_waited
+
+
 def distressed_reservation(normal_reservation: float, cash_shortfall: float,
                            stock_value_at_normal: float) -> float:
     """A reservation lowered as the cash the holder must raise grows against its stock's value; at

@@ -1,5 +1,6 @@
 """A seller left with unsold stock lowers its ask within the year's clearing until the stock sells or the ask
-reaches the seller's floor, what a unit is worth to it unsold (never below what it costs to make).
+reaches the seller's floor, what a unit is worth to it unsold: the cheaper of making it again and holding it
+for a year, but never below what the last unit fetches kept for the buyers it expects in later years.
 
 Only producers whose ask is the one `producers.offers` gave them are searched: a seller that moves the price
 chose its ask against the whole book (seller_offers.py) and holds units back on purpose. When any of them
@@ -14,7 +15,7 @@ from typing import List, Optional, Sequence, Tuple
 
 from sim.book import ROUNDING_SHARE
 
-from . import goods_market, seller_offers
+from . import goods_market, inventory, seller_offers
 from .types import Offer
 
 SEARCH_PRECISION = 1e-4     # numerical tolerance of the bisection on the ask level, not a model number
@@ -43,10 +44,22 @@ def _floors(setup, record, view, offers: Sequence[Offer], original: Sequence[Off
         cost = seller_offers.unit_cost(setup, record, view, offer)
         if cost is None:
             continue
-        floor = seller_offers.unit_value(offer, cost)
+        floor = max(seller_offers.unit_value(offer, cost), _held_value(setup, record, view, offer))
         if offer.reservation_price > floor:
             floors[index] = floor
     return floors
+
+
+def _held_value(setup, record, view, offer: Offer) -> float:
+    """What the offer's last unit is worth to its producer kept for later sales (inventory.queued_holding_value):
+    a seller that expects buyers next year does not sell a storable good below that this year."""
+    producer = record.producers[offer.seller]
+    recipe = setup.recipes[producer.recipe_id]
+    spec = setup.specs.get(offer.good)
+    rate = view.interest_rate(view.currency_of(offer.area))
+    return inventory.queued_holding_value(offer.reservation_price, offer.quantity,
+                                          producer.expected_sales * recipe.outputs.get(offer.good, 0.0), rate,
+                                          spec.spoilage_per_year if spec is not None else 0.0)
 
 
 def _with_level(offers: Sequence[Offer], floors: dict, level: float) -> List[Offer]:
