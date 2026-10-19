@@ -4,7 +4,7 @@ The rule is the one every actor is levied by (`sim/agents/demand_answer.py`); th
 stance, the state's capacity and the household's protection off the game and rolls the enforcement.
 """
 from sim.refusal import LogLine
-from typing import Any, Dict, Tuple
+from typing import Any, Callable, Dict, List, Tuple
 
 from sim.agents.api import demand_answer, edges, ledger
 
@@ -30,17 +30,39 @@ def answer_state_demand(sim: Any, amount: float) -> Dict[str, Any]:
 	return answer
 
 
+# Claims the acting household holds on other actors, which the state can count and seize: (reader, seizer) pairs.
+# reader(sim) -> money the household is owed; seizer(sim, amount, taker) -> money actually handed to `taker`.
+WEALTH_CLAIMS: List[Tuple[Callable[[Any], float], Callable[[Any, float, Any], float]]] = []
+
+
+def register_wealth_claims(reader: Callable[[Any], float], seizer: Callable[[Any, float, Any], float]) -> None:
+	"""Let a confiscation count (and, once the purse is empty, take) what the household is owed by other actors."""
+	if (reader, seizer) not in WEALTH_CLAIMS:
+		WEALTH_CLAIMS.append((reader, seizer))
+
+
 def answer_confiscation(sim: Any, fraction: float, cause: str) -> Tuple[Dict[str, Any], float, float]:
-	"""The state demands `fraction` of the capital it can see (what the household has not hidden). The
-	household answers like any demand; what is paid is taken to the treasury. Returns (the answer, what was
-	demanded, what was taken)."""
+	"""The state demands `fraction` of the wealth it can see (the purse less what the household has hidden, plus
+	registered claims on other actors). The household answers like any demand; what is paid is taken to the
+	treasury, from the purse first and then from the claims. Returns (the answer, what was demanded, what was taken)."""
 	household = sim.state.household
 	capital = household.capital
-	demanded = demand_answer.visible_wealth(capital, household.concealed) * max(0.0, min(1.0, fraction))
+	claims = sum(max(0.0, reader(sim)) for reader, _seizer in WEALTH_CLAIMS)
+	demanded = demand_answer.visible_wealth(capital + claims, household.concealed) * max(0.0, min(1.0, fraction))
 	answer = answer_state_demand(sim, demanded)
 	taken = 0.0
-	if answer["paid"] > 0.0 and capital > 0.0:
-		taken = sim.lose_capital(min(1.0, answer["paid"] / capital), cause, taker=sim.state_treasury())
+	paid = answer["paid"]
+	if paid > 0.0 and capital > 0.0:
+		purse_part = min(paid, capital)
+		taken = sim.lose_capital(purse_part / capital, cause, taker=sim.state_treasury())
+		paid -= purse_part
+	if paid > 0.0:
+		for _reader, seizer in WEALTH_CLAIMS:
+			seized = max(0.0, seizer(sim, paid, sim.state_treasury()))
+			taken += seized
+			paid -= seized
+			if paid <= 0.0:
+				break
 	return answer, demanded, taken
 
 
