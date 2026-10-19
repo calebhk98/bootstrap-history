@@ -1,6 +1,6 @@
 # Olives, vines, cotton and tallow come from anywhere, so lighting follows no geography
 
-**Status:** closed - herd tallow, rush wick, olive knowledge gate and the spending relationship test are in; the quality term is Complaint 564.
+**Status:** closed - herd tallow, rush wick, olive knowledge gate and the spending relationship test are in; the quality term is Complaint 565.
 
 Reference (an outside summary, not code-aware): in antiquity the Mediterranean, the Near East and
 North Africa lit rooms with pottery lamps burning olive or castor oil; tallow candles smoked, stank
@@ -59,4 +59,4 @@ The light need (`data/world/needs.json`) is met by `light_tallow_candle`, `light
 - `wick_rush_m` (gathered rush pith) and `light_tallow_rushlight`.
 - `olive_oil_kg` requires `mat_olive_oil` (held by Rome, Han and England, not by the Mexica), the knowledge gate maize and sugar use; Mexica and Norse declare the unsupplied oil in `unsupplied_basket_goods`.
 - `LightingSpendingTests` (`python3 -m unittest sim.tests.test_lighting_inputs`): oil takes a larger share of light spending at a start whose territory grows olives than at a northern one, and none where the tree is unknown.
-- The smoke and softening quality term needs engine work: Complaint 564. The opening-price artefact that makes unsupplied lamps look cheap is Complaint 565.
+- The smoke and softening quality term needs engine work: Complaint 565. The opening-price artefact that makes unsupplied lamps look cheap is Complaint 566.
