@@ -44,6 +44,7 @@ EVENT_KINDS = {
     "project_abandoned": _entry(MAJOR_FAILURE, failure=True),
     "project_cannot_go_on": _entry(MAJOR_FAILURE, failure=True),
     "concerns_closed_unstaffed": _entry(MAJOR_FAILURE, failure=True),
+    "staff_lost_stops_concerns": _entry(MAJOR_FAILURE, failure=True, stop=True),
     "knowledge_lost": _entry(MAJOR_FAILURE, failure=True),
     "fire": _entry(MAJOR_FAILURE, failure=True, notable=True),
     "project_failed": _entry(MINOR, failure=True),

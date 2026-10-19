@@ -322,6 +322,13 @@ class LabourWorld:
     def venture_staff_free(self):
         return self._sim.venture_staff_free()
 
+    def concerns_to_close_for_staffing(self):
+        return self._sim.concerns_to_close_for_staffing()
+
+    def stopped_yearly_value(self, node_ids):
+        rows = self._sim.ledger_concern_rows()
+        return sum(rows.get(node_id, 0.0) for node_id in node_ids)
+
     @property
     def wage_index(self):
         return self._sim.wage_index

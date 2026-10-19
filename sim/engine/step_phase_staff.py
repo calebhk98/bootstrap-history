@@ -48,10 +48,15 @@ class StaffPhaseMixin:
                 self.state.household.employees[trade_id] = float(survivors)
             else:
                 self.state.household.employees.pop(trade_id)
-        # AND SAY SO: a death is a discrete event that HAPPENED, and a player
-        # watching the payroll shrink with nothing in the log or the events
-        # to say why cannot tell attrition from a bug - it looks exactly
-        # like staff vanishing.
+        # Rehire a specialist foreman an open concern just lost, before the
+        # staffing rule closes the concern.
+        if self.state.founder.policy.get("auto_replace_foreman", False):
+            self.labour.replace_lost_foremen()
+        # Hire for the concerns named with `keep <id> staffed`, before the closure rule.
+        self.labour.keep_flagged_concerns_staffed()
+        self.labour.resync_pools()
+        # AND SAY SO, once the rehiring has had its chance: a loss that still leaves a running concern short is
+        # what the staffing rule is about to close.
         if _lost:
             # Deaths follow the working-age mortality rate; the rest of the yearly loss is turnover to better offers.
             death_share = min(1.0, BASELINE_ANNUAL_MORTALITY_RATE_WORKING_AGE / max(attrition_rate, 1e-9))
@@ -61,19 +66,7 @@ class StaffPhaseMixin:
                 died[trade_id] = sum(1 for _ in range(count) if labeller.random() < death_share)
             poached = {trade_id: count - died[trade_id] for trade_id, count in _lost.items()}
             for cause, counts in (("death", died), ("better offers", poached)):
-                people = ", ".join("%d %s%s" % (count, trade_id, "" if count == 1 else "s")
-                                   for trade_id, count in sorted(counts.items()) if count)
-                if people:
-                    self.state.household.log.append((self.state.scenario.year, LogLine(
-                        "staff_lost", "you lose %s to %s" % (people, cause),
-                        reason=cause.replace(" ", "_"), trades={trade_id: count for trade_id, count in counts.items() if count})))
-        # Rehire a specialist foreman an open concern just lost, before the
-        # staffing rule closes the concern.
-        if self.state.founder.policy.get("auto_replace_foreman", False):
-            self.labour.replace_lost_foremen()
-        # Hire for the concerns named with `keep <id> staffed`, before the closure rule.
-        self.labour.keep_flagged_concerns_staffed()
-        self.labour.resync_pools()
+                self.labour.log_staff_lost(cause, {trade_id: count for trade_id, count in counts.items() if count})
         # A HOUSEHOLD THAT CANNOT PAY ITS PEOPLE LETS THEM GO. This is the whole
         # answer to "you built it from nothing, so you must be able to rebuild
         # it": a payroll a household cannot carry and never reduces keeps a
