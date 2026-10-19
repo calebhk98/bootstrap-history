@@ -36,6 +36,7 @@ class LivingStockYearlyMixin(LivingStockGrowthMixin):
             if held <= 0.0:
                 continue
             room = None
+            loss = rates["annual_loss"] + self.endemic_stock_loss(rates, place)
             if rates.get("grows_on") == GROWS_ON_PASTURE and pasture_room is not None:
                 room = pasture_room / kilograms_per_unit(material)
             elif rates.get("grows_on") == GROWS_ON_ARABLE:
@@ -48,7 +49,7 @@ class LivingStockYearlyMixin(LivingStockGrowthMixin):
                 billed = grown * (held - society) / held
                 grown -= billed * (1.0 - self.pay_growth_labour(material, billed))
             after = stock_dynamics.next_units(
-                held, rates["natural_increase"], rates["annual_loss"], rates["breeding_minimum_units"], grown)
+                held, rates["natural_increase"], loss, rates["breeding_minimum_units"], grown)
             if rates.get("grows_on") == GROWS_ON_PASTURE and pasture_room is not None:
                 pasture_room = max(0.0, pasture_room - grown * kilograms_per_unit(material))
             if material in society_herds:

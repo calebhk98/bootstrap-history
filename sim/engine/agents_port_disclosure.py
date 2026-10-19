@@ -51,7 +51,7 @@ class DisclosureView:
 	def patent_entry(self, node_id: str) -> Any:
 		"""The live patent on an invention as {"holder", "expires", "licensees"}, or None."""
 		sim = self._sim
-		holders = list(sim.actors.actors.values()) + [sim.seat_party(seat_id) for seat_id, seat in sim.state.seats.items()
+		holders = sim.actors.patent_holders(node_id) + [sim.seat_party(seat_id) for seat_id, seat in sim.state.seats.items()
 													  if node_id in seat.holdings.patents]
 		return licence.live_patent(holders, node_id, self.year)
 

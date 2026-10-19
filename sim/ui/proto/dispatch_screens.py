@@ -6,18 +6,19 @@ from .screen_commitments import commitments_report
 from .screen_demography import demography_report
 from .screen_divergence import divergence_report
 from .screen_education import education_report
-from .screen_map import map_report
+from .screen_map import map_screen
 
 
 @command("map", group="society", aliases=("geography", "country", "atlas"),
          summary="the land you hold: places, terrain, deposits, what is next door",
-         usage=["map", "map full"], options={"full": "every tile, not the first dozen"},
+         usage=["map", "map full", "map layer <store>"],
+         options={"full": "every tile, not the first dozen", "layer": "a tile store (base or a mod's) to show on each tile"},
          description="Your base, the tiles your nation holds by people and terrain, the "
                      "named deposits on each, the tiles bordering them, and the days to "
                      "reach each. Tile names are a country and a number; the data names "
                      "no towns.")
 def _cmd_map(sim, nodes, cmd, ended):
-    return {"ok": True, **map_report(sim, full=bool(cmd.get("full")))}
+    return map_screen(sim, cmd)
 
 
 @command("education", group="society", aliases=("literacy", "schools", "schooling"),

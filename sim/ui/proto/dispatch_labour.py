@@ -421,13 +421,17 @@ def _cmd_hire(sim, nodes, cmd, ended):
     # using it here rather than rebuilding one from cmd["n"] keeps the log
     # honest about what actually happened, not just what was asked for.
     sim.log.append((sim.year, LogLine("hire_ordered", err or ("hired %s %s" % (cmd.get("n"), cmd.get("trade"))))))
-    return {"ok": True, "hired": cmd.get("trade"), "n": round(sim.employees.get(trade_id, 0.0) - headcount_before),
-            "asked": quantity,
-            "you_now_employ": round(sim.employees.get(trade_id, 0.0), 2),
-            "annual_wage_bill": round(sim.labour.wage_bill(), 1),
-            "paid_now": round(fee_paid, 1),
-            "from_next_year_per_year": round(sim.labour.wage_bill() - wages_before, 1),
-            "capital": round(sim.capital, 1)}
+    hired_count = round(sim.employees.get(trade_id, 0.0) - headcount_before)
+    reply = {"ok": True, "hired": hired_count, "trade": cmd.get("trade"), "n": hired_count,
+             "asked": quantity,
+             "you_now_employ": round(sim.employees.get(trade_id, 0.0), 2),
+             "annual_wage_bill": round(sim.labour.wage_bill(), 1),
+             "paid_now": round(fee_paid, 1),
+             "from_next_year_per_year": round(sim.labour.wage_bill() - wages_before, 1),
+             "capital": round(sim.capital, 1)}
+    if hired_count < quantity:
+        reply["cause"] = getattr(err, "cause", "search_found_fewer")
+    return reply
 
 
 

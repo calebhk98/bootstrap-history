@@ -92,6 +92,16 @@ class GoodsTests(unittest.TestCase):
         self.assertEqual(self.book.stock("miller", "grain", "t2"), 0.0)
         self.assertEqual(self.book.goods_total("grain"), 0.0)
 
+    def test_goods_totals_sum_what_agents_hold_not_edges_or_emptied_stock(self):
+        self.book.move(GoodsMove("farmer", "miller", "grain", "t1", 20.0, "sale"))
+        self.book.move(GoodsMove("miller", "farmer", "grain", "t1", 20.0, "sale back"))
+        self.book.move(GoodsMove(EDGE_PRODUCTION, "miller", "flour", "t2", 7.0, "milled"))
+        self.book.move(GoodsMove("miller", EDGE_PRODUCTION, "flour", "t2", 7.0, "returned"))
+        self.assertEqual(self.book.goods_totals(), {"grain": 50.0})
+        self.book.move(GoodsMove(EDGE_PRODUCTION, "miller", "flour", "t3", 2.5, "milled"))
+        self.book.move(GoodsMove(EDGE_PRODUCTION, "miller", "flour", "t2", 1.5, "milled"))
+        self.assertEqual(self.book.goods_totals(), {"flour": 4.0, "grain": 50.0})
+
     def test_a_delivered_move_lands_on_the_receivers_tile(self):
         self.book.move(DeliveredMove("farmer", "miller", "grain", "t1", 20.0, "sale", "t2"))
         self.assertEqual(self.book.stock("miller", "grain", "t2"), 20.0)

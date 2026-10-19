@@ -20,10 +20,11 @@ from .protocols import AgentOrders, YearInputs
 from .recipes import recipes_from_production_data
 from .record import EconomyRecord
 from .setup import EconomySetup, TradeSpec, goods_specs
-from .types import (EDGE_CARGO, EDGE_CONSUMPTION, EDGE_EXCHANGE, EDGE_EXTERNAL, EDGE_LEGACY, EDGE_MINT, EDGE_WEAR, Bid,
+from .types import (EDGE_CARGO, EDGE_CONSUMPTION, EDGE_EXCHANGE, EDGE_EXTERNAL, EDGE_LEGACY, EDGE_MINT, EDGE_PRODUCTION, EDGE_WEAR, Bid,
                     GoodsMove, Offer, SiteLimit, Transfer, external_edge)
 from .year_accounts import YearAccounts
 from .unit_cost import variable_cost_per_run
+from .titles_value import title_wealth
 from .spin_up_state import spin_up_state as year_spin_up_state
 from .year_close import rebase_basket_price_level
 from .year_labour import trade_premium
@@ -35,11 +36,11 @@ __all__ = [
     "price_response", "prices_at", "offered_units", "watch_tiles",
     "shown_prices", "Producer", "expected_output_prices", "live_input_prices", "live_wages", "AgentOrders",
     "YearInputs", "recipes_from_production_data", "EconomyRecord", "EconomySetup", "TradeSpec", "SiteLimit",
-    "goods_specs", "EDGE_EXTERNAL", "EDGE_LEGACY", "EDGE_CARGO", "EDGE_CONSUMPTION", "EDGE_EXCHANGE", "external_edge", "Bid", "GoodsMove", "Offer", "Transfer",
-    "variable_cost_per_run", "rebase_basket_price_level", "trade_premium",
+    "goods_specs", "EDGE_EXTERNAL", "EDGE_LEGACY", "EDGE_CARGO", "EDGE_CONSUMPTION", "EDGE_PRODUCTION", "EDGE_EXCHANGE", "external_edge", "Bid", "GoodsMove", "Offer", "Transfer",
+    "variable_cost_per_run", "rebase_basket_price_level", "trade_premium", "title_wealth",
     "traded_volumes", "opening_quantities", "wages_by_trade", "wages_by_trade_weighted", "interest_rate", "producers_of",
     "external_trade_net", "external_trade_volume", "account_balance", "account_holdings",
-    "credit_room", "economy_from_record", "blank_economy", "export_record", "economy_book", "finish_spin_up", "note_spin_up_result", "spin_up_state", "money_year_figures","shown_prices_of",
+    "credit_room", "economy_from_record", "blank_economy", "export_record", "economy_book", "economy_contracts", "finish_spin_up", "note_spin_up_result", "spin_up_state", "money_year_figures","shown_prices_of",
     "settle_agent_takings", "admit_recipes", "move_goods", "post_transfers", "cohort_incomes", "cohort_land_rents", "land_rent_per_hectare",
     "land_rent_paid_by_tile", "land_rent_at_tile", "country_figures", "idle_hours_by_trade",
 ]
@@ -297,6 +298,11 @@ def export_record(economy, skip_currencies=()):
     """The economy's record as plain data, for saving; `skip_currencies` leaves out money another owner keeps in the
     same book."""
     return economy.record.to_record(skip_currencies)
+
+
+def economy_contracts(economy):
+    """The contract registry: the economy's term loans and, once the actors' purses adopt it, their facilities."""
+    return economy.record.contracts
 
 
 def economy_book(economy):

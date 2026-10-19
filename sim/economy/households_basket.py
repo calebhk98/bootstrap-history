@@ -8,13 +8,15 @@ from typing import Dict, List
 
 from sim.world import need_basket
 from sim.world.need_basket import (Basket, NeedSpec, PricedNeed, make_basket, need_units, price_ceilings,
-                                   satiation_limit, subsistence_cost_per_person)
+                                   quality_reach, satiation_limit, subsistence_cost_per_person,
+                                   with_quality_reach)
 
 from .protocols import MarketView
 from .types import TileId
 
 __all__ = ["Basket", "NeedSpec", "PricedNeed", "make_basket", "need_prices", "need_units", "price_ceilings",
-           "satiation_limit", "subsistence_cost_per_person"]
+           "quality_reach", "satiation_limit", "subsistence_cost_per_person",
+           "with_quality_reach"]
 
 
 # basket id -> (basket, goods it names, priced needs by the tuple of those goods' prices); about one basket per tile

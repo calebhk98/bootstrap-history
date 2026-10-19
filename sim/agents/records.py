@@ -155,6 +155,9 @@ class ActorRecord:
 	weak_years: int = 0
 	# consecutive years the interest on a firm's debt outran its margin
 	insolvent_years: int = 0
+	# interest a borrower could not pay (it was past its credit ceiling) and the consecutive years it has gone unpaid
+	interest_arrears: float = 0.0
+	arrears_years: int = 0
 
 	# ---- an interest group of strata: the share of its loss the founder is blamed for; and a stratum's
 	# remembered welfare (what it has come to expect)

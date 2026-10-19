@@ -1,0 +1,14 @@
+{
+  "_note": "How firmly an owner holds a tile. The set is data: the engine only checks a level is listed here. `rank` orders firmness (higher is firmer).",
+  "levels": {
+    "core":        {"rank": 6, "description": "the owner's own heartland, governed directly"},
+    "integrated":  {"rank": 5, "description": "taken in and administered like the core"},
+    "garrisoned":  {"rank": 4, "description": "held by soldiers, administered thinly"},
+    "tributary":   {"rank": 3, "description": "self-governing but pays the owner"},
+    "enclave":     {"rank": 3, "description": "a port or post inside land the owner does not govern"},
+    "claimed":     {"rank": 2, "description": "named as the owner's but not yet governed there"},
+    "ungoverned":  {"rank": 1, "description": "owned on paper with no one governing it"}
+  },
+  "seed_level": "core",
+  "settlement_level": "claimed"
+}

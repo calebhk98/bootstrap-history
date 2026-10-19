@@ -2,7 +2,7 @@
 explicit name, and each private `Sim` member the UI reads or writes has a public function that
 delegates exactly. sim/ui/ imports nothing from sim.engine except this module."""
 from sim.engine import (  # noqa: F401
-    automation_audit, cash_book, category_traits, cause_book, civ_start_check, fuzzy_estimates, path_search, planner,
+    automation_audit, cash_book, category_traits, cause_book, world_events, civ_start_check, fuzzy_estimates, path_search, planner,
     purchase_rule, settings, settings_table, shortage_conditions, topic_tags, tree_merge, units,
     validate_material_gating, validate_node_money, node_revenue_census, validate_copy_visibility, validate_production, validate_unheld_gates, validate_running_gates, validate_defence_stores)
 from sim.engine.blockers import BLOCKER_MEANING, RUNNING_CONSTRAINT_KIND  # noqa: F401
@@ -19,6 +19,7 @@ from sim.engine.default_civilisation import default_civilisation_id  # noqa: F40
 from sim.engine.fog import strip_self_play_advice  # noqa: F401
 from sim.engine.mod_code import COMMAND_REGISTRATIONS, code_report, run_mod_code  # noqa: F401
 from sim.engine.mod_code import allow as allow_mod_code  # noqa: F401
+from sim.engine import mod_stores  # noqa: F401
 from sim.engine.mods_constants import constant_overrides  # noqa: F401
 from sim.engine.ui_commands import load_command_specs  # noqa: F401
 from sim.engine.foreign_economy_data import foreign_economy_document  # noqa: F401
@@ -30,6 +31,7 @@ from sim.engine.permanent_benefit import permanent_parts  # noqa: F401
 from sim.engine.projects_completion import FAILED_PREFIX, goal_movement, MINOR_MARK  # noqa: F401
 from sim.engine.projects_exclusions import CATEGORY_PREFIX, TRAIT_PREFIX  # noqa: F401
 from sim.engine.purchase_rule import purchase_budget  # noqa: F401
+from sim.engine.projects_trade_wait import trades_the_project_waits_for  # noqa: F401
 from sim.engine.run_setup import DetRNG, ensure_fixed_hash_seed, load_strategy, topo_stable  # noqa: F401
 from sim.engine.saveload import (  # noqa: F401
     _SET_FIELDS_OF_NODE_IDS as SET_FIELDS_OF_NODE_IDS,

@@ -65,8 +65,15 @@ class Firm(ExpansionMixin, RecordedActor):
 			return 0.0
 		return min(1.0, max(0.0, world.year - self.record.founded_year) / TRACK_RECORD_YEARS)
 
+	def default(self, world: Any) -> None:
+		"""A firm in default closes: its plant is sold or scrapped to repay what it can, the rest is written off."""
+		firm_exit.close_firm(self, world)
+		super().default(world)
+
 	def act(self, world: Any) -> None:
 		interest = self.pay_interest(world)
+		if self.record.exited_year is not None:
+			return
 		super().act(world)
 		self.operate(world, interest)
 		if EXIT_LOSS_YEARS <= max(self.record.loss_years, self.record.weak_years, self.record.insolvent_years):

@@ -86,5 +86,33 @@ class RouteMemoTests(unittest.TestCase):
         self.assertTrue(all(len(entries) <= merchants_route_memo.SLOTS_PER_GOOD for entries in slots.values()))
 
 
+class HeldStockSearchTests(unittest.TestCase):
+    """A merchant with nothing to spend searches only the goods and areas it holds stock in, and its routes
+    are the ones the full search gives."""
+
+    def setUp(self):
+        self.carriage, self.area_map, self.area_a, self.area_b = world(GOODS)
+        prices = {(good, self.area_a[good]): 2.0 for good in GOODS}
+        prices.update({(good, self.area_b[good]): 4.0 for good in GOODS})
+        self.who = merchant("m", prices)
+
+    def test_the_partial_rows_are_rows_of_the_full_search(self):
+        held = {("salt", "a"): 5.0}
+        full = merchants._candidate_routes(self.who, View({}), self.carriage, self.area_map, held, SPECS, 0.05)
+        partial = merchants._candidate_routes(self.who, View({}), self.carriage, self.area_map, held, SPECS, 0.05,
+                                              merchants.held_by_good(held))
+        self.assertTrue(partial)
+        self.assertEqual(partial, [row for row in full if row[1] == "salt" and "a" in row[2].tiles])
+
+    def test_no_cash_still_sends_held_stock_along_the_route(self):
+        held = {("salt", "a"): 5.0}
+        with_cash = merchants.orders(self.who, View({}), self.carriage, self.area_map, 1000.0, held, SPECS, 0.05)
+        routes_with_cash = dict(self.who.routes)
+        without_cash = merchants.orders(self.who, View({}), self.carriage, self.area_map, 0.0, held, SPECS, 0.05)
+        self.assertTrue(with_cash.bids)
+        self.assertEqual(without_cash.bids, ())
+        self.assertEqual(self.who.routes[("salt", "a")], routes_with_cash[("salt", "a")])
+
+
 if __name__ == "__main__":
     unittest.main()

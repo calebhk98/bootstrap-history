@@ -144,3 +144,22 @@ with the test kept honest.
   deficit now carries the household past 100%, so it settled its debt and stepped all fifty years at several
   seconds each. It starts at 60% (a year's drift lands it past 70%, short of 100%) and the topic takes about
   half a minute (`python3 -m sim.tests --slow --only interface_honesty --jobs 1`). The assertions are unchanged.
+- `spin_up_money_supply` fails on `origin/main` (measured at `678e74da`): the money stock falls below one decade of
+  unreplaced wear (`python3 -m sim.tests --slow --only spin_up_money_supply`). Complaint 473's status line, which
+  says this topic passes, is stale. Limiting opening prices to goods a start can make (566) moves it closer to the
+  bound without passing.
+
+- Complaint 570 closed: the opening now sizes the fuel its smelters burn (`fit_to_supply` holds the chain, not only the timber's direct users). `economy_tin_dearer_than_copper` still fails with a narrower gap (`python3 -m sim.tests --slow --only economy_tin_dearer_than_copper --jobs 1`); `opening_floor_and_thin_trades` (building boom) fails marginally on the branch base as well.
+
+- Complaint 511 traced again on `tin-against-copper` (see its Update 5): `economy_tin_dearer_than_copper` still fails on
+  copper's year-zero scarcity, which comes from the suite's unsettled short opening (smelters idle in the last hidden
+  year, stock gone, yearly pace limit) and from smith hours capped by the trained-substitute wage ceiling. No engine
+  defect found; the check is not weakened and stays failing until the opening settles or the labour ceiling is
+  revisited.
+- Branch `pm-complaints-burndown`: `sited_ore_price_over_cost`'s common-ores check (green on main) is red. Forest
+  timber as a stock (539) makes iron ore open far above its cost while the opening stocks a year of inputs; the fix
+  (open with a working stock, 519's last section) turns four other cycle-dependent checks red until the spin-up
+  settles (473), so it is held back. Two more checks green on main are red here for the same reason (both pass
+  with the working-stock change in): `full_length_opening_checks_han` wage over floor and
+  `full_length_opening_checks_norse` sited ores. Three known regressions, all waiting on 473; none is marked as an
+  expected failure, so they stay visible.

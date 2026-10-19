@@ -5,6 +5,7 @@ A part of the year's phases (core_step_phases.py); Sim inherits it through StepP
 from sim.refusal import LogLine, Refusal
 from sim.agents.api import edges
 from .units_prose import plain_number
+from .projects_trade_wait import STALL_YEARS_BEFORE_ABANDONMENT
 
 
 class ProjectProgressPhaseMixin:
@@ -102,7 +103,7 @@ class ProjectProgressPhaseMixin:
         if blocked:
             project_state["stalled_years"] = project_state.get("stalled_years", 0) + 1
             project_state["blocked_on_trades"] = blocked
-            if project_state["stalled_years"] >= 4:
+            if project_state["stalled_years"] >= STALL_YEARS_BEFORE_ABANDONMENT:
                 self.state.household.log.append((self.state.scenario.year, LogLine("project_halted_no_labour", "HALTED %s: there is nobody here who can "
                                      "do this work (%s). What you spent is lost"
                                  % (node_id, ", ".join(blocked[:2])))))
@@ -114,7 +115,7 @@ class ProjectProgressPhaseMixin:
                 # spent is taken at once, gives no chance to act. Say it
                 # each year, with the number of years left and what would
                 # fix it.
-                _left = 4 - project_state["stalled_years"]
+                _left = STALL_YEARS_BEFORE_ABANDONMENT - project_state["stalled_years"]
                 self.state.household.log.append((self.state.scenario.year, LogLine(
                     "project_cannot_go_on", "%s cannot go on: no %s here. It has "
                     "%d year%s before it is abandoned and "

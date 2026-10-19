@@ -33,6 +33,7 @@ def share_out(payer: Any, payees: List[Any], weights: List[float], amount: float
 	total = sum(weights)
 	if amount == 0.0 or total <= 0.0:
 		return
+	ledger.cover(payer, payees, amount)
 	moved = 0.0
 	for index, payee in enumerate(payees):
 		part = amount - moved if index == len(payees) - 1 else amount * weights[index] / total

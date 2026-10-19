@@ -7,8 +7,12 @@ deposits from sim.world.deposits.
 """
 import functools
 
+from sim.engine import ui_port
+
 from sim.world import deposits as deposit_model
 from sim.geography.api import regions_of_tiles, tile_names, tiles_held
+
+mod_stores = ui_port.mod_stores
 
 TILES_SHOWN_BY_DEFAULT = 12
 
@@ -78,3 +82,20 @@ def map_report(sim, full=False):
         "how": '{"cmd":"map","full":true} lists every tile; '
                '{"cmd":"move_base","to":"<tile>"} moves your base',
     }
+
+
+def map_screen(sim, cmd):
+    """The `map` reply; with `layer` naming a declared tile store, every tile row carries that store's value."""
+    report = map_report(sim, full=bool(cmd.get("full")))
+    layer = cmd.get("layer")
+    if layer is None:
+        return {"ok": True, **report}
+    view = mod_stores.tile_layer(sim, str(layer))
+    if view is None:
+        tile_stores = sorted(name for name, spec in mod_stores.DECLARED.items() if spec.keyed_by == mod_stores.TILE)
+        return {"ok": False, "cause": "unknown_layer", "error": "no tile store %r to show" % layer, "choices": tile_stores}
+    for row in report["tiles"] + report["next_door"]:
+        row["layer_value"] = view.get(row["tile"])
+    report["layer"] = {"store": view.spec.name, "unit": view.spec.unit, "default": view.spec.default,
+                       "tiles_off_default": dict(view.items())}
+    return {"ok": True, **report}

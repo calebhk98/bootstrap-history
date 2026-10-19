@@ -163,23 +163,41 @@ def choose_recipes(final_by_tile, recipes: Mapping[str, Recipe], prices: Mapping
     return ranked, runs
 
 
-def fit_to_supply(setup, record) -> None:
-    """Hold the producers that use a good only deposits supply to the supply the placed sited producers make: where
-    their inputs (and plant wear) would take more, every user's capacity and expected sales are cut by the same
-    share, so no processor opens larger than the ore its tiles can feed. A user of the good that something
-    unsited also makes is not held."""
+def limited_goods(recipes: Mapping[str, Recipe], by_limits) -> set:
+    """Goods the deposits bound: every recipe that makes the good is site-bound with declared limits, or uses (as an
+    input or plant wear) a good that is itself so bound. Charcoal from standing timber is bound by the timber."""
     makers: Dict[GoodId, List[str]] = {}
-    for recipe_id, recipe in setup.recipes.items():
+    for recipe_id, recipe in recipes.items():
         for good, quantity in recipe.outputs.items():
             if quantity > 0.0:
                 makers.setdefault(good, []).append(recipe_id)
+    limited: set = set()
+    changed = True
+    while changed:
+        changed = False
+        for good, makers_of in sorted(makers.items()):
+            if good in limited:
+                continue
+            if all(sites.is_sited(recipes[maker], by_limits)
+                   or any(used in limited for used in list(recipes[maker].inputs) + list(recipes[maker].plant_goods))
+                   for maker in makers_of):
+                limited.add(good)
+                changed = True
+    return limited
+
+
+def fit_to_supply(setup, record) -> None:
+    """Hold the producers that use a good only deposits supply (or only what they supply, down the chain) to the
+    supply the placed producers make: where their inputs (and plant wear) would take more, every user's capacity
+    and expected sales are cut by the same share, so no processor opens larger than the ore its tiles can feed and
+    no smelter larger than the charcoal the timber can burn. A user of the good that something unbound also makes
+    is not held."""
     by_limits = sites.limits_by_recipe(setup.site_limits)
-    fixed = {good for good, makers_of in makers.items()
-             if all(sites.is_sited(setup.recipes[maker], by_limits) for maker in makers_of)}
-    for _sweep in range(CEILING_SWEEPS):
+    fixed = limited_goods(setup.recipes, by_limits)
+    for _sweep in range(2 * CEILING_SWEEPS):      # a chain of holds settles stage by stage
         held = False
         for good in sorted(fixed):
-            supply = math.fsum(producer.capacity_runs * producer.yield_factor * setup.recipes[producer.recipe_id].outputs.get(good, 0.0)
+            supply = math.fsum(producer.expected_sales * producer.yield_factor * setup.recipes[producer.recipe_id].outputs.get(good, 0.0)
                                for producer in record.producers.values())
             users = []
             for producer_id, producer in sorted(record.producers.items()):
@@ -189,7 +207,7 @@ def fit_to_supply(setup, record) -> None:
                     used += recipe.plant_goods.get(good, 0.0) / recipe.plant_life_years
                 if used > 0.0 and not sites.is_sited(recipe, by_limits):
                     users.append((producer_id, producer, used))
-            wanted = math.fsum(producer.capacity_runs * used for _id, producer, used in users)
+            wanted = math.fsum(producer.expected_sales * used for _id, producer, used in users)   # runs worked, not plant sized
             if wanted > supply * (1.0 + 1e-9) and wanted > 0.0:
                 factor = supply / wanted
                 for producer_id, producer, _used in users:

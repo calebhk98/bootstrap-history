@@ -233,6 +233,7 @@ def _brief(sim, nodes, node_id, fog):
             "risk": sim.effective_risk(node_id),
             "pay_to_lower_the_risk": sim.precaution_quote(node_id),
             "earns_per_year": round(sim.venture_real_earnings(node_id), 1),
+            "forecast_basis": sim.venture_forecast_basis(node_id),
             "costs_per_year_after": round(sim.venture_upkeep_quote(node_id)["now"], 1),
             "costs_per_year_at_full_staffing": round(
                 sim.venture_upkeep_quote(node_id)["at_full_staffing"], 1),
@@ -638,6 +639,8 @@ def _digest_row(sim, nodes, node_id, fog):
     calendar-floor detail the digest table never shows."""
     row = _startable_row(sim, nodes, node_id, fog)
     row.pop("nominal_calendar_floor_before_reputation", None)
+    if row.get("forecast_basis") == "market":
+        del row["forecast_basis"]  # the digest flags only a forecast with no market behind it; `all` and `why` carry the basis
     return row
 
 
@@ -1006,6 +1009,7 @@ def _explain_revenue(sim, nodes, node_id, node):
         "revenue": (round(sim.venture_real_earnings(node_id), 1) if (not sim.fog
                                  or _revenue_known_exactly(sim, node_id))
                    else (_fog_revenue_estimate(sim, node_id) or 0.0)),
+        "forecast_basis": sim.venture_forecast_basis(node_id),
         "revenue_forecast_scope": (
             "Direct concern revenue only. Institutions may also increase "
             "household capacity, reachable staff, practice output, or other "

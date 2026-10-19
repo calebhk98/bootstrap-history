@@ -15,7 +15,7 @@ from sim.world import demand, need_basket
 from sim.geography.api import carriage_rates, layer_value, sea_freight, settlement, tiles_held
 from sim.labour import api as labour_api
 
-from . import economy_port_costs, economy_port_sites
+from . import economy_port_closure, economy_port_costs, economy_port_sites
 from .economy_port_stores import opening_store_values
 from .foreign_routes import SEA_MODE
 
@@ -114,7 +114,8 @@ def opening_values(sim):
         "ways": {key: dict(way) for key, way in sorted(sim.state.economy.improvements.items())},
         "site_limits": [[limit.recipe_id, limit.tile, limit.capacity_runs_per_year, limit.yield_factor]
                         for limit in economy_port_sites.site_limits(
-                            sim, {entry_id: production[entry_id]["outputs"] for entry_id in allowed})],
+                            sim, {entry_id: production[entry_id]["outputs"] for entry_id in allowed},
+                            list(tile_ids) + [tile for opened in partners.values() for tile in opened["tiles"]])],
         "stores": opening_store_values(sim.world_map, tile_ids, int(sim.cfg["start_year"])),
     }
 
@@ -190,6 +191,7 @@ def build_setup(sim, opening=None, production=None):
                      for good, entry in _load("world", "service_lives.json").get("years", {}).items()}
     specs = goods_specs({good: "" for good in goods}, spoilage, service_lives)
     prices = {good: price for good, price in opening["prices"].items() if good in specs and price > 0.0}
+    prices = economy_port_closure.makeable_prices(prices, production, recipes)
     trades_data = _load("world", "trades.json").get("trades", {})
     trades = {trade: TradeSpec(trade, float(spec.get("training_years", 0.0)),
                                float(spec.get("fatality_risk_per_year", 0.0)), str(spec.get("family", "")))
@@ -218,6 +220,7 @@ def build_setup(sim, opening=None, production=None):
         basket_by_tile=baskets_by_tile(basket, need_data, world_map, all_tile_ids), coin_per_unit=unit,
         opening_income_per_head=opening.get("opening_income_per_head"),
         recipes_by_country=recipes_by_country(str(civ["id"]), opening["recipes"], partners),
+        tile_owners=sim.tile_owner_map(),
         world_map=world_map, improvements=dict(opening["ways"]),
         site_limits=tuple(SiteLimit(*limit) for limit in opening["site_limits"]),
         opening_store_output={good: tuple(tuple(working) for working in entry["workings"])

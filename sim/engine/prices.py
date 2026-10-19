@@ -155,7 +155,7 @@ REPO_ROOT = os.path.dirname(SIMDIR)                             # repo root
 if REPO_ROOT not in sys.path:
     sys.path.insert(0, REPO_ROOT)
 
-from sim.engine import rent_standin, solve_prices, solve_prices_reach  # noqa: E402
+from sim.engine import disposal_cost, rent_standin, solve_prices, solve_prices_reach  # noqa: E402
 from sim.engine.validate_production import load_production             # noqa: E402
 from sim.labour.api import wages                                     # noqa: E402
 from sim.labour.api import wage_provider                # noqa: E402
@@ -554,37 +554,72 @@ def _tree_nodes() -> Dict[str, Any]:
 
 def _unheld_steps_to(node_id: str, held: Set[str]) -> int:
     """How many technologies not yet held stand between a society and this one, itself included."""
-    from .data import closure
     nodes = _tree_nodes()
     if node_id not in nodes:
         return len(nodes)
-    return len(closure(nodes, node_id) - held)
+    return len(_requirements_of(nodes, node_id) - held)
+
+
+def _requirements_of(nodes: Dict[str, Any], node_id: str) -> FrozenSet[str]:
+    """Everything a node needs, itself included; worked out once per tree, since the tree does not change."""
+    cached = _TREE_NODES.setdefault("requirements", {})
+    if cached.get("tree") is not nodes:
+        cached.clear()
+        cached["tree"] = nodes
+    if node_id not in cached:
+        from .data import closure
+        cached[node_id] = frozenset(closure(nodes, node_id))
+    return cached[node_id]
+
+
+def production_entries_outputs(production_entries: ProductionEntries) -> Set[str]:
+    return {material for entry in production_entries.values() for material in (entry.get("outputs") or {})}
 
 
 def entries_in_reach(held: Set[str], held_gate_nodes: FrozenSet[str], resolvable_materials: Set[str],
                      production_entries: ProductionEntries) -> FrozenSet[str]:
+    """`_entries_in_reach`, remembered per argument set: a society asks again for the techniques it holds."""
+    memo = _TREE_NODES.setdefault("in_reach", {})
+    if memo.get("entries") is not production_entries:
+        memo.clear()
+        memo["entries"] = production_entries
+    key = (frozenset(held), frozenset(held_gate_nodes), frozenset(resolvable_materials))
+    if key not in memo:
+        memo[key] = _entries_in_reach(held, held_gate_nodes, resolvable_materials, production_entries)
+    return memo[key]
+
+
+def _entries_in_reach(held: Set[str], held_gate_nodes: FrozenSet[str], resolvable_materials: Set[str],
+                      production_entries: ProductionEntries) -> FrozenSet[str]:
     """Keys of techniques not held that make only materials the held set cannot make, where the technique
     is the fewest research steps away for every material it makes.
 
     Such a technique prices a new material through the techniques held for everything else and cannot
     undercut one already held; a later, cheaper route to the same material, or a joint process whose
     co-product a nearer technique already makes, is left out (the material then prices at the nearer one)."""
+    # a waste co-product (manure, straw) is tipped when nobody takes it, so it neither shuts a joint process out
+    # because the held set already makes it nor decides which technique is nearest
+    products = {material for material in production_entries_outputs(production_entries)
+                if material not in disposal_cost.waste_materials()}
     candidates = {}
     for key, entry in production_entries.items():
         gate = entry.get("requires_node")
         outputs = entry.get("outputs") or {}
-        if gate is None or gate in held_gate_nodes or not outputs:
+        if gate is None or gate in held_gate_nodes or not any(material in products for material in outputs):
             continue
-        if any(material in resolvable_materials for material in outputs):
+        if any(material in resolvable_materials and material in products for material in outputs):
             continue
         candidates[key] = (_unheld_steps_to(gate, held), key)
     nearest: Dict[str, Tuple[int, str]] = {}
     for key, rank in candidates.items():
         for material in production_entries[key]["outputs"]:
+            if material not in products:
+                continue
             if material not in nearest or rank < nearest[material]:
                 nearest[material] = rank
     return frozenset(key for key, rank in candidates.items()
-                     if all(nearest[material] == rank for material in production_entries[key]["outputs"]))
+                     if all(nearest[material] == rank for material in production_entries[key]["outputs"]
+                           if material in products))
 
 
 def _climate_allows(entry, civilization_id, held_tiles=None):
