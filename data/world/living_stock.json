@@ -1,12 +1,13 @@
 {
   "_doc": {
     "purpose": "How held living stock changes each year (sim/world/stock_dynamics.py, sim/engine/living_stock_yearly.py). A material listed here is multiplied by its natural increase when the holding is at least its breeding minimum, and lowered by its annual loss; both are fractions of the holding, applied as expected values (no dice).",
-    "fields": "walks: true for animals that are driven to market on foot (the drove mode); other stock (seed, cuttings, eggs) is carried as goods. natural_increase: fraction of the holding added in a year by breeding or propagation. annual_loss: fraction lost in a year to death, spoilage or failed sets. breeding_minimum_units: smallest holding that can breed (a breeding group, a viable planting), in the material's unit; below it nothing is added. basis: how the rates were reached. source: author or body, title and year of what the figures came from. confidence: A, B or C, the grade of that source (A a handbook or measured, C a web summary or estimate). grows_on: what limits the holding's yearly gain: pasture (the grass of the stock's place, sim/geography/food_pasture.py, and the live weight already grazing there) or arable (the arable land of the place at the output per hectare of the stock's production entry); absent means unlimited. The labour of any gain is the labour of that production entry, bought at the going wage; a purse that cannot pay buys less gain.",
+    "fields": "walks: true for animals that are driven to market on foot (the drove mode); other stock (seed, cuttings, eggs) is carried as goods. natural_increase: fraction of the holding added in a year by breeding or propagation. annual_loss: fraction lost in a year to death, spoilage or failed sets. breeding_minimum_units: smallest holding that can breed (a breeding group, a viable planting), in the material's unit; below it nothing is added. basis: how the rates were reached. source: author or body, title and year of what the figures came from. confidence: A, B or C, the grade of that source (A a handbook or measured, C a web summary or estimate). grows_on: what limits the holding's yearly gain: pasture (the grass of the stock's place, sim/geography/food_pasture.py, and the live weight already grazing there) or arable (the arable land of the place at the output per hectare of the stock's production entry); absent means unlimited. species: the herd animal ids (data/world/geography/resources/animals.json) the stock is kept from; the held lot also loses the endemic disease loss of its place for the hardiest of them (data/disease/endemic/), and a lot whose loss outruns its natural increase dies out. The labour of any gain is the labour of that production entry, bought at the going wage; a purse that cannot pay buys less gain.",
     "status": "Every rate here is a TEMPORARY HEURISTIC unless the row carries a source: a stated order-of-magnitude estimate from the reasoning in its basis. The gain of a row with grows_on is limited by the pasture or arable land of the place and paid in labour; a row without it is not."
   },
   "materials": {
     "draught_animal_kg": {
       "walks": true,
+      "species": ["cattle", "horse"],
       "natural_increase": 0.2,
       "annual_loss": 0.05,
       "breeding_minimum_units": 1200,
@@ -152,6 +153,14 @@
       "hide_share_of_live_weight": 0.08,
       "fleece_kg_per_head_year": 1.0,
       "salt_kg_per_head_year": 4.0,
+      "manure_share_of_live_weight_per_day": 0.04,
+      "manure_collected_share": 0.33,
+      "winter_fodder_days": 90,
+      "fodder_dry_matter_share_of_live_weight_per_day": 0.02,
+      "straw_share_of_winter_ration": 0.5,
+      "straw_dry_matter_share": 0.9,
+      "bran_kg_per_head_year": 0.0,
+      "dung_and_fodder_source": "Dung and fodder per head, by the species row. Fresh excreta as a share of live weight a day: sheep, goat and cattle are recalled from the ASAE manure production standard (D384, 'Manure Production and Characteristics'; not opened offline), about four percent for sheep and goats and eight for cattle. Collected share is the part of the day in a fold, byre or night corral, a third (assumed): dung dropped at pasture is not gathered. Winter ration: dry matter intake of two percent of live weight a day (a maintenance ration for ruminants on poor feed, recalled) over ninety days of stall or fold feeding (assumed), half of it straw at ninety percent dry matter (assumed). Bran is a supplement for milked animals (assumed). Confidence D throughout; recalled or assumed, none read.",
       "source": "McKinnon and Rocha, 'Reproduction, mortality and growth of indigenous sheep and goats in Mozambique' (FAO, fao.org/4/x5464b/x5464b0w.htm; opened): 79.1 percent of ewes and 91.9 percent of does gave birth in a year, deaths from birth to eight months about 20 percent, whole-flock mortality 16 and 15 percent; litter 1.03 lambs per lambing in an Ethiopian smallholder study and offtake 20 percent a year in a Cameroon flock survey (both as summarised by a search, not opened). Dressing percentage: sheep 44 to 56 percent with 50 used for calculation, goats 40 to 56 percent with 45 used (an extension note on dressing percentage, montana.edu/extension/sanders, as summarised by a search, not opened). The rest (live weight, fleece, fat and hide shares, salt lick, stocking rate) are recalled and not checked against a source.",
       "confidence": "D",
       "basis": "Live weight of sheep of an unimproved breed, in kilograms. Increase = 0.6 of the flock ewes (assumed) x 0.791 lambing x 1.03 lambs x 0.8 surviving to eight months = 0.391. Loss 0.08 of the flock is adult mortality (assumed: about half the whole-flock mortality sourced above). A breeding group is five animals of about 35 kg, 175 kg (TEMPORARY HEURISTIC). Herd parameters beside it feed the herd recipe in data/production/95_herds.json: 1.5 head per hectare of rough Mediterranean grazing (the stocking rate the earlier wool entry used, an estimate), a 30 kg mean live weight at slaughter (lambs and culls mixed), a clip of 1 kg greasy wool a head (unimproved breeds, recalled), mutton fat trimmed for rendering 8 percent of the carcass, a raw skin 8 percent of live weight, 4 kg of salt a head-year (about 10 g a day, recalled). Offtake 0.20 is below natural increase less loss (0.31), so the herd is sustained."
@@ -171,6 +180,14 @@
       "milk_kg_per_head_year": 50.0,
       "horn_kg_per_animal": 0.1,
       "salt_kg_per_head_year": 3.0,
+      "manure_share_of_live_weight_per_day": 0.04,
+      "manure_collected_share": 0.33,
+      "winter_fodder_days": 90,
+      "fodder_dry_matter_share_of_live_weight_per_day": 0.02,
+      "straw_share_of_winter_ration": 0.5,
+      "straw_dry_matter_share": 0.9,
+      "bran_kg_per_head_year": 4.0,
+      "dung_and_fodder_source": "Dung and fodder per head, by the species row. Fresh excreta as a share of live weight a day: sheep, goat and cattle are recalled from the ASAE manure production standard (D384, 'Manure Production and Characteristics'; not opened offline), about four percent for sheep and goats and eight for cattle. Collected share is the part of the day in a fold, byre or night corral, a third (assumed): dung dropped at pasture is not gathered. Winter ration: dry matter intake of two percent of live weight a day (a maintenance ration for ruminants on poor feed, recalled) over ninety days of stall or fold feeding (assumed), half of it straw at ninety percent dry matter (assumed). Bran is a supplement for milked animals (assumed). Confidence D throughout; recalled or assumed, none read.",
       "source": "McKinnon and Rocha, 'Reproduction, mortality and growth of indigenous sheep and goats in Mozambique' (FAO, fao.org/4/x5464b/x5464b0w.htm; opened): 79.1 percent of ewes and 91.9 percent of does gave birth in a year, deaths from birth to eight months about 20 percent, whole-flock mortality 16 and 15 percent; offtake 24 percent a year for goats in a Cameroon flock survey (as summarised by a search, not opened). Dressing percentage: sheep 44 to 56 percent with 50 used for calculation, goats 40 to 56 percent with 45 used (an extension note on dressing percentage, montana.edu/extension/sanders, as summarised by a search, not opened). The rest (litter, live weight, milk per lactation, horn, salt lick, stocking rate) are recalled and not checked against a source.",
       "confidence": "D",
       "basis": "Live weight of goats of an unimproved breed. Increase = 0.6 of the herd does (assumed) x 0.919 kidding x 1.1 kids (assumed) x 0.8 surviving to eight months = 0.485. Loss 0.08 adult mortality (assumed). Breeding group a buck and four does of about 25 kg, 125 kg (TEMPORARY HEURISTIC). Herd parameters for data/production/95_herds.json: 2 head per hectare of browse (recalled), 25 kg mean live weight at slaughter, half the herd milked for 100 kg a lactation of marketable milk (recalled; 50 kg a head-year), fat 5 percent of a lean carcass, skin 8 percent of live weight, 0.1 kg of horn sheath a head, 3 kg of salt a head-year. Offtake 0.24 is below natural increase less loss (0.405)."
@@ -190,6 +207,14 @@
       "milk_kg_per_head_year": 73.375,
       "horn_kg_per_animal": 0.5,
       "salt_kg_per_head_year": 11.0,
+      "manure_share_of_live_weight_per_day": 0.08,
+      "manure_collected_share": 0.33,
+      "winter_fodder_days": 90,
+      "fodder_dry_matter_share_of_live_weight_per_day": 0.02,
+      "straw_share_of_winter_ration": 0.5,
+      "straw_dry_matter_share": 0.9,
+      "bran_kg_per_head_year": 15.0,
+      "dung_and_fodder_source": "Dung and fodder per head, by the species row. Fresh excreta as a share of live weight a day: sheep, goat and cattle are recalled from the ASAE manure production standard (D384, 'Manure Production and Characteristics'; not opened offline), about four percent for sheep and goats and eight for cattle. Collected share is the part of the day in a fold, byre or night corral, a third (assumed): dung dropped at pasture is not gathered. Winter ration: dry matter intake of two percent of live weight a day (a maintenance ration for ruminants on poor feed, recalled) over ninety days of stall or fold feeding (assumed), half of it straw at ninety percent dry matter (assumed). Bran is a supplement for milked animals (assumed). Confidence D throughout; recalled or assumed, none read.",
       "source": "FAO, 'Production parameters of ruminants in traditional systems' (chapter 5 of the FAO review of ruminant production in sub-Saharan Africa; fao.org/4/Y4176E/y4176e08.htm; undated, 1990s), the same source as dairy_cattle_kg: calving rate 58.7 percent, calf mortality 21.7 percent, adult cow mortality 6.3 percent, milk offtake about 250 kg per lactation. Offtake 10 percent, live weight, dressing (45 to 50 percent for zebu-type cattle), fat, hide and horn shares, salt lick (about 30 g a day) and stocking rate are recalled and not checked against a source.",
       "confidence": "D",
       "basis": "Live weight of unselected cattle, in kilograms. Rates are dairy_cattle_kg's (half the herd breeding cows x 0.587 calving x (1 - 0.217) calf survival; adult loss 0.063). Milk per head-year is half the herd x 0.587 calvings x 250 kg a lactation = 73.375 kg. Herd parameters for data/production/95_herds.json: 0.5 head per hectare of extensive grazing, 250 kg live weight at slaughter, dressing 0.48, rendered fat 6 percent of the carcass, green hide 7 percent of live weight, 0.5 kg of horn sheaths a slaughtered animal, 11 kg of salt a head-year. Offtake 0.10 is below natural increase less loss (0.167). Draught animals (draught_animal_kg) are not yet drawn from this herd (Complaints/532)."

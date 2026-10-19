@@ -44,6 +44,9 @@ def default_policy(manual: bool) -> Dict[str, Any]:
         # default in manual play, and off unattended too: the optimizer's
         # auto_hire already replaces trades that concerns draw on.
         "auto_replace_foreman": False,
+        # Pay staff the going wage for their trade every year, so they leave only at the rate the market's own
+        # workers change employer. Off: pay stays at the figure last settled and staff may take better offers.
+        "keep_pay_at_market": True,
         # Keep `reserve` spare craftsmen and scholars above what open
         # concerns hold, hiring and housing them each year. Off always.
         "reserve_staff": False,

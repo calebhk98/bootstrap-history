@@ -153,6 +153,8 @@ Two fixes, usable separately or together:
       {"cmd":"exclude"}                             they left out, with the reason, under
                                                     "excluded". Bare exclude lists the entries.
                                                     `start` by hand is unaffected.
+      {"cmd":"world_events"}                       the dated world event log, the same for every seat:
+      {"cmd":"world_events","id":"<years|kind>"}    {events:[{year,kind,actors,tiles,cause,facts}]}.
       {"cmd":"figures"}                            the headline figures that explain their own
       {"cmd":"figures","id":"<name>"}               change. With an id (cash, income, upkeep,
       {"cmd":"why","id":"<figure name>"}            recurring_net, population, literacy_general,

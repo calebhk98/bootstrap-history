@@ -1,6 +1,6 @@
 # State capacity and tax rates are typed, there is no corvée, and the fiscal crisis is a fixed cascade
 
-**Status:** open
+**Status:** open - split into 620, 621, 622, 623, 624, 625, 626 (closes when they do)
 
 Reference (an outside design note, not code-aware): the tax a state can actually collect should depend
 on its administrators and its reach (Egypt's single river corridor was easy to survey; a far
@@ -44,3 +44,15 @@ debased its coin, demanded goods in kind, or fell into arrears with its soldiers
   and an AI state face the same menu (481, 482).
 - Tax rates as a state choice once the consequences exist; the civilisation file keeps only the
   starting rates.
+
+## Split
+
+Children, in order of work:
+
+- 620: A state's collectible share is a typed `state_capacity`, not derived from officials, literacy and distance
+- 621: There is no corvée or conscription term: labour levies do not exist
+- 622: Taxes in kind exist for grain only
+- 623: The state borrows from the pool: no named creditors, no repayment in land and no default
+- 624: Debasement cuts the metal in the coin but domestic money prices do not follow
+- 625: The fiscal crisis is a fixed cascade, not choices of the state actor
+- 626: Tax rates are typed in the civilisation file and are not a state choice

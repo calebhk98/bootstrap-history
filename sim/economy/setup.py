@@ -76,6 +76,8 @@ class EconomySetup:
     opening_income_per_head: Optional[float] = None   # income a head a year the scenario states; None: the demand it pays for
     # country -> the recipes its producers can run (what its society's techniques allow); empty: every recipe anywhere
     recipes_by_country: Dict[str, Tuple[str, ...]] = field(default_factory=dict)
+    # tile -> {owner, control} (geography's tile_owners), shared with the game's state; empty: the tiles' own countries
+    tile_owners: Dict[TileId, Dict[str, str]] = field(default_factory=dict)
 
     def carriage_rates_at(self, imbalance: float = 1.0) -> Dict[str, float]:
         """Money per tonne-km by mode when `imbalance` of the carriers' return trips find no opposite flow
@@ -106,7 +108,11 @@ class EconomySetup:
                        self.opening_population_by_tile)
 
     def country_of(self, tile: TileId) -> str:
-        """The civilisation whose people live on a tile: the setup's own unless the tile names another."""
+        """The civilisation whose people live on a tile: its owner when the owner map names one, else the
+        setup's own unless the tile names another."""
+        owned = self.tile_owners.get(tile)
+        if owned:
+            return owned["owner"]
         spec = self.tiles.get(tile)
         return (spec.country if spec is not None and spec.country else self.civ_id)
 

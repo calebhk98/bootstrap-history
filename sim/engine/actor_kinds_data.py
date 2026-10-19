@@ -5,6 +5,7 @@ from sim.agents.api import register_declared_kinds
 
 from .data import MODDIR, ROOT
 from .mod_code import run_mod_code
+from .mod_stores import load_mod_stores
 from .mods import get_ordered_mods
 from .mods_base import ModError
 from .mods_world import merge_mod_map
@@ -38,5 +39,6 @@ def register_mod_actor_kinds(mods_dir: Optional[str] = None) -> None:
     if _REGISTERED.get("dir") == mods_dir:
         return
     run_mod_code(mods_dir)
+    load_mod_stores(mods_dir)
     register_declared_kinds(load_kind_declarations(ROOT, mods_dir))
     _REGISTERED["dir"] = mods_dir

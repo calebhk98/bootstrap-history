@@ -10,7 +10,7 @@ these live in a separate file).
 
 from sim.refusal import Refusal
 import sim.engine.ui_port as ui_port
-from sim.engine.ui_port import area_text, mass_per_area_text, mass_rate_text, money_text
+from sim.engine.ui_port import area_text, mass_per_area_text, mass_rate_text, mass_text, money_text
 from .command_registry import command
 from .util import _qty
 from .quantity_units import read_quantity, read_target_quantity
@@ -269,13 +269,22 @@ def _cmd_sell(sim, nodes, cmd, ended):
     quantity, err = read_target_quantity(cmd, "n", 0, "material", sim)
     if err or quantity <= 0:
         return {"ok": False, "error": err or "n must be greater than zero"}
+    held, market_room = sim.goods_market.sale_limits(material)
+    if quantity > held + 1e-9:
+        return {"ok": False, "error": Refusal(
+            "not_enough_held", "you hold %s of %s, not %s. Nothing was sold." % (
+                mass_text(held), material, mass_text(quantity)),
+            material=material, held_tonnes=held, asked_tonnes=quantity)}
     sold = sim.sell_material_stock(material, quantity)
     if sold <= 0:
-        return {"ok": False, "error": "nothing sold: you hold none of that material, or the "
-                "market has taken all of it that it will absorb this year"}
+        return {"ok": False, "error": Refusal(
+            "market_full", "the market has taken all of %s that it will absorb this year. Nothing was sold." % material,
+            material=material, held_tonnes=held, market_room_tonnes=market_room)}
+    held_after, room_after = sim.goods_market.sale_limits(material)
     return {"ok": True, "material": material, "sold_tonnes": sold,
             "asked_tonnes": quantity,
-            "stock_on_hand_tonnes": sim.material_stock_t(ui_port.material_tag(sim, material)[0]),
+            "stock_on_hand_tonnes": held_after,
+            "market_will_still_take_tonnes": room_after,
             "capital": round(sim.capital, 1)}
 
 
@@ -291,8 +300,11 @@ def _cmd_money(sim, nodes, cmd, ended):
     # the living cost it charges, so this screen has to do the same or it
     # double-bills the same year - a discrepancy that only shows up in the
     # first year, which is what makes it easy to miss.
-    _prepaid = min(sim.living_cost(), sim.wages_prepaid)
-    fixed = (sim.upkeep() + sim.living_cost() - _prepaid
+    # The living cost is the one the household pays once the dependants its income cannot carry are shed, as
+    # net_per_year counts it.
+    _living = sim.recurring_living_cost(sim.revenue(), sim.upkeep())
+    _prepaid = min(_living, sim.wages_prepaid)
+    fixed = (sim.upkeep() + _living - _prepaid
              + sim.mine_operating_cost())
     _ramp = sim.still_ramping()
     # A PLAYER MUST SEE IT (data/review/COMMODITY_DYNAMISM.md):

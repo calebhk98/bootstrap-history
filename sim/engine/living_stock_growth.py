@@ -8,7 +8,7 @@ states, bought at the going wage. Growth the land cannot hold or the purse canno
 """
 import functools
 
-from sim.geography.api import arable_hectares, pasture_capacity_kg, tile_facts, tiles_held
+from sim.geography.api import arable_hectares, endemic_animal_loss, pasture_capacity_kg, tile_facts, tiles_held
 from sim.labour.api import production_data
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
@@ -60,6 +60,14 @@ class LivingStockGrowthMixin:
         carried = sum(pasture_capacity_kg(tile, self.state.economy.wild_stock, self.world_map)
                       for tile in tiles_held(self.civ, self.world_map))
         return max(0.0, carried - grazing)
+
+    def endemic_stock_loss(self, rates, place=None):
+        """Share of a held lot lost in a year to the endemic disease of its place, 0 for stock with no species
+        or no place."""
+        place = place if place is not None else self.stock_place()
+        if place is None or not rates.get("species"):
+            return 0.0
+        return endemic_animal_loss(place, rates["species"], self.world_map)
 
     def nursery_room_units(self, material, place):
         """Units of the material the place's arable land can raise in a year at its production entry's output

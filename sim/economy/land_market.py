@@ -11,8 +11,9 @@ still earns above the other costs of working it. Producers are then granted only
 asked for, which caps their runs.
 
 Pure functions: `clear_land` and `rent_postings`. `settle_year` applies them to an economy record.
-Households pay no rent on the plots they work (they own them); producers pay the tile's owner cohort,
-and `ownership.spread` shares it among the tile's cohorts.
+Households pay no rent on the plots they work while they hold the title; producers pay the tile's owner
+cohort, and `ownership.spread` shares it among the tile's title holders. A household that lost its title to
+a lender works the land as a tenant and pays the lender rent (titles.py).
 """
 import math
 from dataclasses import dataclass
@@ -20,7 +21,7 @@ from typing import Dict, List, Mapping, Optional, Sequence
 
 from sim.constants import declare
 
-from . import ownership, unit_cost
+from . import ownership, titles, unit_cost
 from .land_lease import LAND_RENT_ADJUSTMENT_SHARE, posted_rents  # noqa: F401
 from .producers import expected_output_prices, live_input_prices, live_wages
 from .types import AgentId, CurrencyId, TileId, Transfer
@@ -202,4 +203,6 @@ def settle_year(setup, record, view, wanted_runs: Mapping[AgentId, float],
     cash = {demand.agent_id: record.book.balance(demand.agent_id, money) for demand in demands}
     payments = ownership.spread(record, rent_postings(result, demands, owners, money, cash))
     record.book.transfer_many(payments)
-    return payments
+    tenant_payments = titles.settle_tenancies(record, money, arable)
+    record.book.transfer_many(tenant_payments)
+    return payments + tenant_payments

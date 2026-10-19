@@ -265,12 +265,12 @@ class VenturesMixin:
         if pay:
             if fee > self.spending_power("open"):
                 # Report the same spending power the test checked.
-                return False, ("opening it costs %s in stock and premises, "
-                               "and between %s in cash and what anyone will "
-                               "advance against a purchase you can raise %s"
-                               % (money_text(fee, self, grouped=True),
-                                  money_text(household.capital, self, grouped=True),
-                                  money_text(self.spending_power("buy"), self, grouped=True)))
+                return False, Refusal("cash_short", "opening it costs %s in stock and premises, "
+                                      "and between %s in cash and what anyone will "
+                                      "advance against a purchase you can raise %s"
+                                      % (money_text(fee, self, grouped=True),
+                                         money_text(household.capital, self, grouped=True),
+                                         money_text(self.spending_power("buy"), self, grouped=True)))
             self.pay_edge(edges.EDGE_BUILDERS, fee, "opening a venture")
         projects.operating.add(node_id)
         projects.mothballed.discard(node_id)

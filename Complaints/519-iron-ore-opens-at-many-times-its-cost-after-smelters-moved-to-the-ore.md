@@ -97,3 +97,31 @@ order of magnitude with headroom for England's galena at just over 10).
 Still open: silver ore (Rome, England) and Han's gold lode ore. Silver metal itself trades at tens of times its
 making cost (England 666 against 28, Rome 370 against 21 per kg), and the ore follows it, so this is the precious
 metals' price rather than site room. The all-ores test keeps its expected-failure marker for them.
+
+## Traced (no change made)
+
+Suite harness, one step, agent price over making cost: silver metal about twenty times cost in Rome and England and
+about thirty in Han; silver ore follows the metal in Rome and England. Han's gold lode ore is near two times, not the
+twelve above.
+
+- **Not the mint.** Cutting `MINT_YEARLY_STRIKE_SHARE` by orders of magnitude leaves Rome's silver price unchanged and
+  England's far above cost.
+- **Silver sits at the coin's mint parity**, already at the opening; the ore sites take the margin (smelter capacity
+  is about twice the ore sites').
+- **Unverified lead: the price level.** In coin, Rome's opening wage and wheat price look several times below the
+  level the coin standard implies (from a remembered wheat price, not from data in the repo). If so, silver is not
+  dear; everything else is cheap, and this is the same drift as 473 and 526. Check: wage and wheat in coin at the
+  opening and after the spin-up against the coin standard, through `reprice_opening_money` and
+  `coin_revaluation.py`.
+- **Cost side.** The model's silver takes a few hundred labour-hours a kilogram against the thousands attested in
+  closed Complaint 349's sources; that explains part of the ratio. Reconcile the silver recipe chain with 349.
+
+## Found and reverted: the opening stocks a year of inputs (branch `fix-regression-iron-chain`, commit `0410114b`)
+
+`opening._stock_producers_with_inputs` gives every producer a full year of each input. Bloomeries then buy no ore in
+the first year, the miners' sales fall away and they cut their runs, and in the second year a single bidder in a
+one-tile ore market drives the price to its ceiling. Stocking the existing three months' cover
+(`inventory.target_stock`) brought every sited ore in every civilisation under the bound and turned the
+expected-failure test green. It was reverted because it also turned four checks red that depend on where the
+unsettled spin-up's cycle stands (473): `economy_innovator_pricing`, Mexica's staple over cost, a ruined founder
+rebuilding, and a cheaper entry raising the cleared quantity. Land it together with a settled spin-up (473, 526).

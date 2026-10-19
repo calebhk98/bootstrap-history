@@ -46,6 +46,14 @@ now; `game_food_sources()` names the food source ids hunting goes under; `draw_w
 `regrow_wild_stock(wild_stock)` returns it a year later. `pasture_capacity_kg(tile_id, wild_stock)` gives the live weight in kilograms of grazing animals the tile's usable forage keeps through a year (what is left after the wild grazers), for a herd the caller holds on that tile. `arable_hectares(tile_id)` gives the hectares of the tile that can be ploughed, for a nursery or planting the caller keeps there. The game keeps and saves the stock. Labour's
 limit on gatherers (sim/labour/food_gathering.py) is applied by the caller, not here.
 
+`felled` is the game's `{tile_id: tonnes of standing timber felled}`, a missing entry meaning an untouched forest.
+`standing_timber_tonnes(felled, tile_id)` gives the wood standing on a tile; `fell_timber(felled, tile_id, tonnes)`
+returns the ledger after a felling (never more than stands); `regrow_timber(felled)` returns it a year later, each
+tile regrowing at its forest's increment; `timber_haul_km(felled, tile_id)` gives the distance to the nearest
+standing wood once the felled area is cleared around the settlement; `timber_increment_tonnes_per_hectare_year(tile_id)`
+and `timber_mean_increment_tonnes_per_hectare_year(tile_ids)` give the wood a hectare of forest grows in a year.
+The game keeps and saves the ledger.
+
 ## Pathways
 
 | Call | Answer |

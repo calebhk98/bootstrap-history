@@ -1,6 +1,6 @@
 # The opening's income leaks saving, so the economy opens at subsistence and its wage keeps falling
 
-**Status:** open
+**Status:** open - split into 606, 605, 608, 607 (closes when they do)
 
 Found in 507 Stage 2 (merged). The opening sets household income as the fixed point of income and the demand it pays
 for (`sim/economy/opening_income.py`). Households save part of any surplus, and nothing in the fixed point spends
@@ -128,3 +128,29 @@ a third and then no further, and Rome's labourer wage over the first years is no
 without it, so the savings wish is not what drives the wage collapse. Next to look at: the opening wage
 (`wage_schedule`, anchored on the coin metal's table cost) against what labour earns at the households' own work
 (473), and the size of the savings wish itself.
+
+## Measured: the wealth households want against the wealth the opening holds
+
+Rome without a spin-up (`build_setup(unopened_sim(civ="rome_100ad"))`, then `opening.open_economy`) settles at about a
+quarter of the full-employment ceiling. Against total household income, the opening holds producer cash of about a
+year, plant at replacement value of a few hundredths of a year and household cash of under a fifth of a year, while the
+savings wish asks for roughly four years. A throwaway probe added firm equity of K years of income to the wealth
+`goods_orders` sees, split by `ownership_share`: the settled ratio rose with K and reached the ceiling only near four
+years. The opening's real firm equity (about a year) lifts it by about a third, as the rate search did.
+
+So the leak closes only when households hold wealth near the wish, or the wish is smaller. Order of work:
+1. Land and plot titles carry a value (538), the asset the earlier probe found missing.
+2. A `view.equity(agent)` on the `MarketView` protocol (firm net worth and titles), read alike by `goods_orders` and
+   `_opening_bids`, so year-0 income matches the opening.
+3. Question the wish itself: two years of surplus income plus a cash buffer is a labelled figure; check it against
+   sources on pre-modern household saving before building assets to match it.
+4. Then 545 (own plots in the opening) can land, and `opening_income_per_head` can go. The wage drift is 473.
+
+## Split
+
+Children, in order of work:
+
+- 606: The households' savings wish (two years of surplus income plus a cash buffer) is a labelled figure with no source
+- 605: The market view has no `equity(agent)`, so the opening's wealth wish is never set against what households own
+- 608: The opening wage is anchored on the coin metal's table cost, not on what labour earns at the households' own work
+- 607: The opening's income is a fixed point that leaks saving, and fixtures state an income to avoid it

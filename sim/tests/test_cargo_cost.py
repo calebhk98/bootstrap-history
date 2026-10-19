@@ -50,6 +50,11 @@ check("a perishable good costs merchants more than a durable one on the same rou
       s._trader_cost_share(route, "milk_kg") > s._trader_cost_share(route, "iron_bar_kg"), None)
 check("a durable good's cost share is unchanged by naming it",
       abs(s._trader_cost_share(route, "iron_bar_kg") - s._trader_cost_share(route)) < 1e-12, None)
+def _cart_haul(distance_km):
+    from sim.engine.foreign_routes import Leg, Route
+    return Route((Leg("a", "b", "cart", distance_km, 0.0, distance_km / s._carrier_models()["cart"][0].distance_per_day_km),))
+
+
 check("domestic cargo cost share grows with the distance hauled",
-      s.domestic_cargo_cost_share("wheat_kg", 2000.0) > s.domestic_cargo_cost_share("wheat_kg", 500.0) > 0.0,
+      s.domestic_cargo_cost_share("wheat_kg", _cart_haul(2000.0)) > s.domestic_cargo_cost_share("wheat_kg", _cart_haul(500.0)) > 0.0,
       None)

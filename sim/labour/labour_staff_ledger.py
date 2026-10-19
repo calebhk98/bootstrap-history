@@ -7,6 +7,7 @@ against the household actor's `employees`, so a firm or state can use them.
 import math
 
 from sim.refusal import LogLine
+from sim.world import demography
 
 from . import trade_data
 
@@ -17,22 +18,36 @@ class StaffLedgerMixin:
         """Headcount by trade now, to diff against after something trims it."""
         return dict(self._world.state.household.employees)
 
-    def log_staff_reduction(self, cause, before):
-        """Log every trade whose headcount fell since `before`, with why.
+    def log_staff_lost(self, cause, counts):
+        """Log people who left, by trade, with why and which running concerns the loss leaves unstaffed.
 
-        `cause` completes "you lose <people> to <cause>"."""
+        `cause` completes "you lose <people> to <cause>". A loss that leaves a concern the staffing rule will
+        shut is its own kind of event, one that stops a multi-year step."""
+        counts = {trade: count for trade, count in counts.items() if count > 0}
+        if not counts:
+            return
+        world = self._world
+        people = ", ".join("%s %s%s" % (("%d" % round(count) if abs(count - round(count)) < 0.05 else "%.1f" % count),
+                                        trade, "" if abs(count - 1) < 0.05 else "s")
+                           for trade, count in sorted(counts.items()))
+        stops = sorted(world.concerns_to_close_for_staffing())
+        text = "you lose %s to %s" % (people, cause)
+        if stops:
+            text += "; %s will close for want of staff unless you replace them" % ", ".join(stops[:4])
+        world.state.household.log.append((world.state.scenario.year, LogLine(
+            "staff_lost_stops_concerns" if stops else "staff_lost", text, reason=cause.replace(" ", "_"),
+            trades=counts, stops=stops,
+            stops_earnings_per_year=round(self.yearly_value_of(stops), 1))))
+
+    def yearly_value_of(self, node_ids):
+        """What the named running concerns take in a year, as the ledger credits it."""
+        return self._world.stopped_yearly_value(node_ids)
+
+    def log_staff_reduction(self, cause, before):
+        """Log every trade whose headcount fell since `before`, with why."""
         now = self._world.state.household.employees
-        parts = []
-        for trade in sorted(before):
-            drop = before[trade] - now.get(trade, 0.0)
-            if drop <= 0.005:
-                continue
-            count = ("%d" % round(drop) if abs(drop - round(drop)) < 0.05
-                     else "%.1f" % drop)
-            parts.append("%s %s%s" % (count, trade, "" if count == "1" else "s"))
-        if parts:
-            self._world.state.household.log.append(
-                (self._world.state.scenario.year, LogLine("staff_lost", "you lose %s to %s" % (", ".join(parts), cause))))
+        self.log_staff_lost(cause, {trade: before[trade] - now.get(trade, 0.0) for trade in sorted(before)
+                                    if before[trade] - now.get(trade, 0.0) > 0.005})
 
     def trades_drawn_on(self):
         """Specialist trades some active project or open concern needs, with why."""
@@ -84,7 +99,7 @@ class StaffLedgerMixin:
         policy = self._world.state.founder.policy
         return {
             "depends_on_one_person": self.sole_supervisors(),
-            "expected_losses_per_year": round(sum(household.employees.values()) * self._world.STAFF_ATTRITION_RATE, 2),
+            "expected_losses_per_year": round(sum(household.employees.values()) * demography.BASELINE_ANNUAL_MORTALITY_RATE_WORKING_AGE, 2),
             "reserve": ({"craftsmen": household.reserve_craftsmen, "scholars": household.reserve_scholars}
                         if policy.get("reserve_staff", False) else None),
             "in_training": len(household.training),
