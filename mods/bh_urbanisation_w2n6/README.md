@@ -28,7 +28,7 @@ regions) from state the engine already holds. It changes nothing in a game unles
   baseline adult death rate.
 
 The command only reads the engine and records one number in the mod's own saved state; it changes who lives
-where and who dies in no way. To make the tile towns count, see `Complaints/562`.
+where and who dies in no way. To make the tile towns count, see `Complaints/634`.
 
 ## Labelled heuristics (CLAUDE.md 4.4)
 

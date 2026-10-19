@@ -41,7 +41,7 @@
         },
         "source": "Church land at Domesday was about a quarter of the value of England (Darby, Domesday England, 1977), a share the monasteries held much of by 1300; houses and religious: Knowles and Hadcock, Medieval Religious Houses: England and Wales (1971). Monastic and other seigneurial mills and the customary multure of about a sixteenth of the grain: Langdon, Mills in the Medieval Economy: England 1300-1540 (2004). The mill share is a guess of the right order (heuristic); the land and headcount are placeholders on top of the shipped church entry, not counts.",
         "confidence": "D",
-        "_heuristic": "land_share_of_surplus is the share of a year's surplus the house spends on land and land_ceiling_hectares the most it will hold (three times its start, a guess); a stand-in until donors, the house's own rule and the land market's offers are modelled actors (Complaints/564)."
+        "_heuristic": "land_share_of_surplus is the share of a year's surplus the house spends on land and land_ceiling_hectares the most it will hold (three times its start, a guess); a stand-in until donors, the house's own rule and the land market's offers are modelled actors (Complaints/636)."
       }
     ]
   },

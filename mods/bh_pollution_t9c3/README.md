@@ -38,7 +38,7 @@ person that sets the airshed; precipitator efficiency applied to every works at 
 
 - **It does not yet act on the game.** A mod cannot add deaths to the population step or scale a producer's yield, and
   writing engine fields directly is not allowed. The mod registers its answer with `api.externality(...)` when the
-  engine offers that hook (see `Complaints/563-no-hook-lets-a-mod-feed-mortality-or-yield.md`); on an engine without it,
+  engine offers that hook (see `Complaints/635-no-hook-lets-a-mod-feed-mortality-or-yield.md`); on an engine without it,
   the command reports what would apply and says so (`applied_to_the_game: false`).
 - Household fires (wood, peat, charcoal in homes) are not producer inputs, so domestic smoke is missing; charcoal and
   firewood burned by works carry no factor yet.

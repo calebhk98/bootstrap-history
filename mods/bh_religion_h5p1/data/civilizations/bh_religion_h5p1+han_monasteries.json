@@ -41,7 +41,7 @@
         },
         "source": "Hou Hanshu ch.42 (Liu Ying, King of Chu, 65 AD, favours the Buddhist rites) and the tradition of the White Horse Temple at Luoyang, 68 AD; Zurcher, The Buddhist Conquest of China (1959), ch.1: no monastic estate, mill or pawnshop is attested before the fourth to fifth centuries, so the start-date house is a few hundred people on a few hundred hectares and no mill. Later monastic mills and pawnshops (the 'inexhaustible treasuries'): Gernet, Buddhism in Chinese Society (1995), ch.3-4. The sizes are placeholders of the right order, not counts.",
         "confidence": "D",
-        "_heuristic": "land_share_of_surplus is the share of a year's surplus the house spends on land and land_ceiling_hectares the most it will hold (three times its start, a guess); a stand-in until donors, the house's own rule and the land market's offers are modelled actors (Complaints/564)."
+        "_heuristic": "land_share_of_surplus is the share of a year's surplus the house spends on land and land_ceiling_hectares the most it will hold (three times its start, a guess); a stand-in until donors, the house's own rule and the land market's offers are modelled actors (Complaints/636)."
       }
     ]
   },

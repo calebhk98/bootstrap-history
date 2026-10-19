@@ -39,7 +39,7 @@ task model of orders, reports and corrections. No flat cap on hours exists anywh
 ## Known limits
 
 * The overhead does not yet bind: a manager's hours are not subtracted from the directed-hours pool, because the
-  engine has no hook for an outside term (see `Complaints/561-directed-hours-overhead-hook.md`).
+  engine has no hook for an outside term (see `Complaints/633-directed-hours-overhead-hook.md`).
 * No corruption, error-risk or response-delay mechanics beyond the order-loss figure.
 * Hired managers are scribes, who also work as scribes; the mod only counts the ones it hired.
 * The default headcount is the player's hired staff; free labour, deputies and state staff are not counted.

@@ -78,7 +78,7 @@
     "kind": "bh_urbanisation_w2n6:tenement_dwellers",
     "name": "the tenement quarter",
     "members": 20000,
-    "_heuristic": "opening headcount is the mod author's own; replace with a tile town derived by the towns command (Complaints/562)"
+    "_heuristic": "opening headcount is the mod author's own; replace with a tile town derived by the towns command (Complaints/634)"
    }
   ]
  },
