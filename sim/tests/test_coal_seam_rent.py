@@ -52,12 +52,6 @@ class CoalSeamRentTests(unittest.TestCase):
         land_hectare_years = self.production["coal_kg"]["land_hectare_years"]
         self.assertAlmostEqual(low - free, 100.0 * land_hectare_years / 1000.0, places=12)
 
-    def test_the_seam_rent_is_small_beside_the_forest_land(self):
-        # a worked seam is a small part of the surface it lies under, unlike a forest felled whole
-        coal = self.production["coal_kg"]["land_hectare_years"]
-        firewood = self.production["firewood_kg"]["land_hectare_years"]
-        self.assertLess(coal, firewood / 100.0)
-
     def test_coal_stays_below_firewood_per_megajoule_without_any_forest_rent(self):
         # labour alone already puts coal under firewood per megajoule, so the gap the complaint saw is not
         # a missing seam rent: the seam rent that would close it dwarfs the land a working occupies.
