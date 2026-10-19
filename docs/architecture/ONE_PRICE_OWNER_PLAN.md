@@ -478,6 +478,17 @@ further (the two checks in `test_population_farm_technique.py` change meaning on
 first); farming share of labour falls when the food price falls relative to the wage (new
 `test_farm_effort_follows_price`); no input to the allocation is the engine's food need.
 
+**Partly done** (branch `513-farm-effort-follows-food-price`, 2026-10-19). Farm hands kept past need now follow a
+continuous response below the wage: extra hands on the cleared land earn a marginal product falling with labour to the power
+(elasticity - 1), so the hands kept are today's hands times (staple price times marginal product over the unskilled
+wage) to the power 1 / (1 - elasticity), capped by the hands that feed the people to satiation and by the cleared land
+(`sim/labour/farm_intake.py`, no invented curve; both prices from the economy). A dearer wage lets hands go, a
+cheaper calorie (a technique) keeps them and draws more toward satiation. Proofs: `test_farm_effort_follows_price.py`
+(unit response is monotone and continuous; farm share and nutrition fall as the wage elsewhere rises) and
+`test_farm_surplus_intake.py`. Not done: the need-sized allocation (`farm_workers_needed`) is still the floor under the
+kept hands, the household-by-household choice and sale of surplus beyond satiation are open, and the farm constants
+in `economy_goods.py` are untouched.
+
 Files: `sim/engine/labour_allocation` mixin (`LabourAllocationMixin`, find with
 `grep -rn "_allocate_farm_workforce" sim`), `sim/world/need_basket.py` (limit declaration), `sim/world/agriculture.py`
 call sites.
