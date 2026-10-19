@@ -28,9 +28,10 @@ def record_tonnes(commodity):
     return {name: value * tonnes_per_unit(material) for name, value in record.items()}
 
 
-traded = [good for good, volume in sorted(economy_api.traded_volumes(economy).items())
-          if volume > 0.0 and game.market_state(good) is not None and main_material(good) == good]
-check("the opened game has traded goods to compare", len(traded) > 10, len(traded))
+traded = sorted({game.economy.commodity_of(good) for good, volume in economy_api.traded_volumes(economy).items()
+                 if volume > 0.0 and game.market_state(good) is not None})
+traded = [commodity for commodity in traded if main_material(commodity) is not None]
+check("the opened game has traded commodities to compare", len(traded) > 10, len(traded))
 
 mismatched = {"society_sales_tonnes": [], "unsold_tonnes": [], "unmet_demand_tonnes": []}
 for commodity in traded:

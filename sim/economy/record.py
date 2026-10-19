@@ -35,6 +35,8 @@ class EconomyRecord:
     workforce: MarketState = field(default_factory=MarketState)          # the labour core's state: people by labour area, trade and ability band
     property_income: Dict[AgentId, float] = field(default_factory=dict)  # dividends and interest last year
     volumes: Dict[str, float] = field(default_factory=dict)              # market_key -> last year's quantity
+    unsold: Dict[str, float] = field(default_factory=dict)               # market_key -> quantity sellers would have sold at the year's price and did not
+    unmet: Dict[str, float] = field(default_factory=dict)                # market_key -> quantity buyers wanted at the year's price beyond what was sold
     opening_basket: Dict[str, float] = field(default_factory=dict)       # good -> quantity at the opening
     expansion_runs: Dict[AgentId, float] = field(default_factory=dict)   # capacity a loan request would build
     index_base_prices: Dict[str, float] = field(default_factory=dict)    # the price level's base; opening if empty
@@ -80,6 +82,8 @@ class EconomyRecord:
             "workforce": market_state_to_plain(self.workforce),
             "property_income": self.property_income,
             "volumes": self.volumes,
+            "unsold": self.unsold,
+            "unmet": self.unmet,
             "opening_basket": self.opening_basket,
             "expansion_runs": self.expansion_runs,
             "index_base_prices": self.index_base_prices,
@@ -115,6 +119,8 @@ class EconomyRecord:
             workforce=market_state_from_plain(record["workforce"]),
             property_income=dict(record["property_income"]),
             volumes=dict(record["volumes"]),
+            unsold=dict(record["unsold"]),
+            unmet=dict(record["unmet"]),
             opening_basket=dict(record["opening_basket"]),
             expansion_runs=dict(record["expansion_runs"]),
             index_base_prices=dict(record["index_base_prices"]),

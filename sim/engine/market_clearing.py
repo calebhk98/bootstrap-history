@@ -149,6 +149,11 @@ class MarketClearingMixin:
         conditions, outcome = result
         entry = self._market_entry(commodity)
         closing_conditions, closing = self._market_outcome(commodity, with_flows=True)
+        # what the market sold, left unsold and left unmet is the agent economy's record; the static book answers
+        # only while the economy opens
+        record = self.economy.agent_market_record(commodity) or {
+            "sold": closing.society_sales_tonnes, "unsold": closing.unsold_tonnes,
+            "unmet": closing.unmet_demand_tonnes}
         return {
             "material": commodity,
             "price_ratio": outcome.price_ratio,
@@ -165,11 +170,11 @@ class MarketClearingMixin:
             "actor_supply_tonnes": conditions.actor_supply_tonnes + sum(
                 offer.tonnes for offer in self.goods_market.others_offers(commodity)),
             "actor_demand_tonnes": conditions.actor_demand_tonnes,
-            "society_sales_tonnes": closing.society_sales_tonnes,
+            "society_sales_tonnes": record["sold"],
             "displaced_by_founder_tonnes":
                 market.society_sales_displaced_by_founder(closing_conditions),
-            "unsold_tonnes": closing.unsold_tonnes,
-            "unmet_demand_tonnes": closing.unmet_demand_tonnes,
+            "unsold_tonnes": record["unsold"],
+            "unmet_demand_tonnes": record["unmet"],
         }
 
     # ---- the turn of the year -----------------------------------------------
