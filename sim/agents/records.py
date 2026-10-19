@@ -194,6 +194,12 @@ class CountryProfile:
 	cohorts: Dict[str, float] = field(default_factory=dict)
 	# calories a day the country's land feeds its people, fixed at the first step until farming runs abroad
 	food_kcal_per_day: float = 0.0
+	# the country's epidemics, as the home nation's (sim/disease): pathogen id -> age band -> saved patch, the years each
+	# pathogen arrived, its deaths so far, and the pathogens seeded to arrive at the next step
+	disease_records: Dict[str, Any] = field(default_factory=dict)
+	disease_introduced: Dict[str, List[int]] = field(default_factory=dict)
+	disease_deaths: Dict[str, int] = field(default_factory=dict)
+	disease_arrivals: List[str] = field(default_factory=list)
 	# anything else the scenario or a mod declares for the country
 	extra: Dict[str, Any] = field(default_factory=dict)
 
