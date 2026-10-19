@@ -525,7 +525,7 @@ class CapacityMixin:
         wages = [market.unscarce_annual(trade) for trade in sorted(self._world.wages)
                  if trade not in self._world.trades_absent]
         return sum(wages) / len(wages) if wages else market.unscarce_annual(
-            trade_data.fallback_trade(self.wage_schedule().training_years, self._world.trade_family))
+            trade_data.fallback_trade_of(self._world, self.wage_schedule().training_years))
 
     STAFF_EXTRA_HEADROOM_WEIGHT = declare(
         "STAFF_EXTRA_HEADROOM_WEIGHT", 1.35, kind="temporary_heuristic",

@@ -76,7 +76,7 @@ class LabourMarket:
         """Hours a year of this trade that standing staff already take out of its pool: trades drawn
         from the unskilled pool stay drawn while they serve, so they do not decay."""
         world = self._world
-        if trade != trade_data.fallback_trade(self._labour.wage_schedule().training_years, world.trade_family):
+        if trade != trade_data.fallback_trade_of(world, self._labour.wage_schedule().training_years):
             return 0.0
         drawn = [name for name in world.wages if trade_data.drawn_from_unskilled_pool(name)]
         return sum(world.actor_staff_fte(name) for name in drawn) * world.HOURS_PER_PERSON_YEAR
