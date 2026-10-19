@@ -267,7 +267,7 @@ class WhichMaterialsCarryLandTests(unittest.TestCase):
         # recipes, which carry the land). beeswax_kg and papyrus_sheet: their own yield_basis
         # states directly that land is not their binding constraint.
         excluded = {"bone_kg", "bristles_kg", "horsehair_kg",
-                   "manure_kg", "beeswax_kg", "papyrus_sheet"}
+                   "beeswax_kg", "papyrus_sheet"}
         for material in excluded:
             entry = self.production_entries.get(material)
             self.assertIsNotNone(entry, material)
