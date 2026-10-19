@@ -114,7 +114,7 @@
    "inputs": {},
    "labour_hours": {
     "miner": 20.0,
-    "labourer": 5.0
+    "salt_worker": 5.0
    },
    "extracted_from": "ore deposit (rock-salt / halite seam)",
    "unit_dimension": "mass",
@@ -129,7 +129,7 @@
    },
    "inputs": {},
    "labour_hours": {
-    "labourer": 15.0
+    "salt_worker": 15.0
    },
    "capital": [
     {
@@ -163,7 +163,7 @@
     "firewood_kg": 1500.0
    },
    "labour_hours": {
-    "labourer": 80.0
+    "salt_worker": 80.0
    },
    "energy_mj": 0.0,
    "unit_dimension": "mass",

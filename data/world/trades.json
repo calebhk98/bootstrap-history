@@ -13,6 +13,16 @@
       "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
       "fatality_confidence": "D"
     },
+    "baker": {
+      "family": "craft",
+      "note": "Mixes, shapes and bakes bread in a masonry oven and keeps the fire. Cooks and tavern keepers are a separate owner decision (Complaint 530).",
+      "training_years": 3,
+      "training_source": "Author's estimate, conf D: bakers were bound as apprentices for several years in medieval guild practice (recalled, not opened); three years is a guess set beside the miller.",
+      "tool_basket": ["timber"],
+      "fatality_risk_per_year": 0.0,
+      "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
+      "fatality_confidence": "D"
+    },
     "carpenter": {
       "family": "craft",
       "training_years": 5,
@@ -332,6 +342,56 @@
       "training_years": 4,
       "training_source": "Author's estimate, conf D, set at the generic craftsman's four years it replaces for cloth: recalled guild terms for weaving ran longer (seven years under England's Statute of Artificers of 1563, not opened), which is a ceiling, not a Roman or Mexica figure.",
       "tool_basket": ["timber"],
+      "fatality_risk_per_year": 0.0,
+      "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
+      "fatality_confidence": "D"
+    },
+    "charcoal_burner": {
+      "family": "labour",
+      "note": "Stacks and covers a clamp of billets, burns it slowly with little air and tends it for days, then rakes and sacks the charcoal. Fuel for smelting and smithing.",
+      "training_years": 2,
+      "training_source": "Author's estimate, conf D: managing the burn of a clamp was learned over seasons beside a collier (recalled from woodland-craft accounts, not opened); two years is a guess set beside the furnaceman.",
+      "tool_basket": ["timber"],
+      "fatality_risk_per_year": 0.0,
+      "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
+      "fatality_confidence": "D"
+    },
+    "leatherworker": {
+      "family": "craft",
+      "note": "Cuts and stitches finished leather into shoes, harness and scabbards.",
+      "training_years": 4,
+      "training_source": "Author's estimate, conf D: shoemakers and saddlers were bound as apprentices for several years in medieval guild practice (recalled, not opened); four years is a guess.",
+      "tool_basket": ["iron"],
+      "fatality_risk_per_year": 0.0,
+      "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
+      "fatality_confidence": "D"
+    },
+    "lime_burner": {
+      "family": "craft",
+      "note": "Builds and fires a kiln of limestone with wood or coal until it is quicklime, then draws and slakes it.",
+      "training_years": 2,
+      "training_source": "Author's estimate, conf D: judging the burn and drawing the kiln was learned beside a lime burner (recalled from Vitruvius, De architectura II.5, and later building handbooks, not opened); two years is a guess set beside the furnaceman.",
+      "tool_basket": ["stone"],
+      "fatality_risk_per_year": 0.0,
+      "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
+      "fatality_confidence": "D"
+    },
+    "salt_worker": {
+      "family": "labour",
+      "note": "Works salt from sea and brine: fills and rakes solar pans, boils brine in lead or iron pans, and digs and breaks rock salt out of the bed.",
+      "training_years": 1,
+      "training_source": "Author's estimate, conf D: the work is mostly hours of raking and carrying and was learned in a season (recalled, not opened).",
+      "tool_basket": [],
+      "fatality_risk_per_year": 0.0,
+      "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
+      "fatality_confidence": "D"
+    },
+    "tanner": {
+      "family": "craft",
+      "note": "Soaks, limes, scrapes and tans hides into leather in pits of bark liquor, and dresses skins into parchment and vellum.",
+      "training_years": 3,
+      "training_source": "Author's estimate, conf D: tanning was a guild trade learned over several years beside a master because pit timing decides the leather (recalled from medieval guild accounts, not opened).",
+      "tool_basket": ["iron"],
       "fatality_risk_per_year": 0.0,
       "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
       "fatality_confidence": "D"
