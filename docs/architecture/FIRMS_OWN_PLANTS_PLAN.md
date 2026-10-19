@@ -292,6 +292,27 @@ After 3a. Proof: `stuck` and `open` give the same refusal for the same reason (o
 today); a business that loses money for consecutive years closes under the same rule for a seat and a firm (when the seat's
 `auto_shed` is on); seizure takes the business, not the owner's knowledge (extend `test_firm_exit_debt.py`).
 
+*Stage 3b partly done (branch `514-stage-3b-business-review`).* Moved: `Business.review(owner, world, rules)`
+(`sim/agents/business_review.py`) decides which plants close and for which reason (`STAFF_SHORT`, `LOSS_MAKING`,
+`CREDITOR_SEIZURE`; the `CLOSED_*` names on `Sim` alias them), and `Business.review_reopening` brings staff closures
+back. The owner answers through `Reviewable` hooks (defaults on `Actor`; the founder's household answers through
+`business_founder_review.py` and `sim/engine/projects_review.py`, reached as `SimWorld.founder_review()`). A `Plant`
+counts `loss_years` (`Business.note_year`); one rule closes a plant after `EXIT_LOSS_YEARS` loss years for a firm
+and for a seat whose `auto_shed` is on (capability institutions, granted works and `never_abandon` works are
+spared); `Firm.act` exits when the review leaves it no plant. `close_unstaffed_ventures`, `reopen_restaffed_ventures`,
+`shed_loss_makers` and the seizure in `answer_exhausted_credit` call the review; the inline abandonment in
+`step_phase_money` is gone (the same pressure rule, `cuts_losses_now`, runs in `shed_loss_makers`). A firm's default
+(`firm_exit.close_firm`) seizes every plant through `Business.seize_all`, leaving what it learned. `open` and `stuck` call
+`open_refusal` (running gate, then people); the running gate is a coded refusal, and `stuck` reports `blocked_by`.
+Differences resolved: the loss streak is per plant, not the last plant's margin overwriting the firm's count; a seat's
+streak is its fully-ramped margin (`concern_margin`), a firm's is its realised margin (ramp years included) until 3c
+puts both on the kernel; `stuck` charges `opening_fee` (grace discount included) and compares to `spending_power("open")`,
+as `open` does; pressure shedding and seizure rank by `concern_margin`, institutions last. Not moved: the occupancy
+scaling of capability institutions (`INSTITUTION_FLOOR` in `economy_production.institution_upkeep`) stays an upkeep
+figure, for 3c; a firm has no staffing closure (it finds a share of its crew and makes that share), pending stage 4;
+the seat's staffing closure still ranks by node figures inside `concerns_to_close_for_staffing`. Tests:
+`test_business_review.py`, `test_firm_exit_debt.py`. Allowlist: four entries pruned.
+
 **Stage 3c: takings and upkeep through the kernel.** `economy_production.revenue`, `upkeep`, `concern_revenue`,
 `ledger_concern_rows`, `revenue_sources`, `venture_real_earnings`, `venture_upkeep_quote`, `concern_levy` and
 `agents_port.concern_takings`/`entry_gross` read `business.takings` and `business.upkeep` from the kernel at the economy's
