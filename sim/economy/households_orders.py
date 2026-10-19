@@ -34,45 +34,70 @@ BUDGET_SAFETY_SHARE = 1e-9
 
 HOUSEHOLD_TIME_PREFERENCE = declare(
     "HOUSEHOLD_TIME_PREFERENCE", 0.05, kind="temporary_heuristic",
-    unit="share a year", source=None, confidence="D",
+    unit="share a year", source=(
+        'Recalled, not read: growth-model discount rates of a few percent a year (Ramsey-style '
+        'calibrations, Barro and Sala-i-Martin). Not measured for any pre-modern society.'), confidence="D",
     why="A household lends its savings only for at least what it gives up by waiting, on top of what "
         "inflation it expects takes from them. The figure is a common assumption in growth models, "
-        "not measured for any society here; default risk is priced separately by the credit market.")
+        "not measured for any society here; default risk is priced separately by the credit market.",
+    retire="Complaints/607: the opening holds the wealth its households want and saving has a user")
 SAVINGS_YEARS_OF_SURPLUS_INCOME = declare(
     "SAVINGS_YEARS_OF_SURPLUS_INCOME", 2.0, kind="temporary_heuristic",
     unit="years of income above subsistence kept as savings when the real rate equals time preference",
-    source=None, confidence="D",
+    source=(
+        "Recalled, not read: buffer-stock saving (Deaton 1991; Carroll 1997) puts a household's "
+        "target wealth at months to about a year of income; life-cycle saving (Modigliani and "
+        "Brumberg) for old age and dowry (Saller, Patriarchy, Property and Death in the Roman "
+        "Family, 1994, on dowry as a multiple of a year's income) can raise it to several years "
+        "for households with a surplus. Pre-industrial wealth to income ratios (Piketty, Capital "
+        "in the Twenty-First Century, 2014) are national and mostly land. None gives years of "
+        "surplus income per household, so two years sits inside the range and is not derived."), confidence="D",
     why="Households beyond subsistence keep savings against dearth, dowries, old age and burial, and lend "
         "what they do not hold as cash. How many years of surplus income they kept is not measured for any "
-        "society here; probate inventories and dowry records would bound it.")
+        "society here; probate inventories and dowry records would bound it.",
+    retire="Complaints/607: the opening holds the wealth its households want and saving has a user")
 SAVINGS_RATE_RESPONSE_LIMIT = declare(
     "SAVINGS_RATE_RESPONSE_LIMIT", 2.0, kind="temporary_heuristic",
-    unit="largest multiple of the savings target a high real rate draws", source=None, confidence="D",
+    unit="largest multiple of the savings target a high real rate draws", source=(
+        'Recalled, not read: estimates of the interest elasticity of saving are small and of '
+        'either sign (Bernheim 2002 survey of saving, recalled); no pre-modern measure. The bound '
+        'is an assumption.'), confidence="D",
     why="Saving rises with what it earns but not without bound; the bound stands in for the income effect "
-        "that a model of lifetime choice would give.")
+        "that a model of lifetime choice would give.",
+    retire="Complaints/607: the opening holds the wealth its households want and saving has a user")
 SAVINGS_RESPONSE_FLOOR = declare(
     "SAVINGS_RESPONSE_FLOOR", 1.0, kind="temporary_heuristic",
-    unit="share of the savings target kept when cash earns nothing in real terms", source=None,
+    unit="share of the savings target kept when cash earns nothing in real terms", source=(
+        'Recalled, not read: precautionary and bequest motives do not depend on the return '
+        '(Carroll 1997; Deaton 1991). No pre-modern measure of the share. The floor is an '
+        'assumption.'),
     confidence="D",
     why="Households do not stop saving because expected inflation reaches the interest rate: they hold the "
         "wealth in other forms (the durable store takes more of it then) and smooth. The floor stands in "
         "for that portfolio choice and for the saving motives that do not depend on the return (dearth, "
-        "dowry, old age); no society's saving is measured against the real rate here.")
+        "dowry, old age); no society's saving is measured against the real rate here.",
+    retire="Complaints/607: the opening holds the wealth its households want and saving has a user")
 WEALTH_DRAWDOWN_LIMIT = declare(
     "WEALTH_DRAWDOWN_LIMIT", 1.0, kind="temporary_heuristic",
-    unit="share of a year's income that wealth above target may add to spending in a year", source=None,
+    unit="share of a year's income that wealth above target may add to spending in a year", source=(
+        'Recalled, not read: consumption smoothing with slow spending of windfalls (Friedman '
+        'permanent income; Carroll 1997). The pace is an assumption.'),
     confidence="D",
     why="Households smooth consumption: wealth above what they want to keep is spent down over several "
         "years, not in the one year their target falls. Without a limit a fall in the target sends the "
         "whole stock of cash to the shops at once and nothing is left to lend. The pace is an assumption; "
-        "no society's spending is measured against its wealth here.")
+        "no society's spending is measured against its wealth here.",
+    retire="Complaints/607: the opening holds the wealth its households want and saving has a user")
 
 SPENDING_CUT_LIMIT = declare(
     "SPENDING_CUT_LIMIT", 0.3, kind="temporary_heuristic",
-    unit="largest share of its expected spending a household cuts in a year", source=None, confidence="D",
+    unit="largest share of its expected spending a household cuts in a year", source=(
+        'Recalled, not read: consumption smoothing and habit persistence (Deaton 1992). The share '
+        'is an assumption.'), confidence="D",
     why="Households smooth consumption: a rise in the wealth they want to hold is saved over several years, "
         "not in the one year it appears. The share is an assumption; no society's spending is measured "
-        "against its expected spending here.")
+        "against its expected spending here.",
+    retire="Complaints/607: the opening holds the wealth its households want and saving has a user")
 
 
 def savings_target(surplus_income: float, interest_rate: float, expected_inflation: float) -> float:
