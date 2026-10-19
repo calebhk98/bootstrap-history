@@ -113,6 +113,22 @@ class ModCodeApi:
         from sim.agents.api import register_spawner
         register_spawner(self.qualified(name), function)
 
+    def phase(self, name: str, scope: str, handler: Callable, after: Any = (), before: Any = ()) -> None:
+        """A step in the year: `scope` is "seat" (`handler(sim, seat_id)`, once per seat) or "world" (`handler(sim, seats)`,
+        once). Placed right after its latest `after` and/or right before its earliest `before`; each names a shipped
+        phase (see sim/engine/year_phases.py) or another mod's `<mod_id>:<name>`. At least one is required."""
+        from .year_phases import SEAT, WORLD, Phase, register_mod_phase
+        after, before = [after] if isinstance(after, str) else list(after), [before] if isinstance(before, str) else list(before)
+        if scope not in (SEAT, WORLD) or not (after or before):
+            raise ModError("mod %s phase %s needs scope 'seat' or 'world' and an 'after' or 'before'" % (self.mod_id, name))
+        register_mod_phase(Phase(self.qualified(name), scope, handler, self.mod_id, tuple(self.phase_reference(n) for n in after),
+                                 tuple(self.phase_reference(n) for n in before)))
+
+    def phase_reference(self, name: str) -> str:
+        from .year_phases import SHIPPED, MOD_PHASES
+        known = {phase.name for phase in SHIPPED} | {phase.name for phase in MOD_PHASES}
+        return name if name in known or SEPARATOR in name else self.qualified(name)
+
     def state(self, memory: Dict[str, Any]) -> Dict[str, Any]:
         """The mod's own JSON dict inside a saved game: pass `sim.state.interface`."""
         return memory.setdefault("mod_state", {}).setdefault(self.mod_id, {})
@@ -148,4 +164,6 @@ def run_mod_code(mods_dir: str, make_api: Callable[[str], ModCodeApi] = ModCodeA
                 raise ModError("mod %s: %s defines no register(api) function" % (manifest.id, name))
             register(api)
         LOADED[manifest.id] = "ran"
+    from .year_phases import ordered_phases
+    ordered_phases()   # a bad phase constraint is a load error
     return dict(LOADED)
