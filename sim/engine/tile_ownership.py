@@ -31,7 +31,12 @@ class TileOwnershipMixin:
 
     def tile_owner_version(self):
         """Changes whenever who owns a tile does (a transfer, or a replaced owner map)."""
-        return (self.__dict__.get("_tile_transfers", 0), id(self.tile_owner_map()))
+        owners = self.tile_owner_map()
+        seen = self.__dict__.get("_owner_map_seen")
+        if seen is None or seen[0] is not owners:
+            seen = (owners, (seen[1] + 1) if seen else 0)
+            self.__dict__["_owner_map_seen"] = seen
+        return (self.__dict__.get("_tile_transfers", 0), seen[1])
 
     def _owned_tiles_memo(self):
         """{actor: sorted tiles} and the home country's held tiles, rebuilt only when the owner map is replaced

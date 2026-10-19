@@ -299,7 +299,16 @@ class PopulationMixin:
         economy = world.state.economy
         return (world.civ.get("literacy_elite"), world.civ.get("literacy_general"), world.population.working_age,
                 world.pop_scale, len(economy.improvements), world.home_tiles_held_version(),
-                id(economy.society_labour_hours), len(economy.society_labour_hours))
+                self._labour_hours_epoch(economy.society_labour_hours), len(economy.society_labour_hours),
+                self.base_tile())
+
+    def _labour_hours_epoch(self, hours):
+        """A count that changes whenever the society's labour-hours record is replaced by another object."""
+        seen = self.__dict__.get("_labour_hours_seen")
+        if seen is None or seen[0] is not hours:
+            seen = (hours, (seen[1] + 1) if seen else 0)
+            self.__dict__["_labour_hours_seen"] = seen
+        return seen[1]
 
     def _hiring_cap_before_actors(self, trade):
         """Hours a year of a trade the town's people offer, before firms' and governments' staff
