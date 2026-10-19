@@ -26,3 +26,9 @@ Both are engine or economy changes, outside the data-only scope of 534.
 At the Rome opening `material_freight_distance_km('coal')` is zero: Rome holds a tile with a tracked coal
 deposit, so the freight term in this complaint does not apply there; only the missing seam rent or royalty
 remains, and that needs a deposit land-market change (deposit rent from the land market, not a constant).
+
+## Finding (539 work)
+
+Firewood and wood are now drawn from each tile's standing timber (`sim/geography/forest_timber.py`), so their
+cost rises with the haul to standing wood as a tile is cut. The land term stays as the regrowth area at the
+stock's own increment; the rent value is the land market's. The seam rent or royalty for coal remains open.
