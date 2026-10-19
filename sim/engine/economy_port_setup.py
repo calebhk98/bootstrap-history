@@ -218,6 +218,7 @@ def build_setup(sim, opening=None, production=None):
         basket_by_tile=baskets_by_tile(basket, need_data, world_map, all_tile_ids), coin_per_unit=unit,
         opening_income_per_head=opening.get("opening_income_per_head"),
         recipes_by_country=recipes_by_country(str(civ["id"]), opening["recipes"], partners),
+        tile_owners=sim.tile_owner_map(),
         world_map=world_map, improvements=dict(opening["ways"]),
         site_limits=tuple(SiteLimit(*limit) for limit in opening["site_limits"]),
         opening_store_output={good: tuple(tuple(working) for working in entry["workings"])

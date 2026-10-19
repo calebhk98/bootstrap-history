@@ -85,10 +85,12 @@ def regrow_wild_stock(wild_stock: Mapping[str, Any], world_map: Optional[WorldMa
     return food_wild_harvest.regrow(_map(world_map), wild_stock)
 
 
-def tiles_held(civilisation: Mapping[str, Any], world_map: Optional[WorldMap] = None) -> List[str]:
+def tiles_held(civilisation: Mapping[str, Any], world_map: Optional[WorldMap] = None,
+               owners: Optional[Mapping[str, Mapping[str, str]]] = None) -> List[str]:
     """The tiles a civilisation holds: its `home_tiles` when it lists them, else the tiles its `home_regions`
-    labels name. Sorted; a tile the map lacks is not held."""
-    return tile_holdings.tiles_held(civilisation, _map(world_map))
+    labels name; given the owner map (tile_owners), the tiles that map gives its id. Sorted; a tile the map
+    lacks is not held."""
+    return tile_holdings.tiles_held(civilisation, _map(world_map), owners)
 
 
 def tiles_of_regions(region_labels: Iterable[str], world_map: Optional[WorldMap] = None) -> List[str]:

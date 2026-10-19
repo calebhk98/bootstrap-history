@@ -8,10 +8,11 @@ from .concern_levy import ConcernLevyMixin
 from .coverage import CoverageMixin
 from .food_relief import FoodReliefMixin
 from .legitimacy import LegitimacyMixin
+from .tile_ownership import TileOwnershipMixin
 from .transfers import TransfersMixin
 from .working_day import WorkingDayMixin
 
 
 class BenefactionsMixin(TransfersMixin, ConcernLevyMixin, CoverageMixin, FoodReliefMixin, LegitimacyMixin,
-                        WorkingDayMixin, ColoniesMixin):
+                        WorkingDayMixin, ColoniesMixin, TileOwnershipMixin):
     pass
