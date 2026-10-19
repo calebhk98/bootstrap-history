@@ -375,15 +375,15 @@ check("...and says plainly when there was nothing left to take",
 
 # --- a household deep in arrears does not commit to new work.
 bleeding = sim(manual=False)
-into_arrears(bleeding)
+bleeding.capital = -0.95 * bleeding.credit_limit()   # deep in arrears: near the limit before the year's interest
 bleeding.insolvent_years = 20
 bleeding.revenue = lambda: 0.0   # deep in arrears with no income: the needs bill alone leaves nothing to fund new work
 bleeding.revenue_capacity = lambda: 0.0
 active_before = len(bleeding.active)
-bleeding.step()
 check("the room a household can fund shrinks by the arrears it already owes",
       bleeding.funding_breakdown()["credit_available_now"] == 0.0 and bleeding.funding_capacity() == 0.0,
       bleeding.funding_breakdown())
+bleeding.step()
 check("a household deep in arrears does not commit to new work",
       len(bleeding.active) <= active_before + 1, (len(bleeding.active), active_before))
 
