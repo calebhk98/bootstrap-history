@@ -195,6 +195,7 @@ class MarketClearingMixin:
         self.finish_ways()
         self._open_market_book()
         self.economy.run_agent_year()
+        self.record_food_eaten(self.economy.agent.outcomes[-1])
         self.close_partner_books()
         self._close_real_output()
         self.revalue_coin_metals()

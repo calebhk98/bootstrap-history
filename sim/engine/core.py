@@ -42,6 +42,7 @@ from .economy import EconomyMixin
 from .node_rederive import NodeRederiveMixin
 from .market_clearing import MarketClearingMixin
 from .foreign_economies import ForeignEconomiesMixin
+from .food_eaten import FoodEatenMixin
 from .food_supply import FoodSupplyMixin
 from .living_stock import LivingStockMixin
 from .living_stock_opening import LivingStockOpeningMixin
@@ -247,7 +248,7 @@ YEARLY_RECORD_LIMIT = 300
 class Sim(ModStoresMixin, RealPriceRatiosMixin, CoinRevaluationMixin, PartnerCivsMixin, WageMarketRatiosMixin, MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMixin, MarketDemandMixin, RealOutputMixin, ConcernVolumeMixin, TechniquesInUseMixin, IndustryDepthMixin, IndustryConcernMixin, IncumbentPricesMixin, ProducerCostsMixin, FogMixin, GeographyPortMixin, DiseasePortMixin, LabourPortMixin,
           ProjectsMixin, SeatMixin, SeatRunMixin, SeatBuildsMixin, SeatSightMixin, ShockYearMixin, WaysMixin, WorksMixin, HeldWorksMixin, ActionLossMixin, SocietyMixin, ActorsMixin, DisclosureMixin, FounderSalesMixin, SeatDealingsMixin, InterestGroupsMixin, BenefactionsMixin, ForwardingPropertiesMixin, GoalsMixin,
           StepPhasesMixin, LivingStockMixin, LivingStockOpeningMixin, CoinHoardMixin, CoinCarriageMixin, TheftChargeMixin,
-          LivingStockTradeMixin, LivingStockSmugglingMixin, LivingStockYearlyMixin, FoodSupplyMixin, DefenceStoresMixin, EconomyPortMixin, NodeRederiveMixin):
+          LivingStockTradeMixin, LivingStockSmugglingMixin, LivingStockYearlyMixin, FoodSupplyMixin, FoodEatenMixin, DefenceStoresMixin, EconomyPortMixin, NodeRederiveMixin):
     STATE_CAPACITY_DEFAULT = declare(
         "STATE_CAPACITY_DEFAULT", 0.7, kind="temporary_heuristic",
         unit="dimensionless (0..1)", source=None, confidence="D",
@@ -1514,7 +1515,11 @@ class Sim(ModStoresMixin, RealPriceRatiosMixin, CoinRevaluationMixin, PartnerCiv
         # or a future player-facing message can read THIS year's
         # nutrition_ratio without re-deriving it from the cohort counts by
         # hand a second time.
-        food_eaten_kcal_per_day = farm_year.food_available_kcal_per_day + self.relief_kcal_per_day()
+        # the nation eats what its households ate in the economy's last year; the farm model's harvest feeds
+        # demography only before an economy year has closed
+        eaten_kcal_per_day = self.household_food_kcal_per_day(adult_equivalent_population)
+        food_eaten_kcal_per_day = ((farm_year.food_available_kcal_per_day if eaten_kcal_per_day is None
+                                    else eaten_kcal_per_day) + self.relief_kcal_per_day())
         epidemic_deaths = self.disease_year(food_eaten_kcal_per_day, year)
         self._last_demographic_step = self.population.step(
             food_eaten_kcal_per_day, jitter=False,

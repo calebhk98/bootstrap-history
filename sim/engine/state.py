@@ -398,6 +398,8 @@ class PopulationState:
 	pop_working_age: float = 0.0
 	pop_elderly: float = 0.0
 	population_change_last_year: Optional[float] = None
+	# the nation's people-weighted food eaten over need in the economy's last closed year (food_eaten.py)
+	food_eaten_over_need: Optional[float] = None
 	# one dict per simulated year: year, population, births, deaths, nutrition_ratio
 	yearly_record: List[Any] = field(default_factory=list)
 
