@@ -135,7 +135,8 @@ class AgentEconomy(TilePricesMixin):
                 self.stored["opening"] = opening
                 self._save()
             self._built_from = self.stored
-            self._sim.state.actors.purses.adopt_book(economy_api.economy_book(self._economy))
+            self._sim.state.actors.purses.adopt_book(economy_api.economy_book(self._economy),
+                                                         economy_api.economy_contracts(self._economy))
             self.sync_ways()
         return self._economy
 

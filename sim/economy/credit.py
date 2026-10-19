@@ -116,7 +116,7 @@ def clear(requests: Sequence[LoanRequest], offers: Sequence[FundsOffer], currenc
         while owed > 1e-12 and position < len(lender_queue):
             piece = min(owed, lender_left)
             loans.append(Loan(
-                loan_id="loan:%s:%d:%d" % (currency, year, len(loans)), lender=lender_queue[position][1],
+                contract_id="loan:%s:%d:%d" % (currency, year, len(loans)), lender=lender_queue[position][1],
                 borrower=request.borrower, currency=currency, principal=piece,
                 rate=base_rate + premiums[index], years_left=request.years,
                 collateral_value=request.collateral_value * piece / request.amount, issued_year=year))

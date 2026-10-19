@@ -12,6 +12,7 @@ spare cash) and, for whatever they do not cover, the household savers the simula
 from typing import Any, Callable, Dict, Iterable, Optional
 
 from sim.book import Book, Transfer, is_edge
+from sim.contracts import FACILITY, Contracts
 
 COIN = "engine_coin"                          # the currency of the actors' money in the shared book (the engine counts in this coin)
 EDGE_SAVERS = "edge:savers"                   # the household savers who lend to actors
@@ -28,10 +29,10 @@ DEBT_FLOOR = 1e-9                             # a debt below this is rounding re
 class Purses:
     """The accounts of the actors, and the claims against them."""
 
-    def __init__(self, book: Any = None, claims: Any = None) -> None:
+    def __init__(self, book: Any = None, contracts: Optional[Contracts] = None) -> None:
         self.book = book if book is not None else Book()
-        # borrower -> lender -> principal the lender has out to it
-        self.claims: Dict[str, Dict[str, float]] = claims if claims is not None else {}
+        # the debts: each draw on an actor's facility is a contract in the registry the economy shares
+        self.contracts: Contracts = contracts if contracts is not None else Contracts()
         # lender -> funds it offers this year; the savers' offer is the weight of the unmodelled households
         self.offers: Dict[str, float] = {}
         # told (account, signed amount, label) when a lender's net position moves by a draw or a repayment
@@ -45,9 +46,14 @@ class Purses:
     def has_account(self, account: str) -> bool:
         return self.book.knows(account)
 
+    @property
+    def claims(self) -> Dict[str, Dict[str, float]]:
+        """borrower -> lender -> principal the lender has out to it on a facility (a read of the registry)."""
+        return {borrower: self.contracts.facility_of(borrower) for borrower in sorted(self.contracts.facilities)}
+
     def debt(self, account: str) -> float:
-        held = self.claims.get(account)
-        return sum(held.values()) if held else 0.0
+        """What the account owes, on every kind of contract, in the actors' coin."""
+        return self.contracts.debt(account, COIN)
 
     def net(self, account: str) -> float:
         """The purse less the debt: what the actor is worth in cash."""
@@ -55,8 +61,7 @@ class Purses:
 
     def lent(self, lender: Optional[str] = None) -> float:
         """What the lender (every lender when none is named) has out on claims."""
-        return sum(principal for held in self.claims.values() for who, principal in held.items()
-                   if lender is None or who == lender)
+        return self.contracts.exposure(lender, COIN)
 
     def set_offers(self, offers: Dict[str, float]) -> None:
         """The funds each lender offers from now on; the savers' offer keeps its weight whatever the others hold."""
@@ -77,7 +82,7 @@ class Purses:
 
     def pay_interest(self, borrower: str, owed: float, purpose: str = INTEREST_PAID) -> Dict[str, float]:
         """Pay `owed` to the borrower's lenders in proportion to what each has lent it; what each received."""
-        held = dict(self.claims.get(borrower) or {})
+        held = self.contracts.facility_of(borrower)
         total = sum(held.values())
         if owed <= 0.0 or total <= 0.0:
             return {}
@@ -104,13 +109,12 @@ class Purses:
     def write_off(self, borrower: str) -> Dict[str, float]:
         """The borrower closes owing: the claims against it are dropped and each lender bears its loss (the cash
         it lent was booked as an outlay when it left and no repayment follows); the principal each lost."""
-        return self.claims.pop(borrower, {})
+        return {contract.lender: contract.principal for contract in self.contracts.default(borrower, FACILITY)}
 
     def _draw(self, borrower: str, shortfall: float) -> None:
         for lender, part in self._shares_of(borrower, shortfall):
             self.book.transfer(Transfer(lender, borrower, COIN, part, FACILITY_DRAW))
-            held = self.claims.setdefault(borrower, {})
-            held[lender] = held.get(lender, 0.0) + part
+            self.contracts.draw(borrower, lender, COIN, part)
             self._tell(lender, -part, LENT)
 
     def _shares_of(self, borrower: str, amount: float) -> Iterable:
@@ -128,7 +132,7 @@ class Purses:
         return [(lender, part) for lender, part in sorted(parts.items()) if part > 0.0]
 
     def _repay(self, borrower: str) -> None:
-        held = self.claims.get(borrower)
+        held = self.contracts.facility_of(borrower)
         if not held:
             return
         debt = sum(held.values())
@@ -138,22 +142,22 @@ class Purses:
                 part = min(repaid * principal / debt, max(0.0, self.purse(borrower)))   # shares sum to the purse only to rounding
                 if part > 0.0:
                     self.book.transfer(Transfer(borrower, lender, COIN, part, FACILITY_REPAYMENT))
-                    held[lender] = principal - part
+                    self.contracts.repay_facility(borrower, lender, part)
                     self._tell(lender, part, REPAID)
-        if sum(held.values()) <= DEBT_FLOOR:
-            del self.claims[borrower]
-        else:
-            for lender in [who for who, principal in held.items() if principal <= 0.0]:
-                del held[lender]
+        self.contracts.tidy_facility(borrower, DEBT_FLOOR)
 
     def _tell(self, account: str, signed: float, label: str) -> None:
         """A lender's cash moved by a loan: it is told, so the cash it keeps books account for it."""
         if self.observer is not None and not is_edge(account):
             self.observer(account, signed, label)
 
-    def adopt_book(self, book: Any) -> None:
-        """Keep the accounts in `book` from now on (the economy's own, so purses and markets share one book);
-        what this book holds in the actors' currency moves over."""
+    def adopt_book(self, book: Any, contracts: Optional[Contracts] = None) -> None:
+        """Keep the accounts in `book` and the contracts in `contracts` from now on (the economy's own, so purses
+        and markets share one book and one registry); what this book holds in the actors' currency, and the
+        facilities drawn so far, move over."""
+        if contracts is not None and contracts is not self.contracts:
+            contracts.adopt(self.contracts)
+            self.contracts = contracts
         if book is self.book:
             return
         book.absorb(Book.from_record(self.book.to_record(only=(COIN,))))
@@ -162,12 +166,12 @@ class Purses:
     # ---- the save file ----------------------------------------------------------------------
     def to_canon_dict(self) -> Dict[str, Any]:
         return {"book": self.book.to_record(only=(COIN,)),
-                "claims": {borrower: dict(sorted(held.items())) for borrower, held in sorted(self.claims.items())},
+                "facilities": self.contracts.to_records(facilities=True),
                 "offers": dict(sorted(self.offers.items()))}
 
     @classmethod
     def from_record(cls, record: Dict[str, Any]) -> "Purses":
-        purses = cls(Book.from_record(record["book"]),
-                     {borrower: dict(held) for borrower, held in record["claims"].items()})
+        purses = cls(Book.from_record(record["book"]))
+        purses.contracts.load_records(record["facilities"])
         purses.offers = dict(record.get("offers") or {})
         return purses

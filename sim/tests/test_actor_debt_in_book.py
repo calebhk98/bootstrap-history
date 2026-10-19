@@ -135,8 +135,8 @@ class ActorDebtInBook(unittest.TestCase):
     def test_a_payment_into_a_big_debt_with_small_lenders_repays_without_overdrawing(self):
         # shares of a few millionths: summing the parts one by one must not come to more than the purse holds
         state, first, second = pair(0.0)
-        state.purses.claims["first"] = {EDGE_SAVERS: 548598094.2657492, "founder": 21.916031828153518,
-                                        "government:x": 42.367055428964726}
+        state.purses.contracts.set_facility("first", {EDGE_SAVERS: 548598094.2657492, "founder": 21.916031828153518,
+                                                      "government:x": 42.367055428964726}, COIN)
         second.money = 0.6549334790574173
         ledger.transfer(second, first, 0.6549334790574173, "sale")
         self.assertAlmostEqual(state.purses.purse("first"), 0.0, places=12)
