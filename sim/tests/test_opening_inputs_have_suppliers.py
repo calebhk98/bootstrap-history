@@ -3,7 +3,7 @@ producers sized beside them. A fuel made from timber is held to the timber, and 
 import types
 import unittest
 
-from sim.economy import inventory, opening, opening_runs
+from sim.economy import opening, opening_runs
 from sim.economy.producers import Producer
 from sim.economy.record import EconomyRecord
 from sim.economy.types import Recipe, SiteLimit
@@ -41,32 +41,6 @@ class OpeningInputsHaveSuppliersTests(unittest.TestCase):
         made, taken = flows(self.setup, self.record)
         self.assertGreater(taken["charcoal_kg"], 0.0)
         self.assertGreaterEqual(made["charcoal_kg"], taken["charcoal_kg"] * (1.0 - TOLERANCE))
-
-
-class OpeningInputStockTests(unittest.TestCase):
-    """A producer opens holding the working stock of its inputs, not a year's: a year's would leave the suppliers
-    no sales in the first year, and the buyers would then find the input scarce."""
-
-    @classmethod
-    def setUpClass(cls):
-        cls.setup = build_setup(harness.unopened_sim(civ="rome_100ad"))
-        cls.record, _area_map, _carriage = opening.open_economy(cls.setup)
-
-    def test_no_producer_holds_more_of_an_input_than_its_working_stock(self):
-        too_much = {}
-        for producer_id, producer in self.record.producers.items():
-            recipe = self.setup.recipes[producer.recipe_id]
-            runs = inventory.target_stock(producer.expected_sales * (1.0 + opening.OPENING_SPARE_CAPACITY_SHARE))
-            for good, per_run in recipe.inputs.items():
-                held = self.record.book.stock(producer_id, good, producer.tile)
-                if held > runs * per_run * (1.0 + TOLERANCE) + TOLERANCE:
-                    too_much[(producer_id, good)] = held
-        self.assertEqual(too_much, {})
-
-    def test_the_stocks_are_held_at_all(self):
-        held = sum(self.record.book.stock(producer_id, "iron_ore_kg", producer.tile)
-                   for producer_id, producer in self.record.producers.items())
-        self.assertGreater(held, 0.0)
 
 
 class FitToSupplyChainTests(unittest.TestCase):

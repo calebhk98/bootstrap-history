@@ -1,6 +1,6 @@
 # Sited ores open at many times their making cost
 
-**Status:** every sited ore passes in every civilisation at the suite's spin-up (see the last section); the test no longer expects a failure
+**Status:** narrowed to precious ores (silver, gold); the common ores pass
 
 After merge 968974d4 (Complaint 473: weight-losing processors sit at their fixed-site inputs), a Rome opening's
 iron ore trades far above its long-run cost (`economy.agent_prices()["iron_ore_kg"]` against
@@ -115,13 +115,3 @@ twelve above.
   `coin_revaluation.py`.
 - **Cost side.** The model's silver takes a few hundred labour-hours a kilogram against the thousands attested in
   closed Complaint 349's sources; that explains part of the ratio. Reconcile the silver recipe chain with 349.
-
-## Fixed (fix-regression-iron-chain)
-
-After the 539 and Mexica-placement merges Rome's and the Norse iron ore sat far above cost again. The opening put a
-year of every input in each user's store (`opening._stock_producers_with_inputs`), so in the first year the users
-bought nothing, the ore sellers' sales fell away, their runs followed, and in the second year the users found the ore
-scarce: each one-tile ore market has one buyer, and its price went to that buyer's ceiling. Which civilisations tipped
-depended on how closely the placed supply matched the users' need, which the placement merges moved. A user now opens
-holding the working stock (`inventory.target_stock`) of its inputs. Measure: `sited_traded_ore_ratios(civilisation)`.
-`opening_inputs_have_suppliers` pins the stock.

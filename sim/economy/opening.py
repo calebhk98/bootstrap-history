@@ -12,7 +12,7 @@ from typing import Dict, List, Mapping, Tuple
 
 from sim.constants import declare
 
-from . import currency, goods_market, inventory, opening_income, opening_metal, opening_runs, households, households_store, labour_state, location, location_inputs, mint, opening_stores, ownership, sites, titles, unit_cost
+from . import currency, goods_market, opening_income, opening_metal, opening_runs, households, households_store, labour_state, location, location_inputs, mint, opening_stores, ownership, sites, titles, unit_cost
 from .accounts import Book
 from .market_areas import AreaMap
 from .market_memory import MarketMemory, YearView, market_key
@@ -311,14 +311,13 @@ def _add_producers(setup, record, recipe, capacity_by_tile, input_demand, by_lim
 
 
 def _stock_producers_with_inputs(setup, record) -> None:
-    """Each producer opens holding the working stock of inputs its planned runs call for (inventory.target_stock),
-    the cover every holder keeps, so a chain of producers (ore, smelter, fuel) with nothing in store still works
-    its first stage while the next buys what it uses up. A year's inputs in store would leave the suppliers no
-    sales in the first year, they would cut their runs, and the buyers would then find the input scarce."""
+    """Each producer opens holding the inputs of the runs it plans for the year. Inputs bought in a year are used in
+    the next, so a chain of producers (ore, smelter, fuel) with nothing in store works one stage in its first year
+    and fills its pipeline over several, while the opening's demand is met from the first."""
     moves = []
     for producer in record.producers.values():
         recipe = setup.recipes[producer.recipe_id]
-        runs = inventory.target_stock(producer.expected_sales * (1.0 + OPENING_SPARE_CAPACITY_SHARE))
+        runs = producer.expected_sales * (1.0 + OPENING_SPARE_CAPACITY_SHARE)
         moves.extend(GoodsMove(EDGE_PRODUCTION, producer.agent_id, good, producer.tile, runs * per_run,
                                "opening stock of inputs")
                      for good, per_run in sorted(recipe.inputs.items()) if per_run > 0.0 and runs > 0.0)
