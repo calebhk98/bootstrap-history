@@ -75,7 +75,7 @@ class CoinCarriageMixin:
         home = self.actors.state.home_country
         for party in (payer, payee):
             record = getattr(party, "record", None)
-            if record is not None and record.country not in (None, home):
+            if record is not None and getattr(record, "country", None) not in (None, home):
                 return
         origin, destination = self.place_of(payer), self.place_of(payee)
         if origin is None or destination is None or origin == destination:

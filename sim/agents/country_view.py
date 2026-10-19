@@ -7,6 +7,7 @@ Every other member of the shared world passes straight through, by explicit forw
 import inspect
 from typing import Any, Dict, Optional, Set
 
+from .country_hands import hands_of
 from .country_population import people_counted
 from .no_country_economy import NoCountryEconomy
 from .protocols import World
@@ -66,6 +67,10 @@ class CountryWorld:
 
 	def soldiers_under_arms(self) -> float:
 		return self.army_wanted()
+
+	def state_hands(self) -> Any:
+		"""The people and food this country can give its state (country_hands.py)."""
+		return hands_of(self.profile)
 
 	def government(self) -> Any:
 		"""The country's own government actor; one that takes nothing when the scope was not given a registry."""

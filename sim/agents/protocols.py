@@ -51,6 +51,10 @@ class World(Protocol):
 	def army_wanted(self) -> float:
 		...
 
+	def state_hands(self) -> Any:
+		"""The country's working-age people, farm hands and food ratio (headcount.Hands), or None when unmeasured."""
+		...
+
 	def soldiers_under_arms(self) -> float:
 		"""Soldiers the state keeps now: what it paid for last year, else the force it wants."""
 		...

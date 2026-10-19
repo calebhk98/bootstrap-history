@@ -12,7 +12,7 @@ weight (military, infrastructure, prestige, ...), through its policy.
 """
 from typing import Any, Dict, List, Tuple
 
-from . import arrears, budget, demand_answer, ledger, state_works
+from . import arrears, budget, demand_answer, headcount, ledger, state_works
 from .base import Actor, RecordedActor
 from .government_coinage import CoinageMixin
 from .government_granary import GranaryMixin
@@ -106,6 +106,8 @@ class Government(CoinageMixin, GranaryMixin, StoresMixin, SurplusMixin, Recorded
 		arrears.settle(self, world)
 		wanted = world.army_wanted()
 		soldiers = self.record.army if self.record.army > 0.0 else wanted
+		others = headcount.people_in(budget.standing_lines(world, 0.0))
+		soldiers, wanted = headcount.checked_army(world, self.record, wanted, soldiers, others)
 		standing = budget.standing_lines(world, soldiers) + budget.concession_lines(world.group_claims())
 		lines = self.draw_stores(standing, world)
 		self.keep_granary(world)

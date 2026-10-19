@@ -1,6 +1,6 @@
 # The state's soldiers, officials, scholars and builders are not checked against working-age people and food
 
-**Status:** open
+**Status:** closed - pinned by sim/tests/test_state_headcount.py and test_state_headcount_home.py. A state's army is limited by its country's working-age people less the farm hands the food needs, and by last year's food ratio (sim/agents/headcount.py; hands from sim/agents/country_hands.py for a foreign country, `state_hands` in sim/engine/agents_port_budget.py at home); the shortfall and its cause are on the state's `record.headcount`. Officials, court, roads, masons and navy count against the same pool but are not themselves scaled down.
 
 Part of Complaint 489 (Population is one national figure, and soldiers, scholars and builders are not checked against food and people).
 

@@ -1,8 +1,8 @@
 """What a state asks the simulated world when it budgets: its people, its prices, its taxpayers."""
 from typing import Any, List, Tuple
 
-from sim.agents.api import THREAT_ARMY_RESPONSE
-from sim.world import demand
+from sim.agents.api import DOLE_MATERIAL, THREAT_ARMY_RESPONSE, Hands
+from sim.world import agriculture, demand
 from sim.geography.api import territory, tiles_held
 
 
@@ -56,6 +56,19 @@ class BudgetView:
 		"""Soldiers the state keeps now: what it paid for last year, else the force it wants."""
 		kept = self.government().record.army
 		return kept if kept > 0.0 else self.army_wanted()
+
+	def state_hands(self) -> Any:
+		"""The people and food the country can give its state: the working age, the farm hands the society's
+		farming wants (none known before its first allocation), and the share of the people's food need the last
+		year's supply met, with the state's own granary making up what the harvest lacked."""
+		sim = self._sim
+		hours = sim.state.holdings.farm_hours_needed
+		farm_hands = 0.0 if hours is None else hours / agriculture.ANNUAL_LABOUR_HOURS_PER_FARM_WORKER
+		flows = getattr(sim, "_last_demographic_step", None)
+		ratio = 1.0 if flows is None else float(flows.nutrition_ratio)
+		need_tonnes = sim.population.total * self.subsistence_kg_per_person_year() / 1000.0
+		granary = self.government().record.stores.get(DOLE_MATERIAL, 0.0)
+		return Hands(sim.population.working_age, farm_hands, min(1.0, ratio + (granary / need_tonnes if need_tonnes > 0.0 else 0.0)))
 
 	def patron_ask(self) -> float:
 		return self._sim.patron_funding_ask()
