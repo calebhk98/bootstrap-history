@@ -59,7 +59,7 @@ try:
           game.goods_market.purchase_cost(GOOD, 5.0)[0] < twin_years.goods_market.purchase_cost(GOOD, 5.0)[0],
           (game.goods_market.purchase_cost(GOOD, 5.0)[0], twin_years.goods_market.purchase_cost(GOOD, 5.0)[0]))
     check("...and the market clears a larger quantity of it than the same society without it",
-          traded_units(game) > traded_units(twin_years), (traded_units(game), traded_units(twin_years)))
+          traded_units(game) > 1.05 * traded_units(twin_years), (traded_units(game), traded_units(twin_years)))
     check("...so real output rises, through that good",
           game.real_output_hours() > twin_years.real_output_hours() * 1.0001,
           (twin_years.real_output_hours(), game.real_output_hours()))

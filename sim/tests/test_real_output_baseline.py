@@ -7,9 +7,11 @@ from sim.economy import api as economy_api
 
 YEARS = 4
 # A commodity's volume drifts with the world's own year-to-year weather and stock; it does not move by multiples.
-RATIO_BAND = 3.0
-# Measured on rome_100ad over four years: at most 0.29 of the baseline value, in the third year, and 0.01 in the fourth.
-MOVED_SHARE = 1.0 / 3.0
+# TEMPORARY HEURISTIC (retire Complaints/473, the unsettled spin-up): in a settled economy with no intervention a good
+# is "far from one" beyond a factor of two of its baseline year, and goods that far carry a tenth of the baseline value
+# at most. Stated from the subject, not fitted to a run; the unsettled opening may break it (Complaints/558).
+RATIO_BAND = 2.0
+MOVED_SHARE = 0.1
 
 game = sim(civ="rome_100ad", capital=1e9)
 check("the economy's opening basket is not empty", bool(economy_api.opening_quantities(game.economy.agent.economy())))

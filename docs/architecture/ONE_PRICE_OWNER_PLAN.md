@@ -343,13 +343,14 @@ Files: `sim/engine/real_output.py`, `market_clearing.py` (`_follow_cleared_volum
   that year (`test_purchase_limited_by_offered_volume`).
 - What it showed. (1) The economy's own volumes are not stationary: in a no-intervention run output per head reads
   one, 0.86, 0.72, 0.73 over the first four years, and goods carrying up to 0.29 of the baseline year's value sit beyond
-  a factor of three of it in the third year (`test_real_output_baseline.py`, bound one third, set from that
-  measure; `python3 -m sim.tests --slow --only real_output_baseline`). This is the unsettled spin-up of stage 2 (473), not
+  a factor of three of it in the third year (`test_real_output_baseline.py`, bound stated from the subject and expected to fail while the spin-up is unsettled; `python3 -m sim.tests --slow --only real_output_baseline`). This is the unsettled spin-up of stage 2 (473), not
   the measure. (2) A fall in people without a technique does not leave output per head put: output falls less than
   the people, since food volumes rise (the survivors eat more of the same land's food) while construction falls; per
   head read 1.34, 1.26, 1.32, 1.58 over four years after forty in a hundred of the people went. The plan's "a population
-  fall does not raise output per head" is therefore NOT met; the check prints the measure instead of asserting
-  (`test_real_output.py`). It needs the economy's food demand settled, or a decision that the response is wanted.
+  fall does not raise output per head" is therefore NOT met: the assertion in `test_real_output.py` fails (output
+  per head 1.26 to 1.58 after a 40% fall). This may be the right economics (more land and capital per head after a
+  fall, as after historical plagues), so it needs an owner decision on what the proof should be; recorded in
+  Complaints/558.
   (3) The opening basket is final demand: a technique that cheapens an intermediate (copper ore) no longer moves real
   output, so `real_output_helpers.GOOD` is a good households buy (stone blocks), whose volume moves little (+0.3% against
   the twin) while real output and output per head rise. (4) A new good counts only once the economy trades it, which takes

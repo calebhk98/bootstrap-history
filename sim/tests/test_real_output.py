@@ -77,10 +77,6 @@ fallen._apply_population_mortality_shock(0.4)
 close_years(fallen, 2)
 check("a population fall without a technique lowers real output", fallen.real_output_hours() < output_before,
       (output_before, fallen.real_output_hours()))
-# Output per head does NOT stay put in the economy as it stands: the surviving people eat and drink more of the same land's
-# food, so food volumes rise while construction falls, and per head climbs (printed below;
-# measure it with `--only real_output`). That is the economy's own response, not the measure's, and
-# the plan's "a fall in people does not raise output per head" is open until the economy's food demand is settled
-# (Complaint 507 stage 4 note). It is printed, not asserted.
-print("MEASURE population -40%%: output per head %.3f -> %.3f over two years, people %.0f -> %.0f"
-      % (per_head_before, fallen.real_output_per_head(), people_before, fallen.population.total))
+check("...but not output per head, which stays near where it was",
+      abs(fallen.real_output_per_head() / per_head_before - 1.0) <= 0.25,
+      (per_head_before, fallen.real_output_per_head(), people_before, fallen.population.total))

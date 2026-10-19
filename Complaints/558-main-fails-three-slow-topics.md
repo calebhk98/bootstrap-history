@@ -163,3 +163,18 @@ with the test kept honest.
   with the working-stock change in): `full_length_opening_checks_han` wage over floor and
   `full_length_opening_checks_norse` sited ores. Three known regressions, all waiting on 473; none is marked as an
   expected failure, so they stay visible.
+
+## Stage 4 of 507: checks that fail on the economy's real dynamics (2026-10-19)
+
+Left failing on purpose, with causes (`python3 -m sim.tests --slow --only real_output,real_output_cheaper_entry,real_output_baseline --jobs 1`):
+
+- `real_output_cheaper_entry`, "clears a larger quantity of it than the same society without it" (factor kept): with
+  `GOOD` a final good (stone blocks) the game clears only about three tenths of a percent more than its twin. Cause:
+  households' demand for a building stone is nearly inelastic, so a cheaper entry moves real output through value
+  weights, not volume. Real output and output per head still rise.
+- `real_output`, "...but not output per head, which stays near where it was": after a 40% fall in people, output per
+  head reads 1.26 to 1.58 over the following years. Food volumes rise (survivors eat more of the same land's food)
+  while construction falls. This may be the right economics (more land and capital per head after a population fall, as
+  after historical plagues), so the owner decides what the proof should be; the expected direction is not changed here.
+- `real_output_baseline`, goods far from their baseline: the unsettled spin-up (473) moves goods beyond the bound
+  stated in the test; measure with the topic's MEASURE line.
