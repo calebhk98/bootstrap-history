@@ -38,8 +38,9 @@ def partition(tiles: Iterable[TileId], carriage: CarriageTable, value_per_tonne:
     members: Dict[TileId, List[TileId]] = {}
     for tile_id in ordered:
         best_anchor, best_cost = None, math.inf
+        cost_to = carriage.costs_from(tile_id)
         for anchor in anchors:
-            cost = carriage.cost_per_tonne(tile_id, anchor)
+            cost = cost_to.get(anchor, math.inf)
             if cost <= limit and cost < best_cost:
                 best_anchor, best_cost = anchor, cost
         if best_anchor is None:

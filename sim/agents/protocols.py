@@ -411,6 +411,11 @@ class World(Protocol):
 		"""Materials that may be carried between places."""
 		...
 
+	def has_market(self, material: str, place: str) -> bool:
+		"""Whether the place has a market for a material that a cargo can land in: a home society's economy has a
+		book for it; a partner's market is always there."""
+		...
+
 	def price_at(self, material: str, place: str) -> Optional[float]:
 		"""Money per tonne of a material at a place, in home money; None where it has no price."""
 		...

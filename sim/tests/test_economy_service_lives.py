@@ -49,7 +49,7 @@ def years_of(setup, years, spin_up=0, empty=False):
             continue
         flow = economy.record.book.goods_flow(fixture.METAL)
         income = sum(cohort.last_year_income for cohort in economy.record.cohorts.values())
-        rows.append((household_stock(economy), flow.get("wear", 0.0), flow["output"], income))
+        rows.append((household_stock(economy), flow.get("wear", 0.0), flow.get("output", 0.0), income))
     return rows
 
 
@@ -117,10 +117,11 @@ class BadYearTests(unittest.TestCase):
         # the fixture's own income falls by a fifth in its seventh year as margins close; the holding
         # used to go from 33 thousand to 8 thousand units that year. A dip of a few per cent in a year that
         # income rises is the fixture's own noise (the opening's plant is larger than the runs it works, so
-        # output swings more while margins close); the bound is a sixth, against the three quarters of the crash
+        # output swings more while margins close, and more since producers run only what their cash pays for);
+        # the bound is a fifth, against the three quarters of the crash
         rows = years_of(durable_setup(), 14)
         for year in range(1, 14):
-            self.assertGreater(rows[year][0], 0.85 * rows[year - 1][0], "year %d sells a sixth of the stock" % year)
+            self.assertGreater(rows[year][0], 0.8 * rows[year - 1][0], "year %d sells a fifth of the stock" % year)
 
     def test_a_year_of_cash_shortage_sells_at_most_a_third_of_the_stock_and_rebuys_near_the_wear(self):
         # the economy is read after the fixture has settled, as in the other settled tests: the stock then

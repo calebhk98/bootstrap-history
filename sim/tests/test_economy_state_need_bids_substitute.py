@@ -28,11 +28,11 @@ class Holdings:
         pass
 
 
-def state_bids():
+def state_bids(**budget_fields):
     need = NeedSpec("implements", 0.0, 1.0, tuple(EFFECT.items()))
     basket = Basket((need,), SUBSTITUTION, {"implements": {}})
     setup = types.SimpleNamespace(capital_tile=TILE, state_agent="state", basket_for=lambda tile: basket)
-    record = types.SimpleNamespace(state_budget=state_budget.StateBudget(goods_budget=BUDGET), book=Holdings())
+    record = types.SimpleNamespace(state_budget=state_budget.StateBudget(goods_budget=BUDGET, **budget_fields), book=Holdings())
     view = types.SimpleNamespace(area_of=lambda good, tile: AREA)
     area_map = types.SimpleNamespace(goods=lambda: set(PRICES))
     order_book = {}
@@ -58,6 +58,22 @@ class StateNeedBidTests(unittest.TestCase):
             now = quantity_at(bid, bid.reference_price) * bid.reference_price
             dearer = quantity_at(bid, 2.0 * bid.reference_price) * 2.0 * bid.reference_price
             self.assertLess(dearer, 0.75 * now)
+
+
+class StateProgrammeBidTests(unittest.TestCase):
+    """A stated real spending programme buys quantities, not a sum: when the price level rises the state
+    keeps spending its budget on them (up to the budget), so printed money reaches prices instead of
+    sitting in the treasury while the bids shrink with the price."""
+
+    def test_a_dearer_good_still_draws_the_whole_budget_share(self):
+        for bid in state_bids(real_programme=True).values():
+            dearer = quantity_at(bid, 5.0 * bid.reference_price) * 5.0 * bid.reference_price
+            self.assertAlmostEqual(dearer, bid.budget)
+
+    def test_the_quantity_wanted_at_the_reference_price_is_unchanged(self):
+        plain, programme = state_bids(), state_bids(real_programme=True)
+        for good in PRICES:
+            self.assertAlmostEqual(quantity_at(programme[good], PRICES[good]), quantity_at(plain[good], PRICES[good]))
 
 
 if __name__ == "__main__":

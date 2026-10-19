@@ -69,9 +69,16 @@
    },
    "land_hectare_years": 0.99999105,
    "extracted_from": "arable land",
+   "grown_in_climate_classes": [
+    "Csa",
+    "Csb",
+    "Cfa",
+    "BSh",
+    "BSk"
+   ],
    "unit_dimension": "mass",
    "basis": "per hectare of mature, unirrigated olive grove, long-run average across on- and off-bearing years",
-   "yield_basis": "GROWN, limited by land and orchard biology rather than a recipe. Olives bear heavily in alternate years (biennial bearing is a real physiological trait of the tree, not a farming choice), so any single-year figure is misleading; a long-run per-hectare average across on- and off-years for dry-farmed ancient Mediterranean groves - modest tree density for dry farming, no irrigation, no modern pruning regime - is on the order of a few tonnes of olives per hectare per year, of which a lever-and-screw press recovers roughly 15-20% of the fruit's weight as oil (a modern hydraulic press does somewhat better; ancient presses left more oil in the pomace). Combining those gives roughly 300 kg oil/ha/yr, taken as the entry's output. Labour is dominated by harvest: olives are hand-picked or knocked down with poles over the whole canopy of every tree, which is why olive harvest is one of the most labour-hungry weeks of the Mediterranean farming year, plus lighter, steadier labour pressing and settling the oil through the rest of the season. LAND (Complaints/48): the whole batch is the one hectare-year the basis above already states, so land_hectare_years is that hectare in hectare_land's own unit - 1 hectare-year - charged against hectare_land's solved rent by sim/engine/solve_prices.py exactly like an ordinary input; see LAND in _SCHEMA.md.",
+   "yield_basis": "GROWN, limited by land and orchard biology rather than a recipe. Olives bear heavily in alternate years (biennial bearing is a real physiological trait of the tree, not a farming choice), so any single-year figure is misleading; a long-run per-hectare average across on- and off-years for dry-farmed ancient Mediterranean groves - modest tree density for dry farming, no irrigation, no modern pruning regime - is on the order of a few tonnes of olives per hectare per year, of which a lever-and-screw press recovers roughly 15-20% of the fruit's weight as oil (a modern hydraulic press does somewhat better; ancient presses left more oil in the pomace). Combining those gives roughly 300 kg oil/ha/yr, taken as the entry's output. Labour is dominated by harvest: olives are hand-picked or knocked down with poles over the whole canopy of every tree, which is why olive harvest is one of the most labour-hungry weeks of the Mediterranean farming year, plus lighter, steadier labour pressing and settling the oil through the rest of the season. LAND (Complaints/48): the whole batch is the one hectare-year the basis above already states, so land_hectare_years is that hectare in hectare_land's own unit - 1 hectare-year - charged against hectare_land's solved rent by sim/engine/solve_prices.py exactly like an ordinary input; see LAND in _SCHEMA.md. CLIMATE: the olive tolerates the long dry summer of the Mediterranean climate (Koppen Csa, Csb) and needs winter chill to set flower buds, but the tree is damaged by frost below about minus 10 C and killed by hard freezes, and fruit does not ripen in a cool short summer, so cool oceanic, continental and polar climates are left out; humid subtropical (Cfa) and the warm and cool steppe (BSh, BSk) fringes carry groves, and grown_in_climate_classes names those five. Limits recalled from olive agronomy (FAO olive growing guidance; Columella, De Re Rustica 5.8-9, ancient testimony); not re-opened for this entry (Complaints/531).",
    "conf": "C",
    "requires_node": null
   },
@@ -85,42 +92,36 @@
    },
    "land_hectare_years": 0.99999105,
    "extracted_from": "arable land",
+   "grown_in_climate_classes": [
+    "Csa",
+    "Csb",
+    "Cfa",
+    "Cfb",
+    "BSh",
+    "BSk",
+    "Dfa"
+   ],
    "unit_dimension": "mass",
    "basis": "per hectare of vineyard per year, output as kg of fermented common (table) wine, taking wine's density as close to water's",
-   "yield_basis": "GROWN. Pre-modern, unfertilised Mediterranean vineyards - no clonal selection, no irrigation, no chemical inputs - yielded on the order of a few tonnes of grapes per hectare per year, well below a modern high-input vineyard's 10+ tonnes; taken here as 4000 kg/ha. Treading and pressing recovers roughly 65-70% of that weight as must (juice), the rest staying in skins, pips and stems (pomace, which has its own uses this file does not track); fermentation itself loses only a few percent of mass as CO2 escapes, so output is set at 2700 kg/ha. Labour is viticulture across the year - pruning, tying, hoeing weeds, treating for mildew/pests by hand - plus the harvest, treading and racking at vintage; wine's own AGEING afterwards is calendar time in a jar or barrel, not labour, and belongs in a build/storage calendar rather than here. LAND (Complaints/48): the batch is the one hectare-year of vineyard the basis already states, so land_hectare_years is that hectare in hectare_land's own unit (1 hectare-year), charged against hectare_land's solved rent the same way any input is - see LAND in _SCHEMA.md.",
+   "yield_basis": "GROWN. Pre-modern, unfertilised Mediterranean vineyards - no clonal selection, no irrigation, no chemical inputs - yielded on the order of a few tonnes of grapes per hectare per year, well below a modern high-input vineyard's 10+ tonnes; taken here as 4000 kg/ha. Treading and pressing recovers roughly 65-70% of that weight as must (juice), the rest staying in skins, pips and stems (pomace, which has its own uses this file does not track); fermentation itself loses only a few percent of mass as CO2 escapes, so output is set at 2700 kg/ha. Labour is viticulture across the year - pruning, tying, hoeing weeds, treating for mildew/pests by hand - plus the harvest, treading and racking at vintage; wine's own AGEING afterwards is calendar time in a jar or barrel, not labour, and belongs in a build/storage calendar rather than here. LAND (Complaints/48): the batch is the one hectare-year of vineyard the basis already states, so land_hectare_years is that hectare in hectare_land's own unit (1 hectare-year), charged against hectare_land's solved rent the same way any input is - see LAND in _SCHEMA.md. CLIMATE: the vine needs roughly 1,300 to 2,700 growing-degree-days above 10 C between budburst and harvest (the Winkler/Amerine regions I to V, recalled), a winter cold enough to rest the buds without killing them (below about minus 20 C), and a spring frost-free enough to save the shoots. That is the Mediterranean (Csa, Csb), humid subtropical (Cfa), warm and cool oceanic (Cfb, the Rhine and Loire margin), steppe (BSh, BSk) and hot continental summer (Dfa) climates; the cool continental, subarctic, tropical, desert and polar classes fall outside, so grown_in_climate_classes names those seven. From memory of viticulture texts (Winkler, General Viticulture, 1974); not re-opened for this entry (Complaints/531).",
    "conf": "C",
    "requires_node": null
   },
-  "milk_kg": {
+  "cheese_kg": {
    "outputs": {
-    "milk_kg": 1000.0
+    "cheese_kg": 1000.0
    },
-   "inputs": {},
+   "inputs": {
+    "milk_kg": 8000.0,
+    "salt_kg": 20.0
+   },
    "labour_hours": {
-    "labourer": 120.0
+    "labourer": 250.0
    },
-   "land_hectare_years": 0.99999105,
-   "extracted_from": "pasture",
    "unit_dimension": "mass",
-   "basis": "per hectare of dairying pasture per year (goats/sheep, the common ancient Mediterranean dairy animals)",
-   "yield_basis": "GROWN via pasture rather than manufactured. An unimproved ancient dairy goat or ewe - no modern breeding for milk yield - gave on the order of 150-250 litres/year across a lactation, far below a modern dairy breed; rough Mediterranean grazing without irrigation or hay supplementation supports perhaps 4-6 such animals per hectare. Taking 5 animals/ha at ~200 kg/animal/yr (milk's density is close enough to water's that kg and litres are used interchangeably here) gives roughly 1000 kg/ha/yr. Labour is milking twice daily through the lactation plus the herding/penning time apportioned to dairying rather than to wool or meat from the same flock. LAND (Complaints/48): the batch is the one hectare-year of pasture the basis states, so land_hectare_years is that hectare in hectare_land's own unit (1 hectare-year, see wheat_kg's own LAND note). TAG: TEMPORARY HEURISTIC (CLAUDE.md 3.4) - this pasture is charged hectare_land's solved rent, which sim/world/land.py sets from the ARABLE margin of cultivation; real pasture was often land unfit for the plough and cheaper at the margin than cropland, so this overstates milk's true land cost until land.py tracks a rent specific to grazing land.",
-   "conf": "C",
-   "requires_node": null
-  },
-  "wool_kg": {
-   "outputs": {
-    "wool_kg": 3.0
-   },
-   "inputs": {},
-   "labour_hours": {
-    "labourer": 3.0
-   },
-   "land_hectare_years": 0.99999105,
-   "extracted_from": "pasture",
-   "unit_dimension": "mass",
-   "basis": "per hectare of sheep pasture per year, output as kg of raw greasy (unwashed) fleece",
-   "yield_basis": "GROWN, limited by pasture and stocking rate, not a recipe - this is a raw fibre entry with NO spinning or weaving in it; that processing is priced downstream in thread_kg/fabric_kg/cloth_kg so any fibre (this or cotton_kg) can feed the same generic textile chain. Unimproved ancient sheep breeds, before the deliberate selection for fleece weight that only intensifies over the following centuries, clipped on the order of 1.5-2 kg of raw greasy wool a year; rough, unmanured Mediterranean grazing supports perhaps 1.5 such sheep per hectare. That gives roughly 3 kg wool/ha/yr, taken as the output. Labour is shearing (fast - under half an hour a sheep with hand shears once the animal is caught) plus a share of the flock's herding time; the wool is greasy/unwashed as sheared, so scouring losses (lanolin, suint, dirt - commonly a third to half the raw weight) belong to whatever downstream entry first needs clean fibre, not to this one. LAND (Complaints/48): the batch is the one hectare-year of pasture the basis states, converted to land_hectare_years the same way every hectare-basis entry in this file is (1 hectare-year - see wheat_kg's own LAND note). TAG: TEMPORARY HEURISTIC (CLAUDE.md 3.4) - charged hectare_land's solved rent, which is set from the ARABLE margin of cultivation (sim/world/land.py); real sheep pasture was commonly rougher ground than cropland and would earn a lower rent of its own, so this overstates wool's true land cost until land.py distinguishes pasture from arable land.",
-   "conf": "C",
+   "basis": "per tonne of pressed, salted hard cheese from goat and sheep milk",
+   "yield_basis": "Curdling with rennet, draining the whey, pressing and salting. Hard sheep and goat cheese takes about 6 to 10 kg of milk per kg (milk solids concentrate roughly tenfold as whey is drained; Fox et al., Fundamentals of Cheese Science, 2nd ed., 2017; recalled, not re-opened), taken as 8. Salt is about 2 per cent of the finished cheese by mass (same source), 20 kg a tonne; it draws out moisture and stops spoilage organisms, which is why cheese keeps where milk sours in a day (data/world/spoilage.json). The whey, about 85 per cent of the milk by mass, is not priced. Labour is the dairy work of heating, curdling, draining, pressing and turning; a rough figure, conf D.",
+   "conf": "D",
    "requires_node": null
   },
   "cotton_kg": {
@@ -133,9 +134,20 @@
    },
    "land_hectare_years": 0.99999105,
    "extracted_from": "arable land",
+   "grown_in_climate_classes": [
+    "Aw",
+    "Am",
+    "As",
+    "BSh",
+    "BSk",
+    "BWh",
+    "Csa",
+    "Cfa",
+    "Cwa"
+   ],
    "unit_dimension": "mass",
    "basis": "per hectare of cotton per year, output as kg of ginned lint fibre",
-   "yield_basis": "GROWN, and - like wool_kg - a RAW FIBRE entry with no spinning or weaving in it; cotton_fabric_kg is the separate, downstream, manufactured entry for woven cloth, consistent with cotton being the one fibre in this file that already has two tracked material keys. Pre-modern rainfed cotton (no synthetic fertiliser, no mechanical picking) commonly returned on the order of 500-600 kg of seed cotton per hectare; ginning - separating the lint from the seed - removes roughly two thirds of that weight as seed, leaving about 200 kg of lint per hectare, taken as the output. The labour figure is dominated by a real, well documented historical bottleneck: BEFORE a mechanical gin, cleaning cotton by hand runs at only about half a kilogram of lint per worker-day (roughly the historically cited one pound/day for hand-ginning), so clearing 200 kg of lint took on the order of 400 worker-days - about 4000 hours - of ginning alone, dwarfing the roughly 150-200 hours of planting, weeding and hand-picking that precede it. This is exactly why the saw gin was transformative: it did not touch the farming or the picking, only this one enormous, otherwise-irreducible labour sink. LAND (Complaints/48): the batch is the one hectare-year the basis states, so land_hectare_years is that hectare in hectare_land's own unit (1 hectare-year - see wheat_kg's own LAND note), charged against hectare_land's solved rent like any other input.",
+   "yield_basis": "GROWN, and - like wool_kg - a RAW FIBRE entry with no spinning or weaving in it; cotton_fabric_kg is the separate, downstream, manufactured entry for woven cloth, consistent with cotton being the one fibre in this file that already has two tracked material keys. Pre-modern rainfed cotton (no synthetic fertiliser, no mechanical picking) commonly returned on the order of 500-600 kg of seed cotton per hectare; ginning - separating the lint from the seed - removes roughly two thirds of that weight as seed, leaving about 200 kg of lint per hectare, taken as the output. The labour figure is dominated by a real, well documented historical bottleneck: BEFORE a mechanical gin, cleaning cotton by hand runs at only about half a kilogram of lint per worker-day (roughly the historically cited one pound/day for hand-ginning), so clearing 200 kg of lint took on the order of 400 worker-days - about 4000 hours - of ginning alone, dwarfing the roughly 150-200 hours of planting, weeding and hand-picking that precede it. This is exactly why the saw gin was transformative: it did not touch the farming or the picking, only this one enormous, otherwise-irreducible labour sink. LAND (Complaints/48): the batch is the one hectare-year the basis states, so land_hectare_years is that hectare in hectare_land's own unit (1 hectare-year - see wheat_kg's own LAND note), charged against hectare_land's solved rent like any other input. CLIMATE: cotton (Gossypium) wants a frost-free season of about 160 to 200 days with warm nights and a mean temperature above about 20 C in the growing season, and water from rain or irrigation. That is the tropical wet-dry (Aw, Am, As), the warm steppe and desert where rivers or canals irrigate (BSh, BSk, BWh: the Nile, Indus and Mesopotamia), the Mediterranean hot summer (Csa) and the humid subtropical and monsoon-winter classes (Cfa, Cwa); the cool oceanic, continental and polar classes do not give the season, so grown_in_climate_classes names those nine. Limits recalled from cotton agronomy (FAO Cotton: crop water use; Watson, Agricultural Innovation in the Early Islamic World, 1983); not re-opened for this entry (Complaints/531).",
    "conf": "C",
    "requires_node": null
   },
@@ -253,21 +265,6 @@
    "conf": "C",
    "requires_node": null
   },
-  "hide_kg": {
-   "outputs": {
-    "hide_kg": 1.0
-   },
-   "inputs": {},
-   "labour_hours": {
-    "labourer": 0.5
-   },
-   "extracted_from": "livestock (a slaughter byproduct of meat and dairy husbandry)",
-   "unit_dimension": "mass",
-   "basis": "per kg of raw, untanned animal hide taken off a slaughtered animal",
-   "yield_basis": "Hide is a JOINT PRODUCT of raising livestock for meat and milk, not a thing grown or made in its own right - the cost of feeding, herding and raising the animal belongs to whatever entry eventually prices meat and milk (milk_kg exists in this file; meat does not yet), and charging the animal's whole upkeep to leather here would double-count that cost the day a meat entry is added. What belongs here is only the MARGINAL step once the animal is already being slaughtered for those other reasons: flaying the carcass and salting or air-drying the hide enough that it survives transport to a tanner, a matter of a skilled butcher's minutes per animal, not a farming season. LABELLED HEURISTIC (rule 3.4): a complete accounting would instead apportion a SHARE of the animal's feed and grazing-land cost to the hide by its relative market value against meat, tallow, bone, gut and horn - the same joint-cost logic the copper_kg example uses when galena ore yields both lead and silver - but that split needs a livestock/meat entry to divide against, and none exists yet in this file. Until one does, this entry understates the true cost of hide by roughly the animal's own keep.",
-   "conf": "C",
-   "requires_node": null
-  },
   "leather_kg": {
    "outputs": {
     "leather_kg": 1.0
@@ -306,7 +303,9 @@
    ],
    "holding_years": 1.0,
    "holding_basis": "Vegetable tanning leaves hides in the pits through successively stronger bark liquors for a year or more before the leather can be sold, so the hide and bark are tied up for about that long.",
-   "operated_by": ["tex_vegetable_tanning"]
+   "operated_by": [
+    "tex_vegetable_tanning"
+   ]
   },
   "parchment_sheet": {
    "outputs": {
@@ -438,7 +437,9 @@
      "conf": "D"
     }
    ],
-   "operated_by": ["ag2_bone_meal"]
+   "operated_by": [
+    "ag2_bone_meal"
+   ]
   },
   "gelatin_kg": {
    "outputs": {
@@ -570,21 +571,6 @@
    "conf": "C",
    "requires_node": "hom_soap_soft"
   },
-  "fat_kg": {
-   "outputs": {
-    "fat_kg": 1.0
-   },
-   "inputs": {},
-   "labour_hours": {
-    "labourer": 0.3
-   },
-   "extracted_from": "livestock (suet and trimmed fat, a slaughter byproduct)",
-   "unit_dimension": "mass",
-   "basis": "per kg of raw, unrendered animal fat",
-   "yield_basis": "A slaughter byproduct priced the same way as hide_kg, bone_kg and bristles_kg: the animal's own keep belongs to a meat entry this file does not yet have, and this entry charges only the marginal butchery labour of trimming fat from the carcass.",
-   "conf": "C",
-   "requires_node": null
-  },
   "tallow_kg": {
    "outputs": {
     "tallow_kg": 1.0
@@ -636,7 +622,9 @@
      "conf": "D"
     }
    ],
-   "operated_by": ["distillation_alcohol"]
+   "operated_by": [
+    "distillation_alcohol"
+   ]
   },
   "rose_petals_kg": {
    "outputs": {
@@ -857,7 +845,9 @@
      "conf": "D"
     }
    ],
-   "operated_by": ["prn_hand_papermaking"]
+   "operated_by": [
+    "prn_hand_papermaking"
+   ]
   },
   "linen_rag_kg": {
    "outputs": {
@@ -917,6 +907,22 @@
    "yield_basis": "GROWN. Cinnamomum cassia is a warm-subtropical evergreen of southern China (Guangxi, Guangdong, Yunnan), long known there as a bark spice and drug; it is frost-tender, so the classes taken are the tropical ones and the humid subtropical class with a dry winter (Cwa), which holds the Han southern tiles and none of the Roman ones. Bark is stripped from trees of about six to ten years, so a hectare gives a tonne or so of dried bark in the harvest year and nothing in the years before; averaged over a ten-year rotation 600 kg of dried bark per hectare-year is taken (conf C, estimate). Labour: coppicing, stripping, scraping and shade-drying the bark, plus planting and weeding: about 1500 labourer-hours per hectare-year (conf C). LAND: the batch is the one hectare-year of the basis; forests pay arable land's rent here, the same labelled heuristic as the other forest products. SOURCES: the Shennong Bencao Jing (Han materia medica) names cassia; Pliny, Natural History 12.85-98 on cassia and cinnamon; yields and labour are estimates; NONE OF THESE COULD BE OPENED for this entry (Complaints/347).",
    "conf": "C",
    "requires_node": null
+  },
+  "wick_linen_m": {
+   "outputs": {
+    "wick_linen_m": 1.0
+   },
+   "inputs": {
+    "linen_kg": 0.0021
+   },
+   "labour_hours": {
+    "labourer": 0.02
+   },
+   "unit_dimension": "length",
+   "basis": "per metre of finished, twisted linen wick",
+   "yield_basis": "The same wick as wick_cotton_m from a society's own bast fibre: a candle or lamp wick of about 2 grams of spun fibre per metre, with a small allowance for waste. The fibre is linen_kg, the flax entry that folds field work, spinning and weaving into one figure, so a wick here is charged the cloth's weaving as well, an overcount until flax thread has its own entry (labelled heuristic, retire: Complaints/531). Roman and medieval European wicks were flax, hemp or rush pith; rush has no entry in the data. From memory, confidence D.",
+   "conf": "D",
+   "requires_node": "tex_drop_spindle"
   }
  }
 }

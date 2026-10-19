@@ -13,7 +13,7 @@ from typing import Dict, Iterable, Mapping, Optional
 
 from sim.economy import carriage_cache
 from sim.economy.types import TileId, TileSpec
-from sim.geography.api import layer_value, map_of_tiles, open_map, route_costs, tile_facts
+from sim.geography.api import layer_value, map_of_tiles, open_map, route, route_costs, tile_facts
 
 
 def tiles_from_geography(geography: dict, tile_ids: Iterable[TileId]) -> Dict[TileId, TileSpec]:
@@ -74,9 +74,27 @@ class CarriageTable:
         self._improvements = dict(improvements or {})
         self._from_source: Dict[TileId, Dict[TileId, float]] = {}
         self._warmed = False    # whether the whole table has been filled (or fetched) already
+        self.scale = 1.0        # multiplier on every cost: the year's wage on the labour part of the rates (set_scale)
+        self._scaled: Dict[TileId, Dict[TileId, float]] = {}
+        self._days: Dict[tuple, float] = {}
+
+    def set_scale(self, scale: float) -> None:
+        """Multiply every cost by `scale` (1: the costs as searched, the very same answers)."""
+        if scale != self.scale:
+            self.scale = scale
+            self._scaled = {}
 
     def costs_from(self, source: TileId) -> Dict[TileId, float]:
         """Cheapest cost to every given tile reachable from `source` (unreachable tiles are absent)."""
+        found = self._searched_costs_from(source)
+        if self.scale == 1.0:
+            return found
+        scaled = self._scaled.get(source)
+        if scaled is None:
+            scaled = self._scaled[source] = {tile: cost * self.scale for tile, cost in found.items()}
+        return scaled
+
+    def _searched_costs_from(self, source: TileId) -> Dict[TileId, float]:
         cached = self._from_source.get(source)
         if cached is None and not self._warmed:
             self.warm(remember=True)
@@ -96,6 +114,17 @@ class CarriageTable:
     def cost_per_tonne(self, from_tile: TileId, to_tile: TileId) -> float:
         """Money per tonne by the cheapest path; infinite when no path exists."""
         return self.costs_from(from_tile).get(to_tile, math.inf)
+
+    def days_between(self, from_tile: TileId, to_tile: TileId) -> float:
+        """Days a haul takes by the cheapest path (geography's pace for each leg's mode, handling included);
+        infinite when no path exists."""
+        key = (from_tile, to_tile)
+        found = self._days.get(key)
+        if found is None:
+            hauled = route([from_tile], [to_tile], sorted(self._rates), self._improvements, self._rates,
+                           self._handling, self._held_nodes, self._world_map)
+            found = self._days[key] = math.inf if hauled is None else float(hauled["days"])
+        return found
 
     def warm(self, remember: bool = False) -> None:
         """Fill every source. With `remember` the whole table is read from disk when an earlier process

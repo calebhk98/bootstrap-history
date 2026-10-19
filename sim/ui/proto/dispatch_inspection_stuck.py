@@ -184,11 +184,13 @@ def _stuck_nothing_or_money(sim, _startable, _afford):
 
 
 def _stuck_raw_material(sim):
-    if sim.binding and sim.resource_throttle() < 0.95:
+    if not sim.binding:
+        return None
+    throttle, binding = sim.peek_resource_throttle()
+    if binding and throttle < 0.95:
         return {"what": "a raw material", "kind": "supply",
                 "why": "%s: work is running at %d%% of plan. %s"
-                       % (sim.binding, sim.resource_throttle() * 100,
-                          sim.shortage_remedy(sim.binding))}
+                       % (binding, throttle * 100, sim.shortage_remedy(binding))}
     return None
 
 

@@ -18,13 +18,13 @@ from sim.economy.api import (EDGE_EXTERNAL, EDGE_LEGACY, AgentOrders, Economy, G
                              trade_premium, variable_cost_per_run)
 
 from . import economy_port_actors, economy_port_cargo, economy_port_late, economy_port_sites, material_capacity, solve_cache
-from .data import load_civ
 from .economy_port_key import spin_up_key
 from .economy_port_coin import priced_at_the_margin
 from .economy_port_setup import build_setup, opening_values
 from .economy_port_tiles import TilePricesMixin
 from .material_units import tonnes_per_unit
 from .prices import default_production_entries
+from .spin_up_gap import SPIN_UP_RATE_FLOOR, change_gap, price_gap, window_gaps
 
 OUTCOMES_KEPT = 100   # yearly outcomes held in memory for the health figures
 SPIN_UP_CACHE_DIRECTORY = os.path.join(os.path.dirname(solve_cache.DEFAULT_CACHE_DIRECTORY), "agent_economy")
@@ -47,6 +47,11 @@ SPIN_UP_TRIMMED_YEARS = declare(
         "as long as that takes and no longer (shorter lengths left trades glutted or the staffing wage "
         "reference too high in some civilisations; found by trying lengths against the opening-workforce tests). "
         "A model of hiring and training would derive it per trade.")
+SPIN_UP_MEASURED_YEARS = declare(
+    "SPIN_UP_MEASURED_YEARS", 4, kind="temporary_heuristic",
+    unit="consecutive final years", source=None, confidence="D", retire="Complaints/473",
+    why="The opening's reported `spin_up_result` compares this many consecutive last years of the trimmed stage "
+        "(one fewer changes), so one quiet year between swings is not read as settled.")
 SPIN_UP_WATCHED_GOODS = 12
 # `<first-stage years>,<trimmed years>` in this variable shortens the spin-up (the test suite sets it); the years
 # then enter the cache key, so a full game never reads a shortened record.
@@ -104,6 +109,11 @@ class AgentEconomy(TilePricesMixin):
     def spin_up_result(self):
         """The saved opening's first-stage result (see `_settle`); empty before the opening is saved."""
         return dict((self.stored.get("record") or {}).get("spin_up_result") or {})
+
+    def producer_capacities(self):
+        if not self.opened():
+            return []
+        return [(producer.recipe_id, producer.capacity_runs) for producer in economy_api.all_producers(self.economy())]
 
     def opened(self) -> bool:
         return self._economy is not None or "record" in self.stored
@@ -415,7 +425,7 @@ class AgentEconomy(TilePricesMixin):
         sim = self._sim
         total = 0.0
         for partner in partners:
-            standard = load_civ(partner)["coin_standard"]
+            standard = sim.partner_civ(partner)["coin_standard"]
             metal_price = sim._material_prices().get(standard["material"])   # the metal at its cost: its market price (Complaint 519) would size a partner's spending by the opening's mispriced metals
             if not metal_price:
                 continue
@@ -438,7 +448,7 @@ class AgentEconomy(TilePricesMixin):
         volume = economy_api.external_trade_volume(economy)
         imports, exports = (volume - paid_in) / 2.0 * coin, (volume + paid_in) / 2.0 * coin
         for partner in partners:
-            standard = load_civ(partner)["coin_standard"]
+            standard = sim.partner_civ(partner)["coin_standard"]
             metal_price = sim.goods_market.home_unit_price(standard["material"])
             if not metal_price:
                 continue
@@ -493,17 +503,20 @@ class AgentEconomy(TilePricesMixin):
         watched = sorted(basket, key=lambda good: -basket[good] * prices.get(good, 0.0))[:SPIN_UP_WATCHED_GOODS]
         inputs = YearInputs(year=0, population_by_tile={}, working_age_share=economy.setup.working_share,
                             yield_factor_by_producer={}, engine_orders={})
-        result = self._settle(economy, inputs, watched)
+        first_stage = self._settle(economy, inputs, watched)
         economy_api.trim_workforce_to_expected_hours(economy)
-        self._settle_trimmed(economy, inputs)
+        final_states = self._settle_trimmed(economy, inputs, watched)
         economy_api.finish_spin_up(economy)
-        economy_api.note_spin_up_result(economy, result)
+        years = first_stage["years"] + spin_up_years()[1]
+        economy_api.note_spin_up_result(economy, self.final_result(first_stage, final_states, years))
 
     @staticmethod
     def _settle(economy, inputs, watched):
-        """Hidden years until the price level, the rate and the main prices move less than the tolerance a year.
-        Returns {"settled": whether the tolerance was met, "years": years run, "gap": the largest relative
-        change in the last year measured (none measured: infinity is not stored, so one)}."""
+        """The first stage's stop rule (it decides when the stage ends; it is not the opening's reported
+        result): hidden years until the price level, the rate (against a floor, see spin_up_gap) and the main
+        prices move less than the tolerance a year. Returns {"settled": whether the tolerance was met, "years":
+        years run, "gap": the largest change in the last year measured (none measured: infinity is not stored,
+        so one)}."""
         before = None
         gap = 1.0
         years = 0
@@ -511,10 +524,12 @@ class AgentEconomy(TilePricesMixin):
         for _year in range(spin_up_years()[0]):
             outcome = economy.step(inputs)
             years += 1
-            now = ([outcome.basket_price_level, economy_api.interest_rate(economy) or 0.0]
-                   + [outcome.prices.get(good, 0.0) for good in watched])
+            now = (outcome.basket_price_level, economy_api.interest_rate(economy) or 0.0,
+                   {good: outcome.prices.get(good, 0.0) for good in watched})
             if before is not None:
-                gap = max(abs(new / old - 1.0) for new, old in zip(now, before) if old > 0.0)
+                gap = max(change_gap(now[0], before[0]) if before[0] > 0.0 else 0.0,
+                          change_gap(now[1], before[1], SPIN_UP_RATE_FLOOR) if before[1] > 0.0 else 0.0,
+                          price_gap(now[2], before[2]))
                 if gap < SPIN_UP_TOLERANCE:
                     settled = True
                     break
@@ -522,11 +537,30 @@ class AgentEconomy(TilePricesMixin):
         return {"settled": settled, "years": years, "gap": gap}
 
     @staticmethod
-    def _settle_trimmed(economy, inputs):
+    def _settle_trimmed(economy, inputs, watched):
         """The few further years, from the state the first stage left, in which the trimmed trades' wages and
-        entry settle."""
+        entry settle. Returns the state (see spin_up_gap) of each of the last SPIN_UP_MEASURED_YEARS years."""
+        states = collections.deque(maxlen=int(SPIN_UP_MEASURED_YEARS))
         for _year in range(spin_up_years()[1]):
-            economy.step(inputs)
+            outcome = economy.step(inputs)
+            state = economy_api.spin_up_state(economy, outcome)
+            state.update(price_level=outcome.basket_price_level, rate=economy_api.interest_rate(economy) or 0.0,
+                         prices={good: outcome.prices.get(good, 0.0) for good in watched})
+            states.append(state)
+        return list(states)
+
+    @staticmethod
+    def final_result(first_stage, final_states, years):
+        """What the saved opening reports, apart from the stop rule: whether the state it opens in (after
+        trimming) moved less than the tolerance a year, in every quantity spin_up_gap measures, over the last
+        consecutive years. {"settled", "years" (all hidden years), "gap" (largest change; one when fewer than two
+        years were measured), "gaps" (by quantity), "measured_years", "final" (the last year's state),
+        "first_stage" (the stop rule's own result)}."""
+        gaps = window_gaps(final_states)
+        gap = 1.0 if gaps is None else max(gaps.values())
+        return {"settled": gaps is not None and gap < SPIN_UP_TOLERANCE, "years": years, "gap": gap,
+                "gaps": gaps or {}, "measured_years": len(final_states),
+                "final": dict(final_states[-1]) if final_states else {}, "first_stage": dict(first_stage)}
 
     def _save(self):
         self.stored["record"] = economy_api.export_record(self._economy, (PURSE_CURRENCY,))

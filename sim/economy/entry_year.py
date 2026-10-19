@@ -7,6 +7,7 @@ import math
 from typing import Dict, Tuple
 
 from . import location, ownership, sites, unit_cost
+from .entry_backed import unfilled_at_cost
 from .entry_margin import margin_entry_plans
 from .entry_trial import trial_entry_plans
 from .entry import (ENTRANT_OWNER_STAKE_SHARE, UnmetDemand, entrant_loan, entry_plans, gap_beyond_spare,
@@ -37,8 +38,9 @@ def open_entrants(setup, record, view, area_map, unmet_by_market: Dict[Tuple[str
     started = 0
     by_limits = sites.limits_by_recipe(setup.site_limits)
     siting = location.entry_siting(setup, record, view, area_map, carriage or _carriage(setup))
-    plans = entry_plans(setup.recipes, view, unmet, record.land_rent, setup.land_per_run,
-                        _traded_volume(record, view, area_map), siting)
+    traded = _traded_volume(record, view, area_map)
+    plans = entry_plans(setup.recipes, view, unmet, record.land_rent, setup.land_per_run, traded, siting,
+                        unfilled_at_cost(setup, record, view, area_map, bids_by_market, traded))
     if bids_by_market:
         planned = tuple((plan.good, view.area_of(plan.good, plan.tile)) for plan in plans)
         plans += margin_entry_plans(setup, record, view, area_map, bids_by_market, planned, siting)
@@ -49,7 +51,7 @@ def open_entrants(setup, record, view, area_map, unmet_by_market: Dict[Tuple[str
         key = recipe_tile_key(plan.recipe_id, plan.tile)
         producer_id = "producer:" + key
         builds_plant = recipe.plant_life_years > 0.0 and bool(recipe.plant_goods)
-        # each producer stands for the tile's workshops of one recipe: newcomers join its capacity
+        # each producer stands for the tile's workshops of one recipe: newcomers join its capacity and its workshop count
         producer = record.producers.get(producer_id)
         if producer is None:
             owner = ownership.owner_cohort(record, plan.tile)
@@ -62,7 +64,8 @@ def open_entrants(setup, record, view, area_map, unmet_by_market: Dict[Tuple[str
         elif producer_id in record.expansion_runs:
             continue                                    # plant it already asked for is still to come
         if not builds_plant:
-            producer = replaced(producer, capacity_runs=producer.capacity_runs + plan.runs)
+            producer = replaced(producer, capacity_runs=producer.capacity_runs + plan.runs,
+                                workshops=producer.workshops + 1)
         record.producers[producer_id] = producer
         started += 1
         inputs, wages = live_input_prices(producer, recipe, view), live_wages(producer, recipe, view)

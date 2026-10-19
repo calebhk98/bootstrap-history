@@ -1422,6 +1422,11 @@ def main():
                            "(default: the good backing the currency)")
     subparser.add_argument("--payback", action="store_true", help="also list nodes whose build cost is repaid "
                            "suspiciously fast by net earnings (a diagnostic; it changes nothing)")
+    subparser.add_argument("--accounts", action="store_true", help="print each year's accounts instead of the health "
+                           "figures: production, use, consumption, investment and stock per good, food eaten against "
+                           "need by tile and cohort, the real wage against the opening's basket (Complaint 554)")
+    subparser.add_argument("--session", default=None, help="with --accounts: resume this save instead of a fresh game "
+                           "(it is not written back)")
     subparser = sub.add_parser("baseline-ensemble", help="play several games of a civilisation with no player and store "
                                "their distributions (population, wages, literacy, territory, technologies held by year) "
                                "for the divergence screen to compare against; each game takes a long time")
@@ -1439,6 +1444,9 @@ def main():
                                "against coin wear, wage over floor, spin-up settled) for each civilisation's "
                                "full-length opening; reads the shipped openings when current, else computes (minutes)")
     subparser.add_argument("--civs", default="", help="comma-separated civilisation ids (default: all)")
+    subparser.add_argument("--concerns-only", action="store_true",
+                           help="print only the concerns that pay their way (Complaint 528), skipping the checks")
+    subparser.add_argument("--json", action="store_true", help="print the checks and the concern scan as JSON")
     subparser = sub.add_parser("spin-up-trace", help="run a civilisation's hidden spin-up for many years and print the "
                                "price level, the money stock and the mint's strikes by year; slow (minutes)")
     subparser.add_argument("--civ", default="", help="civilisation id (default: the default one)")

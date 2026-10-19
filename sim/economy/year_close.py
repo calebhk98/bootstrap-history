@@ -6,7 +6,7 @@ from typing import Dict, Tuple
 from sim.geography.api import flow_ledger
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
-from . import (currency, expansion_price, households, inventory, merchants, metal_stock, ownership, producer_exit,
+from . import (merchants_transit, carriage_hours, currency, expansion_price, households, inventory, merchants, metal_stock, ownership, producer_exit,
                producers, producers_close, state_budget, taxes)
 from .households_cohort import renewed
 from .market_memory import market_key
@@ -21,10 +21,12 @@ from .replaced import replaced
 
 
 def dispatch_merchants(setup, record, carriage, ledger: YearLedger) -> None:
-    """Merchants carry what they bought. The carriage is the carters' pay: it goes, as wages, to the
-    poorest households of the tile the goods leave. Shortcut until carriers hire hours in the labour
-    market: the carters' hours are not taken from what those households offer."""
+    """Merchants carry what they bought. The crew hours the shipments need were hired in the year's labour
+    market (carriage_hours.bids) and limit what is carried; a merchant with no plan yet (it has not shipped)
+    is not limited. The part of a fee that is not crew pay goes, as wages, to the poorest households of the
+    tile the goods leave: a shortcut until carts, ships and animals are capital (Complaints/552)."""
     money = setup.currency_id
+    crew = carriage_hours.crew_for(setup, record)
     carriers = {}
     for cohort in record.cohorts.values():
         held = carriers.get(cohort.tile)
@@ -32,14 +34,25 @@ def dispatch_merchants(setup, record, carriage, ledger: YearLedger) -> None:
             carriers[cohort.tile] = cohort.agent_id
     carried: dict = {}
     for merchant in sorted(record.merchants.values(), key=lambda each: each.agent_id):
+        record.book.move_many(merchants_transit.advance(merchant, setup.specs))    # hauls on the road for years reach the tile or spoil
+    for merchant in sorted(record.merchants.values(), key=lambda each: each.agent_id):
         fills = ledger.buy_fills.get(merchant.agent_id, [])
         if not fills:
+            if crew is not None:
+                merchant.carriage_hours_wanted = {}     # nothing shipped: no carriers to bid for next year
             continue
+        hire = None
+        if crew is not None:
+            engaged = (carriage_hours.hired(ledger, merchant.agent_id, [trade for trade, _share in crew.trades])
+                       if carriage_hours.planned(merchant) else {"hours": None, "wage": 0.0})
+            hire = merchants.CrewHire(crew.hours_per_money, engaged["hours"], engaged["wage"])
         done = merchants.dispatch(merchant, fills, carriage, setup.specs, money,
                                   record.book.balance(merchant.agent_id, money), _held_stock(record.book, merchant.agent_id),
-                                  carrier_of=carriers.get)
+                                  carrier_of=carriers.get, crew=hire)
         record.book.post(done.transfers, done.moves)
         ledger.note_postings(done.transfers, "wages")
+        if crew is not None:
+            merchant.carriage_hours_wanted = done.crew_hours_wanted
         for move in done.moves:
             flow_ledger.record_flow(carried, move.tile, move.receiver_tile,
                                     move.quantity * setup.specs[move.good].unit_mass_kg / KILOGRAMS_PER_TONNE)
@@ -99,7 +112,7 @@ def wear_and_spoilage(setup, record) -> None:
     book.transfer_many(metal_stock.yearly_wear(cash, record.currency))
 
 
-def close_agents(setup, record, view, ledger: YearLedger, area_map) -> None:
+def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage) -> None:
     money = setup.currency_id
     property_income: Dict[str, float] = {}
     traded = {(result.good, result.area): result.quantity for result in ledger.clearings}
@@ -123,6 +136,8 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map) -> None:
         paid = ownership.spread(record, closed.transfers, cohorts_by_tile)
         record.book.transfer_many(paid)
         worn = producer.capacity_runs - closed.producer.capacity_runs
+        if worn > 0.0:
+            ledger.plant_worn[producer_id] = worn
         if worn > 0.0 and recipe.plant_life_years > 0.0 and revenue > costs:
             record.worn_runs[producer_id] = worn    # a producer covering its costs rebuilds what wore out
         for transfer in paid:
@@ -132,16 +147,23 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map) -> None:
             record.expansion_runs[producer_id] = closed.expansion_runs
         record.producers[producer_id] = _with_sales(closed.producer, recipe, ledger)
     prices, volumes = learned_prices(ledger.clearings, record.memory)
+    anchors = {(good, area.area_id): area.anchor_tile for good in area_map.goods() for area in area_map.areas(good)}
     ordered = (sorted(prices.items()), sorted(volumes.items()))
     interest_rate = view.interest_rate(money)
     for merchant in sorted(record.merchants.values(), key=lambda each: each.agent_id):
         transfers = merchants.close_year(merchant, prices, volumes, record.book.balance(merchant.agent_id, money),
                                          _held_stock(record.book, merchant.agent_id), area_map.area_of, money,
-                                         interest_rate, ordered)
+                                         interest_rate, ordered,
+                                         lambda good, area, home=merchant.home_tile: (
+                                             merchants_transit.news_lag(carriage, home, anchors[(good, area)])
+                                             if (good, area) in anchors else None))
         paid = ownership.spread(record, transfers, cohorts_by_tile)
         record.book.transfer_many(paid)
         for transfer in paid:
             property_income[transfer.payee] = property_income.get(transfer.payee, 0.0) + transfer.amount
+    crew = carriage_hours.crew_for(setup, record)
+    if crew is not None:    # after the owners took their profit: the cash left is what next year's carriers can be paid from
+        record.loan_requests.extend(carriage_hours.wage_loans(setup, record, crew))
     for cohort_id, cohort in sorted(record.cohorts.items()):
         received = dict(ledger.received.get(cohort_id, {}))
         for good, quantity in ledger.grown.get(cohort_id, {}).items():
@@ -200,13 +222,13 @@ def remember_basket_price_level(setup, record) -> float:
 
 
 def rebase_basket_price_level(setup, record) -> None:
-    """Today's prices become the index base (level one) and everyone, the market's memory and each
-    household alike, stops expecting inflation, so the rebase is not read as a jump in prices."""
+    """Today's prices become the index base (level one) and the last level the market's memory and each household
+    compare against becomes one, so the rebase is not read as a jump in prices. Expected inflation is a yearly
+    rate, the same in any base, so it is carried over unchanged."""
     money = setup.currency_id
     record.index_base_prices = national_prices(record)
     record.memory.basket_price_levels[money] = 1.0
-    record.memory.expected_inflation[money] = 0.0
-    record.cohorts = {agent: renewed(cohort, last_basket_price_level=1.0, expected_inflation=0.0)
+    record.cohorts = {agent: renewed(cohort, last_basket_price_level=1.0)
                       for agent, cohort in record.cohorts.items()}
 
 

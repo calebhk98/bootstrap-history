@@ -528,21 +528,21 @@ class ElectricityMixin:
             holdings.shortages[who] += 1
         return worst
 
-    def peek_project_resource_throttle(self, node_id):
-        """(the project's material throttle, the pool binding it) as a screen asks about it. Worked out as a step
-        would, then the stock it banks, the opening stock it records, the draws it notes and the shortage it counts are put back, so a question
-        asked between steps does not change the year that follows."""
+    def _peek_throttle(self, compute):
+        """(compute(), the pool binding it) with the stock it banks, the opening stock it records, the draws it
+        notes and the shortage it counts put back, so a question asked between steps does not change the year
+        that follows."""
         holdings, household = self.state.holdings, self.household
-        saved = (copy.deepcopy(dict(self._material_stock())), copy.deepcopy(self.state.economy.market_flows),
+        saved = (copy.deepcopy(dict(self._material_stock())), self.goods_market.snapshot_flows(),
                  holdings.throttle, holdings.binding, collections.Counter(holdings.shortages),
                  getattr(household, "_stock_throttle_sig", None), getattr(household, "_stock_throttle_cache", None),
                  getattr(household, "_material_demand_cache", None), copy.deepcopy(holdings._material_stock_opening))
-        factor = self.project_resource_throttle(node_id)
+        factor = compute()
         binding = holdings.binding
         stock, flows, holdings.throttle, holdings.binding, shortages, sig, cache, demand, opening = saved
         self._material_stock().clear()
         self._material_stock().update(stock)
-        self.state.economy.market_flows = flows
+        self.goods_market.restore_flows(flows)
         holdings.shortages.clear()
         holdings.shortages.update(shortages)
         household._stock_throttle_sig = sig
@@ -551,6 +551,14 @@ class ElectricityMixin:
         household._material_demand_cache = demand
         holdings._material_stock_opening = opening
         return factor, binding
+
+    def peek_project_resource_throttle(self, node_id):
+        """(the project's material throttle, the pool binding it) as a screen asks about it, with no state changed."""
+        return self._peek_throttle(lambda: self.project_resource_throttle(node_id))
+
+    def peek_resource_throttle(self):
+        """(the portfolio material throttle, the pool binding it) as a screen asks about it, with no state changed."""
+        return self._peek_throttle(self.resource_throttle)
 
     def project_resource_throttle(self, node_id):
         """Material throttle applicable to one active project.

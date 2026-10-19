@@ -570,23 +570,23 @@ GRAIN_SPOILAGE_RATE_PER_YEAR = declare(
         "sitting in storage - see Storage.step.")
 
 MAXIMUM_INTAKE_MULTIPLE_OF_SUBSISTENCE = declare(
-    "MAXIMUM_INTAKE_MULTIPLE_OF_SUBSISTENCE", 1.75,
-    unit="dimensionless (annual grain a person eats in a year of plenty, as a "
-         "multiple of what the same person eats at bare subsistence)",
+    "MAXIMUM_INTAKE_MULTIPLE_OF_SUBSISTENCE", 1.5,
+    unit="dimensionless (food energy a person takes in a year of plenty, as a "
+         "multiple of the subsistence energy this project uses)",
     kind="biological_parameter",
-    source="Subsistence here is the roughly 2,000 kcal a day this project "
-           "already uses. A person doing sustained heavy agricultural labour "
-           "eats on the order of 3,500 to 4,000 kcal a day, which is where "
-           "1.75 comes from. It is a ceiling on what a HUMAN can usefully "
-           "eat, not on what a household can acquire - grain beyond it goes "
-           "to livestock, brewing, seed or market rather than into a person.",
+    source="Satiation is what well-fed modern people eat: the FAO food "
+           "balance sheets (FAOSTAT) put dietary energy supply in high-income "
+           "countries at about 3,300 kcal per person per day (supply, so "
+           "household waste is inside it and measured intake is somewhat "
+           "lower), against the 2,200 kcal subsistence figure of "
+           "sim/world/demand.py: a multiple of 1.5. It is the same level "
+           "data/world/needs.json gives the food need as its satiation "
+           "(tests hold the two together).",
+    confidence="C",
     why="Without a ceiling above subsistence the model had no way to say a "
-        "population ate WELL. Consumption was min(demand, stock), so the "
-        "nutrition ratio could never exceed 1.0 however full the granary "
-        "was, and a good year therefore bought nothing while a bad year "
-        "still cost lives. That one-sidedness is what Complaints/44 is "
-        "about, and the granary only fixed half of it - it banked the grain "
-        "and then never let anyone eat it.")
+        "population ate WELL, and without a ceiling at all it could eat "
+        "without limit. Food beyond this level is not eaten: it goes to "
+        "livestock, brewing, seed, market or waste. Complaint 513.")
 
 
 GRANARY_CAPACITY_YEARS_OF_DEMAND = declare(

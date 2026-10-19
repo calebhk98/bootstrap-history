@@ -103,6 +103,7 @@ class YearView:
         self._goods = set(area_map.goods())
         self._keys_of_good: Dict[str, tuple] = {}
         self._keys_at_tile: Dict[str, tuple] = {}
+        self._area_by_tile: Dict[str, Dict[TileId, AreaId]] = {}    # name -> tile -> its area; the area map does not change
 
     def prices_across(self, good: GoodId, areas) -> list:
         """`price(good, area.area_id)` for each of `areas` (the good's areas), in order."""
@@ -110,7 +111,7 @@ class YearView:
         if keys is None or keys[0] is not areas:
             keys = self._keys_of_good[good] = (areas, [good + KEY_SEPARATOR + area.area_id for area in areas])
         prices = self._memory.prices
-        return [prices.get(key) for key in keys[1]]
+        return list(map(prices.get, keys[1]))
 
     def price_rows(self, goods, tile: TileId) -> list:
         """(good, price, usual price) for each of `goods` in the market area it trades in on `tile`."""
@@ -136,9 +137,14 @@ class YearView:
 
     def area_of(self, good_or_trade: str, tile: TileId) -> AreaId:
         """A good's market area on this tile; a trade's labour area when the key is not a good."""
-        if good_or_trade in self._goods:
-            return self._area_map.area_of(good_or_trade, tile)
-        return self._labour_area_of(tile)
+        by_tile = self._area_by_tile.get(good_or_trade)
+        if by_tile is None:
+            by_tile = self._area_by_tile[good_or_trade] = {}
+        area = by_tile.get(tile)
+        if area is None:
+            area = by_tile[tile] = (self._area_map.area_of(good_or_trade, tile) if good_or_trade in self._goods
+                                    else self._labour_area_of(tile))
+        return area
 
     def currency_of(self, area: AreaId) -> CurrencyId:
         return self._memory.currency_of_area.get(area, self._currency)

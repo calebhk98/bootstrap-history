@@ -185,15 +185,21 @@
    },
    "inputs": {},
    "labour_hours": {
-    "labourer": 150.0
+    "labourer": 1500.0
    },
    "land_hectare_years": 0.99999105,
    "extracted_from": "arable land",
+   "grown_in_climate_classes": [
+    "Af",
+    "Am",
+    "Aw",
+    "Cwa"
+   ],
    "unit_dimension": "mass",
    "unit_mass_kg": 1.0,
    "basis": "per hectare of sugar cane per year, output as kg of raw (muscovado-type) sugar boiled from pressed juice",
-   "yield_basis": "GROWN, then pressed and boiled in the field-side works. Hand-and-animal-mill cane of the pre-industrial period runs on the order of 30-40 tonnes of cane per hectare, of which roller crushing and open-kettle boiling recover roughly 5-6 percent as crystallised raw sugar, giving about 2 tonnes per hectare. Boiling heat is supplied by burning the crushed cane (bagasse), which the crop itself provides, so no thermal input is charged. LAND: the batch is one hectare-year, converted to hectare_land's unit as in wheat_kg's LAND note. LABOUR: borrowed from wheat_kg's 150 labourer-hours per hectare of hand-tilled field crop; harvest and processing work specific to this crop is not added, so labour is understated. Conf C.",
-   "conf": "C",
+   "yield_basis": "GROWN, then pressed and boiled in the field-side works. Hand-and-animal-mill cane of the pre-industrial period runs on the order of 30-40 tonnes of cane per hectare, of which roller crushing and open-kettle boiling recover roughly 5-6 percent as crystallised raw sugar, giving about 2 tonnes per hectare. Boiling heat is supplied by burning the crushed cane (bagasse), which the crop itself provides, so no thermal input is charged. LAND: the batch is one hectare-year, converted to hectare_land's unit as in wheat_kg's LAND note. CLIMATE: sugar cane is a frost-tender perennial grass that needs a long warm, wet, frost-free season (FAO EcoCrop and standard agronomy texts, from memory, not opened), so grown_in_climate_classes names the tropical wet and seasonal classes Af, Am, Aw and the humid subtropical winter-dry Cwa, as the cane nursery sugar_cane_sett_native_kg does; the temperate Mediterranean and oceanic classes are out, so Rome, England and the Norse cannot grow it and a partner would have to sell it. LABOUR: planting setts, weeding, cutting, hauling, crushing and tending the boiling kettles through the season; plantation records for the early modern Caribbean and Java put a field-and-mill workforce near one worker per hectare, so 1500 hours is taken (TEMPORARY HEURISTIC, order of magnitude from memory, not opened; the earlier 150 borrowed from wheat_kg left out the whole mill and boiling-house work). Conf D.",
+   "conf": "D",
    "requires_node": "ag2_sugar_voyage"
   },
   "mat_opium": {
@@ -440,21 +446,6 @@
    "yield_basis": "EXTRACTED. Burnt kelp ('kelp' in the Scottish sense) carries on the order of 0.5-1 percent iodine by mass, and leaching plus crystallisation recovers most of it; at 0.75 percent about 133 tonnes of kelp ash stand behind a tonne, itself burnt from a couple of dozen times its mass of wet weed. LABELLED HEURISTIC for the labour (no cited figure): gathering and burning about 3200 tonnes of wet weed per tonne of iodine at roughly a tonne of wet weed gathered, spread to dry and burnt per labourer-day of ten hours, plus leaching and crystallising the ash, comes to about thirty thousand labourer-hours. Conf C.",
    "conf": "C",
    "requires_node": "analytical_chemistry"
-  },
-  "horn_kg": {
-   "outputs": {
-    "horn_kg": 1.0
-   },
-   "inputs": {},
-   "labour_hours": {
-    "labourer": 0.3
-   },
-   "extracted_from": "livestock (horn sheaths, a slaughter byproduct)",
-   "unit_dimension": "mass",
-   "basis": "per kg of the cleaned raw material",
-   "yield_basis": "Horn sheaths are slaughter offcuts: cattle horn cores are loosened by soaking and the keratin sheath pulled off. The animal's or person's keep is charged elsewhere. Labour is borrowed from bone_kg's 0.3 hours per kg of separating a raw slaughter byproduct; it understates the cleaning work for gut and shell. Conf C.",
-   "conf": "C",
-   "requires_node": null
   },
   "mat_animal_gut": {
    "outputs": {

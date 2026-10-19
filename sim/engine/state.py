@@ -270,6 +270,8 @@ class EconomyState:
 	works_under_construction: Dict[str, Dict[str, List[float]]] = field(default_factory=dict)
 	# tile -> {species id: share of the game left} for hunted species below a full stock (food_supply.py)
 	wild_stock: Dict[str, Dict[str, float]] = field(default_factory=dict)
+	# stock material -> units of the held herd the society's producers keep, which the founder is not billed to raise
+	society_herds: Dict[str, float] = field(default_factory=dict)
 	agent_economy: Dict[str, Any] = field(default_factory=dict)   # the agent economy's record (economy_port_year.py)
 	output_factor: float = 1.0
 	# real output per person over the opening's, measured when the market closes (real_output.py)

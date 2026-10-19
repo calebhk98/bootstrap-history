@@ -37,6 +37,7 @@ class StateBudget:
     need_wanted: Dict[str, float] = field(default_factory=dict)   # goods the lines bid for, so the rest bought is store
     expected_inflation: float = 0.0      # what the treasury expects of prices, as households do
     last_price_level: float = 0.0        # the basket price level when it last updated that expectation
+    real_programme: bool = False         # a stated real spending target: its goods are bought as quantities, not as a sum
 
 
 def plan_year(setup, record, view, labour_bids: List[LabourBid]) -> None:
@@ -44,6 +45,7 @@ def plan_year(setup, record, view, labour_bids: List[LabourBid]) -> None:
     policy, budget = setup.state_policy, record.state_budget
     money, state = setup.currency_id, setup.state_agent
     cash = record.book.balance(state, money)
+    budget.real_programme = False
     reserve = policy.reserve_years_of_revenue * budget.revenue
     spendable = min(cash, budget.revenue + policy.cash_spend_share * max(0.0, cash - budget.revenue - reserve))
     planned = spendable
@@ -51,6 +53,7 @@ def plan_year(setup, record, view, labour_bids: List[LabourBid]) -> None:
     if policy.real_spending_target > 0.0:
         # a stated programme is paid from every coin on hand first, then financed
         planned = policy.real_spending_target * view.basket_price_level(money)
+        budget.real_programme = True
         spendable = min(cash, planned)
     deficit = max(0.0, planned - spendable)
     in_hand, expected, supplied = state_finance.finance_deficit(policy, record, view, setup, deficit, budget.revenue)
@@ -97,7 +100,8 @@ def _labour_bids(setup, record, view, wage_budget: float) -> List[LabourBid]:
 
 def goods_bids(setup, record, view, area_map, order_book, kept=None) -> None:
     """Spend the goods budget across the basket's needs by their weights and each need's goods by the
-    household mix; stores already held are used up first and cost nothing, except the durable store
+    household mix (a stated real programme buys those quantities whatever the price, up to the budget; otherwise
+    a dearer good draws less, as a household's bid does); stores already held are used up first and cost nothing, except the durable store
     (`kept`, by good), which the lines leave alone."""
     budget = record.state_budget
     budget.need_wanted = {}
@@ -128,7 +132,8 @@ def goods_bids(setup, record, view, area_map, order_book, kept=None) -> None:
             budget.need_wanted[good] = budget.need_wanted.get(good, 0.0) + wanted
             area = view.area_of(good, tile)
             order_book.setdefault((good, area), ([], []))[0].append(
-                Bid(state, good, area, tile, 0.0, wanted, price, basket.substitution, wanted * price))   # the need's share, as a household's
+                Bid(state, good, area, tile, wanted if budget.real_programme else 0.0,
+                    0.0 if budget.real_programme else wanted, price, basket.substitution, wanted * price))
     record.book.move_many(moves)
 
 

@@ -7,7 +7,11 @@ record, so a firm, a state or another player borrows by the same rules.
 """
 from typing import Dict, List
 
+from sim.world import capital_market
+
 from . import credit, credit_claims, households_credit, merchants_credit
+from .producers_close import WORKING_CAPITAL_PURPOSE
+from .types import FundsOffer
 from .households_basket import need_prices
 from .year_goods import _held_stock
 
@@ -15,17 +19,15 @@ from .year_goods import _held_stock
 def service(record, money: str, year: int) -> Dict[str, float]:
     """Collect the year's payments at its end, after sales, from loans made in earlier years (a borrower's
     first payment falls due a year after it borrowed). Books the defaults: a lender's loss, a defaulter's
-    record, a merchant's staked capital after what it repaid or was freed of. Returns the money each
-    lender received, which is its income next year."""
+    record, a merchant's staked capital after what it repaid or was freed of. Returns the interest each
+    lender received, which is its income; returned principal is not income."""
     due = [loan for loan in record.loans if loan.issued_year < year]
     if not due:
         return {}
     cash = {loan.borrower: record.book.balance(loan.borrower, money) for loan in due}
-    transfers, serviced, defaults = credit.service(due, cash, year)
+    transfers, serviced, defaults, receipts = credit.service_split(due, cash, year)
     record.book.transfer_many(transfers)
-    received: Dict[str, float] = {}
-    for transfer in transfers:
-        received[transfer.payee] = received.get(transfer.payee, 0.0) + transfer.amount
+    received = {lender: receipt.interest for lender, receipt in receipts.items() if receipt.interest > 0.0}
     owed_before = credit_claims.principal_by_borrower(due)
     owed_after = credit_claims.principal_by_borrower(serviced)
     merchants_credit.stake(record.merchants, {agent: owed_after.get(agent, 0.0) - owed
@@ -35,6 +37,32 @@ def service(record, money: str, year: int) -> Dict[str, float]:
     record.remembered_defaults = credit_claims.remember_defaults(record.remembered_defaults, defaults)
     record.loans = [loan for loan in record.loans if loan.issued_year >= year] + serviced
     return received
+
+
+def lend_working_capital(setup, record, view) -> None:
+    """Strike the producers' working-capital loans before the year's plans, so the cash is there to plan with.
+    Each is dated to the last close, which makes its one payment fall due at this year's end, out of the sales
+    its runs bring. Lenders are the households' cash above their targets; the other requests wait for the
+    year's ordinary lending."""
+    asked = [request for request in record.loan_requests if request.purpose == WORKING_CAPITAL_PURPOSE]
+    if not asked:
+        return
+    record.loan_requests = [request for request in record.loan_requests if request.purpose != WORKING_CAPITAL_PURPOSE]
+    money = setup.currency_id
+    spare = {cohort_id: record.book.balance(cohort_id, money) - cohort.cash_target
+             for cohort_id, cohort in sorted(record.cohorts.items())}
+    spare = {cohort_id: amount for cohort_id, amount in spare.items() if amount > 0.0}
+    if not spare:
+        return
+    offers = [FundsOffer(cohort_id, money, amount, max(0.0, record.cohorts[cohort_id].expected_inflation))
+              for cohort_id, amount in spare.items()]
+    loans, _rate, _unmet = credit.clear(
+        asked, offers, money, record.memory.rates.get(money), credit_claims.principal_by_borrower(record.loans),
+        credit_claims.arrears_history(record.loans, record.remembered_defaults), year=view.year - 1,
+        rate_ceiling=capital_market.RATE_CEILING_SHARE * setup.opening_rate)
+    record.book.transfer_many(credit.disbursements(loans))
+    record.loans.extend(loans)
+    merchants_credit.stake(record.merchants, {loan.borrower: loan.principal for loan in loans})
 
 
 def household_requests(setup, record, view, ledger, priced_by_tile) -> List:

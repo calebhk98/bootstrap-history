@@ -1,6 +1,6 @@
 # Transactions count what was proposed, not what was paid
 
-**Status:** open
+**Status:** closed
 
 Found by an outside reviewer reading the repository; each point checked against the code. Money
 conservation holds (the book balances), which is why the suite passes; these are about which
@@ -18,11 +18,22 @@ quantities drive decisions.
    cleared market, records buyers' shortfalls in `ledger.unpaid`, and then stores `result.quantity`, the
    proposed volume, in `record.volumes` and the market memory, which feed expectations and entry.
 
-## What it would take
+## What happens now
 
-- Regression tests first (6, TDD): a cashless producer plans no runs it cannot pay for; a labour
-  settlement that pays nothing delivers no hours; a goods settlement with a shortfall records the
-  delivered volume.
-- Then: apply cash and resource limits after smoothing; count hours from payments made, with an explicit
-  flag for callers that pass no settlement; record delivered quantities.
-- Re-measure the spin-up (473) after each, since each changes behaviour.
+1. `plan` takes the runs the producer chooses (its working plant, less what unsold output allows) at the
+   year's pace of change, then limits them to what its cash and held inputs pay for; the land cap applies
+   last. Working off stock stays inside the smoothing, since it is a choice, not a limit.
+2. `YearLedger.note_labour` counts hours from the wages actually paid. A settlement that paid nothing
+   delivers no hours; a caller with no settlement passes `settled=False` to count the fills in full.
+3. `clear_goods` records the volume that changed hands (the goods moves the settlement posted) in
+   `record.volumes` and the market memory, and counts a market as traded only when something was delivered.
+
+Regression tests: `sim/tests/test_economy_delivered_not_proposed.py`.
+
+## Working capital
+
+At a year's close a producer whose cash cannot pay the runs next year's plan will try asks for a one-year
+loan (purpose `working capital`, no plant) at up to the yearly return of those runs
+(`sim/economy/producers_close.py`). It takes the producer's single loan slot only when it asks no expansion
+loan. The spin-up's response is measured with `python3 sim/simulator.py spin-up-trace --civ rome_100ad --years 60`
+(473).

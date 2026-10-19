@@ -247,7 +247,7 @@ _lim_wn = s_wn.credit_limit()
 # that would also trip CREDIT EXHAUSTED in the same year - the two markers
 # have to be tested apart, or a step that stops for the wrong reason would
 # still pass.
-s_wn.capital = -(0.75 * _lim_wn)   # a year of interest and the founder's deficit (Complaint 524) must not cross the line first
+s_wn.capital = -(0.6 * _lim_wn)   # a year of interest and the founder's deficit (Complaint 524) lands it past 70% and short of 100%
 _step_wn = S._agent_dispatch(s_wn, NODES, {"cmd": "step", "years": 50})
 check("a multi-year step stops the moment it is CLOSE TO THE LIMIT too, not "
       "only once credit is fully exhausted",

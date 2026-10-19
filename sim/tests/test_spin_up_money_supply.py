@@ -11,12 +11,24 @@ the metal reaches the mint.
 import unittest
 
 from sim.economy.metal_stock import COIN_WEAR_PER_YEAR
-from sim.engine import economy_port_trace
+from sim.engine import economy_port_trace, opening_checks_run, solve_cache
+from sim.engine.economy_port_key import SPIN_UP_SOURCE_MODULES, spin_up_key
+from sim.engine.economy_port_setup import build_setup
 from sim.tests import harness
+
 
 YEARS = 40
 DECADE = 10
 AUDIT_TOLERANCE = 0.05     # share of the years' wear that edges other than wear and the mint may account for
+
+
+def cached_spin_up_trace(game, years):
+    """`economy_port_trace.spin_up_trace(game, years)`, kept on disk beside the opening checks' traces."""
+    setup = build_setup(game, game.state.economy.agent_economy["opening"])
+    key = solve_cache.solve_key({"opening_trace": spin_up_key(setup), "years": years},
+                                source_modules=SPIN_UP_SOURCE_MODULES)
+    return solve_cache.cached_json(key, lambda: economy_port_trace.spin_up_trace(game, years),
+                                   cache_dir=opening_checks_run.TRACE_CACHE_DIRECTORY)
 
 
 def mean(values):
@@ -27,7 +39,7 @@ class SpinUpMoneySupplyTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.game = harness.sim()
-        cls.rows = economy_port_trace.spin_up_trace(cls.game, YEARS)
+        cls.rows = cached_spin_up_trace(cls.game, YEARS)
 
     def test_the_run_records_the_price_level_the_money_stock_and_the_mints_strikes_by_year(self):
         self.assertEqual(len(self.rows), YEARS)
@@ -59,7 +71,7 @@ class SpinUpMoneySupplyTests(unittest.TestCase):
 
     def test_a_game_carries_how_its_spin_up_ended(self):
         result = self.game.economy.spin_up_result()
-        self.assertEqual(sorted(result), ["gap", "settled", "years"])
+        self.assertEqual(sorted(result), ["final", "first_stage", "gap", "gaps", "measured_years", "settled", "years"])
         self.assertIsInstance(result["settled"], bool)
         self.assertGreater(result["years"], 0)
 

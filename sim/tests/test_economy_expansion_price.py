@@ -59,7 +59,8 @@ class ExpansionTests(unittest.TestCase):
         self.assertIsNotNone(self.close(lambda good, added: 0.95).loan_request)
 
     def test_growth_that_pays_at_todays_price_but_not_at_the_price_it_leaves_is_not(self):
-        self.assertIsNone(self.close(lambda good, added: 0.01).loan_request)
+        request = self.close(lambda good, added: 0.01).loan_request     # a cash-short producer may ask for working capital
+        self.assertTrue(request is None or request.purpose != "expand")
         self.assertEqual(self.close(lambda good, added: 0.01).expansion_runs, 0.0)
 
     def test_the_addition_priced_is_the_expansions_own_output(self):

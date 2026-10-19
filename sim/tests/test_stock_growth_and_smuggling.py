@@ -14,9 +14,11 @@ from sim.engine import living_stock_growth, living_stock_smuggling
 from sim.engine.data import load_civ
 from sim.engine.foreign_economies import ForeignEconomiesMixin
 from sim.engine.living_stock import LivingStockMixin
+from sim.engine.living_stock_opening import LivingStockOpeningMixin
 from sim.engine.living_stock_smuggling import LivingStockSmugglingMixin
 from sim.engine.living_stock_trade import LivingStockTradeMixin
 from sim.engine.living_stock_yearly import LivingStockYearlyMixin, stock_rates
+from sim.engine.partner_civs import PartnerCivsMixin
 from sim.engine.material_units import tonnes_per_unit
 from sim.geography.api import open_map, tiles_held
 
@@ -51,9 +53,10 @@ class Market:
         self.pressed[trade] = self.pressed.get(trade, 0.0) + hours
 
 
-class Game(LivingStockMixin, LivingStockTradeMixin, LivingStockSmugglingMixin, LivingStockYearlyMixin):
+class Game(PartnerCivsMixin, LivingStockMixin, LivingStockTradeMixin, LivingStockSmugglingMixin, LivingStockYearlyMixin):
     """Just enough of the game for held stock: the home society is Rome, the partner is Han."""
     STATE_CAPACITY_DEFAULT = 0.7
+    society_herds = LivingStockOpeningMixin.society_herds
     partner_refusal = ForeignEconomiesMixin.partner_refusal
     partner_government = ForeignEconomiesMixin.partner_government
 
@@ -67,7 +70,7 @@ class Game(LivingStockMixin, LivingStockTradeMixin, LivingStockSmugglingMixin, L
         self.goods_market = type("GoodsMarket", (), {"acting": self.purse, "acting_party_id": "founder"})()
         self.state = type("State", (), {
             "scenario": type("Scenario", (), {"year": 100})(),
-            "economy": type("Economy", (), {"wild_stock": {}})(),
+            "economy": type("Economy", (), {"wild_stock": {}, "society_herds": {}})(),
             "household": type("Household", (), {})()})()
         self.actors = ActorRegistry(ActorsState())
         if governed:
@@ -132,13 +135,13 @@ check("...and the hours press on the labour market",
 
 # ---- pasture limits the increase ------------------------------------------------------------------
 _shipped_capacity = living_stock_growth.pasture_capacity_kg
-living_stock_growth.pasture_capacity_kg = lambda tile, wild, world_map: 10500.0
+living_stock_growth.pasture_capacity_kg = lambda tile, wild, world_map: 10500.0 if tile == place else 0.0
 tight = Game()
 tight.grant_stock(HERD, 10000.0)
 tight.step_living_stock()
 check("a pasture that carries 500 kg more lets the herd grow by 500 kg less its loss",
       abs(tight.stock_held(HERD) - (10500.0 - 10000.0 * rates["annual_loss"])) < 1e-6, tight.stock_held(HERD))
-living_stock_growth.pasture_capacity_kg = lambda tile, wild, world_map: 9000.0
+living_stock_growth.pasture_capacity_kg = lambda tile, wild, world_map: 9000.0 if tile == place else 0.0
 full = Game()
 full.grant_stock(HERD, 10000.0)
 full.step_living_stock()

@@ -14,7 +14,10 @@ _reserve_af = max(0.0, _fixed_af - s.revenue())
 # Deep enough that the project's own purse (capital + 0.6*limit - reserve)
 # is negative, but still inside credit_limit so enforce_credit_limit does
 # not wipe `active` out from under this check.
-s.capital = -(_reserve_af + 0.6 * _lim_af) - 50.0
+# Arrears are just deep enough for that purse to be negative (50 short of it), not deeper: a deeper
+# debt costs interest at the market rate, and at a high rate one year's interest alone could carry
+# the household past the limit.
+s.capital = min(-1.0, _reserve_af - 0.6 * _lim_af - 50.0)
 _before_log = len(s.log)
 s.step()
 check("set-up: the project really is underfunded by arrears this year",

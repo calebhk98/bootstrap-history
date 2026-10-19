@@ -141,6 +141,13 @@ check("...and the interest on the whole line stays under what you earn",
       fresh.credit_limit() * fresh.debt_interest_rate() < fresh.revenue(),
       (fresh.credit_limit() * fresh.debt_interest_rate(), fresh.revenue()))
 
+# Money gone dear (whatever the cause) must not let the running tab's own interest push the line past income.
+fresh.market_rate = lambda: 0.5
+check("...and at a dear market rate the interest on the whole line still stays under what you earn",
+      fresh.credit_limit() * fresh.debt_interest_rate() < fresh.revenue(),
+      (fresh.credit_limit() * fresh.debt_interest_rate(), fresh.revenue()))
+del fresh.market_rate
+
 # Status upkeep is conditional on being able to afford it.
 fresh.done.add("citizenship")
 fresh._done_changed()
@@ -400,10 +407,10 @@ for _cost, PACED in _candidates:
     stopped.capital = round(0.3 * _cost)
     if stopped.start_project(PACED)[0]:     # a refusal changes nothing
         break
-for _ in range(2):
-    stopped.step()
+stopped.step()      # one step: a calendar floor of two years leaves the project active only after the first
 spent = stopped.active[PACED]["spent"]
-check("a project part-paid for has really been part-paid for", spent > 100, spent)
+check("a project part-paid for has really been part-paid for",
+      spent > 0 and stopped.active[PACED]["cost_left"] > 0, (spent, stopped.active[PACED]["cost_left"]))
 stopped.credit_limit = lambda: 0.0
 stopped.enforce_credit_limit(stopped.year)
 check("the creditors stopping your work does not burn what you paid",

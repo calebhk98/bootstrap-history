@@ -9,7 +9,7 @@ ordinary rules; credit_claims also keeps the defaulter's record for the next pre
 """
 from dataclasses import dataclass
 import math
-from typing import List, Mapping, Optional, Sequence, Tuple
+from typing import Dict, List, Mapping, Optional, Sequence, Tuple
 
 from sim.constants import declare
 
@@ -76,18 +76,24 @@ def clear(requests: Sequence[LoanRequest], offers: Sequence[FundsOffer], currenc
                              request.collateral_value, arrears_by_borrower.get(request.borrower, 0.0))
                 for request in requests]
     ceilings = [request.maximum_rate - premium for request, premium in zip(requests, premiums)]
+    # a request whose ceiling is below zero or below every lender's ask cannot borrow at any rate the
+    # market could clear at: it is rationed demand, left out of the clearing and returned as unmet
+    lowest_ask = min((offer.minimum_rate for offer in offers), default=None)
+    entry_floor = max(0.0, lowest_ask) if lowest_ask is not None else 0.0
+    able = [ceiling >= entry_floor for ceiling in ceilings]
     target = clearing_point([(offer.minimum_rate, offer.amount) for offer in offers],
-                            [(ceiling, request.amount) for ceiling, request in zip(ceilings, requests)])
+                            [(ceiling, request.amount) for ceiling, request, can in zip(ceilings, requests, able)
+                             if can])
     if target is None:
         base_rate = last_rate if last_rate is not None else 0.0
     else:
         base_rate = sticky_move(last_rate, target, RATE_ADJUSTMENT_SHARE_PER_YEAR)
-        lowest_ask = min((offer.minimum_rate for offer in offers), default=None)
         if lowest_ask is not None and base_rate < lowest_ask <= max(ceilings, default=-math.inf):
             # a sticky rate below every lender's ask would lend nothing while a borrower would pay it
             base_rate = lowest_ask
     if rate_ceiling is not None:
         base_rate = min(base_rate, rate_ceiling)
+    base_rate = max(0.0, base_rate)
     lending =[offer for offer in offers if offer.minimum_rate <= base_rate]
     asking = [index for index, ceiling in enumerate(ceilings) if ceiling >= base_rate]
     supply = sum(offer.amount for offer in sorted(lending, key=lambda o: (o.lender, o.amount)))
@@ -133,26 +139,58 @@ def disbursements(loans: Sequence[Loan]) -> List[Transfer]:
                      "loan_disbursement:" + loan.loan_id) for loan in loans]
 
 
+@dataclass
+class Receipt:
+    """What one lender received in a year: interest is income; principal and arrears (overdue principal)
+    only turn a claim back into cash."""
+    interest: float = 0.0
+    principal: float = 0.0
+    arrears: float = 0.0
+
+
 def service(loans: Sequence[Loan], cash_by_borrower: Mapping[AgentId, float], year: int,
             ) -> Tuple[List[Transfer], List[Loan], List[Default]]:
+    """`service_split` without the split of what each lender received."""
+    transfers, updated, defaults, _receipts = service_split(loans, cash_by_borrower, year)
+    return transfers, updated, defaults
+
+
+def service_split(loans: Sequence[Loan], cash_by_borrower: Mapping[AgentId, float], year: int,
+                  ) -> Tuple[List[Transfer], List[Loan], List[Default], Dict[AgentId, Receipt]]:
     """Collect one year's interest and principal installment, borrower to lender.
 
-    A borrower pays loans in id order until its cash runs out; what it cannot pay joins the loan's arrears,
-    which are collected first next year. Arrears past the declared share of principal end the loan: it is
-    removed, no money moves, and the loss is recorded. Repaid loans are removed.
+    A borrower pays loans in id order until its cash runs out; a payment clears, in turn, arrears interest,
+    overdue principal, this year's interest and the installment. What it cannot pay joins the loan's
+    arrears, which are collected first next year. Arrears past the declared share of principal end the
+    loan: it is removed, no money moves, and the loss is recorded. Repaid loans are removed. The last
+    result is each lender's receipt split into interest, principal and arrears.
     """
     cash = dict(cash_by_borrower)
     transfers: List[Transfer] = []
     updated: List[Loan] = []
     defaults: List[Default] = []
+    receipts: Dict[AgentId, Receipt] = {}
     for loan in sorted(loans, key=lambda l: l.loan_id):
         installment = loan.principal if loan.years_left <= 1.0 else loan.principal / loan.years_left
-        due = loan.arrears + loan.principal * loan.rate + installment
+        interest = loan.principal * loan.rate
+        arrears_interest = min(loan.arrears, loan.arrears_interest)
+        arrears_principal = loan.arrears - arrears_interest
+        due = loan.arrears + interest + installment
         paid = min(max(0.0, cash.get(loan.borrower, 0.0)), due)
         if paid > 0:
             cash[loan.borrower] = cash.get(loan.borrower, 0.0) - paid
             transfers.append(Transfer(loan.borrower, loan.lender, loan.currency, paid,
                                       "loan_service:%s:%d" % (loan.loan_id, year)))
+        left = paid
+        paid_parts = []
+        for part in (arrears_interest, arrears_principal, interest, installment):
+            take = min(left, part)
+            paid_parts.append(take)
+            left -= take
+        receipt = receipts.setdefault(loan.lender, Receipt())
+        receipt.interest += paid_parts[0] + paid_parts[2]
+        receipt.arrears += paid_parts[1]
+        receipt.principal += paid_parts[3]
         arrears = due - paid
         principal = loan.principal - installment
         if arrears > DEFAULT_ARREARS_SHARE * loan.principal + 1e-12:
@@ -162,5 +200,6 @@ def service(loans: Sequence[Loan], cash_by_borrower: Mapping[AgentId, float], ye
         if principal <= 1e-12 and arrears <= 1e-12:
             continue
         updated.append(replaced(loan, principal=principal, arrears=arrears,
-                               years_left=max(0.0, loan.years_left - 1.0)))
-    return transfers, updated, defaults
+                                arrears_interest=(arrears_interest - paid_parts[0]) + (interest - paid_parts[2]),
+                                years_left=max(0.0, loan.years_left - 1.0)))
+    return transfers, updated, defaults, receipts

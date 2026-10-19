@@ -31,3 +31,8 @@ def substitutes_of(material: str) -> FrozenSet[str]:
 	served = _needs_served()
 	needs = served.get(material, frozenset())
 	return frozenset(other for other, other_needs in served.items() if other != material and needs & other_needs)
+
+
+def serves_a_need(material: str) -> bool:
+	"""Whether the needs data names this material as serving some household need."""
+	return bool(_needs_served().get(material))

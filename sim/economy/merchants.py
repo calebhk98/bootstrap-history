@@ -14,7 +14,9 @@ The year is annual, so a merchant acts on last year's prices. In one year it
                  cannot pay to carry stay put and are offered where they are next year.
   3. `close_year` moves its price and volume expectations toward what the year showed and pays its
                  owner a share of the profit over its capital base.
-Goods bought one year are sold the next, so carrying costs one year of interest and spoilage.
+Goods bought one year are sold the next, so carrying costs one year of interest and spoilage; a haul
+whose travel time spans more years waits on the road for them (`merchants_transit`), costing that many
+years of both, and a distant market's price reaches the merchant that many years late.
 `Merchant.routes` is set by `orders` and read by `dispatch`.
 
 Standalone: `sim.constants`, `sim.economy` records, the carriage table and the area map.
@@ -25,7 +27,7 @@ from typing import Callable, Dict, List, Mapping, Optional, Sequence, Tuple
 
 from sim.constants import declare
 
-from . import inventory, merchants_route_memo
+from . import inventory, merchants_route_memo, merchants_transit
 from .accounts import DeliveredMove
 from .households_orders import BUDGET_SAFETY_SHARE
 from .market_areas import AreaMap
@@ -74,13 +76,26 @@ class Merchant:
     expected_prices: Dict[Tuple[GoodId, AreaId], float] = field(default_factory=dict)
     expected_volumes: Dict[Tuple[GoodId, AreaId], float] = field(default_factory=dict)
     routes: Dict[Tuple[GoodId, TileId], Tuple[TileId, AreaId]] = field(default_factory=dict)   # (good, source tile) -> (destination tile, area)
+    carriage_hours_wanted: Optional[Dict[TileId, float]] = None   # crew hours its shipments needed last year, by source tile: this year's bid for carriers; None until it has shipped
+    in_transit: List[merchants_transit.Shipment] = field(default_factory=list)   # hauls still on the road (their goods wait in the transit account)
+    price_history: Dict[Tuple[GoodId, AreaId], List[float]] = field(default_factory=dict)   # prices of distant markets that news has not yet reached it, newest last
+
+
+@dataclass(frozen=True)
+class CrewHire:
+    """The carriers a merchant hired for the year: crew hours inside a unit of carriage money, the hours
+    hired and their average wage an hour (already paid in the labour market)."""
+    hours_per_money: float
+    hours_hired: Optional[float]     # None: no plan to hire for yet, so the shipments are not limited
+    wage: float
 
 
 @dataclass(frozen=True)
 class Dispatch:
     moves: Tuple[DeliveredMove, ...]
     transfers: Tuple[Transfer, ...]
-    stranded: Tuple[Tuple[GoodId, TileId, float], ...]     # (good, tile, quantity) it could not pay to carry
+    stranded: Tuple[Tuple[GoodId, TileId, float], ...]     # (good, tile, quantity) it could not pay or find carriers to carry
+    crew_hours_wanted: Dict[TileId, float] = field(default_factory=dict)   # by source tile, before any cut for want of carriers
 
 
 def expected_price(merchant: Merchant, view: MarketView, good: GoodId, area: AreaId) -> Optional[float]:
@@ -89,11 +104,11 @@ def expected_price(merchant: Merchant, view: MarketView, good: GoodId, area: Are
 
 
 def gap_cost_per_unit(spec: GoodSpec, price_here: float, price_there: float,
-                      carriage_per_tonne: float, interest_rate: float) -> float:
-    """What carrying a unit from here to there and selling it next year costs, margin included."""
+                      carriage_per_tonne: float, interest_rate: float, years: int = 1) -> float:
+    """What carrying a unit from here to there and selling it `years` years on costs, margin included."""
     carriage = carriage_per_tonne * spec.unit_mass_kg / KILOGRAMS_PER_TONNE
-    interest = price_here * max(0.0, interest_rate)
-    spoilage = price_there * min(1.0, max(0.0, spec.spoilage_per_year))
+    interest = price_here * max(0.0, interest_rate) * years
+    spoilage = price_there * merchants_transit.lost_share(spec.spoilage_per_year, years)
     return carriage + interest + spoilage + MERCHANT_MARGIN_SHARE * price_here
 
 
@@ -154,7 +169,18 @@ def _candidate_routes(merchant, view, carriage, area_map, held_stock, specs, int
     expected_by_good: dict = {}
     for (good, area_id), price in merchant.expected_prices.items():
         if price is not None:
-            expected_by_good.setdefault(good, {})[area_id] = price
+            by_area = expected_by_good.get(good)
+            if by_area is None:
+                by_area = expected_by_good[good] = {}
+            by_area[area_id] = price
+    news_current_at: Dict[TileId, bool] = {}     # whether last year's price at a tile has reached the merchant's home
+
+    def news_current(tile: TileId) -> bool:
+        current = news_current_at.get(tile)
+        if current is None:
+            current = news_current_at[tile] = merchants_transit.news_lag(carriage, merchant.home_tile, tile) == 0
+        return current
+
     for good in sorted(set(specs) & set(area_map.goods())):
         areas = area_map.areas(good)
         if len(areas) < 2:
@@ -164,9 +190,12 @@ def _candidate_routes(merchant, view, carriage, area_map, held_stock, specs, int
             seen = [view.price(good, area.area_id) for area in areas]
         else:
             seen = prices_across(good, areas)
-        expected = expected_by_good.get(good)
-        if expected is not None:      # an expectation stands in for last year's price where the merchant has one
-            seen = [expected.get(area.area_id, price) for area, price in zip(areas, seen)]
+        expected = expected_by_good.get(good, {})
+        # an expectation stands in for last year's price where the merchant has one; without one it sees
+        # last year's price only where the news has had time to reach it, and nothing of a farther market
+        seen = [expected[area.area_id] if area.area_id in expected
+                else (price if news_current(area.anchor_tile) else None)
+                for area, price in zip(areas, seen)]
         parts.append(merchants_route_memo.routes_for_good(
             carriage, good, areas, spec, tuple(seen), interest_rate,
             lambda: _good_routes(good, spec, areas, {area.area_id: price for area, price in zip(areas, seen)},
@@ -178,6 +207,7 @@ def _candidate_routes(merchant, view, carriage, area_map, held_stock, specs, int
 def _good_routes(good, spec, areas, prices, carriage, interest_rate) -> list:
     """The unsorted rows of `_candidate_routes` for one good, given its price in each area."""
     rows = []
+    years_between = merchants_transit.years_between
     interest = max(0.0, interest_rate)
     spoilage = min(1.0, max(0.0, spec.spoilage_per_year))
     keep = 1.0 - spoilage
@@ -192,40 +222,45 @@ def _good_routes(good, spec, areas, prices, carriage, interest_rate) -> list:
         if not price_here or price_here <= 0.0:
             continue
         best = None
-        best_net = None
+        best_net = -math.inf
+        best_years = 1
         floor_cost = price_here * (1.0 + interest + MERCHANT_MARGIN_SHARE)
         interest_here = price_here * interest              # the terms of gap_cost_per_unit, hoisted
         margin_here = MERCHANT_MARGIN_SHARE * price_here
-        cost_to = carriage.costs_from(source.anchor_tile)
-        for price_there, kept_there, spoilage_there, anchor_tile, area_id, destination in dearest_first:
+        cost_to_get = carriage.costs_from(source.anchor_tile).get
+        worth_beating = 0.0                                # no cheaper destination can beat this (the best net so far, once positive)
+        for price_there, kept_there, spoilage_there, anchor_tile, _area_id, destination in dearest_first:
             # carriage only adds cost, so no cheaper destination can beat this bound
-            bound = kept_there - floor_cost
-            if bound <= 0.0 or (best_net is not None and bound <= best_net):
+            if kept_there - floor_cost <= worth_beating:
                 break
-            if area_id == source.area_id:
-                continue
-            per_tonne = cost_to.get(anchor_tile, math.inf)
-            if per_tonne == math.inf:
-                continue
+            # the source's own area nets a loss (equal prices, positive margin) and an unreachable tile nets -inf
+            per_tonne = cost_to_get(anchor_tile, math.inf)
             net = price_there - price_here - (per_tonne * unit_mass / KILOGRAMS_PER_TONNE
                                               + interest_here + spoilage_there + margin_here)
-            if net > 0.0 and (best_net is None or net > best_net):
-                best, best_net = (destination, per_tonne), net
+            if net > 0.0:       # a haul held more years pays interest and spoilage for each
+                held_years = years_between(carriage, source.anchor_tile, anchor_tile)
+                if held_years > 1:
+                    net -= interest_here * (held_years - 1) + price_there * (
+                        merchants_transit.lost_share(spec.spoilage_per_year, held_years) - spoilage)
+                if net > worth_beating:
+                    best, best_net, best_years = (destination, per_tonne), net, held_years
+                    worth_beating = net
         if best is None:
             continue
         destination, per_tonne = best
         carriage_per_unit = per_tonne * unit_mass / KILOGRAMS_PER_TONNE
         outlay = price_here + carriage_per_unit
         rows.append((-best_net / outlay, good, source, destination, price_here, outlay,
-                     _break_even_price(spec, prices[destination.area_id], carriage_per_unit, interest_rate)))
+                     _break_even_price(spec, prices[destination.area_id], carriage_per_unit, interest_rate, best_years)))
     return rows
 
 
-def _break_even_price(spec: GoodSpec, price_there: float, carriage_per_unit: float, interest_rate: float) -> float:
+def _break_even_price(spec: GoodSpec, price_there: float, carriage_per_unit: float, interest_rate: float,
+                      years: int = 1) -> float:
     """The source price at which the gap just covers carriage, interest, spoilage and margin
     (gap_cost_per_unit solved for the price here): above it the trade loses money."""
-    kept = price_there * (1.0 - min(1.0, max(0.0, spec.spoilage_per_year))) - carriage_per_unit
-    return max(0.0, kept) / (1.0 + max(0.0, interest_rate) + MERCHANT_MARGIN_SHARE)
+    kept = price_there * (1.0 - merchants_transit.lost_share(spec.spoilage_per_year, years)) - carriage_per_unit
+    return max(0.0, kept) / (1.0 + max(0.0, interest_rate) * years + MERCHANT_MARGIN_SHARE)
 
 
 def held_by_good(held_stock) -> Dict[GoodId, List[Tuple[TileId, float]]]:
@@ -244,6 +279,7 @@ def shared_room(merchant, good, source, destination, held_stock, own: RouteShare
     if held_index is None:
         held_index = held_by_good(held_stock)
     held = sum(quantity for tile, quantity in held_index.get(good, ()) if tile in destination.tiles)
+    held += sum(each.quantity for each in merchant.in_transit if each.good == good and each.destination_tile in destination.tiles)
     return room_left(merchant.expected_volumes, good, source.area_id, destination.area_id, MERCHANT_MARKET_SHARE,
                      own, group, held)
 
@@ -251,50 +287,81 @@ def shared_room(merchant, good, source, destination, held_stock, own: RouteShare
 def dispatch(merchant: Merchant, fills: Sequence[Fill], carriage: CarriageTable,
              specs: Mapping[GoodId, GoodSpec], currency: CurrencyId, cash: float,
              held_stock: Mapping[Tuple[GoodId, TileId], float],
-             carrier_of: Callable[[TileId], Optional[AgentId]] = lambda _tile: EDGE_CARRIAGE) -> Dispatch:
+             carrier_of: Callable[[TileId], Optional[AgentId]] = lambda _tile: EDGE_CARRIAGE,
+             crew: Optional[CrewHire] = None) -> Dispatch:
     """Carry what the merchant holds on each route's source tile (this year's purchases and older stock)
     to the route's destination, paying carriage from `cash` to `carrier_of(source tile)` (the edge when
-    it names nobody). `fills` are not needed: what settled is what is held."""
-    moves, transfers, stranded = [], [], []
+    it names nobody). `fills` are not needed: what settled is what is held.
+    With `crew`, a shipment's crew hours (its fee times `hours_per_money`) must have been hired: every
+    route is cut by the same share when the hours hired fall short, and the fee is paid less the crew's
+    wages, which the labour market has already paid."""
+    shipments = []
     remaining = max(0.0, cash)
+    wanted: Dict[TileId, float] = {}
     for (good, tile), route in sorted(merchant.routes.items()):
         if route[0] == tile:
             continue
         per_unit = carriage.cost_per_tonne(tile, route[0]) * specs[good].unit_mass_kg / KILOGRAMS_PER_TONNE
+        crew_money = 0.0 if crew is None else min(per_unit, per_unit * crew.hours_per_money * crew.wage)
         quantity = held_stock.get((good, tile), 0.0)
-        affordable = quantity if per_unit <= 0.0 else min(quantity, remaining / per_unit)
-        if affordable < quantity:
-            stranded.append((good, tile, quantity - affordable))
-        if affordable <= 0.0:
+        net_unit = per_unit - crew_money
+        affordable = quantity if net_unit <= 0.0 else min(quantity, remaining / net_unit)
+        hours_unit = 0.0 if crew is None else per_unit * crew.hours_per_money
+        wanted[tile] = wanted.get(tile, 0.0) + quantity * hours_unit
+        shipments.append([good, tile, route, quantity, affordable, per_unit, crew_money, hours_unit])
+        remaining -= affordable * net_unit
+    scale = 1.0
+    if crew is not None:
+        needed = math.fsum(row[4] * row[7] for row in shipments)
+        if crew.hours_hired is not None and needed > crew.hours_hired:
+            scale = max(0.0, crew.hours_hired) / needed
+    moves, transfers, stranded = [], [], []
+    for good, tile, route, quantity, affordable, per_unit, crew_money, _hours_unit in shipments:
+        carried = affordable * scale
+        if carried < quantity:
+            stranded.append((good, tile, quantity - carried))
+        if carried <= 0.0:
             continue
-        moves.append(DeliveredMove(merchant.agent_id, merchant.agent_id, good, tile, affordable,
-                                   "carried to market", route[0]))
-        fee = affordable * per_unit
+        years = merchants_transit.years_between(carriage, tile, route[0])
+        if years > 1:      # the haul outlasts the year: it waits on the road and arrives in the year its days put it in
+            merchant.in_transit.append(merchants_transit.Shipment(good, carried, route[0], years - 1))
+        moves.append(DeliveredMove(merchant.agent_id, merchants_transit.EDGE_TRANSIT if years > 1 else merchant.agent_id,
+                                   good, tile, carried, "carried to market", route[0]))
+        fee = carried * (per_unit - crew_money)
         if fee > 0.0:
             transfers.append(Transfer(merchant.agent_id, carrier_of(tile) or EDGE_CARRIAGE, currency, fee,
                                       "carriage of %s" % good))
-            remaining -= fee
-    return Dispatch(tuple(moves), tuple(transfers), tuple(stranded))
+    return Dispatch(tuple(moves), tuple(transfers), tuple(stranded), wanted)
 
 
 def close_year(merchant: Merchant, prices: Mapping[Tuple[GoodId, AreaId], float],
                volumes: Mapping[Tuple[GoodId, AreaId], float], cash: float,
                held_stock: Mapping[Tuple[GoodId, TileId], float],
                area_of: Callable[[GoodId, TileId], AreaId], currency: CurrencyId,
-               interest_rate: float, ordered: Optional[Tuple[Sequence, Sequence]] = None) -> Tuple[Transfer, ...]:
+               interest_rate: float, ordered: Optional[Tuple[Sequence, Sequence]] = None,
+               lag_years: Callable[[GoodId, AreaId], Optional[int]] = lambda good, area: 0) -> Tuple[Transfer, ...]:
     """Update expectations from this year's clearing prices and volumes (by (good, area)), then settle
     the year's profit (wealth, cash plus stock at expected prices, above the capital base). While
     trading earns more on its capital than the interest rate, the owner takes a share and the rest
     becomes capital; otherwise the owner takes all of it. A loss shrinks the capital. `ordered` is the
-    sorted items of `prices` and of `volumes`, for a caller closing many merchants on the same year."""
+    sorted items of `prices` and of `volumes`, for a caller closing many merchants on the same year.
+    A price from a market `lag_years(good, area)` years of news away is learned that many years late; a market
+    with no lag (None: its area no longer exists in the current map) is not heard from."""
     if ordered is None:
         ordered = (sorted(prices.items()), sorted(volumes.items()))
-    for expectation, observed in ((merchant.expected_prices, ordered[0]), (merchant.expected_volumes, ordered[1])):
-        for key, value in observed:
-            old = expectation.get(key)
-            expectation[key] = value if old is None else old + MERCHANT_EXPECTATION_SPEED * (value - old)
+    for key, value in ordered[0]:
+        lag = lag_years(*key)
+        if lag is None:
+            continue
+        news = merchants_transit.heard(merchant, key, value, lag)
+        if news is not None:
+            _expect(merchant.expected_prices, key, news)
+    for key, value in ordered[1]:
+        _expect(merchant.expected_volumes, key, value)
     stock_value = math.fsum(quantity * merchant.expected_prices.get((good, area_of(good, tile)), 0.0)
                             for (good, tile), quantity in held_stock.items() if quantity > 0.0)
+    stock_value += math.fsum(each.quantity * merchant.expected_prices.get((each.good, area_of(each.good, each.destination_tile)), 0.0)
+                             for each in merchant.in_transit)
     wealth = cash + stock_value
     profit = wealth - merchant.capital_base
     if profit <= 0.0:
@@ -307,3 +374,8 @@ def close_year(merchant: Merchant, prices: Mapping[Tuple[GoodId, AreaId], float]
     if payout <= 0.0:
         return ()
     return (Transfer(merchant.agent_id, merchant.owner, currency, payout, "merchant profit"),)
+
+
+def _expect(expectation: Dict, key, value: float) -> None:
+    old = expectation.get(key)
+    expectation[key] = value if old is None else old + MERCHANT_EXPECTATION_SPEED * (value - old)

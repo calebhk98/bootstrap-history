@@ -4,6 +4,7 @@ function in fresh interpreters, since a hash seed is fixed at start-up."""
 
 QUICK_TOPIC = True
 
+
 import json
 import os
 import subprocess

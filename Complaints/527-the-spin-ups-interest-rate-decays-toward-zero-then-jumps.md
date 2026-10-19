@@ -16,3 +16,13 @@ it rises when loan requests exceed funds offered.
 
 Likely cause found since: the clearing uses ceilings below zero from requests that cannot borrow (547).
 The settled test also cannot pass while the rate approaches zero (548).
+
+After 547 the rate no longer goes negative on the small fixture, but it still decays by the sticky share a
+year toward the lowest ask while no one asks for loans (economy.py's no-requests branch), then climbs fast
+when requests appear. Still open.
+
+The lowest ask is `HOUSEHOLD_TIME_PREFERENCE` plus the saver's expected inflation, floored at zero
+(`households_orders.py`). While the spin-up's price level falls (473, 526), expected inflation is negative and
+the ask goes to zero, so a rate drifting down to it with no borrowers is the funds market answering
+deflation, not a separate defect. The jump is the same rate moving off a near-zero base, which looks large
+only as a ratio (548). Re-measure after the opening is fixed (526, 545) before changing `_lend`.

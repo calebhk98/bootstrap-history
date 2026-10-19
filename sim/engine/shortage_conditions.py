@@ -18,7 +18,7 @@ def material_words(material):
 def slowed_projects(sim):
     """The active projects the standing shortage actually slows, in id order; none when nothing running draws it."""
     return [node_id for node_id in sorted(sim.state.projects.active_keys_sorted())
-            if sim.project_resource_throttle(node_id) < 1.0]
+            if sim.peek_project_resource_throttle(node_id)[0] < 1.0]
 
 
 def note_shortage(sim, material, throughput):

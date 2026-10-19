@@ -81,7 +81,6 @@ check("the external edge's own orders are not part of the summarised book",
 # --- (b) a game on the agent economy answers for home once a year has cleared, and moves with cargo.
 game = agent_game()
 game.step()
-game.step()
 world = SimWorld(game)
 home = world._home_place()
 answering = [material for material in world.trade_materials() if world.price_after_cargo(material, home, 0.0, True) is not None]
@@ -115,7 +114,7 @@ def coin_imbalance(played):
 
 
 with_cargo = game
-imbalance_without_cargo = coin_imbalance(with_cargo)   # the two years played so far carried no trader cargo
+imbalance_without_cargo = coin_imbalance(with_cargo)   # the year played so far carried no trader cargo
 world = SimWorld(with_cargo)
 home = world._home_place()
 priced = [m for m in world.trade_materials()
@@ -171,7 +170,7 @@ def home_run(played):
     # the capital of the traders together buys many times what the market trades in a year
     capital_tonnes = 10.0 * volumes.get(material + "|" + area_of(material), 0.0) * tonnes_per_unit(material)
     backs, marginal = [], []
-    for _year in range(2):
+    for year in range(2):
         world = SimWorld(played)
         terms = route_terms(world, PARTNER, home, material)
         back = 0.0
@@ -185,7 +184,8 @@ def home_run(played):
         if back > 0.0:
             world.ship(TRADER, material, back, PARTNER, home)
         backs.append(back)
-        played.step()
+        if year == 0:   # the second year's cargo is read before anything else would happen, so it is not played out
+            played.step()
     return backs, marginal
 
 

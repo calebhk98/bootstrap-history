@@ -57,7 +57,9 @@ class LivingStockGrowthMixin:
         if place is None:
             return None
         grazing = sum(self.stock_held(material) * kilograms_per_unit(material) for material in pastured_materials)
-        return max(0.0, pasture_capacity_kg(place, self.state.economy.wild_stock, self.world_map) - grazing)
+        carried = sum(pasture_capacity_kg(tile, self.state.economy.wild_stock, self.world_map)
+                      for tile in tiles_held(self.civ, self.world_map))
+        return max(0.0, carried - grazing)
 
     def nursery_room_units(self, material, place):
         """Units of the material the place's arable land can raise in a year at its production entry's output

@@ -46,9 +46,15 @@ def _sold_and_price(result, seller: str) -> Tuple[float, float]:
 
 
 def sold_and_price(bids: Sequence[Bid], rivals: Sequence[Offer], offer: Offer, reservation: float,
-                   last_price: Optional[float]) -> Tuple[float, float]:
-    """What the seller sells, and the clearing price, if it offers its quantity at `reservation`."""
-    return _sold_and_price(_clear(bids, rivals, offer, reservation, last_price), offer.seller)
+                   last_price: Optional[float], buyers: Optional[goods_market.Buyers] = None) -> Tuple[float, float]:
+    """What the seller sells, and the clearing price, if it offers its quantity at `reservation`. `buyers` is
+    `goods_market.Buyers(bids, last_price)` when the caller asks for several sellers in one market: the
+    figures are then read off the book without building fills, exactly as `goods_market.clear` gives them."""
+    if buyers is None or is_edge(offer.seller):
+        return _sold_and_price(_clear(bids, rivals, offer, reservation, last_price), offer.seller)
+    ordered = goods_market.with_offer(goods_market.in_clearing_order(rivals), replace(offer, reservation_price=reservation))
+    price, sold = goods_market.price_and_sold(buyers, ordered, offer.seller)
+    return sold, price
 
 
 def profit_at(bids: Sequence[Bid], rivals: Sequence[Offer], offer: Offer, reservation: float,

@@ -3,10 +3,11 @@ gap buyers left."""
 
 QUICK_TOPIC = True
 
+import math
 import unittest
 
-from sim.economy import entry, entry_sizing
-from sim.economy.types import Recipe
+from sim.economy import entry, entry_backed, entry_sizing
+from sim.economy.types import Bid, Recipe
 from sim.tests.test_economy_producers import View
 
 SALT = Recipe("boil_salt", {"salt": 10.0}, {"firewood": 5.0}, {"hand": 2.0}, {"pan": 1.0}, {}, 10.0)
@@ -20,10 +21,11 @@ def view():
     return View(prices={"salt": 1.0, "firewood": 0.1, "pan": 2.0}, wages={"hand": 0.2})
 
 
-def plans(unmet, volumes):
-    """volumes: good -> traded last year; a good left out has no market."""
+def plans(unmet, volumes, unfilled=None):
+    """volumes: good -> traded last year; a good left out has no market. unfilled: quantity bids left unfilled."""
     return entry.entry_plans({"boil_salt": SALT}, view(), market(unmet), None, None,
-                             lambda good, tile: volumes.get(good))
+                             lambda good, tile: volumes.get(good), None,
+                             None if unfilled is None else (lambda recipe_id, good, tile: unfilled))
 
 
 class EntrantSizingTests(unittest.TestCase):
@@ -32,6 +34,25 @@ class EntrantSizingTests(unittest.TestCase):
         chosen = plans(1e6, {"salt": 200.0, "firewood": 1e9, "pan": 1e9})
         expected = entry_sizing.ENTRY_SHARE_OF_TRADED_VOLUME * 200.0 / SALT.outputs["salt"]
         self.assertAlmostEqual(chosen[0].runs, expected)
+
+    def test_unfilled_bids_at_the_entrants_cost_count_with_the_trade(self):
+        # 200 traded, but bids for 600 more went unfilled at a price the works would meet: sized to the 800
+        chosen = plans(1e6, {"salt": 200.0, "firewood": 1e9, "pan": 1e9}, unfilled=600.0)
+        expected = entry_sizing.ENTRY_SHARE_OF_TRADED_VOLUME * 800.0 / SALT.outputs["salt"]
+        self.assertAlmostEqual(chosen[0].runs, expected)
+
+    def test_a_starved_market_that_traded_nothing_is_sized_to_its_unfilled_bids(self):
+        chosen = plans(2000.0, {"salt": 0.0, "firewood": 1e9, "pan": 1e9}, unfilled=600.0)
+        expected = entry_sizing.ENTRY_SHARE_OF_TRADED_VOLUME * 600.0 / SALT.outputs["salt"]
+        self.assertAlmostEqual(chosen[0].runs, expected)
+
+    def test_no_unfilled_bids_leave_the_gap_sized_to_the_trade(self):
+        chosen = plans(1e6, {"salt": 200.0, "firewood": 1e9, "pan": 1e9}, unfilled=0.0)
+        self.assertAlmostEqual(chosen[0].runs, entry_sizing.ENTRY_SHARE_OF_TRADED_VOLUME * 200.0 / SALT.outputs["salt"])
+
+    def test_unfilled_bids_never_size_a_works_beyond_the_gap(self):
+        chosen = plans(100.0, {"salt": 200.0, "firewood": 1e9, "pan": 1e9}, unfilled=1e6)
+        self.assertAlmostEqual(chosen[0].runs, 100.0 * entry.ENTRY_SHARE_OF_UNMET_DEMAND / SALT.outputs["salt"])
 
     def test_a_gap_inside_the_trade_keeps_its_share(self):
         chosen = plans(100.0, {"salt": 1e6, "firewood": 1e9, "pan": 1e9})
@@ -61,6 +82,20 @@ class EntrantSizingTests(unittest.TestCase):
     def test_goods_with_no_market_do_not_limit(self):
         chosen = plans(100.0, {"salt": 1e6})
         self.assertAlmostEqual(chosen[0].runs, 100.0 * entry.ENTRY_SHARE_OF_UNMET_DEMAND / SALT.outputs["salt"])
+
+
+class UnfilledBidsTests(unittest.TestCase):
+    def bid(self, floor, maximum_price):
+        return Bid("buyer", "salt", "area", "tile", floor, 0.0, 1.0, 1.0, 1e9, maximum_price=maximum_price)
+
+    def test_only_bids_that_pay_the_cost_count_and_the_trade_is_taken_off(self):
+        bids = [self.bid(500.0, 3.0), self.bid(400.0, 0.5)]
+        self.assertAlmostEqual(entry_backed.unfilled_quantity(bids, 1.0, 200.0), 300.0)
+        self.assertEqual(entry_backed.unfilled_quantity(bids, 1.0, 900.0), 0.0)
+        self.assertAlmostEqual(entry_backed.unfilled_quantity(bids, 0.25, 0.0), 900.0)
+
+    def test_a_cost_that_cannot_be_priced_backs_nothing(self):
+        self.assertEqual(entry_backed.unfilled_quantity([self.bid(500.0, 3.0)], math.inf, 0.0), 0.0)
 
 
 if __name__ == "__main__":

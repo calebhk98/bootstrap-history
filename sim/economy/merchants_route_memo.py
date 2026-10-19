@@ -23,11 +23,12 @@ def routes_for_good(carriage, good, areas, spec, prices: tuple, interest_rate: f
     except TypeError:                                  # a carriage that cannot be weakly held is not memoised
         return search()
     slots = memo.setdefault(good, [])
-    for slot_areas, slot_spec, slot_prices, slot_rate, rows in slots:
-        if slot_areas is areas and slot_spec == spec and slot_rate == interest_rate and slot_prices == prices:
+    for slot_areas, slot_spec, slot_prices, slot_rate, slot_scale, rows in slots:
+        if slot_areas is areas and slot_spec == spec and slot_rate == interest_rate and slot_prices == prices \
+                and slot_scale == getattr(carriage, "scale", 1.0):
             return rows
     rows = search()
-    slots.append((areas, spec, prices, interest_rate, rows))
+    slots.append((areas, spec, prices, interest_rate, getattr(carriage, "scale", 1.0), rows))
     del slots[:-SLOTS_PER_GOOD]
     return rows
 

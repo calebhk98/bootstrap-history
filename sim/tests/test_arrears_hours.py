@@ -30,7 +30,10 @@ _reserve_af = max(0.0, _fixed_af - s_af.revenue())
 # Mildly in arrears - well clear of credit_limit (so enforce_credit_limit
 # does not wipe `active` out from under this check), but still enough for
 # THIS PROJECT's own purse (capital + 0.6*limit - reserve) to be negative.
-s_af.capital = -(_reserve_af + 0.6 * _lim_af) - 50.0
+# Arrears are just deep enough for that purse to be negative (50 short of it), not deeper: a deeper
+# debt costs interest at the market rate, and at a high rate one year's interest alone could carry
+# the household past the limit.
+s_af.capital = min(-1.0, _reserve_af - 0.6 * _lim_af - 50.0)
 check("set-up: in arrears, but nowhere near the credit limit itself, with "
       "a project that owes nothing further",
       s_af.capital > -_lim_af

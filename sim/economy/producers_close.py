@@ -16,7 +16,7 @@ from sim.constants import declare
 
 from . import unit_cost
 from .producers import (OUTPUT_CHANGE_SHARE_PER_YEAR, Producer, expected_output_prices, live_input_prices,
-                        live_wages, next_expectations, share_working)
+                        live_wages, next_expectations, share_working, within_a_years_change)
 from .protocols import MarketView
 from .types import AgentId, GoodId, LoanRequest, Recipe, TileId, Transfer
 from .replaced import replaced
@@ -51,6 +51,9 @@ EXPANSION_SHARE_PER_YEAR = declare(
     unit="share of current capacity added in a year", source=None, confidence="D",
     why="Plant takes time to build and a lender to find; how fast a profitable producer grows is "
         "bounded by both, which are not yet modelled. A bound keeps growth gradual.")
+WORKING_CAPITAL_PURPOSE = "working capital"     # a loan for next year's running costs, never for plant
+
+
 @dataclass(frozen=True)
 class YearClose:
     producer: Producer
@@ -111,6 +114,9 @@ def close_year(producer: Producer, recipe: Recipe, revenue: float, costs: float,
     target = working_capital_target(recipe, capacity, inputs, wages)
     request, rebuilt = _expansion(producer, recipe, view, currency, rate, wear, inputs, wages,
                                   price_share_after)
+    if request is None:
+        request = _working_capital(producer, recipe, currency, worked, capacity, min(cash, target), paying,
+                                   revenue_per_run, inputs, wages)
     survivor = replaced(producer, capacity_runs=capacity, years_of_loss=losses,
                        expected_prices=expectations, cash_target=target)
     surplus = max(0.0, cash - target)
@@ -128,6 +134,23 @@ def _expected_run(producer, recipe, view, expectations, inputs, wages) -> Tuple[
     if not math.isfinite(cost):
         return 0.0, math.inf
     return unit_cost.revenue_per_run(recipe, prices) * producer.yield_factor, cost
+
+
+def _working_capital(producer, recipe, currency, worked, capacity, cash_kept, paying, revenue_per_run, inputs, wages):
+    """A one-year loan for the running cost of the runs next year's plan will smooth toward but the cash kept
+    cannot pay for, at no more than the yearly return those runs earn on that cost. None when a run earns
+    nothing or the cash covers them."""
+    paid_now = unit_cost.variable_cost_per_run(recipe, inputs, wages)
+    if not math.isfinite(paid_now) or paid_now <= 0.0 or revenue_per_run <= paid_now:
+        return None
+    smoothed = within_a_years_change(replaced(producer, last_runs=worked, capacity_runs=capacity),
+                                     capacity * paying)
+    short_runs = smoothed - cash_kept / paid_now
+    if short_runs <= 0.0:
+        return None
+    amount = short_runs * paid_now
+    return LoanRequest(producer.agent_id, currency, amount, (revenue_per_run - paid_now) / paid_now, 1.0, amount,
+                       WORKING_CAPITAL_PURPOSE)
 
 
 def _dividend(producer: Producer, currency: str, amount: float) -> Tuple[Transfer, ...]:

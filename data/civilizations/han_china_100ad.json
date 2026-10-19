@@ -488,6 +488,9 @@
     "mat_paper": "Han paper (bark, hemp, rag) was beaten by hand-worked pestles; the water-driven stamper in rag_paper is the later mill process."
   },
   "starting_techs": [
+    "fud_cattle_herd",
+    "fud_goat_herd",
+    "fud_sheep_flock",
     "bellows_water_blown",
     "blast_furnace",
     "cap_heat_0700",

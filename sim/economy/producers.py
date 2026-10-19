@@ -94,6 +94,7 @@ class Producer:
     last_runs: float = -1.0                 # runs it worked last year; below zero before its first year
     land_rent_per_run: float = 0.0          # rent on the land a run works, set yearly by the land market
     land_run_cap: float = -1.0              # runs the land it was granted allows; below zero for no limit
+    workshops: int = 1                      # independent workshops it stands for: each newcomer to its recipe and tile joins it
 
 
 @dataclass(frozen=True)
@@ -264,13 +265,16 @@ def plan(producer: Producer, recipe: Recipe, view: MarketView, cash: float) -> P
     margin = revenue - variable
     if producer.capacity_runs <= 0.0 or revenue <= 0.0 or not math.isfinite(variable):
         return Plan(0.0, expected_margin_per_run=margin)
+    # cash pays what the market asks now (as the cash target is struck); the lagging expectation only chooses runs
+    paying_prices = {**inputs, **market_inputs}
     held_value = sum(min(view.stock(producer.agent_id, good, producer.tile), quantity * producer.capacity_runs)
-                     * inputs[good] for good, quantity in recipe.inputs.items())
-    paid_now = variable - rent                  # rent falls due at the year's end, out of the sales
+                     * paying_prices[good] for good, quantity in recipe.inputs.items())
+    paid_now = unit_cost.input_cost_per_run(recipe, paying_prices) + labour_cost     # rent falls due at the year's end, out of the sales
     affordable = (max(cash, 0.0) + held_value) / paid_now if paid_now > 0.0 else producer.capacity_runs
-    runs = max(0.0, min(producer.capacity_runs * share_working(revenue, variable), affordable,
-                        runs_for_stock(producer, recipe, view, variable, outputs)))
-    runs = within_a_years_change(producer, runs)
+    # working off stock is a choice and moves at the year's pace; cash and held inputs bind after it
+    chosen = min(producer.capacity_runs * share_working(revenue, variable),
+                 runs_for_stock(producer, recipe, view, variable, outputs))
+    runs = max(0.0, min(within_a_years_change(producer, chosen), affordable))
     wanted = runs
     if producer.land_run_cap >= 0.0:
         runs = min(runs, producer.land_run_cap)

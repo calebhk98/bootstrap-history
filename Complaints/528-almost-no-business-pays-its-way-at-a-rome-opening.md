@@ -13,3 +13,5 @@ cost), the opening's low wages and income (526), and node takings that still com
 plant's own output at market prices (510/514). What it would take: a committed command (or `opening-checks` row)
 that counts the concerns whose takings at opening prices exceed their running cost, per civilisation, and a
 relationship check that a plausible share of the technologies a society already holds pay their way at its opening.
+
+**Measure:** `python3 sim/simulator.py opening-checks --civs rome_100ad --concerns-only` (add `--json` for structured rows) counts, per civilisation, the held concerns whose takings exceed their running cost and lists the payers and the biggest losers. It is reported, never a failing check; it reuses the entry test's figures (`SimWorld.entry_gross`, `business_books.yearly_costs`, `firm_entry.carrying_cost`) in `sim/agents/concern_scan.py`. The relationship check (what share should pay) is still to decide.

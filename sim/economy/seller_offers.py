@@ -5,7 +5,8 @@ if its own offer moves the clearing price (seller_pricing.py), asks the reservat
 profit; a producer that does not move the price keeps the reservation `producers.offers` gave it. What a
 unit is worth to the seller unsold is the cheaper of replacing it (its variable cost per unit) and holding
 it (its price-taking reservation), so a seller never prices below what a unit costs it to make or keep.
-A seller that moves the price may also raise its ask above the price-taking one, which holds units back
+A producer that stands for several workshops (Producer.workshops above one) is not a seller but a crowd of
+price takers: it keeps the price-taking reservation and neither searches nor raises. A seller that moves the price may also raise its ask above the price-taking one, which holds units back
 (restraint) when the dearer, smaller sale earns more. A change either way is bounded by the share a seller
 already marks its ask down in a year (UNSOLD_ASK_MARKDOWN_SHARE), so an ask moves over the years as the
 book changes and never jumps in one; an ask raised past what buyers pay goes unsold and is marked down
@@ -68,6 +69,14 @@ def substitution_markup(setup, offer: Offer) -> float:
     return elasticity / (elasticity - 1.0) if elasticity > 1.0 else math.inf
 
 
+def stands_for_many(record, offer: Offer) -> bool:
+    """True for a producer that stands for several independent workshops (entry.py joins each newcomer to
+    the tile's producer): each workshop takes the price, so the aggregate offers its units at their
+    price-taking reservations and does not withhold supply against its residual demand."""
+    producer = record.producers.get(offer.seller)
+    return producer is not None and producer.workshops > 1
+
+
 def strategic_offers(setup, record, view, bids: Sequence[Bid], offers: Sequence[Offer],
                      last_price: Optional[float]) -> List[Offer]:
     """`offers` with each moving producer's reservation re-chosen, in agent order."""
@@ -87,12 +96,22 @@ def strategic_offers(setup, record, view, bids: Sequence[Bid], offers: Sequence[
         value = unit_value(offer, cost)
         rivals = offers[:index] + offers[index + 1:]
         ask = max(offer.reservation_price, 0.0)
-        limit = cost * substitution_markup(setup, offer)
+        crowd = stands_for_many(record, offer)
+        # a crowd of price takers earns no markup: the dearest ask it holds when nothing sells is its cost
+        limit = cost if crowd else cost * substitution_markup(setup, offer)
         if ask > limit and math.isfinite(limit):
-            sold, _price = seller_pricing.sold_and_price(book, rivals, offer, ask, last_price)
+            sold, _price = seller_pricing.sold_and_price(book, rivals, offer, ask, last_price, buyers)
             if sold < IDLE_SALE_SHARE * offer.quantity:
                 offers[index] = dataclasses.replace(offer, reservation_price=limit)
                 continue
+        if crowd:
+            # unsold stock at an ask above cost: the crowd marks down by the share of its offer left unsold, never below cost
+            if ask > cost and math.isfinite(cost):
+                sold, _price = seller_pricing.sold_and_price(book, rivals, offer, ask, last_price, buyers)
+                unsold_share = 1.0 - sold / offer.quantity if offer.quantity > 0.0 else 0.0
+                if unsold_share > 0.0:     # close the gap to cost by the share of the offer left unsold
+                    offers[index] = dataclasses.replace(offer, reservation_price=ask - unsold_share * (ask - cost))
+            continue
         step = UNSOLD_ASK_MARKDOWN_SHARE * (ask if ask > 0.0 else max(last_price or 0.0, 0.0))
         floor = ask * (1.0 - UNSOLD_ASK_MARKDOWN_SHARE)
         choice = seller_pricing.best_reservation(

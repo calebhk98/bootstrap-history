@@ -376,6 +376,10 @@ class Book:
     def edge_goods_net(self, edge_id: AgentId, good: GoodId) -> float:
         return self._edge_goods_net.get(edge_id, {}).get(good, 0.0)
 
+    def edge_goods_agents(self) -> List[AgentId]:
+        """Edge accounts that carried goods this year."""
+        return sorted(self._edge_goods_net)
+
     def currencies(self) -> List[CurrencyId]:
         return sorted({currency for purse in self._money.values() for currency in purse})
 

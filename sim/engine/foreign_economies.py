@@ -94,7 +94,7 @@ class ForeignEconomiesMixin(ForeignRoutesMixin, ForeignCapacityMixin, ForeignPay
         gate = self.partner_gate_refusal(civilization_id)
         if gate:
             return gate
-        civilization = load_civ(civilization_id)
+        civilization = self.partner_civ(civilization_id)
         name = civilization.get("name", civilization_id)
         government = self.partner_government(civilization_id)
         if government is None:
@@ -120,7 +120,7 @@ class ForeignEconomiesMixin(ForeignRoutesMixin, ForeignCapacityMixin, ForeignPay
             cache = self.household._foreign_facts_cache = {}
         cached = cache.get(civilization_id)
         known_techs = (len(self.state.projects.done), self.state.scenario.year)
-        civilization = load_civ(civilization_id)
+        civilization = self.partner_civ(civilization_id)
         coin = civilization["coin_standard"]
         coin_price = self.goods_market.home_unit_price(coin["material"])
         if cached is not None and cached[0] is prices and cached[2] == known_techs and cached[3] == coin_price:

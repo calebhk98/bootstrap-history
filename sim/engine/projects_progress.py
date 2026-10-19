@@ -171,7 +171,7 @@ class ProgressMixin:
         the same resource throttle step() applies."""
         project_state = self.state.projects.active[node_id]
         return (min(project_state["ph_left"], self.project_hour_pace(node_id))
-                * self.project_resource_throttle(node_id))
+                * self.peek_project_resource_throttle(node_id)[0])
 
     def trade_shortage_kind(self, trade_id, need, total_demand=None):
         """Why a trade is short for a project that wants `need` hours a year

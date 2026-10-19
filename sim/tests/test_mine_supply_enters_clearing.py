@@ -40,7 +40,7 @@ def ore_after_the_years(runs_allowed, runs_allowed_later=None):
             return fixture.quiet_year(setup)
         return fixture.quiet_year(setup, site_limits=limits(runs_allowed_later))
     _economy, outcomes = fixture.run(setup, years=YEARS, inputs_for_year=inputs_for_year)
-    return outcomes[-1].output.get(fixture.ORE), outcomes[-1].prices[fixture.ORE]
+    return outcomes[-1].output.get(fixture.ORE, 0.0), outcomes[-1].prices[fixture.ORE]
 
 
 class AgentEconomyMineTests(unittest.TestCase):

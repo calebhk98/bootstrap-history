@@ -207,6 +207,9 @@ class _Partner(foreign_capacity.ForeignCapacityMixin):
     def _material_tag(self, material):
         return material, material
 
+    def partner_civ(self, civilization_id):
+        return {"population": 10.0}
+
     def _foreign_can_make(self, civilization_id, material, solved):
         return self._can_make
 
@@ -224,8 +227,7 @@ class PartnerSupplyTests(unittest.TestCase):
     """A partner sells no more than it makes or holds."""
 
     def _supply(self, partner, material="ore_kg"):
-        with mock.patch.object(foreign_capacity, "load_civ", lambda civilization_id: {"population": 10.0}):
-            return partner.foreign_supply_tonnes("partner", material)
+        return partner.foreign_supply_tonnes("partner", material)
 
     def test_a_good_the_partner_cannot_make_supplies_nothing(self):
         self.assertEqual(self._supply(_Partner(can_make=False)), 0.0)

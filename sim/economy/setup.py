@@ -57,6 +57,8 @@ class EconomySetup:
     port_tile: TileId
     unskilled_trade: TradeId = "labourer"
     carriage_rates_balanced: Dict[str, float] = field(default_factory=dict)   # likewise with the opposite flow filling every return; none: same
+    carriage_crew: Dict[str, Tuple[str, float]] = field(default_factory=dict)   # land mode id -> (crew trade, crew hours per tonne-km), geography's; none: carriage hires no hours
+    carriage_wage: float = 0.0     # the wage an hour (unskilled trade) the land carriage rates were priced at; 0: they follow no wage
     hunger_need: str = "food"           # the basket need whose unmet floor counts as hunger
     yield_factor_by_recipe_tile: Dict[str, float] = field(default_factory=dict)
     land_per_run: Dict[str, float] = field(default_factory=dict)      # hectare-years of land a run takes

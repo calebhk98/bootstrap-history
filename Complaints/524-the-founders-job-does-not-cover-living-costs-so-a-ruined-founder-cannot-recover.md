@@ -1,6 +1,6 @@
 # The founder's job does not cover living costs, so a ruined founder cannot climb back
 
-**Status:** open
+**Status:** open (the two `insolvency_whole_game` checks now pass; the income side below is still unbuilt)
 
 Since Complaint 518 the founder's whole standing income is the one `_wages_for_your_own_work` line (the unspoken-for
 hours sold in the held trade at the market wage). In a Rome game whose concerns are shut or never opened that income is
@@ -25,3 +25,12 @@ overdrawn purse plus the yearly deficit crossed the limit within one step, so th
 What it would take: the opening's wages (507 Stage 2) so a held trade pays at least what the founder lives on, or a
 reason a ruined founder sheds living cost faster (`living_cost` carries a household base that does not fall with
 income). Re-measure both checks after 507 Stage 2 before changing either.
+
+## Partial fix
+
+A household in arrears no longer pays for dependants its income cannot carry (`dependants_beyond_means`, charged in
+`_step_money_seat`): after upkeep, the rest of the living cost and interest, only the share of the surplus the
+creditors do not take (`DEBT_SERVICE_SHARE_OF_SURPLUS`) keeps dependants. Debt stays inside the limit and cash rises
+in `python3 -m sim.tests --slow --only insolvency_whole_game`. What remains is the opening's wages (507 Stage 2): the
+standing job still pays less than `living_cost()` reports, and that figure (and the credit floor priced on it) still
+counts the full dependants.

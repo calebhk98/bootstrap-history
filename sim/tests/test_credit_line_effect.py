@@ -62,4 +62,4 @@ seat = FakeSim({"mod_x:bank": {"flat": 150.0}}, acting_seat="second_seat").credi
 check("the effect widens the limit for any seat, not the founder's alone", seat == flat, (seat, flat))
 capped = FakeSim({"mod_x:bank": {"flat": 1.0e9}}).credit_limit()
 check("a wide effect stays bounded by what income can service",
-      capped == FLOOR + EARNING * FakeSim.CREDIT_SURPLUS_YEARS_MULTIPLE, capped)
+      abs(capped - (FLOOR + (EARNING - FLOOR * STARTING_RATE) * FakeSim.CREDIT_SURPLUS_YEARS_MULTIPLE)) < 1e-9, capped)

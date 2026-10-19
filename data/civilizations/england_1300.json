@@ -512,6 +512,9 @@
     "mat_paper": "Paper reaches England as an import from Italy and Spain; the stamper-mill rag-paper process (rag_paper) is not practised there."
   },
   "starting_techs": [
+    "fud_cattle_herd",
+    "fud_goat_herd",
+    "fud_sheep_flock",
     "ag2_composting",
     "ag2_liming",
     "ag2_malting",
