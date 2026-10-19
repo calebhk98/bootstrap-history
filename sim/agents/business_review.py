@@ -135,3 +135,11 @@ def reopen(business: "Business", owner: Any, world: Any) -> List[str]:
 	"""Bring back the plants shut for want of staff that the owner can staff again, the first in its order first."""
 	shut = [plant.entry_key for plant in business.plants if plant.state != OPERATING and plant.reason == STAFF_SHORT]
 	return [entry_key for entry_key in owner.reopening_order(shut, world) if owner.reopens_staffed_plant(entry_key, world)]
+
+
+def seize_all(business: "Business", owner: Any, world: Any) -> List[Closure]:
+	"""The owner defaults: its creditors take every plant it has, running or shut. The knowledge stays with the owner."""
+	closed: List[Closure] = []
+	for entry_key in list(business.entry_keys()):
+		_close(business, owner, world, entry_key, CREDITOR_SEIZURE, closed)
+	return closed

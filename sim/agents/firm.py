@@ -6,7 +6,7 @@ the market with every other operator.
 """
 from typing import Any, Callable, List, Optional
 
-from . import business_books, firm_exit
+from . import business_books, business_review, firm_exit
 from .base import RecordedActor
 from .firm_expansion import ExpansionMixin
 from .borrowing import TRACK_RECORD_YEARS
@@ -49,7 +49,8 @@ class Firm(ExpansionMixin, RecordedActor):
 			margin = (business_books.operate(self.business, self, node_id, world, rivals)
 					  - business_books.carry(self.business, self, node_id, world))
 			self.record.last_margin = margin
-			self.record.loss_years = self.record.loss_years + 1 if margin < 0 else 0
+			self.business.note_year(node_id, margin)
+		self.record.loss_years = self.business.longest_loss_run()
 		if self.record.loss_years == 0 and self.concerns:
 			weak = firm_exit.earns_less_than_plant_would_lend_for(self, world)
 			self.record.weak_years = self.record.weak_years + 1 if weak else 0
@@ -76,7 +77,9 @@ class Firm(ExpansionMixin, RecordedActor):
 			return
 		super().act(world)
 		self.operate(world, interest)
-		if EXIT_LOSS_YEARS <= max(self.record.loss_years, self.record.weak_years, self.record.insolvent_years):
+		had_plants = bool(self.concerns)
+		self.business.review(self, world, rules=(business_review.LOSS_MAKING,))
+		if (had_plants and not self.concerns) or EXIT_LOSS_YEARS <= max(self.record.weak_years, self.record.insolvent_years):
 			firm_exit.close_firm(self, world)
 		else:
 			self.expand(world)

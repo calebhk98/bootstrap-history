@@ -192,6 +192,10 @@ class Business:
 		"""Close the plants the rules shut for this owner (see `business_review`); what closed and why."""
 		return business_review.review(self, owner, world, rules)
 
+	def seize_all(self, owner: Any, world: Any) -> List[business_review.Closure]:
+		"""The owner defaults and its creditors take every plant; what was taken."""
+		return business_review.seize_all(self, owner, world)
+
 	def review_reopening(self, owner: Any, world: Any) -> List[str]:
 		"""Reopen the plants shut for want of staff that the owner can staff again; what reopened."""
 		return business_review.reopen(self, owner, world)
