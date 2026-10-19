@@ -9,7 +9,7 @@ from typing import Any, Iterable, Optional
 
 from sim.agents import api as agents_api
 from sim.agents.api import edges as edge_names
-from sim.economy import api as economy_api
+from . import economy_port_effects as economy_api
 
 from . import world_events
 from .mods_base import ModError

@@ -27,6 +27,7 @@ EVENT_KINDS = {
     "debt_bondage": _entry(SACK, failure=True),
     "wage_cascade": _entry(DEMOGRAPHIC),
     "hazard_hit": _entry(DEMOGRAPHIC, notable=True),
+    "world_hazard": _entry(DEMOGRAPHIC),
     "colony_died_out": _entry(notable=True),
     "credit_exhausted": _entry(ECONOMIC, failure=True, stop=True, notable=True),
     "credit_near_limit": _entry(ECONOMIC, failure=True, stop=True),
