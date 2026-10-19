@@ -13,6 +13,16 @@
       "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
       "fatality_confidence": "D"
     },
+    "baker": {
+      "family": "craft",
+      "note": "Mixes, shapes and bakes bread in a masonry oven and keeps the fire. Cooks and tavern keepers are a separate owner decision (Complaint 530).",
+      "training_years": 3,
+      "training_source": "Author's estimate, conf D: bakers were bound as apprentices for several years in medieval guild practice (recalled, not opened); three years is a guess set beside the miller.",
+      "tool_basket": ["timber"],
+      "fatality_risk_per_year": 0.0,
+      "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
+      "fatality_confidence": "D"
+    },
     "carpenter": {
       "family": "craft",
       "training_years": 5,

@@ -121,6 +121,7 @@
   "cacao_kg": {"satisfies": {"food": 1.6}},
   "starch_kg": {"satisfies": {"food": 1.05}},
   "flour_kg": {"satisfies": {"food": 1.0}},
+  "bread_kg": {"satisfies": {"food": 0.69}, "basis": "Calories of the flour in a kilogram of loaf: the flour factor times the flour in a kilogram of bread (data/production/95_bread.json); water and baking add no food energy.", "conf": "C"},
   "wine_common_kg": {"satisfies": {"food": 0.2}},
 
   "brick_1000": {"satisfies": {"shelter": 1.4}},
