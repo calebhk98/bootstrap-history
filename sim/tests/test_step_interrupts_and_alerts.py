@@ -106,8 +106,10 @@ check("a quiet step has an empty alerts list", quiet.get("alerts") == [], quiet.
 # ---- the per-year hook belongs to one command: a played command clears it afterwards,
 # so a later step in the same process does not also save into that command's session file
 from sim.ui import cli_interactive as _interactive
+from sim.ui.save_policy import SavePolicy
 _hook_sim = collapse
 _hook_session = os.path.join(tempfile.mkdtemp(), "hooked.json")
-_interactive._play_run_one_command(_hook_sim, _hook_sim.nodes, {"cmd": "state"}, _hook_session)
+_interactive._play_run_one_command(_hook_sim, _hook_sim.nodes, {"cmd": "state"}, _hook_session,
+                                      SavePolicy(_hook_session))
 check("the per-year save hook is cleared once the played command is done",
       step_progress._after_year[0] is None, step_progress._after_year[0])
