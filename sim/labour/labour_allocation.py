@@ -127,7 +127,7 @@ class LabourAllocationMixin:
         if people:
             # The unskilled fallback's people are the pool the farm and every other trade draw on, so
             # their headcount says nothing about how many hours non-farm work takes.
-            pool = trade_data.fallback_trade(self.wage_schedule().training_years, self._world.trade_family)
+            pool = trade_data.fallback_trade_of(self._world, self.wage_schedule().training_years)
             held = {trade: count for trade, count in people.items()
                     if trade not in (FARM_TRADE, pool) and count > 0.0}
             total = sum(held.values())
@@ -150,7 +150,7 @@ class LabourAllocationMixin:
         """What the wage rule weighs against the hours worked: the allocation's need, plus the people
         under arms as demand on the unskilled pool that the society's hours no longer cover."""
         needed = self._hours_needed_by_trade()
-        fallback = trade_data.fallback_trade(self.wage_schedule().training_years, self._world.trade_family)
+        fallback = trade_data.fallback_trade_of(self._world, self.wage_schedule().training_years)
         needed[fallback] = needed.get(fallback, 0.0) + self._people_under_arms() * HOURS_PER_FARM_WORKER_YEAR
         return needed
 
