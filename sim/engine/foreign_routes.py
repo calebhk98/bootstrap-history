@@ -10,8 +10,6 @@ see where goods travel.
 """
 import dataclasses
 import functools
-from dataclasses import dataclass
-from typing import Tuple
 
 from sim.constants import declare
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
@@ -24,6 +22,7 @@ from sim.geography.api import transport as freight_physics
 
 from . import action_results, foreign_route_choice
 from .domestic_haul import DomesticHaulMixin
+from .haul_route import Leg, Route, route_from_geography  # noqa: F401  (re-exported)
 from .data import load_civ
 
 CARAVAN_STRING_SIZE = declare(
@@ -41,45 +40,6 @@ RAIL_MODE = "rail"
 CANAL_MODE = "canal"
 # Vehicles and hulls are priced as their timber (their iron fittings are left out).
 FREIGHT_VEHICLE_MATERIAL = "wood_kg"
-
-
-@dataclass(frozen=True)
-class Leg:
-    origin: str
-    destination: str
-    mode: str
-    distance_km: float
-    cost_per_tonne: float
-    travel_days: float = 0.0
-
-
-@dataclass(frozen=True)
-class Route:
-    """A haul over tiles: legs in order from the partner's tiles to this society's."""
-    legs: Tuple[Leg, ...]
-
-    @property
-    def cost_per_tonne(self):
-        return sum(leg.cost_per_tonne for leg in self.legs)
-
-    @property
-    def distance_km(self):
-        return sum(leg.distance_km for leg in self.legs)
-
-    @property
-    def travel_days(self):
-        return sum(leg.travel_days for leg in self.legs)
-
-    def describe(self):
-        return " > ".join("%s -%s-> %s" % (leg.origin, leg.mode, leg.destination) for leg in self.legs)
-
-
-def route_from_geography(found):
-    """A `Route` from the geography contract's answer (its handling days count as travel)."""
-    return Route(tuple(
-        Leg(leg["from"], leg["to"], leg["mode"], leg["km"], leg["cost_per_tonne"],
-            leg["days"] + leg.get("handling_days", 0.0))
-        for leg in found["legs"]))
 
 
 @functools.lru_cache(maxsize=None)
@@ -195,15 +155,16 @@ class ForeignRoutesMixin(DomesticHaulMixin):
         a haul of a material takes it from the domestic flow ledger, `domestic_haul_money_per_tonne`)."""
         return self._freight_mode_costs(imbalance, ("cart",))["cart"]
 
-    def domestic_cargo_cost_share(self, material, distance_km):
-        """The cargo's own cost over a domestic haul as a share of its price: interest at the market
-        rate while it travels, and what is lost to spoilage in that time (and, for a herd on the
-        road, the daily loss the mode states). No merchant margin (domestic carriers' margins are
+    def domestic_cargo_cost_share(self, material, route):
+        """The cargo's own cost over a domestic haul (a `Route`) as a share of its price: interest at the
+        market rate while it travels, and what is lost to spoilage in that time (and, for a herd on the
+        road, the daily loss each leg's mode states). No merchant margin (domestic carriers' margins are
         not modelled)."""
-        mode = self._domestic_haul_mode(self._cargo_class(material))
-        years = freight_cost.days_on_leg(distance_km, self._carrier_models()[mode][0]) / 365.0
+        years = route.travel_days / 365.0
         spoilage = cargo_cost.spoilage_share(cargo_cost.spoilage_rates().get(material, 0.0), years)
-        road = cargo_cost.daily_loss_share(cargo_loss_per_day(self.world_map).get(mode, 0.0), years * 365.0)
+        loss_per_day = cargo_loss_per_day(self.world_map)
+        road = cargo_cost.lost_share(*(cargo_cost.daily_loss_share(loss_per_day.get(leg.mode, 0.0), leg.travel_days)
+                                       for leg in route.legs))
         return trader_response.cost_share_of_price(
             0.0, cargo_cost.lost_share(spoilage, road), self.market_rate(), years)
 
@@ -230,19 +191,28 @@ class ForeignRoutesMixin(DomesticHaulMixin):
         which walks overland and is shipped over water)."""
         civilization_record = civilization if isinstance(civilization, dict) else load_civ(civilization)
         foreign_techs = action_results.expand(self.nodes, frozenset(civilization_record.get("starting_techs") or ()))
-        home_techs = self.held_and_running(include_starting=False)
         if imbalance is None:
             imbalance = self._foreign_flow_imbalance(civilization_record.get("id"))
+        return self._haul_route(tiles_held(civilization_record, self.world_map), imbalance, cargo, foreign_techs)
+
+    def _haul_route(self, origin_tiles, imbalance, cargo, partner_techs=None, improvements=None):
+        """The cheapest `Route` from `origin_tiles` to this society's tiles, leg by leg, each leg at its
+        mode's money rate with the mode's dues at every change of mode: the one haul pricing foreign trade
+        and domestic hauls of materials share. The modes are those this society holds (and, for a foreign
+        haul, `partner_techs` too) that carry the cargo. None when no mode joins the tiles."""
+        home_techs = self.held_and_running(include_starting=False)
+        techs = home_techs | partner_techs if partner_techs is not None else home_techs
         mode_costs = self._freight_mode_costs(imbalance)
-        modes = [mode for mode in usable_route_modes((home_techs, foreign_techs), self.world_map, cargo)
+        modes = [mode for mode in usable_route_modes(
+                    (home_techs, partner_techs) if partner_techs is not None else (home_techs,), self.world_map, cargo)
                  if mode in mode_costs]
-        origin_tiles, destination_tiles = tiles_held(civilization_record, self.world_map), tiles_held(self.civ, self.world_map)
+        destination_tiles = tiles_held(self.civ, self.world_map)
         handling = self._freight_handling_costs()
 
         def search(rates):
             found = route_over_tiles(
-                origin_tiles, destination_tiles, modes, mode_costs=rates, handling_costs=handling,
-                held_nodes=home_techs | foreign_techs, world_map=self.world_map)
+                origin_tiles, destination_tiles, modes, improvements, mode_costs=rates, handling_costs=handling,
+                held_nodes=techs, world_map=self.world_map)
             return None if found is None else self._with_carried_provisions(route_from_geography(found))
         return foreign_route_choice.choose_route(
             search, lambda route: route.cost_per_tonne, mode_costs, self._share_delivered_on)
