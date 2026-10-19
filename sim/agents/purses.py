@@ -152,12 +152,14 @@ class Purses:
         if not held:
             return
         debt = sum(held.values())
-        repaid = min(debt, self.purse(borrower))
+        purse = self.purse(borrower)
+        repaid = min(debt, purse)
         if repaid > DEBT_FLOOR:   # a purse of rounding residue repays nothing
             for lender, principal in sorted(held.items()):
-                part = min(repaid * principal / debt, max(0.0, self.purse(borrower)))   # shares sum to the purse only to rounding
+                part = min(repaid * principal / debt, max(0.0, purse))   # shares sum to the purse only to rounding
                 if part > DEBT_FLOOR:
                     self.book.transfer(Transfer(borrower, lender, COIN, part, FACILITY_REPAYMENT))
+                    purse -= part   # what the book now holds for the borrower
                     self.contracts.repay_facility(borrower, lender, part)
                     self._tell(lender, part, REPAID)
         self.contracts.tidy_facility(borrower, DEBT_FLOOR)

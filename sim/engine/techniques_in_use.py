@@ -27,7 +27,7 @@ class TechniquesInUseMixin:
 
     def techniques_in_use(self):
         """Nodes whose production entries some producer runs now."""
-        epoch = self.techniques_epoch()
+        epoch = (self.household.done_version, self.household.operating_version, self.concern_set_version())
         cached = getattr(self, "_techniques_in_use_cache", None)
         projects = self.state.projects
         if (cached is not None and cached[0] == epoch and cached[2] is projects.done
@@ -49,6 +49,13 @@ class TechniquesInUseMixin:
         year = self.state.scenario.year
         economy = self.state.economy
         first_run = economy.technique_first_run
+        granted = frozenset(self.state.projects.granted)
+        stamp = (year, granted, len(first_run), economy.technique_record_started)
+        cached = getattr(self, "_techniques_spread_cache", None)
+        if cached is not None and cached[0] is in_use and cached[1] is first_run and cached[2] == stamp:
+            return cached[3]    # the same techniques seen in the same year: nothing new to note or to spread
         technique_spread.note_first_run(first_run, in_use, year, not economy.technique_record_started)
         economy.technique_record_started = True
-        return technique_spread.spread_techniques(in_use, self.state.projects.granted, first_run, self.nodes, year)
+        spread = technique_spread.spread_techniques(in_use, granted, first_run, self.nodes, year)
+        self._techniques_spread_cache = (in_use, first_run, (year, granted, len(first_run), True), spread)
+        return spread

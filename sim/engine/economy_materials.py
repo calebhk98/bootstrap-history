@@ -214,6 +214,21 @@ class MaterialSupplyMixin:
             table[entry] = compute()
         return table[entry]
 
+    def _producers_memo(self, name, key, compute):
+        """`compute()` remembered per (name, key) while the economy's producers are unchanged (they change only
+        as its year closes); for answers that read nothing but the producers. An answer of None is not kept."""
+        stamp = self.economy.producers_stamp()
+        memo = getattr(self, "_producers_memo_store", None)
+        if memo is None or memo[0] != stamp:
+            memo = self._producers_memo_store = (stamp, {})
+        entry = (name, key)
+        if entry not in memo[1]:
+            answer = compute()
+            if answer is None:      # not yet known (the economy is opening): ask again
+                return None
+            memo[1][entry] = answer
+        return memo[1][entry]
+
     def _priced_key(self, tag, prices):
         """The key of `prices` that prices a raw material key (for example aluminium_kg) or a curated commodity id
         (the material its `price_material` names). None if `prices` cannot price it."""
