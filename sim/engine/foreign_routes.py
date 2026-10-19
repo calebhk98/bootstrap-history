@@ -213,7 +213,8 @@ class ForeignRoutesMixin(DomesticHaulMixin):
             found = route_over_tiles(
                 origin_tiles, destination_tiles, modes, improvements, mode_costs=rates, handling_costs=handling,
                 held_nodes=techs, world_map=self.world_map)
-            return None if found is None else self._with_carried_provisions(route_from_geography(found))
+            return None if found is None else self._with_carried_provisions(
+                route_from_geography(found), mode_costs, rates)
         return foreign_route_choice.choose_route(
             search, lambda route: route.cost_per_tonne, mode_costs, self._share_delivered_on)
 
@@ -237,11 +238,13 @@ class ForeignRoutesMixin(DomesticHaulMixin):
         """Days of travel between places a mode's carrier restocks; none for a hull at sea."""
         return None if mode == SEA_MODE else provisions.RESTOCK_INTERVAL_DAYS
 
-    def _with_carried_provisions(self, route):
+    def _with_carried_provisions(self, route, base_rates=None, searched_rates=None):
         """The route with each leg priced per tonne delivered: the crew's and animals' food and water
         ride on the carrier and take lift from the cargo (`provisions.restocked_share`), a land carrier
         restocking every few days and a hull at the leg's ends. Handling is not scaled; a stage the
-        carrier cannot provision makes the leg impassable."""
+        carrier cannot provision makes the leg impassable. A leg found on `searched_rates` (the
+        `base_rates` already over the mean leg's share) is re-priced at its own share, so the food is
+        counted once."""
         models = self._carrier_models()
         handling = self._freight_handling_costs()
         legs = []
@@ -251,9 +254,19 @@ class ForeignRoutesMixin(DomesticHaulMixin):
                 continue
             fee = handling.get(leg.mode, 0.0)
             share = provisions.restocked_share(models[leg.mode][0], leg.distance_km, self._restock_days(leg.mode))
+            counted = self._share_in_rate(leg.mode, base_rates, searched_rates)
             legs.append(dataclasses.replace(
-                leg, cost_per_tonne=fee + max(0.0, leg.cost_per_tonne - fee) / share if share > 0.0 else float("inf")))
+                leg, cost_per_tonne=fee + max(0.0, leg.cost_per_tonne - fee) * counted / share
+                if share > 0.0 else float("inf")))
         return Route(tuple(legs))
+
+    @staticmethod
+    def _share_in_rate(mode, base_rates, searched_rates):
+        """Share of lift a searched rate already divides a mode's base rate by (1 when it carries none)."""
+        if not base_rates or not searched_rates:
+            return 1.0
+        base, searched = base_rates.get(mode, 0.0), searched_rates.get(mode, 0.0)
+        return base / searched if 0.0 < base and 0.0 < searched < float("inf") else 1.0
 
     def _route_freight_per_tonne(self, civilization, imbalance=None):
         """Home money to haul a tonne over the cheapest route; infinite when
