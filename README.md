@@ -138,3 +138,4 @@ quick run does not mean the full suite passed. Use `--only` with a topic name
 from `--list` to check the area you changed, and run the full suite before
 opening a pull request. Add `--jobs N` to limit parallel workers. After editing
 anything in `data/`, also run `python3 sim/simulator.py validate`.
+<!-- Test PR connectivity check -->
