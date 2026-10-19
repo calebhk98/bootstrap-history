@@ -51,10 +51,11 @@ class _ConcernWatch:
 	so a state holding a watched business still copies."""
 
 	def __init__(self, firm_id: str, holders: Dict[str, Set[str]], version: List[int],
-				 totals: ConcernTotals, record: Any) -> None:
+				 totals: ConcernTotals, record: Any, concern_set_version: List[int]) -> None:
 		self.firm_id = firm_id
 		self.holders = holders
 		self.version = version
+		self.concern_set_version = concern_set_version
 		self.totals = totals
 		self.record = record
 		self.known: Set[str] = set()
@@ -63,6 +64,7 @@ class _ConcernWatch:
 		current = set(self.record.business.entry_keys())
 		if current != self.known:
 			self.version[0] += 1
+			self.concern_set_version[0] += 1
 		for node_id in self.known - current:
 			self.holders[node_id].discard(self.firm_id)
 		for node_id in current - self.known:
@@ -93,6 +95,8 @@ class ActorRegistry:
 		self._bans: Optional[Dict[str, str]] = None
 		# bumped whenever any firm's concerns change, so market caches keyed on it stay honest
 		self.version: List[int] = [0]
+		# bumped only when the set of concerns a firm runs changes, not when a concern's size does
+		self.concern_set_version: List[int] = [0]
 		self._totals = ConcernTotals()
 		# country -> the world its actors see this year (rebuilt every `advance`)
 		self._scoped: Dict[str, Any] = {}
@@ -123,7 +127,7 @@ class ActorRegistry:
 				actor.on_capacity_change = self.note_capacity_change
 			if hasattr(type(actor), "find_actor"):
 				actor.find_actor = self.get
-			watch = _ConcernWatch(actor_id, self._holders, self.version, self._totals, record)
+			watch = _ConcernWatch(actor_id, self._holders, self.version, self._totals, record, self.concern_set_version)
 			record.business.watch = watch
 			watch()
 		self.actors[actor_id] = actor

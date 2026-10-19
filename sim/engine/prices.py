@@ -554,11 +554,22 @@ def _tree_nodes() -> Dict[str, Any]:
 
 def _unheld_steps_to(node_id: str, held: Set[str]) -> int:
     """How many technologies not yet held stand between a society and this one, itself included."""
-    from .data import closure
     nodes = _tree_nodes()
     if node_id not in nodes:
         return len(nodes)
-    return len(closure(nodes, node_id) - held)
+    return len(_requirements_of(nodes, node_id) - held)
+
+
+def _requirements_of(nodes: Dict[str, Any], node_id: str) -> FrozenSet[str]:
+    """Everything a node needs, itself included; worked out once per tree, since the tree does not change."""
+    cached = _TREE_NODES.setdefault("requirements", {})
+    if cached.get("tree") is not nodes:
+        cached.clear()
+        cached["tree"] = nodes
+    if node_id not in cached:
+        from .data import closure
+        cached[node_id] = frozenset(closure(nodes, node_id))
+    return cached[node_id]
 
 
 def production_entries_outputs(production_entries: ProductionEntries) -> Set[str]:
@@ -567,6 +578,19 @@ def production_entries_outputs(production_entries: ProductionEntries) -> Set[str
 
 def entries_in_reach(held: Set[str], held_gate_nodes: FrozenSet[str], resolvable_materials: Set[str],
                      production_entries: ProductionEntries) -> FrozenSet[str]:
+    """`_entries_in_reach`, remembered per argument set: a society asks again for the techniques it holds."""
+    memo = _TREE_NODES.setdefault("in_reach", {})
+    if memo.get("entries") is not production_entries:
+        memo.clear()
+        memo["entries"] = production_entries
+    key = (frozenset(held), frozenset(held_gate_nodes), frozenset(resolvable_materials))
+    if key not in memo:
+        memo[key] = _entries_in_reach(held, held_gate_nodes, resolvable_materials, production_entries)
+    return memo[key]
+
+
+def _entries_in_reach(held: Set[str], held_gate_nodes: FrozenSet[str], resolvable_materials: Set[str],
+                      production_entries: ProductionEntries) -> FrozenSet[str]:
     """Keys of techniques not held that make only materials the held set cannot make, where the technique
     is the fewest research steps away for every material it makes.
 

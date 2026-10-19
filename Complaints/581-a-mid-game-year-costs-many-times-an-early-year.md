@@ -14,3 +14,27 @@ What it would take: profile a year from a mid-game save, find which costs grow w
 plants, contracts or recorded history rather than with the year's own activity (caches keyed on state that changes
 every year, solves repeated per concern, histories kept and scanned), and make them linear in the year's activity;
 a test on call counts that a year's work does not grow with the number of past years.
+
+## Progress (still open)
+
+Profiled by loading the 143 AD save in-process (the economy's opening skipped, the save restores it) and stepping
+one year, with a per-phase timer and cProfile. What grew with the number of firms, not with the year's activity:
+
+- The theft charge read the loans total (`lent_share`, a scan of every facility contract) once per actor: now once per
+  pass (`charge_actors_for_theft`). This was the largest single cost.
+- A concern's price table (`_concern_prices_in_hours`) and the techniques it may reach (`entries_in_reach`, with each
+  node's requirements) were rebuilt for every concern, because their memo was dropped whenever any firm changed size.
+  They now key on what they read: the techniques held and the civilisation; the catalogue and the arguments.
+- The producers list and the input haul days were rebuilt per concern for the same reason (and the list twice per
+  call); they now key on the economy's producer stamp only (`_producers_memo`).
+- `techniques_in_use` walked every firm after every size change; it now watches only changes to the set of concerns
+  (`concern_set_version`). `techniques_spread` is kept for the same techniques in the same year.
+- `Purses._repay` and `Contracts.tidy_facility` did several passes over a facility of many lenders for every interest
+  receipt; same arithmetic in fewer passes.
+
+Measure: `python3 -m sim.tests --only year_cost_shared_across_concerns` (call counts), and a year from the save with
+the per-phase timer. The cost left is the interest cascade (each borrower pays every lender, each lender that is
+itself a borrower scans its own facility: lenders per borrower squared per firm, a consequence of
+`LENDER_MATERIALITY`, Complaint 580), the labour quotes that rebuild a shared answer whenever a firm changes size
+(`view_share._view_world_stamp` includes the registry version), `tiles_held` rescanning the owner map per call, and the
+patent and entry scans over all actors per firm.
