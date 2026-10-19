@@ -7,6 +7,7 @@ against the household actor's `employees`, so a firm or state can use them.
 import math
 
 from sim.refusal import LogLine
+from sim.world import demography
 
 from . import trade_data
 
@@ -98,7 +99,7 @@ class StaffLedgerMixin:
         policy = self._world.state.founder.policy
         return {
             "depends_on_one_person": self.sole_supervisors(),
-            "expected_losses_per_year": round(sum(household.employees.values()) * self._world.STAFF_ATTRITION_RATE, 2),
+            "expected_losses_per_year": round(sum(household.employees.values()) * demography.BASELINE_ANNUAL_MORTALITY_RATE_WORKING_AGE, 2),
             "reserve": ({"craftsmen": household.reserve_craftsmen, "scholars": household.reserve_scholars}
                         if policy.get("reserve_staff", False) else None),
             "in_training": len(household.training),

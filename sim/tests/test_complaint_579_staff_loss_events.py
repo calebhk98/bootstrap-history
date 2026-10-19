@@ -11,7 +11,8 @@ _game._done_changed()
 _game.employees["artisan"] = 6.0
 _game.labour._resync_pools()
 _game.open_venture(_node_id)
-_game.STAFF_ATTRITION_RATE = 1.0     # every hired craftsman leaves this year
+_game.state.founder.policy["keep_pay_at_market"] = False
+_game.state.household.staff_pay_held["artisan"] = 1e-6     # paid next to nothing: every hired craftsman takes an offer
 
 _reply = ask_agent(_game, cmd="step", years=3)
 _events = _reply["events"]
@@ -34,7 +35,8 @@ check("...and what it stops earning", "stops_earnings_per_year" in _closure["fac
 _quiet = sim(capital=1_000_000.0)
 _quiet.employees["artisan"] = 3.0
 _quiet.labour._resync_pools()
-_quiet.STAFF_ATTRITION_RATE = 1.0
+_quiet.state.founder.policy["keep_pay_at_market"] = False
+_quiet.state.household.staff_pay_held["artisan"] = 1e-6
 _quiet_events = ask_agent(_quiet, cmd="step", years=1)["events"]
 _left = [event for event in _quiet_events if str(event.get("event_kind", "")).startswith("staff_lost")]
 check("a departure that stops nothing is a plain staff_lost event with no stops",

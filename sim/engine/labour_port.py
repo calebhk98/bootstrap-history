@@ -99,10 +99,6 @@ class LabourWorld:
         return self._sim.ROOM_SOURCES
 
     @property
-    def STAFF_ATTRITION_RATE(self):
-        return self._sim.STAFF_ATTRITION_RATE
-
-    @property
     def STAFF_CAPACITY_SOURCES(self):
         return self._sim.STAFF_CAPACITY_SOURCES
 

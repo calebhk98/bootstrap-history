@@ -917,6 +917,10 @@ def _cmd_policy(sim, nodes, cmd, ended):
                                         "glassblower) when the last one "
                                         "supervising an open concern is lost. "
                                         "Off by default",
+                "keep_pay_at_market": "pay each trade's staff the going wage every year, so they leave only at "
+                                      "the rate the market's own workers change employer. Off: pay stays at the "
+                                      "last settled figure, costs less while wages rise, and staff paid below the "
+                                      "market take better offers. On by default",
                 "reserve_staff": "keep the spare craftsmen and scholars set by "
                                  "'reserve craftsmen N' / 'reserve scholars N' above "
                                  "what open concerns hold, hiring (and buying "

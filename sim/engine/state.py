@@ -98,6 +98,8 @@ class HouseholdState:
 	worker_housing_places: Optional[int] = None
 	# spare generic hands the reserve_staff policy keeps above what concerns hold (`reserve`)
 	reserve_craftsmen: int = 0
+	# yearly pay per person by trade as last settled; follows the market while keep_pay_at_market is on
+	staff_pay_held: Dict[str, float] = field(default_factory=dict)
 	reserve_scholars: int = 0
 	# a planned project and the cash target put by for it (`saving`)
 	saving_for: Optional[str] = None
