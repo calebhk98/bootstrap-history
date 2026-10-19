@@ -11,6 +11,9 @@ from . import solve_cache
 SPIN_UP_SOURCE_MODULES = ("sim.engine.economy_port_year",)
 
 
+KEY_FLOAT_DIGITS = 12
+
+
 def _plain(value, ancestors=()):
     """JSON-able content of `value`: objects by what they hold, paths in the checkout relative to it.
     An object's `_` attributes are memos built from the rest (the map's route rates) and are left out;
@@ -18,7 +21,9 @@ def _plain(value, ancestors=()):
     if isinstance(value, str):
         inside = value.startswith(solve_cache._ROOT + os.sep)
         return os.path.relpath(value, solve_cache._ROOT) if inside else value
-    if value is None or isinstance(value, (bool, int, float)):
+    if isinstance(value, float):
+        return float("%.*g" % (KEY_FLOAT_DIGITS, value))    # a last-place difference (a coin's scale) is not a different setup
+    if value is None or isinstance(value, (bool, int)):
         return value
     if any(value is ancestor for ancestor in ancestors):
         raise TypeError("cannot key the spin-up on a %s that contains itself" % type(value).__name__)
