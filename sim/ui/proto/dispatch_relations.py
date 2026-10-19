@@ -10,7 +10,10 @@ from sim.json_files import read_json
 
 from .command_registry import command
 
-SETTABLE = ("stance", "note", "term")
+SETTABLE = ("stance", "note", "term", "embargo")
+TARIFF_TERM = "tariff"   # a term that is the relation's own tariff field, which the markets read
+MAX_TARIFF = 5.0
+EMBARGO_WORDS = {"on": True, "off": False, True: True, False: False}
 
 
 def _stances():
@@ -89,12 +92,14 @@ def _number_or_text(text):
 
 
 @command("set_relation", shape="text", group="society",
-         summary="set your country's stance, a treaty term or a note toward another country",
+         summary="set your country's stance, tariff, embargo, treaty term or note toward another country",
          usage=["set_relation <country> stance <stance>", "set_relation <country> note <text>",
-                "set_relation <country> term <name> <value>",
+                "set_relation <country> term <name> <value>", "set_relation <country> term tariff <share>",
+                "set_relation <country> embargo on|off",
                 '{"cmd":"set_relation","with":"<country>","stance":"friendly","note":"...","term":"<name>","value":3}'],
          options={"<country>": "the other country", "stance": "one of the stances 'relations' lists on a refusal",
-                  "note": "your private words on that country (cut when long)", "term": "a treaty term name, with value",
+                  "note": "your private words on that country (cut when long)", "term": "a treaty term name, with value; 'tariff' is the share of goods' value your state charges on goods from that country",
+                  "embargo": "on stops goods from that country crossing into your markets; off lifts it",
                   "side": "only your own country is accepted: you cannot set another country's side"},
          description="Sets your country's side of the pair; the other country's side is its own to set. Notes and terms "
                      "are kept with the country, not the seat.")
@@ -115,10 +120,20 @@ def _cmd_set_relation(sim, nodes, cmd, ended):
         return _refusal("unknown_stance", "the stances are %s." % ", ".join(stances), choices=stances)
     if cmd.get("term") is not None and not str(cmd["term"]).strip():
         return _refusal("nothing_to_set", "a term needs a name.")
+    if cmd.get("embargo") is not None and cmd["embargo"] not in EMBARGO_WORDS:
+        return _refusal("unknown_embargo", "an embargo is 'on' or 'off'.", choices=["on", "off"])
+    if str(cmd.get("term") or "").strip() == TARIFF_TERM:
+        share = cmd.get("value")
+        if share is not None and (isinstance(share, bool) or not isinstance(share, (int, float)) or not 0.0 <= share <= MAX_TARIFF):
+            return _refusal("bad_tariff", "a tariff is a share of the goods' value between 0 and %g; 0.1 is a tenth." % MAX_TARIFF)
     if cmd.get("stance") is not None:
         relations.set_side(sim.stores, country, other, stance=cmd["stance"])
     if cmd.get("note") is not None:
         relations.set_side(sim.stores, country, other, note=str(cmd["note"]))
-    if cmd.get("term") is not None:
+    if cmd.get("embargo") is not None:
+        relations.set_side(sim.stores, country, other, embargo=EMBARGO_WORDS[cmd["embargo"]])
+    if str(cmd.get("term") or "").strip() == TARIFF_TERM:
+        relations.set_side(sim.stores, country, other, tariff=cmd.get("value") or None)   # no share, or none, removes it
+    elif cmd.get("term") is not None:
         relations.set_term(sim.stores, country, other, str(cmd["term"]).strip(), cmd.get("value"))
     return dict({"ok": True, "country": country}, **_row(sim, country, other))
