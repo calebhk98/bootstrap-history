@@ -1,4 +1,4 @@
-"""Complaint 565: a map overlay's `places` catalogue names the places on a tile, and `map` and `move` carry them."""
+"""Complaint 637: a map overlay's `places` catalogue names the places on a tile, and `map` and `move` carry them."""
 import unittest
 
 from sim.geography import map_source, tile_names
