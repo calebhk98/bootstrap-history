@@ -362,10 +362,19 @@ class ProductionMixin:
             "productivity data.")
     CAPABILITY_FACTOR_HALF_SATURATION_REV = money_units.PricedInLabourHours("CAPABILITY_FACTOR_HALF_SATURATION_REV_LABOUR_HOURS")
 
+    def concern_goods_have_market(self, node_id):
+        """Whether the economy prices what the concern sells; a good nobody has sold yet has none, and its
+        quote then values sales and purchases alike at long-run cost rather than mixing the two bases."""
+        baskets = self.concern_baskets_now(node_id)
+        paid = self.economy.agent_prices_at()
+        if baskets is None or paid is None:
+            return True
+        return all(self._priced_key(material, paid) is not None for material in baskets.outputs)
+
     def node_output_market_factor(self, node):
         """This year's market over long-run prices for what an output-derived node sells and buys; one otherwise."""
         baskets = self.concern_baskets_now(node["id"])
-        if baskets is None:
+        if baskets is None or not self.concern_goods_have_market(node["id"]):
             return 1.0
         return node_revenue_market.market_factor(
             {"_output_per_year": baskets.outputs, "_purchases_per_year": baskets.purchases},

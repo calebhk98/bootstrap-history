@@ -309,12 +309,15 @@ class TrainingMixin:
         # the trade, with no number, gives a player no way to notice a
         # request for eight landing as one. A verb that takes a quantity
         # has to report the quantity.
-        return True, ("%g %s%s taken on for %s (a finder's fee and the "
-                      "first year in advance). You now have %.1f, and %.2f "
-                      "household place(s) left.%s"
-                      % (count, trade, "" if count == 1 else "s",
-                         self._world.money_text(fee, grouped=True), household.employees[trade],
-                         max(0.0, self.household_room()), unfound))
+        text = ("%g %s%s taken on for %s (a finder's fee and the "
+                "first year in advance). You now have %.1f, and %.2f "
+                "household place(s) left.%s"
+                % (count, trade, "" if count == 1 else "s",
+                   self._world.money_text(fee, grouped=True), household.employees[trade],
+                   max(0.0, self.household_room()), unfound))
+        if unfound:
+            return True, Refusal("search_found_fewer", text, asked=float(asked), hired=float(count))
+        return True, text
 
     def fire(self, trade, count):
         """Let staff go. Their wages stop; so does what they were doing.
