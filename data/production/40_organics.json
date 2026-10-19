@@ -118,7 +118,7 @@
     "salt_kg": 20.0
    },
    "labour_hours": {
-    "labourer": 250.0
+    "herder": 250.0
    },
    "unit_dimension": "mass",
    "basis": "per tonne of pressed, salted hard cheese from goat and sheep milk",

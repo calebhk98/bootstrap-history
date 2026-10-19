@@ -87,7 +87,7 @@
    },
    "inputs": {},
    "labour_hours": {
-    "labourer": 40.0
+    "herder": 40.0
    },
    "land_hectare_years": 0.99999105,
    "extracted_from": "pasture",

@@ -214,7 +214,7 @@
    },
    "inputs": {},
    "labour_hours": {
-    "labourer": 120.0
+    "herder": 120.0
    },
    "land_hectare_years": 16.0001091,
    "extracted_from": "pasture (rough grazing, raised to draft size as part of ordinary cattle-keeping)",
@@ -230,7 +230,7 @@
    },
    "inputs": {},
    "labour_hours": {
-    "labourer": 150.0
+    "herder": 150.0
    },
    "land_hectare_years": 16.0001091,
    "extracted_from": "pasture (bred from a jack donkey and a horse mare, reared to working size on rough grazing)",

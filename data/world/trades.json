@@ -129,6 +129,16 @@
       "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
       "fatality_confidence": "D"
     },
+    "herder": {
+      "family": "labour",
+      "note": "Tends flocks and herds on pasture: shepherd, goatherd, cowherd, with the milking, shearing, calving and dairy work of the same household.",
+      "training_years": 2,
+      "training_source": "Author's estimate, conf D: herding was learned from boyhood beside a herder (recalled from pastoral ethnography, not opened); two years is a guess set beside the fisher and hunter.",
+      "tool_basket": [],
+      "fatality_risk_per_year": 0.0,
+      "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
+      "fatality_confidence": "D"
+    },
     "hunter": {
       "family": "labour",
       "note": "Hunts game with bow, spear, snare and dogs. The food a society takes from wild animals is bounded by the hours its hunters work (sim/labour/food_gathering.py).",
@@ -194,6 +204,16 @@
       "family": "scholar",
       "note": "Agent and factor, paid on commission in practice.",
       "training_years": 4,
+      "fatality_risk_per_year": 0.0,
+      "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
+      "fatality_confidence": "D"
+    },
+    "miller": {
+      "family": "craft",
+      "note": "Grinds and sifts grain to flour between stones, by quern, animal mill or water mill. Baking is a separate trade (Complaint 614).",
+      "training_years": 3,
+      "training_source": "Author's estimate, conf D: dressing the stones and setting the grind took a few years beside a miller (recalled from milling handbooks, not opened).",
+      "tool_basket": ["stone", "timber"],
       "fatality_risk_per_year": 0.0,
       "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
       "fatality_confidence": "D"
