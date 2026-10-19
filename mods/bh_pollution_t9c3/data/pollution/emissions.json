@@ -1,0 +1,96 @@
+{
+ "_doc": "What leaves a works, per kilogram of a material the economy burns, smelts or digs. Read only by hooks.py. A source names a material, a basis ('input': kilograms the year's runs consume; 'output': kilograms they make) and the species released per kilogram of that material. Stoichiometric and mass-balance factors are physical; every other number is flagged heuristic with the thing that should replace it. No number here is a result: a run's emissions are these factors times the tonnes the producers actually ran.",
+ "constants": {
+  "sulphur_dioxide_per_sulphur": {"value": 1.9983, "unit": "kg SO2 per kg S", "basis": "S + O2 -> SO2: molar mass 64.066 over 32.06.", "kind": "physical", "conf": "A"},
+  "sulphuric_acid_per_pyritic_sulphur": {"value": 3.0594, "unit": "kg H2SO4 per kg S", "basis": "FeS2 oxidised in water gives two H2SO4 per two S: molar mass 98.079 over 32.06.", "kind": "physical", "conf": "A"}
+ },
+ "sources": {
+  "coal_burned": {
+   "material": "coal_kg", "basis": "input",
+   "what": "Coal consumed by a run is burned (the economy's only coal inputs are fuel).",
+   "species": {
+    "sulphur_dioxide": {"kg_per_kg": 0.02848, "kind": "physical",
+     "derivation": "sulphur mass fraction 0.015 x 1.9983 x 0.95 emitted (the rest stays in the ash). The 0.95 and the form 38 x S lb/ton are EPA AP-42 section 1.1 for bituminous combustion; the fraction 0.015 sits inside the usual 0.5 to 3 per cent range for bituminous coal.",
+     "source": "EPA AP-42, section 1.1 (bituminous and subbituminous coal combustion), recalled not re-read; US Geological Survey coal quality database for the range.", "conf": "C",
+     "heuristic": "The sulphur fraction is one coal for every seam.", "retire": "Per-deposit sulphur in the map's coal deposits (data/world/geography/deposits)."},
+    "particulate": {"kg_per_kg": 0.016, "kind": "heuristic",
+     "derivation": "ash fraction 0.08 x share of ash carried up the flue 0.2.",
+     "source": "Ash range for bituminous coal 5 to 15 per cent (USGS). The carried-up share is a heuristic: AP-42 spreader-stoker factors imply about a third, hand-fired grates differ.", "conf": "D",
+     "heuristic": "Share of ash carried up the flue is one number for every furnace.", "retire": "A furnace type on the recipe or technology (grate, stoker, pulverised) once the tree records it."}
+   }
+  },
+  "coal_mined": {
+   "material": "coal_kg", "basis": "output",
+   "what": "Pyritic sulphur in mined coal oxidises in spoil and workings to acid drainage into streams.",
+   "species": {
+    "acid_drainage": {"kg_per_kg": 0.02295, "kind": "physical",
+     "derivation": "sulphur fraction 0.015 x pyritic share 0.5 x 3.0594 kg H2SO4 per kg S.",
+     "source": "Stoichiometry of pyrite oxidation. Pyritic share of coal sulphur ranges widely, roughly a quarter to two thirds (USGS coal quality).", "conf": "D",
+     "heuristic": "Pyritic share fixed at one half; every drained mine releases all of it.", "retire": "Per-deposit pyritic sulphur and a mine water model."}
+   }
+  },
+  "copper_smelted": {
+   "material": "copper_kg", "basis": "output",
+   "what": "Sulphide ore (the recipe's own yield_basis: Cyprus and Rio Tinto sulphide ores) is roasted and smelted; chalcopyrite CuFeS2 holds two sulphur per copper.",
+   "species": {
+    "sulphur_dioxide": {"kg_per_kg": 1.8147, "kind": "physical",
+     "derivation": "2 x 32.06 / 63.546 kg S per kg Cu = 1.0090; x 1.9983 = 2.0163; x 0.9 released to air.",
+     "source": "Stoichiometry of chalcopyrite; the recipe copper_kg in data/production/20_nonferrous.json.", "conf": "C",
+     "heuristic": "Share of the sulphur released to air (0.9) rather than held in matte or slag.", "retire": "A roasting and smelting model with off-gas capture, or a recipe that outputs the SO2."}
+   }
+  },
+  "lead_smelted": {
+   "material": "lead_kg", "basis": "output",
+   "what": "Galena PbS roasted and reduced.",
+   "species": {
+    "sulphur_dioxide": {"kg_per_kg": 0.27828, "kind": "physical",
+     "derivation": "32.06 / 207.2 kg S per kg Pb = 0.1547; x 1.9983 = 0.3092; x 0.9 released to air.",
+     "source": "Stoichiometry of PbS; recipe lead_kg in data/production/20_nonferrous.json.", "conf": "C",
+     "heuristic": "Same 0.9 release share as copper.", "retire": "As copper."},
+    "lead_fume": {"kg_per_kg": 0.05, "kind": "heuristic",
+     "derivation": "Lead volatilised at smelting temperature and carried off as fume, per kilogram of lead made.",
+     "source": "No figure read; lead fume is a recognised loss in smelting (lead is volatile at furnace heat).", "conf": "D",
+     "heuristic": "Fraction of output lost as fume.", "retire": "Furnace temperature and lead vapour pressure in a smelting model."}
+   }
+  },
+  "mercury_roasted": {
+   "material": "mercury_kg", "basis": "output",
+   "what": "Cinnabar HgS roasted: HgS + O2 -> Hg(vapour) + SO2; the recipe condenses 85 per cent of the vapour.",
+   "species": {
+    "sulphur_dioxide": {"kg_per_kg": 0.31939, "kind": "physical",
+     "derivation": "32.06 / 200.59 kg S per kg Hg = 0.1598; x 1.9983, all of it leaves as SO2 by the reaction.",
+     "source": "Stoichiometry; recipe mercury_kg in data/production/20_nonferrous.json.", "conf": "B"},
+    "mercury_vapour": {"kg_per_kg": 0.17647, "kind": "physical",
+     "derivation": "Uncondensed vapour per kg recovered: 0.15 / 0.85, from the recipe's own stated condensation recovery.",
+     "source": "yield_basis of recipe mercury_kg.", "conf": "C"}
+   }
+  }
+ },
+ "dispersion": {
+  "_doc": "A steady-state box over the airshed: concentration = emission rate / (wind speed x mixing height x airshed width). The box is the textbook screening model for an area source.",
+  "wind_speed_metres_per_second": {"value": 4.0, "kind": "heuristic", "source": "Mid-latitude annual-mean surface wind is a few m/s.", "conf": "D", "retire": "Per-tile wind from the climate layer."},
+  "mixing_height_metres": {"value": 800.0, "kind": "heuristic", "source": "Annual-mean daytime mixing depth in mid-latitudes is several hundred metres to about a kilometre and falls at night and in winter.", "conf": "D", "retire": "Per-tile mixing height from the climate layer."},
+  "settled_land_square_metres_per_person": {"value": 100.0, "kind": "heuristic", "source": "Pre-industrial walled towns packed on the order of 100 people per hectare.", "conf": "D", "retire": "The urbanisation mod or the town table (Complaints/closed/289): sources sit in named towns with their own footprints."},
+  "_airshed": "The airshed is the tile's people times the land each occupies, capped at the tile's area, with every source on the tile and every person of the tile inside it. That overstates exposure where a tile holds many towns; it is an upper bound."
+ },
+ "exposure_response": {
+  "particulate": {"mortality_relative_risk_per_microgram_per_cubic_metre": 0.006, "kind": "measured",
+   "source": "Pope et al. 2002, JAMA 287:1132: about 6 per cent more all-cause mortality per 10 micrograms per cubic metre of fine particles. Modern cohorts; applied to coal-smoke particles as the nearest sourced slope.", "conf": "C",
+   "heuristic": "Modern dose-response applied across all ages and to coal-era smoke.", "retire": "Sourced historical smoke-mortality series (London, Manchester) per age band."},
+  "sulphur_dioxide": {"mortality_relative_risk_per_microgram_per_cubic_metre": 0.0, "kind": "design",
+   "source": "Mortality studies measure smoke and SO2 together; counting both would double count the particulate slope above, so SO2 carries no mortality here and acts on crops.", "conf": "D",
+   "crop_critical_level_microgram_per_cubic_metre": {"value": 30.0, "source": "UNECE Mapping Manual critical level for crops, annual mean.", "conf": "B"},
+   "yield_loss_per_critical_level_exceeded": {"value": 0.1, "kind": "heuristic", "source": "None; no slope read.", "conf": "D", "retire": "Crop-specific SO2 exposure-yield curves in sim/world/agriculture.py."}},
+  "lead_fume": {"mortality_relative_risk_per_microgram_per_cubic_metre": null, "note": "Reported as exposure only: lead harm is occupational and by ingestion, and needs workers' hours and diet, which the economy does not expose."},
+  "mercury_vapour": {"mortality_relative_risk_per_microgram_per_cubic_metre": null, "note": "Reported as exposure only, as lead fume."},
+  "acid_drainage": {"mortality_relative_risk_per_microgram_per_cubic_metre": null, "note": "A water load; the model holds no streams, so it is reported by tile and does no harm."}
+ },
+ "abatement": [
+  {"node": "el2_electrostatic_precipitation_dust_collection", "species": ["particulate", "lead_fume"], "efficiency": 0.95, "kind": "heuristic",
+   "source": "Electrostatic precipitators collect well over 90 per cent of dust by mass at design; the tree note says 'very high efficiency'.", "conf": "C",
+   "heuristic": "Applies to every source on every tile as soon as the nation holds the node.", "retire": "Per-works adoption: a firm installs it, with cost, and only its own stack is cleaned."},
+  {"node": "zinc_industry_scale", "species": ["lead_fume"], "efficiency": 0.5, "kind": "heuristic",
+   "source": "The node is 'zinc smelting at industrial scale, with flue dust collection'; the fraction of lead fume it catches is not read.", "conf": "D",
+   "heuristic": "Flue dust collection learned for zinc is applied to lead works.", "retire": "A lead-works counter node in the tree."}
+ ]
+}
