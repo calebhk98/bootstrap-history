@@ -18,6 +18,12 @@ class VentureQuotesMixin:
         market = self.node_output_market_factor(self.nodes[node_id])
         return self.concern_takings(node_id, ramp, with_output_factor) * units * market
 
+    def venture_forecast_basis(self, node_id):
+        """What the quote of a concern's earnings stands on: `market` (the economy prices its goods) or
+        `long_run_no_market_yet` (nobody has sold them, so the quote is at long-run cost and the price
+        they fetch once sold may differ a great deal)."""
+        return "market" if self.concern_goods_have_market(node_id) else "long_run_no_market_yet"
+
     def venture_upkeep_quote(self, node_id, units=None):
         """Yearly running cost at the current price level, the one source every
         screen quotes: `now` at today's staffing (what the ledger charges) and

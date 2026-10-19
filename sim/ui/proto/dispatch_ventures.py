@@ -34,6 +34,13 @@ def _scholar_family_names():
     return ", ".join(names[:-1]) + " and " + names[-1]
 
 
+def _non_craft_labour_names(sim):
+    """Trades that are neither craft nor scholar family, as a plural list, from the supervision check's own data."""
+    names = [trade + "s" for trade in sim.labour.craft_trades_report()["not_craft"]
+             if TRADE_FAMILY.get(trade) != "scholar"]
+    return ", ".join(names)
+
+
 _CREDIT_PROSE = {"on_credit": ("nothing_is_borrowed_yet", "what_happens_there"),
                  "total_committed_across_active_work": ("what_this_means",)}
 
@@ -733,6 +740,7 @@ def _cmd_ventures(sim, nodes, cmd, ended):
         _foreman_trade, _foreman_fte = sim.venture_foreman(node_id)
         row = {"id": node_id, "name": node["name"],
                 "earns_a_year": round(sim.venture_real_earnings(node_id), 1),
+                "forecast_basis": sim.venture_forecast_basis(node_id),
                 "costs_a_year": round(sim.venture_upkeep_quote(node_id)["now"], 1),
                 "costs_a_year_at_full_staffing": round(
                     sim.venture_upkeep_quote(node_id)["at_full_staffing"], 1),
@@ -804,13 +812,15 @@ def _cmd_ventures(sim, nodes, cmd, ended):
            # which of the two columns a trade lands in.
            "these_are_not_interchangeable": (
                "Most concerns want CRAFTSMEN to keep an eye on them. "
-               "The scholar-family trades (%s) are not craftsmen, and a "
-               "scholar cannot watch a workshop; every other trade counts "
-               "as craft. 'labour <trade>' says which family a trade is. "
+               "Only the trades in `these_are_not_interchangeable_trades.craft` count as craft; "
+               "the scholar-family trades (%s) cannot watch a workshop, and labouring trades "
+               "(%s) are not craftsmen either. "
+               "'labour <trade>' says which family a trade is. "
                "On the prompt, sch counts you and the scholars you employ "
                "(not the other scholar-family trades) and art counts you "
                "and every craft trade you employ."
-               % _scholar_family_names()),
+               % (_scholar_family_names(), _non_craft_labour_names(sim))),
+           "these_are_not_interchangeable_trades": sim.labour.craft_trades_report(),
            # "needs", "held_in_all" and "people_free_to_run_something_new"
            # above are venture_hands()/venture_staff_free()'s own numbers
            # - a continuous SHARE of a person's year, never a headcount -
