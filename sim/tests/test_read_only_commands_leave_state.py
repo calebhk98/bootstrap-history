@@ -15,7 +15,7 @@ READ_ONLY = {
     "portfolio", "economy", "changes", "population", "work", "labour", "market", "money", "options", "map",
     "education", "demography", "divergence", "commitments", "colonies", "ventures", "automation", "offers",
     "shares", "notes", "why", "path", "programme", "saving", "seats", "pay", "priority", "rollout",
-    "prospect", "settle", "quote", "patent",
+    "prospect", "settle", "quote", "patent", "world_events",
 }
 CHANGES_STATE = {
     "start", "stop", "rush", "mothball", "restore", "open", "policy", "offer", "accept", "decline", "disclose",
