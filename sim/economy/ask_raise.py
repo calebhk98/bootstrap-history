@@ -1,6 +1,6 @@
-"""A seller that sells out raises its ask; the half of the rule whose other half is the markdown of unsold
-stock (producers.UNSOLD_ASK_MARKDOWN_SHARE). It keeps raising until the ask is high enough that some stock
-goes unsold, where the markdown takes over, so the ask settles near the price that just clears it."""
+"""A seller that sells out raises its ask; the half of the rule whose other half is the search for unsold
+stock inside the year (unsold_search.py). It keeps raising until the ask is high enough that some stock
+goes unsold, where the search takes over, so the ask settles near the price that just clears it."""
 from typing import List
 
 from sim.constants import declare

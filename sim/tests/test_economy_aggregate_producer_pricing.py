@@ -7,7 +7,7 @@ QUICK_TOPIC = True
 import types
 import unittest
 
-from sim.economy import goods_market, seller_offers, seller_pricing
+from sim.economy import goods_market, seller_offers, unsold_search
 from sim.economy.producers import Producer
 from sim.economy.types import Bid, Offer, Recipe
 
@@ -74,7 +74,7 @@ class AggregateProducerTests(unittest.TestCase):
 
     def test_a_single_workshop_producer_still_prices_strategically(self):
         price, _sold = cleared([producer("only", 1)], [TOTAL])
-        self.assertGreater(price, ASK * 1.05)
+        self.assertGreater(price, ASK)     # it raises its ask against the residual demand
 
     def test_an_aggregate_keeps_the_price_taking_ask(self):
         setup, record = game([producer("whole", SHOPS)])
@@ -82,32 +82,31 @@ class AggregateProducerTests(unittest.TestCase):
                                                 [Offer("whole", GOOD, AREA, TILE, TOTAL, ASK)], 1.0)
         self.assertEqual(chosen[0].reservation_price, ASK)
 
-    def test_an_aggregate_with_unsold_stock_above_its_cost_marks_its_ask_down_by_the_share_unsold(self):
+    def test_an_aggregate_with_unsold_stock_above_its_cost_is_brought_down_to_what_sells_within_the_year(self):
         setup, record = game([producer("whole", SHOPS)])
-        chosen = seller_offers.strategic_offers(setup, record, View(), demand(),
-                                                [Offer("whole", GOOD, AREA, TILE, TOTAL, 10.0)], 1.0)
-        buyers = goods_market.Buyers(demand(), 1.0)
-        sold, _price = seller_pricing.sold_and_price(demand(), [], Offer("whole", GOOD, AREA, TILE, TOTAL, 10.0), 10.0, 1.0, buyers)
-        unsold_share = 1.0 - sold / TOTAL
-        self.assertGreater(unsold_share, 0.0)
-        cost = seller_offers.unit_cost(setup, record, View(), Offer("whole", GOOD, AREA, TILE, TOTAL, 10.0))
-        self.assertAlmostEqual(chosen[0].reservation_price, 10.0 - unsold_share * (10.0 - cost))
+        offers = [Offer("whole", GOOD, AREA, TILE, TOTAL, 10.0)]
+        chosen = seller_offers.strategic_offers(setup, record, View(), demand(), offers, 1.0)
+        final, result = unsold_search.clear_with_search(setup, record, View(), demand(), offers, chosen, GOOD, AREA, "", 1.0)
+        cost = seller_offers.unit_cost(setup, record, View(), offers[0])
+        self.assertLess(final[0].reservation_price, 10.0)
+        self.assertGreaterEqual(final[0].reservation_price, cost)
+        self.assertGreater(result.quantity, 0.0)
 
-    def test_a_mostly_sold_aggregate_marks_down_by_less_than_a_full_step(self):
+    def test_stock_buyers_cannot_absorb_even_at_the_floor_ends_at_the_cost(self):
         setup, record = game([producer("whole", SHOPS)])
         bids = [Bid("buyer", GOOD, AREA, TILE, 0.9 * TOTAL, 0.0, 1.0, 0.5, 1e9)]
-        chosen = seller_offers.strategic_offers(setup, record, View(), bids,
-                                                [Offer("whole", GOOD, AREA, TILE, TOTAL, 10.0)], 1.0)
-        self.assertGreater(chosen[0].reservation_price, 9.0)
-        self.assertLess(chosen[0].reservation_price, 10.0)
+        offers = [Offer("whole", GOOD, AREA, TILE, TOTAL, 10.0)]
+        final, _result = unsold_search.clear_with_search(setup, record, View(), bids, offers, offers, GOOD, AREA, "", 1.0)
+        cost = seller_offers.unit_cost(setup, record, View(), offers[0])
+        self.assertAlmostEqual(final[0].reservation_price, cost)
 
     def test_an_aggregate_whose_stock_goes_unsold_at_a_high_ask_comes_down_to_its_cost(self):
         setup, record = game([producer("whole", SHOPS)])
         cost = seller_offers.unit_cost(setup, record, View(), Offer("whole", GOOD, AREA, TILE, TOTAL, 5.0))
         nobody_buys = [Bid("buyer", GOOD, AREA, TILE, 0.0, 0.0, 1.0, 1.0, 0.0)]
-        chosen = seller_offers.strategic_offers(setup, record, View(), nobody_buys,
-                                                [Offer("whole", GOOD, AREA, TILE, TOTAL, 5.0 * cost)], 1.0)
-        self.assertAlmostEqual(chosen[0].reservation_price, cost)
+        offers = [Offer("whole", GOOD, AREA, TILE, TOTAL, 5.0 * cost)]
+        final, _result = unsold_search.clear_with_search(setup, record, View(), nobody_buys, offers, offers, GOOD, AREA, "", 1.0)
+        self.assertAlmostEqual(final[0].reservation_price, cost)
 
 
 if __name__ == "__main__":

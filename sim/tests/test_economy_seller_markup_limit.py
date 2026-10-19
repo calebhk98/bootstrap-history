@@ -1,14 +1,14 @@
 """Complaint 502: a producer's ask is held to what it costs to make times the markup a seller can charge when
 buyers can substitute toward other goods meeting the same need. Against buyers who spend a fixed budget and
 name no maximum price, a profit-maximiser would raise its ask every year without limit; an idle producer that
-sells nothing at an ask far above that comes down to it at once instead of marking down a share a year."""
+sells nothing at an ask far above that comes down to its cost within the year (unsold_search.py)."""
 
 QUICK_TOPIC = True
 
 import types
 import unittest
 
-from sim.economy import seller_offers
+from sim.economy import seller_offers, unsold_search
 from sim.economy.producers import Producer
 from sim.economy.types import Bid, Offer, Recipe
 
@@ -63,9 +63,13 @@ class MarkupLimitTests(unittest.TestCase):
         ask = asked([fixed_budget_buyer()], 1000.0, 0.97 * MARKUP * RUN_COST_PER_UNIT, 10.0)
         self.assertLessEqual(ask, MARKUP * RUN_COST_PER_UNIT * (1.0 + 1e-9))
 
-    def test_an_idle_seller_far_above_the_limit_comes_down_to_it_at_once(self):
-        ask = asked([fixed_budget_buyer(budget=5.0, reference=200.0)], 100.0, 200.0, 200.0)
-        self.assertAlmostEqual(ask, MARKUP * RUN_COST_PER_UNIT)
+    def test_an_idle_seller_far_above_the_limit_comes_down_to_its_cost_within_the_year(self):
+        bids = [fixed_budget_buyer(budget=5.0, reference=200.0)]
+        setup, record = game()
+        offers = [offer(100.0, 200.0)]
+        chosen = seller_offers.strategic_offers(setup, record, View(), bids, offers, 200.0)
+        final, _result = unsold_search.clear_with_search(setup, record, View(), bids, offers, chosen, GOOD, AREA, "", 200.0)
+        self.assertAlmostEqual(final[0].reservation_price, RUN_COST_PER_UNIT)
 
     def test_a_seller_that_sells_at_its_ask_above_the_limit_is_not_cut_by_the_hold(self):
         # a buyer who takes everything offered at the ask: the seller is not idle, so only the usual search applies

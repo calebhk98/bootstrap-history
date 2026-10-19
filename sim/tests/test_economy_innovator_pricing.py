@@ -59,7 +59,8 @@ class InnovatorPricingTests(unittest.TestCase):
         unpaid = next(row for row in table if row["price"] < row["incumbent_cost"])
         for row in table:
             if row["year"] < unpaid["year"]:
-                self.assertAlmostEqual(row["incumbent_runs"], before, msg="left while the price covered the cost")
+                # stock that sells inside the year no longer holds runs back, so they may rise to capacity
+                self.assertGreaterEqual(row["incumbent_runs"], before, msg="left while the price covered the cost")
         shedding_years = math.ceil(math.log(0.5) / math.log(1.0 - producers.OUTPUT_CHANGE_SHARE_PER_YEAR))
         later = [row for row in table
                  if row["year"] >= unpaid["year"] + producers_close.LOSS_YEARS_BEFORE_EXIT + shedding_years]

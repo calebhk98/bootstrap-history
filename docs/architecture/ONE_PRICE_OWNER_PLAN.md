@@ -391,6 +391,30 @@ Deletes: `UNSOLD_ASK_MARKDOWN_SHARE`, `UNSOLD_PROBE_SHARE_OF_CAPACITY`, `IDLE_SA
 `notional.thin_market_prices` and `THIN_MARKET_SHARE_OF_OPENING_DEMAND` (a thin market no longer holds an
 unreasonable price for years).
 
+**Done** (branch `507-stage-7-price-search-within-year`, 2026-10-19). What was built, and what it showed:
+
+- `sim/economy/unsold_search.py` (`clear_with_search`), called by `year_goods.clear_goods` after `strategic_offers`. A
+  market that clears with unsold stock held by producers still at the ask `producers.offers` gave them is searched:
+  every such seller's ask is capped at one common level, no seller below its own floor (`seller_offers.unit_value`),
+  and the level is the highest at which all of them sell out or sit at their floors (bisection on whole-market
+  clears). Capping all of them together is what the convergence rule comes to: a seller that undercuts leaves its
+  rivals unsold in turn, so revisiting one at a time would race down in tiny steps. A market with no unsold
+  searchable stock clears once. A seller that moved the price (`best_reservation`) holds units back on purpose and
+  is not searched; its raise is bounded by `SOLD_OUT_ASK_RAISE_SHARE`, its cut by its unit value.
+- Deleted: `UNSOLD_ASK_MARKDOWN_SHARE`, `UNSOLD_PROBE_SHARE_OF_CAPACITY`, `IDLE_SALE_SHARE`, the yearly markdown in
+  `producers.next_expectations` (and `unsold_outputs`), and the crowd's share-of-unsold markdown. Not done:
+  `notional.thin_market_prices` and `THIN_MARKET_SHARE_OF_OPENING_DEMAND` stay (the thin-market tests still pass; remove
+  them once the spin-up shows the thin goods settle without them).
+- Proof: new `test_unsold_stock_search.py` (sells within the year, no ask below the floor, a good opened far above
+  cost reaches buyers in one year, sold-out sellers and restrained sellers untouched); the stale-ask, markup-limit and
+  aggregate-producer tests now read the search instead of the yearly markdown.
+- What it showed: with buyers who take a fixed quantity at any price, any excess of stock over that quantity sends the
+  searched asks to the floor in one clear, so the price falls in a year what it fell in years, and the producers'
+  next plan reacts to it: three year-to-year bounds that held before now fail (the dug-clay swing in
+  `test_economy_vessel_price_fixture`, one year of `test_economy_innovator_pricing`'s fall, bronze's traded price over
+  cost in `test_economy_bronze_market_price`; numbers in the commit message and the report). The cure for the
+  cobweb is on the output side (how fast a producer follows a price that moved in one year), not a slower search.
+
 ### Stage 8: farm effort follows the food price (Complaint 513)
 
 Needs stage 3 (one food price) and stage 4 (one traded volume). Not a solver reader today: `LabourAllocationMixin.
