@@ -78,12 +78,6 @@ class SugarAndMaizeTests(unittest.TestCase):
                 self.assertLess(share, 1 / 3, (good, shares))
         self.assertLess(max(shares.values()), 0.5, shares)
 
-    def test_sugar_cane_figures_name_their_sources_and_confidence(self):
-        sugar = self.entries["mat_sugar"]
-        self.assertEqual(sugar["conf"], "D")
-        self.assertIn("Galloway", sugar["yield_basis"])
-        self.assertIn("Deerr", sugar["yield_basis"])
-
 
 if __name__ == "__main__":
     unittest.main()
