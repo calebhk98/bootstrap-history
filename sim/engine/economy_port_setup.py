@@ -15,7 +15,7 @@ from sim.world import demand, need_basket
 from sim.geography.api import carriage_rates, layer_value, sea_freight, settlement, tiles_held
 from sim.labour import api as labour_api
 
-from . import economy_port_costs, economy_port_sites
+from . import economy_port_closure, economy_port_costs, economy_port_sites
 from .economy_port_stores import opening_store_values
 from .foreign_routes import SEA_MODE
 
@@ -190,6 +190,7 @@ def build_setup(sim, opening=None, production=None):
                      for good, entry in _load("world", "service_lives.json").get("years", {}).items()}
     specs = goods_specs({good: "" for good in goods}, spoilage, service_lives)
     prices = {good: price for good, price in opening["prices"].items() if good in specs and price > 0.0}
+    prices = economy_port_closure.makeable_prices(prices, production, recipes)
     trades_data = _load("world", "trades.json").get("trades", {})
     trades = {trade: TradeSpec(trade, float(spec.get("training_years", 0.0)),
                                float(spec.get("fatality_risk_per_year", 0.0)), str(spec.get("family", "")))
