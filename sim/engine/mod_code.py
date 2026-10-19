@@ -28,6 +28,8 @@ CODE_PERMISSION = "code"
 # Commands that mod code registered, waiting for the command registry (sim/ui) to take them: (mod_id, name, fields, handler)
 COMMAND_REGISTRATIONS: List[tuple] = []
 LOADED: Dict[str, str] = {}      # mod id -> "ran" or the reason it did not
+# Directed-hours overheads that mod code registered: (mod_id, function(sim) -> hours a year already spoken for)
+DIRECTOR_OVERHEADS: List[tuple] = []
 
 
 def code_files(manifest: ModManifest) -> Dict[str, str]:
@@ -112,6 +114,12 @@ class ModCodeApi:
     def spawner(self, name: str, function: Callable) -> None:
         from sim.agents.api import register_spawner
         register_spawner(self.qualified(name), function)
+
+    def director_overhead(self, function: Callable) -> Callable:
+        """Register `function(sim) -> hours` charged against the directed-hours pool (management layers, say).
+        Hours are counted as committed, so every free-hours check sees them; a negative result counts as zero."""
+        DIRECTOR_OVERHEADS.append((self.mod_id, function))
+        return function
 
     def state(self, memory: Dict[str, Any]) -> Dict[str, Any]:
         """The mod's own JSON dict inside a saved game: pass `sim.state.interface`."""

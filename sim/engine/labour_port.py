@@ -2,6 +2,7 @@
 the simulation keeps its `Labour`."""
 from sim.agents.api import edges
 from sim.labour.api import Labour
+from .mod_code import DIRECTOR_OVERHEADS
 from . import data, purchase_rule, solve_prices_core, units_prose, wage_schedule
 
 
@@ -25,6 +26,10 @@ class LabourWorld:
     def plain_number(self, value, digits=0):
         """A count, a number of people or of hours (units_prose)."""
         return units_prose.plain_number(value, digits)
+
+    def director_overhead_hours(self):
+        """Hours of the directed-hours pool that mod code charges as overhead (none unless a mod registered some)."""
+        return sum(max(0.0, float(function(self._sim))) for _mod_id, function in DIRECTOR_OVERHEADS)
 
     def pay_edge(self, edge_name, amount, purpose):
         """The founder's household pays a named edge."""

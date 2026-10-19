@@ -939,6 +939,7 @@ class CapacityMixin:
         return (getattr(self._world.household, "teaching_hours_this_year", 0.0)
                 + (getattr(self._world.household, "relocation_hours_this_year", 0.0) or 0.0)
                 + (getattr(self._world.household, "supervision_hours_this_year", 0.0) or 0.0)
+                + self._world.director_overhead_hours()
                 + self._world.household.wage_hours_this_year)
 
     def household_room(self):
