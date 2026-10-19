@@ -11,6 +11,6 @@ check("the economy offers the staple on the founder's tile", offered is not None
 quote = market.quote(WHEAT)
 check("the quote's market figure is the economy's offered quantity",
       abs(quote["market_available_tonnes_per_year"] - offered) <= 1e-9 * offered, (quote["market_available_tonnes_per_year"], offered))
-bought = market.buy(game.acting, WHEAT, 10.0 * offered)
+bought = market.buy(market.acting, WHEAT, 10.0 * offered)
 check("an order of ten times the offer is cut to the offer", abs(bought - offered) <= 1e-9 * offered, (bought, offered))
-check("...and nothing more can be bought that year", market.buy(game.acting, WHEAT, offered) == 0.0)
+check("...and nothing more can be bought that year", market.buy(market.acting, WHEAT, offered) == 0.0)

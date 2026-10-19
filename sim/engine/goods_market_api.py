@@ -216,6 +216,7 @@ class GoodsMarket(GoodsPricing, GoodsOffers):
             return None
         emp_key = sim._material_tag(material)[0]
         brought = self.import_tonnes_available(material)      # a partner's good: its supply and the carriers' lift
+        offered = None if brought is not None else sim.economy.agent_offered_tonnes(material)
         carriage = self._carriage_per_tonne(material, price)
         return {"material": material, "stock_key": emp_key,
                 "buy_per_tonne": self.purchase_cost(material, 0.0)[1],
@@ -223,7 +224,8 @@ class GoodsMarket(GoodsPricing, GoodsOffers):
                 "price_at_tile_per_tonne": price, "carriage_per_tonne": carriage,
                 "making_cost_per_tonne": self.making_cost_per_tonne(material),
                 "market_available_tonnes_per_year": (
-                    sim._material_market_tonnes(emp_key) if brought is None else brought)}
+                    brought if brought is not None else
+                    offered if offered is not None else sim._material_market_tonnes(emp_key))}
 
     def price(self, material):
         """Money to buy one tonne now, or None when the material has no price."""
@@ -274,13 +276,13 @@ class GoodsMarket(GoodsPricing, GoodsOffers):
         buyer.take_delivery(key, tonnes)
 
     def buy(self, buyer, material, tonnes):
-        """Buy a material for a party: the order is cut to what the market sells in a year, and
-        the price climbs as it is filled. Returns the tonnes bought."""
+        """Buy a material for a party: the order is cut to what the sellers offered, less what the buyer has
+        bought this year, and the price climbs as it is filled. Returns the tonnes bought."""
         quote = self.quote(material)
         tonnes = float(tonnes)
         if not quote or tonnes <= 0:
             return 0.0
-        tonnes = min(tonnes, quote["market_available_tonnes_per_year"])
+        tonnes = min(tonnes, self.market_room_tonnes(quote, self.bought_tonnes(quote["stock_key"], buyer.party_id)))
         if tonnes <= 0:
             return 0.0
         cost = self.purchase_cost(quote["material"], tonnes)[0]

@@ -20,6 +20,7 @@ from sim.geography.api import layer_value, settlement, tiles_held
 from sim.world import demand, need_basket, need_demand
 
 from . import goods_market_offers
+from .static_book_basket import StaticBookBasketMixin
 
 MEAN_INCOME_HOURS_PER_CAPITA = declare(
     "MEAN_INCOME_HOURS_PER_CAPITA", 550.0, kind="temporary_heuristic",
@@ -89,7 +90,7 @@ def household_demand_by_material(prices_in_hours, population, income_per_capita,
     return model.total_demand(prices_in_hours)
 
 
-class MarketDemandMixin:
+class MarketDemandMixin(StaticBookBasketMixin):
     """Household demand ratios for the engine's yearly market."""
 
     def _opening_population(self):
@@ -106,7 +107,7 @@ class MarketDemandMixin:
     def household_real_income_ratio(self):
         """What a person's income buys of the opening basket now over what it bought at the opening:
         income in hours over the opening's, over the basket's cost at today's prices against its cost then."""
-        basket = self.base_basket()
+        basket = self.static_book_basket()
         prices = self.goods_market.household_cost_prices()
         per_hour = self.labour.money_per_labour_hour()
         opening_cost = now_cost = 0.0
@@ -136,7 +137,7 @@ class MarketDemandMixin:
         if cache is not None and cache[0] == key and cache[1] is prices:
             return cache[2], cache[3]
         # computed from the rounded key, so the answer depends on the key and not on when it was last computed
-        basket = self.base_basket()
+        basket = self.static_book_basket()
         per_hour = self.labour.money_per_labour_hour()
         # the opening's goods and any the home society now makes, so a need a new good serves can turn to
         # it; a good only a partner offers is not the home market's
