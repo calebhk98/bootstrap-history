@@ -429,13 +429,6 @@ class CreditMixin:
             "own docstring names (Han, Norse, Mexica) varied by circumstance "
             "rather than clustering on a single figure, so this is a round "
             "placeholder, not a citation.")
-    SETTLEMENT_MIN_INTERVAL_YEARS = declare(
-        "SETTLEMENT_MIN_INTERVAL_YEARS", 10.0, kind="temporary_heuristic",
-        unit="years", source=None, confidence="D",
-        why="Minimum gap between one insolvency write-off and the next, so "
-            "settling is a once-in-a-life humiliation rather than an annual "
-            "accounting entry (see the comment this replaces for the bug "
-            "this fixed). The specific gap is a game-balance choice.")
     SETTLEMENT_CAPITAL_RETAINED_FRACTION = declare(
         "SETTLEMENT_CAPITAL_RETAINED_FRACTION", 0.35, kind="temporary_heuristic",
         unit="fraction of the credit limit still owed after settlement",
