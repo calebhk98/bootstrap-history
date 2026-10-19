@@ -109,7 +109,10 @@ def _record_for(entry: CastEntry) -> ActorRecord:
 	for key, value in entry.params.items():
 		if key in field_names:
 			value = copy.deepcopy(value)
-			setattr(record, key, set(value) if isinstance(getattr(record, key), set) else value)
+			current = getattr(record, key)
+			if isinstance(current, float) and isinstance(value, int) and not isinstance(value, bool):
+				value = float(value)   # a whole number in the data is still a float field, as a reloaded save has it
+			setattr(record, key, set(value) if isinstance(current, set) else value)
 	return record
 
 
