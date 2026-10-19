@@ -60,3 +60,19 @@ def famine_watch_phase(sim, seats):
         if shortfall >= threshold:
             mod_effects.BASE_EFFECTS.record_event(sim, "famine", "food unmet", actors=[country],
                                                   food_shortfall=shortfall, people=people)
+
+
+class WorldHazardsMixin:
+    """The world phases and the yearly checks as `Sim` methods, so the year calls them as it calls every phase."""
+
+    def step_world_hazards(self, seats):
+        return world_hazards_phase(self, seats)
+
+    def step_famine_watch(self, seats):
+        return famine_watch_phase(self, seats)
+
+    def check_yearly_world(self):
+        """The yearly invariants, run in every game of more than one country."""
+        from . import invariants
+        if len(countries_in_game(self)) > 1:
+            invariants.check_yearly_invariants(self)

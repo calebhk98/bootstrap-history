@@ -6,7 +6,6 @@ ended (its founder died with no one to carry the work, was denounced or brought 
 seat phases from then on; the others carry on. The market closes once, after every seat's draws and sales,
 so a seat never sees another's draws within the year: a mechanism that wants another seat's state reads
 last year's. `sim` is the Sim, or anything with the same phase methods."""
-from . import invariants, world_hazards
 from .year_phases import run_phases
 
 
@@ -15,5 +14,5 @@ def run_year(sim):
 	run_phases(sim)
 	if sim.debug:
 		sim.verify_step_invariants()
-	elif len(world_hazards.countries_in_game(sim)) > 1:
-		invariants.check_yearly_invariants(sim)
+	else:
+		sim.check_yearly_world()

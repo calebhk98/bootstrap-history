@@ -9,7 +9,6 @@ earliest `before`; the order is a pure function of the registrations, so it is t
 from dataclasses import dataclass
 from typing import Callable, Dict, List, Optional, Sequence
 
-from . import world_hazards
 from .mods_base import ModError
 
 SEAT = "seat"
@@ -55,8 +54,8 @@ SHIPPED: List[Phase] = [
 	Phase("living_stock", SEAT, lambda sim, seat_id: sim.step_living_stock()),
 	Phase("defence_stores", SEAT, lambda sim, seat_id: sim.step_defence_stores()),
 	Phase("random_events", WORLD, _random_events),
-	Phase("world_hazards", WORLD, lambda sim, seats: world_hazards.world_hazards_phase(sim, seats)),
-	Phase("famine_watch", WORLD, lambda sim, seats: world_hazards.famine_watch_phase(sim, seats)),
+	Phase("world_hazards", WORLD, lambda sim, seats: sim.step_world_hazards(seats)),
+	Phase("famine_watch", WORLD, lambda sim, seats: sim.step_famine_watch(seats)),
 	Phase("credit_limit", SEAT, lambda sim, seat_id: sim.enforce_credit_limit(sim.state.scenario.year)),
 	Phase("advance_year", WORLD, _advance_year),
 ]

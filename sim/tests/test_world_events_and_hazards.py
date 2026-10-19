@@ -132,14 +132,14 @@ check("the capacity check fails when an actor employs more people than the count
 ran = []
 runner = two_country_game()
 runner.debug = False
-with mock.patch.object(year_run.invariants, "check_yearly_invariants", lambda target: ran.append(target) or True), \
+with mock.patch.object(invariants, "check_yearly_invariants", lambda target: ran.append(target) or True), \
         mock.patch.object(year_run, "run_phases", lambda target: None):
     year_run.run_year(runner)
 check("a year in a multi-country game runs the yearly checks with debug off", ran == [runner])
 single = unopened_sim()
 single.debug = False
 ran.clear()
-with mock.patch.object(year_run.invariants, "check_yearly_invariants", lambda target: ran.append(target) or True), \
+with mock.patch.object(invariants, "check_yearly_invariants", lambda target: ran.append(target) or True), \
         mock.patch.object(year_run, "run_phases", lambda target: None):
     year_run.run_year(single)
 check("a single-country game does not pay for them", not ran, single.partners_in_agent_economy())
