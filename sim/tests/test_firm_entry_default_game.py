@@ -35,7 +35,7 @@ def default_game_with_founder_concern():
 		projects.done_year[node_id] = year - 10
 	projects.disclosures[CONCERN] = {"mode": "publish"}   # an entrant copies only what it can see
 	projects.operating.add(CONCERN)
-	projects.opened_year[CONCERN] = year - 10
+	projects.business.set_opened_year(CONCERN, year - 10)
 	game._done_changed()
 	return game
 

@@ -250,18 +250,14 @@ class VenturesMixin:
             if node_id in self.SCALABLE_INSTITUTIONS and units and float(units) > 0:
                 return self._expand_institution(node_id, float(units), pay)
             return False, "you are already running that"
-        gate_refusal = self.running_gate_refusal(node_id)
-        if gate_refusal:
-            return False, gate_refusal
         scalable = node_id in self.SCALABLE_INSTITUTIONS
         fee, unit_count = self.opening_fee(node_id, units)
-        refusal = self.staffing_open_refusal(node_id, unit_count)
+        refusal = self.open_refusal(node_id, unit_count)
         if refusal:
             return False, refusal
         projects = self.state.projects
         household = self.state.household
         scenario = self.state.scenario
-        governance = self.state.governance
         if pay:
             if fee > self.spending_power("open"):
                 # Report the same spending power the test checked.
@@ -272,20 +268,13 @@ class VenturesMixin:
                                          money_text(household.capital, self, grouped=True),
                                          money_text(self.spending_power("buy"), self, grouped=True)))
             self.pay_edge(edges.EDGE_BUILDERS, fee, "opening a venture")
-        projects.operating.add(node_id)
-        projects.mothballed.discard(node_id)
-        self.clear_closure(node_id)
-        cause_book.record_concern(self, "opening", node_id, "opened")
+        # A reopening keeps the plant's first opening year, so the ramp does not restart.
+        projects.business.open_plant(node_id, scenario.year)
+        projects.business.note_opened_year_if_unknown(node_id, scenario.year)
         if scalable:
-            inst_units = getattr(governance, "inst_units", None)
-            if inst_units is None:
-                inst_units = governance.inst_units = {}
-            inst_units[node_id] = unit_count
-        # Record when doors opened for venture_ramp. Reopening doesn't restart it.
-        _oy = getattr(projects, "opened_year", None)
-        if _oy is None:
-            _oy = projects.opened_year = {}
-        _oy.setdefault(node_id, scenario.year)
+            projects.business.set_size(node_id, unit_count)
+            self.household.bump_institution_units_version()
+        cause_book.record_concern(self, "opening", node_id, "opened")
         rev_now = self.venture_real_earnings(node_id, unit_count, fully_ramped=True)
         upkeep = self.venture_upkeep_quote(node_id, unit_count)
         up_now = upkeep["now"]
@@ -349,16 +338,13 @@ class VenturesMixin:
                                   money_text(self.state.household.capital, self, grouped=True),
                                   money_text(self.spending_power("buy"), self, grouped=True)))
             self.pay_edge(edges.EDGE_BUILDERS, fee, "expanding a venture")
-        governance = self.state.governance
-        inst_units = getattr(governance, "inst_units", None)
-        if inst_units is None:
-            inst_units = governance.inst_units = {}
-        inst_units[node_id] = have + add_units
+        units_now = have + add_units
+        self.state.projects.business.set_size(node_id, units_now)
         self.household.bump_institution_units_version()
-        rev_now, up_now = node["rev"] * inst_units[node_id], node["up"] * inst_units[node_id]
+        rev_now, up_now = node["rev"] * units_now, node["up"] * units_now
         return True, ("%s expanded from %.2f to %.2f units for %s: it "
                       "now earns about %s a year and costs about %s to run"
-                      % (node_id, have, inst_units[node_id], money_text(fee, self, grouped=True),
+                      % (node_id, have, units_now, money_text(fee, self, grouped=True),
                          money_text(rev_now, self, grouped=True), money_text(up_now, self, grouped=True)))
 
     def close_venture(self, node_id):

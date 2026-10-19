@@ -139,7 +139,8 @@ check("a single running school in a farming society raises literacy over "
 
 s_max = run_it(unopened_sim(capital=2000000.0, manual=False),
                "school_founded", "academy_network")
-s_max.inst_units = {"school_founded": 9.0, "academy_network": 9.0}
+for _institution in ("school_founded", "academy_network"):
+    s_max.state.projects.business.set_size(_institution, 9.0)
 # A society with almost nobody left on the farms.
 s_max.state.economy.society_labour_hours = {_FARM_TRADE: 0.02, "other": 0.98}
 for i in range(1, 701):
@@ -160,7 +161,8 @@ check("the lettered/propertied class closes most of its own gap too, on "
 # SocietyMixin._advance_trade_absorption/_grow_endemic_trade (society.py).
 s_teach = run_it(unopened_sim(capital=5000000.0, manual=False),
                  "school_founded", "academy_network")
-s_teach.inst_units = {"school_founded": 9.0, "academy_network": 9.0}
+for _institution in ("school_founded", "academy_network"):
+    s_teach.state.projects.business.set_size(_institution, 9.0)
 s_teach.trades_created.add("electrician")
 _yrs_needed = s_teach._trade_absorption_years(s_teach._schooling_flow())
 check("heavy schooling brings absorption well under the ~110-year "

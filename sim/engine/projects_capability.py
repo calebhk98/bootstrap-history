@@ -100,10 +100,7 @@ class CapabilityMixin:
             return 1.0 if self.running(node_id) else 0.0
         if node_id not in self.state.projects.operating:
             return 0.0
-        inst_units = getattr(self.state.governance, "inst_units", None)
-        if inst_units is None:
-            return 1.0
-        return max(0.0, inst_units.get(node_id, 1.0))
+        return max(0.0, self.state.projects.business.size_of(node_id))
 
     LITERACY_GENERAL_FLOOR = declare(
         "LITERACY_GENERAL_FLOOR", 0.02, kind="temporary_heuristic",

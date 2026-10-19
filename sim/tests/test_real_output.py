@@ -2,10 +2,10 @@
 opening prices. A technology raises it only through the production entries it improves and the
 goods those entries make; nothing counts completed technologies."""
 from .harness import *  # noqa: F401,F403
-from .real_output_helpers import (GOOD, YEARS_CLOSED, YEARS_TO_ENTER, plain_node, book_of_good, complete, run,
-                                  baseline_the_twin, close_years)
+from .real_output_helpers import (GOOD, YEARS_CLOSED, YEARS_TO_ENTER, plain_node, traded_units, complete, run,
+                                  close_years)
 
-from sim.engine import market_demand
+from sim.economy import api as economy_api
 from sim.engine.agents_port import SimWorld
 
 # --- a technology that improves no entry does not raise output.
@@ -26,22 +26,33 @@ check("...nor output per head", control.real_output_per_head() == twin.real_outp
 
 
 # --- society output is the sum of quantities times opening prices, in this civilisation's money.
+# Every good is the units the economy traded, carried from its first year onto the economy's opening basket and valued at
+# the economy's opening prices (Complaint 507, stage 4).
 game = sim(civ="rome_100ad", capital=1e9)
-game._open_market_book()
-book = game.state.economy.market_book
-book["iron"]["traded_tonnes"] *= 1.5
-book_of_good(game)["traded_tonnes"] *= 0.8
-from sim.engine.real_output import opening_prices_in_hours
-base_prices = opening_prices_in_hours(frozenset(game.state.projects.granted), game.civ, game._opening_farmed_hectares)
-opening = market_demand.household_demand_by_material(
-    base_prices, game._opening_population(), market_demand.MEAN_INCOME_HOURS_PER_CAPITA,
-    game.civ, game.world_map)
-total = 0.0
-for material, units in opening.items():
-    entry = book.get(game._material_tag(material)[0])
-    if entry is None or units <= 0.0 or material not in base_prices:
-        continue
-    total += units * entry["traded_tonnes"] / entry["reference_tonnes"] * base_prices[material]
+check("output per head is one before any year has run", game.real_output_per_head() == 1.0, game.real_output_per_head())
+close_years(game, 1)
+economy = game.economy.agent.economy()
+check("...and at the baseline, the first settled year",
+      abs(game.real_output_per_head() - 1.0) <= 1e-9, game.real_output_per_head())
+basket = game.base_basket()
+opening = economy_api.opening_quantities(economy)
+check("the opening basket is the economy's own, every good in it",
+      all(abs(basket["units"][good] - opening[good]) <= 1e-12 * opening[good] for good in basket["units"])
+      and set(basket["units"]) <= set(opening) and bool(basket["units"]))
+baseline = game.economy.agent.stored["volume_baseline"]
+check("the baseline holds every good the economy traded in its first year",
+      all(baseline.get(good, 0.0) > 0.0 for good in basket["units"] if economy_api.traded_volumes(economy).get(good, 0.0) > 0.0))
+heaviest = sorted(basket["units"], key=lambda good: -basket["units"][good] * basket["prices"][good])[:2]
+for good in heaviest:       # the economy sold half as much again of one good, and a fifth less of another
+    factor = 1.5 if good == heaviest[0] else 0.8
+    for key in list(economy.record.volumes):
+        if key.split("|", 1)[0] == good:
+            economy.record.volumes[key] *= factor
+volumes = economy_api.traded_volumes(economy)
+held = [good for good in basket["units"] if baseline.get(good, 0.0) > 0.0]
+scale = (sum(basket["units"][good] * basket["prices"][good] for good in held)
+         / sum(baseline[good] * basket["prices"][good] for good in held))
+total = scale * sum(volumes.get(good, 0.0) * basket["prices"][good] for good in held)
 check("real output is the sum of quantities sold times opening prices",
       abs(game.real_output_hours() - total) <= 1e-9 * total, (game.real_output_hours(), total))
 check("...and the lines it is made of add up to it",
@@ -55,3 +66,17 @@ check("society output is that, less the share of working people under arms, in t
 check("no field of the economy still counts technologies",
       not hasattr(game.state.economy, "economy") and not hasattr(game, "economy_index")
       and not hasattr(game, "output_volume_scale"))
+check("the engine keeps no volume of its own: no follower of the economy's cleared volumes, no reference tonnes split",
+      not hasattr(game, "_follow_cleared_volumes") and not hasattr(game, "traded_ratio"))
+
+# --- a population that falls without a technique does not change output per head: output falls with the people.
+fallen = sim(civ="rome_100ad", capital=1e9)
+close_years(fallen, 1)
+output_before, per_head_before, people_before = fallen.real_output_hours(), fallen.real_output_per_head(), fallen.population.total
+fallen._apply_population_mortality_shock(0.4)
+close_years(fallen, 2)
+check("a population fall without a technique lowers real output", fallen.real_output_hours() < output_before,
+      (output_before, fallen.real_output_hours()))
+check("...but not output per head, which stays near where it was",
+      abs(fallen.real_output_per_head() / per_head_before - 1.0) <= 0.25,
+      (per_head_before, fallen.real_output_per_head(), people_before, fallen.population.total))

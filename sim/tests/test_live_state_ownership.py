@@ -264,16 +264,11 @@ def _test_governance_and_population_bidirectional_sync():
 	"""Verify governance and population subsystems sync bidirectionally."""
 	s = sim(civ="rome_100ad", capital=1000.0)
 
-	# 1. Governance inst_units synchronization
-	s.inst_units = {"senate": 3.0}
-	if s.state.governance.inst_units.get("senate") != 3.0:
-		return False, f"inst_units via sim failed to sync to state: {s.state.governance.inst_units}"
-	if s.household.inst_units.get("senate") != 3.0:
-		return False, f"inst_units via sim failed to sync to household proxy: {s.household.inst_units}"
-
-	s.state.governance.inst_units["guild"] = 5.0
-	if s.inst_units.get("guild") != 5.0:
-		return False, f"inst_units via state failed to sync to sim: {s.inst_units}"
+	# 1. A plant's size lives on the seat's business and the household proxy reads the same one
+	s.state.projects.business.open_plant("senate", s.year)
+	s.state.projects.business.set_size("senate", 3.0)
+	if s.household.opened_year_of("senate", -1) != s.year or s.state.projects.business.size_of("senate") != 3.0:
+		return False, "a plant opened through the state is not seen through the household proxy"
 
 	# 2. Population synchronization across Sim, Population proxy, and PopulationState
 	s.pop_children = 12000.0

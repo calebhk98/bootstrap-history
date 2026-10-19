@@ -267,6 +267,23 @@ each rule is the agents path unless open question 3 says otherwise. Needs 1 and 
 (the same business owned by a seat and by a firm for one year produces the same crew, upkeep, takings and closing decision
 inputs); closing frees its crew and stops its outlays; mothball then restore returns the same plants.
 
+*Stage 3a partly done (branch `514-stage-3a-founder-businesses-on-the-object`).* Moved: the seat's plants live in
+`ProjectsState.businesses` (one `Business` per seat so far, reached as `projects.business`); `Plant` gained `state`
+(operating or mothballed), `since_year` and `reason`; `Business` gained `mothball`, `restore` and `forget_reason`, and
+set-like views (`business_views.py`: `operating()`, `mothballed()`, `closures()`) so readers keep their `in` and iteration.
+`ProjectsState.operating`, `mothballed` and `closures` are now properties over the business; `opened_year` and
+`GovernanceState.inst_units` are deleted (a plant's `opened_year` and `size`). `open_venture`, `close_work`
+(`close_venture`, `mothball_work`), `restore_work`, `_expand_institution`, `institution_units`, `reopen_units` and the
+seat's side of an exchange (`HouseholdParty.capacity_of`, `release_plant`, `receive_plant`) act on the business; a seat
+selling a plant now hands over its size and age, as a firm does. Saves check saved plants against the tree. Tests:
+`test_founder_and_firm_agree.py`, mothball and restore in `test_business_owner_kinds.py`, the fingerprint reads
+`businesses`. Not moved, still to do: the opening fee is still `venture_capex` (a share of the project cost), not the
+entry's `capital` (needs the entry capital wired for every node; changes openings); the crew rule (`venture_hands`,
+`venture_foreman`, supervision) and the yearly takings and upkeep are still the founder's own code (stages 4 and 3c), so
+the wall allowlist did not shrink; manual `close` still mothballs (so `restore` works after it) where the agents path
+discards the plant; the world-view methods on `HouseholdParty` and `agents_port` still exist (stage 3c); `playtest/` and
+`sim/PROTOCOL.md` need no change yet (the command shapes are unchanged).
+
 **Stage 3b: the yearly rules.** Staffing closure and reopening, loss shedding, creditor seizure and the capability
 institutions' occupancy scaling become the business's `close` reasons, driven by one `Business.review(owner, world)`. Owns:
 `projects_staffing.py` (+ `_report`, `_shortfall`), `economy_credit.py` (seizure and advice), `step_phase_money.py`,
@@ -274,6 +291,27 @@ institutions' occupancy scaling become the business's `close` reasons, driven by
 After 3a. Proof: `stuck` and `open` give the same refusal for the same reason (one function, as `staffing_open_refusal` is
 today); a business that loses money for consecutive years closes under the same rule for a seat and a firm (when the seat's
 `auto_shed` is on); seizure takes the business, not the owner's knowledge (extend `test_firm_exit_debt.py`).
+
+*Stage 3b partly done (branch `514-stage-3b-business-review`).* Moved: `Business.review(owner, world, rules)`
+(`sim/agents/business_review.py`) decides which plants close and for which reason (`STAFF_SHORT`, `LOSS_MAKING`,
+`CREDITOR_SEIZURE`; the `CLOSED_*` names on `Sim` alias them), and `Business.review_reopening` brings staff closures
+back. The owner answers through `Reviewable` hooks (defaults on `Actor`; the founder's household answers through
+`business_founder_review.py` and `sim/engine/projects_review.py`, reached as `SimWorld.founder_review()`). A `Plant`
+counts `loss_years` (`Business.note_year`); one rule closes a plant after `EXIT_LOSS_YEARS` loss years for a firm
+and for a seat whose `auto_shed` is on (capability institutions, granted works and `never_abandon` works are
+spared); `Firm.act` exits when the review leaves it no plant. `close_unstaffed_ventures`, `reopen_restaffed_ventures`,
+`shed_loss_makers` and the seizure in `answer_exhausted_credit` call the review; the inline abandonment in
+`step_phase_money` is gone (the same pressure rule, `cuts_losses_now`, runs in `shed_loss_makers`). A firm's default
+(`firm_exit.close_firm`) seizes every plant through `Business.seize_all`, leaving what it learned. `open` and `stuck` call
+`open_refusal` (running gate, then people); the running gate is a coded refusal, and `stuck` reports `blocked_by`.
+Differences resolved: the loss streak is per plant, not the last plant's margin overwriting the firm's count; a seat's
+streak is its fully-ramped margin (`concern_margin`), a firm's is its realised margin (ramp years included) until 3c
+puts both on the kernel; `stuck` charges `opening_fee` (grace discount included) and compares to `spending_power("open")`,
+as `open` does; pressure shedding and seizure rank by `concern_margin`, institutions last. Not moved: the occupancy
+scaling of capability institutions (`INSTITUTION_FLOOR` in `economy_production.institution_upkeep`) stays an upkeep
+figure, for 3c; a firm has no staffing closure (it finds a share of its crew and makes that share), pending stage 4;
+the seat's staffing closure still ranks by node figures inside `concerns_to_close_for_staffing`. Tests:
+`test_business_review.py`, `test_firm_exit_debt.py`. Allowlist: four entries pruned.
 
 **Stage 3c: takings and upkeep through the kernel.** `economy_production.revenue`, `upkeep`, `concern_revenue`,
 `ledger_concern_rows`, `revenue_sources`, `venture_real_earnings`, `venture_upkeep_quote`, `concern_levy` and

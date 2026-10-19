@@ -13,7 +13,7 @@ from typing import (
 	Optional, Set, Tuple, Union, get_args, get_origin, get_type_hints,
 )
 
-from sim.agents.api import ActorRecord, ActorsState  # noqa: F401
+from sim.agents.api import ActorRecord, ActorsState, Business  # noqa: F401
 from sim.engine import cash_book
 from sim.engine.state_holdings import HoldingsState, SeatProgressState
 from sim.invalidating import ActiveProjectState, _InvalidatingDict
@@ -214,7 +214,8 @@ class ProjectsState:
 	active: Dict[str, ActiveProjectState] = field(default_factory=dict)
 	done: Set[str] = field(default_factory=set)
 	done_year: Optional[Dict[str, int]] = None
-	operating: Set[str] = field(default_factory=set)
+	# the founder's businesses and their plants: what is running, switched off, how big and since when
+	businesses: List[Business] = field(default_factory=lambda: [Business(business_id="founder")])
 	failed_attempts: DefaultDict[str, int] = field(default_factory=lambda: collections.defaultdict(int))
 	# trade -> technique -> retained worker-years of anyone running it (sim/labour/tenure.py, industry_depth.py)
 	tenure: Dict[str, Dict[str, float]] = field(default_factory=dict)
@@ -222,10 +223,8 @@ class ProjectsState:
 	industry_seeded: bool = False
 	# technique -> worker-years a year the society's opening producers put in (industry_depth.py)
 	industry_opening_rate: Dict[str, float] = field(default_factory=dict)
-	mothballed: Set[str] = field(default_factory=set)
 	bountied: Set[str] = field(default_factory=set)
 	granted: Set[str] = field(default_factory=set)
-	opened_year: Dict[str, int] = field(default_factory=dict)
 	paid_towards: Dict[str, float] = field(default_factory=dict)
 	forgotten: Dict[str, int] = field(default_factory=dict)
 	trade_hours_used: Dict[str, float] = field(default_factory=dict)
@@ -238,12 +237,46 @@ class ProjectsState:
 	# node ids, `category:<cat>` and `trait:<trait>` the automatic starters (rush, auto_open, auto_commission) skip
 	excluded: Set[str] = field(default_factory=set)
 	stalled: int = 0
-	# work id -> {"reason": str, "year": int}; only while the work is mothballed
-	closures: Dict[str, Dict[str, object]] = field(default_factory=dict)
 	# every work ever shut for want of staff; kept after it reopens
 	ever_closed_for_staff: Set[str] = field(default_factory=set)
 	# this year's staffing closures and reopenings: year, closed, reopened, short (resource -> amount)
 	staffing_tally: Dict[str, object] = field(default_factory=dict)
+
+	@property
+	def business(self) -> Business:
+		"""The seat's own business, which holds the plants it runs."""
+		return self.businesses[0]
+
+	@property
+	def operating(self):
+		return self.business.operating()
+
+	@operating.setter
+	def operating(self, value) -> None:
+		self._replace_keys(self.business.operating(), value)
+
+	@property
+	def mothballed(self):
+		return self.business.mothballed()
+
+	@mothballed.setter
+	def mothballed(self, value) -> None:
+		self._replace_keys(self.business.mothballed(), value)
+
+	@property
+	def closures(self):
+		"""{work id: {"reason", "year"}} of the shut works that record why (read only)."""
+		return self.business.closures()
+
+	@staticmethod
+	def _replace_keys(view, value) -> None:
+		if value is view:
+			return
+		wanted = set(value or ())
+		for key in [key for key in view if key not in wanted]:
+			view.discard(key)
+		for key in sorted(wanted):
+			view.add(key)
 
 	def active_keys_sorted(self) -> List[str]:
 		"""Return active project ids in the canonical resolution order.
@@ -329,7 +362,6 @@ class EconomyState:
 @dataclass
 class GovernanceState:
 	"""Institutions and civic administrative units."""
-	inst_units: Optional[Dict[str, float]] = None
 	gov: float = 0.0
 
 
@@ -366,6 +398,8 @@ class PopulationState:
 	pop_working_age: float = 0.0
 	pop_elderly: float = 0.0
 	population_change_last_year: Optional[float] = None
+	# the nation's people-weighted food eaten over need in the economy's last closed year (food_eaten.py)
+	food_eaten_over_need: Optional[float] = None
 	# one dict per simulated year: year, population, births, deaths, nutrition_ratio
 	yearly_record: List[Any] = field(default_factory=list)
 

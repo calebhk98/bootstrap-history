@@ -239,3 +239,34 @@ solves), against milliseconds shipped, which is a few percent of a year, not the
 of a year that meets a new band is not these solves and is still open. Measure with the in-game solve keys
 and a cold `ROME_CACHE_DIR` (`solve_cache.recording()` around `Sim.step()`, and `time.process_time()` around
 `shipped_rate_bands.solve_other_bands`).
+
+## Round 3: entry siting priced each tile once per demand; entry falls from a fifth of the year to under a tenth
+
+Profile of the second warm stepped Rome year (`harness.sim()`, `step()`, then `cProfile` over the second `step()`,
+sorted by `tottime` and `cumtime`; and the economy's phases wrapped in `time.process_time`). The profile put
+`open_entrants` at under a third of the profiled year and, inside it, `location.entry_siting`'s `siting` at
+about a quarter of the whole: it prices a recipe on every candidate tile for every unmet demand (about 1800
+calls, about 28000 candidate tiles a year), and each candidate re-read wages, live input prices, the land rent,
+the input haul (`location_inputs.input_haul_cost`, a weighted carriage sum per input), the tile's spare hours
+(`people_by_trade`) and the headroom, none of which depends on the demand being sited. Phase shares of the
+timed year, before: `clear_goods` about a fifth, `open_entrants` about a fifth, merchants' orders about a
+sixth, labour clearing about a tenth, `close_agents` a tenth, `_lend` (merchants' credit requests) under a tenth.
+
+Cut (both exact): one `entry_siting` call now reads each (recipe, tile) once (`location._tile_part`: variable
+cost, yield, input haul, staffable runs, headroom) and only the output's carriage to the demand's anchor is
+priced per demand (`location.assembled_cost`, the same arithmetic `cost_per_run` now calls). Nothing the
+parts read changes while the plans are made (producers are added after all plans), and the supplies were
+already kept per call. Proof: the sorted-key dump of `save_state` after three stepped Rome years is identical
+before and after (md5 equal over three runs); `sim/tests/test_location_assembled_cost.py` keeps the parts
+equal to `cost_per_run`; quick tier green.
+
+Measured (CPU, shared machine at load 4 to 6, so the spread is real): `open_entrants` 1.47 s before, 0.79 s
+after the first memo, 0.46 s after the second (one phase run each); a warm year (years 2 and 3 of three) 6.1 to
+6.5 s before, 5.3 to 5.9 s after. Command: step three years of `harness.sim()` with `time.process_time` around
+each `step()`; phases by wrapping the names `economy.py` imports.
+
+Left: `clear_goods` and merchants (`_good_routes` is about three quarters of merchants' orders: its inner loop
+over destinations is about 3.6 million iterations a year, each a lookup and a few additions; the break bound
+already stops it at the profitable destinations, and a carriage-sorted walk changes tie order), then labour
+switching (`_odds`, `_carry_out`), `close_agents` and credit requests, each flat. The year is still about
+twice the target.

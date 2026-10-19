@@ -6,60 +6,15 @@ The nation is one patch of three age bands (the demography module's bands). A pa
 contact from routes. Technology acts through `disease_effects` on node mechanics. Nothing here names a
 pathogen or a technology."""
 import functools
-import random
 
-from sim.constants import declare
 from sim.disease import api as disease
 from sim.geography.api import endemic_people_loss, tiles_held
-from sim.world import demography
 
-BANDS = ("children", "working_age", "elderly")
-AGE_VULNERABILITY = {"children": demography.STARVATION_VULNERABILITY_CHILD,
-                     "working_age": demography.STARVATION_VULNERABILITY_WORKING_AGE,
-                     "elderly": demography.STARVATION_VULNERABILITY_ELDERLY}
-AGEING = {"children": ("working_age", 1.0 / demography.CHILD_BAND_WIDTH_YEARS),
-          "working_age": ("elderly", 1.0 / demography.WORKING_AGE_BAND_WIDTH_YEARS)}
-INTRODUCTION_BAND = "working_age"
-CAREGIVER_BANDS = ("working_age",)
-
-DISEASE_CONTACT_ANNUAL_CHANCE = declare(
-    "DISEASE_CONTACT_ANNUAL_CHANCE", 0.25, kind="temporary_heuristic",
-    unit="dimensionless (chance per year, per listed pathogen, while it is not circulating)",
-    source=None, confidence="D",
-    why="Stands in for the outside world exporting infected travellers along routes: while a civilisation's "
-        "outside-contact window is open and a listed pathogen is absent from the nation, one introduction "
-        "happens with this chance each year, drawn from the disease package's own hash of the game's seed, "
-        "never Sim.rng. Retired when the spatial stage carries infected people over geography routes.")
-DISEASE_CONTACT_INFECTED_PEOPLE = declare(
-    "DISEASE_CONTACT_INFECTED_PEOPLE", 10, kind="temporary_heuristic", unit="people", source=None, confidence="D",
-    why="Infected working-age people an introduction brings. Stands in for the traveller flux the spatial stage "
-        "derives; an arrival of a few people dies out by chance in a small share of draws, which the chain-binomial "
-        "step produces by itself.")
-AGE_FATALITY_FROM_STARVATION_VULNERABILITY = declare(
-    "AGE_FATALITY_FROM_STARVATION_VULNERABILITY", 1.0, kind="temporary_heuristic",
-    unit="dimensionless (exponent of the band's starvation vulnerability in its relative case fatality)",
-    source=None, confidence="D",
-    why="A pathogen's case fatality is one number for the whole population. Its split across bands reuses the "
-        "demography module's relative vulnerability of children, working-age adults and the elderly (sourced for "
-        "famine, direction supported for epidemic disease, magnitude borrowed), rescaled so the population-weighted "
-        "mean stays the pathogen's own figure. The nutrition shortfall multiplies it by the same curve baseline "
-        "mortality uses. Replaced by per-band fatality in the pathogen files when sourced.")
-DISEASE_CARE_COLLAPSE_SENSITIVITY = declare(
-    "DISEASE_CARE_COLLAPSE_SENSITIVITY", 1.0, kind="temporary_heuristic",
-    unit="dimensionless (extra case fatality, as a multiple of the base, when every caregiving adult is ill at once)",
-    source=None, confidence="D",
-    why="When most adults fall ill together nobody fetches water, feeds the sick or tends the harvest, so fatality "
-        "rises (the sociocultural account of virgin-soil epidemics, Neel 1970 on the Yanomami measles epidemic, "
-        "controversial; no figure read). The multiplier is one plus this times the ill share of the caregiving "
-        "band, so a small outbreak is unchanged and the figure is only the direction. Vary across the ensemble; "
-        "replaced by a sourced curve or by a nursing-capacity mechanism once households exist in the model.")
-DISEASE_URBAN_DENSITY_RATIO = declare(
-    "DISEASE_URBAN_DENSITY_RATIO", 4.0, kind="temporary_heuristic",
-    unit="dimensionless (density of an urban resident's neighbourhood over a rural resident's)",
-    source=None, confidence="D",
-    why="The nation is one patch, so its crowding is the person-weighted density index: rural people at one, urban "
-        "people at this ratio, weighted by the civilisation's urban share. Pathogen transmissibilities are stated for "
-        "the rural index of one. Retired when the spatial stage gives each tile its own population and settlement.")
+nation, tuning = disease.nation, disease.nation_tuning
+BANDS = tuning.BANDS
+DISEASE_CARE_COLLAPSE_SENSITIVITY = tuning.DISEASE_CARE_COLLAPSE_SENSITIVITY
+DISEASE_CONTACT_ANNUAL_CHANCE = tuning.DISEASE_CONTACT_ANNUAL_CHANCE
+DISEASE_URBAN_DENSITY_RATIO = tuning.DISEASE_URBAN_DENSITY_RATIO
 
 
 @functools.lru_cache(maxsize=1)
@@ -82,42 +37,22 @@ class DiseaseWorld:
 
     def contact_windows(self):
         """[(pathogen ids, first year, last year)] the civilisation says the outside world reaches it in."""
-        exposure = self._sim.civ.get("disease_exposure") or {}
-        return [(tuple(entry["pathogens"]), entry["years"][0], entry["years"][1])
-                for entry in exposure.get("outside_contact", ())]
+        return nation.contact_windows(self._sim.civ.get("disease_exposure"))
 
     def seed_text(self):
         return "disease:%s:%d" % (self._sim.civ.get("id"), self._sim._farm_year_weather_seed(0, region="disease"))
 
     def introductions(self, records, year):
         """Pathogens that arrive this year: listed in an open window, absent from the nation, and drawn."""
-        arrivals = []
-        for pathogen_ids, first_year, last_year in self.contact_windows():
-            if not first_year <= year <= last_year:
-                continue
-            for pathogen_id in pathogen_ids:
-                if disease.is_circulating(records, pathogen_id):
-                    continue
-                draw = random.Random("%s:contact:%s:%d" % (self.seed_text(), pathogen_id, year)).random()
-                if draw < DISEASE_CONTACT_ANNUAL_CHANCE:
-                    arrivals.append(pathogen_id)
-        return arrivals
+        return nation.introductions(records, self.contact_windows(), year, self.seed_text(), DISEASE_CONTACT_ANNUAL_CHANCE)
 
     def crowding_index(self):
-        """The person-weighted density of the nation relative to a rural settlement: one for a wholly rural
-        people, rising toward the urban density ratio with the civilisation's urban share."""
-        urban = min(1.0, max(0.0, float(self._sim.civ.get("urban_fraction", 0.0))))
-        return (1.0 - urban) + urban * DISEASE_URBAN_DENSITY_RATIO
+        """The person-weighted density of the nation relative to a rural settlement."""
+        return nation.crowding_index(self._sim.civ.get("urban_fraction", 0.0), DISEASE_URBAN_DENSITY_RATIO)
 
     def fatality_scale_by_band(self, nutrition_ratio):
-        """Each band's multiplier on a pathogen's case fatality: its relative vulnerability, rescaled to a
-        population-weighted mean of one, times the shortfall of food it is living through."""
-        people = self.people_by_band()
-        total = sum(people.values())
-        weight = {band: AGE_VULNERABILITY[band] ** AGE_FATALITY_FROM_STARVATION_VULNERABILITY for band in BANDS}
-        mean = sum(people[band] * weight[band] for band in BANDS) / total if total > 0 else 1.0
-        return {band: weight[band] / mean * demography.nutrition_mortality_multiplier(nutrition_ratio, AGE_VULNERABILITY[band])
-                for band in BANDS}
+        """Each band's multiplier on a pathogen's case fatality (see `nation.fatality_scale_by_band`)."""
+        return nation.fatality_scale_by_band(self.people_by_band(), nutrition_ratio)
 
     def technology_scales(self, pathogen_ids):
         """({pathogen id: multiplier on case fatality}, {pathogen id: multiplier on transmission}) from the
@@ -155,18 +90,11 @@ class DiseasePortMixin:
         arrivals = world.introductions(state.records, year)
         if not arrivals and not state.records:
             return {}
-        known = pathogens()
         nutrition_ratio = self.population.nutrition_ratio(food_available_calories_per_day)
         pathogen_ids = sorted(set(state.records) | set(arrivals))
         fatality_by_pathogen, transmission = world.technology_scales(pathogen_ids)
-        result = disease.advance_year(
-            known, state.records, world.people_by_band(), world.seed_text(), introductions=arrivals,
-            introduction_band=INTRODUCTION_BAND, introduction_size=DISEASE_CONTACT_INFECTED_PEOPLE, ageing=AGEING,
-            fatality_scale=world.fatality_scale_by_band(nutrition_ratio), transmission_scale=transmission,
-            fatality_factor=fatality_by_pathogen, crowding=world.crowding_index(),
-            care_collapse=(CAREGIVER_BANDS, DISEASE_CARE_COLLAPSE_SENSITIVITY))
-        for pathogen_id in result.introduced:
-            state.introduced.setdefault(pathogen_id, []).append(year)
-        for pathogen_id, deaths in result.deaths_by_pathogen.items():
-            state.deaths[pathogen_id] = state.deaths.get(pathogen_id, 0) + sum(deaths.values())
-        return {band: float(count) for band, count in result.deaths_by_band.items()}
+        return nation.run_year(
+            pathogens(), state.records, state.introduced, state.deaths, world.people_by_band(), nutrition_ratio,
+            self.civ.get("urban_fraction", 0.0), arrivals, world.seed_text(), year, fatality_factor=fatality_by_pathogen,
+            transmission_scale=transmission, care_sensitivity=DISEASE_CARE_COLLAPSE_SENSITIVITY,
+            density_ratio=DISEASE_URBAN_DENSITY_RATIO)

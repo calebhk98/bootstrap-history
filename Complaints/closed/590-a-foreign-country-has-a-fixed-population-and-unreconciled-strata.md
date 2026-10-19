@@ -1,6 +1,6 @@
 # A foreign country's population never changes and its strata grow by their own rule
 
-**Status:** closed. Each foreign country's profile holds age cohorts stepped yearly by `Population.step` (`sim/agents/country_population.py`), fed a fixed supply until 591 (`FOREIGN_FOOD_HEADROOM`, a labelled heuristic), and its strata are scaled to the people counted there (`strata_seed.follow_foreign_populations`). Test: `country_population`.
+**Status:** closed. Each foreign country's profile holds age cohorts stepped yearly by `Population.step` (`sim/agents/country_population.py`), fed by its own farm (591), and its strata are scaled to the people counted there (`strata_seed.follow_foreign_populations`). Test: `country_population`.
 
 Part of Complaint 482 (Countries other than the home one are static stubs).
 

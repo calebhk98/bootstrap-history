@@ -13,7 +13,7 @@ from .tuning_strata import (DEFAULT_ARTISAN_SHARE_OF_URBAN, DEFAULT_BONDED_SHARE
 # the trades the default split's wage earners are paid as; a profile that declares its own strata
 # names its own (labelled heuristic: a default until scenarios declare strata)
 DEFAULT_TRADES = {"labourers": "farmer", "poor": "labourer", "artisans": "artisan", "merchants": "merchant",
-				  "bonded": "labourer"}
+				  "bonded": "farmer"}
 
 
 def has_bondage(profile: CountryProfile) -> bool:
@@ -106,7 +106,7 @@ def strata_spawner(registry: Any, world: Any) -> List[str]:
 	"""The yearly step after every actor's turn: found missing strata, settle moves and keep, then
 	hold each country's strata to the people counted there: the home world's count, each foreign Population's."""
 	founded = seed_strata(registry, world)
-	step_foreign_populations(registry)
+	step_foreign_populations(registry, world)
 	if registry.of_kind("stratum"):
 		settle_strata(registry, world)
 		follow_population(registry, world)

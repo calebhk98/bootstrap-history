@@ -16,7 +16,7 @@ from typing import Dict, List, Mapping, Optional
 from sim.constants import declare
 
 from . import currency, durable_stock
-from .credit_view import claims_of
+from .credit_view import claims_of, equity_of
 from .households_ability import affordable_goods, household_budget_for_need
 from .households_basket import (Basket, PricedNeed, need_prices, need_units, price_ceilings, quality_reach,
                                 with_quality_reach)
@@ -177,7 +177,8 @@ def goods_orders(cohort: Cohort, view: MarketView, cash: float, income_this_year
                                    cohort.expected_inflation)
     # the pace is set by the larger of this year's and last year's income, since a year's income so far
     # understates a household's usual income in its first year
-    drawdown = min(currency.spending_adjustment(cash + claims + store_value, keep, income_this_year),
+    owned = equity_of(view, cohort.agent_id)     # what it owns of the firms is wealth it already holds
+    drawdown = min(currency.spending_adjustment(cash + claims + store_value + owned, keep, income_this_year),
                    WEALTH_DRAWDOWN_LIMIT * max(0.0, income_this_year, cohort.last_year_income))
     spending = max(0.0, min(cash, income_this_year + drawdown))
     if cohort.expected_spending > 0.0:

@@ -47,8 +47,6 @@ class FounderSalesMixin:
             sale = exchange_sale.sell_concern(party, node_id, buyers, find_actor, world)
         except CommandRejected as reason:
             return {"ok": False, "error": str(reason)}
-        projects.mothballed.discard(node_id)
-        self.clear_closure(node_id)
         return {"ok": True, "sold": node_id, "buyer": sale["buyer"], "price": round(sale["price"], 1),
                 "capital": round(self.household.capital, 1)}
 

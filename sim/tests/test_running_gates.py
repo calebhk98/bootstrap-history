@@ -8,6 +8,8 @@ QUICK_TOPIC = True
 
 import unittest
 from types import SimpleNamespace
+
+from sim.engine.state import ProjectsState
 from unittest import mock
 
 from sim.engine import validate_running_gates
@@ -35,9 +37,9 @@ class _Host(RunningGatesMixin, CapabilityMixin, StaffingMixin, FogMixin):
     def __init__(self, done, operating):
         self.nodes = _nodes()
         self.state = SimpleNamespace(
-            projects=SimpleNamespace(done=set(done), granted=set(), operating=set(operating),
-                                     mothballed=set(), closures={}, ever_closed_for_staff=set()),
+            projects=ProjectsState(done=set(done), granted=set()),
             scenario=SimpleNamespace(year=100), household=SimpleNamespace(log=[]))
+        self.state.projects.operating = set(operating)
 
     def on_road_to_goal(self, node_id):
         return True

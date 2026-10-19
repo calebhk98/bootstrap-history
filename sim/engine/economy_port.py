@@ -185,11 +185,21 @@ class EconomyPort:
         """An actor's tonnes of a commodity it bids for in the agent economy's market this year, with its budget in coin."""
         self.agent.note_purchase(buyer, commodity, tonnes, budget)
 
-    def agent_cleared_ratio(self, materials):
-        """What the agent economy cleared last year of these materials, over its first year's; None while it
-        opens or when they had not cleared before."""
+    def agent_volume_baseline(self):
+        """{good: units the agent economy cleared in the first year it cleared any}; None while it opens."""
         agent = self._answering_agent()
-        return None if agent is None else agent.cleared_ratio(materials)
+        return None if agent is None else agent.volume_baseline()
+
+    def agent_traded_volumes(self):
+        """{good: units the agent economy traded last year}; None while it opens."""
+        agent = self._answering_agent()
+        return None if agent is None else agent.traded_volumes()
+
+    def agent_opening_basket(self):
+        """({good: units a year households bought at the opening}, {good: opening price in labour hours}) of the
+        agent economy; None while it opens."""
+        agent = self._answering_agent()
+        return None if agent is None else agent.opening_basket()
 
     def producers_stamp(self):
         """Changes whenever the agent economy's producers might (each year it runs, and when it gains recipes)."""

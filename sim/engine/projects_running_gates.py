@@ -5,7 +5,7 @@ gates beginning the node, switches the node's effects off while a work is shut (
 closes the node when it is open as the work closes. `requires_ways` ({way: kilometres}) asks for a
 length of road or railway the actor has built (sim/engine/ways.py). Nothing here names a node.
 """
-from sim.refusal import LogLine
+from sim.refusal import LogLine, Refusal
 from .blockers import blocker_kind
 
 
@@ -57,7 +57,9 @@ class RunningGatesMixin:
     def running_gate_refusal(self, node_id):
         """The sentence refusing to open `node_id` while a work it needs is not running, else None."""
         unmet, short = self.unmet_running_gates(node_id), self.ways_short(node_id)
-        return self.running_gate_text(unmet, short) if unmet or short else None
+        if not (unmet or short):
+            return None
+        return Refusal("running_gate", self.running_gate_text(unmet, short), unmet=list(unmet), ways_short=dict(short))
 
     def _running_gate_index(self):
         """({work id: sorted ids that require it running}, ids that require something), per tree."""

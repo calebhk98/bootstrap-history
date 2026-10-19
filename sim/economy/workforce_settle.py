@@ -3,7 +3,7 @@
 The opening staffs a trade by the hours producers need at full capacity (labour_state.opening_workforce).
 Producers then work well under capacity, so a trade holds more people than it has jobs and, glutted, pays
 the floor. The spin-up's few years cannot thin it (a trade's people leave slowly). Here each skilled trade
-is cut to the hours producers plan for the coming year, or the hours hired in the last, whichever is more;
+is cut to the hours producers plan for the coming year plus what other buyers hired in the last;
 the people cut take up the unskilled trade, as the opening gives them to it.
 """
 from typing import Dict, Tuple
@@ -13,21 +13,27 @@ from sim.labour.api import fallback_trade
 from . import producers
 from .labour_state import core_trades
 from .market_memory import market_key
+from .setup import labour_area
 
 
 def expected_hours(setup, record, view) -> Dict[Tuple[str, str], float]:
-    """Hours wanted next year by (labour area, trade): what each producer plans to bid, or what the
-    market hired last year where that is more (state and other buyers show up there)."""
+    """Hours wanted next year by (labour area, trade): what each producer plans to bid, plus what the
+    market hired last year beyond the producers' own runs (state and other buyers show up there)."""
     wanted: Dict[Tuple[str, str], float] = {}
+    worked: Dict[str, float] = {}      # market key -> hours the producers' own runs last year asked of it
     for producer_id, producer in sorted(record.producers.items()):
-        plan = producers.plan(producer, setup.recipes[producer.recipe_id], view,
-                              record.book.balance(producer_id, setup.currency_id))
+        recipe = setup.recipes[producer.recipe_id]
+        plan = producers.plan(producer, recipe, view, record.book.balance(producer_id, setup.currency_id))
         for bid in plan.labour_bids:
             wanted[(bid.area, bid.trade)] = wanted.get((bid.area, bid.trade), 0.0) + bid.hours
+        for trade, hours in recipe.labour_hours.items():
+            key = market_key(trade, labour_area(producer.tile))
+            worked[key] = worked.get(key, 0.0) + max(0.0, producer.last_runs) * hours
     for area, by_trade in record.workforce.workers.items():
         for trade in by_trade:
-            hired = record.hours_hired.get(market_key(trade, area), 0.0)
-            wanted[(area, trade)] = max(wanted.get((area, trade), 0.0), hired)
+            key = market_key(trade, area)
+            others = max(0.0, record.hours_hired.get(key, 0.0) - worked.get(key, 0.0))
+            wanted[(area, trade)] = wanted.get((area, trade), 0.0) + others
     return wanted
 
 

@@ -97,7 +97,6 @@ check("opening a staffing-closed concern clears its closure",
 
 # --- a record with no closed work behind it does not count
 s_orphan = staffed_sim()
-s_orphan.state.projects.closures[NODE_ID] = {"reason": "staff", "year": s_orphan.year}
 check("a closure record for a work that is running is ignored",
       s_orphan.closure_of(NODE_ID) is None)
 

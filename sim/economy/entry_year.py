@@ -61,7 +61,7 @@ def open_entrants(setup, record, view, area_map, unmet_by_market: Dict[Tuple[str
                                 capacity_runs=0.0, expected_sales=plan.runs,
                                 yield_factor=sites.yield_at(recipe, plan.tile, by_limits,
                                                             setup.yield_factor_by_recipe_tile.get(key, 1.0)))
-        elif producer_id in record.expansion_runs:
+        elif record.expansion_runs.get(producer_id, 0.0) > 0.0:     # a working-capital loan builds no plant
             continue                                    # plant it already asked for is still to come
         if not builds_plant:
             producer = replaced(producer, capacity_runs=producer.capacity_runs + plan.runs,

@@ -127,16 +127,10 @@ def _stuck_shut_ventures(sim, nodes):
     # little free staff capacity for open_venture to actually succeed.
     # The recommendation has to check that it would work, not just that
     # it would pay.
-    _shut_for_staff = getattr(sim, "shut_for_staff", {})
     def _capex_now(_node_id):
-        _fee = sim.venture_capex(_node_id)
-        if (_node_id in _shut_for_staff
-                and sim.year - _shut_for_staff[_node_id] <= sim.STAFF_CLOSURE_GRACE):
-            _fee *= 0.1
-        return _fee
+        return sim.opening_fee(_node_id)[0]   # exactly what `open` charges, grace discount included
     def _openable(_node_id):
-        return (sim.staffing_open_refusal(_node_id, sim.opening_fee(_node_id)[1]) is None
-                and _capex_now(_node_id) <= sim.spending_power("buy"))
+        return sim.open_refusal(_node_id) is None and _capex_now(_node_id) <= sim.spending_power("open")
     _really_openable = [node_id for node_id in _shut if _openable(node_id)]
     if _really_openable:
         _best = max(_really_openable,
@@ -152,15 +146,16 @@ def _stuck_shut_ventures(sim, nodes):
                           money_text(sim.venture_real_upkeep(_best), sim, grouped=True),
                           _best)}
     _best = max(_shut, key=lambda k: sim.venture_real_earnings(k) - sim.venture_real_upkeep(k))
-    _staff_refusal = sim.staffing_open_refusal(_best, sim.opening_fee(_best)[1], with_advice=False)
+    _staff_refusal = sim.open_refusal(_best, with_advice=False)   # the refusal `open` gives, and its cause
     if _staff_refusal:
         _why = _staff_refusal.rstrip(".")
     else:
         _why = ("opening it costs %s, and between cash "
                 "and what anyone will advance you can raise %s"
                 % (money_text(_capex_now(_best), sim, grouped=True),
-                   money_text(sim.spending_power("buy"), sim, grouped=True)))
+                   money_text(sim.spending_power("open"), sim, grouped=True)))
     return {"what": "things you built and cannot open yet", "kind": "closed",
+            "the_best_one": _best, "blocked_by": _staff_refusal.cause if _staff_refusal else "cash_short",
             "why": "%d finished concern(s) are shut and "
                    "earning nothing, and none of them can "
                    "be opened right now. The best is %s, "
