@@ -121,6 +121,13 @@ class Purses:
         self.interest_pending += owed
         return {POOL: owed}
 
+    def pay_arrears(self, borrower: str, owed: float) -> None:
+        """Pay interest that went unpaid in earlier years, from the purse; like any interest it waits in the pool."""
+        paid = min(owed, self.purse(borrower))
+        if paid > DEBT_FLOOR:
+            self.book.transfer(Transfer(borrower, POOL, COIN, paid, INTEREST_PAID))
+            self.interest_pending += paid
+
     def settle_interest(self) -> Dict[str, float]:
         """Share the interest the pool received among its depositors in proportion to their deposits, never more
         than the pool holds (the deposit rate is whatever that comes to; interest lost in a default is not paid),
