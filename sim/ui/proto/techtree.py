@@ -639,6 +639,8 @@ def _digest_row(sim, nodes, node_id, fog):
     calendar-floor detail the digest table never shows."""
     row = _startable_row(sim, nodes, node_id, fog)
     row.pop("nominal_calendar_floor_before_reputation", None)
+    if row.get("forecast_basis") == "market":
+        del row["forecast_basis"]  # the digest flags only a forecast with no market behind it; `all` and `why` carry the basis
     return row
 
 
