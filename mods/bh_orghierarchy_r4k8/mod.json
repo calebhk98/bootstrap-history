@@ -1,0 +1,9 @@
+{
+  "id": "bh_orghierarchy_r4k8",
+  "name": "Organisational Hierarchy",
+  "version": "0.1.0",
+  "dependencies": [],
+  "conflicts": [],
+  "code": ["hierarchy_commands.py"],
+  "permissions": ["code"]
+}

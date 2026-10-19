@@ -403,3 +403,14 @@ main first, so the economy's moved three times (to 410-418, then 425-433, then h
 ## 2026-10-14
 
 507 -> 512  no-producer-enters-for-goods-only-projects-ask-for (filed on fix-480-worked-around-results; 507 was taken)
+
+## 2026-10-19
+
+Filed on `deferred-feature-mods` (and named in its `engine-*` branches) while main took 561 to 632.
+
+561 -> 633  directed-hours-overhead-hook
+562 -> 634  mods-cannot-set-a-tiles-town-population
+563 -> 635  no-hook-lets-a-mod-feed-mortality-or-yield
+564 -> 636  actors-cannot-lend-or-hold-land-in-the-markets
+565 -> 637  map-and-move-cannot-name-places-from-a-mod
+566 -> 638  confiscation-ignores-claims-on-other-actors

@@ -1,0 +1,35 @@
+{
+  "_doc": "Kinds of holder a player can lodge coin with. Each becomes an actor kind '<mod_id>:<name>' with its own purse, created on the first deposit. Every number here is a labelled heuristic (CLAUDE.md 4.4): the engine has no model yet of a custodian's reputation, of coin carried between places, or of regional hazards. The holder's real costs and losses are not here: the engine charges the holder for keeping its coin under guard (coin_hoard.py) and for theft (theft_charge.py) exactly as it does any firm or state.",
+  "holders": {
+    "strongroom": {
+      "label": "a temple or priestly college elsewhere that keeps coin in a strongroom",
+      "carry_hours_per_tonne": 400.0,
+      "custody_markup": 0.25,
+      "failure_chance_per_year": 0.004,
+      "failure_loss_share": 0.5,
+      "_heuristic": {
+        "carry_hours_per_tonne": "labour hours of porters and escort to carry a tonne of coin to the holder; stands in for coin carried over the route to the holder's place, whose distance the holder does not yet have (retire: price the carriage from the geography freight functions once a holder has a tile).",
+        "custody_markup": "yearly fee as a multiple above the holder's own guard cost per unit of coin; the holder's margin. Stands in for a custodian that prices its risk (retire: a holder that sets its fee from its own loss record).",
+        "failure_chance_per_year": "yearly chance the holder is looted or its keepers abscond, independent of the founder's own hazards. Stands in for a regional hazard model (retire: dated hazards that carry a place, so a holder in another region meets that region's own).",
+        "failure_loss_share": "share of the holder's purse taken in such a failure."
+      }
+    },
+    "merchant_house": {
+      "label": "a trading partner's house elsewhere that holds coin on account",
+      "carry_hours_per_tonne": 250.0,
+      "custody_markup": 0.15,
+      "failure_chance_per_year": 0.02,
+      "failure_loss_share": 0.8,
+      "_heuristic": {
+        "carry_hours_per_tonne": "as for the strongroom, a nearer place.",
+        "custody_markup": "a thinner margin than a temple: cheaper, and so less cushion against its own losses.",
+        "failure_chance_per_year": "a house is likelier to fail than a temple (credit and voyages); invented relative size, not measured.",
+        "failure_loss_share": "a failing house loses most of what it holds."
+      }
+    }
+  },
+  "letter_of_credit": {
+    "fee_share_of_amount": 0.01,
+    "_heuristic": "share of the sum the issuing holder keeps for a letter honoured by another holder; stands in for the coin and risk the two houses carry between them (retire: carriage by route plus the issuer's own loss record)."
+  }
+}

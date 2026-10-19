@@ -1,0 +1,9 @@
+{
+  "id": "bh_cashshelter_z6f2",
+  "name": "Cash Shelter",
+  "version": "0.1.0",
+  "dependencies": [],
+  "conflicts": [],
+  "code": ["hooks.py"],
+  "permissions": ["code"]
+}

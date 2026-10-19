@@ -1,0 +1,9 @@
+{
+  "id": "bh_urbanisation_w2n6",
+  "name": "Urbanisation Drivers",
+  "version": "0.1.0",
+  "dependencies": [],
+  "conflicts": [],
+  "code": ["hooks.py"],
+  "permissions": ["code"]
+}

@@ -1,0 +1,14 @@
+{
+  "kinds": {
+    "bh_urbanisation_w2n6:tenement_dwellers": {
+      "_heuristic": "needs multiples, rates and the trade are the mod author's own, to be replaced by the urban mortality and housing mechanisms of Complaints/634; the kind only buys housing and water at the going prices so the cost of town life reaches the market through the ordinary rules",
+      "needs": {"food": 1.0, "shelter": 1.0, "water": 1.0},
+      "vital_needs": ["food", "water"],
+      "trade": "labourer",
+      "work_share": 0.5,
+      "birth_rate": 0.03,
+      "death_rate": 0.035,
+      "famine_death_rate": 0.3
+    }
+  }
+}

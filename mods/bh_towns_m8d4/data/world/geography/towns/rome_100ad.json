@@ -1,0 +1,302 @@
+{
+ "_doc": "Towns at the start year of one civilisation. Each entry: name, tile (a real tile id of the base map, found by placing lat/lon in the map's equal-area grid), lat, lon, and `sizes`, a list of dated snapshots {year, people, low, high, source, conf}. people is the point figure, low and high the range the literature gives; conf follows the map's letters (A checked against the cited source, B coordinate checked and size approximate, C from memory of a secondary compilation, D a weak guess). A size is an initial condition (cited, never tuned); the engine does not read it. Sizes of ancient and medieval towns differ by a factor of two or more between authors, which `low` and `high` show.",
+ "entries": [
+  {
+   "id": "bh_towns_m8d4:rome",
+   "name": "Rome",
+   "tile": "italy_03",
+   "lat": 41.9,
+   "lon": 12.5,
+   "sizes": [
+    {
+     "year": 100,
+     "people": 450000,
+     "low": 400000,
+     "high": 1000000,
+     "source": "Chandler, Four Thousand Years of Urban Growth (1987); Scheidel and others on the population of Rome. Estimates for the capital range from about 400 thousand to a million.",
+     "conf": "C"
+    }
+   ],
+   "also_called": [
+    "Roma"
+   ]
+  },
+  {
+   "id": "bh_towns_m8d4:alexandria",
+   "name": "Alexandria",
+   "tile": "egypt_08",
+   "lat": 31.2,
+   "lon": 29.9,
+   "sizes": [
+    {
+     "year": 100,
+     "people": 250000,
+     "low": 200000,
+     "high": 500000,
+     "source": "Chandler, Four Thousand Years of Urban Growth (1987); Modelski, World Cities: -3000 to 2000 (2003)",
+     "conf": "C"
+    }
+   ]
+  },
+  {
+   "id": "bh_towns_m8d4:antioch",
+   "name": "Antioch",
+   "tile": "turkey_04",
+   "lat": 36.2,
+   "lon": 36.16,
+   "sizes": [
+    {
+     "year": 100,
+     "people": 150000,
+     "low": 100000,
+     "high": 300000,
+     "source": "Chandler, Four Thousand Years of Urban Growth (1987); Modelski, World Cities: -3000 to 2000 (2003)",
+     "conf": "C"
+    }
+   ],
+   "also_called": [
+    "Antiochia"
+   ]
+  },
+  {
+   "id": "bh_towns_m8d4:seleucia_on_the_tigris",
+   "name": "Seleucia on the Tigris",
+   "tile": "iraq_03",
+   "lat": 33.1,
+   "lon": 44.5,
+   "sizes": [
+    {
+     "year": 100,
+     "people": 150000,
+     "low": 100000,
+     "high": 600000,
+     "source": "Chandler, Four Thousand Years of Urban Growth (1987); Modelski, World Cities: -3000 to 2000 (2003). Parthian, not Roman, at most dates; the tile is in the Roman start region.",
+     "conf": "D"
+    }
+   ]
+  },
+  {
+   "id": "bh_towns_m8d4:ephesus",
+   "name": "Ephesus",
+   "tile": "turkey_01",
+   "lat": 37.94,
+   "lon": 27.34,
+   "sizes": [
+    {
+     "year": 100,
+     "people": 100000,
+     "low": 50000,
+     "high": 250000,
+     "source": "Chandler, Four Thousand Years of Urban Growth (1987); Modelski, World Cities: -3000 to 2000 (2003)",
+     "conf": "C"
+    }
+   ]
+  },
+  {
+   "id": "bh_towns_m8d4:carthage",
+   "name": "Carthage",
+   "tile": "tunisia_02",
+   "lat": 36.85,
+   "lon": 10.32,
+   "sizes": [
+    {
+     "year": 100,
+     "people": 80000,
+     "low": 50000,
+     "high": 100000,
+     "source": "Chandler, Four Thousand Years of Urban Growth (1987); Modelski, World Cities: -3000 to 2000 (2003)",
+     "conf": "C"
+    }
+   ]
+  },
+  {
+   "id": "bh_towns_m8d4:damascus",
+   "name": "Damascus",
+   "tile": "syria_01",
+   "lat": 33.51,
+   "lon": 36.29,
+   "sizes": [
+    {
+     "year": 100,
+     "people": 40000,
+     "low": 20000,
+     "high": 80000,
+     "source": "Modelski, World Cities: -3000 to 2000 (2003)",
+     "conf": "D"
+    }
+   ]
+  },
+  {
+   "id": "bh_towns_m8d4:mediolanum",
+   "name": "Mediolanum",
+   "tile": "italy_05",
+   "lat": 45.46,
+   "lon": 9.19,
+   "sizes": [
+    {
+     "year": 100,
+     "people": 40000,
+     "low": 30000,
+     "high": 60000,
+     "source": "Chandler, Four Thousand Years of Urban Growth (1987) (Milan)",
+     "conf": "D"
+    }
+   ],
+   "also_called": [
+    "Milan"
+   ]
+  },
+  {
+   "id": "bh_towns_m8d4:lugdunum",
+   "name": "Lugdunum",
+   "tile": "france_03",
+   "lat": 45.76,
+   "lon": 4.83,
+   "sizes": [
+    {
+     "year": 100,
+     "people": 40000,
+     "low": 30000,
+     "high": 50000,
+     "source": "Chandler, Four Thousand Years of Urban Growth (1987) (Lyon)",
+     "conf": "D"
+    }
+   ],
+   "also_called": [
+    "Lyon"
+   ]
+  },
+  {
+   "id": "bh_towns_m8d4:corduba",
+   "name": "Corduba",
+   "tile": "spain_01",
+   "lat": 37.88,
+   "lon": -4.78,
+   "sizes": [
+    {
+     "year": 100,
+     "people": 30000,
+     "low": 20000,
+     "high": 50000,
+     "source": "Chandler, Four Thousand Years of Urban Growth (1987) (Cordoba)",
+     "conf": "D"
+    }
+   ],
+   "also_called": [
+    "Cordoba"
+   ]
+  },
+  {
+   "id": "bh_towns_m8d4:tarraco",
+   "name": "Tarraco",
+   "tile": "spain_05",
+   "lat": 41.12,
+   "lon": 1.25,
+   "sizes": [
+    {
+     "year": 100,
+     "people": 30000,
+     "low": 15000,
+     "high": 50000,
+     "source": "Modelski, World Cities: -3000 to 2000 (2003)",
+     "conf": "D"
+    }
+   ],
+   "also_called": [
+    "Tarragona"
+   ]
+  },
+  {
+   "id": "bh_towns_m8d4:leptis_magna",
+   "name": "Leptis Magna",
+   "tile": "libya_12",
+   "lat": 32.64,
+   "lon": 14.29,
+   "sizes": [
+    {
+     "year": 100,
+     "people": 30000,
+     "low": 20000,
+     "high": 80000,
+     "source": "Modelski, World Cities: -3000 to 2000 (2003)",
+     "conf": "D"
+    }
+   ]
+  },
+  {
+   "id": "bh_towns_m8d4:augusta_treverorum",
+   "name": "Augusta Treverorum",
+   "tile": "france_05",
+   "lat": 49.75,
+   "lon": 6.64,
+   "sizes": [
+    {
+     "year": 100,
+     "people": 30000,
+     "low": 20000,
+     "high": 80000,
+     "source": "Modelski, World Cities: -3000 to 2000 (2003) (Trier)",
+     "conf": "D"
+    }
+   ],
+   "also_called": [
+    "Trier"
+   ],
+   "note": "The tile is the nearest in the data; Trier lies on today's German border."
+  },
+  {
+   "id": "bh_towns_m8d4:athens",
+   "name": "Athens",
+   "tile": "greece_01",
+   "lat": 37.98,
+   "lon": 23.73,
+   "sizes": [
+    {
+     "year": 100,
+     "people": 25000,
+     "low": 10000,
+     "high": 40000,
+     "source": "Chandler, Four Thousand Years of Urban Growth (1987)",
+     "conf": "D"
+    }
+   ]
+  },
+  {
+   "id": "bh_towns_m8d4:byzantium",
+   "name": "Byzantium",
+   "tile": "turkey_06",
+   "lat": 41.01,
+   "lon": 28.98,
+   "sizes": [
+    {
+     "year": 100,
+     "people": 20000,
+     "low": 10000,
+     "high": 40000,
+     "source": "Chandler, Four Thousand Years of Urban Growth (1987) (later Constantinople)",
+     "conf": "D"
+    }
+   ],
+   "also_called": [
+    "Constantinople"
+   ]
+  },
+  {
+   "id": "bh_towns_m8d4:cyrene",
+   "name": "Cyrene",
+   "tile": "libya_13",
+   "lat": 32.82,
+   "lon": 21.86,
+   "sizes": [
+    {
+     "year": 100,
+     "people": 20000,
+     "low": 10000,
+     "high": 40000,
+     "source": "Modelski, World Cities: -3000 to 2000 (2003)",
+     "conf": "D"
+    }
+   ]
+  }
+ ]
+}
