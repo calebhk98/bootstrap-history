@@ -163,3 +163,11 @@ with the test kept honest.
   with the working-stock change in): `full_length_opening_checks_han` wage over floor and
   `full_length_opening_checks_norse` sited ores. Three known regressions, all waiting on 473; none is marked as an
   expected failure, so they stay visible.
+
+- Branch `507-stage-7-price-search-within-year`: `economy_innovator_pricing` "the price path falls steadily without a
+  swing between years" fails in year 6 (a rise of 1.253 against the 1.2 limit; earlier variants of the branch failed
+  the same check in year 16 or 20 by a hair). Cause: the in-year search plus the queued holding-value floor lets a
+  year's price fall fast while the entrant's capacity is still small, and the next year's price recovers by more than
+  the limit; it comes from the floor commit, not the exit valuation. Complaint 553 notes this check sits at its
+  threshold in every variant of the yearly step, so it is read as a cycle property, not a defect of one rule. The test
+  is not loosened and stays failing (`python3 -m sim.tests --slow --only economy_innovator_pricing --jobs 1`).

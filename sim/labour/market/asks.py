@@ -18,8 +18,8 @@ ASK_ADJUSTMENT_SHARE_PER_YEAR = declare(
     source=None, confidence="D",
     why="A seller that cannot sell lowers the ask until it sells, and one that sells out raises it until it "
         "does not; how fast follows how long a family can go without a sale (its own plot, savings, kin) "
-        "and how well it knows what others are paid, which the model does not carry. The same rate as a "
-        "goods seller's markdown (producers.UNSOLD_ASK_MARKDOWN_SHARE).")
+        "and how well it knows what others are paid, which the model does not carry. A goods seller's "
+        "unsold stock is marked down inside the year instead (economy/unsold_search.py).")
 
 
 def scale_of(state: MarketState, area: str, trade: str) -> float:

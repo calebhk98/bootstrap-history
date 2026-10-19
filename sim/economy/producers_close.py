@@ -14,7 +14,7 @@ from typing import Callable, Collection, List, Mapping, Optional, Sequence, Tupl
 
 from sim.constants import declare
 
-from . import unit_cost
+from . import inventory, unit_cost
 from .producers import (OUTPUT_CHANGE_SHARE_PER_YEAR, Producer, expected_output_prices, live_input_prices,
                         live_wages, next_expectations, share_working, within_a_years_change)
 from .protocols import MarketView
@@ -130,10 +130,23 @@ def _expected_run(producer, recipe, view, expectations, inputs, wages) -> Tuple[
               for good in recipe.outputs}
     if any(price is None for price in prices.values()):
         return 0.0, math.inf
+    prices = _behind_the_stock(producer, recipe, view, prices)
     cost = unit_cost.variable_cost_per_run(recipe, inputs, wages, producer.land_rent_per_run)
     if not math.isfinite(cost):
         return 0.0, math.inf
     return unit_cost.revenue_per_run(recipe, prices) * producer.yield_factor, cost
+
+
+def _behind_the_stock(producer, recipe, view, prices):
+    """A run's output joins the queue behind the stock the producer holds beyond its own runs' inputs, so it is
+    worth what the last unit of that queue fetches (inventory.queued_holding_value): a producer holding years of
+    unsold output does not count on the market's price, which a market with no trade leaves standing."""
+    if producer.expected_sales <= 0.0:
+        return prices
+    rate = view.interest_rate(view.currency_of(view.area_of(min(recipe.outputs), producer.tile)))
+    return {good: inventory.queued_holding_value(
+        price, max(0.0, view.stock(producer.agent_id, good, producer.tile) - recipe.inputs.get(good, 0.0) * producer.capacity_runs),
+        producer.expected_sales * recipe.outputs[good], rate, 0.0) for good, price in prices.items()}
 
 
 def _working_capital(producer, recipe, currency, worked, capacity, cash_kept, paying, revenue_per_run, inputs, wages):

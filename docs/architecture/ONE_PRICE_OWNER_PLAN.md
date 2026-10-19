@@ -391,6 +391,38 @@ Deletes: `UNSOLD_ASK_MARKDOWN_SHARE`, `UNSOLD_PROBE_SHARE_OF_CAPACITY`, `IDLE_SA
 `notional.thin_market_prices` and `THIN_MARKET_SHARE_OF_OPENING_DEMAND` (a thin market no longer holds an
 unreasonable price for years).
 
+**Done** (branch `507-stage-7-price-search-within-year`, 2026-10-19). What was built, and what it showed:
+
+- `sim/economy/unsold_search.py` (`clear_with_search`), called by `year_goods.clear_goods` after `strategic_offers`. A
+  market that clears with unsold stock held by producers still at the ask `producers.offers` gave them is searched:
+  every such seller's ask is capped at one common level, no seller below its own floor (`seller_offers.unit_value`),
+  and the level is the highest at which all of them sell out or sit at their floors (bisection on whole-market
+  clears). Capping all of them together is what the convergence rule comes to: a seller that undercuts leaves its
+  rivals unsold in turn, so revisiting one at a time would race down in tiny steps. A market with no unsold
+  searchable stock clears once. A seller that moved the price (`best_reservation`) holds units back on purpose and
+  is not searched; its raise is bounded by `SOLD_OUT_ASK_RAISE_SHARE`, its cut by its unit value.
+- Deleted: `UNSOLD_ASK_MARKDOWN_SHARE`, `UNSOLD_PROBE_SHARE_OF_CAPACITY`, `IDLE_SALE_SHARE`, the yearly markdown in
+  `producers.next_expectations` (and `unsold_outputs`), and the crowd's share-of-unsold markdown. Not done:
+  `notional.thin_market_prices` and `THIN_MARKET_SHARE_OF_OPENING_DEMAND` stay (remove them once the spin-up shows the thin goods settle without them).
+- Proof: new `test_unsold_stock_search.py` (sells within the year, no ask below the floor, a good opened far above
+  cost reaches buyers in one year, sold-out sellers and restrained sellers untouched); the stale-ask, markup-limit and
+  aggregate-producer tests now read the search instead of the yearly markdown.
+- Floor. A searched seller's floor is the larger of its unit value and `inventory.queued_holding_value`: what the last
+  unit of its stock fetches kept for the buyers it expects in later years (the one-year reservation carried for as many
+  years as the stock is of the expected yearly sales). A storable glut is held, not crashed to cost; a good with no
+  expected sales still falls to cost within the year. Without it, any excess over buyers' fixed demand sent the asks to
+  cost in one clear and the dug-clay price swung 8 to 26 times (`test_economy_vessel_price_fixture`).
+- Entry fix. `entry_year.open_entrants` read a zero in `record.expansion_runs` (left by a working-capital loan request)
+  as plant on the way and turned every newcomer away from that producer; it now blocks only on plant still to come.
+- Exit and contraction. `producers_close._expected_run` values a run's output at the queued holding value behind the
+  stock the producer holds, so a producer holding years of unsold output does not count on a price a market with no
+  trade leaves standing; a run that does not pay shrinks the producer whether or not it holds stock.
+- What it showed: Rome over 60 years (spin-up trace, `sim/economy/settling.py`): the price level's largest yearly step
+  0.197 against main's 0.427, the rate's 0.038 against 0.176 (main reaches the rate ceiling), money stock settled; the
+  wage is still falling (Complaint 608). The fixture (`controlled_run(120)`) still reports price level, wage and rate
+  not settled. Complaint 473 has a section on it. One bound still fails: `test_economy_innovator_pricing` year 6 (Complaint 558).
+  Quick tier green; thin-market, store-usual, asks-follow-sales, expansion-price and bronze (502) pass.
+
 ### Stage 8: farm effort follows the food price (Complaint 513)
 
 Needs stage 3 (one food price) and stage 4 (one traded volume). Not a solver reader today: `LabourAllocationMixin.
