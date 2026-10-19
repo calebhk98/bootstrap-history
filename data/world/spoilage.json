@@ -10,6 +10,9 @@
   "cheese_kg": {"rate": 0.3, "confidence": "D", "source": "Salted, pressed hard cheese ripened in a cool cellar keeps a year or more; rind trimming, mites and drying lose a modest share a year (Fox et al., Fundamentals of Cheese Science, 2nd ed., 2017, on keeping quality of low-moisture salted cheese; recalled, not re-opened)."},
   "bread_kg": {"rate": 50.0, "confidence": "D", "source": "Unpreserved loaves go stale and mould within days to a couple of weeks; a rate that loses most of a loaf in a month (recalled from household practice, not opened)."},
   "salted_meat_kg": {"rate": 0.5, "confidence": "D", "source": "Dry-salted joints kept dry and cool last a year or more; rancid fat, mould and insects take a share a year (recalled from dry-cure practice, not re-opened)."},
+  "fish_kg": {"rate": 200.0, "confidence": "D", "source": "Fresh fish without salting, smoking or ice is unfit within a day or two in warm weather; a rate that loses most of it in days (recalled from fish-handling practice, not opened)."},
+  "salted_fish_kg": {"rate": 0.6, "confidence": "D", "source": "Heavily salted fish kept dry in barrels keeps a year or more; rancid fat, mould and insects take a share a year (recalled from salt cod and salt herring practice, not opened)."},
+  "garum_kg": {"rate": 0.1, "confidence": "D", "source": "Fish sauce is so salty that it keeps for years sealed in amphorae; a small yearly loss to leaks and fading (recalled from Roman amphora trade accounts, not opened)."},
   "silk_cocoon_kg": {"rate": 20.0, "confidence": "D", "source": "Cocoons must be stifled and reeled within weeks or the moth emerges and cuts the thread."},
   "silkworm_eggs_kg": {"rate": 2.0, "confidence": "D", "source": "Eggs hatch with the warmth of spring unless kept cold; held for months at most."}
  }
