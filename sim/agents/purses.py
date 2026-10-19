@@ -122,15 +122,17 @@ class Purses:
         return {POOL: owed}
 
     def settle_interest(self) -> Dict[str, float]:
-        """Share the interest the pool has received among its depositors in proportion to their deposits, then pay
-        the savers back what the pool holds beyond that; what each depositor received."""
+        """Share the interest the pool received among its depositors in proportion to their deposits, never more
+        than the pool holds (the deposit rate is whatever that comes to; interest lost in a default is not paid),
+        then pay the savers back what the pool holds beyond that; what each depositor received."""
         paid: Dict[str, float] = {}
-        total = self.contracts.total_deposits()
+        shares = {depositor: contract.principal for depositor, contract in sorted(self.contracts.deposits.items())}
+        total = sum(shares.values())
         owed, self.interest_pending = self.interest_pending, 0.0
-        if owed > DEBT_FLOOR and total > 0.0:
-            self._fund_pool(owed)
-            for depositor, contract in sorted(self.contracts.deposits.items()):
-                part = owed * contract.principal / total
+        available = min(owed, max(0.0, self.purse(POOL)))
+        if available > DEBT_FLOOR and total > 0.0:
+            for depositor, principal in shares.items():
+                part = min(available * principal / total, max(0.0, self.purse(POOL)))
                 if part > DEBT_FLOOR:
                     self.book.transfer(Transfer(POOL, depositor, COIN, part, DEPOSIT_INTEREST))
                     paid[depositor] = part
