@@ -49,7 +49,8 @@ borrowed = unopened_sim()
 borrowed_treasury = borrowed.state_treasury()
 borrowed_treasury.money = 1.0e12
 for number in range(3):
-    borrowed.actors.add("firm:debtor%d" % number, ActorRecord(kind="firm", money=-5.0e7))
+    # a margin larger than the debt gives each firm a credit ceiling above it, so its interest is paid, not left in arrears
+    borrowed.actors.add("firm:debtor%d" % number, ActorRecord(kind="firm", money=-5.0e7, last_margin=5.0e7))
 borrowed.household.capital = -1.0e6  # the founder owes too
 for _year in range(4):
     one_year(borrowed)
