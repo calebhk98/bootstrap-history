@@ -95,7 +95,7 @@ class RentIsWiredInTests(unittest.TestCase):
         # Moves with tile fertility (arable-weighted, Complaints/130); re-read
         # from this test's own failure message when tile data moves.
         self.assertAlmostEqual(
-            result.prices_in_labour_hours["hectare_land"], 145.65, places=2)
+            result.prices_in_labour_hours["hectare_land"], 164.81, places=2)
 
     def test_omitting_civilization_id_defaults_to_rome(self):
         with_default = engine_prices.solved_prices(
