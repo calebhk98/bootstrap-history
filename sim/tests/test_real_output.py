@@ -2,8 +2,8 @@
 opening prices. A technology raises it only through the production entries it improves and the
 goods those entries make; nothing counts completed technologies."""
 from .harness import *  # noqa: F401,F403
-from .real_output_helpers import (GOOD, YEARS_CLOSED, YEARS_TO_ENTER, plain_node, book_of_good, complete, run,
-                                  baseline_the_twin, close_years)
+from .real_output_helpers import (GOOD, YEARS_CLOSED, YEARS_TO_ENTER, plain_node, traded_units, complete, run,
+                                  close_years)
 
 from sim.economy import api as economy_api
 from sim.engine.agents_port import SimWorld
@@ -26,8 +26,8 @@ check("...nor output per head", control.real_output_per_head() == twin.real_outp
 
 
 # --- society output is the sum of quantities times opening prices, in this civilisation's money.
-# Every commodity is the economy's traded volume over its first settled year's, times the economy's opening basket,
-# valued at the economy's opening prices (Complaint 507, stage 4).
+# Every good is the units the economy traded, carried from its first year onto the economy's opening basket and valued at
+# the economy's opening prices (Complaint 507, stage 4).
 game = sim(civ="rome_100ad", capital=1e9)
 check("output per head is one before any year has run", game.real_output_per_head() == 1.0, game.real_output_per_head())
 close_years(game, 1)
@@ -49,8 +49,10 @@ for good in heaviest:       # the economy sold half as much again of one good, a
         if key.split("|", 1)[0] == good:
             economy.record.volumes[key] *= factor
 volumes = economy_api.traded_volumes(economy)
-total = sum(units * volumes.get(good, 0.0) / baseline[good] * basket["prices"][good]
-            for good, units in basket["units"].items() if baseline.get(good, 0.0) > 0.0)
+held = [good for good in basket["units"] if baseline.get(good, 0.0) > 0.0]
+scale = (sum(basket["units"][good] * basket["prices"][good] for good in held)
+         / sum(baseline[good] * basket["prices"][good] for good in held))
+total = scale * sum(volumes.get(good, 0.0) * basket["prices"][good] for good in held)
 check("real output is the sum of quantities sold times opening prices",
       abs(game.real_output_hours() - total) <= 1e-9 * total, (game.real_output_hours(), total))
 check("...and the lines it is made of add up to it",

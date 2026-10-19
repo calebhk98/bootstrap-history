@@ -171,11 +171,8 @@ class AgentEconomy(TilePricesMixin):
             if volume > 0.0 and good not in baseline:
                 baseline[good] = volume
 
-    def cleared_ratios(self):
-        """{good: units cleared last year over the first year it cleared any}, for each good with a baseline."""
-        baseline = self.stored.get("volume_baseline", {})
-        volumes = economy_api.traded_volumes(self.economy())
-        return {good: volumes.get(good, 0.0) / first for good, first in sorted(baseline.items()) if first > 0.0}
+    def volume_baseline(self):
+        return dict(self.stored.get("volume_baseline", {}))
 
     def traded_volumes(self):
         return economy_api.traded_volumes(self.economy())

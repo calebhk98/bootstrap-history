@@ -19,9 +19,9 @@ def plain_node(game):
                 if node_id not in gates and node_id not in done and not NODES[node_id]["rev"])
 
 
-def book_of_good(game):
-    """The market book's entry for the good (the book is keyed by commodity)."""
-    return game.state.economy.market_book[game._material_tag(GOOD)[0]]
+def traded_units(game, good=GOOD):
+    """Units of the good the agent economy cleared last year."""
+    return economy_api.traded_volumes(game.economy.agent.economy()).get(good, 0.0)
 
 
 def complete(game, node_id):
@@ -32,15 +32,6 @@ def complete(game, node_id):
 def run(game, node_id):
     """A producer runs the node's techniques: only then do they reach a price."""
     game.state.projects.operating.add(node_id)
-
-
-def baseline_the_twin(twin):
-    """The game measures cleared volumes against its first year with the new entry admitted, as any world is
-    measured against its first year; the twin admits no entry, so without a baseline it would sit at its
-    reference while the world's own year-to-year drift moves the game's ratio. It gets its own first year's
-    volume, so the two ratios differ only by what the entry does."""
-    twin.economy.agent.stored["volume_baseline"] = {
-        GOOD: economy_api.traded_volumes(twin.economy.agent.economy())[GOOD]}
 
 
 def close_years(game, years):

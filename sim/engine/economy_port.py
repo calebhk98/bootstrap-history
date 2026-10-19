@@ -185,10 +185,10 @@ class EconomyPort:
         """An actor's tonnes of a commodity it bids for in the agent economy's market this year, with its budget in coin."""
         self.agent.note_purchase(buyer, commodity, tonnes, budget)
 
-    def agent_cleared_ratios(self):
-        """{good: what the agent economy cleared last year over its first year's}; None while it opens."""
+    def agent_volume_baseline(self):
+        """{good: units the agent economy cleared in the first year it cleared any}; None while it opens."""
         agent = self._answering_agent()
-        return None if agent is None else agent.cleared_ratios()
+        return None if agent is None else agent.volume_baseline()
 
     def agent_traded_volumes(self):
         """{good: units the agent economy traded last year}; None while it opens."""
