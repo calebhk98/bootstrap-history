@@ -4,7 +4,7 @@ An actor's debt is its purse below zero. What it will be lent is the smaller of 
 can carry at the market rate and what lenders still hold after everyone else's loans. What it pays is the
 market rate plus a premium for the share of that ceiling it has used, less a discount for its standing.
 """
-from typing import Any
+from typing import Any, Tuple
 
 from sim.constants import declare
 from sim.world import capital_market
@@ -77,9 +77,14 @@ class Borrower:
 		return capital_market.borrower_rate(world.market_rate(), self.standing_discount(world), used)
 
 	def pay_interest(self, world: Any) -> float:
-		"""The year's interest on the debt; the amount owed. It is paid to the lenders by drawing on the facility
-		while the debt is under the ceiling; the rest becomes arrears, paid first from any cash the actor later
-		holds. Arrears that last too long are a default."""
+		"""The year's interest on the debt; the amount owed. See `settle_interest`."""
+		return self.settle_interest(world)[0]
+
+	def settle_interest(self, world: Any) -> Tuple[float, float]:
+		"""(owed, paid) interest for the year. It is paid to the lenders by drawing on the facility while the
+		debt is under the ceiling; the rest becomes arrears, paid first from any cash the actor later holds.
+		Arrears that last too long are a default. The one rule for every borrower: a firm, a state, a trader,
+		the founder's household."""
 		record = self.record  # type: ignore[attr-defined]
 		self.pay_arrears_from_purse()
 		debt = self.debt()
@@ -91,7 +96,7 @@ class Borrower:
 		record.arrears_years = record.arrears_years + 1 if record.interest_arrears > DEBT_FLOOR else 0
 		if borrowing_arrears.in_default(record.arrears_years):
 			self.default(world)
-		return owed
+		return owed, paid
 
 	def pay_arrears_from_purse(self) -> None:
 		"""Interest left unpaid in earlier years is paid from whatever cash the actor now holds."""
