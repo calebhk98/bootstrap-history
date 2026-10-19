@@ -31,6 +31,8 @@ class Contract:
     issued_year: int = 0
     arrears_interest: float = 0.0     # the part of arrears that is unpaid interest
     kind: str = TERM_LOAN
+    collateral_tile: str = ""         # the tile whose land title the loan pledges (empty: none)
+    collateral_share: float = 0.0     # the share of that tile's land pledged
 
     @property
     def loan_id(self) -> str:

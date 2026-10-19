@@ -220,6 +220,8 @@ class LoanRequest:
     years: float
     collateral_value: float
     purpose: str
+    collateral_tile: str = ""          # the tile whose land title is pledged (empty: none)
+    collateral_share: float = 0.0      # the share of that tile's land pledged
 
 
 @dataclass(frozen=True)
