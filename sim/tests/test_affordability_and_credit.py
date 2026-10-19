@@ -151,7 +151,9 @@ del fresh.market_rate
 # Status upkeep is conditional on being able to afford it.
 fresh.done.add("citizenship")
 fresh._done_changed()
+fresh.revenue = lambda: 0.0   # ruined: nothing comes in, so there is nothing to spend on appearances
 ruined_living_cost = fresh.living_cost()
+del fresh.revenue
 check("a ruined household stops keeping up appearances",
       ruined_living_cost < thin_living_cost + 50.0, (ruined_living_cost, thin_living_cost))
 fresh.capital = 2000000.0
@@ -375,6 +377,8 @@ check("...and says plainly when there was nothing left to take",
 bleeding = sim(manual=False)
 into_arrears(bleeding)
 bleeding.insolvent_years = 20
+bleeding.revenue = lambda: 0.0   # deep in arrears with no income: the needs bill alone leaves nothing to fund new work
+bleeding.revenue_capacity = lambda: 0.0
 active_before = len(bleeding.active)
 bleeding.step()
 check("the room a household can fund shrinks by the arrears it already owes",
