@@ -64,8 +64,15 @@ def cost_per_run(recipe: Recipe, wages: Mapping[str, float], input_prices: Mappi
     money per run), over the yield."""
     if yield_factor <= 0.0:
         return math.inf
+    return assembled_cost(unit_cost.variable_cost_per_run(recipe, input_prices, wages, rent), carriage_per_tonne,
+                          yield_factor, tonnes, input_haul)
+
+
+def assembled_cost(variable: float, carriage_per_tonne: float, yield_factor: float, tonnes: float,
+                   input_haul: float) -> float:
+    """A run's variable cost plus the carriage of its output and inputs, over the yield (which is positive)."""
     carriage = carriage_per_tonne * tonnes if tonnes > 0.0 else 0.0
-    return (unit_cost.variable_cost_per_run(recipe, input_prices, wages, rent) + carriage + input_haul) / yield_factor
+    return (variable + carriage + input_haul) / yield_factor
 
 
 def spare_hours(workforce: Mapping[str, float], working_hours_per_worker: float, committed_hours: float) -> float:
@@ -129,6 +136,7 @@ def entry_siting(setup, record, view, area_map, carriage) -> Siting:
     capacity: Dict[Tuple[str, TileId], float] = {}
     committed: Dict[TileId, float] = {}
     supplies: Dict[str, Mapping] = {}
+    tile_parts: Dict[Tuple[str, TileId, float], tuple] = {}    # what a recipe's run on a tile costs apart from the output's carriage
     fixed_goods = location_inputs.fixed_site_goods(setup.recipes, by_recipe)
     for producer in sites.in_id_order(record.producers):
         key = (producer.recipe_id, producer.tile)
@@ -151,21 +159,36 @@ def entry_siting(setup, record, view, area_map, carriage) -> Siting:
             set(area.tiles) | {tile for supply in supplies[recipe_id].values() for tile in supply}))
         for tile in sites.suited_tiles(recipe, setup.tiles, sites.allowed_tiles(recipe, by_recipe, reachable),
                                        setup.recipe_allowed):
-            probe = Producer("probe", "probe", recipe_id, tile, 1.0)
-            wages = {trade: _wage(setup, view, trade, tile) for trade in recipe.labour_hours}
-            factor = sites.yield_at(recipe, tile, by_recipe, setup.yield_factor_by_recipe_tile.get(
-                recipe_id + "@" + tile, 1.0))
-            cost = cost_per_run(recipe, wages, live_input_prices(probe, recipe, view),
-                                record.land_rent.get(tile, 0.0) * setup.land_per_run.get(recipe_id, 0.0),
-                                carriage.cost_per_tonne(tile, demand.anchor_tile), factor, tonnes,
-                                location_inputs.input_haul_cost(recipe, setup.specs, carriage, supplies[recipe_id], tile))
-            spare = spare_hours(labour_state.people_by_trade(record.workforce, labour_area(tile)), setup.working_hours_per_year,
-                                committed.get(tile, 0.0))
-            candidates.append(Candidate(tile, cost, staffable_runs(recipe, spare),
-                                        sites.headroom_runs(recipe, tile, by_recipe, capacity.get((recipe_id, tile), 0.0))))
+            fixed_part = tile_parts.get((recipe_id, tile, carriage.scale))
+            if fixed_part is None:
+                fixed_part = tile_parts[(recipe_id, tile, carriage.scale)] = _tile_part(
+                    setup, record, view, carriage, recipe, by_recipe, supplies[recipe_id], capacity, committed, tile)
+            variable, factor, input_haul, staffable, headroom = fixed_part
+            cost = math.inf if factor <= 0.0 else assembled_cost(
+                variable, carriage.cost_per_tonne(tile, demand.anchor_tile), factor, tonnes, input_haul)
+            candidates.append(Candidate(tile, cost, staffable, headroom))
         picked = choose(candidates, runs, demand.anchor_tile)
         return None if picked is None else (picked[0].tile, picked[1])
     return siting
+
+
+def _tile_part(setup, record, view, carriage, recipe, by_recipe, supplies, capacity, committed, tile):
+    """(variable cost per run, yield factor, input haul per run, staffable runs, headroom runs) of `recipe` on
+    `tile`: none of it depends on where the output goes, so one entry-siting call reads it once per recipe and tile."""
+    probe = Producer("probe", "probe", recipe.recipe_id, tile, 1.0)
+    factor = sites.yield_at(recipe, tile, by_recipe, setup.yield_factor_by_recipe_tile.get(
+        recipe.recipe_id + "@" + tile, 1.0))
+    variable = None
+    if factor > 0.0:
+        wages = {trade: _wage(setup, view, trade, tile) for trade in recipe.labour_hours}
+        variable = unit_cost.variable_cost_per_run(
+            recipe, live_input_prices(probe, recipe, view), wages,
+            record.land_rent.get(tile, 0.0) * setup.land_per_run.get(recipe.recipe_id, 0.0))
+    input_haul = location_inputs.input_haul_cost(recipe, setup.specs, carriage, supplies, tile)
+    spare = spare_hours(labour_state.people_by_trade(record.workforce, labour_area(tile)), setup.working_hours_per_year,
+                        committed.get(tile, 0.0))
+    return (variable, factor, input_haul, staffable_runs(recipe, spare),
+            sites.headroom_runs(recipe, tile, by_recipe, capacity.get((recipe.recipe_id, tile), 0.0)))
 
 
 def _wage(setup, view, trade, tile) -> float:
