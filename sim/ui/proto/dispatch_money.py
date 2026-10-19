@@ -291,8 +291,11 @@ def _cmd_money(sim, nodes, cmd, ended):
     # the living cost it charges, so this screen has to do the same or it
     # double-bills the same year - a discrepancy that only shows up in the
     # first year, which is what makes it easy to miss.
-    _prepaid = min(sim.living_cost(), sim.wages_prepaid)
-    fixed = (sim.upkeep() + sim.living_cost() - _prepaid
+    # The living cost is the one the household pays once the dependants its income cannot carry are shed, as
+    # net_per_year counts it.
+    _living = sim.recurring_living_cost(sim.revenue(), sim.upkeep())
+    _prepaid = min(_living, sim.wages_prepaid)
+    fixed = (sim.upkeep() + _living - _prepaid
              + sim.mine_operating_cost())
     _ramp = sim.still_ramping()
     # A PLAYER MUST SEE IT (data/review/COMMODITY_DYNAMISM.md):
