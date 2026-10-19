@@ -1,6 +1,6 @@
 # Sugar is most of Rome's food, because it opens cheap
 
-**Status:** partly done. Sugar and maize no longer reach a Rome opening (`python3 -m sim.tests --only sugar_maize_knowledge`). Open: `fat_kg` now takes most of the food units (532), so grains are most of the rest, not of the whole; cane labour and yield are order-of-magnitude figures.
+**Status:** closed - sugar and maize are gated out, rendered fat is no longer food (532), grains are the majority of Rome's food units (tested); cane figures stay order-of-magnitude, conf D, with named sources.
 
 Found sizing herds for 532: at a Rome opening (`opening.open_economy(build_setup(unopened_sim(civ="rome_100ad")))`),
 `mat_sugar` is priced at a fraction of a denarius per kilogram and supplies most of the food need's units; millet,
@@ -48,3 +48,9 @@ times the `food` effectiveness in `needs.json`):
   a founder's research brings it in. Knowledge stays `requires_node` and `starting_techs`; no civilisation is named.
 - Maize needs `fud_maize`, which only Mexica starts with (tested). Maize itself is agronomically fine in Rome's
   climate, so a climate list cannot exclude it: that is the knowledge gate.
+
+## Resolution
+
+- `fat_kg` no longer serves the food need (`data/world/needs.json`: tallow was lighting and soap; edible fat was lard), so it takes no food units. A Rome opening now has cereals as the majority of food units, then olive oil and wine. Measure: `python3 -m sim.tests --only sugar_maize_knowledge`.
+- The relationship guarded: `test_rome_food_units_follow_a_pre_modern_diet_and_no_one_good_dominates` asserts cereals above half, no other single food above a third, and fat not a food (bound from Garnsey on cereals as the bulk of Roman calories). The by-mass joint-product cost split (507/532) no longer touches the diet.
+- Cane labour and yield: Galloway (1989) and Deerr (1949-50) are named in `mat_sugar`'s `yield_basis` as the sources to check; neither could be opened here, so the figures stay conf D, labelled a temporary heuristic. Sugar cannot reach a Rome opening whatever its cost (climate and knowledge gates, tested).

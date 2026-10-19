@@ -61,6 +61,29 @@ class SugarAndMaizeTests(unittest.TestCase):
         grains = sum(units.get(good, 0.0) for good in GRAINS)
         self.assertGreater(grains / total, 0.5, {good: round(value / total, 3) for good, value in units.items() if value})
 
+    def test_rome_food_units_follow_a_pre_modern_diet_and_no_one_good_dominates(self):
+        # Roman diet composition (Garnsey, Food and Society in Classical Antiquity, 1999): cereals were the large
+        # majority of calories; oil and wine were secondary. Cereals here must be a majority, and no other single
+        # food may exceed a third of the units. Rendered fat is not a food in the model (Complaint 532).
+        needs = _read("data", "world", "needs.json")["goods"]
+        self.assertEqual(needs["fat_kg"]["satisfies"], {})
+        record, _areas, _carriage = opening.open_economy(build_setup(unopened_sim(civ="rome_100ad")))
+        units = {good: record.opening_basket.get(good, 0.0) * attributes["satisfies"]["food"]
+                 for good, attributes in needs.items() if "food" in attributes["satisfies"]}
+        total = sum(units.values())
+        shares = {good: value / total for good, value in units.items() if value}
+        self.assertGreater(sum(shares.get(good, 0.0) for good in GRAINS), 0.5, shares)
+        for good, share in shares.items():
+            if good not in GRAINS:
+                self.assertLess(share, 1 / 3, (good, shares))
+        self.assertLess(max(shares.values()), 0.5, shares)
+
+    def test_sugar_cane_figures_name_their_sources_and_confidence(self):
+        sugar = self.entries["mat_sugar"]
+        self.assertEqual(sugar["conf"], "D")
+        self.assertIn("Galloway", sugar["yield_basis"])
+        self.assertIn("Deerr", sugar["yield_basis"])
+
 
 if __name__ == "__main__":
     unittest.main()
