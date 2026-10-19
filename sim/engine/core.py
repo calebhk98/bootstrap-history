@@ -1655,24 +1655,13 @@ class Sim(ModStoresMixin, RealPriceRatiosMixin, CoinRevaluationMixin, PartnerCiv
     # civilization has never seen, would be reach 0. Everything below
     # computes reach from the ACTUAL civilization's own home ground.
 
-    STAFF_ATTRITION_RATE = declare(
-        "STAFF_ATTRITION_RATE", 0.035, kind="temporary_heuristic",
-        unit="dimensionless (yearly probability per person)", source=
-        "Rough order-of-magnitude estimate combining Roman adult mortality "
-        "with normal turnover (poaching, retirement).", confidence="C",
-        why="Yearly chance any one employed person dies or leaves for a "
-            "better offer - applied per whole person (see the comment "
-            "below on why headcount is rolled discretely rather than "
-            "smoothed). A plausible order of magnitude for a pre-modern "
-            "adult workforce, not fitted to an attested Roman mortality "
-            "table.")
     DIRECTORS_EXTRA_APPROACH_RATE = declare(
         "DIRECTORS_EXTRA_APPROACH_RATE", 0.12, kind="temporary_heuristic",
         unit="dimensionless (fraction of the gap to capacity closed per "
              "year)", source=None, confidence="D",
         why="How fast the household's deputy-director pool approaches "
             "what its institutions can support, net of the same "
-            "STAFF_ATTRITION_RATE that thins ordinary staff. Tuned so "
+            "working-age mortality that thins ordinary staff. Tuned so "
             "deputies build up over several years rather than "
             "instantaneously; not measured.")
 

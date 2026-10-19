@@ -299,6 +299,7 @@ class TrainingMixin:
         # CARRIED FORWARD, so the next step does not bill the same year twice.
         # See step() 2, where it is netted off living_cost.
         household.wages_prepaid = (household.wages_prepaid or 0.0) + fee
+        self.note_hire_pay(trade, float(count), pay_premium)
         household.employees[trade] = household.employees.get(trade, 0.0) + float(count)
         self.labour_market.hire(self._world.state.household, trade, float(count) * self._world.HOURS_PER_PERSON_YEAR,
                                 pay_premium)
