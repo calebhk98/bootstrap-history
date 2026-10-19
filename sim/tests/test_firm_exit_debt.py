@@ -55,6 +55,7 @@ check("a closed firm runs nothing and owes nothing", not firm.concerns and firm.
 
 # the same margin with a debt its margin carries stays open and pays the interest
 world, registry, firm = indebted_firm(debt=500.0, revenue=1300.0)
+firm.record.last_margin = 1.0e6   # standing earning carries a debt of this size
 years_until_closed(world, firm)
 check("a firm whose margin covers its interest stays open", firm.record.exited_year is None,
 	(firm.record.last_margin, firm.debt()))

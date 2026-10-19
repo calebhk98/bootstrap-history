@@ -81,6 +81,7 @@ class ActorDebtInBook(unittest.TestCase):
     def test_interest_on_a_debt_is_added_to_the_claim(self):
         state, first, _second = pair(0.0)
         first.money = -100.0
+        first.record.last_margin = 1.0e6   # earning enough to carry the debt, so interest may be drawn
         world = FakeWorld()
         world.edge_book = state
         first.pay_interest(world)

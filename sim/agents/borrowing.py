@@ -9,6 +9,9 @@ from typing import Any
 from sim.constants import declare
 from sim.world import capital_market
 
+from . import borrowing_arrears
+from .purses import DEBT_FLOOR
+
 
 STANDING_DISCOUNT_CAP = declare(
 	"STANDING_DISCOUNT_CAP", 0.03, kind="temporary_heuristic",
@@ -74,10 +77,34 @@ class Borrower:
 		return capital_market.borrower_rate(world.market_rate(), self.standing_discount(world), used)
 
 	def pay_interest(self, world: Any) -> float:
-		"""Interest on the debt is paid to the lenders and, the purse being empty, added to the debt; the amount."""
+		"""The year's interest on the debt; the amount owed. It is paid to the lenders by drawing on the facility
+		while the debt is under the ceiling; the rest becomes arrears, paid first from any cash the actor later
+		holds. Arrears that last too long are a default."""
+		record = self.record  # type: ignore[attr-defined]
+		self.pay_arrears_from_purse()
 		debt = self.debt()
-		if debt <= 0.0:
-			return 0.0
-		owed = debt * self.borrowing_rate(world)
-		world.pay_interest(self, owed, "interest")
+		owed = debt * self.borrowing_rate(world) if debt > 0.0 else 0.0
+		paid, unpaid = borrowing_arrears.settle_year(owed, self.spare_credit(world))
+		if paid > 0.0:
+			world.pay_interest(self, paid, "interest")
+		record.interest_arrears += unpaid
+		record.arrears_years = record.arrears_years + 1 if record.interest_arrears > DEBT_FLOOR else 0
+		if borrowing_arrears.in_default(record.arrears_years):
+			self.default(world)
 		return owed
+
+	def pay_arrears_from_purse(self) -> None:
+		"""Interest left unpaid in earlier years is paid from whatever cash the actor now holds."""
+		record = self.record  # type: ignore[attr-defined]
+		paid = min(record.interest_arrears, max(0.0, self.money))  # type: ignore[attr-defined]
+		if paid > DEBT_FLOOR:
+			self.purses.pay_arrears(self.account_id, paid)  # type: ignore[attr-defined]
+			self.note_outlay("interest arrears", paid)  # type: ignore[attr-defined]
+			record.interest_arrears -= paid
+
+	def default(self, world: Any) -> None:
+		"""The lenders write the claim off, the pool bearing the loss; an actor that can close overrides this to
+		close as well."""
+		self.purses.write_off(self.account_id)  # type: ignore[attr-defined]
+		self.record.interest_arrears = 0.0  # type: ignore[attr-defined]
+		self.record.arrears_years = 0  # type: ignore[attr-defined]
