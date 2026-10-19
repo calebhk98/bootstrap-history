@@ -2,7 +2,7 @@
 for in the first year, not several times as many (a glutted trade pays the floor)."""
 from .harness import *  # noqa: F401,F403
 
-from sim.economy import labour_state, producers
+from sim.economy import labour_state, mint, mint_labour, producers, state_budget
 
 GLUT_LIMIT = 3.0   # a trade may hold this many times the hours bid before it counts as glutted
 
@@ -17,6 +17,11 @@ for producer_id, producer in sorted(record.producers.items()):
                           record.book.balance(producer_id, setup.currency_id))
     for bid in plan.labour_bids:
         bid_hours[bid.trade] = bid_hours.get(bid.trade, 0.0) + bid.hours
+# the other employers' jobs are jobs too: the mint's yearly capacity and the state's wage bids, as the year posts them
+for trade, hours in mint_labour.capacity_hours(setup, record.currency, mint.capacity_fine_kilograms(setup, record)).items():
+    bid_hours[trade] = bid_hours.get(trade, 0.0) + hours
+for bid in state_budget._labour_bids(setup, record, view, record.state_budget.wage_budget):
+    bid_hours[bid.trade] = bid_hours.get(bid.trade, 0.0) + bid.hours
 people = labour_state.people_by_trade_everywhere(record.workforce)
 skilled = [trade for trade, spec in setup.trades.items() if spec.training_years > 0.0 and bid_hours.get(trade, 0.0) > 0.0]
 check("the opening has skilled trades that producers bid for", len(skilled) >= 2, skilled)
