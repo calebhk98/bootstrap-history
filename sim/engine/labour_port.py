@@ -18,6 +18,10 @@ class LabourWorld:
         self._sim = sim
         self._trade_registry = None
 
+    def home_tiles_held(self):
+        """The tiles the home country owns, read from the owner map."""
+        return self._sim.home_tiles_held()
+
     def money_text(self, amount, digits=0, grouped=False, short=False):
         """A sum in the civilisation's coin as the player's chosen unit writes it (units_prose)."""
         return units_prose.money_text(amount, self._sim, digits, grouped, short)

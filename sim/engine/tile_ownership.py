@@ -1,0 +1,43 @@
+"""Who owns each tile of the map, saved in `state.economy.tile_owners` (sim/geography/tile_owners.py).
+
+Seeded from the civilisation files of the home country and the partners inside the agent economy the first
+time it is read; every later change goes through `transfer_tile`, whoever the actor is.
+"""
+from sim.geography.api import tile_owners, tiles_held
+
+
+class TileOwnershipMixin:
+
+    def tile_owner_map(self):
+        """{tile: {owner, control}}, seeded from the civilisation files on first use."""
+        economy = self.state.economy
+        if not economy.tile_owners:
+            from .data import load_civ
+            claims = {self.civ["id"]: tiles_held(self.civ, self.world_map)}
+            for partner in self.partners_in_agent_economy():
+                claims[partner] = tiles_held(load_civ(partner), self.world_map)
+            economy.tile_owners, economy.tile_claim_conflicts = tile_owners.seed(claims)
+        return economy.tile_owners
+
+    def tile_owner(self, tile_id):
+        return tile_owners.owner_of(self.tile_owner_map(), tile_id)
+
+    def tile_control(self, tile_id):
+        return tile_owners.control_of(self.tile_owner_map(), tile_id)
+
+    def tiles_owned_by(self, actor_id):
+        """Sorted tiles this country or seat owns, at any control level."""
+        return tile_owners.tiles_of(self.tile_owner_map(), actor_id)
+
+    def home_tiles_held(self):
+        """The tiles the home country owns."""
+        return tiles_held(self.civ, self.world_map, self.tile_owner_map())
+
+    def transfer_tile(self, tile_id, to_actor, control=None):
+        """Give a tile to a country or seat (None releases it); returns the previous owner."""
+        return tile_owners.transfer(self.tile_owner_map(), tile_id, to_actor, control, self.world_map)
+
+    def way_owners(self):
+        """{key: owner or None} of every built way, read from who owns the tiles it stands on."""
+        owners = self.tile_owner_map()
+        return {key: tile_owners.way_owner(owners, key) for key in self.state.economy.improvements}

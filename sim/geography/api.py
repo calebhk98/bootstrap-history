@@ -14,7 +14,7 @@ from sim.geography.queries import (build_requirements, built_km, carriage_rates,
                                    tile_facts, tile_ids, tile_reach_levels, regions_of_tiles, tiles_held, tiles_of_regions, works_priced_from_deposits,
                                    usable_modes, walking_cargo_modes)
 from sim.geography import (cargo_cost, climate_temperatures, crop_climate, flow_ledger, freight_cost, map_data_sources, mineral_shares, provisions, regions,
-                           sea_freight, settlement, territory, tile_names, transport)
+                           sea_freight, settlement, territory, tile_names, tile_owners, transport)
 from sim.geography.climate_temperatures import (KOPPEN_TROPICAL_COLDEST_MONTH_MINIMUM_CELSIUS, daily_temperatures,
                                                 representative_extremes)
 from sim.geography.carriage_reach import MARKET_AREA_THRESHOLD_SHARE, MEAN_DISTANCE_IN_DISC, market_radius_km, realm_span_km
@@ -26,7 +26,7 @@ __all__ = ["Geography", "load_geography", "haversine_km", "MARKET_AREA_THRESHOLD
            "market_radius_km", "realm_span_km", "KOPPEN_TROPICAL_COLDEST_MONTH_MINIMUM_CELSIUS",
            "daily_temperatures", "representative_extremes", "cargo_cost", "climate_temperatures", "crop_climate",
            "freight_cost", "map_data_sources", "mineral_shares", "provisions", "regions", "sea_freight", "settlement", "territory", "tile_lookup",
-           "tile_names", "transport",
+           "tile_names", "tile_owners", "transport",
            # the contract (sim/geography/INTERFACE.md); everything above is older surface outside it
            "queries", "build_requirements", "built_km", "carriage_rates", "open_map", "tile_ids", "tiles_held", "tiles_of_regions", "regions_of_tiles", "tile_facts", "layer_value", "food_potential", "hunted_kcal", "pasture_capacity_kg", "arable_hectares", "game_food_sources", "draw_wild_stock", "regrow_wild_stock", "usable_modes", "dues_hours_per_tonne", "cargo_loss_per_day", "modes_carrying", "droving_carrier", "walking_cargo_modes", "flow_ledger", "route", "improvement_key", "train_carrier", "worked_deposits", "working_rate_tonnes_per_year", "ore_tonnes_per_tonne",
            "reach", "tile_reach_levels", "route_costs", "map_of_tiles", "freight_links", "edge_key", "resource_ids", "resources_at", "endowment", "known_deposits",
