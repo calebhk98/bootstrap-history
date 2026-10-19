@@ -4,9 +4,10 @@ from .harness import *  # noqa: F401,F403
 from sim.economy import api as economy_api
 from sim.engine import prices as price_solver
 
-# A good one single-output, labour-led entry makes, whose cleared volume answers a cheaper entry by more than the
-# world's own year-to-year drift (fat is now a joint product of the herds; a staple's demand barely moves with price).
-GOOD = "copper_ore_kg"
+# A good one single-output, labour-led entry makes, which the economy's households buy (it is in the opening basket,
+# so it counts in real output; an intermediate does not) and whose cleared volume answers a cheaper entry by more than
+# the world's own year-to-year drift.
+GOOD = "stone_blocks"
 YEARS_CLOSED = 1   # the market is one agent-economy year to close, so the fewest years that show each property
 YEARS_TO_ENTER = 3   # producers build plant to run a technique over some years before its goods reach the market
 
