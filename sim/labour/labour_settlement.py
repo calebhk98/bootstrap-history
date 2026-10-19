@@ -39,7 +39,11 @@ class SettlementMixin:
         return tuple(self._world.home_tiles_held())
 
     def settlement_tiles(self):
-        """{tile id: people living there} for the tiles this nation holds."""
+        """{tile id: people living there} for the tiles this nation holds: the regions' people once tracked, else
+        the nation spread by food potential."""
+        tracked = self._world.people_by_tile()
+        if tracked is not None:
+            return tracked
         homes = self.held_tiles()
         total = self._world.population.total
         return {tile: total * settlement.population_share(homes, tile)

@@ -400,6 +400,9 @@ class PopulationState:
 	population_change_last_year: Optional[float] = None
 	# the nation's people-weighted food eaten over need in the economy's last closed year (food_eaten.py)
 	food_eaten_over_need: Optional[float] = None
+	# the same by tile, and the people by tile as [children, working_age, elderly] (regional_people.py)
+	regional_eaten_over_need: Dict[str, float] = field(default_factory=dict)
+	regions: Dict[str, List[float]] = field(default_factory=dict)
 	# one dict per simulated year: year, population, births, deaths, nutrition_ratio
 	yearly_record: List[Any] = field(default_factory=list)
 
