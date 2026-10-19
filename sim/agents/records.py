@@ -190,6 +190,10 @@ class CountryProfile:
 	# bodies of people the country starts with, as data ({"name", "share", "income", ...}); empty
 	# means derive them from what the world can see
 	strata: List[Dict[str, Any]] = field(default_factory=list)
+	# the country's people by age band once its Population has stepped (country_population.py); empty until then
+	cohorts: Dict[str, float] = field(default_factory=dict)
+	# calories a day the country's land feeds its people, fixed at the first step until farming runs abroad
+	food_kcal_per_day: float = 0.0
 	# anything else the scenario or a mod declares for the country
 	extra: Dict[str, Any] = field(default_factory=dict)
 

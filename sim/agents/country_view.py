@@ -7,6 +7,7 @@ Every other member of the shared world passes straight through, by explicit forw
 import inspect
 from typing import Any, Dict, Optional, Set
 
+from .country_population import people_counted
 from .no_country_economy import NoCountryEconomy
 from .protocols import World
 from .records import CountryProfile
@@ -47,10 +48,10 @@ class CountryWorld:
 		return self._baseline  # type: ignore[return-value]
 
 	def population_total(self) -> float:
-		return self.profile.population
+		return people_counted(self.profile)
 
 	def urban_population(self) -> float:
-		return self.profile.population * self.profile.urban_fraction
+		return people_counted(self.profile) * self.profile.urban_fraction
 
 	def state_capacity(self) -> float:
 		return self.profile.state_capacity
@@ -61,7 +62,7 @@ class CountryWorld:
 
 	def army_wanted(self) -> float:
 		declared = self.profile.extra.get("standing_army")
-		return float(declared) if declared is not None else self.profile.population * ARMY_SHARE_OF_POPULATION
+		return float(declared) if declared is not None else people_counted(self.profile) * ARMY_SHARE_OF_POPULATION
 
 	def soldiers_under_arms(self) -> float:
 		return self.army_wanted()

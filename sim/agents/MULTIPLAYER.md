@@ -52,7 +52,7 @@ whatever is pending and a replay reproduces it.
 |---|---|---|---|
 | `government` | `government.py` | cast (home country) | budget, levy, `ValuePolicy` copies |
 | `foreign_government` | `government_foreign.py` | cast (each partner) | revenue from its profile, army and officials, copies under fog |
-| `player` | `player.py`, `player_commands.py` | cast `"actors"` (a join command is Complaint 401) | queued orders; `controller == "ai"` adds a simple research-and-open rule |
+| `player` | `player.py`, `player_commands.py` | cast `"actors"` (a join command is Complaint 481) | queued orders; `controller == "ai"` adds a simple research-and-open rule |
 | `firm` | `firm.py`, `business*.py` | spawner `firm_entry` after any player's proven concern | entry value, exit on losses |
 | `trader` | `trader.py`, `trader_entry.py` | spawner `trader_entry` when a route's gap pays | best margin within capital, sized to a share of depth |
 | `stratum` | `stratum.py`, `stratum_year.py`, `strata_seed.py` | spawner `strata` for every country | income against needs in tiers; growth, schooling and mobility follow |
@@ -60,15 +60,16 @@ whatever is pending and a replay reproduces it.
 
 A stratum's data says what its people earn by. `trade` gives wages, `property_share` gives a share
 of output, `bonded` means kept by an `owner` stratum, and `own_plot` means it falls back on its own
-land when wages fall short. `rises_to` and `falls_to` name where its members move. The home
-country's strata are scaled each year to the population the engine counts: demography owns how many
-people there are, the strata only how they are split.
+land when wages fall short. `rises_to` and `falls_to` name where its members move. Each
+country's strata are scaled each year to the people counted there: the home country's from the
+engine's population, a foreign country's from its own `Population` (`country_population.py`), stepped
+by the same demography code. Demography owns how many people there are, the strata only how they are split.
 
 ## One goods market for now
 
 There is one goods market: the home society's. A firm or player of a foreign country counts as a rival
 of home operators, and what its concerns make is sold there. A trader's sale abroad moves only money
-(Complaint 405). Markets per country come with the agent economy's partners becoming economies
+(Complaint 482). Markets per country come with the agent economy's partners becoming economies
 (Complaint 382, step 4).
 
 ## Money
@@ -82,9 +83,8 @@ actor). Edges are named in `edges.py` and kept in the saved state, so purses plu
 - **Goods-level clearing, cohorts and merchants of the agent economy:** `sim/economy/`.
 - **The founder's projects and household:** the engine (Complaint 382).
 
-Open problems are in Complaints 401 (no protocol command reaches a second player), 402 (the
-founder is not a `Player`), 403 (strata income figures disagree), 404 (cast data undocumented, no
-slaves declared) and 405 (traders beside the other merchant models).
+Open problems are in Complaints 481 (a player cannot play as a country) and 482 (other countries are
+static stubs), with 482's children 590 to 593 (a foreign country's people, food, disease and state).
 
 The actors here decide and own. Where the agent economy already models the same people or trade,
 the adapter reads it rather than this package modelling it twice. Open complaints track where the
