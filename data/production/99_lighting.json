@@ -140,6 +140,46 @@
    "satisfies": {
     "light": 1.0
    }
+  },
+  "light_tallow_candle_linen": {
+   "outputs": {
+    "light_tallow_candle": 1.0
+   },
+   "inputs": {
+    "tallow_kg": 0.53,
+    "wick_linen_m": 2.0
+   },
+   "labour_hours": {
+    "labourer": 0.15
+   },
+   "unit_dimension": "count",
+   "basis": "per thousand lumen-hours of light from dipped tallow candles with a linen wick",
+   "yield_basis": "The same candle as light_tallow_candle with a wick of linen, the medieval northern candle, so a start without cotton can make it. A tallow candle gives about one candela, about 12.6 lumens, so a thousand lumen-hours is about eighty candle-hours. A candle burns about seven grams of tallow an hour, so eighty hours burn about half a kilogram, taken as 0.53 kg with the stub. A wick burns down as the tallow does, about two and a half centimetres an hour, so about two metres. Dipping and trimming take a labourer a few minutes for each candle of six hours' burning, about thirteen candles, taken as 0.15 hours. Burn rate, brightness and dipping rate are recalled figures, confidence D.",
+   "requires_node": null,
+   "conf": "D",
+   "satisfies": {
+    "light": 1.0
+   }
+  },
+  "light_tallow_candle_rush": {
+   "outputs": {
+    "light_tallow_candle": 1.0
+   },
+   "inputs": {
+    "tallow_kg": 0.53,
+    "wick_rush_m": 2.0
+   },
+   "labour_hours": {
+    "labourer": 0.15
+   },
+   "unit_dimension": "count",
+   "basis": "per thousand lumen-hours of light from dipped tallow candles with a peeled rush pith wick",
+   "yield_basis": "The same candle as light_tallow_candle with a wick of peeled rush pith, the medieval northern candle, so a start without cotton can make it. A tallow candle gives about one candela, about 12.6 lumens, so a thousand lumen-hours is about eighty candle-hours. A candle burns about seven grams of tallow an hour, so eighty hours burn about half a kilogram, taken as 0.53 kg with the stub. A wick burns down as the tallow does, about two and a half centimetres an hour, so about two metres. Dipping and trimming take a labourer a few minutes for each candle of six hours' burning, about thirteen candles, taken as 0.15 hours. Burn rate, brightness and dipping rate are recalled figures, confidence D.",
+   "requires_node": null,
+   "conf": "D",
+   "satisfies": {
+    "light": 1.0
+   }
   }
  }
 }

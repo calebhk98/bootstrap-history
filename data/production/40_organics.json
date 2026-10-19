@@ -375,6 +375,74 @@
    "conf": "C",
    "requires_node": "prn_carbon_ink"
   },
+  "oak_gall_kg": {
+   "outputs": {
+    "oak_gall_kg": 1.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 0.5
+   },
+   "extracted_from": "oak woodland (galls of gall wasps on oak leaves and twigs, picked by hand)",
+   "unit_dimension": "mass",
+   "basis": "per kg of dried oak galls",
+   "yield_basis": "GATHERED. Oak galls form each summer on oak twigs and are picked when hard and dry in autumn; they are rich in tannin, about a fifth to a half of their weight in the best Aleppo galls and less in the oak-apple of northern Europe. A gatherer finds and picks a kilogram of the small northern galls in about half an hour, a recalled rate, confidence D. No land is charged: galls are a byproduct of oak woodland with no rival use here (labelled heuristic: woodland byproduct rent is not yet modelled).",
+   "conf": "D",
+   "requires_node": null
+  },
+  "gum_kg": {
+   "outputs": {
+    "gum_kg": 1.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 1.0
+   },
+   "extracted_from": "wild stone-fruit trees (cherry, plum and blackthorn gum exuded from wounded bark)",
+   "unit_dimension": "mass",
+   "basis": "per kg of dried tree gum used as an ink and paint binder",
+   "yield_basis": "GATHERED. Cherry and plum trees exude a water-soluble gum from bark wounds in summer; it hardens into amber lumps that are picked off and dissolved in water as a binder, a substitute for gum arabic where acacia does not grow (Theophilus, De diversis artibus, book 1, and Cennino Cennini, Il libro dell'arte, both recalled not re-opened). Lumps are small and scattered, so a kilogram takes about an hour of searching an orchard or hedgerow, a recalled rate, confidence D. No land is charged: wild or hedgerow trees with no rival use for the gum (labelled heuristic: wild gum is not yet a land class).",
+   "conf": "D",
+   "requires_node": null
+  },
+  "ink_iron_gall_kg": {
+   "outputs": {
+    "ink_kg": 1.0
+   },
+   "inputs": {
+    "oak_gall_kg": 0.12,
+    "green_vitriol_kg": 0.06,
+    "gum_kg": 0.04,
+    "water_kg": 0.8
+   },
+   "labour_hours": {
+    "labourer": 1.0,
+    "scribe": 0.5
+   },
+   "unit_dimension": "mass",
+   "basis": "per kg of finished iron-gall ink (oak galls and copperas steeped in water with gum)",
+   "yield_basis": "Iron-gall ink is tannin from crushed galls steeped in water, iron sulphate (green vitriol, copperas) added so that iron tannate forms, and gum added to hold it in suspension. Medieval recipes (Theophilus, De diversis artibus; Cennino Cennini) give roughly one part galls to one half part vitriol and one third part gum by weight, steeped in about ten parts water, so a kilogram of ink holds about a tenth of a kilogram of galls; taken as 0.12 kg of galls, 0.06 kg of vitriol and 0.04 kg of gum, with a small allowance for filtering loss. Water is the bulk of the ink, charged as water_kg, the rest lost to the filtered dregs. Crushing, steeping for days, boiling and filtering take a labourer about an hour of attention and a scribe half an hour testing it flows, recalled, confidence D. Ratios are recalled from the recipes, not re-opened.",
+   "conf": "D",
+   "requires_node": "mat_vitriols"
+  },
+  "ink_carbon_gum_kg": {
+   "outputs": {
+    "ink_kg": 1.0
+   },
+   "inputs": {
+    "tallow_kg": 10.0,
+    "gum_kg": 0.1
+   },
+   "labour_hours": {
+    "labourer": 5.0,
+    "scribe": 1.0
+   },
+   "unit_dimension": "mass",
+   "basis": "per kg of finished carbon ink, tallow lampblack ground into a gum-and-water suspension",
+   "yield_basis": "The same carbon ink as the olive-oil ink_kg entry, with the soot collected from burning tallow (the fat a northern household has) in a shallow lamp under a cool plate, and bound with gum_kg, the tree gum, as the traditional binder. Soot is a small share of the fuel burnt, taken as the same ten kilograms of fuel for a kilogram of ink as the oil entry, a recalled figure, confidence D; a tenth of a kilogram of gum binds a kilogram of ink, recalled from the recipes. Labour as for the oil ink: tending smoky lamps, scraping soot and grinding it into the binder.",
+   "conf": "D",
+   "requires_node": "prn_carbon_ink"
+  },
   "bristles_kg": {
    "outputs": {
     "bristles_kg": 1.0
