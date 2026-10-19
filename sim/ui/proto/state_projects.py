@@ -178,8 +178,9 @@ def _agent_state_spend_and_net(sim):
         # bill, in the one year the player is most likely to look.
         "wages_you_have_already_paid_this_year": round(
             sim.wages_prepaid, 1) or None,
-        "net_after_project_spend": round(sim.revenue() - sim.upkeep() - sim.living_cost()
-                                         + min(sim.living_cost(),
+        "net_after_project_spend": round(sim.revenue() - sim.upkeep()
+                                         - sim.recurring_living_cost(sim.revenue(), sim.upkeep())
+                                         + min(sim.recurring_living_cost(sim.revenue(), sim.upkeep()),
                                                sim.wages_prepaid)
                                          - sim.mine_operating_cost()
                                          - max(0.0, -sim.capital) * sim.debt_interest_rate()
