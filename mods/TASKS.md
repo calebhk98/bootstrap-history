@@ -47,11 +47,16 @@ add to it.
 
 ## Deferred to mods (owner decisions)
 
-Features the owner decided should be mods. Each closed complaint keeps the design notes.
+Features the owner decided should be mods. Each closed complaint keeps the design notes. Each is now built as
+an opt-in mod (its `README.md` says how to turn it on); what the mod contract could not do is an open complaint
+whose proof-of-concept engine hook sits on its own `engine-*` branch, not merged.
 
-- Organisational hierarchy for directed hours at scale (span of control, overhead, technologies that widen it). (`Complaints/closed/104-directed-hours-need-organisational-hierarchy.md`)
-- Urbanisation as a system: towns grow from jobs, food reach and mortality, with housing, disease and water costs. (`Complaints/closed/107-urbanisation-should-become-first-class.md`)
-- Industrial pollution and externalities derived from physical throughput (smoke, runoff, occupational disease, cleanup technology). (`Complaints/closed/108-add-industrial-pollution-and-externalities.md`)
-- Religious institutions as an actor kind holding land, mills and credit, with data per civilisation. (`Complaints/closed/269-religious-institutions-absent-as-economic-actors.md`)
-- A town table (name, tile, size at the start date with a source) so `map` and `move` can name places. (`Complaints/closed/289-tiles-have-no-place-names-and-no-towns.md`)
-- Sheltering cash from disasters and confiscation (deposits elsewhere, letters of credit); the display part is done. (`Complaints/closed/165-disasters-take-cash.md`)
+- Organisational hierarchy for directed hours at scale (span of control, overhead, technologies that widen it). (`Complaints/closed/104-directed-hours-need-organisational-hierarchy.md`) Mod `bh_orghierarchy_r4k8`; overhead binding on directed hours: `Complaints/561`, branch `engine-director-overhead-hook`.
+- Urbanisation as a system: towns grow from jobs, food reach and mortality, with housing, disease and water costs. (`Complaints/closed/107-urbanisation-should-become-first-class.md`) Mod `bh_urbanisation_w2n6`; derived towns reaching the labour market: `Complaints/562`, branch `engine-town-population-provider`.
+- Industrial pollution and externalities derived from physical throughput (smoke, runoff, occupational disease, cleanup technology). (`Complaints/closed/108-add-industrial-pollution-and-externalities.md`) Mod `bh_pollution_t9c3`; harm reaching mortality and yields: `Complaints/563`, branch `engine-externality-hook`.
+- Religious institutions as an actor kind holding land, mills and credit, with data per civilisation. (`Complaints/closed/269-religious-institutions-absent-as-economic-actors.md`) Mod `bh_religion_h5p1`; lending from a purse and civilisation variants: `Complaints/564`, branch `engine-actor-lenders` (land ownership has no proof of concept).
+- A town table (name, tile, size at the start date with a source) so `map` and `move` can name places. (`Complaints/closed/289-tiles-have-no-place-names-and-no-towns.md`) Mod `bh_towns_m8d4`; names on the shipped `map` and `move`: `Complaints/565`, branch `engine-map-place-names`.
+- Sheltering cash from disasters and confiscation (deposits elsewhere, letters of credit); the display part is done. (`Complaints/closed/165-disasters-take-cash.md`) Mod `bh_cashshelter_z6f2`; confiscation counting lodged coin: `Complaints/566`, branch `engine-confiscation-counts-claims`.
+
+A mod civilisation is a full copy of the shipped file it varies (the loader has no `extends`), so
+`bh_religion_h5p1` and `bh_urbanisation_w2n6` civilisations must be brought in step by hand when their base changes.
