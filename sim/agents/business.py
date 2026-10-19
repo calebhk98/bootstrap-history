@@ -7,8 +7,9 @@ functions of (business, owner, world), so the arithmetic is the same whoever the
 """
 from collections.abc import MutableSet
 from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, Iterable, Iterator, KeysView, List, Optional
+from typing import Any, Callable, Dict, Iterable, Iterator, KeysView, List, Optional, Sequence
 
+from . import business_review
 from .business_views import Closures, StateKeys
 from .business_plant import MOTHBALLED, OPERATING, Plant
 
@@ -175,6 +176,25 @@ class Business:
 		plant = self._by_key.get(entry_key)
 		if plant is not None:
 			plant.margin = margin
+
+	def note_year(self, entry_key: str, margin: float) -> None:
+		"""Tally a plant's year: its margin, and how many years running it has lost money."""
+		plant = self._by_key.get(entry_key)
+		if plant is not None:
+			plant.margin = margin
+			plant.loss_years = plant.loss_years + 1 if margin < 0.0 else 0
+
+	def longest_loss_run(self) -> int:
+		"""The most consecutive loss years of any plant it runs."""
+		return max((plant.loss_years for plant in self.plants if plant.state == OPERATING), default=0)
+
+	def review(self, owner: Any, world: Any, rules: Sequence[str] = business_review.ALL_RULES) -> List[business_review.Closure]:
+		"""Close the plants the rules shut for this owner (see `business_review`); what closed and why."""
+		return business_review.review(self, owner, world, rules)
+
+	def review_reopening(self, owner: Any, world: Any) -> List[str]:
+		"""Reopen the plants shut for want of staff that the owner can staff again; what reopened."""
+		return business_review.reopen(self, owner, world)
 
 
 class PlantKeys(MutableSet):

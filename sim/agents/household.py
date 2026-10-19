@@ -21,6 +21,7 @@ from typing import (Any, Callable, DefaultDict, Dict, Iterable, List,
 
 from sim.invalidating import ActiveProjectState, _InvalidatingSet, _InvalidatingDict
 from .base import Actor
+from .business_founder_review import FounderReview
 from .household_borrowing import FounderBorrowing
 from .policy import IdlePolicy
 
@@ -195,7 +196,7 @@ _LAZY_FIELDS: Set[str] = {
 }
 
 
-class Household(FounderBorrowing, Actor):
+class Household(FounderReview, FounderBorrowing, Actor):
 	"""The founder's household: money, staff, knowledge, plant and standing.
 
 	In the live state architecture, Household delegates all persistent state

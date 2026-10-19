@@ -10,6 +10,7 @@ from typing import Any, Dict, List, Optional, Set, Tuple
 from .business import Business, PlantKeys
 from .business_closing import release_plant
 from .business_plant import Plant
+from .business_review import Reviewable
 from .records import ActorRecord
 
 from . import imitation, ledger
@@ -20,7 +21,7 @@ from .policy import Decision, Option, Policy, ValuePolicy
 from .tuning import ATTENTION_SPAN
 
 
-class Actor(Borrower):
+class Actor(Reviewable, Borrower):
 	kind = "actor"
 	purses: Any = None   # the book of purses the actor keeps its account in, when it keeps one
 

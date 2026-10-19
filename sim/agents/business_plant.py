@@ -19,6 +19,8 @@ class Plant:
 	crew_found: float = 1.0
 	# what the plant made last year after levy and royalty; None until a year has been tallied
 	margin: Optional[float] = None
+	# consecutive tallied years the plant lost money
+	loss_years: int = 0
 	# "operating" or "mothballed"; a mothballed plant keeps its size and age and costs nothing until restored
 	state: str = OPERATING
 	# the year it was mothballed and why (a closure reason); empty while operating

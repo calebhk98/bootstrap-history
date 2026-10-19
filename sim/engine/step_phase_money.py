@@ -92,8 +92,8 @@ class MoneyPhaseMixin:
                     "net-positive concerns already built, within the staff and money available",
                     _before, ids=list(_opened))
         self.charge_interest(self.state.scenario.year)
-        if self.state.founder.policy.get("auto_shed", True):
-            self.shed_loss_makers(self.state.scenario.year)
+        self.note_venture_year()
+        self.shed_loss_makers(self.state.scenario.year)
         self.warn_near_the_limit(self.state.scenario.year)
         self.enforce_credit_limit(self.state.scenario.year)
 
@@ -137,54 +137,7 @@ class MoneyPhaseMixin:
                 if self.state.household.insolvent_years in (3, 6, 12, 25):
                     self.state.household.log.append((self.state.scenario.year, LogLine("arrears_staff_leaving", "IN ARREARS for %d years: staff are leaving "
                                          "because you cannot pay them" % self.state.household.insolvent_years)))
-                # ABANDONMENT, and this is what makes insolvency survivable: a
-                # permanently underwater household must not simply sit
-                # floored, simulating centuries of nothing and reporting it
-                # as "ran out of horizon". An enterprise that cannot
-                # maintain its works does not pay for them for five
-                # centuries. It lets them go, and the buildings fall down.
-                # You lose what they gave you and can rebuild later, which
-                # is a real cost and a real way out.
-                net = (self.revenue() - self.upkeep() - self.recurring_living_cost(self.revenue(), self.upkeep())
-                       - self.mine_operating_cost())
-                # ONLY WORKS THAT COST MORE THAN THEY RETURN, and only if you
-                # let it happen at all: a loop that runs until the books
-                # balance, rather than until shedding stops helping, would
-                # go on destroying profitable works once the genuine
-                # loss-makers are gone, each one making the deficit worse
-                # for ever - and it must respect the auto_shed switch, in a
-                # game whose own help says "every one of them is a switch
-                # you control".
-                if net < 0 and self.state.founder.policy.get("auto_shed", True):
-                    burden = sorted((node_id for node_id in self.state.projects.done
-                                     if self.nodes[node_id]["up"] > self.nodes[node_id]["rev"]
-                                     and node_id not in self.state.projects.granted
-                                     and not self.never_abandon(node_id)),
-                                    key=lambda k: (self.nodes[k]["rev"] - self.nodes[k]["up"]))
-                    shed = []
-                    for node_id in burden:
-                        if net >= 0:
-                            break
-                        node = self.nodes[node_id]
-                        net += node["up"] - node["rev"]
-                        # CLOSE IT, DO NOT UNLEARN IT - and above all do not do
-                        # both: discarding from `done` while adding to
-                        # `mothballed` produces a state no verb can clear -
-                        # `start` sends to `restore`, `restore` says the
-                        # trade is no longer known, `open` says it was
-                        # never built and `mothball` says there is nothing
-                        # to shut. If that node gates a whole branch,
-                        # `available` reads "0 startable now" indefinitely.
-                        self.close_work(node_id, self.CLOSED_LOSS_MAKING)
-                        shed.append(node_id)
-                    if shed:
-                        # NAME THEM, for the same reason as shed_loss_makers and
-                        # the creditors' seizure below: a bare count does not
-                        # tell a player what they lost or why it later
-                        # reappeared mothballed rather than gone for good.
-                        self.state.household.log.append((self.state.scenario.year, LogLine("works_abandoned_arrears", "ABANDONED %d works you could no longer "
-                                             "maintain; they have fallen into disrepair: %s"
-                                             % (len(shed), ", ".join(shed)))))
+                # Works it can no longer maintain were let go above, by the business's loss rule (shed_loss_makers).
         else:
             self.state.household.insolvent_years = 0
         # A standing workforce policy, and ONLY when the optimizer is playing:
