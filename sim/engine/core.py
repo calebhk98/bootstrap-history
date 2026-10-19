@@ -3,7 +3,7 @@ import collections, copy, math, os, random, sys
 
 from sim.constants import declare
 from sim.refusal import LogLine
-from . import money_units
+from . import externalities, money_units
 from . import automation_audit
 from sim.engine.state import SimulationState, ActiveProjectState
 from sim.engine.state_seat import bind_seat
@@ -1517,7 +1517,7 @@ class Sim(RealPriceRatiosMixin, CoinRevaluationMixin, PartnerCivsMixin, WageMark
         # nutrition_ratio without re-deriving it from the cohort counts by
         # hand a second time.
         food_eaten_kcal_per_day = farm_year.food_available_kcal_per_day + self.relief_kcal_per_day()
-        epidemic_deaths = self.disease_year(food_eaten_kcal_per_day, year)
+        epidemic_deaths = externalities.add_deaths(self.disease_year(food_eaten_kcal_per_day, year), self, year)
         self._last_demographic_step = self.population.step(
             food_eaten_kcal_per_day, jitter=False,
             disease_burden=self._disease_burden(), epidemic_deaths=epidemic_deaths)

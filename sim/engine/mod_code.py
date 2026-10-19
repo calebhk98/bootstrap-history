@@ -113,6 +113,12 @@ class ModCodeApi:
         from sim.agents.api import register_spawner
         register_spawner(self.qualified(name), function)
 
+    def externality(self, provider: Callable) -> None:
+        """Feed harm into the year: `(sim, year) -> {"deaths_by_band": {...}, "yield_factor_by_tile": {...}}`
+        (sim/engine/externalities.py)."""
+        from sim.engine import externalities
+        externalities.register(provider)
+
     def state(self, memory: Dict[str, Any]) -> Dict[str, Any]:
         """The mod's own JSON dict inside a saved game: pass `sim.state.interface`."""
         return memory.setdefault("mod_state", {}).setdefault(self.mod_id, {})
