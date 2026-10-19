@@ -637,10 +637,7 @@ class Sim(ModStoresMixin, RealPriceRatiosMixin, CoinRevaluationMixin, PartnerCiv
         """Wrap the bound seat's mutation-aware containers and start its version counters."""
         from sim.engine.economy import _InvalidatingDict, _InvalidatingSet
         from sim.engine.state import ActiveProjectState
-        self.state.projects.operating = _InvalidatingSet(
-            self.state.projects.operating or set(),
-            on_change=self._operating_changed
-        )
+        self.state.projects.business.watch = self._operating_changed
         self.state.projects.active = _InvalidatingDict(
             {k: ActiveProjectState.from_dict(v if isinstance(v, dict) else v.to_canon_dict(), _on_change=self._active_changed)
              for k, v in (self.state.projects.active or {}).items()},

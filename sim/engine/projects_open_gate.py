@@ -1,8 +1,20 @@
-"""The staffing half of the gate `open` applies, as one function."""
+"""The gates `open` applies for want of running works and of people, as one function."""
 from sim.refusal import Refusal
 
 
 class OpenGateMixin:
+
+    def open_refusal(self, node_id, unit_count=None, with_advice=True):
+        """Why a built concern cannot be opened now for want of a running work or of people, else None.
+
+        The one answer `open` refuses with and `stuck` recommends against; `unit_count` is the size `open`
+        would found (what `opening_fee` says unless given)."""
+        gate_refusal = self.running_gate_refusal(node_id)
+        if gate_refusal:
+            return gate_refusal
+        if unit_count is None:
+            unit_count = self.opening_fee(node_id)[1]
+        return self.staffing_open_refusal(node_id, unit_count, with_advice)
 
     def staffing_open_refusal(self, node_id, unit_count=1.0, with_advice=True):
         """Why the people to run this concern are not free now, else None.

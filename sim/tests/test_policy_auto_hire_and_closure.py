@@ -39,6 +39,7 @@ check("a loss-making, non-knowledge node is NOT protected (the control case)",
 
 # One household in arrears takes the loss-shedding scenarios in turn (the control first, while the loss-maker is still shut).
 _neg = unopened_sim(capital=-100000.0)
+_neg.state.founder.policy["auto_shed"] = True   # shedding is the owner's policy; these checks are about what it sheds
 # The control: a loss-maker that is SHUT is left alone entirely.
 s_sh = _neg
 s_sh.done.add(_LOSS); s_sh._done_changed()

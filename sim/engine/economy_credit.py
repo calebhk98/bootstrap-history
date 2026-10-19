@@ -23,7 +23,7 @@ from sim.refusal import LogLine
 from . import money_units
 from .units_prose import money_text
 from sim.world import capital_market
-from sim.agents.api import edges, ledger
+from sim.agents.api import business_review, edges, ledger
 from .agents_port import SimWorld
 
 
@@ -233,7 +233,8 @@ class CreditMixin:
         }
 
     def shed_loss_makers(self, year):
-        """In arrears, stop maintaining anything that costs more than it returns.
+        """Shut the plants that keep losing money; in arrears with a deficit, stop maintaining anything that costs
+        more than it returns (the loss rule of `Business.review`, the same for every owner).
 
         This is what finally answers the reviewer's objection, which was the right
         one: if you can build an enterprise starting from 400 denarii and a
@@ -247,53 +248,15 @@ class CreditMixin:
         your practice again, which is what you started with and is enough.
         """
         household = self.state.household
-        projects = self.state.projects
-        if household.capital >= 0:
-            return
-        shed = []
-        while True:
-            net = (self.revenue() - self.upkeep() - self.living_cost()
-                   - self.mine_operating_cost())
-            if net >= 0:
-                break
-            worst = None
-            # Schools and patrons close last (they're loss-makers but drive credit and scholars).
-            for _pass in (0, 1):
-                # WHAT YOU ARE ACTUALLY PAYING FOR, which since knowing and
-                # running became two states is `operating`, not `done`. This
-                # scanned every completed node, so in a bad year it would pick
-                # a loss-maker that was already shut, unlearn it, and save
-                # nothing at all: upkeep follows `operating` and a closed
-                # concern was already costing nothing. The player lost the
-                # knowledge and kept the deficit.
-                for node_id in sorted(projects.operating):
-                    node = self.nodes[node_id]
-                    if (node["up"] <= node["rev"] or node_id in projects.granted
-                            or self.never_abandon(node_id)):
-                        continue
-                    if (node_id in self.CAPABILITY_INSTITUTIONS) != bool(_pass):
-                        continue
-                    if worst is None or (node["rev"] - node["up"]) < (self.nodes[worst]["rev"]
-                                                               - self.nodes[worst]["up"]):
-                        worst = node_id
-                if worst is not None:
-                    break
-            if worst is None:
-                break
-            # CLOSE IT, do not unlearn it: shedding a loss-maker in ruin is
-            # shutting the doors, and what that saves is its running cost.
-            # The knowledge stays in `done` - you cannot forget how a thing
-            # works because you could not pay for it this year.
-            self.close_work(worst, self.CLOSED_LOSS_MAKING, year)
-            shed.append(worst)
+        shed = [closure.entry_key for closure in self.review_ventures((business_review.LOSS_MAKING,), year)]
         if shed:
             # NAME THEM: "stopped maintaining 1 works" tells a player
             # nothing - not which one, not how to get it back.
-            household.log.append((year, LogLine("arrears_closed_concerns", "in arrears, so closed %d concern%s that cost more "
+            household.log.append((year, LogLine("arrears_closed_concerns", "%sclosed %d concern%s that cost more "
                                  "than they returned: %s. You still know how; "
                                  "'restore' reopens one when you can pay for it"
-                             % (len(shed), "" if len(shed) == 1 else "s",
-                                ", ".join(shed)))))
+                             % ("in arrears, so " if household.capital < 0 else "", len(shed),
+                                "" if len(shed) == 1 else "s", ", ".join(shed)), concerns=list(shed))))
 
     DEBT_RATE_REPUTATION_DISCOUNT_CAP = declare(
         "DEBT_RATE_REPUTATION_DISCOUNT_CAP", 0.03, kind="temporary_heuristic",
@@ -512,32 +475,8 @@ class CreditMixin:
         if household.capital < -limit:
             self.mothball_mines()
         if household.capital < -limit:
-            # From what you are RUNNING: a creditor cannot seize a thing you
-            # merely know how to do, and closing something that was not open
-            # saves nobody anything.
-            burden = sorted((node_id for node_id in projects.operating
-                             if self.nodes[node_id]["up"] > self.nodes[node_id]["rev"]
-                             and node_id not in projects.granted
-                             and not self.never_abandon(node_id)),
-                            key=lambda node_id: (self.nodes[node_id]["rev"] - self.nodes[node_id]["up"]))
-            taken = []
-            for node_id in burden:
-                if household.capital >= -limit:
-                    break
-                # THEY TAKE THE CONCERN, NOT YOUR MEMORY OF HOW IT WORKED:
-                # discarding the node from `done` while leaving it in
-                # `operating` would make it simultaneously forgotten and
-                # running - `state` saying the concern is running,
-                # `ventures` billing for it, `money` charging nothing, and
-                # `start`/`restore`/`open`/`mothball` refusing it on
-                # mutually contradictory grounds, with no way to clear the
-                # entry.
-                #
-                # Closing it is both the fix and the more honest event: what a
-                # creditor can carry away is the shop.
-                self.receive_from_edge(edges.EDGE_CREDITORS, self.nodes[node_id]["up"] * self.CREDITOR_SEIZURE_VALUE_MULTIPLE, "concern seized by creditors")
-                self.close_work(node_id, self.CLOSED_CREDITOR_SEIZURE, year)
-                taken.append(node_id)
+            # A creditor takes the business (the plants it runs), never the knowledge of how they work.
+            taken = [closure.entry_key for closure in self.review_ventures((business_review.CREDITOR_SEIZURE,), year)]
             # Only say it if it happened: firing this every year regardless
             # of whether anything was actually taken would log creditors
             # seizing something for a run that has nothing left to take,

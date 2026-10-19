@@ -18,8 +18,9 @@ file of their own. Behaviour is unchanged and verified byte-identical.
 from sim.refusal import LogLine
 from sim.constants import declare
 from . import cause_book, category_traits
+from .agents_port import SimWorld
 from .units_prose import money_text, per_year
-from sim.agents.api import edges
+from sim.agents.api import business_review, edges
 
 
 def _trim(amount):
@@ -29,18 +30,16 @@ def _trim(amount):
 class StaffingMixin:
 
     # Why a work is shut; the only two writers are close_work and clear_closure.
-    CLOSED_FOR_STAFF = "staff"
+    CLOSED_FOR_STAFF = business_review.STAFF_SHORT
     CLOSED_BY_CHOICE = "manual"
-    CLOSED_LOSS_MAKING = "loss_making"
-    CLOSED_CREDITOR_SEIZURE = "creditor_seizure"
+    CLOSED_LOSS_MAKING = business_review.LOSS_MAKING
+    CLOSED_CREDITOR_SEIZURE = business_review.CREDITOR_SEIZURE
 
     def close_work(self, node_id, reason, year=None, cascade=True):
         """Shut a work and record why and since when, in one place. Whatever requires it running
         shuts with it unless `cascade` is off."""
         projects = self.state.projects
-        projects.operating.discard(node_id)
-        projects.mothballed.add(node_id)
-        projects.closures[node_id] = {"reason": reason, "year": self.state.scenario.year if year is None else year}
+        projects.business.mothball(node_id, self.state.scenario.year if year is None else year, reason)
         if reason == self.CLOSED_FOR_STAFF:
             projects.ever_closed_for_staff.add(node_id)
         cause_book.record_concern(self, "closure", node_id, reason)
@@ -56,12 +55,7 @@ class StaffingMixin:
 
     def clear_closure(self, node_id, reason=None):
         """Drop a closure record. With a reason, only that reason's record goes."""
-        closures = self.state.projects.closures
-        record = closures.get(node_id)
-        if record is None or (reason is not None and record["reason"] != reason):
-            return False
-        del closures[node_id]
-        return True
+        return self.state.projects.business.forget_reason(node_id, reason)
 
     def staff_closure_age(self, node_id):
         """Years since a staffing closure began, or None if not closed for staff."""
@@ -94,11 +88,10 @@ class StaffingMixin:
         running themselves for ever on an empty payroll.
         """
         household = self.state.household
-        closed = self.concerns_to_close_for_staffing()
-        shortfalls = self._staffing_shortfalls(self.staffing_held_totals()) if closed else {}
-        earnings_stopped = round(self.labour.yearly_value_of(closed), 1)
-        for node_id in closed:
-            self.close_work(node_id, self.CLOSED_FOR_STAFF, year)
+        planned = self.concerns_to_close_for_staffing()
+        shortfalls = self._staffing_shortfalls(self.staffing_held_totals()) if planned else {}
+        earnings_stopped = round(self.labour.yearly_value_of(planned), 1)
+        closed = [closure.entry_key for closure in self.review_ventures((business_review.STAFF_SHORT,), year)]
         if closed:
             self.record_staffing_closures(len(closed), shortfalls)
             household.log.append((year, LogLine(
@@ -116,6 +109,17 @@ class StaffingMixin:
                 concerns=sorted(closed), closed_because="short_staffed", short=shortfalls,
                 stops_earnings_per_year=earnings_stopped)))
         return closed
+
+    def review_ventures(self, rules=business_review.ALL_RULES, year=None):
+        """The seat's business under the yearly review (sim/agents/business_review.py); what closed and why.
+        Plants it shuts are dated `year` (the scenario's when not given)."""
+        world = SimWorld(self)
+        world.review_year = year
+        return self.state.projects.business.review(self.household, world, rules)
+
+    def note_venture_year(self):
+        """Tally each running plant's margin, and the years running it has lost money (the loss rule's input)."""
+        SimWorld(self).founder_review().tally(self.state.projects.business)
 
     def staffing_closed_hand_shortfall(self):
         """(scholars, craftsmen) the household lacks to reopen every concern shut for want of staff.
@@ -153,28 +157,8 @@ class StaffingMixin:
         candidates, so a concern a player shut on purpose with
         `mothball` never reappears on its own - that is still their call.
         """
-        projects = self.state.projects
         household = self.state.household
-        cands = [node_id for node_id in sorted(projects.closures)
-                 if self.staff_closure_age(node_id) is not None
-                 and node_id in projects.done and node_id in self.nodes]
-        if not cands:
-            return []
-        # BEST-EARNING FIRST, same idea as auto_open_ventures: when only some
-        # of what closed can be restaffed with what you have free this year,
-        # what comes back first should be what is worth the most, not
-        # whichever id sorts first.
-        cands.sort(key=lambda k: -((self.nodes[k]["rev"] - self.nodes[k]["up"])
-                                   / max(0.01, sum(self.venture_hands(k)))))
-        reopened = []
-        for node_id in cands:
-            need_sch, need_art = self.venture_hands(node_id)
-            sch_free, art_free = self.venture_staff_free()
-            if need_sch > sch_free + 0.01 or need_art > art_free + 0.01:
-                continue
-            did_open, _msg = self.open_venture(node_id)
-            if did_open:
-                reopened.append(node_id)
+        reopened = self.state.projects.business.review_reopening(self.household, SimWorld(self))
         if reopened:
             self.record_staffing_reopenings(len(reopened))
             household.log.append((year, LogLine("concerns_reopened", "you have the people again: %s reopen%s on "
@@ -888,14 +872,13 @@ class StaffingMixin:
         self.pay_edge(edges.EDGE_WORKERS, fee, "known technique restored")
         projects.done.add(node_id)
         self._done_changed()
-        projects.mothballed.discard(node_id)
-        self.clear_closure(node_id)
-        # Back in service means back in OPERATION: restore is what a player
-        # types to reopen something they shut, so it must put it back on the
-        # books rather than leaving it known-but-closed.
+        # Back in service means back in OPERATION: restore is what a player types to reopen something they
+        # shut, so a concern goes back on the books; any other work just stops being shut.
         if self.is_venture(node_id):
-            projects.operating.add(node_id)
+            projects.business.restore(node_id)
             cause_book.record_concern(self, "opening", node_id, "restored")
+        else:
+            projects.business.close_plant(node_id)
         return True, LogLine("restored", "%s back in service for %s%s"
                              % (node_id, money_text(fee, self, grouped=True),
                                 (" (%s)" % _grace_note) if _grace_note else ""),

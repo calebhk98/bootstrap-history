@@ -99,3 +99,18 @@ world, registry, firm, backer = closing_with(0.0, 100.0)
 firm_exit.close_firm(firm, world)
 check("a firm closing in debt pays its backer nothing, in either direction",
 	backer.money == 0.0 and not backer.record.income and not backer.record.outlays, (backer.money, backer.record.income))
+
+
+# the creditors take the business, not what the firm has learned
+world, registry, firm, backer = closing_with(0.0, 100.0)
+firm.learn(["shop"], world)
+taken = firm.business.seize_all(firm, world) if firm.business.plants else []
+check("seizing a firm's business takes every plant, for the creditors' reason",
+	[(closure.entry_key, closure.reason) for closure in taken] == [("shop", "creditor_seizure")] and not firm.business.plants, taken)
+check("what the firm learned stays with it", firm.knows("shop", world), firm.knowledge)
+
+world, registry, firm, backer = closing_with(40.0, 100.0)
+firm.learn(["shop"], world)
+firm_exit.close_firm(firm, world)
+check("a firm in default closes through the same seizure: its plants are gone, its knowledge is not",
+	not firm.business.plants and firm.knows("shop", world), (firm.business.plants, firm.knowledge))

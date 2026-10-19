@@ -227,6 +227,10 @@ class World(Protocol):
 		"""The founder's household meets its lenders' default: it stops what it cannot fund, then settles or enters service."""
 		...
 
+	def founder_review(self) -> Any:
+		"""The founder's seat as the owner of a reviewed business (what `FounderReview` asks)."""
+		...
+
 	def pay_interest(self, payer: Any, owed: float, purpose: str = "interest") -> None:
 		"""A borrower pays the interest on its debt to its lenders."""
 		...

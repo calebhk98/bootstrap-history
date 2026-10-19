@@ -87,7 +87,7 @@ class ProductionMixin:
         """
         projects = self.state.projects
         scenario = self.state.scenario
-        started = (getattr(projects, "opened_year", None) or {}).get(node_id)
+        started = projects.business.opened_year_of(node_id, None)
         if started is None:
             started = projects.done_year.get(node_id, scenario.year)
         age = scenario.year - started

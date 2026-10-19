@@ -89,3 +89,19 @@ check("a business round-trips through save and load with its plants", revived.bu
 	  and revived.business.plant_of("shop").margin == 12.5, revived.business)
 check("...and the revived business finds its plants by entry", revived.business.size_of("shop") == SIZE and revived.business.plant_of("shop") is not None
       and list(revived.business.entry_keys()) == list(owner.business.entry_keys()))
+
+# ---- switching a plant off keeps it, for any owner ---------------------------------------------------------
+owner = owners_of_one_business()["government"]
+plant = owner.business.plant_of("shop")
+owner.business.mothball("shop", 101, "manual")
+check("a mothballed plant is not operating but is kept with its size and age",
+	  "shop" not in owner.business.operating() and "shop" in owner.business.mothballed()
+	  and owner.business.plant_of("shop") is plant and plant.size == SIZE and plant.opened_year == OPENED)
+check("...with the reason and year it was shut", dict(owner.business.closures()) == {"shop": {"reason": "manual", "year": 101}})
+owner.business.restore("shop")
+check("restoring brings the same plant back", "shop" in owner.business.operating() and plant.state == "operating"
+	  and owner.business.plant_of("shop") is plant and not owner.business.closures())
+owner.business.mothball("shop", 102, "staff")
+revived = _deserialize_typed(json.loads(json.dumps(serialize_state(owner.record))), ActorRecord)
+check("a mothballed plant round-trips through a save", revived.business == owner.business
+	  and dict(revived.business.closures()) == {"shop": {"reason": "staff", "year": 102}})

@@ -21,6 +21,7 @@ from .agents_port_revenue import RevenueView
 from .agents_port_site import SiteView
 from .agents_port_cast import CastView
 from .agents_port_seats import SeatView
+from .agents_port_review import ReviewView
 from .agents_port_coinage import CoinageView
 from .agents_port_trade import TradeView
 from . import seat_builds, visibility as visibility_of
@@ -30,7 +31,7 @@ from sim.world import plant_figures
 from .industry_depth import RAMP_SHARE_AT_FULL_DEPTH
 
 
-class SimWorld(BudgetView, SiteView, RevenueView, GroupView, StakeView, DisclosureView, CapitalView, CapacityView, TradeView, CastView, CoinageView, SeatView):
+class SimWorld(BudgetView, SiteView, RevenueView, GroupView, StakeView, DisclosureView, CapitalView, CapacityView, TradeView, CastView, CoinageView, SeatView, ReviewView):
 	"""The `Sim`'s answers to the questions actors ask."""
 
 	def __init__(self, sim: Any) -> None:
@@ -216,7 +217,7 @@ class SimWorld(BudgetView, SiteView, RevenueView, GroupView, StakeView, Disclosu
 		for node_id in sorted(projects.operating):
 			if node_id in projects.granted or not sim.is_venture(node_id):
 				continue
-			opened = (projects.opened_year or {}).get(node_id, self.year)
+			opened = projects.business.opened_year_of(node_id, self.year)
 			if self.year - opened >= self.proof_years(node_id) and self.concern_margin(node_id) > 0:
 				proven.append(node_id)
 		return proven

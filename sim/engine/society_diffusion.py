@@ -141,7 +141,7 @@ class DiffusionMixin:
         if not node or node.get("rev", 0) <= 0:
             return 0.0
         done_year_map = projects.done_year or {}
-        started = projects.opened_year.get(node_id, done_year_map.get(node_id, scenario.year))
+        started = projects.business.opened_year_of(node_id, done_year_map.get(node_id, scenario.year))
         age = max(0.0, scenario.year - started)
         pace = self.corpus_diffusion_pace()
         gen_lit = float(self.civ.get("literacy_general", 0.12))
