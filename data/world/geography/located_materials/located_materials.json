@@ -403,7 +403,7 @@
    "unlocks": [
     "mat_pozzolana"
    ],
-   "note": "Bulk and heavy, so it travels by sea or river; the multiplier is a heuristic standing for freight, to be replaced by the freight model."
+   "note": "Bulk and heavy, so it travels by sea or river. [HEURISTIC: the multiplier stands for freight from the nearest place; located materials are not yet freighted from their sites through the economy (source_tiles knows only mineral deposits); retire: Complaints/563.]"
   },
   {
    "id": "coal",

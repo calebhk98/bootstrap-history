@@ -289,8 +289,7 @@
    "engineer": 300.0
   },
   "mat": {
-   "stone_kg": 500000.0,
-   "lime_kg": 50000.0
+   "concrete_pozzolanic_kg": 8200000.0
   },
   "yrs": 3.0,
   "risk": 0.05,
@@ -309,7 +308,7 @@
    "disease_burden": true
   },
   "build_yrs": 3.0,
-  "_internal": "[HEURISTIC: yearly upkeep taken as one percent of the construction labour hours (repair and keeping the works in service); no wear or failure model yet.]"
+  "_internal": "[BASIS: one kilometre of masonry conduit with a 0.6 m wide, 1.5 m high channel in 0.4 m concrete walls and floor is about 1800 cubic metres, and an arcaded stretch of 200 m (forty 5 m bays of a 32 cubic metre pier and about 30 cubic metres of arch and spandrel) about 2500 more: 4300 cubic metres at about 1.9 tonnes per cubic metre (Frontinus, De Aquaeductu, and Hodge, Roman Aqueducts and Water Supply, 2002, for the channel and arcade forms; Lancaster 2005 for the density). Dimensions are a reasoned estimate, conf C.] [HEURISTIC: yearly upkeep taken as one percent of the construction labour hours (repair and keeping the works in service); no wear or failure model yet.]"
  },
  {
   "id": "med_legal_physician",
