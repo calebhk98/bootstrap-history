@@ -1,4 +1,4 @@
-"""Mod code can charge overhead against the directed-hours pool (Complaints/561): the hours count as committed."""
+"""Mod code can charge overhead against the directed-hours pool (Complaints/633): the hours count as committed."""
 from .harness import *  # noqa: F401,F403
 
 from sim.engine import mod_code
