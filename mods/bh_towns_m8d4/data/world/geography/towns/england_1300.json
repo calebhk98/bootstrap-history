@@ -26,6 +26,15 @@
    "lon": -0.09,
    "sizes": [
     {
+     "year": 100,
+     "people": 30000,
+     "low": 20000,
+     "high": 60000,
+     "source": "Chandler, Four Thousand Years of Urban Growth (1987) (London); Romano-British archaeology gives a wide range",
+     "conf": "D",
+     "name": "Londinium"
+    },
+    {
      "year": 1300,
      "people": 80000,
      "low": 40000,
@@ -33,6 +42,9 @@
      "source": "Chandler, Four Thousand Years of Urban Growth (1987); Keene on medieval London",
      "conf": "C"
     }
+   ],
+   "also_called": [
+    "Londinium"
    ]
   },
   {

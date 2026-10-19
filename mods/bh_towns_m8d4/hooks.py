@@ -6,9 +6,15 @@ cost, refusals and effects are the shipped ones.
 """
 
 
+# Heuristic (retire: later dated snapshots added to `sizes`, or a growth model): a figure older than this many
+# years is flagged `stale` rather than hidden, so it is visibly dated.
+STALE_AFTER_YEARS = 300
+
+
 def _snapshot(town, year):
-    """The town's size record dated nearest to `year`."""
-    return min(town["sizes"], key=lambda record: abs(record["year"] - year))
+    """The town's latest size record dated at or before `year`; None before its earliest record."""
+    earlier = [record for record in town["sizes"] if record["year"] <= year]
+    return max(earlier, key=lambda record: record["year"]) if earlier else None
 
 
 def _names(town):
@@ -20,14 +26,21 @@ def _matches(town, words):
     return needle == town["tile"] or any(needle in name.lower() for name in _names(town))
 
 
-def _row(sim, town, held):
-    record = _snapshot(town, sim.year)
-    row = {"town": town["name"], "tile": town["tile"], "people": record["people"],
+def _present(towns, year):
+    """[(town, snapshot)] for the towns that exist in `year`."""
+    return [(town, record) for town in towns for record in [_snapshot(town, year)] if record is not None]
+
+
+def _row(sim, town, record, held):
+    row = {"town": record.get("name", town["name"]), "tile": town["tile"], "people": record["people"],
            "people_low": record["low"], "people_high": record["high"],
-           "size_year": record["year"], "confidence": record["conf"], "source": record["source"],
-           "held": town["tile"] in held}
-    if town.get("also_called"):
-        row["also_called"] = town["also_called"]
+           "size_year": record["year"], "years_old": sim.year - record["year"],
+           "confidence": record["conf"], "source": record["source"], "held": town["tile"] in held}
+    if row["years_old"] > STALE_AFTER_YEARS:
+        row["stale"] = True
+    names = [name for name in _names(town) if name != row["town"]]
+    if names:
+        row["also_called"] = names
     if town.get("note"):
         row["note"] = town["note"]
     if town["tile"] == sim.labour.base_tile():
@@ -55,8 +68,10 @@ def register(api):
     def towns(sim, nodes, cmd, ended):
         held = sim.labour.settlement_tiles()
         words = str(cmd.get("text") or "").strip()
-        found = [town for town in _towns(sim) if (_matches(town, words) if words else town["tile"] in held)]
-        rows = sorted((_row(sim, town, held) for town in found), key=lambda row: (-row["people"], row["town"]))
+        found = [(town, record) for town, record in _present(_towns(sim), sim.year)
+                 if (_matches(town, words) if words else town["tile"] in held)]
+        rows = sorted((_row(sim, town, record, held) for town, record in found),
+                      key=lambda row: (-row["people"], row["town"]))
         if not rows:
             return {"ok": True, "towns": [], "note": "no town in the table matches" if words
                     else "the table names no town on your tiles"}
@@ -72,7 +87,7 @@ def register(api):
         words = str(cmd.get("text") or "").strip()
         if not words:
             return {"ok": False, "error": "name a town; `towns` lists them"}
-        found = [town for town in _towns(sim) if _matches(town, words)]
+        found = [town for town, _record in _present(_towns(sim), sim.year) if _matches(town, words)]
         exact = [town for town in found if words.lower() in (name.lower() for name in _names(town))]
         found = exact or found
         if not found:

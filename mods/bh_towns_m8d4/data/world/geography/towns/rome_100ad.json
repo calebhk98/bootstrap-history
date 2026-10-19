@@ -167,26 +167,6 @@
    ]
   },
   {
-   "id": "bh_towns_m8d4:londinium",
-   "name": "Londinium",
-   "tile": "united_kingdom_02",
-   "lat": 51.51,
-   "lon": -0.09,
-   "sizes": [
-    {
-     "year": 100,
-     "people": 30000,
-     "low": 20000,
-     "high": 60000,
-     "source": "Chandler, Four Thousand Years of Urban Growth (1987) (London); Romano-British archaeology gives a wide range",
-     "conf": "D"
-    }
-   ],
-   "also_called": [
-    "London"
-   ]
-  },
-  {
    "id": "bh_towns_m8d4:corduba",
    "name": "Corduba",
    "tile": "spain_01",

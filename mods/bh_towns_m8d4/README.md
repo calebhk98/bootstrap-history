@@ -40,7 +40,9 @@ capital's size; the gap is a finding about the settlement model, not an error he
 
 - Shipped `map` and `move` cannot name towns; a mod may only change their help text. Naming towns inside those
   screens needs an engine hook (a map-catalogue hook for the tile name and place rows); see Complaints/565.
-- One snapshot per town (the start date). The command picks the snapshot nearest the current year, so the figure
-  does not grow with the game; later snapshots can be added to `sizes` as data.
+- A town exists from its earliest snapshot on; the command uses the latest snapshot at or before the game year and
+  shows `size_year` and `years_old`. Figures older than `STALE_AFTER_YEARS` in `hooks.py` carry `stale: true`
+  (a labelled heuristic, retired by adding later snapshots to `sizes`). London and Londinium are one entry whose
+  snapshots carry their own names. `python3 mods/bh_towns_m8d4/check.py` checks the table without a game.
 - Tile granularity: Tenochtitlan, Texcoco, Cholula, Tlaxcala and Zempoala share one tile, so `go` moves to the tile.
 - No labelled heuristics: no number here is derived or tuned.
