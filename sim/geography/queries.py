@@ -9,7 +9,7 @@ import math
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Tuple
 
 from sim.geography.json_copy import copied
-from sim.geography import (droving, endemic, food_capacity, food_land, food_pasture, food_wild_harvest, map_source, mechanisms, parameters, resource_links, resources_biotic, rail_freight,
+from sim.geography import (droving, endemic, food_capacity, forest_timber, food_land, food_pasture, food_wild_harvest, map_source, mechanisms, parameters, resource_links, resources_biotic, rail_freight,
                            resources_catalogue, resources_endowment, resources_mined, resources_prospecting, resources_sites,
                            reach_bands, resources_summary, routes_carriage, routes_graph, routes_modes, routes_search, tile_holdings, tile_layers,
                            ways_build, ways_works)
@@ -98,6 +98,37 @@ def draw_wild_stock(wild_stock: Mapping[str, Any], tile_id: str, kcal_taken: Map
 def regrow_wild_stock(wild_stock: Mapping[str, Any], world_map: Optional[WorldMap] = None) -> Dict[str, Dict[str, float]]:
     """The game's wild stock a year on: every drawn-down species regrows."""
     return food_wild_harvest.regrow(_map(world_map), wild_stock)
+
+
+def standing_timber_tonnes(felled: Optional[Mapping[str, float]], tile_id: str, world_map: Optional[WorldMap] = None) -> float:
+    """Tonnes of wood standing on a tile; `felled` is the game's {tile id: tonnes felled}, missing meaning untouched."""
+    return forest_timber.standing_tonnes(_map(world_map), felled, tile_id)
+
+
+def timber_haul_km(felled: Optional[Mapping[str, float]], tile_id: str, world_map: Optional[WorldMap] = None) -> float:
+    """Kilometres from the settlement to the nearest standing wood on a tile, once `felled` has been cut."""
+    return forest_timber.felled_radius_km(_map(world_map), felled, tile_id)
+
+
+def fell_timber(felled: Mapping[str, float], tile_id: str, tonnes: float,
+                world_map: Optional[WorldMap] = None) -> Dict[str, float]:
+    """The felled ledger after `tonnes` of wood come off a tile (never more than stands there)."""
+    return forest_timber.fell(_map(world_map), felled, tile_id, tonnes)
+
+
+def regrow_timber(felled: Mapping[str, float], world_map: Optional[WorldMap] = None) -> Dict[str, float]:
+    """The felled ledger a year on: every tile regrows at its increment until whole."""
+    return forest_timber.regrow(_map(world_map), felled)
+
+
+def timber_increment_tonnes_per_hectare_year(tile_id: str, world_map: Optional[WorldMap] = None) -> float:
+    """Air-dry stem wood a hectare of the tile's forest grows in a year."""
+    return forest_timber.increment_tonnes_per_hectare_year(_map(world_map), tile_id)
+
+
+def timber_mean_increment_tonnes_per_hectare_year(tile_ids: Iterable[str], world_map: Optional[WorldMap] = None) -> float:
+    """Air-dry stem wood a year per hectare over these tiles' forest, weighted by forest area; 0 with no forest."""
+    return forest_timber.mean_increment_tonnes_per_hectare_year(_map(world_map), tile_ids)
 
 
 def tiles_held(civilisation: Mapping[str, Any], world_map: Optional[WorldMap] = None,

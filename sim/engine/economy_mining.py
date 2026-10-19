@@ -866,8 +866,9 @@ class MiningMixin(MineDepositsMixin):
     #
     # [C], sized against the one real anchor available: resources.json's
     # empire-wide 500,000 t/yr of charcoal implies roughly 667,000 ha under
-    # management across the WHOLE Roman world (at CHARCOAL_PER_HA=0.75
-    # t/ha/yr); Rome's own ceiling below tops out around 190,000 ha even at
+    # management across the WHOLE Roman world (at a flat charcoal yield per
+    # hectare; CHARCOAL_PER_HA is now the home forest's increment, so this
+    # anchor needs re-deriving against it); Rome's own ceiling below tops out around 190,000 ha even at
     # full revenue-driven scale-up, comfortably under that -- no private
     # holding should rival the entire empire's own managed woodland. The
     # per-area rate is re-derived from that SAME anchor, using Rome's own
@@ -884,7 +885,8 @@ class MiningMixin(MineDepositsMixin):
         source=
         "Re-derived from the same empire-wide charcoal anchor as the old "
         "FOREST_HA_PER_REGION_BASE (500,000 t/yr implying ~667,000 ha "
-        "managed empire-wide at CHARCOAL_PER_HA=0.75 t/ha/yr), converted "
+        "managed empire-wide at a flat charcoal yield per hectare that "
+        "CHARCOAL_PER_HA no longer holds; re-derive against the forest increment), converted "
         "from hectares-per-region to hectares-per-million-km2 using Rome's "
         "own home land area (9.5175 million km2 across its seven home "
         "regions, the map folder (data/world/geography/)) as the calibration point, so "

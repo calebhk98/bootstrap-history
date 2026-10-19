@@ -114,7 +114,8 @@ def opening_values(sim):
         "ways": {key: dict(way) for key, way in sorted(sim.state.economy.improvements.items())},
         "site_limits": [[limit.recipe_id, limit.tile, limit.capacity_runs_per_year, limit.yield_factor]
                         for limit in economy_port_sites.site_limits(
-                            sim, {entry_id: production[entry_id]["outputs"] for entry_id in allowed})],
+                            sim, {entry_id: production[entry_id]["outputs"] for entry_id in allowed},
+                            list(tile_ids) + [tile for opened in partners.values() for tile in opened["tiles"]])],
         "stores": opening_store_values(sim.world_map, tile_ids, int(sim.cfg["start_year"])),
     }
 

@@ -480,7 +480,7 @@ class AgentEconomy(TilePricesMixin):
                           entrant_share=entrant_share, attrition_share=attrition_share,
                           yield_factor_by_producer=yields, engine_orders=engine_orders, harvest_factor=weather,
                           import_accounts=border_accounts[0], export_accounts=border_accounts[1],
-                          site_limits=tuple(economy_port_sites.site_limits(sim, self._recipe_outputs())))
+                          site_limits=tuple(economy_port_sites.site_limits(sim, self._recipe_outputs(), self._economy.setup.tiles)))
 
     def _seat_tiles(self):
         """The tiles the playing seats buy and sell on, whose markets' books the economy keeps."""
