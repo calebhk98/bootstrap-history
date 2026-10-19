@@ -172,14 +172,3 @@ def table(series_of, years, skip):
             "%s drift %+.4f amplitude %.3f period %5.2f" % (name, stats["drift"], stats["amplitude"], stats["period"])
             for name, stats in found.items())))
     return "\n".join(lines)
-
-
-if __name__ == "__main__":
-    # python3 -m sim.tests.spin_up_sensitivity_support fixture|rome [years] [years to skip]
-    import argparse
-    parser = argparse.ArgumentParser()
-    parser.add_argument("economy", choices=("fixture", "rome"))
-    parser.add_argument("years", type=int, nargs="?", default=250)
-    parser.add_argument("skip", type=int, nargs="?", default=60)
-    arguments = parser.parse_args()
-    print(table(fixture_series if arguments.economy == "fixture" else rome_series, arguments.years, arguments.skip))

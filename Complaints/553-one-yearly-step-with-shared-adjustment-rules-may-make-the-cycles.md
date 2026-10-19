@@ -28,7 +28,7 @@ path with `python3 -c "from sim.tests.test_economy_innovator_pricing import rows
 
 ## Measured (fixture)
 
-Command: `python3 -m sim.tests.spin_up_sensitivity_support fixture` (about 25 s; 250 years of the small
+Command: `python3 -c "from sim.tests import spin_up_sensitivity_support as s; print(s.table(s.fixture_series, 250, 60))"` (about 25 s; 250 years of the small
 fixture, first 60 skipped as the opening transient). The test is `python3 -m sim.tests --slow --only
 spin_up_sensitivity`. Price level (log): drift per year, amplitude (standard deviation of the log around
 its trend), period (best-fitting sinusoid, years).
@@ -51,5 +51,5 @@ Reading: no variant removes the cycle. The amplitude stays within a factor of tw
 speeds (14 to 34 years), as it would for any delayed-feedback loop. So on the fixture the cycle comes from
 the economy (lagged expectations, capacity and credit loops), not from the shared yearly step alone. The
 fixture has few producers, so per-producer heterogeneity is a weak test there. The Rome opening takes
-minutes a variant and is not in the test: `python3 -m sim.tests.spin_up_sensitivity_support rome 100 30`
+minutes a variant and is not in the test: `python3 -c "from sim.tests import spin_up_sensitivity_support as s; print(s.table(s.rome_series, 100, 30))"`
 (many minutes; one process at a time).
