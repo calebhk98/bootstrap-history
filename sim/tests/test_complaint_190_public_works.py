@@ -204,10 +204,10 @@ general, elite = gains(FREE_SCHOOL)
 check("a school that names no group adds to both, as before", general > base_general and elite > base_elite,
       (general, elite))
 both = running(VILLAGE)
-set_units(both, COLLEGE, 1.0)
 both.done.update(NODES[COLLEGE]["pre"])
 both.done.add(COLLEGE)
 both.state.projects.operating.add(COLLEGE)
+set_units(both, COLLEGE, 1.0)
 both._done_changed()
 check("each figure moves with the schools that teach it",
       abs(both.effective_schooling_flow("literacy_general") - both.effective_schooling_flow("literacy_elite")) > 1e-9

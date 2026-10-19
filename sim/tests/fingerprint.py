@@ -20,7 +20,7 @@ Timing comes free with it: `record` and `check` both print the CPU time each
 scenario took, so the same command that proves you broke nothing also tells
 you how much faster it got.
 """
-import argparse, concurrent.futures, hashlib, json, os, random, sys, time
+import argparse, concurrent.futures, dataclasses, hashlib, json, os, random, sys, time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT = os.path.dirname(os.path.dirname(HERE))
@@ -45,8 +45,8 @@ BASELINE_FIELDS = (
     "bribes_ytd", "living_cost_paid", "mine_cost_paid", "spend_last_year",
     "output_factor", "output_per_head", "throttle", "binding", "bountied",
     "stalled", "life_left", "founder_alive", "revealed", "last_settlement",
-    "employees", "trades_created", "policy", "mothballed", "operating",
-    "forgotten", "opened_year", "last_taught", "paid_towards",
+    "employees", "trades_created", "policy", "businesses",
+    "forgotten", "last_taught", "paid_towards",
     "contract_hours", "hour_allocations", "work_trade",
     "commissioned", "wages_paid", "bondage_years_left", "bondage_debt",
     "money_real", "credit_frozen_until", "interest_paid",
@@ -55,12 +55,12 @@ BASELINE_FIELDS = (
     "atrocity", "gov", "wages_earned", "last_patron_death",
     "_said_debasement", "_said_autoopen", "_said_output", "_said_scandal",
     "_said_parallelism", "_said_command_index", "_said_deputies",
-    "_said_near_limit", "closures",
+    "_said_near_limit",
     "pop_children", "pop_working_age", "pop_elderly", "farm_stock_kg",
     "_material_stock_ledger", "farm_hectares", "worker_housing_places",
     "trade_schools", "last_withdrawal", "wages_prepaid", "granted_staff",
     "hours_this_year", "_founder_death_aged", "_founder_death_year",
-    "inst_units", "trade_introduced_year", "trades_endemic",
+    "trade_introduced_year", "trades_endemic",
     "_dashboard_history", "failed_attempts", "shortages"
 )
 
@@ -71,6 +71,8 @@ def _canon(value):
     """Make a value comparable and order-independent where order is not real."""
     if hasattr(value, "to_canon_dict"):
         value = value.to_canon_dict()
+    if dataclasses.is_dataclass(value) and not isinstance(value, type):
+        return _canon(dataclasses.asdict(value))
     if isinstance(value, float):
         # repr() rather than round(): a change that alters the last bit of a
         # float IS a change, and this harness exists to catch exactly that.
