@@ -124,5 +124,17 @@ a status line, what went wrong and the command that shows it.
 ## For contributors
 
 Read [CLAUDE.md](CLAUDE.md) first, then the design documents in
-[docs/architecture/](docs/architecture/). The regression suite is
-`python3 -m sim.tests`.
+[docs/architecture/](docs/architecture/). Run checks from the repository root:
+
+```bash
+python3 -m sim.tests                    # quick regression tier
+python3 -m sim.tests --list             # list all available test topics
+python3 -m sim.tests --only <topic>     # run a topic, regardless of its tier
+python3 -m sim.tests --slow --timing    # full suite with per-topic timings
+```
+
+The default run includes only topics marked `QUICK_TOPIC = True`; a passing
+quick run does not mean the full suite passed. Use `--only` with a topic name
+from `--list` to check the area you changed, and run the full suite before
+opening a pull request. Add `--jobs N` to limit parallel workers. After editing
+anything in `data/`, also run `python3 sim/simulator.py validate`.
