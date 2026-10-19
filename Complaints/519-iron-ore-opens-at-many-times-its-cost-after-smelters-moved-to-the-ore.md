@@ -115,3 +115,13 @@ twelve above.
   `coin_revaluation.py`.
 - **Cost side.** The model's silver takes a few hundred labour-hours a kilogram against the thousands attested in
   closed Complaint 349's sources; that explains part of the ratio. Reconcile the silver recipe chain with 349.
+
+## Found and reverted: the opening stocks a year of inputs (branch `fix-regression-iron-chain`, commit `0410114b`)
+
+`opening._stock_producers_with_inputs` gives every producer a full year of each input. Bloomeries then buy no ore in
+the first year, the miners' sales fall away and they cut their runs, and in the second year a single bidder in a
+one-tile ore market drives the price to its ceiling. Stocking the existing three months' cover
+(`inventory.target_stock`) brought every sited ore in every civilisation under the bound and turned the
+expected-failure test green. It was reverted because it also turned four checks red that depend on where the
+unsettled spin-up's cycle stands (473): `economy_innovator_pricing`, Mexica's staple over cost, a ruined founder
+rebuilding, and a cheaper entry raising the cleared quantity. Land it together with a settled spin-up (473, 526).
