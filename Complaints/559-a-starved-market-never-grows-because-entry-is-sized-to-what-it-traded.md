@@ -41,3 +41,17 @@ run; the earlier trace (511 Update 3) used the full spin-up, which was not rerun
 close, so it cannot change: it still fails (shown tin over copper 0.047, embodied labour ratio 0.441).
 Open: whether the full-spin-up Rome run moves, and why flux entry is not planned there (the recipe may not beat the
 interest rate at the remembered flux price).
+
+## Traced on the short spin-up (no change made)
+
+With `ROME_SPIN_UP_YEARS=2,1` and `Economy` stepped directly (probes in the session scratchpad, not kept): Rome's flux
+makers are large but idle, holding unsold flux (Algeria's maker stops on `runs_for_stock`); Algeria's copper smelter
+holds flux for more runs than it plans and bids only for charcoal; the flux recipe returns well above the interest
+rate at the maker's own remembered price; no unmet flux demand reaches `open_entrants`, and where flux bids exist the
+trade meets them. So in the short spin-up there is no starved flux market for the sizing rule to act on.
+
+The copper problem there is elsewhere: Algeria's smelter runs nothing in its first years although its capacity is
+large, because its expected revenue per run sits just below its variable cost while the market price of copper is
+above both. A producer's expectation that lags its own market is the lead for 511 and the `economy_tin_dearer_than_copper`
+and `economy_bronze_market_price` failures in 558. Whether the full spin-up still shows the starved flux of 511
+Update 3 is being measured.
