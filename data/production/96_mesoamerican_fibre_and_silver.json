@@ -7,7 +7,7 @@
    },
    "inputs": {},
    "labour_hours": {
-    "labourer": 4800.0
+    "farmer": 4800.0
    },
    "land_hectare_years": 0.99999105,
    "extracted_from": "arable land",

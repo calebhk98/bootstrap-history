@@ -28,7 +28,7 @@
   "vegetable_kg": {
    "outputs": {"vegetable_kg": 15000.0},
    "inputs": {"nightsoil_kg": 20000.0},
-   "labour_hours": {"labourer": 1800.0},
+   "labour_hours": {"farmer": 1800.0},
    "land_hectare_years": 0.99999105,
    "extracted_from": "arable land",
    "unit_dimension": "mass",

@@ -21,7 +21,7 @@
    },
    "inputs": {},
    "labour_hours": {
-    "labourer": 150.0
+    "farmer": 150.0
    },
    "land_hectare_years": 1.2399911,
    "capital": [
@@ -51,7 +51,7 @@
    },
    "inputs": {},
    "labour_hours": {
-    "labourer": 350.0
+    "farmer": 350.0
    },
    "land_hectare_years": 0.99999105,
    "extracted_from": "arable land",
@@ -67,7 +67,7 @@
    },
    "inputs": {},
    "labour_hours": {
-    "labourer": 190.0
+    "farmer": 190.0
    },
    "land_hectare_years": 0.99999105,
    "extracted_from": "arable land",
@@ -90,7 +90,7 @@
    },
    "inputs": {},
    "labour_hours": {
-    "labourer": 200.0
+    "farmer": 200.0
    },
    "land_hectare_years": 0.99999105,
    "extracted_from": "arable land",
@@ -149,7 +149,7 @@
    },
    "inputs": {},
    "labour_hours": {
-    "labourer": 4600.0
+    "farmer": 4600.0
    },
    "land_hectare_years": 0.99999105,
    "extracted_from": "arable land",
@@ -176,7 +176,7 @@
    },
    "inputs": {},
    "labour_hours": {
-    "labourer": 150.0
+    "farmer": 150.0
    },
    "land_hectare_years": 0.99999105,
    "extracted_from": "arable land",
@@ -192,7 +192,7 @@
    },
    "inputs": {},
    "labour_hours": {
-    "labourer": 1250.0,
+    "farmer": 1250.0,
     "artisan": 700.0
    },
    "land_hectare_years": 0.99999105,
@@ -211,7 +211,7 @@
     "mulberry_leaves_kg": 1500.0
    },
    "labour_hours": {
-    "labourer": 700.0
+    "farmer": 700.0
    },
    "unit_dimension": "mass",
    "basis": "per 100 kg of fresh live cocoons, spun by silkworms reared on mulberry leaf and stifled (killed in steam or dry heat) before the moth emerges",
@@ -258,7 +258,7 @@
    },
    "inputs": {},
    "labour_hours": {
-    "labourer": 200.0
+    "farmer": 200.0
    },
    "land_hectare_years": 0.99999105,
    "extracted_from": "forest",
@@ -705,7 +705,7 @@
    },
    "inputs": {},
    "labour_hours": {
-    "labourer": 400.0
+    "farmer": 400.0
    },
    "land_hectare_years": 0.99999105,
    "extracted_from": "arable land",
@@ -945,7 +945,7 @@
    },
    "inputs": {},
    "labour_hours": {
-    "labourer": 2000.0
+    "farmer": 2000.0
    },
    "land_hectare_years": 0.99999105,
    "extracted_from": "arable land",
@@ -966,7 +966,7 @@
    },
    "inputs": {},
    "labour_hours": {
-    "labourer": 1500.0
+    "farmer": 1500.0
    },
    "land_hectare_years": 0.99999105,
    "extracted_from": "forest",
