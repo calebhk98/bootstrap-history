@@ -54,3 +54,16 @@ demand for carters, sailors and porters (530).
   Not done: port handling hours, the other modes' labour parts (the cheapest mode's share stands for all),
   and a wage by area (one national average).
 - Tests: `sim/tests/test_economy_carriage_hours.py`.
+
+## Sized (no change made)
+
+- **Travel time is covered.** `sim/economy/merchants_transit.py` holds a haul for the whole years its days span, books
+  spoilage each year to `EDGE_SPOILAGE`, charges interest in `gap_cost_per_unit`, and lags news; held by
+  `test_merchant_travel_time.py`.
+- **Storage at stages** is not charged (spoilage and interest only); small.
+- **Carriers as capital** need, in order: cart, pack saddle and vessel goods with recipes and sourced service lives
+  (only `ox` and `mule` exist, without service lives); carrier-days, animals per carrier and vehicle wear exposed on
+  geography's `Rate` and threaded through `carriage_crew`; a per-merchant fleet whose yearly capacity follows from
+  its carriers and the route's days, with bids or hire for more and wear booked from the service life (merchants are
+  not worn today, `inventory.wear_moves` wears cohort holdings only); and an opening endowment of fleets. Several
+  sessions in all.
