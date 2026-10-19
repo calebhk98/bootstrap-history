@@ -267,6 +267,23 @@ each rule is the agents path unless open question 3 says otherwise. Needs 1 and 
 (the same business owned by a seat and by a firm for one year produces the same crew, upkeep, takings and closing decision
 inputs); closing frees its crew and stops its outlays; mothball then restore returns the same plants.
 
+*Stage 3a partly done (branch `514-stage-3a-founder-businesses-on-the-object`).* Moved: the seat's plants live in
+`ProjectsState.businesses` (one `Business` per seat so far, reached as `projects.business`); `Plant` gained `state`
+(operating or mothballed), `since_year` and `reason`; `Business` gained `mothball`, `restore` and `forget_reason`, and
+set-like views (`business_views.py`: `operating()`, `mothballed()`, `closures()`) so readers keep their `in` and iteration.
+`ProjectsState.operating`, `mothballed` and `closures` are now properties over the business; `opened_year` and
+`GovernanceState.inst_units` are deleted (a plant's `opened_year` and `size`). `open_venture`, `close_work`
+(`close_venture`, `mothball_work`), `restore_work`, `_expand_institution`, `institution_units`, `reopen_units` and the
+seat's side of an exchange (`HouseholdParty.capacity_of`, `release_plant`, `receive_plant`) act on the business; a seat
+selling a plant now hands over its size and age, as a firm does. Saves check saved plants against the tree. Tests:
+`test_founder_and_firm_agree.py`, mothball and restore in `test_business_owner_kinds.py`, the fingerprint reads
+`businesses`. Not moved, still to do: the opening fee is still `venture_capex` (a share of the project cost), not the
+entry's `capital` (needs the entry capital wired for every node; changes openings); the crew rule (`venture_hands`,
+`venture_foreman`, supervision) and the yearly takings and upkeep are still the founder's own code (stages 4 and 3c), so
+the wall allowlist did not shrink; manual `close` still mothballs (so `restore` works after it) where the agents path
+discards the plant; the world-view methods on `HouseholdParty` and `agents_port` still exist (stage 3c); `playtest/` and
+`sim/PROTOCOL.md` need no change yet (the command shapes are unchanged).
+
 **Stage 3b: the yearly rules.** Staffing closure and reopening, loss shedding, creditor seizure and the capability
 institutions' occupancy scaling become the business's `close` reasons, driven by one `Business.review(owner, world)`. Owns:
 `projects_staffing.py` (+ `_report`, `_shortfall`), `economy_credit.py` (seizure and advice), `step_phase_money.py`,
