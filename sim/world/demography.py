@@ -1010,7 +1010,8 @@ class Population(object):
     def step(self, food_available_calories_per_day: float, immigration: float = 0.0,
              emigration: float = 0.0, jitter: bool = False,
              disease_burden: float = PRE_INDUSTRIAL_DISEASE_BURDEN,
-             epidemic_deaths: Optional[Mapping[str, float]] = None) -> "StepFlows":
+             epidemic_deaths: Optional[Mapping[str, float]] = None,
+             endemic_death_rates: Optional[Mapping[str, float]] = None) -> "StepFlows":
         """Advance by one year. Mutates this Population in place and returns
         the flows that moved it, for the caller (a test, or eventually an
         engine) to check the accounting against.
@@ -1085,6 +1086,16 @@ class Population(object):
             * _disease_mortality_multiplier(
                 disease_burden, DISEASE_MORTALITY_FLOOR_MULTIPLIER_ELDERLY)
             * _excess_mortality_multiplier(ratio, STARVATION_VULNERABILITY_ELDERLY))
+
+        # Excess death rate per band from endemic disease of the place (a vector's tile layer), cut by the same
+        # disease burden the nation has not yet removed; never more than the band's survivors.
+        endemic = endemic_death_rates or {}
+        deaths_children += min(self.children - deaths_children,
+                               self.children * endemic.get("children", 0.0) * disease_burden)
+        deaths_working_age += min(self.working_age - deaths_working_age,
+                                  self.working_age * endemic.get("working_age", 0.0) * disease_burden)
+        deaths_elderly += min(self.elderly - deaths_elderly,
+                              self.elderly * endemic.get("elderly", 0.0) * disease_burden)
 
         # Deaths an epidemic model already counted (sim/disease), by band; never more than the band's survivors.
         epidemic = epidemic_deaths or {}

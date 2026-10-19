@@ -4,12 +4,13 @@ with no file or an effect the disease step does not read."""
 from typing import List
 
 from sim.disease import api as disease
+from sim.geography.api import endemic_problems
 
 EFFECT_TARGETS = ("case_fatality", "transmission")
 
 
 def check_disease_data(nodes=None, civilisations=None) -> List[str]:
-    problems = disease.check_pathogen_data()
+    problems = disease.check_pathogen_data() + endemic_problems()
     known = set(disease.pathogen_ids())
     for node_id, node in sorted((nodes or {}).items()):
         spec = (node.get("mechanics") or {}).get("disease_effects")

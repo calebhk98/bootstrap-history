@@ -8,6 +8,7 @@ from sim.geography.api import pasture_capacity_kg, tiles_held
 from sim.labour.api import production_data
 
 from .living_stock_growth import kilograms_per_unit
+from .living_stock_yearly import stock_rates
 
 
 class LivingStockOpeningMixin:
@@ -26,6 +27,13 @@ class LivingStockOpeningMixin:
                 kept[material] = kept.get(material, 0.0) + capacity_runs * units
         return kept
 
+    def endemic_keeping(self, material):
+        """0 to 1: the share of an opening herd that can be kept where it stands. Disease at the place takes
+        a share of the herd every year, and the herd holds only if breeding outruns that loss."""
+        rates = stock_rates().get(material) or {}
+        loss = self.endemic_stock_loss(rates)
+        return 1.0 if loss <= 0.0 else max(0.0, 1.0 - loss / rates["natural_increase"])
+
     def grant_opening_herds(self):
         """Credit the opening herds to the ledger, scaled down together if the held tiles' pasture cannot carry them."""
         kept = self.opening_herd_units()
@@ -34,5 +42,6 @@ class LivingStockOpeningMixin:
         weight = sum(units * kilograms_per_unit(material) for material, units in kept.items())
         scale = min(1.0, carried / weight) if weight > 0.0 else 1.0
         for material, units in sorted(kept.items()):
-            self.grant_stock(material, units * scale)
-            self.society_herds[material] = units * scale
+            units *= scale * self.endemic_keeping(material)
+            self.grant_stock(material, units)
+            self.society_herds[material] = units
