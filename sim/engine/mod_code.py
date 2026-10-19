@@ -113,6 +113,11 @@ class ModCodeApi:
         from sim.agents.api import register_spawner
         register_spawner(self.qualified(name), function)
 
+    def town_provider(self, name: str, function: Callable) -> None:
+        """Say how many people live in a tile's town: `function(labour, tile, nominal_people) -> people or None`."""
+        from sim.labour.api import register_town_provider
+        register_town_provider(self.qualified(name), function)
+
     def state(self, memory: Dict[str, Any]) -> Dict[str, Any]:
         """The mod's own JSON dict inside a saved game: pass `sim.state.interface`."""
         return memory.setdefault("mod_state", {}).setdefault(self.mod_id, {})

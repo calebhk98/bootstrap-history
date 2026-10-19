@@ -20,10 +20,11 @@ from .labour_market import production_data
 from .food_gathering import cap_share, capped_kcal, hours_cap_kcal
 from .wage_provider import people_fed_per_worker
 from .wages import CAREER_YEARS
+from .town_providers import register_town_provider
 from .tenure import add_tenure, fade_tenure, outflow_shares, tenure_by_trade, tenure_held
 
 __all__ = [
-    "wage_provider", "wages", "Labour", "production_data",
+    "wage_provider", "wages", "Labour", "register_town_provider", "production_data",
     "people_fed_per_worker", "CAREER_YEARS",
     "add_tenure", "fade_tenure", "outflow_shares", "tenure_by_trade", "tenure_held", "hours_cap_kcal", "capped_kcal", "cap_share",
     # the labour-market core (sim/labour/market/DESIGN.md): plain records in, plain records out
