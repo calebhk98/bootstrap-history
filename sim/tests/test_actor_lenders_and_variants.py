@@ -21,7 +21,9 @@ GAME = S.Sim(NODES, list(ORDER), random.Random(1), events=False, manual=True, ci
 GAME.refresh_lender_offers()
 offers = GAME.actors.state.purses.offers
 check("a purse-lending actor is offered to borrowers", LENDER_ID in offers, sorted(offers))
-check("its offer is its purse", abs(offers.get(LENDER_ID, 0.0) - GAME.actors.state.purses.purse(LENDER_ID)) < 1e-6, offers.get(LENDER_ID))
+PURSES = GAME.actors.state.purses
+check("its offer is its purse and its deposit in the pool, as a firm's is",
+      abs(offers.get(LENDER_ID, 0.0) - PURSES.purse(LENDER_ID) - PURSES.deposit(LENDER_ID)) < 1e-6, offers.get(LENDER_ID))
 check("a church, which does not set the flag, is not offered", "church:home" not in offers, sorted(offers))
 
 PARTNER = "han_china_100ad"
