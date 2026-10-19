@@ -12,7 +12,7 @@ from typing import Dict, List, Mapping, Tuple
 
 from sim.constants import declare
 
-from . import currency, goods_market, opening_income, opening_metal, opening_own, opening_runs, households, households_store, labour_state, location, location_inputs, mint, opening_stores, ownership, sites, unit_cost
+from . import currency, goods_market, opening_income, opening_metal, opening_runs, households, households_store, labour_state, location, location_inputs, mint, opening_stores, ownership, sites, unit_cost
 from .accounts import Book
 from .market_areas import AreaMap
 from .market_memory import MarketMemory, YearView, market_key
@@ -61,9 +61,9 @@ def _open(setup: EconomySetup, replacement: float) -> Tuple[EconomyRecord, AreaM
                            ways={key: dict(built) for key, built in setup.improvements.items()})
     view = YearView(memory, record.book, area_map, setup.currency_id, labour_area)
     _open_cohorts(setup, record)
-    idle_share = _settle_income(setup, record, view, priced_goods, replacement)
-    _seed_durable_stocks(setup, record, view, idle_share)
-    final_by_tile = _final_demand(setup, record, view, replacement, idle_share)
+    _settle_income(setup, record, view, priced_goods, replacement)
+    _seed_durable_stocks(setup, record, view)
+    final_by_tile = _final_demand(setup, record, view, replacement)
     for country in setup.countries():
         _open_country_producers(setup, record, area_map, carriage, priced_goods, final_by_tile, country)
     sites.apply_site_limits(record, setup)
@@ -126,66 +126,52 @@ def _open_cohorts(setup, record) -> None:
             record.cohorts[cohort.agent_id] = cohort
 
 
-def _settle_income(setup, record, view, priced_goods, replacement) -> float:
+def _settle_income(setup, record, view, priced_goods, replacement) -> None:
     """Households' opening income is the value of the final demand it pays for, not the full-employment ceiling
     (opening_income.py): the producers sized to that demand then pay out the income the households received.
-    Workers are paid alike out of the labour share of it; owners receive the rest by what they own. The
-    demand is what is left to buy after the hours the producers do not hire are spent on the households' own
-    plots (opening_own.py); returns the share of offered hours left idle."""
+    Workers are paid alike out of the labour share of it; owners receive the rest by what they own."""
+    if setup.opening_income_per_head is not None:      # the scenario states its households' income
+        record.cohorts.update(opening_income.with_income(record.cohorts, setup.opening_income_per_head, 0.0))
+        return
+    people = math.fsum(cohort.people for cohort in record.cohorts.values())
     recipes = setup.recipes
     ceilings = opening_runs.run_ceilings(recipes, sites.limits_by_recipe(setup.site_limits))
     ranked = opening_runs.ranked_recipes(recipes, priced_goods, setup.opening_wages, setup.opening_rate)
-    state = {"labour": 0.0, "idle": 0.0}
+    share = {"labour": 0.0}
 
     def demand_at(per_head):
-        record.cohorts.update(opening_income.with_income(record.cohorts, per_head, state["labour"]))
-        final = _final_demand(setup, record, view, replacement, state["idle"])
+        record.cohorts.update(opening_income.with_income(record.cohorts, per_head, share["labour"]))
+        final = _final_demand(setup, record, view, replacement)
         value = opening_income.value_of(final, priced_goods)
         runs = opening_runs.required_runs(final, ranked, recipes, ceilings)
-        state["labour"] = opening_income.labour_share_of(runs, recipes, setup.opening_wages, value)
-        state["idle"] = opening_own.idle_share_after(setup, record, runs, state["idle"])
-        return value, state["labour"]
+        share["labour"] = opening_income.labour_share_of(runs, recipes, setup.opening_wages, value)
+        return value, share["labour"]
 
-    if setup.opening_income_per_head is not None:      # the scenario states its households' income
-        record.cohorts.update(opening_income.with_income(record.cohorts, setup.opening_income_per_head, 0.0))
-    else:
-        people = math.fsum(cohort.people for cohort in record.cohorts.values())
-        per_head, labour_share = opening_income.settled_income_per_head(_full_employment_income_per_head(setup), people, demand_at)
-        record.cohorts.update(opening_income.with_income(record.cohorts, per_head, labour_share))
-    for _pass in range(opening_income.OPENING_INCOME_PASSES):    # the idle hours at the income now set
-        before = state["idle"]
-        final = _final_demand(setup, record, view, replacement, state["idle"])
-        runs = opening_runs.required_runs(final, ranked, recipes, ceilings)
-        state["idle"] = opening_own.idle_share_after(setup, record, runs, state["idle"])
-        if abs(state["idle"] - before) <= opening_income.OPENING_INCOME_TOLERANCE:
-            break
-    return state["idle"]
+    per_head, labour_share = opening_income.settled_income_per_head(_full_employment_income_per_head(setup), people, demand_at)
+    record.cohorts.update(opening_income.with_income(record.cohorts, per_head, labour_share))
 
 
-def _opening_bids(setup, record, view, idle_share=0.0):
-    """(cohort, bid, price) for what each cohort would buy at the opening prices with the opening income, less
-    the floors its idle hours grow on its own plot."""
-    options = opening_own.own_options(setup)
+def _opening_bids(setup, record, view):
+    """(cohort, bid, price) for what each cohort would buy at the opening prices with the opening income."""
     priced_by_tile = {}
     for cohort in sorted(record.cohorts.values(), key=lambda each: each.agent_id):
         priced = priced_by_tile.setdefault(cohort.tile, households.need_prices(setup.basket_for(cohort.tile), view, cohort.tile))
         income = cohort.last_year_income
         orders = households.goods_orders(cohort, view, income, income, setup.basket_for(cohort.tile), setup.specs,
                                          priced)
-        orders = opening_own.less_what_it_grew(setup, cohort, orders, options, idle_share)
         for bid in orders.bids:
             price = view.price(bid.good, bid.area)
             if price:
                 yield cohort, bid, price
 
 
-def _seed_durable_stocks(setup, record, view, idle_share=0.0) -> None:
+def _seed_durable_stocks(setup, record, view) -> None:
     """Households open holding the durables they keep in use (dwellings, vessels, tools): the stock their
     expected flow wants over the good's service life. Without it the first year's demand is the whole
     stock built at once, thirty years of walls in one, and the opening staffs for a building boom that is
     never repeated."""
     moves = []
-    for cohort, bid, price in _opening_bids(setup, record, view, idle_share):
+    for cohort, bid, price in _opening_bids(setup, record, view):
         spec = setup.specs.get(bid.good)
         if spec is None or spec.service_life_years <= 0.0 or bid.priority == households_store.STORE_PRIORITY:
             continue     # a store of wealth is seeded from the deposits (opening_stores), not from need
@@ -197,11 +183,11 @@ def _seed_durable_stocks(setup, record, view, idle_share=0.0) -> None:
         record.book.move_many(moves)
 
 
-def _final_demand(setup, record, view, replacement=0.0, idle_share=0.0) -> Dict[TileId, Dict[GoodId, float]]:
+def _final_demand(setup, record, view, replacement=0.0) -> Dict[TileId, Dict[GoodId, float]]:
     """What each tile's households buy at the opening prices with the opening income, and the metal the mint
     buys to replace what the money loses (at the capital)."""
     final: Dict[TileId, Dict[GoodId, float]] = {}
-    for cohort, bid, price in _opening_bids(setup, record, view, idle_share):
+    for cohort, bid, price in _opening_bids(setup, record, view):
         demand = final.setdefault(cohort.tile, {})
         demand[bid.good] = demand.get(bid.good, 0.0) + goods_market.quantity_at(bid, price)
     if replacement > 0.0:
