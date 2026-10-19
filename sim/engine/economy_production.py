@@ -173,13 +173,8 @@ class ProductionMixin:
         return value
 
     def concern_revenue(self, node_id):
-        """What one open concern earns in a year before the market ceiling: its revenue per unit, the units run
-        (a school you founded three of earns three schools' worth; 1.0 for what was never expanded), its ramp,
-        the price level and the market's room for its output."""
-        node = self.nodes[node_id]
-        units = self.institution_units(node_id) if node_id in self.SCALABLE_INSTITUTIONS else 1.0
-        return (node["rev"] * units * self.venture_ramp(node_id) * self.price_index
-                * self.node_output_market_factor(node))
+        """What one open concern earns in a year before the output factor: the figure the screens quote."""
+        return self.venture_real_earnings(node_id, with_output_factor=False)
 
     def _compute_revenue_uncached(self):
         total_revenue = 0.0
@@ -376,12 +371,13 @@ class ProductionMixin:
             {"_output_per_year": baskets.outputs, "_purchases_per_year": baskets.purchases},
             self._material_prices(), self.goods_market.home_unit_price)
 
-    def concern_takings(self, node_id, ramp):
+    def concern_takings(self, node_id, ramp, with_output_factor=True):
         """Yearly takings of one concern at a given ramp, before market saturation: its loaded figure
-        carried to the techniques held now (concern_volume.py); callers apply the market's price."""
+        carried to the techniques held now (concern_volume.py); callers apply the market's price.
+        `with_output_factor` False leaves out the hazard and war factor `revenue` applies to its total."""
         economy = self.state.economy
-        return (self.nodes[node_id]["rev"] * ramp * economy.output_factor * self.price_index
-                * self.concern_value_ratio(node_id) * self.concern_learning_ratio(node_id))
+        return (self.nodes[node_id]["rev"] * ramp * (economy.output_factor if with_output_factor else 1.0)
+                * self.price_index * self.concern_value_ratio(node_id) * self.concern_learning_ratio(node_id))
 
     def ledger_concern_rows(self):
         """Yearly takings of every opened concern that earns, by node id, as the ledger credits them. The

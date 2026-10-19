@@ -96,6 +96,7 @@ class StaffingMixin:
         household = self.state.household
         closed = self.concerns_to_close_for_staffing()
         shortfalls = self._staffing_shortfalls(self.staffing_held_totals()) if closed else {}
+        earnings_stopped = round(self.labour.yearly_value_of(closed), 1)
         for node_id in closed:
             self.close_work(node_id, self.CLOSED_FOR_STAFF, year)
         if closed:
@@ -112,7 +113,8 @@ class StaffingMixin:
                    ", ".join(sorted(closed)[:4])
                    + (" and others" if len(closed) > 4 else ""),
                    self.staffing_shut_count(), self.STAFFING_REMEDIES),
-                concerns=sorted(closed))))
+                concerns=sorted(closed), closed_because="short_staffed", short=shortfalls,
+                stops_earnings_per_year=earnings_stopped)))
         return closed
 
     def staffing_closed_hand_shortfall(self):
