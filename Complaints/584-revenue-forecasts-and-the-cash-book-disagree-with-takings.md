@@ -1,6 +1,6 @@
 # Revenue forecasts and the cash book disagree with takings
 
-**Status:** closed - the quote values a concern goods at one basis and says which; forecast, takings and cash book read venture_real_earnings
+**Status:** partly - the forecast now says when it rests on long-run cost (`forecast_basis`) and the cash book matches the itemised revenue; the takings of a good on its first sale (the lottery fetched about ten times its long-run cost) are still not forecast
 
 Found by an agent playtest (`Complaints/reports/playtest-rome-seed11-agent-to-221.md`, from 120 AD). `fin_lottery` was forecast at tens a year and took thousands;
 in 139 AD the cash book booked several times the revenue the money breakdown itemised. 577 put quotes and takings
