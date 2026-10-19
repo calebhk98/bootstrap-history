@@ -108,14 +108,14 @@ class Contracts:
         self.facilities[borrower][lender].principal -= amount
 
     def tidy_facility(self, borrower: str, floor: float) -> None:
-        """Drop a facility that is rounding residue, else its paid-off lenders."""
+        """Drop a facility that is rounding residue, else the lenders whose share is paid off or rounding residue."""
         held = self.facilities.get(borrower)
         if held is None:
             return
         if sum(contract.principal for contract in held.values()) <= floor:
             del self.facilities[borrower]
         else:
-            for lender in [who for who, contract in held.items() if contract.principal <= 0.0]:
+            for lender in [who for who, contract in held.items() if contract.principal <= floor]:
                 del held[lender]
 
     # ---- defaults ---------------------------------------------------------------------------
