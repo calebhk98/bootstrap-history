@@ -199,6 +199,23 @@ honest mods, not a defence. The protection is consent: code runs only after the 
 data still loads but its code does not, and `validate` lists it. Allow code only from an author you trust. A real
 boundary needs a separate process or WASM host with an allowlisted message interface; that is not built.
 
+## Stores: values per tile, actor or actor pair
+
+A store is a named value kept for every tile, every actor or every ordered pair of actors, saved with the game
+and readable by anything that reads state. Declare it in `data/stores.json` of the mod:
+
+    {"stores": {"<mod_id>:mana": {"keyed_by": "tile", "default": 0.0, "unit": "mana"}}}
+
+or from code, `handle = api.store("mana", keyed_by="tile", default=0.0, unit="mana")`; `keyed_by` is `tile`,
+`actor` or `actor_pair`. Names are `<mod_id>:<name>` and declared once across the base game and every mod (a
+duplicate is a load error naming both). Code reads and writes through the handle (`handle.get(sim, key)`,
+`handle.set(sim, key, value)`, `handle.items(sim)`; a pair key is the tuple `(first, second)`, and order matters)
+or `api.write_store(sim, name, key, value)`; writing an undeclared store, or another mod's, is an error naming the
+mod. Only values that differ from the default are saved (`state.stores`). A figure or a `read` command reaches a
+value with the state path `stores.<mod_id>:<name>.<key>` (a pair key is `first|second`), and `map layer
+<store name>` adds the value to each tile row of the map screen. The base game's own stores are in
+`data/world/stores.json`; tile `control` (how firmly an owner holds a tile) is one.
+
 ## Actor kinds
 
 An actor kind a mod adds is a species or institution that runs through the ordinary rules. As data, in

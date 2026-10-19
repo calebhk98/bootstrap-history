@@ -129,6 +129,19 @@ class ModCodeApi:
         known = {phase.name for phase in SHIPPED} | {phase.name for phase in MOD_PHASES}
         return name if name in known or SEPARATOR in name else self.qualified(name)
 
+    def store(self, name: str, keyed_by: str, default: Any, unit: str = "") -> Any:
+        """Declare a saved value per "tile", "actor" or "actor_pair" (an ordered pair); returns a handle with
+        `get(sim, key)`, `set(sim, key, value)` and `items(sim)`. Figures and `read` commands reach it as
+        `stores.<mod_id>:<name>.<key>`, and `map` shows a tile store as a layer. A name is declared once across mods."""
+        from .mod_stores import ModStore, StoreSpec, declare
+        spec = StoreSpec(self.qualified(name), self.mod_id, keyed_by, default, unit)
+        declare(spec, "mod %s" % self.mod_id)
+        return ModStore(spec.name, self.mod_id)
+
+    def write_store(self, sim: Any, name: str, key: Any, value: Any) -> None:
+        """Write a value to one of this mod's declared stores; an undeclared store is an error naming the mod."""
+        sim.stores.write(self.qualified(name), key, value, self.mod_id)
+
     def state(self, memory: Dict[str, Any]) -> Dict[str, Any]:
         """The mod's own JSON dict inside a saved game: pass `sim.state.interface`."""
         return memory.setdefault("mod_state", {}).setdefault(self.mod_id, {})

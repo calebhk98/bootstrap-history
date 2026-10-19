@@ -396,6 +396,8 @@ class SimulationState:
 	_rng: Optional[List[Any]] = None
 	_seed: Optional[Union[int, str]] = None
 	_game_version: Optional[str] = None  # which build wrote the save; shown to people, never checked on load
+	# declared store -> {tile, actor or "actor|actor" key: value differing from the default} (mod_stores.py)
+	stores: Dict[str, Dict[str, Any]] = field(default_factory=dict)
 	interface: Dict[str, Any] = field(default_factory=dict)  # the UI's own memory; the engine never reads it
 
 	def __post_init__(self) -> None:
