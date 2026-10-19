@@ -399,11 +399,14 @@
      "source": "Laacher See trass, a volcanic tuff, was quarried in the Roman Rhineland and ground for hydraulic mortar; conf C, citation to be checked against the Eifel Roman quarry literature."
     }
    ],
-   "cost_multiplier": 3,
+   "cost_multiplier": 1,
+   "goods": [
+    "pozzolana_kg"
+   ],
    "unlocks": [
     "mat_pozzolana"
    ],
-   "note": "Bulk and heavy, so it travels by sea or river. [HEURISTIC: the multiplier stands for freight from the nearest place; located materials are not yet freighted from their sites through the economy (source_tiles knows only mineral deposits); retire: Complaints/563.]"
+   "note": "Bulk and heavy, so it travels by sea or river. Its price at a buyer carries freight from the nearest of these places (Geography.source_tiles reads `goods`)."
   },
   {
    "id": "coal",

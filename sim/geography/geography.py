@@ -34,6 +34,7 @@ class Geography:
     _mat_unlock: Dict[str, str]
     _shares_by_tile: Dict[str, Dict[str, float]]
     _material_tiles: Dict[str, Tuple[str, ...]]
+    _located_key_of_good: Dict[str, str]
     _table: Dict[str, Any]
 
     def __init__(self, world: Any) -> None:
@@ -221,8 +222,11 @@ class Geography:
         return sum(share for tile_id, share in self._shares_by_tile.get(material, {}).items() if tile_id in held)
 
     def source_tiles(self, material: str) -> Tuple[str, ...]:
-        """The tiles whose deposits produce `material` (empty for a material no deposit shares out)."""
-        return tuple(sorted(self._shares_by_tile.get(material, {})))
+        """The tiles whose deposits produce `material`, or the places of the located material that names it in
+        `goods` (empty for a material neither places)."""
+        if material in self._shares_by_tile:
+            return tuple(sorted(self._shares_by_tile[material]))
+        return tuple(sorted(self._material_tiles.get(self._located_key_of_good.get(material), ())))
 
     def mineral_scale(self, material: str) -> float:
         """Fraction of a mineral's reference output this civilisation can draw on, kept until the tiles
@@ -242,10 +246,14 @@ class Geography:
         # node id -> located_materials key, so a location-gated tech node finds its geography entry
         # without the tech tree knowing anything about geography.
         self._mat_unlock = {}
+        # good id -> located_materials key, for the goods an entry names in `goods`.
+        self._located_key_of_good = {}
         for material_key, material_data in (self.geo.get("located_materials") or {}).items():
             if material_key.startswith("_"):
                 continue
             self._material_tiles[material_key] = located_places.tiles(material_data, self.geo, rows)
+            for good in (material_data.get("goods") or []):
+                self._located_key_of_good[good] = material_key
             for nid in (material_data.get("unlocks") or []):
                 self._mat_unlock[nid] = material_key
 

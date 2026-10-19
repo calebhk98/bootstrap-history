@@ -133,10 +133,10 @@ class HydraulicConcreteWorksTests(unittest.TestCase):
         self.assertNotIn("lime_kg", materials)
         self.assertNotIn("stone_kg", materials)
 
-    def test_the_pozzolana_distance_multiplier_is_labelled_with_its_retirement(self):
-        places = geography_api.load_geography()["located_materials"]["pozzolana"]
-        self.assertIn("HEURISTIC", places["note"])
-        self.assertRegex(places["note"], r"retire: Complaints/\d+")
+    def test_the_pozzolana_distance_multiplier_is_retired(self):
+        entry = geography_api.load_geography()["located_materials"]["pozzolana"]
+        self.assertEqual(entry["cost_multiplier"], 1)
+        self.assertNotIn("HEURISTIC", entry.get("note", ""))
 
 
 if __name__ == "__main__":
