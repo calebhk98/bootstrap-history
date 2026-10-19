@@ -1,6 +1,6 @@
 # Olives, vines, cotton and tallow come from anywhere, so lighting follows no geography
 
-**Status:** partly done. Crops carry climates, the lamp takes a vessel, linen-wick and beeswax lights exist (`sim/tests/test_lighting_inputs.py`). Open: `fat_kg` from herds (532), rush wick (no rush entry), a knowledge gate for olives in the Americas, the smoke/softening quality term, and the Mediterranean-versus-northern spending test.
+**Status:** closed - herd tallow, rush wick, olive knowledge gate and the spending relationship test are in; the quality term is Complaint 564.
 
 Reference (an outside summary, not code-aware): in antiquity the Mediterranean, the Near East and
 North Africa lit rooms with pottery lamps burning olive or castor oil; tallow candles smoked, stank
@@ -52,3 +52,11 @@ The light need (`data/world/needs.json`) is met by `light_tallow_candle`, `light
 
 - `olive_oil_kg`, `wine_common_kg`, `cotton_kg` carry `grown_in_climate_classes`; England and Norse no longer solve olive oil or cotton (`python3 -m sim.tests --only lighting_inputs`). Mexica holds olive-suitable tiles, so it still makes olive oil: a climate list cannot say the Americas did not know the tree; that is a knowledge gate (`requires_node`).
 - `wick_linen_m` (from `linen_kg`, an overcount since that entry includes weaving), `light_tallow_candle_linen_wick`, `light_oil_lamp_linen_wick`, `light_beeswax_candle` (from `wax_kg`); `light_oil_lamp` takes `ceramic_kg` as its vessel.
+
+## Resolution
+
+- Tallow follows herds: `fat_kg` is only an output of the herd recipes (`data/production/95_herds.json`, Complaint 532) and `tallow_kg` renders it.
+- `wick_rush_m` (gathered rush pith) and `light_tallow_rushlight`.
+- `olive_oil_kg` requires `mat_olive_oil` (held by Rome, Han and England, not by the Mexica), the knowledge gate maize and sugar use; Mexica and Norse declare the unsupplied oil in `unsupplied_basket_goods`.
+- `LightingSpendingTests` (`python3 -m unittest sim.tests.test_lighting_inputs`): oil takes a larger share of light spending at a start whose territory grows olives than at a northern one, and none where the tree is unknown.
+- The smoke and softening quality term needs engine work: Complaint 564. The opening-price artefact that makes unsupplied lamps look cheap is Complaint 565.

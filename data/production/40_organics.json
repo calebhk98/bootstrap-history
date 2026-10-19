@@ -78,9 +78,9 @@
    ],
    "unit_dimension": "mass",
    "basis": "per hectare of mature, unirrigated olive grove, long-run average across on- and off-bearing years",
-   "yield_basis": "GROWN, limited by land and orchard biology rather than a recipe. Olives bear heavily in alternate years (biennial bearing is a real physiological trait of the tree, not a farming choice), so any single-year figure is misleading; a long-run per-hectare average across on- and off-years for dry-farmed ancient Mediterranean groves - modest tree density for dry farming, no irrigation, no modern pruning regime - is on the order of a few tonnes of olives per hectare per year, of which a lever-and-screw press recovers roughly 15-20% of the fruit's weight as oil (a modern hydraulic press does somewhat better; ancient presses left more oil in the pomace). Combining those gives roughly 300 kg oil/ha/yr, taken as the entry's output. Labour is dominated by harvest: olives are hand-picked or knocked down with poles over the whole canopy of every tree, which is why olive harvest is one of the most labour-hungry weeks of the Mediterranean farming year, plus lighter, steadier labour pressing and settling the oil through the rest of the season. LAND (Complaints/48): the whole batch is the one hectare-year the basis above already states, so land_hectare_years is that hectare in hectare_land's own unit - 1 hectare-year - charged against hectare_land's solved rent by sim/engine/solve_prices.py exactly like an ordinary input; see LAND in _SCHEMA.md. CLIMATE: the olive tolerates the long dry summer of the Mediterranean climate (Koppen Csa, Csb) and needs winter chill to set flower buds, but the tree is damaged by frost below about minus 10 C and killed by hard freezes, and fruit does not ripen in a cool short summer, so cool oceanic, continental and polar climates are left out; humid subtropical (Cfa) and the warm and cool steppe (BSh, BSk) fringes carry groves, and grown_in_climate_classes names those five. Limits recalled from olive agronomy (FAO olive growing guidance; Columella, De Re Rustica 5.8-9, ancient testimony); not re-opened for this entry (Complaints/531).",
+   "yield_basis": "GROWN, limited by land and orchard biology rather than a recipe. Olives bear heavily in alternate years (biennial bearing is a real physiological trait of the tree, not a farming choice), so any single-year figure is misleading; a long-run per-hectare average across on- and off-years for dry-farmed ancient Mediterranean groves - modest tree density for dry farming, no irrigation, no modern pruning regime - is on the order of a few tonnes of olives per hectare per year, of which a lever-and-screw press recovers roughly 15-20% of the fruit's weight as oil (a modern hydraulic press does somewhat better; ancient presses left more oil in the pomace). Combining those gives roughly 300 kg oil/ha/yr, taken as the entry's output. Labour is dominated by harvest: olives are hand-picked or knocked down with poles over the whole canopy of every tree, which is why olive harvest is one of the most labour-hungry weeks of the Mediterranean farming year, plus lighter, steadier labour pressing and settling the oil through the rest of the season. LAND (Complaints/48): the whole batch is the one hectare-year the basis above already states, so land_hectare_years is that hectare in hectare_land's own unit - 1 hectare-year - charged against hectare_land's solved rent by sim/engine/solve_prices.py exactly like an ordinary input; see LAND in _SCHEMA.md. CLIMATE: the olive tolerates the long dry summer of the Mediterranean climate (Koppen Csa, Csb) and needs winter chill to set flower buds, but the tree is damaged by frost below about minus 10 C and killed by hard freezes, and fruit does not ripen in a cool short summer, so cool oceanic, continental and polar climates are left out; humid subtropical (Cfa) and the warm and cool steppe (BSh, BSk) fringes carry groves, and grown_in_climate_classes names those five. Limits recalled from olive agronomy (FAO olive growing guidance; Columella, De Re Rustica 5.8-9, ancient testimony); not re-opened for this entry (Complaints/531). KNOWLEDGE (Complaints/531): the tree is an Old World cultigen, so the grove needs the mat_olive_oil node; a society that does not hold it (the Americas before contact) has the climate but not the tree, the same gate fud_maize puts on maize.",
    "conf": "C",
-   "requires_node": null
+   "requires_node": "mat_olive_oil"
   },
   "wine_common_kg": {
    "outputs": {
@@ -940,6 +940,21 @@
    "yield_basis": "The same wick as wick_cotton_m from a society's own bast fibre: a candle or lamp wick of about 2 grams of spun fibre per metre, with a small allowance for waste. The fibre is linen_kg, the flax entry that folds field work, spinning and weaving into one figure, so a wick here is charged the cloth's weaving as well, an overcount until flax thread has its own entry (labelled heuristic, retire: Complaints/531). Roman and medieval European wicks were flax, hemp or rush pith; rush has no entry in the data. From memory, confidence D.",
    "conf": "D",
    "requires_node": "tex_drop_spindle"
+  },
+  "wick_rush_m": {
+   "outputs": {
+    "wick_rush_m": 1.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 0.02
+   },
+   "extracted_from": "wet ground (soft rush, Juncus effusus, cut, dried and peeled to its pith)",
+   "unit_dimension": "length",
+   "basis": "per metre of peeled rush pith used as a wick",
+   "yield_basis": "GATHERED. Soft rush grows wild on damp ground across the cool temperate zone; the green rind is peeled in strips and the pith left to dry, and the pith is the wick of the English rushlight (Gilbert White, The Natural History of Selborne, letter on rushes, 1775, recalled not re-opened). A peeler strips a rush of about half a metre in a minute or two, so a metre of pith takes about 0.02 hours with cutting and drying. No land is charged: wild rush on wet ground has no rival use here (labelled heuristic: wet ground is not yet a land class). Confidence D.",
+   "conf": "D",
+   "requires_node": null
   }
  }
 }
