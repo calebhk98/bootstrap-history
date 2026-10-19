@@ -135,7 +135,8 @@ class AgentEconomy(TilePricesMixin):
                 self.stored["opening"] = opening
                 self._save()
             self._built_from = self.stored
-            self._sim.state.actors.purses.adopt_book(economy_api.economy_book(self._economy))
+            self._sim.state.actors.purses.adopt_book(economy_api.economy_book(self._economy),
+                                                         economy_api.economy_contracts(self._economy))
             self.sync_ways()
         return self._economy
 
@@ -245,7 +246,8 @@ class AgentEconomy(TilePricesMixin):
 
     # ---- firms', states' and traders' sales and purchases (economy_port_actors.py) ------------------
     def note_sale(self, seller, material, tonnes, from_concerns):
-        economy_port_actors.note_sale(self.stored.setdefault("sales", []), seller, material, tonnes, from_concerns)
+        economy_port_actors.note_sale(self.stored.setdefault("sales", []), seller, material, tonnes, from_concerns,
+                                      self.__dict__.setdefault("_sale_index", [None, 0, {}]))
 
     def note_purchase(self, buyer, commodity, tonnes, budget):
         economy_port_actors.note_purchase(self.stored.setdefault("purchases", []), buyer, commodity, tonnes, budget)
@@ -253,7 +255,9 @@ class AgentEconomy(TilePricesMixin):
     def forget_orders(self, actor_id):
         for kind, key in (("sales", "seller"), ("purchases", "buyer")):
             if kind in self.stored:
-                self.stored[kind] = [order for order in self.stored[kind] if order[key] != actor_id]
+                kept = [order for order in self.stored[kind] if order[key] != actor_id]
+                if len(kept) != len(self.stored[kind]):   # a list nothing left keeps its identity, and its index
+                    self.stored[kind] = kept
 
     def trades_good(self, material):
         """Whether the economy has a market for the material."""
@@ -479,7 +483,7 @@ class AgentEconomy(TilePricesMixin):
                           entrant_share=entrant_share, attrition_share=attrition_share,
                           yield_factor_by_producer=yields, engine_orders=engine_orders, harvest_factor=weather,
                           import_accounts=border_accounts[0], export_accounts=border_accounts[1],
-                          site_limits=tuple(economy_port_sites.site_limits(sim, self._recipe_outputs())))
+                          site_limits=tuple(economy_port_sites.site_limits(sim, self._recipe_outputs(), self._economy.setup.tiles)))
 
     def _seat_tiles(self):
         """The tiles the playing seats buy and sell on, whose markets' books the economy keeps."""
@@ -690,6 +694,12 @@ class AgentEconomy(TilePricesMixin):
             costs = economy_api.country_figures.need_floor_costs_per_person_year(economy, scope)
             self._floor_costs[scope] = {need: cost * economy.setup.coin_per_unit for need, cost in costs.items()}
         return dict(self._floor_costs[scope])
+
+    def need_floor_costs_at_tile(self, tile):
+        """What a person's floor of each need costs a year at the prices on one tile, in coin."""
+        economy = self.economy()
+        costs = economy_api.country_figures.tile_need_floor_costs(economy, tile)
+        return {need: cost * economy.setup.coin_per_unit for need, cost in costs.items()}
 
     def land_rent_at_tile(self, tile):
         """Rent per hectare-year on one tile in coin (the mean where none was let there)."""

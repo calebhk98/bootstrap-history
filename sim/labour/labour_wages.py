@@ -179,7 +179,7 @@ class WagesMixin(WageLedgerMixin):
         """
         total = 0.0
         for trade, count in self._world.state.household.employees.items():
-            total += count * self.labour_market.quote_annual(trade)
+            total += count * self.staff_pay(trade)
         return total
 
     HOUSING_PRESSURE_START_OCCUPANCY = declare(

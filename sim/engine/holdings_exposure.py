@@ -55,10 +55,11 @@ def _add_lot(exposure: Exposure, lot: GoodsLot) -> None:
 class HoldingsExposureMixin:
     """Mixed into `Sim`."""
 
-    def actor_exposure(self, actor, price_of_tonne, find_actor):
-        """What a firm or a state keeps: its purse, the stores it holds, and the shares it owns in others."""
+    def actor_exposure(self, actor, price_of_tonne, find_actor, lent_share=None):
+        """What a firm or a state keeps: its purse, the stores it holds, and the shares it owns in others.
+        A caller walking many actors in one pass, with no lending between them, passes `lent_share` once."""
         exposure = Exposure()
-        _add_purse(exposure, actor.money, self.lent_share())
+        _add_purse(exposure, actor.money, self.lent_share() if lent_share is None else lent_share)
         stores = actor.record.stores
         for material in sorted(stores):
             def take(tonnes, material=material):

@@ -99,6 +99,13 @@ def premium_factor(paid: float, rival_paid: float) -> float:
     return (paid / rival_paid) ** FIRM_LABOUR_SUPPLY_ELASTICITY if rival_paid > 0.0 else 1.0
 
 
+def on_the_job_loss_share(paid: float, rival_paid: float) -> float:
+    """Share of an employer's hours a strictly higher rival draws off in a year; none when it pays as much."""
+    if rival_paid <= paid:
+        return 0.0
+    return min(1.0, ON_THE_JOB_SEARCH_SHARE * premium_factor(rival_paid, paid))
+
+
 def eligible_bids(bids: Sequence[Bid], wage: float) -> Tuple[Dict[str, float], Dict[str, float]]:
     """Hours wanted and the wage paid, per employer, among bids that can afford the market wage."""
     wanted: Dict[str, float] = {}
@@ -152,8 +159,7 @@ def poach(hired: Dict[str, float], wanted: Dict[str, float], paid: Dict[str, flo
     for group in pay_groups(paid, list(wanted)):
         for employer in group:
             short = wanted[employer] - hired[employer]
-            capacity = {other: min(hired[other], ON_THE_JOB_SEARCH_SHARE * hired[other]
-                                   * premium_factor(paid[employer], paid[other]))
+            capacity = {other: hired[other] * on_the_job_loss_share(paid[other], paid[employer])
                         for other in wanted if paid[other] < paid[employer] and hired[other] > 0.0}
             total = sum(capacity.values())
             if short <= 0.0 or total <= 0.0:

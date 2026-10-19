@@ -37,7 +37,7 @@ class SettlementMixin:
 
     def held_tiles(self):
         """The tiles this nation holds."""
-        return tuple(geography.tiles_held(self._world.civ))
+        return tuple(self._world.home_tiles_held())
 
     def settlement_tiles(self):
         """{tile id: people living there} for the tiles this nation holds."""

@@ -98,6 +98,8 @@ class HouseholdState:
 	worker_housing_places: Optional[int] = None
 	# spare generic hands the reserve_staff policy keeps above what concerns hold (`reserve`)
 	reserve_craftsmen: int = 0
+	# yearly pay per person by trade as last settled; follows the market while keep_pay_at_market is on
+	staff_pay_held: Dict[str, float] = field(default_factory=dict)
 	reserve_scholars: int = 0
 	# a planned project and the cash target put by for it (`saving`)
 	saving_for: Optional[str] = None
@@ -264,12 +266,20 @@ class EconomyState:
 	improvements: Dict[str, Dict[str, bool]] = field(default_factory=dict)
 	# the same key -> {way: {due year, crew trade and hours a year, engineered, year last pressed}} of the ways paid for and being built (ways.py)
 	ways_under_construction: Dict[str, Dict[str, Dict[str, Any]]] = field(default_factory=dict)
+	# tile -> {owner: country or seat id, control: control level} (tile_ownership.py); seeded from the civilisation files
+	tile_owners: Dict[str, Dict[str, str]] = field(default_factory=dict)
+	# claims the seeding refused because another civilisation file already held the tile: {tile, owner, claimant}
+	tile_claim_conflicts: List[Dict[str, Any]] = field(default_factory=list)
+	# dated records of what changed in the world and why, shared by every seat (world_events.py)
+	world_events: List[Dict[str, Any]] = field(default_factory=list)
 	# tile -> {construction node id: capacity built there} (works.py)
 	works: Dict[str, Dict[str, float]] = field(default_factory=dict)
 	# tile -> {construction node id: [year it is finished, capacity]} of works paid for and being built (works.py)
 	works_under_construction: Dict[str, Dict[str, List[float]]] = field(default_factory=dict)
 	# tile -> {species id: share of the game left} for hunted species below a full stock (food_supply.py)
 	wild_stock: Dict[str, Dict[str, float]] = field(default_factory=dict)
+	# tile -> tonnes of standing timber felled below the tile's full stock; a missing tile is untouched (economy_port_timber.py)
+	forest_felled: Dict[str, float] = field(default_factory=dict)
 	# stock material -> units of the held herd the society's producers keep, which the founder is not billed to raise
 	society_herds: Dict[str, float] = field(default_factory=dict)
 	agent_economy: Dict[str, Any] = field(default_factory=dict)   # the agent economy's record (economy_port_year.py)
@@ -392,6 +402,8 @@ class SimulationState:
 	_rng: Optional[List[Any]] = None
 	_seed: Optional[Union[int, str]] = None
 	_game_version: Optional[str] = None  # which build wrote the save; shown to people, never checked on load
+	# declared store -> {tile, actor or "actor|actor" key: value differing from the default} (mod_stores.py)
+	stores: Dict[str, Dict[str, Any]] = field(default_factory=dict)
 	interface: Dict[str, Any] = field(default_factory=dict)  # the UI's own memory; the engine never reads it
 
 	def __post_init__(self) -> None:

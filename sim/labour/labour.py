@@ -22,6 +22,7 @@ live in sibling modules, grouped by subject, and this file composes them into th
                              an hour once bought (TrainingMixin)
     labour_bondage.py        buying people, freeing them, and the pool bookkeeping that keeps
                              trained/granted staff honest (BondageMixin)
+    labour_staff_pay.py      what staff are paid against the market, and why they take better offers (StaffPayMixin)
     labour_staff_ledger.py   who left the payroll and why, which specialists nothing uses (StaffLedgerMixin)
     labour_staff_controls.py concerns to keep staffed and a reserve of spare hands (StaffControlsMixin)
     labour_allocation.py     the farm workforce and the labour market's split of the rest
@@ -37,13 +38,14 @@ from .labour_wages import WagesMixin
 from .labour_training import TrainingMixin
 from .labour_bondage import BondageMixin
 from .labour_staff_ledger import StaffLedgerMixin
+from .labour_staff_pay import StaffPayMixin
 from .labour_staff_controls import StaffControlsMixin
 from .labour_allocation import LabourAllocationMixin
 from .labour_job import StandingJobMixin
 
 
 class Labour(CapacityMixin, PopulationMixin, SettlementMixin, WagesMixin, TrainingMixin, BondageMixin,
-             StaffLedgerMixin, StaffControlsMixin, LabourAllocationMixin, StandingJobMixin):
+             StaffLedgerMixin, StaffPayMixin, StaffControlsMixin, LabourAllocationMixin, StandingJobMixin):
     """Questions and transactions about labour, for one simulation. `world` is what labour reads of it."""
 
     def __init__(self, world):

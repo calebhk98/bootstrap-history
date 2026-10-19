@@ -26,7 +26,7 @@ from sim.unit_conversions import PERCENT_SCALE
 from . import automation_audit
 from .units_prose import money_text, plain_number
 from .state_demand import answer_confiscation
-from .invariants import check_labour_market_invariants
+from .invariants import check_labour_market_invariants, check_yearly_invariants
 from .step_phase_money import MoneyPhaseMixin
 from .step_phase_project_start import ProjectStartPhaseMixin
 from .step_phase_projects import ProjectProgressPhaseMixin
@@ -51,6 +51,7 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, ProjectStartPhaseMixin, 
     def verify_step_invariants(self):
         """Validate this turn without reading configuration from globals."""
         self.step_context.invariant_checker(self.state)
+        check_yearly_invariants(self)
         return check_labour_market_invariants(self)
 
     def _step_apprenticeships(self):

@@ -44,13 +44,14 @@ class TheftChargeMixin(HoldingsExposureMixin):
         the country's state capacity."""
         from .agents_port import SimWorld
         world = SimWorld(self)
+        lent_share = self.lent_share()   # theft moves coin out of purses, never into a loan: one reading serves every actor
         for actor in self.actors.actors.values():
             record = actor.record
             if record.exited_year is not None or record.stratum:
                 continue
             if record.country not in (None, self.actors.state.home_country):
                 continue
-            exposure = self.actor_exposure(actor, world.material_price, self.actors.get)
+            exposure = self.actor_exposure(actor, world.material_price, self.actors.get, lent_share)
             if not exposure.values:
                 continue
             scale = self.visible_scale(sum(actor.workforce.values()), actor.money, actor.prominence())

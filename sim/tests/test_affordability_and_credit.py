@@ -151,7 +151,9 @@ del fresh.market_rate
 # Status upkeep is conditional on being able to afford it.
 fresh.done.add("citizenship")
 fresh._done_changed()
+fresh.revenue = lambda: 0.0   # ruined: nothing comes in, so there is nothing to spend on appearances
 ruined_living_cost = fresh.living_cost()
+del fresh.revenue
 check("a ruined household stops keeping up appearances",
       ruined_living_cost < thin_living_cost + 50.0, (ruined_living_cost, thin_living_cost))
 fresh.capital = 2000000.0
@@ -373,13 +375,15 @@ check("...and says plainly when there was nothing left to take",
 
 # --- a household deep in arrears does not commit to new work.
 bleeding = sim(manual=False)
-into_arrears(bleeding)
+bleeding.capital = -0.95 * bleeding.credit_limit()   # deep in arrears: near the limit before the year's interest
 bleeding.insolvent_years = 20
+bleeding.revenue = lambda: 0.0   # deep in arrears with no income: the needs bill alone leaves nothing to fund new work
+bleeding.revenue_capacity = lambda: 0.0
 active_before = len(bleeding.active)
-bleeding.step()
 check("the room a household can fund shrinks by the arrears it already owes",
       bleeding.funding_breakdown()["credit_available_now"] == 0.0 and bleeding.funding_capacity() == 0.0,
       bleeding.funding_breakdown())
+bleeding.step()
 check("a household deep in arrears does not commit to new work",
       len(bleeding.active) <= active_before + 1, (len(bleeding.active), active_before))
 
@@ -412,6 +416,7 @@ spent = stopped.active[PACED]["spent"]
 check("a project part-paid for has really been part-paid for",
       spent > 0 and stopped.active[PACED]["cost_left"] > 0, (spent, stopped.active[PACED]["cost_left"]))
 stopped.credit_limit = lambda: 0.0
+stopped.capital = min(stopped.capital, -1.0)     # the household owes something when the credit is withdrawn
 stopped.enforce_credit_limit(stopped.year)
 check("the creditors stopping your work does not burn what you paid",
       abs(stopped.paid_towards.get(PACED, 0.0) - spent) < 0.5, stopped.paid_towards)

@@ -31,3 +31,13 @@ describe different economies.
 - A test: at the opening, the self-grown share of each need and the market demand for it are the
   values the first simulated year produces, within a stated tolerance, under no shock.
 - Related: 526 (the opening income fixed point has no investment, so it opens at subsistence), 513.
+
+## Attempt on branch `opening-sizes-producers-net-of-own-grown-food` (reverted)
+
+Commit `6bfa0b32` ran the year's own-plot rule inside the opening's fixed point (`sim/economy/opening_own.py`, reusing
+`households_own.own_production` and `year_goods._less_what_it_grew`), so the opening's grain demand matched what year
+one grows. It passed the quick tier but broke the slow topic `agent_economy_wiring` on Rome: after the opening,
+households offer no savings at all (`record.funds_offered` is zero, so `economy_api.credit_room` is None). That is the
+collapse recorded in 526: with the food floor grown at home, the saving leak drives the settled income toward zero.
+Reproduce: check out `6bfa0b32` and run `python3 -m sim.tests --slow --only agent_economy_wiring --topic-seconds 900`.
+The branch is kept; land it together with 526, with `agent_economy_wiring` and `full_length_opening_checks` green.
