@@ -78,7 +78,7 @@
     "hemp_fiber_kg": 1.1
    },
    "labour_hours": {
-    "labourer": 15.0
+    "spinner": 15.0
    },
    "unit_dimension": "mass",
    "basis": "per kg of hand-twisted thin twine/string",
@@ -94,7 +94,7 @@
     "hemp_fiber_kg": 1.15
    },
    "labour_hours": {
-    "labourer": 6.0
+    "spinner": 6.0
    },
    "unit_dimension": "mass",
    "basis": "per kg of heavy laid rope, rope-walk grade",
@@ -129,7 +129,8 @@
     "hemp_fiber_kg": 1.15
    },
    "labour_hours": {
-    "labourer": 8.0
+    "spinner": 4.36,
+    "weaver": 3.64
    },
    "unit_dimension": "mass",
    "basis": "per kg of heavy, plain-woven canvas (sailcloth-grade)",

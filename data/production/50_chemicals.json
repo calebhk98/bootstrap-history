@@ -251,7 +251,7 @@
    },
    "inputs": {},
    "labour_hours": {
-    "labourer": 555.0
+    "farmer": 555.0
    },
    "land_hectare_years": 1.38999639,
    "extracted_from": "arable land (madder root, Rubia tinctorum, a 2-3 year crop)",

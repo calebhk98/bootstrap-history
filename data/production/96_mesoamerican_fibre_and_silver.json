@@ -25,8 +25,8 @@
     "cotton_kg": 1.1
    },
    "labour_hours": {
-    "labourer": 40.0,
-    "artisan": 50.0
+    "spinner": 40.0,
+    "weaver": 50.0
    },
    "unit_dimension": "mass",
    "basis": "per kg of plain cotton fabric woven on the backstrap loom, off the loom and unfinished",
@@ -42,8 +42,8 @@
     "maguey_fibre_kg": 1.15
    },
    "labour_hours": {
-    "labourer": 50.0,
-    "artisan": 40.0
+    "spinner": 50.0,
+    "weaver": 40.0
    },
    "unit_dimension": "mass",
    "basis": "per kg of coarse maguey-fibre fabric woven on the backstrap loom, off the loom and unfinished",
@@ -59,7 +59,7 @@
     "fabric_kg": 1.05
    },
    "labour_hours": {
-    "labourer": 4.0
+    "fuller": 4.0
    },
    "unit_dimension": "mass",
    "basis": "per kg of finished cloth from backstrap-woven fabric",

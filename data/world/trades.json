@@ -98,6 +98,16 @@
       "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
       "fatality_confidence": "D"
     },
+    "fuller": {
+      "family": "craft",
+      "note": "Finishes cloth: scours, fulls, felts, washes, stretches and presses it. Dyeing is done by the same finishing trade but has no recipe of its own yet.",
+      "training_years": 3,
+      "training_source": "Author's estimate, conf D: fulling was heavy trampling and washing in a fullonica worked largely by slaves and apprentices (recalled from Pliny, Natural History 35.57, and Roman fullonica studies, not opened), so a few years is a guess.",
+      "tool_basket": ["timber"],
+      "fatality_risk_per_year": 0.0,
+      "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
+      "fatality_confidence": "D"
+    },
     "furnaceman": {
       "family": "craft",
       "training_years": 2,
@@ -282,6 +292,26 @@
         "iron",
         "charcoal"
       ],
+      "fatality_risk_per_year": 0.0,
+      "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
+      "fatality_confidence": "D"
+    },
+    "spinner": {
+      "family": "craft",
+      "note": "Cards and spins fibre into thread or twine on a spindle or wheel, and twists strands into cordage. The slowest step of hand textile work, done by household and hired hands alike.",
+      "training_years": 1,
+      "training_source": "Author's estimate, conf D: spindle spinning was learned in childhood alongside household work (recalled from the textile-history literature, e.g. Barber, Women's Work, 1994, not opened); a year to useful speed is a guess.",
+      "tool_basket": ["timber"],
+      "fatality_risk_per_year": 0.0,
+      "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
+      "fatality_confidence": "D"
+    },
+    "weaver": {
+      "family": "craft",
+      "note": "Warps and weaves thread into cloth on a loom (horizontal, warp-weighted, vertical or backstrap), plain or fine, silk included.",
+      "training_years": 4,
+      "training_source": "Author's estimate, conf D, set at the generic craftsman's four years it replaces for cloth: recalled guild terms for weaving ran longer (seven years under England's Statute of Artificers of 1563, not opened), which is a ceiling, not a Roman or Mexica figure.",
+      "tool_basket": ["timber"],
       "fatality_risk_per_year": 0.0,
       "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
       "fatality_confidence": "D"
