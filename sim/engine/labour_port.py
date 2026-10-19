@@ -22,6 +22,10 @@ class LabourWorld:
         """The tiles the home country owns, read from the owner map."""
         return self._sim.home_tiles_held()
 
+    def home_tiles_held_version(self):
+        """Changes whenever the tiles the home country owns might."""
+        return self._sim.tile_owner_version()
+
     def money_text(self, amount, digits=0, grouped=False, short=False):
         """A sum in the civilisation's coin as the player's chosen unit writes it (units_prose)."""
         return units_prose.money_text(amount, self._sim, digits, grouped, short)
@@ -279,8 +283,8 @@ class LabourWorld:
     def running(self, node_id):
         return self._sim.running(node_id)
 
-    def shared_answer(self, key, inputs, compute):
-        return self._sim._shared_answer(key, inputs, compute)
+    def shared_answer(self, key, inputs, compute, standalone=False):
+        return self._sim._shared_answer(key, inputs, compute, standalone)
 
     def spending_power(self, kind='buy'):
         return self._sim.spending_power(kind)

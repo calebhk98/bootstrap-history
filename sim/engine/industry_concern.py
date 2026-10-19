@@ -53,14 +53,18 @@ class IndustryConcernMixin:
         if producers is None:   # nothing runs while the economy opens
             return 1.0
         base_tile = self.labour.base_tile()
-        gate = {key: entry.get("requires_node") for key, entry in default_production_entries().items()}
+        entries = default_production_entries()
+
+        def gate(recipe):
+            entry = entries.get(recipe)
+            return entry.get("requires_node") if entry is not None else None
         depth, lead = {}, {}
         for material in purchases_value:
             found = producers.get(material, ())
             if not found:
                 continue
             # a technique that needs no technology is established wherever it is run
-            depth[material] = max((self.industry_depth(gate[recipe]) if gate.get(recipe) else 1.0
+            depth[material] = max((self.industry_depth(gate(recipe)) if gate(recipe) else 1.0
                                    for _tile, recipe in found), default=0.0)
             days = self._producers_memo("input_days", (year, material, base_tile),
                                         lambda: self.days_from_producers(found))

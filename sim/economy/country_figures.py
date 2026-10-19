@@ -78,7 +78,12 @@ def people_by_trade(economy, country: Optional[str]) -> Dict[str, float]:
 
 
 def _area_tiles(economy, good: str) -> Dict[str, Set[TileId]]:
-    return {area.area_id: set(area.tiles) for area in economy.area_map.areas(good)} if good in economy.area_map.goods() else {}
+    """Each market area of the good with its tiles; kept on the area map, which does not change once built."""
+    area_map = economy.area_map
+    kept = area_map.__dict__.setdefault("_area_tile_sets", {})
+    if good not in kept:
+        kept[good] = {area.area_id: set(area.tiles) for area in area_map.areas(good)} if good in area_map.goods() else {}
+    return kept[good]
 
 
 def prices(economy, country: Optional[str]) -> Dict[str, float]:

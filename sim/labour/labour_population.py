@@ -293,6 +293,14 @@ class PopulationMixin:
             "themselves - approximated as half again your own headcount's "
             "hours, standing in for that second generation, rather than "
             "modelling who-taught-whom explicitly.")
+    def _hiring_cap_inputs(self):
+        """What the hiring cap reads beyond the world stamp: the literacy, the people and where they live."""
+        world = self._world
+        economy = world.state.economy
+        return (world.civ.get("literacy_elite"), world.civ.get("literacy_general"), world.population.working_age,
+                world.pop_scale, len(economy.improvements), world.home_tiles_held_version(),
+                id(economy.society_labour_hours), len(economy.society_labour_hours))
+
     def _hiring_cap_before_actors(self, trade):
         """Hours a year of a trade the town's people offer, before firms' and governments' staff
         are taken out of it."""
@@ -332,8 +340,8 @@ class PopulationMixin:
             return max(0.0, self._taught_trade_people(trade)
                        - self._world.actor_staff_fte(trade)) * self._world.HOURS_PER_PERSON_YEAR
         cap = self._world.shared_answer(
-            ("hiring_cap", trade), (self._world.civ.get("literacy_elite"), self._world.civ.get("literacy_general")),
-            lambda: self._hiring_cap_before_actors(trade))
+            ("hiring_cap", trade), self._hiring_cap_inputs(), lambda: self._hiring_cap_before_actors(trade),
+            standalone=True)
         # firms and governments hire from the same pool, so what they employ is not on offer
         cap = max(0.0, cap - self._world.actor_staff_fte(trade) * self._world.HOURS_PER_PERSON_YEAR)
         hours = cap + household.employees.get(trade, 0.0) * self._world.HOURS_PER_PERSON_YEAR + school_hours

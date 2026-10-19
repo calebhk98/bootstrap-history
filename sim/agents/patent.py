@@ -17,11 +17,12 @@ def live(entry: Dict[str, Any], year: int) -> bool:
 
 def entry_among(actors: Iterable[Any], node_id: str, year: int) -> Optional[Dict[str, Any]]:
 	"""The live patent on `node_id` held by one of `actors`, with its holder's id, or None."""
-	for actor in sorted(actors, key=lambda each: each.actor_id):
+	first = None
+	for actor in actors:
 		entry = actor.record.patents.get(node_id)
-		if entry is not None and live(entry, year):
-			return dict(entry, holder=str(actor.actor_id))
-	return None
+		if entry is not None and live(entry, year) and (first is None or actor.actor_id < first.actor_id):
+			first = actor
+	return None if first is None else dict(first.record.patents[node_id], holder=str(first.actor_id))
 
 
 def holder_of(world: Any, node_id: str) -> Optional[str]:
