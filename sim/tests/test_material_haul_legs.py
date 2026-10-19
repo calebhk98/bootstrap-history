@@ -7,7 +7,8 @@ import unittest
 
 from sim.engine import action_results
 from sim.engine.data import load_civ
-from sim.geography.api import tiles_held
+from sim.geography import provisions
+from sim.geography.api import route as route_search, tiles_held
 from sim.tests import harness
 
 SEA_TILE = "india_01"
@@ -87,6 +88,25 @@ class LocatedMaterialCarriage(unittest.TestCase):
         holder = harness.unopened_sim()
         self.assertEqual(holder.material_haul_route(LOCATED_GOOD).legs, ())
         self.assertEqual(holder.material_carriage_per_tonne(LOCATED_GOOD, 100.0), 0.0)
+
+
+class ProvisionsCountedOnce(unittest.TestCase):
+    """Complaint 569: a found leg is the mode's base rate (times the ground's factor) over the leg's own
+    share of lift, never over the share twice."""
+
+    def test_a_cart_leg_divides_by_its_share_once(self):
+        game = harness.unopened_sim()
+        imbalance = game._domestic_flow_imbalance()
+        leg = game._haul_route([LAND_TILE], imbalance, "goods").legs[0]
+        self.assertEqual(leg.mode, "cart")
+        bare = game._freight_mode_costs(imbalance)["cart"]
+        share = provisions.restocked_share(game._carrier_models()["cart"][0], leg.distance_km, game._restock_days("cart"))
+        fee = game._freight_handling_costs()["cart"]
+        undivided = route_search(
+            [LAND_TILE], tiles_held(game.civ, game.world_map), ["cart"], None, mode_costs={"cart": bare},
+            handling_costs={}, held_nodes=game.held_and_running(include_starting=False),
+            world_map=game.world_map)["legs"][0]["cost_per_tonne"]
+        self.assertAlmostEqual(leg.cost_per_tonne, fee + undivided / share, places=6)
 
 
 if __name__ == "__main__":
