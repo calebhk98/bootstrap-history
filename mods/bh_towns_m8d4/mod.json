@@ -1,0 +1,9 @@
+{
+  "id": "bh_towns_m8d4",
+  "name": "Town Table",
+  "version": "0.1.0",
+  "dependencies": [],
+  "conflicts": [],
+  "code": ["hooks.py"],
+  "permissions": ["code"]
+}

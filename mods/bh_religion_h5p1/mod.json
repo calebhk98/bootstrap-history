@@ -1,0 +1,9 @@
+{
+  "id": "bh_religion_h5p1",
+  "name": "Religious Institutions as Economic Actors",
+  "version": "0.1.0",
+  "dependencies": [],
+  "conflicts": [],
+  "code": ["hooks.py"],
+  "permissions": ["code"]
+}
