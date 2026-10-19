@@ -288,6 +288,7 @@ class Economy:
         record.funds_offered = sum(offer.amount for offer in funds if offer.currency == money)
         record.lent_by_borrower = {}
         if not requests:
+            record.expansion_runs = {}      # a working-capital loan struck ahead of the year left no plant to wait for
             if funds:
                 # savings on offer and nobody borrowing: lenders compete the rate down toward the lowest
                 # they will lend at, at the market's usual pace
