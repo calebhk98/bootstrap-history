@@ -61,9 +61,9 @@ class DisclosureMixin:
         if licensee is None or licensee.kind == "interest_group":
             return {"ok": False, "error": "name a firm or the state to license it to: %s" % (
                 ", ".join(self.licensable_actor_ids()) or "none exist yet")}
-        problem = licence.terms_problem(licensee, fee, royalty)
+        problem = licence.terms_problem(licensee, fee, royalty, node_id, SimWorld(self))
         if problem:
-            return {"ok": False, "error": problem}
+            return {"ok": False, "error": str(problem), "cause": problem.cause, "facts": problem.facts}
         if not licence.grant(self.seat_party(self.state.acting_seat), licensee, node_id, fee, SimWorld(self)):
             return {"ok": False, "error": "the licensee can already make it"}
         record = self._disclosure_record(node_id)

@@ -69,8 +69,9 @@ def _ruin():
 slow_check("a ruined founder's debt stays inside the credit limit once the settlement has run",
            lambda: (max(_ruin()[3]) <= 1.0 and any("INSOLVENCY SETTLED" in text for _, text in _ruin()[0].state.household.log),
                     _ruin()[3]))
+# the money climbs back at some point in the years; once it has, the founder may spend it on projects
 slow_check("a ruined founder rebuilds rather than freezing",
-           lambda: (_ruin()[4][-1] > _ruin()[4][0] and len(_ruin()[0].done - _ruin()[0].granted) >= _ruin()[2],
+           lambda: (max(_ruin()[4]) > _ruin()[4][0] and len(_ruin()[0].done - _ruin()[0].granted) >= _ruin()[2],
                     (_ruin()[4], _ruin()[2], len(_ruin()[0].done - _ruin()[0].granted))))
 slow_check("ruin never deletes a step the goal needs",
            lambda: ("identity_cover" in _ruin()[0].done and _ruin()[1] <= _ruin()[0].done,

@@ -71,6 +71,7 @@ MONEY_ARGUMENT_EXEMPT = {
 NOT_NUMERIC_KEYS = {
     "and_could_pay_for", "capacity_gained_or_lost", "cash_book", "coin_hoard", "could_pay_for", "debt", "done_earned",
     "expected_lost_per_sacking", "failure_costs_hours", "interest_groups", "it_yields_per_hectare_per_year",
+    "keep_pay_at_market",  # a yes/no option
     "max_cost", "max_total_cost", "pay_to_lower_the_risk", "reserve_cash", "revenue_and_upkeep_apply_only_once_opened",
     "revenue_forecast_scope", "state_interest_trait_score", "sustainable_debt_means", "wage_foundation",
     "what_a_failure_costs", "what_it_costs_you", "where_the_money_comes_from", "worth_knowing_early",

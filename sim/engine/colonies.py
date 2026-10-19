@@ -9,7 +9,7 @@ home. A colony whose people die out is lost.
 """
 from sim.refusal import LogLine
 from sim.agents.api import edges
-from sim.geography.api import settlement, tiles_held
+from sim.geography.api import settlement, tile_owners
 
 from sim.world.shared_constants import (
     ANNUAL_LABOUR_HOURS_PER_FARM_WORKER, FALLOW_SHARE_OF_HOLDING, REFERENCE_LABOUR_HOURS_PER_HECTARE)
@@ -32,12 +32,13 @@ class ColoniesMixin:
         return max(fit, key=lambda item: (item[1]["settlers"], item[0]), default=None)
 
     def claimed_tiles(self):
-        """Tiles any seat's colonies stand on: a tile has one holder."""
-        return [colony["tile"] for seat in self.state.seats.values() for colony in seat.holdings.colonies]
+        """Tiles some other actor owns (a seat's colony, a partner's land): a tile has one owner."""
+        home = self.civ["id"]
+        return [tile for tile, entry in self.tile_owner_map().items() if entry["owner"] != home]
 
     def settlement_candidates(self, by_sea=False):
         """Tiles a colony could be founded on now, best land first."""
-        return settlement.candidate_tiles(list(tiles_held(self.civ)), self.claimed_tiles(), by_sea)
+        return settlement.candidate_tiles(self.home_tiles_held(), self.claimed_tiles(), by_sea)
 
     def settlement_outfit_cost(self, spec):
         """What outfitting the settlers costs: a year's work for each at the society's wage."""
@@ -46,7 +47,7 @@ class ColoniesMixin:
     def found_colony(self, tile_id):
         """(ok, text): found a colony on `tile_id`."""
         household = self.state.household
-        if tile_id in self.claimed_tiles() or tile_id in tiles_held(self.civ):
+        if self.tile_owner(tile_id) is not None:
             return False, "that tile is already held"
         by_land = tile_id in self.settlement_candidates(False)
         if not by_land and tile_id not in self.settlement_candidates(True):
@@ -64,6 +65,7 @@ class ColoniesMixin:
                 plain_number(settlers), money_text(cost, self, grouped=True))
         self.pay_edge(edges.EDGE_BUILDERS, cost, "outfitting a settlement")
         self.population.working_age -= settlers
+        self.transfer_tile(tile_id, self.state.acting_seat, tile_owners.settlement_level(), "colony founded")
         self.state.holdings.colonies.append({
             "tile": tile_id, "founded_year": self.state.scenario.year, "by": node_id,
             "children": 0.0, "working_age": settlers, "elderly": 0.0})
@@ -93,6 +95,7 @@ class ColoniesMixin:
                 colony.update(children=people.children, working_age=people.working_age, elderly=people.elderly)
                 if people.total < 1.0:
                     seat.holdings.colonies.remove(colony)
+                    self.transfer_tile(colony["tile"], None, cause="colony died out")
                     if seat_id == self.state.acting_seat:
                         self.state.household.log.append((year, LogLine(
                             "colony_died_out", "the colony on %s has died out" % colony["tile"], tile=colony["tile"])))

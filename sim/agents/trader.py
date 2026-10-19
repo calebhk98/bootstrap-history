@@ -91,10 +91,18 @@ class Trader(RecordedActor):
 					 tonnes=tonnes, margin=margin, years=route["years"] + 1)
 		return margin
 
+	def default(self, world: Any) -> None:
+		"""A trader in default stops carrying cargo; the claim is written off."""
+		super().default(world)
+		self.record.routes.clear()
+		self.record.exited_year = world.year
+
 	def act(self, world: Any) -> None:
 		if self.record.exited_year is not None:
 			return
 		interest = self.pay_interest(world)
+		if self.record.exited_year is not None:
+			return
 		options = self.route_options(world)
 		chosen = self.decision_policy.choose(self, Decision("trade", options, self.cargo_budget(world))) if options else []
 		shipped = {option.subject for option in chosen}

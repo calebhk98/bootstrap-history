@@ -88,6 +88,7 @@ from .founder_sales import FounderSalesMixin
 from .seat_dealings import SeatDealingsMixin
 from .interest_groups import InterestGroupsMixin
 from .benefactions import BenefactionsMixin
+from .mod_stores import ModStoresMixin
 from .core_properties import ForwardingPropertiesMixin
 from .goals import GoalsMixin
 from .core_step_phases import StepContext, StepPhasesMixin
@@ -243,7 +244,7 @@ FARM_WEATHER_POOLED_CELL_CAP = declare(
 YEARLY_RECORD_LIMIT = 300
 
 
-class Sim(RealPriceRatiosMixin, CoinRevaluationMixin, PartnerCivsMixin, WageMarketRatiosMixin, MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMixin, MarketDemandMixin, RealOutputMixin, ConcernVolumeMixin, TechniquesInUseMixin, IndustryDepthMixin, IndustryConcernMixin, IncumbentPricesMixin, ProducerCostsMixin, FogMixin, GeographyPortMixin, DiseasePortMixin, LabourPortMixin,
+class Sim(ModStoresMixin, RealPriceRatiosMixin, CoinRevaluationMixin, PartnerCivsMixin, WageMarketRatiosMixin, MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMixin, MarketDemandMixin, RealOutputMixin, ConcernVolumeMixin, TechniquesInUseMixin, IndustryDepthMixin, IndustryConcernMixin, IncumbentPricesMixin, ProducerCostsMixin, FogMixin, GeographyPortMixin, DiseasePortMixin, LabourPortMixin,
           ProjectsMixin, SeatMixin, SeatRunMixin, SeatBuildsMixin, SeatSightMixin, ShockYearMixin, WaysMixin, WorksMixin, HeldWorksMixin, ActionLossMixin, SocietyMixin, ActorsMixin, DisclosureMixin, FounderSalesMixin, SeatDealingsMixin, InterestGroupsMixin, BenefactionsMixin, ForwardingPropertiesMixin, GoalsMixin,
           StepPhasesMixin, LivingStockMixin, LivingStockOpeningMixin, CoinHoardMixin, CoinCarriageMixin, TheftChargeMixin,
           LivingStockTradeMixin, LivingStockSmugglingMixin, LivingStockYearlyMixin, FoodSupplyMixin, DefenceStoresMixin, EconomyPortMixin, NodeRederiveMixin):
@@ -1520,7 +1521,8 @@ class Sim(RealPriceRatiosMixin, CoinRevaluationMixin, PartnerCivsMixin, WageMark
         epidemic_deaths = self.disease_year(food_eaten_kcal_per_day, year)
         self._last_demographic_step = self.population.step(
             food_eaten_kcal_per_day, jitter=False,
-            disease_burden=self._disease_burden(), epidemic_deaths=epidemic_deaths)
+            disease_burden=self._disease_burden(), epidemic_deaths=epidemic_deaths,
+            endemic_death_rates=self.endemic_death_rates())
         flows = self._last_demographic_step
         record = self.state.population.yearly_record
         record.append({"year": year, "population": round(self.population.total, 1),
@@ -1653,24 +1655,13 @@ class Sim(RealPriceRatiosMixin, CoinRevaluationMixin, PartnerCivsMixin, WageMark
     # civilization has never seen, would be reach 0. Everything below
     # computes reach from the ACTUAL civilization's own home ground.
 
-    STAFF_ATTRITION_RATE = declare(
-        "STAFF_ATTRITION_RATE", 0.035, kind="temporary_heuristic",
-        unit="dimensionless (yearly probability per person)", source=
-        "Rough order-of-magnitude estimate combining Roman adult mortality "
-        "with normal turnover (poaching, retirement).", confidence="C",
-        why="Yearly chance any one employed person dies or leaves for a "
-            "better offer - applied per whole person (see the comment "
-            "below on why headcount is rolled discretely rather than "
-            "smoothed). A plausible order of magnitude for a pre-modern "
-            "adult workforce, not fitted to an attested Roman mortality "
-            "table.")
     DIRECTORS_EXTRA_APPROACH_RATE = declare(
         "DIRECTORS_EXTRA_APPROACH_RATE", 0.12, kind="temporary_heuristic",
         unit="dimensionless (fraction of the gap to capacity closed per "
              "year)", source=None, confidence="D",
         why="How fast the household's deputy-director pool approaches "
             "what its institutions can support, net of the same "
-            "STAFF_ATTRITION_RATE that thins ordinary staff. Tuned so "
+            "working-age mortality that thins ordinary staff. Tuned so "
             "deputies build up over several years rather than "
             "instantaneously; not measured.")
 

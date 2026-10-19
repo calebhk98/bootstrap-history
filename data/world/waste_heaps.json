@@ -9,6 +9,14 @@
    "source": "Density: unit weight of steel slag aggregate 1600 to 1920 kg/m3, Recycled Materials Resource Center, 'Steel Slag - Material Description' (rmrc.wisc.edu), midpoint taken. Height: Welsh colliery spoil tips recorded by RCAHMW Coflein stand from about 10 m to about 30 m; the low end is taken because tipping was by hand and cart.",
    "why": "Crushed steelworks slag piles dense and angular."
   },
+  "bran_kg": {
+   "bulk_density_kg_per_m3": 250.0,
+   "heap_height_m": 3.0,
+   "kind": "measured",
+   "conf": "D",
+   "source": "Density and height are recalled, none opened offline: loose wheat bran about 250 kg per cubic metre (feed handbooks); a hand-tipped heap three metres, a labelled heuristic. Conf D.",
+   "why": "Light flaky husk."
+  },
   "coal_tar_kg": {
    "bulk_density_kg_per_m3": 1175.0,
    "heap_height_m": 3.0,
@@ -17,13 +25,37 @@
    "source": "Density: specific gravity of tar 1.1 to 1.25 (exam-preparation summary of handbook values, not a primary source), midpoint taken. Depth: a labelled heuristic, a pit a person can empty by bucket.",
    "why": "A viscous liquid, held in a pit, so the footprint is its volume over the pit depth."
   },
-  "wood_tar_kg": {
-   "bulk_density_kg_per_m3": 1175.0,
-   "heap_height_m": 3.0,
+  "manure_kg": {
+   "bulk_density_kg_per_m3": 750.0,
+   "heap_height_m": 2.0,
    "kind": "measured",
    "conf": "D",
-   "source": "As coal_tar_kg: no separate figure for wood tar found.",
-   "why": "A viscous liquid, held in a pit."
+   "source": "Density and height are recalled, none opened offline: fresh farmyard manure 700 to 800 kg per cubic metre (agricultural engineering handbooks); a heap two metres, the height a fork can turn. Conf D.",
+   "why": "Wet, dense and self-heating, so kept low."
+  },
+  "nightsoil_kg": {
+   "bulk_density_kg_per_m3": 1000.0,
+   "heap_height_m": 2.0,
+   "kind": "measured",
+   "conf": "D",
+   "source": "Density and height are recalled, none opened offline: a wet slurry at about the density of water; a pit two metres deep, a labelled heuristic. Conf D.",
+   "why": "A slurry, held in a pit."
+  },
+  "straw_kg": {
+   "bulk_density_kg_per_m3": 60.0,
+   "heap_height_m": 4.0,
+   "kind": "measured",
+   "conf": "D",
+   "source": "Density and height are recalled, none opened offline: loose stacked straw 50 to 80 kg per cubic metre (a thatcher's or farm-engineering figure); a rick four metres, a labelled heuristic. Conf D.",
+   "why": "Very light, stacked high."
+  },
+  "urine_kg": {
+   "bulk_density_kg_per_m3": 1010.0,
+   "heap_height_m": 2.0,
+   "kind": "measured",
+   "conf": "D",
+   "source": "Density and height are recalled, none opened offline: urine specific gravity about 1.01 (clinical references); a pit two metres deep, a labelled heuristic. Conf D.",
+   "why": "A liquid, held in a pit."
   },
   "wood_ash_kg": {
    "bulk_density_kg_per_m3": 820.0,
@@ -32,6 +64,14 @@
    "conf": "C",
    "source": "Density: loose wood ash 663 to 977 kg/m3, Materials 8(10) 5353 (2015), doi 10.3390/MA8105353, midpoint taken. Height: a labelled heuristic; dry ash rests at about 33 degrees (Engineering ToolBox angles of repose), so a low heap spreads wide.",
    "why": "Light, loose, fine ash."
+  },
+  "wood_tar_kg": {
+   "bulk_density_kg_per_m3": 1175.0,
+   "heap_height_m": 3.0,
+   "kind": "measured",
+   "conf": "D",
+   "source": "As coal_tar_kg: no separate figure for wood tar found.",
+   "why": "A viscous liquid, held in a pit."
   }
  }
 }

@@ -39,6 +39,7 @@ class NeedSpec:
     budget_weight: float                   # weight of the need in surplus spending
     goods: Tuple[Tuple[str, float], ...]   # (good, need units one unit of the good gives)
     share_limits: Tuple[Tuple[str, float], ...] = ()   # (good, largest share of the need's units it can meet)
+    qualities: Tuple[Tuple[str, float], ...] = ()      # (good, quality factor the buyer values; absent means one)
 
 
 @dataclass(frozen=True)
@@ -66,6 +67,7 @@ def goods_attributes(need_data: Mapping[str, Any],
     merged: Dict[str, Dict[str, Any]] = {}
     for material, attributes in (need_data.get("goods") or {}).items():
         merged[material] = {"satisfies": dict(attributes.get("satisfies") or {}),
+                            "quality": dict(attributes.get("quality") or {}),
                             "bought_by_households": attributes.get("bought_by_households", True),
                             "max_share_of_need": dict(attributes.get("max_share_of_need") or {})}
     for entry in production.values():
@@ -74,6 +76,7 @@ def goods_attributes(need_data: Mapping[str, Any],
         material = demand._dominant_output_key(entry)
         record = merged.setdefault(material, {"satisfies": {}})
         record["satisfies"].update(entry.get("satisfies") or {})
+        record.setdefault("quality", {}).update(entry.get("quality") or {})
     return merged
 
 
@@ -104,6 +107,7 @@ def make_basket(need_data: Mapping[str, Any], production: Mapping[str, Any],
     civ_values = civ_values or {}
     serving: Dict[str, List[Tuple[str, float]]] = {}
     limits: Dict[str, List[Tuple[str, float]]] = {}
+    qualities: Dict[str, List[Tuple[str, float]]] = {}
     for good in sorted(attributes):
         if attributes[good].get("bought_by_households") is False:
             continue
@@ -111,12 +115,15 @@ def make_basket(need_data: Mapping[str, Any], production: Mapping[str, Any],
             serving.setdefault(need_id, []).append((good, effect))
         for need_id, share in sorted((attributes[good].get("max_share_of_need") or {}).items()):
             limits.setdefault(need_id, []).append((good, float(share)))
+        for need_id, declared in sorted((attributes[good].get("quality") or {}).items()):
+            qualities.setdefault(need_id, []).append((good, float(declared["factor"])))
     specs = []
     for need_id in sorted(need_data["needs"]):
         data = need_data["needs"][need_id]
         scale = civ_scale(data, civ_values)
         specs.append(NeedSpec(need_id, need_floor(data) * scale, float(data["surplus_budget_share"]) * scale,
-                              tuple(serving.get(need_id, ())), tuple(limits.get(need_id, ()))))
+                              tuple(serving.get(need_id, ())), tuple(limits.get(need_id, ())),
+                              tuple(qualities.get(need_id, ()))))
     substitution = (NEED_SUBSTITUTION_ELASTICITY if substitution_elasticity is None
                     else substitution_elasticity)
     if substitution == 1.0:
@@ -142,14 +149,19 @@ def need_prices(basket: Basket, price_of: Callable[[str], Optional[float]]) -> L
 
 
 def priced_need(spec: NeedSpec, exponent: float, price_of: Callable[[str], Optional[float]],
-                with_ceilings: bool = True) -> Optional[PricedNeed]:
+                with_ceilings: bool = True, quality_reach: float = 0.0) -> Optional[PricedNeed]:
     """One need priced, or None when none of its goods has a price. `exponent` is one minus the
-    substitution elasticity; a caller that never reads `ceilings` can leave them out."""
+    substitution elasticity; a caller that never reads `ceilings` can leave them out. `quality_reach` (0 to 1)
+    is how far the buyer pays for quality: the mix weighs a good's quality factor to that power, while the
+    need units a good gives stay its effectiveness. At zero, or for a good with no factor, the mix is by cost
+    per need unit alone."""
+    quality = dict(spec.qualities)
     rows = []
     for good, effect in spec.goods:
         price = price_of(good)
         if price is not None and price > 0.0 and effect > 0.0:
-            rows.append((good, price, effect, (price / effect) ** exponent))
+            valued = effect * quality.get(good, 1.0) ** quality_reach
+            rows.append((good, price, effect, (price / valued) ** exponent))
     if not rows:
         return None
     power = math.fsum(row[3] for row in rows)
@@ -268,3 +280,28 @@ def climate_basket(basket: Basket, tile_record: Mapping[str, Any]) -> Basket:
     if not climate_floor_fields(basket):
         return basket
     return basket_with_floors(basket, climate_needs.floors_for_tile(tile_record))
+
+
+# TEMPORARY HEURISTIC (retire: Complaint 565 follow-up, a measured income elasticity of quality): how far a
+# cohort pays for quality is its surplus share of spending; a household with nothing above its floors buys
+# on cost alone.
+def quality_reach(spending: float, floor_cost: float) -> float:
+    """Share of a cohort's spending that is above its floors, 0 to 1."""
+    if spending <= 0.0:
+        return 0.0
+    return max(0.0, min(1.0, (spending - floor_cost) / spending))
+
+
+def with_quality_reach(priced: Sequence[PricedNeed], basket: Basket, reach: float) -> List[PricedNeed]:
+    """The priced needs re-mixed for a buyer who pays for quality to `reach`. A need whose goods declare no
+    quality factor is returned as it was."""
+    exponent = 1.0 - basket.substitution
+    result = []
+    for need in priced:
+        if not need.spec.qualities or reach <= 0.0:
+            result.append(need)
+            continue
+        prices = {good: price for good, price, _effect, _share in need.goods}
+        remixed = priced_need(need.spec, exponent, prices.get, quality_reach=reach)
+        result.append(need if remixed is None else remixed)
+    return result

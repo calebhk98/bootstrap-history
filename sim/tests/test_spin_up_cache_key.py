@@ -42,6 +42,21 @@ class SetupDigestTests(unittest.TestCase):
             self.assertNotEqual(base, economy_port_key.setup_digest(_Setup(**change)), change)
 
 
+class FloatNoiseTests(unittest.TestCase):
+    """A coin's scale reaches some setup fields as a last-place float difference; the economy amplifies such a
+    difference over the spin-up, so it must not make a different key."""
+
+    def test_a_last_place_float_difference_does_not_change_the_key(self):
+        value, next_float = 0.0009109426184587683, 0.0009109426184587684
+        self.assertNotEqual(value, next_float)
+        self.assertEqual(economy_port_key.setup_digest(_Setup(prices={"wheat": value})),
+                         economy_port_key.setup_digest(_Setup(prices={"wheat": next_float})))
+
+    def test_a_real_change_of_a_float_still_changes_the_key(self):
+        self.assertNotEqual(economy_port_key.setup_digest(_Setup(prices={"wheat": 1.0})),
+                            economy_port_key.setup_digest(_Setup(prices={"wheat": 1.000001})))
+
+
 class CoinTests(unittest.TestCase):
     """The economy counts money in its own unit and the port converts to coin, so games that differ only in
     their coin share one spin-up."""

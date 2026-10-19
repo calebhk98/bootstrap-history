@@ -84,6 +84,8 @@ def concern_world(producers, days, depths=None):
         economy=types.SimpleNamespace(agent_producers_by_good=lambda: producers),
         state=types.SimpleNamespace(scenario=types.SimpleNamespace(year=10)))
     stub._done_memo = lambda name, key, compute: compute()
+    stub._producers_memo = stub._done_memo
+    stub.labour = types.SimpleNamespace(base_tile=lambda: "base")
     stub.industry_depth = lambda node_id: (depths or {}).get(node_id, 0.0)
     stub.days_from_producers = lambda found: days
     return stub

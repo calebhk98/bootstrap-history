@@ -2878,7 +2878,7 @@
    "mason": 300.0
   },
   "mat": {
-   "brick_1000": 200.0,
+   "concrete_pozzolanic_kg": 3000000.0,
    "iron_bar_kg": 150.0,
    "timber_m3": 100.0,
    "wood_kg": 600.0
@@ -2891,6 +2891,7 @@
   "sch": 0,
   "art": 3,
   "conf": "C",
+  "_internal": "[BASIS: a pound-lock chamber of 40 m by 6 m with side walls 3 m thick and 5 m high (1200 cubic metres) and a 1.5 m floor (360 cubic metres) is about 1560 cubic metres, at about 1.9 tonnes per cubic metre of pozzolanic concrete (Lancaster 2005 for the density); timber, iron and wood are the gates, sluices and shuttering. The chamber size is a reasoned estimate, conf C.]",
   "note": "Locks allow boats to navigate waterfalls or height differences. Gates must seal perfectly; any leak drains the lock. The kernel is that operating a lock requires skill: chambers must be filled and drained at the right rate, and gates must close in sequence or water escapes."
  },
  {

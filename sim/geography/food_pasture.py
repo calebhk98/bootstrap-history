@@ -7,7 +7,7 @@ suitability; each head eats a fixed share of its body mass and returns milk and 
 """
 from typing import List, Mapping, Optional, Tuple
 
-from sim.geography import content_rules, food_land, tile_layers
+from sim.geography import content_rules, endemic, food_land, tile_layers
 from sim.geography.food_productivity import (GRAMS_PER_KG, SQUARE_METRES_PER_SQUARE_KM, land_available_to_wild_km2,
                                              lookup, net_primary_production, rows_of_mechanism)
 from sim.geography.food_season import growing_season_fraction
@@ -56,12 +56,19 @@ def kcal_per_head_year(row: dict) -> float:
             + row["offtake_fraction_per_year"] * row["carcass_kg"] * row["carcass_kcal_per_kg"])
 
 
+def herd_keeping(world_map: WorldMap, tile_id: str, row: dict) -> float:
+    """0 to 1: the share of a herd's yield left once endemic disease takes its loss. A herd's yearly offtake is
+    its surplus over replacement, so a loss at least that large leaves nothing to take and the herd dies out."""
+    loss = endemic.animal_loss(world_map, tile_id, (row["id"],))
+    return 1.0 if loss <= 0.0 else max(0.0, 1.0 - loss / row["offtake_fraction_per_year"])
+
+
 def herd_contributions(world_map: WorldMap, tile_id: str,
                        wild_stock: Optional[Mapping] = None) -> List[Tuple[str, str, float]]:
     reader = lookup(world_map, tile_id)
     suited = [(row, content_rules.suitability(row["envelope"], reader))
               for row in rows_of_mechanism(world_map, "herd_animal")]
-    suited = [(row, fit) for row, fit in suited if fit > 0.0]
+    suited = [(row, fit) for row, fit in suited if fit > 0.0 and herd_keeping(world_map, tile_id, row) > 0.0]
     if not suited:
         return []
     forage = usable_forage_kg(world_map, tile_id, wild_stock)
@@ -71,6 +78,6 @@ def herd_contributions(world_map: WorldMap, tile_id: str,
     result = []
     for row, fit in suited:
         intake_per_head = row["adult_mass_kg"] * intake_fraction * CIVIL_DAYS_PER_YEAR * charge
-        heads = forage * fit / crowding / intake_per_head
+        heads = forage * fit / crowding / intake_per_head * herd_keeping(world_map, tile_id, row)
         result.append((row["food_source"], row["id"], heads * kcal_per_head_year(row)))
     return result

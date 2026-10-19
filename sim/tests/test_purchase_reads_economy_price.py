@@ -52,8 +52,10 @@ check("the economy keeps the book of the founder's market for the staple", offer
 # sellers price at cost, so the schedule is flat until the book nears what they hold; the last order takes nearly all of it
 means = [market.purchase_cost(WHEAT, offered * share)[1] for share in (0.001, 0.05, 0.3, 0.99)]
 check("a larger order costs more a tonne", means == sorted(means) and means[-1] > means[0], means)
+# the price holds while the sale is smaller than the sellers' slack at the clearing price, then falls: sell past it
+sale_means = [market.sale_proceeds(WHEAT, offered * share)[1] for share in (0.01, 0.5, 5.0, 50.0)]
 check("a sale fetches less a tonne the more is sold",
-      market.sale_proceeds(WHEAT, offered * 0.5)[1] < market.sale_proceeds(WHEAT, offered * 0.01)[1])
+      sale_means == sorted(sale_means, reverse=True) and sale_means[-1] < sale_means[0], sale_means)
 check("...and buying then selling the same tonne never makes the founder money",
       market.sale_proceeds(WHEAT, 1.0)[0] <= market.purchase_cost(WHEAT, 1.0)[0])
 

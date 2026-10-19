@@ -6,11 +6,11 @@ import unittest
 from dataclasses import replace
 from types import SimpleNamespace
 
-from sim.economy import sites
+from sim.economy import location, opening, sites
 from sim.economy.opening import open_economy
 from sim.economy.producers import Producer
 from sim.economy.recipes import recipe_from_entry
-from sim.economy.types import Recipe, SiteLimit
+from sim.economy.types import MarketArea, Recipe, SiteLimit
 from sim.tests import economy_fixture as fixture
 
 
@@ -111,6 +111,30 @@ class FixtureScenarioTests(unittest.TestCase):
         record, _areas, _carriage = open_economy(self._setup((SiteLimit(fixture.MINE, fixture.HILLS, 5000.0),)))
         self.assertEqual({p.tile for p in record.producers.values() if p.recipe_id == fixture.MINE},
                          {fixture.HILLS})
+
+
+class OpeningSplitTests(unittest.TestCase):
+    def _area(self, tiles):
+        return MarketArea(area_id="a", good_id="ore", tiles=tuple(tiles), anchor_tile=tiles[0])
+
+    def test_an_area_with_sites_is_served_by_its_own_sites(self):
+        limits = (SiteLimit("dig", "town", 1e6), SiteLimit("dig", "hills", 1e9))
+        setup = fixture.small_setup(recipes={"dig": _bound()}, site_limits=limits)
+        split = location.opening_split(setup, _bound(), self._area(["town"]), 10.0)
+        self.assertEqual(split, {"town": 10.0})
+
+    def test_an_area_without_sites_draws_on_every_site_by_capacity(self):
+        limits = (SiteLimit("dig", "farms", 1e6), SiteLimit("dig", "hills", 3e6))
+        setup = fixture.small_setup(recipes={"dig": _bound()}, site_limits=limits)
+        split = location.opening_split(setup, _bound(), self._area(["town"]), 8.0)
+        self.assertAlmostEqual(split["farms"], 2.0)
+        self.assertAlmostEqual(split["hills"], 6.0)
+
+    def test_areas_without_sites_pool_their_runs_and_the_others_keep_theirs(self):
+        limits = {"town": SiteLimit("dig", "town", 1.0)}
+        shares = [(self._area(["town"]), 3.0), (self._area(["farms"]), 2.0), (self._area(["hills"]), 4.0)]
+        pooled = opening._sited_shares(shares, limits)
+        self.assertEqual([(area.tiles, runs) for area, runs in pooled], [(("town",), 3.0), (("farms",), 6.0)])
 
 
 class OrderTests(unittest.TestCase):

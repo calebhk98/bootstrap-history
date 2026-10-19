@@ -22,22 +22,27 @@ class DebtServiceMixin:
         flatter it."""
         revenue = self.revenue_capacity()
         upkeep = self.upkeep()
-        living = self.living_cost(_rev=revenue, _upkeep=upkeep)
-        return revenue - upkeep - living - self.mine_operating_cost()
+        return revenue - upkeep - self.recurring_living_cost(revenue, upkeep) - self.mine_operating_cost()
 
     def dependants_beyond_means(self, living, revenue, upkeep, mine_cost=0.0):
-        """The part of the dependants' cost a household in arrears cannot carry this year: what its income leaves
-        after upkeep, mine costs, the rest of its living cost and the interest on its arrears, less the share of that
-        surplus that goes to the creditors (DEBT_SERVICE_SHARE_OF_SURPLUS). A household with money keeps them all; one
-        in arrears lives within its income and pays its debt down, so debt does not grow by the gap year after year."""
+        """The part of the dependants' cost the household cannot carry this year: what its income leaves after
+        upkeep, mine costs, the rest of its living cost and the interest on any arrears. A household with savings
+        keeps all that surplus for its dependants (its savings are not spent on them); one in arrears also pays the
+        creditors their share of it (DEBT_SERVICE_SHARE_OF_SURPLUS). Either way it lives within its income, as a
+        society household of the same income does, so a lone scholar's wage that covers one person's subsistence
+        does not bleed the purse for a household the wage cannot keep."""
         capital = self.state.household.capital
-        if capital >= 0:
-            return 0.0
         dependants = self.dependants_cost()
-        interest = -capital * self.debt_interest_rate()
+        interest = max(0.0, -capital) * self.debt_interest_rate()
         surplus = revenue - upkeep - mine_cost - (living - dependants) - interest
-        carried = surplus * (1.0 - self.DEBT_SERVICE_SHARE_OF_SURPLUS)
+        creditors_share = self.DEBT_SERVICE_SHARE_OF_SURPLUS if capital < 0 else 0.0
+        carried = surplus * (1.0 - creditors_share)
         return dependants - min(dependants, max(0.0, carried))
+
+    def recurring_living_cost(self, revenue, upkeep):
+        """The living cost of an ordinary next year: what is paid once the dependants the income cannot carry are shed."""
+        living = self.living_cost(_rev=revenue, _upkeep=upkeep)
+        return living - self.dependants_beyond_means(living, revenue, upkeep, self.mine_operating_cost())
 
     def recurring_net(self):
         """Recurring net after the interest arrears cost now."""

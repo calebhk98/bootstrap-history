@@ -3,6 +3,8 @@ and what the cash could not repay becomes the lenders' loss."""
 import math
 from typing import Dict, List, Tuple
 
+from sim.contracts import TERM_LOAN
+
 from . import credit_claims, ownership
 from .accounts import ROUNDING_SHARE
 from .credit import Default
@@ -31,7 +33,7 @@ def exit_producer(record, producer_id: str, payout: List[Transfer]) -> List[Tran
     for lender, lost in credit_claims.losses_by_lender(defaults).items():
         record.credit_losses[lender] = record.credit_losses.get(lender, 0.0) + lost
     record.remembered_defaults = credit_claims.remember_defaults(record.remembered_defaults, defaults)
-    record.loans = [loan for loan in record.loans if loan.borrower != producer_id]
+    record.contracts.default(producer_id, TERM_LOAN)
     record.worn_runs.pop(producer_id, None)
     record.expansion_runs.pop(producer_id, None)
     del record.producers[producer_id]

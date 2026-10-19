@@ -10,6 +10,7 @@ import random
 
 from sim.constants import declare
 from sim.disease import api as disease
+from sim.geography.api import endemic_people_loss, tiles_held
 from sim.world import demography
 
 BANDS = ("children", "working_age", "elderly")
@@ -138,6 +139,10 @@ class DiseaseWorld:
 
 class DiseasePortMixin:
     """Gives `Sim` its yearly disease step. The state is `self.state.disease` (saved with the game)."""
+
+    def endemic_death_rates(self):
+        """{band: excess deaths per head per year} from the endemic diseases of the tiles the nation holds."""
+        return endemic_people_loss(tiles_held(self.civ, self.world_map), self.world_map)
 
     def disease_year(self, food_available_calories_per_day, year=None):
         """Run the year's epidemics and return `{band: deaths}` for `Population.step(epidemic_deaths=...)`.
