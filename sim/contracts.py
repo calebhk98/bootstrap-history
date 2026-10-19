@@ -112,9 +112,10 @@ class Contracts:
         held = self.facilities.get(borrower)
         if held is None:
             return
-        if sum(contract.principal for contract in held.values()) <= floor:
+        principals = [contract.principal for contract in held.values()]
+        if sum(principals) <= floor:
             del self.facilities[borrower]
-        else:
+        elif min(principals) <= floor:
             for lender in [who for who, contract in held.items() if contract.principal <= floor]:
                 del held[lender]
 
