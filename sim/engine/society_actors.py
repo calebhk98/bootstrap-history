@@ -104,6 +104,13 @@ class ActorsMixin:
             return 0
         return self.actors.version[0]
 
+    def concern_set_version(self):
+        """Changes whenever the set of concerns actors run does, not when only a concern's size does."""
+        state = self.state.actors
+        if state is None or not state.records:
+            return 0
+        return self.actors.concern_set_version[0]
+
     def state_treasury(self):
         """The government actor of the acting seat's country: the founder's civilisation unless the seat belongs
         to a partner country that has a government of its own in the cast."""

@@ -65,6 +65,18 @@ def advance(merchant, specs: Mapping[GoodId, GoodSpec]) -> Tuple[GoodsMove, ...]
 _years_between: "weakref.WeakKeyDictionary" = weakref.WeakKeyDictionary()
 
 
+def years_kept_for(carriage):
+    """The memo `years_between` keeps for this carriage table ((from, to) -> years), made if none yet; None for a
+    table that cannot be weakly held."""
+    try:
+        memo = _years_between.get(carriage)
+        if memo is None:
+            memo = _years_between[carriage] = {}
+    except TypeError:
+        return None
+    return memo
+
+
 def years_between(carriage, from_tile: TileId, to_tile: TileId) -> int:
     """`years_held` of the days between two tiles, kept per carriage table (its days never change)."""
     try:

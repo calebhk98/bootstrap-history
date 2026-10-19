@@ -180,6 +180,38 @@ policies (`api.policy`) and spawners (`api.spawner`); every name is forced into 
 state only in `api.state(sim.state.interface)`, a plain dict that is saved with the game, and draws random numbers
 only from `api.rng(world, ...)`, so saves and the fingerprint stay reproducible.
 
+### Adding a phase to the year
+
+`api.phase(name, scope, handler, after=..., before=...)` adds a step to the year. `scope` is `"seat"` (`handler(sim,
+seat_id)`, run once for each seat still in play, inside that seat's `act_as`) or `"world"` (`handler(sim, seats)`,
+run once; it may return a shorter list of seats, and an empty list ends the year). `after` and `before` take a
+phase name or a list: a shipped phase (the registry in `sim/engine/year_phases.py`, whose `SHIPPED` list is the
+order) or another mod's `<mod_id>:<name>`. At least one is required. The phase is placed right after its latest
+`after` and right before its earliest `before`; several mods after the same phase run in mod load order. Adjacent
+seat phases run together seat by seat. A constraint that names an unknown phase, forms a cycle, or cannot hold
+together is a load error naming the mod and the phase.
+
+### Changing the world
+
+A handler or phase changes the world only through `api.effects` (sim/engine/mod_effects.py); reaching into `Sim`
+attributes or package internals is unsupported and bypasses the conservation checks. Every operation takes `sim`
+first, needs a cause in words, and goes through the normal rules:
+
+* `pay(sim, payer_id, payee_id, amount, purpose)`: coin between two actors through the ledger.
+* `pay_edge` / `receive_from_edge(sim, actor_id, edge, amount, purpose)`: coin to or from a named edge (the `EDGE_*`
+  names in `sim/agents/edges.py` and the economy's goods edges, or your own `edge:<mod_id>:<name>`). An unnamed or
+  unknown edge is an error, so money is never made or lost without a counterparty the books show.
+* `add_goods` / `remove_goods(sim, account_id, good, tile, quantity, cause)`: goods enter or leave the economy's book
+  at a tile against a named edge (production and consumption by default); removing more than the account holds is
+  refused.
+* `kill_people(sim, country, share, cause)`: the same death path hazards use; returns the event, whose `died` fact
+  says how many. `move_people(sim, from_stratum, to_stratum, count, cause)` shifts people between strata.
+* `transfer_tile(sim, tile, to_actor, cause)`: ownership change; the event log records it.
+* `write_store(sim, name, key, value)`: a store this mod declared (another owner's is an error).
+* `record_event(sim, kind, cause, actors=..., tiles=..., **facts)`: a world event; the kind is forced into `<mod_id>:`.
+
+The base game's own world hazards call the same `kill_people` and `record_event`, so a data hazard and a mod act alike.
+
 **Python in a mod is not sandboxed.** It runs in the game's process with the player's full permissions: files,
 network, credentials. Nothing inside CPython holds against a hostile author, and the `api` is an interface for
 honest mods, not a defence. The protection is consent: code runs only after the player runs
@@ -187,6 +219,23 @@ honest mods, not a defence. The protection is consent: code runs only after the 
 `mods/consent.json` (local to the player, not committed). A changed file needs consent again; an unallowed mod's
 data still loads but its code does not, and `validate` lists it. Allow code only from an author you trust. A real
 boundary needs a separate process or WASM host with an allowlisted message interface; that is not built.
+
+## Stores: values per tile, actor or actor pair
+
+A store is a named value kept for every tile, every actor or every ordered pair of actors, saved with the game
+and readable by anything that reads state. Declare it in `data/stores.json` of the mod:
+
+    {"stores": {"<mod_id>:mana": {"keyed_by": "tile", "default": 0.0, "unit": "mana"}}}
+
+or from code, `handle = api.store("mana", keyed_by="tile", default=0.0, unit="mana")`; `keyed_by` is `tile`,
+`actor` or `actor_pair`. Names are `<mod_id>:<name>` and declared once across the base game and every mod (a
+duplicate is a load error naming both). Code reads and writes through the handle (`handle.get(sim, key)`,
+`handle.set(sim, key, value)`, `handle.items(sim)`; a pair key is the tuple `(first, second)`, and order matters)
+or `api.write_store(sim, name, key, value)`; writing an undeclared store, or another mod's, is an error naming the
+mod. Only values that differ from the default are saved (`state.stores`). A figure or a `read` command reaches a
+value with the state path `stores.<mod_id>:<name>.<key>` (a pair key is `first|second`), and `map layer
+<store name>` adds the value to each tile row of the map screen. The base game's own stores are in
+`data/world/stores.json`; tile `control` (how firmly an owner holds a tile) is one.
 
 ## Actor kinds
 

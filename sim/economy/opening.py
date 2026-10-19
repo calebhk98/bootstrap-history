@@ -12,7 +12,7 @@ from typing import Dict, List, Mapping, Tuple
 
 from sim.constants import declare
 
-from . import currency, goods_market, opening_income, opening_metal, opening_runs, households, households_store, labour_state, location, location_inputs, mint, opening_stores, ownership, sites, unit_cost
+from . import currency, goods_market, opening_income, opening_metal, opening_runs, households, households_store, labour_state, location, location_inputs, mint, opening_stores, ownership, sites, titles, unit_cost
 from .accounts import Book
 from .market_areas import AreaMap
 from .market_memory import MarketMemory, YearView, market_key
@@ -124,6 +124,7 @@ def _open_cohorts(setup, record) -> None:
         for cohort in households.cohorts_for_tile(tile, people, setup.working_share, setup.gini,
                                                   opening_income_per_capita=income):
             record.cohorts[cohort.agent_id] = cohort
+    titles.seed(record)
 
 
 def _settle_income(setup, record, view, priced_goods, replacement) -> None:
@@ -232,6 +233,14 @@ def _within(area, tiles):
         area, tiles=kept, anchor_tile=area.anchor_tile if area.anchor_tile in kept else kept[0])
 
 
+def _sited_shares(shares, limits):
+    """A sited recipe's runs by area: an area holding a site keeps its share for its own sites; the areas
+    holding none pool theirs on the first of them, which opening_split then spreads over every site."""
+    held = [(area, runs) for area, runs in shares if any(tile in limits for tile in area.tiles)]
+    bare = [(area, runs) for area, runs in shares if not any(tile in limits for tile in area.tiles)]
+    return held + ([(bare[0][0], math.fsum(runs for _area, runs in bare))] if bare else [])
+
+
 def _place_producers(setup, record, area_map, carriage, final_by_tile, incumbents, runs, within=None) -> None:
     """Each market area of the recipe's main output gets its share of the runs, sized by the area's share
     of the demand for that good (households' and the already placed producers' that use it as an input; its
@@ -263,7 +272,7 @@ def _place_producers(setup, record, area_map, carriage, final_by_tile, incumbent
         shares = [(area, count * weight / total) for _id, (area, weight) in sorted(weights.items())
                   if total > 0.0 and weight > 0.0]
         if sites.is_sited(recipe, by_limits) and shares:
-            shares = [(shares[0][0], count)]               # a sited recipe's tiles are the limits', in any area
+            shares = _sited_shares(shares, by_limits[recipe.recipe_id])
         fixed = {} if sites.is_sited(recipe, by_limits) else location_inputs.fixed_inputs(recipe, incumbents, setup.recipes, by_limits)
         if fixed:
             tiles = sites.suited_tiles(recipe, setup.tiles, sorted(within) if within is not None else sorted(setup.tiles),

@@ -7,7 +7,7 @@ import functools
 import math
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Tuple
 
-from sim.geography import map_source, tile_layers
+from sim.geography import map_source, tile_layers, tile_owners
 
 HECTARES_PER_KM2 = 100.0
 
@@ -32,10 +32,15 @@ def tiles_of_regions(regions: Iterable[str], world_map: Optional[map_source.Worl
     return sorted({tile_id for region in regions for tile_id in grouped.get(region, ())})
 
 
-def tiles_held(civilisation: Mapping[str, Any], world_map: Optional[map_source.WorldMap] = None) -> List[str]:
+def tiles_held(civilisation: Mapping[str, Any], world_map: Optional[map_source.WorldMap] = None,
+               owners: Optional[Mapping[str, Mapping[str, str]]] = None) -> List[str]:
     """The tiles a civilisation holds: those it lists as `home_tiles`, else the tiles its `home_regions`
-    labels name (a region is only a label over tiles). Sorted; tiles the map lacks are not held."""
+    labels name (a region is only a label over tiles). Sorted; tiles the map lacks are not held. Given the
+    owner map (tile_owners), the tiles that map gives the civilisation's id instead."""
     world_map = _map(world_map)
+    if owners is not None:
+        return [tile_id for tile_id in tile_owners.tiles_of(owners, str(civilisation.get("id")))
+                if tile_id in world_map.tiles]
     listed = civilisation.get("home_tiles")
     if listed is None:
         return tiles_of_regions(civilisation.get("home_regions") or [], world_map)

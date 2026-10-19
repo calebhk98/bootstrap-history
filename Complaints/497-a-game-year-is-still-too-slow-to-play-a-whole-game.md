@@ -131,3 +131,72 @@ under a tenth. Shared-machine variation in a whole step is larger than that, so 
 `_good_routes` arguments, interleaving the old and new function. What remains is the loop itself (one carriage
 lookup per destination examined, per source, per good, per merchant); cutting it further needs fewer distinct
 questions, not a faster answer.
+
+## Merchants with no cash search only for the stock they hold; book totals read without per-agent sorting
+
+In a saved Rome game (`python3 sim/simulator.py play --civ rome_100ad --session FILE`, then `step 1`), nearly all
+merchants hold stock but no cash and no capital. `merchants.orders` built the whole candidate-route list for each
+of them (every good, every source area) although a merchant that cannot buy uses the list only to send stock it
+already holds along the route out of its area, and `credit_request` returns before searching for a merchant with no
+equity. `orders` now asks `_candidate_routes` for the held goods only, and `_good_routes` for the source areas
+holding that stock only (`only_held`, `source_ids`); each row is the row the full search gives, the partial result
+stays out of the memo the full searches share, and the held-tile list is sorted once per good instead of once per
+row. A merchant with cash searches as before. Also: `merchants.close_year` learns prices and volumes inline (same
+arithmetic as `_expect`) and `year_close` works the news lag out once per anchor tile per merchant; the year's
+stock totals (`year_accounts.stocks`) come from `Book.goods_totals` instead of `holdings` for every agent
+(`math.fsum` is order independent, emptied stock is skipped as before).
+
+Same stepped save before and after (sorted-key dump of the save after three warm years, byte-identical); the
+totals were also compared with the old computation at each call over two years. Measure CPU per warm year as the
+CPU between the second and third `play` prompts of a saved game stepped one year first (in-process, patching
+`input`): about a fifth lower (roughly 5.6 s to 4.6 s on a shared machine, including one save per command), with
+`merchant_orders` falling from about a quarter of the economy's year to a twentieth. Left alone, measured as
+flat: the clearing core (`clear_goods`), producers' planning and closing (about 5000 producers a year, each
+costing the same unit costs several times), the labour year, and `MarketView.area_of` (half a million calls over
+two years, spread over households, producers and entry).
+
+## Round 2: route search skips what cannot pay; the year is flat, merchants are its largest part
+
+Measured on a fresh `rome_100ad` save, a year (warm, `step 2` after `step 1`, CPU) is about seven seconds on the
+shared machine, nowhere near the target. Wrapping the economy's phases in `time.process_time` (not under
+`cProfile`, which inflates call-heavy code) gives, as shares of a stepped year: merchants' orders and credit
+requests together about three tenths, `clear_goods` about a fifth, `close_agents` a tenth, the labour clearing
+under a tenth, entry and households' orders a few percent each. Producers' planning is about two percent and
+their closing about five, so the "five thousand producers a year" lead from round 1 is not where the time is.
+
+What was cut, each exact (same stepped save: the sorted-key dump of the save after three warm years is
+byte-identical before and after): `merchants._good_routes` returns at once when the dearest destination, kept
+after spoilage, cannot cover the cheapest source's floor cost, skips a source whose floor cost the dearest
+destination cannot cover before reading its carriage row, sorts the destinations as plain tuples instead of by a
+key function, and reads the years a haul is held from the table's own memo (`merchants_transit.years_kept_for`);
+`shared_room` no longer builds an empty sum for a good the merchant does not hold. Replaying the captured
+`_good_routes` calls of one year against a copy of the old function (interleaved, `time.process_time`) gives
+about a fifth less CPU in that function and no differing row (`sim/tests/test_merchant_good_routes_exact.py` keeps
+the equivalence against a search that tries every destination). Whole-year function calls under `cProfile` fall
+by about a tenth; whole-year CPU moved by less than the machine's run-to-run variation (a few percent either way
+at a load average of six), so no per-year saving is claimed beyond that.
+
+Checked and left alone, with what was found:
+
+- **Sharing the search between merchants.** Across the merchants of one year nearly nine in ten full searches
+  differ in some area's price (a median of about a seventh of the areas, by a median of about an eighth of the
+  price): the merchants' own expectations are genuinely different, so a bigger memo or a shared base search
+  cannot be exact. The credit pass and the ordering pass also see different interest rates (the credit clearing
+  moves the rate between them), so they cannot share either.
+- **A nearest-first walk of destinations.** Replaced the walk over dearer destinations by a walk outward by
+  carriage cost with an early stop. Exact, but about twice as slow: a source examines only a handful of dearer
+  destinations (a few per source), while the nearest-first order has to step over every nearby tile.
+- **Producers' repeated unit costs.** Memory prices change as each good clears, so a cost computed at planning
+  is not the one the seller's search sees later; caching across those calls is not exact. Within one call the
+  repeats are a few dict reads each.
+- **`MarketView.area_of`** is already a per-view dict lookup (`YearView._area_by_tile`); the call count is the
+  cost, spread over households, producers and entry.
+- **`clear_goods`**: a market has on average between one and two sellers, so the book's sorting and the
+  reservation search are not repeated over long lists; what is left is the per-market fixed work.
+- **Collection.** `Economy.step` shows a few percent of its own time after the year: the cyclic collector, kept
+  off during the year, walks the whole young generation when it is switched back on. Freezing the heap instead
+  would keep the year's cyclic garbage for good, so it was not done.
+
+What would still move a year by a quarter is structural, as listed above: one `play` process for many commands,
+shipped price tables for every rate band, fewer merchants' distinct searches (a model change), or compiled
+clearing.

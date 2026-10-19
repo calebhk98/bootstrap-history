@@ -137,6 +137,7 @@ s_ab = _neg
 s_ab.done.add(_LOSS); s_ab._done_changed()
 s_ab.operating.add(_LOSS)
 s_ab.revenue = lambda: 0.0
+s_ab.state.household.capital = -100000.0   # in arrears, as the household was made; earlier scenarios settled the debt
 s_ab._step_money_seat()    # the year's money phase is where insolvency sheds
 check("no path in the engine leaves a work mothballed but unknown",
       _LOSS in s_ab.mothballed and not (s_ab.mothballed - s_ab.done),

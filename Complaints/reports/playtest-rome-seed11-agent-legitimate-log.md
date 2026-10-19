@@ -1,0 +1,14 @@
+# Playtest 2 log (rome_100ad seed 11, branch pm-complaints-burndown fb462538)
+- 100 AD: money 144, rep 5, revenue 59/yr (wages for own work), net +6.5. First start of game took ~100-140s (cold solve cache / flock wait on a concurrent test run), later starts ~10s.
+- 100: started pwr_coking (cost 40). why says revenue 64.5/yr, but opening needs 4.5 craftsmen supervision + 207 den charge; cheapest craft hire ~43/yr (mason). Looks net-negative: MISLEADING earns figure.
+- 102: coking done, closed. money 125.6, rep 6.7, net 26.9. step 2y took 24s.
+- 105: identity_cover, scientific_method, notation, arithmetic done. scandal rising 4->14 by 109; state_attention lists my textile loom (0 revenue) as pushing textile price down 60% - suspicious.
+- 106: quote mine iron 100t/yr: sink 3.2 den, stand 51/yr; iron price 4421/t vs making cost 52/t. bought it with 26 den cash. 109: producing 100t/yr; sold 10t -> +45,546 den. EXPLOIT-LIKE balance bug (making and selling, so allowed, but absurd)
+- 109-111: sold 200t iron for ~580k total (price fell 4557 -> ~1490/t after my 190t sales). hired 3 scholars 5 masons, opened coking (really earns ~0 once opened; ventures listed 64.5). rush (no preview flag) returned a preview not a start - confusing. rep 12.7
+- 119: money 2.44M (iron sales ~300t/2y at falling price), rep 32, scandal 22 (danger 25), 263+ done, 7 concerns running 12 shut. Projects fail minor setbacks routinely.
+- 125: money 3.48M, rep 43, scandal 21, ~30 goal nodes done. Iron sale stock report inconsistent (sold 400 -> reply says stock 1274 left; next sell only 149 available).
+- 133: ran out of startable goal nodes (104 remain, none startable: need trained scholars/trades). Opened all capabilities blindly (@openall) - wasted 79k on cementation_steel opening; 17 shut for lack of craft supervisors. Hired staff vanishes: masons 5->3, scholars 3->1 over 20y. Training 2 chemists costs 900 founder hours.
+- 139: money 3.0M rep 39 scandal 12; net now +184k/yr (concerns earning). trained chemist/engineer/machinist/optician/electrician (900h per 2 people). em_theory done. Goal path 100 remaining; school_founded needs 2000h.
+- 141: step 2y took 73.6s (machine load ~5 from other sessions test runs); next step >200s still running. money 3.5M net +461k/yr, rep 36.8, scandal 11.6. school_founded started (2000h, 4y floor). precision_three_plate done.
+- 143: 2-year step took 485s wall (machine load 4-5 from other agents tests, but also 98% CPU single thread; game.json save is 50MB). money 5.4M, net +1.16M/yr, rep 35.8, school_founded + cap_tol_100um done.
+- 143: STUCK. step 1y did not finish in 30+ min (traceback: firm.act -> pay_interest -> note_lender_posting); game.json grew 50MB->80MB. State at 143: money 5.37M, rep 35.8, 62/163 goal steps, 32 concerns running. Stopped here.

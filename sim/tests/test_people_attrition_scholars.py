@@ -40,7 +40,7 @@ check("...and with auto_hire off and nobody hiring, the headcount only ever "
       _never_grew, _prev)
 
 # UNBIASED: the realised loss, averaged over many people and many
-# independent seeds, should still land on the nominal 3.5%/yr.
+# independent seeds, should land on the working-age mortality rate (pay is at the market, so nobody takes a better offer).
 _before_att, _after_att = 0.0, 0.0
 for _seed in range(1, 31):
     s.rng = random.Random(_seed)
@@ -50,9 +50,10 @@ for _seed in range(1, 31):
     _before_att += 2000.0
     _after_att += s.employees.get("artisan", 0.0)
 _att_rate = 1.0 - _after_att / _before_att
-check("whole-person attrition still averages the nominal 3.5% a year, over "
-      "many people and many seeds",
-      0.030 < _att_rate < 0.040, _att_rate)
+from sim.world import demography
+_death_rate = demography.BASELINE_ANNUAL_MORTALITY_RATE_WORKING_AGE
+check("whole-person attrition averages the working-age mortality rate, over many people and many seeds",
+      abs(_att_rate - _death_rate) < 0.003, (_att_rate, _death_rate))
 
 # HIRE AND TRAIN LAND WHOLE PEOPLE.
 s = sim(capital=1e6)

@@ -334,6 +334,18 @@ class Book:
                 goods[good] = tiles
         return {"money": money, "goods": goods}
 
+    def goods_totals(self) -> Dict[GoodId, float]:
+        """Quantity held of each good by the agents (edge accounts excluded), goods in name order."""
+        held: Dict[GoodId, List[float]] = {}
+        for agent, by_good in self._goods.items():
+            if is_edge(agent):
+                continue
+            for good, by_tile in by_good.items():
+                quantities = [value for value in by_tile.values() if value != 0.0]
+                if quantities:
+                    held.setdefault(good, []).extend(quantities)
+        return {good: math.fsum(quantities) for good, quantities in sorted(held.items())}
+
     def agents(self) -> List[AgentId]:
         return sorted(set(self._money) | set(self._goods))
 

@@ -11,6 +11,7 @@ from .agent_command_helpers import ask_agent, with_end_year
 
 AQUEDUCT, PUMPING, TOWER, TREATMENT = "civ_aqueduct_roman", "civ_pumping_station", "civ_water_tower", "civ_water_treatment"
 CHAIN = (TOWER,)   # the aqueduct is held by the society at the opening, so the pumping station is the gate that can close
+OPENING_PURSE_PER_PROJECT_COST = 10.0   # a purse many times the works' project cost covers their opening stock
 VOYAGE = "exp_atlantic_crossing"
 HARBOUR, BUOY = "civ_harbour_dock", "sea_drydock"
 
@@ -33,11 +34,13 @@ check("two years on, the tower is still shut while the pumping station is",
       not any(game.running(work) for work in CHAIN), [game.running(work) for work in CHAIN])
 check("...and the log says why", any(cause_of(line) == "work_closed_gate_lapsed" for _year, line in game.state.household.log), None)
 
+# the gate is what is under test, not the purse: cover both works' costs so what the opening stock costs at the
+# prices of the day cannot decide whether the tower may be opened
+game.capital = OPENING_PURSE_PER_PROJECT_COST * sum(game.project_cost(work) for work in (PUMPING,) + CHAIN)
 reopened, message = game.open_venture(PUMPING)
-check("the pumping station can be reopened", reopened or cause_of(message) == "cash_short", message)
-if reopened:
-    again, why = game.open_venture(TOWER)
-    check("with the pumping station back, the tower can be opened again", again, why)
+check("the pumping station can be reopened", reopened, message)
+again, why = game.open_venture(TOWER)
+check("with the pumping station back, the tower can be opened again", again, why)
 
 # --- a harbour and its buoy.
 harbour_game = with_end_year(sim())

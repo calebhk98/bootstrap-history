@@ -118,3 +118,36 @@ expectation.
 flux traded and the copper price are unchanged over five years (copper 2.88, 8.40, 12.44, 13.67, 15.47 before and
 after), because the flux gap is a few kilograms and flux entry is never sized there. The test still fails (0.047
 against 0.441) and reads year zero only. The full-spin-up case was not rerun.
+
+Note (Complaint 570): the opening now makes the charcoal its smelters burn, which raised tin against copper at the opening; the check `economy_tin_dearer_than_copper` still fails by a narrower margin.
+
+## Update 5: year-zero copper is a spin-up transient plus a labour ceiling; no engine defect found, check kept
+
+Traced on `tin-against-copper` (from `pm-complaints-burndown`) by stepping `rome_100ad` one year on the suite's
+opening (the harness sets `ROME_SPIN_UP_YEARS=3,2`) and on longer ones, with throwaway in-process probes (spies on
+`producers.plan`, `producers.produce`, `year_labour.run_labour_year`; the book's edge flows; `notional.making_costs`).
+Read each price against its making cost at the shown input prices and at the full chain cost (every input at its own
+making cost, labour at the shown wages):
+- Tin shows above its labour and near its cost (a little under cost at the shown inputs, a little over its chain cost).
+  Gravel sellers, tin works and the gravel price are not the gap.
+- Copper shows several times its chain cost and a little over twice its making cost at the shown inputs. Its inputs
+  carry scarcity too: wood well above its labour, charcoal above its making cost, ore above its making cost. Copper
+  burns far more charcoal and ore per kilogram than tin, so the same scarcity weighs on it far more.
+- Even with both metals at exactly their chain cost the ratio sits just under the embodied-labour ratio, so the check
+  asks that copper show at or just above its chain cost in year zero.
+- Why copper does not: the suite's opening is not settled (`spin_up_result["settled"]` is false). In its last hidden
+  year the smelters ran almost nothing (their expected price sat under their expected cost) while the brass and bronze
+  makers consumed copper from seeded stock (`book.edge_goods_net` on `edge:production` and `edge:consumption`). Stock is
+  gone in year zero, and each smelter may move only `OUTPUT_CHANGE_SHARE_PER_YEAR` of capacity from last year's runs
+  (`within_a_years_change`), so supply is a fraction of the demand and the sold-out asks rise. Where that pace does not
+  bind, smith hours do: every copper labour area has smith vacancies at a wage equal to its ceiling, the cost of
+  training a substitute (`trained_substitute_wage`, `sim/labour/market/clearing.py`), while the smelters bid far above it. Cash, ore,
+  charcoal and flux do not bind.
+- A longer spin-up does not cure it. With `ROME_SPIN_UP_YEARS=6,2` the smelters run at about half of capacity, the
+  smith ceiling binds everywhere, and copper climbs to tens of times its cost (the ask raise on sold-out sellers keeps
+  ratcheting while supply cannot respond). The shipped full opening has a different price level and other outliers
+  (flux far over its cost); not traced.
+So the year-zero gap is the model's own short-run answer (a trade whose hands cannot grow within the year, a producer
+that idled the year before), not a recipe, entry or accounting error. Raising the smith wage above the training-cost
+ceiling in a vacancy, or allocating scarce hours by value, is a labour-core design decision (the `trained_substitute_wage` rule, the
+wall in `sim/labour/`), not made here. No code change; the check is unchanged and stays red.

@@ -21,17 +21,27 @@ SALE_PREFIX, BUY_PREFIX = "sale:", "buy:"
 
 
 def note_sale(sales: List[dict], seller: str, material: str, tonnes: float,
-              from_concerns: Optional[Sequence[Tuple[str, float]]]) -> None:
-    """A seller's tonnes of a material for the year; the same seller and material join into one."""
+              from_concerns: Optional[Sequence[Tuple[str, float]]], index: Optional[list] = None) -> None:
+    """A seller's tonnes of a material for the year; the same seller and material join into one. `index` is the
+    caller's [list indexed, its length when indexed, {(seller, material): sale}], kept so that each note is a lookup."""
     if tonnes <= 0.0:
         return
-    for sale in sales:
-        if sale["seller"] == seller and sale["material"] == material:
-            sale["tonnes"] += tonnes
-            sale["concerns"] = (sale["concerns"] or []) + [list(each) for each in (from_concerns or [])]
-            return
-    sales.append({"seller": seller, "material": material, "tonnes": float(tonnes),
-                  "concerns": [list(each) for each in (from_concerns or [])]})
+    if index is None:
+        index = [None, 0, {}]
+    if index[0] is not sales or index[1] != len(sales):
+        index[0], index[1], index[2] = sales, len(sales), {}
+        for sale in sales:
+            index[2].setdefault((sale["seller"], sale["material"]), sale)
+    sale = index[2].get((seller, material))
+    if sale is not None:
+        sale["tonnes"] += tonnes
+        sale["concerns"] = (sale["concerns"] or []) + [list(each) for each in (from_concerns or [])]
+        return
+    sale = {"seller": seller, "material": material, "tonnes": float(tonnes),
+            "concerns": [list(each) for each in (from_concerns or [])]}
+    sales.append(sale)
+    index[1] = len(sales)
+    index[2][(seller, material)] = sale
 
 
 def note_purchase(purchases: List[dict], buyer: str, commodity: str, tonnes: float, budget: float) -> None:

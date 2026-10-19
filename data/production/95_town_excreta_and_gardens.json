@@ -1,0 +1,41 @@
+{
+ "_note": "Town urine and nightsoil, and the market garden that spreads nightsoil (Complaints/544). No recipe lets a household output a good, so people's excreta enter the economy through collection recipes: the kilograms a person voids in a year are stated on each (excreted_kg_per_person_year, a physical fact for a test to read), the labour is gathering and carrying. Urine is bought by fullers and tanners (40_organics.json), nightsoil by market gardens below.",
+ "materials": {
+  "urine_kg": {
+   "outputs": {"urine_kg": 1000.0},
+   "inputs": {},
+   "labour_hours": {"labourer": 12.0},
+   "excreted_kg_per_person_year": 550.0,
+   "extracted_from": "town households (urine voided into jars and privies)",
+   "unit_dimension": "mass",
+   "basis": "per tonne of urine collected from town households and carried to the works",
+   "yield_basis": "COLLECTED. An adult voids on the order of one and a half litres of urine a day, about 550 kg a year (physiology textbooks give one to two litres; recalled, not opened; conf C), of which urine is about a thousand and ten grams a litre. Gathering is emptying street jars and household pots into a barrel and carrying it a short way: twelve labourer hours a tonne (author's estimate, conf D). The supply a town can give is its people times the excreted figure times the share collected; the share is not modelled, so the labour is the only limit (a limit that needs households to output goods; see the resolution in Complaints/closed/544). Sole output, so the cost is the collection labour.",
+   "conf": "D",
+   "requires_node": null
+  },
+  "nightsoil_kg": {
+   "outputs": {"nightsoil_kg": 1000.0},
+   "inputs": {},
+   "labour_hours": {"labourer": 20.0},
+   "excreted_kg_per_person_year": 600.0,
+   "extracted_from": "town households (privies and cesspits)",
+   "unit_dimension": "mass",
+   "basis": "per tonne of nightsoil (privy contents, faeces and urine together) collected and carried out of town",
+   "yield_basis": "COLLECTED. Faeces are on the order of 100 to 150 g wet a day, about 50 kg a person-year, and the urine that goes down the same privy another 550 kg, so about 600 kg of mixed nightsoil (physiology textbooks; recalled, not opened; conf C). Emptying a pit, loading buckets and carrying them to a cart is slow, foul work: twenty labourer hours a tonne (author's estimate, conf D). The supply a town can give is its people times the excreted figure times the share collected; the share is not modelled, so the labour is the only limit. Sole output, so the cost is the collection labour.",
+   "conf": "D",
+   "requires_node": null
+  },
+  "vegetable_kg": {
+   "outputs": {"vegetable_kg": 15000.0},
+   "inputs": {"nightsoil_kg": 20000.0},
+   "labour_hours": {"labourer": 1800.0},
+   "land_hectare_years": 0.99999105,
+   "extracted_from": "arable land",
+   "unit_dimension": "mass",
+   "basis": "per hectare of market garden cropped for one year, as kg of fresh vegetables (cabbage, onion, beet, legumes in pod) sold to the town",
+   "yield_basis": "GROWN. A hand-worked garden beside a town, cropped more than once a year on ground manured heavily with nightsoil: fifteen tonnes fresh a hectare is the low end of intensive garden yields (recalled from Chinese and Roman garden accounts, Columella's De re rustica book 10 and F. H. King, Farmers of Forty Centuries, 1911, neither opened; conf D). Nightsoil is applied at about twenty tonnes a hectare a year in the Chinese practice King describes (recalled; conf D). Labour: digging, bedding, watering, weeding and picking by hand, about eighteen hundred hours a hectare (author's estimate, below the several thousand some records give; conf D). LAND: one hectare-year charged at hectare_land's rent like wheat_kg. The soil has no nutrient stock in the model (Complaints/543), so the nightsoil is a cost of the garden's yield, not a restoration of a pool. Food value is a tenth of wheat grain a kilogram (data/world/needs.json).",
+   "conf": "D",
+   "requires_node": null
+  }
+ }
+}

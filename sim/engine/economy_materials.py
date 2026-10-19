@@ -47,6 +47,7 @@ import collections
 
 from . import commodities as _commod, material_capacity
 from sim.constants import declare
+from sim.geography.api import tiles_held, timber_mean_increment_tonnes_per_hectare_year
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
 
@@ -66,19 +67,18 @@ class _StockLedger(collections.Counter):
 class MaterialSupplyMixin:
 
     # ---- raw material supply ------------------------------------------------
-    CHARCOAL_PER_HA = declare(
-        "CHARCOAL_PER_HA", 0.75, kind="engineering_estimate",
-        unit="tonnes charcoal/hectare/year, sustainable coppice yield",
-        source="Order-of-magnitude figure for a sustainably managed "
-               "coppice under traditional charcoal-burning practice; the "
-               "same figure this module's own resource_throttle() "
-               "docstring cites ('a hectare of coppice yields about 0.75 "
-               "tonnes of charcoal a year').",
-        confidence="C",
-        why="Converts hectares of owned woodland into tonnes/year of "
-            "charcoal - the single binding constraint that decides whether "
-            "a blast furnace can run at all, per this file's own charcoal "
-            "commentary.")
+    @property
+    def CHARCOAL_PER_HA(self):
+        """Tonnes of charcoal a year a hectare of coppice yields: the stem wood the home forest grows a
+        hectare a year (sim/geography/forest_timber.py), all cut, burned at the wood-to-charcoal ratio.
+        Coppice is the managed regrowth of that stock, so its yield follows the same increment."""
+        tiles = tuple(tiles_held(self.civ, self.world_map))
+        cached = self.__dict__.get("_coppice_increment")
+        if cached is None or cached[0] != tiles:
+            cached = self.__dict__["_coppice_increment"] = (
+                tiles, timber_mean_increment_tonnes_per_hectare_year(tiles, self.world_map))
+        return cached[1] / self.FIREWOOD_PER_CHARCOAL_MASS_RATIO
+
     # How much of the empire's annual output you can actually BUY. This is not
     # one number: charcoal is bulky, crumbles when carted, and is therefore a
     # LOCAL commodity no matter how much of it the empire makes in total, while
@@ -213,6 +213,21 @@ class MaterialSupplyMixin:
         if entry not in table:
             table[entry] = compute()
         return table[entry]
+
+    def _producers_memo(self, name, key, compute):
+        """`compute()` remembered per (name, key) while the economy's producers are unchanged (they change only
+        as its year closes); for answers that read nothing but the producers. An answer of None is not kept."""
+        stamp = self.economy.producers_stamp()
+        memo = getattr(self, "_producers_memo_store", None)
+        if memo is None or memo[0] != stamp:
+            memo = self._producers_memo_store = (stamp, {})
+        entry = (name, key)
+        if entry not in memo[1]:
+            answer = compute()
+            if answer is None:      # not yet known (the economy is opening): ask again
+                return None
+            memo[1][entry] = answer
+        return memo[1][entry]
 
     def _priced_key(self, tag, prices):
         """The key of `prices` that prices a raw material key (for example aluminium_kg) or a curated commodity id

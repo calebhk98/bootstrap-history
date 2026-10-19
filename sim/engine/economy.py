@@ -15,6 +15,7 @@ from .economy_freight import FreightMixin
 from .economy_mining import MiningMixin
 from .economy_credit import CreditMixin
 from .economy_debt_service import DebtServiceMixin
+from .economy_household_bill import HouseholdBillMixin
 from .economy_capital_market import CapitalMarketMixin
 from .economy_interest import InterestMixin
 from .economy_absorption import MarketAbsorptionMixin
@@ -77,7 +78,7 @@ REPUTATION_EASE_SCALE = declare(
 
 
 class EconomyMixin(GoodsMixin, MaterialSupplyMixin, MaterialReachMixin, ElectricityMixin, FreightMixin,
-                    MiningMixin, CreditMixin, DebtServiceMixin, CapitalMarketMixin, InterestMixin, MarketAbsorptionMixin, ProjectCostTailMixin, ProductionMixin, ProjectMaterialsMixin, ViewShareMixin):
+                    MiningMixin, CreditMixin, HouseholdBillMixin, DebtServiceMixin, CapitalMarketMixin, InterestMixin, MarketAbsorptionMixin, ProjectCostTailMixin, ProductionMixin, ProjectMaterialsMixin, ViewShareMixin):
     """Composition point for the economy sub-mixins, plus what is left over.
 
     EconomyMixin's methods are grouped by subject across sibling modules

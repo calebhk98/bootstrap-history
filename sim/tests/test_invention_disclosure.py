@@ -107,7 +107,7 @@ check("the choice survives a save and load", revived.disclosure_of("zz_easy")["m
 # ---- license: a named firm or the state pays through the ledger and copies at once -------
 game = actor_sim(EXTRA)
 founder_runs(game, "zz_easy", opened_ago=5)
-firm = game.actors.add("firm:licensee", ActorRecord(kind="firm", money=1.0e6, target="zz_easy"))
+firm = game.actors.add("firm:licensee", ActorRecord(kind="firm", money=1.0e6, target="zz_easy", last_margin=1.0e5))
 capital_before, firm_before = game.household.capital, firm.money
 result = game.disclose("zz_easy", "license", licensee="firm:licensee", fee=1000.0)
 check("a licence to a named firm is accepted", result["ok"], result)
@@ -129,15 +129,33 @@ check("a licence to nobody is refused",
 government = game.state_treasury()
 government.credit(1.0e6, "taxation")
 treasury_before = government.money
-result = game.disclose("zz_easy", "license", licensee=government.actor_id, fee=2000.0)
+# ---- a fee above the licensee's own valuation is refused whatever its treasury holds ------
+founder_before, treasury_before = game.household.capital, government.money
+worth = government.imitation_worth("zz_easy", SimWorld(game))
+for fee in (worth * 10.0, 1.0e5):
+    reply = game.disclose("zz_easy", "license", licensee=government.actor_id, fee=fee)
+    check("a fee the state values the know-how below is refused with a cause, the money unmoved",
+          not reply["ok"] and reply["cause"] == "fee_above_value" and game.household.capital == founder_before
+          and government.money == treasury_before and "zz_easy" not in government.knowledge, reply)
+government.money = 5.0
+reply = game.disclose("zz_easy", "license", licensee=government.actor_id, fee=10.0)
+check("a fee above what the treasury holds is refused with a cause",
+      not reply["ok"] and reply["cause"] == "licensee_cannot_pay", reply)
+government.money = treasury_before
+miser = game.actors.add("firm:miser", ActorRecord(kind="firm", money=1.0e6, target="zz_easy", last_margin=10.0))
+reply = game.disclose("zz_easy", "license", licensee="firm:miser", fee=0.0, royalty=0.9)
+check("a royalty whose expected stream exceeds the firm's valuation is refused too",
+      not reply["ok"] and reply["cause"] == "fee_above_value", reply)
+
+result = game.disclose("zz_easy", "license", licensee=government.actor_id, fee=1000.0)
 check("the state can be the licensee, paying from its treasury",
-      result["ok"] and abs((treasury_before - government.money) - 2000.0) < 1e-6
+      result["ok"] and abs((treasury_before - government.money) - 1000.0) < 1e-6
       and "zz_easy" in government.knowledge, result)
 
 # ---- a royalty is paid from the licensee's takings every year ---------------------------
 game = actor_sim(EXTRA)
 founder_runs(game, "zz_easy", opened_ago=5)
-firm = game.actors.add("firm:royal", ActorRecord(kind="firm", money=1.0e6, target="zz_easy"))
+firm = game.actors.add("firm:royal", ActorRecord(kind="firm", money=1.0e6, target="zz_easy", last_margin=1.0e5))
 game.disclose("zz_easy", "license", licensee="firm:royal", fee=0.0, royalty=0.1)
 capital_before = game.household.capital
 game.state.scenario.year += 1

@@ -1,10 +1,12 @@
 """Who owns what on a tile: property income paid to the tile's owner cohort is shared by ownership share.
 
 `owner_cohort(record, tile)` is the cohort named as payee and nominal owner; `spread(record, payments)`
-re-splits dividends and rents paid to such an owner across all of the tile's cohorts.
+re-splits dividends across all of the tile's cohorts by ownership share and rents across the tile's title
+holders (titles.py).
 """
 from typing import Dict, List, Optional, Sequence
 
+from . import titles
 from .households_cohort import cohort_id, distribute_property_income
 from .types import AgentId, TileId, Transfer
 
@@ -30,6 +32,13 @@ def spread(record, payments: Sequence[Transfer], by_tile: Optional[Dict[TileId, 
         owner = record.cohorts.get(payment.payee)
         if owner is None or payment.purpose not in SPREAD_PURPOSES:
             result.append(payment)
+            continue
+        if payment.purpose == "rent":
+            held = titles.shares(record, owner.tile)         # rent goes to whoever holds the land
+            total = sum(held.values())
+            paid = [Transfer(payment.payer, holder, payment.currency, payment.amount * share / total, payment.purpose)
+                    for holder, share in sorted(held.items()) if share > 0.0] if total > 0.0 else []
+            result.extend(paid or [payment])
             continue
         tile_cohorts = by_tile.get(owner.tile) if by_tile is not None else None
         if tile_cohorts is None:

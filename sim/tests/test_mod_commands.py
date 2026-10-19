@@ -116,7 +116,7 @@ class DataCommandTests(CommandTestBase):
     def test_macro_missing_field_runs_nothing(self):
         self.add_mod(ACME)
         self.write_commands(ACME, {ACME + ":m": {
-            "kind": "macro", "summary": "s", "description": "d", "steps": [{"cmd": "quit", "text": "$text"}]}})
+            "kind": "macro", "summary": "s", "description": "d", "steps": [{"cmd": "note", "text": "$text"}]}})
         self.load()
         reply = self.run_command(ACME + ":m")
         self.assertFalse(reply["ok"])

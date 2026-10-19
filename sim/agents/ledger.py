@@ -53,6 +53,14 @@ def transfer(payer: Any, payee: Any, amount: float, purpose: Purpose) -> None:
 			AFTER_TRANSFER[0] = hook
 
 
+def cover(payer: Any, payees: List[Any], amount: float) -> None:
+	"""Before `payer` pays `amount` to several payees in the one book: its facility is drawn once for what its
+	purse lacks, not once per payment."""
+	purses = getattr(payer, "purses", None)
+	if purses is not None and all(getattr(payee, "purses", None) is purses for payee in payees):
+		purses.cover(payer.account_id, amount)
+
+
 def purposes_label(purpose: Purpose) -> str:
 	"""A posting's purpose as the book's one label."""
 	return purpose if isinstance(purpose, str) else "+".join(sorted(purpose))

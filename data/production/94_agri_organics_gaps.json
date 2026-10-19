@@ -35,17 +35,21 @@
   },
   "draught_animal_kg": {
    "outputs": {
-    "draught_animal_kg": 100.0
+    "draught_animal_kg": 100.0,
+    "manure_kg": 6424.0
    },
-   "inputs": {},
+   "inputs": {
+    "straw_kg": 666.667,
+    "bran_kg": 40.0
+   },
    "labour_hours": {
-    "labourer": 40.0
+    "labourer": 59.272
    },
    "land_hectare_years": 0.99999105,
    "extracted_from": "pasture",
    "unit_dimension": "mass",
    "basis": "per hectare of breeding pasture per year, output as kg of live weight of working cattle and horses reared to work age",
-   "yield_basis": "GROWN on pasture by a breeding herd: cows and mares calve or foal, the young are reared on grass and hay to work age. Live-weight gain on extensive pasture is on the order of 100 kg per hectare per year (an estimate, not checked against a source). LAND: the batch is one hectare-year, converted to hectare_land's unit as in wheat_kg's LAND note. LABOUR: herding, calving and breaking to harness, taken as about 40 labourer-hours (an estimate). The animals' own feed is the pasture, charged as land. Made only where draught power is held, because a society with no animal to breed cannot start a herd by labour. Conf C.",
+   "yield_basis": "GROWN on pasture by a breeding herd: cows and mares calve or foal, the young are reared on grass and hay to work age. Live-weight gain on extensive pasture is on the order of 100 kg per hectare per year (an estimate, not checked against a source). LAND: the batch is one hectare-year, converted to hectare_land's unit as in wheat_kg's LAND note. LABOUR: herding, calving and breaking to harness, taken as about 40 labourer-hours (an estimate). The animals' own feed is the pasture, charged as land. Made only where draught power is held, because a society with no animal to breed cannot start a herd by labour. Conf C. DUNG AND FODDER: the breeding herd that one hectare-year of gain implies weighs the gain over its net increase (natural increase less loss in data/world/living_stock.json), about two thirds of a tonne live weight; it drops dung and eats a winter ration at the cattle row's factors (the same row fields as the herd recipes), and the dung is gathered at 3.0 hours a tonne. Working animals in harness are held capital with no recipe of their own, so only the rearing herd is charged here (Complaints/532).",
    "conf": "C",
    "requires_node": "cap_power_muscle"
   },
@@ -198,7 +202,7 @@
    "unit_dimension": "mass",
    "unit_mass_kg": 1.0,
    "basis": "per hectare of sugar cane per year, output as kg of raw (muscovado-type) sugar boiled from pressed juice",
-   "yield_basis": "GROWN, then pressed and boiled in the field-side works. Hand-and-animal-mill cane of the pre-industrial period runs on the order of 30-40 tonnes of cane per hectare, of which roller crushing and open-kettle boiling recover roughly 5-6 percent as crystallised raw sugar, giving about 2 tonnes per hectare. Boiling heat is supplied by burning the crushed cane (bagasse), which the crop itself provides, so no thermal input is charged. LAND: the batch is one hectare-year, converted to hectare_land's unit as in wheat_kg's LAND note. CLIMATE: sugar cane is a frost-tender perennial grass that needs a long warm, wet, frost-free season (FAO EcoCrop and standard agronomy texts, from memory, not opened), so grown_in_climate_classes names the tropical wet and seasonal classes Af, Am, Aw and the humid subtropical winter-dry Cwa, as the cane nursery sugar_cane_sett_native_kg does; the temperate Mediterranean and oceanic classes are out, so Rome, England and the Norse cannot grow it and a partner would have to sell it. LABOUR: planting setts, weeding, cutting, hauling, crushing and tending the boiling kettles through the season; plantation records for the early modern Caribbean and Java put a field-and-mill workforce near one worker per hectare, so 1500 hours is taken (TEMPORARY HEURISTIC, order of magnitude from memory, not opened; the earlier 150 borrowed from wheat_kg left out the whole mill and boiling-house work). Conf D.",
+   "yield_basis": "GROWN, then pressed and boiled in the field-side works. Hand-and-animal-mill cane of the pre-industrial period runs on the order of 30-40 tonnes of cane per hectare, of which roller crushing and open-kettle boiling recover roughly 5-6 percent as crystallised raw sugar, giving about 2 tonnes per hectare. Boiling heat is supplied by burning the crushed cane (bagasse), which the crop itself provides, so no thermal input is charged. LAND: the batch is one hectare-year, converted to hectare_land's unit as in wheat_kg's LAND note. CLIMATE: sugar cane is a frost-tender perennial grass that needs a long warm, wet, frost-free season (FAO EcoCrop and standard agronomy texts, from memory, not opened), so grown_in_climate_classes names the tropical wet and seasonal classes Af, Am, Aw and the humid subtropical winter-dry Cwa, as the cane nursery sugar_cane_sett_native_kg does; the temperate Mediterranean and oceanic classes are out, so Rome, England and the Norse cannot grow it and a partner would have to sell it. LABOUR: planting setts, weeding, cutting, hauling, crushing and tending the boiling kettles through the season; plantation records for the early modern Caribbean and Java put a field-and-mill workforce near one worker per hectare, so 1500 hours is taken (TEMPORARY HEURISTIC, order of magnitude. Sources named for a check, none opened in this environment (a search on 2026-10 returned no figures): Galloway, The Sugar Cane Industry: An Historical Geography (1989), and Deerr, The History of Sugar (1949-50), for muscovado per hectare and workforce per hectare. Confidence stays D until one of them is read, because both the 2 tonnes per hectare and the near-one-worker-per-hectare workforce are recalled, not read; the earlier 150 borrowed from wheat_kg left out the whole mill and boiling-house work). Conf D.",
    "conf": "D",
    "requires_node": "ag2_sugar_voyage"
   },

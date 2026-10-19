@@ -78,7 +78,12 @@ def people_by_trade(economy, country: Optional[str]) -> Dict[str, float]:
 
 
 def _area_tiles(economy, good: str) -> Dict[str, Set[TileId]]:
-    return {area.area_id: set(area.tiles) for area in economy.area_map.areas(good)} if good in economy.area_map.goods() else {}
+    """Each market area of the good with its tiles; kept on the area map, which does not change once built."""
+    area_map = economy.area_map
+    kept = area_map.__dict__.setdefault("_area_tile_sets", {})
+    if good not in kept:
+        kept[good] = {area.area_id: set(area.tiles) for area in area_map.areas(good)} if good in area_map.goods() else {}
+    return kept[good]
 
 
 def prices(economy, country: Optional[str]) -> Dict[str, float]:
@@ -102,11 +107,28 @@ def prices(economy, country: Optional[str]) -> Dict[str, float]:
     return {good: (value / quantity if quantity > 0.0 else plain) for good, (value, quantity, plain) in sorted(totals.items())}
 
 
+def _floor_view(economy):
+    setup, record = economy.setup, economy.record
+    return YearView(record.memory, record.book, economy.area_map, setup.currency_id, labour_area)
+
+
+def _tile_floor_costs(economy, view, tile) -> Dict[str, float]:
+    return {need.spec.need_id: need.price_index * need.spec.subsistence_per_person
+            for need in households.need_prices(economy.setup.basket_for(tile), view, tile)
+            if need.spec.subsistence_per_person > 0.0}
+
+
+def tile_need_floor_costs(economy, tile) -> Dict[str, float]:
+    """What one person's floor of each need costs a year at the prices on one tile (the need-basket kernel on
+    the tile's own climate floors), whether or not anyone lives there."""
+    return _tile_floor_costs(economy, _floor_view(economy), tile)
+
+
 def need_floor_costs_per_person_year(economy, country: Optional[str]) -> Dict[str, float]:
     """What one person's floor of each need costs a year at the prices the country's households pay, the mean
     over its people (the need-basket kernel on each tile's own climate floors)."""
-    setup, record = economy.setup, economy.record
-    view = YearView(record.memory, record.book, economy.area_map, setup.currency_id, labour_area)
+    record = economy.record
+    view = _floor_view(economy)
     sums: Dict[str, float] = {}
     weight = 0.0
     for tile in sorted(country_tiles(economy, country)):
@@ -114,9 +136,8 @@ def need_floor_costs_per_person_year(economy, country: Optional[str]) -> Dict[st
         if people <= 0.0:
             continue
         weight += people
-        for need in households.need_prices(setup.basket_for(tile), view, tile):
-            if need.spec.subsistence_per_person > 0.0:
-                sums[need.spec.need_id] = sums.get(need.spec.need_id, 0.0) + people * need.price_index * need.spec.subsistence_per_person
+        for need_id, cost in _tile_floor_costs(economy, view, tile).items():
+            sums[need_id] = sums.get(need_id, 0.0) + people * cost
     return {need: total / weight for need, total in sorted(sums.items())} if weight > 0.0 else {}
 
 

@@ -69,14 +69,15 @@ class CapitalMarketMixin:
         offers = {EDGE_SAVERS: sources["households"], self.state_treasury().actor_id: sources["state"]}
         purses = self.actors.state.purses
         for firm in self.actors.active_firms():
-            offers[firm.actor_id] = purses.purse(firm.actor_id)
+            offers[firm.actor_id] = purses.purse(firm.actor_id) + purses.deposit(firm.actor_id)
         for lender in self.actors.purse_lenders():
-            offers[lender.actor_id] = purses.purse(lender.actor_id)
+            offers[lender.actor_id] = purses.purse(lender.actor_id) + purses.deposit(lender.actor_id)
         return offers
 
     def refresh_lender_offers(self):
-        """The year's meeting of lenders: fix who offers what to the actors' borrowers."""
+        """The year's meeting of lenders: the pool pays the interest it holds, then who offers what is fixed."""
         from .agents_port import SimWorld
+        self.settle_lender_interest()
         self.actors.state.purses.set_offers(self.lender_offers(self.market_funds(SimWorld(self))))
 
     def lent_share(self):

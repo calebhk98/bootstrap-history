@@ -1,6 +1,6 @@
 # Land never changes hands, and there is no landlord, tenant or lender
 
-**Status:** open
+**Status:** partly - titles, collateral, foreclosure into tenancy and abandonment are built (`test_economy_titles`); the counter-forces (land reform, labour scarcity after plague), the baseline range check, tax farming and bondage are not, and concentration from bad harvests is shown only in a harness, not in a full economy
 
 Reference (an outside design note, not code-aware): land concentration should come from harvest
 shocks and debt, not a typed share. A smallholder short after a bad year borrows from a landowner or
@@ -56,3 +56,30 @@ pull it back, each a mechanism rather than a cap:
   follow it.
 - Elite overreach: when a few hold most land, the state's taxpayers and recruits shrink, which can
   end in revolt or confiscation and redistribution (486 stability, 542 state choices).
+
+## Resolution
+
+- `record.titles` (tile -> holder -> share of the land) is seeded at the opening from the cohorts' ownership
+  shares, so rent flows as before until a title moves. A holder is any actor id (cohort, firm, state, seat).
+  Producers' rent is split by title, not by ownership share (`ownership.spread`).
+- A household's request pledges its whole free title on its tile (`lending._pledging_title`); the pledge rides
+  the loan (`collateral_tile`, `collateral_share` on the contract) and lowers the risk premium through the
+  capitalised rent. Rent is the cleared land rent; a tile no producer rents gives a title no value.
+- Default passes the pledged share from borrower to lender (`titles.foreclose`); the lender's credit loss is
+  reduced by the collateral's value; the borrower stays as a tenant (`record.tenancies`) and pays the lessor
+  the tile's rent on that share through the ledger each year (`titles.settle_tenancies`, from
+  `land_market.settle_year`).
+- A tenant more than a year's rent behind has left the land: the lessor's title on it goes back to nobody
+  (abandonment). Rent from producers then goes to the remaining holders.
+- The one read of a holder's land wealth is `titles_value.title_wealth(tiles, record, holder, rate)`, exported
+  as `sim.economy.api.title_wealth`; the rate is `titles_value.capitalising_rate(live_rate, opening_rate)`.
+  `goods_orders` does not read it yet (526).
+- Tests: `sim/tests/test_economy_titles.py` (bad harvests concentrate titles through default and a good run
+  does not; the defaulted family pays rent; abandonment; seeding; save round trip).
+
+Not built here, each owned by the mechanism it needs: inheritance and supervision cost (need mortal owners and
+overseers), landlords bidding for tenants after a plague (labour scarcity is in the wage, rent does not follow
+it), elite overreach, confiscation and land reform (486, 542), tax farming (542), bondage on default
+(`labour_bondage`). Dividends still split by ownership share; only land rent follows titles. The elite-share
+range check under 4.2 needs a long baseline run: `python3 -m sim.tests --only agent_economy_wiring`'s
+neighbours do not measure it, and no command does yet.

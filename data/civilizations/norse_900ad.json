@@ -469,6 +469,7 @@
     "silver": "the Sala silver mine is dated by its catalogue entry to the fifteenth century at the latest, so no Scandinavian silver was mined in 900; Norse silver was hack-silver and Arab coin that came east to west through trade and plunder; recalled, not a figure from a source read for this entry"
   },
   "unsupplied_basket_goods": {
+    "olive_oil_kg": "olives do not ripen in a Scandinavian climate and the olive-growing node is not held; oil reached the north only by trade the model has no partner for here, so households fall back on tallow",
     "cacao_kg": "an American crop; no partner grows it and the cultivation node is not held, so household demand for it has no supply until a founder brings the stock",
     "camphor_kg": "camphor came from East Asian and Indonesian trade; the distillation node it is gated on is not held and no partner supplies it",
     "cast_iron_kg": "cast iron needs the blast furnace, which this society does not yet have and no partner supplies",
