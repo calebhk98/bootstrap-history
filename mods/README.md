@@ -191,6 +191,27 @@ order) or another mod's `<mod_id>:<name>`. At least one is required. The phase i
 seat phases run together seat by seat. A constraint that names an unknown phase, forms a cycle, or cannot hold
 together is a load error naming the mod and the phase.
 
+### Changing the world
+
+A handler or phase changes the world only through `api.effects` (sim/engine/mod_effects.py); reaching into `Sim`
+attributes or package internals is unsupported and bypasses the conservation checks. Every operation takes `sim`
+first, needs a cause in words, and goes through the normal rules:
+
+* `pay(sim, payer_id, payee_id, amount, purpose)`: coin between two actors through the ledger.
+* `pay_edge` / `receive_from_edge(sim, actor_id, edge, amount, purpose)`: coin to or from a named edge (the `EDGE_*`
+  names in `sim/agents/edges.py` and the economy's goods edges, or your own `edge:<mod_id>:<name>`). An unnamed or
+  unknown edge is an error, so money is never made or lost without a counterparty the books show.
+* `add_goods` / `remove_goods(sim, account_id, good, tile, quantity, cause)`: goods enter or leave the economy's book
+  at a tile against a named edge (production and consumption by default); removing more than the account holds is
+  refused.
+* `kill_people(sim, country, share, cause)`: the same death path hazards use; returns the event, whose `died` fact
+  says how many. `move_people(sim, from_stratum, to_stratum, count, cause)` shifts people between strata.
+* `transfer_tile(sim, tile, to_actor, cause)`: ownership change; the event log records it.
+* `write_store(sim, name, key, value)`: a store this mod declared (another owner's is an error).
+* `record_event(sim, kind, cause, actors=..., tiles=..., **facts)`: a world event; the kind is forced into `<mod_id>:`.
+
+The base game's own world hazards call the same `kill_people` and `record_event`, so a data hazard and a mod act alike.
+
 **Python in a mod is not sandboxed.** It runs in the game's process with the player's full permissions: files,
 network, credentials. Nothing inside CPython holds against a hostile author, and the `api` is an interface for
 honest mods, not a defence. The protection is consent: code runs only after the player runs

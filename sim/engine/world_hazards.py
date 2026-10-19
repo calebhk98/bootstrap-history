@@ -8,7 +8,7 @@ import random
 
 from sim.refusal import LogLine
 
-from . import world_events, world_hazard_data
+from . import mod_effects, world_events, world_hazard_data
 
 
 def countries_in_game(sim):
@@ -21,34 +21,15 @@ def draw(sim, country, kind, year):
     return random.Random("%s|%s|%s|%d" % (sim._farm_year_weather_seed(0), country, kind, year)).random()
 
 
-def _strata_of(sim, country):
-    return [actor for actor in sim.actors.of_kind("stratum") if (actor.record.country or sim.civ["id"]) == country]
-
-
 def people_of(sim, country):
-    """How many people the country holds: the home society's population, or a partner's strata."""
-    if country == sim.civ["id"]:
-        return float(sim.population.total)
-    return sum(actor.record.members for actor in _strata_of(sim, country))
-
-
-def cut_people(sim, country, share):
-    """Remove `share` of the country's people; returns how many died."""
-    before = people_of(sim, country)
-    if country == sim.civ["id"]:
-        sim._apply_population_mortality_shock(share)
-    else:
-        for actor in _strata_of(sim, country):
-            actor.record.members *= 1.0 - share
-    return before - people_of(sim, country)
+    return mod_effects.people_of(sim, country)
 
 
 def hit(sim, country, hazard):
     """Apply one hazard to one country: people lost, a record in the log, a line in every playing seat's log."""
-    died = cut_people(sim, country, hazard["population_loss"])
-    entry = world_events.record(sim, hazard["kind"], actors=[country], cause=hazard["cause"],
-                                population_loss=hazard["population_loss"], died=died)
-    year = entry["year"]
+    entry = mod_effects.BASE_EFFECTS.kill_people(sim, country, hazard["population_loss"], hazard["cause"], kind=hazard["kind"],
+                                                 population_loss=hazard["population_loss"])
+    year, died = entry["year"], entry["facts"]["died"]
     for seat_id in sim.playing_seats():
         sim.state.seats[seat_id].household.log.append((year, LogLine(
             "world_hazard", "%s in %s: about %d people die" % (hazard["cause"], country, round(died)),
@@ -71,11 +52,11 @@ def famine_watch_phase(sim, seats):
     """Write a famine record for each country whose people leave a large share of their food need unmet."""
     threshold = world_hazard_data.famine_food_shortfall()
     for country in countries_in_game(sim):
-        strata = _strata_of(sim, country)
+        strata = mod_effects.strata_of(sim, country)
         people = sum(actor.record.members for actor in strata)
         if people <= 0.0:
             continue
         shortfall = sum(actor.record.members * actor.record.shortfall.get("food", 0.0) for actor in strata) / people
         if shortfall >= threshold:
-            world_events.record(sim, "famine", actors=[country], cause="food unmet",
-                                food_shortfall=shortfall, people=people)
+            mod_effects.BASE_EFFECTS.record_event(sim, "famine", "food unmet", actors=[country],
+                                                  food_shortfall=shortfall, people=people)
