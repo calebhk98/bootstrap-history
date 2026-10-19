@@ -1,6 +1,6 @@
 # A mid-game year costs many times an early year
 
-**Status:** open
+**Status:** closed - a legitimate agent game on this branch steps its second century at the same seconds a year as its first
 
 Found after closing 575, on the legitimate agent playtest's save (`Complaints/reports/playtest-rome-seed11-agent-legitimate-log.md`,
 Rome, seed 11, 143 AD, about thirty concerns running): a year from that save takes minutes, where the same game's
@@ -78,3 +78,10 @@ the lenders are paid once a year, so the cost no longer grows with lenders per b
 mid-game save regrouped into the pool's form (the save predates it): one year fell from about twenty-nine seconds to
 about eighteen, still more than twice an early year. What is left in the profile: the merchants' route searches
 (`routes_search._tree`), the registry's per-founding column insertion, `forget_orders`, and the tile cost lookups.
+
+## Resolution
+
+Measured by an agent playtest played legitimately from a fresh game to 221 AD on the branch with both rounds of cuts
+and pooled lending (580): seconds per game year stayed flat by decade over the whole run, and the save grew only a
+little (`Complaints/reports/playtest-rome-seed11-agent-to-221.md`, per-command timings). The growth this complaint
+names is gone; the yearly cost itself is Complaint 497.
