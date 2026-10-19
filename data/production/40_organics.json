@@ -296,8 +296,7 @@
     "urine_kg": 2.0
    },
    "labour_hours": {
-    "labourer": 4.0,
-    "artisan": 2.0
+    "tanner": 6.0
    },
    "unit_dimension": "mass",
    "basis": "per kg of finished vegetable (oak-bark) tanned leather",
@@ -337,7 +336,7 @@
     "hide_kg": 0.35
    },
    "labour_hours": {
-    "artisan": 3.0
+    "tanner": 3.0
    },
    "unit_mass_kg": 0.02,
    "unit_dimension": "count",
