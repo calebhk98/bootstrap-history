@@ -1,0 +1,56 @@
+{
+ "_note": "Fish as a good: caught by fishers, salted and fermented into garum (Complaints/615). The ceiling on what the water gives stays in the geography fishery rows (data/world/geography/resources/animals.json) and the fisher's hours cap in sim/labour/food_gathering.py; the recipe books the hours. The production schema has no siting field for a non-crop recipe, so coast and river siting is carried by those fishery rows (a society with no coastal or river tile has no fishery ceiling), not by the recipe.",
+ "materials": {
+  "fish_kg": {
+   "outputs": {
+    "fish_kg": 1000.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "fisher": 900.0
+   },
+   "extracted_from": "sea, lake and river fisheries",
+   "unit_dimension": "mass",
+   "basis": "per 1000 kg of cleaned, edible fresh fish and shellfish",
+   "yield_basis": "CATCH. The fisher's return is 1000 kcal an hour (trade 'fisher' in data/world/trades.json, Kelly 2013, The Lifeways of Hunter-Gatherers, Table 3-4, low end taken for shore and day-boat work; conf D). The geography fishery rows give edible fish 700 to 1000 kcal a kilogram (data/world/geography/resources/animals.json; conf D); 900 kcal a kilogram is taken, the freshwater rows' figure, so a tonne is 900000 kcal and takes 900 fisher-hours. That is the one return the calorie cap in sim/labour/food_gathering.py uses: the hours cap there bounds how many tonnes of this recipe a society can draw, so a kilogram of fish is counted once, as the good. Boat, net and weir are not charged as capital here (no source for a per-boat catch was found; conf D).",
+   "conf": "D",
+   "requires_node": null
+  },
+  "salted_fish_kg": {
+   "outputs": {
+    "salted_fish_kg": 700.0
+   },
+   "inputs": {
+    "fish_kg": 1000.0,
+    "salt_kg": 200.0
+   },
+   "labour_hours": {
+    "fisher": 60.0
+   },
+   "unit_dimension": "mass",
+   "basis": "per tonne of fresh fish gutted, layered with salt in barrels or pits, and pressed",
+   "yield_basis": "WET SALTING. Fish are gutted, packed in layers with salt at about one part salt to five of fish by mass (recalled from salt-fish and salt-herring practice and Roman salsamenta; not re-opened; conf D) and left to draw their brine. Salt and water leave: the cured product is taken as seven tenths of the fresh weight (recalled; conf D). Food energy is kept: the energy of a kilogram of salted fish in data/world/needs.json is the fresh fish's times 1000/700, so curing adds none and loses none. Labour is gutting, layering and pressing, about 60 hours a tonne, done by the fishing crews on the shore (a rough figure; conf D). The salt comes from the salt worker (salt_kg).",
+   "conf": "D",
+   "requires_node": null
+  },
+  "garum_kg": {
+   "outputs": {
+    "garum_kg": 500.0
+   },
+   "inputs": {
+    "fish_kg": 1000.0,
+    "salt_kg": 250.0
+   },
+   "labour_hours": {
+    "fisher": 50.0
+   },
+   "holding_years": 0.25,
+   "holding_basis": "Fish and salt ferment in sun-warmed vats for some weeks to a few months before the liquor is drawn off and strained, so the fish and salt are tied up for about that long.",
+   "unit_dimension": "mass",
+   "basis": "per tonne of small fish and offal fermented to fish sauce",
+   "yield_basis": "FERMENTED FISH SAUCE. Small fish and guts are mixed with salt at about one part to four by mass (the Geoponica gives one part salt to two or three of fish by volume; recalled, not re-opened; conf D) and stirred in vats in the sun for weeks to months until the flesh liquefies; the liquor is drawn off and strained and a dregs paste is left. Roughly half the fish mass is taken as sauce; the rest, with the dregs, is waste here (recalled; conf D). Labour is gutting, mixing, stirring and straining, about 50 hours a tonne (a rough figure; conf D). Fish sauce was a condiment, not a staple, so it is not counted as food energy in data/world/needs.json.",
+   "conf": "D",
+   "requires_node": null
+  }
+ }
+}

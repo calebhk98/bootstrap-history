@@ -4,6 +4,8 @@ A trade of the registry that gathers food names the food sources it works (`gath
 return in kcal per hour (`food_kcal_per_hour`). The energy a source can yield in a year is bounded by the
 hours worked in the trades that gather it times their return, whatever the land and sea could give. A food
 source that no trade names is not bounded here. Geography states the ceiling; the caller takes the lower.
+Fish is also a good (`fish_kg`, data/production/95_fish.json) whose recipe books the fisher's hours at this same
+return, so the cap here is the ceiling on how much of that good a society can draw, not a second food supply.
 """
 from typing import Dict, Mapping
 
