@@ -20,3 +20,9 @@ What it would take: price coal's seam land/royalty from the deposit, and freight
 in the recipe price (`material_freight_cost_per_kg` exists in `sim/engine/economy_freight.py` but the recipe
 price does not use it for a good not produced where the buyer holds ground); then re-measure the command above.
 Both are engine or economy changes, outside the data-only scope of 534.
+
+## Finding (563 work)
+
+At the Rome opening `material_freight_distance_km('coal')` is zero: Rome holds a tile with a tracked coal
+deposit, so the freight term in this complaint does not apply there; only the missing seam rent or royalty
+remains, and that needs a deposit land-market change (deposit rent from the land market, not a constant).
