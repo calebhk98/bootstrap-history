@@ -9,7 +9,7 @@ import math
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Tuple
 
 from sim.geography.json_copy import copied
-from sim.geography import (droving, food_capacity, food_land, food_pasture, food_wild_harvest, map_source, mechanisms, parameters, resource_links, resources_biotic, rail_freight,
+from sim.geography import (droving, endemic, food_capacity, food_land, food_pasture, food_wild_harvest, map_source, mechanisms, parameters, resource_links, resources_biotic, rail_freight,
                            resources_catalogue, resources_endowment, resources_mined, resources_prospecting, resources_sites,
                            reach_bands, resources_summary, routes_carriage, routes_graph, routes_modes, routes_search, tile_holdings, tile_layers,
                            ways_build, ways_works)
@@ -50,6 +50,21 @@ def food_potential(tile_id: str, technique_factors: Optional[Mapping[str, float]
     """Sustainable food energy of a tile by source, and the people it feeds. `wild_stock` is the game's
     {tile: {species: share of carrying capacity left}}; a missing entry is a full stock."""
     return food_capacity.food_potential(_map(world_map), tile_id, dict(technique_factors or {}) or None, wild_stock)
+
+
+def endemic_animal_loss(tile_id: str, species: Iterable[str], world_map: Optional[WorldMap] = None) -> float:
+    """Share of a herd lost in a year to endemic disease on the tile: the hardiest listed species' loss."""
+    return endemic.animal_loss(_map(world_map), tile_id, species)
+
+
+def endemic_people_loss(tile_ids: Iterable[str], world_map: Optional[WorldMap] = None) -> Dict[str, float]:
+    """{population band: excess death rate per year} from endemic disease, averaged over the tiles."""
+    return endemic.mean_people_loss(_map(world_map), tile_ids)
+
+
+def endemic_problems() -> List[str]:
+    """What is wrong with the endemic disease files (data/disease/endemic/)."""
+    return endemic.problems()
 
 
 def pasture_capacity_kg(tile_id: str, wild_stock: Optional[Mapping[str, Any]] = None,

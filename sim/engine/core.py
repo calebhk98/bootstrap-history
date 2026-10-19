@@ -1521,7 +1521,8 @@ class Sim(ModStoresMixin, RealPriceRatiosMixin, CoinRevaluationMixin, PartnerCiv
         epidemic_deaths = self.disease_year(food_eaten_kcal_per_day, year)
         self._last_demographic_step = self.population.step(
             food_eaten_kcal_per_day, jitter=False,
-            disease_burden=self._disease_burden(), epidemic_deaths=epidemic_deaths)
+            disease_burden=self._disease_burden(), epidemic_deaths=epidemic_deaths,
+            endemic_death_rates=self.endemic_death_rates())
         flows = self._last_demographic_step
         record = self.state.population.yearly_record
         record.append({"year": year, "population": round(self.population.total, 1),
