@@ -248,7 +248,7 @@ class CreditMixin:
         your practice again, which is what you started with and is enough.
         """
         household = self.state.household
-        shed = [closure.entry_key for closure in self.review_ventures((business_review.LOSS_MAKING,))]
+        shed = [closure.entry_key for closure in self.review_ventures((business_review.LOSS_MAKING,), year)]
         if shed:
             # NAME THEM: "stopped maintaining 1 works" tells a player
             # nothing - not which one, not how to get it back.
@@ -476,7 +476,7 @@ class CreditMixin:
             self.mothball_mines()
         if household.capital < -limit:
             # A creditor takes the business (the plants it runs), never the knowledge of how they work.
-            taken = [closure.entry_key for closure in self.review_ventures((business_review.CREDITOR_SEIZURE,))]
+            taken = [closure.entry_key for closure in self.review_ventures((business_review.CREDITOR_SEIZURE,), year)]
             # Only say it if it happened: firing this every year regardless
             # of whether anything was actually taken would log creditors
             # seizing something for a run that has nothing left to take,

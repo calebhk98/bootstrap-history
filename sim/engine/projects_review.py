@@ -9,9 +9,10 @@ from sim.agents.api import edges
 class SeatReview:
 	"""The hooks of `Reviewable` for the acting seat, answered from the simulation."""
 
-	def __init__(self, world):
+	def __init__(self, world, year=None):
 		self._world = world
 		self._sim = world._sim
+		self._year = self._sim.state.scenario.year if year is None else year
 
 	def tally(self, business):
 		"""Tally each running plant's year: its margin once ramped up, and the years running it has lost money."""
@@ -57,7 +58,7 @@ class SeatReview:
 		return self._sim.state.household.capital < -self._sim.credit_limit()
 
 	def shut(self, entry_key, reason):
-		self._sim.close_work(entry_key, reason, self._sim.state.scenario.year)
+		self._sim.close_work(entry_key, reason, self._year)
 
 	def proceeds_of_seizure(self, entry_key):
 		size = self._sim.state.projects.business.size_of(entry_key)

@@ -91,7 +91,7 @@ class StaffingMixin:
         planned = self.concerns_to_close_for_staffing()
         shortfalls = self._staffing_shortfalls(self.staffing_held_totals()) if planned else {}
         earnings_stopped = round(self.labour.yearly_value_of(planned), 1)
-        closed = [closure.entry_key for closure in self.review_ventures((business_review.STAFF_SHORT,))]
+        closed = [closure.entry_key for closure in self.review_ventures((business_review.STAFF_SHORT,), year)]
         if closed:
             self.record_staffing_closures(len(closed), shortfalls)
             household.log.append((year, LogLine(
@@ -110,9 +110,12 @@ class StaffingMixin:
                 stops_earnings_per_year=earnings_stopped)))
         return closed
 
-    def review_ventures(self, rules=business_review.ALL_RULES):
-        """The seat's business under the yearly review (sim/agents/business_review.py); what closed and why."""
-        return self.state.projects.business.review(self.household, SimWorld(self), rules)
+    def review_ventures(self, rules=business_review.ALL_RULES, year=None):
+        """The seat's business under the yearly review (sim/agents/business_review.py); what closed and why.
+        Plants it shuts are dated `year` (the scenario's when not given)."""
+        world = SimWorld(self)
+        world.review_year = year
+        return self.state.projects.business.review(self.household, world, rules)
 
     def note_venture_year(self):
         """Tally each running plant's margin, and the years running it has lost money (the loss rule's input)."""
