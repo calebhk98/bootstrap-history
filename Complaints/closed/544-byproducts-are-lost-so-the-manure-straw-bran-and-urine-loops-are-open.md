@@ -1,6 +1,6 @@
 # Byproducts are lost, so the manure, straw, bran and urine loops are open
 
-**Status:** open
+**Status:** closed - straw, bran, dung, urine and nightsoil are made, fed and tipped through ordinary recipes; soil restoration waits on 543
 
 Reference (an outside summary of an ancient input-output table, not code-aware): straw from the
 fields and bran from the mill fed the draught and pack animals; their manure went back to the
@@ -30,3 +30,23 @@ lines also consume goods; 533 asks for that check in `simulator.py validate`.
   fulling and tanning, nightsoil for market gardens; disposal only for what nobody buys.
 - Prices of these byproducts then fall out of the joint production, and a town's waste becomes worth
   carting when the fields need it.
+
+## Resolution
+
+- Straw is a joint output of every grain recipe (`wheat_kg`, `wheat_hoe_kg`, `millet_kg`, `maize_kg`).
+- Milling now sifts: each flour recipe makes flour and bran together, and keeps a small dust loss.
+- Herds (sheep, goat, cattle) and the draught-animal rearing recipe make dung together with their other
+  products and eat a winter ration of straw and bran. The per-head factors are fields of the species rows
+  in `data/world/living_stock.json`; a test recomputes each recipe from them. The standalone
+  dung-extraction recipe is deleted. The nitre bed is the dung consumer.
+- Urine and nightsoil: no recipe lets a household output a good, so `data/production/95_town_excreta_and_gardens.json`
+  collects them, stating the kilograms excreted per person-year on each. Urine is bought by fulling
+  (`cloth_kg`) and tanning (`leather_kg`); nightsoil by a new market-garden recipe (`vegetable_kg`, a food).
+- Straw, bran, dung, urine and nightsoil each have a heap in `data/world/waste_heaps.json`, so what
+  nobody buys is tipped, and as recorded wastes they carry no share of the cost of the grain, flour or
+  herd product that came with them.
+- Regression test: `sim/tests/test_byproduct_loops.py` (each joint output exists with its ratio, each has a
+  maker and a consumer or heap).
+- Not done, and not what this complaint asks: the farm has no yield response to dung or nightsoil (543
+  owns the soil nitrogen stock), and the supply of urine and nightsoil is limited only by collection labour
+  until households can output goods.
