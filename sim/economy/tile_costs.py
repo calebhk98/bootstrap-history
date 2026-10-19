@@ -9,7 +9,8 @@ Paths may leave the given tiles (a road through a neighbour); only the given til
 Standalone: `sim.geography.api` and `sim.economy.types` only.
 """
 import math
-from typing import Dict, Iterable, Mapping, Optional
+from dataclasses import dataclass
+from typing import Dict, Iterable, Mapping, Optional, Tuple
 
 from sim.economy import carriage_cache
 from sim.economy.types import TileId, TileSpec
@@ -53,6 +54,34 @@ def world_map_of(tiles: Mapping[TileId, TileSpec]):
         for tile_id, tile in tiles.items()})
 
 
+@dataclass(frozen=True)
+class Haul:
+    """How the cheapest path between two tiles is travelled: its days, the money a tonne pays on each carriage
+    mode's legs (the handling of a change to the mode included) and how many times the load is handled into
+    each mode."""
+    days: float
+    money_by_mode: Tuple[Tuple[str, float], ...] = ()
+    handlings_by_mode: Tuple[Tuple[str, int], ...] = ()
+
+
+NO_PATH = Haul(math.inf)
+
+
+def haul_of(hauled: Mapping[str, object]) -> Haul:
+    """The `Haul` of a geography route: a load is handled into the first leg's mode and into each leg whose mode
+    differs from the one before."""
+    money: Dict[str, float] = {}
+    handlings: Dict[str, int] = {}
+    previous = None
+    for leg in hauled["legs"]:
+        mode = leg["mode"]
+        money[mode] = money.get(mode, 0.0) + float(leg["cost_per_tonne"])
+        if mode != previous:
+            handlings[mode] = handlings.get(mode, 0) + 1
+        previous = mode
+    return Haul(float(hauled["days"]), tuple(sorted(money.items())), tuple(sorted(handlings.items())))
+
+
 class CarriageTable:
     """Cheapest money cost per tonne between tiles over geography's route graph.
 
@@ -76,7 +105,7 @@ class CarriageTable:
         self._warmed = False    # whether the whole table has been filled (or fetched) already
         self.scale = 1.0        # multiplier on every cost: the year's wage on the labour part of the rates (set_scale)
         self._scaled: Dict[TileId, Dict[TileId, float]] = {}
-        self._days: Dict[tuple, float] = {}
+        self._hauls: Dict[tuple, Haul] = {}
 
     def set_scale(self, scale: float) -> None:
         """Multiply every cost by `scale` (1: the costs as searched, the very same answers)."""
@@ -118,13 +147,22 @@ class CarriageTable:
     def days_between(self, from_tile: TileId, to_tile: TileId) -> float:
         """Days a haul takes by the cheapest path (geography's pace for each leg's mode, handling included);
         infinite when no path exists."""
+        return self.haul(from_tile, to_tile).days
+
+    def haul(self, from_tile: TileId, to_tile: TileId) -> Haul:
+        """The cheapest path between two tiles as modes, kilometres and handlings (kept: one route search a
+        pair); `NO_PATH` when none joins them."""
         key = (from_tile, to_tile)
-        found = self._days.get(key)
+        found = self._hauls.get(key)
         if found is None:
             hauled = route([from_tile], [to_tile], sorted(self._rates), self._improvements, self._rates,
                            self._handling, self._held_nodes, self._world_map)
-            found = self._days[key] = math.inf if hauled is None else float(hauled["days"])
+            found = self._hauls[key] = NO_PATH if hauled is None else haul_of(hauled)
         return found
+
+    def unscaled_cost_per_tonne(self, from_tile: TileId, to_tile: TileId) -> float:
+        """`cost_per_tonne` before the year's wage scale."""
+        return self._searched_costs_from(from_tile).get(to_tile, math.inf)
 
     def warm(self, remember: bool = False) -> None:
         """Fill every source. With `remember` the whole table is read from disk when an earlier process

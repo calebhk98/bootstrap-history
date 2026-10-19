@@ -34,8 +34,7 @@ demand for carters, sailors and porters (530).
   paid less the crew's wages, which the labour market has already paid to the households that sold the
   hours. Those hours are no longer offered to other employers or left for the household's own plot.
 - Still a shortcut: the rest of a fee (feed, carts, ships, animals, losses) goes to the poorest
-  households of the source tile; sea and river hauls count at the land mode's hours; handling hours are
-  not counted. Capital for carriers with service lives, and dispatch limited by it, are not built.
+  households of the source tile. Capital for carriers with service lives, and dispatch limited by it, are not built.
 - Carriers must exist to be hired: the opening places people by the runs producers expect, so no carters
   exist when merchants first ship, and the labour core does not grow a new trade fast enough (measured
   below). The crew hours are therefore bid in the unskilled trade (`CARRIAGE_CREW_UNSKILLED_SHARE`, a
@@ -46,14 +45,19 @@ demand for carters, sailors and porters (530).
   a one-year working-capital loan for next year's carrier wages (`carriage_hours.wage_loans`, sized after the owners took their profit, since the cash left is what pays), staked as
   capital like its other loans. Bids are placed where people live: goods leaving an empty tile are bid for
   in the merchant's home labour area.
-- One wage: the rates are priced at the wage of the opening (`EconomySetup.carriage_wage`). Each year the
-  carriage table is multiplied (`CarriageTable.set_scale`, no rebuild, exactly one where the wage is the one
-  priced) so that the labour part of a rate, the cheapest mode's crew hours over both legs of the round trip
-  at the emptiness of the returns, is paid at the unskilled market wage of the year averaged over the hours
-  hired; feed, carts and animals keep their price. The crew's pay for a shipment is then that labour part.
-  Not done: port handling hours, the other modes' labour parts (the cheapest mode's share stands for all),
-  and a wage by area (one national average).
-- Tests: `sim/tests/test_economy_carriage_hours.py`.
+- Hours follow the route (627, closed): `CarriageTable.haul` gives the money a tonne pays on each mode's legs
+  and the handlings into each mode; `carriage_hours.Crew` turns a mode's leg money over its rate into the
+  tonne-km it stands for, times that mode's crew hours (sea and river modes included, `carriage_crew`), and
+  adds the setup's handling hours (`carriage_handling`, unskilled trade) for each handling into a mode whose
+  handling the rates price. A merchant's plan, bids, hires and wage loans are keyed by (trade, tile).
+- Wages by area: the rates are priced at the wage of the opening (`EconomySetup.carriage_wage`). Each year the
+  carriage table is multiplied (`CarriageTable.set_scale`, no rebuild, exactly one where the wages are the one
+  priced) by the change in the labour part of last year's carried flows, each priced at the wage of the area
+  the goods left; the crew is paid that area's wage. Feed, carts and animals keep their price.
+- The crew is still bid in the unskilled trade (`CARRIAGE_CREW_UNSKILLED_SHARE`), so a sailor's hours are
+  labourer hours until 556 places people in the trades the flows need; the code bids each mode's own trade
+  when that share is lowered.
+- Tests: `sim/tests/test_economy_carriage_hours.py`, `sim/tests/test_carriage_hours_by_route.py`.
 
 ## Sized (no change made)
 
