@@ -106,7 +106,7 @@ def strata_spawner(registry: Any, world: Any) -> List[str]:
 	"""The yearly step after every actor's turn: found missing strata, settle moves and keep, then
 	hold each country's strata to the people counted there: the home world's count, each foreign Population's."""
 	founded = seed_strata(registry, world)
-	step_foreign_populations(registry)
+	step_foreign_populations(registry, world)
 	if registry.of_kind("stratum"):
 		settle_strata(registry, world)
 		follow_population(registry, world)

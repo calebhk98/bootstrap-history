@@ -1,6 +1,6 @@
 # A foreign country has no disease: the disease port steps one patch, the home nation
 
-**Status:** open
+**Status:** closed. Each foreign country holds its own epidemics on its profile (`disease_records`, `disease_introduced`, `disease_deaths`) and runs the home nation's year (`sim/disease/nation.py`, shared with `sim/engine/disease_port.py`) from `sim/agents/country_disease.py`; the deaths enter its `Population.step`. A pathogen arrives by the home contact rule (the profile's `extra["disease_exposure"]` windows) and by contact from any country where it circulates (`DISEASE_CONTACT_ANNUAL_CHANCE`, no routes yet). Not yet: technology relief abroad, contact with the home nation, route-based contact. Test: `country_disease`.
 
 Part of Complaint 482 (Countries other than the home one are static stubs).
 
