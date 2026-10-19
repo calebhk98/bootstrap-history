@@ -91,6 +91,17 @@ def register(api):
             return 1.0
         return max(0.0, min(1.0, actor.money / owed))
 
+    def yearly_cost(sim, name, amount):
+        """The holder's own yearly cost of keeping `amount` of coin: the engine's guard cost plus the engine's
+        expected theft on it, at the holder's own visibility."""
+        from sim.engine import theft_exposure
+        from sim.engine.coin_hoard import COIN_GUARD_HOURS_PER_TONNE_YEAR
+        actor = holder_actor(sim, name)
+        scale = sim.visible_scale(sum(actor.workforce.values()), actor.money, actor.prominence()) if actor else 0.0
+        stolen = theft_exposure.expected_theft_loss(
+            {"coin": amount}, {"coin": COIN_GUARD_HOURS_PER_TONNE_YEAR}, scale, sim.state_capacity, 0.0)
+        return sim.coin_keeping_cost_per_year(amount) + stolen
+
     def settle(sim, name, seat):
         """Take the custody fee for each year since the claim was last settled, from the claim itself."""
         entry = claim_of(sim, name, seat)
@@ -100,7 +111,7 @@ def register(api):
         markup = float(holders[name]["custody_markup"])
         charged = 0.0
         for _ in range(years):
-            fee = min(entry["amount"], sim.coin_keeping_cost_per_year(entry["amount"]) * (1.0 + markup))
+            fee = min(entry["amount"], yearly_cost(sim, name, entry["amount"]) * (1.0 + markup))
             entry["amount"] -= fee
             charged += fee
         entry["settled_year"] = sim.year
@@ -309,7 +320,7 @@ def register(api):
             actor = holder_actor(sim, name)
             sheltered.append({
                 "holder": name, "claim": round(entry["amount"], 1), "could_pay_share": round(solvency(sim, name), 3),
-                "fee_per_year": round(min(entry["amount"], sim.coin_keeping_cost_per_year(entry["amount"])
+                "fee_per_year": round(min(entry["amount"], yearly_cost(sim, name, entry["amount"])
                                           * (1.0 + float(holders[name]["custody_markup"]))), 1),
                 "holder_purse": round(actor.money, 1) if actor is not None else 0.0,
                 "own_failure_chance_per_year": holders[name]["failure_chance_per_year"],
@@ -325,3 +336,29 @@ def register(api):
                 item["holder"], item["claim"], 100.0 * item["could_pay_share"], item["fee_per_year"]))
         return {"ok": True, "purse": round(cash, 1), "hazards": rows, "sheltered": sheltered,
                 "sheltered_payable_today": round(total_sheltered, 1), "lines": lines}
+
+    def claims_owed(sim):
+        seat = sim.state.acting_seat
+        return sum(entry["amount"] * solvency(sim, name) for name in holders
+                   for entry in [claim_of(sim, name, seat)] if entry is not None)
+
+    def seize_claims(sim, amount, taker):
+        """A confiscation that has emptied the purse takes the rest from the holders, in the share they can pay."""
+        seat, taken = sim.state.acting_seat, 0.0
+        for name in sorted(holders):
+            entry = claim_of(sim, name, seat)
+            if entry is None or amount - taken <= 0.0:
+                continue
+            share = solvency(sim, name)
+            claim_taken = min(entry["amount"], (amount - taken) / share) if share > 0.0 else 0.0
+            paid = min(claim_taken * share, max(0.0, holder_actor(sim, name).money))
+            if paid > 0.0:
+                ledger.transfer(holder_actor(sim, name), taker, paid, "confiscation of a claim")
+                entry["amount"] -= claim_taken
+                taken += paid
+        return taken
+
+    from sim.engine import state_demand
+    hook = getattr(state_demand, "register_wealth_claims", None)   # absent until the engine counts claims
+    if hook is not None:
+        hook(claims_owed, seize_claims)

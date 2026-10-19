@@ -38,7 +38,7 @@ Holders (`holder_types.json`): `strongroom` (a temple elsewhere) and `merchant_h
   already charges every actor's coin the guard cost (`charge_actors_for_keeping_coin`) and theft
   (`charge_actors_for_theft`), so the holder's purse shrinks by its own state, not by a number in this mod.
 - A deposit is a claim. The custody fee is taken from the claim each year: the engine's guard cost on that coin
-  times one plus the holder's markup. Carrying the coin out and back costs porters' hours priced at the unskilled
+  plus the engine's expected theft on it, times one plus the holder's markup. Carrying the coin out and back costs porters' hours priced at the unskilled
   hour, paid to the guards' edge.
 - Counterparty risk: a holder has a yearly chance of being looted. If its purse is below what it owes, every claim is
   paid in the same share and the rest is lost.
@@ -56,11 +56,11 @@ its own loss record, regional hazards that carry a place).
 - The costs are small. The engine's coin guard cost is a tiny share of the coin a year (`exposure` prints the
   fee a year for your claim), so fees and carriage are slight beside the holder's failure chance. The real price of sheltering is counterparty risk and
   money that is not in the purse when you want to spend it.
-- The holder's fee covers only the guard cost plus markup, not the engine's theft on its coin, so a holder drifts
-  towards insolvency over many decades.
 - The state's confiscation, and the treasury notice, count only the purse. Nothing models the state finding a
   deposit, so lodging coin also hides it from confiscation; that is stronger than the real world and is the one
-  place the shelter may be too generous. An engine hook that lets the state count claims on other actors would fix it.
+  place the shelter may be too generous. The mod registers its claims with `register_wealth_claims` when the engine
+  has it; see `Complaints/566-confiscation-ignores-claims-on-other-actors.md` (proof of concept on branch
+  `engine-confiscation-counts-claims`).
 - Debasement lowers the worth of all coin (`money_real`); a holder's coin is not spared.
 - The mod does not shelter goods, land or the people a plague and a sack take.
 - Endowments are not built: nothing in the engine would let an irrevocable gift differ from a deposit.
