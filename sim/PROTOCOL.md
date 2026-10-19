@@ -677,6 +677,24 @@ holder are refused with the reason, and the others play on. The game is over
 when no seat is playing, or every seat still playing has reached its goal. In
 a game with immortal founders no founder dies, so this never arises.
 
+## Relations between countries
+
+The relations store (`sim/agents/relations.py`, declared in `data/world/stores.json`) holds, per ordered pair of
+countries, that country's own side toward the other: `stance`, `trust`, `treaty` terms, `tariff`, `embargo`, a private
+`note` and a dated `history` of `{year, kind, facts}`. It belongs to the country, so it survives the seat that wrote
+it, and it is saved with the game. Other mechanisms record into it with `relations.record_event` and `set_side`.
+
+    {"cmd":"relations"}                                   every country this seat's country has a record with
+    {"cmd":"relations","with":"han"}                      one pair: "ours", and "theirs" (the other side's stance,
+                                                          treaty, tariff, embargo and history; never its note or trust)
+    {"cmd":"set_relation","with":"han","stance":"friendly"}   also "note":"...", or "term":"<name>","value":<json>
+                                                          (a null value removes the term)
+
+A seat sets only its own country's side: `"side"` naming another country is refused with `cause`
+`not_your_country` (`choices` lists the one allowed). Other refusal causes: `unknown_country` (`choices` lists
+the countries), `same_country`, `unknown_stance` (`choices` lists them, from `data/world/relation_stances.json`),
+`nothing_to_set`. Replies carry `country`, `with`, `ours` and `theirs`.
+
 ## Commands from mods
 
 A mod may add commands, named `<mod_id>:<name>` (typed or as `{"cmd": "<mod_id>:<name>"}`), with an optional bare

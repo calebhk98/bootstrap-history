@@ -1,6 +1,6 @@
 # There is no relations store: no place to record a treaty, trust or a player's view of another power
 
-**Status:** open
+**Status:** closed - relations store (stance, trust, treaty terms, tariff, embargo, note, dated history) per ordered country pair, with relations and set_relation commands
 
 Part of Complaint 487 (No diplomacy).
 
@@ -15,3 +15,7 @@ Seat-to-country comes from `core_seats.py` and `agents_port_seats.py`. Blocks 59
 **What it would take.** Declare an actor-pair `relations` store in `data/world/stores.json` (treaty terms, tariff, embargo, trust, note); `relations` and `set_relation` commands where a seat sets only its own country's side; notes keyed to a country, not a seat, so they survive it (`dispatch_notes.py`; see 481 and 596).
 
 **Test.** A test sets a note and a treaty term for a pair, saves and loads, and reads them back; a seat cannot set the other country's side (refusal `cause`); the note survives the seat.
+
+## Resolution
+
+`sim/agents/relations.py` over the declared `relations` actor-pair store (`data/world/stores.json`); commands in `sim/ui/proto/dispatch_relations.py`; stances in `data/world/relation_stances.json`; protocol in `sim/PROTOCOL.md`. Held by `sim/tests/test_relations_store.py` and `test_relations_save.py`. 598 writes tariff and embargo into the same record. Not done: a `country` option on the `note` command; the commands' typed forms are `relations [country]` and `set_relation <country> stance|note|term ...`.

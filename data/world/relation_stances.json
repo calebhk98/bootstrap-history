@@ -1,0 +1,4 @@
+{
+  "_note": "The stances a country may hold toward another (sim/agents/relations.py). The first is the default.",
+  "stances": ["neutral", "friendly", "allied", "wary", "hostile"]
+}
