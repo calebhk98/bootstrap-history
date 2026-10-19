@@ -104,5 +104,40 @@ class PozzolanicConcreteTests(unittest.TestCase):
             self.assertLess(nearest, DISTRICT_RADIUS_KM, place["name"])
 
 
+CONCRETE_WORKS = ("sea_harbours_pozzolana", "med_aqueducts_latrines", "tr_canal_lock")
+
+
+class HydraulicConcreteWorksTests(unittest.TestCase):
+    """The works that need a binder setting under water or carrying water name Roman concrete."""
+
+    @classmethod
+    def setUpClass(cls):
+        from sim.engine import tree_merge
+        cls.nodes = {node["id"]: node for node in tree_merge.build_tree().tree["nodes"]}
+        cls.production = load_production()[0]
+
+    def test_each_work_draws_pozzolanic_concrete_by_mass(self):
+        for node_id in CONCRETE_WORKS:
+            materials = self.nodes[node_id]["mat"]
+            self.assertGreater(materials.get("concrete_pozzolanic_kg", 0.0), 0.0, node_id)
+            self.assertIn("concrete_pozzolanic_kg", self.production)
+
+    def test_each_work_states_the_source_of_its_mass(self):
+        for node_id in CONCRETE_WORKS:
+            node = self.nodes[node_id]
+            self.assertIn("[BASIS:", node.get("_internal", ""), node_id)
+            self.assertIn(node.get("conf"), ("B", "C", "D"), node_id)
+
+    def test_concrete_replaces_the_separate_lime_and_stone_it_contains(self):
+        materials = self.nodes["med_aqueducts_latrines"]["mat"]
+        self.assertNotIn("lime_kg", materials)
+        self.assertNotIn("stone_kg", materials)
+
+    def test_the_pozzolana_distance_multiplier_is_labelled_with_its_retirement(self):
+        places = geography_api.load_geography()["located_materials"]["pozzolana"]
+        self.assertIn("HEURISTIC", places["note"])
+        self.assertRegex(places["note"], r"retire: Complaints/\d+")
+
+
 if __name__ == "__main__":
     unittest.main()
