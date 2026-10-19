@@ -22,7 +22,7 @@ for command_name in REPLY_COMMANDS:
 
 refusals = []
 for node_id in [node_id for node_id in NODES if node_id not in han_sim.done][:80]:
-    refusals.append(json.dumps(_ask(cmd="start", node=node_id)))
+    refusals.append(json.dumps(_ask(cmd="start", id=node_id)))
 check("a Han game's start refusals name no Roman money",
       not any(FORBIDDEN.search(text) for text in refusals),
       [FORBIDDEN.findall(text) for text in refusals if FORBIDDEN.search(text)][:3])
