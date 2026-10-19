@@ -5,6 +5,8 @@ time it is read; every later change goes through `transfer_tile`, whoever the ac
 """
 from sim.geography.api import tile_owners, tiles_held
 
+from . import world_events
+
 
 class TileOwnershipMixin:
 
@@ -35,9 +37,15 @@ class TileOwnershipMixin:
         """The tiles the home country owns."""
         return tiles_held(self.civ, self.world_map, self.tile_owner_map())
 
-    def transfer_tile(self, tile_id, to_actor, control=None):
-        """Give a tile to a country or seat (None releases it); returns the previous owner."""
-        return tile_owners.transfer(self.tile_owner_map(), tile_id, to_actor, control, self.world_map, self.stores.view("control"))
+    def transfer_tile(self, tile_id, to_actor, control=None, cause="transfer"):
+        """Give a tile to a country or seat (None releases it); returns the previous owner. Writes the change to
+        the world event log with its cause."""
+        controls = self.stores.view("control")
+        previous = tile_owners.transfer(self.tile_owner_map(), tile_id, to_actor, control, self.world_map, controls)
+        world_events.record(self, "tile_transfer", actors=[actor for actor in (previous, to_actor) if actor],
+                            tiles=[tile_id], cause=cause, from_owner=previous, to_owner=to_actor,
+                            control=tile_owners.control_of(controls, tile_id))
+        return previous
 
     def way_owners(self):
         """{key: owner or None} of every built way, read from who owns the tiles it stands on."""
