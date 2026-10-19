@@ -144,3 +144,7 @@ with the test kept honest.
   deficit now carries the household past 100%, so it settled its debt and stepped all fifty years at several
   seconds each. It starts at 60% (a year's drift lands it past 70%, short of 100%) and the topic takes about
   half a minute (`python3 -m sim.tests --slow --only interface_honesty --jobs 1`). The assertions are unchanged.
+- `spin_up_money_supply` fails on `origin/main` (measured at `678e74da`): the money stock falls below one decade of
+  unreplaced wear (`python3 -m sim.tests --slow --only spin_up_money_supply`). Complaint 473's status line, which
+  says this topic passes, is stale. Limiting opening prices to goods a start can make (566) moves it closer to the
+  bound without passing.
