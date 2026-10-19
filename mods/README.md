@@ -180,6 +180,17 @@ policies (`api.policy`) and spawners (`api.spawner`); every name is forced into 
 state only in `api.state(sim.state.interface)`, a plain dict that is saved with the game, and draws random numbers
 only from `api.rng(world, ...)`, so saves and the fingerprint stay reproducible.
 
+### Adding a phase to the year
+
+`api.phase(name, scope, handler, after=..., before=...)` adds a step to the year. `scope` is `"seat"` (`handler(sim,
+seat_id)`, run once for each seat still in play, inside that seat's `act_as`) or `"world"` (`handler(sim, seats)`,
+run once; it may return a shorter list of seats, and an empty list ends the year). `after` and `before` take a
+phase name or a list: a shipped phase (the registry in `sim/engine/year_phases.py`, whose `SHIPPED` list is the
+order) or another mod's `<mod_id>:<name>`. At least one is required. The phase is placed right after its latest
+`after` and right before its earliest `before`; several mods after the same phase run in mod load order. Adjacent
+seat phases run together seat by seat. A constraint that names an unknown phase, forms a cycle, or cannot hold
+together is a load error naming the mod and the phase.
+
 **Python in a mod is not sandboxed.** It runs in the game's process with the player's full permissions: files,
 network, credentials. Nothing inside CPython holds against a hostile author, and the `api` is an interface for
 honest mods, not a defence. The protection is consent: code runs only after the player runs
