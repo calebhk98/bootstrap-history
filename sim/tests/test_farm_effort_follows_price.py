@@ -21,20 +21,23 @@ class HandsAtTheMarginTests(unittest.TestCase):
     def test_hands_stay_where_the_farm_hour_pays_the_wage_exactly(self):
         self.assertAlmostEqual(self.kept(1.0), 10.0)
 
-    def test_hands_rise_and_fall_continuously_with_the_value_of_a_farm_hour(self):
-        ratios = [0.8, 0.9, 1.0, 1.1, 1.25, 1.5, 2.0]
+    def test_hands_do_not_join_past_today_when_farming_pays_more_than_the_wage(self):
+        self.assertAlmostEqual(self.kept(3.0), 10.0)
+
+    def test_hands_fall_continuously_with_the_value_of_a_farm_hour(self):
+        ratios = [0.5, 0.7, 0.8, 0.9, 1.0]
         kept = [self.kept(ratio) for ratio in ratios]
         self.assertEqual(kept, sorted(kept))
         self.assertEqual(len(set(kept)), len(kept))
         for lower, higher in zip(kept, kept[1:]):
-            self.assertLess(higher - lower, 0.45 * higher)
+            self.assertLess(higher - lower, 0.6 * higher)
 
     def test_a_farm_hour_worth_less_than_the_wage_lets_hands_go(self):
         self.assertLess(self.kept(0.5), 10.0)
 
     def test_hands_never_exceed_satiation_or_the_cleared_land(self):
-        self.assertAlmostEqual(self.kept(50.0, satiation=14.0), 14.0)
-        self.assertAlmostEqual(self.kept(50.0, land=12.0), 12.0)
+        self.assertAlmostEqual(self.kept(50.0, satiation=8.0), 8.0)
+        self.assertAlmostEqual(self.kept(50.0, land=6.0), 6.0)
 
     def test_no_price_or_wage_keeps_no_surplus_hands(self):
         self.assertEqual(self.kept(None), 0.0)

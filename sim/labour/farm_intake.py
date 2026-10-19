@@ -13,10 +13,11 @@ def kept_farm_workers(current_fte: float, satiation_fte: float, land_limit_fte: 
     """Farm workers (full-time equivalents) who stay on the land beyond what need asks. Extra hands on
     the cleared land earn a marginal product that falls as labour to the power (elasticity - 1), so hands
     are kept where a farm hour's food at the staple's price equals the unskilled wage: today's hands times
-    the value-over-wage ratio to the power 1 / (1 - elasticity). A ratio above one draws more hands, below
-    one lets them go; the hands that feed the people to satiation and the cleared land cap it. None
+    the value-over-wage ratio to the power 1 / (1 - elasticity). A ratio below one lets hands go; at or above one
+    today's hands stay (joining is the labour market's work, not this rule's); the hands that feed the
+    people to satiation and the cleared land cap it. None
     (no price or wage yet) keeps none."""
     if farm_hour_value_over_wage is None or farm_hour_value_over_wage <= 0.0:
         return 0.0
     wanted = current_fte * farm_hour_value_over_wage ** (1.0 / (1.0 - labour_elasticity))
-    return max(0.0, min(wanted, satiation_fte, land_limit_fte))
+    return max(0.0, min(wanted, current_fte, satiation_fte, land_limit_fte))
