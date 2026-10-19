@@ -45,6 +45,19 @@ class NoFallbackPriceTests(unittest.TestCase):
         self.assertNotIn("zinc_kg", goods)
         self.assertNotIn("zinc_kg", provenance)
 
+    def test_a_waste_co_product_does_not_shut_out_the_joint_process_that_makes_a_product(self):
+        entries = {
+            "rear": _entry({"draught_kg": 1.0, "manure_kg": 2.0}, labour_hours={"labourer": 1.0},
+                           requires_node="rear_node"),
+            "flock": _entry({"wool_kg": 1.0, "manure_kg": 1.0}, labour_hours={"labourer": 1.0},
+                            requires_node="flock_node"),
+        }
+        steps = {"rear_node": 3, "flock_node": 1}
+        with mock.patch.object(engine_prices, "_unheld_steps_to", lambda node, held: steps[node]):
+            goods, provenance = engine_prices.priced_goods_table(set(), _wage_document(), production_entries=entries)
+        self.assertEqual(provenance["draught_kg"], "gated")
+        self.assertEqual(provenance["wool_kg"], "gated")
+
     def test_every_label_left_is_a_seller_the_society_has_or_can_reach(self):
         entries = {"hand": _entry({"cloth_kg": 1.0}, labour_hours={"labourer": 1.0}),
                    "loom": _entry({"silk_kg": 1.0}, labour_hours={"labourer": 1.0}, requires_node="loom_node")}
