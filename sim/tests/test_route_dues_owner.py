@@ -27,6 +27,12 @@ class DuesByHolder(unittest.TestCase):
         twice = geography_api.route_dues_by_holder(_legs(("a", "sail")), {"sail": 3.0}, owners.get, tonnes=20.0)
         self.assertAlmostEqual(twice["rome"], 2.0 * once["rome"])
 
+    def test_dues_are_levied_once_where_the_haul_changes_to_a_mode_not_on_each_hop(self):
+        owners = {"a": "rome", "b": "carthage", "c": "rome"}
+        levied = geography_api.route_dues_levied(
+            _legs(("a", "sail"), ("b", "sail"), ("c", "foot"), ("a", "sail")), {"sail": 3.0}, owners.get)
+        self.assertEqual([(due["tile"], due["holder"]) for due in levied], [("a", "rome"), ("a", "rome")])
+
     def test_a_mode_with_no_dues_and_an_unheld_tile_levy_nothing(self):
         self.assertEqual(geography_api.route_dues_levied(
             _legs(("a", "foot"), ("zz", "sail")), {"sail": 3.0}, {"a": "rome"}.get), [])
@@ -71,6 +77,26 @@ class DuesSettled(unittest.TestCase):
         _paid, second_gain = self._revenue(second, 10.0)
         self.assertAlmostEqual(second_gain, first_gain)
         self.assertEqual(first_treasury.money, first_before)
+
+
+class DuesOnATraderCargo(unittest.TestCase):
+
+    def test_a_partner_route_pays_its_dues_to_the_holder_of_each_tile_and_never_more_than_the_freight(self):
+        from . import harness
+        from sim.engine.agents_port import SimWorld
+        game = harness.unopened_sim()
+        world = SimWorld(game)
+        partner = "han_china_100ad"
+        facts = game._foreign_economy_facts(partner)
+        route = facts["route"]
+        if route is None:
+            self.skipTest("no route joins the partner")
+        paid = {}
+        for tonnes in (10.0, 20.0):
+            paid[tonnes] = world.pay_route_dues(game.household, world._home_place(), partner, "grain", tonnes)
+        freight = world.freight_between(world._home_place(), partner, "grain", 10.0)
+        self.assertLessEqual(paid[10.0], freight + 1e-9)
+        self.assertAlmostEqual(paid[20.0], 2.0 * paid[10.0])
 
 
 if __name__ == "__main__":

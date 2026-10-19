@@ -445,6 +445,11 @@ class World(Protocol):
 		"""Money to carry `tonnes` of a material from one place to another."""
 		...
 
+	def pay_route_dues(self, payer: Any, source: str, destination: str, material: str, tonnes: float) -> float:
+		"""The payer pays the tolls and port dues of carrying `tonnes` between two places to the treasuries of
+		whoever holds the tiles they are levied at; returns the money paid, which is part of the freight."""
+		...
+
 	def market_depth(self, material: str, place: str) -> float:
 		"""Tonnes a year buyers at a place take of a material."""
 		...

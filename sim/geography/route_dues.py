@@ -7,11 +7,13 @@ from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional
 
 def route_dues_levied(legs: Iterable[Mapping[str, Any]], dues_per_tonne: Mapping[str, float],
                       owner_of: Callable[[str], Optional[str]]) -> List[Dict[str, Any]]:
-    """[{tile, holder, mode, per_tonne}] for each leg whose mode carries dues and whose starting tile is held;
+    """[{tile, holder, mode, per_tonne}] for each leg where the haul changes to a mode that carries dues, from a held tile;
     `legs` carry `from` (tile) and `mode`, `dues_per_tonne` is money per tonne by mode."""
-    levied = []
+    levied, previous_mode = [], None
     for leg in legs:
-        per_tonne = float(dues_per_tonne.get(leg["mode"], 0.0))
+        # dues are paid when a haul changes to a mode (as the search charges handling), not on each hop in it
+        per_tonne = float(dues_per_tonne.get(leg["mode"], 0.0)) if leg["mode"] != previous_mode else 0.0
+        previous_mode = leg["mode"]
         holder = owner_of(leg["from"]) if per_tonne > 0.0 else None
         if holder is not None:
             levied.append({"tile": leg["from"], "holder": holder, "mode": leg["mode"], "per_tonne": per_tonne})
