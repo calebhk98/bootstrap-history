@@ -4,7 +4,6 @@ import json
 import os
 import unittest
 
-from sim.economy import opening
 from sim.engine.economy_port_setup import build_setup
 from sim.geography import crop_climate
 from sim.tests.harness import unopened_sim
@@ -85,36 +84,10 @@ def _start(civilisation_id):
     return _read("data", "civilizations", civilisation_id + ".json")["starting_techs"]
 
 
-def _obtainable(setup, home_tiles, good, seen=()):
-    """Whether the home territory can supply the good: some held recipe for it whose inputs it can supply in
-    turn, worked on a tile whose climate the recipe allows. A good no recipe makes is raw: priced or not."""
-    makers = [recipe for recipe in setup.recipes.values() if good in recipe.outputs]
-    if not makers:
-        return good in setup.opening_prices
-    if good in seen:
-        return False
-    for recipe in makers:
-        allowed = any(setup.recipe_allowed(recipe.recipe_id, tile)
-                      and (not recipe.climate_classes or setup.tiles[tile].climate_class in recipe.climate_classes)
-                      for tile in home_tiles)
-        if allowed and all(_obtainable(setup, home_tiles, item, seen + (good,)) for item in recipe.inputs):
-            return True
-    return False
-
-
 def _oil_share_of_light(civilisation_id):
-    """Share of a household's light spending that goes to oil lamps at the start's own prices, counting
-    only the lights its territory can supply."""
+    """Share of a household's light spending that goes to oil lamps at the start's own opening prices."""
     setup = build_setup(unopened_sim(civ=civilisation_id))
-    home_tiles = setup.tiles_of(setup.civ_id)
-    cache = {}
-
-    def price_of(good):
-        if good not in cache:
-            cache[good] = setup.opening_prices.get(good) if _obtainable(setup, home_tiles, good) else None
-        return cache[good]
-
-    light = [need for need in need_basket.need_prices(setup.basket_for(setup.capital_tile), price_of)
+    light = [need for need in need_basket.need_prices(setup.basket_for(setup.capital_tile), setup.opening_prices.get)
              if need.spec.need_id == "light"][0]
     oil = sum(share for good, _price, _effect, share in light.goods if "oil_lamp" in good)
     return oil, sum(share for _good, _price, _effect, share in light.goods)
