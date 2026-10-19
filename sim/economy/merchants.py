@@ -237,30 +237,39 @@ def _good_routes(good, spec, areas, prices, carriage, interest_rate, source_ids=
     only the rows of those source areas."""
     rows = []
     years_between = merchants_transit.years_between
+    kept_years = merchants_transit.years_kept_for(carriage)    # years_between's memo for this table; None when it keeps none
     interest = max(0.0, interest_rate)
     spoilage = min(1.0, max(0.0, spec.spoilage_per_year))
     keep = 1.0 - spoilage
     unit_mass = spec.unit_mass_kg
-    # (price there, price there kept after spoilage, its spoilage cost, anchor tile, area id, area), dearest first
-    dearest_first = [(prices[area.area_id], prices[area.area_id] * keep, prices[area.area_id] * spoilage,
-                      area.anchor_tile, area.area_id, area)
-                     for area in sorted((area for area in areas if prices[area.area_id]),
-                                        key=lambda area: (-prices[area.area_id], area.area_id))]
+    priced = [(area, price) for area, price in zip(areas, map(prices.get, [area.area_id for area in areas])) if price]
+    positive = [price for _area, price in priced if price > 0.0]
+    if not positive or max(price for _area, price in priced) * keep - min(positive) * (
+            1.0 + interest + MERCHANT_MARGIN_SHARE) <= 0.0:
+        return rows      # even the dearest destination, kept after spoilage, cannot cover the cheapest source's floor cost
+    # (minus price there, area id, price there, price there kept after spoilage, its spoilage cost, anchor tile, area),
+    # dearest first
+    dearest_first = sorted([(-price, area.area_id, price, price * keep, price * spoilage, area.anchor_tile, area)
+                            for area, price in priced])
+    dearest_kept = dearest_first[0][3]
     for source in areas:
         if source_ids is not None and source.area_id not in source_ids:
             continue
         price_here = prices[source.area_id]
         if not price_here or price_here <= 0.0:
             continue
+        floor_cost = price_here * (1.0 + interest + MERCHANT_MARGIN_SHARE)
+        if dearest_kept - floor_cost <= 0.0:
+            continue                                       # no destination, however near, covers this source's floor cost
         best = None
         best_net = -math.inf
         best_years = 1
-        floor_cost = price_here * (1.0 + interest + MERCHANT_MARGIN_SHARE)
         interest_here = price_here * interest              # the terms of gap_cost_per_unit, hoisted
         margin_here = MERCHANT_MARGIN_SHARE * price_here
-        cost_to_get = carriage.costs_from(source.anchor_tile).get
+        source_tile = source.anchor_tile
+        cost_to_get = carriage.costs_from(source_tile).get
         worth_beating = 0.0                                # no cheaper destination can beat this (the best net so far, once positive)
-        for price_there, kept_there, spoilage_there, anchor_tile, _area_id, destination in dearest_first:
+        for _minus, _area_id, price_there, kept_there, spoilage_there, anchor_tile, destination in dearest_first:
             # carriage only adds cost, so no cheaper destination can beat this bound
             if kept_there - floor_cost <= worth_beating:
                 break
@@ -269,7 +278,9 @@ def _good_routes(good, spec, areas, prices, carriage, interest_rate, source_ids=
             net = price_there - price_here - (per_tonne * unit_mass / KILOGRAMS_PER_TONNE
                                               + interest_here + spoilage_there + margin_here)
             if net > 0.0:       # a haul held more years pays interest and spoilage for each
-                held_years = years_between(carriage, source.anchor_tile, anchor_tile)
+                held_years = kept_years.get((source_tile, anchor_tile)) if kept_years is not None else None
+                if held_years is None:
+                    held_years = years_between(carriage, source_tile, anchor_tile)
                 if held_years > 1:
                     net -= interest_here * (held_years - 1) + price_there * (
                         merchants_transit.lost_share(spec.spoilage_per_year, held_years) - spoilage)
@@ -309,8 +320,12 @@ def shared_room(merchant, good, source, destination, held_stock, own: RouteShare
     `held_index` is `held_by_good(held_stock)` when the caller asks many times."""
     if held_index is None:
         held_index = held_by_good(held_stock)
-    held = sum(quantity for tile, quantity in held_index.get(good, ()) if tile in destination.tiles)
-    held += sum(each.quantity for each in merchant.in_transit if each.good == good and each.destination_tile in destination.tiles)
+    held = 0
+    held_here = held_index.get(good)
+    if held_here:
+        held = sum(quantity for tile, quantity in held_here if tile in destination.tiles)
+    if merchant.in_transit:
+        held += sum(each.quantity for each in merchant.in_transit if each.good == good and each.destination_tile in destination.tiles)
     return room_left(merchant.expected_volumes, good, source.area_id, destination.area_id, MERCHANT_MARKET_SHARE,
                      own, group, held)
 
