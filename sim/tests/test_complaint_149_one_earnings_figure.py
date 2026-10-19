@@ -1,6 +1,7 @@
 """Complaint 149: every screen that quotes a concern's earnings or upkeep
 uses Sim.venture_real_earnings / venture_real_upkeep."""
 from .harness import *  # noqa: F401,F403
+from sim.engine.data import closure as _closure
 from sim.ui.proto.typed import parse_typed
 
 
@@ -48,7 +49,16 @@ check("why shows the same upkeep for a running concern",
 fresh = sim(capital=1_000_000)
 fresh.price_index = 1.7
 fresh.output_factor = 0.9
-listed = _run(fresh, "available sort earns reverse limit 5")["available"]
+# a concern that earns once the market's price is applied, with everything it rests on known and on the list
+_earners = sorted((node_id for node_id in NODES
+                   if fresh.is_venture(node_id) and fresh.venture_real_earnings(node_id) > 0),
+                  key=lambda node_id: len(_closure(NODES, node_id)))
+for _earner in _earners:
+    fresh.done.update(_closure(NODES, _earner) - {_earner})
+    fresh._done_changed()
+    listed = _run(fresh, "available sort earns reverse limit 5")["available"]
+    if any(row["earns_per_year"] > 0 for row in listed):
+        break
 candidate = next(row for row in listed if row["earns_per_year"] > 0)
 candidate_id = candidate["id"]
 check("available earns/costs match the same methods",

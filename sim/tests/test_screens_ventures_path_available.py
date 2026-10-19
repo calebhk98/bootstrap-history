@@ -67,7 +67,10 @@ check("the path screen prints the blocker line",
 rows_sim = sim(capital=1_000_000.0)
 # a concern that earns from its output and needs a specialist foreman, and one that pays its way, each
 # with everything it rests on known
-_FOREMAN_NODE = "mirror_amalgam"
+_FOREMAN_NODE = min((node_id for node_id in sorted(NODES)
+                     if rows_sim.is_venture(node_id) and rows_sim.venture_foreman(node_id)[0] is not None
+                     and rows_sim.venture_real_earnings(node_id, fully_ramped=True) > 0),
+                    key=lambda node_id: len(_closure(NODES, node_id)))
 _EARNER = min((node_id for node_id in sorted(NODES)
                if rows_sim.is_venture(node_id) and rows_sim.venture_foreman(node_id)[0] is None
                and rows_sim.concern_takings(node_id, 1.0) > 0
@@ -119,7 +122,7 @@ loser = next(row for row in S._agent_dispatch(rows_sim, NODES, {"cmd": "availabl
 rows_sim.venture_upkeep_quote = _real_quote
 check("a loss-maker has no payback", "payback_years" not in loser, loser)
 check("a knowledge node has zero net and no payback",
-      "payback_years" not in by_id["units_standards"])
+      "payback_years" not in next(row for row in listing["available"] if not rows_sim.is_venture(row["id"])))
 
 by_net = S._agent_dispatch(rows_sim, NODES, {"cmd": "available", "sort": "net", "reverse": True, "limit": 30})
 nets = [row["net_per_year"] for row in by_net["available"]]
