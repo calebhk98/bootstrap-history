@@ -14,7 +14,7 @@
     "straw_kg": 3000.0
    },
    "labour_hours": {
-    "labourer": 1743.362
+    "herder": 1743.362
    },
    "land_hectare_years": 66.6667,
    "extracted_from": "pasture",
@@ -42,7 +42,7 @@
     "bran_kg": 400.0
    },
    "labour_hours": {
-    "labourer": 3308.135
+    "herder": 3308.135
    },
    "land_hectare_years": 50.0,
    "extracted_from": "pasture",
@@ -70,7 +70,7 @@
     "bran_kg": 1500.0
    },
    "labour_hours": {
-    "labourer": 5035.4
+    "herder": 5035.4
    },
    "land_hectare_years": 200.0,
    "extracted_from": "pasture",
@@ -89,7 +89,7 @@
    },
    "inputs": {},
    "labour_hours": {
-    "labourer": 24.0
+    "herder": 24.0
    },
    "land_hectare_years": 1.0,
    "extracted_from": "pasture",
@@ -105,7 +105,7 @@
    },
    "inputs": {},
    "labour_hours": {
-    "labourer": 32.0
+    "herder": 32.0
    },
    "land_hectare_years": 1.0,
    "extracted_from": "pasture",
@@ -121,7 +121,7 @@
    },
    "inputs": {},
    "labour_hours": {
-    "labourer": 15.0
+    "herder": 15.0
    },
    "land_hectare_years": 1.0,
    "extracted_from": "pasture",

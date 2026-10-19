@@ -152,13 +152,13 @@ class RealProductionDataSmokeTests(unittest.TestCase):
     data/production/'s own owner's call, not this module's - see
     data/production/_SCHEMA.md and CLAUDE.md section 4)."""
 
-    def test_wheat_kg_is_present_and_booked_to_labourer(self):
+    def test_wheat_kg_is_present_and_booked_to_the_farmer(self):
         production = labour_market.production_data()
         self.assertIn("wheat_kg", production)
         coefficients = labour_market.labour_hours_coefficients_per_unit_output(
             "wheat_kg", production)
-        self.assertIn("labourer", coefficients)
-        self.assertGreater(coefficients["labourer"], 0.0)
+        self.assertIn("farmer", coefficients)
+        self.assertGreater(coefficients["farmer"], 0.0)
 
     def test_iron_bar_kg_needs_both_furnaceman_and_smith(self):
         production = labour_market.production_data()
@@ -171,7 +171,7 @@ class RealProductionDataSmokeTests(unittest.TestCase):
         production = labour_market.production_data()
         hours_by_trade, _ = labour_market.labour_hours_required_by_trade(
             {"wheat_kg": 1_000_000.0, "iron_bar_kg": 10_000.0}, production)
-        self.assertGreater(hours_by_trade.get("labourer", 0.0), 0.0)
+        self.assertGreater(hours_by_trade.get("farmer", 0.0), 0.0)
         self.assertGreater(hours_by_trade.get("smith", 0.0), 0.0)
 
 

@@ -57,6 +57,9 @@ class HouseholdState:
 	insolvent_years: int = 0
 	last_withdrawal: Optional[int] = None
 	last_settlement: int = -999
+	# interest the household could not draw on its facility, and the consecutive years it has owed some (sim/agents/borrowing.py)
+	interest_arrears: float = 0.0
+	arrears_years: int = 0
 	spend_last_year: Optional[float] = None
 	# the cash book (sim/engine/cash_book.py): the open period's entries by cause, cash at its start,
 	# and the last few closed years

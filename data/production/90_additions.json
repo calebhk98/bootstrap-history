@@ -78,7 +78,7 @@
     "hemp_fiber_kg": 1.1
    },
    "labour_hours": {
-    "labourer": 15.0
+    "spinner": 15.0
    },
    "unit_dimension": "mass",
    "basis": "per kg of hand-twisted thin twine/string",
@@ -94,7 +94,7 @@
     "hemp_fiber_kg": 1.15
    },
    "labour_hours": {
-    "labourer": 6.0
+    "spinner": 6.0
    },
    "unit_dimension": "mass",
    "basis": "per kg of heavy laid rope, rope-walk grade",
@@ -129,7 +129,8 @@
     "hemp_fiber_kg": 1.15
    },
    "labour_hours": {
-    "labourer": 8.0
+    "spinner": 4.36,
+    "weaver": 3.64
    },
    "unit_dimension": "mass",
    "basis": "per kg of heavy, plain-woven canvas (sailcloth-grade)",
@@ -145,7 +146,7 @@
     "hide_kg": 3.6
    },
    "labour_hours": {
-    "artisan": 25.0
+    "tanner": 25.0
    },
    "unit_dimension": "mass",
    "basis": "per kg of finished vellum (fine calfskin parchment, scraped thin and stretched)",
@@ -213,7 +214,7 @@
    },
    "inputs": {},
    "labour_hours": {
-    "labourer": 120.0
+    "herder": 120.0
    },
    "land_hectare_years": 16.0001091,
    "extracted_from": "pasture (rough grazing, raised to draft size as part of ordinary cattle-keeping)",
@@ -229,7 +230,7 @@
    },
    "inputs": {},
    "labour_hours": {
-    "labourer": 150.0
+    "herder": 150.0
    },
    "land_hectare_years": 16.0001091,
    "extracted_from": "pasture (bred from a jack donkey and a horse mare, reared to working size on rough grazing)",

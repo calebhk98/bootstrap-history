@@ -125,7 +125,11 @@ class LabourAllocationMixin:
         it while the agent economy runs, else the need the recipe graph puts on it."""
         people = self._world.economy.agent_people_by_trade()
         if people:
-            held = {trade: count for trade, count in people.items() if trade != FARM_TRADE and count > 0.0}
+            # The unskilled fallback's people are the pool the farm and every other trade draw on, so
+            # their headcount says nothing about how many hours non-farm work takes.
+            pool = trade_data.fallback_trade(self.wage_schedule().training_years, self._world.trade_family)
+            held = {trade: count for trade, count in people.items()
+                    if trade not in (FARM_TRADE, pool) and count > 0.0}
             total = sum(held.values())
             if total > 0.0:
                 return {trade: count / total for trade, count in held.items()}

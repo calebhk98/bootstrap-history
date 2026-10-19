@@ -41,7 +41,7 @@
     "wood_kg": 4000.0
    },
    "labour_hours": {
-    "labourer": 30.0
+    "charcoal_burner": 30.0
    },
    "unit_dimension": "mass",
    "basis": "per tonne of charcoal from an earth-clamp burn",
@@ -381,8 +381,7 @@
     "coal_kg": 450.0
    },
    "labour_hours": {
-    "furnaceman": 10.0,
-    "labourer": 6.0
+    "lime_burner": 16.0
    },
    "unit_dimension": "mass",
    "basis": "per tonne of quicklime (CaO) from calcined limestone",
@@ -399,8 +398,7 @@
    "firewood_kg": 1530.0
   },
   "labour_hours": {
-   "furnaceman": 10.0,
-   "labourer": 8.0
+   "lime_burner": 18.0
   },
   "unit_dimension": "mass",
   "basis": "per tonne of quicklime (CaO) from limestone calcined in a firewood-fired kiln (the technique Cato's De Agri Cultura describes; lime_kg is the coal-fired technique for the same good)",

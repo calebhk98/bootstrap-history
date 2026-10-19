@@ -5,6 +5,9 @@ compressed, so a player's first game of each civilisation skips them. `sim/engin
 them; an entry is used only when its key (inputs, data files and source) matches, so after a change to the
 economy or engine source they go stale and the game computes its own as before.
 
+The opening's price solves are also shipped at the other interest-rate bands a game is likely to meet
+(`sim/engine/shipped_rate_bands.py`), so a year that meets a new band reads its solves instead of computing them.
+
 Regenerate before handing a build to players, and drop the stale ones:
 
     python3 sim/simulator.py openings --prune

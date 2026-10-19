@@ -202,3 +202,13 @@ fix-round-regressions-3, because after the ore districts merge (520) extra metal
 later while both series' price levels climb steeply. That loosens the check; restore it when the opening's money stock
 is fixed (507 Stage 2) and the price level stops climbing. Stage 2 (Update 4) moved it to five years: the price level still climbs.
 
+
+## Measured: the settling statistic on Rome, main against the in-year price search (507 Stage 7)
+
+`sim/economy/settling.py` over 60 years of the Rome first stage (`economy_port_trace.spin_up_trace(harness.sim(), 60)`,
+then `settling_report(rows)`; `python3 -m sim.tests --slow --only baseline_rome` runs the same check). On the integration
+branch before Stage 7 every series fails: the price level swings by up to half a log unit a year around a level that
+wanders over several times, the market rate reaches the ceiling `bounded_rate` sets, and the wage and the money stock
+trend down. With Stage 7 (branch `507-stage-7-price-search-within-year`) the rate's yearly steps and the price level's
+swings shrink to a fraction of that and the money stock settles; the price level and the wage still fall steadily,
+which is the labour glut (608), not a cycle. Reproduce both with the command above on each branch (minutes each).

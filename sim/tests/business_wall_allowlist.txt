@@ -10,7 +10,7 @@ sim/engine/agents_port_capacity.py::running_cost
 sim/engine/cash_remedies.py::cash_remedies
 sim/engine/cause_book.py::concern_effect
 sim/engine/commodities.py::material_kg_per_yr
-sim/engine/economy_credit.py::enforce_credit_limit
+sim/engine/economy_credit.py::answer_exhausted_credit
 sim/engine/economy_credit.py::shed_loss_makers
 sim/engine/economy_credit.py::stall_diagnosis
 sim/engine/economy_electricity.py::_electricity_demand_kw

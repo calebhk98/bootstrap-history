@@ -24,6 +24,7 @@ from . import money_units
 from .units_prose import money_text
 from sim.world import capital_market
 from sim.agents.api import edges, ledger
+from .agents_port import SimWorld
 
 
 def calculate_credit_ceiling(raw_credit, running_cost_floor, serviceable, price_index=1.0, market_cap=None):
@@ -329,18 +330,20 @@ class CreditMixin:
         return capital_market.borrower_rate(self.market_rate(), discount, used)
 
     def charge_interest(self, year):
-        """Arrears accrue. They did not before, which made debt free money."""
+        """Arrears accrue: the household pays its interest by the one rule every borrower follows
+        (`sim/agents/borrowing.py`): drawn on its facility within its ceiling, the rest carried as
+        arrears, and a default after too many years of them."""
         household = self.state.household
-        if household.capital >= 0:
+        if household.capital >= 0 and household.interest_arrears <= 0.0:
             return 0.0
-        rate = self.debt_interest_rate()
-        owed = -household.capital * rate
-        self.pay_interest(self.household, owed, "interest on arrears")
-        household.interest_paid = (household.interest_paid or 0.0) + owed
+        owed, paid = self.household.settle_interest(SimWorld(self))
+        household.interest_paid = (household.interest_paid or 0.0) + paid
         if owed > 0 and (household.insolvent_years in (1, 5, 15)):
+            rate = self.debt_interest_rate()
             household.log.append((year, LogLine(
                 "arrears_interest", "interest on %s of arrears at %.1f%% a year"
-                % (money_text(-household.capital, self), rate * 100), rate=rate)))
+                % (money_text(-household.capital, self), rate * 100), rate=rate,
+                unpaid=owed - paid, arrears_years=household.arrears_years)))
         return owed
 
     def warn_near_the_limit(self, year):
@@ -426,13 +429,6 @@ class CreditMixin:
             "own docstring names (Han, Norse, Mexica) varied by circumstance "
             "rather than clustering on a single figure, so this is a round "
             "placeholder, not a citation.")
-    SETTLEMENT_MIN_INTERVAL_YEARS = declare(
-        "SETTLEMENT_MIN_INTERVAL_YEARS", 10.0, kind="temporary_heuristic",
-        unit="years", source=None, confidence="D",
-        why="Minimum gap between one insolvency write-off and the next, so "
-            "settling is a once-in-a-life humiliation rather than an annual "
-            "accounting entry (see the comment this replaces for the bug "
-            "this fixed). The specific gap is a game-balance choice.")
     SETTLEMENT_CAPITAL_RETAINED_FRACTION = declare(
         "SETTLEMENT_CAPITAL_RETAINED_FRACTION", 0.35, kind="temporary_heuristic",
         unit="fraction of the credit limit still owed after settlement",
@@ -458,14 +454,28 @@ class CreditMixin:
             "figure is tuned game feel, not a lending-market estimate.")
 
     def enforce_credit_limit(self, year):
-        """Nobody lends past the limit, so past the limit you simply stop.
+        """Nobody lends past the limit, so past the limit you simply stop: the founder's own responses to
+        exhausted credit, which come before any default. Default itself is the shared arrears rule
+        (`charge_interest`, then `default_on_debt`)."""
+        self.answer_exhausted_credit(year)
 
-        The order matters and is the realistic one: first you stop paying for new
-        work, then you let go of what you cannot maintain, and only then, if it is
-        still hopeless, your creditors write the rest off and take everything
-        that was not nailed down. You are left poor rather than impossibly
-        indebted, which is a position you can work out of.
-        """
+    def default_on_debt(self, year):
+        """The lenders default the founder's debt after too many years of arrears: first the responses to
+        exhausted credit, then entry into service for a civilisation that had it, otherwise a settlement that
+        writes most of the debt off. You are left poor rather than impossibly indebted, which is a position you
+        can work out of."""
+        household = self.state.household
+        self.answer_exhausted_credit(year)
+        limit = self.credit_limit()
+        if household.capital >= -limit:
+            return
+        if self.enter_debt_bondage(year):
+            return
+        self.settle_insolvency(year, limit)
+
+    def answer_exhausted_credit(self, year):
+        """Past the limit, in this order: stop paying for new work, let go of what cannot be maintained, and
+        shed the household that can no longer be fed."""
         limit = self.credit_limit()
         household = self.state.household
         projects = self.state.projects
@@ -557,6 +567,8 @@ class CreditMixin:
             household.log.append((year, LogLine("household_disperses", "the household disperses: %d people leave, because "
                                  "you can no longer feed them" % freed)))
 
+    def enter_debt_bondage(self, year):
+        """Where the society had debt bondage, a default puts the debtor into service; whether it did."""
         # DEBT BONDAGE, where the society had it, modelled as a TERM OF
         # SERVICE that is worked off, because that is what it mostly was:
         # Han debt servitude, the Norse debt-thrall and Mexica tlacotin
@@ -568,8 +580,8 @@ class CreditMixin:
         # In bondage your hours are not your own. That is the whole penalty, and
         # it is a heavy one in a game whose scarcest resource is your hours; but
         # it ends, and it ends sooner if the work is worth something.
-        if (household.capital < -limit and self.civ.get("debt_bondage")
-                and not household.bondage_years_left):
+        household = self.state.household
+        if self.civ.get("debt_bondage") and not household.bondage_years_left:
             term = float(self.civ.get("bondage_years", self.DEBT_BONDAGE_DEFAULT_TERM_YEARS))
             household.bondage_years_left = term
             household.bondage_debt = -household.capital
@@ -578,58 +590,53 @@ class CreditMixin:
                                  "your debt. For about %d years most of your hours "
                                  "belong to someone else. It is not the end: it is "
                                  "worked off, and then you are free again" % term)))
-            return
+            return True
+        return False
 
-        # and the rest is written off. You keep your standing, your knowledge and
-        # your practice, which is exactly what you started with.
-        #
-        # ONCE A DECADE AT MOST: settling whenever the balance sits a
-        # denarius past the line would "settle" a household whose rent
-        # slightly exceeds its credit every single year, logging the same
-        # dramatic event over and over. A write-off is a once-in-a-life
-        # humiliation, not an annual accounting entry, and between them you
-        # are simply in arrears, which already has consequences of its own.
-        if household.capital < -limit and year - getattr(household, "last_settlement", -999) >= self.SETTLEMENT_MIN_INTERVAL_YEARS:
-            household.last_settlement = year
-            # The balance left is measured against the line that stands once the name has been marked down, so it never starts outside it.
-            _rep_before = household.reputation
-            household.reputation = max(0.0, _rep_before - self.SETTLEMENT_REPUTATION_HIT)
-            limit = min(limit, self.credit_limit())
-            household.reputation = _rep_before
-            ledger.settle(self.household, self.edge(edges.EDGE_CREDITORS), -limit * self.SETTLEMENT_CAPITAL_RETAINED_FRACTION, "debts written off in settlement")
-            # THE NUMBER ANNOUNCED HAS TO BE THE NUMBER APPLIED: quoting a
-            # fixed "reputation -12" against a reputation of 4.9 would say
-            # the same thing twice while the second application does
-            # nothing at all - a penalty that cannot be paid should not be
-            # quoted as though it were.
-            _rep_hit = min(self.SETTLEMENT_REPUTATION_HIT, max(0.0, household.reputation))
-            household.reputation = max(0.0, household.reputation - self.SETTLEMENT_REPUTATION_HIT)
-            # AND NOBODY LENDS TO YOU FOR A WHILE. Without this, walking away
-            # from a debt cost a little standing and nothing else, and standing
-            # grows back. A person who has just been written off does not get
-            # a fresh line of credit the following morning.
-            _frozen_before = getattr(household, "credit_frozen_until", 0)
-            household.credit_frozen_until = max(_frozen_before, year + self.SETTLEMENT_CREDIT_FREEZE_YEARS)
-            # Say what actually happened and if the freeze date moved (not on first settlement).
-            _moved = (_frozen_before > year
-                     and household.credit_frozen_until > _frozen_before)
-            household.log.append((year, LogLine(
-                "insolvency_settled",
-                "INSOLVENCY SETTLED: most of the debt is written "
-                "off and you still owe about %s. Your "
-                "name is worth less for it (reputation %s), and "
-                "you keep your knowledge and your practice%s"
-                % (money_text(limit * self.SETTLEMENT_CAPITAL_RETAINED_FRACTION, self, grouped=True),
-                   "-%.1f" % _rep_hit if _rep_hit > 0.05
-                   else "already at nothing, so no further",
-                   (". Settling again while still frozen out "
-                    "pushes the date nobody will fund you "
-                    "again until from %d out to %d - it moves "
-                    "with every settlement, not just the first"
-                    % (_frozen_before, household.credit_frozen_until))
-                   if _moved else ""),
-                reputation_hit=_rep_hit, credit_frozen_until=household.credit_frozen_until,
-                freeze_moved=bool(_moved), frozen_before=_frozen_before)))
+    def settle_insolvency(self, year, limit):
+        """The lenders write most of the debt off. You keep your standing, your knowledge and your practice,
+        which is exactly what you started with."""
+        household = self.state.household
+        household.last_settlement = year
+        # The balance left is measured against the line that stands once the name has been marked down, so it never starts outside it.
+        _rep_before = household.reputation
+        household.reputation = max(0.0, _rep_before - self.SETTLEMENT_REPUTATION_HIT)
+        limit = min(limit, self.credit_limit())
+        household.reputation = _rep_before
+        ledger.settle(self.household, self.edge(edges.EDGE_CREDITORS), -limit * self.SETTLEMENT_CAPITAL_RETAINED_FRACTION, "debts written off in settlement")
+        # THE NUMBER ANNOUNCED HAS TO BE THE NUMBER APPLIED: quoting a
+        # fixed "reputation -12" against a reputation of 4.9 would say
+        # the same thing twice while the second application does
+        # nothing at all - a penalty that cannot be paid should not be
+        # quoted as though it were.
+        _rep_hit = min(self.SETTLEMENT_REPUTATION_HIT, max(0.0, household.reputation))
+        household.reputation = max(0.0, household.reputation - self.SETTLEMENT_REPUTATION_HIT)
+        # AND NOBODY LENDS TO YOU FOR A WHILE. Without this, walking away
+        # from a debt cost a little standing and nothing else, and standing
+        # grows back. A person who has just been written off does not get
+        # a fresh line of credit the following morning.
+        _frozen_before = getattr(household, "credit_frozen_until", 0)
+        household.credit_frozen_until = max(_frozen_before, year + self.SETTLEMENT_CREDIT_FREEZE_YEARS)
+        # Say what actually happened and if the freeze date moved (not on first settlement).
+        _moved = (_frozen_before > year
+                 and household.credit_frozen_until > _frozen_before)
+        household.log.append((year, LogLine(
+            "insolvency_settled",
+            "INSOLVENCY SETTLED: most of the debt is written "
+            "off and you still owe about %s. Your "
+            "name is worth less for it (reputation %s), and "
+            "you keep your knowledge and your practice%s"
+            % (money_text(limit * self.SETTLEMENT_CAPITAL_RETAINED_FRACTION, self, grouped=True),
+               "-%.1f" % _rep_hit if _rep_hit > 0.05
+               else "already at nothing, so no further",
+               (". Settling again while still frozen out "
+                "pushes the date nobody will fund you "
+                "again until from %d out to %d - it moves "
+                "with every settlement, not just the first"
+                % (_frozen_before, household.credit_frozen_until))
+               if _moved else ""),
+            reputation_hit=_rep_hit, credit_frozen_until=household.credit_frozen_until,
+            freeze_moved=bool(_moved), frozen_before=_frozen_before)))
 
     def stall_diagnosis(self):
         """None if the run is going somewhere; otherwise what is wrong and what

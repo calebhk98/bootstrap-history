@@ -21,6 +21,7 @@ from typing import (Any, Callable, DefaultDict, Dict, Iterable, List,
 
 from sim.invalidating import ActiveProjectState, _InvalidatingSet, _InvalidatingDict
 from .base import Actor
+from .household_borrowing import FounderBorrowing
 from .policy import IdlePolicy
 
 
@@ -53,6 +54,8 @@ _SUBSYSTEM_MAP: Dict[str, str] = {
 	"insolvent_years": "household",
 	"last_withdrawal": "household",
 	"last_settlement": "household",
+	"interest_arrears": "household",
+	"arrears_years": "household",
 	"spend_last_year": "household",
 	"scholars": "household",
 	"artisans": "household",
@@ -192,7 +195,7 @@ _LAZY_FIELDS: Set[str] = {
 }
 
 
-class Household(Actor):
+class Household(FounderBorrowing, Actor):
 	"""The founder's household: money, staff, knowledge, plant and standing.
 
 	In the live state architecture, Household delegates all persistent state
