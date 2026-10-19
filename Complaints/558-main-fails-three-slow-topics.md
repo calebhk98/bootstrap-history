@@ -159,4 +159,7 @@ with the test kept honest.
 - Branch `pm-complaints-burndown`: `sited_ore_price_over_cost`'s common-ores check (green on main) is red. Forest
   timber as a stock (539) makes iron ore open far above its cost while the opening stocks a year of inputs; the fix
   (open with a working stock, 519's last section) turns four other cycle-dependent checks red until the spin-up
-  settles (473), so it is held back. One known regression, traded against four.
+  settles (473), so it is held back. Two more checks green on main are red here for the same reason (both pass
+  with the working-stock change in): `full_length_opening_checks_han` wage over floor and
+  `full_length_opening_checks_norse` sited ores. Three known regressions, all waiting on 473; none is marked as an
+  expected failure, so they stay visible.
