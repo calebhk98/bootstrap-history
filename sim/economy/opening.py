@@ -12,7 +12,7 @@ from typing import Dict, List, Mapping, Tuple
 
 from sim.constants import declare
 
-from . import currency, goods_market, opening_income, opening_metal, opening_runs, households, households_store, labour_state, location, location_inputs, mint, opening_stores, ownership, sites, unit_cost
+from . import currency, goods_market, opening_income, opening_metal, opening_runs, households, households_store, labour_state, location, location_inputs, mint, opening_stores, ownership, sites, titles, unit_cost
 from .accounts import Book
 from .market_areas import AreaMap
 from .market_memory import MarketMemory, YearView, market_key
@@ -124,6 +124,7 @@ def _open_cohorts(setup, record) -> None:
         for cohort in households.cohorts_for_tile(tile, people, setup.working_share, setup.gini,
                                                   opening_income_per_capita=income):
             record.cohorts[cohort.agent_id] = cohort
+    titles.seed(record)
 
 
 def _settle_income(setup, record, view, priced_goods, replacement) -> None:
