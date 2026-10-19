@@ -93,10 +93,11 @@
      "conf": "C"
     }
    ],
-   "extracted_from": "coal seam",
+   "land_hectare_years": 0.0013,
+ "extracted_from": "coal seam",
    "unit_dimension": "mass",
    "basis": "per tonne of run-of-mine coal at the pit head",
-   "yield_basis": "EXTRACTED from a seam rather than made, so the cost is entirely the physical work of hewing and hauling. Pre-mechanised bord-and-pillar mining by pick and shovel, in a seam thick enough to work upright, historically ran on the order of a tonne per face-worker per shift; a 9-hour hewing figure plus 4 hours of underground haulage (tramming tubs to the shaft bottom) reflects that a face and its transport are separate jobs. Thin seams, water or bad roof push this well above 9 hours - that variance is exactly what the miner's rent-on-the-seam captures once the price system exists, not this entry.",
+   "yield_basis": "EXTRACTED from a seam rather than made, so the cost is entirely the physical work of hewing and hauling. Pre-mechanised bord-and-pillar mining by pick and shovel, in a seam thick enough to work upright, historically ran on the order of a tonne per face-worker per shift; a 9-hour hewing figure plus 4 hours of underground haulage (tramming tubs to the shaft bottom) reflects that a face and its transport are separate jobs. Thin seams, water or bad roof push this well above 9 hours - that variance is exactly what the miner's rent-on-the-seam captures once the price system exists, not this entry. LAND (Complaints/562): a working occupies and disturbs surface land that the land market would otherwise rent, and that is the seam's rent here, charged through hectare_land at the solved land rent rather than as a constant. Two terms, per tonne won: (a) the ground above the extracted seam is impaired for the life of the pit: a seam about 1.5 m thick of coal at about 1300 kg/m3 recovered at about one half (bord and pillar leaves pillars) yields about 975 kg per square metre, so 1 hectare gives about 9750 t, i.e. about 1.0e-4 hectares per tonne, held for the 10-year service life of the shaft capital above = 1.0e-3 hectare-years; (b) the pit-head yard, headgear and spoil: about 2 hectares held for those 10 years while the pit raises 8,000 t a year (80,000 t) = 2.5e-4 hectare-years per tonne. Sum about 1.3e-3 hectare-years per tonne. Deposit size does not enter: a basin holds so many times a pit's annual output that the Hotelling scarcity of the remaining stock (discounted over stock divided by yearly draw) is nil. Geometry from memory, conf D.",
    "conf": "C",
    "requires_node": null
   },
