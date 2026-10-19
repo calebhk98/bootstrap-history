@@ -120,6 +120,26 @@
    "satisfies": {
     "light": 1.0
    }
+  },
+  "light_tallow_rushlight": {
+   "outputs": {
+    "light_tallow_rushlight": 1.0
+   },
+   "inputs": {
+    "tallow_kg": 0.53,
+    "wick_rush_m": 2.0
+   },
+   "labour_hours": {
+    "labourer": 0.15
+   },
+   "unit_dimension": "count",
+   "basis": "per thousand lumen-hours of light from tallow dips on a rush pith wick",
+   "yield_basis": "The same candle as light_tallow_candle with a wick of peeled rush pith, the poor household's rushlight, for a society that has damp ground and no flax. Burn rate, brightness and dipping rate are those of light_tallow_candle; the pith wick length is taken as the cotton wick's, a recalled equivalence, confidence D.",
+   "requires_node": null,
+   "conf": "D",
+   "satisfies": {
+    "light": 1.0
+   }
   }
  }
 }
