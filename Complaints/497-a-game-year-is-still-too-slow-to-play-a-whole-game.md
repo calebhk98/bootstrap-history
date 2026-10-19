@@ -169,7 +169,7 @@ byte-identical before and after): `merchants._good_routes` returns at once when 
 after spoilage, cannot cover the cheapest source's floor cost, skips a source whose floor cost the dearest
 destination cannot cover before reading its carriage row, sorts the destinations as plain tuples instead of by a
 key function, and reads the years a haul is held from the table's own memo (`merchants_transit.years_kept_for`);
-`shared_room` no longer builds an empty sum for a good the merchant does not hold. Replaying the 4200 captured
+`shared_room` no longer builds an empty sum for a good the merchant does not hold. Replaying the captured
 `_good_routes` calls of one year against a copy of the old function (interleaved, `time.process_time`) gives
 about a fifth less CPU in that function and no differing row (`sim/tests/test_merchant_good_routes_exact.py` keeps
 the equivalence against a search that tries every destination). Whole-year function calls under `cProfile` fall
@@ -178,7 +178,7 @@ at a load average of six), so no per-year saving is claimed beyond that.
 
 Checked and left alone, with what was found:
 
-- **Sharing the search between merchants.** Across the 16 merchants of one year about 3450 of 3860 full searches
+- **Sharing the search between merchants.** Across the merchants of one year nearly nine in ten full searches
   differ in some area's price (a median of about a seventh of the areas, by a median of about an eighth of the
   price): the merchants' own expectations are genuinely different, so a bigger memo or a shared base search
   cannot be exact. The credit pass and the ordering pass also see different interest rates (the credit clearing
