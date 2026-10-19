@@ -1,6 +1,6 @@
 # An active game slows to a stall in lender postings
 
-**Status:** open
+**Status:** closed
 
 Found by an agent playtest played legitimately (`Complaints/reports/playtest-rome-seed11-agent-legitimate-log.md`,
 Rome, seed 11, branch `pm-complaints-burndown` at `fb462538`). With about thirty concerns running and loans taken,
@@ -19,3 +19,20 @@ posting).
 What it would take: profile one slow year from the save, find what grows, make it linear in the year's activity
 (and prune what the game no longer needs to keep), and add a test that the cost of a year does not grow with the
 number of past years' postings.
+
+## Resolution
+
+Cause, measured on the 143 AD save: every firm held a facility claim on every other firm (a draw was split over
+all lenders by offer), so claims grew with the square of the firms (about 176 thousand rows, 60 MB of the
+save, almost all of them firm-to-firm dust). Worse, `Purses.pay_interest` and `payroll.share_out` paid many
+payees one by one, and a payer with an empty purse drew its whole facility again for each payment, each draw
+posting to every lender, and each interest part received by a lender that was itself a borrower repaid all of
+that lender's claims. About three million lender postings in 120 seconds.
+
+Fix: a batch of payments covers the payer's shortfall once (`Purses.cover`, `ledger.cover`); a lender offering
+under a small share of the funds on offer takes no part in a draw (`LENDER_MATERIALITY`, a labelled stand-in,
+retired by Complaint 580); rounding-residue repayments and rows are not posted or kept. Regression test:
+`sim/tests/test_borrower_draws_once_per_batch.py` counts draws, not seconds.
+
+One year from the save (`step 1`, 143 AD) used to take over thirty minutes and now completes in about three and
+a half minutes, load and save included.

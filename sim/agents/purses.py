@@ -11,7 +11,8 @@ spare cash) and, for whatever they do not cover, the household savers the simula
 """
 from typing import Any, Callable, Dict, Iterable, Optional
 
-from sim.book import Book, Transfer, is_edge
+from sim.book import ROUNDING_SHARE, Book, Transfer, is_edge
+from sim.constants import declare
 from sim.contracts import FACILITY, Contracts
 
 COIN = "engine_coin"                          # the currency of the actors' money in the shared book (the engine counts in this coin)
@@ -23,6 +24,13 @@ FACILITY_REPAYMENT = "facility repayment"
 INTEREST_PAID = "interest paid"                 # a borrower's interest to its lenders, as the book labels it
 LENT = "loans made"
 REPAID = "loans repaid to you"
+LENDER_MATERIALITY = declare(
+    "LENDER_MATERIALITY", 1e-4, kind="temporary_heuristic",
+    unit="share of all funds on offer", source=None, confidence="D",
+    retire="Complaints/580: small lenders pool through an intermediary instead of each holding a claim on every borrower",
+    why="A lender offering less than this share of the funds on offer takes no part in a draw; the savers' pool "
+        "covers its part. Every small lender holding a claim on every borrower makes the claims grow with the "
+        "square of the firms and a year's postings with them.")
 DEBT_FLOOR = 1e-9                             # a debt below this is rounding residue
 
 
@@ -72,13 +80,18 @@ class Purses:
         """Move `amount`; a payer short of it draws the rest on its facility first, and a payee in debt repays."""
         if not amount > DEBT_FLOOR:
             return   # rounding residue: the books carry noise larger than this
-        if not is_edge(payer):
-            shortfall = amount - self.purse(payer)
-            if shortfall > 0.0:
-                self._draw(payer, shortfall)
+        self.cover(payer, amount)
         self.book.transfer(Transfer(payer, payee, COIN, amount, purpose))
         if not is_edge(payee):
             self._repay(payee)
+
+    def cover(self, payer: str, amount: float) -> None:
+        """Make the payer's purse hold `amount`, drawing the shortfall on its facility in one go (an account that
+        will make several payments covers their sum first, so the lenders are asked once)."""
+        if not is_edge(payer) and amount > DEBT_FLOOR:
+            held = self.purse(payer)
+            if held < amount * (1.0 - ROUNDING_SHARE):   # a purse short only by float dust pays as it is
+                self._draw(payer, amount - held)
 
     def pay_interest(self, borrower: str, owed: float, purpose: str = INTEREST_PAID) -> Dict[str, float]:
         """Pay `owed` to the borrower's lenders in proportion to what each has lent it; what each received."""
@@ -87,6 +100,7 @@ class Purses:
         if owed <= 0.0 or total <= 0.0:
             return {}
         received: Dict[str, float] = {}
+        self.cover(borrower, owed)
         for lender, principal in sorted(held.items()):
             part = owed * principal / total
             if part > 0.0:
@@ -122,6 +136,8 @@ class Purses:
         weights = {lender: offer for lender, offer in self.offers.items() if lender != borrower and offer > 0.0}
         weights.setdefault(EDGE_SAVERS, 0.0)
         total = sum(weights.values())
+        weights = {lender: weight for lender, weight in weights.items() if weight >= LENDER_MATERIALITY * total}
+        total = sum(weights.values())
         parts: Dict[str, float] = {}
         for lender, weight in sorted(weights.items()):
             part = amount * weight / total if total > 0.0 else 0.0
@@ -137,10 +153,10 @@ class Purses:
             return
         debt = sum(held.values())
         repaid = min(debt, self.purse(borrower))
-        if repaid > 0.0:
+        if repaid > DEBT_FLOOR:   # a purse of rounding residue repays nothing
             for lender, principal in sorted(held.items()):
                 part = min(repaid * principal / debt, max(0.0, self.purse(borrower)))   # shares sum to the purse only to rounding
-                if part > 0.0:
+                if part > DEBT_FLOOR:
                     self.book.transfer(Transfer(borrower, lender, COIN, part, FACILITY_REPAYMENT))
                     self.contracts.repay_facility(borrower, lender, part)
                     self._tell(lender, part, REPAID)
