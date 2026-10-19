@@ -19,7 +19,8 @@ price while unsold goods carry on, so next year's posted price carries them.
 Within the year the founder's own orders keep the marginal price curves that
 already move a bill as it is filled (material_price_factor), which is why the
 posted price leaves out the founder's flows and counts everyone else's.
-`market_state` shows the year's clearing so far.
+`market_state` shows the book's year so far, except what the market sold, left unsold and left unmet, which is the
+agent economy's record of last year.
 """
 from sim.world import market
 
