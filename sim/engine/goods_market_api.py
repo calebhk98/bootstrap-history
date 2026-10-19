@@ -230,6 +230,20 @@ class GoodsMarket(GoodsPricing, GoodsOffers):
         quote = self.quote(material)
         return None if quote is None else quote["buy_per_tonne"]
 
+    @staticmethod
+    def market_room_tonnes(quote, sold_so_far):
+        """Tonnes the market will still take this year, given what the seller has already sold into it."""
+        return max(0.0, quote["market_available_tonnes_per_year"] - sold_so_far)
+
+    def sale_limits(self, material, seller=None):
+        """(held tonnes, market room tonnes) for a sale: the two figures `sell` cuts an order to."""
+        seller = seller or self.acting
+        quote = self.quote(material)
+        if not quote:
+            return 0.0, 0.0
+        key = quote["stock_key"]
+        return seller.held(key), self.market_room_tonnes(quote, self.sold_tonnes(key, seller.party_id))
+
     def quote_sell(self, material, tonnes, seller=None):
         """(stock key, tonnes the market takes now, money for them): the one figure `sell` pays
         and refusals quote as a way to raise cash."""
@@ -240,8 +254,7 @@ class GoodsMarket(GoodsPricing, GoodsOffers):
             return None, 0.0, 0.0
         key = quote["stock_key"]
         sold_so_far = self.sold_tonnes(key, seller.party_id)
-        absorbs = max(0.0, quote["market_available_tonnes_per_year"] - sold_so_far)
-        sold = min(tonnes, seller.held(key), absorbs)
+        sold = min(tonnes, seller.held(key), self.market_room_tonnes(quote, sold_so_far))
         if sold <= 0:
             return key, 0.0, 0.0
         return key, sold, self.sale_proceeds(material, sold, sold_so_far)[0]
