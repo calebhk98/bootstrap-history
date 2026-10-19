@@ -9,7 +9,7 @@ from .firm import Firm
 from .government import Government
 from .household import Household
 from .household_party import HouseholdParty
-from . import concern_scan, imitation, joint_stock, ledger, licence, patent, revenue, supply
+from . import concern_scan, imitation, joint_stock, ledger, licence, patent, relations, revenue, supply
 from .policy import CallbackPolicy, Decision, ExportPolicy, IdlePolicy, Option, Policy, ValuePolicy, exports_allowed, register_policy
 from . import edges, payroll
 from .records import ActorRecord, ActorsState, CastEntry, CountryProfile

@@ -1,6 +1,7 @@
 {
   "_note": "Stores the base game declares (sim/engine/mod_stores.py): a name, what it is keyed by (tile, actor or actor_pair), a default and a unit. Values that differ from the default are saved in state.stores.",
   "stores": {
-    "control": {"keyed_by": "tile", "default": null, "unit": "control level (data/world/control_levels.json)"}
+    "control": {"keyed_by": "tile", "default": null, "unit": "control level (data/world/control_levels.json)"},
+    "relations": {"keyed_by": "actor_pair", "default": null, "unit": "one country's side toward another: stance, trust, treaty terms, tariff, embargo, private note and dated history (sim/agents/relations.py)"}
   }
 }
