@@ -68,8 +68,9 @@ class ForeignEconomiesMixin(ForeignRoutesMixin, ForeignCapacityMixin, ForeignPay
         those that are part of the agent economy."""
         year = self.state.scenario.year
         own = self.civ.get("id")
+        replaced = self.civ.get("variant_of")   # a civilisation that is a variant of a base stands in for it
         return sorted(record["civilization"] for record in foreign_economy_records()
-                      if record.get("enabled", False) and record["civilization"] != own
+                      if record.get("enabled", False) and record["civilization"] not in (own, replaced)
                       and record["from_year"] <= year <= record["until_year"])
 
     def partners_in_agent_economy(self):

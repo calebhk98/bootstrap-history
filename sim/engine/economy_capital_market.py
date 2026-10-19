@@ -63,12 +63,15 @@ class CapitalMarketMixin:
 
     def lender_offers(self, sources):
         """The funds each lender account offers this year, from the market's sources: the households' savings
-        stand behind the savers, the state's reserve behind its account and each firm's purse behind the firm's. A
+        stand behind the savers, the state's reserve behind its account, each firm's purse behind the firm's and the purse of
+        any other actor whose class sets `lends_from_purse` behind its own. A
         player's seat is not a lender: its purse is its own."""
         offers = {EDGE_SAVERS: sources["households"], self.state_treasury().actor_id: sources["state"]}
         purses = self.actors.state.purses
         for firm in self.actors.active_firms():
             offers[firm.actor_id] = purses.purse(firm.actor_id)
+        for lender in self.actors.purse_lenders():
+            offers[lender.actor_id] = purses.purse(lender.actor_id)
         return offers
 
     def refresh_lender_offers(self):
