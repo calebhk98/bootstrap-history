@@ -412,6 +412,7 @@ spent = stopped.active[PACED]["spent"]
 check("a project part-paid for has really been part-paid for",
       spent > 0 and stopped.active[PACED]["cost_left"] > 0, (spent, stopped.active[PACED]["cost_left"]))
 stopped.credit_limit = lambda: 0.0
+stopped.capital = min(stopped.capital, -1.0)     # the household owes something when the credit is withdrawn
 stopped.enforce_credit_limit(stopped.year)
 check("the creditors stopping your work does not burn what you paid",
       abs(stopped.paid_towards.get(PACED, 0.0) - spent) < 0.5, stopped.paid_towards)
