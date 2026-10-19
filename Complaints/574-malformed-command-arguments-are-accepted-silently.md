@@ -1,6 +1,6 @@
 # Malformed command arguments are accepted silently
 
-**Status:** closed - a field no command reads is refused with cause unknown_field
+**Status:** partly - unknown fields are refused with `unknown_field` and `help` takes `topic`, but the check is global: a field any command reads is accepted by every command (`id` on `policy` passes); per-command validation against each command's declared arguments is open
 
 Found by an agent playtest (`Complaints/reports/playtest-rome-seed7-agent-100-years-log.md`):
 
