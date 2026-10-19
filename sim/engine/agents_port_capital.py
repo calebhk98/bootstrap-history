@@ -37,6 +37,16 @@ class CapitalView:
 		"""A borrower pays the interest on its debt to its lenders."""
 		self._sim.pay_interest(payer, owed, purpose)
 
+	def founder_credit_limit(self) -> float:
+		"""The most the founder's household may owe in all."""
+		return self._sim.credit_limit()
+
+	def founder_debt_rate(self) -> float:
+		return self._sim.debt_interest_rate()
+
+	def founder_defaults(self) -> None:
+		self._sim.default_on_debt(self._sim.state.scenario.year)
+
 	def household_saving(self) -> float:
 		"""Yearly saving of the society's households: a share of the income above subsistence, with
 		income spread over the people as the civilisation's inequality says. A labourer's yearly pay keeps
