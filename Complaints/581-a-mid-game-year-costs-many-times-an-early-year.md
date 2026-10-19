@@ -70,3 +70,11 @@ registry (a running sum re-added from the new actor's place), the merchants' rou
 labour pressure and staff reads. Measure with `python3 -m sim.tests --only year_cost_shared_across_concerns` and a
 year from the save with the per-phase timer; the mid-game year is still a small multiple of an early year, so this
 stays open.
+
+## Progress, round three (still open)
+
+The interest cascade is retired by pooled lending (Complaint 580): a borrower's interest is one posting to the pool and
+the lenders are paid once a year, so the cost no longer grows with lenders per borrower squared. Measured with the
+mid-game save regrouped into the pool's form (the save predates it): one year fell from about twenty-nine seconds to
+about eighteen, still more than twice an early year. What is left in the profile: the merchants' route searches
+(`routes_search._tree`), the registry's per-founding column insertion, `forget_orders`, and the tile cost lookups.

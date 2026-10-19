@@ -9,8 +9,8 @@ import unittest
 from sim.agents import ledger
 from sim.agents.api import ActorRecord, ActorsState
 from sim.agents.firm import Firm
-from sim.agents.purses import COIN, EDGE_SAVERS, Purses
-from sim.contracts import FACILITY, STATE_DEBT, TERM_LOAN, Contract, Contracts
+from sim.agents.purses import COIN, POOL, Purses
+from sim.contracts import DEPOSIT, FACILITY, STATE_DEBT, TERM_LOAN, Contract, Contracts
 from sim.economy import api as economy_api
 from sim.economy.types import Loan
 
@@ -38,7 +38,7 @@ class OneRegistry(unittest.TestCase):
         self.assertIs(state.purses.contracts, registry)
         self.assertEqual(registry.debt("firm:a", COIN), 40.0 + 100.0 + 5.0)
         self.assertEqual(state.purses.debt("firm:a"), registry.debt("firm:a", COIN))
-        self.assertEqual(registry.facility_of("firm:a"), {EDGE_SAVERS: 40.0})
+        self.assertEqual(registry.facility_of("firm:a"), {POOL: 40.0})
 
     def test_a_default_books_the_loss_once_on_both_sides(self):
         state, registry = actor_in_debt_on_both_paths()
@@ -71,7 +71,7 @@ class OneRegistry(unittest.TestCase):
     def test_each_owner_saves_its_own_kind_and_a_load_restores_both(self):
         state, registry = actor_in_debt_on_both_paths()
         purse_record = state.purses.to_canon_dict()
-        self.assertEqual([row["kind"] for row in purse_record["facilities"]], [FACILITY])
+        self.assertEqual(sorted(row["kind"] for row in purse_record["facilities"]), [DEPOSIT, FACILITY])
         self.assertEqual([row["kind"] for row in registry.to_records(facilities=False)], [TERM_LOAN])
         restored = Contracts()
         restored.load_records(registry.to_records(facilities=False))

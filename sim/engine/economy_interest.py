@@ -1,8 +1,9 @@
-"""Interest on loans: what a borrower pays goes to its lenders, each in proportion to what it has lent.
+"""Interest on loans: what a borrower pays goes to the credit pool, which shares it among its depositors.
 
-A borrower's debt is a set of loan claims in the actors' book (`sim/agents/purses.py`), so the interest is paid
-straight to the claim holders. The household savers the simulation does not model one by one hold part of every
-claim; what they receive reaches the strata that hold savings, in proportion to what each holds.
+A borrower's debt is one facility claim of the pool in the actors' book (`sim/agents/purses.py`). The interest it
+pays stays in the pool until the year's settlement, when each depositor receives its share in proportion to its
+deposit. The household savers the simulation does not model one by one are depositors too; what they receive
+reaches the strata that hold savings, in proportion to what each holds.
 """
 from sim.agents.api import EDGE_SAVERS, payroll
 
@@ -10,10 +11,15 @@ from sim.agents.api import EDGE_SAVERS, payroll
 class InterestMixin:
 
     def pay_interest(self, payer, owed, purpose="interest"):
-        """`payer` pays `owed` of interest to its lenders; the savers' part is shared among the strata. The lenders
-        that are actors enter it as income."""
+        """`payer` pays `owed` of interest to the credit pool; what it paid."""
         received = payer.purses.pay_interest(payer.account_id, owed)
         payer.note_outlay(purpose, sum(received.values()))
+        return received
+
+    def settle_lender_interest(self):
+        """The pool shares the year's interest among its depositors: the actors enter it as income and the savers'
+        part is shared among the strata."""
+        received = self.actors.state.purses.settle_interest()
         for lender, amount in received.items():
             if lender == EDGE_SAVERS:
                 continue
@@ -23,7 +29,6 @@ class InterestMixin:
         savers = received.get(EDGE_SAVERS, 0.0)
         if savers > 0.0:
             payroll.pay_savers(self.actors, self.edge(EDGE_SAVERS), savers)
-        return received
 
     def note_lender_posting(self, account, signed, label):
         """A lender's cash moved by a loan it made or was repaid: entered in the books the lender keeps."""
