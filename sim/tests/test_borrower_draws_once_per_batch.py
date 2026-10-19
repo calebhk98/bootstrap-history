@@ -9,7 +9,7 @@ import unittest
 from sim.agents import ledger, payroll
 from sim.agents.api import ActorRecord, ActorsState
 from sim.agents.firm import Firm
-from sim.agents.purses import COIN, DEBT_FLOOR, EDGE_SAVERS, Purses
+from sim.agents.purses import COIN, DEBT_FLOOR, EDGE_SAVERS
 
 
 def lenders_and_borrower(lender_count):
@@ -66,30 +66,6 @@ class DrawsOncePerBatch(unittest.TestCase):
         contracts.tidy_facility(borrower.account_id, DEBT_FLOOR)
         self.assertNotIn(lenders[0].account_id, contracts.facility_of(borrower.account_id))
         self.assertEqual(len(contracts.facility_of(borrower.account_id)), 2)
-
-    def test_a_draw_asks_only_the_lenders_that_are_material_and_leaves_the_rest_to_the_savers(self):
-        for small_lender_count in (5, 50, 200):
-            state = ActorsState()
-            purses = state.purses
-            borrower = Firm("firm:borrower", ActorRecord(kind="firm"))
-            small = [Firm("firm:small%d" % index, ActorRecord(kind="firm", money=10.0)) for index in range(small_lender_count)]
-            for actor in [borrower] + small:
-                actor.attach(purses)
-            purses.set_offers({EDGE_SAVERS: 1e9, **{lender.account_id: 10.0 for lender in small}})
-            purses.cover(borrower.account_id, 100.0)
-            self.assertEqual(sorted(purses.contracts.facility_of(borrower.account_id)), [EDGE_SAVERS], small_lender_count)
-            self.assertAlmostEqual(purses.debt(borrower.account_id), 100.0)
-
-    def test_a_material_lender_still_lends(self):
-        state = ActorsState()
-        purses = state.purses
-        borrower = Firm("firm:borrower", ActorRecord(kind="firm"))
-        big = Firm("firm:big", ActorRecord(kind="firm", money=1000.0))
-        for actor in (borrower, big):
-            actor.attach(purses)
-        purses.set_offers({EDGE_SAVERS: 1000.0, big.account_id: 1000.0})
-        purses.cover(borrower.account_id, 100.0)
-        self.assertAlmostEqual(purses.contracts.facility_of(borrower.account_id)[big.account_id], 50.0)
 
 
 if __name__ == "__main__":

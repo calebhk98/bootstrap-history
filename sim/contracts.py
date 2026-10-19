@@ -3,7 +3,8 @@
 A contract has a lender, a borrower, a currency and a principal; its kind says how it behaves. A facility is
 a draw on an actor's standing line (one contract per borrower and lender, repaid pro rata as money comes in);
 a term loan has a rate, a term and arrears (struck by the credit market and serviced yearly); state debt is a
-kind that joins the same registry. A borrower's debt, a lender's claims and exposure, and a default's loss
+kind that joins the same registry; a deposit is what a pooled lender (see `sim/agents/purses.py`) is owed by the
+pool that lends its funds on, one contract per depositor. A borrower's debt, a lender's claims and exposure, and a default's loss
 are read from here, so a query never depends on which path made the contract. Cash stays in the book
 (`sim/book.py`); the registry holds only what is owed.
 
@@ -15,6 +16,7 @@ from typing import Any, Dict, Iterable, List, Optional
 FACILITY = "facility"
 TERM_LOAN = "term_loan"
 STATE_DEBT = "state_debt"
+DEPOSIT = "deposit"
 
 
 @dataclass
@@ -45,6 +47,7 @@ class Contracts:
 
     def __init__(self) -> None:
         self.facilities: Dict[str, Dict[str, Contract]] = {}      # borrower -> lender -> facility contract
+        self.deposits: Dict[str, Contract] = {}                   # depositor -> deposit contract (the pool owes it)
         self.term_loans: List[Contract] = []
         self._term_seen: Any = None                      # (the list, its length, its last contract) the debts below were summed over
         self._term_debts: Dict[Optional[str], Dict[str, float]] = {}   # currency -> borrower -> debt on the term loans
@@ -53,6 +56,7 @@ class Contracts:
     def all(self) -> Iterable[Contract]:
         for held in self.facilities.values():
             yield from held.values()
+        yield from self.deposits.values()
         yield from self.term_loans
 
     def debt(self, borrower: str, currency: Optional[str] = None) -> float:
@@ -119,6 +123,32 @@ class Contracts:
             for lender in [who for who, contract in held.items() if contract.principal <= floor]:
                 del held[lender]
 
+    # ---- deposits ---------------------------------------------------------------------------
+    def deposit(self, depositor: str, pool: str, currency: str, amount: float) -> None:
+        contract = self.deposits.get(depositor)
+        if contract is None:
+            self.deposits[depositor] = Contract("deposit:%s" % depositor, depositor, pool, currency, amount, kind=DEPOSIT)
+        else:
+            contract.principal += amount
+
+    def deposit_of(self, depositor: str) -> float:
+        contract = self.deposits.get(depositor)
+        return contract.principal if contract is not None else 0.0
+
+    def total_deposits(self) -> float:
+        return sum(contract.principal for contract in self.deposits.values())
+
+    def withdraw(self, depositor: str, amount: float, floor: float) -> None:
+        contract = self.deposits[depositor]
+        contract.principal -= amount
+        if contract.principal <= floor:
+            del self.deposits[depositor]
+
+    def scale_deposits(self, factor: float) -> None:
+        """A loss the pool bears: every deposit is worth `factor` of what it was."""
+        for contract in self.deposits.values():
+            contract.principal *= factor
+
     # ---- defaults ---------------------------------------------------------------------------
     def default(self, borrower: str, kind: Optional[str] = None) -> List[Contract]:
         """The borrower closes owing: its contracts of `kind` (all kinds when none) end and are returned. No
@@ -133,7 +163,9 @@ class Contracts:
 
     # ---- sharing and the save file ----------------------------------------------------------
     def adopt(self, other: "Contracts") -> None:
-        """Take over the facilities held by `other` (a purses' own registry before it joins the economy's)."""
+        """Take over the facilities and deposits held by `other` (a purses' own registry before it joins the economy's)."""
+        for depositor, contract in other.deposits.items():
+            self.deposit(depositor, contract.borrower, contract.currency, contract.principal)
         for borrower, held in other.facilities.items():
             mine = self.facilities.setdefault(borrower, {})
             for lender, contract in held.items():
@@ -143,11 +175,12 @@ class Contracts:
                     mine[lender] = contract
 
     def to_records(self, facilities: bool) -> List[Dict[str, Any]]:
-        """The facilities (by borrower and lender) or every other contract (in list order) as plain data; the
-        economy saves the one and the actors' purses the other."""
+        """The facilities (by borrower and lender) and deposits, or every other contract (in list order), as plain
+        data; the economy saves the one and the actors' purses the other."""
         if facilities:
-            return [dict(vars(contract)) for _borrower, held in sorted(self.facilities.items())
-                    for _lender, contract in sorted(held.items())]
+            return ([dict(vars(contract)) for _borrower, held in sorted(self.facilities.items())
+                     for _lender, contract in sorted(held.items())]
+                    + [dict(vars(contract)) for _depositor, contract in sorted(self.deposits.items())])
         return [dict(vars(contract)) for contract in self.term_loans]
 
     def load_records(self, records: Iterable[Dict[str, Any]]) -> None:
@@ -155,5 +188,7 @@ class Contracts:
             contract = Contract(**record)
             if contract.kind == FACILITY:
                 self.facilities.setdefault(contract.borrower, {})[contract.lender] = contract
+            elif contract.kind == DEPOSIT:
+                self.deposits[contract.lender] = contract
             else:
                 self.term_loans.append(contract)

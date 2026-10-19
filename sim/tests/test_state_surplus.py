@@ -4,7 +4,7 @@ spent on works, a named purchase that hires people; no outlay of the state goes 
 from .harness import *  # noqa: F401,F403
 
 
-from sim.agents.purses import COIN, INTEREST_PAID, LENT
+from sim.agents.purses import COIN, INTEREST_PAID, DEPOSIT_LOST
 from sim.engine.coin_hoard import KEEPING_CAUSE
 from sim.engine.theft_charge import THEFT_CAUSE
 
@@ -16,7 +16,7 @@ def one_year(game):
 
 def purchases(treasury):
     """Every purpose a state may pay for: a line it keeps up, or a named purchase or payment."""
-    named = {"interest", "patronage", "relief", KEEPING_CAUSE, LENT, THEFT_CAUSE}   # theft goes to the thieves edge
+    named = {"interest", "patronage", "relief", KEEPING_CAUSE, DEPOSIT_LOST, THEFT_CAUSE}   # theft goes to the thieves edge
     return set(treasury.record.need) | named | {purpose for purpose in treasury.record.outlays if purpose.startswith("building ")}
 
 
