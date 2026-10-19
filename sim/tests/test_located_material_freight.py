@@ -24,7 +24,7 @@ class LocatedMaterialFreightTests(unittest.TestCase):
         self.assertGreater(distance_km, 0.0)
         per_kg = s.material_freight_cost_per_kg(GOOD)
         self.assertGreater(per_kg, 0.0)
-        self.assertAlmostEqual(per_kg, s.domestic_haul_money_per_tonne(GOOD, distance_km) / 1000.0, places=9)
+        self.assertAlmostEqual(per_kg, s.domestic_haul_money_per_tonne(GOOD) / 1000.0, places=9)
 
     def test_buyer_pays_site_cost_plus_carriage(self):
         s = sim(civ="norse_900ad", capital=1.0)
