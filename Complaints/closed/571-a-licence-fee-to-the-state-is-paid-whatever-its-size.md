@@ -1,6 +1,6 @@
 # A licence fee to the state is paid whatever its size
 
-**Status:** open
+**Status:** closed - a licensee refuses terms above its own valuation or treasury, with a cause
 
 Found by an agent playtest (`Complaints/reports/playtest-rome-seed7-agent-100-years-log.md`, Rome, seed 7). The
 `disclose` command with `"mode": "license"` and a government licensee credits the founder the fee asked, at once,
@@ -19,3 +19,7 @@ What it would take: the licensee accepts or refuses by its own valuation (the va
 governments already value techniques they copy, `sim/agents/government.py`) and pays through the ledger from its
 treasury, which can refuse for lack of money; a refusal carries a `cause`. Test: a fee above the licensee's valuation
 or its treasury is refused with a cause, and a fair fee moves money from its treasury to the founder.
+
+## Resolution
+
+`licence.terms_problem` now takes the invention and the world. A firm or state licensee values the know-how with its own `imitation_worth` (a state by the gains its priorities weight against its revenue, a firm by its margin over its horizon) and refuses a fee, plus a royalty's expected stream over that horizon, above it: `fee_above_value`. A fee above the purse is `licensee_cannot_pay`. Refusals are `Refusal` values and the `disclose` reply carries `cause` and `facts`. Payment still goes through `ledger.transfer` named `licence`. A player seat as licensee is not valued (it decides by being named). Tests: `sim/tests/test_invention_disclosure.py`.
