@@ -17,6 +17,7 @@ file of their own. Behaviour is unchanged and verified byte-identical.
 from sim.refusal import LogLine
 from . import money_units, purchase_rule
 from .blockers import blocker_kind
+from .projects_trade_wait import trade_wait_outlasts_the_project
 from .interest_groups import check_group_prohibition
 from .living_stock import check_unheld_stock
 from .projects_running_gates import check_running_gates
@@ -765,16 +766,17 @@ class StartingMixin:
         # anyone could actually be had, would let `why` and `available`
         # say CAN START NOW for a project that later counts down and is
         # abandoned with the spend lost.
-        # People already being TAUGHT count: they will be ready, and starting
-        # work that lands the year they qualify is the right thing to do.
+        # People being TAUGHT count when they qualify before the stall gate
+        # would abandon the project; a later arrival is refused here.
         _none_left = [] if ignore_trade else sorted(
             trade_id for trade_id, want in (node["lab"] or {}).items()
             if want > 0 and self.labour.market_supply(trade_id) <= 0.0
-            and self.labour.trade_headcount_pending(trade_id) <= 0.0)
+            and trade_wait_outlasts_the_project(self, trade_id))
         if _none_left:
             return False, (("this needs %s and there is not one left here to do "
-                           "it: you taught the trade and nobody is currently "
-                           'holding it. {"cmd":"train","trade":"%s","n":2} makes '
+                           "it: nobody holds the trade and nobody is being taught it "
+                           "in time. "
+                           '{"cmd":"train","trade":"%s","n":2} makes '
                            "more, or hire from your own if you have any"
                            % (", ".join(trade_id + "s" for trade_id in _none_left), _none_left[0]))
                            if _why else None)

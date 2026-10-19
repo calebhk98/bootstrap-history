@@ -1,6 +1,6 @@
 # Carriage pays the poor without using their hours or any carriers
 
-**Status:** partly fixed. Carriage hours are now hired in the labour market (below); carts, ships and animals as capital, travel time and storage along the route stay open.
+**Status:** partly - split into 627, 628, 629, 630, 631, 632 (closes when they do); carriage hours are hired in the labour market, and carts, ships and animals as capital, with dispatch limited by them, stay open
 
 Found by an outside reviewer reading the repository; checked against the code.
 
@@ -54,3 +54,29 @@ demand for carters, sailors and porters (530).
   Not done: port handling hours, the other modes' labour parts (the cheapest mode's share stands for all),
   and a wage by area (one national average).
 - Tests: `sim/tests/test_economy_carriage_hours.py`.
+
+## Sized (no change made)
+
+- **Travel time is covered.** `sim/economy/merchants_transit.py` holds a haul for the whole years its days span, books
+  spoilage each year to `EDGE_SPOILAGE`, charges interest in `gap_cost_per_unit`, and lags news; held by
+  `test_merchant_travel_time.py`.
+- **Storage at stages** is not charged (spoilage and interest only); small.
+- **Carriers as capital** need, in order: cart, pack saddle and vessel goods with recipes and sourced service lives
+  (only `ox` and `mule` exist, without service lives); carrier-days, animals per carrier and vehicle wear exposed on
+  geography's `Rate` and threaded through `carriage_crew`; a per-merchant fleet whose yearly capacity follows from
+  its carriers and the route's days, with bids or hire for more and wear booked from the service life (merchants are
+  not worn today, `inventory.wear_moves` wears cohort holdings only); and an opening endowment of fleets. Several
+  sessions in all.
+
+## Split
+
+Children, in order of work:
+
+- 627: Carriage hours count sea and river hauls at the land mode's hours, skip port handling, and use one national wage
+- 628: Storage at stages of a haul is not charged
+- 629: Carts, pack saddles and vessels are not goods and have no service lives
+- 630: Geography's `Rate` does not expose carrier-days, animals per carrier or vehicle wear
+- 631: Merchants have no fleet: dispatch is limited by cash, not by carriers
+- 632: The non-labour part of a carriage fee (feed, carts, ships, animals, losses) goes to the poorest households of the source tile
+
+552 stays `partly`: carriage hours are already hired (see Done).

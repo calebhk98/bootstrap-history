@@ -16,7 +16,8 @@
   },
   "wheat_kg": {
    "outputs": {
-    "wheat_kg": 577.5
+    "wheat_kg": 577.5,
+    "straw_kg": 866.25
    },
    "inputs": {},
    "labour_hours": {
@@ -39,13 +40,14 @@
    "extracted_from": "arable land",
    "unit_dimension": "mass",
    "basis": "per hectare CROPPED with wheat for one growing season, output as kg of threshed grain delivered to the granary, net of the seed corn held back for next year's sowing. A hectare cropped is not a hectare held: under the two-field rotation of this period an equal area lies fallow, so a holding is about twice this area - see sim/world/agriculture.py's FALLOW_SHARE_OF_HOLDING, which is where that land requirement lives.",
-   "yield_basis": "GROWN, so the limit is land and a yield-to-seed ratio, not a recipe with material inputs - this is the single number that decides what share of a pre-industrial population must farm, so it deserves the most defensible physical basis in this file. Ancient Mediterranean wheat under an ard (a scratch plough that does not invert the sod, so a field needs several cross-ploughings rather than one deep one) without heavy manuring returned on the order of 4-5 fold on the seed sown - Columella's own figures and modern archaeobotanical estimates for Roman Italy agree on this order of magnitude. Taking the midpoint 4.5 fold at a seeding rate of 165 kg/ha (the midpoint of the 150-180 kg/ha broadcast range) gives a GROSS yield of 742.5 kg/ha, and subtracting the 165 kg/ha of seed corn held back gives the 577.5 kg/ha stated as this entry's output. ARITHMETIC CORRECTION, RECORDED RATHER THAN QUIETLY APPLIED: this entry previously stated 800 kg/ha and called it net of seed while deriving it from the same fold times seed arithmetic, which yields a GROSS figure by definition - fold return is measured against the seed sown, so the seed is inside it. 800 is a defensible gross number and was an indefensible net one; the two readings differ by 28%, and everything downstream (surplus, the farm-population share, the price of bread) scales off which one is meant. inputs stays empty rather than listing wheat_kg as its own seed input because sim/engine/solve_prices.py's resolvability pass treats a material that appears among its own inputs as never bottoming out in labour, which is wrong for a self-reproducing crop but is the tool's rule today - see Complaints/31. LABOUR. Cross-ploughing, broadcast sowing, weeding, sickle reaping, and threshing and winnowing by flail or ox-treading - about 150 hours/ha in aggregate for pre-mechanical technique. This aggregate is under suspicion and is NOT to be treated as settled: hand reaping with a sickle runs at roughly 0.1 ha per worker-day, which is on the order of 100 hours per hectare for the reaping alone, and that does not leave room inside 150 for the other five sub-tasks. Correcting it means re-deriving this line from its sub-tasks at defensible rates, which has not been done, so the number stands with the doubt attached rather than being adjusted by guess. TEAM (Complaint 398): the ard is drawn by a yoke of oxen, held as plant (capital above, the draught_animal_kg the economy rears and the engine breeds), and the team grazes: land_hectare_years is the one hectare cropped plus about a quarter hectare-year of pasture and hay meadow for the team (a hectare cropped needs 0.2 of an ox, an ox about 1.2 hectares of grazing and hay for roughly 3 tonnes of dry matter a year; order of magnitude, conf C), so fodder is land, not a good. Available only to a society that can keep draught animals (requires_node cap_power_muscle); wheat_hoe_kg is the same crop without a team. LAND (Complaints/48): this entry's whole batch already IS the one hectare-year its own basis states, so land_hectare_years is exactly that hectare expressed in the unit hectare_land is priced in - 1 hectare-year, not a new area estimate. sim/engine/solve_prices.py charges this against hectare_land's own solved price (sim/world/land.py's Ricardian margin of cultivation for the civilization being solved) exactly like any ordinary input, which is how the rent that module computes finally reaches the price of bread - see LAND in _SCHEMA.md.",
+   "yield_basis": "GROWN, so the limit is land and a yield-to-seed ratio, not a recipe with material inputs - this is the single number that decides what share of a pre-industrial population must farm, so it deserves the most defensible physical basis in this file. Ancient Mediterranean wheat under an ard (a scratch plough that does not invert the sod, so a field needs several cross-ploughings rather than one deep one) without heavy manuring returned on the order of 4-5 fold on the seed sown - Columella's own figures and modern archaeobotanical estimates for Roman Italy agree on this order of magnitude. Taking the midpoint 4.5 fold at a seeding rate of 165 kg/ha (the midpoint of the 150-180 kg/ha broadcast range) gives a GROSS yield of 742.5 kg/ha, and subtracting the 165 kg/ha of seed corn held back gives the 577.5 kg/ha stated as this entry's output. ARITHMETIC CORRECTION, RECORDED RATHER THAN QUIETLY APPLIED: this entry previously stated 800 kg/ha and called it net of seed while deriving it from the same fold times seed arithmetic, which yields a GROSS figure by definition - fold return is measured against the seed sown, so the seed is inside it. 800 is a defensible gross number and was an indefensible net one; the two readings differ by 28%, and everything downstream (surplus, the farm-population share, the price of bread) scales off which one is meant. inputs stays empty rather than listing wheat_kg as its own seed input because sim/engine/solve_prices.py's resolvability pass treats a material that appears among its own inputs as never bottoming out in labour, which is wrong for a self-reproducing crop but is the tool's rule today - see Complaints/31. LABOUR. Cross-ploughing, broadcast sowing, weeding, sickle reaping, and threshing and winnowing by flail or ox-treading - about 150 hours/ha in aggregate for pre-mechanical technique. This aggregate is under suspicion and is NOT to be treated as settled: hand reaping with a sickle runs at roughly 0.1 ha per worker-day, which is on the order of 100 hours per hectare for the reaping alone, and that does not leave room inside 150 for the other five sub-tasks. Correcting it means re-deriving this line from its sub-tasks at defensible rates, which has not been done, so the number stands with the doubt attached rather than being adjusted by guess. TEAM (Complaint 398): the ard is drawn by a yoke of oxen, held as plant (capital above, the draught_animal_kg the economy rears and the engine breeds), and the team grazes: land_hectare_years is the one hectare cropped plus about a quarter hectare-year of pasture and hay meadow for the team (a hectare cropped needs 0.2 of an ox, an ox about 1.2 hectares of grazing and hay for roughly 3 tonnes of dry matter a year; order of magnitude, conf C), so fodder is land, not a good. Available only to a society that can keep draught animals (requires_node cap_power_muscle); wheat_hoe_kg is the same crop without a team. LAND (Complaints/48): this entry's whole batch already IS the one hectare-year its own basis states, so land_hectare_years is exactly that hectare expressed in the unit hectare_land is priced in - 1 hectare-year, not a new area estimate. sim/engine/solve_prices.py charges this against hectare_land's own solved price (sim/world/land.py's Ricardian margin of cultivation for the civilization being solved) exactly like any ordinary input, which is how the rent that module computes finally reaches the price of bread - see LAND in _SCHEMA.md. STRAW: the stalks come off the same hectare as the grain. Pre-modern cereals had a harvest index (grain share of above-ground dry matter) of about a quarter to a third (Donald and Hamblin, 'The biological yield and harvest index of cereals as agronomic and plant breeding criteria', Advances in Agronomy 28, 1976; recalled, not opened), so the stalk is two to three times the grain; a sickle cut leaves stubble and chaff falls at the threshing floor, so a kilogram and a half of straw is taken for each kilogram of grain (conf D, an estimate). Stacking is inside the harvest labour already charged. Straw is a joint output with no reference price, a recorded waste (data/world/waste_heaps.json): it carries no share of the grain's cost, and it is fed to herds and draught animals (95_herds.json, 94_agri_organics_gaps.json).",
    "conf": "B",
    "requires_node": "cap_power_muscle"
   },
   "wheat_hoe_kg": {
    "outputs": {
-    "wheat_kg": 577.5
+    "wheat_kg": 577.5,
+    "straw_kg": 866.25
    },
    "inputs": {},
    "labour_hours": {
@@ -55,7 +57,7 @@
    "extracted_from": "arable land",
    "unit_dimension": "mass",
    "basis": "per hectare CROPPED with wheat for one growing season, output as kg of threshed grain delivered to the granary, net of the seed corn held back for next year's sowing. A hectare cropped is not a hectare held: under the two-field rotation of this period an equal area lies fallow, so a holding is about twice this area - see sim/world/agriculture.py's FALLOW_SHARE_OF_HOLDING, which is where that land requirement lives.",
-   "yield_basis": "GROWN, the same wheat as wheat_kg without a plough team, for a society that keeps no draught animals: the ground is turned by spade and hoe instead of the ard, so the yield per hectare is taken as wheat_kg's and the labour rises by the ploughing and cross-ploughing done by hand, about 200 hours per hectare on top of wheat_kg's 150 (spade culture runs to several hundred hours a hectare against well under a hundred for ploughing with a yoke; Columella 2.12 sets hand digging at many times a ploughman's day; order of magnitude, conf C, TEMPORARY HEURISTIC: yield equal to the ard's is assumed, not sourced). No team, so no capital and no pasture: the land is the one hectare cropped. LAND: the batch is one hectare-year as in wheat_kg.",
+   "yield_basis": "GROWN, the same wheat as wheat_kg without a plough team, for a society that keeps no draught animals: the ground is turned by spade and hoe instead of the ard, so the yield per hectare is taken as wheat_kg's and the labour rises by the ploughing and cross-ploughing done by hand, about 200 hours per hectare on top of wheat_kg's 150 (spade culture runs to several hundred hours a hectare against well under a hundred for ploughing with a yoke; Columella 2.12 sets hand digging at many times a ploughman's day; order of magnitude, conf C, TEMPORARY HEURISTIC: yield equal to the ard's is assumed, not sourced). No team, so no capital and no pasture: the land is the one hectare cropped. LAND: the batch is one hectare-year as in wheat_kg. STRAW: the stalks come off the same hectare as the grain. Pre-modern cereals had a harvest index (grain share of above-ground dry matter) of about a quarter to a third (Donald and Hamblin, 'The biological yield and harvest index of cereals as agronomic and plant breeding criteria', Advances in Agronomy 28, 1976; recalled, not opened), so the stalk is two to three times the grain; a sickle cut leaves stubble and chaff falls at the threshing floor, so a kilogram and a half of straw is taken for each kilogram of grain (conf D, an estimate). Stacking is inside the harvest labour already charged. Straw is a joint output with no reference price, a recorded waste (data/world/waste_heaps.json): it carries no share of the grain's cost, and it is fed to herds and draught animals (95_herds.json, 94_agri_organics_gaps.json).",
    "conf": "C",
    "requires_node": null
   },
@@ -78,9 +80,9 @@
    ],
    "unit_dimension": "mass",
    "basis": "per hectare of mature, unirrigated olive grove, long-run average across on- and off-bearing years",
-   "yield_basis": "GROWN, limited by land and orchard biology rather than a recipe. Olives bear heavily in alternate years (biennial bearing is a real physiological trait of the tree, not a farming choice), so any single-year figure is misleading; a long-run per-hectare average across on- and off-years for dry-farmed ancient Mediterranean groves - modest tree density for dry farming, no irrigation, no modern pruning regime - is on the order of a few tonnes of olives per hectare per year, of which a lever-and-screw press recovers roughly 15-20% of the fruit's weight as oil (a modern hydraulic press does somewhat better; ancient presses left more oil in the pomace). Combining those gives roughly 300 kg oil/ha/yr, taken as the entry's output. Labour is dominated by harvest: olives are hand-picked or knocked down with poles over the whole canopy of every tree, which is why olive harvest is one of the most labour-hungry weeks of the Mediterranean farming year, plus lighter, steadier labour pressing and settling the oil through the rest of the season. LAND (Complaints/48): the whole batch is the one hectare-year the basis above already states, so land_hectare_years is that hectare in hectare_land's own unit - 1 hectare-year - charged against hectare_land's solved rent by sim/engine/solve_prices.py exactly like an ordinary input; see LAND in _SCHEMA.md. CLIMATE: the olive tolerates the long dry summer of the Mediterranean climate (Koppen Csa, Csb) and needs winter chill to set flower buds, but the tree is damaged by frost below about minus 10 C and killed by hard freezes, and fruit does not ripen in a cool short summer, so cool oceanic, continental and polar climates are left out; humid subtropical (Cfa) and the warm and cool steppe (BSh, BSk) fringes carry groves, and grown_in_climate_classes names those five. Limits recalled from olive agronomy (FAO olive growing guidance; Columella, De Re Rustica 5.8-9, ancient testimony); not re-opened for this entry (Complaints/531).",
+   "yield_basis": "GROWN, limited by land and orchard biology rather than a recipe. Olives bear heavily in alternate years (biennial bearing is a real physiological trait of the tree, not a farming choice), so any single-year figure is misleading; a long-run per-hectare average across on- and off-years for dry-farmed ancient Mediterranean groves - modest tree density for dry farming, no irrigation, no modern pruning regime - is on the order of a few tonnes of olives per hectare per year, of which a lever-and-screw press recovers roughly 15-20% of the fruit's weight as oil (a modern hydraulic press does somewhat better; ancient presses left more oil in the pomace). Combining those gives roughly 300 kg oil/ha/yr, taken as the entry's output. Labour is dominated by harvest: olives are hand-picked or knocked down with poles over the whole canopy of every tree, which is why olive harvest is one of the most labour-hungry weeks of the Mediterranean farming year, plus lighter, steadier labour pressing and settling the oil through the rest of the season. LAND (Complaints/48): the whole batch is the one hectare-year the basis above already states, so land_hectare_years is that hectare in hectare_land's own unit - 1 hectare-year - charged against hectare_land's solved rent by sim/engine/solve_prices.py exactly like an ordinary input; see LAND in _SCHEMA.md. CLIMATE: the olive tolerates the long dry summer of the Mediterranean climate (Koppen Csa, Csb) and needs winter chill to set flower buds, but the tree is damaged by frost below about minus 10 C and killed by hard freezes, and fruit does not ripen in a cool short summer, so cool oceanic, continental and polar climates are left out; humid subtropical (Cfa) and the warm and cool steppe (BSh, BSk) fringes carry groves, and grown_in_climate_classes names those five. Limits recalled from olive agronomy (FAO olive growing guidance; Columella, De Re Rustica 5.8-9, ancient testimony); not re-opened for this entry (Complaints/531). KNOWLEDGE (Complaints/531): the tree is an Old World cultigen, so the grove needs the mat_olive_oil node; a society that does not hold it (the Americas before contact) has the climate but not the tree, the same gate fud_maize puts on maize.",
    "conf": "C",
-   "requires_node": null
+   "requires_node": "mat_olive_oil"
   },
   "wine_common_kg": {
    "outputs": {
@@ -120,7 +122,24 @@
    },
    "unit_dimension": "mass",
    "basis": "per tonne of pressed, salted hard cheese from goat and sheep milk",
-   "yield_basis": "Curdling with rennet, draining the whey, pressing and salting. Hard sheep and goat cheese takes about 6 to 10 kg of milk per kg (milk solids concentrate roughly tenfold as whey is drained; Fox et al., Fundamentals of Cheese Science, 2nd ed., 2017; recalled, not re-opened), taken as 8. Salt is about 2 per cent of the finished cheese by mass (same source), 20 kg a tonne; it draws out moisture and stops spoilage organisms, which is why cheese keeps where milk sours in a day (data/world/spoilage.json). The whey, about 85 per cent of the milk by mass, is not priced. Labour is the dairy work of heating, curdling, draining, pressing and turning; a rough figure, conf D.",
+   "yield_basis": "Curdling with rennet, draining the whey, pressing and salting. Hard sheep and goat cheese takes about 6 to 10 kg of milk per kg (milk solids concentrate roughly tenfold as whey is drained; Fox et al., Fundamentals of Cheese Science, 2nd ed., 2017; recalled, not re-opened), taken as 8. Salt is about 2 per cent of the finished cheese by mass (same source), 20 kg a tonne; it draws out moisture and stops spoilage organisms, which is why cheese keeps where milk sours in a day (data/world/spoilage.json). The whey, about 85 per cent of the milk by mass, is not priced. Labour is the dairy work of heating, curdling, draining, pressing and turning; a rough figure of a quarter hour a kilogram, conf D: no published time study of hand-made hard farmhouse cheese was found (a search for labour per kilogram of sheep or goat cheese gave only per-cow farm labour totals and milking studies, none of the cheese-room work), so the figure is a bottom-up estimate of the steps and stays D until one is read.",
+   "conf": "D",
+   "requires_node": null
+  },
+  "salted_meat_kg": {
+   "outputs": {
+    "salted_meat_kg": 750.0
+   },
+   "inputs": {
+    "meat_kg": 1000.0,
+    "salt_kg": 150.0
+   },
+   "labour_hours": {
+    "labourer": 40.0
+   },
+   "unit_dimension": "mass",
+   "basis": "per tonne of dry-salted, drained meat (bone-in joints)",
+   "yield_basis": "Dry salting: joints are rubbed and packed in salt, drained and turned for weeks. Salt applied is taken as 15 per cent of the meat by mass (recalled from dry-cure practice; Cato, De agri cultura 162, salts hams by the half modius each, not re-opened), of which the meat takes up a share and the rest drains off with brine. Salt and water leave the joints so that the cured weight is taken as three quarters of the fresh meat (cured hams lose roughly a quarter of their weight in drying; recalled). The salt cuts water activity so spoilage organisms stop, which is why it keeps for a year where fresh meat turns in days (data/world/spoilage.json). Labour is rubbing, packing and turning, 40 hours a tonne, a rough figure. Conf D throughout.",
    "conf": "D",
    "requires_node": null
   },
@@ -271,7 +290,8 @@
    },
    "inputs": {
     "hide_kg": 1.15,
-    "oak_bark_kg": 3.0
+    "oak_bark_kg": 3.0,
+    "urine_kg": 2.0
    },
    "labour_hours": {
     "labourer": 4.0,
@@ -279,7 +299,7 @@
    },
    "unit_dimension": "mass",
    "basis": "per kg of finished vegetable (oak-bark) tanned leather",
-   "yield_basis": "Leather is hides plus tannin plus a great deal of TIME - and time is not labour, so this entry is explicit about which is which. Fleshing and liming (soaking in a lime bath to loosen hair and dissolve the epidermis) removes hair and some tissue, a mass loss partly offset by the tannin the hide later absorbs, netting to roughly 1.15 kg of raw hide needed per kg of finished leather. Traditional oak-bark vegetable tanning used large quantities of ground bark relative to the hide's own weight - historical tanneries are commonly described using several times the hide's weight in bark across the whole tan - taken here at 3 kg of oak_bark_kg per kg of leather. The labour figures (fleshing, liming, working the hide by hand in the tan pits; then currying/finishing - shaving to thickness, working in oils) are what a tanner and his labourers actually DO with their hands; they do NOT include the months the hide spends soaking in progressively stronger tan liquors in a pit, which for heavy leather traditionally ran six months to well over a year. That soak time ties up PIT CAPACITY AND CAPITAL, not labour-hours, and belongs in whatever the sim uses to model production lead time, not in labour_hours here.",
+   "yield_basis": "Leather is hides plus tannin plus a great deal of TIME - and time is not labour, so this entry is explicit about which is which. Fleshing and liming (soaking in a lime bath to loosen hair and dissolve the epidermis) removes hair and some tissue, a mass loss partly offset by the tannin the hide later absorbs, netting to roughly 1.15 kg of raw hide needed per kg of finished leather. Traditional oak-bark vegetable tanning used large quantities of ground bark relative to the hide's own weight - historical tanneries are commonly described using several times the hide's weight in bark across the whole tan - taken here at 3 kg of oak_bark_kg per kg of leather. The labour figures (fleshing, liming, working the hide by hand in the tan pits; then currying/finishing - shaving to thickness, working in oils) are what a tanner and his labourers actually DO with their hands; they do NOT include the months the hide spends soaking in progressively stronger tan liquors in a pit, which for heavy leather traditionally ran six months to well over a year. That soak time ties up PIT CAPACITY AND CAPITAL, not labour-hours, and belongs in whatever the sim uses to model production lead time, not in labour_hours here. URINE: before liming, hides were soaked in stale urine to loosen hair and soften the grain, and the bate that followed was a dung or urine bath (medieval and Roman tanneries; recalled from the general tanning literature, not opened). Two kilograms of urine to a kilogram of leather is an estimate (conf D). The urine is town urine collected by urine_kg (95_town_excreta_and_gardens.json).",
    "conf": "C",
    "requires_node": "tex_vegetable_tanning",
    "capital": [
@@ -356,6 +376,74 @@
    "basis": "per kg of finished carbon (lampblack) ink, ground into a water/gum suspension",
    "yield_basis": "Carbon ink - lampblack soot ground into a thin gum-and-water paste - is, per the project's own material-gating review, a basic ancient craft with no real barrier to entry (it predates every era this simulator covers). It is made by burning oil in a shallow lamp under a cool surface (a bowl, a plate) and scraping off the soot that condenses there; this recovers only a small fraction of the fuel's mass as usable black - most of the oil simply burns to CO2 and water vapour and gives light rather than soot - so producing the roughly half-a-kilogram of pigment a kilogram of ink-cake needs takes several kilograms of burnt lamp oil, taken here at 10 kg of olive_oil_kg per kg of finished ink. LABELLED HEURISTIC (rule 3.4): the traditional binder is gum arabic, which is not a tracked material in this file; its small, cheap contribution to the recipe is folded into labour rather than given its own line, understating true material cost by a small margin. Labour is mostly the slow, fiddly business of tending smoky lamps and collecting soot without contaminating it with lamp-black already scraped, plus a scribe's time grinding the collected soot into the binder and testing it flows and dries correctly - ink-making was frequently done by the scriptorium itself rather than bought in, which is why 'scribe' rather than a dedicated trade appears here.",
    "conf": "C",
+   "requires_node": "prn_carbon_ink"
+  },
+  "oak_gall_kg": {
+   "outputs": {
+    "oak_gall_kg": 1.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 0.5
+   },
+   "extracted_from": "oak woodland (galls of gall wasps on oak leaves and twigs, picked by hand)",
+   "unit_dimension": "mass",
+   "basis": "per kg of dried oak galls",
+   "yield_basis": "GATHERED. Oak galls form each summer on oak twigs and are picked when hard and dry in autumn; they are rich in tannin, about a fifth to a half of their weight in the best Aleppo galls and less in the oak-apple of northern Europe. A gatherer finds and picks a kilogram of the small northern galls in about half an hour, a recalled rate, confidence D. No land is charged: galls are a byproduct of oak woodland with no rival use here (labelled heuristic: woodland byproduct rent is not yet modelled).",
+   "conf": "D",
+   "requires_node": null
+  },
+  "gum_kg": {
+   "outputs": {
+    "gum_kg": 1.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 1.0
+   },
+   "extracted_from": "wild stone-fruit trees (cherry, plum and blackthorn gum exuded from wounded bark)",
+   "unit_dimension": "mass",
+   "basis": "per kg of dried tree gum used as an ink and paint binder",
+   "yield_basis": "GATHERED. Cherry and plum trees exude a water-soluble gum from bark wounds in summer; it hardens into amber lumps that are picked off and dissolved in water as a binder, a substitute for gum arabic where acacia does not grow (Theophilus, De diversis artibus, book 1, and Cennino Cennini, Il libro dell'arte, both recalled not re-opened). Lumps are small and scattered, so a kilogram takes about an hour of searching an orchard or hedgerow, a recalled rate, confidence D. No land is charged: wild or hedgerow trees with no rival use for the gum (labelled heuristic: wild gum is not yet a land class).",
+   "conf": "D",
+   "requires_node": null
+  },
+  "ink_iron_gall_kg": {
+   "outputs": {
+    "ink_kg": 1.0
+   },
+   "inputs": {
+    "oak_gall_kg": 0.12,
+    "green_vitriol_kg": 0.06,
+    "gum_kg": 0.04,
+    "water_kg": 0.8
+   },
+   "labour_hours": {
+    "labourer": 1.0,
+    "scribe": 0.5
+   },
+   "unit_dimension": "mass",
+   "basis": "per kg of finished iron-gall ink (oak galls and copperas steeped in water with gum)",
+   "yield_basis": "Iron-gall ink is tannin from crushed galls steeped in water, iron sulphate (green vitriol, copperas) added so that iron tannate forms, and gum added to hold it in suspension. Medieval recipes (Theophilus, De diversis artibus; Cennino Cennini) give roughly one part galls to one half part vitriol and one third part gum by weight, steeped in about ten parts water, so a kilogram of ink holds about a tenth of a kilogram of galls; taken as 0.12 kg of galls, 0.06 kg of vitriol and 0.04 kg of gum, with a small allowance for filtering loss. Water is the bulk of the ink, charged as water_kg, the rest lost to the filtered dregs. Crushing, steeping for days, boiling and filtering take a labourer about an hour of attention and a scribe half an hour testing it flows, recalled, confidence D. Ratios are recalled from the recipes, not re-opened.",
+   "conf": "D",
+   "requires_node": "mat_vitriols"
+  },
+  "ink_carbon_gum_kg": {
+   "outputs": {
+    "ink_kg": 1.0
+   },
+   "inputs": {
+    "tallow_kg": 10.0,
+    "gum_kg": 0.1
+   },
+   "labour_hours": {
+    "labourer": 5.0,
+    "scribe": 1.0
+   },
+   "unit_dimension": "mass",
+   "basis": "per kg of finished carbon ink, tallow lampblack ground into a gum-and-water suspension",
+   "yield_basis": "The same carbon ink as the olive-oil ink_kg entry, with the soot collected from burning tallow (the fat a northern household has) in a shallow lamp under a cool plate, and bound with gum_kg, the tree gum, as the traditional binder. Soot is a small share of the fuel burnt, taken as the same ten kilograms of fuel for a kilogram of ink as the oil entry, a recalled figure, confidence D; a tenth of a kilogram of gum binds a kilogram of ink, recalled from the recipes. Labour as for the oil ink: tending smoky lamps, scraping soot and grinding it into the binder.",
+   "conf": "D",
    "requires_node": "prn_carbon_ink"
   },
   "bristles_kg": {
@@ -473,21 +561,6 @@
    "basis": "per kg of gelling agent (the animal-gelatin branch of this either/or material)",
    "yield_basis": "This key names an EITHER/OR node - agar (extracted by boiling and cooling red seaweed, principally Gelidium) or animal gelatin, whichever a consumer can obtain - and this entry prices only one branch of it. Agar is a genuinely different physical process (a marine-algae extraction, discovered in 17th-century Japan and dependent on access to the right coastal seaweed beds) with no route into a Roman-founder-era Mediterranean economy, so this entry defaults to the animal-gelatin route this file already has worked out in gelatin_kg and reuses its numbers exactly - see gelatin_kg's yield_basis for the bone-to-collagen reasoning. LABELLED HEURISTIC (rule 3.4): treat this as a placeholder that will be WRONG the moment a consumer of this material is actually reachable only by a founder with access to a seaweed-gathering coastline, at which point the agar branch needs its own entry rather than borrowing gelatin's.",
    "conf": "C",
-   "requires_node": null
-  },
-  "manure_kg": {
-   "outputs": {
-    "manure_kg": 1.0
-   },
-   "inputs": {},
-   "labour_hours": {
-    "labourer": 0.1
-   },
-   "extracted_from": "livestock (a byproduct of keeping draft and dairy animals)",
-   "unit_dimension": "mass",
-   "basis": "per kg of collected manure",
-   "yield_basis": "A byproduct of animals kept for traction, milk or meat, not a thing produced in its own right - a working ox or a dairy herd produces manure whether or not anyone wants it, in well-documented daily quantities per head. The only marginal cost this entry charges is collecting it from stalls, pens or a droving path rather than letting it lie, a light task folded into ordinary animal tending.",
-   "conf": "B",
    "requires_node": null
   },
   "cork_kg": {
@@ -695,14 +768,15 @@
     "cloth_kg": 1.0
    },
    "inputs": {
-    "fabric_kg": 1.05
+    "fabric_kg": 1.05,
+    "urine_kg": 5.0
    },
    "labour_hours": {
     "labourer": 3.0
    },
    "unit_dimension": "mass",
    "basis": "per kg of finished, dressed cloth",
-   "yield_basis": "Third stage of the generic textile chain: raw loom-state fabric is finished - fulled (pounded/trodden with water and fuller's earth to full-shrink and felt a wool weave tight, or simply washed and bleached for a linen/cotton weave), then dried, stretched back to shape on tenter frames, and sometimes napped or pressed. A modest further mass loss (grease, dirt and loose fibre washed out) is taken at 5%. This is the cloth a tailor or sailmaker actually buys.",
+   "yield_basis": "Third stage of the generic textile chain: raw loom-state fabric is finished - fulled (pounded/trodden with water and fuller's earth to full-shrink and felt a wool weave tight, or simply washed and bleached for a linen/cotton weave), then dried, stretched back to shape on tenter frames, and sometimes napped or pressed. A modest further mass loss (grease, dirt and loose fibre washed out) is taken at 5%. This is the cloth a tailor or sailmaker actually buys. URINE: fullers scoured wool cloth in stale human urine, whose ammonia (from urea) saponifies the grease, before the fuller's earth and the stocks (Roman fullonicae, with jars set in the street for passers-by; Pliny, Natural History 28.91 and 35.57, recalled, not opened). Five kilograms of urine to a kilogram of cloth is an estimate for a scouring bath (conf D); linen and cotton cloth are only washed, so for them this overstates the need. The urine is town urine collected by urine_kg (95_town_excreta_and_gardens.json).",
    "conf": "C",
    "requires_node": "tx2_fulling"
   },
@@ -923,6 +997,21 @@
    "yield_basis": "The same wick as wick_cotton_m from a society's own bast fibre: a candle or lamp wick of about 2 grams of spun fibre per metre, with a small allowance for waste. The fibre is linen_kg, the flax entry that folds field work, spinning and weaving into one figure, so a wick here is charged the cloth's weaving as well, an overcount until flax thread has its own entry (labelled heuristic, retire: Complaints/531). Roman and medieval European wicks were flax, hemp or rush pith; rush has no entry in the data. From memory, confidence D.",
    "conf": "D",
    "requires_node": "tex_drop_spindle"
+  },
+  "wick_rush_m": {
+   "outputs": {
+    "wick_rush_m": 1.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "labourer": 0.02
+   },
+   "extracted_from": "wet ground (soft rush, Juncus effusus, cut, dried and peeled to its pith)",
+   "unit_dimension": "length",
+   "basis": "per metre of peeled rush pith used as a wick",
+   "yield_basis": "GATHERED. Soft rush grows wild on damp ground across the cool temperate zone; the green rind is peeled in strips and the pith left to dry, and the pith is the wick of the English rushlight (Gilbert White, The Natural History of Selborne, letter on rushes, 1775, recalled not re-opened). A peeler strips a rush of about half a metre in a minute or two, so a metre of pith takes about 0.02 hours with cutting and drying. No land is charged: wild rush on wet ground has no rival use here (labelled heuristic: wet ground is not yet a land class). Confidence D.",
+   "conf": "D",
+   "requires_node": null
   }
  }
 }

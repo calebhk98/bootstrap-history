@@ -45,6 +45,16 @@ def check_simulation_invariants(state):
     return True
 
 
+def check_tile_owner_invariants(sim):
+    """Assert every tile has at most one owner: the owner map is well formed, and the tiles each seat's colonies
+    stand on are listed by one seat only and owned by it."""
+    from sim.geography.api import tile_owners
+    claims = {seat_id: [colony["tile"] for colony in seat.holdings.colonies] for seat_id, seat in sim.state.seats.items()}
+    found = tile_owners.problems(sim.state.economy.tile_owners, claims, sim.world_map, sim.stores.view("control"))
+    assert not found, "tile ownership broken: %r" % (found,)
+    return True
+
+
 def check_labour_market_invariants(sim):
     """Assert the labour market never holds more people than exist."""
     nation = sim.population.total
@@ -64,3 +74,55 @@ def check_labour_market_invariants(sim):
     assert staffed <= available + 1e-6, \
         "%.1f staff on the payroll exceed the %.1f people of working age" % (staffed, available)
     return True
+
+
+def check_technique_invariants(sim):
+    """Assert no actor runs a plant of a technique it does not hold (its own knowledge, its country's baseline,
+    or a licence it pays royalty under)."""
+    from .agents_port import SimWorld
+    registry = sim.actors
+    world = SimWorld(sim)
+    for actor in registry.actors.values():
+        business = getattr(actor.record, "business", None)
+        if business is None:
+            continue
+        scope = registry.world_for(actor, world)
+        for entry_key in business.entry_keys():
+            held = actor.knows(entry_key, scope) or entry_key in actor.record.royalty_owed
+            assert held, "%s runs %s without holding the technique" % (actor.actor_id, entry_key)
+    return True
+
+
+def check_capacity_invariants(sim):
+    """Assert counts stay within production limits: a plant's size is finite and not negative, the share of its
+    crew found lies in 0..1, no actor's workforce is negative or larger than the people of its country, and each
+    commodity's society capacity is finite and not negative."""
+    from .world_hazards import countries_in_game, people_of
+    registry = sim.actors
+    people = {country: people_of(sim, country) for country in countries_in_game(sim)}
+    home = sim.civ["id"]
+    for actor in registry.actors.values():
+        business = getattr(actor.record, "business", None)
+        for plant in (business.plants if business is not None else ()):
+            assert math.isfinite(plant.size) and plant.size >= 0.0, \
+                "%s plant %s has size %r" % (actor.actor_id, plant.entry_key, plant.size)
+            assert 0.0 <= plant.crew_found <= 1.0 + 1e-9, \
+                "%s plant %s has crew found %r" % (actor.actor_id, plant.entry_key, plant.crew_found)
+        staff = sum(actor.record.workforce.values())
+        country = actor.record.country or home
+        assert math.isfinite(staff) and staff >= -1e-9, "%s workforce %r" % (actor.actor_id, staff)
+        if country in people and people[country] > 0.0:
+            assert staff <= people[country] + 1e-6, \
+                "%s employs %.1f, more than the %.1f people of %s" % (actor.actor_id, staff, people[country], country)
+    for commodity, book in (sim.state.economy.market_book or {}).items():
+        capacity = book.get("capacity_tonnes", 0.0)
+        assert math.isfinite(capacity) and capacity >= -1e-9, "commodity %s has capacity %r" % (commodity, capacity)
+    return True
+
+
+def check_yearly_invariants(sim):
+    """The checks every year runs in a game of several countries, whether or not `sim.debug` is set: tile
+    ownership, techniques held, and production limits."""
+    check_tile_owner_invariants(sim)
+    check_technique_invariants(sim)
+    return check_capacity_invariants(sim)

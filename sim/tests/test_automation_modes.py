@@ -5,9 +5,9 @@ from .harness import *  # noqa: F401,F403
 from sim.ui.proto.typed import parse_typed
 
 
-def hire_game(mode, attrition):
+def hire_game(mode, underpaid):
     game = sim(capital=2_000_000.0, manual=False)
-    game.STAFF_ATTRITION_RATE = attrition
+    game.state.founder.policy["keep_pay_at_market"] = not underpaid
     game.state.founder.policy["auto_hire"] = mode
     game.state.household.automation_audit = []
     return game
@@ -18,13 +18,13 @@ def rows_of(game, action):
 
 
 # ---- growth is the default, replace-only never grows ------------------------------------------
-growing = hire_game(True, 0.0)
+growing = hire_game(True, False)
 for _ in range(3):
     growing._step_staff()
 check("the default mode grows the staff", sum(growing.state.household.employees.values()) > 0
       and rows_of(growing, "hire"))
 
-steady = hire_game("replace", 0.0)
+steady = hire_game("replace", False)
 for _ in range(3):
     steady._step_staff()
 check("replace-only hires nobody when nobody was lost",
@@ -32,10 +32,10 @@ check("replace-only hires nobody when nobody was lost",
       (steady.state.household.employees, steady.state.household.automation_audit))
 
 # ---- replace-only restores what was lost ------------------------------------------------------
-lossy = hire_game("replace", 0.0)
+lossy = hire_game("replace", True)
 lossy.state.household.employees.update({"artisan": 6.0, "scholar": 1.0})
 lossy.labour.resync_pools()
-lossy.STAFF_ATTRITION_RATE = 1.0
+lossy.state.household.staff_pay_held.update({"artisan": 1e-6, "scholar": 1e-6})    # paid next to nothing
 lossy._step_staff()
 replaced = rows_of(lossy, "replace")
 check("replace-only rehires the trades it lost, one row each", replaced and {row["what"].split()[-1] for row in replaced} >= {"artisan"},
@@ -45,7 +45,7 @@ check("it never hires beyond what was lost", lossy.state.household.employees.get
 check("the audit row names the mode", all("replace-only" in row["reason"] for row in replaced), replaced)
 
 # ---- the switch --------------------------------------------------------------------------------
-switch = hire_game(True, 0.0)
+switch = hire_game(True, False)
 reply = S._agent_dispatch(switch, NODES, {"cmd": "policy", "set": {"auto_hire": "replace"}})
 check("the policy command sets the replace-only mode", reply["ok"] and switch.policy["auto_hire"] == "replace", reply)
 reply = S._agent_dispatch(switch, NODES, {"cmd": "policy", "set": {"auto_hire": "off"}})

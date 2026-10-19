@@ -5,7 +5,7 @@ import math
 from dataclasses import dataclass, field
 from typing import Dict, List, Mapping
 
-from .types import EDGE_CONSUMPTION, EDGE_PRODUCTION, EDGE_SPOILAGE, is_edge
+from .types import EDGE_CONSUMPTION, EDGE_PRODUCTION, EDGE_SPOILAGE
 
 # the purposes the economy books goods under (producers.py, households_close.py, inventory.py, economy.py)
 GROWN_PURPOSE = "grown for itself"
@@ -107,13 +107,7 @@ class YearAccounts:
 
 def stocks(book) -> Dict[str, float]:
     """Quantity of each good the agents hold (edge accounts excluded)."""
-    held: Dict[str, List[float]] = {}
-    for agent in book.agents():
-        if is_edge(agent):
-            continue
-        for good, tiles in book.holdings(agent)["goods"].items():
-            held.setdefault(good, []).extend(tiles.values())
-    return {good: math.fsum(quantities) for good, quantities in sorted(held.items())}
+    return book.goods_totals()
 
 
 def build(setup, record, ledger, stocks_at_start: Mapping[str, float], prices: Mapping[str, float],

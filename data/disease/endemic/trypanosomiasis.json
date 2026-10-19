@@ -1,0 +1,27 @@
+{
+  "id": "trypanosomiasis",
+  "name": "Animal trypanosomiasis (nagana), carried by tsetse flies",
+  "vector": "Glossina (tsetse fly)",
+  "kind": "endemic",
+  "_doc": "challenge (0 to 1) is how strongly the vector pressures a tile: the product of the range conditions and the climate and vegetation envelope (sim/geography/content_rules.py). A host's loss in a year is annual_loss_at_full_challenge times the challenge. Hosts are herd animal ids (data/world/geography/resources/animals.json); an animal not listed is not a host.",
+  "range": [
+    {"layer": "lat", "min": -29, "max": 15},
+    {"layer": "lon", "min": -18, "max": 52}
+  ],
+  "challenge_envelope": [
+    {"layer": "mean_temperature_c", "optimal": [20, 30], "tolerated": [16, 34]},
+    {"layer": "annual_precipitation_mm", "optimal": [900, 3000], "tolerated": [500, 4500]},
+    {"layer": "forest_fraction", "optimal": [0.1, 1.0], "tolerated": [0.0, 1.0], "if_missing": true}
+  ],
+  "hosts": {
+    "cattle": {"annual_loss_at_full_challenge": 0.5},
+    "horse": {"annual_loss_at_full_challenge": 0.9}
+  },
+  "range_note": "The range box is the sub-Saharan distribution of Glossina; it also covers Madagascar and the Arabian south-west, which carry no tsetse, so those tiles are over-counted where wet enough. A species distribution is a biogeographic fact (dispersal), not a climate response, so it is data rather than derived.",
+  "sources": {
+    "range": {"confidence": "recalled", "source": "Ford and Katondo 1977 Maps of tsetse fly (Glossina) distribution in Africa; Rogers and Robinson 2004 Tsetse distribution, in The Trypanosomiases"},
+    "challenge_envelope": {"confidence": "recalled", "source": "Rogers 1979 and Rogers and Randolph 1986 on tsetse mortality and temperature (survival falls steeply outside about 16-34 C, best near 20-30 C); belt edge near the 500-600 mm isohyet and the need for woodland or thicket cover (Ford 1971 The Role of the Trypanosomiases in African Ecology); kept as a flat optimum above a small cover share"},
+    "hosts.cattle": {"confidence": "disputed", "source": "Losses of trypanosusceptible cattle in high-challenge areas without drugs run from a fifth to well over a third of the herd a year plus lost calves (Swallow 2000 Impacts of Trypanosomiasis on African Agriculture, PAAT Technical and Scientific Series 2; Murray et al. 1982 on N'Dama trypanotolerance). Half a herd a year at full challenge is a mid-high reading. Trypanotolerant breeds exist and are not modelled."},
+    "hosts.horse": {"confidence": "recalled", "source": "Horses and donkeys are far more susceptible than cattle; infection is near-uniformly fatal untreated (Connor and Van den Bossche 2004 African animal trypanosomiasis, in Infectious Diseases of Livestock)"}
+  }
+}

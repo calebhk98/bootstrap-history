@@ -18,8 +18,8 @@ class EconomyNotOpened(ValueError):
 	"""The game was built without opening its economy and the save cannot stand in for it; build it the long way."""
 
 
-def save_state(sim, path):
-	"""Write the whole game to a file using automatic state serialization from live sim.state."""
+def state_text(sim):
+	"""The whole game as JSON text, from the live sim.state."""
 	sim.economy.flush_record()
 	sim.state._civ = sim.civ.get("id")
 	sim.state._goal = sim.goal
@@ -45,8 +45,17 @@ def save_state(sim, path):
 	# dumps (not dump, not indent) so the C encoder does the work
 	# the agent economy's record is most of the file and already plain JSON: the encoder takes it as it is
 	with verbatim(sim.state.economy.agent_economy.get("record")):
-		text = json.dumps(serialize_state(sim.state), default=str,
-						  separators=(",", ":"))
+		return json.dumps(serialize_state(sim.state), default=str, separators=(",", ":"))
+
+
+def restore_state_text(sim, text):
+	"""Put the game back as `state_text` captured it (the same road a loaded save takes)."""
+	_apply_blob(sim, json.loads(text))
+
+
+def save_state(sim, path):
+	"""Write the whole game to a file using automatic state serialization from live sim.state."""
+	text = state_text(sim)
 	absolute = os.path.abspath(path)
 	# a command that changed nothing leaves the file as it is
 	if _ON_DISK.get(absolute) == (text, _stamp(absolute)):
@@ -332,6 +341,11 @@ def load_state(sim, path):
 	text, blob = _parsed_save(path)
 	_PARSED.clear()
 	_ON_DISK[os.path.abspath(path)] = (text, _stamp(os.path.abspath(path)))
+	_apply_blob(sim, blob)
+	return sim
+
+
+def _apply_blob(sim, blob):
 	bad = _validate_save(blob, sim)
 	if bad:
 		raise ValueError(bad if cause_of(bad) else Refusal("save_invalid", bad))
@@ -379,4 +393,3 @@ def load_state(sim, path):
 		sim._economy_deferred = False
 		reprice_tree(sim, figure)
 	sim.refresh_derived_nodes()
-	return sim

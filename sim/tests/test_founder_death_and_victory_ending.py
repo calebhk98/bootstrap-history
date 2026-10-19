@@ -89,7 +89,7 @@ def _step_and_win():
 
 
 _win.step = _step_and_win
-_win_out = S._agent_dispatch(_win, NODES, {"cmd": "step", "n": 1})
+_win_out = S._agent_dispatch(_win, NODES, {"cmd": "step", "years": 1})
 _victory = _win_out.get("victory") or {}
 check("reaching the goal returns a victory block with date, years and how to score",
       _victory.get("year") == _win.year and "elapsed_years" in _victory
@@ -102,4 +102,4 @@ check("finish ends the run and reveals the total",
       bool(_finish.get("ok")) and (_finish.get("score") or {}).get("total") is not None
       and bool(S._agent_end_reason(_win)), _finish.get("score"))
 check("after finishing, commands that move the game on are refused",
-      not S._agent_dispatch(_win, NODES, {"cmd": "step", "n": 1}).get("ok", True), None)
+      not S._agent_dispatch(_win, NODES, {"cmd": "step", "years": 1}).get("ok", True), None)

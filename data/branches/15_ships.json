@@ -274,7 +274,7 @@
   "kb": "85_transport_civil.md",
   "ph": 0,
   "lab": {"mason": 600, "labourer": 800},
-  "mat": {},
+  "mat": {"concrete_pozzolanic_kg": 11400000},
   "yrs": 0,
   "risk": 0,
   "sus": 0,
@@ -282,8 +282,8 @@
   "rev_hours": 0,
   "sch": 0,
   "art": 0,
-  "conf": "A",
-  "_internal": "[HEURISTIC: no construction labour was authored for this work, so it is taken as the crew bill of civ_harbour_dock (a concrete mole is the same masons and labourers at a larger scale); upkeep one percent of it a year, repair of the mole and clearing of the basin; no silting or wear model yet.]",
+  "conf": "C",
+  "_internal": "[BASIS: one mole of a concrete harbour taken as 100 m long, 12 m wide and 5 m of concrete body, 6000 cubic metres at about 1.9 tonnes per cubic metre for tuff-and-brick caementa in pozzolanic mortar (Lancaster, Concrete Vaulted Construction in Imperial Rome, 2005, for the density; Brandon, Hohlfelder, Jackson and Oleson, Building for Eternity, 2014, for the pier-and-mole method at Caesarea and Portus). The dimensions are a reasoned estimate, conf C.] [HEURISTIC: no construction labour was authored for this work, so it is taken as the crew bill of civ_harbour_dock (a concrete mole is the same masons and labourers at a larger scale); upkeep one percent of it a year, repair of the mole and clearing of the basin; no silting or wear model yet.]",
   "note": "Harbours built in hydraulic concrete that sets underwater are already achievable wherever pozzolana or an equivalent hydraulic binder exists (Rome's Portus and Caesarea are the standing examples); breakwaters and jetties protect anchorages.",
   "traits": [
    "infrastructure"

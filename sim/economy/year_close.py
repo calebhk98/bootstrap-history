@@ -154,9 +154,7 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage) ->
         transfers = merchants.close_year(merchant, prices, volumes, record.book.balance(merchant.agent_id, money),
                                          _held_stock(record.book, merchant.agent_id), area_map.area_of, money,
                                          interest_rate, ordered,
-                                         lambda good, area, home=merchant.home_tile: (
-                                             merchants_transit.news_lag(carriage, home, anchors[(good, area)])
-                                             if (good, area) in anchors else None))
+                                         _news_lag_of(carriage, merchant.home_tile, anchors))
         paid = ownership.spread(record, transfers, cohorts_by_tile)
         record.book.transfer_many(paid)
         for transfer in paid:
@@ -175,6 +173,21 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage) ->
         record.book.move_many(held_only(moves, record.book))
         record.cohorts[cohort_id] = closed
     record.property_income = property_income
+
+
+def _news_lag_of(carriage, home, anchors):
+    """`lag_years` for a merchant at `home`: the news lag to a market's anchor tile, worked out once per tile."""
+    lag_at_tile: Dict = {}
+
+    def lag_years(good, area):
+        tile = anchors.get((good, area))
+        if tile is None:
+            return None
+        lag = lag_at_tile.get(tile)
+        if lag is None:
+            lag = lag_at_tile[tile] = merchants_transit.news_lag(carriage, home, tile)
+        return lag
+    return lag_years
 
 
 def learned_prices(clearings, memory):

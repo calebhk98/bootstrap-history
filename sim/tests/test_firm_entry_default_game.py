@@ -10,17 +10,30 @@ from sim.engine.agents_port import SimWorld
 from sim.geography.api import settlement, tiles_held
 
 # a real concern an entrant earns by after its wages and site rent at the economy's price on the founder's tile, and
-# that an entrant can copy (re-measure: for each node, `SimWorld.entry_gross` less the `business_books.yearly_costs`
+# that an entrant can copy once it is published; the others that earn at the opening are too hard to copy from sight
+# (re-measure: for each node, `SimWorld.entry_gross` less the `business_books.yearly_costs`
 # and `firm_entry.carrying_cost`, above zero, then found a firm here)
-CONCERN = "fin_lottery"
+CONCERN = "finery_puddling"
+
+
+def add_with_prerequisites(game, node_id, found):
+	if node_id in found:
+		return
+	found.add(node_id)
+	for prerequisite in game.nodes[node_id].get("pre") or ():
+		add_with_prerequisites(game, prerequisite, found)
 
 
 def default_game_with_founder_concern():
 	game = sim()
 	year = game.state.scenario.year
 	projects = game.state.projects
-	projects.done.add(CONCERN)
-	projects.done_year[CONCERN] = year - 10
+	known = set()
+	add_with_prerequisites(game, CONCERN, known)   # a founder who runs a concern holds what it stands on
+	for node_id in known:
+		projects.done.add(node_id)
+		projects.done_year[node_id] = year - 10
+	projects.disclosures[CONCERN] = {"mode": "publish"}   # an entrant copies only what it can see
 	projects.operating.add(CONCERN)
 	projects.opened_year[CONCERN] = year - 10
 	game._done_changed()

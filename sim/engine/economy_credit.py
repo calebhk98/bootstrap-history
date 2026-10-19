@@ -9,7 +9,7 @@ arrears cost), warn_near_the_limit()/enforce_credit_limit()/
 shed_loss_makers() (what happens as you approach and then cross the
 limit), stall_diagnosis() and spending_power() (diagnosing and quoting
 against that same limit), and living_cost() (the personal running cost
-- subsistence, household, tax, status - that credit_limit(),
+- needs, dependants, tax, status - that credit_limit(),
 funding_capacity() and stall_diagnosis() all measure a household
 against).
 
@@ -780,11 +780,8 @@ class CreditMixin:
             self.state.household.capital, self.credit_limit(), share)
 
     def dependants_cost(self):
-        """The part of the living cost that keeps the household's dependants (the household itself, its freedmen and slaves)."""
-        household_state = self.state.household
-        return (self.LIVING_COST_HOUSEHOLD_BASE * self.price_index
-                * (1 + household_state.freedmen * self.LIVING_COST_FREEDMAN_SHARE
-                   + household_state.slaves * self.LIVING_COST_SLAVE_SHARE))
+        """The part of the living cost that keeps the household's dependants: people with the same needs as the founder."""
+        return self.household_dependant_people() * self.household_bill_per_person()
 
     def living_cost(self, _rev=None, _upkeep=None, _capital=None):
         """You have to eat, sleep somewhere, pay tax, and look the part.
@@ -830,7 +827,7 @@ class CreditMixin:
         wages = self.labour.wage_bill()
         household_state = self.state.household
         capital = household_state.capital if _capital is None else _capital
-        base = self.LIVING_COST_BASE_SUBSISTENCE * price_index         # bare subsistence, one person
+        base = self.household_bill_per_person()                        # the founder's own needs
         household = self.dependants_cost()
         tax = max(0.0, rev) * self.civ["starting_tax_share"]       # the civ's own starting tax share
         status = 0.0
@@ -855,39 +852,6 @@ class CreditMixin:
                      + max(0.0, capital) * self.LIVING_COST_STATUS_PER_CAPITAL)
         return base + household + tax + status + wages
 
-    LIVING_COST_BASE_SUBSISTENCE_LABOUR_HOURS = declare(
-        "LIVING_COST_BASE_SUBSISTENCE_LABOUR_HOURS", 2400.0, kind="temporary_heuristic",
-        unit="labour hours per year at price_index=1", source=None, confidence="D",
-        why="Bare subsistence cost for one person (food, the plainest "
-            "shelter, nothing else) at this society's reference prices. No "
-            "attested Roman subsistence-basket figure backs this exact "
-            "number; a real figure needs the same physical grounding "
-            "sim/world/agriculture.py gives food (CALORIES_PER_PERSON_DAY, "
-            "a real crop and price), not a flat denarii figure.")
-    LIVING_COST_BASE_SUBSISTENCE = money_units.PricedInLabourHours("LIVING_COST_BASE_SUBSISTENCE_LABOUR_HOURS")
-    LIVING_COST_HOUSEHOLD_BASE_LABOUR_HOURS = declare(
-        "LIVING_COST_HOUSEHOLD_BASE_LABOUR_HOURS", 1800.0, kind="temporary_heuristic",
-        unit="labour hours per year at price_index=1, one dependant-equivalent",
-        source=None, confidence="D",
-        why="Cost of keeping one household dependant beyond bare personal "
-            "subsistence - rent, ordinary household goods, the plain cost "
-            "of a household rather than a single person camping. Not "
-            "sourced to an attested figure.")
-    LIVING_COST_HOUSEHOLD_BASE = money_units.PricedInLabourHours("LIVING_COST_HOUSEHOLD_BASE_LABOUR_HOURS")
-    LIVING_COST_FREEDMAN_SHARE = declare(
-        "LIVING_COST_FREEDMAN_SHARE", 0.5, kind="temporary_heuristic",
-        unit="dimensionless multiple of LIVING_COST_HOUSEHOLD_BASE per freedman",
-        source=None, confidence="D",
-        why="How much one freedman adds to household living costs, "
-            "relative to the base household-dependant figure. Tuned, not "
-            "measured against any attested household-maintenance record.")
-    LIVING_COST_SLAVE_SHARE = declare(
-        "LIVING_COST_SLAVE_SHARE", 0.35, kind="temporary_heuristic",
-        unit="dimensionless multiple of LIVING_COST_HOUSEHOLD_BASE per slave",
-        source=None, confidence="D",
-        why="As LIVING_COST_FREEDMAN_SHARE, for an enslaved household "
-            "member - lower, reflecting a bare rather than a dignified "
-            "standard of upkeep. Tuned, not measured.")
     LIVING_COST_STATUS_PER_CAPITAL = declare(
         "LIVING_COST_STATUS_PER_CAPITAL", 0.015, kind="temporary_heuristic",
         unit="fraction of capital spent on appearances per year",
