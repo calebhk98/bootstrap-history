@@ -129,6 +129,7 @@ def entry_siting(setup, record, view, area_map, carriage) -> Siting:
     capacity: Dict[Tuple[str, TileId], float] = {}
     committed: Dict[TileId, float] = {}
     supplies: Dict[str, Mapping] = {}
+    haul_costs: Dict[Tuple[str, TileId, float], float] = {}    # a recipe's input haul into a tile, for the kept supplies
     fixed_goods = location_inputs.fixed_site_goods(setup.recipes, by_recipe)
     for producer in sites.in_id_order(record.producers):
         key = (producer.recipe_id, producer.tile)
@@ -155,10 +156,15 @@ def entry_siting(setup, record, view, area_map, carriage) -> Siting:
             wages = {trade: _wage(setup, view, trade, tile) for trade in recipe.labour_hours}
             factor = sites.yield_at(recipe, tile, by_recipe, setup.yield_factor_by_recipe_tile.get(
                 recipe_id + "@" + tile, 1.0))
+            haul_key = (recipe_id, tile, carriage.scale)
+            input_haul = haul_costs.get(haul_key)
+            if input_haul is None:
+                input_haul = haul_costs[haul_key] = location_inputs.input_haul_cost(
+                    recipe, setup.specs, carriage, supplies[recipe_id], tile)
             cost = cost_per_run(recipe, wages, live_input_prices(probe, recipe, view),
                                 record.land_rent.get(tile, 0.0) * setup.land_per_run.get(recipe_id, 0.0),
                                 carriage.cost_per_tonne(tile, demand.anchor_tile), factor, tonnes,
-                                location_inputs.input_haul_cost(recipe, setup.specs, carriage, supplies[recipe_id], tile))
+                                input_haul)
             spare = spare_hours(labour_state.people_by_trade(record.workforce, labour_area(tile)), setup.working_hours_per_year,
                                 committed.get(tile, 0.0))
             candidates.append(Candidate(tile, cost, staffable_runs(recipe, spare),
