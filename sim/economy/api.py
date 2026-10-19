@@ -39,7 +39,7 @@ __all__ = [
     "YearInputs", "recipes_from_production_data", "EconomyRecord", "EconomySetup", "TradeSpec", "SiteLimit",
     "goods_specs", "EDGE_EXTERNAL", "EDGE_LEGACY", "EDGE_CARGO", "EDGE_CONSUMPTION", "EDGE_PRODUCTION", "EDGE_EXCHANGE", "external_edge", "Bid", "GoodsMove", "Offer", "Transfer",
     "variable_cost_per_run", "rebase_basket_price_level", "trade_premium", "title_wealth",
-    "traded_volumes", "market_record", "opening_quantities", "wages_by_trade", "wages_by_trade_weighted", "interest_rate", "producers_of",
+    "traded_volumes", "market_record", "opening_quantities", "opening_prices_in_hours", "wages_by_trade", "wages_by_trade_weighted", "interest_rate", "producers_of",
     "external_trade_net", "external_trade_volume", "account_balance", "account_holdings",
     "credit_room", "economy_from_record", "blank_economy", "export_record", "economy_book", "economy_contracts", "finish_spin_up", "note_spin_up_result", "spin_up_state", "money_year_figures","shown_prices_of",
     "settle_agent_takings", "admit_recipes", "move_goods", "post_transfers", "cohort_incomes", "cohort_land_rents", "land_rent_per_hectare",
@@ -74,6 +74,14 @@ def market_record(economy, good):
 def opening_quantities(economy):
     """Quantity of each good in the opening basket."""
     return dict(economy.record.opening_basket)
+
+
+def opening_prices_in_hours(economy):
+    """Opening price of each good in hours of the unskilled trade's opening wage: the weights a basket is valued at."""
+    wage = economy.setup.opening_wages.get(economy.setup.unskilled_trade, 0.0)
+    if not wage > 0.0:
+        return {}
+    return {good: price / wage for good, price in sorted(economy.setup.opening_prices.items()) if price > 0.0}
 
 
 def people_by_trade(economy, country=None):

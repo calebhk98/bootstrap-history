@@ -195,7 +195,6 @@ class MarketClearingMixin:
         self.finish_ways()
         self._open_market_book()
         self.economy.run_agent_year()
-        self._follow_cleared_volumes()
         self.close_partner_books()
         self._close_real_output()
         self.revalue_coin_metals()

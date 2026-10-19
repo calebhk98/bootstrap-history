@@ -157,11 +157,6 @@ class AgentEconomy(TilePricesMixin):
         grown = economy_port_late.opening_with_techniques(self._sim, self.stored["opening"], held, production)
         if grown is None:
             return
-        added = set(grown["recipes"]) - set(self.stored["opening"]["recipes"])
-        late_goods = set(self.stored.get("late_goods", ()))
-        for entry_id in added:
-            late_goods.update(production[entry_id].get("outputs") or {})
-        self.stored["late_goods"] = sorted(late_goods)
         self.stored["opening"] = grown
         economy_api.admit_recipes(self._economy, build_setup(self._sim, grown, production))
         self._floor_costs = {}
@@ -170,26 +165,22 @@ class AgentEconomy(TilePricesMixin):
         self._record_stale = True
 
     def _note_volume_baseline(self):
-        """The first year a good that a late technique allows clears any quantity is the quantity later years
-        are measured against."""
+        """The first year a good clears any quantity is the quantity later years are measured against."""
         baseline = self.stored.setdefault("volume_baseline", {})
-        late_goods = self.stored.get("late_goods", ())
-        volumes = economy_api.traded_volumes(self._economy)
-        for good in late_goods:
-            if volumes.get(good, 0.0) > 0.0 and good not in baseline:
-                baseline[good] = volumes[good]
+        for good, volume in economy_api.traded_volumes(self._economy).items():
+            if volume > 0.0 and good not in baseline:
+                baseline[good] = volume
 
-    def cleared_ratio(self, materials):
-        """Tonnes the economy cleared last year of these materials over what it cleared in the first year it
-        cleared them after a technique gained since the opening allowed their making; None when none of them is
-        such a good, or none had cleared before."""
-        baseline = self.stored.get("volume_baseline", {})
-        if not baseline:
-            return None
-        volumes = economy_api.traded_volumes(self.economy())
-        then = sum(baseline[good] * tonnes_per_unit(good) for good in materials if good in baseline)
-        now = sum(volumes.get(good, 0.0) * tonnes_per_unit(good) for good in materials if good in baseline)
-        return now / then if then > 0.0 else None
+    def volume_baseline(self):
+        return dict(self.stored.get("volume_baseline", {}))
+
+    def traded_volumes(self):
+        return economy_api.traded_volumes(self.economy())
+
+    def opening_basket(self):
+        """(units a year of each good in the opening basket, opening price of each in labour hours)."""
+        economy = self.economy()
+        return economy_api.opening_quantities(economy), economy_api.opening_prices_in_hours(economy)
 
     def producers_stamp(self):
         return self._years_run
