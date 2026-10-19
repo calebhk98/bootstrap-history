@@ -246,7 +246,8 @@ class AgentEconomy(TilePricesMixin):
 
     # ---- firms', states' and traders' sales and purchases (economy_port_actors.py) ------------------
     def note_sale(self, seller, material, tonnes, from_concerns):
-        economy_port_actors.note_sale(self.stored.setdefault("sales", []), seller, material, tonnes, from_concerns)
+        economy_port_actors.note_sale(self.stored.setdefault("sales", []), seller, material, tonnes, from_concerns,
+                                      self.__dict__.setdefault("_sale_index", [None, 0, {}]))
 
     def note_purchase(self, buyer, commodity, tonnes, budget):
         economy_port_actors.note_purchase(self.stored.setdefault("purchases", []), buyer, commodity, tonnes, budget)
@@ -254,7 +255,9 @@ class AgentEconomy(TilePricesMixin):
     def forget_orders(self, actor_id):
         for kind, key in (("sales", "seller"), ("purchases", "buyer")):
             if kind in self.stored:
-                self.stored[kind] = [order for order in self.stored[kind] if order[key] != actor_id]
+                kept = [order for order in self.stored[kind] if order[key] != actor_id]
+                if len(kept) != len(self.stored[kind]):   # a list nothing left keeps its identity, and its index
+                    self.stored[kind] = kept
 
     def trades_good(self, material):
         """Whether the economy has a market for the material."""

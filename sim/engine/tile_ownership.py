@@ -29,18 +29,40 @@ class TileOwnershipMixin:
         self.tile_owner_map()   # seeds the owners and their control levels on first use
         return tile_owners.control_of(self.stores.view("control"), tile_id)
 
+    def tile_owner_version(self):
+        """Changes whenever who owns a tile does (a transfer, or a replaced owner map)."""
+        return (self.__dict__.get("_tile_transfers", 0), id(self.tile_owner_map()))
+
+    def _owned_tiles_memo(self):
+        """{actor: sorted tiles} and the home country's held tiles, rebuilt only when the owner map is replaced
+        or `transfer_tile` has changed it."""
+        owners = self.tile_owner_map()
+        memo = self.__dict__.get("_owned_tiles")
+        key = (self.__dict__.get("_tile_transfers", 0), str(self.civ.get("id")), self.world_map)
+        if memo is None or memo["owners"] is not owners or memo["key"] != key:
+            by_actor = {}
+            for tile_id, entry in sorted(owners.items()):
+                by_actor.setdefault(entry["owner"], []).append(tile_id)
+            memo = {"owners": owners, "key": key, "by_actor": by_actor, "home": None}
+            self.__dict__["_owned_tiles"] = memo
+        return memo
+
     def tiles_owned_by(self, actor_id):
         """Sorted tiles this country or seat owns, at any control level."""
-        return tile_owners.tiles_of(self.tile_owner_map(), actor_id)
+        return list(self._owned_tiles_memo()["by_actor"].get(actor_id, ()))
 
     def home_tiles_held(self):
         """The tiles the home country owns."""
-        return tiles_held(self.civ, self.world_map, self.tile_owner_map())
+        memo = self._owned_tiles_memo()
+        if memo["home"] is None:
+            memo["home"] = tiles_held(self.civ, self.world_map, memo["owners"])
+        return list(memo["home"])
 
     def transfer_tile(self, tile_id, to_actor, control=None, cause="transfer"):
         """Give a tile to a country or seat (None releases it); returns the previous owner. Writes the change to
         the world event log with its cause."""
         controls = self.stores.view("control")
+        self.__dict__["_tile_transfers"] = self.__dict__.get("_tile_transfers", 0) + 1
         previous = tile_owners.transfer(self.tile_owner_map(), tile_id, to_actor, control, self.world_map, controls)
         world_events.record(self, "tile_transfer", actors=[actor for actor in (previous, to_actor) if actor],
                             tiles=[tile_id], cause=cause, from_owner=previous, to_owner=to_actor,

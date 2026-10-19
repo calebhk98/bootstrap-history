@@ -35,8 +35,7 @@ class TechniquesInUseMixin:
             return cached[1]
         in_use = set(projects.granted) | set(projects.operating)
         if self.state.actors is not None and self.state.actors.records:
-            for firm in self.actors.active_firms():
-                in_use.update(firm.concerns)
+            in_use.update(self.actors.concerns_of_active_firms())
         in_use = frozenset(in_use)
         if cached is not None and cached[1] == in_use:
             in_use = cached[1]      # the same set stays the same object, so what is keyed on it holds
