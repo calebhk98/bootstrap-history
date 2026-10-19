@@ -35,3 +35,14 @@ length, by value per kilogram.
 - Tests: `sim/tests/test_merchant_travel_time.py`.
 - Still open: volumes are not lagged; whole-year steps (a 300-day and a 10-day haul both count one year);
   the haul's mode is the cheapest path's, not chosen for speed; no measurement yet of tonnes by route length.
+
+## Attempt not merged (branch `merchant-reach-chains`, commit `3c44bcf9`)
+
+Built: a merchant deals only at tiles within one year's haul of its home or of a tile it has traded at, so its
+stretch grows with experience and long distances are covered by chains (`sim/economy/merchants_reach.py`,
+`Merchant.traded_tiles`); distant volumes arrive as late as prices (`Merchant.volume_history`); the fastest haul is
+compared with the cheapest on carriage, interest and spoilage (`CarriageTable.fastest_haul`). Not merged: a six-year
+in-process run of a Rome game took about a fifth longer, with the cause not isolated (the fastest-haul searches run
+cold), against the release blocker on per-year speed; and the shape test on a four-tile line shows chains joining
+the ends but not traded tonnes falling with route length. Before merging: find and remove the slowdown (the reach
+should make the destination loop smaller, not larger), and measure tonnes by route length on a Rome game.

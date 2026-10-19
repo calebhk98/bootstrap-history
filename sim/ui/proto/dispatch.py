@@ -13,6 +13,7 @@ from . import command_registry, mod_commands
 from .command_registry import command
 from .compact import compact_state, compact_stuck, compact_why
 from .help import _agent_help
+from .field_check import unknown_field_refusal
 from .nodes import NODE_NAME_NORM, _did_you_mean, _norm_name, _resolve_by_name
 from sim.ui.memory import load_state, save_state
 from .score import victory_report
@@ -24,7 +25,7 @@ from .state_waiting import _agent_end_reason
 from .state import _agent_state
 from .state_projects import _agent_state_active_projects, _agent_state_training_and_hours
 from .wave_summary import wave_summary
-from . import step_progress
+from . import step_atomic, step_progress
 from .guidance import delay_kinds, delay_phrase
 from .event_groups import group_disaster_events
 from .event_kinds import stops_a_step
@@ -228,9 +229,11 @@ def _cmd_step(sim, nodes, cmd, ended):
     snapshots = []
     programme_log = []
     first_year_stepped = sim.year
+    failure = None
     for _ in range(years):
         if sim.dead_reason or sim.year >= end_year:
             break
+        held = step_atomic.snapshot(sim)
         before_done, before_log = set(sim.done), len(sim.log)
         # FOR `changes`: what a bare node-or-concern-set diff cannot tell
         # you on its own - WHEN it changed. revealed/operating only ever
@@ -243,10 +246,16 @@ def _cmd_step(sim, nodes, cmd, ended):
         stalled_before = set(stalled_projects(sim))
         goal_was_startable = sim.goal in nodes and sim.can_start(sim.goal)
         population_before = sim.population.total
-        programme_log.extend(programme_before_year(sim, nodes))
-        programme_log.extend(mod_commands.run_policies(sim, nodes, "year_start"))
-        sim.step()
-        programme_log.extend(mod_commands.run_policies(sim, nodes, "year_end"))
+        year_log = []
+        try:
+            year_log.extend(programme_before_year(sim, nodes))
+            year_log.extend(mod_commands.run_policies(sim, nodes, "year_start"))
+            sim.step()
+            year_log.extend(mod_commands.run_policies(sim, nodes, "year_end"))
+        except Exception as error:  # the year is undone whole; the years before it stand
+            failure = step_atomic.failed_year(sim, held, error, sim.year, ran)
+            break
+        programme_log.extend(year_log)
         ran += 1
         population_change = sim.population.total / population_before - 1.0 if population_before > 0 else 0.0
         sim.state.population.population_change_last_year = round(population_change, 4)
@@ -339,7 +348,14 @@ def _cmd_step(sim, nodes, cmd, ended):
                              "Step again when you have had a look." % (ran, years, severe_reason))
             stopped_kind = cause_of(severe_reason)
             break
+    if failure and not ran:
+        return {"ok": False, "error": failure["text"], "exception_kind": failure["exception_kind"],
+                "year": failure["year"]}
     out = dict(ok=True, completed=completed, lost=lost, events=events)
+    if failure:
+        stopped_early = "stopped after %d of the %d years you asked for: %s" % (ran, years, failure["text"])
+        stopped_kind = "year_failed"
+        out["year_failed"] = {key: failure[key] for key in ("cause", "exception_kind", "year", "years_ran")}
     if programme_log:
         out["programme"] = programme_log
     automation_rows = [row for row in ui_port.automation_audit.rows(sim, years)
@@ -559,6 +575,10 @@ def _agent_dispatch_inner(sim, nodes, cmd):
                                          + ", ".join(near)) if near else ""), choices=near)}
     command = cmd.get("cmd")
     ended = _agent_end_reason(sim)
+
+    _stray = unknown_field_refusal(cmd)
+    if _stray:
+        return _stray
 
     if command in ("help", "?", "commands"):
         return {"ok": True, "help": _agent_help(sim, cmd.get("topic"))}

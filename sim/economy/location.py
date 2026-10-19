@@ -116,6 +116,9 @@ def opening_split(setup, recipe: Recipe, area: MarketArea, runs: float) -> Dict[
         limits = by_recipe[recipe.recipe_id]
         weights = {tile: limits[tile].capacity_runs_per_year if population.get(tile, 0.0) > 0.0 else 0.0
                    for tile in limits}
+        local = {tile: weight for tile, weight in weights.items() if tile in area.tiles}
+        if math.fsum(local.values()) > 0.0:
+            weights = local       # the area's own sites serve it; only an area with none draws on the others
         return split_runs(runs, weights, {tile: limits[tile].capacity_runs_per_year for tile in limits})
     return split_runs(runs, weights, {})
 

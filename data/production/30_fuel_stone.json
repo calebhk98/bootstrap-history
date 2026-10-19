@@ -10,10 +10,10 @@
     "labourer": 8.0
    },
    "land_hectare_years": 0.41667345,
-   "extracted_from": "forest",
+   "extracted_from": "standing timber",
    "unit_dimension": "mass",
    "basis": "per tonne of green roundwood, felled and hauled from woodland, not squared or seasoned",
-   "yield_basis": "EXTRACTED, so labour is the physical work of felling and dragging logs rather than a recipe. This is raw feedstock wood (for charcoal-burning, distillation, pulping and the like), not the squared and seasoned construction timber already defined as timber_m3 - no squaring loss applies because nothing here needs precise faces. Air-dry mixed temperate wood runs roughly 550-650 kg per standing cubic metre, so a tonne is a little over 1.5 m3 of standing wood; felling, delimbing and hauling that much by axe and hand-cart is on the order of 8 hours, well under timber_m3's 9+3 hours because there is no squaring or precision cross-cutting to do. LAND (Complaints/48): a tonne needs 1000 kg / 600 kg/standing-m3 (this entry's own midpoint density) = 1.667 standing m3, drawn from the same forest whose 3-5 m3/ha/yr mean annual increment (midpoint 4) already sets timber_m3's own land figure in data/production/00_examples.json - 1.667 / 4 = 0.4167 ha-years/tonne = 0.4167 hectare-years, charged against hectare_land's own solved rent like any other input. TAG: TEMPORARY HEURISTIC (CLAUDE.md 3.4) for the rent VALUE, same forest-vs-arable caveat as timber_m3's own LAND note.",
+   "yield_basis": "EXTRACTED, so labour is the physical work of felling and dragging logs rather than a recipe. This is raw feedstock wood (for charcoal-burning, distillation, pulping and the like), not the squared and seasoned construction timber already defined as timber_m3 - no squaring loss applies because nothing here needs precise faces. Air-dry mixed temperate wood runs roughly 550-650 kg per standing cubic metre, so a tonne is a little over 1.5 m3 of standing wood; felling, delimbing and hauling that much by axe and hand-cart is on the order of 8 hours, well under timber_m3's 9+3 hours because there is no squaring or precision cross-cutting to do. LAND (Complaints/48): a tonne needs 1000 kg / 600 kg/standing-m3 (this entry's own midpoint density) = 1.667 standing m3, drawn from the same forest whose 3-5 m3/ha/yr mean annual increment (midpoint 4) already sets timber_m3's own land figure in data/production/00_examples.json - 1.667 / 4 = 0.4167 ha-years/tonne = 0.4167 hectare-years, charged against hectare_land's own solved rent like any other input. STOCK: the wood is drawn from the tile's standing timber (sim/geography/forest_timber.py), which the felling runs down and growth restores, so a tile with no forest supplies none and a cleared tile hauls from further off. The land term stays as the regrowth area a tonne needs at the stock's own increment; the rent VALUE is the land market's.",
    "conf": "C",
    "requires_node": null
   },
@@ -26,7 +26,7 @@
     "labourer": 9.0
    },
    "land_hectare_years": 0.41667345,
-   "extracted_from": "forest",
+   "extracted_from": "standing timber",
    "unit_dimension": "mass",
    "basis": "per tonne of cordwood, felled, cross-cut to stove length and split, air-dried",
    "yield_basis": "EXTRACTED and close kin to wood_kg, but cut short and split for burning rather than left as long roundwood - the extra hour over wood_kg's 8 is the splitting. Density and felling effort are the same physical wood; the difference is entirely in what happens to it after felling, which is why the two entries are nearly identical instead of unrelated. LAND (Complaints/48): identical felling of identical forest to wood_kg, so the same land figure applies unchanged - see wood_kg's own LAND note for the derivation (0.4167 hectare-years/tonne).",
@@ -93,10 +93,11 @@
      "conf": "C"
     }
    ],
-   "extracted_from": "coal seam",
+   "land_hectare_years": 0.0013,
+ "extracted_from": "coal seam",
    "unit_dimension": "mass",
    "basis": "per tonne of run-of-mine coal at the pit head",
-   "yield_basis": "EXTRACTED from a seam rather than made, so the cost is entirely the physical work of hewing and hauling. Pre-mechanised bord-and-pillar mining by pick and shovel, in a seam thick enough to work upright, historically ran on the order of a tonne per face-worker per shift; a 9-hour hewing figure plus 4 hours of underground haulage (tramming tubs to the shaft bottom) reflects that a face and its transport are separate jobs. Thin seams, water or bad roof push this well above 9 hours - that variance is exactly what the miner's rent-on-the-seam captures once the price system exists, not this entry.",
+   "yield_basis": "EXTRACTED from a seam rather than made, so the cost is entirely the physical work of hewing and hauling. Pre-mechanised bord-and-pillar mining by pick and shovel, in a seam thick enough to work upright, historically ran on the order of a tonne per face-worker per shift; a 9-hour hewing figure plus 4 hours of underground haulage (tramming tubs to the shaft bottom) reflects that a face and its transport are separate jobs. Thin seams, water or bad roof push this well above 9 hours - that variance is exactly what the miner's rent-on-the-seam captures once the price system exists, not this entry. LAND (Complaints/562): a working occupies and disturbs surface land that the land market would otherwise rent, and that is the seam's rent here, charged through hectare_land at the solved land rent rather than as a constant. Two terms, per tonne won: (a) the ground above the extracted seam is impaired for the life of the pit: a seam about 1.5 m thick of coal at about 1300 kg/m3 recovered at about one half (bord and pillar leaves pillars) yields about 975 kg per square metre, so 1 hectare gives about 9750 t, i.e. about 1.0e-4 hectares per tonne, held for the 10-year service life of the shaft capital above = 1.0e-3 hectare-years; (b) the pit-head yard, headgear and spoil: about 2 hectares held for those 10 years while the pit raises 8,000 t a year (80,000 t) = 2.5e-4 hectare-years per tonne. Sum about 1.3e-3 hectare-years per tonne. Deposit size does not enter: a basin holds so many times a pit's annual output that the Hotelling scarcity of the remaining stock (discounted over stock divided by yearly draw) is nil. Geometry from memory, conf D.",
    "conf": "C",
    "requires_node": null
   },

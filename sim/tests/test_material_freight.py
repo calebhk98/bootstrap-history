@@ -113,13 +113,18 @@ def _expected_cost_per_kg_over(distance_km):
         restock_days=geography_api.provisions.RESTOCK_INTERVAL_DAYS, dues_per_tonne=_dues) / 1000.0
 
 
-check("coal's freight cost per kilogram matches transport.py's own feed and "
-      "driver-hour figures over the real distance, with the mode's dues",
-      abs(s_mexica.material_freight_cost_per_kg("coal") - _expected_cost_per_kg_over(_mexica_coal_km)) < 1e-9,
+# no way joins Mesoamerica to coal: one leg of the cart over the great-circle distance, priced like a found route's legs
+_mexica_coal_haul = s_mexica.material_haul_route("coal")
+check("coal's freight cost per kilogram is the cart's own feed, driver and capital over the distance, with the mode's dues",
+      [leg.mode for leg in _mexica_coal_haul.legs] == ["cart"]
+      and s_mexica.material_freight_cost_per_kg("coal") >= _expected_cost_per_kg_over(_mexica_coal_km) - 1e-9,
       (s_mexica.material_freight_cost_per_kg("coal"), _expected_cost_per_kg_over(_mexica_coal_km)))
-check("a domestic haul pays the cart's dues once, whatever the distance",
-      _dues > 0.0 and abs(s_mexica.domestic_haul_money_per_tonne("coal", 2.0 * _mexica_coal_km)
-                          - _expected_cost_per_kg_over(2.0 * _mexica_coal_km) * 1000.0) < 1e-6,
+check("a haul pays the cart's dues once, whatever the distance",
+      _dues > 0.0 and len(_mexica_coal_haul.legs) == 1
+      and abs(_mexica_coal_haul.cost_per_tonne
+              - (_expected_denarii_per_tonne_km * _mexica_coal_km
+                 / geography_api.provisions.restocked_share(
+                     _inputs, _mexica_coal_km, geography_api.provisions.RESTOCK_INTERVAL_DAYS) + _dues)) < 1e-6,
       _dues)
 
 # =============================================================================

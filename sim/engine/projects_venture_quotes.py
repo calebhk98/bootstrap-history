@@ -3,17 +3,26 @@
 
 class VentureQuotesMixin:
 
-    def venture_real_earnings(self, node_id, units=1.0, fully_ramped=False):
-        """Yearly takings as the ledger credits them, the figure `ventures` prints.
+    def venture_real_earnings(self, node_id, units=None, fully_ramped=False, with_output_factor=True):
+        """Yearly takings as the ledger credits them, the figure the screens quote and `revenue` sums.
 
-        Applies the output factor and price level the tree's raw
-        revenue lacks, and, for a running concern, its revenue ramp and its
-        goods market. `fully_ramped` leaves the ramp out (what it reaches).
+        Applies the price level and the goods market the tree's raw revenue lacks, and, for a running concern,
+        its revenue ramp and, if scalable, its units; a concern not yet open is quoted at its full ramp and one
+        unit unless `units` says otherwise. `fully_ramped` leaves the ramp out (what it reaches).
+        `with_output_factor` False leaves out the hazard and war factor, which `revenue` applies to its total.
         """
         running = node_id in self.state.projects.operating
         ramp = 1.0 if fully_ramped or not running else self.venture_ramp(node_id)
-        market = self.node_output_market_factor(self.nodes[node_id]) if running else 1.0
-        return self.concern_takings(node_id, ramp) * units * market
+        if units is None:
+            units = self.institution_units(node_id) if running and node_id in self.SCALABLE_INSTITUTIONS else 1.0
+        market = self.node_output_market_factor(self.nodes[node_id])
+        return self.concern_takings(node_id, ramp, with_output_factor) * units * market
+
+    def venture_forecast_basis(self, node_id):
+        """What the quote of a concern's earnings stands on: `market` (the economy prices its goods) or
+        `long_run_no_market_yet` (nobody has sold them, so the quote is at long-run cost and the price
+        they fetch once sold may differ a great deal)."""
+        return "market" if self.concern_goods_have_market(node_id) else "long_run_no_market_yet"
 
     def venture_upkeep_quote(self, node_id, units=None):
         """Yearly running cost at the current price level, the one source every

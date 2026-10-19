@@ -1,6 +1,6 @@
 # Population is one national figure, and soldiers, scholars and builders are not checked against food and people
 
-**Status:** open
+**Status:** open - split into 603, 602, 604 (closes when they do)
 
 - `Population` is three national age bands (`sim/world/demography.py`, built once in
   `sim/engine/core.py`). Only colonies step a separate population (`sim/engine/colonies.py`). Land and
@@ -26,3 +26,13 @@ delta city against a frontier) needs people per region.
 What it would take: population per tile or region on the existing tile and market-area structure;
 a headcount ledger per country (farm, soldier, scholar, builder, other) checked each year against
 working-age people and food; one literacy state per country read by training and research (490).
+
+## Split
+
+Children, in order of work:
+
+- 603: Population, carrying capacity, famine and migration are national, not per region
+- 602: The state's soldiers, officials, scholars and builders are not checked against working-age people and food
+- 604: Literacy lives in three unlinked places and gates hiring, not research output
+
+The note that maize is absent from the crop table and irrigation is a stated non-goal records a fact, not an ask, and stays here.

@@ -2,10 +2,9 @@
 
 A part of the year's phases (core_step_phases.py); Sim inherits it through StepPhasesMixin."""
 import math
-import random
 
 from sim.refusal import LogLine
-from sim.world.demography import BASELINE_ANNUAL_MORTALITY_RATE_WORKING_AGE
+from sim.world import demography
 from . import automation_audit
 from .units_prose import plain_number
 from .staff_replacement import REPLACE_ONLY, replace_lost_staff
@@ -26,47 +25,13 @@ class StaffPhaseMixin:
         #    runs are calibrated against. With it off, the only things that
         #    change the staff are hire, fire, train, buy and manumit.
         sc_cap, ar_cap, di_cap = self.labour.staff_capacity()
-        attrition_rate = self.STAFF_ATTRITION_RATE
-        # PEOPLE ARE WHOLE: attrition rolls each actual person on the books
-        # individually against self.rng, sorted by trade name so the draws
-        # happen in the same order whatever PYTHONHASHSEED the process
-        # started with, the same convention every other rng loop over this
-        # dict uses (see the "cannot pay" shedding loop below). A death is a
-        # discrete thing that either happens to a particular person this
-        # year or does not, so no trade's headcount is ever a fraction of a
-        # person - never "1.32 artisans" or "0.03 engineers" drawing a
-        # fractional wage while supervising nothing. Summed over many people
-        # this reproduces the same 3.5%-a-year average ATTRITION targets; no
-        # single person is ever a third of a casualty.
-        _lost = {}
-        for trade_id in sorted(self.state.household.employees):
-            head = int(round(self.state.household.employees[trade_id]))
-            survivors = sum(1 for _ in range(head) if self.rng.random() >= attrition_rate)
-            if head - survivors > 0:
-                _lost[trade_id] = head - survivors
-            if survivors > 0:
-                self.state.household.employees[trade_id] = float(survivors)
-            else:
-                self.state.household.employees.pop(trade_id)
-        # AND SAY SO: a death is a discrete event that HAPPENED, and a player
-        # watching the payroll shrink with nothing in the log or the events
-        # to say why cannot tell attrition from a bug - it looks exactly
-        # like staff vanishing.
-        if _lost:
-            # Deaths follow the working-age mortality rate; the rest of the yearly loss is turnover to better offers.
-            death_share = min(1.0, BASELINE_ANNUAL_MORTALITY_RATE_WORKING_AGE / max(attrition_rate, 1e-9))
-            died = {}
-            for trade_id, count in _lost.items():
-                labeller = random.Random("staff-loss-%s-%s" % (self.state.scenario.year, trade_id))
-                died[trade_id] = sum(1 for _ in range(count) if labeller.random() < death_share)
-            poached = {trade_id: count - died[trade_id] for trade_id, count in _lost.items()}
-            for cause, counts in (("death", died), ("better offers", poached)):
-                people = ", ".join("%d %s%s" % (count, trade_id, "" if count == 1 else "s")
-                                   for trade_id, count in sorted(counts.items()) if count)
-                if people:
-                    self.state.household.log.append((self.state.scenario.year, LogLine(
-                        "staff_lost", "you lose %s to %s" % (people, cause),
-                        reason=cause.replace(" ", "_"), trades={trade_id: count for trade_id, count in counts.items() if count})))
+        attrition_rate = demography.BASELINE_ANNUAL_MORTALITY_RATE_WORKING_AGE
+        # PEOPLE ARE WHOLE: each person on the books is rolled individually against self.rng (trades sorted so
+        # draws are reproducible): they die at the working-age mortality rate, or take a better offer at the
+        # rate the market moves workers off a lower payer, which is none when pay is at the going wage.
+        self.labour.settle_staff_pay()
+        _died, _left = self.labour.roll_staff_year(self.rng)
+        _lost = {trade: _died.get(trade, 0) + _left.get(trade, 0) for trade in set(_died) | set(_left)}
         # Rehire a specialist foreman an open concern just lost, before the
         # staffing rule closes the concern.
         if self.state.founder.policy.get("auto_replace_foreman", False):
@@ -74,6 +39,11 @@ class StaffPhaseMixin:
         # Hire for the concerns named with `keep <id> staffed`, before the closure rule.
         self.labour.keep_flagged_concerns_staffed()
         self.labour.resync_pools()
+        # AND SAY SO, once the rehiring has had its chance: a loss that still leaves a running concern short is
+        # what the staffing rule is about to close.
+        if _lost:
+            for cause, counts in (("death", _died), ("better offers", _left)):
+                self.labour.log_staff_lost(cause, {trade_id: count for trade_id, count in counts.items() if count})
         # A HOUSEHOLD THAT CANNOT PAY ITS PEOPLE LETS THEM GO. This is the whole
         # answer to "you built it from nothing, so you must be able to rebuild
         # it": a payroll a household cannot carry and never reduces keeps a

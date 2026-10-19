@@ -120,6 +120,12 @@ class CapacityMixin:
 
     def is_craft_trade(self, trade):
         return self._world.trade_family(trade) == legacy_trade_defaults.CRAFT_FAMILY
+
+    def craft_trades_report(self):
+        """The trades that supervise as craft and those that do not, by the same test `is_craft_trade` applies."""
+        trades = sorted(self._world.wages)
+        return {"craft": [trade for trade in trades if self.is_craft_trade(trade)],
+                "not_craft": [trade for trade in trades if not self.is_craft_trade(trade)]}
     # The literacy this file's trade shares and staff ceilings were already
     # tuned against, before literacy was read anywhere: the default
     # civilisation's own numbers, because every other constant in this economy -

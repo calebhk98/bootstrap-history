@@ -5,11 +5,12 @@ year, when they see their cash fall short of a floor or of the cargo they would 
 them before their orders (the year loop clears credit first). Everything here works on an agent id and the
 record, so a firm, a state or another player borrows by the same rules.
 """
+import dataclasses
 from typing import Dict, List
 
 from sim.world import capital_market
 
-from . import credit, credit_claims, households_credit, merchants_credit
+from . import credit, credit_claims, households_credit, merchants_credit, titles, titles_value
 from .producers_close import WORKING_CAPITAL_PURPOSE
 from .types import FundsOffer
 from .households_basket import need_prices
@@ -32,7 +33,10 @@ def service(record, money: str, year: int) -> Dict[str, float]:
     owed_after = credit_claims.principal_by_borrower(serviced)
     merchants_credit.stake(record.merchants, {agent: owed_after.get(agent, 0.0) - owed
                                               for agent, owed in owed_before.items()})
-    for agent, lost in credit_claims.losses_by_lender(defaults).items():
+    pledged_loans = {loan.loan_id: loan for loan in due if loan.collateral_tile}
+    taken = [dataclasses.replace(default, loss=max(0.0, default.loss - titles.foreclose(record, pledged_loans[default.loan_id])))
+             if default.loan_id in pledged_loans else default for default in defaults]
+    for agent, lost in credit_claims.losses_by_lender(taken).items():
         record.credit_losses[agent] = record.credit_losses.get(agent, 0.0) + lost
     record.remembered_defaults = credit_claims.remember_defaults(record.remembered_defaults, defaults)
     record.loans = [loan for loan in record.loans if loan.issued_year >= year] + serviced
@@ -79,8 +83,21 @@ def household_requests(setup, record, view, ledger, priced_by_tile) -> List:
                      - record.book.balance(cohort_id, money))
         asked = households_credit.subsistence_request(cohort, shortfall, money, rate, debts.get(cohort_id, 0.0))
         if asked is not None:
-            requests.append(asked)
+            requests.append(_pledging_title(setup, record, cohort, asked, rate))
     return requests
+
+
+def _pledging_title(setup, record, cohort, request, live_rate):
+    """The request with the household's whole free title on its tile pledged to it: a peasant pledges the plot."""
+    tile = setup.tiles.get(cohort.tile)
+    free = titles.free_share(record, cohort.agent_id, cohort.tile)
+    if tile is None or free <= 0.0:
+        return request
+    worth = titles_value.share_value(tile, record.land_rent.get(cohort.tile, 0.0), free,
+                                     titles_value.capitalising_rate(live_rate, setup.opening_rate))
+    if worth <= 0.0:
+        return request
+    return dataclasses.replace(request, collateral_value=worth, collateral_tile=cohort.tile, collateral_share=free)
 
 
 def merchant_requests(setup, record, view, area_map, carriage) -> List:

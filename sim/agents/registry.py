@@ -1,5 +1,5 @@
 """The set of actors other than the founder's household, and their yearly turn."""
-from bisect import bisect_left
+from bisect import bisect_left, insort
 from itertools import accumulate
 from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
@@ -8,6 +8,7 @@ from .records import ActorRecord, ActorsState
 from .base import RecordedActor
 from .concern_totals import ConcernTotals
 from .entry_round import NicheEntry
+from . import patent_index
 from .firm import Firm
 from .government import Government
 from .group import InterestGroup
@@ -51,10 +52,11 @@ class _ConcernWatch:
 	so a state holding a watched business still copies."""
 
 	def __init__(self, firm_id: str, holders: Dict[str, Set[str]], version: List[int],
-				 totals: ConcernTotals, record: Any) -> None:
+				 totals: ConcernTotals, record: Any, concern_set_version: List[int]) -> None:
 		self.firm_id = firm_id
 		self.holders = holders
 		self.version = version
+		self.concern_set_version = concern_set_version
 		self.totals = totals
 		self.record = record
 		self.known: Set[str] = set()
@@ -63,6 +65,7 @@ class _ConcernWatch:
 		current = set(self.record.business.entry_keys())
 		if current != self.known:
 			self.version[0] += 1
+			self.concern_set_version[0] += 1
 		for node_id in self.known - current:
 			self.holders[node_id].discard(self.firm_id)
 		for node_id in current - self.known:
@@ -81,6 +84,9 @@ class ActorRegistry:
 		# which firms hold each concern (kept current by _ConcernWatch), and the ids in order
 		self._holders: Dict[str, Set[str]] = {}
 		self._ordered_ids: Optional[List[str]] = None
+		# of_kind answers, in id order: a new actor joins its kind's list, a replaced actor drops them all
+		self._by_kind: Dict[str, List[Any]] = {}
+		self._by_kind_count = 0
 		self._staff: Optional[Dict[str, float]] = None
 		# per trade, every actor's staff in id order and the running left-to-right sum of it, kept
 		# current by re-summing from the one actor whose staff changed (see `_staff_total`)
@@ -93,6 +99,8 @@ class ActorRegistry:
 		self._bans: Optional[Dict[str, str]] = None
 		# bumped whenever any firm's concerns change, so market caches keyed on it stay honest
 		self.version: List[int] = [0]
+		# bumped only when the set of concerns a firm runs changes, not when a concern's size does
+		self.concern_set_version: List[int] = [0]
 		self._totals = ConcernTotals()
 		# country -> the world its actors see this year (rebuilt every `advance`)
 		self._scoped: Dict[str, Any] = {}
@@ -123,12 +131,19 @@ class ActorRegistry:
 				actor.on_capacity_change = self.note_capacity_change
 			if hasattr(type(actor), "find_actor"):
 				actor.find_actor = self.get
-			watch = _ConcernWatch(actor_id, self._holders, self.version, self._totals, record)
+			watch = _ConcernWatch(actor_id, self._holders, self.version, self._totals, record, self.concern_set_version)
 			record.business.watch = watch
 			watch()
+		patent_index.track(record, previous is not None)
 		self.actors[actor_id] = actor
 		prior_order = self._ordered_ids
 		self._ordered_ids = None
+		if previous is None and self._by_kind_count == len(self.actors) - 1:
+			if actor.kind in self._by_kind:
+				insort(self._by_kind[actor.kind], actor, key=lambda each: each.actor_id)
+			self._by_kind_count = len(self.actors)
+		else:
+			self._by_kind = {}
 		if previous is None and self._columns and prior_order is not None and len(prior_order) == len(self.actors) - 1:
 			self._insert_into_columns(actor_id, prior_order)
 		else:
@@ -249,8 +264,12 @@ class ActorRegistry:
 	def of_kind(self, kind: str) -> List[RecordedActor]:
 		if self._ordered_ids is None:
 			self._ordered_ids = sorted(self.actors)
-		return [self.actors[actor_id] for actor_id in self._ordered_ids
-				if self.actors[actor_id].kind == kind]
+		if self._by_kind_count != len(self.actors):
+			self._by_kind, self._by_kind_count = {}, len(self.actors)
+		if kind not in self._by_kind:
+			self._by_kind[kind] = [self.actors[actor_id] for actor_id in self._ordered_ids
+								   if self.actors[actor_id].kind == kind]
+		return list(self._by_kind[kind])
 
 	def ensure_government(self, civ_id: str, name: str = "") -> Government:
 		actor_id = "government:" + civ_id
@@ -305,6 +324,17 @@ class ActorRegistry:
 
 	def active_firms(self) -> List[Firm]:
 		return [firm for firm in self.of_kind("firm") if firm.record.exited_year is None]  # type: ignore[misc]
+
+	def patent_holders(self, node_id: str) -> List[RecordedActor]:
+		"""The actors whose patents name the node (see patent_index.py); each may have let it expire."""
+		return list(patent_index.holders_of(self, node_id))
+
+	def concerns_of_active_firms(self) -> Set[str]:
+		"""Every concern some firm that has not exited runs, read from the holder index."""
+		actors = self.actors
+		return {node_id for node_id, holders in self._holders.items()
+				if any(actors[actor_id].kind == "firm" and actors[actor_id].record.exited_year is None
+					   for actor_id in holders)}
 
 	def concern_nodes(self) -> List[str]:
 		"""Every concern some actor in business runs."""

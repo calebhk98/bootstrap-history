@@ -4,7 +4,10 @@ import json
 import os
 import unittest
 
+from sim.engine.economy_port_setup import build_setup
 from sim.geography import crop_climate
+from sim.tests.harness import unopened_sim
+from sim.world import need_basket
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -51,6 +54,57 @@ class LightingInputTests(unittest.TestCase):
 
     def test_the_oil_lamp_takes_a_vessel(self):
         self.assertIn("ceramic_kg", self.entries["light_oil_lamp"]["inputs"])
+
+    def test_tallow_comes_only_from_herds(self):
+        makers = [name for name, entry in self.entries.items() if "fat_kg" in (entry.get("outputs") or {})]
+        self.assertTrue(makers)
+        for name in makers:
+            self.assertTrue(self.entries[name].get("herd_stock"), name)
+        self.assertIn("fat_kg", self.entries["tallow_kg"]["inputs"])
+
+    def test_a_rush_wick_candle_exists_and_the_rush_is_gathered_not_spun(self):
+        self.assertIn("wick_rush_m", self.entries["light_tallow_rushlight"]["inputs"])
+        self.assertTrue(self.entries["wick_rush_m"].get("extracted_from"))
+        self.assertFalse(self.entries["wick_rush_m"]["inputs"])
+
+    def test_olives_need_a_node_the_americas_do_not_hold(self):
+        node = self.entries["olive_oil_kg"]["requires_node"]
+        self.assertTrue(node)
+        self.assertIn(node, _start("rome_100ad"))
+        self.assertNotIn(node, _start("mexica_1500"))
+        self.assertIn("olive_oil_kg", _read("data", "civilizations", "mexica_1500.json")["unsupplied_basket_goods"])
+
+
+def _read(*parts):
+    with open(os.path.join(ROOT, *parts), encoding="utf-8") as handle:
+        return json.load(handle)
+
+
+def _start(civilisation_id):
+    return _read("data", "civilizations", civilisation_id + ".json")["starting_techs"]
+
+
+def _oil_share_of_light(civilisation_id):
+    """Share of a household's light spending that goes to oil lamps at the start's own opening prices."""
+    setup = build_setup(unopened_sim(civ=civilisation_id))
+    light = [need for need in need_basket.need_prices(setup.basket_for(setup.capital_tile), setup.opening_prices.get)
+             if need.spec.need_id == "light"][0]
+    oil = sum(share for good, _price, _effect, share in light.goods if "oil_lamp" in good)
+    return oil, sum(share for _good, _price, _effect, share in light.goods)
+
+
+class LightingSpendingTests(unittest.TestCase):
+    def test_oil_takes_more_of_the_light_spending_where_olives_grow(self):
+        southern_oil, southern_total = _oil_share_of_light("rome_100ad")
+        northern_oil, northern_total = _oil_share_of_light("england_1300")
+        self.assertGreater(southern_total, 0.0)
+        self.assertGreater(northern_total, 0.0)
+        self.assertGreater(southern_oil / southern_total, northern_oil / northern_total)
+
+    def test_no_oil_is_bought_where_the_olive_tree_is_unknown(self):
+        oil, total = _oil_share_of_light("mexica_1500")
+        self.assertGreater(total, 0.0)
+        self.assertEqual(oil, 0.0)
 
 
 if __name__ == "__main__":

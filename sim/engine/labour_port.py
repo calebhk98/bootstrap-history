@@ -19,6 +19,14 @@ class LabourWorld:
         self._sim = sim
         self._trade_registry = None
 
+    def home_tiles_held(self):
+        """The tiles the home country owns, read from the owner map."""
+        return self._sim.home_tiles_held()
+
+    def home_tiles_held_version(self):
+        """Changes whenever the tiles the home country owns might."""
+        return self._sim.tile_owner_version()
+
     def money_text(self, amount, digits=0, grouped=False, short=False):
         """A sum in the civilisation's coin as the player's chosen unit writes it (units_prose)."""
         return units_prose.money_text(amount, self._sim, digits, grouped, short)
@@ -94,10 +102,6 @@ class LabourWorld:
     @property
     def ROOM_SOURCES(self):
         return self._sim.ROOM_SOURCES
-
-    @property
-    def STAFF_ATTRITION_RATE(self):
-        return self._sim.STAFF_ATTRITION_RATE
 
     @property
     def STAFF_CAPACITY_SOURCES(self):
@@ -280,8 +284,8 @@ class LabourWorld:
     def running(self, node_id):
         return self._sim.running(node_id)
 
-    def shared_answer(self, key, inputs, compute):
-        return self._sim._shared_answer(key, inputs, compute)
+    def shared_answer(self, key, inputs, compute, standalone=False):
+        return self._sim._shared_answer(key, inputs, compute, standalone)
 
     def spending_power(self, kind='buy'):
         return self._sim.spending_power(kind)
@@ -322,6 +326,13 @@ class LabourWorld:
 
     def venture_staff_free(self):
         return self._sim.venture_staff_free()
+
+    def concerns_to_close_for_staffing(self):
+        return self._sim.concerns_to_close_for_staffing()
+
+    def stopped_yearly_value(self, node_ids):
+        rows = self._sim.ledger_concern_rows()
+        return sum(rows.get(node_id, 0.0) for node_id in node_ids)
 
     @property
     def wage_index(self):
