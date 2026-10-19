@@ -1,6 +1,6 @@
 # The farm trade and the unskilled fallback trade are one id, so processing and herding hours count as farming
 
-**Status:** open
+**Status:** closed - pinned by sim/tests/test_farm_trade_is_not_the_fallback.py
 
 Part of Complaint 530 (Most ancient occupations have no trade, and their hours are booked as farming).
 
@@ -15,3 +15,5 @@ Blocks 610 to 613 (their hours must stop counting as farming).
 **What it would take.** Give the unskilled fallback its own trade id, distinct from the farm trade, so only crop and farm hours are dropped from the non-farm shares.
 
 **Test.** A test: a recipe booked to the unskilled fallback appears in the non-farm need shares and a farm recipe does not.
+
+**Resolution.** `farmer` is a trade of its own in `data/world/trades.json` and `legacy_trade_defaults.FARM_TRADE`; `labourer` stays the unskilled fallback. Crop and plantation recipes book `farmer` hours, the default and Rome labourer stratum are `farmer`, and the spin-up drops only the farm trade, so the fallback's non-crop work (stone, wood, charcoal, herding until 611) now shows in the non-farm need shares. While the agent economy runs, the people-based split leaves out the fallback pool (its headcount includes the farm's hands, not a demand for non-farm hours); a share of the pool's own hours stays with the need shares. The farmer's one year of training is an author's estimate (conf D) that keeps it from tying with the fallback for fewest years.

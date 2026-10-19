@@ -755,7 +755,7 @@ class DataConsistencyTests(unittest.TestCase):
         with open(production_path) as handle:
             wheat = json.load(handle)["materials"]["wheat_kg"]
 
-        self.assertEqual(wheat["labour_hours"]["labourer"],
+        self.assertEqual(wheat["labour_hours"]["farmer"],
                          agriculture.REFERENCE_LABOUR_HOURS_PER_HECTARE)
         # Seed rate is a midpoint this module read out of that entry's prose
         # ("around 150-180 kg/ha"), not a machine-readable field, so this

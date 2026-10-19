@@ -1,6 +1,6 @@
 # Herders and millers have no trade: herding is not told apart from crop farming
 
-**Status:** open
+**Status:** closed - pinned by sim/tests/test_herd_and_mill_trades.py
 
 Part of Complaint 530 (Most ancient occupations have no trade, and their hours are booked as farming).
 
@@ -15,3 +15,4 @@ Depends on 609.
 **What it would take.** Add herder and miller to `data/world/trades.json` with sourced training, tools and danger, and re-book those recipes' hours. Baking is 614.
 
 **Test.** `validate` passes; a test reads the booked trade for the listed recipes.
+**Resolution.** `herder` and `miller` are trades in `data/world/trades.json` (training times are author estimates, conf D; fatality stated as unsourced). The herd, animal-stock, draught-animal, cheese and flour recipes book them. Baking stays 614; salted meat and other processing stay with the fallback labourer until 612 and 614.
