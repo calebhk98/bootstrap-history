@@ -94,3 +94,18 @@ place for. Related: 513 (farm labour sized exactly to feed the people), 434 (nee
 ## Moved from 535: salted fish
 
 Once a fish good exists, add a salting recipe (fish and salt in, a keepable good out) and a spoilage row in `data/world/spoilage.json` far below the fresh fish's, as `salted_meat_kg` does for meat. Salt is already a need and an input to cheese and salted meat.
+
+## Sizing (no change made)
+
+List the candidates with one pass over `data/production/*.json`, filtering `labour_hours` for `labourer` and `artisan`;
+most such entries are extraction and chemistry, out of scope here. The complaint's rows split into:
+
+- **Data only, sourceable:** spinner and weaver (thread, linen, fabric, canvas, felt, sailcloth, twine, cordage,
+  backstrap fabrics), fuller and dyer (cloth, dye), tanner (leather, vellum, parchment), charcoal and lime burner,
+  salt worker, herder (wool, milk, meat, herd and draught animals), miller (flour variants). Each needs a trade in
+  `data/world/trades.json` (training, tool basket, fatality source) and the hours re-booked with a source.
+- **New goods and research:** grape and olive crops with presses, jars and `holding_years`; baker and bread; a fish
+  good with salted fish and spoilage (from 535); garum; amphorae; shipwright; leather goods.
+- **Owner decision:** cook and tavern keeper, domestic servant, priest and diviner each need a need or good.
+- **Engine:** porter and dockworker live in the route modes (`sim/geography/routes_rates.py`); `FARM_TRADE` and the
+  unskilled fallback are both `labourer` in `sim/labour/legacy_trade_defaults.py` and must be separated.
