@@ -1,6 +1,6 @@
 # The opening sizes producers for food that households grow themselves in year one
 
-**Status:** open
+**Status:** closed - the opening nets households' own-plot food out of the demand producers are sized to, by the rule a year applies
 
 Found by an outside reviewer reading the repository, checked against the code.
 
@@ -31,3 +31,12 @@ describe different economies.
 - A test: at the opening, the self-grown share of each need and the market demand for it are the
   values the first simulated year produces, within a stated tolerance, under no shock.
 - Related: 526 (the opening income fixed point has no investment, so it opens at subsistence), 513.
+
+## Resolution
+
+`sim/economy/opening_own.py` applies the year's own-plot rule at the opening: the share of offered hours the
+producers do not hire (a fixed point with income and demand, settled in `opening._settle_income`) goes through
+`households_own.own_production`, and `year_goods._less_what_it_grew` cuts the floor bids by what it grows. Firms
+are therefore sized to what is left to buy. Held by `sim/tests/test_opening_own_plots.py`: the grain the opening
+removes from demand equals the grain the first year grows within a stated share of the floor, and the grain
+producers' first-year output stays a bounded share of the capacity they were sized to.
