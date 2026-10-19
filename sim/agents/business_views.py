@@ -43,6 +43,11 @@ class StateKeys(MutableSet):
 			for value in other:
 				self.add(value)
 
+	def intersection_update(self, *others: Any) -> None:
+		for value in list(self):
+			if not all(value in other for other in others):
+				self.discard(value)
+
 	def difference_update(self, *others: Any) -> None:
 		for other in others:
 			for value in list(other):
