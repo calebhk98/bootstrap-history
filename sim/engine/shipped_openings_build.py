@@ -4,7 +4,7 @@ import os
 import random
 from typing import List, Tuple
 
-from . import shipped_openings, solve_cache
+from . import shipped_openings, shipped_rate_bands, solve_cache
 from .core import Sim
 from .data import load, load_civ
 from .economy_port_year import SPIN_UP_YEARS_ENV
@@ -23,10 +23,15 @@ def build_reporting(civ_id: str, before_writing=None):
     if os.environ.get(SPIN_UP_YEARS_ENV):
         raise SystemExit("%s shortens the spin-up; a shipped opening must be the full one" % SPIN_UP_YEARS_ENV)
     _tree, _prices, nodes, _wages, _goods = load()
-    with solve_cache.recording() as touched:
-        game = Sim(nodes, [], random.Random(1), events=False, manual=True, civ=load_civ(civ_id))
+    civ = load_civ(civ_id)
+    with solve_cache.recording() as touched, shipped_rate_bands.SolveRecorder() as solves:
+        game = Sim(nodes, [], random.Random(1), events=False, manual=True, civ=civ)
     if before_writing is not None:
         before_writing(game)
+    starting_rate = float(civ["starting_interest_rate"])
+    with solve_cache.recording() as band_touched:
+        shipped_rate_bands.solve_other_bands(solves.at_starting_rate(starting_rate), starting_rate)
+    touched.extend(band_touched)
     shipped = []
     for directory, key in dict.fromkeys(touched):
         try:

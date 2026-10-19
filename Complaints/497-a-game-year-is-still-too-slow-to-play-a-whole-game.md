@@ -219,3 +219,23 @@ two `step 1`) as eight processes took 15.5 to 15.6 s; as one process 4.2 to 4.3 
 process with `--save-interval 3600` 3.9 to 4.3 s. Held-back writes save little over so few commands: the saving is
 the process start, not the write. Command: `time python3 sim/simulator.py agent --civ norse_900ad --seed 3
 --no-events --session F < commands.txt`, against the same lines fed one per process to the same command.
+
+## Price solves shipped for the other interest-rate bands
+
+`python3 sim/simulator.py openings` now also ships the opening's price solves at the other bands the market
+rate is likely to meet (`sim/engine/shipped_rate_bands.py`). The build records the solves the opening makes
+at the starting rate (`SolveRecorder`), replays each at every band from nil to twice the starting rate,
+nearest the start first, never past `capital_market.RATE_CEILING_SHARE` times the start, capped at
+`MAX_BANDS`. The range comes from a stepped game: its banded rate swung from near nil to above the start within
+five years, and `bounded_rate` only caps the rate (there is no floor at `RATE_FLOOR_SHARE` in `market_rate`).
+Each replay goes through `solved_prices_at_wages` itself with `band_interest_rate` values, so the keys are
+exactly those a game computes; the reader (`solve_cache.cached_json`) is unchanged. A test
+(`shipped_rate_bands`) ships a band, clears every cache and checks the table equals the cold solve and that
+nothing was solved.
+
+Measured: in a stepped Rome game most solve keys a year asks for (every one after the first year) are among
+the replayed keys. A cold band costs about a fifth of a CPU second per band for the opening state (three
+solves), against milliseconds shipped, which is a few percent of a year, not the doubling seen above: the rest
+of a year that meets a new band is not these solves and is still open. Measure with the in-game solve keys
+and a cold `ROME_CACHE_DIR` (`solve_cache.recording()` around `Sim.step()`, and `time.process_time()` around
+`shipped_rate_bands.solve_other_bands`).
