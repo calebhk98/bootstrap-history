@@ -1,6 +1,6 @@
 # No check holds freight to the historical sea, river and land cost ratio
 
-**Status:** partly - the physical ratio is now held by `sim/tests/test_freight_mode_cost_ratio.py`; the money ratio for a Rome opening is not yet checked
+**Status:** closed - the physical ratio and the Rome-opening money ratio are both held by tests; the river gap is a model gap, not a wrong input
 
 Reference (an outside design note, not code-aware): Diocletian's Price Edict implies roughly 1 by sea
 to 5 by river to 28-40 by land for a tonne of grain.
@@ -56,3 +56,17 @@ Findings:
   conditions), not a mode to scale.
 - Not done: the money ratio (carrier capital, return legs, losses via `freight_money_per_tonne_km`)
   needs a Rome opening's prices and is not asserted.
+
+## Resolution
+
+`sim/tests/test_freight_money_ratio.py` builds an unopened Rome game and reads `_freight_mode_costs` (the function
+the route search charges), for one-sided and balanced flows. Bands are wide and taken from the Edict figures cited
+above: river 1.5 to 8 times sea, road 5 to 60 times sea, cart on dirt track 1.5 to 6 times the road, order sea <
+river < road < cart < pack. Measure with `python3 -m unittest sim.tests.test_freight_money_ratio` or read the ratios
+from `unopened_sim()._freight_mode_costs(0.0)`.
+
+Finding: money ratios sit below the physical ones for sea and river because the sea and river carriers' capital,
+hull loss and crew are small per tonne-km next to a land team's feed and oxen. River is again low (still water, no
+current), the same model gap noted above (river conditions: current, windings, shallows); no input has a source to
+correct, and no mode is scaled. The road lands below the Edict range on money at a flat grade, within the lower
+band; the physical check covers the graded case.
