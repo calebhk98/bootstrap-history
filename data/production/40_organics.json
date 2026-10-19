@@ -120,7 +120,24 @@
    },
    "unit_dimension": "mass",
    "basis": "per tonne of pressed, salted hard cheese from goat and sheep milk",
-   "yield_basis": "Curdling with rennet, draining the whey, pressing and salting. Hard sheep and goat cheese takes about 6 to 10 kg of milk per kg (milk solids concentrate roughly tenfold as whey is drained; Fox et al., Fundamentals of Cheese Science, 2nd ed., 2017; recalled, not re-opened), taken as 8. Salt is about 2 per cent of the finished cheese by mass (same source), 20 kg a tonne; it draws out moisture and stops spoilage organisms, which is why cheese keeps where milk sours in a day (data/world/spoilage.json). The whey, about 85 per cent of the milk by mass, is not priced. Labour is the dairy work of heating, curdling, draining, pressing and turning; a rough figure, conf D.",
+   "yield_basis": "Curdling with rennet, draining the whey, pressing and salting. Hard sheep and goat cheese takes about 6 to 10 kg of milk per kg (milk solids concentrate roughly tenfold as whey is drained; Fox et al., Fundamentals of Cheese Science, 2nd ed., 2017; recalled, not re-opened), taken as 8. Salt is about 2 per cent of the finished cheese by mass (same source), 20 kg a tonne; it draws out moisture and stops spoilage organisms, which is why cheese keeps where milk sours in a day (data/world/spoilage.json). The whey, about 85 per cent of the milk by mass, is not priced. Labour is the dairy work of heating, curdling, draining, pressing and turning; a rough figure of a quarter hour a kilogram, conf D: no published time study of hand-made hard farmhouse cheese was found (a search for labour per kilogram of sheep or goat cheese gave only per-cow farm labour totals and milking studies, none of the cheese-room work), so the figure is a bottom-up estimate of the steps and stays D until one is read.",
+   "conf": "D",
+   "requires_node": null
+  },
+  "salted_meat_kg": {
+   "outputs": {
+    "salted_meat_kg": 750.0
+   },
+   "inputs": {
+    "meat_kg": 1000.0,
+    "salt_kg": 150.0
+   },
+   "labour_hours": {
+    "labourer": 40.0
+   },
+   "unit_dimension": "mass",
+   "basis": "per tonne of dry-salted, drained meat (bone-in joints)",
+   "yield_basis": "Dry salting: joints are rubbed and packed in salt, drained and turned for weeks. Salt applied is taken as 15 per cent of the meat by mass (recalled from dry-cure practice; Cato, De agri cultura 162, salts hams by the half modius each, not re-opened), of which the meat takes up a share and the rest drains off with brine. Salt and water leave the joints so that the cured weight is taken as three quarters of the fresh meat (cured hams lose roughly a quarter of their weight in drying; recalled). The salt cuts water activity so spoilage organisms stop, which is why it keeps for a year where fresh meat turns in days (data/world/spoilage.json). Labour is rubbing, packing and turning, 40 hours a tonne, a rough figure. Conf D throughout.",
    "conf": "D",
    "requires_node": null
   },

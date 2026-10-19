@@ -56,5 +56,47 @@ class CheesePreservesMilk(unittest.TestCase):
         self.assertTrue(rates["cheese_kg"]["source"])
 
 
+class HerdsLickSalt(unittest.TestCase):
+
+    def test_every_herd_recipe_takes_salt_from_the_species_row(self):
+        herds = json.load(open(os.path.join(ROOT, "data", "production", "95_herds.json"), encoding="utf-8"))["materials"]
+        rows = world_file("living_stock.json")["materials"]
+        for name, recipe in herds.items():
+            if "herd_stock" not in recipe:
+                continue
+            herd_kind = list(recipe["herd_stock"])[0]
+            self.assertAlmostEqual(recipe["inputs"]["salt_kg"], rows[herd_kind]["salt_kg_per_head_year"] * 100.0, places=3, msg=name)
+
+
+class SaltedMeatKeeps(unittest.TestCase):
+
+    def entry(self):
+        return demand.production_data()["salted_meat_kg"]
+
+    def test_recipe_uses_meat_and_salt_and_loses_water(self):
+        entry = self.entry()
+        self.assertIn("meat_kg", entry["inputs"])
+        self.assertGreater(entry["inputs"]["salt_kg"], 0.0)
+        self.assertLess(sum(entry["outputs"].values()), sum(entry["inputs"].values()))
+        self.assertIn(entry["conf"], ("C", "D"))
+
+    def test_output_spoils_far_less_than_fresh_meat(self):
+        rates = world_file("spoilage.json")["rates_per_year"]
+        self.assertLess(rates["salted_meat_kg"]["rate"], 0.1 * rates["meat_kg"]["rate"])
+        self.assertTrue(rates["salted_meat_kg"]["source"])
+
+    def test_salted_meat_is_food(self):
+        satisfies = world_file("needs.json")["goods"]["salted_meat_kg"]["satisfies"]
+        self.assertIn("food", satisfies)
+
+
+class CheeseLabourIsLabelled(unittest.TestCase):
+
+    def test_labour_figure_states_its_source_search(self):
+        entry = demand.production_data()["cheese_kg"]
+        self.assertEqual(entry["conf"], "D")
+        self.assertIn("no published time study", entry["yield_basis"])
+
+
 if __name__ == "__main__":
     unittest.main()
