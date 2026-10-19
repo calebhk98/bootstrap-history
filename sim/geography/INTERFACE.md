@@ -64,6 +64,7 @@ The game keeps and saves the ledger.
 | `reach(origins, modes, days_budget, improvements, held_nodes)` | `{tile_id: days}` within the budget. |
 | `tile_reach_levels(held_tiles, held_nodes)` | `{tile_id: level}` for every tile: 0 for a held tile, then the reach levels of `reach_levels` banded from the days a route over the modes the nodes open takes; the farthest level where none joins. |
 | `dues_hours_per_tonne()` | `{mode_id: hours}` of tolls or port dues per tonne a haul pays when it changes to the mode (the mode's `dues_hours_per_tonne`, with `dues_source` and `dues_conf`). |
+| `route_dues_levied(legs, dues_per_tonne, owner_of)` | `[{tile, holder, mode, per_tonne}]`: the dues of a found route, each levied at the tile where the haul changes to a mode and owed to that tile's holder now (`owner_of(tile)`). `route_dues_by_holder(..., tonnes)` sums them to `{holder: money}`. |
 | `cargo_loss_per_day()` | `{mode_id: share}` of the cargo a mode loses each day on the road (a herd's strays and wasting; labelled in the mode data). |
 | `walking_cargo_modes()` | `[mode_id]` where the cargo is the carrier (droving): no carrier capital, the cargo's feed eaten on the loaded leg only. `droving_carrier(mode_id)` gives `{inputs}`, its physical inputs per tonne-km. |
 | `flow_ledger` (module) | Plain-dict ledger `{origin: {destination: tonnes}}` of goods carried in a year: `record_flow`, `pair_imbalance`, `return_fill_share`, `overall_imbalance`. The economy keeps one and prices the carriers' return trips by it. |
