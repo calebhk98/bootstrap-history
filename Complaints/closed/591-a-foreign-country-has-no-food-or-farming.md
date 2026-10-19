@@ -1,6 +1,6 @@
 # A foreign country has no food or farming: the farm, granary and nutrition chain runs for the home country only
 
-**Status:** open
+**Status:** closed. Each foreign country runs the home agriculture model (`sim/agents/country_farm.py`): cleared land sized from its own arable ground and people, a farm workforce found by food balance, a weather draw, a granary, and what is eaten feeds its Population. `FOREIGN_FOOD_HEADROOM` is deleted. Not yet modelled abroad: land clearing, and per-country technique (the default wheat, two-field, ard technique is used). Test: `country_farm`.
 
 Part of Complaint 482 (Countries other than the home one are static stubs).
 

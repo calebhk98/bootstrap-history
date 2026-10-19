@@ -23,9 +23,4 @@ RESERVE_YEARS_OF_NEED = declare(
 	unit="years of the standing need", source=None, confidence="D",
 	why="Money a foreign state keeps back before it spends on copying know-how. Stands in for a "
 		"reserve policy.")
-FOREIGN_FOOD_HEADROOM = declare(
-	"FOREIGN_FOOD_HEADROOM", 1.05, kind="temporary_heuristic",
-	unit="ratio of calories fed to calories needed at the first step", source=None, confidence="D",
-	why="What a foreign country's land feeds, as a multiple of what its seeded people need, held fixed "
-		"so its population grows toward that ceiling. Stands in for the farm and granary a foreign "
-		"country does not run yet.", retire="Complaints/591")
+
