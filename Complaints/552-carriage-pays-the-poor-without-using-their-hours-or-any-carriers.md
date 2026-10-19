@@ -60,7 +60,7 @@ demand for carters, sailors and porters (530).
 - **Travel time is covered.** `sim/economy/merchants_transit.py` holds a haul for the whole years its days span, books
   spoilage each year to `EDGE_SPOILAGE`, charges interest in `gap_cost_per_unit`, and lags news; held by
   `test_merchant_travel_time.py`.
-- **Storage at stages** is not charged (spoilage and interest only); small.
+- **Storage at stages** is charged for the years a haul is held beyond the first (628, closed).
 - **Carriers as capital** need, in order: cart, pack saddle and vessel goods with recipes and sourced service lives
   (only `ox` and `mule` exist, without service lives); carrier-days, animals per carrier and vehicle wear exposed on
   geography's `Rate` and threaded through `carriage_crew`; a per-merchant fleet whose yearly capacity follows from

@@ -109,7 +109,7 @@ def gap_cost_per_unit(spec: GoodSpec, price_here: float, price_there: float,
     carriage = carriage_per_tonne * spec.unit_mass_kg / KILOGRAMS_PER_TONNE
     interest = price_here * max(0.0, interest_rate) * years
     spoilage = price_there * merchants_transit.lost_share(spec.spoilage_per_year, years)
-    return carriage + interest + spoilage + MERCHANT_MARGIN_SHARE * price_here
+    return carriage + interest + spoilage + merchants_transit.storage_per_unit(spec, years) + MERCHANT_MARGIN_SHARE * price_here
 
 
 def orders(merchant: Merchant, view: MarketView, carriage: CarriageTable, area_map: AreaMap, cash: float,
@@ -264,6 +264,7 @@ def _good_routes(good, spec, areas, prices, carriage, interest_rate, source_ids=
         best = None
         best_net = -math.inf
         best_years = 1
+        storage_a_year = merchants_transit.storage_per_unit(spec, 2)    # one extra year's storage
         interest_here = price_here * interest              # the terms of gap_cost_per_unit, hoisted
         margin_here = MERCHANT_MARGIN_SHARE * price_here
         source_tile = source.anchor_tile
@@ -282,7 +283,7 @@ def _good_routes(good, spec, areas, prices, carriage, interest_rate, source_ids=
                 if held_years is None:
                     held_years = years_between(carriage, source_tile, anchor_tile)
                 if held_years > 1:
-                    net -= interest_here * (held_years - 1) + price_there * (
+                    net -= (interest_here + storage_a_year) * (held_years - 1) + price_there * (
                         merchants_transit.lost_share(spec.spoilage_per_year, held_years) - spoilage)
                 if net > worth_beating:
                     best, best_net, best_years = (destination, per_tonne), net, held_years
@@ -302,6 +303,7 @@ def _break_even_price(spec: GoodSpec, price_there: float, carriage_per_unit: flo
     """The source price at which the gap just covers carriage, interest, spoilage and margin
     (gap_cost_per_unit solved for the price here): above it the trade loses money."""
     kept = price_there * (1.0 - merchants_transit.lost_share(spec.spoilage_per_year, years)) - carriage_per_unit
+    kept -= merchants_transit.storage_per_unit(spec, years)
     return max(0.0, kept) / (1.0 + max(0.0, interest_rate) * years + MERCHANT_MARGIN_SHARE)
 
 
