@@ -1,6 +1,6 @@
 # A starved market never grows, because entry is sized to what it traded
 
-**Status:** partly fixed: the sizing rule is built; Rome's flux market does not reach it (see Update 1)
+**Status:** closed - the sizing rule is built and tested; the starved Rome flux market no longer reproduces with the short or the full spin-up
 
 Found tracing copper (511, Update 3). `entry_sizing.sized_runs` caps a newcomer at
 `ENTRY_SHARE_OF_TRADED_VOLUME` of last year's traded volume. A market whose makers are too small trades almost
@@ -55,3 +55,11 @@ large, because its expected revenue per run sits just below its variable cost wh
 above both. A producer's expectation that lags its own market is the lead for 511 and the `economy_tin_dearer_than_copper`
 and `economy_bronze_market_price` failures in 558. Whether the full spin-up still shows the starved flux of 511
 Update 3 is being measured.
+
+## Resolution
+
+The rule this complaint asked for is built (Update 1: `entry_backed.unfilled_at_cost`, `entry_sizing.sized_runs(...,
+unfilled=)`, tests `test_economy_entrant_sizing` and `test_economy_entry_unfilled`). The Rome case that prompted it is
+gone: stepping the economy after the full-length spin-up, the flux makers of Algeria, Italy and Turkey hold capacity
+of hundreds to thousands of runs and run every year, and the short spin-up shows the same. The copper smelters'
+shortfall in the first years is charcoal, which no producer makes at the opening: Complaint 570.
