@@ -116,7 +116,7 @@ class MoneyPhaseMixin:
             # climbing out. A household running a surplus is paying its
             # creditors, and nobody calls that insolvency; the counter is
             # for a household whose income does not cover its costs.
-            _net = (self.revenue() - self.upkeep() - self.living_cost()
+            _net = (self.revenue() - self.upkeep() - self.recurring_living_cost(self.revenue(), self.upkeep())
                     - self.mine_operating_cost())
             if _net > 0:
                 self.state.household.insolvent_years = 0
@@ -145,7 +145,7 @@ class MoneyPhaseMixin:
                 # centuries. It lets them go, and the buildings fall down.
                 # You lose what they gave you and can rebuild later, which
                 # is a real cost and a real way out.
-                net = (self.revenue() - self.upkeep() - self.living_cost()
+                net = (self.revenue() - self.upkeep() - self.recurring_living_cost(self.revenue(), self.upkeep())
                        - self.mine_operating_cost())
                 # ONLY WORKS THAT COST MORE THAN THEY RETURN, and only if you
                 # let it happen at all: a loop that runs until the books

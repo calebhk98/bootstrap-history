@@ -1,6 +1,6 @@
 # The founder's job does not cover living costs, so a ruined founder cannot climb back
 
-**Status:** open (the two `insolvency_whole_game` checks now pass; the income side below is still unbuilt)
+**Status:** closed - a household lives within its income whether or not it holds savings, so the default founder's wage carries them
 
 Since Complaint 518 the founder's whole standing income is the one `_wages_for_your_own_work` line (the unspoken-for
 hours sold in the held trade at the market wage). In a Rome game whose concerns are shut or never opened that income is
@@ -34,3 +34,18 @@ creditors do not take (`DEBT_SERVICE_SHARE_OF_SURPLUS`) keeps dependants. Debt s
 in `python3 -m sim.tests --slow --only insolvency_whole_game`. What remains is the opening's wages (507 Stage 2): the
 standing job still pays less than `living_cost()` reports, and that figure (and the credit floor priced on it) still
 counts the full dependants.
+
+## Resolution
+
+Measured on the default Rome game (`sim(manual=False)` in `sim/tests/test_founder_income_living_cost.py`): the founder sells
+the idle hours in the held trade at the market wage (the "going into nothing" line on the state screen is about
+projects only; the wage line already sold them). That wage covers one person's subsistence, but not the household
+base on top of it. The agent economy's own per-person need floors (`agent_need_floor_costs`) sit far below the
+subsistence heuristic, so a society household of the same income does not pay a fixed household base either: it pays
+what its income carries.
+
+`dependants_beyond_means` (`sim/engine/economy_debt_service.py`) now applies to a household with savings as well as to one
+in arrears: dependants are kept out of the income surplus (the creditors' share only when in arrears), and savings are
+not spent on them. `recurring_living_cost` is the figure the recurring net, the sustainable debt and the insolvency
+counter now read, so they agree with what the money phase charges. Subsistence itself is never shed. Tests: the new
+topic `founder_income_living_cost` and the updated `ruined_household_dependants`; `insolvency_whole_game` passes.

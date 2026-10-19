@@ -13,8 +13,11 @@ check("the dependants' cost is part of the living cost",
       0.0 < dependants < game.living_cost(),
       (dependants, game.living_cost()))
 household.capital = 1000.0
-check("a household with money keeps every dependant, whatever its income",
-      game.dependants_beyond_means(game.living_cost(), revenue=0.0, upkeep=upkeep) == 0.0,
+check("a household with money and an income that covers its costs keeps every dependant",
+      game.dependants_beyond_means(game.living_cost(), revenue=1.0e9, upkeep=upkeep) == 0.0,
+      game.dependants_beyond_means(game.living_cost(), revenue=1.0e9, upkeep=upkeep))
+check("a household with money but no income sheds all its dependants and leaves its savings alone",
+      abs(game.dependants_beyond_means(game.living_cost(), revenue=0.0, upkeep=upkeep) - dependants) < 1e-9,
       game.dependants_beyond_means(game.living_cost(), revenue=0.0, upkeep=upkeep))
 household.capital = -10.0
 check("a household in arrears whose income covers its costs keeps every dependant",
