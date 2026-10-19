@@ -1,6 +1,6 @@
 # Built concerns make nothing, because the recipe names a twin node
 
-**Status:** partly - lead_metallurgy, mt2_zinc_by_retort and pwr_coking now operate the lead, zinc and coke entries; the rest below needs recipes
+**Status:** closed - the twins with an entry are linked (`test_twin_nodes_earn.py`); the rest is Complaint 510's recipe-and-demand item
 
 Almost every concern that costs money to run earns nothing. Count them with:
 
@@ -48,3 +48,11 @@ Remaining: `gp_carbon_brushes`, `lens_grinding` and `mt2_sintering_process` have
 good they make (no brush, lens or sintered-ore good exists), so they cannot be linked. They, and the other
 product-making nodes in the measurement, need a recipe for their good and a demand side. That is the
 remaining work; the measurement lists the nodes.
+
+## Resolution
+
+Closed as a duplicate of what remains. The twin nodes that had an entry earn when opened
+(`sim/tests/test_twin_nodes_earn.py`), and `validate` lists the unlinked producers. The nodes left (brushes, lenses,
+sintered ore and the other product-making nodes in that list) need a good, a recipe and a demand side, which is
+exactly the last item of Complaint 510 ("the nodes that make a good with no production entry yet ... get one with a
+demand side"); under 510's owner direction those nodes become knowledge and the recipe is run by a firm.
