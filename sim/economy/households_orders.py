@@ -18,7 +18,8 @@ from sim.constants import declare
 from . import currency, durable_stock
 from .credit_view import claims_of
 from .households_ability import affordable_goods, household_budget_for_need
-from .households_basket import Basket, PricedNeed, need_prices, need_units, price_ceilings
+from .households_basket import (Basket, PricedNeed, need_prices, need_units, price_ceilings, quality_reach,
+                                with_quality_reach)
 from .households_cohort import Cohort
 from .protocols import AgentOrders, MarketView
 from .types import Bid, FundsOffer, GoodId, GoodSpec
@@ -159,6 +160,7 @@ def goods_orders(cohort: Cohort, view: MarketView, cash: float, income_this_year
         if smooth_rise:
             spending = min(spending, max(income_this_year, (1.0 + SPENDING_CUT_LIMIT) * cohort.expected_spending))
         spending = max(spending, min(cash, (1.0 - SPENDING_CUT_LIMIT) * cohort.expected_spending))
+    priced = with_quality_reach(priced, basket, quality_reach(spending, floor_cost))
     floors, totals = need_units(priced, basket, cohort.people, spending - floor_cost)
     # the stock of a durable is sized on the expected flow: this year's flow scaled by expected over actual
     # spending, but never below the flow the smoothed surplus (smoothed spending over smoothed floor cost)
