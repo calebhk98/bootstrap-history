@@ -148,3 +148,5 @@ with the test kept honest.
   unreplaced wear (`python3 -m sim.tests --slow --only spin_up_money_supply`). Complaint 473's status line, which
   says this topic passes, is stale. Limiting opening prices to goods a start can make (566) moves it closer to the
   bound without passing.
+
+- Complaint 570 closed: the opening now sizes the fuel its smelters burn (`fit_to_supply` holds the chain, not only the timber's direct users). `economy_tin_dearer_than_copper` still fails with a narrower gap (`python3 -m sim.tests --slow --only economy_tin_dearer_than_copper --jobs 1`); `opening_floor_and_thin_trades` (building boom) fails marginally on the branch base as well.

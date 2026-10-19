@@ -118,3 +118,5 @@ expectation.
 flux traded and the copper price are unchanged over five years (copper 2.88, 8.40, 12.44, 13.67, 15.47 before and
 after), because the flux gap is a few kilograms and flux entry is never sized there. The test still fails (0.047
 against 0.441) and reads year zero only. The full-spin-up case was not rerun.
+
+Note (Complaint 570): the opening now makes the charcoal its smelters burn, which raised tin against copper at the opening; the check `economy_tin_dearer_than_copper` still fails by a narrower margin.
