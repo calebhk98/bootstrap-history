@@ -9,4 +9,4 @@ class ReviewView:
 
 	def founder_review(self) -> SeatReview:
 		"""The seat's answers to a business review (sim/agents/business_review.py)."""
-		return SeatReview(self._sim)
+		return SeatReview(self)

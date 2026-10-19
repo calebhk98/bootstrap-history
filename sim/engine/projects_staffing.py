@@ -115,11 +115,8 @@ class StaffingMixin:
         return self.state.projects.business.review(self.household, SimWorld(self), rules)
 
     def note_venture_year(self):
-        """Tally each running plant's margin at today's figures, and the years running it has lost money."""
-        business = self.state.projects.business
-        for node_id in sorted(self.state.projects.operating):
-            if node_id in self.nodes:
-                business.note_year(node_id, self.venture_real_earnings(node_id) - self.venture_real_upkeep(node_id))
+        """Tally each running plant's margin, and the years running it has lost money (the loss rule's input)."""
+        SimWorld(self).founder_review().tally(self.state.projects.business)
 
     def staffing_closed_hand_shortfall(self):
         """(scholars, craftsmen) the household lacks to reopen every concern shut for want of staff.

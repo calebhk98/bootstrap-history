@@ -9,18 +9,25 @@ from sim.agents.api import edges
 class SeatReview:
 	"""The hooks of `Reviewable` for the acting seat, answered from the simulation."""
 
-	def __init__(self, sim):
-		self._sim = sim
+	def __init__(self, world):
+		self._world = world
+		self._sim = world._sim
+
+	def tally(self, business):
+		"""Tally each running plant's year: its margin once ramped up, and the years running it has lost money."""
+		for node_id in sorted(self._sim.state.projects.operating):
+			if node_id in self._sim.nodes:
+				business.note_year(node_id, self._world.concern_margin(node_id))
 
 	def staff_closures(self):
 		return self._sim.concerns_to_close_for_staffing()
 
 	def reopening_order(self, entry_keys):
 		"""Staff closures still worth reopening (known, in the tree), best earning for the hands they tie up first."""
-		sim = self._sim
+		sim, world = self._sim, self._world
 		reopenable = [node_id for node_id in entry_keys if node_id in sim.state.projects.done and node_id in sim.nodes]
-		return sorted(reopenable, key=lambda node_id: -((sim.nodes[node_id]["rev"] - sim.nodes[node_id]["up"])
-														/ max(0.01, sum(sim.venture_hands(node_id)))))
+		return sorted(reopenable, key=lambda node_id: -(world.concern_margin(node_id)
+														/ max(0.01, sum(world.concern_staff(node_id).values()))))
 
 	def reopens_staffed_plant(self, entry_key):
 		did_open, _message = self._sim.open_venture(entry_key)
@@ -44,8 +51,7 @@ class SeatReview:
 		return entry_key in self._sim.CAPABILITY_INSTITUTIONS
 
 	def standing_margin(self, entry_key):
-		node = self._sim.nodes[entry_key]
-		return node["rev"] - node["up"]
+		return self._world.concern_margin(entry_key)
 
 	def creditors_press(self):
 		return self._sim.state.household.capital < -self._sim.credit_limit()
@@ -54,7 +60,8 @@ class SeatReview:
 		self._sim.close_work(entry_key, reason, self._sim.state.scenario.year)
 
 	def proceeds_of_seizure(self, entry_key):
-		return self._sim.nodes[entry_key]["up"] * self._sim.CREDITOR_SEIZURE_VALUE_MULTIPLE
+		size = self._sim.state.projects.business.size_of(entry_key)
+		return self._world.upkeep(entry_key, size) * self._sim.CREDITOR_SEIZURE_VALUE_MULTIPLE
 
 	def receive_seizure(self, entry_key, proceeds):
 		self._sim.receive_from_edge(edges.EDGE_CREDITORS, proceeds, "concern seized by creditors")
