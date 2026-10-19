@@ -90,3 +90,7 @@ place for. Related: 513 (farm labour sized exactly to feed the people), 434 (nee
   Han prose. This is the same gap as the by-employment above.
 - India (caste, cotton weaving) and Egypt have no civilisation in `data/civilizations/`; nothing to
   file until one is added.
+
+## Moved from 535: salted fish
+
+Once a fish good exists, add a salting recipe (fish and salt in, a keepable good out) and a spoilage row in `data/world/spoilage.json` far below the fresh fish's, as `salted_meat_kg` does for meat. Salt is already a need and an input to cheese and salted meat.

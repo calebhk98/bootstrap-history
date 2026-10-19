@@ -170,6 +170,7 @@
   "salt_kg": {"satisfies": {"salt": 1.0}},
   "cheese_kg": {"satisfies": {"food": 1.2}},
   "meat_kg": {"satisfies": {"food": 0.4}},
+  "salted_meat_kg": {"satisfies": {"food": 0.5}},
 
   "water_kg": {"satisfies": {"water": 1.0}},
   "water_well_kg": {"satisfies": {"water": 1.0}},
