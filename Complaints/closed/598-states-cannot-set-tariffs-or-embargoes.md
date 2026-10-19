@@ -1,6 +1,6 @@
 # States cannot set tariffs or embargoes: customs has one rate and no partner
 
-**Status:** open
+**Status:** closed. A state's tariff (a share of the goods' value at the source) and embargo on another country, set through `set_relation`, act in the markets: `landed_price` carries the tariff and an embargo removes the offer (`sim/engine/trade_duty.py`); the duty inside import payments reaches the treasury from the border (`sim/economy/tariffs.py`, `year_close.money_taxes`); the traders' route arithmetic carries the duty (`duty_between`, part of `freight_between`) and an embargoed crossing costs without limit, the duty paid to the destination's government actor at settlement; a partner's tariff and embargo on the home country cut the export bid. Offer caches key on the relations, so a mid-game change is seen at once. Test: `sim/tests/test_tariffs_and_embargoes.py`. Not done: a partner's own treasury in the legacy partner books receives nothing from the duty on our exports (the price falls by it); no quotas.
 
 Part of Complaint 487 (No diplomacy).
 
