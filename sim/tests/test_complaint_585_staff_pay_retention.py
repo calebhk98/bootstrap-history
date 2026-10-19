@@ -3,6 +3,7 @@ import random
 
 from .harness import *  # noqa: F401,F403
 from sim.engine.staff_replacement import REPLACE_ONLY
+from sim.refusal import facts_of
 from sim.labour.market.clearing import on_the_job_loss_share
 
 
@@ -50,9 +51,10 @@ leaving = staffed_game(10)
 leaving.state.founder.policy["keep_pay_at_market"] = False
 leaving.state.household.staff_pay_held["artisan"] = 1.0
 leaving._step_staff()
-_reasons = {line.facts.get("reason") for _year, line in leaving.state.household.log
-            if hasattr(line, "facts") and str(getattr(line, "kind", "")).startswith("staff_lost")}
-check("underpaid staff who leave are logged as better offers", "better_offers" in _reasons, _reasons)
+_loss_facts = [facts_of(line) for _year, line in leaving.state.household.log
+               if str(getattr(line, "kind", "")).startswith("staff_lost")]
+check("underpaid staff who leave are logged as better offers",
+      any(("reason", "better_offers") in facts.items() for facts in _loss_facts), _loss_facts)
 
 # lost staff are replaced when the policy says so
 dying = staffed_game(10)
