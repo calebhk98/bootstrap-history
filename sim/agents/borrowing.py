@@ -102,9 +102,17 @@ class Borrower:
 			self.note_outlay("interest arrears", paid)  # type: ignore[attr-defined]
 			record.interest_arrears -= paid
 
+	def write_off_debt(self) -> None:
+		"""The lenders drop the claim; the debt that vanishes is income to the actor, so its ledger still matches its purse."""
+		before = self.money  # type: ignore[attr-defined]
+		self.purses.write_off(self.account_id)  # type: ignore[attr-defined]
+		forgiven = self.money - before  # type: ignore[attr-defined]
+		if forgiven > DEBT_FLOOR:
+			self.note_income("debt forgiven", forgiven)  # type: ignore[attr-defined]
+
 	def default(self, world: Any) -> None:
 		"""The lenders write the claim off, the pool bearing the loss; an actor that can close overrides this to
 		close as well."""
-		self.purses.write_off(self.account_id)  # type: ignore[attr-defined]
+		self.write_off_debt()
 		self.record.interest_arrears = 0.0  # type: ignore[attr-defined]
 		self.record.arrears_years = 0  # type: ignore[attr-defined]

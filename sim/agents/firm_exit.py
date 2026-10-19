@@ -36,6 +36,6 @@ left goes back to the founder who put it up, and any debt still unpaid is writte
 		ledger.transfer(firm, founder, firm.money, "founding stake returned")
 	if founder is not None and "founder_household" in firm.record.plan:
 		household_wealth.release(founder, int(firm.record.plan["founder_household"]), float(firm.record.plan.get("stake", 0.0)))
-	firm.purses.write_off(firm.account_id)  # what it still owes is lost to its lenders: nothing is left to repay it from
+	firm.write_off_debt()  # what it still owes is lost to its lenders: nothing is left to repay it from
 	firm.business.close_all()
 	firm.record.exited_year = world.year
