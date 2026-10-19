@@ -141,7 +141,7 @@ making cost, labour at the shown wages):
   gone in year zero, and each smelter may move only `OUTPUT_CHANGE_SHARE_PER_YEAR` of capacity from last year's runs
   (`within_a_years_change`), so supply is a fraction of the demand and the sold-out asks rise. Where that pace does not
   bind, smith hours do: every copper labour area has smith vacancies at a wage equal to its ceiling, the cost of
-  training a substitute (`trained_substitute_wage`, Complaint 434), while the smelters bid far above it. Cash, ore,
+  training a substitute (`trained_substitute_wage`, `sim/labour/market/clearing.py`), while the smelters bid far above it. Cash, ore,
   charcoal and flux do not bind.
 - A longer spin-up does not cure it. With `ROME_SPIN_UP_YEARS=6,2` the smelters run at about half of capacity, the
   smith ceiling binds everywhere, and copper climbs to tens of times its cost (the ask raise on sold-out sellers keeps
@@ -149,5 +149,5 @@ making cost, labour at the shown wages):
   (flux far over its cost); not traced.
 So the year-zero gap is the model's own short-run answer (a trade whose hands cannot grow within the year, a producer
 that idled the year before), not a recipe, entry or accounting error. Raising the smith wage above the training-cost
-ceiling in a vacancy, or allocating scarce hours by value, is a labour-core design decision (Complaint 434, the
+ceiling in a vacancy, or allocating scarce hours by value, is a labour-core design decision (the `trained_substitute_wage` rule, the
 wall in `sim/labour/`), not made here. No code change; the check is unchanged and stays red.
