@@ -150,3 +150,9 @@ with the test kept honest.
   bound without passing.
 
 - Complaint 570 closed: the opening now sizes the fuel its smelters burn (`fit_to_supply` holds the chain, not only the timber's direct users). `economy_tin_dearer_than_copper` still fails with a narrower gap (`python3 -m sim.tests --slow --only economy_tin_dearer_than_copper --jobs 1`); `opening_floor_and_thin_trades` (building boom) fails marginally on the branch base as well.
+
+- Complaint 511 traced again on `tin-against-copper` (see its Update 5): `economy_tin_dearer_than_copper` still fails on
+  copper's year-zero scarcity, which comes from the suite's unsettled short opening (smelters idle in the last hidden
+  year, stock gone, yearly pace limit) and from smith hours capped by the trained-substitute wage ceiling. No engine
+  defect found; the check is not weakened and stays failing until the opening settles or the labour ceiling is
+  revisited.
