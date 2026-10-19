@@ -131,9 +131,9 @@ check("the founder's own scale is that same function",
       abs(game.household_scale() - game.visible_scale(
           game.labour.headcount(), game.state.household.capital, game.state.household.eminence)) == 0.0)
 rich_firm = game.actors.add("firm:rich", ActorRecord(kind="firm", money=60000000.0))
-rich_firm.workforce["artisan"] = 2000.0
+rich_firm.workforce["labourer"] = 2000.0
 twin_firm = game.actors.add("firm:twin", ActorRecord(kind="firm", money=60000000.0))
-twin_firm.workforce["artisan"] = 2000.0
+twin_firm.workforce["labourer"] = 2000.0
 world = SimWorld(game)
 check("two firms of equal visible scale are assessed equally",
       treasury.assess(rich_firm, 1.0e6, world) == treasury.assess(twin_firm, 1.0e6, world)
@@ -142,7 +142,7 @@ check("a firm of the founder's visible scale is assessed at the founder's rate",
       abs(treasury.assess(rich_firm, 1.0e6, world)[0]
           - sum(game.levy_shares(game.visible_scale(2000.0, 60000000.0, 0.0))) * 1.0e6) < 1e-6)
 small_firm = game.actors.add("firm:small", ActorRecord(kind="firm", money=1000.0))
-small_firm.workforce["artisan"] = 2.0
+small_firm.workforce["labourer"] = 2.0
 check("a small firm the state has not noticed pays nothing", treasury.assess(small_firm, 1.0e6, world)[0] == 0.0)
 game.state_capacity = 0.0
 world = SimWorld(game)
@@ -153,7 +153,7 @@ check("a state with no capacity collects nothing from anyone",
 game = state_seeking(actor_sim([mill]))
 founder_runs(game, "test_mill", opened_ago=6)
 taxed = firm_runs(game, "firm:taxed", "test_mill", money=60000000.0)
-taxed.workforce["artisan"] = 2000.0
+taxed.workforce["labourer"] = 2000.0
 treasury = game.state_treasury()
 income_before = dict(treasury.record.income)
 taxed.operate(SimWorld(game))
