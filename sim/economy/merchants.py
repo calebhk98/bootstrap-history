@@ -120,17 +120,23 @@ def orders(merchant: Merchant, view: MarketView, carriage: CarriageTable, area_m
     shares = shares if shares is not None else RouteShares()
     own = RouteShares()
     merchant.routes = {}
-    candidates = _candidate_routes(merchant, view, carriage, area_map, held_stock, specs, interest_rate)
     held_index = held_by_good(held_stock)
+    remaining = max(0.0, cash) * (1.0 - BUDGET_SAFETY_SHARE)     # a hair kept back: borrowed cash is all spent
+    # with nothing to spend only the stock already held can use a route
+    candidates = _candidate_routes(merchant, view, carriage, area_map, held_stock, specs, interest_rate,
+                                   None if remaining > 0.0 else held_index)
+    held_sorted: Dict[GoodId, list] = {}
     # stock already held where a route out pays is carried along it, not sold where it sits
     for _rank, good, source, destination, *_rest in candidates:
-        for tile, quantity in sorted(held_index.get(good, ())):
+        held_tiles = held_sorted.get(good)
+        if held_tiles is None:
+            held_tiles = held_sorted[good] = sorted(held_index.get(good, ()))
+        for tile, quantity in held_tiles:
             if quantity > 0.0 and tile in source.tiles and tile != destination.anchor_tile:
                 merchant.routes[(good, tile)] = (destination.anchor_tile, destination.area_id)
     offers = [offer for offer in _holding_offers(merchant, view, area_map, held_stock, specs, interest_rate)
               if (offer.good, offer.tile) not in merchant.routes]
     bids: List[Bid] = []
-    remaining = max(0.0, cash) * (1.0 - BUDGET_SAFETY_SHARE)     # a hair kept back: borrowed cash is all spent
     for _rank, good, source, destination, price_here, outlay, ceiling in candidates:
         if remaining <= 0.0:
             break
@@ -160,9 +166,11 @@ def _holding_offers(merchant, view, area_map, held_stock, specs, interest_rate) 
     return offers
 
 
-def _candidate_routes(merchant, view, carriage, area_map, held_stock, specs, interest_rate):
+def _candidate_routes(merchant, view, carriage, area_map, held_stock, specs, interest_rate, only_held=None):
     """Rows (rank, good, source, destination, price here, outlay per unit, most it pays), one per
     profitable (good, source area) at its best destination, best net gap per unit of outlay first.
+    With `only_held` (`held_by_good` of stock) the rows of the goods held, from the source areas holding
+    them alone: each such row is the row the full search gives.
     A good's rows are shared with any caller that sees the same prices at the same rate."""
     parts = []
     prices_across = getattr(view, "prices_across", None)
@@ -181,7 +189,8 @@ def _candidate_routes(merchant, view, carriage, area_map, held_stock, specs, int
             current = news_current_at[tile] = merchants_transit.news_lag(carriage, merchant.home_tile, tile) == 0
         return current
 
-    for good in sorted(set(specs) & set(area_map.goods())):
+    for good in sorted(set(specs) & set(area_map.goods()) if only_held is None
+                       else set(specs) & set(area_map.goods()) & set(only_held)):
         areas = area_map.areas(good)
         if len(areas) < 2:
             continue
@@ -196,16 +205,36 @@ def _candidate_routes(merchant, view, carriage, area_map, held_stock, specs, int
         seen = [expected[area.area_id] if area.area_id in expected
                 else (price if news_current(area.anchor_tile) else None)
                 for area, price in zip(areas, seen)]
+        if only_held is not None:
+            parts.append(_good_routes(good, spec, areas, {area.area_id: price for area, price in zip(areas, seen)},
+                                      carriage, interest_rate, _areas_holding(area_map, good, only_held[good])))
+            continue
         parts.append(merchants_route_memo.routes_for_good(
             carriage, good, areas, spec, tuple(seen), interest_rate,
             lambda: _good_routes(good, spec, areas, {area.area_id: price for area, price in zip(areas, seen)},
                                  carriage, interest_rate)))
-    return merchants_route_memo.sorted_rows(
-        carriage, parts, lambda rows: sorted(rows, key=lambda row: (row[0], row[1], row[2].area_id)))
+    def by_rank(rows):
+        return sorted(rows, key=lambda row: (row[0], row[1], row[2].area_id))
+
+    if only_held is not None:      # a partial search stays out of the memo the full searches share
+        return by_rank([row for part in parts for row in part])
+    return merchants_route_memo.sorted_rows(carriage, parts, by_rank)
 
 
-def _good_routes(good, spec, areas, prices, carriage, interest_rate) -> list:
-    """The unsorted rows of `_candidate_routes` for one good, given its price in each area."""
+def _areas_holding(area_map, good, held) -> set:
+    """Ids of the good's areas holding any of `held` ((tile, quantity) pairs)."""
+    found = set()
+    for tile, _quantity in held:
+        try:
+            found.add(area_map.area_of(good, tile))
+        except KeyError:                       # a tile outside every area
+            pass
+    return found
+
+
+def _good_routes(good, spec, areas, prices, carriage, interest_rate, source_ids=None) -> list:
+    """The unsorted rows of `_candidate_routes` for one good, given its price in each area; with `source_ids`
+    only the rows of those source areas."""
     rows = []
     years_between = merchants_transit.years_between
     interest = max(0.0, interest_rate)
@@ -218,6 +247,8 @@ def _good_routes(good, spec, areas, prices, carriage, interest_rate) -> list:
                      for area in sorted((area for area in areas if prices[area.area_id]),
                                         key=lambda area: (-prices[area.area_id], area.area_id))]
     for source in areas:
+        if source_ids is not None and source.area_id not in source_ids:
+            continue
         price_here = prices[source.area_id]
         if not price_here or price_here <= 0.0:
             continue
@@ -349,15 +380,19 @@ def close_year(merchant: Merchant, prices: Mapping[Tuple[GoodId, AreaId], float]
     with no lag (None: its area no longer exists in the current map) is not heard from."""
     if ordered is None:
         ordered = (sorted(prices.items()), sorted(volumes.items()))
+    expected_prices, speed = merchant.expected_prices, MERCHANT_EXPECTATION_SPEED
     for key, value in ordered[0]:
         lag = lag_years(*key)
         if lag is None:
             continue
-        news = merchants_transit.heard(merchant, key, value, lag)
-        if news is not None:
-            _expect(merchant.expected_prices, key, news)
+        news = value if lag <= 0 else merchants_transit.heard(merchant, key, value, lag)
+        if news is not None:           # `_expect`, inline: this runs for every market every year
+            old = expected_prices.get(key)
+            expected_prices[key] = news if old is None else old + speed * (news - old)
+    expected_volumes = merchant.expected_volumes
     for key, value in ordered[1]:
-        _expect(merchant.expected_volumes, key, value)
+        old = expected_volumes.get(key)
+        expected_volumes[key] = value if old is None else old + speed * (value - old)
     stock_value = math.fsum(quantity * merchant.expected_prices.get((good, area_of(good, tile)), 0.0)
                             for (good, tile), quantity in held_stock.items() if quantity > 0.0)
     stock_value += math.fsum(each.quantity * merchant.expected_prices.get((each.good, area_of(each.good, each.destination_tile)), 0.0)

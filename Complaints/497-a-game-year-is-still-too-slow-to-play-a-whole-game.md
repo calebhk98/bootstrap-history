@@ -131,3 +131,26 @@ under a tenth. Shared-machine variation in a whole step is larger than that, so 
 `_good_routes` arguments, interleaving the old and new function. What remains is the loop itself (one carriage
 lookup per destination examined, per source, per good, per merchant); cutting it further needs fewer distinct
 questions, not a faster answer.
+
+## Merchants with no cash search only for the stock they hold; book totals read without per-agent sorting
+
+In a saved Rome game (`python3 sim/simulator.py play --civ rome_100ad --session FILE`, then `step 1`), nearly all
+merchants hold stock but no cash and no capital. `merchants.orders` built the whole candidate-route list for each
+of them (every good, every source area) although a merchant that cannot buy uses the list only to send stock it
+already holds along the route out of its area, and `credit_request` returns before searching for a merchant with no
+equity. `orders` now asks `_candidate_routes` for the held goods only, and `_good_routes` for the source areas
+holding that stock only (`only_held`, `source_ids`); each row is the row the full search gives, the partial result
+stays out of the memo the full searches share, and the held-tile list is sorted once per good instead of once per
+row. A merchant with cash searches as before. Also: `merchants.close_year` learns prices and volumes inline (same
+arithmetic as `_expect`) and `year_close` works the news lag out once per anchor tile per merchant; the year's
+stock totals (`year_accounts.stocks`) come from `Book.goods_totals` instead of `holdings` for every agent
+(`math.fsum` is order independent, emptied stock is skipped as before).
+
+Same stepped save before and after (sorted-key dump of the save after three warm years, byte-identical); the
+totals were also compared with the old computation at each call over two years. Measure CPU per warm year as the
+CPU between the second and third `play` prompts of a saved game stepped one year first (in-process, patching
+`input`): about a fifth lower (roughly 5.6 s to 4.6 s on a shared machine, including one save per command), with
+`merchant_orders` falling from about a quarter of the economy's year to a twentieth. Left alone, measured as
+flat: the clearing core (`clear_goods`), producers' planning and closing (about 5000 producers a year, each
+costing the same unit costs several times), the labour year, and `MarketView.area_of` (half a million calls over
+two years, spread over households, producers and entry).
