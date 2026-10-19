@@ -140,7 +140,14 @@ class ModCodeApi:
 
     def write_store(self, sim: Any, name: str, key: Any, value: Any) -> None:
         """Write a value to one of this mod's declared stores; an undeclared store is an error naming the mod."""
-        sim.stores.write(self.qualified(name), key, value, self.mod_id)
+        self.effects.write_store(sim, self.qualified(name), key, value)
+
+    @property
+    def effects(self) -> Any:
+        """The supported ways to change the world (sim/engine/mod_effects.py): `pay`, `pay_edge`, `receive_from_edge`,
+        `add_goods`, `remove_goods`, `kill_people`, `move_people`, `transfer_tile`, `write_store`, `record_event`."""
+        from .mod_effects import ModEffects
+        return ModEffects(self.mod_id)
 
     def state(self, memory: Dict[str, Any]) -> Dict[str, Any]:
         """The mod's own JSON dict inside a saved game: pass `sim.state.interface`."""
