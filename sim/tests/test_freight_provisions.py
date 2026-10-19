@@ -160,6 +160,28 @@ class RoutePricingTests(unittest.TestCase):
         legs = (foreign_routes.Leg("a", "b", "teleport", 10.0, 7.0, 1.0),)
         self.assertEqual(_StubEconomy()._with_carried_provisions(foreign_routes.Route(legs)).legs, legs)
 
+    def test_a_searched_leg_counts_the_provisions_once(self):
+        # Complaint 569: the search rates already carry the provisions, so pricing the found leg must not
+        # divide by the share again; it ends at the base rate over the leg's own share.
+        base_rate, distance = 1.0, 200.0
+        restock_days = provisions.RESTOCK_INTERVAL_DAYS
+        searched_rate = base_rate / provisions.restocked_share(CART, distance, restock_days)
+        legs = (foreign_routes.Leg("a", "b", "cart", distance, searched_rate * distance, 11.0),)
+        priced = _StubEconomy()._with_carried_provisions(
+            foreign_routes.Route(legs), {"cart": base_rate}, {"cart": searched_rate})
+        expected = freight_cost.leg_money_per_tonne(base_rate, CART, distance, restock_days)
+        self.assertAlmostEqual(priced.legs[0].cost_per_tonne, expected)
+
+    def test_a_searched_leg_takes_its_own_share_not_the_mean_leg_share(self):
+        base_rate, distance = 1.0, 20.0
+        restock_days = provisions.RESTOCK_INTERVAL_DAYS
+        searched_rate = base_rate / provisions.restocked_share(CART, 200.0, restock_days)
+        legs = (foreign_routes.Leg("a", "b", "cart", distance, searched_rate * distance, 1.0),)
+        priced = _StubEconomy()._with_carried_provisions(
+            foreign_routes.Route(legs), {"cart": base_rate}, {"cart": searched_rate})
+        self.assertAlmostEqual(priced.legs[0].cost_per_tonne,
+                               freight_cost.leg_money_per_tonne(base_rate, CART, distance, restock_days))
+
 
 if __name__ == "__main__":
     unittest.main()

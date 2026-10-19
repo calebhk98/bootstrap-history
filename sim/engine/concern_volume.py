@@ -16,9 +16,13 @@ Two ratios against the opening, both from baskets worked out in labour hours:
 TEMPORARY HEURISTIC (CLAUDE.md 4.4): energy a line draws or makes is valued at the pool price, and
 every line is run whatever the wage, in both baskets alike (the loaded figure applies a wage test).
 """
+import json
 from typing import Any, Dict, FrozenSet, List, Optional, Tuple
 
 from . import energy_prices, node_output
+
+# (civilisation as text, {techniques held: labour-hour prices}); a solve reads only these two
+_PRICES_IN_HOURS: List[Any] = [None, {}]
 
 # (production table, {outputs: entries}); the table is kept so a hit is confirmed with `is`
 _ENTRIES_BY_OUTPUTS: List[Any] = [None, None]
@@ -83,10 +87,19 @@ class ConcernVolumeMixin:
     """Per-concern volume and value ratios, remembered while the techniques held are unchanged."""
 
     def _concern_prices_in_hours(self, held):
-        from .data import calculated_goods_prices
-        return {material: price for material, price in sorted(calculated_goods_prices(
-            held, civilization_id=self.civ.get("id"), civilization=self.civ, money_per_labour_hour=1.0).items())
-            if price > 0.0}
+        """Labour-hour prices under the techniques `held`; remembered while the civilisation is unchanged, so
+        every concern asking about the same techniques shares one answer."""
+        civilisation = json.dumps(self.civ, sort_keys=True, default=str)
+        if _PRICES_IN_HOURS[0] != civilisation:
+            _PRICES_IN_HOURS[:] = [civilisation, {}]
+        remembered = _PRICES_IN_HOURS[1]
+        key = frozenset(held)
+        if key not in remembered:
+            from .data import calculated_goods_prices
+            remembered[key] = {material: price for material, price in sorted(calculated_goods_prices(
+                held, civilization_id=self.civ.get("id"), civilization=self.civ,
+                money_per_labour_hour=1.0).items()) if price > 0.0}
+        return remembered[key]
 
     def _concern_ratios(self, node_id):
         node = self.nodes[node_id]

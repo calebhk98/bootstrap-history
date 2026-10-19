@@ -1,5 +1,5 @@
-"""An actor's money is an account in the purses' book, never below zero; what it owes is a loan claim the household
-savers hold against it. `Actor.money` is the net position, so every reader of it sees what it saw before."""
+"""An actor's money is an account in the purses' book, never below zero; what it owes is one claim the credit pool
+holds against it. `Actor.money` is the net position, so every reader of it sees what it saw before."""
 
 QUICK_TOPIC = True
 
@@ -8,7 +8,7 @@ import unittest
 from sim.agents import ledger
 from sim.agents.api import ActorRecord, ActorsState
 from sim.agents.firm import Firm
-from sim.agents.purses import COIN, EDGE_SAVERS, LENT, REPAID
+from sim.agents.purses import COIN, DEPOSIT_LOST, EDGE_SAVERS, POOL
 from sim.engine.state import deserialize_state, serialize_state
 
 from .agents_fake_world import FakeWorld
@@ -39,7 +39,7 @@ class ActorDebtInBook(unittest.TestCase):
         self.assertEqual(first.money, -150.0)
         self.assertEqual(first.debt(), 150.0)
         self.assertEqual(second.money, 250.0)
-        self.assertEqual(purses.claims["first"], {EDGE_SAVERS: 150.0})
+        self.assertEqual(purses.claims["first"], {POOL: 150.0})
         self.assertEqual(purses.book.balance(EDGE_SAVERS, COIN), -150.0)
 
     def test_money_coming_in_repays_the_claim_first(self):
@@ -81,6 +81,7 @@ class ActorDebtInBook(unittest.TestCase):
     def test_interest_on_a_debt_is_added_to_the_claim(self):
         state, first, _second = pair(0.0)
         first.money = -100.0
+        first.record.last_margin = 1.0e6   # earning enough to carry the debt, so interest may be drawn
         world = FakeWorld()
         world.edge_book = state
         first.pay_interest(world)
@@ -93,9 +94,11 @@ class ActorDebtInBook(unittest.TestCase):
         lender.attach(state.purses)
         state.purses.set_offers({"lender": 1000.0, EDGE_SAVERS: 1000.0})
         ledger.transfer(first, second, 100.0, "buy")
-        self.assertEqual(state.purses.claims["first"], {"lender": 40.0, EDGE_SAVERS: 60.0})   # half would be 50: capped by the purse
+        self.assertEqual(state.purses.claims["first"], {POOL: 100.0})   # one claim, whatever the lenders behind it
+        self.assertEqual(state.purses.deposit("lender"), 40.0)           # the whole of what it holds
+        self.assertEqual(state.purses.deposit(EDGE_SAVERS), 60.0)
         self.assertEqual(state.purses.purse("lender"), 0.0)
-        self.assertEqual(lender.money, 0.0)
+        self.assertEqual(lender.money, 40.0)                              # a deposit is still the lender's wealth
 
     def test_interest_goes_to_the_lenders_in_proportion_to_what_each_lent(self):
         state, first, second = pair(0.0)
@@ -103,10 +106,12 @@ class ActorDebtInBook(unittest.TestCase):
         lender.attach(state.purses)
         state.purses.set_offers({"lender": 1000.0})
         ledger.transfer(first, second, 100.0, "buy")                 # 40 from the lender, 60 from the savers
-        received = state.purses.pay_interest("first", 10.0)
-        self.assertAlmostEqual(received["lender"], 4.0)
-        self.assertAlmostEqual(received[EDGE_SAVERS], 6.0)
-        self.assertAlmostEqual(state.purses.purse("lender"), 4.0)
+        self.assertEqual(state.purses.pay_interest("first", 10.0), {POOL: 10.0})
+        self.assertAlmostEqual(state.purses.purse("lender"), 0.0)    # nothing reaches a depositor before the settlement
+        received = state.purses.settle_interest()
+        self.assertAlmostEqual(received["lender"], 10.0 * 40.0 / 110.0)   # the interest itself was drawn from the savers, so they hold 70
+        self.assertAlmostEqual(received[EDGE_SAVERS], 10.0 * 70.0 / 110.0)
+        self.assertAlmostEqual(state.purses.purse("lender"), 10.0 * 40.0 / 110.0)
         self.assertAlmostEqual(first.money, -110.0)                  # the interest was drawn on the facility too
 
     def test_a_repayment_returns_to_each_lender_by_its_share(self):
@@ -116,11 +121,10 @@ class ActorDebtInBook(unittest.TestCase):
         state.purses.set_offers({"lender": 1000.0})
         ledger.transfer(first, second, 100.0, "buy")
         ledger.transfer(second, first, 50.0, "sell")
-        self.assertAlmostEqual(state.purses.claims["first"]["lender"], 20.0)
-        self.assertAlmostEqual(state.purses.claims["first"][EDGE_SAVERS], 30.0)
-        self.assertAlmostEqual(state.purses.purse("lender"), 20.0)
+        self.assertAlmostEqual(state.purses.claims["first"][POOL], 50.0)
+        self.assertAlmostEqual(state.purses.purse(POOL), 50.0)
 
-    def test_a_lender_is_told_of_its_loans_so_its_books_account_for_its_cash(self):
+    def test_a_depositor_is_told_of_its_share_of_a_default_so_its_books_account_for_its_wealth(self):
         state, first, second = pair(0.0)
         told = []
         state.purses.observer = lambda account, signed, label: told.append((account, signed, label))
@@ -128,15 +132,16 @@ class ActorDebtInBook(unittest.TestCase):
         lender.attach(state.purses)
         state.purses.set_offers({"lender": 1000.0})
         ledger.transfer(first, second, 100.0, "buy")
-        ledger.transfer(second, first, 100.0, "sell")
-        self.assertIn(("lender", -40.0, LENT), told)
-        self.assertIn(("lender", 40.0, REPAID), told)
+        ledger.transfer(second, first, 20.0, "sell")        # 80 still owed; the pool holds 20 and has lent 80
+        state.purses.write_off("first")
+        self.assertEqual(told, [("lender", -40.0 * 80.0 / 100.0, DEPOSIT_LOST)])
+        self.assertAlmostEqual(lender.money, 40.0 * 20.0 / 100.0)
 
     def test_a_payment_into_a_big_debt_with_small_lenders_repays_without_overdrawing(self):
         # shares of a few millionths: summing the parts one by one must not come to more than the purse holds
         state, first, second = pair(0.0)
-        state.purses.claims["first"] = {EDGE_SAVERS: 548598094.2657492, "founder": 21.916031828153518,
-                                        "government:x": 42.367055428964726}
+        state.purses.contracts.set_facility("first", {EDGE_SAVERS: 548598094.2657492, "founder": 21.916031828153518,
+                                                      "government:x": 42.367055428964726}, COIN)
         second.money = 0.6549334790574173
         ledger.transfer(second, first, 0.6549334790574173, "sale")
         self.assertAlmostEqual(state.purses.purse("first"), 0.0, places=12)

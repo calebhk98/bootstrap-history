@@ -1,0 +1,44 @@
+{
+  "_doc": {
+    "purpose": "Undated base-rate shocks that can hit any country in the game in any year. Each year every country draws each kind once from a hash of the game's seed, the country, the kind and the year (no shared dice, so adding a country changes no other country's draws).",
+    "fields": "kind: the event kind written to the world event log. annual_chance: the chance a country is hit in a year. population_loss: the share of the country's people lost when it is hit. cause: the cause written on the event. status, source, retire: the label of the figures (CLAUDE.md 4.4).",
+    "famine_food_shortfall": "A country whose people leave this share of their food need unmet in a year has a famine written to the event log. A recording threshold, not a mechanism: the deaths come from the strata's own famine death rate.",
+    "event_log_years_kept": "How many years of world events a save keeps."
+  },
+  "famine_food_shortfall": {
+    "value": 0.15,
+    "status": "temporary_heuristic",
+    "source": "A cut-off for what counts as a famine worth recording; the sources name no common threshold (the IPC famine phase uses a fifth of households with extreme food gaps, a different measure).",
+    "retire": "Complaint 490"
+  },
+  "event_log_years_kept": 400,
+  "hazards": [
+    {
+      "kind": "flood",
+      "annual_chance": 0.02,
+      "population_loss": 0.01,
+      "cause": "river flood",
+      "status": "temporary_heuristic",
+      "source": "Order of a damaging river flood per country per generation; no per-tile flood frequency layer exists yet, so the rate is not read from the tiles.",
+      "retire": "Complaint 490"
+    },
+    {
+      "kind": "earthquake",
+      "annual_chance": 0.005,
+      "population_loss": 0.01,
+      "cause": "earthquake",
+      "status": "temporary_heuristic",
+      "source": "Order of a destructive earthquake per country per two centuries; no seismic layer exists in the map data yet, so the rate is not read from the tiles.",
+      "retire": "Complaint 490"
+    },
+    {
+      "kind": "bad_ruler",
+      "annual_chance": 0.01,
+      "population_loss": 0.005,
+      "cause": "misrule",
+      "status": "temporary_heuristic",
+      "source": "Order of a ruinous reign per country per century; no succession model draws rulers yet.",
+      "retire": "Complaint 490"
+    }
+  ]
+}

@@ -17,7 +17,7 @@ import os
 import tempfile
 
 from sim.engine.ui_port import TRADE_FAMILY, downstream_count
-from sim.engine.ui_port import purchase_budget
+from sim.engine.ui_port import purchase_budget, trades_the_project_waits_for
 from .nodes import _did_you_mean
 from .quantity_units import read_quantity
 from .start_refusal import refusal_fields
@@ -32,6 +32,13 @@ def _scholar_family_names():
     """The scholar-family trades from the trade table, as a plural list."""
     names = sorted(trade + "s" for trade, family in TRADE_FAMILY.items() if family == "scholar")
     return ", ".join(names[:-1]) + " and " + names[-1]
+
+
+def _non_craft_labour_names(sim):
+    """Trades that are neither craft nor scholar family, as a plural list, from the supervision check's own data."""
+    names = [trade + "s" for trade in sim.labour.craft_trades_report()["not_craft"]
+             if TRADE_FAMILY.get(trade) != "scholar"]
+    return ", ".join(names)
 
 
 _CREDIT_PROSE = {"on_credit": ("nothing_is_borrowed_yet", "what_happens_there"),
@@ -208,6 +215,10 @@ def _cmd_start(sim, nodes, cmd, ended):
             % (node["name"], node["yrs"], "" if node["yrs"] == 1 else "s"))
     if _warn_staff:
         out["but"] = _warn_staff
+    # trade -> years until its first hands (None when nobody is on the way)
+    _waits = trades_the_project_waits_for(sim, node_id)
+    if _waits:
+        out["waits_for_trades"] = _waits
     # BUILD STAFF AND OPERATING STAFF ARE DIFFERENT NUMBERS, and a player
     # can clear the first (checked above, and by start_project itself),
     # pay the whole bill, and only discover the second - venture_hands(),
@@ -729,6 +740,7 @@ def _cmd_ventures(sim, nodes, cmd, ended):
         _foreman_trade, _foreman_fte = sim.venture_foreman(node_id)
         row = {"id": node_id, "name": node["name"],
                 "earns_a_year": round(sim.venture_real_earnings(node_id), 1),
+                "forecast_basis": sim.venture_forecast_basis(node_id),
                 "costs_a_year": round(sim.venture_upkeep_quote(node_id)["now"], 1),
                 "costs_a_year_at_full_staffing": round(
                     sim.venture_upkeep_quote(node_id)["at_full_staffing"], 1),
@@ -800,13 +812,15 @@ def _cmd_ventures(sim, nodes, cmd, ended):
            # which of the two columns a trade lands in.
            "these_are_not_interchangeable": (
                "Most concerns want CRAFTSMEN to keep an eye on them. "
-               "The scholar-family trades (%s) are not craftsmen, and a "
-               "scholar cannot watch a workshop; every other trade counts "
-               "as craft. 'labour <trade>' says which family a trade is. "
+               "Only the trades in `these_are_not_interchangeable_trades.craft` count as craft; "
+               "the scholar-family trades (%s) cannot watch a workshop, and labouring trades "
+               "(%s) are not craftsmen either. "
+               "'labour <trade>' says which family a trade is. "
                "On the prompt, sch counts you and the scholars you employ "
                "(not the other scholar-family trades) and art counts you "
                "and every craft trade you employ."
-               % _scholar_family_names()),
+               % (_scholar_family_names(), _non_craft_labour_names(sim))),
+           "these_are_not_interchangeable_trades": sim.labour.craft_trades_report(),
            # "needs", "held_in_all" and "people_free_to_run_something_new"
            # above are venture_hands()/venture_staff_free()'s own numbers
            # - a continuous SHARE of a person's year, never a headcount -
@@ -913,6 +927,10 @@ def _cmd_policy(sim, nodes, cmd, ended):
                                         "glassblower) when the last one "
                                         "supervising an open concern is lost. "
                                         "Off by default",
+                "keep_pay_at_market": "pay each trade's staff the going wage every year, so they leave only at "
+                                      "the rate the market's own workers change employer. Off: pay stays at the "
+                                      "last settled figure, costs less while wages rise, and staff paid below the "
+                                      "market take better offers. On by default",
                 "reserve_staff": "keep the spare craftsmen and scholars set by "
                                  "'reserve craftsmen N' / 'reserve scholars N' above "
                                  "what open concerns hold, hiring (and buying "

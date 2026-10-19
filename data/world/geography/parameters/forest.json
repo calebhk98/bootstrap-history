@@ -1,0 +1,32 @@
+{
+ "_doc": "Coefficients of the standing-timber stock of a tile (sim/geography/forest_timber.py). Wood grown and wood stood are both derived from the tile's net primary production, so climate sets them.",
+ "entries": [
+  {
+   "id": "forest_stem_share_of_npp",
+   "value": 0.3,
+   "unit": "dimensionless (stem wood grown per unit of net primary production)",
+   "kind": "measured",
+   "source": "Litton, Raich and Ryan 2007, Carbon allocation in forest ecosystems, Global Change Biology 13 (the share of forest NPP going to aboveground woody growth is roughly a quarter to a third), from memory",
+   "conf": "C",
+   "why": "Turns the tile's dry matter production into the stem wood that regrows each year; at temperate production it gives a few tonnes per hectare, in line with the 3-5 cubic metre mean annual increment data/production/30_fuel_stone.json cites for managed forest."
+  },
+  {
+   "id": "forest_standing_years_of_stem_increment",
+   "value": 50,
+   "unit": "years of stem increment held standing",
+   "kind": "measured",
+   "source": "Mature temperate forest holds on the order of one to two hundred tonnes of stem wood per hectare against an increment of a few tonnes (Pan et al. 2011, A large and persistent carbon sink in the world's forests, Science 333), from memory",
+   "conf": "D",
+   "why": "Standing stem wood is the yearly increment times the years the stand has been accumulating it; with the stem share it fixes the tonnes a hectare of untouched forest holds."
+  },
+  {
+   "id": "forest_air_dry_mass_per_dry_mass",
+   "value": 1.15,
+   "unit": "kg air-dry wood per kg oven-dry wood",
+   "kind": "physical",
+   "source": "Air-dried firewood and roundwood hold about fifteen percent moisture on a dry basis (Forest Products Laboratory, Wood Handbook)",
+   "conf": "B",
+   "why": "Net primary production is in dry matter; wood is cut and traded air-dry."
+  }
+ ]
+}

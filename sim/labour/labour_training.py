@@ -299,6 +299,7 @@ class TrainingMixin:
         # CARRIED FORWARD, so the next step does not bill the same year twice.
         # See step() 2, where it is netted off living_cost.
         household.wages_prepaid = (household.wages_prepaid or 0.0) + fee
+        self.note_hire_pay(trade, float(count), pay_premium)
         household.employees[trade] = household.employees.get(trade, 0.0) + float(count)
         self.labour_market.hire(self._world.state.household, trade, float(count) * self._world.HOURS_PER_PERSON_YEAR,
                                 pay_premium)
@@ -309,12 +310,15 @@ class TrainingMixin:
         # the trade, with no number, gives a player no way to notice a
         # request for eight landing as one. A verb that takes a quantity
         # has to report the quantity.
-        return True, ("%g %s%s taken on for %s (a finder's fee and the "
-                      "first year in advance). You now have %.1f, and %.2f "
-                      "household place(s) left.%s"
-                      % (count, trade, "" if count == 1 else "s",
-                         self._world.money_text(fee, grouped=True), household.employees[trade],
-                         max(0.0, self.household_room()), unfound))
+        text = ("%g %s%s taken on for %s (a finder's fee and the "
+                "first year in advance). You now have %.1f, and %.2f "
+                "household place(s) left.%s"
+                % (count, trade, "" if count == 1 else "s",
+                   self._world.money_text(fee, grouped=True), household.employees[trade],
+                   max(0.0, self.household_room()), unfound))
+        if unfound:
+            return True, Refusal("search_found_fewer", text, asked=float(asked), hired=float(count))
+        return True, text
 
     def fire(self, trade, count):
         """Let staff go. Their wages stop; so does what they were doing.
