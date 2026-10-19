@@ -200,3 +200,22 @@ Checked and left alone, with what was found:
 What would still move a year by a quarter is structural, as listed above: one `play` process for many commands,
 shipped price tables for every rate band, fewer merchants' distinct searches (a model change), or compiled
 clearing.
+
+## One process for many commands
+
+`agent` and `play` already read commands from stdin in one process; what an agent driving the game one tool call
+at a time paid was a process (build or load, rebuild the economy) per command, plus a full save after each. Both
+now take `--save-interval SECONDS` (`sim/ui/save_policy.py`): the default 0 saves after every command as before; a
+positive figure writes when that long has passed, on `save`, `load` and `quit`, when the game ends, and on
+leaving. `sim/PROTOCOL.md` and `playtest/BRIEF.md` say how to keep one process alive (a named pipe).
+
+Exact: `sim/tests/test_cli_one_process_session.py` compares the sorted-key dump of the save after the same commands
+(including two `step 1`) run one process per command, one process, and one process with held-back writes, and the
+same for typed `play`. It found one difference: a whole number in a civilisation's church data stayed an int in a
+fresh game and became a float after a reload; `sim/agents/cast.py` now makes it a float when the record is made.
+
+Measured, CPU user plus system, three runs at a load average of 6 to 7: eight `agent` commands (norse_900ad, seed 3,
+two `step 1`) as eight processes took 15.5 to 15.6 s; as one process 4.2 to 4.3 s (about 3.7 times less); as one
+process with `--save-interval 3600` 3.9 to 4.3 s. Held-back writes save little over so few commands: the saving is
+the process start, not the write. Command: `time python3 sim/simulator.py agent --civ norse_900ad --seed 3
+--no-events --session F < commands.txt`, against the same lines fed one per process to the same command.

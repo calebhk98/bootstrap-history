@@ -52,6 +52,13 @@ information the game itself offers you.
 Errors come back as `{"ok":false,"error":"..."}` and the message tells you what
 to do instead.
 
+Speed: each `agent` process loads the save and rebuilds the economy before its
+first command. Send many commands to one process (a pipe, or `--script`) rather
+than starting a process per command. Add `--save-interval 60` to write the
+`--session` file about once a minute instead of after every command; it is
+always written on `quit` and when the process ends. "Keeping one process alive"
+in `sim/PROTOCOL.md` has a named-pipe recipe.
+
 ## The premise
 
 You are a modern person dropped into a pre-industrial society with the

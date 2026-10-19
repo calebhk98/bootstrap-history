@@ -63,6 +63,23 @@ Two fixes, usable separately or together:
       "waiting_on" has "waiting_on_kind"; the score's "why" has "why_kind";
       an automation row may carry "reason_kind" and its figures.
 
+      Keeping one process alive. Every `agent` and `play` process builds or
+      loads the game and rebuilds the economy before its first command. With
+      --session, a process per command pays that every time; one process
+      reading many commands pays it once (the measurement is in Complaints/497).
+      A caller that cannot hold a pipe open between its own tool calls can
+      start the process on a named pipe and write to the pipe later:
+      `mkfifo in; python3 sim/simulator.py agent --session s.json
+      --save-interval 60 < in > out &`, then `echo '{"cmd":"state"}' > in`.
+      --save-interval SECONDS (on `agent` and `play`; default 0) sets how often
+      the session file is written. 0 writes after every command, as always; a
+      positive figure writes when that long has passed since the last write,
+      after `save`, `load` and `quit`, when the game ends, and on leaving the
+      process. The file holds the same game either way, and a process killed
+      between writes loses the commands since the last one.
+      `sim/tests/test_cli_one_process_session.py` checks that the final save
+      equals the one a process per command ends in.
+
       {"cmd":"state"}                              current situation, in full
       {"cmd":"available"}                          every node that can legally start now,
                                                     with cost, founder hours, calendar
