@@ -1,0 +1,68 @@
+{
+  "_doc": "Inputs of the span-of-control rule (hierarchy.py). Every number here is a labelled heuristic: none is derived from lower-level state yet. Technology ids are shipped node ids; a technology the loaded tree lacks is ignored. Within a channel only the best known technology counts (two telegraphs do not double); channels multiply.",
+  "supervision_share_of_manager_hours": {
+    "value": 0.5,
+    "_heuristic": true,
+    "retire": "derive from a task model: the share of a manager's hours left after their own productive work",
+    "why": "A manager who supervises full time is a pure overhead layer; the rest of the year goes to the manager's own productive work."
+  },
+  "coordination_hours_per_report_per_year": {
+    "value": 150,
+    "_heuristic": true,
+    "retire": "derive from the number of orders, reports and corrections per worker and the hours each costs to write, carry, read and answer",
+    "why": "Hours of a manager's attention one direct report consumes in a year with no record-keeping or communication technology: assigning, checking and correcting their work."
+  },
+  "order_loss_per_layer": {
+    "value": 0.08,
+    "_heuristic": true,
+    "retire": "derive from message length, copying error rate and the number of hand-offs per layer",
+    "why": "Share of an order's intent that is lost or distorted each time it passes down one layer by word of mouth. Messaging technologies scale it by their channel factor."
+  },
+  "channels": {
+    "record_keeping": {
+      "what": "Written accounts and records let a manager check work without watching it.",
+      "factor_when_known": {
+        "fin_ledger": 0.85,
+        "fin_double_entry": 0.7,
+        "fin_government": 0.65,
+        "com_hollerith_tabulation": 0.5,
+        "if_hollerith_tabulator": 0.5,
+        "com_relay_computer": 0.4,
+        "com_stored_program_concept": 0.3
+      }
+    },
+    "messaging": {
+      "what": "Faster, more faithful transmission of orders and reports. Also scales the loss per layer.",
+      "factor_when_known": {
+        "semaphore_telegraph": 0.85,
+        "telegraph_electric": 0.6,
+        "com_telephone_manual_exchange": 0.45,
+        "if_telephone_exchange": 0.45,
+        "com_trunk_lines": 0.4,
+        "radio": 0.4
+      }
+    },
+    "measurement": {
+      "what": "Statistics replace inspection of each worker with inspection of a sample.",
+      "factor_when_known": {
+        "statistics_basic": 0.85,
+        "fin_statistical_office": 0.75,
+        "sc2_statistics_control_chart": 0.6
+      }
+    },
+    "copying": {
+      "what": "Printed and typed forms replace hand-copied orders.",
+      "factor_when_known": {
+        "printing_press": 0.85,
+        "prn_typewriter": 0.8,
+        "if_typewriter": 0.8
+      }
+    }
+  },
+  "manager_trade": {
+    "value": "scribe",
+    "_heuristic": true,
+    "retire": "a manager/administrator trade in data/world/trades.json once organisations are actors",
+    "why": "The shipped trade list has no manager. The scribe is the literate record-keeping trade, the closest administrator the labour market offers."
+  }
+}
