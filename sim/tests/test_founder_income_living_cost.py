@@ -8,7 +8,7 @@ revenue, upkeep = game.revenue(), game.upkeep()
 living = game.living_cost()
 shed = game.dependants_beyond_means(living, revenue, upkeep, game.mine_operating_cost())
 paid = living - shed
-base = game.LIVING_COST_BASE_SUBSISTENCE * game.price_index
+base = game.household_bill_per_person()
 
 check("the default founder earns a wage for their idle hours",
       game.labour.hours_for_sale() > 0 and game.founder_wage_income() > 0.0,

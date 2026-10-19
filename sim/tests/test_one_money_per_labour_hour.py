@@ -33,9 +33,9 @@ _priced_node = _game.nodes[_node_id]
 check("the tree's money fields are at the same figure",
       abs(_priced_node["cap"] - _cap_hours * _figure) <= 1e-9 * max(1.0, _priced_node["cap"]),
       (_priced_node["cap"], _cap_hours * _figure))
-check("living costs are priced at the same figure",
-      abs(_game.LIVING_COST_BASE_SUBSISTENCE - _game.LIVING_COST_BASE_SUBSISTENCE_LABOUR_HOURS * _figure) <= 1e-6,
-      _game.LIVING_COST_BASE_SUBSISTENCE)
+check("living costs are the need floors at the economy's prices, in the same coin",
+      abs(_game.household_bill_per_person() - sum(_game.economy.agent_need_floor_costs_at().values())) <= 1e-9,
+      _game.household_bill_per_person())
 
 _game.step()
 _after_year = _game.labour.money_per_labour_hour()
