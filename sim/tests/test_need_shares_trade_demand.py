@@ -278,7 +278,7 @@ class GenericWeightTests(unittest.TestCase):
               "goods": {"zz_grain": {"satisfies": {"food": 1.0}}}}
 
     def _catalogue(self):
-        return {"zz_grain": _recipe("zz_grain", {"labourer": 1.0, "zz_baker": 1.0}),
+        return {"zz_grain": _recipe("zz_grain", {"farmer": 1.0, "zz_baker": 1.0}),
                 "zz_mica": _recipe("zz_mica", {"zz_miner": 5.0})}
 
     def test_a_mineral_no_need_names_and_no_recipe_uses_gets_no_demand(self):

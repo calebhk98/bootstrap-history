@@ -133,6 +133,22 @@ class EconomyPort:
         agent = self._answering_agent()
         return None if agent is None else agent.price_response(material, landed_tonnes, taken_tonnes, tile)
 
+    def main_material_of(self, commodity):
+        """The first priced material of a commodity (its main product), or None when none is priced."""
+        for material in self.materials_in(commodity) + [commodity]:
+            if self.trade_quote(material) is not None:
+                return material
+        return None
+
+    def agent_market_record(self, commodity):
+        """{sold, unsold, unmet} tonnes the agent economy's markets of the commodity's main material had last year
+        (`sim.economy.api.market_record`); None while the economy opens or when the commodity has no priced material."""
+        agent = self._answering_agent()
+        material = self.main_material_of(commodity)
+        if agent is None or material is None:
+            return None
+        return agent.market_record(material)
+
     def agent_producers_by_good(self):
         """{good: [(tile, recipe id)]} of the producers the agent economy runs; None while it opens."""
         agent = self._answering_agent()

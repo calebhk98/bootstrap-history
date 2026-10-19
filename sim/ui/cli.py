@@ -1664,6 +1664,12 @@ def main():
     subparser.add_argument("--session", default=None,
                    help="a save file. Loaded if it exists, written after every "
                         "command, so you can stop and come back later")
+    subparser.add_argument("--save-interval", dest="save_interval", type=float, default=0,
+                   help="seconds between writes of --session. 0 (default) writes after every "
+                        "command; a larger figure writes when that long has passed, on a "
+                        "save, load or quit, when the game ends, and on leaving, so a long "
+                        "run of commands in one process does not pay a write for each. A "
+                        "killed process loses the commands since the last write.")
     subparser.add_argument("--manual", action="store_true",
                    help="accepted and ignored: play is always manual now. Nothing "
                         "starts unless you start it. The old advisory mode, where "
@@ -1726,6 +1732,12 @@ def main():
                    help="a save file. Loaded if it exists, written after every "
                         "command, so you can play across separate invocations "
                         "without holding a process open")
+    subparser.add_argument("--save-interval", dest="save_interval", type=float, default=0,
+                   help="seconds between writes of --session. 0 (default) writes after every "
+                        "command; a larger figure writes when that long has passed, on a "
+                        "save, load or quit, when the game ends, and on leaving, so a long "
+                        "run of commands in one process does not pay a write for each. A "
+                        "killed process loses the commands since the last write.")
     subparser.add_argument("--script", default=None,
                    help="path to a JSON file holding a list of command objects, "
                         "played in order instead of reading stdin")

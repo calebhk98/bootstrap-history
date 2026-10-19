@@ -1,0 +1,41 @@
+{
+ "_note": "Baking: bread from flour and water in a masonry oven fired by process heat (Complaints/614). Cooks, tavern keepers and prepared-food service wait on the owner decision recorded in Complaints/530.",
+ "materials": {
+  "bread_kg": {
+   "outputs": {
+    "bread_kg": 1000.0
+   },
+   "inputs": {
+    "flour_kg": 690.0,
+    "water_kg": 450.0
+   },
+   "labour_hours": {
+    "baker": 60.0
+   },
+   "thermal_mj": 6000.0,
+   "temperature_needed_c": 250.0,
+   "unit_dimension": "mass",
+   "basis": "per 1000 kg of baked loaves",
+   "yield_basis": "DOUGH AND BAKE. Flour takes up about two thirds of its weight in water to make bread dough (a hydration of about 65 percent, recalled from baking handbooks, not opened; conf D): 690 kg of flour with 450 kg of water is about 1140 kg of dough, and the bake drives off about an eighth of that as steam, leaving about 1000 kg of loaves. Mass balance: 690 + 450 = 1140, less 140 evaporated. HEAT: the useful heat is warming the dough to boiling and evaporating the lost water, about 0.43 MJ plus 0.32 MJ a kilogram, near 0.8 MJ a kilogram of loaf; a wood-fired masonry oven delivers about an eighth of the fuel's heat to the dough (the rest heats the oven and flue; author's estimate, conf D), so about 6 MJ of thermal heat a kilogram, priced through the thermal_mj market at the oven's working temperature. LABOUR: kneading, shaping, loading and drawing the loaves, and tending the fire, about 60 baker-hours to a tonne of bread (a baker drawing two batches of about seventy kilograms a day; author's estimate, conf D). OVEN: a domed brick oven is capital (below), not consumed. Calories are those of the flour: the satisfaction factor in data/world/needs.json is the flour's factor times the flour in a kilogram of bread, so baking adds no food energy.",
+   "conf": "D",
+   "requires_node": null,
+   "capital": [
+    {
+     "good": "domed bread oven: brick vault, clay hearth, flue and door",
+     "build_materials": {
+      "brick_1000": 1.2,
+      "clay_kg": 600.0
+     },
+     "build_labour_hours": {
+      "mason": 80.0,
+      "labourer": 60.0
+     },
+     "service_life_years": 15,
+     "annual_output_at_basis": 40000.0,
+     "capital_basis": "A bakery oven about two metres across is a vault of about a thousand bricks over a clay-and-brick hearth (author's estimate from the size, conf D). Its vault is rebuilt after a decade or two of firing and cooling. A baker drawing two batches of about seventy kilograms on a working day for some three hundred days turns out about forty tonnes of loaves a year.",
+     "conf": "D"
+    }
+   ]
+  }
+ }
+}

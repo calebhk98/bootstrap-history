@@ -1,6 +1,6 @@
 # Spinners, weavers, fullers and dyers have no trade, though textiles were the largest non-farm work
 
-**Status:** open
+**Status:** closed - pinned by sim/tests/test_textile_trades.py
 
 Part of Complaint 530 (Most ancient occupations have no trade, and their hours are booked as farming).
 
@@ -15,3 +15,5 @@ Depends on 609.
 **What it would take.** Add spinner and weaver, and fuller and dyer, to `data/world/trades.json` with training, tool basket and fatality sources, and re-book those recipes' hours with a source each. Data only (4.7).
 
 **Test.** `python3 sim/simulator.py validate` passes; a test reads that the listed recipes no longer name `labourer` or `artisan` for their craft hours.
+
+**Resolution.** `spinner`, `weaver` and `fuller` are trades in `data/world/trades.json` (training times are author estimates, conf D, with recalled sources named in `training_source`; fatality is stated as unsourced). The thread, fabric, cloth, linen, canvas, sailcloth, felt, cotton fabric, silk, twine, cordage and backstrap recipes book them; where a recipe states one number for spinning and weaving (canvas, sailcloth) it is split in the ratio of the generic thread and fabric recipes. `dye_kg` is a madder root crop, so its hours are the farmer's: no recipe dyes cloth yet, so the fuller trade covers finishing and a dyer trade waits for a dyeing recipe.

@@ -13,7 +13,7 @@ GENERIC_CRAFT_TRADE = "artisan"
 BONDED_PSEUDO_TRADE = "slave"
 
 # Staff the ledger reports as interchangeable hands rather than specialists.
-GENERIC_STAFF_TRADES = ("artisan", "scholar", "labourer", "slave")
+GENERIC_STAFF_TRADES = ("artisan", "scholar", "labourer", "farmer", "slave")
 
 # Trades whose people are drawn from the unskilled pool while they serve (an army under arms).
 DRAWN_FROM_UNSKILLED_POOL = frozenset({"soldier"})
@@ -22,8 +22,8 @@ DRAWN_FROM_UNSKILLED_POOL = frozenset({"soldier"})
 LETTERED_BUT_NOT_LITERATE = frozenset({"merchant"})
 
 # The trade whose hours the farm-labour logic owns (its recipe hours are kept out of the non-farm
-# split). It is the fallback trade of the shipped registry; workforce_spinup.py has no registry to ask.
-FARM_TRADE = "labourer"
+# split). It is a trade of its own, distinct from the unskilled fallback; workforce_spinup.py has no registry to ask.
+FARM_TRADE = "farmer"
 
 # The family whose trades count as the household's craftsmen.
 CRAFT_FAMILY = "craft"

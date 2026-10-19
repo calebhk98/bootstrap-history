@@ -45,6 +45,7 @@ from sim.engine.ui_port import money_text, units
 from . import cli_options, cli_units_options, replay
 from sim.engine.ui_port import normal_seed, valid_seed_text
 from sim.ui.memory import save_session
+from sim.ui.save_policy import SESSION_WORDS, SavePolicy
 from sim.ui.proto import step_progress
 from sim.ui.proto import util as proto_util
 from .protocol import (_agent_dispatch, _agent_end_reason, final_report,
@@ -119,6 +120,15 @@ def _play_sitting(args, collecting):
     if fresh and app_cfg.get("show_welcome", True):
         _play_print_welcome(sim, kit)
 
+    policy = SavePolicy(session, getattr(args, "save_interval", 0))
+    try:
+        return _play_loop(sim, nodes, session, app_cfg, args, collecting, policy)
+    finally:
+        policy.flush(sim)
+
+
+def _play_loop(sim, nodes, session, app_cfg, args, collecting, policy):
+    """The typed-command loop of a sitting; `policy` decides when the session file is written."""
     commands_read = 0
     while True:
         if commands_read == 1 and collecting:
@@ -134,6 +144,9 @@ def _play_sitting(args, collecting):
             break
         _tokens = line.strip().split()
         _word0 = _tokens[0].lower() if _tokens else ""
+        policy.session = session
+        if _word0 in SESSION_WORDS:
+            policy.flush(sim)
         handled, session, should_exit, exit_value = _play_handle_session_command(
             _word0, _tokens, sim, session, app_cfg, args)
         if handled:
@@ -146,7 +159,7 @@ def _play_sitting(args, collecting):
             continue
         if cmd is None:
             continue
-        if _play_run_one_command(sim, nodes, cmd, session):
+        if _play_run_one_command(sim, nodes, cmd, session, policy):
             break
         if cmd.get("cmd") == "quit":
             break
@@ -525,7 +538,7 @@ def _manual_save_note(resp, session):
         % (landed, os.path.abspath(session), os.path.basename(ui_port.settings_meta_path(saved))))
 
 
-def _play_run_one_command(sim, nodes, cmd, session):
+def _play_run_one_command(sim, nodes, cmd, session, policy):
     """Run one already-parsed command through the dispatcher: dispatch it,
     autosave, and print its rendering. The printing has to happen here,
     inside the same try that guards it, because a BrokenPipeError can come
@@ -559,8 +572,7 @@ def _play_run_one_command(sim, nodes, cmd, session):
     # print must not lose whatever progress was already made, in a game
     # whose own help promises "progress is written to this file after every
     # command... close the terminal, anything".
-    if session:
-        save_session(sim, session)
+    policy.after_command(sim, cmd, ended=bool(_agent_end_reason(sim)))
     try:
         # 'state json' / 'portfolio json' / 'risk json': the raw reply,
         # one line, instead of the rendered screen. Every player of this

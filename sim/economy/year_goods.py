@@ -201,6 +201,8 @@ def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, led
                 record.memory.prices[key] = max(signal, floor)
                 record.memory.note_usual_price(key)
             record.volumes[key] = delivered
+            record.unsold[key] = max(0.0, result.offered_at_price - result.quantity)
+            record.unmet[key] = unmet
             record.memory.note_volume(key, delivered)
             cleared.add(key)
             if delivered > 0.0:

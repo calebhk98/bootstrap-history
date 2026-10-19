@@ -1,6 +1,6 @@
 # The founder and other borrowers default by two rules
 
-**Status:** open
+**Status:** closed. The founder's household is a borrower like any other: `Household` (`sim/agents/household_borrowing.py`) runs `Borrower.settle_interest` with its own ceiling and rate. Interest is drawn within the ceiling, the rest is arrears, and `ARREARS_YEARS_BEFORE_DEFAULT` years of arrears default the debt. `enforce_credit_limit` is now only the founder's responses past the ceiling (stop projects, mothball, seize, disperse); the default (`default_on_debt`) enters bondage or settles. Test: `sim/tests/test_one_default_rule.py`.
 
 Found closing 588. Firms and traders now pay interest only within their credit ceiling, carry the rest as arrears
 and default after a bounded run of years in arrears (`sim/agents/borrowing.py`, `borrowing_arrears.py`). The founder's

@@ -200,3 +200,42 @@ Checked and left alone, with what was found:
 What would still move a year by a quarter is structural, as listed above: one `play` process for many commands,
 shipped price tables for every rate band, fewer merchants' distinct searches (a model change), or compiled
 clearing.
+
+## One process for many commands
+
+`agent` and `play` already read commands from stdin in one process; what an agent driving the game one tool call
+at a time paid was a process (build or load, rebuild the economy) per command, plus a full save after each. Both
+now take `--save-interval SECONDS` (`sim/ui/save_policy.py`): the default 0 saves after every command as before; a
+positive figure writes when that long has passed, on `save`, `load` and `quit`, when the game ends, and on
+leaving. `sim/PROTOCOL.md` and `playtest/BRIEF.md` say how to keep one process alive (a named pipe).
+
+Exact: `sim/tests/test_cli_one_process_session.py` compares the sorted-key dump of the save after the same commands
+(including two `step 1`) run one process per command, one process, and one process with held-back writes, and the
+same for typed `play`. It found one difference: a whole number in a civilisation's church data stayed an int in a
+fresh game and became a float after a reload; `sim/agents/cast.py` now makes it a float when the record is made.
+
+Measured, CPU user plus system, three runs at a load average of 6 to 7: eight `agent` commands (norse_900ad, seed 3,
+two `step 1`) as eight processes took 15.5 to 15.6 s; as one process 4.2 to 4.3 s (about 3.7 times less); as one
+process with `--save-interval 3600` 3.9 to 4.3 s. Held-back writes save little over so few commands: the saving is
+the process start, not the write. Command: `time python3 sim/simulator.py agent --civ norse_900ad --seed 3
+--no-events --session F < commands.txt`, against the same lines fed one per process to the same command.
+
+## Price solves shipped for the other interest-rate bands
+
+`python3 sim/simulator.py openings` now also ships the opening's price solves at the other bands the market
+rate is likely to meet (`sim/engine/shipped_rate_bands.py`). The build records the solves the opening makes
+at the starting rate (`SolveRecorder`), replays each at every band from nil to twice the starting rate,
+nearest the start first, never past `capital_market.RATE_CEILING_SHARE` times the start, capped at
+`MAX_BANDS`. The range comes from a stepped game: its banded rate swung from near nil to above the start within
+five years, and `bounded_rate` only caps the rate (there is no floor at `RATE_FLOOR_SHARE` in `market_rate`).
+Each replay goes through `solved_prices_at_wages` itself with `band_interest_rate` values, so the keys are
+exactly those a game computes; the reader (`solve_cache.cached_json`) is unchanged. A test
+(`shipped_rate_bands`) ships a band, clears every cache and checks the table equals the cold solve and that
+nothing was solved.
+
+Measured: in a stepped Rome game most solve keys a year asks for (every one after the first year) are among
+the replayed keys. A cold band costs about a fifth of a CPU second per band for the opening state (three
+solves), against milliseconds shipped, which is a few percent of a year, not the doubling seen above: the rest
+of a year that meets a new band is not these solves and is still open. Measure with the in-game solve keys
+and a cold `ROME_CACHE_DIR` (`solve_cache.recording()` around `Sim.step()`, and `time.process_time()` around
+`shipped_rate_bands.solve_other_bands`).
