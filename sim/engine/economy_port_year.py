@@ -412,6 +412,11 @@ class AgentEconomy(TilePricesMixin):
                                    export_budget=self._partner_spending(partners) / coin)
         return {EDGE_EXTERNAL: stand_in}
 
+    def market_record(self, material):
+        """Tonnes the material's markets sold, left unsold and left unmet last year."""
+        per_unit = tonnes_per_unit(material)
+        return {name: quantity * per_unit for name, quantity in economy_api.market_record(self.economy(), material).items()}
+
     def price_response(self, material, landed_tonnes, taken_tonnes, tile=None):
         """Factor on a material's price once more tonnes land in its market or are taken out, from the book the
         market last cleared: at the port when no tile is named (the price the economy shows nationally), else on the

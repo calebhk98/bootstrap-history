@@ -39,7 +39,7 @@ __all__ = [
     "YearInputs", "recipes_from_production_data", "EconomyRecord", "EconomySetup", "TradeSpec", "SiteLimit",
     "goods_specs", "EDGE_EXTERNAL", "EDGE_LEGACY", "EDGE_CARGO", "EDGE_CONSUMPTION", "EDGE_PRODUCTION", "EDGE_EXCHANGE", "external_edge", "Bid", "GoodsMove", "Offer", "Transfer",
     "variable_cost_per_run", "rebase_basket_price_level", "trade_premium", "title_wealth",
-    "traded_volumes", "opening_quantities", "wages_by_trade", "wages_by_trade_weighted", "interest_rate", "producers_of",
+    "traded_volumes", "market_record", "opening_quantities", "wages_by_trade", "wages_by_trade_weighted", "interest_rate", "producers_of",
     "external_trade_net", "external_trade_volume", "account_balance", "account_holdings",
     "credit_room", "economy_from_record", "blank_economy", "export_record", "economy_book", "economy_contracts", "finish_spin_up", "note_spin_up_result", "spin_up_state", "money_year_figures","shown_prices_of",
     "settle_agent_takings", "admit_recipes", "move_goods", "post_transfers", "cohort_incomes", "cohort_land_rents", "land_rent_per_hectare",
@@ -55,6 +55,19 @@ def traded_volumes(economy):
     for key, volume in economy.record.volumes.items():
         good = key.split(_KEY_SEPARATOR, 1)[0]
         totals[good] = totals.get(good, 0.0) + volume
+    return totals
+
+
+def market_record(economy, good):
+    """What the markets of one good did last year, summed over its areas, in the good's units: `sold` (traded),
+    `unsold` (what sellers would have sold at the year's price and did not) and `unmet` (what buyers wanted at
+    it beyond what was sold)."""
+    record = economy.record
+    totals = {"sold": 0.0, "unsold": 0.0, "unmet": 0.0}
+    for name, figures in (("sold", record.volumes), ("unsold", record.unsold), ("unmet", record.unmet)):
+        for key, quantity in figures.items():
+            if key.split(_KEY_SEPARATOR, 1)[0] == good:
+                totals[name] += quantity
     return totals
 
 

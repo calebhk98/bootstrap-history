@@ -18,12 +18,8 @@ class GroupView:
 	def _commodity_quote(self, commodity: str) -> Any:
 		"""The quote for the first priced material the commodity is made of (its main product)."""
 		sim = self._sim
-		made_of = sim.economy.materials_in(commodity)
-		for material in made_of + [commodity]:
-			quote = sim.economy.trade_quote(material)
-			if quote is not None:
-				return quote
-		return None
+		material = sim.economy.main_material_of(commodity)
+		return None if material is None else sim.economy.trade_quote(material)
 
 	def displaced_producers(self) -> List[Sector]:
 		"""Producers of each commodity the founder sold into the market this year: what the
