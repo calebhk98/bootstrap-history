@@ -177,8 +177,9 @@ class Purses:
         self.contracts.draw(borrower, POOL, COIN, shortfall)
 
     def _fund_pool(self, amount: float) -> None:
-        """The pool holds `amount`: the savers deposit what its depositors' funds leave short."""
-        lacking = amount - self.purse(POOL)
+        """The pool can pay out `amount` and still hold the interest it owes its depositors: the savers deposit what
+        its depositors' funds leave short."""
+        lacking = amount - (self.purse(POOL) - self.interest_pending)
         if lacking > 0.0:
             self.book.transfer(Transfer(EDGE_SAVERS, POOL, COIN, lacking, DEPOSIT_PLACED))
             self.contracts.deposit(EDGE_SAVERS, POOL, COIN, lacking)
