@@ -73,7 +73,7 @@ def closing_with(cash, owed):
 	purses = registry.state.purses
 	if cash > 0.0:
 		purses.book.transfer(Transfer(EDGE_OUTSIDE, firm.account_id, COIN, cash, "fixture"))
-	purses.claims[firm.account_id] = {EDGE_SAVERS: owed}
+	purses.contracts.set_facility(firm.account_id, {EDGE_SAVERS: owed}, COIN)
 	return world, registry, firm, backer
 
 

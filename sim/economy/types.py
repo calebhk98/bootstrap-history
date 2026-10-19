@@ -8,6 +8,7 @@ import math
 from dataclasses import dataclass, field
 from typing import Mapping, Optional, Tuple
 
+from sim.contracts import Contract
 from sim.book import (EDGE_PREFIX, AgentId, CurrencyId, GoodId, GoodsMove, TileId, Transfer,  # noqa: F401
                       is_edge)
 
@@ -229,16 +230,4 @@ class FundsOffer:
     minimum_rate: float
 
 
-@dataclass
-class Loan:
-    loan_id: str
-    lender: AgentId
-    borrower: AgentId
-    currency: CurrencyId
-    principal: float
-    rate: float
-    years_left: float
-    collateral_value: float
-    arrears: float = 0.0
-    issued_year: int = 0
-    arrears_interest: float = 0.0     # the part of arrears that is unpaid interest
+Loan = Contract                   # a term loan is a contract of that kind in the shared registry

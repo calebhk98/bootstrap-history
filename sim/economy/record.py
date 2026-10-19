@@ -6,6 +6,7 @@ holds last year's market outcomes. Nothing else survives a year.
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Tuple
 
+from sim.contracts import Contracts
 from sim.labour.api import MarketState, market_state_from_plain, market_state_to_plain
 
 from .accounts import Book
@@ -27,7 +28,7 @@ class EconomyRecord:
     cohorts: Dict[AgentId, Cohort] = field(default_factory=dict)
     producers: Dict[AgentId, Producer] = field(default_factory=dict)
     merchants: Dict[AgentId, Merchant] = field(default_factory=dict)
-    loans: List[Loan] = field(default_factory=list)
+    contracts: Contracts = field(default_factory=Contracts)               # every debt: term loans here, facilities the purses'
     loan_requests: List[LoanRequest] = field(default_factory=list)       # made at last year's close
     remembered_defaults: Dict[AgentId, float] = field(default_factory=dict)   # losses a borrower caused, fading
     credit_losses: Dict[AgentId, float] = field(default_factory=dict)    # what each lender has lost to default
@@ -52,6 +53,15 @@ class EconomyRecord:
     spin_up_result: Dict[str, Any] = field(default_factory=dict)         # how the hidden first stage ended: settled, years run, last gap (empty: no spin-up ran)
     carried: Dict[str, Dict[str, float]] = field(default_factory=dict)   # tonnes the merchants carried last year: origin tile -> destination tile (sim.geography.flow_ledger)
 
+    @property
+    def loans(self) -> List[Loan]:
+        """The term loans, in the order they were struck."""
+        return self.contracts.term_loans
+
+    @loans.setter
+    def loans(self, loans: List[Loan]) -> None:
+        self.contracts.term_loans = loans
+
     def to_record(self, skip_currencies=()) -> Dict[str, Any]:
         """The record as plain data; money in `skip_currencies` (another owner's currency in the shared book) is left out."""
         return {
@@ -61,7 +71,7 @@ class EconomyRecord:
             "cohorts": {key: plain(value) for key, value in sorted(self.cohorts.items())},
             "producers": {key: plain(value) for key, value in sorted(self.producers.items())},
             "merchants": {key: _merchant_record(value) for key, value in sorted(self.merchants.items())},
-            "loans": [plain(loan) for loan in self.loans],
+            "loans": self.contracts.to_records(facilities=False),
             "loan_requests": [plain(request) for request in self.loan_requests],
             "remembered_defaults": self.remembered_defaults,
             "credit_losses": self.credit_losses,
@@ -88,14 +98,13 @@ class EconomyRecord:
 
     @classmethod
     def from_record(cls, record: Dict[str, Any]) -> "EconomyRecord":
-        return cls(
+        built = cls(
             book=Book.from_record(record["book"]),
             memory=MarketMemory(**record["memory"]),
             currency=CurrencySpec(**record["currency"]),
             cohorts={key: Cohort(**value) for key, value in record["cohorts"].items()},
             producers={key: Producer(**value) for key, value in record["producers"].items()},
             merchants={key: _merchant_from(value) for key, value in record["merchants"].items()},
-            loans=[Loan(**loan) for loan in record["loans"]],
             loan_requests=[LoanRequest(**request) for request in record["loan_requests"]],
             remembered_defaults=dict(record["remembered_defaults"]),
             credit_losses=dict(record["credit_losses"]),
@@ -119,6 +128,8 @@ class EconomyRecord:
             carried={key: dict(row) for key, row in record["carried"].items()},
             spin_up_result=dict(record["spin_up_result"]),
         )
+        built.contracts.load_records(record["loans"])
+        return built
 
 
 def _pair_keys(mapping: Dict[Tuple[str, str], Any]) -> Dict[str, Any]:
