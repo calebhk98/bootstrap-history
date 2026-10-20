@@ -69,6 +69,7 @@ check("a seat sets its country's stance toward another country", reply["ok"] and
 reply = send({"cmd": "set_relation", "with": "han", "term": "grain_for_silk", "value": 3})
 check("a treaty term is recorded under its name", reply["ok"] and reply["ours"]["treaty"] == {"grain_for_silk": 3}, reply)
 reply = send({"cmd": "set_relation", "with": "han", "note": "their envoy lied about the silk weights"})
+# presentation: the subject is the player's own note, stored and returned as written
 check("a note on another power is recorded", reply["ok"] and reply["ours"]["note"].startswith("their envoy"), reply)
 check("the record is keyed by the ordered pair of countries", set(game.state.stores["relations"]) == {"rome|han"}, game.state.stores)
 
@@ -96,6 +97,7 @@ check("it sees the other side's stance and terms but not their note",
       theirs["theirs"]["stance"] == "friendly" and theirs["theirs"]["treaty"] == {"grain_for_silk": 3}
       and "note" not in theirs["theirs"], theirs)
 send({"cmd": "set_relation", "with": "rome", "note": "keep the tea secret", "as": "northern"})
+# presentation: the subject is the player's own note, stored and returned as written
 check("each country keeps its own side", relations.read(game.stores, "han", "rome")["note"] == "keep the tea secret"
       and relations.read(game.stores, "rome", "han")["note"].startswith("their envoy"), game.state.stores)
 
@@ -119,6 +121,7 @@ check("a saved and loaded game reads the same record",
 
 # ---- the note outlives the seat: it is the country's
 del game.state.seats["northern"]
+# presentation: the subject is the player's own note, stored and returned as written
 check("a country's note survives the loss of its seat",
       relations.read(game.stores, "han", "rome")["note"] == "keep the tea secret", game.state.stores)
 before = copy.deepcopy(game.state.stores)
