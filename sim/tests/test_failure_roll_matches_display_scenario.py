@@ -1,4 +1,4 @@
-"""failure_roll_matches_display: complaint 161, the risk shown is the risk rolled."""
+"""Scenario: complaint 161, the risk shown is the risk rolled: a draw just under the displayed risk fails the attempt and one just over succeeds, on first and later attempts, in one draw. Run with `--only failure_roll_matches_display_scenario`."""
 from .harness import *  # noqa: F401,F403
 from sim.ui.proto.techtree import _explain_timing_and_risk
 
