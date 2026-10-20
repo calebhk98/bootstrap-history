@@ -488,3 +488,14 @@ Two checks stay failing, test bounds untouched:
 Fixed in the same round: the state's loan request carried a ceiling of 3 times the market rate, which is nothing at a
 rate of zero, so lenders' risk premium priced it out and "borrowing comes before printing" saw no loan
 (`sim/economy/state_finance.py`: the premium its own leverage earns lenders is now added to the ceiling).
+- 640 round (seven topics, measured with `python3 -m sim.tests --slow --only <topic> --topic-seconds 170`):
+  `insolvency_whole_game` failed because a Rome game's lending rate reads zero for most spin-up years (a
+  `market_rate()` of 0.0 on `sim(civ="rome_100ad")`; the credit market's rate falls to its lenders' floor, which
+  is clipped at zero when expected deflation exceeds time preference), so a debt past the ceiling owes no interest,
+  builds no arrears and never defaults. The rules (default, settlement, credit warnings) are now tested one at a time
+  in `test_insolvency_rules.py` and `test_credit_warning_rules.py`; the whole-game checks that needed the arrears
+  to build were deleted, `interface_honesty` no longer steps decades (its loop check injects the warning line).
+  `occupational_distribution`, `economy_tin_dearer_than_copper` and the household-floor check in
+  `opening_floor_and_thin_trades` are baseline validations that stay failing, naming 619, 511 and 473.
+  `spin_up_money_supply` and `baseline_rome` are split into a short part (books' rules over a few years) and a
+  `_full_length` part (40 years of spin-up, about twelve seconds a year cold, cached after).

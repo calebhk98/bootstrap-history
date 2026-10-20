@@ -105,6 +105,9 @@ class ActorRecord:
 	# a state's goods it will not sell abroad (its monopolies, set at the start by its country's data), and
 	# the parties it has shut its markets to: party id -> the first year they are open to them again
 	state_monopolies: Set[str] = field(default_factory=set)
+	# the levers a player (or any controller) holds on a state: revenue rates, budget shares, army, navy, works,
+	# reserve, subsidies, mandates (government_levers.py)
+	levers: Dict[str, Any] = field(default_factory=dict)
 	# entries a state runs a plant of besides its monopolies; what its plants took last year and made after costs;
 	# the tonnes of each commodity its standing lines draw (what its own plants keep rather than sell)
 	state_enterprises: Set[str] = field(default_factory=set)

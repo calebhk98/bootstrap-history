@@ -9,11 +9,10 @@ import collections
 import types
 import unittest
 
-from sim.agents.api import Business
+from sim.agents.api import Business, business_crew_rule
 from sim.engine import industry_depth
 from sim.engine.economy_production import ProductionMixin
 from sim.engine.projects_progress import ProgressMixin
-from sim.engine.projects_ventures import VenturesMixin as Ventures
 
 Depth = industry_depth.IndustryDepthMixin
 
@@ -148,9 +147,11 @@ class IndustryDepth(unittest.TestCase):
     def test_the_founders_scholars_are_released_when_the_concern_runs_without_him(self):
         for experience, scholars in ((0.0, 1.0), (50.0, 0.0)):
             stub = world(experience={"loom": experience})
-            stub.venture_hands_founder_staffed = lambda node_id: (1.0, 3.0)
-            stub.concern_runs_without_founder = lambda node_id, stub=stub: Depth.concern_runs_without_founder(stub, node_id)
-            self.assertEqual(Ventures.venture_hands(stub, "loom"), (scholars, 3.0))
+            figures = business_crew_rule.CrewFigures(
+                scholars_figure=4.0, artisans_figure=12.0, revenue=0.0, upkeep=0.0, hours_per_person_year=2000.0,
+                supervision_share=0.25, hands_per_revenue=lambda: 1.0, foreman_share=0.25, unskilled_trade=lambda: "labourer")
+            self.assertEqual(business_crew_rule.hands(figures, lambda: Depth.concern_runs_without_founder(stub, "loom")),
+                             (scholars, 3.0))
 
     def test_nothing_reads_a_depth_written_on_the_tree(self):
         stub = world()

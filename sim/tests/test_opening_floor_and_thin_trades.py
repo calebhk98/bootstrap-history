@@ -23,7 +23,11 @@ def _game():
 
 class OpeningFloorTests(unittest.TestCase):
 
-    def test_the_household_floors_cost_a_small_multiple_of_the_food_floor(self):
+    def test_baseline_validation_the_household_floors_cost_a_small_multiple_of_the_food_floor(self):
+        # A baseline relationship (CLAUDE.md 4.2) of the opening economy's prices, not a rule: the pricing of a
+        # basket is tested in test_need_basket.py. It fails while the opening prices drift (Complaint 473): in
+        # a Rome game bread and meat show far below their opening price and water above it, so water alone costs
+        # a multiple of the food floor.
         _game_, _economy, setup, record, view = _game()
         tiles = sorted({cohort.tile for cohort in record.cohorts.values()})
         ratios = []
@@ -32,7 +36,8 @@ class OpeningFloorTests(unittest.TestCase):
             food = [need for need in priced if need.spec.need_id == "food"]
             if food:
                 ratios.append(subsistence_cost_per_person(priced) / subsistence_cost_per_person(food))
-        self.assertLessEqual(statistics.median(ratios), FLOOR_OVER_FOOD_FLOOR)
+        self.assertLessEqual(statistics.median(ratios), FLOOR_OVER_FOOD_FLOOR,
+                             "Complaint 473 (open): median over %d tiles of all floors over the food floor" % len(ratios))
 
     def test_no_trade_pays_much_above_the_trained_substitute_of_the_unskilled_wage(self):
         # Each area clears against last year's unskilled wage, so a year's lag shows; the people-weighted

@@ -43,8 +43,8 @@ def opening_year_tin_over_copper():
 
 def tin_is_not_cheaper_than_its_labour_against_copper():
     price_ratio, labour_ratio = opening_year_tin_over_copper()
-    return price_ratio >= labour_ratio, "shown tin over copper %.3f, embodied labour ratio %.3f" % (price_ratio, labour_ratio)
+    return price_ratio >= labour_ratio, "Complaint 511 (open): shown tin over copper %.3f, embodied labour ratio %.3f" % (price_ratio, labour_ratio)
 
 
-slow_check("Complaint 511: tin shows no cheaper against copper than the labour its recipe embodies",
+slow_check("baseline validation (4.2), Complaint 511: tin shows no cheaper against copper than the labour its recipe embodies",
            tin_is_not_cheaper_than_its_labour_against_copper)

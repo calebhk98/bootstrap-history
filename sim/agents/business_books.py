@@ -7,6 +7,12 @@ from .business_crew import staff
 from .edges import EDGE_CUSTOMERS, EDGE_LANDOWNERS, EDGE_SUPPLIERS, EDGE_WORKERS
 
 
+def takings_of_size(takings_of_one_unit: float, size: float, market_factor: float) -> float:
+	"""A plant's takings at `size` founding units: its figure for one unit at its ramp, times its size, times the
+	price the goods market gives its goods. The one product the founder's quote and a firm's books both use."""
+	return takings_of_one_unit * size * market_factor
+
+
 def operate(business: Business, owner: Any, entry_key: str, world: Any, rivals: float) -> float:
 	"""One year of a plant: staff it, take its takings, pay upkeep, wages, levy and royalty.
 	Returns the year's margin."""

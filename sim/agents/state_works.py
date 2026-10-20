@@ -47,12 +47,17 @@ WORKS = (
 )
 
 
+def wanted_of(world: Any, work: Work) -> float:
+	"""The stock of a work the state wants: the stock its controller set, else the work's driver."""
+	return world.government().record.levers.get("works", {}).get(work.name, work.wanted(world))
+
+
 def held(world: Any) -> Dict[str, float]:
 	"""The state's stock of each work, set at the opening to the share of what is wanted that stands then."""
 	stock = world.government().record.works_stock
 	for work in WORKS:
 		if work.name not in stock:
-			stock[work.name] = work.opening_share * work.wanted(world)
+			stock[work.name] = work.opening_share * wanted_of(world, work)
 	return stock
 
 
@@ -65,4 +70,4 @@ def wear(stock: Dict[str, float], funded: float, life_years: float) -> None:
 def gaps(world: Any) -> List[Tuple[Work, float]]:
 	"""(work, units short of what is wanted) for each work below its wanted stock, in order."""
 	stock = held(world)
-	return [(work, work.wanted(world) - stock[work.name]) for work in WORKS if work.wanted(world) > stock[work.name]]
+	return [(work, wanted_of(world, work) - stock[work.name]) for work in WORKS if wanted_of(world, work) > stock[work.name]]

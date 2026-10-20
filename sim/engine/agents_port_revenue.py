@@ -1,7 +1,7 @@
 """What a state asks the simulated world when it assesses revenue: its declared forms and the bases they read."""
 from typing import Any, Dict, FrozenSet, List, Optional, Tuple
 
-from sim.agents.api import observed_incomes, revenue
+from sim.agents.api import government_levers, observed_incomes, revenue
 from sim.geography.api import arable_hectares, tiles_held
 
 
@@ -12,7 +12,7 @@ class RevenueView:
 
 	def revenue_forms(self) -> List[Dict[str, Any]]:
 		"""The forms of revenue the civilisation's state raises, as its data declares them."""
-		return list(self._sim.civ.get("state_revenue") or [])
+		return government_levers.revenue_forms(list(self._sim.civ.get("state_revenue") or []), self.government().record)  # type: ignore[attr-defined]
 
 	def revenue_assessments(self) -> List[revenue.Assessment]:
 		return self._once("assessments", lambda: revenue.assess(self))  # type: ignore[attr-defined,no-any-return]

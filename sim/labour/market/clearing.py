@@ -84,13 +84,23 @@ def clearing_target(reservation: float, offered: float, bids: Sequence[Bid]) -> 
     return reservation
 
 
+def pressure(last: float, reservation: float, offered: float, bids: Sequence[Bid]) -> float:
+    """How far the market is from balance at last year's wage: the share of the offered hours that employers
+    leave unwanted or want beyond them, capped at one. The target jumps from the ask to the bids' maxima as
+    wanted hours cross the offered ones, so a step that closed a fixed share of the gap would swing the wage
+    by that jump for a sliver of imbalance (a cobweb, Complaint 651); scaled by the imbalance it is continuous."""
+    at = max(last, reservation)
+    wanted = sum(bid.hours for bid in bids if bid.maximum_wage >= at)
+    return min(1.0, abs(wanted - offered) / offered)
+
+
 def market_wage(last: Optional[float], reservation: float, offered: float, bids: Sequence[Bid]) -> float:
     if offered <= 0.0:
         return last if last is not None else max((bid.maximum_wage for bid in bids), default=reservation)
     if not bids:    # hours on offer and nobody wanting them: the quote drifts down to the ask
         return reservation if last is None else last + WAGE_SHARE_CLOSED_PER_YEAR * (reservation - last)
     target = clearing_target(reservation, offered, bids)
-    wage = target if last is None else last + WAGE_SHARE_CLOSED_PER_YEAR * (target - last)
+    wage = target if last is None else last + WAGE_SHARE_CLOSED_PER_YEAR * pressure(last, reservation, offered, bids) * (target - last)
     if any(bid.maximum_wage >= reservation for bid in bids):
         wage = max(wage, reservation)
     # no employer can pay above its maximum: a wage that lags above every maximum falls to the best of them
