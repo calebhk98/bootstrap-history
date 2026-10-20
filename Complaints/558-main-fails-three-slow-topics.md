@@ -318,3 +318,8 @@ Measured on the integration branch with `python3 -m sim.tests --slow --only <top
   unskilled wage): fixture fixes, no bound loosened.
 - `sited_ore_price_over_cost` fails on `origin/main` too (Norse iron ore 109 times its cost there; on the
   integration branch Rome's iron ore is 16.7 and Rome shows no cassiterite price). Open; not loosened.
+- Complaint 556's change (core books farm people as `farmer`, not `labourer`) moves the opened Rome game's median
+  core wages: farmer 0.171 -> 0.206, labourer 0.145 -> 0.164, mason 0.204 -> 0.229, smith 0.202 -> 0.227 (3-year
+  test spin-up). Hours by occupation group do not move (agriculture 0.361 -> 0.361, unattributed 0.62 -> 0.62):
+  `occupational_distribution` fails in three checks exactly as before (agriculture band, ordering, `shipwright`
+  in no group); the hours are the recipes' `labourer` bookings (619, 530), not the people split.
