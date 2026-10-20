@@ -25,6 +25,7 @@ from .units_prose import money_text
 from sim.world import capital_market
 from sim.agents.api import business_review, edges, ledger
 from .agents_port import SimWorld
+from .project_funding import funding_parts
 
 
 def calculate_credit_ceiling(raw_credit, running_cost_floor, serviceable, price_index=1.0, market_cap=None):
@@ -221,21 +222,11 @@ class CreditMixin:
         surplus itself, and what work in hand still owes."""
         rev = self.revenue()
         upkeep_amount = self.upkeep()
-        household = self.state.household
-        fixed = (upkeep_amount + self.living_cost(_rev=rev, _upkeep=upkeep_amount)
-                 + self.mine_operating_cost()
-                 + max(0.0, -household.capital) * self.debt_interest_rate())
-        surplus = max(0.0, rev - fixed)
-        return {
-            "cash_on_hand": max(0.0, household.capital),
-            # the drawable share of the line, less what is already drawn: arrears use up the room
-            "credit_available_now": max(0.0, self.credit_limit(_rev=rev, _upkeep=upkeep_amount)
-                                        * self.SPENDING_DRAW_SHARE_ORDINARY - max(0.0, -household.capital)),
-            "sustainable_annual_surplus": surplus,
-            "surplus_allowance_over_years": surplus * self.CREDIT_SURPLUS_YEARS_MULTIPLE,
-            "surplus_years_counted": self.CREDIT_SURPLUS_YEARS_MULTIPLE,
-            "already_committed": self.committed_spend(),
-        }
+        capital = self.state.household.capital
+        return funding_parts(
+            capital, rev, upkeep_amount + self.living_cost(_rev=rev, _upkeep=upkeep_amount) + self.mine_operating_cost(),
+            self.debt_interest_rate() if capital < 0 else 0.0, self.credit_limit(_rev=rev, _upkeep=upkeep_amount),
+            self.SPENDING_DRAW_SHARE_ORDINARY, self.CREDIT_SURPLUS_YEARS_MULTIPLE, self.committed_spend())
 
     def shed_loss_makers(self, year):
         """Shut the plants that keep losing money; in arrears with a deficit, stop maintaining anything that costs

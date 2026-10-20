@@ -1,5 +1,8 @@
 """Complaint 185: money moves between actors through a ledger, and the state's
-takings from the founder are received by the government actor."""
+takings from the founder are received by the government actor.
+
+The ledger's rules are tested between actors built here (no game); named scenarios run the household, the yearly
+life of the actors, the state's pressure on the founder and a save and load."""
 import copy
 import json
 import os
@@ -8,7 +11,7 @@ import tempfile
 
 from .harness import *  # noqa: F401,F403
 
-from sim.agents.api import Household, ledger
+from sim.agents.api import ActorRegistry, ActorsState, Household, ledger
 from sim.engine.saveload import load_state, save_state
 from sim.engine.state import ActorRecord
 
@@ -61,30 +64,35 @@ def ledger_balances(actor, opening=0.0):
     return abs(actor.money - (opening + income - outlays)) <= 1e-6 * max(1.0, abs(actor.money))
 
 
-# ---- a transfer between any two actors conserves money ----------------------------
-game = actor_sim([])
-registry = game.actors
+# ---- a transfer between any two actors conserves money (actors built here, no game)
+registry = ActorRegistry(ActorsState(home_country="rome_100ad"))
 treasury = registry.ensure_government("rome_100ad")
-firm = registry.add("firm:payer", ActorRecord(kind="firm", money=500.0))
+payer = registry.add("firm:payer", ActorRecord(kind="firm", money=500.0))
+other = registry.add("firm:other", ActorRecord(kind="firm", money=2000.0))
+ledger.transfer(other, treasury, 40.0, "requisition")
+check("a transfer debits the payer and credits the payee by the same amount",
+      other.money == 1960.0 and treasury.money == 40.0, (other.money, treasury.money))
+ledger.transfer(payer, treasury, 100.0, "taxation")
+check("a recorded payer keeps an outlay and a recorded payee an income, by purpose",
+      payer.record.outlays == {"taxation": 100.0}
+      and treasury.record.income == {"requisition": 40.0, "taxation": 100.0},
+      (payer.record.outlays, treasury.record.income))
+check("a transfer never creates or destroys money",
+      abs((other.money + treasury.money + payer.money) - 2500.0) < 1e-9, (other.money, treasury.money, payer.money))
+check("a recorded actor's purse is its opening money plus income less outlays",
+      ledger_balances(treasury) and ledger_balances(payer, 500.0) and ledger_balances(other, 2000.0))
+ledger.transfer(payer, treasury, 60.0, {"taxation": 0.5, "tithe": 0.5})
+check("a payment covering several purposes books the whole amount, labelled once in the book",
+      abs((payer.money + treasury.money + other.money) - 2500.0) < 1e-9 and ledger.purposes_label({"taxation": 0.5, "tithe": 0.5}) == "taxation+tithe")
+
+# ---- scenario: the founder's household pays what it owes even into debt, exactly as its purse always did
+game = actor_sim([])
+treasury = game.actors.ensure_government("rome_100ad")
 household = game.household
 capital_before = household.money
-ledger.transfer(household, treasury, 40.0, "requisition")
-check("a transfer debits the payer and credits the payee by the same amount",
-      household.money == capital_before - 40.0 and treasury.money == 40.0,
-      (household.money, treasury.money))
-ledger.transfer(firm, treasury, 100.0, "taxation")
-check("a recorded payer keeps an outlay and a recorded payee an income, by purpose",
-      firm.record.outlays == {"taxation": 100.0}
-      and treasury.record.income == {"requisition": 40.0, "taxation": 100.0},
-      (firm.record.outlays, treasury.record.income))
-check("a transfer never creates or destroys money",
-      abs((household.money + treasury.money + firm.money) - (capital_before + 500.0)) < 1e-9,
-      (household.money, treasury.money, firm.money))
 ledger.transfer(household, treasury, capital_before * 3.0, "confiscation")
-check("a household pays what it owes even into debt, exactly as its purse always did",
-      household.money < 0.0 and treasury.money > capital_before, (household.money, treasury.money))
-check("a recorded actor's purse is its opening money plus income less outlays",
-      ledger_balances(treasury) and ledger_balances(firm, 500.0))
+check("scenario: the household pays what it owes even into debt, and the treasury receives it",
+      household.money < 0.0 and abs(treasury.money - capital_before * 3.0) < 1e-6 * capital_before, (household.money, treasury.money))
 
 # ---- the yearly life of the actors goes through the ledger -------------------------
 mill_id = "test_treasury_mill"
@@ -105,20 +113,13 @@ for _ in range(6):
     game.advance_actors(game.state.scenario.year)
 treasury = government_of(game)
 firms = game.actors.of_kind("firm")
-check("the state's yearly revenue is booked as income from taxation",
-      treasury.record.income.get("taxation", 0.0) > 0.0, treasury.record.income)
-check("a firm that ran the mill has takings and upkeep in its books",
-      bool(firms) and firms[0].record.income.get("takings", 0.0) > 0.0
-      and firms[0].record.outlays.get("upkeep", 0.0) > 0.0,
-      [(f.actor_id, f.record.income, f.record.outlays) for f in firms])
-check("every actor's copying spend is an outlay, so no money moves off the books",
-      all(actor.record.outlays.get("copying", 0.0) > 0.0 for actor in [treasury] + firms
-          if actor.works or actor.knowledge),
-      [(a.actor_id, a.record.outlays) for a in [treasury] + firms])
-check("across the years each actor's purse equals its ledger",
-      ledger_balances(treasury) and all(ledger_balances(f) for f in firms),
-      [(a.actor_id, a.money, sum(a.record.income.values()), sum(a.record.outlays.values()))
-       for a in [treasury] + firms])
+check("scenario: over six years the state's revenue is booked as income from taxation, the firm that ran the mill has "
+      "takings and upkeep in its books, every actor's copying spend is an outlay, and each actor's purse equals its ledger",
+      treasury.record.income.get("taxation", 0.0) > 0.0 and bool(firms)
+      and firms[0].record.income.get("takings", 0.0) > 0.0 and firms[0].record.outlays.get("upkeep", 0.0) > 0.0
+      and all(actor.record.outlays.get("copying", 0.0) > 0.0 for actor in [treasury] + firms if actor.works or actor.knowledge)
+      and ledger_balances(treasury) and all(ledger_balances(f) for f in firms),
+      [(a.actor_id, a.money, a.record.income, a.record.outlays) for a in [treasury] + firms])
 
 # ---- what the state takes from the founder reaches the government -------------------
 levied = grown("rome_100ad")
@@ -129,16 +130,17 @@ req_share, _why = levied.requisition_report()
 off_share, _name = levied.office_report()
 levied._state_pressure(levied.year)
 paid = capital_before - levied.capital
-check("the founder is charged requisition and the pressed office as before",
-      abs(paid - (req_share + off_share) * revenue) < 1e-6 * max(1.0, paid) and paid > 0.0,
-      (paid, req_share, off_share, revenue))
-check("what the founder paid is what the government received",
-      abs((treasury.money - treasury_before) - paid) < 1e-6 * max(1.0, paid),
-      (treasury.money - treasury_before, paid))
-check("the treasury books requisition and office separately",
-      abs(treasury.record.income.get("requisition", 0.0) - req_share * revenue) < 1e-6 * max(1.0, paid)
-      and abs(treasury.record.income.get("office", 0.0) - off_share * revenue) < 1e-6 * max(1.0, paid),
-      treasury.record.income)
+quiet = sim(civ="rome_100ad")
+quiet_treasury = government_of(quiet)
+quiet._state_pressure(quiet.year)
+check("scenario: the founder is charged requisition and the pressed office, the government receives exactly that and "
+      "books the two separately; a household the state has not noticed pays nothing",
+      abs(paid - (req_share + off_share) * revenue) < 1e-6 * max(1.0, paid) and paid > 0.0
+      and abs((treasury.money - treasury_before) - paid) < 1e-6 * max(1.0, paid)
+      and abs(treasury.record.income.get("requisition", 0.0) - req_share * revenue) < 1e-6 * max(1.0, paid)
+      and abs(treasury.record.income.get("office", 0.0) - off_share * revenue) < 1e-6 * max(1.0, paid)
+      and quiet_treasury.money == 0.0 and not quiet_treasury.record.income,
+      (paid, req_share, off_share, revenue, treasury.record.income, quiet_treasury.record.income))
 
 drawn = grown("rome_100ad", events=True)
 drawn.rng = AlwaysFires(1)
@@ -149,18 +151,12 @@ treasury.record.levy_base = 1.0e6
 capital_before, treasury_before = drawn.capital, treasury.money
 drawn._state_pressure(drawn.year)
 paid = capital_before - drawn.capital
-check("military supply and confiscation, when they fall, are received too",
+check("scenario: military supply and confiscation, when they fall, are received too, and the founder's loss equals the "
+      "treasury's gain",
       treasury.record.income.get("military supply", 0.0) > 0.0
-      and treasury.record.income.get("confiscation by the state", 0.0) > 0.0, treasury.record.income)
-check("with every levy the founder's loss equals the treasury's gain",
-      abs((treasury.money - treasury_before) - paid) < 1e-6 * max(1.0, paid),
-      (treasury.money - treasury_before, paid))
-
-quiet = sim(civ="rome_100ad")
-treasury = government_of(quiet)
-quiet._state_pressure(quiet.year)
-check("a household the state has not noticed pays nothing and the treasury is untouched",
-      treasury.money == 0.0 and not treasury.record.income, treasury.record.income)
+      and treasury.record.income.get("confiscation by the state", 0.0) > 0.0
+      and abs((treasury.money - treasury_before) - paid) < 1e-6 * max(1.0, paid),
+      (treasury.record.income, treasury.money - treasury_before, paid))
 
 # ---- the ledger is saved and loaded ---------------------------------------------------
 game = levied
@@ -172,7 +168,7 @@ with tempfile.TemporaryDirectory() as folder:
     save_state(game, path)
     revived = sim(civ="rome_100ad")
     load_state(revived, path)
-check("the income and outlay ledgers round-trip through save and load",
+check("scenario: the income and outlay ledgers round-trip through save and load",
       revived.state.actors.records == before and bool(
           revived.state.actors.records["government:rome_100ad"].income),
       revived.state.actors.records.get("government:rome_100ad"))

@@ -17,6 +17,7 @@ file of their own. Behaviour is unchanged and verified byte-identical.
 from sim.refusal import LogLine
 from . import money_units, purchase_rule
 from .blockers import blocker_kind
+from .project_funding import cash_covers_start
 from .projects_trade_wait import trade_wait_outlasts_the_project
 from .interest_groups import check_group_prohibition
 from .living_stock import check_unheld_stock
@@ -614,11 +615,9 @@ class StartingMixin:
     def _cash_covers_start(self, node_id):
         """True when cash in hand pays for this start on top of what work in hand still owes."""
         projects = self.state.projects
-        price = self.project_cost(node_id)
-        price -= min(price, max(0.0, (projects.paid_towards or {}).get(node_id, 0.0)))
-        owed = sum(projects.active[active_id].get("cost_left") or 0.0
-                   for active_id in sorted(projects.active))
-        return owed + price <= self.state.household.capital
+        owed = sum(projects.active[active_id].get("cost_left") or 0.0 for active_id in sorted(projects.active))
+        return cash_covers_start(self.project_cost(node_id), (projects.paid_towards or {}).get(node_id, 0.0), owed,
+                                 self.state.household.capital)
 
     @blocker_kind("money")
     def _check_credit_frozen(self, node_id, node, ignore_trade, _memo, _why):
