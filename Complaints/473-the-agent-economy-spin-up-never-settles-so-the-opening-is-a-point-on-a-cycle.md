@@ -353,3 +353,18 @@ command prints them). Across all cart, stone wall and bar-iron makers:
 
 Where the fix lies: entry of an input maker where buyers exist and no maker does (bloom in a market area with only ore far away),
 merchants carrying bloom and bar between areas, and the price memory under scarce supply. Not producers.py.
+
+## Measured: entry does fire for a bloom market with no maker; it is built where the ore is (branch entry-where-buyers-have-no-maker)
+
+Rome opening, first four spin-up years, `entry_trial.trial_entry_plans` wrapped to print each Chinese bloom market (scratch, no
+committed command): every Chinese market area has bids and no maker, its recipe costs under the bids' ceilings, and a trial plan
+is made each year in most of them (`entry_trial.demand_at` over the bids, a trial share of it). Nothing is missing from the
+entry rule: with the small fixture, bids under the recipe's entry price draw no maker and bids over it draw one sized by their
+quantity (`sim/tests/test_economy_entry_trial.py`, `UnmetBidsDrawAMakerTests`).
+
+What happens to the plan: `location.entry_siting` considers the area's tiles and the tiles that supply the recipe's fixed-site
+input. The opening has iron ore supply on six tiles (Italy, Spain, Syria, Tunisia, Turkey, United Kingdom) and none in China, so the
+newcomer is built on an ore tile, in the Mediterranean-and-Atlantic area that already holds four idle bloom makers
+(`last_runs` nil from year 2). The plan is a sliver of their capacity, so Chinese bloom stays unmade there and the Chinese
+buyers wait on carriage between areas. Fix lies with merchants carrying bloom (not entry) and with the makers' own
+input chain, as the section above says.
