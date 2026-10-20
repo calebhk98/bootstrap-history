@@ -25,6 +25,12 @@ class BudgetView:
 		"""The bodies of people (strata actors) of the state's own country, in id order."""
 		return [stratum for stratum in self._sim.actors.of_kind("stratum") if stratum.record.country is None]
 
+	def literacy(self, field: str) -> float:
+		return self._sim.literacy(field)
+
+	def research_productivity(self, country=None) -> float:
+		return self._sim.research_productivity(country)
+
 	def urban_population(self) -> float:
 		return self.population_total() * float(self._sim.civ.get("urban_fraction", 0.0))
 

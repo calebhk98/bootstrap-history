@@ -20,7 +20,7 @@ def leverage_points(sim):
     risk = sim.knowledge_risk(advice=False, chronology=False)
     return [
         {"lever": "literacy", "why_it_matters": "more people who can read and be taught makes research and trades faster",
-         "figures": {"literacy_general": round(float(sim.civ.get("literacy_general", 0.0)), 3),
+         "figures": {"literacy_general": round(float(sim.literacy("literacy_general")), 3),
                      "general_ceiling": round(sim.literacy_ceiling_general(), 3),
                      "schooling_flow": round(sim.effective_schooling_flow(), 3)}},
         {"lever": "labour", "why_it_matters": "directed hours and people let several projects run in parallel",

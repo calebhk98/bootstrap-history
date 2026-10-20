@@ -82,7 +82,7 @@ class CastView:
 def opening_cast(sim: Any) -> Tuple[str, List[Any], Dict[str, Any]]:
 	"""(home country, entries, profiles): the civilisation played, and every economy trading with it."""
 	foreign = [load_civ(civilisation_id) for civilisation_id in sim.partner_countries()]
-	return cast_from_civilisations(sim.civ, foreign)
+	return cast_from_civilisations(sim.start_civ, foreign)
 
 
 def seed_opening_cast(sim: Any) -> List[str]:

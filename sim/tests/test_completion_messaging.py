@@ -83,13 +83,13 @@ check("...and stays quiet when the staff are free",
       not any("could not open it" in line for line in staffed_lines))
 
 # --- Complaint 83: goal deltas on completion.
-held_goal, held_literacy = game_two.goal, game_two.civ.get("literacy_general")
+held_goal, held_literacy = game_two.goal, game_two.literacy("literacy_general")
 game_two.goal = "goal_literacy_common"
-game_two.civ["literacy_general"] = 0.10
-with _swapped(game_two, apply_tech_effects=lambda node_id: game_two.civ.__setitem__("literacy_general", 0.15)):
+game_two.set_literacy("literacy_general", 0.10)
+with _swapped(game_two, apply_tech_effects=lambda node_id: game_two.set_literacy("literacy_general", 0.15)):
     goal_lines = _finish(game_two, "ag2_balanced_ration")
 game_two.goal = held_goal
-game_two.civ["literacy_general"] = held_literacy
+game_two.set_literacy("literacy_general", held_literacy)
 check("a completion that moves the goal metric shows before and after",
       any("goal effect" in line and "10.0%" in line and "15.0%" in line
           for line in goal_lines), goal_lines)

@@ -68,9 +68,9 @@ def _agent_state_standing(sim):
         # a mechanism that has already maxed out. See
         # SocietyMixin.literacy_ceiling_general/_elite (society.py).
         "literacy": {
-            "general": round(float(sim.civ.get("literacy_general", 0.0)), 3),
+            "general": round(float(sim.literacy("literacy_general")), 3),
             "general_ceiling_now": round(sim.literacy_ceiling_general(), 3),
-            "elite": round(float(sim.civ.get("literacy_elite", 0.0)), 3),
+            "elite": round(float(sim.literacy("literacy_elite")), 3),
             "elite_ceiling": round(sim.literacy_ceiling_elite(), 3),
             "schools_actually_teaching": ui_port.schooling_flow(sim) > 0.0,
             "farm_share_of_working_hours": round(sim.labour.farm_share_of_hours(), 3),

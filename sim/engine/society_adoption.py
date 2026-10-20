@@ -102,6 +102,9 @@ class AdoptionMixin:
         if not eff:
             return
         changed, changed_fields, changes = [], [], {}
+        literacy_fields = ("literacy_elite", "literacy_general")
+        literacy_before = ({field: self.literacy(field) for field in literacy_fields}
+                           if any(field in eff for field in literacy_fields) else {})
         for field, delta in eff.items():
             if field.startswith("_") or not isinstance(delta, (int, float)):
                 continue
@@ -114,19 +117,16 @@ class AdoptionMixin:
                     field, before, self.value_weights[field]))
                 changed_fields.append(field)
                 changes[field] = (before, self.value_weights[field])
-            elif field in ("literacy_general", "literacy_elite", "state_capacity"):
+            elif field == "state_capacity":
                 before = float(self.civ.get(field, 0.0))
-                ceiling = {"literacy_elite": self.literacy_ceiling_elite,
-                           "literacy_general": self.literacy_ceiling_general}.get(field, lambda: 1.0)()
-                # A start above the ceiling is kept; tech cannot push past it.
-                self.civ[field] = max(0.0, min(max(ceiling, before), before + delta))
-                if field == "state_capacity":
-                    self.state_capacity = self.civ[field]
+                after = max(0.0, min(1.0, before + delta))
+                self.civ[field] = after
+                self.state_capacity = after
                 changed.append("%s %.1f%% -> %.1f%% (%+.1f points, one step)" % (
-                    field, before * 100, self.civ[field] * 100,
-                    (self.civ[field] - before) * 100))
+                    field, before * 100, after * 100,
+                    (after - before) * 100))
                 changed_fields.append(field)
-                changes[field] = (before, self.civ[field])
+                changes[field] = (before, after)
             elif field == "population" and node_id not in self.coverage_nodes():
                 # Only the disease technologies carry this weight; the
                 # disease burden reads it live from the tree.
@@ -141,6 +141,22 @@ class AdoptionMixin:
                                % (burden_before, burden))
                 changed_fields.append(field)
                 changes[field] = (burden_before, burden)
+        for field in literacy_fields:
+            delta = eff.get(field)
+            if isinstance(delta, (int, float)):
+                ceiling = (self.literacy_ceiling_elite() if field == "literacy_elite"
+                           else self.literacy_ceiling_general())
+                before = self.literacy(field)
+                target = max(0.0, min(max(ceiling, before), before + delta))
+                learners_ceiling = self.literacy_ceiling_common() if field == "literacy_general" else ceiling
+                self.country_literacy().teach(field, target, learners_ceiling)
+        for field, before in literacy_before.items():
+            after = self.literacy(field)
+            if before != after or field in eff:
+                changes[field] = (before, after)
+                changed_fields.append(field)
+                changed.append("%s %.1f%% -> %.1f%% (%+.1f points, one step)" % (
+                    field, before * 100, after * 100, (after - before) * 100))
         if changed:
             self.state.household.log.append((self.state.scenario.year, LogLine(
                 "society_changed", "%s changes the society, the whole of it at once rather than one "
@@ -167,11 +183,14 @@ class AdoptionMixin:
             "needs, so they cannot be spared for a classroom. Multiplied by "
             "the farm share of hours; a round figure, not measured.")
 
-    def literacy_ceiling_general(self):
-        """The most of the general population schooling could make literate
-        now: everyone but the unable, less the farm children kept at work."""
+    def literacy_ceiling_common(self):
+        """Commoners who can attend school after the farms' call on their children's time."""
         kept_home = self.FARM_CHILDREN_KEPT_FROM_SCHOOL * self.labour.farm_share_of_hours()
         return (1.0 - self.UNABLE_TO_READ_SHARE) * (1.0 - kept_home)
+
+    def literacy_ceiling_general(self):
+        """The whole population's ceiling, including propertied people free of farm work."""
+        return self.country_literacy().ceiling(self.literacy_ceiling_common(), self.literacy_ceiling_elite())
 
     GENERATION_YEARS = declare(
         "GENERATION_YEARS", 25, kind="temporary_heuristic", unit="years",
@@ -271,24 +290,26 @@ class AdoptionMixin:
                        * self.information_diffusion_index())
 
     def literacy_next_year(self):
-        """{civ field: value} for each literacy figure the next year of
-        schooling would move, without applying it."""
-        moved = {}
+        """The next schooling year's reading shares, without changing any stratum."""
+        return self._school_literacy(preview=True)
+
+    def _school_literacy(self, preview=False):
         if self.effective_schooling_flow() <= 0.0:
-            return moved
+            return {}
+        literacy = self.country_literacy()
+        if preview:
+            literacy = literacy.copy()
+        before = {field: literacy.get(field) for field in ("literacy_general", "literacy_elite")}
         for field, ceiling, rate in (
-                ("literacy_general", self.literacy_ceiling_general(),
-                 self.LITERACY_GROWTH_RATE_GENERAL),
                 ("literacy_elite", self.literacy_ceiling_elite(),
-                 self.LITERACY_GROWTH_RATE_ELITE)):
+                 self.LITERACY_GROWTH_RATE_ELITE),
+                ("literacy_general", self.literacy_ceiling_common(),
+                 self.LITERACY_GROWTH_RATE_GENERAL)):
             # each figure moves with the schools that teach it
             flow = self.effective_schooling_flow(field)
-            current = float(self.civ.get(field, 0.0))
-            if current < ceiling - 1e-6:
-                after = min(ceiling, current + rate * flow * (ceiling - current))
-                if after - current > 1e-6:
-                    moved[field] = after
-        return moved
+            literacy.school(field, rate * flow, ceiling)
+        return {field: literacy.get(field) for field, current in before.items()
+                if abs(literacy.get(field) - current) > 1e-6}
 
     def _advance_literacy(self, year):
         """Once a year: let running schools and academies close part of the
@@ -300,8 +321,7 @@ class AdoptionMixin:
         a society does not leap to its ceiling, and it does not overshoot it
         and have to fall back either.
         """
-        changed = self.literacy_next_year()
-        self.civ.update(changed)
+        changed = self._school_literacy()
         if not changed:
             return
         # Census message at most once a generation, so small yearly gains stay quiet.

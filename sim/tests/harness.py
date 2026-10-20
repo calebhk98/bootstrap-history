@@ -202,13 +202,19 @@ def build_unopened(factory):
     """`factory()` (a call that builds a `Sim`) with the agent economy left unopened: see `unopened_sim`."""
     from unittest import mock
     from sim.engine.economy_port import EconomyPort
-    with mock.patch.object(EconomyPort, "open_agent", lambda self: None):
+    from sim.engine.foreign_economies import foreign_economy_records
+    inside = {record["civilization"] for record in foreign_economy_records() if record.get("agent_economy", False)}
+    every_partner = S.Sim.partner_countries
+
+    def supported_partners(game):
+        return [partner for partner in every_partner(game) if partner not in inside]
+
+    # The opening cast may be seeded during construction, before the economy opens.
+    with mock.patch.object(EconomyPort, "open_agent", lambda self: None), \
+            mock.patch.object(S.Sim, "partner_countries", supported_partners):
         game = factory()
     game.economy._opening = True
-    # a partner that lives only in the agent economy has no figures while it is unopened
-    inside = set(game.partners_in_agent_economy())
-    every_partner = game.partner_countries
-    game.partner_countries = lambda: [partner for partner in every_partner() if partner not in inside]
+    game.partner_countries = lambda: supported_partners(game)
     return game
 
 

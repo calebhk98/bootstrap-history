@@ -144,7 +144,7 @@ class DiffusionMixin:
         started = projects.opened_year.get(node_id, done_year_map.get(node_id, scenario.year))
         age = max(0.0, scenario.year - started)
         pace = self.corpus_diffusion_pace()
-        gen_lit = float(self.civ.get("literacy_general", 0.12))
+        gen_lit = float(self.literacy("literacy_general"))
         pace *= (self.LITERACY_DIFFUSION_PACE_BASE
                  + self.LITERACY_DIFFUSION_PACE_SPAN
                  * min(self.LITERACY_DIFFUSION_PACE_CAP_RATIO,
@@ -289,7 +289,7 @@ class DiffusionMixin:
         pace = 1.0
         if category_traits.diffusion_traits()[cat].get("text_paced"):
             pace = self.corpus_diffusion_pace()
-            gen_lit = float(self.civ.get("literacy_general", 0.12))
+            gen_lit = float(self.literacy("literacy_general"))
             pace *= (self.LITERACY_DIFFUSION_PACE_BASE
                      + self.LITERACY_DIFFUSION_PACE_SPAN
                      * min(self.LITERACY_DIFFUSION_PACE_CAP_RATIO,

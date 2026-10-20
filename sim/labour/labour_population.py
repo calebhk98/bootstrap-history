@@ -297,7 +297,7 @@ class PopulationMixin:
         """What the hiring cap reads beyond the world stamp: the literacy, the people and where they live."""
         world = self._world
         economy = world.state.economy
-        return (world.civ.get("literacy_elite"), world.civ.get("literacy_general"), world.population.working_age,
+        return (world.literacy("literacy_elite"), world.literacy("literacy_general"), world.population.working_age,
                 world.pop_scale, len(economy.improvements), world.home_tiles_held_version(),
                 self._labour_hours_epoch(economy.society_labour_hours), len(economy.society_labour_hours),
                 self.base_tile())
@@ -450,9 +450,9 @@ class PopulationMixin:
         if trade_data.drawn_from_unskilled_pool(trade):
             return working   # any of the working age may be called up
         if trade == trade_data.scholar_trade():
-            return pop * float(self._world.civ.get("literacy_elite", 0.0)) * self.SCHOLAR_ENGAGEMENT_FRACTION
+            return pop * float(self._world.literacy("literacy_elite")) * self.SCHOLAR_ENGAGEMENT_FRACTION
         if trade_data.literate_trades(trade_data.registry_of(self._world), (trade,)):
-            return pop * float(self._world.civ.get("literacy_general", 0.0)) * self.SCRIBE_ENGAGEMENT_FRACTION
+            return pop * float(self._world.literacy("literacy_general")) * self.SCRIBE_ENGAGEMENT_FRACTION
         if trade in legacy_trade_defaults.LETTERED_BUT_NOT_LITERATE:
             return urban * self.MERCHANT_DENSITY
         if trade in self._world.trades_absent:

@@ -49,7 +49,7 @@ class SchoolingMessageTimingTests(unittest.TestCase):
         sim.state.projects.operating.add("school_founded")
 
         # Set up a scenario where literacy would advance
-        sim.civ["literacy_elite"] = 0.5
+        sim.set_literacy("literacy_elite", 0.5)
 
         # Advance literacy which generates the message
         sim._advance_literacy(current_year)
@@ -84,7 +84,7 @@ class SchoolingMessageTimingTests(unittest.TestCase):
         sim.state.projects.operating.add("school_founded")
 
         # Set up literacy advancement
-        sim.civ["literacy_elite"] = 0.5
+        sim.set_literacy("literacy_elite", 0.5)
 
         # Advance literacy
         sim._advance_literacy(current_year)
@@ -109,7 +109,7 @@ class SchoolingMessageTimingTests(unittest.TestCase):
         sim.state.projects.done_year["school_founded"] = 100  # same year
         sim.state.projects.operating.add("school_founded")
 
-        sim.civ["literacy_elite"] = 0.5
+        sim.set_literacy("literacy_elite", 0.5)
 
         # Manually call _advance_literacy to generate message
         sim.state.scenario._literacy_said = 0  # Reset message timer to allow message

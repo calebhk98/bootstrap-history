@@ -119,7 +119,10 @@ class TrainingMixin:
         for node, row_trade, add in self._world.LABOUR_PRODUCTIVITY_SOURCES:
             if row_trade == trade and node in projects.done:
                 bonus += add
-        return min(self.LABOUR_PRODUCTIVITY_CAP, 1.0 + bonus)
+        productivity = min(self.LABOUR_PRODUCTIVITY_CAP, 1.0 + bonus)
+        if trade == trade_data.scholar_trade():
+            productivity *= self._world.research_productivity()
+        return productivity
 
     def hours_you_can_call_on(self, trade):
         """Hours of this trade a project can actually draw on this year.

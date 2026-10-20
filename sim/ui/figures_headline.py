@@ -33,7 +33,7 @@ def _recurring_net(sim):
 
 
 def _literacy(sim, field, ceiling):
-    return {"value": float(sim.civ.get(field, 0.0)),
+    return {"value": sim.literacy(field),
             "drivers": {"effective_schooling_flow": sim.effective_schooling_flow(),
                         "ceiling": ceiling}}
 

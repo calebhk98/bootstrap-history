@@ -34,7 +34,7 @@ class LiteracyCeilingTests(unittest.TestCase):
         sim = _fresh_sim()
 
         # Start with a high elite literacy (close to ceiling)
-        sim.civ["literacy_elite"] = 0.95
+        sim.set_literacy("literacy_elite", 0.95)
 
         # Apply tech effects that would push it over the ceiling.
         # printing_press adds 0.2 to literacy_elite
@@ -43,13 +43,13 @@ class LiteracyCeilingTests(unittest.TestCase):
         # Elite literacy should never exceed the ceiling
         elite_ceil = sim.literacy_ceiling_elite()
         self.assertLessEqual(
-            sim.civ["literacy_elite"], elite_ceil,
-            f"Elite literacy {sim.civ['literacy_elite']} exceeds ceiling {elite_ceil}")
+            sim.literacy("literacy_elite"), elite_ceil,
+            f"Elite literacy {sim.literacy('literacy_elite')} exceeds ceiling {elite_ceil}")
 
     def test_multiple_tech_effects_respect_elite_ceiling(self):
         # Apply multiple tech effects that would collectively push past the ceiling
         sim = _fresh_sim()
-        sim.civ["literacy_elite"] = 0.4
+        sim.set_literacy("literacy_elite", 0.4)
 
         # Apply several literacy_elite increasing techs
         elite_ceil = sim.literacy_ceiling_elite()
@@ -61,13 +61,13 @@ class LiteracyCeilingTests(unittest.TestCase):
 
         # Elite literacy should never exceed the ceiling
         self.assertLessEqual(
-            sim.civ["literacy_elite"], elite_ceil,
-            f"Elite literacy {sim.civ['literacy_elite']} exceeds ceiling {elite_ceil}")
+            sim.literacy("literacy_elite"), elite_ceil,
+            f"Elite literacy {sim.literacy('literacy_elite')} exceeds ceiling {elite_ceil}")
 
     def test_schooling_path_respects_elite_ceiling(self):
         # The schooling path should already work correctly
         sim = _fresh_sim()
-        sim.civ["literacy_elite"] = 0.95
+        sim.set_literacy("literacy_elite", 0.95)
 
         # Simulate having a school running
         sim.state.projects.operating.add("school_founded")
@@ -78,21 +78,21 @@ class LiteracyCeilingTests(unittest.TestCase):
         # Elite literacy should never exceed the ceiling
         elite_ceil = sim.literacy_ceiling_elite()
         self.assertLessEqual(
-            sim.civ["literacy_elite"], elite_ceil,
-            f"Schooling path: Elite literacy {sim.civ['literacy_elite']} exceeds ceiling {elite_ceil}")
+            sim.literacy("literacy_elite"), elite_ceil,
+            f"Schooling path: Elite literacy {sim.literacy('literacy_elite')} exceeds ceiling {elite_ceil}")
 
     def test_direct_effect_cannot_exceed_one_zero(self):
         # Even with the current bug, literacy should not exceed 1.0
         # This test documents current behavior
         sim = _fresh_sim()
-        sim.civ["literacy_elite"] = 0.99
+        sim.set_literacy("literacy_elite", 0.99)
 
         # Apply a high effect
         sim.apply_tech_effects("printing_press")
 
         # Should be clamped to [0, 1] at minimum
-        self.assertLessEqual(sim.civ["literacy_elite"], 1.0)
-        self.assertGreaterEqual(sim.civ["literacy_elite"], 0.0)
+        self.assertLessEqual(sim.literacy("literacy_elite"), 1.0)
+        self.assertGreaterEqual(sim.literacy("literacy_elite"), 0.0)
 
 
 if __name__ == "__main__":
