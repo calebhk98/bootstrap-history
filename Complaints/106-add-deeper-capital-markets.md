@@ -89,3 +89,21 @@ Owner decision (2026-10-09): lower priority; it should come when it can, and a c
   a firm choosing equity over debt on cost, and the closed-producer path (`close_idle_producers`) paying its cash
   to the owner alone. Measure: `Economy` fixture tests in `sim/tests/test_economy_shares.py`; on Rome compare the
   rate, `funds_offered` and `lent_by_borrower` of the first years (`share_issuers` is `len(record.shares)`).
+
+- **Banks (step 2).** A bank is an agent id with a purse (`sim/economy/banks.py`, `bank_service.py`); a society
+  founds banks only once it holds a node declaring `deposit_banking` (`fin_deposit_bank`;
+  `sim/engine/economy_port_institutions.py` hands the economy the names), and its richest household founds one
+  when none stands (any agent may call `banks.found`). Households pledge their offered funds to the bank; the
+  bank offers its free cash plus the pledges less a reserve, asking its depositors' rates plus a margin, and takes
+  a deposit only for the loans it makes (the pool's way: interest is paid on no more than was lent), then returns
+  idle cash. A deposit is a term loan in the shared registry (depositor lender, bank borrower), so wealth, claims
+  and the one default rule need nothing new. A bank whose assets as its lenders value them fall short of its
+  deposits (its capital gone) is run on: every deposit falls due, the bank pays what it holds in proportion, and
+  what it cannot pay is arrears the default rule writes off, borne by the depositors. The founder is paid only
+  earnings above the capital it paid in. Heuristics: `BANK_MARGIN_SHARE_OF_OPENING_RATE`,
+  `BANK_FOUNDING_SHARE_OF_CASH`, `BANK_CAPITAL_SHARE_OF_LOANS` (reserve share reuses `LENDER_RESERVE_SHARE`).
+  Still open: depositors choosing among several banks by anything but cover, withdrawals for cash needs, a run
+  on a bank that is solvent but illiquid, credit creation beyond the deposits, the player founding a bank by
+  command (the economy call is `banks.found`; no engine command yet). On Rome with the node granted the
+  founder's own capital covers the loans, so no deposits are taken and the rate is a margin higher
+  (measure with the Rome series of `lent_by_borrower` and `base_rate` with and without the node).

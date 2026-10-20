@@ -10,6 +10,7 @@ from sim.contracts import Contracts
 from sim.labour.api import MarketState, market_state_from_plain, market_state_to_plain
 
 from .accounts import Book
+from .banks import Bank
 from .households_cohort import Cohort
 from .market_memory import KEY_SEPARATOR, MarketMemory
 from .merchants import Merchant
@@ -53,6 +54,7 @@ class EconomyRecord:
     hours_idle: Dict[str, float] = field(default_factory=dict)           # labour market_key -> hours offered and not hired last year
     funds_offered: float = 0.0                                           # savings on offer at the last lending, home currency
     lent_by_borrower: Dict[AgentId, float] = field(default_factory=dict)  # what each borrower was lent at the last lending
+    banks: Dict[AgentId, Bank] = field(default_factory=dict)             # the banks households deposit with (banks.py)
     shares: Dict[AgentId, Dict[AgentId, float]] = field(default_factory=dict)   # producer -> holder -> part of its equity the holder bought (shares.py)
     last_dividends: Dict[AgentId, float] = field(default_factory=dict)   # producer -> the dividend it paid at its last close
     curves: Dict[str, Any] = field(default_factory=dict)                 # market_key -> the book of the last clearing at the port (market_curves.py)
@@ -105,6 +107,7 @@ class EconomyRecord:
             "hours_idle": self.hours_idle,
             "funds_offered": self.funds_offered,
             "lent_by_borrower": self.lent_by_borrower,
+            "banks": {key: plain(value) for key, value in sorted(self.banks.items())},
             "shares": {producer: dict(sorted(held.items())) for producer, held in sorted(self.shares.items())},
             "last_dividends": dict(sorted(self.last_dividends.items())),
             "curves": self.curves,
@@ -146,6 +149,7 @@ class EconomyRecord:
             hours_idle=dict(record["hours_idle"]),
             funds_offered=record["funds_offered"],
             lent_by_borrower=dict(record["lent_by_borrower"]),
+            banks={key: Bank(**value) for key, value in record["banks"].items()},
             shares={producer: dict(held) for producer, held in record["shares"].items()},
             last_dividends=dict(record["last_dividends"]),
             curves=dict(record["curves"]),

@@ -82,10 +82,11 @@ def issues_for(record, requests: Sequence[LoanRequest], market_rate: float) -> L
     return issues
 
 
-def bids_from(offers: Sequence[FundsOffer], lent_by_lender: Mapping[AgentId, float]) -> List[ShareBid]:
-    """What each saver has left after its lending, asking at least the rate it asked as a lender."""
+def bids_from(record, offers: Sequence[FundsOffer], lent_by_lender: Mapping[AgentId, float]) -> List[ShareBid]:
+    """What each household saver has left after its lending, asking at least the rate it asked as a lender."""
     return [ShareBid(offer.lender, offer.amount - lent_by_lender.get(offer.lender, 0.0), offer.minimum_rate)
-            for offer in offers if offer.amount - lent_by_lender.get(offer.lender, 0.0) > EPSILON]
+            for offer in offers if offer.lender in record.cohorts
+            and offer.amount - lent_by_lender.get(offer.lender, 0.0) > EPSILON]
 
 
 def apply(record, fills: Sequence[ShareFill], currency: str) -> Dict[AgentId, float]:
@@ -116,7 +117,7 @@ def raise_equity(record, currency: str, unmet: Sequence[LoanRequest], offers: Se
     for loan in loans:
         lent[loan.lender] = lent.get(loan.lender, 0.0) + loan.principal
     issues = issues_for(record, unmet, market_rate)
-    bids = bids_from(offers, lent)
+    bids = bids_from(record, offers, lent)
     if not issues or not bids:
         return {}
     fills, _rate = share_market.clear(issues, bids, market_rate, rate_floor)

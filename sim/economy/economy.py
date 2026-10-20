@@ -9,7 +9,7 @@ from typing import Any, Dict, Mapping, Optional, Tuple
 
 from sim.world import capital_market
 
-from . import bondage, carriage_hours, credit, debt_relief, credit_claims, currency, equity, labour, land_market, lending, merchants_credit, producers, shares, sites, state_budget, tax_farming, titles_inheritance, unit_cost
+from . import bondage, banks, carriage_hours, credit, debt_relief, credit_claims, currency, equity, labour, land_market, lending, merchants_credit, producers, shares, sites, state_budget, tax_farming, titles_inheritance, unit_cost
 from .credit_view import CreditView
 from .market_areas import AreaMap
 from .market_areas_follow import follow
@@ -182,7 +182,8 @@ class Economy:
         for plan in plans.values():
             for bid in plan.bids:
                 order_book.setdefault((bid.good, bid.area), ([], []))[0].append(bid)
-        plant_runs = self._lend(funds, view, order_book, ledger)
+        funds, pledged = banks.intermediate(setup, record, funds, view.year, inputs.institutions)
+        plant_runs = self._lend(funds, view, order_book, ledger, pledged)
         merchant_orders(setup, record, view, self.area_map, self.carriage, order_book)
         for producer_id, runs in self._rebuild_worn_plant(view, order_book).items():
             plant_runs[producer_id] = plant_runs.get(producer_id, 0.0) + runs
@@ -291,7 +292,7 @@ class Economy:
         dividends, since a lender is paid ahead of them."""
         return lending.service(self.record, self.setup.currency_id, year, self.setup.debt_bondage_years)
 
-    def _lend(self, funds, view, order_book, ledger) -> Dict[str, float]:
+    def _lend(self, funds, view, order_book, ledger, pledged=None) -> Dict[str, float]:
         """New loans from savings. A producer that borrowed to build bids for its plant goods, a household
         for its floors; a merchant's cargo is bought from its enlarged cash (merchant_orders follows)."""
         record, setup = self.record, self.setup
@@ -316,6 +317,7 @@ class Economy:
                                            credit_claims.arrears_history(record.loans, record.remembered_defaults),
                                            year=view.year,
                                            rate_ceiling=capital_market.RATE_CEILING_SHARE * setup.opening_rate)
+        banks.draw_deposits(record, loans, pledged or {}, view.year, money)       # a bank takes its depositors' funds for the loans it makes
         record.book.transfer_many(credit.disbursements(loans))
         record.loans.extend(loans)
         for loan in loans:
