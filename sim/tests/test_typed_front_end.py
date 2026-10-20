@@ -44,3 +44,11 @@ for node_id in list(NODES)[:400]:
 # a speed bound on the shared tree walk, not on any rule
 check("what rests on a node is cheap enough to put in a table", time.time() - started < 1.0,
       "%.2fs for 400" % (time.time() - started))
+
+# --- selling (Complaint 288): the typed forms of `sell`
+check("typed 'sell concern <id>' parses", parse_typed("sell concern zz_easy")[0]
+      == {"cmd": "sell", "what": "concern", "id": "zz_easy"}, parse_typed("sell concern zz_easy"))
+check("typed 'sell farm <ha>' parses", parse_typed("sell farm 40")[0] == {"cmd": "sell", "what": "farm", "n": 40},
+      parse_typed("sell farm 40"))
+check("typed 'sell <material> <tonnes>' is unchanged", parse_typed("sell iron 5")[0]
+      == {"cmd": "sell", "material": "iron", "n": 5}, parse_typed("sell iron 5"))

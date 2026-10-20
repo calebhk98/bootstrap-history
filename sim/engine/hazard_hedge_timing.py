@@ -33,3 +33,11 @@ def add_timing_to_steps(advice_by_kind, current_year, window_start, in_progress)
             floor = step.get("years_even_if_you_start_today")
             if floor is not None:
                 step["timing"] = hedge_timing(floor, current_year, window_start, in_progress)
+
+
+def remaining_floor_years(nodes, chain, done):
+    """Calendar years the nodes of `chain` still need, each at the longer of its years and its work spread at the
+    pace of a lone worker, leaving out what is done."""
+    remaining = sum(max(nodes[node_id]["yrs"], nodes[node_id]["ph"] / 2000.0)
+                    for node_id in chain if node_id not in done)
+    return round(remaining, 1)
