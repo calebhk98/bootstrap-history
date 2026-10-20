@@ -169,7 +169,7 @@ class TrainingMixin:
         reading is wrong: the town's own share has not moved at all, only
         yours has grown, so the two have to be reported apart.
         """
-        mine = self._world.state.household.employees.get(trade, 0.0) * self._world.HOURS_PER_PERSON_YEAR
+        mine = self.employed(trade) * self._world.HOURS_PER_PERSON_YEAR
         total = self.market_supply(trade)
         if trade in self._world.trades_absent:
             # There is no market in these at all; every hour is somebody you
@@ -226,7 +226,7 @@ class TrainingMixin:
                                        % (trade, self._world.trade_notes.get(trade, ""), trade))
         if trade not in self._world.trades_absent:
             exist = self.people_who_exist(trade)
-            on_books = self._world.state.household.employees.get(trade, 0.0)
+            on_books = self.employed(trade)
             rivals = self._world.actor_staff_fte(trade)
             if on_books + rivals + count > exist + 1e-6:
                 return None, None, Refusal("nobody_left", "only about %.1f %ss exist in this country and you "
@@ -303,7 +303,7 @@ class TrainingMixin:
         # See step() 2, where it is netted off living_cost.
         household.wages_prepaid = (household.wages_prepaid or 0.0) + fee
         self.note_hire_pay(trade, float(count), pay_premium)
-        household.employees[trade] = household.employees.get(trade, 0.0) + float(count)
+        self.add_employed(trade, float(count))
         self.labour_market.hire(self._world.state.household, trade, float(count) * self._world.HOURS_PER_PERSON_YEAR,
                                 pay_premium)
         self._resync_pools()
@@ -317,7 +317,7 @@ class TrainingMixin:
                 "first year in advance). You now have %.1f, and %.2f "
                 "household place(s) left.%s"
                 % (count, trade, "" if count == 1 else "s",
-                   self._world.money_text(fee, grouped=True), household.employees[trade],
+                   self._world.money_text(fee, grouped=True), self.employed(trade),
                    max(0.0, self.household_room()), unfound))
         if unfound:
             return True, Refusal("search_found_fewer", text, asked=float(asked), hired=float(count))
@@ -335,7 +335,7 @@ class TrainingMixin:
         """
         trade = str(trade or "").strip().lower()
         household = self._world.state.household
-        have = household.employees.get(trade, 0.0)
+        have = self.employed(trade)
         pending = sum(record[3] for record in household.training
                       if len(record) > 3 and record[2] == trade)
         if have <= 0 and pending <= 0:
@@ -354,9 +354,7 @@ class TrainingMixin:
         if have > 0:
             gone = min(count, have)
             self.labour_market.release(household, trade, gone * self._world.HOURS_PER_PERSON_YEAR)
-            household.employees[trade] = have - gone
-            if household.employees[trade] <= 1e-9:
-                household.employees.pop(trade)
+            self.set_employed(trade, have - gone if have - gone > 1e-9 else 0.0)
             count -= gone
             note = "let %g %s%s go" % (gone, trade, "s" if gone != 1 else "")
         if count > 0 and pending > 0:

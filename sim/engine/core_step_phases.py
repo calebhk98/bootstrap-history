@@ -70,7 +70,7 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, ProjectStartPhaseMixin, 
                     if trade:
                         # A trade you taught. They are now yours to pay, and
                         # they are that trade and no other.
-                        self.state.household.employees[trade] = self.state.household.employees.get(trade, 0.0) + count
+                        self.labour.add_employed(trade, count)
                         self.state.household.log.append((self.state.scenario.year, LogLine("training_finished", "%g %s%s finish their training"
                                          % (count, trade, "s" if count != 1 else ""))))
                         self.labour.resync_pools()

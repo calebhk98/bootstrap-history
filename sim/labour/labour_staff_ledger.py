@@ -16,7 +16,7 @@ class StaffLedgerMixin:
 
     def staff_snapshot(self):
         """Headcount by trade now, to diff against after something trims it."""
-        return dict(self._world.state.household.employees)
+        return self.employed_by_trade()
 
     def log_staff_lost(self, cause, counts):
         """Log people who left, by trade, with why and which running concerns the loss leaves unstaffed.
@@ -45,7 +45,7 @@ class StaffLedgerMixin:
 
     def log_staff_reduction(self, cause, before):
         """Log every trade whose headcount fell since `before`, with why."""
-        now = self._world.state.household.employees
+        now = self.employed_by_trade()
         self.log_staff_lost(cause, {trade: before[trade] - now.get(trade, 0.0) for trade in sorted(before)
                                     if before[trade] - now.get(trade, 0.0) > 0.005})
 
@@ -72,7 +72,7 @@ class StaffLedgerMixin:
         draws on, with what they cost a year."""
         drawn = self.trades_drawn_on()
         rows = []
-        for trade, count in sorted(self._world.state.household.employees.items()):
+        for trade, count in sorted(self.employed_by_trade().items()):
             if trade_data.is_generic_staff(trade) or trade in drawn or count < 0.5:
                 continue
             rows.append({"trade": trade, "count": round(count, 1),
@@ -87,7 +87,7 @@ class StaffLedgerMixin:
             if node_id not in self._world.nodes:
                 continue
             trade, _fte = self._world.venture_foreman(node_id)
-            if trade and round(self._world.state.household.employees.get(trade, 0.0)) == 1:
+            if trade and round(self.employed(trade)) == 1:
                 rows.append({"concern": self._world.nodes[node_id].get("name", node_id),
                              "trade": trade,
                              "warning": "depends on one %s; losing them closes it" % trade})
@@ -99,7 +99,7 @@ class StaffLedgerMixin:
         policy = self._world.state.founder.policy
         return {
             "depends_on_one_person": self.sole_supervisors(),
-            "expected_losses_per_year": round(sum(household.employees.values()) * demography.BASELINE_ANNUAL_MORTALITY_RATE_WORKING_AGE, 2),
+            "expected_losses_per_year": round(self.employed_total() * demography.BASELINE_ANNUAL_MORTALITY_RATE_WORKING_AGE, 2),
             "reserve": ({"craftsmen": household.reserve_craftsmen, "scholars": household.reserve_scholars}
                         if policy.get("reserve_staff", False) else None),
             "in_training": len(household.training),
@@ -118,9 +118,9 @@ class StaffLedgerMixin:
             if short <= 0:
                 return 0
         household = self._world.state.household
-        before = household.employees.get(trade, 0.0)
+        before = self.employed(trade)
         hired, _why = self.hire(trade, short)
-        found = int(round(household.employees.get(trade, 0.0) - before))
+        found = int(round(self.employed(trade) - before))
         if not hired or found <= 0:
             return 0
         household.log.append((self._world.state.scenario.year, LogLine(
@@ -132,5 +132,5 @@ class StaffLedgerMixin:
         """auto_replace_foreman: hire the specialists open concerns need and lack."""
         household = self._world.state.household
         for trade, used in sorted(self._world.venture_foremen_used().items()):
-            short = math.ceil(used - household.employees.get(trade, 0.0) - 0.01)
+            short = math.ceil(used - self.employed(trade) - 0.01)
             self.hire_to_cover(trade, short, "auto_replace_foreman")

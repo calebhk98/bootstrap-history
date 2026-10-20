@@ -10,12 +10,13 @@ from sim.refusal import facts_of
 
 from sim.labour.labour_market_api import LabourMarket
 from sim.labour.labour_staff_ledger import StaffLedgerMixin
+from sim.labour.staff_book import StaffBookMixin
 
 HOURS = 2000.0
 POOLS = {"common": 5000.0, "rare": 30.0}
 
 
-class StubLabour:
+class StubLabour(StaffBookMixin):
     def __init__(self, world):
         self._world = world
 
@@ -67,7 +68,7 @@ check("nothing asked costs nothing and finds nobody",
       market.hire_cost("rare", 0) == 0.0 and market.whole_recruits("rare", 0) == 0)
 
 
-class CoverLabour(StaffLedgerMixin):
+class CoverLabour(StaffLedgerMixin, StaffBookMixin):
     """A labour whose market finds only some of a hire, as a scarce trade's does."""
 
     def __init__(self, found):

@@ -128,16 +128,12 @@ class LabourMarket:
         people = max(0.0, people)
         if people <= 0:
             return self.price_factor(trade)
-        household = self._world.state.household
-        before = household.employees.get(trade, 0.0)
-        household.employees[trade] = before + people
+        before = self._labour.employed(trade)
+        self._labour.set_employed(trade, before + people)
         try:
             supply_after = self._labour.market_supply(trade)
         finally:
-            if before:
-                household.employees[trade] = before
-            else:
-                household.employees.pop(trade, None)
+            self._labour.set_employed(trade, before)
         pressure_after = self.pressure(trade) + people * self._world.HOURS_PER_PERSON_YEAR
         return self._price_factor_from(pressure_after, supply_after)
 
