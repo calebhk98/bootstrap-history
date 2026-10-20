@@ -151,3 +151,12 @@ So the year-zero gap is the model's own short-run answer (a trade whose hands ca
 that idled the year before), not a recipe, entry or accounting error. Raising the smith wage above the training-cost
 ceiling in a vacancy, or allocating scarce hours by value, is a labour-core design decision (the `trained_substitute_wage` rule, the
 wall in `sim/labour/`), not made here. No code change; the check is unchanged and stays red.
+
+## Sourced: skill premia (2026-10-20)
+
+`Complaints/reports/research-how-trades-spread-and-skill-premia.md` (each claim with its URL): the English building
+craftsman's wage over the labourer's (Munro's table of Phelps Brown and Hopkins) fell after the Black Death and kept
+falling for decades, since unskilled hands were scarce too; over the early modern centuries it sat near three to two in
+southern England (Allen, through Broadberry and Gupta). No source was found for a short-run premium of one scarce trade
+far above its training cost. The long-run anchor at the cost of training a substitute stands; a short-run premium needs
+a sourced case of one trade short while others were not before it is built.

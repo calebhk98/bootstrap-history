@@ -204,6 +204,15 @@ Tooling: `python3 -m pylint sim/ | grep C0103` (worklist). Plan:
   guessing.
 - **Every bug becomes a regression test** with the smallest reproducing
   scenario. Resolved complaints move to `Complaints/closed/`.
+- **A test of a rule calls the rule.** Build the inputs in the test and call the
+  function; do not build a whole game to reach one rule. A failing test must name
+  the rule that broke, on the current code, with no bisect over merges; one that
+  cannot is rewritten. Whole-game tests are kept only as named scenario or smoke
+  tests. Where a rule needs the whole `Sim`, pull it into a plain function first.
+- **Sources are read, not recalled.** A figure, in data, a constant or a design
+  note, cites a source someone opened (author, work, page or URL). A research
+  agent cites only what it opened in that session and writes "no source found"
+  otherwise. A figure with no source is a labelled heuristic with a `retire`.
 - **Behaviour tests read values, not wording.** A test of what the model does asserts on structured
   values: the engine's numbers, the reply's fields, a refusal's `cause`, a log line's `kind` and `facts`
   (`sim/refusal.py`). Only a test whose subject is presentation (units, wording, rounding, layout) asserts on

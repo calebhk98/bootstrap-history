@@ -1,6 +1,6 @@
 # No diplomacy: no treaties, state-set tariffs, embargoes, trust, or notes on other powers; tolls ignore volume
 
-**Status:** open - split into 597, 598, 599, 600, 601 (closes when they do)
+**Status:** closed - every child (597 to 601) is closed
 
 - A foreign state can shut its market to one smuggler (`sim/agents/government_foreign.py`) and has an
   export policy for its monopolies (`sim/agents/policy.py`). Nothing else: no treaty, tariff a state sets,

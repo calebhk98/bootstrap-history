@@ -110,11 +110,9 @@ stops, so price and volume checks that read a particular year flip with unrelate
 Rules this work kept, for whoever picks it up:
 
 - A topic over the runner's limit fails; there is no per-topic allowance.
-- When a merge breaks a check, first run it on `origin/main`, then bisect the first-parent merges
-  (`git log --first-parent --oneline origin/main..HEAD`). Change a fixture only to keep its subject (an
-  "equally visible" taxpayer, a baseline measured the same way in both worlds), never to find a window, a good
-  or a bound that happens to pass; a check that fails for a real dynamic stays failing with its cause recorded.
+- A failing check is fixed where it stands, on the current code: no bisect over merges. A check that cannot say which
+  rule broke is itself the defect and is rewritten as a test of that rule's function (Complaint 640). Change a
+  fixture only to keep its subject, never to find a window, a good or a bound that happens to pass.
 - Speed changes must leave a stepped game's save byte-identical (sorted keys), with the CPU saving measured.
-- Facts recalled rather than read are marked as such in the data's source fields; check them before relying
-  on them. Parked on purpose: issues with status `pinned`
+- A figure needs a source someone read; a recalled figure is unsourced (Complaint 646 lists those still in the data). Parked on purpose: issues with status `pinned`
 (`grep -l '^\*\*Status:\*\* pinned' Complaints/*.md`).

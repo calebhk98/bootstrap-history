@@ -18,4 +18,4 @@ visible.
 
 What it would take: garrisons located on tiles (485); an effective-control figure per tile from garrison
 strength, route cost from the seat of government and local unrest (486); revenue assessment that takes
-that figure, so leakage is an outcome. Depends on 483.
+that figure, so leakage is an outcome. 483 (tile control) is closed.

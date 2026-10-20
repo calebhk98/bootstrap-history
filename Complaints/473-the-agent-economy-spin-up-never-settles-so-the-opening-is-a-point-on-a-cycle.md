@@ -209,7 +209,7 @@ is fixed (507 Stage 2) and the price level stops climbing. Stage 2 (Update 4) mo
 then `settling_report(rows)`; `python3 -m sim.tests --slow --only baseline_rome` runs the same check). On the integration
 branch before Stage 7 every series fails: the price level swings by up to half a log unit a year around a level that
 wanders over several times, the market rate reaches the ceiling `bounded_rate` sets, and the wage and the money stock
-trend down. With Stage 7 (branch `507-stage-7-price-search-within-year`) the rate's yearly steps and the price level's
+trend down. With Stage 7 (branch `507-stage-7-price-search-within-year` (deleted unmerged; its code is lost)) the rate's yearly steps and the price level's
 swings shrink to a fraction of that and the money stock settles; the price level and the wage still fall steadily,
 which is the labour glut (608), not a cycle. Reproduce both with the command above on each branch (minutes each).
 
@@ -321,7 +321,7 @@ households still bid for it, and its price (times 10^12 by year 8) carries the p
 index and the joint by-products handled first (the same thin-good fragility as above); it is not a labour mechanism.
 The head's probe is unchanged by this branch.
 
-## Measured and not merged: expansion that replaces wear before it grows (branch `expansion-replaces-wear-then-grows`)
+## Measured and not merged: expansion that replaces wear before it grows (branch `expansion-replaces-wear-then-grows` (deleted unmerged; its code is lost))
 
 Building each year's wear back before growing by the expansion share lets short-lived plant goods (lead) grow, and the
 20-year probe stays calm, but the 60-year trace surges earlier and higher than the head (price level about twice the
@@ -520,7 +520,7 @@ and a wage floor are the candidates; the probe did not print wages or plans). Wh
 spike of the rate to its ceiling between years 30 and 60 is not explained by this probe, which stops at year 14; the 46th-year spike
 analysis above (wage-loan sizing, `lend_working_capital`) remains the lead.
 
-## Measured: why output falls tenfold after the opening (branch 473-why-output-collapses-after-the-opening)
+## Measured: why output falls tenfold after the opening (branch 473-why-output-collapses-after-the-opening, deleted unmerged)
 
 **Finding.** The producers and the labour market are not the cause; they follow sales. In the opening year the households
 spend about 1 per cent of their cash and the producers sell about 0.3 per cent of what the opening sized them for, so the
@@ -657,13 +657,22 @@ The inflation the orchestrator saw over 60 years is consistent with this: the sp
 supply can move only a quarter of capacity a year and, for chains, only as fast as the input makers do. Not tested here: raising
 `OUTPUT_CHANGE_SHARE_PER_YEAR` (that would loosen the limit that stops chains from amplifying, per the earlier section) and the 60-year run.
 
-## Measured and not merged: the opening sized net of the own-plot cut (branch 545-opening-sizes-for-bought-food)
+## Measured and not merged: the opening sized net of the own-plot cut (branch 545-opening-sizes-for-bought-food, deleted unmerged)
 
 Sizing the opening's producers with the year's own `_less_what_it_grew` (through a new `opening_own.less_what_it_grows`)
 makes opening and year agree by construction, but on the short opening it lowers traded value and output further and
 the stock gate still dominates later years. Settling income on the cut demand collapses the economy toward nothing (the
 526 collapse). The root is the year's own-plot rule: every unhired hour goes onto a plot with unlimited free land, so
 households grow nearly all their staples and buy almost none. Land-limited own plots (Complaint 551, branch
-`551-households-farm-the-plots-they-hold`) are needed before the opening can be sized sensibly. Measured with
+`551-households-farm-the-plots-they-hold` (deleted unmerged; its code is lost)) are needed before the opening can be sized sensibly. Measured with
 `ROME_SPIN_UP_YEARS=3,2 PYTHONPATH=. python3 <scratch probe p473_hh.py> 5 out.json` on each commit; the probe is not
 committed.
+
+## Design comparison (2026-10-20)
+
+`Complaints/reports/research-agent-based-economy-design.md` compares this economy with published agent-based models
+(Lengnick 2013, Caiani et al. 2016, Wiese et al. 2024, Peters et al. 2022). Two departures bear on settling: those
+models start from a solved stationary state spread over the agents (Caiani) or a long burn-in (Lengnick), rather than a
+spin-up hoped to settle; and labour demand there comes from vacancies, with hires bounded by the smaller of the jobless
+and the vacancies. The share of offered hours unhired here may count own-plot hours as idle; report them apart before
+reading it as unemployment. Pricing departures are 642 and 643, the rate 641.
