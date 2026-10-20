@@ -25,7 +25,6 @@ class StateWorld(FakeWorld):
 		self.nodes["arsenal"] = make_node("arsenal", hours=2000.0, revenue=TAKINGS, upkeep=UPKEEP, makes=["weapons_kg"])
 		self.baseline = {"salt_works", "arsenal"}
 		self.free_people["labourer"] = 100.0
-		self.inputs = {}
 		self.prices = {"brine_kg": 1.0}
 
 	def government(self):
@@ -33,9 +32,6 @@ class StateWorld(FakeWorld):
 
 	def commodity_of(self, material):
 		return material
-
-	def concern_inputs(self, entry_key):
-		return dict(self.inputs.get(entry_key, {}))
 
 
 def state_with(monopolies=(), enterprises=(), money=OPENING_MONEY):
@@ -81,21 +77,21 @@ check("...and puts no goods on the market", all(tonnes == 0.0 for _seller, _mate
 
 # ---- without inputs nothing is made; stores supply them -----------------------------------------------------
 world, state = state_with(monopolies=["salt_kg"], money=0.0)
-world.inputs["salt_works"] = {"brine_kg": 10.0}
+world.nodes["salt_works"]["inputs"] = {"brine_kg": 10.0}
 state_enterprises.open_enterprises(state, world)
 state_enterprises.run(state, world)
 check("a works with no inputs held and no money to buy them makes nothing",
 	  state.record.enterprise_takings == 0.0 and state.business.crew_found_of("salt_works") == 0.0,
 	  state.record.enterprise_takings)
 world, state = state_with(monopolies=["salt_kg"])
-world.inputs["salt_works"] = {"brine_kg": 10.0}
+world.nodes["salt_works"]["inputs"] = {"brine_kg": 10.0}
 state.record.stores["brine_kg"] = 10.0
 state_enterprises.open_enterprises(state, world)
 state_enterprises.run(state, world)
 check("inputs in the stores are consumed and the works runs", state.record.stores["brine_kg"] == 0.0
 	  and state.business.crew_found_of("salt_works") == 1.0 and state.record.enterprise_takings > 0.0, state.record.stores)
 world, state = state_with(monopolies=["salt_kg"])
-world.inputs["salt_works"] = {"brine_kg": 10.0}
+world.nodes["salt_works"]["inputs"] = {"brine_kg": 10.0}
 state_enterprises.open_enterprises(state, world)
 state_enterprises.run(state, world)
 check("inputs the stores lack are bought at the market's price with the purse",

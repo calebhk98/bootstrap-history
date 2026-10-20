@@ -177,6 +177,9 @@ class FakeWorld:
 	def upkeep(self, node_id: str, capacity: float = 1.0) -> float:
 		return capacity * float(self.nodes[node_id].get("up", 0.0))
 
+	def concern_inputs(self, node_id: str) -> Dict[str, float]:
+		return dict(self.nodes[node_id].get("inputs") or {})
+
 	def materials_made_by(self, node_id: str) -> List[str]:
 		return list(self.nodes[node_id].get("makes") or ())
 
