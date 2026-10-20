@@ -225,6 +225,14 @@ class OneWageTests(unittest.TestCase):
         self.assertEqual(self.priced(1.0, wage_elsewhere=3.0)[0], 1.0)
         self.assertLess(self.priced(0.5, wage_elsewhere=3.0)[0], 1.0)
 
+    def test_a_wage_far_below_the_priced_wage_never_makes_carriage_pay_the_shipper(self):
+        scales = []
+        original = carriage_hours.wage_scale
+        with mock.patch.object(carriage_hours, "wage_scale", lambda *args: scales.append(original(*args)) or scales[-1]):
+            run_watching(trading_setup(carriage_wage=3.0), 20)
+        self.assertTrue(scales)
+        self.assertGreaterEqual(min(scales), 0.0)
+
     def test_money_still_balances_when_the_market_wage_differs_from_the_priced_wage(self):
         done, _years = run_watching(trading_setup(carriage_wage=3.0), 20)
         self.assertTrue(money_audit.year_report(done.record).ok)

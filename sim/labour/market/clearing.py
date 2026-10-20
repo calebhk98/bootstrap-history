@@ -5,6 +5,7 @@ from typing import Dict, List, Optional, Sequence, Set, Tuple
 from sim.constants import declare
 
 from . import asks
+from .import_cost import ImportCosts
 from .premium import training_premium
 from .trades import fallback_trade
 from .records import Bid, Clearing, MarketState, YearInputs
@@ -171,7 +172,8 @@ def poach(hired: Dict[str, float], wanted: Dict[str, float], paid: Dict[str, flo
             hired[employer] += moved
 
 
-def clear_one(state: MarketState, inputs: YearInputs, trade: str, area: str, bids: Sequence[Bid]) -> Clearing:
+def clear_one(state: MarketState, inputs: YearInputs, trade: str, area: str, bids: Sequence[Bid],
+              import_costs: Optional[ImportCosts] = None) -> Clearing:
     spec = inputs.trades[trade]
     workers = sum(state.workers.get(area, {}).get(trade, []))
     offered = workers * inputs.hours_per_worker_year
@@ -180,6 +182,10 @@ def clear_one(state: MarketState, inputs: YearInputs, trade: str, area: str, bid
     reservation = max(base_reservation * asks.scale_of(state, area, trade), lowest, unskilled_option(state, inputs, area, trade))
     last = state.wages.get(area, {}).get(trade)
     ceiling = max(trained_substitute_wage(state, inputs, area, trade), reservation)
+    if bids:      # employers can bring the trade's workers in, so bids no one here can fill do not set the wage
+        imported = (import_costs or ImportCosts(state, inputs)).wage(area, trade)
+        if imported is not None:
+            ceiling = max(min(ceiling, imported), reservation)
     wage = min(market_wage(last, reservation, offered, bids), ceiling)
     target = min(clearing_target(reservation, offered, bids), ceiling) if offered > 0.0 and bids else wage
     wanted, paid = eligible_bids(bids, wage)
@@ -209,5 +215,6 @@ def clear_all(state: MarketState, inputs: YearInputs) -> List[Clearing]:
     for area, by_trade in state.workers.items():
         markets.update((trade, area) for trade, bands in by_trade.items()
                        if sum(bands) > 0.0 and trade in inputs.trades)
-    return [clear_one(state, inputs, trade, area, bids_by_market.get((trade, area), []))
+    import_costs = ImportCosts(state, inputs)
+    return [clear_one(state, inputs, trade, area, bids_by_market.get((trade, area), []), import_costs)
             for trade, area in sorted(markets)]
