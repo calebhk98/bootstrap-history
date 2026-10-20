@@ -187,6 +187,11 @@ Left failing on purpose, with causes (`python3 -m sim.tests --slow --only real_o
 - `real_output_baseline`, goods far from their baseline: the unsettled spin-up (473) moves goods beyond the bound
   stated in the test; measure with the topic's MEASURE line.
 
+Re-measured on `pm-merge-staging` (fc4e0582), `python3 -m sim.tests --slow --only real_output,real_output_cheaper_entry,real_output_baseline --jobs 1`:
+`real_output_cheaper_entry` still fails for the recorded cause (the game clears about two percent more of the final good than
+its twin, short of the factor; demand is inelastic); `real_output_baseline` still fails on the share of goods far from their
+baseline (the MEASURE line), the unsettled spin-up (473); the `real_output` per-head check now passes. No new cause.
+
 ## Slow topics that pass on origin/main and fail on pm-settling-speed-and-walls (integration bisect)
 
 Bisected on the first-parent merges, one topic list per commit (`python3 -m sim.tests --slow --only <topics> --jobs 1`).
