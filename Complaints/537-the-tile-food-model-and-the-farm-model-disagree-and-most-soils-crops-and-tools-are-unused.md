@@ -86,14 +86,42 @@ Within the farm model:
   0.15 to 0.25 of the crop energy, because crops now follow the farm model's yield and two-field share; the two rainforest tests
   now read `crop_site`, which does not depend on seed). Review these.
 
+- Stage 3 (the agent economy): `tile_costs.tiles_from_map(world_map, tile_ids, open_field_cropped_share)` builds each `TileSpec` from
+  geography's `crop_site`: `cropped_fraction` (cropped hectares over land, zero where the ground yields nothing; was
+  `arable_fraction`, raw) and `fertility` (the yield factor of a cropped hectare; was soil only). `TileSpec.cropland_hectares` is the
+  land market's supply, the title value's land and the tenancies' land (`land_market.arable_hectares` deleted;
+  `tile_costs.tiles_from_geography`, the parsed-document path with a third reading of the land, deleted). The share comes from the
+  society's rotation in `economy_port_setup.build_setup`, as `Sim.farm_sites()` does, so the economy's cropland equals the farm
+  model's ceiling for the home tiles. Households' own plots and the shortfall hours read `tile.fertility`, so they now follow the
+  tile's climate and water too (no change to `households_own.py`).
+- Farm producers: `setup.yield_factor_by_recipe_tile` (a seam that was never filled) holds the tile's yield factor for every recipe
+  whose entry says `extracted_from: "arable land"` (pasture, forest and mines are not read through the crop yield). New entrants are
+  sited and costed on it (`location`, `entry_year`); each year `economy_port_sites.crop_yields` gives every land producer
+  weather times its tile's factor, and the hidden spin-up years apply the tile factor without weather. The opening itself is still
+  sized at each recipe's own yield (national runs are quantity over output, in `opening_runs`), so its inputs-have-suppliers
+  identity holds; the tile yield shows from the first hidden year.
+- Test: `sim/tests/test_economy_reads_tile_yield.py` (cropland equals geography's and the farm ceiling, the site yield is geography's
+  factor, a producer on a better-watered tile yields more per run, the year's yield is weather times the tile factor);
+  `test_economy_land_market.py` rent follows the yield factor. `test_economy_tile_costs`, `test_economy_market_areas` and
+  `test_economy_reads_map_through_geography` changed to read `tiles_from_map` / cropland (subject kept); `test_spin_up_measure`
+  stubs the new yield call (subject is the call order).
+- Effect on rome_100ad (probe: open the economy, then five `run_year`): wheat price at opening 0.0889 to 0.0804 (economy units),
+  farm share of worker-years at opening 0.233 to 0.190 and in year five 0.124 to 0.105, mean land rent per hectare 14.4 to 20.6 at
+  opening. CPU per year 8.7, 7.3, 6.5, 6.3, 7.7 before; 9.0, 6.6, 6.2, 6.0, 6.6 after (loaded 4-core machine). Norse: farm share 0.63 to
+  0.54, wheat price 0.0083 to 0.0045; the opening is not checked beyond the topics listed in the commit.
+- `test_opening_herds_follow_producers` "Rome's opening flock supplies its opening wool demand within a tenth" fails identically
+  before and after this change (6.91 million made against 5.94 million used); it is not from this stage.
+
 ## What is left
 
-- The agent economy's own land base: `sim/economy/land_market.py` counts `land_area * arable_fraction` (raw, no slope or forest)
-  and `TileSpec.fertility` (`sim/economy/tile_costs.py`, built in `sim/engine/economy_port_setup.py`) is soil fertility only,
-  used for households' own plots and rent. Giving `TileSpec` geography's `arable_hectares` and the crop yield factor would make
-  the economy's farms read the same land; market farm producers still get only the pooled weather as their `yield_factor`.
-- `land.py`'s rent margin (`margin_outcome_for_civilization`, `cultivable_land_for_civilization`) is a third land ladder on raw
-  arable ground.
+- `land.py`'s rent margin (`margin_outcome_for_civilization`, `cultivable_land_for_civilization`) is still a third land ladder on raw
+  arable ground. It is not dead: `sim/engine/rent_standin.py` uses it for the price solver's opening stand-in rent, and about seven
+  test topics pin it. Moving the stand-in to `territory_cropland` changes the opening prices of every civilisation, so it is its own step.
+- The land market pools arable, pasture and forest producers on one cropland supply per tile; separate supplies per land class need
+  pasture and timber hectares from geography.
+- The economy's cropped share is fixed when the setup is built, as the farm's ceiling is; a rotation change does not reach it.
+- The opening is sized at each recipe's own yield; sizing the national runs by each recipe's mean tile yield (`opening_runs`) would
+  put the tile yield in the opening itself.
 - Soils beyond the climate-class fertility (heavy clay a plough cannot open, podzol, alluvium: Complaint 543), the engine's
   single `DEFAULT_SOIL`, rice and maize adoption, a hoe toolkit, per-tile weather applied to each tile's harvest (the economy
   and farm still take one pooled draw), irrigation as a work that silts up.
