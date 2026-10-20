@@ -174,17 +174,27 @@ def _seed_durable_stocks(setup, record, view) -> None:
     expected flow wants over the good's service life. Without it the first year's demand is the whole
     stock built at once, thirty years of walls in one, and the opening staffs for a building boom that is
     never repeated."""
-    moves = []
-    for cohort, bid, price in _opening_bids(setup, record, view):
-        spec = setup.specs.get(bid.good)
-        if spec is None or spec.service_life_years <= 0.0 or bid.priority == households_store.STORE_PRIORITY:
-            continue     # a store of wealth is seeded from the deposits (opening_stores), not from need
-        quantity = bid.floor_quantity + bid.flexible_quantity     # the stock wanted, whatever the cash
-        if quantity > 0.0:
-            moves.append(GoodsMove(EDGE_PRODUCTION, cohort.agent_id, bid.good, cohort.tile, quantity,
-                                   "opening stock of a durable in use"))
-    if moves:
+    seeded = set()
+    while True:
+        # what is held changes what a cohort wants (it can turn to a substitute), so the bids are read again
+        # until every durable a cohort wants is held; a pair is seeded once, so the passes end
+        moves = []
+        fresh = set()
+        for cohort, bid, price in _opening_bids(setup, record, view):
+            spec = setup.specs.get(bid.good)
+            if spec is None or spec.service_life_years <= 0.0 or bid.priority == households_store.STORE_PRIORITY:
+                continue     # a store of wealth is seeded from the deposits (opening_stores), not from need
+            if (cohort.agent_id, bid.good) in seeded:
+                continue
+            quantity = bid.floor_quantity + bid.flexible_quantity     # the stock wanted, whatever the cash
+            if quantity > 0.0:
+                fresh.add((cohort.agent_id, bid.good))
+                moves.append(GoodsMove(EDGE_PRODUCTION, cohort.agent_id, bid.good, cohort.tile, quantity,
+                                       "opening stock of a durable in use"))
+        if not moves:
+            return
         record.book.move_many(moves)
+        seeded |= fresh
 
 
 def _final_demand(setup, record, view, replacement=0.0) -> Dict[TileId, Dict[GoodId, float]]:
