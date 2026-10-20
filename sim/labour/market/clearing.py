@@ -59,10 +59,11 @@ def trained_substitute_wage(state: MarketState, inputs: YearInputs, area: str, t
     """The most an hour of a trade can command where hands are few: what it takes to train a substitute. A
     person who trains goes the trade's training years unpaid, so the trade pays the unskilled wage times the
     training premium (premium.training_premium: the multiple that leaves a trainee indifferent) and the risk
-    of the work priced as in the reservation wage. Unlimited for the unskilled trade itself."""
+    of the work priced as in the reservation wage. A trade needing no training is capped at the unskilled
+    wage itself (hands move in at once). Unlimited only for the unskilled trade itself."""
     spec = inputs.trades[trade]
     fallback = fallback_trade(inputs.trades)
-    if trade == fallback or spec.training_years <= 0.0:
+    if trade == fallback:
         return math.inf
     unskilled = max(state.wages.get(area, {}).get(fallback) or 0.0, reservation_wage(inputs, area, 0.0))
     premium = training_premium(spec.training_years, inputs.discount_rate, inputs.career_years)
