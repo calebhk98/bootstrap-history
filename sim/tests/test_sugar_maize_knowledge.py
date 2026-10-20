@@ -29,6 +29,17 @@ def _read(*parts):
         return json.load(handle)
 
 
+_OPENED = {}
+
+
+def _rome_opening():
+    """Rome's setup and opened economy record, opened once for the topic (the opening is a few seconds of solving)."""
+    if "rome" not in _OPENED:
+        setup = build_setup(unopened_sim(civ="rome_100ad"))
+        _OPENED["rome"] = (setup, opening.open_economy(setup)[0])
+    return _OPENED["rome"]
+
+
 class SugarAndMaizeTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -48,10 +59,9 @@ class SugarAndMaizeTests(unittest.TestCase):
         self.assertIn(node, _read("data", "civilizations", "mexica_1500.json")["starting_techs"])
 
     def test_rome_opens_with_no_sugar_or_maize_and_eats_grain_first(self):
-        setup = build_setup(unopened_sim(civ="rome_100ad"))
+        setup, record = _rome_opening()
         self.assertNotIn("mat_sugar", setup.opening_prices)
         self.assertNotIn("maize_kg", setup.opening_prices)
-        record, _areas, _carriage = opening.open_economy(setup)
         needs = _read("data", "world", "needs.json")["goods"]
         units = {good: record.opening_basket.get(good, 0.0) * attributes["satisfies"]["food"]
                  for good, attributes in needs.items() if "food" in attributes["satisfies"]}
@@ -67,7 +77,7 @@ class SugarAndMaizeTests(unittest.TestCase):
         # food may exceed a third of the units. Rendered fat is not a food in the model (Complaint 532).
         needs = _read("data", "world", "needs.json")["goods"]
         self.assertEqual(needs["fat_kg"]["satisfies"], {})
-        record, _areas, _carriage = opening.open_economy(build_setup(unopened_sim(civ="rome_100ad")))
+        _setup, record = _rome_opening()
         units = {good: record.opening_basket.get(good, 0.0) * attributes["satisfies"]["food"]
                  for good, attributes in needs.items() if "food" in attributes["satisfies"]}
         total = sum(units.values())
