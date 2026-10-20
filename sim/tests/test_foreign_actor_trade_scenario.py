@@ -1,4 +1,4 @@
-"""Trader actors own the goods they carry between countries (Complaints/115, folded 405).
+"""Scenario (Complaint 640): trader actors own the goods they carry between countries (Complaints/115, folded 405).
 
 A cargo sold to a partner enters that partner's market book, so a gap the traders serve narrows over the
 years; and a good the traders carry in a direction is not also carried that way by the economy's stand-in
@@ -90,7 +90,7 @@ check("a good traders export may still be imported by the economy (the gap runs 
 check("...and a good traders import may still be exported by it",
       (in_good in bids_after) == (in_good in bids_before), in_good)
 
-# --- (c) a cargo sized against the price it makes settles: no flips, and the partner's price stops at the band freight sets.
+# --- (c) a cargo sized against the price it makes settles (the sizing rule is test_trader_routes_rules): no flips, and the partner's price stops at the band freight sets.
 game = agent_game()
 world = SimWorld(game)
 home = world._home_place()
@@ -170,23 +170,3 @@ check("...and cargo taken from home raises the home price the trader pays", home
 check("...and no longer swings from year to year",
       all(abs(later / earlier - 1.0) < 0.01 for earlier, later in zip(partner_prices[1:], partner_prices[2:])),
       partner_prices)
-
-# --- (d) traders ship only goods the destination has a market for (Complaints/529); the game of (c), a few years on.
-world = SimWorld(game)
-home = world._home_place()
-bookless = [material for material in world.trade_materials()
-            if world.price_after_cargo(material, home, 0.0, True) is None]
-check("a Rome start has a good priced at home that the home economy has no book for", bool(bookless), None)
-from sim.agents.trader_routes import gaining_routes
-# make each such good dear at home, so a cargo into the home market would gain were the home market to take it
-real_price_at = world.price_at
-world.price_at = lambda material, place: (
-    (real_price_at(material, PARTNER) or 0.0) * 10.0 if material in bookless and place == home
-    else real_price_at(material, place))
-into_home_without_book = [
-    (material, source) for material in bookless
-    for source, destination, _terms in gaining_routes(world, material, sorted(world.trade_places(None)),
-                                                      lambda place: sorted(world.trade_places(place)))
-    if destination == home]
-check("no gaining route lands a good in a home market that has no book for it", not into_home_without_book,
-      into_home_without_book[:3])

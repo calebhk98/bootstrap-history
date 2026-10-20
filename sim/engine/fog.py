@@ -57,6 +57,17 @@ def strip_self_play_advice(text: Optional[str]) -> Optional[str]:
     return " ".join(sentence for sentence in parts if not _is_self_play(sentence)).strip()
 
 
+def scrub_hidden_ids(text: str, node_ids: Any, is_visible: Callable[[str], bool]) -> str:
+    """Replace every whole node id the player cannot see; longest ids first."""
+    scrubbed = text
+    for node_id in sorted(node_ids, key=lambda candidate: -len(candidate)):
+        if not is_visible(node_id):
+            # Whole ids only; ':' joins a namespaced id, so it is not a boundary either
+            pattern = r'(?<![\w:])' + re.escape(node_id) + r'(?![\w:])'
+            scrubbed = re.sub(pattern, HIDDEN_ID_PLACEHOLDER, scrubbed)
+    return scrubbed
+
+
 class FogMixin:
     # FOG IS A RATCHET: revealed knowledge never shrinks. `revealed` is stored
     # on Household (sim/agents/household.py) as a ratcheting property;
@@ -224,16 +235,7 @@ class FogMixin:
         """Strip node ids the player has not discovered out of a message."""
         if not text or not self.state._fog:
             return text
-        scrubbed = text
-        # Sort by length descending to replace longer ids first, avoiding
-        # corruption when one id is a prefix of another.
-        sorted_ids = sorted(self.nodes, key=lambda node_id: -len(node_id))
-        for node_id in sorted_ids:
-            if not self.is_visible(node_id):
-                # Whole ids only; ':' joins a namespaced id, so it is not a boundary either
-                pattern = r'(?<![\w:])' + re.escape(node_id) + r'(?![\w:])'
-                scrubbed = re.sub(pattern, HIDDEN_ID_PLACEHOLDER, scrubbed)
-        return scrubbed
+        return scrub_hidden_ids(text, self.nodes, self.is_visible)
 
     def fog_summary(self, node_id: str) -> str:
         """One sentence. Deliberately not the whole note, and never the unlocks."""
