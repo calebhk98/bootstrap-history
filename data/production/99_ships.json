@@ -22,7 +22,15 @@
       "yield_basis": "MASS: Rudan et al. 2024, Heritage 7, 6712-6728, doi:10.3390/heritage7120310, section 2 (https://pdfs.semanticscholar.org/f049/335ac58c23206e2cba18a0e74431f425ee8d.pdf), opened: the Kyrenia reconstruction uses a calculated 9 t lightship, not its laden displacement. This is a model estimate, not a surviving ancient bill. INPUTS: Katzev and Katzev, INA Newsletter 13(3), 1986, pp. 6-10 (https://nauticalarch.org/wp-content/uploads/2015/12/INAQ1986-13-3.pdf), opened, documents pine hull, copper spikes, pitch coating and rigged square sail. Estimated mass allocation: 14 m3 retained timber at the existing timber recipe density of 600 kg/m3 gives 8400 kg; tar, cordage, sailcloth and copper add 600 kg. Purchasing 18 m3 allows 4 m3 for shaping offcuts. Tar stands for the reported pitch mixture. These allocations and labour are TEMPORARY HEURISTICS, confidence D, not measured excavation quantities: four shipwrights working 250 eight-hour days give 8000 skilled hours, with one helper giving 2000. Retire these estimates when complaint 629 carrier-capital recipes have measured scantlings, offcuts and construction work logs.",
       "conf": "D",
       "requires_node": "sea_mortise_tenon",
-      "capital_asset": true
+      "capital_asset": true,
+      "carrier_use": {
+        "serves": {
+          "model": "sailing"
+        },
+        "days_per_year": 150.0,
+        "payload_tonnes": 25.0,
+        "payload_basis": "Kyrenia ship cargo about 25 tonnes (Katzev and Katzev, INA Newsletter 13(3), 1986; recalled, not reopened for this figure), confidence D. Days: geography's SAILING_DAYS_PER_YEAR."
+      }
     },
     "warship": {
       "outputs": {

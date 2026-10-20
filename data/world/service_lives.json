@@ -75,6 +75,31 @@
       "years": 20,
       "confidence": "C",
       "source": "D. H. Kennedy, Cable Reinforcement of the Athenian Trireme, Mariners Mirror 62 (1976), doi:10.1080/00253359.1976.10658957: about twenty years, mostly laid up. The publisher indexed extract was checked; full text was inaccessible. This is the reported approximate service life, not a guarantee under continuous service. Coates, Trireme Life Span and Leakage (2012), identifies leakage and deformation as physical limits; full chapter recalled, not reopened. Replacement wear includes refits until maintenance is separated (complaint 629)."
+    },
+    "ox": {
+      "years": 5,
+      "confidence": "C",
+      "source": "Langdon (Horses, Oxen and Technological Innovation, 1986) via Medievalists.net, https://www.medievalists.net/2023/02/horse-ox-medieval-times/ (search summary read, book recalled): medieval plough oxen and horses lived a little over five years in work. A working life, not an age at death; the butchered animal's byproducts are the herd recipes' business, not carriage's."
+    },
+    "mule": {
+      "years": 10,
+      "confidence": "D",
+      "source": "Estimate: Langdon puts the medieval cart horse at about seven working years (see ox); mules are taken as longer lived in work than horses and oxen. Recalled, no source opened for the mule."
+    },
+    "cart": {
+      "years": 10,
+      "confidence": "D",
+      "source": "Estimate of the years before a wooden cart's frame is replaced, wheel and axle repairs folded into replacement wear until a maintenance model exists (complaint 629). Geography's CART_SERVICE_LIFE_KM is a different, unsourced heuristic."
+    },
+    "pack_saddle": {
+      "years": 8,
+      "confidence": "D",
+      "source": "Estimate for a leather-and-wood pack rig in regular use, repairs folded in. Geography's PACK_SADDLE_SERVICE_LIFE_KM is an unsourced placeholder."
+    },
+    "river_barge": {
+      "years": 20,
+      "confidence": "D",
+      "source": "Estimate, shorter than the seagoing merchant ship's 30 years (a river barge grounds and is hauled by rope); repairs folded in. Geography's BARGE_SERVICE_LIFE_KM is an unsourced placeholder."
     }
   }
 }
