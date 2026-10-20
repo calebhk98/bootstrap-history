@@ -1,6 +1,6 @@
 # A player cannot play as a country: a seat is a household and every state is an NPC with no commands
 
-**Status:** open - split into 594, 595, 596 (closes when they do)
+**Status:** closed - every child (594, 595, 596) is closed
 
 An alt-history group wants to run worlds where each player is a country (several at once), and fakes it
 today by treating the founder as the state. The engine cannot host that:
