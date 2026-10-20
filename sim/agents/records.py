@@ -105,6 +105,12 @@ class ActorRecord:
 	# a state's goods it will not sell abroad (its monopolies, set at the start by its country's data), and
 	# the parties it has shut its markets to: party id -> the first year they are open to them again
 	state_monopolies: Set[str] = field(default_factory=set)
+	# entries a state runs a plant of besides its monopolies; what its plants took last year and made after costs;
+	# the tonnes of each commodity its standing lines draw (what its own plants keep rather than sell)
+	state_enterprises: Set[str] = field(default_factory=set)
+	enterprise_takings: float = 0.0
+	enterprise_margin: float = 0.0
+	material_need: Dict[str, float] = field(default_factory=dict)
 	closed_markets: Dict[str, int] = field(default_factory=dict)
 	# material -> units of the state's stock that smugglers have taken, which it can no longer sell
 	stock_taken: Dict[str, float] = field(default_factory=dict)

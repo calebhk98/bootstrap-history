@@ -12,9 +12,10 @@ weight (military, infrastructure, prestige, ...), through its policy.
 """
 from typing import Any, Dict, List, Tuple
 
-from . import arrears, budget, demand_answer, headcount, ledger, state_works
+from . import arrears, budget, demand_answer, headcount, ledger, state_enterprises, state_works
 from .base import Actor, RecordedActor
 from .government_coinage import CoinageMixin
+from .government_enterprises import EnterpriseMixin
 from .government_corvee import CorveeMixin
 from .government_credit import CreditRecordMixin
 from .government_granary import GranaryMixin
@@ -26,7 +27,7 @@ from .tuning_spending import ACCESSION_PROBABILITY_PER_YEAR, PUBLIC_BUILDING_LIF
 from .values import invention_gains, weighted_gain
 
 
-class Government(CorveeMixin, CreditRecordMixin, CoinageMixin, GranaryMixin, StoresMixin, SurplusMixin, RecordedActor):
+class Government(CorveeMixin, CreditRecordMixin, CoinageMixin, EnterpriseMixin, GranaryMixin, StoresMixin, SurplusMixin, RecordedActor):
 	kind = "government"
 	researches = True
 
@@ -37,7 +38,7 @@ class Government(CorveeMixin, CreditRecordMixin, CoinageMixin, GranaryMixin, Sto
 
 	# ---- what it borrows against -------------------------------------------
 	def credit_earning(self, world: Any) -> float:
-		return world.state_revenue()
+		return world.state_revenue() + max(0.0, self.record.enterprise_margin)
 
 	def credit_ceiling(self, world: Any) -> float:
 		"""A state borrows only once it holds a technology declaring the `state_credit` mechanic."""
@@ -116,6 +117,7 @@ class Government(CorveeMixin, CreditRecordMixin, CoinageMixin, GranaryMixin, Sto
 		self.serve_conscripts(conscripts, world)
 		standing = budget.standing_lines(world, soldiers, conscripts) + budget.concession_lines(world.group_claims())
 		standing = self.staff_works_by_corvee(standing, world)
+		self.record.material_need = state_enterprises.needs_of(standing)
 		lines = self.draw_stores(standing, world)
 		self.keep_granary(world)
 		share = budget.funded_share(sum(line.money for line in lines), self.money + self.credit_ceiling(world))
@@ -175,6 +177,7 @@ class Government(CorveeMixin, CreditRecordMixin, CoinageMixin, GranaryMixin, Sto
 		self.decide_debasement(world)
 		self.pay_patron(share, world)
 		self.act(world)
+		self.run_enterprises(world)
 		self.build_works_by_corvee(world)
 		self.build_works(lines, world)
 		self.employ_standing(lines, share, world)
