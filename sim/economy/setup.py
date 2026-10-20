@@ -56,6 +56,7 @@ class EconomySetup:
     capital_tile: TileId
     port_tile: TileId
     unskilled_trade: TradeId = "labourer"
+    import_duty_share: Dict[GoodId, float] = field(default_factory=dict)   # per good, the share of its landed price that is the state's tariff; the port sets it as the year's imports are offered
     carriage_rates_balanced: Dict[str, float] = field(default_factory=dict)   # likewise with the opposite flow filling every return; none: same
     carriage_crew: Dict[str, Tuple[str, float]] = field(default_factory=dict)   # land mode id -> (crew trade, crew hours per tonne-km), geography's; none: carriage hires no hours
     carriage_wage: float = 0.0     # the wage an hour (unskilled trade) the land carriage rates were priced at; 0: they follow no wage

@@ -688,6 +688,8 @@ it, and it is saved with the game. Other mechanisms record into it with `relatio
     {"cmd":"relations","with":"han"}                      one pair: "ours", and "theirs" (the other side's stance,
                                                           treaty, tariff, embargo and history; never its note or trust)
     {"cmd":"set_relation","with":"han","stance":"friendly"}   also "note":"...", or "term":"<name>","value":<json>
+    {"cmd":"set_relation","with":"han","term":"tariff","value":0.1}   your state's tariff on goods from that country (a share of their value at the source); value 0 removes it
+    {"cmd":"set_relation","with":"han","embargo":"on"}   stops goods from that country crossing into your markets; "off" lifts it
                                                           (a null value removes the term)
 
 A seat sets only its own country's side: `"side"` naming another country is refused with `cause`

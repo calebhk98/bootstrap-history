@@ -29,6 +29,7 @@ class YearLedger:
     labour_results: List[LabourResult] = field(default_factory=list)
     unpaid: Dict[AgentId, float] = field(default_factory=dict)
     imports_paid: Dict[Tuple[AgentId, GoodId], float] = field(default_factory=dict)       # money paid to foreign partners
+    border_imports_paid: Dict[Tuple[AgentId, GoodId], float] = field(default_factory=dict)   # of that, paid straight to a foreign edge (tariffs ride on it)
     exports_received: Dict[Tuple[AgentId, GoodId], float] = field(default_factory=dict)   # money received from them
     plant_spend: Dict[AgentId, float] = field(default_factory=dict)    # paid for plant goods, a build not a running cost
     plant_worn: Dict[AgentId, float] = field(default_factory=dict)     # runs of capacity that wore out this year
@@ -71,6 +72,7 @@ class YearLedger:
         if is_external_edge(transfer.payee) and not is_external_edge(transfer.payer):
             key = (transfer.payer, good)
             self.imports_paid[key] = self.imports_paid.get(key, 0.0) + transfer.amount
+            self.border_imports_paid[key] = self.border_imports_paid.get(key, 0.0) + transfer.amount
         elif is_external_edge(transfer.payer) and not is_external_edge(transfer.payee):
             key = (transfer.payee, good)
             self.exports_received[key] = self.exports_received.get(key, 0.0) + transfer.amount

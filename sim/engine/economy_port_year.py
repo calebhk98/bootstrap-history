@@ -17,7 +17,7 @@ from sim.economy.api import (EDGE_EXTERNAL, EDGE_LEGACY, AgentOrders, Economy, G
                              YearInputs, expected_output_prices, external_orders, live_input_prices, live_wages,
                              trade_premium, variable_cost_per_run)
 
-from . import economy_port_actors, economy_port_cargo, economy_port_late, economy_port_sites, material_capacity, solve_cache
+from . import trade_duty, economy_port_actors, economy_port_cargo, economy_port_late, economy_port_sites, material_capacity, solve_cache
 from .economy_port_key import spin_up_key
 from .economy_port_coin import priced_at_the_margin
 from .economy_port_setup import build_setup, opening_values
@@ -379,6 +379,8 @@ class AgentEconomy(TilePricesMixin):
         volumes = economy_api.traded_volumes(economy)
         opening = economy_api.opening_quantities(economy)
         landed, export_prices, available, wanted = {}, {}, {}, {}
+        duty_share = economy.setup.import_duty_share
+        duty_share.clear()
         for good in economy.area_map.goods():
             market = max(volumes.get(good, 0.0), opening.get(good, 0.0))
             if market <= 0.0:
@@ -389,9 +391,11 @@ class AgentEconomy(TilePricesMixin):
                 if (price is not None and price > 0.0 and price < landed.get(good, float("inf"))
                         and not sim.actors_carry(good, False, partner)):
                     landed[good] = price
+                    duty_share[good] = 1.0 - offers_api.landed_price(good, partner, route, with_duty=False) / price
                 partner_price = sim.partner_price_per_unit(partner, good)
-                if route is not None and partner_price and not sim.actors_carry(good, True, partner):
-                    net = partner_price - route.cost_per_tonne * tonnes_per_unit(good)
+                tariff, embargoed = trade_duty.export_terms(sim, partner)
+                if route is not None and partner_price and not embargoed and not sim.actors_carry(good, True, partner):
+                    net = partner_price * (1.0 - tariff) - route.cost_per_tonne * tonnes_per_unit(good)
                     if net > export_prices.get(good, 0.0):
                         export_prices[good] = net
             available[good] = wanted[good] = market * FOREIGN_TRADE_SHARE

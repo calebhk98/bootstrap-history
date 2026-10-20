@@ -15,6 +15,7 @@ import math
 
 from sim.world import trader_response
 
+from . import trade_duty
 from .goods_market_imports import HOME_SELLER, GoodsImports
 
 
@@ -41,10 +42,11 @@ class GoodsOffers(GoodsImports):
     def _route_from(self, civilization_id):
         return self._sim._foreign_route(self._sim.partner_civ(civilization_id))
 
-    def landed_price(self, material, civilization_id, route=None):
+    def landed_price(self, material, civilization_id, route=None, with_duty=True):
         """Money per unit of a material delivered from a trading partner: its cost to the partner,
-        the merchants' costs as a share of that, and the freight. None when the partner does not
-        make it, it may not cross a border, or no route joins the two."""
+        the merchants' costs as a share of that, the freight and the home state's tariff on the partner's
+        goods (`with_duty` False leaves it out). None when the partner does not make it, it may not cross
+        a border, no route joins the two, or the home state embargoes the partner."""
         from .foreign_economies import not_traded_materials
         from .material_units import tonnes_per_unit
         facts = self._sim._foreign_economy_facts(civilization_id)
@@ -55,8 +57,11 @@ class GoodsOffers(GoodsImports):
         partner_price = facts["prices_in_home_money"].get(material)
         if not partner_price:
             return None
+        tariff, embargoed = trade_duty.import_terms(self._sim, civilization_id)
+        if embargoed:
+            return None
         cost = partner_price * self.partner_price_level(civilization_id)
-        return (cost * (1.0 + self.merchants_cost_share(route, material, civilization_id))
+        return (cost * (1.0 + self.merchants_cost_share(route, material, civilization_id) + (tariff if with_duty else 0.0))
                 + (route.cost_per_tonne + self._sim._agent_cost_per_tonne(civilization_id, route))
                 * tonnes_per_unit(material))
 
@@ -94,7 +99,8 @@ class GoodsOffers(GoodsImports):
         partners = tuple(sim.foreign_economies())
         key = (partners, len(sim.state.projects.done), sim.state.scenario.year,
                round(sim.market_rate(), RATE_DECIMALS),
-               tuple(self.partner_price_level(partner) for partner in partners))
+               tuple(self.partner_price_level(partner) for partner in partners),
+               trade_duty.signature(sim, partners))
         cache_name = "_goods_offers_cost_cache" if at_cost else "_goods_offers_cache"
         cache = getattr(sim.household, cache_name, None)
         if cache is not None and cache[0] is prices and cache[1] == key:

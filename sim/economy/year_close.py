@@ -7,7 +7,7 @@ from sim.geography.api import flow_ledger
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
 from . import (merchants_transit, carriage_hours, currency, expansion_price, households, inventory, merchants, metal_stock, ownership, producer_exit,
-               producers, producers_close, state_budget, taxes)
+               producers, producers_close, state_budget, tariffs, taxes)
 from .households_cohort import renewed
 from .market_memory import market_key
 from .national_prices import national_prices
@@ -87,12 +87,16 @@ def tax_facts(setup, record, view, ledger: YearLedger) -> YearFacts:
 def money_taxes(setup, record, view, ledger: YearLedger) -> None:
     forms = [form for form in setup.tax_forms if not form.paid_in]
     received = 0.0
+    duty = tariffs.duty_transfers(setup.import_duty_share, ledger.border_imports_paid, setup.state_agent, setup.currency_id)
+    if duty:
+        record.book.transfer_many(duty)
+        received += math.fsum(transfer.amount for transfer in duty)
     if forms:
         facts = tax_facts(setup, record, view, ledger)
         transfers, _moves, _assessments = taxes.assess(forms, facts, setup.state_agent, {}, setup.state_capacity)
         record.book.transfer_many(transfers)
         ledger.note_postings(transfers)
-        received = math.fsum(transfer.amount for transfer in transfers)
+        received += math.fsum(transfer.amount for transfer in transfers)
     state_budget.close_year(setup, record, ledger, received)
 
 

@@ -65,3 +65,16 @@ def partners_with_records(stores, country):
     """Countries `country` has a recorded side toward, sorted."""
     prefix = country + "|"
     return sorted(key[len(prefix):] for key, _value in stores.view(STORE).items() if key.startswith(prefix))
+
+
+def tariff_on(stores, country, other):
+    """The share of a good's value `country` charges on goods crossing from `other` into its markets (0 when none).
+    Read straight from the record: prices ask this on every quote."""
+    saved = stores.view(STORE).get((country, other))
+    return float(saved.get("tariff") or 0.0) if saved else 0.0
+
+
+def embargoes(stores, country, other):
+    """Whether `country` stops goods crossing from `other` into its markets."""
+    saved = stores.view(STORE).get((country, other))
+    return bool(saved.get("embargo")) if saved else False
