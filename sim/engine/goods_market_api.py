@@ -80,6 +80,10 @@ class GoodsMarket(GoodsPricing, GoodsOffers):
             party = self._seat_parties[seat_id] = SeatParty(self._sim, seat_id)
         return party
 
+    def forget_seat_party(self, seat_id):
+        """A seat that left the game takes its party with it."""
+        self._seat_parties.pop(seat_id, None)
+
     @property
     def acting(self):
         """The party for the seat asking now."""

@@ -6,59 +6,15 @@ QUICK_TOPIC = True
 from .harness import check
 
 from sim.agents.api import relations
-from sim.engine.mod_stores import StoreBook
-from sim.engine.seat_handover import SeatHandoverMixin, handover_refusal, move_seat_fields
-from sim.engine.state import FounderState, HouseholdState, ProjectsState, SimulationState
-from sim.engine.state_seat import FIRST_SEAT_ID, bind_seat, seat_from_template
+from sim.engine.seat_handover import handover_refusal, move_seat_fields
+from sim.engine.state_seat import seat_from_template
 from sim.refusal import cause_of
 import sim.ui.proto.dispatch  # noqa: F401  (registers every command)
 from sim.ui.proto import command_registry
 from sim.ui.proto.notes_store import add_note, all_notes, hand_over_notes
 from sim.ui.proto.seat_address import run_as_seat
 
-
-class Game(SeatHandoverMixin):
-    """Two or three seats on the real root state, with the alias rebinding the handover needs."""
-
-    def __init__(self, seat_ids):
-        first = seat_ids[0]
-        self.state = SimulationState(household=HouseholdState(capital=10.0), projects=ProjectsState(), founder=FounderState())
-        self.state.seats[first] = self.state.seats.pop(FIRST_SEAT_ID)
-        self.state.acting_seat = first
-        for seat_id in seat_ids[1:]:
-            self.state.seats[seat_id] = seat_from_template({}, 5.0, 1e9, {})
-        bind_seat(self.state, first)
-        self._seat_facades = {seat_id: None for seat_id in self.state.seats}
-        self.session_seat = None
-        self.year = 100
-        self.civ = {"id": "home"}
-
-    def _switch_seat(self, seat_id):
-        bind_seat(self.state, seat_id)
-
-    def _reset_economic_caches(self):
-        pass
-
-    @property
-    def stores(self):
-        return StoreBook(self.state.stores)
-
-    def ended_seats(self):
-        return [seat_id for seat_id, held in self.state.seats.items() if held.founder.dead_reason]
-
-    def act_as(self, seat_id):
-        import contextlib
-
-        @contextlib.contextmanager
-        def acting():
-            previous = self.state.acting_seat
-            bind_seat(self.state, seat_id)
-            try:
-                yield self
-            finally:
-                if previous in self.state.seats:
-                    bind_seat(self.state, previous)
-        return acting()
+from .seat_handover_fixture import Game
 
 
 def give(seat, techs, country, goal):
@@ -131,6 +87,12 @@ check("a seat the caller does not own is refused", refused["ok"] is False and re
       and "third" in game.state.seats, refused)
 refused = send(game, {"cmd": "handover"})
 check("no replacement named is refused", refused["ok"] is False and refused["cause"] == "no_replacement", refused)
+game.state.seats["heir"].holdings.mines.append({"material": "iron_ore"})
+refused = send(game, {"cmd": "handover", "to": "heir"})
+check("a replacement with workings of its own is refused with what it holds and nothing changes",
+      refused["ok"] is False and refused["cause"] == "replacement_not_empty" and refused["holds"] == ["holdings"]
+      and "leaver" in game.state.seats, refused)
+game.state.seats["heir"].holdings.mines.clear()
 game.session_seat = "leaver"
 reply = send(game, {"cmd": "handover", "to": "heir"})
 check("a handover answers with what moved", reply["ok"] is True and reply["from"] == "leaver" and reply["to"] == "heir"

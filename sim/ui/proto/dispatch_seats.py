@@ -75,12 +75,12 @@ def hand_over(sim, caller, from_id, to_id):
 @command("handover", shape="word", group="game", aliases=("hand_over",),
          summary="hand your seat's knowledge, holdings and notes to another seat",
          usage=["handover <seat>", '{"cmd":"handover","to":"second"}'],
-         options={"<seat>": "the replacement seat (it must already be in the game; 'join' adds one)",
+         options={"<seat>": "the replacement seat (it must already be in the game and empty; 'join' adds one)",
                   "from": "the seat to hand over; only your own is allowed (default: yours)"},
          description="The replacement takes the known techniques, built works, holdings, cash, institutions, goal, "
                      "country and notes of your seat, and your seat leaves the game. Records kept by country, such "
-                     "as relations, stay with that country. Refusals carry a cause: unknown_seat, same_seat, "
-                     "not_your_seat.")
+                     "as relations, stay with that country. Your debts pass with the seat. Refusals carry a cause: "
+                     "unknown_seat, same_seat, not_your_seat, replacement_not_empty.")
 def _cmd_handover(sim, nodes, cmd, ended):
     to_id = cmd.get("to") or cmd.get("seat") or cmd.get("what")
     if not isinstance(to_id, str) or not to_id.strip():
