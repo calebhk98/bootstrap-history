@@ -186,3 +186,34 @@ Left failing on purpose, with causes (`python3 -m sim.tests --slow --only real_o
   after historical plagues), so the owner decides what the proof should be; the expected direction is not changed here.
 - `real_output_baseline`, goods far from their baseline: the unsettled spin-up (473) moves goods beyond the bound
   stated in the test; measure with the topic's MEASURE line.
+
+## Slow topics that pass on origin/main and fail on pm-settling-speed-and-walls (integration bisect)
+
+Bisected on the first-parent merges, one topic list per commit (`python3 -m sim.tests --slow --only <topics> --jobs 1`).
+
+- Fixed, engine: the 589 merge (7d98a10a) gave `Household` a `record` property (its `HouseholdState`) that shadowed the
+  `ActorRecord` convention; `charge_coin_carriage` read `record.country` on the founder paying a concern levy, so
+  every step with a levy failed (`complaint_584_forecast_takings_cash_book`, `actor_treasury`). The shared borrowing rule now reads
+  `arrears_book`. Regression check in complaint_584.
+- Fixed, tests: `complaint_181_save_cost` and `step_interrupts_and_alerts` called `_play_run_one_command` without the
+  `SavePolicy` 497 added. `complaint_181_save_cost` counts every `os.replace`, so a cache write inside a shared
+  process can make its "a step rewrites the save" read 3; it passes alone.
+- Real dynamic, 612-614 (075f790b): the generic `artisan` trade is now a remnant. Its national pool fell
+  (`people_who_exist("artisan")` on rome_100ad: about 40158 before, about 181 after; measure with
+  `labour.people_who_exist`) because the economy's artisan hours moved to the new trades. `complaint_585_staff_pay_retention`
+  and `actor_firms_compete` staffed the generic trade: fixtures moved to `labourer` (their subject is not the artisan pool).
+  Still red for the same cause: `firm_borrows_to_enter`, `firm_expansion`, `firm_costs_scale`: `concern_staff`
+  (sim/engine/agents_port.py) always asks for `artisan` craftsmen, so a firm of about 32 artisans against a pool of
+  about 181 pays a scarcity wage (wages roughly triple after year one in `firm_borrows_to_enter`'s setup) and the
+  opening firms close. `firm_entry_default_game`: the iron bar's year price at the opening fell (0.31 against 2.26 per kg),
+  so `finery_puddling` has zero market factor (pig iron bought costs more than bars sold) and no entrant sees a margin;
+  it fails from 609-611 (1c0e7ea2). The fix is a design call: firm craftsmen drawn from the trades the concern's recipes name.
+- Real dynamic, 589 (7d98a10a): `failure_and_bounty_money` "a year's late spending cannot leave capital past the credit
+  limit". `enforce_credit_limit` no longer clamps or settles on the spot; spending past the ceiling becomes arrears and
+  defaults after `ARREARS_YEARS_BEFORE_DEFAULT` years. The 438 invariant is superseded; left failing for the owner of 589
+  to restate (what bounds a year's late spending now).
+- Open engine defect, 609-611: `soldiers_leave_production`. The registry flags `labourer` as the fallback, but
+  `labour_allocation._non_farm_shares` excludes the fallback's own people and `society_hours` gives it no hours, so
+  its tightness factor saturates (1.148) with or without an army. The test now reads the world's flagged fallback
+  (`trade_data.fallback_trade_of`) and fails on the real cause: the hours left after farm and specialists should go to
+  the fallback trade in `sim/labour/labour_allocation.py` (`society_hours`).

@@ -8,6 +8,10 @@ game.state.projects.done.add(NODE_ID)
 game._done_changed()
 game.labour.hire("artisan", 3)
 
+# the founder's household is a payer in the coin-carriage hook, which reads `record.country`: its arrears book must not be its `record`
+check("the founder's household keeps its arrears in the household finances, not in a `record`",
+      getattr(game.household, "record", None) is None or hasattr(game.household.record, "country"), None)
+
 
 def ask(**command):
     return S._agent_dispatch(game, NODES, command)

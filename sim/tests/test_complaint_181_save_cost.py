@@ -6,6 +6,7 @@ import json.encoder as _json_encoder
 import sim.engine.saveload as _saveload
 from sim.engine.saveload import save_state, load_state
 from sim.ui.cli_interactive import _play_run_one_command
+from sim.ui.save_policy import SavePolicy
 
 
 def _running_venture_sim():
@@ -54,7 +55,7 @@ class _CountWrites:
 def _run(test_sim, command, path):
     import io, contextlib
     with contextlib.redirect_stdout(io.StringIO()):
-        _play_run_one_command(test_sim, NODES, command, path)
+        _play_run_one_command(test_sim, NODES, command, path, SavePolicy(path))
 
 
 # --- a refusal that changes nothing does not rewrite the save ---------------

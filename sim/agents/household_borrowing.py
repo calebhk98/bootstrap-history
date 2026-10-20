@@ -7,7 +7,7 @@ class FounderBorrowing:
 	"""Mixed into `Household`."""
 
 	@property
-	def record(self) -> Any:
+	def arrears_book(self) -> Any:
 		"""Where the arrears are kept: the household's finances."""
 		return self._state.household  # type: ignore[attr-defined]
 
@@ -20,5 +20,5 @@ class FounderBorrowing:
 	def default(self, world: Any) -> None:
 		"""The founder answers the lenders' default by stopping what it cannot fund, then settling or entering service."""
 		world.founder_defaults()
-		self.record.interest_arrears = 0.0
-		self.record.arrears_years = 0
+		self.arrears_book.interest_arrears = 0.0
+		self.arrears_book.arrears_years = 0

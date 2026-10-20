@@ -61,7 +61,7 @@ check("farm hours still meet the farm need where the hours allow", have >= min(n
 
 run_years(unarmed, 2)
 run_years(armed, 2)
-fallback = trade_data.fallback_trade(armed.labour.wage_schedule().training_years, armed.labour._world.trade_family)
+fallback = trade_data.fallback_trade_of(armed.labour._world, armed.labour.wage_schedule().training_years)
 factor_armed = armed.labour.wage_schedule().tightness_factors.get(fallback, 1.0)
 factor_unarmed = unarmed.labour.wage_schedule().tightness_factors.get(fallback, 1.0)
 check("with the army out of production, the fallback trade's tightness factor ends higher",

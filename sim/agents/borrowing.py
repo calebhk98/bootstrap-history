@@ -76,6 +76,11 @@ class Borrower:
 			used = debt / ceiling if ceiling > 0.0 else 1.0
 		return capital_market.borrower_rate(world.market_rate(), self.standing_discount(world), used)
 
+	@property
+	def arrears_book(self) -> Any:
+		"""Where the arrears are kept: the actor's record unless it names another."""
+		return self.record  # type: ignore[attr-defined]
+
 	def pay_interest(self, world: Any) -> float:
 		"""The year's interest on the debt; the amount owed. See `settle_interest`."""
 		return self.settle_interest(world)[0]
@@ -85,7 +90,7 @@ class Borrower:
 		debt is under the ceiling; the rest becomes arrears, paid first from any cash the actor later holds.
 		Arrears that last too long are a default. The one rule for every borrower: a firm, a state, a trader,
 		the founder's household."""
-		record = self.record  # type: ignore[attr-defined]
+		record = self.arrears_book
 		self.pay_arrears_from_purse()
 		debt = self.debt()
 		owed = debt * self.borrowing_rate(world) if debt > 0.0 else 0.0
@@ -100,7 +105,7 @@ class Borrower:
 
 	def pay_arrears_from_purse(self) -> None:
 		"""Interest left unpaid in earlier years is paid from whatever cash the actor now holds."""
-		record = self.record  # type: ignore[attr-defined]
+		record = self.arrears_book
 		paid = min(record.interest_arrears, max(0.0, self.money))  # type: ignore[attr-defined]
 		if paid > DEBT_FLOOR:
 			self.purses.pay_arrears(self.account_id, paid)  # type: ignore[attr-defined]
@@ -119,5 +124,5 @@ class Borrower:
 		"""The lenders write the claim off, the pool bearing the loss; an actor that can close overrides this to
 		close as well."""
 		self.write_off_debt()
-		self.record.interest_arrears = 0.0  # type: ignore[attr-defined]
-		self.record.arrears_years = 0  # type: ignore[attr-defined]
+		self.arrears_book.interest_arrears = 0.0
+		self.arrears_book.arrears_years = 0
