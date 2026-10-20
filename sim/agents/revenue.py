@@ -2,15 +2,15 @@
 
     revenue of a form = rate of the form * base the form is assessed on
 
-A form is paid in coin, or in kind when it names the good (`paid_in`): a share of the harvest is taken as
-grain, which goes to the state's stores and is used or sold through the goods market (government.py).
+A form is paid in coin, or in kind when it names the good (`paid_in`): a share of what the land yielded of that
+good (grain, wine, oil, cloth, livestock: any good the country's producers make) is taken, which goes to the state's stores and is used or sold through the goods market (government.py).
 A form on land may be limited to the provinces it is levied in (`tiles`, or `except_tiles` of those held), so
 one state can take a share of the crop in some and a share of assessed property in others.
 """
 from dataclasses import dataclass
 from typing import Any, FrozenSet, List, Optional, Tuple
 
-from .revenue_bases import BASES, TILE_BASES
+from .revenue_bases import BASES, GOOD_BASES, TILE_BASES
 
 
 @dataclass(frozen=True)
@@ -46,9 +46,13 @@ def assess(world: Any) -> List[Assessment]:
 	assessments = []
 	for declared in world.revenue_forms():
 		tiles = form_tiles(declared, world)
-		base = BASES[declared["basis"]](world) if tiles is None else BASES[declared["basis"]](world, tiles)
-		rate = float(declared["rate"])
 		material = declared.get("paid_in", "")
+		measure = BASES[declared["basis"]]
+		if declared["basis"] in GOOD_BASES and material:
+			base = measure(world, tiles, material)
+		else:
+			base = measure(world) if tiles is None else measure(world, tiles)
+		rate = float(declared["rate"])
 		if material and material != base.material:
 			raise ValueError("form %r is paid in %r but its basis %r yields %r"
 							 % (declared["form"], material, declared["basis"], base.material))

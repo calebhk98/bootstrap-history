@@ -105,6 +105,10 @@ class World(Protocol):
 	def harvest_tonnes(self) -> float:
 		...
 
+	def output_tonnes(self, material: str, tiles: Optional[FrozenSet[str]] = None) -> float:
+		"""Tonnes of a material the country's producers made last year (only on `tiles` when given)."""
+		...
+
 	def material_price(self, material: str) -> float:
 		"""Money for one tonne of a material at the price the market quotes."""
 		...

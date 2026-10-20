@@ -729,6 +729,12 @@ class AgentEconomy(TilePricesMixin):
         coin = self._economy.setup.coin_per_unit
         return {tile: rent * coin for tile, rent in economy_api.land_rent_paid_by_tile(self.economy()).items()}
 
+    def output_tonnes_by_tile(self):
+        """Tonnes of each good the producers made on each tile last year."""
+        from .material_units import tonnes_per_unit
+        return {tile: {good: units * tonnes_per_unit(good) for good, units in row.items()}
+                for tile, row in economy_api.output_by_tile(self.economy()).items()}
+
     def rate(self):
         return self.answers()[2]
 

@@ -406,6 +406,12 @@ class Economy:
         output: Dict[str, float] = {}
         for (_agent, good), quantity in ledger.output.items():
             output[good] = output.get(good, 0.0) + quantity
+        record.output_by_tile = {}
+        for (agent, good), quantity in sorted(ledger.output.items()):
+            producer = record.producers.get(agent)
+            if producer is not None and quantity > 0.0:
+                row = record.output_by_tile.setdefault(producer.tile, {})
+                row[good] = row.get(good, 0.0) + quantity
         prices = national_prices(record)
         return YearOutcome(year=record.memory.year, basket_price_level=level, prices=prices,
                            wages=mean_wages, rate=record.memory.rates.get(money, 0.0),

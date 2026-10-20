@@ -43,7 +43,7 @@ __all__ = [
     "external_trade_net", "external_trade_volume", "account_balance", "account_holdings",
     "credit_room", "economy_from_record", "blank_economy", "export_record", "economy_book", "economy_contracts", "finish_spin_up", "note_spin_up_result", "spin_up_state", "money_year_figures","shown_prices_of",
     "settle_agent_takings", "admit_recipes", "move_goods", "post_transfers", "cohort_incomes", "cohort_land_rents", "land_rent_per_hectare",
-    "land_rent_paid_by_tile", "land_rent_at_tile", "country_figures", "idle_hours_by_trade",
+    "land_rent_paid_by_tile", "land_rent_at_tile", "country_figures", "idle_hours_by_trade", "output_by_tile",
 ]
 
 _KEY_SEPARATOR = "|"
@@ -115,6 +115,11 @@ def land_rent_at_tile(economy, tile):
     land was let where none was let on this tile (zero where none was let anywhere)."""
     rent = economy.record.land_rent.get(tile, 0.0)
     return rent if rent > 0.0 else land_rent_per_hectare(economy)
+
+
+def output_by_tile(economy):
+    """What the producers made last year, tile -> good -> units, as a sorted copy."""
+    return {tile: dict(sorted(row.items())) for tile, row in sorted(economy.record.output_by_tile.items())}
 
 
 def land_rent_paid_by_tile(economy):

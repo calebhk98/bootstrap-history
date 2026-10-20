@@ -20,9 +20,14 @@ class Base:
 	payers: Tuple[Tuple[Any, float], ...] = ()  # (actor, income) where the base is held by actors the state taxes
 
 
-def harvest(world: Any, tiles: Optional[FrozenSet[str]] = None) -> Base:
-	"""The grain harvested. On named tiles, their share of it: TEMPORARY HEURISTIC (CLAUDE.md 4.4), the harvest
-	is spread over the state's tiles by arable hectares, as no harvest is recorded by tile."""
+def harvest(world: Any, tiles: Optional[FrozenSet[str]] = None, material: str = HARVEST_MATERIAL) -> Base:
+	"""What the land yielded of the good a form is paid in. Grain is the farm's harvest (on named tiles, their
+	share of it: TEMPORARY HEURISTIC (CLAUDE.md 4.4), spread over the state's tiles by arable hectares, as no
+	harvest is recorded by tile, retire: Complaint 622); any other good is what the country's producers made of
+	it last year, tile by tile."""
+	if material != HARVEST_MATERIAL:
+		tonnes = world.output_tonnes(material, tiles)
+		return Base(tonnes * world.material_price(material), tonnes, material)
 	tonnes = world.harvest_tonnes() * (1.0 if tiles is None else world.arable_share(tiles))
 	return Base(tonnes * world.material_price(HARVEST_MATERIAL), tonnes, HARVEST_MATERIAL)
 
@@ -93,3 +98,6 @@ BASES: Dict[str, Callable[[Any], Base]] = {
 
 # The bases that can be limited to named tiles (a form's `tiles` / `except_tiles`); the rest are national.
 TILE_BASES = frozenset({"harvest", "land_rent", "land_value"})
+
+# The bases that read the good a form is paid in (`paid_in`), so one basis serves every good.
+GOOD_BASES = frozenset({"harvest"})
