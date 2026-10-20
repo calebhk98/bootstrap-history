@@ -9,6 +9,7 @@ import unittest
 
 from sim.engine import data
 from sim.engine.food_supply import FoodSupplyMixin
+from sim.engine.soil_nitrogen_year import SoilNitrogenMixin
 from sim.engine.state import EconomyState
 from sim.labour import api as labour_api
 from sim.tests.test_geography_food_gaps import STEPPE, mini_map
@@ -53,7 +54,7 @@ def society(hours, stock=None):
                                  world_map=world_map, labour=types.SimpleNamespace(farming_technique=lambda: DEFAULT_TECHNIQUE))
 
 
-class Society(FoodSupplyMixin):
+class Society(FoodSupplyMixin, SoilNitrogenMixin):
     def __init__(self, hours, stock=None):
         self.__dict__.update(vars(society(hours, stock)))
 
