@@ -289,3 +289,32 @@ Measured on the integration branch with `python3 -m sim.tests --slow --only <top
   moved. The trade split left the unskilled `labourer` pool as the poor and the bonded and put the farm stratum on
   `farmer` (whose quoted wage is four times the labourer's), and coal's hewing and haulage hours are labourer and
   miner hours. Open: why the economy's coal price at the opening is two to three times its solved price.
+- Farmer wage (the thread of `opening_floor_and_thin_trades`, `firm_entry_default_game` and the coal bill): the
+  labour core capped a trade's quote at the unskilled wage times its training premium
+  (`clearing.trained_substitute_wage`) but returned no cap for any trade with zero training years, not only the
+  fallback. After 609 `farmer` has none, so its few market hands (the opening staffs a trade only to the hours
+  its producers need; households' own plots hold the rest) quoted several times the labourer's wage. Fixed in the
+  core: only the fallback trade is uncapped (regression: `test_labour_core_substitute_wage.py`);
+  `opening_floor_and_thin_trades` passes again (`python3 -m sim.tests --slow --only opening_floor_and_thin_trades`).
+  The farmer now quotes a little above the labourer (the reservation and risk terms).
+  Not fixed, a lead from the 556 branch: the core's headcount by trade and `national_trade_population` (the
+  founder-facing market's supply estimate) disagree about where the farm people are; unifying them is 556's scope.
+- `firm_entry_default_game`: bisected to 1c0e7ea2, but the cause is not the farmer wage. At the opening the
+  market price of iron bar against its solved cost fell (about 2.3 times the solved cost before the merge, under
+  0.9 after the merge's data: all long-run prices rose by about 15 percent with the trade split, the thin
+  markets did not follow), which takes `finery_puddling`'s market factor to nothing, so no entrant sees takings.
+  The fixture's concern is now `lead_metallurgy`, which still earns at the opening and keeps the subject (an
+  entrant copies a published concern the founder runs). Open: why the opening iron-bar and coal prices are
+  scarcity-priced by an order of magnitude against the solved cost (thin local markets, coal from 0.006 to 0.25
+  a kilogram between tiles).
+- `node_capital_derived`: `charcoal_industrial` and `en_charcoal_burning` earn nothing now. Charcoal's only
+  dedicated recipe books `charcoal_burner` (dearer than the labourer, two training years), and at the solved
+  charcoal price (set below that recipe's cost, probably by the wood-tar joint route) a batch no longer adds its
+  staff's wages, so `plant_baskets._covers_its_staff` runs no line. The check names these two as idle. Open:
+  the charcoal price should not undercut the only dedicated route's cost.
+- `wage_floor_and_coin_standard`, `stock_growth_and_smuggling`, `world_events_and_hazards` (fails the same way on
+  `origin/main`: the harness leaves out Han, a partner the agent economy holds, so the opening cast was home
+  alone), `economy_exit` (a lean seam must now ask more miner-hours, an untrained trade quoting at most the
+  unskilled wage): fixture fixes, no bound loosened.
+- `sited_ore_price_over_cost` fails on `origin/main` too (Norse iron ore 109 times its cost there; on the
+  integration branch Rome's iron ore is 16.7 and Rome shows no cassiterite price). Open; not loosened.
