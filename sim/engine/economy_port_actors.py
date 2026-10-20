@@ -127,6 +127,26 @@ def purchase_orders(economy, purchases: Sequence[dict], tonnes_per_unit: Callabl
     return orders, funding
 
 
+def standing_bids(economy, flows: dict, seats, tile: str, tonnes_per_unit: Callable[[str], float],
+                  materials_in: Callable[[str], Sequence[str]]) -> Tuple[Bid, ...]:
+    """The founder's year of draws on materials (bought at the market edge, or taken by running works) as fixed-quantity
+    bids at the economy's price, for firm entry to read. They are not cleared: the engine has already paid."""
+    wanted: Dict[str, float] = {}
+    for commodity, parties in sorted((flows.get("bought") or {}).items()):
+        wanted[commodity] = wanted.get(commodity, 0.0) + sum(tonnes for party, tonnes in parties.items() if party in seats)
+    for commodity, tonnes in sorted((flows.get("drawn") or {}).items()):
+        wanted[commodity] = wanted.get(commodity, 0.0) + tonnes
+    view, found = economy.view(), []
+    for commodity, tonnes in sorted(wanted.items()):
+        good = good_for(economy, commodity, materials_in)
+        units = tonnes / tonnes_per_unit(good) if good is not None and tonnes > 0.0 else 0.0
+        area = economy.area_map.area_of(good, tile) if units > 0.0 else None
+        price = (view.price(good, area) or economy.setup.opening_prices.get(good, 0.0)) if units > 0.0 else 0.0
+        if units > 0.0 and price > 0.0:
+            found.append(Bid("standing:founder", good, area, tile, units, 0.0, price, 0.0, units * price))
+    return tuple(found)
+
+
 def fund(economy, funding: Sequence[Tuple[str, float, float]]) -> None:
     """The units the bids hold: from the exchange edge into each buy account (the coin side is the caller's)."""
     currency = economy.setup.currency_id

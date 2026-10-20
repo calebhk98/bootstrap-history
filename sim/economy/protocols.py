@@ -108,3 +108,4 @@ class YearInputs:
     attrition_share: float = 0.0                            # share of working people a year dying or retiring
     labour_levy_hours_per_worker: float = 0.0               # hours of each working person's year the state takes (a corvee, conscripts)
     durable_users: Tuple[AgentId, ...] = ()                 # outside actors' asset accounts whose durables are in use
+    standing_bids: Tuple[Bid, ...] = ()                     # demand settled outside the book (the founder's draws): entry reads it as bids, nothing clears
