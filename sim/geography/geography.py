@@ -9,7 +9,7 @@ located-material costs follow from it.
 import json
 from typing import Any, Dict, NotRequired, Tuple, TypedDict
 
-from sim.geography import located_places, mineral_shares, queries, reach_bands, routes_modes, tile_holdings
+from sim.geography import located_places, mineral_shares, queries, reach_bands, routes_modes, soil_nitrogen, tile_holdings
 from sim.geography.queries import deposit_records
 from sim.geography.distance import haversine_km
 from sim.geography.parameters import parameter as parameter_value
@@ -77,6 +77,27 @@ class Geography:
         if region_id not in self._regions:
             return farthest
         return self._reach_table()["levels"].get(region_id, farthest)
+
+    def soil_nitrogen_factors(self, stock: Dict[str, float], cropped_share: float, reference_cropped_share: float,
+                              herd_kg: float) -> Dict[str, float]:
+        """{tile: yield factor of its soil nitrogen stock} for the held tiles below native, under a rotation that crops
+        `cropped_share` of the holding with a draught herd of `herd_kg`."""
+        if not stock:
+            return {}
+        manure = self._manure_per_hectare(cropped_share, herd_kg)
+        return soil_nitrogen.yield_factors(stock, tile_holdings.tiles_held(self._world.civ, self._world.world_map),
+                                           cropped_share, reference_cropped_share, manure)
+
+    def step_soil_nitrogen(self, stock: Dict[str, float], cropped_share: float, reference_cropped_share: float,
+                           kg_per_cropped_hectare: float, legume_share: float, herd_kg: float) -> None:
+        """One year of cropping, legumes and manure on every held tile that has cropland, written into `stock`."""
+        sites = soil_nitrogen.unworn_sites(self._world.civ, self._world.world_map, cropped_share)
+        manure = soil_nitrogen.manure_nitrogen_per_hectare(herd_kg, sites)
+        soil_nitrogen.step_year(stock, sites, kg_per_cropped_hectare, legume_share, reference_cropped_share, manure)
+
+    def _manure_per_hectare(self, cropped_share: float, herd_kg: float) -> float:
+        sites = soil_nitrogen.unworn_sites(self._world.civ, self._world.world_map, cropped_share)
+        return soil_nitrogen.manure_nitrogen_per_hectare(herd_kg, sites)
 
     def route_km_to(self, tile_ids: Any) -> Any:
         """Kilometres of the cheapest haul from the tiles held to the nearest of these tiles (0.0 when one
