@@ -1,6 +1,6 @@
 # The spin-up's wage flips every other year
 
-**Status:** fixed on the small economy fixture; open until the Rome trace confirms it (`python3 sim/simulator.py spin-up-trace --civ rome_100ad --years 60`)
+**Status:** closed - the wage step scales with the market's imbalance; a 60-year Rome trace of b9ccb70b shows no alternation
 
 A 60-year Rome spin-up trace (`python3 sim/simulator.py spin-up-trace --civ rome_100ad --years 60`) shows the unskilled
 wage alternating year by year from about year 18: a low year, then a year several to many times higher, then low again,
@@ -33,3 +33,9 @@ hours unwanted or wanted beyond them, capped at one), so the step is continuous 
 `sim/tests/test_complaint_651_wage_step_gain.py` (continuity of the step, gain of next wage on last wage below one
 when demand follows the wage, no saw-tooth in the fixture). The scaling stands in the same temporary heuristic as
 `WAGE_SHARE_CLOSED_PER_YEAR`; the derived response is a supply curve that slopes (workers' asks spread), not built.
+
+
+## Confirmed on Rome (b9ccb70b)
+
+`python3 sim/simulator.py spin-up-trace --civ rome_100ad --years 60` in a worktree pinned at b9ccb70b: the unskilled wage falls
+smoothly every year (no year-on-year alternation). The trace shows a different defect, filed as 655.
