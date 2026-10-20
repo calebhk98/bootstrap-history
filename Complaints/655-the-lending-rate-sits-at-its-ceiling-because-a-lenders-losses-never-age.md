@@ -1,6 +1,6 @@
 # The lending rate sits at its ceiling for decades because a lender's losses never age
 
-**Status:** open
+**Status:** fix landed on branch credit-loss-rate-ages; open until the 60-year trace shows the rate off its ceiling
 
 A 60-year Rome spin-up trace of b9ccb70b (`python3 sim/simulator.py spin-up-trace --civ rome_100ad --years 60`, run in a
 pinned worktree) has the market rate at its ceiling (`bounded_rate`, four times the starting rate) from year 8 to year
@@ -16,3 +16,14 @@ What it would take: an expected loss that is a rate per year of exposure and age
 over what the lender had lent that year, carried as a smoothed figure in the record; test `loss_rate` as a function:
 a lender that lost once long ago and has lent cleanly since asks no more than its floor plus a small remembered share;
 a lender losing every year asks more. Then re-run the trace.
+
+## Fix
+
+`record.credit_losses` stays the lifetime stock (money audit, accounts; writers in lending, bank_service, debt_relief,
+bondage, producer_exit). A new `record.loss_rates` (and `losses_seen`, the stock at the last close) holds each lender's
+expected loss per year of exposure: `loss_memory.age`, called at the end of `lending.service`, blends the year's losses
+over the year's exposure (lost plus still owed) into the remembered rate by `LOSS_RATE_SMOOTHING_SHARE` (a labelled
+heuristic, retire named). `lender_ask.loss_rate`, `CreditView.loss_rate`, `lending.lend_working_capital` and
+`banks.spread_of` / `bank_spread.spread` read the smoothed rate. Under the old rule a lender that lost once and was
+fully repaid asked a loss share of 1.0; tests in `sim/tests/test_economy_lender_ask.py` (AgingTests) cover fading,
+repeated losses, no losses and a clean glut. Still to do: the 60-year trace.

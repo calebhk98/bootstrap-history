@@ -133,7 +133,7 @@ def free_cash(record, bank: Bank, money: str) -> float:
 def spread_of(record, bank: Bank, money: str) -> float:
     """What the bank adds to its depositors' rate: its loss record and how thin its capital is behind its loans."""
     loans = loans_out(record, bank.agent_id)
-    return bank_spread.spread(record.credit_losses.get(bank.agent_id, 0.0), loans,
+    return bank_spread.spread(record.loss_rates.get(bank.agent_id, 0.0), loans,
                               capital_of(record, bank.agent_id, money), BANK_CAPITAL_SHARE_OF_LOANS)
 
 
