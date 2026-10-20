@@ -68,7 +68,7 @@ check("nothing asked costs nothing and finds nobody",
       market.hire_cost("rare", 0) == 0.0 and market.whole_recruits("rare", 0) == 0)
 
 
-class CoverLabour(StaffLedgerMixin):
+class CoverLabour(StaffLedgerMixin, StaffBookMixin):
     """A labour whose market finds only some of a hire, as a scarce trade's does."""
 
     def __init__(self, found):
