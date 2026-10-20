@@ -1,6 +1,6 @@
 # One price owner: the agent economy
 
-**Status:** plan; stage 1 built on branch `507-stage-1-solver-is-cost-only` (2026-10-14), stages 2 and 3 built, stage 4 partly built on branch `507-stage-4-traded-volumes-from-the-economy` (2026-10-19), the rest not built. Answers `Complaints/507-prices-and-traded-volumes-have-two-owners.md`
+**Status:** plan; stage 1 built on branch `507-stage-1-solver-is-cost-only` (2026-10-14), stages 2 and 3 built, stage 4 partly built on branch `507-stage-4-traded-volumes-from-the-economy` (2026-10-19), stage 5 partly built on branch `507-stage-5-cost-comparers-at-economy-prices` (2026-10-20), the rest not built. Answers `Complaints/507-prices-and-traded-volumes-have-two-owners.md`
 (owner decision: the agent economy is the only owner of prices and traded volumes; the engine's price solver
 becomes a cost-of-making calculator). Sequel to `ONE_DEMAND_MODEL_PLAN.md` (one household demand kernel) and
 Complaint 115 (one economy). Folds in the price-search half of Complaint 513 (stage 8) and the unsold-stock rule
@@ -380,6 +380,43 @@ Files: `sim/engine/producer_costs.py`, `entry_cost.py`, `concern_volume.py`, `no
 `prices.py` (cache and warm start).
 
 Deletes: `ENGINE_SOLVE_TOLERANCE` and `INTEREST_RATE_BAND` if the closure is no longer iterated at runtime.
+
+**Partly done** (branch `507-stage-5-cost-comparers-at-economy-prices`, 2026-10-20). Built:
+
+- `entry_cost.CostBook` is a thin book over `making_cost.cost_of_making`; `economy_cost_book.py` hands it the economy's
+  price of each input (the home sellers' price on the acting tile, the long-run cost where the economy has no market),
+  its wage of each trade, the lending rate, and land rent (`agent_land_rent_per_hectare`; ore carries no rent, the
+  mine's cost is the recipe that digs it). `producer_costs` (`_reference_entry`, `entry_cost_ratio`,
+  `commodity_floor_ratio`, `concern_cost_ratio`, `founder_concern_offers`) reads that book, remembered while the
+  economy's prices, the rate, the year and the techniques in use stand. The reference entry is the cheapest at those
+  prices, so no `solved_prices` call and no stand-in rent remains in the producer cost path. A plant that exists
+  offers at its running cost, a new one is judged at full cost (`test_entry_cost_at_economy_prices`,
+  `test_running_cost_floor`). A halved-labour entry now costs `1 - labour share / 2` of the incumbents' at these prices
+  (0.857 for the test good, against 0.75 asserted at the opening wage document, where labour was a larger share);
+  `test_real_output_cheaper_entry` states that relation from the cost breakdown instead of a number.
+- `node_revenue_market.basket_market_factor(sold, bought, long_run_prices, price_now)` is the market factor as a
+  function of baskets and two price lists (no node), which `FIRMS_OWN_PLANTS_PLAN.md` stage 3c lifts into the kernel;
+  `market_factor(node, ...)` wraps it. The factor already was economy price over long-run cost; the new
+  `test_node_factor_is_economy_over_cost` proves it on a game.
+- `test_price_over_making_cost_band`: four years in, the traded goods' price over their full cost at the economy's own
+  prices has a median between one and three, and half of them lie within a factor of three either way (measured: median
+  1.6 to 2.1 over years one to five; the tail is the metals and ores, which carry no rent in the cost).
+
+Not done, and why:
+
+- `concern_volume` keeps the long-run table. Its value ratio is net sales of the baskets now over the opening's, both at
+  the same list, and `node_output_market_factor` multiplies it by economy over long-run. At economy prices in both the
+  price move would count twice; the table is the reference by design (section 3, stage 5 text).
+- `techniques_in_use` reads no price (it is the set of techniques producers run); nothing to move.
+- `ENGINE_SOLVE_TOLERANCE`, `INTEREST_RATE_BAND`, `prices.band_interest_rate`, the warm start and
+  `shipped_rate_bands.py` stay: `incumbent_prices._price_tables` still closes the recipe graph at runtime, for the
+  long-run table every `_material_prices()` reader takes (static book, `goods_market_offers`, `economy_materials`,
+  `foreign_*`, `view_share`). They go with those readers (stage 6 and the partner economies of section 6), not before.
+- Speed (Complaint 497): measured on a warm disk cache, a game year costs about 7 s of CPU before and after this stage
+  (6.9 and 6.8, three years each, `rome_100ad`, loaded machine); the engine's price solve is under a quarter of a percent
+  of a profiled warm year, since the solve is read from `solve_cache`. The cost is a cold cache (a first game builds in
+  about 80 s against 3 s warm) and the economy's own clearing, not the runtime solve. (Timed with `time.process_time`
+  around `game._step_market()` and profiled with `cProfile` on a `tests.harness.sim` game; no repo command does this.)
 
 ### Stage 6: the engine's static commodity book goes
 
