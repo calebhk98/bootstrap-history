@@ -2,10 +2,14 @@
 where the simulation keeps its `Geography`."""
 import os
 
-from sim.geography.api import Geography, open_map
+from sim.geography.api import Geography, open_map, settlement
+from sim.world import agriculture_tile, farming_technique
 
 from .data import load_civ
 from .mods import get_ordered_mods
+
+# Views of the land that name no actor (where people live, what a colony can feed) use the default farming technique.
+settlement.set_reference_crop_technique(agriculture_tile.crop_technique(farming_technique.DEFAULT_TECHNIQUE))
 
 MODS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "mods")
 

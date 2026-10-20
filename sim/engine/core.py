@@ -403,9 +403,9 @@ class Sim(ModStoresMixin, RealPriceRatiosMixin, CoinRevaluationMixin, PartnerCiv
         if not held_tiles:
             raise ValueError("civilisation %r holds no tiles: the agent economy needs a territory to run its markets on; "
                              "name its starting claim in `home_tiles`" % (self.civ.get("id"),))
-        territory = land.territory_farmland(held_tiles, load_geography(self.world_map))
+        territory = land.territory_cropland(self.farm_sites())
         self._farm_ladder = territory.ladder
-        self._farm_arable_ceiling = territory.arable_hectares
+        self._farm_arable_ceiling = territory.cropped_hectares
         sized = self._agriculture.farmland_for_population(
             self._adult_equivalent_population(self.population),
             arable_hectares_ceiling=self._farm_arable_ceiling)

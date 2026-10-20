@@ -31,14 +31,19 @@ the layout and the merge rules (new ids `<mod_id>:<name>`, `"override": true`, `
 
 ## Food
 
-`food_potential(tile_id, technique_factors, wild_stock=None)` answers
+`food_potential(tile_id, technique_factors, world_map=None, wild_stock=None, crop_technique=None)` answers
 
     {"tile": id, "kcal_per_year": {source_id: kcal}, "total_kcal_per_year": kcal,
      "people_supported": people, "species": {"hunted": [id], "herded": [id], "fished": [id], "foraged": [id]}}
 
 Each source is sustainable yield (crops, pastoral, hunting, foraging, marine and freshwater
 fishing; ids come from data). `technique_factors` is `{source_id: multiplier}` chosen by the
-caller from what the actor knows; geography does not read the tech tree.
+caller from what the actor knows; geography does not read the tech tree. `crop_technique` is
+`{kg_per_cropped_hectare, open_field_cropped_share, seed_kg_per_cropped_hectare, loss_fraction, kcal_per_kg}`:
+what the farm model says a cropped hectare gives under the actor's crop, tools and rotation. Geography owns the
+tile's side only; without a technique the crop source is absent. `crop_site(tile_id, open_field_cropped_share)`
+answers `{arable_hectares, cropped_hectares, yield_factor}`: the hectares cropped in a year and the mean yield of a
+cropped hectare (soil, climate, river water) against the reference field.
 
 `wild_stock` is the game's `{tile_id: {species_id: share of carrying capacity left}}`, a missing entry
 meaning a full stock. `hunted_kcal(tile_id, wild_stock)` gives `{species_id: kcal}` a year's hunting can take

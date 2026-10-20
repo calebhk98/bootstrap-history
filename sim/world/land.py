@@ -939,44 +939,25 @@ def _tiles_held_in(civilization: Dict[str, Any], geography: Dict[str, Any]) -> L
 
 
 TerritoryFarmland = collections.namedtuple("TerritoryFarmland", [
-    "arable_hectares",        # cultivable ground the held regions contain
-    "mean_fertility",         # arable-area-weighted fertility multiplier
-    "ladder",                 # [(fertility, arable hectares)], best ground first
+    "cropped_hectares",       # hectares the held tiles can crop in a year under the rotation (the farm's ceiling)
+    "mean_yield_factor",      # cropped-area-weighted yield factor (soil, climate, river water) against the reference field
+    "ladder",                 # [(yield factor, cropped hectares)], best ground first
 ])
 
 
-def territory_farmland(tile_ids: List[str],
-                       geography: Optional[Dict[str, Any]] = None) -> TerritoryFarmland:
-    """Arable hectares and arable-weighted mean fertility over the given
-    tiles (a civilisation's `tiles_held`); territory with no farmable
-    ground comes back empty."""
-    geography = geography if geography is not None else load_geography()
-    land_tiles = geography.get("land_tiles")
-    if land_tiles is None:
-        raise KeyError("geography has no 'land_tiles' block")
-    tile_lands = load_tile_lands(geography)
-    total_arable_km2 = 0.0
-    weighted_fertility = 0.0
-    parcels = []
-    for tile_id in sorted(set(tile_ids)):
-        tile = tile_lands[tile_id]
-        # Ground that yields nothing is not arable, whatever its share of the tile.
-        if tile.fertility_quality_multiplier <= 0.0:
-            continue
-        arable_km2 = tile.land_area_km2 * tile.arable_fraction
-        total_arable_km2 += arable_km2
-        weighted_fertility += arable_km2 * tile.fertility_quality_multiplier
-        parcels.append((-tile.fertility_quality_multiplier, tile_id,
-                        arable_km2 * _KM2_TO_HECTARES))
-    parcels.sort()
-    ladder = [(-negative_fertility, hectares)
-              for negative_fertility, _tile_id, hectares in parcels if hectares > 0.0]
-    if total_arable_km2 <= 0.0:
-        return TerritoryFarmland(arable_hectares=0.0, mean_fertility=0.0, ladder=[])
-    return TerritoryFarmland(
-        arable_hectares=total_arable_km2 * _KM2_TO_HECTARES,
-        mean_fertility=weighted_fertility / total_arable_km2,
-        ladder=ladder)
+def territory_cropland(sites: Dict[str, Any]) -> TerritoryFarmland:
+    """The farm's ceiling and ladder from the held tiles' crop sites (geography's `crop_site`, one per tile):
+    each tile offers the hectares it can crop in a year at its own yield factor; ground that yields nothing is
+    not cropland."""
+    parcels = sorted((-site.yield_factor, tile_id, site.cropped_hectares) for tile_id, site in sites.items()
+                     if site.yield_factor > 0.0 and site.cropped_hectares > 0.0)
+    ladder = [(-negative_factor, hectares) for negative_factor, _tile_id, hectares in parcels]
+    total = sum(hectares for _factor, hectares in ladder)
+    if total <= 0.0:
+        return TerritoryFarmland(cropped_hectares=0.0, mean_yield_factor=0.0, ladder=[])
+    return TerritoryFarmland(cropped_hectares=total,
+                             mean_yield_factor=sum(factor * hectares for factor, hectares in ladder) / total,
+                             ladder=ladder)
 
 
 def territory_land_area_km2(tile_ids: List[str],

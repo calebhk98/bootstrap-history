@@ -9,18 +9,21 @@ import unittest
 
 from sim.geography import map_source, parameters, tile_layers
 from sim.geography.food_capacity import food_potential, food_potential_all
+from sim.world.agriculture_tile import crop_technique as farm_crop_technique
+from sim.world.farming_technique import DEFAULT_TECHNIQUE
 
 FIXTURES = os.path.join(os.path.dirname(os.path.abspath(__file__)), "geography_fixtures")
 DRAGON_MOD = "food_overlay_q7x2"
 DRAGON = DRAGON_MOD + ":dragon"
 FORAGER_SOURCES = ("hunting", "foraging", "marine_fishing", "freshwater_fishing")
 _cache = {}
+CROPS = farm_crop_technique(DEFAULT_TECHNIQUE)
 
 
 def earth():
     if "earth" not in _cache:
         world_map = map_source.load_map()
-        _cache["earth"] = (world_map, food_potential_all(world_map))
+        _cache["earth"] = (world_map, food_potential_all(world_map, None, CROPS))
     return _cache["earth"]
 
 
@@ -95,14 +98,14 @@ class FoodTests(unittest.TestCase):
         world_map, results = earth()
         tile_id = next(t for t, r in results.items()
                        if r["kcal_per_year"].get("crops", 0) > 0 and r["kcal_per_year"].get("pastoral", 0) > 0)
-        boosted = food_potential(world_map, tile_id, {"crops": 2.0})
+        boosted = food_potential(world_map, tile_id, {"crops": 2.0}, None, CROPS)
         self.assertAlmostEqual(boosted["kcal_per_year"]["crops"], 2 * results[tile_id]["kcal_per_year"]["crops"])
         self.assertAlmostEqual(boosted["kcal_per_year"]["pastoral"], results[tile_id]["kcal_per_year"]["pastoral"])
 
     def test_class_fallbacks_answer_a_map_without_measured_layers(self):
         world_map, results = earth()
         bare = map_source.WorldMap(world_map.map_id, world_map.tiles, {}, world_map.catalogues, world_map.folders)
-        bare_results = food_potential_all(bare)
+        bare_results = food_potential_all(bare, None, CROPS)
         self.assertEqual(set(bare_results), set(results))
         self.assertTrue(all(math.isfinite(r["total_kcal_per_year"]) for r in bare_results.values()))
         self.assertGreater(statistics.median(r["total_kcal_per_year"] for r in bare_results.values()), 0)
@@ -112,7 +115,7 @@ class ModAnimalTests(unittest.TestCase):
     def test_a_mod_game_animal_is_hunted_where_its_envelope_fits_and_nowhere_else(self):
         base_map, base = earth()
         overlay_map = map_source.load_map(((DRAGON_MOD, os.path.join(FIXTURES, "food_mod_overlay")),))
-        modded = food_potential_all(overlay_map)
+        modded = food_potential_all(overlay_map, None, CROPS)
         fitted = 0
         for tile_id in base_map.tiles:
             before = base[tile_id]["kcal_per_year"].get("hunting", 0.0)

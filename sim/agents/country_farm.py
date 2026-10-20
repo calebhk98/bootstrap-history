@@ -1,14 +1,15 @@
 """A foreign country's farm: the home country's agriculture model (sim/world/agriculture*.py) over the country's own land.
 
 The cleared area is what feeds the seeded people on the ground the country holds (its `arable_hectares` if declared,
-else its home tiles' arable ground, else no ceiling), and its quality is that ground's best-first fertility. Each year
+else the hectares its home tiles can crop in a year, else no ceiling), and its quality is that ground's best-first
+yield factor (soil, climate, river water). Each year
 the farm workers the people need sow, reap and bank into the country's granary; what is eaten sets the Population's
 nutrition. All of it lives in `profile.farm`, so it saves with the profile.
 """
 import random
 from typing import Any, Dict, Optional
 
-from sim.geography.api import load_geography
+from sim.geography.api import crop_site
 from sim.world import agriculture, demography, farming_technique, land
 
 STOCK_KG = "stock_kg"
@@ -27,8 +28,9 @@ def _arable_ground(profile: Any) -> Any:
 		quality = float(profile.extra.get("farm_quality", 1.0))
 		return float(declared), [(quality, float(declared))]
 	if profile.home_tiles:
-		territory = land.territory_farmland(list(profile.home_tiles), load_geography())
-		return territory.arable_hectares, territory.ladder
+		share = 1.0 - farming_technique.DEFAULT_TECHNIQUE.rotation.fallow_share_of_holding
+		territory = land.territory_cropland({tile_id: crop_site(tile_id, share) for tile_id in profile.home_tiles})
+		return territory.cropped_hectares, territory.ladder
 	return None, []
 
 

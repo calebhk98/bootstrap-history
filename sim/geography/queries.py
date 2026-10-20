@@ -8,8 +8,9 @@ one it uses the base map.
 import math
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Tuple
 
+from sim.geography.food_crops import CropSite, CropTechnique
 from sim.geography.json_copy import copied
-from sim.geography import (droving, endemic, food_capacity, forest_timber, food_land, food_pasture, food_wild_harvest, map_source, mechanisms, parameters, resource_links, resources_biotic, rail_freight,
+from sim.geography import (droving, endemic, food_capacity, food_crops, forest_timber, food_land, food_pasture, food_wild_harvest, map_source, mechanisms, parameters, resource_links, resources_biotic, rail_freight,
                            resources_catalogue, resources_endowment, resources_mined, resources_prospecting, resources_sites,
                            reach_bands, resources_summary, routes_carriage, routes_graph, routes_modes, routes_search, tile_holdings, tile_layers,
                            ways_build, ways_isthmus, ways_works)
@@ -46,10 +47,19 @@ def layer_value(tile_id: str, layer_id: str, world_map: Optional[WorldMap] = Non
 
 
 def food_potential(tile_id: str, technique_factors: Optional[Mapping[str, float]] = None,
-                   world_map: Optional[WorldMap] = None, wild_stock: Optional[Mapping[str, Any]] = None) -> Dict[str, Any]:
+                   world_map: Optional[WorldMap] = None, wild_stock: Optional[Mapping[str, Any]] = None,
+                   crop_technique: Optional[CropTechnique] = None) -> Dict[str, Any]:
     """Sustainable food energy of a tile by source, and the people it feeds. `wild_stock` is the game's
-    {tile: {species: share of carrying capacity left}}; a missing entry is a full stock."""
-    return food_capacity.food_potential(_map(world_map), tile_id, dict(technique_factors or {}) or None, wild_stock)
+    {tile: {species: share of carrying capacity left}}; a missing entry is a full stock. `crop_technique` is what
+    the farm model says a cropped hectare gives; without it the tile's crops count for nothing."""
+    return food_capacity.food_potential(_map(world_map), tile_id, dict(technique_factors or {}) or None, wild_stock,
+                                        crop_technique)
+
+
+def crop_site(tile_id: str, open_field_cropped_share: float, world_map: Optional[WorldMap] = None) -> CropSite:
+    """The tile's cropland: arable hectares, hectares cropped in a year under a rotation that crops
+    `open_field_cropped_share` of open fields, and the mean yield of a cropped hectare against the reference field."""
+    return food_crops.crop_site(_map(world_map), tile_id, open_field_cropped_share)
 
 
 def endemic_animal_loss(tile_id: str, species: Iterable[str], world_map: Optional[WorldMap] = None) -> float:

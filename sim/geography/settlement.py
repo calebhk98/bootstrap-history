@@ -12,13 +12,25 @@ import functools
 from typing import Dict, List, Optional, Tuple
 
 from sim.geography import queries, tile_holdings
+from sim.geography.food_crops import CropTechnique
 from sim.geography.distance import haversine_km
 from sim.unit_conversions import CIVIL_DAYS_PER_YEAR
 
 
+_reference_crop_technique: Optional[CropTechnique] = None
+
+
+def set_reference_crop_technique(crop_technique: Optional[CropTechnique]) -> None:
+    """The crop yield (from the farm model's default technique) the technique-free views of the land use."""
+    global _reference_crop_technique
+    _reference_crop_technique = crop_technique
+    for cached in (_carrying_capacity, _capacities, _summary):
+        cached.cache_clear()
+
+
 @functools.lru_cache(maxsize=2048)
 def _carrying_capacity(tile_id: str) -> float:
-    return float(queries.food_potential(tile_id)["total_kcal_per_year"])
+    return float(queries.food_potential(tile_id, None, None, None, _reference_crop_technique)["total_kcal_per_year"])
 
 
 @functools.lru_cache(maxsize=64)

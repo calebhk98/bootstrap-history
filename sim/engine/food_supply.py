@@ -5,9 +5,11 @@ food_wild_stock.py). Each year the hunters' hours bring in at most what the trad
 much is taken from the held tiles' game, and the stock regrows. Fishers bound fishing the same way in
 `society_food_potential`. Nothing here names a trade or a food source: both come from the trade registry.
 """
-from sim.geography.api import (draw_wild_stock, food_potential, game_food_sources, hunted_kcal, regrow_wild_stock,
+from sim.geography.api import (crop_site, draw_wild_stock, food_potential, game_food_sources, hunted_kcal, regrow_wild_stock,
                                tiles_held)
 from sim.labour.api import cap_share, capped_kcal, hours_cap_kcal
+
+from sim.world import agriculture_tile
 
 from . import data
 
@@ -19,14 +21,20 @@ class FoodSupplyMixin:
         registry = {trade_id: {"family": trade.family, **trade.extra} for trade_id, trade in data.TRADE_REGISTRY.items()}
         return hours_cap_kcal(self.state.economy.society_labour_hours, registry)
 
+    def farm_sites(self):
+        """{tile: geography's crop site} over the held tiles under the society's rotation."""
+        share = 1.0 - self.labour.farming_technique().rotation.fallow_share_of_holding
+        return {tile_id: crop_site(tile_id, share, self.world_map) for tile_id in tiles_held(self.civ, self.world_map)}
+
     def society_food_potential(self):
         """{source id: kcal a year} over the held tiles: the land's sustainable yield, game thinned by past hunting,
         each gathered source held to what the hours of its gatherers can bring in."""
         stock = self.state.economy.wild_stock
+        crop_technique = agriculture_tile.crop_technique(self.labour.farming_technique())
         totals = {}
         for tile_id in tiles_held(self.civ, self.world_map):
             for source_id, kcal in food_potential(
-                    tile_id, None, self.world_map, stock)["kcal_per_year"].items():
+                    tile_id, None, self.world_map, stock, crop_technique)["kcal_per_year"].items():
                 totals[source_id] = totals.get(source_id, 0.0) + kcal
         return capped_kcal(totals, self._gathering_caps())
 
