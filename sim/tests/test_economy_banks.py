@@ -34,7 +34,7 @@ class BankFixture(unittest.TestCase):
 
     def stand_a_bank(self):
         """A bank with its founder's capital, and the offers its depositors pledge to it."""
-        bank = banks.found(self.record, self.founder, CAPITAL, 0, self.money, margin=0.01)
+        bank = banks.found(self.record, self.founder, CAPITAL, 0, self.money)
         offers = [FundsOffer(depositor, self.money, PLEDGED, 0.03) for depositor in self.depositors]
         remaining, pledged = banks.intermediate(self.setup, self.record, offers, 0, INSTITUTIONS)
         return bank, remaining, pledged
@@ -88,9 +88,10 @@ class DepositsAndLending(BankFixture):
             self.assertAlmostEqual(claims[depositor], 450.0)
         self.assertAlmostEqual(debts[bank.agent_id], 900.0)
 
-    def test_the_bank_asks_what_it_pays_depositors_plus_its_margin(self):
+    def test_a_bank_with_capital_and_no_losses_asks_what_it_pays_depositors(self):
         bank, remaining, _pledged = self.stand_a_bank()
-        self.assertAlmostEqual(remaining[0].minimum_rate, 0.03 + bank.margin)
+        self.assertAlmostEqual(banks.spread_of(self.record, bank, self.money), 0.0)
+        self.assertAlmostEqual(remaining[0].minimum_rate, 0.03)
 
     def test_a_society_without_the_institution_founds_no_bank(self):
         offers = [FundsOffer(depositor, self.money, PLEDGED, 0.03) for depositor in self.depositors]
