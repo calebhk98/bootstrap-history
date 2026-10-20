@@ -329,3 +329,27 @@ head's by year 30, the rate at its ceiling after): more plant bought each year p
 plant at once. The late surge on the head (years 30 to 43) is led by bricks (a shelter replacement wave about 26 years
 in, after the opening's seeded wall stock wears) and carts (merchants' replacement bids with makers idle); see the idle
 makers and no-seller price work. Reproduce with a 60-year `spin_up_trace` on each commit (about 10 minutes).
+
+## Measured: why makers with plant sit idle while their price climbs (branch fix-idle-makers-at-high-prices)
+
+Rome first stage, years 0 to 8 (`economy_port_trace.spin_up_trace(harness.sim(), 9)` with `producers.plan` and
+`producers.produce` wrapped to print each limit and each input and hour actually held; the wrappers were scratch, no committed
+command prints them). Across all cart, stone wall and bar-iron makers:
+
+- In `plan` the price is not the limit: `share_working` is near the whole capacity for carts after year 2, cash and land do not
+  bind. What binds is the yearly change from last year's runs (`within_a_years_change`) because `last_runs` is the runs
+  achieved, which are nil or tiny, so each year plans a quarter of capacity; the stock gate binds for walls and carts in years 2-3.
+- The plan's quarter is not what is run: carts plan and hire hours for it and achieve nothing (hours held in full, iron bar
+  held nil). Bar-iron makers (the bloomery recipe) are short of bloom and charcoal; walls of mortar and blocks. The input
+  bid ceilings sit at the live price plus the margin share, far below what the bar market clears at in years 2-5 (households
+  and other buyers with ceilings many times higher take the little there is), while the price memory the plan reads rose
+  slowly (the trade is a sliver of what buyers wanted at the old price, `market_memory_asks.memory_reference_volume`).
+- Bloom, the bloomery's input, has no maker in the Chinese market areas at all, and bloom makers elsewhere shrink as their
+  price stays under their cost. Experiment (not kept): weighing a trade against the usual volume alone left the cart and bloomery
+  runs at nil; the chain is short, not only mispriced.
+- A plan-side fix that lets a wide margin ramp faster would not move these runs (expected margins read from the memory price are
+  narrow), and would loosen the limit that stops chains from amplifying; not made. The plan's behaviour at a wide margin is pinned
+  by `sim/tests/test_economy_producer_wide_margin_plan.py`.
+
+Where the fix lies: entry of an input maker where buyers exist and no maker does (bloom in a market area with only ore far away),
+merchants carrying bloom and bar between areas, and the price memory under scarce supply. Not producers.py.
