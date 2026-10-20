@@ -1,8 +1,7 @@
-"""Complaints 345 and 341: what a concern must carry follows the economy. When output per hour
-grows and labour is the scarce input a concern's wage bill grows with it, a concern's running
-costs and takings are its own (no index scales either), a category's takings are the market's own
-price times volume shared out, and the number of firms in a niche is set by the market's size over
-a firm's, so it stops growing when the market stops growing."""
+"""Scenario: Complaints 345 and 341 in a game. When output per hour grows and labour is the scarce input a concern's wage bill
+grows with it, a concern's running costs and takings are its own (no index scales either), and a category's takings are
+the market's own price times volume shared out. The number of firms following the market's size is held by
+test_firm_count_from_costs (the rule) and test_firm_count_whole_game_scenario (the game)."""
 from .harness import *  # noqa: F401,F403
 
 from sim.engine.agents_port import SimWorld
@@ -52,21 +51,10 @@ CATEGORY = sorted(S.Sim.GOODS_CATEGORIES)[0]
 NODE = make_node("zz_scale", CATEGORY, revenue=2.0e5, upkeep=5000.0, hours=50.0)
 
 
-def grow_market(game, growth):
-	"""Every commodity clears `growth` times its quantity, and the society's output follows."""
-	for entry in game.state.economy.market_book.values():
-		entry["traded_tonnes"] *= growth
-	game._close_real_output()
-	game._revenue_cache_key = None
-
-
-def settled(growth=1.0, years=15, rate=0.12):
+def settled(years=15, rate=0.12):
 	game = actor_sim([NODE])
 	game.market_rate = lambda: rate
 	founder_runs(game, "zz_scale", opened_ago=10)
-	for _ in range(years):
-		next_year(game)
-	grow_market(game, growth)
 	for _ in range(years):
 		next_year(game)
 	return game
@@ -103,7 +91,7 @@ check("the founder pays the same upkeep an actor does for the same concern",
       abs(game.venture_real_upkeep("zz_scale") - world.upkeep("zz_scale")) < 1e-6 * world.upkeep("zz_scale"))
 
 # ---- a category's takings are its market's price times volume, shared out ------------------------
-steady = settled(growth=1.0)
+steady = settled()
 shared = steady
 world = SimWorld(shared)
 sellers = len(shared.actors.active_firms()) + 1
@@ -113,16 +101,3 @@ market_total = (NODE["rev"] * shared.state.economy.output_factor * shared.price_
 each = world.concern_takings("zz_scale", shared.year - 20)
 check("every seller's takings are one share of the market's price times volume",
       abs(each * ratios[2] - market_total) < 0.02 * market_total, (each, ratios, market_total))
-
-# ---- the number of firms follows the market's size over a firm's ---------------------------------
-grown = settled(growth=10.0)
-steady_count = len(steady.actors.active_firms())
-grown_count = len(grown.actors.active_firms())
-check("firms entered the niche", steady_count > 0, steady_count)
-check("firms grow no faster than the market they share",
-      grown_count <= 10.0 * steady_count, (steady_count, grown_count))
-count = len(grown.actors.active_firms())
-for _ in range(15):
-	next_year(grown)
-check("a niche whose market stopped growing stops gaining firms", len(grown.actors.active_firms()) == count,
-      (count, len(grown.actors.active_firms())))

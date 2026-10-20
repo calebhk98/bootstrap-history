@@ -1,8 +1,8 @@
-"""Complaint 345, whole game: the number of firms in a niche follows what a firm carries (site rent from the
+"""Scenario, Complaint 345 in a game (the rules are in test_firm_count_from_costs): the number of firms in a niche follows what a firm carries (site rent from the
 engine's land price while the economy opens, a manager's hours) against what the market pays, with no
 cap on entrants a year. Slow topic: it builds games and runs decades.
 
-Re-measure: `python3 -m sim.tests --slow --only firm_count_whole_game`."""
+Re-measure: `python3 -m sim.tests --slow --only firm_count_whole_game_scenario`."""
 from .harness import *  # noqa: F401,F403
 
 import copy

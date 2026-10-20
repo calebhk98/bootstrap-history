@@ -2,115 +2,138 @@
 expand. When the founder's savings cannot fund an entrant's whole stake, the rest is raised as credit bounded by
 the entrant's expected earning, at the borrower's rate, provided the founder puts up their share of it.
 
-A founder is a stratum's best-placed household (`household_wealth.personal_capital`), and the strata's purses
-refill every year in a game, so how much a founder can put up is set by wrapping `firm_entry.personal_capital`
-with a ceiling. The ceilings are taken from the stake an unconstrained founder puts up and the share lenders
-require (`ENTRY_EQUITY_SHARE`). Years are few: the claims are about who enters and what they owe."""
-from .harness import *  # noqa: F401,F403
+Rules, each called on built inputs (no game):
 
-from sim.engine.agents_port import SimWorld
-from sim.agents import firm_entry
-from sim.agents.tuning import ENTRY_EQUITY_SHARE
-from sim.engine.state import ActorRecord
-from sim.agents.firm import Firm
+1. `firm_entry.stake_split`: what a founder puts up, what is left to borrow, and the refusal below lenders' share.
+2. `ActorRegistry.consider_entry` on the fake world: a founder short of the whole stake founds on credit, one
+   putting up less than lenders' share founds none, and dearer credit leaves fewer entrants on credit.
+3. `Firm.copy_budget`: counts what the firm's earning lets it borrow.
 
-import copy
-import random
+The whole-game wiring is `test_firm_borrows_to_enter_scenario`."""
+QUICK_TOPIC = True
+
+import unittest
 from unittest import mock
 
-_TEMPLATE_ID = next(node_id for node_id, node in NODES.items()
-                    if not node["pre"] and node["cap"] >= 0)
+from sim.agents import firm_entry
+from sim.agents.api import ActorRecord, ActorRegistry, ActorsState
+from sim.agents.firm import Firm
+from sim.agents.tuning import ENTRY_EQUITY_SHARE
+
+from .agents_fake_world import FakeWorld, make_node
+
+COPY_COST = 6000.0
 
 
-def make_node(node_id, category, revenue, upkeep, hours):
-	node = copy.deepcopy(NODES[_TEMPLATE_ID])
-	node.update(id=node_id, name=node_id, traits=["commerce"], pre=[], lab={"labourer": hours},
-	            mat={}, rev=revenue, up=upkeep, yrs=1.0, risk=0.0, ph=0.0,
-	            dev_years=None, dev_people=None, cat=category)
-	node.pop("gains", None)
-	return node
+class EntryWorld(FakeWorld):
+	"""A proven concern whose takings are shared among its sellers, with a dear copy."""
+
+	def entry_gross(self, node_id, rivals, entrants):
+		return float(self.nodes[node_id]["rev"]) / (rivals + entrants)
+
+	def plant_cost(self, node_id, actor, step):
+		return 1000.0 * step
+
+	def ramp(self, opened_year, node_id=None):
+		return min(1.0, (self.year - opened_year + 1) / 5.0)
 
 
-def actor_sim():
-	nodes = copy.deepcopy(NODES)
-	nodes["zz_borrow"] = make_node("zz_borrow", sorted(S.Sim.GOODS_CATEGORIES)[0], 8.0e5, 5000.0, 50.0)
-	game = build_unopened(lambda: S.Sim(nodes, list(ORDER), random.Random(1), events=False, manual=True,
-	             civ=S.load_civ("rome_100ad")))
-	game.goal, game.done_year = GOAL, {}
-	game.market_rate = lambda: 0.12
-	year = game.state.scenario.year
-	projects = game.state.projects
-	projects.done.add("zz_borrow")
-	projects.done_year["zz_borrow"] = year - 10
-	projects.operating.add("zz_borrow")
-	projects.business.set_opened_year("zz_borrow", year - 10)
-	game._done_changed()
-	return ready_for_entry(game)
+def make_world(rate=0.12):
+	world = EntryWorld()
+	world.rate = rate
+	world.nodes["shop"] = make_node("shop", hours=100.0, revenue=60000.0, upkeep=1000.0)
+	world.nodes["shop"]["cost"] = COPY_COST
+	world.demonstrated_nodes = {"shop"}
+	world.proven = {"shop"}
+	return world
 
 
-_PUT_UP = firm_entry.personal_capital
-_STAKE_SPLIT = firm_entry.stake_split
-faced = []   # every stake an entrant weighed, in the order weighed
+class StakeSplitTests(unittest.TestCase):
+	def split(self, stake, savings):
+		with mock.patch.object(firm_entry, "personal_capital", lambda stratum: savings):
+			return firm_entry.stake_split(stake, object(), True, 0.0)
+
+	def test_a_founder_who_can_put_up_the_whole_stake_borrows_nothing(self):
+		self.assertEqual(self.split(100.0, 250.0), (100.0, 0.0))
+
+	def test_a_founder_putting_up_lenders_share_borrows_the_rest(self):
+		put_up = 1.05 * ENTRY_EQUITY_SHARE * 100.0
+		pooled, borrowed = self.split(100.0, put_up)
+		self.assertAlmostEqual(pooled, put_up)
+		self.assertAlmostEqual(borrowed, 100.0 - put_up)
+
+	def test_a_founder_putting_up_less_than_lenders_share_is_refused_credit(self):
+		pooled, borrowed = self.split(100.0, 0.5 * ENTRY_EQUITY_SHARE * 100.0)
+		self.assertEqual(borrowed, float("inf"))
+
+	def test_without_strata_the_pooled_capital_funds_up_to_its_limit(self):
+		self.assertEqual(firm_entry.stake_split(100.0, None, False, 30.0), (30.0, 70.0))
+		self.assertEqual(firm_entry.stake_split(100.0, None, False, 500.0), (100.0, 0.0))
 
 
-def _recording_stake_split(stake, *args):
-	faced.append(stake)
-	return _STAKE_SPLIT(stake, *args)
+class EntryOnCreditTests(unittest.TestCase):
+	def entry(self, ceiling=None, rate=0.12):
+		"""(firms founded, stakes weighed, stakes put up) in one year of entry when no founder puts up more than `ceiling`."""
+		registry = ActorRegistry(ActorsState(home_country="home"))
+		registry.add("stratum:home:merchants", ActorRecord(
+			kind="stratum", stratum="merchants", members=100.0, money=1.0e9, literacy=0.5))
+		faced = []
+		put_up = firm_entry.personal_capital
+		split = firm_entry.stake_split
+
+		def recording_split(stake, *arguments):
+			faced.append(stake)
+			return split(stake, *arguments)
+
+		with mock.patch.object(firm_entry, "stake_split", recording_split), \
+				mock.patch.object(firm_entry, "personal_capital",
+				                  (lambda stratum: put_up(stratum)) if ceiling is None
+				                  else (lambda stratum: min(put_up(stratum), ceiling))):
+			founded = registry.consider_entry(make_world(rate))
+		stakes = [registry.actors[firm_id].record.plan["stake"] for firm_id in founded
+		          if "stake" in registry.actors[firm_id].record.plan]
+		return founded, faced, stakes
+
+	def test_a_founder_who_can_put_up_the_whole_stake_founds_firms(self):
+		founded, faced, stakes = self.entry()
+		self.assertTrue(founded)
+		self.assertGreater(max(stakes), 0.0)
+
+	def test_a_founder_short_of_the_whole_stake_but_putting_up_lenders_share_founds_on_credit(self):
+		_, faced, _ = self.entry()
+		short = 1.05 * ENTRY_EQUITY_SHARE * min(faced)
+		founded, _, stakes = self.entry(ceiling=short)
+		self.assertTrue(founded)
+		self.assertLessEqual(max(stakes), short + 1e-6)
+		self.assertLess(short, min(faced))
+
+	def test_a_founder_putting_up_less_than_lenders_share_founds_nothing(self):
+		_, faced, _ = self.entry()
+		founded, _, stakes = self.entry(ceiling=0.5 * ENTRY_EQUITY_SHARE * min(faced))
+		self.assertEqual(founded, [])
+		self.assertEqual(stakes, [])
+
+	def test_dearer_credit_leaves_fewer_entrants_on_credit(self):
+		_, faced, _ = self.entry()
+		short = 1.05 * ENTRY_EQUITY_SHARE * min(faced)
+		usual, _, _ = self.entry(ceiling=short, rate=0.12)
+		dear, _, _ = self.entry(ceiling=short, rate=2.0)
+		self.assertLess(len(dear), len(usual))
 
 
-def run(ceiling=None, credit_rate=None, years=6):
-	"""A game played `years`, in which no founder puts up more than `ceiling` and the firms' cost of capital is
-	`credit_rate` (the firms' own: re-solving every price at another rate is not under test).
-	Returns (game, firms each year, the deepest debt of any firm, the stakes founders put up)."""
-	game = actor_sim()
-	patches = [mock.patch.object(firm_entry, "stake_split", _recording_stake_split)]
-	if ceiling is not None:
-		patches.append(mock.patch.object(firm_entry, "personal_capital", lambda stratum: min(_PUT_UP(stratum), ceiling)))
-	if credit_rate is not None:
-		patches.append(mock.patch.object(SimWorld, "market_rate", lambda self: credit_rate))
-	counts, deepest_debt = [], 0.0
-	for patch in patches:
-		patch.start()
-	try:
-		for _ in range(years):
-			game.state.scenario.year += 1
-			game.advance_actors(game.state.scenario.year)
-			counts.append(len(game.actors.active_firms()))
-			for firm in game.actors.active_firms():
-				deepest_debt = max(deepest_debt, firm.debt())
-	finally:
-		for patch in patches:
-			patch.stop()
-	stakes = [firm.record.plan["stake"] for firm in game.actors.active_firms() if "stake" in firm.record.plan]
-	return game, counts, deepest_debt, stakes
+class CopyBudgetTests(unittest.TestCase):
+	def firm(self, last_margin):
+		state = ActorsState(home_country="home")
+		firm = Firm("zz", ActorRecord(kind="firm", last_margin=last_margin, founded_year=100))
+		firm.attach(state.purses)
+		return firm
+
+	def test_a_firm_with_no_money_may_still_budget_what_its_earning_lets_it_borrow(self):
+		self.assertGreater(self.firm(1.0e5).copy_budget(make_world()), 0.0)
+
+	def test_a_firm_with_no_earning_has_no_copy_budget_on_credit(self):
+		self.assertEqual(self.firm(0.0).copy_budget(make_world()), 0.0)
 
 
-_funded_game, funded_counts, _debt, funded_stakes = run()
-whole_stake = max(funded_stakes)
-check("a founder who can put up the whole stake founds firms beyond the opening ones",
-      max(funded_counts) > funded_counts[0] and whole_stake > 0.0, (funded_counts, whole_stake))
-
-short = 1.05 * ENTRY_EQUITY_SHARE * whole_stake   # more than lenders' share of the stake, so little over it that the entrant must borrow
-unfunded, short_counts, borrowed, short_stakes = run(ceiling=short)
-check("a founder short of the whole stake but putting up lenders' share still founds firms, on credit",
-      max(short_counts) > short_counts[0] and bool(short_stakes) and max(short_stakes) <= short + 1e-6 < whole_stake,
-      (short_counts, short_stakes, short, whole_stake))
-check("an entrant that borrowed owes the market", borrowed > 0.0, borrowed)
-
-# Under lenders' share of the stake: no one backs the entrant. The stake an entrant weighs falls as the concern
-# ages (the early years' losses it must carry shrink), so "the stake" is the smallest one weighed in the funded run.
-thin = 0.5 * ENTRY_EQUITY_SHARE * min(faced)
-_thin_game, thin_counts, _thin_debt, thin_stakes = run(ceiling=thin)
-check("a founder putting up less than lenders' share founds no firm from savings (only the opening ones stand)",
-      max(thin_counts) == thin_counts[0] and not thin_stakes, (thin_counts, thin_stakes))
-
-_dear_game, dear_counts, _dear_debt, _stakes = run(ceiling=short, credit_rate=2.0)
-check("dearer credit leaves fewer entrants on credit", max(dear_counts) < max(short_counts), (dear_counts, short_counts))
-
-# a firm's copy budget counts what it may still borrow
-world = SimWorld(unfunded)
-firm = Firm("zz", ActorRecord(kind="firm", last_margin=1.0e5, founded_year=world.year))
-check("a firm with no money may still budget what its earning lets it borrow", firm.copy_budget(world) > 0.0,
-      firm.copy_budget(world))
-firm.record.last_margin = 0.0
-check("a firm with no earning has no copy budget on credit", firm.copy_budget(world) == 0.0)
+if __name__ == "__main__":
+	unittest.main()

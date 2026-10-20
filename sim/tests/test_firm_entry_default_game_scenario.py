@@ -1,8 +1,8 @@
-"""Complaint 476: in a default game (nothing readied by a test helper) a firm enters a concern the founder runs.
+"""Scenario, Complaint 476: in a default game (nothing readied by a test helper) a firm enters a concern the founder runs.
 An entrant sees a concern from where its country sits; a country sits where its people are, so the founder's
 concern is in sight. Slow topic: it builds a game on the open agent economy and runs a few years.
 
-Re-measure: `python3 -m sim.tests --slow --only firm_entry_default_game`."""
+Re-measure: `python3 -m sim.tests --slow --only firm_entry_default_game_scenario`."""
 from .harness import *  # noqa: F401,F403
 
 from sim.agents.api import PLAYER_VISIBLE_EXPOSURE
