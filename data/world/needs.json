@@ -12,6 +12,8 @@
   "shelter": {
    "subsistence_from_climate": "shelter_m3",
    "surplus_budget_share": 0.12,
+   "satiation_multiple_of_floor": 3.0,
+   "satiation_basis": "Past a roomy dwelling, more wall and roof is not wanted, and a household that has money left builds no more house with it. The floor is the Sphere minimum covered area of 3.5 square metres a head; living space in pre-industrial housing was of the order of ten square metres a head, about three times that (floor areas of peasant and urban tenement dwellings, recalled and not re-opened; confidence D). The limit is that multiple of the tile's own floor, since the floor follows the climate's wall thickness.",
    "unit": "cubic metres of wall or frame",
    "effectiveness_basis": "volume of structure one unit builds"
   },

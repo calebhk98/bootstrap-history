@@ -47,6 +47,8 @@ def check_needs(needs: Dict[str, Any], goods: Dict[str, Any]) -> None:
             raise ModError("need %r needs a positive surplus_budget_share" % need_id)
         if not spec.get("satiation_per_capita_per_year", 1) > 0:
             raise ModError("need %r needs a positive satiation_per_capita_per_year" % need_id)
+        if not spec.get("satiation_multiple_of_floor", 1) >= 1:
+            raise ModError("need %r needs a satiation_multiple_of_floor of at least one" % need_id)
     for material, attributes in goods.items():
         for need_id, effectiveness in (attributes.get("satisfies") or {}).items():
             if need_id not in needs:
