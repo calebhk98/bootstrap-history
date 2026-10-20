@@ -37,6 +37,16 @@ class OpeningTests(unittest.TestCase):
         self.assertLess(aptitude.band_total(state.workers["vale"]["healer"]), 90.0)
         self.assertAlmostEqual(records.people_in(state), 100.0)
 
+    def test_people_no_employer_needs_work_their_plots_as_the_idle_trade(self):
+        registry = dict(REGISTRY, plougher={"family": "toil", "training_years": 1})
+        specs = trades.trade_specs(registry)
+        state = opening.opening_state(specs, {"vale": 1000.0},
+                                      {"vale": {"carver": 100 * HOURS, "digger": 50 * HOURS}}, HOURS, "plougher")
+        by_trade = {trade: aptitude.band_total(bands) for trade, bands in state.workers["vale"].items()}
+        self.assertAlmostEqual(by_trade["digger"], 50.0)
+        self.assertAlmostEqual(by_trade["plougher"], 850.0)
+        self.assertAlmostEqual(records.people_in(state), 1000.0)
+
     def test_a_year_runs_from_the_opening(self):
         inputs = records.YearInputs(
             trades=self.specs, bids=[records.Bid("yard", "carver", "vale", 100 * HOURS, 5.0)],

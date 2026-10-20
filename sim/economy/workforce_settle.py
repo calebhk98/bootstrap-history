@@ -11,7 +11,7 @@ from typing import Dict, Tuple
 from sim.labour.api import fallback_trade
 
 from . import producers
-from .labour_state import core_trades
+from .labour_state import core_trades, plot_trade
 from .market_memory import market_key
 from .setup import labour_area
 
@@ -41,7 +41,9 @@ def trim_to_expected_hours(setup, record, view) -> None:
     """Cut every non-fallback trade holding more people than the hours wanted need; the rest join the
     fallback trade in the same ability bands."""
     fallback = fallback_trade(core_trades(setup))
-    trim_people(record.workforce, expected_hours(setup, record, view), fallback, setup.working_hours_per_year)
+    wanted = expected_hours(setup, record, view)
+    trim_people(record.workforce, wanted, fallback, setup.working_hours_per_year)
+    send_idle_to_plots(record.workforce, wanted, fallback, plot_trade(setup), setup.working_hours_per_year)
 
 
 def trim_people(state, wanted: Dict[Tuple[str, str], float], fallback: str, working_hours_per_year: float) -> None:
@@ -68,6 +70,24 @@ def trim_people(state, wanted: Dict[Tuple[str, str], float], fallback: str, work
             for cohort in cohorts:
                 _give_to_fallback(workers, fallback, [count * (1.0 - factor) for count in cohort[1]])
                 cohort[1] = [count * factor for count in cohort[1]]
+
+
+def send_idle_to_plots(state, wanted: Dict[Tuple[str, str], float], fallback: str, idle_trade: str,
+                       working_hours_per_year: float) -> None:
+    """The fallback trade keeps the people its wanted hours need; the rest, whom no employer wants, work their own
+    plots as `idle_trade`."""
+    if not idle_trade or idle_trade == fallback:
+        return
+    for area, by_trade in state.workers.items():
+        bands = by_trade.get(fallback)
+        people = sum(bands) if bands else 0.0
+        keep = wanted.get((area, fallback), 0.0) / working_hours_per_year
+        if people <= keep or people <= 0.0:
+            continue
+        factor = keep / people
+        freed = [count * (1.0 - factor) for count in bands]
+        bands[:] = [count * factor for count in bands]
+        _give_to_fallback(by_trade, idle_trade, freed)
 
 
 def _give_to_fallback(by_trade, fallback: str, freed) -> None:

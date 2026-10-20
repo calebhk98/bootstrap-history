@@ -438,7 +438,8 @@ class PopulationMixin:
 
     def national_trade_population(self, trade):
         """A rough ESTIMATE of how many people ply this trade across the whole
-        country - not this household's reach: the same share of work
+        country - not this household's reach. Where the labour core holds people of the trade it is their
+        count (one source of people by trade); for a trade it holds nobody in, the same share of work
         _town_people_of_trade reads, applied to the country's urban working
         people instead of one town's. 0.0 for a trade this society does not
         have (trade_available says so). Nobody has published an occupational
@@ -461,6 +462,9 @@ class PopulationMixin:
             return urban * self.MERCHANT_DENSITY
         if trade in self._world.trades_absent:
             return self._taught_trade_people(trade)
+        in_core = (self.core_people_by_trade() or {}).get(trade, 0.0)
+        if in_core > 0.0:
+            return in_core   # the labour core's headcount; the shares below stand in only where it holds nobody
         if trade == FARM_TRADE:
             return working * (1.0 - float(self._world.civ.get("urban_fraction", 0.0)))
         if self._is_unskilled_pool(trade):
