@@ -79,10 +79,12 @@ def diffuse(actors: Iterable[Any], world: Any) -> List[str]:
 	knows what it rests on, learns it with the yearly share the half-life leaves, scaled by how much of it the
 	holder shows at the learner's distance. Returns "learner:node" for each learning, in order."""
 	ordered = sorted(actors, key=lambda actor: actor.identity())
-	baseline = world.baseline_knowledge()
+	known = sorted({node for actor in ordered for node in actor.knowledge} - world.baseline_knowledge())
+	if not known:
+		return []
 	hazard = 1.0 - 0.5 ** (1.0 / max(1e-9, world.knowledge_half_life_years()))
 	learned = []
-	for node_id in sorted({node for actor in ordered for node in actor.knowledge} - baseline):
+	for node_id in known:
 		if node_id not in world.nodes:
 			continue
 		holders = [actor for actor in ordered if node_id in actor.knowledge]
