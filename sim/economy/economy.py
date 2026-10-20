@@ -9,7 +9,7 @@ from typing import Any, Dict, Mapping, Optional, Tuple
 
 from sim.world import capital_market
 
-from . import bondage, banks, carriage_hours, credit, debt_relief, credit_claims, currency, equity, labour, land_market, lending, merchants_credit, producers, shares, sites, state_budget, tax_farming, titles_inheritance, unit_cost
+from . import bondage, banks, carriage_hours, credit, debt_relief, credit_claims, currency, equity, labour, land_market, lending, merchants_credit, producers, shares, sites, state_budget, tax_farming, titles_inheritance, titles_worked, unit_cost
 from .credit_view import CreditView
 from .market_areas import AreaMap
 from .market_areas_follow import follow
@@ -256,12 +256,25 @@ class Economy:
     def _shortfall_hours(self) -> Dict[str, float]:
         """Hours each cohort keeps back for its own-plot plan, at the tile's usual fertility (it plants
         before it knows the harvest)."""
-        hours = {}
+        hours, held = {}, self._hectares_held()
         for cohort_id, cohort in sorted(self.record.cohorts.items()):
             tile = self.setup.tiles.get(cohort.tile)
             hours[cohort_id] = hours_for_own_plan(cohort, self._own_plot_options(),
-                                                  tile.fertility if tile else 0.0)
+                                                  tile.fertility if tile else 0.0, self.setup.recipes,
+                                                  self.setup.land_per_run, held.get(cohort_id, 0.0))
         return hours
+
+    def _hectares_held(self) -> Dict[str, float]:
+        """Hectares each cohort may work for itself: the land it holds or leases (titles, tenancies), cut to
+        the tile's arable land if the claims exceed it. Decided before any growing."""
+        record, held = self.record, {}
+        for tile_id in sorted({cohort.tile for cohort in record.cohorts.values()}):
+            tile = self.setup.tiles.get(tile_id)
+            arable = tile.cropland_hectares if tile else 0.0
+            asked = {cohort.agent_id: titles_worked.worked_share(record, tile_id, cohort.agent_id) * arable
+                     for cohort in record.cohorts.values() if cohort.tile == tile_id}
+            held.update(titles_worked.allocate_hectares(asked, arable))
+        return held
 
     def _grow_own(self, offers, ledger: YearLedger, harvest_factor: float = 1.0,
                   kept: Optional[Dict[str, float]] = None) -> None:
@@ -270,6 +283,7 @@ class Economy:
         self._own_plot_options()
         kept = kept or {}
         self._own_hectares = {}
+        held = self._hectares_held()
         offered: Dict[str, float] = {}
         for offer in offers:
             offered[offer.worker] = offered.get(offer.worker, 0.0) + offer.hours
@@ -278,7 +292,8 @@ class Economy:
             tile = setup.tiles.get(cohort.tile)
             moves, grown, units = own_production(cohort, idle, self._own_options, setup.recipes,
                                                  (tile.fertility if tile else 0.0) * harvest_factor,
-                                                 setup.basket_for(cohort.tile))
+                                                 setup.basket_for(cohort.tile), setup.land_per_run,
+                                                 held.get(cohort.agent_id, 0.0))
             if moves:
                 record.book.move_many(moves)
                 ledger.grown[cohort_id] = grown
