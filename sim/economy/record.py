@@ -162,6 +162,7 @@ def _merchant_record(merchant: Merchant) -> Dict[str, Any]:
             "routes": {key: list(value) for key, value in _pair_keys(merchant.routes).items()},
             "carriage_hours_wanted": merchant.carriage_hours_wanted,
             "carriage_money_wanted": merchant.carriage_money_wanted,
+            "carrier_wear": merchant.carrier_wear, "carrier_team_days": merchant.carrier_team_days,
             "in_transit": [plain(each) for each in merchant.in_transit],
             "price_history": _pair_keys(merchant.price_history)}
 
@@ -174,5 +175,6 @@ def _merchant_from(record: Dict[str, Any]) -> Merchant:
                     routes={key: tuple(value) for key, value in _split_keys(record["routes"]).items()},
                     carriage_hours_wanted=record["carriage_hours_wanted"],
                     carriage_money_wanted=record["carriage_money_wanted"],
+                    carrier_wear=record["carrier_wear"], carrier_team_days=record["carrier_team_days"],
                     in_transit=[Shipment(**each) for each in record["in_transit"]],
                     price_history=_split_keys(record["price_history"]))

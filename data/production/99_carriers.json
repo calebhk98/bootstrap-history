@@ -1,0 +1,86 @@
+{
+ "_note": "Carriers other than seagoing hulls and animals (those are in 99_ships.json and 90_additions.json): the vehicles and rigs that carriage wears out (Complaints/629). Every mass, hour count and allocation is an estimate marked in each yield_basis. carrier_use.serves names which geography mode carrier input the good supplies; days_per_year is the days a unit works in a year.",
+ "materials": {
+  "cart": {
+   "outputs": {
+    "cart": 1.0
+   },
+   "inputs": {
+    "timber_m3": 0.4,
+    "iron_bar_kg": 15.0
+   },
+   "labour_hours": {
+    "carpenter": 150.0,
+    "smith": 15.0
+   },
+   "unit_dimension": "count",
+   "unit_mass_kg": 215.0,
+   "basis": "per two-wheeled cart without its team or harness",
+   "yield_basis": "MASS: geography's CART_SELF_MASS_KG (sim/geography/transport.py), 200 kg empty, cited there as 150-250 kg for a two-wheeled wood-and-iron cart; allocated here as 0.25 m3 of retained timber at the timber recipe density of 600 kg/m3 (150 kg) plus about 15 kg of iron tyre strips, nails and axle fittings; 0.4 m3 is bought to allow shaping offcuts. LABOUR: 150 carpenter hours (wheel making is most of it) and 15 smith hours are TEMPORARY HEURISTICS, confidence D, recalled order of magnitude, not a measured work log. No price sets the bill. Retire when a measured wheelwright's work log is found (complaint 629 follow-up).",
+   "requires_node": "lnd_two_wheel_cart",
+   "conf": "D",
+   "capital_asset": true,
+   "carrier_use": {
+    "serves": {
+     "vehicle": "cart"
+    },
+    "days_per_year": 150.0
+   }
+  },
+  "pack_saddle": {
+   "outputs": {
+    "pack_saddle": 1.0
+   },
+   "inputs": {
+    "timber_m3": 0.02,
+    "leather_kg": 6.0,
+    "cordage_kg": 2.0
+   },
+   "labour_hours": {
+    "leatherworker": 40.0,
+    "carpenter": 10.0
+   },
+   "unit_dimension": "count",
+   "unit_mass_kg": 15.0,
+   "basis": "per wood-framed pack saddle with girth and breeching rigging, for one animal",
+   "yield_basis": "MASS: geography's PACK_SADDLE_MASS_KG, 15 kg for a loaded rig before cargo (10-20 kg cited there). Allocated as a wooden frame of about 0.01 m3 (6 kg at 600 kg/m3; 0.02 m3 bought), 6 kg of leather and 2 kg of cord for girths and padding. LABOUR: 40 leatherworker (saddler) and 10 carpenter hours are TEMPORARY HEURISTICS, confidence D, author's estimates. Retire with a measured saddler's work log (complaint 629 follow-up).",
+   "requires_node": "lnd_mule_transport",
+   "conf": "D",
+   "capital_asset": true,
+   "carrier_use": {
+    "serves": {
+     "model": "pack"
+    },
+    "days_per_year": 150.0
+   }
+  },
+  "river_barge": {
+   "outputs": {
+    "river_barge": 1.0
+   },
+   "inputs": {
+    "timber_m3": 5.0,
+    "wood_tar_kg": 40.0,
+    "iron_bar_kg": 30.0,
+    "cordage_kg": 20.0
+   },
+   "labour_hours": {
+    "shipwright": 500.0,
+    "labourer": 100.0
+   },
+   "unit_dimension": "count",
+   "unit_mass_kg": 3200.0,
+   "basis": "per flat-bottomed river or canal barge towed from a path, without cargo or team",
+   "yield_basis": "MASS: geography's BARGE_SELF_MASS_KG (sim/geography/transport.py), 3000 kg empty (a few tonnes, confidence D there). Allocated as 4.5 m3 of retained timber at 600 kg/m3 (about 2700 kg) plus 30 kg iron fastenings, 40 kg tar and 20 kg cord; 5 m3 is bought for offcuts. LABOUR: about a sixth of the merchant ship's shipwright hours, with a helper share like the ship's; TEMPORARY HEURISTICS, confidence D. Retire with measured barge scantlings and build logs (complaint 629 follow-up).",
+   "requires_node": "lnd_ox_transport",
+   "conf": "D",
+   "capital_asset": true,
+   "carrier_use": {
+    "serves": {
+     "vehicle": "barge"
+    },
+    "days_per_year": 150.0
+   }
+  }
+ }
+}

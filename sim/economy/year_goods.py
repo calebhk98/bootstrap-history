@@ -9,7 +9,7 @@ import dataclasses
 import math
 from typing import Dict, List, Tuple
 
-from . import (goods_market, households, market_curves, merchants, producers, seller_cash, seller_offers, settlement,
+from . import (carriage_wear, goods_market, households, market_curves, merchants, producers, seller_cash, seller_offers, settlement,
                state_budget, state_store, taxes, unsold_search)
 from .market_memory import market_key
 from .market_memory_asks import (memory_reference_volume, note_bids, note_offers, price_after_no_bids,
@@ -86,10 +86,14 @@ def merchant_orders(setup, record, view, area_map, carriage, order_book: OrderBo
     rate = view.interest_rate(money)
     shares = merchants.RouteShares()
     ordered = sorted(record.merchants.values(), key=lambda each: each.agent_id)
+    carrier_bids, carrier_budget = (carriage_wear.bids(setup, record, view, area_map,
+                                                       {each.agent_id: record.book.balance(each.agent_id, money) for each in ordered})
+                                    if carriage_wear.wears(setup) else ([], {}))
+    add_orders(order_book, AgentOrders(bids=tuple(carrier_bids)))     # replacements for the carriers last year's shipments wore
     first = view.year % len(ordered) if ordered else 0          # who sizes first rotates, so no merchant always gets first pick
     for merchant in ordered[first:] + ordered[:first]:
         held = _held_stock(record.book, merchant.agent_id)
-        orders = merchants.orders(merchant, view, carriage, area_map, record.book.balance(merchant.agent_id, money),
+        orders = merchants.orders(merchant, view, carriage, area_map, record.book.balance(merchant.agent_id, money) - carrier_budget.get(merchant.agent_id, 0.0),
                                   held, setup.specs, rate, shares)
         add_orders(order_book, orders)
 

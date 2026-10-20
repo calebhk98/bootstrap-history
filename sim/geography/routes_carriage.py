@@ -8,12 +8,12 @@ Standalone: the map's modes and `routes_rates`.
 """
 from typing import Any, Dict, Iterable, Optional
 
-from sim.geography import routes_modes, routes_rates
+from sim.geography import routes_carriers, routes_modes, routes_rates
 from sim.geography.map_source import WorldMap
 
 
 def carriage_rates(world_map: WorldMap, mode_ids: Iterable[str]) -> Dict[str, Dict[str, Any]]:
-    """{mode_id: {crew_trade, crew_hours_per_tonne_km, cost_hours_per_tonne_km, handling_hours_per_tonne, edge_classes}} for each
+    """{mode_id: {carriers, tonne_km_per_team_day, team_payload_tonnes, crew_trade, crew_hours_per_tonne_km, cost_hours_per_tonne_km, handling_hours_per_tonne, edge_classes}} for each
     named mode with a crew trade and a rate on level, still ground or water."""
     known = routes_modes.modes(world_map)
     found: Dict[str, Dict[str, Any]] = {}
@@ -24,7 +24,11 @@ def carriage_rates(world_map: WorldMap, mode_ids: Iterable[str]) -> Dict[str, Di
         rate = _level_rate(world_map, mode)
         if rate is None:
             continue
-        found[mode_id] = {"crew_trade": mode["crew_trade"],
+        team = routes_carriers.team_of(mode)
+        found[mode_id] = {"carriers": [list(each) for each in team[0]] if team else [],
+                          "tonne_km_per_team_day": team[1] if team else 0.0,
+                          "team_payload_tonnes": team[2] if team else 0.0,
+                          "crew_trade": mode["crew_trade"],
                           "crew_hours_per_tonne_km": rate.labour_hours,
                           "cost_hours_per_tonne_km": routes_rates.physical_cost(world_map, rate),
                           "handling_hours_per_tonne": float(mode.get("handling_hours_per_tonne", 0.0)),
