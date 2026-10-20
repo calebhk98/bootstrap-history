@@ -91,10 +91,12 @@ class CrewHire:
     """The carriers a merchant hired for the year. `hours_per_tonne(source, destination)` is the crew a tonne
     needs on that haul, as ((crew key, hours),) where a key names a trade and the tile it is hired at; `hours_hired`
     the hours hired by key (None: no plan to hire for yet, so the shipments are not limited) and `wage` their
-    average pay an hour by key (already paid in the labour market)."""
+    average pay an hour by key (already paid in the labour market). `reference_wage` is the wage an hour of crew
+    was priced at in the carriage table's rates: it sets how much of a fee is the crew's."""
     hours_per_tonne: Callable[[TileId, TileId], Tuple[Tuple[str, float], ...]]
     hours_hired: Optional[Mapping[str, float]]
     wage: Mapping[str, float]
+    reference_wage: float
 
 
 @dataclass(frozen=True)
@@ -384,9 +386,14 @@ def dispatch(merchant: Merchant, fills: Sequence[Fill], carriage: CarriageTable,
         net_unit = per_unit - crew_money
         affordable = quantity if net_unit <= 0.0 else min(quantity, remaining / net_unit)
         route_hours = math.fsum(hours for _key, hours in crew_rows)
-        for key, hours in crew_rows:      # the fee is all the money the route's hours stand for, shared by their hours
+        crew_part = per_unit
+        if crew is not None and crew_rows and crew.reference_wage > 0.0:      # feed, carts and animals are paid to others, so only the crew's part of the fee is what its hours stand for (rates not priced at a wage: all of it)
+            others_part = max(0.0, carriage.unscaled_cost_per_tonne(tile, route[0]) * tonnes_per_unit
+                              - route_hours * crew.reference_wage)
+            crew_part = max(0.0, per_unit - others_part)
+        for key, hours in crew_rows:      # shared by the route's hours
             wanted[key] = wanted.get(key, 0.0) + quantity * hours
-            worth[key] = worth.get(key, 0.0) + quantity * per_unit * hours / route_hours
+            worth[key] = worth.get(key, 0.0) + quantity * crew_part * hours / route_hours
         shipments.append([good, tile, route, quantity, affordable, per_unit, crew_money, crew_rows])
         remaining -= affordable * net_unit
     cut: Dict[str, float] = {}       # the share of a crew key's hours that was hired, where it falls short

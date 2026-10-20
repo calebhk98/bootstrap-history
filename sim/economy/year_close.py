@@ -53,7 +53,7 @@ def dispatch_merchants(setup, record, carriage, ledger: YearLedger) -> None:
         if crew is not None:
             hours_hired, wages = ((carriage_hours.engaged(record, merchant, index)) if carriage_hours.planned(merchant)
                                   else (None, {}))
-            hire = merchants.CrewHire(crew.hours_per_tonne, hours_hired, wages)
+            hire = merchants.CrewHire(crew.hours_per_tonne, hours_hired, wages, setup.carriage_wage)
         done = merchants.dispatch(merchant, fills, carriage, setup.specs, money,
                                   record.book.balance(merchant.agent_id, money), _held_stock(record.book, merchant.agent_id),
                                   carrier_of=carriers.get, crew=hire,

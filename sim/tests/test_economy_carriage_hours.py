@@ -83,10 +83,10 @@ class CarriageHireTests(unittest.TestCase):
         self.assertAlmostEqual(self.hiring_economy.record.book.check_conservation(1e-9).money["coin"], 0.0)
 
 
-def hire(hours_hired, hours_per_unit=0.5, wage=1.0):
+def hire(hours_hired, hours_per_unit=0.5, wage=1.0, reference_wage=1.0):
     """Crew of one trade hired at tile a: each tonne needs `hours_per_unit` hours, of which `hours_hired` were bought."""
     key = market_key(fixture.LABOURER, "a")
-    return CrewHire(lambda _source, _destination: ((key, hours_per_unit),), {key: hours_hired}, {key: wage})
+    return CrewHire(lambda _source, _destination: ((key, hours_per_unit),), {key: hours_hired}, {key: wage}, reference_wage)
 
 
 class ShortfallTests(unittest.TestCase):
@@ -125,6 +125,29 @@ class ShortfallTests(unittest.TestCase):
 
     def test_hours_wanted_are_reported_before_any_cut(self):
         self.assertAlmostEqual(self.ship(2.5).crew_hours_wanted[market_key(fixture.LABOURER, "a")], 5.0)
+
+
+class CrewWorthTests(unittest.TestCase):
+    """Complaint 556 follow-up: an hour of crew is worth to a merchant only the crew's part of the carriage fee,
+    since the rest of the fee (feed, carts, animals) is paid to others; bidding the whole fee over the hours
+    lifts the labour wage far above what the carriage pays a driver."""
+
+    def want(self, reference_wage):
+        carriage, _m, area_a, _b = world()
+        who = merchant()
+        plan(who, 2.0, 5.0)
+        return merchants.dispatch(who, (), carriage, SPECS, "coin", 100.0, {("salt", "a"): 10.0},
+                                  crew=hire(100.0, reference_wage=reference_wage))
+
+    def test_the_most_an_hour_is_worth_is_the_crews_part_of_the_fee(self):
+        key = market_key(fixture.LABOURER, "a")
+        result = self.want(0.2)       # ten units cost ten in carriage; five crew hours at 0.2 an hour are one of it
+        self.assertAlmostEqual(result.crew_money_wanted[key] / result.crew_hours_wanted[key], 0.2)
+
+    def test_a_reference_wage_above_the_whole_fee_still_values_the_hours_at_no_more_than_the_fee(self):
+        key = market_key(fixture.LABOURER, "a")
+        result = self.want(50.0)
+        self.assertAlmostEqual(result.crew_money_wanted[key], 10.0)
 
 
 class CrewTests(unittest.TestCase):
