@@ -16,6 +16,7 @@ import math
 from sim.constants import declare
 
 from . import trade_data
+from .wage_factors import annual_wage, housing_factor
 from .market.clearing import (FIRM_LABOUR_SUPPLY_ELASTICITY, MATCHING_EFFICIENCY_PER_YEAR,
                               MATCHING_SEARCHER_ELASTICITY)
 
@@ -177,9 +178,9 @@ class LabourMarket:
     def town_housing_factor(self):
         """The housing multiplier on a wage. It reads how full the town's housing is from everyone
         employed in it, so it is the same for every employer hiring there."""
-        occupancy = self.town_workers() / max(1.0, self.town_housing_room())
-        pressure = (occupancy - self._labour.HOUSING_PRESSURE_START_OCCUPANCY) / self._labour.HOUSING_PRESSURE_BAND
-        return 1.0 + self._labour.HOUSING_PRESSURE_MAX_MARKUP * max(0.0, min(1.0, pressure))
+        return housing_factor(self.town_workers(), self.town_housing_room(),
+                              self._labour.HOUSING_PRESSURE_START_OCCUPANCY, self._labour.HOUSING_PRESSURE_BAND,
+                              self._labour.HOUSING_PRESSURE_MAX_MARKUP)
 
     def _annual(self, trade, scarcity):
         world = self._world
@@ -188,8 +189,7 @@ class LabourMarket:
             return wage * world.HOURS_PER_PERSON_YEAR * scarcity
         base = self._labour.base_annual_wage(trade)
         factors = self._labour.wage_cost_factors(trade)
-        return (base * factors["weighted"] * world.price_index
-                * world.wage_index * scarcity * self.pay_scale())
+        return annual_wage(base, factors["weighted"], world.price_index, world.wage_index, scarcity, self.pay_scale())
 
     def quote_annual(self, trade, people=0.0, employer=None, pay_premium=0.0):
         """Money one person-year of a trade costs `employer` now. `people` more taken on first move

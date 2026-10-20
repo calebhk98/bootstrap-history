@@ -1,98 +1,65 @@
-"""Complaints/62: direct technology literacy effects ignore the ceiling.
+"""Complaints/62: a technology's direct literacy effect respects the same ceiling schooling does.
 
-The schooling path in _advance_literacy() correctly clamps literacy to
-literacy_ceiling_elite(), but the direct tech-effect path in apply_tech_effects()
-only clamps to [0.0, 1.0], allowing technologies to push literacy past the
-stated ceiling of 0.97.
+The clamp is `literacy_after_effect`; the schooling path is `CountryLiteracy.school`. Both are called on values built
+here. (`CountryLiteracy.set` clamping to its ceiling is held by test_country_literacy_totals.)"""
+QUICK_TOPIC = True
 
-unittest.TestCase style, like the other focused complaint suites.
-"""
-import os
-import random
-import sys
 import unittest
 
-_REPOSITORY_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(
-    os.path.abspath(__file__))))
-if _REPOSITORY_ROOT not in sys.path:
-    sys.path.insert(0, _REPOSITORY_ROOT)
-from sim import simulator
-from sim.engine.core import Sim
-from sim.tests.harness import build_unopened
+from sim.agents.api import ActorRecord, ActorRegistry, ActorsState, CountryLiteracy
+from sim.engine.literacy_effect import literacy_after_effect
 
-_TREE, _PRICES, _NODES, _WAGES, _GOODS = simulator.load()
+CEILING = 0.99
 
 
-def _fresh_sim():
-    return build_unopened(lambda: Sim(_NODES, list(_NODES), random.Random(1)))
+def literacy_of_one_class(literacy, property_share=0.3):
+    registry = ActorRegistry(ActorsState(home_country="home"))
+    stratum = registry.add("stratum:home:readers", ActorRecord(
+        kind="stratum", country=None, stratum="readers", members=100, literacy=literacy,
+        plan={"property_share": property_share}))
+    return stratum, CountryLiteracy(registry.of_kind("stratum"))
 
 
-class LiteracyCeilingTests(unittest.TestCase):
+class TechnologyEffectTests(unittest.TestCase):
+    def test_an_effect_that_would_pass_the_ceiling_stops_at_it(self):
+        self.assertEqual(literacy_after_effect(0.95, 0.2, CEILING), CEILING)
 
-    def test_direct_tech_effect_respects_elite_ceiling(self):
-        # Create a sim and push elite literacy high through tech effects
-        sim = _fresh_sim()
+    def test_several_effects_in_a_row_still_stop_at_the_ceiling(self):
+        share = 0.4
+        for delta in (0.2, 0.3, 0.4):
+            share = literacy_after_effect(share, delta, CEILING)
+        self.assertEqual(share, CEILING)
 
-        # Start with a high elite literacy (close to ceiling)
-        sim.set_literacy("literacy_elite", 0.95)
+    def test_an_effect_below_the_ceiling_adds_its_whole_delta(self):
+        self.assertAlmostEqual(literacy_after_effect(0.4, 0.2, CEILING), 0.6)
 
-        # Apply tech effects that would push it over the ceiling.
-        # printing_press adds 0.2 to literacy_elite
-        sim.apply_tech_effects("printing_press")
+    def test_a_share_already_above_the_ceiling_is_not_pulled_down_by_a_gain(self):
+        self.assertEqual(literacy_after_effect(0.995, 0.1, CEILING), 0.995)
 
-        # Elite literacy should never exceed the ceiling
-        elite_ceil = sim.literacy_ceiling_elite()
-        self.assertLessEqual(
-            sim.literacy("literacy_elite"), elite_ceil,
-            f"Elite literacy {sim.literacy('literacy_elite')} exceeds ceiling {elite_ceil}")
+    def test_a_loss_lowers_the_share_but_never_below_nothing(self):
+        self.assertAlmostEqual(literacy_after_effect(0.5, -0.2, CEILING), 0.3)
+        self.assertEqual(literacy_after_effect(0.1, -0.5, CEILING), 0.0)
 
-    def test_multiple_tech_effects_respect_elite_ceiling(self):
-        # Apply multiple tech effects that would collectively push past the ceiling
-        sim = _fresh_sim()
-        sim.set_literacy("literacy_elite", 0.4)
+    def test_the_result_is_a_share_even_with_a_ceiling_of_one(self):
+        self.assertEqual(literacy_after_effect(0.99, 0.5, 1.0), 1.0)
 
-        # Apply several literacy_elite increasing techs
-        elite_ceil = sim.literacy_ceiling_elite()
 
-        # Apply tech effects
-        for tech_id in ["printing_press", "arithmetic_positional", "school_founded"]:
-            if tech_id in _NODES:
-                sim.apply_tech_effects(tech_id)
+class SchoolingPathTests(unittest.TestCase):
+    def test_a_school_closes_the_asked_fraction_of_the_gap(self):
+        stratum, literacy = literacy_of_one_class(0.5)
+        literacy.school("literacy_elite", 0.25, CEILING)
+        self.assertAlmostEqual(stratum.record.literacy, 0.5 + 0.25 * (CEILING - 0.5))
 
-        # Elite literacy should never exceed the ceiling
-        self.assertLessEqual(
-            sim.literacy("literacy_elite"), elite_ceil,
-            f"Elite literacy {sim.literacy('literacy_elite')} exceeds ceiling {elite_ceil}")
+    def test_a_school_never_takes_a_class_past_the_ceiling(self):
+        stratum, literacy = literacy_of_one_class(0.95)
+        literacy.school("literacy_elite", 1.0, CEILING)
+        self.assertLessEqual(stratum.record.literacy, CEILING + 1e-12)
+        self.assertAlmostEqual(stratum.record.literacy, CEILING)
 
-    def test_schooling_path_respects_elite_ceiling(self):
-        # The schooling path should already work correctly
-        sim = _fresh_sim()
-        sim.set_literacy("literacy_elite", 0.95)
-
-        # Simulate having a school running
-        sim.state.projects.operating.add("school_founded")
-
-        # Call _advance_literacy which should respect the ceiling
-        sim._advance_literacy(0)
-
-        # Elite literacy should never exceed the ceiling
-        elite_ceil = sim.literacy_ceiling_elite()
-        self.assertLessEqual(
-            sim.literacy("literacy_elite"), elite_ceil,
-            f"Schooling path: Elite literacy {sim.literacy('literacy_elite')} exceeds ceiling {elite_ceil}")
-
-    def test_direct_effect_cannot_exceed_one_zero(self):
-        # Even with the current bug, literacy should not exceed 1.0
-        # This test documents current behavior
-        sim = _fresh_sim()
-        sim.set_literacy("literacy_elite", 0.99)
-
-        # Apply a high effect
-        sim.apply_tech_effects("printing_press")
-
-        # Should be clamped to [0, 1] at minimum
-        self.assertLessEqual(sim.literacy("literacy_elite"), 1.0)
-        self.assertGreaterEqual(sim.literacy("literacy_elite"), 0.0)
+    def test_a_class_above_the_ceiling_is_left_alone(self):
+        stratum, literacy = literacy_of_one_class(0.995)
+        literacy.school("literacy_elite", 0.5, CEILING)
+        self.assertEqual(stratum.record.literacy, 0.995)
 
 
 if __name__ == "__main__":

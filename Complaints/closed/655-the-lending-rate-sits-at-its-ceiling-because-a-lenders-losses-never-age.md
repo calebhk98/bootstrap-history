@@ -1,6 +1,6 @@
 # The lending rate sits at its ceiling for decades because a lender's losses never age
 
-**Status:** fix landed on branch credit-loss-rate-ages; open until the 60-year trace shows the rate off its ceiling
+**Status:** closed - an aging loss rate; the Rome trace of 4affa365 leaves the ceiling
 
 A 60-year Rome spin-up trace of b9ccb70b (`python3 sim/simulator.py spin-up-trace --civ rome_100ad --years 60`, run in a
 pinned worktree) has the market rate at its ceiling (`bounded_rate`, four times the starting rate) from year 8 to year
@@ -27,3 +27,12 @@ heuristic, retire named). `lender_ask.loss_rate`, `CreditView.loss_rate`, `lendi
 `banks.spread_of` / `bank_spread.spread` read the smoothed rate. Under the old rule a lender that lost once and was
 fully repaid asked a loss share of 1.0; tests in `sim/tests/test_economy_lender_ask.py` (AgingTests) cover fading,
 repeated losses, no losses and a clean glut. Still to do: the 60-year trace.
+
+
+## Confirmed on Rome (4affa365)
+
+`python3 sim/simulator.py spin-up-trace --civ rome_100ad --years 60` in a worktree pinned at 4affa365: the rate no longer sits at
+the ceiling (it moves between about zero and a third of the ceiling); the wage falls more slowly and levels off over the
+last decades; hired hours recover to about a third to two fifths of the opening's. The rate still touches zero in
+deflating years (the household floor is time preference plus expected inflation, floored at zero), and the opening's
+collapse (473, issue #61) remains.

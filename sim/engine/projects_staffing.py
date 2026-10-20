@@ -19,6 +19,8 @@ from sim.refusal import LogLine
 from sim.constants import declare
 from . import cause_book, category_traits
 from .agents_port import SimWorld
+from .staffing_events import unstaffed_closure_line
+from .affordability import deep_in_arrears, payback_years
 from .units_prose import money_text, per_year
 from sim.agents.api import business_review, edges
 
@@ -94,20 +96,9 @@ class StaffingMixin:
         closed = [closure.entry_key for closure in self.review_ventures((business_review.STAFF_SHORT,), year)]
         if closed:
             self.record_staffing_closures(len(closed), shortfalls)
-            household.log.append((year, LogLine(
-                "concerns_closed_unstaffed", "nobody left to keep an eye on %d concern%s (short of %s), so "
-                "%s closed; %d now shut for want of staff after this "
-                "year's reopenings. You still know how; reopen with "
-                "'open' once you have the people. The premises "
-                "and the stock stand for a few years yet, so "
-                "reopening soon costs a tenth of what opening did. %s"
-                % (len(closed), "" if len(closed) == 1 else "s",
-                   self.staffing_shortfall_words(shortfalls),
-                   ", ".join(sorted(closed)[:4])
-                   + (" and others" if len(closed) > 4 else ""),
-                   self.staffing_shut_count(), self.STAFFING_REMEDIES),
-                concerns=sorted(closed), closed_because="short_staffed", short=shortfalls,
-                stops_earnings_per_year=earnings_stopped)))
+            household.log.append((year, unstaffed_closure_line(
+                closed, shortfalls, self.staffing_shortfall_words(shortfalls), self.staffing_shut_count(),
+                self.STAFFING_REMEDIES, earnings_stopped)))
         return closed
 
     def review_ventures(self, rules=business_review.ALL_RULES, year=None):
@@ -522,9 +513,7 @@ class StaffingMixin:
         # THIS concern's own payback justifies opening it while in
         # arrears).
         household = self.state.household
-        _deep_arrears = (household.capital < 0
-                         and -household.capital > self.credit_limit() * self.AUTO_OPEN_DEEP_ARREARS_CREDIT_SHARE)
-        return _deep_arrears
+        return deep_in_arrears(household.capital, self.credit_limit(), self.AUTO_OPEN_DEEP_ARREARS_CREDIT_SHARE)
 
     def _auto_open_institution_candidates(self, _deep_arrears):
         """Capability institutions not yet running, that a founder could
@@ -687,7 +676,7 @@ class StaffingMixin:
             # as readily as against half-built work.
             if _deep_arrears:
                 node = self.nodes[node_id]
-                _payback = self.venture_capex(node_id) / max(0.01, node["rev"] - node["up"])
+                _payback = payback_years(self.venture_capex(node_id), node["rev"], node["up"])
                 if _payback > PAYBACK_LIMIT_YEARS:
                     if blocked is None:
                         blocked = (node_id, ("it would take %.1f years to pay for its "

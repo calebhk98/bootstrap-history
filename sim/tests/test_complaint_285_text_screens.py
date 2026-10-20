@@ -1,12 +1,11 @@
-"""Complaint 285: no text screen prints a quantity in a unit the player did not choose.
+"""Complaint 285 (scenario): no text screen prints a quantity in a unit the player did not choose.
 
-A short game is played (land bought, years stepped), non-default units are
-chosen for every dimension, and every read-only text screen is rendered. A
-screen fails when it still prints a native unit label (tonne, hectare, den),
-and a reply fails when a numeric field that reads like a quantity (the registry's `quantity_words`)
-has no field rule (so no converted sibling could exist for it). test_complaint_285_no_hand_units makes the same
-check on every reply key in the source, without a game.
-"""
+A short game is played (land bought, years stepped), non-default units are chosen for every dimension, and every
+read-only text screen is rendered. A screen fails when it still prints a native unit label (tonne, hectare, den), and a
+reply fails when a numeric field that reads like a quantity (the registry's `quantity_words`) has no field rule (so no
+converted sibling could exist for it). test_complaint_285_no_hand_units makes the same check on every reply key in the
+source, without a game; test_complaint_285_display_units tests the conversion on built replies."""
+# presentation: the subject is which unit labels the screens print
 from .harness import *
 import re as _re
 from sim.engine import units as U
@@ -52,6 +51,7 @@ def _unruled_keys(node, screen, parent=None):
 
 
 U.set_preferences(CHOICES)
+leaks_by_screen = {}
 for command in [{"cmd": name} for name in SCREENS] + ARGUMENT_SCREENS:
     screen = "%s %s" % (command["cmd"], command.get("what", "")) if len(command) > 1 else command["cmd"]
     reply = _agent_dispatch(game, NODES, dict(command))
@@ -60,12 +60,15 @@ for command in [{"cmd": name} for name in SCREENS] + ARGUMENT_SCREENS:
     # Lines that show command syntax name the unit a command accepts; they are not quantities.
     shown = [line for line in text.splitlines() if "<" not in line and '{"cmd"' not in line]
     leaks = [line.strip() for line in shown if NATIVE_LABEL.search(line)]
-    check("285 screen %s prints no native unit label" % screen, not leaks, leaks[:4])
-check("285 every quantity-like numeric field has a unit rule", not unruled, unruled)
+    if leaks:
+        leaks_by_screen[screen] = leaks[:4]
+check("285 scenario: no read-only screen prints a native unit label once other units are chosen",
+      not leaks_by_screen, leaks_by_screen)
+check("285 scenario: every quantity-like numeric field of every screen has a unit rule", not unruled, unruled)
 
 # The default choice leaves every screen as the game wrote it.
 U.set_preferences({})
-for screen in ("state", "materials", "market"):
-    check("285 default %s still reads native" % screen,
-          NATIVE_LABEL.search(render_pretty(screen, _agent_dispatch(game, NODES, {"cmd": screen}))) is not None)
+check("285 scenario: with the default choice the state, materials and market screens still read native",
+      all(NATIVE_LABEL.search(render_pretty(screen, _agent_dispatch(game, NODES, {"cmd": screen}))) is not None
+          for screen in ("state", "materials", "market")))
 U.set_registry(None)

@@ -54,15 +54,21 @@ def wage_rows(sim):
             for trade in sorted(WAGES)]
 
 
+def unknown_material_reply(material, known):
+    """The refusal of a material with no price: the near misses among the `known` ones, and where to see them all."""
+    wanted = str(material).strip().lower()
+    near = difflib.get_close_matches(wanted, known, n=5, cutoff=0.5) or [key for key in known if wanted in key][:5]
+    return {"ok": False, "error": "no material called %r has a price here%s. 'market' lists them all."
+            % (material, "; did you mean: " + ", ".join(near) if near else "")}
+
+
 def market_report(sim, offset=0, limit=DEFAULT_MATERIAL_PAGE, material=None):
     """The market screen; `material` narrows the table to that one (and drops the wages), or is refused with suggestions."""
     if material:
         known = priceable_materials(sim)
         wanted = str(material).strip().lower()
         if wanted not in known:
-            near = difflib.get_close_matches(wanted, known, n=5, cutoff=0.5) or [key for key in known if wanted in key][:5]
-            return {"ok": False, "error": "no material called %r has a price here%s. 'market' lists them all."
-                    % (material, "; did you mean: " + ", ".join(near) if near else "")}
+            return unknown_material_reply(material, known)
         return {"ok": True, "materials": material_rows(sim, 0, 1, only=wanted), "wages": []}
     return {"ok": True,
             "materials": material_rows(sim, max(0, offset), max(1, limit)),

@@ -1,18 +1,24 @@
 """Complaint 106: a society founds banks only once it holds a node declaring the `deposit_banking` mechanic; the
 engine hands the economy the institutions the home state's society holds (a civilisation with no banking
-institution yet must not get banks)."""
+institution yet must not get banks). Rules on built inputs; one scenario of the wiring on a game."""
 from .harness import *  # noqa: F401,F403
 
 from sim.engine import economy_port_institutions
+from sim.engine.mechanics import nodes_declaring
 from sim.economy import api as economy_api
 
-game = sim()
-nodes = game.nodes_with_mechanic("deposit_banking")
+declaring = nodes_declaring(NODES, "deposit_banking")
 check("a finance node in the tree declares the deposit_banking mechanic, with a source",
-      bool(nodes) and nodes[0].startswith("fin_") and game.mechanic(nodes[0], "deposit_banking").get("source"), nodes)
-check("Rome starts without the institution, so its economy is told of none",
-      economy_port_institutions.held(game) == (), economy_port_institutions.held(game))
+      bool(declaring) and declaring[0][0].startswith("fin_") and declaring[0][1].get("source"), declaring[:1])
+check("a society holding no banking mechanic is told of no institution",
+      economy_port_institutions.institutions_of(set()) == () and economy_port_institutions.institutions_of({"other"}) == ())
+check("a society holding the deposit_banking mechanic is told of the deposit banking institution",
+      economy_port_institutions.institutions_of({"deposit_banking"}) == (economy_api.DEPOSIT_BANKING,))
 
-game.state_treasury().knowledge.add(nodes[0])
-check("a state that holds the node gives the economy the institution",
-      economy_port_institutions.held(game) == (economy_api.DEPOSIT_BANKING,), economy_port_institutions.held(game))
+# scenario: the wiring from a state's knowledge to the economy's institutions, on a game
+game = sim()
+before = economy_port_institutions.held(game)
+game.state_treasury().knowledge.add(declaring[0][0])
+after = economy_port_institutions.held(game)
+check("scenario: Rome starts without the institution; a state that then holds the node gives the economy it",
+      before == () and after == (economy_api.DEPOSIT_BANKING,), (before, after))

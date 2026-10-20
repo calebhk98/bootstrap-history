@@ -1,109 +1,52 @@
-"""Complaints/34: buying SCHOLAR hours bought nothing.
+"""Complaints/34: buying scholar hours bought nothing, because the project gate read the standing headcount.
 
-Buying labourer hours worked. Commissioning a scholar took the money,
-confirmed the purchase, and left the project gate refusing in exactly the
-same words - because `start_reason` tested the standing HEADCOUNT
-(`effective_scholars`) rather than the hands actually available.
+The hands a household can put on a project are `hands_available` (staff, the founder, and a person per full year of
+contracted hours); the gate compares them with a node's need through `research_gate.hands_short`. Both are plain
+functions, called here on built numbers."""
+QUICK_TOPIC = True
 
-It is the same defect `craft_hands_available` was written to fix, and that
-function's own comment records what it cost: a Norse run ended six hundred
-years in with 136 technologies and 1.6 craftsmen, unable to build the
-workshop that craftsmen work in because it needs two. Nobody extended the
-fix to scholars, so the identical bug survived for them until a player hit
-it and reported it.
-
-unittest.TestCase style, like the other focused complaint suites.
-
-Commissioned scholar hours are gated on hands actually available, not the standing headcount.
-"""
-import os
-import random
-import sys
 import unittest
 
-_REPOSITORY_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(
-    os.path.abspath(__file__))))
-if _REPOSITORY_ROOT not in sys.path:
-    sys.path.insert(0, _REPOSITORY_ROOT)
-from sim import simulator
-from sim.engine.core import Sim
-from sim.tests.harness import build_unopened
+from sim.agents.research_gate import hands_short
+from sim.labour.hands import contracted_hours_of, hands_available
 
-_TREE, _PRICES, _NODES, _WAGES, _GOODS = simulator.load()
+HOURS_PER_PERSON_YEAR = 2000.0
 
 
-def _fresh_sim():
-    return build_unopened(lambda: Sim(_NODES, list(_NODES), random.Random(1)))
-
-
-class ContractedScholarHoursCountTests(unittest.TestCase):
-
-    def test_headcount_ignores_contracted_hours_and_should(self):
-        # effective_scholars stays a pure headcount deliberately: other
-        # callers want "how many people are there", and conflating the two
-        # is what made this bug hard to see. The fix is a SECOND function,
-        # not a changed one.
-        sim = _fresh_sim()
-        before = sim.labour.effective_scholars()
-        sim.household.contract_hours = {"scholar": 4000.0}
-        self.assertEqual(sim.labour.effective_scholars(), before)
-
+class HandsAvailableTests(unittest.TestCase):
     def test_contracted_hours_become_hands(self):
-        sim = _fresh_sim()
-        before = sim.labour.scholar_hands_available()
-        sim.household.contract_hours = {"scholar": 4000.0}
-        after = sim.labour.scholar_hands_available()
-        # 4,000 hours at 2,000 hours a person-year is two more scholars.
-        self.assertAlmostEqual(
-            after - before, 4000.0 / sim.HOURS_PER_PERSON_YEAR, places=9)
+        without = hands_available(3.0, True, 0.0, HOURS_PER_PERSON_YEAR)
+        with_contract = hands_available(3.0, True, 4000.0, HOURS_PER_PERSON_YEAR)
+        self.assertAlmostEqual(with_contract - without, 4000.0 / HOURS_PER_PERSON_YEAR, places=9)
 
-    def test_the_project_gate_reads_hands_not_headcount(self):
-        # The decisive one. Pick a node whose ONLY remaining blocker is the
-        # scholar count - every prerequisite satisfied - so the gate under
-        # test is the one actually reached. A first attempt at this test
-        # picked a node still missing prerequisites and "passed" against an
-        # unchanged message for the wrong reason, which is worth recording:
-        # a gate test that never reaches the gate proves nothing.
-        sim = _fresh_sim()
-        needed = int(sim.labour.effective_scholars()) + 2
-        target = None
-        for node_id, node in _NODES.items():
-            if node.get("sch") != needed:
-                continue
-            sim.household.done.update(node.get("pre", []))
-            message = sim.start_reason(node_id, _why=True)[1] or ""
-            if "scholars" in message:
-                target = (node_id, message)
-                break
-        self.assertIsNotNone(
-            target, "no node reachable with only the scholar count blocking")
-        node_id, blocked_message = target
+    def test_the_founder_is_a_pair_of_hands_while_alive(self):
+        self.assertAlmostEqual(hands_available(3.0, True, 0.0, HOURS_PER_PERSON_YEAR)
+                               - hands_available(3.0, False, 0.0, HOURS_PER_PERSON_YEAR), 1.0)
 
-        sim.household.contract_hours = {
-            "scholar": 2.0 * sim.HOURS_PER_PERSON_YEAR}
-        after_message = sim.start_reason(node_id, _why=True)[1] or ""
-        self.assertNotEqual(
-            blocked_message, after_message,
-            "the refusal is byte-identical before and after buying two "
-            "scholar-years, which is exactly the bug Complaints/34 reports: "
-            "commission cannot unblock the gate that recommends commission.")
-        self.assertNotIn(
-            "trained scholars", after_message,
-            "two bought scholar-years did not clear a two-scholar gate")
+    def test_a_year_of_hours_is_one_person(self):
+        self.assertAlmostEqual(hands_available(0.0, False, HOURS_PER_PERSON_YEAR, HOURS_PER_PERSON_YEAR), 1.0)
 
-    def test_craft_and_scholar_gates_now_agree_in_shape(self):
-        # The bug was an asymmetry, so the regression test is the symmetry.
-        # Both must count staff plus the founder plus contracted hours.
-        sim = _fresh_sim()
-        sim.household.contract_hours = {
-            "scholar": sim.HOURS_PER_PERSON_YEAR,
-            "carpenter": sim.HOURS_PER_PERSON_YEAR,
-        }
-        self.assertAlmostEqual(
-            sim.labour.scholar_hands_available() - sim.labour.effective_scholars(),
-            1.0, places=9)
-        self.assertGreater(
-            sim.labour.craft_hands_available(), sim.household.artisans)
+
+class ContractedHoursTests(unittest.TestCase):
+    def test_only_the_trades_the_gate_counts_are_summed(self):
+        hours = {"scholar": 2000.0, "carpenter": 500.0, "labourer": 70.0}
+        self.assertEqual(contracted_hours_of(hours, lambda trade: trade == "scholar"), 2000.0)
+        self.assertEqual(contracted_hours_of(hours, lambda trade: trade in ("carpenter", "labourer")), 570.0)
+        self.assertEqual(contracted_hours_of({}, lambda trade: True), 0.0)
+
+
+class GateReadsHandsTests(unittest.TestCase):
+    def test_two_bought_scholar_years_clear_a_two_scholar_gap(self):
+        staff, needed = 1.0, 3.0
+        headcount = hands_available(staff, False, 0.0, HOURS_PER_PERSON_YEAR)
+        hands = hands_available(staff, False, 2.0 * HOURS_PER_PERSON_YEAR, HOURS_PER_PERSON_YEAR)
+        self.assertEqual(hands_short(needed, headcount), 2.0)
+        self.assertEqual(hands_short(needed, hands), 0.0)
+
+    def test_a_shortfall_shrinks_as_hours_are_bought(self):
+        shorts = [hands_short(5.0, hands_available(1.0, True, hours, HOURS_PER_PERSON_YEAR))
+                  for hours in (0.0, 2000.0, 4000.0)]
+        self.assertEqual(shorts, [3.0, 2.0, 1.0])
 
 
 if __name__ == "__main__":

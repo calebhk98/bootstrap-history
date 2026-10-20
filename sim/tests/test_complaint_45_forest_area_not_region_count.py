@@ -1,152 +1,120 @@
-"""Regression coverage for Complaints/45, the forest half of it.
+"""Complaints/45, the forest half: the woodland a civilisation can hold follows the ground it holds, not the number of
+region labels the ground is filed under. The rule is sim/engine/forest_ceiling.py, called on civilisations built here
+and read against the real map (no game is built)."""
+QUICK_TOPIC = True
 
-Complaints/45 names land RENT as the place a region-count-as-area proxy
-leaks into the economics (a region is a filing label, not a unit of area,
-and the labels range 86x in size - data/world/geography.json). The
-stakeholder's own follow-up observation pointed at a SECOND place the same
-failure could hide: `Sim.forest_land_ceiling()` in sim/engine/economy.py
-scaling standing woodland by `len(home_regions)`, the COUNT of labels a
-civilization's territory happens to be filed under, rather than by how much
-ground any of those labels actually cover. That would let re-filing the
-same territory under a different number of labels change how much forest
-could be held, with not one hectare of ground changing hands.
-"""
-from .harness import *  # noqa: F401,F403
+import unittest
 
+from sim.engine.data import load_civ
+from sim.engine.economy_mining import MiningMixin
+from sim.engine.forest_ceiling import forest_ceiling_hectares, held_land_area_km2, revenue_scale_multiple
+from sim.geography.api import layer_value, open_map
 
-def _fresh_sim():
-    """A rome_100ad Sim, used only as a vehicle for calling the geography/
-    forest methods under test - its own home_regions and state_capacity are
-    overwritten per-check below via s.civ, exactly the same dict
-    forest_land_ceiling() itself reads with self.civ.get(...)."""
-    return sim(civ="rome_100ad")
+WORLD_MAP = open_map()
+STATE_CAPACITY = 0.6
+BASE = MiningMixin.FOREST_HA_PER_MILLION_KM2_BASE
+PER_CAPACITY = MiningMixin.FOREST_HA_PER_MILLION_KM2_PER_SC
 
 
-# --- 1. home_land_area_km2() sums the land area of the tiles the home regions
-# resolve to - not a count of how many regions there are, and not the region
-# record's own coarse land.land_area_km2.
-def _tile_area(sim_under_test, region_ids):
-    tiles = sim_under_test.geography.data["land_tiles"]["tiles"]
-    region_to_tiles = sim_under_test.geography.data["land_tiles"]["region_to_tiles"]
-    return sum(tiles[tile_id]["land_area_km2"]
-               for region_id in region_ids for tile_id in region_to_tiles[region_id])
+def territory(*region_labels):
+    """A civilisation holding the tiles its region labels name (and no listed tiles)."""
+    return {"id": "built_for_test", "home_regions": list(region_labels)}
 
 
-
-_s = _fresh_sim()
-_s.civ = dict(_s.civ)
-_s.civ.pop("home_tiles", None)
-_s.civ["home_regions"] = ["italia"]
-_italia_area = _s.home_land_area_km2()
-check("home_land_area_km2() of a single region equals the area of that "
-      "region's tiles, not '1 region'",
-      _italia_area == _tile_area(_s, ["italia"]),
-      _italia_area)
-
-_s.civ.pop("home_tiles", None)
-
-_s.civ["home_regions"] = ["italia", "britannia"]
-_two_region_area = _s.home_land_area_km2()
-check("home_land_area_km2() of two home regions is the SUM of their real "
-      "areas, not a count of 2",
-      _two_region_area == _tile_area(_s, ["italia", "britannia"]),
-      _two_region_area)
+def area_of_labelled_tiles(*region_labels):
+    return sum(float(tile["land_area_km2"]) for tile_id, tile in WORLD_MAP.tiles.items()
+               if layer_value(tile_id, "region", WORLD_MAP) in region_labels)
 
 
-# --- 2. THE REAL TEST: two territories of nearly identical AREA but wildly
-# different REGION COUNT must get nearly identical forest ceilings, and two
-# territories of nearly identical region COUNT but wildly different AREA
-# must not. This is exactly the china-vs-rome shape Complaints/45 measures
-# for rent, applied here to forest.
-_rome = _fresh_sim()
-_han = _fresh_sim()
-_han.civ = dict(_han.civ)
-_han.civ.pop("home_tiles", None)
-_han.civ["home_regions"] = ["china"]          # 1 region, 9,597,000 km2
-_han.civ["state_capacity"] = _rome.civ["state_capacity"]   # isolate area, not state capacity
-
-_rome_area = _rome.home_land_area_km2()
-_han_area = _han.home_land_area_km2()
-_rome_ceiling = _rome.forest_land_ceiling()
-_han_ceiling = _han.forest_land_ceiling()
-
-check("Rome (7 regions) and a synthetic single-region China stand-in have "
-      "land areas within 1% of each other, per Complaints/45's own measurement",
-      abs(_rome_area - _han_area) / max(_rome_area, _han_area) < 0.05,
-      (_rome_area, _han_area))
-check("...and with state_capacity held equal, their forest ceilings land "
-      "within 10% of each other too - AREA, not region count, is what should "
-      "decide this",
-      abs(_rome_ceiling - _han_ceiling) / max(_rome_ceiling, _han_ceiling) < 0.10,
-      (_rome_ceiling, _han_ceiling))
-
-# --- 3. Doubling the region COUNT while holding AREA fixed must not move
-# the ceiling at all: relabelling the same ground under a different number
-# of filing categories is not a different amount of ground. Splitting one
-# region into two labels of the same combined area is not directly
-# expressible without editing data/, so instead this compares two DIFFERENT
-# home_regions sets that happen to sum to nearly the same total real area:
-# a single region (levant_mesopotamia) against two others summing to within
-# 5% of its tile area (britannia + italia).
-_a = _fresh_sim()
-_a.civ = dict(_a.civ)
-_a.civ.pop("home_tiles", None)
-_a.civ["home_regions"] = ["levant_mesopotamia"]               # 1 region
-_b = _fresh_sim()
-_b.civ = dict(_b.civ)
-_b.civ.pop("home_tiles", None)
-_b.civ["home_regions"] = ["britannia", "italia"]              # 2 regions
-_a_area = _a.home_land_area_km2()
-_b_area = _b.home_land_area_km2()
-# These are real geography.json figures, not tuned to match; only proceed
-# with the strict comparison if they are in fact close, and report the gap
-# either way so a future geography.json edit that breaks this assumption is
-# visible rather than silently skipped.
-if abs(_a_area - _b_area) / max(_a_area, _b_area) < 0.05:
-    _a.civ["state_capacity"] = _b.civ["state_capacity"]
-    check("a 1-region territory and a 2-region territory of nearly the same "
-          "real area get nearly the same forest ceiling",
-          abs(_a.forest_land_ceiling() - _b.forest_land_ceiling())
-          / max(_a.forest_land_ceiling(), _b.forest_land_ceiling()) < 0.05,
-          (_a_area, _b_area, _a.forest_land_ceiling(), _b.forest_land_ceiling()))
-else:
-    check("levant_mesopotamia and britannia+italia are close enough "
-          "in area for the count-invariance check above to be meaningful",
-          False, (_a_area, _b_area))
+def ceiling_of(civilisation, state_capacity=STATE_CAPACITY, revenue_multiple=1.0):
+    return forest_ceiling_hectares(held_land_area_km2(civilisation, WORLD_MAP), state_capacity, BASE, PER_CAPACITY,
+                                   revenue_multiple)
 
 
-# --- 4. Rome's own ceiling should move only a little from the pre-fix
-# region-count formula, because Rome's SEVEN regions happen to be close to
-# what the region-count formula was tuned against - the fix is a
-# recalibration of what varies, not a deliberate change to Rome's own
-# number. (31,325 ha is the old formula's exact pre-revenue result for
-# rome_100ad's real home_regions/state_capacity, computed by hand from the
-# constants this file replaced.)
-_rome_plain = _fresh_sim()
-_rome_pre_revenue_new = (
-    (_rome_plain.FOREST_HA_PER_MILLION_KM2_BASE
-     + _rome_plain.FOREST_HA_PER_MILLION_KM2_PER_SC
-       * float(_rome_plain.civ.get("state_capacity", _rome_plain.STATE_CAPACITY_DEFAULT_FALLBACK)))
-    * (_rome_plain.home_land_area_km2() / 1.0e6))
-_OLD_ROME_PRE_REVENUE = 31325.0
-check("Rome's own pre-revenue forest ceiling under the area-based formula "
-      "is within 10% of the old region-count formula's figure for Rome "
-      "(tile area runs a few percent above the coarse region records) "
-      "specifically - the fix should barely move the one territory its old "
-      "constants were tuned against",
-      abs(_rome_pre_revenue_new - _OLD_ROME_PRE_REVENUE) / _OLD_ROME_PRE_REVENUE < 0.10,
-      _rome_pre_revenue_new)
+class HeldLandAreaTests(unittest.TestCase):
+    def test_one_region_is_the_area_of_its_tiles_not_one_region(self):
+        self.assertAlmostEqual(held_land_area_km2(territory("italia"), WORLD_MAP), area_of_labelled_tiles("italia"))
+
+    def test_two_regions_are_the_sum_of_their_areas_not_a_count_of_two(self):
+        self.assertAlmostEqual(held_land_area_km2(territory("italia", "britannia"), WORLD_MAP),
+                               area_of_labelled_tiles("italia", "britannia"))
+
+    def test_a_civilisation_that_resolves_to_no_tile_holds_no_land(self):
+        self.assertEqual(held_land_area_km2(territory("not_a_real_region_id"), WORLD_MAP), 0.0)
+
+    def test_listed_tiles_win_over_region_labels(self):
+        listed = {"id": "built_for_test", "home_tiles": [sorted(WORLD_MAP.tiles)[0]], "home_regions": ["italia"]}
+        self.assertAlmostEqual(held_land_area_km2(listed, WORLD_MAP),
+                               float(WORLD_MAP.tiles[sorted(WORLD_MAP.tiles)[0]]["land_area_km2"]))
 
 
-# --- 5. A civilization that holds no tile has no woodland ceiling - no region
-# is substituted for it (no content id is special-cased).
-_orphan = _fresh_sim()
-_orphan.civ = dict(_orphan.civ)
-_orphan.civ.pop("home_tiles", None)
-_orphan.civ["home_regions"] = ["not_a_real_region_id"]
-check("a civ that resolves to no tile holds no land, and no region stands in for it",
-      _orphan.home_land_area_km2() == 0.0,
-      _orphan.home_land_area_km2())
-check("...so its forest ceiling is zero rather than a crash or a borrowed region's",
-      _orphan.forest_land_ceiling() == 0.0,
-      _orphan.forest_land_ceiling())
+class CeilingFormulaTests(unittest.TestCase):
+    def test_the_ceiling_is_proportional_to_land_area(self):
+        one = forest_ceiling_hectares(1.0e6, STATE_CAPACITY, BASE, PER_CAPACITY, 1.0)
+        self.assertAlmostEqual(forest_ceiling_hectares(3.0e6, STATE_CAPACITY, BASE, PER_CAPACITY, 1.0), 3.0 * one)
+
+    def test_a_more_capable_state_holds_more_of_the_same_ground(self):
+        self.assertGreater(forest_ceiling_hectares(1.0e6, 0.9, BASE, PER_CAPACITY, 1.0),
+                           forest_ceiling_hectares(1.0e6, 0.1, BASE, PER_CAPACITY, 1.0))
+
+    def test_a_million_square_kilometres_holds_base_plus_the_capacity_term(self):
+        self.assertAlmostEqual(forest_ceiling_hectares(1.0e6, 0.5, 1000.0, 2000.0, 1.0), 2000.0)
+
+    def test_no_land_no_woodland(self):
+        self.assertEqual(forest_ceiling_hectares(0.0, 1.0, BASE, PER_CAPACITY, 5.0), 0.0)
+
+    def test_the_revenue_multiple_scales_the_ceiling(self):
+        plain = forest_ceiling_hectares(1.0e6, STATE_CAPACITY, BASE, PER_CAPACITY, 1.0)
+        self.assertAlmostEqual(forest_ceiling_hectares(1.0e6, STATE_CAPACITY, BASE, PER_CAPACITY, 2.5), 2.5 * plain)
+
+
+class RevenueMultipleTests(unittest.TestCase):
+    def test_no_revenue_adds_nothing(self):
+        self.assertEqual(revenue_scale_multiple(0.0, 100.0, 5.0), 1.0)
+
+    def test_negative_revenue_adds_nothing(self):
+        self.assertEqual(revenue_scale_multiple(-50.0, 100.0, 5.0), 1.0)
+
+    def test_revenue_adds_its_share_of_the_scale(self):
+        self.assertAlmostEqual(revenue_scale_multiple(250.0, 100.0, 5.0), 3.5)
+
+    def test_the_revenue_part_is_capped(self):
+        self.assertEqual(revenue_scale_multiple(1.0e9, 100.0, 5.0), 6.0)
+
+
+class AreaNotRegionCountTests(unittest.TestCase):
+    """Real geography: territories of near-equal area get near-equal ceilings whatever their label count."""
+
+    def test_rome_and_a_single_region_china_stand_in_have_comparable_land(self):
+        rome = held_land_area_km2(load_civ("rome_100ad"), WORLD_MAP)
+        china = held_land_area_km2(territory("china"), WORLD_MAP)
+        self.assertLess(abs(rome - china) / max(rome, china), 0.05, (rome, china))
+
+    def test_with_state_capacity_held_equal_their_ceilings_agree(self):
+        rome = ceiling_of(load_civ("rome_100ad"))
+        china = ceiling_of(territory("china"))
+        self.assertLess(abs(rome - china) / max(rome, china), 0.10, (rome, china))
+
+    def test_one_region_and_two_regions_of_nearly_the_same_area_get_nearly_the_same_ceiling(self):
+        one, two = territory("levant_mesopotamia"), territory("britannia", "italia")
+        area_one, area_two = held_land_area_km2(one, WORLD_MAP), held_land_area_km2(two, WORLD_MAP)
+        # the comparison means something only while the two territories are close in area
+        self.assertLess(abs(area_one - area_two) / max(area_one, area_two), 0.05, (area_one, area_two))
+        self.assertLess(abs(ceiling_of(one) - ceiling_of(two)) / max(ceiling_of(one), ceiling_of(two)), 0.05)
+
+    def test_a_civilisation_that_resolves_to_no_tile_has_no_woodland_ceiling(self):
+        self.assertEqual(ceiling_of(territory("not_a_real_region_id")), 0.0)
+
+
+class RomeCalibrationTests(unittest.TestCase):
+    """A validation: Rome is the one territory the area constants were calibrated against."""
+
+    def test_rome_before_revenue_is_near_the_figure_the_old_region_count_formula_gave(self):
+        old_formula_ceiling = 31325.0
+        rome = load_civ("rome_100ad")
+        ceiling = ceiling_of(rome, float(rome["state_capacity"]))
+        self.assertLess(abs(ceiling - old_formula_ceiling) / old_formula_ceiling, 0.10, ceiling)
+
+
+if __name__ == "__main__":
+    unittest.main()
