@@ -21,6 +21,7 @@ from sim.constants import declare
 from sim.refusal import LogLine
 from . import money_units
 from .units_prose import money_text
+from .military_rules import war_relief
 from .data import closure, critical_path
 from . import event_causes
 from .hazard_window import hazards_not_yet_past
@@ -109,12 +110,7 @@ class HazardsMixin:
         your own and an army of your own are comparable hedges, and neither
         should dwarf the other.
         """
-        lev = self.military_leverage()
-        if lev <= 0.0:
-            return 1.0, None
-        share = self.MILITARY_WAR_RELIEF_CAP * lev
-        return (1.0 - share), ("an army and treasury the state can call on "
-                               "(military strength %d%%)" % round(lev * 100))
+        return war_relief(self.military_leverage(), self.MILITARY_WAR_RELIEF_CAP)
 
     def _calendar_floor_remaining(self, goal):
         """Minimum calendar years before `goal` is finished, even if every
