@@ -62,7 +62,7 @@ All commands run from the repository root. `X` below is the shared filter
 
 ## People, skills, employment
 
-- Owner: none. Three records: `sim.population` (demography; saved as the `pop_*` fields of `PopulationState`),
+- Owner: the founder's staff book is `sim/labour/staff_book.py` (Complaint 556); the supply side has none yet. Three records: `sim.population` (demography; saved as the `pop_*` fields of `PopulationState`),
   `economy.record.workforce` (the labour core's `MarketState`, working people by labour area, trade and ability),
   and `household.employees` (the founder's own staff, trade to head count).
 - Writers: `grep -rnE "household\.employees\[" sim X`; `grep -rnE "pop_working_age *=" sim X`;
