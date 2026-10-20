@@ -365,7 +365,7 @@ class CapacityMixin:
         household = self._world.state.household
         pending = sum(row[3] for row in household.training
                       if len(row) > 2 and row[2] == trade)
-        return household.employees.get(trade, 0.0) + pending
+        return self.employed(trade) + pending
 
     # What each of these adds to the CEILING on people, taken from
     # staff_capacity below so the advice and the arithmetic cannot drift apart.
@@ -931,7 +931,7 @@ class CapacityMixin:
 
     def headcount(self):
         household = self._world.state.household
-        return sum(household.employees.values()) + household.slaves + household.freedmen
+        return self.employed_total() + household.slaves + household.freedmen
 
     def director_hours_committed(self):
         """Hours of your own year already spoken for before any project sees them.

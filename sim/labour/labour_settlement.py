@@ -126,7 +126,7 @@ class SettlementMixin:
     def _relocation_wage_bill_per_year(self):
         household = self._world.state.household
         return sum(count * self.labour_market.unscarce_annual(trade)
-                   for trade, count in household.employees.items())
+                   for trade, count in self.employed_by_trade().items())
 
     def travel_days_to_tile(self, tile):
         """Days the household needs to reach `tile` by the fastest route over the modes its people hold

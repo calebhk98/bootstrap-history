@@ -178,7 +178,7 @@ class WagesMixin(WageLedgerMixin):
         or the supply of smiths genuinely grows.
         """
         total = 0.0
-        for trade, count in self._world.state.household.employees.items():
+        for trade, count in self.employed_by_trade().items():
             total += count * self.staff_pay(trade)
         return total
 

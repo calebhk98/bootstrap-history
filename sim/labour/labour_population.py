@@ -357,7 +357,7 @@ class PopulationMixin:
             standalone=True)
         # firms and governments hire from the same pool, so what they employ is not on offer
         cap = max(0.0, cap - self._world.actor_staff_fte(trade) * self._world.HOURS_PER_PERSON_YEAR)
-        hours = cap + household.employees.get(trade, 0.0) * self._world.HOURS_PER_PERSON_YEAR + school_hours
+        hours = cap + self.employed(trade) * self._world.HOURS_PER_PERSON_YEAR + school_hours
         return min(hours, self.people_who_exist(trade) * self._world.HOURS_PER_PERSON_YEAR)
 
     def reachable_trade_population(self, trade):
@@ -389,14 +389,14 @@ class PopulationMixin:
         """People in a trade only you teach: your staff, their own students
         (approximated as a multiple of your headcount) and school places."""
         household = self._world.state.household
-        return (household.employees.get(trade, 0.0) * self.TAUGHT_TRADE_SUPPLY_MULTIPLIER
+        return (self.employed(trade) * self.TAUGHT_TRADE_SUPPLY_MULTIPLIER
                 + (household.trade_schools or {}).get(trade, 0.0))
 
     def people_who_exist(self, trade):
         """People in this trade who exist in the country, counting your own
         staff even if a collapse has left the estimate below them."""
         return max(self.national_trade_population(trade),
-                   self._world.state.household.employees.get(trade, 0.0))
+                   self.employed(trade))
 
     def available_trades(self):
         """Every trade this society has that the labour market can supply."""
@@ -497,7 +497,7 @@ class PopulationMixin:
         for trade in sorted(self._world.wages):
             national = self.national_trade_population(trade)
             reach = self.reachable_trade_population(trade) if self.trade_available(trade) else 0.0
-            have = self._world.state.household.employees.get(trade, 0.0)
+            have = self.employed(trade)
             trades.append({
                 "trade": trade,
                 "exists_here": self.trade_available(trade),

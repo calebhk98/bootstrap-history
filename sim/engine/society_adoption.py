@@ -461,7 +461,7 @@ class AdoptionMixin:
         room = ceiling - have
         if room <= 1e-6:
             return
-        household.employees[trade] = have + room * self.TRADE_DIFFUSION_APPROACH_RATE
+        self.labour.set_employed(trade, have + room * self.TRADE_DIFFUSION_APPROACH_RATE)
         self.labour.resync_pools()
 
     def advance_society(self, year):
