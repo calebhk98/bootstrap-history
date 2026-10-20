@@ -63,6 +63,10 @@ class Labour(CapacityMixin, PopulationMixin, SettlementMixin, WagesMixin, Traini
     def apply_land_clearing(self):
         return self._apply_land_clearing()
 
+    def farming_technique(self):
+        """The crop, rotation and toolkit this society farms with."""
+        return self._farming_technique()
+
     def grant_staff(self, scholars=0.0, artisans=0.0):
         return self._grant_staff(scholars, artisans)
 

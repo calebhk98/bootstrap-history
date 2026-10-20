@@ -4,9 +4,17 @@ QUICK_TOPIC = True
 import unittest
 
 from sim.geography import api, settlement
+from sim.world.agriculture_tile import crop_technique
+from sim.world.farming_technique import DEFAULT_TECHNIQUE
+
+CROPS = crop_technique(DEFAULT_TECHNIQUE)
 
 
 class SettlementTests(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        settlement.set_reference_crop_technique(CROPS)
 
     def test_a_tile_with_no_arable_land_but_game_and_fish_holds_people(self):
         held = ["greenland_16", "greenland_17"]
@@ -14,7 +22,7 @@ class SettlementTests(unittest.TestCase):
 
     def test_shares_follow_the_total_food_potential_of_the_tiles(self):
         held = ["italy_01", "greenland_16", "egypt_01"]
-        energy = {tile: api.food_potential(tile)["total_kcal_per_year"] for tile in held}
+        energy = {tile: api.food_potential(tile, None, None, None, CROPS)["total_kcal_per_year"] for tile in held}
         total = sum(energy.values())
         for tile in held:
             self.assertAlmostEqual(settlement.population_share(held, tile), energy[tile] / total)
@@ -22,7 +30,7 @@ class SettlementTests(unittest.TestCase):
 
     def test_the_best_fed_tile_is_the_default_base(self):
         held = ["italy_01", "greenland_16"]
-        energy = {tile: api.food_potential(tile)["total_kcal_per_year"] for tile in held}
+        energy = {tile: api.food_potential(tile, None, None, None, CROPS)["total_kcal_per_year"] for tile in held}
         self.assertEqual(settlement.default_base_tile(held), max(held, key=lambda tile: energy[tile]))
 
 

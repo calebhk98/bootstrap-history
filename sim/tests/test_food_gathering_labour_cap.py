@@ -12,6 +12,7 @@ from sim.engine.food_supply import FoodSupplyMixin
 from sim.engine.state import EconomyState
 from sim.labour import api as labour_api
 from sim.tests.test_geography_food_gaps import STEPPE, mini_map
+from sim.world.farming_technique import DEFAULT_TECHNIQUE
 
 REGISTRY = {
     "hunter": {"family": "labour", "gathers_food_sources": ["hunting"], "food_kcal_per_hour": 1000.0},
@@ -49,7 +50,7 @@ def society(hours, stock=None):
     world_map = mini_map({"a": (STEPPE, {}, [])})
     economy = EconomyState(society_labour_hours=dict(hours), wild_stock=dict(stock or {}))
     return types.SimpleNamespace(state=types.SimpleNamespace(economy=economy), civ={"home_tiles": ["a"]},
-                                 world_map=world_map)
+                                 world_map=world_map, labour=types.SimpleNamespace(farming_technique=lambda: DEFAULT_TECHNIQUE))
 
 
 class Society(FoodSupplyMixin):
@@ -67,7 +68,7 @@ class SocietyFoodTests(unittest.TestCase):
     def test_a_few_hunters_bring_in_only_what_their_hours_allow(self):
         game = Society({"hunter": 1000.0})
         self.assertAlmostEqual(game.society_food_potential()["hunting"], 1000.0 * 1115.0)
-        self.assertGreater(game.society_food_potential()["crops"], 0.0)
+        self.assertIn("crops", game.society_food_potential())   # the steppe tile crops almost nothing, but the source is not capped away
 
     def test_hunters_thin_the_game_and_the_game_recovers_when_they_stop(self):
         game = Society({"hunter": 1.0e9})

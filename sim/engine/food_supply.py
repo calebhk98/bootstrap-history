@@ -9,6 +9,8 @@ from sim.geography.api import (draw_wild_stock, food_potential, game_food_source
                                tiles_held)
 from sim.labour.api import cap_share, capped_kcal, hours_cap_kcal
 
+from sim.world import agriculture_tile
+
 from . import data
 
 
@@ -23,10 +25,11 @@ class FoodSupplyMixin:
         """{source id: kcal a year} over the held tiles: the land's sustainable yield, game thinned by past hunting,
         each gathered source held to what the hours of its gatherers can bring in."""
         stock = self.state.economy.wild_stock
+        crop_technique = agriculture_tile.crop_technique(self.labour.farming_technique())
         totals = {}
         for tile_id in tiles_held(self.civ, self.world_map):
             for source_id, kcal in food_potential(
-                    tile_id, None, self.world_map, stock)["kcal_per_year"].items():
+                    tile_id, None, self.world_map, stock, crop_technique)["kcal_per_year"].items():
                 totals[source_id] = totals.get(source_id, 0.0) + kcal
         return capped_kcal(totals, self._gathering_caps())
 
