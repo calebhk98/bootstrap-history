@@ -21,9 +21,11 @@ from .labour_market import production_data
 from .food_gathering import cap_share, capped_kcal, hours_cap_kcal
 from .wage_provider import people_fed_per_worker
 from .wages import CAREER_YEARS
+from .occupational_shares import occupational_report, shares_by_group, format_report as format_occupational_report, groups_data as occupation_groups
 from .tenure import add_tenure, fade_tenure, outflow_shares, tenure_by_trade, tenure_held
 
 __all__ = [
+    "occupational_report", "shares_by_group", "format_occupational_report", "occupation_groups",
     "wage_provider", "wages", "Labour", "production_data",
     "people_fed_per_worker", "CAREER_YEARS",
     "add_tenure", "fade_tenure", "outflow_shares", "tenure_by_trade", "tenure_held", "hours_cap_kcal", "capped_kcal", "cap_share",

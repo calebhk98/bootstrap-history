@@ -3,7 +3,8 @@ import math
 import random
 
 from sim.engine import node_payback_diagnostic
-from sim.engine.ui_port import Sim, civilization_ids, default_civilisation_id, load, load_civ
+from sim.engine.ui_port import (Sim, civilization_ids, default_civilisation_id, format_occupational_report, load,
+                                load_civ, occupational_report)
 
 FIGURE_LABELS = (
     ("staple_volatility", "std dev of the staple's yearly log price change"),
@@ -25,12 +26,20 @@ def _format(value):
     return "n/a" if value is None or math.isnan(value) else "%.4g" % value
 
 
-def check_one(nodes, civ_id, seed, years, metals, staple=None):
-    """Play `years` years of `civ_id` and return the port's health report."""
+def occupation_lines(game):
+    """Each occupation group's share of the year's working hours against its plausibility band."""
+    return format_occupational_report(occupational_report(game.state.economy.society_labour_hours))
+
+
+def check_one(nodes, civ_id, seed, years, metals, staple=None, occupations=None):
+    """Play `years` years of `civ_id` and return the port's health report; `occupations`, a list, receives the
+    occupation lines."""
     game = Sim(nodes, [], random.Random(seed), events=False, manual=True, civ=load_civ(civ_id))
     game.done_year = {}
     for _year in range(years):
         game.step()
+    if occupations is not None:
+        occupations.extend(occupation_lines(game))
     return game.economy.health(metals, staple)
 
 
@@ -46,12 +55,16 @@ def cmd_economy_check(args):
     metals = tuple(_split(args.metals))
     for civ_id in civs:
         for seed in seeds:
-            report = check_one(nodes, civ_id, seed, args.years, metals, args.staple or None)
+            occupations = [] if getattr(args, "occupations", False) else None
+            report = check_one(nodes, civ_id, seed, args.years, metals, args.staple or None, occupations)
             print("%s, seed %d, %d years" % (civ_id, seed, args.years))
             if getattr(args, "payback", False) and seed == seeds[0] and civ_id == civs[0]:
                 print("  nodes repaying their build cost fast from net earnings (diagnostic only):")
                 print("\n".join(node_payback_diagnostic.format_rows(
                     node_payback_diagnostic.fast_payback_rows(nodes))))
+            if occupations:
+                print("  share of working hours by occupation group:")
+                print("\n".join(occupations))
             if report is None or not report["figures"]:
                 print("  no agent economy figures yet")
                 continue
