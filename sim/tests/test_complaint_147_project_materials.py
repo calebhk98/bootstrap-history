@@ -1,148 +1,203 @@
-"""Complaints/147: a project pays for the materials it is MISSING, at today's
-market price, and draws owned stock first.
+"""Complaints/147: a project pays for the materials it is MISSING, at today's market price, and draws owned stock first.
 
-A research node declares only quantities. The economy prices what is missing
-at the same quote `quote material` shows, and buying a large amount raises the
-price through the market's own scarcity curve.
-"""
+A research node declares only quantities. The bill (`compute_material_bill`) takes what is held in stock, then what the
+founder's own output covers over the build, and prices the rest at the market quote, the part beyond a year's market
+supply at today's spot quote. It is called here on a stub game whose stock, output, supply and quotes are set by the test,
+and `project_material_parts`, `project_own_output_claim`, `project_material_needs` and `bounty_price` on stubs too.
+The whole-game wiring (starting a project, `why`, `quote material`) is test_complaint_147_project_materials_scenario."""
+QUICK_TOPIC = True
+
 import os
+import types
+import unittest
 
-from .harness import *  # noqa: F401,F403
+from sim.engine.project_materials import ProjectMaterialsMixin, compute_material_bill
+from sim.ui.proto.techtree import _material_row
 
-_LEAD = "lead_metallurgy"
-_SMALL = "tex_horizontal_loom"
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+BASE_PRICE = 100.0     # money a tonne at the spot quote
+CLIMB = 0.001          # fractional rise of the price per tonne already bought
+TAGS = {"charcoal_kg": ("charcoal", "forest1"), "coal_kg": ("coal", "mine:coal"), "coke_kg": ("coal", "mine:coal"), "nitre_kg": ("saltpetre", "nitre"),
+        "silver_g": ("silver", "mine:silver"), "tin_kg": ("tin", "mine:tin"), "ghost_kg": ("ghost", "mine:ghost")}
 
-# --- stock is drawn first: holding a material lowers the bill -----------------
-_held_sim = sim(capital=5e7)
-_cost_empty = _held_sim.project_cost(_LEAD)
-_needed = {row["material"]: row["needed_tonnes"]
-           for row in _held_sim.project_material_bill(_LEAD)["rows"]}
-_spent_before = _held_sim.capital
-_bought = {}
-for _material, _tonnes in sorted(_needed.items()):
-    _bought[_material] = _held_sim.buy_material_stock(_material, _tonnes)
-_paid = _spent_before - _held_sim.capital
-_cost_held = _held_sim.project_cost(_LEAD)
-check("stock: the materials were bought in full",
-      all(abs(_bought[key] - _needed[key]) < 1e-6 for key in _needed), (_bought, _needed))
-check("stock: holding the materials takes their market value off the project cost",
-      _cost_held <= _cost_empty - 0.9 * _paid, (_cost_empty, _cost_held, _paid))
 
-# --- the bill: needed, held, missing, cost of the missing part ----------------
-_bill = _held_sim.project_material_bill(_LEAD)
-_rows = {row["material"]: row for row in _bill["rows"]}
-check("bill: one row per material the node needs",
-      set(_rows) == set(_needed) and len(_rows) >= 2, sorted(_rows))
-check("bill: bought tonnes show as held and nothing is missing",
-      all(row["missing_tonnes"] < 1e-6 and row["held_tonnes"] >= row["needed_tonnes"] - 1e-6
-          for row in _rows.values()), _rows)
-check("bill: with everything held the materials part of the cost is zero",
-      _bill["cost_of_missing"] < 1e-6, _bill["cost_of_missing"])
+def a_view(stock=None, own=None, market=None, own_supply=None, unpriced=()):
+    """A stub game: tonnes in stock by material, own output unclaimed a year by supply tag, market tonnes on offer a year."""
+    stock, own, market = dict(stock or {}), dict(own or {}), dict(market or {})
+    own_supply = dict(own_supply or own)
 
-_fresh = sim(capital=5e7)
-_fresh_bill = _fresh.project_material_bill(_LEAD)
-check("bill: with nothing held every needed tonne is missing",
-      all(abs(row["missing_tonnes"] - row["needed_tonnes"]) < 1e-6
-          for row in _fresh_bill["rows"]), _fresh_bill["rows"])
-check("bill: the total of the rows is the cost of the missing part",
-      abs(sum(row["cost_of_missing"] for row in _fresh_bill["rows"])
-          - _fresh_bill["cost_of_missing"]) < 1e-6 * max(1.0, _fresh_bill["cost_of_missing"]),
-      _fresh_bill)
+    def quote(material, tonnes, already=0.0):
+        if material in unpriced:
+            return None
+        mean = BASE_PRICE * (1.0 + CLIMB * (already + tonnes / 2.0))
+        return mean * tonnes, (mean if tonnes else BASE_PRICE * (1.0 + CLIMB * already))
 
-# --- missing part priced at the current market quote --------------------------
-_small = sim()
-_small_bill = _small.project_material_bill(_SMALL)
-for _row in _small_bill["rows"]:
-    _quote = _small.material_trade_quote(_row["material"])
-    _units_per_tonne = 1e6 if _row["material"].endswith("_g") else 1e3
-    _expected = _row["needed_tonnes"] * _quote["buy_per_tonne"] * (
-        1e3 / _units_per_tonne)
-    check("market: %s is priced at the `quote material` price" % _row["material"],
-          abs(_row["cost_of_missing"] - _expected) <= 0.02 * max(_expected, 1e-9),
-          (_row["cost_of_missing"], _expected))
+    return types.SimpleNamespace(
+        LAB_SCALE_SUFFIX="_g", _material_tag=lambda material: TAGS[material], material_stock_t=lambda emp_key: stock.get(emp_key, 0.0),
+        _unclaimed_own_supply=lambda tag, node_id: own.get(tag, 0.0), _own_material_supply=lambda tag: own_supply.get(tag, 0.0),
+        _material_market_tonnes=lambda emp_key: market.get(emp_key, 1000.0), material_purchase_cost=quote)
 
-# --- buying is demand: a large purchase raises the price it is bought at ------
-_price_sim = sim(capital=5e7)
-_one_tonne = _price_sim.material_trade_quote("coal")["buy_per_tonne"]
-_capital_before = _price_sim.capital
-_got = _price_sim.buy_material_stock("coal", 2000.0)
-_average_paid = (_capital_before - _price_sim.capital) / max(_got, 1e-9)
-check("price: a 2000 t purchase was delivered", _got > 1900.0, _got)
-# the climb is the economy's own (its coal book cleared again with the order), not the old heuristic's fixed 5%
-check("price: the large purchase paid more per tonne than the one-tonne quote",
-      _average_paid > _one_tonne, (_average_paid, _one_tonne))
-_small_sim = sim(capital=5e7)
-_capital_before = _small_sim.capital
-_small_sim.buy_material_stock("coal", 200.0)
-check("price: a smaller purchase pays less per tonne than a larger one",
-      (_capital_before - _small_sim.capital) / 200.0 < _average_paid,
-      ((_capital_before - _small_sim.capital) / 200.0, _average_paid))
 
-# --- `why` shows the rows and the same total the engine charges ---------------
-_why = proto([{"cmd": "why", "id": _LEAD}])[0][0]
-_why_rows = _why.get("material_rows") or []
-check("why: the reply carries a row per material with needed, held, missing and cost",
-      bool(_why_rows) and all(
-          {"material", "needed_tonnes", "held_tonnes", "missing_tonnes", "cost_of_missing"}
-          <= set(row) for row in _why_rows), _why.get("material_rows"))
-_reference = sim()
-check("why: the headline total is what the engine charges (held-aware)",
-      abs(_why["cost"]["total"] - round(_reference.project_cost(_LEAD), 1)) < 1.0,
-      (_why["cost"]["total"], _reference.project_cost(_LEAD)))
-check("why: the headline materials figure is the cost of the missing part",
-      abs(_why["cost"]["materials"]
-          - round(_reference.project_material_bill(_LEAD)["cost_of_missing"], 1)) < 1.0,
-      _why["cost"])
+def bill(view, needs, span=1.0):
+    return compute_material_bill(view, "node", needs, span)
 
-# --- starting pays for the missing materials and delivers them ----------------
-_start_sim = sim(capital=5e7)
-run_it(_start_sim, *_start_sim.nodes[_LEAD]["pre"])
-_start_sim.artisans = _start_sim.scholars = 50.0
-_fuel_key = _start_sim._material_tag(sorted(_needed)[0])[0]
-_stock_before = _start_sim.material_stock_t(_fuel_key)
-_capital_before = _start_sim.capital
-_started, _why_not = _start_sim.start_project(_LEAD)
-check("start: the project starts", _started, _why_not)
-check("start: the missing materials were paid for at the start",
-      _capital_before - _start_sim.capital > 0.0, _start_sim.capital)
-check("start: the money delivered stock",
-      _start_sim.material_stock_t(_fuel_key) > _stock_before,
-      (_stock_before, _start_sim.material_stock_t(_fuel_key)))
 
-# --- research data authors never touch prices ---------------------------------
-_module = os.path.join(ROOT, "sim", "engine", "project_materials.py")
-check("no reader of prices.json in the project materials module",
-      os.path.exists(_module) and "prices.json" not in open(_module).read()
-      and "PRICES" not in open(_module).read(), _module)
+def row_of(result, material):
+    return next(row for row in result["rows"] if row["material"] == material)
 
-# --- the bill fixed at the start survives a save and a load, and is not re-priced
-from sim.engine.saveload import save_state, load_state
-_frozen = _start_sim.project_cost(_LEAD)
-_path = os.path.join(tempfile.mkdtemp(), "bill.json")
-save_state(_start_sim, _path)
-_reloaded = sim(capital=1.0)
-load_state(_reloaded, _path)
-check("start: the instalment bill is fixed at the start and survives save/load",
-      abs(_reloaded.project_cost(_LEAD) - _frozen) < 1e-6 and _frozen > 0,
-      (_reloaded.project_cost(_LEAD), _frozen))
-_start_sim.buy_material_stock("coal", 500.0)
-check("start: buying stock afterwards does not change a running project's bill",
-      abs(_start_sim.project_cost(_LEAD) - _frozen) < 1e-6, (_start_sim.project_cost(_LEAD), _frozen))
 
-# --- a bounty is a multiple of what this society would pay to build it -------
-_bounty_sim = sim(capital=5e7)
-check("bounty: priced from the same market-priced cost as the build",
-      abs(_bounty_sim.bounty_price(_LEAD)
-          - _bounty_sim.BOUNTY_PRICE_MULTIPLIER * _bounty_sim.project_cost(_LEAD)
-          / _bounty_sim.opposition_factor(_LEAD)) < 1e-6,
-      _bounty_sim.bounty_price(_LEAD))
+class StockFirst(unittest.TestCase):
+    def test_holding_a_material_covers_it_and_takes_its_cost_off_the_bill(self):
+        held = row_of(bill(a_view(stock={"charcoal": 5000.0}), {"charcoal_kg": 2000.0}), "charcoal_kg")
+        bare = row_of(bill(a_view(), {"charcoal_kg": 2000.0}), "charcoal_kg")
+        self.assertEqual(held["missing_tonnes"], 0.0)
+        self.assertAlmostEqual(held["held_from_stock_tonnes"], held["needed_tonnes"])
+        self.assertEqual(held["cost_of_missing"], 0.0)
+        self.assertGreater(bare["cost_of_missing"], 0.0)
 
-# --- `quote material` charges what `buy material` charges for the same order ---
-from sim.ui.proto.dispatch_money import _cmd_quote
-_quote_sim = sim(capital=5e7)
-_quoted = _cmd_quote(_quote_sim, NODES, {"what": "material", "material": "coal", "n": 2000}, None)
-_before = _quote_sim.capital
-_quote_sim.buy_material_stock("coal", 2000.0)
-check("quote: the quoted price for an order is what buying it costs",
-      abs(_quoted["to_buy_it"] - (_before - _quote_sim.capital)) < 1.0,
-      (_quoted["to_buy_it"], _before - _quote_sim.capital))
+    def test_with_nothing_held_every_needed_tonne_is_missing(self):
+        row = row_of(bill(a_view(), {"charcoal_kg": 2000.0}), "charcoal_kg")
+        self.assertAlmostEqual(row["missing_tonnes"], row["needed_tonnes"])
+        self.assertEqual(row["held_tonnes"], 0.0)
+
+    def test_stock_is_drawn_once_across_materials_sharing_a_stock(self):
+        result = bill(a_view(stock={"charcoal": 3.0}), {"charcoal_kg": 2000.0, "coal_kg": 2000.0})
+        self.assertAlmostEqual(row_of(result, "charcoal_kg")["held_from_stock_tonnes"], 2.0)
+        self.assertEqual(row_of(result, "coal_kg")["held_from_stock_tonnes"], 0.0)
+
+
+class OwnOutput(unittest.TestCase):
+    def test_own_output_over_the_build_covers_what_stock_does_not(self):
+        row = row_of(bill(a_view(own={"forest1": 1.0}), {"charcoal_kg": 4000.0}, span=3.0), "charcoal_kg")   # 4 t needed, 3 t of output
+        self.assertAlmostEqual(row["held_from_own_output_tonnes"], 3.0)
+        self.assertAlmostEqual(row["missing_tonnes"], 1.0)
+
+    def test_owned_supply_lowers_the_bill_and_is_named_on_the_why_row(self):
+        bare = row_of(bill(a_view(), {"charcoal_kg": 4000.0}), "charcoal_kg")
+        owner_view = a_view(own={"forest1": 2.0})
+        owner = row_of(bill(owner_view, {"charcoal_kg": 4000.0}), "charcoal_kg")
+        self.assertGreater(owner["held_from_own_output_tonnes"], 0.0)
+        self.assertLess(owner["missing_tonnes"], bare["missing_tonnes"])
+        self.assertLess(owner["cost_of_missing"], bare["cost_of_missing"])
+        self.assertLessEqual(owner["price_per_tonne"], bare["price_per_tonne"] * (1.0 + 1e-9))
+        shown = _material_row(owner, owner_view)
+        self.assertGreater(shown["own_supply_tonnes_per_year"], 0)
+        # presentation: the why row names the owned supply
+        self.assertIn("own", shown["scarcity_note"])
+        self.assertIn("charcoal_kg", shown["scarcity_note"])
+
+    def test_without_owned_supply_the_why_row_carries_no_note(self):
+        bare = row_of(bill(a_view(), {"charcoal_kg": 4000.0}), "charcoal_kg")
+        shown = _material_row(bare, a_view())
+        self.assertEqual(shown["own_supply_tonnes_per_year"], 0)
+        self.assertNotIn("scarcity_note", shown)
+
+    def test_a_project_claims_the_output_it_draws_so_the_next_counts_only_what_is_left(self):
+        game = types.SimpleNamespace(
+            nodes={"first": {"build_yrs": 4}},
+            project_material_bill=lambda node_id: {"rows": [
+                {"material": "charcoal_kg", "held_from_own_output_tonnes": 8.0},
+                {"material": "coal_kg", "held_from_own_output_tonnes": 0.0}]},
+            _material_tag=lambda material: TAGS[material])
+        self.assertEqual(ProjectMaterialsMixin.project_own_output_claim(game, "first"), {"forest1": 2.0})
+
+    def test_the_unclaimed_supply_is_the_output_less_what_other_running_projects_claimed(self):
+        active = {"first": {"own_output_claim": {"forest1": 2.0}}, "second": {"own_output_claim": {"forest1": 0.5}},
+                  "third": {}}
+        game = types.SimpleNamespace(state=types.SimpleNamespace(projects=types.SimpleNamespace(active=active)),
+                                     _own_material_supply=lambda tag: 3.0)
+        self.assertAlmostEqual(ProjectMaterialsMixin._unclaimed_own_supply(game, "forest1", "third"), 0.5)
+        self.assertAlmostEqual(ProjectMaterialsMixin._unclaimed_own_supply(game, "forest1", "first"), 2.5)
+        game._own_material_supply = lambda tag: 2.0   # the others claimed more than there is
+        self.assertEqual(ProjectMaterialsMixin._unclaimed_own_supply(game, "forest1", "third"), 0.0)
+
+
+class MarketPrice(unittest.TestCase):
+    def test_the_missing_part_is_priced_at_the_market_quote(self):
+        view = a_view()
+        row = row_of(bill(view, {"coal_kg": 2000.0}), "coal_kg")
+        self.assertAlmostEqual(row["cost_of_missing"], view.material_purchase_cost("coal_kg", 2.0)[0])
+        self.assertTrue(row["priced"])
+
+    def test_a_larger_order_pays_more_a_tonne(self):
+        small = row_of(bill(a_view(), {"coal_kg": 2000.0}), "coal_kg")
+        large = row_of(bill(a_view(), {"coal_kg": 400000.0}), "coal_kg")
+        self.assertGreater(large["price_per_tonne"], small["price_per_tonne"])
+
+    def test_the_total_of_the_rows_is_the_cost_of_the_missing_part(self):
+        result = bill(a_view(), {"coal_kg": 2000.0, "charcoal_kg": 3000.0, "tin_kg": 1000.0})
+        self.assertAlmostEqual(sum(row["cost_of_missing"] for row in result["rows"]), result["cost_of_missing"])
+        self.assertEqual(len(result["rows"]), 3)
+
+    def test_a_material_no_one_sells_has_no_price_and_costs_nothing_in_the_bill(self):
+        row = row_of(bill(a_view(unpriced=("ghost_kg",)), {"ghost_kg": 1000.0}), "ghost_kg")
+        self.assertFalse(row["priced"])
+        self.assertEqual(row["cost_of_missing"], 0.0)
+        self.assertGreater(row["missing_tonnes"], 0.0)
+
+
+class InstalmentsBeyondAYearsSupply(unittest.TestCase):
+    """The part beyond a year's market supply is bought over the following years at today's spot quote."""
+
+    def setUp(self):
+        self.view = a_view(market={"saltpetre": 10.0})
+        self.row = row_of(bill(self.view, {"nitre_kg": 30000.0}), "nitre_kg")   # 30 t needed, 10 t on offer a year
+
+    def test_only_a_years_supply_is_deliverable_now(self):
+        self.assertAlmostEqual(self.row["missing_tonnes"], 30.0)
+        self.assertAlmostEqual(self.row["deliverable_now_tonnes"], 10.0)
+
+    def test_the_part_beyond_costs_the_spot_quote(self):
+        spot = self.view.material_purchase_cost("nitre_kg", 0.0)[1]
+        self.assertAlmostEqual(self.row["cost_of_missing"] - self.row["cost_of_deliverable"], 20.0 * spot)
+
+    def test_buying_the_whole_order_at_once_would_climb_further(self):
+        whole_order = self.view.material_purchase_cost("nitre_kg", 30.0)[0]
+        self.assertLess(self.row["cost_of_missing"], whole_order)
+
+    def test_up_front_money_is_the_deliverable_part_only(self):
+        game = types.SimpleNamespace(project_material_bill=lambda node_id: {"rows": [self.row], "cost_of_missing": self.row["cost_of_missing"]})
+        total, up_front = ProjectMaterialsMixin.project_material_parts(game, "node")
+        self.assertAlmostEqual(up_front, self.row["cost_of_deliverable"])
+        self.assertLess(up_front, total)
+
+    def test_materials_drawing_on_one_supply_share_its_year(self):
+        both = bill(a_view(market={"coal": 10.0}), {"coal_kg": 8000.0, "coke_kg": 8000.0})   # 10 t a year between two keys
+        self.assertAlmostEqual(row_of(both, "coal_kg")["deliverable_now_tonnes"], 8.0)
+        self.assertAlmostEqual(row_of(both, "coke_kg")["deliverable_now_tonnes"], 2.0)
+
+    def test_a_laboratory_scale_material_is_all_deliverable(self):
+        row = row_of(bill(a_view(market={"silver": 0.0}), {"silver_g": 5000.0}), "silver_g")
+        self.assertAlmostEqual(row["deliverable_now_tonnes"], row["missing_tonnes"])
+        self.assertIsNone(row["years_of_supply_it_takes"])
+
+
+class Needs(unittest.TestCase):
+    def game(self, fuel):
+        return types.SimpleNamespace(nodes={"node": {"mat": {"charcoal_kg": 100.0, "tin_kg": 5.0}}}, chosen_fuel=lambda node_id: fuel,
+                                     COKE_PER_CHARCOAL=0.5)
+
+    def test_a_project_needs_what_its_node_declares(self):
+        self.assertEqual(dict(ProjectMaterialsMixin.project_material_needs(self.game("charcoal"), "node")),
+                         {"charcoal_kg": 100.0, "tin_kg": 5.0})
+
+    def test_with_coke_chosen_coal_stands_in_for_the_charcoal(self):
+        self.assertEqual(dict(ProjectMaterialsMixin.project_material_needs(self.game("coke"), "node")),
+                         {"coal_kg": 50.0, "tin_kg": 5.0})
+
+
+class BountyAndSource(unittest.TestCase):
+    def test_a_bounty_is_a_multiple_of_what_this_society_would_pay_to_build_it(self):
+        game = types.SimpleNamespace(project_cost_now=lambda node_id: 900.0, opposition_factor=lambda node_id: 1.5,
+                                     BOUNTY_PRICE_MULTIPLIER=4.0)
+        self.assertAlmostEqual(ProjectMaterialsMixin.bounty_price(game, "node"), 900.0 / 1.5 * 4.0)
+
+    def test_no_reader_of_prices_json_in_the_project_materials_module(self):
+        with open(os.path.join(ROOT, "sim", "engine", "project_materials.py"), encoding="utf-8") as source:
+            text = source.read()
+        self.assertNotIn("prices.json", text)
+        self.assertNotIn("PRICES", text)
+
+
+if __name__ == "__main__":
+    unittest.main()
