@@ -521,3 +521,18 @@ the full refactor stays rejected. If no, the next document should look
 directly at `economy.py`, not at reopening the field-by-field split by
 default, because section 6 already names `economy.py` as the file most
 mixins call into and the more likely site of real contention.
+
+---
+
+## 8. Mixin moves into walled packages (running list)
+
+Measure a mixin's coupling with `python3 -c` over `ast`: collect each `self.<name>` in the file, split by load and
+store (the script is a dozen lines; no checked-in command exists for it yet). A moved piece is done when the
+package function reads no `self` at all and the mixin keeps only the glue that fetches the actor's inputs.
+
+- `SoilNitrogenMixin` (`sim/engine/soil_nitrogen_year.py`): the per-tile pool loop, the manure rule and the yield
+  factors moved to `sim/geography/soil_nitrogen.py`, reached as `sim.geography.soil_nitrogen_factors` and
+  `sim.geography.step_soil_nitrogen`. The mixin keeps the rotation, crop and herd lookups (labour's technique and the
+  saved stock) and passes them in. Proof: `sim.tests.test_farm_follows_soil`, `test_soil_nitrogen`,
+  `test_soil_nitrogen_whole_game`, and identical soil nitrogen stock, factors and farm ladder over forty simulated
+  years before and after. The fingerprint was not run (too slow on a loaded machine).
