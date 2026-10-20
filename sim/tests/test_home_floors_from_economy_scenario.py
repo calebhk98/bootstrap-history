@@ -1,4 +1,4 @@
-"""home_floors_from_economy: regression checks, run individually with `--only home_floors_from_economy`."""
+"""Scenario: home_floors_from_economy: regression checks, run individually with `--only home_floors_from_economy_scenario`."""
 from .harness import *  # noqa: F401,F403
 from sim.engine.agents_port import SimWorld
 

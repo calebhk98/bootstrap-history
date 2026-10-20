@@ -79,6 +79,23 @@ def hours_needed_by_trade(need_shares, total_hours, farm_hours_needed):
     return needed
 
 
+def shares_from_people(people, pool_trade, rest_hours):
+    """Each non-farm trade's share of `rest_hours` from the people in it: the specialists work their people's
+    hours and the hours left over go to the unskilled `pool_trade`, whose headcount says nothing about them.
+    None when there are no people by trade or no hours to share."""
+    if not people:
+        return None
+    held = {trade: count for trade, count in people.items()
+            if trade not in (FARM_TRADE, pool_trade) and count > 0.0}
+    total = sum(held.values())
+    if total <= 0.0 or rest_hours <= 0.0:
+        return None
+    specialist_share = min(1.0, total * HOURS_PER_FARM_WORKER_YEAR / rest_hours)
+    shares = {trade: specialist_share * count / total for trade, count in held.items()}
+    shares[pool_trade] = 1.0 - specialist_share
+    return shares
+
+
 def society_hours(total_hours, farm_hours, shares):
     """The society's hours by trade: the farm's, and the rest shared by `shares` of non-farm work."""
     farm_hours = min(max(farm_hours, 0.0), total_hours)
@@ -138,17 +155,9 @@ class LabourAllocationMixin:
         it while the agent economy runs (the specialists work their people's hours, and the hours left over
         go to the unskilled fallback trade, whose headcount is the pool and says nothing about them), else
         the need the recipe graph puts on it."""
-        people = self._world.economy.agent_people_by_trade()
-        if people:
-            pool = self.unskilled_trade()
-            held = {trade: count for trade, count in people.items()
-                    if trade not in (FARM_TRADE, pool) and count > 0.0}
-            total = sum(held.values())
-            if total > 0.0 and rest_hours > 0.0:
-                specialist_share = min(1.0, total * HOURS_PER_FARM_WORKER_YEAR / rest_hours)
-                shares = {trade: specialist_share * count / total for trade, count in held.items()}
-                shares[pool] = 1.0 - specialist_share
-                return shares
+        shares = shares_from_people(self._world.economy.agent_people_by_trade(), self.unskilled_trade(), rest_hours)
+        if shares is not None:
+            return shares
         return self._non_farm_need_shares()
 
     def _hours_needed_by_trade(self, total_hours=None):
