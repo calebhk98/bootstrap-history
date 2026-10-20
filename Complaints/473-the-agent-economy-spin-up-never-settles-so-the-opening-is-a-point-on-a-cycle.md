@@ -326,9 +326,11 @@ The head's probe is unchanged by this branch.
 Building each year's wear back before growing by the expansion share lets short-lived plant goods (lead) grow, and the
 20-year probe stays calm, but the 60-year trace surges earlier and higher than the head (price level about twice the
 head's by year 30, the rate at its ceiling after): more plant bought each year pulls more money and thin inputs into
-plant at once. The late surge on the head (years 30 to 43) is led by bricks (a shelter replacement wave about 26 years
-in, after the opening's seeded wall stock wears) and carts (merchants' replacement bids with makers idle); see the idle
-makers and no-seller price work. Reproduce with a 60-year `spin_up_trace` on each commit (about 10 minutes).
+plant at once. The late surge on the head (years 30 to 43) is led by bricks and carts. Durables carry no age (wear
+removes a share of the holding each year, `inventory.wear_moves`), so there is no replacement wave: household brick
+bids stay steady while brick output falls far below wear within the first decade and nearly stops later, and cart
+output stops within the first years while replacement bids stand with no seller at any price. See the idle makers
+and no-seller price work. Reproduce with a 60-year `spin_up_trace` on each commit (about 10 minutes).
 
 ## Measured: why makers with plant sit idle while their price climbs (branch fix-idle-makers-at-high-prices)
 
@@ -368,3 +370,13 @@ newcomer is built on an ore tile, in the Mediterranean-and-Atlantic area that al
 (`last_runs` nil from year 2). The plan is a sliver of their capacity, so Chinese bloom stays unmade there and the Chinese
 buyers wait on carriage between areas. Fix lies with merchants carrying bloom (not entry) and with the makers' own
 input chain, as the section above says.
+
+## Measured: the late brick and cart surge is not a wear wave (branch 473-shelter-replacement-wave, no commit)
+
+The opening seeds each durable at about flow times service life (`opening._seed_durable_stocks`, `households_orders._durable_ratio`),
+a steady-state stock with no ages, and wear is exponential (`inventory.wear_moves`), so the stock cannot wear out at once.
+In one Rome run the household brick stock declines smoothly after its early build-up, brick bids stay steady, and the
+brick price does not run away; brick makers' output falls far below wear and nearly stops. Cart makers stop within the
+first years and the cart price climbs without bound against standing replacement bids. The open question is why brick
+and cart makers stop: carts lack iron bar (section above); bricks were not traced. Measured with scratch probes over
+`spin_up_trace` (stocks, flows, bids and prices by year); no committed command exists.
