@@ -4,6 +4,7 @@ labour market that prices an hour, and the real partner data; no whole game is b
 
 import collections
 import os
+import types
 
 from .harness import NODES, ROOT, check
 from sim.refusal import cause_of
@@ -20,7 +21,8 @@ from sim.engine.living_stock_trade import LivingStockTradeMixin
 from sim.engine.living_stock_yearly import LivingStockYearlyMixin, stock_rates
 from sim.engine.partner_civs import PartnerCivsMixin
 from sim.engine.material_units import tonnes_per_unit
-from sim.geography.api import open_map, tiles_held
+from sim.geography import stock_land
+from sim.geography.api import Geography, open_map, tiles_held
 
 HOME, PARTNER = "rome_100ad", "han_china_100ad"
 HERD, SUGAR, EGGS, TEA = "draught_animal_kg", "sugar_cane_sett_kg", "silkworm_eggs_kg", "tea_plant_stock_kg"
@@ -63,6 +65,7 @@ class Game(PartnerCivsMixin, LivingStockMixin, LivingStockTradeMixin, LivingStoc
     def __init__(self, capital=1e6, governed=True):
         self.civ = load_civ(HOME)
         self.world_map = open_map()
+        self.geography = Geography(types.SimpleNamespace(civ=self.civ, world_map=self.world_map))
         self.ledger, self.opening = collections.defaultdict(float), {}
         self.scandal, self.scandal_last_year = 0.0, 0.0
         self.purse = Purse(capital, self)
@@ -134,21 +137,21 @@ check("...and the hours press on the labour market",
       abs(sum(game.labour.market.pressed.values()) - hours) < 1e-6, game.labour.market.pressed)
 
 # ---- pasture limits the increase ------------------------------------------------------------------
-_shipped_capacity = living_stock_growth.pasture_capacity_kg
-living_stock_growth.pasture_capacity_kg = lambda tile, wild, world_map: 10500.0 if tile == place else 0.0
+_shipped_capacity = stock_land.pasture_capacity_kg
+stock_land.pasture_capacity_kg = lambda tile, wild, world_map: 10500.0 if tile == place else 0.0
 tight = Game()
 tight.grant_stock(HERD, 10000.0)
 tight.step_living_stock()
 check("a pasture that carries 500 kg more lets the herd grow by 500 kg less its loss",
       abs(tight.stock_held(HERD) - (10500.0 - 10000.0 * rates["annual_loss"])) < 1e-6, tight.stock_held(HERD))
-living_stock_growth.pasture_capacity_kg = lambda tile, wild, world_map: 9000.0 if tile == place else 0.0
+stock_land.pasture_capacity_kg = lambda tile, wild, world_map: 9000.0 if tile == place else 0.0
 full = Game()
 full.grant_stock(HERD, 10000.0)
 full.step_living_stock()
 check("a herd on pasture with no room gains nothing and still suffers its loss",
       abs(full.stock_held(HERD) - 10000.0 * (1.0 - rates["annual_loss"])) < 1e-6, full.stock_held(HERD))
 check("...and buys no labour for growth it did not make", not full.purse.paid, full.purse.paid)
-living_stock_growth.pasture_capacity_kg = _shipped_capacity
+stock_land.pasture_capacity_kg = _shipped_capacity
 
 # ---- the purse limits it too ----------------------------------------------------------------------
 poor = Game(capital=0.0)
@@ -166,8 +169,8 @@ check("a holder who can pay for half of it gets half of the growth",
 sugar = stock_rates()[SUGAR]
 check("the cane row is raised on arable land and no longer capped at a doubling",
       sugar.get("grows_on") == "arable" and sugar["natural_increase"] > 1.0, sugar)
-_shipped_arable = living_stock_growth.arable_hectares
-living_stock_growth.arable_hectares = lambda tile, world_map: 0.01
+_shipped_arable = stock_land.arable_hectares
+stock_land.arable_hectares = lambda tile, world_map: 0.01
 small = Game()
 small.grant_stock(SUGAR, 5000.0)
 small.step_living_stock()
@@ -175,14 +178,14 @@ sett = living_stock_growth.stock_entry(SUGAR)
 room = 0.01 * sett["outputs"][SUGAR] / sett["land_hectare_years"]
 check("a hundredth of a hectare of land raises only what its output per hectare allows",
       abs(small.stock_held(SUGAR) - (5000.0 + room - 5000.0 * sugar["annual_loss"])) < 1e-6, small.stock_held(SUGAR))
-living_stock_growth.arable_hectares = lambda tile, world_map: 1e9
+stock_land.arable_hectares = lambda tile, world_map: 1e9
 wide = Game()
 wide.grant_stock(SUGAR, 5000.0)
 wide.step_living_stock()
 check("with land enough the cane multiplies by its sourced rate",
       abs(wide.stock_held(SUGAR) - 5000.0 * (1.0 + sugar["natural_increase"] - sugar["annual_loss"])) < 1e-6,
       wide.stock_held(SUGAR))
-living_stock_growth.arable_hectares = _shipped_arable
+stock_land.arable_hectares = _shipped_arable
 eggs = Game()
 eggs.grant_stock(EGGS, 1.0)
 eggs.step_living_stock()

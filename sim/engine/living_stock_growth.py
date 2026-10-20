@@ -8,7 +8,6 @@ states, bought at the going wage. Growth the land cannot hold or the purse canno
 """
 import functools
 
-from sim.geography.api import arable_hectares, endemic_animal_loss, pasture_capacity_kg, tile_facts, tiles_held
 from sim.labour.api import production_data
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
@@ -16,18 +15,6 @@ from .material_units import tonnes_per_unit
 
 GROWS_ON_PASTURE = "pasture"
 GROWS_ON_ARABLE = "arable"
-
-
-@functools.lru_cache(maxsize=None)
-def _centre_of(tile_ids, world_map):
-    """The tile of `tile_ids` nearest their mean position, or None for none."""
-    if not tile_ids:
-        return None
-    facts = [tile_facts(tile_id, world_map) for tile_id in tile_ids]
-    mean_lat = sum(fact["lat"] for fact in facts) / len(facts)
-    mean_lon = sum(fact["lon"] for fact in facts) / len(facts)
-    return min(facts, key=lambda fact: ((fact["lat"] - mean_lat) ** 2 + (fact["lon"] - mean_lon) ** 2,
-                                        fact["id"]))["id"]
 
 
 @functools.lru_cache(maxsize=None)
@@ -49,7 +36,7 @@ class LivingStockGrowthMixin:
     def stock_place(self):
         """The tile the held stock stands on: the holder's seat, taken as the held tile nearest the middle of
         the holding (the ledger has one holder, so one place). None for a holder with no tiles."""
-        return _centre_of(tuple(sorted(tiles_held(self.civ, self.world_map))), self.world_map)
+        return self.geography.stock_place()
 
     def pasture_room_kg(self, place, pastured_materials):
         """Live weight more that the place's grass keeps beside what already grazes there; None where the
@@ -57,25 +44,22 @@ class LivingStockGrowthMixin:
         if place is None:
             return None
         grazing = sum(self.stock_held(material) * kilograms_per_unit(material) for material in pastured_materials)
-        carried = sum(pasture_capacity_kg(tile, self.state.economy.wild_stock, self.world_map)
-                      for tile in tiles_held(self.civ, self.world_map))
-        return max(0.0, carried - grazing)
+        return self.geography.pasture_room_kg(place, grazing, self.state.economy.wild_stock)
 
     def endemic_stock_loss(self, rates, place=None):
         """Share of a held lot lost in a year to the endemic disease of its place, 0 for stock with no species
         or no place."""
         place = place if place is not None else self.stock_place()
-        if place is None or not rates.get("species"):
-            return 0.0
-        return endemic_animal_loss(place, rates["species"], self.world_map)
+        return self.geography.endemic_stock_loss(place, rates.get("species"))
 
     def nursery_room_units(self, material, place):
         """Units of the material the place's arable land can raise in a year at its production entry's output
         per hectare; None where nothing limits it (no place, or an entry that works no land)."""
         entry = stock_entry(material)
-        if place is None or entry is None or float(entry.get("land_hectare_years") or 0.0) <= 0.0:
+        if entry is None:
             return None
-        return arable_hectares(place, self.world_map) * entry["outputs"][material] / entry["land_hectare_years"]
+        return self.geography.nursery_room_units(
+            place, entry["outputs"][material], float(entry.get("land_hectare_years") or 0.0))
 
     def growth_labour(self, material, units):
         """{trade: hours} the labour of raising `units` more of the material, from its production entry."""

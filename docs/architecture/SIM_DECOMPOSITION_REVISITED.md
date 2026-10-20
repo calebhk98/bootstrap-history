@@ -536,3 +536,18 @@ package function reads no `self` at all and the mixin keeps only the glue that f
   saved stock) and passes them in. Proof: `sim.tests.test_farm_follows_soil`, `test_soil_nitrogen`,
   `test_soil_nitrogen_whole_game`, and identical soil nitrogen stock, factors and farm ladder over forty simulated
   years before and after. The fingerprint was not run (too slow on a loaded machine).
+- `LivingStockGrowthMixin` (`sim/engine/living_stock_growth.py`): where held stock stands, the pasture room, the
+  endemic loss and the nursery room moved to `sim/geography/stock_land.py`, reached as `sim.geography.stock_place`,
+  `pasture_room_kg`, `endemic_stock_loss` and `nursery_room_units`. The mixin keeps the stock ledger, the production
+  entry and the labour purchase, and hands geography the grazing weight, the wild stock and the entry's output and land
+  use. Its distinct `self.` reads went from 9 to 8 (`civ` and `world_map` replaced by `geography`); measured with the
+  `ast` snippet above. Proof: identical sha256 of forty simulated years of `step_living_stock` plus the place, pasture
+  room, endemic loss and nursery room per material, on a base worktree and on this branch; identical sorted-key md5 of
+  `saveload.state_text` after three stepped Rome years; topics `stock_growth_and_smuggling`, `endemic_disease`,
+  `defence_stores`, `opening_herd_growth_unbilled`, `geography_walls`.
+- `RouteDuesMixin` (`sim/engine/route_dues.py`): the holder-owed loop duplicated `sim.geography.route_dues_by_holder`;
+  the mixin now calls it. Coupling is unchanged (10 reads); the duplicate logic is gone. What remains is glue: the
+  carriers' wage, the owner lookup and the treasury account. Proof: identical hash of the dues owed over 300 generated
+  routes on base and branch, and the same state md5. Next candidate here: `route_dues_treasury` belongs with the
+  agents package.
+- The fingerprint was not run for either move.
