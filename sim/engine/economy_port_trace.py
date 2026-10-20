@@ -6,6 +6,7 @@ never stops at the tolerance, so a drift that the normal stage would cut short s
 """
 from sim.economy import api as economy_api
 
+from . import economy_port_sites
 from .economy_port_setup import build_setup
 from .economy_port_year import YearInputs
 
@@ -24,7 +25,7 @@ def spin_up_trace(game, years):
     economy = economy_api.blank_economy(setup)
     economy_api.begin_spin_up(economy)
     inputs = YearInputs(year=0, population_by_tile={}, working_age_share=setup.working_share,
-                        yield_factor_by_producer={}, engine_orders={})
+                        yield_factor_by_producer=economy_port_sites.crop_yields(economy), engine_orders={})
     rows = []
     for year in range(years):
         outcome = economy.step(inputs)

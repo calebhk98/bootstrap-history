@@ -300,8 +300,7 @@ def _add_producers(setup, record, recipe, capacity_by_tile, input_demand, by_lim
             agent_id=producer_id, owner=households.cohort_id(tile, _richest_class(record, tile)),
             recipe_id=recipe.recipe_id, tile=tile, capacity_runs=capacity / working_share,
             expected_sales=capacity / (1.0 + OPENING_SPARE_CAPACITY_SHARE),
-            yield_factor=sites.yield_at(recipe, tile, by_limits, setup.yield_factor_by_recipe_tile.get(
-                recipe_tile_key(recipe.recipe_id, tile), 1.0)))
+            yield_factor=sites.yield_at(recipe, tile, by_limits))     # sized at the recipe's own yield; the engine applies the tile's each year
         wanted = input_demand.setdefault(tile, {})
         for good, quantity in recipe.inputs.items():
             wanted[good] = wanted.get(good, 0.0) + capacity * quantity

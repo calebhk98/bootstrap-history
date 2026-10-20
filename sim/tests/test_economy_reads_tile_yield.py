@@ -39,8 +39,8 @@ for recipe_id in farm_recipes[:1]:
     check("the site yield is the tile's yield factor",
           math.isclose(setup.yield_factor_by_recipe_tile[recipe_tile_key(recipe_id, best)], sites[best].yield_factor))
 
-# The opened economy: farm producers carry their tile's yield factor, so the same run gives more on the better tile,
-# and the year's inputs scale it by the one pooled weather draw.
+# The opened economy: farm producers carry their tile's yield factor (after the hidden years), so the same run
+# gives more on the better tile, and each year's inputs scale it by the one pooled weather draw.
 opened = sim()
 agent = opened.economy.agent
 economy = agent.economy()
@@ -52,6 +52,8 @@ if len(ranked) >= 2:
     check("a farm producer on the better-yielding tile yields more per run",
           farms[ranked[-1]].yield_factor > farms[ranked[0]].yield_factor,
           (farms[ranked[-1]].yield_factor, farms[ranked[0]].yield_factor))
+    check("a farm run's yield is its tile's factor",
+          all(math.isclose(farms[tile_id].yield_factor, sites[tile_id].yield_factor, rel_tol=1e-9) for tile_id in ranked))
 weather = opened._pooled_farm_weather_multiplier(opened.state.scenario.year)
 yields = agent._inputs({}).yield_factor_by_producer
 check("each year's yield is the tile's factor times the weather",
