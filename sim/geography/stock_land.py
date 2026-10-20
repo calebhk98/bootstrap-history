@@ -34,8 +34,12 @@ def pasture_room_kg(place, grazing_kg, wild_stock, civ, world_map):
     stock has no place."""
     if place is None:
         return None
-    carried = sum(pasture_capacity_kg(tile, wild_stock, world_map) for tile in tiles_held(civ, world_map))
-    return max(0.0, carried - grazing_kg)
+    return max(0.0, held_pasture_kg(wild_stock, civ, world_map) - grazing_kg)
+
+
+def held_pasture_kg(wild_stock, civ, world_map):
+    """Live weight the held tiles' grass carries at the wild stock now standing."""
+    return sum(pasture_capacity_kg(tile, wild_stock, world_map) for tile in tiles_held(civ, world_map))
 
 
 def endemic_stock_loss(place, species, world_map):

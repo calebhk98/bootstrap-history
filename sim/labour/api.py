@@ -13,6 +13,7 @@ from . import wage_provider, wages
 from .market.clearing import clear_all as clear_labour_markets
 from .market.opening import opening_state as opening_labour_market
 from .market.migration import move_shares as migration_shares
+from .regional_migration import moves_between_regions
 from .market.records import (Bid, Clearing, MarketState, Route, School, TradeSpec, YearInputs, YearReport,
                              copy_state as copy_market_state, from_plain as market_state_from_plain, people_in, to_plain as market_state_to_plain)
 from .market.trades import fallback_trade, trade_specs
@@ -30,7 +31,7 @@ __all__ = [
     "people_fed_per_worker", "CAREER_YEARS",
     "add_tenure", "fade_tenure", "outflow_shares", "tenure_by_trade", "tenure_held", "hours_cap_kcal", "capped_kcal", "cap_share",
     # the labour-market core (sim/labour/market/DESIGN.md): plain records in, plain records out
-    "run_labour_year", "migration_shares", "clear_labour_markets", "opening_labour_market", "trade_specs", "fallback_trade", "people_in",
+    "run_labour_year", "migration_shares", "moves_between_regions", "clear_labour_markets", "opening_labour_market", "trade_specs", "fallback_trade", "people_in",
     "Bid", "Clearing", "MarketState", "Route", "School", "TradeSpec", "YearInputs", "YearReport",
     "market_state_to_plain", "market_state_from_plain", "copy_market_state",
 ]

@@ -127,3 +127,10 @@ class DiseasePortMixin:
         self.__dict__["_epidemic_names"] = [pathogens()[pathogen_id].name for pathogen_id in sorted(state.deaths)
                                             if state.deaths[pathogen_id] > killed_before.get(pathogen_id, 0)]
         return deaths
+
+    def epidemic_year(self, food_available_calories_per_day, year):
+        """(epidemic deaths by band, disease burden, endemic death rates) for the year's population step: the
+        epidemics run and cut each seat's staff before the burden and the endemic rates are read."""
+        deaths = self.disease_year(food_available_calories_per_day, year)
+        self.epidemic_hits_seats(deaths, year)
+        return deaths, self._disease_burden(), self.endemic_death_rates()
