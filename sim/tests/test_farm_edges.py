@@ -2,45 +2,41 @@
 technology that rescues it, surplus farm labour, and unfarmable ground on the
 clearing ladder. Each is pinned as a property (direction and bounds), never an
 exact number."""
-import copy
 import math
 import unittest
 from unittest import mock
 
 from .harness import *  # noqa: F401,F403
-from sim.engine import core, invariants
+from sim.engine import invariants
 from sim.labour import labour_allocation
-from sim.geography.api import tiles_held
+from sim.engine.food_supply import FoodSupplyMixin
+from sim.geography.api import crop_site, tiles_held
 from sim.world import agriculture, land
 from sim.labour import labour_market
 
 FARM_TRADE = labour_allocation.FARM_TRADE
 CIV_ID = "rome_100ad"
-_GEOGRAPHY = core.load_geography()
 # Years the opening food shortfall takes to work out of the labour market.
 WARM_UP_YEARS = 15
 
 
-def _geography_with_fertility(civ_id, fertility_of_tile):
-    """A copy of the geography where each home tile's fertility is
-    `fertility_of_tile(rank, tile_count)`, rank 0 being the best tile."""
-    geography = copy.deepcopy(_GEOGRAPHY)
-    land_tiles = geography["land_tiles"]
-    tile_ids = []
-    tile_ids.extend(tiles_held(S.load_civ(civ_id)))
-    ranked = sorted(set(tile_ids), key=lambda tile_id: (
-        -land_tiles["tiles"][tile_id]["fertility_quality_multiplier"], tile_id))
-    for rank, tile_id in enumerate(ranked):
-        land_tiles["tiles"][tile_id]["fertility_quality_multiplier"] = (
-            fertility_of_tile(rank, len(ranked)))
-    return geography
+def _sites_with_fertility(civ_id, fertility_of_tile):
+    """The held tiles' crop sites where each tile's yield factor is `fertility_of_tile(rank, tile_count)`,
+    rank 0 being the best tile."""
+    share = 1.0 - agriculture.DEFAULT_ROTATION.fallow_share_of_holding
+    sites = {tile_id: crop_site(tile_id, share) for tile_id in set(tiles_held(S.load_civ(civ_id)))}
+    ranked = sorted(sites, key=lambda tile_id: (-sites[tile_id].yield_factor, tile_id))
+    return {tile_id: sites[tile_id]._replace(yield_factor=fertility_of_tile(rank, len(ranked)))
+            for rank, tile_id in enumerate(ranked)}
+
+
+def _sim_with_sites(sites, civ_id=CIV_ID):
+    with mock.patch.object(FoodSupplyMixin, "farm_sites", lambda self: sites):
+        return sim(civ_id, events=False)
 
 
 def _sim_on(fertility_of_tile, civ_id=CIV_ID):
-    geography = _geography_with_fertility(civ_id, fertility_of_tile)
-    with mock.patch.object(
-            core, "load_geography", lambda world_map=None: copy.deepcopy(geography)):
-        return sim(civ_id, events=False)
+    return _sim_with_sites(_sites_with_fertility(civ_id, fertility_of_tile), civ_id)
 
 
 def _uniform(fertility):
@@ -160,12 +156,9 @@ class BarrenLandTests(unittest.TestCase):
         self._check_dies_out_cleanly(0.0)
 
     def test_no_arable_ground_at_all_builds_and_starves(self):
-        geography = _geography_with_fertility(CIV_ID, _uniform(1.0))
-        for tile_id in geography["land_tiles"]["tiles"]:
-            geography["land_tiles"]["tiles"][tile_id]["arable_fraction"] = 0.0
-        with mock.patch.object(
-                core, "load_geography", lambda world_map=None: copy.deepcopy(geography)):
-            test_sim = sim(CIV_ID, events=False)
+        sites = {tile_id: site._replace(arable_hectares=0.0, cropped_hectares=0.0)
+                 for tile_id, site in _sites_with_fertility(CIV_ID, _uniform(1.0)).items()}
+        test_sim = _sim_with_sites(sites)
         history = _run(test_sim, 60, until=lambda rows: len(rows) > 5 and rows[-1][0] < rows[5][0] * 0.5)
         self.assertLess(history[-1][0], history[5][0] * 0.5)
         self.assertGreaterEqual(min(row[3] for row in history), 0.0)
@@ -271,20 +264,18 @@ class FarmLabourOversupplyTests(unittest.TestCase):
 
 class ClearingLadderTests(unittest.TestCase):
     def test_unfarmable_parcels_are_not_arable_ground(self):
-        geography = _geography_with_fertility(
-            CIV_ID, lambda rank, count: 0.0 if rank >= count // 2 else 0.8)
-        territory = land.territory_farmland(tiles_held(S.load_civ(CIV_ID)), geography)
+        sites = _sites_with_fertility(CIV_ID, lambda rank, count: 0.0 if rank >= count // 2 else 0.8)
+        territory = land.territory_cropland(sites)
         self.assertTrue(territory.ladder)
         self.assertTrue(all(fertility > 0.0 for fertility, _hectares in territory.ladder))
         self.assertAlmostEqual(sum(hectares for _f, hectares in territory.ladder),
-                               territory.arable_hectares, places=3)
-        self.assertAlmostEqual(territory.mean_fertility, 0.8, places=6)
+                               territory.cropped_hectares, places=3)
+        self.assertAlmostEqual(territory.mean_yield_factor, 0.8, places=6)
 
     def test_ground_with_no_farmable_tile_is_empty_not_an_error(self):
-        geography = _geography_with_fertility(CIV_ID, _uniform(0.0))
-        territory = land.territory_farmland(tiles_held(S.load_civ(CIV_ID)), geography)
+        territory = land.territory_cropland(_sites_with_fertility(CIV_ID, _uniform(0.0)))
         self.assertEqual(territory.ladder, [])
-        self.assertEqual(territory.arable_hectares, 0.0)
+        self.assertEqual(territory.cropped_hectares, 0.0)
 
     def test_clearing_never_brings_worthless_ground_in(self):
         test_sim = _sim_on(lambda rank, count: 0.0 if rank >= count // 2 else 0.5)

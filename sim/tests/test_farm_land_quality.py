@@ -1,9 +1,8 @@
-"""Each civilisation's farm sits on its own soil: land quality is the
-arable-area-weighted fertility of the regions it holds, and the farm is
-sized so the starting population is still fed on that soil."""
-from sim.geography.api import load_geography, tiles_held, tiles_of_regions
+"""Each civilisation's farm sits on its own soil and climate: land quality is the cropped-area-weighted yield factor
+(soil, climate, river water; geography's crop_site) of the tiles it holds, and the farm is sized so the starting
+population is still fed on that ground."""
+from sim.geography.api import crop_site, tiles_held, tiles_of_regions
 import copy
-import json
 import os
 import unittest
 
@@ -12,8 +11,7 @@ from sim.world import agriculture
 from sim.labour import labour_allocation
 
 _ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-_GEOGRAPHY = load_geography()
-_TILES = _GEOGRAPHY["land_tiles"]["tiles"]
+OPEN_FIELD_SHARE = 1.0 - agriculture.DEFAULT_ROTATION.fallow_share_of_holding
 
 _CIVILISATIONS = ("rome_100ad", "han_china_100ad", "norse_900ad")
 
@@ -27,22 +25,21 @@ def _game(civ_id):
     return _READ_ONLY_GAMES[civ_id]
 
 
-def _arable_km2(tile_id):
-    tile = _TILES[tile_id]
-    return tile["land_area_km2"] * tile["arable_fraction"]
+def _cropped_hectares(tile_id):
+    return crop_site(tile_id, OPEN_FIELD_SHARE).cropped_hectares
 
 
 def _expected_quality(held_tiles, hectares=None):
-    """Mean fertility of the best `hectares` of arable ground (all of it when
-    None), hand-computed from the tiles."""
-    tile_ids = sorted(held_tiles,
-                      key=lambda tile_id: (-_TILES[tile_id]["fertility_quality_multiplier"], tile_id))
+    """Mean yield factor of the best `hectares` of cropland (all of it when None), hand-computed from the tiles."""
+    sites = {tile_id: crop_site(tile_id, OPEN_FIELD_SHARE) for tile_id in held_tiles}
+    ranked = sorted((tile_id for tile_id, site in sites.items() if site.yield_factor > 0.0 and site.cropped_hectares > 0.0),
+                    key=lambda tile_id: (-sites[tile_id].yield_factor, tile_id))
     remaining = float("inf") if hectares is None else hectares
     taken = weighted = 0.0
-    for tile_id in tile_ids:
-        step = min(100.0 * _arable_km2(tile_id), remaining)
+    for tile_id in ranked:
+        step = min(sites[tile_id].cropped_hectares, remaining)
         taken += step
-        weighted += step * _TILES[tile_id]["fertility_quality_multiplier"]
+        weighted += step * sites[tile_id].yield_factor
         remaining -= step
         if remaining <= 0.0:
             break
@@ -92,10 +89,8 @@ class FarmLandQualityTests(unittest.TestCase):
     def test_farm_never_exceeds_arable_ceiling(self):
         for civ_id in _CIVILISATIONS:
             test_sim = _game(civ_id)
-            arable_hectares = 100.0 * sum(
-                _arable_km2(tile_id)
-                for tile_id in tiles_held(test_sim.civ))
-            self.assertLessEqual(test_sim.farm_land.hectares, arable_hectares + 1e-6)
+            cropland = sum(_cropped_hectares(tile_id) for tile_id in tiles_held(test_sim.civ))
+            self.assertLessEqual(test_sim.farm_land.hectares, cropland + 1e-6)
 
 
 class FoodBalanceWorkforceTests(unittest.TestCase):
