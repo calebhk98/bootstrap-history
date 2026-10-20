@@ -93,6 +93,7 @@ Children, in order of work:
 - 627: Carriage hours count sea and river hauls at the land mode's hours, skip port handling, and use one national wage
 - 628: Storage at stages of a haul is not charged
 - 629: Carts, pack saddles and vessels are not goods and have no service lives (closed)
+- 630: Geography's rates do not expose carrier-days or vehicle wear (closed)
 - 630: Geography's `Rate` does not expose carrier-days, animals per carrier or vehicle wear
 - 631: Merchants have no fleet: dispatch is limited by cash, not by carriers
 - 632: The non-labour part of a carriage fee (feed, carts, ships, animals, losses) goes to the poorest households of the source tile

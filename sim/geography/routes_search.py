@@ -135,6 +135,10 @@ def _best_state(compiled, tree, tile_ids, by_days):
     return best
 
 
+def _empty_inputs() -> Dict[str, Any]:
+    return {"labour_hours": 0.0, "feed_kg": 0.0, "fuel_kg": 0.0, "km_by_mode": {}, "team_days": {}, "carrier_days": {}}
+
+
 def _legs(compiled, tree, end_state) -> Dict[str, Any]:
     cost, days, previous = tree
     count = len(compiled.mode_ids)
@@ -146,7 +150,7 @@ def _legs(compiled, tree, end_state) -> Dict[str, Any]:
     start_position = state % count
     steps.reverse()
     pending_cost, pending_days = compiled.handling[start_position]
-    legs, inputs = [], {"labour_hours": 0.0, "feed_kg": 0.0, "fuel_kg": 0.0}
+    legs, inputs = [], _empty_inputs()
     for (from_state, km, rate, is_transfer), to_state in steps:
         position = to_state % count
         if is_transfer:
@@ -156,6 +160,7 @@ def _legs(compiled, tree, end_state) -> Dict[str, Any]:
         link_cost = next(link[1] for link in compiled.links[from_state] if link[0] == to_state)
         leg = {"from": compiled.tile_ids[from_state // count], "to": compiled.tile_ids[to_state // count],
                "mode": compiled.mode_ids[position], "km": km, "days": km / rate.km_per_day,
+               "team_days": rate.team_days * km,
                "cost_per_tonne": link_cost + pending_cost}
         if pending_days:
             leg["handling_days"] = pending_days
@@ -167,6 +172,13 @@ def _legs(compiled, tree, end_state) -> Dict[str, Any]:
         inputs["labour_hours"] += rate.labour_hours * km
         inputs["feed_kg"] += rate.feed_kg * km
         inputs["fuel_kg"] += rate.fuel_kg * km
+        mode_id = compiled.mode_ids[position]
+        inputs["km_by_mode"][mode_id] = inputs["km_by_mode"].get(mode_id, 0.0) + km
+        if rate.team_days:
+            inputs["team_days"][mode_id] = inputs["team_days"].get(mode_id, 0.0) + rate.team_days * km
+            for kind, name, carrier_days in rate.carrier_days:
+                key = "%s:%s" % (kind, name)
+                inputs["carrier_days"][key] = inputs["carrier_days"].get(key, 0.0) + carrier_days * km
     return {"legs": legs, "km": sum(leg["km"] for leg in legs), "days": days[end_state],
             "cost_per_tonne": cost[end_state], "inputs": inputs}
 
@@ -180,7 +192,8 @@ def route(world_map: WorldMap, origin_tiles: Iterable[str], destination_tiles: I
     haul is the one taking the fewest days (how a household travels) rather than the cheapest.
 
     Returns {"legs": [{"from", "to", "mode", "km", "days", "cost_per_tonne", ("handling_days")}],
-    "km", "days", "cost_per_tonne", "inputs": {labour_hours, feed_kg, fuel_kg}}. `modes` are mode ids
+    "km", "days", "cost_per_tonne", "inputs": {labour_hours, feed_kg, fuel_kg, and by mode id km_by_mode and
+    team_days (working days of a team per tonne), and carrier_days by "kind:name" (a leg's "team_days" likewise)}}. `modes` are mode ids
     (see `routes_modes.usable_modes`); `improvements` is {edge_key: {"road": true, "rail": true}}.
     `mode_costs` is money per tonne-km by mode and `handling_costs` money per tonne per change to a
     mode; without them cost is physical (labour-hours). `held_nodes` are the tech nodes the parties
@@ -189,7 +202,7 @@ def route(world_map: WorldMap, origin_tiles: Iterable[str], destination_tiles: I
     destinations = _origin_indexes(world_map, destination_tiles)
     if origins & destinations:
         return {"legs": [], "km": 0.0, "days": 0.0, "cost_per_tonne": 0.0,
-                "inputs": {"labour_hours": 0.0, "feed_kg": 0.0, "fuel_kg": 0.0}}
+                "inputs": _empty_inputs()}
     compiled = routes_compile.compiled_for(world_map, routes_modes.checked_mode_ids(world_map, modes),
                                            improvements, mode_costs, handling_costs, held_nodes)
     tree = _tree(compiled, origins, fastest)
