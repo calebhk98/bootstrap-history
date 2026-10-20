@@ -13,7 +13,7 @@ from .tuning_strata import (DEFAULT_ARTISAN_SHARE_OF_URBAN, DEFAULT_BONDED_SHARE
 # the trades the default split's wage earners are paid as; a profile that declares its own strata
 # names its own (labelled heuristic: a default until scenarios declare strata)
 DEFAULT_TRADES = {"labourers": "farmer", "poor": "labourer", "artisans": "artisan", "merchants": "merchant",
-				  "bonded": "farmer"}
+				  "bonded": "labourer"}
 
 
 def has_bondage(profile: CountryProfile) -> bool:

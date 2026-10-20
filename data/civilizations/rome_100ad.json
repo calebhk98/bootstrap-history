@@ -8,7 +8,7 @@
       {"name": "artisans", "share": 0.054, "trade": "artisan", "literacy": 0.12, "rises_to": "merchants", "falls_to": "labourers"},
       {"name": "labourers", "share": 0.7362, "trade": "farmer", "literacy": 0.12, "own_plot": true, "rises_to": "artisans", "falls_to": "poor"},
       {"name": "poor", "share": 0.09, "trade": "labourer", "work_share": 0.2, "literacy": 0.12, "rises_to": "labourers"},
-      {"name": "slaves", "share": 0.1, "bonded": true, "owner": "rich", "trade": "farmer", "literacy": 0.0, "rises_to": "poor"}
+      {"name": "slaves", "share": 0.1, "bonded": true, "owner": "rich", "trade": "labourer", "literacy": 0.0, "rises_to": "poor"}
     ],
     "actors": [
       {"actor_id": "church:home", "kind": "church", "name": "the temples", "members": 15000, "stipend_trade": "scribe", "endowment_hectares": 100000, "tithe_rate": 0.0, "tithe_need": "food"},
