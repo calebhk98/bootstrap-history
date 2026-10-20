@@ -15,6 +15,10 @@ class CorveeMixin:
 		"""Person-years of army service owed this year."""
 		return revenue_labour.person_years(self.record.corvee_due.get(revenue_labour.ARMY_DUE, 0.0), world)  # type: ignore[attr-defined,no-any-return]
 
+	def corvee_hours_taken(self) -> float:
+		"""Hours the state called up from its people this year, for its army and its works."""
+		return sum(self.record.corvee_hours.values())  # type: ignore[attr-defined,no-any-return]
+
 	def serve_conscripts(self, served: float, world: Any) -> None:
 		"""Book the hours the conscripts who could be spared take from their households."""
 		self.record.corvee_hours[revenue_labour.ARMY_DUE] = served * world.hours_per_person_year  # type: ignore[attr-defined]

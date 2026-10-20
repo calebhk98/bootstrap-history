@@ -8,4 +8,4 @@ def levy_hours_per_worker(sim) -> float:
 	working_age = sim.population.working_age
 	if government is None or working_age <= 0.0:
 		return 0.0
-	return max(0.0, sum(government.record.corvee_hours.values()) / working_age)
+	return max(0.0, government.corvee_hours_taken() / working_age)
