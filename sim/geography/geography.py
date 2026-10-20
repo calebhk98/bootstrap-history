@@ -7,9 +7,9 @@ located-material costs follow from it.
 """
 
 import json
-from typing import Any, Dict, NotRequired, Tuple, TypedDict
+from typing import Any, Dict, NotRequired, Optional, Tuple, TypedDict
 
-from sim.geography import located_places, mineral_shares, queries, reach_bands, routes_modes, soil_nitrogen, tile_holdings
+from sim.geography import located_places, mineral_shares, queries, reach_bands, routes_modes, soil_nitrogen, stock_land, tile_holdings
 from sim.geography.queries import deposit_records
 from sim.geography.distance import haversine_km
 from sim.geography.parameters import parameter as parameter_value
@@ -98,6 +98,22 @@ class Geography:
     def _manure_per_hectare(self, cropped_share: float, herd_kg: float) -> float:
         sites = soil_nitrogen.unworn_sites(self._world.civ, self._world.world_map, cropped_share)
         return soil_nitrogen.manure_nitrogen_per_hectare(herd_kg, sites)
+
+    def stock_place(self) -> Optional[str]:
+        """The tile the held stock stands on: the held tile nearest the middle of the holding; None with no tiles."""
+        return stock_land.stock_place(self._world.civ, self._world.world_map)
+
+    def pasture_room_kg(self, place: Optional[str], grazing_kg: float, wild_stock: Any) -> Optional[float]:
+        """Live weight more the held tiles' grass keeps beside `grazing_kg` already on it; None without a place."""
+        return stock_land.pasture_room_kg(place, grazing_kg, wild_stock, self._world.civ, self._world.world_map)
+
+    def endemic_stock_loss(self, place: Optional[str], species: Any) -> float:
+        """Share of a held lot of `species` lost in a year to the endemic disease at `place`."""
+        return stock_land.endemic_stock_loss(place, species, self._world.world_map)
+
+    def nursery_room_units(self, place: Optional[str], output_per_batch: float, hectare_years_per_batch: float) -> Optional[float]:
+        """Units the place's arable land raises in a year at a production entry's output and land use per batch."""
+        return stock_land.nursery_room_units(place, output_per_batch, hectare_years_per_batch, self._world.world_map)
 
     def route_km_to(self, tile_ids: Any) -> Any:
         """Kilometres of the cheapest haul from the tiles held to the nearest of these tiles (0.0 when one

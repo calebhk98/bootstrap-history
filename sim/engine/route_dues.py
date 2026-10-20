@@ -4,7 +4,7 @@ The route search prices the dues per tonne (`_freight_handling_costs`); this rea
 owner map when cargo is carried, so the holder at the time is paid and a transfer of a tile moves the revenue.
 """
 from sim.agents.api import ledger
-from sim.geography.api import dues_hours_per_tonne, route_dues_levied
+from sim.geography.api import dues_hours_per_tonne, route_dues_by_holder
 
 DUES_CAUSE = "route dues"
 
@@ -26,10 +26,7 @@ class RouteDuesMixin:
     def route_dues_by_holder(self, route, tonnes):
         """{holder: money owed} for `tonnes` carried over a `Route`, by who holds each leg's starting tile now."""
         legs = [{"from": leg.origin, "mode": leg.mode} for leg in route.legs]
-        owed = {}
-        for due in route_dues_levied(legs, self.route_dues_per_tonne_by_mode(), self.tile_owner):
-            owed[due["holder"]] = owed.get(due["holder"], 0.0) + due["per_tonne"] * tonnes
-        return owed
+        return route_dues_by_holder(legs, self.route_dues_per_tonne_by_mode(), self.tile_owner, tonnes)
 
     def pay_route_dues(self, payer, route, tonnes, limit=None):
         """The payer pays each holder its dues for `tonnes` over the route, never more than `limit` in all;
