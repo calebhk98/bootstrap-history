@@ -14,13 +14,13 @@ OPENED_YEARS_AGO = 8
 
 
 def founder_running_an_artisan_concern():
-    """A game whose founder runs a plain concern (no capability institution, no scalable size) staffed by artisans."""
+    """A game whose founder runs a plain concern (no capability institution, no scalable size) staffed by craftsmen only."""
     game = sim(capital=1e9)
     world = SimWorld(game)
     for node_id, node in sorted(game.nodes.items()):
         if (node["up"] > 0.0 and node["rev"] > 0.0 and game.is_venture(node_id)
                 and node_id not in game.CAPABILITY_INSTITUTIONS and node_id not in game.SCALABLE_INSTITUTIONS
-                and set(world.concern_staff(node_id)) == {"artisan"}):
+                and "scholar" not in world.concern_staff(node_id) and game.venture_hands(node_id)[1] > 0.0):
             break
     else:
         raise AssertionError("no plain artisan concern in the data")
@@ -51,7 +51,7 @@ class FounderAndFirmAgree(unittest.TestCase):
         scholars, craftsmen = self.game.venture_hands(self.node_id)
         crew = self.world.concern_staff(self.node_id)
         self.assertEqual(scholars, 0.0)
-        self.assertAlmostEqual(craftsmen, crew["artisan"] * self.seat_business.size_of(self.node_id), places=9)
+        self.assertAlmostEqual(craftsmen, sum(crew.values()) * self.seat_business.size_of(self.node_id), places=9)
 
     def test_same_upkeep(self):
         size = self.seat_business.size_of(self.node_id)

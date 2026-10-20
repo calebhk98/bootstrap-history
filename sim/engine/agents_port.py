@@ -144,9 +144,10 @@ class SimWorld(BudgetView, SiteView, RevenueView, GroupView, StakeView, Disclosu
 	def concern_staff(self, node_id: str) -> Dict[str, float]:
 		"""People of each trade one plant of this concern needs: the founder's own rule, which reads the plant's data (plant_figures.crew_people)."""
 		sim = self._sim
-		scholars, craftsmen = sim.venture_hands(node_id)
+		scholars = sim.venture_hands(node_id)[0]
 		foreman_trade, foreman_fte = sim.venture_foreman(node_id)
-		staff = {"scholar": scholars, "artisan": craftsmen}
+		staff = dict(sim.venture_crew_by_trade(node_id))
+		staff["scholar"] = scholars
 		if foreman_trade:
 			staff[foreman_trade] = staff.get(foreman_trade, 0.0) + foreman_fte
 		for trade, people in sim.venture_garrison(node_id).items():
