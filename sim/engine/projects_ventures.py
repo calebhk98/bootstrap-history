@@ -104,6 +104,16 @@ class VenturesMixin:
                                          max(node["art"] * supervision_share, by_size))
         return node["sch"] * supervision_share, crew
 
+    def venture_crew_by_trade(self, node_id):
+        """{trade: people} a concern's plant keeps busy: the trades its recipe names, whoever runs it. A plant
+        whose data states no hours has its crew (the fallback rule above) from the unskilled trade."""
+        node = self.nodes[node_id]
+        craftsmen = self.venture_hands_founder_staffed(node_id)[1]
+        hours = node.get("_labour_hours_per_year")
+        if craftsmen > 0.0 and plant_figures.derived_crew_hours(node.get("_revenue_basis"), hours) > 0.0:
+            return plant_figures.crew_by_trade(hours, self.HOURS_PER_PERSON_YEAR)
+        return {self.labour.unskilled_trade(): craftsmen} if craftsmen > 0.0 else {}
+
     VENTURE_FOREMAN_SHARE = declare(
         "VENTURE_FOREMAN_SHARE", 0.25, kind="temporary_heuristic",
         unit="FTE per concern supervised", source=None, confidence="D",

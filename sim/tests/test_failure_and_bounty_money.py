@@ -2,6 +2,7 @@
 quoted figure, from the bill the player actually bears), 248 (a failed bounty
 is not orphaned) and 249 (selling stock faces the market's limits)."""
 from .harness import *  # noqa: F401,F403
+from sim.agents import borrowing_arrears
 from sim.refusal import cause_of, facts_of
 from sim.ui.proto.techtree import _explain_timing_and_risk
 
@@ -104,16 +105,31 @@ _guarded._step_money()
 check("the year's money flow, coin guard included, stays inside the room under the credit limit",
       _guarded_flows[0] >= -_guarded_room - 1e-6, (_guarded_flows[0], _guarded_room))
 
-# 438: what the year's later phases (the state's levy, the market) take is checked against the credit limit at year end
+# 438, restated by 589: what the year's later phases (the state's levy, the market) take past the credit limit is not
+# clamped; it stays as arrears, bounded by what was spent, and the lenders default it after ARREARS_YEARS_BEFORE_DEFAULT years
 _levied = sim(capital=0.0, manual=True)
 _levy_step_market = _levied._step_market
+_late_spent = []
 def _levy_past_the_limit():
     _levy_step_market()
-    _levied.state.household.debit(_levied.capital + _levied.credit_limit() + 1e5, "requisition")
+    if not _late_spent:
+        _late_spent.append(_levied.capital + _levied.credit_limit() + 1e5)
+        _levied.state.household.debit(_late_spent[0], "requisition")
 _levied._step_market = _levy_past_the_limit
 _levied.step()
-check("a year's late spending cannot leave capital past the credit limit",
-      _levied.capital >= -_levied.credit_limit() - 1e-6, (_levied.capital, _levied.credit_limit()))
+_past_the_limit = -_levied.capital - _levied.credit_limit()
+check("a year's late spending past the credit limit is carried as a debt past it, no more than was spent",
+      0.0 < _past_the_limit <= _late_spent[0] + 1e-6, (_past_the_limit, _late_spent[0]))
+_arrears_years = []
+for _year in range(borrowing_arrears.ARREARS_YEARS_BEFORE_DEFAULT):
+    _levied.step()
+    _arrears_years.append(_levied.state.household.arrears_years)
+check("the debt is arrears: each year it stays unpaid counts one more, until the lenders default it",
+      _arrears_years[:-1] == list(range(1, borrowing_arrears.ARREARS_YEARS_BEFORE_DEFAULT)), _arrears_years)
+check("...and in the stated year the default settles it, leaving capital inside the credit limit",
+      _arrears_years[-1] == 0 and _levied.capital >= -_levied.credit_limit() - 1e-6
+      and any(line.kind == "insolvency_settled" for _, line in _levied.state.household.log if hasattr(line, "kind")),
+      (_arrears_years, _levied.capital, _levied.credit_limit()))
 
 # --- 252: a failed bounty is neither charged to the poster nor orphaned ------
 _bounty_sim = sim(capital=5e7)

@@ -109,7 +109,11 @@ class PopulationMixin:
 
     def _share_of_town_work(self, trade):
         """The trade's share of non-farm labour: society's current hours when it has
-        them, else the need the recipe graph puts on it; 0.0 with neither."""
+        them, else the need the recipe graph puts on it; 0.0 with neither. The generic craftsman is any
+        craftsman, so its share is that of every craft trade together."""
+        if trade == trade_data.generic_craft_trade():
+            return sum(self._share_of_town_work(name) for name in sorted(self._world.wages)
+                       if name != trade and self._world.trade_family(name) == legacy_trade_defaults.CRAFT_FAMILY)
         hours = self._world.state.economy.society_labour_hours
         rest = sum(value for name, value in hours.items() if name != FARM_TRADE)
         if rest > 0.0 and hours.get(trade, 0.0) > 0.0 and trade != FARM_TRADE:

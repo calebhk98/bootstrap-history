@@ -56,6 +56,11 @@ def crew_people(derived_hours: float, hours_per_person_year: float, stated_peopl
     return float(stated_people or fallback_people)
 
 
+def crew_by_trade(labour_hours_by_trade: Mapping[str, float], hours_per_person_year: float) -> Dict[str, float]:
+    """People of each trade a plant keeps busy: the hours its lines ask of that trade over a person-year."""
+    return {trade: hours / hours_per_person_year for trade, hours in sorted(labour_hours_by_trade.items()) if hours > 0.0}
+
+
 def crew_is_fallback(derived_hours: float, stated_people: Optional[float]) -> bool:
     """True when neither the plant's data nor a stated crew gives the people, so the caller's rule decides."""
     return derived_hours <= 0.0 and not stated_people
