@@ -300,9 +300,10 @@ Proof: the sorted-key dump of `save_state` (`saveload.state_text`, parsed and du
 stepped Rome years has the same md5 before and after each cut (c56b1eb987691b7218c2cf6dc131c8b8);
 `sim/tests/test_sold_by_seller_exact.py` keeps `sold_by_seller` equal to the sell fills of `clear`, and `clear` with
 a shared `Buyers` equal to `clear` alone; quick tier green. Saving: the search phase 0.73 to 0.83 s before,
-0.52 to 0.53 s after (same wrapping, years 2 and 3), about 0.25 s a year, four percent of the year; whole-year CPU
-alternating a copy of the old tree and the new one moved by less than the machine's spread (a few tenths of a
-second), so no whole-year figure is claimed. Command: `time.process_time` around `unsold_search.clear_with_search`
+0.52 to 0.53 s after (same wrapping, years 2 and 3), about 0.25 s a year, four percent of the year; whole-year CPU,
+alternating a copy of the old tree (`git archive`) and the new one, three pairs, years 2 and 3 of each run: old
+mean 6.61 s (6.10 to 7.11), new mean 6.20 s (5.83 to 6.74), about six percent, with a spread of the same order as
+the saving, so read it as about 0.4 s plus or minus 0.3. Command: `time.process_time` around `unsold_search.clear_with_search`
 over `Sim.step()` of `harness.sim()`.
 
 Left, measured: merchants' route search (0.9 s a year, about 1400 destination iterations per call; sharing one
