@@ -164,6 +164,7 @@ check("...and a household that can afford the show still pays for it",
 arrears = sim(capital=-4000.0)
 arrears.insolvent_years = 20
 arrears.revenue = lambda: 0.0
+arrears.market_rate = lambda: 0.08   # a settled market may clear at zero; the banner is about a rate that costs
 diagnosis = arrears.stall_diagnosis()
 ledger_loss = (arrears.revenue() - arrears.upkeep() - arrears.living_cost() - arrears.mine_operating_cost()
                - max(0.0, -arrears.capital) * arrears.debt_interest_rate())

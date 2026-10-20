@@ -58,6 +58,20 @@ def risk_premium(debt_after: float, collateral_value: float, arrears_history: fl
     return LEVERAGE_PREMIUM * leverage + ARREARS_PREMIUM * arrears_share
 
 
+def _funds_idle_above_clearing_rate(offers: Sequence[FundsOffer], requests: Sequence[LoanRequest],
+                                    ceilings: Sequence[float], able: Sequence[bool], held_rate: float,
+                                    clearing_rate: float) -> bool:
+    """True when some borrower would pay the clearing rate and, at the held rate above it, lenders still
+    have funds left over: the held rate is not a market-clearing price."""
+    demand_at_clearing = sum(request.amount for request, ceiling, can in zip(requests, ceilings, able)
+                             if can and ceiling >= clearing_rate)
+    if demand_at_clearing <= 0.0:
+        return False
+    demand_at_held = sum(request.amount for request, ceiling in zip(requests, ceilings) if ceiling >= held_rate)
+    supply_at_held = sum(offer.amount for offer in offers if offer.minimum_rate <= held_rate)
+    return supply_at_held > demand_at_held
+
+
 def clear(requests: Sequence[LoanRequest], offers: Sequence[FundsOffer], currency: CurrencyId,
           last_rate: Optional[float], existing_debt_by_borrower: Mapping[AgentId, float],
           arrears_by_borrower: Optional[Mapping[AgentId, float]] = None, year: int = 0,
@@ -91,6 +105,9 @@ def clear(requests: Sequence[LoanRequest], offers: Sequence[FundsOffer], currenc
         if lowest_ask is not None and base_rate < lowest_ask <= max(ceilings, default=-math.inf):
             # a sticky rate below every lender's ask would lend nothing while a borrower would pay it
             base_rate = lowest_ask
+        elif base_rate > target and _funds_idle_above_clearing_rate(offers, requests, ceilings, able, base_rate, target):
+            # repricing may be slow, but not so slow that funds sit unlent while a borrower pays the clearing rate
+            base_rate = target
     if rate_ceiling is not None:
         base_rate = min(base_rate, rate_ceiling)
     base_rate = max(0.0, base_rate)
