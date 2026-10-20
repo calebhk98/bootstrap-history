@@ -102,12 +102,12 @@ class CarriageWearsCarriers(unittest.TestCase):
         cls.years = []
         real = economy.dispatch_merchants
 
-        def watch(setup, record, carriage, ledger):
+        def watch(setup, record, carriage, ledger, area_map):
             held_before = {each.agent_id: sum(record.book.holdings(carriage_wear.account(each.agent_id))["goods"].get(CART, {}).values())
                            for each in record.merchants.values()}
             bought = {each.agent_id: sum(record.book.holdings(each.agent_id)["goods"].get(CART, {}).values())
                       for each in record.merchants.values()}
-            real(setup, record, carriage, ledger)
+            real(setup, record, carriage, ledger, area_map)
             cls.years.append({
                 "held_before": held_before, "bought": bought,
                 "wear": {each.agent_id: dict(each.carrier_wear) for each in record.merchants.values()},

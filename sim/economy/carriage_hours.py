@@ -156,6 +156,12 @@ def bids(setup, record) -> List[LabourBid]:
     return found
 
 
+def last_wage(record, key: str) -> float:
+    """What an hour of the crew `key` (trade and tile it is hired at) was last paid in its labour market, 0 when unknown."""
+    trade, tile = _split(key)
+    return record.memory.wages.get(market_key(trade, labour_area(tile)), 0.0)
+
+
 def hired_index(ledger) -> Dict[Tuple[str, str, str], Tuple[float, float]]:
     """{(employer, trade, area): (hours bought, money paid)} over the year's labour markets."""
     found: Dict[Tuple[str, str, str], Tuple[float, float]] = {}
