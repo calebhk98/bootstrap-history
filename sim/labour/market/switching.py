@@ -4,6 +4,7 @@ A switcher becomes a trainee of the new trade (shorter within a skill family) th
 as entrants; those not admitted stay in their old trade. The fallback trade takes people straight in.
 """
 import math
+from operator import sub
 from typing import Dict, List, Mapping, Tuple
 
 from sim.constants import declare
@@ -187,8 +188,8 @@ def _carry_out(state: MarketState, inputs: YearInputs, report: YearReport, area:
     groups: Dict[Tuple[str, float], List[Tuple[str, List[float]]]] = {}
     for source, target, bands in sorted(moves, key=_move_order):
         source_bands = workers[source]
-        taken = [value if value < have else have for value, have in zip(bands, source_bands)]
-        source_bands[:] = [have - value for have, value in zip(source_bands, taken)]
+        taken = list(map(min, source_bands, bands))   # `have` unless the move asks for less
+        source_bands[:] = map(sub, source_bands, taken)
         groups.setdefault((target, _training_share(inputs, source, target)), []).append((source, taken))
     for (target, share), senders in groups.items():
         if len(senders) == 1:

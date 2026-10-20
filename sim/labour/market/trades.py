@@ -54,6 +54,12 @@ def fallback_trades(specs: Mapping[str, TradeSpec]) -> List[str]:
     return sorted(trade_id for trade_id, spec in specs.items() if spec.fallback)
 
 
+def fallback_trade_of_registry(registry: Mapping[str, Any]) -> str:
+    """`fallback_trade(trade_specs(registry))`, without building every spec when the data flags a fallback trade."""
+    flagged = [trade_id for trade_id, entry in registry.items() if field_of(entry, "fallback")]
+    return min(flagged) if flagged else fallback_trade(trade_specs(registry))
+
+
 def fallback_trade(specs: Mapping[str, TradeSpec]) -> str:
     """The one trade failed trainees and the displaced fall back to: the first fallback trade by id."""
     found = fallback_trades(specs)
