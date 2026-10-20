@@ -65,6 +65,22 @@ def plain_routes(good, spec, areas, prices, carriage, interest_rate, source_ids=
     return rows
 
 
+class KeptCarriage(LineCarriage):
+    """Hands out the same cost table for a source until `reprice` makes a new one (as a carriage table does)."""
+
+    def __init__(self, rate, days_per_step):
+        super().__init__(rate, days_per_step)
+        self.tables = {}
+
+    def costs_from(self, source):
+        if source not in self.tables:
+            self.tables[source] = super().costs_from(source)
+        return self.tables[source]
+
+    def reprice(self, rate):
+        self.rate, self.tables = rate, {}
+
+
 class GoodRoutesTests(unittest.TestCase):
     def setUp(self):
         self.areas = [MarketArea("area%d" % number, "salt", (tile,), tile) for number, tile in enumerate(TILES)]
@@ -87,6 +103,17 @@ class GoodRoutesTests(unittest.TestCase):
             found += bool(merchants._good_routes("salt", spec, self.areas, dict(zip((a.area_id for a in self.areas), prices)),
                                                  carriage, rate, sources))
         self.assertGreater(found, 20)
+
+    def test_kept_cost_tables_give_the_rows_of_a_plain_search_before_and_after_a_reprice(self):
+        generator = random.Random(11)
+        for _trial in range(150):
+            spec = GoodSpec("salt", 1000.0, generator.choice((0.0, 0.3)), 0.0, "food")
+            carriage = KeptCarriage(generator.choice((0.05, 0.4)), 200.0)
+            for rate in (generator.choice((0.05, 0.4, 1.5)), generator.choice((0.0, 0.2, 3.0))):
+                carriage.reprice(rate)
+                for _again in range(3):      # the same table asked again, with other prices
+                    prices = [generator.choice((None, 1.0, generator.uniform(0.5, 6.0))) for _ in self.areas]
+                    self.check(prices, spec, 0.05, carriage, generator.choice((None, {"area2", "area4"})))
 
     def test_flat_prices_give_no_rows(self):
         spec = GoodSpec("salt", 1000.0, 0.0, 0.0, "food")
