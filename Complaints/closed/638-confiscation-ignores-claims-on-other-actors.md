@@ -1,6 +1,6 @@
 # Confiscation counts only the purse, so coin lodged with another actor escapes it for free
 
-**Status:** open
+**Status:** closed - done in the engine - `register_wealth_claims(reader, seizer)` in `sim/engine/state_demand.py`; `answer_confiscation` counts the readers' sum, takes the purse first, then calls each seizer (money to the treasury, through the ledger). Test: `sim/tests/test_confiscation_counts_claims.py`. The engine's founder household holds no claim of its own, so only a mechanism that registers claims (the cash-shelter mod already does) is reached. Left: concealment of claims, the holder's stance, a state reaching only claims in its own country.
 
 A mod can shelter coin from fire, sack, banditry, plague and debasement by moving it through the ledger to another
 actor (`mods/bh_cashshelter_z6f2`). It cannot make the state count that coin. `answer_confiscation`
@@ -16,7 +16,7 @@ then not paid for in the one hazard it most defeats. The same gap applies to a l
 What it would take: a way for a mechanism to declare what an actor is owed by others, which the confiscation share
 counts and takes once the purse is empty.
 
-Proof of concept: branch `engine-confiscation-counts-claims`. It adds `register_wealth_claims(reader, seizer)` and
+Done (from the proof of concept on branch `engine-confiscation-counts-claims`). It adds `register_wealth_claims(reader, seizer)` and
 `WEALTH_CLAIMS` in `sim/engine/state_demand.py`: `answer_confiscation` adds the readers' sum to the wealth it
 demands a share of, takes from the purse first, then calls each seizer for the rest (money goes to the treasury).
 With nothing registered the behaviour is unchanged. Regression test:
