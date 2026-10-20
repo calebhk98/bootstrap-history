@@ -16,6 +16,7 @@ their own. Behaviour is unchanged and verified byte-identical.
 
 from sim.constants import declare
 from sim.refusal import LogLine
+from .literacy_census_phrase import census_phrase
 from .data import (TECH_EFFECTS, TRADES_ABSENT)
 
 
@@ -335,10 +336,7 @@ class AdoptionMixin:
             if "literacy_elite" in changed:
                 bits.append("the lettered and propertied class is now %d%% "
                             "literate" % round(changed["literacy_elite"] * 100))
-            school_phrase = "schooling shows in the census"
-            school_started = self.done_year.get(self.school_node())
-            if school_started is not None and year - school_started >= self.GENERATION_YEARS:
-                school_phrase = "a generation of schooling shows in the census"
+            school_phrase = census_phrase(year, self.done_year.get(self.school_node()), self.GENERATION_YEARS)
             self.state.household.log.append((year, LogLine("school_progress", "%s: %s" % (school_phrase, "; ".join(bits)))))
 
     # ---- A TRADE THE FOUNDER INTRODUCED BECOMES A TRADE THE SOCIETY HAS ----

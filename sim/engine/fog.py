@@ -11,6 +11,7 @@ from . import category_traits
 from .data import closure, JSONDict, Nodes
 from . import event_causes
 from .hazard_window import hazards_not_yet_past
+from .staff_loss_waves import wave_exposure
 from .hazard_hedge_timing import add_timing_to_steps
 
 # What a node id the player has not heard of is replaced with.
@@ -326,14 +327,9 @@ class FogMixin:
                     row["national_public_health"] = {
                         "share_removed": round(exposure["national_relief"], 4),
                         "from": self.national_public_health_sources()}
-                remaining = max(year_start, scenario.year)
-                waves = max(1, year_end - remaining + 1)
-                per_wave = row["staff_loss_after_what_you_have_built"]
-                row["remaining_annual_wave_checks"] = waves
-                row["chance_of_at_least_one_staff_loss_wave"] = round(
-                    1.0 - (1.0 - 0.32) ** waves, 4)
-                row["expected_cumulative_staff_loss"] = round(
-                    1.0 - (1.0 - 0.32 * per_wave) ** waves, 4)
+                row.update(wave_exposure(self.STAFF_LOSS_HAZARD_ANNUAL_CHANCE,
+                                         row["staff_loss_after_what_you_have_built"],
+                                         year_start, year_end, scenario.year))
             upcoming.append(row)
         # Show full records for next 4 actionable hazards, rest by name only (avoid bloat).
         _soon = [row for row in upcoming
