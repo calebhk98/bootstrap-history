@@ -97,6 +97,9 @@ class FakeWorld:
 	def unsold_materials(self, actor: Any, node_id: str) -> List[str]:
 		return list(self.unsold.get(node_id, ()))
 
+	def research_cost(self, node_id: str, max_age_years: int) -> float:
+		return self.copy_cost(node_id)
+
 	def purchasable_substitute_discount(self) -> float:
 		return 0.9
 

@@ -94,6 +94,12 @@ RESEARCH_PROGRAMMES_AT_ONCE = declare(
 	retire="Complaints/491: an actor's scholars and purse limit what it can research at once, not a count",
 	why="How many pieces of research an actor chooses to have in hand; stands in for the limit its own "
 		"scholars and attention put on what it can pursue, and keeps the yearly choice bounded.")
+RESEARCH_REVIEW_YEARS = declare(
+	"RESEARCH_REVIEW_YEARS", 6, kind="temporary_heuristic",
+	unit="years between an actor's reviews of what to research", source=None, confidence="D",
+	retire="Complaints/491: an actor reviews when its knowledge, purse or the prices it values move, not on a calendar",
+	why="How often an actor with no research in hand looks again for something worth researching; stands in for "
+		"the attention a search takes, and keeps the yearly evaluation cheap.")
 EXPANSION_RATE = declare(
 	"EXPANSION_RATE", 0.5, kind="temporary_heuristic",
 	unit="share of present capacity per year", source=None, confidence="D",

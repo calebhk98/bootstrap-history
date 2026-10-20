@@ -53,7 +53,9 @@ discount search; per-actor adoption stage and unit count; subsidy and mandate le
 - Done: firms, AI players and states choose research through their decision policy (`sim/agents/research_choice.py`):
   a firm or player takes a node whose concern's takings at the economy's prices repay its cost over the valuing
   horizon; a state takes nodes its weighted gains value (`imitation_worth`). One programme at a time
-  (`RESEARCH_PROGRAMMES_AT_ONCE`, a labelled heuristic). Test: `--only research_chosen_by_actors`. Cost in a default
+  (`RESEARCH_PROGRAMMES_AT_ONCE`, a labelled heuristic). An actor reviews what to research only every
+  `RESEARCH_REVIEW_YEARS` (its own year of the cycle), prices at most a few plans per review, drops candidates whose
+  labour alone outruns their worth, and reuses a node's pioneer cost for that long (`SimWorld.research_cost`). Test: `--only research_chosen_by_actors`. Cost in a default
   game: `python3 sim/simulator.py` has no command for it; time `advance_actors` over a few years with and without.
 - Done: `demonstrated()` is the seats' builds plus every active actor's own knowledge beyond the baseline, and
   `exposure` reads the holders' distance for those nodes, so imitation can copy from any actor

@@ -4,14 +4,16 @@ A node is on offer when the actor knows what it rests on and values it (`Actor.r
 player by the takings of a concern it would run, a state by the gains its priorities weight. The policy picks
 among the priced offers within the actor's budget; a node is never taken at a loss.
 """
+import zlib
 from typing import Any, List
 
 from . import business_books, research
 from .player_commands import CommandRejected
 from .policy import Decision, Option
-from .tuning import ATTENTION_SPAN, RESEARCH_PROGRAMMES_AT_ONCE, VALUE_HORIZON_YEARS
+from .tuning import ATTENTION_SPAN, RESEARCH_PROGRAMMES_AT_ONCE, RESEARCH_REVIEW_YEARS, VALUE_HORIZON_YEARS
 
 RESEARCH_DECISION = "research"
+PRICED_PER_REVIEW = 2
 
 
 def expected_concern_margin(actor: Any, node_id: str, world: Any) -> float:
@@ -39,6 +41,10 @@ def options(actor: Any, world: Any, room: int = RESEARCH_PROGRAMMES_AT_ONCE, bud
 	offers: List[Option] = []
 	viable = 0
 	for worth, node_id in candidates[:ATTENTION_SPAN]:
+		if len(offers) >= PRICED_PER_REVIEW:   # pricing a plan is dear: look at the best few only
+			break
+		if worth * research.chance(node_id, world) <= research.labour_floor(actor, node_id, world):
+			continue        # its labour alone outruns what it is worth, whatever else it costs
 		offer = Option(subject=node_id, worth=worth, cost=research.plan(actor, node_id, world)["total"],
 					   chance=research.chance(node_id, world))
 		offers.append(offer)
@@ -48,8 +54,15 @@ def options(actor: Any, world: Any, room: int = RESEARCH_PROGRAMMES_AT_ONCE, bud
 	return offers
 
 
+def reviews_this_year(actor: Any, world: Any) -> bool:
+	"""Whether the actor looks for research this year: every RESEARCH_REVIEW_YEARS, each actor in its own year."""
+	return (world.year + zlib.crc32(actor.identity().encode())) % RESEARCH_REVIEW_YEARS == 0
+
+
 def decide(actor: Any, world: Any) -> List[str]:
 	"""Ask the actor's policy which offers to take and begin them; returns the nodes begun."""
+	if not reviews_this_year(actor, world):
+		return []
 	if sum(1 for work in actor.works.values() if work.get("research")) >= RESEARCH_PROGRAMMES_AT_ONCE:
 		return []
 	room = RESEARCH_PROGRAMMES_AT_ONCE - sum(1 for work in actor.works.values() if work.get("research"))

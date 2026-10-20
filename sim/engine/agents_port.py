@@ -82,12 +82,16 @@ class SimWorld(BudgetView, SiteView, RevenueView, GroupView, StakeView, Disclosu
 		"""Everything any seat has completed that the society did not have."""
 		return self._once("inventions", lambda: sorted(seat_builds.built_by_any(self._sim.state.seats)))
 
+	def _registry_actors(self) -> List[Any]:
+		registry = getattr(self._sim, "actors", None)
+		return list(registry.actors.values()) if registry is not None else []
+
 	def actor_held(self) -> Dict[str, List[Any]]:
 		"""Every node an active actor holds beyond what the society already knew, with its holders in id order."""
 		def compute() -> Dict[str, List[Any]]:
 			baseline = self.baseline_knowledge()
 			held: Dict[str, List[Any]] = {}
-			for actor in sorted(self._sim.actors.actors.values(), key=lambda actor: actor.identity()):
+			for actor in sorted(self._registry_actors(), key=lambda actor: actor.identity()):
 				if actor.record.exited_year is not None:
 					continue
 				for node_id in sorted(actor.knowledge):

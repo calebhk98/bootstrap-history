@@ -30,3 +30,12 @@ class ResearchView:
 
 	def purchasable_substitute_discount(self) -> float:
 		return self._sim.PURCHASABLE_SUBSTITUTE_QUALITY_DISCOUNT
+
+	def research_cost(self, node_id: str, max_age_years: int) -> float:
+		"""What the node costs to pioneer, worked out afresh only when the last figure is `max_age_years` old
+		(the cost walks the founder's materials and labour, so every actor's yearly look would repeat it)."""
+		kept = self._sim.actors._research_costs
+		stamped = kept.get(node_id)
+		if stamped is None or self.year - stamped[0] >= max_age_years:
+			stamped = kept[node_id] = (self.year, self.copy_cost(node_id))
+		return stamped[1]

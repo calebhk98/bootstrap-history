@@ -324,6 +324,10 @@ class World(Protocol):
 		"""Materials the node buys that no one in reach sells, sorted."""
 		...
 
+	def research_cost(self, node_id: str, max_age_years: int) -> float:
+		"""Money to pioneer the node, labour included; a figure at most `max_age_years` old may be reused."""
+		...
+
 	def purchasable_substitute_discount(self) -> float:
 		"""Share of its stated quality a substitute bought off the market keeps."""
 		...

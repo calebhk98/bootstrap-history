@@ -104,6 +104,8 @@ class ActorRegistry:
 		self._totals = ConcernTotals()
 		# country -> the world its actors see this year (rebuilt every `advance`)
 		self._scoped: Dict[str, Any] = {}
+		# node -> (year, cost): what researching it cost when last worked out (see SimWorld.research_cost)
+		self._research_costs: Dict[str, Any] = {}
 		for actor_id in sorted(state.records):
 			self._wrap(actor_id)
 

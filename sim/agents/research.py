@@ -12,7 +12,7 @@ from sim.refusal import Refusal
 
 from . import imitation, research_gate
 from .player_commands import CommandRejected
-from .tuning import HIRING_PREMIUM
+from .tuning import HIRING_PREMIUM, RESEARCH_REVIEW_YEARS
 
 
 def missing_prerequisites(actor: Any, node_id: str, world: Any) -> List[str]:
@@ -26,10 +26,16 @@ def plan(actor: Any, node_id: str, world: Any) -> Dict[str, Any]:
 	base_labour = sum(amount * world.labour_market.quote(trade, 0.0, actor) for trade, amount in hours.items())
 	premium = sum(amount * world.labour_market.quote(trade, 0.0, actor) * HIRING_PREMIUM
 				  for trade, amount in hours.items() if actor.workforce.get(trade, 0.0) <= 0)
-	other_money = max(0.0, world.copy_cost(node_id) - base_labour)
+	other_money = max(0.0, world.research_cost(node_id, RESEARCH_REVIEW_YEARS) - base_labour)
 	return {"hours": hours, "money": other_money + premium, "labour_cost": base_labour,
 			"total": other_money + premium + base_labour,
 			"years": max(1, int(math.ceil(float(node.get("yrs") or 0.0))))}
+
+
+def labour_floor(actor: Any, node_id: str, world: Any) -> float:
+	"""The least the node can cost: its labour hours at the going quote (cheap; the full plan prices the rest)."""
+	return sum(amount * world.labour_market.quote(trade, 0.0, actor)
+			   for trade, amount in (world.nodes[node_id].get("lab") or {}).items())
 
 
 def chance(node_id: str, world: Any) -> float:
