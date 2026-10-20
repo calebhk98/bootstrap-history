@@ -34,13 +34,15 @@ def _unsold(sold: dict, offers: Sequence[Offer], indices: Sequence[int]) -> List
             if sold.get((offers[index].seller, offers[index].tile), 0.0) < offers[index].quantity * (1.0 - ROUNDING_SHARE)]
 
 
-def _floors(setup, record, view, offers: Sequence[Offer], original: Sequence[Offer]) -> dict:
-    """Searchable offers (index -> floor): a producer's unchanged ask above what a unit is worth to it unsold."""
+def _floors(setup, record, view, offers: Sequence[Offer], original: Sequence[Offer], costs: dict) -> dict:
+    """Searchable offers (index -> floor): a producer's unchanged ask above what a unit is worth to it unsold.
+    `costs` holds the unit costs the market's sellers already worked out ((seller, tile) -> cost or None)."""
     floors = {}
     for index, offer in enumerate(offers):
         if offer.quantity <= 0.0 or offer.reservation_price != original[index].reservation_price:
             continue
-        cost = seller_offers.unit_cost(setup, record, view, offer)
+        key = (offer.seller, offer.tile)
+        cost = costs[key] if key in costs else seller_offers.unit_cost(setup, record, view, offer)
         if cost is None:
             continue
         floor = max(seller_offers.unit_value(offer, cost), _held_value(setup, record, view, offer))
@@ -68,13 +70,13 @@ def _with_level(offers: Sequence[Offer], floors: dict, level: float) -> List[Off
 
 
 def clear_with_search(setup, record, view, bids, original: Sequence[Offer], offers: Sequence[Offer], good, area,
-                      currency, last_price: Optional[float]) -> Tuple[List[Offer], object]:
+                      currency, last_price: Optional[float], costs: Optional[dict] = None) -> Tuple[List[Offer], object]:
     """(the offers after the search, the market's clearing with them). `original` are the offers before the
     sellers re-chose, `offers` after; a market with no unsold searchable stock clears once."""
     offers = list(offers)
     buyers = goods_market.Buyers(bids, last_price)       # the same bids meet every trial book
     result = goods_market.clear(bids, offers, good, area, currency, last_price, buyers)
-    floors = _floors(setup, record, view, offers, original)
+    floors = _floors(setup, record, view, offers, original, costs if costs is not None else {})
     unsold = _unsold(_sold_by_offer(result, offers), offers, list(floors))
     if not unsold:
         return offers, result
