@@ -487,7 +487,9 @@ class AgentEconomy(TilePricesMixin):
         total = float(population.total)
         weather = sim._pooled_farm_weather_multiplier(sim.state.scenario.year)
         economy = self._economy
-        yields = {producer_id: weather for producer_id, producer in economy_api.producers_of(economy).items()
+        site_yield = economy.setup.yield_factor_by_recipe_tile   # the tile's soil, climate and water, for recipes that crop
+        yields = {producer_id: weather * site_yield.get(economy_api.recipe_tile_key(producer.recipe_id, producer.tile), 1.0)
+                  for producer_id, producer in economy_api.producers_of(economy).items()
                   if economy.setup.land_per_run.get(producer.recipe_id, 0.0) > 0.0}
         entrant_share, attrition_share = working_age_turnover(population)
         return YearInputs(year=sim.state.scenario.year, population_by_tile=sim.labour.settlement_tiles(),

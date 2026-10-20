@@ -22,6 +22,8 @@ def admit_recipes(economy, source) -> bool:
         setup.recipes[recipe_id] = source.recipes[recipe_id]
         if recipe_id in source.land_per_run:
             setup.land_per_run[recipe_id] = source.land_per_run[recipe_id]
+        setup.yield_factor_by_recipe_tile.update({key: factor for key, factor in source.yield_factor_by_recipe_tile.items()
+                                                  if key.partition("@")[0] == recipe_id})
     for good, spec in source.specs.items():
         setup.specs.setdefault(good, spec)
     for trade, wage in source.opening_wages.items():

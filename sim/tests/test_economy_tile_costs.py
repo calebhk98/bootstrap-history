@@ -19,6 +19,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 # Plausible money per tonne-km in denarii and port handling per tonne (test inputs, not model data).
 REAL_RATES = {"cart": 0.19, "pack": 0.5, "river_boat": 0.05, "sail": 0.007}
 REAL_HANDLING = {"sail": 0.2}
+CROPPED_SHARE = 2.0 / 3.0   # a test input: the share of open fields cropped in a year
 
 
 def grid(columns, rows, coastal_columns=(), spacing_degrees=3.5):
@@ -140,7 +141,7 @@ class GeographyIsTheSourceTests(unittest.TestCase):
     def setUpClass(cls):
         cls.geography = geography_api.load_geography()
         cls.tile_ids = civ_tile_ids(cls.geography, "rome_100ad")
-        cls.tiles = tile_costs.tiles_from_geography(cls.geography, cls.tile_ids)
+        cls.tiles = tile_costs.tiles_from_map(geography_api.open_map(), cls.tile_ids, CROPPED_SHARE)
 
     def test_a_river_link_geography_knows_is_cheaper_by_boat_in_the_economy(self):
         inside = set(self.tile_ids)
@@ -171,7 +172,7 @@ class GeographyIsTheSourceTests(unittest.TestCase):
     def test_all_pairs_for_the_largest_civilisation_is_fast_and_cached(self):
         names = ("rome_100ad", "han_china_100ad", "england_1300", "mexica_1500", "norse_900ad")
         biggest = max((civ_tile_ids(self.geography, name) for name in names), key=len)
-        tiles = tile_costs.tiles_from_geography(self.geography, biggest)
+        tiles = tile_costs.tiles_from_map(geography_api.open_map(), biggest, CROPPED_SHARE)
         self.assertGreater(len(tiles), 30)
         geography_api.route([biggest[0]], [biggest[-1]], ["cart"])      # builds the map's graph once
         started = time.perf_counter()
@@ -187,10 +188,12 @@ class GeographyIsTheSourceTests(unittest.TestCase):
 
     def test_tiles_from_geography_reads_fields(self):
         tile_id = sorted(self.geography["land_tiles"]["tiles"])[0]
-        tiles = tile_costs.tiles_from_geography(self.geography, [tile_id])
+        tiles = tile_costs.tiles_from_map(geography_api.open_map(), [tile_id], CROPPED_SHARE)
         record = self.geography["land_tiles"]["tiles"][tile_id]
         self.assertEqual(tiles[tile_id].latitude, record["lat"])
-        self.assertEqual(tiles[tile_id].fertility, record["fertility_quality_multiplier"])
+        site = geography_api.crop_site(tile_id, CROPPED_SHARE)
+        self.assertEqual(tiles[tile_id].fertility, site.yield_factor)
+        self.assertAlmostEqual(tiles[tile_id].cropland_hectares, site.cropped_hectares)
         self.assertEqual(tiles[tile_id].borders, tuple(record["borders"]))
 
 

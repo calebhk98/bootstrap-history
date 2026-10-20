@@ -5,10 +5,10 @@ tiles through `region_to_tiles` is test scaffolding only."""
 import json
 import unittest
 
-from sim.geography.api import load_geography
+from sim.geography.api import load_geography, open_map
 from sim.economy import market_areas, tile_costs
 from sim.economy.types import GoodSpec
-from sim.tests.test_economy_tile_costs import REAL_HANDLING, REAL_RATES, civ_tile_ids, grid, grid_table
+from sim.tests.test_economy_tile_costs import CROPPED_SHARE, REAL_HANDLING, REAL_RATES, civ_tile_ids, grid, grid_table
 
 GRAIN = GoodSpec("grain_kg", 1.0, 0.1, 0.0, "food")
 SILVER = GoodSpec("silver_kg", 1.0, 0.0, 0.0, "metal")
@@ -124,9 +124,9 @@ class RealTilesTests(unittest.TestCase):
 
     def area_counts(self, civ_name):
         tile_ids = civ_tile_ids(self.geography, civ_name)
-        tiles = tile_costs.tiles_from_geography(self.geography, tile_ids)
+        tiles = tile_costs.tiles_from_map(open_map(), tile_ids, CROPPED_SHARE)
         table = tile_costs.carriage_table(tiles, REAL_RATES, REAL_HANDLING)
-        pops = {tile_id: tile.land_area_km2 * tile.arable_fraction * tile.fertility for tile_id, tile in tiles.items()}
+        pops = {tile_id: tile.land_area_km2 * tile.cropped_fraction * tile.fertility for tile_id, tile in tiles.items()}
         goods = [(GRAIN, GRAIN_PRICE), (SILK, SILK_PRICE), (SILVER, SILVER_PRICE)]
         area_map = market_areas.AreaMap(tiles, table, goods, pops)
         connected = max(len(table.costs_from(tile_id)) for tile_id in tiles)

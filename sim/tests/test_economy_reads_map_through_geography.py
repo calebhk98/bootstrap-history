@@ -7,6 +7,7 @@ import tempfile
 from .harness import *  # noqa: F401,F403
 
 from sim.engine import economy_port_setup, geography_port
+from sim.geography.api import crop_site
 
 with open(economy_port_setup.__file__, encoding="utf-8") as handle:
     check("the economy setup does not open the geography file by path", "geography.json" not in handle.read())
@@ -14,10 +15,12 @@ with open(economy_port_setup.__file__, encoding="utf-8") as handle:
 game = unopened_sim()
 base_tiles, _base_map = economy_port_setup.civilisation_tiles(game.civ, game.world_map)
 check("the civilisation holds tiles on the engine's map", len(base_tiles) > 1, len(base_tiles))
-edited = base_tiles[0]
+cropped_share = 1.0 - game.labour.farming_technique().rotation.fallow_share_of_holding
+edited = next(tile for tile in base_tiles if crop_site(tile, cropped_share, game.world_map).yield_factor > 0.0)   # a tile that crops
 base_setup = economy_port_setup.build_setup(game)
-check("the base map gives the tile its shipped arable fraction",
-      base_setup.tiles[edited].arable_fraction != 0.123, base_setup.tiles[edited].arable_fraction)
+base_cropland = crop_site(edited, cropped_share, game.world_map).cropped_hectares
+check("the base map gives the tile its shipped cropland", base_setup.tiles[edited].cropland_hectares == base_cropland,
+      base_setup.tiles[edited].cropland_hectares)
 
 with tempfile.TemporaryDirectory() as mods_dir:
     mod_root = os.path.join(mods_dir, "tile_edit_k3f9")
@@ -33,7 +36,9 @@ with tempfile.TemporaryDirectory() as mods_dir:
         check("the engine's map is the base map with the active mod's overlay",
               modded.world_map.tiles[edited]["arable_fraction"] == 0.123)
         modded_setup = economy_port_setup.build_setup(modded)
-        check("the economy's tiles come from that map", modded_setup.tiles[edited].arable_fraction == 0.123)
+        check("the economy's tiles come from that map",
+              modded_setup.tiles[edited].cropland_hectares == crop_site(edited, cropped_share, modded.world_map).cropped_hectares
+              and modded_setup.tiles[edited].cropland_hectares != base_cropland, modded_setup.tiles[edited].cropland_hectares)
         check("the setup names the map its tiles lie on", modded_setup.world_map is modded.world_map)
     finally:
         geography_port.MODS_DIR = saved

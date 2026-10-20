@@ -12,6 +12,7 @@ from sim.economy.accounts import Book
 from sim.economy.households_cohort import cohort_id, cohorts_for_tile
 from sim.economy.land_market import LandDemand, clear_land, rent_postings
 from sim.economy.producers import Producer
+from sim.economy.replaced import replaced
 from sim.economy.types import EDGE_MINT, Recipe, TileSpec, Transfer
 from sim.tests.test_economy_producers import View
 
@@ -145,6 +146,14 @@ class SettleYearTests(unittest.TestCase):
         self.assertEqual({each.payee.split(":")[1] for each in paid}, {"short"})
         self.assertEqual(len({each.payee for each in paid}), 3)
         self.assertAlmostEqual(record.book.balance("producer:short", "coin"), 1e6 - sum(each.amount for each in paid))
+
+    def test_rent_follows_the_yield_factor_of_the_tile(self):
+        setup, record = economy_of({"good": 100.0, "poor": 100.0}, {"good": 300.0, "poor": 300.0})
+        record.producers["producer:good"] = replaced(record.producers["producer:good"], yield_factor=1.2)
+        record.producers["producer:poor"] = replaced(record.producers["producer:poor"], yield_factor=0.5)
+        view = View({"grain": 1.0}, {"hand": 0.5})
+        land_market.settle_year(setup, record, view, {pid: 300.0 for pid in record.producers})
+        self.assertGreater(record.land_rent["good"], record.land_rent["poor"])
 
     def test_the_cap_does_not_shrink_what_the_producer_wants_next_year(self):
         setup, record = economy_of({"short": 100.0}, {"short": 300.0})

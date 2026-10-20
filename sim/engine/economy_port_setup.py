@@ -9,7 +9,7 @@ import json
 import os
 from typing import Dict
 
-from sim.economy.api import (EconomySetup, SiteLimit, TradeSpec, currency_from_coin_standard, goods_specs, households,
+from sim.economy.api import (EconomySetup, SiteLimit, TradeSpec, currency_from_coin_standard, goods_specs, households, recipe_tile_key,
                              recipes_from_production_data, taxes, tile_costs)
 from sim.world import demand, need_basket
 from sim.geography.api import carriage_rates, layer_value, sea_freight, settlement, tiles_held
@@ -19,6 +19,7 @@ from . import economy_port_closure, economy_port_costs, economy_port_sites
 from .economy_port_stores import opening_store_values
 from .foreign_routes import SEA_MODE
 
+ARABLE_SOURCE = "arable land"   # the production entries' `extracted_from` for crops (some add a note after it)
 DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "data")
 
 
@@ -170,7 +171,8 @@ def build_setup(sim, opening=None, production=None):
     tile_ids, world_map = civilisation_tiles(civ, sim.world_map)
     partners = opening.get("partners") or {}
     all_tile_ids = list(tile_ids) + [tile for opened in partners.values() for tile in opened["tiles"]]
-    tiles = tile_costs.tiles_from_map(world_map, all_tile_ids)
+    cropped_share = 1.0 - sim.labour.farming_technique().rotation.fallow_share_of_holding
+    tiles = tile_costs.tiles_from_map(world_map, all_tile_ids, cropped_share)
     for partner_id, opened in partners.items():
         for tile in opened["tiles"]:
             tiles[tile] = dataclasses.replace(tiles[tile], country=partner_id)
@@ -223,6 +225,7 @@ def build_setup(sim, opening=None, production=None):
         capital_tile=by_people[0], port_tile=(coastal or by_people)[0],
         land_per_run={recipe_id: float(production[recipe_id].get("land_hectare_years") or 0.0)
                       for recipe_id in recipes if production[recipe_id].get("land_hectare_years")},
+        yield_factor_by_recipe_tile=cropland_yields(production, recipes, tiles),
         basket_by_tile=baskets_by_tile(basket, need_data, world_map, all_tile_ids), coin_per_unit=unit,
         opening_income_per_head=opening.get("opening_income_per_head"),
         recipes_by_country=recipes_by_country(str(civ["id"]), opening["recipes"], partners),
@@ -232,6 +235,14 @@ def build_setup(sim, opening=None, production=None):
         opening_store_output={good: tuple(tuple(working) for working in entry["workings"])
                               for good, entry in sorted(opening["stores"].items()) if entry["workings"]},
         opening_store_gaps={good: entry["gap"] for good, entry in sorted(opening["stores"].items()) if entry["gap"]})
+
+
+def cropland_yields(production, recipes, tiles):
+    """{recipe@tile: yield factor} for the recipes that grow on arable land: the tile's soil, climate and water
+    (geography's crop_site) against the reference field. Pasture, forest and mines do not read it."""
+    return {recipe_tile_key(recipe_id, tile_id): tile.fertility
+            for recipe_id in sorted(recipes) if str(production[recipe_id].get("extracted_from") or "").startswith(ARABLE_SOURCE)
+            for tile_id, tile in sorted(tiles.items())}
 
 
 def recipes_by_country(home_id, home_recipes, partners):
