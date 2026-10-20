@@ -419,3 +419,28 @@ its twin. Not fixed: no bound is loosened and no fixture edited, since a fixture
 year or a tile where the sign happens to be right. A fixture that keeps the subject needs the entrant to be large
 relative to the market (a surplus fixture that leaves incumbents no spare capacity) or the check to read the nation's
 price; either is the owner's choice. Related: Complaint 473 (the cycling economy).
+
+## `economy_state_budget` after the credit rate steps (3e74bbad) and the thin-market wage cap (c5c0107e)
+
+Bisected over the first-parent merges (`python3 -m sim.tests --slow --only economy_state_budget --topic-seconds 240`).
+Two checks stay failing, test bounds untouched:
+
+- "printing to cover a deficit raises prices and expectations and can run away" (the price level after eight years is
+  20.7 times the start against the bound of 20 times the first year's 1.67): passes at `d7a49827`, first fails at
+  `3e74bbad` (the rate falls to the clearing rate). The short spin-up now ends with the market rate at exactly 0.0
+  (it was 0.053 at `d7a49827`), and the unprinted control then deflates every year (price level 0.92 falling to 0.44
+  over eight years, against 0.94 rising to 1.11), so the printed run starts lower and climbs 12 times, not 20.
+  Measure with `ROME_SPIN_UP_YEARS=3,2 python3 -` running `opened()`, `run(resumed(fiat=True), 8)` from
+  `sim/tests/test_economy_state_budget.py`. The test's subject (printing runs away) holds in its other two bounds; the
+  fix belongs to the opening settling (Complaints 473, 526).
+- "a balanced budget leaves the states share of the coin steady" (0.1737 against 0.1679): passes through `d9b1e32f`,
+  first fails at `c5c0107e` (hours no labour market can fill stop setting the wage). On the declared-length opening
+  (`resumed(full_length=True)`) the state now starts holding 0.134 of the coin (0.032 at `d9b1e32f`, rate memory 0.8,
+  the ceiling) and hires almost nothing: wages paid to labourers over two years are 0.6 million against 10 million,
+  while its wage budget is 34 million. So its hoard grows with the supply shrinking. The state's wage bid is 1.5 times
+  last year's wage and its hours are capped at a share of each tile's; why the bids now go unfilled, and why the
+  opening hands the state four times the coin, are not found. Open.
+
+Fixed in the same round: the state's loan request carried a ceiling of 3 times the market rate, which is nothing at a
+rate of zero, so lenders' risk premium priced it out and "borrowing comes before printing" saw no loan
+(`sim/economy/state_finance.py`: the premium its own leverage earns lenders is now added to the ceiling).

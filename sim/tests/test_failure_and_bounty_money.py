@@ -108,6 +108,7 @@ check("the year's money flow, coin guard included, stays inside the room under t
 # 438, restated by 589: what the year's later phases (the state's levy, the market) take past the credit limit is not
 # clamped; it stays as arrears, bounded by what was spent, and the lenders default it after ARREARS_YEARS_BEFORE_DEFAULT years
 _levied = sim(capital=0.0, manual=True)
+_levied.market_rate = lambda: 0.08   # arrears are unpaid interest, and a settled market may clear at a rate of zero
 _levy_step_market = _levied._step_market
 _late_spent = []
 def _levy_past_the_limit():
