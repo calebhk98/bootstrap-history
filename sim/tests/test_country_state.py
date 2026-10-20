@@ -44,7 +44,7 @@ class HomeInputs(Shared):
 	def __init__(self, profile, assessed):
 		super().__init__()
 		self.profile, self.assessed = profile, assessed
-		record = type("Record", (), {"accession_due": False, "works_stock": {}, "army": 0.0})()
+		record = type("Record", (), {"accession_due": False, "works_stock": {}, "army": 0.0, "levers": {}})()
 		self.government_actor = type("Government", (), {"record": record})()
 
 	def population_total(self):

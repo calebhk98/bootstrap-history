@@ -730,6 +730,29 @@ A seat sets only its own country's side: `"side"` naming another country is refu
 the countries), `same_country`, `unknown_stance` (`choices` lists them, from `data/world/relation_stances.json`),
 `nothing_to_set`. Replies carry `country`, `with`, `ours` and `theirs`.
 
+### The state's levers
+
+A country seat (`join` with `seat_kind: country`) sets the levers of the government it holds; the next year's budget
+and revenue read them. `levers` lists what is set; `lever` sets one, and a null `value` clears it (the civilisation
+file's figure or the derived one applies again).
+
+    {"cmd":"levers","as":"senate"}                                  the levers set, the kinds, and the budget lines
+    {"cmd":"lever","lever":"revenue","name":"land_tax","value":0.08}   a declared form's rate; a new form also needs "basis"
+    {"cmd":"lever","lever":"budget","name":"dole","value":0.5}      the share of a standing line kept (0 to 1)
+    {"cmd":"lever","lever":"army","value":20000}                    soldiers wanted (the army moves toward it at a bounded rate)
+    {"cmd":"lever","lever":"navy","value":10}                       ships wanted
+    {"cmd":"lever","lever":"works","name":"water_works","value":50000}   m2 of masonry equivalent wanted
+    {"cmd":"lever","lever":"reserve","value":3}                     years of the standing need held before a surplus is spent
+    {"cmd":"lever","lever":"monopoly","name":"salt_kg","value":true}   hold (true) or release (false) a good as a state monopoly
+    {"cmd":"lever","lever":"subsidy","name":"wheat_kg","value":1000}   money a year handed to the good's producers
+    {"cmd":"lever","lever":"mandate","name":"wheat_kg","value":50}     tonnes a year the state must buy of the good
+
+A reply carries `lever`, `name`, `before`, `after`, `country` and `levers`. A seat sets only its own country's levers:
+`country` naming another is refused with `cause` `not_your_country`, a household seat with
+`household_seat_has_no_government`. Other causes: `unknown_lever`, `unknown_name` and `unknown_basis` (`choices` lists
+what is accepted), `value_not_number`, `value_out_of_range` (`low`, `high`), `value_not_boolean`, `nothing_to_clear`.
+Until tax rates are a state choice with consequences (Complaints 625 and 626) a rate may be any share of its base.
+
 ## Commands from mods
 
 A mod may add commands, named `<mod_id>:<name>` (typed or as `{"cmd": "<mod_id>:<name>"}`), with an optional bare

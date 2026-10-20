@@ -33,7 +33,7 @@ def without_seat(cmd: Mapping[str, Any]) -> dict:
 # What a seat with no household of its own may be asked: reads about the world, the seats, the game and the
 # country's relations. `step` runs the year as the first household seat that is playing.
 COUNTRY_SEAT_COMMANDS = frozenset({"seats", "join", "handover", "help", "save", "load", "quit", "options", "game_options",
-                                   "relations", "set_relation", "population", "demography", "map", "groups", "values",
+                                   "relations", "set_relation", "lever", "levers", "population", "demography", "map", "groups", "values",
                                    "world_events", "step"})
 
 

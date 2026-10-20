@@ -119,7 +119,7 @@ class Government(CorveeMixin, CreditRecordMixin, CoinageMixin, EnterpriseMixin, 
 		self.receive_revenue(world)
 		arrears.settle(self, world)
 		conscripts = self.conscript_years(world)
-		wanted = max(world.army_wanted(), conscripts)
+		wanted = max(budget.army_wanted(world), conscripts)
 		soldiers = self.record.army if self.record.army > 0.0 else wanted
 		others = headcount.people_in(budget.standing_lines(world, 0.0))
 		soldiers, wanted = headcount.checked_army(world, self.record, wanted, soldiers, others)
