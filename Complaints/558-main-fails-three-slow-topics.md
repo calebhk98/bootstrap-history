@@ -217,3 +217,17 @@ Bisected on the first-parent merges, one topic list per commit (`python3 -m sim.
   its tightness factor saturates (1.148) with or without an army. The test now reads the world's flagged fallback
   (`trade_data.fallback_trade_of`) and fails on the real cause: the hours left after farm and specialists should go to
   the fallback trade in `sim/labour/labour_allocation.py` (`society_hours`).
+- `foreign_actor_trade` passes on `origin/main` (19 checks, 0 failures) and fails on `pm-settling-speed-and-walls` at
+  "...and no longer swings from year to year" (partner price moves by more than 1 percent between years). Bisected
+  (first-parent merges, `python3 -m sim.tests --slow --only foreign_actor_trade --jobs 1 --topic-seconds 400`): passes
+  through `5e744142` (513) and `84858956` (549); first fails at `44cd2125` (merge of 605-607-saving-finds-a-use).
+  Cause confirmed by switch: with `owned = 0.0 * equity_of(view, cohort.agent_id)` in
+  `sim/economy/households_orders.py` the check passes again. The households' equity term (605) changes the Rome
+  opening's prices a little; the test's cargo (`cargo_for`, millet, about 1.98 million units a year, no return cargo)
+  is sized to what still pays against the partner's price, so it is about the same every year, and the partner's
+  stock-and-capacity book (`close_partner_books`, `market.adjusted_capacity`, `market.stock_after_year`) answers it
+  with a limit cycle: in the failing run the partner price is 130.28 in most years and falls to 64.7 in year 4 and 78.3
+  in year 7 (at the 44cd2125 merge: 72.1 every other year, 68.5, 69.4, 70.1 between), snapping back the next year as
+  the glut clears. The home side is not stepped in this fixture, so the swing is the partner book's own dynamic at a
+  cargo near its threshold, not a home-economy defect. Not fixed; the bound is not loosened. Open (a partner book
+  whose capacity answers a steady cargo without a two-year cycle is the fix to find).
