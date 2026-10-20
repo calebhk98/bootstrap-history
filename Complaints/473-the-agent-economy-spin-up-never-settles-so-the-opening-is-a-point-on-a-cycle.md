@@ -277,3 +277,15 @@ The index is part of the loop, not all of it.
 
 Not tried: planning to the area's demand in single-area thin markets (the baker/flour overshoot reported by the coordinator). The traces show
 the opposite direction for the thin goods that dominate the index (runs far below capacity at high prices), so it is probably another mechanism; unmeasured.
+
+## The opening basket held to supply (merge 66da3cd3)
+
+The spin-up's tipping came from the opening household basket: it was the households' full final demand, never held
+to what the opening's producers could leave for them, so a thin good the opening supplied little of (bronze, brass,
+iron bar, piped water, silver, glass) entered the price level index with a wanted quantity many times its supply, and
+its price, rising by orders of magnitude, carried the index, expected inflation, the savers' ask and the state's real
+targets. `sim/economy/opening_basket.py` now holds each good's basket quantity to the supplied part (the raw demand is
+kept as `opening_demand` for the coin metal's marginal cost). Probe (`settle_probe.sh`: Rome, years 5 to 20) before and
+after on the same head: maximum price level and rate fall from cycling to calm, and the old destabiliser (the farm
+trade at no training years) no longer tips it. The labour glut remains: the wage still falls through the spin-up (608).
+Measure with the probe or `python3 -m sim.tests --slow --only baseline_rome`.
