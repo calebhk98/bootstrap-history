@@ -160,6 +160,9 @@ def _legs(compiled, tree, end_state) -> Dict[str, Any]:
         if pending_days:
             leg["handling_days"] = pending_days
         pending_cost, pending_days = 0.0, 0.0
+        wait = compiled.waits.get((from_state, to_state))
+        if wait:
+            leg["wait_days"] = wait
         legs.append(leg)
         inputs["labour_hours"] += rate.labour_hours * km
         inputs["feed_kg"] += rate.feed_kg * km

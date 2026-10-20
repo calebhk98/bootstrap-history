@@ -19,7 +19,7 @@ import json
 from dataclasses import dataclass, field
 from typing import Any, Dict, FrozenSet, List, Mapping, Optional, Tuple
 
-from sim.geography import routes_graph, routes_modes, routes_rates, sea_freight, ways_isthmus
+from sim.geography import routes_graph, routes_modes, routes_rates, routes_seasons, sea_freight, ways_isthmus
 from sim.geography.map_source import WorldMap
 
 Link = Tuple[int, float, float, float, routes_rates.Rate]  # to_state, cost, days, km, rate
@@ -33,6 +33,7 @@ class Compiled:
     links: List[List[Link]]
     modes_at: List[Tuple[int, ...]]
     handling: List[Tuple[float, float]]  # per mode: cost per tonne, days
+    waits: Dict[Tuple[int, int], float] = field(default_factory=dict)  # (from, to) state: expected days of season wait
     trees: Dict[Any, Any] = field(default_factory=dict)
 
 
@@ -54,7 +55,7 @@ def _built_way(mode: Dict[str, Any], edge: routes_graph.Edge, improvement: Dict[
 
 def _skeleton(world_map: WorldMap, ordered, improvements) -> list:
     """Every link the modes and improvements allow, in compile order, apart from what prices decide:
-    (from state, to state, km, rate, physical cost, level ratio, fords, lane nodes), whatever nodes are held.
+    (from state, to state, km, rate, physical cost, level ratio, fords, lane nodes, season wait), whatever nodes are held.
     Kept on the map."""
     kept = world_map.__dict__.setdefault("_route_skeletons", {})
     key = (ordered, json.dumps(improvements or {}, sort_keys=True))
@@ -91,6 +92,7 @@ def _skeleton(world_map: WorldMap, ordered, improvements) -> list:
                 if crossing == "bridge_only":
                     continue
                 fords = crossing == "ford"
+            wait = routes_seasons.wait_days(world_map, mode, edge, km) if mode.get("closures") else 0.0
             for source, target, current in ((index_a, index_b, edge.current_km_per_hour),
                                             (index_b, index_a, -edge.current_km_per_hour)):
                 rate = table.rate(mode_id, edge.edge_class, grade, current)
@@ -103,7 +105,7 @@ def _skeleton(world_map: WorldMap, ordered, improvements) -> list:
                     ratios[level_key] = routes_rates.physical_cost(world_map, level) if level else 0.0
                 level_cost = ratios[level_key]
                 skeleton.append((source * count + position, target * count + position, km, rate, physical,
-                                 physical / level_cost if level_cost > 0.0 else 1.0, fords, edge.lane_nodes))
+                                 physical / level_cost if level_cost > 0.0 else 1.0, fords, edge.lane_nodes, wait))
     if len(kept) >= 4:
         kept.clear()
     kept[key] = skeleton
@@ -121,17 +123,23 @@ def compile_graph(world_map: WorldMap, mode_ids, improvements, mode_costs, handl
     handling = [_handling(chosen[mode_id], mode_id, handling_costs) for mode_id in ordered]
     # per mode: its cost per tonne-km when prices name it (else None: the physical cost stands)
     priced = [None if mode_costs is None or mode_id not in mode_costs else mode_costs[mode_id] for mode_id in ordered]
-    for from_state, to_state, km, rate, physical, ratio, fords, lane_nodes in _skeleton(world_map, ordered, improvements):
+    waits: Dict[Tuple[int, int], float] = {}
+    for from_state, to_state, km, rate, physical, ratio, fords, lane_nodes, wait in _skeleton(world_map, ordered, improvements):
         if not lane_nodes <= held_nodes:
             continue
         price = priced[from_state % count]
         money = physical if price is None else price * ratio
         ford_cost, ford_days = handling[from_state % count] if fords else (0.0, 0.0)
-        links[from_state].append((to_state, km * money + ford_cost, km / rate.km_per_day + ford_days, km, rate))
+        travel_days = km / rate.km_per_day
+        if wait:
+            # a day spent waiting costs what a day of travel does: the carrier and cargo are tied up either way
+            money *= 1.0 + wait / travel_days
+            waits[(from_state, to_state)] = wait
+        links[from_state].append((to_state, km * money + ford_cost, travel_days + wait + ford_days, km, rate))
     modes_at = [tuple(position for position in range(count) if links[tile * count + position])
                 for tile in range(tile_count)]
     return Compiled(route_graph.tile_ids, {tile_id: index for index, tile_id in enumerate(route_graph.tile_ids)},
-                    ordered, links, modes_at, handling)
+                    ordered, links, modes_at, handling, waits)
 
 
 def compiled_for(world_map: WorldMap, mode_ids, improvements, mode_costs, handling_costs,
