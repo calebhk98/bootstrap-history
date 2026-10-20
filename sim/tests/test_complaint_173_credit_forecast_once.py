@@ -33,7 +33,7 @@ def _credit_lines(text):
 # cash to spare. What is left after it is less than either later bill, so both draw on credit.
 FIRST_START = "tr_lateen_sail"
 SECOND_START = "cn_damp_proof_course"
-THIRD_START = "units_standards"
+THIRD_START = "mt2_sintering_process"
 
 
 def cash_for_one_start():

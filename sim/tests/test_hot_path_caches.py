@@ -110,6 +110,10 @@ class _TonnesWorld:
         # the goods market drops an exited actor's standing orders; this stub keeps no book
         pass
 
+    def baseline_knowledge(self):
+        # research diffusion asks what is common knowledge; this stub world has none
+        return set()
+
     def materials_made_by(self, node_id):
         return ()
 

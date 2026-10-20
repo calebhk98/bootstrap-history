@@ -16,7 +16,7 @@ from .harness import *  # noqa: F401,F403
 s = sim(capital=400.0, surveyed=())
 _front_page_game = s
 S._agent_dispatch(s, NODES, {"cmd": "start", "id": "scientific_method"})
-S._agent_dispatch(s, NODES, {"cmd": "start", "id": "units_standards"})
+S._agent_dispatch(s, NODES, {"cmd": "start", "id": "mt2_sintering_process"})
 _money_agg = S._agent_dispatch(s, NODES, {"cmd": "money"})
 check("committed_spend() matches money's own still_owed_on_work_in_hand",
       abs(s.committed_spend() - _money_agg["still_owed_on_work_in_hand"]) < 0.1,
@@ -80,20 +80,20 @@ check("...and a household with huge funding_capacity() but committed_spend() "
       "committed_spend() too, and does not just check funding_capacity() alone",
       len(_room_short_on_committed.active) == 0, list(_room_short_on_committed.active))
 
-# --- The Rome opening: scientific_method then units_standards on a purse that
+# --- The Rome opening: scientific_method then mt2_sintering_process on a purse that
 # covers the second alone only just short. on_credit prices the second start
 # alone; the aggregate warning must also count the first's unpaid cost, which
 # draws on the same purse in the same year.
 _probe = sim(surveyed=())
 _sci_cost = _probe.project_cost("scientific_method")
-_units_cost = _probe.project_cost("units_standards")
+_units_cost = _probe.project_cost("mt2_sintering_process")
 _purse = round(_units_cost) - 44.0     # just short of the second project alone
 s = sim(surveyed=())
 s.capital = _purse      # in the game's own money, the unit project_cost is quoted in
 r_sci = S._agent_dispatch(s, NODES, {"cmd": "start", "id": "scientific_method"})
-check("set-up: scientific_method alone needed no warning on a purse just short of units_standards",
+check("set-up: scientific_method alone needed no warning on a purse just short of mt2_sintering_process",
       r_sci["ok"] and "total_committed_across_active_work" not in r_sci, r_sci)
-r_units = S._agent_dispatch(s, NODES, {"cmd": "start", "id": "units_standards"})
+r_units = S._agent_dispatch(s, NODES, {"cmd": "start", "id": "mt2_sintering_process"})
 check("set-up: on_credit still prices the second start alone, correctly, "
       "at a small gap",
       r_units["ok"] and r_units["on_credit"]["you_would_borrow"] < 100,
@@ -134,7 +134,7 @@ check("a single active project never gets the aggregate warning - on_credit "
 # same two foundations is not walking into anything.
 s = sim(capital=1e6, surveyed=())
 S._agent_dispatch(s, NODES, {"cmd": "start", "id": "scientific_method"})
-r_rich = S._agent_dispatch(s, NODES, {"cmd": "start", "id": "units_standards"})
+r_rich = S._agent_dispatch(s, NODES, {"cmd": "start", "id": "mt2_sintering_process"})
 check("plenty of cash on hand: no aggregate warning even with two things "
       "started together",
       r_rich["ok"] and "total_committed_across_active_work" not in r_rich, r_rich)

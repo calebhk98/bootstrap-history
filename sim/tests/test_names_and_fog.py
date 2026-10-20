@@ -91,7 +91,7 @@ check("the did-you-mean list under fog only ever suggests things the player has 
 heard = sim(civ="rome_100ad", manual=False)
 heard.fog = True
 heard.revealed = set()
-ask(heard, cmd="start", id="units_standards")
+ask(heard, cmd="start", id="scientific_method")
 for _ in range(2):
     heard.step()
 nonsense = S._agent_available(heard, NODES, {"find": "zzzznonexistentxyz"})
@@ -100,7 +100,7 @@ check("a search matching nothing startable does not also dump the generic heard-
       not nonsense.get("heard_of_but_cannot_begin"), nonsense.get("heard_of_but_cannot_begin"))
 check("...but the same heard-of list still shows up unfiltered when no search was asked for",
       unfiltered.get("heard_of_but_cannot_begin"), "empty heard-of list with no search active")
-matching = S._agent_available(heard, NODES, {"find": "corpus"})
+matching = S._agent_available(heard, NODES, {"find": "atomic"})
 check("...and a search that DOES match a heard-of item still shows it",
-      any(entry["id"] == "corpus_written" for entry in matching.get("heard_of_but_cannot_begin") or []),
+      any(entry["id"] == "atomic_theory" for entry in matching.get("heard_of_but_cannot_begin") or []),
       matching.get("heard_of_but_cannot_begin"))
