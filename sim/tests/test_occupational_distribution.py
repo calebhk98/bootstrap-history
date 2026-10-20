@@ -11,10 +11,14 @@ import unittest
 
 from . import harness  # noqa: F401  (sets the short spin-up the suite's games open on)
 from sim.engine.ui_port import ROOT, Sim, load, load_civ
-from sim.labour.api import occupation_groups, occupational_report, shares_by_group
+from sim.labour.api import hours_by_trade_of_all_employers, occupation_groups, occupational_report, shares_by_group
 
 CIVILISATIONS = ("rome_100ad", "england_1300")
 YEARS = 1
+
+
+def employer_hours(game):
+    return hours_by_trade_of_all_employers(game.labour, game.state.economy.society_labour_hours)
 
 
 def play(civ_id):
@@ -50,13 +54,13 @@ class Baseline(unittest.TestCase):
     def setUpClass(cls):
         cls.games = {civ_id: play(civ_id) for civ_id in CIVILISATIONS}
         for civ_id, game in cls.games.items():
-            for row in occupational_report(game.state.economy.society_labour_hours):
+            for row in occupational_report(employer_hours(game)):
                 print("%s %-16s share %.4f band %s..%s %s" % (
                     civ_id, row["group"], row["share"], row["low"], row["high"], "ok" if row["inside"] else "OUTSIDE"))
 
     def test_each_group_share_is_inside_its_band(self):
         for civ_id, game in self.games.items():
-            for row in occupational_report(game.state.economy.society_labour_hours):
+            for row in occupational_report(employer_hours(game)):
                 with self.subTest(civ=civ_id, group=row["group"]):
                     self.assertTrue(row["inside"], "%s %s share %.4f outside %s..%s" % (
                         civ_id, row["group"], row["share"], row["low"], row["high"]))
@@ -64,7 +68,7 @@ class Baseline(unittest.TestCase):
     def test_textiles_or_building_is_the_largest_non_farm_group(self):
         expected = occupation_groups()["ordering"]["largest_non_farm_among"]
         for civ_id, game in self.games.items():
-            shares = shares_by_group(game.state.economy.society_labour_hours)
+            shares = shares_by_group(employer_hours(game))
             non_farm = {group: share for group, share in shares.items() if group not in ("agriculture", "unattributed")}
             with self.subTest(civ=civ_id):
                 self.assertIn(max(non_farm, key=non_farm.get), expected, non_farm)
