@@ -6,7 +6,7 @@ the market with every other operator.
 """
 from typing import Any, Callable, List, Optional
 
-from . import business_books, business_review, firm_exit
+from . import business_books, business_review, firm_exit, research_choice
 from .base import RecordedActor
 from .firm_expansion import ExpansionMixin
 from .borrowing import TRACK_RECORD_YEARS
@@ -34,6 +34,10 @@ class Firm(ExpansionMixin, RecordedActor):
 		if node_id != self.record.target:
 			return 0.0
 		return max(0.0, self.record.last_margin) * VALUE_HORIZON_YEARS
+
+	def research_worth(self, node_id: str, world: Any) -> float:
+		"""A firm researches a node whose concern's takings, at the economy's prices, repay its cost over the horizon."""
+		return research_choice.concern_worth(self, node_id, world)
 
 	def on_copied(self, node_id: str, world: Any) -> None:
 		if node_id == self.record.target:

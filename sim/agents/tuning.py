@@ -88,6 +88,12 @@ ATTENTION_SPAN = declare(
 	why="How many of the most promising inventions an actor works out a "
 		"copying plan for in a year; stands in for limited attention and "
 		"keeps the yearly evaluation bounded.")
+RESEARCH_PROGRAMMES_AT_ONCE = declare(
+	"RESEARCH_PROGRAMMES_AT_ONCE", 1, kind="temporary_heuristic",
+	unit="research projects per actor", source=None, confidence="D",
+	retire="Complaints/491: an actor's scholars and purse limit what it can research at once, not a count",
+	why="How many pieces of research an actor chooses to have in hand; stands in for the limit its own "
+		"scholars and attention put on what it can pursue, and keeps the yearly choice bounded.")
 EXPANSION_RATE = declare(
 	"EXPANSION_RATE", 0.5, kind="temporary_heuristic",
 	unit="share of present capacity per year", source=None, confidence="D",

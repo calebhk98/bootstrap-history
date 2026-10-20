@@ -18,7 +18,7 @@ class ResearchView:
 			return own(family)
 		sim = self._sim
 		trades = [research_gate.SCHOLAR_TRADE] if family == research_gate.SCHOLAR_FAMILY else [
-			trade for trade in sorted(sim.wages) if trade != research_gate.SCHOLAR_TRADE and sim.labour.is_craft_trade(trade)]
+			trade for trade in sim.labour.available_trades() if trade != research_gate.SCHOLAR_TRADE and sim.labour.is_craft_trade(trade)]
 		return sum(actor.workforce.get(trade, 0.0) + (self.free_fte(trade, actor.identity()) or 0.0) for trade in trades)
 
 	def unsold_materials(self, actor: Any, node_id: str) -> List[str]:

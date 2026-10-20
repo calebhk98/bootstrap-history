@@ -9,7 +9,7 @@ from typing import Any, List
 from . import business_books, research
 from .player_commands import CommandRejected
 from .policy import Decision, Option
-from .tuning import ATTENTION_SPAN, VALUE_HORIZON_YEARS
+from .tuning import ATTENTION_SPAN, RESEARCH_PROGRAMMES_AT_ONCE, VALUE_HORIZON_YEARS
 
 RESEARCH_DECISION = "research"
 
@@ -26,8 +26,8 @@ def concern_worth(actor: Any, node_id: str, world: Any) -> float:
 	return max(0.0, expected_concern_margin(actor, node_id, world)) * VALUE_HORIZON_YEARS
 
 
-def options(actor: Any, world: Any) -> List[Option]:
-	"""The nodes worth researching, best first, priced by the shared plan."""
+def options(actor: Any, world: Any, room: int = RESEARCH_PROGRAMMES_AT_ONCE, budget: float = float("inf")) -> List[Option]:
+	"""The nodes worth researching, best first, priced by the shared plan until `room` of them pay within `budget`."""
 	candidates = []
 	for node_id in sorted(world.nodes):
 		if actor.knows(node_id, world) or node_id in actor.works or research.missing_prerequisites(actor, node_id, world):
@@ -36,18 +36,29 @@ def options(actor: Any, world: Any) -> List[Option]:
 		if worth > 0.0:
 			candidates.append((worth, node_id))
 	candidates.sort(key=lambda item: (-item[0], item[1]))
-	return [Option(subject=node_id, worth=worth, cost=research.plan(actor, node_id, world)["total"],
-				   chance=research.chance(node_id, world))
-			for worth, node_id in candidates[:ATTENTION_SPAN]]
+	offers: List[Option] = []
+	viable = 0
+	for worth, node_id in candidates[:ATTENTION_SPAN]:
+		offer = Option(subject=node_id, worth=worth, cost=research.plan(actor, node_id, world)["total"],
+					   chance=research.chance(node_id, world))
+		offers.append(offer)
+		viable += 1 if offer.net > 0.0 and offer.cost <= budget else 0
+		if viable >= room:       # the best that pay are priced; the rest are not worth the evaluation
+			break
+	return offers
 
 
 def decide(actor: Any, world: Any) -> List[str]:
 	"""Ask the actor's policy which offers to take and begin them; returns the nodes begun."""
-	offers = options(actor, world)
+	if sum(1 for work in actor.works.values() if work.get("research")) >= RESEARCH_PROGRAMMES_AT_ONCE:
+		return []
+	room = RESEARCH_PROGRAMMES_AT_ONCE - sum(1 for work in actor.works.values() if work.get("research"))
+	budget = actor.copy_budget(world)
+	offers = options(actor, world, room, budget)
 	if not offers:
 		return []
 	begun = []
-	for option in actor.decision_policy.choose(actor, Decision(RESEARCH_DECISION, offers, actor.copy_budget(world))):
+	for option in actor.decision_policy.choose(actor, Decision(RESEARCH_DECISION, offers, budget))[:room]:
 		try:
 			actor.start_research(option.subject, world)
 		except CommandRejected:

@@ -13,7 +13,7 @@ from .business_plant import Plant
 from .business_review import Reviewable
 from .records import ActorRecord
 
-from . import imitation, ledger, research
+from . import imitation, ledger, research, research_choice
 from .borrowing import Borrower
 from .ledger import Purpose
 from .purses import EDGE_OUTSIDE, Purses
@@ -234,6 +234,10 @@ class Actor(Reviewable, Borrower):
 		"""Begin researching a node (any actor, one path: `research.py`); refuses with the reason."""
 		return research.begin(self, node_id, world)
 
+	def research_worth(self, node_id: str, world: Any) -> float:
+		"""What researching the node is worth to this actor (0: it does not choose research for itself)."""
+		return 0.0
+
 	def research_price(self, costs: Dict[str, Any], node_id: str, world: Any) -> float:
 		"""Money the research takes out of its purse: the plan's whole cost."""
 		return costs["total"]
@@ -270,6 +274,8 @@ class Actor(Reviewable, Borrower):
 		"""The actor's own business for the year."""
 		self.consider_imitation(world)
 		self.work_on_copies(world)
+		if self.researches:
+			research_choice.decide(self, world)
 		self.work_on_research(world)
 
 	def advance(self, world: Any) -> None:

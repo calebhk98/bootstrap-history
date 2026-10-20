@@ -35,6 +35,10 @@ class Government(CorveeMixin, CreditRecordMixin, CoinageMixin, GranaryMixin, Sto
 		gain = weighted_gain(gains, world.state_weights())
 		return max(0.0, gain) * world.state_revenue() * GOVERNMENT_WORTH_SHARE_PER_GAIN
 
+	def research_worth(self, node_id: str, world: Any) -> float:
+		"""A state researches what its priorities weight (military, administration, ...), as it values copying it."""
+		return self.imitation_worth(node_id, world)
+
 	# ---- what it borrows against -------------------------------------------
 	def credit_earning(self, world: Any) -> float:
 		return world.state_revenue()
