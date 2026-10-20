@@ -8,6 +8,7 @@ Paths may leave the given tiles (a road through a neighbour); only the given til
 
 Standalone: `sim.geography.api` and `sim.economy.types` only.
 """
+import dataclasses
 import math
 from dataclasses import dataclass
 from typing import Dict, Iterable, Mapping, Optional, Tuple
@@ -25,15 +26,20 @@ def tiles_from_map(world_map, tile_ids: Iterable[TileId], open_field_cropped_sha
     for tile_id in tile_ids:
         facts = tile_facts(tile_id, world_map)
         site = crop_site(tile_id, open_field_cropped_share, world_map)
-        area_hectares = facts["land_area_km2"] * HECTARES_PER_SQUARE_KILOMETRE
-        cropped_hectares = site.cropped_hectares if site.yield_factor > 0.0 else 0.0   # ground that yields nothing is not cropland
-        result[tile_id] = TileSpec(
+        result[tile_id] = following_site(TileSpec(
             tile_id=tile_id, latitude=facts["lat"], longitude=facts["lon"],
             land_area_km2=facts["land_area_km2"], coastal=facts["coastal"],
-            borders=tuple(facts["neighbours"]),
-            cropped_fraction=cropped_hectares / area_hectares if area_hectares > 0.0 else 0.0,
-            fertility=site.yield_factor, climate_class=str(facts["climate_class"] or ""))
+            borders=tuple(facts["neighbours"]), cropped_fraction=0.0, fertility=0.0,
+            climate_class=str(facts["climate_class"] or "")), site)
     return result
+
+
+def following_site(tile: TileSpec, site) -> TileSpec:
+    """The tile with its cropped share and fertility read from a crop site (geography's `crop_site`)."""
+    area_hectares = tile.land_area_km2 * HECTARES_PER_SQUARE_KILOMETRE
+    cropped_hectares = site.cropped_hectares if site.yield_factor > 0.0 else 0.0   # ground that yields nothing is not cropland
+    return dataclasses.replace(tile, cropped_fraction=cropped_hectares / area_hectares if area_hectares > 0.0 else 0.0,
+                               fertility=site.yield_factor)
 
 
 def world_map_of(tiles: Mapping[TileId, TileSpec]):

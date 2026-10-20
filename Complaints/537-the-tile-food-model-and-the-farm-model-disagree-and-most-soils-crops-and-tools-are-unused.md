@@ -119,11 +119,17 @@ Within the farm model:
   test topics pin it. Moving the stand-in to `territory_cropland` changes the opening prices of every civilisation, so it is its own step.
 - The land market pools arable, pasture and forest producers on one cropland supply per tile; separate supplies per land class need
   pasture and timber hectares from geography.
-- The economy's cropped share is fixed when the setup is built, as the farm's ceiling is; a rotation change does not reach it.
 - The opening is sized at each recipe's own yield; sizing the national runs by each recipe's mean tile yield (`opening_runs`) would
   put the tile yield in the opening itself.
 - Soils beyond the climate-class fertility (heavy clay a plough cannot open, podzol, alluvium: Complaint 543), the engine's
   single `DEFAULT_SOIL`, rice and maize adoption, a hoe toolkit, per-tile weather applied to each tile's harvest (the economy
   and farm still take one pooled draw), irrigation as a work that silts up.
-- The farm ceiling is set once from the starting rotation; a rotation that fallows less does not raise it.
 - The farm model still runs nationally for labour, clearing and the granary; demography eats what households ate (Complaint 549).
+
+## Done: the economy follows the rotation and the soil (item 3)
+
+- `sim/engine/economy_port_cropland.py` `follow_farm_sites` runs at the start of each agent-economy year: each held tile's
+  cropped share and fertility, and the yield of every crop recipe on it, are read again from `Sim.farm_sites()`
+  (`tile_costs.following_site`). A rotation adopted mid-game reaches the land market's cropland, and the soil nitrogen stock
+  reaches the farm producers' yield. The farm's own ceiling follows the rotation through `Sim.refresh_farm_territory` (Complaint 543).
+- Test: `sim/tests/test_economy_follows_rotation.py`.
