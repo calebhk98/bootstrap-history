@@ -598,6 +598,18 @@
     "silver": "the Taxco silver mines are dated by their catalogue entry to the 1530s, after this start, so no silver deposit in the catalogue was being worked; silver in Mexica hands came by tribute and trade as worked objects from West Mexican and Oaxacan metalworkers; recalled, not a figure from a source read for this entry"
   },
   "unsupplied_basket_goods": {
+    "bronze_kg": "the bronze gate is held but its input tin_kg is gated on a node this society does not hold and no partner supplies tin; implements are met by stone and obsidian tools instead",
+    "cheese_kg": "cheese needs milk_kg, and with no milking animals in the Americas the herd nodes are not held",
+    "felt_kg": "the felting gate is held but its input wool_kg needs a sheep flock this society never kept",
+    "leather_kg": "the tanning gate is held but its input hide_kg needs herd animals the herd nodes (not held) provide; hides of hunted game are not modelled",
+    "light_oil_lamp": "the lamp recipe's gate is held but its input olive_oil_kg is gated on a node this society does not hold and no partner supplies it, so no lamp can be filled; light came from other sources the recipe set does not model",
+    "light_oil_lamp_linen_wick": "the lamp recipe's gate is held but its input olive_oil_kg is gated on a node this society does not hold and no partner supplies it, so no lamp can be filled; light came from other sources the recipe set does not model",
+    "light_tallow_candle": "tallow_kg needs fat_kg from herd animals this society did not keep; light came from other sources the recipe set does not model",
+    "light_tallow_candle_linen": "tallow_kg needs fat_kg from herd animals this society did not keep; light came from other sources the recipe set does not model",
+    "light_tallow_candle_linen_wick": "tallow_kg needs fat_kg from herd animals this society did not keep; light came from other sources the recipe set does not model",
+    "light_tallow_candle_rush": "tallow_kg needs fat_kg from herd animals this society did not keep; light came from other sources the recipe set does not model",
+    "light_tallow_rushlight": "tallow_kg needs fat_kg from herd animals this society did not keep; light came from other sources the recipe set does not model",
+    "salted_meat_kg": "salting needs meat_kg, and the herd nodes that give it are not held; turkey, dog and game are not modelled",
     "olive_oil_kg": "the olive is an Old World tree no American society held before contact, so the grove recipe is gated on a node it does not hold and no partner supplies the oil; lamps burned seed oils and resins the recipe set does not model",
     "fat_kg": "no sheep, goats or cattle, so no tallow; cooking fat and light came from other sources (seed oils, resins, game fat) the recipe set does not model",
     "meat_kg": "no sheep, goats or cattle to herd; meat was turkey, dog and hunted game, which the recipe set does not model, and the herd nodes are not held",
