@@ -75,6 +75,13 @@ Within the farm model:
   tile. `Sim.farm_sites()` (`sim/engine/food_supply.py`) is the seam tests replace.
 - Test: `sim/tests/test_one_food_model.py` checks every held tile's crop kcal against `agriculture.gross_harvest_kg` on the
   tile's own cropped hectares and yield factor, under the default, a better plough and a three-field rotation.
+- Effect on rome_100ad (`PYTHONPATH=. python3 -W ignore`, six years of `run_year`): the farm's quality at opening goes from
+  0.989 to 1.050 (the cleared best ground includes flood-watered land) and the farm share of hours from 0.367 to 0.340, so
+  the pinned figures in `test_farm_edges.py` `test_ordinary_land_is_farmed_as_before` were re-recorded (tolerance unchanged).
+  Norse ground is poor (mean yield factor about 0.25 of the reference field over its cropland): its opening is not yet
+  checked beyond the farm topics.
+- CPU per year (Complaint 497), same probe, loaded 4-core machine: 7.29 s before, 7.51 s after (noise; the first year of each run
+  is dearer).
 - Bounds in `test_geography_food_gaps.py` that were calibrated on the deleted parameters were restated (fishing against crops:
   0.15 to 0.25 of the crop energy, because crops now follow the farm model's yield and two-field share; the two rainforest tests
   now read `crop_site`, which does not depend on seed). Review these.

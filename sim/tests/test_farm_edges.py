@@ -335,9 +335,11 @@ class NetMarginalProductTests(unittest.TestCase):
     def test_ordinary_land_is_farmed_as_before(self):
         # Reference values recorded from the suite's short spin-up with endemic disease (malaria and the herd
         # losses it brings) in the baseline: the people it kills and the herds it thins shift the farm share.
+        # Re-recorded when the farm's land quality became the tiles' yield factor (Complaint 537): Rome's cleared best
+        # ground includes flood-watered land, so the same people need fewer hands. The tolerances are unchanged.
         history = _undisturbed_run(WARM_UP_YEARS + _SETTLE_YEARS_AFTER_WARM_UP)[0]
         for year_index, population, farm_share in (
-                (9, 65309920.6, 0.36717), (19, 65889190.2, 0.37039),
-                (29, 66488899.7, 0.37841)):
+                (9, 65332987.2, 0.33958), (19, 65910166.3, 0.34187),
+                (29, 66478368.4, 0.34584)):
             self.assertAlmostEqual(history[year_index][0] / population, 1.0, delta=0.01)
             self.assertAlmostEqual(history[year_index][1], farm_share, delta=0.01)
