@@ -17,7 +17,8 @@ class PurseResidue(unittest.TestCase):
         specs = {"fish": GoodSpec("fish", 1496.0485584697803, 0.0, 0.0, "food"), "salt": SPECS["salt"]}
         who = merchant()
         who.routes = {("fish", "a"): ("b", area_b["salt"]), ("salt", "b"): ("a", area_a["salt"])}
-        crew = merchants.CrewHire(lambda source, destination: (("carter|a", 1.0),), None, {"carter|a": 0.19976567904521148}, 1.0)
+        crew = merchants.CrewHire(lambda source, destination: (("carter|a", 1.0),), None, {"carter|a": 0.19976567904521148},
+                                  lambda _key: 1.0, lambda _good, tile: "area_" + tile)
         result = merchants.dispatch(who, (), carriage, specs, "coin", 0.0, {("fish", "a"): 10.0, ("salt", "b"): 10.0},
                                     crew=crew, carrier_money=lambda source, destination: 10.0 if source == "a" else 0.0)
         self.assertEqual(sum(transfer.amount for transfer in result.transfers), 0.0)

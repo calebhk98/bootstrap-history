@@ -27,11 +27,11 @@ def run_watching(setup, years):
     watched = []
     real = economy.dispatch_merchants
 
-    def watch(setup_, record, carriage, ledger):
+    def watch(setup_, record, carriage, ledger, area_map):
         trade = fixture.LABOURER
         before = {each.agent_id: dict(each.carriage_hours_wanted or {}) for each in record.merchants.values()}
         hired = {agent: carriage_hours.hired(ledger, agent, [trade]) for agent in record.merchants}
-        real(setup_, record, carriage, ledger)
+        real(setup_, record, carriage, ledger, area_map)
         after = {each.agent_id: dict(each.carriage_hours_wanted or {}) for each in record.merchants.values()}
         market = sum(hours for key, hours in record.hours_hired.items() if key.startswith(trade + "|"))
         others = market - sum(each["hours"] for each in hired.values())
@@ -83,10 +83,11 @@ class CarriageHireTests(unittest.TestCase):
         self.assertAlmostEqual(self.hiring_economy.record.book.check_conservation(1e-9).money["coin"], 0.0)
 
 
-def hire(hours_hired, hours_per_unit=0.5, wage=1.0, reference_wage=1.0):
+def hire(hours_hired, hours_per_unit=0.5, wage=1.0, market_wage=1.0, area_of=None):
     """Crew of one trade hired at tile a: each tonne needs `hours_per_unit` hours, of which `hours_hired` were bought."""
     key = market_key(fixture.LABOURER, "a")
-    return CrewHire(lambda _source, _destination: ((key, hours_per_unit),), {key: hours_hired}, {key: wage}, reference_wage)
+    return CrewHire(lambda _source, _destination: ((key, hours_per_unit),), {key: hours_hired}, {key: wage},
+                    lambda _key: market_wage, area_of or (lambda _good, tile: "area_" + tile))
 
 
 class ShortfallTests(unittest.TestCase):
@@ -128,26 +129,33 @@ class ShortfallTests(unittest.TestCase):
 
 
 class CrewWorthTests(unittest.TestCase):
-    """Complaint 556 follow-up: an hour of crew is worth to a merchant only the crew's part of the carriage fee,
-    since the rest of the fee (feed, carts, animals) is paid to others; bidding the whole fee over the hours
-    lifts the labour wage far above what the carriage pays a driver."""
+    """An hour of crew is worth to a merchant the haul's gain (destination price less origin price, less the part
+    of the fee that is not crew pay) over the hours; the whole fee over the hours would lift the labour wage far
+    above what the carriage pays a driver."""
 
-    def want(self, reference_wage):
-        carriage, _m, area_a, _b = world()
+    def want(self, price_at_source, price_at_destination, market_wage=0.2):
+        carriage, _m, area_a, area_b = world()
         who = merchant()
-        plan(who, 2.0, 5.0)
-        return merchants.dispatch(who, (), carriage, SPECS, "coin", 100.0, {("salt", "a"): 10.0},
-                                  crew=hire(100.0, reference_wage=reference_wage))
+        plan(who, price_at_source, price_at_destination)
+        who.routes = {("salt", "a"): ("b", area_b["salt"])}
+        crew = hire(100.0, market_wage=market_wage, area_of=lambda _good, tile: area_a["salt"] if tile == "a" else "elsewhere")
+        return merchants.dispatch(who, (), carriage, SPECS, "coin", 100.0, {("salt", "a"): 10.0}, crew=crew)
 
-    def test_the_most_an_hour_is_worth_is_the_crews_part_of_the_fee(self):
+    def test_a_wide_spread_is_worth_the_gain_over_the_hours(self):
         key = market_key(fixture.LABOURER, "a")
-        result = self.want(0.2)       # ten units cost ten in carriage; five crew hours at 0.2 an hour are one of it
-        self.assertAlmostEqual(result.crew_money_wanted[key] / result.crew_hours_wanted[key], 0.2)
+        result = self.want(2.0, 5.0)    # ten units: a gain of 3 each less 0.9 of the fee that is not crew pay (0.5 hours at 0.2 is 0.1 of 1), over 5 hours
+        self.assertAlmostEqual(result.crew_money_wanted[key] / result.crew_hours_wanted[key], (3.0 - 0.9) * 10.0 / 5.0)
 
-    def test_a_reference_wage_above_the_whole_fee_still_values_the_hours_at_no_more_than_the_fee(self):
+    def test_it_is_not_the_whole_fee_over_the_hours(self):
         key = market_key(fixture.LABOURER, "a")
-        result = self.want(50.0)
-        self.assertAlmostEqual(result.crew_money_wanted[key], 10.0)
+        result = self.want(2.0, 5.0)
+        self.assertNotAlmostEqual(result.crew_money_wanted[key] / result.crew_hours_wanted[key], 10.0 / 5.0)
+
+    def test_a_spread_below_the_fee_that_is_not_crew_pay_is_worth_nothing(self):
+        key = market_key(fixture.LABOURER, "a")
+        result = self.want(2.0, 2.5)
+        self.assertEqual(result.crew_money_wanted[key], 0.0)
+        self.assertGreater(result.crew_hours_wanted[key], 0.0)
 
 
 class CrewTests(unittest.TestCase):

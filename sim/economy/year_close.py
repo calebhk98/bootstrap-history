@@ -20,7 +20,7 @@ from .year_ledger import YearLedger
 from .replaced import replaced
 
 
-def dispatch_merchants(setup, record, carriage, ledger: YearLedger) -> None:
+def dispatch_merchants(setup, record, carriage, ledger: YearLedger, area_map) -> None:
     """Merchants carry what they bought. The crew hours the shipments need were hired in the year's labour
     market (carriage_hours.bids) and limit what is carried; a merchant with no plan yet (it has not shipped)
     is not limited. The part of a fee that is not crew pay goes, as wages, to the poorest households of the
@@ -53,7 +53,8 @@ def dispatch_merchants(setup, record, carriage, ledger: YearLedger) -> None:
         if crew is not None:
             hours_hired, wages = ((carriage_hours.engaged(record, merchant, index)) if carriage_hours.planned(merchant)
                                   else (None, {}))
-            hire = merchants.CrewHire(crew.hours_per_tonne, hours_hired, wages, setup.carriage_wage)
+            hire = merchants.CrewHire(crew.hours_per_tonne, hours_hired, wages,
+                                    lambda key: carriage_hours.last_wage(record, key), area_map.area_of)
         done = merchants.dispatch(merchant, fills, carriage, setup.specs, money,
                                   record.book.balance(merchant.agent_id, money), _held_stock(record.book, merchant.agent_id),
                                   carrier_of=carriers.get, crew=hire,

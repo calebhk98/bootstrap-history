@@ -199,7 +199,7 @@ class Economy:
         for payment in bonded:
             interest[payment.payee] = interest.get(payment.payee, 0.0) + payment.amount
         titles_inheritance.divide_estates(record)
-        dispatch_merchants(setup, record, self.carriage, ledger)
+        dispatch_merchants(setup, record, self.carriage, ledger, self.area_map)
         money_taxes(setup, record, view, ledger)
         self._build_plant(plant_runs)
         close_view = CreditView(record.memory, record.book, self.area_map, money, labour_area,
