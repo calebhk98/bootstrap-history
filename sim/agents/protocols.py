@@ -45,6 +45,10 @@ class World(Protocol):
 	def trade_exists(self, trade: str) -> bool:
 		...
 
+	def fleet_goods(self) -> List[Any]:
+		"""Available naval goods with their crews, service lives and the state's held units."""
+		...
+
 	def threat_pressure(self) -> float:
 		...
 

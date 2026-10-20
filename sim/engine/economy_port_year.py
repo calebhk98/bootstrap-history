@@ -236,6 +236,18 @@ class AgentEconomy(TilePricesMixin):
         return outcome
 
     # ---- firms', states' and traders' sales and purchases (economy_port_actors.py) ------------------
+    def held_units(self, buyer, material):
+        return economy_port_actors.held_units(self.economy(), buyer, material)
+
+    def fleet_goods(self, buyer):
+        economy = self.economy()
+        production = default_production_entries()
+        return [{"material": good, "life": economy.setup.specs[good].service_life_years,
+                 "held": self.held_units(buyer, good), "crew": entry["naval_crew"]}
+                for good, entry in sorted(production.items()) if entry.get("naval_crew")
+                and good in economy.setup.recipes and good in economy.setup.specs
+                and economy.setup.recipe_allowed(good, self._actor_tile(buyer))]
+
     def note_sale(self, seller, material, tonnes, from_concerns):
         economy_port_actors.note_sale(self.stored.setdefault("sales", []), seller, material, tonnes, from_concerns,
                                       self.__dict__.setdefault("_sale_index", [None, 0, {}]))
@@ -288,7 +300,7 @@ class AgentEconomy(TilePricesMixin):
 
     def _settle_actor_trade(self, sales, purchases):
         """What the actors' sales fetched and their budgets left over turn back into their coin; the goods unsold go
-        back out and the goods bought are used up."""
+        back out. Bought capital assets stay with their buyer and materials are used up."""
         proceeds, refunds, _bought = economy_port_actors.close(self._economy, sales, purchases)
         coin = self._economy.setup.coin_per_unit
         purses, known = self._sim.actors.state.purses, self._sim.actors.actors
@@ -483,6 +495,8 @@ class AgentEconomy(TilePricesMixin):
                           entrant_share=entrant_share, attrition_share=attrition_share,
                           yield_factor_by_producer=yields, engine_orders=engine_orders, harvest_factor=weather,
                           import_accounts=border_accounts[0], export_accounts=border_accounts[1],
+                          durable_users=tuple(economy_port_actors.held_account(buyer)
+                                              for buyer in sorted(sim.actors.actors)),
                           site_limits=tuple(economy_port_sites.site_limits(sim, self._recipe_outputs(), self._economy.setup.tiles)))
 
     def _seat_tiles(self):

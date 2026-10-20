@@ -106,3 +106,4 @@ class YearInputs:
     import_accounts: Tuple = ()                             # accounts that sell goods landed from abroad: their sales are imports
     export_accounts: Tuple = ()                             # accounts that buy goods for abroad: their purchases are exports
     attrition_share: float = 0.0                            # share of working people a year dying or retiring
+    durable_users: Tuple[AgentId, ...] = ()                 # outside actors' asset accounts whose durables are in use

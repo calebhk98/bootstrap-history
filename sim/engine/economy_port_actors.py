@@ -5,8 +5,8 @@ agent economy's stored record, so a save carries them). When the economy's year 
 
 - a sale: the goods enter an account named for the seller and are offered at the lowest price the seller takes;
   after the clear the money the account holds is the seller's proceeds, and what did not sell goes back out;
-- a purchase: the buyer's coin is turned into the economy's unit and held in an account named for the buyer as the
-  budget of a bid for a fixed quantity; after the clear the goods it got are used up and the unspent budget returns.
+- a purchase: the buyer's coin funds a fixed-quantity bid; the unspent budget returns. Complete capital assets
+  remain in its asset account; materials bought for use are consumed.
 
 The actors' coin and the economy's unit are two currencies of one book; they meet at `edge:exchange`, at the
 opening wage that fixes the unit (`coin_per_unit`).
@@ -17,7 +17,7 @@ from sim.economy import api as economy_api
 from sim.economy.api import (EDGE_CONSUMPTION, EDGE_EXCHANGE, EDGE_LEGACY, AgentOrders, Bid, GoodsMove, Offer,
                              Transfer)
 
-SALE_PREFIX, BUY_PREFIX = "sale:", "buy:"
+SALE_PREFIX, BUY_PREFIX, HELD_PREFIX = "sale:", "buy:", "held:"
 
 
 def note_sale(sales: List[dict], seller: str, material: str, tonnes: float,
@@ -62,6 +62,16 @@ def sale_account(seller: str) -> str:
 
 def buy_account(buyer: str) -> str:
     return BUY_PREFIX + buyer
+
+
+def held_account(buyer: str) -> str:
+    return HELD_PREFIX + buyer
+
+
+def held_units(economy, buyer: str, good: str) -> float:
+    """Units of a durable the buyer owns, across its storage tiles."""
+    tiles = economy_api.account_holdings(economy, held_account(buyer))["goods"].get(good, {})
+    return sum(tiles.values())
 
 
 def good_for(economy, commodity: str, materials_in: Callable[[str], Sequence[str]]) -> Optional[str]:
@@ -125,7 +135,7 @@ def fund(economy, funding: Sequence[Tuple[str, float, float]]) -> None:
 
 
 def close(economy, sales: Sequence[dict], purchases: Sequence[dict]):
-    """Close every account after the clear. Unsold goods go back out; goods bought are used up; the money each
+    """Close every account after the clear. Unsold goods go back out; bought capital assets are retained; the money each
     account holds goes to the exchange edge. Returns ({seller: units of money its sales fetched}, {buyer: units of
     its budget left unspent}, {buyer: units of goods it bought})."""
     book, currency = economy_api.economy_book(economy), economy.setup.currency_id
@@ -141,7 +151,11 @@ def close(economy, sales: Sequence[dict], purchases: Sequence[dict]):
         for good, tiles in book.holdings(account)["goods"].items():
             for tile, quantity in sorted(tiles.items()):
                 if quantity > 0.0:
-                    moves.append(GoodsMove(account, outflow, good, tile, quantity, label))
+                    spec = economy.setup.specs.get(good)
+                    receiver = (held_account(actor) if outflow == EDGE_CONSUMPTION and spec
+                                and spec.capital_asset and spec.service_life_years > 0.0 else outflow)
+                    moves.append(GoodsMove(account, receiver, good, tile, quantity,
+                                           "durable purchase" if receiver != outflow else label))
                     if outflow == EDGE_CONSUMPTION:
                         bought[actor] = bought.get(actor, 0.0) + quantity
         money = max(0.0, book.balance(account, currency))

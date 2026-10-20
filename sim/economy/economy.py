@@ -198,7 +198,7 @@ class Economy:
             record.property_income[lender] = record.property_income.get(lender, 0.0) + received
         for payment in rent:
             record.property_income[payment.payee] = record.property_income.get(payment.payee, 0.0) + payment.amount
-        wear_and_spoilage(setup, record)
+        wear_and_spoilage(setup, record, inputs.durable_users)
         level = remember_basket_price_level(setup, record)
         record.memory.year += 1
         return self._outcome(ledger, level, extraction, stocks_at_start)

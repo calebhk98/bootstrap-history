@@ -185,6 +185,24 @@ class EconomyPort:
         """An actor's tonnes of a commodity it bids for in the agent economy's market this year, with its budget in coin."""
         self.agent.note_purchase(buyer, commodity, tonnes, budget)
 
+    def actor_held_units(self, buyer, material):
+        """Durable units owned by an actor after settled market purchases."""
+        return self.agent.held_units(buyer, material)
+
+    def fleet_goods(self, buyer):
+        """Naval goods the country's available recipes make, with the buyer's durable stock."""
+        agent = self._answering_agent()
+        if agent is not None:
+            return agent.fleet_goods(buyer)
+        from .economy_port_setup import _load, allowed_entries
+        from .prices import default_production_entries
+        production = default_production_entries()
+        lives = _load("world", "service_lives.json").get("years", {})
+        allowed = allowed_entries(production, set(self._sim.state.projects.granted))
+        return [{"material": good, "life": float(lives.get(good, {}).get("years", 0.0)),
+                 "held": 0.0, "crew": production[good]["naval_crew"]}
+                for good in allowed if production[good].get("naval_crew")]
+
     def agent_volume_baseline(self):
         """{good: units the agent economy cleared in the first year it cleared any}; None while it opens."""
         agent = self._answering_agent()
@@ -287,8 +305,13 @@ class EconomyPort:
 
     def materials_in(self, commodity):
         """The material keys that trade in one market, sorted."""
-        return sorted(material for material, group in self._sim._material_commodity_map().items()
-                      if group == commodity)
+        materials = sorted(material for material, group in self._sim._material_commodity_map().items()
+                           if group == commodity)
+        if materials:
+            return materials
+        from .prices import default_production_entries
+        return ([commodity] if any(commodity in entry.get("outputs", {})
+                                   for entry in default_production_entries().values()) else [])
 
     def trade_quote(self, material):
         """The market's quote for a material (buy and sell terms), or None if it has no price."""
