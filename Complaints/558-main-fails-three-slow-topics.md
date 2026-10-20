@@ -355,3 +355,38 @@ Measured on the integration branch with `python3 -m sim.tests --slow --only <top
   1.5 to 2 times), which is the trade split and the price level, not one broken floor. The bound stays 8; the
   check passes again when thin markets stop clearing below input cost. Reproduce: `need_basket.need_prices` with
   `price_of` returning None for the good, over the tiles of `record.cohorts`.
+
+## `real_output_cheaper_entry` after 4796f4cb: the entrant's effect is far below the economy's own divergence
+
+Bisected on the first-parent merges (`python3 -m sim.tests --slow --only real_output_cheaper_entry --topic-seconds 240`,
+one commit at a time, about 50 to 110 s each). Passes at 48a23734, 0a6f3b1b and 3ae3a575; first fails at 940d5e42
+(merchant fleets: carriage days per tonne-km from geography) on "the market clears a larger quantity" alone, with the game
+clearing 4.7 percent more than its twin against the factor 1.05. The three price checks first fail at f3a2db9b
+(a remembered price held within 4 times its making cost): the game's price is above the twin's by a hair (8.146058 against
+8.145458). At f3a2db9b, with PRICE_OVER_MAKING_COST_LIMIT raised to 4000, all ten checks pass, so the cap does tip it. On
+4796f4cb the gap is wide (10.73 against 9.81) and stays so for years (see the command below); on the integration head
+(3e74bbad) the price checks pass again and the quantity check and the two real-output checks fail instead (quantity ratio
+about 1.007), so the failing set moves with unrelated merges.
+
+Measured cause, not a defect of one rule:
+
+- The entrant is small. The producers running the technique hold under one percent of the good's incumbent capacity in
+  year 3 on every commit tried, so what it can move directly is a part in a thousand of the price, the same order as the
+  sign flips above. The quantity check only ever passed on drift, as the Stage 4 entry above already says (demand for a
+  building stone is nearly inelastic).
+- The price the check reads is the acting tile's: the nation's shown price carried by that tile's own area price. On
+  4796f4cb in year 3 the nation's price is lower in the game (20.75 against 21.37) and so is its making cost (11.6
+  against 16.0), the intended direction; the founder's tile (france_05, about one percent of the good's volume) is
+  higher in the game (32.3 against 29.5), a thin local market moved by something other than the technique.
+- The cap is a clamp, so a tiny perturbation flips which markets it binds. In year 2 it binds the good itself in the
+  game only (price 60.2 held to 4 times a cost of 13.4 that the technique lowered; the twin's cost allows 72), the
+  intended effect of a lower making cost; in year 3 it binds timber and carts in the twin only. After that the two
+  economies diverge as chaotic cycles do: from year 3 to 9 the good's price swings 10 to 24 and its yearly volume 4 to
+  19 million units in both, with the game above the twin in most years.
+
+Reproduce the year-by-year divergence on 4796f4cb: run the test body with a `print` of
+`game.goods_market.household_prices()[GOOD]` and `traded_units(game)` after each `close_years(game, 1)` for the game and
+its twin. Not fixed: no bound is loosened and no fixture edited, since a fixture that restored the sign would only pick a
+year or a tile where the sign happens to be right. A fixture that keeps the subject needs the entrant to be large
+relative to the market (a surplus fixture that leaves incumbents no spare capacity) or the check to read the nation's
+price; either is the owner's choice. Related: Complaint 473 (the cycling economy).
