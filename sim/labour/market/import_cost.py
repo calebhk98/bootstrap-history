@@ -32,7 +32,10 @@ class ImportCosts:
                 if cost > best.get(here, math.inf):
                     continue
                 for route in self.inputs.routes.get(here, ()):
-                    total = cost + route.moving_cost
+                    step = route.moving_cost
+                    if not step >= 0.0:
+                        step = 0.0      # a route never pays you to move; a negative or unknown cost would loop the search
+                    total = cost + step
                     if total < best.get(route.destination, math.inf):
                         best[route.destination] = total
                         heapq.heappush(queue, (total, route.destination))

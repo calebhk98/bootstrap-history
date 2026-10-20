@@ -99,7 +99,7 @@ def wage_scale(setup, record, carriage) -> float:
     emptiness of the returns leaves, at that wage) follows the wage of the area the goods left instead, as last
     year's labour market cleared it. The routes are last year's carried flows, so the mix of modes is the one
     used. The rest of a fee (feed, carts, animals) keeps its price. 1 where the wages are the one priced, or
-    nothing is known of either."""
+    nothing is known of either; never below 0."""
     carried = getattr(record, "carried", None)
     if not carried or setup.carriage_wage <= 0.0 or not hires(setup):
         return 1.0
@@ -117,7 +117,7 @@ def wage_scale(setup, record, carriage) -> float:
                 wage = wages.get(market_key(trade, labour_area(source)), 0.0)
                 if wage > 0.0:
                     labour_change += tonnes * hours * (wage - setup.carriage_wage)
-    return 1.0 + labour_change / money if money > 0.0 else 1.0
+    return max(0.0, 1.0 + labour_change / money) if money > 0.0 else 1.0     # a fee never pays the shipper
 
 
 def planned(merchant: Merchant) -> bool:
