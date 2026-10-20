@@ -72,6 +72,9 @@ def partner_openings(sim):
     return {partner: partner_opening(sim, partner) for partner in sim.partners_in_agent_economy()}
 
 
+LITERACY_FIELDS = ("literacy_general", "literacy_elite")
+
+
 def opening_values(sim):
     """What the setup takes from the engine at the opening: kept in the save so a resumed game rebuilds
     the same markets, producers and price base however the engine's own tables have moved since."""
@@ -116,6 +119,7 @@ def opening_values(sim):
                             sim, {entry_id: production[entry_id]["outputs"] for entry_id in allowed},
                             list(tile_ids) + [tile for opened in partners.values() for tile in opened["tiles"]])],
         "stores": opening_store_values(sim.world_map, tile_ids, int(sim.cfg["start_year"])),
+        "literacy": {field: sim.literacy(field) for field in LITERACY_FIELDS},
     }
 
 
@@ -179,8 +183,8 @@ def build_setup(sim, opening=None, production=None):
     mint_recipe = (recipes_from_production_data(production, [opening["mint_recipe"]])[opening["mint_recipe"]]
                    if opening.get("mint_recipe") else None)
     need_data = _load("world", "needs.json")
-    society = dict(civ, literacy_general=sim.literacy("literacy_general"),
-                   literacy_elite=sim.literacy("literacy_elite"))
+    literate = opening.get("literacy") or {field: sim.literacy(field) for field in LITERACY_FIELDS}
+    society = dict(civ, **literate)       # the opening's literacy, so a rebuilt setup scales the needs as the first did
     basket = households.make_basket(need_data, production, civ_values=society)
     goods = set()
     for recipe in recipes.values():
