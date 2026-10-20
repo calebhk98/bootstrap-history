@@ -69,5 +69,38 @@ class TrialPlanTests(unittest.TestCase):
         self.assertEqual(entry_trial.trial_entry_plans(setup, economy.record, economy.view(), economy.area_map, bids), [])
 
 
+class UnmetBidsDrawAMakerTests(unittest.TestCase):
+    """Complaint 473: entry follows the bids' ceilings and quantities against the recipe's computed cost, for any good."""
+
+    def setUp(self):
+        self.setup = fixture.small_setup()
+        economy = Economy(self.setup)
+        economy.step(fixture.quiet_year(self.setup))
+        for producer_id in [each for each, producer in economy.record.producers.items()
+                            if producer.recipe_id == fixture.SMELT]:
+            del economy.record.producers[producer_id]
+        self.economy = economy
+        self.area = economy.area_map.areas(fixture.METAL)[0]
+
+    def plans(self, floor, ceiling, siting=None):
+        bid = Bid("buyer", fixture.METAL, self.area.area_id, self.area.anchor_tile, floor, 0.0, 95.0, 1.0, 1e9, 0, ceiling)
+        return entry_trial.trial_entry_plans(self.setup, self.economy.record, self.economy.view(), self.economy.area_map,
+                                             {(fixture.METAL, self.area.area_id): [bid]}, siting=siting)
+
+    def test_bids_with_a_ceiling_under_the_recipes_entry_price_draw_no_maker(self):
+        self.assertEqual(self.plans(50.0, 1.0), [])
+
+    def test_bids_that_meet_the_entry_price_draw_a_maker_sized_by_their_quantity(self):
+        small, large = self.plans(50.0, 1000.0), self.plans(100.0, 1000.0)
+        self.assertEqual(len(small), 1)
+        self.assertEqual(small[0].tile, self.area.anchor_tile)
+        self.assertAlmostEqual(large[0].runs, 2.0 * small[0].runs)
+
+    def test_a_trial_newcomer_is_built_where_the_siting_puts_it(self):
+        # beside its inputs, which can be another market area: the area's buyers then wait on carriage (Complaint 473)
+        plans = self.plans(50.0, 1000.0, siting=lambda recipe_id, demand, runs: ("hills", runs))
+        self.assertEqual([plan.tile for plan in plans], ["hills"])
+
+
 if __name__ == "__main__":
     unittest.main()
