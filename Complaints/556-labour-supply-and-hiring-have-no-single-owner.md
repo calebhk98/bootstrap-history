@@ -1,6 +1,6 @@
 # Labour supply and hiring have no single owner
 
-**Status:** partly done. The founder's staff book has one owner (`sim/labour/staff_book.py`); the supply estimate is still a second copy of the core's people (below).
+**Status:** partly done. The founder's staff book has one owner (`sim/labour/staff_book.py`), and the supply estimate now reads the core's people where the core holds the trade; hires are not yet taken out of the core (below).
 
 Found by an outside reviewer reading the repository; checked against the code. An integration risk:
 no worker has been shown counted twice.
@@ -43,5 +43,21 @@ Done (behaviour preserving, quick tier and the labour, staffing, firm and save t
 - Still outside the owner: the plague survival roll in `sim/engine/society_hazards.py` (listed as a test
   exception until the disease work lands), and the dict wrapper in `core.py` / `economy.py`.
 
-Remaining: make `national_trade_population` and the hiring cap a view of the core's people (a behaviour
-change, needs before and after values), and take hires out of the core's people by tile and trade.
+Done (behaviour change; `python3 -m sim.tests --slow --only labour_single_owner`):
+
+- Cause of the split: the opening placed only the people producers' expected sales need and sent everyone else to
+  the unskilled trade, and the post-spin-up trim sent every cut worker there too. Farm people mostly work their
+  own plots (`households_own.py`), so no producer hires them and the core held them as `labourer` while the
+  estimate booked them as `farmer`. Now people no employer needs work as the plot trade (`labour_state.plot_trade`,
+  the trade the land-only recipes ask most hours of) in `opening_state(idle_trade=...)` and
+  `workforce_settle.send_idle_to_plots`.
+- `national_trade_population` returns the core's headcount for any trade the core holds people in; the
+  literacy-counted trades (scholar, scribe, merchant), the draft pool (soldier) and founder-taught trades are
+  counts the core does not hold and keep their estimates, and a trade the core holds nobody in keeps the old
+  estimate until the core seeds it ([temporary_heuristic] shares in `labour_population`; retire by 558's follow-up).
+- Measured on an opened Rome game (people, core and estimate now equal): farmer 26.6M -> 28.5M (core was 39.7k),
+  labourer 181k -> 1.19M (core was 29.6M), smith 79.7k -> 1.2k, mason 38.6k -> 305k, weaver 70.3k -> 33.2k.
+  Hiring caps (`market_supply`) are unchanged: the town cap binds, not the national count.
+
+Remaining: seed the core with the trades it holds nobody in (artisan, carter, sailor, ...), and take hires out of
+the core's people by tile and trade.
