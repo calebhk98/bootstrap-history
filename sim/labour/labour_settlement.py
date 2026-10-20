@@ -8,6 +8,7 @@ import math
 from sim.constants import declare
 import sim.geography.api as geography
 from sim.geography.api import settlement
+from sim.labour import town_providers
 
 
 class SettlementMixin:
@@ -78,6 +79,9 @@ class SettlementMixin:
         nominal = (self.TOWN_POPULATION_REFERENCE * place
                    * (self.POP_SCALE_FLOOR_SHARE
                       + self.POP_SCALE_VARIABLE_SHARE * min(1.0, self._world.pop_scale)))
+        provided = town_providers.provided_town_population(self, tile, nominal)
+        if provided is not None:
+            return min(provided, tile_people)
         return min(nominal, tile_people * self.TOWN_MAX_SHARE_OF_TILE)
 
     def home_town_population_estimate(self):

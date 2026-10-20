@@ -12,6 +12,7 @@ import functools
 from sim.refusal import LogLine
 
 from sim.disease import api as disease
+from . import externalities
 from .units_prose import money_text
 from sim.geography.api import endemic_people_loss, reach, tiles_held, usable_modes
 
@@ -137,7 +138,7 @@ class DiseasePortMixin:
     def epidemic_year(self, food_available_calories_per_day, year):
         """(epidemic deaths by band, disease burden, endemic death rates) for the year's population step: the
         epidemics run and cut each seat's staff before the burden and the endemic rates are read."""
-        deaths = self.disease_year(food_available_calories_per_day, year)
+        deaths = externalities.add_deaths(self.disease_year(food_available_calories_per_day, year), self, year)
         self.epidemic_hits_seats(deaths, year)
         return deaths, self._disease_burden(), self.endemic_death_rates()
 

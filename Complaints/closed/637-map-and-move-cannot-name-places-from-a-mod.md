@@ -1,6 +1,6 @@
 # `map` and `move` cannot show place names a mod's map overlay supplies
 
-**Status:** open
+**Status:** done. `map` and `move` rows carry `places` from a map overlay's `places` catalogue (`tile_names.places_on`, `sim/tests/test_map_place_names.py`). The mod `bh_towns_m8d4` still names its catalogue `towns`; renaming it to `places` is a data change left to the mod.
 
 The town-table mod (`mods/bh_towns_m8d4`) puts named towns on real tiles as a catalogue of its map overlay and adds
 `bh_towns_m8d4:towns` and `bh_towns_m8d4:go`. It cannot make the shipped `map` and `move` screens name them: a mod
