@@ -40,7 +40,11 @@ try:
     check("a technique one producer runs does not reprice the incumbents' cost of the good",
           game.goods_market.household_prices()[GOOD] == price_before)
     cost = game.entry_cost_ratio(GOOD + "_with_the_technique", GOOD)
-    check("...but a producer making it by that entry makes it for less", cost < 0.75, cost)
+    reference = game._cost_book()[1]._cost(GOOD, source_key, True)
+    labour_share = sum(reference.trade_cost.values()) / reference.unit_cost
+    check("...but a producer making it by that entry makes it for less: by half the labour share of the cost, "
+          "at the economy's prices", 0.0 < labour_share and abs(cost - (1.0 - labour_share / 2.0)) < 1e-9,
+          (cost, labour_share))
     check("...and no good that does not use it changes price",
           all(game.goods_market.household_prices()[material] == price
               for material, price in other_before.items()), other_before)
