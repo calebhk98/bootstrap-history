@@ -177,7 +177,8 @@ class LandRentReferencePriceStaysZeroRentTests(unittest.TestCase):
         production_entries, duplicates = solve_prices.load_production()
         self.assertEqual(duplicates, [])
         self.assertIn("land_hectare_years", production_entries["wheat_kg"])
-        wage_by_trade = {"labourer": 1.0}
+        wage_by_trade = {trade: 1.0 for entry in production_entries.values()
+                         for trade in (entry.get("labour_hours") or {})}   # every trade a recipe names is paid the same here
         rent = solve_prices.land_rent_hours_per_hectare(
             production_entries, wage_by_trade, civilization_id="rome_100ad")
         self.assertIn("hectare_land", rent)
