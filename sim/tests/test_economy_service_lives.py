@@ -3,10 +3,11 @@ bought again in full."""
 
 QUICK_TOPIC = True
 
+import types
 import unittest
 from unittest import mock
 
-from sim.economy import opening
+from sim.economy import households_orders, opening
 from sim.economy.economy import Economy
 from sim.economy.types import Transfer
 from sim.tests import economy_fixture as fixture
@@ -87,22 +88,34 @@ class ServiceLifeTests(unittest.TestCase):
         bought_empty = empty[1][0] - empty[0][0] + empty[1][1]
         self.assertLess(bought_seeded, bought_empty)
 
-    def test_it_is_not_bought_again_in_full(self):
-        # once the fixture has settled its income is level with lumps (competition has taken the margins
-        # that made it grow), so households buy about the wear: never a year's purchase beyond twice the
-        # wear, where buying the stock again would be as many times the wear as the service life
-        rows = years_of(durable_setup(), 13, SPIN_UP_YEARS)
-        for year in range(1, 13):
-            bought = rows[year][0] - rows[year - 1][0] + rows[year][1]
-            self.assertGreaterEqual(bought, -1e-9 * rows[year][1])   # float slack: a level stock buys exactly the wear
-            self.assertLess(bought, 2.0 * rows[year][1], "year %d buys the stock again" % year)
+    # The settled-run checks that read a year of the fixture (Complaint 640) are replaced by the rule they meant:
+    # `_durable_ratio` sizes a durable's purchase as the stock its expected flow wants less what is held, plus wear.
 
-    def test_settled_holdings_move_by_less_than_one_years_wear(self):
-        # with a level income the wanted stock is level, so the holding rises or falls by less than the wear
-        # a lumpy year of income can account for; it is neither sold out nor refilled in a year
-        rows = years_of(durable_setup(), 13, SPIN_UP_YEARS)
-        for year in range(1, 13):
-            self.assertLess(abs(rows[year][0] - rows[year - 1][0]), rows[year][1] * (1.0 + 1e-9), "the stock jumps in year %d" % year)
+
+class DurablePurchaseRuleTests(unittest.TestCase):
+    """households_orders._durable_ratio: a held stock at the level its flow wants buys exactly the wear."""
+    SPECS = {"metal": types.SimpleNamespace(service_life_years=SERVICE_LIFE_YEARS)}
+
+    def bought(self, flow, held, scale=1.0):
+        return households_orders._durable_ratio("metal", flow, held, self.SPECS, scale) * flow
+
+    def test_a_stock_at_its_wanted_level_buys_exactly_the_wear(self):
+        held = 5.0 * SERVICE_LIFE_YEARS
+        self.assertAlmostEqual(self.bought(5.0, held), held / SERVICE_LIFE_YEARS)
+
+    def test_it_is_not_bought_again_in_full(self):
+        held = 5.0 * SERVICE_LIFE_YEARS
+        self.assertLess(self.bought(5.0, held), 2.0 * held / SERVICE_LIFE_YEARS)
+
+    def test_a_stock_above_its_wanted_level_buys_nothing(self):
+        self.assertEqual(self.bought(5.0, 10.0 * SERVICE_LIFE_YEARS), 0.0)
+
+    def test_a_small_rise_in_flow_moves_the_purchase_by_the_stock_it_wants_more(self):
+        held = 5.0 * SERVICE_LIFE_YEARS
+        self.assertAlmostEqual(self.bought(5.0, held, 1.01) - self.bought(5.0, held), 0.01 * held)
+
+    def test_a_good_used_up_in_the_year_is_bought_whole(self):
+        self.assertEqual(households_orders._durable_ratio("bread", 5.0, 0.0, self.SPECS), 1.0)
 
 
 class BadYearTests(unittest.TestCase):

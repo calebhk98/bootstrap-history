@@ -107,3 +107,30 @@ check("the founder's unpaid interest each year is arrears, not more debt",
 check("the founder's default is called once and clears the arrears record",
       founder_world.defaults == 1 and founder.arrears_book.interest_arrears == 0.0
       and founder.arrears_book.arrears_years == 0, (founder_world.defaults, vars(founder.arrears_book)))
+
+
+# Complaint 653: a debt over its ceiling is a breach at a rate of zero too (a margin call on the excess).
+class NilRateWorld(FounderWorld):
+	RATE = 0.0
+
+
+def run_nil_rate(money):
+	world = NilRateWorld()
+	borrower = FounderStandIn(money=money)
+	years_in_arrears = []
+	for years in range(1, MAX_YEARS + 1):
+		borrower.settle_interest(world)
+		if world.defaults:
+			return years, years_in_arrears, world
+		years_in_arrears.append(borrower.arrears_book.arrears_years)
+	return None, years_in_arrears, world
+
+
+over_years, over_progress, over_world = run_nil_rate(-50000.0)
+inside_years, inside_progress, inside_world = run_nil_rate(-500.0)
+check("a debt far over its ceiling at nil interest enters arrears",
+      over_progress[:1] == [1], over_progress)
+check("a debt far over its ceiling at nil interest defaults after the shared run of years",
+      over_years == borrowing_arrears.ARREARS_YEARS_BEFORE_DEFAULT, over_years)
+check("a debt inside its ceiling at nil interest never enters arrears",
+      inside_years is None and set(inside_progress) == {0} and inside_world.defaults == 0, (inside_years, inside_progress))
