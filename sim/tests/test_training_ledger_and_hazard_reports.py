@@ -1,5 +1,6 @@
 """Training lag and people you buy, the revenue ledger, projects short of a trade or money, and how hazards, sackings and failures are reported."""
 from .harness import *  # noqa: F401,F403
+from .plague_fixture import ANTONINE, BLACK_DEATH, with_hazard
 from sim.refusal import cause_of, facts_of
 from .agent_command_helpers import ask_agent, with_end_year, starved_game, pristine_game
 from sim.ui.proto.render_typed import render_pretty as _render_pretty
@@ -174,7 +175,7 @@ check("a society is not granted the route another society would take to it",
 # A hazard should report the harm it did to YOU, not the harm it would have
 # done to somebody with something to lose: a tester with no staff and no money
 # read "staff -45%, and 0 pence gone" three years running.
-s = unopened_sim(civ="england_1300")
+s = with_hazard(unopened_sim(civ="england_1300"), BLACK_DEATH)
 s.scholars = s.artisans = 0.0
 s.employees = {}
 s.capital = 0.0

@@ -25,3 +25,12 @@ Confidence tags follow the research report: `read` (figure seen in a source that
 re-checked before a scenario relies on it.
 
 Not yet expressed: branching stages, routes other than person to person, reservoirs, per-band severity.
+
+## What a civilisation file says
+
+`disease_exposure.outside_contact` in `data/civilizations/*.json` lists sources, initial conditions only:
+`pathogens` (ids of files here), `tiles` (map tiles where they live outside the nation), optional `circulating`
+(always present at the source; else they start there now and then), `carrier_modes` (carriage the outsiders bring)
+and `years` (when the contact exists at all). The chance a pathogen arrives falls with the fewest days of travel
+between the source's tiles and the tiles held (`sim/disease/nation.py`). A civilisation file never states a year,
+a death toll or a staff loss for an epidemic.

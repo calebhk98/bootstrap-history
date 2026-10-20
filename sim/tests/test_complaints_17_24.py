@@ -1,5 +1,6 @@
 """Regression coverage for playtest complaints 17 through 24."""
 from .harness import *  # noqa: F401,F403
+from .plague_fixture import ANTONINE, BLACK_DEATH, with_hazard
 
 
 # A mortality shock changes the screens and hiring multiplier immediately.
@@ -20,7 +21,7 @@ check("plague mortality immediately raises wages",
       _plague.wage_index > _plague._wage_index_base, _plague.wage_index)
 
 # The risk response says that staff loss is an independently repeated wave.
-_risk = S._agent_dispatch(sim(civ="rome_100ad"), NODES, {"cmd": "risk"})
+_risk = S._agent_dispatch(with_hazard(sim(civ="rome_100ad"), ANTONINE), NODES, {"cmd": "risk"})
 _antonine = next(hazard for hazard in _risk["knowledge_risk"]["known_hazards_ahead"]
                  if "Antonine" in hazard["name"])
 check("plague risk exposes annual wave cadence and cumulative exposure",

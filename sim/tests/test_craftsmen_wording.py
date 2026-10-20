@@ -1,5 +1,6 @@
 """craftsmen_wording: regression checks, run individually with `--only craftsmen_wording`."""
 from .harness import *  # noqa: F401,F403
+from .plague_fixture import ANTONINE, BLACK_DEATH, with_hazard
 
 # ===========================================================================
 # "What does it mean when it says I need 2.13 craftsmen?" - wording only,
@@ -116,7 +117,7 @@ check("...but once the government actor holds it, it genuinely has - the "
 # in _shocks, unchanged by any of this). The user's own example: invent the
 # cure or vaccine for a pandemic and it becomes a minor sickness.
 def _plague_line2(civ, hazard_substr, med_nodes, years_before, capital=1e9):
-    household = unopened_sim(civ=civ, capital=capital)
+    household = with_hazard(unopened_sim(civ=civ, capital=capital), ANTONINE if civ == "rome_100ad" else BLACK_DEATH)
     for node_id in med_nodes:
         household.done.add(node_id)
     household.scholars, household.artisans = 50.0, 200.0
