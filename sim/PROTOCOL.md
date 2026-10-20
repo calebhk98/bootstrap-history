@@ -670,6 +670,23 @@ the same for every seat; reads about a holder (`state`, `available`, `log`,
 `money`) show the addressed seat. `seats` shows another seat's country and
 whether its run has ended, not its purse or its work.
 
+A seat is a household seat unless `join` says otherwise:
+
+    {"cmd":"join","seat":"senate","seat_kind":"country"}                       hold your own country's government
+    {"cmd":"join","seat":"khan","seat_kind":"country","country":"han"}         hold another country's
+
+A country seat's holder is that country's `Government` actor (the reply's `holder`, an actor id such as
+`government:rome_100ad`), and it has no founder and no household: the reply carries `founder: null` and
+`household: null`, and `seats` shows its row with `kind` and `holder` and no purse. It has no kit and knows no
+techniques of its own (a `kit` is refused with `cause` `country_seat_has_no_kit`). It is not among the seats the
+household phases of the year run, and it never ends the game or holds it open; the government acts with the year of
+the actors. Refusals carry `cause`: `unknown_country` (`choices` lists the countries that have a government),
+`unknown_seat_kind`. Commands that need a household (`state`, `available`, the projects, labour and money groups) are
+refused for a country seat with `cause` `country_seat_has_no_household`; the reads about the world, the seats, the
+game and relations work, and `step` runs the year for everyone. The levers of the state itself are Complaint 595.
+Two country seats may name one country (a replacement joins before a handover); until one hands over they share its
+government.
+
     {"cmd":"handover","to":"second"}   hand your seat to the seat "second", which must already be in the game and empty
 
 A handover gives the replacement the known techniques, works, holdings, cash, institutions, goal, country and notes
@@ -682,8 +699,9 @@ renamed to the replacement's. Notes belong to the
 seat that wrote them and pass with it. Records kept by country (relations, with their notes) stay with the country,
 which the replacement now plays for. Only your own seat can be handed over (`"from"` naming another is refused).
 Refusals change nothing and carry `cause`: `unknown_seat` (`choices` lists the seats), `same_seat`, `not_your_seat`,
-`no_replacement`, `replacement_not_empty` (`holds` lists what it holds). The reply carries `from`, `to`, `known_nodes`, `country`, `notes` (how many passed) and `seats`.
-A country seat uses the same command once it exists, because its country is a field of the seat.
+`no_replacement`, `replacement_not_empty` (`holds` lists what it holds), `replacement_wrong_kind` (a country seat
+passes only to an empty country seat, a household seat to a household seat). The reply carries `from`, `to`, `known_nodes`, `country`, `notes` (how many passed) and `seats`.
+A country seat uses the same command: its kind, holder and country are fields of the seat and move with it.
 
 `step` advances the year for every seat still playing. A seat's run ends for
 that seat alone (a founder who dies with nobody to carry the work in a game
