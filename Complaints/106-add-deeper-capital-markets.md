@@ -74,3 +74,18 @@ Related: 332.
 The first increment above describes the old engine market, which the game no longer runs. The agent economy has pooled credit with household lenders only (`sim/economy/credit.py`, `credit_claims.py`, `lending.py`); no banks, bonds, equity or insurance. What exists, what is missing, a first step (a bank as an ordinary agent, deposits and loans as claims in `credit_claims`) and the heuristics it needs are in `Complaints/reports/agent-economy-capital-markets.md`. Complaint 307 no longer applies there (the state offers no funds).
 
 Owner decision (2026-10-09): lower priority; it should come when it can, and a civilisation that has no banking institution yet must not get banks.
+
+## Built on the agent economy
+
+- **Shares (step 1).** A producer whose plant request the loan market left unmet sells shares for the rest
+  (`sim/economy/shares.py`, `share_market.py`, called from `Economy._lend`). Savers still holding funds after the
+  year's lending bid; buyers are taken cheapest required rate first and the last needed sets the rate. A share is
+  priced at the present value of the dividends the producer is then expected to pay (the dividend it paid last
+  plus what the new plant earns), discounted at that rate plus the premium a lender would charge it, because a
+  shareholder ranks behind its lenders; a project that does not beat that rate sells nothing. Dividends are split by share
+  in `ownership.spread`, and `equity.holdings` gives holders their part of the producer's worth instead of the
+  owner tile's pro-rata split. The expansion path is untouched: the money the shares raise is plant like a loan's
+  (the one hook is the list of funded amounts in `_lend`). Still open: shares trading between holders after issue,
+  a firm choosing equity over debt on cost, and the closed-producer path (`close_idle_producers`) paying its cash
+  to the owner alone. Measure: `Economy` fixture tests in `sim/tests/test_economy_shares.py`; on Rome compare the
+  rate, `funds_offered` and `lent_by_borrower` of the first years (`share_issuers` is `len(record.shares)`).

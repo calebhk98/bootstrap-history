@@ -9,7 +9,7 @@ from typing import Any, Dict, Mapping, Optional, Tuple
 
 from sim.world import capital_market
 
-from . import bondage, carriage_hours, credit, debt_relief, credit_claims, currency, equity, labour, land_market, lending, merchants_credit, producers, sites, state_budget, tax_farming, titles_inheritance, unit_cost
+from . import bondage, carriage_hours, credit, debt_relief, credit_claims, currency, equity, labour, land_market, lending, merchants_credit, producers, shares, sites, state_budget, tax_farming, titles_inheritance, unit_cost
 from .credit_view import CreditView
 from .market_areas import AreaMap
 from .market_areas_follow import follow
@@ -312,7 +312,7 @@ class Economy:
                                                                 credit.RATE_ADJUSTMENT_SHARE_PER_YEAR)
             return {}
         debt = credit_claims.principal_by_borrower(record.loans)
-        loans, rate, _unmet = credit.clear(requests, funds, money, record.memory.rates.get(money), debt,
+        loans, rate, unmet = credit.clear(requests, funds, money, record.memory.rates.get(money), debt,
                                            credit_claims.arrears_history(record.loans, record.remembered_defaults),
                                            year=view.year,
                                            rate_ceiling=capital_market.RATE_CEILING_SHARE * setup.opening_rate)
@@ -321,6 +321,8 @@ class Economy:
         for loan in loans:
             record.lent_by_borrower[loan.borrower] = record.lent_by_borrower.get(loan.borrower, 0.0) + loan.principal
         record.memory.rates[money] = rate
+        # a plant request lenders left unmet is offered to the savers as shares (the money they raise is plant like a loan's)
+        raised = shares.raise_equity(record, money, unmet, funds, loans, rate, shares.rate_floor_of(setup))
         merchants_credit.stake(record.merchants, {loan.borrower: loan.principal for loan in loans})
         lending.bid_household_loans(setup, record, view, ledger, loans, order_book, priced_by_tile)
         asked = {request.borrower: request.amount for request in requests}
@@ -331,15 +333,15 @@ class Economy:
                 worth[request.borrower] = plant_worth_ratio(request.maximum_rate, rate,
                                                             setup.recipes[producer.recipe_id].plant_life_years)
         plant_runs: Dict[str, float] = {}
-        for loan in loans:
-            producer = record.producers.get(loan.borrower)
-            runs = record.expansion_runs.get(loan.borrower, 0.0)
-            if producer is None or runs <= 0.0 or not asked.get(loan.borrower):
+        for borrower, principal in [(loan.borrower, loan.principal) for loan in loans] + sorted(raised.items()):
+            producer = record.producers.get(borrower)
+            runs = record.expansion_runs.get(borrower, 0.0)
+            if producer is None or runs <= 0.0 or not asked.get(borrower):
                 continue
-            funded_runs = runs * min(1.0, loan.principal / asked[loan.borrower])
-            plant_runs[loan.borrower] = plant_runs.get(loan.borrower, 0.0) + funded_runs
+            funded_runs = runs * min(1.0, principal / asked[borrower])
+            plant_runs[borrower] = plant_runs.get(borrower, 0.0) + funded_runs
             # no dearer than the price at which the new plant would earn just the loan's rate
-            self._bid_for_plant(producer, funded_runs, loan.principal, worth.get(loan.borrower, 1.0), view, order_book)
+            self._bid_for_plant(producer, funded_runs, principal, worth.get(borrower, 1.0), view, order_book)
         record.expansion_runs = {}
         return plant_runs
 

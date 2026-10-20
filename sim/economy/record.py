@@ -53,6 +53,8 @@ class EconomyRecord:
     hours_idle: Dict[str, float] = field(default_factory=dict)           # labour market_key -> hours offered and not hired last year
     funds_offered: float = 0.0                                           # savings on offer at the last lending, home currency
     lent_by_borrower: Dict[AgentId, float] = field(default_factory=dict)  # what each borrower was lent at the last lending
+    shares: Dict[AgentId, Dict[AgentId, float]] = field(default_factory=dict)   # producer -> holder -> part of its equity the holder bought (shares.py)
+    last_dividends: Dict[AgentId, float] = field(default_factory=dict)   # producer -> the dividend it paid at its last close
     curves: Dict[str, Any] = field(default_factory=dict)                 # market_key -> the book of the last clearing at the port (market_curves.py)
     ways: Dict[str, Dict[str, Any]] = field(default_factory=dict)        # the built ways the market areas are partitioned for
     area_imbalance: float = 1.0                                          # the return-trip emptiness the market areas were partitioned for (its memory is keyed by those areas)
@@ -103,6 +105,8 @@ class EconomyRecord:
             "hours_idle": self.hours_idle,
             "funds_offered": self.funds_offered,
             "lent_by_borrower": self.lent_by_borrower,
+            "shares": {producer: dict(sorted(held.items())) for producer, held in sorted(self.shares.items())},
+            "last_dividends": dict(sorted(self.last_dividends.items())),
             "curves": self.curves,
             "ways": {key: dict(built) for key, built in sorted(self.ways.items())},
             "area_imbalance": self.area_imbalance,
@@ -142,6 +146,8 @@ class EconomyRecord:
             hours_idle=dict(record["hours_idle"]),
             funds_offered=record["funds_offered"],
             lent_by_borrower=dict(record["lent_by_borrower"]),
+            shares={producer: dict(held) for producer, held in record["shares"].items()},
+            last_dividends=dict(record["last_dividends"]),
             curves=dict(record["curves"]),
             ways={key: dict(built) for key, built in record["ways"].items()},
             area_imbalance=record["area_imbalance"],

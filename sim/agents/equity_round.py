@@ -1,22 +1,24 @@
 """A firm that cannot borrow what it needs to grow sells a share of its equity to the households that hold savings.
 
-The investor is the best-placed household of a free stratum: it values a share at the firm's last margin over
-the valuation horizon, discounted a year at the market rate, and pays no more than that nor more than it can
-spare. The deal is an exchange offer, so the shares, the money and the later dividends all move through the
+The investor is the best-placed household of a free stratum: it values a share at the present value of the
+dividends the firm pays at the market rate, and pays no more than that nor more than it can spare. The deal is an exchange offer, so the shares, the money and the later dividends all move through the
 same books as any other."""
 from typing import Any, List
+
+from sim.world import capital_market
 
 from . import exchange, firm_entry, household_wealth
 from .equity_need import NEED_KEY
 from .registry import register_spawner
-from .tuning import VALUE_HORIZON_YEARS
+from .tuning_patent import DIVIDEND_PAYOUT_SHARE
 
 
 
 def whole_equity_worth(firm: Any, world: Any) -> float:
-	"""What an investor counts the whole of the firm's equity worth now: its last margin over the horizon,
-	discounted a year at the market rate."""
-	return max(0.0, firm.record.last_margin) * VALUE_HORIZON_YEARS / (1.0 + world.market_rate())
+	"""What the whole of the firm's equity is worth now: the present value, at the market rate, of the dividends it
+	pays out of its last margin."""
+	return capital_market.perpetuity_value(DIVIDEND_PAYOUT_SHARE * firm.record.last_margin, world.market_rate(),
+										   capital_market.RATE_FLOOR_SHARE * world.starting_rate())
 
 
 def raise_equity(registry: Any, world: Any, firm: Any) -> float:

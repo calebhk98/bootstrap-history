@@ -2,8 +2,10 @@
 
 A producer's dividends reach its owner's tile and are split across the tile's cohorts by ownership share
 (`ownership.spread`); the claim on its net worth (cash and plant at what it would cost to build now, less
-what it owes) is split the same way. `holdings` is the one read of it; the market view answers `equity`
-from it, so a household counts what it owns of the firms among the wealth it wants to hold.
+what it owes) is split the same way. Where a producer has sold shares (shares.py) the holders of its shares own
+their part of that worth and the owner's tile the rest.
+`holdings` is the one read of it; the market view answers `equity` from it, so a household counts what it
+owns of the firms among the wealth it wants to hold.
 """
 from typing import Dict
 
@@ -35,6 +37,11 @@ def holdings(setup, record, view) -> Dict[AgentId, float]:
             continue
         worth = firm_net_worth(producer, setup.recipes[producer.recipe_id], record.book.balance(producer_id, money),
                                debts.get(producer_id, 0.0), view)
+        outside = record.shares.get(producer_id)
+        if outside:                      # what holders of its shares own is theirs, not the owner tile's
+            for holder, part in outside.items():
+                held[holder] = held.get(holder, 0.0) + part * worth
+            worth *= max(0.0, 1.0 - sum(outside.values()))
         for agent, amount in distribute_property_income(cohorts_of_tile[owner.tile], worth).items():
             held[agent] = held.get(agent, 0.0) + amount
     return held
