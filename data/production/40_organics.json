@@ -724,11 +724,11 @@
     "cotton_kg": 0.0021
    },
    "labour_hours": {
-    "labourer": 0.02
+    "spinner": 0.02
    },
    "unit_dimension": "length",
    "basis": "per metre of finished, braided cotton wick",
-   "yield_basis": "A simple braided-cotton candle/lamp wick runs on the order of 2 grams of cotton fibre per metre of length for an ordinary taper-sized wick (thicker wicks for larger lamps would need more); a small allowance on top of that raw 2 g/m covers waste in carding and braiding. Labour is fast per metre once done in bulk lengths - twisting or plaiting several strands of carded cotton together is a quick repetitive hand task, nothing like the slow business of spinning fine thread for cloth.",
+   "yield_basis": "A simple braided-cotton candle/lamp wick runs on the order of 2 grams of cotton fibre per metre of length for an ordinary taper-sized wick (thicker wicks for larger lamps would need more); a small allowance on top of that raw 2 g/m covers waste in carding and braiding. Labour is fast per metre once done in bulk lengths - twisting or plaiting several strands of carded cotton together is a quick repetitive hand task, nothing like the slow business of spinning fine thread for cloth. TRADE (Complaint 619): the hours are booked to spinner, not the generic labourer pool, because braiding fibre into a wick is the spinner's craft of twisting and plying fibre (the whole figure moves; its size is unchanged and not re-sourced here).",
    "conf": "C",
    "requires_node": null
   },
@@ -992,11 +992,11 @@
     "linen_kg": 0.0021
    },
    "labour_hours": {
-    "labourer": 0.02
+    "spinner": 0.02
    },
    "unit_dimension": "length",
    "basis": "per metre of finished, twisted linen wick",
-   "yield_basis": "The same wick as wick_cotton_m from a society's own bast fibre: a candle or lamp wick of about 2 grams of spun fibre per metre, with a small allowance for waste. The fibre is linen_kg, the flax entry that folds field work, spinning and weaving into one figure, so a wick here is charged the cloth's weaving as well, an overcount until flax thread has its own entry (labelled heuristic, retire: Complaints/531). Roman and medieval European wicks were flax, hemp or rush pith; rush has no entry in the data. From memory, confidence D.",
+   "yield_basis": "The same wick as wick_cotton_m from a society's own bast fibre: a candle or lamp wick of about 2 grams of spun fibre per metre, with a small allowance for waste. The fibre is linen_kg, the flax entry that folds field work, spinning and weaving into one figure, so a wick here is charged the cloth's weaving as well, an overcount until flax thread has its own entry (labelled heuristic, retire: Complaints/531). Roman and medieval European wicks were flax, hemp or rush pith; rush has no entry in the data. From memory, confidence D. TRADE (Complaint 619): the hours are booked to spinner, not the generic labourer pool, because twisting fibre into a wick is the spinner's craft of twisting and plying fibre (the whole figure moves; its size is unchanged and not re-sourced here).",
    "conf": "D",
    "requires_node": "tex_drop_spindle"
   },

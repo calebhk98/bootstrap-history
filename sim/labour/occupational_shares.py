@@ -21,6 +21,20 @@ def group_of_trade(groups: Mapping) -> Dict[str, str]:
     return {trade: group_id for group_id, group in groups.items() for trade in group["trades"]}
 
 
+def hours_by_trade_of_all_employers(labour, society_hours: Mapping[str, float]) -> Dict[str, float]:
+    """The society's hours by trade, plus what the other employers hold that the society's split leaves out:
+    a trade's hours are the larger of the society's and those of the people the founder, firms and states keep
+    on staff (the army counted whole, which the society's hours have already given up), so a trade the state
+    or a merchant house hires reads at its hours, and nothing the society already counts is counted twice."""
+    hours = dict(society_hours)
+    for group in groups_data()["groups"].values():
+        for trade in group["trades"]:
+            held = labour.reserved_hours(trade)
+            if held > hours.get(trade, 0.0):
+                hours[trade] = held
+    return hours
+
+
 def shares_by_group(hours_by_trade: Mapping[str, float]) -> Dict[str, float]:
     """Each group's share of all hours; a trade in no group raises, so the data cannot silently lag the registry."""
     groups = groups_data()["groups"]

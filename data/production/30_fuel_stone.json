@@ -654,12 +654,12 @@
     "firewood_kg": 500.0
    },
    "labour_hours": {
-    "labourer": 18.0
+    "potter": 18.0
    },
    "unit_mass_kg": 2500.0,
    "unit_dimension": "count",
    "basis": "per 1000 fired common bricks, each about 2.5 kg (1000 bricks = 2500 kg fired mass)",
-   "yield_basis": "As-dug brick clay carries roughly 20-25% free water; drying removes most of it, and firing then drives off the clay minerals' chemically bound water and burns out any organic matter, together costing perhaps another 5-10% of the dried mass - overall the fired brick keeps roughly 78% of the wet clay's mass, so 2500 kg of fired brick needs about 3200 kg of pit clay. Firing a simple clamp or kiln to the 900-1000 C common brick needs, on commonly-cited pre-industrial efficiency figures, on the order of 0.2 kg of fuel per kg of fired brick - 500 kg of firewood for 2500 kg of brick. Labour covers hand-moulding (a moulder and off-bearer team historically set around 1000 bricks a day, hence roughly 10 hours per 1000 here) plus kiln setting, firing and drawing, amortised over a large kiln batch.",
+   "yield_basis": "As-dug brick clay carries roughly 20-25% free water; drying removes most of it, and firing then drives off the clay minerals' chemically bound water and burns out any organic matter, together costing perhaps another 5-10% of the dried mass - overall the fired brick keeps roughly 78% of the wet clay's mass, so 2500 kg of fired brick needs about 3200 kg of pit clay. Firing a simple clamp or kiln to the 900-1000 C common brick needs, on commonly-cited pre-industrial efficiency figures, on the order of 0.2 kg of fuel per kg of fired brick - 500 kg of firewood for 2500 kg of brick. Labour covers hand-moulding (a moulder and off-bearer team historically set around 1000 bricks a day, hence roughly 10 hours per 1000 here) plus kiln setting, firing and drawing, amortised over a large kiln batch. TRADE (Complaint 619): the hours are booked to potter, not the generic labourer pool, because hand-moulding and setting, firing and drawing the kiln are the ceramic craft (the whole figure moves; its size is unchanged and not re-sourced here).",
    "conf": "C",
    "requires_node": "cap_heat_0700"
   },
@@ -672,12 +672,11 @@
     "firewood_kg": 1500.0
    },
    "labour_hours": {
-    "potter": 500.0,
-    "labourer": 200.0
+    "potter": 700.0
    },
    "unit_dimension": "mass",
    "basis": "per tonne of fired earthenware ceramic ware (pottery, tile and the like), low-fired around 900-1000 C",
-   "yield_basis": "The same wet-clay-to-fired-mass logic as brick_1000 applies (roughly 1.3 kg of pit clay per kg of fired ware after drying and firing losses), fired to a similar temperature so given the same fuel intensity per kg. Shaping is where ceramic ware differs from brick: wheel-throwing, trimming and glazing a kilogram of ware is skilled work, taken here at roughly half an hour of potter's time per kg, with a labourer handling clay preparation (wedging, levigating out stones and grit) and kiln loading.",
+   "yield_basis": "The same wet-clay-to-fired-mass logic as brick_1000 applies (roughly 1.3 kg of pit clay per kg of fired ware after drying and firing losses), fired to a similar temperature so given the same fuel intensity per kg. Shaping is where ceramic ware differs from brick: wheel-throwing, trimming and glazing a kilogram of ware is skilled work, taken here at roughly half an hour of potter's time per kg, with a labourer handling clay preparation (wedging, levigating out stones and grit) and kiln loading. TRADE (Complaint 619): the hours are booked to potter, not the generic labourer pool, because the labourer share (wedging and levigating the clay, loading the kiln) is potters' work in the same workshop (the whole figure moves; its size is unchanged and not re-sourced here).",
    "conf": "C",
    "requires_node": "cap_heat_0700"
   },
