@@ -656,7 +656,9 @@ class AgentEconomy(TilePricesMixin):
             return 0.0
         economy = self.economy()
         units = self._capacity_cache.units_by_material(
-            economy, economy_api.all_producers(economy), lambda: economy_api.producers_of(economy).values(),
+            economy, economy_api.all_producers(economy),
+            # summed in id order: a loaded game holds the producers in id order, a live one in the order they entered
+            lambda: sorted(economy_api.producers_of(economy).values(), key=lambda each: each.agent_id),
             economy.setup.recipes)
         return units.get(material, 0.0) * tonnes_per_unit(material)
 
