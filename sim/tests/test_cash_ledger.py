@@ -72,7 +72,7 @@ cash_book.close_period(game)
 check("closing a period starts the next from today's cash with no entries",
       cash_book.opening(household) == closing_cash and household.cash_flow == {}, household.cash_flow)
 check("...and the closed period keeps its opening, closing and causes",
-      household.cash_periods[-1]["closing"] == closing_cash and "venture revenue" in household.cash_periods[-1]["causes"],
+      household.cash_periods[-1]["closing"] == closing_cash and household.cash_periods[-1]["causes"].get("venture revenue") == 50.0,
       household.cash_periods)
 
 household.capital += 9.0   # a write around the ledger, the fault the book exists to expose

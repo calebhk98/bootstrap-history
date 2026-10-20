@@ -1,89 +1,96 @@
 """Complaint 420: the engine keeps (cause, amount) rows for wage changes, concern closures and state
-notice, bounded to a few years, saved, and shown by `figures` and the `causes` command."""
-import os
-import tempfile
+notice, bounded to a few years. The rules are tested on a stub game built here; the wiring (a closure writes its
+row, a save keeps the rows, `figures` and `causes` show them) is test_cause_book_scenario."""
+QUICK_TOPIC = True
+
+import types
 
 from .harness import *  # noqa: F401,F403
 
 from sim.engine import cause_book
-from sim.engine.saveload import load_state, save_state
+from sim.engine.state import HouseholdState
 
 
-def ask(test_sim, **command):
-    return S._agent_dispatch(test_sim, NODES, command)
+class StubGame:
+    """The readings the cause book takes from a game; notice is capacity times a scale that rises with each reading."""
+
+    def __init__(self):
+        self.year = 100
+        self.state = types.SimpleNamespace(household=HouseholdState(capital=1000.0))
+        self.nodes = {"mill": {"rev": 40.0, "up": 15.0}}
+        self.state_capacity = 2.0
+        self.wage_index_now = 1.0
+        self.headcount_now = 100
+        self.labour = types.SimpleNamespace(
+            headcount=lambda: self.headcount_now,
+            market=types.SimpleNamespace(wage_index=lambda: self.wage_index_now,
+                                         wage_index_change=lambda before: self.wage_index_now - before))
+
+    def visible_scale(self, headcount, wealth, eminence, defiance):
+        return 1.0 + headcount / 1000.0 + wealth / 100000.0 + eminence / 10.0 + defiance
+
+    def notice(self):
+        household = self.state.household
+        return self.state_capacity * self.visible_scale(self.headcount_now, household.capital, household.eminence,
+                                                        household.defiance)
 
 
-def fresh():
-    test_sim = sim(capital=1_000_000.0)
-    test_sim.end_year = test_sim.cfg["start_year"] + test_sim.cfg["horizon_years"]
-    return test_sim
+game = StubGame()
+cause_book.close_period(game)   # sets the readings the next period is measured from
 
+# --- rows written where things happen --------------------------------------------------------
+cause_book.record_concern(game, "opening", "mill", "manual")
+check("a concern row carries what the node earns and costs a year",
+      cause_book.rows(game, "opening")[0]["revenue"] == 40.0 and cause_book.rows(game, "opening")[0]["upkeep"] == 15.0,
+      cause_book.rows(game))
+check("an open period's rows count as this year", cause_book.rows(game)[0]["year"] == 100, cause_book.rows(game))
 
-game = fresh()
-# a concern the founder's free hands can staff under the plant-derived crew (the same gate `open` applies)
-node_id = next(node for node in game.order if NODES[node]["rev"] > 0 and game.is_venture(node)
-               and game.staffing_open_refusal(node) is None)
-game.state.projects.done.add(node_id)
-opened = game.open_venture(node_id, pay=False)
-check("opening a concern leaves an opening row with its revenue and upkeep",
-      any(row["kind"] == "opening" and row["subject"] == node_id and "revenue" in row
-          for row in cause_book.rows(game)), (opened, game.state.household.cause_rows))
+index_start, notice_start = game.wage_index_now, game.notice()
+game.wage_index_now = 0.7
+cause_book.record_wage_shock(game, "a plague", index_start)
+check("a wage shock row names its cause with the signed index change",
+      abs(cause_book.causes_since(game, "wage", None)["a plague"] - (-0.3)) < 1e-12, cause_book.rows(game, "wage"))
 
-game.mothball_work(node_id)
-closed = [row for row in cause_book.rows(game) if row["kind"] == "closure" and row["subject"] == node_id]
-check("a closure by choice records its cause and what it stops earning",
-      len(closed) == 1 and closed[0]["cause"] == game.CLOSED_BY_CHOICE
-      and closed[0]["revenue"] == game.nodes[node_id]["rev"], closed)
+# --- closing a period adds the unnamed remainder, so the causes sum to the change ----------------
+game.wage_index_now = 0.8   # 0.1 more than the shock named
+game.state.household.capital += 500000.0
+game.state.household.eminence += 3.0
+game.headcount_now = 80
+game.state_capacity = 2.5
+game.year = 101
+cause_book.close_period(game)
+wage = cause_book.causes_since(game, "wage", None)
+check("wage causes sum to the index change and the unnamed part is its own cause",
+      abs(sum(wage.values()) - (game.wage_index_now - index_start)) < 1e-9
+      and abs(wage[cause_book.UNSHOCKED_WAGE_CAUSE] - 0.1) < 1e-9, wage)
+notice = cause_book.causes_since(game, "notice", None)
+check("notice causes sum to the notice change", abs(sum(notice.values()) - (game.notice() - notice_start)) < 1e-9,
+      (notice, notice_start, game.notice()))
+check("each reading that moved is named: capacity, headcount, wealth and eminence",
+      {cause_book.STATE_CAUSE, "headcount", "wealth", "eminence"} <= set(notice) and "defiance" not in notice, notice)
+check("wealth is a positive notice cause when the purse grew", notice["wealth"] > 0.0, notice)
+check("closing a period stamps the open rows with its year", all(row["year"] is not None for row in
+      game.state.household.cause_rows) and cause_book.rows(game, "opening")[0]["year"] == 101, game.state.household.cause_rows)
 
-game.close_work(node_id, game.CLOSED_FOR_STAFF)
-check("a staffing closure is a separate row with its own cause",
-      {row["cause"] for row in cause_book.rows(game) if row["kind"] == "closure"}
-      == {game.CLOSED_BY_CHOICE, game.CLOSED_FOR_STAFF})
+# --- selecting rows ---------------------------------------------------------------------------
+check("causes since a year leave out the rows stamped up to it",
+      cause_book.causes_since(game, "wage", 100).get("a plague", 0.0) < -0.29 and cause_book.causes_since(game, "wage", 101) == {},
+      (cause_book.causes_since(game, "wage", 100), cause_book.causes_since(game, "wage", 101)))
+game.year = 103
+cause_book.record(game, "closure", "mill", "by choice", 1.0)
+check("rows of a kind in the latest years only", [row["kind"] for row in cause_book.rows(game, "closure", years=1)] == ["closure"]
+      and cause_book.rows(game, "opening", years=1) == [], cause_book.rows(game))
 
-pressure = fresh()
-cause_book.close_period(pressure)
-index_start = pressure.wage_index
-notice_start = pressure.state_notice()
-pressure._apply_population_mortality_shock(0.3)
-cause_book.record_wage_shock(pressure, "a plague", index_start)
-pressure.state.household.capital += 5_000_000.0
-pressure.state.household.eminence += 3.0
-cause_book.close_period(pressure)
-wage = cause_book.causes_since(pressure, "wage", None)
-check("a mortality shock is named in the wage causes", wage.get("a plague", 0) > 0, wage)
-check("wage causes sum to the index change",
-      abs(sum(wage.values()) - (pressure.wage_index - index_start)) < 1e-9, (wage, index_start))
-notice = cause_book.causes_since(pressure, "notice", None)
-check("notice causes sum to the notice change",
-      abs(sum(notice.values()) - (pressure.state_notice() - notice_start)) < 1e-9, (notice, notice_start))
-check("wealth is named as a notice cause", notice.get("wealth", 0) > 0, notice)
-
-with tempfile.TemporaryDirectory() as folder:
-    path = os.path.join(folder, "save.json")
-    save_state(pressure, path)
-    revived = sim(civ="rome_100ad")
-    load_state(revived, path)
-check("the rows and marks survive a save and load",
-      revived.state.household.cause_rows == pressure.state.household.cause_rows
-      and revived.state.household.cause_mark == pressure.state.household.cause_mark
-      and bool(revived.state.household.cause_rows))
-
-wages_figure = ask(pressure, cmd="figures", id="wages")
-# not text: the stored cause label echoes what the test recorded
-check("the wages figure lists its recorded causes",
-      wages_figure.get("ok") and any(cause["cause"] == "a plague" for cause in wages_figure["causes"]), wages_figure)
-notice_figure = ask(pressure, cmd="figures", id="state_notice")
-check("the state notice figure lists its recorded causes",
-      notice_figure.get("ok") and any(cause["cause"] == "wealth" for cause in notice_figure["causes"]), notice_figure)
-
+# --- bounded ----------------------------------------------------------------------------------
 for _ in range(cause_book.YEARS_KEPT + 3):
-    pressure.state.scenario.year += 1
-    cause_book.record(pressure, "closure", "x", "manual", 1.0)
-    cause_book.close_period(pressure)
+    game.year += 1
+    cause_book.record(game, "closure", "x", "manual", 1.0)
+    cause_book.close_period(game)
 check("rows older than the window are dropped",
-      min(row["year"] for row in pressure.state.household.cause_rows)
-      > pressure.state.scenario.year - cause_book.YEARS_KEPT - 1, len(pressure.state.household.cause_rows))
+      min(row["year"] for row in game.state.household.cause_rows) > game.year - cause_book.YEARS_KEPT,
+      sorted({row["year"] for row in game.state.household.cause_rows}))
 
-reply = ask(game, cmd="causes")
-check("the causes command lists closures with their reason",
-      reply.get("ok") and any(row["kind"] == "closure" for row in reply["rows"]), reply)
+for _ in range(cause_book.ROWS_KEPT + 50):
+    cause_book.record(game, "closure", "y", "manual", 1.0)
+check("a run that never closes a period keeps only a capped number of rows",
+      len(game.state.household.cause_rows) == cause_book.ROWS_KEPT, len(game.state.household.cause_rows))

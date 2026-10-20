@@ -1,43 +1,23 @@
-"""Interest and tax rates are each civilisation's own starting state."""
-import contextlib
+"""Interest and tax rates are each civilisation's own starting state: each civ declares them, and the rules that read them
+(the market rate before the economy opens, the arrears rate, the tax in the living cost) are called on a stub game."""
+QUICK_TOPIC = True
+
+
 import copy
 import json
 import os
-import random
+import types
 import tempfile
 import unittest
 from unittest import mock
 
 from sim.engine import data
-from sim.engine.core import Sim
+from sim.engine.economy_capital_market import CapitalMarketMixin
+from sim.engine.economy_credit import CreditMixin
 
 BASE_CIVS = ["rome_100ad", "han_china_100ad", "norse_900ad", "mexica_1500", "england_1300"]
 MOD_CIV = "sample_egypt_100bc_e7k2:egypt"
 FIELDS = ("starting_interest_rate", "starting_tax_share")
-
-
-_GAMES = {}
-
-
-def game(name):
-    """One shared game per civilisation, built once with the economy unopened (the engine's own base rate, as it
-    stands before the economy opens). A test varies a rate on the game's own civ for the length of a block: the
-    engine reads the civ's field when it answers, so no second game (and no second price solve) is needed."""
-    if name not in _GAMES:
-        from sim.tests import harness
-        _GAMES[name] = harness.build_unopened(lambda: Sim(
-            harness.NODES, harness.ORDER, random.Random(1), events=False, manual=True, civ=data.load_civ(name)))
-    return _GAMES[name]
-
-
-@contextlib.contextmanager
-def civ_field(sim, field, value):
-    held = sim.civ[field]
-    sim.civ[field] = value
-    try:
-        yield
-    finally:
-        sim.civ[field] = held
 
 
 class CivRateFieldTests(unittest.TestCase):
@@ -69,37 +49,44 @@ class CivRateFieldTests(unittest.TestCase):
                 self.assertIn(field, str(caught.exception))
 
 
+def stub_game(civ_fields, **overrides):
+    """What the rate rules read: the civ's fields, no agent market yet, a household with no standing, no debt."""
+    household = types.SimpleNamespace(reputation=0.0, capital=0.0)
+    game = types.SimpleNamespace(
+        civ=dict(civ_fields), economy=types.SimpleNamespace(agent_rate=lambda: None), price_index=1.0,
+        state=types.SimpleNamespace(household=household), effect_values=lambda _effect: [],
+        revenue=lambda: 1000.0, upkeep=lambda: 0.0, labour=types.SimpleNamespace(wage_bill=lambda: 0.0),
+        household_bill_per_person=lambda: 0.0, dependants_cost=lambda: 0.0,
+        DEBT_RATE_REPUTATION_DISCOUNT_CAP=CreditMixin.DEBT_RATE_REPUTATION_DISCOUNT_CAP,
+        DEBT_RATE_REPUTATION_SCALE=CreditMixin.DEBT_RATE_REPUTATION_SCALE,
+        LIVING_COST_STATUS_PER_CAPITAL=CreditMixin.LIVING_COST_STATUS_PER_CAPITAL,
+        LIVING_COST_APPEARANCES_SHARE_OF_ROOM=CreditMixin.LIVING_COST_APPEARANCES_SHARE_OF_ROOM)
+    game.market_rate = lambda: CapitalMarketMixin.market_rate(game)
+    for name, value in overrides.items():
+        setattr(game, name, value)
+    return game
+
+
 class EngineUsesCivRatesTests(unittest.TestCase):
-    def test_each_civ_base_rate_shifts_its_interest_one_for_one(self):
+    def test_before_the_economy_opens_the_market_rate_is_the_civs_starting_rate(self):
         for name in BASE_CIVS + [MOD_CIV]:
-            sim = game(name)
-            base = sim.civ["starting_interest_rate"]
-            before = sim.debt_interest_rate()
-            with civ_field(sim, "starting_interest_rate", base + 0.1):
-                self.assertAlmostEqual(sim.debt_interest_rate() - before, 0.1, msg=name)
+            civ = data.load_civ(name)
+            self.assertEqual(CapitalMarketMixin.market_rate(stub_game(civ)), civ["starting_interest_rate"], name)
+
+    def test_a_civs_base_rate_shifts_the_arrears_rate_one_for_one(self):
+        before = CreditMixin.debt_interest_rate(stub_game({"starting_interest_rate": 0.05}))
+        after = CreditMixin.debt_interest_rate(stub_game({"starting_interest_rate": 0.15}))
+        self.assertAlmostEqual(after - before, 0.1)
+
+    def test_a_dearer_starting_rate_makes_arrears_dearer(self):
+        rates = [CreditMixin.debt_interest_rate(stub_game({"starting_interest_rate": value})) for value in (0.05, 0.40)]
+        self.assertLess(rates[0], rates[1])
 
     def test_tax_bite_follows_the_civs_tax_share(self):
-        sim = game("rome_100ad")
-        costs = {}
-        for share in (0.0, 0.3):
-            with civ_field(sim, "starting_tax_share", share):
-                costs[share] = sim.living_cost(_rev=1000.0, _upkeep=0.0)
-        self.assertGreater(costs[0.3], costs[0.0])
-
-    def test_interest_follows_civ_value(self):
-        sim = game("rome_100ad")
-        rates = []
-        for value in (0.05, 0.40):
-            with civ_field(sim, "starting_interest_rate", value):
-                reputation, operating = sim.state.household.reputation, set(sim.operating)
-                sim.state.household.reputation = 0.0
-                sim.operating.clear()
-                try:
-                    rates.append(sim.debt_interest_rate())
-                finally:
-                    sim.state.household.reputation = reputation
-                    sim.operating.update(operating)
-        self.assertLess(rates[0], rates[1])
+        costs = {share: CreditMixin.living_cost(stub_game({"starting_tax_share": share}))
+                 for share in (0.0, 0.3)}
+        self.assertEqual(costs[0.0], 0.0)
+        self.assertAlmostEqual(costs[0.3], 0.3 * 1000.0)
 
 
 if __name__ == "__main__":
