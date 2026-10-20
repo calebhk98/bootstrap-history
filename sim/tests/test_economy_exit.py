@@ -153,8 +153,8 @@ class ExitBooksTests(unittest.TestCase):
 class ScenarioTests(unittest.TestCase):
     def test_a_mine_whose_labour_costs_more_than_its_ore_is_worth_leaves_and_money_is_conserved(self):
         # A lean seam: a run takes so many miner-hours that no wage the labour market can clear at
-        # covers them from the ore it yields.
-        lean_seam = dict(recipes(), **{MINE: Recipe(MINE, {ORE: 1000.0}, {}, {MINER: 40.0 * 40.0})})
+        # covers them from the ore it yields (a trade needing no training quotes at most the unskilled wage).
+        lean_seam = dict(recipes(), **{MINE: Recipe(MINE, {ORE: 1000.0}, {}, {MINER: 40.0 * 80.0})})
         setup = small_setup(recipes=lean_seam)
         economy = Economy(setup)
         mines_by_year = []

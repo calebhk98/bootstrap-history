@@ -127,11 +127,11 @@ growth = 10000.0 * rates["natural_increase"]
 check("an ample pasture and purse give the stated rule",
       abs(game.stock_held(HERD) - (10000.0 + growth - 10000.0 * rates["annual_loss"])) < 1e-6, game.stock_held(HERD))
 entry = living_stock_growth.stock_entry(HERD)
-hours = growth / entry["outputs"][HERD] * entry["labour_hours"]["labourer"]
+hours = growth / entry["outputs"][HERD] * sum(entry["labour_hours"].values())   # whichever trades raise the herd
 check("the growth is paid for in labour at the going wage",
       game.purse.paid and abs(game.purse.paid[0][1] - hours * WAGE) < 1e-6, game.purse.paid)
 check("...and the hours press on the labour market",
-      abs(game.labour.market.pressed.get("labourer", 0.0) - hours) < 1e-6, game.labour.market.pressed)
+      abs(sum(game.labour.market.pressed.values()) - hours) < 1e-6, game.labour.market.pressed)
 
 # ---- pasture limits the increase ------------------------------------------------------------------
 _shipped_capacity = living_stock_growth.pasture_capacity_kg

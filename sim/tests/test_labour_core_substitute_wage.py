@@ -77,6 +77,20 @@ class SubstituteWageTests(unittest.TestCase):
         result = settle(held, bids)
         self.assertGreaterEqual(result.wage, held.wages["vale"]["digger"] - 1e-9)
 
+    def test_a_trade_needing_no_training_is_capped_at_the_unskilled_wage_when_another_is_the_fallback(self):
+        specs = trades.trade_specs({"digger": {"family": "earth", "training_years": 0, "fallback": True},
+                                    "reaper": {"family": "earth", "training_years": 0}})
+        held = MarketState(workers={"vale": {"digger": [50.0, 0.0, 0.0, 0.0, 0.0],
+                                             "reaper": [1.0, 0.0, 0.0, 0.0, 0.0]}})
+        held.wages = {"vale": {"digger": 1.0, "reaper": 1.0}}
+        bids = [Bid("farm", "reaper", "vale", 5000.0, 50.0), Bid("pit", "digger", "vale", 99999.0, 1.0)]
+        for _year in range(40):
+            cleared = clearing.clear_all(held, YearInputs(
+                trades=specs, bids=bids, subsistence_per_worker_year={"vale": 100.0},
+                hours_per_worker_year=HOURS, discount_rate=DISCOUNT, career_years=CAREER))
+        reaper = [each for each in cleared if each.trade == "reaper"][0]
+        self.assertLessEqual(reaper.wage, held.wages["vale"]["digger"] + 1e-9)
+
 
 if __name__ == "__main__":
     unittest.main()
