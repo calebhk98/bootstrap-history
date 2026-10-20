@@ -15,6 +15,7 @@ from .households_cohort import VALUE_OF_LIFE_YEARS_OF_INCOME
 from .households_orders import HOUSEHOLD_TIME_PREFERENCE
 from .labour_ask_floor import mean_floor_per_hour
 from .labour_bids import sloped_bids
+from . import workforce_version
 from .labour_state import core_trades, give_back, hold_back, mirror_wages, people_by_trade
 from .market_memory import market_key
 from .setup import labour_area
@@ -119,6 +120,7 @@ def clear_labour(setup, record, bids: Sequence[LabourBid], offers: Sequence[Labo
                                  bids=core_bids)
     seen, held = hold_back(record.workforce, held_share or {})
     record.workforce, report = run_labour_year(seen, inputs, owned=True)
+    workforce_version.bump(record.workforce)   # the core's year wrote it
     give_back(record.workforce, held)
     by_market: Dict[Tuple[str, str], List[LabourOffer]] = {}
     for offer in offers:

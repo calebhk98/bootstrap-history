@@ -8,7 +8,7 @@ WALL = "two-way"  # nothing here reaches sim/engine/; the engine hands it what i
 
 import math
 
-from . import carriage_wear, country_figures, diagnostics, late_recipes, opening_metal, households, labour_state, land_rents, market_curves, prices_at as tile_prices, taxes, tile_costs, workforce_settle
+from . import carriage_wear, country_figures, diagnostics, late_recipes, opening_metal, households, labour_state, land_rents, market_curves, prices_at as tile_prices, taxes, tile_costs, workforce_settle, workforce_version
 from .banks import DEPOSIT_BANKING
 from .currency import currency_from_coin_standard
 from .economy import Economy
@@ -89,10 +89,12 @@ def opening_prices_in_hours(economy):
 def people_by_trade(economy, country=None):
     """Working people by trade across the labour areas of `country` (the home country when the economy holds
     several and none is named; every area when it holds one), as the labour core's state holds them."""
-    scope = country_figures.home_when_shared(economy, country)
-    if scope is None:
-        return labour_state.people_by_trade_everywhere(economy.record.workforce)
-    return country_figures.people_by_trade(economy, scope)
+    def sum_people():
+        scope = country_figures.home_when_shared(economy, country)
+        if scope is None:
+            return labour_state.people_by_trade_everywhere(economy.record.workforce)
+        return country_figures.people_by_trade(economy, scope)
+    return workforce_version.cached(economy.record.workforce, ("people_by_trade", country), sum_people)
 
 
 def wages_by_trade(economy):

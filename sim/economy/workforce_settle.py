@@ -10,7 +10,7 @@ from typing import Dict, Tuple
 
 from sim.labour.api import fallback_trade
 
-from . import producers
+from . import producers, workforce_version
 from .labour_state import core_trades, plot_trade
 from .market_memory import market_key
 from .setup import labour_area
@@ -49,6 +49,7 @@ def trim_to_expected_hours(setup, record, view) -> None:
 def trim_people(state, wanted: Dict[Tuple[str, str], float], fallback: str, working_hours_per_year: float) -> None:
     """Cut workers, then trainees (who would graduate into the trade and refill it), until each trade holds
     no more people than its wanted hours need."""
+    workforce_version.bump(state)
     for area, by_trade in state.workers.items():
         for trade, bands in by_trade.items():
             people = sum(bands)
@@ -76,6 +77,7 @@ def send_idle_to_plots(state, wanted: Dict[Tuple[str, str], float], fallback: st
                        working_hours_per_year: float) -> None:
     """The fallback trade keeps the people its wanted hours need; the rest, whom no employer wants, work their own
     plots as `idle_trade`."""
+    workforce_version.bump(state)
     if not idle_trade or idle_trade == fallback:
         return
     for area, by_trade in state.workers.items():
