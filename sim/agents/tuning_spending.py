@@ -46,16 +46,6 @@ COAST_KM_PER_SHIP = declare(
 	unit="km of coast per ship", source=None, confidence="D",
 	why="Coast one warship keeps clear of pirates and raiders. Stands in for a "
 		"model of sea control.")
-CREW_PER_SHIP = declare(
-	"CREW_PER_SHIP", 60.0, kind="temporary_heuristic",
-	unit="sailors per ship", source=None, confidence="D",
-	why="Sailors and rowers a warship needs; with the carpenters below, the people "
-		"a fleet keeps.")
-CARPENTERS_PER_SHIP = declare(
-	"CARPENTERS_PER_SHIP", 4.0, kind="temporary_heuristic",
-	unit="carpenters per ship", source=None, confidence="D",
-	why="Shipwrights who keep a hull sound and refit it; stands in for hull "
-		"timber and decay.")
 MAX_STATE_SHARE_OF_TRADE = declare(
 	"MAX_STATE_SHARE_OF_TRADE", 0.25, kind="temporary_heuristic",
 	unit="share of a skilled trade's people in the country", source=None, confidence="D",

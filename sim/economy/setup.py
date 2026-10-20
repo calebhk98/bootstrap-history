@@ -156,5 +156,6 @@ def goods_specs(goods: Mapping[GoodId, str], spoilage_rates: Mapping[GoodId, Map
         specs[good] = GoodSpec(good_id=good, unit_mass_kg=mass,
                                spoilage_per_year=1.0 - math.exp(-decay_rate),
                                service_life_years=float(service_lives.get(good, 0.0)),
-                               category=category)
+                               category=category,
+                               capital_asset=bool(production.get(good, {}).get("capital_asset", False)))
     return specs

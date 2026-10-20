@@ -90,7 +90,10 @@
       "family": "labour",
       "note": "Takes fish and shellfish from the sea, lakes and rivers with boat, net, line and weir. The food a society takes from the water is bounded by the hours its fishers work (sim/labour/food_gathering.py).",
       "training_years": 2,
-      "gathers_food_sources": ["marine_fishing", "freshwater_fishing"],
+      "gathers_food_sources": [
+        "marine_fishing",
+        "freshwater_fishing"
+      ],
       "food_kcal_per_hour": 1000,
       "food_kcal_per_hour_source": "Kelly 2013, The Lifeways of Hunter-Gatherers, Table 3-4: forager return rates for fish and shellfish run from a few hundred to over ten thousand kcal per hour; the low end is taken for shore and day-boat work. No source for per-boat catch was found.",
       "food_kcal_per_hour_confidence": "D",
@@ -123,7 +126,9 @@
       "family": "labour",
       "note": "Hunts game with bow, spear, snare and dogs. The food a society takes from wild animals is bounded by the hours its hunters work (sim/labour/food_gathering.py).",
       "training_years": 3,
-      "gathers_food_sources": ["hunting"],
+      "gathers_food_sources": [
+        "hunting"
+      ],
       "food_kcal_per_hour": 1115,
       "food_kcal_per_hour_source": "Kelly 2013, The Lifeways of Hunter-Gatherers, ch. 3: the Ache average from hunting alone is 1,115 kcal per hour including search time.",
       "food_kcal_per_hour_confidence": "C",
@@ -262,6 +267,21 @@
       "tool_basket": [
         "paper"
       ],
+      "fatality_risk_per_year": 0.0,
+      "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
+      "fatality_confidence": "D"
+    },
+    "shipwright": {
+      "family": "craft",
+      "training_years": 4,
+      "training_source": "Worshipful Company of Shipwrights, Apprenticeship Scheme leaflet, pp. 1-2 (https://www.shipwrights.co.uk/wp-content/uploads/2015/04/SAScheme-2.pdf), opened: a three to four year course; four is used as a modern craft-training proxy, not an attested ancient apprenticeship length.",
+      "training_confidence": "C",
+      "taught_from": "carpenter",
+      "tool_basket": [
+        "timber",
+        "iron"
+      ],
+      "note": "Builds and repairs wooden hulls, including shell-first mortise-and-tenon construction.",
       "fatality_risk_per_year": 0.0,
       "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
       "fatality_confidence": "D"

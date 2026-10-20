@@ -50,6 +50,7 @@ class GoodSpec:
     spoilage_per_year: float         # share of a held stock lost in a year
     service_life_years: float        # 0: used up within the year; above 0: a durable that serves
     category: str                    # a data label (food, fuel, ...); code never branches on a good id
+    capital_asset: bool = False       # a complete asset actor buyers retain, rather than material they use up
 
     @property
     def portable(self) -> bool:

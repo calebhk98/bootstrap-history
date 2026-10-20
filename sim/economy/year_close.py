@@ -96,7 +96,7 @@ def money_taxes(setup, record, view, ledger: YearLedger) -> None:
     state_budget.close_year(setup, record, ledger, received)
 
 
-def wear_and_spoilage(setup, record) -> None:
+def wear_and_spoilage(setup, record, durable_users=()) -> None:
     book = record.book
     holdings: Dict[Tuple[str, str, str], float] = {}
     for agent in book.agents():
@@ -107,7 +107,7 @@ def wear_and_spoilage(setup, record) -> None:
                 if quantity > 0.0:
                     holdings[(agent, good, tile)] = quantity
     book.move_many(inventory.spoilage_moves(holdings, setup.specs))
-    book.move_many(inventory.wear_moves(holdings, setup.specs, set(record.cohorts)))
+    book.move_many(inventory.wear_moves(holdings, setup.specs, set(record.cohorts) | set(durable_users)))
     cash = {agent: book.balance(agent, record.currency.currency_id) for agent in book.agents() if not is_edge(agent)}
     book.transfer_many(metal_stock.yearly_wear(cash, record.currency))
 
