@@ -37,6 +37,7 @@ from .tile_costs import CarriageTable
 from .types import AgentId, AreaId, Bid, CurrencyId, Fill, GoodId, GoodSpec, Offer, TileId, Transfer
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
+PURSE_ROUNDING_MARGIN = 1e-12             # share of the purse kept back so float sums of fees never overdraw it
 EDGE_CARRIAGE = "edge:carriage"          # carriage with no named carrier; the caller creates it
 
 MERCHANT_MARGIN_SHARE = declare(
@@ -385,6 +386,7 @@ def dispatch(merchant: Merchant, fills: Sequence[Fill], carriage: CarriageTable,
         cut = {key: max(0.0, crew.hours_hired.get(key, 0.0)) / total for key, total in needed.items()
                if total > crew.hours_hired.get(key, 0.0)}
     moves, transfers, stranded = [], [], []
+    purse = max(0.0, cash) * (1.0 - PURSE_ROUNDING_MARGIN)
     for good, tile, route, quantity, affordable, per_unit, crew_money, crew_rows in shipments:
         carried = affordable * min([cut[key] for key, _hours in crew_rows if key in cut], default=1.0)
         if carried < quantity:
@@ -396,7 +398,8 @@ def dispatch(merchant: Merchant, fills: Sequence[Fill], carriage: CarriageTable,
             merchant.in_transit.append(merchants_transit.Shipment(good, carried, route[0], years - 1))
         moves.append(DeliveredMove(merchant.agent_id, merchants_transit.EDGE_TRANSIT if years > 1 else merchant.agent_id,
                                    good, tile, carried, "carried to market", route[0]))
-        fee = carried * (per_unit - crew_money)
+        fee = min(carried * (per_unit - crew_money), purse)      # rounding must not overdraw the purse
+        purse -= fee
         if fee > 0.0:
             transfers.append(Transfer(merchant.agent_id, carrier_of(tile) or EDGE_CARRIAGE, currency, fee,
                                       "carriage of %s" % good))

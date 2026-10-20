@@ -35,6 +35,7 @@ def dispatch_merchants(setup, record, carriage, ledger: YearLedger) -> None:
             carriers[cohort.tile] = cohort.agent_id
     carried: dict = {}
     carrier_goods = carriage_wear.carrier_goods(setup)
+    prices = carriage_wear.last_prices(setup, record) if carrier_goods else {}
     wear = carriage_wear.Wear(setup, carriage, record.area_imbalance) if carriage_wear.wears(setup) else None
     for merchant in sorted(record.merchants.values(), key=lambda each: each.agent_id):
         record.book.move_many(merchants_transit.advance(merchant, setup.specs))    # hauls on the road for years reach the tile or spoil
@@ -58,7 +59,7 @@ def dispatch_merchants(setup, record, carriage, ledger: YearLedger) -> None:
                                   carrier_of=carriers.get, crew=hire,
                                   carrier_money=None if wear is None else (
                                       lambda source, destination, each=merchant: carriage_wear.money_per_tonne(
-                                          setup, record, wear, source, destination)))
+                                          prices, wear, source, destination)))
         record.book.post(done.transfers, done.moves)
         ledger.note_postings(done.transfers, "wages")
         if crew is not None:

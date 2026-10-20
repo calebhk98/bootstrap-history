@@ -168,14 +168,18 @@ def bids(setup, record, view, area_map, merchants_cash: Optional[Dict[str, float
     return found, budget
 
 
-def last_price(setup, record, good: GoodId) -> float:
-    """The good's price last year, averaged over the areas that cleared it, else the opening's."""
-    prefix = good + MARKET_KEY_SEPARATOR
-    seen = [price for key, price in sorted(record.memory.prices.items()) if key.startswith(prefix) and price > 0.0]
-    return math.fsum(seen) / len(seen) if seen else setup.opening_prices.get(good, 0.0)
+def last_prices(setup, record) -> Dict[GoodId, float]:
+    """Each carrier good's price last year, averaged over the areas that cleared it, else the opening's."""
+    wanted = set(carrier_goods(setup))
+    seen: Dict[GoodId, List[float]] = {}
+    for key, price in sorted(record.memory.prices.items()):
+        good = key.split(MARKET_KEY_SEPARATOR, 1)[0]
+        if good in wanted and price > 0.0:
+            seen.setdefault(good, []).append(price)
+    return {good: math.fsum(seen[good]) / len(seen[good]) if good in seen else setup.opening_prices.get(good, 0.0)
+            for good in wanted}
 
 
-def money_per_tonne(setup, record, wear: Wear, source: TileId, destination: TileId) -> float:
-    """What the carriers a tonne wears on this haul cost at last year's prices."""
-    return math.fsum(units * last_price(setup, record, good)
-                     for good, units in wear.units_per_tonne(source, destination).items())
+def money_per_tonne(prices: Mapping[GoodId, float], wear: Wear, source: TileId, destination: TileId) -> float:
+    """What the carriers a tonne wears on this haul cost at `prices` (`last_prices`)."""
+    return math.fsum(units * prices.get(good, 0.0) for good, units in wear.units_per_tonne(source, destination).items())

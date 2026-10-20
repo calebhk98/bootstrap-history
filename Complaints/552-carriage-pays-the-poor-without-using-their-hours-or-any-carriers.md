@@ -59,6 +59,20 @@ demand for carters, sailors and porters (530).
   when that share is lowered.
 - Tests: `sim/tests/test_economy_carriage_hours.py`, `sim/tests/test_carriage_hours_by_route.py`.
 
+## Done: carriers are durable goods (629, closed)
+
+- Cart, pack saddle and river barge are goods with recipes (`data/production/99_carriers.json`); merchant ship, ox and
+  mule carry a `carrier_use` too, and all have sourced service lives in `data/world/service_lives.json`.
+- `sim/economy/carriage_wear.py`: a tonne-km on a mode wears each carrier of its team by the team's count over
+  (service life x days a unit works a year x tonne-km the team moves a day). A merchant keeps carriers in its own
+  account, wears them by the year's shipments, and bids next year for as many units as were worn. The fee it pays
+  the households of the source tile is less what those carriers cost at last year's price.
+- Exposed for 630: `Merchant.carrier_wear` (units by good), `Merchant.carrier_team_days` (by mode), and geography's
+  `carriage_rates` entries carry `carriers`, `tonne_km_per_team_day`, `team_payload_tonnes`.
+- Not done (631): wear does not limit dispatch, merchants have no opening fleet, and on a real opening only carts and
+  pack animals are supplied in the first years (no shipwright or saddler trade exists to answer the bids).
+- Tests: `sim/tests/test_carriage_wear.py`.
+
 ## Sized (no change made)
 
 - **Travel time is covered.** `sim/economy/merchants_transit.py` holds a haul for the whole years its days span, books
@@ -78,7 +92,7 @@ Children, in order of work:
 
 - 627: Carriage hours count sea and river hauls at the land mode's hours, skip port handling, and use one national wage
 - 628: Storage at stages of a haul is not charged
-- 629: Carts, pack saddles and vessels are not goods and have no service lives
+- 629: Carts, pack saddles and vessels are not goods and have no service lives (closed)
 - 630: Geography's `Rate` does not expose carrier-days, animals per carrier or vehicle wear
 - 631: Merchants have no fleet: dispatch is limited by cash, not by carriers
 - 632: The non-labour part of a carriage fee (feed, carts, ships, animals, losses) goes to the poorest households of the source tile
