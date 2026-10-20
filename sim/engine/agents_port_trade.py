@@ -101,6 +101,19 @@ class TradeView:
 			return 0.0
 		return float(trade_duty.duty_per_tonne(self._sim, source, destination, self.price_at(material, source) or 0.0)) * tonnes
 
+	def pay_route_dues(self, payer: Any, source: str, destination: str, material: str, tonnes: float) -> float:
+		"""Pays each partner route's dues to the holders of the tiles they are levied at, no more than the
+		route's freight; returns the money paid."""
+		if source == destination:
+			return 0.0
+		sim, home, paid = self._sim, self._home_place(), 0.0  # type: ignore[attr-defined]
+		for partner in (source, destination):
+			if partner != home:
+				facts = sim._foreign_economy_facts(partner)
+				if facts["route"] is not None:
+					paid += sim.pay_route_dues(payer, facts["route"], tonnes, limit=float(facts["freight_per_tonne"] or 0.0) * tonnes)
+		return paid
+
 	def market_depth(self, material: str, place: str) -> float:
 		"""Tonnes a year buyers at a place take; at a partner no more than its market book's demand, the
 		scale its price moves on when traders sell into it."""

@@ -29,6 +29,9 @@ class TradeWorld(FakeWorld):
 	def freight_between(self, source, destination, material, tonnes):
 		return self.freight_per_tonne * tonnes
 
+	def pay_route_dues(self, payer, source, destination, material, tonnes):
+		return 0.0
+
 	def market_depth(self, material, place):
 		return self.depth.get(place, {}).get(material, 0.0)
 
