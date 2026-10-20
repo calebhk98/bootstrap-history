@@ -7,7 +7,7 @@ from sim.constants import declare
 ARREARS_YEARS_BEFORE_DEFAULT = declare(
 	"ARREARS_YEARS_BEFORE_DEFAULT", 3, kind="temporary_heuristic",
 	unit="consecutive years", source=None, confidence="D",
-	retire="Complaints/588: a lender's assessment of the borrower's assets and income replaces the fixed wait",
+	retire="Complaints/106: a lender's assessment of the borrower's assets and income replaces the fixed wait",
 	why="Years a borrower may go without paying its interest in full before its lenders write the claim off. "
 		"Stands in for lenders weighing what the borrower's assets and income can still carry.")
 
@@ -26,13 +26,13 @@ def in_default(years_in_arrears: int) -> bool:
 DEFAULT_RECORD_PREMIUM = declare(
 	"DEFAULT_RECORD_PREMIUM", 0.1, kind="temporary_heuristic",
 	unit="rate added when the remembered loss is all the borrower owes and has lost", source=None, confidence="D",
-	retire="Complaints/588: a lender's assessment of the borrower's record replaces the fixed premium",
+	retire="Complaints/106: a lender's assessment of the borrower's record replaces the fixed premium",
 	why="What a borrower that defaulted pays over the rate of one that did not. Stands in for lenders pricing a "
 		"borrower's record.")
 DEFAULT_RECORD_FADE_PER_YEAR = declare(
 	"DEFAULT_RECORD_FADE_PER_YEAR", 0.1, kind="temporary_heuristic",
 	unit="share of the remembered loss forgotten each year", source=None, confidence="D",
-	retire="Complaints/588: a lender's assessment of the borrower's record replaces the fixed premium",
+	retire="Complaints/106: a lender's assessment of the borrower's record replaces the fixed premium",
 	why="How fast lenders forgive a default. Stands in for lenders' memory of a borrower.")
 
 
