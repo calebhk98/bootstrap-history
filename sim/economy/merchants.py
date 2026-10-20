@@ -398,7 +398,7 @@ def dispatch(merchant: Merchant, fills: Sequence[Fill], carriage: CarriageTable,
             merchant.in_transit.append(merchants_transit.Shipment(good, carried, route[0], years - 1))
         moves.append(DeliveredMove(merchant.agent_id, merchants_transit.EDGE_TRANSIT if years > 1 else merchant.agent_id,
                                    good, tile, carried, "carried to market", route[0]))
-        fee = min(carried * (per_unit - crew_money), purse)      # rounding must not overdraw the purse
+        fee = max(0.0, min(carried * (per_unit - crew_money), purse))      # never above the purse, and a rounding sliver below zero is not cash paid back
         purse -= fee
         if fee > 0.0:
             transfers.append(Transfer(merchant.agent_id, carrier_of(tile) or EDGE_CARRIAGE, currency, fee,
