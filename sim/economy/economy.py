@@ -137,7 +137,7 @@ class Economy:
         setup, record = self.setup, self.record
         self.__dict__.pop("_port_shares", None)
         self.follow_flows()
-        self.carriage.set_scale(carriage_hours.wage_scale(setup, record))   # the carriers' labour at the year's wage
+        self.carriage.set_scale(carriage_hours.wage_scale(setup, record, self.carriage))   # the carriers' labour at the year's wage
         record.book.start_year()
         stocks_at_start = stocks_held(record.book)
         ledger = YearLedger(import_accounts=frozenset(inputs.import_accounts), export_accounts=frozenset(inputs.export_accounts))

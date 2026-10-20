@@ -58,7 +58,8 @@ class EconomySetup:
     unskilled_trade: TradeId = "labourer"
     import_duty_share: Dict[GoodId, float] = field(default_factory=dict)   # per good, the share of its landed price that is the state's tariff; the port sets it as the year's imports are offered
     carriage_rates_balanced: Dict[str, float] = field(default_factory=dict)   # likewise with the opposite flow filling every return; none: same
-    carriage_crew: Dict[str, Tuple[str, float]] = field(default_factory=dict)   # land mode id -> (crew trade, crew hours per tonne-km), geography's; none: carriage hires no hours
+    carriage_crew: Dict[str, Tuple[str, float]] = field(default_factory=dict)   # mode id (land, river, sea) -> (crew trade, crew hours per tonne-km), geography's; none: carriage hires no hours
+    carriage_handling: Dict[str, float] = field(default_factory=dict)   # mode id -> hours of handling a tonne each time a haul changes to the mode, for the modes whose handling the rates price (unskilled trade)
     carriage_wage: float = 0.0     # the wage an hour (unskilled trade) the land carriage rates were priced at; 0: they follow no wage
     hunger_need: str = "food"           # the basket need whose unmet floor counts as hunger
     yield_factor_by_recipe_tile: Dict[str, float] = field(default_factory=dict)

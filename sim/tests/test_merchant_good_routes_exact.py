@@ -50,7 +50,7 @@ def plain_routes(good, spec, areas, prices, carriage, interest_rate, source_ids=
             if net > 0.0:
                 years = merchants.merchants_transit.years_between(carriage, source.anchor_tile, destination.anchor_tile)
                 if years > 1:
-                    net -= price_here * interest * (years - 1) + price_there * (
+                    net -= (price_here * interest + merchants.merchants_transit.storage_per_unit(spec, 2)) * (years - 1) + price_there * (
                         merchants.merchants_transit.lost_share(spec.spoilage_per_year, years) - spoilage)
                 if net > best_net:
                     best, best_net, best_years = (destination, per_tonne), net, years

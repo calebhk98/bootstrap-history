@@ -1,6 +1,6 @@
 # Carriage hours count sea and river hauls at the land mode's hours, skip port handling, and use one national wage
 
-**Status:** open
+**Status:** closed - a haul's crew hours follow the modes it travels (`carriage_hours.Crew`, sea and river included), handled ports add handling hours, and hours are bid and paid at the area the goods leave; tested in `test_carriage_hours_by_route.py`. The hours are still bid in the unskilled trade until 556 (`CARRIAGE_CREW_UNSKILLED_SHARE`); each mode's own trade is used when that share is lowered.
 
 Part of Complaint 552 (Carriage pays the poor without using their hours or any carriers).
 

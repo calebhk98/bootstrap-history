@@ -26,7 +26,8 @@ def dispatch_merchants(setup, record, carriage, ledger: YearLedger) -> None:
     is not limited. The part of a fee that is not crew pay goes, as wages, to the poorest households of the
     tile the goods leave: a shortcut until carts, ships and animals are capital (Complaints/552)."""
     money = setup.currency_id
-    crew = carriage_hours.crew_for(setup, record)
+    crew = carriage_hours.crew_for(setup, record, carriage)
+    index = carriage_hours.hired_index(ledger) if crew is not None else {}
     carriers = {}
     for cohort in record.cohorts.values():
         held = carriers.get(cohort.tile)
@@ -40,12 +41,13 @@ def dispatch_merchants(setup, record, carriage, ledger: YearLedger) -> None:
         if not fills:
             if crew is not None:
                 merchant.carriage_hours_wanted = {}     # nothing shipped: no carriers to bid for next year
+                merchant.carriage_money_wanted = {}
             continue
         hire = None
         if crew is not None:
-            engaged = (carriage_hours.hired(ledger, merchant.agent_id, [trade for trade, _share in crew.trades])
-                       if carriage_hours.planned(merchant) else {"hours": None, "wage": 0.0})
-            hire = merchants.CrewHire(crew.hours_per_money, engaged["hours"], engaged["wage"])
+            hours_hired, wages = ((carriage_hours.engaged(record, merchant, index)) if carriage_hours.planned(merchant)
+                                  else (None, {}))
+            hire = merchants.CrewHire(crew.hours_per_tonne, hours_hired, wages)
         done = merchants.dispatch(merchant, fills, carriage, setup.specs, money,
                                   record.book.balance(merchant.agent_id, money), _held_stock(record.book, merchant.agent_id),
                                   carrier_of=carriers.get, crew=hire)
@@ -53,6 +55,7 @@ def dispatch_merchants(setup, record, carriage, ledger: YearLedger) -> None:
         ledger.note_postings(done.transfers, "wages")
         if crew is not None:
             merchant.carriage_hours_wanted = done.crew_hours_wanted
+            merchant.carriage_money_wanted = done.crew_money_wanted
         for move in done.moves:
             flow_ledger.record_flow(carried, move.tile, move.receiver_tile,
                                     move.quantity * setup.specs[move.good].unit_mass_kg / KILOGRAMS_PER_TONNE)
@@ -163,9 +166,8 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage) ->
         record.book.transfer_many(paid)
         for transfer in paid:
             property_income[transfer.payee] = property_income.get(transfer.payee, 0.0) + transfer.amount
-    crew = carriage_hours.crew_for(setup, record)
-    if crew is not None:    # after the owners took their profit: the cash left is what next year's carriers can be paid from
-        record.loan_requests.extend(carriage_hours.wage_loans(setup, record, crew))
+    if carriage_hours.hires(setup):    # after the owners took their profit: the cash left is what next year's carriers can be paid from
+        record.loan_requests.extend(carriage_hours.wage_loans(setup, record))
     for cohort_id, cohort in sorted(record.cohorts.items()):
         received = dict(ledger.received.get(cohort_id, {}))
         for good, quantity in ledger.grown.get(cohort_id, {}).items():

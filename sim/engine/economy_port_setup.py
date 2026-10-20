@@ -108,8 +108,7 @@ def opening_values(sim):
         "carriage_balanced": sim._freight_mode_costs(0.0, cargo="goods"),
         "carriage_wage": sim.labour.wage_per_hour(sim.FREIGHT_DRIVER_WAGE_TRADE),
         "carriage_crew": {mode: [rate["crew_trade"], rate["crew_hours_per_tonne_km"]]
-                          for mode, rate in carriage_rates(sorted(modes), sim.world_map).items()
-                          if "land" in rate["edge_classes"] and not rate.get("needs_improvement")},
+                          for mode, rate in carriage_rates(sorted(modes), sim.world_map).items()},
         "held_nodes": sorted(sim.held_and_running(include_starting=False)),
         "ways": {key: dict(way) for key, way in sorted(sim.state.economy.improvements.items())},
         "site_limits": [[limit.recipe_id, limit.tile, limit.capacity_runs_per_year, limit.yield_factor]
@@ -207,6 +206,7 @@ def build_setup(sim, opening=None, production=None):
         handling_rates={SEA_MODE: sea_freight.PORT_HANDLING_HOURS_PER_TONNE * wages.get(opening["unskilled_trade"], 0.0)},
         carriage_wage=float(opening["carriage_wage"]),
         carriage_crew={mode: (str(crew[0]), float(crew[1])) for mode, crew in opening["carriage_crew"].items()},
+        carriage_handling={SEA_MODE: sea_freight.PORT_HANDLING_HOURS_PER_TONNE},
         held_nodes=tuple(opening["held_nodes"]),
         specs=specs, recipes=recipes, mint_recipe=mint_recipe, basket=basket, trades=trades,
         tax_forms=taxes.forms_from_civ_data(civ.get("state_revenue") or []),

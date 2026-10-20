@@ -4,8 +4,8 @@ A haul takes the days the route takes (`CarriageTable.days_between`). The econom
 haul is held for as many whole years as its days span, at least one: the year every merchant already
 holds its goods between buying and selling. Goods that need more than that wait on the road in the
 transit account (an edge, so a save keeps them) and reach the destination tile in the year their days
-put them in. Each year on the road costs the good's spoilage and the interest on the money tied up, which
-the merchant weighs when it chooses the route (merchants.py) and pays through its loans.
+put them in. Each year on the road costs the good's spoilage and the interest on the money tied up, and each
+year beyond the first costs its storage at the stage where it waits (`storage_per_unit`), which the merchant weighs when it chooses the route (merchants.py) and pays through its loans.
 News of a distant market travels the same way: the merchant hears a price as many years late as the haul
 to that market is held beyond the first.
 """
@@ -16,6 +16,7 @@ from typing import List, Mapping, Tuple
 
 from sim.unit_conversions import CIVIL_DAYS_PER_YEAR
 
+from .store_return import STORE_STORAGE_COST_PER_KG_YEAR
 from .types import EDGE_SPOILAGE, GoodId, GoodsMove, GoodSpec, TileId
 
 EDGE_TRANSIT = "edge:transit"        # goods on the road between a merchant's purchase and its destination tile
@@ -39,6 +40,12 @@ def years_held(days: float) -> int:
 def lost_share(spoilage_per_year: float, years: int) -> float:
     """The share of a good that spoils over `years` of holding."""
     return 1.0 - (1.0 - min(1.0, max(0.0, spoilage_per_year))) ** years
+
+
+def storage_per_unit(spec: GoodSpec, years: int) -> float:
+    """What housing and guarding a unit costs at the stages of a haul held `years`: the storage a year holds
+    by the kilogram, for each year beyond the first (the year every merchant holds its goods anyway)."""
+    return STORE_STORAGE_COST_PER_KG_YEAR * spec.unit_mass_kg * max(0, years - 1)
 
 
 def advance(merchant, specs: Mapping[GoodId, GoodSpec]) -> Tuple[GoodsMove, ...]:
