@@ -1,7 +1,7 @@
 """`CountryWorld`: the world an actor of another country sees.
 
-Questions about the country (its people, state, techniques, values, government, how much of the founder's work
-reaches it) are answered from its profile, and its pay, output and prices from its own part of the economy.
+Questions about the country (its people, state and its revenue, techniques, values, government, how much of the
+founder's work reaches it) are answered from its profile (the state's in country_state.py), and its pay, output and prices from its own part of the economy.
 Every other member of the shared world passes straight through, by explicit forwarding methods generated from the `World` protocol at class creation.
 """
 import inspect
@@ -9,13 +9,14 @@ from typing import Any, Dict, Optional, Set
 
 from .country_hands import hands_of
 from .country_population import people_counted
+from .country_state import CountryStateView
 from .no_country_economy import NoCountryEconomy
 from .protocols import World
 from .records import CountryProfile
 from .literacy import CountryLiteracy
 from .registry import register_world_scope
 from .stratum_year import FOOD_NEED
-from .tuning_country import ARMY_SHARE_OF_POPULATION, COUNTRY_OBSERVATION_RANGE_KM
+from .tuning_country import COUNTRY_OBSERVATION_RANGE_KM
 
 # members the shared world answers that the protocol does not name yet
 EXTRA_FORWARDED: tuple = ()
@@ -29,8 +30,11 @@ class _NoGovernment:
 	def collect(self, payer: Any, taxable: float, world: Any) -> float:
 		return 0.0
 
+	def levy_rates(self) -> Any:
+		return 0.0, 0.0
 
-class CountryWorld:
+
+class CountryWorld(CountryStateView):
 	"""What an actor of `profile`'s country sees. `holder` is the registry (or its saved state)."""
 
 	def __init__(self, shared: Any, profile: CountryProfile, holder: Any) -> None:
@@ -73,13 +77,6 @@ class CountryWorld:
 	def tax_share(self) -> float:
 		"""Share of its taxpayers' income the country's state starts out taking."""
 		return self.profile.tax_share
-
-	def army_wanted(self) -> float:
-		declared = self.profile.extra.get("standing_army")
-		return float(declared) if declared is not None else people_counted(self.profile) * ARMY_SHARE_OF_POPULATION
-
-	def soldiers_under_arms(self) -> float:
-		return self.army_wanted()
 
 	def state_hands(self) -> Any:
 		"""The people and food this country can give its state (country_hands.py)."""
@@ -151,7 +148,7 @@ def _forward_property(name: str) -> property:
 
 def forward_world_member(name: str, is_property: bool = False) -> None:
 	"""Pass a shared-world member through, unless CountryWorld answers it itself."""
-	if name not in vars(CountryWorld):
+	if not hasattr(CountryWorld, name):
 		setattr(CountryWorld, name, _forward_property(name) if is_property else _forward_method(name))
 
 

@@ -110,7 +110,7 @@ found actors after the year's turns) and `WORLD_SCOPE`; `register_actor_kind(kin
 (`sim/agents/cast.py`, `seed_cast`) creates actors from a civilisation's `cast.actors` entries by
 `kind` and deliberately skips a kind that is not registered yet, creating it on a later call. The
 shipped kinds register themselves at import (`trader.py`, `stratum.py`, `player.py`,
-`government_foreign.py`); `api.py` imports each of those modules by name so the registration
+`government.py`); `api.py` imports each of those modules by name so the registration
 happens.
 
 So the registry is real and keyed by kind, and `MULTIPLAYER.md` says "a mod can add a kind of

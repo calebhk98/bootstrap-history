@@ -10,7 +10,7 @@ from sim.agents.api import ActorRegistry, ActorsState, CastEntry, CountryProfile
 from sim.agents.country_hands import hands_of
 from sim.agents.country_population import step_country
 
-from .agents_fake_world import FakeWorld
+from .country_state_world import StateWorld
 
 # the pure ledger
 hands = headcount.Hands(working_age=1000.0, farm_hands=600.0, food_ratio=1.0)
@@ -41,7 +41,7 @@ class CountryAnswers:
 		return {"food": 5.0}
 
 
-class Shared(FakeWorld):
+class Shared(StateWorld):
 	def country_economy(self, country):
 		return CountryAnswers()
 
@@ -52,7 +52,7 @@ class Shared(FakeWorld):
 def government_of(standing_army):
 	registry = ActorRegistry(ActorsState(home_country="home"))
 	profile = CountryProfile(country="far", population=100000.0, extra={"standing_army": standing_army})
-	entry = CastEntry(actor_id="government:far", country="far", kind="foreign_government", money=1.0e9)
+	entry = CastEntry(actor_id="government:far", country="far", kind="government", money=1.0e9)
 	seed_cast(registry, "home", [entry], {"home": CountryProfile(country="home", population=1000.0), "far": profile})
 	profile = registry.state.countries["far"]
 	for _ in range(3):

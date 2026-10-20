@@ -18,13 +18,12 @@ from .records import ActorRecord, CastEntry, CountryProfile
 # keys under "cast" this module reads itself; any others end up in the profile's `extra`
 CONSUMED_CAST_KEYS = ("strata", "countries", "actors", "treasury", "location", "seats")
 # civilisation keys kept in a profile's `extra` for the mechanisms that read them
-CARRIED_CIVILISATION_KEYS = ("standing_army", "values", "debt_bondage", "bondage_years")
+CARRIED_CIVILISATION_KEYS = ("standing_army", "values", "debt_bondage", "bondage_years", "state_revenue", "hazards")
 GOVERNMENT_PREFIX = "government:"
 # record fields a scenario may not set: the purse and its books, what the actor is, and its life
 BOOKKEEPING_FIELDS = frozenset({"money", "income", "outlays", "kind", "exited_year", "founded_year"})
 EXPORT_POLICY_KIND = "export"
-HOME_GOVERNMENT_KIND = "government"
-FOREIGN_GOVERNMENT_KIND = "foreign_government"
+GOVERNMENT_KIND = "government"
 
 
 def _number(value: Any, default: float) -> float:
@@ -85,7 +84,7 @@ def cast_from_civilisations(home_civ: Mapping[str, Any], foreign_civs: List[Mapp
 		cast = civ.get("cast") or {}
 		entries.append(CastEntry(
 			actor_id=GOVERNMENT_PREFIX + profile.country, country=None if at_home else profile.country,
-			kind=HOME_GOVERNMENT_KIND if at_home else FOREIGN_GOVERNMENT_KIND, name=profile.name,
+			kind=GOVERNMENT_KIND, name=profile.name,
 			money=_number(cast.get("treasury"), 0.0), location=profile.location, policy_kind=EXPORT_POLICY_KIND,
 			params={"state_monopolies": list(civ.get("state_monopolies") or ()),
 					"state_enterprises": list(civ.get("state_enterprises") or ())}))

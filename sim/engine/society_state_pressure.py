@@ -986,15 +986,16 @@ class StatePressureMixin:
             return 0.0
         return min(1.0, (notice - threshold) / (1.0 - threshold))
 
-    def notice_over(self, scale):
+    def notice_over(self, scale, capacity=None):
         """0..1: how far past the notice line a taxpayer of this visible scale
-        stands, as a share of the remaining distance to full notice."""
-        notice = self.state_capacity * scale
+        stands, as a share of the remaining distance to full notice. `capacity`
+        is the state's (this one's when not given)."""
+        notice = (self.state_capacity if capacity is None else capacity) * scale
         if notice <= self.STATE_NOTICE_THRESHOLD:
             return 0.0
         return min(1.0, (notice - self.STATE_NOTICE_THRESHOLD) / (1.0 - self.STATE_NOTICE_THRESHOLD))
 
-    def levy_shares(self, scale, protection=0.0):
+    def levy_shares(self, scale, protection=0.0, state=None):
         """(requisition share, office share) of a year's revenue the state
         assesses on a taxpayer of this visible scale: one rule for the
         founder's household, a firm or any other actor. A visible taxpayer pays
@@ -1002,13 +1003,19 @@ class StatePressureMixin:
         capacity, as a share of income) plus the rates at full notice that
         raise the need the state could not pay (Government.seek_shortfall), in
         proportion to how far past the notice line he stands. Nothing is taken below the
-        line; protection bargains requisition down, never the office."""
-        over = self.notice_over(scale)
+        line; protection bargains requisition down, never the office.
+        `state` is (capacity, tax share, requisition rate, office rate) of another country's state; the
+        founder's own state when not given."""
+        if state is None:
+            capacity, tax_share = self.state_capacity, float(self.civ["starting_tax_share"])
+            requisition_rate, office_rate = self.state_levy_rates()
+        else:
+            capacity, tax_share, requisition_rate, office_rate = state
+        over = self.notice_over(scale, capacity)
         if over <= 0.0:
             return 0.0, 0.0
-        requisition_rate, office_rate = self.state_levy_rates()
         # the share of income the whole society pays the state, then what the state's shortfall adds
-        ordinary_rate = float(self.civ["starting_tax_share"]) * self.state_capacity
+        ordinary_rate = tax_share * capacity
         requisition = (ordinary_rate + requisition_rate) * over
         if protection > 0:
             requisition *= (1.0 - self.REQUISITION_PROTECTION_DISCOUNT * protection)

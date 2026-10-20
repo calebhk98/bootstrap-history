@@ -161,9 +161,9 @@ class SimWorld(BudgetView, SiteView, RevenueView, GroupView, StakeView, Disclosu
 		return self._sim.visible_scale(sum(actor.workforce.values()), demand_answer.visible_wealth(actor.money, actor.concealed_wealth()),
 									   actor.prominence(), actor.defiance())
 
-	def levy_shares(self, scale: float, protection: float = 0.0) -> Any:
+	def levy_shares(self, scale: float, protection: float = 0.0, state: Any = None) -> Any:
 		"""(requisition, office) shares of income the state assesses at this visible scale."""
-		return self._sim.levy_shares(scale, protection)
+		return self._sim.levy_shares(scale, protection, state)
 
 	def government(self) -> Any:
 		"""The government actor of the founder's civilisation."""

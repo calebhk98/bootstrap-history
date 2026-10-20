@@ -1,5 +1,5 @@
 """What a state asks the simulated world when it budgets: its people, its prices, its taxpayers."""
-from typing import Any, List, Tuple
+from typing import Any, List, Optional, Tuple
 
 from sim.agents.api import DOLE_MATERIAL, THREAT_ARMY_RESPONSE, Hands
 from sim.world import agriculture, demand
@@ -96,9 +96,9 @@ class BudgetView:
 		quote = self._sim.economy.purchase_cost(material, tonnes)
 		return 0.0 if quote is None else quote[0]
 
-	def fleet_goods(self) -> List[Any]:
-		"""Available naval vessels, their crews, service lives and the state's holdings."""
-		return self._sim.economy.fleet_goods(self.government().actor_id)
+	def fleet_goods(self, holder_id: Optional[str] = None) -> List[Any]:
+		"""Available naval vessels, their crews, service lives and a state's holdings (the founder's state's by default)."""
+		return self._sim.economy.fleet_goods(holder_id or self.government().actor_id)
 
 	def local_staff(self, trade: str, people: float) -> float:
 		"""How many of `people` kept in a trade nationwide come out of the founder's own labour
@@ -111,8 +111,8 @@ class BudgetView:
 		reach = sim.labour.reachable_trade_population(trade) + sim.actor_staff_fte(trade)
 		return min(1.0, people / nation) * reach
 
-	def notice_over(self, scale: float) -> float:
-		return self._sim.notice_over(scale)
+	def notice_over(self, scale: float, capacity: Optional[float] = None) -> float:
+		return self._sim.notice_over(scale, capacity)
 
 	def visible_taxpayers(self) -> List[Tuple[float, float]]:
 		"""(visible scale, taxable income) of every actor the state can see: the seats still playing and the firms."""

@@ -29,7 +29,6 @@ from .stratum_year import FOOD_NEED
 # importing these registers their kinds, spawners, commands and the country scope
 from .cast import GOVERNMENT_PREFIX, cast_from_civilisations, profile_from_civilisation, seed_cast
 from .country_view import CountryWorld
-from .government_foreign import ForeignGovernment
 from .player import Player
 from .stratum import Stratum, stratum_id
 from .literacy import CountryLiteracy
@@ -52,6 +51,6 @@ __all__ = ["Hands", "PURSE_CURRENCY", "EDGE_EXCHANGE", "EDGE_OUTSIDE", "EDGE_SAV
            "SAVING_SHARE_OF_SURPLUS", "CONCESSION_PREFIX", "Sector", "sector_key",
            "MANAGEMENT_SPAN_EXPONENT", "OBSERVATION_RANGE_KM", "PLAYER_VISIBLE_EXPOSURE", "PROOF_YEARS", "SECRET_EXPOSURE",
            "THREAT_ARMY_RESPONSE", "SOLDIER_TRADE", "DOLE_MATERIAL", "FOOD_NEED", "cast_from_civilisations", "profile_from_civilisation", "seed_cast",
-           "CountryWorld", "CountryLiteracy", "ForeignGovernment", "Player", "Stratum", "stratum_id", "seed_strata",
+           "CountryWorld", "CountryLiteracy", "Player", "Stratum", "stratum_id", "seed_strata",
            "strata_definitions", "strata_spawner", "CommandRejected", "register_command", "exchange", "Trader",
            "trader_entry", "DUES_CAUSE", "pay_dues", "treasury_of", "DeclaredKind", "register_declared_kinds"]
