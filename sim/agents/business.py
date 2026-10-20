@@ -172,6 +172,11 @@ class Business:
 		if plant is not None:
 			plant.crew_found = found
 
+	def note_takings(self, entry_key: str, takings: float) -> None:
+		plant = self._by_key.get(entry_key)
+		if plant is not None:
+			plant.takings = takings
+
 	def note_margin(self, entry_key: str, margin: float) -> None:
 		plant = self._by_key.get(entry_key)
 		if plant is not None:

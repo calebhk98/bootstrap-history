@@ -404,6 +404,10 @@ class World(Protocol):
 	def concern_takings(self, node_id: str, opened_year: int, rivals: float = 0.0, capacity: float = 1.0) -> float:
 		...
 
+	def concern_inputs(self, node_id: str) -> Dict[str, float]:
+		"""Tonnes of each material a concern uses up in a year at its founding size."""
+		...
+
 	def concerns_making(self, material: str) -> Any:
 		"""The nodes whose concerns put `material` on the market."""
 		...
