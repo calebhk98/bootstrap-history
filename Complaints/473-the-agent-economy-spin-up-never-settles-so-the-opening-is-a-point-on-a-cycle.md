@@ -289,3 +289,34 @@ kept as `opening_demand` for the coin metal's marginal cost). Probe (`settle_pro
 after on the same head: maximum price level and rate fall from cycling to calm, and the old destabiliser (the farm
 trade at no training years) no longer tips it. The labour glut remains: the wage still falls through the spin-up (608).
 Measure with the probe or `python3 -m sim.tests --slow --only baseline_rome`.
+
+## Measured: where the unhired hours are (branch 473-why-so-few-hours-are-hired)
+
+Rome first stage, years 0 to 11 (`economy_port_trace.spin_up_trace(harness.sim(), 12)` with the economy's `clear_labour`,
+`own_production` and `producers.plan` wrapped to add up hours; the wrappers were scratch, no committed command prints
+the split). Shares of the hours households offer (working people times the year's hours; the withheld share is nil, so
+all of it reaches the market):
+
+- Own-plot growing takes about a tenth (food floor at about two-tenths of an hour per unit; a cohort's floors need under
+  a twentieth of its hours). `households_own` caps it at the floors, so it is not idle and is not counted as hired.
+- Employers hire about 5 per cent after year 2 (about 18 per cent in year 0). Their bids are close to what is hired
+  (vacant hours under 5 per cent of hired), so there is no shortage at the cleared wage: the glut is on the demand side.
+- About 85 per cent of hours are offered, unhired and not needed by any floor. That is not an artefact of booking
+  (case a): own-plot work is already outside the market figures. But those hours are not idle in life: the model has no
+  household production beyond the floors' land-only goods (spinning, building, fuel, tools, cooking), so self-employed
+  time beyond the floors shows as unemployment.
+- Why producers hire so little (case c, plan side): of the hours the plant could work, in years 1 to 11 the limit that
+  binds is the stock gate (`producers.runs_for_stock`) for about three quarters of the lost hours, the yearly change
+  limit for most of the rest, land caps next; unprofitable runs and cash are each a few per cent. Producers sit on stock many
+  times their expected sales (year 6: millet stock about thirty times its expected sales; stone blocks, clay, firewood,
+  meat likewise), so the market for what they make is small, not their purse.
+- Why the market is small (case b): households grow their food floors on their own plots in year one and cut their floor
+  bids by it (`year_goods._less_what_it_grew`), while the opening sized millet, flour and the rest for households that buy
+  those floors (545). Capacity and opening stock are therefore many times the first year's sales.
+
+Tried and not kept: reading the opening's bids with the same cut (own-plot growing taken out of the floors producers are sized
+for, a small module beside `opening.py`, with a value test on the fixture). The test passed, but the Rome probe went from calm
+to a price level of about 650 (rate stuck at the ceiling): with flour not sized, its joint by-product bran has no maker while
+households still bid for it, and its price (times 10^12 by year 8) carries the price-level index. So the sizing fix needs the
+index and the joint by-products handled first (the same thin-good fragility as above); it is not a labour mechanism.
+The head's probe is unchanged by this branch.
