@@ -182,14 +182,23 @@ check("however many presses, the state keeps some of its capacity", huge.state_l
 
 # ---- schooling that teaches one group -------------------------------------------------------------------------------
 def gains(node_id=None):
-    """(general, elite) literacy the next year adds, with the original school open and `node_id` as well."""
+    """The common and propertied strata's gains, with the original school and `node_id` open."""
     taught = running(node_id) if node_id else unopened_sim()
     taught.done.add("school_founded")
     taught.state.projects.operating.add("school_founded")
     taught._done_changed()
-    taught.civ["literacy_general"], taught.civ["literacy_elite"] = 0.05, 0.4
-    moved = taught.literacy_next_year()
-    return moved.get("literacy_general", 0.05) - 0.05, moved.get("literacy_elite", 0.4) - 0.4
+    taught.set_literacy("literacy_general", 0.05)
+    taught.set_literacy("literacy_elite", 0.4)
+    def shares():
+        common = [record for record in taught.country_literacy().records
+                  if float(record.plan.get("property_share") or 0.0) <= 0.0]
+        people = sum(record.members for record in common)
+        return (sum(record.members * record.literacy for record in common) / people,
+                taught.literacy("literacy_elite"))
+    before_general, before_elite = shares()
+    taught._advance_literacy(taught.year)
+    after_general, after_elite = shares()
+    return after_general - before_general, after_elite - before_elite
 
 
 base_general, base_elite = gains()

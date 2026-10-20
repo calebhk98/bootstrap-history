@@ -85,6 +85,9 @@ class FakeWorld:
 	def pay_wages(self, payer: Any, amount: float, purpose: Any) -> None:
 		ledger.transfer(payer, self.edge("edge:workers"), amount, purpose)
 
+	def research_productivity(self, country=None):
+		return 1.0
+
 	# ---- the tree and what has been shown
 	def civ_id(self) -> str:
 		return self.civ

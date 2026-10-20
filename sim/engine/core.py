@@ -316,7 +316,7 @@ class Sim(ModStoresMixin, RealPriceRatiosMixin, CoinRevaluationMixin, PartnerCiv
         self.cfg = dict(DEFAULTS, **(cfg or {}))
         self.verbose = verbose
         self.bounty_set = set(bounty_set or ())
-        self.civ = civ or load_civ()
+        self.civ = copy.deepcopy(civ or load_civ())
         self.start_civ = copy.deepcopy(self.civ)    # the opening values, kept while self.civ drifts
         self.nodes = nodes_in_civ_money(nodes, self.civ)
         self._remember_derived_gates(self.civ["starting_techs"])
@@ -577,6 +577,11 @@ class Sim(ModStoresMixin, RealPriceRatiosMixin, CoinRevaluationMixin, PartnerCiv
         # they do not mean every society on Earth already owns it.  In
         # particular, never infer one civilization's materials or institutions for another
         # civilization from those fields.
+        self.country_literacy()
+        for field in ("literacy_general", "literacy_elite"):
+            self.start_civ[field] = self.literacy(field)
+        self.civ.pop("literacy_general", None)
+        self.civ.pop("literacy_elite", None)
         self._reconnect_state_hooks()
         # opened now, not by the first question a screen or a cost asks: while it opens the engine's
         # own figures answer, and nothing computed from them may stay cached afterwards
@@ -2132,7 +2137,7 @@ class Sim(ModStoresMixin, RealPriceRatiosMixin, CoinRevaluationMixin, PartnerCiv
             return (breakdown["sources_kw"].get(condition.get("key"), 0.0) / total
                     if total else 0.0)
         if metric in ("literacy_general", "literacy_elite"):
-            return float(self.civ.get(metric, 0.0))
+            return self.literacy(metric)
         if metric == "epidemic_relief":
             # hazard_relief returns the SURVIVING fraction of the harm
             # (1.0 = no protection at all); relief is what is cut, the rest

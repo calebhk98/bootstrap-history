@@ -169,9 +169,9 @@ class CapacityMixin:
         if trade not in self.LITERATE_TRADES:
             return 1.0
         if trade == trade_data.scholar_trade():
-            lit, ref = self._world.civ.get("literacy_elite", 0.0), self.LITERACY_REFERENCE_ELITE
+            lit, ref = self._world.literacy("literacy_elite"), self.LITERACY_REFERENCE_ELITE
         else:
-            lit, ref = self._world.civ.get("literacy_general", 0.0), self.LITERACY_REFERENCE_GENERAL
+            lit, ref = self._world.literacy("literacy_general"), self.LITERACY_REFERENCE_GENERAL
         # NOT CLAMPED AT ONE: Rome starts AT the reference, so clamping here
         # would return exactly 1.0 for Rome for ever, no matter how much
         # printing, movable type, schools and academies raise

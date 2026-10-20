@@ -89,13 +89,13 @@ def start_work(node_id: str, chain: List[str], plan: Dict[str, Any], year: int) 
 			"progress": 0.0, "started": year, "stalled": 0.0}
 
 
-def work_year(actor: Any, node_id: str, work: Dict[str, Any], world: Any) -> bool:
+def work_year(actor: Any, node_id: str, work: Dict[str, Any], world: Any, productivity: float = 1.0) -> bool:
 	"""Advance one copy by a year, paying wages and money for what is done.
 
 	Returns True when the work has reached completion. Money that falls short
 	slows the work proportionally; nothing is forgiven.
 	"""
-	step = 1.0 / work["years"]
+	step = productivity / work["years"]
 	want = min(step, 1.0 - work["progress"])
 	cost = want * (work["money"] + work["labour_cost"])
 	if cost > 0:

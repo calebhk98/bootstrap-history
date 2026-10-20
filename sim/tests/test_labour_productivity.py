@@ -114,12 +114,12 @@ from sim.labour.labour_allocation import FARM_TRADE as _FARM_TRADE
 
 s_noschool = unopened_sim(capital=2000000.0, manual=False)
 s_noschool.trades_created.add("electrician")
-_gen0 = s_noschool.civ["literacy_general"]
+_gen0 = s_noschool.literacy("literacy_general")
 for i in range(1, 401):
     s_noschool.advance_society(s_noschool.year + i)
 check("with no school ever running literacy does not move at all - this "
       "is something a society is TAUGHT, not a free drift",
-      s_noschool.civ["literacy_general"] == _gen0, s_noschool.civ["literacy_general"])
+      s_noschool.literacy("literacy_general") == _gen0, s_noschool.literacy("literacy_general"))
 check("a taught trade never naturalises without a single school ever "
       "running, however long the run",
       "electrician" not in s_noschool.trades_endemic
@@ -127,15 +127,15 @@ check("a taught trade never naturalises without a single school ever "
       (sorted(s_noschool.trades_endemic), s_noschool.employees.get("electrician")))
 
 s_school = run_it(unopened_sim(capital=2000000.0, manual=False), "school_founded")
-_gen0b = s_school.civ["literacy_general"]
+_gen0b = s_school.literacy("literacy_general")
 _ceil_farming = s_school.literacy_ceiling_general()
 for i in range(1, 401):
     s_school.advance_society(s_school.year + i)
 check("a single running school in a farming society raises literacy over "
       "generations but plateaus at the ceiling the farm share sets",
-      _gen0b < s_school.civ["literacy_general"] <= _ceil_farming + 1e-6
+      _gen0b < s_school.literacy("literacy_general") <= _ceil_farming + 1e-6
       and _ceil_farming < 0.9,
-      (round(s_school.civ["literacy_general"], 3), round(_ceil_farming, 3)))
+      (round(s_school.literacy("literacy_general"), 3), round(_ceil_farming, 3)))
 
 s_max = run_it(unopened_sim(capital=2000000.0, manual=False),
                "school_founded", "academy_network")
@@ -147,12 +147,12 @@ for i in range(1, 701):
     s_max.advance_society(s_max.year + i)
 check("heavy schooling in a society with a small farm share, over "
       "centuries, can reach a 90%+ literate general population",
-      s_max.civ["literacy_general"] >= 0.9, s_max.civ["literacy_general"])
+      s_max.literacy("literacy_general") >= 0.9, s_max.literacy("literacy_general"))
 check("...and never reaches the whole population: some cannot learn to read",
-      s_max.civ["literacy_general"] < 1.0, s_max.civ["literacy_general"])
+      s_max.literacy("literacy_general") < 1.0, s_max.literacy("literacy_general"))
 check("the lettered/propertied class closes most of its own gap too, on "
       "the same schooling",
-      s_max.civ["literacy_elite"] >= 0.95, s_max.civ["literacy_elite"])
+      s_max.literacy("literacy_elite") >= 0.95, s_max.literacy("literacy_elite"))
 
 # =============================================================================
 # A TRADE THE FOUNDER INTRODUCED BECOMES A TRADE THE SOCIETY HAS. The user's

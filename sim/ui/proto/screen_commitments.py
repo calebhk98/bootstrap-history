@@ -17,8 +17,8 @@ def _goal(sim):
 
 
 def _literacy(sim):
-    general = float(sim.civ.get("literacy_general", 0.0))
-    elite = float(sim.civ.get("literacy_elite", 0.0))
+    general = float(sim.literacy("literacy_general"))
+    elite = float(sim.literacy("literacy_elite"))
     ceiling_general = sim.literacy_ceiling_general()
     ceiling_elite = sim.literacy_ceiling_elite()
     return {"general": round(general, 4), "general_ceiling": round(ceiling_general, 4),

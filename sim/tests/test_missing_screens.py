@@ -143,7 +143,7 @@ class EducationTests(unittest.TestCase):
         self.assertTrue(reply["ok"], reply)
         literacy = reply["literacy"]
         self.assertEqual(literacy["general"],
-                         round(float(sim.civ["literacy_general"]), 4))
+                         round(float(sim.literacy("literacy_general")), 4))
         self.assertEqual(literacy["general_ceiling"],
                          round(sim.literacy_ceiling_general(), 4))
         self.assertEqual(literacy["elite_ceiling"],
@@ -166,10 +166,10 @@ class EducationTests(unittest.TestCase):
                 sim.done.add(node_id)
                 sim.operating.add(node_id)
         sim._done_changed()
-        before = float(sim.civ["literacy_general"])
+        before = float(sim.literacy("literacy_general"))
         predicted = _ask(sim, "education")["literacy"]["general_next_year"]
         sim._advance_literacy(sim.year)
-        self.assertAlmostEqual(float(sim.civ["literacy_general"]), predicted, places=4)
+        self.assertAlmostEqual(float(sim.literacy("literacy_general")), predicted, places=4)
         self.assertGreaterEqual(predicted, before)
 
     def test_fog_hides_unheard_school_nodes(self):
@@ -242,12 +242,12 @@ class DivergenceTests(unittest.TestCase):
 
     def test_literacy_and_indices_against_the_start(self):
         sim = _shared_sim()
-        start_literacy = float(sim.civ["literacy_general"])
-        sim.civ["literacy_general"] = start_literacy + 0.1
+        start_literacy = float(sim.literacy("literacy_general"))
+        sim.set_literacy("literacy_general", start_literacy + 0.1)
         try:
             reply = _ask(sim, "divergence")
         finally:
-            sim.civ["literacy_general"] = start_literacy
+            sim.set_literacy("literacy_general", start_literacy)
         self.assertEqual(reply["literacy_general"]["start"], round(start_literacy, 4))
         self.assertEqual(reply["literacy_general"]["now"], round(start_literacy + 0.1, 4))
         self.assertEqual(reply["wage_index"]["now"], round(sim.wage_index, 4))

@@ -12,6 +12,7 @@ from .country_population import people_counted
 from .no_country_economy import NoCountryEconomy
 from .protocols import World
 from .records import CountryProfile
+from .literacy import CountryLiteracy
 from .registry import register_world_scope
 from .stratum_year import FOOD_NEED
 from .tuning_country import ARMY_SHARE_OF_POPULATION, COUNTRY_OBSERVATION_RANGE_KM
@@ -50,6 +51,18 @@ class CountryWorld:
 
 	def population_total(self) -> float:
 		return people_counted(self.profile)
+
+	def country_strata(self):
+		state = getattr(self._holder, "state", self._holder)
+		home = state.home_country
+		return [actor for actor in self._holder.of_kind("stratum")
+				if (actor.record.country or home) == self.profile.country]
+
+	def literacy(self, field: str) -> float:
+		return CountryLiteracy(self.country_strata()).get(field)
+
+	def research_productivity(self) -> float:
+		return self._shared.research_productivity(self.profile.country)
 
 	def urban_population(self) -> float:
 		return people_counted(self.profile) * self.profile.urban_fraction

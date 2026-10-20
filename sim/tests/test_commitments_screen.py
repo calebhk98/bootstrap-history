@@ -15,7 +15,7 @@ check("the screen answers", reply.get("ok") is True, reply)
 check("it names the goal and whether it is reached",
       reply["goal"]["id"] == game.goal and reply["goal"]["reached"] is False, reply.get("goal"))
 check("it shows general literacy against its ceiling, as figures the education screen uses",
-      reply["literacy"]["general"] == round(float(game.civ["literacy_general"]), 4)
+      reply["literacy"]["general"] == round(float(game.literacy("literacy_general")), 4)
       and reply["literacy"]["general_ceiling"] == round(game.literacy_ceiling_general(), 4), reply.get("literacy"))
 check("it shows the reserve target from the reserve command",
       reply["reserve"]["craftsmen"] == game.state.household.reserve_craftsmen

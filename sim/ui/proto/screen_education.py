@@ -31,7 +31,7 @@ def _enrolment(sim, schools):
     total_flow = sum(row["flow_added"] for row in running)
     next_year = sim.literacy_next_year()
     gain = (next_year.get("literacy_general", 0.0)
-            - float(sim.civ.get("literacy_general", 0.0))) * sim.population.total
+            - float(sim.literacy("literacy_general"))) * sim.population.total
     for row in schools:
         share = row["flow_added"] / total_flow if total_flow > 0 and row["flow_added"] > 0 else 0.0
         row["share_of_schooling_flow"] = round(share, 4)
@@ -70,8 +70,8 @@ def _recent_change(sim):
 
 
 def education_report(sim):
-    general = float(sim.civ.get("literacy_general", 0.0))
-    elite = float(sim.civ.get("literacy_elite", 0.0))
+    general = float(sim.literacy("literacy_general"))
+    elite = float(sim.literacy("literacy_elite"))
     ceiling_general = sim.literacy_ceiling_general()
     ceiling_elite = sim.literacy_ceiling_elite()
     next_year = sim.literacy_next_year()

@@ -179,7 +179,9 @@ def build_setup(sim, opening=None, production=None):
     mint_recipe = (recipes_from_production_data(production, [opening["mint_recipe"]])[opening["mint_recipe"]]
                    if opening.get("mint_recipe") else None)
     need_data = _load("world", "needs.json")
-    basket = households.make_basket(need_data, production, civ_values=civ)
+    society = dict(civ, literacy_general=sim.literacy("literacy_general"),
+                   literacy_elite=sim.literacy("literacy_elite"))
+    basket = households.make_basket(need_data, production, civ_values=society)
     goods = set()
     for recipe in recipes.values():
         goods.update(recipe.outputs, recipe.inputs, recipe.plant_goods)

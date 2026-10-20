@@ -146,9 +146,9 @@ def _score_components(sim, nodes, reveal_tree_total):
     # the share unable to read, so "literacy" here means how much of what
     # is reachable has been reached. Weighted equally between the two
     # populations the engine tracks separately.
-    gen = max(0.0, float(sim.civ.get("literacy_general", 0.0)))
+    gen = max(0.0, float(sim.literacy("literacy_general")))
     gen_ceiling = max(1e-9, sim.literacy_ceiling_general())
-    eli = max(0.0, float(sim.civ.get("literacy_elite", 0.0)))
+    eli = max(0.0, float(sim.literacy("literacy_elite")))
     eli_ceiling = max(1e-9, sim.literacy_ceiling_elite())
     lit_norm = 0.5 * min(1.0, gen / gen_ceiling) + 0.5 * min(1.0, eli / eli_ceiling)
     out["literacy"] = {"counts": ("general and elite literacy, each as a share of the ceiling "

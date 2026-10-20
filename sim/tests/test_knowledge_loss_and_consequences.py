@@ -119,11 +119,11 @@ _effect_node = next(node_id for node_id in sorted(S.TECH_EFFECTS)
                     if "literacy_general" in S.TECH_EFFECTS[node_id]
                     and node_id in NODES and node_id not in _plain.done)
 _effect_sim = unopened_sim()
-_effect_before = float(_effect_sim.civ["literacy_general"])
+_effect_before = float(_effect_sim.literacy("literacy_general"))
 _effect_sim.done.add(_effect_node)
 _effect_sim.apply_tech_effects(_effect_node)
 _effect_lines = [message for _year, message in _effect_sim.log if cause_of(message) == "society_changed"]
-_effect_after = float(_effect_sim.civ["literacy_general"])
+_effect_after = float(_effect_sim.literacy("literacy_general"))
 check("242: a literacy effect names the old and new value",
       any(abs(facts_of(line)["changes"]["literacy_general"][0] - _effect_before) < 1e-9
           and abs(facts_of(line)["changes"]["literacy_general"][1] - _effect_after) < 1e-9
