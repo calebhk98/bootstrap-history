@@ -183,7 +183,7 @@ def build_setup(sim, opening=None, production=None):
     mint_recipe = (recipes_from_production_data(production, [opening["mint_recipe"]])[opening["mint_recipe"]]
                    if opening.get("mint_recipe") else None)
     need_data = _load("world", "needs.json")
-    literate = opening.get("literacy") or {field: sim.literacy(field) for field in LITERACY_FIELDS}
+    literate = opening["literacy"]
     society = dict(civ, **literate)       # the opening's literacy, so a rebuilt setup scales the needs as the first did
     basket = households.make_basket(need_data, production, civ_values=society)
     goods = set()
