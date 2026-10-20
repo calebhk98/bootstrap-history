@@ -135,6 +135,23 @@ def live_input_prices_at(tile: TileId, recipe: Recipe, view: MarketView) -> Dict
     return prices
 
 
+def paid_input_prices(producer: Producer, recipe: Recipe, view: MarketView,
+                      live: Dict[GoodId, float]) -> Dict[GoodId, float]:
+    """`live` with each input the run uses up raised to the price it cleared at last year in the producer's
+    market, where that is higher than the remembered price: a thin trade moves the remembered price only
+    slightly, and a buyer bidding from it is outbid every year. A view that does not report clearing prices
+    leaves `live` as it is."""
+    cleared_price = getattr(view, "cleared_price", None)
+    if cleared_price is None:
+        return live
+    paid = dict(live)
+    for good in recipe.inputs:
+        cleared = cleared_price(good, view.area_of(good, producer.tile))
+        if cleared is not None and cleared > paid.get(good, math.inf):
+            paid[good] = cleared
+    return paid
+
+
 def expected_input_prices(producer: Producer, recipe: Recipe, view: MarketView,
                           live: Optional[Dict[GoodId, float]] = None) -> Dict[str, float]:
     """The prices a plan costs a run at: for a good the run uses up, the producer's own expectation
@@ -185,8 +202,11 @@ def next_expectations(producer: Producer, recipe: Recipe, view: MarketView,
         previous = updated.get(good)
         updated[good] = latest if previous is None else (
             previous + EXPECTATION_ADJUSTMENT_SHARE * (latest - previous))
+    paid_inputs = paid_input_prices(producer, recipe, view, {
+        good: price for good, price in ((good, view.price(good, view.area_of(good, producer.tile))) for good in recipe.inputs)
+        if price is not None})
     for good in recipe.inputs:
-        latest = view.price(good, view.area_of(good, producer.tile))
+        latest = paid_inputs.get(good)
         if latest is not None and good not in recipe.outputs:
             previous = updated.get(good)
             updated[good] = latest if previous is None else (
@@ -221,7 +241,7 @@ def plan(producer: Producer, recipe: Recipe, view: MarketView, cash: float) -> P
     expected revenue, after the yield, does not cover its variable cost at expected input prices and
     live wages."""
     outputs = expected_output_prices(producer, recipe, view)
-    market_inputs = live_input_prices(producer, recipe, view)
+    market_inputs = paid_input_prices(producer, recipe, view, live_input_prices(producer, recipe, view))
     inputs = expected_input_prices(producer, recipe, view, market_inputs)
     wages = live_wages(producer, recipe, view)
     revenue = unit_cost.revenue_per_run(recipe, outputs) * producer.yield_factor

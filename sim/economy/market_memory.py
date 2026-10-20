@@ -54,6 +54,14 @@ class MarketMemory:
     trade_age: Dict[str, int] = field(default_factory=dict)     # market_key(good, area); absent: never cleared
     years_without_bids: Dict[str, int] = field(default_factory=dict)   # market_key(good, area); absent: bids last year
     years_without_offers: Dict[str, int] = field(default_factory=dict)   # market_key(good, area); absent: offers last year
+    cleared_prices: Dict[str, float] = field(default_factory=dict)      # market_key(good, area); absent: nothing traded last year
+
+    def note_cleared(self, key: str, price: float, quantity: float) -> None:
+        """Keep the price a market cleared at when it traded; forget it when it did not."""
+        if quantity > 0.0 and price > 0.0:
+            self.cleared_prices[key] = price
+        else:
+            self.cleared_prices.pop(key, None)
 
     def note_usual_price(self, key: str) -> None:
         """Move the usual price of a market toward its remembered price (start at it when new)."""
@@ -124,6 +132,10 @@ class YearView:
 
     def price(self, good: GoodId, area: AreaId) -> Optional[float]:
         return self._memory.prices.get(good + KEY_SEPARATOR + area)
+
+    def cleared_price(self, good: GoodId, area: AreaId) -> Optional[float]:
+        """The price the market cleared at last year; None when nothing traded in it."""
+        return self._memory.cleared_prices.get(good + KEY_SEPARATOR + area)
 
     def usual_price(self, good: GoodId, area: AreaId) -> Optional[float]:
         """A slow average of the price, what holders compare today's price with; None before any."""
