@@ -41,3 +41,21 @@ def price_after_thin_trade(price: Optional[float], cost: Optional[float], quanti
         return price
     shortfall = max(0.0, 1.0 - quantity / (REPRESENTATIVE_TRADE_SHARE * usual_volume))
     return price + NO_OFFER_MEMORY_SHARE * shortfall * (cost - price)
+
+
+PRICE_OVER_MAKING_COST_LIMIT = declare(
+    "PRICE_OVER_MAKING_COST_LIMIT", 4.0, kind="temporary_heuristic",
+    unit="times the cost of making a good", source=None, confidence="D",
+    why="Buyers with a fixed want and few sellers bid a thin market up year on year (a cart for a merchant's "
+        "wear, brick, a joint by-product nobody makes), and no seller or entrant is modelled to answer the "
+        "scarcity rent. In the long run a good sells for about what it costs to make, so the remembered price "
+        "is held within a multiple of that cost; how large a rent lasts has no measured basis.",
+    retire="Complaints/473: entry into a scarce good's making answers its rent")
+
+
+def price_within_making_cost(price: float, cost: Optional[float]) -> float:
+    """A remembered price held to PRICE_OVER_MAKING_COST_LIMIT times the cost of making the good. A good with
+    no cost (nobody can make it) is not capped here: it has no cost to bound it by."""
+    if cost is None or cost <= 0.0:
+        return price
+    return min(price, PRICE_OVER_MAKING_COST_LIMIT * cost)
