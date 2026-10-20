@@ -19,6 +19,7 @@ ProductionMixin is composed into EconomyMixin (economy.py) alongside the
 other economy sub-mixins; see that file for the composition and for the
 grouping evidence, and for why this lives in a separate file.
 """
+from .concern_earnings import ledger_row, output_market_factor, takings_at
 from .data import trade_family
 from sim.constants import declare
 from . import category_traits, money_units, node_revenue_market, node_upkeep
@@ -374,18 +375,18 @@ class ProductionMixin:
     def node_output_market_factor(self, node):
         """This year's market over long-run prices for what an output-derived node sells and buys; one otherwise."""
         baskets = self.concern_baskets_now(node["id"])
-        if baskets is None or not self.concern_goods_have_market(node["id"]):
-            return 1.0
-        return node_revenue_market.basket_market_factor(
-            baskets.outputs, baskets.purchases, self._material_prices(), self.goods_market.home_unit_price)
+        return output_market_factor(
+            baskets is not None and self.concern_goods_have_market(node["id"]),
+            lambda: node_revenue_market.basket_market_factor(
+                baskets.outputs, baskets.purchases, self._material_prices(), self.goods_market.home_unit_price))
 
     def concern_takings(self, node_id, ramp, with_output_factor=True):
         """Yearly takings of one concern at a given ramp, before market saturation: its loaded figure
         carried to the techniques held now (concern_volume.py); callers apply the market's price.
         `with_output_factor` False leaves out the hazard and war factor `revenue` applies to its total."""
         economy = self.state.economy
-        return (self.nodes[node_id]["rev"] * ramp * (economy.output_factor if with_output_factor else 1.0)
-                * self.price_index * self.concern_value_ratio(node_id) * self.concern_learning_ratio(node_id))
+        return takings_at(self.nodes[node_id]["rev"], ramp, economy.output_factor if with_output_factor else 1.0,
+                          self.price_index, self.concern_value_ratio(node_id), self.concern_learning_ratio(node_id))
 
     def ledger_concern_rows(self):
         """Yearly takings of every opened concern that earns, by node id, as the ledger credits them. The
@@ -399,9 +400,9 @@ class ProductionMixin:
                 continue
             # The figure `ventures` and `why` print, and the factor revenue() applies, so the ledger's
             # parts add up to its total.
-            amount = self.venture_real_earnings(node_id)
-            if amount > 0.5:
-                rows[node_id] = round(amount, 1)
+            row = ledger_row(self.venture_real_earnings(node_id))
+            if row is not None:
+                rows[node_id] = row
         return rows
 
     def held_trade(self):

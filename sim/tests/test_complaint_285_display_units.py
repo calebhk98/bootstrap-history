@@ -1,156 +1,187 @@
-"""Complaint 285: the player's chosen display units reach every covered screen.
+"""Complaint 285: the player's chosen display units reach every quantity of a reply.
 
-A fake unit is registered per dimension (the stakeholder's `blob` for area),
-selected, and every covered JSON reply and rendered screen is checked: every
-quantity of the dimension carries the fake unit, none keeps another label, and
-the number is the base value converted (so not equal to it). The same run is
-repeated with a mod supplying the fake units. The default (nothing selected)
-must leave every reply untouched.
-"""
-from .harness import *
-import json as _json
-import re as _re
-import tempfile as _tempfile
+A fake unit is registered per dimension (the stakeholder's `blob` for area), selected, and `add_display` is called on
+replies built here: every quantity of the dimension carries the fake unit, the number is the base value converted (so
+not equal to it), and the base field is never changed. The same run is repeated with a mod supplying the fake units.
+The default (nothing selected) leaves every reply untouched. (The covered screens of a played game:
+test_scenario_display_units.)"""
+QUICK_TOPIC = True
+
+import json
+import os
+import tempfile
+import unittest
+from types import SimpleNamespace
+
 from sim.engine import units as U
-from sim.ui.proto.dispatch import _agent_dispatch
+from sim.tests.harness import ROOT
 from sim.ui.proto.render_typed import render_pretty
 from sim.ui.proto.util import _coin_hoard_line
 from sim.ui.units_text import for_text
 
-# Screens covered, by dimension: (render command name, command dict).
-COVERED = {
-    "area": [("buy", {"cmd": "buy", "what": "farm", "n": 5}),
-             ("buy", {"cmd": "buy", "what": "forest", "n": 5})],
-    "mass": [("materials", {"cmd": "materials"})],
-    "money": [("state", {"cmd": "state"}), ("money", {"cmd": "money"}),
-              ("buy", {"cmd": "buy", "what": "farm", "n": 5})],
+FAKE = {"area": "blob_area", "mass": "blob_mass", "money": "blob_money", "temperature": "blob_degree"}
+FAKE_UNITS = {
+    "blob_area": {"name": "blob", "symbol": "blob", "dimension": "area", "factor": 0.15},
+    "blob_mass": {"name": "blob", "symbol": "blob", "dimension": "mass", "factor": 7.0},
+    "blob_money": {"name": "blob", "symbol": "blob", "dimension": "money", "factor": 3.0},
+    "blob_degree": {"name": "blob", "symbol": "blob", "dimension": "temperature", "factor": 2.0, "offset": 10.0},
 }
+# a field of each dimension, its value in the field's native unit, and what the native unit is worth in base units
+FIELDS = {"area": ("hectares", 5.0, "hectare"), "mass": ("needed_tonnes", 14.0, "tonne"),
+          "money": ("capital", 1200.0, "civ_coin"), "temperature": ("furnace_celsius", 100.0, "celsius")}
+HOURS_PER_COIN = 2.0
+GAME = SimpleNamespace(civ={"id": "rome_100ad"}, labour=SimpleNamespace(money_per_labour_hour=lambda: 1.0 / HOURS_PER_COIN))
 # Mass quantities in tonnes: 14 t is 2 blob (7 kg each); the number printed is the converted one.
 HAND_REPLIES = [
     ("why", {"ok": True, "id": "x", "name": "x", "material_rows": [
         {"material": "iron", "needed_tonnes": 14.0, "held_tonnes": 7.0,
          "missing_tonnes": 7.0, "cost_of_missing": 1.0}]}, "need 2,000"),
 ]
-FAKE = {"area": "blob_area", "mass": "blob_mass", "money": "blob_money",
-        "temperature": "blob_degree"}
-FAKE_UNITS = {
-    "blob_area": {"name": "blob", "symbol": "blob", "dimension": "area", "factor": 0.15},
-    "blob_mass": {"name": "blob", "symbol": "blob", "dimension": "mass", "factor": 7.0},
-    "blob_money": {"name": "blob", "symbol": "blob", "dimension": "money", "factor": 3.0},
-    "blob_degree": {"name": "blob", "symbol": "blob", "dimension": "temperature",
-                    "factor": 2.0, "offset": 10.0},
-}
-NATIVE_WORDS = {"area": r"\bhectares?\b|\bha\b", "mass": r"\btonnes?\b",
-                "money": r"\bden\b|\bdenarii\b"}
 
 
-# One game serves every screen: the replies are read for their unit fields and
-# the buys only move prices and cash.
-_GAME = sim(capital=5_000_000.0)
+def registry_with(fake_units):
+    registry = json.loads(json.dumps(U.load_units(ROOT)))
+    registry["units"].update(fake_units)
+    return registry
 
 
-def _fields(reply, dimension, registry, found=None):
-    """Every (key, value, sibling display, rule) of a dimension in a reply tree."""
-    found = [] if found is None else found
-    if isinstance(reply, dict):
-        for key, value in reply.items():
-            if isinstance(value, (dict, list)):
-                _fields(value, dimension, registry, found)
-            elif (isinstance(value, (int, float)) and not isinstance(value, bool)
-                  and not key.endswith("_display")):
-                rule = U.field_rule(registry, key)
-                if rule and rule["dimension"] == dimension:
-                    found.append((key, value, reply.get(key + "_display"), rule))
-    elif isinstance(reply, list):
-        for item in reply:
-            _fields(item, dimension, registry, found)
-    return found
+def reply_of(dimension):
+    field, value, _native = FIELDS[dimension]
+    return {"ok": True, field: value, "nested": {"rows": [{field: value}]}}
 
 
-def _run(registry, label, fake_ids, fake_specs):
-    U.set_registry(registry)
-    for dimension, screens in COVERED.items():
-        spec = fake_specs[fake_ids[dimension]]
-        U.set_preferences({dimension: fake_ids[dimension]})
-        for command_name, command in screens:
-            game = _GAME
-            reply = _agent_dispatch(game, NODES, dict(command))
-            found = _fields(reply, dimension, registry)
-            screen = "%s: %s %s %s" % (label, command["cmd"], command.get("what", ""), dimension)
-            check(screen + " has fields", len(found) > 0, reply)
-            for key, value, shown, rule in found:
-                labelled = (isinstance(shown, dict) and shown.get("unit") == "blob"
-                            and shown.get("symbol") == "blob")
-                check("%s.%s labelled blob" % (screen, key), labelled, shown)
-                if not labelled or not value:
-                    continue
-                base = value * U.native_factor(registry, rule, game)
-                expected = (base - spec.get("offset", 0.0)) / spec["factor"]
-                check("%s.%s converted" % (screen, key),
-                      abs(shown["value"] - expected) <= 0.011 * max(1.0, abs(expected))
-                      and shown["value"] != value, (value, shown, expected))
-            text = render_pretty(command_name, reply)
-            check(screen + " text uses blob", "blob" in text, text)
-            if (command_name, dimension) != ("buy", "money"):
-                # Command syntax lines name the unit a command accepts; not a quantity.
-                shown_lines = [line for line in text.splitlines() if "<" not in line]
-                leaked = _re.findall(NATIVE_WORDS[dimension], "\n".join(shown_lines))
-                check(screen + " text keeps no native label", not leaked, (leaked, text))
-    # Hand-written replies for screens that print their own mass labels.
-    U.set_preferences({"mass": fake_ids["mass"]})
-    for name, reply, expect in HAND_REPLIES:
-        shown = U.add_display(_json.loads(_json.dumps(reply)), None)
-        text = render_pretty(name, shown)
-        screen = "%s: hand-written %s" % (label, name)
-        leaked = _re.findall(NATIVE_WORDS["mass"], text)
-        check(screen + " keeps no tonne label", not leaked, (leaked, text))
-        check(screen + " says blob", "blob" in text, text)
-        check(screen + " number converted", expect in text, (expect, text))
-    hoard = U.add_display({"coin_hoard": {"metal": "silver_kg", "tonnes": 14.0,
-                                          "keeping_cost_per_year": 1.0}}, None)
-    hoard_text = "\n".join(_coin_hoard_line(for_text(hoard, False)))
-    check(label + ": coin hoard line labelled blob", "2000 blob of silver" in hoard_text
-          or "2,000 blob of silver" in hoard_text, hoard_text)
-    # Temperature has no screen in the game yet: the formatter and field rule
-    # are exercised on a synthetic reply (see Complaint 285's remains).
-    U.set_preferences({"temperature": fake_ids["temperature"]})
-    synthetic = U.add_display({"ok": True, "furnace_celsius": 100.0}, None)
-    shown = synthetic.get("furnace_celsius_display") or {}
-    check("%s: temperature field labelled blob and converted" % label,
-          shown.get("unit") == "blob" and abs(shown.get("value", 0) - 45.0) < 0.01, synthetic)
-    U.set_preferences({})
+def expected_shown(registry, dimension, fake_id, fake_units):
+    field, value, native = FIELDS[dimension]
+    spec = fake_units[fake_id]
+    base = value * U.native_factor(registry, {"native": native}, GAME)
+    if dimension == "temperature":
+        base = value
+    return (base - spec.get("offset", 0.0)) / spec["factor"]
 
 
-# Registry as shipped, plus the fake units appended in memory.
-_with_fakes = _json.loads(_json.dumps(U.load_units(ROOT)))
-_with_fakes["units"].update(FAKE_UNITS)
-_run(_with_fakes, "in-memory", FAKE, FAKE_UNITS)
+class DisplayRegistry(unittest.TestCase):
+    """Runs each test with the shipped registry plus fake units, and puts the globals back after."""
+    fake_ids, fake_units = FAKE, FAKE_UNITS
 
-# Default preference leaves every covered reply untouched.
-U.set_registry(_with_fakes)
-U.set_preferences({})
-_default = _agent_dispatch(_GAME, NODES, {"cmd": "state"})
-check("default adds no _display fields", "_display" not in _json.dumps(_default))
+    def setUp(self):
+        self.registry = registry_with(self.fake_units)
+        U.set_registry(self.registry)
+        U.set_preferences({})
+        self.addCleanup(U.set_registry, None)
+        self.addCleanup(U.set_preferences, {})
 
-# The same, with a real mod directory supplying the fake units.
-with _tempfile.TemporaryDirectory() as _tmp:
-    _mod = os.path.join(_tmp, "mods", "test_blobs_k3f9")
-    os.makedirs(os.path.join(_mod, "data", "world"))
-    with open(os.path.join(_mod, "mod.json"), "w") as _handle:
-        _json.dump({"id": "test_blobs_k3f9", "name": "Blobs", "version": "1",
-                    "dependencies": [], "conflicts": []}, _handle)
-    _mod_ids = {dimension: "test_blobs_k3f9:" + name[len("blob_"):] for dimension, name in FAKE.items()}
-    _mod_specs = {"test_blobs_k3f9:" + name[len("blob_"):]: dict(spec) for name, spec in FAKE_UNITS.items()}
-    with open(os.path.join(_mod, "data", "world", "units.json"), "w") as _handle:
-        _json.dump({"units": _mod_specs}, _handle)
-    _run(U.load_units(ROOT, os.path.join(_tmp, "mods")), "mod", _mod_ids, _mod_specs)
-    # A mod unit not namespaced to the mod is refused.
-    with open(os.path.join(_mod, "data", "world", "units.json"), "w") as _handle:
-        _json.dump({"units": {"stray": dict(FAKE_UNITS["blob_area"])}}, _handle)
-    try:
-        U.load_units(ROOT, os.path.join(_tmp, "mods"))
-        check("unnamespaced mod unit refused", False)
-    except Exception as _error:
-        check("unnamespaced mod unit refused", "stray" in str(_error), _error)
-U.set_registry(None)
-U.set_preferences({})
+    def shown(self, dimension):
+        U.set_preferences({dimension: self.fake_ids[dimension]})
+        return U.add_display(reply_of(dimension), GAME)
+
+
+class ConversionTests(DisplayRegistry):
+    def test_a_quantity_of_each_dimension_carries_the_chosen_unit(self):
+        for dimension in FIELDS:
+            field = FIELDS[dimension][0]
+            display = self.shown(dimension)[field + "_display"]
+            self.assertEqual((display["unit"], display["symbol"]), ("blob", "blob"), dimension)
+
+    def test_the_number_is_the_base_value_converted_not_the_native_value(self):
+        for dimension in FIELDS:
+            field, value, _native = FIELDS[dimension]
+            display = self.shown(dimension)[field + "_display"]
+            expected = expected_shown(self.registry, dimension, self.fake_ids[dimension], self.fake_units)
+            self.assertAlmostEqual(display["value"], expected, delta=0.011 * max(1.0, abs(expected)), msg=dimension)
+            self.assertNotEqual(display["value"], value, dimension)
+
+    def test_the_base_field_itself_is_never_changed(self):
+        for dimension in FIELDS:
+            field, value, _native = FIELDS[dimension]
+            self.assertEqual(self.shown(dimension)[field], value, dimension)
+
+    def test_a_quantity_inside_a_nested_row_is_converted_too(self):
+        for dimension in FIELDS:
+            field = FIELDS[dimension][0]
+            self.assertIn(field + "_display", self.shown(dimension)["nested"]["rows"][0], dimension)
+
+    def test_a_dimension_with_no_chosen_unit_is_left_as_written(self):
+        U.set_preferences({"area": FAKE["area"]})
+        reply = U.add_display(reply_of("mass"), GAME)
+        self.assertNotIn("_display", json.dumps(reply))
+
+    def test_a_number_that_is_not_a_quantity_gets_no_display(self):
+        U.set_preferences(FAKE)
+        reply = U.add_display({"ok": True, "year": 100, "count": 4}, GAME)
+        self.assertEqual(reply, {"ok": True, "year": 100, "count": 4})
+
+    def test_temperature_converts_with_its_offset(self):
+        U.set_preferences({"temperature": FAKE["temperature"]})
+        shown = U.add_display({"ok": True, "furnace_celsius": 100.0}, None)["furnace_celsius_display"]
+        self.assertEqual(shown["unit"], "blob")
+        self.assertAlmostEqual(shown["value"], 45.0, places=2)
+
+    def test_the_default_preference_leaves_every_reply_untouched(self):
+        for dimension in FIELDS:
+            reply = reply_of(dimension)
+            self.assertEqual(U.add_display(reply, GAME), reply)
+            self.assertNotIn("_display", json.dumps(U.add_display(reply, GAME)))
+
+
+class TextTests(DisplayRegistry):
+    def test_a_hand_written_reply_prints_its_mass_in_the_chosen_unit_and_converts_the_number(self):
+        # presentation: the screen prints blob, not tonnes
+        U.set_preferences({"mass": FAKE["mass"]})
+        for name, reply, expect in HAND_REPLIES:
+            text = render_pretty(name, U.add_display(json.loads(json.dumps(reply)), None))
+            self.assertIn("blob", text)
+            self.assertIn(expect, text)
+            self.assertNotRegex(text, r"\btonnes?\b")
+
+    def test_the_coin_hoard_line_is_labelled_in_the_chosen_unit(self):
+        # presentation: the line's unit
+        U.set_preferences({"mass": FAKE["mass"]})
+        hoard = U.add_display({"coin_hoard": {"metal": "silver_kg", "tonnes": 14.0, "keeping_cost_per_year": 1.0}}, None)
+        text = "\n".join(_coin_hoard_line(for_text(hoard, False)))
+        self.assertTrue("2000 blob of silver" in text or "2,000 blob of silver" in text, text)
+
+
+class ModUnitsTests(unittest.TestCase):
+    """The same conversions with a real mod directory supplying the fake units."""
+
+    def setUp(self):
+        self.addCleanup(U.set_registry, None)
+        self.addCleanup(U.set_preferences, {})
+        self.directory = tempfile.TemporaryDirectory()
+        self.addCleanup(self.directory.cleanup)
+        self.mod = os.path.join(self.directory.name, "mods", "test_blobs_k3f9")
+        os.makedirs(os.path.join(self.mod, "data", "world"))
+        with open(os.path.join(self.mod, "mod.json"), "w") as handle:
+            json.dump({"id": "test_blobs_k3f9", "name": "Blobs", "version": "1", "dependencies": [], "conflicts": []}, handle)
+
+    def write_units(self, units):
+        with open(os.path.join(self.mod, "data", "world", "units.json"), "w") as handle:
+            json.dump({"units": units}, handle)
+
+    @property
+    def mods_directory(self):
+        return os.path.join(self.directory.name, "mods")
+
+    def test_a_mod_supplies_units_the_display_uses(self):
+        ids = {dimension: "test_blobs_k3f9:" + name[len("blob_"):] for dimension, name in FAKE.items()}
+        specs = {"test_blobs_k3f9:" + name[len("blob_"):]: dict(spec) for name, spec in FAKE_UNITS.items()}
+        self.write_units(specs)
+        registry = U.load_units(ROOT, self.mods_directory)
+        U.set_registry(registry)
+        for dimension in FIELDS:
+            field, _value, _native = FIELDS[dimension]
+            U.set_preferences({dimension: ids[dimension]})
+            display = U.add_display(reply_of(dimension), GAME)[field + "_display"]
+            expected = expected_shown(registry, dimension, ids[dimension], specs)
+            self.assertEqual(display["unit"], "blob", dimension)
+            self.assertAlmostEqual(display["value"], expected, delta=0.011 * max(1.0, abs(expected)), msg=dimension)
+
+    def test_a_mod_unit_not_namespaced_to_the_mod_is_refused(self):
+        self.write_units({"stray": dict(FAKE_UNITS["blob_area"])})
+        with self.assertRaises(Exception) as caught:
+            U.load_units(ROOT, self.mods_directory)
+        self.assertIn("stray", str(caught.exception))
+
+
+if __name__ == "__main__":
+    unittest.main()

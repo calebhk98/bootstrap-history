@@ -1,67 +1,156 @@
-"""Complaint 321: what a project costs in materials does not depend on the firm
-pricing it, so a yearly turn computes each project's material bill once however
-many firms price it, and never serves a bill the market has since moved under."""
-from .harness import *  # noqa: F401,F403
-from sim.agents.api import Firm
-from sim.engine.agents_port import SimWorld
-from sim.agents import imitation
-from sim.engine.project_materials import ProjectMaterialsMixin
-from sim.engine.state import ActorRecord
+"""Complaint 321: what a project costs in materials does not depend on the firm pricing it, so a yearly turn computes
+each project's material bill once however many firms price it, and never serves a bill the market has since moved
+under. The rule is the shared-answer table of sim/engine/view_share.py, called on a stand-in world whose stamp the test
+moves. (That firms' copy pricing goes through it: test_scenarios_batch3_bills.)"""
+QUICK_TOPIC = True
+
+import unittest
+
+from sim.engine.view_share import ViewShareMixin
 
 
-def _chain_with_materials(game, length=4):
-    chain = [node_id for node_id in ORDER if NODES[node_id].get("mat")][:length]
-    game.state.projects.done.update(chain)
-    game._done_changed()
-    game.resource_throttle()  # the turn's held material demand, as a played year has it
-    return chain
+class World(ViewShareMixin):
+    """A world that has a price table (compared by identity), a year and a stock count (compared by value)."""
+
+    def __init__(self):
+        self.prices = {"iron": 5.0}
+        self.year = 100
+        self.stock = {"iron": 0.0}
+        self.computed = 0
+
+    def _view_world_stamp(self):
+        return ((self.prices,), (self.year,))
+
+    def _standalone_stamp(self):
+        return ((), (self.year,))
+
+    def material_stock_t(self, key):
+        return self.stock[key]
+
+    def _shared_bill_keys(self, node_id):
+        return ("iron",)
+
+    def price(self, inputs=("a",), standalone=False, key="bill-a"):
+        def compute():
+            self.computed += 1
+            return self.computed * 10.0
+        return self._shared_answer(key, inputs, compute, standalone)
 
 
-def _bill_computations(firm_count):
-    """How many material purchases the bill code prices when `firm_count` firms price one chain."""
-    game = sim(capital=1e9)
-    chain = _chain_with_materials(game)
-    world = SimWorld(game)
-    purchases = [0]
-    real_cost = ProjectMaterialsMixin.material_purchase_cost
+class SharedAnswerTests(unittest.TestCase):
+    def test_outside_a_view_nothing_is_shared(self):
+        world = World()
+        world.price()
+        world.price()
+        self.assertEqual(world.computed, 2)
 
-    def counting_cost(self, *arguments, **keywords):
-        purchases[0] += 1
-        return real_cost(self, *arguments, **keywords)
+    def test_inside_a_view_an_answer_is_computed_once_however_many_ask(self):
+        world = World()
+        opened = world.open_view_scope({})
+        answers = {world.price() for _ in range(40)}
+        world.close_view_scope(opened)
+        self.assertEqual(world.computed, 1)
+        self.assertEqual(len(answers), 1)
 
-    ProjectMaterialsMixin.material_purchase_cost = counting_cost
-    try:
-        plans = [imitation.copy_plan(Firm("probe:%d" % number, ActorRecord(kind="firm")), chain, world)
-                 for number in range(firm_count)]
-    finally:
-        ProjectMaterialsMixin.material_purchase_cost = real_cost
-    return purchases[0], plans
+    def test_forty_askers_compute_no_more_than_three(self):
+        def computations(askers):
+            world = World()
+            opened = world.open_view_scope({})
+            for _ in range(askers):
+                world.price()
+                world.price(key="bill-b")
+            world.close_view_scope(opened)
+            return world.computed
+        self.assertEqual(computations(40), computations(3))
+
+    def test_different_inputs_are_different_answers(self):
+        world = World()
+        opened = world.open_view_scope({})
+        first, second = world.price(inputs=("a",)), world.price(inputs=("b",))
+        world.close_view_scope(opened)
+        self.assertNotEqual(first, second)
+        self.assertEqual(world.computed, 2)
+
+    def test_a_bill_is_not_served_after_the_price_table_was_rebuilt(self):
+        world = World()
+        opened = world.open_view_scope({})
+        first = world.price()
+        world.prices = {"iron": 9.0}        # a new table: the market moved
+        second = world.price()
+        world.close_view_scope(opened)
+        self.assertNotEqual(first, second)
+
+    def test_a_bill_is_not_served_after_a_stamped_value_moved(self):
+        world = World()
+        opened = world.open_view_scope({})
+        world.price()
+        world.year += 1
+        world.price()
+        world.close_view_scope(opened)
+        self.assertEqual(world.computed, 2)
+
+    def test_a_world_with_no_stamp_shares_nothing(self):
+        world = World()
+        world._view_world_stamp = lambda: None
+        opened = world.open_view_scope({})
+        world.price()
+        world.price()
+        world.close_view_scope(opened)
+        self.assertEqual(world.computed, 2)
+
+    def test_a_standalone_answer_is_shared_outside_a_view(self):
+        world = World()
+        world.price(standalone=True)
+        world.price(standalone=True)
+        self.assertEqual(world.computed, 1)
+
+    def test_closing_a_view_leaves_no_scope_open_on_the_founders_own_pricing(self):
+        world = World()
+        opened = world.open_view_scope({})
+        world.price()
+        world.close_view_scope(opened)
+        self.assertIsNone(world._view_scope)
+        world.price()
+        self.assertEqual(world.computed, 2)
+
+    def test_nested_views_hand_back_the_outer_scope(self):
+        world = World()
+        outer = {}
+        first = world.open_view_scope(outer)
+        second = world.open_view_scope({})
+        world.close_view_scope(second)
+        self.assertIs(world._view_scope, outer)
+        world.close_view_scope(first)
+        self.assertIsNone(world._view_scope)
 
 
-few_count, few_plans = _bill_computations(3)
-many_count, many_plans = _bill_computations(40)
-check("set-up: the chain buys materials, so pricing it costs purchase quotes", few_count > 0, few_count)
-check("pricing one chain for forty firms computes no more bills than for three",
-      many_count == few_count, (few_count, many_count))
-check("every firm is quoted the same copy cost for the same chain",
-      all(plan["total"] == many_plans[0]["total"] for plan in many_plans))
+class SharedBillTests(unittest.TestCase):
+    def test_a_bill_is_reused_while_the_nodes_stock_holds(self):
+        world = World()
+        bills = []
+        opened = world.open_view_scope({})
+        for _ in range(5):
+            bills.append(world._shared_bill("project", lambda: world.price(key="inner")))
+        world.close_view_scope(opened)
+        self.assertEqual(len(set(bills)), 1)
 
-# --- a bill is not served after the market it was priced in moved -----------
-game = sim(capital=1e9)
-chain = _chain_with_materials(game)
-world = SimWorld(game)
-first = world.copy_cost(chain[0])
-for material in sorted(NODES[chain[0]]["mat"]):
-    game._material_stock()[game._material_tag(material)[0]] = 1.0e6
-check("set-up: the held stock moved the cost", game.project_cost(chain[0]) != first, first)
-check("a cost asked of the same world view after the stock moved is the live one",
-      world.copy_cost(chain[0]) == game.project_cost(chain[0]),
-      (world.copy_cost(chain[0]), game.project_cost(chain[0]), first))
+    def test_a_bill_is_recomputed_when_the_stock_it_draws_on_moved(self):
+        world = World()
+        computed = []
+        opened = world.open_view_scope({})
+        world._shared_bill("project", lambda: computed.append(1))
+        world.stock["iron"] = 1.0e6
+        world._shared_bill("project", lambda: computed.append(1))
+        world.close_view_scope(opened)
+        self.assertEqual(len(computed), 2)
 
-# --- the founder's own pricing is not touched by the shared table -----------
-game = sim(capital=1e9)
-chain = _chain_with_materials(game)
-before = game.project_cost(chain[0])
-SimWorld(game).copy_cost(chain[0])
-check("a view's shared bills leave no scope open on the founder's own pricing",
-      getattr(game, "_view_scope", None) is None and game.project_cost(chain[0]) == before)
+    def test_outside_a_view_every_bill_is_computed(self):
+        world = World()
+        computed = []
+        world._shared_bill("project", lambda: computed.append(1))
+        world._shared_bill("project", lambda: computed.append(1))
+        self.assertEqual(len(computed), 2)
+
+
+if __name__ == "__main__":
+    unittest.main()

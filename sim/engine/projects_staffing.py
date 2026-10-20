@@ -19,6 +19,7 @@ from sim.refusal import LogLine
 from sim.constants import declare
 from . import cause_book, category_traits
 from .agents_port import SimWorld
+from .staffing_events import unstaffed_closure_line
 from .units_prose import money_text, per_year
 from sim.agents.api import business_review, edges
 
@@ -94,20 +95,9 @@ class StaffingMixin:
         closed = [closure.entry_key for closure in self.review_ventures((business_review.STAFF_SHORT,), year)]
         if closed:
             self.record_staffing_closures(len(closed), shortfalls)
-            household.log.append((year, LogLine(
-                "concerns_closed_unstaffed", "nobody left to keep an eye on %d concern%s (short of %s), so "
-                "%s closed; %d now shut for want of staff after this "
-                "year's reopenings. You still know how; reopen with "
-                "'open' once you have the people. The premises "
-                "and the stock stand for a few years yet, so "
-                "reopening soon costs a tenth of what opening did. %s"
-                % (len(closed), "" if len(closed) == 1 else "s",
-                   self.staffing_shortfall_words(shortfalls),
-                   ", ".join(sorted(closed)[:4])
-                   + (" and others" if len(closed) > 4 else ""),
-                   self.staffing_shut_count(), self.STAFFING_REMEDIES),
-                concerns=sorted(closed), closed_because="short_staffed", short=shortfalls,
-                stops_earnings_per_year=earnings_stopped)))
+            household.log.append((year, unstaffed_closure_line(
+                closed, shortfalls, self.staffing_shortfall_words(shortfalls), self.staffing_shut_count(),
+                self.STAFFING_REMEDIES, earnings_stopped)))
         return closed
 
     def review_ventures(self, rules=business_review.ALL_RULES, year=None):

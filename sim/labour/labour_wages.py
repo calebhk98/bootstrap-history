@@ -17,6 +17,7 @@ in it.
 from . import trade_data, wage_provider
 from .labour_market_api import LabourMarket
 from .labour_wage_ledger import WageLedgerMixin
+from .staff_pay_rules import wage_bill_of
 from sim.constants import declare
 
 
@@ -177,10 +178,7 @@ class WagesMixin(WageLedgerMixin):
         smith more for a few years, yours included, until the pressure decays
         or the supply of smiths genuinely grows.
         """
-        total = 0.0
-        for trade, count in self.employed_by_trade().items():
-            total += count * self.staff_pay(trade)
-        return total
+        return wage_bill_of(self.employed_by_trade(), self.staff_pay)
 
     HOUSING_PRESSURE_START_OCCUPANCY = declare(
         "HOUSING_PRESSURE_START_OCCUPANCY", 0.75, kind="temporary_heuristic",

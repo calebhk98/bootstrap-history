@@ -1,4 +1,5 @@
 """What a concern really earns and costs, and what reopening it costs: one figure for every screen."""
+from .concern_earnings import forecast_basis, quoted_ramp, quoted_units, real_earnings
 
 
 class VentureQuotesMixin:
@@ -12,17 +13,16 @@ class VentureQuotesMixin:
         `with_output_factor` False leaves out the hazard and war factor, which `revenue` applies to its total.
         """
         running = node_id in self.state.projects.operating
-        ramp = 1.0 if fully_ramped or not running else self.venture_ramp(node_id)
-        if units is None:
-            units = self.institution_units(node_id) if running and node_id in self.SCALABLE_INSTITUTIONS else 1.0
+        ramp = quoted_ramp(running, fully_ramped, lambda: self.venture_ramp(node_id))
+        units = quoted_units(running, node_id in self.SCALABLE_INSTITUTIONS, lambda: self.institution_units(node_id), units)
         market = self.node_output_market_factor(self.nodes[node_id])
-        return self.concern_takings(node_id, ramp, with_output_factor) * units * market
+        return real_earnings(self.concern_takings(node_id, ramp, with_output_factor), units, market)
 
     def venture_forecast_basis(self, node_id):
         """What the quote of a concern's earnings stands on: `market` (the economy prices its goods) or
         `long_run_no_market_yet` (nobody has sold them, so the quote is at long-run cost and the price
         they fetch once sold may differ a great deal)."""
-        return "market" if self.concern_goods_have_market(node_id) else "long_run_no_market_yet"
+        return forecast_basis(self.concern_goods_have_market(node_id))
 
     def venture_upkeep_quote(self, node_id, units=None):
         """Yearly running cost at the current price level, the one source every

@@ -17,6 +17,7 @@ their own. Behaviour is unchanged and verified byte-identical.
 from sim.constants import declare
 from sim.refusal import LogLine
 from .data import (TECH_EFFECTS, TRADES_ABSENT)
+from .literacy_effect import literacy_after_effect
 
 
 class AdoptionMixin:
@@ -147,7 +148,7 @@ class AdoptionMixin:
                 ceiling = (self.literacy_ceiling_elite() if field == "literacy_elite"
                            else self.literacy_ceiling_general())
                 before = self.literacy(field)
-                target = max(0.0, min(max(ceiling, before), before + delta))
+                target = literacy_after_effect(before, delta, ceiling)
                 learners_ceiling = self.literacy_ceiling_common() if field == "literacy_general" else ceiling
                 self.country_literacy().teach(field, target, learners_ceiling)
         for field, before in literacy_before.items():
