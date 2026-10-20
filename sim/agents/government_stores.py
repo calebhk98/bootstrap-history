@@ -11,7 +11,7 @@ a granary model with spoilage and a state's own reserve policy would replace bot
 import dataclasses
 from typing import Any, Dict, List
 
-from . import ledger
+from . import ledger, state_enterprises
 from .budget_line import Line
 from .edges import EDGE_TAXPAYERS
 from .revenue_bases import earned_income
@@ -27,6 +27,8 @@ class StoresMixin:
 		record.revenue_by_form = {assessed.form: assessed.money for assessed in assessments}
 		collected = self.collect_from_payers(assessments)
 		record.revenue_by_form.update(collected)
+		if state_enterprises.monopoly_revenue(record) > 0.0:   # already in the purse: the plants' takings last year
+			record.revenue_by_form["state enterprises"] = state_enterprises.monopoly_revenue(record)
 		record.revenue_in_kind = {assessed.form: assessed.money for assessed in assessments if assessed.in_kind}
 		record.in_kind_received = {}
 		for assessed in assessments:

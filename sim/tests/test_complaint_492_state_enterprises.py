@@ -120,3 +120,8 @@ world.government_actor = type("Taxman", (), {"collect": lambda self, actor, taki
 state_enterprises.open_enterprises(state, world)
 state_enterprises.run(state, world)
 check("the state's own plant is not assessed for the state's levy", asked == [], asked)
+
+# ---- an entry with no takings is not opened for a monopoly -------------------------------------------------
+world, state = state_with(monopolies=["salt_kg"])
+world.nodes["salt_works"]["rev"] = 0.0
+check("a monopoly whose only entry earns nothing opens no plant", state_enterprises.open_enterprises(state, world) == [])
