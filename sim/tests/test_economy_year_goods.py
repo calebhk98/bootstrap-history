@@ -11,7 +11,9 @@ from sim.economy.types import Bid, Offer
 from sim.economy.accounts import Book
 from sim.economy.types import EDGE_CONSUMPTION, EDGE_PRODUCTION, GoodsMove
 from sim.economy.year_close import held_only, learned_prices, national_prices
-from sim.economy.year_goods import _unsold_signal, remembered_price
+from sim.economy import market_quote
+from sim.economy.types import QUOTE_BEST_UNFILLED_BID, QUOTE_COST_COVERING
+from sim.economy.year_goods import remembered_price
 
 
 def bid(maximum_price):
@@ -22,16 +24,15 @@ def offer(reservation, quantity=5.0):
     return Offer("seller", "timber", "area", "tile", quantity, reservation)
 
 
-class UnsoldSignalTests(unittest.TestCase):
+class UnsoldQuoteTests(unittest.TestCase):
     def test_sellers_asking_above_every_buyer_learn_the_most_a_buyer_would_pay(self):
-        self.assertEqual(_unsold_signal([bid(3.0), bid(4.0)], [offer(6.0)]), 4.0)
+        quote = market_quote.no_trade_quote([bid(3.0), bid(4.0)], [offer(6.0)])
+        self.assertEqual((quote.kind, quote.price), (QUOTE_BEST_UNFILLED_BID, 4.0))
 
-    def test_a_seller_asking_less_than_buyers_pay_learns_nothing_from_a_dry_market(self):
-        # nothing traded because nothing real was on offer (rounding dust), not because the ask was too high
-        self.assertIsNone(_unsold_signal([bid(3.0), bid(4.0)], [offer(0.0, quantity=1e-10)]))
-
-    def test_no_offers_no_signal(self):
-        self.assertIsNone(_unsold_signal([bid(4.0)], []))
+    def test_no_offers_and_no_cost_quotes_the_best_bid_and_with_a_cost_the_cost(self):
+        self.assertEqual(market_quote.no_trade_quote([bid(4.0)], []).kind, QUOTE_BEST_UNFILLED_BID)
+        quote = market_quote.no_trade_quote([bid(4.0)], [], cost=2.0)
+        self.assertEqual((quote.kind, quote.price), (QUOTE_COST_COVERING, 2.0))
 
 
 class RememberedPriceTests(unittest.TestCase):

@@ -60,10 +60,10 @@ def producer(name, workshops):
     return Producer(name, "owner:" + name, "farm", TILE, TOTAL, workshops=workshops)
 
 
-def cleared(producers, quantities, bids=None):
+def cleared(producers, quantities, bids=None, ask=ASK):
     bids = bids or demand()
     setup, record = game(producers)
-    offers = [Offer(each.agent_id, GOOD, AREA, TILE, quantity, ASK) for each, quantity in zip(producers, quantities)]
+    offers = [Offer(each.agent_id, GOOD, AREA, TILE, quantity, ask) for each, quantity in zip(producers, quantities)]
     chosen = seller_offers.strategic_offers(setup, record, View(), bids, offers, 1.0)
     result = goods_market.clear(bids, chosen, GOOD, AREA, "", 1.0)
     sold = sum(fill.quantity for fill in result.fills if fill.side == "sell")
@@ -79,8 +79,12 @@ class AggregateProducerTests(unittest.TestCase):
         self.assertAlmostEqual(aggregate_sold, split_sold, delta=0.02 * split_sold)
 
     def test_a_single_workshop_producer_still_prices_strategically(self):
-        price, _sold = cleared([producer("only", 1)], [TOTAL])
-        self.assertGreater(price, ASK)     # it raises its ask against the residual demand
+        setup, record = game([producer("only", 1)])
+        cost = seller_offers.unit_cost(setup, record, View(), Offer("only", GOOD, AREA, TILE, TOTAL, ASK))
+        ask = 1.5 * cost
+        price, _sold = cleared([producer("only", 1)], [TOTAL], ask=ask)
+        self.assertGreater(price, ask)     # it raises its ask against the residual demand, within the band
+        self.assertLessEqual(price, cost * seller_offers.ASK_BAND_CEILING * (1.0 + 1e-9))
 
     def test_an_aggregate_keeps_the_price_taking_ask(self):
         setup, record = game([producer("whole", SHOPS)])

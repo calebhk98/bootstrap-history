@@ -176,17 +176,35 @@ class Fill:
     side: str                        # "buy" or "sell"
 
 
+QUOTE_BEST_UNFILLED_BID = "best_unfilled_bid"          # the most any buyer would have paid, below every ask
+QUOTE_LOWEST_UNFILLED_ASK = "lowest_unfilled_ask"      # the least any seller would have taken, with nobody bidding
+QUOTE_COST_COVERING = "cost_covering"                  # what a maker would have to ask to cover a unit's cost
+
+
+@dataclass(frozen=True)
+class Quote:
+    """What a market that did not trade shows instead of a price: a bid, an ask or a cost, named as such."""
+    kind: str
+    price: float
+
+
 @dataclass(frozen=True)
 class ClearingResult:
     good: GoodId
     area: AreaId
     currency: CurrencyId
-    price: float
+    price: float                     # the crossing the solver worked from; a price traded at only when quantity > 0
     quantity: float
     demand_at_price: float
     offered_at_price: float
     unmet_floor: float               # floor quantity buyers could not get or pay for
     fills: Tuple[Fill, ...]
+    quote: Optional[Quote] = None    # set when nothing traded
+
+    @property
+    def traded_price(self) -> Optional[float]:
+        """The price both sides traded at; None when nothing traded (then read `quote`)."""
+        return self.price if self.quantity > 0.0 else None
 
 
 @dataclass(frozen=True)

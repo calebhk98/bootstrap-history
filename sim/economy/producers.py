@@ -212,12 +212,13 @@ def next_expectations(producer: Producer, recipe: Recipe, view: MarketView,
             updated[good] = latest if previous is None else (
                 previous + EXPECTATION_ADJUSTMENT_SHARE * (latest - previous))
     break_even = _break_even_scale(producer, recipe, view, updated, live_inputs, wages)
+    cost_covering = {good: updated[good] * break_even for good in latest_prices} if break_even is not None else {}
     if break_even is not None:
         for good in latest_prices:
             updated[good] += REGRESSIVE_EXPECTATION_WEIGHT * (updated[good] * break_even - updated[good])
     for good in ask_raise.sold_out_outputs(producer, recipe, view):
         if good in latest_prices:
-            updated[good] *= 1.0 + ask_raise.SOLD_OUT_ASK_RAISE_SHARE
+            updated[good] = ask_raise.raised_within_band(updated[good], cost_covering.get(good))
     return updated
 
 
