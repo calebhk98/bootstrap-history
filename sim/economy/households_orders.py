@@ -16,7 +16,8 @@ from typing import Dict, List, Mapping, Optional
 from sim.constants import declare
 
 from . import currency, durable_stock
-from .credit_view import claims_of, equity_of
+from . import lender_ask
+from .credit_view import claims_of, equity_of, loss_rate_of
 from .households_ability import affordable_goods, household_budget_for_need
 from .households_basket import (Basket, PricedNeed, need_prices, need_units, price_ceilings, quality_reach,
                                 with_quality_reach)
@@ -276,6 +277,7 @@ def goods_orders(cohort: Cohort, view: MarketView, cash: float, income_this_year
         offers = tuple(households_store.store_offers(cohort, view, specs, weights, store_prices, held,
                                                      above_buffer, real_rate, cash, floor_cost))
     if savings > 0.0:
-        funds = (FundsOffer(cohort.agent_id, area_currency, savings,
-                            max(0.0, HOUSEHOLD_TIME_PREFERENCE + cohort.expected_inflation)),)
+        ask = lender_ask.lowest_ask(HOUSEHOLD_TIME_PREFERENCE, cohort.expected_inflation,
+                                    expected_loss_rate=loss_rate_of(view, cohort.agent_id, area_currency))
+        funds = (FundsOffer(cohort.agent_id, area_currency, savings, ask),)
     return AgentOrders(bids=tuple(bids), offers=offers, funds_offers=funds)
