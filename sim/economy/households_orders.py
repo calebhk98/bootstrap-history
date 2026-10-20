@@ -125,15 +125,17 @@ def _durable_ratio(good: GoodId, flow: float, held: float, specs: Mapping[GoodId
     return max(0.0, flow * scale * spec.service_life_years - held + wear) / flow
 
 
-def _smoothed_flow_by_good(cohort: Cohort, priced: List[PricedNeed], basket: Basket
+def _smoothed_flow_by_good(cohort: Cohort, priced: List[PricedNeed], basket: Basket,
+                           spending: Optional[float] = None, floor_cost: Optional[float] = None
                            ) -> Dict[GoodId, float]:
     """The yearly flow of each good the smoothed surplus (smoothed spending over smoothed floor cost) buys,
     with the goods the cohort could afford on it: it sizes the stock of a durable that a bad year, in which
     the floors take nearly all spending or a good is unaffordable, would otherwise size at nothing."""
-    if cohort.expected_spending <= 0.0 or cohort.expected_floor_cost <= 0.0:
+    spending = cohort.expected_spending if spending is None else spending
+    floor_cost = cohort.expected_floor_cost if floor_cost is None else floor_cost
+    if spending <= 0.0 or floor_cost <= 0.0:
         return {}
-    stock_floors, stock_totals = need_units(priced, basket, cohort.people,
-                                            cohort.expected_spending - cohort.expected_floor_cost)
+    stock_floors, stock_totals = need_units(priced, basket, cohort.people, spending - floor_cost)
     flows: Dict[GoodId, float] = {}
     for need in priced:
         need_id = need.spec.need_id
@@ -146,6 +148,25 @@ def _smoothed_flow_by_good(cohort: Cohort, priced: List[PricedNeed], basket: Bas
                 flows[good] = flows.get(good, 0.0) + (stock_floors[need_id] + max(
                     0.0, stock_totals[need_id] - stock_floors[need_id])) * per_unit
     return flows
+
+
+def _store_value_outside_use(cohort: Cohort, priced: List[PricedNeed], basket: Basket, specs: Mapping[GoodId, GoodSpec],
+                             weights, prices, held, cash: float, other_wealth: float, keep: float,
+                             income: float, floor_cost: float) -> float:
+    """What the cohort holds of the store goods that is wealth to spend from. A durable kept in use serves a
+    need and is not wealth, so what the flow of its needs keeps in use is left out; the flow is read at the
+    spending the other wealth allows, so that stocking a durable does not itself move the household to
+    other goods."""
+    from . import households_store            # imported here: that module needs this one's constants
+    in_use_goods = [good for good in weights if held[good] > 0.0 and specs[good].service_life_years > 0.0]
+    value = math.fsum(held[good] * prices[good] for good in weights if good not in in_use_goods)
+    if not in_use_goods:
+        return value
+    provisional = max(0.0, min(cash, income + currency.spending_adjustment(other_wealth + value, keep, income)))
+    reached = with_quality_reach(priced, basket, quality_reach(provisional, floor_cost))
+    in_use = durable_stock.in_use_stock(_smoothed_flow_by_good(cohort, reached, basket, provisional, floor_cost),
+                                        specs, 1.0, households_store.STORE_REBALANCE_BAND)
+    return value + math.fsum(max(0.0, held[good] - in_use.get(good, 0.0)) * prices[good] for good in in_use_goods)
 
 
 def goods_orders(cohort: Cohort, view: MarketView, cash: float, income_this_year: float,
@@ -172,12 +193,13 @@ def goods_orders(cohort: Cohort, view: MarketView, cash: float, income_this_year
     claims = claims_of(view, cohort.agent_id, area_currency)
     from . import households_store            # imported here: that module needs this one's constants
     weights, store_prices, held = households_store.store_holding(cohort, view, specs, priced, shared_store)
-    store_value = math.fsum(held[good] * store_prices[good] for good in weights)
     keep = target + savings_target(income_this_year - floor_cost, view.interest_rate(area_currency),
                                    cohort.expected_inflation)
     # the pace is set by the larger of this year's and last year's income, since a year's income so far
     # understates a household's usual income in its first year
     owned = equity_of(view, cohort.agent_id)     # what it owns of the firms is wealth it already holds
+    store_value = _store_value_outside_use(cohort, priced, basket, specs, weights, store_prices, held,
+                                           cash, cash + claims + owned, keep, income_this_year, floor_cost)
     drawdown = min(currency.spending_adjustment(cash + claims + store_value + owned, keep, income_this_year),
                    WEALTH_DRAWDOWN_LIMIT * max(0.0, income_this_year, cohort.last_year_income))
     spending = max(0.0, min(cash, income_this_year + drawdown))
