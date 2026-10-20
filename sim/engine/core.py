@@ -1893,6 +1893,8 @@ class Sim(ModStoresMixin, RealPriceRatiosMixin, CoinRevaluationMixin, PartnerCiv
                 continue
             self.state.projects.done.add(node_id)
             self._done_changed()
+            if self.state.projects.done_year is None:
+                self.state.projects.done_year = {}
             self.state.projects.done_year[node_id] = year
             self.state.household.log.append((year, LogLine("goal_achieved", "achieved: " + self.nodes[node_id]["name"])))
             self.record_goal_reached(node_id, year)
