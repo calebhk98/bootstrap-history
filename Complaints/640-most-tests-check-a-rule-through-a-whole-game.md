@@ -40,3 +40,12 @@ a plain function first (508). Start with the failing topics above, then the rest
   `goods_orders` test that an owner offers less idle cash. One validation remains.
 - `baseline_fixture`, `real_output_baseline`: kept as baseline validations (4.2), named so, failing on 473 with that message.
 - `spin_up_sensitivity`: now `simulator.py spin-up-sensitivity` (a measurement); its rules are `test_spin_up_sensitivity_rules.py`.
+
+## Applied: audit batch 2 (test_capacity_remedies through test_complaint_147_project_materials)
+
+Each file's rules are called on inputs the test builds (a stub game, a `Business`, a built reply) and the whole-game
+checks are named scenario checks in a `_scenario` file next to it. Extractions: `sim/engine/shortage_sizing.py` (mine and
+nitre-bed sizes), `sim/engine/territory_required.py` (the landless refusal), `compute_material_bill` in
+`sim/engine/project_materials.py`. Deleted as held elsewhere: the two other `test_complaint_147_*` files (now
+`test_complaint_147_project_materials`), the loss-making and creditor-seizure closures (`test_business_review`), the foreman
+choice (`test_business_crew_rule`).

@@ -2,13 +2,15 @@
 
 A concern whose crew mixes generic artisans with a skilled trade needs a foreman of that trade, one specialist
 oversees a bounded number of concerns, and the open gate refuses without one. The rules are called on a stub game
-(`VenturesMixin.venture_foreman`, `venture_foreman_free`, `OpenGateMixin.staffing_open_refusal`) and the screen on a built
+(`venture_foreman_free`, `OpenGateMixin.staffing_open_refusal`; who is the foreman is `business_crew_rule.foreman`, tested in
+test_business_crew_rule) and the screen on a built
 reply; the whole-game wiring is test_complaint_13_specialist_supervision_scenario."""
 QUICK_TOPIC = True
 
 import types
 
 from .harness import *
+from sim.agents import business_crew_rule
 from sim.engine.projects_open_gate import OpenGateMixin
 from sim.engine.projects_ventures import VenturesMixin
 from sim.refusal import cause_of, facts_of
@@ -24,7 +26,8 @@ def a_game(nodes, employees=None, operating=(), capabilities=()):
         state=types.SimpleNamespace(household=household, projects=types.SimpleNamespace(operating=set(operating))),
         institution_units=lambda node_id: 1.0, venture_garrison=lambda node_id, units: {},
         venture_staff_free=lambda: (99.0, 99.0), venture_hands=lambda node_id: (0.0, 0.0))
-    game.venture_foreman = lambda node_id: VenturesMixin.venture_foreman(game, node_id)
+    game.venture_foreman = lambda node_id: business_crew_rule.foreman(business_crew_rule.figures_of(
+        nodes[node_id], lambda: "labourer", 2000.0, 0.5, lambda: 300.0, SHARE, node_id in game.CAPABILITY_INSTITUTIONS, {}))
     game.venture_foremen_used = lambda excluding=None: VenturesMixin.venture_foremen_used(game, excluding)
     game.venture_foreman_free = lambda trade, excluding=None: VenturesMixin.venture_foreman_free(game, trade, excluding)
     return game
@@ -32,20 +35,13 @@ def a_game(nodes, employees=None, operating=(), capabilities=()):
 
 MIRROR = {"rev": 50.0, "lab": {"artisan": 400.0, "glassblower": 300.0, "smith": 100.0}}
 GENERIC = {"rev": 50.0, "lab": {"artisan": 400.0, "labourer": 200.0}}
-SMITHING = {"rev": 50.0, "lab": {"artisan": 400.0, "smith": 100.0}}
 
-# --- who a concern needs as its foreman ----------------------------------------------------------------------------
-game = a_game({"mirror": MIRROR, "generic": GENERIC, "idle": {"rev": 0.0, "lab": {"artisan": 5.0, "smith": 5.0}},
-               "no_artisans": {"rev": 50.0, "lab": {"smith": 100.0}}, "tie": {"rev": 5.0, "lab": {"artisan": 1.0, "smith": 3.0, "potter": 3.0}},
-               "institution": SMITHING}, capabilities=["institution"])
-check("a concern mixing artisans with a skilled trade needs the largest skilled trade as its foreman, for a quarter of his year",
-      game.venture_foreman("mirror") == ("glassblower", SHARE) and SHARE == 0.25, game.venture_foreman("mirror"))
-check("a purely generic concern keeps the older scholar/craftsman rule, with no specialist",
-      game.venture_foreman("generic") == (None, 0.0), game.venture_foreman("generic"))
-check("a concern earning nothing, with no artisan hours, or a capability institution needs no specialist",
-      all(game.venture_foreman(node_id) == (None, 0.0) for node_id in ("idle", "no_artisans", "institution")), "specialist asked")
-check("equal skilled trades are broken by name, so the foreman is the same every time",
-      game.venture_foreman("tie") == ("smith", SHARE), game.venture_foreman("tie"))
+# --- who a concern needs as its foreman is `business_crew_rule.foreman` (test_business_crew_rule holds the cases: the largest
+# skilled trade of a plant built with artisans; none for a generic plant, a plant with no takings or a capability institution).
+game = a_game({"mirror": MIRROR, "generic": GENERIC})
+check("a mirror concern needs a glassblower for a quarter of his year, and a generic one needs no specialist",
+      game.venture_foreman("mirror") == ("glassblower", SHARE) and SHARE == 0.25 and game.venture_foreman("generic") == (None, 0.0),
+      (game.venture_foreman("mirror"), game.venture_foreman("generic")))
 
 # --- a specialist's free time -----------------------------------------------------------------------------------------
 sites = {"mirror_%d" % number: MIRROR for number in range(5)}
