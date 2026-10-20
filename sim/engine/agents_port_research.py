@@ -1,7 +1,7 @@
 """What a researching actor asks of the world: hands, sellers and substitutes (mixed into `SimWorld`)."""
 from typing import Any, List
 
-from sim.agents.research_gate import SCHOLAR_FAMILY, SCHOLAR_TRADE
+from sim.agents.api import research_gate
 
 from .material_availability import materials_without_a_seller
 
@@ -17,8 +17,8 @@ class ResearchView:
 		if own is not None:
 			return own(family)
 		sim = self._sim
-		trades = [SCHOLAR_TRADE] if family == SCHOLAR_FAMILY else [
-			trade for trade in sorted(sim.wages) if trade != SCHOLAR_TRADE and sim.labour.is_craft_trade(trade)]
+		trades = [research_gate.SCHOLAR_TRADE] if family == research_gate.SCHOLAR_FAMILY else [
+			trade for trade in sorted(sim.wages) if trade != research_gate.SCHOLAR_TRADE and sim.labour.is_craft_trade(trade)]
 		return sum(actor.workforce.get(trade, 0.0) + (self.free_fte(trade, actor.identity()) or 0.0) for trade in trades)
 
 	def unsold_materials(self, actor: Any, node_id: str) -> List[str]:
