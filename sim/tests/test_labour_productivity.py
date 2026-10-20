@@ -365,7 +365,7 @@ s_money = unopened_sim(capital=100000.0)
 s_money.capital = -(s_money.credit_limit() * 1.5)
 s_money.last_settlement = -999
 _log_start = len(s_money.log)
-s_money.enforce_credit_limit(105)
+s_money.default_on_debt(105)
 _first_messages = [message for _, message in s_money.log[_log_start:] if cause_of(message) == "insolvency_settled"]
 check("a first-ever settlement, with nothing to extend, says nothing about a moved date",
       bool(_first_messages) and not facts_of(_first_messages[0])["freeze_moved"], _first_messages)
@@ -374,7 +374,7 @@ s_money.capital = -(s_money.credit_limit() * 1.5)
 s_money.last_settlement = -999
 s_money.credit_frozen_until = 110   # an earlier freeze, STILL in force at yr=105
 _log_start = len(s_money.log)
-s_money.enforce_credit_limit(105)
+s_money.default_on_debt(105)
 check("settling again while an earlier freeze is still in force extends the unlock date...",
       s_money.credit_frozen_until == 117, s_money.credit_frozen_until)
 _freeze_messages = [message for _, message in s_money.log[_log_start:] if cause_of(message) == "insolvency_settled"]

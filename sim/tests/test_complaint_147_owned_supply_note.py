@@ -25,7 +25,8 @@ class OwnedSupplyNoteTests(unittest.TestCase):
         before, after = _row(bare), _row(owner)
         # the price a tonne fetches is the economy's on the founder's tile; owned supply may not raise it (Merge
         # 507-stage-3-prices-to-pay removed the scarcity premium) and lowers the bill by covering tonnes
-        self.assertLessEqual(after["price_per_tonne"], before["price_per_tonne"])
+        # (a forest changes the owner's savings, which reaches the price only at float noise since 605-607: about 1e-11 of it)
+        self.assertLessEqual(after["price_per_tonne"], before["price_per_tonne"] * (1.0 + 1e-9))
         self.assertGreater(after["held_from_own_output_tonnes"], 0.0)
         self.assertLess(after["missing_tonnes"], before["missing_tonnes"])
         self.assertLess(after["cost_of_missing"], before["cost_of_missing"])

@@ -263,3 +263,29 @@ Bisected on the first-parent merges, one topic list per commit (`python3 -m sim.
   (the iron bar's price), not the opening wage. `saving_finds_a_use` "households spend most of their income" read the
   opening's state (0.92 came from the opening equity; the run's own effect is 0.878 against 0.875 without it), so it
   now compares runs with and without the equity read.
+
+## Integration branch regressions (fix-integration-regressions-2)
+
+Measured on the integration branch with `python3 -m sim.tests --slow --only <topic> --jobs 1`; each passes on `origin/main`.
+
+- `cli_one_process_session`: one process playing four commands leaves a different save from one process per command
+  (`python3 -m sim.tests --slow --only cli_one_process_session`). Bisected over the first-parent merges: equal through
+  996ce535 (598), different from 4e521c8f (627-628); inside it, commit 3b7a5900 (627). Setting `wage_scale` in
+  `sim/economy/carriage_hours.py` to 1.0 makes the two saves equal again at that commit, so the cause is the
+  carriage wage scale, whose effect a reload does not reproduce: the year-2 differences start at about one part in
+  1e15 on a merchant's hours wanted and grow through the price search. The reloaded table, the persisted `carried`
+  flows and `memory.wages` were checked and match; which unpersisted input of `wage_scale` differs is not yet
+  found. Open: the check stays failing.
+- `economy_carriage_hours`: `test_hours_given_to_carriage_are_taken_from_what_other_employers_hire` fails from 598
+  or earlier on float noise (others hired equal to one ulp: carriers hired almost nothing), and stopped failing
+  after the opening-income fix, when carriers are hired but only 8 of 43 planned hours. That makes
+  `test_a_plan_the_market_can_fill_is_hired_in_full` fail: the bid's maximum wage (1.2) is far above the town wage
+  (0.04), yet the town's labourer hours are all taken (others plus carriers is constant), so the labour market
+  rations. Not a fixture mistake; the check stays failing until the market's rationing of a late bidder is decided.
+- `firm_entry_default_game`: since 1c0e7ea2 (609-611) no entrant copies `finery_puddling`. Measured on the
+  branch: the market factor is no longer zero, expected takings are 12k a year (25k before), but the copy plan
+  costs 200k (72k before), because the opening market price of coal rose (the case for `blast_furnace`'s coal
+  in `project_material_bill`: 58k before, 220k at 1c0e7ea2, 185k now) while the price solver's coal price barely
+  moved. The trade split left the unskilled `labourer` pool as the poor and the bonded and put the farm stratum on
+  `farmer` (whose quoted wage is four times the labourer's), and coal's hewing and haulage hours are labourer and
+  miner hours. Open: why the economy's coal price at the opening is two to three times its solved price.
