@@ -1,6 +1,6 @@
 # A seat cannot be handed over: its knowledge, holdings and notes are lost when the founder dies
 
-**Status:** done. `handover` command (sim/ui/proto/dispatch_seats.py) over `hand_over_seat` (sim/engine/seat_handover.py); notes are now per seat (sim/ui/proto/notes_store.py). Held by sim/tests/test_seat_handover.py and test_seat_handover_whole_game.py (slow). Not moved: other UI memory topics (goal watch, programmes) and a debt balance.
+**Status:** partly - handover command built; debt, goods and offers keyed by seat id, and the replacement's own holdings are not carried (see What is left)
 
 Part of Complaint 481 (A player cannot play as a country).
 
