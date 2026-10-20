@@ -2,8 +2,9 @@
 wealth it wants to hold, so it does not also keep that wealth as idle cash; more of its income reaches a spender
 (goods, or a producer's loan). Values are read from the economy's records, not from text.
 
-Measured on the fixture with plant (`plant_setup`, 40 quiet years, years 5 on), before and after this change:
-spending over income 0.885 then 0.92, and the share of the savings on offer that was lent 0.04 then 0.10."""
+Measured on the fixture with plant (`plant_setup`, 40 quiet years, years 5 on) by `SavingReachesASpenderTests`, which
+runs the economy with and without the households' equity read: the share of the savings on offer that is lent, and
+the spending over income, in each."""
 import dataclasses
 import unittest
 
@@ -98,32 +99,42 @@ class EquityTests(unittest.TestCase):
         self.assertEqual(economy.record.expansion_runs, {})
 
 
+def _run_years(count_equity):
+    """(spending over income, lent over offered) over the warmed-up years, with households counting what they
+    own of the firms or not."""
+    setup = plant_setup()
+    economy = Economy(setup)
+    if not count_equity:
+        economy._equity_read = lambda view: {}
+    economy_api.begin_spin_up(economy)
+    spent = income = lent = offered = 0.0
+    for year in range(YEARS):
+        economy.step(fixture.quiet_year(setup))
+        if year < WARM_UP_YEARS:
+            continue
+        record = economy.record
+        spent += sum(cohort.last_year_spending for cohort in record.cohorts.values())
+        income += sum(cohort.last_year_income for cohort in record.cohorts.values())
+        lent += sum(record.lent_by_borrower.values())
+        offered += record.funds_offered
+    return spent / income, lent / offered
+
+
 class SavingReachesASpenderTests(unittest.TestCase):
+    """Paired runs from the same opening: the opening no longer counts the households' equity (Complaint 558), so
+    an absolute bound would measure the opening's state, not the mechanism."""
+
     @classmethod
     def setUpClass(cls):
-        setup = plant_setup()
-        economy = Economy(setup)
-        economy_api.begin_spin_up(economy)
-        spent = income = lent = offered = 0.0
-        for year in range(YEARS):
-            economy.step(fixture.quiet_year(setup))
-            if year < WARM_UP_YEARS:
-                continue
-            record = economy.record
-            spent += sum(cohort.last_year_spending for cohort in record.cohorts.values())
-            income += sum(cohort.last_year_income for cohort in record.cohorts.values())
-            lent += sum(record.lent_by_borrower.values())
-            offered += record.funds_offered
-        cls.spending_over_income = spent / income
-        cls.lent_over_offered = lent / offered
+        cls.spending_with, cls.lent_with = _run_years(True)
+        cls.spending_without, cls.lent_without = _run_years(False)
 
-    def test_households_spend_most_of_their_income(self):
-        # 0.885 before this change
-        self.assertGreater(self.spending_over_income, 0.9)
+    def test_households_that_count_their_firms_spend_more_of_their_income(self):
+        self.assertGreater(self.spending_with, self.spending_without)
 
     def test_a_share_of_the_savings_on_offer_is_lent_to_producers(self):
-        # 0.04 before this change
-        self.assertGreater(self.lent_over_offered, 0.08)
+        self.assertGreater(self.lent_with, 0.08)
+        self.assertGreater(self.lent_with, 2.0 * self.lent_without)
 
 
 if __name__ == "__main__":

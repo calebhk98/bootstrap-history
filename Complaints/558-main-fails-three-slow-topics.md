@@ -252,3 +252,14 @@ Bisected on the first-parent merges, one topic list per commit (`python3 -m sim.
   the glut clears. The home side is not stepped in this fixture, so the swing is the partner book's own dynamic at a
   cargo near its threshold, not a home-economy defect. Not fixed; the bound is not loosened. Open (a partner book
   whose capacity answers a steady cargo without a two-year cycle is the fix to find).
+- Fixed, 607 (branch `fix-opening-wages-after-equity`): the opening counted the households' equity in its income fixed
+  point (`opening_equity.py`). A household may spend wealth above what it wants to keep at up to a year's income a
+  year (`WEALTH_DRAWDOWN_LIMIT`), so equity added a lasting demand the opening settled on: Rome's opening income was
+  76 percent higher and the thin trades' (furnaceman, engraver) wages at one labour area (`work@france_05`) ran to
+  20 times the others after year one. Removed from the opening; the in-run equity read stays. Regression:
+  `opening_income_equity`. After it, `agent_wage_per_hour` on a default game is back to the 549 levels
+  (labourer 0.043, furnaceman 0.061, engraver 0.080) and `foreign_actor_trade` passes (19 checks, 0 failures).
+  `firm_entry_default_game` still fails and also fails at 84858956, before 605-607: its cause is the 609-611 one above
+  (the iron bar's price), not the opening wage. `saving_finds_a_use` "households spend most of their income" read the
+  opening's state (0.92 came from the opening equity; the run's own effect is 0.878 against 0.875 without it), so it
+  now compares runs with and without the equity read.
