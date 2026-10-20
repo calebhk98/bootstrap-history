@@ -8,12 +8,10 @@ an AI player also decides for itself.
 import math
 from typing import Any, Callable, List, Optional
 
-from . import business_books, ledger, research
+from . import business_books, ledger, research, research_choice
 from .base import RecordedActor
 from .player_commands import CommandRejected, run_orders
-from .policy import Decision, Option
 from .registry import register_actor_kind
-from .tuning import ATTENTION_SPAN, HIRING_PREMIUM, VALUE_HORIZON_YEARS
 from .tuning_player import PLAYER_VISIBLE_EXPOSURE
 
 
@@ -82,22 +80,10 @@ class Player(RecordedActor):
 	# ---- the AI's own decisions -------------------------------------------
 	def expected_margin(self, node_id: str, world: Any) -> float:
 		"""Yearly margin a new operator expects from a concern at full ramp."""
-		rivals = self.rivals_of(node_id, self.actor_id) if self.rivals_of else 0.0
-		upkeep, wages = business_books.yearly_costs(world, node_id)
-		return world.entry_gross(node_id, rivals, 1.0) - upkeep - wages
+		return research_choice.expected_concern_margin(self, node_id, world)
 
-	def research_options(self, world: Any) -> List[Option]:
-		candidates = []
-		for node_id in sorted(world.nodes):
-			if self.knows(node_id, world) or node_id in self.works or research.missing_prerequisites(self, node_id, world):
-				continue
-			margin = self.expected_margin(node_id, world)
-			if margin > 0:
-				candidates.append((margin * VALUE_HORIZON_YEARS, node_id))
-		candidates.sort(key=lambda item: (-item[0], item[1]))
-		return [Option(subject=node_id, worth=worth, cost=research.plan(self, node_id, world)["total"],
-					   chance=research.chance(node_id, world))
-				for worth, node_id in candidates[:ATTENTION_SPAN]]
+	def research_worth(self, node_id: str, world: Any) -> float:
+		return research_choice.concern_worth(self, node_id, world)
 
 	def decide(self, world: Any) -> None:
 		"""An AI player: shut what it expects to lose on, open what it knows pays, research what is worth it."""
@@ -107,12 +93,7 @@ class Player(RecordedActor):
 		for node_id in sorted(self.knowledge - self.concerns):
 			if node_id in world.nodes and self.expected_margin(node_id, world) > 0:
 				self.business.open_plant(node_id, world.year)
-		options = self.research_options(world)
-		for option in self.decision_policy.choose(self, Decision("research", options, self.copy_budget(world))):
-			try:
-				self.start_research(option.subject, world)
-			except CommandRejected:
-				continue
+		research_choice.decide(self, world)
 
 	def act(self, world: Any) -> None:
 		self.pay_interest(world)

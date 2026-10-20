@@ -27,7 +27,9 @@ from .units_prose import money_text
 from sim.constants import declare
 from .projects_precaution import (spec as precaution_spec, extra_cost as precaution_extra_cost,
                                   extra_hours as precaution_extra_hours)
-from sim.agents.api import edges
+from sim.agents.api import CommandRejected, edges, research, research_gate
+from .agents_port import SimWorld
+from .seat_researcher import SeatResearcher
 
 
 class StartingMixin:
@@ -280,14 +282,10 @@ class StartingMixin:
         return quality, True
 
     def _substitution_group_best(self, node_id, group):
-        """The best quality any option in one `req_any` group actually offers."""
-        best = 0.0
-        for opt, qual in (group.get("options") or {}).items():
-            if opt in self.state.projects.done or opt in self.nodes.get(node_id, {}).get("mat", {}):
-                best = max(best, float(qual))
-            elif opt not in self.nodes:
-                best = max(best, float(qual) * self.PURCHASABLE_SUBSTITUTE_QUALITY_DISCOUNT)   # a purchasable commodity
-        return best
+        """The best quality any option in one `req_any` group actually offers (the gate every actor passes)."""
+        return research_gate.substitute_quality(
+            self.nodes[node_id], group, lambda option: option in self.state.projects.done,
+            lambda option: option in self.nodes, self.PURCHASABLE_SUBSTITUTE_QUALITY_DISCOUNT)
 
     def _record_substitution_gap(self, group):
         """Record which group failed and what would have satisfied it.
@@ -535,7 +533,7 @@ class StartingMixin:
 
     @blocker_kind("knowledge")
     def _check_missing_prereqs(self, node_id, node, ignore_trade, _memo, _why):
-        missing = [prereq_id for prereq_id in node["pre"] if prereq_id not in self.state.projects.done]
+        missing = research_gate.unmet_prerequisites(node, lambda prereq_id: prereq_id in self.state.projects.done)
         if missing:
             # NAME ONLY WHAT YOU HAVE HEARD OF: printing every missing
             # prerequisite by raw id regardless of visibility would let a
@@ -692,7 +690,7 @@ class StartingMixin:
         # Exactly the bug the craft gate below was fixed for, never extended
         # to scholars - see scholar_hands_available() in labour.py, which is
         # craft_hands_available() with the trade family changed.
-        if node["sch"] > self.labour.scholar_hands_available():
+        if research_gate.hands_short(node["sch"], self.labour.scholar_hands_available()) > 0.0:
             # _staff_advice is pure (labour.py: no rng, no log, no mutation -
             # it only reads is_venture/is_visible/nodes/artisans/scholars),
             # but it walks STAFF_SOURCES and can itself call is_visible, so
@@ -725,7 +723,7 @@ class StartingMixin:
         #
         # Buying a jobbing carpenter for a season to raise your workshop is
         # what a person in this position actually did.
-        if node["art"] > self.labour.craft_hands_available():
+        if research_gate.hands_short(node["art"], self.labour.craft_hands_available()) > 0.0:
             # A SHARE OF A YEAR, NOT ONLY BODIES. craft_hands_available()
             # adds hours already bought under contract as that fraction of
             # one more craftsman's year (see its own docstring: "a year of
@@ -965,6 +963,16 @@ class StartingMixin:
             return False, refusal
         if precaution and precaution_spec(self, node_id) is None:
             return False, "%s offers no pilot plant or redundant team to pay for." % self.nodes[node_id]["name"]
+        # the start is the shared research path (sim/agents/research.py) with this seat as the researcher
+        try:
+            research.begin(SeatResearcher(self, precaution), node_id, SimWorld(self))
+        except CommandRejected as reason:
+            return False, reason.args[0]
+        return True, None
+
+    def begin_seat_project(self, node_id, precaution=False):
+        """Put the seat's project in hand once the shared gates have passed: buy the materials due now,
+        take the bill, register the project (what `research.begin` asks of the seat)."""
         projects = self.state.projects
         household = self.state.household
         scenario_year = self.state.scenario.year
@@ -1009,7 +1017,7 @@ class StartingMixin:
         if (node["ph"] <= 0 and self.calendar_floor(node_id) <= 0 and price <= 0.5
                 and not node["lab"] and self.effective_risk(node_id) <= 0):
             self._complete(node_id)
-            return True, None
+            return "done"
         if _already > 0.5:
             household.log.append((scenario_year, LogLine("project_restarted", "%s begun again; the %s already "
                                         "paid on it before comes off the bill"
@@ -1020,7 +1028,7 @@ class StartingMixin:
         if node_id in self.order:
             self.order.remove(node_id)
         self.order.insert(0, node_id)
-        return True, None
+        return "begun"
 
     def stop_project(self, node_id):
         """Stop a project you started. Your HOURS are gone; the money stands.

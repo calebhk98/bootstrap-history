@@ -40,8 +40,26 @@ discount search; per-actor adoption stage and unit count; subsidy and mandate le
   actor that knows what a node rests on learns it at the half-life the founder's venture diffusion uses
   (`Sim.knowledge_half_life_years`), scaled by the node's visibility at the distance between the two actors.
   Test: `python3 -m sim.tests --only research_every_actor`.
-- Left: the founder's own research (`projects_starting.py`) is still its own path, not a caller of
-  `research.begin`; actors still skip the start gates (materials, staff, scholars, `req_any` substitutes);
-  no AI choice of research for firms and states (only a `Player` with an AI controller chooses);
-  `demonstrated()` still reads seat builds only, so actor-known nodes are not copyable through
-  `imitation.missing_chain`; the staged-adoption, awareness, contact-trigger and subsidy sub-gaps are untouched.
+- Done: one gate function (`sim/agents/research_gate.py`) serves the founder and every actor: unmet prerequisites,
+  `req_any` substitutes, scholar and craftsmen hands, materials someone sells. `research.begin` refuses with the
+  first failing gate, as a `Refusal` carrying its `cause` (`scholar_staff`, `craft_staff`, `no_substitute`,
+  `materials_unsold`, `prerequisites_unknown`, `cannot_afford`). Test: `--only research_start_gates`.
+- Done: the founder's start (`start_project` in `sim/engine/projects_starting.py`) calls `research.begin` with the seat
+  as researcher (`sim/engine/seat_researcher.py`); the seat answers hands, held stock and bill from its own books, and
+  the founder's other gates (win condition, social approval, credit) still run first in `start_reason`. With the staff
+  in place the founder's bill and an actor's plan for the same node are equal (`--only founder_research_shared_path`).
+  Difference: an actor with no staff of a trade pays the hiring premium on that trade's hours; the founder's bill
+  does not.
+- Done: firms, AI players and states choose research through their decision policy (`sim/agents/research_choice.py`):
+  a firm or player takes a node whose concern's takings at the economy's prices repay its cost over the valuing
+  horizon; a state takes nodes its weighted gains value (`imitation_worth`). One programme at a time
+  (`RESEARCH_PROGRAMMES_AT_ONCE`, a labelled heuristic). An actor reviews what to research only every
+  `RESEARCH_REVIEW_YEARS` (its own year of the cycle), prices at most a few plans per review, drops candidates whose
+  labour alone outruns their worth, and reuses a node's pioneer cost for that long (`SimWorld.research_cost`). Test: `--only research_chosen_by_actors`. Cost in a default
+  game: `python3 sim/simulator.py` has no command for it; time `advance_actors` over a few years with and without.
+- Done: `demonstrated()` is the seats' builds plus every active actor's own knowledge beyond the baseline, and
+  `exposure` reads the holders' distance for those nodes, so imitation can copy from any actor
+  (`--only demonstrated_reads_actor_knowledge`).
+- Left: the staged-adoption, awareness, contact-trigger and subsidy sub-gaps are untouched; a firm's or state's
+  materials are checked against the market only (an actor's own stock is not counted); a state's research choice
+  is only as good as the node `gains` and `traits` data it weighs.

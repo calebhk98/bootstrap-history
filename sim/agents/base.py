@@ -13,7 +13,7 @@ from .business_plant import Plant
 from .business_review import Reviewable
 from .records import ActorRecord
 
-from . import imitation, ledger, research
+from . import imitation, ledger, research, research_choice
 from .borrowing import Borrower
 from .ledger import Purpose
 from .purses import EDGE_OUTSIDE, Purses
@@ -171,7 +171,7 @@ class Actor(Reviewable, Borrower):
 	def imitation_candidates(self, world: Any) -> List[str]:
 		"""The inventions this actor might value, in id order; an actor that
 		values only some of them narrows this so it is not scanned in full."""
-		return world.founder_inventions()
+		return sorted(world.demonstrated())
 
 	def imitation_options(self, world: Any) -> List[Option]:
 		"""Priced options for the inventions that look most worth copying."""
@@ -234,6 +234,21 @@ class Actor(Reviewable, Borrower):
 		"""Begin researching a node (any actor, one path: `research.py`); refuses with the reason."""
 		return research.begin(self, node_id, world)
 
+	def research_worth(self, node_id: str, world: Any) -> float:
+		"""What researching the node is worth to this actor (0: it does not choose research for itself)."""
+		return 0.0
+
+	def research_price(self, costs: Dict[str, Any], node_id: str, world: Any) -> float:
+		"""Money the research takes out of its purse: the plan's whole cost."""
+		return costs["total"]
+
+	def commit_research(self, node_id: str, costs: Dict[str, Any], world: Any) -> str:
+		"""Take the research on as a project in `works`."""
+		work = imitation.start_work(node_id, [node_id], costs, world.year)
+		work["research"] = True
+		self.works[node_id] = work
+		return "research begun, %d years" % costs["years"]
+
 	def work_on_research(self, world: Any) -> List[str]:
 		"""Advance every research a year at the country's literacy; returns the nodes learned."""
 		return research.work_year(self, world)
@@ -259,6 +274,8 @@ class Actor(Reviewable, Borrower):
 		"""The actor's own business for the year."""
 		self.consider_imitation(world)
 		self.work_on_copies(world)
+		if self.researches:
+			research_choice.decide(self, world)
 		self.work_on_research(world)
 
 	def advance(self, world: Any) -> None:

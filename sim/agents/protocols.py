@@ -315,6 +315,23 @@ class World(Protocol):
 	def is_public(self, node_id: str) -> bool:
 		...
 
+	def research_hands(self, actor: Any, family: str) -> float:
+		"""People of a trade family ("scholar", "craft") the actor can put on a piece of research: its staff
+		and the free people it could take on."""
+		...
+
+	def unsold_materials(self, actor: Any, node_id: str) -> List[str]:
+		"""Materials the node buys that no one in reach sells, sorted."""
+		...
+
+	def research_cost(self, node_id: str, max_age_years: int) -> float:
+		"""Money to pioneer the node, labour included; a figure at most `max_age_years` old may be reused."""
+		...
+
+	def purchasable_substitute_discount(self) -> float:
+		"""Share of its stated quality a substitute bought off the market keeps."""
+		...
+
 	def knowledge_half_life_years(self) -> float:
 		"""Years for half of the actors that could learn a node some actor holds to have learned it."""
 		...

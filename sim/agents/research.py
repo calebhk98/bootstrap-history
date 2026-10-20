@@ -8,9 +8,11 @@ Pure functions over an actor and a world view; the actor keeps the project in `w
 import math
 from typing import Any, Dict, Iterable, List
 
-from . import imitation
+from sim.refusal import Refusal
+
+from . import imitation, research_gate
 from .player_commands import CommandRejected
-from .tuning import HIRING_PREMIUM
+from .tuning import HIRING_PREMIUM, RESEARCH_REVIEW_YEARS
 
 
 def missing_prerequisites(actor: Any, node_id: str, world: Any) -> List[str]:
@@ -24,10 +26,16 @@ def plan(actor: Any, node_id: str, world: Any) -> Dict[str, Any]:
 	base_labour = sum(amount * world.labour_market.quote(trade, 0.0, actor) for trade, amount in hours.items())
 	premium = sum(amount * world.labour_market.quote(trade, 0.0, actor) * HIRING_PREMIUM
 				  for trade, amount in hours.items() if actor.workforce.get(trade, 0.0) <= 0)
-	other_money = max(0.0, world.copy_cost(node_id) - base_labour)
+	other_money = max(0.0, world.research_cost(node_id, RESEARCH_REVIEW_YEARS) - base_labour)
 	return {"hours": hours, "money": other_money + premium, "labour_cost": base_labour,
 			"total": other_money + premium + base_labour,
 			"years": max(1, int(math.ceil(float(node.get("yrs") or 0.0))))}
+
+
+def labour_floor(actor: Any, node_id: str, world: Any) -> float:
+	"""The least the node can cost: its labour hours at the going quote (cheap; the full plan prices the rest)."""
+	return sum(amount * world.labour_market.quote(trade, 0.0, actor)
+			   for trade, amount in (world.nodes[node_id].get("lab") or {}).items())
 
 
 def chance(node_id: str, world: Any) -> float:
@@ -35,23 +43,16 @@ def chance(node_id: str, world: Any) -> float:
 
 
 def begin(actor: Any, node_id: str, world: Any) -> str:
-	"""Begin researching a node; refuses with the reason."""
-	if node_id not in world.nodes:
-		raise CommandRejected("no such node")
-	if actor.knows(node_id, world):
-		raise CommandRejected("already known")
-	if node_id in actor.works:
-		raise CommandRejected("already being researched")
-	missing = missing_prerequisites(actor, node_id, world)
-	if missing:
-		raise CommandRejected("prerequisites unknown: " + ", ".join(sorted(missing)))
+	"""Begin researching a node; refuses with the first start gate it fails (`research_gate.refusals`), whose
+	text carries its `cause`. The actor says what the work costs it (`research_price`) and takes it on
+	(`commit_research`); a seat's founder does both through its own books."""
+	found = research_gate.refusals(actor, node_id, world)
+	if found:
+		raise CommandRejected(found[0])
 	costs = plan(actor, node_id, world)
-	if costs["total"] > actor.copy_budget(world):
-		raise CommandRejected("cannot afford the research")
-	work = imitation.start_work(node_id, [node_id], costs, world.year)
-	work["research"] = True
-	actor.works[node_id] = work
-	return "research begun, %d years" % costs["years"]
+	if actor.research_price(costs, node_id, world) > actor.copy_budget(world):
+		raise CommandRejected(Refusal("cannot_afford", "cannot afford the research", total=costs["total"]))
+	return actor.commit_research(node_id, costs, world)
 
 
 def work_year(actor: Any, world: Any) -> List[str]:
