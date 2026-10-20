@@ -35,6 +35,21 @@ class PurseResidue(unittest.TestCase):
         book.transfer_many(result.transfers)
         self.assertGreaterEqual(book.balance(who.agent_id, "coin"), 0.0)
 
+    def test_transfers_that_together_exceed_the_purse_are_cut_to_fit_it(self):
+        transfers = [Transfer("m1", "carter", "coin", amount, "carriage") for amount in (4.0, 3.0, 2.0)]
+        posted = merchants.within_purse(transfers, 6.0)
+        self.assertLessEqual(sum(each.amount for each in posted), 6.0)
+        self.assertAlmostEqual(sum(each.amount for each in posted), 6.0, places=9)
+        self.assertAlmostEqual(posted[0].amount / posted[1].amount, 4.0 / 3.0)
+
+    def test_transfers_within_the_purse_are_posted_whole(self):
+        transfers = [Transfer("m1", "carter", "coin", amount, "carriage") for amount in (4.0, 1.0)]
+        self.assertEqual(merchants.within_purse(transfers, 6.0), tuple(transfers))
+
+    def test_an_empty_purse_posts_nothing(self):
+        posted = merchants.within_purse([Transfer("m1", "carter", "coin", 1.0, "carriage")], -1e-14)
+        self.assertEqual(sum(each.amount for each in posted), 0.0)
+
 
 if __name__ == "__main__":
     unittest.main()
