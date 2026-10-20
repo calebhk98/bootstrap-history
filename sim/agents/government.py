@@ -28,6 +28,7 @@ from .values import invention_gains, weighted_gain
 
 class Government(CorveeMixin, CreditRecordMixin, CoinageMixin, GranaryMixin, StoresMixin, SurplusMixin, RecordedActor):
 	kind = "government"
+	researches = True
 
 	def imitation_worth(self, node_id: str, world: Any) -> float:
 		gains = invention_gains(world.nodes[node_id])

@@ -54,7 +54,7 @@ class CountryLiteracyTests(unittest.TestCase):
         def progress():
             player.works["research"] = {"chain": ["research"], "hours": {}, "money": 0.0,
                                         "labour_cost": 0.0, "years": 10, "progress": 0.0,
-                                        "stalled": 0.0}
+                                        "stalled": 0.0, "research": True}
             player.work_on_research(world)
             return player.works["research"]["progress"]
 

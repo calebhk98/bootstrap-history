@@ -315,6 +315,14 @@ class World(Protocol):
 	def is_public(self, node_id: str) -> bool:
 		...
 
+	def knowledge_half_life_years(self) -> float:
+		"""Years for half of the actors that could learn a node some actor holds to have learned it."""
+		...
+
+	def knowledge_visibility(self, node_id: str, distance_km: float) -> float:
+		"""0..1: how much of a node an actor holds shows to an onlooker `distance_km` away."""
+		...
+
 	def exposure(self, node_id: str, location: Optional[str]) -> float:
 		"""How much of an invention an observer at `location` can learn, 0..1."""
 		...

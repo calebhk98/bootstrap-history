@@ -84,6 +84,15 @@ class SimWorld(BudgetView, SiteView, RevenueView, GroupView, StakeView, Disclosu
 	def demonstrated(self) -> Set[str]:
 		return self._once("demonstrated", lambda: set(self.founder_inventions()))
 
+	def knowledge_half_life_years(self) -> float:
+		return self._sim.knowledge_half_life_years()
+
+	def knowledge_visibility(self, node_id: str, distance_km: float) -> float:
+		"""How much of a node some actor holds shows `distance_km` away: its own opacity, public if a seat runs it."""
+		sim = self._sim
+		visibility = visibility_of.base_visibility("default", self.is_public(node_id), sim.copy_difficulty(node_id), SECRET_EXPOSURE)
+		return visibility_of.seen_from(visibility, distance_km, OBSERVATION_RANGE_KM)
+
 	def is_public(self, node_id: str) -> bool:
 		"""Whether some seat runs it as a concern, where anyone can see it."""
 		return seat_builds.operating_anywhere(self._sim.state.seats, node_id)

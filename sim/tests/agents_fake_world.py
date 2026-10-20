@@ -88,6 +88,15 @@ class FakeWorld:
 	def research_productivity(self, country=None):
 		return 1.0
 
+	def knowledge_half_life_years(self) -> float:
+		return 40.0
+
+	def knowledge_visibility(self, node_id: str, distance_km: float) -> float:
+		return 1.0
+
+	def distance_km(self, place_a: Optional[str], place_b: Optional[str]) -> float:
+		return 0.0
+
 	# ---- the tree and what has been shown
 	def civ_id(self) -> str:
 		return self.civ
