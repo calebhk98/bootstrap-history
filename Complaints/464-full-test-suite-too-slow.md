@@ -78,3 +78,9 @@ quick topics batched with it.
    deep-copy in `geography/loading.py`, region and weather tables).
 
 Owner decision (2026-10-09): the spin-up and test-time work is handled in a separate session; not in this batch.
+
+Update (branch `464-557-faster-slow-suite`): the full-length opening topics now fail in seconds with "shipped openings are stale;
+run `python3 sim/simulator.py openings`" instead of computing for tens of minutes (see 557 step 4). A warm game build is about
+2 s, so the remaining slow topics are dominated by stepped Rome years and whole-tree loops in the engine (item 4). Cut here:
+`state_debases_coin`, `sugar_maize_knowledge`. Verify the whole suite after regenerating the openings:
+`python3 sim/simulator.py openings --prune && python3 -m sim.tests --slow --jobs 3 --timing`.
