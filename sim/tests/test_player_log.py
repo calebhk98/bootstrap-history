@@ -2,28 +2,15 @@
 from .harness import *  # noqa: F401,F403
 from sim.ui.protocol import _agent_log as _AL, parse_typed as _PT
 from sim.refusal import LogLine
+from .test_player_log_lines import stand_in_game
 
 
 def ask(game, **command):
     return S._agent_dispatch(game, NODES, command)
 
 
-# --- The log records what the player did, not just what the engine did.
-game = sim()
-ask(game, cmd="start", id="units_standards")
-ask(game, cmd="hire", trade="smith", n=2)
-ask(game, cmd="fire", trade="smith", n=1)
-_entries = ask(game, cmd="log").get("entries") or []
-check("log records what the player did - starting, hiring, letting go - not "
-      "just what the engine did on its own",
-      any("started" in entry["what"] for entry in _entries)
-      and any("smith" in entry["what"] and "taken on" in entry["what"] for entry in _entries)
-      and any("smith" in entry["what"] and "go" in entry["what"] for entry in _entries),
-      _entries)
-check("log defaults to most-recent-first",
-      _entries[0]["year"] >= _entries[-1]["year"], [entry["year"] for entry in _entries])
-
 # --- Never dumped in one go, however large a limit is asked for.
+game = stand_in_game()
 game.log = [(100 + index % 500, "hired 1 smith") for index in range(3000)]
 check("the log is hard-capped regardless of what limit is asked for",
       len(_AL(game, {"limit": 1000000})["entries"]) <= 100)
@@ -38,7 +25,8 @@ check("'failures' filters the log to only the bad news",
 
 # --- Fog: a log line must not name what fog would refuse to answer `why` about.
 game.fog = True
-game.revealed = set()
+game.nodes = {"point_contact_transistor": {"name": "Point-contact transistor"}}
+game.is_visible = lambda node_id, _memo=None: False
 game.log = [(100, "completed: Point-contact transistor")]
 _scrubbed = _AL(game, {})["entries"][0]["what"]
 check("the log redacts a name fog would refuse to answer `why` about",
@@ -59,6 +47,7 @@ check("a multi-word typed name is not truncated to its first word",
       _cmd2 == {"cmd": "why", "id": "horizontal loom"}, _cmd2)
 
 # --- The automatic behaviours are approximations, and every switch says what it does.
+game = sim()
 _policy = ask(game, cmd="policy")
 check("the policy screen says these are approximations, not optimal play",
       bool(_policy.get("these_are_approximations_not_optimal_play")), _policy.keys())
