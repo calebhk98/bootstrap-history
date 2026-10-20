@@ -9,7 +9,7 @@ from typing import Any, Dict, Mapping, Optional, Tuple
 
 from sim.world import capital_market
 
-from . import carriage_hours, credit, credit_claims, currency, equity, labour, land_market, lending, merchants_credit, producers, sites, state_budget, unit_cost
+from . import bondage, carriage_hours, credit, debt_relief, credit_claims, currency, equity, labour, land_market, lending, merchants_credit, producers, sites, state_budget, tax_farming, titles_inheritance, unit_cost
 from .credit_view import CreditView
 from .market_areas import AreaMap
 from .market_areas_follow import follow
@@ -154,6 +154,8 @@ class Economy:
         sites.apply_site_limits(record, setup, inputs.site_limits)
         view = self.view()
         money = setup.currency_id
+        debt_relief.forgive(record, inputs.debt_relief_tiles)
+        tax_farming.run_auctions(setup, record, inputs.farmed_forms, record.memory.rates.get(setup.currency_id, 0.0))
         lending.lend_working_capital(setup, record, view)
         plans = {producer_id: producers.plan(producer, setup.recipes[producer.recipe_id], view,
                                              record.book.balance(producer_id, money))
@@ -191,6 +193,11 @@ class Economy:
                                        {producer_id: plan.wanted_runs for producer_id, plan in plans.items()},
                                        self._own_hectares)
         interest = self._service_loans(view.year)
+        bonded = bondage.service(record, money, ledger.wages_in)
+        record.book.transfer_many(bonded)
+        for payment in bonded:
+            interest[payment.payee] = interest.get(payment.payee, 0.0) + payment.amount
+        titles_inheritance.divide_estates(record)
         dispatch_merchants(setup, record, self.carriage, ledger)
         money_taxes(setup, record, view, ledger)
         self._build_plant(plant_runs)
@@ -282,7 +289,7 @@ class Economy:
     def _service_loans(self, year: int) -> Dict[str, float]:
         """Payments due at the year's end, out of the year's sales: before carriage, taxes and the owners'
         dividends, since a lender is paid ahead of them."""
-        return lending.service(self.record, self.setup.currency_id, year)
+        return lending.service(self.record, self.setup.currency_id, year, self.setup.debt_bondage_years)
 
     def _lend(self, funds, view, order_book, ledger) -> Dict[str, float]:
         """New loans from savings. A producer that borrowed to build bids for its plant goods, a household

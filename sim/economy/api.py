@@ -26,6 +26,7 @@ from .year_accounts import YearAccounts
 from . import baseline_checks, settling
 from .unit_cost import variable_cost_per_run
 from .titles_value import title_wealth
+from .debt_relief import indebted_tiles as record_indebted_tiles
 from .spin_up_state import spin_up_state as year_spin_up_state
 from .year_close import rebase_basket_price_level
 from .year_labour import trade_premium
@@ -42,7 +43,7 @@ __all__ = [
     "traded_volumes", "market_record", "opening_quantities", "opening_prices_in_hours", "wages_by_trade", "wages_by_trade_weighted", "interest_rate", "producers_of",
     "external_trade_net", "external_trade_volume", "account_balance", "account_holdings",
     "credit_room", "economy_from_record", "blank_economy", "export_record", "economy_book", "economy_contracts", "finish_spin_up", "note_spin_up_result", "spin_up_state", "money_year_figures","shown_prices_of",
-    "settle_agent_takings", "admit_recipes", "move_goods", "post_transfers", "cohort_incomes", "cohort_land_rents", "land_rent_per_hectare",
+    "settle_agent_takings", "indebted_tiles", "money_revenue_forms", "admit_recipes", "move_goods", "post_transfers", "cohort_incomes", "cohort_land_rents", "land_rent_per_hectare",
     "land_rent_paid_by_tile", "land_rent_at_tile", "country_figures", "idle_hours_by_trade", "output_by_tile",
 ]
 
@@ -395,6 +396,16 @@ def move_goods(economy, moves):
 def post_transfers(economy, transfers):
     """Applies money transfers to the economy's book."""
     economy.record.book.transfer_many(transfers)
+
+
+def indebted_tiles(economy):
+    """Tiles where households owe term loans, sorted: those a state could relieve of debt."""
+    return record_indebted_tiles(economy.record)
+
+
+def money_revenue_forms(economy):
+    """Names of the revenue forms paid in money, which a state may farm out."""
+    return [form.name for form in economy.setup.tax_forms if not form.paid_in]
 
 
 def settle_agent_takings(economy, agent_id, edge_id, tile_note="agent's takings"):

@@ -198,4 +198,4 @@ def settle_year(setup, record, view, wanted_runs: Mapping[AgentId, float],
     record.book.transfer_many(payments)
     tenant_payments = titles.settle_tenancies(record, money, arable)
     record.book.transfer_many(tenant_payments)
-    return payments + tenant_payments
+    return payments + [payment for payment in tenant_payments if payment.purpose != "steward_pay"]    # stewards' pay is a wage, not property income

@@ -507,6 +507,13 @@ class CreditMixin:
             household.log.append((year, LogLine("household_disperses", "the household disperses: %d people leave, because "
                                  "you can no longer feed them" % freed)))
 
+    def debt_bondage_term_years(self):
+        """Years of service a default costs in this society; zero where it had no debt bondage. The founder's
+        default and every household cohort's in the economy follow this one rule."""
+        if not self.civ.get("debt_bondage"):
+            return 0.0
+        return float(self.civ.get("bondage_years", self.DEBT_BONDAGE_DEFAULT_TERM_YEARS))
+
     def enter_debt_bondage(self, year):
         """Where the society had debt bondage, a default puts the debtor into service; whether it did."""
         # DEBT BONDAGE, where the society had it, modelled as a TERM OF
@@ -521,8 +528,8 @@ class CreditMixin:
         # it is a heavy one in a game whose scarcest resource is your hours; but
         # it ends, and it ends sooner if the work is worth something.
         household = self.state.household
-        if self.civ.get("debt_bondage") and not household.bondage_years_left:
-            term = float(self.civ.get("bondage_years", self.DEBT_BONDAGE_DEFAULT_TERM_YEARS))
+        term = self.debt_bondage_term_years()
+        if term > 0.0 and not household.bondage_years_left:
             household.bondage_years_left = term
             household.bondage_debt = -household.capital
             ledger.settle(self.household, self.edge(edges.EDGE_CREDITORS), 0.0, "debt taken into bondage")

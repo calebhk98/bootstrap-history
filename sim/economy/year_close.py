@@ -6,7 +6,7 @@ from typing import Dict, Tuple
 from sim.geography.api import flow_ledger
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
-from . import (merchants_transit, carriage_hours, carriage_wear, currency, expansion_price, households, inventory, merchants, metal_stock, ownership, producer_exit,
+from . import (tax_farming, merchants_transit, carriage_hours, carriage_wear, currency, expansion_price, households, inventory, merchants, metal_stock, ownership, producer_exit,
                producers, producers_close, state_budget, tariffs, taxes)
 from .households_cohort import renewed
 from .market_memory import market_key
@@ -106,12 +106,24 @@ def money_taxes(setup, record, view, ledger: YearLedger) -> None:
     if duty:
         record.book.transfer_many(duty)
         received += math.fsum(transfer.amount for transfer in duty)
+    farmed = dict(record.tax_farms)
+    received += math.fsum(farm["price"] for farm in farmed.values())      # the farmers paid up front
     if forms:
         facts = tax_facts(setup, record, view, ledger)
-        transfers, _moves, _assessments = taxes.assess(forms, facts, setup.state_agent, {}, setup.state_capacity)
+        owed_to_state = [form for form in forms if form.name not in farmed]
+        transfers, _moves, assessments = taxes.assess(owed_to_state, facts, setup.state_agent, {}, setup.state_capacity)
+        for form in forms:
+            if form.name in farmed:
+                farmed_transfers, _farmed_moves, farmed_assessments = taxes.assess(
+                    [form], facts, farmed[form.name]["farmer"], {}, tax_farming.TAX_FARMER_REACH)
+                record.book.transfer_many(farmed_transfers)
+                ledger.note_postings(farmed_transfers)
+                assessments = assessments + farmed_assessments
         record.book.transfer_many(transfers)
         ledger.note_postings(transfers)
         received += math.fsum(transfer.amount for transfer in transfers)
+        tax_farming.remember_year(record, assessments, tuple(farmed), setup.state_capacity)
+    record.tax_farms = {}
     state_budget.close_year(setup, record, ledger, received)
 
 
