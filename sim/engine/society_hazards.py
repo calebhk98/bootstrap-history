@@ -23,6 +23,7 @@ from . import money_units
 from .units_prose import money_text
 from .data import closure, critical_path
 from . import event_causes
+from .hazard_condition import hazard_given_condition
 from .hazard_window import hazards_not_yet_past
 from sim.agents.api import edges, ledger
 
@@ -454,7 +455,6 @@ class HazardsMixin:
         cond = hazard.get("condition")
         if not cond:
             return hazard
-        field = cond.get("field")
         need = cond.get("requires_all") or []
         met = all(self.has(tech_id) for tech_id in need)
         if year == hazard_start:
@@ -466,19 +466,7 @@ class HazardsMixin:
                 if msg:
                     self.state.household.log.append((year, LogLine(
                         "hazard_condition_met" if met else "hazard_condition_unmet", msg, hazard=key)))
-        if not met or field not in hazard:
-            return hazard
-        adjusted = dict(hazard)
-        outcome = cond.get("outcome")
-        scale = cond.get("alter_scale", 1.0)
-        if outcome == "avert":
-            del adjusted[field]
-        elif outcome == "alter":
-            if field == "output_factor":
-                adjusted[field] = 1.0 - (1.0 - hazard[field]) * scale
-            else:
-                adjusted[field] = hazard[field] * scale
-        return adjusted
+        return hazard_given_condition(hazard, met)
 
     def _apply_event_causes(self, hazard, year, hazard_start):
         """The event as its stated causes leave it this year, or None when they do not hold.
