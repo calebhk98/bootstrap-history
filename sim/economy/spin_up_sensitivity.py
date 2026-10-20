@@ -1,10 +1,11 @@
 """Complaint 553: variants of the controlled spin-up and the statistics that compare them.
 
-A variant is a context manager that changes how the economy adjusts (speeds of the declared adjustment
-constants, the order of two phases in the year, a seeded speed per producer) by patching the running
-modules; nothing under sim/economy is edited. `statistics_of(series)` gives a series' drift, cycle amplitude
-and cycle period. The test (test_spin_up_sensitivity.py) runs the variants on the small fixture; `rome_series`
-runs one on the Rome opening.
+A measurement run on demand (`simulator.py spin-up-sensitivity`), not a check. A variant is a context manager that
+changes how the economy adjusts (speeds of the declared adjustment constants, the order of two phases in the year,
+a seeded speed per producer) by patching the running modules; no constant is edited. `statistics_of(series)` gives
+a series' drift, cycle amplitude and cycle period; `table` prints one line per variant. The finding it recorded
+(Complaint 553): no variant removes the cycle and the amplitude moves by well under a factor of two, so the cycle
+is the economy's and not the shared yearly step's; the period moves with the speeds.
 """
 import contextlib
 import hashlib
@@ -12,11 +13,11 @@ import math
 import sys
 from unittest import mock
 
-from sim.economy import economy as economy_module, producers, producers_close
+from . import economy as economy_module, producers, producers_close
 
 SPEED_GROUPS = {
     "producer_plans": ("EXPANSION_SHARE_PER_YEAR", "OUTPUT_CHANGE_SHARE_PER_YEAR", "EXPECTATION_ADJUSTMENT_SHARE"),
-    "ask_prices": ("UNSOLD_ASK_MARKDOWN_SHARE", "SOLD_OUT_ASK_RAISE_SHARE", "USUAL_PRICE_SPEED"),
+    "ask_prices": ("SOLD_OUT_ASK_RAISE_SHARE", "USUAL_PRICE_SPEED"),
     "wages": ("TIGHTNESS_ADJUSTMENT_RATE_PER_YEAR", "TIGHTNESS_REVERSION_RATE_PER_YEAR"),
     "interest_rate": ("RATE_ADJUSTMENT_SHARE_PER_YEAR",),
 }
@@ -47,7 +48,7 @@ def speed_factor_of(agent_id, seed, spread):
 
 
 @contextlib.contextmanager
-def speeds_set_by_producer(seed, spread, names=SPEED_GROUPS["producer_plans"] + SPEED_GROUPS["ask_prices"][:2]):
+def speeds_set_by_producer(seed, spread, names=SPEED_GROUPS["producer_plans"] + SPEED_GROUPS["ask_prices"][:1]):
     """Within the block, the functions that take a producer run with each of `names` scaled by that producer's
     own factor (speed_factor_of), so producers do not all react at one speed. The constants are module
     globals, so the functions are wrapped to set them for the length of one producer's call."""
@@ -144,28 +145,10 @@ def statistics_of(series, skip=0):
             "flips": flips}
 
 
-def fixture_series(variant, years):
-    """(price level, unskilled wage) by year of the fixture economy's quiet spin-up under `variant`."""
-    from sim.tests import economy_fixture
-    with VARIANTS[variant]():
-        _economy, outcomes = economy_fixture.run(economy_fixture.small_setup(), years)
-    return ([outcome.basket_price_level for outcome in outcomes],
-            [outcome.wages[economy_fixture.LABOURER] for outcome in outcomes])
-
-
-def rome_series(variant, years):
-    """(price level, unskilled wage) by year of the Rome opening's first stage under `variant`."""
-    from sim.engine import economy_port_trace
-    from sim.tests import harness
-    with VARIANTS[variant]():
-        rows = economy_port_trace.spin_up_trace(harness.sim(), years)
-    return [row["price_level"] for row in rows], [row["wage"] for row in rows]
-
-
-def table(series_of, years, skip):
+def table(series_of, years, skip, variants=None):
     """One line per variant: the price level's and the wage's drift per year, amplitude and period in years."""
     lines = []
-    for variant in VARIANTS:
+    for variant in (variants or VARIANTS):
         prices, wages = series_of(variant, years)
         found = {"price": statistics_of(prices, skip), "wage": statistics_of(wages, skip)}
         lines.append("%-28s %s" % (variant, " | ".join(

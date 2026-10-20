@@ -28,3 +28,15 @@ What it would take: each such check becomes a test that calls the function with 
 deleted where another test already holds the rule. When the rewritten test fails, the rule is fixed. A whole-game test
 stays only as a named scenario or smoke test. Where the rule is a `Sim` method that needs the whole game, pull it into
 a plain function first (508). Start with the failing topics above, then the rest in batches.
+
+## Applied: the settling and real-output topics
+
+- `real_output_cheaper_entry`: deleted. Rule tests in `test_cheaper_entry_lowers_price.py` (cost of a halved-labour entry; a
+  cheaper entrant past the margin lowers the cleared price and raises the quantity; one under the margin changes nothing).
+- `real_output`: the arithmetic moved to `sim/engine/real_output_measure.py` and is tested in `test_real_output_measure.py`; the
+  111 s "a technology that improves no entry" check is deleted (held by `test_engine_prices` gate tests); the file is the wiring
+  scenario plus one named validation.
+- `saving_finds_a_use`: the paired whole-run "lent share doubles" is deleted (the two runs no longer differ); the rule is the
+  `goods_orders` test that an owner offers less idle cash. One validation remains.
+- `baseline_fixture`, `real_output_baseline`: kept as baseline validations (4.2), named so, failing on 473 with that message.
+- `spin_up_sensitivity`: now `simulator.py spin-up-sensitivity` (a measurement); its rules are `test_spin_up_sensitivity_rules.py`.
