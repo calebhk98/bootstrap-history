@@ -58,7 +58,8 @@ def demand_at(bids: Sequence[Bid], price: float, price_now: float) -> float:
         if bid.budget <= 0.0 or price > bid.maximum_price:
             continue
         surplus = max(0.0, bid.budget - bid.floor_quantity * price_now)
-        reach = bid.flexible_quantity * (price / bid.reference_price) ** -bid.elasticity if bid.reference_price > 0.0 else 0.0
+        reach = bid.flexible_quantity * math.exp(min(700.0, -bid.elasticity * math.log(price / bid.reference_price))) \
+            if bid.flexible_quantity > 0.0 and bid.reference_price > 0.0 and price > 0.0 else 0.0
         total += bid.floor_quantity + min(surplus / price, reach)
     return total
 
