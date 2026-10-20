@@ -81,7 +81,7 @@ check("a pathogen circulating in one foreign country reaches another by contact"
 	  deaths_of(spread.state.countries["other"]) > 0, spread.state.countries["other"].disease_introduced)
 
 # the same contact windows as the home country, read from the profile's exposure
-windowed = build(names=("far", "other"), exposure={"outside_contact": [{"pathogens": ["smallpox"], "years": [100, 200]}]})
+windowed = build(names=("far", "other"), exposure={"outside_contact": [{"pathogens": ["smallpox"], "years": [100, 200], "circulating": True}]})
 years(windowed, 40)
 check("a country whose civilisation lists outside contact is reached by it",
 	  windowed.state.countries["far"].disease_introduced.get("smallpox"), windowed.state.countries["far"].disease_introduced)

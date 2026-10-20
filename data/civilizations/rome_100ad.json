@@ -52,42 +52,24 @@
       "residual": 1.0
     }
   },
+  "disease_exposure": {
+    "_note": "Initial conditions for the disease model (sim/disease), not outcomes. Each source names the map tiles where its pathogens live outside the nation; `circulating` says they are always present there (else they start there now and then), `carrier_modes` the carriage the outsiders bring, and `years` (optional) when the contact exists at all. A pathogen reaches the nation with a chance that falls with the days of travel between the source and the tiles the nation holds; when it arrives, who dies and when comes from immunity, age, food and technology. Nothing here is endemic: the nation has met none of them.",
+    "outside_contact": [
+      {
+        "tiles": ["iran_01", "iran_02", "iran_03", "iran_04", "iran_05", "iran_06", "iran_07", "iran_08", "iran_09", "iran_10", "iran_11", "iran_12", "iran_13", "afghanistan_01", "afghanistan_02", "afghanistan_03", "afghanistan_04", "afghanistan_05", "saudi_arabia_01", "saudi_arabia_02", "saudi_arabia_03", "saudi_arabia_04", "saudi_arabia_05", "saudi_arabia_06", "saudi_arabia_07", "saudi_arabia_08", "saudi_arabia_09", "saudi_arabia_10", "saudi_arabia_11", "saudi_arabia_12", "saudi_arabia_13", "saudi_arabia_14", "saudi_arabia_15", "yemen_01", "yemen_02", "yemen_03", "yemen_04"],
+        "pathogens": ["smallpox", "measles", "influenza_pandemic"]
+      },
+      {
+        "tiles": ["india_01", "india_02", "india_03", "india_04", "india_05", "india_06", "india_07", "india_08", "india_09", "india_10", "india_11", "india_12", "india_13", "india_14", "india_15", "india_16", "india_17", "india_18", "india_19", "india_20", "india_21", "india_22", "india_23", "india_24", "india_25", "india_26", "pakistan_01", "pakistan_02", "pakistan_03", "pakistan_04", "pakistan_05", "pakistan_06", "china_01", "china_02", "china_03", "china_04", "china_05", "china_06", "china_07", "china_08", "china_09", "china_10", "china_11", "china_12", "china_13", "china_14", "china_15", "china_16", "china_17", "china_18", "china_19", "china_20", "china_21", "china_22", "china_23", "china_24", "china_25", "china_26", "china_27", "china_28", "china_29", "china_30", "china_31", "china_32", "china_33", "china_34", "china_35", "china_36", "china_37", "china_38", "china_39", "china_40", "china_41", "china_42", "china_43", "china_44", "china_45", "china_46", "china_47", "china_48", "china_49", "china_50", "china_51", "china_52", "china_53", "china_54", "china_55", "china_56", "china_57", "china_58", "china_59", "china_60", "china_61", "china_62", "china_63", "china_64", "china_65", "china_66", "china_67", "china_68"],
+        "pathogens": ["smallpox", "measles"]
+      },
+      {
+        "tiles": ["ethiopia_01", "ethiopia_02", "ethiopia_03", "ethiopia_04", "ethiopia_05", "ethiopia_06", "ethiopia_07", "ethiopia_08", "ethiopia_09", "ethiopia_10", "ethiopia_11", "sudan_01", "sudan_02", "sudan_03", "sudan_04", "sudan_05", "sudan_06", "sudan_07", "sudan_08", "sudan_09", "sudan_10", "sudan_11", "sudan_12", "somalia_01", "somalia_02", "somalia_03", "somalia_04", "somalia_05", "kazakhstan_01", "kazakhstan_02", "kazakhstan_03", "kazakhstan_04", "kazakhstan_05", "kazakhstan_06", "kazakhstan_07", "kazakhstan_08", "kazakhstan_09", "kazakhstan_10", "kazakhstan_11", "kazakhstan_12", "kazakhstan_13", "kazakhstan_14", "kazakhstan_15", "kazakhstan_16", "kazakhstan_17", "kazakhstan_18", "kyrgyzstan_01", "uzbekistan_01", "uzbekistan_02", "mongolia_01", "mongolia_02", "mongolia_03", "mongolia_04", "mongolia_05", "mongolia_06", "mongolia_07", "mongolia_08", "mongolia_09", "mongolia_10"],
+        "pathogens": ["bubonic_plague"]
+      }
+    ]
+  },
   "hazards": [
-    {
-      "name": "Antonine plague",
-      "causes": [
-        {
-          "quantity": "population",
-          "op": ">=",
-          "value": 0.5,
-          "relative_to_start": true,
-          "why": "A pandemic runs through crowded, connected settlements. Below half the opening population the opening density of towns and trade is gone, so there is nothing to carry it at the recorded scale. A reasoning bound, to be fitted against a baseline ensemble."
-        }
-      ],
-      "note": "probably smallpox or measles",
-      "staff_loss": 0.28,
-      "years": [
-        165,
-        180
-      ]
-    },
-    {
-      "name": "Plague of Cyprian",
-      "causes": [
-        {
-          "quantity": "population",
-          "op": ">=",
-          "value": 0.5,
-          "relative_to_start": true,
-          "why": "A pandemic runs through crowded, connected settlements. Below half the opening population the opening density of towns and trade is gone, so there is nothing to carry it at the recorded scale. A reasoning bound, to be fitted against a baseline ensemble."
-        }
-      ],
-      "staff_loss": 0.28,
-      "years": [
-        249,
-        262
-      ]
-    },
     {
       "name": "Third century crisis",
       "causes_not_modelled": [
@@ -324,42 +306,6 @@
       "years": [
         535,
         554
-      ]
-    },
-    {
-      "name": "The Justinianic plague",
-      "causes": [
-        {
-          "quantity": "population",
-          "op": ">=",
-          "value": 0.5,
-          "relative_to_start": true,
-          "why": "A pandemic runs through crowded, connected settlements. Below half the opening population the opening density of towns and trade is gone, so there is nothing to carry it at the recorded scale. A reasoning bound, to be fitted against a baseline ensemble."
-        }
-      ],
-      "note": "First recorded at Pelusium in Egypt in the summer of 541 and in Constantinople by the spring of 542, where Procopius (Wars 2.22-23) says the dead reached five thousand and then ten thousand a day. It has since been confirmed as Yersinia pestis from sixth-century burials at Aschheim and elsewhere: the same organism as the Black Death. The mortality is genuinely disputed - Procopius' figures are not usable, and recent work on pollen records, coin finds and papyri argues the demographic effect was a good deal smaller than the literary sources imply. It is set well below England's Black Death here for that reason, not because it was a mild disease.",
-      "staff_loss": 0.3,
-      "years": [
-        541,
-        545
-      ]
-    },
-    {
-      "name": "Recurrent plague",
-      "causes": [
-        {
-          "quantity": "population",
-          "op": ">=",
-          "value": 0.5,
-          "relative_to_start": true,
-          "why": "A pandemic runs through crowded, connected settlements. Below half the opening population the opening density of towns and trade is gone, so there is nothing to carry it at the recorded scale. A reasoning bound, to be fitted against a baseline ensemble."
-        }
-      ],
-      "note": "The 541 outbreak did not end; it came back roughly every decade for two centuries. Outbreaks are recorded at Constantinople in 558, in the 570s and in 586, and in the west over the same period - Gregory of Tours has the plague at Marseille in 588, and Gregory the Great was elected at Rome in 590 during one of them. Lower severity than the first wave, because some immunity exists and because the population it is working on has already been reduced.",
-      "staff_loss": 0.12,
-      "years": [
-        558,
-        600
       ]
     },
     {

@@ -1,7 +1,7 @@
 """A foreign country's epidemics: the model the home nation runs (sim/disease), over the country's own age bands.
 
-A pathogen arrives by the same contact rule as at home: while one of the country's `disease_exposure` windows is
-open, and also while another country has it circulating (the between-country contact rule, a labelled temporary
+A pathogen arrives by the same contact rule as at home: while one of the country's `disease_exposure` sources is
+open (a foreign country has no routes read yet, so its sources reach it at full weight), and also while another country has it circulating (the between-country contact rule, a labelled temporary
 heuristic until routes carry infected people). Its deaths, by band, go into the country's `Population.step`.
 """
 from functools import lru_cache
@@ -31,8 +31,8 @@ def circulating_in(profiles: Iterable[CountryProfile]) -> Set[str]:
 def disease_deaths(profile: CountryProfile, people: Dict[str, float], nutrition_ratio: float, year: int,
 				   seed_text: str, circulating_elsewhere: Set[str]) -> Dict[str, float]:
 	"""Run the country's year of epidemics; the deaths by band for `Population.step(epidemic_deaths=)`."""
-	windows = disease.nation.contact_windows(profile.extra.get("disease_exposure"))
-	arrivals = disease.nation.introductions(profile.disease_records, windows, year, seed_text,
+	chances = disease.nation.arrival_chances(disease.nation.contact_sources(profile.extra.get("disease_exposure")), year)
+	arrivals = disease.nation.introductions(profile.disease_records, chances, year, seed_text,
 											also_present=circulating_elsewhere)
 	arrivals += [pathogen_id for pathogen_id in profile.disease_arrivals if pathogen_id not in arrivals]
 	profile.disease_arrivals = []

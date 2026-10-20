@@ -65,6 +65,19 @@
       "residual": 1.2
     }
   },
+  "disease_exposure": {
+    "_note": "Initial conditions for the disease model (sim/disease), not outcomes. Each source names the map tiles where its pathogens live outside the nation; `circulating` says they are always present there (else they start there now and then), `carrier_modes` the carriage the outsiders bring, and `years` (optional) when the contact exists at all. A pathogen reaches the nation with a chance that falls with the days of travel between the source and the tiles the nation holds; when it arrives, who dies and when comes from immunity, age, food and technology. Nothing here is endemic: the nation has met none of them.",
+    "outside_contact": [
+      {
+        "tiles": ["germany_01", "germany_02", "germany_03", "united_kingdom_01", "united_kingdom_02", "united_kingdom_03", "united_kingdom_04", "poland_01", "poland_02", "poland_03", "poland_04", "france_01", "france_02", "france_03", "france_04", "france_05"],
+        "pathogens": ["smallpox", "measles", "influenza_pandemic"]
+      },
+      {
+        "tiles": ["kazakhstan_01", "kazakhstan_02", "kazakhstan_03", "kazakhstan_04", "kazakhstan_05", "kazakhstan_06", "kazakhstan_07", "kazakhstan_08", "kazakhstan_09", "kazakhstan_10", "kazakhstan_11", "kazakhstan_12", "kazakhstan_13", "kazakhstan_14", "kazakhstan_15", "kazakhstan_16", "kazakhstan_17", "kazakhstan_18", "kyrgyzstan_01", "uzbekistan_01", "uzbekistan_02", "mongolia_01", "mongolia_02", "mongolia_03", "mongolia_04", "mongolia_05", "mongolia_06", "mongolia_07", "mongolia_08", "mongolia_09", "mongolia_10", "ukraine_01", "ukraine_02", "ukraine_03", "ukraine_04", "ukraine_05", "turkey_01", "turkey_02", "turkey_03", "turkey_04", "turkey_05", "turkey_06", "turkey_07", "turkey_08", "turkey_09", "egypt_01", "egypt_02", "egypt_03", "egypt_04", "egypt_05", "egypt_06", "egypt_07", "egypt_08", "egypt_09", "greece_01", "greece_02", "syria_01"],
+        "pathogens": ["bubonic_plague"]
+      }
+    ]
+  },
   "hazards": [
     {
       "name": "The settlement of Iceland and the founding of the Althing",
@@ -169,24 +182,6 @@
       "years": [
         1397,
         1450
-      ]
-    },
-    {
-      "name": "Black Death in Scandinavia",
-      "causes": [
-        {
-          "quantity": "population",
-          "op": ">=",
-          "value": 0.5,
-          "relative_to_start": true,
-          "why": "A pandemic runs through crowded, connected settlements. Below half the opening population the opening density of towns and trade is gone, so there is nothing to carry it at the recorded scale. A reasoning bound, to be fitted against a baseline ensemble."
-        }
-      ],
-      "note": "Reached Norway in 1349 on an English ship putting in at Bergen and killed on a scale even worse than England's, by some estimates more than half the population; entire farms and valleys were abandoned and some were never resettled. Recurs at reduced severity through the late 14th century, same as everywhere else in Europe, but this is the first and worst wave.",
-      "staff_loss": 0.55,
-      "years": [
-        1349,
-        1351
       ]
     },
     {

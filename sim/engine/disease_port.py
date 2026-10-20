@@ -1,19 +1,23 @@
 """The engine's side of the disease wall: what the disease package reads from the simulation, and the yearly
 step that hands its deaths, by age band, to `Population`.
 
-The nation is one patch of three age bands (the demography module's bands). A pathogen reaches it through
-`civ["disease_exposure"]["outside_contact"]`, a labelled temporary heuristic until the spatial stage derives
-contact from routes. Technology acts through `disease_effects` on node mechanics. Nothing here names a
-pathogen or a technology."""
+The nation is one patch of three age bands (the demography module's bands). A pathogen reaches it from the
+outside sources `civ["disease_exposure"]["outside_contact"]` names (map tiles where it lives, initial conditions
+only): the chance falls with the fewest days of travel between the source's tiles and the tiles the nation holds,
+over the routes its technologies and the outsiders' carriers open. When it arrives, who dies and when comes from
+the model. Technology acts through `disease_effects` on node mechanics. Nothing here names a pathogen, a year or
+a technology."""
 import functools
 
 from sim.disease import api as disease
-from sim.geography.api import endemic_people_loss, tiles_held
+from sim.geography.api import endemic_people_loss, reach, tiles_held, usable_modes
 
 nation, tuning = disease.nation, disease.nation_tuning
 BANDS = tuning.BANDS
 DISEASE_CARE_COLLAPSE_SENSITIVITY = tuning.DISEASE_CARE_COLLAPSE_SENSITIVITY
-DISEASE_CONTACT_ANNUAL_CHANCE = tuning.DISEASE_CONTACT_ANNUAL_CHANCE
+DISEASE_TRAVELLER_ANNUAL_CHANCE = tuning.DISEASE_TRAVELLER_ANNUAL_CHANCE
+DISEASE_EMERGENCE_ANNUAL_CHANCE = tuning.DISEASE_EMERGENCE_ANNUAL_CHANCE
+DISEASE_TRAVEL_DECAY_DAYS = tuning.DISEASE_TRAVEL_DECAY_DAYS
 DISEASE_URBAN_DENSITY_RATIO = tuning.DISEASE_URBAN_DENSITY_RATIO
 
 
@@ -35,16 +39,37 @@ class DiseaseWorld:
     def people_by_band(self):
         return {band: float(getattr(self.population, band)) for band in BANDS}
 
-    def contact_windows(self):
-        """[(pathogen ids, first year, last year)] the civilisation says the outside world reaches it in."""
-        return nation.contact_windows(self._sim.civ.get("disease_exposure"))
+    def contact_sources(self):
+        """The outside sources the civilisation says the pathogens come from (see `nation.contact_sources`)."""
+        return nation.contact_sources(self._sim.civ.get("disease_exposure"))
 
     def seed_text(self):
         return "disease:%s:%d" % (self._sim.civ.get("id"), self._sim._farm_year_weather_seed(0, region="disease"))
 
+    def travel_days(self, source):
+        """The fewest days from the nearest of the source's tiles to a tile the nation holds, over the modes the
+        nation's technologies open plus those the outsiders bring; None when no route joins them. Kept until the
+        tiles held or the modes change."""
+        sim = self._sim
+        held = tuple(sorted(tiles_held(sim.civ, sim.world_map)))
+        modes = tuple(sorted(set(usable_modes([sim.held_and_running()], sim.world_map)) | set(source["carrier_modes"])))
+        cache = sim.__dict__.setdefault("_disease_travel_days", {})
+        key = (held, modes, source["tiles"])
+        if key not in cache:
+            if len(cache) > 32:
+                cache.clear()
+            days = reach(held, modes, 1.0e9, world_map=sim.world_map) if held and source["tiles"] else {}
+            cache[key] = min((days[tile] for tile in source["tiles"] if tile in days), default=None)
+        return cache[key]
+
+    def contact_weight(self, source):
+        """The share of the source's contact the routes let through; one for a source that names no tiles."""
+        return nation.contact_weight(self.travel_days(source)) if source["tiles"] else 1.0
+
     def introductions(self, records, year):
-        """Pathogens that arrive this year: listed in an open window, absent from the nation, and drawn."""
-        return nation.introductions(records, self.contact_windows(), year, self.seed_text(), DISEASE_CONTACT_ANNUAL_CHANCE)
+        """Pathogens that arrive this year: reachable from an open source, absent from the nation, and drawn."""
+        chances = nation.arrival_chances(self.contact_sources(), year, self.contact_weight)
+        return nation.introductions(records, chances, year, self.seed_text())
 
     def crowding_index(self):
         """The person-weighted density of the nation relative to a rural settlement."""
@@ -93,8 +118,12 @@ class DiseasePortMixin:
         nutrition_ratio = self.population.nutrition_ratio(food_available_calories_per_day)
         pathogen_ids = sorted(set(state.records) | set(arrivals))
         fatality_by_pathogen, transmission = world.technology_scales(pathogen_ids)
-        return nation.run_year(
+        killed_before = dict(state.deaths)
+        deaths = nation.run_year(
             pathogens(), state.records, state.introduced, state.deaths, world.people_by_band(), nutrition_ratio,
             self.civ.get("urban_fraction", 0.0), arrivals, world.seed_text(), year, fatality_factor=fatality_by_pathogen,
             transmission_scale=transmission, care_sensitivity=DISEASE_CARE_COLLAPSE_SENSITIVITY,
             density_ratio=DISEASE_URBAN_DENSITY_RATIO)
+        self.__dict__["_epidemic_names"] = [pathogens()[pathogen_id].name for pathogen_id in sorted(state.deaths)
+                                            if state.deaths[pathogen_id] > killed_before.get(pathogen_id, 0)]
+        return deaths

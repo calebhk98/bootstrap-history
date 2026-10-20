@@ -70,6 +70,7 @@ from .producer_costs import ProducerCostsMixin
 from .fog import FogMixin
 from .mechanics import MechanicsMixin
 from .disease_port import DiseasePortMixin
+from .epidemic_staff import EpidemicStaffMixin
 from .geography_port import GeographyPortMixin
 from .labour_port import LabourPortMixin
 from .projects import ProjectsMixin
@@ -246,7 +247,7 @@ FARM_WEATHER_POOLED_CELL_CAP = declare(
 
 
 
-class Sim(ModStoresMixin, RealPriceRatiosMixin, CoinRevaluationMixin, PartnerCivsMixin, WageMarketRatiosMixin, MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMixin, MarketDemandMixin, RealOutputMixin, ConcernVolumeMixin, TechniquesInUseMixin, IndustryDepthMixin, IndustryConcernMixin, IncumbentPricesMixin, ProducerCostsMixin, FogMixin, GeographyPortMixin, DiseasePortMixin, LabourPortMixin,
+class Sim(ModStoresMixin, RealPriceRatiosMixin, CoinRevaluationMixin, PartnerCivsMixin, WageMarketRatiosMixin, MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMixin, MarketDemandMixin, RealOutputMixin, ConcernVolumeMixin, TechniquesInUseMixin, IndustryDepthMixin, IndustryConcernMixin, IncumbentPricesMixin, ProducerCostsMixin, FogMixin, GeographyPortMixin, DiseasePortMixin, EpidemicStaffMixin, LabourPortMixin,
           ProjectsMixin, SeatMixin, SeatRunMixin, SeatBuildsMixin, SeatSightMixin, ShockYearMixin, WaysMixin, WorksMixin, HeldWorksMixin, ActionLossMixin, SocietyMixin, ActorsMixin, DisclosureMixin, FounderSalesMixin, SeatDealingsMixin, InterestGroupsMixin, BenefactionsMixin, RouteDuesMixin, ForwardingPropertiesMixin, GoalsMixin,
           StepPhasesMixin, LivingStockMixin, LivingStockOpeningMixin, CoinHoardMixin, CoinCarriageMixin, TheftChargeMixin,
           LivingStockTradeMixin, LivingStockSmugglingMixin, LivingStockYearlyMixin, FoodSupplyMixin, FoodEatenMixin, DemographicRecoveryMixin, RegionalPeopleMixin, DefenceStoresMixin, EconomyPortMixin, NodeRederiveMixin):

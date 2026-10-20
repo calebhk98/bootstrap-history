@@ -36,6 +36,19 @@
   "handicap_remedies": {
     "_doc": "No handicaps above 1.0 to remedy."
   },
+  "disease_exposure": {
+    "_note": "Initial conditions for the disease model (sim/disease), not outcomes. Each source names the map tiles where its pathogens live outside the nation; `circulating` says they are always present there (else they start there now and then), `carrier_modes` the carriage the outsiders bring, and `years` (optional) when the contact exists at all. A pathogen reaches the nation with a chance that falls with the days of travel between the source and the tiles the nation holds; when it arrives, who dies and when comes from immunity, age, food and technology. Nothing here is endemic: the nation has met none of them.",
+    "outside_contact": [
+      {
+        "tiles": ["turkey_01", "turkey_02", "turkey_03", "turkey_04", "turkey_05", "turkey_06", "turkey_07", "turkey_08", "turkey_09", "egypt_01", "egypt_02", "egypt_03", "egypt_04", "egypt_05", "egypt_06", "egypt_07", "egypt_08", "egypt_09", "greece_01", "greece_02", "syria_01", "italy_01", "italy_02", "italy_03", "italy_04", "italy_05", "spain_01", "spain_02", "spain_03", "spain_04", "spain_05"],
+        "pathogens": ["smallpox", "measles", "influenza_pandemic"]
+      },
+      {
+        "tiles": ["kazakhstan_01", "kazakhstan_02", "kazakhstan_03", "kazakhstan_04", "kazakhstan_05", "kazakhstan_06", "kazakhstan_07", "kazakhstan_08", "kazakhstan_09", "kazakhstan_10", "kazakhstan_11", "kazakhstan_12", "kazakhstan_13", "kazakhstan_14", "kazakhstan_15", "kazakhstan_16", "kazakhstan_17", "kazakhstan_18", "kyrgyzstan_01", "uzbekistan_01", "uzbekistan_02", "mongolia_01", "mongolia_02", "mongolia_03", "mongolia_04", "mongolia_05", "mongolia_06", "mongolia_07", "mongolia_08", "mongolia_09", "mongolia_10", "ukraine_01", "ukraine_02", "ukraine_03", "ukraine_04", "ukraine_05", "iran_01", "iran_02", "iran_03", "iran_04", "iran_05", "iran_06", "iran_07", "iran_08", "iran_09", "iran_10", "iran_11", "iran_12", "iran_13", "afghanistan_01", "afghanistan_02", "afghanistan_03", "afghanistan_04", "afghanistan_05", "saudi_arabia_01", "saudi_arabia_02", "saudi_arabia_03", "saudi_arabia_04", "saudi_arabia_05", "saudi_arabia_06", "saudi_arabia_07", "saudi_arabia_08", "saudi_arabia_09", "saudi_arabia_10", "saudi_arabia_11", "saudi_arabia_12", "saudi_arabia_13", "saudi_arabia_14", "saudi_arabia_15", "yemen_01", "yemen_02", "yemen_03", "yemen_04"],
+        "pathogens": ["bubonic_plague"]
+      }
+    ]
+  },
   "hazards": [
     {
       "name": "Great Famine",
@@ -55,24 +68,6 @@
       "years": [
         1315,
         1317
-      ]
-    },
-    {
-      "name": "Black Death",
-      "causes": [
-        {
-          "quantity": "population",
-          "op": ">=",
-          "value": 0.5,
-          "relative_to_start": true,
-          "why": "A pandemic runs through crowded, connected settlements. Below half the opening population the opening density of towns and trade is gone, so there is nothing to carry it at the recorded scale. A reasoning bound, to be fitted against a baseline ensemble."
-        }
-      ],
-      "note": "and recurrent thereafter",
-      "staff_loss": 0.45,
-      "years": [
-        1348,
-        1350
       ]
     },
     {
@@ -247,24 +242,6 @@
       "years": [
         1642,
         1660
-      ]
-    },
-    {
-      "name": "The Great Plague of London",
-      "causes": [
-        {
-          "quantity": "population",
-          "op": ">=",
-          "value": 0.5,
-          "relative_to_start": true,
-          "why": "A pandemic runs through crowded, connected settlements. Below half the opening population the opening density of towns and trade is gone, so there is nothing to carry it at the recorded scale. A reasoning bound, to be fitted against a baseline ensemble."
-        }
-      ],
-      "note": "The last major English outbreak of bubonic plague. The London bills of mortality record about 68,500 deaths and the true figure was probably near 100,000, a fifth to a quarter of the city, concentrated in the poor parishes outside the walls. Everyone who could afford to leave left, including the court and most of the physicians, and that is most of the effect on a workshop: the labour and the custom walk out of the city together and do not come back for a year.",
-      "staff_loss": 0.22,
-      "years": [
-        1665,
-        1666
       ]
     },
     {
