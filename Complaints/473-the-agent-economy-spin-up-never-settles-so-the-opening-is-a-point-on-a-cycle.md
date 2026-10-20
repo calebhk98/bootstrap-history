@@ -212,3 +212,28 @@ wanders over several times, the market rate reaches the ceiling `bounded_rate` s
 trend down. With Stage 7 (branch `507-stage-7-price-search-within-year`) the rate's yearly steps and the price level's
 swings shrink to a fraction of that and the money stock settles; the price level and the wage still fall steadily,
 which is the labour glut (608), not a cycle. Reproduce both with the command above on each branch (minutes each).
+
+## Measured: what made the integration branch's spin-up swing (fix-settling-regression-exit-and-trim)
+
+Probe: the Rome first stage, 21 years (`economy_port_trace.spin_up_trace(harness.sim(), 21)`): largest price level
+over years 5 to 20, largest and smallest market rate, wage at year 20. The trace builds a blank economy from the
+opening, so only data and the opening's workforce reach it; the post-spin-up trims (`workforce_settle`) and the
+`expected_hours` rule cannot.
+
+| head | max price level | max rate | min rate | wage 20 |
+|---|---|---|---|---|
+| pm-merge-staging before 556b | 2.610 | 0.276 | 0.063 | 0.107 |
+| plus 556b merged | 3.641 | 0.370 | 0.100 | 0.217 |
+| no second trim | 3.641 | 0.370 | 0.100 | 0.217 |
+| 467 data reverted (farmer training 1, no fallback flag, slaves and bonded as labourers) | 0.904 | 0.171 | 0.023 | 0.309 |
+| farmer training 0 and fallback flag only | 3.641 | 0.370 | 0.100 | 0.217 |
+| farmer training 1 with the fallback flag kept (final) | 0.904 | 0.171 | 0.023 | 0.309 |
+
+The swing comes from the farmer trade's training years being 0 (with the exit valuation of the earlier finding
+in place, so that change was not the cause on this head). The second trim, the `expected_hours` rule and the strata
+trades do not move the first stage. Farmer keeps its one year of training; the labourer's `fallback` flag stays so the
+two do not tie.
+
+The 467 check's purpose (no trade opens holding several times its jobs) now excludes the plot trade, whose people
+work their own land and wait on no bid, and trades with under one worker-year of jobs (glassblower holds about a
+millionth of a person against a few thousandths of an hour, a ratio of noise).
