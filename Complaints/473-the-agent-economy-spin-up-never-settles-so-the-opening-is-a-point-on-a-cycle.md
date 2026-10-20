@@ -320,3 +320,12 @@ to a price level of about 650 (rate stuck at the ceiling): with flour not sized,
 households still bid for it, and its price (times 10^12 by year 8) carries the price-level index. So the sizing fix needs the
 index and the joint by-products handled first (the same thin-good fragility as above); it is not a labour mechanism.
 The head's probe is unchanged by this branch.
+
+## Measured and not merged: expansion that replaces wear before it grows (branch `expansion-replaces-wear-then-grows`)
+
+Building each year's wear back before growing by the expansion share lets short-lived plant goods (lead) grow, and the
+20-year probe stays calm, but the 60-year trace surges earlier and higher than the head (price level about twice the
+head's by year 30, the rate at its ceiling after): more plant bought each year pulls more money and thin inputs into
+plant at once. The late surge on the head (years 30 to 43) is led by bricks (a shelter replacement wave about 26 years
+in, after the opening's seeded wall stock wears) and carts (merchants' replacement bids with makers idle); see the idle
+makers and no-seller price work. Reproduce with a 60-year `spin_up_trace` on each commit (about 10 minutes).
