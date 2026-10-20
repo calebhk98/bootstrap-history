@@ -26,6 +26,18 @@ def core_trades(setup, extra_trades: Iterable[str] = ()) -> Dict[str, TradeSpec]
     return trade_specs(registry)
 
 
+def plot_trade(setup) -> str:
+    """The trade of people working their own land: the trade whose hours the land-only recipes (no bought
+    inputs, the ones households grow for themselves, households_own.py) ask most of. Empty when none do."""
+    hours: Dict[str, float] = {}
+    for recipe_id, recipe in setup.recipes.items():
+        if recipe.inputs or setup.land_per_run.get(recipe_id, 0.0) <= 0.0:
+            continue
+        for trade, trade_hours in recipe.labour_hours.items():
+            hours[trade] = hours.get(trade, 0.0) + trade_hours
+    return max(sorted(hours), key=lambda trade: hours[trade]) if hours else ""
+
+
 def opening_workforce(setup, record) -> MarketState:
     """Each tile's working people placed in the trades its producers need for the runs they expect to sell
     (the opening sized them to final demand) and its mint at capacity; hard
@@ -42,7 +54,8 @@ def opening_workforce(setup, record) -> MarketState:
     working = {labour_area(tile): people * setup.working_share
                for tile, people in sorted(setup.opening_population_by_tile.items())}
     trades = core_trades(setup, {trade for needed in hours_needed.values() for trade in needed})
-    state = opening_labour_market(trades, working, hours_needed, setup.working_hours_per_year)
+    state = opening_labour_market(trades, working, hours_needed, setup.working_hours_per_year,
+                                 plot_trade(setup) or None)
     return state
 
 
