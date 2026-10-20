@@ -15,6 +15,7 @@ from typing import Any, Dict, List, Tuple
 from . import arrears, budget, demand_answer, headcount, ledger, state_works
 from .base import Actor, RecordedActor
 from .government_coinage import CoinageMixin
+from .government_credit import CreditRecordMixin
 from .government_granary import GranaryMixin
 from .government_stores import StoresMixin
 from .edges import EDGE_PATRONAGE, EDGE_STATE_SPENDING
@@ -24,7 +25,7 @@ from .tuning_spending import ACCESSION_PROBABILITY_PER_YEAR, PUBLIC_BUILDING_LIF
 from .values import invention_gains, weighted_gain
 
 
-class Government(CoinageMixin, GranaryMixin, StoresMixin, SurplusMixin, RecordedActor):
+class Government(CreditRecordMixin, CoinageMixin, GranaryMixin, StoresMixin, SurplusMixin, RecordedActor):
 	kind = "government"
 
 	def imitation_worth(self, node_id: str, world: Any) -> float:
@@ -162,6 +163,7 @@ class Government(CoinageMixin, GranaryMixin, StoresMixin, SurplusMixin, Recorded
 
 	def advance(self, world: Any) -> None:
 		held = dict(self.workforce)
+		self.fade_default_record()
 		self.accede(world)
 		lines, share = self.pay_standing_need(world)
 		self.decide_debasement(world)

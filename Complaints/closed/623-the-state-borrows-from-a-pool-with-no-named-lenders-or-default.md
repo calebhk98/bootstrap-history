@@ -1,6 +1,6 @@
 # The state borrows from the pool: no named creditors, no repayment in land and no default
 
-**Status:** open
+**Status:** closed. A state is a borrower that names its lenders: `Purses.named_lenders` (`sim/agents/named_lenders.py`) attributes each draw on its facility to the pool's depositors (households' savings, firms, merchants, other states) in proportion to what each placed, and `Government.creditors()` reads the claims. Arrears and default run the shared 589 rule (`Borrower.settle_interest`); a default writes down the named lenders' deposits by their claims (a lender that came after the loan loses nothing) and the loss goes on the state's record, which adds `DEFAULT_RECORD_PREMIUM` to the rate it pays until it fades (`sim/agents/government_credit.py`, `borrowing_arrears.py`). Repayment in land is not done: it waits on titles (538). Test: `sim/tests/test_state_named_lenders.py`.
 
 Part of Complaint 542 (State capacity and tax rates are typed, there is no corvée, and the fiscal crisis is a fixed cascade).
 

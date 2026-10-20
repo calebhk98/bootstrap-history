@@ -42,6 +42,9 @@ class ActorRecord:
 	levy_requisition_rate: float = 0.0
 	levy_office_rate: float = 0.0
 	levy_base: float = 0.0
+	# what lenders lost on a state's defaults, fading by the year; the rate it pays rises with it (government_credit.py)
+	remembered_default_loss: float = 0.0
+	defaults: int = 0
 	# soldiers a state keeps now; 0 until its first year, when it holds the force it wants
 	army: float = 0.0
 	# the last check of the state's wanted head counts against its country's people and food, by line (headcount.py)

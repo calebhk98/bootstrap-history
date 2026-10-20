@@ -20,8 +20,8 @@ debased its coin, demanded goods in kind, or fell into arrears with its soldiers
   `standing_army` share paid at wage (`sim/agents/country_view.py`), not drafted for a term.
 - **Taxes in kind exist for grain only** (`paid_in`, `sim/agents/government_stores.py`).
 - **Borrowing** is from the general loanable pool once a technology allows it
-  (`sim/agents/government.py`, `borrowing.py`). There are no named lenders, no repayment in land and
-  no default.
+  (`sim/agents/government.py`, `borrowing.py`), with its lenders named and a default on its record
+  (623, closed). There is no repayment in land (538).
 - **Debasement** cuts the metal in the coin (`sim/agents/government_coinage.py`), but domestic money
   prices fixed at load do not follow (Complaint 272, closed with that gap noted).
 - **Crisis.** Short of money, `Government.advance` cuts every line by the same share, books arrears,

@@ -83,3 +83,5 @@ it), elite overreach, confiscation and land reform (486, 542), tax farming (542)
 (`labour_bondage`). Dividends still split by ownership share; only land rent follows titles. The elite-share
 range check under 4.2 needs a long baseline run: `python3 -m sim.tests --only agent_economy_wiring`'s
 neighbours do not measure it, and no command does yet.
+
+A state's debt to its named lenders (623) can be repaid in land once titles exist; the lender ledger is `Purses.named_lenders` (`sim/agents/named_lenders.py`).
