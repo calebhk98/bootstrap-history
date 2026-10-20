@@ -6,7 +6,7 @@ from typing import Dict, Tuple
 from sim.geography.api import flow_ledger
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
-from . import (tax_farming, merchants_transit, carriage_hours, carriage_wear, currency, expansion_price, households, inventory, merchants, metal_stock, ownership, producer_exit,
+from . import (tax_farming, merchants_transit, carriage_hours, carriage_wear, currency, expansion_price, households, inventory, merchants, metal_stock, ownership, producer_exit, shares,
                producers, producers_close, state_budget, tariffs, taxes)
 from .households_cohort import renewed
 from .market_memory import market_key
@@ -159,6 +159,7 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage) ->
         price_share = expansion_price.price_share_of(ledger.bids_by_market, traded, area_map.area_of, producer.tile,
                                                    prepared_buyers)
         closed = producers_close.close_year(producer, recipe, revenue, costs, view, worked, price_share)
+        shares.note_dividend(record, producer_id, closed.transfers)
         if closed.exited:
             paid = producer_exit.exit_producer(record, producer_id, list(closed.transfers))
             for transfer in paid:

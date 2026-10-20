@@ -10,7 +10,7 @@ from typing import Dict, List
 
 from sim.world import capital_market
 
-from . import bondage, credit, credit_claims, households_credit, merchants_credit, titles, titles_value
+from . import bank_service, banks, bondage, credit, credit_claims, households_credit, merchants_credit, titles, titles_value
 from .producers_close import WORKING_CAPITAL_PURPOSE
 from .types import FundsOffer
 from .households_basket import need_prices
@@ -22,9 +22,9 @@ def service(record, money: str, year: int, bondage_years: float = 0.0) -> Dict[s
     first payment falls due a year after it borrowed). Books the defaults: a lender's loss, a defaulter's
     record, a merchant's staked capital after what it repaid or was freed of. Returns the interest each
     lender received, which is its income; returned principal is not income."""
-    due = [loan for loan in record.loans if loan.issued_year < year]
+    due = [loan for loan in record.loans if loan.issued_year < year and not banks.is_deposit(record, loan)]
     if not due:
-        return {}
+        return bank_service.service_deposits(record, money, year)
     cash = {loan.borrower: record.book.balance(loan.borrower, money) for loan in due}
     transfers, serviced, defaults, receipts = credit.service_split(due, cash, year)
     record.book.transfer_many(transfers)
@@ -40,7 +40,9 @@ def service(record, money: str, year: int, bondage_years: float = 0.0) -> Dict[s
         record.credit_losses[agent] = record.credit_losses.get(agent, 0.0) + lost
     bondage.enter(record, taken, bondage_years)
     record.remembered_defaults = credit_claims.remember_defaults(record.remembered_defaults, defaults)
-    record.loans = [loan for loan in record.loans if loan.issued_year >= year] + serviced
+    record.loans = [loan for loan in record.loans if loan.issued_year >= year or banks.is_deposit(record, loan)] + serviced
+    for depositor, interest in bank_service.service_deposits(record, money, year).items():
+        received[depositor] = received.get(depositor, 0.0) + interest
     return received
 
 

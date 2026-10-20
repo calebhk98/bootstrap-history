@@ -17,6 +17,7 @@ from typing import Any, Callable, Dict, Optional
 from sim.book import ROUNDING_SHARE, Book, Transfer, is_edge
 from sim.contracts import DEPOSIT, FACILITY, Contracts
 
+from .bonds import BondBook
 from .named_lenders import NamedLenders
 
 COIN = "engine_coin"                          # the currency of the actors' money in the shared book (the engine counts in this coin)
@@ -25,6 +26,8 @@ EDGE_EXCHANGE = "edge:exchange"                # the actors' coin turned into th
 EDGE_OUTSIDE = "edge:outside the book"        # the other side of a posting whose payer or payee keeps no account here
 FACILITY_DRAW = "facility draw"
 FACILITY_REPAYMENT = "facility repayment"
+BOND_SOLD = "bond sold"
+BOND_REDEEMED = "bond redeemed"
 INTEREST_PAID = "interest paid"                 # a borrower's interest to its lenders, as the book labels it
 DEPOSIT_LOST = "deposit lost in a default"   # a depositor's share of the pool's loss, as the lender's books label it
 POOL = "pool:credit"                          # the one lending counterparty: depositors' funds in, borrowers' facilities out
@@ -49,6 +52,8 @@ class Purses:
         self.observer: Optional[Callable[[str, float, str], None]] = None
         # the borrowers (a state) that name their lenders, and who lent each what (named_lenders.py)
         self.named_lenders = NamedLenders()
+        # the issuers (a state) that raise cash by bonds, the terms they sell at, and the bonds outstanding (bonds.py)
+        self.bonds = BondBook()
 
     # ---- reads ------------------------------------------------------------------------------
     def purse(self, account: str) -> float:
@@ -64,8 +69,8 @@ class Purses:
         return {borrower: self.contracts.facility_of(borrower) for borrower in sorted(self.contracts.facilities)}
 
     def debt(self, account: str) -> float:
-        """What the account owes, on every kind of contract, in the actors' coin."""
-        return self.contracts.debt(account, COIN)
+        """What the account owes, on every kind of contract and at face on its bonds, in the actors' coin."""
+        return self.contracts.debt(account, COIN) + self.bonds.debt(account)
 
     def deposit(self, account: str) -> float:
         """What the pool owes the account."""
@@ -79,7 +84,8 @@ class Purses:
         """What the lender has out (its deposit and its loans); every lender's loans when none is named."""
         if lender is not None:
             return self.contracts.exposure(lender, COIN)
-        return sum(contract.principal for contract in self.contracts.all() if contract.kind != DEPOSIT and contract.currency == COIN)
+        return (sum(contract.principal for contract in self.contracts.all() if contract.kind != DEPOSIT and contract.currency == COIN)
+                + self.bonds.total_paid())
 
     def set_offers(self, offers: Dict[str, float]) -> None:
         """The funds each lender offers from now on: a lender's deposit in the pool moves to what it offers (from its
@@ -118,7 +124,7 @@ class Purses:
 
     def pay_interest(self, borrower: str, owed: float, purpose: str = INTEREST_PAID) -> Dict[str, float]:
         """Pay `owed` to the pool its facility is drawn on; it reaches the depositors at the next settlement."""
-        if owed <= 0.0 or sum(self.contracts.facility_of(borrower).values()) <= 0.0:
+        if owed <= 0.0 or (sum(self.contracts.facility_of(borrower).values()) <= 0.0 and self.bonds.debt(borrower) <= 0.0):
             return {}
         self.cover(borrower, owed)
         self.transfer(borrower, POOL, owed, purpose)
@@ -173,7 +179,7 @@ class Purses:
     def write_off(self, borrower: str) -> Dict[str, float]:
         """The borrower closes owing: the claim against it is dropped and the pool bears the loss, every deposit
         losing in proportion (the cash was booked as an outlay when it left and no repayment follows); the loss."""
-        lost = sum(contract.principal for contract in self.contracts.default(borrower, FACILITY))
+        lost = sum(contract.principal for contract in self.contracts.default(borrower, FACILITY)) + self.bonds.write_off(borrower)
         if self.named_lenders.names(borrower):
             deposits = {depositor: contract.principal for depositor, contract in self.contracts.deposits.items()}
             for depositor, part in self.named_lenders.settle_default(borrower, lost, deposits).items():
@@ -190,8 +196,13 @@ class Purses:
 
     def _draw(self, borrower: str, shortfall: float) -> None:
         self._fund_pool(shortfall)
-        self.book.transfer(Transfer(POOL, borrower, COIN, shortfall, FACILITY_DRAW))
-        self.contracts.draw(borrower, POOL, COIN, shortfall)
+        if self.bonds.issues(borrower):
+            # the market buys a bond for the shortfall: the borrower owes its face, the depositors paid the price
+            self.book.transfer(Transfer(POOL, borrower, COIN, shortfall, BOND_SOLD))
+            self.bonds.sell(borrower, shortfall)
+        else:
+            self.book.transfer(Transfer(POOL, borrower, COIN, shortfall, FACILITY_DRAW))
+            self.contracts.draw(borrower, POOL, COIN, shortfall)
         if self.named_lenders.names(borrower):
             self.named_lenders.drew(borrower, shortfall, {depositor: contract.principal
                                                           for depositor, contract in self.contracts.deposits.items()})
@@ -215,6 +226,18 @@ class Purses:
             self._fund_pool(amount)
             self.book.transfer(Transfer(POOL, account, COIN, amount, DEPOSIT_TAKEN_BACK))
             self.contracts.withdraw(account, amount, DEBT_FLOOR)
+
+    def redeem_bonds(self, issuer: str) -> float:
+        """A year passes for the issuer's bonds: those at their term are paid off at face, the issuer drawing the cash
+        (on a new bond when its purse falls short); the face repaid. Call once a year."""
+        due = self.bonds.age(issuer)
+        if due > DEBT_FLOOR:
+            self.cover(issuer, due)
+            self.book.transfer(Transfer(issuer, POOL, COIN, due, BOND_REDEEMED))
+            if self.named_lenders.names(issuer):
+                owed = self.debt(issuer) + due
+                self.named_lenders.repaid(issuer, due / owed if owed > 0.0 else 1.0)
+        return due
 
     def _repay(self, borrower: str) -> None:
         held = self.contracts.facilities.get(borrower)
@@ -260,7 +283,7 @@ class Purses:
         return {"book": self.book.to_record(only=(COIN,)),
                 "facilities": self.contracts.to_records(facilities=True),
                 "offers": dict(sorted(self.offers.items())), "interest_pending": self.interest_pending,
-                "named_lenders": self.named_lenders.to_canon_dict()}
+                "named_lenders": self.named_lenders.to_canon_dict(), "bonds": self.bonds.to_canon_dict()}
 
     @classmethod
     def from_record(cls, record: Dict[str, Any]) -> "Purses":
@@ -269,4 +292,5 @@ class Purses:
         purses.offers = dict(record.get("offers") or {})
         purses.interest_pending = float(record.get("interest_pending", 0.0))
         purses.named_lenders = NamedLenders.from_record(record.get("named_lenders") or {})
+        purses.bonds = BondBook.from_record(record.get("bonds") or {})
         return purses

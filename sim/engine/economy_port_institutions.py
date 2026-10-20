@@ -1,0 +1,20 @@
+"""The credit institutions the home society holds, handed to the economy as plain names.
+
+A node declaring a mechanic (data/branches/MECHANICS.md) that the home state knows, in its own knowledge or in what
+its society already knows, gives the economy the institution it names; without one its households found no bank.
+"""
+from sim.economy import api as economy_api
+
+# node mechanic -> the institution the economy names
+MECHANIC_INSTITUTIONS = {"deposit_banking": economy_api.DEPOSIT_BANKING}
+
+
+def held(sim):
+    """The institutions the home state's society holds; none without a government."""
+    government = sim.actors.government_of(None)
+    if government is None:
+        return ()
+    from .agents_port import SimWorld
+    world = SimWorld(sim)
+    return tuple(institution for mechanic, institution in sorted(MECHANIC_INSTITUTIONS.items())
+                 if any(government.knows(node_id, world) for node_id in sim.nodes_with_mechanic(mechanic)))

@@ -36,6 +36,8 @@ def exit_producer(record, producer_id: str, payout: List[Transfer]) -> List[Tran
     record.contracts.default(producer_id, TERM_LOAN)
     record.worn_runs.pop(producer_id, None)
     record.expansion_runs.pop(producer_id, None)
+    record.shares.pop(producer_id, None)
+    record.last_dividends.pop(producer_id, None)
     del record.producers[producer_id]
     return paid
 

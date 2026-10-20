@@ -64,6 +64,7 @@ change; read them from the node data (no command summarises them).
 | `capability` | a capability institution: `lost_benefit` text, `scalable` (`"literacy"` or `"population"` sets which ceiling bounds its units), `redundant_with` (ids whose operation makes a closed copy harmless) |
 | `patent_grant` | a state that knows the node grants term-limited exclusive rights to inventions (`sim/agents/patent.py`); without a node declaring it no patent is ever granted |
 | `state_credit` | holding it lets a state borrow against its revenue (`source`); without a holder a deficit cuts spending |
+| `deposit_banking` | a society holding it lets its households found banks that take deposits and lend them on (`source`); without a holder none is founded (`sim/economy/banks.py`) |
 | `disease_effects` | `acts_on` (`case_fatality` or `transmission`), `factor` (a multiplier between 0 and 1), optional `pathogens` and `label`: what a running work does to how deadly or how contagious a disease is, to the extent the nation has taken the work up (`sim/engine/disease_port.py`) |
 | `disease_burden` | counts toward the society's disease burden (weights live in the civilisation tech effects); a work that also declares `coverage` counts for the share of the people it reaches while it is open |
 | `founder_life_extension` | extends the founder's life while operating |

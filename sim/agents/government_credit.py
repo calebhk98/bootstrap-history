@@ -1,5 +1,6 @@
 """A state as a borrower with named lenders and a record: the lenders that fund its debt are kept by name, a default
-writes their claims down, and the loss it caused raises the rate it pays until lenders forget."""
+writes their claims down, and the loss it caused raises the rate it pays until lenders forget. It raises cash by selling
+bonds (bonds.py) at a price that follows that rate."""
 from typing import Any, Dict
 
 from . import borrowing_arrears
@@ -12,6 +13,11 @@ class CreditRecordMixin:
 	def attach(self, purses: Purses) -> None:
 		super().attach(purses)  # type: ignore[misc]
 		purses.named_lenders.name(self.account_id)  # type: ignore[attr-defined]
+
+	def set_bond_terms(self, world: Any) -> None:
+		"""The terms the state sells bonds at this year: the going rate as the coupon, and the yield the market asks of
+		this state (its borrowing rate, which carries the premium its default record earns) as the price."""
+		self.purses.bonds.set_terms(self.account_id, world.market_rate(), self.borrowing_rate(world))  # type: ignore[attr-defined]
 
 	def creditors(self) -> Dict[str, float]:
 		"""Who is owed what by this state: the lenders whose deposits fund its debt, and their claims."""

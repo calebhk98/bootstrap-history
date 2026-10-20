@@ -93,7 +93,9 @@ class Borrower:
 		record = self.arrears_book
 		self.pay_arrears_from_purse()
 		debt = self.debt()
-		owed = debt * self.borrowing_rate(world) if debt > 0.0 else 0.0
+		bonds = self.purses.bonds  # type: ignore[attr-defined]
+		floating = max(0.0, debt - bonds.debt(self.account_id))  # type: ignore[attr-defined]
+		owed = (floating * self.borrowing_rate(world) if floating > 0.0 else 0.0) + bonds.coupons_due(self.account_id)  # type: ignore[attr-defined]
 		paid, unpaid = borrowing_arrears.settle_year(owed, self.spare_credit(world))
 		if paid > 0.0:
 			world.pay_interest(self, paid, "interest")

@@ -6,7 +6,7 @@ holders (titles.py).
 """
 from typing import Dict, List, Optional, Sequence
 
-from . import titles
+from . import shares as producer_shares, titles
 from .households_cohort import cohort_id, distribute_property_income
 from .types import AgentId, TileId, Transfer
 
@@ -25,10 +25,11 @@ def owner_cohort(record, tile: TileId) -> Optional[AgentId]:
 
 def spread(record, payments: Sequence[Transfer], by_tile: Optional[Dict[TileId, list]] = None) -> List[Transfer]:
     """Dividends and rents paid to a cohort become payments to every cohort of its tile, each by its
-    ownership share; other payments pass through unchanged. `by_tile` (empty to begin with) keeps each
+    ownership share (after the part due to holders of the producer's shares, shares.py); other payments pass
+    through unchanged. `by_tile` (empty to begin with) keeps each
     tile's cohorts across calls while the cohorts do not change."""
     result: List[Transfer] = []
-    for payment in payments:
+    for payment in (part for each in payments for part in producer_shares.split_dividend(record, each)):
         owner = record.cohorts.get(payment.payee)
         if owner is None or payment.purpose not in SPREAD_PURPOSES:
             result.append(payment)
