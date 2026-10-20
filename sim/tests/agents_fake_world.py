@@ -147,6 +147,19 @@ class FakeWorld:
 	def starting_rate(self) -> float:
 		return self.rate
 
+	# ---- what a state weighs when it is short (fiscal_response.py): no coin, no taxpayers it can see, no forms
+	def coin_regime(self) -> str:
+		return "commodity"
+
+	def coin_stock_value(self) -> float:
+		return 0.0
+
+	def visible_taxpayers(self) -> List[Any]:
+		return []
+
+	def revenue_forms(self) -> List[Any]:
+		return []
+
 	def debt_service_share_of_surplus(self) -> float:
 		return 0.5
 

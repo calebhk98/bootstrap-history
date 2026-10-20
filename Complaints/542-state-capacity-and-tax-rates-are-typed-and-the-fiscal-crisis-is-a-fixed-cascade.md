@@ -54,5 +54,5 @@ Children, in order of work:
 - 622: Taxes in kind exist for grain only
 - 623: The state borrows from the pool: no named creditors, no repayment in land and no default
 - 624: Debasement cuts the metal in the coin but domestic money prices do not follow
-- 625: The fiscal crisis is a fixed cascade, not choices of the state actor
+- 625 (closed): The fiscal crisis is a fixed cascade, not choices of the state actor
 - 626: Tax rates are typed in the civilisation file and are not a state choice
