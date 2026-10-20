@@ -25,7 +25,7 @@ class SoilNitrogenWholeGameTests(unittest.TestCase):
         self.assertEqual(game.state.economy.soil_nitrogen, {})
         game.step_soil_nitrogen()
         cropped = [tile for tile in tiles_held(game.civ, game.world_map)
-                   if crop_site(tile, 0.5, game.world_map).cropped_hectares > 0.0]
+                   if crop_site(tile, 0.5, game.world_map).yield_factor > 0.0]
         stock = game.state.economy.soil_nitrogen
         self.assertTrue(cropped)
         self.assertTrue(all(0.0 < stock[tile] < 1.0 for tile in cropped))

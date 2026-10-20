@@ -2,8 +2,6 @@
 
 The pure stock (sim/world/soil_nutrients.py) is tested on its own; the tile's yield factor reading it is tested
 through geography's crop_site; the save round trip and the yearly step are tested on a whole game (slow)."""
-import os
-import tempfile
 import unittest
 
 from sim.geography.api import crop_site, open_map, tiles_held

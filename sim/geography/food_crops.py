@@ -44,8 +44,9 @@ def _rainfed_cropped_share(world_map: WorldMap, tile_id: str, arable_hectares: f
     return (1.0 - cleared_share) * open_field_cropped_share + cleared_share * shifting
 
 
-def crop_site(world_map: WorldMap, tile_id: str, open_field_cropped_share: float) -> CropSite:
-    """The tile's cropland under a rotation that crops `open_field_cropped_share` of open fields each year."""
+def crop_site(world_map: WorldMap, tile_id: str, open_field_cropped_share: float, nutrient_factor: float = 1.0) -> CropSite:
+    """The tile's cropland under a rotation that crops `open_field_cropped_share` of open fields each year.
+    `nutrient_factor` is what the tile's soil nitrogen stock does to a cropped hectare's yield (sim/world/soil_nutrients.py)."""
     area = tile_layers.number(world_map, tile_id, "land_area_km2", 0.0)
     arable_hectares = area * HECTARES_PER_SQUARE_KM * food_land.arable_fraction(world_map, tile_id)
     fertility = tile_layers.number(world_map, tile_id, "fertility_quality_multiplier", 0.0)
@@ -70,16 +71,17 @@ def crop_site(world_map: WorldMap, tile_id: str, open_field_cropped_share: float
     if cropped <= 0.0:
         return CropSite(arable_hectares, 0.0, 0.0)
     harvest_weight = irrigated * irrigated_cropped_share * irrigated_quality + rainfed * rainfed_cropped_share * rainfed_quality
-    return CropSite(arable_hectares, cropped, harvest_weight / cropped)
+    return CropSite(arable_hectares, cropped, harvest_weight / cropped * nutrient_factor)
 
 
 def crop_contributions(world_map: WorldMap, tile_id: str, wild_stock: Optional[Mapping] = None,
-                       crop_technique: Optional[CropTechnique] = None) -> List[Tuple[str, None, float]]:
+                       crop_technique: Optional[CropTechnique] = None,
+                       nutrient_factors: Optional[Mapping[str, float]] = None) -> List[Tuple[str, None, float]]:
     """Net food energy of the tile's crops: the farm model's gross harvest of a reference hectare, on the
     cropped hectares at the tile's yield factor, less seed and loss. No technique, no crop source."""
     if crop_technique is None:
         return []
-    site = crop_site(world_map, tile_id, crop_technique.open_field_cropped_share)
+    site = crop_site(world_map, tile_id, crop_technique.open_field_cropped_share, (nutrient_factors or {}).get(tile_id, 1.0))
     gross_kg = crop_technique.kg_per_cropped_hectare * site.cropped_hectares * site.yield_factor
     net_kg = max(0.0, gross_kg * (1.0 - crop_technique.loss_fraction)
                  - crop_technique.seed_kg_per_cropped_hectare * site.cropped_hectares)

@@ -24,7 +24,9 @@ class FoodSupplyMixin:
     def farm_sites(self):
         """{tile: geography's crop site} over the held tiles under the society's rotation."""
         share = 1.0 - self.labour.farming_technique().rotation.fallow_share_of_holding
-        return {tile_id: crop_site(tile_id, share, self.world_map) for tile_id in tiles_held(self.civ, self.world_map)}
+        factors = self.soil_nitrogen_factors()
+        return {tile_id: crop_site(tile_id, share, self.world_map, factors.get(tile_id, 1.0))
+                for tile_id in tiles_held(self.civ, self.world_map)}
 
     def society_food_potential(self):
         """{source id: kcal a year} over the held tiles: the land's sustainable yield, game thinned by past hunting,
@@ -32,9 +34,10 @@ class FoodSupplyMixin:
         stock = self.state.economy.wild_stock
         crop_technique = agriculture_tile.crop_technique(self.labour.farming_technique())
         totals = {}
+        factors = self.soil_nitrogen_factors()
         for tile_id in tiles_held(self.civ, self.world_map):
             for source_id, kcal in food_potential(
-                    tile_id, None, self.world_map, stock, crop_technique)["kcal_per_year"].items():
+                    tile_id, None, self.world_map, stock, crop_technique, factors)["kcal_per_year"].items():
                 totals[source_id] = totals.get(source_id, 0.0) + kcal
         return capped_kcal(totals, self._gathering_caps())
 

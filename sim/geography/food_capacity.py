@@ -32,11 +32,12 @@ def _species_group(world_map: WorldMap, species_id: str) -> Optional[str]:
 
 
 def food_potential(world_map: WorldMap, tile_id: str, technique_factors: Optional[Dict[str, float]] = None,
-                   wild_stock: Optional[Mapping] = None, crop_technique: Optional[CropTechnique] = None) -> dict:
+                   wild_stock: Optional[Mapping] = None, crop_technique: Optional[CropTechnique] = None,
+                   nutrient_factors: Optional[Mapping[str, float]] = None) -> dict:
     factors = technique_factors or {}
     kcal_by_source: Dict[str, float] = {}
     species: Dict[str, list] = {group: [] for group in parameter(world_map, "food_species_group_of_mechanism").values()}
-    contributions = list(crop_contributions(world_map, tile_id, wild_stock, crop_technique))
+    contributions = list(crop_contributions(world_map, tile_id, wild_stock, crop_technique, nutrient_factors))
     for source_module in SOURCE_MODULES:
         contributions.extend(source_module(world_map, tile_id, wild_stock))
     for source_id, species_id, kcal in contributions:
