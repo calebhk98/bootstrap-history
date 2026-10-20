@@ -12,7 +12,7 @@ Standalone: `transport`, `sea_freight` and the map's parameters.
 from dataclasses import dataclass
 from typing import Any, Dict, Optional, Tuple
 
-from sim.geography import droving, parameters, sea_freight, transport
+from sim.geography import droving, parameters, routes_teams, sea_freight, transport
 from sim.geography.map_source import MapDataError, WorldMap
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
@@ -28,6 +28,8 @@ class Rate:
     labour_hours: float
     feed_kg: float = 0.0
     fuel_kg: float = 0.0
+    team_days: float = 0.0                                 # working days of one team per tonne-km, at this pace (0: no worn team)
+    carrier_days: Tuple[Tuple[str, str, float], ...] = ()  # (kind, name, carrier-days per tonne-km): the team's members, as `routes_carriers`
 
 
 def physical_cost(world_map: WorldMap, rate: Rate) -> float:
@@ -44,9 +46,12 @@ def _named(name: str) -> Any:
     return found
 
 
-def _from_freight_inputs(inputs, pace: float) -> Rate:
+def _from_freight_inputs(inputs, pace: float, mode: Optional[Dict[str, Any]] = None) -> Rate:
+    carriers = routes_teams.composition(mode) if mode is not None else None
+    team_days = 1.0 / (inputs.tonne_km_per_day * pace) if carriers and inputs.tonne_km_per_day > 0.0 else 0.0
     return Rate(inputs.distance_per_day_km * pace, inputs.driver_hours_per_tonne_km / pace,
-                inputs.feed_kg_per_tonne_km / pace)
+                inputs.feed_kg_per_tonne_km / pace, 0.0, team_days,
+                routes_teams.carrier_days(carriers, team_days) if team_days else ())
 
 
 def _porter(carrier: Dict[str, Any], pace: float) -> Rate:
@@ -91,19 +96,19 @@ def compute_rate(world_map: WorldMap, mode: Dict[str, Any], edge_class: str, gra
             return _porter(carrier, pace)
         if model == "pack":
             return _from_freight_inputs(transport.pack_freight_physical_inputs(
-                _named(carrier["animal"]), carrier["string_size"], grade_fraction=grade), pace)
+                _named(carrier["animal"]), carrier["string_size"], grade_fraction=grade), pace, mode)
         if model == "draught":
             return _from_freight_inputs(transport.draught_freight_physical_inputs(
                 _named(carrier["animal"]), carrier["team_size"], _named(carrier["vehicle"]),
-                _named(carrier["surface"]), grade), pace)
+                _named(carrier["surface"]), grade), pace, mode)
         if model == "barge":
             return _from_freight_inputs(transport.barge_freight_physical_inputs(
                 _named(carrier["animal"]), carrier["team_size"], _named(carrier["vehicle"]),
-                current_km_per_hour=current_km_per_hour), pace)
+                current_km_per_hour=current_km_per_hour), pace, mode)
         if model == "droving":
             return _from_freight_inputs(droving.freight_physical_inputs(carrier), pace)
         if model == "sailing":
-            return _from_freight_inputs(sea_freight.sailing_freight_physical_inputs(), pace)
+            return _from_freight_inputs(sea_freight.sailing_freight_physical_inputs(), pace, mode)
         if model == "rail":
             return _rail(carrier, grade, pace)
         if model == "steamship":

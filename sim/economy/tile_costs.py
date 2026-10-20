@@ -52,6 +52,8 @@ class Haul:
     days: float
     money_by_mode: Tuple[Tuple[str, float], ...] = ()
     handlings_by_mode: Tuple[Tuple[str, int], ...] = ()
+    km_by_mode: Tuple[Tuple[str, float], ...] = ()          # kilometres a tonne is carried on each mode (geography's)
+    team_days_by_mode: Tuple[Tuple[str, float], ...] = ()   # working days of a team a tonne takes on each mode (geography's rates)
 
 
 NO_PATH = Haul(math.inf)
@@ -69,7 +71,10 @@ def haul_of(hauled: Mapping[str, object]) -> Haul:
         if mode != previous:
             handlings[mode] = handlings.get(mode, 0) + 1
         previous = mode
-    return Haul(float(hauled["days"]), tuple(sorted(money.items())), tuple(sorted(handlings.items())))
+    inputs = hauled.get("inputs") or {}
+    return Haul(float(hauled["days"]), tuple(sorted(money.items())), tuple(sorted(handlings.items())),
+                tuple(sorted((inputs.get("km_by_mode") or {}).items())),
+                tuple(sorted((inputs.get("team_days") or {}).items())))
 
 
 class CarriageTable:

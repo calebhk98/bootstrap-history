@@ -81,6 +81,7 @@ class WearRule(unittest.TestCase):
 
 CART = "cart"
 WEAR_PER_TONNE_KM = 0.0005
+CART_TONNE_KM_PER_TEAM_DAY = carriage_rates(["cart"])["cart"]["tonne_km_per_team_day"]
 
 
 def carrying_setup():
@@ -91,7 +92,7 @@ def carrying_setup():
     base = trading_setup()
     return dataclasses.replace(
         base, specs=specs, recipes=recipes, opening_prices=dict(base.opening_prices, **{CART: 400.0}),
-        carriage_carriers={"cart": (20.0, ((CART, WEAR_PER_TONNE_KM),))})
+        carriage_carriers={"cart": (CART_TONNE_KM_PER_TEAM_DAY, ((CART, WEAR_PER_TONNE_KM),))})
 
 
 class CarriageWearsCarriers(unittest.TestCase):
@@ -160,15 +161,17 @@ class ExposureOfShipments(unittest.TestCase):
         setup = carrying_setup()
         carriage = setup.carriage_table()
         wear = carriage_wear.Wear(setup, carriage, 0.0)
-        cost = carriage.cost_per_tonne(fixture.TOWN, fixture.FARMS)
-        rate = setup.carriage_rates_at(0.0)["cart"]
-        tonne_km = cost / rate
+        tonne_km = sum(dict(carriage.haul(fixture.TOWN, fixture.FARMS).km_by_mode).values())
         spec = setup.specs[fixture.ORE]
         tonnes = 10.0
         move = DeliveredMove("m1", "m1", fixture.ORE, fixture.TOWN, tonnes * 1000.0 / spec.unit_mass_kg, "x", fixture.FARMS)
         units, days = carriage_wear.exposure(wear, [move], setup.specs)
-        self.assertAlmostEqual(units[CART], tonnes * tonne_km * WEAR_PER_TONNE_KM, places=9)
-        self.assertAlmostEqual(days["cart"], tonnes * tonne_km / 20.0, places=9)
+        team_days = dict(carriage.haul(fixture.TOWN, fixture.FARMS).team_days_by_mode)["cart"]
+        # the team works the days geography's rate says on the ground crossed, and wears its units by the day
+        self.assertAlmostEqual(units[CART], tonnes * team_days * CART_TONNE_KM_PER_TEAM_DAY * WEAR_PER_TONNE_KM, places=9)
+        # the days follow geography's rate on the ground the haul crosses (its class pace), not a typed figure
+        self.assertAlmostEqual(days["cart"], tonnes * dict(carriage.haul(fixture.TOWN, fixture.FARMS).team_days_by_mode)["cart"], places=9)
+        self.assertGreater(days["cart"], tonnes * tonne_km / CART_TONNE_KM_PER_TEAM_DAY)
 
 
 if __name__ == "__main__":

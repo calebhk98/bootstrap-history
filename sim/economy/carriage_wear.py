@@ -69,7 +69,6 @@ class Wear:
 
     def __init__(self, setup, carriage, imbalance: float):
         self.setup, self.carriage, self.imbalance = setup, carriage, imbalance
-        self.rates = setup.carriage_rates_at(imbalance)
         self._rows: Dict[Tuple[TileId, TileId], Tuple[Dict[GoodId, float], Dict[str, float]]] = {}
 
     def _worn(self, source: TileId, destination: TileId):
@@ -78,17 +77,17 @@ class Wear:
             units: Dict[GoodId, float] = {}
             days: Dict[str, float] = {}
             haul = self.carriage.haul(source, destination)
-            handlings = dict(haul.handlings_by_mode)
+            geography_days = dict(haul.team_days_by_mode)
+            tonne_km_by_mode = dict(haul.km_by_mode)
             for mode, money in haul.money_by_mode:
                 per_day, rows = self.setup.carriage_carriers.get(mode, (0.0, ()))
-                rate = self.rates.get(mode, 0.0)
-                leg_money = money - handlings.get(mode, 0) * self.setup.handling_rates.get(mode, 0.0)
-                if not rows or rate <= 0.0 or leg_money <= 0.0:
+                if not rows or money <= 0.0 or tonne_km_by_mode.get(mode, 0.0) <= 0.0:
                     continue
-                tonne_km = leg_money / rate * (1.0 + self.imbalance)
-                days[mode] = days.get(mode, 0.0) + tonne_km / per_day
+                # the days are geography's, at each leg's pace; the carriers' empty legs home work them too
+                worked = geography_days.get(mode, tonne_km_by_mode[mode] / per_day) * (1.0 + self.imbalance)
+                days[mode] = days.get(mode, 0.0) + worked
                 for good, per_tonne_km in rows:
-                    units[good] = units.get(good, 0.0) + tonne_km * per_tonne_km
+                    units[good] = units.get(good, 0.0) + worked * per_tonne_km * per_day
             found = self._rows[(source, destination)] = (units, days)
         return found
 
