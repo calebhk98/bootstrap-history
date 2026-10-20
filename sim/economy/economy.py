@@ -33,6 +33,7 @@ from .year_close import (check_money, close_agents, dispatch_merchants, money_ta
 from .year_goods import add_orders, clear_goods, cohort_orders, merchant_orders, state_orders
 from .year_labour import clear_labour, held_share_by_area, labour_offers, outside_option_by_tile
 from .year_accounts import YearAccounts, build as build_accounts, stocks as stocks_held
+from .standing_demand import with_standing_bids
 from .year_ledger import YearLedger
 from .collection_paused import collection_paused
 from .replaced import replaced
@@ -197,7 +198,7 @@ class Economy:
                                 loans=lambda: record.loans, equity=self._equity_read)
         close_agents(setup, record, close_view, ledger, self.area_map, self.carriage)
         open_entrants(setup, record, close_view, self.area_map, ledger.unmet_demand, self.carriage,
-                      ledger.bids_by_market)
+                      with_standing_bids(ledger.bids_by_market, inputs.standing_bids))
         restake_owners(setup, record, close_view)
         extraction = sites.extraction_by_tile(record, setup)
         close_idle_producers(setup, record)

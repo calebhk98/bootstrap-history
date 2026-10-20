@@ -497,7 +497,17 @@ class AgentEconomy(TilePricesMixin):
                           labour_levy_hours_per_worker=economy_port_levy.levy_hours_per_worker(sim),
                           durable_users=tuple(economy_port_actors.held_account(buyer)
                                               for buyer in sorted(sim.actors.actors)),
+                          standing_bids=self._founder_standing_bids(),
                           site_limits=tuple(economy_port_sites.site_limits(sim, self._recipe_outputs(), self._economy.setup.tiles)))
+
+    def _founder_standing_bids(self):
+        """The founder's year of draws on materials, as bids for firm entry to read (economy_port_actors.standing_bids)."""
+        sim, seats = self._sim, self._sim.state.seats
+        tiles = sorted(self._seat_tiles())
+        if not tiles:
+            return ()
+        return economy_port_actors.standing_bids(self._economy, sim._market_flows(), seats, tiles[0], tonnes_per_unit,
+                                                 sim.economy.materials_in)
 
     def _seat_tiles(self):
         """The tiles the playing seats buy and sell on, whose markets' books the economy keeps."""
