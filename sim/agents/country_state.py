@@ -11,7 +11,7 @@ from typing import Any, Dict, FrozenSet, List, Optional, Tuple
 from sim.geography.api import arable_hectares, territory
 from sim.world import demography
 
-from . import ledger, revenue
+from . import government_levers, ledger, revenue
 from .edges import EDGE_STATE_SPENDING, EDGE_WORKERS
 from .payroll import share_out
 from .tuning_spending import THREAT_ARMY_RESPONSE
@@ -39,7 +39,7 @@ class CountryStateView:
 	# ---- revenue
 	def revenue_forms(self) -> List[Dict[str, Any]]:
 		"""The forms of revenue the country's state raises, as its civilisation file declares them."""
-		return list(self.profile.extra.get(REVENUE_KEY) or [])
+		return government_levers.revenue_forms(list(self.profile.extra.get(REVENUE_KEY) or []), self.government().record)
 
 	def revenue_assessments(self) -> List[revenue.Assessment]:
 		"""Every declared form assessed on this year's base; kept for the year this scope lives."""
