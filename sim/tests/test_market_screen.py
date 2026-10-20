@@ -1,63 +1,29 @@
-"""market_screen: regression checks, run individually with `--only market_screen`."""
-from .harness import *  # noqa: F401,F403
-from sim.ui.market_report import priceable_materials
+"""market_screen: the `market` command's registration, typed parse and rendering (Complaint 640: a reply built here, no game;
+the command against a whole game is test_market_screen_scenario)."""
+from .harness import check
 from sim.ui.proto import command_registry as _registry
 from sim.ui.proto.render_typed import render_pretty as _render_pretty
 from sim.ui.proto.typed import parse_typed as _parse_typed
 
-# `market`: every priceable material, every trade's wage,
-# on one screen, from numbers the game already computes.
+QUICK_TOPIC = True
+
 check("market is a registered command with a help page",
       _registry.resolve("market") is not None
       and _registry.page("market")["usage"], _registry.resolve("market"))
-
-_loom_sim, _loom_ids = _mk_loom_sim(2, 60)
-_reply = S._agent_dispatch(_loom_sim, NODES, {"cmd": "market"})
-check("market answers ok, with no founder-side goods rows", _reply.get("ok") is True and "goods" not in _reply
-      and "demand" not in _reply, sorted(_reply))
-
-_materials = _reply.get("materials", {})
-_rows = _materials.get("rows", [])
-_priceable = priceable_materials(_loom_sim)
-check("materials table covers every priceable material, not only tracked ones (paged)",
-      _materials.get("total") == len(_priceable) and len(_priceable) > 100
-      and 0 < len(_rows) < len(_priceable), (_materials.get("total"), len(_rows)))
-check("each material row carries the quote's buy price and an own-supply flag",
-      all("buy_per_tonne" in row and isinstance(row["own_supply"], bool) for row in _rows),
-      _rows[:2])
-_everything = S._agent_dispatch(_loom_sim, NODES, {"cmd": "market", "limit": 1000}).get("materials", {}).get("rows", [])
-_bases = {row["material"]: row.get("price_basis") for row in _everything}
-check("each material row says which technique its price is at, and the text names one the society lacks",
-      set(_bases.values()) <= {"solved", "gated", "imported", None} and "gated" in _bases.values()
-      and "priced at a technique you do not have" in _render_pretty(
-          "market", {"ok": True, "materials": {"rows": [dict(_everything[0], price_basis="gated")], "total": 1},
-                     "wages": []}),
-      _bases.get("steel_plate_kg"))
-_quote_ref = _loom_sim.material_trade_quote(_rows[0]["material"])
-check("...and the price is the one `quote material` uses",
-      abs(_rows[0]["buy_per_tonne"] - _quote_ref["buy_per_tonne"]) < 0.01, _rows[0])
-_page2 = S._agent_dispatch(_loom_sim, NODES, {"cmd": "market", "offset": len(_rows), "limit": 5})
-check("offset and limit page the materials table",
-      [row["material"] for row in _page2["materials"]["rows"]]
-      == list(_priceable)[len(_rows):len(_rows) + 5],
-      _page2["materials"]["rows"])
-_mine_sim = sim()
-_mine_sim.state.holdings.forest_ha = 10.0
-_all = S._agent_dispatch(_mine_sim, NODES, {"cmd": "market", "limit": 1000})
-_charcoal = next(row for row in _all["materials"]["rows"] if row["material"] == "charcoal_kg")
-check("a material you produce is flagged as own supply",
-      _charcoal["own_supply"] is True, _charcoal)
-
-_wages = _reply.get("wages", [])
-check("wages table has every trade, with the per-year wage `labour <trade>` reports",
-      sorted(row["trade"] for row in _wages) == sorted(WAGES)
-      and all(abs(row["a_year_of_one"] - S._agent_dispatch(
-          _loom_sim, NODES, {"cmd": "labour", "trade": row["trade"]})["trade"]["a_year_of_one"]) < 1.0
-          for row in _wages[:5]), _wages[:3])
-
 check("typed 'market offset 10 limit 5' parses",
       _parse_typed("market offset 10 limit 5")[0] == {"cmd": "market", "offset": 10, "limit": 5},
       _parse_typed("market offset 10 limit 5"))
+
+_row = {"material": "steel_plate_kg", "buy_per_tonne": 100.0, "sell_per_tonne": 80.0, "market_available_tonnes_per_year": 5.0,
+        "own_supply": False, "price_basis": "solved"}
+_reply = {"ok": True, "materials": {"rows": [_row], "total": 1}, "wages": [{"trade": "smith", "a_year_of_one": 500.0, "available_here": True, "you_employ": 0}]}
 _text = _render_pretty("market", _reply)
-check("the rendered screen has its two sections",
-      all(word in _text for word in ("MATERIAL", "WAGES")), _text[:400])
+# presentation: the screen's section headings
+check("the rendered screen has its two sections", all(word in _text for word in ("MATERIAL", "WAGES")), _text[:400])
+# presentation: the note on a gated price
+check("a price at a technique the society lacks says so",
+      "priced at a technique you do not have" in _render_pretty(
+          "market", {"ok": True, "materials": {"rows": [dict(_row, price_basis="gated")], "total": 1}, "wages": []}),
+      None)
+check("a price at a technique the society holds carries no such note",
+      "priced at a technique you do not have" not in _text, None)
