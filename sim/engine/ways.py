@@ -7,6 +7,9 @@ tonnes, the crew it works with) comes from geography's terrain model; this modul
 and goods markets and records it. Nothing here is specific to the founder: it asks for the paying
 actor's household.
 
+A canal across an isthmus (a cut joining two seas, declared in the map's `isthmuses`) is a way like the
+rest: priced from the earth it moves, built over years, and once open a sea link the route search uses.
+
 A way is paid for when it is started and becomes usable when its build time has passed: the labour over
 what the crew works in a year, where the crew is the people the labour market finds of the way's trade
 (at most the crew the work calls for). The crew leans on that trade's pool every year of the build, so
@@ -14,6 +17,7 @@ other employers pay more for it, and the hands go back when the way opens.
 """
 import sim.geography.api as geography
 from sim.agents.api import edges
+from sim.refusal import Refusal
 from .units_prose import money_text
 
 
@@ -53,6 +57,15 @@ class WaysMixin:
                 "engineered": needs["engineered"], "trade": needs["trade"], "crew": crew,
                 "crew_hours": crew_hours}
 
+    def way_refusal(self, tile_a, tile_b, way):
+        """Why `way` cannot be built between the tiles, as a Refusal: no isthmus declared there for a cut that
+        joins two seas, otherwise that the ground or the edge does not allow it."""
+        where = self._where(way, tile_a, tile_b)
+        if geography.is_cut_way(way, self.world_map):
+            return Refusal("no_isthmus", "no isthmus is known %s: a %s needs a neck of land between two seas "
+                           "that the map says can be cut." % (where, way), way=way)
+        return Refusal("cannot_build", "a %s cannot be built %s." % (way, where), way=way)
+
     @staticmethod
     def _where(way, tile_a, tile_b):
         return "on %s" % tile_a if tile_a == tile_b else "between %s and %s" % (tile_a, tile_b)
@@ -66,7 +79,7 @@ class WaysMixin:
         where = self._where(way, tile_a, tile_b)
         quote = self.way_quote(tile_a, tile_b, way)
         if quote is None:
-            return False, "a %s cannot be built %s." % (way, where)
+            return False, self.way_refusal(tile_a, tile_b, way)
         known = set(self.state.projects.done) | set(self.state.projects.granted)
         if quote["node"] and quote["node"] not in known:
             return False, "your people do not know how to build a %s yet (%s)." % (way, quote["node"])
