@@ -519,3 +519,109 @@ and a wage floor are the candidates; the probe did not print wages or plans). Wh
 (the orchestrator's 60-year trace on the supply-curve labour cap shows the level recovering after about year 30). A one-year
 spike of the rate to its ceiling between years 30 and 60 is not explained by this probe, which stops at year 14; the 46th-year spike
 analysis above (wage-loan sizing, `lend_working_capital`) remains the lead.
+
+## Measured: why output falls tenfold after the opening (branch 473-why-output-collapses-after-the-opening)
+
+**Finding.** The producers and the labour market are not the cause; they follow sales. In the opening year the households
+spend about 1 per cent of their cash and the producers sell about 0.3 per cent of what the opening sized them for, so the
+whole of year 0's output goes into stock. From year 1 the stock gate (`producers.runs_for_stock`, `sim/economy/producers.py:367`)
+binds for most producers and cuts planned runs to expected sales less the excess stock. Expected sales are rebased each year on
+real sales, which are an order of magnitude below the opening's, so planned runs, hours hired and real output follow down. About
+two thirds of the fall in output value from year 0 to year 2 is food staples, whose floors the households grow on their own
+plots (Complaint 545). No small general defect was found, so no code changed beyond the cherry-picked drawdown fix.
+
+**Command (about 25 s a run of 5 years; the probes are scratch, not committed).**
+`ROME_SPIN_UP_YEARS=3,2 PYTHONPATH=. python3 <scratchpad>/p473_hh.py 5 out.json` wraps `producers.plan` and `producers.produce`
+(binding limit, runs achieved), `households.goods_orders` and `year_goods._less_what_it_grew` (budget before and after the
+own-plot cut), and captures the year's `YearLedger` (clearings, household bids). `p473_value.py out.json 22` prints the
+per-good table. All three are in the orchestrator's scratchpad (`p473_split2.py`, `p473_hh.py`, `p473_value.py`).
+
+**1. What falls (value of output at the first cleared price of each good; food staples dominate).**
+
+| Good | Output value y0 | y1 | y2 | y3 | Share of the y0-to-y2 fall |
+|---|---|---|---|---|---|
+| millet | 6.0e9 | 1.6e9 | 6.5e8 | 9e7 | 31.5% |
+| wheat | 2.9e9 | 7.7e8 | 3.8e8 | 9e7 | 14.7% |
+| flour | 2.7e9 | 1.5e9 | 6.2e8 | 1.4e8 | 12.2% |
+| starch | 1.3e9 | 7.2e8 | 1.8e8 | 8e5 | 6.7% |
+| mechanical energy | 1.1e9 | 5.8e8 | 2.4e7 | 0 | 6.6% |
+| stone blocks | 1.1e9 | 5.5e8 | 2.3e8 | 1.2e8 | 5.2% |
+| common wine | 9.8e8 | 5.5e8 | 2.9e8 | 7.7e7 | 4.0% |
+| olive oil | 1.0e9 | 6.5e8 | 3.8e8 | 1.7e8 | 3.9% |
+| vegetables | 6.5e8 | 2.5e8 | 6.7e7 | 1.7e5 | 3.4% |
+| total (all goods made) | 2.12e10 | 8.3e9 | 4.2e9 | 2.0e9 | 100% |
+
+Food staples (millet through vegetables, with bread) are about three quarters of the fall; wool, milk, brick, shoes, linen are
+about 1 to 2 per cent each. The by-products with no demand (manure, straw, nightsoil, clay) fall most in physical units but are
+priced near nothing.
+
+**2. What binds in `producers.plan`** (count of producers by the limit that sets the planned runs; hours lost = (capacity - plan) times hours per run).
+
+| Year | Stock gate | Yearly change step | Land cap | Share working (price under cost) | Cash |
+|---|---|---|---|---|---|
+| 0 | none (no sales record) | none | none | 1855 producers, 6.0e9 h | 3718 producers, 2.9e9 h |
+| 1 | 4841 producers, 5.8e9 h | 131, 1.2e9 h | 300, 9.7e9 h | 242, 8.4e8 h | 131, 1e8 h |
+| 2 | 3038, 1.45e10 h | 2161, 2.6e9 h | 15, 1.6e9 h | 484, 9e8 h | 141 |
+| 3 | 2684, 1.5e10 h | 2340, 2.4e9 h | 14, 1e9 h | 716, 6e8 h | 246 |
+
+Cash and price (share working) are small throughout; the stock gate takes the largest share of lost hours from year 2 on, the yearly step
+second. The land cap in year 1 is one block of 300 by-product and fuel producers (manure, straw, coal, wood).
+In year 0 the cash limit shows because the producers' cash is small against the opening's plans; it cuts hours, but the achieved output
+that year is still the highest.
+
+**3. Year 0's output builds the stock that gates years 1 to 3.** For every staple and processed good, the stock a producer
+holds when it plans year 1 equals its whole year-0 output: manure 8.07e10 held against 8.07e10 made, clay 8.8e9 against 8.8e9,
+flour 3.79e9 against 3.79e9, wine 9.0e9 against 9.7e9, starch 1.29e9 against 1.29e9. The stock does not fall afterwards
+(flour 3.8e9, 5.0e9, 5.9e9, 6.0e9 at the plan of years 1 to 4; wine 9.0e9, 1.2e10, 1.2e10, 1.1e10; starch 1.3e9 to 2.1e9),
+because their sales stay far below the stock; nightsoil, clay and manure decay only slowly.
+
+**4. The opening's assumed sales against the real ones.** Total traded value over all clearings, and the households' share:
+
+| Year | Expected sales at expected prices | Traded value (all buyers) | Households' purchases |
+|---|---|---|---|
+| 0 | 4.5e10 | 1.4e8 | 1.35e8 |
+| 1 | 1.4e10 | 4.9e9 | 3.4e9 |
+| 2 | 8.8e9 | 4.0e9 | 2.8e9 |
+| 3 | 5.5e9 | 4.5e9 | 3.4e9 |
+
+By good, the opening's expected sales (units) against units traded:
+
+| Good | Expected sales, year 0 | Traded y0 | y1 | y2 |
+|---|---|---|---|---|
+| common wine | 2.7e10 | 2.5e7 | 2.9e8 | 8.8e7 |
+| flour | 7.8e9 | 7.6e6 | 9.2e8 | 2.0e7 |
+| vegetables | 7.0e9 | 7e6 | 3.4e7 | 2.8e7 |
+| olive oil | 3.4e9 | 1.5e7 | 1.1e8 | 1.1e8 |
+| starch | 1.2e9 | 3.9e6 | 1.7e7 | 7.4e6 |
+| bread | 2.4e9 | 3.2e8 | 5.2e8 | 1.8e8 |
+
+Which assumption fails: it is Complaint 545, not 526 or 607. In year 0 the households' bids are all of their cash
+(1.15e10, `smooth_rise` off while settling); then `year_goods._less_what_it_grew` (`sim/economy/year_goods.py:59`) cuts each floor
+bid by the share of that floor grown on their plots, and the total bid budget falls from 1.15e10 to 3.9e8 (millet 1.76e9 to 1.1e7,
+olive oil 1.47e9 to 9.5e6, brick 1.21e9 to 6e4, wheat, wine, flour, bread, starch alike, each cut by more than 99 per cent). The
+opening (`sim/economy/opening.py:164`) sizes the same goods from the same function without that cut. In year 1 the cut is smaller
+(1.74e10 to 1.26e10) because the bids are less floor-dominated, but the money is still not spent. The cut money is not redirected: households end year 0
+with 2.1e10 in cash against a target of 1.3e8.
+
+**5. Why the households' hoard still does not come back, with the spend-down fix in.** Households bid 1.26e10, 1.7e10, 2.0e10, 2.0e10
+in years 1 to 4 after the cut, and buy 3.4e9, 2.8e9, 3.4e9, 4.3e9. The unspent budget by what happened at the market:
+
+| Year | Supply exhausted (everything offered was sold) | Supply left unsold (price or ceiling) | No offer at all |
+|---|---|---|---|
+| 1 | 6.3e9 | 1.9e9 | 9.6e8 |
+| 2 | 1.24e10 | 1.3e9 | 4.9e8 |
+| 3 | 1.43e10 | 1.5e9 | 9.4e8 |
+| 4 | 1.42e10 | 1.1e9 | 8.1e8 |
+
+So about 70 per cent of the budget goes to goods whose whole supply sold out (coal, noric steel, bronze, brass, leather, opium,
+firewood, brick, canvas, stone blocks, linen, timber: year 3 largest were coal 2.7e9, noric steel 2.3e9, bronze 1.4e9), while the
+food that the opening made in surplus has no buyers. The drawdown fix lets the budget exist; the hoard is not spent because the
+goods the budget names are thin (short chains for metals, land caps on fuel and timber, see the sections above), and the goods
+that exist are not wanted. Households' cash still rises (2.27e10, 2.41e10, 2.55e10 at the plan of years 1 to 3).
+
+**Not found / not checked.** I did not test whether re-sizing the opening's food by the own-plot share (tried and reverted above)
+changes year-1 output now that the drawdown fix is in; that needs the joint by-product (bran) handled first. The 'supply
+exhausted' classification compares the quantity traded with the quantity offered at the clearing price (`ClearingResult`), so it
+counts a good whose price sits at a bidder's ceiling the same as one with no producer. Whether the thin metal and fuel goods are short for a recipe-chain
+reason (inputs, land caps) or a plan reason was read only from the earlier sections, not re-measured here. The 15-year and
+declared-length runs were not repeated.
