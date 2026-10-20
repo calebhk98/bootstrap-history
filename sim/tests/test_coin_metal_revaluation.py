@@ -10,7 +10,7 @@ import unittest
 from sim.engine.coin_revaluation import CoinRevaluationMixin
 from sim.engine.foreign_actor_trade import ForeignActorTradeMixin
 from sim.engine.foreign_payments import ForeignPaymentsMixin
-from sim.engine.wage_market_ratios import WageMarketRatiosMixin
+from sim.engine.real_price_ratios import RealPriceRatiosMixin
 from sim.labour.labour_wages import WagesMixin
 from sim.tests.test_capital_charge import works_entry
 from sim.tests.test_running_cost_floor import StubGame
@@ -136,7 +136,7 @@ class WageClearingTests(unittest.TestCase):
         self.assertAlmostEqual(dear["tools"], 3.0)
 
 
-class RecordingStub(WageMarketRatiosMixin):
+class RecordingStub(RealPriceRatiosMixin):
     """The market computes a landed price, which asks for a wage: the wage must not ask the market back."""
     def __init__(self):
         self.state = types.SimpleNamespace(economy=types.SimpleNamespace(wage_market_ratios={}))

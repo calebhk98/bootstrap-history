@@ -59,7 +59,7 @@ Each point names the issue that tracks it; read its status line before acting.
   pathogen arrives from the outside sources a civilisation file names (map
   tiles, initial conditions only), with a chance that falls with the days of
   travel from the source to the tiles held; deaths, staff loss and timing come
-  from the model (`sim/engine/epidemic_staff.py` hands the toll to each seat).
+  from the model (`sim/engine/disease_port.py` hands the toll to each seat).
   No civilisation file carries a dated plague. Still open: a patch per tile
   from the per-tile populations, contact scaled by trade volume, the outside
   world as simulated actors (`Complaints/490`).

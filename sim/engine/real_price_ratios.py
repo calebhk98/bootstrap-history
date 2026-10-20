@@ -9,6 +9,8 @@ other, and every ratio is one.
 """
 import math
 
+from sim.labour import trade_data, wage_provider
+
 
 class RealPriceRatiosMixin:
 
@@ -46,3 +48,20 @@ class RealPriceRatiosMixin:
         if basket is None:
             return 1.0
         return 1.0 / basket[2] if metal == self.home_coin_metal() else 1.0
+
+    def last_market_price_ratio(self, material):
+        """The material's real price ratio at the last year's close; one before any close. A wage is set before
+        the year's market clears (the clearing prices imports at a partner's landed price, which needs a wage
+        quote), so wages read this recorded ratio, never the live clearing."""
+        return self.state.economy.wage_market_ratios.get(material, 1.0)
+
+    def record_wage_market_ratios(self):
+        """Record the real price ratio of the staple and of every trade's tool materials."""
+        registry = trade_data.registry_of(self)
+        materials = {wage_provider.staple_material(self.civ)}
+        for trade in registry:
+            materials.update(trade_data.tool_basket(registry, trade))
+        ratios = self.state.economy.wage_market_ratios
+        for material in sorted(materials):
+            ratio = self.real_price_ratio(material)
+            ratios[material] = ratio if ratio and ratio > 0.0 else 1.0

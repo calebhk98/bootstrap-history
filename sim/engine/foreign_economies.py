@@ -63,6 +63,15 @@ def _foreign_prices_in_own_coin(civilization_id):
 class ForeignEconomiesMixin(ForeignRoutesMixin, ForeignCapacityMixin, ForeignPaymentsMixin,
                             ForeignTradersMixin, ForeignActorTradeMixin, TraderCargoMixin):
 
+    def partner_civ(self, civilization_id):
+        """The civilisation `civilization_id` as `load_civ` returns it, loaded once (mods applied, checked) and
+        kept for the game. Read-only: a caller that changes a record takes its own copy with `load_civ`."""
+        loaded = self.__dict__.setdefault("_partner_civs", {})
+        record = loaded.get(civilization_id)
+        if record is None:
+            record = loaded[civilization_id] = load_civ(civilization_id)
+        return record
+
     def partner_countries(self):
         """Every economy enabled for this year, sorted by id: those trading by the legacy partner books and
         those that are part of the agent economy."""

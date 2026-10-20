@@ -10,11 +10,12 @@ import unittest
 from types import SimpleNamespace
 
 from sim.engine import tree_merge, validate_action_results
-from sim.engine.action_loss import ActionLossMixin
+from sim.engine.projects_completion import CompletionMixin
 from sim.engine.society_hazards import HazardsMixin
 
 
-class _Host(ActionLossMixin, HazardsMixin):
+class _Host(HazardsMixin):
+    lose_what_was_risked = CompletionMixin.lose_what_was_risked
 
     def __init__(self, risks, employees=None, stock=None, seed=1):
         self.nodes = {"voyage": {"id": "voyage", "risks": risks} if risks is not None else {"id": "voyage"}}

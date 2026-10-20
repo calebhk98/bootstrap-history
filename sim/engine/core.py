@@ -63,15 +63,12 @@ from .techniques_in_use import TechniquesInUseMixin
 from .industry_concern import IndustryConcernMixin
 from .industry_depth import IndustryDepthMixin
 from .coin_revaluation import CoinRevaluationMixin
-from .partner_civs import PartnerCivsMixin
 from .real_price_ratios import RealPriceRatiosMixin
-from .wage_market_ratios import WageMarketRatiosMixin
 from .incumbent_prices import IncumbentPricesMixin
 from .producer_costs import ProducerCostsMixin
 from .fog import FogMixin
 from .mechanics import MechanicsMixin
 from .disease_port import DiseasePortMixin
-from .epidemic_staff import EpidemicStaffMixin
 from .geography_port import GeographyPortMixin
 from .labour_port import LabourPortMixin
 from .projects import ProjectsMixin
@@ -85,7 +82,6 @@ from .seat_defaults import default_policy
 from .ways import WaysMixin
 from .held_works import HeldWorksMixin
 from .works import WorksMixin
-from .action_loss import ActionLossMixin
 from .society import SocietyMixin
 from .society_actors import ActorsMixin
 from .society_disclosure import DisclosureMixin
@@ -248,8 +244,8 @@ FARM_WEATHER_POOLED_CELL_CAP = declare(
 
 
 
-class Sim(ModStoresMixin, RealPriceRatiosMixin, CoinRevaluationMixin, PartnerCivsMixin, WageMarketRatiosMixin, MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMixin, MarketDemandMixin, RealOutputMixin, ConcernVolumeMixin, TechniquesInUseMixin, IndustryDepthMixin, IndustryConcernMixin, IncumbentPricesMixin, ProducerCostsMixin, FogMixin, GeographyPortMixin, DiseasePortMixin, EpidemicStaffMixin, LabourPortMixin,
-          ProjectsMixin, SeatMixin, SeatRunMixin, SeatBuildsMixin, SeatSightMixin, ShockYearMixin, WaysMixin, WorksMixin, HeldWorksMixin, ActionLossMixin, SocietyMixin, ActorsMixin, DisclosureMixin, FounderSalesMixin, SeatDealingsMixin, InterestGroupsMixin, BenefactionsMixin, RouteDuesMixin, ForwardingPropertiesMixin, GoalsMixin,
+class Sim(ModStoresMixin, RealPriceRatiosMixin, CoinRevaluationMixin, MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMixin, MarketDemandMixin, RealOutputMixin, ConcernVolumeMixin, TechniquesInUseMixin, IndustryDepthMixin, IndustryConcernMixin, IncumbentPricesMixin, ProducerCostsMixin, FogMixin, GeographyPortMixin, DiseasePortMixin, LabourPortMixin,
+          ProjectsMixin, SeatMixin, SeatRunMixin, SeatBuildsMixin, SeatSightMixin, ShockYearMixin, WaysMixin, WorksMixin, HeldWorksMixin, SocietyMixin, ActorsMixin, DisclosureMixin, FounderSalesMixin, SeatDealingsMixin, InterestGroupsMixin, BenefactionsMixin, RouteDuesMixin, ForwardingPropertiesMixin, GoalsMixin,
           StepPhasesMixin, LivingStockMixin, LivingStockOpeningMixin, CoinHoardMixin, CoinCarriageMixin, TheftChargeMixin,
           LivingStockTradeMixin, LivingStockSmugglingMixin, LivingStockYearlyMixin, FoodSupplyMixin, SoilNitrogenMixin, FoodEatenMixin, DemographicRecoveryMixin, RegionalPeopleMixin, DefenceStoresMixin, EconomyPortMixin, NodeRederiveMixin):
     STATE_CAPACITY_DEFAULT = declare(

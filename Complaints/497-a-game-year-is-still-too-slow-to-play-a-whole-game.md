@@ -76,7 +76,7 @@ Related: 473 (the spin-up does not settle, so a longer spin-up cannot replace sh
 A profile of one stepped year of a game with a partner outside the agent economy (the setup of the
 `home_cargo_price` topic) found `load_civ` called thousands of times a year, nearly all to read one field of a
 partner (`coin_standard`, `state_capacity`, `opening_stock`, `population`, tiles held, the route). The `Sim` now
-keeps each loaded partner for the game (`Sim.partner_civ`, `sim/engine/partner_civs.py`) and the per-year
+keeps each loaded partner for the game (`Sim.partner_civ`, `sim/engine/foreign_economies.py`) and the per-year
 readers go through it: partner coin metal, the foreign-economy facts, foreign supply and mineral share, coin
 carriage, partner spending and coin settlement, the living-stock trade, smuggling and routes, and the goods
 market's route lookup. The shared record is read-only; nothing that reads it writes to it (checked: after

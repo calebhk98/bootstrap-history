@@ -583,3 +583,17 @@ package function reads no `self` at all and the mixin keeps only the glue that f
 - Sim mixin count, before and after these two moves: 59 and 59 (no mixin emptied yet); count with
   `python3 -c 'import ast; c = next(n for n in ast.parse(open("sim/engine/core.py").read()).body if isinstance(n, ast.ClassDef) and n.name == "Sim"); print(sum(getattr(b, "id", "").endswith("Mixin") for b in c.bases))'`.
 - The fingerprint was not run for these moves either.
+- Four whole mixins removed from `Sim`'s bases (59 to 55, counted with the command above): each was folded into the
+  mixin that owns its domain, and its file deleted. `PartnerCivsMixin` (`partner_civ`, the per-game record cache) went
+  into `ForeignEconomiesMixin` (`sim/engine/foreign_economies.py`). `WageMarketRatiosMixin` (`last_market_price_ratio`,
+  `record_wage_market_ratios`) went into `RealPriceRatiosMixin` (`sim/engine/real_price_ratios.py`), which computes
+  the ratios it records. `EpidemicStaffMixin` (`epidemic_hits_seats`, `EPIDEMIC_NOTICE_SHARE`) went into
+  `DiseasePortMixin` (`sim/engine/disease_port.py`), which already feeds it the year's deaths. `ActionLossMixin`
+  (`lose_what_was_risked`, `STOCK_RISKS`) went into `CompletionMixin` (`sim/engine/projects_completion.py`), its only
+  caller. These are folds, not moves into a walled package: the logic still reads `self` (the receiving files'
+  distinct `self.` reads rose by 1, 2, 6 and 3 respectively, measured with the `ast` snippet above; the Sim-wide
+  coupling is unchanged). Test hosts that listed the deleted mixins now borrow the method from its new owner.
+  Proof: identical sha256 over eight stepped Rome years of the wage market ratios, `last_market_price_ratio`, each
+  partner's coin standard, `epidemic_hits_seats` (rising deaths) and `lose_what_was_risked` on every risk node, and
+  identical state md5, on a base worktree and on this branch; identical sorted-key md5 of `saveload.state_text` after
+  three stepped Rome years. The fingerprint was not run.

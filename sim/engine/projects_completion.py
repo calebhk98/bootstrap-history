@@ -52,6 +52,10 @@ def goal_movement(before, after):
     return moved, after["road_done"] - before["road_done"]
 
 
+# a node's `risks` kinds taken from the held stock (crew is taken from the employees)
+STOCK_RISKS = ("hull", "cargo")
+
+
 class CompletionMixin:
     MINOR_FAILURE_SHARE = declare(
         "MINOR_FAILURE_SHARE", 0.05, kind="temporary_heuristic",
@@ -376,3 +380,27 @@ class CompletionMixin:
         unit="fraction of real-erosion hazard removed",
         source="your own silver", confidence="D", why=_HAZARD_COUNTER_WHY)
     # HAZARD_COUNTERS: {kind: [(node, share, label)]} from each node's `hazard_counters` (MechanicsMixin).
+
+    def lose_what_was_risked(self, node_id):
+        """Take the crew, hull and cargo a failed attempt put at risk. Returns the log lines saying what went."""
+        risks = self.nodes[node_id].get("risks")
+        if not risks:
+            return []
+        lines = []
+        employees = self.state.household.employees
+        for trade, share in sorted((risks.get("crew") or {}).items()):
+            have = employees.get(trade, 0.0)
+            kept = self._surviving_people(have, 1.0 - share)
+            if kept > 0:
+                employees[trade] = kept
+            else:
+                employees.pop(trade, None)
+            if round(have) - kept > 0:
+                lines.append("crew lost: %d of %d %s" % (round(have) - kept, round(have), trade))
+        for kind in STOCK_RISKS:
+            for material, share in sorted((risks.get(kind) or {}).items()):
+                lost = self.stock_held(material) * share
+                if lost > 0:
+                    self.change_stock(material, -lost)
+                    lines.append("%s lost: %.3g of %s" % (kind, lost, material))
+        return lines

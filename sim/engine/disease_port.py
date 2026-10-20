@@ -9,7 +9,10 @@ the model. Technology acts through `disease_effects` on node mechanics. Nothing 
 a technology."""
 import functools
 
+from sim.refusal import LogLine
+
 from sim.disease import api as disease
+from .units_prose import money_text
 from sim.geography.api import endemic_people_loss, reach, tiles_held, usable_modes
 
 nation, tuning = disease.nation, disease.nation_tuning
@@ -19,6 +22,9 @@ DISEASE_TRAVELLER_ANNUAL_CHANCE = tuning.DISEASE_TRAVELLER_ANNUAL_CHANCE
 DISEASE_EMERGENCE_ANNUAL_CHANCE = tuning.DISEASE_EMERGENCE_ANNUAL_CHANCE
 DISEASE_TRAVEL_DECAY_DAYS = tuning.DISEASE_TRAVEL_DECAY_DAYS
 DISEASE_URBAN_DENSITY_RATIO = tuning.DISEASE_URBAN_DENSITY_RATIO
+
+# below this share of working-age people dead, a seat notices nothing
+EPIDEMIC_NOTICE_SHARE = 0.002
 
 
 @functools.lru_cache(maxsize=1)
@@ -134,3 +140,31 @@ class DiseasePortMixin:
         deaths = self.disease_year(food_available_calories_per_day, year)
         self.epidemic_hits_seats(deaths, year)
         return deaths, self._disease_burden(), self.endemic_death_rates()
+
+    def epidemic_hits_seats(self, deaths_by_band, year):
+        """Cut each playing seat's people and cash by the working-age share the year's epidemics killed; the reply
+        is that share (zero when nothing was done)."""
+        working_age = float(self.population.working_age)
+        share = deaths_by_band.get("working_age", 0.0) / (working_age + deaths_by_band.get("working_age", 0.0)) if working_age > 0 else 0.0
+        if share < EPIDEMIC_NOTICE_SHARE:
+            return 0.0
+        names = self.__dict__.get("_epidemic_names") or ["an epidemic"]
+        name = " and ".join(names)
+        for seat_id in self.playing_seats():
+            with self.act_as(seat_id):
+                household = self.state.household
+                people_before = household.scholars + household.artisans + sum(household.employees.values())
+                staff_before = self.labour.staff_snapshot()
+                self.apply_staff_survival(1 - share)
+                household.directors_extra *= (1 - share)
+                self.labour.log_staff_reduction(name, staff_before)
+                cash = self.lose_capital(share * self.PLAGUE_CASH_LOSS_SHARE, "plague losses")
+                parts = ["staff -%d%%" % round(share * 100)] if people_before > 0.05 else []
+                if cash > 0.5:
+                    parts.append("%s of takings lost while the trade stood idle" % money_text(cash, self, grouped=True))
+                took_nothing = not parts
+                household.log.append((year, LogLine(
+                    "hazard_hit", "%s: %s. Empire-wide, %d%% of working-age people died" % (
+                        name, ", ".join(parts) or "you had nothing it could take", round(share * 100)),
+                    hazard=name, took_nothing=took_nothing, lapsed_hedges=[])))
+        return share
