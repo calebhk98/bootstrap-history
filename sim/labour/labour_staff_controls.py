@@ -13,6 +13,15 @@ from collections import defaultdict
 from . import trade_data
 
 
+def housing_places_to_buy(count, room, cost_per_place, hiring_outlay, spending_power):
+    """The worker housing to buy so `count` more people have room: the places short of `room`, or none when room
+    suffices or the housing and the `hiring_outlay` together exceed `spending_power`."""
+    places = math.ceil(count - max(0.0, room) - 1e-9)
+    if places <= 0 or places * cost_per_place + hiring_outlay > spending_power:
+        return 0
+    return places
+
+
 class StaffControlsMixin:
 
     def keep_staffed_concerns(self):
@@ -71,11 +80,9 @@ class StaffControlsMixin:
     def buy_room_for(self, count, hiring_outlay, label):
         """Buy worker housing for `count` more people when room is short and the purchase budget covers
         the housing and the `hiring_outlay` together. The price and the budget are those of `buy housing`."""
-        places = math.ceil(count - max(0.0, self.household_room()) - 1e-9)
+        places = housing_places_to_buy(count, self.household_room(), self._world.housing_price_per_place(),
+                                       hiring_outlay, self._world.spending_power("buy"))
         if places <= 0:
-            return False
-        cost = places * self._world.housing_price_per_place()
-        if cost + hiring_outlay > self._world.spending_power("buy"):
             return False
         if not self._world.build_worker_housing(places):
             return False

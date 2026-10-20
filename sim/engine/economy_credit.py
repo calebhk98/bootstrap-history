@@ -36,6 +36,12 @@ def calculate_credit_ceiling(raw_credit, running_cost_floor, serviceable, price_
     return max(limit, running_cost_floor) * price_index
 
 
+def bearable_part(amount, capital, credit_limit_after):
+    """How much of `amount` a purse of `capital` and a credit line of `credit_limit_after` (read at the capital left
+    after paying) can take without capital ending below the negative of the limit."""
+    return min(amount, max(0.0, capital + credit_limit_after))
+
+
 def calculate_affordability(capital, credit_ceiling, credit_share, preserve_debt=False):
     """Pure calculation used by every quote and state-changing spend check."""
     if preserve_debt:
@@ -101,8 +107,7 @@ class CreditMixin:
         negative of the limit. The limit is read at the capital left after paying, because the floor
         (living_cost) carries a status term that shrinks as positive capital goes."""
         held = self.state.household.capital
-        limit_after = self.credit_limit(_capital=held - amount)
-        return min(amount, max(0.0, held + limit_after))
+        return bearable_part(amount, held, self.credit_limit(_capital=held - amount))
 
     def credit_limit(self, _rev=None, _upkeep=None, _capital=None):
         """How far into arrears anyone will actually let you go.

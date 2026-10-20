@@ -5,6 +5,7 @@ A part of the year's phases (core_step_phases.py); Sim inherits it through StepP
 from sim.refusal import LogLine, Refusal
 from sim.agents.api import edges
 from .units_prose import plain_number
+from .hour_offer import hours_offered, unmet_directive_cause
 from .projects_trade_wait import STALL_YEARS_BEFORE_ABANDONMENT
 
 
@@ -160,10 +161,7 @@ class ProjectProgressPhaseMixin:
         _dir_hours = self.state.household.hour_allocations.get(node_id)
         _pace_cap = self.project_hour_pace(node_id)
         _project_throttle = self.project_resource_throttle(node_id)
-        if _dir_hours and _dir_hours > 0:
-            per = min(remaining, _pace_cap, _dir_hours) * _project_throttle
-        else:
-            per = min(remaining, _pace_cap) * _project_throttle
+        per = hours_offered(remaining, _pace_cap, _dir_hours, _project_throttle)
         remaining -= per
         # WHAT WAS ACTUALLY TAKEN OFF, which is not the same as what was
         # offered: `per` is allowed to exceed ph_left (the max() above
@@ -203,28 +201,27 @@ class ProjectProgressPhaseMixin:
         # what is left to do, or its calendar floor - could not use
         # that many hours even with the whole pool behind it. Either
         # is a real, nameable reason; "it disappeared" is not.
-        if _dir_hours and _dir_hours > 0 and _dir_hours - per > 1.0:
-            if (_project_throttle < 0.98 and self.state.holdings.binding
-                    and _pace_cap >= _dir_hours - 0.5):
-                _directed_hours_unused.append((node_id, round(_dir_hours - per, 0),
-                    Refusal("shortage_throttle", "a shortage of %s has every project (this one "
-                            "included) running at %d%% of the pace its "
-                            "hours alone would allow"
-                            % (self.state.holdings.binding, round(_project_throttle * 100)))))
-            elif _pace_cap * _project_throttle < _dir_hours - 0.5:
-                _directed_hours_unused.append((node_id, round(_dir_hours - per, 0),
-                    Refusal("own_pace", "its own pace this year - at most %s hours, set "
-                            "by how much of it is left to do or its "
-                            "calendar floor, not by your hours - could not "
-                            "use the rest" % plain_number(
-                                _pace_cap * _project_throttle))))
-            else:
-                _directed_hours_unused.append((node_id, round(_dir_hours - per, 0),
-                    Refusal("pool_claimed", "your other standing allocations and active "
-                            "work already claimed the rest of this year's "
-                            "%s hours before this one's turn came ('priority "
-                            "<id> first' moves a project up the queue)"
-                            % plain_number(_pool_total_this_year))))
+        _unmet = unmet_directive_cause(_dir_hours, per, _pace_cap, _project_throttle, self.state.holdings.binding)
+        if _unmet == "shortage_throttle":
+            _directed_hours_unused.append((node_id, round(_dir_hours - per, 0),
+                Refusal("shortage_throttle", "a shortage of %s has every project (this one "
+                        "included) running at %d%% of the pace its "
+                        "hours alone would allow"
+                        % (self.state.holdings.binding, round(_project_throttle * 100)))))
+        elif _unmet == "own_pace":
+            _directed_hours_unused.append((node_id, round(_dir_hours - per, 0),
+                Refusal("own_pace", "its own pace this year - at most %s hours, set "
+                        "by how much of it is left to do or its "
+                        "calendar floor, not by your hours - could not "
+                        "use the rest" % plain_number(
+                            _pace_cap * _project_throttle))))
+        elif _unmet == "pool_claimed":
+            _directed_hours_unused.append((node_id, round(_dir_hours - per, 0),
+                Refusal("pool_claimed", "your other standing allocations and active "
+                        "work already claimed the rest of this year's "
+                        "%s hours before this one's turn came ('priority "
+                        "<id> first' moves a project up the queue)"
+                        % plain_number(_pool_total_this_year))))
         return remaining, per, spent_hours, _dir_hours
 
     def _project_progress_labour_and_bill(self, node_id, project_state, node,

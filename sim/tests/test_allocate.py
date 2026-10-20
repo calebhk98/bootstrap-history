@@ -1,161 +1,119 @@
-"""allocate: regression checks, run individually with `--only allocate`."""
+"""allocate: a standing instruction for the player's own year of hours.
+
+The rules are tested on built inputs: the queue the hours are drawn in (`hour_offer.priority_queue`), what one
+project is offered and why a directive can go unmet (`hour_offer`), and the `allocate` command on a stand-in
+for the household. Three named scenarios run the real allocator (`_run_seat_work`), a save and load, and the
+standing work order on a game."""
+from types import SimpleNamespace
+
 from .harness import *  # noqa: F401,F403
-from sim.refusal import cause_of, facts_of
+from sim.engine import hour_offer
+from sim.refusal import cause_of
+from sim.ui.proto.dispatch_labour import _cmd_allocate
+
+# --- the queue: a directed project jumps the queue, ahead of higher-`order` work never given a directive.
+queue_order = ["alpha", "beta", "gamma"]
+check("a project with a standing allocation draws before higher-ranked undirected ones",
+      hour_offer.priority_queue(["alpha", "beta", "gamma"], queue_order, {"beta": 500.0}) == ["beta", "alpha", "gamma"])
+check("with nothing ever directed, projects draw strictly by `order` rank",
+      hour_offer.priority_queue(["gamma", "alpha", "beta"], queue_order, {}) == ["alpha", "beta", "gamma"])
+check("a zero allocation directs nothing",
+      hour_offer.priority_queue(["alpha", "beta"], queue_order, {"beta": 0.0}) == ["alpha", "beta"])
+check("directed projects keep `order` rank among themselves, and a project missing from `order` draws last",
+      hour_offer.priority_queue(["stranger", "gamma", "alpha"], queue_order, {"gamma": 1.0, "alpha": 1.0}) == ["alpha", "gamma", "stranger"]
+      and hour_offer.priority_queue(["stranger", "alpha"], queue_order, {}) == ["alpha", "stranger"])
+
+# --- what one project is offered: a directive is a ceiling, never a floor.
+check("a standing allocation gets the hours it asked for when pool and pace allow",
+      hour_offer.hours_offered(1900.0, 3000.0, 500.0, 1.0) == 500.0)
+check("an undirected project is offered the lesser of the pool left and its own pace",
+      hour_offer.hours_offered(1900.0, 700.0, None, 1.0) == 700.0 and hour_offer.hours_offered(300.0, 700.0, 0.0, 1.0) == 300.0)
+check("a directive bigger than the project's own pace only offers it that pace",
+      hour_offer.hours_offered(1900.0, 30.0, 1400.0, 1.0) == 30.0)
+check("a directive bigger than what is left of the pool offers what is left",
+      hour_offer.hours_offered(600.0, 3000.0, 1000.0, 1.0) == 600.0)
+check("a shortage throttle scales the offer", hour_offer.hours_offered(1900.0, 3000.0, 1000.0, 0.5) == 500.0)
+
+# two standing orders asking for more than the whole pool, drawn in queue order
+pool = 1900.0
+first = hour_offer.hours_offered(pool, 3000.0, 1400.0, 1.0)
+second = hour_offer.hours_offered(pool - first, 3000.0, 1000.0, 1.0)
+check("of two over-committed standing orders the first gets its directive in full and the second what the pool had left",
+      first == 1400.0 and second == pool - 1400.0, (first, second))
+check("the second is told the pool ran out, not that anything is wrong with that project",
+      hour_offer.unmet_directive_cause(1000.0, second, 3000.0, 1.0, None) == "pool_claimed")
+
+# --- why a directive goes unmet
+check("a directive met in full, or within an hour of it, has no cause",
+      hour_offer.unmet_directive_cause(500.0, 500.0, 3000.0, 1.0, None) is None
+      and hour_offer.unmet_directive_cause(500.0, 499.5, 3000.0, 1.0, None) is None)
+check("no directive has no cause", hour_offer.unmet_directive_cause(None, 0.0, 30.0, 1.0, None) is None
+      and hour_offer.unmet_directive_cause(0.0, 0.0, 30.0, 1.0, None) is None)
+check("a directive past the project's own pace is named as its own pace",
+      hour_offer.unmet_directive_cause(1400.0, 30.0, 30.0, 1.0, None) == "own_pace")
+check("a directive the pace could carry, cut by a binding shortage, is named as the shortage",
+      hour_offer.unmet_directive_cause(1000.0, 500.0, 3000.0, 0.5, "grain") == "shortage_throttle")
+check("a throttle with no binding shortage named is not called a shortage",
+      hour_offer.unmet_directive_cause(1000.0, 500.0, 3000.0, 0.5, None) == "pool_claimed")
+check("a throttle within two percent is not called a shortage",
+      hour_offer.unmet_directive_cause(1000.0, 500.0, 3000.0, 0.99, "grain") == "pool_claimed")
+
+# --- the `allocate` command: refuses a project not active, refuses an unknown id, sets, reports, clears.
+known_nodes = {"academy_network": {"name": "Academy Network"}}
 
 
-# ===========================================================================
-# `allocate` - a standing instruction for the player's own year of hours.
-# ===========================================================================
-# The player's own words: "if I only wanted to do manual work for 100 hours,
-# research item A for 500 and item B for 1400, I should be able to do that" -
-# set once, not retyped every turn, in a game played over hundreds of them.
-# Every check below drives the real allocator (core.py step()) directly,
-# the same one `portfolio` reads back from - never a second formula that
-# could disagree with what actually happened.
+def standing(household_allocations=None, active=None):
+    return SimpleNamespace(hour_allocations=household_allocations if household_allocations is not None else {},
+                           active=active if active is not None else {}, work_trade=None)
+
+
+household = standing()
+reply = _cmd_allocate(household, known_nodes, {"cmd": "allocate", "id": "academy_network", "hours": 300}, None)
+check("allocate refuses a directive on a project that has not been started",
+      not reply["ok"] and cause_of(reply["error"]) == "project_not_active", reply)
+reply = _cmd_allocate(household, known_nodes, {"cmd": "allocate", "id": "not_a_real_node", "hours": 300}, None)
+check("allocate refuses an id that does not exist at all",
+      not reply["ok"] and cause_of(reply["error"]) == "unknown_node", reply)
+household.active["academy_network"] = {}
+reply = _cmd_allocate(household, known_nodes, {"cmd": "allocate", "id": "academy_network", "hours": 300}, None)
+check("allocate accepts a directive on an active project, echoes it back and keeps it",
+      reply["ok"] and reply.get("hours_a_year") == 300.0 and household.hour_allocations == {"academy_network": 300.0}, reply)
+reply = _cmd_allocate(household, known_nodes, {"cmd": "allocate"}, None)
+check("bare allocate lists every standing order currently in hand",
+      reply["ok"] and reply["allocations"] == [{"id": "academy_network", "hours_a_year": 300.0}], reply)
+reply = _cmd_allocate(household, known_nodes, {"cmd": "allocate", "id": "academy_network", "hours": 0}, None)
+check("hours 0 clears a standing order rather than setting it to zero forever",
+      reply["ok"] and reply.get("cleared") == "academy_network" and "academy_network" not in household.hour_allocations, reply)
+reply = _cmd_allocate(household, known_nodes, {"cmd": "allocate"}, None)
+check("...and it is gone from the list, not zeroed in place", reply["ok"] and reply["allocations"] == "none", reply)
+reply = _cmd_allocate(household, known_nodes, {"cmd": "allocate", "id": "academy_network", "hours": -5}, None)
+check("a negative or non-numeric number of hours is refused", not reply["ok"]
+      and not _cmd_allocate(household, known_nodes, {"cmd": "allocate", "id": "academy_network", "hours": "lots"}, None)["ok"], reply)
+
 
 def _zero_lab(node):
     return {trade: 0.0 for trade in node.get("lab", {})}
 
 
-# --- a directed project jumps the queue, ahead of higher-`order` work that
-# was never given a standing instruction.
+# --- scenario: the real allocator gives a directed project its hours first, and `portfolio` reads them back
 s = sim(capital=1e7)
 _kA, _kB = "academy_network", "corpus_written"
 s.order = [_kA, _kB]
 s.project_resource_throttle = lambda node_id: 1.0   # the order of hours is under test, not what the market has in stock
 for _k in (_kA, _kB):
     _n = NODES[_k]
-    s.active[_k] = dict(ph_left=float(_n["ph"]), yrs=0.0, spent=0.0,
-                        cost_left=0.0, lab_left=_zero_lab(_n))
+    s.active[_k] = dict(ph_left=float(_n["ph"]), yrs=0.0, spent=0.0, cost_left=0.0, lab_left=_zero_lab(_n))
 s.hour_allocations[_kB] = 500.0
 s._run_seat_work()
-check("a standing allocation gets its project the hours it asked for, even "
-      "though an undirected project ranks ahead of it in `order`",
-      s.active[_kB]["hours_offered_this_year"] == 500.0,
-      s.active[_kB]["hours_offered_this_year"])
-check("...and the higher-`order` project gets only what is left of the "
-      "pool once the standing order has taken its share, not the whole "
-      "pool first",
-      s.active[_kA]["hours_offered_this_year"] == s.labour.director_pool() - 500.0,
-      s.active[_kA]["hours_offered_this_year"])
-check("`portfolio`/`state` read the standing order back from the exact "
-      "field step() wrote, never a second guess at it",
-      s.active[_kB].get("hours_directed_this_year") == 500.0
-      and s.active[_kA].get("hours_directed_this_year") is None,
-      (s.active[_kB].get("hours_directed_this_year"),
-       s.active[_kA].get("hours_directed_this_year")))
+check("scenario: the allocator offers a directed project its hours first, the higher-ranked one what is left of the "
+      "pool, and the state reads the directive back from the field step wrote",
+      s.active[_kB]["hours_offered_this_year"] == 500.0
+      and s.active[_kA]["hours_offered_this_year"] == s.labour.director_pool() - 500.0
+      and s.active[_kB].get("hours_directed_this_year") == 500.0 and s.active[_kA].get("hours_directed_this_year") is None,
+      (s.active[_kB]["hours_offered_this_year"], s.active[_kA]["hours_offered_this_year"]))
 
-# --- a directive bigger than the project's own pace is not silently
-# dropped: the rest flows to other active work, and the player is told, by
-# name, that it happened and why - a calendar floor, not "your hours".
-s = sim(capital=1e7)
-_kC, _kD = "school_founded", "academy_network"
-s.order = [_kC, _kD]
-s.project_resource_throttle = lambda node_id: 1.0   # the order of hours is under test, not what the market has in stock
-_nC, _nD = NODES[_kC], NODES[_kD]
-# almost done: its own pace this year is small whatever the pool can spare.
-s.active[_kC] = dict(ph_left=30.0, yrs=0.0, spent=0.0, cost_left=0.0,
-                     lab_left=_zero_lab(_nC))
-s.active[_kD] = dict(ph_left=float(_nD["ph"]), yrs=0.0, spent=0.0,
-                     cost_left=0.0, lab_left=_zero_lab(_nD))
-s.hour_allocations[_kC] = 1400.0
-_before = len(s.log)
-s._run_seat_work()
-_pace_cap = max(30.0, _nC["ph"] / max(_nC["yrs"], 1.0))
-check("a directive bigger than a project's own calendar-floor pace only "
-      "offers it that pace, not the whole directive",
-      s.active[_kC]["hours_offered_this_year"] == round(_pace_cap, 1),
-      s.active[_kC]["hours_offered_this_year"])
-check("...and the hours the directive could not place there are not lost: "
-      "the other active project actually received them this same year",
-      s.active[_kD]["hours_offered_this_year"]
-      == s.labour.director_pool() - s.active[_kC]["hours_offered_this_year"],
-      s.active[_kD]["hours_offered_this_year"])
-_new = [message for _, message in s.log[_before:]]
-check("...and the player is told BY NAME that the directive could not be "
-      "fully honoured, and that the reason is a pace/calendar floor, not "
-      "a refusal to give it hours",
-      any(cause_of(message) == "directed_hours_unused" and facts_of(message)["project"] == _kC
-          and facts_of(message)["reason"] == "own_pace" for message in _new),
-      _new)
-
-# --- two standing orders together asking for more than the whole pool: the
-# one that comes up short is told the real reason is the pool, not itself.
-s = sim(capital=1e7)
-_kE, _kF = "academy_network", "corpus_written"
-s.order = [_kE, _kF]
-s.project_resource_throttle = lambda node_id: 1.0   # the order of hours is under test, not what the market has in stock
-_nE, _nF = NODES[_kE], NODES[_kF]
-s.active[_kE] = dict(ph_left=float(_nE["ph"]), yrs=0.0, spent=0.0,
-                     cost_left=0.0, lab_left=_zero_lab(_nE))
-s.active[_kF] = dict(ph_left=float(_nF["ph"]), yrs=0.0, spent=0.0,
-                     cost_left=0.0, lab_left=_zero_lab(_nF))
-s.hour_allocations[_kE] = 1400.0
-s.hour_allocations[_kF] = 1000.0
-_before = len(s.log)
-s._run_seat_work()
-check("the first of two over-committed standing orders gets its directive "
-      "in full",
-      s.active[_kE]["hours_offered_this_year"] == 1400.0,
-      s.active[_kE]["hours_offered_this_year"])
-check("...and the second gets only what the pool had left, named as the "
-      "pool running out, not as anything wrong with that project",
-      any(cause_of(message) == "directed_hours_unused" and facts_of(message)["reason"] == "pool_claimed"
-          and facts_of(message)["project"] == _kF for _, message in s.log[_before:]),
-      [message for _, message in s.log[_before:]])
-
-# --- a player who never calls `allocate` sees the ordinary priority order
-# and nothing else: with an empty hour_allocations, the sort key collapses
-# to the same single bucket every project has always sorted into.
-s = sim(capital=1e7)
-_order3 = ["academy_network", "corpus_written", "school_founded"]
-s.order = list(_order3)
-s.project_resource_throttle = lambda node_id: 1.0   # the order of hours is under test, not what the market has in stock
-for _k in _order3:
-    _n = NODES[_k]
-    s.active[_k] = dict(ph_left=float(_n["ph"]), yrs=0.0, spent=0.0,
-                        cost_left=0.0, lab_left=_zero_lab(_n))
-s._run_seat_work()
-check("with nothing ever directed, hours still go out strictly by `order` "
-      "rank, exactly as before `allocate` existed",
-      [s.active[node_id]["pool_rank_this_year"] for node_id in _order3] == [1, 2, 3],
-      [s.active[node_id]["pool_rank_this_year"] for node_id in _order3])
-
-# --- `allocate` itself: refuses a project that is not active yet, refuses
-# an id that does not exist, sets, reports back, and clears.
+# --- scenario: a standing order persists across a save and a load, the same as `policy` does
 s = unopened_sim(capital=1e7)
-_r = S._agent_dispatch(s, NODES, {"cmd": "allocate", "id": "academy_network",
-                                  "hours": 300})
-check("allocate refuses a directive on a project that has not been "
-      "started - there is nothing active for it to apply to yet",
-      not _r["ok"] and _r.get("cause") == "project_not_active", _r)
-_r = S._agent_dispatch(s, NODES, {"cmd": "allocate", "id": "not_a_real_node",
-                                  "hours": 300})
-check("allocate refuses an id that does not exist at all",
-      not _r["ok"] and _r.get("cause") == "unknown_node", _r)
-s.active["academy_network"] = dict(ph_left=2500.0, yrs=0.0, spent=0.0,
-                                   cost_left=0.0, lab_left={})
-_r = S._agent_dispatch(s, NODES, {"cmd": "allocate", "id": "academy_network",
-                                  "hours": 300})
-check("allocate accepts a directive on an active project and echoes it back",
-      _r["ok"] and _r.get("hours_a_year") == 300.0, _r)
-_r = S._agent_dispatch(s, NODES, {"cmd": "allocate"})
-check("bare allocate lists every standing order currently in hand",
-      _r["ok"] and _r["allocations"] == [{"id": "academy_network",
-                                          "hours_a_year": 300.0}], _r)
-_r = S._agent_dispatch(s, NODES, {"cmd": "allocate", "id": "academy_network",
-                                  "hours": 0})
-check("hours 0 clears a standing order rather than setting it to zero "
-      "forever",
-      _r["ok"] and _r.get("cleared") == "academy_network"
-      and "academy_network" not in s.hour_allocations, _r)
-_r = S._agent_dispatch(s, NODES, {"cmd": "allocate"})
-check("...and it is actually gone from the list, not just zeroed in place",
-      _r["ok"] and _r["allocations"] == "none", _r)
-
-# --- a standing order persists across a save and a load, the same as
-# `policy` does, rather than silently reverting to "let the allocator "
-# decide" on every resume.
 s.hour_allocations["academy_network"] = 321.0
 s.hour_allocations["work"] = 77.0
 s.work_trade = "scribe"
@@ -164,39 +122,22 @@ _protocol.save_state(s, _save_path)
 s2 = unopened_sim(capital=1e7)
 _protocol.load_state(s2, _save_path)
 os.remove(_save_path)
-check("a standing project directive survives a save and a load",
-      s2.hour_allocations.get("academy_network") == 321.0,
-      s2.hour_allocations)
-check("...and so does a standing work-for-wages directive and its trade",
-      s2.hour_allocations.get("work") == 77.0 and s2.work_trade == "scribe",
-      (s2.hour_allocations.get("work"), s2.work_trade))
+check("scenario: standing project and work-for-wages directives, and the work trade, survive a save and a load",
+      s2.hour_allocations.get("academy_network") == 321.0 and s2.hour_allocations.get("work") == 77.0
+      and s2.work_trade == "scribe", (s2.hour_allocations, s2.work_trade))
 
-# --- the standing "work" directive: sells hours for wages every year on
-# its own, reusing work_for_wages (labour.py) rather than a second way to
-# pay the founder, and tops up a turn where some of it was already sold by
-# hand instead of selling the whole directive again on top.
+# --- scenario: the standing "work" directive tops up hours already sold by hand, then resets for the next year
 s = unopened_sim(capital=1e7)   # legacy: the earnings are compared with the engine's own wage-table rate
 # Fed by its own farm, so no hunger reprices wages during the step.
 s.farm_land.quality, s.farm_land.hectares = 1.3, s.farm_land.hectares * 2.0
-_r = S._agent_dispatch(s, NODES, {"cmd": "allocate", "id": "work",
-                                  "hours": 100, "trade": "labourer"})
-check("allocate accepts a standing work-for-wages order naming a trade",
-      _r["ok"] and _r.get("trade") == "labourer", _r)
-# The rate work_for_wages itself charges for a labourer-hour (labour.py),
-# read back BEFORE either call moves reputation or the indices, rather
-# than re-derived: 100 hours total at that rate is what a topped-up
-# directive should earn, whether 40 of them were sold by hand first or
-# the whole 100 were left to the standing order.
+_r = S._agent_dispatch(s, NODES, {"cmd": "allocate", "id": "work", "hours": 100, "trade": "labourer"})
 _rate_per_hour = (S.ANNUAL_WAGE.get("labourer", 375.0) / s.HOURS_PER_PERSON_YEAR
-                 * s.price_index * s.wage_index
-                 * (1.0 + min(0.5, s.reputation / 200.0)))
+                  * s.price_index * s.wage_index
+                  * (1.0 + min(0.5, s.reputation / 200.0)))
 _pay_by_hand, _err = s.labour.work_for_wages("labourer", 40.0)
 s.step()
-check("a standing work order tops up to the full directive rather than "
-      "selling it twice on top of hours already sold by hand this year",
-      abs(s.wages_earned - 100.0 * _rate_per_hour) < 0.01 * 100.0 * _rate_per_hour,
-      (s.wages_earned, 100.0 * _rate_per_hour))
-check("...and the standing order's own hour tally resets for the next "
-      "year exactly like an ordinary `work` call does",
-      s.wage_hours_this_year == 0.0, s.wage_hours_this_year)
-
+check("scenario: a standing work order naming a trade tops up to the full directive rather than selling it twice, "
+      "and its hour tally resets for the next year",
+      _r["ok"] and _r.get("trade") == "labourer"
+      and abs(s.wages_earned - 100.0 * _rate_per_hour) < 0.01 * 100.0 * _rate_per_hour and s.wage_hours_this_year == 0.0,
+      (_r, s.wages_earned, 100.0 * _rate_per_hour, s.wage_hours_this_year))
