@@ -524,7 +524,6 @@ class AgentEconomy(TilePricesMixin):
         first_stage = self._settle(economy, inputs, watched)
         economy_api.trim_workforce_to_expected_hours(economy)
         final_states = self._settle_trimmed(economy, inputs, watched)
-        economy_api.trim_workforce_to_expected_hours(economy)   # the trade the settled years left idle does not carry its people into the game
         economy_api.finish_spin_up(economy)
         years = first_stage["years"] + spin_up_years()[1]
         economy_api.note_spin_up_result(economy, self.final_result(first_stage, final_states, years))
