@@ -1,5 +1,5 @@
 """The engine's yearly demographic step: the farm model's year, then each region's people fed and stepped."""
-from sim.world import farming_technique
+from sim.world import farm_year as farm_year_model
 
 YEARLY_RECORD_LIMIT = 300
 
@@ -154,109 +154,14 @@ class DemographicRecoveryMixin:
         """
         adult_equivalent_population = self._adult_equivalent_population(self.population)
         farm_workers_fte = self.labour.allocate_farm_workforce(adult_equivalent_population)
-        technique = self._farm_technique_this_year
-        hectares_per_worker = self._agriculture.hectares_cropped_per_farm_worker(
-            technique.crop, technique.toolkit)
-        hectares_worked = min(self.farm_land.hectares, farm_workers_fte * hectares_per_worker)
-        crop_workers_fte = hectares_worked / hectares_per_worker
-        farm_labour_hours = hectares_worked * farming_technique.hours_per_hectare(technique)
         self._last_farm_workers_fte = farm_workers_fte
-        # SEED IS SOWN ON WHAT GETS WORKED, NOT ON `farm_land`'S FULL FIXED
-        # AREA. `Storage.step` charges seed (and next year's seed reservation)
-        # against `land.hectares` directly, with no cap of its own - it is
-        # meant to be handed exactly the area actually being cropped. Passing
-        # `self.farm_land` itself here, unshrunk, would sow (and pay for)
-        # seed across this civilisation's FULL historical endowment even in
-        # a year `hectares_worked` is far smaller (a population that has lost
-        # people has fewer hands, not less land per surviving hand): the
-        # seed bill would outgrow the shrinking workforce's own shrinking
-        # harvest and manufacture a runaway collapse that has nothing to do
-        # with weather. A `Land` sized to `hectares_worked` (this year's
-        # actually-cropped area) avoids that: unworked land beyond that is
-        # fallow-by-absence-of-hands, not sown, not seed-costed, not
-        # harvested.
-        worked_land = self._agriculture.Land(hectares_worked, quality=self.farm_land.quality)
-        # THE GRANARY: opens the year at whatever `self.farm_stock_kg`
-        # carried in from last year's close, not at zero - see this
-        # method's own docstring section on Complaints/44 for why that
-        # single word ("carried" rather than "constructed fresh") is the
-        # entire fix, and `farm_stock_kg` in SAVE_FIELDS
-        # (sim/engine/saveload.py) for why it survives a save.
-        # `seed=` HERE IS DEFENSIVE, NOT LOAD-BEARING: `farm_storage.
-        # step` below is always given an explicit `weather_multiplier`
-        # (Complaints/46), so `Storage`'s own internal
-        # `self._random`/`draw_weather_multiplier` path this seed feeds is
-        # never actually reached from this call site. Still passed, rather
-        # than left at the constructor's own `None` default,
-        # so this stays deterministic even if a future edit here ever stops
-        # passing `weather_multiplier` - the same "belt and braces" spirit
-        # as the civ-wide fallback inside `_pooled_farm_weather_multiplier`
-        # itself.
-        farm_storage = self._agriculture.Storage(
-            stock_kg=self.farm_stock_kg, seed=self._farm_year_weather_seed(year))
-        # `reserve_target_kg` is the SAME figure the carry-forward is capped
-        # at below, and passing it is what lets a population eat above bare
-        # subsistence in a good year. Without it, Storage.step reverts to
-        # min(demand, stock): people eat subsistence or less, never more,
-        # so the nutrition ratio handed to demography cannot exceed 1.0 and
-        # a good year buys nothing while a bad one still costs lives. The
-        # granary alone did not fix that - it banked the grain and then
-        # forbade anyone to eat it. Filling the reserve first is what stops
-        # this becoming a feast that empties the granary: only grain already
-        # beyond the reserve is eaten, which is grain that would otherwise
-        # have sat there and spoiled.
-        reserve_target_kg = self._agriculture.granary_capacity_kg(
-            adult_equivalent_population
-            * self._agriculture.annual_food_demand_kg_per_person(technique.crop))
-        # THE PER-REGION WEATHER DRAW (Complaints/closed/46-one-weather-
-        # draw-for-a-continent.md). `_pooled_farm_weather_multiplier`
-        # draws one independent weather multiplier per home region this
-        # civilisation holds and returns the arable-land-share-weighted
-        # average - see that method's own docstring for the mechanism, the
-        # independence approximation it flags, and the land.py functions it
-        # reads from (never modifies). Passed in explicitly rather than
-        # left for `Storage.step` to draw internally, which is what turns
-        # "one weather draw for a continent" into "N independent draws,
-        # pooled" without self._agriculture.py needing to know anything about
-        # civilisations, home regions or land shares at all - it just
-        # receives a number, exactly as it always has.
-        farm_year = farm_storage.step(
-            worked_land, farm_labour_hours, adult_equivalent_population,
-            crop=technique.crop, rotation=technique.rotation, toolkit=technique.toolkit,
-            worker_count=crop_workers_fte,
-            reserve_target_kg=reserve_target_kg,
-            weather_multiplier=self._pooled_farm_weather_multiplier(year))
-        # CLOSE THE YEAR: write what this year's Storage call actually
-        # leaves on hand back as next year's opening stock, capped at what
-        # this civilisation's storage infrastructure can physically hold
-        # (self._agriculture.granary_capacity_kg - see GRANARY_CAPACITY_YEARS_OF_
-        # DEMAND's own declaration in self._agriculture.py for the physical basis
-        # of the cap, and this method's docstring for why the cap is
-        # applied HERE rather than inside Storage.step).
-        #
-        # `self._agriculture.stock_to_carry_forward_kg`, NOT `farm_year.stock_
-        # after_kg` ALONE - see that function's own docstring and Storage.
-        # step's docstring section on carrying stock across years for why:
-        # `stock_after_kg` has already had NEXT year's seed reservation
-        # (`seed_retained_kg`) removed from it, so persisting `stock_after_
-        # kg` alone would throw that reserved seed away and then charge an
-        # identical amount again as next year's `seed_sown_kg`. Adding
-        # `seed_retained_kg` back in is what makes the two calls agree:
-        # what THIS call earmarked for sowing is exactly what NEXT call's
-        # own `seed_sown_kg` computation will draw down, once and only
-        # once.
-        #
-        # `min()` only clips the UPPER side - a negative carry-forward
-        # (this year ate into seed corn it did not have; see Storage.
-        # step's own docstring on why that is allowed to happen rather
-        # than being silently floored at zero) passes through unclipped
-        # and genuinely carries into next year's sowing: Storage's own
-        # documented "one bad harvest becomes two" mechanism, operating
-        # across years exactly as its class docstring intends.
-        capacity_kg = self._agriculture.granary_capacity_kg(farm_year.food_demand_kg)
-        # A granary cannot hold less than nothing: seed sown beyond the stock is not a debt.
-        self.farm_stock_kg = max(0.0, min(
-            self._agriculture.stock_to_carry_forward_kg(farm_year), capacity_kg))
+        # the weather is drawn once per home region and pooled (`_pooled_farm_weather_multiplier`)
+        seed = self._farm_year_weather_seed(year)
+        result = farm_year_model.run_farm_year(
+            self.farm_land, self._farm_technique_this_year, self.farm_stock_kg, adult_equivalent_population,
+            farm_workers_fte, seed, self._pooled_farm_weather_multiplier(year))
+        farm_year = result.farm_year
+        self.farm_stock_kg = result.stock_kg
         self.labour.apply_land_clearing()
         # Kept for tests and diagnostics only (e.g. `state`'s founder-facing
         # reply never reads this) - NOT a SAVE_FIELDS member and does not

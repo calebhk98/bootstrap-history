@@ -5,6 +5,7 @@ hours by the tonne, priced at the unskilled hour like every other labour cost; c
 priced by the tonne through the route's freight. Any actor holding money pays the keeping cost, a foreign one at its own country's pay.
 """
 from sim.constants import declare
+from sim.world import coin_metal
 
 from sim.labour.api import wage_provider
 
@@ -31,14 +32,13 @@ class CoinHoardMixin:
 
     def coin_keeping_cost_per_year(self, money):
         """Yearly cost of keeping `money` as coin of the home standard under guard."""
-        tonnes = max(0.0, money) * self.coin_kg_per_unit() / 1000.0
-        return tonnes * COIN_GUARD_HOURS_PER_TONNE_YEAR * self.labour.money_per_labour_hour()
+        return coin_metal.keeping_cost_per_year(
+            money, self.coin_kg_per_unit(), COIN_GUARD_HOURS_PER_TONNE_YEAR, self.labour.money_per_labour_hour())
 
     def coin_hoard(self):
         """The money held as physical coin: its metal, mass and the yearly cost of keeping it."""
-        tonnes = max(0.0, self.capital) * self.coin_kg_per_unit() / 1000.0
         return {"metal": wage_provider.coin_standard(self.civ)["material"],
-                "tonnes": tonnes,
+                "tonnes": coin_metal.coin_tonnes(self.capital, self.coin_kg_per_unit()),
                 "keeping_cost_per_year": self.coin_keeping_cost_per_year(self.capital),
                 "basis": KEEPING_BASIS}
 
@@ -71,8 +71,8 @@ class CoinHoardMixin:
         """Partner coin units the carriers take to move `units` of the partner's coin over the route, by
         the coin's mass; never more than is moved."""
         kg_per_unit = self.partner_civ(civilization_id)["coin_standard"]["kg_per_unit"]
-        cost = self._coin_carriage_money_per_tonne(civilization_id) * units * kg_per_unit / 1000.0
-        return min(units, cost / home_money_per_partner_coin)
+        return coin_metal.carriage_units(
+            units, kg_per_unit, self._coin_carriage_money_per_tonne(civilization_id), home_money_per_partner_coin)
 
     def coin_hoard_report(self):
         """`coin_hoard` rounded for a screen."""

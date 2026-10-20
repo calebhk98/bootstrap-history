@@ -91,17 +91,8 @@ class DiseaseWorld:
         `disease_effects` of the technologies the nation has taken up (the share of the country that holds
         a node scales how much of its relief applies)."""
         sim = self._sim
-        fatality = {pathogen_id: 1.0 for pathogen_id in pathogen_ids}
-        transmission = dict(fatality)
-        for node_id, spec in sim._effect_terms("disease_effects"):
-            reach = sim.civ_diffusion(node_id)
-            if reach <= 0.0:
-                continue
-            target = fatality if spec["acts_on"] == "case_fatality" else transmission
-            for pathogen_id in spec.get("pathogens") or pathogen_ids:
-                if pathogen_id in target:
-                    target[pathogen_id] *= 1.0 - (1.0 - spec["factor"]) * reach
-        return fatality, transmission
+        return disease.technology_scales(
+            pathogen_ids, [(spec, sim.civ_diffusion(node_id)) for node_id, spec in sim._effect_terms("disease_effects")])
 
 
 class DiseasePortMixin:
@@ -146,7 +137,7 @@ class DiseasePortMixin:
         """Cut each playing seat's people and cash by the working-age share the year's epidemics killed; the reply
         is that share (zero when nothing was done)."""
         working_age = float(self.population.working_age)
-        share = deaths_by_band.get("working_age", 0.0) / (working_age + deaths_by_band.get("working_age", 0.0)) if working_age > 0 else 0.0
+        share = disease.working_age_death_share(deaths_by_band, working_age)
         if share < EPIDEMIC_NOTICE_SHARE:
             return 0.0
         names = self.__dict__.get("_epidemic_names") or ["an epidemic"]

@@ -597,3 +597,20 @@ package function reads no `self` at all and the mixin keeps only the glue that f
   partner's coin standard, `epidemic_hits_seats` (rising deaths) and `lose_what_was_risked` on every risk node, and
   identical state md5, on a base worktree and on this branch; identical sorted-key md5 of `saveload.state_text` after
   three stepped Rome years. The fingerprint was not run.
+- Sixth step, three moves of arithmetic out of mixins (measured with `selfattrs.py`-style `ast` counts of distinct
+  `self.` reads and writes; mixin count 55 before and after, none emptied, counted with the command above):
+  - `DemographicRecoveryMixin` (`sim/engine/demographic_recovery.py`): the farm year (hectares the workers crop, seed
+    on the worked area, reserve target, the storage step, the capped carry-forward) moved to `sim/world/farm_year.py`
+    (`run_farm_year`, `hectares_worked`). The mixin keeps the workforce, weather, region and colony glue. Distinct
+    `self.` reads went from 16 to 15 (`_agriculture` gone), writes stay 4.
+  - `DiseasePortMixin` (`sim/engine/disease_port.py`): the technology scales on case fatality and transmission and the
+    working-age death share moved to `sim/disease/technology_effects.py` (`sim.disease.api.technology_scales`,
+    `working_age_death_share`). Coupling is unchanged (22 reads, 1 write): the logic left, the inputs did not.
+  - `CoinRevaluationMixin` and `CoinHoardMixin`: the blend of a metal's recorded ratio toward the market, the coin
+    mass, the keeping cost and the carriage units moved to `sim/world/coin_metal.py`. Coupling is unchanged (7 and 11
+    reads); the constants stay declared where they were and are passed in.
+  - Proof: identical sha256 over eight stepped Rome years of the farm year (stock, workers, harvest, shortfall, with
+    the granary set high and negative in alternate years), the disease technology scales and epidemic share, the coin
+    metal ratios (cleared, then set), keeping cost, hoard report and carriage units, on a base worktree and on this
+    branch; identical sorted-key md5 of `saveload.state_text` after three stepped Rome years. New pure tests in
+    `sim/tests/test_sixth_step_pure_functions.py`. The fingerprint was not run.

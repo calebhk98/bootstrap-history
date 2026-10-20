@@ -6,6 +6,7 @@ price level rises with it; a shortage lowers it. Holders of coin and of debts wr
 change: nothing is indexed or compensated.
 """
 from sim.constants import declare
+from sim.world import coin_metal
 
 
 REVALUATION_YEARLY_SHARE = declare(
@@ -40,9 +41,5 @@ class CoinRevaluationMixin:
         metals.update(self.partner_coin_metal(partner) for partner in self.foreign_economies())
         ratios = self.state.economy.coin_metal_ratios
         for metal in sorted(metals):
-            measured = self.coin_value_ratio(metal)
-            if not measured > 0.0:
-                measured = 1.0
-            held = ratios.get(metal, 1.0)
-            moved = held ** (1.0 - REVALUATION_YEARLY_SHARE) * measured ** REVALUATION_YEARLY_SHARE
-            ratios[metal] = min(held * REVALUATION_YEARLY_CAP, max(held / REVALUATION_YEARLY_CAP, moved))
+            ratios[metal] = coin_metal.revalued_ratio(
+                ratios.get(metal, 1.0), self.coin_value_ratio(metal), REVALUATION_YEARLY_SHARE, REVALUATION_YEARLY_CAP)
