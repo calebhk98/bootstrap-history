@@ -34,7 +34,7 @@ def fallback_trade_of(world, training_years: Mapping[str, float]) -> str:
     """The world's unskilled fallback trade: the registry's flagged trade, else the fewest-years rule."""
     registry = registry_of(world)
     if registry:
-        return market_trades.fallback_trade(market_trades.trade_specs(registry))
+        return market_trades.fallback_trade_of_registry(registry)
     return fallback_trade(training_years, world.trade_family)
 
 

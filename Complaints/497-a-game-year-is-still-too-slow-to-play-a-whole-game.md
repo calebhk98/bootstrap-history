@@ -312,3 +312,29 @@ areas changed per merchant makes rare, so it was not built); the bisection could
 the kept level would differ by up to the search precision, which is not exact; labour switching and `close_agents`
 are flat (no function above a few percent). The bisection's cost is now the price solve of each trial; fewer trials
 need a model change (a looser `SEARCH_PRECISION` or a bracket from last year's level).
+
+## Round 5: a profile of a warm year; the allowed small readers cut, merchants are a fifth to a quarter of it
+
+Profile of warm stepped Rome years (`harness.sim()`, `step()`, then `cProfile` over the next `step()`, sorted by
+`tottime` and by `cumtime`). Flat again: by self time the dict `get` inside `merchants._good_routes` (about three
+million calls a year) is first, then `_good_routes` itself; the first thing outside merchants is `fsum`/`sorted`
+spread over many callers. Merchants' route search and credit requests together are about a fifth to a quarter of a
+year (`_candidate_routes` alone about one second of CPU, `time.process_time` around it, not under `cProfile`); that
+work was not touched here.
+
+Cut, all exact: `country_figures.people_by_trade` adds each trade's bands tile by tile without building and sorting
+a dict per tile (the labour package asks it about 160 times a year through `national_trade_population`);
+`trade_data.fallback_trade_of` reads the fallback trade off the registry's flags without building every
+`TradeSpec` (`trades.fallback_trade_of_registry`; it was called for every trade priced); `switching._carry_out`
+takes and removes switchers with `map(min, ...)` and `map(sub, ...)`. Proof: the sorted-key dump of `state_text`
+after three stepped Rome years has the same md5 before and after; `sim/tests/test_year_hot_path_shortcuts_exact.py`
+keeps the first two equal to the plain computations.
+
+Measured (CPU, mean of years 2 to 4 after the first, alternating a copy of the unchanged tree and the changed one,
+two pairs): about 6.09 s before, about 5.92 s after, a little under three percent. Command: step four years of
+`harness.sim()` with `time.process_time` around each `step()`.
+
+Left, measured: `AgentEconomy.people_by_trade` is still summed about 160 times a year for the same workforce; a
+cache needs every writer of the economy's workforce (the labour year, population scaling, `trim_to_expected_hours`)
+to drop it, which was not built. `strata_observed.rank_key` and the labour `_odds` (a column-wise rewrite measured
+no faster) are each about one percent.
