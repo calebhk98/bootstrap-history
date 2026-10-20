@@ -191,6 +191,20 @@ order) or another mod's `<mod_id>:<name>`. At least one is required. The phase i
 seat phases run together seat by seat. A constraint that names an unknown phase, forms a cycle, or cannot hold
 together is a load error naming the mod and the phase.
 
+### Feeding the town, the deaths and the harvest
+
+Three more doors take a provider; none changes the game unless a mod registers one.
+
+* `api.town_provider(name, function)`: `function(labour, tile, nominal_people) -> people or None` says how many people
+  live in a tile's town (`sim/labour/town_providers.py`). `None` declines; the answer is bounded by the tile's own
+  people. The labour market, `map` and every hire reach read it.
+* `api.externality(provider)`: `provider(sim, year) -> {"deaths_by_band": {band: people}, "yield_factor_by_tile":
+  {tile: factor}}` (either key optional; `sim/engine/externalities.py`). Deaths join the year's epidemic deaths before
+  the demographic step; a factor from 0 to 1 scales the yield of land-bound producers on that tile. Factors from
+  several providers multiply. The pooled national harvest is not scaled by tile.
+* A map overlay may add a `places` catalogue of `{id, name, tile, rank?}` (`data/world/geography/`); the `map` and
+  `move` screens then list the names on each tile row (`tile_names.places_on`). No code is needed.
+
 ### Changing the world
 
 A handler or phase changes the world only through `api.effects` (sim/engine/mod_effects.py); reaching into `Sim`

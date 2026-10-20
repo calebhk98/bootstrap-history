@@ -554,12 +554,16 @@ def _cmd_move_base(sim, nodes, cmd, ended):
             if quote is None:
                 continue
             days, hours, money = quote
-            rows.append({"tile": tile, "name": tile_names.tile_name(tile),
-                         "region": tile_names.region_name(tile),
-                         "terrain": tile_names.terrain(tile),
-                         "people": round(people[tile]),
-                         "days_on_the_road": round(days), "your_hours_lost": round(hours),
-                         "wages_paid_on_the_way": round(money)})
+            row = {"tile": tile, "name": tile_names.tile_name(tile),
+                   "region": tile_names.region_name(tile),
+                   "terrain": tile_names.terrain(tile),
+                   "people": round(people[tile]),
+                   "days_on_the_road": round(days), "your_hours_lost": round(hours),
+                   "wages_paid_on_the_way": round(money)}
+            named = tile_names.places_on(sim.world_map, tile)
+            if named:
+                row["places"] = named
+            rows.append(row)
         return {"ok": True, "you_are_based_at": home,
                 "you_are_at_name": tile_names.tile_name(home),
                 "the_town_there": round(sim.labour.home_town_population_estimate()),

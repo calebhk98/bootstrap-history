@@ -45,6 +45,14 @@ def tile_name(tile_id: str) -> str:
     return "%s %s" % (record.get("country_majority", tile_id), number)
 
 
+def places_on(world_map: Any, tile_id: str) -> List[str]:
+    """Names of the places the map's `places` catalogue (any overlay may add entries {id, name, tile, rank?}) puts on
+    the tile, highest rank first; empty when the map has none."""
+    found = [entry for entry in world_map.catalogue("places").values() if entry.get("tile") == tile_id]
+    found.sort(key=lambda entry: (-entry.get("rank", 0), entry["name"]))
+    return [entry["name"] for entry in found]
+
+
 def region_name(tile_id: str) -> str:
     """The named region the tile lies in, or an empty string."""
     record = _tiles().get(tile_id) or {}

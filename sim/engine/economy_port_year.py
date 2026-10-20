@@ -17,7 +17,7 @@ from sim.economy.api import (EDGE_EXTERNAL, EDGE_LEGACY, AgentOrders, Economy, G
                              YearInputs, expected_output_prices, external_orders, live_input_prices, live_wages,
                              trade_premium, variable_cost_per_run)
 
-from . import trade_duty, economy_port_levy, economy_port_actors, economy_port_cargo, economy_port_cropland, economy_port_institutions, economy_port_land, economy_port_late, economy_port_sites, material_capacity, solve_cache
+from . import trade_duty, economy_port_levy, economy_port_actors, economy_port_cargo, economy_port_cropland, economy_port_institutions, economy_port_land, economy_port_late, economy_port_sites, externalities, material_capacity, solve_cache
 from .economy_port_key import spin_up_key
 from .economy_port_coin import priced_at_the_margin
 from .economy_port_setup import build_setup, opening_values
@@ -488,7 +488,11 @@ class AgentEconomy(TilePricesMixin):
         total = float(population.total)
         weather = sim._pooled_farm_weather_multiplier(sim.state.scenario.year)
         economy = self._economy
+        harmed = externalities.yield_factors(sim, sim.state.scenario.year)
         yields = economy_port_sites.crop_yields(economy, weather)
+        if harmed:
+            yields = {producer_id: factor * harmed.get(economy_api.producers_of(economy)[producer_id].tile, 1.0)
+                      for producer_id, factor in yields.items()}
         entrant_share, attrition_share = working_age_turnover(population)
         return YearInputs(year=sim.state.scenario.year, population_by_tile=sim.labour.settlement_tiles(),
                           working_age_share=population.working_age / total if total > 0.0 else 0.0,
