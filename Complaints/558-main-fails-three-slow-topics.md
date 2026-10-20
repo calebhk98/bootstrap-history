@@ -432,3 +432,34 @@ they suffice (`sim/labour/market/import_cost.py`). `economy_innovator_pricing` p
 `python3 -c "from sim.tests import test_spin_up_sensitivity as t; print(t.statistics())"`. The baseline's price cycle is a
 long chaotic one (period near 80 years), and which variant dips under half of it moves with unrelated merges (the variant
 that failed before the fix passes now). No bound loosened. Related: Complaint 473 (the cycling economy).
+
+## `real_output` and `real_output_baseline` after 4796f4cb: a zero rate sharpens the opening's swings
+
+Bisected on the first-parent merges (`python3 -m sim.tests --slow --only real_output --topic-seconds 240`, about 60 s a
+commit). Both topics pass at d7a49827 and fail at 3e74bbad (the rate falls to the clearing rate when lenders' funds sit
+idle above it, `sim/economy/credit.py` `_funds_idle_above_clearing_rate`), and at every later merge. The credit rule
+does what it says: Rome's lenders offer about 400 times what borrowers ask in the opening years, so the clearing rate is
+zero and the held rate now falls to it at once instead of stepping down (0.047, 0.033, 0.023, 0.016 before; 0.0, 0.008,
+0.0, 0.0 now).
+
+What fails is not a rule of the fall or of the baseline but the swing of the opening's own output per head, which is
+larger at a zero rate. The no-intervention game (no shock at all) has output per head 1.0, 0.490, 0.688, 0.544 in
+years 1 to 4 (before 3e74bbad: 1.0, 0.758, 1.106, 1.156). So:
+
+- "...and stays near one with no intervention" (`real_output_baseline`) fails on year 2 at 0.490 against the bound 0.5.
+- "...but not output per head, which stays near where it was" (`real_output`, after a 40 percent mortality shock and two
+  closed years) reads 1.4255 against the bound 1.25 relative to the year before the shock. The same game without the
+  shock reads 0.490, 0.688, 0.544 over those years and with it 0.782, 1.426, 1.021 (the second year after the shock
+  is the one read), so the reading sits inside the economy's own swing. The shock's effect cannot be separated from it
+  until the opening settles.
+- "goods far from their baseline carry a small share" in the same topic was already on the list above.
+
+Reproduce: `PYTHONPATH=. python3` with `sim(civ="rome_100ad", capital=1e9)`, `close_years(game, 1)` four times, printing
+`game.real_output_per_head()`; the clearing rate is the `rate` that `sim.economy.credit.clear` returns. Not fixed, no bound
+loosened, no fixture edited: a fixture that stepped further to find a calm year would only pick where the sign is right.
+Owner: the opening's settling (473).
+
+`real_output_cheaper_entry` still fails on "the market clears a larger quantity of it than the same society without it"
+alone (4964555 against 4759157, a ratio of 1.043 against the bound 1.05); the three price checks and the two output
+checks pass on c5c0107e. Same entrant-versus-divergence cause as the section above; confirmed with
+`python3 -m sim.tests --slow --only real_output_cheaper_entry --topic-seconds 240` and left.
