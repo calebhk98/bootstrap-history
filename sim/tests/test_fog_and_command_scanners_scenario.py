@@ -1,4 +1,6 @@
-"""fog_and_command_scanners: regression checks, run individually with `--only fog_and_command_scanners`."""
+"""Scenario: two generic scanners over a fogged game: no command prints the raw id of a node the player has not heard of
+(and the JSON modes are no bypass), and every command pointer a reply or help prints is a command the parser accepts. The
+parsing of the JSON modes is in test_typed_json_modes_parse; the bounty fog rule is in test_fog_leak3."""
 from .harness import *  # noqa: F401,F403
 from sim.ui import protocol as _PROTO
 
@@ -63,18 +65,6 @@ check("no command in KNOWN_COMMANDS prints the raw id of a node this fogged "
       "here rather than by a playtester, the way `bounty` was",
       not _fogscan_leaks, _fogscan_leaks)
 
-# --- 5. MACHINE-READABLE OUTPUT MODES. Every player of this game is an AI
-# agent parsing text, and several have lost runs to parsing prose that was
-# never meant to be a machine interface.
-check("'state json'/'portfolio json'/'risk json' are understood by the "
-      "typed parser, in any position, alongside their existing modifiers",
-      _PT("state json")[0] == {"cmd": "state", "full": False, "json": True}
-      and _PT("state full json")[0] == {"cmd": "state", "full": True, "json": True}
-      and _PT("portfolio json")[0] == {"cmd": "portfolio", "json": True}
-      and _PT("portfolio")[0] == {"cmd": "portfolio", "json": False}
-      and _PT("risk json")[0] == {"cmd": "risk", "json": True}
-      and _PT("hazards json")[0] == {"cmd": "risk", "json": True},
-      (_PT("state json"), _PT("portfolio json"), _PT("risk json")))
 # THE JSON MUST NOT BE A FOG BYPASS. Reusing the exact same fogged founder
 # and hidden-node set the generic fog scanner above already built: the
 # JSON this session would emit for 'state json'/'portfolio json'/'risk

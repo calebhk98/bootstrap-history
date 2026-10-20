@@ -1,152 +1,112 @@
-"""The farmed area grows toward the arable ceiling, best ground first, paid
-for in labour and driven by food scarcity; land rent reads the same ladder."""
-import copy
-import os
-import tempfile
+"""The farmed area grows toward the arable ceiling, best ground first, paid for in labour and driven by food scarcity;
+land rent reads the same ladder.
+
+Rules, each called on inputs the test builds:
+
+1. `land.territory_cropland` and `land.ladder_quality`: the ladder is best ground first, sums to the ceiling, and the
+   mean quality falls as worse ground is brought in.
+2. `labour_allocation.hours_spent_clearing`, `cleared_hectares`, `quality_of_area`: clearing is paid in the hands beyond
+   what the farm can crop, never passes the arable ceiling, and the new ground is no better than the old.
+3. `land.margin_outcome_for_civilization` and `prices.band_farmed_hectares`: rent reads the farmed area.
+
+The years of clearing in a game, the save round trip and the price tables following the area are
+`test_farm_clearing_scenario`."""
+QUICK_TOPIC = True
+
 import unittest
 
-from .harness import *  # noqa: F401,F403
+from sim.geography.food_crops import CropSite
 from sim.labour import labour_allocation
-from sim.geography.api import crop_site, tiles_held
-from sim.engine import saveload
-from sim.world import agriculture, land
+from sim.world import agriculture, farming_technique, land
 
 HOURS = labour_allocation.HOURS_PER_FARM_WORKER_YEAR
+TECHNIQUE = farming_technique.DEFAULT_TECHNIQUE
 
-
-def _ladder(civ_id):
-    civ = S.load_civ(civ_id)
-    share = 1.0 - agriculture.DEFAULT_ROTATION.fallow_share_of_holding
-    return land.territory_cropland({tile: crop_site(tile, share) for tile in tiles_held(civ)})
+# tile -> (cropped hectares, yield factor); the third tile is unfarmable
+SITES = {
+    "plain": CropSite(1200.0, 1000.0, 1.4),
+    "hills": CropSite(600.0, 500.0, 0.9),
+    "marsh": CropSite(900.0, 800.0, 0.5),
+    "dune": CropSite(300.0, 250.0, 0.0),
+}
 
 
 class LadderTests(unittest.TestCase):
-    def test_ladder_is_best_ground_first_and_sums_to_the_ceiling(self):
-        territory = _ladder("norse_900ad")
-        fertilities = [fertility for fertility, _hectares in territory.ladder]
+    def setUp(self):
+        self.territory = land.territory_cropland(SITES)
+
+    def test_ladder_is_best_ground_first(self):
+        fertilities = [fertility for fertility, _hectares in self.territory.ladder]
         self.assertEqual(fertilities, sorted(fertilities, reverse=True))
-        self.assertAlmostEqual(sum(hectares for _f, hectares in territory.ladder),
-                               territory.cropped_hectares, places=3)
+
+    def test_ladder_sums_to_the_ceiling_and_leaves_out_unfarmable_ground(self):
+        self.assertAlmostEqual(sum(hectares for _fertility, hectares in self.territory.ladder),
+                               self.territory.cropped_hectares, places=6)
+        self.assertAlmostEqual(self.territory.cropped_hectares, 1000.0 + 500.0 + 800.0, places=6)
+        self.assertTrue(all(fertility > 0.0 for fertility, _hectares in self.territory.ladder))
 
     def test_quality_falls_as_worse_ground_is_brought_in(self):
-        territory = _ladder("han_china_100ad")
-        ceiling = territory.cropped_hectares
-        qualities = [land.ladder_quality(territory.ladder, ceiling * share)
-                     for share in (0.05, 0.2, 0.5, 1.0)]
+        ceiling = self.territory.cropped_hectares
+        qualities = [land.ladder_quality(self.territory.ladder, ceiling * share) for share in (0.05, 0.2, 0.5, 1.0)]
         self.assertEqual(qualities, sorted(qualities, reverse=True))
-        self.assertAlmostEqual(qualities[-1], territory.mean_yield_factor, places=9)
+        self.assertAlmostEqual(qualities[-1], self.territory.mean_yield_factor, places=9)
+
+    def test_the_first_hectares_are_the_best_ground(self):
+        self.assertAlmostEqual(land.ladder_quality(self.territory.ladder, 500.0), 1.4, places=9)
+
+    def test_ground_with_no_farmable_tile_is_empty_not_an_error(self):
+        territory = land.territory_cropland({"dune": SITES["dune"]})
+        self.assertEqual(territory.ladder, [])
+        self.assertEqual(territory.cropped_hectares, 0.0)
+
+
+class ClearingRuleTests(unittest.TestCase):
+    def test_labour_cost_is_a_declared_labelled_parameter(self):
+        self.assertGreater(agriculture.CLEARING_LABOUR_HOURS_PER_HECTARE, 0.0)
+
+    def test_hands_the_farm_can_crop_do_not_clear(self):
+        crop_limit_fte = 1000.0 / agriculture.hectares_cropped_per_farm_worker(TECHNIQUE.crop, TECHNIQUE.toolkit)
+        self.assertEqual(labour_allocation.hours_spent_clearing(crop_limit_fte, 1000.0, TECHNIQUE), 0.0)
+        self.assertEqual(labour_allocation.hours_spent_clearing(0.5 * crop_limit_fte, 1000.0, TECHNIQUE), 0.0)
+
+    def test_hands_beyond_what_the_farm_can_crop_spend_their_year_clearing(self):
+        crop_limit_fte = 1000.0 / agriculture.hectares_cropped_per_farm_worker(TECHNIQUE.crop, TECHNIQUE.toolkit)
+        hours = labour_allocation.hours_spent_clearing(crop_limit_fte + 7.0, 1000.0, TECHNIQUE)
+        self.assertAlmostEqual(hours, 7.0 * HOURS)
+
+    def test_clearing_is_paid_in_the_hours_it_takes(self):
+        hours = 10.0 * agriculture.CLEARING_LABOUR_HOURS_PER_HECTARE
+        self.assertAlmostEqual(labour_allocation.cleared_hectares(hours, 1000.0, 5000.0), 10.0)
+
+    def test_area_never_passes_the_arable_ceiling(self):
+        cleared = labour_allocation.cleared_hectares(1e12, 1000.0, 2300.0)
+        self.assertAlmostEqual(cleared, 1300.0)
+        self.assertEqual(labour_allocation.cleared_hectares(1e12, 2300.0, 2300.0), 0.0)
+        self.assertEqual(labour_allocation.cleared_hectares(1e12, 2400.0, 2300.0), 0.0)
+
+    def test_without_a_ceiling_there_is_nothing_to_clear(self):
+        self.assertEqual(labour_allocation.cleared_hectares(1e12, 1000.0, None), 0.0)
+
+    def test_new_ground_is_no_better_than_the_ground_already_farmed(self):
+        ladder = land.territory_cropland(SITES).ladder
+        before = labour_allocation.quality_of_area(ladder, 800.0)
+        after = labour_allocation.quality_of_area(ladder, 800.0 + labour_allocation.cleared_hectares(1e12, 800.0, 2300.0))
+        self.assertLess(after, before)
+        self.assertAlmostEqual(after, land.ladder_quality(ladder, 2300.0), places=9)
+
+    def test_without_a_ladder_quality_is_the_reference_field(self):
+        self.assertEqual(labour_allocation.quality_of_area([], 500.0), 1.0)
 
 
 class RentReadsTheFarmedAreaTests(unittest.TestCase):
     def test_margin_is_the_last_ground_the_farm_covers(self):
         civ_id = "han_china_100ad"
-        territory = _ladder(civ_id)
-        small = land.margin_outcome_for_civilization(
-            civ_id, farmed_hectares=territory.cropped_hectares * 0.02)
-        large = land.margin_outcome_for_civilization(
-            civ_id, farmed_hectares=territory.cropped_hectares * 0.6)
-        self.assertGreater(small.margin_fertility_quality_multiplier,
-                           large.margin_fertility_quality_multiplier)
-        supplied = sum(a.arable_hectares_supplied for a in large.allocations)
-        self.assertAlmostEqual(
-            supplied, territory.cropped_hectares * 0.6,
-            delta=territory.cropped_hectares * 0.01)
-
-
-class ClearingTests(unittest.TestCase):
-    def test_labour_cost_is_a_declared_labelled_parameter(self):
-        self.assertGreater(agriculture.CLEARING_LABOUR_HOURS_PER_HECTARE, 0.0)
-
-    def _run(self, civ_id, years, scale=1.0):
-        test_sim = sim(civ_id, events=False)
-        test_sim.farm_land.hectares *= scale
-        history = []
-        for year in range(101, 101 + years):
-            before = test_sim.farm_land.hectares
-            test_sim._demographic_recovery(year)
-            history.append((before, test_sim.farm_land.hectares))
-        return test_sim, history
-
-    def test_a_short_civilisation_clears_more_ground(self):
-        test_sim, history = self._run("norse_900ad", 30)
-        self.assertGreater(test_sim.farm_land.hectares, history[0][0] * 1.05)
-
-    def test_area_never_passes_the_arable_ceiling(self):
-        test_sim, _history = self._run("norse_900ad", 60)
-        ceiling = _ladder("norse_900ad").cropped_hectares
-        self.assertLessEqual(test_sim.farm_land.hectares, ceiling + 1e-6)
-
-    def test_new_ground_is_worse_than_the_ground_already_farmed(self):
-        test_sim = sim("norse_900ad", events=False)
-        quality_before = test_sim.farm_land.quality
-        for year in range(101, 131):
-            test_sim._demographic_recovery(year)
-        # Cleared ground comes from the best-first ladder, so quality never rises.
-        self.assertLessEqual(test_sim.farm_land.quality, quality_before)
-        expected = land.ladder_quality(_ladder("norse_900ad").ladder,
-                                       test_sim.farm_land.hectares)
-        self.assertAlmostEqual(test_sim.farm_land.quality, expected, places=9)
-
-    def test_clearing_is_paid_in_hands_beyond_what_the_farm_can_crop(self):
-        test_sim = sim("norse_900ad", events=False)
-        for year in range(101, 111):
-            hectares_before = test_sim.farm_land.hectares
-            test_sim._demographic_recovery(year)
-            hectares_cleared = test_sim.farm_land.hectares - hectares_before
-            hours = test_sim.state.economy.society_labour_hours[labour_allocation.FARM_TRADE]
-            crop_hours = (hectares_before
-                          / agriculture.hectares_cropped_per_farm_worker()) * HOURS
-            spare_hours = max(0.0, hours - crop_hours)
-            self.assertLessEqual(
-                hectares_cleared * agriculture.CLEARING_LABOUR_HOURS_PER_HECTARE,
-                spare_hours * 1.0001 + 1e-6, year)
-
-    def test_a_fed_civilisation_does_not_clear(self):
-        test_sim = sim("rome_100ad", events=False)
-        test_sim.farm_land.quality = 1.5
-        test_sim.farm_land.hectares *= 1.5
-        start = test_sim.farm_land.hectares
-        test_sim._demographic_recovery(101)
-        self.assertAlmostEqual(test_sim.farm_land.hectares, start, delta=start * 1e-9)
-
-    def test_cleared_area_survives_save_and_load(self):
-        test_sim = sim("norse_900ad", events=False)
-        for year in range(101, 111):
-            test_sim._demographic_recovery(year)
-        path = tempfile.mktemp(suffix=".json")
-        try:
-            saveload.save_state(test_sim, path)
-            fresh = sim("norse_900ad", events=False)
-            saveload.load_state(fresh, path)
-        finally:
-            if os.path.exists(path):
-                os.remove(path)
-        self.assertAlmostEqual(fresh.farm_land.hectares, test_sim.farm_land.hectares, places=6)
-        self.assertAlmostEqual(fresh.farm_land.quality, test_sim.farm_land.quality, places=9)
-
-
-class PriceCacheFollowsClearingTests(unittest.TestCase):
-    def _rent(self, civ, farmed_hectares):
-        from sim.engine import prices
-        from sim.engine.data import schedule_of_civilisation
-        document = schedule_of_civilisation(civ).document()
-        solved = prices.solved_prices(
-            civ["starting_techs"], document, civilization=civ, farmed_hectares=farmed_hectares)
-        return solved.prices_in_labour_hours["hectare_land"]
-
-    def test_clearing_land_changes_the_rent_the_solver_prices(self):
-        civ = S.load_civ("han_china_100ad")
-        ceiling = _ladder("han_china_100ad").cropped_hectares
-        small = self._rent(civ, ceiling * 0.02)
-        large = self._rent(civ, ceiling * 0.6)
-        self.assertNotAlmostEqual(small, large, places=6)
-
-    def test_the_incumbent_price_tables_follow_the_cleared_area(self):
-        test_sim = sim("han_china_100ad", events=False)
-        before = test_sim._price_tables()[0]["hectare_land"]
-        test_sim.farm_land.hectares *= 3.0
-        after = test_sim._price_tables()[0]["hectare_land"]
-        self.assertNotAlmostEqual(before, after, places=6)
+        ceiling = land.margin_outcome_for_civilization(civ_id, farmed_hectares=1e12)
+        total = sum(a.arable_hectares_supplied for a in ceiling.allocations)
+        small = land.margin_outcome_for_civilization(civ_id, farmed_hectares=total * 0.02)
+        large = land.margin_outcome_for_civilization(civ_id, farmed_hectares=total * 0.6)
+        self.assertGreater(small.margin_fertility_quality_multiplier, large.margin_fertility_quality_multiplier)
+        self.assertAlmostEqual(sum(a.arable_hectares_supplied for a in large.allocations), total * 0.6, delta=total * 0.01)
 
     def test_nearby_areas_share_one_solve(self):
         from sim.engine import prices
