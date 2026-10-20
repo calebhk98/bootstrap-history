@@ -380,3 +380,51 @@ brick price does not run away; brick makers' output falls far below wear and nea
 first years and the cart price climbs without bound against standing replacement bids. The open question is why brick
 and cart makers stop: carts lack iron bar (section above); bricks were not traced. Measured with scratch probes over
 `spin_up_trace` (stocks, flows, bids and prices by year); no committed command exists.
+
+## Measured: how the yearly rate is set, and what moves before it reaches its ceiling (branch 473-why-the-rate-hits-its-ceiling)
+
+**The rule.** `economy.Economy._lend` (`sim/economy/economy.py`) gathers the year's loan requests (producers' `expand` and
+`enter` plant, `state deficit`, households' `subsistence`, merchants' `trade`) and the funds on offer, and calls `credit.clear`
+(`sim/economy/credit.py`). Each lender offers at a lowest rate; each request can pay at most its `maximum_rate` less its
+risk premium. `labour.clearing_point` finds the rate where the two queues meet. The year's rate is then:
+
+1. `sticky_move` from last year's rate toward that target by `RATE_ADJUSTMENT_SHARE_PER_YEAR` of the gap;
+2. raised at once to the lowest lender ask if the sticky rate falls below it while some borrower would still pay it (the
+   `base_rate < lowest_ask` branch in `credit.clear`), so a rise is not step-limited and a fall is;
+3. held at `RATE_CEILING_SHARE` times the opening rate (`capital_market.py`), which is what the spike's 0.48 is.
+
+With funds on offer and no requests, `_lend` moves the rate toward the lowest ask by the same step. Nothing but the households
+offers funds in this run (no banks, firms or state), and a household offers its cash above its spending and cash target at
+`HOUSEHOLD_TIME_PREFERENCE + expected_inflation` (`households_orders.py`). Expected inflation is each cohort's smoothed
+year-on-year change of the basket price level (`households_close.close_year`, `currency.update_expected_inflation`).
+
+**What the early years show.** Probe `rate473b`-style (scratch: a wrapper over `credit.clear` printing supply, lowest ask,
+requests by purpose and unmet by purpose, one line a year, Rome first stage from the harness opening; not committed, no command
+prints it), years 0 to 33: funds offered are one to two orders of magnitude above everything asked (offers of the order
+1e10 against requests of the order 1e8 to 1e9 in money-supply units), the state asks for nothing, and the rate equals the
+lowest ask to the digit in nearly every year (for example years 24, 30 and 33 jumped straight to it). So in the first
+thirty-odd years the rate is not a clearing of plant, merchant or state credit against savings; it is the households' reservation
+rate, time preference plus the smoothed change of the basket price level. A fall in the price level (a dozen years of deflation
+from the opening) drove it to nil by year 9; a rise drives it up.
+
+**The spike is not explained by that alone.** The trace dump (`rows60_6f00.json`, `spin_up_trace`, head 6f0085da) has the rate at
+about 0.04 in year 45 and 0.48 in year 46, then 0.40, 0.33, 0.25, 0.22, 0.24, 0.20, 0.14, 0.10 by year 54. The price level
+that precedes it rises from about 0.26 (year 43) to 0.30, 0.38 and 0.41, and the money supply falls smoothly through the whole run.
+Smoothing those year-on-year changes at the declared speed gives an expected inflation under a quarter, not the 0.43 a lowest
+ask at the ceiling needs. And a jump from 0.04 to the ceiling in one year cannot come from the step limit unless the target is
+far above it. So either the cohorts' expected inflation differs from this reconstruction (the cohorts read the level at their own
+close), or at year 46 the clearing target is demand-driven: borrowers with very large `maximum_rate` (producers' yearly return on
+plant runs into the tens and hundreds in the early-year probe) outbidding a funds supply that has shrunk. The decay after the
+spike (about a quarter of the gap a year) is the step limit toward a target that itself falls.
+Unverified: which of the two; the probe stepping 46 years takes longer than the five minutes a subagent may run.
+
+**Probe for the next run.** `scratchpad/rate473_full.py` wraps `credit.clear` and prints, per year, the price level, rate, money,
+debt, cohorts' expected inflation (lowest and highest), supply, lowest ask, the unsmoothed clearing target, last rate, requests by
+purpose with the share able to pay the clearing rate, money lent and any state request. Run it for 60 years from the repo root.
+Reading it: `rate == lowest_ask` means the Fisher floor; `target` far above `lowest_ask` with demand able to pay exceeding
+supply means credit demand; `state` non-empty means the treasury.
+
+**Not changed.** No defect was proven, so no code changed. Candidate defects to judge once the probe is read: a rate that is
+the households' reservation rate while supply swamps demand makes the credit market inert (the funds pool is almost all of
+the money stock); the one-way step limit (instant rise to the lowest ask, slow fall) makes any one-year price jump a ratcheted
+spike; unbounded `maximum_rate` from `unit_cost.return_on_capital` lets one cheap plant sale set the clearing price when supply is short.
