@@ -13,7 +13,7 @@ INTRODUCTION_BAND = "working_age"
 CAREGIVER_BANDS = ("working_age",)
 
 DISEASE_TRAVELLER_ANNUAL_CHANCE = declare(
-    "DISEASE_TRAVELLER_ANNUAL_CHANCE", 0.25, kind="temporary_heuristic",
+    "DISEASE_TRAVELLER_ANNUAL_CHANCE", 0.6, kind="temporary_heuristic",
     unit="dimensionless (chance per year, per pathogen, that an infected party sets out from a source where it is always present)",
     source=None, confidence="D", retire="Complaints/490: the outside world's own people carry infection along the routes they trade",
     why="Stands in for the outside world exporting infected travellers: while the pathogen is absent from the nation, "
@@ -21,16 +21,16 @@ DISEASE_TRAVELLER_ANNUAL_CHANCE = declare(
         "that the routes let through (`DISEASE_TRAVEL_DECAY_DAYS`). Drawn from the disease package's own hash of the "
         "game's seed, never Sim.rng.")
 DISEASE_EMERGENCE_ANNUAL_CHANCE = declare(
-    "DISEASE_EMERGENCE_ANNUAL_CHANCE", 0.012, kind="temporary_heuristic",
+    "DISEASE_EMERGENCE_ANNUAL_CHANCE", 0.0015, kind="temporary_heuristic",
     unit="dimensionless (chance per year, per pathogen, that it starts to spread at a source where it is not always present)",
     source=None, confidence="D", retire="Complaints/490: the outside world's own people carry infection along the routes they trade",
     why="The outside world is not simulated, so a pathogen that is not always present at a source starts there at "
         "random: a spill-over from animals, a mutation, a long-dormant focus. Its arrival at the nation then follows "
         "the same contact rule as a pathogen that is always there. No dated outbreak is stated anywhere; the value "
-        "is to be fitted so the ensemble's major epidemics per millennium sit inside the published range "
-        "(`python3 -m sim.tests --slow --only plagues_from_contact` prints the ensemble).")
+        "is fitted so an ensemble of Rome runs holds a handful of pandemics in five centuries, never the same years "
+        "(bounds asserted in `python3 -m sim.tests --slow --only plagues_from_contact`).")
 DISEASE_TRAVEL_DECAY_DAYS = declare(
-    "DISEASE_TRAVEL_DECAY_DAYS", 60.0, kind="temporary_heuristic",
+    "DISEASE_TRAVEL_DECAY_DAYS", 150.0, kind="temporary_heuristic",
     unit="days of travel (the distance at which a source's contact falls to a third)",
     source=None, confidence="D", retire="Complaints/490: contact scales with the volume of trade over each route edge",
     why="Contact between a source and the nation falls off with the fewest days of travel between them over the "

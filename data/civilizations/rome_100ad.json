@@ -65,7 +65,7 @@
       },
       {
         "tiles": ["ethiopia_01", "ethiopia_02", "ethiopia_03", "ethiopia_04", "ethiopia_05", "ethiopia_06", "ethiopia_07", "ethiopia_08", "ethiopia_09", "ethiopia_10", "ethiopia_11", "sudan_01", "sudan_02", "sudan_03", "sudan_04", "sudan_05", "sudan_06", "sudan_07", "sudan_08", "sudan_09", "sudan_10", "sudan_11", "sudan_12", "somalia_01", "somalia_02", "somalia_03", "somalia_04", "somalia_05", "kazakhstan_01", "kazakhstan_02", "kazakhstan_03", "kazakhstan_04", "kazakhstan_05", "kazakhstan_06", "kazakhstan_07", "kazakhstan_08", "kazakhstan_09", "kazakhstan_10", "kazakhstan_11", "kazakhstan_12", "kazakhstan_13", "kazakhstan_14", "kazakhstan_15", "kazakhstan_16", "kazakhstan_17", "kazakhstan_18", "kyrgyzstan_01", "uzbekistan_01", "uzbekistan_02", "mongolia_01", "mongolia_02", "mongolia_03", "mongolia_04", "mongolia_05", "mongolia_06", "mongolia_07", "mongolia_08", "mongolia_09", "mongolia_10"],
-        "pathogens": ["pneumonic_plague"]
+        "pathogens": ["bubonic_plague"]
       }
     ]
   },

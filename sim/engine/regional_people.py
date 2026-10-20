@@ -80,6 +80,7 @@ class RegionalPeopleMixin:
             regions, self.state.population.regional_eaten_over_need, borders, settlement.distance_between_tiles_km)
         food = sum(kcal_by_region.values())
         epidemic_deaths = self.disease_year(food, year)
+        self.epidemic_hits_seats(epidemic_deaths, year)
         ratio = self.population.nutrition_ratio(food)
         flows = regional_population.step_regions(
             regions, kcal_by_region, self._disease_burden(), epidemic_deaths, self.endemic_death_rates(), leaving, arriving)

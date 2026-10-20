@@ -70,12 +70,11 @@
     "outside_contact": [
       {
         "tiles": ["germany_01", "germany_02", "germany_03", "united_kingdom_01", "united_kingdom_02", "united_kingdom_03", "united_kingdom_04", "poland_01", "poland_02", "poland_03", "poland_04", "france_01", "france_02", "france_03", "france_04", "france_05"],
-        "pathogens": ["smallpox", "measles", "influenza_pandemic"],
-        "circulating": true
+        "pathogens": ["smallpox", "measles", "influenza_pandemic"]
       },
       {
         "tiles": ["kazakhstan_01", "kazakhstan_02", "kazakhstan_03", "kazakhstan_04", "kazakhstan_05", "kazakhstan_06", "kazakhstan_07", "kazakhstan_08", "kazakhstan_09", "kazakhstan_10", "kazakhstan_11", "kazakhstan_12", "kazakhstan_13", "kazakhstan_14", "kazakhstan_15", "kazakhstan_16", "kazakhstan_17", "kazakhstan_18", "kyrgyzstan_01", "uzbekistan_01", "uzbekistan_02", "mongolia_01", "mongolia_02", "mongolia_03", "mongolia_04", "mongolia_05", "mongolia_06", "mongolia_07", "mongolia_08", "mongolia_09", "mongolia_10", "ukraine_01", "ukraine_02", "ukraine_03", "ukraine_04", "ukraine_05", "turkey_01", "turkey_02", "turkey_03", "turkey_04", "turkey_05", "turkey_06", "turkey_07", "turkey_08", "turkey_09", "egypt_01", "egypt_02", "egypt_03", "egypt_04", "egypt_05", "egypt_06", "egypt_07", "egypt_08", "egypt_09", "greece_01", "greece_02", "syria_01"],
-        "pathogens": ["pneumonic_plague"]
+        "pathogens": ["bubonic_plague"]
       }
     ]
   },

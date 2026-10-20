@@ -118,8 +118,12 @@ class DiseasePortMixin:
         nutrition_ratio = self.population.nutrition_ratio(food_available_calories_per_day)
         pathogen_ids = sorted(set(state.records) | set(arrivals))
         fatality_by_pathogen, transmission = world.technology_scales(pathogen_ids)
-        return nation.run_year(
+        killed_before = dict(state.deaths)
+        deaths = nation.run_year(
             pathogens(), state.records, state.introduced, state.deaths, world.people_by_band(), nutrition_ratio,
             self.civ.get("urban_fraction", 0.0), arrivals, world.seed_text(), year, fatality_factor=fatality_by_pathogen,
             transmission_scale=transmission, care_sensitivity=DISEASE_CARE_COLLAPSE_SENSITIVITY,
             density_ratio=DISEASE_URBAN_DENSITY_RATIO)
+        self.__dict__["_epidemic_names"] = [pathogens()[pathogen_id].name for pathogen_id in sorted(state.deaths)
+                                            if state.deaths[pathogen_id] > killed_before.get(pathogen_id, 0)]
+        return deaths
