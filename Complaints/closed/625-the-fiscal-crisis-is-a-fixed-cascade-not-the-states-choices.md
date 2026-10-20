@@ -1,6 +1,6 @@
 # The fiscal crisis is a fixed cascade, not choices of the state actor
 
-**Status:** open
+**Status:** closed - a shortfall is one decision, `fiscal_response`, put to the state's decision policy (`sim/agents/fiscal_response.py`, `government_fiscal.py`). The menu is borrow, cut lines, arrears, debase, levy and demand in kind, each with consequences (interest, services lost, pay unpaid, coin metal cut, income taken). `FiscalPolicy` values them; `fiscal_cascade` is the old order kept as one policy; a player's `CallbackPolicy` names responses. Tests: `state_fiscal_response`; `Government.advance` runs no cascade. Slow check still to run by the PM: `state_arrears` (whole games).
 
 Part of Complaint 542 (State capacity and tax rates are typed, there is no corvée, and the fiscal crisis is a fixed cascade).
 
