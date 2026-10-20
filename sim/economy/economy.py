@@ -126,8 +126,15 @@ class Economy:
         return equity.holdings(self.setup, self.record, view)
 
     def strike_lighter_coin(self, cut_share: float, restrike_share: float) -> None:
-        """The issuer of the currency cuts the metal in the coin it strikes again this year (a struck coin only)."""
-        self.record.currency = currency.debase_by_cut(self.record.currency, cut_share, restrike_share)
+        """The issuer recoins the part of the stock that comes to the mint at `cut_share` less metal (a struck
+        coin only): the metal saved is struck as more coin, which the issuer receives and spends."""
+        record = self.record
+        supply = record.book.money_supply(record.currency.currency_id)
+        struck = currency.units_struck_by_cut(record.currency, supply, cut_share, restrike_share)
+        if struck <= 0.0:
+            return
+        record.book.transfer_many(currency.issue(record.currency, struck, "recoinage"))
+        record.currency = currency.debase_by_cut(record.currency, supply, cut_share, restrike_share)
 
     def step(self, inputs: YearInputs) -> YearOutcome:
         with collection_paused():
@@ -406,6 +413,12 @@ class Economy:
         output: Dict[str, float] = {}
         for (_agent, good), quantity in ledger.output.items():
             output[good] = output.get(good, 0.0) + quantity
+        record.output_by_tile = {}
+        for (agent, good), quantity in sorted(ledger.output.items()):
+            producer = record.producers.get(agent)
+            if producer is not None and quantity > 0.0:
+                row = record.output_by_tile.setdefault(producer.tile, {})
+                row[good] = row.get(good, 0.0) + quantity
         prices = national_prices(record)
         return YearOutcome(year=record.memory.year, basket_price_level=level, prices=prices,
                            wages=mean_wages, rate=record.memory.rates.get(money, 0.0),

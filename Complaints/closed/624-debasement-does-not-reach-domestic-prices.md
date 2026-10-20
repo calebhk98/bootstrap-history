@@ -1,6 +1,6 @@
 # Debasement cuts the metal in the coin but domestic money prices do not follow
 
-**Status:** open
+**Status:** closed - a state's cut is a recoinage: the metal saved is struck as more coin (`currency.units_struck_by_cut`) issued to the state, and the lighter average coin follows; prices rise through the money supply and normal clearing. Tests: `state_debasement_prices`, `state_debases_coin`.
 
 Part of Complaint 542 (State capacity and tax rates are typed, there is no corvée, and the fiscal crisis is a fixed cascade).
 

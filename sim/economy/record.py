@@ -56,6 +56,7 @@ class EconomyRecord:
     settling: bool = False                                               # in the hidden spin-up: households' spending rises as far as their wealth allows
     spin_up_result: Dict[str, Any] = field(default_factory=dict)         # how the hidden first stage ended: settled, years run, last gap (empty: no spin-up ran)
     carried: Dict[str, Dict[str, float]] = field(default_factory=dict)   # tonnes the merchants carried last year: origin tile -> destination tile (sim.geography.flow_ledger)
+    output_by_tile: Dict[TileId, Dict[str, float]] = field(default_factory=dict)   # tile -> good -> units the home producers made last year
 
     @property
     def loans(self) -> List[Loan]:
