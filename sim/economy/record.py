@@ -23,7 +23,7 @@ from .types import AgentId, CurrencySpec, Loan, LoanRequest, TileId, TradeId
 
 
 # the record's fields whose annotation names an AgentId (a test reads the source and holds this list to it)
-AGENT_KEYED_FIELDS = ("cohorts", "producers", "merchants", "remembered_defaults", "credit_losses", "property_income",
+AGENT_KEYED_FIELDS = ("cohorts", "producers", "merchants", "remembered_defaults", "credit_losses", "loss_rates", "losses_seen", "property_income",
                       "expansion_runs", "worn_runs", "titles", "bondage", "lent_by_borrower", "banks", "shares",
                       "last_dividends")
 
@@ -40,6 +40,8 @@ class EconomyRecord:
     loan_requests: List[LoanRequest] = field(default_factory=list)       # made at last year's close
     remembered_defaults: Dict[AgentId, float] = field(default_factory=dict)   # losses a borrower caused, fading
     credit_losses: Dict[AgentId, float] = field(default_factory=dict)    # what each lender has lost to default
+    loss_rates: Dict[AgentId, float] = field(default_factory=dict)       # each lender's expected loss per year of exposure, aging (loss_memory.py)
+    losses_seen: Dict[AgentId, float] = field(default_factory=dict)      # credit_losses as of the last year's close
     workforce: MarketState = field(default_factory=MarketState)          # the labour core's state: people by labour area, trade and ability band
     property_income: Dict[AgentId, float] = field(default_factory=dict)  # dividends and interest last year
     volumes: Dict[str, float] = field(default_factory=dict)              # market_key -> last year's quantity
@@ -104,6 +106,8 @@ class EconomyRecord:
             "loan_requests": [plain(request) for request in self.loan_requests],
             "remembered_defaults": self.remembered_defaults,
             "credit_losses": self.credit_losses,
+            "loss_rates": self.loss_rates,
+            "losses_seen": self.losses_seen,
             "workforce": market_state_to_plain(self.workforce),
             "property_income": self.property_income,
             "volumes": self.volumes,
@@ -147,6 +151,8 @@ class EconomyRecord:
             loan_requests=[LoanRequest(**request) for request in record["loan_requests"]],
             remembered_defaults=dict(record["remembered_defaults"]),
             credit_losses=dict(record["credit_losses"]),
+            loss_rates=dict(record["loss_rates"]),
+            losses_seen=dict(record["losses_seen"]),
             workforce=market_state_from_plain(record["workforce"]),
             property_income=dict(record["property_income"]),
             volumes=dict(record["volumes"]),
