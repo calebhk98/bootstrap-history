@@ -1,12 +1,11 @@
-"""Insolvency over whole Rome years: a settlement never abandons a persona or institution, and a founder driven
-deep into debt stays inside the credit line, climbs back and keeps what the goal needs. The settlement and the
-building of the persona do not depend on the market close, so those years leave it out; the ruined founder's
-recovery reads the founder's money, which follows the market close, so its years are full steps
+"""Scenario (Complaint 640): a founder driven deep into debt climbs back and keeps what the goal needs. The rules of
+default and settlement (a settlement never abandons a persona or institution, the debt after it is inside the
+line) are tested one at a time in test_insolvency_rules.py; this keeps only the recovery over whole Rome years,
+which reads the founder's money and so needs full steps
 (python3 -m sim.tests --slow --only insolvency_whole_game --timing measures it)."""
 
 from .harness import *  # noqa: F401,F403
 from sim.engine.data import closure as data_closure
-from sim.agents import borrowing_arrears
 
 RUIN_YEARS = 5   # full market years after the ruin: the founder's money climbs back within them
 
@@ -17,25 +16,7 @@ def without_market(game):
     return game
 
 
-# Rome carries no debt bondage, so a deep debt ends in a written-off settlement.
-insolvent = without_market(sim(civ="rome_100ad", capital=1000000.0))
-insolvent.start_project("identity_cover")
-for _ in range(4):  # until the persona is built
-    insolvent.step()
-    if "identity_cover" in insolvent.done:
-        break
-persona_built = "identity_cover" in insolvent.done
-insolvent.capital = -2.0 * insolvent.credit_limit()
-for _ in range(borrowing_arrears.ARREARS_YEARS_BEFORE_DEFAULT + 1):  # until the settlement is logged
-    insolvent.step()
-    if any("INSOLVENCY SETTLED" in text for _, text in insolvent.state.household.log):
-        break
-settled = [text for _, text in insolvent.state.household.log if "INSOLVENCY SETTLED" in text]
-check("an insolvency settlement never abandons a persona or institution",
-      persona_built and settled and "identity_cover" in insolvent.done,
-      (persona_built, len(settled), "identity_cover" in insolvent.done))
-
-# A founder driven deep into debt stays inside the credit line, climbs back, and keeps what the goal needs.
+# A founder driven deep into debt climbs back and keeps what the goal needs.
 def _ruined_founder_run():
     ruined = sim(manual=False, capital=hours_money(20200000))
     ruined.labour.buy_slaves(400)
@@ -67,9 +48,6 @@ def _ruin():
     return _RUIN["run"]
 
 
-slow_check("a ruined founder's debt stays inside the credit limit once the settlement has run (after the years of arrears)",
-           lambda: (max(_ruin()[3][borrowing_arrears.ARREARS_YEARS_BEFORE_DEFAULT:]) <= 1.0 and any("INSOLVENCY SETTLED" in text for _, text in _ruin()[0].state.household.log),
-                    _ruin()[3]))
 # the money climbs back at some point in the years; once it has, the founder may spend it on projects
 slow_check("a ruined founder rebuilds rather than freezing",
            lambda: (max(_ruin()[4]) > _ruin()[4][0] and len(_ruin()[0].done - _ruin()[0].granted) >= _ruin()[2],
