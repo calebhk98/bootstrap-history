@@ -420,24 +420,15 @@ year or a tile where the sign happens to be right. A fixture that keeps the subj
 relative to the market (a surplus fixture that leaves incumbents no spare capacity) or the check to read the nation's
 price; either is the owner's choice. Related: Complaint 473 (the cycling economy).
 
-## `economy_innovator_pricing` after c5c0107e: a labour wage capped by a slack neighbour starves the coffee demand
+## `spin_up_sensitivity` after the labour import cap: the variants' amplitude sits on the band's edge
 
-Bisected on the first-parent merges (`python3 -m sim.tests --slow --only economy_innovator_pricing --topic-seconds 240`,
-a few seconds each). Passes at 4796f4cb and d7a49827. "The price path falls steadily" first fails at 3e74bbad (the rate
-falls to the clearing rate): a small bump in year 22 of the scenario, because the cheaper credit changes the later
-wages. At c5c0107e (the labour import cap) all three failing checks appear: the wage cap in
-`sim/labour/market/clearing.py` (`clear_one`, `ImportCosts.wage`) held every area's wage at the one slack area's wage
-plus the move, so wages ratcheted to the reservation floor in all three areas while two of them had more bids than hands.
-Fixed in part: the cap now takes only areas with hands to spare (more hours of the trade than their own employers bid
-for), which restores "the price falls as the entrant's capacity grows" and `spin_up_sensitivity`.
+The labour import cap (c5c0107e) took every area with the trade as a source, and areas all short of hands capped each other's
+wages to the reservation floor; this broke `economy_innovator_pricing` and `spin_up_sensitivity` ("ask_prices x2"). The cap
+now fills the hours wanted beyond an area's own hands from the cheapest reachable areas' spare hands and binds only when
+they suffice (`sim/labour/market/import_cost.py`). `economy_innovator_pricing` passes again.
 
-Still failing, a real dynamic: the cap still binds in an area with a few hands to spare that is far short of the
-shortage elsewhere (the hills hold about 120 thousand spare hours against about 2 million wanted in the other two areas
-in year 5), because the cap's own test fixes the swamped market at a thousand times the hours offered. Wages stay at
-about a fifth of the uncapped path, households' surplus is small, coffee volume stays near 200 thousand against 330
-thousand uncapped, and the price rises while the entrant grows, so the year-to-year rise limit fails in year 8 (1.717
-against 1.648) and the price never drops below the incumbents' cost, so they never leave. Print the labour clearing per
-area with `PYTHONPATH=. python3 <script that wraps sim.labour.market.clearing.clear_one around
-sim.tests.economy_innovator_scenario.run_scenario>` and read wage, hours offered and hours wanted per area and year.
-The owner of the import cap should make the spare hands limit how far the cap reaches (cap only the hours the spare hands
-can fill, price the rest by the bids) and re-pin the cap's swamped-market test to that. No bound loosened, no fixture edited.
+`spin_up_sensitivity` still fails on "no change of adjustment speed removes the cycle", now on a different variant
+(`producer_plans x0.5`, amplitude 0.183 against a floor of 0.2265 from the baseline 0.453). Print every variant with
+`python3 -c "from sim.tests import test_spin_up_sensitivity as t; print(t.statistics())"`. The baseline's price cycle is a
+long chaotic one (period near 80 years), and which variant dips under half of it moves with unrelated merges (the variant
+that failed before the fix passes now). No bound loosened. Related: Complaint 473 (the cycling economy).
