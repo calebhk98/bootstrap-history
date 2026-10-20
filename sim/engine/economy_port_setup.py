@@ -9,7 +9,7 @@ import json
 import os
 from typing import Dict
 
-from sim.economy.api import (EconomySetup, SiteLimit, TradeSpec, currency_from_coin_standard, goods_specs, households,
+from sim.economy.api import (EconomySetup, carriage_wear, SiteLimit, TradeSpec, currency_from_coin_standard, goods_specs, households,
                              recipes_from_production_data, taxes, tile_costs)
 from sim.world import demand, need_basket
 from sim.geography.api import carriage_rates, layer_value, sea_freight, settlement, tiles_held
@@ -95,6 +95,7 @@ def opening_values(sim):
                             for trade in (production[entry_id].get("labour_hours") or {})}
                            | {unskilled})
     modes = sim._freight_mode_costs(cargo="goods")
+    rates = carriage_rates(sorted(modes), sim.world_map)
     prices = dict(partner_prices)
     prices.update(economy_port_costs.opening_costs(sim))
     return {
@@ -111,7 +112,9 @@ def opening_values(sim):
         "carriage_balanced": sim._freight_mode_costs(0.0, cargo="goods"),
         "carriage_wage": sim.labour.wage_per_hour(sim.FREIGHT_DRIVER_WAGE_TRADE),
         "carriage_crew": {mode: [rate["crew_trade"], rate["crew_hours_per_tonne_km"]]
-                          for mode, rate in carriage_rates(sorted(modes), sim.world_map).items()},
+                          for mode, rate in rates.items()},
+        "carriage_teams": {mode: {key: rate[key] for key in ("carriers", "tonne_km_per_team_day", "team_payload_tonnes")}
+                           for mode, rate in rates.items()},
         "held_nodes": sorted(sim.held_and_running(include_starting=False)),
         "ways": {key: dict(way) for key, way in sorted(sim.state.economy.improvements.items())},
         "site_limits": [[limit.recipe_id, limit.tile, limit.capacity_runs_per_year, limit.yield_factor]
@@ -212,6 +215,10 @@ def build_setup(sim, opening=None, production=None):
         handling_rates={SEA_MODE: sea_freight.PORT_HANDLING_HOURS_PER_TONNE * wages.get(opening["unskilled_trade"], 0.0)},
         carriage_wage=float(opening["carriage_wage"]),
         carriage_crew={mode: (str(crew[0]), float(crew[1])) for mode, crew in opening["carriage_crew"].items()},
+        carriage_carriers=carriage_wear.table(
+            opening["carriage_teams"],
+            {good: production[good]["carrier_use"] for good in sorted(specs) if production.get(good, {}).get("carrier_use")},
+            {good: spec.service_life_years for good, spec in specs.items()}),
         carriage_handling={SEA_MODE: sea_freight.PORT_HANDLING_HOURS_PER_TONNE},
         held_nodes=tuple(opening["held_nodes"]),
         specs=specs, recipes=recipes, mint_recipe=mint_recipe, basket=basket, trades=trades,

@@ -8,7 +8,7 @@ WALL = "two-way"  # nothing here reaches sim/engine/; the engine hands it what i
 
 import math
 
-from . import country_figures, diagnostics, late_recipes, opening_metal, households, labour_state, land_rents, market_curves, prices_at as tile_prices, taxes, tile_costs, workforce_settle
+from . import carriage_wear, country_figures, diagnostics, late_recipes, opening_metal, households, labour_state, land_rents, market_curves, prices_at as tile_prices, taxes, tile_costs, workforce_settle
 from .currency import currency_from_coin_standard
 from .economy import Economy
 from .foreign import external_orders
@@ -33,7 +33,7 @@ from sim.world import capital_market
 
 __all__ = [
     "YearAccounts", "baseline_checks", "settling",
-    "diagnostics", "households", "taxes", "tile_costs", "currency_from_coin_standard", "Economy", "external_orders",
+    "carriage_wear", "diagnostics", "households", "taxes", "tile_costs", "currency_from_coin_standard", "Economy", "external_orders",
     "price_response", "prices_at", "offered_units", "watch_tiles",
     "shown_prices", "Producer", "expected_output_prices", "live_input_prices", "live_wages", "AgentOrders",
     "YearInputs", "recipes_from_production_data", "EconomyRecord", "EconomySetup", "TradeSpec", "SiteLimit",

@@ -6,7 +6,7 @@ from typing import Dict, Tuple
 from sim.geography.api import flow_ledger
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
-from . import (merchants_transit, carriage_hours, currency, expansion_price, households, inventory, merchants, metal_stock, ownership, producer_exit,
+from . import (merchants_transit, carriage_hours, carriage_wear, currency, expansion_price, households, inventory, merchants, metal_stock, ownership, producer_exit,
                producers, producers_close, state_budget, tariffs, taxes)
 from .households_cohort import renewed
 from .market_memory import market_key
@@ -34,6 +34,8 @@ def dispatch_merchants(setup, record, carriage, ledger: YearLedger) -> None:
         if held is None or cohort.income_class < record.cohorts[held].income_class:
             carriers[cohort.tile] = cohort.agent_id
     carried: dict = {}
+    carrier_goods = carriage_wear.carrier_goods(setup)
+    wear = carriage_wear.Wear(setup, carriage, record.area_imbalance) if carriage_wear.wears(setup) else None
     for merchant in sorted(record.merchants.values(), key=lambda each: each.agent_id):
         record.book.move_many(merchants_transit.advance(merchant, setup.specs))    # hauls on the road for years reach the tile or spoil
     for merchant in sorted(record.merchants.values(), key=lambda each: each.agent_id):
@@ -42,6 +44,9 @@ def dispatch_merchants(setup, record, carriage, ledger: YearLedger) -> None:
             if crew is not None:
                 merchant.carriage_hours_wanted = {}     # nothing shipped: no carriers to bid for next year
                 merchant.carriage_money_wanted = {}
+            if wear is not None:
+                merchant.carrier_wear, merchant.carrier_team_days = {}, {}
+                carriage_wear.settle(merchant, record.book, carrier_goods, {})
             continue
         hire = None
         if crew is not None:
@@ -50,12 +55,18 @@ def dispatch_merchants(setup, record, carriage, ledger: YearLedger) -> None:
             hire = merchants.CrewHire(crew.hours_per_tonne, hours_hired, wages)
         done = merchants.dispatch(merchant, fills, carriage, setup.specs, money,
                                   record.book.balance(merchant.agent_id, money), _held_stock(record.book, merchant.agent_id),
-                                  carrier_of=carriers.get, crew=hire)
+                                  carrier_of=carriers.get, crew=hire,
+                                  carrier_money=None if wear is None else (
+                                      lambda source, destination, each=merchant: carriage_wear.money_per_tonne(
+                                          setup, record, wear, source, destination)))
         record.book.post(done.transfers, done.moves)
         ledger.note_postings(done.transfers, "wages")
         if crew is not None:
             merchant.carriage_hours_wanted = done.crew_hours_wanted
             merchant.carriage_money_wanted = done.crew_money_wanted
+        if wear is not None:
+            merchant.carrier_wear, merchant.carrier_team_days = carriage_wear.exposure(wear, done.moves, setup.specs)
+            carriage_wear.settle(merchant, record.book, carrier_goods, merchant.carrier_wear)
         for move in done.moves:
             flow_ledger.record_flow(carried, move.tile, move.receiver_tile,
                                     move.quantity * setup.specs[move.good].unit_mass_kg / KILOGRAMS_PER_TONNE)
