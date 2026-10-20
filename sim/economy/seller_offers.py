@@ -8,22 +8,17 @@ it (its price-taking reservation), so a seller never prices below what a unit co
 A producer that stands for several workshops (Producer.workshops above one) is not a seller but a crowd of
 price takers: it keeps the price-taking reservation and neither searches nor raises. A seller that moves
 the price may also raise its ask above the price-taking one, which holds units back (restraint) when the
-dearer, smaller sale earns more. A raise is bounded by the share a sold-out seller
-raises its ask in a year (ask_raise.SOLD_OUT_ASK_RAISE_SHARE), so an ask rises over the years as the book
-changes and never jumps in one; a cut is not bounded below the unit value, and a seller whose ask goes
+dearer, smaller sale earns more. Only an owner of one workshop searches the book; the searched ask is held
+inside a band above the seller's unit cost (ask_band_multiple). A raise is bounded by the share a sold-out seller
+raises its ask in a year (ask_raise.SOLD_OUT_ASK_RAISE_SHARE) and stops at the band's edge; a cut is not bounded below the unit value, and a seller whose ask goes
 unsold under the price-taking rule is brought down to what sells by unsold_search.py.
-
-A seller's ask is also held to what a unit costs it times the markup a seller can charge when buyers can
-substitute toward other goods meeting the same need (substitution_markup). Against buyers who spend a fixed
-budget and name no maximum price, profit rises with the ask without limit, so without the hold the ask
-ratchets up each year.
 """
 import dataclasses
 import math
 from typing import List, Optional, Sequence
 
 from . import entry_trial, goods_market, market_curves, seller_pricing
-from .ask_raise import SOLD_OUT_ASK_RAISE_SHARE
+from .ask_raise import ASK_BAND_CEILING, SOLD_OUT_ASK_RAISE_SHARE
 from .producers import expected_output_prices, live_input_prices, live_wages
 from .types import EDGE_EXTERNAL, Bid, Offer
 
@@ -55,9 +50,15 @@ def unit_value(offer: Offer, cost: float) -> float:
 def substitution_markup(setup, offer: Offer) -> float:
     """The ratio of price to cost a seller can charge when buyers substitute toward other goods meeting the
     same need at the basket's elasticity of substitution (the constant-elasticity monopolist's markup);
-    unbounded when buyers do not substitute more than one for one."""
+    where buyers do not substitute more than one for one the stated band (ASK_BAND_CEILING) stands in."""
     elasticity = setup.basket_for(offer.tile).substitution
-    return elasticity / (elasticity - 1.0) if elasticity > 1.0 else math.inf
+    return elasticity / (elasticity - 1.0) if elasticity > 1.0 else ASK_BAND_CEILING
+
+
+def ask_band_multiple(setup, offer: Offer) -> float:
+    """The most, as a multiple of a unit's cost, any seller's ask may be: the derived substitution markup,
+    never past ASK_BAND_CEILING, so inelastic demand gives a finite ask."""
+    return min(substitution_markup(setup, offer), ASK_BAND_CEILING)
 
 
 def stands_for_many(record, offer: Offer) -> bool:
@@ -92,7 +93,7 @@ def strategic_offers(setup, record, view, bids: Sequence[Bid], offers: Sequence[
         ask = max(offer.reservation_price, 0.0)
         if stands_for_many(record, offer):
             continue     # a crowd of price takers keeps its reservation; unsold_search.py lowers it to what sells
-        limit = cost * substitution_markup(setup, offer)
+        limit = cost * ask_band_multiple(setup, offer) if math.isfinite(cost) else math.inf
         step = SOLD_OUT_ASK_RAISE_SHARE * (ask if ask > 0.0 else max(last_price or 0.0, 0.0))
         choice = seller_pricing.best_reservation(
             book, rivals, offer, value, last_price, ceiling=min(ask + step, max(limit, value)), floor=value,
