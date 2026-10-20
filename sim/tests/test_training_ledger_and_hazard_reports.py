@@ -314,13 +314,7 @@ check("every cost breakdown multiplies out to the total it states",
 #    printed two lines below it on the same screen. They read "+9.5 a year"
 #    while capital fell 105, then 117, accelerating - a household in a debt
 #    spiral being told it was recovering.
-s = sim(civ="rome_100ad", surveyed=())
-s.capital = -3000.0
-_m = S._agent_dispatch(s, NODES, {"cmd": "money"})
-check("the net counts interest on arrears, which is a cost like any other",
-      _m["net_per_year"] < 0 and _m["what_it_costs_you"]["interest_on_arrears"] > 0,
-      "net %.1f with %.1f of interest"
-      % (_m["net_per_year"], _m["what_it_costs_you"]["interest_on_arrears"]))
+# (The rule, interest counted in the net, is tested as a function in test_arrears_interest_in_net.)
 
 # 5. "A site is sacked" took 62% of a tester's money, restarted every project
 #    and cut their people nearly in half, and printed only those five words -

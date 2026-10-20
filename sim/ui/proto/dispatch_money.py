@@ -348,8 +348,7 @@ def _cmd_money(sim, nodes, cmd, ended):
                 # figures below, not left as a line the net ignores, or a
                 # debt spiral can show a positive net while capital is
                 # actually falling.
-                "interest_on_arrears": round(
-                    max(0.0, -sim.capital) * sim.debt_interest_rate(), 1)},
+                "interest_on_arrears": round(sim.interest_on_arrears(), 1)},
             # revenue_capacity(), not revenue() - this is the STANDING
             # figure (see the comment two lines below, and state's own
             # net_per_year, protocol.py: same fix, same reason). A
@@ -365,7 +364,7 @@ def _cmd_money(sim, nodes, cmd, ended):
             # as a contradiction.
             "net_after_project_spend": round(
                 sim.revenue() - fixed
-                - max(0.0, -sim.capital) * sim.debt_interest_rate()
+                - sim.interest_on_arrears()
                 - getattr(sim, "spend_last_year", 0.0), 1),
             "credit_limit": round(sim.credit_limit(), 1),
             "interest_rate_on_arrears": round(sim.debt_interest_rate(), 4),
