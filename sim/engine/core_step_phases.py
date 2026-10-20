@@ -114,6 +114,7 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, ProjectStartPhaseMixin, 
     def begin_world_year(self):
         """What the society notes before the year starts."""
         self.refresh_derived_nodes()
+        self.refresh_farm_territory()
         # open every book entry at the year's start, so a read before the first step cannot open one at another state
         self._open_market_book()
 

@@ -1149,8 +1149,8 @@ MOUNTAIN = Soil(
 # the next crop. Manure, a legume fallow crop, guano and (much later)
 # synthetic nitrogen are all ways of putting nitrogen back WITHOUT idling
 # the land, which is why each entry below moves fallow_share_of_holding
-# DOWN and soil_fertility_yield_multiplier UP together, through the same
-# field pairing, rather than as three unrelated special cases.
+# DOWN. A legume's gain is the soil nitrogen stock's (soil_nutrients.py);
+# only the Nile's silt still carries a yield multiplier of its own.
 # ----------------------------------------------------------------------
 
 THREE_FIELD_FALLOW_SHARE_OF_HOLDING = declare(
@@ -1175,22 +1175,6 @@ THREE_FIELD_LEGUME_SHARE_OF_HOLDING = declare(
            "and vetch; taking half of it as legumes is recalled, not measured",
     confidence="D",
     why="Feeds the soil nitrogen stock's legume gain (soil_nutrients.py).")
-
-THREE_FIELD_SOIL_FERTILITY_YIELD_MULTIPLIER = declare(
-    "THREE_FIELD_SOIL_FERTILITY_YIELD_MULTIPLIER", 1.15,
-    kind="temporary_heuristic",
-    unit="fraction of reference yield (dimensionless)",
-    source=None,
-    confidence="D",
-    why="The three-field system's spring field commonly carried a legume "
-        "(peas, beans, vetch), whose root-nodule nitrogen fixation raises "
-        "the following grain crop's yield above a bare fallow's. The real "
-        "mechanism is a nitrogen mass balance (how much N a legume fixes "
-        "per hectare versus how much a bare fallow year recovers by "
-        "mineralisation alone) that does not exist in this module yet; "
-        "this number is a placeholder in the right direction, paired with "
-        "the fallow reduction above because both come from the same extra "
-        "nitrogen.")
 
 NILE_FLOOD_RECESSION_FALLOW_SHARE_OF_HOLDING = declare(
     "NILE_FLOOD_RECESSION_FALLOW_SHARE_OF_HOLDING", 0.02,
@@ -1231,7 +1215,7 @@ TWO_FIELD = DEFAULT_ROTATION
 THREE_FIELD = Rotation(
     name="three_field",
     fallow_share_of_holding=THREE_FIELD_FALLOW_SHARE_OF_HOLDING,
-    soil_fertility_yield_multiplier=THREE_FIELD_SOIL_FERTILITY_YIELD_MULTIPLIER,
+    soil_fertility_yield_multiplier=1.0,       # legumes and fallow act through the soil nitrogen stock
     legume_share_of_holding=THREE_FIELD_LEGUME_SHARE_OF_HOLDING)
 
 NILE_FLOOD_RECESSION = Rotation(

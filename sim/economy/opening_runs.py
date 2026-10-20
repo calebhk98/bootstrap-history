@@ -10,6 +10,7 @@ from typing import Dict, List, Mapping, Optional, Tuple
 
 from . import sites, unit_cost
 from .replaced import replaced
+from .setup import recipe_tile_key
 from .types import GoodId, Recipe, TileId
 
 INPUT_OUTPUT_PASSES = 60
@@ -25,12 +26,34 @@ def national_totals(by_tile: Mapping[TileId, Mapping[GoodId, float]]) -> Dict[Go
     return dict(sorted(total.items()))
 
 
+def mean_yields(setup, recipes: Mapping[str, Recipe], tiles=None) -> Dict[str, float]:
+    """{crop recipe: yield factor of a run} the opening's runs are sized at. A tile's people eat what its yield grows,
+    so the runs for a person's food are one over the tile's yield: the factor is the harmonic mean of the yield
+    factors of the tiles the recipe can run on (climate and technique allowing, and yielding something), weighted
+    by their people. A recipe the tiles' yield does not touch has no entry, and its run is the recipe's own."""
+    people = {tile: count for tile, count in setup.opening_population_by_tile.items()
+              if count > 0.0 and (tiles is None or tile in tiles)}
+    means: Dict[str, float] = {}
+    for recipe_id in sorted(recipes):
+        keyed = [tile for tile in sorted(people) if recipe_tile_key(recipe_id, tile) in setup.yield_factor_by_recipe_tile]
+        growing = [tile for tile in sites.suited_tiles(recipes[recipe_id], setup.tiles, keyed, setup.recipe_allowed)
+                   if setup.yield_factor_by_recipe_tile[recipe_tile_key(recipe_id, tile)] > 0.0]
+        if growing:
+            means[recipe_id] = (math.fsum(people[tile] for tile in growing)
+                                / math.fsum(people[tile] / setup.yield_factor_by_recipe_tile[recipe_tile_key(recipe_id, tile)]
+                                            for tile in growing))
+    return means
+
+
 def unit_costs(recipes: Mapping[str, Recipe], prices: Mapping[GoodId, float], wages: Mapping[str, float],
-               rate: float, required: Optional[Mapping[GoodId, float]] = None) -> Dict[GoodId, List[Tuple[float, str]]]:
+               rate: float, required: Optional[Mapping[GoodId, float]] = None,
+               yields: Optional[Mapping[str, float]] = None) -> Dict[GoodId, List[Tuple[float, str]]]:
     """(cost of one unit, recipe) for every recipe that makes each good, cheapest first: a joint run's cost shared
     among its outputs by their value. With `required` (the quantity of each good the opening needs), a run's
     co-product counts only up to what is needed once the runs for the good are made: a by-product nobody wants
-    in that quantity is no value to the run, and the good is made another way."""
+    in that quantity is no value to the run, and the good is made another way. A recipe in `yields` makes that
+    factor of its stated outputs a run."""
+    yields = yields or {}
     costed: Dict[GoodId, List[Tuple[float, str]]] = {}
     for recipe_id, recipe in sorted(recipes.items()):
         cost = (unit_cost.variable_cost_per_run(recipe, prices, wages)
@@ -43,15 +66,18 @@ def unit_costs(recipes: Mapping[str, Recipe], prices: Mapping[GoodId, float], wa
             values = _supported_values(recipe, good, prices, required)
             total_value = math.fsum(values.values())
             share = values[good] / total_value if total_value > 0.0 else 1.0 / len(recipe.outputs)
-            costed.setdefault(good, []).append((cost * share / quantity, recipe_id))
+            made = quantity * yields.get(recipe_id, 1.0)
+            if made > 0.0:
+                costed.setdefault(good, []).append((cost * share / made, recipe_id))
     return {good: sorted(rows) for good, rows in sorted(costed.items())}
 
 
 def ranked_recipes(recipes: Mapping[str, Recipe], prices: Mapping[GoodId, float], wages: Mapping[str, float],
-                   rate: float, required: Optional[Mapping[GoodId, float]] = None) -> Dict[GoodId, List[str]]:
+                   rate: float, required: Optional[Mapping[GoodId, float]] = None,
+                   yields: Optional[Mapping[str, float]] = None) -> Dict[GoodId, List[str]]:
     """The recipes that make each good, cheapest per unit of that good first (`unit_costs`)."""
     return {good: [recipe_id for _cost, recipe_id in rows]
-            for good, rows in unit_costs(recipes, prices, wages, rate, required).items()}
+            for good, rows in unit_costs(recipes, prices, wages, rate, required, yields).items()}
 
 
 def first_choices(ranked: Mapping[GoodId, List[str]]) -> Dict[GoodId, str]:
@@ -118,12 +144,13 @@ def required_quantities(final_by_tile, runs: Mapping[str, float], recipes: Mappi
 
 
 def required_runs(final_by_tile, ranked: Mapping[GoodId, List[str]], recipes: Mapping[str, Recipe],
-                  ceilings: Optional[Mapping[str, float]] = None) -> Dict[str, float]:
+                  ceilings: Optional[Mapping[str, float]] = None, yields: Optional[Mapping[str, float]] = None) -> Dict[str, float]:
     """Runs a year of each recipe that meet final demand and every chosen recipe's own inputs and plant wear
     (a fixed point of the input-output system). A good takes its cheapest recipe up to that recipe's ceiling,
     then the next, so what a deposit cannot feed is made another way; a joint run's other outputs count toward
-    their own goods."""
+    their own goods. A recipe in `yields` makes that factor of its stated outputs a run, so it takes more runs."""
     ceilings = ceilings or {}
+    yields = yields or {}
     runs: Dict[str, float] = {}
     for _ in range(INPUT_OUTPUT_PASSES):
         required = required_quantities(final_by_tile, runs, recipes)
@@ -133,7 +160,7 @@ def required_runs(final_by_tile, ranked: Mapping[GoodId, List[str]], recipes: Ma
             for recipe_id in ranked.get(good, ()):
                 if quantity <= 0.0:
                     break
-                made = recipes[recipe_id].outputs.get(good, 0.0)
+                made = recipes[recipe_id].outputs.get(good, 0.0) * yields.get(recipe_id, 1.0)
                 if made <= 0.0:
                     continue
                 runs_now = max(updated.get(recipe_id, 0.0), min(remaining / made, ceilings.get(recipe_id, math.inf)))
@@ -149,17 +176,17 @@ def required_runs(final_by_tile, ranked: Mapping[GoodId, List[str]], recipes: Ma
 
 
 def choose_recipes(final_by_tile, recipes: Mapping[str, Recipe], prices: Mapping[GoodId, float],
-                   wages: Mapping[str, float], rate: float, ceilings: Optional[Mapping[str, float]] = None
-                   ) -> Tuple[Dict[GoodId, List[str]], Dict[str, float]]:
+                   wages: Mapping[str, float], rate: float, ceilings: Optional[Mapping[str, float]] = None,
+                   yields: Optional[Mapping[str, float]] = None) -> Tuple[Dict[GoodId, List[str]], Dict[str, float]]:
     """(recipes ranked for each good, runs a year of each) for a final demand: the cheapest recipes up to their
     ceilings, chosen again against the demand that choice leaves for a co-product until the choice stops moving."""
-    ranked = ranked_recipes(recipes, prices, wages, rate)
-    runs = required_runs(final_by_tile, ranked, recipes, ceilings)
+    ranked = ranked_recipes(recipes, prices, wages, rate, None, yields)
+    runs = required_runs(final_by_tile, ranked, recipes, ceilings, yields)
     for _pass in range(INCUMBENT_PASSES):
-        chosen = ranked_recipes(recipes, prices, wages, rate, required_quantities(final_by_tile, runs, recipes))
+        chosen = ranked_recipes(recipes, prices, wages, rate, required_quantities(final_by_tile, runs, recipes), yields)
         if chosen == ranked:
             break
-        ranked, runs = chosen, required_runs(final_by_tile, chosen, recipes, ceilings)
+        ranked, runs = chosen, required_runs(final_by_tile, chosen, recipes, ceilings, yields)
     return ranked, runs
 
 

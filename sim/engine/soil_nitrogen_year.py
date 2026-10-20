@@ -5,7 +5,7 @@ Each year the cropped hectares' harvest, the rotation's legumes and the manure s
 (sim/world/soil_nutrients.py), and the tile's yield factor reads it back through `soil_nitrogen_factors`.
 """
 from sim.geography.api import crop_site, tiles_held
-from sim.world import agriculture, agriculture_tile, soil_nutrients
+from sim.world import agriculture, agriculture_tile, land, soil_nutrients
 
 DRAUGHT_HERD = "draught_animal_kg"   # the held stock whose dung the transitional manure rule spreads
 
@@ -14,6 +14,14 @@ class SoilNitrogenMixin:
 
     def _rotation_cropped_share(self):
         return 1.0 - self.labour.farming_technique().rotation.fallow_share_of_holding
+
+    def refresh_farm_territory(self):
+        """The farm's ladder, ceiling and cleared ground's quality from the held tiles as they now are: the soil nitrogen
+        stock and the society's rotation both move a tile's yield factor and cropped hectares."""
+        territory = land.territory_cropland(self.farm_sites())
+        self._farm_ladder = territory.ladder
+        self._farm_arable_ceiling = territory.cropped_hectares
+        self.labour.set_farm_area(self.farm_land.hectares)
 
     def soil_nitrogen_factors(self):
         """{tile: yield factor of its soil nitrogen stock} for the held tiles below native, under the society's rotation."""

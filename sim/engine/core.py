@@ -613,6 +613,7 @@ class Sim(ModStoresMixin, RealPriceRatiosMixin, CoinRevaluationMixin, PartnerCiv
         cleared = getattr(self.state.holdings, "farm_cleared_hectares", None)
         if cleared is not None:
             self.labour.set_farm_area(cleared)
+            self.refresh_farm_territory()
         # Synchronize demographic cohort floats
         if self.state.population is not None and hasattr(self, "population"):
             if self.state.population.pop_children or self.state.population.pop_working_age or self.state.population.pop_elderly:

@@ -110,7 +110,8 @@ def opening_split(setup, recipe: Recipe, area: MarketArea, runs: float) -> Dict[
     (sites.UNSITED_EXTRACTION_ANYWHERE)."""
     by_recipe = sites.limits_by_recipe(setup.site_limits)
     population = setup.opening_population_by_tile
-    suited = sites.suited_tiles(recipe, setup.tiles, area.tiles, setup.recipe_allowed)
+    suited = tuple(tile for tile in sites.suited_tiles(recipe, setup.tiles, area.tiles, setup.recipe_allowed)
+                   if _crops_on(setup, recipe, tile))
     if not suited:
         return {}
     if recipe.site_bound and not by_recipe.get(recipe.recipe_id):
@@ -128,6 +129,11 @@ def opening_split(setup, recipe: Recipe, area: MarketArea, runs: float) -> Dict[
             weights = local       # the area's own sites serve it; only an area with none draws on the others
         return split_runs(runs, weights, {tile: limits[tile].capacity_runs_per_year for tile in limits})
     return split_runs(runs, weights, {})
+
+
+def _crops_on(setup, recipe: Recipe, tile: TileId) -> bool:
+    """False where the recipe takes the tile's yield and the tile yields nothing: a run there makes nothing."""
+    return setup.yield_factor_by_recipe_tile.get(recipe.recipe_id + "@" + tile, 1.0) > 0.0
 
 
 def entry_siting(setup, record, view, area_map, carriage) -> Siting:
