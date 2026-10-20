@@ -50,13 +50,17 @@ def full_cost_per_unit(recipe: Recipe, good: GoodId, output_prices: Mapping[Good
 def demand_at(bids: Sequence[Bid], price: float, price_now: float) -> float:
     """What the bids, made at `price_now`, would take at `price`. A bid's floor is needed whatever the
     price; the rest of its budget, beyond what the floor costs now, is spending a buyer shares out by
-    budget, so it buys in inverse proportion to the price. A buyer's ceiling still holds."""
+    budget, so it buys in inverse proportion to the price, up to what the bid's own schedule would take there
+    (`flexible_quantity`; a buyer with none takes its floor and no more, however cheap the good). A buyer's
+    ceiling still holds."""
     total = 0.0
     for bid in bids:
         if bid.budget <= 0.0 or price > bid.maximum_price:
             continue
         surplus = max(0.0, bid.budget - bid.floor_quantity * price_now)
-        total += bid.floor_quantity + surplus / price
+        reach = bid.flexible_quantity * math.exp(min(700.0, -bid.elasticity * math.log(price / bid.reference_price))) \
+            if bid.flexible_quantity > 0.0 and bid.reference_price > 0.0 and price > 0.0 else 0.0
+        total += bid.floor_quantity + min(surplus / price, reach)
     return total
 
 
