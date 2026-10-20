@@ -13,7 +13,7 @@ from .business_plant import Plant
 from .business_review import Reviewable
 from .records import ActorRecord
 
-from . import imitation, ledger
+from . import imitation, ledger, research
 from .borrowing import Borrower
 from .ledger import Purpose
 from .purses import EDGE_OUTSIDE, Purses
@@ -23,6 +23,7 @@ from .tuning import ATTENTION_SPAN
 
 class Actor(Reviewable, Borrower):
 	kind = "actor"
+	researches = False   # whether the actor does research and takes part in knowledge spreading (`research.py`)
 	purses: Any = None   # the book of purses the actor keeps its account in, when it keeps one
 
 	def __init__(self, policy: Optional[Policy] = None) -> None:
@@ -215,6 +216,8 @@ class Actor(Reviewable, Borrower):
 		finished = []
 		for node_id in sorted(self.works):
 			work = self.works[node_id]
+			if work.get("research"):
+				continue
 			if not imitation.work_year(self, node_id, work, world):
 				continue
 			del self.works[node_id]
@@ -226,6 +229,14 @@ class Actor(Reviewable, Borrower):
 			else:
 				self.record_failure(node_id)
 		return finished
+
+	def start_research(self, node_id: str, world: Any) -> str:
+		"""Begin researching a node (any actor, one path: `research.py`); refuses with the reason."""
+		return research.begin(self, node_id, world)
+
+	def work_on_research(self, world: Any) -> List[str]:
+		"""Advance every research a year at the country's literacy; returns the nodes learned."""
+		return research.work_year(self, world)
 
 	def accept_licence(self, node_id: str, chain: List[str], world: Any) -> None:
 		"""Licensed know-how arrives complete: learned, and the actor can make it."""
@@ -248,6 +259,7 @@ class Actor(Reviewable, Borrower):
 		"""The actor's own business for the year."""
 		self.consider_imitation(world)
 		self.work_on_copies(world)
+		self.work_on_research(world)
 
 	def advance(self, world: Any) -> None:
 		"""One year: act, then press the labour market for the people newly taken on and ease it for those let go."""

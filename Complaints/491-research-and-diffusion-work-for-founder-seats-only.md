@@ -1,6 +1,6 @@
 # Research, staged adoption and diffusion work for founder seats only; a country's own discoveries are invisible
 
-**Status:** open
+**Status:** open (partly done: one research path and actor-to-actor diffusion exist; see Progress)
 
 - **Only seat inventions can be seen or copied.** `demonstrated()` is `founder_inventions()`
   (`sim/engine/agents_port.py`). A `Player`'s or a country's own research never becomes visible to anyone.
@@ -27,3 +27,21 @@ push a technology that the market would not adopt.
 What it would take: one research path for every actor through the founder's start gates; a register of
 every actor's non-baseline knowledge for `demonstrated`; an awareness state and contact events that
 discount search; per-actor adoption stage and unit count; subsidy and mandate levers on the government (481).
+
+## Progress
+
+- Done: `sim/agents/research.py` is one research path for every actor that has `researches = True` (a player,
+  a firm, a government): `begin`, `plan`, `work_year`, `diffuse`. `Actor.start_research` and
+  `Actor.work_on_research` call it, and `Actor.act` advances research for firms and states. The same node costs
+  the same through the labour market and purse; progress scales with `research_productivity()` of the actor's
+  country; completion adds the node to the actor's own `knowledge`. A research project is a `works` entry
+  with `research: True`, which `work_on_copies` skips.
+- Done: knowledge spreads between actors once a year (`ActorRegistry.advance` calls `research.diffuse`): an
+  actor that knows what a node rests on learns it at the half-life the founder's venture diffusion uses
+  (`Sim.knowledge_half_life_years`), scaled by the node's visibility at the distance between the two actors.
+  Test: `python3 -m sim.tests --only research_every_actor`.
+- Left: the founder's own research (`projects_starting.py`) is still its own path, not a caller of
+  `research.begin`; actors still skip the start gates (materials, staff, scholars, `req_any` substitutes);
+  no AI choice of research for firms and states (only a `Player` with an AI controller chooses);
+  `demonstrated()` still reads seat builds only, so actor-known nodes are not copyable through
+  `imitation.missing_chain`; the staged-adoption, awareness, contact-trigger and subsidy sub-gaps are untouched.

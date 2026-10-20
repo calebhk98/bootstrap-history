@@ -6,9 +6,9 @@ A human or LLM player acts only through queued orders (`player_commands.py`) and
 an AI player also decides for itself.
 """
 import math
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, List, Optional
 
-from . import business_books, imitation, ledger
+from . import business_books, ledger, research
 from .base import RecordedActor
 from .player_commands import CommandRejected, run_orders
 from .policy import Decision, Option
@@ -19,6 +19,7 @@ from .tuning_player import PLAYER_VISIBLE_EXPOSURE
 
 class Player(RecordedActor):
 	kind = "player"
+	researches = True
 
 	# Set by the registry: how many other operators share a concern's market.
 	rivals_of: Optional[Callable[[str, str], float]] = None
@@ -30,59 +31,6 @@ class Player(RecordedActor):
 
 	def credit_earning(self, world: Any) -> float:
 		return max(0.0, self.record.last_margin)
-
-	# ---- research ---------------------------------------------------------
-	def missing_prerequisites(self, node_id: str, world: Any) -> List[str]:
-		return [pre for pre in world.nodes[node_id].get("pre") or () if not self.knows(pre, world)]
-
-	def research_plan(self, node_id: str, world: Any) -> Dict[str, Any]:
-		"""Hours, money and calendar for pioneering one node at full effort."""
-		node = world.nodes[node_id]
-		hours = dict(node.get("lab") or {})
-		base_labour = sum(amount * world.labour_market.quote(trade, 0.0, self) for trade, amount in hours.items())
-		premium = sum(amount * world.labour_market.quote(trade, 0.0, self) * HIRING_PREMIUM
-					  for trade, amount in hours.items() if self.workforce.get(trade, 0.0) <= 0)
-		other_money = max(0.0, world.copy_cost(node_id) - base_labour)
-		return {"hours": hours, "money": other_money + premium, "labour_cost": base_labour,
-				"total": other_money + premium + base_labour,
-				"years": max(1, int(math.ceil(float(node.get("yrs") or 0.0))))}
-
-	def research_chance(self, node_id: str, world: Any) -> float:
-		return 1.0 - min(1.0, world.copy_risk(node_id))
-
-	def start_research(self, node_id: str, world: Any) -> str:
-		"""Begin researching a node; refuses with the reason."""
-		if node_id not in world.nodes:
-			raise CommandRejected("no such node")
-		if self.knows(node_id, world):
-			raise CommandRejected("already known")
-		if node_id in self.works:
-			raise CommandRejected("already being researched")
-		missing = self.missing_prerequisites(node_id, world)
-		if missing:
-			raise CommandRejected("prerequisites unknown: " + ", ".join(sorted(missing)))
-		plan = self.research_plan(node_id, world)
-		if plan["total"] > self.copy_budget(world):
-			raise CommandRejected("cannot afford the research")
-		self.works[node_id] = imitation.start_work(node_id, [node_id], plan, world.year)
-		return "research begun, %d years" % plan["years"]
-
-	def work_on_research(self, world: Any) -> List[str]:
-		"""Advance every research a year; returns the nodes learned."""
-		self.workforce.clear()
-		learned = []
-		for node_id in sorted(self.works):
-			work = self.works[node_id]
-			if not imitation.work_year(self, node_id, work, world, world.research_productivity()):
-				continue
-			del self.works[node_id]
-			roll = world.rng_for(world.year, self.kind, node_id, self.identity())
-			if roll.random() < self.research_chance(node_id, world):
-				self.learn([node_id], world)
-				learned.append(node_id)
-			else:
-				self.record_failure(node_id)
-		return learned
 
 	# ---- concerns ---------------------------------------------------------
 	def begin_concern(self, node_id: str, world: Any) -> str:
@@ -141,14 +89,14 @@ class Player(RecordedActor):
 	def research_options(self, world: Any) -> List[Option]:
 		candidates = []
 		for node_id in sorted(world.nodes):
-			if self.knows(node_id, world) or node_id in self.works or self.missing_prerequisites(node_id, world):
+			if self.knows(node_id, world) or node_id in self.works or research.missing_prerequisites(self, node_id, world):
 				continue
 			margin = self.expected_margin(node_id, world)
 			if margin > 0:
 				candidates.append((margin * VALUE_HORIZON_YEARS, node_id))
 		candidates.sort(key=lambda item: (-item[0], item[1]))
-		return [Option(subject=node_id, worth=worth, cost=self.research_plan(node_id, world)["total"],
-					   chance=self.research_chance(node_id, world))
+		return [Option(subject=node_id, worth=worth, cost=research.plan(self, node_id, world)["total"],
+					   chance=research.chance(node_id, world))
 				for worth, node_id in candidates[:ATTENTION_SPAN]]
 
 	def decide(self, world: Any) -> None:
@@ -171,6 +119,7 @@ class Player(RecordedActor):
 		run_orders(self, world)
 		if self.record.controller == "ai":
 			self.decide(world)
+		self.workforce.clear()
 		self.work_on_research(world)
 		self.operate(world)
 
