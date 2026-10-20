@@ -217,3 +217,24 @@ Bisected on the first-parent merges, one topic list per commit (`python3 -m sim.
   its tightness factor saturates (1.148) with or without an army. The test now reads the world's flagged fallback
   (`trade_data.fallback_trade_of`) and fails on the real cause: the hours left after farm and specialists should go to
   the fallback trade in `sim/labour/labour_allocation.py` (`society_hours`).
+
+## Fixes on `fix-firms-hire-recipe-trades`
+
+- Fixed: a business's crew is the trades its recipe names. `Sim.venture_crew_by_trade` (`plant_figures.crew_by_trade`)
+  is the one function the founder's path (`venture_hands`) and the agents path (`concern_staff`) read; a plant whose data
+  states no hours takes the flagged unskilled trade, not a named generic one. Regression: `crew_is_the_recipes_trades`.
+  `firm_borrows_to_enter`, `firm_expansion`, `firm_costs_scale` pass. `founder_and_firm_agree` and `firm_count_whole_game`
+  now read the crew as the sum over its trades (their subject is the founder and firm agreeing, not the artisan pool).
+- Fixed: `soldiers_leave_production`. The specialists work their people's hours and `society_hours` gives the flagged
+  fallback trade the hours left after farm and specialists (`labour_allocation._non_farm_shares(rest_hours)`).
+- Fixed: `auto_hire_buys_room`. The founder's auto_hire still hires the generic craft trade, whose estimate of people had
+  fallen to the no-demand floor ("nobody left to hire"); the generic craftsman is any craftsman, so its share of town
+  work is that of the craft family together (`labour_population._share_of_town_work`).
+- Fixed, test: `failure_and_bounty_money` restated for 589: late spending past the credit limit is carried as arrears no
+  larger than the spending, counts a year each year, and is defaulted in year `ARREARS_YEARS_BEFORE_DEFAULT`.
+- Still failing, not the trades: `firm_entry_default_game`. At HEAD the opening agent economy's wages are several times
+  the earlier ones (furnaceman and engraver most; measure with `economy.agent_wage_per_hour(trade)` on a default game),
+  which lifts the iron bar's long-run price and so cuts its market factor, and the entrant's value test
+  (`entry_round.NicheEntry.found`) fails on the copy cost. The jump is not in 609-614: wages are normal at 549
+  (84858956) and at 5e744142, and high at 44cd2125 (Merge 605-607, saving finds a use: households count what they own of
+  the firms and the opening estimates it from the runs). Owner of 605-607 to look at the opening wage level.
