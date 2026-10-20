@@ -656,3 +656,14 @@ Reading, in the order a maker meets the limits:
 The inflation the orchestrator saw over 60 years is consistent with this: the spend-down frees demand at the stock-adjustment pace while
 supply can move only a quarter of capacity a year and, for chains, only as fast as the input makers do. Not tested here: raising
 `OUTPUT_CHANGE_SHARE_PER_YEAR` (that would loosen the limit that stops chains from amplifying, per the earlier section) and the 60-year run.
+
+## Measured and not merged: the opening sized net of the own-plot cut (branch 545-opening-sizes-for-bought-food)
+
+Sizing the opening's producers with the year's own `_less_what_it_grew` (through a new `opening_own.less_what_it_grows`)
+makes opening and year agree by construction, but on the short opening it lowers traded value and output further and
+the stock gate still dominates later years. Settling income on the cut demand collapses the economy toward nothing (the
+526 collapse). The root is the year's own-plot rule: every unhired hour goes onto a plot with unlimited free land, so
+households grow nearly all their staples and buy almost none. Land-limited own plots (Complaint 551, branch
+`551-households-farm-the-plots-they-hold`) are needed before the opening can be sized sensibly. Measured with
+`ROME_SPIN_UP_YEARS=3,2 PYTHONPATH=. python3 <scratch probe p473_hh.py> 5 out.json` on each commit; the probe is not
+committed.
