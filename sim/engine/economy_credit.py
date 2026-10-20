@@ -250,12 +250,13 @@ class CreditMixin:
         household = self.state.household
         shed = [closure.entry_key for closure in self.review_ventures((business_review.LOSS_MAKING,), year)]
         if shed:
+            in_arrears = household.capital < 0
             # NAME THEM: "stopped maintaining 1 works" tells a player
             # nothing - not which one, not how to get it back.
             household.log.append((year, LogLine("arrears_closed_concerns", "%sclosed %d concern%s that cost more "
                                  "than they returned: %s. You still know how; "
                                  "'restore' reopens one when you can pay for it"
-                             % ("in arrears, so " if household.capital < 0 else "", len(shed),
+                             % ("in arrears, so " if in_arrears else "", len(shed),
                                 "" if len(shed) == 1 else "s", ", ".join(shed)), concerns=list(shed))))
 
     DEBT_RATE_REPUTATION_DISCOUNT_CAP = declare(
