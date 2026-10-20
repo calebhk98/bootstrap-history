@@ -376,9 +376,8 @@ class ProductionMixin:
         baskets = self.concern_baskets_now(node["id"])
         if baskets is None or not self.concern_goods_have_market(node["id"]):
             return 1.0
-        return node_revenue_market.market_factor(
-            {"_output_per_year": baskets.outputs, "_purchases_per_year": baskets.purchases},
-            self._material_prices(), self.goods_market.home_unit_price)
+        return node_revenue_market.basket_market_factor(
+            baskets.outputs, baskets.purchases, self._material_prices(), self.goods_market.home_unit_price)
 
     def concern_takings(self, node_id, ramp, with_output_factor=True):
         """Yearly takings of one concern at a given ramp, before market saturation: its loaded figure
