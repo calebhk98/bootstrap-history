@@ -116,9 +116,11 @@ def with_offer(ordered: List[Offer], offer: Offer) -> List[Offer]:
 
 
 def clear(bids: Sequence[Bid], offers: Sequence[Offer], good: GoodId, area: AreaId,
-          currency: CurrencyId, last_price: Optional[float]) -> ClearingResult:
-    """Clear one market for one year. Deterministic whatever the order of `bids` and `offers`."""
-    buyers = Buyers(bids, last_price)
+          currency: CurrencyId, last_price: Optional[float], buyers: Optional[Buyers] = None) -> ClearingResult:
+    """Clear one market for one year. Deterministic whatever the order of `bids` and `offers`. `buyers` is
+    `Buyers(bids, last_price)` when the caller clears the same bids against several books."""
+    if buyers is None:
+        buyers = Buyers(bids, last_price)
     bids = buyers.bids
     price, eligible, supply, wants = _crossing(buyers, in_clearing_order(offers))
     if eligible is None:
@@ -134,6 +136,20 @@ def clear(bids: Sequence[Bid], offers: Sequence[Offer], good: GoodId, area: Area
     traded -= wash
     unmet = math.fsum([max(0.0, bid.floor_quantity - quantity) for bid, quantity in zip(bids, served)])
     return ClearingResult(good, area, currency, price, traded, wanted, supply, unmet, tuple(fills))
+
+
+def sold_by_seller(buyers: Buyers, offers: Sequence[Offer]) -> dict:
+    """(seller, tile) -> what that seller's offers sell there, as the sell fills of `clear` add up (a non-edge
+    seller's fills are untouched by self-trade washing), without building fills."""
+    price, eligible, supply, _wants = _crossing(buyers, in_clearing_order(offers), with_wants=False)
+    sold: dict = {}
+    if eligible is None:
+        return sold
+    for offer, quantity in _fill_sellers(eligible, buyers.traded_at(price, supply)):
+        if quantity > 0.0:
+            key = (offer.seller, offer.tile)
+            sold[key] = sold.get(key, 0.0) + quantity
+    return sold
 
 
 def price_and_sold(buyers: Buyers, ordered: List[Offer], seller: str) -> Tuple[float, float]:

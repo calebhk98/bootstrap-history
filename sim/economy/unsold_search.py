@@ -9,7 +9,6 @@ a seller that undercuts leaves its rivals unsold in turn; the level is the highe
 out or sit at their floors, found by bisection on whole-market clears. A market with no unsold searchable
 stock clears once, and a sold-out seller's ask is raised between years by ask_raise.py.
 """
-import dataclasses
 import math
 from typing import List, Optional, Sequence, Tuple
 
@@ -21,18 +20,18 @@ from .types import Offer
 SEARCH_PRECISION = 1e-4     # numerical tolerance of the bisection on the ask level, not a model number
 
 
-def _sold_by_offer(result, offers: Sequence[Offer]) -> List[float]:
+def _sold_by_offer(result, offers: Sequence[Offer]) -> dict:
     sold = {}
     for fill in result.fills:
         if fill.side == "sell":
             key = (fill.agent, fill.tile)
             sold[key] = sold.get(key, 0.0) + fill.quantity
-    return [sold.get((each.seller, each.tile), 0.0) for each in offers]
+    return sold
 
 
-def _unsold(result, offers: Sequence[Offer], indices: Sequence[int]) -> List[int]:
-    sold = _sold_by_offer(result, offers)
-    return [index for index in indices if sold[index] < offers[index].quantity * (1.0 - ROUNDING_SHARE)]
+def _unsold(sold: dict, offers: Sequence[Offer], indices: Sequence[int]) -> List[int]:
+    return [index for index in indices
+            if sold.get((offers[index].seller, offers[index].tile), 0.0) < offers[index].quantity * (1.0 - ROUNDING_SHARE)]
 
 
 def _floors(setup, record, view, offers: Sequence[Offer], original: Sequence[Offer]) -> dict:
@@ -63,8 +62,9 @@ def _held_value(setup, record, view, offer: Offer) -> float:
 
 
 def _with_level(offers: Sequence[Offer], floors: dict, level: float) -> List[Offer]:
-    return [dataclasses.replace(each, reservation_price=min(each.reservation_price, max(floors[index], level)))
-            if index in floors else each for index, each in enumerate(offers)]
+    return [Offer(each.seller, each.good, each.area, each.tile, each.quantity,
+                  min(each.reservation_price, max(floors[index], level))) if index in floors else each
+            for index, each in enumerate(offers)]
 
 
 def clear_with_search(setup, record, view, bids, original: Sequence[Offer], offers: Sequence[Offer], good, area,
@@ -72,18 +72,19 @@ def clear_with_search(setup, record, view, bids, original: Sequence[Offer], offe
     """(the offers after the search, the market's clearing with them). `original` are the offers before the
     sellers re-chose, `offers` after; a market with no unsold searchable stock clears once."""
     offers = list(offers)
-    result = goods_market.clear(bids, offers, good, area, currency, last_price)
+    buyers = goods_market.Buyers(bids, last_price)       # the same bids meet every trial book
+    result = goods_market.clear(bids, offers, good, area, currency, last_price, buyers)
     floors = _floors(setup, record, view, offers, original)
-    unsold = _unsold(result, offers, list(floors))
+    unsold = _unsold(_sold_by_offer(result, offers), offers, list(floors))
     if not unsold:
         return offers, result
     searched = list(floors)       # a seller undercut by a lower ask becomes unsold in turn: all are searched together
 
     def trial(level: float):
         candidate = _with_level(offers, {index: floors[index] for index in searched}, level)
-        cleared = goods_market.clear(bids, candidate, good, area, currency, last_price)
-        return candidate, cleared, [index for index in _unsold(cleared, candidate, searched)
-                                    if candidate[index].reservation_price > floors[index]]
+        sold = goods_market.sold_by_seller(buyers, candidate)       # the fills are built once, for the level kept
+        return candidate, [index for index in _unsold(sold, candidate, searched)
+                           if candidate[index].reservation_price > floors[index]]
 
     low = min(floors[index] for index in searched)
     best = trial(low)         # every searched ask at its floor: nothing above a floor can stay unsold
@@ -91,8 +92,8 @@ def clear_with_search(setup, record, view, bids, original: Sequence[Offer], offe
     while high - low > SEARCH_PRECISION * max(high, 1e-300):
         middle = math.sqrt(low * high) if low > 0.0 else 0.5 * (low + high)
         attempt = trial(middle)
-        if attempt[2]:
+        if attempt[1]:
             high = middle
         else:
             low, best = middle, attempt
-    return best[0], best[1]
+    return best[0], goods_market.clear(bids, best[0], good, area, currency, last_price, buyers)
