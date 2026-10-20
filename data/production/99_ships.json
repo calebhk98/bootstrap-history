@@ -1,0 +1,54 @@
+{
+  "_note": "Counted wooden vessels. Material quantities and work rates are explicitly estimated from physical reconstruction evidence; no sale price is prescribed. Service lives are in data/world/service_lives.json. naval_crew marks a vessel the state may buy for sea control and names its operating trades.",
+  "materials": {
+    "merchant_ship": {
+      "outputs": {
+        "merchant_ship": 1.0
+      },
+      "inputs": {
+        "timber_m3": 18.0,
+        "wood_tar_kg": 200.0,
+        "cordage_kg": 200.0,
+        "sailcloth_kg": 100.0,
+        "copper_kg": 100.0
+      },
+      "labour_hours": {
+        "shipwright": 8000.0,
+        "labourer": 2000.0
+      },
+      "unit_dimension": "count",
+      "unit_mass_kg": 9000.0,
+      "basis": "per small shell-first merchant sailing vessel, without cargo or crew",
+      "yield_basis": "MASS: Rudan et al. 2024, Heritage 7, 6712-6728, doi:10.3390/heritage7120310, section 2 (https://pdfs.semanticscholar.org/f049/335ac58c23206e2cba18a0e74431f425ee8d.pdf), opened: the Kyrenia reconstruction uses a calculated 9 t lightship, not its laden displacement. This is a model estimate, not a surviving ancient bill. INPUTS: Katzev and Katzev, INA Newsletter 13(3), 1986, pp. 6-10 (https://nauticalarch.org/wp-content/uploads/2015/12/INAQ1986-13-3.pdf), opened, documents pine hull, copper spikes, pitch coating and rigged square sail. Estimated mass allocation: 14 m3 retained timber at the existing timber recipe density of 600 kg/m3 gives 8400 kg; tar, cordage, sailcloth and copper add 600 kg. Purchasing 18 m3 allows 4 m3 for shaping offcuts. Tar stands for the reported pitch mixture. These allocations and labour are TEMPORARY HEURISTICS, confidence D, not measured excavation quantities: four shipwrights working 250 eight-hour days give 8000 skilled hours, with one helper giving 2000. Retire these estimates when complaint 629 carrier-capital recipes have measured scantlings, offcuts and construction work logs.",
+      "conf": "D",
+      "requires_node": "sea_mortise_tenon",
+      "capital_asset": true
+    },
+    "warship": {
+      "outputs": {
+        "warship": 1.0
+      },
+      "inputs": {
+        "timber_m3": 50.0,
+        "wood_tar_kg": 400.0,
+        "cordage_kg": 200.0,
+        "sailcloth_kg": 200.0,
+        "bronze_kg": 200.0
+      },
+      "labour_hours": {
+        "shipwright": 24000.0,
+        "labourer": 6000.0
+      },
+      "unit_dimension": "count",
+      "unit_mass_kg": 25000.0,
+      "naval_crew": {
+        "sailor": 200.0
+      },
+      "basis": "per light wooden oared warship, rigged with oars and ram, without crew",
+      "yield_basis": "MASS: Morrison, Coates and Rankov, The Athenian Trireme (2000), empty Olympias about 25 tonnes; recalled, not opened in full. Hellenic Navy construction account (https://averof.hellenicnavy.gr/en/trireme-olympias/construction-of-the-trireme-by-the-hn/), opened, records a 200 kg cast ram. Estimated allocation: 40 m3 retained timber at the existing timber recipe density of 600 kg/m3 is 24000 kg, plus 400 kg coating, 200 kg each of rope, sail and bronze ram gives 25000 kg. Purchase 50 m3 to allow 10 m3 shaping waste. Pitch coating and rope/cloth follow the observed wooden merchant construction described in merchant_ship. Crew: 170 rowers plus other crew, rounded to 200 sailors, from Morrison, Coates and Rankov (2000), recalled. The material allocations and 24000 shipwright plus 6000 helper hours are TEMPORARY HEURISTICS, confidence D: three times the small merchant construction work for a longer hull with oar fittings. Retire these estimates under complaint 629 with measured warship scantlings and construction logs. No price or historical fleet size sets the bill.",
+      "conf": "D",
+      "requires_node": "sea_mortise_tenon",
+      "capital_asset": true
+    }
+  }
+}

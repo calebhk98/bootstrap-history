@@ -1,5 +1,5 @@
 {
-  "_doc": "Service life of a durable good: the years a stock of it serves before it is worn out or lost, so households hold it and buy only to keep it up (the economy reads a good with a service life as a durable; a good not listed is used up within the year). Keyed by the good ids of data/production. Estimates, confidence C or D; a wear model per good (use, material, maintenance) would derive them. Carts and ships are not goods in the production data yet, so they have no entry; timber, cloth and other materials that are also consumed as inputs are left out until a held-stock model separates the two uses.",
+  "_doc": "Service life of a durable good: the years a stock of it serves before it is worn out or lost, so users hold it and buy only to keep it up (the economy reads a good with a service life as a durable; a good not listed is used up within the year). Keyed by the good ids of data/production. Estimates, confidence C or D; a wear model per good (use, material, maintenance) would derive them. Carts are not goods in the production data yet, so they have no entry; timber, cloth and other materials that are also consumed as inputs are left out until a held-stock model separates the two uses.",
   "years": {
     "brick_1000": {
       "years": 80,
@@ -65,6 +65,16 @@
       "years": 50,
       "confidence": "D",
       "source": "Ornament metal is durable; about 2 per cent worn or lost a year, the figure already stated in data/world/needs.json (ornament satiation_basis), is a fifty-year life."
+    },
+    "merchant_ship": {
+      "years": 30,
+      "confidence": "C",
+      "source": "Rudan et al. 2024, Heritage 7, 6712-6728, doi:10.3390/heritage7120310, section 1, opened (https://pdfs.semanticscholar.org/f049/335ac58c23206e2cba18a0e74431f425ee8d.pdf): Kyrenia built in the second half of the fourth century BC and lost in the first decades of the third. Thirty years is an estimate within that archaeological interval, not a measured mean; old timber dates are not treated as the vessel age. Repairs are folded into replacement wear pending the carrier-capital maintenance model (complaint 629)."
+    },
+    "warship": {
+      "years": 20,
+      "confidence": "C",
+      "source": "D. H. Kennedy, Cable Reinforcement of the Athenian Trireme, Mariners Mirror 62 (1976), doi:10.1080/00253359.1976.10658957: about twenty years, mostly laid up. The publisher indexed extract was checked; full text was inaccessible. This is the reported approximate service life, not a guarantee under continuous service. Coates, Trireme Life Span and Leakage (2012), identifies leakage and deformation as physical limits; full chapter recalled, not reopened. Replacement wear includes refits until maintenance is separated (complaint 629)."
     }
   }
 }

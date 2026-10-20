@@ -8,8 +8,8 @@ market's price, so it is demand like any other.
 from typing import Any, Dict, List
 
 from .budget_line import Line
-from .tuning_spending import (CARPENTERS_PER_SHIP, COAST_KM_PER_SHIP, COURT_RETAINERS_PER_OFFICIAL,
-							  CREW_PER_SHIP, DOLE_SHARE_OF_URBAN_PEOPLE, MASONRY_PERSON_YEARS_PER_M2,
+from .tuning_spending import (COAST_KM_PER_SHIP, COURT_RETAINERS_PER_OFFICIAL,
+							  DOLE_SHARE_OF_URBAN_PEOPLE, MASONRY_PERSON_YEARS_PER_M2,
 							  PUBLIC_BUILDING_LIFE_YEARS, PUBLIC_FLOOR_AREA_PER_URBAN_PERSON_M2,
 							  MAX_STATE_SHARE_OF_TRADE, ROAD_UPKEEP_PERSON_YEARS_PER_KM)
 
@@ -53,7 +53,21 @@ def dole_line(world: Any) -> List[Line]:
 
 def navy_line(world: Any) -> List[Line]:
 	ships = world.territory().coast_km / COAST_KM_PER_SHIP
-	if ships <= 0.0 or not world.trade_exists("sailor"):
+	if ships <= 0.0:
 		return []
-	return [paid(world, "navy", "requisition",
-				 {"sailor": ships * CREW_PER_SHIP, "carpenter": ships * CARPENTERS_PER_SHIP})]
+	options = [good for good in world.fleet_goods()
+			   if good["life"] > 0.0 and all(world.trade_exists(trade) for trade in good["crew"])]
+	if not options:
+		return []
+	good = min(options, key=lambda option: (
+		world.material_cost(option["material"], 0.001) / option["life"]
+		+ sum(count * world.pay_per_person_year(trade) for trade, count in option["crew"].items()),
+		option["material"]))
+	line = paid(world, "navy", "requisition", {trade: ships * count for trade, count in good["crew"].items()})
+	missing = max(0.0, ships - good["held"] * max(0.0, 1.0 - 1.0 / good["life"]))
+	if missing > 0.0:
+		# The market port counts non-gram material units in thousands, including counted goods.
+		quantity = missing / 1000.0
+		line.materials = {world.commodity_of(good["material"]): quantity}
+		line.material_cost = world.material_cost(good["material"], quantity)
+	return [line]
