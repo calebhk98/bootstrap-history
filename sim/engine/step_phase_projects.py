@@ -5,6 +5,7 @@ A part of the year's phases (core_step_phases.py); Sim inherits it through StepP
 from sim.refusal import LogLine, Refusal
 from sim.agents.api import edges
 from .units_prose import plain_number
+from .project_funding import fund_year, project_purse
 from .hour_offer import hours_offered, unmet_directive_cause
 from .projects_trade_wait import STALL_YEARS_BEFORE_ABANDONMENT
 
@@ -337,61 +338,21 @@ class ProjectProgressPhaseMixin:
             + upkeep
             + mine_operating
         )
-        reserve = max(0.0, fixed - revenue)
-        purse = (
-            self.state.household.capital
-            + self.credit_limit(_rev=revenue, _upkeep=upkeep) * 0.6
-            - reserve
-        )
-        # NOTHING OWED IS NOT THE SAME AS NOTHING AFFORDABLE: a project
-        # with cost_left already at zero asks for money=0 this year, and
-        # the money>purse test must not fire just because purse itself has
-        # gone negative from deep arrears unrelated to this project's own
-        # bill - a fully paid project, needing not one more denarius, must
-        # still be free to make purely calendar-waiting progress. The gate
-        # is on the household's purse only when this project actually
-        # needs something from it.
-        if money > 0 and money > purse:
-            # PROPORTIONAL, not a flat half: the refund must scale by how
-            # underfunded the purse actually is (`funded_frac`), the same
-            # way the trade-shortage case two blocks up already scales its
-            # refund by how much of the need went unmet (worst). A flat
-            # per*0.5 refund whenever the purse falls short AT ALL, whether
-            # by one denarius or by the whole bill, would give a project
-            # funded to 95% of what it needed the same fixed half-progress
-            # loss as one funded to 5%.
-            funded_frac = 0.0 if money <= 0 else max(0.0, min(1.0, purse / money))
-            money = max(0.0, purse)
-            # Capped at what was actually taken off, and at what has not
-            # already been handed back by the trade-shortage refund
-            # above. See spent_hours: you cannot be refunded work you
-            # never did, and you cannot be refunded the same hour twice.
-            give_back = min(spent_hours - refunded, per * (1.0 - funded_frac))
-            project_state["ph_left"] += max(0.0, give_back)
-            refunded += max(0.0, give_back)
+        purse = project_purse(self.state.household.capital, self.credit_limit(_rev=revenue, _upkeep=upkeep), fixed, revenue)
+        # A project with nothing left to pay asks for no money, so a purse gone negative from arrears that are not
+        # its own does not stop it making calendar-waiting progress (fund_year).
+        funding = fund_year(money, purse, spent_hours, refunded, per, self.state.household.capital < 0)
+        if funding.underfunded:
+            project_state["ph_left"] += funding.gave_back
             project_state["underfunded_this_year"] = True
-            # WHY, not just that: hours reported as "offered" with none
-            # "effective" is meaningless without a reason. Arrears are the
-            # reason: the purse a project may draw on is what you hold
-            # plus part of your credit, less what your fixed costs need,
-            # and in arrears that is nothing at all.
-            project_state["why_underfunded"] = (
-                "in arrears: after fixed costs there is nothing left to "
-                "draw on, so the hours offered this year did almost "
-                "nothing" if self.state.household.capital < 0 else
-                "this year's instalment is more than the purse will bear")
-            # SAY IT NOW, NOT ONLY WHEN ASKED. `why_underfunded` sits on
-            # the project and answers the question if a player thinks
-            # to check `why` or `portfolio` - but the founder-hours lost
-            # here never come back, whatever the player does next, and
-            # nothing prompted them to look. Recorded here (only the
-            # arrears case, only if it actually cost real hours) and
-            # logged once below, after the loop.
-            if self.state.household.capital < 0 and give_back > 1.0:
-                _arrears_hours_lost.append((node_id, round(give_back, 0)))
+            project_state["why_underfunded"] = funding.why
+            # The founder-hours lost to arrears never come back; they are logged once after the loop.
+            if funding.hours_lost_to_arrears:
+                _arrears_hours_lost.append((node_id, round(funding.hours_lost_to_arrears, 0)))
         else:
             project_state.pop("underfunded_this_year", None)
             project_state.pop("why_underfunded", None)
+        money, refunded = funding.money, funding.refunded
         return money, refunded
 
     def _project_progress_finish(self, node_id, project_state, money, refunded,
