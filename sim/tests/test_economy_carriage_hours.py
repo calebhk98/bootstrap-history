@@ -297,6 +297,30 @@ class WageLoanTests(unittest.TestCase):
         asked = carriage_hours.wage_loans(setup, self.record(20.0))
         self.assertAlmostEqual(asked[0].amount, 30.0)
 
+    def test_the_wage_loan_covers_only_the_hours_the_market_gave_it_last_year(self):
+        # Complaint 473: bids for far more hours than the area's people offer clear at a high wage, and a loan
+        # for the whole bid at that wage would draw every household's spare cash.
+        setup = trading_setup()
+        record = self.record(0.0)
+        market = (fixture.LABOURER, "work@town")
+        asked = carriage_hours.wage_loans(setup, record, {"m1": {market: 10.0}})
+        self.assertAlmostEqual(asked[0].amount, 10.0 * 0.5)
+        self.assertEqual(carriage_hours.wage_loans(setup, record, {"m1": {market: 0.0}}), [])
+
+    def test_a_merchant_without_a_plan_is_sized_on_no_more_than_the_markets_whole_supply(self):
+        market = (fixture.LABOURER, "work@town")
+        asked = carriage_hours.wage_loans(trading_setup(), self.record(0.0), {}, {market: 20.0})
+        self.assertAlmostEqual(asked[0].amount, 20.0 * 0.5)
+
+    def test_a_plan_of_no_hours_asks_for_nothing(self):
+        record = self.record(0.0)
+        record.merchants["m1"].carriage_hours_wanted = {market_key(fixture.LABOURER, "town"): 0.0}
+        self.assertEqual(carriage_hours.wage_loans(trading_setup(), record, {"m1": {}}), [])
+
+    def test_a_merchant_with_no_crew_plan_last_year_is_sized_on_the_hours_it_wants(self):
+        asked = carriage_hours.wage_loans(trading_setup(), self.record(0.0), {})
+        self.assertAlmostEqual(asked[0].amount, 100.0 * 0.5)
+
     def test_a_merchant_with_cash_enough_asks_for_nothing(self):
         setup = trading_setup()
         self.assertEqual(carriage_hours.wage_loans(setup, self.record(80.0)), [])

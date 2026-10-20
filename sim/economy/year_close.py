@@ -51,6 +51,10 @@ def dispatch_merchants(setup, record, carriage, ledger: YearLedger, area_map) ->
             continue
         hire = None
         if crew is not None:
+            if carriage_hours.planned(merchant):
+                ledger.crew_hours_bought[merchant.agent_id] = {
+                    (trade, area): bought for (employer, trade, area), (bought, _paid) in index.items()
+                    if employer == merchant.agent_id}
             hours_hired, wages = ((carriage_hours.engaged(record, merchant, index)) if carriage_hours.planned(merchant)
                                   else (None, {}))
             hire = merchants.CrewHire(crew.hours_per_tonne, hours_hired, wages,
@@ -193,7 +197,9 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage) ->
         for transfer in paid:
             property_income[transfer.payee] = property_income.get(transfer.payee, 0.0) + transfer.amount
     if carriage_hours.hires(setup):    # after the owners took their profit: the cash left is what next year's carriers can be paid from
-        record.loan_requests.extend(carriage_hours.wage_loans(setup, record))
+        record.loan_requests.extend(carriage_hours.wage_loans(setup, record, ledger.crew_hours_bought,
+                                                           {(result.trade, result.area): result.hours_hired + result.idle_hours
+                                                            for result in ledger.labour_results}))
     for cohort_id, cohort in sorted(record.cohorts.items()):
         received = dict(ledger.received.get(cohort_id, {}))
         for good, quantity in ledger.grown.get(cohort_id, {}).items():

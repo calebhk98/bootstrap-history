@@ -428,3 +428,46 @@ supply means credit demand; `state` non-empty means the treasury.
 the households' reservation rate while supply swamps demand makes the credit market inert (the funds pool is almost all of
 the money stock); the one-way step limit (instant rise to the lowest ask, slow fall) makes any one-year price jump a ratcheted
 spike; unbounded `maximum_rate` from `unit_cost.return_on_capital` lets one cheap plant sale set the clearing price when supply is short.
+
+## Measured: where the households' cash goes in the year of the rate spike (branch 473-where-household-cash-goes)
+
+**Finding.** Households' cash is lent out, not lost. Before the year's plans, `lending.lend_working_capital`
+(`sim/economy/lending.py`, called from `_run_year` in `sim/economy/economy.py`) lends every cohort's cash above its target to
+the merchants whose carriers' wage loans (`carriage_hours.wage_loans`, `sim/economy/carriage_hours.py`) were asked at the last
+close. In the spike year that single call moves households from about 2.1e10 to about 3.1e8; no other phase before
+`clear_labour` changes household money. The loans are repaid in `_service_loans` at the year's end, which is why the total
+is back (about 2.1e10) within the same year and the year-end figure of year 48 looks normal. So the drop is physical in the
+book (money really changes hands, nothing is mis-counted), but the loan size is a sizing defect.
+
+**Why the loan is that big.** `wage_loans` asked for the bill of every hour the merchant bid for, at the market's remembered
+wage. The thin labour markets of the Algerian tiles offer a few thousand hours against tens of millions bid, so they clear at
+the merchants' own reservation price, and the remembered wage runs away (it rises every year). The bill is wanted hours times
+that wage, about 5.6e10 in the spike year against about 4.9e9 the year before, while the wages actually paid by merchants in
+the year were about 6e8. The households' spare cash (about 2.1e10) is all taken, the funds left for the ordinary credit
+round are about nothing, subsistence borrowing finds no lender and the rate goes to its ceiling.
+
+**Command.** Load the year-45 pickle with the code of commit fed22775 and step twice; wrap `Book._record_money` (tally by
+purpose, payer class, payee class) and the `_run_year` phases (household money before and after each). Script:
+`scratchpad/a473/flow_probe.py` in the orchestrator's scratchpad.
+
+| Phase of year 46 | Household cash before | after |
+|---|---|---|
+| `lend_working_capital` | 2.10e10 | 3.1e08 |
+| `clear_labour` | 3.1e08 | 1.46e09 |
+| `clear_goods` | 1.46e09 | 1.30e09 |
+| `_service_loans` | 1.4e09 | 2.15e10 |
+| `money_taxes` | 2.15e10 | 2.09e10 |
+
+(Year 45 does the same at a smaller size: 2.14e10 to 1.64e10 in `lend_working_capital`.)
+
+**Changed.** `wage_loans` sizes a merchant that had a crew plan last year on the hours the labour markets sold it
+(`YearLedger.crew_hours_bought`, set in `dispatch_merchants`), shared among its keys of that market by their wanted hours.
+A merchant without a plan is sized on the hours wanted, to no more than the market's whole supply last year (hours hired plus
+idle, from `ledger.labour_results`); that bound is loose when several such merchants share one market. The runaway wage in the thin markets is a separate matter
+and remains: bids far beyond the area's offered hours clear at the bidders' reservation price. Regression tests:
+`WageLoanTests` in `sim/tests/test_economy_carriage_hours.py`.
+
+**Checked.** The fix applied to the fed22775 code and the same pickle: the wage loans asked at the close of year 45 fall
+from 5.6e10 to 1.9e09, `lend_working_capital` in year 46 moves households from 2.10e10 to 1.90e10 (it was 3.1e08), and the
+households keep about 1.9e10 into the credit round. Not run: the full spin-up to year 48 (longer than five minutes), so the
+rate and subsistence-borrowing figures of the later years are unmeasured.
