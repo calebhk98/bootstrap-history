@@ -9,6 +9,9 @@ from sim.agents import borrowing_arrears
 from sim.agents.api import ActorRecord, Business, ActorRegistry, ActorsState
 from sim.agents.stratum import Stratum  # noqa: F401  (registers the kind)
 
+from sim.agents.borrowing import Borrower
+from sim.agents.household_borrowing import FounderBorrowing
+
 from .agents_fake_world import FakeWorld
 
 MAX_YEARS = 12
@@ -27,28 +30,80 @@ def years_until_firm_defaults():
     return None, firm
 
 
+class FounderBook:
+	"""The household's finances as the arrears rule reads them."""
+
+	def __init__(self):
+		self.interest_arrears = 0.0
+		self.arrears_years = 0
+
+
+class NoBonds:
+	def debt(self, account_id):
+		return 0.0
+
+	def coupons_due(self, account_id):
+		return 0.0
+
+
+class NoPurses:
+	bonds = NoBonds()
+
+
+class FounderStandIn(FounderBorrowing, Borrower):
+	"""The founder's household reduced to what the shared rule reads: a purse, an arrears book, and a world that
+	answers the founder's ceiling, rate and way of defaulting. No engine."""
+
+	purses = NoPurses()
+	account_id = "founder"
+
+	def __init__(self, money):
+		self.money = money
+		self._state = type("StandInState", (), {"household": FounderBook()})()
+
+
+class FounderWorld(FakeWorld):
+	CEILING = 1000.0
+	RATE = 0.06
+
+	def __init__(self):
+		super().__init__(year=50)
+		self.defaults = 0
+
+	def founder_credit_limit(self):
+		return self.CEILING
+
+	def founder_debt_rate(self):
+		return self.RATE
+
+	def founder_defaults(self):
+		self.defaults += 1
+
+
 def years_until_founder_defaults():
-    founder = sim(capital=-99999.0)
-    start = founder.year
-    check("the founder's debt is past its ceiling in this state", -founder.capital > founder.credit_limit(),
-          (founder.capital, founder.credit_limit()))
-    debts = []
-    for years in range(1, MAX_YEARS + 1):
-        year = start + years
-        founder.charge_interest(year)
-        founder.enforce_credit_limit(year)
-        debts.append(-founder.capital)
-        if founder.last_settlement != -999:
-            return years, debts
-    return None, debts
+	world = FounderWorld()
+	founder = FounderStandIn(money=-5000.0)
+	book = founder.arrears_book
+	arrears_by_year = []
+	for years in range(1, MAX_YEARS + 1):
+		founder.settle_interest(world)
+		if world.defaults:
+			return years, arrears_by_year, founder, world
+		arrears_by_year.append(book.interest_arrears)
+	return None, arrears_by_year, founder, world
 
 
 firm_years, firm = years_until_firm_defaults()
-founder_years, founder_debts = years_until_founder_defaults()
+founder_years, founder_arrears, founder, founder_world = years_until_founder_defaults()
 check("a firm past its ceiling defaults after the shared run of years in arrears",
       firm_years == borrowing_arrears.ARREARS_YEARS_BEFORE_DEFAULT, firm_years)
 check("the founder past its ceiling defaults after the same run of years in arrears",
       founder_years == firm_years, (founder_years, firm_years))
-check("the founder's debt does not compound past its ceiling while in arrears",
-      founder_years is not None and all(abs(debt - founder_debts[0]) < 1e-6 for debt in founder_debts[:founder_years - 1]),
-      founder_debts[:5])
+yearly_interest = 5000.0 * FounderWorld.RATE
+check("the founder's unpaid interest each year is arrears, not more debt",
+      founder.money == -5000.0 and all(
+          abs(arrears - yearly_interest * (index + 1)) < 1e-6 for index, arrears in enumerate(founder_arrears)),
+      (founder.money, founder_arrears))
+check("the founder's default is called once and clears the arrears record",
+      founder_world.defaults == 1 and founder.arrears_book.interest_arrears == 0.0
+      and founder.arrears_book.arrears_years == 0, (founder_world.defaults, vars(founder.arrears_book)))

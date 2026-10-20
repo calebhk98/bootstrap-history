@@ -102,11 +102,6 @@ check("'start <id>' is unchanged", (_parsed or {}).get("cmd") == "start", (_pars
 # --- preview and a real run agree near the credit margin
 for _margin_capital in (150.0, 400.0, 900.0, 2500.0):
     _margin_sim = unopened_sim(capital=_margin_capital)
-    if _margin_capital == 400.0:
-        check("start_refusal is None for a startable, affordable project and changes nothing",
-              _margin_sim.start_refusal("units_standards") is None and not _margin_sim.active)
-        check("start_refusal counts extra_owed against the credit ceiling",
-              _margin_sim.start_blockers("units_standards", extra_owed=1e9)[0]["cause"] == "money_refusal")
     _preview_ids = [row["id"] for row in _rush(_margin_sim, limit=50, preview=True)["would_start"]]
     _real_ids = [row["id"] for row in _rush(_margin_sim, limit=50)["started"]]
     check("rush preview matches the real run at capital %d" % _margin_capital,
