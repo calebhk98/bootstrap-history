@@ -1,6 +1,6 @@
 # ForeignGovernment is one revenue formula: no revenue forms, works, navy, dole, reserve policy or borrowing
 
-**Status:** partly - the class is gone and a country is a scoped Government; the readings in 647 remain
+**Status:** partly - the class is gone and a country is a scoped Government; the readings in 649 remain
 
 Part of Complaint 482 (Countries other than the home one are static stubs).
 
@@ -29,7 +29,7 @@ Depends on 590 (earners counted). Blocks 594 and 595.
   (`sim/engine/agents_port*.py`, `society_state_pressure.py`).
 - Effect on the game: a foreign state now has the home state's budget lines (collectors, public buildings, court, dole, navy,
   works), so it can be short of money where the one formula was not; its revenue is its declared forms, not earners times pay.
-- Still open: `647` lists what a country's state reads as nothing or as a home figure.
+- Still open: `649` lists what a country's state reads as nothing or as a home figure.
 
 **Tests:** `sim/tests/test_country_state.py` (revenue assessed from declared forms; the same budget lines as the home state for the same inputs;
 a year of the state), `sim/tests/test_agents_countries.py`, `sim/tests/test_state_headcount.py`.
