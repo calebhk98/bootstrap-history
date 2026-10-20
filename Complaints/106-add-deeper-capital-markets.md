@@ -107,3 +107,14 @@ Owner decision (2026-10-09): lower priority; it should come when it can, and a c
   command (the economy call is `banks.found`; no engine command yet). On Rome with the node granted the
   founder's own capital covers the loans, so no deposits are taken and the rate is a margin higher
   (measure with the Rome series of `lent_by_borrower` and `base_rate` with and without the node).
+
+- **State bonds (step 3).** A state raises cash by selling bonds (`sim/agents/bonds.py`, `Purses._draw`) instead of
+  drawing on the pool at par. Each year `Government.set_bond_terms` sets the coupon (the going rate) and the yield
+  the market asks of this state (its borrowing rate, which carries Complaint 623's default-record premium); the
+  pool's depositors pay the present value of coupons and face at that yield, so a state with a default on its
+  record sells the same coupon for less and owes more face for the same cash. The state's debt is the face, its
+  interest the fixed coupon (the floating rate applies only to what is not bonds, `Borrower.settle_interest`),
+  bonds fall due after `BOND_TERM_YEARS` and are repaid by selling new ones if the purse is short, and a default
+  costs the named depositors what they paid. Still open: bonds changing hands after issue (a holder's wealth
+  marked to the price), insurance and investment funds, the term chosen by the issuer, and non-state issuers.
+  On Rome no state borrowing occurs in the first years, so the series is unchanged.

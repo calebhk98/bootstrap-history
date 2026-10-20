@@ -172,6 +172,8 @@ class Government(CorveeMixin, CreditRecordMixin, CoinageMixin, EnterpriseMixin, 
 	def advance(self, world: Any) -> None:
 		held = dict(self.workforce)
 		self.fade_default_record()
+		self.set_bond_terms(world)
+		self.purses.redeem_bonds(self.account_id)
 		self.accede(world)
 		lines, share = self.pay_standing_need(world)
 		self.decide_debasement(world)
