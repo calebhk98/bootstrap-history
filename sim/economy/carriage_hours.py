@@ -210,20 +210,39 @@ def hired(ledger, merchant_id: str, trades) -> Dict[str, float]:
     return {"hours": hours, "wage": paid / quantity if quantity > 0.0 else 0.0}
 
 
-def wage_loans(setup, record) -> List[LoanRequest]:
+def wage_loans(setup, record, hired_last_year=None, supply_last_year=None) -> List[LoanRequest]:
     """A one-year loan to each merchant whose carriers' wages for next year's plan its cash will not cover:
     carriers are paid at the labour market, before the year's lenders meet, so the merchant needs the cash
-    in hand. It offers up to what the hours are worth to it above their wage, as a share of the wage."""
+    in hand. It offers up to what the hours are worth to it above their wage, as a share of the wage.
+    `hired_last_year` is {merchant: {(trade, area): hours bought}} for merchants that had a crew plan: a
+    market sells no more than its people offer however many hours are bid, so such a merchant is sized on
+    the hours it got, shared among its keys in that market by their hours. Any other merchant is sized on the
+    hours it wants, to no more than the market's whole supply last year, `supply_last_year` {(trade, area): hours
+    hired plus hours left idle}."""
     money = setup.currency_id
     populated = {cohort.tile for cohort in record.cohorts.values()}
+    hired_last_year = hired_last_year or {}
+    supply_last_year = supply_last_year or {}
     requests = []
     for merchant in sorted(record.merchants.values(), key=lambda each: each.agent_id):
+        wanted_by_key = merchant.carriage_hours_wanted or {}
+        bought = hired_last_year.get(merchant.agent_id)
+        areas = {key: hiring_area(record, merchant, _split(key)[1], populated) for key in wanted_by_key}
+        wanted_in_market: Dict[Tuple[str, str], float] = {}
+        for key, wanted in wanted_by_key.items():
+            market = (_split(key)[0], areas[key])
+            wanted_in_market[market] = wanted_in_market.get(market, 0.0) + wanted
         bill, worth = 0.0, 0.0
-        for key, wanted in (merchant.carriage_hours_wanted or {}).items():
-            trade, tile = _split(key)
-            area = hiring_area(record, merchant, tile, populated)
-            bill += wanted * record.memory.wages.get(market_key(trade, area), 0.0)
-            worth += merchant.carriage_money_wanted.get(key, 0.0)
+        for key, wanted in wanted_by_key.items():
+            trade, _tile = _split(key)
+            market = (trade, areas[key])
+            available = bought.get(market, 0.0) if bought is not None else supply_last_year.get(market)
+            if available is None:
+                share = 1.0
+            else:
+                share = min(1.0, available / wanted_in_market[market]) if wanted_in_market[market] > 0.0 else 0.0
+            bill += wanted * share * record.memory.wages.get(market_key(trade, areas[key]), 0.0)
+            worth += merchant.carriage_money_wanted.get(key, 0.0) * share
         short = bill - max(0.0, record.book.balance(merchant.agent_id, money))
         if short > 0.0 and bill > 0.0 and worth > bill:
             requests.append(LoanRequest(merchant.agent_id, money, short, (worth - bill) / bill, 1.0, short,

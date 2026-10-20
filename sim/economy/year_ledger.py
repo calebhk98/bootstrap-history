@@ -19,6 +19,7 @@ class YearLedger:
     sales_in: Dict[AgentId, float] = field(default_factory=dict)
     received: Dict[AgentId, Dict[GoodId, float]] = field(default_factory=dict)
     hours_hired: Dict[AgentId, Dict[str, float]] = field(default_factory=dict)
+    crew_hours_bought: Dict[AgentId, Dict[Tuple[str, str], float]] = field(default_factory=dict)   # merchants that bid for crew: hours sold them by (trade, area)
     hours_sold: Dict[AgentId, float] = field(default_factory=dict)
     grown: Dict[AgentId, Dict[GoodId, float]] = field(default_factory=dict)       # made for itself
     grown_units: Dict[AgentId, Dict[str, float]] = field(default_factory=dict)    # need units of that
