@@ -26,8 +26,9 @@ def household_stock(economy):
 
 # The fixture opens with margins no competition has worked on; entry and the wage floor take them away over
 # decades, with incomes and the wanted stock swinging while they do (Complaint 398). The real game also
-# measures from a spun-up economy, so the durable path is read after the fixture has settled.
-SPIN_UP_YEARS = 60
+# measures from a spun-up economy, so the durable path is read after the fixture has settled. Its income still swings
+# by a tenth over a decade or so, so the window is one in which that swing does not move the stock by a year's wear.
+SPIN_UP_YEARS = 50
 
 
 def economy_opening_empty(setup):
