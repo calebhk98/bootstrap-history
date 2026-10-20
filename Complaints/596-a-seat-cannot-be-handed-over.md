@@ -1,6 +1,6 @@
 # A seat cannot be handed over: its knowledge, holdings and notes are lost when the founder dies
 
-**Status:** open
+**Status:** partly - handover command built; debt, goods and offers keyed by seat id, and the replacement's own holdings are not carried (see What is left)
 
 Part of Complaint 481 (A player cannot play as a country).
 

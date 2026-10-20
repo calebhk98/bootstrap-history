@@ -1,6 +1,7 @@
 """The player's own notes: free text with the year, optionally attached to a project (Complaint 207).
 
 Kept through `memory.remembered`, so they ride along with every save and load the UI makes."""
+from sim.engine.state_seat import FIRST_SEAT_ID
 from sim.ui import memory
 
 TOPIC = "notes"
@@ -16,9 +17,19 @@ def _store(sim):
     return store
 
 
+def _owner(row):
+    """The seat a note belongs to; a note written before seats were stamped is the first seat's."""
+    return row.get("seat", FIRST_SEAT_ID)
+
+
+def _acting(sim):
+    return getattr(sim.state, "acting_seat", FIRST_SEAT_ID)
+
+
 def _rows(sim):
-    """The notes for reading, without creating a store on a game that has none."""
-    return memory.remembered(sim, TOPIC).get("rows", [])
+    """The acting seat's notes for reading, without creating a store on a game that has none."""
+    seat = _acting(sim)
+    return [row for row in memory.remembered(sim, TOPIC).get("rows", []) if _owner(row) == seat]
 
 
 def clean_text(text):
@@ -32,7 +43,7 @@ def add_note(sim, text, node_id=None):
     store = _store(sim)
     if not text or len(store["rows"]) >= MAX_NOTES:
         return None
-    row = {"n": store["next"], "year": sim.year, "text": text, "project": node_id}
+    row = {"n": store["next"], "year": sim.year, "text": text, "project": node_id, "seat": _acting(sim)}
     store["next"] += 1
     store["rows"].append(row)
     return dict(row)
@@ -41,9 +52,17 @@ def add_note(sim, text, node_id=None):
 def drop_note(sim, number):
     rows = _store(sim)["rows"]
     for index, row in enumerate(rows):
-        if row["n"] == number:
+        if row["n"] == number and _owner(row) == _acting(sim):
             return rows.pop(index)
     return None
+
+
+def hand_over_notes(sim, from_id, to_id):
+    """Pass every note of seat `from_id` to seat `to_id`; returns how many moved."""
+    moved = [row for row in _store(sim)["rows"] if _owner(row) == from_id]
+    for row in moved:
+        row["seat"] = to_id
+    return len(moved)
 
 
 def all_notes(sim):

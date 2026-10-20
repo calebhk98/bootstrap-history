@@ -60,7 +60,7 @@ class SeatMixin:
 		try:
 			yield self
 		finally:
-			if self.state.acting_seat != previous:
+			if self.state.acting_seat != previous and previous in self.state.seats:   # a handover removes a seat
 				self._switch_seat(previous)
 
 	def sync_seat_facades(self) -> None:
