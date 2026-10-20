@@ -12,7 +12,7 @@ from typing import Dict, List, Mapping, Tuple
 
 from sim.constants import declare
 
-from . import currency, goods_market, opening_equity, opening_income, opening_metal, opening_runs, households, households_store, labour_state, location, location_inputs, mint, opening_stores, ownership, sites, titles, unit_cost
+from . import currency, goods_market, opening_income, opening_metal, opening_runs, households, households_store, labour_state, location, location_inputs, mint, opening_stores, ownership, sites, titles, unit_cost
 from .accounts import Book
 from .market_areas import AreaMap
 from .market_memory import MarketMemory, YearView, market_key
@@ -59,7 +59,7 @@ def _open(setup: EconomySetup, replacement: float) -> Tuple[EconomyRecord, AreaM
     memory = _opening_memory(setup, area_map, priced_goods)
     record = EconomyRecord(book=Book(), memory=memory, currency=setup.currency,
                            ways={key: dict(built) for key, built in setup.improvements.items()})
-    view = opening_equity.OpeningView(memory, record.book, area_map, setup.currency_id, labour_area)
+    view = YearView(memory, record.book, area_map, setup.currency_id, labour_area)
     _open_cohorts(setup, record)
     _settle_income(setup, record, view, priced_goods, replacement)
     _seed_durable_stocks(setup, record, view)
@@ -145,8 +145,6 @@ def _settle_income(setup, record, view, priced_goods, replacement) -> None:
         final = _final_demand(setup, record, view, replacement)
         value = opening_income.value_of(final, priced_goods)
         runs = opening_runs.required_runs(final, ranked, recipes, ceilings)
-        view.owned = opening_equity.split(record.cohorts.values(),
-                                          opening_equity.firms_worth(runs, recipes, priced_goods, setup.opening_wages))
         share["labour"] = opening_income.labour_share_of(runs, recipes, setup.opening_wages, value)
         return value, share["labour"]
 

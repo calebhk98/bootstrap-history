@@ -15,8 +15,8 @@ SMELT = Recipe("smelt", {"metal": 10.0, "slag": 90.0}, {"ore": 100.0}, {"smith":
                plant_goods={"stone": 2.0}, plant_life_years=10.0)
 
 
-def bid(floor, budget):
-    return Bid("buyer", "grain", "area", "tile", floor, 0.0, 1.0, 2.0, budget)
+def bid(floor, budget, flexible=0.0):
+    return Bid("buyer", "grain", "area", "tile", floor, flexible, 1.0, 2.0, budget)
 
 
 class FullCostTests(unittest.TestCase):
@@ -34,7 +34,11 @@ class FullCostTests(unittest.TestCase):
 class DemandAtTests(unittest.TestCase):
     def test_a_floor_stays_a_floor_and_spending_beyond_it_buys_more_at_a_lower_price(self):
         self.assertAlmostEqual(entry_trial.demand_at([bid(10.0, 20.0)], 1.0, 2.0), 10.0)
-        self.assertAlmostEqual(entry_trial.demand_at([bid(0.0, 20.0)], 1.0, 2.0), 20.0)
+        self.assertAlmostEqual(entry_trial.demand_at([bid(0.0, 20.0, flexible=20.0)], 1.0, 2.0), 20.0)
+
+    def test_a_buyer_with_a_floor_and_a_budget_takes_no_more_than_its_floor_of_a_good_that_costs_nothing(self):
+        # a by-product priced near zero (straw): the budget divided by the price is not what a buyer would take
+        self.assertAlmostEqual(entry_trial.demand_at([bid(100.0, 1e5)], 1e-15, 1e-15), 100.0)
 
 
 class CapacityTests(unittest.TestCase):

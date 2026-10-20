@@ -92,7 +92,7 @@ class MarketTests(unittest.TestCase):
         economy.record.margin_years.clear()
         view = economy.view()
         area = economy.area_map.areas(TRINKET)[0]
-        bids = {(TRINKET, area.area_id): [Bid("buyer", TRINKET, area.area_id, area.anchor_tile, 0.0, 0.0, 1.0, 1e3, 1e6)]}
+        bids = {(TRINKET, area.area_id): [Bid("buyer", TRINKET, area.area_id, area.anchor_tile, 0.0, 1e6, 1.0, 1e3, 1e6)]}
         for key in list(economy.record.memory.usual_prices):
             if key.startswith(TRINKET):
                 economy.record.memory.usual_prices[key] = 1e3
