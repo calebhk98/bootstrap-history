@@ -328,3 +328,30 @@ Measured on the integration branch with `python3 -m sim.tests --slow --only <top
   test spin-up). Hours by occupation group do not move (agriculture 0.361 -> 0.361, unattributed 0.62 -> 0.62):
   `occupational_distribution` fails in three checks exactly as before (agriculture band, ordering, `shipwright`
   in no group); the hours are the recipes' `labourer` bookings (619, 530), not the people split.
+- `opening_floor_and_thin_trades` ("household floors cost a small multiple of the food floor", bound 8): measured on
+  the Rome opening (median over the populated tiles of each need's floor cost as a multiple of the food floor;
+  `need_prices` on the economy's year-1 view, as the test does):
+
+  | need | origin/main | staging head |
+  |---|---|---|
+  | food (absolute, per person) | 16.3 | 2.3 |
+  | clothing | 0.40 | 5.12 |
+  | warmth | 0.20 | 2.67 |
+  | water | 0.46 | 1.88 |
+  | shelter | 0.15 | 1.39 |
+  | vessels | 0.015 | 0.20 |
+  | salt | 0.007 | 0.07 |
+  | all floors | 2.15 | 13.1 |
+
+  The ratio is mostly the denominator. Dropping the new foods from the head's food need moves the ratio: without
+  `bread_kg` 7.8 (food cost 4.6), without fish and salted fish 10.6, without all three 5.5. Cause: bread (614) and
+  fish (615) entered the food need, and in the markets that clear in year 1 their price collapses (bread's median
+  over the 79 market areas is a few hundredths of a flour kilogram's price; the cheapest areas under a thousandth).
+  Example: at the tile `algeria_15` a baker runs about 58 runs, the area's bread clears at about 0.001 against a
+  flour price of 0.58 (a loaf takes 0.69 kg of flour), while at the other bakers' tiles bread holds near 0.4 and the
+  baker does not run. The mix weights cheap goods up, so the food floor follows the collapsed price. Not a floor
+  error: a thin single-area market overshooting (the producer's expected sales exceed the area's demand; the
+  expansion damping is Complaint 473's). Non-food floors also grew in absolute terms (clothing and warmth about
+  1.5 to 2 times), which is the trade split and the price level, not one broken floor. The bound stays 8; the
+  check passes again when thin markets stop clearing below input cost. Reproduce: `need_basket.need_prices` with
+  `price_of` returning None for the good, over the tiles of `record.cohorts`.
