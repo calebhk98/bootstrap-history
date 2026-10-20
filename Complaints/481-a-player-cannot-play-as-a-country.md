@@ -41,7 +41,7 @@ that a mod could have written them. Review that led here:
 
 Children, in order of work:
 
-- 594: There is no country seat: a seat is always a household
+- 594 (closed): There is no country seat: a seat is always a household
 - 595: The state takes no orders: no protocol command sets a tax form or rate, a budget line, an army size, a reserve floor, a monopoly or a subsidy
 - 596: A seat cannot be handed over: its knowledge, holdings and notes are lost when the founder dies
 
