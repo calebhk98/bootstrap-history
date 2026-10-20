@@ -119,7 +119,7 @@ REQUIRED_SAVE_FIELDS = REQUIRED_V3_SECTIONS + REQUIRED_METADATA_FIELDS
 # encoding). Anything named here is checked against the currently loaded
 # tree, because the tree is data and does get edited: a node can be renamed
 # or removed between when a save was written and when it is read back.
-_SET_FIELDS_OF_NODE_IDS = ("done", "granted", "mothballed", "operating",
+_SET_FIELDS_OF_NODE_IDS = ("done", "granted",
                            "bountied", "revealed", "keep_staffed")
 # Checked against the wage table instead, which is what they actually are.
 _SET_FIELDS_OF_TRADE_NAMES = ("trades_created", "trades_endemic")
@@ -248,6 +248,12 @@ def _check_save_node_id_references(blob, sim):
         if ids is None or not all(isinstance(node_id, str) for node_id in ids):
             return "this save is corrupt: '%s' should be a set of id strings" % field_name, None
         unknown |= {node_id for node_id in ids if node_id not in sim.nodes}
+    for business in _get_field(blob, "businesses") or []:
+        plants = business.get("plants") if isinstance(business, dict) else None
+        if not isinstance(plants, list) or not all(isinstance(plant, dict) and isinstance(plant.get("entry_key"), str)
+                                                    for plant in plants):
+            return "this save is corrupt: a business should hold plants with entry ids", None
+        unknown |= {plant["entry_key"] for plant in plants if plant["entry_key"] not in sim.nodes}
     active = _get_field(blob, "active") or {}
     unknown |= {node_id for node_id in active if node_id not in sim.nodes}
     return None, unknown

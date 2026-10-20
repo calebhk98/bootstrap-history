@@ -173,7 +173,7 @@ class SavedStateTest(unittest.TestCase):
 
 
 class ContactHeuristicTest(unittest.TestCase):
-    CIV = {"id": "stand_in", "disease_exposure": {"outside_contact": [{"pathogens": ["smallpox"], "years": [1520, 1600]}]}}
+    CIV = {"id": "stand_in", "disease_exposure": {"outside_contact": [{"pathogens": ["smallpox"], "years": [1520, 1600], "circulating": True}]}}
 
     def arrivals(self, sim, years, records=None):
         world = disease_port.DiseaseWorld(sim)
@@ -190,8 +190,8 @@ class ContactHeuristicTest(unittest.TestCase):
         first = self.arrivals(sim, years)
         self.assertEqual(first, self.arrivals(StandIn(self.CIV), years))
         share = len(first) / len(years)
-        self.assertGreater(share, disease_port.DISEASE_CONTACT_ANNUAL_CHANCE / 3)
-        self.assertLess(share, disease_port.DISEASE_CONTACT_ANNUAL_CHANCE * 2)
+        self.assertGreater(share, disease_port.DISEASE_TRAVELLER_ANNUAL_CHANCE / 3)
+        self.assertLess(share, disease_port.DISEASE_TRAVELLER_ANNUAL_CHANCE * 2)
 
     def test_a_pathogen_already_circulating_is_not_introduced_again(self):
         records = {"smallpox": {"working_age": {"counts": {"susceptible": 5, "infectious.0": 3}}}}
@@ -207,7 +207,7 @@ class ContactHeuristicTest(unittest.TestCase):
                 self.assertFalse(first <= 1520 <= last or first <= 1600 <= last, hazard.get("name"))
 
     def test_the_validator_rejects_an_unknown_pathogen_and_a_bad_effect(self):
-        bad_civ = {"c": {"disease_exposure": {"outside_contact": [{"pathogens": ["no_such"], "years": [1, 2]}]}}}
+        bad_civ = {"c": {"disease_exposure": {"outside_contact": [{"pathogens": ["no_such"], "years": [1, 2], "tiles": ["mexico_01"]}]}}}
         bad_node = {"n": {"mechanics": {"disease_effects": {"acts_on": "luck", "factor": 2, "pathogens": ["no_such"]}}}}
         problems = validate_disease_data.check_disease_data(bad_node, bad_civ)
         self.assertEqual(len(problems), 4)

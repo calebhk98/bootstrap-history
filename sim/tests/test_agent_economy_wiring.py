@@ -58,7 +58,7 @@ check("Complaint 383: wheat is not pinned at a floor price", prices[-1] > 0.0 an
 founder = agent_game("rome_100ad")
 founder.state.projects.done.add("finery_puddling")
 founder.state.projects.operating.add("finery_puddling")
-founder.state.projects.opened_year["finery_puddling"] = founder.state.scenario.year - 5
+founder.state.projects.business.set_opened_year("finery_puddling", founder.state.scenario.year - 5)
 founder._done_changed()
 
 

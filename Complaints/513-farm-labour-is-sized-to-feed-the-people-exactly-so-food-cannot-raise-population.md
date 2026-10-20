@@ -1,6 +1,6 @@
 # Farm labour is sized to feed the people exactly, so a food technology cannot raise population while land is spare
 
-**Status:** partly fixed - intake rises to a sourced satiation level and farm hands stay while a farm hour pays at least the wage; the food price is not yet cleared against farm effort (see Progress)
+**Status:** partly fixed - intake rises to a sourced satiation level and farm hands stay while a farm hour pays at least the wage; the food price is not yet cleared against farm effort (see Progress; effort now continuous in the price ratio)
 
 Found closing 480. `LabourAllocationMixin._allocate_farm_workforce` puts just enough people on the land to meet
 the population's food need (`farm_workers_needed`): a better technique frees hands, a shortfall calls for hands
@@ -39,7 +39,10 @@ leave farming when food is cheap and the price recovers.
   yet, the farm is sized to need and farmers leave, as before. The surplus is eaten through the granary's
   existing rule (grain beyond the reserve, up to the satiation level), so nutrition and the demography that reads
   it respond (`test_farm_surplus_intake.py`).
-- Remaining: farm effort is a threshold on the price ratio, not a continuous response; the staple's price does not
+- Farm effort is now continuous in the price ratio (`kept_farm_workers`: today's hands times the ratio to the power
+  1 / (1 - labour elasticity), from the diminishing marginal product of hands on fixed cleared land, capped at
+  satiation and the cleared land); `test_farm_effort_follows_price.py`.
+- Remaining: need-sized hands are still the floor under that response; the staple's price does not
   yet fall as intake nears satiation (the household basket caps food at the same level, but the farm sector does
   not see that demand curve), and surplus beyond satiation is not yet sold, stored or fed to animals by anyone.
 

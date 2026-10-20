@@ -8,7 +8,7 @@ from typing import Dict, Iterable, Mapping, Tuple
 
 from sim.labour.api import MarketState, TradeSpec, opening_labour_market, trade_specs
 
-from . import mint, mint_labour
+from . import mint, mint_labour, workforce_version
 from .market_memory import market_key
 from .setup import labour_area
 
@@ -24,6 +24,18 @@ def core_trades(setup, extra_trades: Iterable[str] = ()) -> Dict[str, TradeSpec]
     for trade, entry in registry.items():
         entry["fallback"] = trade == setup.unskilled_trade
     return trade_specs(registry)
+
+
+def plot_trade(setup) -> str:
+    """The trade of people working their own land: the trade whose hours the land-only recipes (no bought
+    inputs, the ones households grow for themselves, households_own.py) ask most of. Empty when none do."""
+    hours: Dict[str, float] = {}
+    for recipe_id, recipe in setup.recipes.items():
+        if recipe.inputs or setup.land_per_run.get(recipe_id, 0.0) <= 0.0:
+            continue
+        for trade, trade_hours in recipe.labour_hours.items():
+            hours[trade] = hours.get(trade, 0.0) + trade_hours
+    return max(sorted(hours), key=lambda trade: hours[trade]) if hours else ""
 
 
 def opening_workforce(setup, record) -> MarketState:
@@ -42,7 +54,8 @@ def opening_workforce(setup, record) -> MarketState:
     working = {labour_area(tile): people * setup.working_share
                for tile, people in sorted(setup.opening_population_by_tile.items())}
     trades = core_trades(setup, {trade for needed in hours_needed.values() for trade in needed})
-    state = opening_labour_market(trades, working, hours_needed, setup.working_hours_per_year)
+    state = opening_labour_market(trades, working, hours_needed, setup.working_hours_per_year,
+                                 plot_trade(setup) or None)
     return state
 
 
@@ -67,6 +80,7 @@ def scale_people(state: MarketState, area: str, factor: float) -> None:
     for cohorts in state.trainees.get(area, {}).values():
         for cohort in cohorts:
             cohort[1] = [count * factor for count in cohort[1]]
+    workforce_version.bump(state)
 
 
 def mirror_wages(wages: Dict[str, float], state: MarketState) -> None:
@@ -89,6 +103,7 @@ def hold_back(state: MarketState, share_by_area: Mapping[str, float]) -> Tuple[M
         for trade, bands in seen.workers.get(area, {}).items():
             held.setdefault(area, {})[trade] = [count * share for count in bands]
             bands[:] = [count * (1.0 - share) for count in bands]
+    workforce_version.bump(seen)
     return seen, held
 
 
@@ -99,3 +114,4 @@ def give_back(state: MarketState, held: Mapping[str, Mapping[str, list]]) -> Non
         for trade, bands in by_trade.items():
             now = workers.setdefault(trade, [0.0] * len(bands))
             now[:] = [count + back for count, back in zip(now, bands)]
+    workforce_version.bump(state)

@@ -8,41 +8,38 @@ Paths may leave the given tiles (a road through a neighbour); only the given til
 
 Standalone: `sim.geography.api` and `sim.economy.types` only.
 """
+import dataclasses
 import math
-from typing import Dict, Iterable, Mapping, Optional
+from dataclasses import dataclass
+from typing import Dict, Iterable, Mapping, Optional, Tuple
 
 from sim.economy import carriage_cache
-from sim.economy.types import TileId, TileSpec
-from sim.geography.api import layer_value, map_of_tiles, open_map, route, route_costs, tile_facts
+from sim.economy.types import HECTARES_PER_SQUARE_KILOMETRE, TileId, TileSpec
+from sim.geography.api import crop_site, map_of_tiles, open_map, route, route_costs, tile_facts
 
 
-def tiles_from_geography(geography: dict, tile_ids: Iterable[TileId]) -> Dict[TileId, TileSpec]:
-    """TileSpecs for the named tiles from the parsed geography document; borders are kept whole."""
-    records = geography["land_tiles"]["tiles"]
-    result = {}
-    for tile_id in tile_ids:
-        record = records[tile_id]
-        result[tile_id] = TileSpec(
-            tile_id=tile_id, latitude=record["lat"], longitude=record["lon"],
-            land_area_km2=record["land_area_km2"], coastal=bool(record["coastal"]),
-            borders=tuple(record["borders"]), arable_fraction=record["arable_fraction"],
-            fertility=record["fertility_quality_multiplier"],
-            climate_class=str(record.get("koppen_class") or ""))
-    return result
-
-
-def tiles_from_map(world_map, tile_ids: Iterable[TileId]) -> Dict[TileId, TileSpec]:
-    """TileSpecs for the named tiles read through geography's api from `world_map`; borders are kept whole."""
+def tiles_from_map(world_map, tile_ids: Iterable[TileId], open_field_cropped_share: float) -> Dict[TileId, TileSpec]:
+    """TileSpecs for the named tiles read through geography's api from `world_map`; borders are kept whole.
+    A tile's land is geography's cropland under a rotation that crops `open_field_cropped_share` of open fields
+    each year, and its fertility the yield factor of a cropped hectare (soil, climate, river water)."""
     result = {}
     for tile_id in tile_ids:
         facts = tile_facts(tile_id, world_map)
-        result[tile_id] = TileSpec(
+        site = crop_site(tile_id, open_field_cropped_share, world_map)
+        result[tile_id] = following_site(TileSpec(
             tile_id=tile_id, latitude=facts["lat"], longitude=facts["lon"],
             land_area_km2=facts["land_area_km2"], coastal=facts["coastal"],
-            borders=tuple(facts["neighbours"]), arable_fraction=layer_value(tile_id, "arable_fraction", world_map),
-            fertility=layer_value(tile_id, "fertility_quality_multiplier", world_map),
-            climate_class=str(facts["climate_class"] or ""))
+            borders=tuple(facts["neighbours"]), cropped_fraction=0.0, fertility=0.0,
+            climate_class=str(facts["climate_class"] or "")), site)
     return result
+
+
+def following_site(tile: TileSpec, site) -> TileSpec:
+    """The tile with its cropped share and fertility read from a crop site (geography's `crop_site`)."""
+    area_hectares = tile.land_area_km2 * HECTARES_PER_SQUARE_KILOMETRE
+    cropped_hectares = site.cropped_hectares if site.yield_factor > 0.0 else 0.0   # ground that yields nothing is not cropland
+    return dataclasses.replace(tile, cropped_fraction=cropped_hectares / area_hectares if area_hectares > 0.0 else 0.0,
+                               fertility=site.yield_factor)
 
 
 def world_map_of(tiles: Mapping[TileId, TileSpec]):
@@ -51,6 +48,39 @@ def world_map_of(tiles: Mapping[TileId, TileSpec]):
         tile_id: {"lat": tile.latitude, "lon": tile.longitude, "land_area_km2": tile.land_area_km2,
                   "coastal": tile.coastal, "borders": list(tile.borders)}
         for tile_id, tile in tiles.items()})
+
+
+@dataclass(frozen=True)
+class Haul:
+    """How the cheapest path between two tiles is travelled: its days, the money a tonne pays on each carriage
+    mode's legs (the handling of a change to the mode included) and how many times the load is handled into
+    each mode."""
+    days: float
+    money_by_mode: Tuple[Tuple[str, float], ...] = ()
+    handlings_by_mode: Tuple[Tuple[str, int], ...] = ()
+    km_by_mode: Tuple[Tuple[str, float], ...] = ()          # kilometres a tonne is carried on each mode (geography's)
+    team_days_by_mode: Tuple[Tuple[str, float], ...] = ()   # working days of a team a tonne takes on each mode (geography's rates)
+
+
+NO_PATH = Haul(math.inf)
+
+
+def haul_of(hauled: Mapping[str, object]) -> Haul:
+    """The `Haul` of a geography route: a load is handled into the first leg's mode and into each leg whose mode
+    differs from the one before."""
+    money: Dict[str, float] = {}
+    handlings: Dict[str, int] = {}
+    previous = None
+    for leg in hauled["legs"]:
+        mode = leg["mode"]
+        money[mode] = money.get(mode, 0.0) + float(leg["cost_per_tonne"])
+        if mode != previous:
+            handlings[mode] = handlings.get(mode, 0) + 1
+        previous = mode
+    inputs = hauled.get("inputs") or {}
+    return Haul(float(hauled["days"]), tuple(sorted(money.items())), tuple(sorted(handlings.items())),
+                tuple(sorted((inputs.get("km_by_mode") or {}).items())),
+                tuple(sorted((inputs.get("team_days") or {}).items())))
 
 
 class CarriageTable:
@@ -76,7 +106,7 @@ class CarriageTable:
         self._warmed = False    # whether the whole table has been filled (or fetched) already
         self.scale = 1.0        # multiplier on every cost: the year's wage on the labour part of the rates (set_scale)
         self._scaled: Dict[TileId, Dict[TileId, float]] = {}
-        self._days: Dict[tuple, float] = {}
+        self._hauls: Dict[tuple, Haul] = {}
 
     def set_scale(self, scale: float) -> None:
         """Multiply every cost by `scale` (1: the costs as searched, the very same answers)."""
@@ -118,13 +148,22 @@ class CarriageTable:
     def days_between(self, from_tile: TileId, to_tile: TileId) -> float:
         """Days a haul takes by the cheapest path (geography's pace for each leg's mode, handling included);
         infinite when no path exists."""
+        return self.haul(from_tile, to_tile).days
+
+    def haul(self, from_tile: TileId, to_tile: TileId) -> Haul:
+        """The cheapest path between two tiles as modes, kilometres and handlings (kept: one route search a
+        pair); `NO_PATH` when none joins them."""
         key = (from_tile, to_tile)
-        found = self._days.get(key)
+        found = self._hauls.get(key)
         if found is None:
             hauled = route([from_tile], [to_tile], sorted(self._rates), self._improvements, self._rates,
                            self._handling, self._held_nodes, self._world_map)
-            found = self._days[key] = math.inf if hauled is None else float(hauled["days"])
+            found = self._hauls[key] = NO_PATH if hauled is None else haul_of(hauled)
         return found
+
+    def unscaled_cost_per_tonne(self, from_tile: TileId, to_tile: TileId) -> float:
+        """`cost_per_tonne` before the year's wage scale."""
+        return self._searched_costs_from(from_tile).get(to_tile, math.inf)
 
     def warm(self, remember: bool = False) -> None:
         """Fill every source. With `remember` the whole table is read from disk when an earlier process

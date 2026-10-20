@@ -1,6 +1,6 @@
 # Land never changes hands, and there is no landlord, tenant or lender
 
-**Status:** partly - titles, collateral, foreclosure into tenancy and abandonment are built (`test_economy_titles`); the counter-forces (land reform, labour scarcity after plague), the baseline range check, tax farming and bondage are not, and concentration from bad harvests is shown only in a harness, not in a full economy
+**Status:** partly - titles, collateral, foreclosure into tenancy and abandonment, the baseline range check, the counter-forces (partible inheritance, tenancy management cost, state debt relief), tax farming and household bondage are built; still open: labour scarcity moving rent and lease terms, elite overreach and confiscation or land reform (486, 542), and a concentration check on a full game (the fixture economy never concentrates, see below)
 
 Reference (an outside design note, not code-aware): land concentration should come from harvest
 shocks and debt, not a typed share. A smallholder short after a bad year borrows from a landowner or
@@ -77,9 +77,50 @@ pull it back, each a mechanism rather than a cap:
 - Tests: `sim/tests/test_economy_titles.py` (bad harvests concentrate titles through default and a good run
   does not; the defaulted family pays rent; abandonment; seeding; save round trip).
 
+Built after the first cut (each with a quick test topic):
+
+- Range check (`sim/economy/titles_concentration.py`, slow topic `economy_land_concentration`): the top-decile
+  share of holders and a Gini over holders' hectares, asserted to stay within a wide pre-industrial agrarian band
+  (the band is recalled, not looked up; the test says so). Measure the path with
+  `python3 -m sim.tests --slow --only economy_land_concentration` (the test prints it). The fixture economy
+  never borrows to default, so titles do not move and the path is flat at the opening's Gini: the check passes
+  vacuously until a full game with household borrowing is run through it. Do not read it as validation of the
+  counter-forces.
+- Partible inheritance (`titles_inheritance.py`): households do not die or divide here, so a labelled
+  transitional rule (retire: household division in demography) passes a generation's share of the land a cohort
+  holds above its opening ownership share to the tile's cohorts that hold less than they opened with, in
+  proportion to the shortfall. Pledged land stays; a tenant who inherits from its own lessor holds that land
+  outright (`titles.pass_title`). Run once a year after loans are serviced.
+- Management cost (`titles_management.py`, in `titles.settle_tenancies`): a lessor's stewards take a share of
+  every tenancy's rent that rises with the number of other tenancies it holds (a lone tenancy is free), paid to
+  the tile's poorest cohort as `steward_pay` (not property income); where the cost eats all the rent the tenant
+  holds the land outright. The rate is a labelled heuristic (retire: overseer staff and distance costs).
+- Debt relief (`debt_relief.py`, lever `sim/agents/policy_land.py`, port `sim/engine/economy_port_land.py`): a
+  state's decision policy is offered the tiles where households owe (`debt_relief` decision); the tiles it picks
+  reach the economy as `YearInputs.debt_relief_tiles`, where the tiles' household loans are cancelled (the
+  lender books the loss, no title moves) and tenants' rent arrears are forgiven. The default policy values it at
+  nothing, so only a player's or a mod's policy chooses it.
+- Tax farming (`tax_farming.py`, `YearInputs.farmed_forms`, `policy_land.farmed_forms`, collection in
+  `year_close.money_taxes`): the state names money forms to farm for the year; any actor with cash bids the form's
+  base of last year at its own reach, discounted a year and capped by its cash; the best bid at or above the
+  state's own expected take (discounted likewise) wins, pays the state up front, and collects through the ordinary
+  assessment (`taxes.assess`) at the farmer's reach (labelled heuristic `TAX_FARMER_REACH`, retire 542). A form
+  needs a year of history before it can be farmed (`record.tax_history`, saved).
+- Bondage (`bondage.py`, `EconomySetup.debt_bondage_years`, `Sim.debt_bondage_term_years`): the founder's default
+  and every household cohort's go through one rule for whether and how long (the society's `debt_bondage` and
+  `bondage_years`). A cohort whose default leaves it with no title enters bondage to its lender for the loss the
+  collateral did not cover (`record.bondage`, saved); each year the creditor takes the owed share of the cohort's
+  wages (the product of the bonded hours: the cohort still sells its hours) as far as its cash goes, which comes
+  off the debt and the creditor's credit loss, until the debt is worked off or the term served. Not built: the
+  bonded hours do not leave the labour market for the creditor's own works, and the arrears-years rule of 589
+  (`borrowing_arrears`) is the founder's and firms'; the economy's household default still follows the credit
+  market's arrears share (`credit.DEFAULT_ARREARS_SHARE`), so the two rules agree on policy, not yet on timing.
+
 Not built here, each owned by the mechanism it needs: inheritance and supervision cost (need mortal owners and
 overseers), landlords bidding for tenants after a plague (labour scarcity is in the wage, rent does not follow
 it), elite overreach, confiscation and land reform (486, 542), tax farming (542), bondage on default
 (`labour_bondage`). Dividends still split by ownership share; only land rent follows titles. The elite-share
 range check under 4.2 needs a long baseline run: `python3 -m sim.tests --only agent_economy_wiring`'s
 neighbours do not measure it, and no command does yet.
+
+A state's debt to its named lenders (623) can be repaid in land once titles exist; the lender ledger is `Purses.named_lenders` (`sim/agents/named_lenders.py`).

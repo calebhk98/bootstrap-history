@@ -1,8 +1,8 @@
 """Complaints 101, 112, 354, 478: a technique that halves a good's labour reaches a price and a quantity only
 through producers that run it; split from test_real_output so each runs inside the topic limit."""
 from .harness import *  # noqa: F401,F403
-from .real_output_helpers import (GOOD, YEARS_CLOSED, YEARS_TO_ENTER, plain_node, book_of_good, complete, run,
-                                  baseline_the_twin, close_years)
+from .real_output_helpers import (GOOD, YEARS_CLOSED, YEARS_TO_ENTER, plain_node, traded_units, complete, run,
+                                  close_years)
 
 import copy
 
@@ -40,14 +40,17 @@ try:
     check("a technique one producer runs does not reprice the incumbents' cost of the good",
           game.goods_market.household_prices()[GOOD] == price_before)
     cost = game.entry_cost_ratio(GOOD + "_with_the_technique", GOOD)
-    check("...but a producer making it by that entry makes it for less", cost < 0.75, cost)
+    reference = game._cost_book()[1]._cost(GOOD, source_key, True)
+    labour_share = sum(reference.trade_cost.values()) / reference.unit_cost
+    check("...but a producer making it by that entry makes it for less: by half the labour share of the cost, "
+          "at the economy's prices", 0.0 < labour_share and abs(cost - (1.0 - labour_share / 2.0)) < 1e-9,
+          (cost, labour_share))
     check("...and no good that does not use it changes price",
           all(game.goods_market.household_prices()[material] == price
               for material, price in other_before.items()), other_before)
     twin_years = sim(civ="rome_100ad", capital=1e9)
     close_years(game, 1)
     close_years(twin_years, 1)
-    baseline_the_twin(twin_years)
     close_years(game, YEARS_TO_ENTER - 1)
     close_years(twin_years, YEARS_TO_ENTER - 1)
     check("a producer that makes the good by that entry and sells it lowers the price the market posts",
@@ -60,8 +63,7 @@ try:
           game.goods_market.purchase_cost(GOOD, 5.0)[0] < twin_years.goods_market.purchase_cost(GOOD, 5.0)[0],
           (game.goods_market.purchase_cost(GOOD, 5.0)[0], twin_years.goods_market.purchase_cost(GOOD, 5.0)[0]))
     check("...and the market clears a larger quantity of it than the same society without it",
-          book_of_good(game)["traded_tonnes"] > 1.05 * book_of_good(twin_years)["traded_tonnes"],
-          (book_of_good(game)["traded_tonnes"], book_of_good(twin_years)["traded_tonnes"]))
+          traded_units(game) > 1.05 * traded_units(twin_years), (traded_units(game), traded_units(twin_years)))
     check("...so real output rises, through that good",
           game.real_output_hours() > twin_years.real_output_hours() * 1.0001,
           (twin_years.real_output_hours(), game.real_output_hours()))

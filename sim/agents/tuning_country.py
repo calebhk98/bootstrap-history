@@ -23,3 +23,4 @@ RESERVE_YEARS_OF_NEED = declare(
 	unit="years of the standing need", source=None, confidence="D",
 	why="Money a foreign state keeps back before it spends on copying know-how. Stands in for a "
 		"reserve policy.")
+

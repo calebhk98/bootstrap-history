@@ -19,7 +19,8 @@ price while unsold goods carry on, so next year's posted price carries them.
 Within the year the founder's own orders keep the marginal price curves that
 already move a bill as it is filled (material_price_factor), which is why the
 posted price leaves out the founder's flows and counts everyone else's.
-`market_state` shows the year's clearing so far.
+`market_state` shows the book's year so far, except what the market sold, left unsold and left unmet, which is the
+agent economy's record of last year.
 """
 from sim.world import market
 
@@ -149,6 +150,11 @@ class MarketClearingMixin:
         conditions, outcome = result
         entry = self._market_entry(commodity)
         closing_conditions, closing = self._market_outcome(commodity, with_flows=True)
+        # what the market sold, left unsold and left unmet is the agent economy's record; the static book answers
+        # only while the economy opens
+        record = self.economy.agent_market_record(commodity) or {
+            "sold": closing.society_sales_tonnes, "unsold": closing.unsold_tonnes,
+            "unmet": closing.unmet_demand_tonnes}
         return {
             "material": commodity,
             "price_ratio": outcome.price_ratio,
@@ -165,11 +171,11 @@ class MarketClearingMixin:
             "actor_supply_tonnes": conditions.actor_supply_tonnes + sum(
                 offer.tonnes for offer in self.goods_market.others_offers(commodity)),
             "actor_demand_tonnes": conditions.actor_demand_tonnes,
-            "society_sales_tonnes": closing.society_sales_tonnes,
+            "society_sales_tonnes": record["sold"],
             "displaced_by_founder_tonnes":
                 market.society_sales_displaced_by_founder(closing_conditions),
-            "unsold_tonnes": closing.unsold_tonnes,
-            "unmet_demand_tonnes": closing.unmet_demand_tonnes,
+            "unsold_tonnes": record["unsold"],
+            "unmet_demand_tonnes": record["unmet"],
         }
 
     # ---- the turn of the year -----------------------------------------------
@@ -189,7 +195,7 @@ class MarketClearingMixin:
         self.finish_ways()
         self._open_market_book()
         self.economy.run_agent_year()
-        self._follow_cleared_volumes()
+        self.record_food_eaten(self.economy.agent.outcomes[-1])
         self.close_partner_books()
         self._close_real_output()
         self.revalue_coin_metals()

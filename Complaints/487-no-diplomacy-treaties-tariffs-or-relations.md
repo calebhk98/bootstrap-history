@@ -48,7 +48,7 @@ sea-link canal as a way. A note store is the cheap first step.
 
 Children, in order of work:
 
-- 597: There is no relations store: no place to record a treaty, trust or a player's view of another power
+- 597 (closed): There is no relations store: no place to record a treaty, trust or a player's view of another power
 - 598: States cannot set tariffs or embargoes: customs has one rate and no partner
 - 599: Route dues are a flat per-mode charge with no owner, no response to volume and no competition between routes
 - 600: Routes are open all year: no mud season, winter ice or monsoon in the route modes

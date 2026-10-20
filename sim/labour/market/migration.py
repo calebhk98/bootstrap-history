@@ -7,7 +7,7 @@ Staying scores zero. Flows are all computed from the counts at the start of the 
 so the order of areas does not matter. Trainees stay where they train.
 """
 import math
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from sim.constants import declare
 
@@ -48,6 +48,23 @@ def _sorted_routes(routes: List[Route]) -> List[Route]:
     return sorted(routes, key=lambda route: (route.destination, route.moving_cost))
 
 
+def move_shares(real_origin: float, options: List[Tuple[Optional[float], float]]) -> List[float]:
+    """Share of the people of one place who move along each option this year. An option is the real income at its
+    end (income over that place's subsistence; None or not above zero means it cannot be weighed) and the moving cost
+    in years of the origin's subsistence. Staying is an option scoring zero; only the share who consider moving at all
+    can go. The rule for workers between market areas and for people between regions alike."""
+    scores: Dict[str, float] = {STAY: 0.0}
+    for position, (real_destination, cost_in_years) in enumerate(options):
+        if real_destination is None or real_destination <= 0.0:
+            continue
+        scores[str(position)] = (math.log(real_destination) - math.log(real_origin)
+                                 - MIGRATION_COST_WEIGHT * cost_in_years)
+    if len(scores) == 1:
+        return [0.0] * len(options)
+    shares = logit_shares(scores, MIGRATION_TASTE_SCALE)
+    return [shares.get(str(position), 0.0) * MIGRATION_CONSIDERATION_SHARE_PER_YEAR for position in range(len(options))]
+
+
 def migrate(state: MarketState, inputs: YearInputs, clearings: Dict[Tuple[str, str], Clearing],
             report: YearReport) -> None:
     """Move workers along the routes; record the net change per area in `report.migrated`."""
@@ -67,23 +84,12 @@ def migrate(state: MarketState, inputs: YearInputs, clearings: Dict[Tuple[str, s
             real_origin = _real_income(state, inputs, index, origin, trade, cache)
             if real_origin <= 0.0:
                 continue
-            scores: Dict[str, float] = {STAY: 0.0}
-            for position, route in enumerate(routes):
-                if route.destination == origin:
-                    continue
-                real_destination = _real_income(state, inputs, index, route.destination, trade, cache)
-                if real_destination <= 0.0:
-                    continue
-                cost_in_years = route.moving_cost / floor
-                scores[str(position)] = (math.log(real_destination) - math.log(real_origin)
-                                         - MIGRATION_COST_WEIGHT * cost_in_years)
-            if len(scores) == 1:
-                continue
-            shares = logit_shares(scores, MIGRATION_TASTE_SCALE)
-            for position, route in enumerate(routes):
-                share = shares.get(str(position), 0.0) * MIGRATION_CONSIDERATION_SHARE_PER_YEAR
+            options = [(None, 0.0) if route.destination == origin else
+                       (_real_income(state, inputs, index, route.destination, trade, cache),
+                        route.moving_cost / floor) for route in routes]
+            for position, share in enumerate(move_shares(real_origin, options)):
                 if share > 0.0:
-                    flows.append((origin, route.destination, trade, [count * share for count in bands]))
+                    flows.append((origin, routes[position].destination, trade, [count * share for count in bands]))
 
     for origin, destination, trade, moved in flows:
         origin_bands = state.workers[origin][trade]

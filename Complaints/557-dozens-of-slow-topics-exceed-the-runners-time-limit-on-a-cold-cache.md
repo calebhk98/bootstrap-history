@@ -107,3 +107,22 @@ year is cheaper (bronze: merchants' route search, `sim/economy/merchants.py` `_g
 item of its profile), and until the shipped openings carry the spin-ups and traces they read
 (`python3 sim/simulator.py openings --prune`, plus the 40-year money trace `spin_up_money_supply` keys in the
 opening traces cache).
+
+## Step 4: stale openings fail fast; what the slow topics share (branch `464-557-faster-slow-suite`)
+
+`full_length_opening_checks_<civilisation>` no longer computes a stale opening. `full_length_opening_support.results_of`
+runs the opening under `refusing_to_compute_openings`: a miss on the `agent_economy`, `opening_traces` or `backing_margin`
+cache that has neither a disk entry nor a shipped one raises `StaleShippedOpening` ("the shipped openings are stale; run
+`python3 sim/simulator.py openings`"). Each civilisation gets a `test_opening_is_current_<civilisation>` check outside the
+expected-failure wrapper, so a stale opening is a plain failure and not an expected one. Rome: over ten minutes to 2 s
+(`python3 -m sim.tests --slow --timing --only full_length_opening_checks_rome`). `ROME_COMPUTE_STALE_OPENINGS=1` computes
+anyway. `spin_up_money_supply` and `shipped_opening_game` have the full spin-up as their subject and keep computing.
+`test_stale_opening_guard.py` covers the guard.
+
+Sample of 14 slow topics, warm, `--jobs 1`: a warm `sim()` build is about 2 s (`unopened_sim` 0.2 s), so builds are not the
+shared cost. What they share is stepped Rome years (10 to 25 s each, the first dearest) and per-node loops over the whole
+tree (`can_start`, `start_blockers`: `research_filters` `state:blocked` 19 s), both engine cost. Cuts, seconds before to after:
+`state_debases_coin` 46 to 29 (a warm-up year no check reads dropped), `sugar_maize_knowledge` 29 to 22 (Rome's economy opened
+once for two checks). Tried and not kept: `step_reply_severity` one year (no events) and two years (no faster). Left: `disease_century`
+68 s (the pure model, three seeds by four settings), `economy_state_budget` 46 s (opens the full-length opening, so it follows
+the shipped openings).

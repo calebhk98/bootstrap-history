@@ -6,35 +6,26 @@ profit; a producer that does not move the price keeps the reservation `producers
 unit is worth to the seller unsold is the cheaper of replacing it (its variable cost per unit) and holding
 it (its price-taking reservation), so a seller never prices below what a unit costs it to make or keep.
 A producer that stands for several workshops (Producer.workshops above one) is not a seller but a crowd of
-price takers: it keeps the price-taking reservation and neither searches nor raises. A seller that moves the price may also raise its ask above the price-taking one, which holds units back
-(restraint) when the dearer, smaller sale earns more. A change either way is bounded by the share a seller
-already marks its ask down in a year (UNSOLD_ASK_MARKDOWN_SHARE), so an ask moves over the years as the
-book changes and never jumps in one; an ask raised past what buyers pay goes unsold and is marked down
-again by the producer's own rule.
+price takers: it keeps the price-taking reservation and neither searches nor raises. A seller that moves
+the price may also raise its ask above the price-taking one, which holds units back (restraint) when the
+dearer, smaller sale earns more. A raise is bounded by the share a sold-out seller
+raises its ask in a year (ask_raise.SOLD_OUT_ASK_RAISE_SHARE), so an ask rises over the years as the book
+changes and never jumps in one; a cut is not bounded below the unit value, and a seller whose ask goes
+unsold under the price-taking rule is brought down to what sells by unsold_search.py.
 
 A seller's ask is also held to what a unit costs it times the markup a seller can charge when buyers can
 substitute toward other goods meeting the same need (substitution_markup). Against buyers who spend a fixed
 budget and name no maximum price, profit rises with the ask without limit, so without the hold the ask
-ratchets up each year; and a seller that sells next to nothing at an ask above the hold comes down to it
-at once, since a market in which it is idle tells it nothing about a price above what undercutting rivals
-could ask.
+ratchets up each year.
 """
 import dataclasses
 import math
 from typing import List, Optional, Sequence
 
-from sim.constants import declare
-
 from . import entry_trial, goods_market, market_curves, seller_pricing
-from .producers import UNSOLD_ASK_MARKDOWN_SHARE, expected_output_prices, live_input_prices, live_wages
+from .ask_raise import SOLD_OUT_ASK_RAISE_SHARE
+from .producers import expected_output_prices, live_input_prices, live_wages
 from .types import EDGE_EXTERNAL, Bid, Offer
-
-IDLE_SALE_SHARE = declare(
-    "IDLE_SALE_SHARE", 0.01, kind="temporary_heuristic", unit="share of its offer a seller sells at its ask",
-    source=None, confidence="D",
-    why="A seller that sells less than this share of what it offers at its ask is idle: its ask is above what "
-        "any real buyer pays, so it comes down to cost times the substitution markup at once instead of "
-        "marking down a share a year. Where idle begins has no measured basis.")
 
 
 def merged_bids(bids: Sequence[Bid], good: str) -> List[Bid]:
@@ -78,8 +69,9 @@ def stands_for_many(record, offer: Offer) -> bool:
 
 
 def strategic_offers(setup, record, view, bids: Sequence[Bid], offers: Sequence[Offer],
-                     last_price: Optional[float]) -> List[Offer]:
-    """`offers` with each moving producer's reservation re-chosen, in agent order."""
+                     last_price: Optional[float], costs: Optional[dict] = None) -> List[Offer]:
+    """`offers` with each moving producer's reservation re-chosen, in agent order. A `costs` dict receives
+    each offer's `unit_cost` by (seller, tile), for the unsold search of the same market to read."""
     offers = list(offers)
     if not bids or not offers:
         return offers
@@ -91,31 +83,19 @@ def strategic_offers(setup, record, view, bids: Sequence[Bid], offers: Sequence[
         if offer.quantity <= 0.0:
             continue
         cost = unit_cost(setup, record, view, offer)
+        if costs is not None:
+            costs[(offer.seller, offer.tile)] = cost
         if cost is None:
             continue
         value = unit_value(offer, cost)
         rivals = offers[:index] + offers[index + 1:]
         ask = max(offer.reservation_price, 0.0)
-        crowd = stands_for_many(record, offer)
-        # a crowd of price takers earns no markup: the dearest ask it holds when nothing sells is its cost
-        limit = cost if crowd else cost * substitution_markup(setup, offer)
-        if ask > limit and math.isfinite(limit):
-            sold, _price = seller_pricing.sold_and_price(book, rivals, offer, ask, last_price, buyers)
-            if sold < IDLE_SALE_SHARE * offer.quantity:
-                offers[index] = dataclasses.replace(offer, reservation_price=limit)
-                continue
-        if crowd:
-            # unsold stock at an ask above cost: the crowd marks down by the share of its offer left unsold, never below cost
-            if ask > cost and math.isfinite(cost):
-                sold, _price = seller_pricing.sold_and_price(book, rivals, offer, ask, last_price, buyers)
-                unsold_share = 1.0 - sold / offer.quantity if offer.quantity > 0.0 else 0.0
-                if unsold_share > 0.0:     # close the gap to cost by the share of the offer left unsold
-                    offers[index] = dataclasses.replace(offer, reservation_price=ask - unsold_share * (ask - cost))
-            continue
-        step = UNSOLD_ASK_MARKDOWN_SHARE * (ask if ask > 0.0 else max(last_price or 0.0, 0.0))
-        floor = ask * (1.0 - UNSOLD_ASK_MARKDOWN_SHARE)
+        if stands_for_many(record, offer):
+            continue     # a crowd of price takers keeps its reservation; unsold_search.py lowers it to what sells
+        limit = cost * substitution_markup(setup, offer)
+        step = SOLD_OUT_ASK_RAISE_SHARE * (ask if ask > 0.0 else max(last_price or 0.0, 0.0))
         choice = seller_pricing.best_reservation(
-            book, rivals, offer, value, last_price, ceiling=min(ask + step, max(limit, floor)), floor=floor,
+            book, rivals, offer, value, last_price, ceiling=min(ask + step, max(limit, value)), floor=value,
             current=ask, buyers=buyers)
         if choice is not None:
             offers[index] = dataclasses.replace(offer, reservation_price=choice)

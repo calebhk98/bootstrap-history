@@ -1,5 +1,5 @@
-"""A seller left holding goods nobody bought at its ask lowers the ask and what it expects to get, and does
-not stop planning runs for good because the sales it recorded were at an ask above every bid."""
+"""A seller left holding goods nobody bought at its ask is brought down to what sells inside the year's clearing
+(unsold_search.py), so its expectation follows the market's price and not a yearly markdown."""
 
 QUICK_TOPIC = True
 
@@ -58,32 +58,14 @@ class UnsoldAskTests(unittest.TestCase):
         expected = producers.next_expectations(seller(expected_prices={}), FARM, unpriced)
         self.assertNotIn("grain", expected)
 
-    def test_unsold_stock_lowers_the_expected_price(self):
+    def test_unsold_stock_does_not_lower_the_expectation_between_years(self):
+        # the markdown happens inside the year's clearing (unsold_search.py), so the market's price is the signal
         expected = producers.next_expectations(seller(), FARM, frozen_market(stock=500.0))["grain"]
-        self.assertLess(expected, 0.63)
+        self.assertAlmostEqual(expected, 0.7)     # the price the market remembers; only a sold-out seller adds a raise
 
     def test_no_stock_left_keeps_the_expectation(self):
         expected = producers.next_expectations(seller(), FARM, frozen_market(stock=0.0))["grain"]
         self.assertGreater(expected, 0.65)
-
-    def test_the_reservation_follows_the_expectation_down_year_after_year(self):
-        producer = seller()
-        view = frozen_market(stock=500.0)
-        reservations = []
-        for _year in range(8):
-            producer = producers.replaced(producer, expected_prices=producers.next_expectations(producer, FARM, view))
-            offer, = producers.offers(producer, FARM, view, {"grain": 500.0}, 0.0, 0.05, {"grain": GoodSpec("grain", 1.0, 0.0, 0.0, "food")})
-            reservations.append(offer.reservation_price)
-        self.assertTrue(all(later < earlier for earlier, later in zip(reservations, reservations[1:])))
-        # the markdown compounds; the regressive pull toward cost slows it
-        self.assertLess(reservations[-1], (1.0 - producers.UNSOLD_ASK_MARKDOWN_SHARE) ** 4 * reservations[0])
-
-    def test_sales_recorded_at_too_high_an_ask_do_not_stop_runs_for_good(self):
-        producer = seller(expected_sales=1e-6)
-        held_in_runs = 0.1
-        runs = producers.runs_for_stock(producer, FARM, View({}, {}, stock=held_in_runs * FARM.outputs["grain"]))
-        self.assertGreater(runs, 0.0)
-        self.assertTrue(math.isfinite(runs))
 
     def test_a_large_unsold_stock_still_holds_runs_back(self):
         producer = seller(expected_sales=1e-6)

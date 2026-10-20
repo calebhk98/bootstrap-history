@@ -34,8 +34,7 @@ demand for carters, sailors and porters (530).
   paid less the crew's wages, which the labour market has already paid to the households that sold the
   hours. Those hours are no longer offered to other employers or left for the household's own plot.
 - Still a shortcut: the rest of a fee (feed, carts, ships, animals, losses) goes to the poorest
-  households of the source tile; sea and river hauls count at the land mode's hours; handling hours are
-  not counted. Capital for carriers with service lives, and dispatch limited by it, are not built.
+  households of the source tile. Capital for carriers with service lives, and dispatch limited by it, are not built.
 - Carriers must exist to be hired: the opening places people by the runs producers expect, so no carters
   exist when merchants first ship, and the labour core does not grow a new trade fast enough (measured
   below). The crew hours are therefore bid in the unskilled trade (`CARRIAGE_CREW_UNSKILLED_SHARE`, a
@@ -46,21 +45,40 @@ demand for carters, sailors and porters (530).
   a one-year working-capital loan for next year's carrier wages (`carriage_hours.wage_loans`, sized after the owners took their profit, since the cash left is what pays), staked as
   capital like its other loans. Bids are placed where people live: goods leaving an empty tile are bid for
   in the merchant's home labour area.
-- One wage: the rates are priced at the wage of the opening (`EconomySetup.carriage_wage`). Each year the
-  carriage table is multiplied (`CarriageTable.set_scale`, no rebuild, exactly one where the wage is the one
-  priced) so that the labour part of a rate, the cheapest mode's crew hours over both legs of the round trip
-  at the emptiness of the returns, is paid at the unskilled market wage of the year averaged over the hours
-  hired; feed, carts and animals keep their price. The crew's pay for a shipment is then that labour part.
-  Not done: port handling hours, the other modes' labour parts (the cheapest mode's share stands for all),
-  and a wage by area (one national average).
-- Tests: `sim/tests/test_economy_carriage_hours.py`.
+- Hours follow the route (627, closed): `CarriageTable.haul` gives the money a tonne pays on each mode's legs
+  and the handlings into each mode; `carriage_hours.Crew` turns a mode's leg money over its rate into the
+  tonne-km it stands for, times that mode's crew hours (sea and river modes included, `carriage_crew`), and
+  adds the setup's handling hours (`carriage_handling`, unskilled trade) for each handling into a mode whose
+  handling the rates price. A merchant's plan, bids, hires and wage loans are keyed by (trade, tile).
+- Wages by area: the rates are priced at the wage of the opening (`EconomySetup.carriage_wage`). Each year the
+  carriage table is multiplied (`CarriageTable.set_scale`, no rebuild, exactly one where the wages are the one
+  priced) by the change in the labour part of last year's carried flows, each priced at the wage of the area
+  the goods left; the crew is paid that area's wage. Feed, carts and animals keep their price.
+- The crew is still bid in the unskilled trade (`CARRIAGE_CREW_UNSKILLED_SHARE`), so a sailor's hours are
+  labourer hours until 556 places people in the trades the flows need; the code bids each mode's own trade
+  when that share is lowered.
+- Tests: `sim/tests/test_economy_carriage_hours.py`, `sim/tests/test_carriage_hours_by_route.py`.
+
+## Done: carriers are durable goods (629, closed)
+
+- Cart, pack saddle and river barge are goods with recipes (`data/production/99_carriers.json`); merchant ship, ox and
+  mule carry a `carrier_use` too, and all have sourced service lives in `data/world/service_lives.json`.
+- `sim/economy/carriage_wear.py`: a tonne-km on a mode wears each carrier of its team by the team's count over
+  (service life x days a unit works a year x tonne-km the team moves a day). A merchant keeps carriers in its own
+  account, wears them by the year's shipments, and bids next year for as many units as were worn. The fee it pays
+  the households of the source tile is less what those carriers cost at last year's price.
+- Exposed for 630: `Merchant.carrier_wear` (units by good), `Merchant.carrier_team_days` (by mode), and geography's
+  `carriage_rates` entries carry `carriers`, `tonne_km_per_team_day`, `team_payload_tonnes`.
+- Not done (631): wear does not limit dispatch, merchants have no opening fleet, and on a real opening only carts and
+  pack animals are supplied in the first years (no shipwright or saddler trade exists to answer the bids).
+- Tests: `sim/tests/test_carriage_wear.py`.
 
 ## Sized (no change made)
 
 - **Travel time is covered.** `sim/economy/merchants_transit.py` holds a haul for the whole years its days span, books
   spoilage each year to `EDGE_SPOILAGE`, charges interest in `gap_cost_per_unit`, and lags news; held by
   `test_merchant_travel_time.py`.
-- **Storage at stages** is not charged (spoilage and interest only); small.
+- **Storage at stages** is charged for the years a haul is held beyond the first (628, closed).
 - **Carriers as capital** need, in order: cart, pack saddle and vessel goods with recipes and sourced service lives
   (only `ox` and `mule` exist, without service lives); carrier-days, animals per carrier and vehicle wear exposed on
   geography's `Rate` and threaded through `carriage_crew`; a per-merchant fleet whose yearly capacity follows from
@@ -74,7 +92,8 @@ Children, in order of work:
 
 - 627: Carriage hours count sea and river hauls at the land mode's hours, skip port handling, and use one national wage
 - 628: Storage at stages of a haul is not charged
-- 629: Carts, pack saddles and vessels are not goods and have no service lives
+- 629: Carts, pack saddles and vessels are not goods and have no service lives (closed)
+- 630: Geography's rates do not expose carrier-days or vehicle wear (closed)
 - 630: Geography's `Rate` does not expose carrier-days, animals per carrier or vehicle wear
 - 631: Merchants have no fleet: dispatch is limited by cash, not by carriers
 - 632: The non-labour part of a carriage fee (feed, carts, ships, animals, losses) goes to the poorest households of the source tile

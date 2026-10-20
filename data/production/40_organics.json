@@ -21,7 +21,7 @@
    },
    "inputs": {},
    "labour_hours": {
-    "labourer": 150.0
+    "farmer": 150.0
    },
    "land_hectare_years": 1.2399911,
    "capital": [
@@ -51,7 +51,7 @@
    },
    "inputs": {},
    "labour_hours": {
-    "labourer": 350.0
+    "farmer": 350.0
    },
    "land_hectare_years": 0.99999105,
    "extracted_from": "arable land",
@@ -67,7 +67,7 @@
    },
    "inputs": {},
    "labour_hours": {
-    "labourer": 190.0
+    "farmer": 190.0
    },
    "land_hectare_years": 0.99999105,
    "extracted_from": "arable land",
@@ -90,7 +90,7 @@
    },
    "inputs": {},
    "labour_hours": {
-    "labourer": 200.0
+    "farmer": 200.0
    },
    "land_hectare_years": 0.99999105,
    "extracted_from": "arable land",
@@ -118,7 +118,7 @@
     "salt_kg": 20.0
    },
    "labour_hours": {
-    "labourer": 250.0
+    "herder": 250.0
    },
    "unit_dimension": "mass",
    "basis": "per tonne of pressed, salted hard cheese from goat and sheep milk",
@@ -149,7 +149,7 @@
    },
    "inputs": {},
    "labour_hours": {
-    "labourer": 4600.0
+    "farmer": 4600.0
    },
    "land_hectare_years": 0.99999105,
    "extracted_from": "arable land",
@@ -176,7 +176,7 @@
    },
    "inputs": {},
    "labour_hours": {
-    "labourer": 150.0
+    "farmer": 150.0
    },
    "land_hectare_years": 0.99999105,
    "extracted_from": "arable land",
@@ -192,14 +192,15 @@
    },
    "inputs": {},
    "labour_hours": {
-    "labourer": 1250.0,
-    "artisan": 700.0
+    "farmer": 250.0,
+    "spinner": 1000.0,
+    "weaver": 700.0
    },
    "land_hectare_years": 0.99999105,
    "extracted_from": "arable land",
    "unit_dimension": "mass",
    "basis": "per hectare of flax per year, output as kg of finished, woven linen cloth",
-   "yield_basis": "GROWN, but UNLIKE wool_kg/cotton_kg/hemp_fiber_kg this entry folds the entire chain from field to finished cloth into one number, because flax has only this one tracked material key - there is no separate 'flax_fiber_kg' or 'linen_thread_kg' for the tree to consume at an intermediate stage, so linen_kg has to represent the usable end-state directly. The chain: flax straw retted, broken, scutched and hackled yields on the order of 150-250 kg of good spinnable line fibre per hectare (well below hemp's yield - flax is a finer, more delicate fibre for finer cloth); spinning and weaving losses take a further 10-15%, giving roughly 150 kg of finished cloth/ha, taken as the output. The labour is where the real cost lives: hand SPINNING flax into thread on a spindle or wheel is, by a wide historical margin, the slowest step in pre-mechanised textile production - it took several full-time spinners' output to keep one weaver supplied, which is exactly why the spinning jenny mattered centuries before power looms did. Field work, retting, breaking, scutching and hackling for a hectare's fibre is put at roughly 250 labourer-hours; spinning that fibre into thread at roughly 1000 labourer-hours (household/unskilled craft, historically often women's and children's work); weaving the thread into cloth on a horizontal loom at roughly 700 artisan-hours (skilled, equipment-using work, hence the different trade). Bleaching/finishing is treated as folded into the weaving step rather than broken out separately. LAND (Complaints/48): the batch is the one hectare-year the basis states, so land_hectare_years is that hectare in hectare_land's own unit (1 hectare-year - see wheat_kg's own LAND note), charged against hectare_land's solved rent like any other input.",
+   "yield_basis": "GROWN, but UNLIKE wool_kg/cotton_kg/hemp_fiber_kg this entry folds the entire chain from field to finished cloth into one number, because flax has only this one tracked material key - there is no separate 'flax_fiber_kg' or 'linen_thread_kg' for the tree to consume at an intermediate stage, so linen_kg has to represent the usable end-state directly. The chain: flax straw retted, broken, scutched and hackled yields on the order of 150-250 kg of good spinnable line fibre per hectare (well below hemp's yield - flax is a finer, more delicate fibre for finer cloth); spinning and weaving losses take a further 10-15%, giving roughly 150 kg of finished cloth/ha, taken as the output. The labour is where the real cost lives: hand SPINNING flax into thread on a spindle or wheel is, by a wide historical margin, the slowest step in pre-mechanised textile production - it took several full-time spinners' output to keep one weaver supplied, which is exactly why the spinning jenny mattered centuries before power looms did. Field work, retting, breaking, scutching and hackling for a hectare's fibre is put at roughly 250 farmer-hours; spinning that fibre into thread at roughly 1000 spinner-hours (household craft, historically often women's and children's work); weaving the thread into cloth on a horizontal loom at roughly 700 weaver-hours (skilled, equipment-using work). Bleaching/finishing is treated as folded into the weaving step rather than broken out separately. LAND (Complaints/48): the batch is the one hectare-year the basis states, so land_hectare_years is that hectare in hectare_land's own unit (1 hectare-year - see wheat_kg's own LAND note), charged against hectare_land's solved rent like any other input.",
    "conf": "C",
    "requires_node": "tex_drop_spindle"
   },
@@ -211,7 +212,7 @@
     "mulberry_leaves_kg": 1500.0
    },
    "labour_hours": {
-    "labourer": 700.0
+    "farmer": 700.0
    },
    "unit_dimension": "mass",
    "basis": "per 100 kg of fresh live cocoons, spun by silkworms reared on mulberry leaf and stifled (killed in steam or dry heat) before the moth emerges",
@@ -227,7 +228,8 @@
     "silk_cocoon_kg": 700.0
    },
    "labour_hours": {
-    "artisan": 12000.0
+    "spinner": 5000.0,
+    "weaver": 7000.0
    },
    "unit_dimension": "mass",
    "basis": "per 100 kg of finished plain-weave silk cloth, reeled from cocoons, thrown into yarn and woven",
@@ -258,7 +260,7 @@
    },
    "inputs": {},
    "labour_hours": {
-    "labourer": 200.0
+    "farmer": 200.0
    },
    "land_hectare_years": 0.99999105,
    "extracted_from": "forest",
@@ -294,8 +296,7 @@
     "urine_kg": 2.0
    },
    "labour_hours": {
-    "labourer": 4.0,
-    "artisan": 2.0
+    "tanner": 6.0
    },
    "unit_dimension": "mass",
    "basis": "per kg of finished vegetable (oak-bark) tanned leather",
@@ -335,7 +336,7 @@
     "hide_kg": 0.35
    },
    "labour_hours": {
-    "artisan": 3.0
+    "tanner": 3.0
    },
    "unit_mass_kg": 0.02,
    "unit_dimension": "count",
@@ -705,7 +706,7 @@
    },
    "inputs": {},
    "labour_hours": {
-    "labourer": 400.0
+    "farmer": 400.0
    },
    "land_hectare_years": 0.99999105,
    "extracted_from": "arable land",
@@ -723,11 +724,11 @@
     "cotton_kg": 0.0021
    },
    "labour_hours": {
-    "labourer": 0.02
+    "spinner": 0.02
    },
    "unit_dimension": "length",
    "basis": "per metre of finished, braided cotton wick",
-   "yield_basis": "A simple braided-cotton candle/lamp wick runs on the order of 2 grams of cotton fibre per metre of length for an ordinary taper-sized wick (thicker wicks for larger lamps would need more); a small allowance on top of that raw 2 g/m covers waste in carding and braiding. Labour is fast per metre once done in bulk lengths - twisting or plaiting several strands of carded cotton together is a quick repetitive hand task, nothing like the slow business of spinning fine thread for cloth.",
+   "yield_basis": "A simple braided-cotton candle/lamp wick runs on the order of 2 grams of cotton fibre per metre of length for an ordinary taper-sized wick (thicker wicks for larger lamps would need more); a small allowance on top of that raw 2 g/m covers waste in carding and braiding. Labour is fast per metre once done in bulk lengths - twisting or plaiting several strands of carded cotton together is a quick repetitive hand task, nothing like the slow business of spinning fine thread for cloth. TRADE (Complaint 619): the hours are booked to spinner, not the generic labourer pool, because braiding fibre into a wick is the spinner's craft of twisting and plying fibre (the whole figure moves; its size is unchanged and not re-sourced here).",
    "conf": "C",
    "requires_node": null
   },
@@ -739,11 +740,11 @@
     "wool_kg": 1.05
    },
    "labour_hours": {
-    "labourer": 6.0
+    "spinner": 6.0
    },
    "unit_dimension": "mass",
    "basis": "per kg of spun thread, wool taken as the representative raw fibre",
-   "yield_basis": "The first stage of this file's generic textile chain (thread_kg -> fabric_kg -> cloth_kg), which any raw fibre entry (wool_kg here; cotton_kg or hemp_fiber_kg could equally feed it) can be imagined substituting into. Carding (combing the fibres straight and parallel) and spinning on a spindle or wheel loses a small amount of fibre as short, unspinnable waste, taken at 5%. Spinning is unskilled/semi-skilled hand or household craft historically, hence 'labourer' rather than a specialised trade, and - as linen_kg's entry discusses at length - is by far the slowest step in hand textile production; the hours here are lower than linen_kg's per-kg spinning cost because wool's fibre is coarser and quicker to spin to a usable thickness than fine flax line fibre.",
+   "yield_basis": "The first stage of this file's generic textile chain (thread_kg -> fabric_kg -> cloth_kg), which any raw fibre entry (wool_kg here; cotton_kg or hemp_fiber_kg could equally feed it) can be imagined substituting into. Carding (combing the fibres straight and parallel) and spinning on a spindle or wheel loses a small amount of fibre as short, unspinnable waste, taken at 5%. Spinning is booked to the spinner trade (a household and hired craft learned young), and - as linen_kg's entry discusses at length - is by far the slowest step in hand textile production; the hours here are lower than linen_kg's per-kg spinning cost because wool's fibre is coarser and quicker to spin to a usable thickness than fine flax line fibre.",
    "conf": "C",
    "requires_node": "tex_drop_spindle"
   },
@@ -755,11 +756,11 @@
     "thread_kg": 1.05
    },
    "labour_hours": {
-    "artisan": 5.0
+    "weaver": 5.0
    },
    "unit_dimension": "mass",
    "basis": "per kg of plain-woven fabric straight off the loom, undressed and unfinished",
-   "yield_basis": "Second stage of the generic textile chain: thread is warped and woven on a loom, a skilled, equipment-using craft (hence 'artisan' rather than 'labourer', unlike the spinning stage before it) with a modest loom-waste allowance (thrums, selvedge trimming) taken at 5%. This is UNFINISHED cloth - no fulling, dyeing, bleaching or napping yet - which is what distinguishes it from cloth_kg.",
+   "yield_basis": "Second stage of the generic textile chain: thread is warped and woven on a loom, a skilled, equipment-using craft (the weaver trade, unlike the spinner of the stage before it) with a modest loom-waste allowance (thrums, selvedge trimming) taken at 5%. This is UNFINISHED cloth - no fulling, dyeing, bleaching or napping yet - which is what distinguishes it from cloth_kg.",
    "conf": "C",
    "requires_node": "tex_two_beam_loom"
   },
@@ -772,7 +773,7 @@
     "urine_kg": 5.0
    },
    "labour_hours": {
-    "labourer": 3.0
+    "fuller": 3.0
    },
    "unit_dimension": "mass",
    "basis": "per kg of finished, dressed cloth",
@@ -788,7 +789,8 @@
     "hemp_fiber_kg": 1.15
    },
    "labour_hours": {
-    "labourer": 8.0
+    "spinner": 4.36,
+    "weaver": 3.64
    },
    "unit_dimension": "mass",
    "basis": "per kg of heavy, plain-woven canvas (sailcloth-grade)",
@@ -804,7 +806,7 @@
     "wool_kg": 1.2
    },
    "labour_hours": {
-    "labourer": 4.0
+    "fuller": 4.0
    },
    "unit_dimension": "mass",
    "basis": "per kg of finished wool felt",
@@ -820,8 +822,8 @@
     "cotton_kg": 1.1
    },
    "labour_hours": {
-    "labourer": 8.0,
-    "artisan": 5.0
+    "spinner": 8.0,
+    "weaver": 5.0
    },
    "unit_dimension": "mass",
    "basis": "per kg of woven cotton fabric",
@@ -945,7 +947,7 @@
    },
    "inputs": {},
    "labour_hours": {
-    "labourer": 2000.0
+    "farmer": 2000.0
    },
    "land_hectare_years": 0.99999105,
    "extracted_from": "arable land",
@@ -966,7 +968,7 @@
    },
    "inputs": {},
    "labour_hours": {
-    "labourer": 1500.0
+    "farmer": 1500.0
    },
    "land_hectare_years": 0.99999105,
    "extracted_from": "forest",
@@ -990,11 +992,11 @@
     "linen_kg": 0.0021
    },
    "labour_hours": {
-    "labourer": 0.02
+    "spinner": 0.02
    },
    "unit_dimension": "length",
    "basis": "per metre of finished, twisted linen wick",
-   "yield_basis": "The same wick as wick_cotton_m from a society's own bast fibre: a candle or lamp wick of about 2 grams of spun fibre per metre, with a small allowance for waste. The fibre is linen_kg, the flax entry that folds field work, spinning and weaving into one figure, so a wick here is charged the cloth's weaving as well, an overcount until flax thread has its own entry (labelled heuristic, retire: Complaints/531). Roman and medieval European wicks were flax, hemp or rush pith; rush has no entry in the data. From memory, confidence D.",
+   "yield_basis": "The same wick as wick_cotton_m from a society's own bast fibre: a candle or lamp wick of about 2 grams of spun fibre per metre, with a small allowance for waste. The fibre is linen_kg, the flax entry that folds field work, spinning and weaving into one figure, so a wick here is charged the cloth's weaving as well, an overcount until flax thread has its own entry (labelled heuristic, retire: Complaints/531). Roman and medieval European wicks were flax, hemp or rush pith; rush has no entry in the data. From memory, confidence D. TRADE (Complaint 619): the hours are booked to spinner, not the generic labourer pool, because twisting fibre into a wick is the spinner's craft of twisting and plying fibre (the whole figure moves; its size is unchanged and not re-sourced here).",
    "conf": "D",
    "requires_node": "tex_drop_spindle"
   },

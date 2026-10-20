@@ -4,7 +4,7 @@ An actor's debt is its purse below zero. What it will be lent is the smaller of 
 can carry at the market rate and what lenders still hold after everyone else's loans. What it pays is the
 market rate plus a premium for the share of that ceiling it has used, less a discount for its standing.
 """
-from typing import Any
+from typing import Any, Tuple
 
 from sim.constants import declare
 from sim.world import capital_market
@@ -76,14 +76,26 @@ class Borrower:
 			used = debt / ceiling if ceiling > 0.0 else 1.0
 		return capital_market.borrower_rate(world.market_rate(), self.standing_discount(world), used)
 
+	@property
+	def arrears_book(self) -> Any:
+		"""Where the arrears are kept: the actor's record unless it names another."""
+		return self.record  # type: ignore[attr-defined]
+
 	def pay_interest(self, world: Any) -> float:
-		"""The year's interest on the debt; the amount owed. It is paid to the lenders by drawing on the facility
-		while the debt is under the ceiling; the rest becomes arrears, paid first from any cash the actor later
-		holds. Arrears that last too long are a default."""
-		record = self.record  # type: ignore[attr-defined]
+		"""The year's interest on the debt; the amount owed. See `settle_interest`."""
+		return self.settle_interest(world)[0]
+
+	def settle_interest(self, world: Any) -> Tuple[float, float]:
+		"""(owed, paid) interest for the year. It is paid to the lenders by drawing on the facility while the
+		debt is under the ceiling; the rest becomes arrears, paid first from any cash the actor later holds.
+		Arrears that last too long are a default. The one rule for every borrower: a firm, a state, a trader,
+		the founder's household."""
+		record = self.arrears_book
 		self.pay_arrears_from_purse()
 		debt = self.debt()
-		owed = debt * self.borrowing_rate(world) if debt > 0.0 else 0.0
+		bonds = self.purses.bonds  # type: ignore[attr-defined]
+		floating = max(0.0, debt - bonds.debt(self.account_id))  # type: ignore[attr-defined]
+		owed = (floating * self.borrowing_rate(world) if floating > 0.0 else 0.0) + bonds.coupons_due(self.account_id)  # type: ignore[attr-defined]
 		paid, unpaid = borrowing_arrears.settle_year(owed, self.spare_credit(world))
 		if paid > 0.0:
 			world.pay_interest(self, paid, "interest")
@@ -91,11 +103,11 @@ class Borrower:
 		record.arrears_years = record.arrears_years + 1 if record.interest_arrears > DEBT_FLOOR else 0
 		if borrowing_arrears.in_default(record.arrears_years):
 			self.default(world)
-		return owed
+		return owed, paid
 
 	def pay_arrears_from_purse(self) -> None:
 		"""Interest left unpaid in earlier years is paid from whatever cash the actor now holds."""
-		record = self.record  # type: ignore[attr-defined]
+		record = self.arrears_book
 		paid = min(record.interest_arrears, max(0.0, self.money))  # type: ignore[attr-defined]
 		if paid > DEBT_FLOOR:
 			self.purses.pay_arrears(self.account_id, paid)  # type: ignore[attr-defined]
@@ -114,5 +126,5 @@ class Borrower:
 		"""The lenders write the claim off, the pool bearing the loss; an actor that can close overrides this to
 		close as well."""
 		self.write_off_debt()
-		self.record.interest_arrears = 0.0  # type: ignore[attr-defined]
-		self.record.arrears_years = 0  # type: ignore[attr-defined]
+		self.arrears_book.interest_arrears = 0.0
+		self.arrears_book.arrears_years = 0

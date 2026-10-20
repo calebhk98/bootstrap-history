@@ -51,6 +51,7 @@ SHIPPED: List[Phase] = [
 	Phase("seat_work", SEAT, lambda sim, seat_id: sim._run_seat_work()),
 	Phase("market", WORLD, lambda sim, seats: sim._step_market()),
 	Phase("wild_stock", WORLD, lambda sim, seats: sim.step_wild_stock()),
+	Phase("soil_nitrogen", WORLD, lambda sim, seats: sim.step_soil_nitrogen()),
 	Phase("living_stock", SEAT, lambda sim, seat_id: sim.step_living_stock()),
 	Phase("defence_stores", SEAT, lambda sim, seat_id: sim.step_defence_stores()),
 	Phase("random_events", WORLD, _random_events),

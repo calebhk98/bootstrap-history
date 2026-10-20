@@ -27,22 +27,23 @@ class SatiationDataTests(unittest.TestCase):
 
 
 class KeptFarmWorkersTests(unittest.TestCase):
-    def test_hands_stay_while_a_farm_hour_pays_at_least_the_wage_and_food_is_still_wanted(self):
+    def test_hands_stay_where_a_farm_hour_pays_exactly_the_wage(self):
         self.assertEqual(farm_intake.kept_farm_workers(
-            current_fte=80.0, satiation_fte=100.0, land_limit_fte=200.0, farm_hour_value_over_wage=3.0), 80.0)
+            current_fte=80.0, satiation_fte=100.0, land_limit_fte=200.0, farm_hour_value_over_wage=1.0, labour_elasticity=0.5), 80.0)
 
     def test_hands_beyond_what_satiation_uses_do_not_stay(self):
         self.assertEqual(farm_intake.kept_farm_workers(
-            current_fte=150.0, satiation_fte=100.0, land_limit_fte=200.0, farm_hour_value_over_wage=3.0), 100.0)
+            current_fte=150.0, satiation_fte=100.0, land_limit_fte=200.0, farm_hour_value_over_wage=3.0, labour_elasticity=0.5), 100.0)
 
     def test_hands_beyond_the_land_do_not_stay(self):
         self.assertEqual(farm_intake.kept_farm_workers(
-            current_fte=80.0, satiation_fte=100.0, land_limit_fte=60.0, farm_hour_value_over_wage=3.0), 60.0)
+            current_fte=80.0, satiation_fte=100.0, land_limit_fte=60.0, farm_hour_value_over_wage=3.0, labour_elasticity=0.5), 60.0)
 
-    def test_cheap_food_keeps_nobody(self):
-        self.assertEqual(farm_intake.kept_farm_workers(
-            current_fte=80.0, satiation_fte=100.0, land_limit_fte=200.0, farm_hour_value_over_wage=0.5), 0.0)
+    def test_cheap_food_keeps_fewer_hands_than_work_the_land_today(self):
+        self.assertLess(farm_intake.kept_farm_workers(
+            current_fte=80.0, satiation_fte=100.0, land_limit_fte=200.0, farm_hour_value_over_wage=0.5,
+            labour_elasticity=0.5), 80.0)
 
     def test_no_price_signal_keeps_nobody(self):
         self.assertEqual(farm_intake.kept_farm_workers(
-            current_fte=80.0, satiation_fte=100.0, land_limit_fte=200.0, farm_hour_value_over_wage=None), 0.0)
+            current_fte=80.0, satiation_fte=100.0, land_limit_fte=200.0, farm_hour_value_over_wage=None, labour_elasticity=0.5), 0.0)

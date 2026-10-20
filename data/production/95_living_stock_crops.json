@@ -7,7 +7,7 @@
    },
    "inputs": {},
    "labour_hours": {
-    "labourer": 800.0
+    "farmer": 800.0
    },
    "land_hectare_years": 0.99999105,
    "extracted_from": "arable land",
@@ -23,7 +23,7 @@
    },
    "inputs": {},
    "labour_hours": {
-    "labourer": 600.0
+    "farmer": 600.0
    },
    "land_hectare_years": 0.99999105,
    "extracted_from": "arable land",
@@ -39,7 +39,7 @@
    },
    "inputs": {},
    "labour_hours": {
-    "labourer": 600.0
+    "farmer": 600.0
    },
    "land_hectare_years": 0.99999105,
    "extracted_from": "arable land",
@@ -55,7 +55,7 @@
    },
    "inputs": {},
    "labour_hours": {
-    "labourer": 700.0
+    "farmer": 700.0
    },
    "land_hectare_years": 0.99999105,
    "extracted_from": "arable land",
@@ -71,7 +71,7 @@
    },
    "inputs": {},
    "labour_hours": {
-    "labourer": 800.0
+    "farmer": 800.0
    },
    "land_hectare_years": 0.99999105,
    "extracted_from": "arable land",
@@ -87,7 +87,7 @@
    },
    "inputs": {},
    "labour_hours": {
-    "labourer": 40.0
+    "herder": 40.0
    },
    "land_hectare_years": 0.99999105,
    "extracted_from": "pasture",
@@ -103,7 +103,7 @@
    },
    "inputs": {},
    "labour_hours": {
-    "labourer": 500.0
+    "farmer": 500.0
    },
    "land_hectare_years": 0.99999105,
    "extracted_from": "arable land",
@@ -119,7 +119,7 @@
    },
    "inputs": {},
    "labour_hours": {
-    "labourer": 630.0
+    "farmer": 630.0
    },
    "land_hectare_years": 0.99999105,
    "extracted_from": "arable land",
@@ -135,7 +135,7 @@
    },
    "inputs": {},
    "labour_hours": {
-    "labourer": 310.0
+    "farmer": 310.0
    },
    "land_hectare_years": 0.99999105,
    "extracted_from": "arable land",
@@ -151,7 +151,7 @@
    },
    "inputs": {},
    "labour_hours": {
-    "labourer": 600.0
+    "farmer": 600.0
    },
    "land_hectare_years": 0.99999105,
    "extracted_from": "arable land",
@@ -170,7 +170,7 @@
    },
    "inputs": {},
    "labour_hours": {
-    "labourer": 800.0
+    "farmer": 800.0
    },
    "land_hectare_years": 0.99999105,
    "extracted_from": "arable land",

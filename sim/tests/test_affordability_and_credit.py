@@ -164,6 +164,7 @@ check("...and a household that can afford the show still pays for it",
 arrears = sim(capital=-4000.0)
 arrears.insolvent_years = 20
 arrears.revenue = lambda: 0.0
+arrears.market_rate = lambda: 0.08   # a settled market may clear at zero; the banner is about a rate that costs
 diagnosis = arrears.stall_diagnosis()
 ledger_loss = (arrears.revenue() - arrears.upkeep() - arrears.living_cost() - arrears.mine_operating_cost()
                - max(0.0, -arrears.capital) * arrears.debt_interest_rate())
@@ -361,13 +362,13 @@ check("auto_open_ventures() really does open the same concern on a rich househol
 insolvent = sim(capital=-99999.0)
 insolvent.reputation = 4.9
 insolvent.insolvent_years = 30
-insolvent.enforce_credit_limit(150)
+insolvent.default_on_debt(150)
 check("a reputation penalty announces what it actually took",
       [facts_of(message)["reputation_hit"] for _, message in insolvent.log
        if cause_of(message) == "insolvency_settled"][-1] == 4.9, insolvent.log[-1:])
 insolvent.capital = -99999.0
 insolvent.insolvent_years = 30
-insolvent.enforce_credit_limit(200)
+insolvent.default_on_debt(200)
 check("...and says plainly when there was nothing left to take",
       [facts_of(message)["reputation_hit"] for _, message in insolvent.log
        if cause_of(message) == "insolvency_settled"][-1] == 0.0,

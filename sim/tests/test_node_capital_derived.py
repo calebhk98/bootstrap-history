@@ -124,7 +124,12 @@ class OutputNodesTypeNoFigure(unittest.TestCase):
         _tree, _document, nodes, _wages, _goods = data.load()
         output = {node_id for node_id, node in nodes.items() if node.get("_revenue_basis") == "output"}
         self.assertGreater(len(output), 20)
-        for node_id in output:
+        # a plant none of whose lines adds what its staff cost at these prices runs nothing, so its baskets are
+        # empty and it earns nothing (558: charcoal_industrial, whose burner is dearer than the by-product route)
+        idle = {node_id for node_id in output if not nodes[node_id]["_output_per_year"]
+                and not nodes[node_id]["_energy_sold_per_year"]}
+        self.assertLessEqual(idle, {"charcoal_industrial", "en_charcoal_burning"})
+        for node_id in output - idle:
             self.assertGreater(nodes[node_id]["_upkeep_hours_parts"]["staff"] + nodes[node_id]["rev_hours"], 0.0, node_id)
 
     def test_each_output_node_is_named_as_an_operator_by_the_entries_it_runs(self):

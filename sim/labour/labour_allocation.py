@@ -120,15 +120,26 @@ class LabourAllocationMixin:
         return {trade: value / rest for trade, value in hours.items()
                 if trade != FARM_TRADE and rest > 0.0}
 
-    def _non_farm_shares(self):
-        """Each non-farm trade's share of the hours the society gives them: the labour core's people in
-        it while the agent economy runs, else the need the recipe graph puts on it."""
+    def unskilled_trade(self):
+        """The registry's flagged fallback trade: the one anyone can take up at once."""
+        return trade_data.fallback_trade_of(self._world, self.wage_schedule().training_years)
+
+    def _non_farm_shares(self, rest_hours):
+        """Each non-farm trade's share of the `rest_hours` the society gives them: the labour core's people in
+        it while the agent economy runs (the specialists work their people's hours, and the hours left over
+        go to the unskilled fallback trade, whose headcount is the pool and says nothing about them), else
+        the need the recipe graph puts on it."""
         people = self._world.economy.agent_people_by_trade()
         if people:
-            held = {trade: count for trade, count in people.items() if trade != FARM_TRADE and count > 0.0}
+            pool = self.unskilled_trade()
+            held = {trade: count for trade, count in people.items()
+                    if trade not in (FARM_TRADE, pool) and count > 0.0}
             total = sum(held.values())
-            if total > 0.0:
-                return {trade: count / total for trade, count in held.items()}
+            if total > 0.0 and rest_hours > 0.0:
+                specialist_share = min(1.0, total * HOURS_PER_FARM_WORKER_YEAR / rest_hours)
+                shares = {trade: specialist_share * count / total for trade, count in held.items()}
+                shares[pool] = 1.0 - specialist_share
+                return shares
         return self._non_farm_need_shares()
 
     def _hours_needed_by_trade(self, total_hours=None):
@@ -146,7 +157,7 @@ class LabourAllocationMixin:
         """What the wage rule weighs against the hours worked: the allocation's need, plus the people
         under arms as demand on the unskilled pool that the society's hours no longer cover."""
         needed = self._hours_needed_by_trade()
-        fallback = trade_data.fallback_trade(self.wage_schedule().training_years, self._world.trade_family)
+        fallback = self.unskilled_trade()
         needed[fallback] = needed.get(fallback, 0.0) + self._people_under_arms() * HOURS_PER_FARM_WORKER_YEAR
         return needed
 
@@ -221,15 +232,16 @@ class LabourAllocationMixin:
         return fte
 
     def _farm_hour_value_over_wage(self, technique):
-        """What an extra farm hour's food is worth at the staple's price, over an hour of the unskilled
-        wage, both from the agent economy; None while either is missing."""
+        """What an extra hand's hour on the cleared land (the harvest model's marginal product) is worth in
+        food at the staple's price, over an hour of the unskilled wage, both from the agent economy; None
+        while either is missing."""
         marginal_product = self._world.state.holdings.farm_last_marginal_product
         wage = self._world.economy_unskilled_wage()
         prices = self._world.economy.agent_prices()
         price = prices.get(wage_provider.staple_material(self._world.civ)) if prices else None
         if not marginal_product or not wage or not price:
             return None
-        return price * net_marginal_product_kg_per_hour(marginal_product, technique) / wage
+        return price * marginal_product / wage
 
     def _food_balance_step(self, baseline_fte, adult_equivalent_population, technique, intake_multiple=1.0):
         hectares_per_worker = agriculture.hectares_cropped_per_farm_worker(
@@ -271,14 +283,15 @@ class LabourAllocationMixin:
     def _kept_farm_workers(self, current_fte, adult_equivalent_population, technique):
         """Hands that stay on the land past need because food is worth farming for (farm_intake.py)."""
         value_over_wage = self._farm_hour_value_over_wage(technique)
-        if value_over_wage is None or value_over_wage < 1.0:
+        if value_over_wage is None:
             return 0.0
         satiation_fte = self._expected_year_farm_need(
             self._share_farm_fte(adult_equivalent_population, technique), adult_equivalent_population,
             technique, agriculture.MAXIMUM_INTAKE_MULTIPLE_OF_SUBSISTENCE)
         land_limit_fte = self._world.farm_land.hectares / agriculture.hectares_cropped_per_farm_worker(
             technique.crop, technique.toolkit)
-        return farm_intake.kept_farm_workers(current_fte, satiation_fte, land_limit_fte, value_over_wage)
+        return farm_intake.kept_farm_workers(current_fte, satiation_fte, land_limit_fte, value_over_wage,
+                                             agriculture.LABOUR_OUTPUT_ELASTICITY)
 
     def _allocate_farm_workforce(self, adult_equivalent_population):
         """Farm FTE for this year, after the labour market reacts to last
@@ -308,10 +321,9 @@ class LabourAllocationMixin:
         need_fte = max(need_fte, self._kept_farm_workers(
             current_fte, adult_equivalent_population, technique))
         holdings.farm_hours_needed = need_fte * HOURS_PER_FARM_WORKER_YEAR
+        farm_hours = farm_hours_after(current_farm_hours, min(holdings.farm_hours_needed, total_hours), total_hours)
         economy.society_labour_hours = society_hours(
-            total_hours,
-            farm_hours_after(current_farm_hours, min(holdings.farm_hours_needed, total_hours), total_hours),
-            self._non_farm_shares())
+            total_hours, farm_hours, self._non_farm_shares(total_hours - farm_hours))
         farm_fte = economy.society_labour_hours[FARM_TRADE] / HOURS_PER_FARM_WORKER_YEAR
         crop_limit_fte = (self._world.farm_land.hectares / agriculture.hectares_cropped_per_farm_worker(
             technique.crop, technique.toolkit))

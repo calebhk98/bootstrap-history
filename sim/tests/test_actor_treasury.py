@@ -98,7 +98,7 @@ year = game.state.scenario.year
 game.state.projects.done.add(mill_id)
 game.state.projects.done_year[mill_id] = year - 6
 game.state.projects.operating.add(mill_id)
-game.state.projects.opened_year[mill_id] = year - 6
+game.state.projects.business.set_opened_year(mill_id, year - 6)
 game._done_changed()
 for _ in range(6):
     game.state.scenario.year += 1

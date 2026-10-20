@@ -42,8 +42,18 @@ class ActorRecord:
 	levy_requisition_rate: float = 0.0
 	levy_office_rate: float = 0.0
 	levy_base: float = 0.0
+	# what lenders lost on a state's defaults, fading by the year; the rate it pays rises with it (government_credit.py)
+	remembered_default_loss: float = 0.0
+	defaults: int = 0
+	# hours of labour owed to the state this year by what it is for (works, army), and the hours it took: the households'
+	# lost working time; person-years left over after the upkeep, for raising works (revenue_labour.py)
+	corvee_due: Dict[str, float] = field(default_factory=dict)
+	corvee_hours: Dict[str, float] = field(default_factory=dict)
+	corvee_spare_years: float = 0.0
 	# soldiers a state keeps now; 0 until its first year, when it holds the force it wants
 	army: float = 0.0
+	# the last check of the state's wanted head counts against its country's people and food, by line (headcount.py)
+	headcount: Dict[str, Dict[str, Any]] = field(default_factory=dict)
 	# a state's revenue last year by form, in money's worth, and the part of it taken in kind
 	revenue_by_form: Dict[str, float] = field(default_factory=dict)
 	revenue_in_kind: Dict[str, float] = field(default_factory=dict)
@@ -95,6 +105,12 @@ class ActorRecord:
 	# a state's goods it will not sell abroad (its monopolies, set at the start by its country's data), and
 	# the parties it has shut its markets to: party id -> the first year they are open to them again
 	state_monopolies: Set[str] = field(default_factory=set)
+	# entries a state runs a plant of besides its monopolies; what its plants took last year and made after costs;
+	# the tonnes of each commodity its standing lines draw (what its own plants keep rather than sell)
+	state_enterprises: Set[str] = field(default_factory=set)
+	enterprise_takings: float = 0.0
+	enterprise_margin: float = 0.0
+	material_need: Dict[str, float] = field(default_factory=dict)
 	closed_markets: Dict[str, int] = field(default_factory=dict)
 	# material -> units of the state's stock that smugglers have taken, which it can no longer sell
 	stock_taken: Dict[str, float] = field(default_factory=dict)
@@ -190,6 +206,16 @@ class CountryProfile:
 	# bodies of people the country starts with, as data ({"name", "share", "income", ...}); empty
 	# means derive them from what the world can see
 	strata: List[Dict[str, Any]] = field(default_factory=list)
+	# the country's people by age band once its Population has stepped (country_population.py); empty until then
+	cohorts: Dict[str, float] = field(default_factory=dict)
+	# the country's farm (country_farm.py): cleared hectares, their quality, the granary, and the last harvest's figures
+	farm: Dict[str, float] = field(default_factory=dict)
+	# the country's epidemics, as the home nation's (sim/disease): pathogen id -> age band -> saved patch, the years each
+	# pathogen arrived, its deaths so far, and the pathogens seeded to arrive at the next step
+	disease_records: Dict[str, Any] = field(default_factory=dict)
+	disease_introduced: Dict[str, List[int]] = field(default_factory=dict)
+	disease_deaths: Dict[str, int] = field(default_factory=dict)
+	disease_arrivals: List[str] = field(default_factory=list)
 	# anything else the scenario or a mod declares for the country
 	extra: Dict[str, Any] = field(default_factory=dict)
 

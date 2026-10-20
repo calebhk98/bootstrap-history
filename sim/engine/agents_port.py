@@ -18,9 +18,12 @@ from .agents_port_disclosure import DisclosureView
 from .agents_port_groups import GroupView
 from .agents_port_stakes import StakeView
 from .agents_port_revenue import RevenueView
+from .agents_port_enterprises import EnterpriseView
 from .agents_port_site import SiteView
 from .agents_port_cast import CastView
 from .agents_port_seats import SeatView
+from .agents_port_review import ReviewView
+from .agents_port_research import ResearchView
 from .agents_port_coinage import CoinageView
 from .agents_port_trade import TradeView
 from . import seat_builds, visibility as visibility_of
@@ -30,7 +33,8 @@ from sim.world import plant_figures
 from .industry_depth import RAMP_SHARE_AT_FULL_DEPTH
 
 
-class SimWorld(BudgetView, SiteView, RevenueView, GroupView, StakeView, DisclosureView, CapitalView, CapacityView, TradeView, CastView, CoinageView, SeatView):
+class SimWorld(BudgetView, SiteView, RevenueView, GroupView, StakeView, DisclosureView, CapitalView, CapacityView, TradeView, CastView, CoinageView, SeatView, ReviewView, EnterpriseView,
+               ResearchView):
 	"""The `Sim`'s answers to the questions actors ask."""
 
 	def __init__(self, sim: Any) -> None:
@@ -80,8 +84,36 @@ class SimWorld(BudgetView, SiteView, RevenueView, GroupView, StakeView, Disclosu
 		"""Everything any seat has completed that the society did not have."""
 		return self._once("inventions", lambda: sorted(seat_builds.built_by_any(self._sim.state.seats)))
 
+	def _registry_actors(self) -> List[Any]:
+		registry = getattr(self._sim, "actors", None)
+		return list(registry.actors.values()) if registry is not None else []
+
+	def actor_held(self) -> Dict[str, List[Any]]:
+		"""Every node an active actor holds beyond what the society already knew, with its holders in id order."""
+		def compute() -> Dict[str, List[Any]]:
+			baseline = self.baseline_knowledge()
+			held: Dict[str, List[Any]] = {}
+			for actor in sorted(self._registry_actors(), key=lambda actor: actor.identity()):
+				if actor.record.exited_year is not None:
+					continue
+				for node_id in sorted(actor.knowledge):
+					if node_id in self.nodes and node_id not in baseline:
+						held.setdefault(node_id, []).append(actor)
+			return held
+		return self._once("actor_held", compute)
+
 	def demonstrated(self) -> Set[str]:
-		return self._once("demonstrated", lambda: set(self.founder_inventions()))
+		"""What can be seen made: every seat's builds and every actor's own knowledge."""
+		return self._once("demonstrated", lambda: set(self.founder_inventions()) | set(self.actor_held()))
+
+	def knowledge_half_life_years(self) -> float:
+		return self._sim.knowledge_half_life_years()
+
+	def knowledge_visibility(self, node_id: str, distance_km: float) -> float:
+		"""How much of a node some actor holds shows `distance_km` away: its own opacity, public if a seat runs it."""
+		sim = self._sim
+		visibility = visibility_of.base_visibility("default", self.is_public(node_id), sim.copy_difficulty(node_id), SECRET_EXPOSURE)
+		return visibility_of.seen_from(visibility, distance_km, OBSERVATION_RANGE_KM)
 
 	def is_public(self, node_id: str) -> bool:
 		"""Whether some seat runs it as a concern, where anyone can see it."""
@@ -91,7 +123,10 @@ class SimWorld(BudgetView, SiteView, RevenueView, GroupView, StakeView, Disclosu
 		"""How much of an invention an observer at `location` can learn, 0..1: the best view of any seat
 		that built it, from that seat's own place (the acting seat's when no seat built it)."""
 		sim = self._sim
-		builders = seat_builds.builders_of(sim.state.seats, node_id) or [sim.state.acting_seat]
+		builders = seat_builds.builders_of(sim.state.seats, node_id)
+		holders = self.actor_held().get(node_id, [])
+		if not builders and not holders:
+			builders = [sim.state.acting_seat]
 		public = self.is_public(node_id)
 		best = 0.0
 		for seat_id in builders:
@@ -101,6 +136,9 @@ class SimWorld(BudgetView, SiteView, RevenueView, GroupView, StakeView, Disclosu
 				visibility = visibility_of.seen_from(
 					visibility, self.distance_km(location, sim.seat_place(seat_id)), OBSERVATION_RANGE_KM)
 			best = max(best, visibility)
+		for holder in holders:
+			best = max(best, self.knowledge_visibility(
+				node_id, self.distance_km(holder.location(), location) if location is not None else 0.0))
 		return best
 
 	def state_weights(self) -> Dict[str, float]:
@@ -143,9 +181,10 @@ class SimWorld(BudgetView, SiteView, RevenueView, GroupView, StakeView, Disclosu
 	def concern_staff(self, node_id: str) -> Dict[str, float]:
 		"""People of each trade one plant of this concern needs: the founder's own rule, which reads the plant's data (plant_figures.crew_people)."""
 		sim = self._sim
-		scholars, craftsmen = sim.venture_hands(node_id)
+		scholars = sim.venture_hands(node_id)[0]
 		foreman_trade, foreman_fte = sim.venture_foreman(node_id)
-		staff = {"scholar": scholars, "artisan": craftsmen}
+		staff = dict(sim.venture_crew_by_trade(node_id))
+		staff["scholar"] = scholars
 		if foreman_trade:
 			staff[foreman_trade] = staff.get(foreman_trade, 0.0) + foreman_fte
 		for trade, people in sim.venture_garrison(node_id).items():
@@ -216,7 +255,7 @@ class SimWorld(BudgetView, SiteView, RevenueView, GroupView, StakeView, Disclosu
 		for node_id in sorted(projects.operating):
 			if node_id in projects.granted or not sim.is_venture(node_id):
 				continue
-			opened = (projects.opened_year or {}).get(node_id, self.year)
+			opened = projects.business.opened_year_of(node_id, self.year)
 			if self.year - opened >= self.proof_years(node_id) and self.concern_margin(node_id) > 0:
 				proven.append(node_id)
 		return proven

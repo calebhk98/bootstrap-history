@@ -9,13 +9,13 @@ import dataclasses
 import math
 from typing import Dict, List, Tuple
 
-from . import (goods_market, households, market_curves, merchants, producers, seller_cash, seller_offers, settlement,
-               state_budget, state_store, taxes)
+from . import (carriage_wear, goods_market, households, market_curves, merchants, producers, seller_cash, seller_offers, settlement,
+               state_budget, state_store, taxes, unsold_search)
 from .market_memory import market_key
 from .market_memory_asks import (memory_reference_volume, note_bids, note_offers, price_after_no_bids,
                                  price_after_resumed_trade, wanted_at)
 from .market_memory_asks import REPRESENTATIVE_TRADE_SHARE
-from .market_memory_offers import price_after_no_offers, price_after_thin_trade
+from .market_memory_offers import price_after_no_offers, price_after_thin_trade, price_within_making_cost
 from .notional import making_costs
 from .protocols import AgentOrders
 from .recipes import input_depth_order
@@ -86,10 +86,14 @@ def merchant_orders(setup, record, view, area_map, carriage, order_book: OrderBo
     rate = view.interest_rate(money)
     shares = merchants.RouteShares()
     ordered = sorted(record.merchants.values(), key=lambda each: each.agent_id)
+    carrier_bids, carrier_budget = (carriage_wear.bids(setup, record, view, area_map,
+                                                       {each.agent_id: record.book.balance(each.agent_id, money) for each in ordered})
+                                    if carriage_wear.wears(setup) else ([], {}))
+    add_orders(order_book, AgentOrders(bids=tuple(carrier_bids)))     # replacements for the carriers last year's shipments wore
     first = view.year % len(ordered) if ordered else 0          # who sizes first rotates, so no merchant always gets first pick
     for merchant in ordered[first:] + ordered[:first]:
         held = _held_stock(record.book, merchant.agent_id)
-        orders = merchants.orders(merchant, view, carriage, area_map, record.book.balance(merchant.agent_id, money),
+        orders = merchants.orders(merchant, view, carriage, area_map, record.book.balance(merchant.agent_id, money) - carrier_budget.get(merchant.agent_id, 0.0),
                                   held, setup.specs, rate, shares)
         add_orders(order_book, orders)
 
@@ -152,8 +156,12 @@ def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, led
         for area in areas:
             bids, offers = order_book.pop((good, area))
             key = market_key(good, area)
-            offers = seller_offers.strategic_offers(setup, record, view, bids, offers, record.memory.prices.get(key))
-            result = goods_market.clear(bids, offers, good, area, setup.currency_id, record.memory.prices.get(key))
+            unit_costs: Dict = {}
+            chosen = seller_offers.strategic_offers(setup, record, view, bids, offers, record.memory.prices.get(key),
+                                                    unit_costs)
+            offers, result = unsold_search.clear_with_search(setup, record, view, bids, offers, chosen, good, area,
+                                                             setup.currency_id, record.memory.prices.get(key),
+                                                             unit_costs)
             delivered = 0.0
             if result.quantity > 0.0:
                 done_settlement = settlement.settle_goods(record.book, result)
@@ -196,11 +204,18 @@ def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, led
                     relaxed = price_after_thin_trade(old, costs.get(good), 0.0, record.memory.volume_weights.get(key, 0.0))
                     signal = relaxed if relaxed != old else None
             if signal is not None and signal > 0.0:
+                if result.quantity <= REPRESENTATIVE_TRADE_SHARE * record.memory.volume_weights.get(key, 0.0):
+                    if costs is None:
+                        costs = making_costs(setup, record)
+                    signal = price_within_making_cost(signal, costs.get(good))
                 floor = setup.opening_prices.get(good, signal) * PRICE_MEMORY_FLOOR_SHARE
                 record.memory.prices[key] = max(signal, floor)
                 record.memory.note_usual_price(key)
             record.volumes[key] = delivered
+            record.unsold[key] = max(0.0, result.offered_at_price - result.quantity)
+            record.unmet[key] = unmet
             record.memory.note_volume(key, delivered)
+            record.memory.note_cleared(key, result.price, delivered)
             cleared.add(key)
             if delivered > 0.0:
                 traded.add(key)

@@ -8,11 +8,12 @@ one it uses the base map.
 import math
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Tuple
 
+from sim.geography.food_crops import CropSite, CropTechnique
 from sim.geography.json_copy import copied
-from sim.geography import (droving, endemic, food_capacity, forest_timber, food_land, food_pasture, food_wild_harvest, map_source, mechanisms, parameters, resource_links, resources_biotic, rail_freight,
+from sim.geography import (droving, endemic, food_capacity, food_crops, forest_timber, food_land, food_pasture, food_wild_harvest, map_source, mechanisms, parameters, resource_links, resources_biotic, rail_freight,
                            resources_catalogue, resources_endowment, resources_mined, resources_prospecting, resources_sites,
                            reach_bands, resources_summary, routes_carriage, routes_graph, routes_modes, routes_search, tile_holdings, tile_layers,
-                           ways_build, ways_works)
+                           ways_build, ways_isthmus, ways_works)
 
 WorldMap = map_source.WorldMap
 
@@ -46,10 +47,22 @@ def layer_value(tile_id: str, layer_id: str, world_map: Optional[WorldMap] = Non
 
 
 def food_potential(tile_id: str, technique_factors: Optional[Mapping[str, float]] = None,
-                   world_map: Optional[WorldMap] = None, wild_stock: Optional[Mapping[str, Any]] = None) -> Dict[str, Any]:
+                   world_map: Optional[WorldMap] = None, wild_stock: Optional[Mapping[str, Any]] = None,
+                   crop_technique: Optional[CropTechnique] = None,
+                   nutrient_factors: Optional[Mapping[str, float]] = None) -> Dict[str, Any]:
     """Sustainable food energy of a tile by source, and the people it feeds. `wild_stock` is the game's
-    {tile: {species: share of carrying capacity left}}; a missing entry is a full stock."""
-    return food_capacity.food_potential(_map(world_map), tile_id, dict(technique_factors or {}) or None, wild_stock)
+    {tile: {species: share of carrying capacity left}}; a missing entry is a full stock. `crop_technique` is what
+    the farm model says a cropped hectare gives; without it the tile's crops count for nothing. `nutrient_factors` is
+    {tile: yield factor of its soil nitrogen stock}; a missing tile is native soil."""
+    return food_capacity.food_potential(_map(world_map), tile_id, dict(technique_factors or {}) or None, wild_stock,
+                                        crop_technique, nutrient_factors)
+
+
+def crop_site(tile_id: str, open_field_cropped_share: float, world_map: Optional[WorldMap] = None,
+              nutrient_factor: float = 1.0) -> CropSite:
+    """The tile's cropland: arable hectares, hectares cropped in a year under a rotation that crops
+    `open_field_cropped_share` of open fields, and the mean yield of a cropped hectare against the reference field."""
+    return food_crops.crop_site(_map(world_map), tile_id, open_field_cropped_share, nutrient_factor)
 
 
 def endemic_animal_loss(tile_id: str, species: Iterable[str], world_map: Optional[WorldMap] = None) -> float:
@@ -244,11 +257,17 @@ def freight_links(mode_ids: Iterable[str], world_map: Optional[WorldMap] = None)
 def build_requirements(tile_a: str, tile_b: Optional[str], improvement: str,
                        world_map: Optional[WorldMap] = None) -> Optional[Dict[str, Any]]:
     """What building `improvement` ("road", "rail", "canal", "bridge") over the land edge between two
-    bordering tiles takes, or a "port" on one coastal tile (`tile_b` the same tile or None):
+    bordering tiles takes, a "port" on one coastal tile (`tile_b` the same tile or None), or a sea canal
+    ("sea_canal") across a declared isthmus between the two tiles it joins:
     {km, grade, trade, labour_hours, materials: {material: tonnes}, node, build_years, engineered,
     crew_people, crew_hours_per_year}, or None when it cannot be built. Ground steeper than the way's
     natural limit is built `engineered` at more earthwork."""
     return ways_build.requirements(_map(world_map), tile_a, tile_b, improvement)
+
+
+def is_cut_way(improvement: str, world_map: Optional[WorldMap] = None) -> bool:
+    """Whether `improvement` is a canal across an isthmus (a way the map's `isthmuses` declare sites for)."""
+    return ways_isthmus.is_cut_way(_map(world_map), improvement)
 
 
 def train_carrier(mode_id: str, world_map: Optional[WorldMap] = None) -> Optional[Dict[str, Any]]:
@@ -375,6 +394,7 @@ def problems(world_map: Optional[WorldMap] = None) -> List[str]:
     found += ["resource %r names an unknown mechanism" % row_id for row_id in mechanisms.unknown_rows(world_map)]
     found += ["route mode %r is incomplete" % mode_id for mode_id in routes_modes.invalid_entries(world_map)]
     found += ["built work %r is incomplete" % work_id for work_id in ways_works.invalid_entries(world_map)]
+    found += ["isthmus cut %r is incomplete" % site_id for site_id in ways_isthmus.invalid_entries(world_map)]
     found += resources_catalogue.validate(world_map)
     return found
 

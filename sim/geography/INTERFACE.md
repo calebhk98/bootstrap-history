@@ -31,14 +31,19 @@ the layout and the merge rules (new ids `<mod_id>:<name>`, `"override": true`, `
 
 ## Food
 
-`food_potential(tile_id, technique_factors, wild_stock=None)` answers
+`food_potential(tile_id, technique_factors, world_map=None, wild_stock=None, crop_technique=None)` answers
 
     {"tile": id, "kcal_per_year": {source_id: kcal}, "total_kcal_per_year": kcal,
      "people_supported": people, "species": {"hunted": [id], "herded": [id], "fished": [id], "foraged": [id]}}
 
 Each source is sustainable yield (crops, pastoral, hunting, foraging, marine and freshwater
 fishing; ids come from data). `technique_factors` is `{source_id: multiplier}` chosen by the
-caller from what the actor knows; geography does not read the tech tree.
+caller from what the actor knows; geography does not read the tech tree. `crop_technique` is
+`{kg_per_cropped_hectare, open_field_cropped_share, seed_kg_per_cropped_hectare, loss_fraction, kcal_per_kg}`:
+what the farm model says a cropped hectare gives under the actor's crop, tools and rotation. Geography owns the
+tile's side only; without a technique the crop source is absent. `crop_site(tile_id, open_field_cropped_share)`
+answers `{arable_hectares, cropped_hectares, yield_factor}`: the hectares cropped in a year and the mean yield of a
+cropped hectare (soil, climate, river water) against the reference field.
 
 `wild_stock` is the game's `{tile_id: {species_id: share of carrying capacity left}}`, a missing entry
 meaning a full stock. `hunted_kcal(tile_id, wild_stock)` gives `{species_id: kcal}` a year's hunting can take
@@ -64,10 +69,11 @@ The game keeps and saves the ledger.
 | `reach(origins, modes, days_budget, improvements, held_nodes)` | `{tile_id: days}` within the budget. |
 | `tile_reach_levels(held_tiles, held_nodes)` | `{tile_id: level}` for every tile: 0 for a held tile, then the reach levels of `reach_levels` banded from the days a route over the modes the nodes open takes; the farthest level where none joins. |
 | `dues_hours_per_tonne()` | `{mode_id: hours}` of tolls or port dues per tonne a haul pays when it changes to the mode (the mode's `dues_hours_per_tonne`, with `dues_source` and `dues_conf`). |
+| `route_dues_levied(legs, dues_per_tonne, owner_of)` | `[{tile, holder, mode, per_tonne}]`: the dues of a found route, each levied at the tile where the haul changes to a mode and owed to that tile's holder now (`owner_of(tile)`). `route_dues_by_holder(..., tonnes)` sums them to `{holder: money}`. |
 | `cargo_loss_per_day()` | `{mode_id: share}` of the cargo a mode loses each day on the road (a herd's strays and wasting; labelled in the mode data). |
 | `walking_cargo_modes()` | `[mode_id]` where the cargo is the carrier (droving): no carrier capital, the cargo's feed eaten on the loaded leg only. `droving_carrier(mode_id)` gives `{inputs}`, its physical inputs per tonne-km. |
 | `flow_ledger` (module) | Plain-dict ledger `{origin: {destination: tonnes}}` of goods carried in a year: `record_flow`, `pair_imbalance`, `return_fill_share`, `overall_imbalance`. The economy keeps one and prices the carriers' return trips by it. |
-| `carriage_rates(mode_ids)` | `{mode_id: {crew_trade, crew_hours_per_tonne_km, handling_hours_per_tonne, edge_classes}}` on level ground for the modes that name a `crew_trade`, from the same physical rates the route search uses. |
+| `carriage_rates(mode_ids)` | `{mode_id: {carriers, tonne_km_per_team_day, team_payload_tonnes, crew_trade, crew_hours_per_tonne_km, handling_hours_per_tonne, edge_classes}}` on level ground for the modes that name a `crew_trade`, from the same physical rates the route search uses. |
 | `freight_links(modes)` | `[(tile_a, tile_b, mode, km)]` for edges these modes use with nothing built. |
 | `map_of_tiles({tile_id: {lat, lon, coastal, borders}})` | A map of just those tiles with the base map's modes, sea lanes and parameters, for a scenario or test that places its own tiles. |
 | `ore_goods()` | `{resource_id: {ore_good: [smelting_recipe_id, ...]}}` for the resources whose catalogue row names ore goods (`ore_goods`), in catalogue order; a mod adds a mineral by adding a row. |

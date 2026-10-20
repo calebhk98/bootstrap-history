@@ -10,12 +10,11 @@ import unittest
 from sim.engine.coin_revaluation import CoinRevaluationMixin
 from sim.engine.foreign_payments import ForeignPaymentsMixin
 from sim.engine.real_price_ratios import RealPriceRatiosMixin
-from sim.engine.wage_market_ratios import WageMarketRatiosMixin
 
 BASELINE = {"silver_kg": 50.0, "wheat_kg": 1.0, "iron_kg": 4.0, "cloth_kg": 9.0}
 
 
-class AgentCoinage(RealPriceRatiosMixin, CoinRevaluationMixin, WageMarketRatiosMixin, ForeignPaymentsMixin):
+class AgentCoinage(RealPriceRatiosMixin, CoinRevaluationMixin, ForeignPaymentsMixin):
     """The agent economy's prices in its own coin; the engine's price level is derived from the ratios."""
     def __init__(self):
         self.state = types.SimpleNamespace(economy=types.SimpleNamespace(

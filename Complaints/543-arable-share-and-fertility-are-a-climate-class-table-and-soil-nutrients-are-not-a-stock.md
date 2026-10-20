@@ -1,6 +1,6 @@
 # Arable share and fertility are a climate-class table, and soil nutrients are not a stock
 
-**Status:** open
+**Status:** partly done: the soil nitrogen stock (below); arable share and fertility from the water balance, slope and silt, and tillage resistance, remain open
 
 Reference (an outside design note, not code-aware): soil should be derived from the physical inputs a
 tile already has, not looked up. Plant growth is limited by the scarcer of heat and water; rain far
@@ -35,3 +35,33 @@ soils resist tillage until the tool and team can pull hard enough.
   only to a heavy plough (537).
 - The table kept only as a test reference: the derived values should land near it for the classes it
   covers, as a validation under 4.2.
+
+## Done: soil nitrogen stock
+
+- `sim/geography/soil_nutrients.py`: the share of a tile's native nitrogen pool left, saved as `state.economy.soil_nitrogen`
+  (a tile with no entry is native). Each year the harvest's grain nitrogen draws it down; a grain legume's net fixation,
+  the humus share of applied manure and the natural input (equal to a native soil's loss, so untouched ground holds still)
+  build it. A crop's yield against the reference field follows the year's mineral supply (pool mineralisation, plus nitrate
+  that the fallow hectares of the holding leave, plus the manure's available share) with a saturating response, normalised
+  to native soil under the two-field rotation. Rates are declared with sources (most recalled, marked) in that module.
+- Geography only multiplies: `crop_site(..., nutrient_factor)` and `food_potential(..., nutrient_factors)`.
+  `sim/engine/soil_nitrogen_year.py` owns the yearly step (phase `soil_nitrogen`) and feeds the factors to the tile food view
+  and `Sim.farm_sites()`. `Rotation` gained `legume_share_of_holding` (three-field: half the spring field).
+- Manure is a transitional rule (`MANURE_COLLECTED_SHARE`, retire: farmers buying manure goods, 544): the society's draught
+  herd's collected dung is spread over the held cropland. No farm producer buys the manure goods yet.
+- Tests: `sim/tests/test_soil_nitrogen.py`, `test_soil_nitrogen_whole_game.py`.
+
+## Done: the farm model reads the stock
+
+- `Sim.refresh_farm_territory()` (`sim/engine/soil_nitrogen_year.py`) rebuilds the farm's ladder, ceiling and the cleared
+  ground's quality from `farm_sites()` at the start of each year (and after a load), so national farm yield follows the soil
+  nitrogen stock and the society's rotation. `THREE_FIELD_SOIL_FERTILITY_YIELD_MULTIPLIER` is deleted: the three-field
+  rotation's edge is its smaller fallow (more cropped hectares) and its legumes' gain to the stock.
+- Tests: `sim/tests/test_farm_follows_soil.py` (continuous cropping lowers the ladder's harvest weight and the cleared
+  ground's quality over thirty years; three-field with legumes holds a higher stock and harvest than without; the ceiling
+  follows a rotation change). The Nile rotation keeps its own silt multiplier until silt is an input.
+
+## Left
+
+- Per-tile manure from market purchase; silt as an input on flooded tiles (then the Nile multiplier goes); arable share and
+  fertility derivation; tillage resistance.

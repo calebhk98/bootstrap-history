@@ -57,21 +57,6 @@ OUTPUT_CHANGE_SHARE_PER_YEAR = declare(
         "last year's price swings its whole output, and a chain of such producers feeding each other "
         "amplifies the swing every year instead of settling. A model of hiring and training would "
         "derive the speed per trade.")
-UNSOLD_ASK_MARKDOWN_SHARE = declare(
-    "UNSOLD_ASK_MARKDOWN_SHARE", 0.15, kind="temporary_heuristic",
-    unit="share of the expected price a seller drops in a year its stock went unsold", source=None,
-    confidence="D",
-    why="A seller left holding goods nobody bought at its ask lowers the ask and what it expects to get. "
-        "How fast follows how many buyers there are and what holding costs, and the market's memory "
-        "carries no bid it could read, so one rate for every good. A faster markdown slid thin markets "
-        "down and back up by orders of magnitude (frozen_markets probe of limestone prices).")
-UNSOLD_PROBE_SHARE_OF_CAPACITY = declare(
-    "UNSOLD_PROBE_SHARE_OF_CAPACITY", 0.02, kind="temporary_heuristic",
-    unit="share of capacity counted as sales a producer can still hope for", source=None,
-    confidence="D",
-    why="Sales recorded when the ask was above every bid say nothing about what a lower ask would sell, "
-        "so a producer whose sales fell to nothing still plans a small run to test the market. The "
-        "size of the test follows what a workshop can afford to lose, which is not modelled.")
 STORAGE_COST_PER_UNIT = declare(
     "STORAGE_COST_PER_UNIT", 0.0, kind="temporary_heuristic",
     unit="money per unit of good per year", source=None, confidence="D",
@@ -150,6 +135,23 @@ def live_input_prices_at(tile: TileId, recipe: Recipe, view: MarketView) -> Dict
     return prices
 
 
+def paid_input_prices(producer: Producer, recipe: Recipe, view: MarketView,
+                      live: Dict[GoodId, float]) -> Dict[GoodId, float]:
+    """`live` with each input the run uses up raised to the price it cleared at last year in the producer's
+    market, where that is higher than the remembered price: a thin trade moves the remembered price only
+    slightly, and a buyer bidding from it is outbid every year. A view that does not report clearing prices
+    leaves `live` as it is."""
+    cleared_price = getattr(view, "cleared_price", None)
+    if cleared_price is None:
+        return live
+    paid = dict(live)
+    for good in recipe.inputs:
+        cleared = cleared_price(good, view.area_of(good, producer.tile))
+        if cleared is not None and cleared > paid.get(good, math.inf):
+            paid[good] = cleared
+    return paid
+
+
 def expected_input_prices(producer: Producer, recipe: Recipe, view: MarketView,
                           live: Optional[Dict[GoodId, float]] = None) -> Dict[str, float]:
     """The prices a plan costs a run at: for a good the run uses up, the producer's own expectation
@@ -200,8 +202,11 @@ def next_expectations(producer: Producer, recipe: Recipe, view: MarketView,
         previous = updated.get(good)
         updated[good] = latest if previous is None else (
             previous + EXPECTATION_ADJUSTMENT_SHARE * (latest - previous))
+    paid_inputs = paid_input_prices(producer, recipe, view, {
+        good: price for good, price in ((good, view.price(good, view.area_of(good, producer.tile))) for good in recipe.inputs)
+        if price is not None})
     for good in recipe.inputs:
-        latest = view.price(good, view.area_of(good, producer.tile))
+        latest = paid_inputs.get(good)
         if latest is not None and good not in recipe.outputs:
             previous = updated.get(good)
             updated[good] = latest if previous is None else (
@@ -213,25 +218,7 @@ def next_expectations(producer: Producer, recipe: Recipe, view: MarketView,
     for good in ask_raise.sold_out_outputs(producer, recipe, view):
         if good in latest_prices:
             updated[good] *= 1.0 + ask_raise.SOLD_OUT_ASK_RAISE_SHARE
-    for good in unsold_outputs(producer, recipe, view):
-        if good not in updated:
-            continue  # never priced and nothing expected: there is no ask to mark down
-        updated[good] = min(updated[good], producer.expected_prices.get(good, updated[good])
-                            * (1.0 - UNSOLD_ASK_MARKDOWN_SHARE))
     return updated
-
-
-def unsold_outputs(producer: Producer, recipe: Recipe, view: MarketView) -> List[GoodId]:
-    """Outputs it still holds after the year's market beyond what it keeps for its own runs and the
-    working stock its sales call for: all of it was on offer, so it went unsold at the ask."""
-    unsold = []
-    for good in sorted(recipe.outputs):
-        spare = (view.stock(producer.agent_id, good, producer.tile)
-                 - recipe.inputs.get(good, 0.0) * producer.capacity_runs
-                 - inventory.target_stock(producer.expected_sales) * recipe.outputs[good])
-        if spare > 0.0:
-            unsold.append(good)
-    return unsold
 
 
 def _break_even_scale(producer, recipe, view, prices, live_inputs=None, wages=None) -> Optional[float]:
@@ -254,7 +241,7 @@ def plan(producer: Producer, recipe: Recipe, view: MarketView, cash: float) -> P
     expected revenue, after the yield, does not cover its variable cost at expected input prices and
     live wages."""
     outputs = expected_output_prices(producer, recipe, view)
-    market_inputs = live_input_prices(producer, recipe, view)
+    market_inputs = paid_input_prices(producer, recipe, view, live_input_prices(producer, recipe, view))
     inputs = expected_input_prices(producer, recipe, view, market_inputs)
     wages = live_wages(producer, recipe, view)
     revenue = unit_cost.revenue_per_run(recipe, outputs) * producer.yield_factor
@@ -386,8 +373,7 @@ def runs_for_stock(producer: Producer, recipe: Recipe, view: MarketView, run_cos
     what a run makes of the others, at those prices, covers the cost: a joint recipe runs for the output that pays."""
     if producer.expected_sales <= 0.0:
         return math.inf
-    # sales recorded at an ask above every bid do not bound what a lower ask sells: keep a probe
-    sales = max(producer.expected_sales, UNSOLD_PROBE_SHARE_OF_CAPACITY * producer.capacity_runs)
+    sales = producer.expected_sales
     target = inventory.target_stock(sales)
     excess = {good: view.stock(producer.agent_id, good, producer.tile) / made - target
               for good, made in recipe.outputs.items() if made > 0.0}

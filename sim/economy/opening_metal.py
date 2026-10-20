@@ -38,7 +38,7 @@ def marginal_cost(setup, record):
     if good is None:
         return None
     prices = {each: price for each, price in setup.opening_prices.items() if each in setup.specs and price > 0.0}
-    final = {"nation": dict(record.opening_basket)}
+    final = {"nation": dict(record.opening_demand)}
     ceilings = opening_runs.run_ceilings(setup.recipes, sites.limits_by_recipe(setup.site_limits))
     _ranked, runs = opening_runs.choose_recipes(final, setup.recipes, prices, setup.opening_wages,
                                                 setup.opening_rate, ceilings)

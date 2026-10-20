@@ -79,5 +79,8 @@ _material_quote = _stock_sim.material_trade_quote("iron")
 if _material_quote:
     _tonnes = min(_stock_sim.spending_power("buy") / _material_quote["buy_per_tonne"] * 0.999,
                   _material_quote["market_available_tonnes_per_year"])
+    # the price climbs as the order is filled, so the amount that fits the budget is the one whose bill does
+    while _stock_sim.material_purchase_cost("iron", _tonnes)[0] > 0.999 * _stock_sim.spending_power("buy"):
+        _tonnes *= 0.9
     check("material: an amount within the shared budget is bought in full",
           _stock_sim.buy_material_stock("iron", _tonnes) == _tonnes, _tonnes)

@@ -9,6 +9,7 @@ import collections
 import types
 import unittest
 
+from sim.agents.api import Business
 from sim.engine import industry_depth
 from sim.engine.economy_production import ProductionMixin
 from sim.engine.projects_progress import ProgressMixin
@@ -23,7 +24,7 @@ def world(experience=None, founding_staff=2.0, concerns=None, seeded=True, grant
     tenure = {"artisan": {node: years for node, years in (experience or {}).items()}} if experience else {}
     projects = types.SimpleNamespace(
         tenure=tenure, tenure_headcount={}, industry_seeded=seeded, industry_opening_rate={}, granted=set(granted or ()),
-        opened_year={"loom": 10}, done_year={}, failed_attempts=collections.defaultdict(int), done=set(), operating=set())
+        business=Business.running(["loom"], opened_year=10), done_year={}, failed_attempts=collections.defaultdict(int), done=set(), operating=set())
     stub = types.SimpleNamespace(
         state=types.SimpleNamespace(projects=projects, scenario=types.SimpleNamespace(year=10)),
         cfg={"revenue_ramp_years": 4.0}, nodes={"loom": {"risk": 0.3, "ph": 4000.0}},

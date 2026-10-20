@@ -521,3 +521,96 @@ the full refactor stays rejected. If no, the next document should look
 directly at `economy.py`, not at reopening the field-by-field split by
 default, because section 6 already names `economy.py` as the file most
 mixins call into and the more likely site of real contention.
+
+---
+
+## 8. Mixin moves into walled packages (running list)
+
+Measure a mixin's coupling with `python3 -c` over `ast`: collect each `self.<name>` in the file, split by load and
+store (the script is a dozen lines; no checked-in command exists for it yet). A moved piece is done when the
+package function reads no `self` at all and the mixin keeps only the glue that fetches the actor's inputs.
+
+- `SoilNitrogenMixin` (`sim/engine/soil_nitrogen_year.py`): the per-tile pool loop, the manure rule and the yield
+  factors moved to `sim/geography/soil_nitrogen.py`, reached as `sim.geography.soil_nitrogen_factors` and
+  `sim.geography.step_soil_nitrogen`. The mixin keeps the rotation, crop and herd lookups (labour's technique and the
+  saved stock) and passes them in. Proof: `sim.tests.test_farm_follows_soil`, `test_soil_nitrogen`,
+  `test_soil_nitrogen_whole_game`, and identical soil nitrogen stock, factors and farm ladder over forty simulated
+  years before and after. The fingerprint was not run (too slow on a loaded machine).
+- `LivingStockGrowthMixin` (`sim/engine/living_stock_growth.py`): where held stock stands, the pasture room, the
+  endemic loss and the nursery room moved to `sim/geography/stock_land.py`, reached as `sim.geography.stock_place`,
+  `pasture_room_kg`, `endemic_stock_loss` and `nursery_room_units`. The mixin keeps the stock ledger, the production
+  entry and the labour purchase, and hands geography the grazing weight, the wild stock and the entry's output and land
+  use. Its distinct `self.` reads went from 9 to 8 (`civ` and `world_map` replaced by `geography`); measured with the
+  `ast` snippet above. Proof: identical sha256 of forty simulated years of `step_living_stock` plus the place, pasture
+  room, endemic loss and nursery room per material, on a base worktree and on this branch; identical sorted-key md5 of
+  `saveload.state_text` after three stepped Rome years; topics `stock_growth_and_smuggling`, `endemic_disease`,
+  `defence_stores`, `opening_herd_growth_unbilled`, `geography_walls`.
+- `RouteDuesMixin` (`sim/engine/route_dues.py`): the holder-owed loop duplicated `sim.geography.route_dues_by_holder`;
+  the mixin now calls it. Coupling is unchanged (10 reads); the duplicate logic is gone. What remains is glue: the
+  carriers' wage, the owner lookup and the treasury account. Proof: identical hash of the dues owed over 300 generated
+  routes on base and branch, and the same state md5.
+- `RouteDuesMixin`, second step: the treasury lookup and the split of a payment among holders moved to
+  `sim/agents/route_dues_pay.py`, reached as `sim.agents.api.treasury_of` and `pay_dues`. The mixin keeps the seat
+  and government registries it hands in, so its distinct `self.` reads stay at 10 (the logic left, the inputs did
+  not). Proof: identical sha256 of the money paid and every actor's purse over 400 generated payments (with and
+  without a limit) on base and branch, and the same state md5.
+- `FoodSupplyMixin` (`sim/engine/food_supply.py`): the per-tile crop sites, the food sum, the huntable game and the
+  draw on the wild stock moved to `sim/geography/food_society.py`, reached through new `Geography` methods
+  (`crop_sites`, `food_kcal_by_source`, `game_food_sources`, `huntable_kcal`, `take_hunt`, `regrow_wild_stock`). The
+  mixin keeps the gatherers' hours bound (labour's `cap_share`, `capped_kcal`) and the rotation, crop technique and
+  soil factors it hands in. Distinct `self.` reads went from 6 to 5 (`civ` and `world_map` replaced by `geography`).
+  Proof: identical sha256 over sixty simulated years of `step_wild_stock`, `farm_sites` and `society_food_potential`
+  (hunting hours raised, then stopped; a soil nitrogen stock set) on base and branch, and the same state md5.
+- `sim/world/soil_nutrients.py` moved to `sim/geography/soil_nutrients.py` (exported as `sim.geography.api.soil_nutrients`):
+  only geography read it, so the old `sim.world` import in the geography walls test's allowlist was backwards. The
+  allowlist is now empty.
+- The fingerprint was not run for any move.
+- `LivingStockOpeningMixin` (`sim/engine/living_stock_opening.py`): the pasture the held tiles carry moved to
+  `sim/geography/stock_land.py` (`held_pasture_kg`, which `pasture_room_kg` now uses too), reached as
+  `sim.geography.held_pasture_kg`. Distinct `self.` reads went from 9 to 8 (`civ` and `world_map` replaced by
+  `geography`). Proof: identical sha256 over forty simulated years of `grant_opening_herds`, `endemic_keeping` and the
+  held stock (two herd sizes alternating, one far beyond the pasture, the wild stock cut part-way) on base and branch.
+- `RegionalPeopleMixin` (`sim/engine/regional_people.py`): the migration rule between regions moved to
+  `sim/labour/regional_migration.py` (`sim.labour.api.moves_between_regions`); the calories each region is fed moved to
+  `sim/world/regional_population.py` (`kcal_per_day_by_region`); the people by tile, the tiles' population shares and the
+  borders moved to `sim/geography/settlement.py` (`people_by_tile`, `population_shares`, `borders_among`, the last
+  through `Geography.borders_among`). The year's epidemic inputs are now one call,
+  `DiseasePortMixin.epidemic_year`, so the mixin no longer names four disease methods. Distinct `self.` reads went from
+  9 to 6 (the disease port gained two, `_disease_burden` and `epidemic_hits_seats`, which it keeps beside
+  `disease_year`). Proof: identical sha256 over twelve stepped Rome years of the region populations, people by tile,
+  calories fed and the year's flows (regional food ratios set, then cleared) on base and branch, and the same state
+  md5.
+- Sim mixin count, before and after these two moves: 59 and 59 (no mixin emptied yet); count with
+  `python3 -c 'import ast; c = next(n for n in ast.parse(open("sim/engine/core.py").read()).body if isinstance(n, ast.ClassDef) and n.name == "Sim"); print(sum(getattr(b, "id", "").endswith("Mixin") for b in c.bases))'`.
+- The fingerprint was not run for these moves either.
+- Four whole mixins removed from `Sim`'s bases (59 to 55, counted with the command above): each was folded into the
+  mixin that owns its domain, and its file deleted. `PartnerCivsMixin` (`partner_civ`, the per-game record cache) went
+  into `ForeignEconomiesMixin` (`sim/engine/foreign_economies.py`). `WageMarketRatiosMixin` (`last_market_price_ratio`,
+  `record_wage_market_ratios`) went into `RealPriceRatiosMixin` (`sim/engine/real_price_ratios.py`), which computes
+  the ratios it records. `EpidemicStaffMixin` (`epidemic_hits_seats`, `EPIDEMIC_NOTICE_SHARE`) went into
+  `DiseasePortMixin` (`sim/engine/disease_port.py`), which already feeds it the year's deaths. `ActionLossMixin`
+  (`lose_what_was_risked`, `STOCK_RISKS`) went into `CompletionMixin` (`sim/engine/projects_completion.py`), its only
+  caller. These are folds, not moves into a walled package: the logic still reads `self` (the receiving files'
+  distinct `self.` reads rose by 1, 2, 6 and 3 respectively, measured with the `ast` snippet above; the Sim-wide
+  coupling is unchanged). Test hosts that listed the deleted mixins now borrow the method from its new owner.
+  Proof: identical sha256 over eight stepped Rome years of the wage market ratios, `last_market_price_ratio`, each
+  partner's coin standard, `epidemic_hits_seats` (rising deaths) and `lose_what_was_risked` on every risk node, and
+  identical state md5, on a base worktree and on this branch; identical sorted-key md5 of `saveload.state_text` after
+  three stepped Rome years. The fingerprint was not run.
+- Sixth step, three moves of arithmetic out of mixins (measured with `selfattrs.py`-style `ast` counts of distinct
+  `self.` reads and writes; mixin count 55 before and after, none emptied, counted with the command above):
+  - `DemographicRecoveryMixin` (`sim/engine/demographic_recovery.py`): the farm year (hectares the workers crop, seed
+    on the worked area, reserve target, the storage step, the capped carry-forward) moved to `sim/world/farm_year.py`
+    (`run_farm_year`, `hectares_worked`). The mixin keeps the workforce, weather, region and colony glue. Distinct
+    `self.` reads went from 16 to 15 (`_agriculture` gone), writes stay 4.
+  - `DiseasePortMixin` (`sim/engine/disease_port.py`): the technology scales on case fatality and transmission and the
+    working-age death share moved to `sim/disease/technology_effects.py` (`sim.disease.api.technology_scales`,
+    `working_age_death_share`). Coupling is unchanged (22 reads, 1 write): the logic left, the inputs did not.
+  - `CoinRevaluationMixin` and `CoinHoardMixin`: the blend of a metal's recorded ratio toward the market, the coin
+    mass, the keeping cost and the carriage units moved to `sim/world/coin_metal.py`. Coupling is unchanged (7 and 11
+    reads); the constants stay declared where they were and are passed in.
+  - Proof: identical sha256 over eight stepped Rome years of the farm year (stock, workers, harvest, shortfall, with
+    the granary set high and negative in alternate years), the disease technology scales and epidemic share, the coin
+    metal ratios (cleared, then set), keeping cost, hoard report and carriage units, on a base worktree and on this
+    branch; identical sorted-key md5 of `saveload.state_text` after three stepped Rome years. New pure tests in
+    `sim/tests/test_sixth_step_pure_functions.py`. The fingerprint was not run.

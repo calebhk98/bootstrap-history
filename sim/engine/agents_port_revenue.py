@@ -32,6 +32,12 @@ class RevenueView:
 						 * sim._agriculture.annual_food_demand_kg_per_person(technique.crop))
 		return kilograms / 1000.0
 
+	def output_tonnes(self, material: str, tiles: Optional[FrozenSet[str]] = None) -> float:
+		"""Tonnes of a material the producers on the state's tiles (only `tiles` when given) made last year."""
+		held = set(self.held_tiles()) if tiles is None else set(tiles)
+		by_tile = self._sim.economy.agent_output_tonnes_by_tile()
+		return sum(row.get(material, 0.0) for tile, row in by_tile.items() if tile in held)
+
 	def material_price(self, material: str) -> float:
 		"""Money for one tonne of a material at the price the market quotes."""
 		return self.material_cost(material, 1.0)  # type: ignore[attr-defined,no-any-return]

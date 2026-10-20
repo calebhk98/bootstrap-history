@@ -16,6 +16,7 @@ import types
 import unittest
 
 from sim.engine import disease_port, state
+from sim.geography import api as geography
 from sim.world import demography
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -36,6 +37,7 @@ class StandInSim(disease_port.DiseasePortMixin):
 
     def __init__(self, civ, seed):
         self.civ = civ
+        self.world_map = geography.open_map()
         self.year = civ["year"]
         self.seed = seed
         self.state = types.SimpleNamespace(disease=state.DiseaseState())
@@ -49,6 +51,9 @@ class StandInSim(disease_port.DiseasePortMixin):
 
     def _farm_year_weather_seed(self, year, region=None):
         return self.seed * 7919 + year
+
+    def held_and_running(self):
+        return frozenset(self.civ.get("starting_techs", ()))
 
     def _effect_terms(self, channel):
         return []
@@ -100,7 +105,7 @@ def deepest_fall(runs, seed):
     """Share of the population at first contact lost at the lowest point within the validation window."""
     disease_state = runs[seed][2]
     first_year = min(years[0] for years in disease_state.introduced.values())
-    rows = [row for row in runs[seed][1] if row[0] >= first_year]
+    rows = [row for row in runs[seed][1] if row[0] >= first_year - 1]
     return 1.0 - min(people for _y, people, _d in rows[:YEARS_AFTER_CONTACT]) / rows[0][1]
 
 
@@ -118,7 +123,7 @@ class CenturyTest(unittest.TestCase):
     def contact_row(self, seed):
         start, rows, disease_state = self.runs[seed]
         first_year = min(years[0] for years in disease_state.introduced.values())
-        return first_year, [row for row in rows if row[0] >= first_year]
+        return first_year, [row for row in rows if row[0] >= first_year - 1]
 
     def test_the_scenario_seeds_pathogens_the_files_define(self):
         for seed in SEEDS:

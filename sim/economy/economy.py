@@ -9,7 +9,7 @@ from typing import Any, Dict, Mapping, Optional, Tuple
 
 from sim.world import capital_market
 
-from . import carriage_hours, credit, credit_claims, currency, labour, land_market, lending, merchants_credit, producers, sites, state_budget, unit_cost
+from . import bondage, banks, carriage_hours, credit, debt_relief, credit_claims, currency, equity, labour, land_market, lending, merchants_credit, producers, shares, sites, state_budget, tax_farming, titles_inheritance, unit_cost
 from .credit_view import CreditView
 from .market_areas import AreaMap
 from .market_areas_follow import follow
@@ -33,6 +33,7 @@ from .year_close import (check_money, close_agents, dispatch_merchants, money_ta
 from .year_goods import add_orders, clear_goods, cohort_orders, merchant_orders, state_orders
 from .year_labour import clear_labour, held_share_by_area, labour_offers, outside_option_by_tile
 from .year_accounts import YearAccounts, build as build_accounts, stocks as stocks_held
+from .standing_demand import with_standing_bids
 from .year_ledger import YearLedger
 from .collection_paused import collection_paused
 from .replaced import replaced
@@ -120,11 +121,21 @@ class Economy:
 
     def view(self) -> YearView:
         return CreditView(self.record.memory, self.record.book, self.area_map, self.setup.currency_id, labour_area,
-                          loans=lambda: self.record.loans)
+                          loans=lambda: self.record.loans, equity=self._equity_read)
+
+    def _equity_read(self, view) -> Dict[str, float]:
+        return equity.holdings(self.setup, self.record, view)
 
     def strike_lighter_coin(self, cut_share: float, restrike_share: float) -> None:
-        """The issuer of the currency cuts the metal in the coin it strikes again this year (a struck coin only)."""
-        self.record.currency = currency.debase_by_cut(self.record.currency, cut_share, restrike_share)
+        """The issuer recoins the part of the stock that comes to the mint at `cut_share` less metal (a struck
+        coin only): the metal saved is struck as more coin, which the issuer receives and spends."""
+        record = self.record
+        supply = record.book.money_supply(record.currency.currency_id)
+        struck = currency.units_struck_by_cut(record.currency, supply, cut_share, restrike_share)
+        if struck <= 0.0:
+            return
+        record.book.transfer_many(currency.issue(record.currency, struck, "recoinage"))
+        record.currency = currency.debase_by_cut(record.currency, supply, cut_share, restrike_share)
 
     def step(self, inputs: YearInputs) -> YearOutcome:
         with collection_paused():
@@ -134,7 +145,7 @@ class Economy:
         setup, record = self.setup, self.record
         self.__dict__.pop("_port_shares", None)
         self.follow_flows()
-        self.carriage.set_scale(carriage_hours.wage_scale(setup, record))   # the carriers' labour at the year's wage
+        self.carriage.set_scale(carriage_hours.wage_scale(setup, record, self.carriage))   # the carriers' labour at the year's wage
         record.book.start_year()
         stocks_at_start = stocks_held(record.book)
         ledger = YearLedger(import_accounts=frozenset(inputs.import_accounts), export_accounts=frozenset(inputs.export_accounts))
@@ -143,6 +154,8 @@ class Economy:
         sites.apply_site_limits(record, setup, inputs.site_limits)
         view = self.view()
         money = setup.currency_id
+        debt_relief.forgive(record, inputs.debt_relief_tiles)
+        tax_farming.run_auctions(setup, record, inputs.farmed_forms, record.memory.rates.get(setup.currency_id, 0.0))
         lending.lend_working_capital(setup, record, view)
         plans = {producer_id: producers.plan(producer, setup.recipes[producer.recipe_id], view,
                                              record.book.balance(producer_id, money))
@@ -154,7 +167,7 @@ class Economy:
         staff_mint(setup, record, view, labour_bids)
         labour_bids.extend(carriage_hours.bids(setup, record))    # merchants' carriers, from last year's shipments
         outside_option = outside_option_by_tile(setup, record, view)
-        everyone = labour_offers(setup, record, view, outside_option)
+        everyone = labour_offers(setup, record, view, outside_option, inputs.labour_levy_hours_per_worker)
         offers, kept = withhold_hours(everyone, self._shortfall_hours())
         context = labour_context(setup, record, view, self.carriage, inputs, self._own_plot_options(), outside_option)
         clear_labour(setup, record, labour_bids, offers, ledger, context, held_share_by_area(everyone, offers))
@@ -169,7 +182,8 @@ class Economy:
         for plan in plans.values():
             for bid in plan.bids:
                 order_book.setdefault((bid.good, bid.area), ([], []))[0].append(bid)
-        plant_runs = self._lend(funds, view, order_book, ledger)
+        funds, pledged = banks.intermediate(setup, record, funds, view.year, inputs.institutions)
+        plant_runs = self._lend(funds, view, order_book, ledger, pledged)
         merchant_orders(setup, record, view, self.area_map, self.carriage, order_book)
         for producer_id, runs in self._rebuild_worn_plant(view, order_book).items():
             plant_runs[producer_id] = plant_runs.get(producer_id, 0.0) + runs
@@ -180,14 +194,19 @@ class Economy:
                                        {producer_id: plan.wanted_runs for producer_id, plan in plans.items()},
                                        self._own_hectares)
         interest = self._service_loans(view.year)
-        dispatch_merchants(setup, record, self.carriage, ledger)
+        bonded = bondage.service(record, money, ledger.wages_in)
+        record.book.transfer_many(bonded)
+        for payment in bonded:
+            interest[payment.payee] = interest.get(payment.payee, 0.0) + payment.amount
+        titles_inheritance.divide_estates(record)
+        dispatch_merchants(setup, record, self.carriage, ledger, self.area_map)
         money_taxes(setup, record, view, ledger)
         self._build_plant(plant_runs)
         close_view = CreditView(record.memory, record.book, self.area_map, money, labour_area,
-                                loans=lambda: record.loans)
+                                loans=lambda: record.loans, equity=self._equity_read)
         close_agents(setup, record, close_view, ledger, self.area_map, self.carriage)
         open_entrants(setup, record, close_view, self.area_map, ledger.unmet_demand, self.carriage,
-                      ledger.bids_by_market)
+                      with_standing_bids(ledger.bids_by_market, inputs.standing_bids))
         restake_owners(setup, record, close_view)
         extraction = sites.extraction_by_tile(record, setup)
         close_idle_producers(setup, record)
@@ -271,9 +290,9 @@ class Economy:
     def _service_loans(self, year: int) -> Dict[str, float]:
         """Payments due at the year's end, out of the year's sales: before carriage, taxes and the owners'
         dividends, since a lender is paid ahead of them."""
-        return lending.service(self.record, self.setup.currency_id, year)
+        return lending.service(self.record, self.setup.currency_id, year, self.setup.debt_bondage_years)
 
-    def _lend(self, funds, view, order_book, ledger) -> Dict[str, float]:
+    def _lend(self, funds, view, order_book, ledger, pledged=None) -> Dict[str, float]:
         """New loans from savings. A producer that borrowed to build bids for its plant goods, a household
         for its floors; a merchant's cargo is bought from its enlarged cash (merchant_orders follows)."""
         record, setup = self.record, self.setup
@@ -285,6 +304,7 @@ class Economy:
         record.funds_offered = sum(offer.amount for offer in funds if offer.currency == money)
         record.lent_by_borrower = {}
         if not requests:
+            record.expansion_runs = {}      # a working-capital loan struck ahead of the year left no plant to wait for
             if funds:
                 # savings on offer and nobody borrowing: lenders compete the rate down toward the lowest
                 # they will lend at, at the market's usual pace
@@ -293,15 +313,18 @@ class Economy:
                                                                 credit.RATE_ADJUSTMENT_SHARE_PER_YEAR)
             return {}
         debt = credit_claims.principal_by_borrower(record.loans)
-        loans, rate, _unmet = credit.clear(requests, funds, money, record.memory.rates.get(money), debt,
+        loans, rate, unmet = credit.clear(requests, funds, money, record.memory.rates.get(money), debt,
                                            credit_claims.arrears_history(record.loans, record.remembered_defaults),
                                            year=view.year,
                                            rate_ceiling=capital_market.RATE_CEILING_SHARE * setup.opening_rate)
+        banks.draw_deposits(record, loans, pledged or {}, view.year, money)       # a bank takes its depositors' funds for the loans it makes
         record.book.transfer_many(credit.disbursements(loans))
         record.loans.extend(loans)
         for loan in loans:
             record.lent_by_borrower[loan.borrower] = record.lent_by_borrower.get(loan.borrower, 0.0) + loan.principal
         record.memory.rates[money] = rate
+        # a plant request lenders left unmet is offered to the savers as shares (the money they raise is plant like a loan's)
+        raised = shares.raise_equity(record, money, unmet, funds, loans, rate, shares.rate_floor_of(setup))
         merchants_credit.stake(record.merchants, {loan.borrower: loan.principal for loan in loans})
         lending.bid_household_loans(setup, record, view, ledger, loans, order_book, priced_by_tile)
         asked = {request.borrower: request.amount for request in requests}
@@ -312,15 +335,15 @@ class Economy:
                 worth[request.borrower] = plant_worth_ratio(request.maximum_rate, rate,
                                                             setup.recipes[producer.recipe_id].plant_life_years)
         plant_runs: Dict[str, float] = {}
-        for loan in loans:
-            producer = record.producers.get(loan.borrower)
-            runs = record.expansion_runs.get(loan.borrower, 0.0)
-            if producer is None or runs <= 0.0 or not asked.get(loan.borrower):
+        for borrower, principal in [(loan.borrower, loan.principal) for loan in loans] + sorted(raised.items()):
+            producer = record.producers.get(borrower)
+            runs = record.expansion_runs.get(borrower, 0.0)
+            if producer is None or runs <= 0.0 or not asked.get(borrower):
                 continue
-            funded_runs = runs * min(1.0, loan.principal / asked[loan.borrower])
-            plant_runs[loan.borrower] = plant_runs.get(loan.borrower, 0.0) + funded_runs
+            funded_runs = runs * min(1.0, principal / asked[borrower])
+            plant_runs[borrower] = plant_runs.get(borrower, 0.0) + funded_runs
             # no dearer than the price at which the new plant would earn just the loan's rate
-            self._bid_for_plant(producer, funded_runs, loan.principal, worth.get(loan.borrower, 1.0), view, order_book)
+            self._bid_for_plant(producer, funded_runs, principal, worth.get(borrower, 1.0), view, order_book)
         record.expansion_runs = {}
         return plant_runs
 
@@ -402,6 +425,12 @@ class Economy:
         output: Dict[str, float] = {}
         for (_agent, good), quantity in ledger.output.items():
             output[good] = output.get(good, 0.0) + quantity
+        record.output_by_tile = {}
+        for (agent, good), quantity in sorted(ledger.output.items()):
+            producer = record.producers.get(agent)
+            if producer is not None and quantity > 0.0:
+                row = record.output_by_tile.setdefault(producer.tile, {})
+                row[good] = row.get(good, 0.0) + quantity
         prices = national_prices(record)
         return YearOutcome(year=record.memory.year, basket_price_level=level, prices=prices,
                            wages=mean_wages, rate=record.memory.rates.get(money, 0.0),

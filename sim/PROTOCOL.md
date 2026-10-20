@@ -63,6 +63,23 @@ Two fixes, usable separately or together:
       "waiting_on" has "waiting_on_kind"; the score's "why" has "why_kind";
       an automation row may carry "reason_kind" and its figures.
 
+      Keeping one process alive. Every `agent` and `play` process builds or
+      loads the game and rebuilds the economy before its first command. With
+      --session, a process per command pays that every time; one process
+      reading many commands pays it once (the measurement is in Complaints/497).
+      A caller that cannot hold a pipe open between its own tool calls can
+      start the process on a named pipe and write to the pipe later:
+      `mkfifo in; python3 sim/simulator.py agent --session s.json
+      --save-interval 60 < in > out &`, then `echo '{"cmd":"state"}' > in`.
+      --save-interval SECONDS (on `agent` and `play`; default 0) sets how often
+      the session file is written. 0 writes after every command, as always; a
+      positive figure writes when that long has passed since the last write,
+      after `save`, `load` and `quit`, when the game ends, and on leaving the
+      process. The file holds the same game either way, and a process killed
+      between writes loses the commands since the last one.
+      `sim/tests/test_cli_one_process_session.py` checks that the final save
+      equals the one a process per command ends in.
+
       {"cmd":"state"}                              current situation, in full
       {"cmd":"available"}                          every node that can legally start now,
                                                     with cost, founder hours, calendar
@@ -659,6 +676,26 @@ with mortal founders, a denunciation, a fall): its commands that need a living
 holder are refused with the reason, and the others play on. The game is over
 when no seat is playing, or every seat still playing has reached its goal. In
 a game with immortal founders no founder dies, so this never arises.
+
+## Relations between countries
+
+The relations store (`sim/agents/relations.py`, declared in `data/world/stores.json`) holds, per ordered pair of
+countries, that country's own side toward the other: `stance`, `trust`, `treaty` terms, `tariff`, `embargo`, a private
+`note` and a dated `history` of `{year, kind, facts}`. It belongs to the country, so it survives the seat that wrote
+it, and it is saved with the game. Other mechanisms record into it with `relations.record_event` and `set_side`.
+
+    {"cmd":"relations"}                                   every country this seat's country has a record with
+    {"cmd":"relations","with":"han"}                      one pair: "ours", and "theirs" (the other side's stance,
+                                                          treaty, tariff, embargo and history; never its note or trust)
+    {"cmd":"set_relation","with":"han","stance":"friendly"}   also "note":"...", or "term":"<name>","value":<json>
+    {"cmd":"set_relation","with":"han","term":"tariff","value":0.1}   your state's tariff on goods from that country (a share of their value at the source); value 0 removes it
+    {"cmd":"set_relation","with":"han","embargo":"on"}   stops goods from that country crossing into your markets; "off" lifts it
+                                                          (a null value removes the term)
+
+A seat sets only its own country's side: `"side"` naming another country is refused with `cause`
+`not_your_country` (`choices` lists the one allowed). Other refusal causes: `unknown_country` (`choices` lists
+the countries), `same_country`, `unknown_stance` (`choices` lists them, from `data/world/relation_stances.json`),
+`nothing_to_set`. Replies carry `country`, `with`, `ours` and `theirs`.
 
 ## Commands from mods
 

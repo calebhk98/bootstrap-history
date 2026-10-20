@@ -6,7 +6,7 @@ the cargo (`economy_port_cargo.py`), or the quote where the book took none of it
 up from the booking to the result and closes the partner's tally on what really crossed.
 A leg is a plain dict kept in `state.economy.agent_economy["cargo"]`, so a save carries it.
 """
-from sim.agents.api import edges, ledger
+from sim.agents.api import GOVERNMENT_PREFIX, edges, ledger
 
 from .data import load_civ
 
@@ -20,19 +20,22 @@ class TraderCargoMixin:
         """The legs noted since the last settlement, in a stable order."""
         return [leg for _id, leg in sorted(self.state.economy.agent_economy.get("cargo", {}).items())]
 
-    def note_cargo_leg(self, trader_id, material, tonnes, source, destination, paid, received, carriage, home):
-        """Note a cargo a trader shipped; the same trader, route and good in one year is one leg."""
+    def note_cargo_leg(self, trader_id, material, tonnes, source, destination, paid, received, carriage, home, duty=0.0):
+        """Note a cargo a trader shipped; the same trader, route and good in one year is one leg. `duty` is the
+        part of `carriage` that is the destination state's tariff."""
         kind = LANDING if destination == home else TAKING if source == home else THROUGH
         partner = source if kind == LANDING else destination
         leg_id = "cargo:%s:%s:%s:%s" % (trader_id, partner if kind != THROUGH else source + ">" + destination,
                                         material, kind)
         leg = self.state.economy.agent_economy.setdefault("cargo", {}).setdefault(leg_id, {
             "id": leg_id, "trader": trader_id, "kind": kind, "source": source, "destination": destination,
-            "partner": partner, "material": material, "tonnes": 0.0, "paid": 0.0, "received": 0.0, "carriage": 0.0})
+            "partner": partner, "material": material, "tonnes": 0.0, "paid": 0.0, "received": 0.0, "carriage": 0.0,
+            "duty": 0.0})
         leg["tonnes"] += tonnes
         leg["paid"] += paid
         leg["received"] += received
         leg["carriage"] += carriage
+        leg["duty"] += duty
 
     def _money_per_partner_coin(self, partner):
         standard = load_civ(partner)["coin_standard"]
@@ -70,8 +73,15 @@ class TraderCargoMixin:
             else:
                 self._pay_partner(leg["source"], tonnes, leg["paid"])
                 self._pay_partner(leg["destination"], -tonnes, leg["received"])
+            self._pay_duty(leg)
             self._true_up_trader(leg["trader"], delta)
         self.state.economy.agent_economy.pop("cargo", None)
+
+    def _pay_duty(self, leg):
+        """The tariff a cargo paid in its carriage reaches the treasury of the country it entered."""
+        collector = self.actors.get(GOVERNMENT_PREFIX + leg["destination"]) if leg.get("duty") else None
+        if collector is not None:
+            ledger.transfer(self.edge(edges.EDGE_FREIGHT), collector, leg["duty"], "tax:tariff")
 
     def _true_up_trader(self, trader_id, delta):
         """The trader's purse and margin follow what a cargo really made against what it was booked at."""

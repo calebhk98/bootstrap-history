@@ -75,6 +75,12 @@ class FakeWorld:
 		# concerns that have run at a profit where entrants can see them
 		self.proven: Set[str] = set()
 		self.edge_book = ActorsState()
+		# trade family -> people that can be put on research; node -> materials no one sells
+		self.hands: Dict[str, float] = {}
+		self.unsold: Dict[str, List[str]] = {}
+
+	def state_hands(self) -> Any:
+		return None
 
 	def edge(self, name: str) -> Any:
 		return self.edge_book.edge(name)
@@ -84,6 +90,27 @@ class FakeWorld:
 
 	def research_productivity(self, country=None):
 		return 1.0
+
+	def research_hands(self, actor: Any, family: str) -> float:
+		return self.hands.get(family, 0.0)
+
+	def unsold_materials(self, actor: Any, node_id: str) -> List[str]:
+		return list(self.unsold.get(node_id, ()))
+
+	def research_cost(self, node_id: str, max_age_years: int) -> float:
+		return self.copy_cost(node_id)
+
+	def purchasable_substitute_discount(self) -> float:
+		return 0.9
+
+	def knowledge_half_life_years(self) -> float:
+		return 40.0
+
+	def knowledge_visibility(self, node_id: str, distance_km: float) -> float:
+		return 1.0
+
+	def distance_km(self, place_a: Optional[str], place_b: Optional[str]) -> float:
+		return 0.0
 
 	# ---- the tree and what has been shown
 	def civ_id(self) -> str:
@@ -159,11 +186,20 @@ class FakeWorld:
 	def concern_takings(self, node_id: str, opened_year: int, rivals: float = 0.0, capacity: float = 1.0) -> float:
 		return capacity * float(self.nodes[node_id].get("rev", 0.0)) / (1.0 + rivals)
 
+	def entry_gross(self, node_id: str, rivals: float, entrants: float) -> float:
+		return self.concern_takings(node_id, self.year, max(0.0, rivals + entrants - 1.0))
+
 	def plant_cost(self, node_id: str, actor: Any = None, capacity: float = 1.0) -> float:
 		return capacity * float(self.nodes[node_id].get("cap", 0.0))
 
 	def upkeep(self, node_id: str, capacity: float = 1.0) -> float:
 		return capacity * float(self.nodes[node_id].get("up", 0.0))
+
+	def concern_gross(self, node_id: str) -> float:
+		return float(self.nodes[node_id].get("rev", 0.0))
+
+	def concern_inputs(self, node_id: str) -> Dict[str, float]:
+		return dict(self.nodes[node_id].get("inputs") or {})
 
 	def materials_made_by(self, node_id: str) -> List[str]:
 		return list(self.nodes[node_id].get("makes") or ())

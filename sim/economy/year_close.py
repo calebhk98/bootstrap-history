@@ -6,8 +6,8 @@ from typing import Dict, Tuple
 from sim.geography.api import flow_ledger
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
-from . import (merchants_transit, carriage_hours, currency, expansion_price, households, inventory, merchants, metal_stock, ownership, producer_exit,
-               producers, producers_close, state_budget, taxes)
+from . import (tax_farming, merchants_transit, carriage_hours, carriage_wear, currency, expansion_price, households, inventory, merchants, metal_stock, ownership, producer_exit, shares,
+               producers, producers_close, state_budget, tariffs, taxes)
 from .households_cohort import renewed
 from .market_memory import market_key
 from .national_prices import national_prices
@@ -20,19 +20,23 @@ from .year_ledger import YearLedger
 from .replaced import replaced
 
 
-def dispatch_merchants(setup, record, carriage, ledger: YearLedger) -> None:
+def dispatch_merchants(setup, record, carriage, ledger: YearLedger, area_map) -> None:
     """Merchants carry what they bought. The crew hours the shipments need were hired in the year's labour
     market (carriage_hours.bids) and limit what is carried; a merchant with no plan yet (it has not shipped)
     is not limited. The part of a fee that is not crew pay goes, as wages, to the poorest households of the
     tile the goods leave: a shortcut until carts, ships and animals are capital (Complaints/552)."""
     money = setup.currency_id
-    crew = carriage_hours.crew_for(setup, record)
+    crew = carriage_hours.crew_for(setup, record, carriage)
+    index = carriage_hours.hired_index(ledger) if crew is not None else {}
     carriers = {}
     for cohort in record.cohorts.values():
         held = carriers.get(cohort.tile)
         if held is None or cohort.income_class < record.cohorts[held].income_class:
             carriers[cohort.tile] = cohort.agent_id
     carried: dict = {}
+    carrier_goods = carriage_wear.carrier_goods(setup)
+    prices = carriage_wear.last_prices(setup, record) if carrier_goods else {}
+    wear = carriage_wear.Wear(setup, carriage, record.area_imbalance) if carriage_wear.wears(setup) else None
     for merchant in sorted(record.merchants.values(), key=lambda each: each.agent_id):
         record.book.move_many(merchants_transit.advance(merchant, setup.specs))    # hauls on the road for years reach the tile or spoil
     for merchant in sorted(record.merchants.values(), key=lambda each: each.agent_id):
@@ -40,19 +44,35 @@ def dispatch_merchants(setup, record, carriage, ledger: YearLedger) -> None:
         if not fills:
             if crew is not None:
                 merchant.carriage_hours_wanted = {}     # nothing shipped: no carriers to bid for next year
+                merchant.carriage_money_wanted = {}
+            if wear is not None:
+                merchant.carrier_wear, merchant.carrier_team_days = {}, {}
+                carriage_wear.settle(merchant, record.book, carrier_goods, {})
             continue
         hire = None
         if crew is not None:
-            engaged = (carriage_hours.hired(ledger, merchant.agent_id, [trade for trade, _share in crew.trades])
-                       if carriage_hours.planned(merchant) else {"hours": None, "wage": 0.0})
-            hire = merchants.CrewHire(crew.hours_per_money, engaged["hours"], engaged["wage"])
+            if carriage_hours.planned(merchant):
+                ledger.crew_hours_bought[merchant.agent_id] = {
+                    (trade, area): bought for (employer, trade, area), (bought, _paid) in index.items()
+                    if employer == merchant.agent_id}
+            hours_hired, wages = ((carriage_hours.engaged(record, merchant, index)) if carriage_hours.planned(merchant)
+                                  else (None, {}))
+            hire = merchants.CrewHire(crew.hours_per_tonne, hours_hired, wages,
+                                    lambda key: carriage_hours.last_wage(record, key), area_map.area_of)
         done = merchants.dispatch(merchant, fills, carriage, setup.specs, money,
                                   record.book.balance(merchant.agent_id, money), _held_stock(record.book, merchant.agent_id),
-                                  carrier_of=carriers.get, crew=hire)
+                                  carrier_of=carriers.get, crew=hire,
+                                  carrier_money=None if wear is None else (
+                                      lambda source, destination, each=merchant: carriage_wear.money_per_tonne(
+                                          prices, wear, source, destination)))
         record.book.post(done.transfers, done.moves)
         ledger.note_postings(done.transfers, "wages")
         if crew is not None:
             merchant.carriage_hours_wanted = done.crew_hours_wanted
+            merchant.carriage_money_wanted = done.crew_money_wanted
+        if wear is not None:
+            merchant.carrier_wear, merchant.carrier_team_days = carriage_wear.exposure(wear, done.moves, setup.specs)
+            carriage_wear.settle(merchant, record.book, carrier_goods, merchant.carrier_wear)
         for move in done.moves:
             flow_ledger.record_flow(carried, move.tile, move.receiver_tile,
                                     move.quantity * setup.specs[move.good].unit_mass_kg / KILOGRAMS_PER_TONNE)
@@ -87,12 +107,28 @@ def tax_facts(setup, record, view, ledger: YearLedger) -> YearFacts:
 def money_taxes(setup, record, view, ledger: YearLedger) -> None:
     forms = [form for form in setup.tax_forms if not form.paid_in]
     received = 0.0
+    duty = tariffs.duty_transfers(setup.import_duty_share, ledger.border_imports_paid, setup.state_agent, setup.currency_id)
+    if duty:
+        record.book.transfer_many(duty)
+        received += math.fsum(transfer.amount for transfer in duty)
+    farmed = dict(record.tax_farms)
+    received += math.fsum(farm["price"] for farm in farmed.values())      # the farmers paid up front
     if forms:
         facts = tax_facts(setup, record, view, ledger)
-        transfers, _moves, _assessments = taxes.assess(forms, facts, setup.state_agent, {}, setup.state_capacity)
+        owed_to_state = [form for form in forms if form.name not in farmed]
+        transfers, _moves, assessments = taxes.assess(owed_to_state, facts, setup.state_agent, {}, setup.state_capacity)
+        for form in forms:
+            if form.name in farmed:
+                farmed_transfers, _farmed_moves, farmed_assessments = taxes.assess(
+                    [form], facts, farmed[form.name]["farmer"], {}, tax_farming.TAX_FARMER_REACH)
+                record.book.transfer_many(farmed_transfers)
+                ledger.note_postings(farmed_transfers)
+                assessments = assessments + farmed_assessments
         record.book.transfer_many(transfers)
         ledger.note_postings(transfers)
-        received = math.fsum(transfer.amount for transfer in transfers)
+        received += math.fsum(transfer.amount for transfer in transfers)
+        tax_farming.remember_year(record, assessments, tuple(farmed), setup.state_capacity)
+    record.tax_farms = {}
     state_budget.close_year(setup, record, ledger, received)
 
 
@@ -128,6 +164,7 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage) ->
         price_share = expansion_price.price_share_of(ledger.bids_by_market, traded, area_map.area_of, producer.tile,
                                                    prepared_buyers)
         closed = producers_close.close_year(producer, recipe, revenue, costs, view, worked, price_share)
+        shares.note_dividend(record, producer_id, closed.transfers)
         if closed.exited:
             paid = producer_exit.exit_producer(record, producer_id, list(closed.transfers))
             for transfer in paid:
@@ -159,9 +196,10 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage) ->
         record.book.transfer_many(paid)
         for transfer in paid:
             property_income[transfer.payee] = property_income.get(transfer.payee, 0.0) + transfer.amount
-    crew = carriage_hours.crew_for(setup, record)
-    if crew is not None:    # after the owners took their profit: the cash left is what next year's carriers can be paid from
-        record.loan_requests.extend(carriage_hours.wage_loans(setup, record, crew))
+    if carriage_hours.hires(setup):    # after the owners took their profit: the cash left is what next year's carriers can be paid from
+        record.loan_requests.extend(carriage_hours.wage_loans(setup, record, ledger.crew_hours_bought,
+                                                           {(result.trade, result.area): result.hours_hired + result.idle_hours
+                                                            for result in ledger.labour_results}))
     for cohort_id, cohort in sorted(record.cohorts.items()):
         received = dict(ledger.received.get(cohort_id, {}))
         for good, quantity in ledger.grown.get(cohort_id, {}).items():

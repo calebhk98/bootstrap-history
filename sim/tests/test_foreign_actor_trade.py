@@ -113,7 +113,12 @@ def payable(material):
     return paying_tonnes(world, home, PARTNER, material, terms, 1e12 / terms["outlay"], rate)
 
 
-material = max(candidates, key=lambda pair: payable(pair[1]))[1]
+# the cargo is judged on a good whose home book answers it: a deep home book whose price a whole cargo leaves where
+# it was (the opening holds a great stock of a grain) cannot show that cargo taken from home raises the price
+answering = [pair for pair in candidates
+             if (world.price_after_cargo(pair[1], home, payable(pair[1]), False) or 0.0) > world.price_at(pair[1], home)]
+check("...and one of them has a home price that the cargo moves", bool(answering), [pair[1] for pair in candidates])
+material = max(answering, key=lambda pair: payable(pair[1]))[1]
 check("...and a cargo of the widest-paying good pays", payable(material) > 0.0, material)
 
 

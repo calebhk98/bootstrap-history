@@ -8,7 +8,7 @@ from .records import ActorRecord, ActorsState
 from .base import RecordedActor
 from .concern_totals import ConcernTotals
 from .entry_round import NicheEntry
-from . import patent_index
+from . import patent_index, research
 from .firm import Firm
 from .government import Government
 from .group import InterestGroup
@@ -104,6 +104,8 @@ class ActorRegistry:
 		self._totals = ConcernTotals()
 		# country -> the world its actors see this year (rebuilt every `advance`)
 		self._scoped: Dict[str, Any] = {}
+		# node -> (year, cost): what researching it cost when last worked out (see SimWorld.research_cost)
+		self._research_costs: Dict[str, Any] = {}
 		for actor_id in sorted(state.records):
 			self._wrap(actor_id)
 
@@ -382,6 +384,8 @@ class ActorRegistry:
 				self._columns_synced = False
 			first = False
 		self._acting = None
+		research.diffuse([actor for actor in self.actors.values()
+						  if actor.researches and actor.record.exited_year is None], world)
 		for _name, spawner in list(SPAWNERS):
 			spawner(self, world)
 		# entry and group formation change staff after the last count; whatever reads before the next

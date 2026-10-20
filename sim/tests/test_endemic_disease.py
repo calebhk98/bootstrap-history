@@ -3,12 +3,14 @@ cannot keep cattle or horses and offers no draught team, a temperate tile is una
 on a hot wet tile against a cool dry one, and no engine code names a region."""
 import os
 import re
+import types
 import unittest
 
 from sim.engine.living_stock_growth import LivingStockGrowthMixin
 from sim.engine.living_stock_opening import LivingStockOpeningMixin
 from sim.engine.living_stock_yearly import stock_rates
 from sim.geography import api as geography
+from sim.geography.api import Geography
 from sim.geography import endemic, food_pasture
 from sim.world.demography import Population
 
@@ -22,6 +24,7 @@ SAHEL_TILE = "burkina_faso_02"  # inside the box, too dry for the vector
 class Holder(LivingStockOpeningMixin, LivingStockGrowthMixin):
     def __init__(self, world_map, place):
         self.world_map, self._place = world_map, place
+        self.geography = Geography(types.SimpleNamespace(world_map=world_map))
 
     def stock_place(self):
         return self._place

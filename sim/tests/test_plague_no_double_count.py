@@ -4,10 +4,11 @@ import random
 import unittest
 
 from .harness import *  # noqa: F401,F403
+from .plague_fixture import ANTONINE, BLACK_DEATH, with_hazard
 
 
 def _fresh():
-    return unopened_sim(civ="rome_100ad", capital=1e9)
+    return with_hazard(unopened_sim(civ="rome_100ad", capital=1e9), ANTONINE)
 
 
 def _plague_hazard(household):

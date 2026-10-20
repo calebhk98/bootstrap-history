@@ -7,10 +7,14 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.geography import api, food_season, map_source
+from sim.geography import api, food_season, map_source, parameters
 from sim.geography.food_capacity import food_potential
+from sim.world.agriculture_tile import crop_technique as farm_crop_technique
+from sim.world.farming_technique import DEFAULT_TECHNIQUE
 
 _cache = {}
+CROPS = farm_crop_technique(DEFAULT_TECHNIQUE)
+OPEN_FIELD_SHARE = CROPS.open_field_cropped_share
 
 
 def earth():
@@ -39,7 +43,7 @@ def mini_map(specs, drop_wild=False):
 
 
 def kcal(world_map, tile_id, source):
-    return food_potential(world_map, tile_id)["kcal_per_year"].get(source, 0.0)
+    return food_potential(world_map, tile_id, None, None, CROPS)["kcal_per_year"].get(source, 0.0)
 
 
 COASTAL = "united_kingdom_01"
@@ -64,8 +68,8 @@ class PartitionedShelfTests(unittest.TestCase):
 
     def test_real_coastal_tiles_no_longer_out_fish_their_fields(self):
         for tile_id in ("united_kingdom_01", "china_45", "south_korea_01", "netherlands_01"):
-            result = api.food_potential(tile_id)["kcal_per_year"]
-            self.assertLess(result.get("marine_fishing", 0.0), 0.15 * result["crops"], tile_id)
+            result = api.food_potential(tile_id, None, None, None, CROPS)["kcal_per_year"]
+            self.assertLess(result.get("marine_fishing", 0.0), 0.25 * result["crops"], tile_id)  # crops follow the farm model's yield and rotation
 
     def test_nearest_land_partition_splits_a_strait_down_the_middle(self):
         try:
@@ -123,7 +127,7 @@ class GrowingSeasonTests(unittest.TestCase):
 
     def test_subarctic_herding_is_well_under_a_person_per_square_km(self):
         world_map = earth()
-        values = sorted(api.food_potential(tile_id)["kcal_per_year"].get("pastoral", 0.0)
+        values = sorted(api.food_potential(tile_id, None, None, None, CROPS)["kcal_per_year"].get("pastoral", 0.0)
                         / world_map.tiles[tile_id]["land_area_km2"]
                         for tile_id, tile in world_map.tiles.items() if tile["koppen_class"] == "Dfc")
         kcal_per_person = world_map.catalogue("parameters")["food_kcal_per_person_year"]["value"]
@@ -144,27 +148,32 @@ class CompetitionTests(unittest.TestCase):
 
 
 class RainforestTests(unittest.TestCase):
-    def crops(self, rain, forest, arable=0.2):
+    def site(self, rain, forest, arable=0.2):
         layers = {"annual_precipitation_mm": rain, "forest_fraction": forest, "arable_fraction": arable,
                   "ruggedness_index": 0.0, "river_km_navigable": 0.0, "river_km_all": 0.0}
-        return kcal(mini_map({"a": (FARMLAND, layers, [])}), "a", "crops")
+        return api.crop_site("a", OPEN_FIELD_SHARE, mini_map({"a": (FARMLAND, layers, [])}))
 
     def test_humid_tropical_rain_is_not_waterlogging(self):
-        self.assertAlmostEqual(self.crops(2400.0, 0.0), self.crops(1400.0, 0.0), delta=0.01 * self.crops(1400.0, 0.0))
-        self.assertGreater(self.crops(4500.0, 0.0), 0.0)
-        self.assertLess(self.crops(4500.0, 0.0), self.crops(2400.0, 0.0))
+        humid, wet, waterlogged = (self.site(rain, 0.0).yield_factor for rain in (1400.0, 2400.0, 4500.0))
+        self.assertAlmostEqual(wet, humid, delta=0.01 * humid)
+        self.assertGreater(waterlogged, 0.0)
+        self.assertLess(waterlogged, wet)
 
     def test_land_cleared_from_forest_is_cropped_in_a_long_fallow_rotation(self):
-        open_land = self.crops(2400.0, 0.0)
-        cleared = self.crops(2400.0, 0.95)
-        self.assertLess(cleared, 0.6 * open_land)
-        self.assertGreater(cleared, 0.2 * open_land)
+        open_site, cleared_site = self.site(2400.0, 0.0), self.site(2400.0, 0.95)
+        open_share = open_site.cropped_hectares / open_site.arable_hectares
+        cleared_share = cleared_site.cropped_hectares / cleared_site.arable_hectares
+        crop_years, fallow_years = (parameters.parameter(earth(), name) for name in ("food_forest_fallow_crop_years", "food_forest_fallow_years"))
+        shifting = crop_years / (crop_years + fallow_years)
+        self.assertAlmostEqual(open_share, OPEN_FIELD_SHARE)
+        self.assertLess(cleared_share, open_share)
+        self.assertGreater(cleared_share, shifting)
 
     def test_rainforest_cropping_is_within_reach_of_savanna_cropping(self):
         world_map = earth()
         medians = {}
         for koppen in ("Af", "Aw"):
-            values = sorted(api.food_potential(tile_id)["kcal_per_year"]["crops"] / tile["land_area_km2"]
+            values = sorted(api.food_potential(tile_id, None, None, None, CROPS)["kcal_per_year"]["crops"] / tile["land_area_km2"]
                             for tile_id, tile in world_map.tiles.items() if tile["koppen_class"] == koppen)
             medians[koppen] = values[len(values) // 2]
         self.assertGreater(medians["Af"], 0.5 * medians["Aw"])

@@ -42,7 +42,9 @@ class WageFloorFollowsSolvedFoodTests(unittest.TestCase):
     def test_more_labour_per_harvest_raises_the_floor(self):
         civ = data.load_civ("rome_100ad")
         entries = _entries()
-        entries["wheat_kg"]["labour_hours"]["labourer"] *= 2.0
+        hours = entries["wheat_kg"]["labour_hours"]
+        for trade in hours:     # whichever trade the farm work is booked to
+            hours[trade] *= 2.0
         self.assertGreater(_schedule(civ, entries).floor_per_hour,
                            _schedule(civ).floor_per_hour)
 

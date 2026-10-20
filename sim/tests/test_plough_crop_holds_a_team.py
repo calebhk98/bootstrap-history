@@ -26,7 +26,7 @@ class RealWheatDataTests(unittest.TestCase):
         self.assertEqual(plough.inputs, {})
         self.assertGreater(self.production["wheat_kg"]["land_hectare_years"],
                            self.production["wheat_hoe_kg"]["land_hectare_years"])
-        self.assertLess(plough.labour_hours["labourer"], hand.labour_hours["labourer"])
+        self.assertLess(plough.labour_hours["farmer"], hand.labour_hours["farmer"])
 
     def test_the_hand_recipe_needs_no_team(self):
         hand = self.recipes["wheat_hoe_kg"]

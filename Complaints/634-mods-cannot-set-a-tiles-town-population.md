@@ -1,6 +1,6 @@
 # A mod cannot make its derived tile towns count in the game
 
-**Status:** open
+**Status:** partly done. Hook: `ModCodeApi.town_provider` (`sim/labour/town_providers.py`, `sim/tests/test_town_providers.py`). Left: the mod registering its derivation, moving households between tiles, and the urban mortality premium in `Population.step`.
 
 The mod `bh_urbanisation_w2n6` derives a town per land tile from non-farm jobs, food reachable within a haul and
 a disease premium (command `bh_urbanisation_w2n6:towns`), as Complaints/closed/107 asks. It can only show the

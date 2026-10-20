@@ -43,7 +43,7 @@ def actor_sim():
 	projects.done.add("zz_borrow")
 	projects.done_year["zz_borrow"] = year - 10
 	projects.operating.add("zz_borrow")
-	projects.opened_year["zz_borrow"] = year - 10
+	projects.business.set_opened_year("zz_borrow", year - 10)
 	game._done_changed()
 	return ready_for_entry(game)
 

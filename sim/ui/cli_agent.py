@@ -15,6 +15,7 @@ from sim.engine.ui_port import Sim
 from . import replay
 from .protocol import _agent_dispatch, _agent_end_reason, _agent_help, load_state, render_pretty, save_state
 from .memory import save_session
+from .save_policy import SavePolicy
 from sim.engine.ui_port import settings, units
 from sim.ui.proto import step_progress
 
@@ -143,6 +144,16 @@ def cmd_agent(args):
         sys.stderr.flush()
 
     step_progress.set_after_year(step_progress.commit_and_report(session, sys.stderr))
+    policy = SavePolicy(session, getattr(args, "save_interval", 0))
+    try:
+        return _agent_loop(sim, nodes, args, emit, policy)
+    finally:
+        policy.flush(sim)
+
+
+def _agent_loop(sim, nodes, args, emit, policy):
+    """Run the script or stdin commands of `cmd_agent`; `policy` decides when the session file is written."""
+    session = policy.session
     if args.script:
         try:
             cmds = json.load(open(args.script))
@@ -158,10 +169,9 @@ def cmd_agent(args):
             # same reasoning applies here too - a --script run piped through
             # something that closes early must not lose state that already
             # happened, the same as the stdin loop below.
-            if session:
-                save_session(sim, session)
-                if _agent_end_reason(sim):
-                    replay.record_end_of_run(sim, session)
+            policy.after_command(sim, command_obj, ended=bool(_agent_end_reason(sim)))
+            if session and _agent_end_reason(sim):
+                replay.record_end_of_run(sim, session)
             try:
                 emit(resp, command_obj.get("cmd") if isinstance(command_obj, dict) else None)
             except BrokenPipeError:
@@ -210,10 +220,9 @@ def cmd_agent(args):
         # promises you can "close the terminal, anything" and come back; a
         # promise that holds only when nobody closes the pipe first is not
         # that promise.
-        if session:
-            save_session(sim, session)
-            if _agent_end_reason(sim):
-                replay.record_end_of_run(sim, session)
+        policy.after_command(sim, cmd, ended=bool(_agent_end_reason(sim)))
+        if session and _agent_end_reason(sim):
+            replay.record_end_of_run(sim, session)
         try:
             emit(resp, cmd.get("cmd") if isinstance(cmd, dict) else None)
         except (BrokenPipeError, OSError):

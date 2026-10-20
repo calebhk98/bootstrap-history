@@ -16,6 +16,10 @@ UNOFFERED = "cap_tol_1mm"
 def _fresh():
     test_sim = sim(capital=10000000.0)
     test_sim.start_refusal = lambda node_id: None   # staff and prerequisites are not under test
+    test_sim.state.projects.done.update(NODES[NODE_ID]["pre"])   # the shared research gate still reads what is known
+    test_sim._done_changed()
+    test_sim.labour.craft_hands_available = lambda: 1.0e6   # nor is how many hands the shared gate counts
+    test_sim.labour.scholar_hands_available = lambda: 1.0e6
     return test_sim
 
 

@@ -227,8 +227,8 @@ class EconomyMixin(GoodsMixin, MaterialSupplyMixin, MaterialReachMixin, Electric
         self.household.bump_operating_version()
 
     def _reset_operating(self):
-        """Re-wrap operating in a fresh `_InvalidatingSet` and invalidate once."""
-        self.state.projects.operating = _InvalidatingSet(self.state.projects.operating or set(), on_change=self._operating_changed)
+        """Point the seat's business at the invalidation hook and invalidate once."""
+        self.state.projects.business.watch = self._operating_changed
         self._operating_changed()
 
     def _active_changed(self):

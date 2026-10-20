@@ -11,7 +11,7 @@ a granary model with spoilage and a state's own reserve policy would replace bot
 import dataclasses
 from typing import Any, Dict, List
 
-from . import ledger
+from . import ledger, state_enterprises
 from .budget_line import Line
 from .edges import EDGE_TAXPAYERS
 from .revenue_bases import earned_income
@@ -27,13 +27,19 @@ class StoresMixin:
 		record.revenue_by_form = {assessed.form: assessed.money for assessed in assessments}
 		collected = self.collect_from_payers(assessments)
 		record.revenue_by_form.update(collected)
+		if state_enterprises.monopoly_revenue(record) > 0.0:   # already in the purse: the plants' takings last year
+			record.revenue_by_form["state enterprises"] = state_enterprises.monopoly_revenue(record)
 		record.revenue_in_kind = {assessed.form: assessed.money for assessed in assessments if assessed.in_kind}
 		record.in_kind_received = {}
 		for assessed in assessments:
 			if assessed.in_kind:
 				record.in_kind_received[assessed.material] = record.in_kind_received.get(assessed.material, 0.0) + assessed.tonnes
 				record.stores[assessed.material] = record.stores.get(assessed.material, 0.0) + assessed.tonnes
-		unmodelled = sum(assessed.money for assessed in assessments if not assessed.in_kind and not assessed.payers)
+		record.corvee_due = {}
+		for assessed in assessments:
+			if assessed.in_labour:
+				record.corvee_due[assessed.labour_to] = record.corvee_due.get(assessed.labour_to, 0.0) + (1.0 - assessed.commute) * assessed.hours
+		unmodelled = sum(assessed.coin_money for assessed in assessments)
 		ledger.transfer(world.edge(EDGE_TAXPAYERS), self, unmodelled, "taxation")
 
 	def collect_from_payers(self, assessments: List[Any]) -> Dict[str, float]:

@@ -30,6 +30,14 @@ def fallback_trade(training_years: Mapping[str, float], family_of: Callable[[str
     return _fallback_of(tuple((trade, years, family_of(trade)) for trade, years in training_years.items()))
 
 
+def fallback_trade_of(world, training_years: Mapping[str, float]) -> str:
+    """The world's unskilled fallback trade: the registry's flagged trade, else the fewest-years rule."""
+    registry = registry_of(world)
+    if registry:
+        return market_trades.fallback_trade_of_registry(registry)
+    return fallback_trade(training_years, world.trade_family)
+
+
 def registry_of(world) -> Mapping[str, Mapping[str, Any]]:
     """The world's trade registry; a world that states none has no trade facts."""
     return getattr(world, "trade_registry", None) or {}

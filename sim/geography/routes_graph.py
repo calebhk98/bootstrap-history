@@ -37,6 +37,7 @@ class Edge:
     current_km_per_hour: float = 0.0
     lane_nodes: FrozenSet[str] = frozenset()
     crosses_river: bool = False
+    middle: Optional[Tuple[float, float]] = None  # lat, lon of the water path's midpoint (catalogue sea edges)
 
     @property
     def key(self) -> str:
@@ -174,6 +175,11 @@ def _midpoint(coordinates, tile_a, tile_b) -> Tuple[float, float]:
             math.degrees(math.atan2(middle[1], middle[0])))
 
 
+def midpoint_of(world_map: WorldMap, edge: Edge) -> Tuple[float, float]:
+    """The edge's midpoint (lat, lon): the water path's when it has one, else between its tile centres."""
+    return edge.middle or _midpoint(graph(world_map).coordinates, edge.tile_a, edge.tile_b)
+
+
 def _catalogue_sea_edges(world_map: WorldMap) -> List[Edge]:
     offshore_limit = parameters.parameter(world_map, "route_coast_offshore_max_km")
     edges = []
@@ -183,7 +189,8 @@ def _catalogue_sea_edges(world_map: WorldMap) -> List[Edge]:
             continue
         edge_class = "coast" if link["max_offshore_km"] <= offshore_limit else "open_sea"
         lane_nodes = routes_modes.lane_requirements(world_map, link["midpoint_lat"], link["midpoint_lon"], edge_class)
-        edges.append(Edge(tile_a, tile_b, edge_class, float(link["water_km"]), lane_nodes=lane_nodes))
+        edges.append(Edge(tile_a, tile_b, edge_class, float(link["water_km"]), lane_nodes=lane_nodes,
+                          middle=(link["midpoint_lat"], link["midpoint_lon"])))
     return edges
 
 
@@ -258,7 +265,8 @@ def harbour_edges(world_map: WorldMap, improvements) -> List[Edge]:
                     continue
                 kept = found.get((port, other))
                 if kept is None or edge.km < kept.km:
-                    found[(port, other)] = Edge(port, other, edge.edge_class, edge.km, lane_nodes=edge.lane_nodes)
+                    found[(port, other)] = Edge(port, other, edge.edge_class, edge.km, lane_nodes=edge.lane_nodes,
+                                               middle=edge.middle)
     return [found[pair] for pair in sorted(found)]
 
 

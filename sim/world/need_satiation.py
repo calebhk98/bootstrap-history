@@ -9,6 +9,9 @@ in proportion to their budget weights.
 from typing import Any, Dict, Mapping
 
 SATIATION_FIELD = "satiation_per_capita_per_year"
+# A need whose floor follows the climate (shelter) cannot name one figure for every tile: it names a multiple of its
+# floor instead, and the limit per head is that multiple times the tile's floor.
+SATIATION_MULTIPLE_FIELD = "satiation_multiple_of_floor"
 
 
 def apply_satiation(need_units: Dict[str, float], price_index: Mapping[str, float],

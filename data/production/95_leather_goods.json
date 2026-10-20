@@ -1,0 +1,59 @@
+{
+ "_note": "Finished leather goods made by the leatherworker from the tanner's leather (Complaints/612): shoes, a draught animal's harness and a sword scabbard. Every mass, hour count and life is a recalled or estimated figure, marked in each yield_basis.",
+ "materials": {
+  "shoes_pair": {
+   "outputs": {
+    "shoes_pair": 1.0
+   },
+   "inputs": {
+    "leather_kg": 0.8
+   },
+   "labour_hours": {
+    "leatherworker": 8.0
+   },
+   "unit_dimension": "count",
+   "unit_mass_kg": 0.9,
+   "basis": "per pair of stitched leather shoes",
+   "yield_basis": "A pair of hand-stitched leather shoes or boots uses a bit under a kilogram of finished leather for sole, upper and thongs (recalled from museum finds of Roman and medieval shoes, not opened; conf D), cut and sewn by a leatherworker in about a working day (author's estimate, conf D). Thread and nails are a few grams and are left out. CLOTHING: the pair satisfies the clothing need at the factor leather_kg already carries per kilogram of leather it holds (data/world/needs.json), so a worked pair is worth its leather and no more until a source gives cover and warmth of footwear separately; a labelled placeholder, retire with a need for footwear.",
+   "requires_node": "tex_vegetable_tanning",
+   "conf": "D",
+   "satisfies": {
+    "clothing": 1.2
+   }
+  },
+  "harness_set": {
+   "outputs": {
+    "harness_set": 1.0
+   },
+   "inputs": {
+    "leather_kg": 8.0
+   },
+   "labour_hours": {
+    "leatherworker": 30.0
+   },
+   "unit_dimension": "count",
+   "unit_mass_kg": 9.0,
+   "basis": "per set of leather harness for one draught animal: collar pad, traces, reins, girth and straps",
+   "yield_basis": "Straps, traces and reins for one animal run to some eight kilograms of heavy leather and a thirty-hour stitching job for a saddler (author's estimate from the size of the pieces, conf D; metal fittings and the wooden collar or yoke are left out). It is a capital good of a draught animal: it is bought by whoever works the animal, so it has no household need of its own.",
+   "requires_node": "tex_vegetable_tanning",
+   "conf": "D"
+  },
+  "scabbard_leather": {
+   "outputs": {
+    "scabbard_leather": 1.0
+   },
+   "inputs": {
+    "leather_kg": 0.4
+   },
+   "labour_hours": {
+    "leatherworker": 6.0
+   },
+   "unit_dimension": "count",
+   "unit_mass_kg": 0.5,
+   "basis": "per leather-covered scabbard and belt for one sword or dagger",
+   "yield_basis": "A leather sheath with its belt uses some four tenths of a kilogram of leather and a few hours of cutting, wetting, moulding and stitching (author's estimate, conf D). It is the soldier's kit, bought by whoever arms a soldier, and carries no household need of its own.",
+   "requires_node": "tex_vegetable_tanning",
+   "conf": "D"
+  }
+ }
+}

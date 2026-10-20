@@ -121,8 +121,8 @@ class NoModuleReadsRegionLabelsForTileDataTests(unittest.TestCase):
         self.assertEqual([cell.cell_id for cell in territory],
                          [cell.cell_id for cell in labelled._compute_farm_weather_cells()])
         from sim.world import land
-        self.assertEqual(land.territory_farmland(tiled_tiles(tiled.civ)).arable_hectares,
-                         land.territory_farmland(tiled_tiles(labelled.civ)).arable_hectares)
+        self.assertEqual(land.territory_cropland(tiled.farm_sites()).cropped_hectares,
+                         land.territory_cropland(labelled.farm_sites()).cropped_hectares)
 
     def test_crop_climate_and_cast_place_follow_the_tiles_held(self):
         from sim.agents.cast import profile_from_civilisation

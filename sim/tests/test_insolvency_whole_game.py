@@ -6,6 +6,7 @@ recovery reads the founder's money, which follows the market close, so its years
 
 from .harness import *  # noqa: F401,F403
 from sim.engine.data import closure as data_closure
+from sim.agents import borrowing_arrears
 
 RUIN_YEARS = 5   # full market years after the ruin: the founder's money climbs back within them
 
@@ -25,7 +26,7 @@ for _ in range(4):  # until the persona is built
         break
 persona_built = "identity_cover" in insolvent.done
 insolvent.capital = -2.0 * insolvent.credit_limit()
-for _ in range(2):  # until the settlement is logged
+for _ in range(borrowing_arrears.ARREARS_YEARS_BEFORE_DEFAULT + 1):  # until the settlement is logged
     insolvent.step()
     if any("INSOLVENCY SETTLED" in text for _, text in insolvent.state.household.log):
         break
@@ -66,8 +67,8 @@ def _ruin():
     return _RUIN["run"]
 
 
-slow_check("a ruined founder's debt stays inside the credit limit once the settlement has run",
-           lambda: (max(_ruin()[3]) <= 1.0 and any("INSOLVENCY SETTLED" in text for _, text in _ruin()[0].state.household.log),
+slow_check("a ruined founder's debt stays inside the credit limit once the settlement has run (after the years of arrears)",
+           lambda: (max(_ruin()[3][borrowing_arrears.ARREARS_YEARS_BEFORE_DEFAULT:]) <= 1.0 and any("INSOLVENCY SETTLED" in text for _, text in _ruin()[0].state.household.log),
                     _ruin()[3]))
 # the money climbs back at some point in the years; once it has, the founder may spend it on projects
 slow_check("a ruined founder rebuilds rather than freezing",

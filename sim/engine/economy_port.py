@@ -104,6 +104,11 @@ class EconomyPort:
         agent = self._answering_agent()
         return {} if agent is None else agent.land_rent_paid_by_tile()
 
+    def agent_output_tonnes_by_tile(self):
+        """Tonnes of each good made on each tile last year; empty while the economy opens."""
+        agent = self._answering_agent()
+        return {} if agent is None else agent.output_tonnes_by_tile()
+
     def agent_idle_hours_by_trade(self):
         """(hours offered and not hired, hours offered) of each trade last year; empty while the economy opens."""
         agent = self._answering_agent()
@@ -132,6 +137,22 @@ class EconomyPort:
         than the sellers hold."""
         agent = self._answering_agent()
         return None if agent is None else agent.price_response(material, landed_tonnes, taken_tonnes, tile)
+
+    def main_material_of(self, commodity):
+        """The first priced material of a commodity (its main product), or None when none is priced."""
+        for material in self.materials_in(commodity) + [commodity]:
+            if self.trade_quote(material) is not None:
+                return material
+        return None
+
+    def agent_market_record(self, commodity):
+        """{sold, unsold, unmet} tonnes the agent economy's markets of the commodity's main material had last year
+        (`sim.economy.api.market_record`); None while the economy opens or when the commodity has no priced material."""
+        agent = self._answering_agent()
+        material = self.main_material_of(commodity)
+        if agent is None or material is None:
+            return None
+        return agent.market_record(material)
 
     def agent_producers_by_good(self):
         """{good: [(tile, recipe id)]} of the producers the agent economy runs; None while it opens."""
@@ -187,11 +208,21 @@ class EconomyPort:
                  "held": 0.0, "crew": production[good]["naval_crew"]}
                 for good in allowed if production[good].get("naval_crew")]
 
-    def agent_cleared_ratio(self, materials):
-        """What the agent economy cleared last year of these materials, over its first year's; None while it
-        opens or when they had not cleared before."""
+    def agent_volume_baseline(self):
+        """{good: units the agent economy cleared in the first year it cleared any}; None while it opens."""
         agent = self._answering_agent()
-        return None if agent is None else agent.cleared_ratio(materials)
+        return None if agent is None else agent.volume_baseline()
+
+    def agent_traded_volumes(self):
+        """{good: units the agent economy traded last year}; None while it opens."""
+        agent = self._answering_agent()
+        return None if agent is None else agent.traded_volumes()
+
+    def agent_opening_basket(self):
+        """({good: units a year households bought at the opening}, {good: opening price in labour hours}) of the
+        agent economy; None while it opens."""
+        agent = self._answering_agent()
+        return None if agent is None else agent.opening_basket()
 
     def producers_stamp(self):
         """Changes whenever the agent economy's producers might (each year it runs, and when it gains recipes)."""

@@ -17,6 +17,10 @@ from sim.engine.saveload import load_state, save_state
 from sim.engine.state import ActorRecord
 
 
+# a force the revenue cannot carry, yet within the working-age people who could serve (Complaint 602)
+HEAVY_ARMY = 1.0e7
+
+
 def budget_sim(civ="rome_100ad", army=None, purse=None):
     """A game whose lenders advance the state nothing, so a deficit beyond the reserve is cut (borrowing
     is covered by test_capital_market)."""
@@ -112,7 +116,7 @@ check("a state that paid all it needs records no unfunded need",
       not any(treasury.record.unfunded.values()), treasury.record.unfunded)
 
 # ---- a deficit is financed from the reserve first, then spending is cut ----------------------
-heavy, heavy_treasury = budget_sim(army=1.0e8)  # a force the revenue cannot carry
+heavy, heavy_treasury = budget_sim(army=HEAVY_ARMY)  # a force the revenue cannot carry
 revenue = SimWorld(heavy).state_revenue()
 heavy_lines = budget.standing_lines(SimWorld(heavy))
 need = sum(line.money for line in heavy_lines)
@@ -134,7 +138,7 @@ check("the cut is recorded as unfunded need, by line",
       abs(sum(heavy_treasury.record.unfunded.values()) - (need - spent)) < 1e-6 * need
       and all(amount > 0.0 for amount in heavy_treasury.record.unfunded.values()),
       heavy_treasury.record.unfunded)
-rich, treasury_rich = budget_sim(army=1.0e8)
+rich, treasury_rich = budget_sim(army=HEAVY_ARMY)
 treasury_rich.money = 10.0 * need
 one_year(rich)
 check("a reserve big enough finances the whole deficit and leaves nothing unfunded",
@@ -157,7 +161,7 @@ check("the state takes the same share of the founder's local pool as of the nati
 check("what the state employs is no longer on offer to the founder",
       game.actor_staff_fte("scribe") > scribes_before and game.labour.market_supply("soldier") < soldiers_free_before,
       (game.actor_staff_fte("scribe"), game.labour.market_supply("soldier"), soldiers_free_before))
-unfunded_game, unfunded_treasury = budget_sim(army=1.0e8, purse=0.0)
+unfunded_game, unfunded_treasury = budget_sim(army=HEAVY_ARMY, purse=0.0)
 one_year(unfunded_game)
 check("a state that cut its spending employs correspondingly fewer people",
       unfunded_treasury.workforce["soldier"] < 0.5 * (unfunded_game.labour.reachable_trade_population("soldier")
@@ -255,7 +259,7 @@ check("protection bargains requisition down and leaves the office alone",
       and abs(bargained.levy_shares(bargained.household_scale(), 0.85)[1] - office) < 1e-12,
       (bargained.levy_shares(bargained.household_scale(), 0.85), (requisition, office)))
 below = unopened_sim()
-below.civ["standing_army"] = 1.0e8
+below.civ["standing_army"] = HEAVY_ARMY
 one_year(below)
 check("a household below the notice line pays nothing even when the state is short",
       below.levy_shares(below.household_scale(), 0.0) == (0.0, 0.0), below.levy_shares(below.household_scale(), 0.0))
@@ -304,7 +308,7 @@ one_year(army_game)
 check("a state that pays for its army keeps the force it wants", abs(army_treasury.record.army - wanted) < 1e-6 * wanted,
       (army_treasury.record.army, wanted))
 poor, poor_treasury = budget_sim(purse=0.0)
-poor.civ["standing_army"] = 1.0e8
+poor.civ["standing_army"] = HEAVY_ARMY
 sizes = []
 for _year in range(4):
     one_year(poor)

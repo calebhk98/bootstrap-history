@@ -69,10 +69,10 @@ class DeliveredVolumeTests(unittest.TestCase):
         offers = [Offer("seller", "timber", "area", "t", 10.0, 1.0)]
         setup = types.SimpleNamespace(recipes={}, tax_forms=[], currency_id="coin", port_tile="t", capital_tile="t",
                                       opening_prices={}, state_agent="state")
-        record = types.SimpleNamespace(producers={}, book=book, memory=MarketMemory(), curves={}, volumes={})
+        record = types.SimpleNamespace(producers={}, book=book, memory=MarketMemory(), curves={}, volumes={}, unsold={}, unmet={})
         area_map = types.SimpleNamespace(area_of=lambda good, tile: "area", goods=lambda: {"timber"})
         ledger = YearLedger()
-        with mock.patch.object(year_goods.seller_offers, "strategic_offers", lambda s, r, v, b, o, p: list(o)), \
+        with mock.patch.object(year_goods.seller_offers, "strategic_offers", lambda s, r, v, b, o, p, costs=None: list(o)), \
                 mock.patch.object(year_goods.market_curves, "kept_areas", lambda *args: set()):
             year_goods.clear_goods(setup, record, None, area_map, {("timber", "area"): (bids, offers)}, {}, ledger)
         delivered = 10.0 - book.stock("seller", "timber", "t")

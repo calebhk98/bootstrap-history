@@ -101,11 +101,11 @@ class StaffPhaseMixin:
                 # which is the safe direction for a household that genuinely
                 # cannot make payroll.
                 cut = min(self.state.household.employees[trade_id], math.ceil(short / wage - 1e-9))
-                self.state.household.employees[trade_id] -= cut
+                self.labour.add_employed(trade_id, -cut)
                 short -= cut * wage
                 gone += cut
-                if self.state.household.employees[trade_id] < 0.5:
-                    self.state.household.employees.pop(trade_id)
+                if self.labour.employed(trade_id) < 0.5:
+                    self.labour.set_employed(trade_id, 0.0)
             self.labour.resync_pools()
             self.labour.log_staff_reduction("a payroll you cannot meet", _before_shed)
             # ALWAYS, not only when it worked. Losing the staff you paid to hire
@@ -246,7 +246,7 @@ class StaffPhaseMixin:
                 short = want - have
                 if short > 0.02 and self.state.household.capital > self.labour.market.quote_annual(trade_id) * self.TRADE_REPLACEMENT_AFFORDABILITY_YEARS:
                     _before = self.state.household.capital
-                    self.state.household.employees[trade_id] = have + short
+                    self.labour.set_employed(trade_id, have + short)
                     self.pay_edge(edges.EDGE_WORKERS, short * self.labour.market.quote_annual(trade_id), "wages advanced for replacement staff")
                     automation_audit.record(
                         self, "auto_hire", "replace", "%.1f %s" % (short, trade_id),

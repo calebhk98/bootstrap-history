@@ -54,15 +54,12 @@ class MineDepositsMixin:
                                        historical_rates(self.world_map, resource_id))
         return {working["id"]: working["mined_share"] for working in mined["workings"]}
 
-    def _deposit_base(self, resource_id):
-        """[(row, size in tonnes, share worked out before the game)] of the deposits this seat can name, kept
-        until the year, the tiles or the deposits found change."""
-        holdings = self.state.holdings
-        tiles = tuple(geography.tiles_held(self.civ, self.world_map))
-        found = holdings.deposits_found
+    def _deposit_rows(self, resource_id, tiles, found, store_key):
+        """[(row, size in tonnes, share worked out before the game)] of the deposits on `tiles` (plus the
+        prospected `found`), kept until the year, the tiles or the deposits found change."""
         key = (tiles, self.state.scenario.year, len(found))
         store = self.__dict__.setdefault("_deposit_base_cache", {})
-        cached = store.get(resource_id)
+        cached = store.get(store_key)
         if cached is None or cached[0] != key:
             modelled = self._modelled_sizes(resource_id)
             before = self._worked_before_start(resource_id, tiles)
@@ -71,8 +68,25 @@ class MineDepositsMixin:
                 size = row["size_tonnes"] if row["size_tonnes"] is not None else modelled.get(row["id"])
                 if size is not None:
                     rows.append((row, size, before.get(row["id"], 0.0)))
-            cached = store[resource_id] = (key, rows)
+            cached = store[store_key] = (key, rows)
         return cached[1]
+
+    def _deposit_base(self, resource_id):
+        """The deposits this seat can name: its held tiles, and what prospecting found."""
+        tiles = tuple(geography.tiles_held(self.civ, self.world_map))
+        return self._deposit_rows(resource_id, tiles, self.state.holdings.deposits_found, resource_id)
+
+    def _priced_rows(self, resource_id, base):
+        drawn = self.state.holdings.deposit_drawn
+        history = historical_rates(self.world_map, resource_id)
+        rows = []
+        for row, size, before in base:
+            remaining = max(0.0, size * (1.0 - before) - drawn.get(row["id"], 0.0))
+            rate = min(max(geography.working_rate_tonnes_per_year(size, self.world_map), history.get(row["id"], 0.0)),
+                       remaining)
+            rows.append(dict(row, size_tonnes=size, remaining_tonnes=remaining, rate_tonnes_per_year=rate,
+                             room_tonnes_per_year=max(0.0, rate - self._capacity_naming(row["id"]))))
+        return rows
 
     def found_deposits(self, mat):
         """The deposits of `mat` this seat can name, each {id, name, tile_id, size_tonnes, remaining_tonnes,
@@ -80,16 +94,20 @@ class MineDepositsMixin:
         resource_id = self.mine_resource_id(mat)
         if resource_id is None:
             return []
-        drawn = self.state.holdings.deposit_drawn
-        history = historical_rates(self.world_map, resource_id)
-        rows = []
-        for row, size, before in self._deposit_base(resource_id):
-            remaining = max(0.0, size * (1.0 - before) - drawn.get(row["id"], 0.0))
-            rate = min(max(geography.working_rate_tonnes_per_year(size, self.world_map), history.get(row["id"], 0.0)),
-                       remaining)
-            rows.append(dict(row, size_tonnes=size, remaining_tonnes=remaining, rate_tonnes_per_year=rate,
-                             room_tonnes_per_year=max(0.0, rate - self._capacity_naming(row["id"]))))
-        return rows
+        return self._priced_rows(resource_id, self._deposit_base(resource_id))
+
+    def partner_deposits(self, mat, tile_ids):
+        """The catalogue deposits of `mat`, first worked by now, on those of `tile_ids` the seat does not hold:
+        the sites of the partner economies' own firms. The seat cannot name them (no mine or prospecting of
+        its draws on them); the firms working them draw them down."""
+        resource_id = self.mine_resource_id(mat)
+        if resource_id is None:
+            return []
+        held = set(geography.tiles_held(self.civ, self.world_map))
+        tiles = tuple(sorted(set(tile_ids) - held))
+        if not tiles:
+            return []
+        return self._priced_rows(resource_id, self._deposit_rows(resource_id, tiles, (), (resource_id, "partner")))
 
     def _capacity_naming(self, deposit_id):
         """Tonnes a year of workings, standing and being sunk, that name this deposit."""

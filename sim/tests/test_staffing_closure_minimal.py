@@ -99,7 +99,7 @@ check("losing every smith closes the smith concerns and only those",
 ramp = crowded_sim(smiths, others)
 ramp.state.scenario.year += 10
 first = smiths[0]
-ramp.state.projects.opened_year[first] = ramp.year - 5
+ramp.state.projects.business.set_opened_year(first, ramp.year - 5)
 before_ramp = ramp.venture_ramp(first)
 ramp.close_work(first, ramp.CLOSED_FOR_STAFF)
 ramp.open_venture(first, pay=False)
@@ -122,7 +122,7 @@ quoted.price_index *= 1.3
 node_id = others[0]
 quoted.operating.add(node_id)
 quoted.state.scenario.year += 10
-quoted.state.projects.opened_year[node_id] = quoted.year - 10
+quoted.state.projects.business.set_opened_year(node_id, quoted.year - 10)
 real_earnings = quoted.venture_real_earnings(node_id)
 check("the real earnings figure differs from the tree's base figure in this set-up",
       abs(real_earnings - NODES[node_id]["rev"]) > 1.0, (real_earnings, NODES[node_id]["rev"]))
@@ -136,7 +136,7 @@ check("open quotes the real fully-ramped earnings and upkeep",
 
 # --- one reopening price after a deliberate shutdown, stated when shutting
 priced = crowded_sim([], others)
-priced.state.projects.opened_year[node_id] = priced.year
+priced.state.projects.business.set_opened_year(node_id, priced.year)
 _ok, priced_message = priced.mothball_work(node_id)
 stated = figure_in(priced_message, "for")
 before_capital = priced.capital

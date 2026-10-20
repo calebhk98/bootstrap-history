@@ -12,7 +12,7 @@ from typing import Dict, List, Mapping, Tuple
 
 from sim.constants import declare
 
-from . import currency, goods_market, opening_income, opening_metal, opening_runs, households, households_store, labour_state, location, location_inputs, mint, opening_stores, ownership, sites, titles, unit_cost
+from . import currency, goods_market, opening_basket, opening_income, opening_metal, opening_runs, households, households_store, labour_state, location, location_inputs, mint, opening_stores, ownership, sites, titles, unit_cost
 from .accounts import Book
 from .market_areas import AreaMap
 from .market_memory import MarketMemory, YearView, market_key
@@ -74,7 +74,8 @@ def _open(setup: EconomySetup, replacement: float) -> Tuple[EconomyRecord, AreaM
     record.workforce = labour_state.opening_workforce(setup, record)   # the mint's capacity follows the money struck
     mint.seed_opening_metal(setup, record)
     opening_stores.seed_opening_stores(setup, record, _store_goods(setup, view, area_map, priced_goods))
-    record.opening_basket = opening_runs.national_totals(final_by_tile)
+    record.opening_demand = opening_runs.national_totals(final_by_tile)
+    record.opening_basket = opening_basket.supplied_part(setup, record, record.opening_demand)
     return record, area_map, carriage
 
 
@@ -86,10 +87,11 @@ def _open_country_producers(setup, record, area_map, carriage, priced_goods, fin
                if not setup.recipes_by_country or recipe_id in setup.recipes_by_country.get(country, ())}
     final = {tile: demand for tile, demand in final_by_tile.items() if tile in tiles}
     ceilings = opening_runs.run_ceilings(recipes, sites.limits_by_recipe(setup.site_limits))
+    yields = opening_runs.mean_yields(setup, recipes, tiles)
     ranked, runs = opening_runs.choose_recipes(final, recipes, priced_goods, setup.opening_wages, setup.opening_rate,
-                                               ceilings)
+                                               ceilings, yields)
     incumbents = opening_runs.first_choices(ranked)
-    _place_producers(setup, record, area_map, carriage, final, incumbents, runs,
+    _place_producers(setup, record, area_map, carriage, final, incumbents, runs, yields,
                      tiles if len(setup.countries()) > 1 else None)
 
 
@@ -137,14 +139,15 @@ def _settle_income(setup, record, view, priced_goods, replacement) -> None:
     people = math.fsum(cohort.people for cohort in record.cohorts.values())
     recipes = setup.recipes
     ceilings = opening_runs.run_ceilings(recipes, sites.limits_by_recipe(setup.site_limits))
-    ranked = opening_runs.ranked_recipes(recipes, priced_goods, setup.opening_wages, setup.opening_rate)
+    yields = opening_runs.mean_yields(setup, recipes)
+    ranked = opening_runs.ranked_recipes(recipes, priced_goods, setup.opening_wages, setup.opening_rate, None, yields)
     share = {"labour": 0.0}
 
     def demand_at(per_head):
         record.cohorts.update(opening_income.with_income(record.cohorts, per_head, share["labour"]))
         final = _final_demand(setup, record, view, replacement)
         value = opening_income.value_of(final, priced_goods)
-        runs = opening_runs.required_runs(final, ranked, recipes, ceilings)
+        runs = opening_runs.required_runs(final, ranked, recipes, ceilings, yields)
         share["labour"] = opening_income.labour_share_of(runs, recipes, setup.opening_wages, value)
         return value, share["labour"]
 
@@ -241,7 +244,7 @@ def _sited_shares(shares, limits):
     return held + ([(bare[0][0], math.fsum(runs for _area, runs in bare))] if bare else [])
 
 
-def _place_producers(setup, record, area_map, carriage, final_by_tile, incumbents, runs, within=None) -> None:
+def _place_producers(setup, record, area_map, carriage, final_by_tile, incumbents, runs, yields, within=None) -> None:
     """Each market area of the recipe's main output gets its share of the runs, sized by the area's share
     of the demand for that good (households' and the already placed producers' that use it as an input; its
     people's share when nobody buys it), spread over its tiles by location.opening_split: one producer per
@@ -282,9 +285,34 @@ def _place_producers(setup, record, area_map, carriage, final_by_tile, incumbent
                 [(area, area_runs * (1.0 + OPENING_SPARE_CAPACITY_SHARE)) for area, area_runs in shares], tiles)
             _add_producers(setup, record, recipe, capacity_by_tile, input_demand, by_limits)
             continue
+        if recipe_id in yields:
+            shares = _where_it_crops(setup, recipe, shares)
         for area, area_runs in shares:
             capacity_by_tile = location.opening_split(setup, recipe, area, area_runs * (1.0 + OPENING_SPARE_CAPACITY_SHARE))
+            capacity_by_tile = _at_area_yield(setup, recipe, capacity_by_tile, yields)
             _add_producers(setup, record, recipe, capacity_by_tile, input_demand, by_limits)
+
+
+def _where_it_crops(setup, recipe, shares):
+    """A crop recipe's runs for the market areas where a tile can crop it: an area with none (too dry, too cold)
+    is fed by the others, so its runs are shared over them in proportion."""
+    growing = [(area, runs) for area, runs in shares if location.opening_split(setup, recipe, area, 1.0)]
+    total, kept = math.fsum(runs for _area, runs in shares), math.fsum(runs for _area, runs in growing)
+    return [(area, runs * total / kept) for area, runs in growing] if 0.0 < kept < total else shares
+
+
+def _at_area_yield(setup, recipe, capacity_by_tile, yields) -> Dict[TileId, float]:
+    """The runs of a crop recipe, which were counted at the national mean yield, scaled so the tiles they stand on
+    (each at its own yield factor) make what the area's share of the national runs would."""
+    if recipe.recipe_id not in yields:
+        return capacity_by_tile
+    factors = {tile: setup.yield_factor_by_recipe_tile.get(recipe_tile_key(recipe.recipe_id, tile), 1.0) for tile in capacity_by_tile}
+    total = math.fsum(capacity_by_tile.values())
+    made = math.fsum(capacity * factors[tile] for tile, capacity in capacity_by_tile.items())
+    if total <= 0.0 or made <= 0.0:
+        return capacity_by_tile
+    scale = yields[recipe.recipe_id] * total / made
+    return {tile: capacity * scale for tile, capacity in capacity_by_tile.items()}
 
 
 def _add_producers(setup, record, recipe, capacity_by_tile, input_demand, by_limits) -> None:
@@ -301,7 +329,7 @@ def _add_producers(setup, record, recipe, capacity_by_tile, input_demand, by_lim
             recipe_id=recipe.recipe_id, tile=tile, capacity_runs=capacity / working_share,
             expected_sales=capacity / (1.0 + OPENING_SPARE_CAPACITY_SHARE),
             yield_factor=sites.yield_at(recipe, tile, by_limits, setup.yield_factor_by_recipe_tile.get(
-                recipe_tile_key(recipe.recipe_id, tile), 1.0)))
+                recipe_tile_key(recipe.recipe_id, tile), 1.0)))     # a crop recipe is sized at its tile's yield; the engine adds the weather each year
         wanted = input_demand.setdefault(tile, {})
         for good, quantity in recipe.inputs.items():
             wanted[good] = wanted.get(good, 0.0) + capacity * quantity

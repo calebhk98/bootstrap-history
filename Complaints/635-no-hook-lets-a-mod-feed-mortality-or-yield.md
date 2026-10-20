@@ -1,6 +1,6 @@
 # No hook lets a mod feed deaths or land yield into the year
 
-**Status:** open
+**Status:** partly done. Hook: `ModCodeApi.externality` (`sim/engine/externalities.py`; tests `test_externalities`, `test_externalities_in_a_game`) feeds deaths by band and a yield factor per tile to land-bound producers. Left: the pooled national farm harvest (`_pooled_farm_weather_multiplier`) is not scaled by tile, and the pollution mod does not register a provider yet.
 
 The industrial pollution mod (`mods/bh_pollution_t9c3`) works out, from the year's producer runs, the smoke, ash,
 acid drainage and smelter gas each tile emits, the concentration its people breathe, and the excess deaths and lost

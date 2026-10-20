@@ -2,6 +2,9 @@
 from dataclasses import dataclass
 from typing import Optional
 
+OPERATING = "operating"
+MOTHBALLED = "mothballed"
+
 
 @dataclass
 class Plant:
@@ -16,3 +19,12 @@ class Plant:
 	crew_found: float = 1.0
 	# what the plant made last year after levy and royalty; None until a year has been tallied
 	margin: Optional[float] = None
+	# what the plant took last year at the economy's prices (an estimate where its goods clear in the market's book)
+	takings: float = 0.0
+	# consecutive tallied years the plant lost money
+	loss_years: int = 0
+	# "operating" or "mothballed"; a mothballed plant keeps its size and age and costs nothing until restored
+	state: str = OPERATING
+	# the year it was mothballed and why (a closure reason); empty while operating
+	since_year: Optional[int] = None
+	reason: str = ""

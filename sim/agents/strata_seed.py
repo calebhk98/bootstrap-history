@@ -1,6 +1,7 @@
 """Founding the strata of every country: from the profile's own list, else a default from what it states."""
 from typing import Any, Dict, List
 
+from .country_population import people_counted, step_foreign_populations
 from .records import ActorRecord, CountryProfile
 from .registry import register_spawner
 from .stratum import stratum_id
@@ -11,7 +12,7 @@ from .tuning_strata import (DEFAULT_ARTISAN_SHARE_OF_URBAN, DEFAULT_BONDED_SHARE
 
 # the trades the default split's wage earners are paid as; a profile that declares its own strata
 # names its own (labelled heuristic: a default until scenarios declare strata)
-DEFAULT_TRADES = {"labourers": "labourer", "poor": "labourer", "artisans": "artisan", "merchants": "merchant",
+DEFAULT_TRADES = {"labourers": "farmer", "poor": "labourer", "artisans": "artisan", "merchants": "merchant",
 				  "bonded": "labourer"}
 
 
@@ -87,13 +88,29 @@ def follow_population(registry: Any, world: Any) -> float:
 	return factor
 
 
+def follow_foreign_populations(registry: Any) -> None:
+	"""Scale each foreign country's strata so their members add up to the people counted there."""
+	for country, profile in registry.state.countries.items():
+		if country == registry.state.home_country:
+			continue
+		strata = [stratum for stratum in registry.of_kind("stratum")
+				  if stratum.record.country == country and stratum.record.exited_year is None]
+		counted = sum(stratum.record.members for stratum in strata)
+		if counted > 0.0 and people_counted(profile) > 0.0:
+			factor = people_counted(profile) / counted
+			for stratum in strata:
+				stratum.record.members *= factor
+
+
 def strata_spawner(registry: Any, world: Any) -> List[str]:
 	"""The yearly step after every actor's turn: found missing strata, settle moves and keep, then
-	hold the home strata to the population the world counts."""
+	hold each country's strata to the people counted there: the home world's count, each foreign Population's."""
 	founded = seed_strata(registry, world)
+	step_foreign_populations(registry, world)
 	if registry.of_kind("stratum"):
 		settle_strata(registry, world)
 		follow_population(registry, world)
+		follow_foreign_populations(registry)
 	return founded
 
 

@@ -55,6 +55,10 @@ class World(Protocol):
 	def army_wanted(self) -> float:
 		...
 
+	def state_hands(self) -> Any:
+		"""The country's working-age people, farm hands and food ratio (headcount.Hands), or None when unmeasured."""
+		...
+
 	def soldiers_under_arms(self) -> float:
 		"""Soldiers the state keeps now: what it paid for last year, else the force it wants."""
 		...
@@ -99,6 +103,10 @@ class World(Protocol):
 		...
 
 	def harvest_tonnes(self) -> float:
+		...
+
+	def output_tonnes(self, material: str, tiles: Optional[FrozenSet[str]] = None) -> float:
+		"""Tonnes of a material the country's producers made last year (only on `tiles` when given)."""
 		...
 
 	def material_price(self, material: str) -> float:
@@ -219,6 +227,22 @@ class World(Protocol):
 		"""(what the state has out on loan, the yearly rate lenders earn) at the last meeting."""
 		...
 
+	def founder_credit_limit(self) -> float:
+		"""The most the founder's household may owe in all."""
+		...
+
+	def founder_debt_rate(self) -> float:
+		"""The yearly rate the founder's household pays on what it owes."""
+		...
+
+	def founder_defaults(self) -> None:
+		"""The founder's household meets its lenders' default: it stops what it cannot fund, then settles or enters service."""
+		...
+
+	def founder_review(self) -> Any:
+		"""The founder's seat as the owner of a reviewed business (what `FounderReview` asks)."""
+		...
+
 	def pay_interest(self, payer: Any, owed: float, purpose: str = "interest") -> None:
 		"""A borrower pays the interest on its debt to its lenders."""
 		...
@@ -289,6 +313,31 @@ class World(Protocol):
 		...
 
 	def is_public(self, node_id: str) -> bool:
+		...
+
+	def research_hands(self, actor: Any, family: str) -> float:
+		"""People of a trade family ("scholar", "craft") the actor can put on a piece of research: its staff
+		and the free people it could take on."""
+		...
+
+	def unsold_materials(self, actor: Any, node_id: str) -> List[str]:
+		"""Materials the node buys that no one in reach sells, sorted."""
+		...
+
+	def research_cost(self, node_id: str, max_age_years: int) -> float:
+		"""Money to pioneer the node, labour included; a figure at most `max_age_years` old may be reused."""
+		...
+
+	def purchasable_substitute_discount(self) -> float:
+		"""Share of its stated quality a substitute bought off the market keeps."""
+		...
+
+	def knowledge_half_life_years(self) -> float:
+		"""Years for half of the actors that could learn a node some actor holds to have learned it."""
+		...
+
+	def knowledge_visibility(self, node_id: str, distance_km: float) -> float:
+		"""0..1: how much of a node an actor holds shows to an onlooker `distance_km` away."""
 		...
 
 	def exposure(self, node_id: str, location: Optional[str]) -> float:
@@ -372,6 +421,10 @@ class World(Protocol):
 	def concern_takings(self, node_id: str, opened_year: int, rivals: float = 0.0, capacity: float = 1.0) -> float:
 		...
 
+	def concern_inputs(self, node_id: str) -> Dict[str, float]:
+		"""Tonnes of each material a concern uses up in a year at its founding size."""
+		...
+
 	def concerns_making(self, material: str) -> Any:
 		"""The nodes whose concerns put `material` on the market."""
 		...
@@ -431,6 +484,11 @@ class World(Protocol):
 
 	def freight_between(self, source: str, destination: str, material: str, tonnes: float) -> float:
 		"""Money to carry `tonnes` of a material from one place to another."""
+		...
+
+	def pay_route_dues(self, payer: Any, source: str, destination: str, material: str, tonnes: float) -> float:
+		"""The payer pays the tolls and port dues of carrying `tonnes` between two places to the treasuries of
+		whoever holds the tiles they are levied at; returns the money paid, which is part of the freight."""
 		...
 
 	def market_depth(self, material: str, place: str) -> float:

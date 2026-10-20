@@ -8,6 +8,7 @@ import math
 from sim.constants import declare
 import sim.geography.api as geography
 from sim.geography.api import settlement
+from sim.labour import town_providers
 
 
 class SettlementMixin:
@@ -39,7 +40,11 @@ class SettlementMixin:
         return tuple(self._world.home_tiles_held())
 
     def settlement_tiles(self):
-        """{tile id: people living there} for the tiles this nation holds."""
+        """{tile id: people living there} for the tiles this nation holds: the regions' people once tracked, else
+        the nation spread by food potential."""
+        tracked = self._world.people_by_tile()
+        if tracked is not None:
+            return tracked
         homes = self.held_tiles()
         total = self._world.population.total
         return {tile: total * settlement.population_share(homes, tile)
@@ -74,6 +79,9 @@ class SettlementMixin:
         nominal = (self.TOWN_POPULATION_REFERENCE * place
                    * (self.POP_SCALE_FLOOR_SHARE
                       + self.POP_SCALE_VARIABLE_SHARE * min(1.0, self._world.pop_scale)))
+        provided = town_providers.provided_town_population(self, tile, nominal)
+        if provided is not None:
+            return min(provided, tile_people)
         return min(nominal, tile_people * self.TOWN_MAX_SHARE_OF_TILE)
 
     def home_town_population_estimate(self):
@@ -122,7 +130,7 @@ class SettlementMixin:
     def _relocation_wage_bill_per_year(self):
         household = self._world.state.household
         return sum(count * self.labour_market.unscarce_annual(trade)
-                   for trade, count in household.employees.items())
+                   for trade, count in self.employed_by_trade().items())
 
     def travel_days_to_tile(self, tile):
         """Days the household needs to reach `tile` by the fastest route over the modes its people hold

@@ -14,6 +14,9 @@ _REPOSITORY_SIM_DIRECTORY = os.path.dirname(os.path.dirname(os.path.abspath(__fi
 
 MECHANISATION_NODES = ("horse_collar", "fud_heavy_mouldboard_plough_coulter",
                        "fud_mechanical_reaper", "ag2_reaper")
+# A food technology whose effect is a yield per hectare: a crop with more calories per hectare. A rotation no
+# longer carries a yield multiplier; it acts through the cropped share and the soil nitrogen stock, over centuries.
+CROP_NODES = ("mat_newworld_crops",)
 # Long enough for adoption of a new technique to show in population and in the farm share.
 YEARS = 30
 # Long enough for a land-bound society's food to bind its people.
@@ -98,7 +101,7 @@ class FoodTechnologyReachesPopulationTests(unittest.TestCase):
     def test_a_food_technology_reaches_the_cohort_model_through_labour_where_food_is_not_scarce(self):
         # Rome's food is not what limits its people, so the technology does not add people; it frees farm workers
         # and the cohorts are no smaller for it.
-        improved = _trajectory("food", ("crop_rotation", "fud_three_field_rotation"), (YEARS,))[YEARS]
+        improved = _trajectory("food", CROP_NODES, (YEARS,))[YEARS]
         control = _control()[YEARS]
         self.assertGreaterEqual(improved["population"], control["population"])
         self.assertLess(improved["farm_workers"], control["farm_workers"])
@@ -114,7 +117,7 @@ class FoodTechnologyReachesPopulationTests(unittest.TestCase):
             _run_years(game, LAND_BOUND_YEARS)
             return game.population.total
         self.assertGreater(
-            land_bound_population(("crop_rotation", "fud_three_field_rotation")), land_bound_population(()))
+            land_bound_population(CROP_NODES), land_bound_population(()))
 
     def test_it_does_not_move_population_on_the_day_it_completes(self):
         improved = _rome()

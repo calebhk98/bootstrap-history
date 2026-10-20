@@ -13,7 +13,7 @@ from sim.geography.api import settlement, tiles_held
 # that an entrant can copy once it is published; the others that earn at the opening are too hard to copy from sight
 # (re-measure: for each node, `SimWorld.entry_gross` less the `business_books.yearly_costs`
 # and `firm_entry.carrying_cost`, above zero, then found a firm here)
-CONCERN = "finery_puddling"
+CONCERN = "lead_metallurgy"
 
 
 def add_with_prerequisites(game, node_id, found):
@@ -35,7 +35,7 @@ def default_game_with_founder_concern():
 		projects.done_year[node_id] = year - 10
 	projects.disclosures[CONCERN] = {"mode": "publish"}   # an entrant copies only what it can see
 	projects.operating.add(CONCERN)
-	projects.opened_year[CONCERN] = year - 10
+	projects.business.set_opened_year(CONCERN, year - 10)
 	game._done_changed()
 	return game
 

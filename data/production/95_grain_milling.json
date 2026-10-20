@@ -10,7 +10,7 @@
     "wheat_kg": 1190.0
    },
    "labour_hours": {
-    "labourer": 5.721
+    "miller": 5.721
    },
    "mechanical_mj": 114.423,
    "unit_dimension": "mass",
@@ -28,7 +28,7 @@
     "millet_kg": 1190.0
    },
    "labour_hours": {
-    "labourer": 5.721
+    "miller": 5.721
    },
    "mechanical_mj": 114.423,
    "unit_dimension": "mass",
@@ -46,7 +46,7 @@
     "maize_kg": 1190.0
    },
    "labour_hours": {
-    "labourer": 5.721
+    "miller": 5.721
    },
    "mechanical_mj": 114.423,
    "unit_dimension": "mass",
@@ -63,7 +63,7 @@
     "wheat_kg": 1040.0
    },
    "labour_hours": {
-    "labourer": 5.0
+    "miller": 5.0
    },
    "mechanical_mj": 100.0,
    "unit_dimension": "mass",
@@ -80,7 +80,7 @@
     "millet_kg": 1040.0
    },
    "labour_hours": {
-    "labourer": 5.0
+    "miller": 5.0
    },
    "mechanical_mj": 100.0,
    "unit_dimension": "mass",
@@ -97,7 +97,7 @@
     "maize_kg": 1040.0
    },
    "labour_hours": {
-    "labourer": 5.0
+    "miller": 5.0
    },
    "mechanical_mj": 100.0,
    "unit_dimension": "mass",

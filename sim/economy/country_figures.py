@@ -69,11 +69,12 @@ def idle_hours_by_trade(economy, country: Optional[str]) -> Dict[str, tuple]:
 
 def people_by_trade(economy, country: Optional[str]) -> Dict[str, float]:
     """Working people by trade in the country's labour markets."""
-    from .labour_state import people_by_trade as in_area
+    workers = economy.record.workforce.workers
     totals: Dict[str, float] = {}
     for tile in sorted(country_tiles(economy, country)):
-        for trade, people in in_area(economy.record.workforce, labour_area(tile)).items():
-            totals[trade] = totals.get(trade, 0.0) + people
+        # each trade is added tile by tile in tile order; the order trades are met in within a tile does not matter
+        for trade, bands in workers.get(labour_area(tile), {}).items():
+            totals[trade] = totals.get(trade, 0.0) + math.fsum(bands)
     return dict(sorted(totals.items()))
 
 

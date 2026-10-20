@@ -15,8 +15,8 @@ from .merchants import Merchant
 from .record import EconomyRecord
 
 _MEMORY_MARKETS = ("prices", "usual_prices", "volume_weights", "trade_age", "years_without_bids",
-                   "years_without_offers")
-_RECORD_MARKETS = ("volumes", "margin_years", "curves")
+                   "years_without_offers", "cleared_prices")
+_RECORD_MARKETS = ("volumes", "unsold", "unmet", "margin_years", "curves")
 
 
 def old_areas_by_new(old: AreaMap, new: AreaMap) -> Dict[str, Dict[str, str]]:

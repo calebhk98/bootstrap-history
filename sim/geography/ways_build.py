@@ -13,7 +13,7 @@ Standalone: the route graph and modes of this package.
 """
 from typing import Any, Dict, Mapping, Optional
 
-from sim.geography import routes_graph, routes_modes, ways_works
+from sim.geography import routes_graph, routes_modes, ways_isthmus, ways_works
 from sim.geography.map_source import WorldMap
 
 METRES_PER_KM = 1000.0
@@ -27,6 +27,8 @@ def _mode_building(world_map: WorldMap, improvement: str) -> Optional[Dict[str, 
 def built_km(world_map: WorldMap, improvements: Mapping[str, Mapping[str, Any]], improvement: str) -> float:
     """Length of `improvement` the caller's record holds, over the land edges it covers, counted the
     way `requirements` counts a build (a bridge's span or a port's quay for those works)."""
+    if ways_isthmus.is_cut_way(world_map, improvement):
+        return ways_isthmus.built_km(world_map, improvements, improvement)
     if ways_works.entry(world_map, improvement) is not None:
         return ways_works.built_km(world_map, improvements, improvement)
     mode = _mode_building(world_map, improvement)
@@ -40,6 +42,8 @@ def requirements(world_map: WorldMap, tile_a: str, tile_b: Optional[str], improv
     crew_people, crew_hours_per_year} of building `improvement` (a mode's `needs_improvement`, such as
     "road", or a work such as "bridge" or "port") over the land edge, or None when it cannot be built
     there: no such edge, no mode builds it, or the ground is steeper than the mode's engineered limit."""
+    if ways_isthmus.is_cut_way(world_map, improvement):
+        return ways_isthmus.requirements(world_map, tile_a, tile_b, improvement)
     if ways_works.entry(world_map, improvement) is not None:
         return ways_works.requirements(world_map, tile_a, tile_b, improvement)
     edge = routes_graph.land_edge(world_map, tile_a, tile_b) if tile_b is not None else None

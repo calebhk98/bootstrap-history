@@ -93,6 +93,26 @@ class BorrowersAgainstFundsTests(unittest.TestCase):
         self.assertLessEqual(economy.record.memory.rates[COIN], ceiling + 1e-12)
         self.assertGreater(economy.record.memory.rates[COIN], START_RATE)
 
+    def test_a_glut_of_funds_does_not_hold_the_rate_above_the_lowest_ask(self):
+        funds = [offer(amount=1_000_000.0, minimum_rate=0.02)]
+        borrowing = [request(amount=100.0, maximum_rate=0.5)]
+        _loans, rate, _unmet = credit.clear(borrowing, funds, COIN, 0.45, {})
+        self.assertAlmostEqual(rate, 0.02)
+
+    def test_a_rate_held_high_does_not_turn_away_a_borrower_who_would_pay_the_clearing_rate(self):
+        funds = [offer(amount=1_000_000.0, minimum_rate=0.02)]
+        borrowing = [request(amount=100.0, maximum_rate=0.5), request(amount=100.0, maximum_rate=0.1, borrower="borrower:b")]
+        loans, rate, unmet = credit.clear(borrowing, funds, COIN, 0.45, {})
+        self.assertEqual(unmet, [])
+        self.assertAlmostEqual(sum(loan.principal for loan in loans), 200.0)
+        self.assertLess(rate, 0.1)
+
+    def test_scarce_funds_still_let_the_rate_fall_only_by_a_share_of_the_gap(self):
+        funds = [offer(amount=50.0, minimum_rate=0.02)]
+        borrowing = [request(amount=100.0, maximum_rate=0.5)]
+        _loans, rate, _unmet = credit.clear(borrowing, funds, COIN, 0.45, {})
+        self.assertGreater(rate, 0.1)
+
     def test_more_funds_against_the_same_borrowing_clear_at_a_lower_rate(self):
         borrowing = [request(amount=500.0)]
         scarce_funds = [offer(amount=100.0, minimum_rate=0.03)]

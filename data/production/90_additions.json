@@ -78,7 +78,7 @@
     "hemp_fiber_kg": 1.1
    },
    "labour_hours": {
-    "labourer": 15.0
+    "spinner": 15.0
    },
    "unit_dimension": "mass",
    "basis": "per kg of hand-twisted thin twine/string",
@@ -94,7 +94,7 @@
     "hemp_fiber_kg": 1.15
    },
    "labour_hours": {
-    "labourer": 6.0
+    "spinner": 6.0
    },
    "unit_dimension": "mass",
    "basis": "per kg of heavy laid rope, rope-walk grade",
@@ -119,7 +119,9 @@
      "conf": "C"
     }
    ],
-   "operated_by": ["tex_rope_walk"]
+   "operated_by": [
+    "tex_rope_walk"
+   ]
   },
   "sailcloth_kg": {
    "outputs": {
@@ -129,7 +131,8 @@
     "hemp_fiber_kg": 1.15
    },
    "labour_hours": {
-    "labourer": 8.0
+    "spinner": 4.36,
+    "weaver": 3.64
    },
    "unit_dimension": "mass",
    "basis": "per kg of heavy, plain-woven canvas (sailcloth-grade)",
@@ -145,7 +148,7 @@
     "hide_kg": 3.6
    },
    "labour_hours": {
-    "artisan": 25.0
+    "tanner": 25.0
    },
    "unit_dimension": "mass",
    "basis": "per kg of finished vellum (fine calfskin parchment, scraped thin and stretched)",
@@ -205,7 +208,9 @@
      "conf": "D"
     }
    ],
-   "operated_by": ["nitric_acid"]
+   "operated_by": [
+    "nitric_acid"
+   ]
   },
   "ox": {
    "outputs": {
@@ -213,7 +218,7 @@
    },
    "inputs": {},
    "labour_hours": {
-    "labourer": 120.0
+    "herder": 120.0
    },
    "land_hectare_years": 16.0001091,
    "extracted_from": "pasture (rough grazing, raised to draft size as part of ordinary cattle-keeping)",
@@ -221,7 +226,13 @@
    "basis": "per one mature, trained draft ox (a castrated bull, roughly 4 years old, ready for the yoke)",
    "yield_basis": "A draft ox is a live animal reared over roughly 4 years on rough grazing before it is strong and heavy enough for the yoke, not a thing manufactured in a season. Cattle need far more forage per head than sheep (this file's wool_kg and milk_kg both use sheep/goat stocking rates on the order of 1.5-6 animals per hectare of rough Mediterranean pasture); a full-grown ox's intake is on the order of 8-10 times a sheep's, so raising one ties up roughly 3-5 hectares of grazing for the whole rearing period. LAND (Complaints/48), UPDATED: this land-tenure cost is now priced, closing the gap this entry used to flag - land_hectare_years takes the midpoint of the 3-5 ha this paragraph already states, held for the full ~4-year rearing period: 4 ha x 4 years = 16 ha-years, 16 hectare-years, charged against hectare_land's own solved rent (sim/world/land.py) by sim/engine/solve_prices.py exactly like an ordinary input - see LAND in _SCHEMA.md. TAG: TEMPORARY HEURISTIC (CLAUDE.md 3.4) for the rent VALUE only (rough cattle grazing priced at the same rent as arable cropland - see wool_kg's own LAND note in data/production/40_organics.json for the same caveat, which applies here too); the 4 ha x 4 yr AREA figure is this paragraph's own stated physical estimate, not a new heuristic. Labour is a herder's time apportioned across a mixed herd over the full rearing period (not four years of full-time attention on one animal), plus the short habituation period training an ox to the yoke, folded in as a small addition to the multi-year herding total. No `_kg` unit because the tree and prices.json both price this as one whole animal, matching how it is actually bought and sold.",
    "conf": "C",
-   "requires_node": null
+   "requires_node": null,
+   "carrier_use": {
+    "serves": {
+     "animal": "ox"
+    },
+    "days_per_year": 150.0
+   }
   },
   "mule": {
    "outputs": {
@@ -229,7 +240,7 @@
    },
    "inputs": {},
    "labour_hours": {
-    "labourer": 150.0
+    "herder": 150.0
    },
    "land_hectare_years": 16.0001091,
    "extracted_from": "pasture (bred from a jack donkey and a horse mare, reared to working size on rough grazing)",
@@ -237,7 +248,13 @@
    "basis": "per one mature, trained pack/draft mule",
    "yield_basis": "A mule is a sterile F1 hybrid of a male donkey and a female horse - a genetic fact, not a modelling choice - so, unlike cattle or sheep, a mule herd cannot breed itself: every mule has to be produced afresh by keeping a jack donkey and horse mares as permanent breeding stock, a real added husbandry cost on top of the ordinary grazing and rearing any equid needs. This entry folds that extra breeding overhead (maintaining stud stock, the mare's own gestation, a real chance of a failed cross or a foal that does not survive) into a higher labour figure than this file's own ox entry, on top of a broadly similar few years of grazing and rearing to working size. As with ox, no `_kg` unit because a mule is bought and sold as one whole animal. LAND (Complaints/48): this entry states no grazing-hectares figure of its own beyond 'broadly similar' to ox's rearing, so land_hectare_years REUSES ox's own stated 4 ha x 4 yr estimate unchanged (16 hectare-years - see ox's own LAND note) rather than inventing an independent number; this is an explicit borrow, not a fresh estimate, and should be revisited if this entry's own grazing intensity is ever measured separately. TAG: TEMPORARY HEURISTIC (CLAUDE.md 3.4), same rent-value caveat as ox's own LAND note.",
    "conf": "C",
-   "requires_node": null
+   "requires_node": null,
+   "carrier_use": {
+    "serves": {
+     "animal": "mule"
+    },
+    "days_per_year": 150.0
+   }
   }
  }
 }

@@ -7,8 +7,7 @@ import unittest
 
 from .harness import *  # noqa: F401,F403
 from sim.labour import labour_allocation
-from sim.engine.core import load_geography
-from sim.geography.api import tiles_held
+from sim.geography.api import crop_site, tiles_held
 from sim.engine import saveload
 from sim.world import agriculture, land
 
@@ -17,7 +16,8 @@ HOURS = labour_allocation.HOURS_PER_FARM_WORKER_YEAR
 
 def _ladder(civ_id):
     civ = S.load_civ(civ_id)
-    return land.territory_farmland(tiles_held(civ), load_geography())
+    share = 1.0 - agriculture.DEFAULT_ROTATION.fallow_share_of_holding
+    return land.territory_cropland({tile: crop_site(tile, share) for tile in tiles_held(civ)})
 
 
 class LadderTests(unittest.TestCase):
@@ -26,15 +26,15 @@ class LadderTests(unittest.TestCase):
         fertilities = [fertility for fertility, _hectares in territory.ladder]
         self.assertEqual(fertilities, sorted(fertilities, reverse=True))
         self.assertAlmostEqual(sum(hectares for _f, hectares in territory.ladder),
-                               territory.arable_hectares, places=3)
+                               territory.cropped_hectares, places=3)
 
     def test_quality_falls_as_worse_ground_is_brought_in(self):
         territory = _ladder("han_china_100ad")
-        ceiling = territory.arable_hectares
+        ceiling = territory.cropped_hectares
         qualities = [land.ladder_quality(territory.ladder, ceiling * share)
                      for share in (0.05, 0.2, 0.5, 1.0)]
         self.assertEqual(qualities, sorted(qualities, reverse=True))
-        self.assertAlmostEqual(qualities[-1], territory.mean_fertility, places=9)
+        self.assertAlmostEqual(qualities[-1], territory.mean_yield_factor, places=9)
 
 
 class RentReadsTheFarmedAreaTests(unittest.TestCase):
@@ -42,15 +42,15 @@ class RentReadsTheFarmedAreaTests(unittest.TestCase):
         civ_id = "han_china_100ad"
         territory = _ladder(civ_id)
         small = land.margin_outcome_for_civilization(
-            civ_id, farmed_hectares=territory.arable_hectares * 0.02)
+            civ_id, farmed_hectares=territory.cropped_hectares * 0.02)
         large = land.margin_outcome_for_civilization(
-            civ_id, farmed_hectares=territory.arable_hectares * 0.6)
+            civ_id, farmed_hectares=territory.cropped_hectares * 0.6)
         self.assertGreater(small.margin_fertility_quality_multiplier,
                            large.margin_fertility_quality_multiplier)
         supplied = sum(a.arable_hectares_supplied for a in large.allocations)
         self.assertAlmostEqual(
-            supplied, territory.arable_hectares * 0.6,
-            delta=territory.arable_hectares * 0.01)
+            supplied, territory.cropped_hectares * 0.6,
+            delta=territory.cropped_hectares * 0.01)
 
 
 class ClearingTests(unittest.TestCase):
@@ -73,7 +73,7 @@ class ClearingTests(unittest.TestCase):
 
     def test_area_never_passes_the_arable_ceiling(self):
         test_sim, _history = self._run("norse_900ad", 60)
-        ceiling = _ladder("norse_900ad").arable_hectares
+        ceiling = _ladder("norse_900ad").cropped_hectares
         self.assertLessEqual(test_sim.farm_land.hectares, ceiling + 1e-6)
 
     def test_new_ground_is_worse_than_the_ground_already_farmed(self):
@@ -136,7 +136,7 @@ class PriceCacheFollowsClearingTests(unittest.TestCase):
 
     def test_clearing_land_changes_the_rent_the_solver_prices(self):
         civ = S.load_civ("han_china_100ad")
-        ceiling = _ladder("han_china_100ad").arable_hectares
+        ceiling = _ladder("han_china_100ad").cropped_hectares
         small = self._rent(civ, ceiling * 0.02)
         large = self._rent(civ, ceiling * 0.6)
         self.assertNotAlmostEqual(small, large, places=6)

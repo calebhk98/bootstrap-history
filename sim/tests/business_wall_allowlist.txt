@@ -10,8 +10,6 @@ sim/engine/agents_port_capacity.py::running_cost
 sim/engine/cash_remedies.py::cash_remedies
 sim/engine/cause_book.py::concern_effect
 sim/engine/commodities.py::material_kg_per_yr
-sim/engine/economy_credit.py::enforce_credit_limit
-sim/engine/economy_credit.py::shed_loss_makers
 sim/engine/economy_credit.py::stall_diagnosis
 sim/engine/economy_electricity.py::_electricity_demand_kw
 sim/engine/economy_electricity.py::_node_annual_tonnes
@@ -51,7 +49,6 @@ sim/engine/projects_staffing.py::_auto_open_log_blocked
 sim/engine/projects_staffing.py::_auto_open_ordinary_candidates
 sim/engine/projects_staffing.py::_auto_open_ordinary_ventures
 sim/engine/projects_staffing.py::mothball_work
-sim/engine/projects_staffing.py::reopen_restaffed_ventures
 sim/engine/projects_staffing.py::staffing_closure_warnings
 sim/engine/projects_staffing_shortfall.py::_staffing_draw_of
 sim/engine/projects_staffing_shortfall.py::concerns_to_close_for_staffing
@@ -71,7 +68,6 @@ sim/engine/projects_ventures.py::venture_staff_used
 sim/engine/projects_ventures.py::venture_staff_who_is_watching_what
 sim/engine/society_diffusion.py::diffusion_index
 sim/engine/society_diffusion.py::diffusion_share
-sim/engine/step_phase_money.py::_step_money_seat
 sim/engine/step_phase_project_start.py::_step_start_projects
 sim/engine/validate_running_gates.py::_states_upkeep_source
 sim/engine/validate_unlinked_producers.py::report_lines

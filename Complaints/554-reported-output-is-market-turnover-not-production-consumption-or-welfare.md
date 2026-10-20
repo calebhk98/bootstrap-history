@@ -1,6 +1,6 @@
 # Reported output is market turnover, not production, consumption or welfare
 
-**Status:** open (the yearly accounts exist; the baseline checks below do not)
+**Status:** partly (the yearly accounts exist; baseline checks for feasibility, reproduction and bounded dynamics exist and the bounded-dynamics one fails today; responses and historical fit do not)
 
 Found by an outside reviewer reading the repository; checked against the code.
 
@@ -25,6 +25,16 @@ Found by an outside reviewer reading the repository; checked against the code.
   The first run of a civilisation builds its spin-up (cached on disk afterwards).
 - Tests: `python3 -m unittest sim.tests.test_year_accounts` (the fixture's identity, self-grown food outside market
   turnover, calories by cohort).
+
+- Baseline checks on a controlled run (`sim/economy/baseline_checks.py`, `sim/economy/settling.py`, both through
+  `sim/economy/api.py`): feasibility of every year's accounts (uses within production plus inflow plus stock, flows
+  closing, no negative stock), reproduction (stocks not eaten through, food eaten per tile, the mint replacing the coin
+  that wears), and bounded dynamics (the price level, unskilled wage, money stock and interest rate: largest year over
+  year change and a trend of the log series over the last years, drift counted only when monotone; the bounds are
+  labelled temporary heuristics retiring with 473). `settling.settling_report(rows)` and `settling.format_report`
+  take the rows `spin_up_trace` returns. Tests: topics `baseline_fixture` (small fixture, seconds) and
+  `baseline_rome` (Rome spin-up, slow); the settling tests fail today and are meant to (473).
+  Not built: sensible responses (harvest loss, blocked route, productivity gain) and historical fit.
 
 ## What it would take
 

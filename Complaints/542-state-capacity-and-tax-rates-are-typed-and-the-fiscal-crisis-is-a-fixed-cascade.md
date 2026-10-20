@@ -16,12 +16,12 @@ debased its coin, demanded goods in kind, or fell into arrears with its soldiers
   typed number (`sim/agents/cast.py`, `records.py`). The bases are modelled quantities, which is
   right. Nothing derives capacity from officials, scribes, literacy or distance from the capital;
   `ADMINISTRATIVE_SPAN` (`sim/agents/tuning.py`) sizes the officials kept, not what they can collect.
-- **No labour tax.** Corvée appears only in civilisation prose; soldiers are a typed
-  `standing_army` share paid at wage (`sim/agents/country_view.py`), not drafted for a term.
+- **Labour dues** exist (621, closed): a form on `labour_days` takes days from household time for works
+  or conscripts (`sim/agents/revenue_labour.py`). Soldiers beyond them are a typed `standing_army` share paid at wage.
 - **Taxes in kind exist for grain only** (`paid_in`, `sim/agents/government_stores.py`).
 - **Borrowing** is from the general loanable pool once a technology allows it
-  (`sim/agents/government.py`, `borrowing.py`). There are no named lenders, no repayment in land and
-  no default.
+  (`sim/agents/government.py`, `borrowing.py`), with its lenders named and a default on its record
+  (623, closed). There is no repayment in land (538).
 - **Debasement** cuts the metal in the coin (`sim/agents/government_coinage.py`), but domestic money
   prices fixed at load do not follow (Complaint 272, closed with that gap noted).
 - **Crisis.** Short of money, `Government.advance` cuts every line by the same share, books arrears,

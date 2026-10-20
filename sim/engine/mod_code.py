@@ -149,6 +149,17 @@ class ModCodeApi:
         from .mod_effects import ModEffects
         return ModEffects(self.mod_id)
 
+    def town_provider(self, name: str, function: Callable) -> None:
+        """Say how many people live in a tile's town: `function(labour, tile, nominal_people) -> people or None`."""
+        from sim.labour.api import register_town_provider
+        register_town_provider(self.qualified(name), function)
+
+    def externality(self, provider: Callable) -> None:
+        """Feed harm into the year: `(sim, year) -> {"deaths_by_band": {...}, "yield_factor_by_tile": {...}}`
+        (sim/engine/externalities.py)."""
+        from sim.engine import externalities
+        externalities.register(provider)
+
     def state(self, memory: Dict[str, Any]) -> Dict[str, Any]:
         """The mod's own JSON dict inside a saved game: pass `sim.state.interface`."""
         return memory.setdefault("mod_state", {}).setdefault(self.mod_id, {})

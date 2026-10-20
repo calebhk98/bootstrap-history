@@ -365,7 +365,7 @@ class CapacityMixin:
         household = self._world.state.household
         pending = sum(row[3] for row in household.training
                       if len(row) > 2 and row[2] == trade)
-        return household.employees.get(trade, 0.0) + pending
+        return self.employed(trade) + pending
 
     # What each of these adds to the CEILING on people, taken from
     # staff_capacity below so the advice and the arithmetic cannot drift apart.
@@ -525,7 +525,7 @@ class CapacityMixin:
         wages = [market.unscarce_annual(trade) for trade in sorted(self._world.wages)
                  if trade not in self._world.trades_absent]
         return sum(wages) / len(wages) if wages else market.unscarce_annual(
-            trade_data.fallback_trade(self.wage_schedule().training_years, self._world.trade_family))
+            trade_data.fallback_trade_of(self._world, self.wage_schedule().training_years))
 
     STAFF_EXTRA_HEADROOM_WEIGHT = declare(
         "STAFF_EXTRA_HEADROOM_WEIGHT", 1.35, kind="temporary_heuristic",
@@ -931,7 +931,7 @@ class CapacityMixin:
 
     def headcount(self):
         household = self._world.state.household
-        return sum(household.employees.values()) + household.slaves + household.freedmen
+        return self.employed_total() + household.slaves + household.freedmen
 
     def director_hours_committed(self):
         """Hours of your own year already spoken for before any project sees them.

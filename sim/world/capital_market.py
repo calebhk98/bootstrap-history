@@ -65,6 +65,12 @@ def borrower_rate(market_rate: float, standing_discount: float, share_of_ceiling
     return market_rate + max(0.0, premium - max(0.0, standing_discount))
 
 
+def perpetuity_value(yearly_income: float, rate: float, rate_floor: float = 1e-9) -> float:
+    """What an income of `yearly_income` a year for good is worth now at `rate`: its present value. The rate is held
+    at `rate_floor` so a nil rate does not make the income worth infinity."""
+    return max(0.0, yearly_income) / max(rate, rate_floor)
+
+
 def headroom(capacity: float, lent: float) -> float:
     """What lenders can still advance: what they will lend less what is lent."""
     return max(0.0, capacity - lent)

@@ -9,7 +9,8 @@ import json
 import os
 from typing import Dict
 
-from sim.economy.api import (EconomySetup, SiteLimit, TradeSpec, currency_from_coin_standard, goods_specs, households,
+from sim.economy.api import (EconomySetup, carriage_wear, SiteLimit, TradeSpec, currency_from_coin_standard, goods_specs, households,
+                             recipe_tile_key,
                              recipes_from_production_data, taxes, tile_costs)
 from sim.world import demand, need_basket
 from sim.geography.api import carriage_rates, layer_value, sea_freight, settlement, tiles_held
@@ -19,6 +20,7 @@ from . import economy_port_closure, economy_port_costs, economy_port_sites
 from .economy_port_stores import opening_store_values
 from .foreign_routes import SEA_MODE
 
+ARABLE_SOURCE = "arable land"   # the production entries' `extracted_from` for crops (some add a note after it)
 DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "data")
 
 
@@ -72,6 +74,9 @@ def partner_openings(sim):
     return {partner: partner_opening(sim, partner) for partner in sim.partners_in_agent_economy()}
 
 
+LITERACY_FIELDS = ("literacy_general", "literacy_elite")
+
+
 def opening_values(sim):
     """What the setup takes from the engine at the opening: kept in the save so a resumed game rebuilds
     the same markets, producers and price base however the engine's own tables have moved since."""
@@ -92,6 +97,7 @@ def opening_values(sim):
                             for trade in (production[entry_id].get("labour_hours") or {})}
                            | {unskilled})
     modes = sim._freight_mode_costs(cargo="goods")
+    rates = carriage_rates(sorted(modes), sim.world_map)
     prices = dict(partner_prices)
     prices.update(economy_port_costs.opening_costs(sim))
     return {
@@ -108,8 +114,9 @@ def opening_values(sim):
         "carriage_balanced": sim._freight_mode_costs(0.0, cargo="goods"),
         "carriage_wage": sim.labour.wage_per_hour(sim.FREIGHT_DRIVER_WAGE_TRADE),
         "carriage_crew": {mode: [rate["crew_trade"], rate["crew_hours_per_tonne_km"]]
-                          for mode, rate in carriage_rates(sorted(modes), sim.world_map).items()
-                          if "land" in rate["edge_classes"] and not rate.get("needs_improvement")},
+                          for mode, rate in rates.items()},
+        "carriage_teams": {mode: {key: rate[key] for key in ("carriers", "tonne_km_per_team_day", "team_payload_tonnes")}
+                           for mode, rate in rates.items()},
         "held_nodes": sorted(sim.held_and_running(include_starting=False)),
         "ways": {key: dict(way) for key, way in sorted(sim.state.economy.improvements.items())},
         "site_limits": [[limit.recipe_id, limit.tile, limit.capacity_runs_per_year, limit.yield_factor]
@@ -117,6 +124,7 @@ def opening_values(sim):
                             sim, {entry_id: production[entry_id]["outputs"] for entry_id in allowed},
                             list(tile_ids) + [tile for opened in partners.values() for tile in opened["tiles"]])],
         "stores": opening_store_values(sim.world_map, tile_ids, int(sim.cfg["start_year"])),
+        "literacy": {field: sim.literacy(field) for field in LITERACY_FIELDS},
     }
 
 
@@ -167,7 +175,8 @@ def build_setup(sim, opening=None, production=None):
     tile_ids, world_map = civilisation_tiles(civ, sim.world_map)
     partners = opening.get("partners") or {}
     all_tile_ids = list(tile_ids) + [tile for opened in partners.values() for tile in opened["tiles"]]
-    tiles = tile_costs.tiles_from_map(world_map, all_tile_ids)
+    cropped_share = 1.0 - sim.labour.farming_technique().rotation.fallow_share_of_holding
+    tiles = tile_costs.tiles_from_map(world_map, all_tile_ids, cropped_share)
     for partner_id, opened in partners.items():
         for tile in opened["tiles"]:
             tiles[tile] = dataclasses.replace(tiles[tile], country=partner_id)
@@ -180,8 +189,8 @@ def build_setup(sim, opening=None, production=None):
     mint_recipe = (recipes_from_production_data(production, [opening["mint_recipe"]])[opening["mint_recipe"]]
                    if opening.get("mint_recipe") else None)
     need_data = _load("world", "needs.json")
-    society = dict(civ, literacy_general=sim.literacy("literacy_general"),
-                   literacy_elite=sim.literacy("literacy_elite"))
+    literate = opening["literacy"]
+    society = dict(civ, **literate)       # the opening's literacy, so a rebuilt setup scales the needs as the first did
     basket = households.make_basket(need_data, production, civ_values=society)
     goods = set()
     for recipe in recipes.values():
@@ -209,16 +218,22 @@ def build_setup(sim, opening=None, production=None):
         handling_rates={SEA_MODE: sea_freight.PORT_HANDLING_HOURS_PER_TONNE * wages.get(opening["unskilled_trade"], 0.0)},
         carriage_wage=float(opening["carriage_wage"]),
         carriage_crew={mode: (str(crew[0]), float(crew[1])) for mode, crew in opening["carriage_crew"].items()},
+        carriage_carriers=carriage_wear.table(
+            opening["carriage_teams"],
+            {good: production[good]["carrier_use"] for good in sorted(specs) if production.get(good, {}).get("carrier_use")},
+            {good: spec.service_life_years for good, spec in specs.items()}),
+        carriage_handling={SEA_MODE: sea_freight.PORT_HANDLING_HOURS_PER_TONNE},
         held_nodes=tuple(opening["held_nodes"]),
         specs=specs, recipes=recipes, mint_recipe=mint_recipe, basket=basket, trades=trades,
         tax_forms=taxes.forms_from_civ_data(civ.get("state_revenue") or []),
         state_capacity=min(1.0, max(0.0, float(civ.get("state_capacity", 1.0)))),
         working_hours_per_year=float(sim.HOURS_PER_PERSON_YEAR), working_share=float(opening["working_share"]),
         gini=demand.GINI_COEFFICIENT_PREINDUSTRIAL_AGRARIAN, opening_population_by_tile=population_by_tile,
-        unskilled_trade=opening["unskilled_trade"], opening_prices=prices, opening_wages=wages, opening_rate=float(opening["rate"]),
+        unskilled_trade=opening["unskilled_trade"], debt_bondage_years=sim.debt_bondage_term_years(), opening_prices=prices, opening_wages=wages, opening_rate=float(opening["rate"]),
         capital_tile=by_people[0], port_tile=(coastal or by_people)[0],
         land_per_run={recipe_id: float(production[recipe_id].get("land_hectare_years") or 0.0)
                       for recipe_id in recipes if production[recipe_id].get("land_hectare_years")},
+        yield_factor_by_recipe_tile=cropland_yields(production, recipes, tiles),
         basket_by_tile=baskets_by_tile(basket, need_data, world_map, all_tile_ids), coin_per_unit=unit,
         opening_income_per_head=opening.get("opening_income_per_head"),
         recipes_by_country=recipes_by_country(str(civ["id"]), opening["recipes"], partners),
@@ -228,6 +243,14 @@ def build_setup(sim, opening=None, production=None):
         opening_store_output={good: tuple(tuple(working) for working in entry["workings"])
                               for good, entry in sorted(opening["stores"].items()) if entry["workings"]},
         opening_store_gaps={good: entry["gap"] for good, entry in sorted(opening["stores"].items()) if entry["gap"]})
+
+
+def cropland_yields(production, recipes, tiles):
+    """{recipe@tile: yield factor} for the recipes that grow on arable land: the tile's soil, climate and water
+    (geography's crop_site) against the reference field. Pasture, forest and mines do not read it."""
+    return {recipe_tile_key(recipe_id, tile_id): tile.fertility
+            for recipe_id in sorted(recipes) if str(production[recipe_id].get("extracted_from") or "").startswith(ARABLE_SOURCE)
+            for tile_id, tile in sorted(tiles.items())}
 
 
 def recipes_by_country(home_id, home_recipes, partners):

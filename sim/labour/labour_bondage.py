@@ -102,8 +102,8 @@ class BondageMixin:
         the grant back rather than let it be overwritten out of existence.
         """
         household = self._world.state.household
-        craft = sum(count for trade, count in household.employees.items() if self.is_craft_trade(trade))
-        schol = household.employees.get(trade_data.scholar_trade(), 0.0)
+        craft = sum(count for trade, count in self.employed_by_trade().items() if self.is_craft_trade(trade))
+        schol = self.employed(trade_data.scholar_trade())
         granted = getattr(household, "granted_staff", None) or {}
         # PEOPLE STILL LEARNING ARE NOT YET CRAFTSMEN. This function
         # recomputes self.household.artisans from scratch on every call, so

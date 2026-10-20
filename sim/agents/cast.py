@@ -87,7 +87,8 @@ def cast_from_civilisations(home_civ: Mapping[str, Any], foreign_civs: List[Mapp
 			actor_id=GOVERNMENT_PREFIX + profile.country, country=None if at_home else profile.country,
 			kind=HOME_GOVERNMENT_KIND if at_home else FOREIGN_GOVERNMENT_KIND, name=profile.name,
 			money=_number(cast.get("treasury"), 0.0), location=profile.location, policy_kind=EXPORT_POLICY_KIND,
-			params={"state_monopolies": list(civ.get("state_monopolies") or ())}))
+			params={"state_monopolies": list(civ.get("state_monopolies") or ()),
+					"state_enterprises": list(civ.get("state_enterprises") or ())}))
 		pending.extend(cast.get("countries") or ())
 		for declared in cast.get("actors") or ():
 			entry = _entry_from_declaration(declared, None if at_home else profile.country)
@@ -109,12 +110,10 @@ def _record_for(entry: CastEntry) -> ActorRecord:
 	for key, value in entry.params.items():
 		if key in field_names:
 			value = copy.deepcopy(value)
-			initial = getattr(record, key)
-			if isinstance(initial, set):
-				value = set(value)
-			elif isinstance(initial, float):
-				value = float(value)
-			setattr(record, key, value)
+			current = getattr(record, key)
+			if isinstance(current, float) and isinstance(value, int) and not isinstance(value, bool):
+				value = float(value)   # a whole number in the data is still a float field, as a reloaded save has it
+			setattr(record, key, set(value) if isinstance(current, set) else value)
 	return record
 
 

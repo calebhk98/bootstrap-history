@@ -590,7 +590,12 @@
   "sch": 0,
   "art": 1,
   "conf": "B",
-  "note": "Bank that accepts deposits and allows withdrawal on demand. Not merely storage but active management of customer funds. Requires trust, double-entry records, and systematic procedures."
+  "note": "Bank that accepts deposits and allows withdrawal on demand. Not merely storage but active management of customer funds. Requires trust, double-entry records, and systematic procedures.",
+  "mechanics": {
+   "deposit_banking": {
+    "source": "A society that holds the institution lets its households found banks that take deposits and lend them on (docs/knowledge/96_finance.md, deposit_bank); the argentarii of Rome took deposits and lent, but the deposit bank proper, repaying on demand while lending out the deposits, is the Italian city states' (Genoa, Florence)."
+   }
+  }
  },
  {
   "id": "fin_fractional_reserve",

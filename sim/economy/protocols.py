@@ -50,6 +50,10 @@ class MarketView(Protocol):
     def price(self, good: GoodId, area: AreaId) -> Optional[float]:
         """Last year's clearing price; None if the market never cleared."""
 
+    def cleared_price(self, good: GoodId, area: AreaId) -> Optional[float]:
+        """The price the market cleared at last year, as paid, not as remembered (the remembered price moves
+        part of the way when little traded). A view may omit it; buyers then plan from the remembered price."""
+
     def usual_price(self, good: GoodId, area: AreaId) -> Optional[float]:
         """A slow average of the clearing price, which holders of durable goods compare today's with.
         A view may omit it; holders then expect no reversion."""
@@ -78,6 +82,10 @@ class MarketView(Protocol):
     def stock(self, agent: AgentId, good: GoodId, tile: TileId) -> float:
         """The agent's holding of a good on a tile now."""
 
+    def equity(self, agent: AgentId) -> float:
+        """What the agent owns of the firms (net worth by ownership share), in money. A view may omit it
+        (`credit_view.equity_of` then reads zero)."""
+
 
 class Clearing(Protocol):
     """goods_market.clear and labour.clear share this shape."""
@@ -102,4 +110,9 @@ class YearInputs:
     import_accounts: Tuple = ()                             # accounts that sell goods landed from abroad: their sales are imports
     export_accounts: Tuple = ()                             # accounts that buy goods for abroad: their purchases are exports
     attrition_share: float = 0.0                            # share of working people a year dying or retiring
+    labour_levy_hours_per_worker: float = 0.0               # hours of each working person's year the state takes (a corvee, conscripts)
+    debt_relief_tiles: Tuple[TileId, ...] = ()              # tiles whose households' debts the state cancels this year (debt_relief.py)
+    farmed_forms: Tuple[str, ...] = ()                      # money revenue forms the state lets to the best bidder this year (tax_farming.py)
+    institutions: Tuple[str, ...] = ()                      # the credit institutions the society holds (banks.DEPOSIT_BANKING): without one its households found none
     durable_users: Tuple[AgentId, ...] = ()                 # outside actors' asset accounts whose durables are in use
+    standing_bids: Tuple[Bid, ...] = ()                     # demand settled outside the book (the founder's draws): entry reads it as bids, nothing clears

@@ -15,6 +15,7 @@ from .households_cohort import VALUE_OF_LIFE_YEARS_OF_INCOME
 from .households_orders import HOUSEHOLD_TIME_PREFERENCE
 from .labour_ask_floor import mean_floor_per_hour
 from .labour_bids import sloped_bids
+from . import workforce_version
 from .labour_state import core_trades, give_back, hold_back, mirror_wages, people_by_trade
 from .market_memory import market_key
 from .setup import labour_area
@@ -43,8 +44,12 @@ def outside_option_by_tile(setup, record, view) -> Dict[str, float]:
             for tile, floor in floors.items()}
 
 
-def labour_offers(setup, record, view, subsistence_by_tile) -> List[LabourOffer]:
-    """Each cohort's share of the tile's workers in each trade, as hours at the reservation wage."""
+def labour_offers(setup, record, view, subsistence_by_tile, levy_hours_per_worker: float = 0.0) -> List[LabourOffer]:
+    """Each cohort's share of the tile's workers in each trade, as hours at the reservation wage. The hours a state
+    levies (`levy_hours_per_worker`) are not the households' to offer."""
+    hours_left = max(0.0, setup.working_hours_per_year - max(0.0, levy_hours_per_worker))
+    if hours_left <= 0.0:
+        return []
     danger = {trade: spec.fatality_risk_per_year for trade, spec in setup.trades.items()}
     offers: List[LabourOffer] = []
     working_by_tile: Dict[str, float] = {}
@@ -59,7 +64,7 @@ def labour_offers(setup, record, view, subsistence_by_tile) -> List[LabourOffer]
             people_by_area[area] = people_by_trade(record.workforce, area)
         workers = {trade: count * share for trade, count in people_by_area[area].items()}
         offers.extend(households.labour_offers(cohort, workers, view, subsistence_by_tile.get(cohort.tile, 0.0),
-                                               setup.working_hours_per_year, danger))
+                                               hours_left, danger))
     return offers
 
 
@@ -115,6 +120,7 @@ def clear_labour(setup, record, bids: Sequence[LabourBid], offers: Sequence[Labo
                                  bids=core_bids)
     seen, held = hold_back(record.workforce, held_share or {})
     record.workforce, report = run_labour_year(seen, inputs, owned=True)
+    workforce_version.bump(record.workforce)   # the core's year wrote it
     give_back(record.workforce, held)
     by_market: Dict[Tuple[str, str], List[LabourOffer]] = {}
     for offer in offers:

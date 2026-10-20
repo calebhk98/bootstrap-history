@@ -7,9 +7,9 @@ located-material costs follow from it.
 """
 
 import json
-from typing import Any, Dict, NotRequired, Tuple, TypedDict
+from typing import Any, Dict, NotRequired, Optional, Tuple, TypedDict
 
-from sim.geography import located_places, mineral_shares, queries, reach_bands, routes_modes, tile_holdings
+from sim.geography import food_society, settlement, located_places, mineral_shares, queries, reach_bands, routes_modes, soil_nitrogen, stock_land, tile_holdings
 from sim.geography.queries import deposit_records
 from sim.geography.distance import haversine_km
 from sim.geography.parameters import parameter as parameter_value
@@ -77,6 +77,75 @@ class Geography:
         if region_id not in self._regions:
             return farthest
         return self._reach_table()["levels"].get(region_id, farthest)
+
+    def soil_nitrogen_factors(self, stock: Dict[str, float], cropped_share: float, reference_cropped_share: float,
+                              herd_kg: float) -> Dict[str, float]:
+        """{tile: yield factor of its soil nitrogen stock} for the held tiles below native, under a rotation that crops
+        `cropped_share` of the holding with a draught herd of `herd_kg`."""
+        if not stock:
+            return {}
+        manure = self._manure_per_hectare(cropped_share, herd_kg)
+        return soil_nitrogen.yield_factors(stock, tile_holdings.tiles_held(self._world.civ, self._world.world_map),
+                                           cropped_share, reference_cropped_share, manure)
+
+    def step_soil_nitrogen(self, stock: Dict[str, float], cropped_share: float, reference_cropped_share: float,
+                           kg_per_cropped_hectare: float, legume_share: float, herd_kg: float) -> None:
+        """One year of cropping, legumes and manure on every held tile that has cropland, written into `stock`."""
+        sites = soil_nitrogen.unworn_sites(self._world.civ, self._world.world_map, cropped_share)
+        manure = soil_nitrogen.manure_nitrogen_per_hectare(herd_kg, sites)
+        soil_nitrogen.step_year(stock, sites, kg_per_cropped_hectare, legume_share, reference_cropped_share, manure)
+
+    def _manure_per_hectare(self, cropped_share: float, herd_kg: float) -> float:
+        sites = soil_nitrogen.unworn_sites(self._world.civ, self._world.world_map, cropped_share)
+        return soil_nitrogen.manure_nitrogen_per_hectare(herd_kg, sites)
+
+    def stock_place(self) -> Optional[str]:
+        """The tile the held stock stands on: the held tile nearest the middle of the holding; None with no tiles."""
+        return stock_land.stock_place(self._world.civ, self._world.world_map)
+
+    def pasture_room_kg(self, place: Optional[str], grazing_kg: float, wild_stock: Any) -> Optional[float]:
+        """Live weight more the held tiles' grass keeps beside `grazing_kg` already on it; None without a place."""
+        return stock_land.pasture_room_kg(place, grazing_kg, wild_stock, self._world.civ, self._world.world_map)
+
+    def borders_among(self, tile_ids: Any) -> Dict[str, Any]:
+        """{tile: the tiles it borders} for each of `tile_ids` on the map."""
+        return settlement.borders_among(tile_ids, self._world.world_map)
+
+    def held_pasture_kg(self, wild_stock: Any) -> float:
+        """Live weight the held tiles' grass carries at the wild stock now standing."""
+        return stock_land.held_pasture_kg(wild_stock, self._world.civ, self._world.world_map)
+
+    def endemic_stock_loss(self, place: Optional[str], species: Any) -> float:
+        """Share of a held lot of `species` lost in a year to the endemic disease at `place`."""
+        return stock_land.endemic_stock_loss(place, species, self._world.world_map)
+
+    def nursery_room_units(self, place: Optional[str], output_per_batch: float, hectare_years_per_batch: float) -> Optional[float]:
+        """Units the place's arable land raises in a year at a production entry's output and land use per batch."""
+        return stock_land.nursery_room_units(place, output_per_batch, hectare_years_per_batch, self._world.world_map)
+
+    def crop_sites(self, cropped_share: float, nutrient_factors: Dict[str, float]) -> Dict[str, Any]:
+        """{tile: crop site} over the held tiles under a rotation that crops `cropped_share`, each under its soil nitrogen factor."""
+        return food_society.crop_sites(self._world.civ, self._world.world_map, cropped_share, nutrient_factors)
+
+    def food_kcal_by_source(self, wild_stock: Any, crop_technique: Any, nutrient_factors: Dict[str, float]) -> Dict[str, float]:
+        """{source id: kcal a year} over the held tiles, game thinned by `wild_stock`, before any labour bound."""
+        return food_society.food_kcal_by_source(self._world.civ, self._world.world_map, wild_stock, crop_technique, nutrient_factors)
+
+    def game_food_sources(self) -> Any:
+        """The food source ids that hunting wild animals goes under."""
+        return queries.game_food_sources(self._world.world_map)
+
+    def huntable_kcal(self, wild_stock: Any) -> Dict[str, Dict[str, float]]:
+        """{tile: {species: kcal}} the held tiles' game could give this year."""
+        return food_society.huntable_kcal(self._world.civ, self._world.world_map, wild_stock)
+
+    def take_hunt(self, wild_stock: Any, available: Dict[str, Dict[str, float]], share: float) -> Any:
+        """The wild stock after hunters take `share` of `available` on every tile."""
+        return food_society.take_hunt(wild_stock, available, share, self._world.world_map)
+
+    def regrow_wild_stock(self, wild_stock: Any) -> Any:
+        """The wild stock a year on: every drawn-down species regrows."""
+        return queries.regrow_wild_stock(wild_stock, self._world.world_map)
 
     def route_km_to(self, tile_ids: Any) -> Any:
         """Kilometres of the cheapest haul from the tiles held to the nearest of these tiles (0.0 when one

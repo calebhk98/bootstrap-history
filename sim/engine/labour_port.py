@@ -22,6 +22,10 @@ class LabourWorld:
         """The tiles the home country owns, read from the owner map."""
         return self._sim.home_tiles_held()
 
+    def people_by_tile(self):
+        """{tile: people} from the regions the engine tracks, or None before they cover the tiles held."""
+        return self._sim.people_by_tile()
+
     def home_tiles_held_version(self):
         """Changes whenever the tiles the home country owns might."""
         return self._sim.tile_owner_version()

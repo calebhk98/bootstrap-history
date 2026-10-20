@@ -16,7 +16,7 @@ from typing import Dict, List, Mapping, Optional
 from sim.constants import declare
 
 from . import currency, durable_stock
-from .credit_view import claims_of
+from .credit_view import claims_of, equity_of
 from .households_ability import affordable_goods, household_budget_for_need
 from .households_basket import (Basket, PricedNeed, need_prices, need_units, price_ceilings, quality_reach,
                                 with_quality_reach)
@@ -34,45 +34,70 @@ BUDGET_SAFETY_SHARE = 1e-9
 
 HOUSEHOLD_TIME_PREFERENCE = declare(
     "HOUSEHOLD_TIME_PREFERENCE", 0.05, kind="temporary_heuristic",
-    unit="share a year", source=None, confidence="D",
+    unit="share a year", source=(
+        'Recalled, not read: growth-model discount rates of a few percent a year (Ramsey-style '
+        'calibrations, Barro and Sala-i-Martin). Not measured for any pre-modern society.'), confidence="D",
     why="A household lends its savings only for at least what it gives up by waiting, on top of what "
         "inflation it expects takes from them. The figure is a common assumption in growth models, "
-        "not measured for any society here; default risk is priced separately by the credit market.")
+        "not measured for any society here; default risk is priced separately by the credit market.",
+    retire="Complaints/607: the opening holds the wealth its households want and saving has a user")
 SAVINGS_YEARS_OF_SURPLUS_INCOME = declare(
     "SAVINGS_YEARS_OF_SURPLUS_INCOME", 2.0, kind="temporary_heuristic",
     unit="years of income above subsistence kept as savings when the real rate equals time preference",
-    source=None, confidence="D",
+    source=(
+        "Recalled, not read: buffer-stock saving (Deaton 1991; Carroll 1997) puts a household's "
+        "target wealth at months to about a year of income; life-cycle saving (Modigliani and "
+        "Brumberg) for old age and dowry (Saller, Patriarchy, Property and Death in the Roman "
+        "Family, 1994, on dowry as a multiple of a year's income) can raise it to several years "
+        "for households with a surplus. Pre-industrial wealth to income ratios (Piketty, Capital "
+        "in the Twenty-First Century, 2014) are national and mostly land. None gives years of "
+        "surplus income per household, so two years sits inside the range and is not derived."), confidence="D",
     why="Households beyond subsistence keep savings against dearth, dowries, old age and burial, and lend "
         "what they do not hold as cash. How many years of surplus income they kept is not measured for any "
-        "society here; probate inventories and dowry records would bound it.")
+        "society here; probate inventories and dowry records would bound it.",
+    retire="Complaints/607: the opening holds the wealth its households want and saving has a user")
 SAVINGS_RATE_RESPONSE_LIMIT = declare(
     "SAVINGS_RATE_RESPONSE_LIMIT", 2.0, kind="temporary_heuristic",
-    unit="largest multiple of the savings target a high real rate draws", source=None, confidence="D",
+    unit="largest multiple of the savings target a high real rate draws", source=(
+        'Recalled, not read: estimates of the interest elasticity of saving are small and of '
+        'either sign (Bernheim 2002 survey of saving, recalled); no pre-modern measure. The bound '
+        'is an assumption.'), confidence="D",
     why="Saving rises with what it earns but not without bound; the bound stands in for the income effect "
-        "that a model of lifetime choice would give.")
+        "that a model of lifetime choice would give.",
+    retire="Complaints/607: the opening holds the wealth its households want and saving has a user")
 SAVINGS_RESPONSE_FLOOR = declare(
     "SAVINGS_RESPONSE_FLOOR", 1.0, kind="temporary_heuristic",
-    unit="share of the savings target kept when cash earns nothing in real terms", source=None,
+    unit="share of the savings target kept when cash earns nothing in real terms", source=(
+        'Recalled, not read: precautionary and bequest motives do not depend on the return '
+        '(Carroll 1997; Deaton 1991). No pre-modern measure of the share. The floor is an '
+        'assumption.'),
     confidence="D",
     why="Households do not stop saving because expected inflation reaches the interest rate: they hold the "
         "wealth in other forms (the durable store takes more of it then) and smooth. The floor stands in "
         "for that portfolio choice and for the saving motives that do not depend on the return (dearth, "
-        "dowry, old age); no society's saving is measured against the real rate here.")
+        "dowry, old age); no society's saving is measured against the real rate here.",
+    retire="Complaints/607: the opening holds the wealth its households want and saving has a user")
 WEALTH_DRAWDOWN_LIMIT = declare(
     "WEALTH_DRAWDOWN_LIMIT", 1.0, kind="temporary_heuristic",
-    unit="share of a year's income that wealth above target may add to spending in a year", source=None,
+    unit="share of a year's income that wealth above target may add to spending in a year", source=(
+        'Recalled, not read: consumption smoothing with slow spending of windfalls (Friedman '
+        'permanent income; Carroll 1997). The pace is an assumption.'),
     confidence="D",
     why="Households smooth consumption: wealth above what they want to keep is spent down over several "
         "years, not in the one year their target falls. Without a limit a fall in the target sends the "
         "whole stock of cash to the shops at once and nothing is left to lend. The pace is an assumption; "
-        "no society's spending is measured against its wealth here.")
+        "no society's spending is measured against its wealth here.",
+    retire="Complaints/607: the opening holds the wealth its households want and saving has a user")
 
 SPENDING_CUT_LIMIT = declare(
     "SPENDING_CUT_LIMIT", 0.3, kind="temporary_heuristic",
-    unit="largest share of its expected spending a household cuts in a year", source=None, confidence="D",
+    unit="largest share of its expected spending a household cuts in a year", source=(
+        'Recalled, not read: consumption smoothing and habit persistence (Deaton 1992). The share '
+        'is an assumption.'), confidence="D",
     why="Households smooth consumption: a rise in the wealth they want to hold is saved over several years, "
         "not in the one year it appears. The share is an assumption; no society's spending is measured "
-        "against its expected spending here.")
+        "against its expected spending here.",
+    retire="Complaints/607: the opening holds the wealth its households want and saving has a user")
 
 
 def savings_target(surplus_income: float, interest_rate: float, expected_inflation: float) -> float:
@@ -100,15 +125,17 @@ def _durable_ratio(good: GoodId, flow: float, held: float, specs: Mapping[GoodId
     return max(0.0, flow * scale * spec.service_life_years - held + wear) / flow
 
 
-def _smoothed_flow_by_good(cohort: Cohort, priced: List[PricedNeed], basket: Basket
+def _smoothed_flow_by_good(cohort: Cohort, priced: List[PricedNeed], basket: Basket,
+                           spending: Optional[float] = None, floor_cost: Optional[float] = None
                            ) -> Dict[GoodId, float]:
     """The yearly flow of each good the smoothed surplus (smoothed spending over smoothed floor cost) buys,
     with the goods the cohort could afford on it: it sizes the stock of a durable that a bad year, in which
     the floors take nearly all spending or a good is unaffordable, would otherwise size at nothing."""
-    if cohort.expected_spending <= 0.0 or cohort.expected_floor_cost <= 0.0:
+    spending = cohort.expected_spending if spending is None else spending
+    floor_cost = cohort.expected_floor_cost if floor_cost is None else floor_cost
+    if spending <= 0.0 or floor_cost <= 0.0:
         return {}
-    stock_floors, stock_totals = need_units(priced, basket, cohort.people,
-                                            cohort.expected_spending - cohort.expected_floor_cost)
+    stock_floors, stock_totals = need_units(priced, basket, cohort.people, spending - floor_cost)
     flows: Dict[GoodId, float] = {}
     for need in priced:
         need_id = need.spec.need_id
@@ -121,6 +148,25 @@ def _smoothed_flow_by_good(cohort: Cohort, priced: List[PricedNeed], basket: Bas
                 flows[good] = flows.get(good, 0.0) + (stock_floors[need_id] + max(
                     0.0, stock_totals[need_id] - stock_floors[need_id])) * per_unit
     return flows
+
+
+def _store_value_outside_use(cohort: Cohort, priced: List[PricedNeed], basket: Basket, specs: Mapping[GoodId, GoodSpec],
+                             weights, prices, held, cash: float, other_wealth: float, keep: float,
+                             income: float, floor_cost: float) -> float:
+    """What the cohort holds of the store goods that is wealth to spend from. A durable kept in use serves a
+    need and is not wealth, so what the flow of its needs keeps in use is left out; the flow is read at the
+    spending the other wealth allows, so that stocking a durable does not itself move the household to
+    other goods."""
+    from . import households_store            # imported here: that module needs this one's constants
+    in_use_goods = [good for good in weights if held[good] > 0.0 and specs[good].service_life_years > 0.0]
+    value = math.fsum(held[good] * prices[good] for good in weights if good not in in_use_goods)
+    if not in_use_goods:
+        return value
+    provisional = max(0.0, min(cash, income + currency.spending_adjustment(other_wealth + value, keep, income)))
+    reached = with_quality_reach(priced, basket, quality_reach(provisional, floor_cost))
+    in_use = durable_stock.in_use_stock(_smoothed_flow_by_good(cohort, reached, basket, provisional, floor_cost),
+                                        specs, 1.0, households_store.STORE_REBALANCE_BAND)
+    return value + math.fsum(max(0.0, held[good] - in_use.get(good, 0.0)) * prices[good] for good in in_use_goods)
 
 
 def goods_orders(cohort: Cohort, view: MarketView, cash: float, income_this_year: float,
@@ -147,12 +193,14 @@ def goods_orders(cohort: Cohort, view: MarketView, cash: float, income_this_year
     claims = claims_of(view, cohort.agent_id, area_currency)
     from . import households_store            # imported here: that module needs this one's constants
     weights, store_prices, held = households_store.store_holding(cohort, view, specs, priced, shared_store)
-    store_value = math.fsum(held[good] * store_prices[good] for good in weights)
     keep = target + savings_target(income_this_year - floor_cost, view.interest_rate(area_currency),
                                    cohort.expected_inflation)
     # the pace is set by the larger of this year's and last year's income, since a year's income so far
     # understates a household's usual income in its first year
-    drawdown = min(currency.spending_adjustment(cash + claims + store_value, keep, income_this_year),
+    owned = equity_of(view, cohort.agent_id)     # what it owns of the firms is wealth it already holds
+    store_value = _store_value_outside_use(cohort, priced, basket, specs, weights, store_prices, held,
+                                           cash, cash + claims + owned, keep, income_this_year, floor_cost)
+    drawdown = min(currency.spending_adjustment(cash + claims + store_value + owned, keep, income_this_year),
                    WEALTH_DRAWDOWN_LIMIT * max(0.0, income_this_year, cohort.last_year_income))
     spending = max(0.0, min(cash, income_this_year + drawdown))
     if cohort.expected_spending > 0.0:

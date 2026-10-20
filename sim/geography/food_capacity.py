@@ -1,6 +1,6 @@
 """Sustainable food energy of a tile by source, and the people it supports.
 
-    food_potential(world_map, tile_id, technique_factors=None)
+    food_potential(world_map, tile_id, technique_factors=None, wild_stock=None, crop_technique=None)
         -> {"tile": id, "kcal_per_year": {source_id: kcal}, "total_kcal_per_year": kcal,
             "people_supported": number, "species": {group: [content ids with a nonzero yield]}}
 
@@ -8,12 +8,13 @@
 techniques allow); a missing source counts 1. Source ids come from the content rows (and the
 `food_source_crops` parameter), group names from the `food_species_group_of_mechanism` parameter.
 Every source module returns (source_id, species_id, kcal) tuples; this module only adds them.
-`wild_stock` is the game's {tile: {species id: share of its carrying capacity left}} (food_wild_stock.py);
+`crop_technique` (food_crops.CropTechnique) is what the farm model says a cropped hectare gives under the actor's
+crop, tools and rotation; without it the crop source is absent. `wild_stock` is the game's {tile: {species id: share of its carrying capacity left}} (food_wild_stock.py);
 a missing entry counts as a full stock.
 """
 from typing import Dict, Mapping, Optional
 
-from sim.geography.food_crops import crop_contributions
+from sim.geography.food_crops import CropTechnique, crop_contributions
 from sim.geography.food_fishing import fishing_contributions
 from sim.geography.food_pasture import herd_contributions
 from sim.geography.food_productivity import food_cache
@@ -21,8 +22,7 @@ from sim.geography.food_wild import foraging_contributions, hunting_contribution
 from sim.geography.map_source import WorldMap
 from sim.geography.parameters import parameter
 
-SOURCE_MODULES = (crop_contributions, herd_contributions, hunting_contributions, foraging_contributions,
-                  fishing_contributions)
+SOURCE_MODULES = (herd_contributions, hunting_contributions, foraging_contributions, fishing_contributions)
 
 
 def _species_group(world_map: WorldMap, species_id: str) -> Optional[str]:
@@ -32,28 +32,32 @@ def _species_group(world_map: WorldMap, species_id: str) -> Optional[str]:
 
 
 def food_potential(world_map: WorldMap, tile_id: str, technique_factors: Optional[Dict[str, float]] = None,
-                   wild_stock: Optional[Mapping] = None) -> dict:
+                   wild_stock: Optional[Mapping] = None, crop_technique: Optional[CropTechnique] = None,
+                   nutrient_factors: Optional[Mapping[str, float]] = None) -> dict:
     factors = technique_factors or {}
     kcal_by_source: Dict[str, float] = {}
     species: Dict[str, list] = {group: [] for group in parameter(world_map, "food_species_group_of_mechanism").values()}
+    contributions = list(crop_contributions(world_map, tile_id, wild_stock, crop_technique, nutrient_factors))
     for source_module in SOURCE_MODULES:
-        for source_id, species_id, kcal in source_module(world_map, tile_id, wild_stock):
-            kcal = max(0.0, kcal) * factors.get(source_id, 1.0)
-            kcal_by_source[source_id] = kcal_by_source.get(source_id, 0.0) + kcal
-            group = None if species_id is None else _species_group(world_map, species_id)
-            if kcal > 0.0 and group is not None:
-                species[group].append(species_id)
+        contributions.extend(source_module(world_map, tile_id, wild_stock))
+    for source_id, species_id, kcal in contributions:
+        kcal = max(0.0, kcal) * factors.get(source_id, 1.0)
+        kcal_by_source[source_id] = kcal_by_source.get(source_id, 0.0) + kcal
+        group = None if species_id is None else _species_group(world_map, species_id)
+        if kcal > 0.0 and group is not None:
+            species[group].append(species_id)
     total = sum(kcal_by_source.values())
     return {"tile": tile_id, "kcal_per_year": kcal_by_source, "total_kcal_per_year": total,
             "people_supported": total / parameter(world_map, "food_kcal_per_person_year"),
             "species": {group: sorted(set(ids)) for group, ids in species.items()}}
 
 
-def food_potential_all(world_map: WorldMap, technique_factors: Optional[Dict[str, float]] = None) -> Dict[str, dict]:
-    """Every tile's food potential; cached per map and per set of technique factors."""
+def food_potential_all(world_map: WorldMap, technique_factors: Optional[Dict[str, float]] = None,
+                       crop_technique: Optional[CropTechnique] = None) -> Dict[str, dict]:
+    """Every tile's food potential; cached per map, per set of technique factors and per crop technique."""
     cache = food_cache(world_map, "potential_all")
-    key = tuple(sorted((technique_factors or {}).items()))
+    key = (tuple(sorted((technique_factors or {}).items())), crop_technique)
     if key not in cache:
-        cache[key] = {tile_id: food_potential(world_map, tile_id, technique_factors)
+        cache[key] = {tile_id: food_potential(world_map, tile_id, technique_factors, None, crop_technique)
                       for tile_id in world_map.tiles}
     return cache[key]

@@ -1425,6 +1425,8 @@ def main():
     subparser.add_argument("--accounts", action="store_true", help="print each year's accounts instead of the health "
                            "figures: production, use, consumption, investment and stock per good, food eaten against "
                            "need by tile and cohort, the real wage against the opening's basket (Complaint 554)")
+    subparser.add_argument("--occupations", action="store_true", help="also print each occupation group's share of "
+                           "working hours against its plausibility band (Complaint 619)")
     subparser.add_argument("--session", default=None, help="with --accounts: resume this save instead of a fresh game "
                            "(it is not written back)")
     subparser = sub.add_parser("baseline-ensemble", help="play several games of a civilisation with no player and store "
@@ -1664,6 +1666,12 @@ def main():
     subparser.add_argument("--session", default=None,
                    help="a save file. Loaded if it exists, written after every "
                         "command, so you can stop and come back later")
+    subparser.add_argument("--save-interval", dest="save_interval", type=float, default=0,
+                   help="seconds between writes of --session. 0 (default) writes after every "
+                        "command; a larger figure writes when that long has passed, on a "
+                        "save, load or quit, when the game ends, and on leaving, so a long "
+                        "run of commands in one process does not pay a write for each. A "
+                        "killed process loses the commands since the last write.")
     subparser.add_argument("--manual", action="store_true",
                    help="accepted and ignored: play is always manual now. Nothing "
                         "starts unless you start it. The old advisory mode, where "
@@ -1726,6 +1734,12 @@ def main():
                    help="a save file. Loaded if it exists, written after every "
                         "command, so you can play across separate invocations "
                         "without holding a process open")
+    subparser.add_argument("--save-interval", dest="save_interval", type=float, default=0,
+                   help="seconds between writes of --session. 0 (default) writes after every "
+                        "command; a larger figure writes when that long has passed, on a "
+                        "save, load or quit, when the game ends, and on leaving, so a long "
+                        "run of commands in one process does not pay a write for each. A "
+                        "killed process loses the commands since the last write.")
     subparser.add_argument("--script", default=None,
                    help="path to a JSON file holding a list of command objects, "
                         "played in order instead of reading stdin")

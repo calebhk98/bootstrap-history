@@ -15,7 +15,7 @@ from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence, Tuple
 
 from sim.constants import declare
 from sim.world import demand
-from sim.world.need_satiation import SATIATION_FIELD, apply_satiation
+from sim.world.need_satiation import SATIATION_FIELD, SATIATION_MULTIPLE_FIELD, apply_satiation
 
 NEED_SUBSTITUTION_ELASTICITY = declare(
     "NEED_SUBSTITUTION_ELASTICITY", 2.0,
@@ -131,8 +131,14 @@ def make_basket(need_data: Mapping[str, Any], production: Mapping[str, Any],
     return Basket(tuple(specs), substitution, need_data["needs"])
 
 
-def satiation_limit(basket: Basket, need_id: str) -> Optional[float]:
-    return basket.need_data[need_id].get(SATIATION_FIELD)
+def satiation_limit(basket: Basket, need_id: str, floor_per_person: float = 0.0) -> Optional[float]:
+    """The per-head yearly limit of a need: its stated figure, else its stated multiple of `floor_per_person`."""
+    data = basket.need_data[need_id]
+    if data.get(SATIATION_FIELD) is not None:
+        return data[SATIATION_FIELD]
+    if data.get(SATIATION_MULTIPLE_FIELD) is not None and floor_per_person > 0.0:
+        return float(data[SATIATION_MULTIPLE_FIELD]) * floor_per_person
+    return None
 
 
 def need_prices(basket: Basket, price_of: Callable[[str], Optional[float]]) -> List[PricedNeed]:
@@ -237,7 +243,8 @@ def need_units(priced: Sequence[PricedNeed], basket: Basket, people: float, surp
 def limit_satiation(totals: Dict[str, float], priced: Sequence[PricedNeed], basket: Basket, people: float) -> None:
     """Cap each satiable need's units at its per-head limit and move the freed spending, in place."""
     limits = {need.spec.need_id: {"surplus_budget_share": need.spec.budget_weight,
-                                  "satiation_per_capita_per_year": satiation_limit(basket, need.spec.need_id)}
+                                  "satiation_per_capita_per_year": satiation_limit(
+                                      basket, need.spec.need_id, need.spec.subsistence_per_person)}
               for need in priced}
     apply_satiation(totals, {need.spec.need_id: need.price_index for need in priced}, limits, people)
 

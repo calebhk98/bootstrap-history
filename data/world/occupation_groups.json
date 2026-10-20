@@ -1,0 +1,56 @@
+{
+  "_doc": "Plausibility bands for the occupational distribution of a no-intervention baseline (Complaint 619, DESIGN 4.2). Each trade belongs to one group; each band is the range of the group's share of all working hours that a pre-industrial agrarian economy plausibly shows. The bands are deliberately wide: they say 'not absurd', they are not a fit, and they are not set from any dated year. Shares of the labour force stand in for shares of hours (hours per worker differ by trade; that difference is smaller than the width of the bands). Every figure below is RECALLED from the named literature, not looked up in this session; check against the source before narrowing a band. 'unattributed' holds the unskilled labourer pool whose hours recipes do not assign to an occupation; its band caps how much of the economy may stay unclassified.",
+  "sources": {
+    "scheidel_friesen_2009": "Scheidel and Friesen, 'The Size of the Economy and the Distribution of Income in the Roman Empire', Journal of Roman Studies 99 (2009). Recalled: the large majority of the empire's people lived and worked on the land; the urban share was roughly one tenth to one sixth.",
+    "allen_2000": "Allen, 'Economic structure and agricultural productivity in Europe, 1300-1800', European Review of Economic History 4 (2000). Recalled: agriculture takes well over half of the labour force in pre-industrial European economies, four fifths or more in the poorest.",
+    "bairoch_1988": "Bairoch, Cities and Economic Development (1988). Recalled: pre-industrial economies keep roughly two thirds to nine tenths of the labour force in agriculture.",
+    "broadberry_2015": "Broadberry, Campbell, Klein, Overton, van Leeuwen, British Economic Growth 1270-1870 (2015). Recalled: textiles are the largest single industrial employer, from a low single-digit share of all workers up to the mid-teens; building a few percent.",
+    "wilson_2002": "Wilson, 'Machines, Power and the Ancient Economy', Journal of Roman Studies 92 (2002), and Wilson and Flohr (eds), The Economy of Roman Italy (2016). Recalled, qualitative only: cloth, building and food processing were the main non-farm trades."
+  },
+  "groups": {
+    "agriculture": {
+      "trades": ["farmer", "herder", "fisher", "hunter"],
+      "band": [0.55, 0.92],
+      "sources": ["scheidel_friesen_2009", "allen_2000", "bairoch_1988"]
+    },
+    "textiles": {
+      "trades": ["spinner", "weaver", "fuller"],
+      "band": [0.02, 0.16],
+      "sources": ["broadberry_2015", "wilson_2002"]
+    },
+    "building": {
+      "trades": ["mason", "carpenter", "plumber", "lime_burner", "millwright"],
+      "band": [0.01, 0.08],
+      "sources": ["broadberry_2015", "wilson_2002"]
+    },
+    "food_processing": {
+      "trades": ["miller", "baker", "salt_worker"],
+      "band": [0.01, 0.08],
+      "sources": ["wilson_2002"]
+    },
+    "transport": {
+      "trades": ["carter", "sailor"],
+      "band": [0.005, 0.06],
+      "sources": ["allen_2000", "wilson_2002"]
+    },
+    "other_crafts": {
+      "trades": ["potter", "smith", "furnaceman", "glassblower", "engraver", "artisan", "charcoal_burner", "tanner", "leatherworker", "miner", "optician", "machinist", "engineer", "chemist", "electrician", "shipwright"],
+      "band": [0.01, 0.10],
+      "sources": ["allen_2000", "broadberry_2015"]
+    },
+    "services_state": {
+      "trades": ["soldier", "scribe", "merchant", "scholar", "master"],
+      "band": [0.01, 0.10],
+      "sources": ["scheidel_friesen_2009", "allen_2000"]
+    },
+    "unattributed": {
+      "trades": ["labourer"],
+      "band": [0.0, 0.10],
+      "sources": []
+    }
+  },
+  "ordering": {
+    "_doc": "Textiles or building is expected to be the largest non-farm group among those classified (Complaint 619).",
+    "largest_non_farm_among": ["textiles", "building"]
+  }
+}

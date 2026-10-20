@@ -82,7 +82,8 @@ class Trader(RecordedActor):
 		paid, received = world.ship(self.actor_id, detail["material"], tonnes, detail["source"], detail["destination"])
 		freight = world.freight_between(detail["source"], detail["destination"], detail["material"], tonnes)
 		ledger.transfer(self, world.edge(EDGE_MARKET), paid, "edge:market purchase")
-		ledger.transfer(self, world.edge(EDGE_FREIGHT), freight, EDGE_FREIGHT)
+		dues = world.pay_route_dues(self, detail["source"], detail["destination"], detail["material"], tonnes)
+		ledger.transfer(self, world.edge(EDGE_FREIGHT), freight - dues, EDGE_FREIGHT)
 		ledger.transfer(world.edge(EDGE_MARKET), self, received, "edge:market sale")
 		margin = received - paid - freight
 		route = self.record.routes.setdefault(

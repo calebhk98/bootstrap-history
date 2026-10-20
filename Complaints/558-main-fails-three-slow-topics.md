@@ -163,3 +163,328 @@ with the test kept honest.
   with the working-stock change in): `full_length_opening_checks_han` wage over floor and
   `full_length_opening_checks_norse` sited ores. Three known regressions, all waiting on 473; none is marked as an
   expected failure, so they stay visible.
+
+- Branch `507-stage-7-price-search-within-year`: `economy_innovator_pricing` "the price path falls steadily without a
+  swing between years" fails in year 6 (a rise of 1.253 against the 1.2 limit; earlier variants of the branch failed
+  the same check in year 16 or 20 by a hair). Cause: the in-year search plus the queued holding-value floor lets a
+  year's price fall fast while the entrant's capacity is still small, and the next year's price recovers by more than
+  the limit; it comes from the floor commit, not the exit valuation. Complaint 553 notes this check sits at its
+  threshold in every variant of the yearly step, so it is read as a cycle property, not a defect of one rule. The test
+  is not loosened and stays failing (`python3 -m sim.tests --slow --only economy_innovator_pricing --jobs 1`).
+
+## Stage 4 of 507: checks that fail on the economy's real dynamics (2026-10-19)
+
+Left failing on purpose, with causes (`python3 -m sim.tests --slow --only real_output,real_output_cheaper_entry,real_output_baseline --jobs 1`):
+
+- `real_output_cheaper_entry`, "clears a larger quantity of it than the same society without it" (factor kept): with
+  `GOOD` a final good (stone blocks) the game clears only about three tenths of a percent more than its twin. Cause:
+  households' demand for a building stone is nearly inelastic, so a cheaper entry moves real output through value
+  weights, not volume. Real output and output per head still rise.
+- `real_output`, "...but not output per head, which stays near where it was": after a 40% fall in people, output per
+  head reads 1.26 to 1.58 over the following years. Food volumes rise (survivors eat more of the same land's food)
+  while construction falls. This may be the right economics (more land and capital per head after a population fall, as
+  after historical plagues), so the owner decides what the proof should be; the expected direction is not changed here.
+- `real_output_baseline`, goods far from their baseline: the unsettled spin-up (473) moves goods beyond the bound
+  stated in the test; measure with the topic's MEASURE line.
+
+Re-measured on `pm-merge-staging` (fc4e0582), `python3 -m sim.tests --slow --only real_output,real_output_cheaper_entry,real_output_baseline --jobs 1`:
+`real_output_cheaper_entry` still fails for the recorded cause (the game clears about two percent more of the final good than
+its twin, short of the factor; demand is inelastic); `real_output_baseline` still fails on the share of goods far from their
+baseline (the MEASURE line), the unsettled spin-up (473); the `real_output` per-head check now passes. No new cause.
+
+## Slow topics that pass on origin/main and fail on pm-settling-speed-and-walls (integration bisect)
+
+Bisected on the first-parent merges, one topic list per commit (`python3 -m sim.tests --slow --only <topics> --jobs 1`).
+
+- Fixed, engine: the 589 merge (7d98a10a) gave `Household` a `record` property (its `HouseholdState`) that shadowed the
+  `ActorRecord` convention; `charge_coin_carriage` read `record.country` on the founder paying a concern levy, so
+  every step with a levy failed (`complaint_584_forecast_takings_cash_book`, `actor_treasury`). The shared borrowing rule now reads
+  `arrears_book`. Regression check in complaint_584.
+- Fixed, tests: `complaint_181_save_cost` and `step_interrupts_and_alerts` called `_play_run_one_command` without the
+  `SavePolicy` 497 added. `complaint_181_save_cost` counts every `os.replace`, so a cache write inside a shared
+  process can make its "a step rewrites the save" read 3; it passes alone.
+- Real dynamic, 612-614 (075f790b): the generic `artisan` trade is now a remnant. Its national pool fell
+  (`people_who_exist("artisan")` on rome_100ad: about 40158 before, about 181 after; measure with
+  `labour.people_who_exist`) because the economy's artisan hours moved to the new trades. `complaint_585_staff_pay_retention`
+  and `actor_firms_compete` staffed the generic trade: fixtures moved to `labourer` (their subject is not the artisan pool).
+  Still red for the same cause: `firm_borrows_to_enter`, `firm_expansion`, `firm_costs_scale`: `concern_staff`
+  (sim/engine/agents_port.py) always asks for `artisan` craftsmen, so a firm of about 32 artisans against a pool of
+  about 181 pays a scarcity wage (wages roughly triple after year one in `firm_borrows_to_enter`'s setup) and the
+  opening firms close. `firm_entry_default_game`: the iron bar's year price at the opening fell (0.31 against 2.26 per kg),
+  so `finery_puddling` has zero market factor (pig iron bought costs more than bars sold) and no entrant sees a margin;
+  it fails from 609-611 (1c0e7ea2). The fix is a design call: firm craftsmen drawn from the trades the concern's recipes name.
+- Real dynamic, 589 (7d98a10a): `failure_and_bounty_money` "a year's late spending cannot leave capital past the credit
+  limit". `enforce_credit_limit` no longer clamps or settles on the spot; spending past the ceiling becomes arrears and
+  defaults after `ARREARS_YEARS_BEFORE_DEFAULT` years. The 438 invariant is superseded; left failing for the owner of 589
+  to restate (what bounds a year's late spending now).
+- Open engine defect, 609-611: `soldiers_leave_production`. The registry flags `labourer` as the fallback, but
+  `labour_allocation._non_farm_shares` excludes the fallback's own people and `society_hours` gives it no hours, so
+  its tightness factor saturates (1.148) with or without an army. The test now reads the world's flagged fallback
+  (`trade_data.fallback_trade_of`) and fails on the real cause: the hours left after farm and specialists should go to
+  the fallback trade in `sim/labour/labour_allocation.py` (`society_hours`).
+
+## Fixes on `fix-firms-hire-recipe-trades`
+
+- Fixed: a business's crew is the trades its recipe names. `Sim.venture_crew_by_trade` (`plant_figures.crew_by_trade`)
+  is the one function the founder's path (`venture_hands`) and the agents path (`concern_staff`) read; a plant whose data
+  states no hours takes the flagged unskilled trade, not a named generic one. Regression: `crew_is_the_recipes_trades`.
+  `firm_borrows_to_enter`, `firm_expansion`, `firm_costs_scale` pass. `founder_and_firm_agree` and `firm_count_whole_game`
+  now read the crew as the sum over its trades (their subject is the founder and firm agreeing, not the artisan pool).
+- Fixed: `soldiers_leave_production`. The specialists work their people's hours and `society_hours` gives the flagged
+  fallback trade the hours left after farm and specialists (`labour_allocation._non_farm_shares(rest_hours)`).
+- Fixed: `auto_hire_buys_room`. The founder's auto_hire still hires the generic craft trade, whose estimate of people had
+  fallen to the no-demand floor ("nobody left to hire"); the generic craftsman is any craftsman, so its share of town
+  work is that of the craft family together (`labour_population._share_of_town_work`).
+- Fixed, test: `failure_and_bounty_money` restated for 589: late spending past the credit limit is carried as arrears no
+  larger than the spending, counts a year each year, and is defaulted in year `ARREARS_YEARS_BEFORE_DEFAULT`.
+- Still failing, not the trades: `firm_entry_default_game`. At HEAD the opening agent economy's wages are several times
+  the earlier ones (furnaceman and engraver most; measure with `economy.agent_wage_per_hour(trade)` on a default game),
+  which lifts the iron bar's long-run price and so cuts its market factor, and the entrant's value test
+  (`entry_round.NicheEntry.found`) fails on the copy cost. The jump is not in 609-614: wages are normal at 549
+  (84858956) and at 5e744142, and high at 44cd2125 (Merge 605-607, saving finds a use: households count what they own of
+  the firms and the opening estimates it from the runs). Owner of 605-607 to look at the opening wage level.
+- `foreign_actor_trade` passes on `origin/main` (19 checks, 0 failures) and fails on `pm-settling-speed-and-walls` at
+  "...and no longer swings from year to year" (partner price moves by more than 1 percent between years). Bisected
+  (first-parent merges, `python3 -m sim.tests --slow --only foreign_actor_trade --jobs 1 --topic-seconds 400`): passes
+  through `5e744142` (513) and `84858956` (549); first fails at `44cd2125` (merge of 605-607-saving-finds-a-use).
+  Cause confirmed by switch: with `owned = 0.0 * equity_of(view, cohort.agent_id)` in
+  `sim/economy/households_orders.py` the check passes again. The households' equity term (605) changes the Rome
+  opening's prices a little; the test's cargo (`cargo_for`, millet, about 1.98 million units a year, no return cargo)
+  is sized to what still pays against the partner's price, so it is about the same every year, and the partner's
+  stock-and-capacity book (`close_partner_books`, `market.adjusted_capacity`, `market.stock_after_year`) answers it
+  with a limit cycle: in the failing run the partner price is 130.28 in most years and falls to 64.7 in year 4 and 78.3
+  in year 7 (at the 44cd2125 merge: 72.1 every other year, 68.5, 69.4, 70.1 between), snapping back the next year as
+  the glut clears. The home side is not stepped in this fixture, so the swing is the partner book's own dynamic at a
+  cargo near its threshold, not a home-economy defect. Not fixed; the bound is not loosened. Open (a partner book
+  whose capacity answers a steady cargo without a two-year cycle is the fix to find).
+- Fixed, 607 (branch `fix-opening-wages-after-equity`): the opening counted the households' equity in its income fixed
+  point (`opening_equity.py`). A household may spend wealth above what it wants to keep at up to a year's income a
+  year (`WEALTH_DRAWDOWN_LIMIT`), so equity added a lasting demand the opening settled on: Rome's opening income was
+  76 percent higher and the thin trades' (furnaceman, engraver) wages at one labour area (`work@france_05`) ran to
+  20 times the others after year one. Removed from the opening; the in-run equity read stays. Regression:
+  `opening_income_equity`. After it, `agent_wage_per_hour` on a default game is back to the 549 levels
+  (labourer 0.043, furnaceman 0.061, engraver 0.080) and `foreign_actor_trade` passes (19 checks, 0 failures).
+  `firm_entry_default_game` still fails and also fails at 84858956, before 605-607: its cause is the 609-611 one above
+  (the iron bar's price), not the opening wage. `saving_finds_a_use` "households spend most of their income" read the
+  opening's state (0.92 came from the opening equity; the run's own effect is 0.878 against 0.875 without it), so it
+  now compares runs with and without the equity read.
+
+## Integration branch regressions (fix-integration-regressions-2)
+
+Measured on the integration branch with `python3 -m sim.tests --slow --only <topic> --jobs 1`; each passes on `origin/main`.
+
+- `cli_one_process_session`: one process playing four commands leaves a different save from one process per command
+  (`python3 -m sim.tests --slow --only cli_one_process_session`). Bisected over the first-parent merges: equal through
+  996ce535 (598), different from 4e521c8f (627-628); inside it, commit 3b7a5900 (627). Setting `wage_scale` in
+  `sim/economy/carriage_hours.py` to 1.0 makes the two saves equal again at that commit, so the cause is the
+  carriage wage scale, whose effect a reload does not reproduce: the year-2 differences start at about one part in
+  1e15 on a merchant's hours wanted and grow through the price search. The reloaded table, the persisted `carried`
+  flows and `memory.wages` were checked and match; which unpersisted input of `wage_scale` differs is not yet
+  found. Open: the check stays failing.
+- `economy_carriage_hours`: `test_hours_given_to_carriage_are_taken_from_what_other_employers_hire` fails from 598
+  or earlier on float noise (others hired equal to one ulp: carriers hired almost nothing), and stopped failing
+  after the opening-income fix, when carriers are hired but only 8 of 43 planned hours. That makes
+  `test_a_plan_the_market_can_fill_is_hired_in_full` fail: the bid's maximum wage (1.2) is far above the town wage
+  (0.04), yet the town's labourer hours are all taken (others plus carriers is constant), so the labour market
+  rations. Not a fixture mistake; the check stays failing until the market's rationing of a late bidder is decided.
+- `firm_entry_default_game`: since 1c0e7ea2 (609-611) no entrant copies `finery_puddling`. Measured on the
+  branch: the market factor is no longer zero, expected takings are 12k a year (25k before), but the copy plan
+  costs 200k (72k before), because the opening market price of coal rose (the case for `blast_furnace`'s coal
+  in `project_material_bill`: 58k before, 220k at 1c0e7ea2, 185k now) while the price solver's coal price barely
+  moved. The trade split left the unskilled `labourer` pool as the poor and the bonded and put the farm stratum on
+  `farmer` (whose quoted wage is four times the labourer's), and coal's hewing and haulage hours are labourer and
+  miner hours. Open: why the economy's coal price at the opening is two to three times its solved price.
+- Farmer wage (the thread of `opening_floor_and_thin_trades`, `firm_entry_default_game` and the coal bill): the
+  labour core capped a trade's quote at the unskilled wage times its training premium
+  (`clearing.trained_substitute_wage`) but returned no cap for any trade with zero training years, not only the
+  fallback. After 609 `farmer` has none, so its few market hands (the opening staffs a trade only to the hours
+  its producers need; households' own plots hold the rest) quoted several times the labourer's wage. Fixed in the
+  core: only the fallback trade is uncapped (regression: `test_labour_core_substitute_wage.py`);
+  `opening_floor_and_thin_trades` passes again (`python3 -m sim.tests --slow --only opening_floor_and_thin_trades`).
+  The farmer now quotes a little above the labourer (the reservation and risk terms).
+  Not fixed, a lead from the 556 branch: the core's headcount by trade and `national_trade_population` (the
+  founder-facing market's supply estimate) disagree about where the farm people are; unifying them is 556's scope.
+- `firm_entry_default_game`: bisected to 1c0e7ea2, but the cause is not the farmer wage. At the opening the
+  market price of iron bar against its solved cost fell (about 2.3 times the solved cost before the merge, under
+  0.9 after the merge's data: all long-run prices rose by about 15 percent with the trade split, the thin
+  markets did not follow), which takes `finery_puddling`'s market factor to nothing, so no entrant sees takings.
+  The fixture's concern is now `lead_metallurgy`, which still earns at the opening and keeps the subject (an
+  entrant copies a published concern the founder runs). Open: why the opening iron-bar and coal prices are
+  scarcity-priced by an order of magnitude against the solved cost (thin local markets, coal from 0.006 to 0.25
+  a kilogram between tiles).
+- `node_capital_derived`: `charcoal_industrial` and `en_charcoal_burning` earn nothing now. Charcoal's only
+  dedicated recipe books `charcoal_burner` (dearer than the labourer, two training years), and at the solved
+  charcoal price (set below that recipe's cost, probably by the wood-tar joint route) a batch no longer adds its
+  staff's wages, so `plant_baskets._covers_its_staff` runs no line. The check names these two as idle. Open:
+  the charcoal price should not undercut the only dedicated route's cost.
+- `wage_floor_and_coin_standard`, `stock_growth_and_smuggling`, `world_events_and_hazards` (fails the same way on
+  `origin/main`: the harness leaves out Han, a partner the agent economy holds, so the opening cast was home
+  alone), `economy_exit` (a lean seam must now ask more miner-hours, an untrained trade quoting at most the
+  unskilled wage): fixture fixes, no bound loosened.
+- `sited_ore_price_over_cost` fails on `origin/main` too (Norse iron ore 109 times its cost there; on the
+  integration branch Rome's iron ore is 16.7 and Rome shows no cassiterite price). Open; not loosened.
+- Complaint 556's change (core books farm people as `farmer`, not `labourer`) moves the opened Rome game's median
+  core wages: farmer 0.171 -> 0.206, labourer 0.145 -> 0.164, mason 0.204 -> 0.229, smith 0.202 -> 0.227 (3-year
+  test spin-up). Hours by occupation group do not move (agriculture 0.361 -> 0.361, unattributed 0.62 -> 0.62):
+  `occupational_distribution` fails in three checks exactly as before (agriculture band, ordering, `shipwright`
+  in no group); the hours are the recipes' `labourer` bookings (619, 530), not the people split.
+- `opening_floor_and_thin_trades` ("household floors cost a small multiple of the food floor", bound 8): measured on
+  the Rome opening (median over the populated tiles of each need's floor cost as a multiple of the food floor;
+  `need_prices` on the economy's year-1 view, as the test does):
+
+  | need | origin/main | staging head |
+  |---|---|---|
+  | food (absolute, per person) | 16.3 | 2.3 |
+  | clothing | 0.40 | 5.12 |
+  | warmth | 0.20 | 2.67 |
+  | water | 0.46 | 1.88 |
+  | shelter | 0.15 | 1.39 |
+  | vessels | 0.015 | 0.20 |
+  | salt | 0.007 | 0.07 |
+  | all floors | 2.15 | 13.1 |
+
+  The ratio is mostly the denominator. Dropping the new foods from the head's food need moves the ratio: without
+  `bread_kg` 7.8 (food cost 4.6), without fish and salted fish 10.6, without all three 5.5. Cause: bread (614) and
+  fish (615) entered the food need, and in the markets that clear in year 1 their price collapses (bread's median
+  over the 79 market areas is a few hundredths of a flour kilogram's price; the cheapest areas under a thousandth).
+  Example: at the tile `algeria_15` a baker runs about 58 runs, the area's bread clears at about 0.001 against a
+  flour price of 0.58 (a loaf takes 0.69 kg of flour), while at the other bakers' tiles bread holds near 0.4 and the
+  baker does not run. The mix weights cheap goods up, so the food floor follows the collapsed price. Not a floor
+  error: a thin single-area market overshooting (the producer's expected sales exceed the area's demand; the
+  expansion damping is Complaint 473's). Non-food floors also grew in absolute terms (clothing and warmth about
+  1.5 to 2 times), which is the trade split and the price level, not one broken floor. The bound stays 8; the
+  check passes again when thin markets stop clearing below input cost. Reproduce: `need_basket.need_prices` with
+  `price_of` returning None for the good, over the tiles of `record.cohorts`.
+
+## Slow regressions between ae57ae47 and 4796f4cb (economy values)
+
+Bisected by running one topic per first-parent merge (`python3 -m sim.tests --slow --only <topic> --topic-seconds 240`).
+
+- `engine_prices_civilization_rent` ("hectare land is no longer zero for rome", 145.65 -> 164.81): first fails at
+  `2d40eaa4` (farmer training 0 -> 1 year, bonded households' trade `labourer`). The rent is in labour hours, and the
+  farmer's hour now carries a year of training. A value the merge meant to move; the pin is updated, the subject (land
+  priced above zero for Rome) is unchanged.
+- `foreign_actor_trade` ("cargo taken from home raises the home price the trader pays"): the check passed through
+  `0f43ff60`, then `f3a2db9b` (price cap) made the partner price end one step lower, and `12fef2d1` (durables kept in
+  use are not spent from) changed which good pays most: millet, Han 204 against Rome 27 a kilogram. Rome's millet book
+  is deep and flat (`price_after_cargo` at home is unchanged for any cargo up to the whole 2 million), so no cargo
+  moves its price. The fixture now picks, among the paying goods, one whose home price the cargo moves; no bound moves.
+  Open dynamic: Han's millet price under a constant cargo swings 204 -> 103 -> 204 -> 125 -> 204 (years 3 and 6;
+  `python3 -m sim.tests --slow --only foreign_actor_trade` on `12fef2d1` before the fixture change).
+- `economy_state_budget` ("printing more raises the price level more instead of saturating", 34.1 not above 71.2):
+  first fails at `6f0085da` (makers plan and bid inputs at no less than their last clearing price); not the price cap
+  `f3a2db9b`, which passes. Not fixed, test untouched. Measured on the settled opening (`resumed(fiat=True,
+  full_length=True)`, 4 years): the basket price level at 16 times the supply is 3.8, 12.6, 31.9, 34.1 against 3.6,
+  11.8, 28.3, 56.9 at 4 times, while the money supply is 595 against 134 times its start. The level is a few thin
+  goods: `brick_wall_m3` is 541 times its base in the 4 times run and 8.5 in the 16 times run, `vegetable_kg` 89 and 2.0,
+  `brick_1000` 57 and 5.4, `ceramic_kg` 56 and 1.8, `fish_kg` 3.9 and 152; the median good is 7.1 and 7.2 times its
+  base in both. So typical prices already saturate between the two programmes (the capital-market-only state spending
+  above) and the index follows whichever thin good spikes (Complaint 473). The test's subject (a bigger programme
+  raises the level more) fails on the index; the fix belongs to thin-good pricing.
+- `economy_tin_dearer_than_copper`, `baseline_fixture` ("stocks are not eaten through", "the fixture settles") are not new:
+  both failed in the earlier full run with the same bound (tin 0.169, now 0.118, against 0.441; the ratio has sat
+  between 0.08 and 0.17 since `befec1c7`; grain stock 0.971, now 0.967). Still waiting on the opening settling (473, 526).
+
+## `real_output_cheaper_entry` after 4796f4cb: the entrant's effect is far below the economy's own divergence
+
+Bisected on the first-parent merges (`python3 -m sim.tests --slow --only real_output_cheaper_entry --topic-seconds 240`,
+one commit at a time, about 50 to 110 s each). Passes at 48a23734, 0a6f3b1b and 3ae3a575; first fails at 940d5e42
+(merchant fleets: carriage days per tonne-km from geography) on "the market clears a larger quantity" alone, with the game
+clearing 4.7 percent more than its twin against the factor 1.05. The three price checks first fail at f3a2db9b
+(a remembered price held within 4 times its making cost): the game's price is above the twin's by a hair (8.146058 against
+8.145458). At f3a2db9b, with PRICE_OVER_MAKING_COST_LIMIT raised to 4000, all ten checks pass, so the cap does tip it. On
+4796f4cb the gap is wide (10.73 against 9.81) and stays so for years (see the command below); on the integration head
+(3e74bbad) the price checks pass again and the quantity check and the two real-output checks fail instead (quantity ratio
+about 1.007), so the failing set moves with unrelated merges.
+
+Measured cause, not a defect of one rule:
+
+- The entrant is small. The producers running the technique hold under one percent of the good's incumbent capacity in
+  year 3 on every commit tried, so what it can move directly is a part in a thousand of the price, the same order as the
+  sign flips above. The quantity check only ever passed on drift, as the Stage 4 entry above already says (demand for a
+  building stone is nearly inelastic).
+- The price the check reads is the acting tile's: the nation's shown price carried by that tile's own area price. On
+  4796f4cb in year 3 the nation's price is lower in the game (20.75 against 21.37) and so is its making cost (11.6
+  against 16.0), the intended direction; the founder's tile (france_05, about one percent of the good's volume) is
+  higher in the game (32.3 against 29.5), a thin local market moved by something other than the technique.
+- The cap is a clamp, so a tiny perturbation flips which markets it binds. In year 2 it binds the good itself in the
+  game only (price 60.2 held to 4 times a cost of 13.4 that the technique lowered; the twin's cost allows 72), the
+  intended effect of a lower making cost; in year 3 it binds timber and carts in the twin only. After that the two
+  economies diverge as chaotic cycles do: from year 3 to 9 the good's price swings 10 to 24 and its yearly volume 4 to
+  19 million units in both, with the game above the twin in most years.
+
+Reproduce the year-by-year divergence on 4796f4cb: run the test body with a `print` of
+`game.goods_market.household_prices()[GOOD]` and `traded_units(game)` after each `close_years(game, 1)` for the game and
+its twin. Not fixed: no bound is loosened and no fixture edited, since a fixture that restored the sign would only pick a
+year or a tile where the sign happens to be right. A fixture that keeps the subject needs the entrant to be large
+relative to the market (a surplus fixture that leaves incumbents no spare capacity) or the check to read the nation's
+price; either is the owner's choice. Related: Complaint 473 (the cycling economy).
+
+## `spin_up_sensitivity` after the labour import cap: the variants' amplitude sits on the band's edge
+
+The labour import cap (c5c0107e) took every area with the trade as a source, and areas all short of hands capped each other's
+wages to the reservation floor; this broke `economy_innovator_pricing` and `spin_up_sensitivity` ("ask_prices x2"). The cap
+now fills the hours wanted beyond an area's own hands from the cheapest reachable areas' spare hands and binds only when
+they suffice (`sim/labour/market/import_cost.py`). `economy_innovator_pricing` passes again.
+
+`spin_up_sensitivity` still fails on "no change of adjustment speed removes the cycle", now on a different variant
+(`producer_plans x0.5`, amplitude 0.183 against a floor of 0.2265 from the baseline 0.453). Print every variant with
+`python3 -c "from sim.tests import test_spin_up_sensitivity as t; print(t.statistics())"`. The baseline's price cycle is a
+long chaotic one (period near 80 years), and which variant dips under half of it moves with unrelated merges (the variant
+that failed before the fix passes now). No bound loosened. Related: Complaint 473 (the cycling economy).
+
+## `real_output` and `real_output_baseline` after 4796f4cb: a zero rate sharpens the opening's swings
+
+Bisected on the first-parent merges (`python3 -m sim.tests --slow --only real_output --topic-seconds 240`, about 60 s a
+commit). Both topics pass at d7a49827 and fail at 3e74bbad (the rate falls to the clearing rate when lenders' funds sit
+idle above it, `sim/economy/credit.py` `_funds_idle_above_clearing_rate`), and at every later merge. The credit rule
+does what it says: Rome's lenders offer about 400 times what borrowers ask in the opening years, so the clearing rate is
+zero and the held rate now falls to it at once instead of stepping down (0.047, 0.033, 0.023, 0.016 before; 0.0, 0.008,
+0.0, 0.0 now).
+
+What fails is not a rule of the fall or of the baseline but the swing of the opening's own output per head, which is
+larger at a zero rate. The no-intervention game (no shock at all) has output per head 1.0, 0.490, 0.688, 0.544 in
+years 1 to 4 (before 3e74bbad: 1.0, 0.758, 1.106, 1.156). So:
+
+- "...and stays near one with no intervention" (`real_output_baseline`) fails on year 2 at 0.490 against the bound 0.5.
+- "...but not output per head, which stays near where it was" (`real_output`, after a 40 percent mortality shock and two
+  closed years) reads 1.4255 against the bound 1.25 relative to the year before the shock. The same game without the
+  shock reads 0.490, 0.688, 0.544 over those years and with it 0.782, 1.426, 1.021 (the second year after the shock
+  is the one read), so the reading sits inside the economy's own swing. The shock's effect cannot be separated from it
+  until the opening settles.
+- "goods far from their baseline carry a small share" in the same topic was already on the list above.
+
+Reproduce: `PYTHONPATH=. python3` with `sim(civ="rome_100ad", capital=1e9)`, `close_years(game, 1)` four times, printing
+`game.real_output_per_head()`; the clearing rate is the `rate` that `sim.economy.credit.clear` returns. Not fixed, no bound
+loosened, no fixture edited: a fixture that stepped further to find a calm year would only pick where the sign is right.
+Owner: the opening's settling (473).
+
+`real_output_cheaper_entry` still fails on "the market clears a larger quantity of it than the same society without it"
+alone (4964555 against 4759157, a ratio of 1.043 against the bound 1.05); the three price checks and the two output
+checks pass on c5c0107e. Same entrant-versus-divergence cause as the section above; confirmed with
+`python3 -m sim.tests --slow --only real_output_cheaper_entry --topic-seconds 240` and left.
+
+## `economy_state_budget` after the credit rate steps (3e74bbad) and the thin-market wage cap (c5c0107e)
+
+Bisected over the first-parent merges (`python3 -m sim.tests --slow --only economy_state_budget --topic-seconds 240`).
+Two checks stay failing, test bounds untouched:
+
+- "printing to cover a deficit raises prices and expectations and can run away" (the price level after eight years is
+  20.7 times the start against the bound of 20 times the first year's 1.67): passes at `d7a49827`, first fails at
+  `3e74bbad` (the rate falls to the clearing rate). The short spin-up now ends with the market rate at exactly 0.0
+  (it was 0.053 at `d7a49827`), and the unprinted control then deflates every year (price level 0.92 falling to 0.44
+  over eight years, against 0.94 rising to 1.11), so the printed run starts lower and climbs 12 times, not 20.
+  Measure with `ROME_SPIN_UP_YEARS=3,2 python3 -` running `opened()`, `run(resumed(fiat=True), 8)` from
+  `sim/tests/test_economy_state_budget.py`. The test's subject (printing runs away) holds in its other two bounds; the
+  fix belongs to the opening settling (Complaints 473, 526).
+- "a balanced budget leaves the states share of the coin steady" (0.1737 against 0.1679): passes through `d9b1e32f`,
+  first fails at `c5c0107e` (hours no labour market can fill stop setting the wage). On the declared-length opening
+  (`resumed(full_length=True)`) the state now starts holding 0.134 of the coin (0.032 at `d9b1e32f`, rate memory 0.8,
+  the ceiling) and hires almost nothing: wages paid to labourers over two years are 0.6 million against 10 million,
+  while its wage budget is 34 million. So its hoard grows with the supply shrinking. The state's wage bid is 1.5 times
+  last year's wage and its hours are capped at a share of each tile's; why the bids now go unfilled, and why the
+  opening hands the state four times the coin, are not found. Open.
+
+Fixed in the same round: the state's loan request carried a ceiling of 3 times the market rate, which is nothing at a
+rate of zero, so lenders' risk premium priced it out and "borrowing comes before printing" saw no loan
+(`sim/economy/state_finance.py`: the premium its own leverage earns lenders is now added to the ceiling).

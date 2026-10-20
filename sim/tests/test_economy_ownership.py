@@ -13,7 +13,7 @@ from sim.economy.types import Transfer
 def record_with_three_cohorts():
     cohorts = (cohorts_for_tile("t", 3000.0, 0.5, 0.4, class_count=3)
                + cohorts_for_tile("u", 1000.0, 0.5, 0.4, class_count=3))
-    return SimpleNamespace(cohorts={cohort.agent_id: cohort for cohort in cohorts})
+    return SimpleNamespace(cohorts={cohort.agent_id: cohort for cohort in cohorts}, shares={}, producers={})
 
 
 class SpreadTests(unittest.TestCase):

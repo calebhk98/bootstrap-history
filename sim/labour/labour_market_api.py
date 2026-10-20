@@ -76,7 +76,7 @@ class LabourMarket:
         """Hours a year of this trade that standing staff already take out of its pool: trades drawn
         from the unskilled pool stay drawn while they serve, so they do not decay."""
         world = self._world
-        if trade != trade_data.fallback_trade(self._labour.wage_schedule().training_years, world.trade_family):
+        if trade != trade_data.fallback_trade_of(world, self._labour.wage_schedule().training_years):
             return 0.0
         drawn = [name for name in world.wages if trade_data.drawn_from_unskilled_pool(name)]
         return sum(world.actor_staff_fte(name) for name in drawn) * world.HOURS_PER_PERSON_YEAR
@@ -128,16 +128,12 @@ class LabourMarket:
         people = max(0.0, people)
         if people <= 0:
             return self.price_factor(trade)
-        household = self._world.state.household
-        before = household.employees.get(trade, 0.0)
-        household.employees[trade] = before + people
+        before = self._labour.employed(trade)
+        self._labour.set_employed(trade, before + people)
         try:
             supply_after = self._labour.market_supply(trade)
         finally:
-            if before:
-                household.employees[trade] = before
-            else:
-                household.employees.pop(trade, None)
+            self._labour.set_employed(trade, before)
         pressure_after = self.pressure(trade) + people * self._world.HOURS_PER_PERSON_YEAR
         return self._price_factor_from(pressure_after, supply_after)
 

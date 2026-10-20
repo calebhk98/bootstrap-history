@@ -12,13 +12,25 @@ import functools
 from typing import Dict, List, Optional, Tuple
 
 from sim.geography import queries, tile_holdings
+from sim.geography.food_crops import CropTechnique
 from sim.geography.distance import haversine_km
 from sim.unit_conversions import CIVIL_DAYS_PER_YEAR
 
 
+_reference_crop_technique: Optional[CropTechnique] = None
+
+
+def set_reference_crop_technique(crop_technique: Optional[CropTechnique]) -> None:
+    """The crop yield (from the farm model's default technique) the technique-free views of the land use."""
+    global _reference_crop_technique
+    _reference_crop_technique = crop_technique
+    for cached in (_carrying_capacity, _capacities, _summary):
+        cached.cache_clear()
+
+
 @functools.lru_cache(maxsize=2048)
 def _carrying_capacity(tile_id: str) -> float:
-    return float(queries.food_potential(tile_id)["total_kcal_per_year"])
+    return float(queries.food_potential(tile_id, None, None, None, _reference_crop_technique)["total_kcal_per_year"])
 
 
 @functools.lru_cache(maxsize=64)
@@ -99,3 +111,23 @@ def candidate_tiles(held_tiles: List[str], claimed_tiles: List[str], by_sea: boo
 def distance_between_tiles_km(from_tile: str, to_tile: str) -> float:
     """Great-circle distance between two tiles' centres, held or not."""
     return haversine_km(*tile_holdings.tile_centre(from_tile), *tile_holdings.tile_centre(to_tile))
+
+
+def borders_among(tile_ids: List[str], world_map=None) -> Dict[str, List[str]]:
+    """{tile: the tiles it borders} for each of `tile_ids` the map has."""
+    tiles = tile_holdings._map(world_map).tiles
+    return {tile_id: tiles[tile_id]["borders"] for tile_id in tile_ids if tile_id in tiles}
+
+
+def population_shares(held_tiles: List[str]) -> Dict[str, float]:
+    """{tile: fraction of the nation's people} for every tile held, the tiles in id order."""
+    return {tile: population_share(held_tiles, tile) for tile in tile_ids(held_tiles)}
+
+
+def people_by_tile(stored_regions, total_people: float, held_tiles: List[str]) -> Optional[Dict[str, float]]:
+    """{tile: people} once the tracked regions cover the tiles held, else None (the caller spreads the nation by share)."""
+    if not stored_regions or sorted(stored_regions) != tile_ids(held_tiles):
+        return None
+    held = sum(sum(bands) for bands in stored_regions.values())
+    scale = total_people / held if held > 0.0 else 0.0
+    return {tile: sum(bands) * scale for tile, bands in stored_regions.items()}

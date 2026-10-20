@@ -14,6 +14,7 @@ def operate(business: Business, owner: Any, entry_key: str, world: Any, rivals: 
 	found = staff(business, owner, entry_key, world)
 	business.note_crew_found(entry_key, found)
 	takings = found * world.concern_takings(entry_key, business.opened_year_of(entry_key, world.year), rivals, size)
+	business.note_takings(entry_key, takings)
 	upkeep = world.upkeep(entry_key, size)
 	wages = found * world.concern_wage_bill(entry_key, size)
 	if not world.sells_on_book(entry_key):   # what sells in the book is paid when the year's market clears
@@ -23,7 +24,8 @@ def operate(business: Business, owner: Any, entry_key: str, world: Any, rivals: 
 		world.pay_wages(owner, wages, "wages")
 	else:
 		ledger.transfer(owner, world.edge(EDGE_WORKERS), wages, "wages")
-	levy = world.government().collect(owner, takings, world)
+	state = world.government()
+	levy = 0.0 if state is owner else state.collect(owner, takings, world)   # a state does not levy its own works
 	royalty = world.collect_royalty(owner, entry_key, takings)
 	return takings - upkeep - wages - levy - royalty
 

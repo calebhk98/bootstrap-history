@@ -7,10 +7,8 @@ import unittest
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 ECONOMY_DIR = os.path.join(ROOT, "sim", "economy")
 ENGINE_DIR = os.path.join(ROOT, "sim", "engine")
-ALLOWED_ENGINE_IMPORTERS = {"economy_port.py", "economy_port_setup.py", "economy_port_year.py", "economy_port_cargo.py",
-                           "economy_port_health.py", "economy_port_sites.py", "economy_port_country.py",
-                           "economy_port_actors.py", "economy_port_trace.py", "economy_port_coin.py", "economy_port_tiles.py",
-                           "economy_port_timber.py", "economy_port_effects.py"}
+ALLOWED_ENGINE_IMPORTERS = {name for name in os.listdir(ENGINE_DIR)
+                            if name.startswith("economy_port") and name.endswith(".py")}
 
 
 def imported_modules(path):

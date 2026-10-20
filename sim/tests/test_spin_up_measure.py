@@ -99,7 +99,7 @@ class StopRuleTests(unittest.TestCase):
 
 
 class OrderTests(unittest.TestCase):
-    def test_the_recorded_result_is_measured_after_the_workforce_is_trimmed(self):
+    def test_the_recorded_result_is_measured_after_the_workforce_is_trimmed_and_trimmed_again_before_play(self):
         calls = []
         window = [_state() for _year in range(4)]
         agent = economy_port_year.AgentEconomy.__new__(economy_port_year.AgentEconomy)
@@ -107,6 +107,7 @@ class OrderTests(unittest.TestCase):
         api = economy_port_year.economy_api
         first = {"settled": True, "years": 3, "gap": 0.0}
         with mock.patch.object(api, "opening_quantities", lambda economy: {}), \
+                mock.patch.object(economy_port_year.economy_port_sites, "crop_yields", lambda economy: {}), \
                 mock.patch.object(api, "trim_workforce_to_expected_hours", lambda economy: calls.append("trim")), \
                 mock.patch.object(api, "finish_spin_up", lambda economy: calls.append("finish")), \
                 mock.patch.object(api, "note_spin_up_result",
@@ -116,9 +117,9 @@ class OrderTests(unittest.TestCase):
                 mock.patch.object(economy_port_year.AgentEconomy, "_settle_trimmed",
                                   staticmethod(lambda economy, inputs, watched: calls.append("trimmed") or window)):
             agent._spin_up()
-        self.assertEqual(calls[:4], ["settle", "trim", "trimmed", "finish"])
-        self.assertEqual(calls[4][1]["measured_years"], 4)
-        self.assertEqual(calls[4][1]["first_stage"], first)
+        self.assertEqual(calls[:5], ["settle", "trim", "trimmed", "trim", "finish"])
+        self.assertEqual(calls[5][1]["measured_years"], 4)
+        self.assertEqual(calls[5][1]["first_stage"], first)
 
 
 class StateTests(unittest.TestCase):

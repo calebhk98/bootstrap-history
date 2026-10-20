@@ -35,7 +35,7 @@ def new_game(revenue):
 	game.state.projects.done.add("zz_count")
 	game.state.projects.done_year["zz_count"] = year - 10
 	game.state.projects.operating.add("zz_count")
-	game.state.projects.opened_year["zz_count"] = year - 10
+	game.state.projects.business.set_opened_year("zz_count", year - 10)
 	game._done_changed()
 	return game
 
@@ -87,11 +87,11 @@ derived_id = next(node_id for node_id in sorted(big_game.nodes)
                   if big_game.nodes[node_id].get("_revenue_basis") == "output"
                   and sum(big_game.nodes[node_id]["_labour_hours_per_year"].values()) > 0.0)
 derived_world = SimWorld(big_game)
-crew_before = derived_world.concern_staff(derived_id).get("artisan", 0.0)
+crew_before = sum(derived_world.concern_staff(derived_id).values())
 expected_crew = sum(big_game.nodes[derived_id]["_labour_hours_per_year"].values()) / big_game.HOURS_PER_PERSON_YEAR
 big_game.nodes[derived_id]["rev"] *= 3.0
 check("a derived concern's crew is its plant's hours over a person-year", abs(crew_before - expected_crew) < 1e-9, (crew_before, expected_crew))
-check("...and does not move with its takings", derived_world.concern_staff(derived_id).get("artisan", 0.0) == crew_before)
+check("...and does not move with its takings", sum(derived_world.concern_staff(derived_id).values()) == crew_before)
 
 # entrants act on what the market pays now, not on a stale expectation that ignores the firms already
 # in: the count rises to what the market holds and stays near it, rather than overshooting and collapsing

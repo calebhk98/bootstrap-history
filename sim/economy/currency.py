@@ -110,13 +110,22 @@ def debase(spec: CurrencySpec, new_backing_per_unit: float) -> CurrencySpec:
                                fineness=spec.fineness * new_backing_per_unit / spec.backing_per_unit)
 
 
-def debase_by_cut(spec: CurrencySpec, cut_share: float, restrike_share: float) -> CurrencySpec:
-    """The issuer cuts `cut_share` of the metal from the coin it strikes again, `restrike_share` of the
-    stock this year: the average coin holds that share of the cut less metal. A coin that is not struck,
-    or no cut, leaves the spec as it was."""
-    if spec.regime != "struck_coin" or cut_share <= 0.0 or restrike_share <= 0.0:
+def units_struck_by_cut(spec: CurrencySpec, supply: float, cut_share: float, restrike_share: float) -> float:
+    """Coin the issuer gains by striking the part of the stock that comes to the mint (`restrike_share` of
+    `supply`) at `cut_share` less metal: the metal saved makes more coin of the lighter weight. Zero for a
+    coin that is not struck, or no cut."""
+    if spec.regime != "struck_coin" or spec.issuer is None or cut_share <= 0.0 or restrike_share <= 0.0:
+        return 0.0
+    return supply * restrike_share * cut_share / (1.0 - cut_share)
+
+
+def debase_by_cut(spec: CurrencySpec, supply: float, cut_share: float, restrike_share: float) -> CurrencySpec:
+    """The coin after that recoinage: the same metal spread over the coin there was and the coin struck from
+    the saving, so the average coin holds less of it. A coin that is not struck, or no cut, is as it was."""
+    struck = units_struck_by_cut(spec, supply, cut_share, restrike_share)
+    if struck <= 0.0:
         return spec
-    return debase(spec, spec.backing_per_unit * (1.0 - cut_share * restrike_share))
+    return debase(spec, spec.backing_per_unit * supply / (supply + struck))
 
 
 def cash_balance_target(yearly_spending: float, interest_rate: float, expected_inflation: float) -> float:

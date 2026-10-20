@@ -1,6 +1,6 @@
 # Disease is one national patch with a dice-roll importation, and older starts still schedule plagues by date
 
-**Status:** open
+**Status:** partly fixed. Every civilisation now runs the disease model: pathogens arrive from named outside sources (`disease_exposure.outside_contact`: tiles, no dates) with a chance that falls with route days to the tiles held (`sim/disease/nation.py`, `sim/engine/disease_port.py`), and the dated plague hazards are deleted from the Rome, England, Norse and Mexica files; an epidemic's toll reaches each seat from the model (`sim/engine/disease_port.py`). Test: `plagues_from_contact`. Still open: one patch per tile (the nation is still one patch; only the deaths are spread over 603's tiles), contact scaled by trade volume and density per edge, campaign and settlement cost by region (`sim/world/military_logistics.py`), the outside world as simulated actors, initial immunity for civilisations whose childhood diseases are already endemic (England 1300), and the risk screens no longer forecast plague.
 
 - `sim/engine/disease_port.py` steps one patch ("The nation is one patch"). There is no per-region disease
   load, so campaign and settlement cost cannot depend on where.

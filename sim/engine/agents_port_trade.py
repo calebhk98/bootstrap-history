@@ -7,6 +7,7 @@ place buy for themselves in a year is the depth a trader sizes its cargo to.
 """
 from typing import Any, Dict, List, Optional, Tuple
 
+from . import trade_duty
 from .foreign_capacity import budget_scaled_final_tonnes, household_tonnes_by_material
 from .foreign_economies import not_traded_materials
 from .material_units import tonnes_per_unit
@@ -91,7 +92,27 @@ class TradeView:
 		for partner in (source, destination):
 			if partner != home:
 				per_tonne += float(self._sim._foreign_economy_facts(partner)["freight_per_tonne"] or 0.0)  # type: ignore[attr-defined]
-		return per_tonne * tonnes
+		return per_tonne * tonnes + self.duty_between(source, destination, material, tonnes)
+
+	def duty_between(self, source: str, destination: str, material: str, tonnes: float) -> float:
+		"""The tariff the destination country's state charges on a cargo from the source country (a share of its value
+		at the source); infinite when that state embargoes the source. Part of what the route costs a trader."""
+		if tonnes <= 0.0 or source == destination:
+			return 0.0
+		return float(trade_duty.duty_per_tonne(self._sim, source, destination, self.price_at(material, source) or 0.0)) * tonnes
+
+	def pay_route_dues(self, payer: Any, source: str, destination: str, material: str, tonnes: float) -> float:
+		"""Pays each partner route's dues to the holders of the tiles they are levied at, no more than the
+		route's freight; returns the money paid."""
+		if source == destination:
+			return 0.0
+		sim, home, paid = self._sim, self._home_place(), 0.0  # type: ignore[attr-defined]
+		for partner in (source, destination):
+			if partner != home:
+				facts = sim._foreign_economy_facts(partner)
+				if facts["route"] is not None:
+					paid += sim.pay_route_dues(payer, facts["route"], tonnes, limit=float(facts["freight_per_tonne"] or 0.0) * tonnes)
+		return paid
 
 	def market_depth(self, material: str, place: str) -> float:
 		"""Tonnes a year buyers at a place take; at a partner no more than its market book's demand, the
@@ -129,6 +150,8 @@ class TradeView:
 		home side is orders in the book; a partner's side is tallied for its market book to close on (foreign_actor_trade.py)."""
 		if tonnes <= 0.0:
 			return 0.0, 0.0
+		if self.duty_between(source, destination, material, tonnes) == float("inf"):
+			return 0.0, 0.0   # the destination's state embargoes the source: nothing crosses
 		paid = (self.price_at(material, source) or 0.0) * tonnes
 		received = (self.price_at(material, destination) or 0.0) * tonnes
 		home = self._home_place()
@@ -142,7 +165,8 @@ class TradeView:
 		if source != home:
 			sim.note_actor_trade(source, material, tonnes, False)
 		sim.note_cargo_leg(trader_id, material, tonnes, source, destination, paid, received,
-						   self.freight_between(source, destination, material, tonnes), home)
+						   self.freight_between(source, destination, material, tonnes), home,
+						   duty=self.duty_between(source, destination, material, tonnes))
 		key = (material, destination)
 		self._delivered()[key] = self._delivered().get(key, 0.0) + tonnes
 		return paid, received

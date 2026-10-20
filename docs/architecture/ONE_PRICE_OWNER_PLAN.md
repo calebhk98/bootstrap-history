@@ -1,6 +1,6 @@
 # One price owner: the agent economy
 
-**Status:** plan; stage 1 built on branch `507-stage-1-solver-is-cost-only` (2026-10-14), the rest not built. Answers `Complaints/507-prices-and-traded-volumes-have-two-owners.md`
+**Status:** plan; stage 1 built on branch `507-stage-1-solver-is-cost-only` (2026-10-14), stages 2 and 3 built, stage 4 partly built on branch `507-stage-4-traded-volumes-from-the-economy` (2026-10-19), stage 5 partly built on branch `507-stage-5-cost-comparers-at-economy-prices` (2026-10-20), the rest not built. Answers `Complaints/507-prices-and-traded-volumes-have-two-owners.md`
 (owner decision: the agent economy is the only owner of prices and traded volumes; the engine's price solver
 becomes a cost-of-making calculator). Sequel to `ONE_DEMAND_MODEL_PLAN.md` (one household demand kernel) and
 Complaint 115 (one economy). Folds in the price-search half of Complaint 513 (stage 8) and the unsold-stock rule
@@ -321,6 +321,46 @@ Files: `sim/engine/real_output.py`, `market_clearing.py` (`_follow_cleared_volum
 (`market_available_tonnes_per_year`), `economy_materials.py` (`_material_market_tonnes`), `labour_port.py`,
 `event_causes.py`, `sim/economy/api.py` (offered quantity read).
 
+**Partly done** (branch `507-stage-4-traded-volumes-from-the-economy`, 2026-10-19). What was built, and what it showed:
+
+- Real output. `real_output.py` reads the economy only: the opening basket is `opening_quantities` valued at
+  `opening_prices_in_hours` (new `sim.economy.api` read: the opening price over the unskilled trade's opening wage);
+  volumes are `traded_volumes`. `stored["volume_baseline"]` now holds the first year every good cleared any (it held
+  late goods only). The plan's per-good ratio (traded over baseline times the opening quantity) swung output per head
+  by multiples, because a good the economy barely trades in its first year has a tiny baseline and a large opening
+  weight (measured: milk and cheese by two orders of magnitude, a candle by tens). So the measure weights a good by
+  what the economy trades of it: real output is one scale times the sum of traded units times opening price, the scale
+  carrying the baseline year onto the opening basket's value (`RealOutputMixin.traded_measure`). Output per head is
+  one in the baseline year by construction, and one before any year has closed.
+- Deleted: `_follow_cleared_volumes`, `traded_ratio`, the `reference_tonnes` split and `commodity` ratios in
+  `real_output`, `agent_cleared_ratio`, `AgentEconomy.cleared_ratio`, `stored["late_goods"]`. The static book keeps its
+  own basket for now (`static_book_basket.py`, the old `base_basket`): `market_demand` and the book's household
+  ratios read it, and it goes with the static book in stage 6.
+- Offered quantity. `quote["market_available_tonnes_per_year"]` is the economy's offered tonnes at the acting tile
+  (`agent_offered_tonnes`) for a home good; a partner's good keeps the carriers' lift; the engine's
+  `_material_market_tonnes` answers only while the economy opens and for the freight and reach callers that still use it
+  (`economy_materials.py` untouched). `GoodsMarket.buy` cuts an order to the offer less what the buyer has already bought
+  that year (`test_purchase_limited_by_offered_volume`).
+- What it showed. (1) The economy's own volumes are not stationary: in a no-intervention run output per head reads
+  one, 0.86, 0.72, 0.73 over the first four years, and goods carrying up to 0.29 of the baseline year's value sit beyond
+  a factor of three of it in the third year (`test_real_output_baseline.py`, bound stated from the subject and expected to fail while the spin-up is unsettled; `python3 -m sim.tests --slow --only real_output_baseline`). This is the unsettled spin-up of stage 2 (473), not
+  the measure. (2) A fall in people without a technique does not leave output per head put: output falls less than
+  the people, since food volumes rise (the survivors eat more of the same land's food) while construction falls; per
+  head read 1.34, 1.26, 1.32, 1.58 over four years after forty in a hundred of the people went. The plan's "a population
+  fall does not raise output per head" is therefore NOT met: the assertion in `test_real_output.py` fails (output
+  per head 1.26 to 1.58 after a 40% fall). This may be the right economics (more land and capital per head after a
+  fall, as after historical plagues), so it needs an owner decision on what the proof should be; recorded in
+  Complaints/558.
+  (3) The opening basket is final demand: a technique that cheapens an intermediate (copper ore) no longer moves real
+  output, so `real_output_helpers.GOOD` is a good households buy (stone blocks), whose volume moves little (+0.3% against
+  the twin) while real output and output per head rise. (4) A new good counts only once the economy trades it, which takes
+  producers some years (`test_concern_volume.py` closes three). (5) `test_population_farm_technique.py` runs
+  `advance_society`, which does not close the agent economy's year, so output per head stays one there and the plan's
+  check could not be added to it; a whole-game version belongs with the technique test above.
+- Not done: the founder's sale limit still reads the offered quantity (the book's held tonnes), not the buyers' bid;
+  `economy-check` has no output-per-head guard (the new topic covers it); `labour_port.py`, `event_causes.py` and
+  `economy_port_year.py`'s cleared ratio needed no change beyond the above.
+
 ### Stage 5: cost comparers use the calculator at the economy's prices
 
 Moves: `producer_costs`, `entry_cost.CostBook`, `concern_volume`, `node_revenue_market`/`node_output_market_factor`,
@@ -340,6 +380,43 @@ Files: `sim/engine/producer_costs.py`, `entry_cost.py`, `concern_volume.py`, `no
 `prices.py` (cache and warm start).
 
 Deletes: `ENGINE_SOLVE_TOLERANCE` and `INTEREST_RATE_BAND` if the closure is no longer iterated at runtime.
+
+**Partly done** (branch `507-stage-5-cost-comparers-at-economy-prices`, 2026-10-20). Built:
+
+- `entry_cost.CostBook` is a thin book over `making_cost.cost_of_making`; `economy_cost_book.py` hands it the economy's
+  price of each input (the home sellers' price on the acting tile, the long-run cost where the economy has no market),
+  its wage of each trade, the lending rate, and land rent (`agent_land_rent_per_hectare`; ore carries no rent, the
+  mine's cost is the recipe that digs it). `producer_costs` (`_reference_entry`, `entry_cost_ratio`,
+  `commodity_floor_ratio`, `concern_cost_ratio`, `founder_concern_offers`) reads that book, remembered while the
+  economy's prices, the rate, the year and the techniques in use stand. The reference entry is the cheapest at those
+  prices, so no `solved_prices` call and no stand-in rent remains in the producer cost path. A plant that exists
+  offers at its running cost, a new one is judged at full cost (`test_entry_cost_at_economy_prices`,
+  `test_running_cost_floor`). A halved-labour entry now costs `1 - labour share / 2` of the incumbents' at these prices
+  (0.857 for the test good, against 0.75 asserted at the opening wage document, where labour was a larger share);
+  `test_real_output_cheaper_entry` states that relation from the cost breakdown instead of a number.
+- `node_revenue_market.basket_market_factor(sold, bought, long_run_prices, price_now)` is the market factor as a
+  function of baskets and two price lists (no node), which `FIRMS_OWN_PLANTS_PLAN.md` stage 3c lifts into the kernel;
+  `market_factor(node, ...)` wraps it. The factor already was economy price over long-run cost; the new
+  `test_node_factor_is_economy_over_cost` proves it on a game.
+- `test_price_over_making_cost_band`: four years in, the traded goods' price over their full cost at the economy's own
+  prices has a median between one and three, and half of them lie within a factor of three either way (measured: median
+  1.6 to 2.1 over years one to five; the tail is the metals and ores, which carry no rent in the cost).
+
+Not done, and why:
+
+- `concern_volume` keeps the long-run table. Its value ratio is net sales of the baskets now over the opening's, both at
+  the same list, and `node_output_market_factor` multiplies it by economy over long-run. At economy prices in both the
+  price move would count twice; the table is the reference by design (section 3, stage 5 text).
+- `techniques_in_use` reads no price (it is the set of techniques producers run); nothing to move.
+- `ENGINE_SOLVE_TOLERANCE`, `INTEREST_RATE_BAND`, `prices.band_interest_rate`, the warm start and
+  `shipped_rate_bands.py` stay: `incumbent_prices._price_tables` still closes the recipe graph at runtime, for the
+  long-run table every `_material_prices()` reader takes (static book, `goods_market_offers`, `economy_materials`,
+  `foreign_*`, `view_share`). They go with those readers (stage 6 and the partner economies of section 6), not before.
+- Speed (Complaint 497): measured on a warm disk cache, a game year costs about 7 s of CPU before and after this stage
+  (6.9 and 6.8, three years each, `rome_100ad`, loaded machine); the engine's price solve is under a quarter of a percent
+  of a profiled warm year, since the solve is read from `solve_cache`. The cost is a cold cache (a first game builds in
+  about 80 s against 3 s warm) and the economy's own clearing, not the runtime solve. (Timed with `time.process_time`
+  around `game._step_market()` and profiled with `cProfile` on a `tests.harness.sim` game; no repo command does this.)
 
 ### Stage 6: the engine's static commodity book goes
 
@@ -391,6 +468,38 @@ Deletes: `UNSOLD_ASK_MARKDOWN_SHARE`, `UNSOLD_PROBE_SHARE_OF_CAPACITY`, `IDLE_SA
 `notional.thin_market_prices` and `THIN_MARKET_SHARE_OF_OPENING_DEMAND` (a thin market no longer holds an
 unreasonable price for years).
 
+**Done** (branch `507-stage-7-price-search-within-year`, 2026-10-19). What was built, and what it showed:
+
+- `sim/economy/unsold_search.py` (`clear_with_search`), called by `year_goods.clear_goods` after `strategic_offers`. A
+  market that clears with unsold stock held by producers still at the ask `producers.offers` gave them is searched:
+  every such seller's ask is capped at one common level, no seller below its own floor (`seller_offers.unit_value`),
+  and the level is the highest at which all of them sell out or sit at their floors (bisection on whole-market
+  clears). Capping all of them together is what the convergence rule comes to: a seller that undercuts leaves its
+  rivals unsold in turn, so revisiting one at a time would race down in tiny steps. A market with no unsold
+  searchable stock clears once. A seller that moved the price (`best_reservation`) holds units back on purpose and
+  is not searched; its raise is bounded by `SOLD_OUT_ASK_RAISE_SHARE`, its cut by its unit value.
+- Deleted: `UNSOLD_ASK_MARKDOWN_SHARE`, `UNSOLD_PROBE_SHARE_OF_CAPACITY`, `IDLE_SALE_SHARE`, the yearly markdown in
+  `producers.next_expectations` (and `unsold_outputs`), and the crowd's share-of-unsold markdown. Not done:
+  `notional.thin_market_prices` and `THIN_MARKET_SHARE_OF_OPENING_DEMAND` stay (remove them once the spin-up shows the thin goods settle without them).
+- Proof: new `test_unsold_stock_search.py` (sells within the year, no ask below the floor, a good opened far above
+  cost reaches buyers in one year, sold-out sellers and restrained sellers untouched); the stale-ask, markup-limit and
+  aggregate-producer tests now read the search instead of the yearly markdown.
+- Floor. A searched seller's floor is the larger of its unit value and `inventory.queued_holding_value`: what the last
+  unit of its stock fetches kept for the buyers it expects in later years (the one-year reservation carried for as many
+  years as the stock is of the expected yearly sales). A storable glut is held, not crashed to cost; a good with no
+  expected sales still falls to cost within the year. Without it, any excess over buyers' fixed demand sent the asks to
+  cost in one clear and the dug-clay price swung 8 to 26 times (`test_economy_vessel_price_fixture`).
+- Entry fix. `entry_year.open_entrants` read a zero in `record.expansion_runs` (left by a working-capital loan request)
+  as plant on the way and turned every newcomer away from that producer; it now blocks only on plant still to come.
+- Exit and contraction. `producers_close._expected_run` values a run's output at the queued holding value behind the
+  stock the producer holds, so a producer holding years of unsold output does not count on a price a market with no
+  trade leaves standing; a run that does not pay shrinks the producer whether or not it holds stock.
+- What it showed: Rome over 60 years (spin-up trace, `sim/economy/settling.py`): the price level's largest yearly step
+  0.197 against main's 0.427, the rate's 0.038 against 0.176 (main reaches the rate ceiling), money stock settled; the
+  wage is still falling (Complaint 608). The fixture (`controlled_run(120)`) still reports price level, wage and rate
+  not settled. Complaint 473 has a section on it. One bound still fails: `test_economy_innovator_pricing` year 6 (Complaint 558).
+  Quick tier green; thin-market, store-usual, asks-follow-sales, expansion-price and bronze (502) pass.
+
 ### Stage 8: farm effort follows the food price (Complaint 513)
 
 Needs stage 3 (one food price) and stage 4 (one traded volume). Not a solver reader today: `LabourAllocationMixin.
@@ -405,6 +514,17 @@ Proof: with spare land a food technology raises nutrition and then population, u
 further (the two checks in `test_population_farm_technique.py` change meaning on purpose: write the new relationship
 first); farming share of labour falls when the food price falls relative to the wage (new
 `test_farm_effort_follows_price`); no input to the allocation is the engine's food need.
+
+**Partly done** (branch `513-farm-effort-follows-food-price`, 2026-10-19). Farm hands kept past need now follow a
+continuous response below the wage: extra hands on the cleared land earn a marginal product falling with labour to the power
+(elasticity - 1), so the hands kept are today's hands times (staple price times marginal product over the unskilled
+wage) to the power 1 / (1 - elasticity), capped by the hands that feed the people to satiation and by the cleared land
+(`sim/labour/farm_intake.py`, no invented curve; both prices from the economy). A dearer wage lets hands go, a
+cheaper calorie (a technique) keeps them and draws more toward satiation. Proofs: `test_farm_effort_follows_price.py`
+(unit response is monotone and continuous; farm share and nutrition fall as the wage elsewhere rises) and
+`test_farm_surplus_intake.py`. Not done: the need-sized allocation (`farm_workers_needed`) is still the floor under the
+kept hands, the household-by-household choice and sale of surplus beyond satiation are open, and the farm constants
+in `economy_goods.py` are untouched.
 
 Files: `sim/engine/labour_allocation` mixin (`LabourAllocationMixin`, find with
 `grep -rn "_allocate_farm_workforce" sim`), `sim/world/need_basket.py` (limit declaration), `sim/world/agriculture.py`
