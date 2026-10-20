@@ -113,6 +113,10 @@ class _TonnesWorld:
     def materials_made_by(self, node_id):
         return ()
 
+    def baseline_knowledge(self):
+        # the shared research path (diffusion) subtracts what every actor starts knowing; this world has none
+        return set()
+
     def market_sale(self, actor_id, material, tonnes, from_concerns=None):
         pass
 
