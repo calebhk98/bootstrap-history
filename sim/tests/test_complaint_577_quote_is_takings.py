@@ -5,7 +5,10 @@ QUICK_TOPIC = True
 
 import unittest
 
+from sim.agents.api import business_books
 from sim.engine import concern_earnings as earnings
+
+takings_of_size = business_books.takings_of_size
 
 TREE_REVENUE = 1000.0
 PRICE_INDEX = 1.7
@@ -57,19 +60,19 @@ class QuotedUnitsTests(unittest.TestCase):
 
 class RealEarningsTests(unittest.TestCase):
     def test_the_goods_markets_price_multiplies_the_takings(self):
-        self.assertAlmostEqual(earnings.real_earnings(takings(), 1.0, 0.8), 0.8 * takings())
+        self.assertAlmostEqual(takings_of_size(takings(), 1.0, 0.8), 0.8 * takings())
 
     def test_a_quote_before_opening_applies_the_market_factor_to_the_full_ramp_takings(self):
-        quote = earnings.real_earnings(takings(ramp=earnings.quoted_ramp(False, False, lambda: 0.3)), 1.0, 0.8)
+        quote = takings_of_size(takings(ramp=earnings.quoted_ramp(False, False, lambda: 0.3)), 1.0, 0.8)
         self.assertAlmostEqual(quote, takings(ramp=1.0) * 0.8)
 
     def test_units_scale_the_earnings(self):
-        self.assertAlmostEqual(earnings.real_earnings(takings(), 4.0, 0.8), 4.0 * 0.8 * takings())
+        self.assertAlmostEqual(takings_of_size(takings(), 4.0, 0.8), 4.0 * 0.8 * takings())
 
     def test_earnings_with_the_output_factor_are_the_earnings_without_it_times_the_factor(self):
         market = 0.85
-        with_factor = earnings.real_earnings(takings(output_factor=0.9), 2.0, market)
-        without = earnings.real_earnings(takings(output_factor=1.0), 2.0, market)
+        with_factor = takings_of_size(takings(output_factor=0.9), 2.0, market)
+        without = takings_of_size(takings(output_factor=1.0), 2.0, market)
         self.assertAlmostEqual(with_factor, without * 0.9)
 
 
@@ -83,7 +86,7 @@ class LedgerRowTests(unittest.TestCase):
         self.assertIsNone(earnings.ledger_row(-12.0))
 
     def test_a_row_is_within_a_twentieth_of_the_figure_the_screens_quote(self):
-        quote = earnings.real_earnings(takings(), 1.0, 0.77)
+        quote = takings_of_size(takings(), 1.0, 0.77)
         self.assertLess(abs(earnings.ledger_row(quote) - quote), 0.051)
 
 

@@ -1,144 +1,127 @@
-"""closure_reasons: a closed work records why and since when, and only its own cause clears it."""
-from .harness import *  # noqa: F401,F403
+"""closure_reasons: a closed work records why and since when, and only its own cause clears it.
 
-NODE_ID = concern_needing_craftsmen_to_supervise()
+The rules are called on a business built here (`Business`, `business_review.reopen`) and on a stub game for the
+staffing-closure age and the discounted reopening fee. The whole-game scenario is test_closure_reasons_scenario.
+The loss-making and creditor-seizure closures (reasons "loss_making" and "creditor_seizure") are held by
+test_business_review (LossRuleIsOneRule, the seizure tests)."""
+QUICK_TOPIC = True
 
+import types
+import unittest
 
-def staffed_sim():
-	# A running concern that needs a craftsman to supervise it.
-	test_sim = unopened_sim(capital=1_000_000.0)
-	test_sim.done.update(NODES[NODE_ID]["pre"])
-	test_sim.done.add(NODE_ID)
-	test_sim._done_changed()
-	test_sim.employees["artisan"] = 6.0
-	test_sim.labour._resync_pools()
-	opened, reason = test_sim.open_venture(NODE_ID)
-	check("set-up: the fixture's founder can afford to open the concern", opened, reason)
-	return test_sim
+from sim.agents import business_review
+from sim.agents.api import Business
+from sim.engine.projects import ProjectsMixin
+from sim.engine.projects_staffing import StaffingMixin
+from sim.engine.projects_venture_quotes import VentureQuotesMixin
 
-
-def staff_close(test_sim):
-	test_sim.employees["artisan"] = 0.0
-	test_sim.labour._resync_pools()
-	closed = test_sim.close_unstaffed_ventures(test_sim.year)
-	test_sim.employees["artisan"] = 6.0
-	test_sim.labour._resync_pools()
-	return closed
+STAFF = business_review.STAFF_SHORT
+MANUAL = StaffingMixin.CLOSED_BY_CHOICE
 
 
-def restore_price(test_sim):
-	before = test_sim.capital
-	ok, message = test_sim.restore_work(NODE_ID)
-	return ok, message, before - test_sim.capital
+def a_business_running(*entry_keys):
+	return Business.running(entry_keys, opened_year=0)
 
 
-def age_years(test_sim, years):
-	test_sim.state.scenario.year += years
+class ClosureRecord(unittest.TestCase):
+
+	def test_a_closure_records_its_reason_and_year(self):
+		business = a_business_running("mill")
+		business.mothball("mill", 40, STAFF)
+		self.assertEqual(business.closures()["mill"], {"reason": STAFF, "year": 40})
+
+	def test_restoring_clears_the_record_so_a_later_manual_closure_has_its_own_year(self):
+		business = a_business_running("mill")
+		business.mothball("mill", 40, STAFF)
+		business.restore("mill")
+		self.assertNotIn("mill", business.closures())
+		business.mothball("mill", 70, MANUAL)
+		self.assertEqual(business.closures()["mill"], {"reason": MANUAL, "year": 70})
+
+	def test_only_the_reason_that_resolves_a_closure_clears_it(self):
+		business = a_business_running("mill")
+		business.mothball("mill", 40, MANUAL)
+		self.assertFalse(business.forget_reason("mill", STAFF))
+		self.assertEqual(business.closures()["mill"]["reason"], MANUAL)
+		self.assertTrue(business.forget_reason("mill", MANUAL))
+		self.assertNotIn("mill", business.closures())
+
+	def test_clearing_with_no_reason_removes_whatever_closure_there_is(self):
+		business = a_business_running("mill")
+		business.mothball("mill", 40, STAFF)
+		self.assertTrue(business.forget_reason("mill"))
+		self.assertNotIn("mill", business.closures())
+
+	def test_a_running_plant_has_no_closure_record(self):
+		business = a_business_running("mill")
+		self.assertFalse(business.forget_reason("mill"))
+		self.assertNotIn("mill", business.closures())
+
+	def test_opening_a_shut_plant_brings_it_back_and_clears_its_record(self):
+		business = a_business_running("mill")
+		business.mothball("mill", 40, STAFF)
+		business.open_plant("mill", 50)
+		self.assertEqual(business.state_of("mill"), "operating")
+		self.assertNotIn("mill", business.closures())
 
 
-# --- restoring after a staffing closure clears it, so a later manual
-# mothball does not inherit the old staffing age
-s_stale = staffed_sim()
-check("set-up: losing the keeper closes the concern for staffing",
-      staff_close(s_stale) == [NODE_ID])
-check("the staffing closure names its reason",
-      (s_stale.closure_of(NODE_ID) or {}).get("reason") == "staff", s_stale.closure_of(NODE_ID))
-ok_first, _, first_price = restore_price(s_stale)
-check("restoring it works", ok_first)
-check("restoring clears the staffing closure", s_stale.closure_of(NODE_ID) is None
-      and NODE_ID not in s_stale.shut_for_staff, s_stale.shut_for_staff)
-age_years(s_stale, 30)
-s_stale.mothball_work(NODE_ID)
-check("a manual mothball records a manual closure with its own year",
-      s_stale.closure_of(NODE_ID) == {"reason": "manual", "year": s_stale.year},
-      s_stale.closure_of(NODE_ID))
-ok_again, message_again, _ = restore_price(s_stale)
-# presentation: the restore message must not blame an old closure
-check("restoring a manual mothball does not blame an old staffing closure",
-      ok_again and "staffing" not in message_again and "years" not in message_again,
-      message_again)
+class ReopeningAnswersOnlyStaffingClosures(unittest.TestCase):
 
-# --- a manual mothball right after a staffing restore gets no staffing discount
-s_fresh = staffed_sim()
-s_fresh.mothball_work(NODE_ID)
-_, _, manual_price = restore_price(s_fresh)
-s_quick = staffed_sim()
-staff_close(s_quick)
-restore_price(s_quick)
-s_quick.mothball_work(NODE_ID)
-_, _, quick_price = restore_price(s_quick)
-check("a manual mothball right after a staffing restore pays the same as any manual one",
-      abs(quick_price - manual_price) < 1e-6, (quick_price, manual_price))
-check("...while a real staffing closure is discounted against it",
-      first_price < manual_price, (first_price, manual_price))
+	class Owner:
+		"""An owner that can staff whatever it is asked about."""
 
-# --- the automatic reopen only answers staffing closures
-s_manual = staffed_sim()
-staff_close(s_manual)
-restore_price(s_manual)
-s_manual.mothball_work(NODE_ID)
-check("restaffing does not reopen a work the player shut on purpose",
-      s_manual.reopen_restaffed_ventures(s_manual.year) == []
-      and NODE_ID in s_manual.mothballed, s_manual.closure_of(NODE_ID))
+		def reopening_order(self, entry_keys, _world):
+			return sorted(entry_keys)
 
-# --- a closure is only cleared by the reason that resolves it
-check("clearing a staffing closure leaves a manual closure alone",
-      s_manual.clear_closure(NODE_ID, "staff") is False
-      and s_manual.closure_of(NODE_ID)["reason"] == "manual")
-check("clearing with no reason removes whatever closure there is",
-      s_manual.clear_closure(NODE_ID) is True and s_manual.closure_of(NODE_ID) is None)
+		def reopens_staffed_plant(self, _entry_key, _world):
+			return True
 
-# --- opening it directly also clears the closure
-s_open = staffed_sim()
-staff_close(s_open)
-ok_open, _ = s_open.open_venture(NODE_ID)
-check("opening a staffing-closed concern clears its closure",
-      ok_open and s_open.closure_of(NODE_ID) is None)
+	def test_a_work_shut_for_want_of_staff_is_reopened(self):
+		business = a_business_running("mill")
+		business.mothball("mill", 40, STAFF)
+		self.assertEqual(business_review.reopen(business, self.Owner(), None), ["mill"])
 
-# --- a record with no closed work behind it does not count
-s_orphan = staffed_sim()
-check("a closure record for a work that is running is ignored",
-      s_orphan.closure_of(NODE_ID) is None)
+	def test_a_work_the_player_shut_on_purpose_is_never_reopened_on_its_own(self):
+		business = a_business_running("mill")
+		business.mothball("mill", 40, MANUAL)
+		self.assertEqual(business_review.reopen(business, self.Owner(), None), [])
 
-# --- save/load round-trips the closure
-s_save = staffed_sim()
-staff_close(s_save)
-save_path = os.path.join(HERE, "_test_closure_reasons_save.json")
-S.save_state(s_save, save_path)
-s_loaded = S.Sim(NODES, ORDER, random.Random(1), events=False, manual=True,
-                 civ=S.load_civ("rome_100ad"))
-s_loaded.goal, s_loaded.done_year = GOAL, {}
-S.load_state(s_loaded, save_path)
-os.remove(save_path)
-check("a closure's reason and year survive save and load",
-      s_loaded.closure_of(NODE_ID) == s_save.closure_of(NODE_ID)
-      and s_loaded.closure_of(NODE_ID)["reason"] == "staff", s_loaded.closure_of(NODE_ID))
 
-# --- loss-making shedding from economy_credit.shed_loss_makers (easier to test)
-# shed_loss_makers sheds loss-makers when capital < 0
-s_auto_shed = unopened_sim(capital=hours_money(202000), manual=False)  # Start with money to open
-_loss_id = "academy_network"  # loss-making institution: earns nothing, costs upkeep
-s_auto_shed.done.update(NODES[_loss_id]["pre"])
-s_auto_shed.done.add(_loss_id)
-s_auto_shed._done_changed()
-s_auto_shed.open_venture(_loss_id)  # Now it's in operating
-s_auto_shed.state.household.capital = -hours_money(101000)  # Make household insolvent
-s_auto_shed.revenue = lambda: 0.0   # nothing coming in, so the works are what bleeds
-s_auto_shed.shed_loss_makers(s_auto_shed.state.scenario.year)
-check("shed_loss_makers closes loss-making works with loss_making reason",
-      _loss_id in s_auto_shed.mothballed and (s_auto_shed.closure_of(_loss_id) or {}).get("reason") == "loss_making",
-      s_auto_shed.closure_of(_loss_id))
+class StaffingClosureDiscount(unittest.TestCase):
+	"""A concern the staffing rule shut within the grace window keeps its premises and costs a fraction to reopen."""
 
-# --- creditor seizure from economy_credit.enforce_credit_limit
-# Need a loss-making node to be seized
-s_seiz = unopened_sim(capital=hours_money(202000))
-_seiz_id = "academy_network"  # loss-making institution: earns nothing, costs upkeep
-s_seiz.done.update(NODES[_seiz_id]["pre"])
-s_seiz.done.add(_seiz_id)
-s_seiz._done_changed()
-s_seiz.open_venture(_seiz_id)  # Now it's in operating
-s_seiz.state.household.capital = -hours_money(4030000)  # Make deeply insolvent, exceeding credit limit
-s_seiz.enforce_credit_limit(s_seiz.year)
-check("enforce_credit_limit seizes works with creditor_seizure reason",
-      _seiz_id in s_seiz.mothballed and (s_seiz.closure_of(_seiz_id) or {}).get("reason") == "creditor_seizure",
-      s_seiz.closure_of(_seiz_id))
+	GRACE = ProjectsMixin.STAFF_CLOSURE_GRACE
+	DISCOUNT = ProjectsMixin.STAFF_CLOSURE_DISCOUNT
+
+	def game_with(self, reason, shut_year, year):
+		business = a_business_running("mill")
+		business.mothball("mill", shut_year, reason)
+		game = types.SimpleNamespace(
+			state=types.SimpleNamespace(scenario=types.SimpleNamespace(year=year),
+			                            projects=types.SimpleNamespace(mothballed=business.mothballed(), closures=business.closures())),
+			CLOSED_FOR_STAFF=StaffingMixin.CLOSED_FOR_STAFF, STAFF_CLOSURE_GRACE=self.GRACE,
+			STAFF_CLOSURE_DISCOUNT=self.DISCOUNT, is_venture=lambda _node: True, venture_capex=lambda _node: 1000.0)
+		game.closure_of = lambda node: StaffingMixin.closure_of(game, node)
+		game.staff_closure_age = lambda node: StaffingMixin.staff_closure_age(game, node)
+		return game
+
+	def fee(self, reason, shut_year, year):
+		game = self.game_with(reason, shut_year, year)
+		return VentureQuotesMixin.reopen_fee(game, "mill")
+
+	def test_a_staffing_closure_has_an_age_and_a_manual_one_has_none(self):
+		self.assertEqual(StaffingMixin.staff_closure_age(self.game_with(STAFF, 40, 43), "mill"), 3)
+		self.assertIsNone(StaffingMixin.staff_closure_age(self.game_with(MANUAL, 40, 43), "mill"))
+
+	def test_within_the_grace_window_reopening_costs_the_discounted_fraction(self):
+		self.assertAlmostEqual(self.fee(STAFF, 40, 40 + self.GRACE), 1000.0 * self.DISCOUNT)
+
+	def test_past_the_grace_window_reopening_costs_the_ordinary_fee(self):
+		self.assertAlmostEqual(self.fee(STAFF, 40, 40 + self.GRACE + 1), 1000.0)
+
+	def test_a_manual_closure_is_never_discounted_however_young(self):
+		self.assertAlmostEqual(self.fee(MANUAL, 40, 41), 1000.0)
+
+
+if __name__ == "__main__":
+	unittest.main()

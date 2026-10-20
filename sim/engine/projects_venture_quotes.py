@@ -1,5 +1,6 @@
 """What a concern really earns and costs, and what reopening it costs: one figure for every screen."""
-from .concern_earnings import forecast_basis, quoted_ramp, quoted_units, real_earnings
+from sim.agents.api import business_books
+from .concern_earnings import forecast_basis, quoted_ramp, quoted_units
 
 
 class VentureQuotesMixin:
@@ -16,7 +17,7 @@ class VentureQuotesMixin:
         ramp = quoted_ramp(running, fully_ramped, lambda: self.venture_ramp(node_id))
         units = quoted_units(running, node_id in self.SCALABLE_INSTITUTIONS, lambda: self.institution_units(node_id), units)
         market = self.node_output_market_factor(self.nodes[node_id])
-        return real_earnings(self.concern_takings(node_id, ramp, with_output_factor), units, market)
+        return business_books.takings_of_size(self.concern_takings(node_id, ramp, with_output_factor), units, market)
 
     def venture_forecast_basis(self, node_id):
         """What the quote of a concern's earnings stands on: `market` (the economy prices its goods) or

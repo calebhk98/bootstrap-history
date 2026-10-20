@@ -39,6 +39,8 @@ agent._country_answers = {}
 agent._stale = set()
 agent._built_from = FakeState.economy.agent_economy
 
+home_wage_before = agent.wage_per_hour(fixture.LABOURER)
+agent._answers, agent._country_answers = None, {}
 # the north's labour markets pay half as much again as the home ones did
 for key in list(economy.record.memory.wages):
     if key.endswith("work@" + fixture.NORTH_FARMS) or key.endswith("work@" + fixture.NORTH_PORT):
@@ -53,7 +55,7 @@ check("the partner wage is the one its labour markets set", abs(north_wage - set
 home_prices, north_prices = agent.answers()[0], agent.answers(fixture.NORTH)[0]
 check("a partner country's seat buys at the prices of the markets its tiles trade in",
       north_prices[fixture.GRAIN] > 0.0 and set(north_prices) <= set(home_prices) | set(north_prices), None)
-check("the home answers are not moved by the other country's wages", abs(home_wage * 1.5 - north_wage) < 1e-9, (home_wage, north_wage))
+check("the home answers are not moved by the other country's wages", abs(home_wage - home_wage_before) < 1e-9, (home_wage, home_wage_before))
 check("a country the economy does not hold is answered as the home country",
       agent.answers("elsewhere") == agent.answers() and agent.wage_per_hour(fixture.LABOURER, "elsewhere") == home_wage, None)
 check("the home answer is the same whether or not the country is named", agent.answers(setup.civ_id) is agent.answers(), None)

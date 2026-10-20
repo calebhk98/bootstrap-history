@@ -4,6 +4,10 @@ Complaints/361. Dispatch modules load by discovery, the typed parser entry is
 derived from the argument shape a command declares, the id-taking lists come
 from the registry, and every command parses its documented typed usage.
 """
+QUICK_TOPIC = True
+
+import types
+
 from .harness import *  # noqa: F401,F403
 from sim.ui.proto import command_registry as _registry
 from sim.ui.proto import dispatch as _dispatch
@@ -77,7 +81,8 @@ finally:
 # --- the help pages' hand text names only commands that exist, and the
 # command index shows each command's registered text (no hand override)
 from sim.ui.proto import help as _help
-_help_sim = sim()
+# the help pages read only the fog setting, the civilisation's name, the start year and the goal
+_help_sim = types.SimpleNamespace(fog=False, civ={"name": "Rome"}, cfg={"start_year": 100}, goal=GOAL)
 _index = _help._topic_commands(_help_sim)
 _hand_overrides = [name for name in _registry.COMMANDS
                    if _index["commands"].get(name) != _help._command_text(name, _help_sim.fog)]

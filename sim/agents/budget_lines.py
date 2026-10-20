@@ -52,7 +52,7 @@ def dole_line(world: Any) -> List[Line]:
 
 
 def navy_line(world: Any) -> List[Line]:
-	ships = world.territory().coast_km / COAST_KM_PER_SHIP
+	ships = world.government().record.levers.get("navy", world.territory().coast_km / COAST_KM_PER_SHIP)
 	if ships <= 0.0:
 		return []
 	options = [good for good in world.fleet_goods()

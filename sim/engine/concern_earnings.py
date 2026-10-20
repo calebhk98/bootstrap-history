@@ -23,11 +23,6 @@ def quoted_units(running, scalable, running_units_of, units_asked=None):
     return running_units_of() if running and scalable else 1.0
 
 
-def real_earnings(takings, units, market_factor):
-    """Takings as the ledger credits them: per unit, times the units, at the goods market's price."""
-    return takings * units * market_factor
-
-
 def output_market_factor(market_prices_goods, market_factor_of):
     """The market's price over the long-run price for a concern's goods (`market_factor_of()`); one while nobody has
     sold them, so the quote stays at long-run takings rather than at nothing."""

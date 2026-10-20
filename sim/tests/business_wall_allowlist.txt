@@ -1,6 +1,5 @@
 sim/agents/protocols.py::concern_takings
 sim/agents/protocols.py::concern_wage_bill
-sim/engine/agents_port.py::concern_staff
 sim/engine/agents_port.py::concern_takings
 sim/engine/agents_port.py::concern_wage_bill
 sim/engine/agents_port.py::entry_gross
@@ -63,7 +62,6 @@ sim/engine/projects_ventures.py::venture_capex
 sim/engine/projects_ventures.py::venture_foreman
 sim/engine/projects_ventures.py::venture_foremen_used
 sim/engine/projects_ventures.py::venture_hands
-sim/engine/projects_ventures.py::venture_hands_founder_staffed
 sim/engine/projects_ventures.py::venture_staff_used
 sim/engine/projects_ventures.py::venture_staff_who_is_watching_what
 sim/engine/society_diffusion.py::diffusion_index

@@ -38,6 +38,7 @@ from sim.world.shared_constants import (
 from sim.unit_conversions import PERCENT_SCALE
 
 
+from .territory_required import require_territory
 from .economy import EconomyMixin
 from .node_rederive import NodeRederiveMixin
 from .market_clearing import MarketClearingMixin
@@ -397,9 +398,7 @@ class Sim(ModStoresMixin, RealPriceRatiosMixin, CoinRevaluationMixin, MechanicsM
         # population at reference soil, on the best ground the held tiles
         # offer; later clearing works down the same best-first ladder.
         held_tiles = tiles_held(self.civ, self.world_map)
-        if not held_tiles:
-            raise ValueError("civilisation %r holds no tiles: the agent economy needs a territory to run its markets on; "
-                             "name its starting claim in `home_tiles`" % (self.civ.get("id"),))
+        require_territory(self.civ, held_tiles)
         territory = land.territory_cropland(self.farm_sites())
         self._farm_ladder = territory.ladder
         self._farm_arable_ceiling = territory.cropped_hectares

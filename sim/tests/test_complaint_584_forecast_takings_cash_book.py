@@ -6,7 +6,10 @@ QUICK_TOPIC = True
 
 import unittest
 
+from sim.agents.api import business_books
 from sim.engine import concern_earnings as earnings
+
+takings_of_size = business_books.takings_of_size
 
 
 class ForecastBasisTests(unittest.TestCase):
@@ -22,7 +25,7 @@ class NoMarketYetTests(unittest.TestCase):
         factor = earnings.output_market_factor(False, lambda: self.fail("no market to read"))
         takings = earnings.takings_at(500.0, 1.0, 1.0, 1.0, 1.0, 1.0)
         self.assertEqual(factor, 1.0)
-        self.assertEqual(earnings.real_earnings(takings, 1.0, factor), takings)
+        self.assertEqual(takings_of_size(takings, 1.0, factor), takings)
         self.assertGreater(takings, 0.0)
 
     def test_once_the_goods_sell_the_markets_factor_applies(self):

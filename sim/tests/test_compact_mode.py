@@ -1,4 +1,5 @@
-"""The agent-oriented compact mode: Complaints/reports/playthrough-review-han-china-100-to-400ad.md section 1.
+"""The agent-oriented compact mode (the parser, the enrichers on synthetic replies, and the help text; the replies
+of a live game are test_compact_mode_scenario): Complaints/reports/playthrough-review-han-china-100-to-400ad.md section 1.
 
 A player of this game who is itself an AI agent asked for "an explicit
 agent-oriented compact mode that can return highly structured state without
@@ -21,10 +22,13 @@ sim/ui/proto/*.py:
 
 The compact agent output mode keeps reason-carrying prose; the mode-off path is byte-identical.
 """
+QUICK_TOPIC = True
+
 import json
 import os
 import subprocess
 import sys
+import types
 
 from .harness import *  # noqa: F401,F403
 
@@ -266,65 +270,6 @@ check("compact_stuck keeps the counts and the cheapest start",
 
 
 # ===========================================================================
-# PART 3: end-to-end through the real dispatcher on a live Sim, including the
-# size claim: compact is much smaller than json and than the text screen.
-# ===========================================================================
-
-_ptest_sim = sim()
-_ptest_blocked = next(node_id for node_id in ORDER
-                      if node_id not in _ptest_sim.done and not _ptest_sim.can_start(node_id))
-_ptest_why_compact = S._agent_dispatch(
-    _ptest_sim, NODES, {"cmd": "why", "id": _ptest_blocked, "compact": True})
-check("live `why` compact says blocked:true and names what blocks it",
-      _ptest_why_compact.get("blocked") is True and _ptest_why_compact.get("blocked_by"),
-      _ptest_why_compact)
-
-_ptest_stuck_plain = S._agent_dispatch(_ptest_sim, NODES, {"cmd": "stuck"})
-_ptest_stuck_compact = S._agent_dispatch(_ptest_sim, NODES, {"cmd": "stuck", "compact": True})
-check("live `stuck` compact has one blocker per reason the plain reply gave",
-      len(_ptest_stuck_compact["blockers"])
-      == len(_ptest_stuck_plain["what_is_holding_you_up"]), _ptest_stuck_compact)
-check("live `stuck` compact is smaller than `stuck json`",
-      len(json.dumps(_ptest_stuck_compact)) < len(json.dumps(_ptest_stuck_plain)),
-      (len(json.dumps(_ptest_stuck_compact)), len(json.dumps(_ptest_stuck_plain))))
-
-_size_sim = sim()
-_started = next(node_id for node_id in ORDER if _size_sim.can_start(node_id))
-_size_sim.start_project(_started)
-_state_json = S._agent_dispatch(_size_sim, NODES, {"cmd": "state", "json": True})
-_state_compact = S._agent_dispatch(_size_sim, NODES,
-                                   {"cmd": "state", "json": True, "compact": True})
-_json_bytes = len(json.dumps(_state_json))
-_compact_bytes = len(json.dumps(_state_compact))
-_text_bytes = len(_RSTATE(_state_json))
-check("live `state compact` is far smaller than `state json` (under a third)",
-      _compact_bytes * 3 < _json_bytes, (_compact_bytes, _json_bytes))
-check("live `state compact` is smaller than the text screen",
-      _compact_bytes < _text_bytes, (_compact_bytes, _text_bytes))
-_fields_needed = ("year", "money", "net_per_year", "founder_hours_free", "projects",
-                  "concerns", "standing", "danger", "nearest_goal_blocker")
-check("live `state compact` has every field a turn needs",
-      all(field in _state_compact for field in _fields_needed),
-      sorted(_state_compact))
-check("live `state compact` lists the project just started, with a blocker key",
-      any(row["id"] == _started and "blocker" in row for row in _state_compact["projects"]),
-      _state_compact["projects"])
-check("live `state compact` names the nearest goal blocker",
-      isinstance(_state_compact["nearest_goal_blocker"], dict)
-      and "id" in _state_compact["nearest_goal_blocker"],
-      _state_compact["nearest_goal_blocker"])
-check("live `state compact` money and net match the full reply",
-      _state_compact["money"] == _state_json["capital"]
-      and _state_compact["net_per_year"] == _state_json["net_per_year"])
-
-_typed_cmd, _typed_err = _PT("why %s compact" % _ptest_blocked)
-check("typed 'why <id> compact' parses with no error", _typed_err is None, _typed_err)
-_typed_resp = S._agent_dispatch(sim(), NODES, _typed_cmd)
-check("typed 'why <id> compact' end to end gives the same blocked_by",
-      _typed_resp.get("blocked_by") == _ptest_why_compact.get("blocked_by"), _typed_resp)
-
-
-# ===========================================================================
 # PART 4: dispatch.py applies compact mode LAST, after both localisation
 # passes - a structural check (source order), not a behavioural sample, so
 # it holds regardless of which civilisation a future check happens to run
@@ -336,6 +281,7 @@ check("typed 'why <id> compact' end to end gives the same blocked_by",
 # ===========================================================================
 import inspect
 from sim.ui.proto import dispatch as _dispatch_mod
+from sim.ui.proto import help as _help_module
 
 _dispatch_src = inspect.getsource(_dispatch_mod._agent_reply)
 _i_money = _dispatch_src.index("_localise_money")
@@ -352,7 +298,7 @@ check("_agent_reply applies compact enrichment after BOTH localisation "
 # feature has to actually be discoverable from inside the game, or a
 # player typing 'help commands' - the one place this game's own help
 # system tells a newcomer to look - would never learn either word exists.
-_help_commands = S._agent_help(sim(), "commands")["commands"]
+_help_commands = _help_module._topic_commands(types.SimpleNamespace(fog=False))["commands"]
 check("'help commands' documents the new json/compact words, so a player "
       "typing 'help' can actually discover them",
       any("compact" in key or "json" in key for key in _help_commands),

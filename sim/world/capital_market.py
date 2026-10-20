@@ -5,6 +5,8 @@ demanded to funds held; the rate is the civilisation's starting rate (an initial
 how far that ratio has moved from its starting value; a borrower pays that rate plus a premium for its
 own arrears, less a discount for its own standing.
 """
+from typing import Optional
+
 from sim.constants import declare
 
 RATE_ELASTICITY = declare(
@@ -45,6 +47,12 @@ def bounded_rate(starting_rate: float, rate: float) -> float:
     """A market rate held under the ceiling: however keen the queue of borrowers, lenders' own risk and the
     borrowers' turn to other means stop the rate there."""
     return min(rate, starting_rate * RATE_CEILING_SHARE)
+
+
+def market_rate_answered(starting_rate: float, agent_rate: Optional[float]) -> float:
+    """The market rate: the agent credit market's answer held under the ceiling, or the starting rate while
+    that market has not yet answered."""
+    return starting_rate if agent_rate is None else bounded_rate(starting_rate, agent_rate)
 
 
 def capital_recovery_factor(rate: float, life_years: float) -> float:

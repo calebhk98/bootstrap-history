@@ -5,8 +5,8 @@ models, in coin or in kind (`revenue.py`, `government_stores.py`); spending is w
 keeps up (`budget.py`: army, officials, roads, public buildings, court, dole, works, collection, campaign, donative,
 navy), paid from the purse. A deficit comes out of the reserve, then is
 borrowed up to its credit ceiling (only once it holds the technology of public
-debt), and only then is every line cut by the same share. What it could not
-pay is what it seeks from the taxpayers it can see. What is left of the purse
+debt). What it still lacks it meets by a choice among borrowing, cutting lines, deferring
+pay, debasing, levying and demanding in kind (`fiscal_response.py`), as its policy picks. What is left of the purse
 funds copying know-how it values by the gains its civilisation's priorities
 weight (military, infrastructure, prestige, ...), through its policy.
 """
@@ -18,6 +18,7 @@ from .government_coinage import CoinageMixin
 from .government_enterprises import EnterpriseMixin
 from .government_corvee import CorveeMixin
 from .government_credit import CreditRecordMixin
+from .government_fiscal import FiscalMixin
 from .government_granary import GranaryMixin
 from .government_markets import MarketsMixin
 from .government_stores import StoresMixin
@@ -28,7 +29,7 @@ from .tuning_spending import ACCESSION_PROBABILITY_PER_YEAR, PUBLIC_BUILDING_LIF
 from .values import invention_gains, weighted_gain
 
 
-class Government(CorveeMixin, CreditRecordMixin, CoinageMixin, EnterpriseMixin, GranaryMixin, MarketsMixin, StoresMixin, SurplusMixin, RecordedActor):
+class Government(CorveeMixin, CreditRecordMixin, FiscalMixin, CoinageMixin, EnterpriseMixin, GranaryMixin, MarketsMixin, StoresMixin, SurplusMixin, RecordedActor):
 	kind = "government"
 
 	@property
@@ -119,7 +120,7 @@ class Government(CorveeMixin, CreditRecordMixin, CoinageMixin, EnterpriseMixin, 
 		self.receive_revenue(world)
 		arrears.settle(self, world)
 		conscripts = self.conscript_years(world)
-		wanted = max(world.army_wanted(), conscripts)
+		wanted = max(budget.army_wanted(world), conscripts)
 		soldiers = self.record.army if self.record.army > 0.0 else wanted
 		others = headcount.people_in(budget.standing_lines(world, 0.0))
 		soldiers, wanted = headcount.checked_army(world, self.record, wanted, soldiers, others)
@@ -130,11 +131,11 @@ class Government(CorveeMixin, CreditRecordMixin, CoinageMixin, EnterpriseMixin, 
 		self.record.material_need = state_enterprises.needs_of(standing)
 		lines = self.draw_stores(standing, world)
 		self.keep_granary(world)
-		share = budget.funded_share(sum(line.money for line in lines), self.money + self.credit_ceiling(world))
+		share = self.meet_shortfall(lines, world)
 		self.record.army = budget.army_next_year(soldiers, wanted, share)
 		self.record.need = {line.name: line.money for line in lines}
 		self.record.unfunded = {line.name: line.money * (1.0 - share) for line in lines}
-		arrears.owe(self.record, lines, share)
+		arrears.owe(self.record, lines, share, self.deferred_fraction(lines, share))
 		state_works.wear(state_works.held(world), share, PUBLIC_BUILDING_LIFE_YEARS)
 		if any(line.name == "donative" for line in lines):
 			self.record.accession_due = False
@@ -171,7 +172,7 @@ class Government(CorveeMixin, CreditRecordMixin, CoinageMixin, EnterpriseMixin, 
 		self.record.levy_base = sum(world.notice_over(scale) * income for scale, income in payers)
 		kinds = {line.name: line.kind for line in lines}
 		self.record.levy_requisition_rate, self.record.levy_office_rate = budget.levy_rates(
-			self.record.unfunded, kinds, self.record.levy_base)
+			self.levy_sought(), kinds, self.record.levy_base)
 
 	def accede(self, world: Any) -> None:
 		"""A new ruler accedes with a yearly chance, and owes the army a donative until it is paid."""
@@ -186,7 +187,6 @@ class Government(CorveeMixin, CreditRecordMixin, CoinageMixin, EnterpriseMixin, 
 		self.purses.redeem_bonds(self.account_id)
 		self.accede(world)
 		lines, share = self.pay_standing_need(world)
-		self.decide_debasement(world)
 		self.pay_patron(share, world)
 		self.act(world)
 		self.run_enterprises(world)

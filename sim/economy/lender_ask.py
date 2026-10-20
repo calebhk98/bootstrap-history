@@ -1,18 +1,16 @@
 """The lowest rate a lender takes: the best return among its alternatives, plus the loss it expects.
 
 Alternatives are its own time preference (on top of the inflation it expects), the yield of land it could buy
-(rent over title price), and the yield of public debt where a state sells it. The expected loss is the share of
-what the lender has put out that it has lost to default, read from its own record. Nothing here is typed per
+(rent over title price), and the yield of public debt where a state sells it. The expected loss is the lender's
+remembered yearly loss rate on what it has put out (loss_memory), read from its own record. Nothing here is typed per
 civilisation: every input is a lender's own state or a market figure.
 """
 from typing import Optional
 
 
-def loss_rate(losses: float, claims: float) -> float:
-    """The share of the lender's credit exposure (what it lost plus what it is still owed) that went bad."""
-    if losses <= 0.0:
-        return 0.0
-    return losses / (losses + max(0.0, claims))
+def loss_rate(remembered_rate: float) -> float:
+    """The loss the lender expects per year of exposure: its remembered rate (loss_memory), which ages."""
+    return min(1.0, max(0.0, remembered_rate))
 
 
 def land_yield(rent_per_hectare: float, price_per_hectare: Optional[float]) -> float:

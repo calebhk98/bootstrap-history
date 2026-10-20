@@ -1,33 +1,33 @@
-"""Complaint 273: the yearly cost of keeping the household's coin under guard is charged to its purse and
-shows in the cash ledger as its own cause, in proportion to the coin held."""
+"""Scenario for Complaint 273 in a whole game: a step charges the household's purse for keeping its coin under guard, as
+its own cause in the cash ledger, and the money and state screens report the hoard's mass. The rules (the mass, the
+keeping cost) are in test_coin_hoard_mass."""
 from .harness import *  # noqa: F401,F403
 
 from sim.engine import cash_book
 
 CAUSE = "keeping coin under guard"
 
-
-def stepped(capital):
-    """(money the ledger charged for keeping coin in one step, what the hoard owed each time it was asked)."""
-    game = sim(capital=capital, manual=False, events=False)
-    owed = []
-    hoard = game.coin_hoard
-
-    def watched():
-        report = hoard()
-        owed.append(report["keeping_cost_per_year"])
-        return report
-    game.coin_hoard = watched
-    game.step()
-    return -cash_book.causes_since(game, None).get(CAUSE, 0.0), owed
+game = sim(capital=1.0e6, manual=False, events=False)
+owed = []
+hoard = game.coin_hoard
 
 
-rich_paid, rich_owed = stepped(1.0e6)
-poor_owes = sim(capital=1.0e3, manual=False, events=False).coin_hoard()["keeping_cost_per_year"]
-check("the cash ledger names the cost of keeping coin", rich_paid > 0.0, rich_paid)
-check("the charge is what the hoard owed when the year's money was struck",
-      any(abs(rich_paid - amount) <= 1e-9 * max(1.0, amount) for amount in rich_owed), (rich_paid, rich_owed))
-check("a larger hoard is charged more", rich_paid > poor_owes > 0.0, (poor_owes, rich_paid))
+def watched():
+    report = hoard()
+    owed.append(report["keeping_cost_per_year"])
+    return report
 
-debt_paid, _debt_owed = stepped(-1.0e4)
-check("a purse in debt holds no coin and is charged nothing for it", debt_paid == 0.0, debt_paid)
+
+game.coin_hoard = watched
+game.step()
+paid = -cash_book.causes_since(game, None).get(CAUSE, 0.0)
+check("scenario: a step charges the household what the hoard owed, under its own cause in the cash ledger",
+      paid > 0.0 and any(abs(paid - amount) <= 1e-9 * max(1.0, amount) for amount in owed), (paid, owed))
+
+replies, _stdout, _code = proto([{"cmd": "money"}, {"cmd": "state"}], civ="han_china_100ad")
+money_reply, state_reply = replies[-2], replies[-1]
+opening = sim(civ="han_china_100ad").coin_hoard_report()
+check("scenario: the money and state screens report the hoard's mass",
+      money_reply.get("coin_hoard", {}).get("tonnes") == opening["tonnes"]
+      and state_reply.get("coin_hoard", {}).get("tonnes") == opening["tonnes"],
+      (money_reply.get("coin_hoard"), state_reply.get("coin_hoard")))

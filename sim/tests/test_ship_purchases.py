@@ -58,6 +58,7 @@ class ShipPurchases(unittest.TestCase):
             for good, quantity in recipe.inputs.items()])
         purchases = []
         world = SimpleNamespace(
+            government=lambda: SimpleNamespace(record=SimpleNamespace(levers={})),
             territory=lambda: SimpleNamespace(coast_km=100.0),
             fleet_goods=lambda: [{"material": "warship", "life": 20.0,
                                   "held": 0.0, "crew": entry["naval_crew"]}],
@@ -83,6 +84,7 @@ class ShipPurchases(unittest.TestCase):
 
     def test_navy_buys_missing_hulls_and_keeps_only_the_crew_on_payroll(self):
         world = SimpleNamespace(
+            government=lambda: SimpleNamespace(record=SimpleNamespace(levers={})),
             territory=lambda: SimpleNamespace(coast_km=100.0),
             fleet_goods=lambda: [{"material": "test_hull", "life": 20.0,
                                   "held": 0.0, "crew": {"sailor": 60.0}}],
