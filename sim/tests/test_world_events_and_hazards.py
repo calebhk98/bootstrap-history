@@ -11,6 +11,7 @@ from sim.agents.business_plant import Plant
 from sim.agents.api import seed_strata
 from sim.engine.agents_port import SimWorld
 from sim.engine.agents_port_cast import seed_opening_cast
+from sim.agents.api import cast_from_civilisations, seed_cast
 from sim.engine import invariants, world_events, world_hazard_data, world_hazards, year_run
 from sim.engine.saveload import load_state, save_state
 
@@ -25,6 +26,9 @@ def two_country_game():
     game.partners_in_agent_economy = lambda: [PARTNER]
     game.goal, game.done_year = GOAL, {}
     seed_opening_cast(game)
+    # the harness leaves out a partner the agent economy holds, and the opening cast is then home alone: seed the partner's
+    home_country, entries, profiles = cast_from_civilisations(game.start_civ, [S.load_civ(PARTNER)])
+    seed_cast(game.actors, home_country, entries, profiles)
     seed_strata(game.actors, SimWorld(game))
     return game
 
