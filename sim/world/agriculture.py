@@ -730,7 +730,11 @@ Rotation = collections.namedtuple("Rotation", [
                                           # the field, whether from a
                                           # legume fallow, manure, guano or
                                           # a river's silt.
-])
+    "legume_share_of_holding",           # share of the holding in grain
+                                          # legumes each year; the soil
+                                          # nitrogen stock gains their net
+                                          # fixation (soil_nutrients.py)
+], defaults=(0.0,))
 
 Toolkit = collections.namedtuple("Toolkit", [
     "name",
@@ -1163,6 +1167,15 @@ THREE_FIELD_FALLOW_SHARE_OF_HOLDING = declare(
         "altogether - the middle point on the same fallow axis two-field "
         "and Nile flood-recession farming sit at the ends of.")
 
+THREE_FIELD_LEGUME_SHARE_OF_HOLDING = declare(
+    "THREE_FIELD_LEGUME_SHARE_OF_HOLDING", 1.0 / 6.0,
+    kind="engineering_estimate",
+    unit="fraction of holding in grain legumes in any one year (dimensionless)",
+    source="The spring field of the three-field system (a third of the holding) carried oats, barley, peas, beans "
+           "and vetch; taking half of it as legumes is recalled, not measured",
+    confidence="D",
+    why="Feeds the soil nitrogen stock's legume gain (soil_nutrients.py).")
+
 THREE_FIELD_SOIL_FERTILITY_YIELD_MULTIPLIER = declare(
     "THREE_FIELD_SOIL_FERTILITY_YIELD_MULTIPLIER", 1.15,
     kind="temporary_heuristic",
@@ -1218,7 +1231,8 @@ TWO_FIELD = DEFAULT_ROTATION
 THREE_FIELD = Rotation(
     name="three_field",
     fallow_share_of_holding=THREE_FIELD_FALLOW_SHARE_OF_HOLDING,
-    soil_fertility_yield_multiplier=THREE_FIELD_SOIL_FERTILITY_YIELD_MULTIPLIER)
+    soil_fertility_yield_multiplier=THREE_FIELD_SOIL_FERTILITY_YIELD_MULTIPLIER,
+    legume_share_of_holding=THREE_FIELD_LEGUME_SHARE_OF_HOLDING)
 
 NILE_FLOOD_RECESSION = Rotation(
     name="nile_flood_recession",

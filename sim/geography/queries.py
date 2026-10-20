@@ -48,18 +48,21 @@ def layer_value(tile_id: str, layer_id: str, world_map: Optional[WorldMap] = Non
 
 def food_potential(tile_id: str, technique_factors: Optional[Mapping[str, float]] = None,
                    world_map: Optional[WorldMap] = None, wild_stock: Optional[Mapping[str, Any]] = None,
-                   crop_technique: Optional[CropTechnique] = None) -> Dict[str, Any]:
+                   crop_technique: Optional[CropTechnique] = None,
+                   nutrient_factors: Optional[Mapping[str, float]] = None) -> Dict[str, Any]:
     """Sustainable food energy of a tile by source, and the people it feeds. `wild_stock` is the game's
     {tile: {species: share of carrying capacity left}}; a missing entry is a full stock. `crop_technique` is what
-    the farm model says a cropped hectare gives; without it the tile's crops count for nothing."""
+    the farm model says a cropped hectare gives; without it the tile's crops count for nothing. `nutrient_factors` is
+    {tile: yield factor of its soil nitrogen stock}; a missing tile is native soil."""
     return food_capacity.food_potential(_map(world_map), tile_id, dict(technique_factors or {}) or None, wild_stock,
-                                        crop_technique)
+                                        crop_technique, nutrient_factors)
 
 
-def crop_site(tile_id: str, open_field_cropped_share: float, world_map: Optional[WorldMap] = None) -> CropSite:
+def crop_site(tile_id: str, open_field_cropped_share: float, world_map: Optional[WorldMap] = None,
+              nutrient_factor: float = 1.0) -> CropSite:
     """The tile's cropland: arable hectares, hectares cropped in a year under a rotation that crops
     `open_field_cropped_share` of open fields, and the mean yield of a cropped hectare against the reference field."""
-    return food_crops.crop_site(_map(world_map), tile_id, open_field_cropped_share)
+    return food_crops.crop_site(_map(world_map), tile_id, open_field_cropped_share, nutrient_factor)
 
 
 def endemic_animal_loss(tile_id: str, species: Iterable[str], world_map: Optional[WorldMap] = None) -> float:

@@ -46,6 +46,7 @@ from .food_eaten import FoodEatenMixin
 from .demographic_recovery import DemographicRecoveryMixin
 from .regional_people import RegionalPeopleMixin
 from .food_supply import FoodSupplyMixin
+from .soil_nitrogen_year import SoilNitrogenMixin
 from .living_stock import LivingStockMixin
 from .living_stock_opening import LivingStockOpeningMixin
 from .coin_hoard import CoinHoardMixin
@@ -250,7 +251,7 @@ FARM_WEATHER_POOLED_CELL_CAP = declare(
 class Sim(ModStoresMixin, RealPriceRatiosMixin, CoinRevaluationMixin, PartnerCivsMixin, WageMarketRatiosMixin, MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMixin, MarketDemandMixin, RealOutputMixin, ConcernVolumeMixin, TechniquesInUseMixin, IndustryDepthMixin, IndustryConcernMixin, IncumbentPricesMixin, ProducerCostsMixin, FogMixin, GeographyPortMixin, DiseasePortMixin, EpidemicStaffMixin, LabourPortMixin,
           ProjectsMixin, SeatMixin, SeatRunMixin, SeatBuildsMixin, SeatSightMixin, ShockYearMixin, WaysMixin, WorksMixin, HeldWorksMixin, ActionLossMixin, SocietyMixin, ActorsMixin, DisclosureMixin, FounderSalesMixin, SeatDealingsMixin, InterestGroupsMixin, BenefactionsMixin, RouteDuesMixin, ForwardingPropertiesMixin, GoalsMixin,
           StepPhasesMixin, LivingStockMixin, LivingStockOpeningMixin, CoinHoardMixin, CoinCarriageMixin, TheftChargeMixin,
-          LivingStockTradeMixin, LivingStockSmugglingMixin, LivingStockYearlyMixin, FoodSupplyMixin, FoodEatenMixin, DemographicRecoveryMixin, RegionalPeopleMixin, DefenceStoresMixin, EconomyPortMixin, NodeRederiveMixin):
+          LivingStockTradeMixin, LivingStockSmugglingMixin, LivingStockYearlyMixin, FoodSupplyMixin, SoilNitrogenMixin, FoodEatenMixin, DemographicRecoveryMixin, RegionalPeopleMixin, DefenceStoresMixin, EconomyPortMixin, NodeRederiveMixin):
     STATE_CAPACITY_DEFAULT = declare(
         "STATE_CAPACITY_DEFAULT", 0.7, kind="temporary_heuristic",
         unit="dimensionless (0..1)", source=None, confidence="D",
