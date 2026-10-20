@@ -70,6 +70,15 @@ class ImportCostTests(unittest.TestCase):
         held.wages["dale"]["digger"] = 0.1       # a glut next door: the move is cheap, but the ask is one an hour
         self.assertGreaterEqual(vale_wage(held, {"vale": [Route("dale", MOVING_COST)]}), 1.0)
 
+    def test_a_neighbour_whose_own_employers_want_all_its_hands_has_none_to_import(self):
+        # both areas swamped: neither can fetch from the other, so the wage follows the bids in each
+        bids = swamped_bids() + [Bid("works", "digger", "dale", 1.0e6, GREAT_BID)]
+        routes = {"vale": [Route("dale", MOVING_COST)], "dale": [Route("vale", MOVING_COST)]}
+        held = state()
+        for _year in range(YEARS):
+            found = clearing.clear_all(held, inputs(bids, routes))
+        self.assertGreater(min(each.wage for each in found), 100.0)
+
 
 if __name__ == "__main__":
     unittest.main()

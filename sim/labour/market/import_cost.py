@@ -20,6 +20,9 @@ class ImportCosts:
         discounted_years = years if rate <= 0.0 else (1.0 - math.exp(-rate * years)) / rate
         self.career_hours = max(discounted_years * inputs.hours_per_worker_year, 1e-12)
         self._reach: Dict[str, List[Tuple[float, str]]] = {}
+        self.wanted: Dict[Tuple[str, str], float] = {}
+        for bid in inputs.bids:
+            self.wanted[(bid.area, bid.trade)] = self.wanted.get((bid.area, bid.trade), 0.0) + max(bid.hours, 0.0)
 
     def reach(self, area: str) -> List[Tuple[float, str]]:
         """(cheapest moving cost over the routes, area) for every other area reachable from `area`, nearest
@@ -44,9 +47,9 @@ class ImportCosts:
 
     def wage(self, area: str, trade: str) -> Optional[float]:
         """The cheapest wage an hour of `trade` in `area` can be had for from an area that has hands of the
-        trade and a wage for it: that wage (never under what its workers need to live on, so a glut does not
-        price below their outside option) plus the way's moving cost over a career's hours. None where no
-        reachable area has the trade."""
+        trade to spare (more hours of them than its own employers bid for) and a wage for it: that wage (never
+        under what its workers need to live on, so a glut does not price below their outside option) plus the
+        way's moving cost over a career's hours. None where no reachable area has hands to spare."""
         inputs = self.inputs
         cheapest: Optional[float] = None
         for moving_cost, other in self.reach(area):
@@ -54,8 +57,11 @@ class ImportCosts:
             if cheapest is not None and fare >= cheapest:
                 break       # farther areas cost more to fetch from, whatever they pay
             wage = self.wages.get(other, {}).get(trade)
-            if wage is None or sum(self.state.workers.get(other, {}).get(trade, ())) <= 0.0:
+            if wage is None:
                 continue
+            spare = sum(self.state.workers.get(other, {}).get(trade, ())) * inputs.hours_per_worker_year
+            if spare <= self.wanted.get((other, trade), 0.0):
+                continue        # that area's own employers want all its hands: none to fetch
             outside = inputs.subsistence_per_worker_year.get(other, 0.0) / max(inputs.hours_per_worker_year, 1e-12)
             cost = max(wage, outside) + fare
             if cheapest is None or cost < cheapest:
