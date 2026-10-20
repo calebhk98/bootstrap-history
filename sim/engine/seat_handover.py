@@ -17,7 +17,7 @@ from sim.refusal import Refusal
 from .seat_handover_empty import holds_that_would_be_lost
 from .seat_handover_rekey import rename_seat_references
 
-MOVED_FIELDS = ("household", "projects", "holdings", "governance", "seat_progress", "goal", "country")
+MOVED_FIELDS = ("household", "projects", "holdings", "governance", "seat_progress", "goal", "country", "kind", "holder")
 
 
 def handover_refusal(seats: Mapping, from_id: str, to_id: str) -> Optional[Refusal]:
@@ -29,6 +29,10 @@ def handover_refusal(seats: Mapping, from_id: str, to_id: str) -> Optional[Refus
 			               % (seat_id, role, ", ".join(known)), choices=known, seat=seat_id)
 	if from_id == to_id:
 		return Refusal("same_seat", "a seat cannot be handed to itself. Nothing was changed.", seat=from_id)
+	if seats[from_id].kind != seats[to_id].kind:
+		return Refusal("replacement_wrong_kind", "seat %r is a %s seat and %r is a %s seat; a seat passes only to a seat of its own kind "
+		               "(join adds one). Nothing was changed." % (from_id, seats[from_id].kind, to_id, seats[to_id].kind),
+		               seat=to_id, kind=seats[from_id].kind)
 	holds = holds_that_would_be_lost(seats[to_id])
 	if holds:
 		return Refusal("replacement_not_empty", "seat %r already has %s, which a handover would overwrite. Hand over to an empty "

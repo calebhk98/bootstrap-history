@@ -41,24 +41,44 @@ def _partners_for(civilisation_id, civilisation, civilisations, economies):
     return found
 
 
+def _obtainable(held, by_material, bought_in):
+    """Materials a holder of `held` nodes can end up with: raw ones (no recipe), those in `bought_in`, and
+    those some recipe makes whose gate is held and whose every input is itself obtainable (a fixed point,
+    so a cycle of recipes with no way in is not obtainable)."""
+    inputs_of = {}
+    for recipes in by_material.values():
+        for _gate, entry in recipes:
+            for material in entry.get("inputs") or ():
+                inputs_of.setdefault(material, [])
+    have = {material for material in inputs_of if material not in by_material} | set(bought_in)
+    changed = True
+    while changed:
+        changed = False
+        for material, recipes in by_material.items():
+            if material in have:
+                continue
+            if any(_makes(held, [gate]) and all(item in have or item not in by_material
+                                                 for item in entry.get("inputs") or ())
+                   for gate, entry in recipes):
+                have.add(material)
+                changed = True
+    return have
+
+
 def unsupplied_basket_goods(civilisation_id, civilisations, production, goods, economies):
-    """Basket goods with a recipe, none of which the civilisation can run or buy from a partner."""
+    """Basket goods with a recipe, none of which the civilisation can run to the end of its inputs, or buy
+    from a partner that can. A recipe whose own gate is held but whose input has no held chain does not count."""
     civilisation = civilisations[civilisation_id]
     by_material = _producers(production)
     held = set(civilisation.get("starting_techs") or ())
     partners = _partners_for(civilisation_id, civilisation, civilisations, economies)
-    missing = []
-    for good in sorted(goods):
-        if (goods[good] or {}).get("bought_by_households") is False:
-            continue
-        gates = [gate for gate, _entry in by_material.get(good, ())]
-        if not gates or _makes(held, gates):
-            continue
-        if any(_sells_abroad(partner, good)
-               and _makes(set(partner.get("starting_techs") or ()), gates) for partner in partners):
-            continue
-        missing.append(good)
-    return missing
+    partner_makes = [(partner, _obtainable(set(partner.get("starting_techs") or ()), by_material, ()))
+                     for partner in partners]
+    candidates = [good for good in goods if (goods[good] or {}).get("bought_by_households") is not False]
+    bought_in = {good for good in by_material
+                 if any(good in made and _sells_abroad(partner, good) for partner, made in partner_makes)}
+    own = _obtainable(held, by_material, bought_in)
+    return [good for good in sorted(candidates) if good in by_material and good not in own]
 
 
 def basket_supply_findings(civilisations, production, goods, economies):

@@ -8,7 +8,7 @@ labour market like every other line the state keeps up. Nothing is paid to nobod
 """
 from typing import Any, List
 
-from . import budget, ledger, state_works
+from . import budget, government_levers, ledger, state_works
 from .edges import EDGE_BUILDERS
 from .tuning_spending import MASONRY_PERSON_YEARS_PER_M2, MAX_STATE_SHARE_OF_TRADE, RESERVE_CEILING_YEARS_OF_NEED
 
@@ -39,7 +39,7 @@ class SurplusMixin:
 		"""Reserve beyond what it holds against risk relieves its people's reported need, restocks the granary
 		when grain is cheap, then raises the works it wants and lacks (`state_works.py`), as many as what is left
 		pays at the going wage and the trades allow. What no work wants stays in the reserve."""
-		excess = self.money - RESERVE_CEILING_YEARS_OF_NEED * sum(line.money for line in lines)  # type: ignore[attr-defined]
+		excess = self.money - government_levers.reserve_years(self.record, RESERVE_CEILING_YEARS_OF_NEED) * sum(line.money for line in lines)  # type: ignore[attr-defined]
 		excess -= self.relieve_strata(excess, world)
 		excess -= self.restock_granary(excess, world)  # type: ignore[attr-defined]
 		for work, gap in state_works.gaps(world):

@@ -22,7 +22,7 @@ Last: depends on 609 to 618.
 no-intervention game by `data/world/occupation_groups.json` (groups, wide bands, sources; the figures are marked
 recalled there, not looked up). Print the shares with
 `python3 sim/simulator.py economy-check --civs rome_100ad --years 1 --occupations`. The ordering test (textiles or
-building the largest classified non-farm group) passes; the band test fails honestly, bands unchanged.
+building the largest classified non-farm group) passed then and now fails (services and state lead after the 640 rewrite's run); the band test fails honestly, bands unchanged.
 
 Measured (one year, seed 1, `python3 -m sim.tests --slow --only occupational_distribution --jobs 1`), share of hours:
 

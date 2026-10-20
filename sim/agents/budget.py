@@ -10,7 +10,7 @@ line: goods in kind (requisition) or service in office.
 """
 from typing import Any, Dict, List, Optional, Tuple
 
-from . import budget_lines, budget_works
+from . import budget_lines, budget_works, government_levers
 from .budget_line import Line
 from .tuning import ADMINISTRATIVE_SPAN, ARMY_ADJUSTMENT_RATE, LEVY_RATE_CEILING
 
@@ -55,12 +55,19 @@ def standing_lines(world: Any, soldiers: Optional[float] = None, conscripts: flo
 	"""Everything the state keeps up this year, in a fixed order, for an army of `soldiers`, `conscripts` of them unpaid
 	(the force it wants when not given)."""
 	if soldiers is None:
-		soldiers = world.army_wanted()
-	return (army_line(world, soldiers, conscripts) + administration_line(world) + budget_lines.roads_line(world)
+		soldiers = army_wanted(world)
+	lines = (army_line(world, soldiers, conscripts) + administration_line(world) + budget_lines.roads_line(world)
 			+ budget_lines.public_buildings_line(world) + budget_lines.court_line(world, officials_kept(world))
 			+ budget_lines.dole_line(world) + budget_lines.navy_line(world) + budget_works.works_upkeep_lines(world)
 			+ budget_works.collection_line(world) + budget_works.campaign_line(world, soldiers)
 			+ budget_works.donative_line(world, max(0.0, soldiers - conscripts)))
+	record = world.government().record
+	return government_levers.scaled(record, lines) + government_levers.lever_lines(record, world)
+
+
+def army_wanted(world: Any) -> float:
+	"""The force the state wants: the army lever its controller set, else what the world derives."""
+	return government_levers.army_target(world.government().record, world.army_wanted())
 
 
 def army_next_year(soldiers: float, wanted: float, funded: float) -> float:

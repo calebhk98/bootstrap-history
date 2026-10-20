@@ -10,7 +10,8 @@ from typing import Dict, List
 
 from sim.world import capital_market
 
-from . import bank_service, banks, bondage, credit, credit_claims, households_credit, merchants_credit, titles, titles_value
+from . import bank_service, banks, bondage, credit, credit_claims, households_credit, lender_ask, loss_memory, merchants_credit, titles, titles_value
+from .households_orders import HOUSEHOLD_TIME_PREFERENCE
 from .producers_close import WORKING_CAPITAL_PURPOSE
 from .types import FundsOffer
 from .households_basket import need_prices
@@ -18,6 +19,13 @@ from .year_goods import _held_stock
 
 
 def service(record, money: str, year: int, bondage_years: float = 0.0) -> Dict[str, float]:
+    """The year's payments (`_collect`), then every lender's loss rate ages by the year's losses."""
+    received = _collect(record, money, year, bondage_years)
+    loss_memory.age(record, money)
+    return received
+
+
+def _collect(record, money: str, year: int, bondage_years: float) -> Dict[str, float]:
     """Collect the year's payments at its end, after sales, from loans made in earlier years (a borrower's
     first payment falls due a year after it borrowed). Books the defaults: a lender's loss, a defaulter's
     record, a merchant's staked capital after what it repaid or was freed of. Returns the interest each
@@ -61,7 +69,9 @@ def lend_working_capital(setup, record, view) -> None:
     spare = {cohort_id: amount for cohort_id, amount in spare.items() if amount > 0.0}
     if not spare:
         return
-    offers = [FundsOffer(cohort_id, money, amount, max(0.0, record.cohorts[cohort_id].expected_inflation))
+    offers = [FundsOffer(cohort_id, money, amount, lender_ask.lowest_ask(
+                  HOUSEHOLD_TIME_PREFERENCE, record.cohorts[cohort_id].expected_inflation,
+                  expected_loss_rate=lender_ask.loss_rate(record.loss_rates.get(cohort_id, 0.0))))
               for cohort_id, amount in spare.items()]
     loans, _rate, _unmet = credit.clear(
         asked, offers, money, record.memory.rates.get(money), credit_claims.principal_by_borrower(record.loans),

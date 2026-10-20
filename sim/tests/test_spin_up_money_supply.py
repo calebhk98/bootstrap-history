@@ -1,24 +1,18 @@
-"""Complaint 473: over a long spin-up the coin lost to wear is not replaced, so the money stock drains.
-
-Runs the Rome agent economy's first stage for many years (sim/engine/economy_port_trace.py, the command
-`simulator.py spin-up-trace`) on the opening a game saved, and reads the price level, the money stock and the
-mint's strikes by year. Slow: one economy stepped for decades.
-
-`test_the_money_stock_keeps_up_with_wear` FAILS on the current code and is meant to: the mint strikes next to
-nothing because the silver chain stops supplying it (Complaint 473, Update). Do not loosen it; it passes when
-the metal reaches the mint.
-"""
+"""Complaint 473, the short part: the spin-up trace records the money stock, price level and mint's strikes, and the
+money audit's edge accounts balance. These are rules of the books, so a few years of the Rome agent economy's first
+stage (sim/engine/economy_port_trace.py, the command `simulator.py spin-up-trace`) hold them; a year costs about
+twelve seconds. The decades-long question, whether the mint keeps the stock up with wear, is a full-length spin-up
+and lives in test_spin_up_money_supply_full_length.py (Complaint 640)."""
 import unittest
 
-from sim.economy.metal_stock import COIN_WEAR_PER_YEAR
 from sim.engine import economy_port_trace, opening_checks_run, solve_cache
 from sim.engine.economy_port_key import SPIN_UP_SOURCE_MODULES, spin_up_key
 from sim.engine.economy_port_setup import build_setup
 from sim.tests import harness
 
 
-YEARS = 40
-DECADE = 10
+YEARS = 40               # the full-length trace (test_spin_up_money_supply_full_length.py)
+SHORT_YEARS = 4          # enough years for the books' rules
 AUDIT_TOLERANCE = 0.05     # share of the years' wear that edges other than wear and the mint may account for
 
 
@@ -31,18 +25,14 @@ def cached_spin_up_trace(game, years):
                                    cache_dir=opening_checks_run.TRACE_CACHE_DIRECTORY)
 
 
-def mean(values):
-    return sum(values) / len(values)
-
-
 class SpinUpMoneySupplyTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.game = harness.sim()
-        cls.rows = cached_spin_up_trace(cls.game, YEARS)
+        cls.rows = cached_spin_up_trace(cls.game, SHORT_YEARS)
 
     def test_the_run_records_the_price_level_the_money_stock_and_the_mints_strikes_by_year(self):
-        self.assertEqual(len(self.rows), YEARS)
+        self.assertEqual(len(self.rows), SHORT_YEARS)
         for column in economy_port_trace.COLUMNS:
             self.assertTrue(all(column in row for row in self.rows), column)
         self.assertTrue(all(row["money_supply"] > 0.0 and row["price_level"] > 0.0 for row in self.rows))
@@ -55,19 +45,6 @@ class SpinUpMoneySupplyTests(unittest.TestCase):
         struck = sum(row["struck"] for row in self.rows)
         change = sum(row["change"] for row in self.rows)
         self.assertLessEqual(abs(change - (struck - wear)), AUDIT_TOLERANCE * wear)
-
-    def test_the_money_stock_keeps_up_with_wear(self):
-        # Unreplaced, a stock shrinks by (1 - wear) each year, so a decade of wear is a fixed share of it. A mint
-        # that replaces what wear takes keeps the stock; a lag in doing so may cost one decade's wear, and no more
-        # however long the run (the same lag at every decade would be a drain).
-        first = mean([row["money_supply"] for row in self.rows[:DECADE]])
-        last = mean([row["money_supply"] for row in self.rows[-DECADE:]])
-        one_decade_unreplaced = (1.0 - COIN_WEAR_PER_YEAR) ** DECADE
-        replaced = sum(row["struck"] for row in self.rows[-DECADE:]) / sum(row["wear"] for row in self.rows[-DECADE:])
-        self.assertGreaterEqual(last / first, one_decade_unreplaced,
-                                "the money stock fell to %.3f of its first decade's (one decade of unreplaced wear "
-                                "leaves %.3f); in the last decade the mint replaced %.2f of the wear"
-                                % (last / first, one_decade_unreplaced, replaced))
 
     def test_a_game_carries_how_its_spin_up_ended(self):
         result = self.game.economy.spin_up_result()

@@ -668,6 +668,7 @@
   },
   "wage_index": 0.7,
   "unsupplied_basket_goods": {
+    "obsidian_blade_kg": "the obsidian blade knapping node is not held and no partner supplies blades; iron, bronze and knapped flint tools meet the implements need",
     "cacao_kg": "an American crop; no partner grows it and the cultivation node is not held, so household demand for it has no supply until a founder brings the stock",
     "camphor_kg": "camphor came from East Asian and Indonesian trade; the distillation node it is gated on is not held and no partner supplies it",
     "cement_portland_kg": "Portland cement is a modern industrial product far past this start; households bid for it only because the need data lists it as shelter",

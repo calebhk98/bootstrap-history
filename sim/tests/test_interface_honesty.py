@@ -1,5 +1,6 @@
 """interface_honesty: regression checks, run individually with `--only interface_honesty`."""
 from .harness import *  # noqa: F401,F403
+from sim.refusal import LogLine
 
 # ============================================================================
 # INTERFACE HONESTY: an estimate instead of a certainty where fog says the
@@ -184,53 +185,11 @@ check("...and every field event text names is one this command can look up",
       [row["field"] for row in _vals["values"]])
 
 
-# --- JOB 3d: a long step stops when something it warned about actually
-# happens, rather than running the rest of the years you asked for on top
-# of it. A break tester watched "CLOSE TO THE LIMIT ... while it is still
-# your choice" get ploughed straight through to CREDIT EXHAUSTED inside one
-# big `step`.
-s_se = sim(capital=500.0)
-s_se.end_year = s_se.cfg["start_year"] + 200
-# Plain `start`, not `rush` - this check has to stand on its own before
-# `rush` exists as a command (see JOB 3f, committed separately and later).
-_memo_se = {}
-_ok_se = [node_id for node_id in s_se.order if s_se.can_start(node_id, _memo=_memo_se)]
-_ok_se = [node_id for node_id in _ok_se
-          if not (NODES[node_id]["ph"] == 0 and NODES[node_id]["_total_cost"] <= 1)]
-_ok_se.sort(key=lambda k: s_se.project_cost(k), reverse=True)
-# A start whose up-front materials the purse cannot cover is refused, so walk
-# down the list and take the first 15 that go through.
-_started_se = 0
-for _k_se in _ok_se:
-    if _started_se >= 15:
-        break
-    _started_se += bool(S._agent_dispatch(s_se, NODES, {"cmd": "start", "id": _k_se}).get("ok"))
-s_se.capital = -(0.9 * s_se.credit_limit())   # start close to the limit instead of running years to get there
-_step_ce = S._agent_dispatch(s_se, NODES, {"cmd": "step", "years": 100})
-# CLOSE TO THE LIMIT now interrupts a batched step too (see the dedicated
-# check below), and it fires strictly BEFORE exhaustion by design - so this
-# same household may now stop there first, on the way to the exhaustion
-# this test is actually about. Keep stepping through any such earlier stop;
-# the property under test is that it reaches, and stops AT, exhaustion
-# eventually, never running past it within one call.
-_saw_exhausted = any("CREDIT EXHAUSTED" in event["message"] for event in _step_ce["events"])
-_hops = 0
-while (not _saw_exhausted and _step_ce.get("stopped_early")
-       and s_se.year < s_se.end_year and _hops < 20):
-    _step_ce = S._agent_dispatch(s_se, NODES,
-                                 {"cmd": "step",
-                                  "years": min(100, s_se.end_year - s_se.year)})
-    _saw_exhausted = any("CREDIT EXHAUSTED" in event["message"]
-                        for event in _step_ce["events"])
-    _hops += 1
-check("a multi-year step stops the moment credit is actually exhausted, "
-      "rather than running the rest of the years on top of it",
-      bool(_step_ce.get("stopped_early")) and _saw_exhausted,
-      (_step_ce.get("stopped_early"), _hops))
-check("...and it really did stop short of the 100 years asked for",
-      s_se.year < s_se.cfg["start_year"] + 100, s_se.year)
+# --- JOB 3d: a long step stops when something it warned about actually happens. The credit-exhausted line, the
+# near-the-limit warning and the table of which lines stop a step are tested one at a time in
+# test_credit_warning_rules.py (Complaint 640); the CLOSE TO THE LIMIT step below keeps the loop that reads the table.
 
-# --- BREAK: the interrupt above existed for the FATAL warning only.
+# --- BREAK: the interrupt existed for the FATAL warning only.
 # warn_near_the_limit's own docstring says it exists to give you a chance to
 # react "while there is still a decision left" - stop a project, mothball a
 # loss-maker, fire somebody - and it fired into the log exactly as promised,
@@ -242,12 +201,17 @@ check("...and it really did stop short of the 100 years asked for",
 # the fatal one needs it least, since nothing is left to choose by then.
 s_wn = sim(capital=500.0)
 s_wn.end_year = s_wn.cfg["start_year"] + 200
-_lim_wn = s_wn.credit_limit()
-# Set up just past the 70% warning threshold, comfortably short of the 100%
-# that would also trip CREDIT EXHAUSTED in the same year - the two markers
-# have to be tested apart, or a step that stops for the wrong reason would
-# still pass.
-s_wn.capital = -(0.69 * _lim_wn)   # just under the 70% line: a year's interest carries it past, well short of 100%
+_step_of_wn = s_wn.step
+
+
+def _step_that_warns():
+    """A year whose household ends it close to the limit: the line `warn_near_the_limit` writes (the rule that
+    writes it is tested on its own in test_credit_warning_rules.py), so this step tests only the loop."""
+    _step_of_wn()
+    s_wn.state.household.log.append((s_wn.year, LogLine("credit_near_limit", "CLOSE TO THE LIMIT: test", share_of_limit=0.8)))
+
+
+s_wn.step = _step_that_warns
 _step_wn = S._agent_dispatch(s_wn, NODES, {"cmd": "step", "years": 50})
 check("a multi-year step stops the moment it is CLOSE TO THE LIMIT too, not "
       "only once credit is fully exhausted",
