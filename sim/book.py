@@ -12,6 +12,8 @@ import sys
 from dataclasses import dataclass
 from typing import Dict, Iterable, List, Sequence, Tuple
 
+from sim.rekey import rekey
+
 AgentId = str
 CurrencyId = str
 GoodId = str
@@ -313,6 +315,12 @@ class Book:
     def balance(self, agent: AgentId, currency: CurrencyId) -> float:
         purse = self._money.get(agent)
         return purse.get(currency, 0.0) if purse else 0.0
+
+    def rename_agent(self, old: AgentId, new: AgentId) -> None:
+        """Everything `old` holds becomes `new`'s (added to what `new` holds); no posting is made, so no total moves."""
+        rekey(self._money, old, new)
+        rekey(self._goods, old, new)
+        rekey(self._holders, old, new)
 
     def knows(self, agent: AgentId) -> bool:
         """Whether the agent has ever held or paid anything in this book."""

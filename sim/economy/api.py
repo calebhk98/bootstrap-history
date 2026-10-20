@@ -422,3 +422,9 @@ def settle_agent_takings(economy, agent_id, edge_id, tile_note="agent's takings"
                for tile, quantity in tiles.items() if quantity > 0.0]
     book.move_many(returns)
     return proceeds
+
+
+def rename_agent(economy, old, new):
+    """`old` becomes `new` throughout the economy's records: money, goods, debts and claims, titles and shares are
+    added to what `new` already holds; no posting is made, so no total moves."""
+    economy.record.rename_agent(old, new)

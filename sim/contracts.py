@@ -13,6 +13,8 @@ The registry is shared the way the book is: the economy owns it, and the actors'
 from dataclasses import dataclass
 from typing import Any, Dict, Iterable, List, Optional
 
+from sim.rekey import rename_text
+
 FACILITY = "facility"
 TERM_LOAN = "term_loan"
 STATE_DEBT = "state_debt"
@@ -160,6 +162,36 @@ class Contracts:
             ended.extend(c for c in self.term_loans if c.borrower == borrower and (kind is None or c.kind == kind))
             self.term_loans = [c for c in self.term_loans if c not in ended]
         return ended
+
+    # ---- renaming ---------------------------------------------------------------------------
+    def rename(self, old: str, new: str) -> None:
+        """`old` becomes `new` as borrower, lender and depositor: its contracts join `new`'s (a draw on the same
+        lender adds to the one facility). A contract that would then be between `new` and itself ends."""
+        for contract in self.all():
+            contract.lender = rename_text(contract.lender, old, new)
+            contract.borrower = rename_text(contract.borrower, old, new)
+            contract.contract_id = rename_text(contract.contract_id, old, new)
+        facilities: Dict[str, Dict[str, Contract]] = {}
+        for held in self.facilities.values():
+            for contract in held.values():
+                if contract.lender == contract.borrower:
+                    continue
+                mine = facilities.setdefault(contract.borrower, {})
+                if contract.lender in mine:
+                    mine[contract.lender].principal += contract.principal
+                    mine[contract.lender].arrears += contract.arrears
+                else:
+                    mine[contract.lender] = contract
+        self.facilities = facilities
+        deposits: Dict[str, Contract] = {}
+        for contract in self.deposits.values():
+            if contract.lender in deposits:
+                deposits[contract.lender].principal += contract.principal
+            else:
+                deposits[contract.lender] = contract
+        self.deposits = deposits
+        self.term_loans = [contract for contract in self.term_loans if contract.lender != contract.borrower]
+        self._term_seen = None
 
     # ---- sharing and the save file ----------------------------------------------------------
     def adopt(self, other: "Contracts") -> None:
