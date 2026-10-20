@@ -727,6 +727,17 @@
       }
     },
     {
+      "form": "corvee",
+      "basis": "labour_days",
+      "rate": 15,
+      "per": "working_age_person",
+      "to": "works",
+      "_internal": {
+        "source": "A month of labour a year from each adult man for the state's roads, walls and canals (Hanshu, Shihuo zhi; commutation to cash is left out). Only men owed it, about half the working age, so the days a working-age person owes are half a month.",
+        "confidence": "C"
+      }
+    },
+    {
       "form": "import_duty",
       "basis": "imports_value",
       "rate": 0.05,

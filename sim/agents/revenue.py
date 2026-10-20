@@ -10,6 +10,7 @@ one state can take a share of the crop in some and a share of assessed property 
 from dataclasses import dataclass
 from typing import Any, FrozenSet, List, Optional, Tuple
 
+from . import revenue_labour
 from .revenue_bases import BASES, GOOD_BASES, TILE_BASES
 
 
@@ -23,10 +24,30 @@ class Assessment:
 	tonnes: float = 0.0  # what is taken in kind, in tonnes; zero for a form paid in coin
 	material: str = ""  # the good taken in kind
 	payers: Tuple[Tuple[Any, float], ...] = ()  # (actor, money) taken from actors, where the base is theirs
+	person_days: float = 0.0  # labour owed, in days of work, where the form is a labour due (revenue_labour.py)
+	labour_to: str = ""  # what the labour is for: the state's works or its army
+	commute: float = 0.0  # the share of a labour due paid in coin instead
 
 	@property
 	def in_kind(self) -> bool:
 		return bool(self.material)
+
+	@property
+	def in_labour(self) -> bool:
+		return bool(self.labour_to)
+
+	@property
+	def hours(self) -> float:
+		"""Hours of work owed, before any commuted to coin."""
+		return self.person_days * revenue_labour.HOURS_PER_WORKING_DAY
+
+	@property
+	def coin_money(self) -> float:
+		"""Money that reaches the purse from nowhere the actors' books show: not goods, and of a labour due only
+		the commuted share."""
+		if self.in_kind or self.payers:
+			return 0.0
+		return self.commute * self.money if self.in_labour else self.money
 
 
 def form_tiles(declared: Any, world: Any) -> Optional[FrozenSet[str]]:
@@ -45,6 +66,9 @@ def assess(world: Any) -> List[Assessment]:
 	"""Every declared form assessed on this year's base, in the order the civilisation lists them."""
 	assessments = []
 	for declared in world.revenue_forms():
+		if declared["basis"] == revenue_labour.BASIS:
+			assessments.append(labour_due(declared, world))
+			continue
 		tiles = form_tiles(declared, world)
 		material = declared.get("paid_in", "")
 		measure = BASES[declared["basis"]]
@@ -73,3 +97,13 @@ def taxed_actors(declared: Any, base: Any) -> Assessment:
 	owed = tuple((payer, min(rate * income, max(0.0, payer.money))) for payer, income in chosen)
 	return Assessment(declared["form"], declared["basis"], sum(income for _payer, income in chosen), rate,
 					  sum(amount for _payer, amount in owed), payers=owed)
+
+
+def labour_due(declared: Any, world: Any) -> Assessment:
+	"""Labour owed: the base is a year of the liable people's work at the going wage, the rate the share of a working
+	year the days come to, so the money's worth is what the state would pay for the labour."""
+	levy = revenue_labour.levy_of(declared, world)
+	share_of_year = (float(declared["rate"]) * revenue_labour.HOURS_PER_WORKING_DAY) / world.hours_per_person_year
+	base = levy.people * world.pay_per_person_year("labourer")
+	return Assessment(declared["form"], declared["basis"], base, share_of_year, share_of_year * base,
+					  person_days=levy.person_days, labour_to=levy.destination, commute=levy.commute)

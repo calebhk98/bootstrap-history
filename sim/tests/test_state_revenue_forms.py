@@ -7,7 +7,7 @@ sim = unopened_sim   # legacy: pins surplus grain sold into the engine's goods m
 
 
 from sim.engine.agents_port import SimWorld
-from sim.agents import budget_lines, revenue
+from sim.agents import budget_lines, revenue, revenue_labour
 from sim.agents.tuning_spending import GRANARY_LOSS_SHARE_PER_YEAR
 
 HARVEST_KG = 4.0e9
@@ -37,7 +37,7 @@ for civ_id in ("rome_100ad", "han_china_100ad", "norse_900ad", "mexica_1500", "e
     forms = built.civ.get("state_revenue")
     check("%s declares the forms its state raises revenue by" % civ_id, bool(forms), forms)
     check("%s's forms each name a basis the engine models, a rate and where the rate comes from" % civ_id,
-          all(form["basis"] in revenue.BASES and form["rate"] > 0.0 and form.get("_internal", {}).get("source")
+          all((form["basis"] in revenue.BASES or form["basis"] == revenue_labour.BASIS) and form["rate"] > 0.0 and form.get("_internal", {}).get("source")
               for form in forms or []), forms)
 
 # ---- revenue is the sum of the forms assessed on their bases --------------------------------------

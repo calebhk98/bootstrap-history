@@ -33,7 +33,11 @@ class StoresMixin:
 			if assessed.in_kind:
 				record.in_kind_received[assessed.material] = record.in_kind_received.get(assessed.material, 0.0) + assessed.tonnes
 				record.stores[assessed.material] = record.stores.get(assessed.material, 0.0) + assessed.tonnes
-		unmodelled = sum(assessed.money for assessed in assessments if not assessed.in_kind and not assessed.payers)
+		record.corvee_due = {}
+		for assessed in assessments:
+			if assessed.in_labour:
+				record.corvee_due[assessed.labour_to] = record.corvee_due.get(assessed.labour_to, 0.0) + (1.0 - assessed.commute) * assessed.hours
+		unmodelled = sum(assessed.coin_money for assessed in assessments)
 		ledger.transfer(world.edge(EDGE_TAXPAYERS), self, unmodelled, "taxation")
 
 	def collect_from_payers(self, assessments: List[Any]) -> Dict[str, float]:
