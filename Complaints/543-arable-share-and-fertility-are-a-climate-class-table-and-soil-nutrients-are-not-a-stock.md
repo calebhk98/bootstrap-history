@@ -51,9 +51,17 @@ soils resist tillage until the tool and team can pull hard enough.
   herd's collected dung is spread over the held cropland. No farm producer buys the manure goods yet.
 - Tests: `sim/tests/test_soil_nitrogen.py`, `test_soil_nitrogen_whole_game.py`.
 
+## Done: the farm model reads the stock
+
+- `Sim.refresh_farm_territory()` (`sim/engine/soil_nitrogen_year.py`) rebuilds the farm's ladder, ceiling and the cleared
+  ground's quality from `farm_sites()` at the start of each year (and after a load), so national farm yield follows the soil
+  nitrogen stock and the society's rotation. `THREE_FIELD_SOIL_FERTILITY_YIELD_MULTIPLIER` is deleted: the three-field
+  rotation's edge is its smaller fallow (more cropped hectares) and its legumes' gain to the stock.
+- Tests: `sim/tests/test_farm_follows_soil.py` (continuous cropping lowers the ladder's harvest weight and the cleared
+  ground's quality over thirty years; three-field with legumes holds a higher stock and harvest than without; the ceiling
+  follows a rotation change). The Nile rotation keeps its own silt multiplier until silt is an input.
+
 ## Left
 
-- The farm model's ladder and ceiling are set once at the opening, so national farm yield does not yet fall with the stock;
-  the tile food view does.
-- `THREE_FIELD_SOIL_FERTILITY_YIELD_MULTIPLIER` (a heuristic) now overlaps with the legume and fallow effect and should go.
-- Per-tile manure from market purchase; silt as an input on flooded tiles; arable share and fertility derivation; tillage resistance.
+- Per-tile manure from market purchase; silt as an input on flooded tiles (then the Nile multiplier goes); arable share and
+  fertility derivation; tillage resistance.
