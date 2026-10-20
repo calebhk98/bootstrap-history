@@ -69,8 +69,9 @@ def stands_for_many(record, offer: Offer) -> bool:
 
 
 def strategic_offers(setup, record, view, bids: Sequence[Bid], offers: Sequence[Offer],
-                     last_price: Optional[float]) -> List[Offer]:
-    """`offers` with each moving producer's reservation re-chosen, in agent order."""
+                     last_price: Optional[float], costs: Optional[dict] = None) -> List[Offer]:
+    """`offers` with each moving producer's reservation re-chosen, in agent order. A `costs` dict receives
+    each offer's `unit_cost` by (seller, tile), for the unsold search of the same market to read."""
     offers = list(offers)
     if not bids or not offers:
         return offers
@@ -82,6 +83,8 @@ def strategic_offers(setup, record, view, bids: Sequence[Bid], offers: Sequence[
         if offer.quantity <= 0.0:
             continue
         cost = unit_cost(setup, record, view, offer)
+        if costs is not None:
+            costs[(offer.seller, offer.tile)] = cost
         if cost is None:
             continue
         value = unit_value(offer, cost)

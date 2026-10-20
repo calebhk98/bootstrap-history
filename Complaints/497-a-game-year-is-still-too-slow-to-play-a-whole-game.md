@@ -270,3 +270,45 @@ over destinations is about 3.6 million iterations a year, each a lookup and a fe
 already stops it at the profitable destinations, and a carriage-sorted walk changes tie order), then labour
 switching (`_odds`, `_carry_out`), `close_agents` and credit requests, each flat. The year is still about
 twice the target.
+
+## Round 4: the unsold-stock search clears without building fills; the year is flat again
+
+Phases of the second and third warm stepped Rome year (`harness.sim()`, `step()` three times, `time.process_time`
+around the names `economy.py` imports and around `unsold_search.clear_with_search`; not under `cProfile`), as
+shares of the year, now against round 3: `clear_goods` about 28 to 33 percent (round 3: about a fifth; it now holds
+the in-year unsold-stock search, about a tenth of the year on its own, 0.73 to 0.83 s), merchants' orders about 16
+percent (round 3: about a fifth; `_good_routes` is all of it, 2600 full searches a year, none with `source_ids`),
+labour clearing about 12 percent (round 3: about a tenth, not edited here), `close_agents` about 9 to 10 percent,
+`open_entrants` about 6 percent (down from a fifth, round 3's cut), `_lend` 3 to 4 percent, households' orders 3
+percent. The year itself is 6.2 to 6.9 s CPU on this machine, so the unsold search (new since round 3) cancelled
+most of what round 3 saved. Inside `clear_goods` the largest parts are `strategic_offers` (0.75 s, of which
+`best_reservation` 0.57 s), the unsold search (0.52 s after the cuts below), `_produce_and_offer` (0.23 s) and
+settlement (0.18 s).
+
+Cuts, both exact:
+
+- The search built `goods_market.Buyers` and the full clearing (buyer fills, seller fills, self-trade washing,
+  unmet quantity) for each of its trials (about 15000 a year). It now builds one `Buyers` per market
+  (`goods_market.clear(..., buyers)`), reads each trial's sold quantities with `goods_market.sold_by_seller` (the
+  same crossing, rationing and seller filling, no fills) and builds the full clearing once, for the level it
+  keeps. `_with_level` calls `Offer(...)` instead of `dataclasses.replace`. The sequence of trial levels is
+  unchanged, so the kept level is the same.
+- `strategic_offers` hands the sellers' unit costs to `clear_with_search`, which read them again to find the
+  floors (about 5800 duplicate `unit_cost` calls a year; nothing changes the prices between the two).
+
+Proof: the sorted-key dump of `save_state` (`saveload.state_text`, parsed and dumped with sorted keys) after three
+stepped Rome years has the same md5 before and after each cut (c56b1eb987691b7218c2cf6dc131c8b8);
+`sim/tests/test_sold_by_seller_exact.py` keeps `sold_by_seller` equal to the sell fills of `clear`, and `clear` with
+a shared `Buyers` equal to `clear` alone; quick tier green. Saving: the search phase 0.73 to 0.83 s before,
+0.52 to 0.53 s after (same wrapping, years 2 and 3), about 0.25 s a year, four percent of the year; whole-year CPU,
+alternating a copy of the old tree (`git archive`) and the new one, three pairs, years 2 and 3 of each run: old
+mean 6.61 s (6.10 to 7.11), new mean 6.20 s (5.83 to 6.74), about six percent, with a spread of the same order as
+the saving, so read it as about 0.4 s plus or minus 0.3. Command: `time.process_time` around `unsold_search.clear_with_search`
+over `Sim.step()` of `harness.sim()`.
+
+Left, measured: merchants' route search (0.9 s a year, about 1400 destination iterations per call; sharing one
+merchant's per-source result with another needs every changed area to sort after the break point, which a seventh of
+areas changed per merchant makes rare, so it was not built); the bisection could start from last year's level but
+the kept level would differ by up to the search precision, which is not exact; labour switching and `close_agents`
+are flat (no function above a few percent). The bisection's cost is now the price solve of each trial; fewer trials
+need a model change (a looser `SEARCH_PRECISION` or a bracket from last year's level).

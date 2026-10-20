@@ -152,9 +152,12 @@ def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, led
         for area in areas:
             bids, offers = order_book.pop((good, area))
             key = market_key(good, area)
-            chosen = seller_offers.strategic_offers(setup, record, view, bids, offers, record.memory.prices.get(key))
+            unit_costs: Dict = {}
+            chosen = seller_offers.strategic_offers(setup, record, view, bids, offers, record.memory.prices.get(key),
+                                                    unit_costs)
             offers, result = unsold_search.clear_with_search(setup, record, view, bids, offers, chosen, good, area,
-                                                             setup.currency_id, record.memory.prices.get(key))
+                                                             setup.currency_id, record.memory.prices.get(key),
+                                                             unit_costs)
             delivered = 0.0
             if result.quantity > 0.0:
                 done_settlement = settlement.settle_goods(record.book, result)
