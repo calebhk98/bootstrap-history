@@ -4,6 +4,7 @@ separate workforce that moves hours between trades."""
 import unittest
 
 from .harness import *  # noqa: F401,F403
+from sim.economy import workforce_version
 from sim.labour import labour_allocation, labour_market
 
 FARM = labour_allocation.FARM_TRADE
@@ -26,9 +27,11 @@ class HoursFollowTheCoreTests(unittest.TestCase):
         game = sim(civ="rome_100ad", events=False)
         game._demographic_recovery(101)
         before = _non_farm_share(game, "smith")
-        for by_trade in _core_state(game).workers.values():
+        workforce = _core_state(game)
+        for by_trade in workforce.workers.values():
             if "smith" in by_trade:
                 by_trade["smith"] = [count * 50.0 for count in by_trade["smith"]]
+        workforce_version.bump(workforce)      # a writer of the workforce says so; the people-by-trade figure is cached per version
         game._demographic_recovery(102)
         self.assertGreater(_non_farm_share(game, "smith"), 5.0 * before)
 

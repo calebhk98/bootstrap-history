@@ -20,6 +20,9 @@ class ImportCosts:
         discounted_years = years if rate <= 0.0 else (1.0 - math.exp(-rate * years)) / rate
         self.career_hours = max(discounted_years * inputs.hours_per_worker_year, 1e-12)
         self._reach: Dict[str, List[Tuple[float, str]]] = {}
+        self.wanted: Dict[Tuple[str, str], float] = {}
+        for bid in inputs.bids:
+            self.wanted[(bid.area, bid.trade)] = self.wanted.get((bid.area, bid.trade), 0.0) + max(bid.hours, 0.0)
 
     def reach(self, area: str) -> List[Tuple[float, str]]:
         """(cheapest moving cost over the routes, area) for every other area reachable from `area`, nearest
@@ -43,21 +46,31 @@ class ImportCosts:
         return self._reach[area]
 
     def wage(self, area: str, trade: str) -> Optional[float]:
-        """The cheapest wage an hour of `trade` in `area` can be had for from an area that has hands of the
-        trade and a wage for it: that wage (never under what its workers need to live on, so a glut does not
-        price below their outside option) plus the way's moving cost over a career's hours. None where no
-        reachable area has the trade."""
+        """The wage an hour of `trade` in `area` can be had for by fetching hands from elsewhere, as far as
+        hands to spare reach. Each reachable area with a wage for the trade offers the hours its workers have
+        beyond what its own employers bid for, at its wage (never under what its workers need to live on, so a
+        glut does not price below their outside option) plus the way's moving cost over a career's hours. The
+        cheapest offers are taken until they fill the hours wanted here beyond the area's own hands; the dearest
+        one taken is the cap. None where the spare hands do not fill the shortage: the bids then set the wage."""
         inputs = self.inputs
-        cheapest: Optional[float] = None
+        here = sum(self.state.workers.get(area, {}).get(trade, ())) * inputs.hours_per_worker_year
+        shortage = self.wanted.get((area, trade), 0.0) - here
+        if shortage <= 0.0:
+            return None
+        offers: List[Tuple[float, float]] = []
         for moving_cost, other in self.reach(area):
-            fare = moving_cost / self.career_hours
-            if cheapest is not None and fare >= cheapest:
-                break       # farther areas cost more to fetch from, whatever they pay
             wage = self.wages.get(other, {}).get(trade)
-            if wage is None or sum(self.state.workers.get(other, {}).get(trade, ())) <= 0.0:
+            if wage is None:
                 continue
+            spare = (sum(self.state.workers.get(other, {}).get(trade, ())) * inputs.hours_per_worker_year
+                     - self.wanted.get((other, trade), 0.0))
+            if spare <= 0.0:
+                continue        # that area's own employers want all its hands: none to fetch
             outside = inputs.subsistence_per_worker_year.get(other, 0.0) / max(inputs.hours_per_worker_year, 1e-12)
-            cost = max(wage, outside) + fare
-            if cheapest is None or cost < cheapest:
-                cheapest = cost
-        return cheapest
+            offers.append((max(wage, outside) + moving_cost / self.career_hours, spare))
+        filled = 0.0
+        for cost, spare in sorted(offers):
+            filled += spare
+            if filled >= shortage:
+                return cost
+        return None

@@ -419,3 +419,16 @@ its twin. Not fixed: no bound is loosened and no fixture edited, since a fixture
 year or a tile where the sign happens to be right. A fixture that keeps the subject needs the entrant to be large
 relative to the market (a surplus fixture that leaves incumbents no spare capacity) or the check to read the nation's
 price; either is the owner's choice. Related: Complaint 473 (the cycling economy).
+
+## `spin_up_sensitivity` after the labour import cap: the variants' amplitude sits on the band's edge
+
+The labour import cap (c5c0107e) took every area with the trade as a source, and areas all short of hands capped each other's
+wages to the reservation floor; this broke `economy_innovator_pricing` and `spin_up_sensitivity` ("ask_prices x2"). The cap
+now fills the hours wanted beyond an area's own hands from the cheapest reachable areas' spare hands and binds only when
+they suffice (`sim/labour/market/import_cost.py`). `economy_innovator_pricing` passes again.
+
+`spin_up_sensitivity` still fails on "no change of adjustment speed removes the cycle", now on a different variant
+(`producer_plans x0.5`, amplitude 0.183 against a floor of 0.2265 from the baseline 0.453). Print every variant with
+`python3 -c "from sim.tests import test_spin_up_sensitivity as t; print(t.statistics())"`. The baseline's price cycle is a
+long chaotic one (period near 80 years), and which variant dips under half of it moves with unrelated merges (the variant
+that failed before the fix passes now). No bound loosened. Related: Complaint 473 (the cycling economy).
