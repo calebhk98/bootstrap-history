@@ -10,6 +10,7 @@ from sim.tests import economy_fixture as fixture
 from sim.tests import harness
 
 BAND = 1.05      # the basket may exceed what is left for households by rounding only
+ROUNDING_SHARE = 1e-9    # of the demand: a quantity under it is float residue of sums that cancel to nothing
 
 
 def left_for_households(setup, record):
@@ -30,7 +31,8 @@ def left_for_households(setup, record):
 def goods_over_supply(setup, record):
     left = left_for_households(setup, record)
     return {good: wanted / left.get(good, 0.0) if left.get(good, 0.0) > 0.0 else float("inf")
-            for good, wanted in record.opening_basket.items() if wanted > BAND * max(left.get(good, 0.0), 0.0)}
+            for good, wanted in record.opening_basket.items() if wanted > BAND * max(left.get(good, 0.0), 0.0)
+            and wanted > ROUNDING_SHARE * record.opening_demand.get(good, 0.0)}
 
 
 def limited_metal_setup(mine_runs):

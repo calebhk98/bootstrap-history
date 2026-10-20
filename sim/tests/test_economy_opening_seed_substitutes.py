@@ -1,7 +1,6 @@
-"""Complaint 473: seeding a durable a cohort wants can move the cohort to a substitute (seeding raises the
-wealth it spends from, so the first good drops out of its bids and another appears). The substitute is then
-bid for as a whole stock the opening sizes its makers to build in year 0. Seeding follows the bids until
-every durable a cohort wants is held."""
+"""Complaint 473: a durable a household keeps in use is not wealth it spends from. Counted as wealth, the stock
+the opening seeds raised a cohort's spending, which made a dearer substitute affordable, and the substitute was
+then bid for as a whole stock the opening sized its makers to build in year 0."""
 
 QUICK_TOPIC = True
 
@@ -9,57 +8,36 @@ import types
 import unittest
 from unittest import mock
 
-from sim.economy import opening
-from sim.economy.accounts import Book
-from sim.economy.types import Bid
+from sim.economy import households_orders, households_store
 
-COHORT = types.SimpleNamespace(agent_id="household:a", tile="t")
-FIRST, SUBSTITUTE = "stone", "brick"
-STOCK = 800.0
-WEAR = 10.0
-
-
-def book_stock(book, good):
-    return sum(book.holdings(COHORT.agent_id)["goods"].get(good, {}).values())
+SERVICE_LIFE_YEARS = 50.0
+FLOW = 1.0
+PRICE = 10.0
+SPECS = {"stone": types.SimpleNamespace(service_life_years=SERVICE_LIFE_YEARS),
+         "silver": types.SimpleNamespace(service_life_years=0.0)}
 
 
-def bids_that_move_on(book):
-    """Before the first good is held the cohort wants a stock of it; once it holds it, the wear of that and
-    a whole stock of the substitute."""
-    def bids(setup, record, view):
-        held_first = book_stock(record.book, FIRST) > 0.0
-        held_substitute = book_stock(record.book, SUBSTITUTE) > 0.0
-        wanted = {}
-        if not held_first:
-            wanted[FIRST] = STOCK
-        else:
-            wanted[FIRST] = WEAR
-            wanted[SUBSTITUTE] = WEAR if held_substitute else STOCK
-        for good, quantity in wanted.items():
-            yield COHORT, Bid(COHORT.agent_id, good, "area", COHORT.tile, quantity, 0.0, 1.0, 0.0, quantity), 1.0
-    return bids
+def wealth_in_stores(held):
+    """The store wealth the cohort spends from, with its needs keeping FLOW of stone a year in use."""
+    prices = {"stone": PRICE, "silver": PRICE}
+    with mock.patch.object(households_orders, "_smoothed_flow_by_good", lambda *_arguments: {"stone": FLOW}), \
+            mock.patch.object(households_orders, "with_quality_reach", lambda priced, *_arguments: priced), \
+            mock.patch.object(households_orders, "quality_reach", lambda *_arguments: 0.0):
+        return households_orders._store_value_outside_use(
+            types.SimpleNamespace(), [], None, SPECS, prices, prices, held, 100.0, 100.0, 0.0, 100.0, 50.0)
 
 
-class SeedFollowsSubstitutesTests(unittest.TestCase):
-    def test_a_durable_the_cohort_turns_to_after_the_first_seeding_is_seeded_too(self):
-        book = Book()
-        setup = types.SimpleNamespace(specs={FIRST: types.SimpleNamespace(service_life_years=80.0),
-                                             SUBSTITUTE: types.SimpleNamespace(service_life_years=80.0)})
-        record = types.SimpleNamespace(book=book)
-        with mock.patch.object(opening, "_opening_bids", bids_that_move_on(book)):
-            opening._seed_durable_stocks(setup, record, None)
-            self.assertEqual(book_stock(book, SUBSTITUTE), STOCK)
-            remaining = [bid for _cohort, bid, _price in opening._opening_bids(setup, record, None)]
-        self.assertLessEqual(sum(bid.floor_quantity for bid in remaining), 2.0 * WEAR)
+class DurablesInUseAreNotWealthTests(unittest.TestCase):
+    def test_a_stock_no_larger_than_the_one_kept_in_use_is_not_wealth(self):
+        self.assertEqual(wealth_in_stores({"stone": FLOW * SERVICE_LIFE_YEARS, "silver": 0.0}), 0.0)
 
-    def test_a_durable_already_held_is_not_seeded_again(self):
-        book = Book()
-        setup = types.SimpleNamespace(specs={FIRST: types.SimpleNamespace(service_life_years=80.0),
-                                             SUBSTITUTE: types.SimpleNamespace(service_life_years=80.0)})
-        record = types.SimpleNamespace(book=book)
-        with mock.patch.object(opening, "_opening_bids", bids_that_move_on(book)):
-            opening._seed_durable_stocks(setup, record, None)
-        self.assertEqual(book_stock(book, FIRST), STOCK)
+    def test_only_the_stock_beyond_what_is_kept_in_use_is_wealth(self):
+        in_use = FLOW * SERVICE_LIFE_YEARS * (1.0 + households_store.STORE_REBALANCE_BAND)
+        held = {"stone": in_use + 7.0, "silver": 0.0}
+        self.assertAlmostEqual(wealth_in_stores(held), 7.0 * PRICE, places=6)
+
+    def test_a_store_good_without_a_service_life_is_all_wealth(self):
+        self.assertEqual(wealth_in_stores({"stone": 0.0, "silver": 3.0}), 3.0 * PRICE)
 
 
 if __name__ == "__main__":
