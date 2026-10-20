@@ -4,7 +4,6 @@ A recipe that is a herd's yearly turn states `herd_stock` ({stock material: unit
 economy's opening sizes its producers to the opening's demand; the ledger's living stock starts as those runs times
 what a run keeps, held to the pasture the held tiles carry. One figure, not two: nothing here names a species.
 """
-from sim.geography.api import pasture_capacity_kg, tiles_held
 from sim.labour.api import production_data
 
 from .living_stock_growth import kilograms_per_unit
@@ -37,8 +36,7 @@ class LivingStockOpeningMixin:
     def grant_opening_herds(self):
         """Credit the opening herds to the ledger, scaled down together if the held tiles' pasture cannot carry them."""
         kept = self.opening_herd_units()
-        carried = sum(pasture_capacity_kg(tile, self.state.economy.wild_stock, self.world_map)
-                      for tile in tiles_held(self.civ, self.world_map))
+        carried = self.geography.held_pasture_kg(self.state.economy.wild_stock)
         weight = sum(units * kilograms_per_unit(material) for material, units in kept.items())
         scale = min(1.0, carried / weight) if weight > 0.0 else 1.0
         for material, units in sorted(kept.items()):

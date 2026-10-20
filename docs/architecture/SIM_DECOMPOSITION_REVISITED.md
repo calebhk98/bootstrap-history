@@ -565,3 +565,21 @@ package function reads no `self` at all and the mixin keeps only the glue that f
   only geography read it, so the old `sim.world` import in the geography walls test's allowlist was backwards. The
   allowlist is now empty.
 - The fingerprint was not run for any move.
+- `LivingStockOpeningMixin` (`sim/engine/living_stock_opening.py`): the pasture the held tiles carry moved to
+  `sim/geography/stock_land.py` (`held_pasture_kg`, which `pasture_room_kg` now uses too), reached as
+  `sim.geography.held_pasture_kg`. Distinct `self.` reads went from 9 to 8 (`civ` and `world_map` replaced by
+  `geography`). Proof: identical sha256 over forty simulated years of `grant_opening_herds`, `endemic_keeping` and the
+  held stock (two herd sizes alternating, one far beyond the pasture, the wild stock cut part-way) on base and branch.
+- `RegionalPeopleMixin` (`sim/engine/regional_people.py`): the migration rule between regions moved to
+  `sim/labour/regional_migration.py` (`sim.labour.api.moves_between_regions`); the calories each region is fed moved to
+  `sim/world/regional_population.py` (`kcal_per_day_by_region`); the people by tile, the tiles' population shares and the
+  borders moved to `sim/geography/settlement.py` (`people_by_tile`, `population_shares`, `borders_among`, the last
+  through `Geography.borders_among`). The year's epidemic inputs are now one call,
+  `DiseasePortMixin.epidemic_year`, so the mixin no longer names four disease methods. Distinct `self.` reads went from
+  9 to 6 (the disease port gained two, `_disease_burden` and `epidemic_hits_seats`, which it keeps beside
+  `disease_year`). Proof: identical sha256 over twelve stepped Rome years of the region populations, people by tile,
+  calories fed and the year's flows (regional food ratios set, then cleared) on base and branch, and the same state
+  md5.
+- Sim mixin count, before and after these two moves: 59 and 59 (no mixin emptied yet); count with
+  `python3 -c 'import ast; c = next(n for n in ast.parse(open("sim/engine/core.py").read()).body if isinstance(n, ast.ClassDef) and n.name == "Sim"); print(sum(getattr(b, "id", "").endswith("Mixin") for b in c.bases))'`.
+- The fingerprint was not run for these moves either.

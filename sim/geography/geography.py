@@ -9,7 +9,7 @@ located-material costs follow from it.
 import json
 from typing import Any, Dict, NotRequired, Optional, Tuple, TypedDict
 
-from sim.geography import food_society, located_places, mineral_shares, queries, reach_bands, routes_modes, soil_nitrogen, stock_land, tile_holdings
+from sim.geography import food_society, settlement, located_places, mineral_shares, queries, reach_bands, routes_modes, soil_nitrogen, stock_land, tile_holdings
 from sim.geography.queries import deposit_records
 from sim.geography.distance import haversine_km
 from sim.geography.parameters import parameter as parameter_value
@@ -106,6 +106,14 @@ class Geography:
     def pasture_room_kg(self, place: Optional[str], grazing_kg: float, wild_stock: Any) -> Optional[float]:
         """Live weight more the held tiles' grass keeps beside `grazing_kg` already on it; None without a place."""
         return stock_land.pasture_room_kg(place, grazing_kg, wild_stock, self._world.civ, self._world.world_map)
+
+    def borders_among(self, tile_ids: Any) -> Dict[str, Any]:
+        """{tile: the tiles it borders} for each of `tile_ids` on the map."""
+        return settlement.borders_among(tile_ids, self._world.world_map)
+
+    def held_pasture_kg(self, wild_stock: Any) -> float:
+        """Live weight the held tiles' grass carries at the wild stock now standing."""
+        return stock_land.held_pasture_kg(wild_stock, self._world.civ, self._world.world_map)
 
     def endemic_stock_loss(self, place: Optional[str], species: Any) -> float:
         """Share of a held lot of `species` lost in a year to the endemic disease at `place`."""

@@ -30,6 +30,22 @@ def kcal_per_day_fed(population: Population, eaten_over_need: float) -> float:
     return eaten_over_need * adult_equivalents(population) * SUBSISTENCE_CALORIES_PER_ADULT_EQUIVALENT_DAY
 
 
+def kcal_per_day_by_region(regions: Mapping[str, Population], eaten_over_need_by_region: Mapping[str, float],
+                           national_eaten_over_need: Optional[float], farm_kcal_per_day: float,
+                           relief_kcal_per_day: float) -> Dict[str, float]:
+    """{region: calories a day it is fed}: its households' eaten over need where the economy has booked it, else
+    the nation's, else its share of the farm model's harvest; open works' relief is shared by need."""
+    need = {tile: adult_equivalents(region) for tile, region in regions.items()}
+    total_need = sum(need.values())
+    fed = {}
+    for tile, region in regions.items():
+        ratio = eaten_over_need_by_region.get(tile, national_eaten_over_need)
+        share = need[tile] / total_need if total_need > 0.0 else 0.0
+        base = kcal_per_day_fed(region, ratio) if ratio is not None else farm_kcal_per_day * share
+        fed[tile] = base + relief_kcal_per_day * share
+    return fed
+
+
 def keep_to_nation(regions: Dict[str, Population], national: Population, tiles: Sequence[str],
                    share_of_tile: Mapping[str, float]) -> None:
     """Make `regions` cover exactly `tiles` and sum, band by band, to `national`. A tile not yet tracked starts as its
