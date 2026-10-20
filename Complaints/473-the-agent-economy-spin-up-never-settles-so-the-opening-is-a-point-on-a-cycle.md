@@ -471,3 +471,51 @@ and remains: bids far beyond the area's offered hours clear at the bidders' rese
 from 5.6e10 to 1.9e09, `lend_working_capital` in year 46 moves households from 2.10e10 to 1.90e10 (it was 3.1e08), and the
 households keep about 1.9e10 into the credit round. Not run: the full spin-up to year 48 (longer than five minutes), so the
 rate and subsistence-borrowing figures of the later years are unmeasured.
+
+## Measured: is the steady deflation the mint failing to replace worn coin? (branch 473-steady-deflation-and-zero-rate)
+
+**Finding.** The money stock shrinks every year by about the coin wear, as the sections above say, but that shrinkage is far too small
+to be the deflation. In a 15-year trace from a short-spin-up opening the stock falls about 13 per cent while the price level falls
+about 55 per cent. What moves with the price level is the real economy contracting: hours employers take, producers' cash and real
+output fall by large factors in the first five years while the households' cash rises. No code changed; no small general defect
+was proven.
+
+**Command.** `ROME_SPIN_UP_YEARS=3,2` and a probe that steps `AgentEconomy` the way `economy_port_trace.spin_up_trace` does and prints,
+per year, the figures below (`scratchpad/p473_money.py` in the orchestrator's scratchpad; about 6 s a year, 15 years in under 100 s).
+Note the opening is the 3,2-year short spin-up, not the declared-length one, because building the declared-length opening cold took
+longer than five minutes; so the first-year contraction below may partly be the unsettled opening and the 60-year figures are
+not reproduced here.
+
+| Year | Price level | Money stock | Coin worn | Coin struck net | Households' cash | Cohorts' cash target | Producers' cash | Hours hired | Real output | Rate |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 0 | 0.645 | 4.07e10 | 4.11e8 | 0 | 2.09e10 | 1.3e8 | 1.86e10 | 1.44e10 | 3.59e10 | 0.174 |
+| 1 | 0.686 | 4.04e10 | 4.08e8 | 1.1e8 | 2.43e10 | 9.5e8 | 1.46e10 | 5.99e9 | 1.22e10 | 0.050 |
+| 2 | 0.629 | 4.00e10 | 4.04e8 | 1.3e7 | 2.57e10 | 7.5e8 | 1.27e10 | 3.57e9 | 5.6e9 | 0 |
+| 4 | 0.502 | 3.91e10 | 3.95e8 | -2.0e7 | 2.78e10 | 6.6e8 | 9.0e9 | 2.81e9 | 1.4e9 | 0 |
+| 7 | 0.369 | 3.80e10 | 3.84e8 | -9.8e6 | 3.02e10 | 7.3e8 | 6.2e9 | 3.21e9 | 1.4e9 | 0 |
+| 10 | 0.334 | 3.68e10 | 3.72e8 | 3.8e6 | 3.09e10 | 1.14e9 | 3.6e9 | 3.56e9 | 1.7e9 | 0 |
+| 14 | 0.314 | 3.53e10 | 3.56e8 | -3.2e7 | 3.31e10 | not printed | not printed | 4.47e9 | not printed | 0.025 |
+
+Offered hours stay near 1.1e11 throughout, so about 97 per cent of the offered hours are idle after year 2. Cohorts' mean
+expected inflation runs between -0.03 and -0.18 from year 1.
+
+**Reading.**
+1. Mint: it does not replace wear. Struck net is between minus 7e7 and plus 1.1e8 against wear near 4e8 (share of wear
+   replaced about zero). The cause is the one already found above (Update 1 and 2): metal reaches the mint only from silver
+   producers, whose output the declared deposits cap at a fraction of wear. `mint.mint_orders` bids for all the metal offered
+   at the mint price; nothing in its decision starves it, so no change to `sim/economy/mint.py` is justified. Changing it to strike
+   without metal would be a money-supply target, which the design forbids.
+2. That shrinkage (1 per cent a year) cannot explain a price level falling 55 per cent in 14 years. The money is not lost
+   from circulation but sits with households: their holdings are about 30 times their own cash target while spending is limited to
+   income plus a capped drawdown (`households_orders.goods_orders`, `WEALTH_DRAWDOWN_LIMIT`), and producers' cash drains to
+   them as the wage bill and sales collapse. So the price level follows demand from a contracting income, not the stock.
+3. A reinforcing loop is visible but not isolated: `currency.cash_balance_target` takes the cost of holding money as
+   `max(0, rate + expected inflation)`; at a zero rate and expected inflation below zero the cost is zero and the target is
+   at its largest, so expected deflation raises the demand for cash exactly when the nominal rate cannot go below zero.
+   Whether it matters was not measured (cash is already far above target here).
+
+**Not found.** Why hours hired and real output fall by an order of magnitude after year 0 (producers' plans against falling prices
+and a wage floor are the candidates; the probe did not print wages or plans). Whether the same holds on the declared-length opening
+(the orchestrator's 60-year trace on the supply-curve labour cap shows the level recovering after about year 30). A one-year
+spike of the rate to its ceiling between years 30 and 60 is not explained by this probe, which stops at year 14; the 46th-year spike
+analysis above (wage-loan sizing, `lend_working_capital`) remains the lead.
