@@ -42,6 +42,14 @@ class ActorRecord:
 	levy_requisition_rate: float = 0.0
 	levy_office_rate: float = 0.0
 	levy_base: float = 0.0
+	# what lenders lost on a state's defaults, fading by the year; the rate it pays rises with it (government_credit.py)
+	remembered_default_loss: float = 0.0
+	defaults: int = 0
+	# hours of labour owed to the state this year by what it is for (works, army), and the hours it took: the households'
+	# lost working time; person-years left over after the upkeep, for raising works (revenue_labour.py)
+	corvee_due: Dict[str, float] = field(default_factory=dict)
+	corvee_hours: Dict[str, float] = field(default_factory=dict)
+	corvee_spare_years: float = 0.0
 	# soldiers a state keeps now; 0 until its first year, when it holds the force it wants
 	army: float = 0.0
 	# the last check of the state's wanted head counts against its country's people and food, by line (headcount.py)

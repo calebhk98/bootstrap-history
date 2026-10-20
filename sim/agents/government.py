@@ -15,6 +15,8 @@ from typing import Any, Dict, List, Tuple
 from . import arrears, budget, demand_answer, headcount, ledger, state_works
 from .base import Actor, RecordedActor
 from .government_coinage import CoinageMixin
+from .government_corvee import CorveeMixin
+from .government_credit import CreditRecordMixin
 from .government_granary import GranaryMixin
 from .government_stores import StoresMixin
 from .edges import EDGE_PATRONAGE, EDGE_STATE_SPENDING
@@ -24,7 +26,7 @@ from .tuning_spending import ACCESSION_PROBABILITY_PER_YEAR, PUBLIC_BUILDING_LIF
 from .values import invention_gains, weighted_gain
 
 
-class Government(CoinageMixin, GranaryMixin, StoresMixin, SurplusMixin, RecordedActor):
+class Government(CorveeMixin, CreditRecordMixin, CoinageMixin, GranaryMixin, StoresMixin, SurplusMixin, RecordedActor):
 	kind = "government"
 
 	def imitation_worth(self, node_id: str, world: Any) -> float:
@@ -104,11 +106,15 @@ class Government(CoinageMixin, GranaryMixin, StoresMixin, SurplusMixin, Recorded
 		self.pay_interest(world)
 		self.receive_revenue(world)
 		arrears.settle(self, world)
-		wanted = world.army_wanted()
+		conscripts = self.conscript_years(world)
+		wanted = max(world.army_wanted(), conscripts)
 		soldiers = self.record.army if self.record.army > 0.0 else wanted
 		others = headcount.people_in(budget.standing_lines(world, 0.0))
 		soldiers, wanted = headcount.checked_army(world, self.record, wanted, soldiers, others)
-		standing = budget.standing_lines(world, soldiers) + budget.concession_lines(world.group_claims())
+		conscripts = min(conscripts, soldiers)
+		self.serve_conscripts(conscripts, world)
+		standing = budget.standing_lines(world, soldiers, conscripts) + budget.concession_lines(world.group_claims())
+		standing = self.staff_works_by_corvee(standing, world)
 		lines = self.draw_stores(standing, world)
 		self.keep_granary(world)
 		share = budget.funded_share(sum(line.money for line in lines), self.money + self.credit_ceiling(world))
@@ -162,11 +168,13 @@ class Government(CoinageMixin, GranaryMixin, StoresMixin, SurplusMixin, Recorded
 
 	def advance(self, world: Any) -> None:
 		held = dict(self.workforce)
+		self.fade_default_record()
 		self.accede(world)
 		lines, share = self.pay_standing_need(world)
 		self.decide_debasement(world)
 		self.pay_patron(share, world)
 		self.act(world)
+		self.build_works_by_corvee(world)
 		self.build_works(lines, world)
 		self.employ_standing(lines, share, world)
 		self.seek_shortfall(lines, world)

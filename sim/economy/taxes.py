@@ -49,7 +49,7 @@ class Assessment:
 
 
 # Bases the actor layer assesses on the purses of the actors it names (sim/agents/revenue_bases.py), not the economy.
-ACTOR_LAYER_BASES = frozenset({"stratum_income", "land_rent", "land_value"})
+ACTOR_LAYER_BASES = frozenset({"stratum_income", "land_rent", "land_value", "labour_days"})
 
 
 def forms_from_civ_data(state_revenue: Sequence[Mapping]) -> Tuple[TaxForm, ...]:

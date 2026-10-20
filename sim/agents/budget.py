@@ -21,12 +21,14 @@ EQUIPMENT_MATERIAL = "iron_bar_kg"
 SOLDIER_TRADE = "soldier"
 
 
-def army_line(world: Any, soldiers: float) -> List[Line]:
+def army_line(world: Any, soldiers: float, conscripts: float = 0.0) -> List[Line]:
+	"""The force of `soldiers`, of whom `conscripts` serve a labour due and draw no pay; all of it wears equipment."""
 	if soldiers <= 0.0:
 		return []
+	paid = max(0.0, soldiers - conscripts)
 	tonnes = soldiers * world.equipment_kg_per_soldier() / 1000.0
-	return [Line("army", "requisition", {SOLDIER_TRADE: soldiers},
-				 soldiers * world.pay_per_person_year(SOLDIER_TRADE),
+	return [Line("army", "requisition", {SOLDIER_TRADE: paid} if paid > 0.0 else {},
+				 paid * world.pay_per_person_year(SOLDIER_TRADE),
 				 {world.commodity_of(EQUIPMENT_MATERIAL): tonnes},
 				 world.material_cost(EQUIPMENT_MATERIAL, tonnes))]
 
@@ -49,16 +51,16 @@ def concession_lines(claims: Dict[str, float]) -> List[Line]:
 	return [Line(name, "requisition", transfer=amount) for name, amount in sorted(claims.items()) if amount > 0.0]
 
 
-def standing_lines(world: Any, soldiers: Optional[float] = None) -> List[Line]:
-	"""Everything the state keeps up this year, in a fixed order, for an army of `soldiers`
+def standing_lines(world: Any, soldiers: Optional[float] = None, conscripts: float = 0.0) -> List[Line]:
+	"""Everything the state keeps up this year, in a fixed order, for an army of `soldiers`, `conscripts` of them unpaid
 	(the force it wants when not given)."""
 	if soldiers is None:
 		soldiers = world.army_wanted()
-	return (army_line(world, soldiers) + administration_line(world) + budget_lines.roads_line(world)
+	return (army_line(world, soldiers, conscripts) + administration_line(world) + budget_lines.roads_line(world)
 			+ budget_lines.public_buildings_line(world) + budget_lines.court_line(world, officials_kept(world))
 			+ budget_lines.dole_line(world) + budget_lines.navy_line(world) + budget_works.works_upkeep_lines(world)
 			+ budget_works.collection_line(world) + budget_works.campaign_line(world, soldiers)
-			+ budget_works.donative_line(world, soldiers))
+			+ budget_works.donative_line(world, max(0.0, soldiers - conscripts)))
 
 
 def army_next_year(soldiers: float, wanted: float, funded: float) -> float:

@@ -17,6 +17,8 @@ from typing import Any, Callable, Dict, Optional
 from sim.book import ROUNDING_SHARE, Book, Transfer, is_edge
 from sim.contracts import DEPOSIT, FACILITY, Contracts
 
+from .named_lenders import NamedLenders
+
 COIN = "engine_coin"                          # the currency of the actors' money in the shared book (the engine counts in this coin)
 EDGE_SAVERS = "edge:savers"                   # the household savers who lend to actors
 EDGE_EXCHANGE = "edge:exchange"                # the actors' coin turned into the economy's unit and back
@@ -45,6 +47,8 @@ class Purses:
         self.interest_pending: float = 0.0
         # told (account, signed amount, label) when a lender's net position moves by a draw or a repayment
         self.observer: Optional[Callable[[str, float, str], None]] = None
+        # the borrowers (a state) that name their lenders, and who lent each what (named_lenders.py)
+        self.named_lenders = NamedLenders()
 
     # ---- reads ------------------------------------------------------------------------------
     def purse(self, account: str) -> float:
@@ -170,6 +174,12 @@ class Purses:
         """The borrower closes owing: the claim against it is dropped and the pool bears the loss, every deposit
         losing in proportion (the cash was booked as an outlay when it left and no repayment follows); the loss."""
         lost = sum(contract.principal for contract in self.contracts.default(borrower, FACILITY))
+        if self.named_lenders.names(borrower):
+            deposits = {depositor: contract.principal for depositor, contract in self.contracts.deposits.items()}
+            for depositor, part in self.named_lenders.settle_default(borrower, lost, deposits).items():
+                self.contracts.withdraw(depositor, part, DEBT_FLOOR)
+                self._tell(depositor, -part, DEPOSIT_LOST)
+                lost -= part
         total = self.contracts.total_deposits()
         if lost > 0.0 and total > 0.0:
             factor = max(0.0, (total - lost) / total)
@@ -182,6 +192,9 @@ class Purses:
         self._fund_pool(shortfall)
         self.book.transfer(Transfer(POOL, borrower, COIN, shortfall, FACILITY_DRAW))
         self.contracts.draw(borrower, POOL, COIN, shortfall)
+        if self.named_lenders.names(borrower):
+            self.named_lenders.drew(borrower, shortfall, {depositor: contract.principal
+                                                          for depositor, contract in self.contracts.deposits.items()})
 
     def _fund_pool(self, amount: float) -> None:
         """The pool can pay out `amount` and still hold the interest it owes its depositors: the savers deposit what
@@ -221,6 +234,8 @@ class Purses:
                         self.book.transfer(Transfer(borrower, lender, COIN, part, FACILITY_REPAYMENT))
                         purse -= part   # what the book now holds for the borrower
                         self.contracts.repay_facility(borrower, lender, part)
+                if self.named_lenders.names(borrower):
+                    self.named_lenders.repaid(borrower, repaid / debt)
         self.contracts.tidy_facility(borrower, DEBT_FLOOR)
 
     def _tell(self, account: str, signed: float, label: str) -> None:
@@ -244,7 +259,8 @@ class Purses:
     def to_canon_dict(self) -> Dict[str, Any]:
         return {"book": self.book.to_record(only=(COIN,)),
                 "facilities": self.contracts.to_records(facilities=True),
-                "offers": dict(sorted(self.offers.items())), "interest_pending": self.interest_pending}
+                "offers": dict(sorted(self.offers.items())), "interest_pending": self.interest_pending,
+                "named_lenders": self.named_lenders.to_canon_dict()}
 
     @classmethod
     def from_record(cls, record: Dict[str, Any]) -> "Purses":
@@ -252,4 +268,5 @@ class Purses:
         purses.contracts.load_records(record["facilities"])
         purses.offers = dict(record.get("offers") or {})
         purses.interest_pending = float(record.get("interest_pending", 0.0))
+        purses.named_lenders = NamedLenders.from_record(record.get("named_lenders") or {})
         return purses
