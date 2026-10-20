@@ -60,7 +60,6 @@ def metal_change_in_a_year(game, cut):
 
 for civ in ("rome_100ad",):
     game = agent_game(civ)
-    game.step()
     check("%s: a state that cuts nothing leaves the metal in the coin" % civ,
           metal_change_in_a_year(game, 0.0) == 1.0)
     check("%s: the state's cut lowers the metal in the coin once, the coin it saves struck as more coin" % civ,
