@@ -7,6 +7,7 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, List, Tuple
 
 from sim.contracts import Contracts
+from sim.rekey import rekey
 from sim.labour.api import MarketState, market_state_from_plain, market_state_to_plain
 
 from .accounts import Book
@@ -19,6 +20,12 @@ from .producers import Producer
 from .record_plain import plain
 from .state_budget import StateBudget
 from .types import AgentId, CurrencySpec, Loan, LoanRequest, TileId, TradeId
+
+
+# the record's fields whose annotation names an AgentId (a test reads the source and holds this list to it)
+AGENT_KEYED_FIELDS = ("cohorts", "producers", "merchants", "remembered_defaults", "credit_losses", "property_income",
+                      "expansion_runs", "worn_runs", "titles", "bondage", "lent_by_borrower", "banks", "shares",
+                      "last_dividends")
 
 
 @dataclass
@@ -74,6 +81,15 @@ class EconomyRecord:
     @loans.setter
     def loans(self, loans: List[Loan]) -> None:
         self.contracts.term_loans = loans
+
+    def rename_agent(self, old: AgentId, new: AgentId) -> None:
+        """`old` becomes `new` in the book, the contracts and every store keyed by an agent id (the fields typed so),
+        and as the borrower of a request; what each holds or owes is added to what `new` already has."""
+        self.book.rename_agent(old, new)
+        self.contracts.rename(old, new)
+        for name in AGENT_KEYED_FIELDS:
+            setattr(self, name, rekey(getattr(self, name), old, new))
+        self.loan_requests = rekey(self.loan_requests, old, new)
 
     def to_record(self, skip_currencies=()) -> Dict[str, Any]:
         """The record as plain data; money in `skip_currencies` (another owner's currency in the shared book) is left out."""

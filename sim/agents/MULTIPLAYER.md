@@ -19,7 +19,7 @@ Where the seed comes from (engine adapter `agents_port_cast.py`):
 1. The civilisation the game was started with. It becomes `home_country` and gets the home
    government.
 2. The foreign economies enabled for the start year (`data/world/foreign_economies.json`). Each one
-   becomes a country with a profile built from its own civilisation file and a foreign government.
+   becomes a country with a profile built from its own civilisation file and a government of its own (the one `Government`, scoped to the country).
 3. An optional `"cast"` key in the civilisation dict, which adds further countries, players and
    strata. Mods already patch civilisation files, so a mod adds actors without new loader code.
 
@@ -51,7 +51,7 @@ whatever is pending and a replay reproduces it.
 | Kind | Module | Created by | Decides with |
 |---|---|---|---|
 | `government` | `government.py` | cast (home country) | budget, levy, `ValuePolicy` copies |
-| `foreign_government` | `government_foreign.py` | cast (each partner) | revenue from its profile, army and officials, copies under fog |
+| `government` (country set) | `government.py`, read through `country_state.py` | cast (each partner) | the one Government: revenue forms from its civilisation file, the home budget lines, copies under fog |
 | `player` | `player.py`, `player_commands.py` | cast `"actors"` (a join command is Complaint 481) | queued orders; `controller == "ai"` adds a simple research-and-open rule |
 | `firm` | `firm.py`, `business*.py` | spawner `firm_entry` after any player's proven concern | entry value, exit on losses |
 | `trader` | `trader.py`, `trader_entry.py` | spawner `trader_entry` when a route's gap pays | best margin within capital, sized to a share of depth |

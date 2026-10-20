@@ -24,7 +24,7 @@ from .setup import EconomySetup, TradeSpec, goods_specs, recipe_tile_key
 from .types import (EDGE_CARGO, EDGE_CONSUMPTION, EDGE_EXCHANGE, EDGE_EXTERNAL, EDGE_LEGACY, EDGE_MINT, EDGE_PRODUCTION, EDGE_WEAR, Bid,
                     GoodsMove, Offer, SiteLimit, Transfer, external_edge)
 from .year_accounts import YearAccounts
-from . import baseline_checks, settling
+from . import baseline_checks, settling, spin_up_sensitivity
 from .unit_cost import variable_cost_per_run
 from .titles_value import title_wealth
 from .debt_relief import indebted_tiles as record_indebted_tiles
@@ -34,7 +34,7 @@ from .year_labour import trade_premium
 from sim.world import capital_market
 
 __all__ = [
-    "YearAccounts", "baseline_checks", "settling",
+    "YearAccounts", "baseline_checks", "settling", "spin_up_sensitivity",
     "carriage_wear", "diagnostics", "households", "taxes", "tile_costs", "currency_from_coin_standard", "Economy", "external_orders",
     "price_response", "prices_at", "offered_units", "watch_tiles",
     "shown_prices", "Producer", "expected_output_prices", "live_input_prices", "live_wages", "AgentOrders",
@@ -422,3 +422,9 @@ def settle_agent_takings(economy, agent_id, edge_id, tile_note="agent's takings"
                for tile, quantity in tiles.items() if quantity > 0.0]
     book.move_many(returns)
     return proceeds
+
+
+def rename_agent(economy, old, new):
+    """`old` becomes `new` throughout the economy's records: money, goods, debts and claims, titles and shares are
+    added to what `new` already holds; no posting is made, so no total moves."""
+    economy.record.rename_agent(old, new)

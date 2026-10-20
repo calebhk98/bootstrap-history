@@ -48,7 +48,8 @@ class MarketView(Protocol):
     year: int
 
     def price(self, good: GoodId, area: AreaId) -> Optional[float]:
-        """Last year's clearing price; None if the market never cleared."""
+        """The planning price: last year's traded price or, where nothing traded, the market's quote (see
+        MarketView.quote_kind in market_memory.py); None if the market never posted anything."""
 
     def cleared_price(self, good: GoodId, area: AreaId) -> Optional[float]:
         """The price the market cleared at last year, as paid, not as remembered (the remembered price moves

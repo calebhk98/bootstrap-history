@@ -33,4 +33,4 @@ Children, in order of work:
 - 590 (closed): A foreign country's population never changes and its strata grow by their own rule
 - 591: A foreign country has no food or farming: the farm, granary and nutrition chain runs for the home country only
 - 592: A foreign country has no disease: the disease port steps one patch, the home nation
-- 593: ForeignGovernment is one revenue formula: no revenue forms, works, navy, dole, reserve policy or borrowing
+- 593 (partly done, see 649): ForeignGovernment is one revenue formula: no revenue forms, works, navy, dole, reserve policy or borrowing

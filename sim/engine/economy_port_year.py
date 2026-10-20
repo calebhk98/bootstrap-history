@@ -12,6 +12,7 @@ import os
 from sim.agents.api import COIN_RESTRIKE_SHARE_PER_YEAR, EDGE_EXCHANGE as COIN_EXCHANGE, PURSE_CURRENCY
 from sim.constants import declare
 from sim.economy import api as economy_api
+from sim.rekey import rekey
 from sim.world.demography_turnover import working_age_turnover
 from sim.economy.api import (EDGE_EXTERNAL, EDGE_LEGACY, AgentOrders, Economy, GoodsMove, Offer, Producer,
                              YearInputs, expected_output_prices, external_orders, live_input_prices, live_wages,
@@ -262,6 +263,15 @@ class AgentEconomy(TilePricesMixin):
                 kept = [order for order in self.stored[kind] if order[key] != actor_id]
                 if len(kept) != len(self.stored[kind]):   # a list nothing left keeps its identity, and its index
                     self.stored[kind] = kept
+
+    def rename_agent(self, old, new):
+        """`old` becomes `new` in the economy's records and in the year's stored notes (a seat handed over)."""
+        if self.opened():
+            economy_api.rename_agent(self.economy(), old, new)
+            self._record_stale = True
+        for kind in ("seat_takings", "sales", "purchases"):
+            if kind in self.stored:
+                rekey(self.stored[kind], old, new)
 
     def trades_good(self, material):
         """Whether the economy has a market for the material."""

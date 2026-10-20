@@ -16,6 +16,7 @@ from typing import Any, Callable, Dict, Optional
 
 from sim.book import ROUNDING_SHARE, Book, Transfer, is_edge
 from sim.contracts import DEPOSIT, FACILITY, Contracts
+from sim.rekey import rekey
 
 from .bonds import BondBook
 from .named_lenders import NamedLenders
@@ -277,6 +278,16 @@ class Purses:
             return
         book.absorb(Book.from_record(self.book.to_record(only=(COIN,))))
         self.book = book
+
+    def rename_account(self, old: str, new: str) -> None:
+        """`old` becomes `new` with all it holds and owes: its purse and goods, its deposit, its facility and term
+        loans as borrower and as lender, its bonds, its named lenders and its offer of funds. Nothing is paid, so
+        every total in the book and the registry is what it was."""
+        self.book.rename_agent(old, new)
+        self.contracts.rename(old, new)
+        for held in (self.bonds.terms, self.bonds.held, self.named_lenders.borrowers, self.named_lenders.held,
+                     self.named_lenders.written_down, self.offers):
+            rekey(held, old, new)
 
     # ---- the save file ----------------------------------------------------------------------
     def to_canon_dict(self) -> Dict[str, Any]:

@@ -1,13 +1,15 @@
-"""A market with offers and no bids drifts toward the lowest ask instead of freezing, and the first trade
+"""A market with offers and no bids quotes its lowest unfilled ask instead of keeping a price, and the first trade
 after such quiet years moves the remembered price only part of the way."""
 
 QUICK_TOPIC = True
 
+import dataclasses
 import unittest
 
 from sim.economy import market_memory_asks as asks
+from sim.economy import market_quote
 from sim.economy.market_memory import MarketMemory
-from sim.economy.types import Bid, Offer
+from sim.economy.types import QUOTE_BEST_UNFILLED_BID, QUOTE_LOWEST_UNFILLED_ASK, Bid, Offer
 
 
 def offer(ask):
@@ -18,30 +20,23 @@ def bid(budget=10.0):
     return Bid("buyer", "limestone_kg", "area", "tile", 1.0, 0.0, 1.0, 0.0, budget)
 
 
-class NoBidMemoryTests(unittest.TestCase):
-    def test_remembered_price_moves_part_of_the_way_to_the_lowest_ask(self):
-        price = asks.price_after_no_bids(1000.0, [], [offer(500.0), offer(100.0)])
-        self.assertLess(price, 1000.0)
-        self.assertGreater(price, 100.0)
+class NoBidQuoteTests(unittest.TestCase):
+    def test_a_market_with_offers_and_no_bids_quotes_the_lowest_unfilled_ask(self):
+        quote = market_quote.no_trade_quote([], [offer(500.0), offer(100.0)])
+        self.assertEqual((quote.kind, quote.price), (QUOTE_LOWEST_UNFILLED_ASK, 100.0))
 
-    def test_repeated_years_converge_on_the_ask(self):
-        price = 1000.0
-        for _year in range(30):
-            price = asks.price_after_no_bids(price, [], [offer(100.0)]) or price
-        self.assertLess(price, 101.0)
-
-    def test_an_ask_above_the_memory_does_not_raise_it(self):
-        self.assertIsNone(asks.price_after_no_bids(100.0, [], [offer(900.0)]))
-
-    def test_a_market_with_a_live_bid_is_left_to_the_other_rules(self):
-        self.assertIsNone(asks.price_after_no_bids(1000.0, [bid()], [offer(100.0)]))
+    def test_a_market_with_a_live_bid_below_every_ask_quotes_the_bid(self):
+        capped = dataclasses.replace(bid(), maximum_price=50.0)
+        quote = market_quote.no_trade_quote([capped], [offer(100.0)])
+        self.assertEqual(quote.price, 50.0)
+        self.assertEqual(quote.kind, QUOTE_BEST_UNFILLED_BID)
 
     def test_a_broke_buyer_is_no_bid(self):
-        self.assertIsNotNone(asks.price_after_no_bids(1000.0, [bid(budget=0.0)], [offer(100.0)]))
+        quote = market_quote.no_trade_quote([bid(budget=0.0)], [offer(100.0)])
+        self.assertEqual((quote.kind, quote.price), (QUOTE_LOWEST_UNFILLED_ASK, 100.0))
 
-    def test_nothing_remembered_or_nothing_offered_gives_none(self):
-        self.assertIsNone(asks.price_after_no_bids(None, [], [offer(100.0)]))
-        self.assertIsNone(asks.price_after_no_bids(1000.0, [], []))
+    def test_nothing_offered_and_nothing_bid_quotes_nothing(self):
+        self.assertIsNone(market_quote.no_trade_quote([], []))
 
 
 class ResumedTradeTests(unittest.TestCase):

@@ -82,9 +82,9 @@ class MarkupLimitTests(unittest.TestCase):
         eager = [Bid("buyer", GOOD, AREA, TILE, 500.0, 0.0, 200.0, 0.0, 1e9)]
         self.assertGreaterEqual(asked(eager, 100.0, 200.0, 200.0), 0.85 * 200.0)
 
-    def test_without_substitution_there_is_no_limit(self):
-        ask = asked([fixed_budget_buyer(budget=5.0, reference=200.0)], 100.0, 200.0, 200.0, substitution=1.0)
-        self.assertGreaterEqual(ask, 0.85 * 200.0)
+    def test_without_substitution_the_stated_band_still_bounds_the_ask(self):
+        ask = asked([fixed_budget_buyer()], 1000.0, RUN_COST_PER_UNIT * 2.9, 10.0, substitution=1.0)
+        self.assertLessEqual(ask, seller_offers.ASK_BAND_CEILING * RUN_COST_PER_UNIT * (1.0 + 1e-9))
 
 
 if __name__ == "__main__":

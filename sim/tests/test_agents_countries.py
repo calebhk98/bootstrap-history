@@ -6,13 +6,16 @@ from .harness import check
 
 from sim.agents.api import ActorRecord, ActorRegistry, ActorsState, RecordedActor
 from sim.agents import registry as registry_module
-from sim.agents import country_view, government_foreign  # noqa: F401  (they register themselves)
+from sim.agents import country_view  # noqa: F401  (registers the country scope)
 from sim.agents.cast import cast_from_civilisations, profile_from_civilisation, seed_cast
 from sim.agents.country_view import CountryWorld, NoCountryEconomy
 from sim.agents.protocols import World
+from sim.world import demography
+from sim.agents.tuning_country import ARMY_SHARE_OF_POPULATION
 from sim.engine.state import deserialize_state, serialize_state
 
-from .agents_fake_world import FakeWorld, make_node, total_money
+from .agents_fake_world import make_node, total_money
+from .country_state_world import StateWorld
 
 
 class CountryAnswers:
@@ -28,7 +31,7 @@ class CountryAnswers:
 		return {"food": 20.0}
 
 
-class ScenarioWorld(FakeWorld):
+class ScenarioWorld(StateWorld):
 	"""The shared (home) world plus what a country's scope asks of it."""
 
 	def __init__(self) -> None:
@@ -73,7 +76,8 @@ HOME = {"id": "alpha", "name": "Alpha", "population": 1_000_000, "urban_fraction
 				 "actors": [{"actor_id": "observer:1", "kind": "observer", "controller": "llm", "money": 20.0,
 							 "knowledge": ["wheel"]}]}}
 BETA = {"id": "beta", "name": "Beta", "population": 500_000, "state_capacity": 0.5, "starting_tax_share": 0.2,
-		"wage_index": 0.5, "home_tiles": ["algeria_02"], "starting_techs": ["loom"], "cast": {"treasury": 10.0, "countries": [
+		"wage_index": 0.5, "home_tiles": ["algeria_02"], "starting_techs": ["loom"],
+		"state_revenue": [{"form": "poll_tax", "basis": "adult_labour_years", "rate": 0.2}], "cast": {"treasury": 10.0, "countries": [
 			{"id": "gamma", "name": "Gamma", "population": 100_000, "starting_techs": ["raft"], "home_tiles": ["algeria_03"]}]}}
 DELTA = {"id": "delta", "population": 200_000}
 profile = profile_from_civilisation(HOME)
@@ -94,8 +98,8 @@ check("every country has a profile, declared ones too", set(profiles) == {"alpha
 check("the home government is a government with no foreign country",
 	  by_id["government:alpha"].kind == "government" and by_id["government:alpha"].country is None
 	  and by_id["government:alpha"].money == 50.0)
-check("each foreign country has a foreign government of its own",
-	  all(by_id["government:" + country].kind == "foreign_government" and by_id["government:" + country].country == country
+check("each foreign country has a government of its own, scoped to the country",
+	  all(by_id["government:" + country].kind == "government" and by_id["government:" + country].country == country
 		  for country in ("beta", "gamma", "delta")))
 check("a government sits where its country is", by_id["government:beta"].location == "algeria_02")
 check("a declared actor joins the cast with its own fields",
@@ -195,29 +199,27 @@ government = registry2.actors["government:beta"]
 world.distances = {"algeria_02": 0.0}
 registry2.advance(world)
 income, outlays = government.record.income, government.record.outlays
-check("a foreign government raises revenue from its country's taxpayers",
-	  income.get("edge:foreign_taxpayers", 0.0) > 0.0, income)
-expected = 500_000 * 0.3 * 50.0 * 0.2 * 0.5
-check("its revenue follows from people, wages, tax share and capacity",
-	  abs(income["edge:foreign_taxpayers"] - expected) < 1e-6, (income, expected))
-check("it spends on its army and officials", outlays.get("edge:foreign_payroll_army", 0.0) > 0.0
-	  and outlays.get("edge:foreign_payroll_officials", 0.0) > 0.0, outlays)
+check("a foreign government raises revenue from its declared forms",
+	  income.get("taxation", 0.0) > 0.0, income)
+working_age = demography.Population.stationary(500_000, seed=0).working_age
+opening_army = 500_000 * ARMY_SHARE_OF_POPULATION
+expected = 0.2 * (working_age - opening_army) * 50.0
+check("its revenue is the poll tax: the rate on the working age less the army, at the country's own pay",
+	  abs(income["taxation"] - expected) < 1e-6 and abs(government.record.revenue_by_form["poll_tax"] - expected) < 1e-6,
+	  (income, expected))
+check("it spends on its army and officials", {"army", "administration"} <= set(government.record.need), government.record.need)
 check("its purse is its income less its outlays, opening money included",
 	  abs(government.money - (sum(income.values()) - sum(outlays.values()))) < 1e-6, government.money)
-check("money enters and leaves a foreign government only at named edges or on its own copying",
-	  all(label.startswith("edge:") or label == "copying" for label in list(income) + list(outlays)), (income, outlays))
+check("money enters and leaves a foreign government only for taxes, the lines it keeps, purchases or its own copying",
+	  all(label.startswith("edge:") or label in set(government.record.need) | {"taxation", "purchase", "copying"}
+		  for label in list(income) + list(outlays)), (income, outlays))
 check("it keeps what it does not spend", government.money > 0.0)
 check("it never levies the founder's side of the world", world.government_actor.asked == [])
 check("it copies the founder's invention it values, from its own tree",
 	  "wheel" in government.knowledge or "wheel" in government.works, (government.knowledge, government.works))
 check("its staff stay out of the founder's labour pool", government.workforce == {})
 check("a foreign government's army follows its funded share", government.record.army > 0.0)
-
-# nothing beyond the world a government is not given: a country with no wage gets no revenue, no crash
-poor = CountryWorld(world, profiles["gamma"], registry2)
-check("a world that is not a country's scope yields a government no revenue", government.revenue(world) == 0.0)
-check("revenue scales with a country's taxable people",
-	  government.revenue(own_view) > government.revenue(poor), (government.revenue(own_view), government.revenue(poor)))
+check("a foreign state does not research with the founder's hands", not government.researches)
 check("every actor's money other than the foreign government's is untouched", total_money(
 	[actor for actor_id, actor in registry2.actors.items() if actor_id != "government:beta"]) == 0.0)
 

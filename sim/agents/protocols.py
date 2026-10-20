@@ -45,8 +45,8 @@ class World(Protocol):
 	def trade_exists(self, trade: str) -> bool:
 		...
 
-	def fleet_goods(self) -> List[Any]:
-		"""Available naval goods with their crews, service lives and the state's held units."""
+	def fleet_goods(self, holder_id: Optional[str] = None) -> List[Any]:
+		"""Available naval goods with their crews, service lives and the held units of a state (the founder's by default)."""
 		...
 
 	def threat_pressure(self) -> float:
@@ -82,7 +82,8 @@ class World(Protocol):
 	def local_staff(self, trade: str, people: float) -> float:
 		...
 
-	def notice_over(self, scale: float) -> float:
+	def notice_over(self, scale: float, capacity: Optional[float] = None) -> float:
+		"""How far past the notice line a taxpayer of this visible scale stands; `capacity` is another state's."""
 		...
 
 	def visible_taxpayers(self) -> List[Tuple[float, float]]:
@@ -223,6 +224,10 @@ class World(Protocol):
 	def state_may_borrow(self, state: Any) -> bool:
 		...
 
+	def nodes_with_mechanic(self, mechanic: str) -> Any:
+		"""The tree nodes that declare a mechanic."""
+		...
+
 	def state_lending(self) -> Tuple[float, float]:
 		"""(what the state has out on loan, the yearly rate lenders earn) at the last meeting."""
 		...
@@ -354,8 +359,9 @@ class World(Protocol):
 		"""How large and visible any actor looks to the state: its staff, its wealth and its prominence."""
 		...
 
-	def levy_shares(self, scale: float, protection: float = 0.0) -> Any:
-		"""(requisition, office) shares of income the state assesses at this visible scale."""
+	def levy_shares(self, scale: float, protection: float = 0.0, state: Any = None) -> Any:
+		"""(requisition, office) shares of income the state assesses at this visible scale; `state` is another
+		country's (capacity, tax share, requisition rate, office rate) in place of the founder's state's."""
 		...
 
 	def government(self) -> Any:

@@ -3,7 +3,7 @@
 A deposit is a term loan in the shared registry whose lender is the depositor and whose borrower is the bank, at
 the rate the depositor asked as a lender, so the credit view already counts it in the depositor's wealth and
 against the bank. Households pledge their funds to the bank; the bank offers them, with the cash it holds beyond
-its reserve, to the credit market like any lender, asking the depositors' rates plus its margin, and takes the
+its reserve, to the credit market like any lender, asking the depositors' rates plus its spread (bank_spread.py), and takes the
 deposit only when it lends, so it pays interest on no more than it has lent (the way the actors' pool takes
 funds as they are drawn). The loans it makes are ordinary loans with the bank as lender, serviced
 and defaulted by the one rule (credit.py). The bank pays its depositors out of what its borrowers paid it
@@ -20,18 +20,12 @@ from typing import Dict, List, Optional, Sequence, Tuple
 from sim.constants import declare
 from sim.world import capital_market
 
-from . import credit_claims
+from . import bank_spread, credit_claims
 from .types import AgentId, FundsOffer, Loan, Transfer
 
 DEPOSIT_BANKING = "deposit_banking"        # the institution a society must hold for its households to found banks
 DEPOSIT_TERM_YEARS = 1.0e9                 # a deposit has no term: the installment due each year is nil until the depositor demands it
 DEPOSIT_PURPOSE = "deposit"
-BANK_MARGIN_SHARE_OF_OPENING_RATE = declare(
-    "BANK_MARGIN_SHARE_OF_OPENING_RATE", 0.2, kind="temporary_heuristic",
-    unit="share of the civilisation's opening rate", source=None, confidence="D",
-    retire="Complaints/106: banks compete for deposits and loans, and the margin follows",
-    why="The margin a bank asks over what it pays its depositors. Stands in for its operating cost and the "
-        "competition among banks, which are not modelled.")
 BANK_FOUNDING_SHARE_OF_CASH = declare(
     "BANK_FOUNDING_SHARE_OF_CASH", 0.5, kind="temporary_heuristic",
     unit="share of the founder's cash", source=None, confidence="D",
@@ -52,7 +46,6 @@ class Bank:
     founder: AgentId
     founded_year: int
     reserve_share: float = capital_market.LENDER_RESERVE_SHARE   # share of its deposits it keeps in cash and does not lend
-    margin: float = 0.0                                          # what it asks over the rate it pays depositors
     failed_year: int = -1                                        # the year its depositors ran; below zero while it stands
     paid_in: float = 0.0                                         # the capital its founder put in, which no dividend returns
 
@@ -88,14 +81,14 @@ def loans_out(record, bank_id: AgentId) -> float:
     return sum(loan.principal for loan in record.loans if loan.lender == bank_id and not is_deposit(record, loan))
 
 
-def found(record, founder: AgentId, capital: float, year: int, money: str, margin: float,
+def found(record, founder: AgentId, capital: float, year: int, money: str,
           reserve_share: Optional[float] = None) -> Optional[Bank]:
     """The founder puts `capital` of its cash into a new bank. None when it holds less."""
     capital = min(capital, record.book.balance(founder, money))
     if capital <= 0.0:
         return None
     bank_id = "bank:%d" % len(record.banks)
-    bank = Bank(bank_id, founder, year, margin=margin, paid_in=capital)
+    bank = Bank(bank_id, founder, year, paid_in=capital)
     if reserve_share is not None:
         bank.reserve_share = reserve_share
     record.book.transfer(Transfer(founder, bank_id, money, capital, "bank capital"))
@@ -109,8 +102,7 @@ def found_when_allowed(setup, record, institutions: Sequence[str], year: int) ->
         return None
     money = setup.currency_id
     founder = max(sorted(record.cohorts), key=lambda cohort_id: record.book.balance(cohort_id, money))
-    return found(record, founder, BANK_FOUNDING_SHARE_OF_CASH * record.book.balance(founder, money), year, money,
-                 BANK_MARGIN_SHARE_OF_OPENING_RATE * setup.opening_rate)
+    return found(record, founder, BANK_FOUNDING_SHARE_OF_CASH * record.book.balance(founder, money), year, money)
 
 
 def solvency(record, bank_id: AgentId, money: str) -> float:
@@ -138,13 +130,20 @@ def free_cash(record, bank: Bank, money: str) -> float:
     return max(0.0, record.book.balance(bank.agent_id, money) - bank.reserve_share * owed_to_depositors(record, bank.agent_id))
 
 
-def ask_of(record, bank: Bank, pledged: Sequence[FundsOffer] = ()) -> float:
-    """The rate the bank asks to lend: what it pays its depositors on average, plus its margin. The depositors are
+def spread_of(record, bank: Bank, money: str) -> float:
+    """What the bank adds to its depositors' rate: its loss record and how thin its capital is behind its loans."""
+    loans = loans_out(record, bank.agent_id)
+    return bank_spread.spread(record.credit_losses.get(bank.agent_id, 0.0), loans,
+                              capital_of(record, bank.agent_id, money), BANK_CAPITAL_SHARE_OF_LOANS)
+
+
+def ask_of(record, bank: Bank, money: str, pledged: Sequence[FundsOffer] = ()) -> float:
+    """The rate the bank asks to lend: what it pays its depositors on average, plus its spread. The depositors are
     those who would place funds with it this year, or those it has."""
     rated = [(offer.amount, offer.minimum_rate) for offer in pledged] or [
         (deposit.principal, deposit.rate) for deposit in deposits_of(record, bank.agent_id)]
     total = sum(amount for amount, _rate in rated)
-    return (sum(amount * rate for amount, rate in rated) / total if total > 0.0 else 0.0) + bank.margin
+    return (sum(amount * rate for amount, rate in rated) / total if total > 0.0 else 0.0) + spread_of(record, bank, money)
 
 
 def intermediate(setup, record, offers: Sequence[FundsOffer], year: int, institutions: Sequence[str] = (),
@@ -173,7 +172,7 @@ def intermediate(setup, record, offers: Sequence[FundsOffer], year: int, institu
         funds = free_cash(record, bank, money) + (1.0 - bank.reserve_share) * sum(
             offer.amount for offer in placed.get(bank.agent_id, ()))
         if funds > 0.0:
-            kept.append(FundsOffer(bank.agent_id, money, funds, ask_of(record, bank, placed.get(bank.agent_id, ()))))
+            kept.append(FundsOffer(bank.agent_id, money, funds, ask_of(record, bank, money, placed.get(bank.agent_id, ()))))
     return kept, placed
 
 

@@ -670,6 +670,21 @@ the same for every seat; reads about a holder (`state`, `available`, `log`,
 `money`) show the addressed seat. `seats` shows another seat's country and
 whether its run has ended, not its purse or its work.
 
+    {"cmd":"handover","to":"second"}   hand your seat to the seat "second", which must already be in the game and empty
+
+A handover gives the replacement the known techniques, works, holdings, cash, institutions, goal, country and notes
+of the seat you play, and your seat leaves the game; the replacement keeps its own founder. The replacement must be
+an empty seat (one `join` just added): it may hold cash, debts and known techniques, which merge with yours, but no
+works, staff, holdings, institutions, arrears or goal record, because those would be overwritten. Your debts and claims
+(facility draws, term loans as borrower or lender, deposits, arrears) pass to the replacement, so a handover never
+forgives a debt, and every store keyed by your seat's id (goods, offers, shares, licences, other actors' records) is
+renamed to the replacement's. Notes belong to the
+seat that wrote them and pass with it. Records kept by country (relations, with their notes) stay with the country,
+which the replacement now plays for. Only your own seat can be handed over (`"from"` naming another is refused).
+Refusals change nothing and carry `cause`: `unknown_seat` (`choices` lists the seats), `same_seat`, `not_your_seat`,
+`no_replacement`, `replacement_not_empty` (`holds` lists what it holds). The reply carries `from`, `to`, `known_nodes`, `country`, `notes` (how many passed) and `seats`.
+A country seat uses the same command once it exists, because its country is a field of the seat.
+
 `step` advances the year for every seat still playing. A seat's run ends for
 that seat alone (a founder who dies with nobody to carry the work in a game
 with mortal founders, a denunciation, a fall): its commands that need a living

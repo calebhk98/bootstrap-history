@@ -2,7 +2,10 @@
 
 from sim.engine.ui_port import STARTING_KITS
 
+from sim.refusal import Refusal
+
 from .command_registry import command
+from .notes_store import hand_over_notes
 
 
 def seat_rows(sim):
@@ -53,3 +56,35 @@ def _cmd_join(sim, nodes, cmd, ended):
     sim.join_seat(seat_id, template)
     return {"ok": True, "joined": seat_id, "seats": seat_rows(sim),
             "note": 'send its commands with "as":"%s"; it plays from the next step.' % seat_id}
+
+
+def hand_over(sim, caller, from_id, to_id):
+    """Pass seat `from_id` to `to_id` on behalf of `caller`: the engine moves the seat, then its notes follow.
+    Answers the reply; a refusal carries `cause` and changes nothing."""
+    if from_id != caller:
+        return {"ok": False, "cause": "not_your_seat", "choices": [caller], "seat": from_id,
+                "error": "you can hand over only your own seat (%s), not %r. Nothing was changed." % (caller, from_id)}
+    moved = sim.hand_over_seat(from_id, to_id)
+    if isinstance(moved, Refusal):
+        return {"ok": False, "cause": moved.cause, "choices": moved.choices, "error": str(moved), **moved.facts}
+    notes = hand_over_notes(sim, from_id, to_id)
+    return dict(moved, ok=True, notes=notes, seats=seat_rows(sim),
+                note='seat %s now holds what %s held; send its commands with "as":"%s".' % (to_id, from_id, to_id))
+
+
+@command("handover", shape="word", group="game", aliases=("hand_over",),
+         summary="hand your seat's knowledge, holdings and notes to another seat",
+         usage=["handover <seat>", '{"cmd":"handover","to":"second"}'],
+         options={"<seat>": "the replacement seat (it must already be in the game and empty; 'join' adds one)",
+                  "from": "the seat to hand over; only your own is allowed (default: yours)"},
+         description="The replacement takes the known techniques, built works, holdings, cash, institutions, goal, "
+                     "country and notes of your seat, and your seat leaves the game. Records kept by country, such "
+                     "as relations, stay with that country. Your debts pass with the seat. Refusals carry a cause: "
+                     "unknown_seat, same_seat, not_your_seat, replacement_not_empty.")
+def _cmd_handover(sim, nodes, cmd, ended):
+    to_id = cmd.get("to") or cmd.get("seat") or cmd.get("what")
+    if not isinstance(to_id, str) or not to_id.strip():
+        return {"ok": False, "cause": "no_replacement",
+                "error": 'name the replacement seat, e.g. {"cmd":"handover","to":"second"}'}
+    caller = sim.state.acting_seat
+    return hand_over(sim, caller, cmd.get("from", caller), to_id.strip())

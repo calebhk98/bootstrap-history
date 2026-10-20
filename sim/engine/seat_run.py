@@ -7,6 +7,7 @@ still playing has reached its goal."""
 from typing import Iterable, List, Mapping
 
 from .data import kit_capital
+from .seat_handover import SeatHandoverMixin
 from .state_seat import SeatState, seat_from_template
 
 
@@ -30,7 +31,7 @@ def run_is_over(seats: Mapping[str, SeatState]) -> bool:
 	return all(seat_finished(seat) for seat in seats.values())
 
 
-class SeatRunMixin:
+class SeatRunMixin(SeatHandoverMixin):
 
 	def playing_seats(self) -> List[str]:
 		return seats_playing(self.state.seats)

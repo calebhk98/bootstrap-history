@@ -1453,6 +1453,13 @@ def main():
                                "price level, the money stock and the mint's strikes by year; slow (minutes)")
     subparser.add_argument("--civ", default="", help="civilisation id (default: the default one)")
     subparser.add_argument("--years", type=int, default=60, help="years to run (default 60)")
+    subparser = sub.add_parser("spin-up-sensitivity", help="run a civilisation's spin-up under variants of how the economy "
+                               "adjusts and print each variant's price-level and wage drift, cycle amplitude and period; "
+                               "one spin-up per variant (minutes each on Rome)")
+    subparser.add_argument("--civ", default="", help="civilisation id (default: the default one)")
+    subparser.add_argument("--years", type=int, default=100, help="years to run per variant (default 100)")
+    subparser.add_argument("--skip", type=int, default=30, help="opening years left out of the statistics (default 30)")
+    subparser.add_argument("--variants", default="", help="comma-separated variant names (default: all)")
     sub.add_parser("goals", help="list the selectable goals and their critical-path floors")
     subparser = sub.add_parser("path", help="the critical path to a goal"); subparser.add_argument("goal", nargs="?")
     subparser = sub.add_parser("costs", help="the resource costs of every node"); subparser.add_argument("--top", type=int, default=20)
@@ -1759,7 +1766,7 @@ def main():
             "search": cmd_search, "economy-check": cmd_economy_check,
             "mod-allow": cli_mods.cmd_mod_allow,
             "baseline-ensemble": cmd_baseline_ensemble, "openings": cmd_openings, "opening-checks": cmd_opening_checks,
-            "spin-up-trace": cmd_spin_up_trace}[args.cmd](args)
+            "spin-up-trace": cmd_spin_up_trace, "spin-up-sensitivity": cmd_spin_up_sensitivity}[args.cmd](args)
 
 
 # ----------------------------------------------------------------------------
@@ -1781,3 +1788,4 @@ from .cli_baseline import cmd_baseline_ensemble
 from .cli_openings import cmd_openings
 from .cli_opening_checks import cmd_opening_checks
 from .cli_spin_up_trace import cmd_spin_up_trace
+from .cli_spin_up_sensitivity import cmd_spin_up_sensitivity

@@ -26,7 +26,7 @@ check("the home country is the civilisation played", state.home_country == home,
 check("every economy trading with it is a country of the cast",
       set(partners) <= set(state.countries) and home in state.countries, (partners, list(state.countries)))
 check("each foreign country has its own government with its own techniques",
-      all(registry.get("government:" + partner).kind == "foreign_government"
+      all(registry.get("government:" + partner).record.country == partner
           and state.countries[partner].starting_techs == set(S.load_civ(partner)["starting_techs"])
           for partner in partners))
 check("the home country's people are bodies of people, not individuals",

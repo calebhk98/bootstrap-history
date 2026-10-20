@@ -19,6 +19,7 @@ from .government_enterprises import EnterpriseMixin
 from .government_corvee import CorveeMixin
 from .government_credit import CreditRecordMixin
 from .government_granary import GranaryMixin
+from .government_markets import MarketsMixin
 from .government_stores import StoresMixin
 from .edges import EDGE_PATRONAGE, EDGE_STATE_SPENDING
 from .government_surplus import SurplusMixin
@@ -27,9 +28,14 @@ from .tuning_spending import ACCESSION_PROBABILITY_PER_YEAR, PUBLIC_BUILDING_LIF
 from .values import invention_gains, weighted_gain
 
 
-class Government(CorveeMixin, CreditRecordMixin, CoinageMixin, EnterpriseMixin, GranaryMixin, StoresMixin, SurplusMixin, RecordedActor):
+class Government(CorveeMixin, CreditRecordMixin, CoinageMixin, EnterpriseMixin, GranaryMixin, MarketsMixin, StoresMixin, SurplusMixin, RecordedActor):
 	kind = "government"
-	researches = True
+
+	@property
+	def researches(self) -> bool:  # type: ignore[override]
+		"""Only the founder's country's state originates research: it spends the founder's research hands. A
+		country's state copies what it sees (retire: Complaint 647, research hands by country)."""
+		return self.record.country is None
 
 	def imitation_worth(self, node_id: str, world: Any) -> float:
 		gains = invention_gains(world.nodes[node_id])
@@ -188,4 +194,6 @@ class Government(CorveeMixin, CreditRecordMixin, CoinageMixin, EnterpriseMixin, 
 		self.build_works(lines, world)
 		self.employ_standing(lines, share, world)
 		self.seek_shortfall(lines, world)
+		if self.record.country is not None:
+			self.workforce.clear()   # a country's state staff are its own people: not the founder's pool, nor counted in it
 		self.press_new_staff(held, world)

@@ -1,10 +1,5 @@
-"""What a market with sellers and no buyers remembers: the price drifts down toward the lowest ask.
-
-A market where nothing was bid never trades, so its remembered price would stay wherever it was
-last set, and buyers who plan from that price find their runs do not pay and never bid. Sellers
-mark their asks down on unsold stock (producers.py), so the lowest ask is the one thing such a
-market shows; the memory follows it part of the way down.
-"""
+"""What a market remembers across years of thin or resumed trade, and how long it has gone without bids or
+offers. A market with sellers and no buyers reports the lowest unfilled ask as a quote (market_quote.py)."""
 import math
 from typing import Optional, Sequence
 
@@ -13,30 +8,8 @@ from sim.constants import declare
 from .goods_market import quantity_at
 from .types import EDGE_EXTERNAL, Bid, Offer
 
-NO_BID_MEMORY_SHARE = declare(
-    "NO_BID_MEMORY_SHARE", 0.3, kind="temporary_heuristic",
-    unit="share of the gap to the lowest ask closed in a year with offers and no bids", source=None,
-    confidence="D",
-    why="Buyers plan from a remembered price and a market nobody bids in gives it nothing new. The "
-        "lowest ask is what sellers are willing to take, so the memory moves toward it, partway so "
-        "one seller's low ask does not become the price. Real buyers would look at sellers' posted "
-        "prices; the economy has no such listing, so the speed is a placeholder.")
-
-
 def has_no_bids(bids: Sequence[Bid]) -> bool:
     return not any(bid.budget > 0.0 for bid in bids)
-
-
-def price_after_no_bids(old: Optional[float], bids: Sequence[Bid], offers: Sequence[Offer]) -> Optional[float]:
-    """The remembered price after a year with offers and no bids: part of the way down to the lowest
-    ask. None when the market had bids or no offers, when nothing was remembered, or when the ask is
-    not below the memory (an ask above the remembered price is no evidence the price rose)."""
-    if old is None or not offers or not has_no_bids(bids):
-        return None
-    lowest_ask = min(offer.reservation_price for offer in offers)
-    if not lowest_ask > 0.0 or lowest_ask >= old:
-        return None
-    return old + NO_BID_MEMORY_SHARE * (lowest_ask - old)
 
 
 RESUMED_TRADE_MEMORY_SHARE = declare(

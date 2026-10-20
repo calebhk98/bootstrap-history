@@ -1,7 +1,11 @@
 """A seller that sells out raises its ask; the half of the rule whose other half is the search for unsold
-stock inside the year (unsold_search.py). It keeps raising until the ask is high enough that some stock
-goes unsold, where the search takes over, so the ask settles near the price that just clears it."""
-from typing import List
+stock inside the year (unsold_search.py). It raises until the ask is high enough that some stock goes
+unsold, where the search takes over, or until it reaches the edge of the band around its unit cost
+(ASK_BAND_CEILING), where it stops: a seller whose stock is all gone but whose ask is already a multiple of
+what a unit costs it learns nothing more by asking higher, and a good whose supply cannot respond does not
+climb for decades."""
+import math
+from typing import List, Optional
 
 from sim.constants import declare
 
@@ -15,6 +19,25 @@ SOLD_OUT_ASK_RAISE_SHARE = declare(
         "much, so it tries a little more. Smaller than the markdown of unsold stock because a raise that "
         "overshoots costs a year of sales while a cut that overshoots costs only margin; raises that were "
         "too fast swung durable purchases (Complaint 468).")
+ASK_BAND_CEILING = declare(
+    "ASK_BAND_CEILING", 3.0, kind="temporary_heuristic",
+    unit="multiple of a unit's cost that bounds a seller's ask above when buyers' substitution does not",
+    source=None, confidence="D", retire="Complaints/643-a-seller-facing-inelastic-demand-has-an-unbounded-ask.md",
+    why="Lengnick 2013 (eq 8-9) holds each firm's price between two multiples of its marginal cost and Caiani "
+        "et al. 2016 (eq 3.6-3.7) set it as a markup on expected unit cost, so no seller's ask is unbounded. "
+        "Where buyers substitute toward other goods the band's width is derived (substitution_markup in "
+        "seller_offers.py); where they do not, a width from the seller's cost structure (the buyers' cheapest "
+        "alternative way to meet the need, priced from the recipes) is not yet built, so a stated multiple stands in.")
+
+
+def raised_within_band(expected_price: float, break_even_price: Optional[float], ceiling_multiple: float = ASK_BAND_CEILING) -> float:
+    """`expected_price` raised one step for a sold-out seller, stopping at the band's edge: the price that
+    just covers a unit's cost (`break_even_price`) times the band. A seller already above the edge is left
+    where it is, not cut here (unsold stock does that); one with no cost to anchor on does not raise."""
+    if break_even_price is None or not math.isfinite(break_even_price) or break_even_price <= 0.0:
+        return expected_price
+    edge = break_even_price * ceiling_multiple
+    return max(expected_price, min(expected_price * (1.0 + SOLD_OUT_ASK_RAISE_SHARE), edge))
 
 
 def sold_out_outputs(producer, recipe, view) -> List[str]:

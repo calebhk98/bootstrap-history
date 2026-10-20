@@ -55,6 +55,7 @@ class MarketMemory:
     years_without_bids: Dict[str, int] = field(default_factory=dict)   # market_key(good, area); absent: bids last year
     years_without_offers: Dict[str, int] = field(default_factory=dict)   # market_key(good, area); absent: offers last year
     cleared_prices: Dict[str, float] = field(default_factory=dict)      # market_key(good, area); absent: nothing traded last year
+    quote_kinds: Dict[str, str] = field(default_factory=dict)           # market_key(good, area); what `prices` holds when nothing traded
 
     def note_cleared(self, key: str, price: float, quantity: float) -> None:
         """Keep the price a market cleared at when it traded; forget it when it did not."""
@@ -131,7 +132,14 @@ class YearView:
         return [(good, prices.get(key), usual_prices.get(key)) for good, key in keys[1]]
 
     def price(self, good: GoodId, area: AreaId) -> Optional[float]:
+        """The planning price: last year's traded price, or, where nothing traded, the quote (`quote_kind`
+        says which). A reader that needs a price both sides agreed to uses `cleared_price`."""
         return self._memory.prices.get(good + KEY_SEPARATOR + area)
+
+    def quote_kind(self, good: GoodId, area: AreaId) -> Optional[str]:
+        """What `price` is when nothing traded last year (a QUOTE_* kind); None when it is a traded price or
+        the opening estimate no market has replaced."""
+        return self._memory.quote_kinds.get(good + KEY_SEPARATOR + area)
 
     def cleared_price(self, good: GoodId, area: AreaId) -> Optional[float]:
         """The price the market cleared at last year; None when nothing traded in it."""

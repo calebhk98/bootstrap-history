@@ -9,7 +9,6 @@ import types
 from .harness import NODES, ROOT, check
 from sim.refusal import cause_of
 
-from sim.agents import government_foreign  # noqa: F401  (registers the foreign government)
 from sim.agents.api import ActorRegistry, ActorsState, cast_from_civilisations, seed_cast
 from sim.engine import living_stock_growth, living_stock_smuggling
 from sim.engine.data import load_civ
