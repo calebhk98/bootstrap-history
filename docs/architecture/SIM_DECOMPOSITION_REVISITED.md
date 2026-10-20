@@ -548,6 +548,20 @@ package function reads no `self` at all and the mixin keeps only the glue that f
 - `RouteDuesMixin` (`sim/engine/route_dues.py`): the holder-owed loop duplicated `sim.geography.route_dues_by_holder`;
   the mixin now calls it. Coupling is unchanged (10 reads); the duplicate logic is gone. What remains is glue: the
   carriers' wage, the owner lookup and the treasury account. Proof: identical hash of the dues owed over 300 generated
-  routes on base and branch, and the same state md5. Next candidate here: `route_dues_treasury` belongs with the
-  agents package.
-- The fingerprint was not run for either move.
+  routes on base and branch, and the same state md5.
+- `RouteDuesMixin`, second step: the treasury lookup and the split of a payment among holders moved to
+  `sim/agents/route_dues_pay.py`, reached as `sim.agents.api.treasury_of` and `pay_dues`. The mixin keeps the seat
+  and government registries it hands in, so its distinct `self.` reads stay at 10 (the logic left, the inputs did
+  not). Proof: identical sha256 of the money paid and every actor's purse over 400 generated payments (with and
+  without a limit) on base and branch, and the same state md5.
+- `FoodSupplyMixin` (`sim/engine/food_supply.py`): the per-tile crop sites, the food sum, the huntable game and the
+  draw on the wild stock moved to `sim/geography/food_society.py`, reached through new `Geography` methods
+  (`crop_sites`, `food_kcal_by_source`, `game_food_sources`, `huntable_kcal`, `take_hunt`, `regrow_wild_stock`). The
+  mixin keeps the gatherers' hours bound (labour's `cap_share`, `capped_kcal`) and the rotation, crop technique and
+  soil factors it hands in. Distinct `self.` reads went from 6 to 5 (`civ` and `world_map` replaced by `geography`).
+  Proof: identical sha256 over sixty simulated years of `step_wild_stock`, `farm_sites` and `society_food_potential`
+  (hunting hours raised, then stopped; a soil nitrogen stock set) on base and branch, and the same state md5.
+- `sim/world/soil_nutrients.py` moved to `sim/geography/soil_nutrients.py` (exported as `sim.geography.api.soil_nutrients`):
+  only geography read it, so the old `sim.world` import in the geography walls test's allowlist was backwards. The
+  allowlist is now empty.
+- The fingerprint was not run for any move.

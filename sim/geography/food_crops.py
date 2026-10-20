@@ -46,7 +46,7 @@ def _rainfed_cropped_share(world_map: WorldMap, tile_id: str, arable_hectares: f
 
 def crop_site(world_map: WorldMap, tile_id: str, open_field_cropped_share: float, nutrient_factor: float = 1.0) -> CropSite:
     """The tile's cropland under a rotation that crops `open_field_cropped_share` of open fields each year.
-    `nutrient_factor` is what the tile's soil nitrogen stock does to a cropped hectare's yield (sim/world/soil_nutrients.py)."""
+    `nutrient_factor` is what the tile's soil nitrogen stock does to a cropped hectare's yield (sim/geography/soil_nutrients.py)."""
     area = tile_layers.number(world_map, tile_id, "land_area_km2", 0.0)
     arable_hectares = area * HECTARES_PER_SQUARE_KM * food_land.arable_fraction(world_map, tile_id)
     fertility = tile_layers.number(world_map, tile_id, "fertility_quality_multiplier", 0.0)

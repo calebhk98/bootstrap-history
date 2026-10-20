@@ -4,7 +4,7 @@ The per-tile loop lives in sim/geography/soil_nitrogen.py, reached as `sim.geogr
 rotation, crop and draught herd. `state.economy.soil_nitrogen` is the saved {tile: share of the native pool left}; a tile
 with no entry is native.
 Each year the cropped hectares' harvest, the rotation's legumes and the manure spread draw the pool down or build it
-(sim/world/soil_nutrients.py), and the tile's yield factor reads it back through `soil_nitrogen_factors`.
+(sim/geography/soil_nutrients.py), and the tile's yield factor reads it back through `soil_nitrogen_factors`.
 """
 from sim.world import agriculture, agriculture_tile, land
 

@@ -14,7 +14,7 @@ from sim.geography.queries import (build_requirements, built_km, is_cut_way, car
                                    tile_facts, tile_ids, tile_reach_levels, regions_of_tiles, tiles_held, tiles_of_regions, works_priced_from_deposits,
                                    usable_modes, walking_cargo_modes)
 from sim.geography import (cargo_cost, climate_temperatures, crop_climate, flow_ledger, freight_cost, map_data_sources, mineral_shares, provisions, regions,
-                           sea_freight, settlement, territory, tile_names, tile_owners, transport)
+                           sea_freight, settlement, soil_nutrients, territory, tile_names, tile_owners, transport)
 from sim.geography.climate_temperatures import (KOPPEN_TROPICAL_COLDEST_MONTH_MINIMUM_CELSIUS, daily_temperatures,
                                                 representative_extremes)
 from sim.geography.carriage_reach import MARKET_AREA_THRESHOLD_SHARE, MEAN_DISTANCE_IN_DISC, market_radius_km, realm_span_km
@@ -26,7 +26,7 @@ from sim.geography.route_dues import route_dues_by_holder, route_dues_levied
 __all__ = ["Geography", "load_geography", "haversine_km", "MARKET_AREA_THRESHOLD_SHARE", "MEAN_DISTANCE_IN_DISC",
            "market_radius_km", "realm_span_km", "KOPPEN_TROPICAL_COLDEST_MONTH_MINIMUM_CELSIUS",
            "daily_temperatures", "representative_extremes", "cargo_cost", "climate_temperatures", "crop_climate",
-           "freight_cost", "map_data_sources", "mineral_shares", "provisions", "regions", "sea_freight", "settlement", "territory", "tile_lookup",
+           "freight_cost", "map_data_sources", "mineral_shares", "provisions", "regions", "sea_freight", "settlement", "soil_nutrients", "territory", "tile_lookup",
            "tile_names", "tile_owners", "transport",
            # the contract (sim/geography/INTERFACE.md); everything above is older surface outside it
            "queries", "build_requirements", "built_km", "is_cut_way", "carriage_rates", "open_map", "tile_ids", "tiles_held", "tiles_of_regions", "regions_of_tiles", "tile_facts", "layer_value", "food_potential", "crop_site", "CropSite", "CropTechnique", "hunted_kcal", "pasture_capacity_kg", "endemic_animal_loss", "endemic_people_loss", "endemic_problems", "arable_hectares", "game_food_sources", "draw_wild_stock", "regrow_wild_stock", "standing_timber_tonnes", "timber_haul_km", "fell_timber", "regrow_timber", "timber_increment_tonnes_per_hectare_year", "timber_mean_increment_tonnes_per_hectare_year", "usable_modes", "dues_hours_per_tonne", "route_dues_by_holder", "route_dues_levied", "cargo_loss_per_day", "modes_carrying", "droving_carrier", "walking_cargo_modes", "flow_ledger", "route", "improvement_key", "train_carrier", "worked_deposits", "working_rate_tonnes_per_year", "ore_tonnes_per_tonne",
