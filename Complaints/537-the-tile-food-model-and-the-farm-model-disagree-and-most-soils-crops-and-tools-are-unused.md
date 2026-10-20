@@ -119,8 +119,6 @@ Within the farm model:
   test topics pin it. Moving the stand-in to `territory_cropland` changes the opening prices of every civilisation, so it is its own step.
 - The land market pools arable, pasture and forest producers on one cropland supply per tile; separate supplies per land class need
   pasture and timber hectares from geography.
-- The opening is sized at each recipe's own yield; sizing the national runs by each recipe's mean tile yield (`opening_runs`) would
-  put the tile yield in the opening itself.
 - Soils beyond the climate-class fertility (heavy clay a plough cannot open, podzol, alluvium: Complaint 543), the engine's
   single `DEFAULT_SOIL`, rice and maize adoption, a hoe toolkit, per-tile weather applied to each tile's harvest (the economy
   and farm still take one pooled draw), irrigation as a work that silts up.
@@ -133,3 +131,17 @@ Within the farm model:
   (`tile_costs.following_site`). A rotation adopted mid-game reaches the land market's cropland, and the soil nitrogen stock
   reaches the farm producers' yield. The farm's own ceiling follows the rotation through `Sim.refresh_farm_territory` (Complaint 543).
 - Test: `sim/tests/test_economy_follows_rotation.py`.
+
+## Done: the opening is sized at the tile yield (item 2)
+
+- `opening_runs.mean_yields` gives each crop recipe the yield its runs are counted at: the people-weighted harmonic mean of the
+  tile factors of the tiles it can run on (a tile's people eat what the tile grows); `required_runs`, `unit_costs` and
+  `choose_recipes` take it, so the national run counts, the inputs they pull (nightsoil) and the income settle all know the yield.
+  Placement scales each area's runs to its own tiles' mean yield, gives every crop producer its tile's factor, puts none on a tile
+  that yields nothing, and shares the runs of an area where the crop cannot grow over the areas where it can (wine was 11 percent
+  short of its demand otherwise).
+- Test: `sim/tests/test_opening_crops_at_tile_yield.py`; `opening_inputs_have_suppliers` passes (the arithmetic mean left
+  nightsoil 7 percent short, the harmonic mean over the tiles the crop grows on closes it).
+- Effect on rome_100ad (probe: open the economy, hidden years included): wheat price 0.0870 to 0.0911 (economy units), farm share
+  of worker-years 0.1033 to 0.0867. `opening_floor_and_thin_trades` "household floors cost a small multiple of the food floor"
+  fails before this change (10.36) and after (11.40).
