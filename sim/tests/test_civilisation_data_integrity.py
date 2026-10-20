@@ -4,7 +4,11 @@ civilisation sets names a real, liftable node, one civilisation is never
 handed another's flavour text, a priced material is gated by its own
 prerequisite rather than sentinel-priced, and no civilisation's dated events
 leave a long silent stretch or hand out a free technology on turn one.
+The rules these files feed (the needs-first gate, the word swaps) are called on plain inputs here; the games they
+run in are test_civilisation_data_integrity_scenario.
 """
+QUICK_TOPIC = True
+
 from .harness import *  # noqa: F401,F403
 
 
@@ -34,63 +38,54 @@ for _cf in sorted(os.listdir(os.path.join(ROOT, "data/civilizations"))):
               all(x in NODES for x in (_ent.get("ids") or [])),
               [x for x in (_ent.get("ids") or []) if x not in NODES])
 
-# One unopened game per civilisation serves the flavour-text, price-level and gate checks (data and engine tables only).
-_CIVS = ("rome_100ad", "han_china_100ad", "norse_900ad", "mexica_1500", "england_1300")
-_games = {_cid: unopened_sim(civ=_cid) for _cid in _CIVS}
 
-# --- BREAK: Han China was told it writes its corpus "in plain quantitative
-# Greek and Latin" and seeks "Senatorial patronage".
-for _cid, _bad in (("han_china_100ad", "Greek and Latin"), ("norse_900ad", "Senatorial patronage")):
-    _rl = [S._agent_dispatch(_games[_cid], NODES, {"cmd": "why", "id": _node_id})
-           for _node_id in ("corpus_written", "patron_senatorial")]
-    check("%s is not handed Rome's own words" % _cid, _bad not in json.dumps(_rl), _bad)
-_rr = S._agent_dispatch(_games["rome_100ad"], NODES, {"cmd": "why", "id": "corpus_written"})
+# --- the word swaps: a civilisation is never handed another's flavour text ----------------------------------------
+# BREAK: Han China was told it writes its corpus "in plain quantitative Greek and Latin" and seeks "Senatorial
+# patronage". The swap pairs are the civilisation's data; `_localise_words` applies them to a reply.
+from sim.ui.proto.util import _localise_words
+
+_rome_words = json.dumps([NODES["corpus_written"], NODES["patron_senatorial"]])
+check("the tree is written in Rome's words (so the swaps below have something to swap)",
+      "Greek and Latin" in _rome_words and "Senatorial patronage" in _rome_words, _rome_words[:100])
+for _cid, _bad in (("han_china_100ad", "Greek and Latin"), ("norse_900ad", "Senatorial patronage"),
+                   ("han_china_100ad", "Senatorial patronage")):
+    _pairs = (S.load_civ(_cid).get("local_words") or {}).get("pairs")
+    _localised = json.dumps([_localise_words(NODES[_n], _pairs) for _n in ("corpus_written", "patron_senatorial")])
+    check("%s is not handed Rome's own words (%s)" % (_cid, _bad), _bad not in _localised, _bad)
+_rome_pairs = (S.load_civ("rome_100ad").get("local_words") or {}).get("pairs")
 check("...and Rome, which the tree is written from, is left alone",
-      "Greek and Latin" in json.dumps(_rr), json.dumps(_rr)[:120])
+      json.dumps(_localise_words(NODES["corpus_written"], _rome_pairs)) == json.dumps(NODES["corpus_written"]), _rome_pairs)
 
-# --- BREAK: the advertised price index touched nothing a player feels: revenue
-# and living costs were identical in every civ.
-_lc, _rv = {}, {}
-for _cid, _s in _games.items():
-    _rv[_cid] = round(_s.revenue(), 2)
-    _lc[_cid] = round(_s.household_bill_per_person(), 4)   # the economy's need floors at this society's prices
-check("living costs follow this society's own prices",
-      len(set(_lc.values())) == 5, _lc)
-check("...and so does what your practice pays",
-      len(set(_rv.values())) == 5, _rv)
-check("...and every society pays something for its needs",
-      all(bill > 0.0 for bill in _lc.values()), _lc)
+# --- the needs-first gate ----------------------------------------------------------------------------------------
+# BREAK: the Mexica menu says "no draught animals, no iron, no wheel in practical use" and horse_collar was startable
+# on arrival in the Valley of Mexico in 1500. `needs_first` is called with the civilisation's own data on a stub game.
+import types
+from sim.engine.society_diffusion import DiffusionMixin
 
-# --- BREAK: grant_ambient ran BEFORE the civ's named starting_techs were added,
-# so a free completion was credited on the first `step`. Nothing free may arrive
-# after the game begins.
-for _cid in _CIVS:
-    _s = sim(civ=_cid)      # stepping needs the opened economy
-    _before_ga = set(_s.done)
-    _s.step()
-    check("%s hands you nothing free on turn one" % _cid,
-          not (_s.done - _before_ga), sorted(_s.done - _before_ga))
-
-# --- BREAK: the Mexica menu says "no draught animals, no iron, no wheel in
-# practical use" and horse_collar was startable on arrival in the Valley of
-# Mexico in 1500, with `why` still calling it a collar for a draught horse.
-_mex = _games["mexica_1500"]
 _HORSE = "horse_collar"
-_ok_h, _why_h = _mex.start_reason(_HORSE)
-check("a society with no draught animal cannot begin draught-animal work",
-      not _ok_h and "draught animal" in _why_h, _why_h)
-check("...and the refusal names the one thing that would open it",
-      "exp_import_draught_animals" in _why_h, _why_h)
-check("...and it is not in what you could begin today",
-      not any(entry["id"] == _HORSE
-              for entry in S._agent_available(_mex, NODES, {"all": True})["available"]),
-      _HORSE)
-_mex.done.add("exp_import_draught_animals"); _mex._done_changed()
-check("...and bringing the animals across opens all of it at once",
-      _mex.needs_first(_HORSE)[0] is None, _mex.needs_first(_HORSE))
-_rom = _games["rome_100ad"]
+
+
+def _gated(civ_id, done=(), stock_met=False):
+    game = types.SimpleNamespace(civ=S.load_civ(civ_id), state=types.SimpleNamespace(projects=types.SimpleNamespace(done=set(done))),
+                                 stock_holds_met=lambda _stock: stock_met)
+    return DiffusionMixin.needs_first(game, _HORSE), game
+
+
+(_node, _because), _mexica_game = _gated("mexica_1500")
+check("a society with no draught animal is gated on the node that brings them", _node == "exp_import_draught_animals", _node)
+check("...and the refusal says there is no draught animal", "draught animal" in _because, _because)
+check("...and bringing the animals across (the node done) opens it",
+      _gated("mexica_1500", done=["exp_import_draught_animals"])[0] == (None, None), "still gated")
+check("...and holding enough of the animals opens it without the node",
+      _gated("mexica_1500", stock_met=True)[0] == (None, None), "still gated")
+check("...a gate that rests on stock is not asked about knowledge alone",
+      DiffusionMixin.needs_first(_mexica_game, _HORSE, about_stock=False) == (None, None), "gated on knowledge")
 check("a society that HAS horses is not gated at all (the control case)",
-      _rom.needs_first(_HORSE)[0] is None, _rom.needs_first(_HORSE))
+      _gated("rome_100ad")[0] == (None, None), _gated("rome_100ad")[0])
+check("a node that is not behind the gate is not gated",
+      DiffusionMixin.needs_first(_mexica_game, "corpus_written") == (None, None), "gated")
+
+
 # --- BREAK: rubber was priced at 99,999 a kilo, a sentinel left over from the
 # abolished "unobtainable" tier, and it survived the abolition of the concept
 # that justified it. A play tester worked out that one kilo was four hundred

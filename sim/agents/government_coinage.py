@@ -12,7 +12,7 @@ from .tuning_coinage import COIN_RESTRIKE_SHARE_PER_YEAR, DEBASEMENT_SHARE_CEILI
 STRUCK_COIN = "struck_coin"
 
 
-def debasement_decision(government: Any, world: Any) -> float:
+def debasement_decision(government: Any, world: Any, shortfall: Any = None) -> float:
 	"""Share of the metal in its coin the state cuts this year; zero unless it is short.
 
 	The shortfall is what its standing need left unfunded after revenue, reserve and credit. Lighter
@@ -21,7 +21,8 @@ def debasement_decision(government: Any, world: Any) -> float:
 	"""
 	if world.coin_regime() != STRUCK_COIN:
 		return 0.0
-	shortfall = sum(government.record.unfunded.values())
+	if shortfall is None:   # unless the state's fiscal response sized it, the whole unfunded need
+		shortfall = sum(government.record.unfunded.values())
 	struck_again = world.coin_stock_value() * COIN_RESTRIKE_SHARE_PER_YEAR
 	if shortfall <= 0.0 or struck_again <= 0.0:
 		return 0.0

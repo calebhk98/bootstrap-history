@@ -31,8 +31,9 @@ from sim.refusal import Refusal, LogLine
 from . import money_units
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 from sim.world import deposits as deposit_model, mine_technique
-from sim.geography.api import mine_demand_goods, parameter_value, tile_facts, tiles_held, works_priced_from_deposits
+from sim.geography.api import mine_demand_goods, parameter_value, works_priced_from_deposits
 from . import purchase_rule
+from .forest_ceiling import forest_ceiling_hectares, held_land_area_km2, revenue_scale_multiple
 from .units_prose import area_text
 from .mine_deposits import MineDepositsMixin, NO_DEPOSIT_TEXT
 from sim.agents.api import edges
@@ -235,7 +236,7 @@ class MiningMixin(MineDepositsMixin):
             base = favour[1]["base"] + favour[1]["state_scale"] * state_capacity
         else:
             base = self.MINE_CEILING_BASE_STRANGER + self.MINE_CEILING_STATE_SCALE_STRANGER * state_capacity
-        base *= 1.0 + min(self.REVENUE_SCALE_CAP_MULTIPLE, max(0.0, self.revenue()) / self.REVENUE_SCALE_DENARII)
+        base *= revenue_scale_multiple(self.revenue(), self.REVENUE_SCALE_DENARII, self.REVENUE_SCALE_CAP_MULTIPLE)
         geo = self.geography.mineral_scale(mat)
         return base * geo
 
@@ -916,17 +917,15 @@ class MiningMixin(MineDepositsMixin):
         """Total land area, in km2, of the tiles this civilization holds, not counted by how many
         region labels that ground is filed under (see forest_land_ceiling()). A civilisation holding
         no tile has none."""
-        return sum(float(tile_facts(tile, self.world_map)["land_area_km2"])
-                   for tile in tiles_held(self.civ, self.world_map))
+        return held_land_area_km2(self.civ, self.world_map)
 
     def forest_land_ceiling(self):
         """The largest standing coppice you could ever hold, in hectares."""
-        home_land_million_km2 = self.home_land_area_km2() / 1.0e6
         state_capacity = float(self.civ.get("state_capacity", self.STATE_CAPACITY_DEFAULT_FALLBACK))
-        base = ((self.FOREST_HA_PER_MILLION_KM2_BASE
-                 + self.FOREST_HA_PER_MILLION_KM2_PER_SC * state_capacity) * home_land_million_km2)
-        return base * (1.0 + min(self.REVENUE_SCALE_CAP_MULTIPLE,
-                                  max(0.0, self.revenue()) / self.REVENUE_SCALE_DENARII))
+        return forest_ceiling_hectares(
+            self.home_land_area_km2(), state_capacity, self.FOREST_HA_PER_MILLION_KM2_BASE,
+            self.FOREST_HA_PER_MILLION_KM2_PER_SC,
+            revenue_scale_multiple(self.revenue(), self.REVENUE_SCALE_DENARII, self.REVENUE_SCALE_CAP_MULTIPLE))
 
     def buy_forest(self, hectares):
         """Coppice woodland, bought outright. The cheapest thing in the tree that

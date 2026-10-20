@@ -27,6 +27,8 @@ import math
 from sim.constants import declare
 from sim.refusal import Refusal
 from . import legacy_trade_defaults, trade_data
+from .hire_outcome import craft_trades_report
+from .room_advice import room_advice, sources_to_build, sources_to_reopen
 from .wage_provider import reference_civilisation
 
 
@@ -123,9 +125,7 @@ class CapacityMixin:
 
     def craft_trades_report(self):
         """The trades that supervise as craft and those that do not, by the same test `is_craft_trade` applies."""
-        trades = sorted(self._world.wages)
-        return {"craft": [trade for trade in trades if self.is_craft_trade(trade)],
-                "not_craft": [trade for trade in trades if not self.is_craft_trade(trade)]}
+        return craft_trades_report(self._world.wages, self.is_craft_trade)
     # The literacy this file's trade shares and staff ceilings were already
     # tuned against, before literacy was read anywhere: the default
     # civilisation's own numbers, because every other constant in this economy -
@@ -422,49 +422,17 @@ class CapacityMixin:
         # endowment_land or court an imperial patron, instead of simply
         # reopening what they already own.
         projects = self._world.state.projects
-        reopen = [(node_id, add) for node_id, add in self._world.ROOM_SOURCES
-                  if node_id in projects.done and node_id in self._world.nodes and node_id not in projects.operating
-                  and self._world.is_venture(node_id)]
-        reopen.sort(key=lambda kv: -kv[1])
-        want = [(node_id, add) for node_id, add in self._world.ROOM_SOURCES
-                if node_id not in projects.done and node_id in self._world.nodes
-                and self._world.is_visible(node_id)]
+        reopen = sources_to_reopen(self._world.ROOM_SOURCES, projects.done, projects.operating, self._world.nodes,
+                                   self._world.is_venture)
         # NEAREST FIRST, and nearest means how much of the tree stands between
         # you and it. Sorted on size alone this offered power_grid (+130) to a
         # founder with six places - the last node in the game, true and
         # useless - while workshop_first, one prerequisite away, went unnamed.
-        def _distance(node_id):
-            return len(self._world.closure(self._world.nodes, node_id) - projects.done)
-        want.sort(key=lambda kv: (_distance(kv[0]), -kv[1]))
-        _reopen_bit = (
-            ("you already have %s, shut: reopening %s is cheaper than "
-             "building anything else. "
-             % (" and ".join("%s (+%s)" % (node_id, self._places_text(places)) for node_id, places in reopen[:2]),
-                "it" if len(reopen) == 1 else "them"))
-            if reopen else "")
-        _housing_bit = ("Housing is bought: 'buy housing N' adds N places at %s each. "
-                        % self._world.money_text(self._world.housing_price_per_place(), grouped=True))
-        _housing = [{"action": "buy_housing", "node": None}]
-        _reopens = [{"action": "reopen", "node": node_id} for node_id, _places in reopen[:2]]
-        if not want:
-            if reopen:
-                return Refusal("room_advice", "%sThe rest is built - or in this case, "
-                               "reopened: %s'open %s'."
-                               % (_housing_bit, _reopen_bit, reopen[0][0]), remedies=_housing + _reopens)
-            return Refusal("room_advice", "%sBeyond that, room comes from institutions and heavy "
-                           "industry, and you have every one of them this society "
-                           "offers; what is left grows on its own as they run."
-                           % _housing_bit, remedies=_housing)
-        _now = [(node_id, places) for node_id, places in want if self._world.start_reason(node_id, _why=False)[0]]
-        return Refusal("room_advice", "%sMore room is built: %s%s at your present income (the places grow "
-                       "with surplus, since each needs people you can pay). Each is somewhere for "
-                       "people to work and somebody to oversee them.%s"
-                       % (_housing_bit, _reopen_bit,
-                          "; ".join("%s (+%s places)" % (node_id, self._places_text(places)) for node_id, places in want[:3]),
-                          "" if _now else " None is startable today; they are listed "
-                                          "nearest first, so the first is what to work "
-                                          "towards."),
-                       remedies=_housing + _reopens + [{"action": "build", "node": node_id} for node_id, _places in want[:3]])
+        want = sources_to_build(self._world.ROOM_SOURCES, projects.done, self._world.nodes, self._world.is_visible,
+                                lambda node_id: len(self._world.closure(self._world.nodes, node_id) - projects.done))
+        startable_now = any(self._world.start_reason(node_id, _why=False)[0] for node_id, _places in want)
+        return room_advice(self._world.money_text(self._world.housing_price_per_place(), grouped=True),
+                           reopen, want, startable_now, self._places_text)
 
     # WHO TRAINS PEOPLE, AND HOW MANY OF THEM.
     #

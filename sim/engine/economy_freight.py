@@ -63,6 +63,7 @@ from sim.constants import declare
 from . import money_units
 from . import purchase_rule
 from .units_prose import area_text, mass_per_area_text, mass_rate_text, money_text
+from .shortage_sizing import mine_shortfall_after_sinking, mine_size_tonnes, nitre_bed_square_metres
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
 from sim.geography.api import freight_cost, provisions, transport as freight_physics
@@ -633,9 +634,7 @@ class FreightMixin:
             # Twenty per cent headroom prevents a tiny change in the portfolio
             # putting the player straight back into shortage, without turning a
             # one-tonne deficit into the old fixed sixteen-tonne recommendation.
-            square_meters = max(100, int(math.ceil(
-                deficit * self.NITRE_SHORTAGE_SAFETY_BUFFER
-                / max(self.NITRE_YIELD_T_PER_M2, 1e-12) / 100.0)) * 100)
+            square_meters = nitre_bed_square_metres(deficit, self.NITRE_SHORTAGE_SAFETY_BUFFER, self.NITRE_YIELD_T_PER_M2)
             return {"text": (
                 "Saltpetre is made in nitre beds, not mined: you are about "
                 "%s short. With a 20%% safety buffer, 'buy "
@@ -647,18 +646,16 @@ class FreightMixin:
                               * self.price_index, self, grouped=True))),
                 "commands": ["buy nitre %d" % square_meters]}
         if binding in self.MINE_OPEX_MATERIALS:
-            sinking = [tranche for tranche in (self.state.holdings.mine_tranches or []) if tranche[0] == binding]
-            sinking_tonnes = sum(tranche[1] for tranche in sinking)
+            sinking_tonnes, ready_year, shortfall_t = mine_shortfall_after_sinking(
+                binding, shortfall_t, self.state.holdings.mine_tranches)
             if sinking_tonnes > 0.0:
-                ready_year = int(min(tranche[2] for tranche in sinking))
-                shortfall_t = max(0.0, shortfall_t - sinking_tonnes)
                 sinking_text = ("A working of %s is already being sunk, ready in %d. "
                                 % (mass_rate_text(sinking_tonnes, self, grouped=True, short=False), ready_year))
                 if shortfall_t < 1.0:
                     return {"text": sinking_text + "It covers the shortfall; wait for it.", "commands": []}
             else:
                 sinking_text = ""
-            tonnes_short = max(1, math.ceil(shortfall_t - 1e-9))
+            tonnes_short = mine_size_tonnes(shortfall_t)
             return {"text": sinking_text + (
                 "The market will not sell you enough %s, so you have to dig "
                 "it: %s. 'quote mine %s %d' for the price, then 'buy mine "

@@ -1,11 +1,15 @@
 """Complaints/416: the engine keeps the roads and track an actor has built, pays labour and material
-for them from the terrain, and routes over them."""
+for them from the terrain, and routes over them.
+
+Geography's own rules (what a way costs, which edges can be built, that a built road beats a track) are in
+test_geography_ways_build.py and test_geography_routes.py; here the saved state is a round trip of built state, and
+the engine's wiring to the labour market, the purse, the routes and the command are named scenarios."""
 import random
 import unittest
 
 from sim import simulator
 from sim.engine.core import Sim
-from sim.engine.state import deserialize_state, serialize_state, SimulationState
+from sim.engine.state import deserialize_state, serialize_state, EconomyState
 from sim.geography import api as geography
 
 _TREE, _PRICES, _NODES, _WAGES, _GOODS = simulator.load()
@@ -35,10 +39,7 @@ def _finish_building(sim):
 
 class BuiltWaysTests(unittest.TestCase):
 
-    def test_a_new_game_has_built_nothing(self):
-        self.assertEqual(_fresh_sim().state.economy.improvements, {})
-
-    def test_building_a_road_records_it_and_charges_labour_and_stone(self):
+    def test_scenario_building_a_road_records_it_charges_labour_and_stone_and_is_what_routes_use(self):
         sim = _fresh_sim()
         tile_a, tile_b = _buildable_pair(sim)
         sim.state.household.capital = 1e12
@@ -52,17 +53,9 @@ class BuiltWaysTests(unittest.TestCase):
         self.assertTrue(sim.state.economy.improvements[geography.edge_key(tile_a, tile_b)]["road"])
         # a balance near 1e12 carries rounding far coarser than 1e-4, so compare by share of the quote
         self.assertAlmostEqual(before - sim.state.household.capital, quote["money"], delta=1e-9 * quote["money"])
-
-    def test_a_built_road_is_what_routes_use(self):
-        sim = _fresh_sim()
-        tile_a, tile_b = _buildable_pair(sim)
-        sim.state.household.capital = 1e12
-        self.assertNotIn(geography.edge_key(tile_a, tile_b), sim.ways_built())
-        sim.build_way(tile_a, tile_b, "road")
-        _finish_building(sim)
         self.assertIn(geography.edge_key(tile_a, tile_b), sim.ways_built())
 
-    def test_building_is_refused_without_the_money_the_technology_or_a_border(self):
+    def test_scenario_building_is_refused_without_the_money_the_technology_or_a_border(self):
         sim = _fresh_sim()
         tile_a, tile_b = _buildable_pair(sim)
         sim.state.household.capital = 0.0
@@ -72,16 +65,16 @@ class BuiltWaysTests(unittest.TestCase):
         self.assertFalse(sim.build_way(tile_a, tile_b, "rail")[0])
         self.assertEqual(sim.state.economy.improvements, {})
 
-    def test_the_built_ways_survive_save_and_load(self):
-        sim = _fresh_sim()
-        tile_a, tile_b = _buildable_pair(sim)
-        sim.state.household.capital = 1e12
-        sim.build_way(tile_a, tile_b, "road")
-        _finish_building(sim)
-        copy = deserialize_state(serialize_state(sim.state.economy), type(sim.state.economy))
-        self.assertEqual(copy.improvements, sim.state.economy.improvements)
+    def test_the_built_and_building_ways_survive_save_and_load(self):
+        economy = EconomyState()
+        economy.improvements = {"a|b": {"road": True, "canal": True}}
+        economy.ways_under_construction = {"b|c": {"road": {"due": 130, "crew_trade": "labourer", "hours_a_year": 4000.0,
+                                                          "engineered": False, "pressed": 128}}}
+        copy = deserialize_state(serialize_state(economy), EconomyState)
+        self.assertEqual(copy.improvements, economy.improvements)
+        self.assertEqual(copy.ways_under_construction, economy.ways_under_construction)
 
-    def test_roads_along_the_cheapest_route_lower_its_cost_and_never_slow_the_household(self):
+    def test_scenario_roads_along_the_cheapest_route_lower_its_cost_and_never_slow_the_household(self):
         sim = _fresh_sim()
         sim.state.household.capital = 1e12
         base = sim.labour.base_tile()
@@ -99,7 +92,7 @@ class BuiltWaysTests(unittest.TestCase):
         self.assertLess(built["cost_per_tonne"], route["cost_per_tonne"])
         self.assertLessEqual(sim.labour.travel_days_to_tile(far), days_before + 1e-9)
 
-    def test_a_way_takes_its_crew_from_the_labour_market_until_it_opens(self):
+    def test_scenario_a_way_takes_its_crew_from_the_labour_market_until_it_opens(self):
         sim = _fresh_sim()
         tile_a, tile_b = _buildable_pair(sim)
         sim.state.household.capital = 1e12
@@ -112,7 +105,7 @@ class BuiltWaysTests(unittest.TestCase):
         _finish_building(sim)
         self.assertLess(market.pressure("labourer"), pressed)
 
-    def test_the_command_previews_and_builds(self):
+    def test_scenario_the_command_previews_and_builds(self):
         from sim.ui.proto.dispatch import _agent_dispatch
         from sim.ui.proto.typed import parse_typed
         sim = _fresh_sim()

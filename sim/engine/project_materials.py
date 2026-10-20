@@ -13,6 +13,57 @@ from .material_units import tonnes_per_unit
 
 
 
+def compute_material_bill(view, node_id, needs, span):
+    """The rows of a project's material bill and the cost of what is missing, from `view` (a game's stock, own output,
+    market supply and quotes). `needs` is {material key: units}; `span` the years the build takes."""
+    stock_left, own_left, headroom_left = {}, {}, {}
+    bought = collections.Counter()
+    rows, total = [], 0.0
+    for material, units in sorted(needs.items()):
+        emp_key, tag = view._material_tag(material)
+        needed = units * tonnes_per_unit(material)
+        stock_left.setdefault(emp_key, view.material_stock_t(emp_key))
+        own_left.setdefault(tag, view._unclaimed_own_supply(tag, node_id) * span)
+        from_stock = min(needed, stock_left[emp_key])
+        stock_left[emp_key] -= from_stock
+        from_own = min(needed - from_stock, own_left[tag])
+        own_left[tag] -= from_own
+        missing = needed - from_stock - from_own
+        quoted = view.material_purchase_cost(material, missing, bought[emp_key, tag])
+        cost, mean_price = quoted if quoted else (0.0, 0.0)
+        bought[emp_key, tag] += missing
+        deliverable_cost = cost
+        lab_scale = material.endswith(view.LAB_SCALE_SUFFIX) and not material.endswith("_kg")
+        headroom_left.setdefault(emp_key, view._material_market_tonnes(emp_key))
+        deliverable = missing if lab_scale else min(missing, headroom_left[emp_key])
+        if not lab_scale:
+            headroom_left[emp_key] -= deliverable
+        if quoted and missing > deliverable:
+            # past a year's market supply the rest is bought over the following years at today's
+            # quote, not all at once up the scarcity curve
+            spot = view.material_purchase_cost(material, 0.0)
+            deliverable_cost = (view.material_purchase_cost(material, deliverable, bought[emp_key, tag] - missing)[0]
+                                if deliverable > 0 else 0.0)
+            cost = deliverable_cost + (missing - deliverable) * spot[1]
+            mean_price = cost / missing
+        total += cost
+        rows.append({"material": material, "needed_tonnes": needed,
+                     "held_tonnes": from_stock + from_own,
+                     "held_from_stock_tonnes": from_stock,
+                     "held_from_own_output_tonnes": from_own,
+                     "missing_tonnes": missing,
+                     "price_per_tonne": mean_price, "cost_of_missing": cost,
+                     "cost_of_deliverable": deliverable_cost,
+                     "deliverable_now_tonnes": deliverable,
+                     "own_supply_tonnes_per_year": view._own_material_supply(tag),
+                     "years_of_supply_it_takes": (
+                         None if lab_scale or missing <= 0 else missing / max(
+                             1e-9, view._material_market_tonnes(emp_key)
+                             + view._own_material_supply(tag))),
+                     "priced": quoted is not None})
+    return {"rows": rows, "cost_of_missing": total}
+
+
 class ProjectMaterialsMixin:
     def project_material_needs(self, node_id):
         """{material key: units} the project physically consumes, with the
@@ -57,52 +108,7 @@ class ProjectMaterialsMixin:
     def _compute_material_bill(self, node_id):
         span = max(1.0, float(self.nodes[node_id].get("build_yrs")
                               or self.nodes[node_id].get("yrs") or 1.0))
-        stock_left, own_left, headroom_left = {}, {}, {}
-        bought = collections.Counter()
-        rows, total = [], 0.0
-        for material, units in sorted(self.project_material_needs(node_id).items()):
-            emp_key, tag = self._material_tag(material)
-            needed = units * tonnes_per_unit(material)
-            stock_left.setdefault(emp_key, self.material_stock_t(emp_key))
-            own_left.setdefault(tag, self._unclaimed_own_supply(tag, node_id) * span)
-            from_stock = min(needed, stock_left[emp_key])
-            stock_left[emp_key] -= from_stock
-            from_own = min(needed - from_stock, own_left[tag])
-            own_left[tag] -= from_own
-            missing = needed - from_stock - from_own
-            quoted = self.material_purchase_cost(material, missing, bought[emp_key, tag])
-            cost, mean_price = quoted if quoted else (0.0, 0.0)
-            bought[emp_key, tag] += missing
-            deliverable_cost = cost
-            lab_scale = material.endswith(self.LAB_SCALE_SUFFIX) and not material.endswith("_kg")
-            headroom_left.setdefault(emp_key, self._material_market_tonnes(emp_key))
-            deliverable = missing if lab_scale else min(missing, headroom_left[emp_key])
-            if not lab_scale:
-                headroom_left[emp_key] -= deliverable
-            if quoted and missing > deliverable:
-                # past a year's market supply the rest is bought over the following years at today's
-                # quote, not all at once up the scarcity curve
-                spot = self.material_purchase_cost(material, 0.0)
-                deliverable_cost = (self.material_purchase_cost(material, deliverable, bought[emp_key, tag] - missing)[0]
-                                    if deliverable > 0 else 0.0)
-                cost = deliverable_cost + (missing - deliverable) * spot[1]
-                mean_price = cost / missing
-            total += cost
-            rows.append({"material": material, "needed_tonnes": needed,
-                         "held_tonnes": from_stock + from_own,
-                         "held_from_stock_tonnes": from_stock,
-                         "held_from_own_output_tonnes": from_own,
-                         "missing_tonnes": missing,
-                         "price_per_tonne": mean_price, "cost_of_missing": cost,
-                         "cost_of_deliverable": deliverable_cost,
-                         "deliverable_now_tonnes": deliverable,
-                         "own_supply_tonnes_per_year": self._own_material_supply(tag),
-                         "years_of_supply_it_takes": (
-                             None if lab_scale or missing <= 0 else missing / max(
-                                 1e-9, self._material_market_tonnes(emp_key)
-                                 + self._own_material_supply(tag))),
-                         "priced": quoted is not None})
-        return {"rows": rows, "cost_of_missing": total}
+        return compute_material_bill(self, node_id, self.project_material_needs(node_id), span)
 
     def _up_front_materials_money(self, node_id):
         """Money the start would spend now on the materials the market can

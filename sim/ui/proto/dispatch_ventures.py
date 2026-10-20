@@ -11,6 +11,7 @@ here. Behaviour is unchanged and moved verbatim.
 
 import sim.engine.ui_port as ui_port
 from sim.refusal import LogLine
+from . import credit_forecast
 from .command_registry import command
 from .explain_once import already_explained
 import os
@@ -24,6 +25,7 @@ from .start_refusal import refusal_fields
 from sim.engine.ui_port import money_text, plain_number
 from sim.ui.memory import load_state, save_state
 from .util import _flag
+from .start_commitment import stacked_commitment
 from .rush_filters import parse_rush_filters, passes_rush_filters, rush_exposure
 from .ventures import _VENTURE_SUPERVISION_NOTE
 
@@ -41,10 +43,6 @@ def _non_craft_labour_names(sim):
     return ", ".join(names)
 
 
-_CREDIT_PROSE = {"on_credit": ("nothing_is_borrowed_yet", "what_happens_there"),
-                 "total_committed_across_active_work": ("what_this_means",)}
-
-
 def _shorten_credit_forecast(sim, cmd, out):
     """Keep the credit forecast's explanatory prose to once per game year.
 
@@ -52,20 +50,10 @@ def _shorten_credit_forecast(sim, cmd, out):
     `credit_forecast_in_full` says which the reply is, and the text screen
     prints a one-line summary for the short form. `full` asks for it all again.
     """
-    blocks = [key for key in _CREDIT_PROSE if key in out]
-    if not blocks:
-        return
     seat_progress = sim.state.seat_progress
     said = ui_port.said_explanations(seat_progress) or {}
-    full = bool(cmd.get("full")) or said.get("credit_forecast") != sim.year
-    if full:
-        said["credit_forecast"] = sim.year
+    if credit_forecast.shorten(out, said, sim.year, cmd.get("full")):
         ui_port.set_said_explanations(seat_progress, said)
-    else:
-        for key in blocks:
-            for prose_key in _CREDIT_PROSE[key]:
-                out[key].pop(prose_key, None)
-    out["credit_forecast_in_full"] = full
 
 
 @command("start", shape="tech", group="projects", aliases=("begin", "research", "build"),
@@ -300,17 +288,10 @@ def _cmd_start(sim, nodes, cmd, ended):
     # number the un-manual director's own start heuristic already uses
     # to avoid over-committing itself (step(), core.py) - given here as
     # the real ceiling, not a second formula that could drift from it.
-    _committed = sim.committed_spend()
-    _cash = max(0.0, sim.capital)
-    if _committed > _cash and len(sim.active) > 1:
-        _capacity = sim.funding_capacity()
+    _stacked = stacked_commitment(sim.committed_spend(), sim.capital, len(sim.active), sim.funding_capacity)
+    if _stacked:
         out["total_committed_across_active_work"] = {
-            "you_have_promised": round(_committed, 1),
-            "across_projects_in_hand": len(sim.active),
-            "you_currently_hold": round(_cash, 1),
-            "likely_to_draw_on_credit_between_them": round(
-                _committed - _cash, 1),
-            "your_real_ceiling_if_it_comes_to_that": round(_capacity, 1),
+            **_stacked,
             "what_this_means": (
                 "not what this ONE project costs - the total still owed "
                 "across all %d projects in hand at once, including this "

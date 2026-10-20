@@ -1,119 +1,143 @@
-"""Complaint 181: a command that changes nothing (a refusal, a bare `state`)
-must not pay for rewriting the whole save, and writing a save must not go
-through the slow pure-Python JSON encoder. Counted work, not clock time."""
-from .harness import *  # noqa: F401,F403
-import json.encoder as _json_encoder
-import sim.engine.saveload as _saveload
-from sim.engine.saveload import save_state, load_state
-from sim.ui.cli_interactive import _play_run_one_command
-from sim.ui.save_policy import SavePolicy
+"""Complaint 181: a command that changes nothing must not pay for rewriting the whole save, and writing a save must not
+go through the slow pure-Python JSON encoder. Counted work, not clock time. The rules are `save_state`'s skip of an
+unchanged game and `state_json` (sim/engine/saveload.py), and the scan's reads of the society's baseline knowledge
+(sim/agents/base.py), each called on inputs built here. (The play loop saving only what changed:
+test_scenarios_batch3_saves.)"""
+QUICK_TOPIC = True
+
+import json.encoder as json_encoder
+import os
+import tempfile
+import unittest
+from unittest import mock
+
+from sim.agents.api import ActorRecord, Firm
+from sim.engine import saveload
+from sim.tests.agents_fake_world import FakeWorld, make_node
 
 
-def _running_venture_sim():
-    test_sim = sim(capital=1e9)
-    venture_id = next(node_id for node_id in ORDER if test_sim.is_venture(node_id))
-    run_it(test_sim, venture_id)
-    return test_sim, venture_id
-
-
-def _fresh_session():
-    test_sim, venture_id = _running_venture_sim()
-    path = os.path.join(tempfile.mkdtemp(), "session.json")
-    save_state(test_sim, path)
-    reloaded = sim(capital=1.0)
-    load_state(reloaded, path)
-    return reloaded, venture_id, path
-
-
-class _CountWrites:
-    """Counts how many times a save replaced the file, and how many times the
-    pure-Python JSON encoder (the slow path) was built."""
+class CountWrites:
+    """Counts how many times a save replaced the file, and how many times the pure-Python JSON encoder was built."""
 
     def __enter__(self):
         self.replaces = 0
         self.python_encoder_builds = 0
         self._real_replace = os.replace
-        self._real_make_iterencode = _json_encoder._make_iterencode
+        self._real_make_iterencode = json_encoder._make_iterencode
 
         def counting_replace(source, destination):
             self.replaces += 1
             return self._real_replace(source, destination)
 
-        def counting_make_iterencode(*args, **kwargs):
+        def counting_make_iterencode(*arguments, **keywords):
             self.python_encoder_builds += 1
-            return self._real_make_iterencode(*args, **kwargs)
+            return self._real_make_iterencode(*arguments, **keywords)
 
         os.replace = counting_replace
-        _json_encoder._make_iterencode = counting_make_iterencode
+        json_encoder._make_iterencode = counting_make_iterencode
         return self
 
-    def __exit__(self, *exc):
+    def __exit__(self, *exception):
         os.replace = self._real_replace
-        _json_encoder._make_iterencode = self._real_make_iterencode
+        json_encoder._make_iterencode = self._real_make_iterencode
 
 
-def _run(test_sim, command, path):
-    import io, contextlib
-    with contextlib.redirect_stdout(io.StringIO()):
-        _play_run_one_command(test_sim, NODES, command, path, SavePolicy(path))
+class SaveSkipTests(unittest.TestCase):
+    def setUp(self):
+        self.path = os.path.join(tempfile.mkdtemp(), "session.json")
+        self.text = ['{"year":100}']
+        patcher = mock.patch.object(saveload, "state_text", lambda game: self.text[0])
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def save(self):
+        with CountWrites() as counted:
+            saveload.save_state(object(), self.path)
+        return counted.replaces
+
+    def test_the_first_save_writes_the_file(self):
+        self.assertEqual(self.save(), 1)
+        with open(self.path) as handle:
+            self.assertEqual(handle.read(), '{"year":100}')
+
+    def test_a_game_that_changed_nothing_rewrites_the_save_zero_times(self):
+        self.save()
+        self.assertEqual([self.save() for _ in range(3)], [0, 0, 0])
+
+    def test_a_game_that_changed_rewrites_it_once_and_the_file_is_the_new_game(self):
+        self.save()
+        self.text[0] = '{"year":101}'
+        self.assertEqual(self.save(), 1)
+        with open(self.path) as handle:
+            self.assertEqual(handle.read(), '{"year":101}')
+
+    def test_a_file_changed_behind_the_games_back_is_rewritten(self):
+        self.save()
+        with open(self.path, "w") as handle:
+            handle.write("something else")
+        self.assertEqual(self.save(), 1)
+        with open(self.path) as handle:
+            self.assertEqual(handle.read(), '{"year":100}')
+
+    def test_a_gz_path_is_compressed_and_read_back(self):
+        self.path += ".gz"
+        self.save()
+        self.assertEqual(saveload.read_save_text(self.path), '{"year":100}')
 
 
-# --- a refusal that changes nothing does not rewrite the save ---------------
-refusal_sim, running_id, refusal_path = _fresh_session()
-refusal_sim.end_year = refusal_sim.cfg["start_year"] + 500
-_run(refusal_sim, {"cmd": "state"}, refusal_path)   # the first look sets a one-time flag
-with _CountWrites() as counted:
-    _run(refusal_sim, {"cmd": "open", "id": running_id}, refusal_path)
-    _run(refusal_sim, {"cmd": "open", "id": "no_such_node_anywhere"}, refusal_path)
-    _run(refusal_sim, {"cmd": "state"}, refusal_path)
-check("refusals and a bare state rewrite the save zero times", counted.replaces == 0,
-      counted.replaces)
+class StateJsonTests(unittest.TestCase):
+    SERIALIZED = {"seats": [{"capital": 1.5, "done": ["a", "b"], "notes": {"x": None}}] * 50, "when": {"year": 100}}
 
-# --- a command that does change the game still saves it ---------------------
-with _CountWrites() as counted:
-    _run(refusal_sim, {"cmd": "step", "years": 1}, refusal_path)
-check("a step rewrites the save", counted.replaces == 1, counted.replaces)
-stepped_year = refusal_sim.state.scenario.year
-check_sim = sim(capital=1.0)
-load_state(check_sim, refusal_path)
-check("...and what it wrote is the stepped game", check_sim.state.scenario.year == stepped_year,
-      (check_sim.state.scenario.year, stepped_year))
+    def test_a_save_is_encoded_without_the_pure_python_json_encoder(self):
+        with CountWrites() as counted:
+            saveload.state_json(self.SERIALIZED)
+        self.assertEqual(counted.python_encoder_builds, 0)
 
-# --- the write path uses the C encoder --------------------------------------
-with _CountWrites() as counted:
-    save_state(refusal_sim, os.path.join(tempfile.mkdtemp(), "other.json"))
-check("a save is encoded without the pure-Python JSON encoder",
-      counted.python_encoder_builds == 0, counted.python_encoder_builds)
+    def test_a_save_is_compact_one_line_without_indentation(self):
+        text = saveload.state_json(self.SERIALIZED)
+        self.assertLess(len(text.splitlines()), 50)
+        self.assertNotIn("\n", text)
+        self.assertNotIn(", ", text)
 
-# --- a save is compact: no per-field indentation ----------------------------
-with open(refusal_path) as save_handle:
-    save_line_count = sum(1 for _ in save_handle)
-check("a save is a handful of lines, not one line per value", save_line_count < 50,
-      save_line_count)
+    def test_what_is_encoded_reads_back_the_same(self):
+        import json
+        self.assertEqual(json.loads(saveload.state_json(self.SERIALIZED)), self.SERIALIZED)
 
-# --- imitation scan: the society's baseline knowledge is read once per scan,
-# --- not once per invention per actor ---------------------------------------
-from sim.engine.agents_port import SimWorld
-from sim.engine.state import ActorRecord
-
-scan_sim = sim(capital=1e9)
-for scan_node in [node_id for node_id in ORDER if node_id not in scan_sim.done][:80]:
-    scan_sim.state.projects.done.add(scan_node)
-scan_sim._done_changed()
-scan_firm = scan_sim.actors.add("firm:scan", ActorRecord(kind="firm", money=1e6))
-scan_world = SimWorld(scan_sim)
-baseline_reads = [0]
-_real_baseline = scan_world.baseline_knowledge
+    def test_a_value_json_cannot_encode_is_written_as_text_not_refused(self):
+        self.assertIn("{1, 2}", saveload.state_json({"set": {1, 2}}).replace("'", ""))
 
 
-def _counting_baseline():
-    baseline_reads[0] += 1
-    return _real_baseline()
+class ImitationScanTests(unittest.TestCase):
+    """The society's baseline knowledge is read a constant number of times per scan, not once per invention."""
+
+    class CountingWorld(FakeWorld):
+        def __init__(self, inventions):
+            super().__init__()
+            self.baseline_reads = 0
+            for number in range(inventions):
+                node_id = "invention_%03d" % number
+                self.nodes[node_id] = make_node(node_id, revenue=50.0)
+                self.demonstrated_nodes.add(node_id)
+
+        def baseline_knowledge(self):
+            self.baseline_reads += 1
+            return self.baseline
+
+    def reads(self, inventions):
+        world = self.CountingWorld(inventions)
+        firm = Firm("firm:scan", ActorRecord(kind="firm", money=1e6))
+        firm.imitation_options(world)
+        return world.baseline_reads, len(world.founder_inventions())
+
+    def test_the_scan_has_many_inventions_to_look_at(self):
+        self.assertGreaterEqual(self.reads(80)[1], 50)
+
+    def test_the_baseline_knowledge_is_read_a_constant_number_of_times_per_scan(self):
+        few, _ = self.reads(10)
+        many, scanned = self.reads(80)
+        self.assertTrue(1 <= many <= 5, (many, scanned))
+        self.assertEqual(few, many)
 
 
-scan_world.baseline_knowledge = _counting_baseline
-scan_inventions = len(scan_world.founder_inventions())
-scan_firm.imitation_options(scan_world)
-check("set-up: the scan has many inventions to look at", scan_inventions >= 50, scan_inventions)
-check("the baseline knowledge is read a constant number of times per scan",
-      baseline_reads[0] <= 5, (baseline_reads[0], scan_inventions))
+if __name__ == "__main__":
+    unittest.main()

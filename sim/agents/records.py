@@ -33,6 +33,8 @@ class ActorRecord:
 	# a state's standing need by line last year, and the part it could not pay
 	need: Dict[str, float] = field(default_factory=dict)
 	unfunded: Dict[str, float] = field(default_factory=dict)
+	# how a state met its last shortfall (fiscal_response.py): response -> money of the shortfall covered that way
+	fiscal_response: Dict[str, float] = field(default_factory=dict)
 	# pay a state owes its army and officials from earlier years, by line; paid first from later revenue
 	arrears: Dict[str, float] = field(default_factory=dict)
 	# what the state paid of those arrears this year, by line

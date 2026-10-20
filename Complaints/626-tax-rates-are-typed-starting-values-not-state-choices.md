@@ -1,6 +1,6 @@
 # Tax rates are typed in the civilisation file and are not a state choice
 
-**Status:** open
+**Status:** open - partly done: a state-set rate is read ahead of the file's rate (595 levers) and the state's demand in kind raises the rates of its in-kind forms (`Government.demand_in_kind`, test `state_fiscal_response`). Still open: a coin form's rate is not yet a state choice, and the file's rate is still read each year when no lever is set rather than copied once at setup.
 
 Part of Complaint 542 (State capacity and tax rates are typed, there is no corvée, and the fiscal crisis is a fixed cascade).
 

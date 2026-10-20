@@ -1,4 +1,7 @@
-"""auto_hire_buys_room: a staffing closure with no room left reopens once the household can pay for room (Complaint 525)."""
+"""auto_hire_buys_room: a staffing closure with no room left reopens once the household can pay for room (Complaint 525).
+The room purchase is a rule on built inputs; two named scenarios run the policy on a game."""
+from sim.labour.labour_staff_controls import housing_places_to_buy
+
 from .harness import *  # noqa: F401,F403
 
 _node_id = "tex_rope_walk"
@@ -27,18 +30,24 @@ def _closed_for_want_of_staff(capital):
     return game
 
 
+check("room that already holds the new people buys no housing", housing_places_to_buy(3, 5.0, 100.0, 10.0, 1.0e9) == 0)
+check("housing is bought for the people the room is short of",
+      housing_places_to_buy(3, 1.0, 100.0, 10.0, 1.0e9) == 2)
+check("negative room counts as none", housing_places_to_buy(2, -4.0, 100.0, 10.0, 1.0e9) == 2)
+check("housing and the hiring outlay together within the budget are bought",
+      housing_places_to_buy(1, 0.0, 100.0, 50.0, 150.0) == 1)
+check("a purse that cannot pay for housing and the hire together buys no room",
+      housing_places_to_buy(1, 0.0, 100.0, 50.0, 149.0) == 0)
+
 _rich = _closed_for_want_of_staff(600000.0)
 _room_before = _rich.labour.household_room()
 _reopened_years = 0
 for _year in range(4):
     _rich.step()
     _reopened_years += _node_id in _rich.operating
-check("set-up: the household's room was used up before the year turned", _room_before < 1.0, _room_before)
-check("a rich household with no room left buys housing and hires, so the concern attrition shut reopens within a few years",
-      _reopened_years >= 1, (_reopened_years, dict(_rich.employees)))
-check("...and the room came from worker housing",
-      (_rich.state.household.worker_housing_places or 0.0) > 0.0,
-      _rich.state.household.worker_housing_places)
+check("scenario: a rich household with no room left buys worker housing and hires, so the concern attrition shut reopens",
+      _room_before < 1.0 and _reopened_years >= 1 and (_rich.state.household.worker_housing_places or 0.0) > 0.0,
+      (_room_before, _reopened_years, _rich.state.household.worker_housing_places, dict(_rich.employees)))
 
 _poor = _closed_for_want_of_staff(60000.0)
 _poor.capital = 0.0
@@ -47,28 +56,8 @@ for _year in range(4):
     _poor.capital = 0.0
 _skips = [row for row in _poor.state.household.automation_audit
           if row["policy"] == "auto_hire" and row["action"] == "skipped"]
-check("a household that cannot pay stays shut, buys no room, and the audit says why the hire was refused",
+check("scenario: a household that cannot pay stays shut, buys no room, and the audit says why the hire was refused",
       _node_id not in _poor.operating
       and (_poor.state.household.worker_housing_places or 0.0) == 0.0
       and bool(_skips) and "shut for want of staff" in _skips[-1]["reason"],
       (_node_id in _poor.operating, _poor.state.household.worker_housing_places, _skips[-1:] if _skips else "no skip row"))
-
-# The policy's own call, with no attrition draw in the way.
-_direct = _closed_for_want_of_staff(60000.0)
-_direct.employees["farmhand"] = _direct.employees.get("farmhand", 0.0) + max(0, int(_direct.labour.household_room()))
-_direct.labour._resync_pools()
-_room_direct = _direct.labour.household_room()
-_plain_hired, _plain_reply = _direct.labour.hire("artisan", 1)
-check("set-up: a plain hire is refused for want of room",
-      not _plain_hired and _plain_reply.cause == "household_room", (_room_direct, _plain_reply))
-_bought_hired, _bought_reply = _direct.labour.hire_buying_room("artisan", 1)
-check("hire_buying_room buys the room and then hires", _bought_hired
-      and (_direct.state.household.worker_housing_places or 0.0) >= 1.0, _bought_reply)
-
-_broke = _closed_for_want_of_staff(60000.0)
-_broke.employees["farmhand"] = _broke.employees.get("farmhand", 0.0) + max(0, int(_broke.labour.household_room()))
-_broke.labour._resync_pools()
-_broke.capital = 0.0
-_broke_hired, _broke_reply = _broke.labour.hire_buying_room("artisan", 1)
-check("hire_buying_room leaves the refusal alone when the purse cannot pay for the room",
-      not _broke_hired and (_broke.state.household.worker_housing_places or 0.0) == 0.0, _broke_reply)

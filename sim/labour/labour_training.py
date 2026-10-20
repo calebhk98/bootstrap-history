@@ -21,6 +21,9 @@ import math
 from sim.constants import declare
 from sim.refusal import Refusal
 from . import trade_data
+from .hands import contracted_hours_of, hands_available
+from .hire_outcome import hire_result, unfound_note
+from .room_advice import hire_room_refusal
 
 
 class TrainingMixin:
@@ -278,15 +281,7 @@ class TrainingMixin:
             # refusing exactly that request - a refusal that contradicts
             # itself. A figure a player is meant to act on must never be
             # rounded in the direction that overstates it.
-            room = max(0.0, room)
-            whole = int(room)
-            advice = self._room_advice()
-            return None, None, Refusal("household_room", "you can supervise, house and teach %.2f more people, "
-                                       "not %g%s. %s"
-                                       % (math.floor(room * 100) / 100.0, count,
-                                          " - %d is the most whole people you can take" % whole
-                                          if whole else " - you have no room for even one",
-                                          advice), room=room, remedies=advice.facts["remedies"])
+            return None, None, hire_room_refusal(room, count, self._room_advice())
         return count, fee, None
 
     def hire(self, trade, count, pay_premium=0.0):
@@ -307,8 +302,7 @@ class TrainingMixin:
         self.labour_market.hire(self._world.state.household, trade, float(count) * self._world.HOURS_PER_PERSON_YEAR,
                                 pay_premium)
         self._resync_pools()
-        unfound = (" Found %g of the %g asked for; the rest must be sought next year." % (count, asked)
-                   if count < asked - 1e-6 else "")
+        unfound = unfound_note(count, asked)
         # SAY HOW MANY, AND HOW MANY YOU NOW HAVE: a reply that only names
         # the trade, with no number, gives a player no way to notice a
         # request for eight landing as one. A verb that takes a quantity
@@ -319,9 +313,7 @@ class TrainingMixin:
                 % (count, trade, "" if count == 1 else "s",
                    self._world.money_text(fee, grouped=True), self.employed(trade),
                    max(0.0, self.household_room()), unfound))
-        if unfound:
-            return True, Refusal("search_found_fewer", text, asked=float(asked), hired=float(count))
-        return True, text
+        return hire_result(text, unfound, count, asked)
 
     def fire(self, trade, count):
         """Let staff go. Their wages stop; so does what they were doing.
@@ -591,8 +583,7 @@ class TrainingMixin:
         you can attempt a thing that needs one, and buying a job rather than a
         person is the whole point of `commission`."""
         household = self._world.state.household
-        contracted = sum(hours for trade, hours in getattr(household, "contract_hours", {}).items()
-                         if self.is_craft_trade(trade))
+        contracted = contracted_hours_of(getattr(household, "contract_hours", {}), self.is_craft_trade)
         # AND YOURSELF. effective_scholars() has always counted the founder as
         # one of the scholars - "you are your own natural philosopher" - and
         # nothing counted them as a pair of hands, though the premise of the
@@ -601,8 +592,8 @@ class TrainingMixin:
         # and a Norse run that could field one could never build the place
         # craftsmen work, so it ended six hundred years later with 136
         # technologies and no staff at all.
-        own = 1.0 if self._world.state.founder.founder_alive else 0.0
-        return household.artisans + own + contracted / self._world.HOURS_PER_PERSON_YEAR
+        return hands_available(household.artisans, self._world.state.founder.founder_alive, contracted,
+                               self._world.HOURS_PER_PERSON_YEAR)
 
     COMMISSION_PREMIUM_MULTIPLIER = declare(
         "COMMISSION_PREMIUM_MULTIPLIER", 1.6, kind="temporary_heuristic",

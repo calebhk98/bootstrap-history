@@ -1,14 +1,19 @@
-"""Complaint 423: a mod adds a `figures` entry by data (data/ui/figures.json), and the goods a mine supplies come
-from the resource catalogue, so neither needs an engine or UI edit."""
+"""Complaint 423: a mod adds a `figures` entry by data (data/ui/figures.json), and the goods a mine supplies come from
+the resource catalogue, so neither needs an engine or UI edit. The figure registry reads state paths off any object, so
+it is called here on a stand-in for the game; the catalogue is the real map's."""
+QUICK_TOPIC = True
+
 import json
 import os
 import tempfile
+import unittest
+from types import SimpleNamespace
 
-from .harness import *  # noqa: F401,F403
-
+from sim.engine.economy_mining import MiningMixin
 from sim.engine.mods_base import ModError
-from sim.ui import figures_data
+from sim.geography.api import open_map
 from sim.ui import figures as figure_registry
+from sim.ui import figures_data
 from sim.ui.proto import dispatch_figures
 
 MOD_ID = "tester_figs_k3f9"
@@ -21,55 +26,81 @@ def write_mod(mods_dir, figures):
     folder = os.path.join(mods_dir, MOD_ID)
     os.makedirs(os.path.join(folder, "data", "ui"))
     with open(os.path.join(folder, "mod.json"), "w", encoding="utf-8") as handle:
-        json.dump({"id": MOD_ID, "name": "Figures", "version": "1.0.0", "dependencies": [], "conflicts": []},
-                  handle)
+        json.dump({"id": MOD_ID, "name": "Figures", "version": "1.0.0", "dependencies": [], "conflicts": []}, handle)
     with open(os.path.join(folder, "data", "ui", "figures.json"), "w", encoding="utf-8") as handle:
         json.dump({"figures": figures}, handle)
 
 
-game = sim(capital=1_000_000.0)
-base_figures = set(figure_registry.FIGURES)
-check("the base figures declared as data are registered", {"income", "population"} <= base_figures)
-population = figure_registry.read_figure(game, "population")
-check("a declared figure reads its state paths",
-      population["value"] == round(game.population.total) and set(population["components"])
-      == {"children", "working age", "elderly"}, population)
+def game():
+    """What the declared figures read: the population, the price level and the household's cash."""
+    return SimpleNamespace(population=SimpleNamespace(total=1000.4, children=300.0, working_age=600.0, elderly=100.4),
+                           price_index=1.25, year=100, wage_index=1.5,
+                           state=SimpleNamespace(household=SimpleNamespace(capital=4321.5)))
 
-figure_id = MOD_ID + ":capital_in_hand"
-with tempfile.TemporaryDirectory() as mods_dir:
-    write_mod(mods_dir, {figure_id: {"label": "cash again", "unit": "money", "value": "state.household.capital",
-                                     "drivers": {"price level": "price_index"}}})
-    figures_data.register_data_figures(mods_dir)
-    listing = dispatch_figures.figure_listing()
-    check("a mod's figure shows in the figures listing",
-          figure_id in {row["name"] for row in listing["figures"]}, listing)
-    reply = dispatch_figures.figure_reply(game, figure_id)
-    check("a mod's figure reads the game", reply.get("ok") and abs(reply["current"] - game.capital) < 0.1, reply)
-    check("a mod's figure shows its drivers", reply["drivers"][0]["driver"] == "price level", reply)
-figures_data.register_data_figures()
-check("the default registration drops the mod's figure", figure_id not in figure_registry.FIGURES)
 
-with tempfile.TemporaryDirectory() as mods_dir:
-    write_mod(mods_dir, {"unqualified": {"label": "x", "value": "capital"}})
-    try:
-        figures_data.register_data_figures(mods_dir)
-        refused = False
-    except ModError:
-        refused = True
-    figures_data.register_data_figures()
-check("a mod figure id outside its namespace is refused", refused)
-
-for bad_path in ("open_mine", "_mine_capex", "population.__class__"):
-    with tempfile.TemporaryDirectory() as mods_dir:
-        write_mod(mods_dir, {MOD_ID + ":bad": {"label": "x", "value": bad_path}})
-        try:
-            figures_data.register_data_figures(mods_dir)
-            message = ""
-        except ModError as error:
-            message = str(error)
+class FigureTests(unittest.TestCase):
+    def tearDown(self):
         figures_data.register_data_figures()
-    check("a mod figure reading %r is refused, naming the path" % bad_path, bad_path in message, message)
 
-check("the goods a mine supplies come from the catalogue and equal the old table",
-      all(game.mine_demand_goods(material) == goods for material, goods in OLD_DEMAND_KEYS.items()))
-check("a material with no catalogue row is its own demand good", game.mine_demand_goods("unknown_kg") == ("unknown_kg",))
+    def test_the_base_figures_declared_as_data_are_registered(self):
+        self.assertTrue({"income", "population"} <= set(figure_registry.FIGURES))
+
+    def test_a_declared_figure_reads_its_state_paths(self):
+        population = figure_registry.read_figure(game(), "population")
+        self.assertEqual(population["value"], 1000)
+        self.assertEqual(set(population["components"]), {"children", "working age", "elderly"})
+
+    def test_a_mods_figure_shows_in_the_listing_and_reads_the_game_and_its_drivers(self):
+        figure_id = MOD_ID + ":capital_in_hand"
+        with tempfile.TemporaryDirectory() as mods_dir:
+            write_mod(mods_dir, {figure_id: {"label": "cash again", "unit": "money", "value": "state.household.capital",
+                                             "drivers": {"price level": "price_index"}}})
+            figures_data.register_data_figures(mods_dir)
+            self.assertIn(figure_id, {row["name"] for row in dispatch_figures.figure_listing()["figures"]})
+            reply = dispatch_figures.figure_reply(game(), figure_id)
+        self.assertTrue(reply.get("ok"))
+        self.assertAlmostEqual(reply["current"], 4321.5, places=1)
+        self.assertEqual(reply["drivers"][0]["driver"], "price level")
+
+    def test_the_default_registration_drops_the_mods_figure(self):
+        figure_id = MOD_ID + ":capital_in_hand"
+        with tempfile.TemporaryDirectory() as mods_dir:
+            write_mod(mods_dir, {figure_id: {"label": "x", "value": "price_index"}})
+            figures_data.register_data_figures(mods_dir)
+            self.assertIn(figure_id, figure_registry.FIGURES)
+        figures_data.register_data_figures()
+        self.assertNotIn(figure_id, figure_registry.FIGURES)
+
+    def test_a_mod_figure_id_outside_its_namespace_is_refused(self):
+        with tempfile.TemporaryDirectory() as mods_dir:
+            write_mod(mods_dir, {"unqualified": {"label": "x", "value": "capital"}})
+            with self.assertRaises(ModError):
+                figures_data.register_data_figures(mods_dir)
+
+    def test_a_mod_figure_reading_a_path_that_is_not_readable_is_refused_naming_the_path(self):
+        for bad_path in ("open_mine", "_mine_capex", "population.__class__"):
+            with tempfile.TemporaryDirectory() as mods_dir:
+                write_mod(mods_dir, {MOD_ID + ":bad": {"label": "x", "value": bad_path}})
+                with self.assertRaises(ModError) as caught:
+                    figures_data.register_data_figures(mods_dir)
+            self.assertIn(bad_path, str(caught.exception))
+
+    def test_a_path_follows_attributes_then_dict_keys(self):
+        stand_in = SimpleNamespace(table={"iron": SimpleNamespace(price=7.0)})
+        self.assertEqual(figures_data.read_path(stand_in, "table.iron.price"), 7.0)
+
+
+class MineGoodsTests(unittest.TestCase):
+    def goods(self, material):
+        return MiningMixin.mine_demand_goods(SimpleNamespace(world_map=open_map()), material)
+
+    def test_the_goods_a_mine_supplies_come_from_the_catalogue_and_equal_the_old_table(self):
+        for material, goods in OLD_DEMAND_KEYS.items():
+            self.assertEqual(self.goods(material), goods, material)
+
+    def test_a_material_with_no_catalogue_row_is_its_own_demand_good(self):
+        self.assertEqual(self.goods("unknown_kg"), ("unknown_kg",))
+
+
+if __name__ == "__main__":
+    unittest.main()

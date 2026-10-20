@@ -30,8 +30,27 @@ def can_pay(actor, cost):
 def affordable_units(actor, unit_cost, decimals=1):
     """Units the budget buys, rounded down so the quoted figure is buyable."""
     scale = 10 ** decimals
-    units = purchase_budget(actor) / max(unit_cost, 1e-9)
-    return math.floor(units * scale + _EPSILON) / scale
+    budget = purchase_budget(actor)
+    unit_cost = max(unit_cost, 1e-9)
+    units = budget / unit_cost
+    rounded = math.floor(units * scale + _EPSILON) / scale
+    # the float-noise allowance must not round a figure up past what the budget pays
+    return rounded if rounded * unit_cost <= budget + _EPSILON else math.floor(units * scale) / scale
+
+
+def affordable_whole_units(budget, base_unit_cost, cost_of_units, steps=20):
+    """Whole units whose bill `cost_of_units(n)` (rising with n) the budget covers, found by bisection from the
+    most the base unit cost allows."""
+    lower, upper = 0.0, budget / max(base_unit_cost, 1e-9)
+    affordable = 0.0
+    for _ in range(steps):
+        middle = (lower + upper) / 2.0
+        if cost_of_units(middle) <= budget:
+            affordable = middle
+            lower = middle
+        else:
+            upper = middle
+    return int(affordable)
 
 
 def afford_means():
