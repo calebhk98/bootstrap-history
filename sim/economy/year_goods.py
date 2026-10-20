@@ -9,13 +9,12 @@ import dataclasses
 import math
 from typing import Dict, List, Tuple
 
-from . import (carriage_wear, goods_market, households, market_curves, merchants, producers, seller_cash, seller_offers, settlement,
+from . import (carriage_wear, goods_market, households, market_curves, market_quote, merchants, producers, seller_cash, seller_offers, settlement,
                state_budget, state_store, taxes, unsold_search)
 from .market_memory import market_key
-from .market_memory_asks import (memory_reference_volume, note_bids, note_offers, price_after_no_bids,
-                                 price_after_resumed_trade, wanted_at)
+from .market_memory_asks import memory_reference_volume, note_bids, note_offers, price_after_resumed_trade, wanted_at
 from .market_memory_asks import REPRESENTATIVE_TRADE_SHARE
-from .market_memory_offers import price_after_no_offers, price_after_thin_trade, price_within_making_cost
+from .market_memory_offers import price_after_thin_trade, price_toward_quote
 from .notional import making_costs
 from .protocols import AgentOrders
 from .recipes import input_depth_order
@@ -190,24 +189,15 @@ def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, led
                         costs = making_costs(setup, record)
                     signal = price_after_thin_trade(signal, costs.get(good), result.quantity, usual)
             else:
-                signal = _unsold_signal(bids, offers)
-                if signal is None:
-                    signal = price_after_no_bids(old, bids, offers)
-                if signal is None and bids and not any(offer.quantity > 0.0 for offer in offers):
+                quote = result.quote
+                if bids and not any(offer.quantity > 0.0 for offer in offers):
                     if costs is None:
                         costs = making_costs(setup, record)
-                    signal = price_after_no_offers(old, costs.get(good))
-                if signal is None and bids and offers and old is not None:
-                    # both sides present and nothing traded: the remembered price relaxes toward the making cost
-                    if costs is None:
-                        costs = making_costs(setup, record)
-                    relaxed = price_after_thin_trade(old, costs.get(good), 0.0, record.memory.volume_weights.get(key, 0.0))
-                    signal = relaxed if relaxed != old else None
+                    quote = market_quote.no_trade_quote(bids, offers, costs.get(good))
+                signal = price_toward_quote(old, quote.price) if quote is not None else None
+                if signal is not None:
+                    record.memory.quote_kinds[key] = quote.kind
             if signal is not None and signal > 0.0:
-                if result.quantity <= REPRESENTATIVE_TRADE_SHARE * record.memory.volume_weights.get(key, 0.0):
-                    if costs is None:
-                        costs = making_costs(setup, record)
-                    signal = price_within_making_cost(signal, costs.get(good))
                 floor = setup.opening_prices.get(good, signal) * PRICE_MEMORY_FLOOR_SHARE
                 record.memory.prices[key] = max(signal, floor)
                 record.memory.note_usual_price(key)
@@ -216,6 +206,8 @@ def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, led
             record.unmet[key] = unmet
             record.memory.note_volume(key, delivered)
             record.memory.note_cleared(key, result.price, delivered)
+            if delivered > 0.0:
+                record.memory.quote_kinds.pop(key, None)
             cleared.add(key)
             if delivered > 0.0:
                 traded.add(key)
@@ -232,18 +224,6 @@ def remembered_price(old, cleared, quantity, usual_volume):
     if old is None or usual_volume <= 0.0:
         return cleared
     return old + min(1.0, quantity / usual_volume) * (cleared - old)
-
-
-def _unsold_signal(bids, offers):
-    """What a market that cleared nothing tells its sellers: the most any buyer would have paid, which
-    is below every seller's ask. None when nobody bid or nobody offered, or when a seller asked less
-    than that (nothing real was on offer)."""
-    if not offers:
-        return None
-    ceilings = [bid.maximum_price for bid in bids if bid.budget > 0.0 and math.isfinite(bid.maximum_price)]
-    if not ceilings or min(offer.reservation_price for offer in offers) <= max(ceilings):
-        return None
-    return max(ceilings)
 
 
 def _produce_and_offer(setup, record, view, producer_id, plan, in_kind, order_book, ledger) -> None:

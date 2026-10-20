@@ -10,9 +10,9 @@ Choices:
   * Prices are positive. A reservation at or below zero (a waste product) is treated as the lowest
     price the market considers, so such a seller sells whatever demand takes at that token price and
     the rest stays unsold; the price never clears below zero.
-  * With no offers there is no trade and the price stays at the last price (0.0 if none), every
-    floor unmet. With no demand nothing sells; the price is the last price if some seller would sell
-    at it, else the lowest reservation.
+  * With no offers there is no trade, every floor unmet. With no demand nothing sells. A result with no
+    trade has no price (`traded_price` is None) and a `quote` instead (market_quote.py); its `price`
+    field is the crossing the solver worked from, not a price anyone traded at.
 """
 import bisect
 import math
@@ -26,6 +26,7 @@ from .accounts import ROUNDING_SHARE
 from .goods_market_demand import DemandSchedule
 from .goods_market_fills import buyer_fills, seller_fills, without_edge_self_trades
 from .goods_market_solve import solve_price
+from . import market_quote
 from .types import AreaId, Bid, ClearingResult, CurrencyId, GoodId, Offer
 
 MINIMUM_PRICE_SHARE_OF_REFERENCE = declare(
@@ -64,9 +65,10 @@ def _quantity(floor, flexible, reference, elasticity, budget, price):
     return min(wanted, budget / price)
 
 
-def _empty(good, area, currency, price, bids, supply_at_price=0.0) -> ClearingResult:
+def _empty(good, area, currency, price, bids, supply_at_price=0.0, offers=()) -> ClearingResult:
     unmet = math.fsum(max(0.0, bid.floor_quantity) for bid in bids)
-    return ClearingResult(good, area, currency, price, 0.0, 0.0, supply_at_price, unmet, ())
+    return ClearingResult(good, area, currency, price, 0.0, 0.0, supply_at_price, unmet, (),
+                          market_quote.no_trade_quote(bids, offers))
 
 
 def _price_scale(bids: Sequence[Bid], last_price: Optional[float]) -> float:
@@ -124,7 +126,7 @@ def clear(bids: Sequence[Bid], offers: Sequence[Offer], good: GoodId, area: Area
     bids = buyers.bids
     price, eligible, supply, wants = _crossing(buyers, in_clearing_order(offers))
     if eligible is None:
-        return _empty(good, area, currency, price, bids, supply)
+        return _empty(good, area, currency, price, bids, supply, offers)
     wanted = math.fsum(wants)
     served = _ration(bids, wants, min(wanted, supply))
     traded = math.fsum(served)
