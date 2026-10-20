@@ -21,6 +21,7 @@ years of both, and a distant market's price reaches the merchant that many years
 
 Standalone: `sim.constants`, `sim.economy` records, the carriage table and the area map.
 """
+import dataclasses
 import math
 from dataclasses import dataclass, field
 from typing import Callable, Dict, List, Mapping, Optional, Sequence, Tuple
@@ -103,6 +104,17 @@ class Dispatch:
     stranded: Tuple[Tuple[GoodId, TileId, float], ...]     # (good, tile, quantity) it could not pay or find carriers to carry
     crew_hours_wanted: Dict[str, float] = field(default_factory=dict)   # by crew key, before any cut for want of carriers
     crew_money_wanted: Dict[str, float] = field(default_factory=dict)   # the carriage money those hours stand for, by crew key
+
+
+def within_purse(transfers: Sequence[Transfer], balance: float) -> Tuple[Transfer, ...]:
+    """The transfers as posted against a purse holding `balance`: all of them when their sum fits the purse (less the
+    rounding margin), else each cut by the same share so the sum does."""
+    total = math.fsum(transfer.amount for transfer in transfers)
+    allowed = max(0.0, balance) * (1.0 - PURSE_ROUNDING_MARGIN)
+    if total <= allowed:
+        return tuple(transfers)
+    share = allowed / total
+    return tuple(dataclasses.replace(transfer, amount=transfer.amount * share) for transfer in transfers)
 
 
 def expected_price(merchant: Merchant, view: MarketView, good: GoodId, area: AreaId) -> Optional[float]:
@@ -403,7 +415,7 @@ def dispatch(merchant: Merchant, fills: Sequence[Fill], carriage: CarriageTable,
         if fee > 0.0:
             transfers.append(Transfer(merchant.agent_id, carrier_of(tile) or EDGE_CARRIAGE, currency, fee,
                                       "carriage of %s" % good))
-    return Dispatch(tuple(moves), tuple(transfers), tuple(stranded), wanted, worth)
+    return Dispatch(tuple(moves), within_purse(transfers, cash), tuple(stranded), wanted, worth)
 
 
 def close_year(merchant: Merchant, prices: Mapping[Tuple[GoodId, AreaId], float],
