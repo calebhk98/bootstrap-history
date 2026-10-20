@@ -171,7 +171,7 @@ class Actor(Reviewable, Borrower):
 	def imitation_candidates(self, world: Any) -> List[str]:
 		"""The inventions this actor might value, in id order; an actor that
 		values only some of them narrows this so it is not scanned in full."""
-		return world.founder_inventions()
+		return sorted(world.demonstrated())
 
 	def imitation_options(self, world: Any) -> List[Option]:
 		"""Priced options for the inventions that look most worth copying."""

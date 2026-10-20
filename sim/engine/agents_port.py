@@ -82,8 +82,23 @@ class SimWorld(BudgetView, SiteView, RevenueView, GroupView, StakeView, Disclosu
 		"""Everything any seat has completed that the society did not have."""
 		return self._once("inventions", lambda: sorted(seat_builds.built_by_any(self._sim.state.seats)))
 
+	def actor_held(self) -> Dict[str, List[Any]]:
+		"""Every node an active actor holds beyond what the society already knew, with its holders in id order."""
+		def compute() -> Dict[str, List[Any]]:
+			baseline = self.baseline_knowledge()
+			held: Dict[str, List[Any]] = {}
+			for actor in sorted(self._sim.actors.actors.values(), key=lambda actor: actor.identity()):
+				if actor.record.exited_year is not None:
+					continue
+				for node_id in sorted(actor.knowledge):
+					if node_id in self.nodes and node_id not in baseline:
+						held.setdefault(node_id, []).append(actor)
+			return held
+		return self._once("actor_held", compute)
+
 	def demonstrated(self) -> Set[str]:
-		return self._once("demonstrated", lambda: set(self.founder_inventions()))
+		"""What can be seen made: every seat's builds and every actor's own knowledge."""
+		return self._once("demonstrated", lambda: set(self.founder_inventions()) | set(self.actor_held()))
 
 	def knowledge_half_life_years(self) -> float:
 		return self._sim.knowledge_half_life_years()
@@ -102,7 +117,10 @@ class SimWorld(BudgetView, SiteView, RevenueView, GroupView, StakeView, Disclosu
 		"""How much of an invention an observer at `location` can learn, 0..1: the best view of any seat
 		that built it, from that seat's own place (the acting seat's when no seat built it)."""
 		sim = self._sim
-		builders = seat_builds.builders_of(sim.state.seats, node_id) or [sim.state.acting_seat]
+		builders = seat_builds.builders_of(sim.state.seats, node_id)
+		holders = self.actor_held().get(node_id, [])
+		if not builders and not holders:
+			builders = [sim.state.acting_seat]
 		public = self.is_public(node_id)
 		best = 0.0
 		for seat_id in builders:
@@ -112,6 +130,9 @@ class SimWorld(BudgetView, SiteView, RevenueView, GroupView, StakeView, Disclosu
 				visibility = visibility_of.seen_from(
 					visibility, self.distance_km(location, sim.seat_place(seat_id)), OBSERVATION_RANGE_KM)
 			best = max(best, visibility)
+		for holder in holders:
+			best = max(best, self.knowledge_visibility(
+				node_id, self.distance_km(holder.location(), location) if location is not None else 0.0))
 		return best
 
 	def state_weights(self) -> Dict[str, float]:
