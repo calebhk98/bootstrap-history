@@ -45,6 +45,9 @@ class EconomyRecord:
     land_rent: Dict[TileId, float] = field(default_factory=dict)         # rent per hectare producers paid, by tile
     titles: Dict[TileId, Dict[AgentId, float]] = field(default_factory=dict)   # tile -> holder -> share of its land (titles.py)
     tenancies: Dict[TileId, List[Dict[str, Any]]] = field(default_factory=dict)   # tile -> rows of tenant, lessor, share, arrears
+    bondage: Dict[AgentId, Dict[str, Any]] = field(default_factory=dict)   # household cohort -> creditor, debt left, years left (bondage.py)
+    tax_history: Dict[str, Dict[str, float]] = field(default_factory=dict)   # form -> last year's base and the state's own take (tax_farming.py)
+    tax_farms: Dict[str, Dict[str, Any]] = field(default_factory=dict)   # form -> this year's farmer and price; empty between years
     margin_years: Dict[str, int] = field(default_factory=dict)           # market_key -> years in a row the expected price stood above the entry price
     hours_hired: Dict[str, float] = field(default_factory=dict)          # labour market_key -> hours hired last year
     hours_idle: Dict[str, float] = field(default_factory=dict)           # labour market_key -> hours offered and not hired last year
@@ -93,6 +96,8 @@ class EconomyRecord:
             "land_rent": self.land_rent,
             "titles": {tile: dict(held) for tile, held in sorted(self.titles.items())},
             "tenancies": {tile: [dict(row) for row in rows] for tile, rows in sorted(self.tenancies.items())},
+            "bondage": {cohort: dict(bond) for cohort, bond in sorted(self.bondage.items())},
+            "tax_history": {form: dict(row) for form, row in sorted(self.tax_history.items())},
             "margin_years": self.margin_years,
             "hours_hired": self.hours_hired,
             "hours_idle": self.hours_idle,
@@ -130,6 +135,8 @@ class EconomyRecord:
             land_rent=dict(record["land_rent"]),
             titles={tile: dict(held) for tile, held in record["titles"].items()},
             tenancies={tile: [dict(row) for row in rows] for tile, rows in record["tenancies"].items()},
+            bondage={cohort: dict(bond) for cohort, bond in record["bondage"].items()},
+            tax_history={form: dict(row) for form, row in record["tax_history"].items()},
             margin_years=dict(record["margin_years"]),
             hours_hired=dict(record["hours_hired"]),
             hours_idle=dict(record["hours_idle"]),

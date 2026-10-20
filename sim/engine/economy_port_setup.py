@@ -229,7 +229,7 @@ def build_setup(sim, opening=None, production=None):
         state_capacity=min(1.0, max(0.0, float(civ.get("state_capacity", 1.0)))),
         working_hours_per_year=float(sim.HOURS_PER_PERSON_YEAR), working_share=float(opening["working_share"]),
         gini=demand.GINI_COEFFICIENT_PREINDUSTRIAL_AGRARIAN, opening_population_by_tile=population_by_tile,
-        unskilled_trade=opening["unskilled_trade"], opening_prices=prices, opening_wages=wages, opening_rate=float(opening["rate"]),
+        unskilled_trade=opening["unskilled_trade"], debt_bondage_years=sim.debt_bondage_term_years(), opening_prices=prices, opening_wages=wages, opening_rate=float(opening["rate"]),
         capital_tile=by_people[0], port_tile=(coastal or by_people)[0],
         land_per_run={recipe_id: float(production[recipe_id].get("land_hectare_years") or 0.0)
                       for recipe_id in recipes if production[recipe_id].get("land_hectare_years")},

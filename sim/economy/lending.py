@@ -10,14 +10,14 @@ from typing import Dict, List
 
 from sim.world import capital_market
 
-from . import credit, credit_claims, households_credit, merchants_credit, titles, titles_value
+from . import bondage, credit, credit_claims, households_credit, merchants_credit, titles, titles_value
 from .producers_close import WORKING_CAPITAL_PURPOSE
 from .types import FundsOffer
 from .households_basket import need_prices
 from .year_goods import _held_stock
 
 
-def service(record, money: str, year: int) -> Dict[str, float]:
+def service(record, money: str, year: int, bondage_years: float = 0.0) -> Dict[str, float]:
     """Collect the year's payments at its end, after sales, from loans made in earlier years (a borrower's
     first payment falls due a year after it borrowed). Books the defaults: a lender's loss, a defaulter's
     record, a merchant's staked capital after what it repaid or was freed of. Returns the interest each
@@ -38,6 +38,7 @@ def service(record, money: str, year: int) -> Dict[str, float]:
              if default.loan_id in pledged_loans else default for default in defaults]
     for agent, lost in credit_claims.losses_by_lender(taken).items():
         record.credit_losses[agent] = record.credit_losses.get(agent, 0.0) + lost
+    bondage.enter(record, taken, bondage_years)
     record.remembered_defaults = credit_claims.remember_defaults(record.remembered_defaults, defaults)
     record.loans = [loan for loan in record.loans if loan.issued_year >= year] + serviced
     return received

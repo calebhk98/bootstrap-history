@@ -497,6 +497,7 @@ class AgentEconomy(TilePricesMixin):
                           import_accounts=border_accounts[0], export_accounts=border_accounts[1],
                           labour_levy_hours_per_worker=economy_port_levy.levy_hours_per_worker(sim),
                           debt_relief_tiles=economy_port_land.debt_relief_tiles(sim, economy),
+                          farmed_forms=economy_port_land.farmed_forms(sim, economy),
                           durable_users=tuple(economy_port_actors.held_account(buyer)
                                               for buyer in sorted(sim.actors.actors)),
                           site_limits=tuple(economy_port_sites.site_limits(sim, self._recipe_outputs(), self._economy.setup.tiles)))

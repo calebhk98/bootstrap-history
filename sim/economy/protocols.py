@@ -108,4 +108,5 @@ class YearInputs:
     attrition_share: float = 0.0                            # share of working people a year dying or retiring
     labour_levy_hours_per_worker: float = 0.0               # hours of each working person's year the state takes (a corvee, conscripts)
     debt_relief_tiles: Tuple[TileId, ...] = ()              # tiles whose households' debts the state cancels this year (debt_relief.py)
+    farmed_forms: Tuple[str, ...] = ()                      # money revenue forms the state lets to the best bidder this year (tax_farming.py)
     durable_users: Tuple[AgentId, ...] = ()                 # outside actors' asset accounts whose durables are in use
