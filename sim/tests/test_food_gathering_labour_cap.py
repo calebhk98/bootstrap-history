@@ -11,6 +11,7 @@ from sim.engine import data
 from sim.engine.food_supply import FoodSupplyMixin
 from sim.engine.soil_nitrogen_year import SoilNitrogenMixin
 from sim.engine.state import EconomyState
+from sim.geography.api import Geography
 from sim.labour import api as labour_api
 from sim.tests.test_geography_food_gaps import STEPPE, mini_map
 from sim.world.farming_technique import DEFAULT_TECHNIQUE
@@ -50,8 +51,10 @@ class LabourCapTests(unittest.TestCase):
 def society(hours, stock=None):
     world_map = mini_map({"a": (STEPPE, {}, [])})
     economy = EconomyState(society_labour_hours=dict(hours), wild_stock=dict(stock or {}))
-    return types.SimpleNamespace(state=types.SimpleNamespace(economy=economy), civ={"home_tiles": ["a"]},
-                                 world_map=world_map, labour=types.SimpleNamespace(farming_technique=lambda: DEFAULT_TECHNIQUE))
+    civ = {"home_tiles": ["a"]}
+    geography = Geography(types.SimpleNamespace(civ=civ, world_map=world_map))
+    return types.SimpleNamespace(state=types.SimpleNamespace(economy=economy), civ=civ, world_map=world_map, geography=geography,
+                                 labour=types.SimpleNamespace(farming_technique=lambda: DEFAULT_TECHNIQUE))
 
 
 class Society(FoodSupplyMixin, SoilNitrogenMixin):

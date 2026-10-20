@@ -9,7 +9,7 @@ located-material costs follow from it.
 import json
 from typing import Any, Dict, NotRequired, Optional, Tuple, TypedDict
 
-from sim.geography import located_places, mineral_shares, queries, reach_bands, routes_modes, soil_nitrogen, stock_land, tile_holdings
+from sim.geography import food_society, located_places, mineral_shares, queries, reach_bands, routes_modes, soil_nitrogen, stock_land, tile_holdings
 from sim.geography.queries import deposit_records
 from sim.geography.distance import haversine_km
 from sim.geography.parameters import parameter as parameter_value
@@ -114,6 +114,30 @@ class Geography:
     def nursery_room_units(self, place: Optional[str], output_per_batch: float, hectare_years_per_batch: float) -> Optional[float]:
         """Units the place's arable land raises in a year at a production entry's output and land use per batch."""
         return stock_land.nursery_room_units(place, output_per_batch, hectare_years_per_batch, self._world.world_map)
+
+    def crop_sites(self, cropped_share: float, nutrient_factors: Dict[str, float]) -> Dict[str, Any]:
+        """{tile: crop site} over the held tiles under a rotation that crops `cropped_share`, each under its soil nitrogen factor."""
+        return food_society.crop_sites(self._world.civ, self._world.world_map, cropped_share, nutrient_factors)
+
+    def food_kcal_by_source(self, wild_stock: Any, crop_technique: Any, nutrient_factors: Dict[str, float]) -> Dict[str, float]:
+        """{source id: kcal a year} over the held tiles, game thinned by `wild_stock`, before any labour bound."""
+        return food_society.food_kcal_by_source(self._world.civ, self._world.world_map, wild_stock, crop_technique, nutrient_factors)
+
+    def game_food_sources(self) -> Any:
+        """The food source ids that hunting wild animals goes under."""
+        return queries.game_food_sources(self._world.world_map)
+
+    def huntable_kcal(self, wild_stock: Any) -> Dict[str, Dict[str, float]]:
+        """{tile: {species: kcal}} the held tiles' game could give this year."""
+        return food_society.huntable_kcal(self._world.civ, self._world.world_map, wild_stock)
+
+    def take_hunt(self, wild_stock: Any, available: Dict[str, Dict[str, float]], share: float) -> Any:
+        """The wild stock after hunters take `share` of `available` on every tile."""
+        return food_society.take_hunt(wild_stock, available, share, self._world.world_map)
+
+    def regrow_wild_stock(self, wild_stock: Any) -> Any:
+        """The wild stock a year on: every drawn-down species regrows."""
+        return queries.regrow_wild_stock(wild_stock, self._world.world_map)
 
     def route_km_to(self, tile_ids: Any) -> Any:
         """Kilometres of the cheapest haul from the tiles held to the nearest of these tiles (0.0 when one

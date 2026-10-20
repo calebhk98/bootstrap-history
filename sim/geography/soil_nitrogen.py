@@ -2,13 +2,13 @@
 
 The stock is {tile: share of the native pool left}; a tile with no entry is native. The society's rotation, its crop
 and its draught herd come in as arguments, so this module reads nothing from the simulation. The pool arithmetic is
-sim/world/soil_nutrients.py.
+sim/geography/soil_nutrients.py.
 """
 from typing import Dict, Iterable, Optional
 
 from sim.geography.queries import crop_site
 from sim.geography.tile_holdings import tiles_held
-from sim.world import soil_nutrients
+from sim.geography import soil_nutrients
 
 
 def unworn_sites(civ, world_map, cropped_share: float):

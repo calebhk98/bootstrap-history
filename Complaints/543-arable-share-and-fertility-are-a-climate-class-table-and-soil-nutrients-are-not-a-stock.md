@@ -38,7 +38,7 @@ soils resist tillage until the tool and team can pull hard enough.
 
 ## Done: soil nitrogen stock
 
-- `sim/world/soil_nutrients.py`: the share of a tile's native nitrogen pool left, saved as `state.economy.soil_nitrogen`
+- `sim/geography/soil_nutrients.py`: the share of a tile's native nitrogen pool left, saved as `state.economy.soil_nitrogen`
   (a tile with no entry is native). Each year the harvest's grain nitrogen draws it down; a grain legume's net fixation,
   the humus share of applied manure and the natural input (equal to a native soil's loss, so untouched ground holds still)
   build it. A crop's yield against the reference field follows the year's mineral supply (pool mineralisation, plus nitrate

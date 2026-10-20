@@ -42,6 +42,7 @@ from . import foundation, group_servants  # noqa: F401  (registers the church an
 from . import demand_answer, demand_commands, demand_year  # noqa: F401  (registers the command that answers the state's demands, and its yearly turn)
 from .trader import Trader
 from .trader_entry import trader_entry
+from .route_dues_pay import DUES_CAUSE, pay_dues, treasury_of
 
 __all__ = ["Hands", "PURSE_CURRENCY", "EDGE_EXCHANGE", "EDGE_OUTSIDE", "EDGE_SAVERS", "Purses", "demand_answer", "Actor", "RecordedActor", "Business", "Plant", "Household", "HouseholdParty", "exchange_sale", "Firm", "Government",
            "policy_land", "Policy", "ValuePolicy", "ExportPolicy", "exports_allowed", "GOVERNMENT_PREFIX", "CallbackPolicy", "IdlePolicy", "Option",
@@ -53,4 +54,4 @@ __all__ = ["Hands", "PURSE_CURRENCY", "EDGE_EXCHANGE", "EDGE_OUTSIDE", "EDGE_SAV
            "THREAT_ARMY_RESPONSE", "SOLDIER_TRADE", "DOLE_MATERIAL", "FOOD_NEED", "cast_from_civilisations", "profile_from_civilisation", "seed_cast",
            "CountryWorld", "CountryLiteracy", "ForeignGovernment", "Player", "Stratum", "stratum_id", "seed_strata",
            "strata_definitions", "strata_spawner", "CommandRejected", "register_command", "exchange", "Trader",
-           "trader_entry", "DeclaredKind", "register_declared_kinds"]
+           "trader_entry", "DUES_CAUSE", "pay_dues", "treasury_of", "DeclaredKind", "register_declared_kinds"]
