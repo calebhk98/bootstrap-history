@@ -355,3 +355,32 @@ Measured on the integration branch with `python3 -m sim.tests --slow --only <top
   1.5 to 2 times), which is the trade split and the price level, not one broken floor. The bound stays 8; the
   check passes again when thin markets stop clearing below input cost. Reproduce: `need_basket.need_prices` with
   `price_of` returning None for the good, over the tiles of `record.cohorts`.
+
+## Slow regressions between ae57ae47 and 4796f4cb (economy values)
+
+Bisected by running one topic per first-parent merge (`python3 -m sim.tests --slow --only <topic> --topic-seconds 240`).
+
+- `engine_prices_civilization_rent` ("hectare land is no longer zero for rome", 145.65 -> 164.81): first fails at
+  `2d40eaa4` (farmer training 0 -> 1 year, bonded households' trade `labourer`). The rent is in labour hours, and the
+  farmer's hour now carries a year of training. A value the merge meant to move; the pin is updated, the subject (land
+  priced above zero for Rome) is unchanged.
+- `foreign_actor_trade` ("cargo taken from home raises the home price the trader pays"): the check passed through
+  `0f43ff60`, then `f3a2db9b` (price cap) made the partner price end one step lower, and `12fef2d1` (durables kept in
+  use are not spent from) changed which good pays most: millet, Han 204 against Rome 27 a kilogram. Rome's millet book
+  is deep and flat (`price_after_cargo` at home is unchanged for any cargo up to the whole 2 million), so no cargo
+  moves its price. The fixture now picks, among the paying goods, one whose home price the cargo moves; no bound moves.
+  Open dynamic: Han's millet price under a constant cargo swings 204 -> 103 -> 204 -> 125 -> 204 (years 3 and 6;
+  `python3 -m sim.tests --slow --only foreign_actor_trade` on `12fef2d1` before the fixture change).
+- `economy_state_budget` ("printing more raises the price level more instead of saturating", 34.1 not above 71.2):
+  first fails at `6f0085da` (makers plan and bid inputs at no less than their last clearing price); not the price cap
+  `f3a2db9b`, which passes. Not fixed, test untouched. Measured on the settled opening (`resumed(fiat=True,
+  full_length=True)`, 4 years): the basket price level at 16 times the supply is 3.8, 12.6, 31.9, 34.1 against 3.6,
+  11.8, 28.3, 56.9 at 4 times, while the money supply is 595 against 134 times its start. The level is a few thin
+  goods: `brick_wall_m3` is 541 times its base in the 4 times run and 8.5 in the 16 times run, `vegetable_kg` 89 and 2.0,
+  `brick_1000` 57 and 5.4, `ceramic_kg` 56 and 1.8, `fish_kg` 3.9 and 152; the median good is 7.1 and 7.2 times its
+  base in both. So typical prices already saturate between the two programmes (the capital-market-only state spending
+  above) and the index follows whichever thin good spikes (Complaint 473). The test's subject (a bigger programme
+  raises the level more) fails on the index; the fix belongs to thin-good pricing.
+- `economy_tin_dearer_than_copper`, `baseline_fixture` ("stocks are not eaten through", "the fixture settles") are not new:
+  both failed in the earlier full run with the same bound (tin 0.169, now 0.118, against 0.441; the ratio has sat
+  between 0.08 and 0.17 since `befec1c7`; grain stock 0.971, now 0.967). Still waiting on the opening settling (473, 526).
