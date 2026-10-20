@@ -44,6 +44,8 @@ class ActorRecord:
 	levy_base: float = 0.0
 	# soldiers a state keeps now; 0 until its first year, when it holds the force it wants
 	army: float = 0.0
+	# the last check of the state's wanted head counts against its country's people and food, by line (headcount.py)
+	headcount: Dict[str, Dict[str, Any]] = field(default_factory=dict)
 	# a state's revenue last year by form, in money's worth, and the part of it taken in kind
 	revenue_by_form: Dict[str, float] = field(default_factory=dict)
 	revenue_in_kind: Dict[str, float] = field(default_factory=dict)

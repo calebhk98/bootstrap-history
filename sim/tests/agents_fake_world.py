@@ -76,6 +76,9 @@ class FakeWorld:
 		self.proven: Set[str] = set()
 		self.edge_book = ActorsState()
 
+	def state_hands(self) -> Any:
+		return None
+
 	def edge(self, name: str) -> Any:
 		return self.edge_book.edge(name)
 

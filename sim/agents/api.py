@@ -23,6 +23,7 @@ from .tuning_player import PLAYER_VISIBLE_EXPOSURE
 from .tuning_spending import THREAT_ARMY_RESPONSE
 from .budget import SOLDIER_TRADE
 from .budget_lines import DOLE_MATERIAL
+from .headcount import Hands
 from .stratum_year import FOOD_NEED
 # importing these registers their kinds, spawners, commands and the country scope
 from .cast import GOVERNMENT_PREFIX, cast_from_civilisations, profile_from_civilisation, seed_cast
@@ -40,7 +41,7 @@ from . import demand_answer, demand_commands, demand_year  # noqa: F401  (regist
 from .trader import Trader
 from .trader_entry import trader_entry
 
-__all__ = ["PURSE_CURRENCY", "EDGE_EXCHANGE", "EDGE_OUTSIDE", "EDGE_SAVERS", "Purses", "demand_answer", "Actor", "RecordedActor", "Business", "Plant", "Household", "HouseholdParty", "exchange_sale", "Firm", "Government",
+__all__ = ["Hands", "PURSE_CURRENCY", "EDGE_EXCHANGE", "EDGE_OUTSIDE", "EDGE_SAVERS", "Purses", "demand_answer", "Actor", "RecordedActor", "Business", "Plant", "Household", "HouseholdParty", "exchange_sale", "Firm", "Government",
            "Policy", "ValuePolicy", "ExportPolicy", "exports_allowed", "GOVERNMENT_PREFIX", "CallbackPolicy", "IdlePolicy", "Option",
            "Decision", "register_policy", "ActorRegistry", "ActorRecord", "ActorsState",
            "CastEntry", "CountryProfile", "register_actor_kind",

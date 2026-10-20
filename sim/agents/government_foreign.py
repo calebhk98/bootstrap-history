@@ -9,7 +9,7 @@ inventions it values through its country's scoped world, so distance and its own
 """
 from typing import Any, Dict
 
-from . import budget, ledger, policy
+from . import budget, headcount, ledger, policy
 from .base import RecordedActor
 from .registry import register_actor_kind
 from .tuning import GOVERNMENT_WORTH_SHARE_PER_GAIN
@@ -34,10 +34,15 @@ class ForeignGovernment(RecordedActor):
 		return earners * world.pay_per_person_year("labourer") * tax_share() * world.state_capacity()
 
 	def standing_need(self, world: Any) -> Dict[str, float]:
-		"""Money the army and the officials cost this year at the country's own pay."""
+		"""Money the army and the officials cost this year at the country's own pay, for as many soldiers as the
+		country's people and food can spare."""
 		soldiers = self.record.army if self.record.army > 0.0 else world.army_wanted()
+		soldiers, _ = headcount.checked_army(world, self.record, world.army_wanted(), soldiers, self.officials(world))
 		return {"army": soldiers * world.pay_per_person_year(budget.SOLDIER_TRADE),
 				"administration": sum(line.money for line in budget.administration_line(world))}
+
+	def officials(self, world: Any) -> float:
+		return headcount.people_in(budget.administration_line(world))
 
 	def imitation_worth(self, node_id: str, world: Any) -> float:
 		gain = weighted_gain(invention_gains(world.nodes[node_id]), world.state_weights())
@@ -55,8 +60,8 @@ class ForeignGovernment(RecordedActor):
 		if share > 0.0:
 			ledger.transfer(self, world.edge(ARMY_PAY_EDGE), need["army"] * share, ARMY_PAY_EDGE)
 			ledger.transfer(self, world.edge(OFFICIALS_PAY_EDGE), need["administration"] * share, OFFICIALS_PAY_EDGE)
-		wanted = world.army_wanted()
-		soldiers = self.record.army if self.record.army > 0.0 else wanted
+		soldiers = self.record.army if self.record.army > 0.0 else world.army_wanted()
+		soldiers, wanted = headcount.checked_army(world, self.record, world.army_wanted(), soldiers, self.officials(world))
 		self.record.army = budget.army_next_year(soldiers, wanted, share)
 		self.record.need = need
 		self.record.unfunded = {name: money * (1.0 - share) for name, money in need.items()}
