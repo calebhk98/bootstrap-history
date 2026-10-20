@@ -7,7 +7,6 @@ read of a holder's land wealth.
 from typing import Mapping
 
 from . import titles
-from .land_market import arable_hectares
 from .types import AgentId, TileId
 
 
@@ -17,7 +16,7 @@ def capitalising_rate(live_rate: float, opening_rate: float) -> float:
 
 
 def share_value(tile, rent_per_hectare: float, share: float, rate: float) -> float:
-    return share * arable_hectares(tile) * rent_per_hectare / rate if rate > 0.0 else 0.0
+    return share * tile.cropland_hectares * rent_per_hectare / rate if rate > 0.0 else 0.0
 
 
 def title_wealth(tiles: Mapping[TileId, object], record, holder: AgentId, rate: float) -> float:

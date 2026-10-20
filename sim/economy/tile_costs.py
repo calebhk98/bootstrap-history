@@ -13,36 +13,26 @@ from dataclasses import dataclass
 from typing import Dict, Iterable, Mapping, Optional, Tuple
 
 from sim.economy import carriage_cache
-from sim.economy.types import TileId, TileSpec
-from sim.geography.api import layer_value, map_of_tiles, open_map, route, route_costs, tile_facts
+from sim.economy.types import HECTARES_PER_SQUARE_KILOMETRE, TileId, TileSpec
+from sim.geography.api import crop_site, map_of_tiles, open_map, route, route_costs, tile_facts
 
 
-def tiles_from_geography(geography: dict, tile_ids: Iterable[TileId]) -> Dict[TileId, TileSpec]:
-    """TileSpecs for the named tiles from the parsed geography document; borders are kept whole."""
-    records = geography["land_tiles"]["tiles"]
-    result = {}
-    for tile_id in tile_ids:
-        record = records[tile_id]
-        result[tile_id] = TileSpec(
-            tile_id=tile_id, latitude=record["lat"], longitude=record["lon"],
-            land_area_km2=record["land_area_km2"], coastal=bool(record["coastal"]),
-            borders=tuple(record["borders"]), arable_fraction=record["arable_fraction"],
-            fertility=record["fertility_quality_multiplier"],
-            climate_class=str(record.get("koppen_class") or ""))
-    return result
-
-
-def tiles_from_map(world_map, tile_ids: Iterable[TileId]) -> Dict[TileId, TileSpec]:
-    """TileSpecs for the named tiles read through geography's api from `world_map`; borders are kept whole."""
+def tiles_from_map(world_map, tile_ids: Iterable[TileId], open_field_cropped_share: float) -> Dict[TileId, TileSpec]:
+    """TileSpecs for the named tiles read through geography's api from `world_map`; borders are kept whole.
+    A tile's land is geography's cropland under a rotation that crops `open_field_cropped_share` of open fields
+    each year, and its fertility the yield factor of a cropped hectare (soil, climate, river water)."""
     result = {}
     for tile_id in tile_ids:
         facts = tile_facts(tile_id, world_map)
+        site = crop_site(tile_id, open_field_cropped_share, world_map)
+        area_hectares = facts["land_area_km2"] * HECTARES_PER_SQUARE_KILOMETRE
+        cropped_hectares = site.cropped_hectares if site.yield_factor > 0.0 else 0.0   # ground that yields nothing is not cropland
         result[tile_id] = TileSpec(
             tile_id=tile_id, latitude=facts["lat"], longitude=facts["lon"],
             land_area_km2=facts["land_area_km2"], coastal=facts["coastal"],
-            borders=tuple(facts["neighbours"]), arable_fraction=layer_value(tile_id, "arable_fraction", world_map),
-            fertility=layer_value(tile_id, "fertility_quality_multiplier", world_map),
-            climate_class=str(facts["climate_class"] or ""))
+            borders=tuple(facts["neighbours"]),
+            cropped_fraction=cropped_hectares / area_hectares if area_hectares > 0.0 else 0.0,
+            fertility=site.yield_factor, climate_class=str(facts["climate_class"] or ""))
     return result
 
 

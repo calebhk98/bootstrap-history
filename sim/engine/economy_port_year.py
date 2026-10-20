@@ -487,8 +487,7 @@ class AgentEconomy(TilePricesMixin):
         total = float(population.total)
         weather = sim._pooled_farm_weather_multiplier(sim.state.scenario.year)
         economy = self._economy
-        yields = {producer_id: weather for producer_id, producer in economy_api.producers_of(economy).items()
-                  if economy.setup.land_per_run.get(producer.recipe_id, 0.0) > 0.0}
+        yields = economy_port_sites.crop_yields(economy, weather)
         entrant_share, attrition_share = working_age_turnover(population)
         return YearInputs(year=sim.state.scenario.year, population_by_tile=sim.labour.settlement_tiles(),
                           working_age_share=population.working_age / total if total > 0.0 else 0.0,
@@ -521,7 +520,7 @@ class AgentEconomy(TilePricesMixin):
         prices = economy.setup.opening_prices
         watched = sorted(basket, key=lambda good: -basket[good] * prices.get(good, 0.0))[:SPIN_UP_WATCHED_GOODS]
         inputs = YearInputs(year=0, population_by_tile={}, working_age_share=economy.setup.working_share,
-                            yield_factor_by_producer={}, engine_orders={})
+                            yield_factor_by_producer=economy_port_sites.crop_yields(economy), engine_orders={})
         first_stage = self._settle(economy, inputs, watched)
         economy_api.trim_workforce_to_expected_hours(economy)
         final_states = self._settle_trimmed(economy, inputs, watched)

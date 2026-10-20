@@ -46,9 +46,6 @@ LAND_SCARCITY_RENT_SHARE = declare(
         "its other costs; producers need no demand curve for land here, so how much they get to keep "
         "is a bargaining outcome the model does not derive. A land auction or tenancy contract model "
         "would replace the share.")
-HECTARES_PER_SQUARE_KILOMETRE = declare(
-    "HECTARES_PER_SQUARE_KILOMETRE", 100.0, kind="physical_constant", unit="hectares per km2",
-    source="definition", confidence="A", why="Unit conversion from a tile's area in km2 to hectares.")
 
 
 @dataclass(frozen=True)
@@ -64,10 +61,6 @@ class LandDemand:
 class LandResult:
     rent_per_hectare_by_tile: Dict[TileId, float]    # mean rent a producer pays per hectare granted
     granted_hectares: Dict[AgentId, float]
-
-
-def arable_hectares(tile) -> float:
-    return max(0.0, tile.land_area_km2 * HECTARES_PER_SQUARE_KILOMETRE * tile.arable_fraction)
 
 
 def _weighted(demands: Sequence[LandDemand], attribute: str) -> float:
@@ -184,7 +177,7 @@ def settle_year(setup, record, view, wanted_runs: Mapping[AgentId, float],
     and its producers, and book the rent: producers pay the tile's owner, shared by ownership.spread.
     Returns the payments made (to cohorts), for the year's property income."""
     demands = demands_of(setup, record, view, wanted_runs)
-    arable = {tile_id: arable_hectares(tile) for tile_id, tile in setup.tiles.items()}
+    arable = {tile_id: tile.cropland_hectares for tile_id, tile in setup.tiles.items()}
     cleared = clear_land(arable, demands, own_plot_hectares)
     result = replaced(cleared, rent_per_hectare_by_tile=posted_rents(record.land_rent,
                                                                               cleared.rent_per_hectare_by_tile))

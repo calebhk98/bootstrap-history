@@ -12,6 +12,8 @@ from sim.contracts import Contract
 from sim.book import (EDGE_PREFIX, AgentId, CurrencyId, GoodId, GoodsMove, TileId, Transfer,  # noqa: F401
                       is_edge)
 
+HECTARES_PER_SQUARE_KILOMETRE = 100.0   # unit conversion from a tile's area in km2 to hectares
+
 AreaId = str
 TradeId = str
 
@@ -77,10 +79,15 @@ class TileSpec:
     land_area_km2: float
     coastal: bool
     borders: Tuple[TileId, ...]
-    arable_fraction: float
-    fertility: float
+    cropped_fraction: float          # share of the tile's land that is cropped in a year (geography's crop_site)
+    fertility: float                 # yield of a cropped hectare against the reference field: soil, climate, river water
     climate_class: str = ""          # a climate label from data (Koppen); empty when not known
     country: str = ""                # the civilisation whose people live and hold techniques here; empty is the home one
+
+    @property
+    def cropland_hectares(self) -> float:
+        """Hectares of the tile cropped in a year: the land the economy's farms and households work."""
+        return max(0.0, self.land_area_km2 * HECTARES_PER_SQUARE_KILOMETRE * self.cropped_fraction)
 
 
 @dataclass(frozen=True)

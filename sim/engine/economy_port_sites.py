@@ -12,7 +12,8 @@ Recipes that fell standing timber are limited by the tile's stock instead (econo
 Recipes for resources the catalogue lists no ore for (coal, salt, quarries) declare no limit and keep the
 economy's labelled fallback (`UNSITED_EXTRACTION_ANYWHERE`).
 """
-from sim.economy.api import SiteLimit
+from sim.economy import api as economy_api
+from sim.economy.api import SiteLimit, recipe_tile_key
 from sim.geography.api import ore_goods, ore_tonnes_per_tonne
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
@@ -61,3 +62,14 @@ def deplete(sim, extraction, outputs_by_recipe):
                 ore_tonnes -= take * ore_tonnes_per_tonne(row)
             if ore_tonnes <= 1e-12:
                 break
+
+
+def crop_yields(economy, weather=1.0):
+    """{producer id: yield factor} for the producers whose recipe takes land: the year's weather times the tile's
+    soil, climate and water for a recipe that crops (setup.yield_factor_by_recipe_tile), the weather alone for
+    pasture and forest."""
+    setup = economy.setup
+    site_yield = setup.yield_factor_by_recipe_tile
+    return {producer_id: weather * site_yield.get(recipe_tile_key(producer.recipe_id, producer.tile), 1.0)
+            for producer_id, producer in economy_api.producers_of(economy).items()
+            if setup.land_per_run.get(producer.recipe_id, 0.0) > 0.0}
