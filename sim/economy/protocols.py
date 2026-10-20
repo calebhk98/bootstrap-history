@@ -107,4 +107,5 @@ class YearInputs:
     export_accounts: Tuple = ()                             # accounts that buy goods for abroad: their purchases are exports
     attrition_share: float = 0.0                            # share of working people a year dying or retiring
     labour_levy_hours_per_worker: float = 0.0               # hours of each working person's year the state takes (a corvee, conscripts)
+    debt_relief_tiles: Tuple[TileId, ...] = ()              # tiles whose households' debts the state cancels this year (debt_relief.py)
     durable_users: Tuple[AgentId, ...] = ()                 # outside actors' asset accounts whose durables are in use

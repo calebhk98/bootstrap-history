@@ -9,7 +9,7 @@ from typing import Any, Dict, Mapping, Optional, Tuple
 
 from sim.world import capital_market
 
-from . import carriage_hours, credit, credit_claims, currency, equity, labour, land_market, lending, merchants_credit, producers, sites, state_budget, unit_cost
+from . import carriage_hours, credit, debt_relief, credit_claims, currency, equity, labour, land_market, lending, merchants_credit, producers, sites, state_budget, titles_inheritance, unit_cost
 from .credit_view import CreditView
 from .market_areas import AreaMap
 from .market_areas_follow import follow
@@ -153,6 +153,7 @@ class Economy:
         sites.apply_site_limits(record, setup, inputs.site_limits)
         view = self.view()
         money = setup.currency_id
+        debt_relief.forgive(record, inputs.debt_relief_tiles)
         lending.lend_working_capital(setup, record, view)
         plans = {producer_id: producers.plan(producer, setup.recipes[producer.recipe_id], view,
                                              record.book.balance(producer_id, money))
@@ -190,6 +191,7 @@ class Economy:
                                        {producer_id: plan.wanted_runs for producer_id, plan in plans.items()},
                                        self._own_hectares)
         interest = self._service_loans(view.year)
+        titles_inheritance.divide_estates(record)
         dispatch_merchants(setup, record, self.carriage, ledger)
         money_taxes(setup, record, view, ledger)
         self._build_plant(plant_runs)
