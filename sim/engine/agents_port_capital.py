@@ -27,7 +27,11 @@ class CapitalView:
 	def state_may_borrow(self, state: Any) -> bool:
 		"""Whether a state holds a technology that declares the `state_credit` mechanic, in its own
 		knowledge or in what its society already knows."""
-		return any(state.knows(node_id, self) for node_id in self._sim.nodes_with_mechanic("state_credit"))
+		return any(state.knows(node_id, self) for node_id in self.nodes_with_mechanic("state_credit"))
+
+	def nodes_with_mechanic(self, mechanic: str) -> Any:
+		"""The tree nodes that declare a mechanic."""
+		return self._sim.nodes_with_mechanic(mechanic)
 
 	def state_lending(self) -> Tuple[float, float]:
 		"""(what the state has out on loan, the yearly rate lenders earn) at the last meeting."""
