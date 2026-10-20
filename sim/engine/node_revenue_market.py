@@ -7,14 +7,13 @@ tile; the factor is the year's net over the long-run net.
 from typing import Callable, Mapping, Optional
 
 
-def market_factor(node: Mapping, long_run_prices: Mapping[str, float],
-                  price_now: Callable[[str], Optional[float]]) -> float:
-    """Net sales this year over net sales at long-run cost; one for a node with no baskets. A material
-    nothing prices now is valued at its long-run cost."""
-    sold = node.get("_output_per_year")
+def basket_market_factor(sold: Mapping[str, float], bought: Mapping[str, float],
+                         long_run_prices: Mapping[str, float],
+                         price_now: Callable[[str], Optional[float]]) -> float:
+    """Net sales this year over net sales at long-run cost, for what an entry sells and buys in a year; one
+    where nothing is sold. A material nothing prices now is valued at its long-run cost."""
     if not sold:
         return 1.0
-    bought = node.get("_purchases_per_year") or {}
     long_run = this_year = 0.0
     for basket, sign in ((sold, 1.0), (bought, -1.0)):
         for material, quantity in basket.items():
@@ -27,3 +26,10 @@ def market_factor(node: Mapping, long_run_prices: Mapping[str, float],
     if long_run <= 0.0:
         return 1.0
     return max(0.0, this_year) / long_run
+
+
+def market_factor(node: Mapping, long_run_prices: Mapping[str, float],
+                  price_now: Callable[[str], Optional[float]]) -> float:
+    """`basket_market_factor` for an output-derived node's yearly baskets; one for a node with none."""
+    return basket_market_factor(node.get("_output_per_year") or {}, node.get("_purchases_per_year") or {},
+                                long_run_prices, price_now)

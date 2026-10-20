@@ -6,7 +6,7 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.engine import data, entry_cost, solve_prices
+from sim.engine import entry_cost, solve_prices
 from sim.engine.market_clearing import MarketClearingMixin
 from sim.engine.producer_costs import ProducerCostsMixin
 from sim.tests.test_capital_charge import WAGES, works_entry
@@ -15,9 +15,7 @@ RATE = 0.12
 
 
 def book(production):
-    civilization = dict(data.load_civ("rome_100ad"), starting_interest_rate=RATE)
-    document = data.schedule_of_civilisation(civilization).document()
-    return entry_cost.CostBook({"ore_kg": 1.0}, document, civilization, frozenset(), production=production)
+    return entry_cost.CostBook({"ore_kg": 1.0}.get, WAGES.get, RATE, production=production)
 
 
 class RunningCostSplitTests(unittest.TestCase):
@@ -41,8 +39,8 @@ class RunningCostSplitTests(unittest.TestCase):
 class CostBookTests(unittest.TestCase):
     def test_running_cost_is_below_full_cost_by_the_plants_repayment(self):
         cost_book = book({"widget_kg": works_entry()})
-        full = cost_book.unit_cost_hours("widget_kg", "widget_kg")
-        running = cost_book.running_unit_cost_hours("widget_kg", "widget_kg")
+        full = cost_book.unit_cost("widget_kg", "widget_kg")
+        running = cost_book.running_unit_cost("widget_kg", "widget_kg")
         self.assertIsNotNone(running)
         self.assertLess(running, full)
 
@@ -53,8 +51,8 @@ class CostBookTests(unittest.TestCase):
     def test_running_share_is_the_running_cost_over_the_full_cost(self):
         cost_book = book({"widget_kg": works_entry()})
         share = cost_book.running_share("widget_kg", "widget_kg")
-        self.assertAlmostEqual(share, cost_book.running_unit_cost_hours("widget_kg", "widget_kg")
-                               / cost_book.unit_cost_hours("widget_kg", "widget_kg"))
+        self.assertAlmostEqual(share, cost_book.running_unit_cost("widget_kg", "widget_kg")
+                               / cost_book.unit_cost("widget_kg", "widget_kg"))
         self.assertTrue(0.0 < share < 1.0)
 
 
