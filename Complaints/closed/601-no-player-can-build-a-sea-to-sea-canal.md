@@ -1,6 +1,6 @@
 # No player action can build a sea-to-sea canal
 
-**Status:** open
+**Status:** closed. A canal across an isthmus is a way (`sea_canal`): data states where a cut is possible (`data/world/geography/isthmuses/`), the cost is the earth moved at the canal mode's rates (`sim/geography/ways_isthmus.py`), and a built cut is a sea link in the route graph. Tests: `geography_sea_canal`, `engine_sea_canal`.
 
 Part of Complaint 487 (No diplomacy).
 

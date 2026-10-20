@@ -1,0 +1,8 @@
+{"_doc": "Where a cut across a neck of land between two seas is physically possible, as a stated fact of the ground: the two port tiles it would join (tile_a, tile_b), length_km (the cut's line), mean_ground_height_m (the average height of the ground above sea level along that line), side_slope_run_per_rise (how far each bank spreads sideways per metre of depth, set by the ground's angle of repose), way (the improvement a built cut is recorded as, under the edge key of the two tiles) and builds_like (the route mode whose construction rates, width, excavation per person-day, crew and lining, price the work). Which cuts were ever dug is not stated here; a built cut is a sea link of the stated length that sea modes run on. Overlays add sites as <mod_id>:<name>.",
+ "entries": [
+  {"id": "suez", "way": "sea_canal", "tile_a": "egypt_06", "tile_b": "egypt_08", "length_km": 160.0,
+   "mean_ground_height_m": 6.0, "side_slope_run_per_rise": 1.5, "builds_like": "canal",
+   "kind": "measured", "conf": "D",
+   "source": "Labelled approximation from the shape of the Isthmus of Suez: about 160 km between the Mediterranean and the Gulf of Suez, ground that rises only to the low teens of metres at the summit and is mostly lake and flat sand elsewhere, so a few metres on average; the bank spread is the angle of repose of dry sand (about 34 degrees, run over rise 1.5). Tiles are country-scale, so the line is between the two tiles' ports.",
+   "why": "A level sand neck with a low summit: a long cut but little depth, the cheapest kind of sea-to-sea link per kilometre."}
+ ]}

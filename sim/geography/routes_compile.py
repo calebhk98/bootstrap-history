@@ -11,7 +11,7 @@ is levelled to the mode's `built_grade_cap` (or the improvement's own `grade`), 
 than the mode's `max_natural_grade` needs `engineered`. A land edge that crosses a river (`bridge` in
 the improvements) is forded by a land mode at that mode's own handling, crossed only by a bridge by a
 mode that is `bridge_only`. A built `port` (keyed by its tile) takes the sea edges of the harbours
-bordering it.
+bordering it. A built isthmus cut (`ways_isthmus`) is a sea edge between its two tiles.
 
 Standalone: the route graph, rates and modes of this package.
 """
@@ -19,7 +19,7 @@ import json
 from dataclasses import dataclass, field
 from typing import Any, Dict, FrozenSet, List, Mapping, Optional, Tuple
 
-from sim.geography import routes_graph, routes_modes, routes_rates, sea_freight
+from sim.geography import routes_graph, routes_modes, routes_rates, sea_freight, ways_isthmus
 from sim.geography.map_source import WorldMap
 
 Link = Tuple[int, float, float, float, routes_rates.Rate]  # to_state, cost, days, km, rate
@@ -68,7 +68,8 @@ def _skeleton(world_map: WorldMap, ordered, improvements) -> list:
     count = len(ordered)
     ratios: Dict[Any, Any] = {}
     skeleton = []
-    for edge in route_graph.edges + tuple(routes_graph.harbour_edges(world_map, improvements)):
+    for edge in route_graph.edges + tuple(routes_graph.harbour_edges(world_map, improvements)) \
+            + tuple(ways_isthmus.cut_edges(world_map, improvements)):
         index_a, index_b = tile_index[edge.tile_a], tile_index[edge.tile_b]
         improvement = (improvements or {}).get(edge.key, {})
         for position, mode_id in enumerate(ordered):
