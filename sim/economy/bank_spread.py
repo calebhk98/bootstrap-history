@@ -24,7 +24,7 @@ def capital_shortfall_share(capital: float, loans_out: float, target_capital_sha
     return min(1.0, max(0.0, (target_capital_share - ratio) / target_capital_share))
 
 
-def spread(losses: float, loans_out: float, capital: float, target_capital_share: float) -> float:
+def spread(remembered_loss_rate: float, loans_out: float, capital: float, target_capital_share: float) -> float:
     """What the bank adds to its depositors' rate: the loss rate on its book plus the capital term."""
-    return (lender_ask.loss_rate(losses, loans_out)
+    return (lender_ask.loss_rate(remembered_loss_rate)
             + BANK_SPREAD_AT_NO_CAPITAL * capital_shortfall_share(capital, loans_out, target_capital_share))

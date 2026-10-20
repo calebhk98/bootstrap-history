@@ -122,7 +122,7 @@ class Economy:
     def view(self) -> YearView:
         return CreditView(self.record.memory, self.record.book, self.area_map, self.setup.currency_id, labour_area,
                           loans=lambda: self.record.loans, equity=self._equity_read,
-                          losses=lambda: self.record.credit_losses)
+                          loss_rates=lambda: self.record.loss_rates)
 
     def _equity_read(self, view) -> Dict[str, float]:
         return equity.holdings(self.setup, self.record, view)
@@ -205,7 +205,7 @@ class Economy:
         self._build_plant(plant_runs)
         close_view = CreditView(record.memory, record.book, self.area_map, money, labour_area,
                                 loans=lambda: record.loans, equity=self._equity_read,
-                                losses=lambda: record.credit_losses)
+                                loss_rates=lambda: record.loss_rates)
         close_agents(setup, record, close_view, ledger, self.area_map, self.carriage)
         open_entrants(setup, record, close_view, self.area_map, ledger.unmet_demand, self.carriage,
                       with_standing_bids(ledger.bids_by_market, inputs.standing_bids))

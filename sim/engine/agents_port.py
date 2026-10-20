@@ -8,7 +8,7 @@ import math
 import random
 from typing import Any, Dict, List, Optional, Set
 
-from sim.agents.api import OBSERVATION_RANGE_KM, SECRET_EXPOSURE, demand_answer, payroll, supply
+from sim.agents.api import OBSERVATION_RANGE_KM, business_books, SECRET_EXPOSURE, demand_answer, payroll, supply
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
 from .agents_port_budget import BudgetView
@@ -179,17 +179,8 @@ class SimWorld(BudgetView, SiteView, RevenueView, GroupView, StakeView, Disclosu
 		return self._sim.HOURS_PER_PERSON_YEAR
 
 	def concern_staff(self, node_id: str) -> Dict[str, float]:
-		"""People of each trade one plant of this concern needs: the founder's own rule, which reads the plant's data (plant_figures.crew_people)."""
-		sim = self._sim
-		scholars = sim.venture_hands(node_id)[0]
-		foreman_trade, foreman_fte = sim.venture_foreman(node_id)
-		staff = dict(sim.venture_crew_by_trade(node_id))
-		staff["scholar"] = scholars
-		if foreman_trade:
-			staff[foreman_trade] = staff.get(foreman_trade, 0.0) + foreman_fte
-		for trade, people in sim.venture_garrison(node_id).items():
-			staff[trade] = staff.get(trade, 0.0) + people
-		return {trade: people for trade, people in staff.items() if people > 0.0}
+		"""People of each trade one plant of this concern needs: the one crew rule (business_crew_rule), which reads the plant's data."""
+		return self._sim.concern_staff_by_trade(node_id)
 
 	def concern_wage_bill(self, node_id: str, capacity: float = 1.0) -> float:
 		"""Yearly wages of the people running this concern needs, at the going wage, for a firm
@@ -275,8 +266,8 @@ class SimWorld(BudgetView, SiteView, RevenueView, GroupView, StakeView, Disclosu
 		of capacity gets its share of the demand; a concern with no market model splits with the
 		capacity of its rivals."""
 		sim = self._sim
-		takings = (sim.concern_takings(node_id, self.ramp(opened_year, node_id)) * capacity
-				   * sim.node_output_market_factor(self.nodes[node_id]))
+		takings = business_books.takings_of_size(sim.concern_takings(node_id, self.ramp(opened_year, node_id)), capacity,
+												 sim.node_output_market_factor(self.nodes[node_id]))
 		category = self.nodes[node_id].get("cat")
 		if category in sim.GOODS_CATEGORIES:
 			return takings * sim.goods_category_factor(category)

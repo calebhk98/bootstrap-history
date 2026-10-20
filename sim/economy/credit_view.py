@@ -16,10 +16,10 @@ class CreditView(YearView):
 
     def __init__(self, *arguments, loans: Callable[[], Sequence[Loan]] = lambda: (),
                  equity: Callable[["CreditView"], Mapping[AgentId, float]] = lambda view: {},
-                 losses: Callable[[], Mapping[AgentId, float]] = lambda: {}, **keywords) -> None:
+                 loss_rates: Callable[[], Mapping[AgentId, float]] = lambda: {}, **keywords) -> None:
         super().__init__(*arguments, **keywords)
         self._loans = loans
-        self._losses = losses
+        self._loss_rates = loss_rates
         self._equity_of_all = equity      # reads the view once, when first asked, and keeps the answer
         self._equity = None
         self._claims_seen = None          # (loan list, its length, its last loan) the claims below were summed over
@@ -38,8 +38,8 @@ class CreditView(YearView):
 
 
     def loss_rate(self, agent: AgentId, currency: CurrencyId) -> float:
-        """The share of its credit exposure the agent has lost to default (lender_ask.loss_rate)."""
-        return lender_ask.loss_rate(self._losses().get(agent, 0.0), self.claims(agent, currency))
+        """The loss the agent expects per year of credit exposure (lender_ask.loss_rate)."""
+        return lender_ask.loss_rate(self._loss_rates().get(agent, 0.0))
 
     def equity(self, agent: AgentId) -> float:
         """What the agent owns of the firms (equity.py), at the prices this view carries."""
