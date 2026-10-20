@@ -109,7 +109,12 @@ def _record_for(entry: CastEntry) -> ActorRecord:
 	for key, value in entry.params.items():
 		if key in field_names:
 			value = copy.deepcopy(value)
-			setattr(record, key, set(value) if isinstance(getattr(record, key), set) else value)
+			initial = getattr(record, key)
+			if isinstance(initial, set):
+				value = set(value)
+			elif isinstance(initial, float):
+				value = float(value)
+			setattr(record, key, value)
 	return record
 
 

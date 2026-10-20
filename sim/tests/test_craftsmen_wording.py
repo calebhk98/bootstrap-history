@@ -226,7 +226,7 @@ def _literacy_after(info_done, years=60):
     for i in range(1, years + 1):
         household.year += 1
         household.advance_society(household.year)
-    return household.civ["literacy_general"]
+    return household.literacy("literacy_general")
 
 
 _lit_no_info = _literacy_after(False)

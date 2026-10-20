@@ -30,13 +30,13 @@ check("changing the goal drops the cached critical floor", getattr(game, "_goal_
 # Each goal keeps its own reach year.
 game = unopened_sim()
 game.goal = general_goal
-game.civ["literacy_general"] = 0.5
+game.set_literacy("literacy_general", 0.5)
 game._check_win_conditions(1000)
 check("the first goal records its year", game.goal_year == 1000 and game.state.seat_progress.goal_years == {general_goal: 1000},
       game.state.seat_progress.goal_years)
 game.set_goal(elite_goal)
 check("a new goal starts with no reach year", game.goal_year is None and game.goal == elite_goal)
-game.civ["literacy_general"] = 0.9
+game.set_literacy("literacy_general", 0.9)
 game._check_win_conditions(1007)
 check("the second goal records its own year", game.goal_year == 1007, game.goal_year)
 check("the first goal's year is kept", game.state.seat_progress.goal_years == {general_goal: 1000, elite_goal: 1007},
@@ -55,13 +55,13 @@ with tempfile.TemporaryDirectory() as folder:
 # A watched goal is promoted once the formal goal is reached.
 game = unopened_sim()
 game.goal = general_goal
-game.civ["literacy_general"] = 0.0
+game.set_literacy("literacy_general", 0.0)
 other = next(row["id"] for row in ask(game, cmd="goals")["choices"]
              if row["id"] != elite_goal and not NODES[row["id"]].get("win_condition"))
 ask(game, cmd="goals", action="watch", goal=other)
 early = ask(game, cmd="goals", action="promote")
 check("promotion is refused before the formal goal is reached", early["ok"] is False and game.goal == general_goal, early)
-game.civ["literacy_general"] = 1.0
+game.set_literacy("literacy_general", 1.0)
 game._check_win_conditions(1000)
 promoted = ask(game, cmd="goals", action="promote", goal=other)
 check("a watched goal becomes the formal goal after a win", promoted["ok"] is not False and game.goal == other, promoted)
@@ -74,7 +74,7 @@ check("only a watched goal can be promoted", ask(game, cmd="goals", action="prom
 game = unopened_sim()
 rows = game.win_condition_anatomy({"metric": "literacy_general", "op": ">=", "value": 0.2})
 check("the hook returns (label, value, unit) rows", rows and all(len(row) == 3 for row in rows), rows)
-check("the hook reports the live metric", any(row[0] == "current" and row[1] == game.civ.get("literacy_general") for row in rows), rows)
+check("the hook reports the live metric", any(row[0] == "current" and row[1] == game.literacy("literacy_general") for row in rows), rows)
 game.WIN_CONDITION_ANATOMY["mod_metric"] = lambda sim_, condition: [("grain stock", 3.0, "tonnes")]
 try:
     check("a mod registers its own anatomy", game.win_condition_anatomy({"metric": "mod_metric"}) == [("grain stock", 3.0, "tonnes")])

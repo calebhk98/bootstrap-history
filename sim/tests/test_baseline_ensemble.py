@@ -60,6 +60,7 @@ with tempfile.TemporaryDirectory() as directory:
 
 	def fake_sim(year, built):
 		return SimpleNamespace(
+			literacy=lambda field: {"literacy_general": 0.1, "literacy_elite": 0.9}[field],
 			civ={"id": "fixture_civ", "literacy_general": 0.1, "literacy_elite": 0.9},
 			cfg={"start_year": 100}, year=year, wage_index=1.0, population=SimpleNamespace(total=1005.0),
 			world_map=None, nodes=nodes, done=set(built), granted=set(), tiles_now=10)

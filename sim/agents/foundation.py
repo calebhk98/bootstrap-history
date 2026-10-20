@@ -14,6 +14,7 @@ from . import ledger
 from .base import RecordedActor
 from .edges import EDGE_ECONOMY
 from .group_tuning import STRATUM_GRIEVANCE_THRESHOLD, STRATUM_WELFARE_MEMORY_RATE
+from .literacy import CountryLiteracy
 from .registry import register_actor_kind
 from .sector import Sector
 
@@ -24,9 +25,7 @@ PATRONAGE = "patronage"
 
 def mean_literacy(world: Any) -> float:
 	"""The members-weighted literacy of the country's bodies of people (0 for none)."""
-	strata = world.country_strata()
-	people = sum(stratum.record.members for stratum in strata)
-	return sum(stratum.record.literacy * stratum.record.members for stratum in strata) / people if people > 0.0 else 0.0
+	return CountryLiteracy(world.country_strata()).get("literacy_general")
 
 
 class Foundation(RecordedActor):

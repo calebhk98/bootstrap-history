@@ -1,5 +1,5 @@
 """Actors other than the founder, run once a year inside the simulation."""
-from sim.agents.api import ActorRegistry, ledger, payroll, SOLDIER_TRADE
+from sim.agents.api import ActorRegistry, CountryLiteracy, ledger, payroll, seed_strata, SOLDIER_TRADE
 from .actor_kinds_data import register_mod_actor_kinds
 from .agents_port import SimWorld
 from .agents_port_cast import seed_opening_cast
@@ -7,6 +7,28 @@ from .state import ActorsState
 
 
 class ActorsMixin:
+
+    def country_literacy(self, country=None):
+        """Current reading shares, owned only by the country's strata."""
+        seed_opening_cast(self)
+        if not self.actors.of_kind("stratum"):
+            seed_strata(self.actors, None)
+        home = self.actors.state.home_country
+        country = country or home
+        return CountryLiteracy(actor for actor in self.actors.of_kind("stratum")
+                               if (actor.record.country or home) == country)
+
+    def literacy(self, field, country=None):
+        return self.country_literacy(country).get(field)
+
+    def set_literacy(self, field, value, ceiling=1.0, country=None):
+        self.country_literacy(country).set(field, value, ceiling)
+
+    def research_productivity(self, country=None):
+        """Research uses the same lettered population ratio as scholar hiring."""
+        return max(0.0, min(self.labour.LITERACY_FACTOR_CAP,
+                           self.literacy("literacy_elite", country)
+                           / self.labour.LITERACY_REFERENCE_ELITE))
 
     @property
     def actors(self):

@@ -198,7 +198,7 @@ check("clergy forget a fall that lasts", Sector.of_foundations([church]) == [])
 
 # ---- an academy: scholars, patrons, and the spread of schooling --------------------------------------------------------
 world = StakeWorld()
-world.strata = [SimpleNamespace(record=SimpleNamespace(members=1000.0, literacy=0.1))]
+world.strata = [SimpleNamespace(record=ActorRecord(kind="stratum", members=1000.0, literacy=0.1))]
 academy = foundation(Academy, "academy", members=10.0, stipend_trade="scholar", tithe_rate=0.0, endowment_hectares=0.0, patronage_rate=0.8)
 academy.advance(world)
 check("an academy collects the patronage that pays for learning while few can read",

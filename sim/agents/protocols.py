@@ -499,6 +499,12 @@ class World(Protocol):
 
 	# ---- What the home state asks of its people (sim/engine/agents_port_budget.py)
 
+	def literacy(self, field: str) -> float:
+		...
+
+	def research_productivity(self, country=None) -> float:
+		...
+
 	def country_strata(self) -> List[Any]:
 		"""The home country's bodies of people, in id order."""
 		...

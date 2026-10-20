@@ -66,8 +66,8 @@ def tile_count(sim):
 
 def _current(sim):
     return {"population": float(sim.population.total), "wage_index": float(sim.wage_index),
-            "literacy_general": float(sim.civ.get("literacy_general", 0.0)),
-            "literacy_elite": float(sim.civ.get("literacy_elite", 0.0)),
+            "literacy_general": float(sim.literacy("literacy_general")),
+            "literacy_elite": float(sim.literacy("literacy_elite")),
             "territory_tiles": float(tile_count(sim))}
 
 
@@ -121,9 +121,9 @@ def divergence_report(sim):
         "wage_index": _pair(started("wage_index"), sim.wage_index),
         "price_index": _pair(started("price_index"), sim.price_index),
         "literacy_general": _pair(started("literacy_general"),
-                                  sim.civ.get("literacy_general", 0.0)),
+                                  sim.literacy("literacy_general")),
         "literacy_elite": _pair(started("literacy_elite"),
-                                sim.civ.get("literacy_elite", 0.0)),
+                                sim.literacy("literacy_elite")),
         "territory": {"start": start_regions, "now": now_regions,
                       "changed": start_regions != now_regions},
         "dated_events": _dated_events(sim),

@@ -73,7 +73,7 @@ class Player(RecordedActor):
 		learned = []
 		for node_id in sorted(self.works):
 			work = self.works[node_id]
-			if not imitation.work_year(self, node_id, work, world):
+			if not imitation.work_year(self, node_id, work, world, world.research_productivity()):
 				continue
 			del self.works[node_id]
 			roll = world.rng_for(world.year, self.kind, node_id, self.identity())

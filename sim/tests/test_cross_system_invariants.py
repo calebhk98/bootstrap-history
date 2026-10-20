@@ -57,7 +57,7 @@ class CeilingInvariants(unittest.TestCase):
         for field, ceiling_of in (("literacy_general", "literacy_ceiling_general"),
                                   ("literacy_elite", "literacy_ceiling_elite")):
             sim = _fresh_sim()
-            start = float(sim.civ.get(field, 0.0))
+            start = float(sim.literacy(field))
             sim_node = LITERACY_GOAL
             saved = data.TECH_EFFECTS.get(sim_node)
             data.TECH_EFFECTS[sim_node] = {field: 5.0}
@@ -68,7 +68,7 @@ class CeilingInvariants(unittest.TestCase):
                 if saved is not None:
                     data.TECH_EFFECTS[sim_node] = saved
             ceiling = getattr(sim, ceiling_of)()
-            self.assertLessEqual(sim.civ[field], max(ceiling, start) + 1e-9, field)
+            self.assertLessEqual(sim.literacy(field), max(ceiling, start) + 1e-9, field)
 
     def test_the_ceilings_are_fractions(self):
         sim = _fresh_sim()
@@ -81,12 +81,12 @@ class GoalDeltaInvariants(unittest.TestCase):
     def test_the_reported_goal_delta_is_the_change_in_the_live_measure(self):
         sim = _fresh_sim(LITERACY_GOAL)
         before = sim.goal_snapshot()
-        sim.civ["literacy_general"] = sim.civ.get("literacy_general", 0.0) + 0.03
+        sim.set_literacy("literacy_general", sim.literacy("literacy_general") + 0.03)
         after = sim.goal_snapshot()
         moved, _gained = goal_movement(before, after)
         labels = {label: (old, new) for label, old, new in moved}
         self.assertIn("literacy general", labels)
-        live = sim.civ["literacy_general"]
+        live = sim.literacy("literacy_general")
         self.assertAlmostEqual(after["measures"]["literacy general"][0], live)
         self.assertAlmostEqual(live - before["measures"]["literacy general"][0], 0.03)
         for label, (old_value, _fraction) in before["measures"].items():

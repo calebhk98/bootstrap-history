@@ -132,6 +132,12 @@ class LabourWorld:
     def civ(self):
         return self._sim.civ
 
+    def literacy(self, field):
+        return self._sim.literacy(field, self._sim.acting_country())
+
+    def research_productivity(self):
+        return self._sim.research_productivity(self._sim.acting_country())
+
     @property
     def economy(self):
         return self._sim.economy

@@ -23,7 +23,7 @@ def state_text(sim):
 	sim.economy.flush_record()
 	sim.state._civ = sim.civ.get("id")
 	sim.state._goal = sim.goal
-	sim.state._civ_live = {attr: sim.civ.get(attr) for attr in ("literacy_general", "literacy_elite", "state_capacity")}
+	sim.state._civ_live = {attr: sim.civ.get(attr) for attr in ("state_capacity",)}
 	sim.state._weights = dict(sim.value_weights)
 	sim.state._fog = sim.fog
 	sim.state._immortal = bool(sim.cfg.get("immortal", True))

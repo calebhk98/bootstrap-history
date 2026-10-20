@@ -46,6 +46,8 @@ def _read_generation_share(sim, condition):
 SOURCE_READERS["attribute"] = _read_attribute
 SOURCE_READERS["generation_share"] = _read_generation_share
 METRIC_READERS["epidemic_relief"] = lambda sim: 1.0 - sim.hazard_relief("staff_loss")[0]
+METRIC_READERS["literacy_general"] = lambda sim: sim.literacy("literacy_general")
+METRIC_READERS["literacy_elite"] = lambda sim: sim.literacy("literacy_elite")
 
 
 def current_value(sim, condition):
