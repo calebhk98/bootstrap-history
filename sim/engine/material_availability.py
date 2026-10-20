@@ -6,8 +6,9 @@ reached, a route opened, a partner that gains it."""
 from .blockers import blocker_kind
 
 
-def materials_without_a_seller(self, node_id):
-    """[material] the project would buy and no one in reach sells, sorted. Stock in hand covers a need."""
+def materials_without_a_seller(self, node_id, held_tonnes=None):
+    """[material] the project would buy and no one in reach sells, sorted. Stock in hand covers a need;
+    `held_tonnes(material)` says how much a buyer other than the founder holds."""
     from .material_units import tonnes_per_unit
     node = self.nodes[node_id]
     market = self.goods_market
@@ -16,7 +17,8 @@ def materials_without_a_seller(self, node_id):
     needs = self.project_material_needs(node_id)
     return [material for material in sorted(needs)
             if not market.can_be_bought(material)
-            and self.material_stock_t(self._material_tag(material)[0]) < needs[material] * tonnes_per_unit(material)]
+            and (held_tonnes(material) if held_tonnes else self.material_stock_t(self._material_tag(material)[0]))
+            < needs[material] * tonnes_per_unit(material)]
 
 
 @blocker_kind("supply")

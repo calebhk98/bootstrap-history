@@ -75,6 +75,9 @@ class FakeWorld:
 		# concerns that have run at a profit where entrants can see them
 		self.proven: Set[str] = set()
 		self.edge_book = ActorsState()
+		# trade family -> people that can be put on research; node -> materials no one sells
+		self.hands: Dict[str, float] = {}
+		self.unsold: Dict[str, List[str]] = {}
 
 	def state_hands(self) -> Any:
 		return None
@@ -87,6 +90,15 @@ class FakeWorld:
 
 	def research_productivity(self, country=None):
 		return 1.0
+
+	def research_hands(self, actor: Any, family: str) -> float:
+		return self.hands.get(family, 0.0)
+
+	def unsold_materials(self, actor: Any, node_id: str) -> List[str]:
+		return list(self.unsold.get(node_id, ()))
+
+	def purchasable_substitute_discount(self) -> float:
+		return 0.9
 
 	def knowledge_half_life_years(self) -> float:
 		return 40.0

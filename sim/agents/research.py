@@ -8,7 +8,9 @@ Pure functions over an actor and a world view; the actor keeps the project in `w
 import math
 from typing import Any, Dict, Iterable, List
 
-from . import imitation
+from sim.refusal import Refusal
+
+from . import imitation, research_gate
 from .player_commands import CommandRejected
 from .tuning import HIRING_PREMIUM
 
@@ -35,23 +37,16 @@ def chance(node_id: str, world: Any) -> float:
 
 
 def begin(actor: Any, node_id: str, world: Any) -> str:
-	"""Begin researching a node; refuses with the reason."""
-	if node_id not in world.nodes:
-		raise CommandRejected("no such node")
-	if actor.knows(node_id, world):
-		raise CommandRejected("already known")
-	if node_id in actor.works:
-		raise CommandRejected("already being researched")
-	missing = missing_prerequisites(actor, node_id, world)
-	if missing:
-		raise CommandRejected("prerequisites unknown: " + ", ".join(sorted(missing)))
+	"""Begin researching a node; refuses with the first start gate it fails (`research_gate.refusals`), whose
+	text carries its `cause`. The actor says what the work costs it (`research_price`) and takes it on
+	(`commit_research`); a seat's founder does both through its own books."""
+	found = research_gate.refusals(actor, node_id, world)
+	if found:
+		raise CommandRejected(found[0])
 	costs = plan(actor, node_id, world)
-	if costs["total"] > actor.copy_budget(world):
-		raise CommandRejected("cannot afford the research")
-	work = imitation.start_work(node_id, [node_id], costs, world.year)
-	work["research"] = True
-	actor.works[node_id] = work
-	return "research begun, %d years" % costs["years"]
+	if actor.research_price(costs, node_id, world) > actor.copy_budget(world):
+		raise CommandRejected(Refusal("cannot_afford", "cannot afford the research", total=costs["total"]))
+	return actor.commit_research(node_id, costs, world)
 
 
 def work_year(actor: Any, world: Any) -> List[str]:

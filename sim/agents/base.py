@@ -234,6 +234,17 @@ class Actor(Reviewable, Borrower):
 		"""Begin researching a node (any actor, one path: `research.py`); refuses with the reason."""
 		return research.begin(self, node_id, world)
 
+	def research_price(self, costs: Dict[str, Any], node_id: str, world: Any) -> float:
+		"""Money the research takes out of its purse: the plan's whole cost."""
+		return costs["total"]
+
+	def commit_research(self, node_id: str, costs: Dict[str, Any], world: Any) -> str:
+		"""Take the research on as a project in `works`."""
+		work = imitation.start_work(node_id, [node_id], costs, world.year)
+		work["research"] = True
+		self.works[node_id] = work
+		return "research begun, %d years" % costs["years"]
+
 	def work_on_research(self, world: Any) -> List[str]:
 		"""Advance every research a year at the country's literacy; returns the nodes learned."""
 		return research.work_year(self, world)
