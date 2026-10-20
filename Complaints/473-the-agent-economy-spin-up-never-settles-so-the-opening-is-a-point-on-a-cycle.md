@@ -237,3 +237,43 @@ two do not tie.
 The 467 check's purpose (no trade opens holding several times its jobs) now excludes the plot trade, whose people
 work their own land and wait on no bid, and trades with under one worker-year of jobs (glassblower holds about a
 millionth of a person against a few thousandths of an hour, a ratio of noise).
+
+## Measured: which merge tips the spin-up into cycling, and what the cycle is (branch 473-why-the-spin-up-tips-into-cycling)
+
+Probe as in the table above (Rome first stage, 21 years: max price level over years 5-20, max rate, min rate, wage 20), each
+first-parent merge with the farmer-training fix (the data and `strata_seed` part of merge 2d40eaa4's second parent) applied on top.
+
+| commit | max price level | max rate | min rate | wage 20 |
+|---|---|---|---|---|
+| 49896150 (556b) + fix | 0.904 | 0.171 | 0.023 | 0.309 |
+| d9551124 (621-623) + fix | 4.973 | 0.394 | 0.108 | 0.198 |
+| 73655a13 (619b recipes book their trades) + fix | 4.048 | 0.301 | 0.112 | 0.214 |
+| 2d40eaa4 (head) | 2.491 | 0.316 | - | - |
+| head + price level chained over what households bought (tried, not kept) | 1.380 | 0.184 | 0.053 | 0.105 |
+| 49896150 + fix + the same chained level | 1.222 | 0.258 | 0.033 | 0.608 |
+
+The tipping merge is 619b: a pure data rebook (brick, ceramic, wick and tar hours from the generic labourer to potter, spinner,
+charcoal burner). 537, 619c and 600 were not probed (619b already cycles).
+
+What the cycle is (per-year traces of the 619b and 556b configurations; the scripts were scratch, no committed command prints them):
+
+- Both configurations share one slump: producers' runs fall to under a tenth of capacity in year 2, the hired share of offered hours is
+  3 to 8 per cent throughout, the wage falls to a third, capacity halves in years 5-6. That is the labour glut (608), not the cycle.
+- The "price level" is a fixed basket of the opening's wanted quantities over goods that traded recently. At 619b the opening gives piped
+  water, iron bar and raw glass a few thousand runs of capacity; at 556b it gives them none, so they never trade and sit out of the index.
+  Once they trade, their basket quantities (piped water 781e9 kg against 23e9 made; iron bar 52e6 against 1e6 made, none bought by
+  households; glass 152e6 against 3e7) are far above supply, their prices climb two orders of magnitude (water x380, glass x400, iron x130
+  by year 13) and they carry most of the index while stone, brick and millet stay at or below base. Households' actual spending on piped
+  water is 5 to 9 per cent. Expected inflation, the savers' ask (the rate floor), cash targets and the state's real spending target read this
+  index, so the rate sits at 0.1 to 0.3 (against 0.03 to 0.17) and lending is several times larger.
+- Supply does not answer a 100-fold price: water capacity stays near 1.95e3 runs for fourteen years (loans for about a tenth of capacity are
+  funded each year, little plant arrives); glass plant lasts 3 years so expansion only replaces wear; the bloomery runs 0.1 to 5 per cent of capacity.
+- The opening decides by a threshold which thin goods have any capacity at all. That is the sensitivity: a few recipes' labour rebook moved
+  those goods across it, as farmer training years did earlier.
+
+Tried: a Tornqvist chained index weighted by households' spending shares. It lowers the head's swing (2.491 to 1.380; rate 0.316 to 0.184)
+but moves the calm configuration the other way (0.904 to 1.222; rate 0.171 to 0.258), so it does not make both calm and was not kept.
+The index is part of the loop, not all of it.
+
+Not tried: planning to the area's demand in single-area thin markets (the baker/flour overshoot reported by the coordinator). The traces show
+the opposite direction for the thin goods that dominate the index (runs far below capacity at high prices), so it is probably another mechanism; unmeasured.
