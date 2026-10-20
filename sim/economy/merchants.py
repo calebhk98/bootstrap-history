@@ -28,7 +28,7 @@ from typing import Callable, Dict, List, Mapping, Optional, Sequence, Tuple
 
 from sim.constants import declare
 
-from . import inventory, merchants_route_memo, merchants_transit
+from . import inventory, merchants_nearest, merchants_route_memo, merchants_transit
 from .accounts import DeliveredMove
 from .households_orders import BUDGET_SAFETY_SHARE
 from .market_areas import AreaMap
@@ -261,21 +261,33 @@ def _good_routes(good, spec, areas, prices, carriage, interest_rate, source_ids=
     spoilage = min(1.0, max(0.0, spec.spoilage_per_year))
     keep = 1.0 - spoilage
     unit_mass = spec.unit_mass_kg
-    priced = [(area, price) for area, price in zip(areas, map(prices.get, [area.area_id for area in areas])) if price]
-    positive = [price for _area, price in priced if price > 0.0]
-    if not positive or max(price for _area, price in priced) * keep - min(positive) * (
-            1.0 + interest + MERCHANT_MARGIN_SHARE) <= 0.0:
+    priced = []
+    dearest = None                       # the dearest price, as max() picks it
+    cheapest = None                      # the cheapest positive price
+    get_price = prices.get
+    for area in areas:
+        price = get_price(area.area_id)
+        if price:
+            priced.append((area, price))
+            if dearest is None or price > dearest:
+                dearest = price
+            if price > 0.0 and (cheapest is None or price < cheapest):
+                cheapest = price
+    if cheapest is None:
+        return rows
+    cheapest_floor = cheapest * (1.0 + interest + MERCHANT_MARGIN_SHARE)
+    if dearest * keep - cheapest_floor <= 0.0:
         return rows      # even the dearest destination, kept after spoilage, cannot cover the cheapest source's floor cost
     # (minus price there, area id, price there, price there kept after spoilage, its spoilage cost, anchor tile, area),
-    # dearest first
+    # dearest first; a destination whose kept price cannot cover the cheapest floor cost ends every source's scan, so it is left out
     dearest_first = sorted([(-price, area.area_id, price, price * keep, price * spoilage, area.anchor_tile, area)
-                            for area, price in priced])
+                            for area, price in priced if not price * keep - cheapest_floor <= 0.0])
     dearest_kept = dearest_first[0][3]
-    for source in areas:
+    storage_a_year = None                # one extra year's storage, made when a haul first needs it
+    for source, price_here in priced:
         if source_ids is not None and source.area_id not in source_ids:
             continue
-        price_here = prices[source.area_id]
-        if not price_here or price_here <= 0.0:
+        if price_here <= 0.0:
             continue
         floor_cost = price_here * (1.0 + interest + MERCHANT_MARGIN_SHARE)
         if dearest_kept - floor_cost <= 0.0:
@@ -283,15 +295,22 @@ def _good_routes(good, spec, areas, prices, carriage, interest_rate, source_ids=
         best = None
         best_net = -math.inf
         best_years = 1
-        storage_a_year = merchants_transit.storage_per_unit(spec, 2)    # one extra year's storage
         interest_here = price_here * interest              # the terms of gap_cost_per_unit, hoisted
         margin_here = MERCHANT_MARGIN_SHARE * price_here
         source_tile = source.anchor_tile
-        cost_to_get = carriage.costs_from(source_tile).get
+        costs_here = carriage.costs_from(source_tile)
+        cost_to_get = costs_here.get
+        nearest = merchants_nearest.nearest_carriage(carriage, good, areas, source, costs_here)
+        if nearest == math.inf:
+            continue                                       # no other area is reachable, and the source's own nets a loss
+        nearest_money = nearest * unit_mass / KILOGRAMS_PER_TONNE
         worth_beating = 0.0                                # no cheaper destination can beat this (the best net so far, once positive)
         for _minus, _area_id, price_there, kept_there, spoilage_there, anchor_tile, destination in dearest_first:
             # carriage only adds cost, so no cheaper destination can beat this bound
             if kept_there - floor_cost <= worth_beating:
+                break
+            # nor can a destination whose price, less the carriage of the nearest other area, cannot (the slack covers rounding)
+            if kept_there - floor_cost - nearest_money + 1e-9 * (price_there + price_here + nearest_money) <= worth_beating:
                 break
             # the source's own area nets a loss (equal prices, positive margin) and an unreachable tile nets -inf
             per_tonne = cost_to_get(anchor_tile, math.inf)
@@ -302,6 +321,8 @@ def _good_routes(good, spec, areas, prices, carriage, interest_rate, source_ids=
                 if held_years is None:
                     held_years = years_between(carriage, source_tile, anchor_tile)
                 if held_years > 1:
+                    if storage_a_year is None:
+                        storage_a_year = merchants_transit.storage_per_unit(spec, 2)
                     net -= (interest_here + storage_a_year) * (held_years - 1) + price_there * (
                         merchants_transit.lost_share(spec.spoilage_per_year, held_years) - spoilage)
                 if net > worth_beating:
