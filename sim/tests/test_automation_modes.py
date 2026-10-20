@@ -45,6 +45,7 @@ check("the audit row names the mode", all("replace-only" in each["reason"] for e
 refused = household_that(refuses=("scholar",))
 replace_lost_staff(refused, {"artisan": 2, "scholar": 1})
 skips = [each for each in refused.state.household.automation_audit if each["action"] == "skipped"]
+# presentation: the skip row carries the refusal's wording
 check("a refused rehire is recorded as a skipped action with the refusal, and the other trades are still rehired",
       refused.state.household.employees == {"artisan": 2.0} and len(skips) == 1 and skips[0]["what"] == "replace 1 scholar"
       and "no room for scholar" in skips[0]["reason"], refused.state.household.automation_audit)
@@ -85,6 +86,7 @@ lossy.labour.resync_pools()
 lossy.state.household.staff_pay_held.update({"artisan": 1e-6, "scholar": 1e-6})    # paid next to nothing
 lossy._step_staff()
 replaced = rows_of(lossy, "replace")
+# presentation: the audit row names the mode in words
 check("scenario: replace-only on a game rehires the trades it lost, never beyond what was lost, naming the mode",
       replaced and {each["what"].split()[-1] for each in replaced} >= {"artisan"}
       and lossy.state.household.employees.get("artisan", 0.0) <= 6.0
