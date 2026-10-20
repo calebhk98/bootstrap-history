@@ -614,7 +614,7 @@ in years 1 to 4 after the cut, and buy 3.4e9, 2.8e9, 3.4e9, 4.3e9. The unspent b
 | 4 | 1.42e10 | 1.1e9 | 8.1e8 |
 
 So about 70 per cent of the budget goes to goods whose whole supply sold out (coal, noric steel, bronze, brass, leather, opium,
-firewood, brick, canvas, stone blocks, linen, timber: year 3 largest were coal 2.7e9, noric steel 2.3e9, bronze 1.4e9), while the
+firewood, brick, canvas, stone blocks, linen, timber: year 2 largest were coal 2.7e9, noric steel 2.3e9, bronze 1.4e9), while the
 food that the opening made in surplus has no buyers. The drawdown fix lets the budget exist; the hoard is not spent because the
 goods the budget names are thin (short chains for metals, land caps on fuel and timber, see the sections above), and the goods
 that exist are not wanted. Households' cash still rises (2.27e10, 2.41e10, 2.55e10 at the plan of years 1 to 3).
