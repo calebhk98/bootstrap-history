@@ -625,3 +625,34 @@ exhausted' classification compares the quantity traded with the quantity offered
 counts a good whose price sits at a bidder's ceiling the same as one with no producer. Whether the thin metal and fuel goods are short for a recipe-chain
 reason (inputs, land caps) or a plan reason was read only from the earlier sections, not re-measured here. The 15-year and
 declared-length runs were not repeated.
+
+**6. What stops makers from expanding to meet the spending** (same probe, `p473_short.py out.json <goods>`, makers grouped by main output; binding limit counted per maker in `producers.plan`).
+
+| Good | Year | Planned / capacity | Achieved / planned | Binding (makers) | Traded |
+|---|---|---|---|---|---|
+| coal | 1 | 0.18 | 1.0 | stock gate 66, land 30 | 6.6e9 |
+| coal | 2 | 0.28 | 1.0 | yearly step 100 of 104 | 2.6e9 |
+| coal | 3 | 0.46 | 1.0 | yearly step 103 | 3.75e9 |
+| canvas | 1, 2, 3 | 0.27, 0.45, 0.58 | 1.0, 0.95, 0.88 | stock gate 95, then step 100, 102 | 3.1e7, 2.2e7, 2.8e7 |
+| noric steel | 1, 2, 3 | 0.23, 0.31, 0.18 | 0.41, 0.007, 0.36 | stock gate 98, then step 81, step 68 / share working 35 | 3.1e6, 7.9e4, 6.4e5 |
+| bronze | 1, 2, 3 | 0.23, 0.43, 0.26 | 0.82, 0.45, 0.02 | stock gate 98, step 89, step 63 / share working 41 | 9.6e3, 3.9e3, 2.4e3 |
+| leather | 1, 2, 3 | 0.34, 0.53, 0.27 | 0.83, 0.04, 0.11 | stock gate 90, step 103, step 104 | 1.0e7, 2.9e5, 3.5e5 |
+| brick | 1, 2, 3 | 0.23, 0.02, 0.06 | 0.9, 0.8, 0.23 | stock gate 39, 38, 37 with share working 15, 35, 40 | 2.3e5, 5.1e5, 4.1e5 |
+| firewood, timber | 2, 3 | 0.31 to 0.41 | 1.0 | step 55 to 58 of 88 / 93, land 2 to 3 | |
+
+Reading, in the order a maker meets the limits:
+1. Year 1: the stock gate. Year 0's unsold output is the stock; year 1's sold-out goods are the ones whose year-0 stock the households
+   then bought (coal, canvas, steel, bronze, leather, stone blocks: traded in year 1 equals or exceeds the year's own output). The gate sees stock
+   and low expected sales (`producers.py:367`) and plans well under capacity.
+2. Years 2 to 3: the yearly change step (`within_a_years_change`, `producers.py:281`, `OUTPUT_CHANGE_SHARE_PER_YEAR`). The stock is gone, the
+   price is up and the maker would plan more, but it may move at most a quarter of capacity from last year's runs, and last year's runs were
+   the gated ones. With planned runs a third to a half of capacity in year 3, recovery to the demand takes several more years, over which
+   the unspent household money keeps bidding the price up.
+3. Metals and leather: planned runs are not reached. Noric steel achieves 0.7 per cent of its plan in year 2, bronze 2 per cent in year 3, leather 4 per cent
+   in year 2: inputs (ore, bloom, charcoal, hides) are short, as the earlier sections found. Widening the plan there changes nothing until
+   an input maker exists.
+4. Cash is not binding in these goods; share working binds for about 40 of 104 bronze, brass and steel makers by year 3 (price under cost at the expected price).
+
+The inflation the orchestrator saw over 60 years is consistent with this: the spend-down frees demand at the stock-adjustment pace while
+supply can move only a quarter of capacity a year and, for chains, only as fast as the input makers do. Not tested here: raising
+`OUTPUT_CHANGE_SHARE_PER_YEAR` (that would loosen the limit that stops chains from amplifying, per the earlier section) and the 60-year run.
