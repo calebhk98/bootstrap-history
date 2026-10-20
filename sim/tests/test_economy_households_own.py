@@ -2,10 +2,11 @@
 
 QUICK_TOPIC = True
 
+import types
 import unittest
 
 from sim.economy.households_cohort import Cohort
-from sim.economy import households_own
+from sim.economy import households_own, titles_worked
 from sim.economy.households_own import hours_for_own_plan, next_own_plan, withhold_hours
 from sim.economy.types import LabourOffer, Recipe
 
@@ -69,6 +70,62 @@ class WithholdTests(unittest.TestCase):
         kept_offers, kept = withhold_hours([LabourOffer("w", "smith", "a", 60.0, 1.0)], {"w": 500.0})
         self.assertEqual([offer.hours for offer in kept_offers], [0.0])
         self.assertEqual(kept, {"w": 60.0})
+
+
+class LandHeldTests(unittest.TestCase):
+    """Own-plot growing is limited to land the cohort holds or leases (Complaint 551)."""
+    RECIPES = {"grow_grain": Recipe("grow_grain", {"grain": 10.0}, {}, {"hand": 4.0})}
+    LAND = {"grow_grain": 2.0}
+    BASKET = types.SimpleNamespace(needs=[types.SimpleNamespace(
+        need_id="food", subsistence_per_person=1.0, goods=(("grain", 1.0),))])
+
+    def _grow(self, hectares, fertility=1.0):
+        # 100 people, 1000 idle hours; the food floor is 100 need units: 200 hours, 100 hectares
+        options = households_own.own_production_options(self.RECIPES, self.LAND, self.BASKET)
+        return households_own.own_production(cohort(), 1000.0, options, self.RECIPES, fertility, self.BASKET,
+                                             self.LAND, hectares)
+
+    def test_a_cohort_holding_no_land_grows_nothing(self):
+        moves, grown, units = self._grow(0.0)
+        self.assertEqual((moves, grown, units), ([], {}, {}))
+
+    def test_a_cohort_grows_no_more_than_its_hectares_yield(self):
+        # ten hectares: five runs of ten units, fifty need units, against a floor of one hundred
+        _moves, grown, units = self._grow(10.0)
+        self.assertAlmostEqual(units["food"], 50.0)
+        self.assertAlmostEqual(grown["grain"], 50.0)
+
+    def test_poorer_soil_yields_less_from_the_same_hectares(self):
+        _moves, _grown, units = self._grow(10.0, fertility=0.5)
+        self.assertAlmostEqual(units["food"], 25.0)
+
+    def test_land_beyond_the_floor_is_not_farmed(self):
+        _moves, _grown, units = self._grow(500.0)
+        self.assertAlmostEqual(units["food"], 100.0)
+
+    def test_hours_on_land_follow_hectares_and_run_size(self):
+        self.assertAlmostEqual(households_own.hours_on_land(3.0, self.RECIPES["grow_grain"], 2.0), 6.0)
+        self.assertEqual(households_own.hours_on_land(0.0, self.RECIPES["grow_grain"], 2.0), 0.0)
+
+    def test_plan_hours_are_capped_by_land_held(self):
+        plan = cohort({"food": 10.0})                      # twenty hours of plan
+        self.assertAlmostEqual(hours_for_own_plan(plan, OPTIONS, 1.0), 20.0)
+        self.assertEqual(hours_for_own_plan(plan, OPTIONS, 1.0, self.RECIPES, self.LAND, 0.0), 0.0)
+        self.assertAlmostEqual(hours_for_own_plan(plan, OPTIONS, 1.0, self.RECIPES, self.LAND, 3.0), 6.0)
+
+    def test_allocation_cuts_claims_to_the_tiles_arable_land(self):
+        grant = titles_worked.allocate_hectares({"a": 30.0, "b": 10.0}, 20.0)
+        self.assertAlmostEqual(sum(grant.values()), 20.0)
+        self.assertAlmostEqual(grant["a"], 15.0)
+        self.assertEqual(titles_worked.allocate_hectares({"a": 5.0}, 20.0), {"a": 5.0})
+
+    def test_worked_share_is_title_less_let_out_plus_tenancy(self):
+        record = types.SimpleNamespace(cohorts={}, titles={"t": {"lord": 0.6, "other": 0.4}},
+                                       tenancies={"t": [{"tenant": "serf", "lessor": "lord", "share": 0.25,
+                                                         "arrears": 0.0}]})
+        self.assertAlmostEqual(titles_worked.worked_share(record, "t", "lord"), 0.35)
+        self.assertAlmostEqual(titles_worked.worked_share(record, "t", "serf"), 0.25)
+        self.assertEqual(titles_worked.worked_share(record, "t", "stranger"), 0.0)
 
 
 if __name__ == "__main__":

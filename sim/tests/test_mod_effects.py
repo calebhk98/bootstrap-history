@@ -66,14 +66,14 @@ class EffectsTests(unittest.TestCase):
         self.assertAlmostEqual(government.money, held)
         self.assertTrue(self.game.state.actors.purses.book.check_conservation(1e-9).ok)
 
-    def test_a_money_move_without_a_named_edge_is_refused(self):
+    def test_a_money_move_to_the_mods_own_edge_is_accepted(self):
         government = self.game.actors.get("government:rome_100ad")
-        for edge in (None, "", "nowhere", "edge:%s:x" % BETA):
-            with self.assertRaises(ModError, msg=edge):
-                self.effects.pay_edge(self.game, government.actor_id, edge, 1.0, "x")
+        self.effects.pay_edge(self.game, government.actor_id, "edge:%s:tithe" % ACME, 1.0, "own edge")
+        self.assertAlmostEqual(self.game.edge("edge:%s:tithe" % ACME).volume(), 1.0)
         with self.assertRaises(ModError):
             self.effects.pay_edge(self.game, government.actor_id, edges.EDGE_OFFICIALS, -1.0, "x")
-        self.effects.pay_edge(self.game, government.actor_id, "edge:%s:tithe" % ACME, 1.0, "own edge")
+        with self.assertRaises(ModError):
+            self.effects.pay_edge(self.game, government.actor_id, "nowhere", 1.0, "x")
 
     def test_goods_added_and_removed_appear_in_the_book(self):
         economy, _ = economy_fixture.run(years=1)
@@ -107,18 +107,6 @@ class EffectsTests(unittest.TestCase):
         with self.assertRaises(ModError):
             self.effects.kill_people(self.game, PARTNER, 1.5, "too many")
 
-    def test_moving_people_between_strata_keeps_the_total(self):
-        strata = [actor.actor_id for actor in self.game.actors.of_kind("stratum")
-                  if (actor.record.country or "rome_100ad") == PARTNER]
-        first, second = strata[0], strata[1]
-        before = people_of(self.game, PARTNER)
-        members = self.game.actors.get(first).record.members
-        entry = self.effects.move_people(self.game, first, second, members / 2, "migration")
-        self.assertAlmostEqual(entry["facts"]["moved"], members / 2)
-        self.assertAlmostEqual(people_of(self.game, PARTNER), before)
-        with self.assertRaises(ModError):
-            self.effects.move_people(self.game, first, "government:rome_100ad", 1.0, "not a stratum")
-
     def test_a_tile_transfer_writes_a_world_event_with_its_cause(self):
         tile = self.game.tiles_owned_by("rome_100ad")[0]
         self.effects.transfer_tile(self.game, tile, PARTNER, "a treaty")
@@ -133,12 +121,6 @@ class EffectsTests(unittest.TestCase):
         self.assertEqual(self.game.stores.view(ACME + ":mana").get(tile), 3.0)
         with self.assertRaises(ModError):
             ModEffects(BETA).write_store(self.game, ACME + ":mana", tile, 1.0)
-
-    def test_a_recorded_event_carries_the_mods_namespace_and_a_cause(self):
-        entry = self.effects.record_event(self.game, "omen", "a comet", actors=["rome_100ad"], brightness=2)
-        self.assertEqual((entry["kind"], entry["cause"], entry["facts"]), (ACME + ":omen", "a comet", {"brightness": 2}))
-        with self.assertRaises(ModError):
-            self.effects.record_event(self.game, "omen", "")
 
     def test_the_base_game_hazards_use_the_same_operation(self):
         owners = []

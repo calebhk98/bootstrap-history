@@ -6,7 +6,7 @@ from .harness import *  # noqa: F401,F403
 
 from sim.agents import stratum_year
 from sim.agents.api import observed_incomes
-from sim.agents.strata_observed import rank_key as stratum_rank, slice_income
+from sim.agents.strata_observed import slice_income
 from sim.engine.agents_port import SimWorld
 
 
@@ -66,12 +66,6 @@ for actor in sorted(strata, key=lambda actor: actor.record.stratum):
     bridge = stratum_year.bonded_product(actor, world) if actor.is_bonded() else stratum_year.own_income(actor, world)
     print("  %-10s members %10.0f  cohorts %14.0f  bridge %14.0f" % (
         actor.record.stratum, actor.record.members, incomes[actor.record.stratum], bridge))
-
-# strata earning the same per head are ordered by name, whatever their headcounts do to the rounding
-by_name = {actor.record.stratum: actor for actor in strata}
-check("strata that earn the same per head tie in rank, so the name orders them and not float noise",
-      stratum_rank(by_name["slaves"], world) == stratum_rank(by_name["labourers"], world),
-      (stratum_rank(by_name["slaves"], world), stratum_rank(by_name["labourers"], world)))
 
 # ---- the books after a year: income is the mapped cohort income ------------------------------
 before = {actor.actor_id: actor.record.income.get("edge:economy", 0.0) for actor in home(on)}

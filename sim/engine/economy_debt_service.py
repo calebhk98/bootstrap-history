@@ -7,6 +7,16 @@ by `money`, `state` and the start warning alike.
 from sim.constants import declare
 
 
+def interest_on_arrears(capital, rate):
+    """The yearly interest on a debt: nothing while the purse is in credit."""
+    return max(0.0, -capital) * rate
+
+
+def net_after_interest(net_before_interest, capital, rate):
+    """Recurring net once the interest on any debt is counted as the cost it is."""
+    return net_before_interest - interest_on_arrears(capital, rate)
+
+
 class DebtServiceMixin:
 
     DEBT_SERVICE_SHARE_OF_SURPLUS = declare(
@@ -33,7 +43,7 @@ class DebtServiceMixin:
         does not bleed the purse for a household the wage cannot keep."""
         capital = self.state.household.capital
         dependants = self.dependants_cost()
-        interest = max(0.0, -capital) * self.debt_interest_rate()
+        interest = interest_on_arrears(capital, self.debt_interest_rate())
         surplus = revenue - upkeep - mine_cost - (living - dependants) - interest
         creditors_share = self.DEBT_SERVICE_SHARE_OF_SURPLUS if capital < 0 else 0.0
         carried = surplus * (1.0 - creditors_share)
@@ -46,8 +56,12 @@ class DebtServiceMixin:
 
     def recurring_net(self):
         """Recurring net after the interest arrears cost now."""
-        return (self.recurring_net_before_interest()
-                - max(0.0, -self.state.household.capital) * self.debt_interest_rate())
+        return net_after_interest(self.recurring_net_before_interest(), self.state.household.capital,
+                                  self.debt_interest_rate())
+
+    def interest_on_arrears(self):
+        """This year's interest on the household's debt at the rate it pays."""
+        return interest_on_arrears(self.state.household.capital, self.debt_interest_rate())
 
     def sustainable_debt(self):
         """The largest debt whose yearly interest stays within the allowed

@@ -24,6 +24,7 @@ from .projects_running_gates import check_running_gates
 from .material_availability import check_materials_have_a_seller
 from .data import win_condition_describe
 from .units_prose import money_text
+from .start_money_rule import start_shortfall
 from sim.constants import declare
 from .projects_precaution import (spec as precaution_spec, extra_cost as precaution_extra_cost,
                                   extra_hours as precaution_extra_hours)
@@ -929,11 +930,12 @@ class StartingMixin:
         paid_now = min(price, max(0.0, (projects.paid_towards or {}).get(node_id, 0.0)))
         price -= paid_now
         # sorted(): summing floats over a dict whose keys came from a set
-        owed = extra_owed + sum(projects.active[nid].get("cost_left") or 0.0
-                                for nid in sorted(projects.active))
-        ceiling = max(0.0, self.state.household.capital) + self.credit_limit()
+        owed_on_work_in_hand = sum(projects.active[nid].get("cost_left") or 0.0
+                                   for nid in sorted(projects.active))
         # applies to the first project too
-        if owed + price > ceiling:
+        owed, ceiling, shortfall = start_shortfall(
+            price, owed_on_work_in_hand, extra_owed, self.state.household.capital, self.credit_limit())
+        if shortfall > 0.0:
             return ("you already owe %s on work in hand; this "
                     "would take it to %s, and between cash and your credit line "
                     "you can raise %s, so you are %s short. Finish or stop "

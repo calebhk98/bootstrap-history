@@ -88,6 +88,15 @@ def society_hours(total_hours, farm_hours, shares):
     return hours
 
 
+def current_farm_hours(held_hours, total_hours, baseline_fte):
+    """Farm hours the year starts from: the held split's farm share of this year's hours, else (nothing held
+    yet, the opening) what the average-year food balance needs, never more than all the hours."""
+    held_total = sum(held_hours.values())
+    if held_total > 0.0:
+        return held_hours[FARM_TRADE] * total_hours / held_total
+    return min(baseline_fte * HOURS_PER_FARM_WORKER_YEAR, total_hours)
+
+
 def farm_hours_after(current_hours, needed_hours, total_hours):
     """Farm hours a year on: toward what the farm is needed for, no faster than the occupational
     mobility rate (larger gaps move faster, up to its ceiling) lets hours leave or join it."""
@@ -303,13 +312,9 @@ class LabourAllocationMixin:
             self._share_farm_fte(adult_equivalent_population, technique),
             adult_equivalent_population, technique)
         total_hours = self._society_hours_available()
-        held_hours = sum(economy.society_labour_hours.values())
-        if held_hours > 0.0:
-            current_farm_hours = economy.society_labour_hours[FARM_TRADE] * total_hours / held_hours
-        else:
-            current_farm_hours = min(baseline_fte * HOURS_PER_FARM_WORKER_YEAR, total_hours)   # the food balance
+        farm_hours_now = current_farm_hours(economy.society_labour_hours, total_hours, baseline_fte)
         last_shortfall_kg = holdings.farm_last_shortfall_kg
-        current_fte = current_farm_hours / HOURS_PER_FARM_WORKER_YEAR
+        current_fte = farm_hours_now / HOURS_PER_FARM_WORKER_YEAR
         if last_shortfall_kg is None:
             need_fte = current_fte
         else:
@@ -321,7 +326,7 @@ class LabourAllocationMixin:
         need_fte = max(need_fte, self._kept_farm_workers(
             current_fte, adult_equivalent_population, technique))
         holdings.farm_hours_needed = need_fte * HOURS_PER_FARM_WORKER_YEAR
-        farm_hours = farm_hours_after(current_farm_hours, min(holdings.farm_hours_needed, total_hours), total_hours)
+        farm_hours = farm_hours_after(farm_hours_now, min(holdings.farm_hours_needed, total_hours), total_hours)
         economy.society_labour_hours = society_hours(
             total_hours, farm_hours, self._non_farm_shares(total_hours - farm_hours))
         farm_fte = economy.society_labour_hours[FARM_TRADE] / HOURS_PER_FARM_WORKER_YEAR
