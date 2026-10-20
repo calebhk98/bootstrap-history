@@ -5,6 +5,8 @@ from sim.constants import declare
 from sim.refusal import LogLine
 from . import money_units
 from . import automation_audit
+from .mortality_shock import cut_cohorts
+from .wage_scarcity import wage_index_of
 from sim.engine.state import SimulationState, ActiveProjectState
 from sim.engine.state_seat import bind_seat
 from .data import (DEFAULTS, kit_capital, load_civ, load_geography, load_resources,
@@ -724,8 +726,7 @@ class Sim(ModStoresMixin, RealPriceRatiosMixin, CoinRevaluationMixin, MechanicsM
             self.POP_SCALE_FLOOR,
             float(self.civ.get("population", self.DEFAULT_POPULATION_100AD))
             / self.DEFAULT_POPULATION_100AD)
-        shortfall = max(0.0, 1.0 - self.pop_scale / unshocked_trend)
-        return self._wage_index_base * (1.0 + self.WAGE_SCARCITY_ELASTICITY * shortfall)
+        return wage_index_of(self._wage_index_base, self.WAGE_SCARCITY_ELASTICITY, self.pop_scale, unshocked_trend)
 
     def _apply_population_mortality_shock(self, raw):
         """Cut `self.population`'s cohorts by `raw` (a fraction of the whole,
@@ -757,19 +758,9 @@ class Sim(ModStoresMixin, RealPriceRatiosMixin, CoinRevaluationMixin, MechanicsM
         directly - as future work, once a hazard can be expressed in
         calories rather than in a bare staff_loss fraction.
         """
-        population = self.population
-        weighted = (population.children * self._demography.STARVATION_VULNERABILITY_CHILD
-                   + population.working_age * self._demography.STARVATION_VULNERABILITY_WORKING_AGE
-                   + population.elderly * self._demography.STARVATION_VULNERABILITY_ELDERLY)
-        if weighted <= 0.0 or raw <= 0.0:
-            return
-        scale = raw * population.total / weighted
-        population.children -= population.children * min(
-            1.0, scale * self._demography.STARVATION_VULNERABILITY_CHILD)
-        population.working_age -= population.working_age * min(
-            1.0, scale * self._demography.STARVATION_VULNERABILITY_WORKING_AGE)
-        population.elderly -= population.elderly * min(
-            1.0, scale * self._demography.STARVATION_VULNERABILITY_ELDERLY)
+        cut_cohorts(self.population, raw, self._demography.STARVATION_VULNERABILITY_CHILD,
+                    self._demography.STARVATION_VULNERABILITY_WORKING_AGE,
+                    self._demography.STARVATION_VULNERABILITY_ELDERLY)
 
     def _adult_equivalent_population(self, population):
         """`population`'s food need in ADULT-EQUIVALENT units - the same

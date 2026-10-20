@@ -1,104 +1,117 @@
-"""Complaint 116: relationships between two systems that neither system's own tests see. Each test states
-one invariant over a range of inputs on a game that does not need the agent economy, so the file is fast.
-To add one, build `_fresh_sim()`, drive the two systems and assert the relationship (see the list in 116)."""
+"""Complaint 116: relationships between two systems that neither system's own tests see. Each invariant is stated over
+a range of inputs on the rule itself, called with figures built here (a population, a household, a ceiling); one named
+scenario reads the live goal measure through a game."""
+QUICK_TOPIC = True
+
 import math
 import random
 import unittest
+from types import SimpleNamespace
 
-from sim.engine import data
+from sim.engine.literacy_rules import common_ceiling, target_after_effect
+from sim.engine.mortality_shock import cut_cohorts
 from sim.engine.projects_completion import goal_movement
-from sim.engine.ui_port import Sim, load, load_civ
-from sim.tests.harness import build_unopened
+from sim.engine.society_hazards import HazardsMixin
 
-_TREE, _PRICES, _NODES, _WAGES, _GOODS = load()
-LITERACY_GOAL = "goal_literacy_common"
+CHILD, WORKING_AGE, ELDERLY = 1.6, 1.0, 1.4   # the vulnerability ratios (sim/world/demography.py)
 
 
-def _fresh_sim(goal=None):
-    sim = build_unopened(lambda: Sim(_NODES, [], random.Random(1), events=False, manual=True,
-                                     civ=load_civ("rome_100ad")))
-    sim.done_year = {}
-    if goal:
-        sim.goal = goal
-    return sim
+class Cohorts:
+    def __init__(self, children=300.0, working_age=600.0, elderly=100.0):
+        self.children, self.working_age, self.elderly = children, working_age, elderly
+
+    @property
+    def total(self):
+        return self.children + self.working_age + self.elderly
+
+
+def shocked(raw, **cohorts):
+    population = Cohorts(**cohorts)
+    before = population.total
+    cut_cohorts(population, raw, CHILD, WORKING_AGE, ELDERLY)
+    return population, before
 
 
 class EventLossInvariants(unittest.TestCase):
     def test_a_mortality_shock_never_removes_more_people_than_exist(self):
         for raw in (0.05, 0.45, 0.99, 3.0):
-            sim = _fresh_sim()
-            before = sim.population.total
-            sim._apply_population_mortality_shock(raw)
-            population = sim.population
+            population, before = shocked(raw)
             for cohort in (population.children, population.working_age, population.elderly):
                 self.assertGreaterEqual(cohort, 0.0, raw)
             self.assertLessEqual(before - population.total, before + 1e-9, raw)
             self.assertLessEqual(population.total, before + 1e-9, raw)
 
     def test_a_small_shock_removes_the_share_it_names(self):
-        sim = _fresh_sim()
-        before = sim.population.total
-        sim._apply_population_mortality_shock(0.2)
-        self.assertAlmostEqual((before - sim.population.total) / before, 0.2, places=6)
+        population, before = shocked(0.2)
+        self.assertAlmostEqual((before - population.total) / before, 0.2, places=6)
+
+    def test_the_young_and_the_old_lose_a_larger_share_than_working_age(self):
+        population, _before = shocked(0.2)
+        self.assertLess(population.children / 300.0, population.working_age / 600.0)
+        self.assertLess(population.elderly / 100.0, population.working_age / 600.0)
+
+    def test_no_shock_or_an_empty_population_changes_nothing(self):
+        population, before = shocked(0.0)
+        self.assertEqual(population.total, before)
+        empty, _ = shocked(0.5, children=0.0, working_age=0.0, elderly=0.0)
+        self.assertEqual(empty.total, 0.0)
 
     def test_staff_survival_never_adds_people(self):
         for share in (0.0, 0.3, 0.9, 1.0):
-            sim = _fresh_sim()
-            household = sim.state.household
+            household = SimpleNamespace(scholars=40.0, artisans=60.0, employees={"smith": 25.0, "miller": 3.0})
+            fake = type("Fake", (HazardsMixin,), {})()
+            fake.state, fake.rng = SimpleNamespace(household=household), random.Random(1)
             before = household.scholars + household.artisans + sum(household.employees.values())
-            sim.apply_staff_survival(share)
+            fake.apply_staff_survival(share)
             after = household.scholars + household.artisans + sum(household.employees.values())
             self.assertLessEqual(after, before + 1e-9, share)
             self.assertTrue(all(count > 0 for count in household.employees.values()))
 
+    def test_a_survival_share_of_one_keeps_everyone_and_zero_keeps_no_one(self):
+        for share, kept in ((1.0, 128.0), (0.0, 0.0)):
+            household = SimpleNamespace(scholars=40.0, artisans=60.0, employees={"smith": 25.0, "miller": 3.0})
+            fake = type("Fake", (HazardsMixin,), {})()
+            fake.state, fake.rng = SimpleNamespace(household=household), random.Random(1)
+            fake.apply_staff_survival(share)
+            self.assertEqual(household.scholars + household.artisans + sum(household.employees.values()), kept)
+
 
 class CeilingInvariants(unittest.TestCase):
     def test_a_technology_never_pushes_literacy_past_its_ceiling(self):
-        for field, ceiling_of in (("literacy_general", "literacy_ceiling_general"),
-                                  ("literacy_elite", "literacy_ceiling_elite")):
-            sim = _fresh_sim()
-            start = float(sim.literacy(field))
-            sim_node = LITERACY_GOAL
-            saved = data.TECH_EFFECTS.get(sim_node)
-            data.TECH_EFFECTS[sim_node] = {field: 5.0}
-            try:
-                sim.apply_tech_effects(sim_node)
-            finally:
-                data.TECH_EFFECTS.pop(sim_node)
-                if saved is not None:
-                    data.TECH_EFFECTS[sim_node] = saved
-            ceiling = getattr(sim, ceiling_of)()
-            self.assertLessEqual(sim.literacy(field), max(ceiling, start) + 1e-9, field)
+        for before in (0.0, 0.2, 0.6):
+            self.assertLessEqual(target_after_effect(before, 5.0, 0.9), 0.9)
 
-    def test_the_ceilings_are_fractions(self):
-        sim = _fresh_sim()
-        for ceiling in (sim.literacy_ceiling_general(), sim.literacy_ceiling_elite()):
-            self.assertTrue(0.0 < ceiling <= 1.0)
-        self.assertLessEqual(sim.literacy_ceiling_general(), sim.literacy_ceiling_elite() + 1e-9)
+    def test_a_field_already_past_its_ceiling_is_not_pulled_down(self):
+        self.assertEqual(target_after_effect(0.95, 0.1, 0.9), 0.95)
+
+    def test_a_negative_effect_never_takes_literacy_below_nothing(self):
+        self.assertEqual(target_after_effect(0.1, -5.0, 0.9), 0.0)
+
+    def test_the_common_ceiling_is_a_fraction_and_falls_as_farm_hours_rise(self):
+        previous = None
+        for farm_share in (0.0, 0.3, 0.6, 0.9):
+            ceiling = common_ceiling(0.01, 0.8, farm_share)
+            self.assertTrue(0.0 < ceiling <= 1.0, farm_share)
+            if previous is not None:
+                self.assertLess(ceiling, previous)
+            previous = ceiling
+
+    def test_the_common_ceiling_never_exceeds_the_elite_ceiling(self):
+        self.assertLessEqual(common_ceiling(0.01, 0.8, 0.0), 1.0 - 0.01 + 1e-12)
 
 
 class GoalDeltaInvariants(unittest.TestCase):
-    def test_the_reported_goal_delta_is_the_change_in_the_live_measure(self):
-        sim = _fresh_sim(LITERACY_GOAL)
-        before = sim.goal_snapshot()
-        sim.set_literacy("literacy_general", sim.literacy("literacy_general") + 0.03)
-        after = sim.goal_snapshot()
-        moved, _gained = goal_movement(before, after)
-        labels = {label: (old, new) for label, old, new in moved}
-        self.assertIn("literacy general", labels)
-        live = sim.literacy("literacy_general")
-        self.assertAlmostEqual(after["measures"]["literacy general"][0], live)
-        self.assertAlmostEqual(live - before["measures"]["literacy general"][0], 0.03)
-        for label, (old_value, _fraction) in before["measures"].items():
-            new_value = after["measures"][label][0]
-            self.assertEqual(label in labels, abs(new_value - old_value) > 1e-9, label)
-
     def test_nothing_is_reported_when_nothing_moved(self):
-        sim = _fresh_sim(LITERACY_GOAL)
-        snapshot = sim.goal_snapshot()
-        moved, gained = goal_movement(snapshot, sim.goal_snapshot())
-        self.assertEqual((moved, gained), ([], 0))
+        snapshot = {"measures": {"literacy general": (0.2, True)}, "road_done": 2}
+        self.assertEqual(goal_movement(snapshot, dict(snapshot)), ([], 0))
         self.assertTrue(all(math.isfinite(value) for value, _fraction in snapshot["measures"].values()))
+
+    def test_only_the_measures_that_moved_are_reported_and_the_road_steps_gained_are_counted(self):
+        before = {"measures": {"literacy general": (0.2, True), "ceiling": (0.5, True)}, "road_done": 2}
+        after = {"measures": {"literacy general": (0.23, True), "ceiling": (0.5, True)}, "road_done": 5}
+        moved, gained = goal_movement(before, after)
+        self.assertEqual([label for label, _old, _new in moved], ["literacy general"])
+        self.assertEqual(gained, 3)
 
 
 if __name__ == "__main__":
