@@ -1,13 +1,15 @@
 """Interest groups beyond displaced material producers: strata whose incomes fall (311), the society's own
 producers of a goods category the founder's concerns undersell (312), and what a prohibition reaches (313)."""
-from .harness import check, sim
+QUICK_TOPIC = True
+
+from .harness import check
 
 from sim.agents.api import ActorRegistry, ActorsState, CountryProfile, Sector
 from sim.agents.group import blame_after_protection, protection_needed
 from sim.agents.group_reach import subjects_reached
 from sim.agents.strata_seed import strata_spawner
 from sim.agents.tuning_strata import STRATUM_WORKING_SHARE
-from sim.engine.agents_port import SimWorld
+from sim.engine.agents_port_groups import founder_share_of_sellers
 
 from .agents_fake_world import FakeWorld
 
@@ -101,19 +103,11 @@ check("the founder is blamed only for his share of the sellers when firms sell i
 	  Sector.of_goods(strata, shared, world)[0].blame_share == 0.25, Sector.of_goods(strata, shared, world)[0].blame_share)
 
 # ---- 436: firms selling into a category share the blame for its price depression -------------------
-game = sim()
-category = "textiles"
-node_id = game._nodes_in_cat(category)[0]
-game.done.add(node_id)
-game._done_changed()
-game.operating.add(node_id)
-game._operating_changed()
-game.actor_concerns_in = lambda asked: 3.0 if asked == category else 0
-game.household._goods_cat_state_cache = None
-game.household._goods_category_ratios_cache = None
-founder_share = SimWorld(game).goods_categories()[category]["founder_share"]
 check("the founder's share of a depressed category is his concerns over every seller's, firms included",
-	  abs(founder_share - 0.25) < 1e-9, founder_share)
+      abs(founder_share_of_sellers(4.0, 3.0) - 0.25) < 1e-9, founder_share_of_sellers(4.0, 3.0))
+check("the founder is the whole category when no firm sells into it", founder_share_of_sellers(4.0, 0) == 1.0)
+check("the founder's share is held within nothing and everything",
+      founder_share_of_sellers(2.0, 5.0) == 0.0 and founder_share_of_sellers(2.0, -5.0) == 1.0)
 
 # ---- 313: a prohibition is bargained down by protection, not lifted outright ---------------------
 check("a weak group is overridden by little protection, a strong one needs more",

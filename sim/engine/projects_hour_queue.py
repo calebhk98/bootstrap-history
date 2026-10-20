@@ -2,24 +2,15 @@
 screen read, so a displayed rank is the rank the next step applies."""
 
 
+from .hour_offer import priority_queue
+
+
 class HourQueueMixin:
 
     def hour_priority_queue(self):
         """Active projects in the order they draw on the hour pool: projects
         with a standing `allocate` first, then the rest by tree priority."""
-        active = self.state.projects.active
-        position = {}
-        unfound = set(active)
-        for index, node_id in enumerate(self.order):
-            if not unfound:
-                break
-            if node_id in unfound:
-                position[node_id] = index
-                unfound.discard(node_id)
-        allocations = self.state.household.hour_allocations
-        return sorted(active, key=lambda node_id: (
-            0 if allocations.get(node_id, 0.0) > 0 else 1,
-            position.get(node_id, 9999)))
+        return priority_queue(self.state.projects.active, self.order, self.state.household.hour_allocations)
 
     def hour_pool_now(self):
         """Founder and deputy hours this year not already committed."""

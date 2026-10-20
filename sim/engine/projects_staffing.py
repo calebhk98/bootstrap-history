@@ -19,6 +19,7 @@ from sim.refusal import LogLine
 from sim.constants import declare
 from . import cause_book, category_traits
 from .agents_port import SimWorld
+from .affordability import deep_in_arrears, payback_years
 from .units_prose import money_text, per_year
 from sim.agents.api import business_review, edges
 
@@ -522,9 +523,7 @@ class StaffingMixin:
         # THIS concern's own payback justifies opening it while in
         # arrears).
         household = self.state.household
-        _deep_arrears = (household.capital < 0
-                         and -household.capital > self.credit_limit() * self.AUTO_OPEN_DEEP_ARREARS_CREDIT_SHARE)
-        return _deep_arrears
+        return deep_in_arrears(household.capital, self.credit_limit(), self.AUTO_OPEN_DEEP_ARREARS_CREDIT_SHARE)
 
     def _auto_open_institution_candidates(self, _deep_arrears):
         """Capability institutions not yet running, that a founder could
@@ -687,7 +686,7 @@ class StaffingMixin:
             # as readily as against half-built work.
             if _deep_arrears:
                 node = self.nodes[node_id]
-                _payback = self.venture_capex(node_id) / max(0.01, node["rev"] - node["up"])
+                _payback = payback_years(self.venture_capex(node_id), node["rev"], node["up"])
                 if _payback > PAYBACK_LIMIT_YEARS:
                     if blocked is None:
                         blocked = (node_id, ("it would take %.1f years to pay for its "

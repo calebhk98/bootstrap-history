@@ -9,6 +9,12 @@ from sim.economy import api as economy_api
 MECHANIC_INSTITUTIONS = {"deposit_banking": economy_api.DEPOSIT_BANKING}
 
 
+def institutions_of(mechanics_known):
+    """The institutions named by the mechanics a society has a node for (a collection of mechanic names)."""
+    return tuple(institution for mechanic, institution in sorted(MECHANIC_INSTITUTIONS.items())
+                 if mechanic in mechanics_known)
+
+
 def held(sim):
     """The institutions the home state's society holds; none without a government."""
     government = sim.actors.government_of(None)
@@ -16,5 +22,5 @@ def held(sim):
         return ()
     from .agents_port import SimWorld
     world = SimWorld(sim)
-    return tuple(institution for mechanic, institution in sorted(MECHANIC_INSTITUTIONS.items())
-                 if any(government.knows(node_id, world) for node_id in sim.nodes_with_mechanic(mechanic)))
+    return institutions_of({mechanic for mechanic in MECHANIC_INSTITUTIONS
+                            if any(government.knows(node_id, world) for node_id in sim.nodes_with_mechanic(mechanic))})

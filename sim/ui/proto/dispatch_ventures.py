@@ -24,6 +24,7 @@ from .start_refusal import refusal_fields
 from sim.engine.ui_port import money_text, plain_number
 from sim.ui.memory import load_state, save_state
 from .util import _flag
+from .start_commitment import stacked_commitment
 from .rush_filters import parse_rush_filters, passes_rush_filters, rush_exposure
 from .ventures import _VENTURE_SUPERVISION_NOTE
 
@@ -300,17 +301,10 @@ def _cmd_start(sim, nodes, cmd, ended):
     # number the un-manual director's own start heuristic already uses
     # to avoid over-committing itself (step(), core.py) - given here as
     # the real ceiling, not a second formula that could drift from it.
-    _committed = sim.committed_spend()
-    _cash = max(0.0, sim.capital)
-    if _committed > _cash and len(sim.active) > 1:
-        _capacity = sim.funding_capacity()
+    _stacked = stacked_commitment(sim.committed_spend(), sim.capital, len(sim.active), sim.funding_capacity)
+    if _stacked:
         out["total_committed_across_active_work"] = {
-            "you_have_promised": round(_committed, 1),
-            "across_projects_in_hand": len(sim.active),
-            "you_currently_hold": round(_cash, 1),
-            "likely_to_draw_on_credit_between_them": round(
-                _committed - _cash, 1),
-            "your_real_ceiling_if_it_comes_to_that": round(_capacity, 1),
+            **_stacked,
             "what_this_means": (
                 "not what this ONE project costs - the total still owed "
                 "across all %d projects in hand at once, including this "

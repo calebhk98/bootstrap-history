@@ -25,6 +25,8 @@ from .units_prose import money_text
 from sim.world import capital_market
 from sim.agents.api import business_review, edges, ledger
 from .agents_port import SimWorld
+from .project_funding import funding_parts
+from .affordability import appearances_spending, near_limit, reputation_hit_taken, spending_power_of
 
 
 def calculate_credit_ceiling(raw_credit, running_cost_floor, serviceable, price_index=1.0, market_cap=None):
@@ -36,11 +38,10 @@ def calculate_credit_ceiling(raw_credit, running_cost_floor, serviceable, price_
     return max(limit, running_cost_floor) * price_index
 
 
-def calculate_affordability(capital, credit_ceiling, credit_share, preserve_debt=False):
-    """Pure calculation used by every quote and state-changing spend check."""
-    if preserve_debt:
-        return max(0.0, capital) + credit_ceiling * credit_share
-    return max(0.0, capital + credit_ceiling * credit_share)
+def bearable_part(amount, capital, credit_limit_after):
+    """How much of `amount` a purse of `capital` and a credit line of `credit_limit_after` (read at the capital left
+    after paying) can take without capital ending below the negative of the limit."""
+    return min(amount, max(0.0, capital + credit_limit_after))
 
 
 class CreditMixin:
@@ -101,8 +102,7 @@ class CreditMixin:
         negative of the limit. The limit is read at the capital left after paying, because the floor
         (living_cost) carries a status term that shrinks as positive capital goes."""
         held = self.state.household.capital
-        limit_after = self.credit_limit(_capital=held - amount)
-        return min(amount, max(0.0, held + limit_after))
+        return bearable_part(amount, held, self.credit_limit(_capital=held - amount))
 
     def credit_limit(self, _rev=None, _upkeep=None, _capital=None):
         """How far into arrears anyone will actually let you go.
@@ -216,21 +216,11 @@ class CreditMixin:
         surplus itself, and what work in hand still owes."""
         rev = self.revenue()
         upkeep_amount = self.upkeep()
-        household = self.state.household
-        fixed = (upkeep_amount + self.living_cost(_rev=rev, _upkeep=upkeep_amount)
-                 + self.mine_operating_cost()
-                 + max(0.0, -household.capital) * self.debt_interest_rate())
-        surplus = max(0.0, rev - fixed)
-        return {
-            "cash_on_hand": max(0.0, household.capital),
-            # the drawable share of the line, less what is already drawn: arrears use up the room
-            "credit_available_now": max(0.0, self.credit_limit(_rev=rev, _upkeep=upkeep_amount)
-                                        * self.SPENDING_DRAW_SHARE_ORDINARY - max(0.0, -household.capital)),
-            "sustainable_annual_surplus": surplus,
-            "surplus_allowance_over_years": surplus * self.CREDIT_SURPLUS_YEARS_MULTIPLE,
-            "surplus_years_counted": self.CREDIT_SURPLUS_YEARS_MULTIPLE,
-            "already_committed": self.committed_spend(),
-        }
+        capital = self.state.household.capital
+        return funding_parts(
+            capital, rev, upkeep_amount + self.living_cost(_rev=rev, _upkeep=upkeep_amount) + self.mine_operating_cost(),
+            self.debt_interest_rate() if capital < 0 else 0.0, self.credit_limit(_rev=rev, _upkeep=upkeep_amount),
+            self.SPENDING_DRAW_SHARE_ORDINARY, self.CREDIT_SURPLUS_YEARS_MULTIPLE, self.committed_spend())
 
     def shed_loss_makers(self, year):
         """Shut the plants that keep losing money; in arrears with a deficit, stop maintaining anything that costs
@@ -322,25 +312,9 @@ class CreditMixin:
         """
         limit = self.credit_limit()
         household = self.state.household
-        if limit <= 0 or household.capital >= 0:
-            household._said_near_limit = False
+        warn, household._said_near_limit, used = near_limit(household.capital, limit, household._said_near_limit)
+        if not warn:
             return
-        used = -household.capital / limit
-        # PAST IT IS NOT "CLOSE TO" IT, and past it the halting has already
-        # happened: enforce_credit_limit runs immediately after this and
-        # deals with it, so this must not still say "CLOSE TO THE LIMIT
-        # ... every project in hand is halted" in a year when nothing here
-        # actually halts anything. Warn about what is still ahead of you,
-        # not about what has just been done.
-        if used >= 1.0:
-            household._said_near_limit = True
-            return
-        if used < 0.7:
-            household._said_near_limit = False
-            return
-        if household._said_near_limit:
-            return
-        household._said_near_limit = True
         household.log.append((year, LogLine(
             "credit_near_limit", "CLOSE TO THE LIMIT: you owe %s of the %s anyone "
             "here will advance you (%d%%). Past it every "
@@ -556,7 +530,7 @@ class CreditMixin:
         # the same thing twice while the second application does
         # nothing at all - a penalty that cannot be paid should not be
         # quoted as though it were.
-        _rep_hit = min(self.SETTLEMENT_REPUTATION_HIT, max(0.0, household.reputation))
+        _rep_hit = reputation_hit_taken(self.SETTLEMENT_REPUTATION_HIT, household.reputation)
         household.reputation = max(0.0, household.reputation - self.SETTLEMENT_REPUTATION_HIT)
         # AND NOBODY LENDS TO YOU FOR A WHILE. Without this, walking away
         # from a debt cost a little standing and nothing else, and standing
@@ -692,7 +666,6 @@ class CreditMixin:
 
     def spending_power(self, kind="buy"):
         """What you could actually raise, by what you mean to spend it on."""
-        share = 1.0 if kind == "start" else self.SPENDING_DRAW_SHARE_ORDINARY
         # THE DEBT YOU ALREADY CARRY COUNTS AGAINST YOU. This read
         # max(0.0, self.household.capital) + credit_limit() * share, which floored the
         # capital term and so ignored arrears entirely: a household 500 into
@@ -707,31 +680,11 @@ class CreditMixin:
         # hire(), train() and commission() had this right all along and
         # computed it inline; the screens that quote a figure to the player
         # called this function and so quoted one too high.
-        if kind == "open":
-            # THE ONE CASE WHERE THE HOLE DOES NOT COUNT, and it is not an
-            # oversight. Opening a door on a concern you have ALREADY built
-            # and which ALREADY earns is not a wage or a commission: it buys
-            # its own fee back, often in weeks. Counting the arrears against
-            # it is how a household gets locked out of the very thing that
-            # would dig it out.
-            #
-            # Two traced runs are in the suite for this: a household deep
-            # in arrears with several finished concerns worth real money a
-            # year, shut, must still be able to open them, and a concern
-            # that takes years to clear its own capex must not open just
-            # because arrears are otherwise ignored here. See the checks
-            # named "a completed concern that pays for its own door within
-            # months opens even while deep in arrears" and its slow-payback sibling,
-            # which holds the line the other way: a concern that takes YEARS
-            # to clear its own capex still does not open on this.
-            # Past the line nobody lends, so there is nothing to raise for a door fee either.
-            if self.state.household.capital < -self.credit_limit():
-                return 0.0
-            return calculate_affordability(
-                self.state.household.capital, self.credit_limit(), share,
-                preserve_debt=True)
-        return calculate_affordability(
-            self.state.household.capital, self.credit_limit(), share)
+        # THE ONE CASE WHERE THE HOLE DOES NOT COUNT is `open`: a door on a concern already built and already earning
+        # buys its own fee back, often in weeks, so counting the arrears against it would lock a household out of the
+        # very thing that would dig it out (a concern slow to repay its own capex is held back by its payback, in
+        # projects_staffing). Past the line nobody lends, so there is nothing to raise for a door fee either.
+        return spending_power_of(kind, self.state.household.capital, self.credit_limit(), self.SPENDING_DRAW_SHARE_ORDINARY)
 
     def dependants_cost(self):
         """The part of the living cost that keeps the household's dependants: people with the same needs as the founder."""
@@ -787,7 +740,6 @@ class CreditMixin:
         status = 0.0
         for _node_id, upkeep_of_status in self.effect_values("living_cost_status"):
             status += upkeep_of_status * price_index
-        status += max(0.0, capital) * self.LIVING_COST_STATUS_PER_CAPITAL      # you cannot look poor and rich
         # A RUINED MAN STOPS KEEPING UP APPEARANCES: status spending must be
         # capped by what is actually left after eating (`room` below), not
         # carried as a fixed, unconditional cost - an uncapped citizenship
@@ -802,8 +754,8 @@ class CreditMixin:
         # themselves starve you.
         upkeep_amount = self.upkeep() if _upkeep is None else _upkeep
         room = max(0.0, rev - base - household - tax - upkeep_amount - wages)
-        status = min(status, room * self.LIVING_COST_APPEARANCES_SHARE_OF_ROOM
-                     + max(0.0, capital) * self.LIVING_COST_STATUS_PER_CAPITAL)
+        status = appearances_spending(status, capital, room, self.LIVING_COST_STATUS_PER_CAPITAL,
+                                      self.LIVING_COST_APPEARANCES_SHARE_OF_ROOM)
         return base + household + tax + status + wages
 
     LIVING_COST_STATUS_PER_CAPITAL = declare(
