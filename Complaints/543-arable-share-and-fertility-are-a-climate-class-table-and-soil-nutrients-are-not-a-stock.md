@@ -47,8 +47,10 @@ soils resist tillage until the tool and team can pull hard enough.
 - Geography only multiplies: `crop_site(..., nutrient_factor)` and `food_potential(..., nutrient_factors)`.
   `sim/engine/soil_nitrogen_year.py` owns the yearly step (phase `soil_nitrogen`) and feeds the factors to the tile food view
   and `Sim.farm_sites()`. `Rotation` gained `legume_share_of_holding` (three-field: half the spring field).
-- Manure is a transitional rule (`MANURE_COLLECTED_SHARE`, retire: farmers buying manure goods, 544): the society's draught
-  herd's collected dung is spread over the held cropland. No farm producer buys the manure goods yet.
+- Manure is a transitional rule (`MANURE_COLLECTED_SHARE`, `sim/geography/soil_nutrients.py`): the society's draught herd's collected
+  dung is spread over the held cropland. Dung is made by herd and draught recipes (544, closed: `data/production/95_herds.json`) but the only
+  recipe that takes it as an input is the nitre bed (`data/production/60_nitrogen.json`); no farm recipe buys it. The constant's `retire`
+  still names 544, which is closed: it should name this complaint (the retirement is a farm recipe with manure as an input).
 - Tests: `sim/tests/test_soil_nitrogen.py`, `test_soil_nitrogen_whole_game.py`.
 
 ## Done: the farm model reads the stock
@@ -63,5 +65,5 @@ soils resist tillage until the tool and team can pull hard enough.
 
 ## Left
 
-- Per-tile manure from market purchase; silt as an input on flooded tiles (then the Nile multiplier goes); arable share and
+- Per-tile manure from market purchase (a farm recipe with manure as an input, so 544's dung reaches the soil); silt as an input on flooded tiles (then the Nile multiplier goes); arable share and
   fertility derivation; tillage resistance.
