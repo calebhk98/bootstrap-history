@@ -65,3 +65,9 @@ leisure each take of Rome's 2000 hours a worker is still not measured separately
 file's estimates (cooking, cleaning and childcare confidence D) and are not re-measured here. The hire/own switch is still a
 step in the wage (households differ in the wage they face, so the aggregate rises step by step); it was not made smooth.
 Cooked food, cleaning and childcare as bought substitutes are not yet data in `household_work.json`.
+
+## Effect measured after the sourced hours (PM)
+
+The opening's typical traded good now sells below its making cost (`price_over_making_cost_band_validation`, see 558): the
+stationary opening (473) does not yet take the larger household day out of the hours it plans with. The figures stay; the
+opening is what has to read them.
