@@ -39,6 +39,12 @@ class CountryAnswers:
 	def need_floor_costs_per_person_year(self):
 		return {"food": 20.0}
 
+	def trade_value(self, direction):
+		return 0.0
+
+	def people_of_trade(self, trade):
+		return 1.0e6
+
 
 class ScenarioWorld(StateWorld):
 	"""The shared (home) world plus what a country's scope asks of it."""

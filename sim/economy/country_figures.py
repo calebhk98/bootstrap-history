@@ -7,7 +7,7 @@ no record of is None, so a caller can fall back to a labelled estimate."""
 import math
 from typing import Dict, Optional, Set
 
-from . import households
+from . import carried_book, households
 from .market_memory import KEY_SEPARATOR, YearView
 from .setup import LABOUR_AREA_PREFIX, labour_area
 from .types import TileId
@@ -170,3 +170,11 @@ def money_held(economy, country: Optional[str]) -> float:
     holders = [cohort.agent_id for cohort in record.cohorts.values() if cohort.tile in tiles]
     holders += [producer.agent_id for producer in record.producers.values() if producer.tile in tiles]
     return math.fsum(record.book.balance(holder, money) for holder in holders)
+
+
+def trade_book(economy, country: Optional[str]) -> Dict[str, Dict[str, float]]:
+    """What the merchants carried across the country's border last year, by good (tonnes and value each way, in the
+    economy's unit; carried_book.trade_book). Empty for None, which has no border."""
+    if country is None:
+        return {}
+    return carried_book.trade_book(economy.record.carried_goods, economy.setup.country_of, country)

@@ -49,6 +49,12 @@ class CountryAnswers:
 	def need_floor_costs_per_person_year(self):
 		return {"food": 5.0}
 
+	def trade_value(self, direction):
+		return 0.0
+
+	def people_of_trade(self, trade):
+		return 1.0e6
+
 
 class Shared(StateWorld):
 	def country_economy(self, country):
