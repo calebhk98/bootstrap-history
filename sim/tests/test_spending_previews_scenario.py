@@ -77,8 +77,9 @@ check("firing in the year of hire says what happens to the paid-in-advance wage"
 # --- 240: the sliver left after the final instalment settles in the step that finishes the project
 tail_sim = bounty_sim
 tail_sim.capital = 1e10
-tail_id = next(node_id for node_id in ORDER if node_id not in tail_sim.done
-               and tail_sim.can_start(node_id) and tail_sim.project_cost(node_id) > 5e3 and NODES[node_id]["yrs"] <= 1)
+tail_id = max((node_id for node_id in ORDER if node_id not in tail_sim.done
+               and tail_sim.can_start(node_id) and NODES[node_id]["yrs"] <= 1),
+              key=lambda node_id: (tail_sim.project_cost(node_id), node_id))   # the dearest one-year project: the sliver is largest
 tail_sim.start_project(tail_id)
 project_state = tail_sim.active[tail_id]
 project_state["ph_left"] = 0.0
@@ -95,7 +96,11 @@ check("money shows the debt the recurring surplus can carry, from the shared met
 expensive_id = max((node_id for node_id in ORDER if node_id not in debt_sim.done and debt_sim.can_start(node_id)
                     and debt_sim.project_cost(node_id) < 0.5 * debt_sim.funding_capacity()),
                    key=lambda node_id: (debt_sim.project_cost(node_id), node_id))
-debt_sim.capital = 0.6 * debt_sim.project_cost(expensive_id)
+# the materials are bought from cash at the start, so the cash held must cover them and fall short of the instalments
+probe_sim = sim(capital=2e4)
+probe_sim.capital = 100 * probe_sim.project_cost(expensive_id)
+probe_reply = _ask(probe_sim, cmd="start", id=expensive_id)
+debt_sim.capital = probe_reply["of_which_materials_paid_now"] + 0.5 * probe_reply["of_which_instalments_still_owed"]
 credit_forecast = _ask(debt_sim, cmd="start", id=expensive_id).get("on_credit") or {}
 check("the start warning shows sustainable debt beside the ceiling",
       "sustainable_debt" in credit_forecast and "interest_as_share_of_recurring_surplus" in credit_forecast, credit_forecast)

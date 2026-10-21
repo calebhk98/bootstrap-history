@@ -12,6 +12,7 @@ from typing import Dict, List, Mapping, Tuple
 
 from sim.constants import declare
 
+from .household_work_year import basket_key, cohort_basket
 from . import carriage_fleet_book, currency, goods_market, opening_basket, opening_income, opening_metal, opening_runs, households, households_store, labour_state, location, location_inputs, mint, opening_stores, ownership, sites, titles, unit_cost
 from .accounts import Book
 from .market_areas import AreaMap
@@ -161,9 +162,10 @@ def _opening_bids(setup, record, view):
     """(cohort, bid, price) for what each cohort would buy at the opening prices with the opening income."""
     priced_by_tile = {}
     for cohort in sorted(record.cohorts.values(), key=lambda each: each.agent_id):
-        priced = priced_by_tile.setdefault(cohort.tile, households.need_prices(setup.basket_for(cohort.tile), view, cohort.tile))
+        basket = cohort_basket(setup, record, cohort)
+        priced = priced_by_tile.setdefault(basket_key(record, cohort), households.need_prices(basket, view, cohort.tile))
         income = cohort.last_year_income
-        orders = households.goods_orders(cohort, view, income, income, setup.basket_for(cohort.tile), setup.specs,
+        orders = households.goods_orders(cohort, view, income, income, basket, setup.specs,
                                          priced)
         for bid in orders.bids:
             price = view.price(bid.good, bid.area)

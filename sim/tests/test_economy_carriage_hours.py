@@ -73,14 +73,46 @@ class CarriageHireTests(unittest.TestCase):
                 if sum(plan_.values()) > 0.0:
                     self.assertGreater(year["hired"][agent]["wage"], 0.0)
 
-    def test_hours_given_to_carriage_are_taken_from_what_other_employers_hire(self):
-        index = self.hiring.index(self.planned_years()[0])   # the two runs are alike until the first bid
-        self.assertLess(self.hiring[index]["others_hired"], self.plain[index]["others_hired"])
-
     def test_money_is_still_conserved(self):
         report = money_audit.year_report(self.hiring_economy.record)
         self.assertTrue(report.ok, report.unexpected)
         self.assertAlmostEqual(self.hiring_economy.record.book.check_conservation(1e-9).money["coin"], 0.0)
+
+
+def hours_hired_by_farm(merchant_bid_hours):
+    """Hours the farm is hired for in a labour market of scarce supply, when a merchant also bids `merchant_bid_hours`
+    for its carriers at a higher wage; the bids go through the year's labour clearing together."""
+    import types
+    from sim.economy.accounts import Book
+    from sim.economy.market_memory import MarketMemory
+    from sim.economy.types import EDGE_MINT, LabourBid, LabourOffer, Transfer
+    from sim.economy.year_labour import clear_labour
+    from sim.economy.year_ledger import YearLedger
+    from sim.labour.api import MarketState, YearInputs as CoreInputs
+    from sim.labour.market.aptitude import split_evenly
+    book = Book()
+    for employer in ("farm", "merchant"):
+        book.transfer(Transfer(EDGE_MINT, employer, "coin", 1e9, "opening"))
+    area = "labour:t1"
+    record = types.SimpleNamespace(book=book, memory=MarketMemory(),
+                                   workforce=MarketState(workers={area: {"plough": split_evenly(0.05)}}))
+    setup = types.SimpleNamespace(currency_id="coin", trades={}, unskilled_trade="plough")
+    bids = [LabourBid("farm", "plough", area, 100.0, 5.0)]
+    if merchant_bid_hours:
+        bids.append(LabourBid("merchant", "plough", area, merchant_bid_hours, 9.0))
+    ledger = YearLedger()
+    context = CoreInputs(trades={}, bids=(), subsistence_per_worker_year={area: 2000.0},
+                         hours_per_worker_year=2000.0, discount_rate=0.05, career_years=30.0)
+    clear_labour(setup, record, bids, [LabourOffer("family", "plough", area, 100.0, 1.0)], ledger, context)
+    return ledger.hours_hired.get("farm", {}).get("plough", 0.0), ledger.hours_hired.get("merchant", {}).get("plough", 0.0)
+
+
+class CarriageTakesHoursTests(unittest.TestCase):
+    def test_hours_given_to_carriage_are_taken_from_what_other_employers_hire(self):
+        farm_alone, _none = hours_hired_by_farm(0.0)
+        farm_with_carriers, carriers = hours_hired_by_farm(40.0)
+        self.assertGreater(carriers, 0.0)
+        self.assertLess(farm_with_carriers, farm_alone)
 
 
 def hire(hours_hired, hours_per_unit=0.5, wage=1.0, market_wage=1.0, area_of=None):

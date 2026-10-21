@@ -48,6 +48,7 @@ class Cohort:
     expected_floor_cost: float = 0.0   # smoothed cost of the cohort's need floors; spending beyond it sizes durables
     unmet_floor_by_need: Dict[str, float] = field(default_factory=dict)   # need units short of the floor
     own_plan_by_need: Dict[str, float] = field(default_factory=dict)      # need units it grows with hours kept back
+    hired_work_per_person: float = 0.0  # hours of household work a person's share hires this year (household_work_year.py)
 
 
 def cohort_id(tile: TileId, income_class: int) -> AgentId:

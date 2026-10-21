@@ -8,6 +8,7 @@ from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
 from . import (carriage_fleet_book, tax_farming, merchants_transit, carriage_hours, carriage_wear, currency, expansion_price, households, inventory, merchants, metal_stock, ownership, producer_exit, shares,
                producers, producers_close, state_budget, tariffs, taxes)
+from .household_work_year import basket_key, cohort_basket
 from .households_cohort import renewed
 from .market_memory import market_key
 from .national_prices import national_prices
@@ -231,7 +232,7 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage) ->
             received[good] = received.get(good, 0.0) + quantity
         income = ledger.wages_in.get(cohort_id, 0.0) + record.property_income.get(cohort_id, 0.0)
         spent = ledger.money_out.get(cohort_id, 0.0)
-        closed, moves = households.close_year(cohort, received, view, setup.specs, setup.basket_for(cohort.tile),
+        closed, moves = households.close_year(cohort, received, view, setup.specs, cohort_basket(setup, record, cohort),
                                                    income, spent)
         record.book.move_many(held_only(moves, record.book))
         record.cohorts[cohort_id] = closed
