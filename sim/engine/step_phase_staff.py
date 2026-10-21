@@ -8,7 +8,8 @@ from sim.world import demography
 from . import automation_audit
 from .units_prose import plain_number
 from .payroll_trim import payroll_means, staff_to_let_go
-from .staff_phase_rules import has_room_to_hire, hires_needed
+from .staff_phase_rules import (approach, artisan_goal, can_afford_replacement, craft_headcount, directors_next, has_room_to_hire,
+                                hires_needed, scholar_goal)
 from .staff_replacement import REPLACE_ONLY, replace_lost_staff, replacement_wanted
 from sim.agents.api import edges
 
@@ -133,12 +134,12 @@ class StaffPhaseMixin:
             # widens this same wall past that well before the goal is in
             # reach).
             target_sc = scholar_target(sc_cap, extra, self.AUTO_HIRE_SCHOLAR_EXTRA_SHARE, self.labour.literate_capacity("scholar"))
-            desired_sc = self.state.household.scholars + (target_sc - self.state.household.scholars) * self.AUTO_HIRE_SCHOLAR_APPROACH_RATE
+            desired_sc = approach(self.state.household.scholars, target_sc, self.AUTO_HIRE_SCHOLAR_APPROACH_RATE)
             target_ar = ar_cap + extra
-            desired_ar = self.state.household.artisans + (target_ar - self.state.household.artisans) * self.AUTO_HIRE_ARTISAN_APPROACH_RATE
+            desired_ar = approach(self.state.household.artisans, target_ar, self.AUTO_HIRE_ARTISAN_APPROACH_RATE)
             # Keep the per-trade books honest about the aggregate: staff taken on
             # for you are generic craftsmen and scribes, and that is all they are.
-            craft = max(0.0, desired_ar - self.state.household.freedmen - self.state.household.slaves * self.AUTO_HIRE_SLAVE_CRAFT_CREDIT)
+            craft = craft_headcount(desired_ar, self.state.household.freedmen, self.state.household.slaves, self.AUTO_HIRE_SLAVE_CRAFT_CREDIT)
             specials = sum(value for trade_id, value in self.state.household.employees.items()
                            if trade_id not in ("artisan", "scholar") and self.step_context.trade_family(trade_id) == "craft")
             # SPECIALISTS MUST NOT EAT THE GENERALISTS: the generic bucket is
@@ -200,11 +201,10 @@ class StaffPhaseMixin:
                     self, "auto_hire", "hire for shut concerns",
                     "concerns shut for want of staff need %.1f more people, but the income that pays staff covers "
                     "%.0f%% of them" % (_closed_unscaled, 100.0 * self.household._staff_scale))
-            _grow_to("artisan", max(craft * 0.25, craft - specials,
-                                    self.state.household.employees.get("artisan", 0.0) + _closed_ar),
+            _grow_to("artisan", artisan_goal(craft, specials, self.state.household.employees.get("artisan", 0.0), _closed_ar),
                      closure_need=_closed_ar)
             if desired_sc > 0 or _closed_sc > 0:
-                _grow_to("scholar", max(desired_sc, self.state.household.scholars + _closed_sc),
+                _grow_to("scholar", scholar_goal(desired_sc, self.state.household.scholars, _closed_sc),
                          closure_need=_closed_sc)
             # REPLACE THE PEOPLE YOU LOSE, trade by trade: attrition can erode
             # a taught trade toward zero, and nothing replaces it if the
@@ -229,7 +229,8 @@ class StaffPhaseMixin:
                 if want is None:
                     continue
                 short = want - have
-                if short > 0.02 and self.state.household.capital > self.labour.market.quote_annual(trade_id) * self.TRADE_REPLACEMENT_AFFORDABILITY_YEARS:
+                if short > 0.02 and can_afford_replacement(self.state.household.capital, self.labour.market.quote_annual(trade_id),
+                                                           self.TRADE_REPLACEMENT_AFFORDABILITY_YEARS):
                     _before = self.state.household.capital
                     self.labour.set_employed(trade_id, have + short)
                     self.pay_edge(edges.EDGE_WORKERS, short * self.labour.market.quote_annual(trade_id), "wages advanced for replacement staff")
@@ -252,10 +253,10 @@ class StaffPhaseMixin:
                     self, "auto_commission", "commission",
                     "%.0f hours of %s" % (_commissioned[2], _commissioned[1]),
                     "%s is blocked only on craftsmen's hands" % _commissioned[0], _before)
-        self.state.household.directors_extra += (di_cap - self.state.household.directors_extra) * self.DIRECTORS_EXTRA_APPROACH_RATE - self.state.household.directors_extra * attrition_rate
+        self.state.household.directors_extra = directors_next(self.state.household.directors_extra, di_cap,
+                                                              self.DIRECTORS_EXTRA_APPROACH_RATE, attrition_rate)
         self.state.household.artisans = max(0.0, self.state.household.artisans)
         self.state.household.scholars = max(0.0, self.state.household.scholars)
-        self.state.household.directors_extra = max(0.0, self.state.household.directors_extra)
         # SAY IT WHEN IT CROSSES A WHOLE PERSON: the year's hour pool can
         # grow well past the founder's own baseline as institutions add
         # deputies, and the single largest change to the resource the
