@@ -37,7 +37,7 @@ All figures sit in the cast entry (`members`, `endowment_hectares`, and `plan`: 
 ## Labelled heuristics
 
 * `land_share_of_surplus` and `land_ceiling_hectares`: stand-ins until donors, the house's own rule and a land
-  market with owners are modelled (Complaints/636).
+  market with owners are modelled (land titles: Complaints/538; a house lending its purse: Complaints/636).
 * `mill_share_of_grain` (England): the share of milled grain that went through monastic mills is a guess of the
   right order; the toll rate (about a sixteenth) is the customary multure (Langdon 2004).
 * Start sizes (`members`, `endowment_hectares`): placeholders of the right order, confidence D. They are added to
@@ -47,8 +47,9 @@ All figures sit in the cast entry (`members`, `endowment_hectares`, and `plan`: 
 
 * The credit market only offers the purses of households, the state and firms, so a house's purse is not lent
   to the founder or to firms yet; and the land market has no owners, so land a house buys does not leave the
-  founder's market. `Complaints/538` holds land titles and `Complaints/636-actors-cannot-lend-or-hold-land-in-the-markets.md` the lending half, with the
-  proof of concept for the lending half (branch `engine-actor-lenders`, not merged).
+  founder's market. Land titles are `Complaints/538`; the lending half is
+  `Complaints/636-actors-cannot-lend-or-hold-land-in-the-markets.md`, with a proof of concept on branch
+  `engine-actor-lenders` (not merged).
 * The Han variant is `hidden` because it cannot run: the shipped Han economy stays a foreign partner beside the
   variant (partners are excluded by exact civilisation id), which raises `NoCountryEconomy`. The same complaint
   covers it.
