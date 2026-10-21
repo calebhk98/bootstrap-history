@@ -33,6 +33,7 @@ from sim.unit_conversions import KILOGRAMS_PER_TONNE
 from sim.world import deposits as deposit_model, mine_technique
 from sim.geography.api import mine_demand_goods, parameter_value, works_priced_from_deposits
 from . import purchase_rule
+from .mine_ceiling import mine_ceiling_tonnes, room_under_ceiling
 from .forest_ceiling import forest_ceiling_hectares, held_land_area_km2, revenue_scale_multiple
 from .units_prose import area_text
 from .mine_deposits import MineDepositsMixin, NO_DEPOSIT_TEXT
@@ -232,13 +233,11 @@ class MiningMixin(MineDepositsMixin):
         sim/world/deposits.py, not a multiple here)."""
         state_capacity = float(self.civ.get("state_capacity", self.STATE_CAPACITY_DEFAULT_FALLBACK))
         favour = self.effect_best("mine_ceiling")
-        if favour is not None:
-            base = favour[1]["base"] + favour[1]["state_scale"] * state_capacity
-        else:
-            base = self.MINE_CEILING_BASE_STRANGER + self.MINE_CEILING_STATE_SCALE_STRANGER * state_capacity
-        base *= revenue_scale_multiple(self.revenue(), self.REVENUE_SCALE_DENARII, self.REVENUE_SCALE_CAP_MULTIPLE)
-        geo = self.geography.mineral_scale(mat)
-        return base * geo
+        return mine_ceiling_tonnes(
+            favour[1] if favour is not None else None, state_capacity, self.MINE_CEILING_BASE_STRANGER,
+            self.MINE_CEILING_STATE_SCALE_STRANGER,
+            revenue_scale_multiple(self.revenue(), self.REVENUE_SCALE_DENARII, self.REVENUE_SCALE_CAP_MULTIPLE),
+            self.geography.mineral_scale(mat))
 
     MINE_CEILING_BASE_IMPERIAL = declare(
         "MINE_CEILING_BASE_IMPERIAL", 20000.0, kind="temporary_heuristic",
@@ -697,8 +696,8 @@ class MiningMixin(MineDepositsMixin):
         holdings = self.state.holdings
         household = self.state.household
         scenario = self.state.scenario
-        t_per_yr = min(t_per_yr, max(0.0, ceiling - have_cap.get(mat, 0.0)
-                                          - holdings.mine_pending.get(mat, 0.0)))
+        t_per_yr = min(t_per_yr, room_under_ceiling(ceiling, have_cap.get(mat, 0.0),
+                                                    holdings.mine_pending.get(mat, 0.0)))
         deposit_room = self.mine_room_in_deposits(mat, deposit)
         if deposit_room is not None:
             if deposit_room <= 0.0:
@@ -933,7 +932,7 @@ class MiningMixin(MineDepositsMixin):
         holdings = self.state.holdings
         household = self.state.household
         scenario = self.state.scenario
-        room = max(0.0, self.forest_land_ceiling() - holdings.forest_ha)
+        room = room_under_ceiling(self.forest_land_ceiling(), holdings.forest_ha)
         if hectares > room:
             # SILENT TRUNCATION, not a refusal: open_mine's own ceiling does
             # the same (the tranche you get is the room there is, not zero),
