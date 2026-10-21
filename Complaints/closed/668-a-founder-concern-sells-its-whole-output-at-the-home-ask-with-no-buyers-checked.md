@@ -1,6 +1,6 @@
 # A founder concern sells its whole physical output at the home ask with no buyers checked
 
-**Status:** open - takings are bounded by what the clearing sold (forecast one year behind); paying the founder from the clearing itself remains (510/514)
+**Status:** closed - a founder concern's book-sold output is offered into the year's clearing and the seat is paid what buyers took, less its inputs at economy prices (`sim/engine/economy_port_seats.py` `settle_seats`, rules in `concern_sales.py`, tests `test_seat_paid_from_sales.py` and its scenario); the aggregate revenue ceiling remains on the concerns not sold in the book (514)
 
 Found reading a playtest (`Complaints/reports/playtest-rome-seed11-agent-to-221.md`, "lead_chamber/sulfuric_retort acid sales
 ~4M/yr ... labourer wage 37/yr"). The report called it "legit production, unrealistic scale". The scale is not an

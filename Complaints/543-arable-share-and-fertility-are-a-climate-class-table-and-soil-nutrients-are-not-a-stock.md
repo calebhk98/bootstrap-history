@@ -83,6 +83,11 @@ soils resist tillage until the tool and team can pull hard enough.
 
 - Open question: the rainforest-against-savanna check (`test_geography_food_gaps`) is an expected failure. Derived savanna fertility sits near the
   Mediterranean reference because the rule has no weathering age; an opened lecture says tropical soils in general are leached and unproductive.
+  Decision (PM): the check stays at 0.5, because the rule is the suspect. Savanna soils (Oxisols, Ultisols, Alfisols under
+  repeated burning) are old and weathered, so the next step is a weathering term that lowers fertility with heat and time
+  under leaching. It comes from soil-science sources (a weathering rate against temperature, as in Arrhenius-type
+  chemical weathering), not from fitting the ratio. The term is a labelled heuristic until a soil-age layer exists. The
+  expected failure turns green, or stays red, on its own.
 
 ## Left
 
