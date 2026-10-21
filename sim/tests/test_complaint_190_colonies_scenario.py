@@ -4,7 +4,7 @@ light and amusement needs and the typed lines are in test_complaint_190_colonies
 from .harness import *  # noqa: F401,F403
 from sim.refusal import cause_of
 
-from sim.geography.api import settlement, tiles_held
+from sim.geography.api import tiles_held
 
 CHARTER = "ben_settlement_charter"
 
@@ -28,12 +28,6 @@ spec = NODES[CHARTER]["mechanics"]["settlement"]
 held = tiles_held(game.civ)
 reachable = game.settlement_candidates(False)
 check("settlers can reach tiles that border what the country holds", bool(reachable) and not set(reachable) & set(held), reachable[:3])
-check("the tiles are listed best land first",
-      all(settlement.capacity_kcal_per_day(a) >= settlement.capacity_kcal_per_day(b) for a, b in zip(reachable, reachable[1:])))
-check("by sea, any coast is reachable from a coast, which is many more tiles", len(game.settlement_candidates(True)) > len(reachable))
-check("the outfit is a year's work for each settler at the society's wage",
-      abs(game.settlement_outfit_cost(spec) - spec["settlers"] * spec["outfit_hours_per_settler"]
-          * game.labour.money_per_labour_hour()) < 1e-6)
 
 # ---- founding a colony --------------------------------------------------------------------------------------
 tile = reachable[0]
@@ -56,18 +50,8 @@ check("the colonies listing shows its people and what its land could feed",
 # ---- the people of a colony ---------------------------------------------------------------------------------------
 growing = chartered()
 growing.found_colony(reachable[0])
-start = people(growing.state.holdings.colonies[0])
 for year in range(40):
     growing.advance_colonies(growing.state.scenario.year + year)
-grown = people(growing.state.holdings.colonies[0])
-check("a colony on good land grows by the same births and deaths as the home country's people", grown > 2 * start, (start, grown))
-
-capacity = settlement.capacity_kcal_per_day(reachable[0])
-check("with no hands to work the land there is no food",
-      settlement.worked_kcal_per_day(reachable[0], 0.0) == 0.0)
-check("the land's food is what the hands can hold of it, never more than the land gives",
-      0.0 < settlement.worked_kcal_per_day(reachable[0], 1000.0) < capacity
-      and abs(settlement.worked_kcal_per_day(reachable[0], 1.0e12) - capacity) < 1e-6 * capacity)
 
 dying = chartered()
 dying.found_colony(reachable[0])

@@ -28,3 +28,20 @@ def advance_colony(colony, kcal_per_day_for, population_class, disease_burden):
     people.step(kcal_per_day_for(people.working_age), jitter=False, disease_burden=disease_burden)
     colony.update(children=people.children, working_age=people.working_age, elderly=people.elderly)
     return people.total < 1.0
+
+
+def best_settlement_work(known, by_sea):
+    """(node id, spec) of the work that sends the most settlers (ties by id) among `known` (node id, spec) pairs, over a
+    voyage by sea only by works whose spec says `by_sea`; None when none fits."""
+    fit = [(node_id, spec) for node_id, spec in known if spec.get("by_sea") or not by_sea]
+    return max(fit, key=lambda item: (item[1]["settlers"], item[0]), default=None)
+
+
+def outfit_cost(spec, money_per_labour_hour):
+    """What outfitting the settlers costs: the hours each is given, at the society's money per hour of labour."""
+    return spec["settlers"] * spec["outfit_hours_per_settler"] * money_per_labour_hour
+
+
+def colony_people(colony):
+    """Everyone in a colony: its three cohorts."""
+    return colony["children"] + colony["working_age"] + colony["elderly"]

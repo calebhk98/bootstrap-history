@@ -4,7 +4,9 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.engine.colony_rules import WORKING_AGE_PER_SETTLER, advance_colony, founding_refusal
+from sim.engine.colony_rules import (WORKING_AGE_PER_SETTLER, advance_colony, best_settlement_work, colony_people,
+                                     founding_refusal, outfit_cost)
+from sim.geography.api import settlement
 from sim.world import demography
 
 
@@ -87,6 +89,62 @@ class AdvanceColony(unittest.TestCase):
             advance_colony(colony, lambda hands: 0.0, demography.Population, 0.0)
             totals.append(colony["children"] + colony["working_age"] + colony["elderly"])
         self.assertTrue(all(later < earlier for earlier, later in zip(totals, totals[1:])), totals)
+
+
+class Settlement(unittest.TestCase):
+    """The work chosen, the outfit and the head count (colony_rules), and the tiles settlers can reach (the geography)."""
+
+    WORKS = [("small_charter", {"settlers": 50, "outfit_hours_per_settler": 100.0}),
+             ("big_sea_charter", {"settlers": 200, "outfit_hours_per_settler": 100.0, "by_sea": True}),
+             ("big_land_charter", {"settlers": 200, "outfit_hours_per_settler": 100.0})]
+
+    def test_the_work_that_sends_the_most_settlers_is_chosen_and_ties_go_by_id(self):
+        self.assertEqual(best_settlement_work(self.WORKS, False)[0], "big_sea_charter")
+        self.assertIsNone(best_settlement_work([], False))
+
+    def test_a_voyage_by_sea_needs_a_work_that_crosses_the_sea(self):
+        self.assertEqual(best_settlement_work(self.WORKS, True)[0], "big_sea_charter")
+        self.assertIsNone(best_settlement_work(self.WORKS[:1], True))
+        self.assertEqual(best_settlement_work(self.WORKS[:1], False)[0], "small_charter")
+
+    def test_the_outfit_is_each_settlers_hours_at_the_money_per_hour(self):
+        self.assertAlmostEqual(outfit_cost({"settlers": 20, "outfit_hours_per_settler": 50.0}, 2.5), 2500.0)
+
+    def test_a_colonys_people_are_its_three_cohorts(self):
+        self.assertEqual(colony_people({"children": 1.0, "working_age": 20.0, "elderly": 3.0}), 24.0)
+
+    def test_settlers_reach_tiles_that_border_what_is_held_and_not_the_held_tiles_themselves(self):
+        from sim.engine.data import load_civ
+        from sim.geography.api import tiles_held
+        held = tiles_held(load_civ("rome_100ad"))
+        reachable = settlement.candidate_tiles(held, [])
+        self.assertTrue(reachable)
+        self.assertFalse(set(reachable) & set(held))
+
+    def test_the_tiles_are_listed_best_land_first_and_a_claimed_tile_is_not_offered(self):
+        from sim.engine.data import load_civ
+        from sim.geography.api import tiles_held
+        held = tiles_held(load_civ("rome_100ad"))
+        reachable = settlement.candidate_tiles(held, [])
+        capacities = [settlement.capacity_kcal_per_day(tile) for tile in reachable]
+        self.assertEqual(capacities, sorted(capacities, reverse=True))
+        self.assertNotIn(reachable[0], settlement.candidate_tiles(held, [reachable[0]]))
+
+    def test_by_sea_any_coast_is_reachable_from_a_coast_which_is_many_more_tiles(self):
+        from sim.engine.data import load_civ
+        from sim.geography.api import tiles_held
+        held = tiles_held(load_civ("rome_100ad"))
+        self.assertGreater(len(settlement.candidate_tiles(held, [], True)), len(settlement.candidate_tiles(held, [])))
+
+    def test_no_hands_raise_no_food_and_many_hands_raise_the_whole_of_what_the_land_gives(self):
+        from sim.engine.data import load_civ
+        from sim.geography.api import tiles_held
+        tile = settlement.candidate_tiles(tiles_held(load_civ("rome_100ad")), [])[0]
+        capacity = settlement.capacity_kcal_per_day(tile)
+        self.assertEqual(settlement.worked_kcal_per_day(tile, 0.0), 0.0)
+        self.assertLess(settlement.worked_kcal_per_day(tile, 1.0), settlement.worked_kcal_per_day(tile, 1000.0))
+        self.assertLess(settlement.worked_kcal_per_day(tile, 1000.0), capacity)
+        self.assertAlmostEqual(settlement.worked_kcal_per_day(tile, 1.0e12), capacity, delta=1e-6 * capacity)
 
 
 if __name__ == "__main__":
