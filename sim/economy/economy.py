@@ -356,7 +356,8 @@ class Economy:
         loans, rate, unmet = credit.clear(requests, offered, money, record.memory.rates.get(money), debt,
                                            credit_claims.arrears_history(record.loans, record.remembered_defaults),
                                            year=view.year,
-                                           rate_ceiling=capital_market.RATE_CEILING_SHARE * setup.opening_rate)
+                                           rate_ceiling=capital_market.RATE_CEILING_SHARE * setup.opening_rate,
+                                           expected_inflation=lending.expected_inflation_of(record))
         every_loan = loans
         loans, record.credit_granted = credit_lines.split_lines(loans, [ask.borrower for ask in credit_asks])
         for ask in credit_asks:

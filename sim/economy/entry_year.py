@@ -6,7 +6,7 @@ cash back into paying producers that ran out of it."""
 import math
 from typing import Dict, Tuple
 
-from . import location, ownership, sites, unit_cost
+from . import credit, location, ownership, sites, unit_cost
 from .entry_backed import unfilled_at_cost
 from .entry_margin import margin_entry_plans
 from .entry_trial import trial_entry_plans
@@ -77,7 +77,7 @@ def open_entrants(setup, record, view, area_map, unmet_by_market: Dict[Tuple[str
             per_run = unit_cost.plant_value_per_run(recipe, inputs, wages)
             loan = entrant_loan(per_run * plan.runs, stake) if per_run > 0.0 and math.isfinite(per_run) else 0.0
             if loan > 0.0:
-                record.loan_requests.append(LoanRequest(producer_id, money, loan, plan.yearly_return,
+                record.loan_requests.append(LoanRequest(producer_id, money, loan, credit.earnable_rate(plan.yearly_return),
                                                         recipe.plant_life_years, loan, "enter"))
                 record.expansion_runs[producer_id] = loan / per_run
     return started

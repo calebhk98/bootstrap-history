@@ -10,7 +10,7 @@ from typing import Mapping, Optional
 
 from sim.constants import declare
 
-from . import merchants
+from . import credit, merchants
 from .types import CurrencyId, LoanRequest
 
 MERCHANT_LOAN_YEARS = declare(
@@ -58,7 +58,7 @@ def credit_request(merchant, view, carriage, area_map, cash: float, held_stock, 
             break
     if wanted <= 0.0:
         return None
-    return LoanRequest(merchant.agent_id, currency, wanted, interest_rate + gain / wanted, MERCHANT_LOAN_YEARS,
+    return LoanRequest(merchant.agent_id, currency, wanted, interest_rate + credit.earnable_rate(gain, wanted), MERCHANT_LOAN_YEARS,
                        wanted, "trade")
 
 

@@ -1,6 +1,6 @@
 # Lenders ask nothing for what their money earns elsewhere or for default, so the rate clears at zero
 
-**Status:** partly - the lowest ask (time preference plus expected inflation, plus the lender's own loss record) and the bank's spread (loss record plus capital shortfall) are built; still open: the land-yield and public-debt alternatives are computed but have no live input (no title sale price, no state bond sold to households), see Open
+**Status:** partly - the credit bound is now on the real rate with quantity rationing by risk (see Changes after the probe; the opening rate is not yet re-measured), the lowest ask (time preference plus expected inflation, plus the lender's own loss record) and the bank's spread (loss record plus capital shortfall) are built; still open: the land-yield and public-debt alternatives are computed but have no live input (no title sale price, no state bond sold to households), see Open
 
 **What was wrong.** Households lent at `max(0, expected_inflation)`, `credit.clear` (`sim/economy/credit.py`) floored the rate at zero
 and dropped it to the lowest ask when funds sat idle, and a bank asked its depositors' rate plus a fixed margin. So a
@@ -52,3 +52,20 @@ sides would agree to.
 **What it would take.** Feed the two alternatives (titles at a price, a state bond reachable by households), re-measure the
 opening rate, and retire `RATE_FLOOR_SHARE` if the lenders' floor now does its job. Tests call the ask and clearing
 functions with built offers: a glut leaves the rate at the lenders' floor, not zero; a lender with past losses asks more.
+
+## Changes after the probe (credit-real-rate-and-rationing)
+
+- `credit.clear` (`sim/economy/credit.py`) bounds the real rate: `rate_ceiling` plus the `expected_inflation` the economy passes
+  (`lending.expected_inflation_of`, people-weighted cohort expectations). Where the bound holds the rate below the clearing point,
+  funds go to the least risky borrower first (premium: leverage, collateral, arrears), the rest is left unmet. When every offer
+  asks more than the bound, `credit.clear_with_cause` returns `cause == no_offer_at_rate`, no loans and the held rate (the lowest
+  ask when there is none), never the bound.
+- Caps (`credit.earnable_rate`): producers' working capital and plant, entrants, merchants, carriage and households ask at most
+  what the loan earns on their own figures; a missing or non-finite figure is a zero cap, not an unbounded one. The typed
+  `HOUSEHOLD_RATE_CEILING` is retired. The state's cap (`STATE_BORROWING_RATE_CEILING_MULTIPLE`) and credit lines are unchanged.
+- `NicheEntry.found` prices the stake with `entry_round.capital_cost` (a loan costs at least the market rate).
+- Tests: `test_economy_credit_rate_at_ceiling.py`, `test_economy_credit_real_rate.py`, `test_economy_credit.py`.
+- Still open: re-measure the opening rate on an opened Rome game (snippet in the hand-off; the expected inflation read from the
+  unsettled price level is 473's). `capital_market.market_rate_answered` still bounds the engine-facing rate nominally
+  (`bounded_rate` takes `expected_inflation` but `economy_capital_market.market_rate` does not pass it); `no_offer_at_rate` is
+  returned but not stored on the record.

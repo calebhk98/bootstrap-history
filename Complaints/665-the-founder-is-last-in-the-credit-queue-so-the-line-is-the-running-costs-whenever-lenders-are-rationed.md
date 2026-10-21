@@ -34,3 +34,7 @@ an initial condition of the scenario, not a modelled outcome; the kit size was n
   is 641's. The largest request per lending was not measured (a spy on `credit.clear`).
 - Firms and the state via purses are unchanged (state deficit requests already join the clearing).
 - Related: 641 (the rate sat high because lenders' funds were exhausted).
+
+- Update (credit-real-rate-and-rationing): the clearing no longer clamps to a rate no lender accepts (641), and when the real-rate
+  bound rations lenders the founder's line is served by premium (leverage and collateral) like every request, not by cap.
+  Not re-measured on a Rome game.

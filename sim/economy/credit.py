@@ -58,6 +58,15 @@ def risk_premium(debt_after: float, collateral_value: float, arrears_history: fl
     return LEVERAGE_PREMIUM * leverage + ARREARS_PREMIUM * arrears_share
 
 
+def earnable_rate(gain: float, outlay: float = 1.0) -> float:
+    """The most a borrower can pay per unit borrowed: what the loan earns it, `gain`, over the `outlay` it funds.
+    Nothing when the outlay or the gain is not a finite positive figure, so a missing or runaway figure cannot
+    become an unbounded cap."""
+    if not (math.isfinite(gain) and math.isfinite(outlay)) or gain <= 0.0 or outlay <= 0.0:
+        return 0.0
+    return gain / outlay
+
+
 def _funds_idle_above_clearing_rate(offers: Sequence[FundsOffer], requests: Sequence[LoanRequest],
                                     ceilings: Sequence[float], able: Sequence[bool], held_rate: float,
                                     clearing_rate: float) -> bool:
@@ -72,15 +81,42 @@ def _funds_idle_above_clearing_rate(offers: Sequence[FundsOffer], requests: Sequ
     return supply_at_held > demand_at_held
 
 
+NO_OFFER_AT_RATE = "no_offer_at_rate"      # every offer asks more than the bound lets the rate reach
+NO_OFFERS = "no_offers"
+
+
+@dataclass(frozen=True)
+class Clearing:
+    loans: List[Loan]
+    rate: float
+    unmet: List[LoanRequest]
+    cause: Optional[str] = None          # why nothing could clear, when nothing did and funds were on offer
+
+
 def clear(requests: Sequence[LoanRequest], offers: Sequence[FundsOffer], currency: CurrencyId,
           last_rate: Optional[float], existing_debt_by_borrower: Mapping[AgentId, float],
           arrears_by_borrower: Optional[Mapping[AgentId, float]] = None, year: int = 0,
-          rate_ceiling: Optional[float] = None) -> Tuple[List[Loan], float, List[LoanRequest]]:
-    """Match funds with requests. Returns (new loans, base rate, requests left unmet).
+          rate_ceiling: Optional[float] = None, expected_inflation: float = 0.0,
+          ) -> Tuple[List[Loan], float, List[LoanRequest]]:
+    """`clear_with_cause` without the cause."""
+    result = clear_with_cause(requests, offers, currency, last_rate, existing_debt_by_borrower, arrears_by_borrower,
+                              year, rate_ceiling, expected_inflation)
+    return result.loans, result.rate, result.unmet
+
+
+def clear_with_cause(requests: Sequence[LoanRequest], offers: Sequence[FundsOffer], currency: CurrencyId,
+                     last_rate: Optional[float], existing_debt_by_borrower: Mapping[AgentId, float],
+                     arrears_by_borrower: Optional[Mapping[AgentId, float]] = None, year: int = 0,
+                     rate_ceiling: Optional[float] = None, expected_inflation: float = 0.0) -> Clearing:
+    """Match funds with requests. Returns the new loans, the base rate, the requests left unmet and a cause.
 
     A request left unmet is returned with `amount` reduced to what it did not get. Each loan carries the
-    base rate plus its borrower's premium; `disbursements(loans)` gives the money to move. The base rate
-    never passes `rate_ceiling`: when funds are scarce the rest is rationed, not priced without bound.
+    base rate plus its borrower's premium; `disbursements(loans)` gives the money to move. `rate_ceiling`
+    bounds the real rate: the base rate never passes it plus `expected_inflation`. Where that bound holds the
+    rate below the clearing point, lenders are rationed by quantity: funds go to the borrowers whose premium
+    (leverage, arrears, collateral) is least first. When every offer asks more than the bound, nothing can
+    clear: the rate stays at its last value (the lowest ask when there is none) and the cause is
+    `no_offer_at_rate`; the bound is never turned into a rate no lender accepts.
     """
     arrears_by_borrower = arrears_by_borrower or {}
     requests = sorted((request for request in requests if request.currency == currency and request.amount > 0),
@@ -108,19 +144,31 @@ def clear(requests: Sequence[LoanRequest], offers: Sequence[FundsOffer], currenc
         elif base_rate > target and _funds_idle_above_clearing_rate(offers, requests, ceilings, able, base_rate, target):
             # repricing may be slow, but not so slow that funds sit unlent while a borrower pays the clearing rate
             base_rate = target
-    if rate_ceiling is not None:
-        base_rate = min(base_rate, rate_ceiling)
+    nominal_ceiling = None if rate_ceiling is None else rate_ceiling + max(0.0, expected_inflation)
+    rationed_by_risk = nominal_ceiling is not None and base_rate > nominal_ceiling
+    cause = None
+    if rationed_by_risk:
+        if lowest_ask is not None and lowest_ask > nominal_ceiling:
+            # no lender accepts the bound: hold the rate, lend nothing, say why
+            held = last_rate if last_rate is not None else lowest_ask
+            return Clearing([], max(0.0, held), list(requests), NO_OFFER_AT_RATE)
+        base_rate = nominal_ceiling
     base_rate = max(0.0, base_rate)
+    if not offers:
+        cause = NO_OFFERS
     lending =[offer for offer in offers if offer.minimum_rate <= base_rate]
     asking = [index for index, ceiling in enumerate(ceilings) if ceiling >= base_rate]
     supply = sum(offer.amount for offer in sorted(lending, key=lambda o: (o.lender, o.amount)))
     demand = sum(requests[index].amount for index in asking)
     lent = min(supply, demand)
     lender_entries: List[Entry] = [(offer.minimum_rate, offer.lender, offer.amount) for offer in lending]
-    borrower_entries: List[Entry] = [(ceilings[index], requests[index].borrower, requests[index].amount)
-                                     for index in asking]
+    if rationed_by_risk:      # the least risky borrower is served first
+        borrower_entries: List[Entry] = [(premiums[index], requests[index].borrower, requests[index].amount)
+                                         for index in asking]
+    else:
+        borrower_entries = [(ceilings[index], requests[index].borrower, requests[index].amount) for index in asking]
     lender_amounts = allocate_in_order(lender_entries, lent, descending=False)
-    borrower_amounts = allocate_in_order(borrower_entries, lent, descending=True)
+    borrower_amounts = allocate_in_order(borrower_entries, lent, descending=not rationed_by_risk)
     # lenders in cheapest-first order, then the same order of borrowers, paired by running through both
     lender_queue = sorted(((offer.minimum_rate, offer.lender, amount)
                            for offer, amount in zip(lending, lender_amounts) if amount > 0))
@@ -149,7 +197,7 @@ def clear(requests: Sequence[LoanRequest], offers: Sequence[FundsOffer], currenc
         left = request.amount - granted.get(index, 0.0)
         if left > 1e-9:
             unmet.append(replaced(request, amount=left))
-    return loans, base_rate, unmet
+    return Clearing(loans, base_rate, unmet, cause)
 
 
 def disbursements(loans: Sequence[Loan]) -> List[Transfer]:

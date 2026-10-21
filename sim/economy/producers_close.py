@@ -14,7 +14,7 @@ from typing import Callable, Collection, List, Mapping, Optional, Sequence, Tupl
 
 from sim.constants import declare
 
-from . import inventory, unit_cost
+from . import credit, inventory, unit_cost
 from .producers import (OUTPUT_CHANGE_SHARE_PER_YEAR, Producer, expected_output_prices, live_input_prices,
                         live_wages, next_expectations, share_working, within_a_years_change)
 from .protocols import MarketView
@@ -165,7 +165,7 @@ def _working_capital(producer, recipe, currency, worked, capacity, cash_kept, pa
     if short_runs <= 0.0:
         return None
     amount = short_runs * paid_now
-    return LoanRequest(producer.agent_id, currency, amount, (revenue_per_run - paid_now) / paid_now, 1.0, amount,
+    return LoanRequest(producer.agent_id, currency, amount, credit.earnable_rate(revenue_per_run - paid_now, paid_now), 1.0, amount,
                        WORKING_CAPITAL_PURPOSE)
 
 
@@ -199,5 +199,5 @@ def _expansion(producer, recipe, view, currency, rate, capacity, worked, inputs,
     if yearly_return <= rate:
         return None, 0.0
     amount = runs * value
-    return LoanRequest(producer.agent_id, currency, amount, yearly_return, recipe.plant_life_years,
+    return LoanRequest(producer.agent_id, currency, amount, credit.earnable_rate(yearly_return), recipe.plant_life_years,
                        amount, "expand"), runs
