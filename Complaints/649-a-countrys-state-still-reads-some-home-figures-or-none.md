@@ -1,6 +1,6 @@
 # A country's state still reads some home figures, or none: no trade book, coin stock, prices, equipment, trade counts or research hands of its own
 
-**Status:** open (partly done: prices, coin, trade book, people by trade, equipment, rent owners and seat taxpayers read the country's own part of the economy; research hands, state enterprises, interest groups and unskilled people remain below)
+**Status:** open (partly done: prices, coin, trade book, people by trade, equipment, rent owners and seat taxpayers (home and abroad) read the country's own part of the economy; research hands, state enterprises, interest groups and unskilled people remain below)
 
 Follow-up to Complaint 593 (the foreign state is now the one `Government`, scoped to its country; `sim/agents/country_state.py`).
 
@@ -28,8 +28,10 @@ goods only; the home state's `foreign_trade_by_year` (trade with off-map partner
 A country's `equipment_kg_per_soldier` is the burden at the share of the military work its own state holds (its knowledge and
 its civilisation's starting techs), read through `military_work_ids` and `equipment_kg_at_adoption`. Its `land_rent_owners` are its
 own strata laid along its own cohorts' rent curve (`CountryAnswers.land_rent_curve`; nobody while its economy keeps no cohorts). Its
-visible taxpayers include the playing seats of that country (`seat_taxpayers`). Checks: `sim/tests/test_country_state.py`,
-`sim/tests/test_country_economy.py`. Not done: the home `visible_taxpayers` also lists seats of other countries.
+visible taxpayers include the playing seats of that country (`seat_taxpayers`); the home state's visible taxpayers use the same
+selection for the home country, where a seat with no country is the game's own. Checks: `sim/tests/test_country_state.py`,
+`sim/tests/test_country_economy.py`, `sim/tests/test_home_state_taxpayers.py`. The home state's firms are not yet
+scoped by country (`active_firms` lists every firm).
 
 **Why it matters.** A country's revenue and war capacity are inputs of the game (481); each of these makes a country's
 state read the founder's side of the world or nothing.
