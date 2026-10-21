@@ -6,6 +6,7 @@ QUICK_TOPIC = True
 
 import types
 import unittest
+from unittest import mock
 
 from sim.economy import goods_market, seller_offers, unsold_search
 from sim.economy.producers import Producer
@@ -71,6 +72,16 @@ def cleared(producers, quantities, bids=None, ask=ASK):
 
 
 class AggregateProducerTests(unittest.TestCase):
+    def test_price_takers_do_not_prepare_a_strategic_buyer_book(self):
+        setup, record = game([producer("whole", SHOPS)])
+        offers = [Offer("whole", GOOD, AREA, TILE, TOTAL, ASK)]
+        costs = {}
+        with mock.patch.object(seller_offers, "merged_bids", wraps=seller_offers.merged_bids) as prepare:
+            chosen = seller_offers.strategic_offers(setup, record, View(), demand(), offers, 1.0, costs)
+        self.assertEqual(chosen, offers)
+        self.assertEqual(prepare.call_count, 0)
+        self.assertEqual(costs[("whole", TILE)], seller_offers.unit_cost(setup, record, View(), offers[0]))
+
     def test_splitting_an_aggregate_into_identical_small_producers_leaves_price_and_quantity(self):
         aggregate_price, aggregate_sold = cleared([producer("whole", SHOPS)], [TOTAL], deep_demand())
         small = [producer("shop%02d" % number, 1) for number in range(SHOPS)]
