@@ -51,3 +51,22 @@ def pooled_multiplier(cells, cholesky_lower, independent_draws, stdev, floor, ce
         correlated_z = sum(cholesky_lower[row][col] * independent_draws[col] for col in range(row + 1))
         pooled += cell.weight * max(floor, min(ceiling, 1.0 + stdev * correlated_z))
     return pooled
+
+
+def tile_shares(cells):
+    """{cell id: share of the total weight}; equal shares when no cell has weight, empty for no cells."""
+    total = sum(cell.weight for cell in cells)
+    if not cells:
+        return {}
+    if total > 0.0:
+        return {cell.cell_id: cell.weight / total for cell in cells}
+    return {cell.cell_id: 1.0 / len(cells) for cell in cells}
+
+
+def harm_multiplier(share_by_tile, yield_factor_by_tile):
+    """The share of the harvest left after harm: each tile with a factor loses (1 - factor) of its share of the arable
+    land; a tile not named, or named by no share, loses nothing. 1.0 when nothing is harmed."""
+    lost = 0.0
+    for tile, factor in yield_factor_by_tile.items():
+        lost += share_by_tile.get(tile, 0.0) * (1.0 - min(1.0, max(0.0, factor)))
+    return max(0.0, 1.0 - lost)

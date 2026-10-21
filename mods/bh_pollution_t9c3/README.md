@@ -36,10 +36,10 @@ person that sets the airshed; precipitator efficiency applied to every works at 
 
 ## Known limits
 
-- **It does not yet act on the game.** A mod cannot add deaths to the population step or scale a producer's yield, and
-  writing engine fields directly is not allowed. The mod registers its answer with `api.externality(...)` when the
-  engine offers that hook (see `Complaints/635-no-hook-lets-a-mod-feed-mortality-or-yield.md`); on an engine without it,
-  the command reports what would apply and says so (`applied_to_the_game: false`).
+- **It acts on the game through `api.externality`:** its deaths join the year's epidemic deaths and its yield factors
+  scale land-bound producers and the pooled harvest the people eat. A world phase also keeps each tile's particulate
+  concentration and yield factor in tile stores, so `map layer <store>` shows them. The providers run twice a year
+  (deaths, then yields) and the phase a third time, each recomputing the picture; none caches.
 - Household fires (wood, peat, charcoal in homes) are not producer inputs, so domestic smoke is missing; charcoal and
   firewood burned by works carry no factor yet.
 - No water model: acid drainage and mercury are loads by tile and do no harm. The tree has no scrubber or lime

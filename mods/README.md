@@ -193,15 +193,23 @@ together is a load error naming the mod and the phase.
 
 ### Feeding the town, the deaths and the harvest
 
-Three more doors take a provider; none changes the game unless a mod registers one.
+Four more doors take a provider; none changes the game unless a mod registers one.
 
-* `api.town_provider(name, function)`: `function(labour, tile, nominal_people) -> people or None` says how many people
-  live in a tile's town (`sim/labour/town_providers.py`). `None` declines; the answer is bounded by the tile's own
-  people. The labour market, `map` and every hire reach read it.
+* `api.director_overhead(function)`: `function(sim) -> hours` a year charged against the directed-hours pool
+  (`sim/engine/director_overhead.py`). The hours count as committed, so every free-hours check sees them; a negative
+  answer counts as zero.
+* `api.town_provider(name, function, mortality_premium=None)`: `function(labour, tile, nominal_people) -> people or None`
+  says how many people live in a tile's town (`sim/labour/town_providers.py`). `None` declines; the answer is bounded
+  by the tile's own people. The labour market, `map` and every hire reach read it. The optional
+  `mortality_premium(labour, tile, town_people) -> share or None` is the town's excess over the baseline death rate; it
+  is averaged over the tile's people and reaches `Population.step` (`urban_mortality_premium`). A provider reads the
+  game through `labour.simulation_for_providers()` and should read a store a phase wrote, so a loaded game answers
+  as the live one did.
 * `api.externality(provider)`: `provider(sim, year) -> {"deaths_by_band": {band: people}, "yield_factor_by_tile":
   {tile: factor}}` (either key optional; `sim/engine/externalities.py`). Deaths join the year's epidemic deaths before
   the demographic step; a factor from 0 to 1 scales the yield of land-bound producers on that tile. Factors from
-  several providers multiply. The pooled national harvest is not scaled by tile.
+  several providers multiply. The pooled national harvest the people eat is scaled too, by the tile's share of the
+  arable land times its loss (`weather_pooling.harm_multiplier`).
 * A map overlay may add a `places` catalogue of `{id, name, tile, rank?}` (`data/world/geography/`); the `map` and
   `move` screens then list the names on each tile row (`tile_names.places_on`). No code is needed.
 
@@ -286,7 +294,10 @@ an error naming both mods; declare a dependency to choose a winner.
 A file `data/civilizations/<id>.json` is a new civilisation (namespaced with the mod id) unless it carries `"override": true`, in which case it patches the
 existing civilisation of that id (base or from another mod; write `:` as `+` in the file name) by deep merge,
 changing only the named fields; lists such as `starting_techs` are replaced
-whole. Unrelated mods patching the same field are an error naming both. A
+whole. A new civilisation may name `"variant_of": "<civilisation id>"`: it is that civilisation (mods applied) with the
+file's fields deep-merged over it and its own `id`, so the file holds only what differs; `append` and `remove_items`
+edit inherited lists (`"append": {"cast.actors": [...]}`). The base is not also a foreign partner while a variant is
+played, and a loop of variants is an error. Unrelated mods patching the same field are an error naming both. A
 patch with `"hidden": true` keeps the civilisation out of the new-game menu and
 `civilization_ids()`; it still loads by name.
 

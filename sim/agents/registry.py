@@ -337,6 +337,11 @@ class ActorRegistry:
 	def active_firms(self) -> List[Firm]:
 		return [firm for firm in self.of_kind("firm") if firm.record.exited_year is None]  # type: ignore[misc]
 
+	def purse_lenders(self) -> List[RecordedActor]:
+		"""Actors in play whose class sets `lends_from_purse`, in id order: the credit market offers their purses to borrowers."""
+		return [self.actors[actor_id] for actor_id in sorted(self.actors)
+				if getattr(self.actors[actor_id], "lends_from_purse", False) and self.actors[actor_id].record.exited_year is None]
+
 	def patent_holders(self, node_id: str) -> List[RecordedActor]:
 		"""The actors whose patents name the node (see patent_index.py); each may have let it expire."""
 		return list(patent_index.holders_of(self, node_id))

@@ -13,7 +13,7 @@ The shipped game is unchanged. A player picks one of the new civilisations at th
 |---|---|---|
 | `bh_religion_h5p1:england_monasteries` | `england_1300` | monastic houses: land, mills with a customary toll, a lending purse |
 | `bh_religion_h5p1:rome_temple_estates` | `rome_100ad` | temple estates: land and a lending purse, no mills |
-| `bh_religion_h5p1:han_monasteries` | `han_china_100ad` | the first Buddhist houses: a few hundred people, no mills; hidden, see limits |
+| `bh_religion_h5p1:han_monasteries` | `han_china_100ad` | the first Buddhist houses: a few hundred people, no mills |
 
 The house needs the mod's Python: run `python3 sim/simulator.py mod-allow bh_religion_h5p1` once. Without consent
 the civilisations still load but the house is not created (the cast entry waits for its kind).
@@ -37,7 +37,7 @@ All figures sit in the cast entry (`members`, `endowment_hectares`, and `plan`: 
 ## Labelled heuristics
 
 * `land_share_of_surplus` and `land_ceiling_hectares`: stand-ins until donors, the house's own rule and a land
-  market with owners are modelled (land titles: Complaints/538; a house lending its purse: Complaints/636).
+  market with owners are modelled (land titles: Complaints/538; a house lending its purse: Complaints/closed/636).
 * `mill_share_of_grain` (England): the share of milled grain that went through monastic mills is a guess of the
   right order; the toll rate (about a sixteenth) is the customary multure (Langdon 2004).
 * Start sizes (`members`, `endowment_hectares`): placeholders of the right order, confidence D. They are added to
@@ -45,14 +45,12 @@ All figures sit in the cast entry (`members`, `endowment_hectares`, and `plan`: 
 
 ## Known limits
 
-* The credit market only offers the purses of households, the state and firms, so a house's purse is not lent
-  to the founder or to firms yet; and the land market has no owners, so land a house buys does not leave the
-  founder's market. Land titles are `Complaints/538`; the lending half is
-  `Complaints/636-actors-cannot-lend-or-hold-land-in-the-markets.md`, with a proof of concept on branch
-  `engine-actor-lenders` (not merged).
-* The Han variant is `hidden` because it cannot run: the shipped Han economy stays a foreign partner beside the
-  variant (partners are excluded by exact civilisation id), which raises `NoCountryEconomy`. The same complaint
-  covers it.
+* A house's purse is lent: the credit market offers the purse of every actor whose class sets `lends_from_purse`
+  (`lender_offers`, `sim/engine/economy_capital_market.py`), as it offers a firm's. The land market has no owners, so
+  land a house buys does not leave the founder's market; land titles are `Complaints/538`.
+* The three civilisations are `variant_of` patches (`mods/README.md`, Civilisations): each file names only its
+  house, so a change to the shipped civilisation reaches the variant. A variant of Han is played without the shipped
+  Han economy as a foreign partner.
 * A house does not join the sector/grievance machinery (`agents_port_groups.py` collects only the `church` and
   `academy` kinds), so the political risk of a dissolved house is not wired.
 * Houses do not grow their headcount, take donations or found new houses.

@@ -2,7 +2,7 @@
 import copy
 import json
 import os
-from typing import Any, Dict, Iterable, List, Optional
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple
 
 from .mods_base import ModError, ModManifest, claim_fields, deep_merge, unrelated as _unrelated_claim
 from .mods_ids import SEPARATOR, check_new_id
@@ -88,12 +88,28 @@ def _mod_files(name: str, manifests: List[ModManifest]) -> Iterable[tuple]:
                 yield manifest, path, json.load(source)
 
 
-def apply_mod_civilization(name: str, base: Optional[Dict[str, Any]],
-                           manifests: Iterable[ModManifest]) -> Optional[Dict[str, Any]]:
+def variant_of_base(name: str, patch: Dict[str, Any], manifest: ModManifest, by_id: Dict[str, ModManifest],
+                    claims: Dict[Any, str], path: str, loader: Callable, chain: Tuple[str, ...]) -> Dict[str, Any]:
+    """A new civilisation written as a patch of the one its `variant_of` names: the base (with its own mods applied),
+    the file's fields deep-merged over it, its own id, and its `append` / `remove_items` operators applied. `hidden`
+    is the file's own. `loader(base_id, chain)` loads the base; a loop of variants is an error naming the loop."""
+    base_id = patch["variant_of"]
+    if base_id == name or base_id in chain:
+        raise ModError("mod %s: %s: civilisation variants form a loop: %s" % (manifest.id, path, " -> ".join(chain + (name, base_id))))
+    base = copy.deepcopy(loader(base_id, chain + (name,)))
+    base.pop("hidden", None)
+    fields = {key: value for key, value in patch.items() if key not in LIST_OPERATORS}
+    return apply_list_operators(deep_merge(base, dict(fields, id=name)), patch, manifest, by_id, claims, path)
+
+
+def apply_mod_civilization(name: str, base: Optional[Dict[str, Any]], manifests: Iterable[ModManifest],
+                           variant_loader: Optional[Callable] = None,
+                           chain: Tuple[str, ...] = ()) -> Optional[Dict[str, Any]]:
     """Base civ (or None) with mod files applied in dependency order.
 
     A file with `"override": true` patches the civ by deep merge, changing only
-    the fields it names; any other file defines a new civ and must not collide.
+    the fields it names; any other file defines a new civ and must not collide. A new civ with `variant_of` is a
+    patch of the civ it names (`variant_of_base`) when a `variant_loader` is given.
     """
     manifests = list(manifests)
     by_id = {manifest.id: manifest for manifest in manifests}
@@ -114,6 +130,8 @@ def apply_mod_civilization(name: str, base: Optional[Dict[str, Any]],
             raise ModError("civilization %s is defined in both %s and %s" %
                            (name, defined_by, path))
         civ, defined_by = patch, path
+        if variant_loader is not None and patch.get("variant_of"):
+            civ = variant_of_base(name, patch, manifest, by_id, claims, path, variant_loader, chain)
     return civ
 
 
@@ -142,14 +160,23 @@ def check_all_civilizations(base_dir: str, manifests: Iterable[ModManifest]) -> 
     """Apply mods to every civ and check its starting techs, whether or not anyone picks it."""
     manifests = list(manifests)
     removed = scan_removed(manifests, TECH)
-    for name in civilization_names(base_dir, manifests):
+
+    def load(name: str, chain: Tuple[str, ...] = ()) -> Optional[Dict[str, Any]]:
         path = os.path.join(base_dir, name + ".json")
         base = None
         if os.path.exists(path):
             with open(path, encoding="utf-8") as source:
                 base = json.load(source)
-        civ = apply_mod_civilization(name, base, manifests)
-        check_starting_techs(civ, manifests, removed)
+        civ = apply_mod_civilization(name, base, manifests, load_variant_base, chain)
+        if civ is None:
+            raise ModError("civilization %s is a variant of %r, which does not exist" % (chain[-1] if chain else name, name))
+        return civ
+
+    def load_variant_base(base_id: str, chain: Tuple[str, ...]) -> Dict[str, Any]:
+        return load(base_id, chain)
+
+    for name in civilization_names(base_dir, manifests):
+        check_starting_techs(load(name), manifests, removed)
 
 
 def is_hidden(civ: Dict[str, Any]) -> bool:

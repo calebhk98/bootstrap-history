@@ -84,6 +84,24 @@ class SettlementMixin:
             return min(provided, tile_people)
         return min(nominal, tile_people * self.TOWN_MAX_SHARE_OF_TILE)
 
+    def town_mortality_premium_by_tile(self):
+        """{tile: premium} for the tiles whose town carries a mortality premium from a registered provider: the premium
+        of the town's people averaged over all the tile's people (a share of the baseline death rate). Empty with
+        no provider."""
+        if not town_providers.PREMIUMS:
+            return {}
+        found = {}
+        for tile, people in sorted(self.settlement_tiles().items()):
+            town = self._town_population_at(tile)
+            premium = town_providers.provided_mortality_premium(self, tile, town)
+            if premium and town > 0.0 and people > 0.0:
+                found[tile] = premium * min(1.0, town / people)
+        return found
+
+    def simulation_for_providers(self):
+        """The simulation a town provider reads (a mod's stores, for instance); providers read it and never write it."""
+        return self._world.simulation()
+
     def home_town_population_estimate(self):
         """People in the base's town."""
         return self._town_population_at(self.base_tile())

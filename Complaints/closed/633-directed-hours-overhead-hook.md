@@ -1,6 +1,6 @@
 # A mod cannot charge overhead against the directed-hours pool
 
-**Status:** open
+**Status:** closed
 
 **What is wrong.** Mod `bh_orghierarchy_r4k8` (feature of `Complaints/closed/104`) works out the management layers a
 workforce needs from a span-of-control rule and hires the managers through the ordinary labour path. It cannot make that
@@ -28,3 +28,17 @@ port (`sim/engine/labour_port.py`). With no registration the sum is zero, so not
 registers an overhead and checks the free hours fall by exactly that amount.
 
 **Tried.** A proof of concept on branch `engine-director-overhead-hook` (not in main) did exactly this; it was never merged.
+
+## Done
+
+`ModCodeApi.director_overhead(function)` (`sim/engine/mod_code.py`) registers `function(sim) -> hours` in
+`sim/engine/director_overhead.py`; `LabourWorld.director_overhead_hours` (`sim/engine/labour_port.py`) hands the total to
+`director_hours_committed` (`sim/labour/labour_capacity.py`), which counts it beside supervision hours, so every free-hours
+check sees it. The yearly `phase` hook cannot cover this: a phase runs code, and no effect in `api.effects` spends
+hours. With nothing registered the term is zero. `bh_orghierarchy_r4k8` registers the hours the apex spends on its own
+direct reports (reports times coordination hours, cut by known technologies; managers hired with `staff_managers` take
+reports off the apex). Tests: `sim/tests/test_director_overhead_hook.py` (free hours fall by exactly the overhead),
+`sim/tests/test_orghierarchy_mod_overhead.py` (the mod's rule and its registration).
+
+Not done, on purpose: no phase hires managers every year. Hiring spends the player's money, so it stays the
+`staff_managers` command (a policy switch in `data/ui/policies.json` would be the way; see 639).

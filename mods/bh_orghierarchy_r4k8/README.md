@@ -5,8 +5,8 @@ layers of managers; the cost should follow from a span-of-control rule, not from
 
 ## What it adds
 
-Two code commands (nothing else: no technologies, recipes, trades, constants, needs or civilisations, so the shipped
-game is unchanged whether or not the mod is allowed):
+Two code commands and an overhead on the directed-hours pool (no technologies, recipes, trades, constants, needs or
+civilisations; the shipped game is unchanged unless the mod is allowed):
 
 * `bh_orghierarchy_r4k8:hierarchy` (aliases `span`, `orgchart`), read only. Shows the hierarchy a workforce would need:
   span of control, layers, managers per layer, the manager hours that consumes against the directed-hours pool, the
@@ -38,8 +38,10 @@ task model of orders, reports and corrections. No flat cap on hours exists anywh
 
 ## Known limits
 
-* The overhead does not yet bind: a manager's hours are not subtracted from the directed-hours pool, because the
-  engine has no hook for an outside term (see `Complaints/633-directed-hours-overhead-hook.md`).
+* The overhead binds through `api.director_overhead`: the hours the apex spends on its own direct reports (reports
+  times the coordination hours one costs, cut by the known technologies) count as committed. Managers hired with
+  `staff_managers` take reports off the apex, lowest layer first. `staff_managers` stays a command: it spends the
+  player's money, so no phase hires for them (a policy switch in `data/ui/policies.json` would be the way).
 * No corruption, error-risk or response-delay mechanics beyond the order-loss figure.
 * Hired managers are scribes, who also work as scribes; the mod only counts the ones it hired.
 * The default headcount is the player's hired staff; free labour, deputies and state staff are not counted.

@@ -880,7 +880,8 @@ class CapacityMixin:
         household = self._world.household
         return hours_committed(getattr(household, "teaching_hours_this_year", 0.0),
                                getattr(household, "relocation_hours_this_year", 0.0),
-                               getattr(household, "supervision_hours_this_year", 0.0), household.wage_hours_this_year)
+                               (getattr(household, "supervision_hours_this_year", 0.0) or 0.0) + self._world.director_overhead_hours(),
+                               household.wage_hours_this_year)
 
     def household_room(self):
         """How many more people this household can feed, house and oversee.

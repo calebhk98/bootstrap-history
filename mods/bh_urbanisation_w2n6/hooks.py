@@ -1,4 +1,4 @@
-"""Read-only urbanisation model on land tiles: where non-farm people can live and what living there costs.
+"""Urbanisation model on land tiles: where non-farm people can live and what living there costs.
 
 For each tile the nation holds, the town is what two drivers allow; nothing is a fixed city size:
   food reach  the farm surplus of every tile within a haul of the town, shared with the other towns that reach it;
@@ -6,7 +6,8 @@ For each tile the nation holds, the town is what two drivers allow; nothing is a
               plus the dependants of the founder's own non-farm employees at the base tile.
 Costs fall out of physical quantities: water at the WHO basic-access level, housing volume from the tile's climate,
 and a disease premium on mortality that grows with crowding and shrinks as the water and sanitation technologies
-the engine already counts (its disease burden) are held. Nothing is written to the engine.
+the engine already counts (its disease burden) are held. Each year a phase stores every tile's town and premium; the
+town provider the mod registers hands them to the labour market and to the population step.
 """
 import json
 import os
@@ -51,7 +52,7 @@ def _tile_record(tile):
     return {"lat": facts["lat"], "koppen_class": facts["climate_class"]}
 
 
-def urban_report(sim, days=DEFAULT_FOOD_HAUL_DAYS):
+def urban_report(sim, days=DEFAULT_FOOD_HAUL_DAYS, limit=ROWS_SHOWN):
     people = sim.labour.settlement_tiles()
     tiles = sorted(people)
     population = sim.population
@@ -102,11 +103,28 @@ def urban_report(sim, days=DEFAULT_FOOD_HAUL_DAYS):
     return {"ok": True, "food_haul_days": days, "nonfarm_people": round(nonfarm_people), "people_in_towns": housed,
             "nonfarm_people_in_no_town": round(max(0.0, nonfarm_people + founder_dependants - housed)),
             "urban_share_of_nation": round(housed / population.total, 4) if population.total > 0.0 else 0.0,
-            "disease_burden": round(disease_burden, 3), "towns": rows[:ROWS_SHOWN], "tiles_counted": len(rows),
+            "disease_burden": round(disease_burden, 3), "towns": rows[:limit], "tiles_counted": len(rows),
             "note": "a derived view: nothing here changes who lives where or who dies; the drivers are the columns"}
 
 
+def record_towns(sim, write, days=DEFAULT_FOOD_HAUL_DAYS):
+    """Hand `write(store, tile, value)` the derived town and its mortality premium of every tile the nation holds."""
+    for row in urban_report(sim, days, limit=None)["towns"]:
+        write("town_people", row["tile"], row["town_people"])
+        write("urban_mortality_premium", row["tile"], row["urban_mortality_premium"])
+
+
 def register(api):
+    towns_store = api.store("town_people", keyed_by="tile", default=None, unit="people")
+    premium_store = api.store("urban_mortality_premium", keyed_by="tile", default=None, unit="share of the baseline death rate")
+
+    # The year's derivation is kept in the stores (saved with the game), so the labour market and the population step read
+    # one number per tile and a loaded game answers the same as the live one.
+    api.phase("derive_towns", "world", lambda sim, seats: record_towns(sim, lambda store, tile, value: api.write_store(sim, store, tile, value)),
+              after="money_world")
+    api.town_provider("towns", lambda labour, tile, nominal: towns_store.get(labour.simulation_for_providers(), tile),
+                      mortality_premium=lambda labour, tile, town: premium_store.get(labour.simulation_for_providers(), tile))
+
     @api.command("towns", group="society", summary="Towns derived from jobs, food reach and disease, per tile",
                  usage=["bh_urbanisation_w2n6:towns", '{"cmd":"bh_urbanisation_w2n6:towns","days":5}'],
                  description="Shows, for each tile the nation holds, the town its non-farm jobs and the food "
