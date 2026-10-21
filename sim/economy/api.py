@@ -10,6 +10,7 @@ import math
 
 from . import carried_book, carriage_wear, country_figures, diagnostics, late_recipes, opening_metal, households, households_work, labour_state, land_rents, market_curves, prices_at as tile_prices, taxes, tile_costs, workforce_settle, workforce_version
 from .banks import DEPOSIT_BANKING
+from .credit_lines import line_request as credit_line_request
 from .currency import currency_from_coin_standard
 from .economy import Economy
 from .foreign import external_orders
@@ -44,7 +45,7 @@ __all__ = [
     "variable_cost_per_run", "rebase_basket_price_level", "trade_premium", "title_wealth",
     "traded_volumes", "market_record", "opening_quantities", "opening_prices_in_hours", "wages_by_trade", "wages_by_trade_weighted", "interest_rate", "producers_of",
     "external_trade_net", "external_trade_volume", "account_balance", "account_holdings",
-    "credit_room", "economy_from_record", "blank_economy", "export_record", "economy_book", "economy_contracts", "finish_spin_up", "note_spin_up_result", "spin_up_state", "money_year_figures","shown_prices_of",
+    "credit_room", "credit_line_request", "economy_from_record", "blank_economy", "export_record", "economy_book", "economy_contracts", "finish_spin_up", "note_spin_up_result", "spin_up_state", "money_year_figures","shown_prices_of",
     "settle_agent_takings", "indebted_tiles", "money_revenue_forms", "admit_recipes", "move_goods", "post_transfers", "cohort_incomes", "cohort_land_rents", "land_rent_per_hectare",
     "land_rent_paid_by_tile", "land_rent_at_tile", "DEPOSIT_BANKING", "country_figures", "carried_book", "idle_hours_by_trade", "output_by_tile",
 ]
@@ -165,12 +166,15 @@ def interest_rate(economy):
 
 
 def credit_room(economy, borrower_id):
-    """What lenders will still advance `borrower_id` beyond what others were lent at the last lending: the
-    share of the savings on offer that lenders put out, less what the other borrowers took. None before
-    lenders have met (no savings were offered yet)."""
+    """What lenders will still advance `borrower_id`. A borrower whose credit line was in the last clearing
+    (credit_lines.py) has what the clearing granted it; any other, the share of the savings on offer that
+    lenders put out less what the other borrowers took. None before lenders have met (no savings were
+    offered yet)."""
     record = economy.record
     if record.funds_offered <= 0.0:
         return None
+    if borrower_id in record.credit_granted:
+        return record.credit_granted[borrower_id]
     others = sum(lent for borrower, lent in record.lent_by_borrower.items() if borrower != borrower_id)
     return capital_market.headroom(capital_market.lendable_capacity(record.funds_offered), others)
 

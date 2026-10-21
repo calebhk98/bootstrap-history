@@ -24,7 +24,7 @@ from .types import AgentId, CurrencySpec, Loan, LoanRequest, TileId, TradeId
 
 # the record's fields whose annotation names an AgentId (a test reads the source and holds this list to it)
 AGENT_KEYED_FIELDS = ("cohorts", "producers", "merchants", "remembered_defaults", "credit_losses", "loss_rates", "losses_seen", "property_income",
-                      "expansion_runs", "worn_runs", "titles", "bondage", "lent_by_borrower", "banks", "shares",
+                      "expansion_runs", "worn_runs", "titles", "bondage", "lent_by_borrower", "credit_granted", "banks", "shares",
                       "last_dividends")
 
 
@@ -64,6 +64,7 @@ class EconomyRecord:
     hours_idle: Dict[str, float] = field(default_factory=dict)           # labour market_key -> hours offered and not hired last year
     funds_offered: float = 0.0                                           # savings on offer at the last lending, home currency
     lent_by_borrower: Dict[AgentId, float] = field(default_factory=dict)  # what each borrower was lent at the last lending
+    credit_granted: Dict[AgentId, float] = field(default_factory=dict)   # what the last clearing granted each credit line asked for (credit_lines.py)
     banks: Dict[AgentId, Bank] = field(default_factory=dict)             # the banks households deposit with (banks.py)
     shares: Dict[AgentId, Dict[AgentId, float]] = field(default_factory=dict)   # producer -> holder -> part of its equity the holder bought (shares.py)
     last_dividends: Dict[AgentId, float] = field(default_factory=dict)   # producer -> the dividend it paid at its last close
@@ -130,6 +131,7 @@ class EconomyRecord:
             "hours_idle": self.hours_idle,
             "funds_offered": self.funds_offered,
             "lent_by_borrower": self.lent_by_borrower,
+            "credit_granted": self.credit_granted,
             "banks": {key: plain(value) for key, value in sorted(self.banks.items())},
             "shares": {producer: dict(sorted(held.items())) for producer, held in sorted(self.shares.items())},
             "last_dividends": dict(sorted(self.last_dividends.items())),
@@ -176,6 +178,7 @@ class EconomyRecord:
             hours_idle=dict(record["hours_idle"]),
             funds_offered=record["funds_offered"],
             lent_by_borrower=dict(record["lent_by_borrower"]),
+            credit_granted=dict(record["credit_granted"]),
             banks={key: Bank(**value) for key, value in record["banks"].items()},
             shares={producer: dict(held) for producer, held in record["shares"].items()},
             last_dividends=dict(record["last_dividends"]),

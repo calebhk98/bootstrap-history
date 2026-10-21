@@ -205,6 +205,25 @@ class CloseYearTests(unittest.TestCase):
         self.assertAlmostEqual(result.expansion_runs, producers_close.EXPANSION_SHARE_PER_YEAR * farmer().capacity_runs)
         self.assertAlmostEqual(request.amount, result.expansion_runs * 10.0)
 
+    def test_plant_is_not_borrowed_for_while_standing_capacity_sits_idle(self):
+        # Complaint 665: a producer working a fraction of its capacity needs no new plant to meet next year's runs
+        rich = View({"metal": 20.0, "silver": 5.0, "ore": 1.0, "stone": 1.0}, {"smith": 1.0})
+        idle = farmer(recipe_id="smelt", capacity_runs=100.0, last_runs=40.0, expected_sales=40.0)
+        result = producers_close.close_year(idle, SMELT, 500.0, 50.0, rich, worked_runs=40.0)
+        self.assertTrue(result.loan_request is None or result.loan_request.purpose != "expand")
+        self.assertEqual(result.expansion_runs, 0.0)
+
+    def test_plant_borrowed_for_is_only_the_runs_next_year_can_work_beyond_standing_capacity(self):
+        rich = View({"metal": 20.0, "silver": 5.0, "ore": 1.0, "stone": 1.0}, {"smith": 1.0})
+        full = farmer(recipe_id="smelt", capacity_runs=100.0, last_runs=100.0, expected_sales=100.0)
+        near = farmer(recipe_id="smelt", capacity_runs=100.0, last_runs=70.0, expected_sales=70.0)
+        full_close = producers_close.close_year(full, SMELT, 500.0, 50.0, rich, worked_runs=100.0)
+        near_close = producers_close.close_year(near, SMELT, 500.0, 50.0, rich, worked_runs=70.0)
+        self.assertGreater(full_close.expansion_runs, near_close.expansion_runs)
+        self.assertGreater(near_close.expansion_runs, 0.0)
+        self.assertLessEqual(full_close.expansion_runs, producers_close.EXPANSION_SHARE_PER_YEAR * 100.0 + 1e-9)
+        self.assertEqual(full_close.loan_request.years, SMELT.plant_life_years)      # no longer than the plant lasts
+
     def test_expected_prices_move_toward_the_latest_price(self):
         view = farm_view(3.0)
         result = producers_close.close_year(farmer(expected_prices={"grain": 1.0}), FARM, 100.0, 10.0, view)

@@ -112,7 +112,7 @@ def close_year(producer: Producer, recipe: Recipe, revenue: float, costs: float,
         capacity = min(capacity, max(paying * producer.capacity_runs,
                                      (1.0 - OUTPUT_CHANGE_SHARE_PER_YEAR) * producer.capacity_runs))
     target = working_capital_target(recipe, capacity, inputs, wages)
-    request, rebuilt = _expansion(producer, recipe, view, currency, rate, wear, inputs, wages,
+    request, rebuilt = _expansion(producer, recipe, view, currency, rate, capacity, worked, inputs, wages,
                                   price_share_after)
     if request is None:
         request = _working_capital(producer, recipe, currency, worked, capacity, min(cash, target), paying,
@@ -172,7 +172,7 @@ def _dividend(producer: Producer, currency: str, amount: float) -> Tuple[Transfe
     return (Transfer(producer.agent_id, producer.owner, currency, amount, "dividend"),)
 
 
-def _expansion(producer, recipe, view, currency, rate, wear, inputs, wages, price_share_after=None):
+def _expansion(producer, recipe, view, currency, rate, capacity, worked, inputs, wages, price_share_after=None):
     """A loan to grow, when a run of new capacity would earn more than the live rate at the price expected
     once the new capacity's output is on the market. Plant that wore out is rebuilt from the producer's own
     cash (the economy's year does it). Only a recipe with plant needs one; without plant the site and the
@@ -180,7 +180,12 @@ def _expansion(producer, recipe, view, currency, rate, wear, inputs, wages, pric
     value = unit_cost.plant_value_per_run(recipe, inputs, wages)
     if recipe.plant_life_years <= 0.0 or value <= 0.0 or not math.isfinite(value):
         return None, 0.0
-    runs = EXPANSION_SHARE_PER_YEAR * producer.capacity_runs
+    # plant is built for the runs next year can work beyond the capacity left standing, not for idle capacity
+    scale = max(worked, producer.expected_sales)
+    runs = min(EXPANSION_SHARE_PER_YEAR * producer.capacity_runs,
+               scale + OUTPUT_CHANGE_SHARE_PER_YEAR * producer.capacity_runs - capacity)
+    if runs <= 0.0:
+        return None, 0.0
     prices = expected_output_prices(producer, recipe, view) or {}
     if price_share_after is not None:
         if unit_cost.return_on_capital(recipe, prices, inputs, wages) <= rate:
