@@ -34,3 +34,16 @@ Not yet expressed: branching stages, routes other than person to person, reservo
 and `years` (when the contact exists at all). The chance a pathogen arrives falls with the fewest days of travel
 between the source's tiles and the tiles held (`sim/disease/nation.py`). A civilisation file never states a year,
 a death toll or a staff loss for an epidemic.
+
+`disease_exposure.endemic` lists pathogens the people already carry at the start date (initial conditions). The model
+opens each tile at the equilibrium the pathogen's own numbers imply (`sim/disease/endemic_state.py`): the susceptible
+share is the reciprocal of the reproduction number at the tile's crowding, spread over the age bands by the force of
+infection that makes it so, so children are mostly susceptible and adults mostly immune, with the infected in each stage
+to match. A pathogen listed here that is not in `outside_contact` still circulates at home.
+
+## The spatial stage
+
+The nation is one patch per tile held (`sim/disease/metapopulation.py`). Infection passes between two tiles in
+proportion to the people travelling between them: the crews that go with the tonnes merchants carried, migrants, and
+the everyday trips to bordering tiles; and a tile's own contact scales with its crowding (density over the people-weighted
+mean) to the pathogen's `density_exponent`. A pathogen enters at the held tile its outside source reaches first.

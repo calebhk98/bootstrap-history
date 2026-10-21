@@ -25,6 +25,8 @@ def check_disease_data(nodes=None, civilisations=None) -> List[str]:
         problems += ["%s: disease_effects names pathogen %s, which has no file in data/disease/" % (node_id, name)
                      for name in spec.get("pathogens") or () if name not in known]
     for civ_id, civ in sorted((civilisations or {}).items()):
+        problems += ["%s: disease_exposure.endemic names pathogen %s, which has no file in data/disease/" % (civ_id, name)
+                     for name in (civ.get("disease_exposure") or {}).get("endemic", ()) if name not in known]
         for entry in (civ.get("disease_exposure") or {}).get("outside_contact", ()):
             problems += ["%s: disease_exposure names pathogen %s, which has no file in data/disease/" % (civ_id, name)
                          for name in entry.get("pathogens", ()) if name not in known]

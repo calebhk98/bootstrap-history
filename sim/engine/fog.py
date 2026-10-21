@@ -266,6 +266,12 @@ class FogMixin:
         # thirty entries in a list, is most of the reply.
         return note if len(note) <= 110 else note[:107].rstrip(" ,;") + "..."
 
+    def _epidemic_risk(self) -> Dict[str, Any]:
+        """What the disease model forecasts for the coming year (infections now, contact between tiles, and the
+        chance each pathogen reaches the nation): the risk of epidemics read from the model, not from a dated list."""
+        forecast = self.epidemic_forecast()
+        return {key: value for key, value in forecast.items() if key != "expected_deaths_by_tile"}
+
     def knowledge_risk(self, advice: bool = True, chronology: bool = True) -> Dict[str, Any]:
         """How exposed your finished work is to being forgotten, and to what.
 
@@ -360,6 +366,7 @@ class FogMixin:
         can_be_sacked = any(entry.get("sacks_a_site") for entry in upcoming)
         if not can_be_sacked:
             return {
+                "epidemic_forecast": self._epidemic_risk(),
                 "technologies_at_risk": at_risk,
                 "loss_chance_if_a_site_is_sacked": round(chance, 2),
                 "fraction_lost_when_it_happens": round(frac, 2),
@@ -373,6 +380,7 @@ class FogMixin:
                 "timeline": timeline,
             }
         return {
+            "epidemic_forecast": self._epidemic_risk(),
             "technologies_at_risk": at_risk,
             "loss_chance_if_a_site_is_sacked": round(chance, 2),
             "fraction_lost_when_it_happens": round(frac, 2),

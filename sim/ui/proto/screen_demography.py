@@ -4,7 +4,6 @@ population model and from population_report.
 """
 import sim.engine.ui_port as ui_port
 from .demography_history import recent_shocks, recovery
-from sim.engine.ui_port import hazards_not_yet_past
 
 
 def _last_year(sim):
@@ -33,12 +32,10 @@ def _last_year_from_record(sim):
             "nutrition_ratio": last["nutrition_ratio"], "year": last["year"]}
 
 
-def _hazards_costing_people(sim):
-    return [{"name": hazard.get("name", "hazard"), "years": [year_start, year_end],
-             "share_of_staff_lost": hazard["staff_loss"]}
-            for hazard, year_start, year_end, in_progress
-            in hazards_not_yet_past(sim.civ, sim.year)
-            if in_progress and hazard.get("staff_loss")]
+def _epidemics_under_way(sim):
+    """The pathogens someone is infected with now, each with the model's forecast of the year's deaths."""
+    return [{"name": row["name"], "infected": row["infected"], "expected_deaths": row["expected_deaths"]}
+            for row in ui_port.epidemic_forecast(sim)["by_pathogen"]]
 
 
 def demography_report(sim):
@@ -56,7 +53,9 @@ def demography_report(sim):
         "change_in_the_last_step": change,
         "last_year": _last_year(sim),
         "disease_burden": round(ui_port.disease_burden(sim), 4),
-        "epidemics_under_way": _hazards_costing_people(sim),
+        "epidemics_under_way": _epidemics_under_way(sim),
+        "epidemic_forecast": {key: value for key, value in ui_port.epidemic_forecast(sim).items()
+                              if key != "expected_deaths_by_tile"},
         "recent_shocks": recent_shocks(sim.state.population.yearly_record),
         "recovery": recovery(sim.state.population.yearly_record, total, sim.year),
         "wage_index": round(sim.wage_index, 4),

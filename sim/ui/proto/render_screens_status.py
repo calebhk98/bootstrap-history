@@ -141,6 +141,16 @@ def render_risk(out):
              % (_fmt_num(knowledge_risk.get("technologies_at_risk")), _pct(knowledge_risk.get("loss_chance_if_a_site_is_sacked")),
                 _pct(knowledge_risk.get("fraction_lost_when_it_happens"))))
     lines.append("hedge: %s" % (knowledge_risk.get("hedged_by") or "none yet"))
+    forecast = knowledge_risk.get("epidemic_forecast")
+    if forecast:
+        lines.append("EPIDEMICS (the model's forecast for this year from the infections now and the contact between "
+                     "tiles): about %s deaths, %s of working-age people" % (
+                         _fmt_num(forecast["expected_deaths"]), _pct(forecast["expected_working_age_share"])))
+        for row in forecast["by_pathogen"]:
+            lines.append("  %s: %s infected now, about %s deaths expected" % (
+                row["name"], _fmt_num(row["infected"]), _fmt_num(row["expected_deaths"])))
+        for pathogen_id, chance in (forecast.get("arrival_chances") or {}).items():
+            lines.append("  chance %s reaches the country this year: %s" % (pathogen_id, _pct(chance)))
     if knowledge_risk.get("you_have_already_lost"):
         lines.append("")
         lines.append("ALREADY LOST TO A SACKING: %s technolog%s, most recently in %s"

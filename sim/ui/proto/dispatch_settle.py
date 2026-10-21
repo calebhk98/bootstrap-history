@@ -29,6 +29,8 @@ def _cmd_settle(sim, nodes, cmd, ended):
     return {"ok": True, "settlers": spec["settlers"],
             "outfit_cost": round(sim.settlement_outfit_cost(spec), 1),
             "tiles": sim.settlement_candidates(by_sea)[:CANDIDATES_SHOWN],
+            "outfit_cost_by_tile": {candidate: round(sim.settlement_outfit_cost(spec, candidate), 1)
+                                    for candidate in sim.settlement_candidates(by_sea)[:CANDIDATES_SHOWN]},
             "colonies": sim.colony_rows()}
 
 
