@@ -73,12 +73,9 @@ plague_mitigation_realism
 plague_no_double_count
 player_choice_routes
 player_guidance_commands
-player_log
 prerequisite_names_shown
 project_retry_and_risk
-read_only_commands_leave_state
 route_dues_owner
-ruined_household_dependants
 rush_filters
 rush_fiscal_controls
 small_text_remains

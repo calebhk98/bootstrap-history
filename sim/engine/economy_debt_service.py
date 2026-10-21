@@ -24,6 +24,16 @@ def dependants_not_carried(dependants, surplus, creditors_share):
     return dependants - min(dependants, max(0.0, carried))
 
 
+def dependants_beyond_means_of(capital, dependants, living, revenue, upkeep, mine_cost, debt_rate, creditors_share_in_arrears):
+    """The part of the dependants' cost a household cannot carry: what its income leaves after upkeep, mine costs, the rest
+    of its living cost and the interest on any arrears. A household with savings keeps all that surplus for its dependants;
+    one in arrears also pays its creditors their share of it first."""
+    interest = interest_on_arrears(capital, debt_rate)
+    surplus = revenue - upkeep - mine_cost - (living - dependants) - interest
+    creditors_share = creditors_share_in_arrears if capital < 0 else 0.0
+    return dependants_not_carried(dependants, surplus, creditors_share)
+
+
 class DebtServiceMixin:
 
     DEBT_SERVICE_SHARE_OF_SURPLUS = declare(
@@ -48,12 +58,9 @@ class DebtServiceMixin:
         creditors their share of it (DEBT_SERVICE_SHARE_OF_SURPLUS). Either way it lives within its income, as a
         society household of the same income does, so a lone scholar's wage that covers one person's subsistence
         does not bleed the purse for a household the wage cannot keep."""
-        capital = self.state.household.capital
-        dependants = self.dependants_cost()
-        interest = interest_on_arrears(capital, self.debt_interest_rate())
-        surplus = revenue - upkeep - mine_cost - (living - dependants) - interest
-        creditors_share = self.DEBT_SERVICE_SHARE_OF_SURPLUS if capital < 0 else 0.0
-        return dependants_not_carried(dependants, surplus, creditors_share)
+        return dependants_beyond_means_of(
+            self.state.household.capital, self.dependants_cost(), living, revenue, upkeep, mine_cost,
+            self.debt_interest_rate(), self.DEBT_SERVICE_SHARE_OF_SURPLUS)
 
     def recurring_living_cost(self, revenue, upkeep):
         """The living cost of an ordinary next year: what is paid once the dependants the income cannot carry are shed."""

@@ -1,4 +1,4 @@
-"""Complaint 529: a screen or query command must not change the game."""
+"""SCENARIO (Complaint 529): a screen or query command must not change the game; whether one does is read off the saved state of a real game."""
 import os
 import tempfile
 
