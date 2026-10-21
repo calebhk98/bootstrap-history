@@ -377,13 +377,14 @@ class ProductionMixin:
             lambda: node_revenue_market.basket_market_factor(
                 baskets.outputs, baskets.purchases, self._material_prices(), self.goods_market.home_unit_price))
 
-    def concern_takings(self, node_id, ramp, with_output_factor=True):
+    def concern_takings(self, node_id, ramp, with_output_factor=True, cost_scale=None):
         """Yearly takings of one concern at a given ramp, before market saturation: its loaded figure
         carried to the techniques held now (concern_volume.py); callers apply the market's price.
-        `with_output_factor` False leaves out the hazard and war factor `revenue` applies to its total."""
+        `with_output_factor` False leaves out the hazard and war factor `revenue` applies to its total;
+        `cost_scale` is the scale on the tree's book coin (the home society's when none is given)."""
         economy = self.state.economy
         return takings_at(self.nodes[node_id]["rev"], ramp, economy.output_factor if with_output_factor else 1.0,
-                          self.price_index, self.concern_value_ratio(node_id), self.concern_learning_ratio(node_id))
+                          self.price_index if cost_scale is None else cost_scale, self.concern_value_ratio(node_id), self.concern_learning_ratio(node_id))
 
     def ledger_concern_rows(self):
         """Yearly takings of every opened concern that earns, by node id, as the ledger credits them. The

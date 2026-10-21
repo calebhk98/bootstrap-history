@@ -1,6 +1,6 @@
 # A country's state still reads some home figures, or none: no trade book, coin stock, prices, equipment, trade counts or research hands of its own
 
-**Status:** open (partly done: prices, coin, trade book, people by trade, equipment, rent owners and seat taxpayers (home and abroad) read the country's own part of the economy; research hands, state enterprises, interest groups and unskilled people remain below)
+**Status:** open (partly done: prices, coin, trade book, people by trade, equipment, rent owners and seat taxpayers (home and abroad) read the country's own part of the economy; plant books of state enterprises and of any firm abroad; research hands, interest groups and unskilled people remain below)
 
 Follow-up to Complaint 593 (the foreign state is now the one `Government`, scoped to its country; `sim/agents/country_state.py`).
 
@@ -10,7 +10,7 @@ readings from its profile and its part of the one economy, but these have no per
 - Unskilled people: `national_people("labourer")` is still the working age, as at home (labelled heuristic in `country_state.py`, with the fallback for a country the economy has no part for).
 - Interest groups and patronage: `group_claims` is empty and `patron_ask` is zero abroad.
 - Research: a country's state copies but does not originate research (`Government.researches`), as research hands are the founder's.
-- State enterprises and monopolies declared in a country's file run against the founder's concerns.
+- A country's plants: their crew is still drawn from the founder's labour pool (`free_fte`, `concern_staff`), and site rent, the manager's hours (`carry`) and the choice of which entry to open (`concern_gross`) and entry decisions (`yearly_costs`) read home figures; the books themselves are done (below).
 
 **Done.** A country's `material_cost` and `material_price` are its own market areas' quote (`CountryAnswers.price_per_tonne`,
 nothing where they quote none); its `coin_regime` is the one economy's money standard and its `coin_stock_value` is the
@@ -36,6 +36,14 @@ state's visible taxpayers take firms by that rule (`firm_taxpayers(country)`, be
 selects its firms by the same field. A plant carries no tile and a firm one `location`, so a firm has one country: its taxable
 income is not split by where its plants earn. Splitting it needs a tile on each plant and the country of that tile
 (`setup.country_of`), which is a mechanism not built yet.
+
+A plant's yearly books (`business_books.operate`) are read through `world.plant_books`: at home the founder's engine's figures
+(`business_plant_books.home_books`); abroad the country's own: takings and upkeep are the tree's book-coin figures
+(`book_takings`, `book_upkeep`) at the country's cost scale (its civilisation file's `price_index`, `CountryProfile.price_index`) and its
+market over long-run prices (`market_factor_at` with `CountryAnswers.price_per_unit`), wages its labour markets' pay
+(`pay_per_person_year`). A figure the country keeps no record of (no part of the economy, a trade nobody pays, a concern in a goods
+category, whose demand is the home households') makes the reading None and the plant stands idle that year. TEMPORARY HEURISTIC:
+no hazard or war factor applies abroad (retire: this complaint). Checks: `sim/tests/test_country_plant_books.py`.
 
 **Why it matters.** A country's revenue and war capacity are inputs of the game (481); each of these makes a country's
 state read the founder's side of the world or nothing.

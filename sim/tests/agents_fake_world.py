@@ -8,7 +8,7 @@ own file, so tests owning different mechanisms never edit this one together.
 import random
 from typing import Any, Dict, List, Optional, Set
 
-from sim.agents import ledger
+from sim.agents import business_plant_books, ledger
 from sim.agents.records import ActorsState
 
 
@@ -196,6 +196,9 @@ class FakeWorld:
 	def concern_wage_bill(self, node_id: str, capacity: float = 1.0) -> float:
 		return capacity * sum(people * self.hours_per_person_year * self.labour_market.wage_per_hour
 							  for people in self.concern_staff(node_id).values())
+
+	def plant_books(self, node_id: str, opened_year: int, rivals: float, size: float) -> Any:
+		return business_plant_books.home_books(self, node_id, opened_year, rivals, size)
 
 	def site_rent(self, node_id: str, capacity: float = 1.0, tile: Optional[str] = None) -> float:
 		return 0.0
