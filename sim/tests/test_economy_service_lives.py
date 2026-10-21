@@ -33,8 +33,12 @@ SPIN_UP_YEARS = 60
 
 def economy_opening_empty(setup):
     """An economy whose households open holding none of the durable, as when a good is new to a society:
-    the opening's seeding of in-use stocks (opening._seed_durable_stocks) is switched off."""
-    with mock.patch.object(opening, "_seed_durable_stocks", lambda *_arguments: None):
+    the opening's seeding of in-use stocks (opening._seed_durable_stocks) is switched off, and the opening sizes its
+    producers for building that stock rather than for replacing a seeded one."""
+    bids = opening._opening_bids
+    with mock.patch.object(opening, "_seed_durable_stocks", lambda *_arguments: None), \
+            mock.patch.object(opening, "_opening_bids",
+                              lambda *arguments, **options: bids(*arguments, **{**options, "stationary_durables": False})):
         return Economy(setup)
 
 
@@ -89,19 +93,19 @@ class ServiceLifeTests(unittest.TestCase):
         self.assertLess(bought_seeded, bought_empty)
 
     # The settled-run checks that read a year of the fixture (Complaint 640) are replaced by the rule they meant:
-    # `_durable_ratio` sizes a durable's purchase as the stock its expected flow wants less what is held, plus wear.
+    # `_durable_ratio` fills the gap from the post-wear holding to the serving stock.
 
 
 class DurablePurchaseRuleTests(unittest.TestCase):
-    """households_orders._durable_ratio: a held stock at the level its flow wants buys exactly the wear."""
+    """The post-wear holding buys the missing part of the serving stock."""
     SPECS = {"metal": types.SimpleNamespace(service_life_years=SERVICE_LIFE_YEARS)}
 
     def bought(self, flow, held, scale=1.0):
         return households_orders._durable_ratio("metal", flow, held, self.SPECS, scale) * flow
 
-    def test_a_stock_at_its_wanted_level_buys_exactly_the_wear(self):
-        held = 5.0 * SERVICE_LIFE_YEARS
-        self.assertAlmostEqual(self.bought(5.0, held), held / SERVICE_LIFE_YEARS)
+    def test_a_stock_after_year_end_wear_buys_exactly_the_missing_wear(self):
+        held = 5.0 * (SERVICE_LIFE_YEARS - 1.0)
+        self.assertAlmostEqual(self.bought(5.0, held), 5.0)
 
     def test_it_is_not_bought_again_in_full(self):
         held = 5.0 * SERVICE_LIFE_YEARS
@@ -126,7 +130,6 @@ class BadYearTests(unittest.TestCase):
         economy_fixture.households_with_a_surplus(self)
 
 
-    @unittest.expectedFailure       # cause: with the stated surplus income the wage no longer collapses and prices rise a few per cent a year (607); the holding then swings a quarter in year eight (468)
     def test_the_unspun_fixtures_income_crash_does_not_sell_the_stock(self):
         # the fixture's own income falls by a fifth in its seventh year as margins close; the holding
         # used to go from 33 thousand to 8 thousand units that year. A dip of a few per cent in a year that

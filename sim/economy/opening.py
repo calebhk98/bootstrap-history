@@ -13,7 +13,7 @@ from typing import Dict, List, Mapping, Tuple
 from sim.constants import declare
 from sim.refusal import Refusal
 
-from . import carriage_fleet_book, currency, goods_market, opening_basket, opening_bid_memory, opening_income, opening_metal, opening_plans, opening_runs, households, households_store, labour_state, location, location_inputs, mint, opening_stores, ownership, sites, titles, unit_cost
+from . import carriage_fleet_book, currency, durable_stock, goods_market, opening_basket, opening_bid_memory, opening_income, opening_metal, opening_plans, opening_runs, households, households_store, labour_state, location, location_inputs, mint, opening_stores, ownership, sites, titles, unit_cost
 from .accounts import Book
 from .market_areas import AreaMap
 from .market_memory import MarketMemory, YearView, market_key
@@ -201,7 +201,7 @@ def _settle_income(setup, record, view, priced_goods, replacement) -> None:
     record.cohorts.update(opening_income.with_income(record.cohorts, per_head, labour_share))
 
 
-def _opening_bids(setup, record, view, memory=None):
+def _opening_bids(setup, record, view, memory=None, stationary_durables=True):
     """(cohort, bid, price) for what each cohort would buy at the opening prices with the opening income. A `memory`
     (opening_bid_memory.py) kept across calls that change only incomes spares the work that does not depend on them."""
     memory = opening_bid_memory.BidMemory() if memory is None else memory
@@ -210,7 +210,8 @@ def _opening_bids(setup, record, view, memory=None):
         priced = memory.priced(setup, record, view, cohort, basket)
         income = cohort.last_year_income
         orders = households.goods_orders(cohort, view, income, income, basket, setup.specs,
-                                         priced, shared_store=memory.stores(record, cohort))
+                                         priced, shared_store=memory.stores(record, cohort),
+                                         stationary_durables=stationary_durables)
         for bid in orders.bids:
             price = view.price(bid.good, bid.area)
             if price:
@@ -218,16 +219,14 @@ def _opening_bids(setup, record, view, memory=None):
 
 
 def _seed_durable_stocks(setup, record, view) -> None:
-    """Households open holding the durables they keep in use (dwellings, vessels, tools): the stock their
-    expected flow wants over the good's service life. Without it the first year's demand is the whole
-    stock built at once, thirty years of walls in one, and the opening staffs for a building boom that is
-    never repeated."""
+    """Households open at the planning date, holding their serving stock after year-end losses.
+    Their first purchases replace those losses, as in a later year with the same desired flow."""
     moves = []
-    for cohort, bid, price in _opening_bids(setup, record, view):
+    for cohort, bid, price in _opening_bids(setup, record, view, stationary_durables=False):
         spec = setup.specs.get(bid.good)
         if spec is None or spec.service_life_years <= 0.0 or bid.priority == households_store.STORE_PRIORITY:
             continue     # a store of wealth is seeded from the deposits (opening_stores), not from need
-        quantity = bid.floor_quantity + bid.flexible_quantity     # the stock wanted, whatever the cash
+        quantity = durable_stock.after_year_end_losses(bid.floor_quantity + bid.flexible_quantity, spec)
         if quantity > 0.0:
             moves.append(GoodsMove(EDGE_PRODUCTION, cohort.agent_id, bid.good, cohort.tile, quantity,
                                    "opening stock of a durable in use"))
