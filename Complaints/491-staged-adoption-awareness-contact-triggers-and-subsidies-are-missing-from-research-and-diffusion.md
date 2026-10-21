@@ -1,32 +1,27 @@
-# Research, staged adoption and diffusion work for founder seats only; a country's own discoveries are invisible
+# Staged adoption, awareness, contact triggers and subsidy levers are missing from research and diffusion
 
-**Status:** open (partly done: one research path and actor-to-actor diffusion exist; see Progress)
+**Status:** partly (research and actor-to-actor diffusion work for every actor; the gaps below remain)
 
-- **Only seat inventions can be seen or copied.** `demonstrated()` is `founder_inventions()`
-  (`sim/engine/agents_port.py`). A `Player`'s or a country's own research never becomes visible to anyone.
-- **Actor research skips the tree's gates.** `Player.start_research` (`sim/agents/player.py`) checks
-  prerequisites and money only, not materials, staff, scholars or the start checks the founder passes
-  (`sim/engine/projects_starting.py`). Research speed and odds take no scholar count, literacy or printing.
+What is wrong now:
+
 - **Two stages, not a ladder.** A technique is known, built or operating; `adopt_yrs` is folded into `yrs`
-  and read nowhere else (`sim/engine/tree_merge.py`). No per-country adoption share, so "this country has
+  at load (`sim/engine/tree_merge.py`, `sim/engine/mods.py`). No per-country adoption share, so "this country has
   aircraft, but only a few" is not state.
 - **Diffusion has one carrier.** Exposure is visibility by distance (`sim/agents/country_view.py`,
   `exposure`). No carrying by trade, espionage or battlefield contact, and no "knows it exists" state that
   cuts the search without granting the skill to make it.
 - **Contact triggers are thin.** Expedition `returns` exist (`sim/engine/action_results.py`) and only route
   nodes use them; no node requires samples brought back from a region (rubber, latex).
-- **Substitutes are seat-only.** `req_any` quality factors (a bronze or copper boiler for an atmospheric
-  engine) are read from the seat's done set (`projects_starting.py`); actors cannot use them.
 - **No state subsidy or mandate.** Governments copy what they value (`sim/agents/government.py`), but cannot
   pay or order firms and mines to adopt a technique that does not pay.
-- Related: Complaint 478 (techniques gained after the opening never reach the agent economy).
+- A firm's or state's materials are checked against the market only (an actor's own stock is not counted).
+- Related: Complaint 478 (closed; techniques gained after the opening reach the agent economy).
 
 Why it matters: all three reports separate discovery from deployment and diffusion, and want a state to
 push a technology that the market would not adopt.
 
-What it would take: one research path for every actor through the founder's start gates; a register of
-every actor's non-baseline knowledge for `demonstrated`; an awareness state and contact events that
-discount search; per-actor adoption stage and unit count; subsidy and mandate levers on the government (481).
+What it would take: an awareness state and contact events that discount search; per-actor adoption stage and
+unit count; subsidy and mandate levers on the government (481).
 
 ## Progress
 
@@ -60,6 +55,4 @@ discount search; per-actor adoption stage and unit count; subsidy and mandate le
 - Done: `demonstrated()` is the seats' builds plus every active actor's own knowledge beyond the baseline, and
   `exposure` reads the holders' distance for those nodes, so imitation can copy from any actor
   (`--only demonstrated_reads_actor_knowledge`).
-- Left: the staged-adoption, awareness, contact-trigger and subsidy sub-gaps are untouched; a firm's or state's
-  materials are checked against the market only (an actor's own stock is not counted); a state's research choice
-  is only as good as the node `gains` and `traits` data it weighs.
+- Left: the gaps listed at the top; a state's research choice is only as good as the node `gains` and `traits` data it weighs.

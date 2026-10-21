@@ -1,13 +1,13 @@
 # The founder's ventures and other actors' concerns are separate implementations of running a business
 
-**Status:** open
+**Status:** open - one design with 510 (`docs/architecture/FIRMS_OWN_PLANTS_PLAN.md`); 510 also carries the opening check for whether plants pay their way (was 528)
 
 Found closing 479: firms took their crew from the plant while the founder's ventures still took it from takings,
 and nothing stopped the two from diverging, because they are different code. The founder's ventures are `Sim`
 mixin methods (`sim/engine/projects_ventures.py`, `projects_venture_quotes.py`: `open_venture`, upkeep, staffing,
-closure); firms and player seats run concerns in `sim/agents/` (`concern_ops.operate_concern`, `firm.py`,
-`player.py`). Each rule a business follows (crew, upkeep, takings, closure, sale) can exist in two versions, one
-of which only the founder sees. Measure: `grep -rn "def open_venture\|def operate_concern\|def operate" sim --include=*.py`.
+closure); firms and player seats run concerns in `sim/agents/` (`business_books.operate`, `firm.operate`,
+`player.operate`). Each rule a business follows (crew, upkeep, takings, closure, sale) can exist in two versions, one
+of which only the founder sees. Measure: `grep -rn "def open_venture\|def operate" sim --include=*.py`.
 
 Why it matters (CLAUDE.md "general actors"; multiplayer): every mechanism the founder uses must be usable by any
 actor, and a fix in one path silently misses the other.
