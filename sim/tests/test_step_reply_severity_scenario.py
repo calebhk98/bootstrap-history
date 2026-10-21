@@ -1,4 +1,5 @@
-"""Complaint 79: every event in a real step reply carries a severity tier name."""
+"""Complaint 79: every event in a real step reply carries a severity tier name. Complaint 640: the tiering rule is
+`tag_events` in test_event_severity; this is the wiring of the `step` command on one played game."""
 import unittest
 
 from .harness import *  # noqa: F401,F403

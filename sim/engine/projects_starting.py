@@ -14,7 +14,7 @@ a passed (or overridden) legality test leads to.
 These are methods of Sim; they are a mixin only so that they can live in a
 file of their own. Behaviour is unchanged and verified byte-identical.
 """
-from sim.refusal import LogLine
+from sim.refusal import LogLine, Refusal
 from . import money_units, purchase_rule
 from .blockers import blocker_kind
 from .project_funding import cash_covers_start, paid_credit
@@ -935,14 +935,16 @@ class StartingMixin:
         owed, ceiling, shortfall = start_shortfall(
             price, owed_on_work_in_hand, extra_owed, self.state.household.capital, self.credit_limit())
         if shortfall > 0.0:
-            return ("you already owe %s on work in hand; this "
-                    "would take it to %s, and between cash and your credit line "
-                    "you can raise %s, so you are %s short. Finish or stop "
-                    "something first, or earn or pay down that amount.%s"
-                    % (money_text(owed, self, grouped=True), money_text(owed + price, self, grouped=True),
-                       money_text(ceiling, self, grouped=True),
-                       money_text(owed + price - ceiling, self, grouped=True),
-                       purchase_rule.remedies_text(self)))
+            return Refusal("cash_short",
+                           "you already owe %s on work in hand; this "
+                           "would take it to %s, and between cash and your credit line "
+                           "you can raise %s, so you are %s short. Finish or stop "
+                           "something first, or earn or pay down that amount.%s"
+                           % (money_text(owed, self, grouped=True), money_text(owed + price, self, grouped=True),
+                              money_text(ceiling, self, grouped=True),
+                              money_text(owed + price - ceiling, self, grouped=True),
+                              purchase_rule.remedies_text(self)),
+                           owed=owed, price=price, ceiling=ceiling, short=owed + price - ceiling)
         return None
 
     def start_project(self, node_id, precaution=False):

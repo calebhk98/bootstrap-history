@@ -1,22 +1,18 @@
 """Complaints 272 and 624: the cut a struck-coin state decides on is a recoinage. The coin struck again holds
 less metal, the same metal makes more coin, and the new coin goes to the issuer; a state that cuts nothing
-leaves the coin alone."""
+leaves the coin alone. Complaint 640: the recoinage is called on a book and a coin built here; the yearly
+wiring and the price effect are in test_state_debasement_prices."""
+QUICK_TOPIC = True
+
 from .harness import *  # noqa: F401,F403
-import random
+from types import SimpleNamespace
 
 from sim.agents.api import COIN_RESTRIKE_SHARE_PER_YEAR
-from sim.agents.government import Government
 from sim.economy import currency
-
-
-def agent_game(civ):
-    game = S.Sim(NODES, ORDER, random.Random(1), events=True, manual=False, civ=S.load_civ(civ))
-    game.goal, game.done_year = GOAL, {}
-    return game
-
-
-def home_coin(game):
-    return game.economy.agent.economy().record.currency
+from sim.economy.accounts import Book
+from sim.economy.economy import Economy
+from sim.economy.types import EDGE_MINT, Transfer
+from sim.engine.economy_port_year import AgentEconomy
 
 
 spec = currency.currency_from_coin_standard("realm", {"regime": "struck_coin", "material": "silver_kg",
@@ -33,37 +29,51 @@ check("a coin that is not struck is left alone", currency.debase_by_cut(fiat, SU
 check("a coin that is not struck yields nothing", currency.units_struck_by_cut(fiat, SUPPLY, 0.2, 0.1) == 0.0)
 
 
-
-def deciding(cut):
-    """A government that decides this cut each year, whatever its purse says."""
-    def decide(self, world):
-        self.record.coin_cut_share = cut
-        return cut
-    return decide
+def economy_holding(supply):
+    """A stand-in economy with only what `strike_lighter_coin` reads: a book holding `supply` coin and the coin."""
+    book = Book()
+    book.transfer(Transfer(EDGE_MINT, "holder", spec.currency_id, supply, "opening"))
+    return SimpleNamespace(record=SimpleNamespace(book=book, currency=spec))
 
 
-def money_supply(game):
-    economy = game.economy.agent.economy()
-    return economy.record.book.money_supply(economy.setup.currency_id)
+def strike(economy, cut):
+    Economy.strike_lighter_coin(economy, cut, COIN_RESTRIKE_SHARE_PER_YEAR)
+    return economy.record
 
 
-def metal_change_in_a_year(game, cut):
-    original = Government.decide_debasement
-    Government.decide_debasement = deciding(cut)
-    try:
-        before = home_coin(game).backing_per_unit
-        game.step()
-    finally:
-        Government.decide_debasement = original
-    return home_coin(game).backing_per_unit / before
+untouched = economy_holding(SUPPLY)
+record = strike(untouched, 0.0)
+check("a state that cuts nothing leaves the metal in the coin", record.currency == spec, record.currency)
+check("a state that cuts nothing mints nothing", record.book.money_supply(spec.currency_id) == SUPPLY)
+
+cutting = economy_holding(SUPPLY)
+record = strike(cutting, 0.2)
+check("the state's cut lowers the metal in the coin once, the coin it saves struck as more coin",
+      abs(record.currency.backing_per_unit / spec.backing_per_unit - 1.0 / (1.0 + 0.2 * COIN_RESTRIKE_SHARE_PER_YEAR / 0.8)) < 1e-9,
+      record.currency)
+check("the coin saved is new money in circulation",
+      abs(record.book.money_supply(spec.currency_id) - (SUPPLY + currency.units_struck_by_cut(spec, SUPPLY, 0.2, COIN_RESTRIKE_SHARE_PER_YEAR))) < 1e-9,
+      record.book.money_supply(spec.currency_id))
+check("the new coin goes to the issuer", record.book.balance(spec.issuer, spec.currency_id) > 0.0)
+check("the metal in all the coin is what it was", abs(record.currency.backing_per_unit * record.book.money_supply(spec.currency_id)
+                                                      - spec.backing_per_unit * SUPPLY) < 1e-9)
+
+fiat_economy = SimpleNamespace(record=SimpleNamespace(book=economy_holding(SUPPLY).record.book, currency=fiat))
+check("a coin that is not struck is left alone by the yearly recoinage", strike(fiat_economy, 0.2).currency == fiat)
 
 
-for civ in ("rome_100ad",):
-    game = agent_game(civ)
-    check("%s: a state that cuts nothing leaves the metal in the coin" % civ,
-          metal_change_in_a_year(game, 0.0) == 1.0)
-    check("%s: the state's cut lowers the metal in the coin once, the coin it saves struck as more coin" % civ,
-          abs(metal_change_in_a_year(game, 0.2) - 1.0 / (1.0 + 0.2 * COIN_RESTRIKE_SHARE_PER_YEAR / 0.8)) < 1e-9)
-    before_supply = money_supply(game)
-    metal_change_in_a_year(game, 0.2)
-    check("%s: the coin saved is new money in circulation" % civ, money_supply(game) > before_supply, (before_supply, money_supply(game)))
+class Recorder:
+    def __init__(self):
+        self.calls = []
+
+    def strike_lighter_coin(self, cut, restrike_share):
+        self.calls.append((cut, restrike_share))
+
+
+port = SimpleNamespace(_sim=SimpleNamespace(state_treasury=lambda: SimpleNamespace(record=SimpleNamespace(coin_cut_share=0.15))),
+                       _floor_costs={"stale": 1.0})
+recorder = Recorder()
+AgentEconomy._strike_state_coin(port, recorder)
+check("the year strikes the cut the home state decided on, at the restrike share",
+      recorder.calls == [(0.15, COIN_RESTRIKE_SHARE_PER_YEAR)], recorder.calls)
+check("a recoinage clears the cached floor costs", port._floor_costs == {})

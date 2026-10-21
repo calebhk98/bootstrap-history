@@ -1,42 +1,72 @@
 """A project short of a trade is told "booked" only when other work books it;
-a trade the society cannot field at that pace is a staffing shortage."""
+a trade the society cannot field at that pace is a staffing shortage. Complaint 640: the draw and the note are called
+on a stand-in game that holds one project and one trade's supply, so no game is built."""
+QUICK_TOPIC = True
+
+import types
 import unittest
 
 from .harness import *  # noqa: F401,F403
+from sim.engine.projects_progress import ProgressMixin
+
+NODE = "mill"
+TRADE = "smith"
+HOURS_WANTED = 1000.0
+YEARS = 2.0
+PACE = HOURS_WANTED / YEARS   # hours a year the project asks of the trade
 
 
-def _lone_project_beyond_supply():
-    household = sim(civ="rome_100ad", capital=1e9)
-    for node_id, node in NODES.items():
-        for trade_id, want in (node.get("lab") or {}).items():
-            pace = want / max(1.0, node["yrs"])
-            if 0 < household.labour.hours_you_can_call_on(trade_id) < pace:
-                household.active[node_id] = dict(
-                    ph_left=float(node["ph"]), yrs=0.0, spent=0.0,
-                    cost_left=household.project_cost(node_id), lab_left=dict(node["lab"]))
-                return household, node_id, trade_id
-    raise AssertionError("no node outruns a trade's supply")
+class ProgressGame(ProgressMixin):
+    """One project of one trade, and the hours the society can field of that trade."""
+
+    def __init__(self, supply):
+        self.nodes = {NODE: {"lab": {TRADE: HOURS_WANTED}, "yrs": YEARS}}
+        self.state = types.SimpleNamespace(projects=types.SimpleNamespace(trade_hours_used={}))
+        self.labour = types.SimpleNamespace(hours_you_can_call_on=lambda trade: supply)
+        self.project_state = {"lab_left": None, "yrs": 0.0}
+
+    def _effective_lab_left(self, node_id, project_state):
+        return dict(self.nodes[node_id]["lab"])
+
+    def lab_max_span(self, node_id):
+        return 99.0
+
+    def draw(self):
+        return self.lab_year_draw(NODE, self.project_state, 1.0, 1.0e9)
 
 
 class TradeShortageKind(unittest.TestCase):
 
     def test_alone_and_beyond_supply_is_staffing_not_booked(self):
-        household, node_id, trade_id = _lone_project_beyond_supply()
-        household.trade_hours_used = {}
-        project_state = household.active[node_id]
-        household.lab_year_draw(node_id, project_state, 1.0, 1e9)
-        note = household.trade_shortfall_note(project_state)
+        game = ProgressGame(supply=0.4 * PACE)
+        game.draw()
+        note = game.trade_shortfall_note(game.project_state)
+        self.assertEqual(game.project_state["short_of_trade_staffing"], [TRADE])
         self.assertNotIn("already booked", note)
         self.assertIn("nobody to do the work", note)
-        self.assertIn(trade_id, note)
+        self.assertIn(TRADE, note)
 
     def test_booked_by_a_second_project_is_booked(self):
-        household, node_id, trade_id = _lone_project_beyond_supply()
-        supply = household.labour.hours_you_can_call_on(trade_id)
-        node = NODES[node_id]
-        household.trade_hours_used = {trade_id: supply}
-        project_state = household.active[node_id]
-        household.lab_year_draw(node_id, project_state, 1.0, 1e9)
-        project_state["short_of_trade_staffing"] = []
-        self.assertIn("already booked", household.trade_shortfall_note(project_state))
-        self.assertIn(trade_id, node["lab"])
+        game = ProgressGame(supply=1.5 * PACE)
+        game.state.projects.trade_hours_used = {TRADE: 1.5 * PACE}   # another project took all of it
+        game.draw()
+        self.assertEqual(game.project_state["short_of_trade"], [TRADE])
+        self.assertEqual(game.project_state["short_of_trade_staffing"], [])
+        self.assertIn("already booked", game.trade_shortfall_note(game.project_state))
+
+    def test_a_project_the_trade_can_serve_is_not_short(self):
+        game = ProgressGame(supply=1.5 * PACE)
+        game.draw()
+        self.assertEqual(game.project_state["status"], "ACTIVE")
+        self.assertNotIn("short_of_trade", game.project_state)
+
+    def test_the_kind_of_a_shortage(self):
+        game = ProgressGame(supply=PACE)
+        self.assertEqual(game.trade_shortage_kind(TRADE, 2.0 * PACE), "staffing")
+        self.assertEqual(game.trade_shortage_kind(TRADE, PACE), "booked")
+        self.assertEqual(game.trade_shortage_kind(TRADE, PACE, total_demand=PACE), None)
+        self.assertEqual(game.trade_shortage_kind(TRADE, PACE, total_demand=2.0 * PACE), "booked")
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -781,6 +781,23 @@
    "conf": "C",
    "requires_node": "tx2_fulling"
   },
+  "dyed_cloth_kg": {
+   "outputs": {
+    "dyed_cloth_kg": 1.0
+   },
+   "inputs": {
+    "cloth_kg": 1.0,
+    "dye_kg": 0.2
+   },
+   "labour_hours": {
+    "fuller": 2.0
+   },
+   "unit_dimension": "mass",
+   "basis": "per kg of finished cloth dyed in one colour",
+   "yield_basis": "Finished cloth is steeped in a dye bath. Dyestuff per kg of cloth: an opened craft dyer's recipe for madder gives '20 grams Indian Madder Root powder' 'for 100 grams of fibre' (https://allfiberarts.com/?p=2778), so 0.2 kg per kg. That source is a modern craft recipe for one madder species, not a historical dye house; mordant and bath water are left out. The output is counted as the cloth's mass (the dye is a small addition taken up by the cloth, a labelled simplification that the mass check tolerates). LABELLED HEURISTIC, conf D, no source found for the dyer's hours per kilogram (2.0, booked to the fuller, the finishing trade whose note says dyeing has no trade of its own); retire: Complaints/533 when a dye-house source is read.",
+   "conf": "D",
+   "requires_node": "tex_dye_madder"
+  },
   "canvas_kg": {
    "outputs": {
     "canvas_kg": 1.0

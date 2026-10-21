@@ -381,6 +381,19 @@ def _data_source_errors(nodes):
             + ["data/branches: " + problem for problem in tree_merge.merge_problems(tree_merge.build_tree())])
 
 
+def _dead_end_lines(nodes, production):
+    """Complaints/533: produced goods nothing consumes (findings, not errors)."""
+    from sim.engine import validate_dead_ends
+    from sim.engine.need_data import load_needs
+    from sim.engine.catalog import _trade_fields, load_trade_registry
+    from sim.json_files import read_json
+    lives = read_json(os.path.join(ROOT, "data", "world", "service_lives.json")).get("years", {})
+    tree_materials = {material for node in nodes.values() for material in (node.get("mat") or {})}
+    return validate_dead_ends.report_lines(production, load_needs(ROOT, MODDIR)["goods"], lives,
+                                           {trade: _trade_fields(record) for trade, record in load_trade_registry(ROOT, production).items()},
+                                           validate_dead_ends.state_goods(), tree_materials)
+
+
 def cmd_validate(args):
     tree, prices, nodes, wages, goods = load()
     production = load_production_catalog(ROOT, MODDIR)
@@ -392,6 +405,7 @@ def cmd_validate(args):
     errs += validate_node_money.check_node_money(nodes, production)
     from sim.engine import validate_unlinked_producers
     print("\n".join(validate_unlinked_producers.report_lines(nodes, production)))
+    print("\n".join(_dead_end_lines(nodes, production)))
     errs += validate_copy_visibility.check_copy_visibility(nodes)
     from sim.engine import copy_visibility_defaults
     errs += validate_copy_visibility.check_category_table(copy_visibility_defaults.table())
