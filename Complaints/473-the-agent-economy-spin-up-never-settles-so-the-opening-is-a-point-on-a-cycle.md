@@ -678,3 +678,12 @@ models start from a solved stationary state spread over the agents (Caiani) or a
 spin-up hoped to settle; and labour demand there comes from vacancies, with hires bounded by the smaller of the jobless
 and the vacancies. The share of offered hours unhired here may count own-plot hours as idle; report them apart before
 reading it as unemployment. Pricing departures are 642 and 643, the rate 641.
+
+## Finding: the Norse baseline price level falls without any intervention
+
+Measured with `play("norse_900ad", 7)` from `sim/tests/money_regimes_play.py` (no mined metal), the basket price level
+by year is 1.07, 1.41, 0.96, 1.07, 0.96, 0.55, 0.46. Millet, about a third of the basket's weight, falls to about 0.4 of
+its base price by year five, and wheat is already about 0.37 of base in year 0. With 10% extra mined metal each year the
+level follows the same food collapse a year earlier (the money stock does double). So the slow validation "more metal
+raises the price level" (`check_more_metal_raises_price_level`) is drowned by the unsettled economy for Norse; the
+transmission rules are held by `test_money_reaches_prices`.

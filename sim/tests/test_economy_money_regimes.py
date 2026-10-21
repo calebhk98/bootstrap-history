@@ -4,7 +4,7 @@ raises the money stock under struck and weighed money, and the mint holds the me
 of the money in circulation. Norse weighed silver is its own topic: it is a run of its own, and the suite
 runs topics side by side."""
 from .harness import *  # noqa: F401,F403
-from .money_regimes_play import REGIME_OF, check_more_metal_raises_money, play
+from .money_regimes_play import REGIME_OF, check_more_metal_raises_money, check_more_metal_raises_price_level, play
 
 
 for civ_id, regime in sorted(REGIME_OF.items()):
@@ -20,6 +20,7 @@ check("Mexica's money is made of cacao, a good in the production catalogue",
       and "cacao_kg" in production["cacao_kg"]["outputs"])
 
 check_more_metal_raises_money("england_1300")      # norse_900ad: test_economy_money_regimes_norse.py
+check_more_metal_raises_price_level("england_1300")
 
 money, _level, record, setup = play("mexica_1500", 1)
 check("Mexica runs a year on cacao money with money and goods conserved",
