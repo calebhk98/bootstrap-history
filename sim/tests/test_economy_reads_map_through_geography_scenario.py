@@ -1,4 +1,4 @@
-"""Complaints 409 and 410: the economy's setup reads tiles through geography's api, and the map the
+"""SCENARIO (Complaints 409 and 410): the economy's setup reads tiles through geography's api, and the map the
 game opens carries the active mods' map overlays."""
 import json
 import os

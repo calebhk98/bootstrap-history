@@ -1,20 +1,9 @@
-"""Food, housing, trade schools, demographics, and durable material stock. The typed-command parse is a rule on a string;
-the stock accounting of the material throttle is a rule in test_material_throttle_rules. Three named scenarios remain:
+"""SCENARIO: food, housing, trade schools, demographics, and durable material stock. The typed-command parse is a rule in
+test_typed_front_end; the stock accounting of the material throttle is a rule in test_material_throttle_rules. Three scenarios:
 the levers pulled through the protocol on one game, the throttle banking a mine's output once per year through the Sim,
 and the materials report with explicit buying and selling."""
 from .harness import *
 from sim.ui.proto.render import render_pretty
-from sim.ui.proto.typed import parse_typed
-
-check("typed economic levers reach their protocol actions",
-      parse_typed("buy farm 120")[0] == {"cmd": "buy", "what": "farm", "n": 120}
-      and parse_typed("buy housing 5")[0] == {"cmd": "buy", "what": "housing", "n": 5}
-      and parse_typed("buy trade_school smith 2")[0]
-          == {"cmd": "buy", "what": "trade_school", "material": "smith", "n": 2}
-      and parse_typed("materials")[0] == {"cmd": "materials"}
-      and parse_typed("sell iron 5")[0]
-          == {"cmd": "sell", "material": "iron", "n": 5})
-
 
 s = sim(capital=1_000_000)
 reply = S._agent_dispatch(s, NODES, {"cmd": "buy", "what": "farm", "n": 120})

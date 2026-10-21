@@ -32,13 +32,8 @@ craftsmen_wording
 cross_screen_consistency
 demographics
 demographics_and_plague
-disease_burden_wiring
 early_playtest
-economic_levers_inventory
-economy_entry_for_standing_bids
-economy_reads_map_through_geography
 eminence_scandal_and_reputation
-firm_count_from_costs
 five_things_winner
 freight_domestic_haul
 freight_dues
