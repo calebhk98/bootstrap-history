@@ -5,7 +5,7 @@ plant makes). The money the clearing pays is for the units buyers took at the cl
 unsold. These rules turn the clearing's result into a per-material record and the record into the share of an
 output the next forecast may count as sold.
 """
-from typing import Dict, Mapping, NamedTuple, Optional
+from typing import Callable, Dict, Mapping, NamedTuple, Optional
 
 CLEARED_LAST_YEAR = "cleared_last_year"
 BUYERS_LAST_YEAR = "buyers_last_year"
@@ -25,6 +25,20 @@ class Outlook(NamedTuple):
     share: float
     price: Optional[float]
     basis: str
+
+
+def offered_units(outputs: Mapping[str, float], scale: float, traded: Callable[[str], bool]) -> Dict[str, float]:
+    """What a concern puts in the clearing in a year: each output the market trades, `outputs` (units a year at full
+    staffing) times `scale` (its ramp, size and hazard factor); an output nobody trades stays out of the book."""
+    return {material: units * scale for material, units in sorted(outputs.items())
+            if units * scale > 0.0 and traded(material)}
+
+
+def inputs_cost(purchases: Mapping[str, float], scale: float, price_of: Callable[[str], Optional[float]]) -> float:
+    """What the concern's year of inputs costs at today's prices: `purchases` (units a year at full staffing) times
+    `scale`, each at `price_of(material)`; an input with no price known is left out (the caller says which)."""
+    return sum(units * scale * price for material, units in sorted(purchases.items())
+               for price in [price_of(material)] if price is not None and units > 0.0)
 
 
 def settle_sales(offered: Mapping[str, float], unsold: Mapping[str, float], proceeds: float,

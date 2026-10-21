@@ -192,20 +192,25 @@ class ProductionMixin:
             self.state_funding(),
             self.home_price_level(),
         )
-        if getattr(self.household, "_revenue_cache_key", None) == key:
-            return self.household._revenue_cache_val
+        if getattr(self.household, "_revenue_cache_key", None) != key:
+            self.household._revenue_cache_val = self._compute_revenue_uncached()
+            self.household._revenue_cache_key = key
+        return sum(self.household._revenue_cache_val)
 
-        value = self._compute_revenue_uncached()
-        self.household._revenue_cache_key = key
-        self.household._revenue_cache_val = value
-        return value
+    def estimated_revenue(self):
+        """The part of `revenue` the engine credits as an estimate: everything but the concerns the clearing pays
+        (concern_book_sales.py). The year's ledger credits this; those concerns are credited by the clearing."""
+        self.revenue()
+        return self.household._revenue_cache_val[0]
 
     def concern_revenue(self, node_id):
         """What one open concern earns in a year before the output factor: the figure the screens quote."""
         return self.venture_real_earnings(node_id, with_output_factor=False)
 
     def _compute_revenue_uncached(self):
+        """(the estimate, the forecast of the concerns the clearing pays), both after the output factor."""
         total_revenue = 0.0
+        book_forecast = 0.0
         practice_set = self._practice_set()
         projects = self.state.projects
         granted = projects.granted
@@ -228,8 +233,11 @@ class ProductionMixin:
             node = self.nodes[node_id]
             # a held skill earns through the founder's own hours (founder_wage_income), not through the node
             if node["rev"] and not practice:
-                total_revenue += self.concern_revenue(node_id)
-        # THERE IS ONLY SO MUCH MARKET. Uncapped, this compounds: every venture
+                if self.concern_sells_on_book(node_id):
+                    book_forecast += self.concern_revenue(node_id)    # last year's sale record, as the clearing paid it
+                else:
+                    total_revenue += self.concern_revenue(node_id)
+        # THERE IS ONLY SO MUCH MARKET for what the clearing does not pay. Uncapped, this compounds: every venture
         # pays back quickly, so its income buys the next one, and nothing
         # stops a run's capital from growing far past what a real market this
         # size could absorb - it cannot sell more inns than the town wants.
@@ -248,21 +256,19 @@ class ProductionMixin:
         ceiling = self.REVENUE_CEILING_PER_POP_SCALE * self.pop_scale \
             * self.real_output_per_head() * self.price_index
         gross = gross / (1.0 + gross / max(1.0, ceiling))
-        return (gross + self.state_funding()) * economy.output_factor
+        return (gross + self.state_funding()) * economy.output_factor, book_forecast * economy.output_factor
 
     REVENUE_CEILING_LABOUR_HOURS_PER_POP_SCALE = declare(
         "REVENUE_CEILING_LABOUR_HOURS_PER_POP_SCALE", 18100000.0, kind="temporary_heuristic",
         unit="labour hours/year at pop_scale=1, output_per_head=1", source=None,
         confidence="D",
-        why="Amount of labour, not of coin: it was a book-denarii figure and now follows what labour costs. "
-            "The saturating ceiling on how much revenue a single founder's "
-            "ventures can pull out of one civilisation's whole market - "
-            "invented specifically to stop a run compounding into billions "
-            "against an empire whose own annual product is not separately "
-            "modelled (see this method's own comment on the tester who held "
-            "three billion denarii). A real ceiling needs an actual GDP "
-            "figure for the civilisation to compare against, which this "
-            "engine does not compute.")
+        retire="Complaint 514",
+        why="Amount of labour, not of coin. The saturating ceiling on what the engine's estimate of a founder's "
+            "concerns may add up to against one civilisation's market. Concerns whose goods the economy trades are "
+            "paid by the clearing and no longer pass through it; it still bounds the concerns nobody clears "
+            "(services, institutions, workshop output). Measured not to bind in an ordinary run (Complaint 514). "
+            "It is kept because the money screen's market deduction (Complaint 216) is read from it; retire both "
+            "when those concerns are paid from a clearing or a stated demand.")
     REVENUE_CEILING_PER_POP_SCALE = money_units.PricedInLabourHours("REVENUE_CEILING_LABOUR_HOURS_PER_POP_SCALE")
 
     SLAVE_LABOUR_PRODUCTIVITY_SHARE = declare(

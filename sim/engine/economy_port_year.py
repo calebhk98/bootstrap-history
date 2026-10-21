@@ -363,17 +363,13 @@ class AgentEconomy(TilePricesMixin):
         view = economy.view()
         moves, offers = [], []
         offered = self.__dict__.setdefault("_seat_offered", {}).setdefault(agent_id, (tile, {}))[1]
+        inputs = self.__dict__.setdefault("_seat_inputs", {})
         for node_id in sorted(projects.operating):
-            if node_id in projects.granted or not sim.is_venture(node_id):
+            quantities = sim.concern_book_offer(node_id)
+            if not quantities:
                 continue
-            baskets = sim.concern_baskets_now(node_id)
-            if baskets is None:
-                continue
-            ramp = sim.venture_ramp(node_id)
-            for material, units in sorted(baskets.outputs.items()):
-                quantity = units * ramp
-                if quantity <= 0.0 or material not in area_map.goods():
-                    continue
+            inputs[agent_id] = inputs.get(agent_id, 0.0) + sim.concern_book_inputs_cost(node_id)
+            for material, quantity in sorted(quantities.items()):
                 offered[material] = offered.get(material, 0.0) + quantity
                 moves.append(GoodsMove(EDGE_LEGACY, agent_id, material, tile, quantity, "concern output"))
                 cost = self._concern_reservation(node_id, material, tile, view, agent_id)
@@ -511,16 +507,13 @@ class AgentEconomy(TilePricesMixin):
                                  self._sim.state.scenario.year, imports, exports)
 
     def _settle_seats(self):
-        """What each seat's goods fetched goes back to the engine; what did not sell goes back too."""
-        coin = self._economy.setup.coin_per_unit
-        book, currency = economy_api.economy_book(self._economy), self._economy.setup.currency_id
-        proceeds = {seat_id: max(0.0, book.balance(seat_id, currency)) for seat_id in sorted(self._sim.state.seats)}
+        """What each seat's goods fetched goes to its ledger, less what its concerns' inputs cost; what did not sell goes
+        back to the engine (economy_port_seats.settle_seats)."""
         offered = self.__dict__.pop("_seat_offered", {})
-        sold = economy_port_seats.record_year(self._economy, offered, proceeds, coin)
+        inputs = self.__dict__.pop("_seat_inputs", {})
+        sold, takings = economy_port_seats.settle_seats(self._sim, self._economy, offered, inputs, EDGE_LEGACY)
         self.stored["seat_sales"] = {**self.stored.get("seat_sales", {}), **sold}
-        self.stored["seat_takings"] = {
-            seat_id: economy_api.settle_agent_takings(self._economy, seat_id, EDGE_LEGACY) * coin
-            for seat_id in sorted(self._sim.state.seats)}
+        self.stored["seat_takings"] = takings
 
     def seat_sale_outlook(self, seat_id, material, quantity):
         """What the seat may count as sold of `quantity` units of a material it makes: its last clearing's share and

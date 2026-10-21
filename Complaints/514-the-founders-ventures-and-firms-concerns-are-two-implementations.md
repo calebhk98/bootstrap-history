@@ -1,6 +1,6 @@
 # The founder's ventures and other actors' concerns are separate implementations of running a business
 
-**Status:** open - the arithmetic is shared, the founder's takings, upkeep and hiring still run their own code (see "Progress"); one design with 510 (`docs/architecture/FIRMS_OWN_PLANTS_PLAN.md`); 510 also carries the opening check for whether plants pay their way (was 528)
+**Status:** open - the arithmetic is shared and book-sold takings are paid by the clearing; the founder's estimated takings, upkeep and hiring still run their own code (see "Progress"); one design with 510 (`docs/architecture/FIRMS_OWN_PLANTS_PLAN.md`); 510 also carries the opening check for whether plants pay their way (was 528)
 
 Found closing 479: firms took their crew from the plant while the founder's ventures still took it from takings,
 and nothing stopped the two from diverging, because they are different code. The founder's ventures are `Sim`
@@ -37,17 +37,30 @@ still two code paths, with the command that finds each (`python3 -m sim.tests --
    `economy_port.concern_upkeep`/`concern_takings`, `agents_port.entry_gross`/`concern_takings` (firms) each read the node's `rev` and `up`.
    Target: one function of (entry, prices, wages, size) in `sim/world/plant_figures.py`. After 507 stage 5 (the market factor as a function of
    (entry, prices), not of a node).
-2. **The founder is not paid from its sale account.** `_acting_seat_orders` offers every running concern's output in the clearing and
-   `_settle_seats` stores the proceeds (`stored["seat_takings"]`), but nothing reads them: the ledger credits the engine's estimate in
-   `_step_money_seat` (`receive_from_edge(EDGE_CUSTOMERS, revenue)`), one year behind the clearing. Paying the seat as a firm is paid needs
-   (a) the credit moved into `_settle_seats`, (b) the book-sold concerns' estimate taken out of the credit in `_step_money_seat` (the
-   estimate is summed before the saturating ceiling, so it cannot be split after it), and (c) the proceeds are gross while the estimate is
-   net of the inputs the concern buys, so the founder's input purchases must be bid for in the book or subtracted. Display keeps the estimate
-   (`ventures`, `why`, `revenue_sources`). Whole-game money tests (capital change equals revenue less costs) will need porting.
-3. **The aggregate ceiling stays.** Measured on the default Rome game under the automatic policy (`manual=False`, 23 years from the first
-   year with concerns), the ceiling `REVENUE_CEILING_LABOUR_HOURS_PER_POP_SCALE` cut revenue by under a tenth of a percent, so it does not bind
-   in an ordinary run; it is the guard for a run that compounds, and non-book concerns (services, institutions, workshop output) are still
-   unbounded by any clearing. Retire it when item 2 is done and those pay from a clearing or a stated demand.
+2. **The founder is paid from its sale account (done).** `_acting_seat_orders` offers each running concern's output
+   (`concern_book_sales.concern_book_offer`, one rule for the clearing, the estimate and the forecast) and
+   `economy_port_seats.settle_seats` (called by `_settle_seats`, in the `market` phase after the clearing) credits the seat's ledger
+   the clearing's proceeds, gross ("concern sales"), and charges the inputs those concerns bought at the economy's prices
+   ("inputs of concerns sold in the book"; the estimate was net of them, and the founder does not yet bid for them in the book).
+   Upkeep and wages are charged in the money phase as before. The estimate (`estimated_revenue`, credited in `_step_money_seat`
+   as "venture revenue") leaves those concerns out before the ceiling; `revenue()` is still estimate plus the forecast of the
+   book concerns, read from last year's sale record with its `sale_basis`, so `ventures`, `why`, `revenue`, `money` and
+   `revenue_sources` are unchanged in kind. A concern that offers nothing the economy trades is still paid by the estimate.
+   Measure: `python3 -m sim.tests.income_probe` (opens concerns whose goods the economy trades on a Rome game and prints, per year,
+   the credits by purpose beside the forecast); run it on `origin/main` and on the branch. The comparison and its meaning are in
+   the branch report: the clearing paid several times what the estimate quoted for the one concern that survives staffing,
+   which is the 510 opening question (do plants pay their way) showing up in the founder's books.
+   Rules: `sim/tests/test_seat_paid_from_sales.py`; whole game: `sim/tests/test_seat_paid_from_sales_scenario.py`.
+   Not done: the settlement runs once the year's market has cleared, so the purse the money phase tests (credit line, insolvency,
+   `shed_loss_makers`) does not yet hold the year's sales; the forecast stands in for them there.
+3. **The aggregate ceiling stays, for non-book concerns only.** Measured on the default Rome game (every concern the tree lets the
+   founder open and the economy does not trade, all at full ramp, at the opening's output and price level), their quoted takings
+   were a few percent of the ceiling `REVENUE_CEILING_LABOUR_HOURS_PER_POP_SCALE` sets (a one-off script summing `venture_real_earnings(fully_ramped=True)` over those nodes; no command keeps it), so it cuts at most that few percent in the worst case
+   and nothing in an ordinary run (an earlier automatic-policy run measured under a tenth of a percent). Nothing needs it for
+   compounding any more: the concerns that could compound sell in the clearing, which bounds them. It is kept only because the money
+   screen's market deduction (`_what_the_market_will_not_absorb`, `where_the_market_squeeze_falls`, Complaint 216) is read from it;
+   its `retire` now names this complaint. Retire both when services, institutions and workshop output are paid from a clearing or a
+   stated demand.
 4. **The founder hires (plan stage 4).** `venture_staff_free`, `venture_staff_used`, `venture_foreman_free`,
    `venture_staff_who_is_watching_what` are the household's supervision hands; delete them when the founder's business hires its crew through
    `sim.labour.market`. The opening fee (`venture_capex`) stays a share of the project cost until entries carry `capital` for every node.

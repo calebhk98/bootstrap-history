@@ -197,13 +197,23 @@ check("scenario cash book: once it sells, its goods have a market price and the 
 _quote = _book.venture_real_earnings(_NODE)
 _itemised_again = ask_agent(_book, cmd="money")["where_the_money_comes_from"]
 ask_agent(_book, cmd="step", years=1)
-_booked_again = ask_agent(_book, cmd="money")["cash_book"]["earlier_years"][-1]["causes"].get("venture revenue")
-# the revenue's saturating ceiling lowers the total a little below the sum of the parts; the ledger pushes a gap it does
-# not show (at most GAP_SHOWN_ABOVE) into its largest row, so the row sits below the quote by no more than that
+_causes_again = ask_agent(_book, cmd="money")["cash_book"]["earlier_years"][-1]["causes"]
+_booked_again = _causes_again.get("venture revenue", 0.0)
+_estimated_rows = sum(row for node_id, row in _itemised_again.items() if not _book.concern_sells_on_book(node_id))
+# the revenue's saturating ceiling lowers the estimated total a little below the sum of its parts; the ledger pushes a gap it
+# does not show (at most GAP_SHOWN_ABOVE) into its largest row, so the row sits below the quote by no more than that
 check("scenario cash book: a running concern's forecast is within the year's price change of its takings, the ledger "
       "residue aside",
-      0.0 <= _quote - _itemised_again[_NODE] <= revenue_ledger.GAP_SHOWN_ABOVE and abs(_booked_again - sum(_itemised_again.values())) < 0.2,
-      (_quote, _itemised_again, _booked_again))
+      0.0 <= _quote - _itemised_again[_NODE] <= revenue_ledger.GAP_SHOWN_ABOVE, (_quote, _itemised_again))
+# a concern the clearing pays is credited what the clearing paid (gross) less its inputs, as its own cash book lines; the
+# line `venture revenue` is the estimate's rows alone
+check("scenario cash book: the revenue line is the itemised rows the engine estimates, and a concern sold in the book is "
+      "credited the clearing's proceeds beside the inputs it bought",
+      abs(_booked_again - _estimated_rows) < 0.2
+      and abs(_causes_again.get("concern sales", 0.0)
+              - _book.economy.agent.stored["seat_takings"][_book.state.acting_seat]) < 0.2
+      and _causes_again.get("inputs of concerns sold in the book", 0.0) <= 0.0,
+      (_booked_again, _estimated_rows, _causes_again))
 
 
 # ---- scenario: `sell` reports the holding and market room the next sale draws on, and refuses more than is held -----
