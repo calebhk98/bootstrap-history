@@ -12,9 +12,13 @@ from typing import Dict, Set, Tuple
 from sim.constants import declare
 
 from . import unit_cost
-from .market_memory import KEY_SEPARATOR, MarketMemory
+from .market_memory import KEY_SEPARATOR, PRICE_TRADED, MarketMemory
 from .national_prices import national_prices
 from .recipes import input_depth_order
+
+KIND_MAKING_COST_ESTIMATE = "making_cost_estimate"   # what the cheapest recipe costs at today's prices; nothing traded lately
+KIND_THIN_TRADE_BLEND = "thin_trade_blend"           # a market price blended toward making cost; the market trades a sliver
+KIND_REMEMBERED = "remembered_price"                 # the last price shown, nothing makes the good and nothing traded lately
 
 RECENT_TRADE_YEARS = declare(
     "RECENT_TRADE_YEARS", 2, kind="temporary_heuristic",
@@ -131,14 +135,29 @@ def cheapest_cost(setup, good, live, wages, rate):
     return best if math.isfinite(best) and best > 0.0 else None
 
 
-def shown_prices(setup, record, market=None) -> Tuple[Dict[str, float], Set[str]]:
-    """(prices, stale goods) the game is shown. A recently traded good shows its market price, except one
-    the markets trade only a sliver of, which shows near what it costs to make (see `_estimated_prices`).
-    An untraded good somebody can make shows what it costs to make; one nobody can make keeps its last
-    price. Both kinds are listed as stale: not a price a market has set lately."""
+def shown_prices_with_kinds(setup, record, market=None) -> Tuple[Dict[str, float], Set[str], Dict[str, str]]:
+    """(prices, stale goods, kind of each good's price) the game is shown. A recently traded good shows its
+    market price, except one the markets trade only a sliver of, which shows near what it costs to make (see
+    `_estimated_prices`). An untraded good somebody can make shows what it costs to make; one nobody can make
+    keeps its last price. Stale goods are not a price a market has set lately: their kind says whether it is a
+    making-cost estimate, a quote (named by what it is) or the last price."""
     prices = dict(national_prices(record) if market is None else market)
     stale = set(prices) - recently_traded_goods(record.memory)
-    prices.update(_estimated_prices(setup, record, prices, untraded=True, thin=True))
+    estimated = _estimated_prices(setup, record, prices, untraded=True, thin=True)
+    prices.update(estimated)
+    remembered = record.memory.price_kinds_by_good()
+    kinds = {}
+    for good in prices:
+        if good in estimated:
+            kinds[good] = KIND_MAKING_COST_ESTIMATE if good in stale else KIND_THIN_TRADE_BLEND
+        else:
+            kinds[good] = remembered.get(good, PRICE_TRADED if good not in stale else KIND_REMEMBERED)
+    return prices, stale, kinds
+
+
+def shown_prices(setup, record, market=None) -> Tuple[Dict[str, float], Set[str]]:
+    """(prices, stale goods) the game is shown; see `shown_prices_with_kinds`."""
+    prices, stale, _kinds = shown_prices_with_kinds(setup, record, market)
     return prices, stale
 
 

@@ -60,11 +60,13 @@ for _year in range(4):
     world.ship(TRADER, material, world.market_depth(material, PARTNER) * TRADER_DEPTH_SHARE, world._home_place(), PARTNER)
     game.close_partner_books()
 prices.append(SimWorld(game).price_at(material, PARTNER))
-check("the partner's price ends below where it began and never climbs above it (a glut is held in stock first)",
-      prices[-1] < prices[0] and all(later <= prices[0] * (1.0 + 1e-6) for later in prices[1:]), prices)
+# a cargo smaller than the partner's demand displaces the partner's own producers (they idle) and the price stays at
+# their floor; it gives way only once the cargo outgrows what the partner takes (Complaint 672: idle output is not stock)
+check("the partner's price never climbs above where it began (the cargo displaces its producers, who idle)",
+      all(later <= prices[0] * (1.0 + 1e-6) for later in prices[1:]), prices)
 home_price = SimWorld(game).price_at(material, SimWorld(game)._home_place())
-check("...so the gap traders serve is narrower than it was",
-      prices[-1] - home_price < prices[0] - home_price, (prices[0], prices[-1], home_price))
+check("...so the gap traders serve is no wider than it was",
+      prices[-1] - home_price <= (prices[0] - home_price) * (1.0 + 1e-6), (prices[0], prices[-1], home_price))
 check("a year's tally is cleared when the partner's book closes", not game.state.economy.foreign_actor_trade, None)
 
 # --- (b) a good traders carry in a direction is not also carried that way by the stand-in external orders.
@@ -159,17 +161,14 @@ def pays(cargo):
 
 
 check("the cargo always goes the way of the gap: it never flips sign", all(flow > 0.0 for flow in signed), signed)
-# the partner's market holds a glut in stock before its price gives way, so a steady cargo moves the price only once
-# the stock outgrows what the market takes up (the lag is checked in (a) above)
+# a steady cargo smaller than the partner's demand leaves its price at its producers' floor (checked in (a) above)
 check("the partner's price never climbs above where it began and stays above the home price it is bought at",
       all(home_price < price <= partner_prices[0] * (1.0 + 1e-6) for price in partner_prices[1:]), (partner_prices, home_price))
 check("...a quarter more cargo than the last year's would not pay at the prices it meets, and the cargo itself does",
       pays(taken_from_home[-1]) and not pays(taken_from_home[-1] * 1.25), taken_from_home)
 check("...and cargo taken from home raises the home price the trader pays", home_price_after > home_price,
       (home_price_after, home_price))
-# Open, no complaint yet (proposed in the report of this branch): at the floor the society's idle output is carried as
-# stock, the next year's stock sells below every producer's cost and clears the book, and the year after the price is
-# back at the floor, so the partner's price alternates (sim/world/market.py clear_market and stock_after_year).
-check("...and no longer swings from year to year (Complaint 672: the clearing's stock carry makes a two-year cycle, so this is red)",
+# Complaint 672: idle capacity is idle, not stock, so a steady cargo gives a steady partner price.
+check("...and no longer swings from year to year",
       all(abs(later / earlier - 1.0) < 0.01 for earlier, later in zip(partner_prices[1:], partner_prices[2:])),
       partner_prices)

@@ -226,7 +226,8 @@ class GoodsMarket(GoodsPricing, GoodsOffers):
         return {"material": material, "stock_key": emp_key,
                 "buy_per_tonne": self.purchase_cost(material, 0.0)[1],
                 "sell_per_tonne": self.sale_proceeds(material, 0.0, self.sold_tonnes(emp_key, self.acting_party_id))[1],
-                "price_at_tile_per_tonne": price, "carriage_per_tonne": carriage,
+                "price_at_tile_per_tonne": price, "price_kind": self.price_kind(material),
+                "carriage_per_tonne": carriage,
                 "making_cost_per_tonne": self.making_cost_per_tonne(material),
                 "market_available_tonnes_per_year": (
                     brought if brought is not None else

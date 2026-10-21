@@ -56,6 +56,9 @@ class _Market(GoodsMarket):
     def making_cost_per_tonne(self, material):
         return 5.0
 
+    def price_kind(self, material):
+        return "traded"
+
     def purchase_cost(self, material, tonnes, already=0.0):
         return 11.0 * tonnes, 11.0
 

@@ -39,7 +39,7 @@ that commit. Re-run the same command for the current list; this section is repla
 - `scenarios_batch3`: the cash-book check ignored the ledger's own rule for a small gap from the saturating revenue ceiling
   (fixed).
 - `population_farm_technique_scenario`: honest, 513 (a technique releases no farm hands on fully worked opening land).
-- `foreign_actor_trade_scenario` ("...and no longer swings from year to year"): honest, 672.
+- `foreign_actor_trade_scenario` ("...and no longer swings from year to year"): was red until 672 (closed: idle capacity is no longer stock); green now.
 - `subsistence_staple_is_civilisation_data`: expected the staple's labour to move the floor more than wheat's, but land rent is
   priced in wheat (`solve_prices.land_rent_hours_per_hectare`), so wheat's sourced labour reaches every grain; now a rule test
   of the floor schedule (fixed).

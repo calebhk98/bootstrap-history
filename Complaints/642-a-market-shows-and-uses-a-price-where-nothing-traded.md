@@ -1,6 +1,6 @@
 # A market shows and uses a price where nothing traded
 
-**Status:** partly fixed (clearing, memory, the price index and the cap; display readers and the opening estimate still to move)
+**Status:** partly fixed (clearing, memory, the price index, the cap, the opening estimate's kind and the player's screen; the items under Left remain)
 
 `goods_market` (`sim/economy/goods_market.py`, the clearing that returns `held_price`) returns the last price when a
 market has no offers, when what is offered is residue, or when no buyer wants anything; `market_memory.py` keeps a
@@ -40,9 +40,21 @@ books: no trade gives no price and a quote; a trade gives its price.
   price and a named quote; the index follows traded areas; the view names a quote), `test_economy_frozen_markets.py`,
   `test_economy_year_goods.py`, `test_economy_no_offer_memory.py`. `test_economy_price_within_making_cost.py` deleted.
 
+- The opening estimate has a kind: `MarketMemory.price_kind` (and `MarketView.price_kind`) name a remembered price as
+  `traded`, its quote kind, or `QUOTE_OPENING_ESTIMATE`; `notional.shown_prices_with_kinds` adds the estimate kinds
+  (`making_cost_estimate`, `thin_trade_blend`, `remembered_price`); `api.shown_price_kinds_of` and
+  `EconomyPort.agent_price_kind` carry it to the engine.
+- Readers moved: `GoodsMarket.quote` carries `price_kind` (`goods_market_pricing.price_kind`: the economy's kind,
+  `making_cost_table` where the economy has no market, `partner_landed_price`); the `market` screen row shows "no trade:
+  <cause>" for any price that is not a trade (`render_screens_market.price_note`); the founder's standing bid takes no price
+  where there is none (`economy_port_actors.standing_price`) and the seat sales weights no longer read a missing price
+  as 0.0 (`economy_port_seats.record_year`). `engine/commodities.py` reads no market price (no read of
+  `memory.prices` or `MarketView` in it).
+- Tests: `test_economy_price_kinds.py`, `test_goods_market_pays_economy_price.py` (the quote's kind).
+
 ## Left
 
-- Opening estimates (`opening.py`, `late_recipes.py`) are still stored in `memory.prices` with no kind.
-- A no-trade market with nothing to quote keeps its old remembered price.
-- `engine/` readers and the player display should show `quote_kind`.
-- The thin-trade relaxation (`price_after_thin_trade`) still moves a traded price toward cost.
+- A no-trade market with nothing to quote keeps its old remembered price (its kind stays the last one recorded).
+- The thin-trade relaxation (`price_after_thin_trade`) still moves a traded price toward cost in the planning memory; the
+  display now labels the blended figure `thin_trade_blend`.
+- Other `view.price(...) or 0.0` reads in `sim/economy/opening.py` (the opening's own, owned by the opening work).

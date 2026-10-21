@@ -94,6 +94,7 @@ class AgentEconomy(TilePricesMixin):
         self._answers = None
         self._country_answers = {}
         self._stale = set()
+        self._kinds = None               # (the answers they belong to, {good: kind of its shown price})
         self._capacity_cache = material_capacity.ProducerCapacityCache()
         self._floor_costs = {}           # need floors by country scope, valid until the economy next changes
         self._floor_costs_of = None      # the economy object they were read from
@@ -686,6 +687,14 @@ class AgentEconomy(TilePricesMixin):
                              {trade: wage * coin for trade, wage in wages.items()},
                              economy_api.interest_rate(self._economy))
         return self._answers
+
+    def price_kind(self, good):
+        """What the shown price of a good is (economy_api.shown_price_kinds_of): traded, a quote named by what it
+        is, or an estimate; None for a good the economy shows no price for. Built once a year."""
+        self.answers()
+        if self._kinds is None or self._kinds[0] is not self._answers:
+            self._kinds = (self._answers, economy_api.shown_price_kinds_of(self._economy))
+        return self._kinds[1].get(good)
 
     def stale_goods(self):
         """Goods whose shown price is not a market's: not cleared within notional.RECENT_TRADE_YEARS."""
