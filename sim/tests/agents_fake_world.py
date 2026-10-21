@@ -164,6 +164,9 @@ class FakeWorld:
 	def revenue_forms(self) -> List[Any]:
 		return []
 
+	def revenue_assessments(self) -> List[Any]:
+		return []
+
 	def debt_service_share_of_surplus(self) -> float:
 		return 0.5
 

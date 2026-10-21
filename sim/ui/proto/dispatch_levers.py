@@ -43,14 +43,13 @@ def seat_government(sim, cmd):
     return government, country, None
 
 
-def lever_context(sim, country):
-    """What the country declares and has: its revenue forms, the goods the economy knows, its people."""
+def lever_context(sim, country, government):
+    """What the country has: the revenue forms its state holds, the goods the economy knows, its people."""
     if country == str(sim.civ["id"]):
-        forms, people = list(sim.civ.get("state_revenue") or []), sim.population.total
+        people = sim.population.total
     else:
-        profile = sim.actors.state.countries[country]
-        forms, people = list(profile.extra.get("state_revenue") or []), profile.population
-    return government_levers.LeverContext(forms, set(material_prices(sim)), people)
+        people = sim.actors.state.countries[country].population
+    return government_levers.LeverContext(list(government.record.revenue_forms), set(material_prices(sim)), people)
 
 
 def set_lever_reply(sim, cmd):
@@ -58,7 +57,7 @@ def set_lever_reply(sim, cmd):
     government, country, refusal = seat_government(sim, cmd)
     if refusal:
         return refusal
-    result = government_levers.set_lever(government.record, cmd, lever_context(sim, country))
+    result = government_levers.set_lever(government.record, cmd, lever_context(sim, country, government))
     if isinstance(result, Refusal):
         return {"ok": False, "cause": result.cause, "choices": result.choices, "error": str(result), **result.facts}
     return dict(result, ok=True, country=country, levers=government_levers.current(government.record),

@@ -2,7 +2,7 @@
 
 A state whose standing need exceeds its purse is put one decision, `fiscal_response`. Its options are the ways to
 cover the gap: borrow, cut lines, defer pay as arrears, debase the coin, levy the taxpayers it can see, demand
-more in kind. Each option states how much of the gap it can cover and what it does to others, per share of the
+more in kind, raise the rate of a form it collects in coin. Each option states how much of the gap it can cover and what it does to others, per share of the
 need covered (`consequences`): interest paid, services lost, the share of pay left unpaid (which lowers the army's
 loyalty), coin metal cut (which raises prices), income taken from taxpayers. The state's decision policy chooses.
 A player state (a `CallbackPolicy` naming responses) and an AI state (a `FiscalPolicy` valuing consequences)
@@ -17,11 +17,12 @@ from .policy import CallbackPolicy, Decision, IdlePolicy, Option, Policy, regist
 from .tuning import LEVY_RATE_CEILING
 from .tuning_coinage import COIN_RESTRIKE_SHARE_PER_YEAR, DEBASEMENT_SHARE_CEILING
 from .tuning_fiscal import (FISCAL_BURDEN_WEIGHT, FISCAL_DEBT_CARRY_YEARS, FISCAL_LOYALTY_WEIGHT,
-							FISCAL_PRICE_RISE_WEIGHT, FISCAL_SERVICE_LOSS_WEIGHT, KIND_DEMAND_RATE_STEP)
+							FISCAL_PRICE_RISE_WEIGHT, FISCAL_SERVICE_LOSS_WEIGHT, KIND_DEMAND_RATE_STEP, RATE_RAISE_STEP)
 
 FISCAL_DECISION = "fiscal_response"
-BORROW, CUT, ARREARS, DEBASE, LEVY, KIND = "borrow", "cut_lines", "arrears", "debase", "levy", "demand_in_kind"
-RESPONSES = (BORROW, CUT, ARREARS, DEBASE, LEVY, KIND)
+BORROW, CUT, ARREARS, DEBASE, LEVY, KIND, RATE = ("borrow", "cut_lines", "arrears", "debase", "levy", "demand_in_kind",
+												  "raise_rate")
+RESPONSES = (BORROW, CUT, ARREARS, DEBASE, LEVY, KIND, RATE)
 STRUCK_COIN = "struck_coin"
 _TINY = 1e-12
 
@@ -53,7 +54,22 @@ def menu(government: Any, world: Any, lines: Sequence[Any], gap: float) -> Decis
 	kind_base = in_kind_base(government.record, world)
 	if kind_base > 0.0:
 		options.append(_option(KIND, kind_base * KIND_DEMAND_RATE_STEP, dict(carry, income_taken=need / kind_base)))
+	coin_base = coin_rate_base(world)
+	if coin_base > 0.0:
+		options.append(_option(RATE, coin_base * RATE_RAISE_STEP, dict(carry, income_taken=need / coin_base)))
 	return Decision(FISCAL_DECISION, options, gap)
+
+
+def raisable_coin_forms(world: Any) -> List[Any]:
+	"""The assessments of the forms the state collects in coin on a base of money, at a rate above nothing: the
+	forms whose rate it can raise for money (not a labour due, not a form paid in kind)."""
+	return [assessed for assessed in world.revenue_assessments()
+			if not assessed.in_kind and not assessed.in_labour and assessed.rate > 0.0 and assessed.base > 0.0]
+
+
+def coin_rate_base(world: Any) -> float:
+	"""Money's worth of the base the state's coin forms are assessed on."""
+	return sum(assessed.base * assessed.collectible for assessed in raisable_coin_forms(world))
 
 
 def in_kind_base(record: Any, world: Any) -> float:
@@ -121,7 +137,7 @@ class OrderedFiscalPolicy(FiscalPolicy):
 
 # the order of the old engine rule, kept as one policy among others: borrow, debase, levy, defer pay, cut
 CASCADE_ORDER = (BORROW, DEBASE, LEVY, ARREARS, CUT)
-LEVY_FIRST_ORDER = (BORROW, LEVY, KIND, ARREARS, CUT)
+LEVY_FIRST_ORDER = (BORROW, LEVY, KIND, RATE, ARREARS, CUT)
 register_policy("fiscal_consequence", FiscalPolicy)
 register_policy("fiscal_levy_first", lambda: OrderedFiscalPolicy(LEVY_FIRST_ORDER))
 register_policy("fiscal_cascade", lambda: OrderedFiscalPolicy(CASCADE_ORDER))

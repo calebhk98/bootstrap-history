@@ -114,6 +114,7 @@ class YearInputs:
     labour_levy_hours_per_worker: float = 0.0               # hours of each working person's year the state takes (a corvee, conscripts)
     debt_relief_tiles: Tuple[TileId, ...] = ()              # tiles whose households' debts the state cancels this year (debt_relief.py)
     farmed_forms: Tuple[str, ...] = ()                      # money revenue forms the state lets to the best bidder this year (tax_farming.py)
+    tax_rates: Tuple[Tuple[str, float], ...] = ()           # (form, rate) the state holds this year; a form not named keeps its rate (taxes.with_rates)
     institutions: Tuple[str, ...] = ()                      # the credit institutions the society holds (banks.DEPOSIT_BANKING): without one its households found none
     durable_users: Tuple[AgentId, ...] = ()                 # outside actors' asset accounts whose durables are in use
     standing_bids: Tuple[Bid, ...] = ()                     # demand settled outside the book (the founder's draws): entry reads it as bids, nothing clears

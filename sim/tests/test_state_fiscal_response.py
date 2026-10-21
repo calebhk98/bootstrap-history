@@ -9,6 +9,7 @@ import inspect
 
 from .harness import check
 
+from sim.agents.tuning_fiscal import RATE_RAISE_STEP
 from sim.agents import arrears, fiscal_response, government_levers, group_servants, revenue
 from sim.agents.api import ActorRecord
 from sim.agents.budget_line import Line
@@ -18,6 +19,7 @@ from sim.agents.policy import CallbackPolicy, IdlePolicy, make_policy
 from .agents_fake_world import FakeWorld
 
 GRAIN_FORM = {"form": "grain_levy", "basis": "harvest", "rate": 0.1, "paid_in": "wheat_kg"}
+WEALTH_FORM = {"form": "wealth_tax", "basis": "coin_stock", "rate": 0.01}
 COIN_STOCK = 20000.0
 VISIBLE_INCOME = 5000.0
 NEED = 1000.0
@@ -48,7 +50,7 @@ class ShortWorld(FakeWorld):
 		return 1.0
 
 	def revenue_forms(self):
-		return government_levers.revenue_forms([GRAIN_FORM], self.government_record)
+		return government_levers.revenue_forms(self.government_record)
 
 	def revenue_assessments(self):
 		return revenue.assess(self)
@@ -87,13 +89,14 @@ def lines():
 			Line("roads", "office", transfer=100.0)]
 
 
-def short_state(policy_kind=None, policy=None, borrows=True):
+def short_state(policy_kind=None, policy=None, borrows=True, coin_form=False):
 	"""A government with an empty purse and a standing need of NEED, in a world that reads its record."""
 	world = ShortWorld()
 	state = (Lender if borrows else Government)("government:home", ActorRecord(kind="government", money=0.0), policy)
 	if policy_kind:
 		state.decision_policy = make_policy(policy_kind)
 	state.record.revenue_in_kind = {"grain_levy": 200.0}
+	state.record.revenue_forms = [dict(GRAIN_FORM)] + ([dict(WEALTH_FORM)] if coin_form else [])
 	world.government_record = state.record
 	return state, world
 
@@ -108,7 +111,13 @@ def decide(state, world):
 state, world = short_state()
 menu = fiscal_response.menu(state, world, lines(), NEED)
 offered = {option.subject: option for option in menu.options}
-check("the menu offers all six responses", set(offered) == set(fiscal_response.RESPONSES), sorted(offered))
+coin_state, coin_world = short_state(coin_form=True)
+coin_offered = {option.subject: option for option in fiscal_response.menu(coin_state, coin_world, lines(), NEED).options}
+check("the menu offers every response but a rate raise, which needs a form collected in coin",
+	  set(offered) == set(fiscal_response.RESPONSES) - {fiscal_response.RATE}, sorted(offered))
+check("a state with a form collected in coin is offered raising its rate, and the cost is the burden on its base",
+	  coin_offered[fiscal_response.RATE].detail["income_taken"] > 0.0
+	  and coin_offered[fiscal_response.RATE].worth == COIN_STOCK * RATE_RAISE_STEP, coin_offered.get(fiscal_response.RATE))
 check("borrowing costs the interest the lender asks", offered["borrow"].detail["interest"] == 0.08, offered["borrow"].detail)
 check("cutting lines loses the services", offered["cut_lines"].detail["services_lost"] > 0.0)
 check("deferring pay leaves pay unpaid, which the army and officials feel",
@@ -211,6 +220,22 @@ plain, plain_world = short_state(policy=CallbackPolicy(lambda actor, decision: [
 decide(plain, plain_world)
 check("a state that did not demand in kind keeps the starting rate",
 	  {assessed.form: assessed for assessed in revenue.assess(plain_world)}["grain_levy"].rate == GRAIN_FORM["rate"])
+
+# ---- 626: an AI state under a shortfall raises the rate of a form it collects in coin ----------------------------
+raiser, world = short_state(borrows=False, coin_form=True)
+raiser.decision_policy = fiscal_response.OrderedFiscalPolicy((fiscal_response.RATE, fiscal_response.CUT))
+before = {assessed.form: assessed for assessed in revenue.assess(world)}["wealth_tax"]
+share, choice = decide(raiser, world)
+after = {assessed.form: assessed for assessed in revenue.assess(world)}["wealth_tax"]
+check("an AI state that values taxing its people raises the rate of a coin form to cover the shortfall",
+	  choice.get(fiscal_response.RATE, 0.0) > 0.0 and after.rate > before.rate == WEALTH_FORM["rate"], (choice, before.rate, after.rate))
+check("the raised rate yields more of the same base next year", after.money > before.money and after.base == before.base)
+check("the file's form is left as it was: the rate is the state's own", WEALTH_FORM["rate"] == 0.01
+	  and raiser.record.revenue_forms[1]["rate"] == 0.01 and raiser.record.levers["revenue"]["wealth_tax"]["rate"] == after.rate,
+	  (raiser.record.revenue_forms, raiser.record.levers))
+steady_rate, world = short_state(policy=CallbackPolicy(lambda actor, decision: ["borrow"]), borrows=True, coin_form=True)
+decide(steady_rate, world)
+check("a state that does not choose it keeps its rate", "revenue" not in steady_rate.record.levers, steady_rate.record.levers)
 
 # ---- no fixed cascade remains in the year -----------------------------------------------------------------------
 source = inspect.getsource(Government.advance)
