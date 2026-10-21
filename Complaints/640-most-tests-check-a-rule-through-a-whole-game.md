@@ -50,6 +50,17 @@ nitre-bed sizes), `sim/engine/territory_required.py` (the landless refusal), `co
 `test_complaint_147_project_materials`), the loss-making and creditor-seizure closures (`test_business_review`), the foreman
 choice (`test_business_crew_rule`).
 
+## Applied: audit batch 8 (test_labour_productivity through test_mod_actor_kind_in_a_game)
+
+Rules are called on inputs the test builds (a stub founder over the real mixin, a `HouseholdState`, a built reply); the
+whole-game checks sit in a `_scenario` file next to each. Extractions: `sim/engine/freight_markup.py` (freight markup and
+scarcity factor of a bought material, used by `economy_freight.py`), `sim/engine/diffusion_curve.py` (the leak of a
+venture's edge and the knowledge half-life, used by `society_diffusion.py`). Deleted as held elsewhere:
+`test_material_supply_whole_game` (the output of a made material is deposits plus producer capacity, held by
+`test_material_supply_from_capacity`); the per-material grant and year checks of `test_living_stock_crops` (held by
+`test_living_stock_scenario` and `test_living_stock_trade_scenario`). Kept whole as scenarios: `late_techniques_reach_economy`,
+`market_state_is_economy_record`, `mod_actor_kind_in_a_game`, `menu_seed_and_saves_scenario`, `material_reach_whole_game`.
+
 ## Applied: audit batch 6 (test_fog_leaks_and_typed_wording through test_hire_reports_count_found)
 
 Rules are called on inputs the test builds; whole-game checks that remain are named `_scenario` files next to them.
