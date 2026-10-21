@@ -3,7 +3,9 @@
 A worker's skills are portable, so a worker of one trade considers the same trade at the end of each
 route. The score of a destination is the log of its real expected income (income over that area's
 subsistence) less the origin's, less the moving cost counted in years of the origin's subsistence.
-Staying scores zero. Flows are all computed from the counts at the start of the step and applied after,
+Income is what a worker keeps after the state's take in that area (`YearInputs.taxed_share`: a heavier take at home,
+a collective liability falling on the stayers, is a reason to go), and a route's cost includes what a leaver expects to
+pay if recaptured (`Route.expected_penalty`). Staying scores zero. Flows are all computed from the counts at the start of the step and applied after,
 so the order of areas does not matter. Trainees stay where they train.
 """
 import math
@@ -36,11 +38,12 @@ STAY = "stay"
 
 
 def _real_income(state, inputs, clearings, area: str, trade: str, cache: Dict[Tuple[str, str], float]) -> float:
-    """Expected income over the area's subsistence; zero when the area has no subsistence figure."""
+    """Expected income after the state's take, over the area's subsistence; zero when the area has no subsistence figure."""
     key = (area, trade)
     if key not in cache:
         floor = inputs.subsistence_per_worker_year.get(area, 0.0)
-        cache[key] = expected_income(state, inputs, clearings, area, trade) / floor if floor > 0.0 else 0.0
+        kept = 1.0 - min(1.0, max(0.0, inputs.taxed_share.get(area, 0.0)))
+        cache[key] = kept * expected_income(state, inputs, clearings, area, trade) / floor if floor > 0.0 else 0.0
     return cache[key]
 
 
@@ -86,7 +89,7 @@ def migrate(state: MarketState, inputs: YearInputs, clearings: Dict[Tuple[str, s
                 continue
             options = [(None, 0.0) if route.destination == origin else
                        (_real_income(state, inputs, index, route.destination, trade, cache),
-                        route.moving_cost / floor) for route in routes]
+                        (route.moving_cost + route.expected_penalty) / floor) for route in routes]
             for position, share in enumerate(move_shares(real_origin, options)):
                 if share > 0.0:
                     flows.append((origin, routes[position].destination, trade, [count * share for count in bands]))

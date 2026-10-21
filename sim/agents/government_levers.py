@@ -13,14 +13,15 @@ from typing import Any, Collection, Dict, List, Union
 from sim.refusal import Refusal
 
 from . import state_works
+from .government_levers_tax import TAX_KINDS, remission_share, set_tax_lever
 from .budget_line import Line, goods
 from .revenue_bases import BASES
 from .revenue_labour import BASIS as LABOUR_BASIS
 
 REVENUE, BUDGET, ARMY, NAVY, WORKS, RESERVE, MONOPOLY, SUBSIDY, MANDATE = (
 	"revenue", "budget", "army", "navy", "works", "reserve", "monopoly", "subsidy", "mandate")
-LEVER_KINDS = (REVENUE, BUDGET, ARMY, NAVY, WORKS, RESERVE, MONOPOLY, SUBSIDY, MANDATE)
-SCALAR_KINDS = (ARMY, NAVY, RESERVE)   # one figure, no name
+LEVER_KINDS = (REVENUE, BUDGET, ARMY, NAVY, WORKS, RESERVE, MONOPOLY, SUBSIDY, MANDATE) + TAX_KINDS
+SCALAR_KINDS = (ARMY, NAVY, RESERVE) + TAX_KINDS   # one figure (or a rule), no name
 DAYS_PER_YEAR = 365.0                  # the most days of labour a due can take
 
 # the standing lines a budget lever can cut; each work's upkeep line is named for the work
@@ -130,6 +131,8 @@ def set_lever(record: Any, request: Dict[str, Any], context: LeverContext) -> Un
 		return _set_revenue(record, request, context)
 	if kind == MONOPOLY:
 		return _set_monopoly(record, request, context)
+	if kind in TAX_KINDS:
+		return set_tax_lever(record.levers, kind, request.get("value"), _number, _refuse)
 	name, value = request.get("name"), request.get("value")
 	if kind not in SCALAR_KINDS:
 		choices = {BUDGET: budget_line_names(), WORKS: [work.name for work in state_works.WORKS]}.get(kind, sorted(context.materials))
@@ -167,8 +170,12 @@ def revenue_forms(record: Any) -> List[Dict[str, Any]]:
 	declared = record.revenue_forms
 	forms = [dict(form, rate=overrides[form["form"]]["rate"]) if form["form"] in overrides else form for form in declared]
 	known = {form["form"] for form in declared}
-	return forms + [{"form": name, "basis": slot["basis"], "rate": slot["rate"]}
-					for name, slot in sorted(overrides.items()) if name not in known]
+	forms += [{"form": name, "basis": slot["basis"], "rate": slot["rate"]}
+			  for name, slot in sorted(overrides.items()) if name not in known]
+	remitted = remission_share(record)
+	if remitted > 0.0:
+		forms = [dict(form, rate=float(form["rate"]) * (1.0 - remitted)) for form in forms]
+	return forms
 
 
 def army_target(record: Any, derived: float) -> float:

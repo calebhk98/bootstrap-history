@@ -57,6 +57,7 @@ class Route:
     """One way out of an area: where it leads and what moving there costs a person, in money."""
     destination: AreaId
     moving_cost: float
+    expected_penalty: float = 0.0    # what a leaver expects to pay if the state recaptures him (money; the caller's rule)
 
 
 @dataclasses.dataclass
@@ -77,6 +78,7 @@ class YearInputs:
     value_of_life_years_of_income: float = 0.0          # prices a trade's fatality risk into its ask
     bondage_allowed: frozenset = frozenset()            # areas whose civilisation recognises bondage; others buy none
     bonded_for_sale: Dict[AreaId, Dict[TradeId, float]] = dataclasses.field(default_factory=dict)   # bonded people of a trade on offer in an area
+    taxed_share: Dict[AreaId, float] = dataclasses.field(default_factory=dict)   # share of a worker's income the state takes from those who stay in the area, liability included
 
 
 @dataclasses.dataclass

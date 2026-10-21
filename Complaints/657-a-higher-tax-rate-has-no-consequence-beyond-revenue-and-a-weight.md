@@ -1,6 +1,6 @@
 # A higher tax rate has no consequence beyond revenue and a typed burden weight
 
-**Status:** partly - a harvest tax and a land tax reach the farmer's and the owner's own rules; concealment of income from a form follows the rate and the officials' reach in both layers (actors and the economy's money, harvest and trade forms), and the AI state's rate-raise yield counts it; flight, withdrawal of labour and unrest (486) are open, so `FISCAL_BURDEN_WEIGHT` stays
+**Status:** partly - a harvest tax and a land tax reach the farmer's and the owner's own rules; concealment of income from a form follows the rate and the officials' reach in both layers (actors and the economy's money, harvest and trade forms), and the AI state's rate-raise yield counts it; the flight comparison, the liability rule and the amnesty, immunity and remission levers are built as rules (below) but the engine does not yet feed them into the labour market's year inputs or the AI state's menu; unrest (486) is open, so `FISCAL_BURDEN_WEIGHT` stays
 
 Follows from 626 (tax rates as a state choice).
 
@@ -45,6 +45,28 @@ can leave lowers the base next year; an AI state with the loss in its menu raise
   labelled heuristics with `retire` 657.
 - Tests: `test_tax_pressure_reaches_decisions.py` (rules called with built inputs; the engine wiring is covered only by
   whole-game topics), `test_tax_evasion.py`, `test_tax_evasion_economy.py`.
+
+- **Flight is the migration rule.** `sim/labour/market/migration.py` scores each route by the income kept after the state's take
+  in that area (`YearInputs.taxed_share`) less the move's cost, which now includes the expected penalty of recapture
+  (`Route.expected_penalty`, from `sim/agents/flight.py` `expected_penalty_of_leaving`: the chance of recapture at the
+  state's reach on the tile he goes to times what he owes with the penalty at that reach). Taxed land a fleeing tenant leaves
+  is released to no holder by `sim/economy/titles_flight.py` `tenant_flees` (538's rule).
+- **Liability is a state choice.** `sim/agents/liability.py`: individual, or collective per unit, where the stayers split the
+  unit's assessment (the merismos). Tested for the sourced spiral: under collective liability a shock raises the stayers'
+  take and a larger share leaves each year; under individual liability the take and the share leaving stay flat.
+- **Levers** (`sim/agents/government_levers_tax.py`, through `lever`/`levers`): `liability`, `amnesty` (share of arrears
+  waived), `immunity` (years a taker of deserted land owes nothing; `flight.share_after_immunity`) and `remission` (every
+  form's rate, read through `government_levers.revenue_forms`, so revenue and `tax_burden` see it).
+- **Hiding and Yitzhaki.** A penalty in proportion to the tax unpaid leaves the rate out of the choice; the rate effect in
+  `evasion.py` comes only from the hiding-cost curve, which stays labelled (`HIDING_MARGINAL_COST_AT_CEILING`).
+- Tests: `test_tax_flight_and_liability.py`.
+
+**Still open.** (a) The engine does not yet fill `YearInputs.taxed_share` and `Route.expected_penalty`
+(`sim/economy/labour_inputs.py` builds the routes), nor call `tenant_flees` or the return rule each year, nor read
+`immunity` where land is taken up; the rules and levers exist and are tested, the wiring is not. (b) The AI state's menu does
+not pull `liability`, `amnesty` or `remission`, and `rate_raise_yield` does not net the base lost through flight, so
+`FISCAL_BURDEN_WEIGHT` stays. (c) Return of fugitives is the same comparison run backwards (`flight.arrears_owed_by_fugitive`
+as the route's cost) but no year step moves them. (d) Unrest (486). (e) The hiding-cost curve has no source.
 
 ## Research needed
 
