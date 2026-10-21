@@ -1,4 +1,4 @@
-"""Complaint 511: tin's price follows from the gravel its deposits must be worked through, so in a Rome game the
+"""BASELINE VALIDATION (CLAUDE.md 4.2, Complaint 640): Complaint 511: tin's price follows from the gravel its deposits must be worked through, so in a Rome game the
 price shown for tin over copper's is not below the ratio of the labour their recipes embody (tin, a metal of
 few deposits, must be dug from a great weight of lean gravel). Measured on the opening year, before any
 unsold seller's ask has drifted below cost. The aged-game relation (tin not below copper after years) waits on

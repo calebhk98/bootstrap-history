@@ -1,4 +1,4 @@
-"""Scenario (Complaint 640): founder death and the ending in a running game (the losable list is test_losable_nodes.py).
+"""SCENARIO (Complaint 640): founder death and the ending in a running game (the losable list is test_losable_nodes.py).
 
 Complaints 220, 251, 252, 253, 255, 260: founder age and death text, deputies,
 the ending after a dispersed corpus, achievements announced once, the civilisation

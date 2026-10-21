@@ -1,4 +1,4 @@
-"""Complaint 640, audit batch 3, scenario: the household's staff pay follows the policy; underpaid staff leave as logged
+"""SCENARIO (Complaint 640): Complaint 640, audit batch 3, scenario: the household's staff pay follows the policy; underpaid staff leave as logged
 better offers and replace-only hiring brings them back. The rules are plain functions with tests of their own:
 test_complaint_585_staff_pay_retention (pay, settling, the roll) and test_complaint_579_staff_loss_events (the log line)."""
 import random

@@ -1,4 +1,4 @@
-"""Scenario for Complaint 127: `start` warns when the free staff could not open the finished concern. The rule (a concern is
+"""SCENARIO (Complaint 640): for Complaint 127: `start` warns when the free staff could not open the finished concern. The rule (a concern is
 short when its need exceeds the free scholars or craftsmen, within a tolerance, and quiet when the free staff cover it) is
 `staff_shortfall`, tested in test_completion_messaging; this is the reply through a whole game."""
 from .harness import *  # noqa: F401,F403

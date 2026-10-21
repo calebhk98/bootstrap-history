@@ -1,4 +1,4 @@
-"""Complaint 467 (scenario, a baseline validation of the opening): the opening game's skilled trades hold about as many
+"""BASELINE VALIDATION (CLAUDE.md 4.2, Complaint 640): Complaint 467 (scenario, a baseline validation of the opening): the opening game's skilled trades hold about as many
 people as employers will want hours for in the first year, not several times as many (a glutted trade pays the floor).
 
 It is the opening's workforce read against the same opening's producer, mint and state bids, so it needs the opened

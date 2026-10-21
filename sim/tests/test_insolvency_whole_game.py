@@ -1,4 +1,4 @@
-"""Scenario (Complaint 640): a founder driven deep into debt climbs back and keeps what the goal needs. The rules of
+"""SCENARIO (Complaint 640): a founder driven deep into debt climbs back and keeps what the goal needs. The rules of
 default and settlement (a settlement never abandons a persona or institution, the debt after it is inside the
 line) are tested one at a time in test_insolvency_rules.py; this keeps only the recovery over whole Rome years,
 which reads the founder's money and so needs full steps

@@ -1,4 +1,4 @@
-"""A save written with fog off must not load into a fogged game and
+"""SCENARIO (Complaint 640): A save written with fog off must not load into a fogged game and
 hand the player the whole tree.
 
 Regrouped from test_round8_fixes.py - see CLAUDE.md's test-file

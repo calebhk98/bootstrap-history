@@ -1,4 +1,4 @@
-"""Two named scenarios. A real game seeds its cast from the civilisation played and the economies trading with it, and the
+"""SCENARIO (Complaint 640): Two named scenarios. A real game seeds its cast from the civilisation played and the economies trading with it, and the
 whole cast takes its years with money conserved between actors."""
 import random
 

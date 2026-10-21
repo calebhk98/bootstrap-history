@@ -1,4 +1,4 @@
-"""Complaint 473, the full-length part: over a long spin-up the coin lost to wear must be replaced, or the money stock
+"""SCENARIO (Complaint 640): Complaint 473, the full-length part: over a long spin-up the coin lost to wear must be replaced, or the money stock
 drains. A baseline validation (CLAUDE.md 4.2) whose subject is a spin-up of decades: no single rule holds it, since
 whether the mint strikes depends on the metal chain, the price level and the mint's hours together.
 

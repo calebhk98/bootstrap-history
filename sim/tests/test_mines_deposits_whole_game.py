@@ -1,4 +1,4 @@
-"""Complaint 416 (415): the ore sites are tested on stub deposits below; the whole-game checks are scenarios: a mine names
+"""SCENARIO (Complaint 640): Complaint 416 (415): the ore sites are tested on stub deposits below; the whole-game checks are scenarios: a mine names
 a deposit the seat has found, and what the agent economy's ore firms raise is drawn from the found deposits.
 Builds games, so it is not a quick topic."""
 import types

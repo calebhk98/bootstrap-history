@@ -1,4 +1,4 @@
-"""Complaint 110, the slow check against a real game: the church and academy a civilisation starts with run a year in
+"""SCENARIO (Complaint 640): Complaint 110, the slow check against a real game: the church and academy a civilisation starts with run a year in
 the live adapters (`SimWorld`), the servants and strata sectors are read from the real world's budget and labour core,
 an unpaid army mutinies against the real treasury, and the founder's answers to a demand (negotiate, conceal,
 confiscation) work on the real household. Builds whole games, so it is not in the quick tier."""

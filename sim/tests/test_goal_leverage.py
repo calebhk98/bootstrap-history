@@ -1,4 +1,4 @@
-"""Complaint 98: the goal screen shows system leverage, not only the prerequisite chain."""
+"""SCENARIO (Complaint 640): Complaint 98: the goal screen shows system leverage, not only the prerequisite chain."""
 from .harness import *  # noqa: F401,F403
 
 from sim.ui.proto import command_registry

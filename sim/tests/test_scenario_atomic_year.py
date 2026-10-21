@@ -1,4 +1,4 @@
-"""Complaint 640, audit batch 3, scenario: a year that raises leaves the whole game as it was, the retry runs the year
+"""SCENARIO (Complaint 640): Complaint 640, audit batch 3, scenario: a year that raises leaves the whole game as it was, the retry runs the year
 once, and a multi-year step that fails in its third year keeps the two before it. The description of the failure is a
 function with tests of its own: test_complaint_587_atomic_year."""
 from .harness import *  # noqa: F401,F403

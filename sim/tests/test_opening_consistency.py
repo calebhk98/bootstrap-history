@@ -1,4 +1,4 @@
-"""Complaints 473 and 507 (stage 2): the opening is internally consistent.
+"""SCENARIO (Complaint 640): Complaints 473 and 507 (stage 2): the opening is internally consistent.
 
 One final demand sizes the producers' plant, the hands they hire and the income households receive, so the
 money households are paid is the money the demand they were sized to spends; the metal the money loses a year

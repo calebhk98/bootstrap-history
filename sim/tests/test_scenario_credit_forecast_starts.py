@@ -1,4 +1,4 @@
-"""Complaint 640, audit batch 3, scenario: a household that borrows to start work is told the credit forecast in full
+"""SCENARIO (Complaint 640): Complaint 640, audit batch 3, scenario: a household that borrows to start work is told the credit forecast in full
 once in a year, and `full` asks for it again. The rules are plain functions with tests of their own:
 test_complaint_173_credit_forecast_once."""
 from .harness import *  # noqa: F401,F403

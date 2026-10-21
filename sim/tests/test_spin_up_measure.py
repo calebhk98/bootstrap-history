@@ -1,4 +1,4 @@
-"""How the spin-up measures whether it settled: a rate near zero can settle, the reported result describes the
+"""SCENARIO (Complaint 640): How the spin-up measures whether it settled: a rate near zero can settle, the reported result describes the
 final (trimmed) state over several consecutive years and includes quantities, and the rebase keeps expectations."""
 QUICK_TOPIC = True
 

@@ -1,4 +1,4 @@
-"""A declared kind named in a civilisation's cast takes part in a real game's actor years.
+"""SCENARIO (Complaint 640): A declared kind named in a civilisation's cast takes part in a real game's actor years.
 
 Slow topic: it builds a whole game (not in the quick tier)."""
 import random

@@ -1,4 +1,4 @@
-"""Complaint 640, audit batch 3, scenarios: games saved and played on.
+"""SCENARIO (Complaint 640): Complaint 640, audit batch 3, scenarios: games saved and played on.
 
 The rules have tests of their own: test_complaint_181_save_cost (when a save is written) and
 test_complaint_188_fuzzy_estimates (the estimates). What stays here is that a played game carries them: the play loop

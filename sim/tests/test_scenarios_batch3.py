@@ -1,4 +1,4 @@
-"""Complaint 640, audit batch 3: the scenarios the rule tests leave to a whole game.
+"""SCENARIO (Complaint 640): Complaint 640, audit batch 3: the scenarios the rule tests leave to a whole game.
 
 Each rule that used to be checked here through a game is now a test of its own function (the files named in each
 scenario's comment). What stays is wiring: that the screens, the commands and the engine call the one function, and
