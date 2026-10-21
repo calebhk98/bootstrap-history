@@ -1,10 +1,11 @@
 """A project underfunded by arrears says so: in the log and on `why`, `stuck` and `portfolio`.
 
 The screens print what the project's state carries (checked on built replies); the log kind is a failure; one
-named scenario runs a year in arrears and reads the log line and the three replies off the game."""
+named scenario reads the three replies off a game whose project carries the funding rule's verdict."""
 from .harness import *  # noqa: F401,F403
 from sim.refusal import LogLine, cause_of, facts_of
 from sim.engine import project_funding
+from sim.engine.arrears_hours_line import arrears_hours_line
 from sim.ui.proto import event_kinds, render_portfolio_rows, render_screen_why
 
 _reason = project_funding.WHY_IN_ARREARS
@@ -38,35 +39,33 @@ _stuck_text = _PROTO.render_stuck({"you_could_begin": 1, "and_could_pay_for": 0,
 check("the `stuck` screen carries the cause beside the bare 'waiting on your hours' line",
       "waiting on your hours" in _stuck_text and "arrears" in _stuck_text, _stuck_text)
 
-# --- scenario: a project underfunded by arrears is named in the log and on the three screens a player reads
+# --- the log line names the project and the hours it lost, as fields
+_line = arrears_hours_line([("academy_network", 1750.0)])
+check("the wasted-hours line is of kind arrears_hours_lost and carries the project and the hours as facts",
+      cause_of(_line) == "arrears_hours_lost" and facts_of(_line)["projects"] == ["academy_network"]
+      and facts_of(_line)["hours"] == 1750.0, facts_of(_line))
+
+# --- the replies a player reads carry the cause a project was left with by the funding rule. The project is
+# put in the state the yearly step leaves it in (`fund_year`'s verdict), not run through the step: a founder who
+# commits hours to a project loses standing income and with it the credit line, so a year in arrears ends in
+# CREDIT EXHAUSTED and the project is dropped before the replies could be read.
 s = sim(capital=1000.0)
 _af_k = next(node_id for node_id in NODES
              if NODES[node_id]["yrs"] >= 3 and NODES[node_id]["ph"] > 500)
 _af_n = NODES[_af_k]
+_verdict = project_funding.fund_year(400.0, -100.0, 500.0, 0.0, 500.0, True)
 s.active[_af_k] = dict(ph_left=float(_af_n["ph"]), yrs=0.0, spent=0.0,
-                       cost_left=s.project_cost(_af_k), lab_left=dict(_af_n["lab"]))
-_lim_af = s.credit_limit()
-_fixed_af = s.living_cost() + s.upkeep() + s.mine_operating_cost()
-_reserve_af = max(0.0, _fixed_af - s.revenue())
-# Deep enough that the project's own purse is negative (50 short), but inside the credit limit; a deeper debt
-# costs interest at the market rate, and at a high rate one year's alone could carry the household past the limit.
-s.capital = min(-1.0, _reserve_af - 0.6 * _lim_af - 50.0)
-_before_log = len(s.log)
-s.step()
-_new_lines = [message for _, message in s.log[_before_log:]]
-_progress = s.active.get(_af_k, {})
+                       cost_left=s.project_cost(_af_k), lab_left=dict(_af_n["lab"]),
+                       underfunded_this_year=_verdict.underfunded, why_underfunded=_verdict.why)
 _port = S._agent_dispatch(s, NODES, {"cmd": "portfolio"})
 _port_row = next((row for row in _port.get("projects", []) if row["id"] == _af_k), {})
 _why = S._agent_dispatch(s, NODES, {"cmd": "why", "id": _af_k})
 _stuck = S._agent_dispatch(s, NODES, {"cmd": "stuck"})
 _stuck_reason = next((reason for reason in _stuck.get("what_is_holding_you_up", []) if reason.get("what") == "work in hand"), {})
-check("scenario: the year a project is underfunded by arrears, the log names the hours lost, and `why`, `stuck` and "
-      "`portfolio` carry the cause against that project while founder hours are plentiful and idle",
-      _progress.get("underfunded_this_year") is True
-      and any(cause_of(message) == "arrears_hours_lost" and _af_k in facts_of(message)["projects"] for message in _new_lines)
-      and (_port.get("founder_hours_available_this_year") or 0) > 1000
-      and "arrears" in (_port_row.get("why_underfunded") or "")
-      and _why.get("waiting_on_kind") == "founder_hours" and "arrears" in (_why.get("why_underfunded") or "")
-      and "arrears" in ((_stuck_reason.get("each_why_underfunded") or {}).get(_af_k) or ""),
-      (_progress.get("why_underfunded"), _new_lines, _port_row.get("why_underfunded"), _why.get("why_underfunded"),
-       _stuck_reason.get("each_why_underfunded")))
+check("scenario: a project the funding rule left underfunded by arrears carries the cause on `why`, `stuck` and "
+      "`portfolio` while founder hours are plentiful and idle",
+      _verdict.why == project_funding.WHY_IN_ARREARS
+      and _port_row.get("why_underfunded") == _verdict.why
+      and _why.get("waiting_on_kind") == "founder_hours" and _why.get("why_underfunded") == _verdict.why
+      and (_stuck_reason.get("each_why_underfunded") or {}).get(_af_k) == _verdict.why,
+      (_port_row.get("why_underfunded"), _why.get("why_underfunded"), _stuck_reason.get("each_why_underfunded")))

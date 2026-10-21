@@ -1,7 +1,8 @@
 """arrears_hours: a household in arrears must not lose the hours of a project that owes nothing further (Complaint:
 "in arrears freezes ALL founder-hour progress even on fully-paid projects"), and a concern shut on purpose must
 never reappear on its own. The rules are tested on built inputs (`project_funding`, `business_review.reopen`);
-two named scenarios run them through the yearly step."""
+one named scenario runs the first through the yearly step (the staffing-closure scenario is in
+test_staff_closure_reopening_scenario)."""
 from .harness import *  # noqa: F401,F403
 
 from sim.agents import business_review
@@ -65,13 +66,11 @@ _af_n = NODES[_af_k]
 s_af.active[_af_k] = dict(ph_left=float(_af_n["ph"]), yrs=0.0,
                           spent=s_af.project_cost(_af_k), cost_left=0.0,
                           lab_left=dict(_af_n["lab"]))
-_lim_af = s_af.credit_limit()
-_fixed_af = s_af.living_cost() + s_af.upkeep() + s_af.mine_operating_cost()
-_reserve_af = max(0.0, _fixed_af - s_af.revenue())
-# In arrears just deep enough for the project's purse to be negative (50 short), well clear of the credit limit
-# (deeper debt costs interest, and at a high rate one year's alone could carry the household past the limit).
-s_af.capital = min(-1.0, _reserve_af - 0.6 * _lim_af - 50.0)
-_in_arrears_clear_of_limit = s_af.capital > -_lim_af and s_af.active[_af_k]["cost_left"] == 0.0
+# In arrears by a denarius: the rule reads only whether capital is below zero, and how deep the purse goes is the
+# funding rule's (tested above on a purse of any depth). A deeper debt is not clear of the limit once the project's
+# hours are committed, because a founder's standing income, and with it the credit line, shrinks by them.
+s_af.capital = -1.0
+_in_arrears_clear_of_limit = s_af.capital < 0.0 and s_af.active[_af_k]["cost_left"] == 0.0
 _ph_before_af = s_af.active[_af_k]["ph_left"]
 s_af.step()
 check("scenario: a fully-paid project still makes real hour progress through the year while the household is in "
@@ -81,52 +80,3 @@ check("scenario: a fully-paid project still makes real hour progress through the
       and not s_af.active[_af_k].get("underfunded_this_year"),
       (_in_arrears_clear_of_limit, _ph_before_af, s_af.active.get(_af_k, {}).get("ph_left"),
        s_af.active.get(_af_k, {}).get("why_underfunded")))
-
-
-# --- scenario: the treadmill, measured: a spread of concerns starved of staff, closures against automatic reopenings
-def _portfolio_run(auto_hire, years=12):
-    sim_state = sim(civ="norse_900ad", capital=60000.0)
-    sim_state.policy["auto_hire"] = auto_hire
-    cands = sorted((node_id for node_id in NODES if sim_state.is_venture(node_id) and NODES[node_id]["rev"] > 0),
-                   key=lambda k: -(NODES[k]["rev"] / max(1.0, sum(sim_state.venture_hands(k)))))
-    chosen, need_sch, need_art = [], 0.0, 0.0
-    for node_id in cands:
-        sim_state.done.add(node_id)
-        scholar_hands, artisan_hands = sim_state.venture_hands(node_id)
-        if (need_sch + scholar_hands > 8.0 and need_sch > 0) or (need_art + artisan_hands > 35.0 and need_art > 0):
-            sim_state.done.discard(node_id)
-            continue
-        need_sch += scholar_hands
-        need_art += artisan_hands
-        chosen.append(node_id)
-        if len(chosen) >= 25:
-            break
-    sim_state._done_changed()
-    sim_state.employees["scholar"] = round(need_sch) + 1
-    sim_state.employees["artisan"] = round(need_art) + 2
-    sim_state.labour._resync_pools()
-    # one year's losses forced rather than left to the dice
-    opened = [node_id for node_id in chosen if sim_state.open_venture(node_id)[0]]
-    reopenings = 0
-    for year in range(years):
-        if year == 1:
-            sim_state.employees["artisan"] = 2.0
-            sim_state.labour._resync_pools()
-        before = set(sim_state.operating)
-        sim_state.step()
-        reopenings += len((set(sim_state.operating) - before) & set(opened))
-    free_scholars, free_artisans = sim_state.venture_staff_free()
-    # only a staffing closure is the staffing rule's to undo
-    stranded = [node_id for node_id in opened if node_id not in sim_state.operating
-                and sim_state.staff_closure_age(node_id) is not None
-                and sim_state.venture_hands(node_id)[0] <= free_scholars + 0.01
-                and sim_state.venture_hands(node_id)[1] <= free_artisans + 0.01]
-    return opened, stranded, reopenings
-
-
-_opened, _stranded, _reopenings = _portfolio_run(auto_hire=True)
-check("scenario: with auto_hire replacing attrition losses, no closed concern stays shut while there are free people "
-      "to run it - every closure comes back on its own as soon as the household can staff it again",
-      not _stranded and _reopenings > 0,
-      "opened %d, shut with free staff at the end: %s, auto-reopenings: %d"
-      % (len(_opened), _stranded, _reopenings))

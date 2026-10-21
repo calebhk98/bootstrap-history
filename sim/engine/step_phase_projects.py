@@ -5,6 +5,7 @@ A part of the year's phases (core_step_phases.py); Sim inherits it through StepP
 from sim.refusal import LogLine, Refusal
 from sim.agents.api import edges
 from .units_prose import plain_number
+from .arrears_hours_line import arrears_hours_line
 from .project_funding import fund_year, project_purse, year_bill
 from .hour_offer import hours_offered, unmet_directive_cause
 from .projects_trade_wait import STALL_YEARS_BEFORE_ABANDONMENT
@@ -504,18 +505,7 @@ class ProjectProgressPhaseMixin:
         # all. Named per project, so 'why <id>' and this line never disagree
         # about which project or how much.
         if _arrears_hours_lost:
-            _total_lost = sum(hours for _, hours in _arrears_hours_lost)
-            _names = ", ".join("%s (%s hr)" % (node_id, plain_number(hours))
-                                for node_id, hours in _arrears_hours_lost)
-            self.state.household.log.append((self.state.scenario.year, LogLine(
-                "arrears_hours_lost", "IN ARREARS: %s founder-hours meant for %s did "
-                "almost nothing this year, on top of the money "
-                "- that time does not come back, arrears or not. "
-                "'work' sells idle hours for wages instead of "
-                "losing them here; clearing the arrears is what "
-                "stops it happening again"
-                % (plain_number(_total_lost), _names),
-                hours=_total_lost, projects=[node_id for node_id, _hours in _arrears_hours_lost])))
+            self.state.household.log.append((self.state.scenario.year, arrears_hours_line(_arrears_hours_lost)))
 
         # A STANDING ALLOCATION THE PLAYER GAVE, AND DID NOT GET - SAID, NOT
         # LEFT FOR THEM TO NOTICE. `allocate` is a promise about the one
