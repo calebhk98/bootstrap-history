@@ -10,7 +10,7 @@ readings from its profile and its part of the one economy, but these have no per
 - Unskilled people: `national_people("labourer")` is still the working age, as at home (labelled heuristic in `country_state.py`, with the fallback for a country the economy has no part for).
 - Interest groups and patronage: `group_claims` is empty and `patron_ask` is zero abroad.
 - Research: a country's state copies but does not originate research (`Government.researches`), as research hands are the founder's.
-- A country's plants: site rent, the manager's hours (`carry`, `management_cost` reads the home labour quote) and the choice of which entry to open (`concern_gross`) and entry decisions (`yearly_costs`) read home figures; the books and the crew are done (below). `concern_staff` is the plant's own technology (people per trade), not a country figure. The home `free_fte` and `actor_staff_fte` still subtract every actor's staff, foreign included, from the home pool.
+- A country's plants: site rent, the manager's hours (`carry`, `management_cost` reads the home labour quote) and the choice of which entry to open (`concern_gross`) and entry decisions (`yearly_costs`) read home figures; the books and the crew are done (below). `concern_staff` is the plant's own technology (people per trade), not a country figure.
 
 **Done.** A country's `material_cost` and `material_price` are its own market areas' quote (`CountryAnswers.price_per_tonne`,
 nothing where they quote none); its `coin_regime` is the one economy's money standard and its `coin_stock_value` is the
@@ -48,7 +48,9 @@ no hazard or war factor applies abroad (retire: this complaint). Checks: `sim/te
 A country's plant takes its crew from that country's labour markets: `CountryWorld.free_fte` is the people its labour markets hold in the
 trade (`CountryAnswers.people_of_trade`) less what the other actors of that country employ (`ActorRegistry.staff_fte_in_country`,
 `people_left` in `sim/agents/country_state_crew.py`); a country the economy has no part for gives None and the plant finds no crew,
-never the founder's pool. Checks: `sim/tests/test_country_plant_books.py`.
+never the founder's pool. The home side counts the same way: the home `free_fte` and `actor_staff_fte` subtract only the home country's
+actors' staff (`ActorRegistry.home_staff_fte`, an actor with no country being home), not the foreign actors', whose crew come from their
+country's labour. Checks: `sim/tests/test_country_plant_books.py`, `sim/tests/test_home_pool_country_scoped.py`.
 
 **Why it matters.** A country's revenue and war capacity are inputs of the game (481); each of these makes a country's
 state read the founder's side of the world or nothing.
