@@ -11,51 +11,53 @@ from sim.constants import declare
 
 NATIVE_POOL_KG_PER_HECTARE = declare(
     "NATIVE_POOL_KG_PER_HECTARE", 3000.0,
-    kind="biological_parameter", unit="kg nitrogen per hectare in the rooting zone",
+    kind="temporary_heuristic", unit="kg nitrogen per hectare in the rooting zone",
     source="Topsoil carries about 0.1 percent nitrogen (0.05 to 0.3), over about 3000 tonnes of soil to 25 cm "
-           "(Brady and Weil, The Nature and Properties of Soils; recalled, not opened)",
-    confidence="C", why="Size of the organic nitrogen pool a harvest draws on; the stock is kept as a share of it.")
+           "(no source found; Brady and Weil was not opened)",
+    confidence="D", retire="Complaints/646: a source read for the figure", why="Size of the organic nitrogen pool a harvest draws on; the stock is kept as a share of it.")
 
 LOSS_RATE_PER_YEAR = declare(
     "LOSS_RATE_PER_YEAR", 0.01,
-    kind="engineering_estimate", unit="share of the pool per year",
+    kind="temporary_heuristic", unit="share of the pool per year",
     source="Leaching and denitrification take about a percent of soil organic nitrogen a year (order of magnitude "
-           "from Brady and Weil, recalled)",
-    confidence="D", why="Sets both the natural input that keeps native soil level and how fast a worn pool recovers.")
+           "no source found; Brady and Weil was not opened)",
+    confidence="D", retire="Complaints/646: a source read for the figure", why="Sets both the natural input that keeps native soil level and how fast a worn pool recovers.")
 
 MINERALISATION_RATE_PER_YEAR = declare(
     "MINERALISATION_RATE_PER_YEAR", 0.02,
     kind="biological_parameter", unit="share of the pool made plant-available per year",
-    source="One to three percent of soil organic nitrogen mineralises each year (Brady and Weil; recalled)",
+    source="Sullivan, Moore, Verhoeven and Brewer, Baseline Soil Nitrogen Mineralization: Measurement and "
+           "Interpretation (Oregon State University Extension EM 9281; opened): 'Annually, about 1% to 3% of the "
+           "N present in SOM is mineralized to nitrate (NO3).'",
     confidence="C", why="Nitrogen a crop can take from the pool in a year.")
 
 GRAIN_NITROGEN_FRACTION = declare(
     "GRAIN_NITROGEN_FRACTION", 0.02,
-    kind="biological_parameter", unit="kg nitrogen per kg of grain harvested",
-    source="Wheat grain is about 1.8 to 2.4 percent nitrogen (feed and cereal composition tables; recalled). "
+    kind="temporary_heuristic", unit="kg nitrogen per kg of grain harvested",
+    source="No source found for wheat grain nitrogen (1.8 to 2.4 percent was recalled; no composition table opened). "
            "Straw is taken to stay on the field",
-    confidence="B", why="What each harvest removes from the pool.")
+    confidence="D", retire="Complaints/646: a source read for the figure", why="What each harvest removes from the pool.")
 
 LEGUME_NET_NITROGEN_KG_PER_HECTARE = declare(
     "LEGUME_NET_NITROGEN_KG_PER_HECTARE", 25.0,
-    kind="engineering_estimate", unit="kg nitrogen per hectare of a grain legume crop, fixation less grain removal",
+    kind="temporary_heuristic", unit="kg nitrogen per hectare of a grain legume crop, fixation less grain removal",
     source="Net nitrogen balance of harvested grain legumes runs from about -20 to +40 kg a hectare (Peoples and "
-           "others 2009, Symbiosis 48; recalled, not opened)",
-    confidence="D", why="Why a legume in the rotation holds the pool up.")
+           "others 2009, Symbiosis 48; no source found, not opened)",
+    confidence="D", retire="Complaints/646: a source read for the figure", why="Why a legume in the rotation holds the pool up.")
 
 MANURE_AVAILABLE_FIRST_YEAR = declare(
     "MANURE_AVAILABLE_FIRST_YEAR", 0.3,
-    kind="engineering_estimate", unit="share of applied manure nitrogen a crop can take that year",
+    kind="temporary_heuristic", unit="share of applied manure nitrogen a crop can take that year",
     source="Farmyard manure gives a crop 10 to 30 percent of its nitrogen in the year of application (UK "
-           "RB209 fertiliser manual; recalled)",
-    confidence="C", why="Immediate yield effect of manure.")
+           "RB209 fertiliser manual; no source found, not opened)",
+    confidence="D", retire="Complaints/646: a source read for the figure", why="Immediate yield effect of manure.")
 
 MANURE_RETAINED_IN_POOL = declare(
     "MANURE_RETAINED_IN_POOL", 0.4,
-    kind="engineering_estimate", unit="share of applied manure nitrogen that settles into the pool",
+    kind="temporary_heuristic", unit="share of applied manure nitrogen that settles into the pool",
     source="Long-term manured plots (Rothamsted Broadbalk, Hoosfield) gain soil nitrogen from the organic fraction "
-           "of manure; the share is recalled, conf D",
-    confidence="D", why="Why repeated manuring builds a lasting stock rather than one good year.")
+           "of manure; the share has no source found, conf D",
+    confidence="D", retire="Complaints/646: a source read for the figure", why="Why repeated manuring builds a lasting stock rather than one good year.")
 
 FALLOW_NITRATE_RETENTION = declare(
     "FALLOW_NITRATE_RETENTION", 0.5,
@@ -73,16 +75,18 @@ HALF_SATURATION_SUPPLY_KG_PER_HECTARE = declare(
     why="Supply at which a crop reaches half its nitrogen-saturated yield.")
 
 HERD_EXCRETA_KG_PER_LIVE_WEIGHT_KG_YEAR = declare(
-    "HERD_EXCRETA_KG_PER_LIVE_WEIGHT_KG_YEAR", 29.0,
+    "HERD_EXCRETA_KG_PER_LIVE_WEIGHT_KG_YEAR", 23.0,
     kind="biological_parameter", unit="kg fresh dung and urine per kg live weight per year",
-    source="A cow of 500 kg voids about 40 kg of dung and urine a day, 8 percent of live weight (farm manure "
-           "handbooks; recalled)",
+    source="USDA NRCS, Agricultural Waste Management Field Handbook, Part 651 chapter 4 (rev. July 1996; opened), "
+           "Table 4-8: beef cow manure as excreted 63.00 lb per day per 1000 lb of animal, 0.063 of live weight a "
+           "day; dairy cows are 80.00 (Table 4-5)",
     confidence="C", why="Manure the society's draught herd drops.")
 
 MANURE_NITROGEN_FRACTION = declare(
     "MANURE_NITROGEN_FRACTION", 0.005,
     kind="biological_parameter", unit="kg nitrogen per kg fresh dung and urine",
-    source="Fresh cattle manure with urine is about half a percent nitrogen (RB209; recalled)",
+    source="USDA NRCS, Agricultural Waste Management Field Handbook, Part 651 chapter 4 (opened), Table 4-8: beef "
+           "cow manure as excreted 63.00 lb and N 0.33 lb per day per 1000 lb of animal, 0.52 percent nitrogen",
     confidence="C", why="Nitrogen in the herd's excreta.")
 
 MANURE_COLLECTED_SHARE = declare(
