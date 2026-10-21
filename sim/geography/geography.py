@@ -123,9 +123,9 @@ class Geography:
         """Units the place's arable land raises in a year at a production entry's output and land use per batch."""
         return stock_land.nursery_room_units(place, output_per_batch, hectare_years_per_batch, self._world.world_map)
 
-    def crop_sites(self, cropped_share: float, nutrient_factors: Dict[str, float]) -> Dict[str, Any]:
+    def crop_sites(self, cropped_share: float, nutrient_factors: Dict[str, float], tillage_capacity: float = 1.0) -> Dict[str, Any]:
         """{tile: crop site} over the held tiles under a rotation that crops `cropped_share`, each under its soil nitrogen factor."""
-        return food_society.crop_sites(self._world.civ, self._world.world_map, cropped_share, nutrient_factors)
+        return food_society.crop_sites(self._world.civ, self._world.world_map, cropped_share, nutrient_factors, tillage_capacity)
 
     def food_kcal_by_source(self, wild_stock: Any, crop_technique: Any, nutrient_factors: Dict[str, float]) -> Dict[str, float]:
         """{source id: kcal a year} over the held tiles, game thinned by `wild_stock`, before any labour bound."""

@@ -131,8 +131,7 @@ def fraction_of_population_that_must_farm(
     pit-silo combination, so calling this with no arguments reproduces the
     pinned 0.21181 exactly - see sim/tests/test_agriculture.py's
     HeadlineCalibrationTests. `soil` and `rotation` here contribute ONLY
-    their yield multipliers (`quality_multiplier`,
-    `soil_fertility_yield_multiplier`); the idle-land share a rotation
+    their yield multiplier (`quality_multiplier`); the idle-land share a rotation
     carries is a LAND requirement, not a food-output one, and is never
     read here - see holding_hectares_required_per_farm_worker and the
     module's rotation-and-idle-land section for why applying it here would
@@ -162,8 +161,7 @@ def fraction_of_population_that_must_farm(
     gross_yield_at_reference_labour_kg_per_ha = (
         crop.planting_material_kg_per_ha * crop.fold_return_on_planting_material)
     fertility_multiplier = (
-        toolkit.ploughing_yield_multiplier * rotation.soil_fertility_yield_multiplier
-        * soil.quality_multiplier)
+        toolkit.ploughing_yield_multiplier * soil.quality_multiplier)
     net_yield_after_seed_kg_per_ha = (
         gross_yield_at_reference_labour_kg_per_ha * fertility_multiplier
         - crop.planting_material_kg_per_ha)
@@ -245,7 +243,7 @@ def hectares_netting_reference_food(
     toolkit = toolkit or DEFAULT_TOOLKIT
     seed_kg_per_ha = crop.planting_material_kg_per_ha
     gross_kg_per_ha = (seed_kg_per_ha * crop.fold_return_on_planting_material * toolkit.ploughing_yield_multiplier
-                       * rotation.soil_fertility_yield_multiplier * soil.quality_multiplier)
+                       * soil.quality_multiplier)
     remaining_kg = max(0.0, reference_hectares) * (gross_kg_per_ha - seed_kg_per_ha)
     hectares = 0.0
     for yield_factor, parcel_hectares in ladder:

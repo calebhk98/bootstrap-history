@@ -39,4 +39,5 @@ def step_year(stock: Dict[str, float], sites, kg_per_cropped_hectare: float, leg
         cropped_share = site.cropped_hectares / max(site.arable_hectares, site.cropped_hectares)
         stock[tile_id] = soil_nutrients.next_share(
             stock.get(tile_id, 1.0), cropped_share, kg_per_cropped_hectare * site.yield_factor,
-            legume_share, manure_per_hectare, reference_cropped_share)
+            legume_share, manure_per_hectare, reference_cropped_share,
+            flooded_share=min(1.0, site.flooded_hectares / max(site.arable_hectares, site.cropped_hectares)))

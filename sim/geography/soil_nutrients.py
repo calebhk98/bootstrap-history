@@ -99,6 +99,32 @@ MANURE_COLLECTED_SHARE = declare(
     why="Transitional rule: the society's draught herd manures its cropland for free until farm producers buy the "
         "manure goods.")
 
+SILT_DEPOSITION_METRES_PER_YEAR = declare(
+    "SILT_DEPOSITION_METRES_PER_YEAR", 0.0008,
+    kind="temporary_heuristic", unit="metres of silt laid on flooded land per year",
+    source="Pre-High-Dam Nile overbank deposition 0.6 to 1.5 mm a year, mean 0.8 mm (a Springer Environmental Earth Sciences "
+           "article on the Aswan High Dam's effects, seen as a search snippet only, page not opened; a 2009 EGU abstract "
+           "doubts a steady rate); other rivers differ and the figure is taken for every flooded tile",
+    confidence="D", retire="Complaints/543: a sediment load per river layer",
+    why="Silt a river lays on the land it waters each year.")
+
+SILT_BULK_DENSITY_KG_PER_CUBIC_METRE = declare(
+    "SILT_BULK_DENSITY_KG_PER_CUBIC_METRE", 1300.0,
+    kind="temporary_heuristic", unit="kg per cubic metre of dry silt",
+    source="Mineral soil bulk density 1.1 to 1.6 tonnes per cubic metre (no source found, not opened)",
+    confidence="D", retire="Complaints/543: a source read for the figure", why="Turns silt depth into mass.")
+
+SILT_NITROGEN_FRACTION = declare(
+    "SILT_NITROGEN_FRACTION", NATIVE_POOL_KG_PER_HECTARE / 3.0e6,
+    kind="temporary_heuristic", unit="kg nitrogen per kg of silt",
+    source="Taken equal to the native topsoil's nitrogen share (NATIVE_POOL_KG_PER_HECTARE over the mass of the rooting "
+           "zone, 3000 tonnes a hectare); river silt is the washed topsoil of its basin",
+    confidence="D", retire="Complaints/543: a source read for the figure", why="Nitrogen a river's silt carries to the land.")
+
+SQUARE_METRES_PER_HECTARE = 10000.0
+SILT_NITROGEN_KG_PER_FLOODED_HECTARE = (SILT_DEPOSITION_METRES_PER_YEAR * SQUARE_METRES_PER_HECTARE
+                                        * SILT_BULK_DENSITY_KG_PER_CUBIC_METRE * SILT_NITROGEN_FRACTION)
+
 NATURAL_INPUT_KG_PER_HECTARE = NATIVE_POOL_KG_PER_HECTARE * LOSS_RATE_PER_YEAR   # keeps a native soil level
 
 
@@ -124,15 +150,17 @@ def yield_response(pool_share, cropped_share, reference_cropped_share, manure_ni
 
 
 def next_share(pool_share, cropped_share, harvest_kg_per_cropped_hectare, legume_share=0.0,
-               manure_nitrogen_kg_per_hectare=0.0, reference_cropped_share=0.5):
+               manure_nitrogen_kg_per_hectare=0.0, reference_cropped_share=0.5, flooded_share=0.0):
     """The pool share after one year. `harvest_kg_per_cropped_hectare` is the reference field's harvest; the
-    tile's own response scales it. `legume_share` is the share of the holding in grain legumes."""
+    tile's own response scales it. `legume_share` is the share of the holding in grain legumes;
+    `flooded_share` the share a river floods and silts each year."""
     pool = pool_share * NATIVE_POOL_KG_PER_HECTARE
     harvest_kg = harvest_kg_per_cropped_hectare * yield_response(
         pool_share, cropped_share, reference_cropped_share, manure_nitrogen_kg_per_hectare)
     removal = cropped_share * harvest_kg * GRAIN_NITROGEN_FRACTION
     gain = (NATURAL_INPUT_KG_PER_HECTARE + legume_share * LEGUME_NET_NITROGEN_KG_PER_HECTARE
-            + MANURE_RETAINED_IN_POOL * manure_nitrogen_kg_per_hectare)
+            + MANURE_RETAINED_IN_POOL * manure_nitrogen_kg_per_hectare
+            + flooded_share * SILT_NITROGEN_KG_PER_FLOODED_HECTARE)
     pool = max(0.0, pool + gain - removal - LOSS_RATE_PER_YEAR * pool)
     return pool / NATIVE_POOL_KG_PER_HECTARE
 

@@ -36,8 +36,7 @@ ONE CROP BY DEFAULT, NOT ONE CROP BY CONSTRUCTION. The numbers below are
 organised as small tables - `Crop`, `Soil`, `Rotation`, `Toolkit`,
 `StorageTechnique` - each one a named bundle of declared numbers for one
 instance of that axis (wheat vs potatoes vs rice; ordinary Mediterranean loam
-vs Ukrainian chernozem vs arctic tundra; two-field vs three-field vs Nile
-flood-recession farming; ard-and-ox vs horse-collar-and-mouldboard vs a
+vs Ukrainian chernozem vs arctic tundra; two-field vs three-field; ard-and-ox vs horse-collar-and-mouldboard vs a
 mechanical reaper; a pit silo vs a refrigerated store), because fertiliser,
 rotation, a better crop, better land, better draught power and better storage
 all have to be able to change the answer, and a module with every parameter
@@ -164,11 +163,9 @@ SHAPE.
                   kind of scalar as poor fertility even though they are a
                   different physical thing - this module cannot yet tell
                   them apart, and says so.
-    Rotation      a named bundle: the fallow share of a holding and a
-                  soil-fertility yield multiplier, moving together because
-                  both come from the same underlying fact - nitrogen. Two-
-                  field, three-field and Nile flood-recession farming are
-                  three points on the same axis, not three special cases.
+    Rotation      a named bundle: the fallow share of a holding and the
+                  share in grain legumes. Two-field and three-field are
+                  two points on the same axis, not two special cases.
     Toolkit       a named bundle: a labour-hours multiplier (tools and
                   draught power that speed up ploughing/sowing/weeding), a
                   reaping-rate multiplier (tools that speed up the harvest
@@ -258,7 +255,8 @@ import random
 from typing import Optional
 
 from sim.constants import declare
-from sim.world.farm_labour import REFERENCE_LABOUR_HOURS_PER_HECTARE, WHEAT_REAPED_HECTARES_PER_PERSON_DAY
+from sim.world.farm_labour import (REFERENCE_LABOUR_HOURS_PER_HECTARE, WHEAT_HOE_HOURS_PER_HECTARE,
+                                   WHEAT_REAPED_HECTARES_PER_PERSON_DAY)
 from sim.world.grain_yield import FOLD_RETURN, SEED_KG_PER_HECTARE
 from sim.world.shared_constants import (
     ANNUAL_LABOUR_HOURS_PER_FARM_WORKER,
@@ -704,18 +702,35 @@ Rotation = collections.namedtuple("Rotation", [
                                           # fraction_of_population_that_
                                           # must_farm, only by the holding
                                           # calculation.
-    "soil_fertility_yield_multiplier",   # the OTHER half of the same
-                                          # nitrogen fact: less fallow
-                                          # needed and higher yield both
-                                          # come from more nitrogen reaching
-                                          # the field, whether from a
-                                          # legume fallow, manure, guano or
-                                          # a river's silt.
     "legume_share_of_holding",           # share of the holding in grain
                                           # legumes each year; the soil
                                           # nitrogen stock gains their net
                                           # fixation (soil_nutrients.py)
 ], defaults=(0.0,))
+
+ARD_TILLAGE_CAPACITY = declare(
+    "ARD_TILLAGE_CAPACITY", 0.15,
+    kind="temporary_heuristic", unit="share of heavy ground opened",
+    source="The scratch ard cannot turn heavy wet clay, which north-west Europe's heavy wheeled plough opened (accounts "
+           "of the medieval plough, e.g. Lynn White, Medieval Technology and Social Change 1962; recalled, not opened); "
+           "the share is invented",
+    confidence="D", retire="Complaints/543: a draught force per toolkit set against a soil texture layer's tillage resistance",
+    why="How much of a tile's heavy ground an ox-drawn ard opens (the tile's heavy share is geography's `heavy_soil_share`).")
+
+HOE_TILLAGE_CAPACITY = declare(
+    "HOE_TILLAGE_CAPACITY", 0.15,
+    kind="temporary_heuristic", unit="share of heavy ground opened",
+    source="A hoe works wet clay slowly by hand; invented, no source found",
+    confidence="D", retire="Complaints/543: a draught force per toolkit set against a soil texture layer's tillage resistance",
+    why="How much of a tile's heavy ground a hand hoe opens.")
+
+MOULDBOARD_TILLAGE_CAPACITY = declare(
+    "MOULDBOARD_TILLAGE_CAPACITY", 1.0,
+    kind="temporary_heuristic", unit="share of heavy ground opened",
+    source="The heavy plough with a horse in a rigid collar or a large team opened the heavy clays (as for the ard; "
+           "not opened)",
+    confidence="D", retire="Complaints/543: a draught force per toolkit set against a soil texture layer's tillage resistance",
+    why="How much of a tile's heavy ground the heavy plough opens.")
 
 Toolkit = collections.namedtuple("Toolkit", [
     "name",
@@ -728,7 +743,9 @@ Toolkit = collections.namedtuple("Toolkit", [
                                       # weeds/stubble better than an ard;
                                       # a yield effect independent of the
                                       # labour saved
-])
+    "tillage_capacity",              # share of a tile's heavy (clay) ground
+                                      # this toolkit's draught can open
+], defaults=(1.0,))
 
 StorageTechnique = collections.namedtuple("StorageTechnique", [
     "name",
@@ -753,14 +770,14 @@ DEFAULT_SOIL = Soil(
 
 DEFAULT_ROTATION = Rotation(
     name="two_field",
-    fallow_share_of_holding=FALLOW_SHARE_OF_HOLDING,
-    soil_fertility_yield_multiplier=1.0)
+    fallow_share_of_holding=FALLOW_SHARE_OF_HOLDING)
 
 DEFAULT_TOOLKIT = Toolkit(
     name="ard_and_ox_with_sickle",
     labour_hours_multiplier=1.0,
     reaping_rate_multiplier=1.0,
-    ploughing_yield_multiplier=1.0)
+    ploughing_yield_multiplier=1.0,
+    tillage_capacity=ARD_TILLAGE_CAPACITY)
 
 DEFAULT_STORAGE_TECHNIQUE = StorageTechnique(
     name="pit_silo_or_raised_granary",
@@ -1130,8 +1147,8 @@ MOUNTAIN = Soil(
 # the next crop. Manure, a legume fallow crop, guano and (much later)
 # synthetic nitrogen are all ways of putting nitrogen back WITHOUT idling
 # the land, which is why each entry below moves fallow_share_of_holding
-# DOWN. A legume's gain is the soil nitrogen stock's (soil_nutrients.py);
-# only the Nile's silt still carries a yield multiplier of its own.
+# DOWN. A legume's gain and a river's silt are the soil nitrogen stock's
+# (soil_nutrients.py); a rotation carries no yield multiplier of its own.
 # ----------------------------------------------------------------------
 
 THREE_FIELD_FALLOW_SHARE_OF_HOLDING = declare(
@@ -1145,8 +1162,7 @@ THREE_FIELD_FALLOW_SHARE_OF_HOLDING = declare(
     confidence="B",
     why="Adding a spring-sown field alongside the fallow drops the idle "
         "share from a half to a third without eliminating fallow "
-        "altogether - the middle point on the same fallow axis two-field "
-        "and Nile flood-recession farming sit at the ends of.")
+        "altogether - the middle point on the fallow axis.")
 
 THREE_FIELD_LEGUME_SHARE_OF_HOLDING = declare(
     "THREE_FIELD_LEGUME_SHARE_OF_HOLDING", 1.0 / 6.0,
@@ -1157,52 +1173,12 @@ THREE_FIELD_LEGUME_SHARE_OF_HOLDING = declare(
     confidence="D",
     why="Feeds the soil nitrogen stock's legume gain (soil_nutrients.py).")
 
-NILE_FLOOD_RECESSION_FALLOW_SHARE_OF_HOLDING = declare(
-    "NILE_FLOOD_RECESSION_FALLOW_SHARE_OF_HOLDING", 0.02,
-    kind="engineering_estimate",
-    unit="fraction of holding idle in any one year (dimensionless)",
-    source="Egyptological accounts of the annual Nile inundation "
-           "describe fresh silt being deposited across the flood plain "
-           "every year, letting land be cropped continuously without a "
-           "fallow year; taken as a small residual rather than exactly "
-           "zero for basin-irrigation scheduling and the desert-margin "
-           "strip that floods unreliably.",
-    confidence="C",
-    why="The other named example (with Ukrainian chernozem) of exceptional "
-        "land, and the one FALLOW_SHARE_OF_HOLDING's own declaration "
-        "already names: a river doing every year, for free, what a farmer "
-        "otherwise buys with an idle field.")
-
-NILE_FLOOD_RECESSION_SOIL_FERTILITY_YIELD_MULTIPLIER = declare(
-    "NILE_FLOOD_RECESSION_SOIL_FERTILITY_YIELD_MULTIPLIER", 1.4,
-    kind="engineering_estimate",
-    unit="fraction of reference yield (dimensionless)",
-    source="Comparisons of Nile valley grain yields against rain-fed "
-           "Mediterranean land commonly cite a 30-50% advantage from "
-           "annual silt replenishment; taken as a round midpoint, "
-           "matching CHERNOZEM_QUALITY_MULTIPLIER's figure since both "
-           "describe the same kind of advantage (naturally replenished "
-           "fertility) by a different mechanism (river silt vs parent "
-           "soil).",
-    confidence="C",
-    why="The silt is both why the fallow can be skipped AND why the "
-        "unfallowed yield itself is higher than bare-fallow farming would "
-        "give even without skipping it - the same pairing as the "
-        "three-field entry above, for the same nitrogen-and-mineral "
-        "reason, at the strong end of the axis rather than the middle.")
-
 TWO_FIELD = DEFAULT_ROTATION
 
 THREE_FIELD = Rotation(
     name="three_field",
     fallow_share_of_holding=THREE_FIELD_FALLOW_SHARE_OF_HOLDING,
-    soil_fertility_yield_multiplier=1.0,       # legumes and fallow act through the soil nitrogen stock
     legume_share_of_holding=THREE_FIELD_LEGUME_SHARE_OF_HOLDING)
-
-NILE_FLOOD_RECESSION = Rotation(
-    name="nile_flood_recession",
-    fallow_share_of_holding=NILE_FLOOD_RECESSION_FALLOW_SHARE_OF_HOLDING,
-    soil_fertility_yield_multiplier=NILE_FLOOD_RECESSION_SOIL_FERTILITY_YIELD_MULTIPLIER)
 
 
 # ----------------------------------------------------------------------
@@ -1286,20 +1262,29 @@ MECHANICAL_REAPER_REAPING_RATE_MULTIPLIER = declare(
 
 ARD_AND_OX_WITH_SICKLE = DEFAULT_TOOLKIT
 
+HAND_HOE = Toolkit(
+    name="hand_hoe",
+    labour_hours_multiplier=WHEAT_HOE_HOURS_PER_HECTARE / REFERENCE_LABOUR_HOURS_PER_HECTARE,
+    reaping_rate_multiplier=1.0,
+    ploughing_yield_multiplier=1.0,
+    tillage_capacity=HOE_TILLAGE_CAPACITY)
+
 HORSE_COLLAR_AND_MOULDBOARD = Toolkit(
     name="horse_collar_and_mouldboard",
     labour_hours_multiplier=HORSE_COLLAR_LABOUR_HOURS_MULTIPLIER,
     reaping_rate_multiplier=1.0,  # unaffected: this toolkit changes
                                   # ploughing, not reaping - see the
                                   # TOOLKIT TABLE section above.
-    ploughing_yield_multiplier=HORSE_COLLAR_PLOUGHING_YIELD_MULTIPLIER)
+    ploughing_yield_multiplier=HORSE_COLLAR_PLOUGHING_YIELD_MULTIPLIER,
+    tillage_capacity=MOULDBOARD_TILLAGE_CAPACITY)
 
 SCYTHE_AND_CRADLE = Toolkit(
     name="scythe_and_cradle",
     labour_hours_multiplier=1.0,  # unaffected: a scythe changes reaping,
                                   # not ploughing/sowing/weeding.
     reaping_rate_multiplier=SCYTHE_AND_CRADLE_REAPING_RATE_MULTIPLIER,
-    ploughing_yield_multiplier=1.0)
+    ploughing_yield_multiplier=1.0,
+    tillage_capacity=ARD_TILLAGE_CAPACITY)
 
 MECHANICAL_REAPER = Toolkit(
     name="mechanical_reaper",
@@ -1307,7 +1292,8 @@ MECHANICAL_REAPER = Toolkit(
                                   # in the reaping RATE below; ploughing,
                                   # sowing and threshing are unchanged.
     reaping_rate_multiplier=MECHANICAL_REAPER_REAPING_RATE_MULTIPLIER,
-    ploughing_yield_multiplier=1.0)
+    ploughing_yield_multiplier=1.0,
+    tillage_capacity=ARD_TILLAGE_CAPACITY)
 
 
 # ----------------------------------------------------------------------

@@ -592,26 +592,6 @@ class CropSoilRotationToolkitAxisTests(unittest.TestCase):
             / (1.0 - agriculture.THREE_FIELD_FALLOW_SHARE_OF_HOLDING),
             places=6)
 
-    def test_nile_flood_recession_rotation_raises_yield_and_frees_the_most_land(self):
-        # The exceptional-land end of the rotation axis: continuous
-        # cropping (almost no fallow) AND a fertility bonus from the silt,
-        # moving together as the ROTATION TABLE section says they should.
-        # Both should beat the two-field default, and Nile's near-zero
-        # fallow should free more land than three-field's partial cut.
-        default_fraction = agriculture.fraction_of_population_that_must_farm()
-        three_field_fraction = agriculture.fraction_of_population_that_must_farm(
-            rotation=agriculture.THREE_FIELD)
-        nile_fraction = agriculture.fraction_of_population_that_must_farm(
-            rotation=agriculture.NILE_FLOOD_RECESSION)
-        self.assertLess(nile_fraction, default_fraction)
-        self.assertLess(nile_fraction, three_field_fraction)
-
-        nile_holding = agriculture.holding_hectares_required_per_farm_worker(
-            rotation=agriculture.NILE_FLOOD_RECESSION)
-        three_field_holding = agriculture.holding_hectares_required_per_farm_worker(
-            rotation=agriculture.THREE_FIELD)
-        self.assertLess(nile_holding, three_field_holding)
-
     def test_horse_collar_toolkit_saves_labour_and_raises_the_area_when_the_year_binds(self):
         # The horse collar and mouldboard need fewer hours per hectare
         # (HORSE_COLLAR_LABOUR_HOURS_MULTIPLIER < 1), which raises the

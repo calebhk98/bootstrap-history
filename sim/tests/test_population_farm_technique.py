@@ -6,6 +6,7 @@ literacy rules are called as functions; no game is built. The decades-long runs 
 farm share) are test_population_farm_technique_scenario."""
 QUICK_TOPIC = True
 
+import json
 import os
 import unittest
 from types import SimpleNamespace
@@ -63,9 +64,21 @@ class NoSecondPopulationTests(unittest.TestCase):
 
 
 class TechniqueTests(unittest.TestCase):
-    def test_default_technique_is_the_reference_one(self):
+    def test_a_society_without_draught_animals_farms_with_the_hoe(self):
         labour, _world = _labour()
-        self.assertEqual(labour._farming_technique().toolkit, agriculture.DEFAULT_TOOLKIT)
+        self.assertEqual(labour._farming_technique().toolkit, agriculture.HAND_HOE)
+
+    def test_the_draught_capability_gives_the_ard_the_reference_toolkit(self):
+        labour, world = _labour(done=("cap_power_muscle",))
+        world.civ["starting_techs"] = list(world.civ.get("starting_techs", ())) + ["cap_power_muscle"]
+        self.assertEqual(labour._farming_technique().toolkit._replace(name=agriculture.DEFAULT_TOOLKIT.name), agriculture.DEFAULT_TOOLKIT)
+
+    def test_the_hoe_costs_the_hours_the_hoe_recipe_does(self):
+        # The production data's own two wheat entries, both built from data/world/farm_labour.json.
+        with open(os.path.join(os.path.dirname(_REPOSITORY_SIM_DIRECTORY), "data", "production", "40_organics.json"), encoding="utf-8") as handle:
+            materials = json.load(handle)["materials"]
+        hoe_over_plough = materials["wheat_hoe_kg"]["labour_hours"]["farmer"] / materials["wheat_kg"]["labour_hours"]["farmer"]
+        self.assertAlmostEqual(agriculture.HAND_HOE.labour_hours_multiplier, hoe_over_plough, places=6)
 
     def test_adoption_grows_with_age(self):
         labour, world = _labour(done=("fud_mechanical_reaper",), year=100, done_year={"fud_mechanical_reaper": 100})
@@ -82,7 +95,7 @@ class TechniqueTests(unittest.TestCase):
 
     def test_a_technology_not_held_does_nothing(self):
         labour, _world = _labour(done=())
-        self.assertEqual(labour._farming_technique(), farming_technique.DEFAULT_TECHNIQUE)
+        self.assertEqual(labour._farming_technique(), farming_technique.DEFAULT_TECHNIQUE._replace(toolkit=farming_technique.BASE_TOOLKIT))
 
 
 class MechanisationTests(unittest.TestCase):

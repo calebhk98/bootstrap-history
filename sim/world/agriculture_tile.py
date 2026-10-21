@@ -26,4 +26,5 @@ def crop_technique(technique, storage_technique: Optional["agriculture.StorageTe
         open_field_cropped_share=1.0 - rotation.fallow_share_of_holding,
         seed_kg_per_cropped_hectare=crop.planting_material_kg_per_ha,
         loss_fraction=storage_technique.spoilage_rate_per_year,
-        kcal_per_kg=crop.energy_kcal_per_kg)
+        kcal_per_kg=crop.energy_kcal_per_kg,
+        tillage_capacity=toolkit.tillage_capacity)

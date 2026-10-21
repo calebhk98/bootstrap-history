@@ -185,8 +185,9 @@ def build_setup(sim, opening=None, production=None):
     tile_ids, world_map = civilisation_tiles(civ, sim.world_map)
     partners = opening.get("partners") or {}
     all_tile_ids = list(tile_ids) + [tile for opened in partners.values() for tile in opened["tiles"]]
-    cropped_share = 1.0 - sim.labour.farming_technique().rotation.fallow_share_of_holding
-    tiles = tile_costs.tiles_from_map(world_map, all_tile_ids, cropped_share)
+    technique = sim.labour.farming_technique()
+    cropped_share = 1.0 - technique.rotation.fallow_share_of_holding
+    tiles = tile_costs.tiles_from_map(world_map, all_tile_ids, cropped_share, technique.toolkit.tillage_capacity)
     for partner_id, opened in partners.items():
         for tile in opened["tiles"]:
             tiles[tile] = dataclasses.replace(tiles[tile], country=partner_id)

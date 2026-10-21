@@ -294,8 +294,7 @@ def gross_harvest_kg(
 
     per_land_component = effective_hectares ** (1.0 - LABOUR_OUTPUT_ELASTICITY)
     per_labour_component = labour_hours ** LABOUR_OUTPUT_ELASTICITY
-    fertility_multiplier = (
-        toolkit.ploughing_yield_multiplier * rotation.soil_fertility_yield_multiplier)
+    fertility_multiplier = toolkit.ploughing_yield_multiplier
     return (total_factor_productivity * per_land_component * per_labour_component
             * land.quality * fertility_multiplier
             * technique_multiplier * weather_multiplier)

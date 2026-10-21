@@ -48,7 +48,6 @@ class FarmFollowsSoil(unittest.TestCase):
         self.assertLess(after, before)
 
     def test_the_three_field_edge_is_the_stocks(self):
-        self.assertEqual(agriculture.THREE_FIELD.soil_fertility_yield_multiplier, 1.0)
         without_legumes = agriculture.THREE_FIELD._replace(name="three_field_no_legumes", legume_share_of_holding=0.0)
         _before, harvest_with, stock_with = self.years_under(agriculture.THREE_FIELD)
         _before, harvest_without, stock_without = self.years_under(without_legumes)

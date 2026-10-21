@@ -15,6 +15,10 @@ Technique = collections.namedtuple("Technique", ["crop", "rotation", "toolkit"])
 DEFAULT_TECHNIQUE = Technique(
     agriculture.DEFAULT_CROP, agriculture.DEFAULT_ROTATION, agriculture.DEFAULT_TOOLKIT)
 
+# What a society farms with before any technology says otherwise: a hand hoe. The draught-animal capability declares
+# the ard behind its team; the rest of the toolkits are declared by the technologies that bring them.
+BASE_TOOLKIT = agriculture.HAND_HOE
+
 
 
 def entries_by_axis(declarations):
@@ -86,7 +90,7 @@ def technique_from_adoption(adoption, declarations):
     return Technique(
         crop,
         _axis(DEFAULT_TECHNIQUE.rotation, entries["rotation"], adoption),
-        _axis(DEFAULT_TECHNIQUE.toolkit, entries["toolkit"], adoption))
+        _axis(BASE_TOOLKIT, entries["toolkit"], adoption))
 
 
 def hours_per_hectare(technique):

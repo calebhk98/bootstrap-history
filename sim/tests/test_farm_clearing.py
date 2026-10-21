@@ -109,8 +109,7 @@ class OpeningAreaTests(unittest.TestCase):
 
     def _net_kg(self, ladder, hectares):
         gross_per_hectare = (self.crop.planting_material_kg_per_ha * self.crop.fold_return_on_planting_material
-                             * TECHNIQUE.toolkit.ploughing_yield_multiplier
-                             * TECHNIQUE.rotation.soil_fertility_yield_multiplier)
+                             * TECHNIQUE.toolkit.ploughing_yield_multiplier)
         total = 0.0
         for fertility, parcel_hectares in ladder:
             step = min(parcel_hectares, hectares)

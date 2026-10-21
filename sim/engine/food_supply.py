@@ -23,8 +23,9 @@ class FoodSupplyMixin:
 
     def farm_sites(self):
         """{tile: geography's crop site} over the held tiles under the society's rotation."""
-        share = 1.0 - self.labour.farming_technique().rotation.fallow_share_of_holding
-        return self.geography.crop_sites(share, self.soil_nitrogen_factors())
+        technique = self.labour.farming_technique()
+        share = 1.0 - technique.rotation.fallow_share_of_holding
+        return self.geography.crop_sites(share, self.soil_nitrogen_factors(), technique.toolkit.tillage_capacity)
 
     def society_food_potential(self):
         """{source id: kcal a year} over the held tiles: the land's sustainable yield, game thinned by past hunting,

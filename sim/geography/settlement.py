@@ -142,7 +142,8 @@ def cropped_hectares(tile_id: str) -> float:
     """Hectares of the tile cropped in a year under the reference crop technique (0 without one)."""
     if _reference_crop_technique is None:
         return 0.0
-    return float(queries.crop_site(tile_id, _reference_crop_technique.open_field_cropped_share).cropped_hectares)
+    return float(queries.crop_site(tile_id, _reference_crop_technique.open_field_cropped_share,
+                              tillage_capacity=_reference_crop_technique.tillage_capacity).cropped_hectares)
 
 
 def reference_kcal_per_tonne() -> float:
