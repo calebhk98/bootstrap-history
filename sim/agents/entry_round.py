@@ -19,8 +19,8 @@ class NicheEntry:
 		self.pool, self.strata_exist = pool, strata_exist
 		self.tile = firm_entry.firm_tile(registry, None)
 		self.carried = firm_entry.carrying_cost(world, node_id, tile=self.tile)
-		upkeep, wages = business_books.yearly_costs(world, node_id)
-		self.costs = upkeep + wages + self.carried
+		yearly = business_books.yearly_costs(world, node_id)
+		self.costs: Optional[float] = None if yearly is None or self.carried is None else sum(yearly) + self.carried
 		probe = Firm("probe", ActorRecord(kind="firm", founded_year=world.year))
 		self.seen = imitation.in_sight(self.tile, node_id, world)
 		self.chain = imitation.missing_chain(node_id, world, probe) if self.seen else None
@@ -29,7 +29,7 @@ class NicheEntry:
 	def found(self, rivals: float, waiting: int) -> Optional[str]:
 		"""The id of a firm founded into the niche, or None when no entrant would earn enough."""
 		registry, world, node_id = self.registry, self.world, self.node_id
-		if self.plan is None:
+		if self.plan is None or self.costs is None:   # no plan, or costs the country keeps no record of: no entry
 			return None
 		gross = firm_entry.expected_entry_gross(registry, world, node_id, rivals, waiting + 1)
 		expected = gross - self.costs

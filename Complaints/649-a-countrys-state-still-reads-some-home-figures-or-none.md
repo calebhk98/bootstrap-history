@@ -1,6 +1,6 @@
 # A country's state still reads some home figures, or none: no trade book, coin stock, prices, equipment, trade counts or research hands of its own
 
-**Status:** open (partly done: prices, coin, trade book, people by trade, equipment, rent owners and seat taxpayers (home and abroad) read the country's own part of the economy; plant books and crew of state enterprises and of any firm abroad; research hands, interest groups and unskilled people remain below)
+**Status:** open (partly done: prices, coin, trade book, people by trade, equipment, rent owners and seat taxpayers (home and abroad) read the country's own part of the economy; plant books, crew, site rent, manager pay, entry figures and entry costs of state enterprises and of any firm abroad; research hands, interest groups and unskilled people remain below)
 
 Follow-up to Complaint 593 (the foreign state is now the one `Government`, scoped to its country; `sim/agents/country_state.py`).
 
@@ -10,7 +10,6 @@ readings from its profile and its part of the one economy, but these have no per
 - Unskilled people: `national_people("labourer")` is still the working age, as at home (labelled heuristic in `country_state.py`, with the fallback for a country the economy has no part for).
 - Interest groups and patronage: `group_claims` is empty and `patron_ask` is zero abroad.
 - Research: a country's state copies but does not originate research (`Government.researches`), as research hands are the founder's.
-- A country's plants: site rent, the manager's hours (`carry`, `management_cost` reads the home labour quote) and the choice of which entry to open (`concern_gross`) and entry decisions (`yearly_costs`) read home figures; the books and the crew are done (below). `concern_staff` is the plant's own technology (people per trade), not a country figure.
 
 **Done.** A country's `material_cost` and `material_price` are its own market areas' quote (`CountryAnswers.price_per_tonne`,
 nothing where they quote none); its `coin_regime` is the one economy's money standard and its `coin_stock_value` is the
@@ -51,6 +50,17 @@ trade (`CountryAnswers.people_of_trade`) less what the other actors of that coun
 never the founder's pool. The home side counts the same way: the home `free_fte` and `actor_staff_fte` subtract only the home country's
 actors' staff (`ActorRegistry.home_staff_fte`, an actor with no country being home), not the foreign actors', whose crew come from their
 country's labour. Checks: `sim/tests/test_country_plant_books.py`, `sim/tests/test_home_pool_country_scoped.py`.
+
+A country's plant reads the rest of what running it costs from the same part of the economy (`sim/agents/country_state_site.py`): its site
+rent is the hectares the concern occupies at the rent its land market let on the tile (the mean of the land let in the country where none was
+let on the tile or the tile is not the country's: `CountryAnswers.land_rent_at`); the manager's hours are paid at the best paid trade of the
+crew at the country's pay (`hourly_pay`, used by `firm_entry.management_cost`); the takings of a ramped-up concern (`concern_gross`, which
+chooses the entry a state opens) and the yearly costs an entrant weighs (`plant_costs`, behind `business_books.yearly_costs`) are the tree's
+book figures at the country's cost scale and prices. A figure the country keeps no record of (no part of the economy, no land let, a trade nobody
+pays, a goods category) makes the reading None; the actor does not enter, a state does not open the entry, a plant pays no rent it cannot read,
+and a research margin reads as nothing, never the home figure. TEMPORARY HEURISTIC: no hazard or war factor applies abroad (retire: this
+complaint). The home world keeps its figures (`hourly_pay` is the home quote, `plant_costs` its upkeep and wage bill). Checks:
+`sim/tests/test_country_abroad_readings.py`, `sim/tests/test_country_economy.py`.
 
 **Why it matters.** A country's revenue and war capacity are inputs of the game (481); each of these makes a country's
 state read the founder's side of the world or nothing.

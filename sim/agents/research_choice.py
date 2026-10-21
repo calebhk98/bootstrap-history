@@ -19,8 +19,10 @@ PRICED_PER_REVIEW = 2
 def expected_concern_margin(actor: Any, node_id: str, world: Any) -> float:
 	"""Yearly margin an operator expects from the node's concern once it has ramped up, at the economy's prices."""
 	rivals = actor.rivals_of(node_id, actor.actor_id) if getattr(actor, "rivals_of", None) else 0.0
-	upkeep, wages = business_books.yearly_costs(world, node_id)
-	return world.entry_gross(node_id, rivals, 1.0) - upkeep - wages
+	yearly = business_books.yearly_costs(world, node_id)
+	if yearly is None:   # the actor's country keeps no record of the costs: the concern is worth nothing to it
+		return 0.0
+	return world.entry_gross(node_id, rivals, 1.0) - sum(yearly)
 
 
 def concern_worth(actor: Any, node_id: str, world: Any) -> float:

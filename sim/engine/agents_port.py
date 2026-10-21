@@ -6,9 +6,9 @@ of the engine and lets a test or a second scenario supply another one.
 import hashlib
 import math
 import random
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional, Set, Tuple
 
-from sim.agents.api import OBSERVATION_RANGE_KM, business_books, SECRET_EXPOSURE, demand_answer, payroll, supply
+from sim.agents.api import OBSERVATION_RANGE_KM, business_books, business_plant_books, SECRET_EXPOSURE, demand_answer, payroll, supply
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
 from .agents_port_budget import BudgetView
@@ -188,6 +188,14 @@ class SimWorld(BudgetView, SiteView, RevenueView, GroupView, StakeView, Disclosu
 		return self.span_factor(capacity) * sum(
 			people * self.hours_per_person_year * self.labour_market.quote(trade)
 			for trade, people in self.concern_staff(node_id).items())
+
+	def hourly_pay(self, trade: str) -> Optional[float]:
+		"""What an hour of a trade pays at the going wage of the home labour market."""
+		return float(self.labour_market.quote(trade, 0.0))
+
+	def plant_costs(self, node_id: str) -> Optional[Tuple[float, float]]:
+		"""(upkeep, wage bill) of a plant of the concern at its founding size at home."""
+		return business_plant_books.home_costs(self, node_id)
 
 	def free_fte(self, trade: str, actor_id: Optional[str]) -> Optional[float]:
 		"""People of a trade left in the pool for this actor after the founder's staff and

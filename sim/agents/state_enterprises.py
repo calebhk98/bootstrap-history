@@ -16,14 +16,14 @@ from .edges import EDGE_CUSTOMERS
 
 def entries_for(government: Any, world: Any) -> List[str]:
 	"""The entries the state should run a plant of: those it declares, and for each monopoly it holds that none of
-	its plants makes, the first known entry that makes the good and earns (an entry with no takings model is no business to open)."""
+	its plants makes, the first known entry that makes the good and earns (an entry with no takings model, or none the state's country can read, is no business to open)."""
 	record = government.record
 	wanted = set(record.state_enterprises)
 	made = {material for entry_key in government.business.entry_keys() for material in world.materials_made_by(entry_key)}
 	for material in sorted(record.state_monopolies):
 		if material in made or any(material in world.materials_made_by(entry_key) for entry_key in wanted):
 			continue
-		makers = sorted(entry_key for entry_key in world.concerns_making(material) if government.knows(entry_key, world) and world.concern_gross(entry_key) > 0.0)
+		makers = sorted(entry_key for entry_key in world.concerns_making(material) if government.knows(entry_key, world) and (world.concern_gross(entry_key) or 0.0) > 0.0)
 		if makers:
 			wanted.add(makers[0])
 	return sorted(wanted)
