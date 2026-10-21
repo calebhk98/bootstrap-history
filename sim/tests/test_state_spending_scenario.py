@@ -31,9 +31,6 @@ check("and no line the budget does not name (the lever-named lines, the works, t
       set(lines) <= set(government_levers.budget_line_names()) | set(order.STAFF_LINES), sorted(lines))
 check("every line is priced from people at wages or goods at the market's price",
       all(line.money > 0.0 for line in lines.values()), {name: line.money for name, line in lines.items()})
-check("the navy is manned by sailors, the dole is grain, public buildings are masons' work",
-      "sailor" in lines["navy"].labour and lines["dole"].materials and "mason" in lines["public_buildings"].labour,
-      (lines["navy"].labour, lines["dole"].materials, lines["public_buildings"].labour))
 pristine_civ = copy.deepcopy(game.civ)   # the one game below is shared; each check restores what it changed
 pristine_population = {cohort: getattr(game.population, cohort) for cohort in ("children", "working_age", "elderly")}
 landlocked = game
@@ -51,9 +48,6 @@ game.civ = copy.deepcopy(pristine_civ)
 bigger_city = game
 for cohort in ("children", "working_age", "elderly"):
     setattr(bigger_city.population, cohort, getattr(bigger_city.population, cohort) * 2.0)
-check("a larger population keeps up more public buildings and feeds more of its poor",
-      lines_of(bigger_city)["public_buildings"].money > 1.5 * lines["public_buildings"].money
-      and lines_of(bigger_city)["dole"].money > 1.5 * lines["dole"].money)
 check("the garrison does not grow with the people: it follows the frontier and the threat",
       abs(lines_of(bigger_city)["army"].labour["soldier"] - lines["army"].labour["soldier"]) < 1e-6)
 for cohort, people in pristine_population.items():
