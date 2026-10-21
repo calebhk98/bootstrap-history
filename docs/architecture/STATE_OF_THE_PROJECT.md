@@ -89,7 +89,7 @@ is still to do.
 The accounting defects an outside review found are fixed (546, 547, 548 closed; 529 closed), and several
 mechanisms moved toward physical inputs (513, 517, 531, 532, 534, 535, 550, 552, 559, 560 partly). What blocks
 the rest is the opening: the hidden spin-up drifts for decades (473), and every change elsewhere moves where it
-stops, so price and volume checks that read a particular year flip with unrelated merges. In order:
+stops, so price and volume checks that read a particular year flip with unrelated merges. Reference-model research for the opening (solved stationary state, buffer-stock savings, licences): `Complaints/reports/research-reference-economy-models.md`. In order:
 
 1. **The opening (526, with 473, 527, 545).** Households' savings wish has almost nothing to absorb it at the
    opening, so the opening's income falls toward the floors and the wage drifts down through the spin-up
