@@ -1,150 +1,123 @@
-"""staffing closures explained: Complaints/229, 215, 201, 202, 231, 242."""
+"""Staffing closures explained: Complaints 229, 215, 201, 202, 231, 242, 233, 205, 206, 235, 246. The rules are called on
+stubs over the real mixins (the year's tally and summary, the unused-hours notes) and on the plain functions behind the
+log lines and the sentences; the closure, the recommendation of `stuck` and the starved allocation through a whole game are
+test_staffing_closures_explained_scenario. The spare-number arithmetic (held, in use, allowance) is
+test_staffing_warnings."""
+
+QUICK_TOPIC = True
+
 import re
+from types import SimpleNamespace
 
-from .harness import *  # noqa: F401,F403
+from .harness import check
 
+from sim.agents.api import business_review
+from sim.engine.allocation_notes import AllocationNotesMixin
 from sim.engine.data import TRADE_FAMILY
-from sim.ui.proto.render_screen_state_blocks import _staffing_warning_sentences
+from sim.engine.projects_staffing import StaffingMixin
+from sim.engine.projects_staffing_report import StaffingReportMixin
+from sim.engine.staffing_events import unstaffed_closure_line
+from sim.labour.hire_outcome import craft_trades_report
+from sim.refusal import cause_of, facts_of
+from sim.ui.proto.dispatch_ventures import _non_craft_labour_names, _scholar_family_names
 
-CLOSING_NODE = concern_needing_craftsmen_to_supervise()
-
-
-def staffed_sim():
-	test_sim = sim(capital=1_000_000.0)
-	test_sim.done.update(NODES[CLOSING_NODE]["pre"])
-	test_sim.done.add(CLOSING_NODE)
-	test_sim._done_changed()
-	test_sim.employees["artisan"] = 6.0
-	test_sim.labour._resync_pools()
-	test_sim.open_venture(CLOSING_NODE)
-	return test_sim
+STAFF = business_review.STAFF_SHORT
 
 
-def new_messages(test_sim, start):
-	return [message for _year, message in test_sim.log[start:]]
+# ---- 233: the closure line says why, how many are still shut, and names the remedies ---------------------------------
+class Report(StaffingReportMixin, StaffingMixin):
+    """The tally and the summary over a stub of the projects' record."""
+
+    def __init__(self, shut=(), year=100):
+        self.state = SimpleNamespace(
+            projects=SimpleNamespace(staffing_tally={}, closures={node_id: {"reason": STAFF, "year": year - 1} for node_id in shut},
+                                     mothballed=set(shut)),
+            scenario=SimpleNamespace(year=year))
 
 
-# --- 233: the closure line says why, how many are still shut, and names the remedies
-closing_sim = staffed_sim()
-closing_sim.employees["artisan"] = 0.0
-closing_sim.labour._resync_pools()
-log_start = len(closing_sim.log)
-closed = closing_sim.close_unstaffed_ventures(closing_sim.year)
-closure_text = " ".join(new_messages(closing_sim, log_start))
-check("set-up: the staffing rule closed the concern", closed == [CLOSING_NODE], closed)
+line = unstaffed_closure_line(["mill"], {"craftsmen": 2.1}, Report.staffing_shortfall_words({"craftsmen": 2.1}), 1,
+                              StaffingReportMixin.STAFFING_REMEDIES, 300.0)
 for remedy in ("keep", "reserve", "auto_replace_foreman"):
-	check("the closure line names '%s' as a remedy" % remedy, remedy in closure_text, closure_text)
-check("the closure line names the resource that ran short", "craftsm" in closure_text, closure_text)
-summary = closing_sim.staffing_closure_summary()
+    check("the closure line names '%s' as a remedy" % remedy, remedy in line, line)
+check("the closure line names the resource that ran short and how short", "craftsmen (short 2.1 full-time)" in line, line)
+check("the closure line counts those still shut and names what closed", "1 now shut" in line and "mill" in line, line)
+check("the closure line keeps its facts: what closed, why, what was short and what it stopped earning",
+      facts_of(line)["concerns"] == ["mill"] and facts_of(line)["closed_because"] == "short_staffed"
+      and facts_of(line)["short"] == {"craftsmen": 2.1} and facts_of(line)["stops_earnings_per_year"] == 300.0
+      and cause_of(line) == "concerns_closed_unstaffed", facts_of(line))
+many = unstaffed_closure_line(["a", "b", "c", "d", "e", "f"], {}, "nothing", 6, "", 0.0)
+check("six closures name four and say 'and others'", "and others" in many and "a, b, c, d" in many, many)
+
+report = Report(shut=["mill"])
+report.record_staffing_closures(1, {"craftsmen": 2.1})
+summary = report.staffing_closure_summary()
 check("the closure summary counts closed, reopened and still shut",
-      summary is not None and re.search(r"closed 1\b", summary) and re.search(r"reopened 0\b", summary)
-      and re.search(r"still shut 1\b", summary), summary)
-closing_sim.employees["artisan"] = 6.0
-closing_sim.labour._resync_pools()
-log_start = len(closing_sim.log)
-closing_sim.reopen_restaffed_ventures(closing_sim.year)
-reopen_text = " ".join(new_messages(closing_sim, log_start))
-check("the reopening line says how many are still shut, so the two counts reconcile",
-      "still shut" in reopen_text, reopen_text)
-check("the summary reflects the reopening",
-      re.search(r"reopened 1\b", closing_sim.staffing_closure_summary() or ""),
-      closing_sim.staffing_closure_summary())
-check("no summary when nothing has closed", sim(capital=1e6).staffing_closure_summary() is None)
-
-# --- 219: stuck recommends only what open accepts
-recommend_sim = sim(capital=1e7)
-for node_id in ("en_undershot_wheel", "mirror_amalgam"):
-	recommend_sim.done.update(NODES[node_id]["pre"])
-	recommend_sim.done.add(node_id)
-recommend_sim._done_changed()
-stuck_reply = S._agent_dispatch(recommend_sim, NODES, {"cmd": "stuck"})
-stuck_text = json.dumps(stuck_reply)
-recommended = re.findall(r"'open ([a-z0-9_]+)'", stuck_text)
-check("set-up: stuck makes an open recommendation", recommended, stuck_text)
-for node_id in recommended:
-	check("stuck recommends %s only if open would accept it" % node_id,
-	      recommend_sim.open_venture(node_id, pay=False)[0], recommend_sim.open_venture(node_id, pay=False))
-foreman_node = "mirror_amalgam"
-foreman_trade, _fte = recommend_sim.venture_foreman(foreman_node)
-check("one function states the staffing refusal open applies",
-      recommend_sim.staffing_open_refusal(foreman_node) == recommend_sim.open_venture(foreman_node)[1],
-      recommend_sim.staffing_open_refusal(foreman_node))
-check("a shut concern that needs a foreman is never recommended while no foreman is free",
-      foreman_node not in recommended, recommended)
-
-# --- 205: a project starved of directed hours is told the command that reserves them
-starve_sim = sim(capital=1e7)
-first_id, second_id = "academy_network", "school_founded"   # no scarce material limits their pace
-starve_sim.order = [first_id, second_id]
-for node_id in (first_id, second_id):
-	node = NODES[node_id]
-	starve_sim.active[node_id] = dict(ph_left=float(node["ph"]), yrs=0.0, spent=0.0, cost_left=0.0,
-	                                  lab_left={trade: 0.0 for trade in node.get("lab", {})})
-starve_sim.hour_allocations[first_id] = 1400.0
-starve_sim.hour_allocations[second_id] = 1000.0
-log_start = len(starve_sim.log)
-starve_sim.step()
-starved_lines = [message for message in new_messages(starve_sim, log_start)
-                 if "DIRECTED HOURS UNUSED" in message and "before this one's turn came" in message]
-check("the pool-ran-out reason names `allocate <project> <hours>`",
-      starved_lines and "allocate %s" % second_id in starved_lines[0], starved_lines)
-
-# --- 206: a standing order that keeps falling short is reported once until it changes
-second_name = NODES[second_id]["name"]
+      re.search(r"closed 1\b", summary) and re.search(r"reopened 0\b", summary) and re.search(r"still shut 1\b", summary), summary)
+check("...and names the cause and the remedies", "craftsmen (short 2.1 full-time)" in summary and "keep <id> staffed" in summary, summary)
+report.state.projects.closures.clear()
+report.state.projects.mothballed.clear()
+report.record_staffing_reopenings(1)
+check("the summary reflects the reopening and the shut count falls", re.search(r"reopened 1\b", report.staffing_closure_summary())
+      and re.search(r"still shut 0\b", report.staffing_closure_summary()), report.staffing_closure_summary())
+check("no summary when nothing has closed", Report().staffing_closure_summary() is None)
+last_year = Report()
+last_year.state.projects.staffing_tally = {"year": 99, "closed": 3, "reopened": 0, "short": {}}
+check("a new year starts the tally afresh", last_year.staffing_closure_summary() is None, last_year.state.projects.staffing_tally)
+by_choice = Report()
+by_choice.state.projects.closures["m"] = {"reason": StaffingMixin.CLOSED_BY_CHOICE, "year": 90}
+by_choice.state.projects.mothballed.add("m")
+check("a concern shut by choice is not shut for want of staff", by_choice.staffing_shut_count() == 0 and by_choice.staffing_closure_summary() is None)
 
 
-def unused_lines_about(test_sim, start, name):
-	return [message for message in new_messages(test_sim, start)
-	        if "DIRECTED HOURS UNUSED" in message and name in message]
+# ---- 205, 206: a standing order that keeps falling short is reported once until it changes -------------------------------
+class Notes(AllocationNotesMixin):
+    """The unused-hours report over a household that logs and keeps the standing orders."""
+
+    def __init__(self, orders):
+        self.log = []
+        self.state = SimpleNamespace(
+            household=SimpleNamespace(unused_hours_reported={}, hour_allocations=dict(orders), log=self.log),
+            scenario=SimpleNamespace(year=100))
+        self.nodes = {"school": {"name": "School founding"}, "academy": {"name": "Academy"}}
+
+    def said_about(self, name):
+        return [message for _year, message in self.log if "DIRECTED HOURS UNUSED" in message and name in message]
 
 
-repeat_sim = sim(capital=1e7)
-repeat_sim.active[second_id] = dict(ph_left=1000.0, yrs=0.0, spent=0.0, cost_left=0.0, lab_left={})
-repeat_sim.hour_allocations[second_id] = 1000.0
-pace_reason = "its own pace this year - at most 300 hours could not use the rest"
+pace = "its own pace this year - at most %d hours could use the rest"
+notes = Notes({"school": 1000.0})
 for year_number in range(3):
-	log_start = len(repeat_sim.log)
-	repeat_sim.report_unused_directed_hours([(second_id, 700.0, pace_reason.replace("300", str(300 - year_number)))])
-	said = len(unused_lines_about(repeat_sim, log_start, second_name))
-	check("year %d: a shortfall that falls short the same way is reported once, not yearly" % year_number,
-	      said == (1 if year_number == 0 else 0), said)
-repeat_sim.hour_allocations[second_id] = 600.0
-log_start = len(repeat_sim.log)
-repeat_sim.report_unused_directed_hours([(second_id, 300.0, pace_reason)])
-check("a changed standing order is reported afresh",
-      len(unused_lines_about(repeat_sim, log_start, second_name)) == 1, new_messages(repeat_sim, log_start))
-repeat_sim.report_unused_directed_hours([])
-log_start = len(repeat_sim.log)
-repeat_sim.report_unused_directed_hours([(second_id, 300.0, pace_reason)])
-check("a shortfall that recovered and returned is reported afresh",
-      len(unused_lines_about(repeat_sim, log_start, second_name)) == 1, new_messages(repeat_sim, log_start))
-check("the first report says it will not repeat and how to lower the order",
-      "once" in starved_lines[0] or "not repeat" in starved_lines[0], starved_lines)
+    before = len(notes.log)
+    notes.report_unused_directed_hours([("school", 700.0, pace % (300 - year_number))])
+    check("year %d: a shortfall that falls short the same way is reported once, not yearly" % year_number,
+          len(notes.log) - before == (1 if year_number == 0 else 0), notes.log)
+check("the report names the command that lowers the standing order to what the project can use, and says it will not repeat",
+      "allocate school 300" in notes.log[0][1] and "allocate school 0" in notes.log[0][1] and "said once" in notes.log[0][1], notes.log[0][1])
+notes.state.household.hour_allocations["school"] = 600.0
+before = len(notes.log)
+notes.report_unused_directed_hours([("school", 300.0, pace % 300)])
+check("a changed standing order is reported afresh", len(notes.log) - before == 1, notes.log)
+notes.report_unused_directed_hours([])
+before = len(notes.log)
+notes.report_unused_directed_hours([("school", 300.0, pace % 300)])
+check("a shortfall that recovered and returned is reported afresh", len(notes.log) - before == 1, notes.log)
+before = len(notes.log)
+notes.report_unused_directed_hours([("school", 300.0, "a different reason")])
+check("the same order falling short for a different reason is reported afresh", len(notes.log) - before == 1, notes.log)
+check("the report carries its facts: the project and the hours unused", facts_of(notes.log[0][1])["project"] == "school"
+      and facts_of(notes.log[0][1])["hours_unused"] == 700.0, facts_of(notes.log[0][1]))
+other = Notes({"school": 1000.0, "academy": 500.0})
+other.report_unused_directed_hours([("school", 100.0, "reason one"), ("academy", 100.0, "reason one")])
+check("each project's order is reported on its own", len(other.said_about("School")) == 1 and len(other.said_about("Academy")) == 1)
 
-# --- 235: the spare number is explained in full-time equivalents
-spare_sim = sim(capital=1e6)
-spare_sim.done.add("ag2_canning")
-spare_sim._done_changed()
-spare_sim.open_venture("ag2_canning")
-spare_sim.state.household.artisans += 1.0
-spare_sim.cfg["immortal"] = False  # an immortal founder's own share is never at risk
-spare_warnings = spare_sim.staffing_closure_warnings()
-check("set-up: the concern is on the staffing warning list", spare_warnings, spare_warnings)
-if spare_warnings:
-	warning = spare_warnings[0]
-	check("the warning carries held, in use and allowance behind its spare number",
-	      all(key in warning for key in ("held", "in_use", "allowance")), warning)
-	check("the spare number is held plus allowance minus in use",
-	      abs(warning["within"] - (warning["held"] + warning["allowance"] - warning["in_use"])) < 0.06, warning)
-	spare_screen = " ".join(_staffing_warning_sentences(spare_warnings))
-	check("the state screen explains the arithmetic once, in full-time equivalents",
-	      "full-time" in spare_screen and "in use" in spare_screen, spare_screen)
-
-# --- 246: the interchangeability sentence comes from the trade table
-ventures_reply = S._agent_dispatch(sim(capital=1e6), NODES, {"cmd": "ventures"})
-sentence = ventures_reply.get("these_are_not_interchangeable", "")
+# ---- 246: the interchangeability sentence comes from the trade table ---------------------------------------------------------
 scholar_trades = sorted(trade for trade, family in TRADE_FAMILY.items() if family == "scholar")
-check("every scholar-family trade is named in the sentence",
-      all(trade in sentence for trade in scholar_trades), sentence)
-check("no craft trade is called a scholar in the sentence",
-      "machinist" not in sentence and "smith" not in sentence, sentence)
+craft_trades = sorted(trade for trade, family in TRADE_FAMILY.items() if family == "craft")
+sentence = _scholar_family_names()
+check("every scholar-family trade is named in the sentence", bool(scholar_trades) and all(trade + "s" in sentence for trade in scholar_trades), sentence)
+check("no craft trade is called a scholar in the sentence", bool(craft_trades) and not any(trade + "s" in sentence for trade in craft_trades), sentence)
+labour = SimpleNamespace(craft_trades_report=lambda: craft_trades_report(["smith", "chemist", "potter", "labourer"], lambda trade: trade in ("smith", "potter")))
+check("the labouring trades named are those the supervision check says are not craft, and not the scholar family's",
+      _non_craft_labour_names(SimpleNamespace(labour=labour)) == ("labourers" if TRADE_FAMILY.get("chemist") == "scholar" else "chemists, labourers"),
+      _non_craft_labour_names(SimpleNamespace(labour=labour)))
+check("the craft test splits the trades", craft_trades_report(["b", "a", "c"], lambda trade: trade == "a") == {"craft": ["a"], "not_craft": ["b", "c"]})

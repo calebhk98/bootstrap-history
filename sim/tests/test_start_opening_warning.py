@@ -1,36 +1,22 @@
-"""start_opening_warning: Complaint 127 - warn at start when free staff are insufficient to open the finished concern."""
+"""Scenario for Complaint 127: `start` warns when the free staff could not open the finished concern. The rule (a concern is
+short when its need exceeds the free scholars or craftsmen, within a tolerance, and quiet when the free staff cover it) is
+`staff_shortfall`, tested in test_completion_messaging; this is the reply through a whole game."""
 from .harness import *  # noqa: F401,F403
 
+WARNING = "today_you_could_not_open_this_when_it_is_done"
 
-# --- Complaint 127: start should warn when a concern cannot be opened with today's staff.
-# Concern with insufficient free staff to open.
-short_sim = sim(capital=1_000_000)
-# Complete prerequisites so we can start school_founded
-short_sim.done.update(NODES["school_founded"]["pre"])
-short_sim.done.add("freedman_staff")   # one option of the school's technical_staff group
-short_sim.venture_staff_free = lambda: (0.0, 0.0)
-short_sim.venture_hands = lambda node_id: (5.0, 5.0)
-short_reply = S._agent_dispatch(short_sim, NODES, {"cmd": "start", "id": "school_founded"})
-check("a concern started with insufficient staff says so in the warning",
-      bool(short_reply.get("today_you_could_not_open_this_when_it_is_done")),
-      short_reply.get("today_you_could_not_open_this_when_it_is_done"))
+game = sim(capital=1_000_000)
+game.done.update(NODES["school_founded"]["pre"])
+game.done.add("freedman_staff")   # one option of the school's technical_staff group
+game.venture_staff_free = lambda: (0.0, 0.0)
+game.venture_hands = lambda node_id: (5.0, 5.0)
 
-# Concern with sufficient free staff.
-staffed_sim = sim(capital=1_000_000)
-# Complete prerequisites so we can start school_founded
-staffed_sim.done.update(NODES["school_founded"]["pre"])
-staffed_sim.venture_staff_free = lambda: (50.0, 50.0)
-staffed_sim.venture_hands = lambda node_id: (5.0, 5.0)
-staffed_reply = S._agent_dispatch(staffed_sim, NODES, {"cmd": "start", "id": "school_founded"})
-check("...and stays quiet when the staff are free",
-      "today_you_could_not_open_this_when_it_is_done" not in staffed_reply,
-      staffed_reply.get("today_you_could_not_open_this_when_it_is_done"))
-
-# Non-concern technology has no warning.
-tech_sim = sim(capital=1_000_000)
-tech_sim.venture_staff_free = lambda: (0.0, 0.0)
-tech_sim.venture_hands = lambda node_id: (5.0, 5.0)
-tech_reply = S._agent_dispatch(tech_sim, NODES, {"cmd": "start", "id": "ag2_balanced_ration"})
-check("a non-concern technology has no opening staff warning",
-      "today_you_could_not_open_this_when_it_is_done" not in tech_reply,
-      tech_reply.get("today_you_could_not_open_this_when_it_is_done"))
+concern = S._agent_dispatch(game, NODES, {"cmd": "start", "id": "school_founded"})
+check("a concern started with insufficient staff says so in the warning", bool(concern.get(WARNING)), concern.get(WARNING))
+tech_game = sim(capital=1_000_000)
+tech_game.venture_staff_free = lambda: (0.0, 0.0)
+tech_game.venture_hands = lambda node_id: (5.0, 5.0)
+plain_id = next((node_id for node_id in ORDER if not tech_game.is_venture(node_id) and tech_game.start_reason(node_id)[0]), None)
+technology = S._agent_dispatch(tech_game, NODES, {"cmd": "start", "id": plain_id})
+check("a non-concern technology that starts has no opening staff warning, with no free staff",
+      plain_id is not None and technology.get("ok") and WARNING not in technology, (plain_id, technology))

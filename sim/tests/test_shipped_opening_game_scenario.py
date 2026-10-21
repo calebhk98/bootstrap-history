@@ -1,4 +1,5 @@
-"""A game opened from shipped cache entries is the same game as one that computed them, and runs no spin-up."""
+"""Scenario: a game opened from shipped cache entries is the same game as one that computed them, and runs no spin-up.
+The shipped-entry rules are test_shipped_openings; the spin-up is cut to its shortest so the computed game is cheap."""
 import os
 import random
 import tempfile
@@ -24,6 +25,7 @@ class ShippedOpeningGameTests(unittest.TestCase):
         _tree, _prices, nodes, _wages, _goods = load()
         with tempfile.TemporaryDirectory() as shipped, tempfile.TemporaryDirectory() as first, \
                 tempfile.TemporaryDirectory() as second, \
+                mock.patch.dict(os.environ, {economy_port_year.SPIN_UP_YEARS_ENV: "1,1"}), \
                 mock.patch.object(shipped_openings, "SHIPPED_OPENINGS_DIRECTORY", shipped):
             first_cache = os.path.join(first, "agent_economy")
             with mock.patch.object(economy_port_year, "SPIN_UP_CACHE_DIRECTORY", first_cache), \

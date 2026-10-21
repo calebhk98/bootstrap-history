@@ -1,19 +1,54 @@
-"""Complaint 572: `start` states at once what the first year would show: a trade with no hands yet."""
-from .harness import *  # noqa: F401,F403
-from .agent_command_helpers import ask_agent
+"""Complaint 572: when a trade a project needs will first have hands. The start gate, the start reply and the stall gate read
+one rule (`projects_trade_wait`), called here on a stub game with trainees in training; the `start` command through a whole
+game is test_start_waits_for_trade_scenario."""
 
-PROJECT = "mfg_cutting_fluid"      # owes hours to the machinist, a trade Rome lacks at the start
-game = sim(civ="rome_100ad", capital=500000)
-ask_agent(game, cmd="train", trade="machinist", n=1)
-reply = ask_agent(game, cmd="start", id=PROJECT)
-waits = reply.get("waits_for_trades") or {}
-check("a start whose trade is still in training is accepted and names the trade and the wait",
-      reply.get("ok") is True and set(waits) == {"machinist"} and waits["machinist"] > 0, reply)
+QUICK_TOPIC = True
 
-late = sim(civ="rome_100ad", capital=500000)
-ask_agent(late, cmd="train", trade="machinist", n=1)
-late.state.household.training[0][1] = late.state.scenario.year + 10
-late_reply = ask_agent(late, cmd="start", id=PROJECT)
-check("a start whose trainees arrive after the stall limit is refused with the staffing cause",
-      late_reply.get("ok") is False and late_reply.get("blocked_cause") == "none_left_trades", late_reply)
-check("...and nothing was started", PROJECT not in late.active, list(late.active))
+from types import SimpleNamespace
+
+from .harness import check
+
+from sim.engine.projects_trade_wait import (STALL_YEARS_BEFORE_ABANDONMENT, trade_wait_outlasts_the_project,
+                                            trades_the_project_waits_for, years_until_trade_has_hands)
+
+YEAR = 100
+
+
+def stub_game(supply, training):
+    """A game whose labour market has these hands by trade and whose household has these trainees: (label, year they
+    join, trade, how many)."""
+    return SimpleNamespace(
+        labour=SimpleNamespace(market_supply=lambda trade: supply.get(trade, 0.0)),
+        state=SimpleNamespace(scenario=SimpleNamespace(year=YEAR), household=SimpleNamespace(training=[list(row) for row in training])),
+        nodes={"project": {"lab": {"machinist": 50.0, "smith": 20.0, "idle_trade": 0.0}}})
+
+
+# ---- years until a trade has hands --------------------------------------------------------------------------------
+check("a trade with hands now waits no time",
+      years_until_trade_has_hands(stub_game({"smith": 2.0}, []), "smith") == 0.0)
+check("a trade nobody holds and nobody is learning waits for ever",
+      years_until_trade_has_hands(stub_game({}, []), "machinist") is None)
+check("a trade being learned waits until the soonest trainees join",
+      years_until_trade_has_hands(stub_game({}, [("t", YEAR + 3, "machinist", 1), ("t", YEAR + 2, "machinist", 1)]), "machinist") == 2.0)
+check("trainees who have already joined count as no wait, and trainees of another trade or none do not count",
+      years_until_trade_has_hands(stub_game({}, [("t", YEAR - 1, "machinist", 1)]), "machinist") == 0.0
+      and years_until_trade_has_hands(stub_game({}, [("t", YEAR + 1, "smith", 1), ("t", YEAR + 1, "machinist", 0)]), "machinist") is None)
+
+# ---- the trades a project waits for -----------------------------------------------------------------------------------
+game = stub_game({"smith": 2.0}, [("t", YEAR + 2, "machinist", 1)])
+check("a project names each trade it owes hours to that nobody holds yet, with the wait",
+      trades_the_project_waits_for(game, "project") == {"machinist": 2.0}, trades_the_project_waits_for(game, "project"))
+check("a trade nobody is learning is named with no end to the wait",
+      trades_the_project_waits_for(stub_game({"smith": 2.0}, []), "project") == {"machinist": None})
+check("a trade the project owes no hours to is never waited for",
+      "idle_trade" not in trades_the_project_waits_for(stub_game({}, []), "project"))
+check("a project whose trades all have hands waits for nothing",
+      trades_the_project_waits_for(stub_game({"smith": 1.0, "machinist": 1.0}, []), "project") == {})
+
+# ---- the stall gate -------------------------------------------------------------------------------------------------------
+check("trainees who arrive before the stall gate would abandon the project are waited for",
+      not trade_wait_outlasts_the_project(stub_game({}, [("t", YEAR + STALL_YEARS_BEFORE_ABANDONMENT - 2, "machinist", 1)]), "machinist"))
+check("trainees who arrive after it are not",
+      trade_wait_outlasts_the_project(stub_game({}, [("t", YEAR + STALL_YEARS_BEFORE_ABANDONMENT, "machinist", 1)]), "machinist"))
+check("a trade nobody is learning outlasts the project", trade_wait_outlasts_the_project(stub_game({}, []), "machinist"))
+check("a trade with hands never does", not trade_wait_outlasts_the_project(stub_game({"smith": 1.0}, []), "smith"))
