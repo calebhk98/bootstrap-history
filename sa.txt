@@ -1,0 +1,74 @@
+Calculating dry matter intakes for various
+
+
+
+
+                                                                                                                                                     Managing livestock in dry times
+classes of stock
+The amount of dry matter (DM) an animal will eat will depend on its body weight, quality of the feed and class of stock. It is important to
+calculate the average daily intake to ensure that you are feeding the correct amount by weight or that the animal is able to obtain enough
+nutrients from a certain feed determined by intake limits.
+
+Cattle and sheep generally consume between 2-3% of their live weight in DM daily.
+
+Guidelines for % of body weights used to determine DM intake for various classes of stock are as follows:
+
+
+
+
+                                                                                                                                                      Calculating dry matter intakes
+•    Animal on dry pasture or poor quality feed: 2%
+
+•    Animal on average quality pasture or hay: 2.5- 3%
+
+•    Feedlot animal with a high component of grain in the diet: 4%
+
+Dry matter intakes may vary from these depending on the type of feed and the animal. Factors that influence DM intake included the
+following: amount of water, digestibility, neutral detergent fibre (NDF), nitrogen (Rumen Degradable Protein), insufficient sulphur, sodium,
+cobalt or selenium, high environmental temperatures, palatability, trough space, access to feed, feeding time and disease.
+
+
+Example 1                                                                        Example 4
+A group of 100 ewes with multiple lambs at foot weigh 60 kg                      I have barley straw that has feed tested at 77.3% NDF and 6 MJ
+liveweight each. How much DM will I need to supply per day to                    ME/KG DM. How much would my dry 60 kg ewes consume and
+ensure they are fully fed?                                                       would this meet their energy requirements assuming their energy
+                                                                                 requirement was 8 MJ ME/day for maintenance?
+60kg (Liveweight of ewe) x 3% (percent of body weight) = 1.8kg
+DM per day per ewe                                                               120/77.3 = 1.6% of body weight as dry matter
+
+1.8 Kg DM per day per ewe x by 100 ewes                                          60x1.6 % = 0.96 KG DM/day consumed
+= 180 kg DM per day for the group.
+                                                                                 0.96 (kg DM consumed) x 6 (MJ ME /KG DM)
+                                                                                 = 5.8 MJ ME/day obtained from the straw.
+Example 2
+                                                                                 The requirement of the ewe is 8MJ ME/day and the ewe can only
+I want to supplementary feed the group some silage with a DM of                  obtain 5.8 MJ ME/day from the straw based on the restrictions to
+50% how much silage will I need to feed the group as fed?                        intake from the NDF content of the straw. A deficit of 2.2 MJ/ME/
+                                                                                 day will result in the ewe not maintaining her body weight and
+180 ÷ 50% =360 Kg as fed per day for the group.
+                                                                                 weight loss will occur.
+
+Example 3 - using NDF to predict intake
+An accurate way of measuring intake is using the neutral
+detergent fibre (NDF) value. To get this figure you can use an
+‘average’ value from a feed table or ideally use the value obtained
+from a feed analysis you have taken. The base equation is as
+follows:
+
+120/NDF of the feed = % of body weight used to determine the
+dry matter intake of that feed.
+
+I have lucerne hay and the feed test report states the NDF value
+as 33.8%. How much lucerne hay can my 300 kg steer consume a
+day?
+
+120/33.8 (NDF) = 3.6% of body weight as dry matter
+
+300 x 3.6% = 10.8 kg DM/day consumed
+
+
+
+
+Content courtesy of Natural Resources South East, Primary Industries and Regions SA, Department for Environment and Water with the support of
+MacKillop Farm Management Group and SheepConnect SA.
+

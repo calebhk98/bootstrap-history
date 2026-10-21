@@ -111,6 +111,7 @@ class Recipe:
     plant_life_years: float = 0.0
     climate_classes: Tuple[str, ...] = ()   # climates it can be worked in, from data; empty: any
     site_bound: bool = False         # runs only where a site is declared (sites.py); the economy knows nothing else of it
+    tool_wear: Mapping[GoodId, float] = field(default_factory=dict)   # per run: the part of `inputs` that is its workers' tools wearing out
 
 
 @dataclass(frozen=True)

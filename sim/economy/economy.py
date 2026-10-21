@@ -3,13 +3,14 @@
 `Economy(setup)` opens it; `Economy(setup, EconomyRecord.from_record(saved))` resumes it.
 `step(inputs)` runs a year and returns what the engine reads back.
 """
+import dataclasses
 import math
 from dataclasses import dataclass, field
 from typing import Any, Dict, Mapping, Optional, Tuple
 
 from sim.world import capital_market
 
-from . import bondage, banks, carriage_hours, credit, debt_relief, credit_claims, currency, equity, labour, land_market, lending, merchants_credit, producers, shares, sites, state_budget, tax_farming, titles_inheritance, titles_worked, unit_cost
+from . import taxes, bondage, banks, carriage_hours, credit, debt_relief, credit_claims, currency, equity, labour, land_market, lending, merchants_credit, producers, shares, sites, state_budget, tax_farming, titles_inheritance, titles_worked, unit_cost
 from .credit_view import CreditView
 from .market_areas import AreaMap
 from .market_areas_follow import follow
@@ -143,6 +144,8 @@ class Economy:
             return self._run_year(inputs)
 
     def _run_year(self, inputs: YearInputs) -> YearOutcome:
+        if inputs.tax_rates:
+            self.setup = dataclasses.replace(self.setup, tax_forms=taxes.with_rates(self.setup.tax_forms, inputs.tax_rates))
         setup, record = self.setup, self.record
         self.__dict__.pop("_port_shares", None)
         self.follow_flows()
@@ -292,10 +295,13 @@ class Economy:
         for cohort_id, cohort in sorted(record.cohorts.items()):
             idle = offered.get(cohort_id, 0.0) + kept.get(cohort_id, 0.0) - ledger.hours_sold.get(cohort_id, 0.0)
             tile = setup.tiles.get(cohort.tile)
+            hours_used: Dict[str, float] = {}
             moves, grown, units = own_production(cohort, idle, self._own_options, setup.recipes,
                                                  (tile.fertility if tile else 0.0) * harvest_factor,
                                                  setup.basket_for(cohort.tile), setup.land_per_run,
-                                                 held.get(cohort.agent_id, 0.0))
+                                                 held.get(cohort.agent_id, 0.0), hours_used)
+            if hours_used:
+                ledger.own_plot_hours[cohort_id] = hours_used
             if moves:
                 record.book.move_many(moves)
                 ledger.grown[cohort_id] = grown

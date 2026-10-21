@@ -1,6 +1,6 @@
 # State capacity and tax rates are typed, there is no corvée, and the fiscal crisis is a fixed cascade
 
-**Status:** open - split into 620, 621, 622, 623, 624, 625, 626 (closes when they do)
+**Status:** open - split into 620, 621, 622, 623, 624, 625, 626 (620 is closed for collection only, in Complaints/; 657 follows from 626)
 
 Reference (an outside design note, not code-aware): the tax a state can actually collect should depend
 on its administrators and its reach (Egypt's single river corridor was easy to survey; a far
@@ -55,4 +55,5 @@ Children, in order of work:
 - 623: The state borrows from the pool: no named creditors, no repayment in land and no default
 - 624: Debasement cuts the metal in the coin but domestic money prices do not follow
 - 625 (closed): The fiscal crisis is a fixed cascade, not choices of the state actor
-- 626: Tax rates are typed in the civilisation file and are not a state choice
+- 626 (closed): Tax rates are typed in the civilisation file and are not a state choice
+- 657: A higher tax rate has no consequence beyond revenue and a typed burden weight (follows from 626)

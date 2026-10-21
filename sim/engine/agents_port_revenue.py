@@ -14,7 +14,7 @@ class RevenueView(CollectionView):
 
 	def revenue_forms(self) -> List[Dict[str, Any]]:
 		"""The forms of revenue the civilisation's state raises, as its data declares them."""
-		return government_levers.revenue_forms(list(self._sim.civ.get("state_revenue") or []), self.government().record)  # type: ignore[attr-defined]
+		return government_levers.revenue_forms(self.government().record)  # type: ignore[attr-defined]
 
 	def revenue_assessments(self) -> List[revenue.Assessment]:
 		return self._once("assessments", lambda: revenue.assess(self))  # type: ignore[attr-defined,no-any-return]

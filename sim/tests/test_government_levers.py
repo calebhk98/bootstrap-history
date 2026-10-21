@@ -5,6 +5,7 @@ and calls the rule: `set_lever`, then `budget.standing_lines`, `revenue.assess`,
 
 QUICK_TOPIC = True
 
+import copy
 import unittest
 from types import SimpleNamespace
 from unittest import mock
@@ -28,7 +29,7 @@ class LeverWorld(FakeWorld):
 
     def __init__(self, money=0.0):
         super().__init__()
-        self.state = Government("government:home", ActorRecord(kind="government", money=money))
+        self.state = Government("government:home", ActorRecord(kind="government", money=money, revenue_forms=copy.deepcopy(FORMS)))
         self.prices = {GRAIN: 2.0, "ship": 50.0, "iron_bar_kg": 1.0}
         self.forms = FORMS
 
@@ -69,7 +70,7 @@ class LeverWorld(FakeWorld):
         return 0.0
 
     def revenue_forms(self):
-        return government_levers.revenue_forms(self.forms, self.state.record)
+        return government_levers.revenue_forms(self.state.record)
 
     def country_strata(self):
         return []
@@ -181,18 +182,18 @@ class LeverRules(unittest.TestCase):
         self.assertAlmostEqual(after.money, 2.0 * before.money)
 
     def test_a_started_form_joins_the_declared_ones(self):
-        record = ActorRecord(kind="government")
+        record = ActorRecord(kind="government", revenue_forms=copy.deepcopy(FORMS))
         change = government_levers.set_lever(record, lever("revenue", "salt_tax", 0.05, basis="exports_value"), context())
         self.assertTrue(change["new_form"])
-        forms = government_levers.revenue_forms(FORMS, record)
+        forms = government_levers.revenue_forms(record)
         self.assertEqual([form["form"] for form in forms], ["land_tax", "poll_tax", "salt_tax"])
         self.assertEqual(forms[2]["basis"], "exports_value")
 
     def test_clearing_a_rate_restores_the_files_figure(self):
-        record = ActorRecord(kind="government")
+        record = ActorRecord(kind="government", revenue_forms=copy.deepcopy(FORMS))
         government_levers.set_lever(record, lever("revenue", "land_tax", 0.5), context())
         government_levers.set_lever(record, lever("revenue", "land_tax"), context())
-        self.assertEqual(government_levers.revenue_forms(FORMS, record), FORMS)
+        self.assertEqual(government_levers.revenue_forms(record), FORMS)
 
     def test_a_reserve_lever_is_the_reserve_held_before_a_surplus_is_spent(self):
         need = 100.0

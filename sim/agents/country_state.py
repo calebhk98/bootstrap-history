@@ -19,7 +19,6 @@ from .tuning_spending import THREAT_ARMY_RESPONSE
 from .tuning_country import ARMY_SHARE_OF_POPULATION
 
 # the keys of a civilisation's data a country's state reads
-REVENUE_KEY = "state_revenue"
 HAZARDS_KEY = "hazards"
 STANDING_ARMY_KEY = "standing_army"
 
@@ -40,7 +39,7 @@ class CountryStateView(CollectionView):
 	# ---- revenue
 	def revenue_forms(self) -> List[Dict[str, Any]]:
 		"""The forms of revenue the country's state raises, as its civilisation file declares them."""
-		return government_levers.revenue_forms(list(self.profile.extra.get(REVENUE_KEY) or []), self.government().record)
+		return government_levers.revenue_forms(self.government().record)
 
 	def revenue_assessments(self) -> List[revenue.Assessment]:
 		"""Every declared form assessed on this year's base; kept for the year this scope lives."""

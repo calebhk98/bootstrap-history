@@ -155,9 +155,11 @@ def current(record: Any) -> Dict[str, Any]:
 
 # ---- what the government reads ------------------------------------------------------------------------
 
-def revenue_forms(declared: List[Dict[str, Any]], record: Any) -> List[Dict[str, Any]]:
-	"""The declared forms at the rates the government has set, then the forms it has started."""
+def revenue_forms(record: Any) -> List[Dict[str, Any]]:
+	"""The forms the state raises at the rates it holds, then the forms it has started. The record's own forms were
+	copied from the civilisation file at setup; the file is not read again."""
 	overrides = record.levers.get(REVENUE) or {}
+	declared = record.revenue_forms
 	forms = [dict(form, rate=overrides[form["form"]]["rate"]) if form["form"] in overrides else form for form in declared]
 	known = {form["form"] for form in declared}
 	return forms + [{"form": name, "basis": slot["basis"], "rate": slot["rate"]}
