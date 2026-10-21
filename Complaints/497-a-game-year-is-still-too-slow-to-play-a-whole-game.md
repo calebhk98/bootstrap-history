@@ -110,6 +110,39 @@ year) and unit costs; `clear` is mostly `solve_price` and per-market setup, over
 `close_agents` is `producers_close.close_year` per producer (expectations and expected run), flat; settlement posting
 and `producers.plan`/`offers` are outside the files this round owned.
 
+## Round 7: country figures reused while their inputs are unchanged; producers share reads
+
+Branch `year-speed-country-figures-and-producer-reads`. All exact: the sorted-key dump of the save after a warm-up
+and three warm stepped Rome years (`harness.sim()`) is identical before and after (cmp of the two dumps, twice).
+
+- `country_figures.prices` (24 calls a year, 19 of them the same country asked by `material_cost`) and
+  `traded_volumes` keep their answer with copies of the prices, weights and volumes they read, and reuse it only
+  while the live dicts compare equal (a C-speed dict comparison, so any change between calls, in place or not,
+  rescans). Measured with `time.process_time` around the function over three warm years: `prices` 0.525 s a year
+  before, 0.050 after; `traded_volumes` 0.028 before, 0.008 after. Test: `test_country_prices_memo` (random markets,
+  random changes between calls, against the unmemoised `scan_prices` / `scan_volumes`).
+- `producers.next_expectations` reads the input prices from the `live_inputs` its caller passes instead of reading
+  them again; `producers.offers` hands its expected output prices to `shortfall_at_working_scale` and
+  `share_that_pays`; `producers_close._expected_run` reads a market price only for an output with no expectation;
+  `YearView.present_prices_at` builds the market keys of a recipe's goods and trades once per tile
+  (`live_input_prices_at`, `live_wages_at`). Test: `test_producers_shared_reads` (random recipes, producers and
+  markets, against the calls that read for themselves). These four are inside the noise of a whole year: `plan`
+  0.143 to 0.161, `offers` 0.078 to 0.079, `close_year` 0.265 to 0.244 s a year.
+
+CPU per warm year (`time.process_time` around `Sim.step()` after one warm-up, the machine shared with other
+sessions, load average 4 on 4 cores, so only differences above half a second mean anything): old 5.78, 7.18, 7.57 and
+6.39, 6.45, 5.72; new 5.55, 6.09, 5.98 and 6.10, 6.48, 5.87. By the component timers the change is about 0.5 s a year.
+
+Profile of a warm year after this round (cProfile, inflated about 2.3 times): `clear_goods` 3.4 of 17.3 s, of
+which merchants 2.3; `clear_labour` 3.1; `close_agents` 2.0; `open_entrants` 1.9; `_lend` 1.1, nearly all
+`merchants_credit.credit_request` running a second full route search for the two merchants that borrow (the
+second search sees post-clearing prices and so misses the memo of the first); `wear_and_spoilage` 0.5. In the
+files this round owned nothing above about 0.3 s of real time is left: `settlement._settle` with `Book.post`
+(about 0.27 s; already tight, per-call overhead), `best_reservation` (about 0.33 s; the book clearing and the
+pruned search), `producers.plan` (0.15 s), `close_year` (0.25 s). Not taken: lazy unit costs for crowds in
+`strategic_offers` (the unsold search needs a crowd's cost for its floor in every market that reaches it, and a
+market with nothing unsold is a third of the cost at most, under 0.05 s).
+
 ## numpy tried, not adopted (owner asked for a measurement, 2026-10-21)
 
 Branch `numpy-speed-probe` (kept, not merged) vectorises the merchants' route search, the largest single phase of a

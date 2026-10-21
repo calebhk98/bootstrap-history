@@ -6,10 +6,12 @@ QUICK_TOPIC = True
 
 import random
 import unittest
+from types import SimpleNamespace
 
 import math
 
 from sim.economy import producers, producers_close, unit_cost
+from sim.economy.market_memory import MarketMemory, YearView
 from sim.economy.types import Recipe
 
 GOODS = ["grain", "seed", "iron", "tool", "cloth", "wool"]
@@ -100,6 +102,37 @@ class SharedReadsTests(unittest.TestCase):
             wages = producers.live_wages(producer, recipe, view)
             self.assertEqual(old_expected_run(producer, recipe, view, expectations, inputs, wages),
                              producers_close._expected_run(producer, recipe, view, expectations, inputs, wages))
+
+    def test_year_view_reads_prices_and_wages_as_the_view_calls_do(self):
+        generator = random.Random(7)
+        area_map = SimpleNamespace(goods=lambda: GOODS, area_of=lambda good, tile: "%s_%s" % (good[:2], tile[-1]))
+        memory = MarketMemory()
+        view = YearView(memory, None, area_map, "coin", lambda tile: "labour_" + tile)
+        recipes = [recipe_of(generator) for _each in range(6)]
+        plain = PlainView(view)
+        for _round in range(300):
+            for name in GOODS:
+                for tile in ("t1", "t2", "t3"):
+                    memory.prices.pop(name + "|" + area_map.area_of(name, tile), None)
+                    if generator.random() < 0.7:
+                        memory.prices[name + "|" + area_map.area_of(name, tile)] = generator.uniform(0.1, 9.0)
+            for trade in TRADES:
+                for tile in ("t1", "t2", "t3"):
+                    memory.wages.pop(trade + "|labour_" + tile, None)
+                    if generator.random() < 0.7:
+                        memory.wages[trade + "|labour_" + tile] = generator.uniform(0.1, 3.0)
+            recipe, tile = generator.choice(recipes), generator.choice(("t1", "t2", "t3"))
+            self.assertEqual(list(producers.live_input_prices_at(tile, recipe, view).items()),
+                             list(producers.live_input_prices_at(tile, recipe, plain).items()))
+            self.assertEqual(list(producers.live_wages_at(tile, recipe, view).items()),
+                             list(producers.live_wages_at(tile, recipe, plain).items()))
+
+
+class PlainView:
+    """A view with only the per-name readers, so the producers' fallback path runs."""
+
+    def __init__(self, view):
+        self.price, self.wage, self.area_of = view.price, view.wage, view.area_of
 
 
 def old_expected_run(producer, recipe, view, expectations, inputs, wages):

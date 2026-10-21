@@ -131,8 +131,12 @@ def live_input_prices(producer: Producer, recipe: Recipe, view: MarketView) -> D
 
 def live_input_prices_at(tile: TileId, recipe: Recipe, view: MarketView) -> Dict[GoodId, float]:
     """`live_input_prices` for a recipe worked on a tile, with no producer there yet."""
+    goods = _priced_names(recipe)[0]
+    present_prices_at = getattr(view, "present_prices_at", None)
+    if present_prices_at is not None:
+        return present_prices_at(goods, tile)
     prices = {}
-    for good in _priced_names(recipe)[0]:
+    for good in goods:
         price = view.price(good, view.area_of(good, tile))
         if price is not None:
             prices[good] = price
@@ -180,8 +184,12 @@ def live_wages(producer: Producer, recipe: Recipe, view: MarketView) -> Dict[str
 
 def live_wages_at(tile: TileId, recipe: Recipe, view: MarketView) -> Dict[str, float]:
     """`live_wages` for a recipe worked on a tile, with no producer there yet."""
+    trades = _priced_names(recipe)[1]
+    present_prices_at = getattr(view, "present_prices_at", None)
+    if present_prices_at is not None:
+        return present_prices_at(trades, tile, True)
     wages = {}
-    for trade in _priced_names(recipe)[1]:
+    for trade in trades:
         wage = view.wage(trade, view.area_of(trade, tile))
         if wage is not None:
             wages[trade] = wage

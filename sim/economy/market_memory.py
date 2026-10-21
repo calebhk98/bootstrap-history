@@ -117,6 +117,7 @@ class YearView:
         self._goods = set(area_map.goods())
         self._keys_of_good: Dict[str, tuple] = {}
         self._keys_at_tile: Dict[str, tuple] = {}
+        self._keys_of_names: Dict[tuple, tuple] = {}     # (id of a names tuple, wages) -> (names, tile -> market keys)
         self._area_by_tile: Dict[str, Dict[TileId, AreaId]] = {}    # name -> tile -> its area; the area map does not change
 
     def prices_across(self, good: GoodId, areas) -> list:
@@ -140,6 +141,23 @@ class YearView:
         """The planning price: last year's traded price, or, where nothing traded, the quote (`quote_kind`
         says which). A reader that needs a price both sides agreed to uses `cleared_price`."""
         return self._memory.prices.get(good + KEY_SEPARATOR + area)
+
+    def present_prices_at(self, names: tuple, tile: TileId, wages: bool = False) -> Dict[str, float]:
+        """`price` (or `wage` when `wages`) of each of `names` (goods or trades, one tuple kept by the caller) in its
+        area on `tile`, those with a figure only, in order: the keys are built once per names tuple and tile."""
+        kept = self._keys_of_names.get((id(names), wages))
+        if kept is None or kept[0] is not names:
+            kept = self._keys_of_names[(id(names), wages)] = (names, {})
+        keys = kept[1].get(tile)
+        if keys is None:
+            keys = kept[1][tile] = tuple(name + KEY_SEPARATOR + self.area_of(name, tile) for name in names)
+        table = self._memory.wages if wages else self._memory.prices
+        found = {}
+        for name, key in zip(names, keys):
+            figure = table.get(key)
+            if figure is not None:
+                found[name] = figure
+        return found
 
     def quote_kind(self, good: GoodId, area: AreaId) -> Optional[str]:
         """What `price` is when nothing traded last year (a QUOTE_* kind); None when it is a traded price or
