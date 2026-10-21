@@ -1,5 +1,5 @@
 {
- "_note": "Light: the light need (data/world/needs.json) is met by a flame or a lamp, each priced from the fuel it burns and the work of keeping it. One recipe for each way of making light; the household mix chooses among them by cost per thousand lumen-hours, so a candle's worth comes from its burn time and light, not from a rule that names candles. The sizes are recalled figures, not re-opened sources, confidence D.",
+ "_note": "Light: the light need (data/world/needs.json) is met by a flame or a lamp, each priced from the fuel it burns and the work of keeping it. One recipe for each way of making light; the household mix chooses among them by cost per thousand lumen-hours, so a candle's worth comes from its burn time and light, not from a rule that names candles. The sizes have no source found and are labelled heuristics, confidence D.",
  "materials": {
   "light_tallow_candle": {
    "outputs": {
@@ -14,7 +14,7 @@
    },
    "unit_dimension": "count",
    "basis": "per thousand lumen-hours of light from dipped tallow candles",
-   "yield_basis": "A tallow candle gives about one candela, about 12.6 lumens, so a thousand lumen-hours is about eighty candle-hours. A candle burns about seven grams of tallow an hour, so eighty hours burn about half a kilogram, taken as 0.53 kg with the stub. A wick burns down as the tallow does, about two and a half centimetres an hour, so about two metres. Dipping and trimming take a labourer a few minutes for each candle of six hours' burning, about thirteen candles, taken as 0.15 hours. Burn rate, brightness and dipping rate are recalled figures, confidence D.",
+   "yield_basis": "A tallow candle gives about one candela, about 12.6 lumens, so a thousand lumen-hours is about eighty candle-hours. A candle burns about seven grams of tallow an hour, so eighty hours burn about half a kilogram, taken as 0.53 kg with the stub. A wick burns down as the tallow does, about two and a half centimetres an hour, so about two metres. Dipping and trimming take a labourer a few minutes for each candle of six hours' burning, about thirteen candles, taken as 0.15 hours. Burn rate, brightness and dipping rate have no source found (labelled heuristics), confidence D.",
    "requires_node": null,
    "conf": "D",
    "satisfies": {
@@ -35,7 +35,7 @@
    },
    "unit_dimension": "count",
    "basis": "per thousand lumen-hours of light from open oil lamps",
-   "yield_basis": "An open clay lamp burning olive oil gives about the light of a candle and burns about eight grams of oil an hour, so eighty hours burn about 0.64 kg. The wick is drawn up about two centimetres an hour, about 1.6 m. Filling, trimming and lighting each lamp each evening is a minute or so of a labourer's time an hour of burning, taken as 0.3 hours. Burn rate and brightness are recalled figures, confidence D. The lamp's clay vessel is an input: a hand-sized earthenware lamp weighs about 80 g and survives some thousands of hours of burning before it breaks or clogs, taken as 50 batches of eighty hours, so each batch uses 0.0016 kg of ceramic_kg (weight and life recalled, confidence D).",
+   "yield_basis": "An open clay lamp burning olive oil gives about the light of a candle and burns about eight grams of oil an hour, so eighty hours burn about 0.64 kg. The wick is drawn up about two centimetres an hour, about 1.6 m. Filling, trimming and lighting each lamp each evening is a minute or so of a labourer's time an hour of burning, taken as 0.3 hours. Burn rate and brightness have no source found (labelled heuristics), confidence D. The lamp's clay vessel is an input: a hand-sized earthenware lamp weighs about 80 g and survives some thousands of hours of burning before it breaks or clogs, taken as 50 batches of eighty hours, so each batch uses 0.0016 kg of ceramic_kg (weight and life: no source found, labelled heuristics, confidence D).",
    "requires_node": "hom_oil_lamp_simple",
    "conf": "D",
    "satisfies": {
@@ -53,7 +53,7 @@
    },
    "unit_dimension": "count",
    "basis": "per thousand lumen-hours of light from carbon-filament electric lamps",
-   "yield_basis": "An early carbon-filament lamp gave about three lumens for each watt it drew, so a thousand lumen-hours takes about 330 watt-hours, 1.2 megajoules. The electrician's time is for replacing filaments and keeping the wiring, a hundredth of an hour for each thousand lumen-hours. The efficacy is a recalled figure, confidence D.",
+   "yield_basis": "An early carbon-filament lamp gave about three lumens for each watt it drew, so a thousand lumen-hours takes about 330 watt-hours, 1.2 megajoules. The electrician's time is for replacing filaments and keeping the wiring, a hundredth of an hour for each thousand lumen-hours. The efficacy has no source found (Wikipedia, Luminous efficacy, opened, lists tungsten but not carbon filaments), a labelled heuristic, confidence D.",
    "requires_node": "hom_electric_lighting",
    "conf": "D",
    "satisfies": {
@@ -74,7 +74,7 @@
    },
    "unit_dimension": "count",
    "basis": "per thousand lumen-hours of light from open oil lamps with a linen wick",
-   "yield_basis": "The same lamp as light_oil_lamp with a wick of linen, for a society that does not grow cotton. An open clay lamp burning olive oil gives about the light of a candle and burns about eight grams of oil an hour, so eighty hours burn about 0.64 kg. The wick is drawn up about two centimetres an hour, about 1.6 m. Filling, trimming and lighting each lamp each evening is a minute or so of a labourer's time an hour of burning, taken as 0.3 hours. Burn rate and brightness are recalled figures, confidence D. The lamp's clay vessel is an input: a hand-sized earthenware lamp weighs about 80 g and survives some thousands of hours of burning before it breaks or clogs, taken as 50 batches of eighty hours, so each batch uses 0.0016 kg of ceramic_kg (weight and life recalled, confidence D).",
+   "yield_basis": "The same lamp as light_oil_lamp with a wick of linen, for a society that does not grow cotton. An open clay lamp burning olive oil gives about the light of a candle and burns about eight grams of oil an hour, so eighty hours burn about 0.64 kg. The wick is drawn up about two centimetres an hour, about 1.6 m. Filling, trimming and lighting each lamp each evening is a minute or so of a labourer's time an hour of burning, taken as 0.3 hours. Burn rate and brightness have no source found (labelled heuristics), confidence D. The lamp's clay vessel is an input: a hand-sized earthenware lamp weighs about 80 g and survives some thousands of hours of burning before it breaks or clogs, taken as 50 batches of eighty hours, so each batch uses 0.0016 kg of ceramic_kg (weight and life: no source found, labelled heuristics, confidence D).",
    "requires_node": "hom_oil_lamp_simple",
    "conf": "D",
    "satisfies": {
@@ -94,7 +94,7 @@
    },
    "unit_dimension": "count",
    "basis": "per thousand lumen-hours of light from dipped tallow candles with a linen wick",
-   "yield_basis": "The same candle as light_tallow_candle with a wick of linen, for a society that does not grow cotton. A tallow candle gives about one candela, about 12.6 lumens, so a thousand lumen-hours is about eighty candle-hours. A candle burns about seven grams of tallow an hour, so eighty hours burn about half a kilogram, taken as 0.53 kg with the stub. A wick burns down as the tallow does, about two and a half centimetres an hour, so about two metres. Dipping and trimming take a labourer a few minutes for each candle of six hours' burning, about thirteen candles, taken as 0.15 hours. Burn rate, brightness and dipping rate are recalled figures, confidence D.",
+   "yield_basis": "The same candle as light_tallow_candle with a wick of linen, for a society that does not grow cotton. A tallow candle gives about one candela, about 12.6 lumens, so a thousand lumen-hours is about eighty candle-hours. A candle burns about seven grams of tallow an hour, so eighty hours burn about half a kilogram, taken as 0.53 kg with the stub. A wick burns down as the tallow does, about two and a half centimetres an hour, so about two metres. Dipping and trimming take a labourer a few minutes for each candle of six hours' burning, about thirteen candles, taken as 0.15 hours. Burn rate, brightness and dipping rate have no source found (labelled heuristics), confidence D.",
    "requires_node": null,
    "conf": "D",
    "satisfies": {
@@ -114,7 +114,7 @@
    },
    "unit_dimension": "count",
    "basis": "per thousand lumen-hours of light from beeswax candles",
-   "yield_basis": "A beeswax candle gives about the light of a tallow candle and burns a little slower, about six grams an hour (its heat of combustion is near tallow's and it melts higher), so eighty hours burn about 0.5 kg of refined wax (wax_kg); wick and labour as for a tallow candle, pouring or rolling taking as long as dipping. Burn rate recalled, confidence D. Beeswax costs the hive-year behind beeswax_kg, so this candle is dear and the mix uses it only where wax is cheap against fat.",
+   "yield_basis": "A beeswax candle gives about the light of a tallow candle and burns a little slower, about six grams an hour (its heat of combustion is near tallow's and it melts higher), so eighty hours burn about 0.5 kg of refined wax (wax_kg); wick and labour as for a tallow candle, pouring or rolling taking as long as dipping. Burn rate: no source found, confidence D. Beeswax costs the hive-year behind beeswax_kg, so this candle is dear and the mix uses it only where wax is cheap against fat.",
    "requires_node": null,
    "conf": "D",
    "satisfies": {
@@ -134,7 +134,7 @@
    },
    "unit_dimension": "count",
    "basis": "per thousand lumen-hours of light from tallow dips on a rush pith wick",
-   "yield_basis": "The same candle as light_tallow_candle with a wick of peeled rush pith, the poor household's rushlight, for a society that has damp ground and no flax. Burn rate, brightness and dipping rate are those of light_tallow_candle; the pith wick length is taken as the cotton wick's, a recalled equivalence, confidence D.",
+   "yield_basis": "The same candle as light_tallow_candle with a wick of peeled rush pith, the poor household's rushlight, for a society that has damp ground and no flax. Burn rate, brightness and dipping rate are those of light_tallow_candle; the pith wick length is taken as the cotton wick's, an equivalence with no source found, confidence D.",
    "requires_node": null,
    "conf": "D",
    "satisfies": {
@@ -154,7 +154,7 @@
    },
    "unit_dimension": "count",
    "basis": "per thousand lumen-hours of light from dipped tallow candles with a linen wick",
-   "yield_basis": "The same candle as light_tallow_candle with a wick of linen, the medieval northern candle, so a start without cotton can make it. A tallow candle gives about one candela, about 12.6 lumens, so a thousand lumen-hours is about eighty candle-hours. A candle burns about seven grams of tallow an hour, so eighty hours burn about half a kilogram, taken as 0.53 kg with the stub. A wick burns down as the tallow does, about two and a half centimetres an hour, so about two metres. Dipping and trimming take a labourer a few minutes for each candle of six hours' burning, about thirteen candles, taken as 0.15 hours. Burn rate, brightness and dipping rate are recalled figures, confidence D.",
+   "yield_basis": "The same candle as light_tallow_candle with a wick of linen, the medieval northern candle, so a start without cotton can make it. A tallow candle gives about one candela, about 12.6 lumens, so a thousand lumen-hours is about eighty candle-hours. A candle burns about seven grams of tallow an hour, so eighty hours burn about half a kilogram, taken as 0.53 kg with the stub. A wick burns down as the tallow does, about two and a half centimetres an hour, so about two metres. Dipping and trimming take a labourer a few minutes for each candle of six hours' burning, about thirteen candles, taken as 0.15 hours. Burn rate, brightness and dipping rate have no source found (labelled heuristics), confidence D.",
    "requires_node": null,
    "conf": "D",
    "satisfies": {
@@ -174,7 +174,7 @@
    },
    "unit_dimension": "count",
    "basis": "per thousand lumen-hours of light from dipped tallow candles with a peeled rush pith wick",
-   "yield_basis": "The same candle as light_tallow_candle with a wick of peeled rush pith, the medieval northern candle, so a start without cotton can make it. A tallow candle gives about one candela, about 12.6 lumens, so a thousand lumen-hours is about eighty candle-hours. A candle burns about seven grams of tallow an hour, so eighty hours burn about half a kilogram, taken as 0.53 kg with the stub. A wick burns down as the tallow does, about two and a half centimetres an hour, so about two metres. Dipping and trimming take a labourer a few minutes for each candle of six hours' burning, about thirteen candles, taken as 0.15 hours. Burn rate, brightness and dipping rate are recalled figures, confidence D.",
+   "yield_basis": "The same candle as light_tallow_candle with a wick of peeled rush pith, the medieval northern candle, so a start without cotton can make it. A tallow candle gives about one candela, about 12.6 lumens, so a thousand lumen-hours is about eighty candle-hours. A candle burns about seven grams of tallow an hour, so eighty hours burn about half a kilogram, taken as 0.53 kg with the stub. A wick burns down as the tallow does, about two and a half centimetres an hour, so about two metres. Dipping and trimming take a labourer a few minutes for each candle of six hours' burning, about thirteen candles, taken as 0.15 hours. Burn rate, brightness and dipping rate have no source found (labelled heuristics), confidence D.",
    "requires_node": null,
    "conf": "D",
    "satisfies": {
