@@ -13,6 +13,7 @@ import sim.engine.ui_port as ui_port
 from sim.refusal import LogLine
 from . import credit_forecast
 from .command_registry import command
+from .parallelism_notes import calendar_floor_note
 from .explain_once import already_explained
 import os
 import tempfile
@@ -190,17 +191,10 @@ def _cmd_start(sim, nodes, cmd, ended):
     # calendar floor is long enough that it cannot be the only thing in
     # hand for a while - not every multi-year start, which would be noise
     # by the fifth one.
-    if node["yrs"] >= 2 and ui_port.said_parallelism(sim) is None:
+    _floor_note = calendar_floor_note(node["name"], node["yrs"], ui_port.said_parallelism(sim))
+    if _floor_note is not None:
         ui_port.set_said_parallelism(sim, True)
-        out["a_calendar_floor_is_not_exclusive_research_time"] = (
-            "%s will take at least %d year%s, whatever else you do. That "
-            "time is not spent watching it: your founder-hours and staff "
-            "are free the moment this year's share of the work is paid "
-            "for, and nothing stops you spending them on something else "
-            "in the meantime. The strongest play is usually to keep "
-            "several things running at once - start preparing the next "
-            "layer now rather than waiting for this one to finish."
-            % (node["name"], node["yrs"], "" if node["yrs"] == 1 else "s"))
+        out["a_calendar_floor_is_not_exclusive_research_time"] = _floor_note
     if _warn_staff:
         out["but"] = _warn_staff
     # trade -> years until its first hands (None when nobody is on the way)
