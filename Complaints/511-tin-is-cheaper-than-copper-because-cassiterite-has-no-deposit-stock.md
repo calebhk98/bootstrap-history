@@ -186,3 +186,25 @@ UK gravel site limit sits far above any tin demand, copper ore's sites are not b
 stock), and no carriage or area rule puts tin low. The cause is the unsettled opening (Complaint 473) acting on copper and
 charcoal, and the labour ceiling on smith hours; a fix is a labour-core and opening change, so none was made here. No
 regression test added, since no rule was found wrong; the slow check stays red and unchanged.
+
+## Update 7: the smith ceiling is not what holds copper down; rule kept (skilled-labour-ceiling-rule)
+
+Rule tests: `sim/tests/test_labour_core_skilled_ceiling.py` (plain records, calls `clearing.clear_all`, `year.run_year`,
+`trained_substitute_wage`). Findings:
+- The ceiling caps the quoted wage, not the hours. Employers bidding far above it are quoted the ceiling and every hand in
+  the trade is hired (hours wanted stay above hours offered); raising the maximum bid changes neither wage nor hours.
+- New hands come only as trainees through the trade's own places (incumbents times `APPRENTICES_PER_MASTER`, plus school
+  seats), never by the wage directly and never by switching from labourers while the wage sits at the ceiling. Once those
+  places are full, removing the ceiling adds no trainees, so in the long run places, not the ceiling, bound growth.
+- Research (`Complaints/reports/research-how-trades-spread-and-skill-premia.md`): no opened source shows a craft premium
+  rising above its long-run level when the craft was short; after the Black Death the premium fell. One-off imports of
+  artisans cost a large multiple (Epstein), which the core already prices as `ImportCosts`, a cap below the ceiling.
+  So the rule is not shown wrong and was not changed.
+- Year zero on `rome_100ad` (spies on `year_labour.run_labour_year`, `producers.plan`, `producers.produce`, as for Update
+  6): the smith ceiling does not bind copper. Smith hours hired meet the smith hours the smelters' runs need in every copper
+  area; the binding terms in `producers.produce` are unskilled labourer hours (employers want more than all offered, in
+  every copper area), furnaceman hours in the one area whose furnacemen are few, and flux in one area. The plan is held by
+  the 25 percent pace from seeded `last_runs` (a smelter idle the year before plans a quarter of capacity), then achieved
+  runs fall below plan on those hours. So the measured split is the opening's seeded `last_runs`/pace (Complaint 473)
+  plus total unskilled hours, not the skilled-labour ceiling. Remeasure: spy as above on one `economy.step` of the suite's
+  opening. The check stays red and unchanged.
