@@ -138,6 +138,14 @@ class OpeningAreaTests(unittest.TestCase):
         self.assertAlmostEqual(sized, 100.0, places=9)
         self.assertEqual(agriculture_labour.hectares_netting_reference_food([], 1000.0), 0.0)
 
+    def test_a_territory_with_no_arable_ground_opens_no_farm(self):
+        # An empty ladder is ground known to be absent, not ground unknown: no hectares are invented.
+        self.assertEqual(agriculture_labour.farmland_for_population(1.0e6, ladder=[]).hectares, 0.0)
+        self.assertGreater(agriculture_labour.farmland_for_population(1.0e6, ladder=None).hectares, 0.0)
+
+    def test_a_territory_of_zero_fertility_opens_no_farm(self):
+        self.assertEqual(agriculture_labour.farmland_for_population(1.0e6, ladder=[(0.0, 1e6)]).hectares, 0.0)
+
     def test_the_norse_opening_ground_nets_what_its_people_eat(self):
         civ = json.load(open(os.path.join(ROOT, "data", "civilizations", "norse_900ad.json"), encoding="utf-8"))
         share = 1.0 - agriculture.DEFAULT_ROTATION.fallow_share_of_holding

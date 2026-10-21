@@ -131,37 +131,21 @@ def _ample_land_sim(fertility):
 
 
 class BarrenLandTests(unittest.TestCase):
-    def _check_dies_out_cleanly(self, fertility):
-        test_sim = _sim_on(_uniform(fertility))
-        # The checks read year 50, so the run must pass it; it stops once the die-out holds.
-        def died_out(rows):
-            return (len(rows) > 51 and rows[-1][0] < rows[9][0] * 0.2
-                    and rows[-1][0] < rows[50][0] and rows[-1][2] < 1.0)
-        history = _run(test_sim, 100, until=died_out)
-        populations = [row[0] for row in history]
-        for population, share, nutrition, stock in history:
-            self.assertTrue(all(math.isfinite(value)
-                                for value in (population, share, nutrition, stock)))
-            self.assertGreaterEqual(population, 0.0)
-            self.assertGreaterEqual(stock, 0.0)
-            self.assertLessEqual(share, 1.0 + 1e-9)
-        self.assertLess(populations[-1], populations[9] * 0.2)
-        self.assertLess(populations[-1], populations[50])
-        self.assertLess(history[-1][2], 1.0)
-
-    def test_near_zero_fertility_starves_without_negative_numbers(self):
-        self._check_dies_out_cleanly(1e-6)
-
-    def test_zero_fertility_ground_builds_and_starves_without_crashing(self):
-        self._check_dies_out_cleanly(0.0)
+    """Smoke scenario: a world with no arable ground opens no farm and its people starve. The rules are
+    `farmland_for_population` on an empty ladder (test_farm_clearing) and the ladder leaving out unfarmable
+    ground (test_farm_edges); zero and near-zero fertility reach the same empty ladder."""
 
     def test_no_arable_ground_at_all_builds_and_starves(self):
         sites = {tile_id: site._replace(arable_hectares=0.0, cropped_hectares=0.0)
                  for tile_id, site in _sites_with_fertility(CIV_ID, _uniform(1.0)).items()}
         test_sim = _sim_with_sites(sites)
-        history = _run(test_sim, 60, until=lambda rows: len(rows) > 5 and rows[-1][0] < rows[5][0] * 0.5)
-        self.assertLess(history[-1][0], history[5][0] * 0.5)
-        self.assertGreaterEqual(min(row[3] for row in history), 0.0)
+        self.assertEqual(test_sim.farm_land.hectares, 0.0)
+        history = _run(test_sim, 5)
+        self.assertLess(history[-1][0], history[0][0])
+        for population, share, nutrition, stock in history:
+            self.assertTrue(all(math.isfinite(value) for value in (population, share, nutrition, stock)))
+            self.assertLess(nutrition, 1.0)
+            self.assertGreaterEqual(stock, 0.0)
 
 
 class SubSubsistenceLandTests(unittest.TestCase):

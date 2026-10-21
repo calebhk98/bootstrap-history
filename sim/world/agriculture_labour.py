@@ -294,12 +294,13 @@ def farmland_for_population(
     what the territory holds, so a civilisation that cannot be fed from its
     own ground starts short rather than inventing land. `ladder` (best-first
     (yield factor, hectares) parcels of the ground held) sizes the area on that
-    ground's yield instead: see `hectares_netting_reference_food`.
+    ground's yield instead: see `hectares_netting_reference_food`; an empty ladder is a territory with no
+    arable ground, which opens no farm.
     """
     workers_fte = farm_workers_fte_for_population(
         adult_equivalent_population, crop, soil, rotation, toolkit, storage_technique)
     hectares = hectares_cropped_per_farm_worker(crop, toolkit) * workers_fte
-    if ladder:
+    if ladder is not None:
         hectares = hectares_netting_reference_food(ladder, hectares, crop, soil, rotation, toolkit)
     if arable_hectares_ceiling is not None:
         hectares = min(hectares, arable_hectares_ceiling)
