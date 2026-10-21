@@ -37,7 +37,7 @@ class OpeningPriceClosureTests(unittest.TestCase):
                     if good not in makers_anywhere:
                         continue
                     self.assertTrue(any(
-                        good in recipe.outputs and all(item in prices for item in recipe.inputs)
+                        good in recipe.outputs and all(item in prices for item in recipe.hard_inputs)
                         and production[recipe.recipe_id].get("requires_node") in (None, *setup.held_nodes)
                         for recipe in setup.recipes.values()), (civilisation_id, good))
 
