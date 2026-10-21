@@ -17,11 +17,11 @@ from sim.world.shared_constants import LABOUR_OUTPUT_ELASTICITY
 LEISURE_ELASTICITY = declare(
     "LEISURE_ELASTICITY", 2.0, kind="temporary_heuristic",
     unit="elasticity of the ratio of hours sold to leisure hours, with respect to the wage", source=None, confidence="D",
-    retire="Complaints/673",
+    retire="Complaints/675",
     why="A household splits the hours its plot and household work leave between leisure and sale; the more the wage "
         "pays against what its hours are worth at rest the more it sells. The figure only sets how smoothly the hours "
         "move with the wage, so that a small excess of hours moves the wage a little; no labour-supply study has been "
-        "opened for it (673).")
+        "opened for it (675).")
 
 
 def plot_hours_kept(hours_available: float, wage_per_hour: float, plot_return_per_hour: float,

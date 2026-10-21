@@ -250,7 +250,7 @@ of excess hours took the wage to the floor. Built:
 
 - `households_hours_offered.leisure_share / leisure_hours_kept / leisure_anchor_wage`: of the hours the plot and household
   work leave, a share falls to leisure, one half at an anchor wage, falling smoothly as the wage rises. The elasticity is a
-  labelled heuristic (`LEISURE_ELASTICITY`, retire 673).
+  labelled heuristic (`LEISURE_ELASTICITY`, retire 675).
 - `labour_supply.HourSupply`: a cohort's hours sold as a function of the wage (own-plot plan and household work fixed, plot by
   `plot_hours_kept`, leisure by the above). `Clearing` in the labour core takes it (`YearInputs.hours_share_at`) and finds the
   wage where hours sold meet the hours wanted (`clearing.supply_target`); hours kept, sold and at leisure are then read at the

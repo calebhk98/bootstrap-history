@@ -50,7 +50,7 @@ household-work data, so only the plot side is exercised there; leisure is not mo
 
 A household's hours are shared by `labour_supply.HourSupply`: own-plot plan and household work first (the work still hired or done
 by the all-or-nothing rule against the servant's wage), then the plot by its marginal return, then leisure by a declared
-preference (673), then sale. At the opening the leisure anchor is solved so offered equals hired, so what household work and
+preference (675), then sale. At the opening the leisure anchor is solved so offered equals hired, so what household work and
 leisure each take of Rome's 2000 hours a worker is still not measured separately: Rome's household-work hours come from the data
 file's estimates (cooking, cleaning and childcare confidence D) and are not re-measured here. The hire/own switch is still a
 step in the wage (households differ in the wage they face, so the aggregate rises step by step); it was not made smooth.
