@@ -87,7 +87,9 @@ def stationary_setup(slack_share: float = 0.0, **changes) -> EconomySetup:
     hours it keeps for its own plot at the stated wage (households_hours_offered.py), not the stated 2000 a year, which
     is many times what the fixture's recipes hire: at those hours the labour market clears at the workers' survival
     wage a dozen times below the stated one, and no year repeats itself. Households work a plot (`land_per_run` on the
-    farm recipe), so an hour not sold has a use at home. The runs are those of the stated fixture's opening demand."""
+    farm recipe), so an hour not sold has a use at home. The runs are those of the stated fixture's opening demand.
+    The opening splits each worker's time so the hours sold equal the hours hired whatever the hours he has
+    (opening_leisure.py), so `slack_share` here shows in the hours offered only if the setup is changed after the opening."""
     stated = small_setup(land_per_run={FARM: PLOT_LAND_PER_RUN})
     economy = Economy(stated)
     flows = opening_stationary.solve({TOWN: economy.record.opening_demand}, stated.recipes, stated.opening_prices,
@@ -161,18 +163,3 @@ def households_with_a_surplus(test_case):
                               lambda ceiling, _people, _demand_at: (ceiling, 0.0))
     patch.start()
     test_case.addCleanup(patch.stop)
-
-
-@contextlib.contextmanager
-def surplus_game_openings():
-    """Within the block, a game's agent economy opens with households' income at the full-employment ceiling,
-    stated in the setup (so the spin-up cache keeps it apart from the settled opening). See `surplus_households`."""
-    from sim.engine import economy_port_year
-
-    def with_ceiling(sim):
-        opening = real_opening_values(sim)
-        opening["opening_income_per_head"] = float(sim.HOURS_PER_PERSON_YEAR) * opening["working_share"]
-        return opening
-    real_opening_values = economy_port_year.opening_values
-    with mock.patch.object(economy_port_year, "opening_values", with_ceiling):
-        yield

@@ -48,3 +48,10 @@ the settled income toward zero. So the work lands together with 526 (607), with 
 `economy_fixture.stationary_setup` gives the farm recipe a `land_per_run`, so households grow part of their own grain in
 the fixture and the own-plot cut can be reproduced there (previously not reproducible: 473 Update 6). The opening still
 sizes producers for the whole food demand; sizing net of the plot is not done.
+
+## Update: on the plot fixture the year-one sales equal the runs the opening sized (473 Update 8)
+
+On `economy_fixture.small_setup(land_per_run=...)` (households grow part of their food from year one) the farms' year-one runs
+are within one per cent of the runs the opening sized and the grain bought equals what they produce, so the first-year shortfall
+this complaint describes does not appear on the fixture (the opening's demand is already net of the households' own-plot plan).
+Rome is not re-measured; the claim stays open until `spin-up-trace` is read for it.

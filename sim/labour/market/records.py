@@ -6,7 +6,7 @@ dataclass of numbers, strings, lists and dicts, so `to_plain`/`from_plain` round
 field list.
 """
 import dataclasses
-from typing import Dict, List, Optional, Sequence
+from typing import Callable, Dict, List, Optional, Sequence, Tuple
 
 AreaId = str
 TradeId = str
@@ -79,6 +79,7 @@ class YearInputs:
     bondage_allowed: frozenset = frozenset()            # areas whose civilisation recognises bondage; others buy none
     bonded_for_sale: Dict[AreaId, Dict[TradeId, float]] = dataclasses.field(default_factory=dict)   # bonded people of a trade on offer in an area
     taxed_share: Dict[AreaId, float] = dataclasses.field(default_factory=dict)   # share of a worker's income the state takes from those who stay in the area, liability included
+    hours_share_at: Dict[Tuple[TradeId, AreaId], Callable[[float], float]] = dataclasses.field(default_factory=dict)   # (trade, area) -> share of the workers' hours they sell at a wage an hour (rising); absent: all of them, at any wage
 
 
 @dataclasses.dataclass

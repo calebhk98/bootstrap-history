@@ -21,7 +21,7 @@ it is a mod (`mods/TASKS.md`).
   labour (the wage it faces, averaged over the hours it would sell) is worth more than the servant's price, otherwise none, so
   hiring follows income and the wage with no typed share (the earlier typed budget share is retired). The servant's price is
   last year's `domestic_servant` wage, else the tile's subsistence wage per hour.
-- Own hours are kept back: `Economy._shortfall_hours` adds each cohort's own household-work hours to its own-plot hours, so
+- Own hours are kept back: `labour_supply.HourSupply` (earlier `Economy._shortfall_hours`) adds each cohort's own household-work hours to its own-plot hours, so
   `withhold_hours` cuts the offers; `_grow_own` does not count them as spare hours.
 - Hearth: a cohort has one when it holds a title or a tenancy on its tile (`has_hearth`). A hearth-less cohort gets
   `without_hearth_basket` (food only from goods marked `ready_to_eat`, no cooking in its household work) and burns no fuel;
@@ -43,5 +43,15 @@ replace the labelled estimates in `data/world/household_work.json`.
 ## Update: household work shares the choice
 
 Household work's own hours and the hours kept for the plot are the same kind of choice (an hour at home against the wage).
-`Economy._shortfall_hours` keeps the larger of the plan and the plot choice, then adds household work. The fixture has no
+`HourSupply` keeps the larger of the plan and the plot choice, then adds household work. The fixture has no
 household-work data, so only the plot side is exercised there; leisure is not modelled.
+
+## Update: leisure is modelled, household work still enters at the servant's price (473 Update 8)
+
+A household's hours are shared by `labour_supply.HourSupply`: own-plot plan and household work first (the work still hired or done
+by the all-or-nothing rule against the servant's wage), then the plot by its marginal return, then leisure by a declared
+preference (673), then sale. At the opening the leisure anchor is solved so offered equals hired, so what household work and
+leisure each take of Rome's 2000 hours a worker is still not measured separately: Rome's household-work hours come from the data
+file's estimates (cooking, cleaning and childcare confidence D) and are not re-measured here. The hire/own switch is still a
+step in the wage (households differ in the wage they face, so the aggregate rises step by step); it was not made smooth.
+Cooked food, cleaning and childcare as bought substitutes are not yet data in `household_work.json`.

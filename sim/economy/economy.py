@@ -20,9 +20,8 @@ from .mint_labour import close_year as close_mint_year, mint_agent
 from .money_audit import MoneyAudit, year_report
 from .flow_rates import flow_imbalance
 from .entry_year import close_idle_producers, open_entrants, restake_owners
-from . import household_hours_year, household_work_year, land_bid_year
-from .households_own import (hours_for_own_plan, own_production, own_production_options, plot_hectares,
-                             withhold_hours)
+from . import household_hours_year, household_work_year, land_bid_year, opening_leisure
+from .households_own import (hours_for_own_plan, own_production, own_production_options, plot_hectares)
 from .labour_inputs import labour_context
 from .labour_state import scale_people
 from .opening import open_economy
@@ -33,7 +32,8 @@ from .types import Bid, EDGE_CONSUMPTION, GoodsMove, is_edge
 from .year_close import (check_money, close_agents, dispatch_merchants, money_taxes, national_prices,
                          remember_basket_price_level, wear_and_spoilage)
 from .year_goods import add_orders, clear_goods, cohort_orders, merchant_orders, state_orders
-from .year_labour import clear_labour, held_share_by_area, labour_offers, outside_option_by_tile
+from .labour_supply import HourSupply
+from .year_labour import clear_labour, labour_offers, outside_option_by_tile
 from .year_accounts import YearAccounts, build as build_accounts, stocks as stocks_held
 from .standing_demand import with_standing_bids
 from .year_ledger import YearLedger
@@ -78,7 +78,8 @@ def plant_worth_ratio(yearly_return: float, rate: float, life_years: float) -> f
 class Economy:
     def __init__(self, setup: EconomySetup, record: EconomyRecord = None) -> None:
         self.setup = setup
-        if record is None:
+        opening = record is None
+        if opening:
             record, area_map, carriage = open_economy(setup)
         else:
             carriage = setup.carriage_table(record.ways, record.area_imbalance)
@@ -90,6 +91,8 @@ class Economy:
         self.watched_tiles: Tuple[str, ...] = ()   # tiles whose market books are kept beside the port's and the capital's; not saved
         self._own_options = None
         self._own_hectares: Dict[str, float] = {}   # land households' own plots took this year, by tile
+        if opening:
+            opening_leisure.seed(self)
 
     def set_improvements(self, improvements: Mapping[str, Mapping[str, Any]]) -> bool:
         """Rebuild the carriage table over these built ways, partition the market areas again over it and
@@ -177,9 +180,11 @@ class Economy:
         outside_option = outside_option_by_tile(setup, record, view)
         land_bid_year.take_up_own(setup, record, self._own_plot_options())
         everyone = labour_offers(setup, record, view, outside_option, inputs.labour_levy_hours_per_worker)
-        offers, kept = withhold_hours(everyone, self._shortfall_hours(everyone, view, outside_option))
+        supply = self._hour_supply(everyone, view, outside_option)
         context = labour_context(setup, record, view, self.carriage, inputs, self._own_plot_options(), outside_option)
-        labour_report = clear_labour(setup, record, labour_bids, offers, ledger, context, held_share_by_area(everyone, offers))
+        labour_report = clear_labour(setup, record, labour_bids, everyone, ledger, context, supply=supply)
+        offers, kept = supply.sold, supply.kept
+        self._leisure_hours = supply.leisure
         ledger.bonded_bought, ledger.bonded_paid = bonded_purchase.settle(
             record.book, money, labour_report.formed, labour_bids, context.ask_floor_per_worker_year)
         self._grow_own(offers, ledger, inputs.harvest_factor, kept)
@@ -266,25 +271,28 @@ class Economy:
             self._own_options = own_production_options(setup.recipes, setup.land_per_run, setup.basket)
         return self._own_options
 
-    def _shortfall_hours(self, everyone=(), view=None, outside_option=None) -> Dict[str, float]:
-        """Hours each cohort keeps back for its own-plot plan, at the tile's usual fertility (it plants
-        before it knows the harvest), and for the household work it does itself (household_work_year.py)."""
-        hours, held = {}, self._hectares_held()
+    def _fixed_home_hours(self, everyone, view, outside_option) -> Tuple[Dict[str, float], Dict[str, float]]:
+        """(own-plot plan hours, household work hours) each cohort keeps back whatever the wage: the plan at the tile's
+        usual fertility (it plants before it knows the harvest), and the household work it does itself
+        (household_work_year.py)."""
+        plan, held = {}, self._hectares_held()
         for cohort_id, cohort in sorted(self.record.cohorts.items()):
             tile = self.setup.tiles.get(cohort.tile)
-            hours[cohort_id] = hours_for_own_plan(cohort, self._own_plot_options(),
-                                                  tile.fertility if tile else 0.0, self.setup.recipes,
-                                                  self.setup.land_per_run, held.get(cohort_id, 0.0))
-        if view is not None and everyone:       # hours the household would rather work its plot than sell at this wage
-            for cohort_id, choice in household_hours_year.decide(self.setup, self.record, view, everyone,
-                                                                 self._own_plot_options(), held).items():
-                hours[cohort_id] = max(hours.get(cohort_id, 0.0), choice)
-        self._work_hours = {}
-        if view is not None:
-            self._work_hours = household_work_year.decide(self.setup, self.record, view, everyone, outside_option or {})
-            for cohort_id, work in self._work_hours.items():
-                hours[cohort_id] = hours.get(cohort_id, 0.0) + work
-        return hours
+            plan[cohort_id] = hours_for_own_plan(cohort, self._own_plot_options(), tile.fertility if tile else 0.0,
+                                                 self.setup.recipes, self.setup.land_per_run, held.get(cohort_id, 0.0))
+        self._work_hours = household_work_year.decide(self.setup, self.record, view, everyone, outside_option or {})
+        return plan, self._work_hours
+
+    def _hour_supply(self, everyone, view, outside_option, anchors=None) -> HourSupply:
+        """The hours households sell as a schedule against the wage (labour_supply.py)."""
+        plan, work = self._fixed_home_hours(everyone, view, outside_option)
+        usable: Dict[str, float] = {}
+        plot = household_hours_year.plot_schedules(self.setup, self.record, view, everyone, self._own_plot_options(),
+                                                   self._hectares_held(), usable)
+        level = view.basket_price_level(self.setup.currency_id)
+        anchor_wage = {trade: anchor * level for trade, anchor in (self.record.leisure_anchor_wage if anchors is None else anchors).items()}
+        faced = {(offer.trade, offer.area): view.wage(offer.trade, offer.area) or offer.reservation_wage for offer in everyone}
+        return HourSupply(everyone, plan, work, plot, usable, anchor_wage, faced)
 
     def _hectares_held(self) -> Dict[str, float]:
         """Hectares each cohort may work for itself: the land it holds or leases (titles, tenancies), cut to
@@ -311,7 +319,8 @@ class Economy:
             offered[offer.worker] = offered.get(offer.worker, 0.0) + offer.hours
         for cohort_id, cohort in sorted(record.cohorts.items()):
             idle = (offered.get(cohort_id, 0.0) + kept.get(cohort_id, 0.0) - ledger.hours_sold.get(cohort_id, 0.0)
-                    - min(kept.get(cohort_id, 0.0), getattr(self, "_work_hours", {}).get(cohort_id, 0.0)))   # household work is not spare hours
+                    - min(kept.get(cohort_id, 0.0), getattr(self, "_work_hours", {}).get(cohort_id, 0.0)
+                          + getattr(self, "_leisure_hours", {}).get(cohort_id, 0.0)))   # household work and leisure are not spare hours
             tile = setup.tiles.get(cohort.tile)
             hours_used: Dict[str, float] = {}
             moves, grown, units = own_production(cohort, idle, self._own_options, setup.recipes,

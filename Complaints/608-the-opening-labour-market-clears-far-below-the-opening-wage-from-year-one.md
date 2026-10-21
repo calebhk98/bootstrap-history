@@ -1,6 +1,6 @@
 # The opening's labour market clears far below the opening wage from year one
 
-**Status:** open - on the small fixture the stated wage is above the clearing wage whenever hours offered exceed hours hired, and scaling prices with it does not help (473 Update 6); measured cause is the opening's demand for hours (a stock glut, traced in 473 and 545), not the wage anchor the first title named
+**Status:** partly - the labour market clears at the opening wage in year one on the fixtures (473 Update 8); the demand-side drift over later years and Rome are not closed
 
 Part of Complaint 526 (The opening's income leaks saving, so the economy opens at subsistence and its wage keeps falling).
 
@@ -30,3 +30,11 @@ With households choosing hours against their plot (`households_hours_offered.py`
 hired plus kept, the stationary fixture's year-one wage moves by 3 per cent (not a third). The stated fixture still
 clears at the survival wage: it has no plot or household work to use the hours. The opening wage is still the cost
 table's; seeding it where hours offered equal hours hired is not done.
+
+## Update: the year-one wage no longer collapses on the small fixtures (473 Update 8)
+
+Hours sold now rise with the wage and the core clears against that schedule, so a few per cent of excess hours moves the wage
+a few per cent. On the stated fixture the opening splits time (`opening_leisure.seed`) so offered equals hired at the opening
+wage, and year one's wage stays at the opening wage (was 0.075). Still open: the wage and price level drift down over years
+on the fixtures through the demand side (473 Update 8: households add to their cash, producers' cash and runs fall), and Rome
+is not re-measured (orchestrator commands in 473 Update 8's branch report).
