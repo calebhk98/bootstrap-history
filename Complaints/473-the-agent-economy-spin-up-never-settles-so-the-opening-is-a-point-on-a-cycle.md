@@ -372,3 +372,27 @@ level up 0.4 per cent a year with the wage) remains, and is the settling failure
 shortened hidden spin-up, 5 years; a full spin-up exceeds five minutes): wheat price multiple years 0 to 4 was 1, 0.21, 0.19, 0.17, 0.16 and
 is 1, 0.75, 0.73, 0.74, 0.72; iron bar year 4 was 3.2 and is 1.4; furnaceman hours hired hold at 2.5e8 to 2.7e8 (were 1.7e8 to 2.4e8). The
 run-up after year 12 is not yet re-measured; command: `ROME_SPIN_UP_YEARS` unset, `python3 probe10.py 20` from the worktree root.
+
+## Update 11: the below-cost reading after the sourced household day is a phase of the cycle, not a rule (branch opening-below-making-cost)
+
+`price_over_making_cost_band_validation` (558) went red at e72b36c0, which changed only `data/world/household_work.json` and
+`data/world/needs.json`. Putting those two files back to their 1cd50f79 content on the e72b36c0 tree restores the earlier numbers
+digit for digit, so the data is the whole cause. The two sides of the check read the same wages: `economy_cost_book` takes
+`agent_wage_per_hour` (the economy's hours-weighted wage by trade), and the price is the goods market's. No rule reads the wage
+before household work on one side and after on the other.
+
+Probe (not committed; `sim(civ="rome_100ad", capital=1e9)`, then `_step_market()` a year at a time, the check's own median of
+price over `CostBook.cheapest_cost` for goods the economy traded), median ratio by year, years 0 to 8:
+
+- 1cd50f79: 1.13, 1.12, 1.02, 1.06, 1.12, 1.08, 1.15, 1.52, 1.41.
+- e72b36c0: 1.12, 1.11, 1.02, 1.02, 0.90, 1.00, 1.00, 1.01, 1.24.
+
+The opening itself (year 0) is the same at both. The household day does enter the hour supply: hours offered for sale at year 0 are
+about a tenth fewer and a third fewer at year 1 (`labour_supply.HourSupply` keeps the household's own work out of the offer), while
+hours hired differ little. What differs is where the unsettled cycle (this complaint) carries the price level afterwards: it stays
+low through year 2 at e72b36c0 and rises a year later, and at year 4 the farmer and vine-and-olive wages the cost side reads are
+spikes from markets that hired few hours (farmer 1.2 coin an hour at e72b36c0 against 0.14, unskilled 0.09), which the price
+follows only the next year. So the median at year 4 sits in a dip of a series that otherwise hovers about one. The check reads
+one year of a cycle that does not settle, which is this complaint, not a mispriced opening; the check and its bounds are left
+as they are, and it should go green when the cycle settles. Open question for whoever settles it: an hours-weighted wage over
+markets that hired few hours (`wages_by_trade_weighted`) lets a thin market set a trade's cost; not changed here.
