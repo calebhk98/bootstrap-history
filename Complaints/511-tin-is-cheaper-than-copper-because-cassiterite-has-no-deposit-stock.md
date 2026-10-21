@@ -160,3 +160,29 @@ falling for decades, since unskilled hands were scarce too; over the early moder
 southern England (Allen, through Broadberry and Gupta). No source was found for a short-run premium of one scarce trade
 far above its training cost. The long-run anchor at the cost of training a substitute stands; a short-run premium needs
 a sourced case of one trade short while others were not before it is built.
+
+## Update 6: decomposition of the shown ratio on the current code (no rule defect found)
+
+Measured by stepping `rome_100ad` one year as `test_economy_tin_dearer_than_copper.py` does (`--slow --only
+economy_tin_dearer_than_copper`: shown tin over copper 0.11 against 0.441), then reading `economy.record`
+(`memory.prices`, `producers`, `setup.site_limits`), `country_figures.wages_per_hour`, `notional.cheapest_cost` at the
+shown prices (throwaway in-process probes, not kept). The log of the gap (0.441 over 0.11) splits into two parts:
+- Which price is shown: tin is one market area (`france_05@b3`, the only Roman-touching tin area; its one seller is the
+  UK tin works), copper is `france_05@b4` plus the Egyptian area. Carriage and area choice are not the gap: every
+  shown figure is one area's cleared price over its own producers.
+- Copper clears at about three times its making cost at the shown inputs, tin at about one and a third. Every copper
+  seller's remembered ask sits below the clearing price (asks near twice cost); the price clears above all asks because
+  copper supply is short. Planned runs summed over the copper smelters are about twice the runs achieved (Spain plans
+  2040, achieves 1742; China plans 1620, achieves 6; Algeria 414 to 245), while the tin works achieve nearly all of
+  their plan. The smelters' last-year runs are the opening's seed (idle the year before), so supply cannot follow demand
+  within the 25 percent a year pace, and the hands (smith hours at the training-cost ceiling) cap the rest: Updates 3
+  and 5, not changed by anything here.
+- Copper's inputs carry scarcity that tin's barely do. A kilogram of copper burns four kilograms of charcoal and 50 of ore;
+  a kilogram of tin 0.6 of charcoal and 643 of gravel. Charcoal shows near three times its making cost in the main area, so
+  even with tin and copper both made at cost from the shown inputs the ratio is about 0.24, under the embodied-labour
+  ratio, which prices charcoal at its labour alone.
+Site scarcity and the sellers' asks for tin are not the cause: gravel shows above its labour (not decayed under it), the
+UK gravel site limit sits far above any tin demand, copper ore's sites are not binding in year zero (ore sellers hold seeded
+stock), and no carriage or area rule puts tin low. The cause is the unsettled opening (Complaint 473) acting on copper and
+charcoal, and the labour ceiling on smith hours; a fix is a labour-core and opening change, so none was made here. No
+regression test added, since no rule was found wrong; the slow check stays red and unchanged.
