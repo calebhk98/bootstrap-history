@@ -107,8 +107,8 @@ used by `projects_progress.py` and `start`), `multi_year_hours_warning` (`sim/ui
 stand-in game and the command keeps three checks on built nodes in `test_research_filters_scenario`. Deleted as held
 elsewhere: the weather cell and pooled-draw checks of `regional_weather_wiring` (`test_growing_season_weather_correlation`
 and its scenario), the housing sum of `reserve_staff_policy` (`test_auto_hire_buys_room`), the cheapest-route relocation
-check (now a rule on the small fixture map). Found vacuous and rewritten: `round8g_display`'s and `repeated_output`'s
-fog-only band and explained-once checks read an unfogged game and passed whatever the rule did; they now run on a fogged
-stand-in. Baseline validation: `test_regional_weather_century_validation` (slow-only, naming Complaint 46).
+check (now a rule on the small fixture map). Found vacuous and rewritten: the two "does not claim nothing rests on it" checks of
+`refusal_wording_and_screens` read the band from an unfogged game, where the field is empty, and passed whatever the rule
+did; they now run on a fogged stand-in. Baseline validation: `test_regional_weather_century_validation` (slow-only, naming Complaint 46).
 Kept as scenarios: `run_reproducibility` (determinism), the save round trips and two-game match of the weather, the
 `again` command, the Options menu, the starting grants per civilisation.
