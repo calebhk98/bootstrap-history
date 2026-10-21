@@ -2,7 +2,9 @@
 source that runs them. Part of the port."""
 import dataclasses
 import hashlib
+import inspect
 import json
+import types
 import os
 
 from . import solve_cache
@@ -25,6 +27,11 @@ def _plain(value, ancestors=()):
         return float("%.*g" % (KEY_FLOAT_DIGITS, value))    # a last-place difference (a coin's scale) is not a different setup
     if value is None or isinstance(value, (bool, int)):
         return value
+    if isinstance(value, types.FunctionType):
+        # a rule the port hands in: keyed by its name and its own source, so editing it is a different setup
+        source = inspect.getsource(value)
+        return {"function": "%s.%s" % (value.__module__, value.__qualname__),
+                "source": hashlib.sha256(source.encode("utf-8")).hexdigest()}
     if any(value is ancestor for ancestor in ancestors):
         raise TypeError("cannot key the spin-up on a %s that contains itself" % type(value).__name__)
     ancestors = ancestors + (value,)

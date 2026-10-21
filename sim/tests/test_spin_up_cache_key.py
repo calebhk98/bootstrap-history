@@ -117,6 +117,31 @@ class ObjectContentTests(unittest.TestCase):
             economy_port_key.setup_digest(_Setup(world_map=object()))
 
 
+def _rule_one(rate, reach):
+    return rate * (1.0 - reach)
+
+
+def _rule_two(rate, reach):
+    return rate * reach
+
+
+@dataclasses.dataclass
+class _SetupWithRule:
+    civ_id: str = "rome_100ad"
+    hiding: Any = _rule_one
+
+
+class RuleFieldTests(unittest.TestCase):
+    """A setup may carry a rule (a function) the port hands in; it is keyed by what it is, not refused."""
+
+    def test_a_setup_holding_a_function_is_keyed(self):
+        self.assertEqual(economy_port_key.setup_digest(_SetupWithRule()), economy_port_key.setup_digest(_SetupWithRule()))
+
+    def test_a_different_function_gives_a_different_key(self):
+        self.assertNotEqual(economy_port_key.setup_digest(_SetupWithRule()),
+                            economy_port_key.setup_digest(_SetupWithRule(hiding=_rule_two)))
+
+
 class ScopedSourceTests(unittest.TestCase):
     def setUp(self):
         self.root = tempfile.mkdtemp(prefix="spin_up_key_")
