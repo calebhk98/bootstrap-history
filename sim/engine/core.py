@@ -350,17 +350,15 @@ class Sim(ModStoresMixin, RealPriceRatiosMixin, CoinRevaluationMixin, MechanicsM
             float(self.civ.get("population", self.DEFAULT_POPULATION_100AD)),
             seed=_population_seed)
         # Initial condition: cleared area is what feeds the starting
-        # population at reference soil, on the best ground the held tiles
+        # population given the yield of the best ground the held tiles
         # offer; later clearing works down the same best-first ladder.
         held_tiles = tiles_held(self.civ, self.world_map)
         require_territory(self.civ, held_tiles)
         territory = land.territory_cropland(self.farm_sites())
         self._farm_ladder = territory.ladder
         self._farm_arable_ceiling = territory.cropped_hectares
-        sized = self._agriculture.farmland_for_population(
-            self._adult_equivalent_population(self.population),
-            arable_hectares_ceiling=self._farm_arable_ceiling)
-        self.labour.set_farm_area(sized.hectares)
+        self.labour.set_farm_area(self._agriculture.farmland_for_population(
+            self._adult_equivalent_population(self.population), ladder=self._farm_ladder).hectares)
         self._opening_farmed_hectares = self.farm_land.hectares
         # WIRING THREE (Complaints/49-one-label-draws-one-coin.md), REPLACING
         # WIRING TWO'S OWN `_farm_region_weights`/`_compute_farm_region_
