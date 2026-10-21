@@ -13,7 +13,7 @@ from sim.geography.api import (endemic_people_loss, food_potential, layer_value,
 from sim.world import campaign_contest, campaign_supply, military_logistics
 from sim.world.army_record import Army
 
-from . import world_events
+from . import contact_events, world_events
 
 RETREAT_NOTE = "withdrew"
 
@@ -239,6 +239,7 @@ class CampaignYearMixin:
         self.campaign_store()["held_since"][tile] = {"year": int(self.state.scenario.year), "by": army.owner,
                                                       "from": previous}
         army.log.append({"kind": "conquest", "tile": tile, "from": previous})
+        contact_events.after_conquest(self, army.owner, previous, tile)
 
     def _withdraw(self, army: Army, why: str) -> None:
         owned_home = army.home_tile and self.tile_owner(army.home_tile) == army.owner

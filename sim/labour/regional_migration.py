@@ -8,13 +8,13 @@ from sim.world.military_logistics import ARMY_MARCH_RATE_KM_PER_DAY
 from .market.migration import move_shares
 
 
-def moves_between_regions(regions: Mapping[str, Population], eaten_over_need: Mapping[str, float],
-                          borders: Mapping[str, List[str]], distance_km: Callable[[str, str], float]
-                          ) -> Tuple[Dict[str, float], Dict[str, float]]:
-    """({region: working-age people leaving}, {region: arriving}) this year. Where people ate better is the
-    destination's real income over its subsistence; a day on the road costs a day of the origin's subsistence."""
-    leaving: Dict[str, float] = {}
-    arriving: Dict[str, float] = {}
+def migrant_pairs(regions: Mapping[str, Population], eaten_over_need: Mapping[str, float],
+                  borders: Mapping[str, List[str]], distance_km: Callable[[str, str], float]
+                  ) -> List[Tuple[str, str, float]]:
+    """[(origin, destination, working-age people moved)] this year, in origin then destination order. Where people
+    ate better is the destination's real income over its subsistence; a day on the road costs a day of the origin's
+    subsistence."""
+    pairs: List[Tuple[str, str, float]] = []
     for origin in sorted(regions):
         real_origin = eaten_over_need.get(origin, 0.0)
         working_age = regions[origin].working_age
@@ -25,7 +25,22 @@ def moves_between_regions(regions: Mapping[str, Population], eaten_over_need: Ma
                    for tile in destinations]
         for destination, share in zip(destinations, move_shares(real_origin, options)):
             if share > 0.0:
-                moved = working_age * share
-                leaving[origin] = leaving.get(origin, 0.0) + moved
-                arriving[destination] = arriving.get(destination, 0.0) + moved
+                pairs.append((origin, destination, working_age * share))
+    return pairs
+
+
+def totals_of_pairs(pairs: List[Tuple[str, str, float]]) -> Tuple[Dict[str, float], Dict[str, float]]:
+    """({region: people leaving}, {region: arriving}) summed from `migrant_pairs`."""
+    leaving: Dict[str, float] = {}
+    arriving: Dict[str, float] = {}
+    for origin, destination, moved in pairs:
+        leaving[origin] = leaving.get(origin, 0.0) + moved
+        arriving[destination] = arriving.get(destination, 0.0) + moved
     return leaving, arriving
+
+
+def moves_between_regions(regions: Mapping[str, Population], eaten_over_need: Mapping[str, float],
+                          borders: Mapping[str, List[str]], distance_km: Callable[[str, str], float]
+                          ) -> Tuple[Dict[str, float], Dict[str, float]]:
+    """({region: working-age people leaving}, {region: arriving}) this year, summed from `migrant_pairs`."""
+    return totals_of_pairs(migrant_pairs(regions, eaten_over_need, borders, distance_km))

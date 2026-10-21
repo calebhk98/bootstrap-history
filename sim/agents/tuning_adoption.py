@@ -38,3 +38,15 @@ ADOPTION_SPEED_PER_MARGIN_GAP = declare(
 	retire="slope fitted to observed diffusion curves by technique class (Griliches 1957 fits slope to profitability)",
 	why="Slope of the logistic adoption curve, share' = speed * gap * share * (1 - share): the form is "
 		"Griliches's, the proportionality of slope to profitability is his finding, the constant is not fitted.")
+CONQUEST_CONTACT_VOLUME = declare(
+	"CONQUEST_CONTACT_VOLUME", 1.0, kind="temporary_heuristic",
+	unit="contact volume per conquest", source=None, confidence="D",
+	retire="contact volume measured from carried tonnes, migrants and routes (sim/agents/awareness.py contact_volume)",
+	why="Contact a conquest gives the winner's actors with the places of the people they overran; a fitted figure "
+		"would come from garrison, tribute and captive counts, none of which feeds contact volume yet.")
+MIGRANT_CONTACT_VOLUME_PER_PERSON = declare(
+	"MIGRANT_CONTACT_VOLUME_PER_PERSON", 0.001, kind="temporary_heuristic",
+	unit="contact volume per migrant", source=None, confidence="D",
+	retire="contact volume measured from carried tonnes, migrants and routes (sim/agents/awareness.py contact_volume)",
+	why="Contact each working-age migrant gives the actors where they arrive with the place they left; a fitted "
+		"figure would come from how fast news travels with a settler (no source found).")

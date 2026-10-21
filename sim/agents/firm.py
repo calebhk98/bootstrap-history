@@ -16,6 +16,7 @@ from .tuning import EXIT_LOSS_YEARS, VALUE_HORIZON_YEARS
 class Firm(ExpansionMixin, RecordedActor):
 	kind = "firm"
 	researches = True
+	keeps_purchases = True   # what it buys at the market joins its stores (a state draws its purchases at once)
 	borrows_for_copies = True
 
 	# Set by the registry: how many other operators share a concern's market.

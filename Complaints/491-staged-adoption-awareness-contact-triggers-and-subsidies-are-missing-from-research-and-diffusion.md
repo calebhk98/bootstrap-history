@@ -1,6 +1,6 @@
 # Staged adoption, awareness, contact triggers and subsidy levers are missing from research and diffusion
 
-**Status:** partly (awareness, staged adoption, technique levers and own stock are built and tested; the remainder is at the end)
+**Status:** partly (awareness, staged adoption, technique levers, own stock, contact events and share-weighted plants are built and tested; the remainder is at the end)
 
 What is wrong now:
 
@@ -70,9 +70,17 @@ unit count; subsidy and mandate levers on the government (481).
   in `adoption.advance_actor` (subsidy per trying actor; the state makes a mandated actor whole for realised losses).
 - Done: the start gate counts the actor's own stock (`research_gate.materials_short_of_stock`, `Actor.held_tonnes`
   from the record's `stores`).
-- Remainder: (1) the engine does not yet call `awareness.record_contact` on a conquest or a migration, and a new
-  route raises awareness only through the carried-tonnes reading of `contact_volume`; (2) the share is state only:
-  no production code reads `adoption` yet, so a share does not yet change a plant's output or crew; (3) no node
-  requires samples brought back from a region (expedition `returns`, rubber and latex); (4) the contact and speed
-  constants are heuristics (`sim/agents/tuning_adoption.py`) awaiting measured carriers and fitted curves; (5) a firm's
-  `stores` is not yet filled by its purchases, so its own stock is mostly empty in a real game.
+- Done: the share reaches production. `adoption.plant_weight` weights a plant of the technique by the owner's share
+  (1.0 when the owner has no record), and `business_books.operate` and `business_crew.staff` run the plant at
+  size times weight, so crew, takings and wages follow the share; `adoption.observed_gap` reads the plant's margin per
+  unit of share. Test: `--only adoption_reaches_production`.
+- Done: the engine records contact on a conquest (`campaign_year._take` calls `contact_events.after_conquest`) and on a
+  migration (`regional_people.step_regions_of_people` calls `contact_events.after_migration` from `migrant_pairs`).
+- Done: purchases a buyer that `keeps_purchases` (a firm) makes at the market are delivered to its `stores`
+  (`economy_port_actors.close` returns the delivery by good; `stock_keeping.add_delivery`).
+- Remainder: (3) no node requires samples brought back from a region (expedition `returns`, rubber and latex);
+  (4) the contact and speed constants are heuristics (`sim/agents/tuning_adoption.py`): contact would be retired by a
+  measured carrier (tonnes, migrants, routes) and the logistic speed by a curve fitted to Griliches-style adoption
+  data, neither of which has a source opened yet; (5) no firm calls `market_purchase` yet (a plant's inputs are
+  costed in its books, not bought as goods), so firm stores fill only once a firm buys inputs or research materials as
+  goods; (6) the effect of the share on a whole game is unmeasured (needs the slow suite and a baseline run).

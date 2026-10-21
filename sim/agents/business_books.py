@@ -1,7 +1,7 @@
 """A business's yearly books: what a plant takes, costs and pays, the same arithmetic for any owner."""
 from typing import Any, Optional, Tuple
 
-from . import firm_entry, ledger
+from . import adoption, firm_entry, ledger
 from .business import Business
 from .business_crew import staff
 from .edges import EDGE_CUSTOMERS, EDGE_LANDOWNERS, EDGE_SUPPLIERS, EDGE_WORKERS
@@ -16,13 +16,14 @@ def takings_of_size(takings_of_one_unit: float, size: float, market_factor: floa
 def operate(business: Business, owner: Any, entry_key: str, world: Any, rivals: float) -> float:
 	"""One year of a plant: staff it, take its takings, pay upkeep, wages, levy and royalty.
 	Returns the year's margin."""
-	size = business.size_of(entry_key)
+	weight = adoption.plant_weight(owner.adoption, entry_key)   # the share of the plant that runs the technique
+	size = business.size_of(entry_key) * weight
 	books = world.plant_books(entry_key, business.opened_year_of(entry_key, world.year), rivals, size)
 	if books is None:   # the plant's country keeps no record of a figure its books need: it stands idle
 		business.note_crew_found(entry_key, 0.0)
 		business.note_takings(entry_key, 0.0)
 		return 0.0
-	found = staff(business, owner, entry_key, world)
+	found = staff(business, owner, entry_key, world, weight)
 	business.note_crew_found(entry_key, found)
 	takings = found * books.takings
 	business.note_takings(entry_key, takings)

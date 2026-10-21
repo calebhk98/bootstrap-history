@@ -43,11 +43,25 @@ def share_of(actor: Any, node_id: str) -> float:
 	return 0.0 if entry is None else float(entry["share"])
 
 
+def plant_weight(adoption: Dict[str, Dict[str, Any]], node_id: str) -> float:
+	"""The weight a technique carries in an actor's plants of it: its adoption share, or 1.0 for a plant the actor
+	runs with no adoption record (it was never a trial, so all of it runs the technique)."""
+	entry = adoption.get(node_id)
+	return 1.0 if entry is None else float(entry["share"])
+
+
+def margin_per_share(margin: float, weight: float) -> float:
+	"""A plant's margin at full weight: what it made divided by the weight it ran at, so a small share is not read
+	as a small margin."""
+	return margin / weight if weight > 0.0 else 0.0
+
+
 def observed_gap(actor: Any, node_id: str, world: Any) -> float:
 	"""Margin of the technique (the actor's own when it runs it, else what the economy shows) over the mean
 	margin of the actor's other concerns."""
 	own = actor.margin_of(node_id)
-	new_margin = float(world.concern_margin(node_id)) if own is None else float(own)
+	new_margin = (float(world.concern_margin(node_id)) if own is None
+				  else margin_per_share(float(own), plant_weight(actor.adoption, node_id)))
 	others = [actor.margin_of(other) for other in sorted(actor.concerns) if other != node_id]
 	others = [margin for margin in others if margin is not None]
 	return margin_gap(new_margin, sum(others) / len(others) if others else 0.0)
