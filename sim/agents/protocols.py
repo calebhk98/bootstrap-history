@@ -66,6 +66,18 @@ class World(Protocol):
 	def patron_ask(self) -> float:
 		...
 
+	def patron_clients(self, country: str) -> List[Tuple[float, float]]:
+		"""(governance, reputation factor) of the playing seats of a country whose techniques run the funding mechanic."""
+		...
+
+	def state_funding_terms(self, people: float) -> Dict[str, float]:
+		"""The terms a state funds a client on, for a country of `people` (agents/patronage.py)."""
+		...
+
+	def country_output_per_head(self, country: str, opening_people: float, people: float) -> Optional[float]:
+		"""A country's real output per person over its opening's; None while the economy has no record of it."""
+		...
+
 	def equipment_kg_per_soldier(self) -> float:
 		...
 

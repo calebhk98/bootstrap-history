@@ -101,11 +101,11 @@ class GroupView:
 	def sectors(self) -> Dict[str, Sector]:
 		"""Everyone hurt this year, by key."""
 		def compute() -> Dict[str, Sector]:
-			strata = [stratum for stratum in self._sim.actors.of_kind("stratum")]  # type: ignore[attr-defined]
+			strata = self._sim.actors.home_actors("stratum")  # type: ignore[attr-defined]
 			goods = Sector.of_goods(strata, self.goods_categories(), self) if strata else []
 			caused = self.displaced_producers() + goods + self.squeezed_employers()
-			firms = [firm for firm in self._sim.actors.of_kind("firm")]  # type: ignore[attr-defined]
-			foundations = [foundation for kind in ("church", "academy") for foundation in self._sim.actors.of_kind(kind)]  # type: ignore[attr-defined]
+			firms = self._sim.actors.home_actors("firm")  # type: ignore[attr-defined]
+			foundations = [foundation for kind in ("church", "academy") for foundation in self._sim.actors.home_actors(kind)]  # type: ignore[attr-defined]
 			governments = [government for government in self._sim.actors.of_kind("government")  # type: ignore[attr-defined]
 						   if government.record.country is None]
 			servants = [sector for government in governments for sector in Sector.of_servants(government, self)]
@@ -126,7 +126,7 @@ class GroupView:
 	def group_claims(self) -> Dict[str, float]:
 		"""What the state has undertaken to make good to each organised group, by budget line name."""
 		return {CONCESSION_PREFIX + group.actor_id: group.record.claim
-				for group in self._sim.actors.of_kind("interest_group") if group.organised()}  # type: ignore[attr-defined]
+				for group in self._sim.actors.home_actors("interest_group") if group.organised()}  # type: ignore[attr-defined]
 
 	def scope_revenue(self, scope: float) -> float:
 		"""The state's yearly revenue from a territory holding `scope` of the whole."""

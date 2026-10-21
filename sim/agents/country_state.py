@@ -160,14 +160,6 @@ class CountryStateView(CollectionView):
 		return self._shared.fleet_goods(holder_id or self.government().actor_id)
 
 	# ---- taxpayers and the levy
-	def patron_ask(self) -> float:
-		"""Nobody is the patron of a country's state."""
-		return 0.0
-
-	def group_claims(self) -> Dict[str, float]:
-		"""Interest groups form around the founder's economy; a country's state owes none yet (Complaint 649)."""
-		return {}
-
 	def visible_taxpayers(self) -> List[Tuple[float, float]]:
 		"""(visible scale, taxable income) of the firms and the players' seats of the country the state can see."""
 		lookup = getattr(self._holder, "active_firms", None)

@@ -312,7 +312,10 @@ class ActorRegistry:
 
 	def world_for(self, actor: Any, world: Any) -> Any:
 		"""The world an actor sees: the shared one for the home country, else its country's scope."""
-		country = self.country_of(actor)
+		return self.world_of_country(self.country_of(actor), world)
+
+	def world_of_country(self, country: Optional[str], world: Any) -> Any:
+		"""The world a country's actors see: the shared one for the home country, else the country's scope."""
 		scope = WORLD_SCOPE[0]
 		if scope is None or not country or country == self.state.home_country or country not in self.state.countries:
 			return world
@@ -321,6 +324,10 @@ class ActorRegistry:
 			scoped = scope(world, self.state.countries[country], self)
 			self._scoped[country] = scoped
 		return scoped
+
+	def home_actors(self, kind: str) -> List[RecordedActor]:
+		"""The actors of a kind that answer to the home country, in id order."""
+		return [actor for actor in self.of_kind(kind) if self.country_of(actor) == self.state.home_country]
 
 	def market_operators(self) -> List[RecordedActor]:
 		"""Every actor still in business that runs concerns in the shared market: firms and players."""
@@ -447,19 +454,31 @@ class ActorRegistry:
 		return founded
 
 	def consider_groups(self, world: Any) -> List[str]:
-		"""Organise a group for each body of people whose lost income has reached the point at
-		which they act on the state, and call a dissolved group back when its cause returns."""
+		"""Organise a group for each body of people, in each country, whose lost income has reached the point at
+		which they act on their state, and call a dissolved group back when its cause returns."""
+		formed: List[str] = []
+		home = self.state.home_country
+		for country in [home] + sorted(set(self.state.countries) - {home}):
+			if country != home and self.government_of(country) is None:
+				continue
+			formed.extend(self._organise_groups(self.world_of_country(country, world), country))
+		return formed
+
+	def _organise_groups(self, world: Any, country: str) -> List[str]:
+		"""The groups of one country's sectors, read through that country's world."""
 		from .group_tuning import GROUP_ORGANISING_WEIGHT
+		home = country == self.state.home_country
 		formed = []
 		for key, sector in sorted(world.sectors().items()):
 			if sector.lost_income / world.scope_revenue(sector.scope) < GROUP_ORGANISING_WEIGHT:
 				continue
-			group_id = "group:" + key
+			group_id = "group:" + key if home else "group:%s:%s" % (country, key)
 			existing = self.actors.get(group_id)
 			if existing is not None and existing.record.exited_year is None:
 				continue
 			if existing is None:
-				existing = self.add(group_id, ActorRecord(**InterestGroup.founded_by(sector), founded_year=world.year))
+				existing = self.add(group_id, ActorRecord(**InterestGroup.founded_by(sector, None if home else country),
+														  founded_year=world.year))
 			else:
 				existing.record.exited_year = None
 			existing.record.lost_income = 0.0
@@ -471,7 +490,7 @@ class ActorRegistry:
 		"""Commodity -> name of the interest group whose demand to forbid the techniques that
 		make it the state is meeting this year."""
 		if self._bans is None:
-			self._bans = {group.record.subject: group.record.name for group in self.of_kind("interest_group")
+			self._bans = {group.record.subject: group.record.name for group in self.home_actors("interest_group")
 						  if group.record.exited_year is None and group.record.demands and not group.record.technique}
 		return self._bans
 

@@ -27,6 +27,9 @@ class StateWorld(FakeWorld):
 	def seat_taxpayers(self, country):
 		return []
 
+	def patron_clients(self, country):
+		return []
+
 	def subsistence_kg_per_person_year(self):
 		return 200.0
 

@@ -91,6 +91,10 @@ class CountryAnswers:
         """Working people of a trade in the labour markets of the country's tiles (nobody for a trade none practise)."""
         return country_figures.people_by_trade(self._economy, self._country).get(trade, 0.0)
 
+    def idle_hours_by_trade(self) -> Dict[str, tuple]:
+        """(hours offered and not hired, hours offered) of each trade in the labour markets of the country's tiles last year."""
+        return country_figures.idle_hours_by_trade(self._economy, self._country)
+
     def working_people(self) -> Optional[float]:
         """Every working person in the labour markets of the country's tiles, whatever the trade: the hands unskilled
         labour can draw on (the working age at home). None where the country's labour markets hold nobody."""

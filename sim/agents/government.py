@@ -24,6 +24,7 @@ from .government_markets import MarketsMixin
 from .government_stores import StoresMixin
 from .edges import EDGE_PATRONAGE, EDGE_STATE_SPENDING
 from .government_surplus import SurplusMixin
+from .no_country_economy import NoCountryEconomy
 from .tuning import GOVERNMENT_WORTH_SHARE_PER_GAIN
 from .tuning_spending import ACCESSION_PROBABILITY_PER_YEAR, PUBLIC_BUILDING_LIFE_YEARS
 from .values import invention_gains, weighted_gain
@@ -152,8 +153,12 @@ class Government(CorveeMixin, CreditRecordMixin, FiscalMixin, CoinageMixin, Ente
 
 	def pay_patron(self, share: float, world: Any) -> None:
 		"""Fund the founder as patron from what is left of the purse after the standing need.
-		A state that left any of its need unpaid funds nobody."""
-		ask = world.patron_ask() if share >= 1.0 else 0.0
+		A state that left any of its need unpaid funds nobody, and nor does one whose country the economy keeps no pay or output
+		for (it cannot say what to give)."""
+		try:
+			ask = world.patron_ask() if share >= 1.0 else 0.0
+		except NoCountryEconomy:
+			ask = 0.0
 		grant = min(ask, max(0.0, self.money))
 		self.record.patron_grant = grant
 		if grant > 0.0:

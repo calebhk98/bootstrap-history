@@ -21,7 +21,7 @@ class TransfersMixin:
 
     def state_claims(self):
         """What the state has undertaken to make good to organised interest groups this year."""
-        return sum(group.record.claim for group in self.actors.of_kind("interest_group") if group.organised())
+        return sum(group.record.claim for group in self.actors.home_actors("interest_group") if group.organised())
 
     def transfer_size(self, spec):
         """The sum a `transfer` spec asks for now: a share of the state's debt or of its claims, or a stated sum
