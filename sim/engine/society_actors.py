@@ -67,7 +67,7 @@ class ActorsMixin:
         state = self.state.actors
         if state is None or not state.records:
             return 0.0
-        return self.actors.staff_fte(trade)
+        return self.actors.home_staff_fte(trade)
 
     def actor_staff_nationwide(self, trade):
         """People of this trade that firms and governments hold nationwide. Staff in the founder's

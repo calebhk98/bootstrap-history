@@ -262,6 +262,10 @@ class ActorRegistry:
 					if actor_id != excluding and self.country_of(actor) == country)
 		return max(0.0, total)
 
+	def home_staff_fte(self, trade: str, excluding: Optional[str] = None) -> float:
+		"""People of one trade the home country's actors employ (an actor with no country is home)."""
+		return self.staff_fte_in_country(trade, self.state.home_country, excluding)
+
 	def add(self, actor_id: str, record: ActorRecord) -> RecordedActor:
 		self.state.records[actor_id] = record
 		return self._wrap(actor_id)

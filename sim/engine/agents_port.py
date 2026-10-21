@@ -198,7 +198,7 @@ class SimWorld(BudgetView, SiteView, RevenueView, GroupView, StakeView, Disclosu
 			return None
 		exist = sim.labour.taught_trade_people(trade) if trade in TRADES_ABSENT else sim.labour.people_who_exist(trade)
 		founder = sum(seat.household.employees.get(trade, 0.0) for seat in sim.state.seats.values())
-		return max(0.0, exist - founder - sim.actors.staff_fte(trade, excluding=actor_id))
+		return max(0.0, exist - founder - sim.actors.home_staff_fte(trade, excluding=actor_id))
 
 	def copy_cost(self, node_id: str) -> float:
 		"""Money the pioneer's version of this work costs, labour included."""
