@@ -670,6 +670,7 @@ def _cmd_ventures(sim, nodes, cmd, ended):
         row = {"id": node_id, "name": node["name"],
                 "earns_a_year": round(sim.venture_real_earnings(node_id), 1),
                 "forecast_basis": sim.venture_forecast_basis(node_id),
+                "sale_basis": sim.venture_sale_basis(node_id),
                 "costs_a_year": round(sim.venture_upkeep_quote(node_id)["now"], 1),
                 "costs_a_year_at_full_staffing": round(
                     sim.venture_upkeep_quote(node_id)["at_full_staffing"], 1),
