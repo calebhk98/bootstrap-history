@@ -120,22 +120,25 @@ class BudgetView:
 	def notice_over(self, scale: float, capacity: Optional[float] = None) -> float:
 		return self._sim.notice_over(scale, capacity)
 
-	def seat_taxpayers(self, country: str) -> List[Tuple[float, float]]:
-		"""(visible scale, taxable income) of the playing household seats that belong to `country`."""
+	def seat_taxpayers(self, country: Optional[str]) -> List[Tuple[float, float]]:
+		"""(visible scale, taxable income) of the playing household seats that belong to `country`; a seat with no
+		country belongs to the game's own (home) country."""
 		sim = self._sim
+		home = sim.actors.state.home_country
 		payers = []
 		for seat_id in sim.playing_seats():
-			if sim.state.seats[seat_id].country == country and sim.state.seats[seat_id].holds_household:
+			seat = sim.state.seats[seat_id]
+			if (seat.country or home) == (country or home) and seat.holds_household:
 				with sim.act_as(seat_id):
 					payers.append((self.visible_scale_of(sim.household), max(0.0, sim.revenue())))  # type: ignore[attr-defined]
 		return payers
 
 	def visible_taxpayers(self) -> List[Tuple[float, float]]:
-		"""(visible scale, taxable income) of every actor the state can see: the seats still playing and the firms."""
+		"""(visible scale, taxable income) of every actor the home state can see: the home country's playing seats and the firms."""
 		sim = self._sim
-		payers = []
-		for seat_id in sim.playing_seats() or [sim.state.acting_seat]:
-			with sim.act_as(seat_id):
+		payers = self.seat_taxpayers(sim.actors.state.home_country)
+		if not sim.playing_seats():
+			with sim.act_as(sim.state.acting_seat):
 				payers.append((self.visible_scale_of(sim.household), max(0.0, sim.revenue())))  # type: ignore[attr-defined]
 		for firm in sim.actors.active_firms():
 			payers.append((self.visible_scale_of(firm), max(0.0, firm.record.last_margin)))  # type: ignore[attr-defined]
