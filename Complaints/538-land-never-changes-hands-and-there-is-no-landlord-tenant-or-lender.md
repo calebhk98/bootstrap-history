@@ -156,10 +156,35 @@ clearing land has no cost (no inputs, no hours) and one output, so the sum over 
 `sim/tests/test_economy_costless_run_stock_gate.py`. With the fix the probe (`unsold_search._floors` wrapped, Norse game) shows the
 stock stop growing after the years the yearly change limit allows, where it used to add the full capacity every year.
 
-Still open, the buyer side: nothing wants cleared hectares, so expected sales still decay to nothing and the
-ask still falls with no taker. A buyer needs (a) a household or farm cohort that takes up open ground when its
-crop margin on a hectare, at the going rent, beats its other use, as a bid for `hectare_land` rather than a
-lease read off `titles_*.py`; (b) the clearer's own use, the plot it farms itself (the 551 own-plot
-rule on held land) taking hectares from its own stock instead of selling them; (c) the ask falling toward the
-capitalised rent (`unsold_search._held_value`) instead of an expected-sales ratchet. Not built; it touches
-`sim/economy/titles_*.py` and the households' land demand, and is a mechanism of its own.
+Buyer side, household cohort built (2026-10-21). Rules in `sim/economy/land_bid.py` (rule tests
+`sim/tests/test_economy_land_bid.py`), wiring in `sim/economy/land_bid_year.py`. A hectare earns its holder the
+better of the crop margin of the best land-only recipe (its outputs at the prices the actor sees, cut by fertility,
+less its hours at the servant wage) and the tile's rent; it is worth that earning capitalised at
+`titles_value.capitalising_rate`. A cohort with hours left once its own plot took what its land could bids for
+`hectare_land` on its tile, for the hectares those hours can work, at no more than that worth and only when it beats
+the going price; the money comes from the savings it would otherwise lend (the funds offer is cut by the bid's
+budget), never from its cash buffer (a first cut that spent the whole cash left the poorest cohort short of its
+floors and defaulting). After the goods clear, `land_bid_year.take_up_bought` turns the hectares a cohort holds in
+stock into a title passed from the seller's owner (`titles.pass_title`), and the stock is consumed. Measure: step the
+Norse game of `sim/tests/test_staff_closure_reopening_scenario.py` and print the clearer's stock, the remembered
+price and the titles of `sweden_01` each year.
+
+What the measure shows: in the Norse game no cohort has a crop it can grow (its own-plot options are all outside the
+tile's climate), so its earning is the rent only, its worth equals the seller's floor (both are the rent over the
+rate) and the trade has no surplus: the ask falls to the capitalised rent and then trades only a sliver. Where a
+cohort can farm (the Chinese games of `sim/tests/test_agent_economy_wiring.py`) the crop margin lifts its worth
+above the floor and cohorts buy tens of thousands of hectares from the clearer's stock in a year. Only recipes
+with a climate list count as crops (`sites.climate_allows`): a mine's recipe has a tiny land per run and would make
+every hectare look worth a fortune.
+
+Not built, still open:
+- Only household cohorts bid. A farm producer or another actor can call the same rules; no wiring yet.
+- (b) the clearer's own use (551 own plots on held land taking hectares from its own stock) and (c) the ask falling
+  toward the capitalised rent instead of an expected-sales ratchet.
+- The bid is for hours-limited farming; a cohort that would only let the hectare (rent branch of the earning) is
+  not modelled as a buyer without hands to work it.
+- A hectare is a title passed from the seller's owner, not new ground: the tile's titles already sum to one and the
+  clearer's stock is not backed by land the owner holds, so an owner with no free share sells nothing (the stock stays
+  with the buyer). Where cleared hectares add to the tile's arable land is undecided.
+- The ground goods are found as immobile goods a recipe makes from nothing (`land_bid.land_goods`); the data has no
+  land marker.

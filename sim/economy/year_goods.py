@@ -9,7 +9,7 @@ import dataclasses
 import math
 from typing import Dict, List, Tuple
 
-from . import (carriage_fleet_book, carriage_wear, goods_market, households, market_curves, market_quote, merchants, producers, seller_cash, seller_offers, settlement,
+from . import (land_bid_year, carriage_fleet_book, carriage_wear, goods_market, households, market_curves, market_quote, merchants, producers, seller_cash, seller_offers, settlement,
                state_budget, state_store, taxes, tool_wear, unsold_search)
 from .household_work_year import basket_key, cohort_basket
 from .market_memory import market_key
@@ -37,7 +37,7 @@ def add_orders(book: OrderBook, orders: AgentOrders) -> None:
         book.setdefault((offer.good, offer.area), ([], []))[1].append(offer)
 
 
-def cohort_orders(setup, record, view, ledger: YearLedger, order_book: OrderBook) -> List:
+def cohort_orders(setup, record, view, ledger: YearLedger, order_book: OrderBook, own_options=None) -> List:
     """Households' bids for the year; returns their savings offers for the credit market."""
     funds = []
     priced_by_tile = {}
@@ -59,7 +59,12 @@ def cohort_orders(setup, record, view, ledger: YearLedger, order_book: OrderBook
         orders = households.goods_orders(cohort, view, cash - sum(bid.budget for bid in tool_bids), income,
                                          basket, setup.specs, priced,
                                          smooth_rise=not record.settling, shared_store=store_by_tile)
-        add_orders(order_book, _less_what_it_grew(orders, cohort, basket, ledger.grown_units.get(cohort.agent_id)))
+        orders = _less_what_it_grew(orders, cohort, basket, ledger.grown_units.get(cohort.agent_id))
+        if own_options:
+            savings = sum(offer.amount for offer in orders.funds_offers)     # only what it would otherwise lend
+            orders = land_bid_year.with_land_bids(orders, land_bid_year.land_bids(
+                setup, record, view, cohort, own_options, ledger.spare_hours.get(cohort.agent_id, 0.0), savings))
+        add_orders(order_book, orders)
         funds.extend(orders.funds_offers)
     return funds
 
