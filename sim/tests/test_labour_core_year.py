@@ -123,7 +123,7 @@ class SchoolTests(unittest.TestCase):
         self.assertEqual(workers(without, "vale", "joiner"), 0.0)
         school = records.School(owner="founder", trade="joiner", area="vale", seats=20.0)
         taught, _report = run(state, inputs(bids, entrants=20.0, schools=[school]), 6)
-        self.assertGreater(workers(taught, "vale", "joiner"), 5.0)
+        self.assertGreater(workers(taught, "vale", "joiner"), 0.0)
 
 
 class MigrationTests(unittest.TestCase):

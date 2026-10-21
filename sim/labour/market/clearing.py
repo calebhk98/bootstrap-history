@@ -197,7 +197,10 @@ def clear_one(state: MarketState, inputs: YearInputs, trade: str, area: str, bid
         if imported is not None:
             ceiling = max(min(ceiling, imported), reservation)
     wage = min(market_wage(last, reservation, offered, bids), ceiling)
-    target = min(clearing_target(reservation, offered, bids), ceiling) if offered > 0.0 and bids else wage
+    # heading: the wage moves toward the clearing target by the same imbalance scaling `market_wage` applies, so
+    # the expectation it feeds is continuous across balance (Complaint 664)
+    target = (wage + pressure(wage, reservation, offered, bids) * (min(clearing_target(reservation, offered, bids), ceiling) - wage)
+              if offered > 0.0 and bids else wage)
     wanted, paid = eligible_bids(bids, wage)
     previous = state.hired_hours.get(area, {}).get(trade, {})
     hired = retain(wanted, previous, offered) if offered > 0.0 else {employer: 0.0 for employer in wanted}

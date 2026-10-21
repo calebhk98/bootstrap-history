@@ -1,6 +1,6 @@
 # A sliver of shortage sends a trade's expected income to its highest bid
 
-**Status:** open
+**Status:** closed. The clearing's heading wage (`target_wage`, `clear_one` in `sim/labour/market/clearing.py`) now moves from the settled wage toward the clearing target by `pressure`, the same imbalance scaling `market_wage` applies, so `income_at_graduation` rises with the shortfall instead of jumping to the top bid. Function test: `ExpectedIncomeIsContinuousAcrossBalance` in `sim/tests/test_labour_core_skilled_ceiling.py`.
 
 Found while testing the skilled-labour ceiling (`sim/tests/test_labour_core_skilled_ceiling.py`). In a built labour
 market where a trade is very slightly short of hours, `income_at_graduation` (`sim/labour/market/expectations.py`)

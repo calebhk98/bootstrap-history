@@ -8,7 +8,7 @@ import math
 import unittest
 from unittest import mock
 
-from sim.labour.market import aptitude, clearing, records, training, trades, year
+from sim.labour.market import aptitude, clearing, expectations, records, training, trades, year
 
 REGISTRY = {
     "digger": {"family": "toil", "training_years": 0},
@@ -111,6 +111,34 @@ class NewHandsComeThroughTrainingPlaces(unittest.TestCase):
         for _year in range(10):
             state, report = year.run_year(state, inputs(smith_maximum=1e6))
             self.assertLessEqual(report.switched.get("vale", {}).get("smith", 0.0), 1e-9)
+
+
+class ExpectedIncomeIsContinuousAcrossBalance(unittest.TestCase):
+    """Complaint 664: an entrant's expected income moves with how short the trade is, not to the top bid."""
+
+    BID = 10.0
+
+    def graduation_income(self, shortfall_share):
+        # one year from a settled start; smiths wanted exceed the smiths on hand by the share given
+        year_inputs = inputs(self.BID, smiths_wanted=SMITHS * (1.0 + shortfall_share))
+        settled = start()      # wages already settled at the outside option, so the wage is mid-adjustment
+        settled.wages = {"vale": {"digger": 1.0, "smith": 1.0}}
+        _state, report = year.run_year(settled, year_inputs)
+        found = expectations.income_at_graduation(start(), year_inputs, expectations.index_clearings(report.clearings),
+                                                  "vale", "smith", [1.0] * aptitude.band_count())
+        return found - HOURS      # over the outside option
+
+    def test_a_sliver_of_shortage_moves_the_expectation_by_about_a_sliver(self):
+        balanced = self.graduation_income(-1e-4)
+        sliver = self.graduation_income(1e-4)
+        half = self.graduation_income(0.5)
+        self.assertGreater(half, 0.0)
+        self.assertLess(abs(sliver - balanced), 0.01 * half)
+
+    def test_the_expectation_does_not_fall_as_the_shortage_grows(self):
+        shortfalls = [-1e-4, 0.0, 1e-4, 1e-2, 0.1, 0.5, 1.0]
+        incomes = [self.graduation_income(share) for share in shortfalls]
+        self.assertEqual(incomes, sorted(incomes))
 
 
 if __name__ == "__main__":
