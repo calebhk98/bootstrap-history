@@ -691,3 +691,22 @@ its base price by year five, and wheat is already about 0.37 of base in year 0. 
 level follows the same food collapse a year earlier (the money stock does double). So the slow validation "more metal
 raises the price level" (`check_more_metal_raises_price_level`) is drowned by the unsettled economy for Norse; the
 transmission rules are held by `test_money_reaches_prices`.
+
+## Durable boundary corrected; coupled stationary opening remains open
+
+The opening and household durable orders now agree on the planning-date stock:
+the desired serving stock after the preceding close's wear and spoilage.
+Orders fill its gap to the serving stock without adding another wear allowance.
+Opening income and production sizing use replacement demand even before the
+stock is seeded. This removes a calendar mismatch, not the economy's cycle.
+Measure the rule and its connection to the opening with
+`python3 -m unittest sim.tests.test_durable_stationary_state`.
+
+`docs/architecture/STATIONARY_OPENING.md` defines the remaining coupled state,
+phase boundaries and residuals. It explains why the income iteration's view
+before assets exist is not the yearly household's balance sheet. It also
+separates purchases of existing land from physical investment. The stated
+income override remains; no settling tolerance or shipped opening is changed.
+The long-run measurements and unsuccessful performance experiments are recorded
+on GitHub issues #61 and #62. This complaint and the related income, own-plot,
+wealth and wage complaints remain unresolved by this subsystem correction.

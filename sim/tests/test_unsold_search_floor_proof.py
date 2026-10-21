@@ -3,6 +3,7 @@
 QUICK_TOPIC = True
 
 import random
+from dataclasses import replace
 import unittest
 from unittest import mock
 
@@ -33,6 +34,28 @@ class FloorProofTests(unittest.TestCase):
             with mock.patch.object(unsold_search, "all_at_floor", return_value=False):
                 expected = self.clear(bids, offers)
             self.assertEqual(actual, expected)
+
+    def test_flexible_budget_limited_and_prioritised_books_are_bit_identical(self):
+        generator = random.Random(61)
+        for _case in range(160):
+            offers = [offer(str(index), generator.uniform(1.0, 100.0), generator.uniform(1.1, 20.0) * COST)
+                      for index in range(generator.randrange(1, 5))]
+            bids = [replace(buyer(generator.uniform(0.0, 100.0), generator.uniform(0.1, 10.0) * COST),
+                            buyer=str(index), flexible_quantity=generator.uniform(0.0, 100.0),
+                            elasticity=generator.uniform(0.0, 3.0), budget=generator.uniform(0.0, 2000.0),
+                            priority=generator.randrange(3))
+                    for index in range(generator.randrange(1, 8))]
+            actual = self.clear(bids, offers)
+            with mock.patch.object(unsold_search, "all_at_floor", return_value=False):
+                expected = self.clear(bids, offers)
+            self.assertEqual(actual, expected)
+
+    def test_nonmonotone_demand_and_rounding_boundary_keep_the_search(self):
+        offers = [offer("a", 100.0, 5.0 * COST)]
+        for bid in (replace(buyer(10.0, 4.0 * COST), elasticity=-1.0),
+                    buyer(100.0 * (1.0 - unsold_search.ROUNDING_SHARE), 4.0 * COST)):
+            buyers = goods_market.Buyers([bid], 100.0)
+            self.assertFalse(unsold_search.all_at_floor(buyers, offers, {0: COST}))
 
     def test_duplicate_seller_keys_cannot_use_the_total_stock_proof(self):
         offers = [offer("a", 100.0, 5.0 * COST), offer("a", 100.0, 5.0 * COST)]

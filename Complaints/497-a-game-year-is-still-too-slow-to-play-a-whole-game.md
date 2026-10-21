@@ -352,3 +352,48 @@ What would let arrays pay: batching across goods and distinct price vectors in o
 reworking the merchants' sequential route commitment (each merchant's commits change what the next sees), and
 array-shaped data for `clear_goods`, `clear_labour`, `close_agents` and `open_entrants`. That is the model change of
 option 1 or 3 above, not a translation. A mod-swappable kernel for such a change is Complaint 661.
+
+## Skip searches whose terminal result is already proved
+
+`unsold_search.all_at_floor` checks whether every offer is searchable at a
+common floor and total demand at that floor cannot absorb the stock. With
+nonnegative, nonincreasing demand and distinct seller keys, every higher trial
+must leave a seller unsold above its floor. The bisection therefore cannot
+improve on its initial floor trial. Clear that terminal book directly.
+Different floors, duplicate seller keys, nonmonotone schedules and the rounding
+boundary retain the ordinary search. `seller_offers` also defers preparing a
+strategic buyer book until an individual workshop actually needs it.
+
+Direct equivalence and guard checks:
+
+```bash
+python3 -m unittest sim.tests.test_unsold_search_floor_proof sim.tests.test_unsold_stock_search sim.tests.test_economy_aggregate_producer_pricing
+```
+
+The speed-only commit precedes the durable-model correction. Its complete
+sorted-key `state_text` save matches main after the warm-year benchmark. The
+alternating timings, commit IDs and rejected merchant experiments are on
+GitHub issue #62. Reproduce the benchmark on each pinned checkout with:
+
+```python
+import json
+import time
+from pathlib import Path
+from sim.tests.harness import sim
+from sim.engine.saveload import state_text
+
+game = sim()
+for year in range(4):
+    started = time.process_time()
+    game.step()
+    print(year, time.process_time() - started)
+Path("stepped-save.json").write_text(json.dumps(json.loads(state_text(game)), sort_keys=True))
+```
+
+Discard the first step's timing, alternate the old and speed-only checkouts,
+and compare the save files exactly. This is a modest reduction, not attainment
+of the year-time target. Array translation and certified reuse of the merchant
+route search measured slower and are excluded. The next structural experiment
+should batch independent market books within a phase while preserving their
+dependency order; merchant commitments cannot be shared without accounting for
+the state each preceding merchant changes.
