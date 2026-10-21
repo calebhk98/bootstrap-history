@@ -15,6 +15,11 @@ def capitalising_rate(live_rate: float, opening_rate: float) -> float:
     return max(live_rate, opening_rate)
 
 
+def hectare_value(rent_per_hectare: float, rate: float) -> float:
+    """What one hectare is worth to its holder: its rent capitalised at the rate."""
+    return rent_per_hectare / rate if rate > 0.0 else 0.0
+
+
 def share_value(tile, rent_per_hectare: float, share: float, rate: float) -> float:
     return share * tile.cropland_hectares * rent_per_hectare / rate if rate > 0.0 else 0.0
 
