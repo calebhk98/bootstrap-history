@@ -88,6 +88,14 @@ soils resist tillage until the tool and team can pull hard enough.
   under leaching. It comes from soil-science sources (a weathering rate against temperature, as in Arrhenius-type
   chemical weathering), not from fitting the ratio. The term is a labelled heuristic until a soil-age layer exists. The
   expected failure turns green, or stays red, on its own.
+  Tried (branch `soil-weathering`, not merged): an Arrhenius times rain weathering index (form and activation energy from
+  White and Blum 1995, abstract read at pubs.usgs.gov/publication/70019112) lowering fertility. It made the ratio worse
+  (rainforest is both hotter and wetter, so it weathers most), and its strength was set as the largest value that kept the
+  Koppen-table tolerances, which is a fit to a test, so it was not merged. What separates savanna from rainforest in the
+  soil literature is age, parent material and burning, which a climate index cannot carry. Next step: a soil-age or
+  parent-material layer (for example a soil-order map), not another climate coefficient. Until then the 0.5 check stays an
+  expected failure; whether its bound is right needs a source on cropping potential by climate (an agro-ecological zones
+  study such as FAO GAEZ suitability by Koppen class).
 
 ## Left
 
