@@ -1,10 +1,10 @@
 # The opening's income is a fixed point that leaks saving, and fixtures state an income to avoid it
 
-**Status:** open - households now count their firms' equity (605), which lifts spending and lending a little; the leak is not closed
+**Status:** open - households count their firms' equity (605, closed), which lifts spending and lending a little; the leak is not closed
 
 Part of Complaint 526 (The opening's income leaks saving, so the economy opens at subsistence and its wage keeps falling).
 
-Depends on 605, 606, 538 and 545 (545 cannot land alone). The unmerged rate search is on branch `fix-526-opening-rate` (`sim/economy/opening_rate.py`) and may be revived here.
+Depends on 606, 538 and 545 (545 cannot land alone; 605 is closed). The unmerged rate search is on branch `fix-526-opening-rate` (`sim/economy/opening_rate.py`) and may be revived here.
 
 **What is wrong.** The opening sets household income as the fixed point of income and the demand it pays for. Households save part of any surplus and nothing spends it (no producer plant, working capital or lending demand), so the fixed point falls to the households' floors. Fixtures state an income through `EconomySetup.opening_income_per_head` to get a surplus.
 
@@ -30,7 +30,7 @@ Three ways to give saving a use were weighed against the code:
    The tests use `plant_setup()` (plant on the farm and the mine). Working-capital and entrant requests are the
    only other demand for funds and they are small against the stock on offer.
 3. The opening holding households at the wealth they want. The opening's firms are worth little against a wish
-   of years of surplus income (`opening_equity.py` counts them in the settlement); the settled income over the
+   of years of surplus income (an `opening_equity.py` counted them in the settlement; it is no longer in `sim/economy`); the settled income over the
    ceiling moves by about a hundredth of itself. The wealth the wish asks for does not exist in the opening, so
    only a smaller wish (606) or assets that do (538, land) can meet it.
 

@@ -1,6 +1,6 @@
 # ForeignGovernment is one revenue formula: no revenue forms, works, navy, dole, reserve policy or borrowing
 
-**Status:** partly - the class is gone and a country is a scoped Government; the readings in 649 remain
+**Status:** closed - the class is gone and a country is a scoped `Government`; what a country's state still reads as a home figure or as nothing is tracked in 649
 
 Part of Complaint 482 (Countries other than the home one are static stubs).
 
