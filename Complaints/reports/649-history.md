@@ -1,6 +1,7 @@
-# A country's state still reads some home figures, or none: no trade book, coin stock, prices, equipment, trade counts or research hands of its own
+# History of Complaint 649 (as it stood before it was trimmed)
 
-**Status:** open (partly done: prices, coin, trade book, people by trade, equipment, rent owners and seat taxpayers (home and abroad) read the country's own part of the economy; plant books, crew, site rent, manager pay, entry figures and entry costs of state enterprises and of any firm abroad; research hands, interest groups and unskilled people remain below)
+Moved from the complaint file. Figures and line numbers here are as of the time they were written and may be stale; the complaint carries the current state.
+
 
 Follow-up to Complaint 593 (the foreign state is now the one `Government`, scoped to its country; `sim/agents/country_state.py`).
 

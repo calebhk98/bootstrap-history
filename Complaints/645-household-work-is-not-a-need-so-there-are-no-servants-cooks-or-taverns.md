@@ -1,59 +1,41 @@
 # Household work is not a need, so there are no servants, cooks or taverns
 
-**Status:** mostly done: the household chooses by the worth of its hour, own hours are kept out of the labour offered, a cohort with no hearth buys cooked food, and a hearth burns cooking fuel; land after the opening (473) and an urban marker remain
+**Status:** mostly done: the household chooses by the worth of its hour, own hours are kept out of the labour offered, a cohort with no hearth buys cooked food, and a hearth burns cooking fuel; land after the opening (473), a whole-game re-measure and an urban marker remain
 
-Owner decision (530, 2026-10-20). Cooking, fetching water and fuel, cleaning, grinding and childcare take hours every
-household spends. Nothing in `data/world/needs.json` or the household model books them, so domestic service, cooks and
-tavern keepers have no demand, and their hours sit in the generic `labourer` pool (619).
+Owner decision (530, 2026-10-20): cooking, fetching water and fuel, cleaning, grinding and childcare take hours every
+household spends, and they are a need met by the household's own hours or by hiring. Religion as a need is out of scope;
+it is a mod (`mods/TASKS.md`).
 
-What it would take: a household-work need met by the household's own hours or by hiring, the same choice as own-plot
-growing (`sim/economy/households_own.py`), so a richer household hires more as its own hours are worth more. Cooking
-needs a hearth and fuel; a household without one (urban tenancy, 551's endowments) buys cooked food, which is the
-demand for cooks and taverns. The hours a household needs come from a source (time-use studies), not a typed share.
-Land after the opening settles (473), since a new need moves the opening's demand. Tests: a richer cohort hires more
-household work; a cohort without a hearth buys cooked food.
-
-Religion as a need is out of scope by owner decision; it is a mod (`mods/TASKS.md`).
-
-## Done
+## What is built
 
 - `data/world/household_work.json`: hours a person's share of household work takes, by task. Water, fuel and grinding
   come from Blackden and Wodon (eds), Gender, Time Use, and Poverty in Sub-Saharan Africa, World Bank Working Paper 73,
-  2006, overview p. 9 (opened): an average adult female spends from just under 1 hour to 2 hours 20 minutes a day
-  carrying water, firewood and crops for grinding. Cooking, cleaning and childcare hours: no source found, labelled
-  estimates (confidence D) with a `retire`.
-- `household_work` need in `data/world/needs.json`, no floor, satiation held equal to that file by a test, met by
-  `domestic_service_hour` (`data/production/95_household_services.json`), made by the new `domestic_servant` trade
-  (`data/world/trades.json`, group `services_state`). `cooked_meal_kg` is the cooked food a cook or eating house makes.
-- `sim/economy/households_work.py`: hours needed, hired hours (a richer cohort hires more), own hours, and the basket
-  of a household with no hearth (food only from goods marked `ready_to_eat`). Tests: `sim/tests/test_economy_households_work.py`.
-
-## Done in stage 2
-
-- The typed 0.04 is retired. `households_work.hired_hours` hires all of a cohort's household work when an hour of
-  its own labour (the wage it faces, averaged over the hours it would sell, `hour_value`) is worth more than the
-  servant's price, otherwise none; cohorts differ in what their hours earn, so the aggregate steps up smoothly. The
-  servant's price is the `domestic_servant` wage last year, else the tile's subsistence wage per hour. The need's
-  `surplus_budget_share` is 0 (`need_data` now allows a need with no share); hired hours are the cohort's floor of
-  the need (`Cohort.hired_work_per_person`, set in `sim/economy/household_work_year.py`).
-- Own hours are kept back: `Economy._shortfall_hours` adds each cohort's own household-work hours to its own-plot
-  hours, so `withhold_hours` cuts the offers; `_grow_own` does not count them as spare hours for the plot.
-- Hearth: a cohort has one when it holds a title or a tenancy on its tile (`has_hearth`). No urban marker exists in the
-  economy. `cohort_basket` gives a hearth-less cohort `without_hearth_basket` at the cohort sites (opening bids, goods
-  orders, year close, household loans); the work of a landless household leaves out cooking.
+  2006, overview p. 9 (opened): an average adult female spends from just under 1 hour to 2 hours 20 minutes a day carrying
+  water, firewood and crops for grinding. Cooking, cleaning and childcare hours: no source found, labelled estimates
+  (confidence D) with a `retire`. Cooking fuel (`cooking_fuel_mj_per_person_per_day`): Johnson and Bryden 2012 (abstract
+  opened).
+- `household_work` need in `data/world/needs.json`, no floor, met by `domestic_service_hour`
+  (`data/production/95_household_services.json`), made by the `domestic_servant` trade (group `services_state`).
+  `cooked_meal_kg` is the cooked food a cook or eating house makes.
+- `sim/economy/households_work.py` and `household_work_year.py`: a cohort hires all its household work when an hour of its own
+  labour (the wage it faces, averaged over the hours it would sell) is worth more than the servant's price, otherwise none, so
+  hiring follows income and the wage with no typed share (the earlier typed budget share is retired). The servant's price is
+  last year's `domestic_servant` wage, else the tile's subsistence wage per hour.
+- Own hours are kept back: `Economy._shortfall_hours` adds each cohort's own household-work hours to its own-plot hours, so
+  `withhold_hours` cuts the offers; `_grow_own` does not count them as spare hours.
+- Hearth: a cohort has one when it holds a title or a tenancy on its tile (`has_hearth`). A hearth-less cohort gets
+  `without_hearth_basket` (food only from goods marked `ready_to_eat`, no cooking in its household work) and burns no fuel;
+  a cohort with one pays the cooking fuel added to its warmth floor (`households_work.with_cooking_fuel`).
 - Tests: `sim/tests/test_economy_household_work_year.py`, `sim/tests/test_economy_households_work.py`.
 
 ## Still to do
 
-- (Done) Cooking fuel: `cooking_fuel_mj_per_person_per_day` in `data/world/household_work.json` (Johnson and Bryden 2012, abstract opened) is added to the warmth floor of a cohort with a hearth (`households_work.with_cooking_fuel`, `household_work_year.cohort_basket`); a hearth-less cohort burns none. Not yet measured in a whole game: compare `simulator.py economy-check` fuel prices before and after.
-- Land after the opening settles (473). Re-measure with a whole game: the hours kept back are a large share of the
-  offered hours (compare `simulator.py economy-check` hired share and wage over floor before and after).
-- An urban marker, when one exists, should also remove the hearth.
+- Land after the opening settles (473), since a new need moves the opening's demand.
+- Re-measure with a whole game: the hours kept back are a large share of the offered hours, and the fuel price moves; compare
+  `simulator.py economy-check` hired share, wage over floor and fuel prices before and after.
+- No urban marker exists in the economy; when one does, it should also remove the hearth.
 
-## PM note (2026-10-21)
+## Research needed
 
-The first stage's hired-hours rule takes a typed budget share (0.04) of the cohort's surplus. That is a spending share
-typed into the data, the kind of cultural constant 530's decision ruled out. Replace it with the household's own
-choice: it hires an hour of household work when an hour of its own labour is worth more at the market than the
-servant's price, up to the work there is, so hiring follows income and the wage with no typed share. Retire the
-0.04 when that lands.
+Cooking, cleaning and childcare hours per person (time-use studies for pre-industrial or subsistence households), which
+replace the labelled estimates in `data/world/household_work.json`.
