@@ -4,7 +4,7 @@ from typing import Any
 from sim.agents.api import PROOF_YEARS, SECRET_EXPOSURE, ledger, licence
 
 from . import seat_builds
-from .visibility import base_visibility, most_open_mode
+from .visibility import base_visibility, most_open_mode, years_to_be_believed
 
 
 class DisclosureView:
@@ -31,12 +31,7 @@ class DisclosureView:
 
 	def proof_years(self, node_id: str) -> float:
 		"""Years a concern must run at a profit before outsiders believe it."""
-		mode = self.disclosure_mode(node_id)
-		if mode == "publish":
-			return 0.0
-		if mode in ("secret", "license"):
-			return PROOF_YEARS / self.secret_exposure(node_id)
-		return float(PROOF_YEARS)
+		return years_to_be_believed(self.disclosure_mode(node_id), PROOF_YEARS, self.secret_exposure(node_id))
 
 	def seat_parties(self) -> Any:
 		"""Every seat as an actor, by seat id: the founder and other players hold patents and shares."""

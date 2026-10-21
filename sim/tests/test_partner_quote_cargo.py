@@ -1,19 +1,35 @@
-"""A partner quote prices the cargo's own spoilage (Complaints/340): the material is named to the merchants' terms."""
+"""A partner quote prices the cargo's own spoilage (Complaints/340): the material is named to the merchants' terms.
+`partner_quote_per_tonne` is called on a stub that holds only what it reads."""
+from types import SimpleNamespace
+
 from .harness import *  # noqa: F401,F403
 
-HOME, PARTNER, RAMIE = "rome_100ad", "han_china_100ad", "ramie_stock_kg"
+from sim.engine.living_stock import LivingStockMixin
+from sim.engine.material_units import tonnes_per_unit
 
-buyer = sim(civ=HOME, capital=1e7)
+QUICK_TOPIC = True
+
+PARTNER, RAMIE = "han_china_100ad", "ramie_stock_kg"
+ROUTE = SimpleNamespace(cost_per_tonne=50.0)
+
+
+def buyer(named):
+    def cost_share(route, material=None, civilization_id=None):
+        named.append(material)
+        return 0.25
+
+    return SimpleNamespace(
+        partner_countries=lambda: [PARTNER], partner_refusal=lambda civilization_id, material: None,
+        _foreign_economy_facts=lambda civilization_id: {"prices_in_home_money": {RAMIE: 10.0},
+                                                        "solved_materials": [RAMIE], "route": "sea"},
+        _material_route=lambda civ, material, route: ROUTE, partner_civ=lambda civilization_id: {},
+        partner_price_level=lambda civilization_id: 1.0, _trader_cost_share=cost_share,
+        _agent_cost_per_tonne=lambda civilization_id, route: 5.0)
+
+
 named = []
-original_share = buyer._trader_cost_share
-
-
-def recording_share(route, material=None, civilization_id=None):
-    named.append(material)
-    return original_share(route, material, civilization_id)
-
-
-buyer._trader_cost_share = recording_share
-quote = buyer.partner_quote_per_tonne(RAMIE, PARTNER)
+quote = LivingStockMixin.partner_quote_per_tonne(buyer(named), RAMIE, PARTNER)
 check("a partner quote is made", quote is not None and quote > 0, quote)
 check("the merchants' terms are asked for the material quoted", named == [RAMIE], named)
+check("the quote adds the merchants' share to the price and then the agent's and the route's carriage",
+      abs(quote - ((10.0 / tonnes_per_unit(RAMIE)) * 1.25 + 5.0 + 50.0)) < 1e-9, quote)

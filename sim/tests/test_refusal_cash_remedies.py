@@ -1,72 +1,81 @@
-"""An unaffordable purchase's refusal lists the commands that raise cash,
-with the amounts those commands themselves charge or pay."""
-import unittest
+"""An unaffordable purchase's refusal lists the commands that raise cash, with the amounts those commands themselves
+charge or pay. `cash_remedies`, `remedies_text` and `refusal_text` run on a stand-in actor holding stock, concerns,
+mines and staff (no game). The refusal reached through `start` is test_refusal_cash_remedies_scenario."""
+from types import SimpleNamespace
 
-from .harness import *  # noqa: F401,F403
+from .harness import check
 
+from sim.engine import cash_remedies, purchase_rule
+from sim.engine.living_stock_yearly import stock_rates
+from sim.refusal import facts_of
 
-def _indebted_household():
-    household = sim(civ="rome_100ad", capital=5000)
-    household.state.household.capital = -6000
-    return household
+QUICK_TOPIC = True
 
-
-def _refusal(household):
-    node_id = next(node_id for node_id in NODES
-                   if node_id not in household.done and household.start_reason(node_id)[0]
-                   and household.start_refusal(node_id))
-    return household.start_refusal(node_id)
+BREEDING = sorted(stock_rates())[0]
 
 
-class RefusalListsRemedies(unittest.TestCase):
-
-    def test_stock_sale_remedy_quotes_what_sell_pays(self):
-        household = _indebted_household()
-        household._material_stock()["iron"] = 40.0
-        _, tonnes, money = household.goods_market.quote_sell("iron", 40.0)
-        self.assertGreater(money, 0)
-        text = _refusal(household)
-        self.assertIn("sell iron", text)
-        self.assertIn("{:,.0f}".format(money), text)
-        before = household.capital
-        household.sell_material_stock("iron", 40.0)
-        self.assertAlmostEqual(household.capital - before, money, places=3)
-
-    def test_breeding_stock_is_not_offered_for_sale(self):
-        from sim.engine.living_stock_yearly import stock_rates
-        household = _indebted_household()
-        stock_material = sorted(stock_rates())[0]
-        household.grant_stock(stock_material, 5000.0)
-        household._material_stock()["iron"] = 40.0
-        text = _refusal(household)
-        self.assertIn("sell iron", text)
-        self.assertNotIn("sell " + stock_material, text)
-
-    def test_mothball_remedy_quotes_the_upkeep_it_stops(self):
-        household = _indebted_household()
-        node_id = next(node_id for node_id in NODES if NODES[node_id].get("up", 0) > 0
-                       and node_id not in household.state.projects.granted)
-        household.state.projects.done.add(node_id)
-        household.state.projects.operating.add(node_id)
-        saving = household.venture_real_upkeep(node_id)
-        text = _refusal(household)
-        self.assertIn("mothball " + node_id, text)
-        self.assertIn("{:,.0f}".format(saving), text)
-
-    def test_fire_remedy_quotes_the_wage_it_stops(self):
-        household = _indebted_household()
-        household.state.household.employees["smith"] = 2
-        wage = household.labour.market.quote_annual("smith")
-        text = _refusal(household)
-        self.assertIn("fire smith", text)
-        self.assertIn("{:,.0f}".format(wage), text)
-
-    def test_no_remedy_line_when_nothing_to_offer(self):
-        household = _indebted_household()
-        household.state.household.employees.clear()
-        household.state.projects.operating.clear()
-        self.assertNotIn("To raise cash", _refusal(household))
+def _actor(stock=None, upkeep=None, mines=None, employees=None, wages=None, budget=100.0, cash=-6000.0):
+    stock = {} if stock is None else stock
+    upkeep = {} if upkeep is None else upkeep
+    mines = {} if mines is None else mines
+    wages = {} if wages is None else wages
+    projects = SimpleNamespace(operating=set(upkeep), done=set(upkeep), granted=set())
+    return SimpleNamespace(
+        SPENDING_DRAW_SHARE_ORDINARY=0.5, capital=cash, civ={"id": "stub"},
+        _stock_key=lambda material: material, _material_stock=lambda: stock,
+        material_stock_t=lambda material: stock[material],
+        goods_market=SimpleNamespace(quote_sell=lambda material, tonnes: (material, tonnes, 30.0 * tonnes)),
+        state=SimpleNamespace(projects=projects, household=SimpleNamespace(employees=employees or {})),
+        venture_real_upkeep=lambda node_id: upkeep[node_id],
+        mine_capacity=mines, _workings_of=lambda material: mines[material],
+        mine_operating_cost_for=lambda working: working,
+        labour=SimpleNamespace(market=SimpleNamespace(quote_annual=lambda trade: wages[trade])),
+        spending_power=lambda kind: budget, credit_limit=lambda: 5000.0)
 
 
-if __name__ == "__main__":
-    unittest.main()
+# --- each remedy quotes the amount its own command uses
+stocked = _actor(stock={"iron": 40.0})
+lines = cash_remedies.cash_remedies(stocked)
+check("selling stock is offered at what the market quote pays for all of it (40 tonnes at 30 is 1,200)",
+      len(lines) == 1 and lines[0].startswith("sell iron 40.0") and "1,200" in lines[0], lines)
+check("breeding stock is not offered for sale",
+      cash_remedies.cash_remedies(_actor(stock={BREEDING: 5000.0, "iron": 40.0})) == lines)
+check("stock that brings nothing is not offered", cash_remedies.cash_remedies(_actor(stock={"iron": 0.0})) == [])
+
+mothball = cash_remedies.cash_remedies(_actor(upkeep={"loom": 700.0}))
+check("a running concern is offered for mothballing at the upkeep it stops",
+      len(mothball) == 1 and mothball[0].startswith("mothball loom") and "700" in mothball[0], mothball)
+check("a concern whose upkeep is half a coin or less is not offered",
+      cash_remedies.cash_remedies(_actor(upkeep={"loom": 0.4})) == [])
+granted = _actor(upkeep={"loom": 700.0})
+granted.state.projects.granted.add("loom")
+check("a concern the society already had is not offered", cash_remedies.cash_remedies(granted) == [])
+
+closing = cash_remedies.cash_remedies(_actor(mines={"copper": [300.0, 150.0]}))
+check("a mine is offered for closing at the sum of its workings' costs",
+      len(closing) == 1 and closing[0].startswith("close copper") and "450" in closing[0], closing)
+
+firing = cash_remedies.cash_remedies(_actor(employees={"smith": 2}, wages={"smith": 90.0}))
+check("a trade with staff is offered for firing at the wage it stops",
+      len(firing) == 1 and firing[0].startswith("fire smith") and "90" in firing[0], firing)
+check("a trade with nobody hired is not offered",
+      cash_remedies.cash_remedies(_actor(employees={"smith": 0}, wages={"smith": 90.0})) == [])
+
+# --- order and limit
+many = _actor(upkeep={"concern_%d" % index: 100.0 + index for index in range(10)}, stock={"iron": 40.0})
+ordered = cash_remedies.cash_remedies(many)
+check("at most six remedies are listed, the largest amount first",
+      len(ordered) == cash_remedies.REMEDY_LIMIT == 6 and ordered[0].startswith("sell iron")
+      and ordered[1].startswith("mothball concern_9"), ordered)
+
+# --- the text a refusal carries
+check("no remedy line when nothing is on offer", purchase_rule.remedies_text(_actor()) == "")
+# presentation: the sentence joining the remedies names each command
+check("remedies join into one sentence naming each command",
+      "sell iron" in purchase_rule.remedies_text(stocked) and "To raise cash" in purchase_rule.remedies_text(stocked))
+refusal = purchase_rule.refusal_text(stocked, "a loom", 900.0)
+check("the refusal states its cost, the budget and the shortfall as values",
+      refusal.cause == "cash_short" and facts_of(refusal)["cost"] == 900.0 and facts_of(refusal)["budget"] == 100.0
+      and facts_of(refusal)["short"] == 800.0, facts_of(refusal))
+# presentation: the refusal lists the remedy in its text
+check("...and carries the remedy line", "sell iron" in str(refusal), str(refusal))

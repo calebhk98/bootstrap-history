@@ -50,6 +50,17 @@ nitre-bed sizes), `sim/engine/territory_required.py` (the landless refusal), `co
 `test_complaint_147_project_materials`), the loss-making and creditor-seizure closures (`test_business_review`), the foreman
 choice (`test_business_crew_rule`).
 
+## Applied: audit batch 8 (test_labour_productivity through test_mod_actor_kind_in_a_game)
+
+Rules are called on inputs the test builds (a stub founder over the real mixin, a `HouseholdState`, a built reply); the
+whole-game checks sit in a `_scenario` file next to each. Extractions: `sim/engine/freight_markup.py` (freight markup and
+scarcity factor of a bought material, used by `economy_freight.py`), `sim/engine/diffusion_curve.py` (the leak of a
+venture's edge and the knowledge half-life, used by `society_diffusion.py`). Deleted as held elsewhere:
+`test_material_supply_whole_game` (the output of a made material is deposits plus producer capacity, held by
+`test_material_supply_from_capacity`); the per-material grant and year checks of `test_living_stock_crops` (held by
+`test_living_stock_scenario` and `test_living_stock_trade_scenario`). Kept whole as scenarios: `late_techniques_reach_economy`,
+`market_state_is_economy_record`, `mod_actor_kind_in_a_game`, `menu_seed_and_saves_scenario`, `material_reach_whole_game`.
+
 ## Applied: audit batch 6 (test_fog_leaks_and_typed_wording through test_hire_reports_count_found)
 
 Rules are called on inputs the test builds; whole-game checks that remain are named `_scenario` files next to them.
@@ -100,3 +111,70 @@ work in hand (`test_start_money_rule`), the carriage and spin-up-key checks of t
 the project bill as tonnes times the quote (`test_complaint_147_project_materials`), the working-age death share
 (`test_sixth_step_pure_functions`). `quote_matches_charge` and `player_text_names_own_civilisation` are scenarios by nature (two paths
 through the dispatcher agreeing; a leak across every reply builder).
+
+## Applied: audit batch 7 (test_historical_events through test_labour_population_derived)
+
+Rules now called on inputs the test builds, quick tier: `test_historical_events` (`hazard_given_condition`),
+`test_home_cargo_price` (the quote's rules), `test_hot_path_caches`, `test_hour_pool_standing_is_live` (`hour_standing` and
+the active-project builder on a stub game), `test_hours_by_trade_from_core` (`shares_from_people`),
+`test_household_capacity_and_literacy` (`literate_capacity`, `household_room`, `_room_advice` on a stub labour),
+`test_household_never_happened_fields`, `test_idle_capacity_view`, `test_idle_sized_suggestions`, `test_industrial_dashboard`
+(the `changes` window checks, the typed front end), `test_invention_disclosure` (`disclose`, `copy_difficulty_of`,
+`years_to_be_believed`), `test_keep_staffed` (the parser), `test_knowledge_loss_warning`, `test_knowledge_risk_and_sacking`
+(`corpus_hedge`, `_sack_corpus_loss`, `_log_corpus_loss` on a stub game), `test_labour_allocation_wiring`,
+`test_labour_follows_need`, `test_labour_market_town_pricing` (`LabourMarket` over a stub labour), `test_labour_population_derived`.
+Extractions, behaviour unchanged: `hazard_given_condition` in `sim/engine/hazard_condition.py`; `shares_from_people` in
+`sim/labour/labour_allocation.py`; `copy_difficulty_of` and `years_to_be_believed` in `sim/engine/visibility.py`.
+Whole-game checks stay as named `_scenario` files next to their rules. `test_in_memory_civilisation`, `test_industry_depth_game`,
+`test_home_floors_from_economy` and `test_labour_hiring_and_wages` are wholly wiring (screens, save round trips, the yearly
+staff phases) and are now `_scenario` files; their rules sit in `Sim` methods that read much of the state
+(`seed_opening_industry_experience`, `_step_staff`, `train`, `fire`, `commission`) and are still to be pulled out.
+`labour_margins_whole_game` is now `test_labour_margins_baseline_validation` (a baseline validation, 4.2, naming Complaints 398
+and 640) plus a scenario for the draught-animal recipes.
+
+## Applied: deep extraction 1
+
+`early_playtest`, `concern_volume`, `demographics_and_plague` and `economic_levers_inventory`, which batch 4 had left
+mostly whole, now hold at most four named scenarios each; their rules moved to five quick files
+(`test_early_playtest_data`, `test_civ_cost_and_hazard_relief_rules`, `test_concern_volume_rules`,
+`test_mortality_shock_rules`, `test_material_throttle_rules`) over new plain functions (`material_throttle.py`,
+`staff_loss_words.py`, `civ_cost.py`, `value_weight.py`). The `hazard_hit` log line now carries `defence` and
+`national_toll_percent` as facts, so scenarios read values, not prose.
+
+## Applied: audit batch 9 (test_mod_namespaces through test_perf_optimizations)
+
+Rules are called on inputs the test builds (stand-in games that hold only what the method reads); whole-game checks that
+remain are named `_scenario` files next to them. Extractions into plain functions: `founder_billed_growth`
+(`sim/engine/stock_growth_billing.py`), `herd_units_kept` and `opening_herds` (`sim/engine/opening_herd_rules.py`),
+`dice_for_play` (`sim/ui/play_dice.py`), `calendar_floor_note` and `free_hours_note` (`sim/ui/proto/parallelism_notes.py`),
+`candidates_the_player_may_see` (`sim/ui/proto/name_candidates.py`), `borrowing_forecast` (`sim/ui/proto/credit_forecast.py`),
+`scholar_target` (`sim/labour/staff_targets.py`), `nitre_bed_yearly_spend` (`sim/engine/shortage_sizing.py`). New quick rule
+files or topics: `node_factor_is_economy_over_cost`, `one_living_cost_model`, `partner_quote_cargo`, `peek_resource_throttle`,
+`opening_herd_growth_unbilled`, `opening_herds_follow_producers`, `opening_smelters_beside_ore`, `opening_basket_agrees`,
+`options_from_settings_table`, `parallelism_note`, `mod_namespaces`, `names_and_fog`, `one_goods_market`, `one_labour_market`,
+`people_attrition_scholars`, `perf_optimizations`. Deleted as held elsewhere: the afford-gate return-shape check (funding
+arithmetic is `test_arrears_hours`), the source-text read of `_agent_state` for the free-hours field (the scenario reads the
+reply), the whole-run 150-year attrition (`roll_trade`, also `test_complaint_585_staff_pay_retention`). Kept as scenarios:
+`node_revenue`, `node_revenue_follows_research`, `node_revenue_per_civ`, `money_units_one_boundary`, `multi_year_step_log`,
+`names_and_fog`, `one_goods_market`, `one_labour_market`, `one_living_cost_model`, `opening_herds_follow_producers`,
+`opening_basket_agrees`, `opening_smelters_beside_ore`, `parallelism_note`, `partner_in_agent_economy`, `peek_resource_throttle`,
+`people_attrition_scholars`, `people_by_trade_cache_year`, `perf_optimizations`.
+
+## Applied: audit batch 11 (test_refusal_cash_remedies through test_seat_sight)
+
+Rules are called on inputs the test builds (a stand-in game, the small fixture map, a built reply, the tree's own nodes);
+the whole-game checks that remain are named `_scenario` files next to their rules. New stand-in:
+`sim/tests/score_game.py` (what `score_report` and `final_report` read). Extractions, behaviour unchanged:
+`routes_to_carry` (`sim/ui/replay.py`), `trade_demand_table` and `oversubscription_notes` (`sim/engine/trade_demand.py`,
+used by `projects_progress.py` and `start`), `multi_year_hours_warning` (`sim/ui/proto/multi_year_warning.py`),
+`route_money_warnings` (`sim/ui/proto/dispatch_inspection_path.py`), ventures paging (`sim/ui/proto/venture_paging.py`).
+`research_filters` no longer sweeps `can_start` over the tree (Complaint 557): the filters run over the tree's nodes with a
+stand-in game and the command keeps three checks on built nodes in `test_research_filters_scenario`. Deleted as held
+elsewhere: the weather cell and pooled-draw checks of `regional_weather_wiring` (`test_growing_season_weather_correlation`
+and its scenario), the housing sum of `reserve_staff_policy` (`test_auto_hire_buys_room`), the cheapest-route relocation
+check (now a rule on the small fixture map). Found vacuous and rewritten: the two "does not claim nothing rests on it" checks of
+`refusal_wording_and_screens` read the band from an unfogged game, where the field is empty, and passed whatever the rule
+did; they now run on a fogged stand-in. Baseline validation: `test_regional_weather_century_validation` (slow-only, naming Complaint 46).
+Kept as scenarios: `run_reproducibility` (determinism), the save round trips and two-game match of the weather, the
+`again` command, the Options menu, the starting grants per civilisation.
+

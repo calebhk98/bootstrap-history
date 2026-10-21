@@ -8,9 +8,11 @@ import json
 from .harness import *  # noqa: F401,F403
 
 from sim.engine.data import ROOT
-from sim.world import stock_dynamics
 
-HOME = "rome_100ad"
+QUICK_TOPIC = True
+
+# Complaint 640: the reach of a grant into the ledger and the yearly rate are test_living_stock_scenario and
+# test_living_stock_trade (the year turns the held stock); this file reads the data only.
 WIRING = {
     "pepper_vine_stock_kg": "fud_pepper_cultivation",
     "dairy_cattle_kg": "fud_livestock_selective_cattle",
@@ -34,21 +36,3 @@ for material, node_id in sorted(WIRING.items()):
           len(row.get("source", "")) > 40 and row.get("confidence") in ("A", "B", "C"), row)
     check("%s: the node %s grants it" % (material, node_id),
           (NODES[node_id].get("grants") or {}).get(material, 0) > 0, NODES[node_id].get("grants"))
-
-    # reachable: the node's grant is what completing it adds to the ledger
-    founder = sim(civ=HOME, capital=1e6)
-    check("%s is not held before the node" % material, founder.stock_held(material) == 0.0, None)
-    founder.grant_stock(material, NODES[node_id]["grants"][material])
-    held = founder.stock_held(material)
-    check("%s is held once the node's grant lands" % material, held > 0.0, held)
-
-    # a year breeds and loses by the stated rates
-    herd = max(held, row["breeding_minimum_units"])
-    founder.grant_stock(material, herd - held)
-    founder.step_living_stock()
-    expected = stock_dynamics.next_units(herd, row["natural_increase"], row["annual_loss"],
-                                         row["breeding_minimum_units"])
-    check("%s: a year moves the holding by the stated rates" % material,
-          abs(founder.stock_held(material) - expected) < 1e-6, (founder.stock_held(material), expected))
-    check("%s: the holding is not constant over a year" % material,
-          abs(founder.stock_held(material) - herd) > 1e-9, None)

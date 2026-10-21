@@ -1,310 +1,171 @@
-"""scheduling_legibility: regression checks, run individually with `--only scheduling_legibility`."""
-from .harness import *  # noqa: F401,F403
-from unittest import mock
-from sim.ui import protocol as _PROTO
+"""Project scheduling made legible: what a project is waiting on (five precise reasons), the portfolio's demand against
+each trade's supply, the note when a start would oversubscribe a trade, and the warning before a multi-year step wastes
+hours. Each rule runs on tables or a stand-in game the test builds (no game): the real `_waiting_on` and the real
+`trade_shortage_kind` over a stand-in of trades, money and queue. The allocator's stored shares and the commands
+through a game are test_scheduling_legibility_scenario."""
+from types import SimpleNamespace
 
-# =============================================================================
-# PROJECT SCHEDULING, MADE LEGIBLE. A player who had already won the game
-# raised this in four separate places across a 500-year run: founder-hours
-# reported as free while a cheap project crawled because of the active
-# portfolio; one workshop stuck at 60% for a year with no visible cause;
-# "waiting on your hours" hard to reconcile with the displayed free hours;
-# and trade-hour demand from a shrunk staff competing invisibly across a
-# dozen projects. Five things below, one per deliverable.
-# =============================================================================
-# render_portfolio (_RPORT) is not used in this file, only _agent_portfolio
-# (_APORT) below - but it IS used by test_arrears_visibility.py, which gets
-# it from harness.py's own re-export rather than importing it here.
-from sim.ui.protocol import _agent_portfolio as _APORT
+from .harness import check
 
-# --- 1. PER-PROJECT ALLOCATION, READ FROM THE ALLOCATOR ITSELF. core.py's
-# step() (5. progress) now writes pool_total/rank/active_count/remaining_
-# before onto each active project's own st dict AS IT DECIDES each one's
-# share, and _agent_state/`portfolio` read those fields back rather than
-# recomputing a share that could disagree with what was actually applied.
-# Two founder-hours-only institutions (no hired trade at all, so nothing
-# here is about staffing) share one pool: sc2_institution_doctorate started
-# second and so sits at the front of `order` - priority #1, offered its
-# full 150 hours against the WHOLE 2,000-hour pool; sc2_institution_
-# curriculum is priority #2, offered its 120 against what was left AFTER
-# the first one's share, 1,850.
-_s_alloc = sim(civ="rome_100ad", capital=5_000_000.0, surveyed=())
-_s_alloc.done.update({"school_founded", "fin_university",
-                      "sc2_institution_examination"})
-_s_alloc._done_changed()
-_s_alloc.end_year = _s_alloc.cfg["start_year"] + _s_alloc.cfg["horizon_years"]
-_s_alloc.start_project("sc2_institution_curriculum")
-_s_alloc.start_project("sc2_institution_doctorate")
-_s_alloc._run_seat_work()    # the year's project work (start, materials, progress) without the economy around it
-_st_doc = _s_alloc.active["sc2_institution_doctorate"]
-_st_cur = _s_alloc.active["sc2_institution_curriculum"]
-check("the allocator stores WHY a project got its share: pool total, this "
-      "project's rank in the queue, and how many active projects shared "
-      "the pool, all on the same st dict step() itself decided from",
-      _st_doc["pool_rank_this_year"] == 1 and _st_cur["pool_rank_this_year"] == 2
-      and _st_doc["pool_active_count_this_year"] == 2
-      and _st_cur["pool_active_count_this_year"] == 2
-      and _st_doc["pool_total_this_year"] == 2000.0,
-      (_st_doc, _st_cur))
-check("the higher-priority project's own share came off the FULL pool, and "
-      "the next one in line saw only what was left after it - the exact "
-      "arithmetic behind 'this project is receiving N of your M available "
-      "directed hours because K active projects are sharing attention'",
-      _st_doc["pool_remaining_before_this_year"] == 2000.0
-      and _st_cur["pool_remaining_before_this_year"]
-      == 2000.0 - _st_doc["hours_offered_this_year"]
-      and _st_doc["hours_offered_this_year"] == 150.0
-      and _st_cur["hours_offered_this_year"] == 120.0,
-      (_st_doc["pool_remaining_before_this_year"],
-       _st_cur["pool_remaining_before_this_year"]))
-_pf_alloc = S._agent_dispatch(_s_alloc, NODES, {"cmd": "portfolio"})
-_pf_rows = {row["id"]: row for row in _pf_alloc["projects"]}
-check("`portfolio` prints the SAME numbers the allocator stored - not a "
-      "second guess at them: displayed share and applied share can never "
-      "differ, because they are read from the identical st dict",
-      _pf_rows["sc2_institution_doctorate"]["hours_offered_this_year"]
-      == _st_doc["hours_offered_this_year"]
-      and _pf_rows["sc2_institution_doctorate"]["hours_effective_this_year"]
-      == _st_doc["hours_effective_this_year"]
-      and _pf_rows["sc2_institution_doctorate"]["pool_rank_this_year"]
-      == _st_doc["pool_rank_this_year"]
-      and _pf_rows["sc2_institution_curriculum"]["hours_offered_this_year"]
-      == _st_cur["hours_offered_this_year"],
-      _pf_rows)
-# THE SAME INVARIANT, THROUGH A JSON ROUND-TRIP - what an agent parsing
-# `portfolio json` actually receives, not the live Python dict.
-_pf_parsed = json.loads(json.dumps(_pf_alloc))
-_pf_parsed_rows = {row["id"]: row for row in _pf_parsed["projects"]}
-check("the same equality survives a real json.dumps/json.loads round trip",
-      _pf_parsed_rows["sc2_institution_doctorate"]["hours_offered_this_year"]
-      == _st_doc["hours_offered_this_year"],
-      _pf_parsed_rows["sc2_institution_doctorate"])
+from sim.engine.projects_progress import ProgressMixin
+from sim.engine.trade_demand import oversubscription_notes, trade_demand_table
+from sim.refusal import cause_of
+from sim.ui.proto.economy import _portfolio_constraint as _PCON
+from sim.ui.proto.multi_year_warning import multi_year_hours_warning
+from sim.ui.proto.state_waiting import _waiting_on
 
-# --- 2a. PER-TRADE DEMAND VS SUPPLY, AGGREGATED, BEFORE COMMITTING. "With
-# only one active chemist remaining after attrition, numerous projects
-# reached ~60% founder work but then stalled because their chemist-hours
-# were all competing for the same 3,000 annual trade-hours." Six chemist-
-# using projects, one shared trade, supply pinned to 1,500 - well under
-# what six projects each wanting hundreds of hours would want at once.
-_s_dem = unopened_sim(civ="rome_100ad", capital=5_000_000.0)
-_dem_targets = sorted(node_id for node_id in NODES
-                      if (NODES[node_id].get("lab") or {}).get("chemist"))[:6]
-for _k in _dem_targets:
-    _n = NODES[_k]
-    _s_dem.active[_k] = dict(ph_left=float(_n["ph"]), yrs=0.0, spent=0.0,
-                             cost_left=_s_dem.project_cost(_k),
-                             lab_left=dict(_n["lab"]))
-_dem_real_hycco = _s_dem.labour.hours_you_can_call_on
-_s_dem.labour.hours_you_can_call_on = (
-    lambda trade, _fallback=_dem_real_hycco: 1500.0 if trade == "chemist" else _fallback(trade))
-# INDEPENDENTLY DERIVED, from trade_draw_plan (the same read-only formula
-# lab_year_draw itself uses for the demand side) called once per project -
-# not the aggregate function under test - so a break in the aggregation
-# loop shows up as a mismatch here.
-_expect_demand = sum(
-    _s_dem.trade_draw_plan(_node_id, None).get("chemist", {}).get("desired", 0.0)
-    for _node_id in _dem_targets)
-_dvs = _s_dem.trade_demand_vs_supply()
-check("trade_demand_vs_supply sums each active project's own read-only "
-      "demand for the trade, not a second, independently-guessed total",
-      abs(_dvs["chemist"]["demand_hours_this_year"] - _expect_demand) < 0.5,
-      (_dvs["chemist"]["demand_hours_this_year"], _expect_demand))
-check("...against what the trade can actually supply this year, and flags "
-      "the portfolio as oversubscribed on it when demand exceeds supply",
-      _dvs["chemist"]["supply_hours_this_year"] == 1500.0
-      and _dvs["chemist"]["oversubscribed"] is True
-      and _expect_demand > 1500.0, _dvs["chemist"])
-check("...and names every project actually drawing on it, so a player can "
-      "see which of their own projects are competing, not only that some "
-      "of them are",
-      set(_dvs["chemist"]["projects_drawing_on_it"]) == set(_dem_targets),
-      _dvs["chemist"]["projects_drawing_on_it"])
-_port_dem = _APORT(_s_dem, NODES)
-_port_dem_row = next(row for row in _port_dem["trade_hours_demand_vs_supply"]
-                     if row["trade"] == "chemist")
-check("`portfolio`'s own trade-demand table reads the identical numbers, "
-      "never a re-derived estimate that could disagree with them",
-      _port_dem_row["demand_hours_this_year"]
-      == _dvs["chemist"]["demand_hours_this_year"]
-      and _port_dem_row["oversubscribed"] == _dvs["chemist"]["oversubscribed"],
-      _port_dem_row)
+QUICK_TOPIC = True
 
-# --- 2b. THE SAME OVERSUBSCRIPTION, VISIBLE AT `start` ITSELF. "The first
-# workshop/lab sat at 60% until I stopped adding new work for a year" - a
-# player should not have to discover this 60% in. One chemist-needing
-# project already active and holding 80 of a pinned 150-hour chemist
-# supply; starting a second that alone would fit (100 <= 150) but not
-# alongside the first (80 + 100 > 150) must say so AT the moment of
-# commitment, not merely let it start silently and crawl.
-_s_over = unopened_sim(civ="rome_100ad", capital=5_000_000.0)
-_s_over.trades_created.add("chemist")
-_s_over.employees["chemist"] = 20.0
-_s_over.labour._resync_pools()
-_over_real_hycco = _s_over.labour.hours_you_can_call_on
-_s_over.labour.hours_you_can_call_on = (
-    lambda trade, _fallback=_over_real_hycco: 150.0 if trade == "chemist" else _fallback(trade))
-_s_over.done.update(NODES["md2_local_anaesthesia"]["pre"])
-_s_over.done.update(NODES["md2_staining_methylene"]["pre"])
-_ok_over, _why_over = _s_over.start_project("md2_local_anaesthesia")
-check("(setup) the first chemist-needing project starts cleanly on its own",
-      _ok_over, _why_over)
-_resp_over = S._agent_dispatch(_s_over, NODES,
-                               {"cmd": "start", "id": "md2_staining_methylene"})
-check("a `start` that would oversubscribe a trade says so in the "
-      "confirmation itself, naming the trade, the portfolio's new total "
-      "demand and what the trade can actually supply",
-      _resp_over.get("ok") is True
-      and "chemist" in (_resp_over.get("this_oversubscribes_a_trade") or "")
-      and "180" in _resp_over["this_oversubscribes_a_trade"]
-      and "150" in _resp_over["this_oversubscribes_a_trade"],
-      _resp_over.get("this_oversubscribes_a_trade"))
-check("...and it does not block the start - overcommitting is still the "
-      "player's call, only an informed one now",
-      "md2_staining_methylene" in _s_over.active, sorted(_s_over.active))
 
-# --- 3. FIVE PRECISE REASONS, NOT A BLURRED "NOBODY TO DO THE WORK". The
-# weak spot the player named was specifically the labour cases: an absolute
-# staffing shortage and a trade your OWN other work has booked used to
-# share one label and one remedy-less sentence.
-from sim.ui.protocol import _portfolio_constraint as _PCON
-_s_staff = unopened_sim(civ="rome_100ad", capital=1e9)
-_staff_k = next(node_id for node_id in NODES if (NODES[node_id].get("lab") or {}).get("chemist"))
-_n_staff = NODES[_staff_k]
-_s_staff.active[_staff_k] = dict(ph_left=float(_n_staff["ph"]), yrs=0.0,
-                                 spent=0.0, cost_left=_s_staff.project_cost(_staff_k),
-                                 lab_left=dict(_n_staff["lab"]))
-_w_staff = _WO(_s_staff, NODES, _staff_k, _s_staff.active[_staff_k],
-              _s_staff.active[_staff_k]["cost_left"])
-check("an ABSOLUTE staffing shortage (this society can field none of the "
-      "trade at all) is its own precise reason",
-      _w_staff.startswith("nobody to do the work") and _PCON(_w_staff) == "staffing",
-      _w_staff)
+# --- 2a. per-trade demand against supply, aggregated, before committing
+SUPPLY = {"chemist": 1500.0, "smith": 5000.0}
+WANTS = {"a": {"chemist": 400.0, "smith": 100.0}, "b": {"chemist": 700.0}, "c": {"chemist": 500.0}, "d": {}}
+table = trade_demand_table(WANTS, SUPPLY.get)
+check("the demand of a trade is the sum of each project's own desired hours of it",
+      table["chemist"]["demand_hours_this_year"] == 1600.0 and table["smith"]["demand_hours_this_year"] == 100.0, table)
+check("...against what the trade can supply, flagged oversubscribed only when demand exceeds supply",
+      table["chemist"]["supply_hours_this_year"] == 1500.0 and table["chemist"]["oversubscribed"] is True
+      and table["smith"]["oversubscribed"] is False, table)
+check("...and names every project actually drawing on it, in order, and a project that wants nothing is in no row",
+      table["chemist"]["projects_drawing_on_it"] == ["a", "b", "c"] and table["smith"]["projects_drawing_on_it"] == ["a"]
+      and set(table) == {"chemist", "smith"}, table)
+exact = trade_demand_table({"a": {"chemist": 1500.0}}, SUPPLY.get)
+check("demand exactly equal to supply is not oversubscribed", exact["chemist"]["oversubscribed"] is False)
+check("the table does not depend on the order the projects are given in",
+      trade_demand_table(dict(reversed(list(WANTS.items()))), SUPPLY.get) == table)
+check("no active project means an empty table", trade_demand_table({}, SUPPLY.get) == {})
 
-_s_book = _s_staff
-_s_book.trades_created.add("chemist")
-_s_book.employees["chemist"] = 0.8
-_s_book.labour._resync_pools()
-_n_book = NODES[_staff_k]
-_s_book.active[_staff_k] = dict(ph_left=float(_n_book["ph"]), yrs=0.0,
-                                spent=0.0, cost_left=_s_book.project_cost(_staff_k),
-                                lab_left=dict(_n_book["lab"]))
-# A real competing project, so the portfolio view and the per-project reason
-# are testing the same allocation data rather than an invented used-hours
-# counter that could equally have been this project's own successful draw.
-_other_book = next(node_id for node_id in NODES
-                   if node_id != _staff_k and (NODES[node_id].get("lab") or {}).get("chemist")
-                   and (NODES[node_id]["lab"]["chemist"] / max(1.0, NODES[node_id]["yrs"])
-                        + NODES[_staff_k]["lab"]["chemist"]
-                        / max(1.0, NODES[_staff_k]["yrs"])
-                        > _s_book.labour.hours_you_can_call_on("chemist")))
-_n_other_book = NODES[_other_book]
-_s_book.active[_other_book] = dict(
-    ph_left=float(_n_other_book["ph"]), yrs=0.0, spent=0.0,
-    cost_left=_s_book.project_cost(_other_book),
-    lab_left=dict(_n_other_book["lab"]))
-_w_book = _WO(_s_book, NODES, _staff_k, _s_book.active[_staff_k],
-             _s_book.active[_staff_k]["cost_left"])
-check("a trade your OWN other active work has already booked - the society "
-      "CAN field it - is a DIFFERENT, distinctly-worded reason with a "
-      "different remedy (stop something else, do not go hire or teach)",
-      _w_book.startswith("trade hours already booked") and _PCON(_w_book) == "trade_hours"
-      and _w_book != _w_staff, _w_book)
+# --- 2b. the same oversubscription, said at `start`
+numbers = lambda amount: "%d" % round(amount)
+demand_now = {"chemist": {"demand_hours_this_year": 80.0, "projects_drawing_on_it": ["first"]}}
+notes = oversubscription_notes(demand_now, {"chemist": {"desired": 100.0}}, {"chemist": 150.0}.get, set(), numbers)
+check("a start that alone fits (100 of 150) but not alongside the first (80 + 100) names the trade, the new total "
+      "and what the trade supplies",
+      len(notes) == 1 and notes[0].startswith("chemist:") and "180" in notes[0] and "150" in notes[0]
+      and "1 other active project already" in notes[0], notes)
+check("a start that fits alongside the others says nothing",
+      oversubscription_notes(demand_now, {"chemist": {"desired": 70.0}}, {"chemist": 150.0}.get, set(), numbers) == [])
+check("a trade already reported as impossible is not reported again, nor one nobody supplies",
+      oversubscription_notes(demand_now, {"chemist": {"desired": 100.0}}, {"chemist": 150.0}.get, {"chemist"}, numbers) == []
+      and oversubscription_notes({}, {"chemist": {"desired": 100.0}}, {"chemist": 0.0}.get, set(), numbers) == [])
+# presentation: the note counts the competing projects
+check("with no other project drawing on the trade the note counts none",
+      "0 other active projects already" in oversubscription_notes({}, {"smith": {"desired": 200.0}}, {"smith": 100.0}.get, set(), numbers)[0])
 
-_s_mat = sim(civ="rome_100ad", capital=1e9, surveyed=())
-_s_mat.active["gunpowder"] = dict(
-    ph_left=float(NODES["gunpowder"]["ph"]), yrs=0.0, spent=0.0,
-    cost_left=_s_mat.project_cost("gunpowder"), lab_left=dict(NODES["gunpowder"]["lab"]))
-# the economy-wide shortage is set directly: the pool one of the project's own inputs belongs to runs short
-_pool = _s_mat._material_tag(sorted(NODES["gunpowder"]["mat"])[0])[0]
-_s_mat.state.holdings.binding = _pool
-with mock.patch.object(type(_s_mat), "resource_throttle", lambda self: 0.5):
-    _w_mat = _WO(_s_mat, NODES, "gunpowder", _s_mat.active["gunpowder"],
-                _s_mat.active["gunpowder"]["cost_left"])
-check("a project short of nothing - staff, money, calendar - can still be "
-      "waiting on MATERIALS: one economy-wide shortage (here, the pool one input of "
-      "gunpowder belongs to) scales every project's hours down by the same factor, and "
-      "that is now a fifth, distinct, named reason",
-      _w_mat.startswith("materials:") and _pool in _w_mat
-      and _PCON(_w_mat) == "materials", _w_mat)
-check("calendar and money, the two the player already called clear, are "
-      "untouched by any of this",
+
+# --- 3. five precise reasons, not a blurred "nobody to do the work"
+class _Stub(ProgressMixin):
+    """A game as `_waiting_on` reads it: a trade's supply, the portfolio's demand, money, the throttle and the queue."""
+
+    def __init__(self, supply=None, demand=None, spending=1.0e9, cost=1000.0, throttle=(1.0, None), standing=None,
+                 director_pool=2000.0, committed=0.0):
+        self.civ = {"id": "stub"}
+        self._demand = demand or {}
+        self._spending, self._cost, self._throttle, self._standing = spending, cost, throttle, standing
+        self.labour = SimpleNamespace(hours_you_can_call_on=lambda trade: (supply or {}).get(trade, 0.0),
+                                      director_pool=lambda: director_pool, director_hours_committed=lambda: committed)
+
+    def trade_demand_vs_supply(self):
+        return self._demand
+
+    def project_cost(self, node_id):
+        return self._cost
+
+    def spending_power(self, kind):
+        return self._spending
+
+    def peek_project_resource_throttle(self, node_id):
+        return self._throttle
+
+    def hour_standing(self, node_id):
+        return self._standing
+
+
+NODE = {"yrs": 2, "ph": 100, "lab": {"chemist": 1000.0}}
+NODES = {"work": NODE}
+
+
+def _progress(**fields):
+    return dict({"ph_left": 50.0, "yrs": 0.0, "lab_left": {"chemist": 1000.0}}, **fields)
+
+
+none_at_all = _waiting_on(_Stub(supply={"chemist": 0.0}), NODES, "work", _progress(), 800.0)
+check("an ABSOLUTE staffing shortage (this society can field none of the trade at all) is its own precise reason",
+      cause_of(none_at_all) == "staffing" and _PCON(none_at_all) == "staffing", none_at_all)
+booked = _waiting_on(_Stub(supply={"chemist": 600.0}, demand={"chemist": {"demand_hours_this_year": 900.0}}),
+                     NODES, "work", _progress(), 800.0)
+check("a trade the society CAN field but your OWN other active work has booked is a different, distinct reason "
+      "with a different remedy",
+      cause_of(booked) == "trade_hours" and _PCON(booked) == "trade_hours" and cause_of(booked) != cause_of(none_at_all), booked)
+both = _waiting_on(_Stub(supply={"chemist": 0.0, "smith": 600.0}, demand={"smith": {"demand_hours_this_year": 900.0}}),
+                   {"work": {"yrs": 2, "ph": 100, "lab": {"chemist": 1000.0, "smith": 1000.0}}}, "work",
+                   _progress(lab_left={"chemist": 1000.0, "smith": 1000.0}), 800.0)
+# presentation: both shortages are named in one sentence, the absolute one first
+check("a project short one trade absolutely and another only to its own other work reports both, the absolute one first",
+      cause_of(both) == "staffing" and "chemist" in both and "smith" in both and both.index("chemist") < both.index("smith"), both)
+free = _Stub(supply={"chemist": 5000.0}, demand={"chemist": {"demand_hours_this_year": 500.0}})
+check("a trade with enough supply and demand within it blocks nothing: the next reason is read",
+      cause_of(_waiting_on(free, NODES, "work", _progress(), 800.0)) == "founder_hours")
+materials = _waiting_on(_Stub(supply={"chemist": 5000.0}, throttle=(0.5, "saltpetre")), NODES, "work", _progress(), 800.0)
+check("a project short of nothing else can still be waiting on MATERIALS: one economy-wide shortage scales its hours, "
+      "a fifth distinct reason that names the input and the pace",
+      cause_of(materials) == "materials" and _PCON(materials) == "materials" and "saltpetre" in materials and "50%" in materials,
+      materials)
+check("a throttle under two percent is noise and is not reported",
+      cause_of(_waiting_on(_Stub(supply={"chemist": 5000.0}, throttle=(0.99, "saltpetre")), NODES, "work", _progress(), 800.0))
+      == "founder_hours")
+money_done = _progress(ph_left=0.0)
+paced = _waiting_on(_Stub(supply={"chemist": 5000.0}, cost=1000.0), NODES, "work", money_done, 800.0)
+check("with the work done and the money in hand to cover a year's instalment, the wait is the pace money can be absorbed at",
+      cause_of(paced) == "money_pace" and _PCON(paced) == "money", paced)
+check("with no money at all it is fully blocked, and with some but not a year's instalment it is unfunded",
+      cause_of(_waiting_on(_Stub(supply={"chemist": 5000.0}, spending=0.0), NODES, "work", money_done, 800.0)) == "money_blocked"
+      and cause_of(_waiting_on(_Stub(supply={"chemist": 5000.0}, spending=100.0), NODES, "work", money_done, 800.0)) == "money_unfunded")
+calendar = _waiting_on(_Stub(supply={"chemist": 5000.0}), NODES, "work", money_done, 0.0)
+check("with the work and the money done, the wait is the calendar", cause_of(calendar) == "calendar" and _PCON(calendar) == "calendar", calendar)
+queued = _waiting_on(_Stub(supply={"chemist": 5000.0}, standing=(2, 3, 2000.0)), NODES, "work", _progress(), 800.0)
+# presentation: the wait names the rank and the pool
+check("hours the project shares with others name its rank, how many share and the pool, still the founder-hours bucket",
+      cause_of(queued) == "founder_hours" and _PCON(queued) == "founder_hours" and "priority #2 of 3" in queued and "2,000" in queued, queued)
+
+# the classifier also reads plain wording (a saved or foreign sentence), and a reply that is not text is unclear
+check("calendar and money are classified from their wording as well",
       _PCON("the calendar") == "calendar"
-      and _PCON("money: 40 still owed and this year's instalment of 10 is "
-               "more than you can raise") == "money", None)
-check("'your hours', enriched with the allocator's own rank/pool figures "
-      "(deliverable 1), still classifies as the founder-hours bucket",
+      and _PCON("money: 40 still owed and this year's instalment of 10 is more than you can raise") == "money")
+check("'your hours', enriched with the allocator's rank and pool, still classifies as the founder-hours bucket",
       _PCON("your hours") == "founder_hours"
-      and _PCON("your hours: priority #1 of 2 active projects sharing "
-               "this year's 2,000 directed hours; more") == "founder_hours",
-      None)
+      and _PCON("your hours: priority #1 of 2 active projects sharing this year's 2,000 directed hours; more") == "founder_hours")
+check("text of no known kind, or no text, is unclear", _PCON("something else") == "unclear" and _PCON(None) == "unclear")
 
-# --- 4. WARN BEFORE A MULTI-YEAR STEP WASTES HOURS. "Founder-hours do not
-# bank. A player can have long calendar-floor projects running, use `step
-# 5`, and unintentionally throw away thousands of usable founder-hours if
-# they did not fill the portfolio first." Verified against step() itself,
-# not assumed: core.py computes `pool` fresh every year from director_pool()
-# minus this year's commitments (core.py step(), "4b. start new projects"),
-# and nothing on `self` ever carries a leftover balance into the next call -
-# it does not partly bank, it does not bank at all, which is exactly the
-# player's own assumption, so the warning below says so plainly rather than
-# hedging on a partial-banking case that does not exist.
-# The same two-project game as section 1, whose project work has already run once there.
-_s_idle = _s_alloc
-# The warning is computed before any year runs, so the single-year reply is read with the step itself
-# turned off; the guard shows the idle-hours condition the warning keys on is live, or "no warning"
-# would hold for the wrong reason.
-assert S._agent_state(_s_idle, NODES).get("free_hours_going_unused"), \
-    "the single-year check needs hours going unused, or it proves nothing"
-_real_step = _s_idle.step
-_s_idle.step = lambda: None
-try:
-    _resp_1yr = S._agent_dispatch(_s_idle, NODES, {"cmd": "step", "years": 1})
-finally:
-    _s_idle.step = _real_step
-check("a single-year step never carries this warning - it exists only to "
-      "protect a MULTI-year request from spending the same idle year "
-      "more than once unnoticed",
-      _resp_1yr.get("multi_year_hours_warning") is None, _resp_1yr)
-_year_before_multi_step = _s_idle.year
-# The warning can be turned off by the machine-wide setting; the years still run.
-import json as _json
-import os as _os
-import tempfile as _tempfile
-_warning_config_path = _os.path.join(_tempfile.mkdtemp(), "cfg.json")
-_previous_config_env = _os.environ.get("ROME_SIM_CONFIG")
-_os.environ["ROME_SIM_CONFIG"] = _warning_config_path
-try:
-    _json.dump({"multi_year_step_warning": False}, open(_warning_config_path, "w"))
-    # the idle-hours game again, with the warning off; years are counted rather than played
-    _quiet_years_run = []
-    _s_idle.step = lambda: _quiet_years_run.append(1)
-    _resp_quiet = S._agent_dispatch(_s_idle, NODES, {"cmd": "step", "years": 2})
-    check("with multi_year_step_warning off, a multi-year step that would warn does not, and still runs",
-          _resp_quiet.get("ok") is True and not _resp_quiet.get("multi_year_hours_warning")
-          and len(_quiet_years_run) == 2,
-          _resp_quiet.get("multi_year_hours_warning"))
-finally:
-    _s_idle.step = _real_step
-    if _previous_config_env is None:
-        _os.environ.pop("ROME_SIM_CONFIG", None)
-    else:
-        _os.environ["ROME_SIM_CONFIG"] = _previous_config_env
-# CAPTURED BEFORE THE STEP RUNS. Once step(years=5) executes it changes the
-# pool this year's idle-hours figure was about; the warning has to be
-# checked against what the pool was BEFORE any of the five years ran.
-_pre_idle_hours = max(0.0, _s_idle.labour.director_pool()
-                      - _s_idle.labour.director_hours_committed())
-_resp_idle = S._agent_dispatch(_s_idle, NODES, {"cmd": "step", "years": 2})
-check("a multi-year step warns, up front, when this year alone already has "
-      "substantial founder-hours going to waste and something is genuinely "
-      "startable that could use them",
-      bool(_resp_idle.get("multi_year_hours_warning"))
-      and "founder-hours" in _resp_idle["multi_year_hours_warning"], _resp_idle.get("multi_year_hours_warning"))
-check("...names the actual number of hours at stake, read from the same "
-      "founder-hours-available figure `state` itself reports, not a second "
-      "guess at it",
-      "{:,.0f}".format(_pre_idle_hours) in (_resp_idle.get("multi_year_hours_warning") or ""),
-      (_pre_idle_hours, _resp_idle.get("multi_year_hours_warning")))
-check("it warns and proceeds - the years still actually run",
-      _resp_idle.get("ok") is True and _resp_idle["year"] > _year_before_multi_step,
-      _resp_idle.get("year"))
+# --- the shortage kind itself
+shortage = _Stub(supply={"chemist": 100.0})
+check("a trade that cannot supply the need at all is a staffing shortage, whatever the demand",
+      shortage.trade_shortage_kind("chemist", 150.0, 10.0) == "staffing")
+check("a trade that can supply the need but is overdrawn by the portfolio is booked",
+      shortage.trade_shortage_kind("chemist", 50.0, 300.0) == "booked")
+check("a trade that can supply the need and the demand is no shortage",
+      shortage.trade_shortage_kind("chemist", 50.0, 100.0) is None)
+check("with no demand figure the project is already known to be short, so booked unless staffing",
+      shortage.trade_shortage_kind("chemist", 50.0) == "booked" and shortage.trade_shortage_kind("chemist", 150.0) == "staffing")
+
+# --- 4. warn before a multi-year step wastes hours
+def _unreachable():
+    raise AssertionError("the tree was scanned for a startable project when the warning could not apply")
+
+
+def _warn(years=5, enabled=True, unused=True, startable=lambda: "Loom", hours=1234.0, waiting=lambda: "your hours"):
+    return multi_year_hours_warning(years, enabled, unused, startable, hours, waiting)
+
+
+warning = _warn()
+check("a multi-year step warns, up front, when this year alone has founder-hours going to waste and something is startable",
+      warning and "founder-hours" in warning and "'Loom'" in warning, warning)
+# presentation: the warning names the hours at stake
+check("...naming the number of hours at stake", "1,234" in warning, warning)
+check("a single-year step never carries this warning", multi_year_hours_warning(1, True, True, _unreachable, 10.0, _unreachable) is None)
+check("with multi_year_step_warning off, a multi-year step that would warn does not",
+      multi_year_hours_warning(5, False, True, _unreachable, 10.0, _unreachable) is None)
+check("with no idle hours there is nothing to warn about, and the tree is not scanned",
+      multi_year_hours_warning(5, True, None, _unreachable, 10.0, _unreachable) is None)
+check("with nothing startable the warning would tell the player to do something they cannot, so it does not",
+      _warn(startable=lambda: None) is None)

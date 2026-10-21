@@ -1,217 +1,154 @@
-"""score_and_ending: regression checks, run individually with `--only score_and_ending`."""
-from .harness import *  # noqa: F401,F403
+"""The score and the ending: the weights, the goal gate, fog, the achievements and the points scale, each called on a
+stand-in game with the values the test sets (`score_game.ScoreGame`, no game is run). The dispatcher and hash-seed
+wiring are in test_score_and_ending_scenario."""
+from .harness import check, NODES, GOAL, S
+
 from sim.refusal import cause_of
-from sim.ui import protocol as _PROTO
+from sim.tests.score_game import ScoreGame
+from sim.ui.protocol import score_report as _score, render_score as _render_score, SCORE_WEIGHTS, \
+    final_report as _final_report
 
-# =============================================================================
-# THE SCORE AND THE ENDING. A player who had just won asked for a score,
-# weighted across seven things, goal-gated ("no score: the goal was not
-# reached"), inspectable mid-run, and respectful of fog - plus a short
-# achievements list. See engine/protocol.py's own block comment above
-# SCORE_WEIGHTS for which field feeds each component and why.
-# =============================================================================
-from sim.ui.protocol import (score_report as _SCORE, render_score as _RSCORE,
-                             SCORE_WEIGHTS as _SW)
+QUICK_TOPIC = True
 
-check("score is advertised in KNOWN_COMMANDS, the same way capacity/economy/"
-      "changes were",
-      "score" in S.KNOWN_COMMANDS, S.KNOWN_COMMANDS)
-check("the seven weights sum to exactly 1.0, so the total is a real "
-      "percentage, not one that quietly falls short of or past 100%",
-      abs(sum(_SW.values()) - 1.0) < 1e-9, _SW)
 
-_score_game = sim(capital=5_000_000.0)   # one game; each check below sets the year, fog and goal it needs
-_score_start_year = _score_game.year
-_score_horizon_year = _score_game.cfg["start_year"] + _score_game.cfg["horizon_years"]
-_score_goal_year = _score_game.goal_year
-_sc_win = S._agent_dispatch(_score_game, NODES, {"cmd": "score"})
-check("`score` answers through the command dispatcher with its components",
-      _sc_win.get("ok") and "components" in _sc_win, _sc_win)
+def _game(**fields):
+    game = ScoreGame(NODES, goal=GOAL)
+    for name, value in fields.items():
+        setattr(game, name, value)
+    return game
 
-# --- THE GATE: no goal, no score, not a number. ---
-_score_game.year = _score_horizon_year
-_rep_nogoal = _SCORE(_score_game, NODES)
-# not text: an enumerated flag value
-check("a run that ends without the goal still gets its total, flagged "
-      "goal not reached",
-      _rep_nogoal["total"] is not None and _rep_nogoal["points"] is not None
-      and _rep_nogoal["goal_not_reached"] == "goal not reached",
-      _rep_nogoal["total"])
+
+def _horizon_year(game):
+    return game.cfg["start_year"] + game.cfg["horizon_years"]
+
+
+check("score is advertised in KNOWN_COMMANDS", "score" in S.KNOWN_COMMANDS, S.KNOWN_COMMANDS)
+check("the seven weights sum to exactly 1.0, so the total is a real percentage",
+      len(SCORE_WEIGHTS) == 7 and abs(sum(SCORE_WEIGHTS.values()) - 1.0) < 1e-9, SCORE_WEIGHTS)
+
+# --- the gate: no goal, no flagged-reached total, but a total all the same
+game = _game()
+game.year = _horizon_year(game)
+report_nogoal = _score(game, NODES)
+check("a run that ends without the goal still gets its total, flagged goal not reached",
+      report_nogoal["total"] is not None and report_nogoal["points"] is not None
+      and bool(report_nogoal.get("goal_not_reached")) and not report_nogoal["goal_reached"],
+      report_nogoal["total"])
 check("...and the rendered ending screen shows the total with the flag",
-      "TOTAL: " in _RSCORE(_rep_nogoal) and "goal not reached" in _RSCORE(_rep_nogoal)
-      and "TOTAL: --" not in _RSCORE(_rep_nogoal),
-      _RSCORE(_rep_nogoal))
+      "TOTAL: " in _render_score(report_nogoal) and "goal not reached" in _render_score(report_nogoal)
+      and "TOTAL: --" not in _render_score(report_nogoal))
 
-# --- MID-RUN: inspectable before the goal is reached.
-_score_game.year = _score_start_year
-_rep_mid = _SCORE(_score_game, NODES)
-check("mid-run, before the goal and before the horizon, `score` still "
-      "shows every component - what you are optimising, not only what you "
-      "already won",
-      _rep_mid["total"] is not None and not _rep_mid["goal_reached"]
-      and all(component.get("raw") is not None for component in _rep_mid["components"].values()),
-      _rep_mid["components"].keys())
+report_mid = _score(_game(), NODES)
+check("mid-run, before the goal and the horizon, every component is shown with its raw figure",
+      report_mid["total"] is not None and not report_mid["goal_reached"]
+      and all(component.get("raw") is not None for component in report_mid["components"].values())
+      and set(report_mid["components"]) == set(SCORE_WEIGHTS), list(report_mid["components"]))
+check("each weighted figure is the normalized one times its weight",
+      all(abs(component["weighted"] - round(component["normalized"] * SCORE_WEIGHTS[name], 4)) < 1e-9
+          for name, component in report_mid["components"].items()))
 
-# --- FOG: the tree's TOTAL size is not visible under fog, so technology_coverage
-# withholds its normalized value and denominator until the run ends.
-_score_game.fog = True
-_rep_fogmid = _SCORE(_score_game, NODES)
-_tc_fogmid = _rep_fogmid["components"]["technology_coverage"]
-check("under fog, mid-run, technology coverage withholds the tree's total "
-      "and its own normalized value but keeps the raw done-count",
-      _tc_fogmid["normalized"] is None and _tc_fogmid["of_total"] is None
-      and _tc_fogmid["raw"] == len(_score_game.done),
-      _tc_fogmid)
-check("...and the rendered screen never prints the tree's total node count "
-      "while withheld",
-      str(len(NODES)) not in _RSCORE(_rep_fogmid), _RSCORE(_rep_fogmid))
-_score_game.year = _score_horizon_year
-_tc_fogend = _SCORE(_score_game, NODES)["components"]["technology_coverage"]
+# --- fog: the tree's total size stays hidden until the run ends
+game = _game(fog=True, done={"a", "b", "c"})
+coverage_mid = _score(game, NODES)["components"]["technology_coverage"]
+check("under fog, mid-run, coverage withholds the tree's total and its normalized value but keeps the raw count",
+      coverage_mid["normalized"] is None and coverage_mid["of_total"] is None and coverage_mid["raw"] == 3,
+      coverage_mid)
+check("...and the rendered screen never prints the tree's total node count while withheld",
+      str(len(NODES)) not in _render_score(_score(game, NODES)))
+check("...so the total is not computable and the screen says so",
+      _score(game, NODES)["total"] is None and "TOTAL: --" in _render_score(_score(game, NODES)))
+game.year = _horizon_year(game)
+coverage_end = _score(game, NODES)["components"]["technology_coverage"]
 check("once the run ends, fog lifts exactly this one number",
-      _tc_fogend["normalized"] is not None
-      and _tc_fogend["of_total"] == len(NODES), _tc_fogend)
+      coverage_end["normalized"] == 3 / len(NODES) and coverage_end["of_total"] == len(NODES), coverage_end)
+check("off fog, coverage is visible at once, mid-run",
+      _score(_game(done={"a"}), NODES)["components"]["technology_coverage"]["normalized"] is not None)
 
-# --- _agent_end_reason's fog branch never checked goal_year, so a player who
-# won under fog and kept building was told at the horizon they did not reach it.
-_score_game.goal_year = _score_start_year + 5
-_end_wonfog = S._agent_end_reason(_score_game)
-check("BREAK: under fog, a player who reached the goal and kept building "
-      "to the horizon is told they reached it, not that they did not",
-      cause_of(_end_wonfog) == "horizon_goal_reached",
-      _end_wonfog)
-_score_game.goal_year = _score_goal_year
-check("...while a player who never reached it under fog still reads the "
-      "honest 'did not reach' message, unchanged",
-      cause_of(S._agent_end_reason(_score_game)) == "horizon_goal_missed", None)
-_score_game.fog = False
-_score_game.year = _score_start_year
-check("off fog, technology coverage is visible immediately, mid-run - fog "
-      "is the only thing that ever withholds it",
-      _SCORE(_score_game, NODES)["components"]["technology_coverage"]["normalized"]
-      is not None, None)
+# --- the end reason under fog
+game = _game(fog=True)
+game.year = _horizon_year(game)
+game.goal_year = game.cfg["start_year"] + 5
+import sim.ui.proto.state_waiting as _waiting
+check("under fog, a player who reached the goal and kept building to the horizon is told they reached it",
+      cause_of(_waiting._agent_end_reason(game)) == "horizon_goal_reached")
+game.goal_year = None
+check("...while one who never reached it under fog is told so",
+      cause_of(_waiting._agent_end_reason(game)) == "horizon_goal_missed")
 
-
-# --- ACHIEVEMENTS: each one flips on its own tracked field, in isolation,
-# and none of them fire before the goal is reached at all.
-def _achievements(**extra):
-    """Achievements for the shared game with a goal reached next year and the given fields overridden."""
-    saved = {name: getattr(_score_game, name, None) for name in extra}   # an unset field reads as missing
-    saved_goal_year = _score_game.goal_year
-    _score_game.goal_year = _score_game.year + 1
-    for name, value in extra.items():
-        setattr(_score_game, name, value)
-    try:
-        return _SCORE(_score_game, NODES)["achievements"]
-    finally:
-        for name, value in saved.items():
-            setattr(_score_game, name, value)
-        _score_game.goal_year = saved_goal_year
+# --- achievements: each flips on its own field, and none fire before the goal
+def _achievements(**fields):
+    game = _game(**fields)
+    game.goal_year = game.year + 1 if "goal_year" not in fields else fields["goal_year"]
+    return _score(game, NODES)["achievements"]
 
 
-_ach_clean = _achievements()
-check("a clean won run earns every achievement this suite can isolate",
-      all(achievement["won"] for name, achievement in _ach_clean.items()
-          if name != "outpaced_the_fastest_plan"),
-      _ach_clean)
-check("...and a run that never reached the goal earns none at all - no "
-      "achievement fires on an unfinished run",
-      _SCORE(_score_game, NODES)["achievements"] == {},
-      _SCORE(_score_game, NODES)["achievements"])
+clean = _achievements()
+check("a clean won run earns every achievement but the pace one, which has its own checks",
+      all(entry["won"] for name, entry in clean.items() if name != "outpaced_the_fastest_plan"), clean)
+check("a run that never reached the goal earns no achievement at all", _score(_game(), NODES)["achievements"] == {})
+sacked = _achievements(forgotten={"corpus_written": 300})
+check("a sacking that forgot one technology costs only the corpus achievement",
+      not sacked["corpus_intact"]["won"] and sacked["never_understaffed"]["won"]
+      and sacked["free_hands_only"]["won"] and sacked["clean_ledger"]["won"], sacked)
+game = _game()
+game.state.projects.ever_closed_for_staff.add("workshop_first")
+game.goal_year = game.year + 1
+understaffed = _score(game, NODES)["achievements"]
+check("a concern once closed for want of staff costs only that achievement",
+      not understaffed["never_understaffed"]["won"] and understaffed["corpus_intact"]["won"], understaffed)
+check("a concern shut for staff now costs it too",
+      not _achievements(shut_for_staff={"workshop_first": 150})["never_understaffed"]["won"])
+insolvent = _achievements(insolvent_years=1)
+check("one insolvent year costs the clean-ledger achievement only",
+      not insolvent["clean_ledger"]["won"] and insolvent["corpus_intact"]["won"], insolvent)
+check("a single coin of interest paid costs it on its own",
+      not _achievements(interest_paid=0.01)["clean_ledger"]["won"])
+slaveholder = _achievements(slaves=1)
+check("owning one slave costs only the free-hands achievement",
+      not slaveholder["free_hands_only"]["won"] and slaveholder["clean_ledger"]["won"], slaveholder)
+check("having freed a slave counts against it as well",
+      not _achievements(manumitted_total=1)["free_hands_only"]["won"])
+# the goal's own fastest timeline is the floor; twice it is the bar
+check("reaching the goal within twice the critical-path floor outpaces the fastest plan",
+      _achievements(goal_year=100 + 40)["outpaced_the_fastest_plan"]["won"])
+check("...and one year over twice the floor does not",
+      not _achievements(goal_year=100 + 41)["outpaced_the_fastest_plan"]["won"])
 
-_ach_sack = _achievements(forgotten={"corpus_written": 300})
-check("BREAK-style isolation: a sacking that forgot even one technology "
-      "costs only the corpus achievement, not the others",
-      not _ach_sack["corpus_intact"]["won"]
-      and _ach_sack["never_understaffed"]["won"]
-      and _ach_sack["free_hands_only"]["won"], _ach_sack)
+# --- the ending screen and the points scale
+game = _game(done={sorted(NODES)[0]})
+game.goal_year = game.year + 1
+game.year = _horizon_year(game)
+final = _final_report(game, NODES)
+check("the ending screen's final_report carries the score",
+      final.get("score", {}).get("total") is not None, final.get("score"))
+check("points are an exact rescaling of the same capped total, 1000 for a perfect run",
+      final["score"]["points"] == round(final["score"]["total"] * 1000), final["score"])
+check("a run that missed the goal has a points figure too",
+      report_nogoal["points"] == round(report_nogoal["total"] * 1000))
 
-_score_game.state.projects.business.mothball("workshop_first", 150, "staff")
-_ach_staff = _achievements()
-_score_game.state.projects.business.close_plant("workshop_first")
-check("...a concern once closed for want of staff costs only that "
-      "achievement",
-      not _ach_staff["never_understaffed"]["won"]
-      and _ach_staff["corpus_intact"]["won"], _ach_staff)
+perfect = _game(reputation=1e9, scandal=-1e9, capital=1e30, headcount=1e9, done=set(NODES),
+                literacy_values={"literacy_general": 1e9, "literacy_elite": 1e9},
+                units={"workshop_first": 1e9, "school_founded": 1e9},
+                operating={"workshop_first", "school_founded", "identity_cover"})
+perfect.goal_year = perfect.year + 1
+report_perfect = _score(perfect, NODES)
+check("a household built to overdrive every component cannot pass 100% or 1000 points",
+      report_perfect["total"] <= 1.0 + 1e-9 and report_perfect["points"] <= 1000,
+      (report_perfect["total"], report_perfect["points"]))
+check("...and every component is clamped to one on its own",
+      all(component["normalized"] <= 1.0 + 1e-9 for component in report_perfect["components"].values()),
+      {name: component["normalized"] for name, component in report_perfect["components"].items()})
 
-_ach_debt = _achievements(insolvent_years=1)
-check("...one insolvent year costs the clean-ledger achievement",
-      not _ach_debt["clean_ledger"]["won"]
-      and _ach_debt["corpus_intact"]["won"], _ach_debt)
-_ach_interest = _achievements(interest_paid=0.01)
-check("...and so does a single denarius of interest paid, on its own",
-      not _ach_interest["clean_ledger"]["won"], _ach_interest)
-
-_ach_slave = _achievements(slaves=1)
-check("...owning even one slave costs only the free-hands achievement",
-      not _ach_slave["free_hands_only"]["won"]
-      and _ach_slave["clean_ledger"]["won"], _ach_slave)
-
-_ach_fast = _achievements(goal_year=_score_game.cfg["start_year"] + 1)
-check("reaching the goal almost immediately outpaces twice its own "
-      "critical-path floor",
-      _ach_fast["outpaced_the_fastest_plan"]["won"], _ach_fast)
-_ach_slow = _achievements(goal_year=_score_game.cfg["start_year"] + 5000)
-check("...while dawdling to five thousand years after the start does not",
-      not _ach_slow["outpaced_the_fastest_plan"]["won"], _ach_slow)
-
-# --- DETERMINISM: institutions sums floats over CAPABILITY_INSTITUTIONS, a
-# frozenset, so this has to be proven under a different PYTHONHASHSEED.
-def _score_snapshot(seed_env):
-    proc = subprocess.run(
-        [sys.executable, "-c",
-         "import sys; import random; from sim import simulator as S; "
-         "from sim.ui.protocol import score_report as SC; "
-         "T,P,N,W,G = S.load(); _l,O,_b = S.load_strategy('recommended', N, T['meta']['goal_node']); "
-         "s = S.Sim(N, O, random.Random(1), events=False, manual=False, "
-         "civ=S.load_civ('rome_100ad'), cfg={'start_capital':5000000.0}); "
-         "s.goal, s.done_year = T['meta']['goal_node'], {}; "
-         "s.goal_year = s.year + 1; "
-         "[s.done.add(k) for k in sorted(s.CAPABILITY_INSTITUTIONS)]; "
-         "[s.operating.add(k) for k in sorted(s.CAPABILITY_INSTITUTIONS)]; "
-         "s.inst_units = {k: 2.0 for k in s.SCALABLE_INSTITUTIONS}; "
-         "s._done_changed(); "
-         "r = SC(s, N); "
-         "print(repr((round(r['components']['institutions']['normalized'], 12), "
-         "r['total'])))"],
-        capture_output=True, text=True, timeout=60, cwd=ROOT,
-        env=dict(os.environ, PYTHONHASHSEED=seed_env))
-    return proc.stdout.strip()
-_score_seed_a, _score_seed_b = _par_map(_score_snapshot, ("0", "98765"))
-check("the institutions component, and the total it feeds, are identical "
-      "under a different PYTHONHASHSEED",
-      _score_seed_a == _score_seed_b and _score_seed_a,
-      (_score_seed_a, _score_seed_b))
-
-# --- THE ENDING SCREEN carries the score.
-_score_game.goal_year = _score_game.year + 1
-_score_game.year = _score_horizon_year
-_final_sc = _FRPT(_score_game, NODES)
-check("the ending screen's final_report carries the score, not just the "
-      "road-to-the-goal tally it already had",
-      _final_sc.get("score", {}).get("total") is not None, _final_sc.get("score"))
-check("points is a lossless, exact rescaling of the SAME capped total - "
-      "1000 for a perfect run - never a second figure computed some other "
-      "way that could disagree with the percentage",
-      _final_sc["score"]["points"] == round(_final_sc["score"]["total"] * 1000),
-      (_final_sc["score"]["points"], _final_sc["score"]["total"]))
-check("a run that missed the goal has a points figure too, the same "
-      "rescaled total",
-      _rep_nogoal.get("points") == round(_rep_nogoal["total"] * 1000),
-      _rep_nogoal.get("points"))
-# PERFECT SCORE NEVER EXCEEDS 1000, confirmed against a household built to
-# max out every component at once.
-_s_perfect = sim(capital=5_000_000.0)
-_s_perfect.goal_year = _s_perfect.year + 1
-_s_perfect.reputation = 1e9
-_s_perfect.scandal = -1e9
-_s_perfect.done = set(NODES)
-_s_perfect._done_changed()
-_s_perfect.inst_units = {institution: 1e9 for institution in _s_perfect.SCALABLE_INSTITUTIONS}
-for _cik in _s_perfect.CAPABILITY_INSTITUTIONS:
-    _s_perfect.operating.add(_cik)
-_rep_perfect = _SCORE(_s_perfect, NODES)
-check("even a household built to overdrive every single component at "
-      "once cannot push the percentage past 100% or the points past 1000",
-      _rep_perfect["total"] <= 1.0 + 1e-9
-      and _rep_perfect["points"] <= 1000,
-      (_rep_perfect["total"], _rep_perfect["points"]))
+# --- literacy is printed as a percentage against its ceiling
+literate = _game(literacy_values={"literacy_general": 0.0749, "literacy_elite": 0.9})
+literate_reply = _score(literate, NODES)
+literacy_line = next(line for line in _render_score(literate_reply).splitlines() if line.strip().startswith("literacy"))
+literacy_detail = literate_reply["components"]["literacy"]["raw_detail"]
+# presentation: the score prints literacy as a percentage, not a raw fraction
+check("score prints general literacy as a percentage, not a raw fraction", "7.49%" in literacy_line, literacy_line)
+# presentation: the figure is printed against its ceiling
+check("score prints the literacy figure against its ceiling",
+      "%.2f%%" % (literacy_detail["general_ceiling"] * 100) in literacy_line, (literacy_line, literacy_detail))
+check("the literacy share is half the general and half the elite share of each ceiling",
+      abs(literate_reply["components"]["literacy"]["normalized"]
+          - (0.5 * min(1.0, 0.0749 / 0.2) + 0.5 * min(1.0, 0.9 / 0.8))) < 1e-9)

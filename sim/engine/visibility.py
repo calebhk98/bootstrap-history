@@ -19,6 +19,27 @@ def base_visibility(mode: str, in_public_use: bool, copy_difficulty: float, secr
     return secret_exposure / copy_difficulty
 
 
+def copy_difficulty_of(node: dict) -> float:
+    """How hard a node's know-how is to copy from sight. A node declares `copy_visibility` (the share an onlooker
+    can recover from the product or the yard) and difficulty is its reciprocal; a node that does not falls back
+    to the trades and materials it needs, at least one (TRANSITIONAL, CLAUDE.md 4.4)."""
+    if node.get("copy_visibility"):
+        return 1.0 / float(node["copy_visibility"])
+    trades = [trade for trade, hours in (node.get("lab") or {}).items() if hours > 0]
+    materials = [material for material, amount in (node.get("mat") or {}).items() if amount]
+    return max(1, len(trades) + len(materials))
+
+
+def years_to_be_believed(mode: str, proof_years: float, secret_exposure: float) -> float:
+    """Years a concern must run at a profit before outsiders believe it: none once published, longer in
+    proportion to how little leaks past the door when it is a secret or a licensed one, else `proof_years`."""
+    if mode == "publish":
+        return 0.0
+    if mode in ("secret", "license"):
+        return proof_years / secret_exposure
+    return float(proof_years)
+
+
 def seen_from(visibility: float, distance_km: float, observation_range_km: float) -> float:
     """What an onlooker `distance_km` away learns of an invention that shows `visibility` at its door."""
     return visibility / (1.0 + distance_km / observation_range_km)

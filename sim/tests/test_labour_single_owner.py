@@ -1,67 +1,56 @@
 """Complaint 556: who can work and who is hired by whom has one owner, the labour package.
 
-Measures the copies (the labour core's people, the town-supply estimate, the founder's book, the
-firms' staff), holds every reservation under the supply the owner reports, and walls the founder's
-book to the owner."""
+Rule tests (Complaint 640): the founder's book accessors and the reservation arithmetic run on a stub world, and the
+wall keeps every write of the founder's book inside the owner. The whole-game agreement of the estimate with the
+labour core is test_labour_single_owner_scenario."""
+import ast
 import os
 import re
+from types import SimpleNamespace
 
-from sim.labour import legacy_trade_defaults, trade_data
+from sim.labour.staff_book import StaffBookMixin
 
 from .harness import *  # noqa: F401,F403
 
-game = sim(capital=5_000_000.0)
-labour = game.labour
-household = game.state.household
-core = labour.core_people_by_trade()
+QUICK_TOPIC = True
 
-# ---- one count of people by trade: the estimate is a view of the core's headcount ----
-SMALL_TOLERANCE = 0.01
-staffed = {trade: people for trade, people in core.items() if people > 0.0}
-for trade, people in sorted(staffed.items()):
-    estimate = labour.national_trade_population(trade)
-    if not labour.trade_available(trade) or trade in labour._world.trades_absent:
-        continue
-    if trade_data.scholar_trade() == trade or trade_data.drawn_from_unskilled_pool(trade) \
-            or trade in legacy_trade_defaults.LETTERED_BUT_NOT_LITERATE \
-            or trade_data.literate_trades(trade_data.registry_of(game), (trade,)):
-        continue   # trades counted off literacy or the draft, not the headcount
-    check("the estimate of %s agrees with the core's people" % trade,
-          abs(estimate - people) <= SMALL_TOLERANCE * people, (people, estimate))
-farm_people = core.get("farmer", 0.0)
-check("farm people are farmers in the core: most of the working age", farm_people > 0.5 * game.population.working_age,
-      (farm_people, game.population.working_age))
-check("the unskilled pool is the people the labourer's own work needs, not the country",
-      core.get("labourer", 0.0) < 0.5 * farm_people, (core.get("labourer"), farm_people))
-counted = [trade for trade in staffed if abs(labour.national_trade_population(trade) - staffed[trade]) <= SMALL_TOLERANCE * staffed[trade]]
-check("national totals are equal over the trades the estimate reads from the core",
-      abs(sum(staffed[trade] for trade in counted) - sum(labour.national_trade_population(trade) for trade in counted)) < 1e-6 * sum(staffed.values()))
-check("the core holds the working age and the farm people are the biggest trade",
-      abs(sum(staffed.values()) - game.population.working_age) < 0.01 * game.population.working_age
-      and max(staffed, key=staffed.get) == "farmer", (sum(staffed.values()), game.population.working_age))
+
+class _Book(StaffBookMixin):
+    """The owner's book over a stub world: a household with a staff map and the other employers' staff."""
+
+    def __init__(self, other_staff, supply):
+        self._world = SimpleNamespace(
+            state=SimpleNamespace(household=SimpleNamespace(employees={})),
+            actors_staff_nationwide=lambda trade: other_staff.get(trade, 0.0),
+            HOURS_PER_PERSON_YEAR=2000.0)
+        self._supply = supply
+
+    def people_who_exist(self, trade):
+        return self._supply.get(trade, 0.0)
+
 
 # ---- the founder's book is the owner's ----
-check("the owner reads the founder's head count", labour.employed("artisan") == household.employees.get("artisan", 0.0))
-labour.set_employed("artisan", 2.0)
-check("set_employed writes the household's book", household.employees["artisan"] == 2.0 and labour.employed_total() >= 2.0)
-labour.add_employed("artisan", -2.0)
-check("a count of nothing leaves the trade off the book", "artisan" not in household.employees and labour.employed_by_trade().get("artisan") is None)
+book = _Book(other_staff={"artisan": 4.0}, supply={"artisan": 10.0, "labourer": 5.0})
+household = book._world.state.household
+household.employees["artisan"] = 3.0
+check("the owner reads the founder's head count", book.employed("artisan") == 3.0)
+book.set_employed("artisan", 2.0)
+check("set_employed writes the household's book", household.employees["artisan"] == 2.0 and book.employed_total() == 2.0)
+book.add_employed("artisan", -2.0)
+check("a count of nothing leaves the trade off the book",
+      "artisan" not in household.employees and book.employed_by_trade().get("artisan") is None)
+book.add_employed("labourer", 3.0)
+copy = book.employed_by_trade()
+copy["labourer"] = 99.0
+check("the staff the owner reports is a copy", household.employees["labourer"] == 3.0)
 
-# ---- a hire is a reservation under the supply, and the core does not see it yet ----
-core_before = dict(core)
-hired, reply = labour.hire("labourer", 3)
-check("the hire went through", hired, reply)
-check("the founder's book holds the hired people", labour.employed("labourer") == 3.0, labour.employed("labourer"))
-check("reserved people include the book", labour.reserved_people("labourer") >= 3.0)
-check("reserved hours are people times hours a person-year",
-      abs(labour.reserved_hours("labourer") - labour.reserved_people("labourer") * game.HOURS_PER_PERSON_YEAR) < 1e-6)
-check("the hire is invisible to the core's people (known gap: reservations are not yet taken from the core)",
-      labour.core_people_by_trade().get("labourer") == core_before.get("labourer"))
-for trade in sorted(labour.employed_by_trade()):
-    check("reservations of %s never exceed the supply the owner reports" % trade,
-          labour.reserved_people(trade) <= labour.supplied_people(trade) + 1e-9,
-          (labour.reserved_people(trade), labour.supplied_people(trade)))
-    check("unreserved people of %s are never negative" % trade, labour.unreserved_people(trade) >= 0.0)
+# ---- a reservation is the founder's staff plus the other employers' ----
+book.set_employed("artisan", 2.0)
+check("reserved people are the book plus the firms' and states' staff", book.reserved_people("artisan") == 6.0, book.reserved_people("artisan"))
+check("reserved hours are people times hours a person-year", book.reserved_hours("artisan") == 6.0 * 2000.0)
+check("unreserved people are the supply less every reservation", book.unreserved_people("artisan") == 4.0, book.unreserved_people("artisan"))
+book.set_employed("labourer", 9.0)
+check("unreserved people are never negative", book.unreserved_people("labourer") == 0.0)
 
 # ---- the wall: nothing outside the owner writes the founder's book ----
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -81,7 +70,6 @@ for folder, _subfolders, filenames in os.walk(os.path.join(ROOT_DIR, "sim")):
                 if WRITE.search(line) and not line.lstrip().startswith("#"):
                     strays.append("%s:%d" % (relative, number))
 check("only sim/labour (and the household's own accessor, bar the listed exceptions) writes the founder's book", not strays, strays)
-import ast
 readers = []
 for name in sorted(os.listdir(os.path.join(ROOT_DIR, "sim", "labour"))):
     if name.endswith(".py") and name != "staff_book.py":

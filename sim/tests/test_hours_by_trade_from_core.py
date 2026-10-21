@@ -1,53 +1,48 @@
-"""The engine's hours by trade (the society's working hours split between trades) have one owner: the
-labour core's people when the agent economy runs, the recipe graph's need when it does not. There is no
-separate workforce that moves hours between trades."""
+"""The engine's hours by trade have one owner: the labour core's people when the agent economy runs, the recipe
+graph's need when it does not (Complaint 640: rules on built inputs; the whole-game checks are in
+test_hours_by_trade_from_core_scenario). There is no separate workforce that moves hours between trades."""
+QUICK_TOPIC = True
+
 import unittest
 
 from .harness import *  # noqa: F401,F403
-from sim.economy import workforce_version
 from sim.labour import labour_allocation, labour_market
 
 FARM = labour_allocation.FARM_TRADE
+HOURS_PER_WORKER = labour_allocation.HOURS_PER_FARM_WORKER_YEAR
+REST = 1000.0 * HOURS_PER_WORKER
 
 
-def _non_farm_share(game, trade):
-    hours = game.state.economy.society_labour_hours
-    rest = sum(value for name, value in hours.items() if name != FARM)
-    return hours.get(trade, 0.0) / rest
-
-
-def _core_state(game):
-    game.economy.open_agent()
-    return game.economy.agent.economy().record.workforce
-
-
-class HoursFollowTheCoreTests(unittest.TestCase):
+class SharesFromPeopleTests(unittest.TestCase):
 
     def test_a_trade_with_more_people_has_more_hours(self):
-        game = sim(civ="rome_100ad", events=False)
-        game._demographic_recovery(101)
-        before = _non_farm_share(game, "smith")
-        workforce = _core_state(game)
-        for by_trade in workforce.workers.values():
-            if "smith" in by_trade:
-                by_trade["smith"] = [count * 50.0 for count in by_trade["smith"]]
-        workforce_version.bump(workforce)      # a writer of the workforce says so; the people-by-trade figure is cached per version
-        game._demographic_recovery(102)
-        self.assertGreater(_non_farm_share(game, "smith"), 5.0 * before)
+        before = labour_allocation.shares_from_people({"smith": 10.0, "weaver": 10.0}, "labourer", REST)
+        after = labour_allocation.shares_from_people({"smith": 500.0, "weaver": 10.0}, "labourer", REST)
+        self.assertGreater(after["smith"], 5.0 * before["smith"])
 
-    def test_hours_add_up_to_the_hours_the_society_has(self):
-        game = sim(civ="rome_100ad", events=False)
-        game._demographic_recovery(101)
-        total = sum(game.state.economy.society_labour_hours.values())
-        # people change a little after the year's allocation, so the two totals agree to a percent
-        self.assertAlmostEqual(total, game.labour._society_hours_available(), delta=0.01 * total)
+    def test_shares_add_up_to_one_and_the_pool_trade_takes_what_the_specialists_leave(self):
+        shares = labour_allocation.shares_from_people({"smith": 100.0, "weaver": 300.0}, "labourer", REST)
+        self.assertAlmostEqual(sum(shares.values()), 1.0, places=12)
+        self.assertAlmostEqual(shares["smith"], 100.0 / 1000.0, places=12)
+        self.assertAlmostEqual(shares["labourer"], 1.0 - 400.0 / 1000.0, places=12)
 
-    def test_before_the_economy_has_opened_hours_follow_the_need_the_recipes_put_on_each_trade(self):
-        game = unopened_sim(civ="rome_100ad", events=False)
-        game._demographic_recovery(101)
-        shares = game.labour._non_farm_need_shares()
-        for trade, share in shares.items():
-            self.assertAlmostEqual(_non_farm_share(game, trade), share, places=9)
+    def test_specialists_never_take_more_than_all_the_hours(self):
+        shares = labour_allocation.shares_from_people({"smith": 5000.0}, "labourer", REST)
+        self.assertAlmostEqual(shares["smith"], 1.0, places=12)
+        self.assertAlmostEqual(shares["labourer"], 0.0, places=12)
+
+    def test_farm_and_pool_headcounts_do_not_count_as_specialists(self):
+        shares = labour_allocation.shares_from_people({FARM: 9000.0, "labourer": 9000.0, "smith": 100.0}, "labourer", REST)
+        self.assertEqual(set(shares), {"smith", "labourer"})
+        self.assertAlmostEqual(shares["smith"], 100.0 / 1000.0, places=12)
+
+    def test_no_people_or_no_hours_gives_no_answer_so_the_recipe_need_applies(self):
+        self.assertIsNone(labour_allocation.shares_from_people({}, "labourer", REST))
+        self.assertIsNone(labour_allocation.shares_from_people({"smith": 0.0}, "labourer", REST))
+        self.assertIsNone(labour_allocation.shares_from_people({"smith": 10.0}, "labourer", 0.0))
+
+
+class NoSecondWorkforceTests(unittest.TestCase):
 
     def test_no_second_workforce_moves_hours_between_trades(self):
         self.assertFalse(hasattr(labour_market, "Workforce"))

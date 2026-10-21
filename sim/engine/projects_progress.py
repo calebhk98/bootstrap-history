@@ -16,12 +16,12 @@ _complete); it is what happens to it in between.
 These are methods of Sim; they are a mixin only so that they can live in a
 file of their own. Behaviour is unchanged and verified byte-identical.
 """
-import collections
 
 from sim.constants import declare
 from .completion_schedule import calendar_floor_years, earliest_completion_years, payment_schedule_years
 from .failure_diagnosis import failure_teaches
 from .industry_depth import depth_risk_multiplier
+from .trade_demand import trade_demand_table
 from .projects_precaution import chosen as precaution_chosen, relief_multiplier as precaution_relief, quote as precaution_quote
 
 
@@ -211,25 +211,12 @@ class ProgressMixin:
         own run had one chemist left, 3,000 trade-hours a year, and a dozen
         projects each quietly assuming they would get all of it.
         """
-        demand = collections.defaultdict(float)
-        by_trade = collections.defaultdict(list)
-        # sorted(): this feeds float sums, and projects.active is a dict whose
-        # key order depends on PYTHONHASHSEED.
         projects = self.state.projects
-        for node_id in projects.active_keys_sorted():
-            project_state = projects.active[node_id]
-            for trade_id, plan in sorted(self.trade_draw_plan(
-                    node_id, self._effective_lab_left(node_id, project_state)).items()):
-                demand[trade_id] += plan["desired"]
-                by_trade[trade_id].append(node_id)
-        out = {}
-        for trade_id in sorted(demand):
-            supply = self.labour.hours_you_can_call_on(trade_id)
-            out[trade_id] = {"demand_hours_this_year": round(demand[trade_id], 1),
-                      "supply_hours_this_year": round(supply, 1),
-                      "oversubscribed": bool(demand[trade_id] > supply + 1e-6),
-                      "projects_drawing_on_it": sorted(by_trade[trade_id])}
-        return out
+        desired_by_project = {
+            node_id: {trade_id: plan["desired"] for trade_id, plan in self.trade_draw_plan(
+                node_id, self._effective_lab_left(node_id, projects.active[node_id])).items()}
+            for node_id in projects.active_keys_sorted()}
+        return trade_demand_table(desired_by_project, self.labour.hours_you_can_call_on)
 
     def lab_year_draw(self, node_id, project_state, frac, hired_left):
         """This year's hired-labour draw for active project `node_id`.

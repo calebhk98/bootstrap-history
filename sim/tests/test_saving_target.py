@@ -1,67 +1,85 @@
-"""Complaint 294: an actor can mark a planned project and savings target; `stuck` respects it."""
-from .harness import *  # noqa: F401,F403
+"""Complaint 294: an actor can mark a planned project and savings target. The plan, the year it becomes affordable,
+the command's refusals and the typed forms, each on a stand-in game (cash, income, year and a household record, no
+game). `stuck` respecting the target is test_saving_target_scenario."""
+from types import SimpleNamespace
 
-from sim.ui.proto.typed import parse_typed
+from .harness import check, NODES
+
+from sim.ui.proto.dispatch_saving import _cmd_saving
 from sim.ui.proto.render_typed import _RENDERERS
+from sim.ui.proto.saving_plan import saving_plan, saving_reason
+from sim.ui.proto.typed import parse_typed
+
+QUICK_TOPIC = True
+
+PROJECT = sorted(NODES)[0]
 
 
-def ask(test_sim, **command):
-    return S._agent_dispatch(test_sim, NODES, command)
+def _saver(cash=2_000.0, income=500.0, year=100, project_cost=900.0):
+    return SimpleNamespace(
+        state=SimpleNamespace(household=SimpleNamespace(saving_for=None, saving_target=0.0)),
+        capital=cash, year=year, recurring_net=lambda: income, project_cost=lambda node_id: project_cost,
+        civ={"id": "stub"})
 
 
-saver = sim(capital=2_000.0)
-cheapest = min((node_id for node_id in NODES if node_id not in saver.done and saver.start_reason(node_id)[0]),
-               key=saver.project_cost)
-before = ask(saver, cmd="stuck")
-check("without a target stuck recommends starting the cheapest thing",
-      cheapest in str(before["what_is_holding_you_up"]), before["what_is_holding_you_up"])
+def _ask(saver, **command):
+    return _cmd_saving(saver, NODES, dict(cmd="saving", **command), False)
 
-check("'saving <id> <amount>' parses", parse_typed("saving %s 9000" % cheapest)[0]
-      == {"cmd": "saving", "id": cheapest, "target": 9000.0}, parse_typed("saving %s 9000" % cheapest))
+
+check("'saving <id> <amount>' parses", parse_typed("saving %s 9000" % PROJECT)[0]
+      == {"cmd": "saving", "id": PROJECT, "target": 9000.0}, parse_typed("saving %s 9000" % PROJECT))
 check("'saving off' parses", parse_typed("saving off")[0] == {"cmd": "saving", "off": True}, parse_typed("saving off"))
 
-saver.recurring_net = lambda: 500.0
+check("with no target set there is no plan", saving_plan(_saver()) is None and saving_reason(_saver()) is None)
+
+saver = _saver()
 target = saver.capital + 1_800.0
-reply = ask(saver, cmd="saving", id=cheapest, target=target)
+reply = _ask(saver, id=PROJECT, target=target)
 check("setting a target is accepted", reply.get("ok") is True, reply)
 plan = reply["saving"]
 check("the plan names the project, target, cash and net income",
-      plan["id"] == cheapest and abs(plan["target"] - target) < 0.1 and abs(plan["cash"] - saver.capital) < 0.1
+      plan["id"] == PROJECT and abs(plan["target"] - target) < 0.1 and abs(plan["cash"] - saver.capital) < 0.1
       and plan["net_income_per_year"] == 500.0, plan)
-check("the year affordable is today's year plus whole years of income needed",
+check("the year affordable is today's year plus whole years of income needed (1800 at 500 a year is four years)",
       plan["year_affordable"] == saver.year + 4, plan)
+saver.recurring_net = lambda: 600.0
+check("an exact multiple of the income needs no extra year (1800 at 600 a year is three)",
+      saving_plan(saver)["year_affordable"] == saver.year + 3)
 
-after = ask(saver, cmd="stuck")
-text = str(after["what_is_holding_you_up"])
-# presentation: the wording of the stuck advice
-check("stuck no longer recommends starting the cheapest thing while saving",
-      "would begin the cheapest" not in text, text)
-saving_rows = [row for row in after["what_is_holding_you_up"] if row.get("kind") == "saving"]
-check("stuck shows a saving row with the affordable year",
-      saving_rows and str(plan["year_affordable"]) in saving_rows[0]["why"] and cheapest in saving_rows[0]["what"],
-      saving_rows)
-check("the printed stuck screen shows it", "SAVING" in _RENDERERS["stuck"](after), _RENDERERS["stuck"](after)[:300])
+row = saving_reason(saver)
+check("the stuck row for a plan is a saving row naming the project and the affordable year",
+      row["kind"] == "saving" and PROJECT in row["what"] and str(saver.year + 3) in row["why"], row)
 
-default = ask(saver, cmd="saving", id=cheapest)
-check("no amount means the project's own cost", default["saving"]["target"] == round(saver.project_cost(cheapest), 1), default)
+default = _ask(saver, id=PROJECT)
+check("no amount means the project's own cost", default["saving"]["target"] == round(saver.project_cost(PROJECT), 1), default)
 
-saver.recurring_net = lambda: -10.0
-losing = ask(saver, cmd="saving", id=cheapest, target=saver.capital + 5_000.0)
-check("with no surplus there is no affordable year", losing["saving"]["year_affordable"] is None, losing)
+losing = _saver(income=-10.0)
+check("with no surplus there is no affordable year",
+      _ask(losing, id=PROJECT, target=losing.capital + 5_000.0)["saving"]["year_affordable"] is None)
+# presentation: the stuck row says the target is never reached
+check("...and the stuck row says it is never reached",
+      "never" in saving_reason(losing)["why"])
+check("a zero income is no surplus either",
+      saving_plan(SimpleNamespace(**dict(vars(losing), recurring_net=lambda: 0.0)))["year_affordable"] is None)
 
-reached = ask(saver, cmd="saving", id=cheapest, target=saver.capital - 1.0)
-check("a target already in hand is affordable this year", reached["saving"]["year_affordable"] == saver.year, reached)
+reached = _saver()
+check("a target already in hand is affordable this year",
+      _ask(reached, id=PROJECT, target=reached.capital - 1.0)["saving"]["year_affordable"] == reached.year)
+check("...and a target exactly equal to the cash is too",
+      _ask(reached, id=PROJECT, target=reached.capital)["saving"]["year_affordable"] == reached.year)
+# presentation: the stuck row says the target is in hand
+check("...and the stuck row says it is in hand", "in hand" in saving_reason(reached)["why"])
 
-bad = ask(saver, cmd="saving", id="no_such_node")
-check("an unknown project is refused", bad.get("ok") is False, bad)
-check("a negative amount is refused", ask(saver, cmd="saving", id=cheapest, target=-5).get("ok") is False)
+fresh = _saver()
+check("an unknown project is refused", _ask(fresh, id="no_such_node").get("ok") is False)
+check("a negative amount is refused", _ask(fresh, id=PROJECT, target=-5).get("ok") is False)
+check("a flag is not an amount", _ask(fresh, id=PROJECT, target=True).get("ok") is False)
+check("a refused target sets nothing", fresh.state.household.saving_for is None)
 
-cleared = ask(saver, cmd="saving", off=True)
+cleared = _ask(reached, off=True)
 check("off clears the target", cleared["ok"] and cleared["saving"] is None, cleared)
-check("stuck recommends the cheapest again once cleared",
-      cheapest in str(ask(saver, cmd="stuck")["what_is_holding_you_up"]))
-
-saver.recurring_net = lambda: 500.0
-ask(saver, cmd="saving", id=cheapest, target=saver.capital + 1_800.0)
-standing = ask(saver, cmd="saving")
-check("bare saving shows the standing plan", standing["saving"]["id"] == cheapest, standing)
+standing = _saver()
+_ask(standing, id=PROJECT, target=standing.capital + 1_800.0)
+check("bare saving shows the standing plan", _ask(standing)["saving"]["id"] == PROJECT)
+check("the printed stuck screen shows a saving row",
+      "SAVING" in _RENDERERS["stuck"]({"what_is_holding_you_up": [saving_reason(standing)]}), None)
