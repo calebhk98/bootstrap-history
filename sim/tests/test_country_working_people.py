@@ -17,14 +17,14 @@ from .country_state_world import StateWorld
 setup = fixture.two_country_setup()
 economy, _outcomes = fixture.run(setup, years=4)
 
-north = CountryAnswers(economy, fixture.NORTH)
-home = CountryAnswers(economy, setup.civ_id)
+north = CountryAnswers(economy, fixture.NORTH, off_map_trade=lambda direction: 0.0)
+home = CountryAnswers(economy, setup.civ_id, off_map_trade=lambda direction: 0.0)
 north_by_trade = country_figures.people_by_trade(economy, fixture.NORTH)
 check("a country's working people are the people its labour markets hold, over every trade",
 	  abs(north.working_people() - sum(north_by_trade.values())) < 1e-6 and north.working_people() > north_by_trade["labourer"] - 1e-9,
 	  (north.working_people(), north_by_trade))
 check("...and not the other country's", abs(home.working_people() - north.working_people()) > 1.0, (home.working_people(), north.working_people()))
-check("a country whose tiles hold no labour markets has none to count (None)", CountryAnswers(economy, "nowhere").working_people() is None)
+check("a country whose tiles hold no labour markets has none to count (None)", CountryAnswers(economy, "nowhere", off_map_trade=lambda direction: 0.0).working_people() is None)
 
 
 MARKET_PEOPLE = 5400.0
