@@ -1,6 +1,6 @@
 # A higher tax rate has no consequence beyond revenue and a typed burden weight
 
-**Status:** partly - a harvest tax and a land tax reach the farmer's and the owner's own rules; concealment, flight and unrest (486) and the AI state's foresight of the loss are open, so `FISCAL_BURDEN_WEIGHT` stays
+**Status:** partly - a harvest tax and a land tax reach the farmer's and the owner's own rules; concealment of income from a form on what actors hold now follows the rate and the officials' reach, and the AI state's rate-raise yield counts it; flight, unrest (486) and concealment under the harvest and trade forms are open, so `FISCAL_BURDEN_WEIGHT` stays
 
 Follows from 626 (tax rates as a state choice).
 
@@ -41,9 +41,21 @@ loss in its menu raises a rate less than one without.
 - Tests: `sim/tests/test_tax_pressure_reaches_decisions.py` (share taken, harvest tax lowers farm effort, land tax lowers the
   net rent and makes a marginal tenancy a loss). They call the rules with built inputs; the engine wiring (`labour_port`,
   `economy_port_land`) is covered only by whole-game topics.
-- Still open: no taxed base is concealed or moved (needs households' and firms' choice between declaring, hiding and leaving a
-  taxed tile); no unrest or flight (486); the producers' land demand and run decisions in the economy do not net a harvest
+- **Income is hidden from a rising rate.** `sim/agents/evasion.py` `hidden_share`: a payer hides the share at which the last
+  unit's saving (the rate, less the chance of being found times the tax and a penalty scaled by the state's reach, the
+  penalty rule of `demand_answer.py`) equals the rising cost of hiding it, up to a ceiling. So a higher rate hides more; a
+  state whose officials reach more of the payers is hidden from less; full reach hides nothing.
+  `revenue.taxed_actors` (forms on `stratum_income`, `land_rent`, `land_value`) assesses only the declared income; `Assessment.concealed`
+  records the rest. `fiscal_response.rate_raise_yield` is the menu's yield of a full rate step net of the extra hiding it
+  provokes (`raise_coin_rates` uses the same figure), which also corrects the old worth that took the whole base as the yield
+  of a raise (it ignored the rate). Hidden income stays with the payer, so household disposable income and saving follow the
+  existing purse rules. The cost of hiding is an expected cost in the choice, not a cash flow.
+  Constants `HIDEABLE_SHARE_OF_INCOME`, `HIDING_MARGINAL_COST_AT_CEILING` (`sim/agents/tuning_evasion.py`) are labelled heuristics
+  with `retire` 657; no source found. Tests: `sim/tests/test_tax_evasion.py`.
+- Still open: flight from a taxed tile and withdrawal of labour (a stronger form of the above, for households' choice of
+  place); hiding under the harvest and trade forms; the economy layer's money forms (`sim/economy/taxes.py`) still evade only
+  by the state's capacity; no unrest or flight (486); the producers' land demand and run decisions in the economy do not net a harvest
   tax off expected revenue (`land_market.demands_of`); the AI state's `raise_rate` option does not yet count the base lost
-  through these. `FISCAL_BURDEN_WEIGHT` therefore stays as the labelled stand-in; it retires when the menu values the
-  measured fall in base.
+  through these. `FISCAL_BURDEN_WEIGHT` therefore stays as the labelled stand-in (the menu now counts the lost yield but not the
+  flight or unrest); it retires when the menu values those too.
 - Sources: no source on pre-modern tax pressure and abandonment (agri deserti) was opened in this session, so none is cited.

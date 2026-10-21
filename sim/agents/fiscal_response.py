@@ -12,7 +12,7 @@ nothing set against them cannot be paid.
 import dataclasses
 from typing import Any, Dict, Iterable, List, Optional, Sequence
 
-from . import arrears
+from . import arrears, evasion
 from .policy import CallbackPolicy, Decision, IdlePolicy, Option, Policy, register_policy
 from .tuning import LEVY_RATE_CEILING
 from .tuning_coinage import COIN_RESTRIKE_SHARE_PER_YEAR, DEBASEMENT_SHARE_CEILING
@@ -56,7 +56,7 @@ def menu(government: Any, world: Any, lines: Sequence[Any], gap: float) -> Decis
 		options.append(_option(KIND, kind_base * KIND_DEMAND_RATE_STEP, dict(carry, income_taken=need / kind_base)))
 	coin_base = coin_rate_base(world)
 	if coin_base > 0.0:
-		options.append(_option(RATE, coin_base * RATE_RAISE_STEP, dict(carry, income_taken=need / coin_base)))
+		options.append(_option(RATE, rate_raise_yield(world), dict(carry, income_taken=need / coin_base)))
 	return Decision(FISCAL_DECISION, options, gap)
 
 
@@ -70,6 +70,27 @@ def raisable_coin_forms(world: Any) -> List[Any]:
 def coin_rate_base(world: Any) -> float:
 	"""Money's worth of the base the state's coin forms are assessed on."""
 	return sum(assessed.base * assessed.collectible for assessed in raisable_coin_forms(world))
+
+
+def new_rate_of(rate: float) -> float:
+	"""The rate a form is raised to in one full step."""
+	return min(1.0, rate * (1.0 + RATE_RAISE_STEP))
+
+
+def rate_raise_yield(world: Any) -> float:
+	"""Money the state's coin forms yield more, next year, at a full step of rate: the extra rate on the base the
+	payers still declare at that rate. A form on what actors hold loses to hiding as the rate climbs (evasion.py),
+	so it yields less than the rate times the base."""
+	extra = 0.0
+	for assessed in raisable_coin_forms(world):
+		raised = new_rate_of(assessed.rate)
+		if assessed.payers:
+			gross = assessed.base + assessed.concealed
+			extra += (evasion.yield_of_rate(gross, raised, assessed.collectible)
+					  - evasion.yield_of_rate(gross, assessed.rate, assessed.collectible))
+		else:
+			extra += assessed.collectible * (raised - assessed.rate) * assessed.base
+	return max(0.0, extra)
 
 
 def in_kind_base(record: Any, world: Any) -> float:

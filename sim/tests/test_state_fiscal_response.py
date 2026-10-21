@@ -117,7 +117,7 @@ check("the menu offers every response but a rate raise, which needs a form colle
 	  set(offered) == set(fiscal_response.RESPONSES) - {fiscal_response.RATE}, sorted(offered))
 check("a state with a form collected in coin is offered raising its rate, and the cost is the burden on its base",
 	  coin_offered[fiscal_response.RATE].detail["income_taken"] > 0.0
-	  and coin_offered[fiscal_response.RATE].worth == COIN_STOCK * RATE_RAISE_STEP, coin_offered.get(fiscal_response.RATE))
+	  and abs(coin_offered[fiscal_response.RATE].worth - COIN_STOCK * WEALTH_FORM["rate"] * RATE_RAISE_STEP) < 1e-9, coin_offered.get(fiscal_response.RATE))
 check("borrowing costs the interest the lender asks", offered["borrow"].detail["interest"] == 0.08, offered["borrow"].detail)
 check("cutting lines loses the services", offered["cut_lines"].detail["services_lost"] > 0.0)
 check("deferring pay leaves pay unpaid, which the army and officials feel",

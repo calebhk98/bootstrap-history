@@ -64,7 +64,7 @@ class FiscalMixin:
 		"""Raise the rate of each form collected in coin, as far as `amount` of money's worth of the base reaches,
 		through the same lever a player pulls; the rates it set. Next year's assessment is on them."""
 		raisable = fiscal_response.raisable_coin_forms(world)
-		capacity = fiscal_response.coin_rate_base(world) * RATE_RAISE_STEP
+		capacity = fiscal_response.rate_raise_yield(world)
 		if capacity <= 0.0:
 			return {}
 		fraction = min(1.0, amount / capacity)
