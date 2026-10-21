@@ -18,7 +18,7 @@ from sim.economy.api import (EDGE_EXTERNAL, EDGE_LEGACY, AgentOrders, Economy, G
                              YearInputs, expected_output_prices, external_orders, live_input_prices, live_wages,
                              trade_premium, variable_cost_per_run)
 
-from . import trade_duty, economy_port_bondage, economy_port_levy, economy_port_actors, economy_port_cargo, economy_port_cropland, economy_port_institutions, economy_port_land, economy_port_late, economy_port_sites, externalities, material_capacity, solve_cache
+from . import trade_duty, economy_port_bondage, economy_port_levy, economy_port_actors, economy_port_cargo, economy_port_cropland, economy_port_institutions, economy_port_land, economy_port_late, economy_port_seats, economy_port_sites, externalities, material_capacity, solve_cache
 from .economy_port_key import spin_up_key
 from .economy_port_coin import priced_at_the_margin
 from .economy_port_setup import build_setup, opening_values
@@ -274,7 +274,7 @@ class AgentEconomy(TilePricesMixin):
         if self.opened():
             economy_api.rename_agent(self.economy(), old, new)
             self._record_stale = True
-        for kind in ("seat_takings", "sales", "purchases"):
+        for kind in ("seat_takings", "seat_sales", "sales", "purchases"):
             if kind in self.stored:
                 rekey(self.stored[kind], old, new)
 
@@ -351,6 +351,7 @@ class AgentEconomy(TilePricesMixin):
         projects = sim.state.projects
         view = economy.view()
         moves, offers = [], []
+        offered = self.__dict__.setdefault("_seat_offered", {}).setdefault(agent_id, (tile, {}))[1]
         for node_id in sorted(projects.operating):
             if node_id in projects.granted or not sim.is_venture(node_id):
                 continue
@@ -362,6 +363,7 @@ class AgentEconomy(TilePricesMixin):
                 quantity = units * ramp
                 if quantity <= 0.0 or material not in area_map.goods():
                     continue
+                offered[material] = offered.get(material, 0.0) + quantity
                 moves.append(GoodsMove(EDGE_LEGACY, agent_id, material, tile, quantity, "concern output"))
                 cost = self._concern_reservation(node_id, material, tile, view, agent_id)
                 offers.append(Offer(agent_id, material, area_map.area_of(material, tile), tile, quantity, cost))
@@ -493,9 +495,21 @@ class AgentEconomy(TilePricesMixin):
     def _settle_seats(self):
         """What each seat's goods fetched goes back to the engine; what did not sell goes back too."""
         coin = self._economy.setup.coin_per_unit
+        book, currency = economy_api.economy_book(self._economy), self._economy.setup.currency_id
+        proceeds = {seat_id: max(0.0, book.balance(seat_id, currency)) for seat_id in sorted(self._sim.state.seats)}
+        offered = self.__dict__.pop("_seat_offered", {})
+        sold = economy_port_seats.record_year(self._economy, offered, proceeds, coin)
+        self.stored["seat_sales"] = {**self.stored.get("seat_sales", {}), **sold}
         self.stored["seat_takings"] = {
             seat_id: economy_api.settle_agent_takings(self._economy, seat_id, EDGE_LEGACY) * coin
             for seat_id in sorted(self._sim.state.seats)}
+
+    def seat_sale_outlook(self, seat_id, material, quantity):
+        """What the seat may count as sold of `quantity` units of a material it makes: its last clearing's share and
+        price, else what the market's buyers took last year (concern_sales.outlook); None when the economy is not open."""
+        if not self.opened():
+            return None
+        return economy_port_seats.outlook(self.economy(), self.stored.get("seat_sales", {}), seat_id, material, quantity)
 
     def _inputs(self, engine_orders, border_accounts=((), ())) -> YearInputs:
         sim = self._sim

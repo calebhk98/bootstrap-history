@@ -10,3 +10,17 @@ Measured: Measured 2026-10-21 on main 3cb9c9a0, an opened Rome game with the ful
 
 What it would take: iron near its cost at the opening (519, 473), and a test that a founder's mine output sells at
 a bounded multiple of its cost per tonne.
+
+## Trace of the mine output's sale path (founder-sells-into-clearing)
+
+A mine does not sell anything by itself. `sim/engine/economy_mining.py` turns a tranche into a working
+(`commission_mines`), whose yearly tonnes (`mine_yield_t_for`) are an own supply (`_own_material_supply("mine:<material>")`,
+`sim/engine/economy_materials.py`) that the founder's works draw on as an input. Ore the founder sells goes through the
+`sell` order (`GoodsMarket.sell`, `sim/engine/goods_market_api.py`), which is not the home-ask path of 668: it pays
+`sale_proceeds` (the economy's price on the tile falling with the tonnes sold) at once, cut to `market_room_tonnes`, which was
+the tonnes the sellers offered, not what buyers want. That cap is now `sale_room_tonnes`: no more than the buyers took
+and still wanted last year (`market_record` sold plus unmet) where the economy trades the good, so a good no one bought
+sells nothing (`sim/tests/test_sale_room_follows_buyers.py`). A concern the founder runs on the ore sells its product through
+668's path. What is not fixed: the price spread across tiles (473), and `sell` still pays at once at the price the book last
+showed, not from the year's clearing. Whether a founder's iron now sells at a bounded multiple of its cost was not measured
+(no spin-up run here): measure with the commands in the 668 hand-off.

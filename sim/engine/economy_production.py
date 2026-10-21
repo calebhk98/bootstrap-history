@@ -23,7 +23,7 @@ from .bondage_workshop_rules import workshop_craft_wages, workshop_output_value
 from .concern_earnings import ledger_row, output_market_factor, takings_at
 from .data import trade_family
 from sim.constants import declare
-from . import category_traits, money_units, node_revenue_market, node_upkeep
+from . import category_traits, concern_sales, money_units, node_revenue_market, node_upkeep
 from .readable import readable
 from .revenue_ledger import assemble_ledger
 from sim.world import plant_figures
@@ -369,13 +369,32 @@ class ProductionMixin:
             return True
         return all(self._priced_key(material, paid) is not None for material in baskets.outputs)
 
-    def node_output_market_factor(self, node):
-        """This year's market over long-run prices for what an output-derived node sells and buys; one otherwise."""
+    def node_output_market_factor(self, node, selling_seat=None):
+        """This year's market over long-run prices for what an output-derived node sells and buys; one otherwise.
+        `selling_seat` names the seat whose concern it is: only the share its output sold in the clearing counts, at
+        the price it cleared at (concern_sales.py); without it every unit sells at the sellers' ask."""
         baskets = self.concern_baskets_now(node["id"])
+        outlook = None if selling_seat is None else (
+            lambda material, quantity: self.economy.agent_seat_sale_outlook(selling_seat, material, quantity))
         return output_market_factor(
             baskets is not None and self.concern_goods_have_market(node["id"]),
             lambda: node_revenue_market.basket_market_factor(
-                baskets.outputs, baskets.purchases, self._material_prices(), self.goods_market.home_unit_price))
+                baskets.outputs, baskets.purchases, self._material_prices(), self.goods_market.home_unit_price, outlook))
+
+    def concern_sale_basis(self, node_id):
+        """What the share of a founder concern's output counted as sold stands on: `cleared_last_year` (its own sales
+        in the last clearing), `buyers_last_year` (what the market's buyers took and still wanted, before it has sold),
+        or `no_market_yet` (nobody trades its goods, so every unit is counted at long-run cost)."""
+        baskets = self.concern_baskets_now(node_id)
+        if baskets is None or not self.concern_goods_have_market(node_id):
+            return concern_sales.NO_MARKET_YET
+        seat = self.state.acting_seat
+        bases = [taken.basis for material, units in sorted(baskets.outputs.items()) if units > 0.0
+                 for taken in [self.economy.agent_seat_sale_outlook(seat, material, units)] if taken is not None]
+        if not bases:
+            return concern_sales.NO_MARKET_YET
+        return concern_sales.CLEARED_LAST_YEAR if all(basis == concern_sales.CLEARED_LAST_YEAR for basis in bases) \
+            else concern_sales.BUYERS_LAST_YEAR
 
     def concern_takings(self, node_id, ramp, with_output_factor=True, cost_scale=None):
         """Yearly takings of one concern at a given ramp, before market saturation: its loaded figure

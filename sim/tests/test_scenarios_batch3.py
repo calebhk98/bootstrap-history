@@ -131,7 +131,7 @@ _money = _run(_crowded, "money")
 _why = _run(_crowded, "why " + _loom)
 check("scenario earnings figure: ventures, money and why quote the same earnings and upkeep",
       _close(_ventures_row["earns_a_year"], _real_earnings) and _close(_ventures_row["costs_a_year"], _real_upkeep)
-      and _close(_money["where_the_money_comes_from"].get(_loom), _real_earnings)
+      and _close(_money["where_the_money_comes_from"].get(_loom) or 0.0, _real_earnings)   # a row earning nothing is not listed
       and _close(_why.get("revenue"), _real_earnings) and _close(_why.get("upkeep"), _real_upkeep),
       (_ventures_row, _money["where_the_money_comes_from"].get(_loom), _why.get("revenue"), _why.get("upkeep"),
        _real_earnings, _real_upkeep))
