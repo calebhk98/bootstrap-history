@@ -394,7 +394,7 @@
        "service_life_years": 8,
        "alternative_basis": "LABELLED HEURISTIC, conf D, no source found for the build bill or life of this fitted-out plant without iron; the charcoal clamp's plant, taken unchanged: wooden tools of the same mass in place of the iron bar. Retire: Complaint 666.",
        "conf": "D",
-       "retire": "Complaint 666"
+       "retire": "Complaint 671"
       }
      ],
      "capital_basis": "A tar kiln is a clamp like the charcoal burner's, a conical heap on a dished hearth drained to a pot, run by the same kind of team with the same pole-and-turf hut and tools, so the charcoal clamp's plant is taken unchanged. Capacity is quoted in kilograms of charcoal, the batch's larger output, which is what the solver divides the charge by; the same thirty tonnes a year at the entry's yield. Reasoned estimates (conf D).",

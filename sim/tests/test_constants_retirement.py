@@ -67,6 +67,17 @@ class RetirementRuleTests(unittest.TestCase):
         self.assertEqual(dangling, [], "retire names only closed complaints; point it at the open complaint that "
                                        "now owns the mechanism: %s" % ", ".join(dangling))
 
+    def test_a_data_row_retiring_only_to_closed_complaints_is_caught(self):
+        data = {"rows": [{"retire": "Complaint 544"}, {"retire": "Complaint 543"}, {"retire": "a crop model"}],
+                "nested": {"deep": {"retire": "Complaints/544 then Complaints/closed/544"}}}
+        self.assertEqual(retirement.closed_data_retirements(data, open_numbers={543}),
+                         ["nested.deep.retire", "rows[0].retire"])
+
+    def test_no_data_row_retires_only_to_closed_complaints(self):
+        dangling = retirement.closed_data_retirements_in_tree(retirement.open_complaint_numbers())
+        self.assertEqual(dangling, [], "data `retire` names only closed complaints; point it at the open complaint that now "
+                                       "owns the figure: %s" % ", ".join(dangling))
+
     def test_declare_records_retire(self):
         constants.declare("RETIREMENT_TEST_ONLY_NUMBER", 1.0, kind="temporary_heuristic",
                           unit="1", why="test", retire="Complaints/509")

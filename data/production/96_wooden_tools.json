@@ -9,7 +9,7 @@
    "unit_mass_kg": 1.0,
    "basis": "per tonne of finished wooden farm tools (hoes, spades, rakes, forks, sickle handles), counted by the mass of the tools",
    "yield_basis": "LABELLED HEURISTIC (conf D), no source found for the timber a tonne of wooden tools takes nor for the carpenter hours. Hewing a blade or tine from a log wastes most of it and green wood is part water, so a tonne of tools is taken to start as three tonnes of green roundwood (wood_kg); shaping each tool by axe, adze and knife is taken as about two hours a kilogram (author's estimate; searched for a timed replication of wooden spades and hoes and found none; the Danish T-shaped wooden spade replication at https://tidsskrift.dk/dja/article/view/138710 reports that the spades 'are relatively easy to produce' but its abstract gives no hours or timber mass; retire: Complaint 659). Needs no technology.",
-   "retire": "Complaint 659",
+   "retire": "Complaint 650",
    "conf": "D",
    "requires_node": null
   }
