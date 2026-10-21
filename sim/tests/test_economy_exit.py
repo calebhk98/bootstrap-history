@@ -19,14 +19,16 @@ def smelter_view(**changes):
 
 
 class IdleCapacityTests(unittest.TestCase):
-    def test_plantless_capacity_whose_runs_would_not_pay_decays_toward_the_runs_worked(self):
+    def test_plantless_capacity_whose_runs_would_not_pay_is_shed_at_the_pace_workplaces_change(self):
+        # some workplaces still cover their cost, so the producer stays; the rest close no faster than workplaces open
         producer = farmer(capacity_runs=10.0)
-        for _year in range(40):
+        for _year in range(10):
             before = producer.capacity_runs
-            producer = producers_close.close_year(producer, FARM, 100.0, 50.0, farm_view(1e-6), 4.0).producer
-            self.assertLess(producer.capacity_runs, before + 1e-12)
-            self.assertGreaterEqual(producer.capacity_runs, 4.0)
-        self.assertAlmostEqual(producer.capacity_runs, 4.0, places=3)
+            result = producers_close.close_year(producer, FARM, 100.0, 50.0, farm_view(0.5), 4.0)
+            producer = result.producer
+            self.assertFalse(result.exited)
+            self.assertLess(producer.capacity_runs, before)
+            self.assertGreaterEqual(producer.capacity_runs, (1.0 - producers.OUTPUT_CHANGE_SHARE_PER_YEAR) * before - 1e-9)
 
     def test_plantless_capacity_whose_runs_would_pay_is_kept_while_it_waits(self):
         # idle for want of inputs or buyers, not of a margin: the hands are kept
@@ -46,12 +48,11 @@ class IdleCapacityTests(unittest.TestCase):
 
 
 class ExitTests(unittest.TestCase):
-    def test_a_plantless_producer_no_workplace_of_which_pays_exits_after_the_loss_years(self):
+    def test_a_plantless_producer_no_workplace_of_which_pays_exits_in_the_first_year_its_sales_do_not_cover_cost(self):
         view = farm_view(0.001, cash=20.0)
         producer = farmer()
-        for _year in range(producers_close.LOSS_YEARS_BEFORE_EXIT):
-            result = producers_close.close_year(producer, FARM, 3.0, 70.0, view, 1.0)
-            producer = result.producer
+        result = producers_close.close_year(producer, FARM, 3.0, 70.0, view, 1.0)
+        producer = result.producer
         self.assertTrue(result.exited)
         self.assertEqual(producer.capacity_runs, 0.0)
         self.assertAlmostEqual(sum(transfer.amount for transfer in result.transfers), 20.0)

@@ -201,3 +201,34 @@ the stock gate planning zero runs, idle capacity decaying, food running out) and
 input's price plus its whole run margin, so a scarce input is bid up without bound). Next: the stock gate eases instead of
 zeroing plans when stock will clear; capacity is not shed while expected sales cover cost; an input bid is bounded by what the
 input is worth in use against its substitutes, with rationing by bid only when supply is short. Re-run the same command after.
+
+## Update 8: the supply collapse and the input-bid ratchet, each link as a rule (branch supply-collapse-and-bid-ratchet)
+
+Rules (each with a rule test that builds producers and views, not a game):
+
+1. Planning (`producers.runs_for_stock`, `STOCK_CLEARING_YEARS`, test_economy_stock_drawdown): excess stock over the target
+   is worked off over several years (runs are expected sales less excess over those years), so a producer with a positive
+   margin whose stock clears in them keeps working; it plans none only for stock that cannot clear.
+2. Capacity (`producers_close.close_year`, `idle_capacity.py`, test_economy_idle_capacity_life): idle plantless capacity
+   wears at the one over its tools' service life (`IDLE_CAPACITY_DECAY_SHARE` retired); a producer sheds workplaces
+   in the first year its expected sales do not cover running cost, not after three loss years, and not so many that the
+   workplaces that pay would make less than it expects to sell (short supply lifts the price). `LOSS_YEARS_BEFORE_EXIT`
+   stays only as entry's wait (`entry_margin`). The bare removal of the count was measured to be worse on the fixture
+   (the model re-draws the workplaces' cost spread each year, so shedding to the paying share repeats), hence the
+   expected-sales floor.
+3. Input bids (`producers.input_ceiling`, `tool_fallback.value_in_use`, test_economy_input_ceiling_share): a ceiling is the
+   price plus the run's margin shared by the input's cost share (not the whole run margin), and for a tool never more than
+   it saves against the cheapest substitute in the basket (wooden tools, then by hand). The old wide-margin test that
+   pinned a ceiling of ten times the price now pins the margin share.
+4. Ask band (`ask_raise.band_edge`, `seller_offers.input_share_of_cost`, test_economy_ask_band_chain): the band multiple
+   applies to what a seller adds; inputs it buys pass through. On a three-stage chain the old ceilings were 3, 12, 39
+   times a stage's value added, now 3, 6, 9. `ASK_BAND_CEILING` (retire 643) is unchanged; the Caiani check (markup on
+   unit cost, moved with inventory) holds, with the markup bounded per stage.
+
+Fixture (stationary_setup, 8 years, throwaway probe, same seed): grain price year 5 0.224 (was 0.230), wage 0.916 (was
+0.886); year 7 grain runs summed over the three producers 857 (was 510), real wage (wage over grain price) 5.1 (was 3.9);
+staple runs after five years 72 per cent of the first year's (66 before; `test_economy_supply_collapse_scenario`). The
+price still falls in later years: the wage unit root (mover 1) and the demand side are not touched here.
+
+Not done: a Rome trace (orchestrator: `python3 sim/simulator.py spin-up-trace --civ rome_100ad --years 60`, then the
+settling statistic). Left: the cost spread is re-drawn each year; the ore price and mint movers (3, 4 above).
