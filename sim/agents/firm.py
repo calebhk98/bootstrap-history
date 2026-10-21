@@ -41,12 +41,12 @@ class Firm(ExpansionMixin, RecordedActor):
 
 	def on_copied(self, node_id: str, world: Any) -> None:
 		if node_id == self.record.target:
-			self.business.open_plant(node_id, world.year)
+			self.business.open_plant(node_id, world.year, self.location())
 
 	def accept_licence(self, node_id: str, chain: List[str], world: Any) -> None:
 		"""A licensed concern becomes the firm's own business."""
 		self.learn(chain, world)
-		self.business.open_plant(node_id, world.year)
+		self.business.open_plant(node_id, world.year, self.location())
 
 	def operate(self, world: Any, interest: float = 0.0) -> None:
 		for node_id in sorted(self.concerns):

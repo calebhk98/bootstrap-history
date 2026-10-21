@@ -9,7 +9,7 @@ from typing import Any, Dict, FrozenSet, List, Optional, Tuple
 
 from sim.geography.api import arable_hectares, settlement, territory, usable_modes
 
-from . import budget, collection, country_hazards, government_levers, ledger, revenue, strata_observed
+from . import budget, collection, country_hazards, government_levers, ledger, revenue, strata_observed, taxpayer_income
 from .collection_world import CollectionView
 from .edges import EDGE_STATE_SPENDING, EDGE_WORKERS
 from .no_country_economy import NoCountryEconomy
@@ -173,8 +173,8 @@ class CountryStateView(CollectionView):
 		lookup = getattr(self._holder, "active_firms", None)
 		firms = lookup() if callable(lookup) else []
 		seats = list(self._shared.seat_taxpayers(self.profile.country))
-		return seats + [(self.visible_scale_of(firm), max(0.0, firm.record.last_margin))
-						for firm in firms if firm.record.country == self.profile.country]
+		return seats + [(self.visible_scale_of(firm), income) for firm, income in taxpayer_income.firm_incomes_in(
+			firms, self.profile.country, self._holder.country_of, self._holder.country_of_tile)]
 
 	def notice_over(self, scale: float, capacity: Optional[float] = None) -> float:
 		return self._shared.notice_over(scale, self.state_reach() if capacity is None else capacity)

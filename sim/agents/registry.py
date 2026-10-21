@@ -8,7 +8,7 @@ from .records import ActorRecord, ActorsState
 from .base import RecordedActor
 from .concern_totals import ConcernTotals
 from .entry_round import NicheEntry
-from . import patent_index, research
+from . import patent_index, research, taxpayer_income
 from .firm import Firm
 from .government import Government
 from .group import InterestGroup
@@ -298,6 +298,13 @@ class ActorRegistry:
 		record = getattr(actor, "record", None)
 		country = None if record is None else record.country
 		return country or self.state.home_country
+
+	def country_of_tile(self, tile: str) -> Optional[str]:
+		"""The country whose profile holds a tile; None when none does."""
+		owners = self.__dict__.get("_tile_owners")
+		if owners is None:
+			owners = self.__dict__["_tile_owners"] = taxpayer_income.tile_owners(self.state.countries)
+		return owners.get(tile)
 
 	def government_of(self, country: Optional[str]) -> Optional[Government]:
 		"""The government of a country (the home country for None), if it has one."""
