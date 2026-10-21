@@ -43,10 +43,11 @@ def days_per_person(literacy: float) -> float:
 
 
 def tile_shares(officials: float, working_days: float, literacy: float, people_by_tile: Mapping[str, float],
-				travel_days_by_tile: Mapping[str, float]) -> Dict[str, float]:
+				travel_days_by_tile: Mapping[str, float], person_days: Optional[float] = None) -> Dict[str, float]:
 	"""{tile: share of what is due there that the state's officials collect}. A tile with no road from the seat
-	(absent from `travel_days_by_tile`) is collected in no share."""
-	per_person = days_per_person(literacy)
+	(absent from `travel_days_by_tile`) is collected in no share. Other staff (guards, inspectors) reach a tile by the
+	same time rule, given the days one person of the tile asks of them in `person_days`."""
+	per_person = days_per_person(literacy) if person_days is None else person_days
 	road = {tile: ROUNDS_OF_COLLECTION_PER_YEAR * 2.0 * travel_days_by_tile[tile]
 			for tile in people_by_tile if tile in travel_days_by_tile}
 	asked = {tile: people_by_tile[tile] * per_person + road[tile] for tile in road}

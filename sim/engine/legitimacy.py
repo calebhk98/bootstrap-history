@@ -41,3 +41,22 @@ class LegitimacyMixin:
         if memo is None or memo[0] != key:
             memo = self.__dict__["_state_reach_memo"] = (key, world.collectible_share())
         return memo[1]
+
+    def order_reach(self):
+        """The share of the home people its employed guards watch over the roads from the seat (Complaint 660)."""
+        return self._staff_reach("guards", "order_share")
+
+    def inspection_reach(self):
+        """The share of the home people whose claims and workings its employed inspectors check (Complaint 660)."""
+        return self._staff_reach("inspectors", "inspection_share")
+
+    def _staff_reach(self, line_name, share_name):
+        from .agents_port import SimWorld
+        world = SimWorld(self)
+        unfunded = world.government().record.unfunded.get(line_name, 0.0)
+        key = (self.year, self.household.done_version, self.household.operating_version, round(self.population.total), unfunded)
+        memos = self.__dict__.setdefault("_staff_reach_memo", {})
+        memo = memos.get(line_name)
+        if memo is None or memo[0] != key:
+            memo = memos[line_name] = (key, getattr(world, share_name)())
+        return memo[1]

@@ -214,10 +214,10 @@ class MiningMixin(MineDepositsMixin):
         state can run, times whether the ore is actually under your feet,
         (what technology lets a working raise per shaft is in the works cost,
         sim/world/deposits.py, not a multiple here)."""
-        state_reach = self.state_reach()
+        inspection_share = self.inspection_reach()
         favour = self.effect_best("mine_ceiling")
         return mine_ceiling_tonnes(
-            favour[1] if favour is not None else None, state_reach, self.MINE_CEILING_BASE_STRANGER,
+            favour[1] if favour is not None else None, inspection_share, self.MINE_CEILING_BASE_STRANGER,
             self.MINE_CEILING_STATE_SCALE_STRANGER,
             revenue_scale_multiple(self.revenue(), self.REVENUE_SCALE_DENARII, self.REVENUE_SCALE_CAP_MULTIPLE),
             self.geography.mineral_scale(mat))
@@ -233,7 +233,7 @@ class MiningMixin(MineDepositsMixin):
             "this method distinguishes.")
     MINE_CEILING_STATE_SCALE_IMPERIAL = declare(
         "MINE_CEILING_STATE_SCALE_IMPERIAL", 60000.0, kind="temporary_heuristic",
-        unit="tonnes/year per unit of state_reach", source=None,
+        unit="tonnes/year per unit of inspection reach (share of people whose claims its inspectors check)", source=None,
         confidence="D",
         why="How much further a more capable state extends the imperial-"
             "tier ceiling. Tuned, not derived from any state-capacity "
@@ -247,7 +247,7 @@ class MiningMixin(MineDepositsMixin):
             "never simply shut out of mining.")
     MINE_CEILING_STATE_SCALE_STRANGER = declare(
         "MINE_CEILING_STATE_SCALE_STRANGER", 4000.0, kind="temporary_heuristic",
-        unit="tonnes/year per unit of state_reach", source=None,
+        unit="tonnes/year per unit of inspection reach", source=None,
         confidence="D",
         why="As MINE_CEILING_STATE_SCALE_IMPERIAL, for the stranger tier.")
     REVENUE_SCALE_CAP_MULTIPLE = declare(

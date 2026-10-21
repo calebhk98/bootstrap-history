@@ -41,7 +41,7 @@ class TheftChargeMixin(HoldingsExposureMixin):
     def charge_actors_for_theft(self):
         """Every home-country actor in business (a state, a firm) loses its expected theft of what it keeps.
         Guarding is the keeping cost `charge_actors_for_keeping_coin` charges in full; the state's order is
-        the country's state reach."""
+        the share of its people its employed guards watch."""
         from .agents_port import SimWorld
         world = SimWorld(self)
         lent_share = self.lent_share()   # theft moves coin out of purses, never into a loan: one reading serves every actor
@@ -57,7 +57,7 @@ class TheftChargeMixin(HoldingsExposureMixin):
             scale = self.visible_scale(sum(actor.workforce.values()), actor.money, actor.prominence())
             self.steal_from(actor, exposure, theft_exposure.THEFT_SHARE_PER_YEAR_AT_FULL_EXPOSURE,
                             {kind: COIN_GUARD_HOURS_PER_TONNE_YEAR for kind in GUARDED_KINDS}, scale,
-                            self.state_reach(), 0.0)
+                            self.order_reach(), 0.0)
 
     def founder_visible_scale(self):
         household = self.state.household
@@ -71,14 +71,14 @@ class TheftChargeMixin(HoldingsExposureMixin):
         guard = {kind: COIN_GUARD_HOURS_PER_TONNE_YEAR * paid_share for kind in GUARDED_KINDS}
         return self.steal_from(household, self.founder_exposure(),
                                theft_exposure.THEFT_SHARE_PER_YEAR_AT_FULL_EXPOSURE, guard,
-                               self.founder_visible_scale(), self.state_reach(), household.protection)
+                               self.founder_visible_scale(), self.order_reach(), household.protection)
 
     def plunder_founder(self, strength, cause, order_holds):
         """A sack or a bandit year takes from the founder by the same exposure: what is portable and visible,
         less what is guarded. A sack comes where order has failed (`order_holds` False). Returns the money taken."""
         household = self.state.household
         if order_holds:
-            capacity, protection = self.state_reach(), household.protection
+            capacity, protection = self.order_reach(), household.protection
         else:
             capacity, protection = 0.0, 0.0
         guard = {kind: COIN_GUARD_HOURS_PER_TONNE_YEAR for kind in GUARDED_KINDS}
