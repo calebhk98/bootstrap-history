@@ -113,6 +113,9 @@ class FakeWorld:
 	def knowledge_visibility(self, node_id: str, distance_km: float) -> float:
 		return 1.0
 
+	def contact_volume(self, place_a: Optional[str], place_b: Optional[str]) -> float:
+		return 0.0
+
 	def distance_km(self, place_a: Optional[str], place_b: Optional[str]) -> float:
 		return 0.0
 

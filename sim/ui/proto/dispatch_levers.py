@@ -49,7 +49,8 @@ def lever_context(sim, country, government):
         people = sim.population.total
     else:
         people = sim.actors.state.countries[country].population
-    return government_levers.LeverContext(list(government.record.revenue_forms), set(material_prices(sim)), people)
+    return government_levers.LeverContext(list(government.record.revenue_forms), set(material_prices(sim)), people,
+                                          set(sim.nodes))
 
 
 def set_lever_reply(sim, cmd):
