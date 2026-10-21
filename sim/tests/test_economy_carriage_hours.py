@@ -326,6 +326,18 @@ class BidAreaTests(unittest.TestCase):
         self.assertEqual(self.bids(["town", "farms"]), {"work@town": 40.0, "work@farms": 10.0})
 
 
+class BidMaximumTests(unittest.TestCase):
+    def test_the_maximum_bid_for_an_hour_is_the_carriage_money_the_hour_stands_for(self):
+        key = market_key(fixture.LABOURER, "farms")
+        who = Merchant("m1", "town", "owner", 1.0)
+        who.carriage_hours_wanted = {key: 40.0}
+        who.carriage_money_wanted = {key: 90.0}
+        cohorts = {tile: type("Cohort", (), {"tile": tile})() for tile in ("town", "farms")}
+        record = type("Record", (), {"merchants": {"m1": who}, "cohorts": cohorts, "area_imbalance": 1.0})()
+        found = carriage_hours.bids(trading_setup(), record)
+        self.assertEqual([bid.maximum_wage for bid in found], [90.0 / 40.0])
+
+
 class WageLoanTests(unittest.TestCase):
     """Carriers are paid at the labour market, before lenders meet, so a merchant short of cash borrows its wage bill."""
 
