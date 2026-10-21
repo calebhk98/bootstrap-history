@@ -192,6 +192,10 @@ scenarios work without engine edits.
 - **A shortage of one input must not silently stop everything that uses it.**
   Before making an input binding, say what the user does without it (a
   substitute, more hours, less output) and test that path.
+- **Order must not depend on history.** A loaded game rebuilds its collections
+  in saved order, so a float sum or a random draw over a collection that a live
+  game holds in creation order gives a different game after a save. Keep live
+  collections in the order a load produces, or iterate sorted.
 - **Moving a helper moves its importers.** When a module or test file is
   split, grep for every import of what moved.
 - **`_internal` fields are for auditors, `note` fields are for players.**
