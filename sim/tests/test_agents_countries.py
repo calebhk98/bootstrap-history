@@ -10,12 +10,14 @@ from sim.agents import country_view  # noqa: F401  (registers the country scope)
 from sim.agents.cast import cast_from_civilisations, profile_from_civilisation, seed_cast
 from sim.agents.country_view import CountryWorld, NoCountryEconomy
 from sim.agents.protocols import World
-from sim.world import demography
 from sim.agents.tuning_country import ARMY_SHARE_OF_POPULATION
 from sim.engine.state import deserialize_state, serialize_state
 
 from .agents_fake_world import make_node, total_money
 from .country_state_world import StateWorld
+
+
+LABOUR_MARKET_PEOPLE = 150_000.0     # the working people the country's labour markets hold (not its profile's working age)
 
 
 class CountryAnswers:
@@ -44,6 +46,9 @@ class CountryAnswers:
 
 	def people_of_trade(self, trade):
 		return 1.0e6
+
+	def working_people(self):
+		return LABOUR_MARKET_PEOPLE
 
 
 class ScenarioWorld(StateWorld):
@@ -216,10 +221,9 @@ registry2.advance(world)
 income, outlays = government.record.income, government.record.outlays
 check("a foreign government raises revenue from its declared forms",
 	  income.get("taxation", 0.0) > 0.0, income)
-working_age = demography.Population.stationary(500_000, seed=0).working_age
 opening_army = 500_000 * ARMY_SHARE_OF_POPULATION
-expected = 0.2 * (working_age - opening_army) * 50.0
-check("its revenue is the poll tax: the rate on the working age less the army, at the country's own pay",
+expected = 0.2 * (LABOUR_MARKET_PEOPLE - opening_army) * 50.0
+check("its revenue is the poll tax: the rate on the working people its labour markets hold less the army, at the country's own pay",
 	  abs(income["taxation"] - expected) < 1e-6 and abs(government.record.revenue_by_form["poll_tax"] - expected) < 1e-6,
 	  (income, expected))
 check("it spends on its army and officials", {"army", "administration"} <= set(government.record.need), government.record.need)

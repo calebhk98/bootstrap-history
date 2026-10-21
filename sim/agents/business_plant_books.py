@@ -52,19 +52,19 @@ def wage_bill_at(staff: Mapping[str, float], size: float, span_factor: float,
 def books_at_country_prices(book_takings: float, book_upkeep: float, staff: Mapping[str, float], size: float,
 							span_factor: float, cost_scale: float, market_factor: float,
 							pay_per_person_year: Callable[[str], Optional[float]], shares_goods_market: bool,
-							rivals: float) -> Optional[PlantBooks]:
+							rivals: float, output_factor: float) -> Optional[PlantBooks]:
 	"""A plant's books at a country's own figures. `book_takings` and `book_upkeep` are the tree's figures for one founding
 	size in book coin (before any cost scale); `market_factor` is the country's market over long-run prices for what the
-	plant sells and buys (the world's `market_factor_at` with the country's unit prices).
+	plant sells and buys (the world's `market_factor_at` with the country's unit prices); `output_factor` is the share of its
+	output the country's own hazards and wars leave (country_hazards.py).
 
 	Takings are the book figure at the country's cost scale and market factor, shared among the operators of a concern with
 	no market model. A concern in a goods category shares the home society's demand, which has no country record: None, as
-	is a crew with a trade the country's labour markets pay nothing for. TEMPORARY HEURISTIC (CLAUDE.md 4.4): no hazard or
-	war factor applies abroad, as the country has no record of one (retire: Complaint 649)."""
+	is a crew with a trade the country's labour markets pay nothing for."""
 	if shares_goods_market:
 		return None
 	wages = wage_bill_at(staff, size, span_factor, pay_per_person_year)
 	if wages is None:
 		return None
-	takings = book_takings * cost_scale * size * market_factor / (size + rivals)
+	takings = book_takings * cost_scale * size * market_factor * output_factor / (size + rivals)
 	return PlantBooks(takings, book_upkeep * cost_scale * size, wages)

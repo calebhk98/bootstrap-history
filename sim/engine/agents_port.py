@@ -16,6 +16,7 @@ from .agents_port_capacity import CapacityView
 from .agents_port_capital import CapitalView
 from .agents_port_disclosure import DisclosureView
 from .agents_port_groups import GroupView
+from .agents_port_patronage import PatronageView
 from .agents_port_stakes import StakeView
 from .agents_port_revenue import RevenueView
 from .agents_port_enterprises import EnterpriseView
@@ -33,7 +34,7 @@ from sim.world import plant_figures
 from .industry_depth import RAMP_SHARE_AT_FULL_DEPTH
 
 
-class SimWorld(BudgetView, SiteView, RevenueView, GroupView, StakeView, DisclosureView, CapitalView, CapacityView, TradeView, CastView, CoinageView, SeatView, ReviewView, EnterpriseView,
+class SimWorld(BudgetView, SiteView, RevenueView, GroupView, PatronageView, StakeView, DisclosureView, CapitalView, CapacityView, TradeView, CastView, CoinageView, SeatView, ReviewView, EnterpriseView,
                ResearchView):
 	"""The `Sim`'s answers to the questions actors ask."""
 

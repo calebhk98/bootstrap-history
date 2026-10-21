@@ -15,9 +15,22 @@ class CountryCrewView:
 
 	profile: Any
 	_holder: Any
+	_shared: Any
 
 	def _own_economy(self) -> Any:
 		raise NotImplementedError
+
+	def research_hands(self, actor: Any, family: str) -> float:
+		"""People of a trade family the actor can put on research: its staff and the people its own country's labour markets
+		hold in those trades that no other employer there has. Refuses (NoCountryEconomy) where the economy has no part for
+		the country; never the founder's pool."""
+		hands = 0.0
+		for trade in self._shared.research_trades(family):
+			left = self.free_fte(trade, actor.identity())
+			if left is None:
+				raise NoCountryEconomy(self.profile.country, "research hands")
+			hands += actor.workforce.get(trade, 0.0) + left
+		return hands
 
 	def free_fte(self, trade: str, actor_id: Optional[str]) -> Optional[float]:
 		"""People of a trade left in this country's labour markets for `actor_id`; None when the economy has no part for the

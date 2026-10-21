@@ -71,3 +71,12 @@ retire the labelled heuristic, then remove the line here. `grep -n "647" sim/age
 
 **Test.** A country's state, given a trade book, a coin stock and its own prices, assesses a customs form and prices the
 dole from them; `sim/tests/test_country_state.py` is where the checks go.
+
+
+## Closed
+
+Unskilled people, interest groups, patronage, research hands, the hazard factor, the trade book by year and a firm's income by country
+were built last; the closing note is `Complaints/closed/649-*.md`. Interest groups of a foreign country now form and press its state: a
+game with the Han economy in the agent economy organises groups there within a few years (measure: step a Rome game with Han switched
+into the agent economy, as `sim/tests/test_partner_in_agent_economy_scenario.py` does, and read `registry.of_kind("interest_group")`
+for those with a `country`). Their claims reach the country's budget as requisition lines, as the home groups' do.

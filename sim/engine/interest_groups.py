@@ -16,7 +16,7 @@ class InterestGroupsMixin:
         state = self.state.actors
         if state is None or not state.records:
             return []
-        return [group.record for group in self.actors.of_kind("interest_group")
+        return [group.record for group in self.actors.home_actors("interest_group")
                 if group.record.exited_year is None]
 
     def interest_groups(self):
@@ -68,7 +68,7 @@ class InterestGroupsMixin:
     def _technique_bans(self):
         """technique -> (name of the group, its pull) for the groups whose demand is to forbid one technique."""
         bans = {}
-        for group in self.actors.of_kind("interest_group"):
+        for group in self.actors.home_actors("interest_group"):
             record = group.record
             if record.exited_year is None and record.demands and record.technique:
                 bans[record.technique] = (record.name, record.strength)
@@ -101,7 +101,7 @@ class InterestGroupsMixin:
                                     lambda material: self._material_tag(material)[0],
                                     need_substitutes.substitutes_of)
         for subject in sorted(reached & set(banned)):
-            strength = max((group.record.strength for group in self.actors.of_kind("interest_group")
+            strength = max((group.record.strength for group in self.actors.home_actors("interest_group")
                             if group.record.subject == subject and group.record.demands and not group.record.technique),
                            default=0.0)
             return banned[subject], subject, strength

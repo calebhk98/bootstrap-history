@@ -18,7 +18,7 @@ class HomeView(BudgetView):
 		self.acting = None
 		self._sim = SimpleNamespace(
 			state=SimpleNamespace(seats=seats, acting_seat="founder"),
-			actors=SimpleNamespace(state=SimpleNamespace(home_country=HOME), active_firms=lambda: []),
+			actors=SimpleNamespace(state=SimpleNamespace(home_country=HOME), active_firms=lambda: [], country_of=lambda actor: HOME, country_of_tile=lambda tile: None),
 			household=None, playing_seats=lambda: playing, act_as=self._act_as, revenue=lambda: SEAT_INCOME[self.acting])
 
 	@contextlib.contextmanager
@@ -45,7 +45,7 @@ check("a foreign state's seats are the ones the same rule selects for that count
 
 # firms: a firm belongs to the country its record names (none is the game's own), whatever tile it stands on
 def firm(country, margin):
-	return SimpleNamespace(record=SimpleNamespace(country=country, last_margin=margin))
+	return SimpleNamespace(record=SimpleNamespace(country=country, last_margin=margin, business=SimpleNamespace(plants=[])))
 
 
 def country_of(actor):

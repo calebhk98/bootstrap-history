@@ -19,6 +19,7 @@ ProductionMixin is composed into EconomyMixin (economy.py) alongside the
 other economy sub-mixins; see that file for the composition and for the
 grouping evidence, and for why this lives in a separate file.
 """
+from sim.agents.api import patronage
 from .bondage_workshop_rules import workshop_craft_wages, workshop_output_value
 from .concern_earnings import ledger_row, output_market_factor, takings_at
 from .data import trade_family
@@ -67,17 +68,41 @@ class ProductionMixin:
         """What a patron state would give the founder in a year if its treasury could spare it."""
         if not self.running_with_mechanic("state_funding"):
             return 0.0
-        return (self.STATE_FUNDING_BASE * self.real_output_per_head() * self.state_reach()
-                * self.pop_scale ** self.STATE_FUNDING_POP_SCALE_EXPONENT
-                * (1.0 + max(0.0, self.state.governance.gov) / self.STATE_FUNDING_GOV_QUALITY_SCALE)
-                * self.rep_factor())
+        return patronage.ask(self.STATE_FUNDING_BASE, self.real_output_per_head(), self.state_reach(), self.pop_scale,
+                             self.STATE_FUNDING_POP_SCALE_EXPONENT, self.state.governance.gov,
+                             self.STATE_FUNDING_GOV_QUALITY_SCALE, self.rep_factor())
+
+    def patron_clients(self, country):
+        """(seat id, governance, reputation factor) of the playing seats of `country` whose techniques run the
+        `state_funding` mechanic: the clients its state is asked to fund (a seat with no country is the home country's)."""
+        home = str(self.civ.get("id"))
+        clients = []
+        for seat_id in self.playing_seats():
+            if (self.state.seats[seat_id].country or home) != country:
+                continue
+            with self.act_as(seat_id):
+                if self.running_with_mechanic("state_funding"):
+                    clients.append((seat_id, max(0.0, self.state.governance.gov), self.rep_factor()))
+        return clients
 
     def state_funding(self):
         """What the treasury has paid the founder this year; the government decides it
-        (Government.pay_patron) from its purse after its standing need."""
+        (Government.pay_patron) from its purse after its standing need. A seat of another country is paid by that
+        country's state, its grant shared among the seats that state funds."""
         state = self.state.actors
-        record = None if state is None else state.records.get("government:" + str(self.civ.get("id")))
-        return 0.0 if record is None else record.patron_grant
+        if state is None:
+            return 0.0
+        home = str(self.civ.get("id"))
+        acting = self.state.acting_seat
+        seat = self.state.seats.get(acting)
+        country = (None if seat is None else seat.country) or home
+        record = state.records.get("government:" + country)
+        if record is None:
+            return 0.0
+        if country == home:
+            return record.patron_grant
+        clients = self.patron_clients(country)
+        return record.patron_grant / len(clients) if any(seat_id == acting for seat_id, _gov, _rep in clients) else 0.0
 
     def venture_ramp(self, node_id):
         """How much of its full takings a concern is making, 0..1.

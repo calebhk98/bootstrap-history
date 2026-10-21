@@ -84,9 +84,9 @@ class Business:
 		return None if plant is None else plant.margin
 
 	# ---- changing -----------------------------------------------------------
-	def open_plant(self, entry_key: str, year: Optional[int]) -> Plant:
-		"""Begin running a plant of the entry from `year`; a plant already running is restarted from `year`,
-		and a mothballed one is brought back with its size and age."""
+	def open_plant(self, entry_key: str, year: Optional[int], tile: Optional[str] = None) -> Plant:
+		"""Begin running a plant of the entry from `year` on `tile` (where its owner is when none is given); a plant
+		already running is restarted from `year`, and a mothballed one is brought back with its size and age."""
 		plant = self._by_key.get(entry_key)
 		if plant is not None and plant.state == MOTHBALLED:
 			self.restore(entry_key)
@@ -94,7 +94,7 @@ class Business:
 		if plant is not None:
 			plant.opened_year = year
 			return plant
-		plant = Plant(entry_key=entry_key, opened_year=year)
+		plant = Plant(entry_key=entry_key, opened_year=year, tile=tile)
 		self.plants.append(plant)
 		self._by_key[entry_key] = plant
 		self._changed()

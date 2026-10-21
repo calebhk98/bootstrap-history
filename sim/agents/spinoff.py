@@ -135,7 +135,7 @@ def _found_rival(registry: Any, world: Any, parent: Any, node_id: str, pool: Lis
 	else:
 		pool[0] -= own
 		ledger.transfer(registry.state.edge(EDGE_POOLED_CAPITAL), firm, own, EDGE_POOLED_CAPITAL)
-	firm.business.open_plant(node_id, world.year)
+	firm.business.open_plant(node_id, world.year, tile)
 	return firm_id
 
 

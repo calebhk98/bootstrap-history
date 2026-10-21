@@ -18,7 +18,7 @@ from sim.economy.api import (EDGE_EXTERNAL, EDGE_LEGACY, AgentOrders, Economy, G
                              YearInputs, expected_output_prices, external_orders, live_input_prices, live_wages,
                              trade_premium, variable_cost_per_run)
 
-from . import trade_duty, economy_port_bondage, economy_port_levy, economy_port_actors, economy_port_cargo, economy_port_cropland, economy_port_institutions, economy_port_land, economy_port_late, economy_port_seats, economy_port_sites, externalities, material_capacity, solve_cache
+from . import country_trade_years, trade_duty, economy_port_bondage, economy_port_levy, economy_port_actors, economy_port_cargo, economy_port_cropland, economy_port_institutions, economy_port_land, economy_port_late, economy_port_seats, economy_port_sites, externalities, material_capacity, solve_cache
 from .economy_port_key import spin_up_key
 from .economy_port_coin import priced_at_the_margin
 from .economy_port_setup import build_setup, opening_values
@@ -234,7 +234,7 @@ class AgentEconomy(TilePricesMixin):
         self._settle_actor_trade(sales, purchases)
         self._settle_seats()
         self._sim.settle_trader_cargo(economy_port_cargo.close_cargo_accounts(economy, legs, tonnes_per_unit))
-        self._settle_foreign_coin()
+        self._note_off_map_trade(*self._settle_foreign_coin())
         self._answers = None
         self._country_answers = {}
         self._floor_costs = {}
@@ -477,7 +477,7 @@ class AgentEconomy(TilePricesMixin):
         sim, economy = self._sim, self._economy
         partners = sim.foreign_economies()
         if not partners:
-            return
+            return 0.0, 0.0
         coin = economy.setup.coin_per_unit
         paid_in = economy_api.external_trade_net(economy)            # exports less imports
         volume = economy_api.external_trade_volume(economy)
@@ -492,6 +492,13 @@ class AgentEconomy(TilePricesMixin):
                 sim._settle_flow(partner, 1.0, imports / len(partners), per_partner_coin)
             if exports > 0.0:
                 sim._settle_flow(partner, -1.0, exports / len(partners), per_partner_coin)
+        return imports, exports
+
+    def _note_off_map_trade(self, imports, exports):
+        """The year's trade over the external edge goes into the book of the country whose tile the port stands on."""
+        setup = self._economy.setup
+        country_trade_years.note(self.stored.setdefault("country_trade_by_year", {}), setup.country_of(setup.port_tile),
+                                 self._sim.state.scenario.year, imports, exports)
 
     def _settle_seats(self):
         """What each seat's goods fetched goes back to the engine; what did not sell goes back too."""
@@ -771,7 +778,9 @@ class AgentEconomy(TilePricesMixin):
         if country == economy.setup.civ_id or country not in economy.setup.countries():
             return None
         from .economy_port_country import CountryAnswers
-        answers = CountryAnswers(economy, country)
+        year = self._sim.state.scenario.year
+        book = self.stored.get("country_trade_by_year", {})
+        answers = CountryAnswers(economy, country, lambda direction: country_trade_years.value(book, country, year - 1, direction))
         return answers if answers.has_labour_market() else None
 
     def land_rent_per_hectare(self):

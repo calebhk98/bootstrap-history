@@ -33,8 +33,8 @@ def pay(trade):
 check("a site costs its hectares at the country's rent per hectare", rent_of_site(HECTARES, COUNTRY_RENT) == HECTARES * COUNTRY_RENT)
 check("a country that let no land has no rent for a site (None)", rent_of_site(HECTARES, None) is None)
 check("a ramped-up concern takes the book figure at the country's cost scale and market factor",
-	  gross_at_country_prices(BOOK_TAKINGS, COST_SCALE, 1.25, False) == BOOK_TAKINGS * COST_SCALE * 1.25)
-check("a concern in a goods category has no takings in a country (None)", gross_at_country_prices(BOOK_TAKINGS, COST_SCALE, 1.0, True) is None)
+	  gross_at_country_prices(BOOK_TAKINGS, COST_SCALE, 1.25, False, 1.0) == BOOK_TAKINGS * COST_SCALE * 1.25)
+check("a concern in a goods category has no takings in a country (None)", gross_at_country_prices(BOOK_TAKINGS, COST_SCALE, 1.0, True, 1.0) is None)
 check("a plant's yearly costs are the book upkeep at the cost scale and the crew's pay in the country",
 	  costs_at_country_prices(BOOK_UPKEEP, STAFF, COST_SCALE, SPAN, pay) == (BOOK_UPKEEP * COST_SCALE, 2.0 * 14.0 + 3.0 * 10.0))
 check("a crew with a trade the country pays nothing for has no costs (None)",
