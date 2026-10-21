@@ -12,8 +12,8 @@ from typing import Dict, List, Mapping, Tuple
 
 from sim.constants import declare
 
-from . import currency, goods_market, opening_basket, opening_income, opening_metal, opening_runs, households, households_store, labour_state, location, location_inputs, mint, opening_stores, ownership, sites, titles, unit_cost
 from .household_work_year import basket_key, cohort_basket
+from . import carriage_fleet_book, currency, goods_market, opening_basket, opening_income, opening_metal, opening_runs, households, households_store, labour_state, location, location_inputs, mint, opening_stores, ownership, sites, titles, unit_cost
 from .accounts import Book
 from .market_areas import AreaMap
 from .market_memory import MarketMemory, YearView, market_key
@@ -71,6 +71,7 @@ def _open(setup: EconomySetup, replacement: float) -> Tuple[EconomyRecord, AreaM
     opening_runs.fit_to_supply(setup, record)
     _stock_producers_with_inputs(setup, record)
     _open_merchants(setup, record, priced_goods, final_by_tile)
+    carriage_fleet_book.endow(setup, record, carriage, priced_goods, final_by_tile)
     _strike_opening_cash(setup, record)
     record.workforce = labour_state.opening_workforce(setup, record)   # the mint's capacity follows the money struck
     mint.seed_opening_metal(setup, record)

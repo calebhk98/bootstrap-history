@@ -7,7 +7,7 @@ import os
 import unittest
 from unittest import mock
 
-from sim.economy import carriage_wear, economy
+from sim.economy import carriage_fleet_book, carriage_wear, economy
 from sim.economy.accounts import DeliveredMove
 from sim.economy.merchants import Merchant
 from sim.economy.types import GoodSpec, Recipe
@@ -127,23 +127,25 @@ class CarriageWearsCarriers(unittest.TestCase):
         self.assertGreater(first["wear"][agent][CART], 0.0)
         self.assertGreaterEqual(first["held_after"][agent], 0.0)
 
-    def test_carriers_held_lose_the_units_worn_up_to_what_they_hold(self):
+    def test_a_carrier_with_a_life_is_not_used_up_by_the_haul_it_ages_with_the_fleet(self):
+        # dispatch moves what was bought into the carrier account and takes nothing off it; wear_and_spoilage ages it
         for year in self.years:
-            for agent, wear in year["wear"].items():
-                arrived = year["held_before"][agent] + year["bought"][agent]
-                self.assertAlmostEqual(year["held_after"][agent], max(0.0, arrived - wear.get(CART, 0.0)), places=9)
+            for agent in year["wear"]:
+                self.assertAlmostEqual(year["held_after"][agent], year["held_before"][agent] + year["bought"][agent], places=9)
 
     def test_carriage_creates_demand_for_the_carrier_good(self):
         bought = [year for year in self.years if any(units > 0.0 for units in year["bought"].values())]
         self.assertTrue(bought, "merchants never bought a cart")
         self.assertGreater(sum(outcome.output.get(CART, 0.0) for outcome in self.outcomes), 0.0)
 
-    def test_a_merchant_bids_for_the_units_last_year_wore(self):
+    def test_a_merchant_bids_for_the_fleet_its_routes_call_for_less_what_it_holds(self):
         record = self.economy.record
         merchant = next(each for each in record.merchants.values())
-        merchant.carrier_wear = {CART: 0.5}
+        held = carriage_fleet_book.held(record.book, merchant.agent_id, [CART])[CART]
+        merchant.carrier_wear = {}
+        merchant.carrier_fleet_wanted = {CART: (held + 0.5) / self.setup.specs[CART].service_life_years}
         view = self.economy.view()
-        bids, budget = carriage_wear.bids(self.setup, record, view, self.economy.area_map)
+        bids, budget = carriage_fleet_book.bids(self.setup, record, view, self.economy.area_map)
         mine = [bid for bid in bids if bid.buyer == merchant.agent_id and bid.good == CART]
         self.assertEqual(len(mine), 1)
         self.assertAlmostEqual(mine[0].floor_quantity, 0.5)

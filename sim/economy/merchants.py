@@ -28,7 +28,7 @@ from typing import Callable, Dict, List, Mapping, Optional, Sequence, Tuple
 
 from sim.constants import declare
 
-from . import inventory, merchants_nearest, merchants_route_memo, merchants_transit
+from . import carriage_fleet, inventory, merchants_nearest, merchants_route_memo, merchants_transit
 from .accounts import DeliveredMove
 from .households_orders import BUDGET_SAFETY_SHARE
 from .market_areas import AreaMap
@@ -82,6 +82,7 @@ class Merchant:
     carriage_money_wanted: Dict[str, float] = field(default_factory=dict)   # the carriage money those hours stand for, by the same key: the most an hour is worth to it
     carrier_wear: Dict[str, float] = field(default_factory=dict)   # carrier units its shipments wore last year, by good (carriage_wear): this year's bid for carriers
     carrier_team_days: Dict[str, float] = field(default_factory=dict)   # team-days its shipments worked last year, by carriage mode
+    carrier_fleet_wanted: Dict[str, float] = field(default_factory=dict)   # wear a year its routes' stock called for last year, less what it hired, by carrier good (carriage_fleet): the fleet it bids to hold
     in_transit: List[merchants_transit.Shipment] = field(default_factory=list)   # hauls still on the road (their goods wait in the transit account)
     price_history: Dict[Tuple[GoodId, AreaId], List[float]] = field(default_factory=dict)   # prices of distant markets that news has not yet reached it, newest last
 
@@ -108,6 +109,7 @@ class Dispatch:
     stranded: Tuple[Tuple[GoodId, TileId, float], ...]     # (good, tile, quantity) it could not pay or find carriers to carry
     crew_hours_wanted: Dict[str, float] = field(default_factory=dict)   # by crew key, before any cut for want of carriers
     crew_money_wanted: Dict[str, float] = field(default_factory=dict)   # the carriage money those hours stand for, by crew key
+    fleet_wanted: Dict[str, float] = field(default_factory=dict)   # wear a year the routes' stock called for, by carrier good, before any cut for want of carriers
 
 
 def within_purse(transfers: Sequence[Transfer], balance: float) -> Tuple[Transfer, ...]:
@@ -382,7 +384,8 @@ def dispatch(merchant: Merchant, fills: Sequence[Fill], carriage: CarriageTable,
              carrier_of: Callable[[TileId], Optional[AgentId]] = lambda _tile: EDGE_CARRIAGE,
              crew: Optional[CrewHire] = None,
              carrier_money: Optional[Callable[[TileId, TileId], float]] = None,
-             margin_kept: bool = False) -> Dispatch:
+             margin_kept: bool = False,
+             fleet: Optional[carriage_fleet.FleetLimit] = None) -> Dispatch:
     """Carry what the merchant holds on each route's source tile (this year's purchases and older stock)
     to the route's destination, paying carriage from `cash` to `carrier_of(source tile)` (the edge when
     it names nobody). `fills` are not needed: what settled is what is held.
@@ -392,8 +395,12 @@ def dispatch(merchant: Merchant, fills: Sequence[Fill], carriage: CarriageTable,
     (what the carriers a tonne wears and the animals eat cost) the merchant buys them in the goods market, so the
     fee is paid less that too. With `margin_kept` the rest of the fee (the carriers' interest, their losses and
     the margin) stays with the merchant that owns the carriers and is paid to nobody; only crew pay owed for
-    hours not yet hired (the first year of shipping, which has no plan) still goes to `carrier_of`, as before."""
+    hours not yet hired (the first year of shipping, which has no plan) still goes to `carrier_of`, as before.
+    With `fleet`, routes also share the carriers the merchant holds or hired: a route carries no more tonnes than
+    the wear its scarcest carrier good has left allows, in route order."""
     shipments = []
+    spare = None if fleet is None else dict(fleet.capacity)
+    fleet_wanted: Dict[str, float] = {}
     remaining = max(0.0, cash)
     wanted: Dict[str, float] = {}
     worth: Dict[str, float] = {}
@@ -414,6 +421,13 @@ def dispatch(merchant: Merchant, fills: Sequence[Fill], carriage: CarriageTable,
                 hours * crew.market_wage(key) for key, hours in crew_rows)
             payout_unit = min(payout_unit, unhired)
         affordable = quantity if payout_unit <= 0.0 else min(quantity, remaining / payout_unit)
+        if fleet is not None and tonnes_per_unit > 0.0:
+            wear_per_tonne = fleet.units_per_tonne(tile, route[0])
+            for carrier, units in wear_per_tonne.items():
+                fleet_wanted[carrier] = fleet_wanted.get(carrier, 0.0) + quantity * tonnes_per_unit * units
+            affordable = min(affordable, carriage_fleet.tonnes_within(spare, wear_per_tonne) / tonnes_per_unit)
+            for carrier in spare:
+                spare[carrier] -= affordable * tonnes_per_unit * wear_per_tonne.get(carrier, 0.0)
         route_hours = math.fsum(hours for _key, hours in crew_rows)
         gain = per_unit
         if crew is not None and crew_rows:      # what an hour is worth is the haul's gain once the fee's other parts (feed, carts, animals, tolls) are paid
@@ -452,7 +466,7 @@ def dispatch(merchant: Merchant, fills: Sequence[Fill], carriage: CarriageTable,
         if fee > 0.0:
             transfers.append(Transfer(merchant.agent_id, carrier_of(tile) or EDGE_CARRIAGE, currency, fee,
                                       "carriage of %s" % good))
-    return Dispatch(tuple(moves), within_purse(transfers, cash), tuple(stranded), wanted, worth)
+    return Dispatch(tuple(moves), within_purse(transfers, cash), tuple(stranded), wanted, worth, fleet_wanted)
 
 
 def close_year(merchant: Merchant, prices: Mapping[Tuple[GoodId, AreaId], float],

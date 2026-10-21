@@ -9,7 +9,7 @@ import dataclasses
 import math
 from typing import Dict, List, Tuple
 
-from . import (carriage_wear, goods_market, households, market_curves, market_quote, merchants, producers, seller_cash, seller_offers, settlement,
+from . import (carriage_fleet_book, carriage_wear, goods_market, households, market_curves, market_quote, merchants, producers, seller_cash, seller_offers, settlement,
                state_budget, state_store, taxes, tool_wear, unsold_search)
 from .household_work_year import basket_key, cohort_basket
 from .market_memory import market_key
@@ -94,7 +94,7 @@ def merchant_orders(setup, record, view, area_map, carriage, order_book: OrderBo
     rate = view.interest_rate(money)
     shares = merchants.RouteShares()
     ordered = sorted(record.merchants.values(), key=lambda each: each.agent_id)
-    carrier_bids, carrier_budget = (carriage_wear.bids(setup, record, view, area_map,
+    carrier_bids, carrier_budget = (carriage_fleet_book.bids(setup, record, view, area_map,
                                                        {each.agent_id: record.book.balance(each.agent_id, money) for each in ordered})
                                     if carriage_wear.wears(setup) else ([], {}))
     add_orders(order_book, AgentOrders(bids=tuple(carrier_bids)))     # replacements for the carriers last year's shipments wore
