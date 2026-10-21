@@ -1,6 +1,7 @@
-# Tin is cheaper than copper because cassiterite has no deposit stock
+# Complaint 511 history: tin against copper, updates 1 to 7 and the skill-premia source note
 
-**Status:** partly - recipe mass balance fixed; aged-game price falls below the labour that digs it, tracked by 507 stage 7 (unsold asks)
+Moved out of the complaint so it states only the current problem. Measurements are as taken on the branches and dates named; re-measure before relying on them.
+
 
 Split from 502. The recipe `cassiterite_kg` (`data/production/20_nonferrous.json`) costs a few miner and
 labourer hours a tonne and carries nothing for the scarcity of the deposit, while copper's ore recipe carries a
