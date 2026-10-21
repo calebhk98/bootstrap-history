@@ -39,3 +39,9 @@ it is a mod (`mods/TASKS.md`).
 
 Cooking, cleaning and childcare hours per person (time-use studies for pre-industrial or subsistence households), which
 replace the labelled estimates in `data/world/household_work.json`.
+
+## Update: household work shares the choice
+
+Household work's own hours and the hours kept for the plot are the same kind of choice (an hour at home against the wage).
+`Economy._shortfall_hours` keeps the larger of the plan and the plot choice, then adds household work. The fixture has no
+household-work data, so only the plot side is exercised there; leisure is not modelled.

@@ -60,3 +60,8 @@ plant as the default so saving has a user.
 
 **Direction (2026-10-20).** With 606's sourced wealth figures, the opening's households should hold their wealth
 mostly as land titles; the leak closes by giving saving that asset (538, 551) before any change to the wish.
+
+## Update: not deleted
+
+`opening_income_per_head` is still used by the engine's opening and by `surplus_game_openings`; deleting it waits for the
+opening to seed its wage and runs from `opening_stationary` (473 Update 7). The stationary fixture states no income.

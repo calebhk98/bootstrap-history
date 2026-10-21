@@ -23,3 +23,10 @@ unhired hours are those the market has no demand for, because producers sized at
 sales and cut runs to work it off (see 473, "where the unhired hours are"). A higher opening wage would only rescale
 prices, as the rescaling branch showed. The test this complaint asks for (year-one clearing wage near the opening wage)
 needs the opening's final demand to agree with the own-plot growing of year one (545) first.
+
+## Update: hours offered by choice (473 Update 7)
+
+With households choosing hours against their plot (`households_hours_offered.py`) and the fixture's hours equal to
+hired plus kept, the stationary fixture's year-one wage moves by 3 per cent (not a third). The stated fixture still
+clears at the survival wage: it has no plot or household work to use the hours. The opening wage is still the cost
+table's; seeding it where hours offered equal hours hired is not done.
