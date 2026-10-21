@@ -6,9 +6,10 @@ Private producers in the agent economy are capacity-limited by plant, inputs and
 (`sim/economy/producers*.py`, `entry_sizing.py`), and recipes carry hard chemical inputs
 (`data/production/`, `data/material_gating.json`). The state does not use that machinery:
 
-- **No ships.** The navy is a wage line from coast length (`sim/agents/budget_lines.py`,
-  `COAST_KM_PER_SHIP`). A state cannot commission warships, so funding cannot be refused for lack of
-  timber, shipwrights or a yard, and there are no wrecks or replacements.
+- **Ships (built since):** the navy line buys counted warships through the goods market from shipwright producers
+  (`sim/agents/budget_lines.navy_line`, `data/production/99_ships.json`, `sim/agents/NAVY.md`, PR #59); delivered hulls wear
+  through the durable stock. Left: crew pay is sized to the target fleet, not to the hulls held, so sailors are paid for ships
+  not yet built; merchant fleets and route ownership are 629's.
 - **State works are masonry.** `sim/agents/state_works.py` keeps square metres of walls and buildings with
   labour-only upkeep. Schools, telegraphs and machinery are not stocks with a service life and the staff
   they need each year.

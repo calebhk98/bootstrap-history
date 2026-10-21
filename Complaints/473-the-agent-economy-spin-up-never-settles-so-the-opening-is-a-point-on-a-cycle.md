@@ -315,3 +315,13 @@ stays a reported statistic (outcome, trace, cohorts' cash target comparison). No
 good's full opening quantity, so a sliver-trade good still weighs fully in the median; the cohorts' reservation wages and survival
 wage were not found to use the index. Whether the late explosion goes away needs the 60-year Rome trace
 (`python3 sim/simulator.py spin-up-trace --civ rome_100ad --years 60`), not run here.
+
+## Measured (2026-10-21, 60-year Rome trace at 5306f780: after the chained price level, Update 9)
+
+Output: `Complaints/reports/473-trace-5306f780.txt`. The late runaway is gone: the wage stays within a narrow band from the
+fourth decade on (it had run to thousands of times its opening), hired hours hold steady for the whole run, and the rate stays
+below its old ceiling. The fixed-basket price level (now a reported statistic only, read by nothing that sets a wage or a
+target) still wanders over an order of magnitude and more, carried by thin goods' remembered asks (decomposition at 9eb35921).
+Left for the settling check: the fixed-basket level's wander (drop thin goods' asks from it, or weight by what traded), the
+rate's year-to-year steps against `settling_report`'s bound, and the slow baseline validations (`baseline_rome_full_length`,
+`spin_up_money_supply_full_length`, `baseline_fixture`, `real_output_baseline`) re-run on this head.
