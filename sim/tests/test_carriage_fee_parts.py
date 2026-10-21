@@ -5,7 +5,7 @@ import dataclasses
 import unittest
 from unittest import mock
 
-from sim.economy import carriage_hours, carriage_wear, economy, merchants, money_audit
+from sim.economy import carriage_fleet_book, carriage_hours, carriage_wear, economy, merchants, money_audit
 from sim.economy.types import Fill
 from sim.tests import economy_fixture as fixture
 from sim.tests import test_carriage_wear as wear_fixture
@@ -102,7 +102,7 @@ class FeedCrewAndCartsAreBought(unittest.TestCase):
         record = self.economy.record
         merchant = next(iter(record.merchants.values()))
         merchant.carrier_wear = {FEED_GOOD: 3.0}
-        bids, budget = carriage_wear.bids(self.setup, record, self.economy.view(), self.economy.area_map)
+        bids, budget = carriage_fleet_book.bids(self.setup, record, self.economy.view(), self.economy.area_map)
         mine = [bid for bid in bids if bid.buyer == merchant.agent_id and bid.good == FEED_GOOD]
         self.assertEqual(len(mine), 1)
         self.assertAlmostEqual(mine[0].floor_quantity, 3.0)

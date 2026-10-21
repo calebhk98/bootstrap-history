@@ -6,7 +6,7 @@ from typing import Dict, Tuple
 from sim.geography.api import flow_ledger
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
-from . import (tax_farming, merchants_transit, carriage_hours, carriage_wear, currency, expansion_price, households, inventory, merchants, metal_stock, ownership, producer_exit, shares,
+from . import (carriage_fleet_book, tax_farming, merchants_transit, carriage_hours, carriage_wear, currency, expansion_price, households, inventory, merchants, metal_stock, ownership, producer_exit, shares,
                producers, producers_close, state_budget, tariffs, taxes)
 from .households_cohort import renewed
 from .market_memory import market_key
@@ -42,13 +42,22 @@ def dispatch_merchants(setup, record, carriage, ledger: YearLedger, area_map) ->
     wear = carriage_wear.Wear(setup, carriage, record.area_imbalance) if carriage_wear.wears(setup) else None
     for merchant in sorted(record.merchants.values(), key=lambda each: each.agent_id):
         record.book.move_many(merchants_transit.advance(merchant, setup.specs))    # hauls on the road for years reach the tile or spoil
+    lives = carriage_fleet_book.fleet_lives(setup) if wear is not None else {}
+    own_capacity, hired, lent = {}, {}, {}
+    if lives:     # a merchant carries no more than its fleet bears; idle fleets are hired out to those short of one
+        for merchant in record.merchants.values():
+            carriage_fleet_book.keep(merchant, record.book, carrier_goods)
+            own_capacity[merchant.agent_id] = carriage_fleet_book.own_capacity(record.book, merchant.agent_id, lives)
+        needed = {merchant.agent_id: carriage_fleet_book.wear_needed(
+            merchant, _held_stock(record.book, merchant.agent_id), setup.specs, wear, lives) for merchant in record.merchants.values()}
+        hired, lent = carriage_fleet_book.share_idle(own_capacity, needed)
     for merchant in sorted(record.merchants.values(), key=lambda each: each.agent_id):
         fills = ledger.buy_fills.get(merchant.agent_id, [])
         if not fills:
             if crew is not None:
                 merchant.carriage_hours_wanted = {}     # nothing shipped: no carriers to bid for next year
                 merchant.carriage_money_wanted = {}
-            if wear is not None:
+            if wear is not None:     # its fleet's wanted size stands: it may ship again
                 merchant.carrier_wear, merchant.carrier_team_days = {}, {}
                 carriage_wear.settle(merchant, record.book, carrier_goods, {})
             continue
@@ -68,7 +77,9 @@ def dispatch_merchants(setup, record, carriage, ledger: YearLedger, area_map) ->
                                   carrier_money=None if wear is None else (
                                       lambda source, destination, each=merchant: carriage_wear.money_per_tonne(
                                           prices, wear, source, destination)),
-                                  margin_kept=wear is not None)
+                                  margin_kept=wear is not None,
+                                  fleet=carriage_fleet_book.limit_for(wear, own_capacity[merchant.agent_id], hired.get(merchant.agent_id, {}))
+                                  if lives else None)
         record.book.post(done.transfers, done.moves)
         ledger.note_postings(done.transfers, "wages")
         if crew is not None:
@@ -76,7 +87,16 @@ def dispatch_merchants(setup, record, carriage, ledger: YearLedger, area_map) ->
             merchant.carriage_money_wanted = done.crew_money_wanted
         if wear is not None:
             merchant.carrier_wear, merchant.carrier_team_days = carriage_wear.exposure(wear, done.moves, setup.specs)
-            carriage_wear.settle(merchant, record.book, carrier_goods, merchant.carrier_wear)
+            carriage_wear.settle(merchant, record.book, carrier_goods,
+                                 {good: units for good, units in merchant.carrier_wear.items() if good not in lives})
+            if lives:
+                merchant.carrier_fleet_wanted = {good: max(0.0, units - hired.get(merchant.agent_id, {}).get(good, 0.0))
+                                                 for good, units in done.fleet_wanted.items()}
+                rent = carriage_fleet_book.rent_transfers(
+                    merchant.agent_id, hired.get(merchant.agent_id, {}), merchant.carrier_wear,
+                    own_capacity[merchant.agent_id], lent, prices, money, record.book.balance(merchant.agent_id, money))
+                record.book.transfer_many(rent)
+                ledger.note_postings(rent)
         for move in done.moves:
             flow_ledger.record_flow(carried, move.tile, move.receiver_tile,
                                     move.quantity * setup.specs[move.good].unit_mass_kg / KILOGRAMS_PER_TONNE)
@@ -147,7 +167,8 @@ def wear_and_spoilage(setup, record, durable_users=()) -> None:
                 if quantity > 0.0:
                     holdings[(agent, good, tile)] = quantity
     book.move_many(inventory.spoilage_moves(holdings, setup.specs))
-    book.move_many(inventory.wear_moves(holdings, setup.specs, set(record.cohorts) | set(durable_users)))
+    fleets = {carriage_wear.account(merchant_id) for merchant_id in record.merchants}     # carriers age in the merchants' fleets
+    book.move_many(inventory.wear_moves(holdings, setup.specs, set(record.cohorts) | set(durable_users) | fleets))
     cash = {agent: book.balance(agent, record.currency.currency_id) for agent in book.agents() if not is_edge(agent)}
     book.transfer_many(metal_stock.yearly_wear(cash, record.currency))
 
