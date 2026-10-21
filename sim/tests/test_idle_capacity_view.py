@@ -16,6 +16,7 @@ check("when every project only waits on the calendar the explanation says the wa
 _mixed = wait_explanation({"calendar": ["a"], "money": ["b", "c"]})
 check("when something waits on more than the calendar the explanation says so and names each kind with its count",
       "not only the calendar" in _mixed and "money (2)" in _mixed and "calendar (1)" in _mixed, _mixed)
+# presentation: the explanation is wording a player reads
 check("with nothing running nothing is waited on and the hours are free",
       "nothing is running" in wait_explanation({}), wait_explanation({}))
 check("the delay phrase lists kinds in order with counts", delay_phrase({"money": ["x"], "calendar": ["a", "b"]}) == "calendar (2), money (1)",

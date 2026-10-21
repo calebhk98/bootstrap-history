@@ -1,4 +1,5 @@
-"""Hiring, training and commissioning a trade; wage pricing and its
+"""Scenario (Complaint 640: these are the player-facing commands and the yearly staff phases reached on one game; the
+price-pressure rules are in test_labour_market_town_pricing). Hiring, training and commissioning a trade; wage pricing and its
 forecast; the founder's own practice income; and a dead founder's effect on
 all of it.
 """
@@ -61,7 +62,7 @@ _base_quote = _ask(household, "labour", trade="millwright")["trade"]["a_year_of_
 for _ in range(6):
     household.labour.hire("millwright", 3)
 _dear = _ask(household, "labour", trade="millwright")["trade"]
-check("leaning on a trade shows up in its quoted price, not only in the bill",
+check("leaning on a trade shows up in the labour reply's quoted price, not only in the bill",
       _dear["a_year_of_one"] > _base_quote, (_base_quote, _dear["a_year_of_one"]))
 check("...and says why, and what brings it back down",
       _dear.get("dearer_than_usual_by") and "supply" in (_dear.get("because") or ""), _dear.get("because"))

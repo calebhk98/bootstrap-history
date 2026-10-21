@@ -18,6 +18,7 @@ check("only oversubscribed trades get a teaching suggestion", [row["trade"] for 
 check("the people short are the shortfall in hours over a person's year, rounded up", _rows[0]["people_short"] == 2, _rows[0])
 check("a shortfall of a single hour still asks for one person", _rows[1]["people_short"] == 1, _rows[1])
 check("the teaching hours are the people times the hours teaching one takes", _rows[0]["teaching_hours"] == 600.0, _rows[0])
+# presentation: the suggested command is the line a player types
 check("the command is the train command for that trade and number", _rows[0]["command"] == "train machinist 2", _rows[0])
 check("no oversubscribed trade, no suggestion", training_suggestions(_game, []) == [])
 
