@@ -8,6 +8,7 @@ from unittest import mock
 from .harness import *  # noqa: F401,F403
 from .harness import _mk_loom_sim
 from sim.engine.data import closure as _closure
+from sim.engine import revenue_ledger
 from sim.refusal import cause_of, facts_of
 from sim.ui.proto.typed import parse_typed
 from .agent_command_helpers import ask_agent
@@ -197,8 +198,11 @@ _quote = _book.venture_real_earnings(_NODE)
 _itemised_again = ask_agent(_book, cmd="money")["where_the_money_comes_from"]
 ask_agent(_book, cmd="step", years=1)
 _booked_again = ask_agent(_book, cmd="money")["cash_book"]["earlier_years"][-1]["causes"].get("venture revenue")
-check("scenario cash book: a running concern's forecast is within the year's price change of its takings",
-      abs(_itemised_again[_NODE] - _quote) < 0.11 and abs(_booked_again - sum(_itemised_again.values())) < 0.2,
+# the revenue's saturating ceiling lowers the total a little below the sum of the parts; the ledger pushes a gap it does
+# not show (at most GAP_SHOWN_ABOVE) into its largest row, so the row sits below the quote by no more than that
+check("scenario cash book: a running concern's forecast is within the year's price change of its takings, the ledger "
+      "residue aside",
+      0.0 <= _quote - _itemised_again[_NODE] <= revenue_ledger.GAP_SHOWN_ABOVE and abs(_booked_again - sum(_itemised_again.values())) < 0.2,
       (_quote, _itemised_again, _booked_again))
 
 

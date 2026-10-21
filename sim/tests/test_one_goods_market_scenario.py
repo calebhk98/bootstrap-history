@@ -17,16 +17,21 @@ def closing_ratio(game, material=MATERIAL):
     return game.market_state(material)["price_ratio_if_year_closed_now"]
 
 
-# --- the founder's own stock sale is entered in the same book, under his name, and lowers the price
+# --- the founder's own stock sale is entered in the same book, under his name. Whether it lowers the price is the rule
+# tested in test_one_goods_market; this opening's iron price sits at the producers' floor, where a sale cannot lower it
+# and instead displaces the society's producers.
 control = sim(civ="rome_100ad", capital=1e9)
 tonnes = control.market_state(MATERIAL)["capacity_tonnes"] * 0.05
 selling = sim(civ="rome_100ad", capital=1e9)
 selling._material_stock()[MATERIAL] = tonnes
 sold = selling.sell_material_stock(MATERIAL, tonnes)
-check("the founder's own stock sale is entered in the same book under his name, and lowers the price",
+check("the founder's own stock sale is entered in the same book under his name, and displaces the producers' sales "
+      "at a price that cannot fall below their floor",
       sold > 0 and abs(selling.goods_market.sold_tonnes(MATERIAL, selling.goods_market.acting_party_id) - sold) < 1e-9
       and selling.goods_market.others_sold_tonnes(MATERIAL) == 0.0
-      and closing_ratio(selling) < closing_ratio(control),
+      and selling.market_state(MATERIAL)["price_ratio_if_year_closed_now"] >= selling.market_state(MATERIAL)["floor_ratio"]
+      and abs(selling.market_state(MATERIAL)["displaced_by_founder_tonnes"] - sold) < 1e-3 * sold
+      and closing_ratio(selling) <= closing_ratio(control) * (1.0 + 1e-6),    # solver tolerance
       (sold, closing_ratio(selling), closing_ratio(control)))
 
 # --- firm output is supply in the book

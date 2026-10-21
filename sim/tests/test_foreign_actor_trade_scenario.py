@@ -167,6 +167,9 @@ check("...a quarter more cargo than the last year's would not pay at the prices 
       pays(taken_from_home[-1]) and not pays(taken_from_home[-1] * 1.25), taken_from_home)
 check("...and cargo taken from home raises the home price the trader pays", home_price_after > home_price,
       (home_price_after, home_price))
-check("...and no longer swings from year to year",
+# Open, no complaint yet (proposed in the report of this branch): at the floor the society's idle output is carried as
+# stock, the next year's stock sells below every producer's cost and clears the book, and the year after the price is
+# back at the floor, so the partner's price alternates (sim/world/market.py clear_market and stock_after_year).
+check("...and no longer swings from year to year (OPEN: the clearing's stock carry makes a two-year cycle, so this is red)",
       all(abs(later / earlier - 1.0) < 0.01 for earlier, later in zip(partner_prices[1:], partner_prices[2:])),
       partner_prices)
