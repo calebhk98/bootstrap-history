@@ -27,6 +27,17 @@ AGENT_KEYED_FIELDS = ("cohorts", "producers", "merchants", "remembered_defaults"
                       "expansion_runs", "worn_runs", "titles", "bondage", "lent_by_borrower", "credit_granted", "banks", "shares",
                       "last_dividends")
 
+# the stores `to_record` writes sorted by key, and so a load reads back in that order
+SAVED_SORTED_FIELDS = ("cohorts", "producers", "merchants", "titles", "tenancies", "bondage", "tax_history", "banks", "shares",
+                       "last_dividends", "ways", "carried")
+
+
+def _seat_sorted(store: Dict[Any, Any]) -> None:
+    if list(store) != sorted(store):
+        held = [(key, store[key]) for key in sorted(store)]
+        store.clear()
+        store.update(held)
+
 
 @dataclass
 class EconomyRecord:
@@ -94,6 +105,14 @@ class EconomyRecord:
         for name in AGENT_KEYED_FIELDS:
             setattr(self, name, rekey(getattr(self, name), old, new))
         self.loan_requests = rekey(self.loan_requests, old, new)
+
+    def sort_in_saved_order(self) -> None:
+        """Re-seat the keyed stores the save writes in id order, in place, so a live game iterates them as a loaded one does."""
+        for name in SAVED_SORTED_FIELDS:
+            _seat_sorted(getattr(self, name))
+            for inner in getattr(self, name).values():
+                if isinstance(inner, dict):
+                    _seat_sorted(inner)
 
     def to_record(self, skip_currencies=()) -> Dict[str, Any]:
         """The record as plain data; money in `skip_currencies` (another owner's currency in the shared book) is left out."""
