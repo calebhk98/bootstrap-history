@@ -63,6 +63,21 @@ def tool_stock_per_worker(registry: Mapping[str, Mapping[str, Any]], trade: str)
     return {good: float(units) for good, units in stock.items() if good in basket and units > 0.0}
 
 
+def tool_order(registry: Mapping[str, Mapping[str, Any]], trade: str) -> Tuple[str, ...]:
+    """The trade's tool goods that carry a stock, in basket order: the first is the tool its workers keep, each
+    later one is drawn when the one before it is short."""
+    stock = tool_stock_per_worker(registry, trade)
+    return tuple(good for good in tool_basket(registry, trade) if good in stock)
+
+
+def tool_hours_factors(registry: Mapping[str, Mapping[str, Any]], trade: str) -> Tuple[Dict[str, float], float]:
+    """(hours per run factor by tool good, factor working by hand) for a trade: how much longer a run takes
+    with that tool in place of the first, and with none. A good or case the data does not state is 1.0."""
+    fields = registry.get(trade, {})
+    by_good = {good: max(1.0, float(factor)) for good, factor in (fields.get("tool_hours_factor") or {}).items()}
+    return by_good, max(1.0, float(fields.get("tool_hours_factor_by_hand", 1.0)))
+
+
 def tool_draw(registry: Mapping[str, Mapping[str, Any]], trade: str, workers: float,
               service_life_years: Mapping[str, float]) -> Dict[str, Dict[str, float]]:
     """What `workers` of the trade hold and wear: {good: {"stock": units in use, "wear_per_year": units worn out a year}}.

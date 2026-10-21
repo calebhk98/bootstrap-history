@@ -6,6 +6,11 @@
       "confidence": "D",
       "source": "LABELLED HEURISTIC, no source found for the working life of an iron farm tool before wear, breakage or loss replaces it; retire: Complaints/533."
     },
+    "wooden_tools_kg": {
+      "years": 2,
+      "confidence": "D",
+      "source": "LABELLED HEURISTIC, no source found for the working life of a wooden hoe, spade or rake before wear or breakage; taken as half an iron tool's, since wood wears and splits faster than iron; retire: Complaint 659."
+    },
     "brick_1000": {
       "years": 80,
       "confidence": "D",

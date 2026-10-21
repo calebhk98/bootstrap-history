@@ -8,30 +8,71 @@ durable (`tool_bids`): it buys what wore out and what is short of the stock the 
 names a good or a trade.
 """
 import dataclasses
-from typing import Dict, Iterable, List, Mapping
+import math
+from typing import Dict, Iterable, List, Mapping, Optional, Sequence, Tuple
 
-from .types import Bid, GoodId, GoodSpec, Recipe, TradeId
+from .types import Bid, GoodId, GoodSpec, Recipe, ToolFallback, TradeId
 
 TOOL_BID_PRICE_MARGIN = 0.25      # budget set aside above last year's price, as for a household's floors
 
 WearPerHour = Mapping[TradeId, Mapping[GoodId, float]]
 
 
-def with_tool_wear(recipe: Recipe, wear_per_hour: WearPerHour, makeable: Iterable[GoodId]) -> Recipe:
+def with_tool_wear(recipe: Recipe, wear_per_hour: WearPerHour, makeable: Iterable[GoodId],
+                   order: Optional[Mapping[TradeId, Sequence[GoodId]]] = None,
+                   hours_factors: Optional[Mapping[TradeId, Tuple[Mapping[GoodId, float], float]]] = None) -> Recipe:
     """`recipe` with the tools its hired hours wear added to its inputs (and listed in `tool_wear`). A tool
-    nothing in the society makes is not charged, and a recipe never wears the tool it makes."""
+    nothing in the society makes is not charged, and a recipe never wears the tool it makes. With `order` (a
+    trade's tool goods, first choice first) a trade wears the first it can have made; the later ones it can have
+    made are the recipe's `tool_fallbacks` for that tool, each with the extra hours it asks, and then working by
+    hand. `hours_factors` is {trade: (hours factor by tool good, hours factor by hand)}. Without `order` every
+    good with a wear is its own tool."""
     makeable = frozenset(makeable)
+    hours_factors = hours_factors or {}
     wear: Dict[GoodId, float] = {}
+    backups: Dict[GoodId, Dict[GoodId, List[Tuple[float, float, TradeId]]]] = {}
+    by_hand: Dict[GoodId, List[Tuple[float, float, TradeId]]] = {}
     for trade, hours in recipe.labour_hours.items():
-        for good, per_hour in wear_per_hour.get(trade, {}).items():
-            if per_hour > 0.0 and good in makeable and good not in recipe.outputs:
-                wear[good] = wear.get(good, 0.0) + hours * per_hour
+        rates = wear_per_hour.get(trade, {})
+        goods = [good for good in (order.get(trade, ()) if order is not None else sorted(rates)) if good in makeable]
+        if order is None:
+            goods = [good for good in goods if rates.get(good, 0.0) > 0.0]
+            chain = [[good] for good in goods]
+        else:
+            chain = [goods] if goods else []
+        for tools in chain:
+            first = tools[0]
+            if rates.get(first, 0.0) <= 0.0 or first in recipe.outputs:
+                continue
+            wear[first] = wear.get(first, 0.0) + hours * rates[first]
+            factor_by_good, factor_by_hand = hours_factors.get(trade, ({}, 1.0))
+            for later in tools[1:]:
+                if rates.get(later, 0.0) > 0.0 and later not in recipe.outputs:
+                    backups.setdefault(first, {}).setdefault(later, []).append(
+                        (hours * rates[later], factor_by_good.get(later, 1.0), trade))
+            by_hand.setdefault(first, []).append((hours, factor_by_hand, trade))
     if not wear:
         return recipe
     inputs = dict(recipe.inputs)
     for good, quantity in wear.items():
         inputs[good] = inputs.get(good, 0.0) + quantity
-    return dataclasses.replace(recipe, inputs=inputs, tool_wear=wear)
+    fallbacks = {}
+    for first in wear:
+        rows = [_fallback(later, rows_of, recipe) for later, rows_of in backups.get(first, {}).items()]
+        if order is not None:
+            rows.append(_fallback("", [(hours, factor, trade) for hours, factor, trade in by_hand[first]], recipe, by_hand=True))
+        fallbacks[first] = tuple(rows)
+    return dataclasses.replace(recipe, inputs=inputs, tool_wear=wear, tool_fallbacks=fallbacks if order is not None else {})
+
+
+def _fallback(good: GoodId, rows: List[Tuple[float, float, TradeId]], recipe: Recipe, by_hand: bool = False) -> ToolFallback:
+    """One fallback tier: units a run (by hand draws none), and the hours factor of the trades that wear the tool,
+    weighted by their hours."""
+    trades = tuple(sorted({trade for _quantity, _factor, trade in rows}))
+    hours = math.fsum(recipe.labour_hours[trade] for trade in trades)
+    factor = math.fsum(recipe.labour_hours[trade] * factor for _quantity, factor, trade in rows) / hours if hours > 0.0 else 1.0
+    units = 0.0 if by_hand else math.fsum(quantity for quantity, _factor, _trade in rows)
+    return ToolFallback(good, units, factor, trades)
 
 
 def tool_stock_wanted(recipe: Recipe, hours: float, specs: Mapping[GoodId, GoodSpec]) -> Dict[GoodId, float]:

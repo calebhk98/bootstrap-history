@@ -56,3 +56,11 @@ business to improve. It also hides the crafts from the non-farm need shares (530
 - **Own-plot households.** `own_production_options` accepts a recipe whose only inputs are tool wear. A household's own-plot hours are recorded by recipe (`YearLedger.own_plot_hours`), and `cohort_orders` (`sim/economy/year_goods.py`) adds `tool_bids`: the stock those hours keep in use, less what it holds after this year's wear (the durable rule), paid from its cash before its other goods. The tools it holds wear as any cohort durable.
 - **Left out.** Employers do not hold a tool stock, only buy the yearly wear (a flow). A household's first year buys the whole stock. A society with no recipe for the tool charges none.
 - **Tests.** `sim/tests/test_complaint_533_stage_two_tool_wear.py`. Not run, being whole-game: `python3 sim/simulator.py economy-check`, and the shipped openings (`openings/`) are likely to need recomputing (`openings`, `opening-checks`).
+
+## Done (tool shortage, Complaint 659)
+
+A tool is no longer a hard input. A trade's `tool_basket` names alternatives in order (`wooden_tools_kg` after
+`iron_tools_kg` for the farmer), a short tool is replaced by the next one with its own hours per run, and then by hand;
+a recipe is never zeroed by a tool shortage alone (`Recipe.tool_fallbacks`, `Recipe.hard_inputs`,
+`sim/economy/tool_fallback.py`). The opening no longer cuts users of a deposit-bound tool. The stage 2 note "Left out"
+still holds: employers hold no tool stock. See Complaints/659 for the measurements.

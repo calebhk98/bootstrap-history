@@ -8,7 +8,7 @@ the rest is made by the next cheapest.
 import math
 from typing import Dict, List, Mapping, Optional, Tuple
 
-from . import sites, unit_cost
+from . import sites, tool_fallback, unit_cost
 from .replaced import replaced
 from .setup import recipe_tile_key
 from .types import GoodId, Recipe, TileId
@@ -121,7 +121,7 @@ def run_ceilings(recipes: Mapping[str, Recipe], by_limits) -> Dict[str, float]:
                 continue                              # something unlimited also makes it
             supply = math.fsum(ceilings[maker] * recipes[maker].outputs[good] for maker in makers_of)
             for recipe_id, recipe in recipes.items():
-                needed = recipe.inputs.get(good, 0.0)
+                needed = recipe.hard_inputs.get(good, 0.0)
                 if needed > 0.0 and ceilings.get(recipe_id, math.inf) > supply / needed * (1.0 + 1e-12):
                     ceilings[recipe_id] = supply / needed
                     changed = True
@@ -154,6 +154,7 @@ def required_runs(final_by_tile, ranked: Mapping[GoodId, List[str]], recipes: Ma
     runs: Dict[str, float] = {}
     for _ in range(INPUT_OUTPUT_PASSES):
         required = required_quantities(final_by_tile, runs, recipes)
+        tool_fallback.shift_unmet_tools(required, runs, recipes, ranked, ceilings)
         updated: Dict[str, float] = {}
         for good, quantity in sorted(required.items()):
             remaining = quantity
@@ -206,7 +207,7 @@ def limited_goods(recipes: Mapping[str, Recipe], by_limits) -> set:
             if good in limited:
                 continue
             if all(sites.is_sited(recipes[maker], by_limits)
-                   or any(used in limited for used in list(recipes[maker].inputs) + list(recipes[maker].plant_goods))
+                   or any(used in limited for used in list(recipes[maker].hard_inputs) + list(recipes[maker].plant_goods))
                    for maker in makers_of):
                 limited.add(good)
                 changed = True
@@ -229,7 +230,7 @@ def fit_to_supply(setup, record) -> None:
             users = []
             for producer_id, producer in sorted(record.producers.items()):
                 recipe = setup.recipes[producer.recipe_id]
-                used = recipe.inputs.get(good, 0.0)
+                used = recipe.hard_inputs.get(good, 0.0)
                 if recipe.plant_life_years > 0.0:
                     used += recipe.plant_goods.get(good, 0.0) / recipe.plant_life_years
                 if used > 0.0 and not sites.is_sited(recipe, by_limits):

@@ -5,6 +5,7 @@ tested alone. Quantities are in the good's own unit (a `*_kg` good is counted in
 the currency named beside it. Nothing here names a particular good, trade, place or currency.
 """
 import math
+from functools import cached_property
 from dataclasses import dataclass, field
 from typing import Mapping, Optional, Tuple
 
@@ -100,6 +101,16 @@ class MarketArea:
 
 
 @dataclass(frozen=True)
+class ToolFallback:
+    """What a worker does when the tool a recipe's wear names is short: draw `good` instead (`units_per_run` a
+    run), or work by hand when `good` is empty. The hours of `trades` go up by `hours_factor` on the runs it covers."""
+    good: GoodId
+    units_per_run: float
+    hours_factor: float
+    trades: Tuple[TradeId, ...] = ()
+
+
+@dataclass(frozen=True)
 class Recipe:
     """One way to make goods: per run, what goes in and what comes out. Data, never engine nodes."""
     recipe_id: str
@@ -112,6 +123,15 @@ class Recipe:
     climate_classes: Tuple[str, ...] = ()   # climates it can be worked in, from data; empty: any
     site_bound: bool = False         # runs only where a site is declared (sites.py); the economy knows nothing else of it
     tool_wear: Mapping[GoodId, float] = field(default_factory=dict)   # per run: the part of `inputs` that is its workers' tools wearing out
+    tool_fallbacks: Mapping[GoodId, Tuple[ToolFallback, ...]] = field(default_factory=dict)   # per wear good: what is drawn, in order, when it is short
+
+    @cached_property
+    def hard_inputs(self) -> Mapping[GoodId, float]:
+        """`inputs` without the tools' wear: what a run cannot go ahead without. A short tool never stops a run."""
+        if not self.tool_wear:
+            return self.inputs
+        rest = {good: quantity - self.tool_wear.get(good, 0.0) for good, quantity in self.inputs.items()}
+        return {good: quantity for good, quantity in rest.items() if quantity > 1e-12 * max(1.0, self.inputs[good])}
 
 
 @dataclass(frozen=True)

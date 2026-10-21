@@ -7,7 +7,7 @@
 
   "empire_output_100ad": {
     "_note": "What the whole Roman economy produces annually at its peak. Your programme is a rounding error against these until it is not, and the moment it stops being one is the moment you start bidding up prices against the army and the mints.",
-    "iron":     {"t_per_yr": 82500, "conf": "C", "source": "commonly cited estimate for total imperial output, from slag volumes"},
+    "iron":     {"t_per_yr": 82500, "conf": "C", "source": "Poehler, van Roggen and Crowther, The Iron Streets of Pompeii (2019), n. 3, read at https://gwern.net/doc/technology/2019-poehler.pdf : \"Craddock (2008, 108) reports the annual iron output of the Roman Empire was 82,500 tons, but see Sim (2011, 22-3) for other estimates.\" Craddock's own derivation was not opened."},
     "lead":     {"t_per_yr": 80000, "conf": "C", "source": "ice-core lead deposition peaks in the Roman period at levels not matched again until the industrial revolution"},
     "copper":   {"t_per_yr": 15000, "conf": "C"},
     "tin":      {"t_per_yr": 2000,  "conf": "C", "note": "Cornwall and Iberia. The scarcest of the common metals and the reason bronze is expensive."},

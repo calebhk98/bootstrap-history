@@ -1,0 +1,17 @@
+{
+ "_note": "Wooden farm tools: hoes, spades, rakes and forks cut and shaped from seasoned timber. The tool a farm worker draws when iron tools are short (data/world/trades.json tool_basket order). Every figure is a labelled heuristic with a retire field naming Complaint 659; no source was opened.",
+ "materials": {
+  "wooden_tools_kg": {
+   "outputs": {"wooden_tools_kg": 1000.0},
+   "inputs": {"wood_kg": 3000.0},
+   "labour_hours": {"carpenter": 2000.0},
+   "unit_dimension": "mass",
+   "unit_mass_kg": 1.0,
+   "basis": "per tonne of finished wooden farm tools (hoes, spades, rakes, forks, sickle handles), counted by the mass of the tools",
+   "yield_basis": "LABELLED HEURISTIC (conf D), no source found for the timber a tonne of wooden tools takes nor for the carpenter hours. Hewing a blade or tine from a log wastes most of it and green wood is part water, so a tonne of tools is taken to start as three tonnes of green roundwood (wood_kg); shaping each tool by axe, adze and knife is taken as about two hours a kilogram (author's estimate; retire: Complaint 659). Needs no technology.",
+   "retire": "Complaint 659",
+   "conf": "D",
+   "requires_node": null
+  }
+ }
+}

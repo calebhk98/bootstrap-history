@@ -60,6 +60,6 @@ def sized_runs(recipe: Recipe, good: GoodId, runs_by_gap: float, whole_gap_runs:
         if volume <= 0.0:
             market_runs = max(trial_runs, market_runs)
     supply_runs = min((_runs_supported(traded(input_good, tile if works_at is None else works_at), per_run, trial_runs)
-                       for needs in (recipe.inputs, recipe.plant_goods) for input_good, per_run in needs.items()),
+                       for needs in (recipe.hard_inputs, recipe.plant_goods) for input_good, per_run in needs.items()),
                       default=math.inf)
     return min(runs_by_gap, market_runs, supply_runs)

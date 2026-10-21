@@ -19,6 +19,7 @@ from .market_memory import MarketMemory, YearView, market_key
 from .merchants import Merchant
 from .producers import Producer
 from .producers_close import working_capital_target
+from .replaced import replaced
 from .record import EconomyRecord
 from .setup import EconomySetup, labour_area, recipe_tile_key
 from .tile_costs import CarriageTable
@@ -323,14 +324,20 @@ def _add_producers(setup, record, recipe, capacity_by_tile, input_demand, by_lim
     working_share = opening_income.working_share(recipe, setup.opening_prices, setup.opening_wages)
     for tile, capacity in capacity_by_tile.items():
         producer_id = "producer:" + recipe_tile_key(recipe.recipe_id, tile)
-        if capacity <= 0.0 or producer_id in record.producers or not _has_people(record, tile):
+        if capacity <= 0.0 or not _has_people(record, tile):
             continue
-        record.producers[producer_id] = Producer(
-            agent_id=producer_id, owner=households.cohort_id(tile, _richest_class(record, tile)),
-            recipe_id=recipe.recipe_id, tile=tile, capacity_runs=capacity / working_share,
-            expected_sales=capacity / (1.0 + OPENING_SPARE_CAPACITY_SHARE),
-            yield_factor=sites.yield_at(recipe, tile, by_limits, setup.yield_factor_by_recipe_tile.get(
-                recipe_tile_key(recipe.recipe_id, tile), 1.0)))     # a crop recipe is sized at its tile's yield; the engine adds the weather each year
+        held = record.producers.get(producer_id)
+        if held is not None:      # a second share of the runs on the same tile (a pooled area's) adds to the producer
+            record.producers[producer_id] = replaced(
+                held, capacity_runs=held.capacity_runs + capacity / working_share,
+                expected_sales=held.expected_sales + capacity / (1.0 + OPENING_SPARE_CAPACITY_SHARE))
+        else:
+            record.producers[producer_id] = Producer(
+                agent_id=producer_id, owner=households.cohort_id(tile, _richest_class(record, tile)),
+                recipe_id=recipe.recipe_id, tile=tile, capacity_runs=capacity / working_share,
+                expected_sales=capacity / (1.0 + OPENING_SPARE_CAPACITY_SHARE),
+                yield_factor=sites.yield_at(recipe, tile, by_limits, setup.yield_factor_by_recipe_tile.get(
+                    recipe_tile_key(recipe.recipe_id, tile), 1.0)))     # a crop recipe is sized at its tile's yield; the engine adds the weather each year
         wanted = input_demand.setdefault(tile, {})
         for good, quantity in recipe.inputs.items():
             wanted[good] = wanted.get(good, 0.0) + capacity * quantity

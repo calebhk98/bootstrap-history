@@ -257,15 +257,18 @@ def build_setup(sim, opening=None, production=None):
 
 def tool_wear_recipes(recipes, trades_data, life_years, hours_per_worker_year):
     """The recipes with the tools their hired hours wear out added as inputs: each trade's basket and stock
-    (data/world/trades.json) over the goods' service lives, per hour a worker works. A tool no recipe makes is
-    left out."""
-    wear_per_hour = {}
+    (data/world/trades.json) over the goods' service lives, per hour a worker works. The first basket good a
+    recipe in the society makes is the tool; the later ones are what a short supply falls back to, and then
+    working by hand (each with its hours factor in the data). A tool no recipe makes is left out."""
+    wear_per_hour, order, factors = {}, {}, {}
     for trade in sorted(trades_data):
         draw = labour_api.tool_draw(trades_data, trade, 1.0, life_years)
         if draw:
             wear_per_hour[trade] = {good: row["wear_per_year"] / hours_per_worker_year for good, row in draw.items()}
+            order[trade] = labour_api.tool_order(trades_data, trade)
+            factors[trade] = labour_api.tool_hours_factors(trades_data, trade)
     makeable = {good for recipe in recipes.values() for good in recipe.outputs}
-    return {recipe_id: with_tool_wear(recipe, wear_per_hour, makeable) for recipe_id, recipe in recipes.items()}
+    return {recipe_id: with_tool_wear(recipe, wear_per_hour, makeable, order, factors) for recipe_id, recipe in recipes.items()}
 
 
 def cropland_yields(production, recipes, tiles):
