@@ -15,6 +15,7 @@ from sim.world.shared_constants import (
     ANNUAL_LABOUR_HOURS_PER_FARM_WORKER, FALLOW_SHARE_OF_HOLDING)
 from sim.world.farm_labour import REFERENCE_LABOUR_HOURS_PER_HECTARE
 
+from .colony_rules import advance_colony, founding_refusal
 from .units_prose import money_text, plain_number
 
 # land one farm worker holds, fallow included: the hours a worker gives a year over the hours a cropped hectare takes
@@ -48,20 +49,23 @@ class ColoniesMixin:
     def found_colony(self, tile_id):
         """(ok, text): found a colony on `tile_id`."""
         household = self.state.household
-        if self.tile_owner(tile_id) is not None:
-            return False, "that tile is already held"
         by_land = tile_id in self.settlement_candidates(False)
-        if not by_land and tile_id not in self.settlement_candidates(True):
-            return False, "no settlers can reach that tile from what you hold; `settle` lists the tiles they can"
+        by_sea = tile_id in self.settlement_candidates(True)
         chosen = self.settlement_spec(by_sea=not by_land)
-        if chosen is None:
-            return False, ("you know no way to send settlers%s" % ("" if by_land else " across the sea"))
-        node_id, spec = chosen
-        settlers = float(spec["settlers"])
-        if self.population.working_age < 10.0 * settlers:
+        node_id, spec = chosen if chosen else (None, None)
+        settlers = float(spec["settlers"]) if spec else 0.0
+        cost = self.settlement_outfit_cost(spec) if spec else 0.0
+        cause = founding_refusal(self.tile_owner(tile_id) is not None, by_land, by_sea, chosen is not None,
+                                 self.population.working_age, settlers, cost, self.spending_power("buy"))
+        if cause == "tile_held":
+            return False, "that tile is already held"
+        if cause == "unreachable":
+            return False, "no settlers can reach that tile from what you hold; `settle` lists the tiles they can"
+        if cause == "no_settlement_work":
+            return False, "you know no way to send settlers%s" % ("" if by_land else " across the sea")
+        if cause == "too_few_people":
             return False, "the country has too few people of working age to spare %s settlers" % plain_number(settlers)
-        cost = self.settlement_outfit_cost(spec)
-        if cost > self.spending_power("buy"):
+        if cause == "cannot_afford":
             return False, "outfitting %s settlers costs %s, more than you can raise" % (
                 plain_number(settlers), money_text(cost, self, grouped=True))
         self.pay_edge(edges.EDGE_BUILDERS, cost, "outfitting a settlement")
@@ -90,11 +94,9 @@ class ColoniesMixin:
         burden = self._disease_burden()
         for seat_id, seat in self.state.seats.items():
             for colony in list(seat.holdings.colonies):
-                people = self._demography.Population(colony["children"], colony["working_age"], colony["elderly"])
-                food = settlement.worked_kcal_per_day(colony["tile"], people.working_age * HOLDING_HECTARES_PER_WORKER)
-                people.step(food, jitter=False, disease_burden=burden)
-                colony.update(children=people.children, working_age=people.working_age, elderly=people.elderly)
-                if people.total < 1.0:
+                tile = colony["tile"]
+                if advance_colony(colony, lambda hands: settlement.worked_kcal_per_day(tile, hands * HOLDING_HECTARES_PER_WORKER),
+                                  self._demography.Population, burden):
                     seat.holdings.colonies.remove(colony)
                     self.transfer_tile(colony["tile"], None, cause="colony died out")
                     if seat_id == self.state.acting_seat:

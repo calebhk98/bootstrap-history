@@ -1,5 +1,5 @@
 """SCENARIO (Complaint 190): settled colonies (owned territory with a people of its own on the tile map) in a whole game:
-founding, what stops a colony, its people over the years, save and load, and the `settle` and `colonies` commands. The
+founding, its people over the years, save and load, and the `settle` and `colonies` commands. Wiring only: the refusals and the yearly step are in test_colony_rules. The
 light and amusement needs and the typed lines are in test_complaint_190_colonies."""
 from .harness import *  # noqa: F401,F403
 from sim.refusal import cause_of
@@ -53,16 +53,6 @@ check("the log says where", any(tile in line for _year, line in game.state.house
 check("the colonies listing shows its people and what its land could feed",
       game.colony_rows()[0]["people"] == spec["settlers"] and game.colony_rows()[0]["most_the_land_feeds"] > 0, game.colony_rows())
 
-# ---- what stops a colony ----------------------------------------------------------------------------------------
-nobody = unopened_sim(capital=1.0e12)
-check("without a way to send settlers nothing is founded", not nobody.found_colony(reachable[0])[0], nobody.found_colony(reachable[0]))
-thin = chartered()
-thin.population.working_age = 100.0
-check("a country with too few people to spare refuses", not thin.found_colony(reachable[0])[0])
-poor = chartered(capital=1000.0)
-check("a household that cannot raise the outfit refuses", not poor.found_colony(reachable[0])[0]
-      and poor.state.holdings.colonies == [], poor.state.holdings.colonies)
-
 # ---- the people of a colony ---------------------------------------------------------------------------------------
 growing = chartered()
 growing.found_colony(reachable[0])
@@ -71,8 +61,6 @@ for year in range(40):
     growing.advance_colonies(growing.state.scenario.year + year)
 grown = people(growing.state.holdings.colonies[0])
 check("a colony on good land grows by the same births and deaths as the home country's people", grown > 2 * start, (start, grown))
-check("it ages into children and elders as well as workers",
-      growing.state.holdings.colonies[0]["children"] > 0 and growing.state.holdings.colonies[0]["elderly"] > 0)
 
 capacity = settlement.capacity_kcal_per_day(reachable[0])
 check("with no hands to work the land there is no food",
