@@ -135,8 +135,10 @@ Each item names the code that holds it (re-measure before acting; `grep` the nam
   changes every civilisation's opening prices, so it is its own step.
 - **Irrigation as a work** that silts up or needs clearing labour: river strips are still free and permanent
   (`food_irrigation_*` in `data/world/geography/parameters/food.json`). Silt now feeds the nitrogen stock, but a canal's upkeep does not exist.
-- The Norse opening saturates the labour split (the farm share of hours reads at its ceiling): most of its tiles yield next to nothing and its flat
-  wet ground is heavy. Measure with `opening_farm.py` as given in the report; it was already high before this round.
+- Norse opening: a first version closed heavy ground to the ard outright and pinned the labour split (the best Swedish tile lost a fifth of its
+  ground). The arable share is the ground the reference ard ploughs (`soil_reference_tillage_capacity`), so the ard loses nothing, a heavier
+  toolkit opens heavy ground beyond it and a lighter one less (`food_crops._tillable_scale`); `test_norse_opening_scenario`. Norse is still poor in crops
+  (most tiles yield next to nothing); pasture, dairy and fishing are not read by the crop-only farm path.
 
 ## Done: tile weather, the hand hoe and tillage (this round)
 

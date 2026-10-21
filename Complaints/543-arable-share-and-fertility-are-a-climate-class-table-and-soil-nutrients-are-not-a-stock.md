@@ -81,6 +81,9 @@ soils resist tillage until the tool and team can pull hard enough.
 - The draught herd's dung is the cattle species row's data (`manure_share_of_live_weight_per_day`, `manure_collected_share`); the two invented constants are deleted.
   The free-spread rule is still transitional (`FREE_MANURE_SPREAD_SHARE`, retire: this complaint).
 
+- Open question: the rainforest-against-savanna check (`test_geography_food_gaps`) is an expected failure. Derived savanna fertility sits near the
+  Mediterranean reference because the rule has no weathering age; an opened lecture says tropical soils in general are leached and unproductive.
+
 ## Left
 
 - **Manure bought by farms.** No crop recipe takes `manure_kg` or `nightsoil_kg` as an input, and a recipe's yield is fixed per run, so a bought input

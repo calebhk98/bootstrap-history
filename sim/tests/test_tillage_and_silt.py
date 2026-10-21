@@ -4,7 +4,8 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.geography import soil_nitrogen, soil_nutrients, tile_layers
+from sim.geography import food_land, soil_nitrogen, soil_nutrients, tile_layers
+from sim.geography.parameters import parameter
 from sim.geography.api import crop_site, open_map
 from sim.world import agriculture, agriculture_tile, farming_technique
 
@@ -30,8 +31,20 @@ class TillageTests(unittest.TestCase):
         heavy = tile_layers.number(self.world_map, self.heavy_tile, "heavy_soil_share", 0.0)
         self.assertGreater(full.arable_hectares, ard.arable_hectares)
         self.assertGreater(ard.arable_hectares, none.arable_hectares)
-        self.assertAlmostEqual(none.arable_hectares, full.arable_hectares * (1.0 - heavy), delta=1e-6 * full.arable_hectares)
+        reference = 1.0 - heavy * (1.0 - agriculture.ARD_TILLAGE_CAPACITY)
+        self.assertAlmostEqual(none.arable_hectares, full.arable_hectares * (1.0 - heavy) / 1.0, delta=1e-6 * full.arable_hectares)
+        self.assertAlmostEqual(full.arable_hectares / ard.arable_hectares, 1.0 / reference, places=6)
         self.assertGreater(full.cropped_hectares, ard.cropped_hectares)
+
+    def test_the_reference_toolkit_ploughs_exactly_the_arable_share(self):
+        # The arable share is set at the ard of the old table's era: the ard (and the hoe, equally able) lose nothing to heavy ground.
+        for tile_id in (self.heavy_tile, "sweden_01"):
+            site = crop_site(tile_id, SHARE, self.world_map, tillage_capacity=agriculture.ARD_TILLAGE_CAPACITY)
+            self.assertAlmostEqual(site.arable_hectares, food_land.arable_hectares(self.world_map, tile_id), delta=1e-6 * site.arable_hectares)
+
+    def test_the_geography_reference_capacity_is_the_ards(self):
+        self.assertEqual(parameter(self.world_map, "soil_reference_tillage_capacity"), agriculture.ARD_TILLAGE_CAPACITY)
+        self.assertEqual(agriculture.HAND_HOE.tillage_capacity, agriculture.ARD_TILLAGE_CAPACITY)
 
     def test_a_tile_with_no_heavy_ground_does_not_care_about_the_toolkit(self):
         light = next(tile_id for tile_id in sorted(self.world_map.tiles)
