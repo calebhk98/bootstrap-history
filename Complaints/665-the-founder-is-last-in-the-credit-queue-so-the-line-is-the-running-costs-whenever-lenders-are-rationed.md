@@ -1,6 +1,6 @@
 # The founder is last in the credit queue, so the line is only the running costs whenever lenders are rationed
 
-**Status:** fixed in part: items 1 to 3 changed (see Changes); the rate and the founder's line in a full-length game are not re-measured
+**Status:** partly - items 1 to 3 changed (see Changes); in a full-length game the founder now has a credit line, but the market rate sits at the lenders' ceiling (641)
 
 **What was wrong.** A founder is an actor, and "every mechanism usable by any actor" (CLAUDE.md section 2) needs its credit
 request to enter the same clearing as everyone's. It did not: `credit.clear` served it from the remainder, which was zero
@@ -29,8 +29,8 @@ an initial condition of the scenario, not a modelled outcome; the kit size was n
 
 ## What is left
 
-- Re-measure in a full-length game (no short spin-up): the founder's line
-  (`printf '{"cmd":"state"}\n' | python3 sim/simulator.py agent --civ rome_100ad`), the market rate, and the largest request
-  per lending (a spy on `credit.clear`). The orchestrator's measurement is pending; do not change the status before it.
+- Measured: Measured 2026-10-21 on main 3cb9c9a0, an opened Rome game with the full spin-up: from a checkout root, `from sim.tests import harness; import os; os.environ.pop("ROME_SPIN_UP_YEARS", None); game = harness.sim(capital=1e7)`, then the reads named below. `game.credit_limit()` is positive (the line is no longer the running costs alone), and
+  `record.memory.rates` reads the lenders' ceiling. The founder can borrow, at the ceiling rate; what holds the rate there
+  is 641's. The largest request per lending was not measured (a spy on `credit.clear`).
 - Firms and the state via purses are unchanged (state deficit requests already join the clearing).
 - Related: 641 (the rate sat high because lenders' funds were exhausted).

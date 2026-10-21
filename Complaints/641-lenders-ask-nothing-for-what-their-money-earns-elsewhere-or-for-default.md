@@ -29,9 +29,10 @@ sides would agree to.
   whole loss share. `RATE_FLOOR_SHARE` (capital_market) is a separate typed floor that this does not retire.
 - The opening rate in the default game reads at the lenders' ceiling, and at that rate `NicheEntry.found` rejected every
   concern tried, so no firm entered in the default game. Two causes were fixed (665: an idle plant's request for more
-  plant, and the lender reserve never held), and seats' credit lines now join `credit.clear`. The cleared rate was not
-  re-measured in a full-length game: `game.economy._answering_agent().economy().record.memory.rates` on a default Rome game
-  (the orchestrator's measurement is pending). A default game in which no firm can ever enter is a defect, not a setting;
+  plant, and the lender reserve never held), and seats' credit lines now join `credit.clear`. Measured after those: Measured 2026-10-21 on main 3cb9c9a0, an opened Rome game with the full spin-up: from a checkout root, `from sim.tests import harness; import os; os.environ.pop("ROME_SPIN_UP_YEARS", None); game = harness.sim(capital=1e7)`, then the reads named below. `game.economy._answering_agent().economy().record.memory.rates` still reads
+  the lenders' ceiling, so the 665 fixes did not bring it down. Which rule holds it there is being diagnosed with rule tests
+  (the candidates: demand above funds at every lower rate, the lowest ask itself reaching the ceiling through loss memory or
+  an expected inflation read off a runaway price index, or the ceiling clamping a rate with no clearing point). A default game in which no firm can ever enter is a defect, not a setting;
   `test_firm_entry_default_game_scenario` checks placement without a founding.
 
 **What it would take.** Feed the two alternatives (titles at a price, a state bond reachable by households), re-measure the

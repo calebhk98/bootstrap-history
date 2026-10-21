@@ -1,6 +1,6 @@
 # An opened Rome game holds almost no smiths, so smith work is refused for want of people
 
-**Status:** fixed on main (the fix is merged; the branch name tool-fallback-and-iron-site-room is gone); the full opened-game smith count was not re-measured: a cold spin-up does not finish inside the two-minute rule, and the orchestrator's measurement is pending
+**Status:** closed - an opened Rome game with the full spin-up holds smiths in the thousands and `start horse_collar` succeeds
 
 **What was wrong.** In an opened `rome_100ad` game the labour core's people of the smith trade read about a thousandth of a
 person, against tens of thousands in an unopened game, so `start horse_collar` was refused with cause `people_exist` ("no
@@ -28,7 +28,9 @@ Tests: `sim/tests/test_complaint_659_tool_fallback_and_site_room.py`, `test_comp
 `test_opening_workforce_follows_hours.py`. The step-by-step findings and before/after opening volumes are in
 `Complaints/reports/659-history.md`.
 
-**What is left.** Re-measure the opened-game smith count (command above), then close this complaint. Sources for the wooden
+**Measured.** Measured 2026-10-21 on main 3cb9c9a0, an opened Rome game with the full spin-up: from a checkout root, `from sim.tests import harness; import os; os.environ.pop("ROME_SPIN_UP_YEARS", None); game = harness.sim(capital=1e7)`, then the reads named below. `game.labour.national_trade_population("smith")` reads in the thousands (against about a thousandth before the fix), and `_agent_dispatch(game, NODES, {"cmd": "start", "id": "horse_collar"})` returns ok.
+
+**Left elsewhere.** Sources for the wooden
 tool: the by-hand-versus-wooden hours factor is sourced (Semyonov 1974 via Shukurov et al., `sim/tests/test_tool_hours_sourced.py`;
 see 650 and `Complaints/reports/research-stone-and-wooden-tools.md`); wood per tonne, carpenter hours, the stock per worker, the
 by-hand factor and the service life of a wooden tool are labelled heuristics with `retire` naming this complaint (no source
