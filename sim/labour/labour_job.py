@@ -5,6 +5,9 @@ Methods of Labour, split from labour_wages.py, which prices the trade and sells 
 """
 
 
+from .founder_hours import hours_free
+
+
 class StandingJobMixin:
     """Hours left to sell, and what they pay in a given trade."""
 
@@ -15,7 +18,7 @@ class StandingJobMixin:
         until a project's hours are the hours of a seat."""
         if not self._world.state.founder.founder_alive:
             return 0.0
-        return max(0.0, self.director_pool() - self.director_hours_committed())
+        return hours_free(self.director_pool(), self.director_hours_committed())
 
     def standing_job_pay(self, trade):
         """A year of the unspoken-for hours sold in `trade` at its market wage; nothing without a trade."""

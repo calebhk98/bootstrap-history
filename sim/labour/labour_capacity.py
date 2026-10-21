@@ -27,6 +27,7 @@ import math
 from sim.constants import declare
 from sim.refusal import Refusal
 from . import legacy_trade_defaults, trade_data
+from .founder_hours import hours_committed, hours_pool
 from .hire_outcome import craft_trades_report
 from .room_advice import room_advice, sources_to_build, sources_to_reopen
 from .staff_advice import staff_remedies
@@ -90,17 +91,10 @@ class CapacityMixin:
             "being a total stop.")
 
     def director_pool(self):
-        total_hours = 0.0
-        if self._world.state.founder.founder_alive:
-            own = self._world.cfg["founder_hours_per_year"]
-            # In bondage most of your hours are owed to somebody else. Not all
-            # of them: nobody worked every waking hour, and the evenings are
-            # where the work gets done. This is the cost, and it is temporary.
-            if self._world.state.household.bondage_years_left > 0:
-                own *= self.BONDAGE_HOURS_SHARE
-            total_hours += own
-        total_hours += self._world.state.household.directors_extra * self._world.cfg["director_hours_per_year"]
-        return total_hours
+        # In bondage most of your hours are owed to somebody else, not all: the evenings are where the work gets done.
+        return hours_pool(self._world.state.founder.founder_alive, self._world.cfg["founder_hours_per_year"],
+                          self._world.state.household.bondage_years_left > 0, self.BONDAGE_HOURS_SHARE,
+                          self._world.state.household.directors_extra, self._world.cfg["director_hours_per_year"])
 
     # ---- literacy bounds who you can hire ----------------------------------
     # FINDINGS_ROUND2 section Q: every civ file carries literacy_general and
@@ -883,10 +877,10 @@ class CapacityMixin:
         a free second year inside every year. There is one year, and one
         pair of hands.
         """
-        return (getattr(self._world.household, "teaching_hours_this_year", 0.0)
-                + (getattr(self._world.household, "relocation_hours_this_year", 0.0) or 0.0)
-                + (getattr(self._world.household, "supervision_hours_this_year", 0.0) or 0.0)
-                + self._world.household.wage_hours_this_year)
+        household = self._world.household
+        return hours_committed(getattr(household, "teaching_hours_this_year", 0.0),
+                               getattr(household, "relocation_hours_this_year", 0.0),
+                               getattr(household, "supervision_hours_this_year", 0.0), household.wage_hours_this_year)
 
     def household_room(self):
         """How many more people this household can feed, house and oversee.

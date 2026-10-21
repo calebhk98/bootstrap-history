@@ -21,6 +21,19 @@ def shortfalls_beyond(totals, allowances):
             for resource in sorted(totals) if totals[resource] > allowances[resource]}
 
 
+def missing_when_opened(held_totals, opening_draw, shortfalls_of):
+    """Resource -> amount short if a shut concern drawing `opening_draw` were opened beside what `held_totals` already
+    hold. A shortfall that already exists is not blamed on it, and `shortfalls_of(totals)` is the same test that decides
+    which running concerns close."""
+    totals = dict(held_totals)
+    already = shortfalls_of(totals)
+    for resource, amount in opening_draw.items():
+        totals[resource] = totals.get(resource, 0.0) + amount
+    return {resource: amount - already.get(resource, 0.0)
+            for resource, amount in shortfalls_of(totals).items()
+            if amount - already.get(resource, 0.0) > 0.005}
+
+
 def closures_for_shortfall(draws, net_value, protected, shortfalls_of):
     """The fewest running concerns, lowest net value first, whose closure covers every shortfall.
 
