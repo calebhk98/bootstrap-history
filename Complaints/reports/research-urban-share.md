@@ -121,3 +121,9 @@ Heuristics to label (4.4), each needing a `retire`: the freight-to-price cap tha
 - Rome's annual immigration need; London's "one in six" and "8,000 a year".
 - Desmet and Henderson, and any Malthusian-urbanization model beyond a title.
 - The Norse sub-period split (Viking Age against later) beyond the chapter summary.
+
+## 7. Review note
+
+A second reader opened the Cambridge Core page of Hanson and Ortman (JRA 30, doi 10.1017/S1047759400074134): it shows
+the quotation of Scheidel on the five largest cities, but not the 10 to 15 per cent empire-wide share given in section 3.
+Treat that row as a lead until the article's text (or Scheidel 2007) is opened and the page recorded.
