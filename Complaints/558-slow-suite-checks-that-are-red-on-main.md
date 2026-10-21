@@ -34,9 +34,12 @@ that commit. Re-run the same command for the current list; this section is repla
   rule (fixed).
 - `firm_borrows_to_enter_scenario`: compared against the first year's firm count, which now fills every niche at once; now
   compares against the opening's (fixed).
-- `foreign_actor_trade_scenario` ("...and no longer swings from year to year"), `one_goods_market_scenario` (the founder's own
-  stock sale lowers the price), `population_farm_technique_scenario` (a food surplus releases farm workers),
-  `scenarios_batch3` (a running concern's forecast against its takings): diagnosis in progress.
+- `one_goods_market_scenario`: asked a scenario to show a founder's sale lowering a price that sits at the producers' floor;
+  the rule test holds the price rule, the scenario keeps the wiring (fixed).
+- `scenarios_batch3`: the cash-book check ignored the ledger's own rule for a small gap from the saturating revenue ceiling
+  (fixed).
+- `population_farm_technique_scenario`: honest, 513 (a technique releases no farm hands on fully worked opening land).
+- `foreign_actor_trade_scenario` ("...and no longer swings from year to year"): honest, 672.
 - `subsistence_staple_is_civilisation_data`: expected the staple's labour to move the floor more than wheat's, but land rent is
   priced in wheat (`solve_prices.land_rent_hours_per_hectare`), so wheat's sourced labour reaches every grain; now a rule test
   of the floor schedule (fixed).
