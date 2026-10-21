@@ -59,3 +59,5 @@ as a firm is paid (`business_books.operate` with `sells_on_book`) needs the foun
 (Complaint 382) and is the remaining step under 510/514. The aggregate ceiling
 (`REVENUE_CEILING_LABOUR_HOURS_PER_POP_SCALE`) is untouched; retire it once the seat is paid from the clearing. Firm entry
 forecasts (`entry_gross`, `concern_takings` in `agents_port.py`) still read the ask: they pass no seat.
+
+The remaining step (crediting the seat from `stored["seat_takings"]`) is written out with its three parts in Complaint 514, "Progress", item 2.
