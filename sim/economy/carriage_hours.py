@@ -4,9 +4,9 @@ market before the goods move, and what is hired limits what is carried.
 A haul's hours come from the route itself: each mode it travels spends geography's physical crew hours per
 tonne-km on the tonne-km its legs cost, in that mode's trade (a sailor on water, a carter with animals, a porter on foot),
 and each change to a mode the setup prices handling for (a port) spends handling hours of the unskilled trade.
-The hours are bid at the tile the goods leave and paid that area's wage. Carts, ships and animals as capital,
-and the feed they eat, are not yet modelled here: the part of a fee that is not crew pay still goes to the
-households of the tile the goods leave (year_close).
+The hours are bid at the tile the goods leave and paid that area's wage. The carriers and the feed
+the animals eat are bought in the goods market (carriage_wear), and year_close keeps what is left of a fee with the
+merchant that owns the carriers.
 """
 import math
 from typing import Dict, List, Optional, Tuple

@@ -1,7 +1,8 @@
 """The yearly staffing check: which concerns a real shortfall of people forces shut."""
 from collections import defaultdict
 
-from .staffing_choice import (HAND_RESOURCES, closures_for_shortfall, shortfalls_beyond, staffing_allowances)
+from .staffing_choice import (HAND_RESOURCES, closures_for_shortfall, missing_when_opened, shortfalls_beyond,
+                             staffing_allowances)
 
 
 class StaffingShortfallMixin:
@@ -46,13 +47,9 @@ class StaffingShortfallMixin:
         concerns must close, so what it names is what would shut it again.
         Pass `staffing_held_totals()` to price many concerns against one walk.
         """
-        totals = defaultdict(float, self.staffing_held_totals() if held_totals is None else held_totals)
-        already = self._staffing_shortfalls(totals, strict=True)
-        for resource, amount in self._staffing_draw_of(node_id, self.reopen_units(node_id)).items():
-            totals[resource] += amount
-        return {resource: amount - already.get(resource, 0.0)
-                for resource, amount in self._staffing_shortfalls(totals, strict=True).items()
-                if amount - already.get(resource, 0.0) > 0.005}
+        return missing_when_opened(self.staffing_held_totals() if held_totals is None else held_totals,
+                                   self._staffing_draw_of(node_id, self.reopen_units(node_id)),
+                                   lambda totals: self._staffing_shortfalls(totals, strict=True))
 
     def _staffing_allowances(self, trades, strict=False):
         """How much of each resource the household carries before a concern must close.

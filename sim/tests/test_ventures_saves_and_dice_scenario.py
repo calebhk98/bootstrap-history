@@ -1,7 +1,7 @@
 """Scenarios (Complaint 640): running concerns, hiring and staffing gates, save and resume (including the dice) and the
-identity_cover alarm, each on a built game. The identity_cover prerequisites are test_ventures_saves_and_dice. The rules
-that remain here (load validation, the staffing gates of `open` and `start`, `work_for_wages`) sit in Sim methods still to
-be pulled into plain functions: listed for the PM in Complaint 640.""" 
+identity_cover alarm, each on a built game. The identity_cover prerequisites are test_ventures_saves_and_dice. The load refusals
+are test_save_refusal_rules; the founder's hours, the sale note, the buy cap and the staffing gates are test_founder_hours_rules;
+what a shut concern lacks is test_staffing_choice_rules. What remains is wiring through the protocol and a played game."""
 from .harness import *  # noqa: F401,F403
 from sim.refusal import cause_of
 from .agent_command_helpers import ask_agent, with_end_year, pristine_game
@@ -21,42 +21,20 @@ _good = ask_agent(_load_game, cmd="save", file=_rel("sess.json"))
 check("a legitimate save from this game loads cleanly",
       ask_agent(_load_game, cmd="load", file=_rel("sess.json")).get("ok") is True, _good)
 
-_bad_saves = {
-    "not an object at all": "[1, 2, 3]",
-    "an unrelated JSON object": json.dumps({"hello": "world"}),
-    "missing required fields": json.dumps({"year": 100, "capital": 400}),
-}
-for _i, (_label, _content) in enumerate(_bad_saves.items()):
-    _name = "bad%d.json" % _i
-    open(os.path.join(_loadtest_abs, _name), "w").write(_content)
-    _before = ask_agent(_load_game, cmd="state")
-    _resp = ask_agent(_load_game, cmd="load", file=_rel(_name))
-    _after = ask_agent(_load_game, cmd="state")
-    check("load refuses %s with a clear message, not a crash" % _label,
-          _resp.get("ok") is False and "Traceback" not in _resp.get("error", "")
-          and len(_resp.get("error", "")) < 400, _resp)
-    check("a refused load (%s) leaves the running game untouched" % _label,
-          _before.get("year") == _after.get("year") and _before.get("capital") == _after.get("capital"),
-          (_before.get("year"), _after.get("year")))
+# which saves are refused, and that a refusal leaves the game as it was, are test_save_refusal_rules; here the protocol's reply
+open(os.path.join(_loadtest_abs, "bad.json"), "w").write("[1, 2, 3]")
+_before = ask_agent(_load_game, cmd="state")
+_resp = ask_agent(_load_game, cmd="load", file=_rel("bad.json"))
+_after = ask_agent(_load_game, cmd="state")
+check("the protocol answers a refused load with a refusal and leaves the running game untouched",
+      _resp.get("ok") is False and "Traceback" not in _resp.get("error", "")
+      and _before.get("year") == _after.get("year") and _before.get("capital") == _after.get("capital"), _resp)
 
 # a save for a civilisation other than the one currently running
 ask_agent(pristine_game("norse_900ad"), cmd="save", file=_rel("norse.json"))
 _r2 = ask_agent(_load_game, cmd="load", file=_rel("norse.json"))
-check("load refuses a save from a different civilisation",
+check("the protocol carries the cause of a save from a different civilisation",
       _r2.get("ok") is False and _r2.get("cause") == "save_wrong_civilisation", _r2)
-
-# a save that refers to a node id the current tree does not have
-_blob = json.load(open(os.path.join(_loadtest_abs, "sess.json")))
-_target_done = _blob["seats"][_blob["acting_seat"]]["projects"]["done"]["__set__"]
-_target_done.append("this_node_does_not_exist_anymore")
-json.dump(_blob, open(os.path.join(_loadtest_abs, "unknown_node.json"), "w"))
-_before = ask_agent(_load_game, cmd="state")
-_r3 = ask_agent(_load_game, cmd="load", file=_rel("unknown_node.json"))
-check("load refuses a save that refers to a node the tree no longer has",
-      _r3.get("ok") is False and _r3.get("cause") == "save_unknown_nodes"
-      and "this_node_does_not_exist_anymore" in _r3["facts"]["nodes"], _r3)
-check("that refusal leaves the running game untouched too",
-      _before.get("year") == ask_agent(_load_game, cmd="state").get("year"))
 
 # --- the Mexica break tester, six findings, one check each ------------------
 # Every one of these was reproduced from the tester's own transcript before it
@@ -91,8 +69,8 @@ check("starting something says what bill you have just taken on",
 #    that gate chemistry, precision and electricity wrote a name the next load
 #    refused as a missing technology. It cost that tester two runs and, by their
 #    own measurement, 1,230 technologies.
-_tr_game = unopened_sim()
-ask_agent(_tr_game, cmd="train", trade="optician", n=1)
+_tr_game = unopened_sim(capital=1.0e6)   # enough to keep a trainee fed: the subject is the save, not the cost
+_tr_trained = ask_agent(_tr_game, cmd="train", trade="optician", n=1)
 _tr_path = os.path.join(ROOT, _rel("trained.json"))
 S.save_state(_tr_game, _tr_path)
 _tr_loaded = unopened_sim()
@@ -102,7 +80,7 @@ try:
 except Exception as error:
     _tr_error = repr(error)
 check("teaching a trade does not destroy the save",
-      _tr_error is None and "optician" in _tr_loaded.trades_created, _tr_error)
+      _tr_trained.get("ok") and _tr_error is None and "optician" in _tr_loaded.trades_created, (_tr_trained, _tr_error))
 
 # 1. `work` earned wages as a chemist in a society whose `hire` and `labour`
 #    both said chemists do not exist there.
@@ -153,18 +131,9 @@ _earned, _note = s.labour.work_for_wages("labourer", s.labour.director_pool())
 check("hours sold as a labourer are not also spent practising medicine",
       _earned > 0 and _rev_before > 0 and s.revenue() < _rev_before * 0.05,
       "revenue %.1f -> %.1f having sold every hour" % (_rev_before, s.revenue()))
-# ...and the player is told, rather than left to find it in the ledger. A
-# tester measured a year of labour at 66 denarii against a 227 cost of living
-# and a 259-a-year practice switched off, and called `work` self-destructive.
-# It is, for a physician; the defect was that nothing said so.
+# ...and the player is told, rather than left to find it in the ledger; the note and the half-sale are test_founder_hours_rules.
 check("selling your hours at a loss says so, and still happens",
       _note and "cost you" in _note, _note)
-s2 = unopened_sim()
-s2.output_factor = _PRACTICE_BOOM
-s2.labour.work_for_wages("labourer", s2.labour.director_pool() * 0.5)
-check("selling half your hours costs you half the practice, not all of it",
-      abs(s2.revenue() - _rev_before * 0.5) < _rev_before * 0.06,
-      "%.1f against half of %.1f" % (s2.revenue(), _rev_before))
 
 # --- knowing how, and actually running it ------------------------------------
 # The user, on the deepest thing anyone said about this model: "you research
@@ -252,18 +221,8 @@ for _civ in ("han_china_100ad", "norse_900ad", "mexica_1500", "england_1300"):
 # shop to do did not count - and the refusal's own advice was to go and
 # commission it.
 s = unopened_sim(civ="norse_900ad", capital=100000.0)
-# Prerequisites are tested before staff, so satisfy them: the point of this
-# check is the staff gate, not the ladder above it.
-for _p in NODES["workshop_first"]["pre"]:
-    s.done.add(_p)
-s._done_changed()
-_ok0, _why0 = s.start_reason("workshop_first")
-_blocked_on_staff = "craftsmen" in (_why0 or "")
+# the gate itself (contracted hours count) is test_founder_hours_rules; here a commission reaches the labour it reads
 s.labour.commission("carpenter", 4000)
-_ok1, _why1 = s.start_reason("workshop_first")
-check("craftsmen you have under contract count toward what a project needs",
-      _blocked_on_staff and "craftsmen" not in (_why1 or ""),
-      "before: %s | after: %s" % ((_why0 or "")[:60], (_why1 or "")[:60]))
 check("commission can unblock the gate whose own advice is to commission",
       s.labour.craft_hands_available() >= 2.0,
       "%.2f craft hands from 4,000 contracted hours" % s.labour.craft_hands_available())
@@ -300,10 +259,12 @@ check("a resumed game carries on the same dice, so a project at its threshold do
 _dh_game = sim(civ="han_china_100ad", capital=2.0e7, surveyed=())     # wage work reads the opened economy
 _dh = [ask_agent(_dh_game, cmd="train", trade="machinist", n=2), ask_agent(_dh_game, cmd="train", trade="chemist", n=2),
        ask_agent(_dh_game, cmd="state"), ask_agent(_dh_game, cmd="work", trade="smith", hours=2000)]
+_dh_pool = _dh_game.labour.director_pool()
+_dh_free = _dh_game.labour.director_pool() - _dh_game.labour.director_hours_committed()
 check("hours spent teaching are not still available to sell",
-      _dh[2]["founder_hours_available"] < 400 and _dh[3].get("ok") is False,
-      "%r free, work accepted=%r" % (_dh[2].get("founder_hours_available"),
-                                     _dh[3].get("ok")))
+      _dh[0].get("ok") and _dh_free < _dh_pool - 1000.0 and abs(_dh[2]["founder_hours_available"] - _dh_free) < 0.1
+      and _dh[3].get("ok") is False,
+      "%r free of %r, work accepted=%r" % (_dh[2].get("founder_hours_available"), _dh_pool, _dh[3].get("ok")))
 
 # 3. A bribe that buys nothing said so and charged 5,000 anyway.
 _bb_game = _v_game
@@ -332,13 +293,6 @@ check("a stalled project names the resource actually stalling it",
       "scribe" in _w and "your hours" not in _w, _w)
 check("...and says how far short the society is, in numbers",
       "can field" in _w or "booked" in _w, _w)
-
-# A play tester watched their year grow from 2,000 hours to 6,090 with nothing
-# saying why. It is deputies, not the founder working harder.
-_hrs = [ask_agent(pristine_game(), cmd="state")]
-check("state says where the founder's hours actually come from",
-      (_hrs[0].get("where_your_hours_come_from") or {}).get("hours_each_deputy_adds"),
-      _hrs[0].get("where_your_hours_come_from"))
 
 # --- the persona is a persona, not a licence to do arithmetic ----------------
 # The user, on identity_cover: "does anything building on it actually require
@@ -408,14 +362,6 @@ check("the founder is one of the craftsmen as well as one of the scholars",
       s.labour.craft_hands_available() >= 1.0 and s.labour.effective_scholars() >= 1.0,
       "%.1f hands, %.1f scholars, with nobody hired"
       % (s.labour.craft_hands_available(), s.labour.effective_scholars()))
-s2 = unopened_sim(civ="norse_900ad")
-for _p in NODES["workshop_first"]["pre"]:
-    s2.done.add(_p)
-s2._done_changed()
-s2.labour.hire("carpenter", 1)
-check("...so one hired hand is enough to raise your first workshop",
-      s2.start_reason("workshop_first")[0],
-      s2.start_reason("workshop_first")[1])
 
 # --- BREAK: the pivot node of the entire game did nothing under --manual, the
 # interactive protocol's only mode. school_founded's own text promises "+4
@@ -465,11 +411,9 @@ check("the quoted price of a forest is the price you are charged",
 s = unopened_sim(capital=1000000.0)
 _room = s.labour.household_room()
 _ok_over = s.labour.buy_slaves(int(_room) + 5)
-check("buying people obeys the same household cap as hiring them",
-      _ok_over == 0 and s.slaves == 0,
+check("buying people obeys the same household cap as hiring them (the refusal text is test_founder_hours_rules)",
+      _ok_over == 0 and s.slaves == 0 and s.labour.buy_slaves(max(1, int(_room) - 1)) > 0,
       "room %.2f, bought %s" % (_room, _ok_over))
-check("...and buying within it still works",
-      s.labour.buy_slaves(max(1, int(_room) - 1)) > 0, "room %.2f" % _room)
 
 # You cannot run fifty businesses with three people.
 s3 = s

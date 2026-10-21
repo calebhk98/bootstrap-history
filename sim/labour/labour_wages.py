@@ -17,7 +17,7 @@ in it.
 from . import trade_data, wage_provider
 from .wage_factors import tools_factor, weighted_factor
 from .labour_market_api import LabourMarket
-from .hours_sale_warning import starving_warning
+from .hours_sale_warning import sale_at_a_loss_note, starving_warning
 from .labour_wage_ledger import WageLedgerMixin
 from .staff_moves import (FOUNDER_DEAD, HOURS_NOT_POSITIVE, HOURS_SHORT, NO_SUCH_TRADE, TRADE_ABSENT,
                           wage_work_blocker)
@@ -134,14 +134,9 @@ class WagesMixin(WageLedgerMixin):
         self.log_wage_work(trade, hours, pay)
         # SAY WHEN IT IS A BAD TRADE: hours sold here are hours the standing job does not sell, and when
         # that job pays more than this trade the sale loses money. The sale still happens.
-        job_pay_given_up = revenue_before - self._world.revenue()
-        if job_pay_given_up > pay:
-            earned, given_up = round(pay), round(job_pay_given_up)
-            message = ("you earned %s, and the standing job those hours were selling was paying %s a year - "
-                       "so this cost you %s. Selling hours in a lower-paid trade is for when you need the "
-                       "cash more than the job."
-                       % (self._world.money_text(earned, grouped=True), self._world.money_text(given_up, grouped=True),
-                          self._world.money_text(given_up - earned, grouped=True)))
+        message = sale_at_a_loss_note(pay, revenue_before - self._world.revenue(),
+                                      lambda amount: self._world.money_text(amount, grouped=True))
+        if message:
             return pay, message + (" Also: " + _starve if _starve else "")
         return pay, _starve
 
