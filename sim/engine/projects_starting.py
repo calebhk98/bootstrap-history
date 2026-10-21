@@ -740,11 +740,15 @@ class StartingMixin:
         absent = [] if ignore_trade else sorted(trade_id for trade_id in node["lab"]
                                                 if not self.labour.trade_available(trade_id))
         if absent:
-            return False, (("this needs %s and there are none in this society. "
-                           'Teach one: {"cmd":"train","trade":"%s","n":2} '
-                           "(about 450 of your own hours each, two years)"
-                           % (", ".join(trade_id + "s" for trade_id in absent), absent[0]))
-                           if _why else None)
+            if not _why:
+                return False, None
+            source = self.labour._source_trade_for(absent[0])
+            cost = ("about %.0f of your own hours each, %.1f years"
+                    % (self.labour.training_hours_per_person(absent[0], source),
+                       self.labour.training_years_from(absent[0], source))) if source else "no trade here to teach it from"
+            return False, ("this needs %s and there are none in this society. "
+                           'Teach one: {"cmd":"train","trade":"%s","n":1} (%s)'
+                           % (", ".join(trade_id + "s" for trade_id in absent), absent[0], cost))
         return None
 
     @blocker_kind("specialists")
