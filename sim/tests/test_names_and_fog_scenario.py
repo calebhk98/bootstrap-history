@@ -69,8 +69,8 @@ heard = sim(civ="rome_100ad", manual=False)
 heard.fog = True
 heard.revealed = set()
 ask(heard, cmd="start", id="scientific_method")
-for _ in range(2):
-    heard.step()
+heard.step()
+heard.reveal_from("scientific_method")    # finishing it teaches what it leads to; whether the project ends by a given year is not the subject
 nonsense = S._agent_available(heard, NODES, {"find": "zzzznonexistentxyz"})
 unfiltered = S._agent_available(heard, NODES, {"limit": 50})
 matching = S._agent_available(heard, NODES, {"find": "atomic"})

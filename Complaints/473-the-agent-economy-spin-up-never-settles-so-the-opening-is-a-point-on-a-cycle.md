@@ -682,3 +682,12 @@ reading it as unemployment. Pricing departures are 642 and 643, the rate 641.
 ## Update 5: the replacement figure goes negative because the mint melts coin once the price level runs away
 
 money_replacement (sim/economy/baseline_checks.py) is struck net of melted, over wear; its sign is right (in the cached 40-year Rome traces the stock change equals struck less wear each year). The mint rule is intended: it sells the metal it holds at parity (mint.mint_orders), so when other buyers pay more than the mint pays for bullion it melts coin, and the measure counts that on purpose. Early years strike a large share of wear; as the price level climbs the run (the food shortage owned by other work) metal becomes dearer than coin, the mint stops buying and sells, and the last decade nets to melting. So silver not reaching the mint is no longer the binding cause late in the run; the price level is. Rows: python3 sim/simulator.py spin-up-trace --civ rome_100ad --years 40.
+
+## Finding: the Norse baseline price level falls without any intervention
+
+Measured with `play("norse_900ad", 7)` from `sim/tests/money_regimes_play.py` (no mined metal), the basket price level
+by year is 1.07, 1.41, 0.96, 1.07, 0.96, 0.55, 0.46. Millet, about a third of the basket's weight, falls to about 0.4 of
+its base price by year five, and wheat is already about 0.37 of base in year 0. With 10% extra mined metal each year the
+level follows the same food collapse a year earlier (the money stock does double). So the slow validation "more metal
+raises the price level" (`check_more_metal_raises_price_level`) is drowned by the unsettled economy for Norse; the
+transmission rules are held by `test_money_reaches_prices`.
