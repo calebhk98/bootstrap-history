@@ -54,3 +54,21 @@ def domestic_cargo_cost_share(spoilage_rate_per_year, loss_per_day_by_mode, rout
     road = cargo_cost.lost_share(*(cargo_cost.daily_loss_share(loss_per_day_by_mode.get(leg.mode, 0.0), leg.travel_days)
                                    for leg in route.legs))
     return trader_response.cost_share_of_price(0.0, cargo_cost.lost_share(spoilage, road), annual_rate, years)
+
+
+def cargo_class_of(stock_row):
+    """"living_stock" for stock whose living-stock row says it walks (animals), else "goods" (seed, cuttings, eggs)."""
+    return "living_stock" if (stock_row or {}).get("walks") else "goods"
+
+
+def domestic_haul_mode(cargo, walking_modes, goods_mode):
+    """The mode a domestic haul of this class of cargo goes by: `goods_mode` (the cart) for goods, the first mode whose
+    cargo walks for living stock, the goods mode when the map has none."""
+    if cargo == "living_stock":
+        return walking_modes[0] if walking_modes else goods_mode
+    return goods_mode
+
+
+def unjoined_haul_cost(rate_per_tonne_km, distance_km, dues_per_tonne):
+    """Money per tonne of a haul no way joins: one leg at the mode's rate over the great-circle distance, plus the dues once."""
+    return rate_per_tonne_km * distance_km + dues_per_tonne

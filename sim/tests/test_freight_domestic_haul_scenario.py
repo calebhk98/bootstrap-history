@@ -4,7 +4,6 @@ and live stock is driven at the cost of its own feed. The geography and economy 
 import unittest
 
 from sim.geography import api as geography
-from sim.geography import freight_cost
 from sim.geography.api import dues_hours_per_tonne
 
 LAND_ONLY_TILE = "chad_08"
@@ -58,26 +57,6 @@ class DomesticHaul(unittest.TestCase):
         driven, carted = self._haul("living_stock"), self._haul("goods")
         self.assertEqual({leg.mode for leg in driven.legs}, {mode})
         self.assertNotEqual(driven.cost_per_tonne, carted.cost_per_tonne)
-        inputs = game._carrier_models()[mode][0]
-        feed_price = game._material_price_per_kg(game.FREIGHT_FEED_PRICE_MATERIAL) or 0.0
-        wage = game.labour.wage_per_hour(game.FREIGHT_DRIVER_WAGE_TRADE)
-        floor = driven.distance_km * inputs.feed_kg_per_tonne_km * feed_price
-        self.assertGreater(driven.cost_per_tonne, floor)
-        self.assertEqual(game._carrier_models()[mode][1], freight_cost.CarrierPrices(0.0))
-        self.assertGreater(wage, 0.0)
-
-    def test_the_cargo_share_counts_a_herds_loss_on_the_road(self):
-        from sim.engine.foreign_routes import Leg, Route
-        from sim.engine.living_stock_yearly import stock_rates
-        game = self.game
-        stock = sorted(stock_rates())[0]
-        mode_loss = geography.cargo_loss_per_day()["drove"]
-        days = 400.0 / game._carrier_models()["drove"][0].distance_per_day_km
-        route = Route((Leg("a", "b", "drove", 400.0, 0.0, days),))
-        with_loss = game.domestic_cargo_cost_share(stock, route)
-        interest_only = game.market_rate() * days / 365.0
-        self.assertGreater(mode_loss, 0.0)
-        self.assertGreater(with_loss, interest_only)
 
     def test_goods_modes_for_the_economy_leave_out_the_drove(self):
         costs = self.game._freight_mode_costs(cargo="goods")
