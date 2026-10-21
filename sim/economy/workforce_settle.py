@@ -11,7 +11,7 @@ from typing import Dict, Tuple
 from sim.labour.api import fallback_trade
 
 from . import producers, workforce_version
-from .labour_state import core_trades, plot_trade
+from .labour_state import core_trades, plot_trade, producers_hours_needed, seeded_hours
 from .market_memory import market_key
 from .setup import labour_area
 
@@ -42,6 +42,9 @@ def trim_to_expected_hours(setup, record, view) -> None:
     fallback trade in the same ability bands."""
     fallback = fallback_trade(core_trades(setup))
     wanted = expected_hours(setup, record, view)
+    for area, seeds in seeded_hours(setup, producers_hours_needed(setup, record)).items():
+        for trade, hours in seeds.items():
+            wanted[(area, trade)] = max(wanted.get((area, trade), 0.0), hours)   # the society's need keeps the trades no run staffs
     trim_people(record.workforce, wanted, fallback, setup.working_hours_per_year)
     send_idle_to_plots(record.workforce, wanted, fallback, plot_trade(setup), setup.working_hours_per_year)
 

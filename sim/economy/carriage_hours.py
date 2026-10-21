@@ -11,23 +11,12 @@ merchant that owns the carriers.
 import math
 from typing import Dict, List, Optional, Tuple
 
-from sim.constants import declare
-
 from . import credit
 from .market_memory import KEY_SEPARATOR as MARKET_KEY_SEPARATOR, market_key
 from .merchants import Merchant
 from .producers_close import WORKING_CAPITAL_PURPOSE
 from .setup import labour_area
 from .types import LabourBid, LoanRequest
-
-CARRIAGE_CREW_UNSKILLED_SHARE = declare(
-    "CARRIAGE_CREW_UNSKILLED_SHARE", 1.0, kind="temporary_heuristic",
-    unit="share of the crew hours bid in the setup's unskilled trade", source=None, confidence="D",
-    retire="Complaints/556: one workforce owner whose opening places people in the trades the opening's flows need",
-    why="The opening places people by the runs producers expect, not by the goods merchants carry, so no "
-        "carters or sailors exist when merchants first ship and a specialist trade left to train its own would "
-        "stop carriage for years. The crew hours of a trade that needs training are bid in the unskilled trade (drovers on foot "
-        "are labourers in the trade data) instead of the mode's carter or sailor trade.")
 
 CrewRows = Tuple[Tuple[str, float], ...]      # ((crew key, crew hours),): a crew key is market_key(trade, tile hired at)
 
@@ -37,24 +26,11 @@ def hires(setup) -> bool:
     return any(hours > 0.0 for _trade, hours in setup.carriage_crew.values())
 
 
-def _asks_no_training(setup, trade: str) -> bool:
-    spec, unskilled = setup.trades.get(trade), setup.trades.get(setup.unskilled_trade)
-    return (bool(trade) and trade != setup.unskilled_trade and spec is not None and unskilled is not None
-            and spec.training_years <= unskilled.training_years)
-
-
 def crew_trades(setup, mode_trade: str) -> Tuple[Tuple[str, float], ...]:
-    """The trades a mode's crew hours are bid in, as (trade, share): the unskilled trade for the share
-    CARRIAGE_CREW_UNSKILLED_SHARE names and the mode's own for the rest. A mode whose trade asks no more
-    training than the unskilled trade (porters, dockworkers) is hired in its own trade whole: anyone can take
-    it up at once, and the heuristic is about trades that need years."""
-    if _asks_no_training(setup, mode_trade):
-        return ((mode_trade, 1.0),)
-    unskilled = min(1.0, max(0.0, CARRIAGE_CREW_UNSKILLED_SHARE))
-    merged: Dict[str, float] = {}
-    for trade, share in ((setup.unskilled_trade, unskilled), (mode_trade, 1.0 - unskilled)):
-        merged[trade] = merged.get(trade, 0.0) + share
-    return tuple((trade, share) for trade, share in sorted(merged.items()) if share > 0.0)
+    """The trades a mode's crew hours are bid in, as (trade, share): the mode's own trade whole (a sailor on
+    water, a carter with animals, a porter on foot), the unskilled trade where the mode names none. The labour
+    core holds those trades from the opening (labour_state.seeded_hours), so they answer the bids."""
+    return ((mode_trade or setup.unskilled_trade, 1.0),)
 
 
 class Crew:

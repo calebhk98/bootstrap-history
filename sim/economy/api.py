@@ -110,6 +110,12 @@ def people_by_trade(economy, country=None):
     return workforce_version.cached(economy.record.workforce, ("people_by_trade", country), sum_people)
 
 
+def people_by_tile_and_trade(economy):
+    """Working people of the labour core by tile and trade, over every labour area (trainees are not counted)."""
+    return {labour_state.area_tile(area): labour_state.people_by_trade(economy.record.workforce, area)
+            for area in sorted(economy.record.workforce.workers)}
+
+
 def wages_by_trade(economy):
     """Last year's wages per hour, as a list of market wages for each trade."""
     rows = {}

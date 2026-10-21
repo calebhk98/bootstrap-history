@@ -36,15 +36,19 @@ check("the core holds the working age and the farm people are the biggest trade"
 
 
 # ---- a hire is a reservation under the supply, and the core does not see it yet ----
-core_before = dict(core)
 hired, reply = labour.hire("labourer", 3)
 check("the hire went through", hired, reply)
 check("the founder's book holds the hired people", labour.employed("labourer") == 3.0, labour.employed("labourer"))
 check("reserved people include the book", labour.reserved_people("labourer") >= 3.0)
 check("reserved hours are people times hours a person-year",
       abs(labour.reserved_hours("labourer") - labour.reserved_people("labourer") * game.HOURS_PER_PERSON_YEAR) < 1e-6)
-check("the hire is invisible to the core's people (known gap: reservations are not yet taken from the core)",
-      labour.core_people_by_trade().get("labourer") == core_before.get("labourer"))
+free = labour.free_core_people("labourer")
+base_core = labour.core_people_by_tile_and_trade().get(labour.base_tile(), {}).get("labourer", 0.0)
+check("the hire is taken out of the core's people at the base tile, so another employer does not count them free",
+      abs(free - (sum(by_trade.get("labourer", 0.0) for by_trade in labour.core_people_by_tile_and_trade().values()) - 3.0)) < 1e-6
+      and base_core >= 3.0, (free, base_core))
+over = [row for row in labour.reservations_over_core() if row[1] == "labourer"]
+check("the labourers hired do not exceed the core's labourers at their tile (the hours-reserved boundary)", not over, over)
 for trade in sorted(labour.employed_by_trade()):
     check("reservations of %s never exceed the supply the owner reports" % trade,
           labour.reserved_people(trade) <= labour.supplied_people(trade) + 1e-9,

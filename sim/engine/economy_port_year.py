@@ -707,6 +707,12 @@ class AgentEconomy(TilePricesMixin):
             return None
         return economy_api.people_by_trade(self.economy())
 
+    def people_by_tile_and_trade(self):
+        """The labour core's people by tile and trade, or None before the economy has been opened."""
+        if self._economy is None and "record" not in self.stored:
+            return None
+        return economy_api.people_by_tile_and_trade(self.economy())
+
     def producer_capacity_tonnes(self, material):
         """Tonnes a year the economy's producers can make of a material at full capacity; zero before the
         economy has opened."""
