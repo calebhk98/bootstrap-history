@@ -1,6 +1,6 @@
 # A higher tax rate has no consequence beyond revenue and a typed burden weight
 
-**Status:** partly - a harvest tax and a land tax reach the farmer's and the owner's own rules; concealment of income from a form follows the rate and the officials' reach in both layers (actors and the economy's money, harvest and trade forms), and the AI state's rate-raise yield counts it; the flight comparison, the liability rule and the amnesty, immunity and remission levers are built as rules (below) but the engine does not yet feed them into the labour market's year inputs or the AI state's menu; unrest (486) is open, so `FISCAL_BURDEN_WEIGHT` stays
+**Status:** partly - a harvest tax and a land tax reach the farmer's and the owner's own rules; concealment of income from a form follows the rate and the officials' reach in both layers (actors and the economy's money, harvest and trade forms), and the AI state's rate-raise yield counts it; the flight comparison, the liability rule and the amnesty, immunity and remission levers are rules, fed by the engine into the labour market's year inputs (tenants flee, fugitives are kept and return) and into the AI state's menu, which nets the base lost to flight; unrest (486) is open, so `FISCAL_BURDEN_WEIGHT` stays
 
 Follows from 626 (tax rates as a state choice).
 
@@ -61,12 +61,28 @@ can leave lowers the base next year; an AI state with the loss in its menu raise
   `evasion.py` comes only from the hiding-cost curve, which stays labelled (`HIDING_MARGINAL_COST_AT_CEILING`).
 - Tests: `test_tax_flight_and_liability.py`.
 
-**Still open.** (a) The engine does not yet fill `YearInputs.taxed_share` and `Route.expected_penalty`
-(`sim/economy/labour_inputs.py` builds the routes), nor call `tenant_flees` or the return rule each year, nor read
-`immunity` where land is taken up; the rules and levers exist and are tested, the wiring is not. (b) The AI state's menu does
-not pull `liability`, `amnesty` or `remission`, and `rate_raise_yield` does not net the base lost through flight, so
-`FISCAL_BURDEN_WEIGHT` stays. (c) Return of fugitives is the same comparison run backwards (`flight.arrears_owed_by_fugitive`
-as the route's cost) but no year step moves them. (d) Unrest (486). (e) The hiding-cost curve has no source.
+- **Flight is wired into the year.** `YearInputs.taxed_share_by_tile`, `state_reach_by_tile`, `amnesty_share` and `immunity_years` are filled
+  by `sim/engine/economy_port_flight.py` from `sim/agents/flight_inputs.py` (the state's income forms times its reach on the tile, under its liability rule
+  with the people who fled counted out of those who remain). `sim/economy/flight_routes.py` turns them into `YearInputs.taxed_share` and each route's
+  `expected_penalty` (the actors' `flight.expected_penalty_of_leaving`, handed in as `EconomySetup.flight`, so the economy imports no actor). After the
+  labour year `sim/economy/flight_step.py` runs `flight_year.py`: tenants of an area people left leave their land (`titles_flight.tenant_flees`), the leavers
+  are kept as `EconomyRecord.fugitives` with what they owe, and a fugitive returns by the migration rule run backwards (his refuge's income against home's after the take,
+  less the arrears, `flight.arrears_owed_by_fugitive`, with the amnesty lever; `flight.share_after_immunity` on the take he meets at home).
+- **The AI state's menu counts flight and has the tax-response levers.** `fiscal_flight.py` calls the migration rule for the share of payers who leave at a take
+  (only those who can reach a tile the officials do not); `rate_raise_yield` nets the base lost that way on forms on income. The menu offers `remission`
+  (only where a cut yields more), `amnesty` (where people have fled) and `liability` (collective, where the leavers' assessment on the stayers recovers more than the extra flight loses),
+  and `Government.pull_tax_response_levers` sets the levers the choice covered money with.
+- Tests: `test_tax_flight_wiring.py` (rules called with built inputs; the engine's year is covered only by the whole-game smoke topics).
+
+**`FISCAL_BURDEN_WEIGHT` stays.** The menu now nets flight for a rate raise, but (1) unrest (486) is the other loss it stood in for and is not modelled;
+(2) the levy and the demand in kind, which also carry `income_taken`, do not net flight; (3) with the migration rule's cap on the share who consider
+moving in a year, flight alone never makes a raise yield less in any rate or reach tried, so the loss the weight stands for is not all flight.
+
+**Still open.** (a) Immunity is read only where a fugitive weighs returning to deserted land: released land is still never taken up by anyone else (nothing in the economy
+fills a title below one on a tile except a clearer's new ground), so a taker's years without tax are not applied after the first comparison. All net outflow from a taxed area is
+treated as flight (no split of the part that is not about tax); a fugitive's refuge is the area that gained most that year, not tracked per person; arrears accrue as a year's take at
+the area's subsistence, not the person's income, and `Route.expected_penalty` counts this year's take only (the fugitives' arrears are not added to a new leaver's). Whole-game effect not
+measured (a slow topic and the fingerprint are needed). (b) `remission` is never offered in the cases tried (see above). (d) Unrest (486). (e) The hiding-cost curve has no source.
 
 ## Research needed
 

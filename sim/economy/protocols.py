@@ -25,7 +25,7 @@ The year (`economy.Economy.step`), one civilisation's economy:
 Every movement of money or goods is a `Transfer` or `GoodsMove` booked through `accounts.Book`.
 An agent's purse never goes below zero except an edge account's (types.EDGE_*).
 """
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Mapping, Optional, Protocol, Sequence, Tuple
 
 from .types import (AgentId, AreaId, Bid, CurrencyId, FundsOffer, GoodId, LabourBid, LabourOffer,
@@ -126,6 +126,10 @@ class YearInputs:
     farmed_forms: Tuple[str, ...] = ()                      # money revenue forms the state lets to the best bidder this year (tax_farming.py)
     tax_rates: Tuple[Tuple[str, float], ...] = ()           # (form, rate) the state holds this year; a form not named keeps its rate (taxes.with_rates)
     land_tax_share_of_rent: float = 0.0                     # share of a rent the state's land forms take from the owner (land_market.settle_year)
+    taxed_share_by_tile: Mapping[TileId, float] = field(default_factory=dict)   # share of a stayer's income the state takes on each tile, liability rule included (flight_routes.py)
+    state_reach_by_tile: Mapping[TileId, float] = field(default_factory=dict)   # share of the people on each tile the state's officials reach: the chance a leaver is recaptured there
+    amnesty_share: float = 0.0                              # share of a fugitive's arrears the state waives (government_levers_tax.amnesty_share)
+    immunity_years: float = 0.0                             # years a taker-up of deserted land owes nothing (government_levers_tax.immunity_years)
     institutions: Tuple[str, ...] = ()                      # the credit institutions the society holds (banks.DEPOSIT_BANKING): without one its households found none
     durable_users: Tuple[AgentId, ...] = ()                 # outside actors' asset accounts whose durables are in use
     bondage_tiles: Tuple[TileId, ...] = ()                  # tiles whose society recognises bondage: bonded people may be bought there (Complaint 644)

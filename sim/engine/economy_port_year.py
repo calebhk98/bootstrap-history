@@ -18,7 +18,7 @@ from sim.economy.api import (EDGE_EXTERNAL, EDGE_LEGACY, AgentOrders, Economy, G
                              YearInputs, expected_output_prices, external_orders, live_input_prices, live_wages,
                              trade_premium, variable_cost_per_run)
 
-from . import country_trade_years, trade_duty, economy_port_bondage, economy_port_levy, economy_port_actors, economy_port_cargo, economy_port_cropland, economy_port_institutions, economy_port_land, economy_port_late, economy_port_seats, economy_port_sites, externalities, material_capacity, solve_cache
+from . import country_trade_years, trade_duty, economy_port_bondage, economy_port_levy, economy_port_actors, economy_port_cargo, economy_port_cropland, economy_port_flight, economy_port_institutions, economy_port_land, economy_port_late, economy_port_seats, economy_port_sites, externalities, material_capacity, solve_cache
 from .economy_port_key import spin_up_key
 from .economy_port_coin import priced_at_the_margin
 from .economy_port_setup import build_setup, opening_values
@@ -116,6 +116,10 @@ class AgentEconomy(TilePricesMixin):
         if not self.opened():
             return []
         return [(producer.recipe_id, producer.capacity_runs) for producer in economy_api.all_producers(self.economy())]
+
+    def fugitive_share_by_tile(self):
+        """{tile: share of the people who belonged to it that are away having fled the state's take}; empty before the economy opens."""
+        return economy_api.fugitive_share_by_tile(self.economy()) if self.opened() else {}
 
     def opened(self) -> bool:
         return self._economy is not None or "record" in self.stored
@@ -543,6 +547,7 @@ class AgentEconomy(TilePricesMixin):
                           farmed_forms=economy_port_land.farmed_forms(sim, economy),
                           tax_rates=economy_port_land.tax_rates(sim),
                           land_tax_share_of_rent=economy_port_land.land_tax_share_of_rent(sim),
+                          **economy_port_flight.flight_values(sim, economy),
                           institutions=economy_port_institutions.held(sim),
                           durable_users=tuple(economy_port_actors.held_account(buyer)
                                               for buyer in sorted(sim.actors.actors)),
