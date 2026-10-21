@@ -6,9 +6,9 @@ Reference (an outside design note, not code-aware): carrying capacity is arable 
 planted share (fallow by rotation, none under flood silt) times gross yield (soil and crop) net of
 seed and storage loss, in calories; tools set the hectares one farmer works, not the yield per hectare.
 
-## What the code does
+## What the code did before the stages below (historical; "What is left" is the current state)
 
-There are two models, and they do not read each other:
+There were two models, and they did not read each other (re-check each bullet before acting; stages 1 to 3 changed the tile and farm yield, land and quality):
 
 - **Tile model** (`sim/geography/food_capacity.py`, `food_crops.py`, parameters in
   `data/world/geography/parameters/food.json`): a calorie ceiling per tile from arable area, a fixed
@@ -25,7 +25,7 @@ Within the farm model:
 - Rotations: `NILE_FLOOD_RECESSION` (near-zero fallow) is defined in `agriculture.py`, but outside
   tests nothing selects it, and nothing ties it to floodplain land. The tile model gives river land no
   fallow on its own. Each model handles the Nile its own way.
-- Crops: `RICE` is defined but no tree node adopts it; there is no maize (Complaint 489) and no
+- Crops: `RICE` is defined but no tree node adopts it; there is no maize and no
   irrigated wheat separate from dry wheat.
 - Tools: yield per hectare and hectares per worker are separate (`agriculture_yield.py`,
   `agriculture_labour.py`), which is right. The toolkits run from the ard and oxen to the mechanical
@@ -40,7 +40,7 @@ Within the farm model:
 - Soils from map data with a heavy-clay class that only a heavy plough opens.
 - Crops adopted by the tree for rice and maize; a hoe toolkit.
 - Tile weather applied to the tile's own harvest.
-- Related: 489 (population national, food check partial), 513 (farm labour sized exactly).
+- Related: 603 (population per region), 513 (staple price near satiation).
 
 ## Second note from the same source
 
@@ -48,7 +48,7 @@ Within the farm model:
   `data/world/geography/parameters/food.json`); no canals silt up or need clearing labour, so a
   state that stops maintaining them loses nothing.
 
-## Measured before the change (rome_100ad, `PYTHONPATH=. python3 -W ignore` probe of the opened game)
+## Measured before the change (historical; rome_100ad, `PYTHONPATH=. python3 -W ignore` probe of the opened game)
 
 - Tile view, crops, over the 88 held tiles: about 115 thousand giga-kcal a year. Farm model's gross harvest on its own cleared
   land: about 57 thousand giga-kcal. Per tile, the tile view over the farm model's harvest on the same arable hectares
