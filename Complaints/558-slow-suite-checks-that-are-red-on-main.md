@@ -34,7 +34,10 @@ that commit. Re-run the same command for the current list; this section is repla
   rule (fixed).
 - `firm_borrows_to_enter_scenario`: compared against the first year's firm count, which now fills every niche at once; now
   compares against the opening's (fixed).
-- `one_goods_market_scenario`: asked a scenario to show a founder's sale lowering a price that sits at the producers' floor;
+- `one_goods_market_scenario` (again, after the opening moved off the floor): the check assumed the opening's iron price sat at the
+  producers' floor; it now states the rule: the sale displaces producers, and what it does not displace comes with a price fall
+  that stops at the floor (fixed).
+- `one_goods_market_scenario` (earlier): asked a scenario to show a founder's sale lowering a price that sits at the producers' floor;
   the rule test holds the price rule, the scenario keeps the wiring (fixed).
 - `scenarios_batch3`: the cash-book check ignored the ledger's own rule for a small gap from the saturating revenue ceiling
   (fixed).
