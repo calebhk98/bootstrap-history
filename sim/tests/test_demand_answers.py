@@ -45,7 +45,7 @@ class PressedWorld(FakeWorld):
         super().__init__()
         self.capacity, self.draw = capacity, draw
 
-    def state_capacity(self):
+    def state_reach(self):
         return self.capacity
 
     def visible_scale_of(self, actor):
@@ -166,7 +166,7 @@ def founder_game(capital=1000.0, capacity=0.9, protection=0.0, seed=1, stance="c
     household = Household(demand_stance=stance, protection=protection, service_offer=0.0, concealed=0.0, defiance=0.0,
                           scandal=0.0, capital=capital, log=[])
     game = SimpleNamespace(state=SimpleNamespace(household=household, scenario=SimpleNamespace(year=100)),
-                           state_capacity=capacity, rng=random.Random(seed), treasury=Treasury(), paid_edges=[])
+                           state_reach=lambda: capacity, rng=random.Random(seed), treasury=Treasury(), paid_edges=[])
 
     def lose_capital(fraction, cause="losses", taker=None):
         lost = household.capital * fraction

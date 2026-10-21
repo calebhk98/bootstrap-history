@@ -17,7 +17,7 @@ def settle_year(actor: Any, world: Any) -> Dict[str, float]:
 	settled = {"concealed": 0.0, "cost": 0.0, "seized": 0.0, "found": 0.0}
 	if stance == demand_answer.CONCEAL or actor.concealed_wealth() > 0.0:
 		draw = world.rng_for("conceal", actor.actor_id, world.year).random()
-		settled = demand_answer.settle_concealment(stance, max(0.0, actor.money), world.state_capacity(),
+		settled = demand_answer.settle_concealment(stance, max(0.0, actor.money), world.state_reach(),
 												   actor.standing(), draw)
 		if settled["cost"] > 0.0:
 			ledger.transfer(actor, world.edge(EDGE_OFFICIALS), settled["cost"], "concealing wealth")

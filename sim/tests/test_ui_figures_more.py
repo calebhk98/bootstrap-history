@@ -19,7 +19,10 @@ NEW_FIGURES = ("wages", "state_notice", "epidemic", "project_throughput")
 class _Game:
     """Only what the four world figures read."""
     wage_index, pop_scale, price_index = 1.25, 0.9, 1.1
-    state_capacity, throttle = 0.4, 0.8
+    throttle = 0.8
+
+    def state_reach(self):
+        return 0.4
     year = 100
     civ = {"hazards": []}
 

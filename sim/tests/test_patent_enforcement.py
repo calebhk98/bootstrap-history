@@ -16,7 +16,7 @@ class EnforcedWorld(FakeWorld):
 	capacity = 1.0
 	registry = None
 
-	def state_capacity(self):
+	def state_reach(self):
 		return self.capacity
 
 	def patent_entry(self, node_id):

@@ -208,45 +208,32 @@ class MiningMixin(MineDepositsMixin):
     # cannot buy much tin also cannot simply out-organise its way to
     # unlimited tin by sinking shafts instead -- the same ground is short
     # either way. Measure it per civilisation with Geography.mineral_scale().
-    STATE_CAPACITY_DEFAULT_FALLBACK = declare(
-        "STATE_CAPACITY_DEFAULT_FALLBACK", 0.5, kind="initial_condition",
-        unit="dimensionless state-capacity index (0-1 scale), fallback",
-        source=None, confidence="D",
-        why="Fallback state_capacity for a civilisation whose own data "
-            "does not specify one - a middling value on the 0-1 scale "
-            "civ.get('state_capacity', ...) otherwise reads from each "
-            "civilisation's own file, used here for both the mine and "
-            "forest land ceilings. Every shipped civilisation defines its "
-            "own state_capacity (out of this file's scope); this is only "
-            "the default a missing or hand-authored one would fall back "
-            "to, not a claim about any specific society.")
-
     def mine_land_ceiling(self, mat):
         """The largest standing capacity of this material you could ever
         organise, in tonnes/yr: how big an enterprise your standing and
         state can run, times whether the ore is actually under your feet,
         (what technology lets a working raise per shaft is in the works cost,
         sim/world/deposits.py, not a multiple here)."""
-        state_capacity = float(self.civ.get("state_capacity", self.STATE_CAPACITY_DEFAULT_FALLBACK))
+        state_reach = self.state_reach()
         favour = self.effect_best("mine_ceiling")
         return mine_ceiling_tonnes(
-            favour[1] if favour is not None else None, state_capacity, self.MINE_CEILING_BASE_STRANGER,
+            favour[1] if favour is not None else None, state_reach, self.MINE_CEILING_BASE_STRANGER,
             self.MINE_CEILING_STATE_SCALE_STRANGER,
             revenue_scale_multiple(self.revenue(), self.REVENUE_SCALE_DENARII, self.REVENUE_SCALE_CAP_MULTIPLE),
             self.geography.mineral_scale(mat))
 
     MINE_CEILING_BASE_IMPERIAL = declare(
         "MINE_CEILING_BASE_IMPERIAL", 20000.0, kind="temporary_heuristic",
-        unit="tonnes/year (base, before state capacity and revenue scale)",
+        unit="tonnes/year (base, before state reach and revenue scale)",
         source=None, confidence="D",
         why="Base standing-mine ceiling for an imperial patron before "
-            "state capacity, geology and mining technology are applied. "
+            "state reach, geology and mining technology are applied. "
             "No fiscal or organisational-capacity data backs this figure; "
             "it is a tuned starting point for the four patronage tiers "
             "this method distinguishes.")
     MINE_CEILING_STATE_SCALE_IMPERIAL = declare(
         "MINE_CEILING_STATE_SCALE_IMPERIAL", 60000.0, kind="temporary_heuristic",
-        unit="tonnes/year per unit of state_capacity", source=None,
+        unit="tonnes/year per unit of state_reach", source=None,
         confidence="D",
         why="How much further a more capable state extends the imperial-"
             "tier ceiling. Tuned, not derived from any state-capacity "
@@ -260,7 +247,7 @@ class MiningMixin(MineDepositsMixin):
             "never simply shut out of mining.")
     MINE_CEILING_STATE_SCALE_STRANGER = declare(
         "MINE_CEILING_STATE_SCALE_STRANGER", 4000.0, kind="temporary_heuristic",
-        unit="tonnes/year per unit of state_capacity", source=None,
+        unit="tonnes/year per unit of state_reach", source=None,
         confidence="D",
         why="As MINE_CEILING_STATE_SCALE_IMPERIAL, for the stranger tier.")
     REVENUE_SCALE_CAP_MULTIPLE = declare(
@@ -677,9 +664,9 @@ class MiningMixin(MineDepositsMixin):
             return 0.0
         # Scale beyond a local lease needs a concession, which in practice means
         # the fiscus. Metalla were largely imperial property.
-        # The ceiling is about STANDING, STATE CAPACITY AND GEOLOGY -- see
+        # The ceiling is about STANDING, STATE REACH AND GEOLOGY -- see
         # mine_land_ceiling()'s own comment for why it is geology now, not
-        # standing alone, and for why a society with little state capacity
+        # standing alone, and for why a society with little state reach
         # genuinely cannot organise a very large mine while a chieftain who
         # can raise a crew can still do better than a foreigner with a local
         # lease. Without the state-capacity/revenue half of this the Norse
@@ -842,7 +829,7 @@ class MiningMixin(MineDepositsMixin):
     # per-region forest figure to read the way minerals has one, so this is
     # built from the signal that IS there: how much GROUND you actually hold
     # and how good your state is at organising land tenure at all
-    # (state_capacity) -- a coppice is not a metalla, so no imperial
+    # (state_reach) -- a coppice is not a metalla, so no imperial
     # concession gates it, but fencing off and managing a woodland at scale
     # still takes an administration capable of holding the tenure.
     #
@@ -877,7 +864,7 @@ class MiningMixin(MineDepositsMixin):
     # region count moves a great deal, which is the entire point of the fix.
     FOREST_HA_PER_MILLION_KM2_BASE = declare(
         "FOREST_HA_PER_MILLION_KM2_BASE", 1100.0, kind="engineering_estimate",
-        unit="hectares/(million km2 of home land) (base, before state capacity)",
+        unit="hectares/(million km2 of home land) (base, before state reach)",
         source=
         "Re-derived from the same empire-wide charcoal anchor as the old "
         "FOREST_HA_PER_REGION_BASE (500,000 t/yr implying ~667,000 ha "
@@ -890,7 +877,7 @@ class MiningMixin(MineDepositsMixin):
         "the switch from counting labels to reading area.",
         confidence="C",
         why="Base standing-woodland ceiling per million km2 of home land "
-            "held, before state capacity is applied. the geography data carries "
+            "held, before state reach is applied. the geography data carries "
             "no per-region forest figure the way it does for minerals, so "
             "this is still built from a proxy and checked against the one "
             "real empire-wide anchor available, not measured region by "
@@ -899,7 +886,7 @@ class MiningMixin(MineDepositsMixin):
             "many labels that area happens to be filed under.")
     FOREST_HA_PER_MILLION_KM2_PER_SC = declare(
         "FOREST_HA_PER_MILLION_KM2_PER_SC", 2575.0, kind="engineering_estimate",
-        unit="hectares/(million km2 of home land) per unit of state_capacity",
+        unit="hectares/(million km2 of home land) per unit of state_reach",
         source="Same empire-wide charcoal anchor and Rome-area calibration "
         "as FOREST_HA_PER_MILLION_KM2_BASE.",
         confidence="C",
@@ -916,9 +903,9 @@ class MiningMixin(MineDepositsMixin):
 
     def forest_land_ceiling(self):
         """The largest standing coppice you could ever hold, in hectares."""
-        state_capacity = float(self.civ.get("state_capacity", self.STATE_CAPACITY_DEFAULT_FALLBACK))
+        state_reach = self.state_reach()
         return forest_ceiling_hectares(
-            self.home_land_area_km2(), state_capacity, self.FOREST_HA_PER_MILLION_KM2_BASE,
+            self.home_land_area_km2(), state_reach, self.FOREST_HA_PER_MILLION_KM2_BASE,
             self.FOREST_HA_PER_MILLION_KM2_PER_SC,
             revenue_scale_multiple(self.revenue(), self.REVENUE_SCALE_DENARII, self.REVENUE_SCALE_CAP_MULTIPLE))
 

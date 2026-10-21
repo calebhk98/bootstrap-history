@@ -1,7 +1,7 @@
 """The founder's household answers the state's demands: the requisition and the supply levy it assesses, and a confiscation.
 
 The rule is the one every actor is levied by (`sim/agents/demand_answer.py`); this reads the household's
-stance, the state's capacity and the household's protection off the game and rolls the enforcement.
+stance, the state's reach and the household's protection off the game and rolls the enforcement.
 """
 from sim.refusal import LogLine
 from typing import Any, Callable, Dict, List, Tuple
@@ -20,7 +20,7 @@ def answer_state_demand(sim: Any, amount: float) -> Dict[str, Any]:
 	household = sim.state.household
 	stance = household.demand_stance
 	draw = sim.rng.random() if stance not in _PAYS_IN_FULL else 1.0
-	answer = demand_answer.settle_demand(stance, amount, sim.state_capacity, household.protection, draw,
+	answer = demand_answer.settle_demand(stance, amount, sim.state_reach(), household.protection, draw,
 										 household.service_offer)
 	if answer["service"] > 0.0:
 		sim.pay_edge(edges.EDGE_STATE_SPENDING, answer["service"], "service to the state")
@@ -72,7 +72,7 @@ def settle_household_year(sim: Any) -> Dict[str, float]:
 	settled = {"concealed": 0.0, "cost": 0.0, "seized": 0.0, "found": 0.0}
 	if household.demand_stance == demand_answer.CONCEAL or household.concealed > 0.0:
 		draw = sim.rng.random()
-		settled = demand_answer.settle_concealment(household.demand_stance, max(0.0, household.capital), sim.state_capacity,
+		settled = demand_answer.settle_concealment(household.demand_stance, max(0.0, household.capital), sim.state_reach(),
 												   household.protection, draw)
 		if settled["cost"] > 0.0:
 			sim.pay_edge(edges.EDGE_OFFICIALS, settled["cost"], "concealing wealth")
@@ -111,4 +111,4 @@ def set_household_stance(sim: Any, stance: str, service: float = 0.0) -> str:
 	household = sim.state.household
 	household.demand_stance = stance
 	household.service_offer = max(0.0, float(service))
-	return describe_stance(stance, sim.state_capacity, household.protection, household.service_offer)
+	return describe_stance(stance, sim.state_reach(), household.protection, household.service_offer)

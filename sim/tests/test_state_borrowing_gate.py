@@ -26,7 +26,7 @@ class CreditWorld(FakeWorld):
     def state_revenue(self):
         return 100000.0
 
-    def state_capacity(self):
+    def state_reach(self):
         return 0.5
 
     def nodes_with_mechanic(self, mechanic):

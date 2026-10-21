@@ -569,7 +569,6 @@
     "tex_wool",
     "tx2_needle_hand"
   ],
-  "state_capacity": 0.8,
   "state_pressure": {
     "_doc": "See rome_100ad.json's own state_pressure._doc for the shape this object takes and how society.py reads it.",
     "requisition_name": "the tribute of the calpixque",

@@ -34,11 +34,11 @@ class ProductionMixin:
 
     STATE_FUNDING_BASE_LABOUR_HOURS = declare(
         "STATE_FUNDING_BASE_LABOUR_HOURS", 50400.0, kind="temporary_heuristic",
-        unit="labour hours/year at output_per_head=1, state_capacity=1, pop_scale=1",
+        unit="labour hours/year at output_per_head=1, state_reach=1, pop_scale=1",
         source=None, confidence="D",
         why="Amount of labour, not of coin: it was a book-denarii figure and now follows what labour costs. "
             "What an imperial patron is worth in direct funding at a "
-            "reference civilisation size and state capacity. No fiscal "
+            "reference civilisation size and state reach. No fiscal "
             "record backs this figure; a real answer needs a state budget "
             "model - tax revenue, the fiscus's own spending priorities - "
             "that this engine does not have, per CLAUDE.md 3.1's ban on "
@@ -67,7 +67,7 @@ class ProductionMixin:
         """What a patron state would give the founder in a year if its treasury could spare it."""
         if not self.running_with_mechanic("state_funding"):
             return 0.0
-        return (self.STATE_FUNDING_BASE * self.real_output_per_head() * self.state_capacity
+        return (self.STATE_FUNDING_BASE * self.real_output_per_head() * self.state_reach()
                 * self.pop_scale ** self.STATE_FUNDING_POP_SCALE_EXPONENT
                 * (1.0 + max(0.0, self.state.governance.gov) / self.STATE_FUNDING_GOV_QUALITY_SCALE)
                 * self.rep_factor())
