@@ -1,4 +1,4 @@
-"""A real year (the labour year, the population following, the trim at the end of the spin-up) leaves the cached
+"""Scenario: a real year (the labour year, the population following, the trim at the end of the spin-up) leaves the cached
 people by trade equal to a fresh sum."""
 import math
 import unittest

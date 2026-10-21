@@ -1,4 +1,4 @@
-"""Complaints/355: a civilisation that exists only in memory (a derived mod civ,
+"""Scenarios (Complaint 640: all wiring, nothing here is a single rule). Complaints/355: a civilisation that exists only in memory (a derived mod civ,
 a test variant, a player-made country) runs the whole game, and its own fields
 are what the engine uses, not a file's with the same id."""
 import copy

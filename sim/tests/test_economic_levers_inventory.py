@@ -1,6 +1,7 @@
 """Food, housing, trade schools, demographics, and durable material stock. The typed-command parse is a rule on a string;
-every other check is a named scenario: a lever pulled through the protocol on a game and its effect read back (the stock
-banking of `resource_throttle` is a Sim method tangled with the throttle, and is a candidate for extraction under 640)."""
+the stock accounting of the material throttle is a rule in test_material_throttle_rules. Three named scenarios remain:
+the levers pulled through the protocol on one game, the throttle banking a mine's output once per year through the Sim,
+and the materials report with explicit buying and selling."""
 from .harness import *
 from sim.ui.proto.render import render_pretty
 from sim.ui.proto.typed import parse_typed
@@ -17,6 +18,7 @@ check("typed economic levers reach their protocol actions",
 
 s = sim(capital=1_000_000)
 reply = S._agent_dispatch(s, NODES, {"cmd": "buy", "what": "farm", "n": 120})
+# --- SCENARIO: the levers, pulled on one game
 check("scenario: farmland is a direct lever that lowers food costs", reply["ok"] and reply["food_cost_factor"] < 1, reply)
 
 room0 = s.labour.supervision_room()
@@ -39,6 +41,7 @@ check("scenario: population exposes national, reachable, and employed trade demo
                         ("estimated_in_the_country", "within_your_reach", "you_employ")),
       pop)
 
+# --- SCENARIO: the throttle banks a mine's unused output once per year through the Sim
 s = sim()
 s._own_production_tags = lambda: {("iron", "mine:iron")}
 s._own_material_supply = lambda tag: 100.0 if tag == "mine:iron" else 0.0
@@ -53,16 +56,9 @@ check("scenario: unused mine output banks once per year rather than once per que
       one_year == 100.0 and s.material_stock_t("iron") == 200.0,
       (one_year, s.material_stock_t("iron")))
 
+# --- SCENARIO: the materials report, and explicit buying and selling
 s = sim()
-s._material_stock()["iron"] = 100.0
-s.year += 2
-s.annual_material_demand = lambda: {"iron_bar_kg": 50.0}
-s._material_market_tonnes = lambda material: 0.0
-s._own_material_supply = lambda tag: 0.0
-check("scenario: old iron inventory covers later demand without current production",
-      s.resource_throttle() == 1.0 and abs(s.material_stock_t("iron") - 50.0) < 1e-6,
-      (s.throttle, s.material_stock_t("iron")))
-
+s._material_stock()["iron"] = 50.0
 report = S._agent_dispatch(s, NODES, {"cmd": "materials"})
 iron = next(material_row for material_row in report["materials"] if material_row["material"] == "iron")
 check("scenario: materials reports stock, flow, demand, and buy/sell values",

@@ -1,8 +1,12 @@
 """hot_path_caches: the per-year hot paths do not repeat work whose answer cannot have changed.
 
+The whole-game checks are in test_hot_path_caches_scenario.
+
 Complaint 141: a year got slower as more was built because every concern's
 output looked up the production catalog through a path-resolving call.
 """
+QUICK_TOPIC = True
+
 import os
 
 from .harness import *  # noqa: F401,F403
@@ -36,16 +40,6 @@ check("a warm production lookup resolves no filesystem paths",
       _count_calls(os.path, "abspath", _look_up_output_many_times) == 0)
 check("a warm production lookup lists no directories",
       _count_calls(os, "listdir", _look_up_output_many_times) == 0)
-
-# A year's wall-clock budget is generous on purpose: it catches a return of the
-# per-call catalog scan (tens of times slower), not machine noise.
-_budget_sim = sim(capital=200000.0)
-_start = time.process_time()
-_budget_sim.step()
-_elapsed = time.process_time() - _start
-check("an early year of the default run takes well under twenty seconds of CPU",
-      _elapsed < 20.0, "%.1fs" % _elapsed)
-
 
 # --- an actor's supply of a material looks only at the concerns that make it.
 from sim.agents.base import Actor as _Actor
@@ -150,6 +144,7 @@ _registry = _registry_of_firms(10)
 _registry.consider_entry = lambda world: []
 # the stub world answers only what firms and interest groups ask; the other spawners stay out of it
 from sim.agents import registry as _registry_module
+_saved_spawners = list(_registry_module.SPAWNERS)
 _registry_module.SPAWNERS[:] = [entry for entry in _registry_module.SPAWNERS
                                 if entry[0] in ("firm_entry", "interest_groups")]
 for _actor in _registry.actors.values():
@@ -278,15 +273,4 @@ _registry.actors["firm:003"].concerns.add("forge")
 check("...and a firm taking on a concern is counted at once",
       _registry.concerns_in("metal", _loom_nodes) == 1 and _registry.concerns_in("cloth", _loom_nodes) == 20)
 
-# --- the material stock moves capacity keys to the pool once, not on every read.
-_probe = sim(capital=2000.0)
-_ledger = _probe._material_stock()
-_ledger["scholar_hours"] += 5.0
-_probe._material_stock()
-check("a capacity key written to the stock lands in the pool and leaves the stock",
-      "scholar_hours" not in _probe._material_stock() and _probe.state.economy.capacity_pool.get("scholar_hours", 0.0) >= 5.0)
-
-# --- the works effects of mining techniques are read once until what is built or operating changes.
-_probe.mine_works_effects()
-_asked = _count_calls(_probe, "running", lambda: [_probe.mine_works_effects() for _ in range(20)])
-check("the mining works effects are not recomputed while nothing built or operating changes", _asked == 0, _asked)
+_registry_module.SPAWNERS[:] = _saved_spawners   # the registry's spawner list is shared by every topic in the process

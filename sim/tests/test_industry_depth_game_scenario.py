@@ -1,4 +1,4 @@
-"""Complaint 111, whole game: the opening industries are seeded once from the agent economy's producers,
+"""Scenario (Complaint 640: seed, accrual and save round trip are wiring on one game). Complaint 111, whole game: the opening industries are seeded once from the agent economy's producers,
 whatever is read first, and what the seed holds frees, speeds and steadies the concerns it should.
 
 Slow topic: it builds a whole game (and an agent economy), so it is not in the quick tier.

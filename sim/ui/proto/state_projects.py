@@ -1,6 +1,6 @@
 """State-reply builders for active projects, money, operations, spending and training hours."""
 
-from sim.engine.ui_port import plain_number
+from .parallelism_notes import free_hours_note
 from sim.refusal import cause_of
 from .state_waiting import _agent_end_reason, _waiting_on, _worth_knowing_early
 from .state_shut_staffing import shut_for_want_of_staff
@@ -260,32 +260,9 @@ def _agent_state_training_and_hours(sim, active, full):
         # spent paying that screen's byte budget, and it still fires on the
         # very next ordinary `state` or `step` instead.
         **({"worth_knowing_early": _worth_knowing_early(sim)} if not full else {}),
-        "free_hours_going_unused": (
-            ("%s founder-hours this year are going into nothing: every "
-             "project you have in hand is only waiting on the calendar "
-             "now, not on you or your money. A calendar floor is not "
-             "exclusive research time - start something else alongside "
-             "it while it runs. 'available' or 'stuck' says what you "
-             "could begin today; 'idle' splits the hours and names the delay."
-             % plain_number(max(0.0, sim.labour.director_pool()
-                                    - sim.labour.director_hours_committed())))
-            if (active
-                and all(value["founder_hours_left"] <= 0 for value in active.values())
-                and max(0.0, sim.labour.director_pool()
-                        - sim.labour.director_hours_committed()) > 200)
-            # AND WHEN NOTHING IS RUNNING AT ALL, which the first branch cannot
-            # see because it requires `active` to be non-empty. A player who
-            # steps a year with an empty slate loses those hours exactly as
-            # completely, and hours do not carry.
-            else ("%s founder-hours this year are going into nothing at all: "
-                  "you have no work in hand. Hours do not carry to next year. "
-                  "'available' or 'stuck' says what you could begin today; 'idle' splits the hours and names the delay."
-                  % plain_number(max(0.0, sim.labour.director_pool()
-                                         - sim.labour.director_hours_committed()))
-                  if (not active
-                      and max(0.0, sim.labour.director_pool()
-                              - sim.labour.director_hours_committed()) > 200)
-                  else None)),
+        "free_hours_going_unused": free_hours_note(
+            [value["founder_hours_left"] for value in active.values()],
+            max(0.0, sim.labour.director_pool() - sim.labour.director_hours_committed())),
         "founder_hours_sold_for_wages_this_year": round(
             sim.wage_hours_this_year, 1),
         # WHERE THE HOURS COME FROM: the pool can grow well past a single

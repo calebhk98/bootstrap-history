@@ -1,12 +1,12 @@
 """Farm hours move toward what the farm is needed for, the rest of the hours are shared by trade, and a
-wage that signals scarcity eases back once hours meet need; the training premium uses the
-civilisation's own interest rate."""
-import random
+wage that signals scarcity eases back once hours meet need; the training premium grows with the interest
+rate (Complaint 640: the schedule built from a game's own rate is in test_labour_follows_need_scenario)."""
+QUICK_TOPIC = True
+
 import unittest
 
 from sim.labour import labour_allocation
-from sim.engine.data import load_civ
-from sim.tests.harness import S, NODES, ORDER, build_unopened
+from sim.tests import harness  # noqa: F401  (the suite's shared setup)
 from sim.labour import labour_market, wages
 
 FARM = labour_allocation.FARM_TRADE
@@ -66,15 +66,7 @@ class HoursFollowNeedTests(unittest.TestCase):
         self.assertEqual(needed, {FARM: 600.0, "smith": 100.0, "potter": 300.0})
 
 
-class TrainingPremiumUsesCivilisationRateTests(unittest.TestCase):
-
-    def test_the_schedule_prices_training_at_the_civilisations_rate(self):
-        civ = load_civ("rome_100ad")
-        engine = build_unopened(lambda: S.Sim(NODES, ORDER, random.Random(1), events=False, manual=True, civ=civ))
-        schedule = engine.labour.wage_schedule()
-        years = schedule.training_years["smith"]
-        self.assertAlmostEqual(schedule.premium("smith"),
-                               wages.training_premium(years, civ["starting_interest_rate"]))
+class TrainingPremiumTests(unittest.TestCase):
 
     def test_higher_interest_rate_gives_a_larger_premium(self):
         self.assertGreater(wages.training_premium(5.0, 0.30), wages.training_premium(5.0, 0.05))

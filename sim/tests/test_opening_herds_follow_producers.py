@@ -1,56 +1,41 @@
-"""Complaints/532: the engine's opening herds are the head the agent economy's herd producers keep (one figure)."""
+"""Complaints/532: the engine's opening herds are the head the agent economy's herd producers keep (one figure). The
+arithmetic is called on producers and pasture the test states; the running game is in
+test_opening_herds_follow_producers_scenario."""
 import json
 import os
 
 from .harness import *  # noqa: F401,F403
-from .harness import unopened_sim
 
-from sim.economy import api as economy_api
 from sim.engine.data import ROOT
-from sim.geography.api import pasture_capacity_kg, tiles_held
-from sim.labour.api import production_data
+from sim.engine.opening_herd_rules import herd_units_kept, opening_herds
+
+QUICK_TOPIC = True
 
 HERD_STOCKS = ("sheep_kg", "goat_kg", "cattle_kg")
-production = production_data()
+PRODUCTION = {"keep_sheep": {"herd_stock": {"sheep_kg": 2.0}}, "keep_sheep_hill": {"herd_stock": {"sheep_kg": 3.0}},
+              "keep_cattle": {"herd_stock": {"cattle_kg": 1.0}}, "weave": {"outputs": {"cloth": 1.0}}}
+WEIGHT_KG = {"sheep_kg": 10.0, "cattle_kg": 100.0}.get
+FULL = lambda material: 1.0
 
+kept = herd_units_kept([("keep_sheep", 10.0), ("keep_sheep_hill", 4.0), ("keep_cattle", 5.0), ("weave", 99.0), ("unknown", 7.0)],
+                       PRODUCTION)
+check("the head kept is each producer's runs times the stock one run holds, summed by species",
+      kept == {"sheep_kg": 32.0, "cattle_kg": 5.0}, kept)
+check("a producer whose recipe keeps no herd adds none", "cloth" not in kept and len(kept) == 2, kept)
 
-def head_of_producers(game):
-    """{stock material: units} the herd producers keep: runs a year times the stock one run holds."""
-    held = {}
-    for producer in economy_api.all_producers(game.economy.agent.economy()):
-        for material, units in (production[producer.recipe_id].get("herd_stock") or {}).items():
-            held[material] = held.get(material, 0.0) + producer.capacity_runs * units
-    return held
+roomy = opening_herds(kept, 1e12, WEIGHT_KG, FULL)
+check("where the pasture is ample the opening herds are the producers' head", roomy == kept, roomy)
 
-
-rome = sim(civ="rome_100ad", capital=1e6)
-kept = head_of_producers(rome)
-capacity = sum(pasture_capacity_kg(tile, rome.state.economy.wild_stock, rome.world_map)
-               for tile in tiles_held(rome.civ, rome.world_map))
-check("the herd producers keep sheep", kept.get("sheep_kg", 0.0) > 0.0, kept)
-total_kg = sum(kept.values())
-for material in HERD_STOCKS:
-    wanted = kept.get(material, 0.0)
-    check("%s held at the opening equals the producers' head (pasture permitting)" % material,
-          abs(rome.stock_held(material) - wanted) <= 1e-6 * max(1.0, wanted) or total_kg > capacity,
-          (rome.stock_held(material), wanted))
-check("the opening herds stand within the pasture the held tiles carry",
-      sum(rome.stock_held(material) for material in HERD_STOCKS) <= capacity, capacity)
-
-# the sheep the economy's opening sizes supply the wool its textile producers take
-from sim.economy import opening
-from sim.engine.economy_port_setup import build_setup
-_record, _areas, _carriage = opening.open_economy(build_setup(unopened_sim(civ="rome_100ad")))
-producers = list(_record.producers.values())
-wool_made = sum(p.capacity_runs * production[p.recipe_id]["outputs"].get("wool_kg", 0.0) for p in producers)
-wool_used = sum(p.capacity_runs * (production[p.recipe_id].get("inputs") or {}).get("wool_kg", 0.0) for p in producers)
-check("Rome's opening flock supplies its opening wool demand within a tenth",
-      wool_used > 0.0 and abs(wool_made / wool_used - 1.0) <= 0.1, (wool_made, wool_used))
-
-mexica = sim(civ="mexica_1500", capital=1e6)
-for material in HERD_STOCKS:
-    check("a civilisation with no herd node holds no %s" % material, mexica.stock_held(material) == 0.0,
-          mexica.stock_held(material))
+weight = 32.0 * 10.0 + 5.0 * 100.0
+tight = opening_herds(kept, weight / 2.0, WEIGHT_KG, FULL)
+check("a pasture that carries half the weight holds every herd down by half together",
+      all(abs(tight[material] - kept[material] / 2.0) < 1e-9 for material in kept), tight)
+check("the herds held stand within the pasture the held tiles carry",
+      sum(units * WEIGHT_KG(material) for material, units in tight.items()) <= weight / 2.0 + 1e-9, tight)
+diseased = opening_herds(kept, 1e12, WEIGHT_KG, {"sheep_kg": 0.25, "cattle_kg": 1.0}.get)
+check("disease at the place leaves only the share of a herd that can stand there",
+      diseased == {"cattle_kg": 5.0, "sheep_kg": 8.0}, diseased)
+check("no herd producers hold no herds", opening_herds({}, 100.0, WEIGHT_KG, FULL) == {})
 
 for name in ("rome_100ad", "han_china_100ad", "england_1300", "norse_900ad"):
     with open(os.path.join(ROOT, "data", "civilizations", name + ".json"), encoding="utf-8") as handle:

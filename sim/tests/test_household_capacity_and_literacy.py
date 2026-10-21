@@ -1,145 +1,98 @@
-"""How many people a household can feed, house and oversee at all
-(household_room, the founder's own deputised hours), the advice that points
-at what would widen it, and the separate ceiling literacy puts on lettered
-trades.
+"""How many people a household can staff at all: the ceiling literacy puts on lettered trades
+(`literate_capacity`), the household room (`household_room`) and the advice that points at what would widen it
+(`_room_advice`). Complaint 640: the rules are called on a stub world built here; the whole-game checks are in
+test_household_capacity_and_literacy_scenario."""
+QUICK_TOPIC = True
 
-Regrouped from test_round8_fixes.py and test_round9.py - see CLAUDE.md's
-test-file reorganisation note. Checks moved verbatim; each one's own comment
-explains the break it guards.
-"""
+import types
+
 from .harness import *  # noqa: F401,F403
-from sim.refusal import cause_of, facts_of
+from sim.labour.labour_capacity import CapacityMixin
+from sim.refusal import facts_of
 
 
-# --- the ceiling on lettered trades and the household-room refusals, on one rich game; checks that
-# need the starting literacy come before the technologies that widen it.
-core = unopened_sim(capital=2000000.0)
+class _StubLabour(CapacityMixin):
+    """Only what the capacity rules read."""
+    LITERATE_TRADES = frozenset({"machinist", "scholar"})
+    LITERATE_CAPACITY_FLOOR = 2.0
 
-# A lettered trade shows the ceiling on how many can ever exist here, and `why` warns when a node
-# wants more than can ever exist.
-_labour_scholar = S._agent_dispatch(core, NODES, {"cmd": "labour", "trade": "scholar"})
-_labour_smith = S._agent_dispatch(core, NODES, {"cmd": "labour", "trade": "smith"})
-_why_goal = S._agent_dispatch(core, NODES, {"cmd": "why", "id": GOAL})
-_why_easy = S._agent_dispatch(core, NODES, {"cmd": "why", "id": "horse_collar"})
-check("a lettered trade shows the ceiling on how many can ever exist here",
-      _labour_scholar["trade"].get("most_this_society_can_ever_supply") is not None,
-      _labour_scholar["trade"].get("most_this_society_can_ever_supply"))
-check("...and says what widens it",
-      "printing" in str(_labour_scholar["trade"].get("what_widens_it")),
-      _labour_scholar["trade"].get("what_widens_it"))
-check("...and a trade needing no letters carries no such ceiling",
-      _labour_smith["trade"].get("most_this_society_can_ever_supply") is None,
-      _labour_smith["trade"].get("most_this_society_can_ever_supply"))
-check("and `why` warns when a node wants more scholars than can ever exist",
-      _why_goal.get("more_scholars_than_this_society_can_supply"),
-      _why_goal.get("more_scholars_than_this_society_can_supply"))
-check("...and more craftsmen than the household could ever hold",
-      _why_goal.get("more_craftsmen_than_your_household_can_hold"),
-      _why_goal.get("more_craftsmen_than_your_household_can_hold"))
-check("...and says nothing of the kind about a node you could staff",
-      not _why_easy.get("more_scholars_than_this_society_can_supply"),
-      _why_easy.get("more_scholars_than_this_society_can_supply"))
+    def __init__(self, literacy=1.0, institutional=0.0, supervision=0.0, headcount_now=0.0, room_places=0.0,
+                 existing=None, absent=(), done=(), operating=(), room_sources=()):
+        projects = types.SimpleNamespace(done=set(done), operating=set(operating))
+        self._world = types.SimpleNamespace(
+            cfg={"hired_hours_cap_base": 1000000.0}, pop_scale=1.0, HOURS_PER_PERSON_YEAR=2000.0,
+            trades_absent=set(absent), state=types.SimpleNamespace(projects=projects),
+            ROOM_SOURCES=list(room_sources), nodes={node_id: {} for node_id, _ in room_sources},
+            is_venture=lambda node_id: True, is_visible=lambda node_id: True,
+            closure=lambda nodes, node_id: {node_id}, start_reason=lambda node_id, _why=True: (True, ""),
+            money_text=lambda amount, grouped=False: "%g" % amount, housing_price_per_place=lambda: 100.0)
+        self.literacy, self.institutional, self.supervision = literacy, institutional, supervision
+        self.headcount_now, self.room_places, self.existing = headcount_now, room_places, existing
 
-# `train electrician 20` is bounded by literacy like every other taught trade.
-check("every taught trade is bounded by literacy, electrician included",
-      all(trade in core.labour.LITERATE_TRADES for trade in S.TRADES_ABSENT),
-      sorted(set(S.TRADES_ABSENT) - set(core.labour.LITERATE_TRADES)))
-_ok_el, _why_el = core.labour.train("electrician", 20)
-check("...so twenty electricians cannot be taught into a society of twelve",
-      not _ok_el and cause_of(_why_el) == "literacy_wall", _why_el)
+    def local_market_share(self):
+        return 1.0
 
-# The household-room refusal names what raises the room, not what buys people.
-_ok_rm, _why_rm = core.labour.hire("smith", 20)
-check("a room refusal names what raises the room, not what buys people",
-      not _ok_rm and "built" in _why_rm and "hire" not in _why_rm.split(".")[1],
-      _why_rm)
-check("...and names the nearest of them first, not the largest",
-      _why_rm.index("workshop_first") < (_why_rm.find("school_founded") if "school_founded" in _why_rm else len(_why_rm)),
-      _why_rm[_why_rm.index("built"):][:120])
+    def literacy_factor(self, trade):
+        return self.literacy
 
-# Teaching a society to read raises what it can staff, but not without bound.
-_cap0 = core.labour.literate_capacity("machinist")
-for _k in ("rag_paper", "printing_press", "if_movable_type", "school_founded",
-           "academy_network", "corpus_written"):
-    if _k in NODES:
-        core.apply_tech_effects(_k)
-_cap1 = core.labour.literate_capacity("machinist")
-check("teaching a society to read raises what it can staff", _cap1 > _cap0 * 1.5, (_cap0, _cap1))
-check("...but not without bound", _cap1 < _cap0 * 5, (_cap0, _cap1))
+    def staff_capacity(self):
+        return self.institutional, self.room_places
+
+    def supervision_room(self):
+        return self.supervision
+
+    def headcount(self):
+        return self.headcount_now
+
+    def people_who_exist(self, trade):
+        return float("inf") if self.existing is None else self.existing
+
+    def room_added_by(self, places):
+        return places
+
+
+# --- literate_capacity: the ceiling on lettered trades.
+_low = _StubLabour(literacy=0.2).literate_capacity("machinist")
+_high = _StubLabour(literacy=0.9).literate_capacity("machinist")
+check("teaching a society to read raises what it can staff", _high > _low, (_low, _high))
+_floor = _StubLabour.LITERATE_CAPACITY_FLOOR
+check("...in proportion to literacy above the floor, not without bound",
+      abs((_StubLabour(literacy=0.6).literate_capacity("machinist") - _floor)
+          - 2.0 * (_StubLabour(literacy=0.3).literate_capacity("machinist") - _floor)) < 1e-9)
 check("a trade that needs no letters is not capped by literacy at all",
-      core.labour.literate_capacity("smith") == float("inf"), core.labour.literate_capacity("smith"))
+      _StubLabour().literate_capacity("smith") == float("inf"))
+check("a floor of findable people stays when no one reads", _StubLabour(literacy=0.0).literate_capacity("machinist")
+      == _StubLabour.LITERATE_CAPACITY_FLOOR)
+check("the floor is added to, not maxed with, the pool: reading still moves the ceiling",
+      _StubLabour(literacy=0.01).literate_capacity("machinist") > _StubLabour(literacy=0.0).literate_capacity("machinist"))
+check("a scholar ceiling adds the institutions that train scholars outright",
+      _StubLabour(institutional=7.0).literate_capacity("scholar") > _StubLabour().literate_capacity("scholar") + 6.9)
+check("only a scholar gets the institutional pool", _StubLabour(institutional=7.0).literate_capacity("machinist")
+      == _StubLabour().literate_capacity("machinist"))
+check("the people who exist cap a present trade", _StubLabour(existing=1.5).literate_capacity("machinist") == 1.5)
+check("...but not a trade the world has none of yet (absent trades are taught in)",
+      _StubLabour(existing=0.0, absent={"machinist"}).literate_capacity("machinist") > 0.0)
 
-# household_room bounds hire, buy and train by one number. The literacy ceiling is already widened,
-# so the room is what binds.
-_room0 = core.labour.household_room()
-check("a fresh household has room for a few people and no more", 0 < _room0 < 20, _room0)
-check("...and the literacy ceiling is not what binds here",
-      core.labour.literate_capacity("machinist") > _room0 + 1, (core.labour.literate_capacity("machinist"), _room0))
-_ok_within, _why_within = unopened_sim(capital=2000000.0).labour.train("machinist", 1)
-check("teaching within the room still works", _ok_within, _why_within)
-core.labour.hire("smith", int(_room0))          # fill the room exactly
-_ok_t3, _why_t3 = core.labour.train("machinist", 1)
-check("teaching past what you can feed and house is refused",
-      not _ok_t3 and cause_of(_why_t3) == "household_room", _why_t3)
-check("...and it says there is no room for even one", core.labour.household_room() < 1.0, core.labour.household_room())
-check("...and what makes room, which is not what buys people",
-      facts_of(_why_t3)["remedies"]
-      and all(remedy["action"] in ("buy_housing", "reopen", "build") for remedy in facts_of(_why_t3)["remedies"]),
-      facts_of(_why_t3))
-check("hire, buy and train are all bounded by the same one number",
-      core.labour.hire("smith", 1)[0] is False and core.labour.train("machinist", 1)[0] is False
-      and core.labour.buy_slaves(1) <= 0, (_room0, core.labour.household_room()))
+# --- household_room: one number for hire, buy and train.
+check("household room is the places plus the supervision, less the people held",
+      _StubLabour(room_places=8.0, supervision=4.0, headcount_now=5.0).household_room() == 7.0)
+check("...and goes negative when more are held than there is room for",
+      _StubLabour(room_places=3.0, supervision=0.0, headcount_now=5.0).household_room() == -2.0)
 
-# --- advice on how to get artisans, scholars and room never points at a remedy waiting on what it
-# supplies, and offers a shut institution back as the cheap fix.
-advice = unopened_sim(capital=1000000.0)
-check("giving staff advice does not recurse into itself",
-      isinstance(advice.start_reason("workshop_first")[1], str), "no RecursionError")
-advice.done.add("patron_local"); advice._done_changed()
-_adv = advice.labour._staff_advice("artisans")
-check("advice never points at a remedy waiting on the thing it supplies",
-      {"action": "build", "node": "workshop_first"} not in facts_of(_adv)["remedies"], _adv)
-advice.artisans = 20.0
-check("...and names it plainly once it is actually reachable",
-      {"action": "build_after_hiring", "node": "workshop_first"} not in facts_of(advice.labour._staff_advice("artisans"))["remedies"],
-      advice.labour._staff_advice("artisans"))
-run_it(advice, "workshop_first", "school_founded")
-_advice_open = advice.labour._room_advice()
-advice.operating.discard("school_founded")
-_advice_shut = advice.labour._room_advice()
+# --- advice: what raises the room, with a shut source offered back as the cheap fix.
+_sources = [("school_founded", 5), ("workshop_first", 3)]
+_shut = _StubLabour(done={"school_founded"}, operating=set(), room_sources=_sources)._room_advice()
+_open = _StubLabour(done={"school_founded"}, operating={"school_founded"}, room_sources=_sources)._room_advice()
 check("a shut room-source is offered back as the cheap fix, not silently dropped from the advice",
-      {"action": "reopen", "node": "school_founded"} in facts_of(_advice_shut)["remedies"], _advice_shut)
-check("...and it is not also still claimed as an open place in the same breath",
-      {"action": "reopen", "node": "school_founded"} not in facts_of(_advice_open)["remedies"],
-      (_advice_open, _advice_shut))
-_staff_shut = advice.labour._staff_advice("scholars")
-check("the scholar-pool advice offers to reopen a shut school rather than treating it as covered",
-      {"action": "reopen", "node": "school_founded"} in facts_of(_staff_shut)["remedies"], _staff_shut)
-check("ROOM_SOURCES names real node ids only - no stale reference silently filtered out",
-      all(node_id in NODES for node_id, _ in advice.ROOM_SOURCES),
-      [node_id for node_id, _ in advice.ROOM_SOURCES if node_id not in NODES])
-advice.done.update(NODES); advice._done_changed()
-# Open, not just built: every room source must be running for "you have everything".
-advice.operating.update(node_id for node_id, _ in advice.ROOM_SOURCES if node_id in NODES)
-check("...and says so plainly when you already hold every one of them",
-      "every one of them" in advice.labour._room_advice(), advice.labour._room_advice())
-
-_DEPUTY_YEARS = 2
-
-
-# --- a deputy is announced with what it does to the founder's year, once per whole deputy.
-def _deputies_are_announced():
-    deputies_sim = sim(capital=20000000.0, manual=False)   # the opening purse is re-expressed in the game money unit, so this buys what the old figure did
-    run_it(deputies_sim, "school_founded", "patron_imperial", "academy_network")
-    peak_deputies = 0.0
-    for _ in range(_DEPUTY_YEARS):
-        deputies_sim.step()
-        peak_deputies = max(peak_deputies, deputies_sim.directors_extra)
-    said = [message for _, message in deputies_sim.log if "deput" in message]
-    # deputies can leave again, so the bound is the most held at once, not the count at the end
-    return (any("your year is" in message for message in said)
-            and len(said) == len(set(said)) and len(said) <= int(peak_deputies), said[:1])
-
-slow_check("gaining a deputy is announced with what it does to your year, "
-           "once per whole deputy rather than every year",
-           _deputies_are_announced)
+      {"action": "reopen", "node": "school_founded"} in facts_of(_shut)["remedies"], facts_of(_shut))
+check("...and an open one is not offered for reopening",
+      {"action": "reopen", "node": "school_founded"} not in facts_of(_open)["remedies"], facts_of(_open))
+check("a source not yet built is offered to build, and the nearest first",
+      [remedy["node"] for remedy in facts_of(_open)["remedies"] if remedy["action"] == "build"] == ["workshop_first"],
+      facts_of(_open))
+check("the room advice always offers to buy housing",
+      all({"action": "buy_housing", "node": None} in facts_of(advice)["remedies"] for advice in (_shut, _open)))
+_everything = _StubLabour(done={"school_founded", "workshop_first"}, operating={"school_founded", "workshop_first"},
+                          room_sources=_sources)._room_advice()
+check("with every source built and running only housing remains", facts_of(_everything)["remedies"] == [
+      {"action": "buy_housing", "node": None}], facts_of(_everything))

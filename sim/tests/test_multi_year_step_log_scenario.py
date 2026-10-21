@@ -1,4 +1,4 @@
-"""multi_year_step_log: `step N` logs and reports every simulated year.
+"""Scenario, multi_year_step_log: `step N` logs and reports every simulated year (equivalence with N single steps).
 
 Complaints/159: after `step 2` the log showed nothing for the second year.
 Measured: the multi-year step logs exactly what N single steps log; the
@@ -57,7 +57,7 @@ check("every year with a log entry inside the step appears in the step's events"
       all(year in reported_years for year in logged_years),
       (logged_years, reported_years))
 printed = _RP("step", multi_reply)
-check("the printed step report shows events of every reported year",
+check("the printed step report shows events of every reported year",   # presentation: the printed report
       all(("DURING %d" % year in printed) or ("COMPLETED %d" % year in printed)
           for year in reported_years),
       (reported_years, printed[:800]))
