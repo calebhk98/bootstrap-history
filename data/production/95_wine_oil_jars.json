@@ -111,13 +111,13 @@
    },
    "unit_dimension": "mass",
    "basis": "per hectare of vineyard per year, output as kg of fermented common (table) wine, taking wine's density as close to water's",
-   "yield_basis": "MADE from grapes_kg. Treading and pressing recovers roughly 65-70 percent of the grapes' weight as must, fermentation loses a few percent as CO2, so 4000 kg of grapes gives 2700 kg of wine (the same unsourced estimate the entry carried before, conf C). The wine is stored and shipped in jars: 26 litres to a jar at wine's density near water's is 2700/26 jars, each used once (Aguilera Martin, as cited under olive_oil_kg p. 15, says wine jars, unlike oil jars, were reused, but no count of refills was found, so one use is a LABELLED HEURISTIC that overstates the jar share, retire: Complaint 656). Cellar labour is the 30 hours of treading and racking (heuristic split, see grapes_kg). PRESS: Cato, De Agricultura 11 (LacusCurtius, https://penelope.uchicago.edu/Thayer/E/Roman/Texts/Cato/De_Agricultura/A*.html), equips a vineyard of 25.2 ha with \"3 complete presses\"; one press serves a third of that, 8.41 ha (at 2,523 square metres to the Roman land unit, Wikipedia as above), so its yearly capacity is that area times the 2700 kg/ha. Build bill and life of a press: no source found (Cato 18 and 19 give the pressing-room and the posts; their timber and stone were not totalled): LABELLED HEURISTICS, conf D, retire: Complaint 656.",
+   "yield_basis": "MADE from grapes_kg. Treading and pressing recovers roughly 65-70 percent of the grapes' weight as must, fermentation loses a few percent as CO2, so 4000 kg of grapes gives 2700 kg of wine (the same unsourced estimate the entry carried before, conf C). The wine is stored and shipped in jars: 26 litres to a jar at wine's density near water's is 2700/26 jars, each used once (Aguilera Martin, as cited under olive_oil_kg p. 15, says wine jars, unlike oil jars, were reused, but no count of refills was found, so one use is a LABELLED HEURISTIC that overstates the jar share, retire: Complaint 656). Cellar labour is the 30 hours of treading and racking (heuristic split, see grapes_kg). PRESS: Cato, De Agricultura 11 (LacusCurtius, https://penelope.uchicago.edu/Thayer/E/Roman/Texts/Cato/De_Agricultura/A*.html), equips a vineyard of 25.2 ha with \"3 complete presses\"; one press serves a third of that, 8.41 ha (at 2,523 square metres to the Roman land unit, Wikipedia as above), so its yearly capacity is that area times the 2700 kg/ha. Press timber and stone are now read from Cato 18 and 19 (see capital_basis); build labour and life of a press: no source found: LABELLED HEURISTICS, conf D, retire: Complaint 656.",
    "capital": [
     {
      "good": "wine press, beam press with its pressing floor",
      "build_materials": {
-      "timber_m3": 4.0,
-      "stone_kg": 2000.0
+      "timber_m3": 4.24,
+      "stone_kg": 2577.0
      },
      "build_labour_hours": {
       "carpenter": 200.0,
@@ -125,7 +125,7 @@
      },
      "service_life_years": 30.0,
      "annual_output_at_basis": 22707.0,
-     "capital_basis": "Capacity from Cato 11: 3 presses to 25.2 ha (see yield_basis), 8.41 ha each, at 2700 kg of wine a hectare. Timber, stone, labour and the 30-year life are LABELLED HEURISTICS, conf D, no source found, retire: Complaint 656.",
+     "capital_basis": "Capacity from Cato 11: 3 presses to 25.2 ha (see yield_basis), 8.41 ha each, at 2700 kg of wine a hectare. Cato, De Agricultura 18 (LacusCurtius, https://penelope.uchicago.edu/Thayer/E/Roman/Texts/Cato/De_Agricultura/A*.html): \"Anchor-posts 2 feet thick, 9 feet high, including tenons\"; \"guide-posts 2 feet in diameter and 10 feet high, including the tenons\"; \"cover the whole area 5 feet by 2½ feet with hard stones to a depth of 1½ feet\"; \"lay on it a flat stone, 2½ by 2½ by 1½ feet, and set the posts on it\". Roman foot 296 mm (Wikipedia, Ancient Roman units of measurement, \"Using the value 296 mm (11.7 in) for the Roman foot\"), so a cubic foot is 0.0259 cubic metres. Counted per press: two anchor-posts taken as 2 by 2 feet square in section, two guide-posts round, one anchor foundation block and two guide-post flat stones, which is 4.24 cubic metres of timber and 37.5 cubic feet (0.973 cubic metres) of stone; stone at 2650 kg per cubic metre (Wikipedia, Granite: average density between 2.65 and 2.75 g/cm3; Cato says only 'hard stones'), 2577 kg. These are LOWER BOUNDS: Cato gives no section for the press-beam, windlass or levers, and the pavement, press seat and mill stones are not totalled, and the square section of the anchor-posts is an assumption (conf C for the counted parts). Wine press (Cato 19 raises the guide-posts and anchor-posts two feet: 11 and 12 feet). Carpenter and mason hours and the 30-year life are LABELLED HEURISTICS, conf D, no source found, retire: Complaint 656.",
      "conf": "D"
     }
    ],
@@ -145,13 +145,13 @@
    },
    "unit_dimension": "mass",
    "basis": "per hectare of mature olive grove per year, long-run average, output as kg of pressed oil",
-   "yield_basis": "MADE from olives_kg. 1700 kg of olives at about 17.6 percent recovery is 300 kg of oil (recovery from the entry's earlier recalled 15-20 percent range for a lever-and-screw press, not re-opened). Oil is held in jars of 26 litres, filled at oil's density, specific gravity 0.911 at 20 C (Wikipedia, Olive oil infobox, https://en.wikipedia.org/wiki/Olive_oil), so 26 litres hold 23.7 kg and 300 kg of oil fills 12.67 jars, each used once: oil jars were not refilled, \"constituir envases no reutilizables\" because the oil soaked the ceramic and went rancid (Aguilera Martin, Evolucion de los tituli picti de las anforas Dressel 20, Acta XII Congressus Internationalis Epigraphiae Graecae et Latinae, p. 15), and the Dressel 20 jars were discarded at Monte Testaccio rather than recycled (Wikipedia, Monte Testaccio, https://en.wikipedia.org/wiki/Monte_Testaccio). Pressing and settling labour is 30 hours (heuristic split). PRESS: Cato 10 (https://penelope.uchicago.edu/Thayer/E/Roman/Texts/Cato/De_Agricultura/A*.html) equips an oliveyard of 60.6 ha with \"5 complete oil-pressing equipments\", so a press serves 12.1 ha (240 Roman land units over 5, at 2,523 square metres each; Wikipedia, as in amphora_count), and its yearly capacity is that area times 300 kg/ha. Build bill and life: no source found, LABELLED HEURISTICS, conf D, retire: Complaint 656.",
+   "yield_basis": "MADE from olives_kg. 1700 kg of olives at about 17.6 percent recovery is 300 kg of oil (recovery from the entry's earlier recalled 15-20 percent range for a lever-and-screw press, not re-opened). Oil is held in jars of 26 litres, filled at oil's density, specific gravity 0.911 at 20 C (Wikipedia, Olive oil infobox, https://en.wikipedia.org/wiki/Olive_oil), so 26 litres hold 23.7 kg and 300 kg of oil fills 12.67 jars, each used once: oil jars were not refilled, \"constituir envases no reutilizables\" because the oil soaked the ceramic and went rancid (Aguilera Martin, Evolucion de los tituli picti de las anforas Dressel 20, Acta XII Congressus Internationalis Epigraphiae Graecae et Latinae, p. 15), and the Dressel 20 jars were discarded at Monte Testaccio rather than recycled (Wikipedia, Monte Testaccio, https://en.wikipedia.org/wiki/Monte_Testaccio). Pressing and settling labour is 30 hours (heuristic split). PRESS: Cato 10 (https://penelope.uchicago.edu/Thayer/E/Roman/Texts/Cato/De_Agricultura/A*.html) equips an oliveyard of 60.6 ha with \"5 complete oil-pressing equipments\", so a press serves 12.1 ha (240 Roman land units over 5, at 2,523 square metres each; Wikipedia, as in amphora_count), and its yearly capacity is that area times 300 kg/ha. Press timber and stone are read from Cato 18 (see capital_basis); build labour and life: no source found, LABELLED HEURISTICS, conf D, retire: Complaint 656.",
    "capital": [
     {
      "good": "oil press, beam press with mill and settling vats",
      "build_materials": {
-      "timber_m3": 4.0,
-      "stone_kg": 3000.0
+      "timber_m3": 3.5,
+      "stone_kg": 2577.0
      },
      "build_labour_hours": {
       "carpenter": 200.0,
@@ -159,7 +159,7 @@
      },
      "service_life_years": 30.0,
      "annual_output_at_basis": 3633.1,
-     "capital_basis": "Capacity from Cato 10: 5 presses to 60.6 ha (12.1 ha each) at 300 kg of oil a hectare. Timber, stone, labour and the 30-year life are LABELLED HEURISTICS, conf D, no source found, retire: Complaint 656.",
+     "capital_basis": "Capacity from Cato 10: 5 presses to 60.6 ha (12.1 ha each) at 300 kg of oil a hectare. Cato, De Agricultura 18 (LacusCurtius, https://penelope.uchicago.edu/Thayer/E/Roman/Texts/Cato/De_Agricultura/A*.html): \"Anchor-posts 2 feet thick, 9 feet high, including tenons\"; \"guide-posts 2 feet in diameter and 10 feet high, including the tenons\"; \"cover the whole area 5 feet by 2½ feet with hard stones to a depth of 1½ feet\"; \"lay on it a flat stone, 2½ by 2½ by 1½ feet, and set the posts on it\". Roman foot 296 mm (Wikipedia, Ancient Roman units of measurement, \"Using the value 296 mm (11.7 in) for the Roman foot\"), so a cubic foot is 0.0259 cubic metres. Counted per press: two anchor-posts taken as 2 by 2 feet square in section, two guide-posts round, one anchor foundation block and two guide-post flat stones, which is 3.50 cubic metres of timber and 37.5 cubic feet (0.973 cubic metres) of stone; stone at 2650 kg per cubic metre (Wikipedia, Granite: average density between 2.65 and 2.75 g/cm3; Cato says only 'hard stones'), 2577 kg. These are LOWER BOUNDS: Cato gives no section for the press-beam, windlass or levers, and the pavement, press seat and mill stones are not totalled, and the square section of the anchor-posts is an assumption (conf C for the counted parts). Oil press (Cato 18, 9 and 10 feet). Carpenter and mason hours and the 30-year life are LABELLED HEURISTICS, conf D, no source found, retire: Complaint 656.",
      "conf": "D"
     }
    ],
