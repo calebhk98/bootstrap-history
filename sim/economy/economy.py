@@ -150,6 +150,7 @@ class Economy:
         if inputs.tax_rates:
             self.setup = dataclasses.replace(self.setup, tax_forms=taxes.with_rates(self.setup.tax_forms, inputs.tax_rates))
         setup, record = self.setup, self.record
+        record.sort_in_saved_order()
         self.__dict__.pop("_port_shares", None)
         self.follow_flows()
         self.carriage.set_scale(carriage_hours.wage_scale(setup, record, self.carriage))   # the carriers' labour at the year's wage
