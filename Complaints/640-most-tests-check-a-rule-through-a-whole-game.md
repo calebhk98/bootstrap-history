@@ -1,6 +1,6 @@
 # Most tests check a rule through a whole game, so a failure cannot say which rule broke
 
-**Status:** open
+**Status:** open. Audit of the existing files done (the batches below); the guard that stops a new undeclared whole-game test is in place; what remains is the leftover list the guard prints.
 
 A large share of `sim/tests/test_*.py` builds a whole game (`harness.sim()`, `opened()`, `close_years`) and reads a
 value off it, to check a rule that is one function. Such a test passes only while the live game happens to hold the
@@ -282,3 +282,44 @@ scenarios each; `sited_ore_price_over_cost` is a baseline validation naming 519.
 compared against capital taken after it). `state_debasement_prices` was red after 625 (its hook no longer set the cut);
 it now drives `Government.apply_debasement`. Still Sim-only: `project_cost_now`, `venture_upkeep_quote`,
 `staffing_missing_to_open`.
+
+## Applied: the guard, and the declaration of whole-game modules
+
+New whole-game tests kept arriving as undeclared files. `python3 -m sim.tests --whole-game-checks` (`sim/tests/whole_game_checks.py`)
+reads each `test_*.py` syntax tree and lists the modules that build a whole game (`sim`, `unopened_sim`, `build_unopened`, `Sim`,
+the in-process CLI `proto` and `cli_in_process.run`, the `spin_up_*` helpers) and are not declared. A module is declared by a file
+name ending `_scenario`, `_validation` or `_smoke`, or by a docstring opening `SCENARIO`, `BASELINE VALIDATION` or `SMOKE`. The quick
+topic `whole_game_declared` fails on an undeclared builder that is not in `sim/tests/whole_game_leftovers.txt` and on a listed
+module that has since been declared, converted or deleted, so the list only shrinks. Its rule checks call the detector and the
+declaration test on source text built in the test.
+
+Declared by marker in this pass (their subject is a whole game: scenarios, the opening and spin-up checks, save and resume round
+trips, determinism, the CLI front end, baseline validations): 61 modules, found by reading each docstring against the checks in it.
+Split, the rule checks staying quick and the game-building checks moving to a `_scenario` file beside them: `arrears_hours`,
+`auto_hire_buys_room`, `bank_institution_gate`, `bearable_part_pure`, `complaints_17_24`, `completion_messaging`,
+`concerns_that_pay`, `dynamic_wages`, `demography_history`, `alerts_staffing_finish`, `automation_audit`. `concerns_that_pay`
+had been failing before this pass (its fake world lacked `plant_costs`, which the scan reads); the stub now has it.
+
+## Remaining: the guard's leftover list
+
+`python3 -m sim.tests --whole-game-checks` prints the list (`sim/tests/whole_game_leftovers.txt`); each line is a module whose rules
+are checked through a game and that still needs a split or a conversion. By how they build the game:
+
+- `unopened_sim` only (about 55): mostly rules that read the data or the setup of a civilisation; each becomes a call of the
+  rule on a stand-in (`sim/tests/labour_stand_in.py`, `disease_stand_in.py`, `score_game.py` and the stub games of the
+  converted files are the pattern), or a `_scenario` file where the point is the setup.
+- `sim` on a live game (about 23): the rule needs the yearly step; pull it out of the `Sim` method first (508).
+- the in-process CLI (about 10): the typed and JSON front end; the parse is a rule on a string, the reply a scenario.
+- spin-up and others (about 8): measurements of the spin-up; they belong in `simulator.py` subcommands or validations.
+
+Two leftovers recorded earlier stay open:
+
+- `start_and_upkeep_quotes_scenario`: two checks, a `start horse_collar` in an opened game is refused `people_exist` because the
+  labour core holds about 0.001 smiths there, against tens of thousands in an unopened game of the same civilisation. Left as a
+  pointer: being measured separately.
+- Rules still inside `Sim` methods that need pulling out into plain functions before their checks can leave a scenario:
+  `project_cost_now`, `venture_upkeep_quote`, `staffing_missing_to_open`, `seed_opening_industry_experience`, `_step_staff`, `train`,
+  `fire`, `commission`, load validation, the staffing gates of `open` and `start`, `work_for_wages`, and the `Sim.start_reason`
+  deficit sizing.
+
+The complaint closes when the leftover list is empty and the rules above are plain functions.

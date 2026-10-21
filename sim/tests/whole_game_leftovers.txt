@@ -9,7 +9,6 @@ agent_economy_wiring
 agriculture_wiring
 allocate
 arrears_visibility
-auto_hire_buys_room
 automation_modes
 automation_skips
 backing_margin_cache
@@ -27,8 +26,6 @@ complaint_191_fuzzy_option_and_readme
 complaint_492_han_iron_monopoly
 complaint_505_room_advice_income
 complaints_09_16
-complaints_17_24
-completion_messaging
 concern_volume
 country_literacy
 craftsmen_wording
@@ -40,7 +37,6 @@ demographics
 demographics_and_plague
 disease_burden_wiring
 early_playtest
-economic_caching
 economic_levers_inventory
 economy_check_command
 economy_entry_for_standing_bids
