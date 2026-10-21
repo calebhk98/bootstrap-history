@@ -165,13 +165,6 @@
       "band_source": "A cap the model's classification must meet, not a literature figure."
     }
   },
-  "ordering": {
-    "_doc": "Textiles or building is expected to be the largest non-farm group among those classified (Complaint 619).",
-    "largest_non_farm_among": [
-      "textiles",
-      "building"
-    ]
-  },
   "outside_society_trades": ["soldier"],
   "industry_total": {
     "_doc": "Sum of textiles, building, food_processing and other_crafts: the one industrial aggregate read in an opened source. Not yet checked by a test.",

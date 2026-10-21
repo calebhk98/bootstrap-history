@@ -67,3 +67,10 @@ not tuned to the run.
   waste haulage (porters on foot, carters for pack and cart) and natron (salt worker, as the recipe's own basis says).
 - Not measured: the Rome and England shares after these changes. `economy-check --occupations` does not finish in five
   minutes; the slow topic `occupational_distribution` is still to be run by the orchestrator.
+
+## Ordering rule dropped (2026-10-21)
+
+The check that textiles or building is the largest non-farm group is removed with its `ordering` entry in
+`data/world/occupation_groups.json`: no opened source supports it, and the one opened source with a split
+(Broadberry, Campbell and van Leeuwen 2013, Explorations in Economic History 50, England's labour force in 1381:
+services above industry) contradicts it. See `Complaints/reports/research-occupation-bands-and-porters.md`.
