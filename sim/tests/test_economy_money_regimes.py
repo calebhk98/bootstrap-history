@@ -1,6 +1,6 @@
 """Each civilisation's money works as its own regime on the agent economy: England struck silver with a
 mint charge, Norse weighed silver, Han and Rome struck coin, Mexica cacao beans. More metal mined
-raises the money stock and the price level under struck and weighed money, and the mint holds the metal
+raises the money stock under struck and weighed money, and the mint holds the metal
 of the money in circulation. Norse weighed silver is its own topic: it is a run of its own, and the suite
 runs topics side by side."""
 from .harness import *  # noqa: F401,F403
