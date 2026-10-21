@@ -155,6 +155,11 @@ def current(record: Any) -> Dict[str, Any]:
 
 # ---- what the government reads ------------------------------------------------------------------------
 
+def revenue_forms_of(government: Any) -> List[Dict[str, Any]]:
+	"""The forms a government actor holds this year (revenue_forms of its record)."""
+	return revenue_forms(government.record)
+
+
 def revenue_forms(record: Any) -> List[Dict[str, Any]]:
 	"""The forms the state raises at the rates it holds, then the forms it has started. The record's own forms were
 	copied from the civilisation file at setup; the file is not read again."""

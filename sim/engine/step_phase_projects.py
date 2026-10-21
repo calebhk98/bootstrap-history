@@ -505,7 +505,7 @@ class ProjectProgressPhaseMixin:
         # all. Named per project, so 'why <id>' and this line never disagree
         # about which project or how much.
         if _arrears_hours_lost:
-            self.state.household.log.append((self.state.scenario.year, arrears_hours_line(_arrears_hours_lost)))
+            self.state.household.log.append((self.state.scenario.year, arrears_hours_line(_arrears_hours_lost)))  # plain line: arrears_hours_line builds the LogLine and its kind
 
         # A STANDING ALLOCATION THE PLAYER GAVE, AND DID NOT GET - SAID, NOT
         # LEFT FOR THEM TO NOTICE. `allocate` is a promise about the one
