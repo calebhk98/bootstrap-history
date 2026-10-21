@@ -142,3 +142,22 @@ reply), the whole-run 150-year attrition (`roll_trade`, also `test_complaint_585
 `names_and_fog`, `one_goods_market`, `one_labour_market`, `one_living_cost_model`, `opening_herds_follow_producers`,
 `opening_basket_agrees`, `opening_smelters_beside_ore`, `parallelism_note`, `partner_in_agent_economy`, `peek_resource_throttle`,
 `people_attrition_scholars`, `people_by_trade_cache_year`, `perf_optimizations`.
+
+## Applied: audit batch 13 (test_state_debases_coin through test_trade_shortage_kind)
+
+Rules are called on inputs the test builds (stand-in games and worlds holding only what the rule reads); all of these topics
+are now quick except two named scenarios. New or rewritten quick rule files: `test_state_debases_coin` (`Economy.strike_lighter_coin`,
+the yearly `_strike_state_coin`), `test_state_headcount_home` (`state_hands`, `checked_army`), `test_state_repetition`
+(`already_explained`), `test_state_revenue_forms` (the forms over a stand-in world, the lever on a rate), `test_state_taxes_in_kind_economy`
+(units to tonnes, the held tiles), `test_state_serialization` (the cache reset, the save validation on a built save),
+`test_state_soldier_trade` (the army line, the standing draw on the unskilled trade, the state's hiring pressing the market),
+`test_state_strata_fiscal`, `test_state_weapon_relief` (the relief over a stand-in game), `test_step_problems`,
+`test_strata_income_from_cohorts`, `test_stuck_matches_start`, `test_stuck_sees_training`, `test_tiles_replace_regions`,
+`test_town_providers`, `test_trade_reach_transport`, `test_trade_school_rename`, `test_trade_shortage_kind`. Extractions, behaviour
+unchanged: `score_total` (`sim/ui/proto/score_total.py`); the start money refusal (`_money_refusal`) now carries its cause
+`cash_short` and facts `owed`, `price`, `ceiling`, `short`. Scenarios kept: `test_state_repetition_scenario` (`state` and `ventures`
+mark an explanation as seen), `test_state_revenue_forms_scenario` (one played year of grain taken in kind),
+`test_step_reply_severity_scenario` (the `step` command tags every event). Deleted as held elsewhere: the in-kind levy, price and stores
+checks of `test_state_taxes_in_kind_economy` (`test_state_taxes_in_kind`); the strata's books over a year and the conservation of money
+in `test_strata_income_from_cohorts` (`test_agents_strata`); the region-record land check of `test_tiles_replace_regions`
+(`test_a_region_record_is_only_a_label`). `test_tariffs_and_embargoes` and `test_state_land_revenue` were already stand-in tests.
