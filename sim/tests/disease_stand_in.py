@@ -26,13 +26,13 @@ def civilisation(civ_id):
 class StandInSim(disease_port.DiseasePortMixin):
     """The members the disease step reads from `Sim`."""
 
-    def __init__(self, civ, seed):
+    def __init__(self, civ, seed, people_share=1.0 / 50.0):
         self.civ = civ
         self.year = civ["year"]
         self.seed = seed
         self.world_map = world_map()
         self.state = types.SimpleNamespace(disease=state.DiseaseState())
-        self.population = demography.Population.stationary(float(civ["population"]) / 50.0, seed=seed)
+        self.population = demography.Population.stationary(float(civ["population"]) * people_share, seed=seed)
         self.food = (self.population.children * demography.CHILD_CALORIE_EQUIVALENT + self.population.working_age
                      + self.population.elderly * demography.ELDERLY_CALORIE_EQUIVALENT
                      ) * demography.SUBSISTENCE_CALORIES_PER_ADULT_EQUIVALENT_DAY

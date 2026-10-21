@@ -17,7 +17,7 @@ def england():
 
 class EndemicStartTest(unittest.TestCase):
     def test_a_civilisation_whose_childhood_diseases_are_endemic_opens_with_the_immune_share_their_numbers_imply(self):
-        sim = england()
+        sim = StandInSim(civilisation("england_1300"), 1, people_share=1.0)   # all its people: a fiftieth is below measles' endemic size
         sim.disease_year(sim.food, sim.year)
         records = sim.state.disease.records
         self.assertEqual(sorted(records), ["measles", "smallpox"])
