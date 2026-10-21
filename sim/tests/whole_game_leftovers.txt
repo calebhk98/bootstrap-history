@@ -36,10 +36,8 @@ disease_burden_wiring
 early_playtest
 economic_levers_inventory
 economy_entry_for_standing_bids
-economy_follows_rotation
 economy_reads_map_through_geography
 eminence_scandal_and_reputation
-farm_follows_soil
 firm_count_from_costs
 firm_crew_paid_once
 five_things_winner
