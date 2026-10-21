@@ -94,3 +94,21 @@ elsewhere: the state budget's debasing, borrowing-first and hours-and-goods runs
 count and expansion dynamics repeated across the firm scenarios (`test_firm_count_from_costs`, `test_firm_expansion`).
 The state budget's runs over years on an opened England are `test_economy_state_budget_validation` (baseline validations,
 4.2, naming Complaint 526); `economy_tin_dearer_than_copper` stays the slow validation naming Complaint 511.
+
+## Applied: audit batch 11 (test_refusal_cash_remedies through test_seat_sight)
+
+Rules are called on inputs the test builds (a stand-in game, the small fixture map, a built reply, the tree's own nodes);
+the whole-game checks that remain are named `_scenario` files next to their rules. New stand-in:
+`sim/tests/score_game.py` (what `score_report` and `final_report` read). Extractions, behaviour unchanged:
+`routes_to_carry` (`sim/ui/replay.py`), `trade_demand_table` and `oversubscription_notes` (`sim/engine/trade_demand.py`,
+used by `projects_progress.py` and `start`), `multi_year_hours_warning` (`sim/ui/proto/multi_year_warning.py`),
+`route_money_warnings` (`sim/ui/proto/dispatch_inspection_path.py`), ventures paging (`sim/ui/proto/venture_paging.py`).
+`research_filters` no longer sweeps `can_start` over the tree (Complaint 557): the filters run over the tree's nodes with a
+stand-in game and the command keeps three checks on built nodes in `test_research_filters_scenario`. Deleted as held
+elsewhere: the weather cell and pooled-draw checks of `regional_weather_wiring` (`test_growing_season_weather_correlation`
+and its scenario), the housing sum of `reserve_staff_policy` (`test_auto_hire_buys_room`), the cheapest-route relocation
+check (now a rule on the small fixture map). Found vacuous and rewritten: `round8g_display`'s and `repeated_output`'s
+fog-only band and explained-once checks read an unfogged game and passed whatever the rule did; they now run on a fogged
+stand-in. Baseline validation: `test_regional_weather_century_validation` (slow-only, naming Complaint 46).
+Kept as scenarios: `run_reproducibility` (determinism), the save round trips and two-game match of the weather, the
+`again` command, the Options menu, the starting grants per civilisation.
