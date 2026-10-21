@@ -1,6 +1,6 @@
 # A state's collectible share is a typed `state_capacity`, not derived from officials, literacy and distance
 
-**Status:** closed for collection (typed `state_capacity` still read outside collection, see Outcome)
+**Status:** closed
 
 Part of Complaint 542 (State capacity and tax rates are typed, there is no corvée, and the fiscal crisis is a fixed cascade).
 
@@ -29,9 +29,8 @@ Related: 604 (literacy state).
 - At the opening Rome's share is saturated (all of it collected), so revenue is unchanged until officials go unpaid
   or the road is long. Measure: `SimWorld(sim(civ="rome_100ad")).collectible_share()` in `sim/tests/harness.py`.
 - Tests: `sim/tests/test_state_collection_follows_officials.py`.
-- Typed `state_capacity` is still read for enforcement, demand answers, theft, credit standing, mining and forest
-  ceilings and medical compliance. Those are not collection and are left for their own complaints; labour dues
-  (`labour_days`) are not scaled by the collectible share.
+- Typed `state_capacity` was still read outside collection; Complaint 658 moved those readers onto the same share
+  and removed the typed field. Labour dues (`labour_days`) are not scaled by the collectible share.
 - Sources: no source found for officials' time per taxpayer or rounds per year. Only a publisher description of
   Stasavage, States of Credit (2011), was seen in a search (smaller polities sustained assemblies more easily); the
   book was not opened and nothing here depends on it.
