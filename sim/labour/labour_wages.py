@@ -17,6 +17,7 @@ in it.
 from . import trade_data, wage_provider
 from .wage_factors import tools_factor, weighted_factor
 from .labour_market_api import LabourMarket
+from .hours_sale_warning import starving_warning
 from .labour_wage_ledger import WageLedgerMixin
 from .staff_pay_rules import wage_bill_of
 from sim.constants import declare
@@ -130,27 +131,10 @@ class WagesMixin(WageLedgerMixin):
         # active_hours_still_wanted (projects.py), the same formula step()
         # itself uses to hand out the pool, so this can never warn about a
         # shortfall step() would not also produce.
-        _starve = None
         _wanted = self._world.active_hours_still_wanted()
+        _starve = None
         if _wanted:
-            _after = max(0.0, self.director_pool() - self.director_hours_committed())
-            _short = {trade_id: hours_wanted for trade_id, hours_wanted in _wanted.items() if hours_wanted > _after + 0.5}
-            if _short:
-                _named = sorted(_short.items(), key=lambda kv: -kv[1])[:2]
-                _more = len(_short) - len(_named)
-                _bits = ["%s (wants about %.0f more of your hours this year)"
-                        % (trade_id, hours_wanted) for trade_id, hours_wanted in _named]
-                _starve = (
-                    "this leaves only %.0f of your own hours for the rest of "
-                    "the year, and %s: %s%s. Nothing is lost - what it does "
-                    "not get this year it gets next - but if that is not what "
-                    "you meant, work fewer hours. Selling them anyway is a "
-                    "fair move if it is cash you need right now."
-                    % (_after,
-                       "it still wants more than that" if len(_short) == 1
-                       else "these still want more than that",
-                       "; ".join(_bits),
-                       (", and %d more" % _more) if _more else ""))
+            _starve = starving_warning(_wanted, max(0.0, self.director_pool() - self.director_hours_committed()))
         self.log_wage_work(trade, hours, pay)
         # SAY WHEN IT IS A BAD TRADE: hours sold here are hours the standing job does not sell, and when
         # that job pays more than this trade the sale loses money. The sale still happens.

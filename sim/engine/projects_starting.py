@@ -17,7 +17,7 @@ file of their own. Behaviour is unchanged and verified byte-identical.
 from sim.refusal import LogLine
 from . import money_units, purchase_rule
 from .blockers import blocker_kind
-from .project_funding import cash_covers_start
+from .project_funding import cash_covers_start, paid_credit
 from .projects_trade_wait import trade_wait_outlasts_the_project
 from .interest_groups import check_group_prohibition
 from .living_stock import check_unheld_stock
@@ -926,7 +926,7 @@ class StartingMixin:
         if refusal:
             return refusal
         # money already sunk into this node comes off the bill
-        paid_now = min(price, max(0.0, (projects.paid_towards or {}).get(node_id, 0.0)))
+        paid_now = paid_credit(price, (projects.paid_towards or {}).get(node_id, 0.0))
         price -= paid_now
         # sorted(): summing floats over a dict whose keys came from a set
         owed_on_work_in_hand = sum(projects.active[nid].get("cost_left") or 0.0
@@ -983,7 +983,7 @@ class StartingMixin:
         if precaution:
             bill += precaution_extra_cost(self, node_id, bill)
         price = bill
-        _paid_now = min(price, max(0.0, (projects.paid_towards or {}).get(node_id, 0.0)))
+        _paid_now = paid_credit(price, (projects.paid_towards or {}).get(node_id, 0.0))
         price -= _paid_now
         node = self.nodes[node_id]
         # CREDIT FOR WHAT YOU ALREADY PAID. See enforce_credit_limit: when the

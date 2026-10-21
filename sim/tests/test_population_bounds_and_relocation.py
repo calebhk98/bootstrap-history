@@ -1,162 +1,92 @@
-"""Complaints/56, 68, 116: the local labour market cannot outlive the nation,
-tradesmen cannot outnumber the people who exist, the base can move, and a
+"""Complaints/56, 68, 116: the local labour market cannot outlive the nation, tradesmen cannot outnumber the people who exist, and a
 nation too small for a project simply cannot staff it.
 
-unittest.TestCase style, like the other focused complaint suites.
-"""
-import os
-import random
-import sys
+`Labour` runs on a small stand-in world (a real civilisation file and a real `Population`), and the invariant checker on a stub
+labour; no game is built. Moving the base, the reachable tradesmen on a game and hiring past the people who exist are
+test_population_bounds_and_relocation_scenario."""
+QUICK_TOPIC = True
+
 import unittest
+from types import SimpleNamespace
 
-_REPOSITORY_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(
-    os.path.abspath(__file__))))
-if _REPOSITORY_ROOT not in sys.path:
-    sys.path.insert(0, _REPOSITORY_ROOT)
-from sim import simulator
-from sim.engine.core import Sim
 from sim.engine.invariants import check_labour_market_invariants
-from sim.ui.proto.dispatch import _agent_dispatch
+from sim.labour.labour import Labour
+from sim.tests.harness import NODES
+from sim.tests.labour_stand_in import shrink, stand_in_world
 from sim.ui.proto.typed import parse_typed
-from sim.tests.harness import build_unopened
-
-_TREE, _PRICES, _NODES, _WAGES, _GOODS = simulator.load()
-
-
-def _fresh_sim(civ="rome_100ad"):
-    return build_unopened(lambda: Sim(_NODES, list(_NODES), random.Random(1), civ=simulator.load_civ(civ)))
-
-
-def _shrink_nation(sim, total):
-    """Scale every age cohort so the nation holds `total` people."""
-    factor = total / sim.population.total
-    sim.population.children *= factor
-    sim.population.working_age *= factor
-    sim.population.elderly *= factor
 
 
 class TownShrinksWithNationTests(unittest.TestCase):
 
     def test_town_shrinks_with_the_nation_and_never_exceeds_it(self):
-        sim = _fresh_sim()
-        before = sim.labour.home_town_population_estimate()
-        _shrink_nation(sim, 5000)
-        after = sim.labour.home_town_population_estimate()
+        world = stand_in_world()
+        labour = Labour(world)
+        before = labour.home_town_population_estimate()
+        shrink(world.population, 5000)
+        after = labour.home_town_population_estimate()
         self.assertLess(after, before * 0.25 * 0.5)
-        self.assertLessEqual(after, sim.population.total)
+        self.assertLessEqual(after, world.population.total)
         for total in (500, 30, 3):
-            _shrink_nation(sim, total)
-            self.assertLessEqual(sim.labour.home_town_population_estimate(), total)
+            shrink(world.population, total)
+            self.assertLessEqual(labour.home_town_population_estimate(), total)
 
-    def test_reachable_tradesmen_never_exceed_people_in_trade(self):
-        for civ in ("norse_900ad",):
-            sim = _fresh_sim(civ)
+    def test_the_town_never_exceeds_the_nation_in_any_civilisation(self):
+        for civ_id in ("rome_100ad", "norse_900ad", "mexica_1500", "han_china_100ad"):
             for total in (None, 5000, 200, 30):
-                if total is not None:
-                    _shrink_nation(sim, total)
-                for trade in sorted(_WAGES):
-                    if not sim.labour.trade_available(trade):
-                        continue
-                    reach = sim.labour.reachable_trade_population(trade)
-                    limit = max(sim.labour.national_trade_population(trade),
-                                sim.state.household.employees.get(trade, 0.0))
-                    self.assertLessEqual(reach, limit + 1e-6,
-                                         "%s %s at %s" % (civ, trade, total))
-                    self.assertLessEqual(reach, sim.population.total)
+                world = stand_in_world(civ_id, total)
+                self.assertLessEqual(Labour(world).home_town_population_estimate(), world.population.total + 1e-6, (civ_id, total))
 
-    def test_invariant_checker_flags_a_town_larger_than_the_nation(self):
-        sim = _fresh_sim()
-        self.assertTrue(check_labour_market_invariants(sim))
-        sim.labour.home_town_population_estimate = lambda: sim.population.total * 2
+
+class InvariantCheckerTests(unittest.TestCase):
+    """`check_labour_market_invariants` flags a town larger than the nation, tradesmen beyond the people in the trade, and more
+    staff than working people."""
+
+    def _game(self, town=100.0, reachable=10.0, exist=50.0, staff=5.0, nation=1000.0, working_age=600.0):
+        labour = SimpleNamespace(home_town_population_estimate=lambda: town, available_trades=lambda: ["smith"],
+                                 reachable_trade_population=lambda trade: reachable, people_who_exist=lambda trade: exist)
+        return SimpleNamespace(population=SimpleNamespace(total=nation, working_age=working_age), labour=labour,
+                               state=SimpleNamespace(household=SimpleNamespace(employees={"smith": staff})))
+
+    def test_a_consistent_labour_market_passes(self):
+        self.assertTrue(check_labour_market_invariants(self._game()))
+
+    def test_a_town_larger_than_the_nation_is_flagged(self):
         with self.assertRaises(AssertionError):
-            check_labour_market_invariants(sim)
+            check_labour_market_invariants(self._game(town=2000.0))
 
-    def test_invariant_checker_flags_more_staff_than_working_people(self):
-        sim = _fresh_sim()
-        sim.state.household.employees["smith"] = sim.population.working_age + 10.0
+    def test_more_reachable_tradesmen_than_exist_is_flagged(self):
         with self.assertRaises(AssertionError):
-            check_labour_market_invariants(sim)
+            check_labour_market_invariants(self._game(reachable=60.0, exist=50.0))
+
+    def test_more_reachable_tradesmen_than_the_nation_is_flagged(self):
+        with self.assertRaises(AssertionError):
+            check_labour_market_invariants(self._game(reachable=1500.0, exist=2000.0))
+
+    def test_more_staff_than_working_people_is_flagged(self):
+        with self.assertRaises(AssertionError):
+            check_labour_market_invariants(self._game(staff=700.0, working_age=600.0))
 
 
-class MoveBaseTests(unittest.TestCase):
+class TooSmallToStaffTests(unittest.TestCase):
+    """A project that needs more people than exist cannot be staffed; the same project in a full nation is not refused for people."""
 
-    def test_move_changes_town_and_trades(self):
-        sim = _fresh_sim()
-        home = sim.labour.base_tile()
-        town_before = sim.labour.home_town_population_estimate()
-        supply_before = sim.labour.market_supply("smith")
-        people = sim.labour.settlement_tiles()
-        others = [tile for tile in people if tile != home and people[tile] >= 1.0]
-        sim.state.household.capital = 1e9
-        # A poorer tile hosts a smaller town, and so fewer reachable smiths.
-        poorest = min(others, key=lambda tile: people[tile])
-        ok, message = sim.labour.move_base(poorest)
-        self.assertTrue(ok, message)
-        self.assertEqual(sim.labour.base_tile(), poorest)
-        self.assertLess(sim.labour.home_town_population_estimate(), town_before)
-        self.assertLess(sim.labour.market_supply("smith"), supply_before)
+    def test_tiny_nation_cannot_staff_a_factory(self):
+        shortfall = Labour(stand_in_world(total=200)).project_staffing_shortfall(NODES["fin_factory"])
+        self.assertIsNotNone(shortfall)
+        # presentation: the refusal says people do not exist in the country
+        self.assertIn("exist", shortfall)
+        self.assertIn("country", shortfall)
 
-    def test_move_costs_hours_money_and_local_contracts(self):
-        sim = _fresh_sim()
-        household = sim.state.household
-        household.employees["smith"] = 2.0
-        household.commissioned["smith"] = 400.0
-        household.familiarity = 0.5
-        capital = household.capital
-        far = max((tile for tile in sim.labour.settlement_tiles() if tile != sim.labour.base_tile()),
-                  key=lambda tile: sim.labour.distance_to_tile_km(tile))
-        ok, message = sim.labour.move_base(far)
-        self.assertTrue(ok, message)
-        self.assertLess(household.capital, capital)
-        self.assertLess(household.familiarity, 0.5)
-        self.assertFalse(household.commissioned.get("smith"))
-        self.assertGreater(household.relocation_hours_this_year, 0.0)
+    def test_the_same_project_is_not_refused_for_people_in_a_full_nation(self):
+        self.assertIsNone(Labour(stand_in_world()).project_staffing_shortfall(NODES["fin_factory"]))
 
-    def test_move_refuses_unknown_and_same_tile(self):
-        sim = _fresh_sim()
-        self.assertFalse(sim.labour.move_base("atlantis_01")[0])
-        self.assertFalse(sim.labour.move_base(sim.labour.base_tile())[0])
 
-    def test_move_command_and_typed_parser(self):
+class MoveCommandParses(unittest.TestCase):
+    def test_move_parses_to_a_move_base_command_naming_the_tile(self):
         command, error = parse_typed("move italia_01")
         self.assertIsNone(error)
         self.assertEqual(command["cmd"], "move_base")
         self.assertEqual(command["to"], "italia_01")
-        sim = _fresh_sim()
-        listing = _agent_dispatch(sim, _NODES, {"cmd": "move_base"})
-        self.assertTrue(listing["ok"])
-        self.assertIn("tiles", listing)
-
-    def test_base_is_stored_on_the_household(self):
-        sim = _fresh_sim()
-        target = next(tile for tile in sim.labour.settlement_tiles() if tile != sim.labour.base_tile())
-        sim.state.household.capital = 1e9
-        sim.labour.move_base(target)
-        self.assertEqual(sim.state.household.base_tile, target)
-
-
-class TooSmallToStaffTests(unittest.TestCase):
-
-    def test_tiny_nation_cannot_staff_a_factory(self):
-        sim = _fresh_sim()
-        _shrink_nation(sim, 200)
-        ok, reason = sim.start_reason("fin_factory")
-        self.assertFalse(ok)
-        self.assertIn("exist", reason)
-        self.assertIn("country", reason)
-
-    def test_same_project_is_not_refused_for_people_in_a_full_nation(self):
-        sim = _fresh_sim()
-        ok, reason = sim.start_reason("fin_factory")
-        self.assertNotIn("people who could do the work", reason or "")
-
-    def test_hiring_more_than_exist_is_refused(self):
-        sim = _fresh_sim()
-        _shrink_nation(sim, 200)
-        sim.state.household.capital = 1e9
-        ok, message = sim.labour.hire("smith", 5)
-        self.assertFalse(ok)
-        self.assertIn("exist", message)
 
 
 if __name__ == "__main__":

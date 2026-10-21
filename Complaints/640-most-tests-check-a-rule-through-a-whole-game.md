@@ -83,3 +83,20 @@ elsewhere: the state budget's debasing, borrowing-first and hours-and-goods runs
 count and expansion dynamics repeated across the firm scenarios (`test_firm_count_from_costs`, `test_firm_expansion`).
 The state budget's runs over years on an opened England are `test_economy_state_budget_validation` (baseline validations,
 4.2, naming Complaint 526); `economy_tin_dearer_than_copper` stays the slow validation naming Complaint 511.
+
+## Applied: audit batch 10 (test_physical_money_constants through test_readouts_timing_power_mines_road)
+
+Rules are called on inputs or stubs the test builds (quick tier); the whole-game checks that remain are named `_scenario` files
+next to them. Extractions, behaviour unchanged: `mine_labour_hours_per_tonne` (`sim/engine/mine_labour_profile.py`),
+`calendar_floor_years`, `payment_schedule_years`, `earliest_completion_years` (`sim/engine/completion_schedule.py`),
+`payroll_means` and `staff_to_let_go` (`sim/engine/payroll_trim.py`), `paid_credit` (`sim/engine/project_funding.py`, now the one
+place the credit for money already paid is worked out; `ui_port` re-exports it), `starving_warning` (`sim/labour/hours_sale_warning.py`).
+Shared stand-ins: `sim/tests/disease_stand_in.py` (the disease model with no game), `sim/tests/labour_stand_in.py` (`Labour` over a
+real civilisation and `Population`). Baseline validations (4.2): `test_plagues_from_contact_validation` (Complaint 490) and
+`test_price_over_making_cost_band_validation` (Complaint 507; it reads only goods the economy traded, so the quote a market reports
+where nothing traded, Complaint 642, is not in its band). Deleted as held elsewhere: the knowledge categories never abandoned
+(`test_category_traits`), the loss rule and seizure closing a plant and keeping its knowledge (`test_business_review`), the cap on
+work in hand (`test_start_money_rule`), the carriage and spin-up-key checks of the port's built ways (`test_economy_built_ways`),
+the project bill as tonnes times the quote (`test_complaint_147_project_materials`), the working-age death share
+(`test_sixth_step_pure_functions`). `quote_matches_charge` and `player_text_names_own_civilisation` are scenarios by nature (two paths
+through the dispatcher agreeing; a leak across every reply builder).

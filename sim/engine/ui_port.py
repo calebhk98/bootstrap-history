@@ -40,6 +40,7 @@ from sim.engine.saveload import (  # noqa: F401
     civ_of_save, EconomyNotOpened, goal_of_save, load_state, REQUIRED_SAVE_FIELDS, SAVE_FIELDS, save_state)
 from sim.engine.save_companions import save_session  # noqa: F401
 from sim.engine.settings_table import normal_seed, valid_seed_text  # noqa: F401
+from sim.engine.project_funding import paid_credit  # noqa: F401
 from sim.engine.shortage_conditions import condition_line  # noqa: F401
 from sim.engine.units_summary import summary_line  # noqa: F401
 from sim.engine.units import tagged  # noqa: F401

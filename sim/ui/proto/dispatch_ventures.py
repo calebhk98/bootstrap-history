@@ -380,9 +380,8 @@ def _rush_caps(cmd, sim):
 
 def _rush_cost_left(sim, node_id):
     """Money still owed to begin this project, net of what was already sunk."""
-    paid = (sim.state.projects.paid_towards or {}).get(node_id, 0.0)
     price = sim.project_cost(node_id)
-    return price - min(price, max(0.0, paid))
+    return price - ui_port.paid_credit(price, (sim.state.projects.paid_towards or {}).get(node_id, 0.0))
 
 
 def _rush_cap_refusal(sim, caps, budget, cost, draw, cost_so_far, draw_so_far, hours=0.0, hours_so_far=0.0):
