@@ -1,62 +1,51 @@
-"""Wage work shows in `money` and `log`; the shortage remedy tells the truth
-about the player's own workings (complaints 144 and 171)."""
-from .harness import *  # noqa: F401,F403
+"""Wage work shows in the `money` text; the shortage remedy tells the truth about the player's own workings (complaints 144
+and 171). Complaint 640: the remedy is called on a stub founder and the text is rendered from a hand-written reply; the
+played-game wage work is in test_wage_work_ledger_scenario."""
+QUICK_TOPIC = True
 
-# --- complaint 144: one-off wage work -------------------------------------
-_game = sim()
+import unittest
+
+from sim.engine import purchase_rule  # noqa: F401  (first: the engine modules import each other in a fixed order)
+from sim.ui.proto.render_screens_economy import _money_wage_work_lines
+
+from .test_material_production_commands import _Founder
 
 
-def _ask(**command):
-    return S._agent_dispatch(_game, NODES, command)
+class _Miner(_Founder):
+    MINE_OPEX_MATERIALS = ("gold",)
+
+    def material_shortfall_t(self, material, by_tag=None):
+        return 0.0
 
 
-_preview = _ask(cmd="work", trade="scholar", hours=1500, preview=True)
-_money_before_work = _ask(cmd="money")
-_work = _ask(cmd="work", trade="scholar", hours=1500)
-_money = _ask(cmd="money")
-_log = _ask(cmd="log")
-check("`work ... preview` changes nothing and states the wage",
-      _preview.get("preview") and _preview.get("nothing_changed")
-      and _preview.get("earned", 0) > 0
-      and not _money_before_work.get("wage_work_this_year"),
-      _preview)
-check("the preview matches what the real work then reports",
-      _preview.get("earned") == _work.get("earned"),
-      (_preview, _work))
-_wage = _money.get("wage_work_this_year") or {}
-check("`money` itemises the hours sold and the wage income, and no displaced practice",
-      _wage.get("hours") == 1500 and _wage.get("wage_income") == _work["earned"]
-      and "practice_income_displaced" not in _wage and "net" not in _wage,
-      _wage)
-check("`log` has a line for the wage work",
-      any(entry.get("event_kind") == "wage_work_sold" for entry in _log.get("entries", [])), str(_log)[:400])
+class ShortageRemedyTests(unittest.TestCase):
 
-# --- complaint 144: the standing order, and the text screen -----------------
-_game = sim()
-_game.end_year = _game.cfg["start_year"] + _game.cfg["horizon_years"]
-_ask(cmd="allocate", id="work", trade="scholar", hours=1000)
-_ask(cmd="step", years=1)
-_standing_money = _ask(cmd="money")
-_wage = _standing_money.get("wage_work_last_year") or {}
-check("a standing `allocate work` order also appears in `money` after the step",
-      _wage.get("hours", 0) > 0 and _wage.get("wage_income", 0) > 0, _wage)
+    def test_no_workings_and_no_shortfall_says_to_sink_one(self):
+        plan = _Miner(cash=0.0).shortage_remedy_plan("gold")
+        self.assertEqual(plan["kind"], "dig_mine")
+        self.assertFalse(plan["has_working"])
+        self.assertIn("buy mine gold 1", plan["commands"])
 
-from sim.ui.proto.render_screens_economy import render_money
-_text = render_money(_standing_money)
-check("the money text shows the wage rows and no longer claims the rows "
-      "add up to revenue while omitting wages",
-      "wage work last year" in _text and "(these add up to the revenue above)" not in _text,
-      _text)
+    def test_workings_that_cover_demand_say_so_with_no_shortfall(self):
+        founder = _Miner(cash=0.0)
+        founder.mine_capacity = {"gold": 5.0}
+        plan = founder.shortage_remedy_plan("gold")
+        self.assertEqual(plan["kind"], "dig_mine")
+        self.assertTrue(plan["has_working"])
+        self.assertLess(plan["short_tonnes"], 1.0)
 
-# --- complaint 171: shortage remedy ----------------------------------------
-_s = _game
 
-_s.annual_material_demand = lambda: {"gold_kg": 0.0}
-_none = _s.shortage_remedy_plan("gold")
-check("no workings and no shortfall: the remedy says to sink one, not that "
-      "your workings cover demand",
-      _none["kind"] == "dig_mine" and not _none["has_working"] and "buy mine gold 1" in _none["commands"], _none)
-_s.household.mines.append({"material": "gold", "capacity": 5.0})
-_covered = _s.shortage_remedy_plan("gold")
-check("workings that do cover demand still say so",
-      _covered["kind"] == "dig_mine" and _covered["has_working"] and _covered["short_tonnes"] < 1.0, _covered)
+class WageWorkLinesTests(unittest.TestCase):
+
+    def test_the_money_text_shows_the_wage_rows_and_does_not_claim_they_add_up_to_revenue(self):
+        text = "\n".join(_money_wage_work_lines({"wage_work_last_year": {"hours": 1000, "wage_income": 240.0}}))
+        # presentation: the rows' labels and the note that wages are outside the revenue
+        self.assertIn("wage work last year", text)
+        self.assertNotIn("(these add up to the revenue above)", text)
+
+    def test_no_wage_work_gives_no_lines(self):
+        self.assertEqual(_money_wage_work_lines({}), [])
+
+
+if __name__ == "__main__":
+    unittest.main()
