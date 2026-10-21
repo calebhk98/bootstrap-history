@@ -1,6 +1,6 @@
 # Most tree nodes charge upkeep as a concern but make nothing: knowledge and plant are one object
 
-**Status:** open - owner direction (2026-10-14): tech nodes are knowledge only; a business is a firm an actor runs (plan: `docs/architecture/FIRMS_OWN_PLANTS_PLAN.md`; with 514)
+**Status:** open - ratchet and plant-based opening check landed (see "Progress"); the authoring of entries and the deletion of node money fields remain. Owner direction (2026-10-14): tech nodes are knowledge only; a business is a firm an actor runs (plan: `docs/architecture/FIRMS_OWN_PLANTS_PLAN.md`; with 514)
 
 `python3 -m sim.engine.validate_unlinked_producers` lists the nodes that carry upkeep but gate or operate no
 production entry. It is most of the tree, largely staffed engineering nodes. 504 linked the few twins that
@@ -44,3 +44,35 @@ the biggest losers. It is reported, never a failing check; it reuses the entry t
 (`SimWorld.entry_gross`, `business_books.yearly_costs`, `firm_entry.carrying_cost`) in `sim/agents/concern_scan.py`.
 Open: `finery_puddling` pays with takings several times what `origin/main` showed for it; the cause is not traced
 (`sim/tests/test_firm_entry_default_game.py` uses it).
+
+## Progress (branch one-business-object)
+
+- **A node that charges upkeep and gates or operates no entry is a `validate` error** unless it is on `data/unlinked_upkeep_nodes.txt`
+  (`sim/engine/validate_unlinked_producers.py: check_unlinked_upkeep`; test `sim/tests/test_unlinked_upkeep_ratchet.py`). The list can
+  only shrink: a listed node that now runs an entry is a `validate` warning to prune. Measure: `wc -l data/unlinked_upkeep_nodes.txt` and
+  `python3 -m sim.engine.validate_unlinked_producers` (the two agree). Nothing was removed from the list yet: see below for why.
+- **Why no node was zeroed.** Setting the default-basis upkeep of an entry-less node to nothing (an experiment, not kept) removes the
+  upkeep of nearly every entry-less node at once, and fails well over a hundred checks in the quick tier (the nodes offered to `open`
+  collapse, fortifications and sewers stop charging). Those nodes are not all knowledge: the sample shows products (a motorcycle, a tank wagon,
+  a steam tractor), structures a state keeps up (a sewer, a cable anchorage, a fortification) and institutions, besides real
+  knowledge (a diffraction grating, phase contrast). Each class needs its own owner and plant, so the split is authored data
+  (stage 5a of the plan), not a rule: products need an entry with a demand side, structures a state-run service plant, institutions a
+  `service` entry.
+- Ten entry-less nodes have an entry of the same name that names another node (`rag_paper`, `tex_canvas`, `chm_nylon`, `cn_mortar`,
+  `potash_soda`, `crucible_steel` and others). Linking them as 504 did would pay one plant's output to two nodes; decide which node is
+  the knowledge and which the plant before linking.
+- **Opening check on the business object (was 528).** `sim/agents/concern_scan.py` now reads a `Business`: a row per operating plant
+  with its owner, size, whether its goods sell in the book (`sells_on_book`) and the entrant's takings and costs scaled to the plant.
+  `sim/engine/concern_scan_run.py` scans two businesses: one plant of each concern the society holds, as a notional business, and the
+  plants every seat and actor runs now (`running`). Reported, never a failing check. The full-length opening takes more than five
+  minutes, so the command is for the orchestrator: `python3 sim/simulator.py opening-checks --civs rome_100ad --concerns-only --json`.
+  Open: the `finery_puddling` question above is untouched.
+
+### Remainder, in order
+
+1. Stage 5a of the plan: author an entry (with demand side) for each product-making node on `data/unlinked_upkeep_nodes.txt`, a
+   service entry for each institution, and a state service plant for each structure; one worker per `data/branches/<domain>`; prune the list
+   as each node links (`python3 sim/simulator.py validate` after every edit).
+2. Delete the knowledge nodes' upkeep (what is left on the list after 1 is knowledge).
+3. Stage 5b: delete the node money fields and their readers (`FIRMS_OWN_PLANTS_PLAN.md` section 3.4), after 514's takings and upkeep
+   run through the kernel.
