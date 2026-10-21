@@ -13,9 +13,11 @@ between trades is the angle between their task shares (Gathmann and Schonberg).
 import functools
 import math
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple
+from typing import AbstractSet, Any, Dict, FrozenSet, List, Mapping, Optional, Sequence, Tuple
 
 from sim.constants import declare
+
+from .market.formation import bonded_available, migration_takes, spare_people
 
 TaskShares = Dict[str, float]
 
@@ -65,6 +67,54 @@ def shipped_task_shares() -> Dict[str, TaskShares]:
     return task_shares_by_trade(production_data())
 
 
+SOCIETY = "society"          # the teacher of a trade whose techniques the society already knows
+UNGATED = ""                 # marks a recipe that needs no technology
+
+
+def gating_nodes_by_trade(recipes: Mapping[str, Mapping[str, Any]]) -> Dict[str, FrozenSet[str]]:
+    """{trade: nodes whose knowledge the trade's work needs}: the `requires_node` of every recipe that books
+    hours to the trade. A recipe that needs no technology (null) contributes `UNGATED`; a recipe that does
+    not classify its node (key absent) contributes nothing."""
+    nodes: Dict[str, set] = {}
+    for recipe in recipes.values():
+        if "requires_node" not in recipe:
+            continue
+        gate = recipe["requires_node"] or UNGATED
+        for trade, booked in (recipe.get("labour_hours") or {}).items():
+            if booked > 0:
+                nodes.setdefault(trade, set()).add(gate)
+    return {trade: frozenset(gates) for trade, gates in nodes.items()}
+
+
+@functools.lru_cache(maxsize=1)
+def shipped_gating_nodes() -> Dict[str, FrozenSet[str]]:
+    from .labour_market import production_data
+    return gating_nodes_by_trade(production_data())
+
+
+def teachers_of(trade: str, gating: Mapping[str, AbstractSet[str]], knowledge_by_actor: Mapping[str, AbstractSet[str]],
+                baseline: AbstractSet[str] = frozenset(), demonstrated: AbstractSet[str] = frozenset()) -> List[str]:
+    """The actors that can teach `trade`: those holding the knowledge of any technique its work needs, by
+    actor id. A trade with a technique needing no technology, or one the society already knows, has
+    `SOCIETY` as a teacher. A technique someone has demonstrated that no listed actor holds still has
+    a holder, named "demonstrated". Empty when no one holds any of it."""
+    needed = set(gating.get(trade, ()))
+    if not needed:
+        return []
+    teachers = sorted(actor for actor, known in knowledge_by_actor.items() if needed & set(known))
+    if UNGATED in needed or needed & set(baseline):
+        teachers.insert(0, SOCIETY)
+    elif not teachers and needed & set(demonstrated):
+        teachers.append("demonstrated")
+    return teachers
+
+
+def teacher_present(trade: str, gating: Mapping[str, AbstractSet[str]], knowledge_by_actor: Mapping[str, AbstractSet[str]],
+                    baseline: AbstractSet[str] = frozenset(), demonstrated: AbstractSet[str] = frozenset()) -> bool:
+    """Whether any actor holds the knowledge to teach `trade` (see `teachers_of`)."""
+    return bool(teachers_of(trade, gating, knowledge_by_actor, baseline, demonstrated))
+
+
 def task_distance(first: Mapping[str, float], second: Mapping[str, float]) -> float:
     """One minus the cosine between two task descriptions: zero for the same shares, one for none in common.
     Symmetric. A trade with no recorded tasks is at distance one from everything."""
@@ -102,11 +152,6 @@ def nearest_sources(new_trade: str, shares: Mapping[str, TaskShares],
     described = shares.get(new_trade, {})
     return sorted((uncovered_share(described, shares.get(source, {})), source)
                   for source in candidates if source != new_trade)
-
-
-def spare_people(workers: float, hours_wanted: float, hours_per_worker_year: float) -> float:
-    """People of a trade an area could release: its workers less those its employers' bids still need."""
-    return max(0.0, workers - max(0.0, hours_wanted) / max(hours_per_worker_year, 1e-12))
 
 
 @dataclass
@@ -148,11 +193,9 @@ def first_people_plan(trade: str, wanted: float, *, shares: Mapping[str, TaskSha
     A trade reached by none of these has an empty plan."""
     plan = FormationPlan(trade, wanted)
     remaining = wanted
-    for area in sorted(migrant_spare, key=lambda name: (-migrant_spare[name], name)):
-        take = min(remaining, max(0.0, migrant_spare[area]))
-        if take > 0.0:
-            plan.routes.append(Route("migration", area, take, (migration_years or {}).get(area, 0.0)))
-            remaining -= take
+    for area, take in migration_takes(wanted, migrant_spare):
+        plan.routes.append(Route("migration", area, take, (migration_years or {}).get(area, 0.0)))
+        remaining -= take
     if remaining > 0.0 and teacher_present:
         for uncovered, source in nearest_sources(trade, shares, sorted(source_spare)):
             take = min(remaining, max(0.0, source_spare[source]))
