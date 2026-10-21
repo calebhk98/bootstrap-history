@@ -18,6 +18,18 @@ What it would take: farm work chosen by households and farms against the price o
 elsewhere (the agent economy already prices both), so a cheaper calorie raises consumption toward satiation
 and the demography reads the outcome.
 
+## Finding: a food technique on fully worked land leaves no surplus
+
+With the sourced wheat labour per hectare (646's Columella figures) the Rome opening's cleared land is fully worked:
+farm hands times hectares a hand works equals the farm land. A food toolkit then saves only a small share of hours per
+hectare and adds almost no yield, so intake stays at need whatever the technique. The slow check
+`farm_surplus_intake` ("a better technique with spare land raises nutrition") is red for this and names 513; making
+the cleared land larger in both runs does not change it. Measure: `python3 -m sim.tests --slow --only
+farm_surplus_intake --jobs 1`, and read the farm workers, hectares per worker and `farm_land` of a Rome opening. Open
+question for this complaint: is the opening's farm sized to exactly the land (then no technique can show a surplus
+until clearing answers the price), or is spare land expected at an opening? Section 3 of
+`Complaints/reports/research-urban-share.md` and the farm-share band in 619 bear on it.
+
 ## Owner decision (2026-10-14)
 
 Food beyond need can raise intake, up to a satiation level (on the order of what well-fed modern people eat, not
