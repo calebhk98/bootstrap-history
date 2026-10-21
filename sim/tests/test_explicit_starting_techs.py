@@ -1,24 +1,34 @@
-"""Opening knowledge is exactly what the civilisation declares, and nothing else."""
-from .harness import *  # noqa: F401,F403
+"""A typo in explicit scenario data must fail fast, not degrade into a different opening state: the declared starting
+technologies are returned whole when all are in the tree, and refused naming the unknown ones when any is not.
+`starting_techs.declared_starting_techs` is called on a built civilisation record and tree. That a game opens holding
+exactly them is `test_explicit_starting_techs_scenario`."""
+QUICK_TOPIC = True
 
-# The two civilisations with the least in common stand for the rest; the free-on-turn-one
-# check for every civilisation lives in test_civilisation_data_integrity.
-for _civ in ("rome_100ad", "mexica_1500"):
-    _start = unopened_sim(civ=_civ)
-    _declared = set(S.load_civ(_civ)["starting_techs"])
-    check("%s holds exactly its declared starting technologies" % _civ,
-          _start.granted == _declared and _start.done == _declared,
-          sorted((_start.granted ^ _declared) | (_start.done ^ _declared)))
+import unittest
 
-# A typo in explicit scenario data must fail fast, not degrade into a
-# different opening state.
-_bad_civ = copy.deepcopy(S.load_civ("rome_100ad"))
-_bad_civ["starting_techs"].append("not_a_real_node")
-try:
-    build_unopened(lambda: S.Sim(NODES, ORDER, random.Random(1), events=False, civ=_bad_civ))
-except ValueError as _error:
-    _rejected_unknown_start = "not_a_real_node" in str(_error)
-else:
-    _rejected_unknown_start = False
-check("unknown explicit starting technologies fail fast",
-      _rejected_unknown_start, "invalid id was accepted")
+from sim.engine.starting_techs import declared_starting_techs
+
+NODES = {"fire": {}, "bronze": {}, "iron": {}}
+
+
+class DeclaredStartingTechsTests(unittest.TestCase):
+    def test_the_declared_technologies_come_back_whole(self):
+        civ = {"id": "test_civ", "starting_techs": ["fire", "bronze"]}
+        self.assertEqual(list(declared_starting_techs(civ, NODES)), ["fire", "bronze"])
+
+    def test_a_civilisation_declaring_none_opens_knowing_none(self):
+        self.assertEqual(list(declared_starting_techs({"id": "test_civ", "starting_techs": []}, NODES)), [])
+
+    def test_an_unknown_technology_is_refused_naming_it_and_the_civilisation(self):
+        civ = {"id": "test_civ", "starting_techs": ["fire", "not_a_real_node", "also_missing"]}
+        with self.assertRaises(ValueError) as refused:
+            declared_starting_techs(civ, NODES)
+        message = str(refused.exception)  # presentation: the refusal names what is wrong
+        self.assertIn("not_a_real_node", message)
+        self.assertIn("also_missing", message)
+        self.assertIn("test_civ", message)
+        self.assertNotIn("fire", message)
+
+
+if __name__ == "__main__":
+    unittest.main()

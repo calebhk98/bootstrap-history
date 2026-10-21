@@ -1,0 +1,53 @@
+"""Scenarios (Complaint 640; the rules are in test_hours_by_trade_from_core): the society's hours by trade follow the
+labour core's people when the agent economy runs, the recipe graph's need when it does not."""
+import unittest
+
+from .harness import *  # noqa: F401,F403
+from sim.economy import workforce_version
+from sim.labour import labour_allocation
+
+FARM = labour_allocation.FARM_TRADE
+
+
+def _non_farm_share(game, trade):
+    hours = game.state.economy.society_labour_hours
+    rest = sum(value for name, value in hours.items() if name != FARM)
+    return hours.get(trade, 0.0) / rest
+
+
+def _core_state(game):
+    game.economy.open_agent()
+    return game.economy.agent.economy().record.workforce
+
+
+class HoursFollowTheCoreTests(unittest.TestCase):
+
+    def test_a_trade_with_more_people_in_the_core_has_more_hours(self):
+        game = sim(civ="rome_100ad", events=False)
+        game._demographic_recovery(101)
+        before = _non_farm_share(game, "smith")
+        workforce = _core_state(game)
+        for by_trade in workforce.workers.values():
+            if "smith" in by_trade:
+                by_trade["smith"] = [count * 50.0 for count in by_trade["smith"]]
+        workforce_version.bump(workforce)      # a writer of the workforce says so; the people-by-trade figure is cached per version
+        game._demographic_recovery(102)
+        self.assertGreater(_non_farm_share(game, "smith"), 5.0 * before)
+
+    def test_hours_add_up_to_the_hours_the_society_has(self):
+        game = sim(civ="rome_100ad", events=False)
+        game._demographic_recovery(101)
+        total = sum(game.state.economy.society_labour_hours.values())
+        # people change a little after the year's allocation, so the two totals agree to a percent
+        self.assertAlmostEqual(total, game.labour._society_hours_available(), delta=0.01 * total)
+
+    def test_before_the_economy_has_opened_hours_follow_the_need_the_recipes_put_on_each_trade(self):
+        game = unopened_sim(civ="rome_100ad", events=False)
+        game._demographic_recovery(101)
+        shares = game.labour._non_farm_need_shares()
+        for trade, share in shares.items():
+            self.assertAlmostEqual(_non_farm_share(game, trade), share, places=9)
+
+
+if __name__ == "__main__":
+    unittest.main()

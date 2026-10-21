@@ -50,6 +50,17 @@ nitre-bed sizes), `sim/engine/territory_required.py` (the landless refusal), `co
 `test_complaint_147_project_materials`), the loss-making and creditor-seizure closures (`test_business_review`), the foreman
 choice (`test_business_crew_rule`).
 
+## Applied: audit batch 8 (test_labour_productivity through test_mod_actor_kind_in_a_game)
+
+Rules are called on inputs the test builds (a stub founder over the real mixin, a `HouseholdState`, a built reply); the
+whole-game checks sit in a `_scenario` file next to each. Extractions: `sim/engine/freight_markup.py` (freight markup and
+scarcity factor of a bought material, used by `economy_freight.py`), `sim/engine/diffusion_curve.py` (the leak of a
+venture's edge and the knowledge half-life, used by `society_diffusion.py`). Deleted as held elsewhere:
+`test_material_supply_whole_game` (the output of a made material is deposits plus producer capacity, held by
+`test_material_supply_from_capacity`); the per-material grant and year checks of `test_living_stock_crops` (held by
+`test_living_stock_scenario` and `test_living_stock_trade_scenario`). Kept whole as scenarios: `late_techniques_reach_economy`,
+`market_state_is_economy_record`, `mod_actor_kind_in_a_game`, `menu_seed_and_saves_scenario`, `material_reach_whole_game`.
+
 ## Applied: audit batch 6 (test_fog_leaks_and_typed_wording through test_hire_reports_count_found)
 
 Rules are called on inputs the test builds; whole-game checks that remain are named `_scenario` files next to them.
@@ -65,3 +76,50 @@ harbour, voyage and failed-voyage checks of `gated_works_close_in_play` (`test_r
 and nutrition bounds, failing on Complaint 44). Kept as scenarios, with no rule function to pull out: `founder_and_firm_agree`,
 `founder_job_game`, `founder_research_shared_path`, `goal_leverage`, `forest_timber_whole_game`, `hire_reports_count_found`,
 `hash_seed_order` (determinism).
+
+## Applied: audit batch 5 (test_economy_reads_tile_yield through test_fog_leak3)
+
+Rules now called on inputs the test builds, quick tier: `test_firm_borrows_to_enter` (`stake_split`, entry on credit, copy
+budget), `test_firm_entry_market`, `test_firm_expansion` (`Firm.expand` on a return-per-step world, `rivals_of`),
+`test_fog_leak3` (`missing_prereq_message` and `bounty_refusal` on a fogged stub, the parser's bare flags),
+`test_typed_json_modes_parse`, `test_farm_clearing` (ladder and clearing), `test_farm_land_quality`, `test_farm_edges`,
+`test_failure_needs_instrument` (`failure_teaches`, `note_failure`), `test_failure_and_bounty_money` (`bearable_part_of`),
+`test_economy_crop_yields`, `test_economy_state_budget` (the budget's record round trip), `test_education_enrolment`
+(`_enrolment`, `_limited_by`), `test_entry_cost_at_economy_prices` (`CostBook`), `test_every_posting_names_a_counterparty`
+(source scan, edges), `test_explicit_starting_techs`, `test_figures_inspector` (`explain_figure`), `test_mechanics_documented`.
+Extractions, behaviour unchanged: `hours_spent_clearing`, `cleared_hectares`, `quality_of_area` in
+`sim/labour/labour_allocation.py`; `harmed_yields` in `sim/engine/economy_port_sites.py`; `declared_starting_techs` in
+`sim/engine/starting_techs.py`. Whole-game checks stay as named `_scenario` files next to their rules. Deleted as held
+elsewhere: the state budget's debasing, borrowing-first and hours-and-goods runs (`test_economy_agent_state`), the firm
+count and expansion dynamics repeated across the firm scenarios (`test_firm_count_from_costs`, `test_firm_expansion`).
+The state budget's runs over years on an opened England are `test_economy_state_budget_validation` (baseline validations,
+4.2, naming Complaint 526); `economy_tin_dearer_than_copper` stays the slow validation naming Complaint 511.
+
+## Applied: audit batch 7 (test_historical_events through test_labour_population_derived)
+
+Rules now called on inputs the test builds, quick tier: `test_historical_events` (`hazard_given_condition`),
+`test_home_cargo_price` (the quote's rules), `test_hot_path_caches`, `test_hour_pool_standing_is_live` (`hour_standing` and
+the active-project builder on a stub game), `test_hours_by_trade_from_core` (`shares_from_people`),
+`test_household_capacity_and_literacy` (`literate_capacity`, `household_room`, `_room_advice` on a stub labour),
+`test_household_never_happened_fields`, `test_idle_capacity_view`, `test_idle_sized_suggestions`, `test_industrial_dashboard`
+(the `changes` window checks, the typed front end), `test_invention_disclosure` (`disclose`, `copy_difficulty_of`,
+`years_to_be_believed`), `test_keep_staffed` (the parser), `test_knowledge_loss_warning`, `test_knowledge_risk_and_sacking`
+(`corpus_hedge`, `_sack_corpus_loss`, `_log_corpus_loss` on a stub game), `test_labour_allocation_wiring`,
+`test_labour_follows_need`, `test_labour_market_town_pricing` (`LabourMarket` over a stub labour), `test_labour_population_derived`.
+Extractions, behaviour unchanged: `hazard_given_condition` in `sim/engine/hazard_condition.py`; `shares_from_people` in
+`sim/labour/labour_allocation.py`; `copy_difficulty_of` and `years_to_be_believed` in `sim/engine/visibility.py`.
+Whole-game checks stay as named `_scenario` files next to their rules. `test_in_memory_civilisation`, `test_industry_depth_game`,
+`test_home_floors_from_economy` and `test_labour_hiring_and_wages` are wholly wiring (screens, save round trips, the yearly
+staff phases) and are now `_scenario` files; their rules sit in `Sim` methods that read much of the state
+(`seed_opening_industry_experience`, `_step_staff`, `train`, `fire`, `commission`) and are still to be pulled out.
+`labour_margins_whole_game` is now `test_labour_margins_baseline_validation` (a baseline validation, 4.2, naming Complaints 398
+and 640) plus a scenario for the draught-animal recipes.
+
+## Applied: deep extraction 1
+
+`early_playtest`, `concern_volume`, `demographics_and_plague` and `economic_levers_inventory`, which batch 4 had left
+mostly whole, now hold at most four named scenarios each; their rules moved to five quick files
+(`test_early_playtest_data`, `test_civ_cost_and_hazard_relief_rules`, `test_concern_volume_rules`,
+`test_mortality_shock_rules`, `test_material_throttle_rules`) over new plain functions (`material_throttle.py`,
+`staff_loss_words.py`, `civ_cost.py`, `value_weight.py`). The `hazard_hit` log line now carries `defence` and
+`national_toll_percent` as facts, so scenarios read values, not prose.

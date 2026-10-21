@@ -25,7 +25,7 @@ one employer cannot also be given to another (551 is one case: own-plot hours an
 
 ## Progress
 
-Measured on an opened Rome game (`python3 -m sim.tests --slow --only labour_single_owner`):
+Measured on an opened Rome game (`python3 -m sim.tests --slow --only labour_single_owner,labour_single_owner_scenario`):
 
 - The labour core's people by trade and the town-supply estimate (`national_trade_population`) are two
   copies that disagree: the core holds the unskilled pool as nearly all working people while the estimate
@@ -43,7 +43,7 @@ Done (behaviour preserving, quick tier and the labour, staffing, firm and save t
 - Still outside the owner: the plague survival roll in `sim/engine/society_hazards.py` (listed as a test
   exception until the disease work lands), and the dict wrapper in `core.py` / `economy.py`.
 
-Done (behaviour change; `python3 -m sim.tests --slow --only labour_single_owner`):
+Done (behaviour change; `python3 -m sim.tests --slow --only labour_single_owner,labour_single_owner_scenario`):
 
 - Cause of the split: the opening placed only the people producers' expected sales need and sent everyone else to
   the unskilled trade, and the post-spin-up trim sent every cut worker there too. Farm people mostly work their
