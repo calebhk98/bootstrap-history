@@ -20,7 +20,7 @@ from .mint_labour import close_year as close_mint_year, mint_agent
 from .money_audit import MoneyAudit, year_report
 from .flow_rates import flow_imbalance
 from .entry_year import close_idle_producers, open_entrants, restake_owners
-from . import household_hours_year, household_work_year, land_bid_year, land_lease_year, opening_leisure
+from . import capital_year, household_hours_year, household_work_year, land_bid_year, land_lease_year, opening_leisure
 from .households_own import (hours_for_own_plan, own_production, own_production_options, plot_hectares)
 from .labour_inputs import labour_context
 from .labour_state import scale_people
@@ -192,7 +192,9 @@ class Economy:
         ledger.bonded_bought, ledger.bonded_paid = bonded_purchase.settle(
             record.book, money, labour_report.formed, labour_bids, context.ask_floor_per_worker_year)
         bondage_hours.deliver(ledger.hours_hired, placed)
+        capital_year.insure(setup, record, view, inputs.harvest_factor, view.year, inputs.institutions)     # cover is bought and the weather settles it
         self._grow_own(offers, ledger, inputs.harvest_factor, kept)
+        capital_year.note_exposure(setup, record, view, self.area_map, ledger, inputs.harvest_factor, inputs.institutions)
         order_book = {}
         funds = cohort_orders(setup, record, view, ledger, order_book, self._own_plot_options())
         state_orders(setup, record, view, self.area_map, order_book, {})
@@ -206,8 +208,11 @@ class Economy:
         for bid in land_bid_year.firm_land_bids(setup, record, view, {producer_id: plan.wanted_runs for producer_id, plan in plans.items()},
                                                 {producer_id: sum(bid.budget for bid in plan.bids) for producer_id, plan in plans.items()}):
             order_book.setdefault((bid.good, bid.area), ([], []))[0].append(bid)
+        funds = capital_year.before_lending(setup, record, view, ledger, funds, view.year, inputs.institutions)   # holders sell shares and loans; depositors run on banks
         funds, pledged = banks.intermediate(setup, record, funds, view.year, inputs.institutions)
+        kept = capital_year.snapshot(record, money, funds)
         plant_runs = self._lend(funds, view, order_book, ledger, pledged, inputs.credit_asks)
+        capital_year.invest_idle(setup, record, view, funds, kept, inputs.institutions)       # savings neither lent nor put in shares go into a fund
         merchant_orders(setup, record, view, self.area_map, self.carriage, order_book)
         for producer_id, runs in self._rebuild_worn_plant(view, order_book).items():
             plant_runs[producer_id] = plant_runs.get(producer_id, 0.0) + runs

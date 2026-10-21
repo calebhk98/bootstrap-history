@@ -229,6 +229,12 @@ Two fixes, usable separately or together:
                                                     still practise it unlicensed: the state enforces the
                                                     right only as far as its capacity reaches, and a holder
                                                     who catches an infringer is paid its margin.
+      {"cmd":"found","what":"bank","capital":<amount>}
+                                                   put capital of yours into a bank of the agent economy
+                                                    (it takes households' deposits and lends them on); needs
+                                                    a node declaring deposit_banking. {ok, bank, capital} or
+                                                    {ok:false, error, cause} with cause no_banking_institution,
+                                                    capital_not_positive, capital_exceeds_cash or economy_not_open.
       {"cmd":"offer","to":"<actor id>","give":{...},"take":{...}}
                                                    offer a firm, a state, a stratum or another seat things
                                                     for things: money, patent [ids], licence [ids] with

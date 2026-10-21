@@ -278,7 +278,10 @@
   "art": 0,
   "conf": "A",
   "note": "Craft guilds and professional societies. Enforce standards, restrict entry, and provide mutual aid. State views them with suspicion.",
-  "yrs": 0.5
+  "yrs": 0.5,
+  "mechanics": {
+   "risk_pooling": {"source": "Members of a collegium paid into a common treasury that met members' costs, such as burial (Wikipedia, Collegium (ancient Rome), read: military collegia existed 'to help their members cover their funeral expenses'; religious collegia gave 'guaranteed burial services')."}
+  }
  },
  {
   "id": "fin_arabic_numerals",
@@ -769,7 +772,11 @@
   "sch": 0,
   "art": 1,
   "conf": "B",
-  "note": "Permanent marketplace for shares. Allows quick price discovery and liquid exit. Draws wealth from direct business operations into financial markets."
+  "note": "Permanent marketplace for shares. Allows quick price discovery and liquid exit. Draws wealth from direct business operations into financial markets.",
+  "mechanics": {
+   "pooled_funds": {"source": "A society with an organised market for shares can run a pool that holds shares and loans for households of moderate means (Wikipedia, Investment trust, read: the first, Foreign & Colonial, 1868, aimed 'to give the investor of moderate means the same advantages as the large capitalists'; earlier Dutch pools not opened)."},
+   "share_trading": {"source": "A permanent marketplace for shares lets a holder sell to another agent without the company dissolving (docs/knowledge/96_finance.md, stock_exchange: 'you can cash out whenever you want'); the Amsterdam exchange is early modern."}
+  }
  },
  {
   "id": "fin_bond",
@@ -797,7 +804,10 @@
   "sch": 0,
   "art": 1,
   "conf": "B",
-  "note": "Fixed-income security representing a debt obligation. Pays coupons on schedule and returns principal at maturity. Tradeable like shares."
+  "note": "Fixed-income security representing a debt obligation. Pays coupons on schedule and returns principal at maturity. Tradeable like shares.",
+  "mechanics": {
+   "bond_market": {"source": "A bond is a fixed-income claim its holder can sell on, and a firm or town may issue one as a state does (docs/knowledge/96_finance.md, public_debt: investors buy bonds, the issuer pays coupons and repays at maturity; node note: tradeable like shares)."}
+  }
  },
  {
   "id": "fin_public_debt",
@@ -998,6 +1008,7 @@
   "conf": "B",
   "note": "A premium-for-indemnity contract transfers the risk of a specified cargo or vessel loss to underwriters. The project is not discovering risk: it establishes standard policies, shared loss records, underwriting practice, reserves, and enforceable claims among existing bankers and maritime lenders.",
   "mechanics": {
+   "insurance_underwriting": {"source": "An insurer takes a premium and pays an indemnity when the hazard strikes, pricing from what it has seen of the hazard (docs/knowledge/96_finance.md, marine_insurance: premium against the loss rate, capital for the occasional total loss)."},
    "hazard_counters": [
     {
      "kind": "output_factor",

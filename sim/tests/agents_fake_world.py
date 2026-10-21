@@ -151,6 +151,9 @@ class FakeWorld:
 		return random.Random(repr((self.seed,) + parts))
 
 	# ---- money and credit
+	def nodes_with_mechanic(self, mechanic: str) -> Any:
+		return ()
+
 	def market_rate(self) -> float:
 		return self.rate
 

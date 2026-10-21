@@ -48,6 +48,7 @@ class Bank:
     reserve_share: float = capital_market.LENDER_RESERVE_SHARE   # share of its deposits it keeps in cash and does not lend
     failed_year: int = -1                                        # the year its depositors ran; below zero while it stands
     paid_in: float = 0.0                                         # the capital its founder put in, which no dividend returns
+    owner_loss: float = 0.0                                      # the capital its founder lost when the bank failed
 
 
 def is_deposit(record, loan: Loan) -> bool:
@@ -111,17 +112,24 @@ def solvency(record, bank_id: AgentId, money: str) -> float:
     return assets_of(record, bank_id, money) / owed if owed > 0.0 else 1.0
 
 
+def fail(record, bank: Bank, year: int, money: str) -> None:
+    """The bank stops lending and taking deposits, each deposit falls due at the year's end (paid in proportion to
+    what the bank holds, the rest arrears the one default rule writes off, so the depositors bear it), and its
+    founder loses the capital the bank no longer holds."""
+    bank.failed_year = year
+    bank.owner_loss = max(0.0, bank.paid_in - max(0.0, capital_of(record, bank.agent_id, money)))
+    for deposit in deposits_of(record, bank.agent_id):
+        deposit.years_left = 1.0
+
+
 def run_on_insolvent(record, money: str, year: int) -> List[AgentId]:
     """Depositors review their banks as the year opens: where a bank's assets no longer cover its deposits they all
-    ask for their money. The bank stops lending and taking deposits, and each deposit falls due at the year's end.
-    Returns the banks that failed."""
+    ask for their money (`fail`). Returns the banks that failed."""
     failed = []
     for bank in standing(record):
         if capital_of(record, bank.agent_id, money) < 0.0:
-            bank.failed_year = year
+            fail(record, bank, year, money)
             failed.append(bank.agent_id)
-            for deposit in deposits_of(record, bank.agent_id):
-                deposit.years_left = 1.0
     return failed
 
 
