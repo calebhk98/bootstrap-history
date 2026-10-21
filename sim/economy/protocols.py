@@ -77,6 +77,10 @@ class MarketView(Protocol):
     def expected_inflation(self, currency: CurrencyId) -> float:
         """Adaptive expectation of next year's rise in the price level, as a share."""
 
+    def observed_inflation(self, currency: CurrencyId) -> Optional[float]:
+        """Last year's rise in prices, the weighted median of the goods' changes; None before there is one. A view
+        may omit it; holders then read the change in the price level."""
+
     def cash(self, agent: AgentId, currency: CurrencyId) -> float:
         """The agent's money now."""
 

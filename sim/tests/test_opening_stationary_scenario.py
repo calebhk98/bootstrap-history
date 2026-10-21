@@ -62,6 +62,18 @@ class StationaryQuantitiesOfTheStatedFixtureTests(unittest.TestCase):
         self.assertAlmostEqual(ratio, 1.1, places=6)
 
 
+class ObservedInflationTests(unittest.TestCase):
+    def test_the_opening_remembers_its_prices_and_a_year_reads_inflation_from_them(self):
+        setup = fixture.small_setup()
+        economy = Economy(setup)
+        self.assertEqual(economy.record.memory.last_year_prices, setup.opening_prices)
+        outcome = economy.step(fixture.quiet_year(setup))
+        grain = outcome.prices[fixture.GRAIN] / setup.opening_prices[fixture.GRAIN] - 1.0
+        observed = economy.record.memory.observed_inflation[setup.currency_id]
+        self.assertGreaterEqual(observed, min(grain, 0.0) - 1e-9)    # a median of the goods, never below the lowest
+        self.assertLessEqual(observed, max(grain, 0.0) + 1e-9)
+
+
 class OneYearOfTheStatedFixtureTests(unittest.TestCase):
     @unittest.expectedFailure
     def test_a_year_leaves_the_wage_and_the_grain_price_within_the_settling_bounds(self):
