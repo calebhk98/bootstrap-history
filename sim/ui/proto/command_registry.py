@@ -63,6 +63,12 @@ def handlers():
     return table
 
 
+def unknown_command_error(command):
+    """The refusal for a word that is no command: it names every command there is, so the list cannot go stale."""
+    return "unknown cmd %r. Use one of: %s. %s" % (
+        command, ", ".join(COMMANDS), 'Or {"cmd":"help"} for what each one does.')
+
+
 def alias_map():
     """Every alias mapped to the command it stands for."""
     return {alias: name for name, entry in COMMANDS.items()

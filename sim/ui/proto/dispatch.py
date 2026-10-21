@@ -609,7 +609,4 @@ def _agent_dispatch_inner(sim, nodes, cmd):
     # was handed a list that silently omitted labour, hire, train, commission,
     # money, risk, policy, quote, close, mothball, restore, work and bribe.
     # A help message that is wrong is worse than none, because it is believed.
-    return {"ok": False,
-            "error": "unknown cmd %r. Use one of: %s. %s"
-                     % (command, ", ".join(command_registry.COMMANDS),
-                        'Or {"cmd":"help"} for what each one does.')}
+    return {"ok": False, "error": command_registry.unknown_command_error(command)}

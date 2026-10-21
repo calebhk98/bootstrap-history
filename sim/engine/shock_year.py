@@ -6,7 +6,7 @@ mildest figure any seat's works leave (sim/engine/hazard_merge.py). One seat run
 order as a game with no other seat."""
 from sim.refusal import LogLine
 
-from . import cause_book, staff_loss_words
+from . import cause_book, staff_loss_words, value_weight
 from .units_prose import money_text
 from .hazard_merge import mildest_hazard
 
@@ -196,8 +196,8 @@ class ShockYearMixin:
             if field not in self.value_weights:
                 continue
             before = self.value_weights[field]
-            self.value_weights[field] = max(self.VALUE_WEIGHT_FLOOR,
-                                            min(self.VALUE_WEIGHT_CEILING, before + total_delta / span))
+            self.value_weights[field] = value_weight.shifted(
+                before, total_delta / span, self.VALUE_WEIGHT_FLOOR, self.VALUE_WEIGHT_CEILING)
             if abs(self.value_weights[field] - before) > 1e-9:
                 changed[field] = self.value_weights[field]
         # Log at start, end, and every 10 years: visible change without noise.

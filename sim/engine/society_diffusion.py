@@ -22,7 +22,7 @@ that they can live in a file of their own. Behaviour is unchanged and
 verified byte-identical.
 """
 from sim.constants import declare
-from . import category_traits, seat_builds
+from . import category_traits, civ_cost, seat_builds
 from .diffusion_rules import medical_compliance, medical_relief, spread_share, weapons_relief
 from .institution_societies import belongs_to_other_society
 
@@ -532,40 +532,8 @@ class DiffusionMixin:
         does; below 1, easier. It is deliberately a small table in the civ file
         rather than logic in here, so a new civilization is data.
         """
-        mults = self.civ.get("cost_multipliers") or {}
-        if not mults:
+        if not self.civ.get("cost_multipliers"):
             return 1.0
-        # A remedy lifts a handicap once you have built the thing that answers
-        # it, read from `handicap_remedies` in the civ file.
-        rem = self.civ.get("handicap_remedies") or {}
         node = self.nodes[node_id]
-
-        def mult(key):
-            multiplier = float(mults[key])
-            remedy = rem.get(key)
-            if isinstance(remedy, dict) and remedy.get("node") in self.state.projects.done:
-                multiplier = float(remedy.get("residual", 1.0))
-            return multiplier
-
-        # THE CATEGORY IS THE CRAFT; THE TRAITS ARE WHAT IT IS FOR, and treating
-        # them as equals inverts the whole system: multiplying every matching
-        # key together lets secondary traits (infrastructure, commerce) swamp
-        # the craft category a civilisation is actually built around - a
-        # longship, category `ships`, the Norse's best domain, must not come
-        # out costing them MORE than it costs Rome just because its
-        # infrastructure and commerce traits are also present.
-        #
-        # What a thing takes to build is its craft. What it is used for should
-        # colour that, not overwhelm it, so traits apply at a damped exponent
-        # when the craft is known and at full weight when it is not.
-        cat = node.get("cat")
-        traits = [trait for trait in (node.get("traits") or ()) if trait in mults]
-        if cat in mults:
-            factor = mult(cat)
-            for trait in traits:
-                factor *= mult(trait) ** 0.25
-            return factor
-        factor = 1.0
-        for trait in traits:
-            factor *= mult(trait)
-        return factor
+        return civ_cost.civ_cost_factor(self.civ.get("cost_multipliers"), self.civ.get("handicap_remedies"),
+                                        self.state.projects.done, node.get("cat"), node.get("traits") or ())
