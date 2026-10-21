@@ -45,10 +45,46 @@ def blocker_kind(kind):
     return mark
 
 
+def classify_plain_check(check_name, kind, text, supply_ids, shut_text, is_mothballed):
+    """The entry a refusing start check reports. `shut_text` is not None when
+    the work is a built venture that is not running: a done check then reads as
+    closed with that text; a mothballed one says so in its cause."""
+    if kind == "done" and shut_text is not None:
+        kind, text = "closed", shut_text
+    cause = re.sub(r"^_?check_", "", check_name)
+    if check_name == "_check_already_done" and is_mothballed:
+        kind, cause = "closed", "mothballed"
+    elif kind == "closed" and cause == "already_done":
+        cause = "built_but_shut"
+    return {"kind": kind, "cause": cause, "ids": supply_ids if kind == "supply" else [], "text": text}
+
+
+def collect_blockers(checks, run_check, classify, money_refusal):
+    """Every refusal in gate order. `run_check(check)` returns None or
+    (passes, text); `classify(check, text)` returns the entries a refusal
+    stands for. A terminal kind ends the list; `money_refusal()` (text or
+    None) is read last."""
+    blockers = []
+    for check in checks:
+        verdict = run_check(check)
+        if verdict is None or verdict[0]:
+            continue
+        entries = classify(check, verdict[1])
+        blockers.extend(entries)
+        if any(entry["kind"] in TERMINAL_BLOCKER_KINDS for entry in entries):
+            return blockers
+    money = money_refusal()
+    if money:
+        blockers.append({"kind": "money", "cause": "money_refusal", "ids": [], "text": money})
+    return blockers
+
+
+TERMINAL_BLOCKER_KINDS = ("goal", "done", "active", "unavailable", "closed")
+
+
 class BlockersMixin:
 
     BLOCKER_KINDS = BLOCKER_KINDS
-    _TERMINAL_BLOCKER_KINDS = ("goal", "done", "active", "unavailable", "closed")
 
     def _visible_to_player(self, node_id):
         return not self.fog or node_id in self.nodes and self.is_visible(node_id)
@@ -87,15 +123,11 @@ class BlockersMixin:
         if kind == "supply" and check_name not in ("check_unheld_stock", "check_materials_have_a_seller"):
             _group, options = getattr(self.household, "_last_subst_gap", None) or (None, [])
             ids = [option for option in options if self._visible_to_player(option)]
-        if kind == "done" and self.is_venture(node_id) and not self.running(node_id):
-            kind = "closed"
-            text = ("you have built it already but it is shut: 'open %s' to run it" % node_id)
-        cause = re.sub(r"^_?check_", "", check_name)
-        if check_name == "_check_already_done" and node_id in self.state.projects.mothballed:
-            kind, cause = "closed", "mothballed"
-        elif kind == "closed" and cause == "already_done":
-            cause = "built_but_shut"
-        return [{"kind": kind, "cause": cause, "ids": ids, "text": text}]
+        shut_text = None
+        if self.is_venture(node_id) and not self.running(node_id):
+            shut_text = "you have built it already but it is shut: 'open %s' to run it" % node_id
+        return [classify_plain_check(check_name, kind, text, ids, shut_text,
+                                     node_id in self.state.projects.mothballed)]
 
     def start_blockers(self, node_id, extra_owed=0.0):
         """Every reason the project cannot begin now, in the order the gate
@@ -105,16 +137,8 @@ class BlockersMixin:
         if node_id not in self.nodes:
             return [{"kind": "unavailable", "cause": "no_such_node", "ids": [], "text": "no such node"}]
         node = self.nodes[node_id]
-        blockers = []
-        for check in self._START_REASON_CHECKS:
-            verdict = check(self, node_id, node, False, None, True)
-            if verdict is None or verdict[0]:
-                continue
-            entries = self._classify_check(check, node_id, node, verdict[1])
-            blockers.extend(entries)
-            if any(entry["kind"] in self._TERMINAL_BLOCKER_KINDS for entry in entries):
-                return blockers
-        money = self._money_refusal(node_id, extra_owed)
-        if money:
-            blockers.append({"kind": "money", "cause": "money_refusal", "ids": [], "text": money})
-        return blockers
+        return collect_blockers(
+            self._START_REASON_CHECKS,
+            lambda check: check(self, node_id, node, False, None, True),
+            lambda check, text: self._classify_check(check, node_id, node, text),
+            lambda: self._money_refusal(node_id, extra_owed))

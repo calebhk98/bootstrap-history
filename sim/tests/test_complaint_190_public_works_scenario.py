@@ -1,4 +1,5 @@
-"""SCENARIO (Complaint 190): in a whole game works repeated across the land change the nation as a whole: coverage and
+"""SCENARIO (Complaint 190): in a whole game, wiring only for coverage, burden and rollout (their rules are in
+test_coverage_rules), works repeated across the land change the nation as a whole: coverage and
 rollouts, district clinics against the disease burden, grain handed out to a hungry nation, a free press wearing away
 the state's authority, schools that teach one group, and light that lengthens the working day. The permanence of a
 benefit, the typed lines and the demography of a fed nation are in test_complaint_190_public_works."""
@@ -36,38 +37,22 @@ def set_units(game, node_id, units):
 
 # ---- coverage: what share of the people a repeated work serves -----------------------------------------
 game = running(CLINICS)
-hours = sum(NODES[CLINICS]["annual_labour_hours"].values())
-per_unit = hours / NODES[CLINICS]["mechanics"]["coverage"]["staff_hours_per_person_year"]
-check("a clinic unit serves its staff hours over the hours each patient needs",
-      abs(game.people_per_unit(CLINICS) - per_unit) < 1e-9, (game.people_per_unit(CLINICS), per_unit))
-check("one unit covers its people over the nation's",
-      abs(game.coverage_share(CLINICS) - per_unit / game.population.total) < 1e-12, game.coverage_share(CLINICS))
 check("coverage counts only while the doors are open",
       unopened_sim().coverage_share(CLINICS) == 0.0)
 half_units = game.units_for_coverage(CLINICS, 0.5)
 set_units(game, CLINICS, half_units)
-check("the units that serve half the people do", abs(game.coverage_share(CLINICS) - 0.5) < 1e-9, game.coverage_share(CLINICS))
+check("a game's open clinics serve the share its units ask for", abs(game.coverage_share(CLINICS) - 0.5) < 1e-9, game.coverage_share(CLINICS))
 check("the most units the nation can fill is the units that serve everyone, not a few towns' worth",
       abs(game.institution_unit_ceiling(CLINICS) - game.units_for_coverage(CLINICS, 1.0)) < 1e-9,
       (game.institution_unit_ceiling(CLINICS), game.units_for_coverage(CLINICS, 1.0)))
-check("a work cannot cover more than everyone", abs(game.units_for_coverage(CLINICS, 1.0) * per_unit - game.population.total) < 1e-3)
-
-schools = running(VILLAGE)
-eligible = NODES[VILLAGE]["mechanics"]["coverage"]["eligible_share"]
-check("a school is measured against the school-age share of the people, not all of them",
-      abs(schools.units_for_coverage(VILLAGE, 1.0) * schools.people_per_unit(VILLAGE)
-          - eligible * schools.population.total) < 1e-3, schools.units_for_coverage(VILLAGE, 1.0))
 
 # ---- district clinics lower the nation's disease burden by the share they reach ----------------------
 weights = {tech_id: TECH_EFFECTS[tech_id]["population"] for tech_id in game.DISEASE_BURDEN_TECH_IDS}
 total = sum(weights.values())
 check("district clinics carry a weight in the disease-burden table", CLINICS in weights and weights[CLINICS] > 0, weights)
-expected = 1.0 - weights[CLINICS] * 0.5 / total
-check("clinics reaching half the people take half their weight off the burden",
-      abs(game._disease_burden() - expected) < 1e-12, (game._disease_burden(), expected))
+check("clinics reaching half the people lower the burden a game reads",
+      game._disease_burden() < demography.PRE_INDUSTRIAL_DISEASE_BURDEN, game._disease_burden())
 set_units(game, CLINICS, game.units_for_coverage(CLINICS, 1.0))
-check("clinics reaching everyone take all their weight off the burden",
-      abs(game._disease_burden() - (1.0 - weights[CLINICS] / total)) < 1e-12, game._disease_burden())
 
 built_not_open = unopened_sim()
 built_not_open.done.update(NODES[CLINICS]["pre"])
@@ -83,10 +68,6 @@ check("every other disease technology held and no clinic open leaves only the cl
       abs(everything._disease_burden() - weights[CLINICS] / total) < 1e-12, everything._disease_burden())
 check("a technology that declares no coverage still counts whole once held",
       everything.disease_burden_held("germ_theory") == 1.0)
-
-tiny = running(CLINICS, units=1.0)
-check("one clinic does almost nothing for a nation", 1.0 - tiny._disease_burden() < 0.001 * weights[CLINICS] / total + 1e-9,
-      tiny._disease_burden())
 
 finished = unopened_sim()
 finished.done.add(CLINICS)
@@ -115,12 +96,7 @@ check("rolling out a work not yet open opens it at the units the share needs",
 asked.clear()
 partway = running(CLINICS, units=3.0)
 partway.open_venture = record
-ok, text = partway.roll_out(CLINICS, 0.1)
-check("rolling out an open work adds only the units still wanted",
-      ok and abs(asked[0][1] - (partway.units_for_coverage(CLINICS, 0.1) - 3.0)) < 1e-9, (ok, asked))
-asked.clear()
-ok, text = partway.roll_out(CLINICS, 0.0001)
-check("a share already covered asks for nothing", not ok and asked == [] and cause_of(text) == "already_covered", (ok, text, asked))
+check("a share already covered asks for nothing here either", not partway.roll_out(CLINICS, 0.0001)[0] and asked == [])
 check("a work that cannot be rolled out is refused", not unopened_sim().roll_out("blast_furnace", 0.5)[0])
 check("a work not yet known is refused without naming it", unopened_sim().roll_out(CLINICS, 0.5) == (
     False, "you have not worked out how to do that yet"))

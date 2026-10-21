@@ -1,7 +1,7 @@
 """SCENARIO (Complaint 421): the automatic project start and the mine order record what they skipped, and why.
 
 Four named scenarios: each runs one automatic phase of the yearly step with the engine's own answers stubbed, and
-reads the skip row. The rule is inline in the phase's candidate loop, which does not stand apart from it."""
+reads the skip row. Wiring only: the decisions are `sim/engine/auto_start_rule.py`, checked in `test_auto_start_rule`."""
 from .harness import *  # noqa: F401,F403
 
 

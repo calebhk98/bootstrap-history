@@ -1,4 +1,4 @@
-"""SCENARIO: one classifier names every blocker: Complaints/125, 263 (and 234, 238, 239, 268 below)."""
+"""SCENARIO: a game reaches the blocker rule (`sim/engine/blockers.py`, rule tests in `test_blockers_rule`) and every readout agrees: one classifier names every blocker: Complaints/125, 263 (and 234, 238, 239, 268 below)."""
 from .harness import *  # noqa: F401,F403
 
 from sim.ui.proto.render_screen_why import render_why
@@ -40,13 +40,6 @@ startable = [node_id for node_id in NODES if poor_sim.start_reason(node_id)[0]]
 dearest = max(startable, key=poor_sim.project_cost)
 check("a bill past cash and credit is a money blocker", kinds_of(poor_sim, dearest) == ["money"],
       poor_sim.start_blockers(dearest))
-
-closed_sim = unopened_sim(capital=1e9)
-closed_sim.done.add("workshop_first")
-closed_sim._done_changed()
-closed_sim.mothball_work("workshop_first")
-check("a built work that was shut is a closed blocker", kinds_of(closed_sim, "workshop_first") == ["closed"],
-      closed_sim.start_blockers("workshop_first"))
 
 # --- the refusal and the readout are the same function
 check("start_refusal is the first blocker's text",
