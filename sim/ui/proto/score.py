@@ -6,6 +6,7 @@ import math
 from sim.refusal import cause_of
 from sim.engine.ui_port import closure, critical_path, topo_order
 
+from .score_total import score_total
 from .state_waiting import _agent_end_reason
 from .util import _fmt_num, _wrap
 
@@ -363,9 +364,7 @@ def score_report(sim, nodes):
     components = _score_components(sim, nodes, reveal_tree_total)
     goal = sim.goal
     goal_reached = bool(goal and sim.goal_year)
-    total = None
-    if all(component["normalized"] is not None for component in components.values()):
-        total = round(sum(component["weighted"] for component in components.values()), 4)
+    total, points = score_total(components)
     # A NUMBER TO COMPARE RUNS WITH, NOT ONLY A PERCENTAGE: a percentage
     # answers "how much of the possible score", a point figure answers
     # "how did this run do against that one", and the second question is
@@ -393,7 +392,6 @@ def score_report(sim, nodes):
     # precision as a figure built from normalized fractions and fixed
     # weights honestly has - inventing a bigger scale would imply the
     # model can discriminate finer than it does.
-    points = round(total * 1000) if total is not None else None
     out = {"goal_in_words": (sim.nodes[goal]["name"] if goal in sim.nodes
                              else None),
            "goal_reached": goal_reached, "goal_year": sim.goal_year,
