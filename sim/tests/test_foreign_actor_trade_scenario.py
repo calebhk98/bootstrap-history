@@ -60,13 +60,13 @@ for _year in range(4):
     world.ship(TRADER, material, world.market_depth(material, PARTNER) * TRADER_DEPTH_SHARE, world._home_place(), PARTNER)
     game.close_partner_books()
 prices.append(SimWorld(game).price_at(material, PARTNER))
-# a cargo smaller than the partner's demand displaces the partner's own producers (they idle) and the price stays at
-# their floor; it gives way only once the cargo outgrows what the partner takes (Complaint 672: idle output is not stock)
-check("the partner's price never climbs above where it began (the cargo displaces its producers, who idle; Complaint 673: a cheaper import should lower it)",
-      all(later <= prices[0] * (1.0 + 1e-6) for later in prices[1:]), prices)
+# Complaint 673: the cargo asks its landed cost; where that is below the partner's producers' floor it sells first
+# and the partner's price gives way
+check("the partner's price ends below where it began and never climbs above it",
+      prices[-1] < prices[0] and all(later <= prices[0] * (1.0 + 1e-6) for later in prices[1:]), prices)
 home_price = SimWorld(game).price_at(material, SimWorld(game)._home_place())
-check("...so the gap traders serve is no wider than it was",
-      prices[-1] - home_price <= (prices[0] - home_price) * (1.0 + 1e-6), (prices[0], prices[-1], home_price))
+check("...so the gap traders serve is narrower than it was",
+      prices[-1] - home_price < prices[0] - home_price, (prices[0], prices[-1], home_price))
 check("a year's tally is cleared when the partner's book closes", not game.state.economy.foreign_actor_trade, None)
 
 # --- (b) a good traders carry in a direction is not also carried that way by the stand-in external orders.

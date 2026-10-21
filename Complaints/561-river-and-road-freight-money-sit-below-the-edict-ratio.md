@@ -33,3 +33,17 @@ scaling a mode. Then tighten the two lower bands in the test toward the Edict fi
   not the per-tonne-km ratio) from a sourced river hydrology, the route builder passing it to the rate, and a
   direction-aware money rate (`_freight_mode_costs` has no direction; a balanced flow averages the legs).
 - Measure as above; at the time of writing river and road over sea were unchanged from 541's figures.
+
+## Re-measured (stale premise) and what stays open
+
+`python3 -c "from sim.tests.harness import unopened_sim; c=unopened_sim()._freight_mode_costs(0.0); print({m: round(c[m]/c['sail'],1) for m in c})"`
+now gives river about 5.3 and road about 31 over sea (the same at a one-sided flow), so both sit at the Edict's figures (about 5 and
+28-40), not at the low edge of the bands; `python3 -m sim.tests --slow --only freight_money_ratio` passes. The ratio moved when other
+inputs (wages, sea cost) moved, not through a river or cart change, so the match is not yet evidence the inputs are right.
+
+Still unsourced, so not closed: the cart's structural payload (nothing but the team's pull limits it), river current and towing
+speed (none supplied to `routes_rates.rate`), `CART_SERVICE_LIFE_KM` and `BARGE_SELF_MASS_KG` (a heuristic and a D-grade estimate in
+`sim/geography/transport.py`). Opened this session: Scheidel, "ORBISprices" (2013 working paper, p. 6-7, mirror at
+ancientportsantiques.com): the Edict's land and river sections "show no appreciation of varying contexts (such as river velocity)",
+so the Edict's river figure is flat and cannot validate a current-dependent rate; it gives no cart payload. Not opened (search
+returned no readable text): Raepsaet on carts, the Edict's freight chapters, river towing studies. No figure was changed.
