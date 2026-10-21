@@ -161,8 +161,8 @@ check("...at the same cost in money, people and goods",
 	  all(abs(a.money - b.money) < 1e-9 and a.labour == b.labour and a.materials == b.materials
 		  for a, b in zip(country_lines, home_lines)), [(a.name, a.money, b.money) for a, b in zip(country_lines, home_lines)])
 names = {line.name for line in country_lines}
-check("the army, officials, collection of its forms, public buildings and dole are among them",
-	  {"army", "administration", "tax_collection", "public_buildings", "dole"} <= names, names)
+check("the army, officials, guards, inspectors, collection of its forms, public buildings and dole are among them",
+	  {"army", "administration", "guards", "inspectors", "tax_collection", "public_buildings", "dole"} <= names, names)
 check("a country's collectors follow the forms it declares",
 	  "tax_collection" not in {line.name for line in budget.standing_lines(country_world(profile_with([]))[0], 100.0)})
 

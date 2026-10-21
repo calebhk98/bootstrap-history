@@ -80,9 +80,9 @@ def visibility_factor(visible_scale):
     return UNSEEN_EXPOSURE_FLOOR + (1.0 - UNSEEN_EXPOSURE_FLOOR) * scale
 
 
-def order_factor(state_reach, protection):
-    """Exposure left under the state's order and the holder's own protection (each 0..1, independent covers)."""
-    uncovered = (1.0 - min(1.0, max(0.0, state_reach))) * (1.0 - min(1.0, max(0.0, protection)))
+def order_factor(guarded_share, protection):
+    """Exposure left under the share of people its guards watch and the holder's own protection (each 0..1, independent covers)."""
+    uncovered = (1.0 - min(1.0, max(0.0, guarded_share))) * (1.0 - min(1.0, max(0.0, protection)))
     return 1.0 - ORDER_SUPPRESSION * (1.0 - uncovered)
 
 

@@ -54,9 +54,8 @@ check("public-health guidance is followed less where the state reaches less",
       starved.medical_diffusion_relief() < fed.medical_diffusion_relief(),
       (starved.medical_diffusion_relief(), fed.medical_diffusion_relief()))
 
-# ---- (b) needs specific staff (guards for order, inspectors for mines and woods): no such line exists, reach stands in
-check("the mine ceiling falls with the reach", starved.mine_land_ceiling("iron") < fed.mine_land_ceiling("iron"),
-      (starved.mine_land_ceiling("iron"), fed.mine_land_ceiling("iron")))
+# ---- (b) needs specific staff: woods need wardens (no such line yet, so reach stands in); mines and order are in
+# test_state_guards_and_inspectors.py
 check("the forest ceiling falls with the reach", starved.forest_land_ceiling() < fed.forest_land_ceiling(),
       (starved.forest_land_ceiling(), fed.forest_land_ceiling()))
 
@@ -64,9 +63,3 @@ check("the forest ceiling falls with the reach", starved.forest_land_ceiling() <
 partner = "han_china_100ad"
 check("a partner's reach is a share read from its own country's view",
       0.0 <= fed.partner_state_reach(partner) <= 1.0, fed.partner_state_reach(partner))
-
-# ---- (b) order against theft: guards are not a line the state employs, so the reach stands in ------------------------------
-for each in (fed, starved):
-    each.household.capital = 1.0e6
-check("theft takes more from the founder where the state reaches less",
-      starved.plunder_founder(0.2, "bandits", True) > fed.plunder_founder(0.2, "bandits", True))

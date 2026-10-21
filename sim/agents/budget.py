@@ -10,7 +10,7 @@ line: goods in kind (requisition) or service in office.
 """
 from typing import Any, Dict, List, Optional, Tuple
 
-from . import budget_lines, budget_works, government_levers
+from . import budget_lines, budget_works, government_levers, order
 from .budget_line import Line, goods
 from .tuning import ADMINISTRATIVE_SPAN, ARMY_ADJUSTMENT_RATE, LEVY_RATE_CEILING
 
@@ -80,7 +80,8 @@ def standing_lines(world: Any, soldiers: Optional[float] = None, conscripts: flo
 	(the force it wants when not given)."""
 	if soldiers is None:
 		soldiers = army_wanted(world)
-	lines = (army_line(world, soldiers, conscripts) + administration_line(world) + budget_lines.roads_line(world)
+	lines = (army_line(world, soldiers, conscripts) + administration_line(world) + order.guards_line(world)
+			+ order.inspectors_line(world) + budget_lines.roads_line(world)
 			+ budget_lines.public_buildings_line(world) + budget_lines.court_line(world, officials_kept(world))
 			+ budget_lines.dole_line(world) + budget_lines.navy_line(world) + budget_works.works_upkeep_lines(world)
 			+ budget_works.collection_line(world) + budget_works.campaign_line(world, soldiers)

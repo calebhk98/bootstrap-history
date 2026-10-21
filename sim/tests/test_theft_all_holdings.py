@@ -133,7 +133,7 @@ def founder_seat(farm_hectares=10.0):
     household.protection = 0.0
     seat = FounderSeat(
         state=types.SimpleNamespace(household=household, holdings=types.SimpleNamespace(farm_hectares=farm_hectares)),
-        civ={"staple": "wheat"}, price_index=1.0, farm_stock_kg=20000.0, forest_ha=2.0, FOREST_COST_PER_HA=100.0, state_reach=0.0,
+        civ={"staple": "wheat"}, price_index=1.0, farm_stock_kg=20000.0, forest_ha=2.0, FOREST_COST_PER_HA=100.0, order_reach=0.0,
         lent_share=lambda: 0.1, farm_price_per_hectare=lambda: 50.0, _material_stock=lambda: stock,
         goods_market=types.SimpleNamespace(quote=lambda material: {"sell_per_tonne": 5.0}),
         edge=lambda name: thieves, visible_scale=lambda *args: 0.5, labour=types.SimpleNamespace(headcount=lambda: 3),
@@ -173,7 +173,7 @@ class FounderHoldings(unittest.TestCase):
 
     def test_an_ordered_state_makes_banditry_cost_less_than_a_sack_of_equal_strength(self):
         orderly, fallen = founder_seat(), founder_seat()
-        orderly.state_reach = lambda: 0.8
+        orderly.order_reach = lambda: 0.8
         kept = TheftChargeMixin.plunder_founder(orderly, 0.3, "banditry", order_holds=True)
         lost = TheftChargeMixin.plunder_founder(fallen, 0.3, "sack and plunder", order_holds=False)
         self.assertLess(kept, lost)
