@@ -5,7 +5,7 @@ A part of the year's phases (core_step_phases.py); Sim inherits it through StepP
 from sim.refusal import LogLine, Refusal
 from sim.agents.api import edges
 from .units_prose import plain_number
-from .project_funding import fund_year, project_purse
+from .project_funding import fund_year, project_purse, year_bill
 from .hour_offer import hours_offered, unmet_directive_cause
 from .projects_trade_wait import STALL_YEARS_BEFORE_ABANDONMENT
 
@@ -294,7 +294,7 @@ class ProjectProgressPhaseMixin:
         # smaller than a year's instalment - a geometric decay that
         # approaches zero and never reaches it, while completion needs the
         # bill down to half a denarius.
-        money = min(project_state["cost_left"], self.project_cost(node_id) * frac)
+        money = year_bill(project_state["cost_left"], self.project_cost(node_id), frac)
         hired_left -= hired_hours
         return hired_left, money, refunded
 

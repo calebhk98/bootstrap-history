@@ -1,12 +1,14 @@
 """The need each trade carries comes from household demand through the recipe graph, not from
-authored shares; the engine's starting hours by trade follow it or the labour core's people."""
+authored shares; the yearly split of hours is plain arithmetic on the numbers handed in (Complaint 640: the
+whole-game checks are in test_workforce_spinup_scenario)."""
+QUICK_TOPIC = True
+
 import copy
 import glob
 import json
 import os
 import unittest
 
-from .harness import *  # noqa: F401,F403
 from sim.labour import labour_allocation
 from sim.engine.catalog import load_production_catalog
 from sim.engine.solve_prices_core import techniques_available_to
@@ -105,14 +107,6 @@ class NeedSharesTests(unittest.TestCase):
         civ = next(_civilisations())
         self.assertEqual(_shares(_PRODUCTION, civ["starting_techs"]), _shares(_PRODUCTION, civ["starting_techs"]))
 
-    def test_the_same_seed_gives_the_same_starting_workforce(self):
-        first = sim(civ="rome_100ad", events=False)
-        second = sim(civ="rome_100ad", events=False)
-        for test_sim in (first, second):
-            test_sim._demographic_recovery(101)
-        self.assertEqual(first.state.economy.society_labour_hours,
-                         second.state.economy.society_labour_hours)
-
 
 class HoursRuleTests(unittest.TestCase):
     """The yearly split of hours, called with plain inputs."""
@@ -157,35 +151,34 @@ class HoursRuleTests(unittest.TestCase):
         self.assertEqual(labour_allocation.farm_hours_after(100.0, 100.0, 1000.0), 100.0)
 
 
-class EngineStartTests(unittest.TestCase):
+    def test_a_short_harvest_pulls_farm_hours_back_toward_the_need(self):
+        technique = labour_allocation.farming_technique.DEFAULT_TECHNIQUE
+        total_hours = 1.0e6
+        held = {self.farm: 0.5 * total_hours, "smith": 0.5 * total_hours}
+        current_hours = labour_allocation.current_farm_hours(held, total_hours, 1.0e9) * 0.5
+        current_workers = current_hours / self.year
+        wanted_workers = labour_allocation.farm_workers_needed(
+            current_workers * 2.0, current_workers, 5.0e5, 100.0, 1.0e9, technique=technique)
+        after = labour_allocation.farm_hours_after(current_hours, wanted_workers * self.year, total_hours)
+        self.assertGreater(wanted_workers, current_workers)
+        self.assertGreater(after, current_hours)
 
-    def _first_year(self, civ_id):
-        test_sim = sim(civ=civ_id, events=False)
-        test_sim._demographic_recovery(test_sim.civ.get("year", 100) + 1)
-        return test_sim, test_sim.state.economy.society_labour_hours
+    def test_the_non_farm_split_among_specialists_holds_from_one_year_to_the_next(self):
+        people = {"smith": 30.0, "weaver": 10.0, "labourer": 500.0}
+        first = labour_allocation.shares_from_people(people, "labourer", 4.0e6)
+        second = labour_allocation.shares_from_people(people, "labourer", 4.4e6)
+        self.assertAlmostEqual(first["smith"] / first["weaver"], second["smith"] / second["weaver"])
+        self.assertAlmostEqual(sum(first.values()), 1.0)
 
-    def test_yearly_allocation_continues_from_the_spun_up_split(self):
-        test_sim, first = self._first_year("rome_100ad")
-        first = dict(first)
-        test_sim._demographic_recovery(102)
-        second = test_sim.state.economy.society_labour_hours
-        rest_first = {trade: hours for trade, hours in first.items()
-                      if trade != labour_allocation.FARM_TRADE}
-        rest_second = {trade: hours for trade, hours in second.items()
-                       if trade != labour_allocation.FARM_TRADE}
-        total_first, total_second = sum(rest_first.values()), sum(rest_second.values())
-        for trade, hours in rest_first.items():
-            self.assertAlmostEqual(hours / total_first, rest_second[trade] / total_second,
-                                   delta=0.02)
+    def test_the_hours_left_over_go_to_the_unskilled_trade(self):
+        shares = labour_allocation.shares_from_people({"smith": 10.0, "labourer": 500.0}, "labourer", 1.0e6)
+        expected = 10.0 * self.year / 1.0e6
+        self.assertAlmostEqual(shares["smith"], expected)
+        self.assertAlmostEqual(shares["labourer"], 1.0 - expected)
 
-    def test_a_short_harvest_still_pulls_hours_to_the_farm(self):
-        test_sim, hours = self._first_year("rome_100ad")
-        farm = labour_allocation.FARM_TRADE
-        before = hours[farm]
-        for trade in hours:
-            hours[trade] *= 0.5 if trade == farm else 1.0
-        test_sim._demographic_recovery(102)
-        self.assertGreater(test_sim.state.economy.society_labour_hours[farm], before * 0.5)
+    def test_no_people_or_no_hours_to_share_gives_no_split(self):
+        self.assertIsNone(labour_allocation.shares_from_people({}, "labourer", 1.0e6))
+        self.assertIsNone(labour_allocation.shares_from_people({"smith": 10.0}, "labourer", 0.0))
 
 
 if __name__ == "__main__":

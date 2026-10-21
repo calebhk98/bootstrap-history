@@ -9,6 +9,7 @@ from sim.refusal import LogLine
 from . import cause_book, staff_loss_words, value_weight
 from .units_prose import money_text
 from .hazard_merge import mildest_hazard
+from .hazard_toll import staff_loss_toll
 
 
 class ShockYearMixin:
@@ -95,9 +96,10 @@ class ShockYearMixin:
         loss, why, relief, med_relief = report["loss"], report["why"], report["relief"], report["med_relief"]
         historical = report["historical"]
         hit = []
-        if report["people_before"] > 0.05:
+        people_hit, cash_hit = staff_loss_toll(report["people_before"], report["cash"])
+        if people_hit:
             hit.append(staff_loss_words.staff_clause(loss, relief, why))
-        if report["cash"] > 0.5:
+        if cash_hit:
             hit.append("%s of takings lost while the trade stood idle"
                        % money_text(report["cash"], self, grouped=True))
         took_nothing = not hit
