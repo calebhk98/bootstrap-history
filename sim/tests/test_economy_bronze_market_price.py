@@ -8,6 +8,8 @@ from sim.economy import notional
 from sim.economy.protocols import YearInputs
 from sim.economy.national_prices import national_prices
 
+# Eighteen stepped Rome years take longer than the runner's default limit; a timeout would hide the result.
+TOPIC_SECONDS = 900
 GOOD = "bronze_kg"
 YEARS_PLAYED = 18
 MARKUP_BOUND = 3.0      # a melt's fuel and skilled hours are already in its recipe cost; a markup beyond this is a thin market
