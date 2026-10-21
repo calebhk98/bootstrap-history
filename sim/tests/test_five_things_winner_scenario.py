@@ -1,4 +1,4 @@
-"""Session commands typed mid-game, the frozen manual checkpoint, and the
+"""SCENARIO: session commands typed mid-game, the frozen manual checkpoint, and the
 Endless difficulty horizon: regressions from a player who won the game."""
 from .harness import *  # noqa: F401,F403
 

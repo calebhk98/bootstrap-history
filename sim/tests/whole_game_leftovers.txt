@@ -34,7 +34,6 @@ demographics
 demographics_and_plague
 early_playtest
 eminence_scandal_and_reputation
-five_things_winner
 freight_domestic_haul
 freight_dues
 freight_money_ratio
