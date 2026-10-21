@@ -26,6 +26,7 @@ from .material_availability import check_materials_have_a_seller
 from .data import win_condition_describe
 from .units_prose import money_text
 from .start_money_rule import start_shortfall
+from .staff_gate import craftsmen_gate_text, scholar_gate_text
 from sim.constants import declare
 from .projects_precaution import (spec as precaution_spec, extra_cost as precaution_extra_cost,
                                   extra_hours as precaution_extra_hours)
@@ -695,13 +696,8 @@ class StartingMixin:
             # it only reads is_venture/is_visible/nodes/artisans/scholars),
             # but it walks STAFF_SOURCES and can itself call is_visible, so
             # it is skipped along with the rest of the sentence.
-            return False, (("needs %d trained scholars, and you have %.1f - "
-                            "counting people on your staff and yourself, plus "
-                            "any hours already bought under contract as that "
-                            "share of one more. %s"
-                           % (node["sch"], self.labour.scholar_hands_available(),
-                              self.labour.staff_advice(
-                                  "scholars", node["sch"] - self.labour.scholar_hands_available())))
+            return False, (scholar_gate_text(node["sch"], self.labour.scholar_hands_available(),
+                                             lambda deficit: self.labour.staff_advice("scholars", deficit))
                            if _why else None)
         return None
 
@@ -731,13 +727,8 @@ class StartingMixin:
             # be fractional even when every actual person on the payroll is
             # a whole one. Said inline, not left for the player to work out
             # from a number that otherwise looks like a body cut short.
-            return False, (("needs %d trained craftsmen, and you have %.1f - "
-                           "counting people on your staff plus any hours "
-                           "already bought under contract as that share of "
-                           "one more. %s"
-                           % (node["art"], self.labour.craft_hands_available(),
-                              self.labour.staff_advice(
-                                  "artisans", node["art"] - self.labour.craft_hands_available())))
+            return False, (craftsmen_gate_text(node["art"], self.labour.craft_hands_available(),
+                                               lambda deficit: self.labour.staff_advice("artisans", deficit))
                            if _why else None)
         return None
 

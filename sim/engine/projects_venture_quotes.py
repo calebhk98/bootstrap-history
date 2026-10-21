@@ -1,6 +1,7 @@
 """What a concern really earns and costs, and what reopening it costs: one figure for every screen."""
 from sim.agents.api import business_books
 from .closure_grace import fee_after_grace
+from .quote_figures import upkeep_quote
 from .concern_earnings import forecast_basis, quoted_ramp, quoted_units
 
 
@@ -31,9 +32,8 @@ class VentureQuotesMixin:
         screen quotes: `now` at today's staffing (what the ledger charges) and
         `at_full_staffing` with every place filled. The two are equal for an
         ordinary concern. `units` prices a stated size of a scalable institution."""
-        scale = self.price_index
-        return {"now": self.institution_upkeep(node_id, units) * scale,
-                "at_full_staffing": self.institution_upkeep(node_id, units, fully_staffed=True) * scale}
+        return upkeep_quote(self.institution_upkeep(node_id, units),
+                            self.institution_upkeep(node_id, units, fully_staffed=True), self.price_index)
 
     def venture_real_upkeep(self, node_id, units=None):
         """Yearly running cost at today's staffing: the figure the ledger charges (`upkeep`)."""

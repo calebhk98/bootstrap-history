@@ -1,26 +1,9 @@
-"""Scenarios (Complaint 640): in a built game the refusal on a project one scholar short says to hire one, and `allocate ... useful` caps at the useful work. The rules are
-in test_workforce_advice_and_allocate_cap."""
+"""Scenario (Complaint 640): in a built game `allocate ... useful` caps at the useful work. The rule is in
+test_workforce_advice_and_allocate_cap; the scholar gate, whose refusal on a project one scholar short says to hire one, is
+called on built numbers in test_founder_hours_rules."""
 import unittest
 
 from .harness import *  # noqa: F401,F403
-
-
-def _scholar_blocked_node(household):
-    for node_id, node in NODES.items():
-        if node["sch"] == 2:
-            _, why = household.start_reason(node_id)
-            if why and "trained scholars" in why:
-                return node_id, why
-    raise AssertionError("no node blocked on two scholars")
-
-
-class HireAdviceMatchesDeficit(unittest.TestCase):
-
-    def test_one_scholar_short_says_hire_one(self):
-        household = sim(civ="rome_100ad", capital=1e6)
-        _, why = _scholar_blocked_node(household)
-        self.assertIn('"n":1', why)
-        self.assertNotIn('"n":2', why)
 
 
 class AllocateUseful(unittest.TestCase):

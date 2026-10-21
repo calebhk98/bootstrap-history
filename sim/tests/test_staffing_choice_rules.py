@@ -3,7 +3,7 @@ rules called on draws and totals built here, no game."""
 QUICK_TOPIC = True
 
 from .harness import *  # noqa: F401,F403
-from sim.engine.staffing_choice import closures_for_shortfall, shortfalls_beyond, staffing_allowances
+from sim.engine.staffing_choice import closures_for_shortfall, missing_when_opened, shortfalls_beyond, staffing_allowances
 from sim.labour.labour_staff_controls import people_to_hire_for
 
 # --- allowances
@@ -70,3 +70,23 @@ check("...and a shortfall of a hundredth of a person hires nobody",
       people_to_hire_for({"craftsmen": 2.0}, {"craftsmen": 0.01}) == {})
 check("...nor does a resource with no shortfall", people_to_hire_for({"craftsmen": 2.0}, {}) == {})
 check("a part person over a whole one hires the next", people_to_hire_for({"craftsmen": 5.0}, {"craftsmen": 2.4}) == {"craftsmen": 3})
+
+
+# --- what a shut concern lacks if it were opened now (Complaint 87's `state` list)
+def strict_shortfalls(totals):
+    return shortfalls_beyond(totals, {"craftsmen": 2.0, "scholars": 1.0, "glassblower": 0.0})
+
+
+check("a concern whose people the household can field is missing nothing",
+      missing_when_opened({"craftsmen": 1.0}, {"craftsmen": 1.0}, strict_shortfalls) == {})
+check("a concern lacking a foreman trade names the trade and the full-time equivalent",
+      missing_when_opened({}, {"glassblower": 0.25}, strict_shortfalls) == {"glassblower": 0.25})
+check("what the running concerns already overdraw is not blamed on the shut one",
+      missing_when_opened({"craftsmen": 3.0}, {"scholars": 0.5}, strict_shortfalls) == {})
+check("only the overdraw the opening adds is missing",
+      missing_when_opened({"craftsmen": 3.0}, {"craftsmen": 1.5}, strict_shortfalls) == {"craftsmen": 1.5})
+check("less than a hundredth of a person over is not missing",
+      missing_when_opened({"craftsmen": 2.0}, {"craftsmen": 0.004}, strict_shortfalls) == {})
+held = {"craftsmen": 1.0}
+missing_when_opened(held, {"craftsmen": 9.0}, strict_shortfalls)
+check("the totals the caller passes are not changed", held == {"craftsmen": 1.0})

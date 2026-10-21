@@ -1,7 +1,7 @@
 """Scenarios in a whole game: `start` reports the whole bill split into materials paid now and instalments owed, and the
 total is what `why` quoted (Complaint 500); `why`, `quote open`, `ventures` and `open` agree on a concern's running cost
-and label staffing (Complaint 501). The figures come from `Sim.project_cost_now` and `venture_upkeep_quote`, which read
-much of the game's state and have no plain-function form yet."""
+and label staffing (Complaint 501). The figures are built by `cost_if_started_now` and `upkeep_quote`, called on numbers in
+test_quote_figures_rules; here the screens are checked to show what the engine quotes."""
 from .harness import *  # noqa: F401,F403
 
 from sim.ui.proto.render_screens_start import render_start

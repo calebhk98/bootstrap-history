@@ -404,7 +404,7 @@ def _cmd_quote(sim, nodes, cmd, ended):
         n_f, err_f = read_target_quantity(cmd, "n", 100, "forest", sim)
         if err_f:
             return {"ok": False, "error": err_f}
-        per = sim.FOREST_COST_PER_HA * sim.price_index
+        per = sim.forest_price_per_hectare()
         return {"ok": True, "what": "forest", "hectares": n_f,
                 "to_buy_it": round(per * n_f, 1),
                 "per_hectare": round(per, 2),

@@ -7,6 +7,7 @@ import math
 from sim.constants import declare
 from . import money_units
 
+from .quote_figures import cost_if_started_now
 from .economy_goods import GoodsMixin
 from .economy_materials import MaterialSupplyMixin
 from .material_reach import MaterialReachMixin
@@ -205,8 +206,8 @@ class EconomyMixin(GoodsMixin, MaterialSupplyMixin, MaterialReachMixin, Electric
         """The cost if the project started today: labour and capital, plus
         the materials you do not already hold at current market prices."""
         materials, _up_front = self.project_material_parts(node_id)
-        return ((self.project_cost_without_materials(node_id) + materials)
-                * self.geography.material_cost_factor(node_id) * self.opposition_factor(node_id))
+        return cost_if_started_now(self.project_cost_without_materials(node_id), materials,
+                                   self.geography.material_cost_factor(node_id), self.opposition_factor(node_id))
 
     def _done_changed(self):
         """Call after anything adds to or removes from self.household.done.
