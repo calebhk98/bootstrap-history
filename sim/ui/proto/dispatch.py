@@ -11,6 +11,7 @@ from sim.engine.ui_port import fuzzy_estimates, units
 from .economy import _dashboard_snapshot
 from . import command_registry, mod_commands
 from .command_registry import command
+from .name_candidates import candidates_the_player_may_see
 from .compact import compact_state, compact_stuck, compact_why
 from .help import _agent_help
 from .field_check import unknown_field_refusal
@@ -496,10 +497,8 @@ def _agent_dispatch_inner(sim, nodes, cmd):
             # `_did_you_mean` already refuses to suggest the goal for one.
             _exact_here = NODE_NAME_NORM.get(_norm_name(cmd["id"]), ())
             _op_lc = cmd["cmd"].strip().lower()
-            _name_cands = [
-                node_id for node_id in _name_cands
-                if sim.is_visible(node_id, _memo=_name_memo)
-                or (node_id == _goal and _op_lc == "why" and node_id in _exact_here)]
+            _name_cands = candidates_the_player_may_see(
+                _name_cands, lambda node_id: sim.is_visible(node_id, _memo=_name_memo), _goal, _op_lc, _exact_here)
         if len(_name_cands) == 1:
             cmd = dict(cmd, id=_name_cands[0])
         elif len(_name_cands) > 1:
