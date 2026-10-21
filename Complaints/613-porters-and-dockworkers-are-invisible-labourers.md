@@ -28,3 +28,14 @@ training than the unskilled one. `occupation_groups.json` lists both in the tran
 **Research needed.** Hours of porter and longshore labour per tonne (Roman Ostia and Portus portage, tlamemeh loads and
 daily distances from a primary or monograph source, such as Hassig, Aztec Warfare and Trade and Conquest, which has not been opened).
 The foot mode's 27 kg and 22 km a day sit near Wikipedia "Tlamemeh" (23 kg, 21 to 25 km a day; secondary).
+
+**Research pass (source-porter-hours).** No figure was replaced; no opened source supports a better one.
+Opened: Law and Rodway, Himalayan Journal 64 (2008), "Lowland porters in the Solu Khumbu" (Nepal; commercial porters carry far
+above body weight, "a 24 year old man who weighed 52 kg carrying a 90 kg load from Jiri to Kakou, a six-day walk"; no km a day,
+so no daily distance follows; Nepal is a different society and a paid-by-weight market, not a Mexica relay).
+Wikipedia "Tlamemeh" re-opened: quotes "carrying on average 23 kilos" and "daily commute of 21 to 25 kilometers", with no
+inline citation and no Hassig page. Not opened (503/403): Bastien et al. 2005 (Science), Malville 1999 (only seen as quoted in
+search summaries), the Karwansaray blog quoting Hassig pp. 32-33 for a load and a five-league stage. Port hours per tonne:
+searches for Ostia and Portus saccarii and early-modern stevedoring found no per-worker rate; the one opened-in-summary source
+gives pay per ton, not hours. Still open: open Hassig (Aztec Warfare 1988, pp. 32-35) in print, Bastien 2005 full text, and a
+port-history rate for tons per gang-day with the gang size.
