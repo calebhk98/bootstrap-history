@@ -64,21 +64,23 @@ class FigureTests(unittest.TestCase):
         self.assertEqual(reading["drivers"]["employees"], 3)
 
     def test_the_epidemic_figure_is_zero_with_no_epidemic_under_way(self):
-        with mock.patch.object(figures_world, "hazards_not_yet_past", lambda civ, year: []), \
+        forecast = {"expected_deaths": 0, "expected_working_age_share": 0.0, "by_pathogen": []}
+        with mock.patch.object(figures_world.ui_port, "epidemic_forecast", lambda sim: forecast), \
                 mock.patch.object(figures_world.ui_port, "last_demographic_step", lambda sim: None), \
                 mock.patch.object(figures_world.ui_port, "disease_burden", lambda sim: 0.1):
             reading = figure_registry.read_figure(_Game(), "epidemic")
         self.assertEqual(reading["value"], 0.0)
-        self.assertEqual(reading["drivers"], {"disease_burden": 0.1})
+        self.assertEqual(reading["drivers"], {"disease_burden": 0.1, "expected_deaths": 0, "people_infected": 0})
 
-    def test_the_epidemic_figure_takes_the_worst_staff_loss_of_an_epidemic_in_progress(self):
-        hazards = [({"staff_loss": 0.3}, 90, 110, True), ({"staff_loss": 0.1}, 90, 110, True),
-                   ({"staff_loss": 0.9}, 200, 210, False)]
-        with mock.patch.object(figures_world, "hazards_not_yet_past", lambda civ, year: hazards), \
+    def test_the_epidemic_figure_is_the_models_forecast_share_of_working_age_people(self):
+        forecast = {"expected_deaths": 900, "expected_working_age_share": 0.2,
+                    "by_pathogen": [{"infected": 40, "expected_deaths": 500}, {"infected": 2, "expected_deaths": 400}]}
+        with mock.patch.object(figures_world.ui_port, "epidemic_forecast", lambda sim: forecast), \
                 mock.patch.object(figures_world.ui_port, "last_demographic_step", lambda sim: None), \
                 mock.patch.object(figures_world.ui_port, "disease_burden", lambda sim: 0.1):
             reading = figure_registry.read_figure(_Game(), "epidemic")
         self.assertEqual(reading["value"], 0.2)
+        self.assertEqual(reading["drivers"]["people_infected"], 42)
 
 
 class CashBookRowTests(unittest.TestCase):

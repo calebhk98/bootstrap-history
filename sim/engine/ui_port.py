@@ -106,6 +106,11 @@ def disease_burden(sim):
     return sim._disease_burden()
 
 
+def epidemic_forecast(sim):
+    """The disease model's forecast of the coming year (see `DiseasePortMixin.epidemic_forecast`)."""
+    return sim.epidemic_forecast()
+
+
 def last_demographic_step(sim):
     return sim._last_demographic_step
 

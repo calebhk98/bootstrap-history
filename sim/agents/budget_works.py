@@ -6,6 +6,8 @@ needs, the supply of a force in the field against a threat, and the donative a n
 import math
 from typing import Any, List
 
+from sim.disease import api as disease
+
 from . import budget_lines, state_works
 from .budget_line import Line, goods
 from .tuning_spending import (CAMPAIGN_SHARE_OF_ARMY_PER_UNIT_THREAT, CUSTOMS_BASE_PER_COLLECTOR_WAGE_YEAR,
@@ -51,11 +53,20 @@ def collection_line(world: Any) -> List[Line]:
 	return [line] if line.money > 0.0 else []
 
 
+def _frontier_disease_loss(world: Any) -> float:
+	"""The share of working-age people the diseases of the frontier region take in a year, when the world can say
+	(a country that does not follow its regions' disease reads none)."""
+	read = getattr(world, "frontier_disease_loss", None)
+	return float(read()) if read is not None else 0.0
+
+
 def campaign_line(world: Any, soldiers: float) -> List[Line]:
 	"""Grain for the part of the army that takes the field against a threat, over a march out to the frontier and
-	back. The army does not move on the map, so the distance is the radius of a region with the frontier's length.
+	back, more men marching as the frontier region's disease takes some of them. The army does not move on the
+	map, so the distance is the radius of a region with the frontier's length.
 	TEMPORARY HEURISTIC (CLAUDE.md 4.4)."""
 	marching = soldiers * min(1.0, CAMPAIGN_SHARE_OF_ARMY_PER_UNIT_THREAT * world.threat_pressure())
+	marching *= disease.nation.provisioning_factor(_frontier_disease_loss(world))
 	days = 2.0 * (world.territory().frontier_km / (2.0 * math.pi)) / MARCH_KM_PER_DAY
 	tonnes = marching * days * SOLDIER_GRAIN_KG_PER_DAY / 1000.0
 	if tonnes <= 0.0:

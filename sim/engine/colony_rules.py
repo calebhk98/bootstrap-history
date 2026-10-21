@@ -1,4 +1,5 @@
 """Colony rules as plain functions: what stops a founding, and one year of a colony's people (Complaint 190)."""
+from sim.disease import api as disease
 
 # a country must hold this many working-age people per settler sent
 WORKING_AGE_PER_SETTLER = 10.0
@@ -37,9 +38,11 @@ def best_settlement_work(known, by_sea):
     return max(fit, key=lambda item: (item[1]["settlers"], item[0]), default=None)
 
 
-def outfit_cost(spec, money_per_labour_hour):
-    """What outfitting the settlers costs: the hours each is given, at the society's money per hour of labour."""
-    return spec["settlers"] * spec["outfit_hours_per_settler"] * money_per_labour_hour
+def outfit_cost(spec, money_per_labour_hour, disease_loss=0.0):
+    """What outfitting the settlers costs: the hours each is given, at the society's money per hour of labour,
+    for as many more as the place's yearly disease loss (a share) will take before the stated number is settled."""
+    return (spec["settlers"] * spec["outfit_hours_per_settler"] * money_per_labour_hour
+            * disease.nation.provisioning_factor(disease_loss))
 
 
 def colony_people(colony):

@@ -20,6 +20,8 @@ where none is found it is a labelled heuristic with a `retire`, never a "recalle
 - The Mexica and Norse mineral-reach notes (`data/civilizations/mexica_1500.json`, `norse_900ad.json`) use the word
   "recalled" but state no figure; reword them as notes (no figure to source).
 
+- Spatial stage (490): `sim/disease/spread_tuning.py` (travellers per tonne, visit days, local trips) and the England 1300 `endemic` list have no source read.
+
 **What it would take.** For each, open a source (author, work, page or URL, the passage) and record it, or leave the figure a
 labelled heuristic with `retire`. The Dean et al. 2018 plague full text returned 403 when tried; a library copy or a different
 primary source is needed.

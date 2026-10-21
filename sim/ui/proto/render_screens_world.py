@@ -125,7 +125,8 @@ def render_demography(out):
     lines.append("disease burden %s of the pre-industrial level; wage index %s"
                  % (_fmt_num(out["disease_burden"]), _fmt_num(out["wage_index"])))
     for event in out.get("epidemics_under_way") or []:
-        lines.append("under way: %s (%s-%s)" % (event["name"], *event["years"]))
+        lines.append("under way: %s, %s infected, about %s deaths forecast this year" % (
+            event["name"], _fmt_num(event["infected"]), _fmt_num(event["expected_deaths"])))
     shocks = out.get("recent_shocks") or []
     if shocks:
         lines.append("")

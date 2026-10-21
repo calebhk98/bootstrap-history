@@ -41,9 +41,11 @@ class ColoniesMixin:
         """Tiles a colony could be founded on now, best land first."""
         return settlement.candidate_tiles(self.home_tiles_held(), self.claimed_tiles(), by_sea)
 
-    def settlement_outfit_cost(self, spec):
-        """What outfitting the settlers costs: a year's work for each at the society's wage."""
-        return outfit_cost(spec, self.labour.money_per_labour_hour())
+    def settlement_outfit_cost(self, spec, tile_id=None):
+        """What outfitting the settlers costs: a year's work for each at the society's wage, and more of them
+        fitted out where the tile's diseases (`regional_disease_loss`) will take some before they are established."""
+        return outfit_cost(spec, self.labour.money_per_labour_hour(),
+                           self.regional_disease_loss(tile_id) if tile_id else 0.0)
 
     def found_colony(self, tile_id):
         """(ok, text): found a colony on `tile_id`."""
@@ -53,7 +55,7 @@ class ColoniesMixin:
         chosen = self.settlement_spec(by_sea=not by_land)
         node_id, spec = chosen if chosen else (None, None)
         settlers = float(spec["settlers"]) if spec else 0.0
-        cost = self.settlement_outfit_cost(spec) if spec else 0.0
+        cost = self.settlement_outfit_cost(spec, tile_id) if spec else 0.0
         cause = founding_refusal(self.tile_owner(tile_id) is not None, by_land, by_sea, chosen is not None,
                                  self.population.working_age, settlers, cost, self.spending_power("buy"))
         if cause == "tile_held":

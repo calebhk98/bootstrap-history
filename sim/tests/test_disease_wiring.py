@@ -46,6 +46,9 @@ class StandIn(disease_port.DiseasePortMixin):
     def _farm_year_weather_seed(self, year, region=None):
         return 12345 + year
 
+    def urban_fraction(self):
+        return float(self.civ.get("urban_fraction", 0.0))
+
     def _effect_terms(self, channel):
         return list(self._effects) if channel == "disease_effects" else []
 

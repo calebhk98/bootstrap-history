@@ -21,6 +21,10 @@ class BudgetView:
 		"""Frontier, coast and road length of the tiles the state holds."""
 		return territory.holdings(self._sim.home_tiles_held())
 
+	def frontier_disease_loss(self) -> float:
+		"""The share of working-age people the diseases of the tiles on the frontier take in a year."""
+		return self._sim.frontier_disease_loss()
+
 	def country_strata(self) -> List[Any]:
 		"""The bodies of people (strata actors) of the state's own country, in id order."""
 		return [stratum for stratum in self._sim.actors.of_kind("stratum") if stratum.record.country is None]
