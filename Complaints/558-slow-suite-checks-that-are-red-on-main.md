@@ -3,23 +3,42 @@
 **Status:** open
 
 A red slow suite on the default branch means every branch's slow run starts red and its own regressions are read against
-noise. This file is the current list: one section per failing topic, naming the complaint that owns the fix. Where the subject
-is an open design issue, that complaint pins the check or leaves it failing on purpose; it is never loosened to go green.
-Older entries (the three topics this file first named, and the later regressions bisected on integration branches) are in
-`Complaints/reports/558-history.md`; their topics have moved on.
+noise. This file is the current list: one entry per failing topic, naming the complaint that owns the fix. Where the subject
+is an open design issue, that complaint leaves the check failing on purpose; it is never loosened to go green. Older entries
+are in `Complaints/reports/558-history.md`.
 
-Filled from the full slow run on 3cb9c9a0 (orchestrator).
+Measured: the full slow run on main 3cb9c9a0, 2026-10-21, `python3 -m sim.tests --slow --jobs 3 --timing` in a checkout pinned to
+that commit. Re-run the same command for the current list; this section is replaced, not appended, each time.
 
-Command: `python3 -m sim.tests --slow --timing` (cold: see 557 for the time cost; one process at a time).
+## Honest validations of open problems (stay red until the owner closes)
 
-## Failing topics
+- `baseline_fixture` (rate not settled), `baseline_rome_full_length` (rate not settled; the mint replaces a small share of the
+  coin that wears), `spin_up_money_supply_full_length` (money stock falls against wear; mint replacement negative),
+  `real_output` (output per head after a population fall), `real_output_baseline` (goods far from baseline carry much of the
+  basket), `economy_money_regimes_norse` (weighed-metal price level): 473, the opening that never settles.
+- `economy_state_budget_validation` (a balanced budget keeps the state's coin share; printing raises prices): 526 and 473.
+- `economy_tin_dearer_than_copper`: 511 (GitHub #65).
+- `economy_bronze_market_price`: 502 (GitHub #66). Its worst traded price over recipe cost rose between the last two full runs.
+- `occupational_distribution` (agriculture share below its band; services and state the largest non-farm group): 619 (GitHub #64).
+- `sited_ore_price_over_cost_validation`: 519. It now fails on the common ores too, which 519's status says pass: re-measure
+  which ores and update 519.
+- `farm_surplus_intake` (a food technique raises no intake): 513, see its finding on fully worked opening land.
+- `full_length_opening_checks_{england,han,mexica,norse,rome}`: the shipped openings are stale, by design until the opening
+  settles (473); regenerate with `python3 sim/simulator.py openings --prune` then.
 
-One section per topic, in this form:
+## Being fixed on `complaints-triage-and-slow-measurements`
 
-### `<topic>`
+- `concerns_that_pay`: a stand-in world lacked `plant_costs` (fixed).
+- `engine_prices_civilization_rent`: pinned a recorded rent figure that moved with the sourced wheat labour; now checks the
+  rule (fixed).
+- `firm_borrows_to_enter_scenario`: compared against the first year's firm count, which now fills every niche at once; now
+  compares against the opening's (fixed).
+- `foreign_actor_trade_scenario` ("...and no longer swings from year to year"), `one_goods_market_scenario` (the founder's own
+  stock sale lowers the price), `population_farm_technique_scenario` (a food surplus releases farm workers),
+  `scenarios_batch3` (a running concern's forecast against its takings): diagnosis in progress.
+- `subsistence_staple_is_civilisation_data` (the staple moves the floor more than wheat): not yet diagnosed.
 
-- Failing check, as the runner prints it.
-- Owning complaint.
-- What would turn it green (fix, or pinned status with the test kept honest).
+## Timed out at the default topic limit
 
-(No topics listed until the orchestrator's run fills this in.)
+- `farm_edges_scenario`, `plagues_from_contact_validation`: ran past the runner's limit under a three-job load; re-run alone
+  (`--only <topic> --jobs 1`) before reading them as failures. Speed: 497, 557.

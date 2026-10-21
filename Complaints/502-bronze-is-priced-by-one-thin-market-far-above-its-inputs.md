@@ -1,6 +1,14 @@
 # Bronze is priced by one thin market, far above its inputs, and tin is cheaper than copper
 
-**Status:** closed
+**Status:** open - reopened: the slow validation `economy_bronze_market_price` still fails in an aged Rome game (GitHub #66); measure with `python3 -m sim.tests --slow --only economy_bronze_market_price --jobs 1`
+
+## Reopened
+
+The original opening-price defect was fixed, but the aged-game check that names this complaint fails on main: bronze shows and
+trades above a bounded multiple of its recipe cost in some years, and the worst multiple grew between the last two full slow
+runs (`Complaints/558`). Find which years overshoot and which part of the price causes it (the ask, the budget bids, a thin
+market's memory) on the current code; fix the rule, or show with the measurement that the cause is the unsettled opening (473)
+and let this close with it. Do not widen `MARKUP_BOUND`.
 
 On the `market` screen of a Rome game (`play --civ rome_100ad --kit merchant --seed real25`), bronze sells
 for about ninety times what its recipe's inputs cost. The recipe (`bronze_kg` in
