@@ -190,3 +190,14 @@ log +0.5, the smelters' bids against the ask band, mover 3) and the mint (strike
 Hired hours still fall in later years (0.68 to 0.53 million over 3 years, demand side). Not done: seeding the engine's
 opening wage and `opening_income_per_head` from `opening_stationary` (Rome offers 2000 hours a worker against what its
 recipes hire; the household-work hours (645) are what should take the difference, unmeasured).
+
+## Measured (2026-10-21, 60-year Rome trace at 3d05ffbe)
+
+`python3 sim/simulator.py spin-up-trace --civ rome_100ad --years 60` in a checkout pinned to the merge of the robust inflation
+index and the real-rate credit bound (before the households' plot-hours choice). Output: `Complaints/reports/473-trace-3d05ffbe.txt`.
+The price level still runs away after the first decade and hired hours fall many-fold; the wage rises with prices. Expected
+inflation no longer follows one thin good, so the run-up is real: it is the supply collapse traced on #61 (year-0 overproduction,
+the stock gate planning zero runs, idle capacity decaying, food running out) and the input-bid ratchet (a buyer's cap is the
+input's price plus its whole run margin, so a scarce input is bid up without bound). Next: the stock gate eases instead of
+zeroing plans when stock will clear; capacity is not shed while expected sales cover cost; an input bid is bounded by what the
+input is worth in use against its substitutes, with rationing by bid only when supply is short. Re-run the same command after.
