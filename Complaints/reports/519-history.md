@@ -1,6 +1,7 @@
-# Sited ores open at many times their making cost
+# Complaint 519 history: measurement log
 
-**Status:** narrowed to precious ores (silver, gold); the common ores pass
+Moved out of the complaint so it states only the current problem. Figures are as measured on the dates and branches named; re-measure before relying on them.
+
 
 After merge 968974d4 (Complaint 473: weight-losing processors sit at their fixed-site inputs), a Rome opening's
 iron ore trades far above its long-run cost (`economy.agent_prices()["iron_ore_kg"]` against

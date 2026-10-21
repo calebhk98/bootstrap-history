@@ -1,8 +1,8 @@
-# Farm labour is sized to feed the people exactly, so a food technology cannot raise population while land is spare
+# The staple price does not fall near satiation and a farm surplus has no outlet: need-sized hands remain the floor
 
-**Status:** partly fixed - intake rises to a sourced satiation level and farm hands stay while a farm hour pays at least the wage; the food price is not yet cleared against farm effort (see Progress; effort now continuous in the price ratio)
+**Status:** partly fixed - intake rises to a sourced satiation level and farm effort follows the staple price against the wage; need-sized hands are still the floor, the staple price does not fall near satiation, and surplus beyond satiation is not sold, stored or fed to animals
 
-Found closing 480. `LabourAllocationMixin._allocate_farm_workforce` puts just enough people on the land to meet
+Found closing 480. Originally `LabourAllocationMixin._allocate_farm_workforce` put just enough people on the land to meet
 the population's food need (`farm_workers_needed`): a better technique frees hands, a shortfall calls for hands
 and then for clearing. Nutrition therefore sits at need every year, and the fertility and mortality responses
 that read it never move. In a default Rome a food technology leaves population unchanged to the person over
@@ -16,9 +16,7 @@ on prices and the households' choices.
 
 What it would take: farm work chosen by households and farms against the price of food and the wage
 elsewhere (the agent economy already prices both), so a cheaper calorie raises consumption toward satiation
-and the demography reads the outcome. Owner decision: should a food surplus be able to raise intake above need
-(and so fertility and survival), or is freeing labour for other work the intended response while land is
-spare?
+and the demography reads the outcome.
 
 ## Owner decision (2026-10-14)
 
@@ -46,13 +44,10 @@ leave farming when food is cheap and the price recovers.
   yet fall as intake nears satiation (the household basket caps food at the same level, but the farm sector does
   not see that demand curve), and surplus beyond satiation is not yet sold, stored or fed to animals by anyone.
 
-## Attempt not merged (branch `farm-effort-follows-food-price` (deleted unmerged; its code is lost), commit `37bb6313`)
+## Tried and not merged
 
-Made farm effort continuous as the share `value / (1 + value)` of surplus hands, where value is a farm hour's food at
-the staple price over the unskilled wage, and counted granary overflow as waste (`carry_forward_and_waste_kg`,
-`holdings.farm_wasted_kg`). Not merged: the curve is an invented functional form, neither derived nor labelled (it
-keeps half the hands when a farm hour pays exactly the wage, where a household's own comparison keeps all of them),
-and it lowered intake after a food technique, so the existing `test_farm_surplus_intake` bound was loosened to pass.
-The waste count is worth keeping. A continuous response should come from households' own allocation of hours
-(each cohort comparing the farm hour with its own wage, so the aggregate is smooth because cohorts differ), and the
-surplus should reach the agent economy as supply.
+Branch `farm-effort-follows-food-price` (deleted unmerged, commit `37bb6313`): effort as the share `value / (1 + value)` of
+surplus hands. Rejected: an invented functional form, neither derived nor labelled, and it lowered intake after a food
+technique. The waste count (`carry_forward_and_waste_kg`, `holdings.farm_wasted_kg`) was worth keeping. A continuous
+response should come from households' own allocation of hours (each cohort comparing the farm hour with its own wage),
+and the surplus should reach the agent economy as supply.
