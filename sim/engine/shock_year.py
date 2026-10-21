@@ -6,7 +6,7 @@ mildest figure any seat's works leave (sim/engine/hazard_merge.py). One seat run
 order as a game with no other seat."""
 from sim.refusal import LogLine
 
-from . import cause_book
+from . import cause_book, staff_loss_words
 from .units_prose import money_text
 from .hazard_merge import mildest_hazard
 
@@ -96,12 +96,7 @@ class ShockYearMixin:
         historical = report["historical"]
         hit = []
         if report["people_before"] > 0.05:
-            if why and relief <= 0.25:
-                hit.append("staff -%d%%, held off almost entirely by what you built (%s)" % (loss * 100, "; ".join(why)))
-            elif why and relief <= 0.75:
-                hit.append("staff -%d%% (softened by %s)" % (loss * 100, "; ".join(why)))
-            else:
-                hit.append("staff -%d%%" % (loss * 100))
+            hit.append(staff_loss_words.staff_clause(loss, relief, why))
         if report["cash"] > 0.5:
             hit.append("%s of takings lost while the trade stood idle"
                        % money_text(report["cash"], self, grouped=True))
@@ -110,20 +105,11 @@ class ShockYearMixin:
             hit.append("you had nothing it could take")
         message = "%s: %s" % (hazard.get("name", "hazard"), ", ".join(hit))
         # Separate sentence so a spared household does not read the national toll as its own.
-        if raw > 0.01:
-            message += (". Empire-wide, population -%d%%%s - wages (and everything paid in them) stay dear until the "
-                        "population does, either way"
-                        % (raw * 100,
-                           (" (the country's own public health has spread far enough to hold this below the "
-                            "%d%% this would otherwise have been - %d%% softer; that is medical work you "
-                            "built (%s) spreading through the country)"
-                            % (round(historical * 100), round(med_relief * 100), self._national_sources_words()))
-                           if med_relief > 0.02 else ""))
-        elif med_relief > 0.02 and historical > 0.01:
-            message += (". Empire-wide: the country's own public health (medical work you built: %s) has spread far "
-                        "enough that this, historically a %d%% loss, barely registers"
-                        % (self._national_sources_words(), round(historical * 100)))
-        return LogLine("hazard_hit", message, hazard=hazard.get("name", "hazard"), took_nothing=took_nothing, lapsed_hedges=report["lapsed_hedges"])
+        message += staff_loss_words.national_toll_sentence(
+            raw, historical, med_relief, self._national_sources_words() if med_relief > 0.02 else "")
+        return LogLine("hazard_hit", message, hazard=hazard.get("name", "hazard"), took_nothing=took_nothing, lapsed_hedges=report["lapsed_hedges"],
+                       defence=staff_loss_words.defence_kind(relief, why) if report["people_before"] > 0.05 else "no_staff",
+                       national_toll_percent=round(raw * 100))
 
     # ---- output_factor: war and its aftermath, the world's output floor ------------------
 
