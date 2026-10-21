@@ -1,6 +1,6 @@
 """The seats commands: who is playing, and adding a player to a game under way."""
 
-from sim.engine.state_seat import COUNTRY_SEAT, HOUSEHOLD_SEAT
+from sim.engine.state_seat import COUNTRY_SEAT, FOUNDER_SECTION, HOUSEHOLD_SEAT
 from sim.engine.ui_port import STARTING_KITS
 
 from sim.refusal import Refusal
@@ -81,7 +81,7 @@ def _join_country_seat(sim, seat_id, cmd):
                 "error": "a country seat has no starting kit: its means are its state's. Nothing was changed."}
     seat = sim.join_seat(seat_id, {"kind": COUNTRY_SEAT, "country": country})
     return {"ok": True, "joined": seat_id, "kind": seat.kind, "holder": seat.holder, "country": country,
-            "founder": None, "household": None, "seats": seat_rows(sim),
+            FOUNDER_SECTION: seat.founder, "household": None, "seats": seat_rows(sim),
             "note": 'seat %s holds the government of %s; it has no household. Send its commands with "as":"%s".'
                     % (seat_id, country, seat_id)}
 

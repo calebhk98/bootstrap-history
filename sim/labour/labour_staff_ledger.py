@@ -28,6 +28,7 @@ class StaffLedgerMixin:
             return
         world = self._world
         stops = sorted(world.concerns_to_close_for_staffing())
+        # plain line: staff_lost_line builds the LogLine and its kind
         world.state.household.log.append((world.state.scenario.year, staff_lost_line(
             cause, counts, stops, self.yearly_value_of(stops))))
 
