@@ -22,6 +22,7 @@ in.
 import collections
 import copy
 
+from . import material_throttle
 from .data import hard_pre
 from sim.constants import declare
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
@@ -492,30 +493,16 @@ class ElectricityMixin:
             # with a large generic market figure and no demand for years
             # would otherwise accumulate thousands of tonnes nobody ever
             # produced or paid for).
-            own_and_stock = opening_stock.get(emp_key, 0.0) + self._own_material_supply(tag)
-            have = own_and_stock + self._material_market_tonnes(emp_key)
-            # Lab-scale first, and unconditionally: drawn from whatever is
-            # banked or flowing in this year, topped up by a direct purchase
-            # this function never checks capacity for - "I would just buy
-            # 20 grams," exactly. It can never be what sets `worst`/`who`.
-            lab_drawn = min(lab_need, have)
-            have -= lab_drawn
-            consumed_ind = 0.0
-            if ind_need > 1e-12:
-                if have < ind_need:
-                    fraction = max(self.RESOURCE_THROTTLE_FLOOR, have / ind_need)
-                    if fraction < worst:
-                        worst, who = fraction, emp_key
-                    consumed_ind = have
-                else:
-                    consumed_ind = ind_need
-            # BANK THE REST OF WHAT WAS YOURS. Own production (and prior
-            # stock) this year that neither draw actually touched goes back
-            # into stock rather than evaporating - the other half of the fix
-            # (DOCS_VS_ENGINE.md #3). Capped at own_and_stock, never at the
-            # larger `have`, for exactly the reason in the comment above.
-            stock[emp_key] = max(0.0, own_and_stock - lab_drawn - consumed_ind)
-            self.goods_market.note_draw(emp_key, lab_drawn + consumed_ind - own_and_stock)
+            draw = material_throttle.draw_one_material(
+                opening_stock.get(emp_key, 0.0), self._own_material_supply(tag), self._material_market_tonnes(emp_key),
+                lab_need, ind_need, self.RESOURCE_THROTTLE_FLOOR)
+            # Lab-scale is drawn first and unconditionally, so it can never be what sets `worst`/`who`.
+            if draw.pace is not None and draw.pace < worst:
+                worst, who = draw.pace, emp_key
+            # Own production and prior stock that neither draw touched goes back into stock; the market's
+            # standing offer is never banked.
+            stock[emp_key] = draw.banked
+            self.goods_market.note_draw(emp_key, draw.net_draw)
         holdings.throttle, holdings.binding = worst, who
         # Stored AFTER mutation, against stock as this call actually left
         # it - so an immediate repeat call's sig (computed from that same,

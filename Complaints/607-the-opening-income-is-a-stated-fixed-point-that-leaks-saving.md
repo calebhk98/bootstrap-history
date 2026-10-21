@@ -16,7 +16,7 @@ Depends on 605, 606, 538 and 545 (545 cannot land alone). The unmerged rate sear
 
 **Test.** Realised year-0 income is within a band of the opening figure; a more productive technique set opens with a larger surplus; the spin-up settles (which also needs 608 and 473); `grep -rn opening_income_per_head sim` is empty.
 
-## Evaluated and built (branch `605-607-saving-finds-a-use`)
+## Evaluated and built (branch `605-607-saving-finds-a-use` (merged as `44cd2125`, then deleted; `equity.py` is in main, `opening_equity.py` is no longer in `sim/economy`))
 
 Three ways to give saving a use were weighed against the code:
 
@@ -57,3 +57,6 @@ opposite phases. Not loosened; the cycle is 553/473.
 What remains for 607: deleting `opening_income_per_head` needs the opening to hold the wealth its households want
 (606's wish shrunk to sourced figures, 538's land) so the fixed point is not at the floors, and a fixture with
 plant as the default so saving has a user.
+
+**Direction (2026-10-20).** With 606's sourced wealth figures, the opening's households should hold their wealth
+mostly as land titles; the leak closes by giving saving that asset (538, 551) before any change to the wish.

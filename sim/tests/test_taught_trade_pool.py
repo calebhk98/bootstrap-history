@@ -33,7 +33,7 @@ def make_world(taught=12.0, founder_staff=2.0, actor_staff=3.0):
     labour = Labour()
     labour.taught = taught
     seats = {"founder": types.SimpleNamespace(household=types.SimpleNamespace(employees={TAUGHT: founder_staff, "smith": 5.0}))}
-    actors = types.SimpleNamespace(staff_fte=lambda trade, excluding=None: actor_staff if trade == TAUGHT else 0.0)
+    actors = types.SimpleNamespace(home_staff_fte=lambda trade, excluding=None: actor_staff if trade == TAUGHT else 0.0)
     return SimWorld(types.SimpleNamespace(labour=labour, state=types.SimpleNamespace(seats=seats), actors=actors))
 
 

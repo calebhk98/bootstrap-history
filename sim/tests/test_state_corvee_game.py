@@ -1,6 +1,7 @@
-"""Complaint 621 in a whole game: a civilisation that declares a corvee and a conscription takes the hours from its
+"""Scenarios for Complaint 621 in a whole game: a civilisation that declares a corvee and a conscription takes the hours from its
 working-age people, staffs its works with them unpaid, fills its army with them, and hands the lost hours to the economy
-as the working time its households no longer offer."""
+as the working time its households no longer offer. The rules are in test_state_corvee and test_levy_hours_per_worker;
+the worth of the corvee to the state's revenue and the cost of a conscript army are held by test_state_corvee."""
 from .harness import *  # noqa: F401,F403
 
 from sim.agents import revenue_labour
@@ -18,7 +19,8 @@ def one_year(game):
 
 def with_dues(*forms):
     game = sim()
-    game.civ["state_revenue"] = list(game.civ.get("state_revenue") or []) + list(forms)
+    record = game.state_treasury().record   # the state's own forms, copied from the civilisation's file at setup
+    record.revenue_forms = list(record.revenue_forms) + list(forms)
     return game
 
 
@@ -39,8 +41,6 @@ check("the days owed are taken as hours from the working-age people",
 check("the hours reach the economy as working time each household no longer offers",
       abs(economy_port_levy.levy_hours_per_worker(game) - DAYS * revenue_labour.HOURS_PER_WORKING_DAY) < 1e-6,
       economy_port_levy.levy_hours_per_worker(game))
-check("the corvee's worth is part of the revenue the state's credit rests on",
-      SimWorld(game).state_revenue() > SimWorld(plain).state_revenue(), (SimWorld(game).state_revenue(), SimWorld(plain).state_revenue()))
 
 soldiers = with_dues({"form": "conscription", "basis": "labour_days", "rate": CONSCRIPT_DAYS, "per": "working_age_person",
                       "to": "army"})
@@ -51,7 +51,3 @@ conscripts = treasury.record.corvee_hours["army"] / SimWorld(soldiers).hours_per
 check("conscripts are part of the army the country's people can spare",
       conscripts > 0.0 and booked["granted"] >= conscripts - 1e-6 and treasury.record.army >= conscripts - 1e-6,
       (conscripts, booked, treasury.record.army))
-plain_record = plain.state_treasury().record
-check("an army with conscripts in it costs less a soldier than an army of paid soldiers",
-      treasury.record.need["army"] / treasury.record.army < plain_record.need["army"] / plain_record.army,
-      (treasury.record.need["army"], treasury.record.army, plain_record.need["army"], plain_record.army))

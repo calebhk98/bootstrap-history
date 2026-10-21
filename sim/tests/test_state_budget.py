@@ -9,6 +9,8 @@ import tempfile
 
 from .harness import *  # noqa: F401,F403
 
+from sim.agents.policy import IdlePolicy
+
 
 
 from sim.engine.agents_port import SimWorld
@@ -21,14 +23,14 @@ from sim.engine.state import ActorRecord
 HEAVY_ARMY = 1.0e7
 
 
-def budget_sim(civ="rome_100ad", army=None, purse=None):
+def budget_sim(civ="rome_100ad", army=None, purse=None, cut_when_short=False):
     """A game whose lenders advance the state nothing, so a deficit beyond the reserve is cut (borrowing
     is covered by test_capital_market)."""
     game = unopened_sim(civ=civ)
     game.market_credit_room = lambda actor_id: 0.0
     # revenue in coin only, so a deficit is measured against money (in-kind revenue: test_state_revenue_forms)
-    game.civ["state_revenue"] = [{key: value for key, value in form.items() if key != "paid_in"}
-                                 for form in game.civ["state_revenue"]]
+    record = game.state_treasury().record   # the state's own forms, copied from the civilisation's file at setup
+    record.revenue_forms = [{key: value for key, value in form.items() if key != "paid_in"} for form in record.revenue_forms]
     # the goods the state buys are bid for in the agent economy's book and paid when the year clears, not booked as outlays
     game.bids = []   # (buyer, commodity, tonnes, money)
     real_note_purchase = game.economy.note_actor_purchase
@@ -39,6 +41,8 @@ def budget_sim(civ="rome_100ad", army=None, purse=None):
     treasury = game.state_treasury()
     if purse is not None:
         treasury.money = purse
+    if cut_when_short:
+        treasury.decision_policy = IdlePolicy()   # a state that chooses no other response cuts its lines
     return game, treasury
 
 
@@ -93,13 +97,13 @@ game.civ["standing_army"] = opening_army
 # (this one year also serves the labour-pool and goods-market sections below, which read the same year's result)
 revenue = SimWorld(game).state_revenue()
 standing = budget.standing_lines(SimWorld(game))
-need = sum(line.money for line in standing)
 standing_purposes = {line.name for line in standing}
 soldiers_free_before = game.labour.market_supply("soldier")
 scribes_before = game.actor_staff_fte("scribe")
 iron_demand_before_buying = sum(1 for bid in game.bids if bid[1] == "iron")
 one_year(game)
 income, outlays = treasury.record.income, treasury.record.outlays
+need = sum(treasury.record.need.values())   # the year's standing need after the state's stores drew on it (a store-fed line asks the purse for nothing)
 check("the state's revenue is booked as income from taxation, less what it took in kind",
       abs(income.get("taxation", 0.0) + sum(treasury.record.revenue_in_kind.values()) - revenue) < 1e-6 * revenue,
       (income, treasury.record.revenue_in_kind, revenue))
@@ -116,7 +120,7 @@ check("a state that paid all it needs records no unfunded need",
       not any(treasury.record.unfunded.values()), treasury.record.unfunded)
 
 # ---- a deficit is financed from the reserve first, then spending is cut ----------------------
-heavy, heavy_treasury = budget_sim(army=HEAVY_ARMY)  # a force the revenue cannot carry
+heavy, heavy_treasury = budget_sim(army=HEAVY_ARMY, cut_when_short=True)  # a force the revenue cannot carry
 revenue = SimWorld(heavy).state_revenue()
 heavy_lines = budget.standing_lines(SimWorld(heavy))
 need = sum(line.money for line in heavy_lines)
@@ -124,6 +128,7 @@ check("the heavy army is a real deficit", need > 2.0 * revenue, (need, revenue))
 reserve = 0.4 * (need - revenue)
 heavy_treasury.money = reserve
 one_year(heavy)
+need = sum(heavy_treasury.record.need.values())   # the year's need after the state's stores drew on it
 heavy_bids = sum(money for buyer, _commodity, _tonnes, money in heavy.bids if buyer == heavy_treasury.actor_id)
 heavy_outlays = heavy_treasury.record.outlays
 on_lines = sum(heavy_outlays.get(line.name, 0.0) for line in heavy_lines)
@@ -133,10 +138,11 @@ check("a reserve that covers part of the deficit is all committed: the purse kee
       abs(heavy_treasury.money - heavy_bids + off_lines) < 1e-6 * need, (heavy_treasury.money, heavy_bids, off_lines))
 spent = on_lines + heavy_bids
 check("spending on the lines is cut to what revenue and reserve afford",
-      abs(spent - (revenue + reserve)) < 1e-6 * need, (spent, revenue, reserve))
+      abs(spent - (heavy_treasury.record.income.get("taxation", 0.0) + reserve)) < 1e-6 * need,
+      (spent, heavy_treasury.record.income, reserve))
 check("the cut is recorded as unfunded need, by line",
       abs(sum(heavy_treasury.record.unfunded.values()) - (need - spent)) < 1e-6 * need
-      and all(amount > 0.0 for amount in heavy_treasury.record.unfunded.values()),
+      and all(heavy_treasury.record.unfunded[name] > 0.0 for name, owed in heavy_treasury.record.need.items() if owed > 0.0),
       heavy_treasury.record.unfunded)
 rich, treasury_rich = budget_sim(army=HEAVY_ARMY)
 treasury_rich.money = 10.0 * need
@@ -196,12 +202,6 @@ def short_of(unfunded, firms=0, protection=None):
     for number in range(firms):
         firm = game.actors.add("firm:visible%d" % number, ActorRecord(kind="firm", money=60000000.0,
                                                                       last_margin=INCOME))
-    world = SimWorld(game)
-    while sum(line.money for line in budget.standing_lines(world)) < 1.5 * world.state_revenue():
-        game.civ["standing_army"] *= 2.0  # a need above revenue, so the purse that falls short is positive, not a debt
-        world = SimWorld(game)  # soldiers leave production, so revenue is read afresh
-    need = sum(line.money for line in budget.standing_lines(world))
-    game.state_treasury().money = need - world.state_revenue() - unfunded
     one_year(game)
     world = SimWorld(game)
     household_scale = world.visible_taxpayers()[0][0]
@@ -216,13 +216,18 @@ def short_of(unfunded, firms=0, protection=None):
             else:
                 high = firm.money
     world = SimWorld(game)
+    # the state went short of `unfunded` and chose to raise it all by levy: the year's need is split across its lines
+    record = game.state_treasury().record
+    owed = sum(record.need.values())
+    record.unfunded = {name: unfunded * amount / owed for name, amount in record.need.items()}
+    record.fiscal_response = {"levy": unfunded}
     game.state_treasury().seek_shortfall(budget.standing_lines(world), world)
     return game
 
 
 def ordinary(game):
     """The share of income the society pays the state, as it falls on a visible taxpayer."""
-    return game.civ["starting_tax_share"] * game.state_capacity * game.notice_over(game.household_scale())
+    return game.civ["starting_tax_share"] * game.state_reach() * game.notice_over(game.household_scale())
 
 
 def charged(game):
@@ -245,7 +250,7 @@ check("a bigger shortfall asks more of the same household", charged(large) > 1.5
 check("the same shortfall spread over a second equally visible taxpayer asks half as much of each",
       abs(charged(short_of(1.0e4, firms=1)) - 0.5 * charged(small)) < 0.05 * charged(small),
       (charged(short_of(1.0e4, firms=1)), charged(small)))
-ruinous = short_of(1.0e12)
+ruinous = short_of(1.0e3 * INCOME)   # far past what the visible income could raise, yet less than the whole need, so officials are still partly paid
 requisition, office = ruinous.levy_shares(ruinous.household_scale(), 0.0)
 requisition -= ordinary(ruinous)
 check("however large the shortfall the levy stops at the ceiling on one taxpayer's income",
@@ -253,7 +258,7 @@ check("however large the shortfall the levy stops at the ceiling on one taxpayer
       (requisition, office))
 check("army need is claimed as requisition and the officials' as office",
       requisition > 0.0 and office > 0.0 and requisition > office, (requisition, office))
-bargained = short_of(1.0e12, protection=0.85)
+bargained = short_of(1.0e3 * INCOME, protection=0.85)
 check("protection bargains requisition down and leaves the office alone",
       bargained.levy_shares(bargained.household_scale(), 0.85)[0] < requisition
       and abs(bargained.levy_shares(bargained.household_scale(), 0.85)[1] - office) < 1e-12,

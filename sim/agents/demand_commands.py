@@ -15,7 +15,7 @@ def answer_demand(player: Any, order: Dict[str, Any], world: Any) -> str:
 		raise CommandRejected(str(reason)) from reason
 	player.set_demand_stance(stance)
 	player.record.service_offer = service
-	capacity, standing = world.state_capacity(), player.standing()
+	capacity, standing = world.state_reach(), player.standing()
 	if stance == demand_answer.NEGOTIATE:
 		odds = demand_answer.negotiation_odds(1.0, capacity, standing, service)
 		return ("answering the state's demands by: negotiating. The state takes your offer with a chance of %.0f%% and "

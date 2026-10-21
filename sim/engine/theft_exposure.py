@@ -80,9 +80,9 @@ def visibility_factor(visible_scale):
     return UNSEEN_EXPOSURE_FLOOR + (1.0 - UNSEEN_EXPOSURE_FLOOR) * scale
 
 
-def order_factor(state_capacity, protection):
-    """Exposure left under the state's order and the holder's own protection (each 0..1, independent covers)."""
-    uncovered = (1.0 - min(1.0, max(0.0, state_capacity))) * (1.0 - min(1.0, max(0.0, protection)))
+def order_factor(guarded_share, protection):
+    """Exposure left under the share of people its guards watch and the holder's own protection (each 0..1, independent covers)."""
+    uncovered = (1.0 - min(1.0, max(0.0, guarded_share))) * (1.0 - min(1.0, max(0.0, protection)))
     return 1.0 - ORDER_SUPPRESSION * (1.0 - uncovered)
 
 
@@ -94,31 +94,31 @@ def guard_hours_for(kind, guard_hours_per_tonne_year):
     return guard_hours_per_tonne_year
 
 
-def share_taken(kind, strength, guard_hours_per_tonne_year, visible_scale, state_capacity, protection):
+def share_taken(kind, strength, guard_hours_per_tonne_year, visible_scale, state_reach, protection):
     """Share of a holding of this kind that a theft of this strength takes: what is portable, unguarded, visible
     and outside the state's order. Strength 1 is the share of a fully exposed holding taken by the event."""
     guarded = (guarding_factor(guard_hours_for(kind, guard_hours_per_tonne_year))
                if kind in GUARDABLE_KINDS else 1.0)
-    around = visibility_factor(visible_scale) * order_factor(state_capacity, protection)
+    around = visibility_factor(visible_scale) * order_factor(state_reach, protection)
     return min(1.0, max(0.0, strength) * portability_of(kind) * guarded * around)
 
 
-def theft_shares_by_kind(kinds, strength, guard_hours_per_tonne_year, visible_scale, state_capacity, protection):
+def theft_shares_by_kind(kinds, strength, guard_hours_per_tonne_year, visible_scale, state_reach, protection):
     """Share taken of each kind named, for a theft of this strength."""
-    return {kind: share_taken(kind, strength, guard_hours_per_tonne_year, visible_scale, state_capacity,
+    return {kind: share_taken(kind, strength, guard_hours_per_tonne_year, visible_scale, state_reach,
                               protection) for kind in kinds}
 
 
-def theft_loss_by_kind(holdings, guard_hours_per_tonne_year, visible_scale, state_capacity, protection,
+def theft_loss_by_kind(holdings, guard_hours_per_tonne_year, visible_scale, state_reach, protection,
                        strength=THEFT_SHARE_PER_YEAR_AT_FULL_EXPOSURE):
     """Expected value stolen in a year from each kind of holding (kind -> value held); a debt is not stolen from.
     A larger `strength` prices an event (a sack, a bandit year) by the same exposure."""
-    shares = theft_shares_by_kind(holdings, strength, guard_hours_per_tonne_year, visible_scale, state_capacity,
+    shares = theft_shares_by_kind(holdings, strength, guard_hours_per_tonne_year, visible_scale, state_reach,
                                   protection)
     return {kind: max(0.0, value) * shares[kind] for kind, value in holdings.items()}
 
 
-def expected_theft_loss(holdings, guard_hours_per_tonne_year, visible_scale, state_capacity, protection):
+def expected_theft_loss(holdings, guard_hours_per_tonne_year, visible_scale, state_reach, protection):
     """Total expected value stolen in a year across the holdings."""
-    return sum(theft_loss_by_kind(holdings, guard_hours_per_tonne_year, visible_scale, state_capacity,
+    return sum(theft_loss_by_kind(holdings, guard_hours_per_tonne_year, visible_scale, state_reach,
                                   protection).values())

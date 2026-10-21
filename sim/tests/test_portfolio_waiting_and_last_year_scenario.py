@@ -1,0 +1,34 @@
+"""Scenario (Complaint 293): in a running game the portfolio's waiting groups agree with the start gate, and a project that has
+run carries last year's hours from the dashboard snapshots. The grouping rules are in test_portfolio_waiting_and_last_year."""
+from .harness import *  # noqa: F401,F403
+
+
+def ask(test_sim, **command):
+    return S._agent_dispatch(test_sim, NODES, command)
+
+
+poor = sim(capital=2_000.0)
+poor.end_year = poor.cfg["start_year"] + poor.cfg["horizon_years"]
+screen = ask(poor, cmd="portfolio")
+waiting = screen.get("waiting_to_start")
+check("portfolio has a waiting-to-start section", isinstance(waiting, list) and waiting, screen.keys())
+if waiting:
+    check("a waiting group's kind is the gate's first blocker for each member",
+          all(poor.start_blockers(project) and poor.start_blockers(project)[0]["kind"] == group["kind"]
+              for group in waiting for project in group["projects"]), waiting[:1])
+
+rich = poor
+rich.capital = 5_000_000.0
+for node_id in list(rich.order):
+    if len(rich.active) >= 2:
+        break
+    if node_id not in rich.done and NODES[node_id]["yrs"] >= 6 and rich.can_start(node_id):
+        ask(rich, cmd="start", id=node_id)
+ask(rich, cmd="step", years=2)  # arrival snapshot plus two years
+rows = ask(rich, cmd="portfolio")["projects"]
+check("a project that has run a year carries last year's effective hours",
+      rows and all("hours_effective_last_year" in row for row in rows), rows[:1])
+snapshots = rich._dashboard_history
+check("last year's figure is the earlier snapshot's, not this year's",
+      all(row["hours_effective_last_year"] == snapshots[-2]["project_hours_effective"].get(row["id"])
+          for row in rows), (rows[:1], snapshots[-2].get("project_hours_effective")))

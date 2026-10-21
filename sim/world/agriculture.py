@@ -53,13 +53,13 @@ does, because every table just rescales the same Cobb-Douglas curve; see
 NET YIELD MUST MATCH data/production/40_organics.json's `wheat_kg` ENTRY, BY
 CONSTRUCTION. Fold-return is measured against the seed sown, so a fold-return
 figure produces a GROSS harvest with the seed inside it; net of seed, wheat's
-4.5-fold return on 165 kg/ha of seed corn gives 577.5 kg/ha, which is what
+fold return on the seed corn of one hectare, less that seed, is what
 this module computes and what the data file states -
 `sim/tests/test_agriculture.py`'s DataConsistencyTests reads the file and
 checks it, so the two cannot drift apart unnoticed.
 
 The physically right form of that entry lists seed among wheat's own inputs
-and outputs the gross 742.5 kg/ha, which would make seed corn a visible first
+and outputs the gross yield, which would make seed corn a visible first
 claim on the harvest (and a famine eating next year's seed a representable
 event). It is written net instead because `sim/engine/solve_prices.py`'s
 resolvability pass refuses any material that appears among its own inputs -
@@ -77,17 +77,15 @@ close that gap, and the gap is a factor of about four. One mechanism
 accounts for most of what closes it, worth stating plainly because it is not
 where a first reading would look:
 
-  THE BINDING CONSTRAINT IS THE HARVEST WINDOW, NOT THE FARMING YEAR. Grain
-  ripens and is then lost to shattering and lodging within two or three
-  weeks, and a worker reaping by sickle covers on the order of a tenth of a
-  hectare a day. Twenty-one days times 0.1 ha/day caps one worker at about
-  2.1 cropped hectares, against the 9.3 ha the same worker's 1,400 annual
-  hours would otherwise buy at 150 h/ha. The annual-hours ceiling is
-  therefore slack by more than four to one and does not bind at all:
-  REFERENCE_LABOUR_HOURS_PER_HECTARE could be doubled, or the farming year
-  lengthened, and this module's headline number would not move by a single
-  percentage point. That is the finding. See
-  `hectares_cropped_per_farm_worker`.
+  TWO CEILINGS BIND A WORKER, WHICHEVER IS SMALLER: the harvest window
+  (days of ripeness times hectares reaped a day) and the farming year (hours
+  a worker gives over hours a hectare takes). Both follow the sub-tasks of
+  data/world/farm_labour.json (cultivation cycle, reaping, threshing), so
+  the reaping rate and the hours per hectare cannot disagree about how long
+  reaping takes. At those figures the farming year is the smaller ceiling;
+  a crop that takes few hours a hectare, or a labour-saving toolkit, hands
+  the binding role to the window. `python3 -m sim.tests --only agriculture`
+  pins both cases. See `hectares_cropped_per_farm_worker`.
 
   FALLOW IS A LAND FACT, NOT A LABOUR ONE, AND CHANGES THIS NUMBER BY
   NOTHING. Two-field rotation leaves half a holding idle each year, so a
@@ -126,14 +124,10 @@ likely hiding, in the order this module would bet on:
       olives, pasture, fishing - that historically absorbed much of the
       rural population is absent, as is the fodder land that draught oxen
       eat, which on a real farm is a large claim on the holding.
-  (d) REFERENCE_LABOUR_HOURS_PER_HECTARE PROBABLY UNDERCOUNTS. Still true,
-      and the harvest constants give independent evidence for it: reaping
-      alone at 0.1 ha/day is on the order of 100 h/ha, which does not fit
-      inside a 150 h/ha total that also has to cover cross-ploughing,
-      sowing, weeding, threshing and winnowing. It no longer matters to the
-      headline number, because that ceiling is slack - but it would matter
-      to any cost computed from those hours, which is what
-      data/production/40_organics.json feeds.
+  (d) The hours per hectare were once a typed figure with no source, too
+      small for the reaping alone. They are now built from sourced
+      sub-tasks (Complaint 646); the farm share this module reports moved
+      with them.
 
 THE HARVEST WINDOW BINDS gross_harvest_kg DIRECTLY, NOT ONLY THE HEADLINE
 CALIBRATION. HARVEST_WINDOW_DAYS and HECTARES_REAPED_PER_WORKER_DAY are read
@@ -264,11 +258,12 @@ import random
 from typing import Optional
 
 from sim.constants import declare
+from sim.world.farm_labour import REFERENCE_LABOUR_HOURS_PER_HECTARE, WHEAT_REAPED_HECTARES_PER_PERSON_DAY
+from sim.world.grain_yield import FOLD_RETURN, SEED_KG_PER_HECTARE
 from sim.world.shared_constants import (
     ANNUAL_LABOUR_HOURS_PER_FARM_WORKER,
     FALLOW_SHARE_OF_HOLDING,
     LABOUR_OUTPUT_ELASTICITY,
-    REFERENCE_LABOUR_HOURS_PER_HECTARE,
     SUBSISTENCE_ENERGY_REQUIREMENT_KCAL_PER_ADULT_DAY,
     WHEAT_ENERGY_KCAL_PER_KG,
 )
@@ -282,7 +277,7 @@ from sim.world.shared_constants import (
 # like it are listed there too). Importing them does not break the
 # STANDALONE property this file and sim/world/land.py both keep (see this
 # file's own docstring), because sim/world/shared_constants.py imports
-# nothing but sim.constants.declare, the same as this file already does.
+# nothing but sim.constants.declare and sim.world.farm_labour (a data reader), so it stays standalone.
 # This file's own public names for these five values (assigned just below)
 # are kept unchanged, so every existing caller and test that reads e.g.
 # `agriculture.LABOUR_OUTPUT_ELASTICITY` is unaffected.
@@ -291,27 +286,23 @@ from sim.world.shared_constants import (
 # SEED AND YIELD BIOLOGY
 # ============================================================================
 # These two numbers are Roman-wheat-specific facts about the crop and the
-# sowing practice, not properties of this simulation. Both are read from
-# data/production/40_organics.json's wheat_kg entry (itself sourced to
-# Columella and modern archaeobotanical estimates for Roman Italy), and from
-# the same range the task that produced this module names independently:
-# "Roman wheat returned something like four to five times the seed sown on
-# decent land, around a tonne per hectare gross." See the module docstring's
-# NET YIELD MUST MATCH section for the gross-versus-net distinction that
-# governs how these two numbers are used.
+# sowing practice, not properties of this simulation. Both are built from
+# Columella's text in data/world/grain_yield.json (sim/world/grain_yield.py).
+# See the module docstring's NET YIELD MUST MATCH section for the
+# gross-versus-net distinction that governs how they are used.
 
 SEED_SOWING_RATE_KG_PER_HA = declare(
-    "SEED_SOWING_RATE_KG_PER_HA", 165.0,
+    "SEED_SOWING_RATE_KG_PER_HA", SEED_KG_PER_HECTARE,
     kind="engineering_estimate",
     unit="kg seed/hectare",
-    source="data/production/40_organics.json wheat_kg entry: broadcast "
-           "sowing rate for ancient Mediterranean wheat under an ard, "
-           "given there as \"around 150-180 kg/ha\"; taken here as the "
-           "midpoint of that stated range.",
+    source="Built in data/world/grain_yield.json by sim/world/grain_yield.py: Columella, De Re Rustica 2.9.1 "
+           "(LacusCurtius, opened), five modii of wheat to the iugerum of medium land; twenty Roman pounds to the "
+           "modius of the lightest wheat, Pliny, Natural History 18.12 (Perseus, opened); 328.9 g to the Roman "
+           "pound (Wikipedia, opened); 0.2523 hectares to the iugerum (data/world/farm_labour.json).",
     confidence="B",
     why="Sets how much of every harvest must be paid back to the ground "
         "before anything is food, and is the yardstick fold-return is "
-        "quoted against - 'four to five times the seed sown' means nothing "
+        "quoted against - 'four times the seed sown' means nothing "
         "without this number.")
 
 CLEARING_LABOUR_HOURS_PER_HECTARE = declare(
@@ -328,14 +319,13 @@ CLEARING_LABOUR_HOURS_PER_HECTARE = declare(
         "tracked process.")
 
 FOLD_RETURN_ON_SEED_SOWN = declare(
-    "FOLD_RETURN_ON_SEED_SOWN", 4.5,
+    "FOLD_RETURN_ON_SEED_SOWN", FOLD_RETURN,
     kind="biological_parameter",
     unit="kg reaped / kg sown (dimensionless)",
-    source="Columella's own figures and modern archaeobotanical estimates "
-           "for Roman Italy, both giving roughly 4-5 fold return under an "
-           "ard without heavy manuring; same range independently named in "
-           "data/production/40_organics.json and in the task that produced "
-           "this module. Taken as the midpoint.",
+    source="data/world/grain_yield.json: Columella, De Re Rustica 3.3.4 (LacusCurtius, opened), grain crops "
+           "\"throughout at least the greater part of Italy\" hardly returned \"a yield of four for one\". "
+           "Varro 1.44.1 gives tenfold to fifteen-fold for the best districts of Etruria, carried here by a tile "
+           "yield factor above 1.0, not by this reference.",
     confidence="B",
     why="The crop's biological response to being sown at all, at reference "
         "labour and average land quality in an average year - the single "
@@ -345,9 +335,7 @@ FOLD_RETURN_ON_SEED_SOWN = declare(
 
 GROSS_YIELD_AT_REFERENCE_LABOUR_KG_PER_HA = (
     SEED_SOWING_RATE_KG_PER_HA * FOLD_RETURN_ON_SEED_SOWN)
-# 742.5 kg/ha - inside the 700-900 kg/ha range data/production/40_organics.json
-# itself derives from the same fold-return arithmetic. Not a `declare()`:
-# it is arithmetic on two already-declared numbers, not a fact of its own.
+# Not a `declare()`: it is arithmetic on two already-declared numbers, not a fact of its own.
 
 # ============================================================================
 # LABOUR AND TECHNIQUE
@@ -445,26 +433,19 @@ HARVEST_WORKING_DAY_HOURS = declare(
         "number. See `max_hectares_reapable_by_crew`.")
 
 HECTARES_REAPED_PER_WORKER_DAY = declare(
-    "HECTARES_REAPED_PER_WORKER_DAY", 0.10,
+    "HECTARES_REAPED_PER_WORKER_DAY", WHEAT_REAPED_HECTARES_PER_PERSON_DAY,
     kind="engineering_estimate",
     unit="hectares/worker/day",
-    source="Hand reaping with a sickle, including binding into sheaves, is "
-           "repeatedly given in pre-mechanical agricultural accounts at "
-           "roughly a quarter to a third of an acre per man-day, i.e. "
-           "0.10-0.13 ha; taken at the low end, the sickle rather than the "
-           "faster scythe, which is what a grain harvest in this period "
-           "used (the scythe was a hay tool).",
-    confidence="B",
-    why="Turns the harvest window from a span of days into an area. Note "
-        "what this figure implies about the labour total above: reaping "
-        "alone at this rate is on the order of 100 hours per hectare, "
-        "which does not fit inside REFERENCE_LABOUR_HOURS_PER_HECTARE's "
-        "150 h/ha alongside cross-ploughing, sowing, weeding, threshing "
-        "and winnowing. That is independent evidence for the docstring's "
-        "suspicion (a) that the 150 h/ha aggregate undercounts, and it is "
-        "recorded here rather than acted on, because correcting it means "
-        "re-deriving data/production/40_organics.json's labour line from "
-        "its sub-tasks, not editing a number in this file.")
+    source="The inverse of the reaping sub-task in data/world/farm_labour.json: Columella, De Re Rustica "
+           "2.12.1 (LacusCurtius, opened), one and a half days of the reaper to the iugerum of wheat, per "
+           "hectare at 2,523 square metres to the iugerum. Shukurov et al., arXiv 1505.05121 section 8.1 "
+           "(secondary) quotes Halstead and "
+           "Jones (1989), 10-30 person-days/ha for a modern sickle on Greek islands, a slower rate "
+           "(0.03-0.1 ha/day) that would tighten the harvest window; the Roman figure is taken.",
+    confidence="C",
+    why="Turns the harvest window from a span of days into an area, and is the same fact as the reaping "
+        "hours inside REFERENCE_LABOUR_HOURS_PER_HECTARE, so the window ceiling and the labour total cannot "
+        "disagree about how long a hectare takes to cut.")
 
 # ============================================================================
 # ROTATION AND FALLOW

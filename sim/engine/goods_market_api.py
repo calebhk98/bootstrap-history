@@ -22,6 +22,7 @@ from sim.world.producer_market import Offer
 from . import purchase_rule
 from .goods_market_offers import GoodsOffers
 from .goods_market_pricing import GoodsPricing
+from .sale_orders import tonnes_sold
 from sim.agents.api import edges
 
 class SeatParty:
@@ -79,6 +80,10 @@ class GoodsMarket(GoodsPricing, GoodsOffers):
         if party is None:
             party = self._seat_parties[seat_id] = SeatParty(self._sim, seat_id)
         return party
+
+    def forget_seat_party(self, seat_id):
+        """A seat that left the game takes its party with it."""
+        self._seat_parties.pop(seat_id, None)
 
     @property
     def acting(self):
@@ -256,7 +261,7 @@ class GoodsMarket(GoodsPricing, GoodsOffers):
             return None, 0.0, 0.0
         key = quote["stock_key"]
         sold_so_far = self.sold_tonnes(key, seller.party_id)
-        sold = min(tonnes, seller.held(key), self.market_room_tonnes(quote, sold_so_far))
+        sold = tonnes_sold(tonnes, seller.held(key), self.market_room_tonnes(quote, sold_so_far))
         if sold <= 0:
             return key, 0.0, 0.0
         return key, sold, self.sale_proceeds(material, sold, sold_so_far)[0]

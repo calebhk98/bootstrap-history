@@ -1,4 +1,4 @@
-"""Complaint 502: in an aged Rome game bronze, whose recipe is a melt of copper and tin with fuel and a few
+"""BASELINE VALIDATION (CLAUDE.md 4.2), slow-only, against a declared band (MARKUP_BOUND): Complaint 502: in an aged Rome game bronze, whose recipe is a melt of copper and tin with fuel and a few
 skilled hours, shows (and trades at) a bounded multiple of what that recipe costs at the live input prices and
 wages, not the price one thin market's remembered ask and budget bids settled on."""
 from .harness import *  # noqa: F401,F403
@@ -8,6 +8,8 @@ from sim.economy import notional
 from sim.economy.protocols import YearInputs
 from sim.economy.national_prices import national_prices
 
+# Eighteen stepped Rome years take longer than the runner's default limit; a timeout would hide the result.
+TOPIC_SECONDS = 900
 GOOD = "bronze_kg"
 YEARS_PLAYED = 18
 MARKUP_BOUND = 3.0      # a melt's fuel and skilled hours are already in its recipe cost; a markup beyond this is a thin market
@@ -39,5 +41,5 @@ def aged_bronze_is_priced_near_its_recipe():
                 worst_shown, worst_traded, [(year, round(shown, 2), round(traded, 2)) for year, shown, traded in rows]))
 
 
-slow_check("Complaint 502: bronze in an aged Rome game shows and trades within a bounded multiple of its recipe cost",
+slow_check("validation (declared band, reopens Complaint 502): bronze in an aged Rome game shows and trades within a bounded multiple of its recipe cost",
            aged_bronze_is_priced_near_its_recipe)

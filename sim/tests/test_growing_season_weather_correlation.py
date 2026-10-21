@@ -1,223 +1,117 @@
-"""growing_season_weather_correlation: does the harvest weather draw actually
-answer Complaints/49-one-label-draws-one-coin.md's own question - "over what
-distance does growing-season weather stop agreeing with itself?" - instead
-of the two hardcoded answers (a region record is one weather system; two
-region records draw independently) that complaint measured as both wrong?
-
-This module is the seam test for WIRING THREE, replacing sim/tests/
-test_regional_weather_wiring.py's own `RegionWeightsTests`/
-`PooledWeatherMultiplierTests` (which pinned WIRING TWO's per-region-record
-mechanism bit for bit, and fail after this change - see this task's own
-report for exactly which of that file's checks are now stale and why, since
-this file does not own it). What that file's other classes still check
-(`_farm_year_weather_seed` purity, save/reload determinism, the century
-acceptance bar) is NOT re-checked here to avoid duplicating a suite this
-task does not own; this file is additive, focused on what changed.
-
-Weather is correlated across land tiles by real distance.
-"""
-
+"""Growing-season weather is correlated by distance (Complaints/49-one-label-draws-one-coin.md): weather agrees with itself
+over a distance, so two nearby cells draw nearly the same year and two cells continents apart draw independently, and a
+territory spread over many cells pools to a steadier harvest than one cell would. The rules, on cells the test builds
+(`sim/world/weather_pooling.py`); the cells a running game derives from its geography are in
+test_growing_season_weather_correlation_scenario.py."""
+import collections
+import math
+import random
 import statistics
 import unittest
 
-from .harness import *  # noqa: F401,F403
+from sim.world import agriculture
+from sim.world.shared_constants import GROWING_SEASON_WEATHER_DECORRELATION_LENGTH_KM
+from sim.world.weather_pooling import chordal_position_km, correlation_cholesky, pooled_multiplier
 
-from sim.engine.core import Sim, agriculture
-from sim.geography import api as geography_api
-from sim.tests.weather_test_helpers import assert_single_draw_fallback
+QUICK_TOPIC = True
 
-
-def _rome_sim(events=False):
-    return sim(civ="rome_100ad", events=events)
-
-
-def _han_china_sim(events=False):
-    return sim(civ="han_china_100ad", events=events)
+Cell = collections.namedtuple("Cell", "cell_id lat lon weight")
+LENGTH_KM = GROWING_SEASON_WEATHER_DECORRELATION_LENGTH_KM
 
 
-_SHARED = {}
-
-
-def _shared_sim(civ):
-    """One game per civilisation for the tests that only read its weather cells."""
-    if civ not in _SHARED:
-        _SHARED[civ] = sim(civ=civ)
-    return _SHARED[civ]
-
-
-class WeatherCellsTests(unittest.TestCase):
-    """`Sim._compute_farm_weather_cells` - the tile-grained replacement for
-    WIRING TWO's own per-region-record weight list.
-    """
-
-    def test_romes_seven_regions_resolve_to_88_land_tiles_cells(self):
-        # 5 (italia) + 9 (gaul_germania) + 4 (britannia) + 7 (hispania) +
-        # 47 (north_africa) + 11 (greece_anatolia) + 5 (levant_mesopotamia)
-        # - geography.json's own land_tiles.region_to_tiles counts, not a
-        # number this task invented. A change to that data file is exactly
-        # the kind of thing this assertion exists to catch.
-        test_sim = _shared_sim("rome_100ad")
-        self.assertEqual(len(test_sim._farm_weather_cells), 88)
-
-    def test_han_chinas_one_region_still_resolves_to_many_cells(self):
-        # The whole point of Complaints/49: a region record is not one
-        # weather system. China holds 69 land_tiles cells under its own
-        # single home_regions entry - WIRING TWO gave this civilisation
-        # exactly one weather draw for all of them; this wiring must not.
-        test_sim = _shared_sim("han_china_100ad")
-        self.assertEqual(len(test_sim._farm_weather_cells), 69)
-
-    def test_cell_weights_sum_to_one(self):
-        for civ in ("rome_100ad", "han_china_100ad"):
-            test_sim = _shared_sim(civ)
-            total_weight = sum(cell.weight for cell in test_sim._farm_weather_cells)
-            self.assertAlmostEqual(total_weight, 1.0, places=9, msg=civ)
-
-    def test_a_civilisation_with_no_home_regions_gets_no_cells(self):
-        test_sim = _rome_sim()
-        test_sim.civ = dict(test_sim.civ, home_regions=[], home_tiles=[])
-        self.assertEqual(test_sim._compute_farm_weather_cells(), [])
-
-    def test_a_civilisation_naming_an_unmapped_but_real_region_degrades_to_one_cell(self):
-        # italia is real and tile-mapped; north_africa is real too, so this
-        # does not exercise the degrade path - construct the degrade path
-        # directly instead by feeding a region name geography.json's own
-        # `regions` block has but `land_tiles.region_to_tiles` does not.
-        test_sim = _shared_sim("rome_100ad")
-        # `_compute_farm_weather_cells` reads geography fresh off disk
-        # (see its own docstring on why), not off `self.geo`, so patching
-        # `self.geo` alone cannot exercise this path from the outside -
-        # this test instead just confirms the REAL data still has an entry
-        # for every one of Rome's seven home regions, which is what makes
-        # the degrade path's own "should not happen for any of the 21
-        # shipped regions" claim true today rather than merely asserted.
-        real_region_to_tiles = test_sim.geography.data["land_tiles"]["region_to_tiles"]
-        for region in geography_api.regions_of_tiles(geography_api.tiles_held(test_sim.civ)):
-            self.assertIn(region, real_region_to_tiles, region)
-            self.assertGreater(len(real_region_to_tiles[region]), 0, region)
+def correlation_from_cholesky(lower):
+    dimension = len(lower)
+    return [[sum(lower[row][term] * lower[col][term] for term in range(min(row, col) + 1))
+             for col in range(dimension)] for row in range(dimension)]
 
 
 class SpatialCorrelationTests(unittest.TestCase):
-    """`Sim._compute_farm_weather_correlation_cholesky` - the actual
-    distance-based correlation mechanism Complaints/49 asked for, checked
-    directly against synthetic cells rather than through the whole
-    civilisation pipeline, so a failure here points at the linear algebra
-    and not at geography.json's data.
-    """
-
-    def _correlation_from_cholesky(self, lower):
-        dimension = len(lower)
-        return [[sum(lower[row][term_index] * lower[col][term_index]
-                      for term_index in range(min(row, col) + 1))
-                 for col in range(dimension)] for row in range(dimension)]
 
     def test_cholesky_factor_reproduces_the_intended_correlation_matrix(self):
-        test_sim = _shared_sim("rome_100ad")
-        cells = [
-            Sim._WeatherCell(cell_id="a", lat=41.0, lon=12.0, weight=0.5),
-            Sim._WeatherCell(cell_id="b", lat=42.0, lon=13.0, weight=0.3),
-            Sim._WeatherCell(cell_id="c", lat=-10.0, lon=140.0, weight=0.2),
-        ]
-        lower = test_sim._compute_farm_weather_correlation_cholesky(cells)
-        rebuilt = self._correlation_from_cholesky(lower)
+        cells = [Cell("a", 41.0, 12.0, 0.5), Cell("b", 42.0, 13.0, 0.3), Cell("c", -10.0, 140.0, 0.2)]
+        rebuilt = correlation_from_cholesky(correlation_cholesky(cells, LENGTH_KM))
         for row in range(3):
             self.assertAlmostEqual(rebuilt[row][row], 1.0, places=6)
-        # a and b are close together (about 150 km apart); c is on the
-        # opposite side of the planet. The rebuilt off-diagonal entries
-        # must reflect that ordering, not just be "some numbers".
+        # a and b are about 150 km apart; c is across the planet
         self.assertGreater(rebuilt[0][1], rebuilt[0][2])
         self.assertGreater(rebuilt[1][0], rebuilt[1][2])
+        self.assertAlmostEqual(rebuilt[0][1], rebuilt[1][0], places=9)
 
-    def test_two_nearby_cells_correlate_far_more_than_two_distant_ones(self):
-        # Operationalises Complaints/49's own worked example: "Gaul and
-        # Hispania share weather systems; Britannia and Mesopotamia do
-        # not." Read the real region anchors (from the tiles) rather than
-        # hand-picking new coordinates, so this test tracks the actual
-        # data this mechanism runs on.
-        test_sim = _shared_sim("rome_100ad")
-        regions = test_sim.geography.regions  # records with their anchor, derived from the tiles
-        gaul, hispania = regions["gaul_germania"], regions["hispania"]
-        britannia, levant = regions["britannia"], regions["levant_mesopotamia"]
-        cells = [
-            Sim._WeatherCell(cell_id="gaul", lat=gaul["lat"], lon=gaul["lon"], weight=0.25),
-            Sim._WeatherCell(cell_id="hispania", lat=hispania["lat"], lon=hispania["lon"], weight=0.25),
-            Sim._WeatherCell(cell_id="britannia", lat=britannia["lat"], lon=britannia["lon"], weight=0.25),
-            Sim._WeatherCell(cell_id="levant", lat=levant["lat"], lon=levant["lon"], weight=0.25),
-        ]
-        lower = test_sim._compute_farm_weather_correlation_cholesky(cells)
-        rebuilt = self._correlation_from_cholesky(lower)
-        gaul_hispania = rebuilt[0][1]
-        britannia_levant = rebuilt[2][3]
-        self.assertGreater(gaul_hispania, britannia_levant,
-                            (gaul_hispania, britannia_levant))
-        # Not just "greater" - Complaints/49's own language is "share
-        # weather systems" against "do not", which should read as
-        # substantially, not marginally, more correlated.
-        self.assertGreater(gaul_hispania, 2 * britannia_levant)
+    def test_the_correlation_is_the_exponential_of_the_chordal_distance(self):
+        cells = [Cell("a", 41.0, 12.0, 0.5), Cell("b", 48.0, 2.0, 0.5)]
+        rebuilt = correlation_from_cholesky(correlation_cholesky(cells, LENGTH_KM))
+        a, b = chordal_position_km(41.0, 12.0), chordal_position_km(48.0, 2.0)
+        distance = sum((first - second) ** 2 for first, second in zip(a, b)) ** 0.5
+        self.assertAlmostEqual(rebuilt[0][1], math.exp(-distance / LENGTH_KM), places=9)
+
+    def test_neighbouring_regions_share_weather_far_more_than_distant_ones(self):
+        # Gaul and Hispania share weather systems; Britannia and the Levant do not
+        cells = [Cell("gaul", 46.6, 2.5, 0.25), Cell("hispania", 40.4, -3.7, 0.25),
+                 Cell("britannia", 52.5, -1.5, 0.25), Cell("levant", 33.5, 38.0, 0.25)]
+        rebuilt = correlation_from_cholesky(correlation_cholesky(cells, LENGTH_KM))
+        gaul_hispania, britannia_levant = rebuilt[0][1], rebuilt[2][3]
+        self.assertGreater(gaul_hispania, 2 * britannia_levant, (gaul_hispania, britannia_levant))
 
     def test_a_cell_perfectly_correlates_with_itself(self):
-        test_sim = _shared_sim("rome_100ad")
-        cells = [Sim._WeatherCell(cell_id="solo", lat=10.0, lon=20.0, weight=1.0)]
-        lower = test_sim._compute_farm_weather_correlation_cholesky(cells)
+        lower = correlation_cholesky([Cell("solo", 10.0, 20.0, 1.0)], LENGTH_KM)
         self.assertAlmostEqual(lower[0][0], 1.0, places=9)
 
+    def test_a_longer_decorrelation_length_correlates_the_same_cells_more(self):
+        cells = [Cell("a", 41.0, 12.0, 0.5), Cell("b", 48.0, 2.0, 0.5)]
+        short = correlation_from_cholesky(correlation_cholesky(cells, 100.0))[0][1]
+        long = correlation_from_cholesky(correlation_cholesky(cells, 3000.0))[0][1]
+        self.assertGreater(long, short)
 
-class PooledWeatherMultiplierTests(unittest.TestCase):
-    """`Sim._pooled_farm_weather_multiplier` - the correlated-cell weighted
-    average that replaces WIRING TWO's independent-per-region average.
-    """
-
-    def test_falls_back_to_the_old_single_draw_when_there_are_no_cells(self):
-        assert_single_draw_fallback(self, _rome_sim(), agriculture)
-
-    def test_han_china_gets_real_diversification_from_being_spread_out(self):
-        # THE ACTUAL BUG Complaints/49 reports: WIRING TWO gave a
-        # civilisation holding one region record exactly ONE weather draw,
-        # no matter how large that region's real land area was - China at
-        # 9,597,000 km2 pooled to the same single coin flip as Norse
-        # Scandinavia. This is the direct measurement that it no longer
-        # does: China's pooled stdev must sit meaningfully below a single
-        # independent draw's own stdev (WEATHER_YIELD_STDEV_FRACTION).
-        test_sim = _shared_sim("han_china_100ad")
-        draws = [test_sim._pooled_farm_weather_multiplier(year)
-                 for year in range(101, 101 + 1000)]
-        pooled_stdev = statistics.pstdev(draws)
-        self.assertLess(pooled_stdev, agriculture.WEATHER_YIELD_STDEV_FRACTION * 0.85,
-                         pooled_stdev)
-
-    def test_each_cell_actually_draws_its_own_number_not_one_value_repeated(self):
-        test_sim = _shared_sim("rome_100ad")
-        year = 150
-        independent = {cell.cell_id: random.Random(
-            test_sim._farm_year_weather_seed(year, region=cell.cell_id)).gauss(0.0, 1.0)
-            for cell in test_sim._farm_weather_cells}
-        self.assertGreater(len(set(independent.values())), 1, independent)
+    def test_the_factor_is_lower_triangular(self):
+        cells = [Cell(str(index), 30.0 + index, 10.0 * index, 0.25) for index in range(4)]
+        lower = correlation_cholesky(cells, LENGTH_KM)
+        for row in range(4):
+            for col in range(row + 1, 4):
+                self.assertEqual(lower[row][col], 0.0)
 
 
-class DeterminismTests(unittest.TestCase):
-    """The Cholesky setup is reconstructed from static data on every load.
-    The matching-run and mid-run save/reload trajectories are asserted in
-    test_regional_weather_wiring.DeterminismAcrossSaveAndReloadTests.
-    """
+class PooledMultiplierTests(unittest.TestCase):
 
-    def test_the_cholesky_factor_is_recomputed_not_persisted(self):
-        # Needs no SAVE_FIELDS entry (see Sim.__init__'s own comment at
-        # this attribute's assignment) - confirm that holds by mutating it
-        # post-construction and reloading: the reload must NOT carry the
-        # mutated value forward, because a fresh Sim.__init__ rebuilds it
-        # from self.civ/geography.json every time, before load_state runs.
-        from sim import simulator as S
+    FLOOR, CEILING, STDEV = agriculture.WEATHER_FLOOR_MULTIPLIER, agriculture.WEATHER_CEILING_MULTIPLIER, \
+        agriculture.WEATHER_YIELD_STDEV_FRACTION
 
-        test_sim = _rome_sim()
-        test_sim._farm_weather_correlation_cholesky = "not a real matrix"
-        path = os.path.join(ROOT, _rel("growing_season_weather_correlation_cholesky_probe.json"))
-        S.save_state(test_sim, path)
+    def _spread_cells(self, count):
+        return [Cell(str(index), 20.0 + 1.5 * index, 5.0 + 4.0 * index, 1.0 / count) for index in range(count)]
 
-        reloaded = _rome_sim()
-        S.load_state(reloaded, path)
-        self.assertNotEqual(reloaded._farm_weather_correlation_cholesky,
-                             "not a real matrix")
-        self.assertEqual(len(reloaded._farm_weather_correlation_cholesky), 88)
+    def _pooled_draws(self, cells, years=1000):
+        lower = correlation_cholesky(cells, LENGTH_KM)
+        draws = []
+        for year in range(years):
+            independent = [random.Random(year * 1000 + index).gauss(0.0, 1.0) for index in range(len(cells))]
+            draws.append(pooled_multiplier(cells, lower, independent, self.STDEV, self.FLOOR, self.CEILING))
+        return draws
+
+    def test_zero_draws_pool_to_the_mean_weather(self):
+        cells = self._spread_cells(5)
+        lower = correlation_cholesky(cells, LENGTH_KM)
+        self.assertAlmostEqual(pooled_multiplier(cells, lower, [0.0] * 5, self.STDEV, self.FLOOR, self.CEILING), 1.0)
+
+    def test_a_territory_spread_over_many_cells_is_steadier_than_one_cell(self):
+        # the bug in Complaints/49: a large region used to draw one coin, like a small one
+        spread = statistics.pstdev(self._pooled_draws(self._spread_cells(40)))
+        single = statistics.pstdev(self._pooled_draws([Cell("solo", 40.0, 10.0, 1.0)]))
+        self.assertLess(spread, single * 0.85, (spread, single))
+
+    def test_a_single_cell_draws_at_the_stated_spread(self):
+        single = statistics.pstdev(self._pooled_draws([Cell("solo", 40.0, 10.0, 1.0)]))
+        self.assertAlmostEqual(single, self.STDEV, delta=0.03)
+
+    def test_each_cell_is_clipped_before_the_average(self):
+        cells = [Cell("a", 40.0, 10.0, 0.5), Cell("b", 40.0, 10.0, 0.5)]
+        lower = [[1.0, 0.0], [0.0, 1.0]]
+        extreme = pooled_multiplier(cells, lower, [100.0, -100.0], self.STDEV, self.FLOOR, self.CEILING)
+        self.assertAlmostEqual(extreme, 0.5 * self.CEILING + 0.5 * self.FLOOR)
+
+    def test_the_weights_decide_each_cells_share(self):
+        cells = [Cell("a", 40.0, 10.0, 0.75), Cell("b", 40.0, 10.0, 0.25)]
+        lower = [[1.0, 0.0], [0.0, 1.0]]
+        pooled = pooled_multiplier(cells, lower, [1.0, -1.0], 0.1, self.FLOOR, self.CEILING)
+        self.assertAlmostEqual(pooled, 0.75 * 1.1 + 0.25 * 0.9)
 
 
 if __name__ == "__main__":

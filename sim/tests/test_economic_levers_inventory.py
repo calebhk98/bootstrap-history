@@ -1,4 +1,7 @@
-"""Food, housing, trade schools, demographics, and durable material stock."""
+"""Food, housing, trade schools, demographics, and durable material stock. The typed-command parse is a rule on a string;
+the stock accounting of the material throttle is a rule in test_material_throttle_rules. Three named scenarios remain:
+the levers pulled through the protocol on one game, the throttle banking a mine's output once per year through the Sim,
+and the materials report with explicit buying and selling."""
 from .harness import *
 from sim.ui.proto.render import render_pretty
 from sim.ui.proto.typed import parse_typed
@@ -15,11 +18,12 @@ check("typed economic levers reach their protocol actions",
 
 s = sim(capital=1_000_000)
 reply = S._agent_dispatch(s, NODES, {"cmd": "buy", "what": "farm", "n": 120})
-check("farmland is a direct lever that lowers food costs", reply["ok"] and reply["food_cost_factor"] < 1, reply)
+# --- SCENARIO: the levers, pulled on one game
+check("scenario: farmland is a direct lever that lowers food costs", reply["ok"] and reply["food_cost_factor"] < 1, reply)
 
 room0 = s.labour.supervision_room()
 reply = S._agent_dispatch(s, NODES, {"cmd": "buy", "what": "housing", "n": 5})
-check("worker housing directly expands household capacity",
+check("scenario: worker housing directly expands household capacity",
       reply["ok"] and s.labour.supervision_room() == room0 + 5, reply)
 
 s.trades_created.add("chemist")
@@ -27,16 +31,17 @@ s.labour.market.press("chemist", 2_000)
 scarcity0 = s.labour.market.price_factor("chemist")
 reply = S._agent_dispatch(s, NODES, {"cmd": "buy", "what": "trade_school",
                                      "trade": "chemist", "n": 2})
-check("a named trade school makes its profession more common",
+check("scenario: a named trade school makes its profession more common",
       reply["ok"] and s.labour.market_supply("chemist") >= 4_000
       and s.labour.market.price_factor("chemist") < scarcity0, reply)
 
 pop = S._agent_dispatch(s, NODES, {"cmd": "population"})
-check("population exposes national, reachable, and employed trade demographics",
+check("scenario: population exposes national, reachable, and employed trade demographics",
       pop["ok"] and all(field in pop["trades"][0] for field in
                         ("estimated_in_the_country", "within_your_reach", "you_employ")),
       pop)
 
+# --- SCENARIO: the throttle banks a mine's unused output once per year through the Sim
 s = sim()
 s._own_production_tags = lambda: {("iron", "mine:iron")}
 s._own_material_supply = lambda tag: 100.0 if tag == "mine:iron" else 0.0
@@ -47,27 +52,21 @@ s.resource_throttle()
 one_year = s.material_stock_t("iron")
 s.year += 1
 s.resource_throttle()
-check("unused mine output banks once per year rather than once per query",
+check("scenario: unused mine output banks once per year rather than once per query",
       one_year == 100.0 and s.material_stock_t("iron") == 200.0,
       (one_year, s.material_stock_t("iron")))
 
+# --- SCENARIO: the materials report, and explicit buying and selling
 s = sim()
-s._material_stock()["iron"] = 100.0
-s.year += 2
-s.annual_material_demand = lambda: {"iron_bar_kg": 50.0}
-s._material_market_tonnes = lambda material: 0.0
-s._own_material_supply = lambda tag: 0.0
-check("old iron inventory covers later demand without current production",
-      s.resource_throttle() == 1.0 and abs(s.material_stock_t("iron") - 50.0) < 1e-6,
-      (s.throttle, s.material_stock_t("iron")))
-
+s._material_stock()["iron"] = 50.0
 report = S._agent_dispatch(s, NODES, {"cmd": "materials"})
 iron = next(material_row for material_row in report["materials"] if material_row["material"] == "iron")
-check("materials reports stock, flow, demand, and buy/sell values",
+check("scenario: materials reports stock, flow, demand, and buy/sell values",
       iron["stock_on_hand_tonnes"] == 50.0
       and all(iron[field] is not None for field in
               ("own_production_tonnes_per_year", "current_demand_tonnes_per_year",
                "buy_per_tonne", "sell_per_tonne")), iron)
+# presentation: the readable materials screen carries its heading
 check("the readable materials screen exposes inventory",
       "MATERIAL STOCKS" in render_pretty("materials", report), report)
 
@@ -75,6 +74,6 @@ s = sim(capital=1_000_000)
 bought = S._agent_dispatch(s, NODES, {"cmd": "buy", "what": "material",
                                       "material": "iron", "n": 1})
 sold = S._agent_dispatch(s, NODES, {"cmd": "sell", "material": "iron", "n": 0.5})
-check("material stock can be explicitly bought and sold",
+check("scenario: material stock can be explicitly bought and sold",
       bought["ok"] and sold["ok"] and abs(s.material_stock_t("iron") - 0.5) < 1e-6,
       (bought, sold))

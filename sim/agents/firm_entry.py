@@ -5,15 +5,18 @@ from . import household_wealth, ledger
 from .tuning import ENTRY_EQUITY_SHARE, ENTRANT_EXPECTATION_ADJUSTMENT_SHARE, MANAGEMENT_SPAN_OF_CONTROL, TACIT_SHARE_OF_COPYING
 
 
-def management_cost(world: Any, node_id: str, capacity: float = 1.0) -> float:
+def management_cost(world: Any, node_id: str, capacity: float = 1.0) -> Optional[float]:
 	"""Yearly pay for the manager hours a concern run at `capacity` times its founding size needs:
-	the hours of its staff over the span of control, paid as the best paid trade among its staff."""
+	the hours of its staff over the span of control, paid as the best paid trade among its staff at the
+	pay of the actor's own country; None when that country pays nothing for a trade of the staff."""
 	staff = world.concern_staff(node_id)
 	people = sum(staff.values()) * capacity
 	if people <= 0.0:
 		return 0.0
-	manager_wage = max(world.labour_market.quote(trade, 0.0) for trade in staff)
-	return people / MANAGEMENT_SPAN_OF_CONTROL * world.hours_per_person_year * manager_wage
+	wages = [world.hourly_pay(trade) for trade in staff]
+	if any(wage is None for wage in wages):
+		return None
+	return people / MANAGEMENT_SPAN_OF_CONTROL * world.hours_per_person_year * max(wages)
 
 
 def firm_tile(registry: Any, actor: Optional[Any]) -> Optional[str]:
@@ -24,13 +27,16 @@ def firm_tile(registry: Any, actor: Optional[Any]) -> Optional[str]:
 	return None if home is None else home.record.location  # type: ignore[no-any-return]
 
 
-def carrying_cost(world: Any, node_id: str, capacity: float = 1.0, tile: Optional[str] = None) -> float:
+def carrying_cost(world: Any, node_id: str, capacity: float = 1.0, tile: Optional[str] = None) -> Optional[float]:
 	"""What a firm running a concern at `capacity` carries beyond the concern's upkeep and wages: the
 	rent of the site on its tile and a manager's hours. The cost of winning customers is the agents'
 	hours the merchants' terms charge per tonne a carrier lifts (merchant_terms.agent_cost_per_tonne);
 	a sale in the firm's own market needs no carrier, so a firm carries nothing more for it, and where
-	goods cross places the traders who carry them bear it."""
-	return world.site_rent(node_id, capacity, tile) + management_cost(world, node_id, capacity)
+	goods cross places the traders who carry them bear it. None when the actor's country keeps no record of
+	the rent or the pay."""
+	rent = world.site_rent(node_id, capacity, tile)
+	management = management_cost(world, node_id, capacity)
+	return None if rent is None or management is None else rent + management
 
 
 def expected_takings(registry: Any, world: Any, node_id: str) -> float:

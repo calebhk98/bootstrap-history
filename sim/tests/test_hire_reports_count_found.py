@@ -1,4 +1,7 @@
-"""Complaint 425: a hire the market fills only in part reports the people found, not the people asked for."""
+"""Scenario (Complaint 640): partial hires in a running game. The reply fields (people found, people asked, the cause) are
+tested on built numbers in test_complaint_583_partial_hire_and_craft_help.py.
+
+Complaint 425: a hire the market fills only in part reports the people found, not the people asked for."""
 from unittest import mock
 
 from .harness import *  # noqa: F401,F403
@@ -14,8 +17,7 @@ with mock.patch.object(LabourMarket, "whole_recruits", return_value=FOUND):
 check("the partial hire went through", reply.get("ok") is True, reply)
 check("the headcount rose by the people found", game.employees["artisan"] - headcount_before == FOUND,
       (headcount_before, game.employees.get("artisan")))
-check("the reply names the people found, not the people asked for", reply.get("n") == FOUND, reply)
-check("the reply still says what was asked", reply.get("asked") == ASKED, reply)
+check("the reply carries that headcount change as the people found", reply.get("n") == FOUND, reply)
 
 # The staff audit: each automatic hire row names the people the staff gained.
 auto = sim(capital=2_000_000.0, manual=False)

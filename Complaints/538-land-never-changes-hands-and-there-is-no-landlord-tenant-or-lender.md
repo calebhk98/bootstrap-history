@@ -124,3 +124,88 @@ range check under 4.2 needs a long baseline run: `python3 -m sim.tests --only ag
 neighbours do not measure it, and no command does yet.
 
 A state's debt to its named lenders (623) can be repaid in land once titles exist; the lender ledger is `Purses.named_lenders` (`sim/agents/named_lenders.py`).
+
+## Finding (2026-10-21, from Complaint 662's capture)
+
+In a Norse game in its sixth year a `hectare_land` market had one seller, no buyers, and a seller's floor hundreds
+of orders of magnitude below its ask. Measure: step the game of `sim/tests/test_staff_closure_reopening_scenario.py`
+and print the floors `unsold_search.clear_with_search` receives for land markets. A land seller's lowest acceptable price that close to
+zero says the reservation it is built from (rent or yield over the rate) has collapsed. Measure where that floor
+comes from before trusting land prices in that game.
+
+Diagnosed and fixed (2026-10-21). After 647 it still reproduces: stepping the Norse game of the scenario with the
+floors printed (a scratch script wrapping `unsold_search._floors`), the `hectare_land` seller's floor fell from the
+order of thousands in year 0 to a tiny fraction in year 2, then to nothing within a few more years, while its ask stayed in the thousands.
+Cause: the floor was `unsold_search._held_value`, `inventory.queued_holding_value`, which queues a stock behind the
+yearly sales it expects and discounts a year of interest per year waited. The land producer's stock grows every year
+and its expected sales decay (nobody buys), so the years waited ran to hundreds and the discount to zero. Ground does not queue: every
+hectare yields its rent the whole time it is held. A function test on built inputs
+(`sim/tests/test_economy_land_seller_floor.py`) shows the collapse; the rule now values a non-portable good (the ground) at
+the tile's rent per hectare capitalised at the rate (never under the opening's, as titles are), so a land seller's
+reservation follows what the land yields it, and rent-free land is worth nothing to hold. With the fix the same probe
+shows the floor stay a bounded share of the capitalised rent in every year (no collapse).
+
+Still open on its own cause: the land producer still adds hectares to a stock that no one buys and the ask falls year
+on year with no buyer; land is treated as a flow producer, and who buys land (a market of buyers) is the remaining
+part of this complaint.
+
+Runaway fixed (2026-10-21). Land was not exempt from the stock gate and its expected sales were read right. The
+gate (`producers.runs_for_stock`) lets a recipe run on when what its non-piling outputs sell covers the run's cost;
+clearing land has no cost (no inputs, no hours) and one output, so the sum over no outputs (zero) met the cost
+(zero) and the gate opened for ever. Fix: that exit needs something else to sell (`sells > 0.0`). Rule test:
+`sim/tests/test_economy_costless_run_stock_gate.py`. With the fix the probe (`unsold_search._floors` wrapped, Norse game) shows the
+stock stop growing after the years the yearly change limit allows, where it used to add the full capacity every year.
+
+Buyer side, household cohort built (2026-10-21). Rules in `sim/economy/land_bid.py` (rule tests
+`sim/tests/test_economy_land_bid.py`), wiring in `sim/economy/land_bid_year.py`. A hectare earns its holder the
+better of the crop margin of the best land-only recipe (its outputs at the prices the actor sees, cut by fertility,
+less its hours at the servant wage) and the tile's rent; it is worth that earning capitalised at
+`titles_value.capitalising_rate`. A cohort with hours left once its own plot took what its land could bids for
+`hectare_land` on its tile, for the hectares those hours can work, at no more than that worth and only when it beats
+the going price; the money comes from the savings it would otherwise lend (the funds offer is cut by the bid's
+budget), never from its cash buffer (a first cut that spent the whole cash left the poorest cohort short of its
+floors and defaulting). After the goods clear, `land_bid_year.take_up_bought` turns the hectares a cohort holds in
+stock into a title (first cut: passed from the seller's owner; now new arable land, see below), and the stock is consumed. Measure: step the
+Norse game of `sim/tests/test_staff_closure_reopening_scenario.py` and print the clearer's stock, the remembered
+price and the titles of `sweden_01` each year.
+
+What the measure shows: in the Norse game no cohort has a crop it can grow (its own-plot options are all outside the
+tile's climate), so its earning is the rent only, its worth equals the seller's floor (both are the rent over the
+rate) and the trade has no surplus: the ask falls to the capitalised rent and then trades only a sliver. Where a
+cohort can farm (the Chinese games of `sim/tests/test_agent_economy_wiring.py`) the crop margin lifts its worth
+above the floor and cohorts buy tens of thousands of hectares from the clearer's stock in a year. Only recipes
+with a climate list count as crops (`sites.climate_allows`): a mine's recipe has a tiny land per run and would make
+every hectare look worth a fortune.
+
+Built after that (2026-10-21): the clearer's own use, the ask, and where cleared ground goes.
+
+- Where cleared ground adds to a tile's arable land (decided): at the moment an actor takes it up. A tile's arable land
+  is its cropland plus `record.cleared_hectares` (`titles_ground.arable_hectares`, saved). Ground in a clearer's stock
+  is not arable and has no title until taken up; `titles_ground.add_ground` then grows the arable land by those hectares
+  and gives them to the taker, and every other holder's share, every tenancy's share and every pledged share on the tile
+  shrinks by the same factor so each keeps its hectares (shares still sum as before). Nobody gives up a hectare, so a
+  clearer whose owner holds no free share still sells (the earlier cap that left such ground in the buyer's stock is
+  gone). Readers of the arable area use the helper: the land market's clearing, the own-plot allocation
+  (`Economy._hectares_held`), title value and collateral, the concentration check. Rule tests:
+  `sim/tests/test_economy_land_bid.py` (`TitleTests`).
+- (b) The clearer's own use (`land_bid.own_use`, wired by `land_bid_year.take_up_own`, called in the year before hours
+  are kept back): a cohort that owns a clearer keeps from the clearer's stock the hectares its own plots need to grow its
+  floors beyond the land it holds, as its own title, before the rest is offered. Where its titles already cover the
+  floors it keeps nothing, which is the Norse game's case (measure: `unsold_search._floors` wrapped and the clearer's stock
+  printed each year; the stock does not change from own use there). Rule tests: `TitleTests` and `YearWiringTests` in the
+  same file.
+- (c) The ask: the seller's floor was already the capitalised rent (`unsold_search._held_value`); the year's search
+  (`unsold_search.clear_with_search`) lowers an unsold land ask to that floor and no lower, and sells out at what a
+  buyer pays above it, whatever the stock and expected sales (`AskFallsToTheCapitalisedRentTests` in
+  `sim/tests/test_economy_land_seller_floor.py`). The remaining expected-sales ratchet was the clearer's plan margin:
+  `producers_close._behind_the_stock` queued ground behind its stock and valued a run at nothing; ground now keeps its
+  price (`sim/tests/test_economy_ground_not_queued.py`). The seller floor and the stock gate are unchanged. No
+  between-years markdown was added, the markdown stays inside the year's clearing.
+
+Not built, still open:
+- Only household cohorts bid. A farm producer or another actor can call the same rules; no wiring yet. The clearer's own
+  use is only for a clearer a cohort owns (a firm owner would need own plots of its own).
+- The bid is for hours-limited farming; a cohort that would only let the hectare (rent branch of the earning) is
+  not modelled as a buyer without hands to work it.
+- The ground goods are found as immobile goods a recipe makes from nothing (`land_bid.land_goods`); the data has no
+  land marker.

@@ -61,6 +61,22 @@
      },
      "service_life_years": 15,
      "annual_output_at_basis": 30000.0,
+     "build_alternatives": [
+      {
+       "build_materials": {
+        "timber_m3": 2.0,
+        "wooden_tools_kg": 40.0
+       },
+       "build_labour_hours": {
+        "carpenter": 80.0,
+        "labourer": 100.0
+       },
+       "service_life_years": 8,
+       "alternative_basis": "LABELLED HEURISTIC, conf D, no source found for the build bill or life of this fitted-out plant without iron; the rakes, shovels and fittings the iron bar would make are wooden tools of the same mass, hewn by the carpenters at a third more hours, and they wear out in about half the time. Retire: Complaint 666.",
+       "conf": "D",
+       "retire": "Complaint 666"
+      }
+     ],
      "capital_basis": "An earth-clamp burn is built afresh on a levelled hearth, so the lasting plant is only a pole-and-turf hut of some two cubic metres of poles, rakes, shovels and the cleared platform. A collier's team burns a clamp over about a week and keeps several going, which is the order of thirty tonnes of charcoal a year at the four-to-one wood the entry states; the figures are reasoned estimates.",
      "conf": "D"
     }
@@ -89,6 +105,22 @@
      },
      "service_life_years": 10,
      "annual_output_at_basis": 8000000.0,
+     "build_alternatives": [
+      {
+       "build_materials": {
+        "timber_m3": 240.0,
+        "wooden_tools_kg": 500.0
+       },
+       "build_labour_hours": {
+        "carpenter": 450.0,
+        "labourer": 200.0
+       },
+       "service_life_years": 6,
+       "alternative_basis": "LABELLED HEURISTIC, conf D, no source found for the build bill or life of this fitted-out plant without iron; the iron fittings of the headgear and windlass become wooden pegs, trenails and lashed joints of the same mass in worked timber, a fifth more timber, half as many carpenter hours again, and a shorter life. Retire: Complaint 666.",
+       "conf": "D",
+       "retire": "Complaint 666"
+      }
+     ],
      "capital_basis": "coal_kg's own entry is EXTRACTED and otherwise carries only labour, which understates a real pit: working a seam below the shallowest bell-pits needs shaft timbering to hold back loose ground, a headgear over the shaft, and a hand or horse windlass (later a steam winder) to raise coal and water - real, if modest by furnace standards, fixed capital that is easy to omit precisely because extraction entries elsewhere in this file correctly carry none. Timber is the dominant cost because pit timber rots and must be replaced on a roughly decade cycle underground, independent of how much coal is drawn; iron covers the headgear and winding-gear fittings. Annual output (order 8,000 t/yr) is representative of a single modest pre-mechanised shaft pit rather than a large 19th-century colliery.",
      "conf": "C"
     }

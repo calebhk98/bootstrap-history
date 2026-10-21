@@ -22,8 +22,11 @@ that they can live in a file of their own. Behaviour is unchanged and
 verified byte-identical.
 """
 from sim.constants import declare
-from . import category_traits, seat_builds
+from . import category_traits, civ_cost, seat_builds
+from .diffusion_rules import medical_compliance, medical_relief, spread_share, weapons_relief
 from .institution_societies import belongs_to_other_society
+from .adoption_share import held_share
+from .diffusion_curve import knowledge_half_life, leaked_share
 
 
 class DiffusionMixin:
@@ -142,20 +145,16 @@ class DiffusionMixin:
             return 0.0
         done_year_map = projects.done_year or {}
         started = projects.business.opened_year_of(node_id, done_year_map.get(node_id, scenario.year))
-        age = max(0.0, scenario.year - started)
-        share = 1.0 - 0.5 ** (age / self.knowledge_half_life_years())
-        return min(self.VENTURE_DIFFUSION_CAP, max(0.0, share))
+        return leaked_share(scenario.year - started, self.knowledge_half_life_years(), self.VENTURE_DIFFUSION_CAP)
 
     def knowledge_half_life_years(self, country=None):
         """Years for half of those who could copy a technique to have done so: faster with a written, dispersed
         corpus and with the country's general literacy."""
-        pace = self.corpus_diffusion_pace()
-        gen_lit = float(self.literacy("literacy_general", country))
-        pace *= (self.LITERACY_DIFFUSION_PACE_BASE
-                 + self.LITERACY_DIFFUSION_PACE_SPAN
-                 * min(self.LITERACY_DIFFUSION_PACE_CAP_RATIO,
-                       gen_lit / max(0.02, self.labour.LITERACY_REFERENCE_GENERAL)))
-        return self.VENTURE_DIFFUSION_HALF_LIFE_YEARS / max(self.DIFFUSION_PACE_FLOOR, pace)
+        return knowledge_half_life(
+            self.VENTURE_DIFFUSION_HALF_LIFE_YEARS, self.corpus_diffusion_pace(),
+            float(self.literacy("literacy_general", country)), self.labour.LITERACY_REFERENCE_GENERAL,
+            self.LITERACY_DIFFUSION_PACE_BASE, self.LITERACY_DIFFUSION_PACE_SPAN,
+            self.LITERACY_DIFFUSION_PACE_CAP_RATIO, self.DIFFUSION_PACE_FLOOR)
 
     def diffusion_index(self):
         """One number for the whole household: the revenue-weighted average
@@ -329,7 +328,7 @@ class DiffusionMixin:
         age = max(0.0, scenario.year - seat_builds.earliest_done_year(self.state.seats, node_id, scenario.year))
         half_life = (self._diffusion_half_life_years(cat)
                      / max(0.4, self._diffusion_pace(cat)))
-        return max(0.0, min(1.0, 1.0 - 0.5 ** (age / half_life)))
+        return spread_share(age, half_life)
 
     def _category_diffusion_index(self, cat):
         """Plain average across every founder-built DONE node in `cat` -
@@ -362,7 +361,7 @@ class DiffusionMixin:
         """Share of the founder's military work the government actor holds."""
         held = self.state_treasury().knowledge
         ids = sorted(seat_builds.built_by_any(self.state.seats, self._diffusible_ids("military")))
-        return sum(1 for node_id in ids if node_id in held) / len(ids) if ids else 0.0
+        return held_share(ids, held)
 
     # ---- DISEASE: THE COUNTRY IS HARDER TO KILL WHOLESALE ------------------
     # National prevalence of an epidemic falls as the country absorbs the
@@ -372,17 +371,16 @@ class DiffusionMixin:
     MEDICAL_COMPLIANCE_BASE = declare(
         "MEDICAL_COMPLIANCE_BASE", 0.5, kind="temporary_heuristic",
         unit="dimensionless (share following public-health guidance at "
-             "zero state capacity)", source=None, confidence="D",
+             "zero state reach)", source=None, confidence="D",
         why="Share of people who follow quarantine and hygiene guidance "
-            "with no administration behind it; state capacity supplies "
+            "with no administration behind it; state reach supplies "
             "the rest. Not derived from a behavioural model.")
 
     def medical_compliance(self):
-        return (self.MEDICAL_COMPLIANCE_BASE
-                + (1.0 - self.MEDICAL_COMPLIANCE_BASE) * self.state_capacity)
+        return medical_compliance(self.MEDICAL_COMPLIANCE_BASE, self.state_reach())
 
     def medical_diffusion_relief(self):
-        return min(1.0, self.medical_diffusion_index() * self.medical_compliance())
+        return medical_relief(self.medical_diffusion_index(), self.MEDICAL_COMPLIANCE_BASE, self.state_reach())
 
     # ---- WAR: A STATE THAT IS ACTUALLY ARMED LOSES LESS, AND SACKS LESS ----
     # military_leverage() and _military_war_relief() (further below)
@@ -417,11 +415,7 @@ class DiffusionMixin:
                    if node_id in held)
 
     def _state_military_diffusion_relief(self, per_weapon):
-        weapons = self.state_military_weapons_held()
-        if weapons <= 0:
-            return 1.0, None
-        return ((1.0 - per_weapon) ** weapons,
-                "the state's own armies now carry %d of the weapons you worked out" % weapons)
+        return weapons_relief(per_weapon, self.state_military_weapons_held())
 
     def world_diffusion_report(self):
         """None while nothing the founder has built is spreading into the
@@ -536,40 +530,8 @@ class DiffusionMixin:
         does; below 1, easier. It is deliberately a small table in the civ file
         rather than logic in here, so a new civilization is data.
         """
-        mults = self.civ.get("cost_multipliers") or {}
-        if not mults:
+        if not self.civ.get("cost_multipliers"):
             return 1.0
-        # A remedy lifts a handicap once you have built the thing that answers
-        # it, read from `handicap_remedies` in the civ file.
-        rem = self.civ.get("handicap_remedies") or {}
         node = self.nodes[node_id]
-
-        def mult(key):
-            multiplier = float(mults[key])
-            remedy = rem.get(key)
-            if isinstance(remedy, dict) and remedy.get("node") in self.state.projects.done:
-                multiplier = float(remedy.get("residual", 1.0))
-            return multiplier
-
-        # THE CATEGORY IS THE CRAFT; THE TRAITS ARE WHAT IT IS FOR, and treating
-        # them as equals inverts the whole system: multiplying every matching
-        # key together lets secondary traits (infrastructure, commerce) swamp
-        # the craft category a civilisation is actually built around - a
-        # longship, category `ships`, the Norse's best domain, must not come
-        # out costing them MORE than it costs Rome just because its
-        # infrastructure and commerce traits are also present.
-        #
-        # What a thing takes to build is its craft. What it is used for should
-        # colour that, not overwhelm it, so traits apply at a damped exponent
-        # when the craft is known and at full weight when it is not.
-        cat = node.get("cat")
-        traits = [trait for trait in (node.get("traits") or ()) if trait in mults]
-        if cat in mults:
-            factor = mult(cat)
-            for trait in traits:
-                factor *= mult(trait) ** 0.25
-            return factor
-        factor = 1.0
-        for trait in traits:
-            factor *= mult(trait)
-        return factor
+        return civ_cost.civ_cost_factor(self.civ.get("cost_multipliers"), self.civ.get("handicap_remedies"),
+                                        self.state.projects.done, node.get("cat"), node.get("traits") or ())

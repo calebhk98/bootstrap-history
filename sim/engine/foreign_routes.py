@@ -22,7 +22,7 @@ from sim.geography.api import transport as freight_physics
 
 from . import action_results, foreign_route_choice
 from .domestic_haul import DomesticHaulMixin
-from .haul_route import Leg, Route, route_from_geography  # noqa: F401  (re-exported)
+from .haul_route import Leg, Route, domestic_cargo_cost_share, route_from_geography  # noqa: F401  (re-exported)
 from .data import load_civ
 
 CARAVAN_STRING_SIZE = declare(
@@ -160,13 +160,8 @@ class ForeignRoutesMixin(DomesticHaulMixin):
         market rate while it travels, and what is lost to spoilage in that time (and, for a herd on the
         road, the daily loss each leg's mode states). No merchant margin (domestic carriers' margins are
         not modelled)."""
-        years = route.travel_days / 365.0
-        spoilage = cargo_cost.spoilage_share(cargo_cost.spoilage_rates().get(material, 0.0), years)
-        loss_per_day = cargo_loss_per_day(self.world_map)
-        road = cargo_cost.lost_share(*(cargo_cost.daily_loss_share(loss_per_day.get(leg.mode, 0.0), leg.travel_days)
-                                       for leg in route.legs))
-        return trader_response.cost_share_of_price(
-            0.0, cargo_cost.lost_share(spoilage, road), self.market_rate(), years)
+        return domestic_cargo_cost_share(
+            cargo_cost.spoilage_rates().get(material, 0.0), cargo_loss_per_day(self.world_map), route, self.market_rate())
 
     def _foreign_flow_imbalance(self, civilization_id):
         """How one-sided last year's trade with a partner was, from its book: 1 when nothing

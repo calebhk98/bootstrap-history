@@ -54,11 +54,6 @@ GROWTH_LAG_SHARE = declare(
 	"GROWTH_LAG_SHARE", 0.5, kind="temporary_heuristic",
 	unit="share of the gap to the target growth closed per year", source=None, confidence="D",
 	why="Population growth responds to welfare with a lag.")
-BONDED_BIRTH_SHARE = declare(
-	"BONDED_BIRTH_SHARE", 0.3, kind="temporary_heuristic",
-	unit="share of the ordinary birth rate", source=None, confidence="D",
-	why="Bonded members raise few children of their own; stands in for family separation "
-		"and the keeper's control of births.")
 MOBILITY_RATE = declare(
 	"MOBILITY_RATE", 0.02, kind="temporary_heuristic",
 	unit="share of members per year at full pressure", source=None, confidence="D",

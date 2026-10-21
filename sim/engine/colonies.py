@@ -12,7 +12,8 @@ from sim.agents.api import edges
 from sim.geography.api import settlement, tile_owners
 
 from sim.world.shared_constants import (
-    ANNUAL_LABOUR_HOURS_PER_FARM_WORKER, FALLOW_SHARE_OF_HOLDING, REFERENCE_LABOUR_HOURS_PER_HECTARE)
+    ANNUAL_LABOUR_HOURS_PER_FARM_WORKER, FALLOW_SHARE_OF_HOLDING)
+from sim.world.farm_labour import REFERENCE_LABOUR_HOURS_PER_HECTARE
 
 from .units_prose import money_text, plain_number
 

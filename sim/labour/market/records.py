@@ -75,6 +75,8 @@ class YearInputs:
     enterable_trades: Optional[frozenset] = None        # None: every trade in `trades`
     ask_floor_per_worker_year: Dict[AreaId, float] = dataclasses.field(default_factory=dict)  # the wage a worker needs to keep his household alive and working, less its own plot: the lowest an ask falls to
     value_of_life_years_of_income: float = 0.0          # prices a trade's fatality risk into its ask
+    bondage_allowed: frozenset = frozenset()            # areas whose civilisation recognises bondage; others buy none
+    bonded_for_sale: Dict[AreaId, Dict[TradeId, float]] = dataclasses.field(default_factory=dict)   # bonded people of a trade on offer in an area
 
 
 @dataclasses.dataclass
@@ -104,7 +106,7 @@ class Clearing:
     hired_by_employer: Dict[str, float]
     paid_by_employer: Dict[str, float]
     average_wage: float
-    target_wage: Optional[float] = None   # where the wage is heading: hours offered meet hours wanted; none: the wage
+    target_wage: Optional[float] = None   # where the wage is heading: toward the price where offered meets wanted hours, scaled by the imbalance; none: the wage
 
     @property
     def heading_wage(self) -> float:
@@ -133,6 +135,7 @@ class YearReport:
     migrated: Dict[AreaId, float] = dataclasses.field(default_factory=dict)                  # net, by area
     graduated: Dict[AreaId, Dict[TradeId, float]] = dataclasses.field(default_factory=dict)
     left_work: Dict[AreaId, float] = dataclasses.field(default_factory=dict)
+    formed: Dict[AreaId, Dict[TradeId, Dict[str, float]]] = dataclasses.field(default_factory=dict)   # first hands of an empty trade by route (formation.py)
 
     def clearing(self, trade: TradeId, area: AreaId) -> Optional[Clearing]:
         for each in self.clearings:

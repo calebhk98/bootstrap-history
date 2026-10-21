@@ -61,6 +61,30 @@ class BasketSupplyRule(unittest.TestCase):
         self.assertEqual(len(warnings), 1)
 
 
+class InputClosure(unittest.TestCase):
+    """Complaint 652: a held gate is not enough when an input has no chain the start can run or buy."""
+
+    PRODUCTION = {"tool": {"requires_node": "smith", "inputs": {"tin": 1.0}},
+                  "tin": {"requires_node": "mining"},
+                  "loop_a": {"requires_node": None, "inputs": {"loop_b": 1.0}},
+                  "loop_b": {"requires_node": None, "inputs": {"loop_a": 1.0}}}
+    GOODS = {"tool": {}, "loop_a": {}}
+
+    def _unsupplied(self, civilisations, economies=()):
+        return check.unsupplied_basket_goods("home", civilisations, self.PRODUCTION, self.GOODS, list(economies))
+
+    def test_a_held_own_gate_with_an_unheld_input_gate_is_unsupplied(self):
+        self.assertEqual(self._unsupplied({"home": _civ(["smith"])}), ["loop_a", "tool"])
+
+    def test_holding_the_input_gate_supplies_it(self):
+        self.assertEqual(self._unsupplied({"home": _civ(["smith", "mining"])}), ["loop_a"])
+
+    def test_a_partner_that_sells_the_input_supplies_it(self):
+        civilisations = {"home": _civ(["smith"]), "far": _civ(["mining"])}
+        economies = [{"civilization": "far", "enabled": True}]
+        self.assertEqual(self._unsupplied(civilisations, economies), ["loop_a"])
+
+
 class ShippedCivilisationsSupplyTheirBaskets(unittest.TestCase):
 
     def test_every_unsupplied_basket_good_has_a_reason(self):

@@ -22,7 +22,7 @@ def farm_state(profile: Any) -> Dict[str, float]:
 
 
 def _arable_ground(profile: Any) -> Any:
-	"""(arable hectares ceiling or None, best-first ladder of (fertility, hectares)) for the ground the country holds."""
+	"""(arable hectares ceiling or None, best-first ladder of (fertility, hectares) or None when no tiles are known) for the ground the country holds."""
 	declared = profile.extra.get("arable_hectares")
 	if declared is not None:
 		quality = float(profile.extra.get("farm_quality", 1.0))
@@ -31,12 +31,12 @@ def _arable_ground(profile: Any) -> Any:
 		share = 1.0 - farming_technique.DEFAULT_TECHNIQUE.rotation.fallow_share_of_holding
 		territory = land.territory_cropland({tile_id: crop_site(tile_id, share) for tile_id in profile.home_tiles})
 		return territory.cropped_hectares, territory.ladder
-	return None, []
+	return None, None
 
 
 def _open_farm(profile: Any, adult_equivalents: float) -> None:
-	ceiling, ladder = _arable_ground(profile)
-	hectares = agriculture.farmland_for_population(adult_equivalents, arable_hectares_ceiling=ceiling).hectares
+	_ceiling, ladder = _arable_ground(profile)
+	hectares = agriculture.farmland_for_population(adult_equivalents, ladder=ladder).hectares
 	quality = land.ladder_quality(ladder, hectares) if ladder else 1.0
 	profile.farm = {"hectares": hectares, "quality": quality, STOCK_KG: 0.0, "harvest_kg": 0.0, "shortfall_kg": 0.0,
 					"years": 0.0}

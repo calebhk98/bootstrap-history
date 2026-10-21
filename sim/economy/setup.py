@@ -24,6 +24,11 @@ def labour_area(tile: TileId) -> str:
     return LABOUR_AREA_PREFIX + tile
 
 
+def area_tile(area: str) -> TileId:
+    """The tile a labour area stands for (the inverse of `labour_area`)."""
+    return area[len(LABOUR_AREA_PREFIX):] if area.startswith(LABOUR_AREA_PREFIX) else area
+
+
 @dataclass(frozen=True)
 class TradeSpec:
     trade_id: TradeId
@@ -56,17 +61,23 @@ class EconomySetup:
     capital_tile: TileId
     port_tile: TileId
     unskilled_trade: TradeId = "labourer"
+    hiding: Any = None  # (rate, reach) -> share of its base a payer hides; the port hands in the actor layer's rule, None: none
     debt_bondage_years: float = 0.0               # term of service a landless household in default owes its creditor; 0: the society has no debt bondage (bondage.py)
     import_duty_share: Dict[GoodId, float] = field(default_factory=dict)   # per good, the share of its landed price that is the state's tariff; the port sets it as the year's imports are offered
     carriage_rates_balanced: Dict[str, float] = field(default_factory=dict)   # likewise with the opposite flow filling every return; none: same
     carriage_crew: Dict[str, Tuple[str, float]] = field(default_factory=dict)   # mode id (land, river, sea) -> (crew trade, crew hours per tonne-km), geography's; none: carriage hires no hours
-    carriage_handling: Dict[str, float] = field(default_factory=dict)   # mode id -> hours of handling a tonne each time a haul changes to the mode, for the modes whose handling the rates price (unskilled trade)
+    carriage_handling: Dict[str, float] = field(default_factory=dict)   # mode id -> hours of handling a tonne each time a haul changes to the mode, for the modes whose handling the rates price
+    carriage_handling_trade: Dict[str, str] = field(default_factory=dict)   # mode id -> the trade that works those handling hours (geography's `handling_trade`); a mode with none is handled by the unskilled trade
     carriage_carriers: Dict[str, Tuple[float, Tuple[Tuple[str, float], ...]]] = field(default_factory=dict)   # mode id -> (tonne-km a team moves a day, ((carrier good, units worn per tonne-km),)): what a tonne-km wears (carriage_wear); none: carriage wears nothing
     carriage_wage: float = 0.0     # the wage an hour (unskilled trade) the land carriage rates were priced at; 0: they follow no wage
+    fuel_need: str = "warmth"           # the basket need fuel meets; a hearth's cooking fuel is added to its floor
     hunger_need: str = "food"           # the basket need whose unmet floor counts as hunger
     yield_factor_by_recipe_tile: Dict[str, float] = field(default_factory=dict)
     land_per_run: Dict[str, float] = field(default_factory=dict)      # hectare-years of land a run takes
     basket_by_tile: Dict[TileId, Any] = field(default_factory=dict)   # floors that follow the tile's climate
+    household_work: Dict[str, Any] = field(default_factory=dict)      # hours of household work by task (data/world/household_work.json); empty: none is modelled
+    ready_to_eat: frozenset = frozenset()                             # goods a household with no hearth can eat as bought
+    servant_trade: str = "domestic_servant"                           # the trade whose wage is the price of an hour of household work
     state_policy: StatePolicy = field(default_factory=StatePolicy)   # how the state budgets and finances a deficit
     site_limits: Tuple[SiteLimit, ...] = ()     # where site-bound recipes can run, and how much (sites.py)
     mint_recipe: Optional[Recipe] = None   # how the mint strikes coin: the production entry the coin standard names

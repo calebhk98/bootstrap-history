@@ -9,7 +9,6 @@ from types import SimpleNamespace
 from .harness import check
 
 from sim.agents.api import ActorRecord, ActorRegistry, ActorsState, Decision, Option, ValuePolicy
-from sim.agents import government_foreign  # noqa: F401  (registers the foreign government)
 from sim.agents.cast import cast_from_civilisations, seed_cast
 from sim.agents.policy import ExportPolicy, exports_allowed
 from sim.engine.civ_basket_check import _sells_abroad

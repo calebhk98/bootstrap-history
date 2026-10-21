@@ -49,7 +49,10 @@ class GroupData(unittest.TestCase):
                 self.assertTrue(group["sources"], group_id)
 
 
-class Baseline(unittest.TestCase):
+class BaselineValidation(unittest.TestCase):
+    """A baseline validation (CLAUDE.md 4.2) against sourced bands: slow only, never a picked year. It fails while
+    the attribution of hours to trades is open (Complaint 619); the bands stay as sourced."""
+
     @classmethod
     def setUpClass(cls):
         cls.games = {civ_id: play(civ_id) for civ_id in CIVILISATIONS}
@@ -62,7 +65,7 @@ class Baseline(unittest.TestCase):
         for civ_id, game in self.games.items():
             for row in occupational_report(employer_hours(game)):
                 with self.subTest(civ=civ_id, group=row["group"]):
-                    self.assertTrue(row["inside"], "%s %s share %.4f outside %s..%s" % (
+                    self.assertTrue(row["inside"], "Complaint 619 (open): %s %s share %.4f outside %s..%s" % (
                         civ_id, row["group"], row["share"], row["low"], row["high"]))
 
     def test_textiles_or_building_is_the_largest_non_farm_group(self):
@@ -71,7 +74,7 @@ class Baseline(unittest.TestCase):
             shares = shares_by_group(employer_hours(game))
             non_farm = {group: share for group, share in shares.items() if group not in ("agriculture", "unattributed")}
             with self.subTest(civ=civ_id):
-                self.assertIn(max(non_farm, key=non_farm.get), expected, non_farm)
+                self.assertIn(max(non_farm, key=non_farm.get), expected, "Complaint 619 (open): %s" % non_farm)
 
 
 if __name__ == "__main__":

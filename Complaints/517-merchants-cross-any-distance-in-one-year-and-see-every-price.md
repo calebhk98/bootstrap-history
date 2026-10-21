@@ -36,7 +36,7 @@ length, by value per kilogram.
 - Still open: volumes are not lagged; whole-year steps (a 300-day and a 10-day haul both count one year);
   the haul's mode is the cheapest path's, not chosen for speed; no measurement yet of tonnes by route length.
 
-## Attempt not merged (branch `merchant-reach-chains`, commit `3c44bcf9`)
+## Attempt not merged (branch `merchant-reach-chains` (deleted unmerged; its code is lost), commit `3c44bcf9`)
 
 Built: a merchant deals only at tiles within one year's haul of its home or of a tile it has traded at, so its
 stretch grows with experience and long distances are covered by chains (`sim/economy/merchants_reach.py`,

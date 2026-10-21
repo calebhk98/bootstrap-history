@@ -22,7 +22,7 @@ Last: depends on 609 to 618.
 no-intervention game by `data/world/occupation_groups.json` (groups, wide bands, sources; the figures are marked
 recalled there, not looked up). Print the shares with
 `python3 sim/simulator.py economy-check --civs rome_100ad --years 1 --occupations`. The ordering test (textiles or
-building the largest classified non-farm group) passes; the band test fails honestly, bands unchanged.
+building the largest classified non-farm group) passed then and now fails (services and state lead after the 640 rewrite's run); the band test fails honestly, bands unchanged.
 
 Measured (one year, seed 1, `python3 -m sim.tests --slow --only occupational_distribution --jobs 1`), share of hours:
 
@@ -42,3 +42,22 @@ like bill instead of the new trades, so the farm group reads low and nothing is 
 scribes and carters book no hours into `society_labour_hours`, so transport and services read zero; (3) the new
 spinner, weaver, miller and baker trades hold hours of a few thousandths. The test closes this complaint once these
 are fixed, not by moving the bands.
+
+## Note: wheat labour now sourced (Complaint 646, pass 6)
+
+`wheat_kg` books 554 farmer-hours a hectare (was 150), built from sourced sub-tasks in `data/world/farm_labour.json`.
+The farm share in the undisturbed Rome scenario fell (0.340 to 0.280 at year index 9, `test_farm_edges_scenario`),
+because a worker's cropped area is now set by the farming year, not the harvest window. The recipe-booked hours in
+`society_labour_hours` rise with the 554; re-measure the groups with
+`python3 sim/simulator.py economy-check --civs rome_100ad --years 1 --occupations` (not finished inside 4 minutes on
+the machine used). The table above is from before this change.
+
+## Note: grain inputs sourced; farm-share check now reads the band (pass 7)
+
+The farm share of Rome's no-intervention run is validated against the agriculture band above in
+`test_farm_edges_scenario` (slow), replacing a test that pinned values recorded from a run. The inputs of
+`fraction_of_population_that_must_farm` were re-read: seed and fold return now come from Columella 2.9.1 and 3.3.4
+(`data/world/grain_yield.json`), which raised the fraction (one farmer feeds fewer people); measure it with
+`python3 -c "from sim.world import agriculture as a; print(a.fraction_of_population_that_must_farm())"`.
+Still unsourced: `ANNUAL_LABOUR_HOURS_PER_FARM_WORKER` (a labelled heuristic), grain spoilage, the draught-animal fodder
+taken from the harvest (not modelled), and the single-staple ration.

@@ -16,11 +16,12 @@ _complete); it is what happens to it in between.
 These are methods of Sim; they are a mixin only so that they can live in a
 file of their own. Behaviour is unchanged and verified byte-identical.
 """
-import collections
 
 from sim.constants import declare
+from .completion_schedule import calendar_floor_years, earliest_completion_years, payment_schedule_years
 from .failure_diagnosis import failure_teaches
 from .industry_depth import depth_risk_multiplier
+from .trade_demand import trade_demand_table
 from .projects_precaution import chosen as precaution_chosen, relief_multiplier as precaution_relief, quote as precaution_quote
 
 
@@ -210,25 +211,12 @@ class ProgressMixin:
         own run had one chemist left, 3,000 trade-hours a year, and a dozen
         projects each quietly assuming they would get all of it.
         """
-        demand = collections.defaultdict(float)
-        by_trade = collections.defaultdict(list)
-        # sorted(): this feeds float sums, and projects.active is a dict whose
-        # key order depends on PYTHONHASHSEED.
         projects = self.state.projects
-        for node_id in projects.active_keys_sorted():
-            project_state = projects.active[node_id]
-            for trade_id, plan in sorted(self.trade_draw_plan(
-                    node_id, self._effective_lab_left(node_id, project_state)).items()):
-                demand[trade_id] += plan["desired"]
-                by_trade[trade_id].append(node_id)
-        out = {}
-        for trade_id in sorted(demand):
-            supply = self.labour.hours_you_can_call_on(trade_id)
-            out[trade_id] = {"demand_hours_this_year": round(demand[trade_id], 1),
-                      "supply_hours_this_year": round(supply, 1),
-                      "oversubscribed": bool(demand[trade_id] > supply + 1e-6),
-                      "projects_drawing_on_it": sorted(by_trade[trade_id])}
-        return out
+        desired_by_project = {
+            node_id: {trade_id: plan["desired"] for trade_id, plan in self.trade_draw_plan(
+                node_id, self._effective_lab_left(node_id, projects.active[node_id])).items()}
+            for node_id in projects.active_keys_sorted()}
+        return trade_demand_table(desired_by_project, self.labour.hours_you_can_call_on)
 
     def lab_year_draw(self, node_id, project_state, frac, hired_left):
         """This year's hired-labour draw for active project `node_id`.
@@ -426,26 +414,23 @@ class ProgressMixin:
         already does a hundred complicated things does not start the social
         diffusion of the hundred-and-first from zero credibility.
         """
-        node = self.nodes[node_id]
-        floor = node["yrs"]
-        if node["yrs"] >= self.DIFFUSION_LIMITED_YEARS_THRESHOLD:   # diffusion-limited nodes, not physical curing
-            floor = max(self.CALENDAR_FLOOR_MIN_YEARS,
-                        node["yrs"] / (1.0 + self.state.household.reputation / self.CALENDAR_FLOOR_REPUTATION_SCALE))
-        return floor * self.rebuild_work_factor(node_id)
+        return calendar_floor_years(
+            self.nodes[node_id]["yrs"], self.state.household.reputation, self.rebuild_work_factor(node_id),
+            self.DIFFUSION_LIMITED_YEARS_THRESHOLD, self.CALENDAR_FLOOR_MIN_YEARS, self.CALENDAR_FLOOR_REPUTATION_SCALE)
 
     def payment_schedule_years(self, node_id):
         """Years the bill takes to pay in full: it is paid in equal yearly
         instalments over the node's nominal years, which reputation never
         shortens."""
-        return max(1.0, self.nodes[node_id]["yrs"] * self.rebuild_work_factor(node_id))
+        return payment_schedule_years(self.nodes[node_id]["yrs"], self.rebuild_work_factor(node_id))
 
     def earliest_completion_years(self, node_id):
         """The soonest the project can finish, with no failure: the longer of
         the calendar floor and the payment schedule, less what a running
         attempt has already served."""
-        earliest = max(self.calendar_floor(node_id), self.payment_schedule_years(node_id))
         running = self.state.projects.active.get(node_id)
-        return max(0.0, earliest - running.get("yrs", 0.0)) if running else earliest
+        return earliest_completion_years(self.calendar_floor(node_id), self.payment_schedule_years(node_id),
+                                         running.get("yrs", 0.0) if running else None)
 
     def expected_calendar_years(self, node_id, _max_extra_attempts=500):
         """Expected calendar years to SUCCEED at node_id, counting every retry the

@@ -1,12 +1,13 @@
 """Carriers as durable goods: carriage wears the stock of carts, pack saddles, animals and hulls that a mode uses,
-and the merchants buy them back in the goods market.
+and the merchants buy them back in the goods market. The feed the team's animals eat is used up the same way
+(a row with no life: eaten by the tonne-km), so a merchant buys it in the goods market too.
 
 A mode's team (a cart and its two oxen, a string of mules with their saddles, a hull) moves a known tonne-km
 a working day (geography). A unit of a carrier good works `days_per_year` days a year for its service life, so
 one tonne-km wears `count in the team / (life years * days per year * tonne-km per team-day)` units of it.
-A merchant keeps its carriers in an account of their own (`account`), wears them by the tonne-km it carried, and
-next year bids for as many units as this year wore (the unit shortfall, when it held fewer, is still the plan).
-Fleets sized to the route's days, and an opening endowment of them, are Complaints/631's.
+A merchant keeps its carriers in an account of their own (`account`); a feed is used up by the tonne-km carried, a carrier
+with a life ages by it, and the merchant bids for the fleet its routes call for (carriage_fleet_book.bids).
+The fleet that bounds dispatch, its wear by service life and its opening endowment are carriage_fleet and carriage_fleet_book.
 
 Standalone: the economy records and the carriage table.
 """
@@ -15,8 +16,8 @@ from typing import Dict, List, Mapping, Optional, Sequence, Tuple
 
 from .accounts import DeliveredMove
 from .market_memory import KEY_SEPARATOR as MARKET_KEY_SEPARATOR
-from .merchants import MERCHANT_BID_ELASTICITY, Merchant
-from .types import AreaId, Bid, EDGE_CONSUMPTION, GoodId, GoodsMove, TileId
+from .merchants import Merchant
+from .types import EDGE_CONSUMPTION, GoodId, GoodsMove, TileId
 
 CARRIER_ACCOUNT_PREFIX = "carriers:"
 CarrierRows = Tuple[Tuple[GoodId, float], ...]     # ((carrier good, units worn per tonne-km),)
@@ -34,12 +35,14 @@ def units_per_tonne_km(count: float, life_years: float, days_per_year: float, to
     return count / capacity if capacity > 0.0 else 0.0
 
 
-def table(teams: Mapping[str, Mapping], uses: Mapping[GoodId, Mapping], lives: Mapping[GoodId, float]
-          ) -> Dict[str, Tuple[float, CarrierRows]]:
+def table(teams: Mapping[str, Mapping], uses: Mapping[GoodId, Mapping], lives: Mapping[GoodId, float],
+          feed: Optional[Tuple[GoodId, float]] = None) -> Dict[str, Tuple[float, CarrierRows]]:
     """{mode: (tonne-km per team-day, ((carrier good, units worn per tonne-km),))} for each mode with a team.
     `teams` is geography's carriage rates (carriers, tonne_km_per_team_day, team_payload_tonnes); `uses` the
     `carrier_use` of each good that has one; `lives` the goods' service lives. A team member no good serves,
-    or a good with no life, wears nothing here."""
+    or a good with no life, wears nothing here. `feed` is (feed good, kilograms in a unit of it): a team with
+    animals also uses up that good, at geography's `animal_feed_kg_per_tonne_km`, a row like a carrier's whose
+    units are eaten rather than worn by a life."""
     served: Dict[Tuple[str, str], GoodId] = {}
     for good, use in sorted(uses.items()):
         for kind, name in sorted(use["serves"].items()):
@@ -58,6 +61,9 @@ def table(teams: Mapping[str, Mapping], uses: Mapping[GoodId, Mapping], lives: M
             day_tonne_km = per_day * (float(payload) / float(team["team_payload_tonnes"])
                                       if payload and team.get("team_payload_tonnes") else 1.0)
             rows.append((good, units_per_tonne_km(float(count), life, float(use["days_per_year"]), day_tonne_km)))
+        eaten = float(team.get("animal_feed_kg_per_tonne_km", 0.0))
+        if feed is not None and eaten > 0.0 and feed[1] > 0.0 and per_day > 0.0:
+            rows.append((feed[0], eaten / feed[1]))
         if rows:
             found[mode] = (per_day, tuple(rows))
     return found
@@ -124,8 +130,9 @@ def carrier_goods(setup) -> List[GoodId]:
 
 
 def settle(merchant: Merchant, book, goods: Sequence[GoodId], units_worn: Mapping[GoodId, float]) -> List[GoodsMove]:
-    """The moves that put the carriers (`goods`) the merchant bought into its carrier account and wear the stock there
-    by `units_worn` (at most what it holds; the rest is the shortfall, unmet wear)."""
+    """The moves that put the carriers (`goods`) the merchant bought into its carrier account and use up `units_worn`
+    of the stock there (at most what it holds; the rest is the shortfall, unmet wear). A carrier with a service life
+    is not used up here: the fleet ages with the other durables (year_close.wear_and_spoilage)."""
     mine = account(merchant.agent_id)
     moves: List[GoodsMove] = []
     for good in goods:
@@ -143,28 +150,6 @@ def settle(merchant: Merchant, book, goods: Sequence[GoodId], units_worn: Mappin
                 left -= take
     book.move_many(worn)
     return moves + worn
-
-
-def bids(setup, record, view, area_map, merchants_cash: Optional[Dict[str, float]] = None) -> Tuple[List[Bid], Dict[str, float]]:
-    """Each merchant's bids for the carriers its shipments wore last year, delivered to its home tile, and the
-    money each bid sets aside ({merchant: budget}), which the caller takes off the cash the merchant trades with."""
-    found: List[Bid] = []
-    budget: Dict[str, float] = {}
-    for merchant in sorted(record.merchants.values(), key=lambda each: each.agent_id):
-        for good, units in sorted((merchant.carrier_wear or {}).items()):
-            if units <= 0.0 or good not in area_map.goods():
-                continue
-            area = area_map.area_of(good, merchant.home_tile)
-            price = view.price(good, area) or setup.opening_prices.get(good, 0.0)
-            if price <= 0.0 or not math.isfinite(price):
-                continue
-            money = min(units * price, max(0.0, (merchants_cash or {}).get(merchant.agent_id, math.inf)) - budget.get(merchant.agent_id, 0.0))
-            if money <= 0.0:
-                continue
-            found.append(Bid(merchant.agent_id, good, area, merchant.home_tile, units, 0.0, price,
-                             MERCHANT_BID_ELASTICITY, money))
-            budget[merchant.agent_id] = budget.get(merchant.agent_id, 0.0) + money
-    return found, budget
 
 
 def last_prices(setup, record) -> Dict[GoodId, float]:

@@ -4,9 +4,9 @@ market before the goods move, and what is hired limits what is carried.
 A haul's hours come from the route itself: each mode it travels spends geography's physical crew hours per
 tonne-km on the tonne-km its legs cost, in that mode's trade (a sailor on water, a carter with animals, a porter on foot),
 and each change to a mode the setup prices handling for (a port) spends handling hours of the unskilled trade.
-The hours are bid at the tile the goods leave and paid that area's wage. Carts, ships and animals as capital,
-and the feed they eat, are not yet modelled here: the part of a fee that is not crew pay still goes to the
-households of the tile the goods leave (year_close).
+The hours are bid at the tile the goods leave and paid that area's wage. The carriers and the feed
+the animals eat are bought in the goods market (carriage_wear), and year_close keeps what is left of a fee with the
+merchant that owns the carriers.
 """
 import math
 from typing import Dict, List, Optional, Tuple
@@ -25,7 +25,7 @@ CARRIAGE_CREW_UNSKILLED_SHARE = declare(
     retire="Complaints/556: one workforce owner whose opening places people in the trades the opening's flows need",
     why="The opening places people by the runs producers expect, not by the goods merchants carry, so no "
         "carters or sailors exist when merchants first ship and a specialist trade left to train its own would "
-        "stop carriage for years. The crew hours are bid in the unskilled trade (porters and drovers on foot "
+        "stop carriage for years. The crew hours of a trade that needs training are bid in the unskilled trade (drovers on foot "
         "are labourers in the trade data) instead of the mode's carter or sailor trade.")
 
 CrewRows = Tuple[Tuple[str, float], ...]      # ((crew key, crew hours),): a crew key is market_key(trade, tile hired at)
@@ -36,9 +36,19 @@ def hires(setup) -> bool:
     return any(hours > 0.0 for _trade, hours in setup.carriage_crew.values())
 
 
+def _asks_no_training(setup, trade: str) -> bool:
+    spec, unskilled = setup.trades.get(trade), setup.trades.get(setup.unskilled_trade)
+    return (bool(trade) and trade != setup.unskilled_trade and spec is not None and unskilled is not None
+            and spec.training_years <= unskilled.training_years)
+
+
 def crew_trades(setup, mode_trade: str) -> Tuple[Tuple[str, float], ...]:
     """The trades a mode's crew hours are bid in, as (trade, share): the unskilled trade for the share
-    CARRIAGE_CREW_UNSKILLED_SHARE names and the mode's own for the rest."""
+    CARRIAGE_CREW_UNSKILLED_SHARE names and the mode's own for the rest. A mode whose trade asks no more
+    training than the unskilled trade (porters, dockworkers) is hired in its own trade whole: anyone can take
+    it up at once, and the heuristic is about trades that need years."""
+    if _asks_no_training(setup, mode_trade):
+        return ((mode_trade, 1.0),)
     unskilled = min(1.0, max(0.0, CARRIAGE_CREW_UNSKILLED_SHARE))
     merged: Dict[str, float] = {}
     for trade, share in ((setup.unskilled_trade, unskilled), (mode_trade, 1.0 - unskilled)):
@@ -75,7 +85,8 @@ class Crew:
         for mode, count in haul.handlings_by_mode:
             per_handling = setup.carriage_handling.get(mode, 0.0)
             if per_handling > 0.0:
-                hours[setup.unskilled_trade] = hours.get(setup.unskilled_trade, 0.0) + count * per_handling
+                trade = setup.carriage_handling_trade.get(mode) or setup.unskilled_trade
+                hours[trade] = hours.get(trade, 0.0) + count * per_handling
         return hours
 
     def hours_per_tonne(self, source: str, destination: str) -> CrewRows:

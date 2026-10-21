@@ -3,6 +3,7 @@ organise in proportion to what they lost, press the state, and the state answers
 its purse. Every effect names its group and its cause."""
 from .harness import *
 
+from sim.agents import budget
 from sim.agents.api import supply
 from sim.engine.agents_port import SimWorld
 from sim.agents.group import state_response
@@ -13,7 +14,7 @@ def grievance_game(civ="rome_100ad", share=0.6, capacity=None, purse=1.0e12):
     """A game whose founder has sold `share` of the opening iron market this year."""
     game = unopened_sim(civ=civ)   # the displaced-sales market is the engine's own
     if capacity is not None:
-        game.state_capacity = capacity
+        game.state_reach = lambda: capacity
     game._open_market_book()
     game.goods_market.note_sale(game.goods_market.acting_party_id, "iron", game._market_entry("iron")["reference_tonnes"] * share)
     game.state_treasury().money = purse
@@ -95,34 +96,34 @@ check("a purse that covers it pays the group and the founder is not levied for i
 check("what the state paid arrives in the group's purse",
       flush.actors.get("group:displaced_producers:iron").money > 0.0)
 
-broke = unopened_sim()
-broke.civ["standing_army"] = 1.0e8
-broke._open_market_book()
-broke.goods_market.note_sale(broke.goods_market.acting_party_id, "iron", broke._market_entry("iron")["reference_tonnes"] * 0.6)
-broke.state_treasury().money = 0.0
-a_year(broke)
-a_year(broke)
-record = broke.state_treasury().record
-check("a state that cannot pay leaves the group's claim unfunded",
-      record.unfunded.get(name, 0.0) > 0.0, (record.need, record.unfunded))
-rates_with = broke.state_levy_rates()
-calm = unopened_sim()
-calm.civ["standing_army"] = 1.0e8
-calm.state_treasury().money = 0.0
-a_year(calm)
-a_year(calm)
-check("the unpaid claim raises the rate the state takes from taxpayers it sees",
-      rates_with[0] > calm.state_levy_rates()[0], (rates_with, calm.state_levy_rates()))
-reasons = broke.group_levy_reasons()
+# The year's fiscal choice (borrow, cut, defer, levy, ...) is the state's own since Complaint 625, so an unpaid claim
+# reaches the taxpayers only through the levy the state chooses: the rules are called on built inputs.
+claims = SimWorld(flush).group_claims()
+claim_lines = budget.concession_lines(claims)
+check("the group's claim is a requisition line of the state's standing need, one per group",
+      [line.name for line in claim_lines] == [name] and claim_lines[0].kind == "requisition"
+      and claim_lines[0].money == claims[name] > 0.0, (claims, claim_lines))
+visible_income = 1.0e9
+owed_claim = {name: claims[name]}
+unpaid_rates = budget.levy_rates(owed_claim, {name: "requisition"}, visible_income)
+check("a levy that raises an unpaid claim sets the requisition rate from the income the state sees",
+      unpaid_rates[0] > 0.0 and unpaid_rates[1] == 0.0 and abs(unpaid_rates[0] - claims[name] / visible_income) < 1e-12,
+      unpaid_rates)
+check("a claim paid in full adds nothing to the rate", budget.levy_rates({}, {name: "requisition"}, visible_income) == (0.0, 0.0))
+
+owing = grievance_game()
+a_year(owing)
+owing.state_treasury().record.unfunded[name] = SimWorld(owing).group_claims()[name]
+reasons = owing.group_levy_reasons()
 check("the levy names the group it is for and the cause",
       reasons and "producers of iron" in reasons[0] and "your sales of iron" in reasons[0], reasons)
-broke.employees["artisan"] = 2000.0
-broke.labour._resync_pools()
-broke.capital = 60000000.0
-broke.eminence = 25.0
-broke.update_protection()
+owing.employees["artisan"] = 2000.0
+owing.labour._resync_pools()
+owing.capital = 60000000.0
+owing.eminence = 25.0
+owing.update_protection()
 check("the requisition screen lists the group among the reasons for the levy",
-      any("producers of iron" in why for why in broke.requisition_report()[1]), broke.requisition_report())
+      any("producers of iron" in why for why in owing.requisition_report()[1]), owing.requisition_report())
 
 # ---- a ban the state can afford stops the founder building what hurts the group --------------
 banner = big

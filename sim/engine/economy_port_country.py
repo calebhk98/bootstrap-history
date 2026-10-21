@@ -5,7 +5,8 @@ economy (sim/economy/country_figures.py); a figure it has no record of is None a
 labelled estimate."""
 from typing import Dict, Optional
 
-from sim.economy.api import country_figures, trade_premium
+from .material_units import tonnes_per_unit
+from sim.economy.api import carried_book, cohort_land_rents, country_figures, land_rent_at_tile, trade_premium
 
 
 class CountryAnswers:
@@ -44,3 +45,58 @@ class CountryAnswers:
 
     def population(self) -> float:
         return country_figures.population(self._economy, self._country)
+
+    def price_per_tonne(self, material: str) -> Optional[float]:
+        """Money for a tonne of a material at the price its market areas touching the country quote; None when
+        none of them trades it."""
+        price = country_figures.prices(self._economy, self._country).get(material)
+        return None if price is None else price * self._coin / tonnes_per_unit(material)
+
+    def price_per_unit(self, material: str) -> Optional[float]:
+        """Money for one unit of a material at the price its market areas touching the country quote; None when none
+        of them trades it."""
+        price = country_figures.prices(self._economy, self._country).get(material)
+        return None if price is None else price * self._coin
+
+    def coin_regime(self) -> str:
+        """The standard of the money the one economy uses."""
+        return country_figures.currency(self._economy).regime
+
+    def coin_stock_value(self) -> float:
+        """Money's worth of the backing metal in the money held on the country's tiles, at the country's price of
+        that metal (none for fiat money, which has no metal)."""
+        spec = country_figures.currency(self._economy)
+        price = country_figures.prices(self._economy, self._country).get(spec.backing_good) if spec.backing_good else None
+        if price is None:
+            return 0.0
+        held = country_figures.money_held(self._economy, self._country)
+        return held * spec.backing_per_unit * price * self._coin
+
+    def trade_book(self) -> Dict[str, Dict[str, float]]:
+        """The goods that crossed the country's border last year: tonnes and money each way, by good (imports at the
+        price where they landed, exports at the price where they left)."""
+        return {good: {key: value * self._coin if key.endswith("_value") else value for key, value in entry.items()}
+                for good, entry in country_figures.trade_book(self._economy, self._country).items()}
+
+    def trade_value(self, direction: str) -> float:
+        """Money's worth of the goods imported ("in") or exported ("out") last year."""
+        return carried_book.trade_value(self.trade_book(), direction)
+
+    def people_of_trade(self, trade: str) -> float:
+        """Working people of a trade in the labour markets of the country's tiles (nobody for a trade none practise)."""
+        return country_figures.people_by_trade(self._economy, self._country).get(trade, 0.0)
+
+    def land_rent_at(self, tile: Optional[str]) -> Optional[float]:
+        """Rent per hectare-year in coin on a tile of the country, the mean of the country's let land where none was let
+        on it (or the tile is not the country's); None where the country let no land."""
+        economy = self._economy
+        own_tiles = country_figures.country_tiles(economy, self._country)
+        rent = land_rent_at_tile(economy, tile if tile in own_tiles else None, self._country)
+        return rent * self._coin if rent > 0.0 else None
+
+    def land_rent_curve(self, tiles=None):
+        """(people, rent received in coin) of the country's household cohorts, poorest first: the rent paid on its
+        tiles (only `tiles` of them when given) goes to the cohorts that own the land."""
+        tiles = None if tiles is None else set(tiles)
+        return [(people, rent * self._coin)
+                for people, rent in cohort_land_rents(self._economy, tiles, self._country)]

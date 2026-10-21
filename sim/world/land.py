@@ -364,11 +364,12 @@ from typing import Any, Dict, List, Optional
 
 from sim.constants import declare
 from sim.geography.api import load_geography, tiles_held
+from sim.world.farm_labour import REFERENCE_LABOUR_HOURS_PER_HECTARE as _SHARED_REFERENCE_LABOUR_HOURS_PER_HECTARE
+from sim.world.grain_yield import FOLD_RETURN, SEED_KG_PER_HECTARE, net_yield_kg_per_hectare
 from sim.world.shared_constants import (
     ANNUAL_LABOUR_HOURS_PER_FARM_WORKER as _SHARED_ANNUAL_LABOUR_HOURS_PER_FARM_WORKER,
     FALLOW_SHARE_OF_HOLDING as _SHARED_FALLOW_SHARE_OF_HOLDING,
     LABOUR_OUTPUT_ELASTICITY as _SHARED_LABOUR_OUTPUT_ELASTICITY,
-    REFERENCE_LABOUR_HOURS_PER_HECTARE as _SHARED_REFERENCE_LABOUR_HOURS_PER_HECTARE,
     SUBSISTENCE_ENERGY_REQUIREMENT_KCAL_PER_ADULT_DAY as _SHARED_SUBSISTENCE_ENERGY_REQUIREMENT_KCAL_PER_ADULT_DAY,
     WHEAT_ENERGY_KCAL_PER_KG,
 )
@@ -399,16 +400,13 @@ CIVILIZATIONS_DIR = os.path.join(_ROOT, "data", "civilizations")
 # ============================================================================
 
 REFERENCE_WHEAT_YIELD_KG_PER_HECTARE = declare(
-    "REFERENCE_WHEAT_YIELD_KG_PER_HECTARE", 577.5,
+    "REFERENCE_WHEAT_YIELD_KG_PER_HECTARE", net_yield_kg_per_hectare(SEED_KG_PER_HECTARE, FOLD_RETURN),
     kind="engineering_estimate",
     unit="kg threshed grain/hectare/season, net of seed corn, at fertility_"
          "quality_multiplier 1.0",
     source="data/production/40_organics.json's own wheat_kg entry - "
-           "Columella's ~4.5-fold return on a 165 kg/ha seeding rate for "
-           "ancient Mediterranean dry farming. Duplicated here rather than "
-           "imported, per this module's own STANDALONE section - if the "
-           "two numbers ever drift apart that is a visible finding for a "
-           "future reconciliation pass, not a bug in either file.",
+           "the seed and fold return built in data/world/grain_yield.json "
+           "(Columella 2.9.1 and 3.3.4), read through sim/world/grain_yield.py.",
     confidence="B",
     why="This is the yield fertility_quality_multiplier is a multiplier ON, "
         "and the anchor that makes Italia's own multiplier exactly 1.0 by "

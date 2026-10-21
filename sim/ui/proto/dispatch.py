@@ -5,12 +5,13 @@ import importlib
 import os
 import pkgutil
 
-from sim.engine.ui_port import money_word, plain_number
+from sim.engine.ui_port import money_word
 from sim.engine.ui_port import fuzzy_estimates, units
 
 from .economy import _dashboard_snapshot
 from . import command_registry, mod_commands
 from .command_registry import command
+from .name_candidates import candidates_the_player_may_see
 from .compact import compact_state, compact_stuck, compact_why
 from .help import _agent_help
 from .field_check import unknown_field_refusal
@@ -26,6 +27,7 @@ from .state import _agent_state
 from .state_projects import _agent_state_active_projects, _agent_state_training_and_hours
 from .wave_summary import wave_summary
 from . import step_atomic, step_progress
+from . import multi_year_warning
 from .guidance import delay_kinds, delay_phrase
 from .event_groups import group_disaster_events
 from .event_kinds import stops_a_step
@@ -157,47 +159,18 @@ def _cmd_step(sim, nodes, cmd, ended):
     # with a real pool still free) - read here, not recomputed, so this
     # warning and that field can never disagree about what "idle" means.
     # Non-blocking: it says so and proceeds, it does not refuse the step.
+    lone_dependencies = sim.labour.sole_supervisors() if years > 1 else []
     multi_year_hours_warning = None
     multi_year_hours_waiting_on = None
-    lone_dependencies = sim.labour.sole_supervisors() if years > 1 else []
     if years > 1 and ui_port.settings.load_config().get("multi_year_step_warning", True):
         _pre_state = _agent_state_training_and_hours(sim, _agent_state_active_projects(sim, nodes), False)
-        _idle_note = _pre_state.get("free_hours_going_unused")
-        if _idle_note:
-            # A STARTABLE PROJECT HAS TO EXIST, or the warning would be
-            # telling a player to do something they cannot do. Early
-            # exit on the first hit - see `stuck`'s own _startable for
-            # the same full-tree scan, accepted there for the same
-            # reason: nothing cheaper tells you whether ANYTHING at all
-            # is startable right now.
-            _could_start = next(
-                (node_id for node_id in nodes if node_id not in sim.done and node_id not in sim.active
-                 and sim.can_start(node_id)), None)
-            if _could_start:
-                # DOES IT ACTUALLY BANK? Checked against step()'s own
-                # code, not assumed: core.py's step() computes `pool`
-                # fresh every year from director_pool() minus this
-                # year's commitments, and whatever of it 5b's wage-work
-                # branch does not spend either is simply never written
-                # anywhere - no field on `self` carries a "leftover
-                # hours" balance into the next call. It does not partly
-                # bank; it does not bank at all.
-                multi_year_hours_warning = (
-                    "before stepping %d years: %s founder-hours this "
-                    "year are already going to waste, and '%s' is one "
-                    "thing you could start today that would use some of "
-                    "them. Founder-hours do not bank at all: step() "
-                    "draws a fresh pool every year, and what goes "
-                    "unused this year is simply gone, never carried "
-                    "into the next one - so 'step %d' spends this "
-                    "year's slack exactly as idle as it is right now, "
-                    "%d more times over, unless you start something "
-                    "first. Running projects wait on: %s. Proceeding anyway."
-                    % (years, plain_number(
-                           _pre_state.get("founder_hours_available") or 0.0),
-                       nodes[_could_start]["name"], years, years,
-                       delay_phrase(delay_kinds(sim, nodes))))
-                multi_year_hours_waiting_on = delay_kinds(sim, nodes)
+        multi_year_hours_warning = multi_year_warning.multi_year_hours_warning(
+            years, True, _pre_state.get("free_hours_going_unused"),
+            lambda: next((nodes[node_id]["name"] for node_id in nodes if node_id not in sim.done
+                          and node_id not in sim.active and sim.can_start(node_id)), None),
+            _pre_state.get("founder_hours_available"), lambda: delay_phrase(delay_kinds(sim, nodes)))
+        if multi_year_hours_warning:
+            multi_year_hours_waiting_on = delay_kinds(sim, nodes)
     # LOST, not only completed: a game whose only score is what you have
     # built has to report subtraction at least as loudly as addition, so
     # anything that drops out of `done` during a multi-year step has to be
@@ -496,10 +469,8 @@ def _agent_dispatch_inner(sim, nodes, cmd):
             # `_did_you_mean` already refuses to suggest the goal for one.
             _exact_here = NODE_NAME_NORM.get(_norm_name(cmd["id"]), ())
             _op_lc = cmd["cmd"].strip().lower()
-            _name_cands = [
-                node_id for node_id in _name_cands
-                if sim.is_visible(node_id, _memo=_name_memo)
-                or (node_id == _goal and _op_lc == "why" and node_id in _exact_here)]
+            _name_cands = candidates_the_player_may_see(
+                _name_cands, lambda node_id: sim.is_visible(node_id, _memo=_name_memo), _goal, _op_lc, _exact_here)
         if len(_name_cands) == 1:
             cmd = dict(cmd, id=_name_cands[0])
         elif len(_name_cands) > 1:
@@ -609,7 +580,4 @@ def _agent_dispatch_inner(sim, nodes, cmd):
     # was handed a list that silently omitted labour, hire, train, commission,
     # money, risk, policy, quote, close, mothball, restore, work and bribe.
     # A help message that is wrong is worse than none, because it is believed.
-    return {"ok": False,
-            "error": "unknown cmd %r. Use one of: %s. %s"
-                     % (command, ", ".join(command_registry.COMMANDS),
-                        'Or {"cmd":"help"} for what each one does.')}
+    return {"ok": False, "error": command_registry.unknown_command_error(command)}

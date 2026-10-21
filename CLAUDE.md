@@ -31,16 +31,27 @@ When spawning subagents with the `Agent` tool:
   needs no history rewrite.
 - **Parallel agents that edit code** run in separate worktrees and should be
   given tasks that touch different files. Say in each prompt which files the
-  other agents own. Check that each worktree starts from the current
-  `origin/main` (a stale local `main` makes them start far behind). Ask for a
+  other agents own. A new worktree starts from `origin/main`, whatever branch
+  the session is on: when the work merges into another branch, the prompt's
+  first step checks that branch out from origin. Ask for a
   fingerprint only under the rule in section 6.
+- **Read what an agent hands back before merging.** Open its test diff (a
+  narrowed check, a picked window or a typed number is the usual way a check
+  goes green wrongly) and open at least one citation from each research
+  report yourself.
+- **Long runs use a checkout pinned to one commit** (a detached worktree),
+  never the checkout being merged into: a merge in the middle of a run mixes
+  old and new code and reports errors that are not there.
+- **Keep the pool full.** When an agent reports, merge its work and start the
+  next task in the same turn.
 - Only the orchestrating session may run on a large model. It reads, decides,
   writes the hard parts and merges.
 - **Subagents do not wait.** A subagent's prompt cache lapses after about five
   minutes idle, and every wake after that re-reads its whole context at full
   price. A subagent runs only commands that finish in under about five minutes
   (the quick tier, a few targeted topics with `--topic-seconds 240`), never
-  polls or sleeps on a background job, and hands every long run (the full
+  polls or sleeps on a background job, stops every run it started before it
+  reports, and hands every long run (the full
   `--slow` suite, spin-up traces, `opening-checks`, `openings`, fingerprints) back
   to the orchestrator as exact commands; the orchestrator runs those itself.
 - **Size a batch to the machine as well as the budget.** Agents that run whole
@@ -174,6 +185,19 @@ scenarios work without engine edits.
 - **No hard numbers in comments or markdown.** Numbers go stale. Give the
   idea and the command that measures it. Where no command exists, say so in
   the same sentence.
+- **No in-band value means "none".** A missing price, quote or reading is
+  `None` or a refusal with a `cause`, never `0.0`: a zero price reads as free
+  to every caller. Likewise a tolerance relative to a number that can reach
+  zero never closes; give it a floor that cannot.
+- **A shortage of one input must not silently stop everything that uses it.**
+  Before making an input binding, say what the user does without it (a
+  substitute, more hours, less output) and test that path.
+- **Order must not depend on history.** A loaded game rebuilds its collections
+  in saved order, so a float sum or a random draw over a collection that a live
+  game holds in creation order gives a different game after a save. Keep live
+  collections in the order a load produces, or iterate sorted.
+- **Moving a helper moves its importers.** When a module or test file is
+  split, grep for every import of what moved.
 - **`_internal` fields are for auditors, `note` fields are for players.**
   Never put an audit marker where a player will read it.
 - **Portability.** The suite must run from a checkout of any name in any
@@ -204,6 +228,15 @@ Tooling: `python3 -m pylint sim/ | grep C0103` (worklist). Plan:
   guessing.
 - **Every bug becomes a regression test** with the smallest reproducing
   scenario. Resolved complaints move to `Complaints/closed/`.
+- **A test of a rule calls the rule.** Build the inputs in the test and call the
+  function; do not build a whole game to reach one rule. A failing test must name
+  the rule that broke, on the current code, with no bisect over merges; one that
+  cannot is rewritten. Whole-game tests are kept only as named scenario or smoke
+  tests. Where a rule needs the whole `Sim`, pull it into a plain function first.
+- **Sources are read, not recalled.** A figure, in data, a constant or a design
+  note, cites a source someone opened (author, work, page or URL). A research
+  agent cites only what it opened in that session and writes "no source found"
+  otherwise. A figure with no source is a labelled heuristic with a `retire`.
 - **Behaviour tests read values, not wording.** A test of what the model does asserts on structured
   values: the engine's numbers, the reply's fields, a refusal's `cause`, a log line's `kind` and `facts`
   (`sim/refusal.py`). Only a test whose subject is presentation (units, wording, rounding, layout) asserts on

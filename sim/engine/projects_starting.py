@@ -14,9 +14,11 @@ a passed (or overridden) legality test leads to.
 These are methods of Sim; they are a mixin only so that they can live in a
 file of their own. Behaviour is unchanged and verified byte-identical.
 """
-from sim.refusal import LogLine
+from sim.refusal import LogLine, Refusal
 from . import money_units, purchase_rule
 from .blockers import blocker_kind
+from .project_funding import cash_covers_start, paid_credit
+from .projects_training_advice import training_advice, training_advice_text
 from .projects_trade_wait import trade_wait_outlasts_the_project
 from .interest_groups import check_group_prohibition
 from .living_stock import check_unheld_stock
@@ -24,6 +26,8 @@ from .projects_running_gates import check_running_gates
 from .material_availability import check_materials_have_a_seller
 from .data import win_condition_describe
 from .units_prose import money_text
+from .start_money_rule import start_shortfall
+from .staff_gate import craftsmen_gate_text, scholar_gate_text
 from sim.constants import declare
 from .projects_precaution import (spec as precaution_spec, extra_cost as precaution_extra_cost,
                                   extra_hours as precaution_extra_hours)
@@ -613,11 +617,9 @@ class StartingMixin:
     def _cash_covers_start(self, node_id):
         """True when cash in hand pays for this start on top of what work in hand still owes."""
         projects = self.state.projects
-        price = self.project_cost(node_id)
-        price -= min(price, max(0.0, (projects.paid_towards or {}).get(node_id, 0.0)))
-        owed = sum(projects.active[active_id].get("cost_left") or 0.0
-                   for active_id in sorted(projects.active))
-        return owed + price <= self.state.household.capital
+        owed = sum(projects.active[active_id].get("cost_left") or 0.0 for active_id in sorted(projects.active))
+        return cash_covers_start(self.project_cost(node_id), (projects.paid_towards or {}).get(node_id, 0.0), owed,
+                                 self.state.household.capital)
 
     @blocker_kind("money")
     def _check_credit_frozen(self, node_id, node, ignore_trade, _memo, _why):
@@ -695,13 +697,8 @@ class StartingMixin:
             # it only reads is_venture/is_visible/nodes/artisans/scholars),
             # but it walks STAFF_SOURCES and can itself call is_visible, so
             # it is skipped along with the rest of the sentence.
-            return False, (("needs %d trained scholars, and you have %.1f - "
-                            "counting people on your staff and yourself, plus "
-                            "any hours already bought under contract as that "
-                            "share of one more. %s"
-                           % (node["sch"], self.labour.scholar_hands_available(),
-                              self.labour.staff_advice(
-                                  "scholars", node["sch"] - self.labour.scholar_hands_available())))
+            return False, (scholar_gate_text(node["sch"], self.labour.scholar_hands_available(),
+                                             lambda deficit: self.labour.staff_advice("scholars", deficit))
                            if _why else None)
         return None
 
@@ -731,13 +728,8 @@ class StartingMixin:
             # be fractional even when every actual person on the payroll is
             # a whole one. Said inline, not left for the player to work out
             # from a number that otherwise looks like a body cut short.
-            return False, (("needs %d trained craftsmen, and you have %.1f - "
-                           "counting people on your staff plus any hours "
-                           "already bought under contract as that share of "
-                           "one more. %s"
-                           % (node["art"], self.labour.craft_hands_available(),
-                              self.labour.staff_advice(
-                                  "artisans", node["art"] - self.labour.craft_hands_available())))
+            return False, (craftsmen_gate_text(node["art"], self.labour.craft_hands_available(),
+                                               lambda deficit: self.labour.staff_advice("artisans", deficit))
                            if _why else None)
         return None
 
@@ -749,11 +741,11 @@ class StartingMixin:
         absent = [] if ignore_trade else sorted(trade_id for trade_id in node["lab"]
                                                 if not self.labour.trade_available(trade_id))
         if absent:
-            return False, (("this needs %s and there are none in this society. "
-                           'Teach one: {"cmd":"train","trade":"%s","n":2} '
-                           "(about 450 of your own hours each, two years)"
-                           % (", ".join(trade_id + "s" for trade_id in absent), absent[0]))
-                           if _why else None)
+            if not _why:
+                return False, None
+            return False, ("this needs %s and there are none in this society. Teach one: %s"
+                           % (", ".join(trade_id + "s" for trade_id in absent),
+                              training_advice_text(training_advice(self.labour, absent[0]))))
         return None
 
     @blocker_kind("specialists")
@@ -773,10 +765,9 @@ class StartingMixin:
         if _none_left:
             return False, (("this needs %s and there is not one left here to do "
                            "it: nobody holds the trade and nobody is being taught it "
-                           "in time. "
-                           '{"cmd":"train","trade":"%s","n":2} makes '
-                           "more, or hire from your own if you have any"
-                           % (", ".join(trade_id + "s" for trade_id in _none_left), _none_left[0]))
+                           "in time. Teach more: %s, or hire from your own if you have any"
+                           % (", ".join(trade_id + "s" for trade_id in _none_left),
+                              training_advice_text(training_advice(self.labour, _none_left[0]))))
                            if _why else None)
         return None
 
@@ -926,22 +917,25 @@ class StartingMixin:
         if refusal:
             return refusal
         # money already sunk into this node comes off the bill
-        paid_now = min(price, max(0.0, (projects.paid_towards or {}).get(node_id, 0.0)))
+        paid_now = paid_credit(price, (projects.paid_towards or {}).get(node_id, 0.0))
         price -= paid_now
         # sorted(): summing floats over a dict whose keys came from a set
-        owed = extra_owed + sum(projects.active[nid].get("cost_left") or 0.0
-                                for nid in sorted(projects.active))
-        ceiling = max(0.0, self.state.household.capital) + self.credit_limit()
+        owed_on_work_in_hand = sum(projects.active[nid].get("cost_left") or 0.0
+                                   for nid in sorted(projects.active))
         # applies to the first project too
-        if owed + price > ceiling:
-            return ("you already owe %s on work in hand; this "
-                    "would take it to %s, and between cash and your credit line "
-                    "you can raise %s, so you are %s short. Finish or stop "
-                    "something first, or earn or pay down that amount.%s"
-                    % (money_text(owed, self, grouped=True), money_text(owed + price, self, grouped=True),
-                       money_text(ceiling, self, grouped=True),
-                       money_text(owed + price - ceiling, self, grouped=True),
-                       purchase_rule.remedies_text(self)))
+        owed, ceiling, shortfall = start_shortfall(
+            price, owed_on_work_in_hand, extra_owed, self.state.household.capital, self.credit_limit())
+        if shortfall > 0.0:
+            return Refusal("cash_short",
+                           "you already owe %s on work in hand; this "
+                           "would take it to %s, and between cash and your credit line "
+                           "you can raise %s, so you are %s short. Finish or stop "
+                           "something first, or earn or pay down that amount.%s"
+                           % (money_text(owed, self, grouped=True), money_text(owed + price, self, grouped=True),
+                              money_text(ceiling, self, grouped=True),
+                              money_text(owed + price - ceiling, self, grouped=True),
+                              purchase_rule.remedies_text(self)),
+                           owed=owed, price=price, ceiling=ceiling, short=owed + price - ceiling)
         return None
 
     def start_project(self, node_id, precaution=False):
@@ -982,7 +976,7 @@ class StartingMixin:
         if precaution:
             bill += precaution_extra_cost(self, node_id, bill)
         price = bill
-        _paid_now = min(price, max(0.0, (projects.paid_towards or {}).get(node_id, 0.0)))
+        _paid_now = paid_credit(price, (projects.paid_towards or {}).get(node_id, 0.0))
         price -= _paid_now
         node = self.nodes[node_id]
         # CREDIT FOR WHAT YOU ALREADY PAID. See enforce_credit_limit: when the

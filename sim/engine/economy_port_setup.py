@@ -9,9 +9,10 @@ import json
 import os
 from typing import Dict
 
-from sim.economy.api import (EconomySetup, carriage_wear, SiteLimit, TradeSpec, currency_from_coin_standard, goods_specs, households,
-                             recipe_tile_key,
-                             recipes_from_production_data, taxes, tile_costs)
+from sim.economy.api import (EconomySetup, carriage_wear, SiteLimit, TradeSpec, currency_from_coin_standard, goods_specs, households, households_work,
+                             plant_builds, recipe_tile_key,
+                             recipes_from_production_data, taxes, tile_costs, with_tool_wear)
+from sim.agents import api as agents_api
 from sim.world import demand, need_basket
 from sim.geography.api import carriage_rates, layer_value, sea_freight, settlement, tiles_held
 from sim.labour import api as labour_api
@@ -115,7 +116,9 @@ def opening_values(sim):
         "carriage_wage": sim.labour.wage_per_hour(sim.FREIGHT_DRIVER_WAGE_TRADE),
         "carriage_crew": {mode: [rate["crew_trade"], rate["crew_hours_per_tonne_km"]]
                           for mode, rate in rates.items()},
-        "carriage_teams": {mode: {key: rate[key] for key in ("carriers", "tonne_km_per_team_day", "team_payload_tonnes")}
+        "carriage_handling_trade": {mode: rate["handling_trade"] for mode, rate in rates.items() if rate.get("handling_trade")},
+        "carriage_feed_good": sim.FREIGHT_FEED_PRICE_MATERIAL,
+        "carriage_teams": {mode: {key: rate[key] for key in ("carriers", "tonne_km_per_team_day", "team_payload_tonnes", "animal_feed_kg_per_tonne_km")}
                            for mode, rate in rates.items()},
         "held_nodes": sorted(sim.held_and_running(include_starting=False)),
         "ways": {key: dict(way) for key, way in sorted(sim.state.economy.improvements.items())},
@@ -126,6 +129,12 @@ def opening_values(sim):
         "stores": opening_store_values(sim.world_map, tile_ids, int(sim.cfg["start_year"])),
         "literacy": {field: sim.literacy(field) for field in LITERACY_FIELDS},
     }
+
+
+def society_at_opening(civ, opening):
+    """The civilisation's fields with the literacy the opening saved, so a setup rebuilt after literacy has moved scales the
+    needs as the first setup did."""
+    return dict(civ, **opening["literacy"])
 
 
 def baskets_by_tile(basket, need_data, world_map, tile_ids):
@@ -186,12 +195,13 @@ def build_setup(sim, opening=None, production=None):
     production = production or demand.production_data()
     every_recipe = sorted(set(opening["recipes"]).union(*(opened["recipes"] for opened in partners.values())))
     recipes = recipes_from_production_data(production, every_recipe)
+    trades_data = _load("world", "trades.json").get("trades", {})
+    life_years = {good: float(entry["years"]) for good, entry in _load("world", "service_lives.json").get("years", {}).items()}
+    recipes = tool_wear_recipes(recipes, trades_data, life_years, float(sim.HOURS_PER_PERSON_YEAR))
     mint_recipe = (recipes_from_production_data(production, [opening["mint_recipe"]])[opening["mint_recipe"]]
                    if opening.get("mint_recipe") else None)
     need_data = _load("world", "needs.json")
-    literate = opening["literacy"]
-    society = dict(civ, **literate)       # the opening's literacy, so a rebuilt setup scales the needs as the first did
-    basket = households.make_basket(need_data, production, civ_values=society)
+    basket = households.make_basket(need_data, production, civ_values=society_at_opening(civ, opening))
     goods = set()
     for recipe in recipes.values():
         goods.update(recipe.outputs, recipe.inputs, recipe.plant_goods)
@@ -203,7 +213,7 @@ def build_setup(sim, opening=None, production=None):
     specs = goods_specs({good: "" for good in goods}, spoilage, service_lives)
     prices = {good: price for good, price in opening["prices"].items() if good in specs and price > 0.0}
     prices = economy_port_closure.makeable_prices(prices, production, recipes)
-    trades_data = _load("world", "trades.json").get("trades", {})
+    recipes = {recipe_id: plant_builds.with_plant_from(recipe, prices) for recipe_id, recipe in recipes.items()}
     trades = {trade: TradeSpec(trade, float(spec.get("training_years", 0.0)),
                                float(spec.get("fatality_risk_per_year", 0.0)), str(spec.get("family", "")))
               for trade, spec in sorted(trades_data.items())}
@@ -221,12 +231,15 @@ def build_setup(sim, opening=None, production=None):
         carriage_carriers=carriage_wear.table(
             opening["carriage_teams"],
             {good: production[good]["carrier_use"] for good in sorted(specs) if production.get(good, {}).get("carrier_use")},
-            {good: spec.service_life_years for good, spec in specs.items()}),
+            {good: spec.service_life_years for good, spec in specs.items()},
+            (opening["carriage_feed_good"], specs[opening["carriage_feed_good"]].unit_mass_kg) if opening["carriage_feed_good"] in specs else None),
         carriage_handling={SEA_MODE: sea_freight.PORT_HANDLING_HOURS_PER_TONNE},
+        carriage_handling_trade={mode: str(trade) for mode, trade in opening["carriage_handling_trade"].items()},
         held_nodes=tuple(opening["held_nodes"]),
         specs=specs, recipes=recipes, mint_recipe=mint_recipe, basket=basket, trades=trades,
         tax_forms=taxes.forms_from_civ_data(civ.get("state_revenue") or []),
-        state_capacity=min(1.0, max(0.0, float(civ.get("state_capacity", 1.0)))),
+        state_capacity=1.0,   # follows the officials: `run_year` sets it from `Sim.state_reach()` before each year
+        hiding=agents_api.evasion.hidden_share,   # the one hiding rule the actor layer uses (Complaint 657)
         working_hours_per_year=float(sim.HOURS_PER_PERSON_YEAR), working_share=float(opening["working_share"]),
         gini=demand.GINI_COEFFICIENT_PREINDUSTRIAL_AGRARIAN, opening_population_by_tile=population_by_tile,
         unskilled_trade=opening["unskilled_trade"], debt_bondage_years=sim.debt_bondage_term_years(), opening_prices=prices, opening_wages=wages, opening_rate=float(opening["rate"]),
@@ -235,6 +248,7 @@ def build_setup(sim, opening=None, production=None):
                       for recipe_id in recipes if production[recipe_id].get("land_hectare_years")},
         yield_factor_by_recipe_tile=cropland_yields(production, recipes, tiles),
         basket_by_tile=baskets_by_tile(basket, need_data, world_map, all_tile_ids), coin_per_unit=unit,
+        household_work=households_work.load_household_work(), ready_to_eat=households_work.ready_to_eat_goods(need_data),
         opening_income_per_head=opening.get("opening_income_per_head"),
         recipes_by_country=recipes_by_country(str(civ["id"]), opening["recipes"], partners),
         tile_owners=sim.tile_owner_map(),
@@ -243,6 +257,22 @@ def build_setup(sim, opening=None, production=None):
         opening_store_output={good: tuple(tuple(working) for working in entry["workings"])
                               for good, entry in sorted(opening["stores"].items()) if entry["workings"]},
         opening_store_gaps={good: entry["gap"] for good, entry in sorted(opening["stores"].items()) if entry["gap"]})
+
+
+def tool_wear_recipes(recipes, trades_data, life_years, hours_per_worker_year):
+    """The recipes with the tools their hired hours wear out added as inputs: each trade's basket and stock
+    (data/world/trades.json) over the goods' service lives, per hour a worker works. The first basket good a
+    recipe in the society makes is the tool; the later ones are what a short supply falls back to, and then
+    working by hand (each with its hours factor in the data). A tool no recipe makes is left out."""
+    wear_per_hour, order, factors = {}, {}, {}
+    for trade in sorted(trades_data):
+        draw = labour_api.tool_draw(trades_data, trade, 1.0, life_years)
+        if draw:
+            wear_per_hour[trade] = {good: row["wear_per_year"] / hours_per_worker_year for good, row in draw.items()}
+            order[trade] = labour_api.tool_order(trades_data, trade)
+            factors[trade] = labour_api.tool_hours_factors(trades_data, trade)
+    makeable = {good for recipe in recipes.values() for good in recipe.outputs}
+    return {recipe_id: with_tool_wear(recipe, wear_per_hour, makeable, order, factors) for recipe_id, recipe in recipes.items()}
 
 
 def cropland_yields(production, recipes, tiles):

@@ -8,8 +8,9 @@ WALL = "two-way"  # nothing here reaches sim/engine/; the engine hands it what i
 
 import math
 
-from . import carriage_wear, country_figures, diagnostics, late_recipes, opening_metal, households, labour_state, land_rents, market_curves, prices_at as tile_prices, taxes, tile_costs, workforce_settle, workforce_version
+from . import carried_book, carriage_wear, country_figures, diagnostics, late_recipes, opening_metal, households, households_work, labour_state, land_rents, market_curves, prices_at as tile_prices, taxes, tile_costs, workforce_settle, workforce_version
 from .banks import DEPOSIT_BANKING
+from .credit_lines import line_request as credit_line_request
 from .currency import currency_from_coin_standard
 from .economy import Economy
 from .foreign import external_orders
@@ -19,12 +20,14 @@ from .notional import shown_prices
 from .producers import Producer, expected_output_prices, live_input_prices, live_wages
 from .protocols import AgentOrders, YearInputs
 from .recipes import recipes_from_production_data
+from . import plant_builds
+from .tool_wear import with_tool_wear
 from .record import EconomyRecord
 from .setup import EconomySetup, TradeSpec, goods_specs, recipe_tile_key
 from .types import (EDGE_CARGO, EDGE_CONSUMPTION, EDGE_EXCHANGE, EDGE_EXTERNAL, EDGE_LEGACY, EDGE_MINT, EDGE_PRODUCTION, EDGE_WEAR, Bid,
                     GoodsMove, Offer, SiteLimit, Transfer, external_edge)
 from .year_accounts import YearAccounts
-from . import baseline_checks, settling
+from . import baseline_checks, settling, spin_up_sensitivity
 from .unit_cost import variable_cost_per_run
 from .titles_value import title_wealth
 from .debt_relief import indebted_tiles as record_indebted_tiles
@@ -34,18 +37,18 @@ from .year_labour import trade_premium
 from sim.world import capital_market
 
 __all__ = [
-    "YearAccounts", "baseline_checks", "settling",
-    "carriage_wear", "diagnostics", "households", "taxes", "tile_costs", "currency_from_coin_standard", "Economy", "external_orders",
+    "YearAccounts", "baseline_checks", "settling", "spin_up_sensitivity",
+    "carriage_wear", "diagnostics", "households", "households_work", "taxes", "tile_costs", "currency_from_coin_standard", "Economy", "external_orders",
     "price_response", "prices_at", "offered_units", "watch_tiles",
     "shown_prices", "Producer", "expected_output_prices", "live_input_prices", "live_wages", "AgentOrders",
-    "YearInputs", "recipe_tile_key", "recipes_from_production_data", "EconomyRecord", "EconomySetup", "TradeSpec", "SiteLimit",
+    "YearInputs", "recipe_tile_key", "recipes_from_production_data", "plant_builds", "with_tool_wear", "EconomyRecord", "EconomySetup", "TradeSpec", "SiteLimit",
     "goods_specs", "EDGE_EXTERNAL", "EDGE_LEGACY", "EDGE_CARGO", "EDGE_CONSUMPTION", "EDGE_PRODUCTION", "EDGE_EXCHANGE", "external_edge", "Bid", "GoodsMove", "Offer", "Transfer",
     "variable_cost_per_run", "rebase_basket_price_level", "trade_premium", "title_wealth",
-    "traded_volumes", "market_record", "opening_quantities", "opening_prices_in_hours", "wages_by_trade", "wages_by_trade_weighted", "interest_rate", "producers_of",
+    "traded_volumes", "country_traded_volumes", "country_opening_basket", "market_record", "opening_quantities", "opening_prices_in_hours", "wages_by_trade", "wages_by_trade_weighted", "interest_rate", "producers_of",
     "external_trade_net", "external_trade_volume", "account_balance", "account_holdings",
-    "credit_room", "economy_from_record", "blank_economy", "export_record", "economy_book", "economy_contracts", "finish_spin_up", "note_spin_up_result", "spin_up_state", "money_year_figures","shown_prices_of",
+    "credit_room", "credit_line_request", "economy_from_record", "blank_economy", "export_record", "economy_book", "economy_contracts", "finish_spin_up", "note_spin_up_result", "spin_up_state", "money_year_figures","shown_prices_of",
     "settle_agent_takings", "indebted_tiles", "money_revenue_forms", "admit_recipes", "move_goods", "post_transfers", "cohort_incomes", "cohort_land_rents", "land_rent_per_hectare",
-    "land_rent_paid_by_tile", "land_rent_at_tile", "DEPOSIT_BANKING", "country_figures", "idle_hours_by_trade", "output_by_tile",
+    "land_rent_paid_by_tile", "land_rent_at_tile", "DEPOSIT_BANKING", "country_figures", "carried_book", "idle_hours_by_trade", "output_by_tile",
 ]
 
 _KEY_SEPARATOR = "|"
@@ -58,6 +61,16 @@ def traded_volumes(economy):
         good = key.split(_KEY_SEPARATOR, 1)[0]
         totals[good] = totals.get(good, 0.0) + volume
     return totals
+
+
+def country_traded_volumes(economy, country=None):
+    """Last year's traded quantity of each good over the markets of `country` (the home country when none is named)."""
+    return country_figures.traded_volumes(economy, country or economy.setup.civ_id)
+
+
+def country_opening_basket(economy, country=None):
+    """Quantity of each good in the opening basket that falls to `country` (the home country when none is named)."""
+    return country_figures.opening_basket(economy, country or economy.setup.civ_id)
 
 
 def market_record(economy, good):
@@ -114,11 +127,12 @@ def land_rent_per_hectare(economy, country=None):
     return sum(rents) / len(rents) if rents else 0.0
 
 
-def land_rent_at_tile(economy, tile):
-    """Rent per hectare-year the land market let land at on one tile last year; the mean over the tiles where
-    land was let where none was let on this tile (zero where none was let anywhere)."""
+def land_rent_at_tile(economy, tile, country=None):
+    """Rent per hectare-year the land market let land at on one tile last year; the mean over the tiles of `country`
+    (the home country's when none is named) where land was let where none was let on this tile (zero where none was let
+    anywhere)."""
     rent = economy.record.land_rent.get(tile, 0.0)
-    return rent if rent > 0.0 else land_rent_per_hectare(economy)
+    return rent if rent > 0.0 else land_rent_per_hectare(economy, country)
 
 
 def output_by_tile(economy):
@@ -164,12 +178,15 @@ def interest_rate(economy):
 
 
 def credit_room(economy, borrower_id):
-    """What lenders will still advance `borrower_id` beyond what others were lent at the last lending: the
-    share of the savings on offer that lenders put out, less what the other borrowers took. None before
-    lenders have met (no savings were offered yet)."""
+    """What lenders will still advance `borrower_id`. A borrower whose credit line was in the last clearing
+    (credit_lines.py) has what the clearing granted it; any other, the share of the savings on offer that
+    lenders put out less what the other borrowers took. None before lenders have met (no savings were
+    offered yet)."""
     record = economy.record
     if record.funds_offered <= 0.0:
         return None
+    if borrower_id in record.credit_granted:
+        return record.credit_granted[borrower_id]
     others = sum(lent for borrower, lent in record.lent_by_borrower.items() if borrower != borrower_id)
     return capital_market.headroom(capital_market.lendable_capacity(record.funds_offered), others)
 
@@ -422,3 +439,9 @@ def settle_agent_takings(economy, agent_id, edge_id, tile_note="agent's takings"
                for tile, quantity in tiles.items() if quantity > 0.0]
     book.move_many(returns)
     return proceeds
+
+
+def rename_agent(economy, old, new):
+    """`old` becomes `new` throughout the economy's records: money, goods, debts and claims, titles and shares are
+    added to what `new` already holds; no posting is made, so no total moves."""
+    economy.record.rename_agent(old, new)

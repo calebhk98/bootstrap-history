@@ -41,7 +41,7 @@
   },
   "case_fatality": {
    "confidence": "read",
-   "source": "Panum 1846 Faroe epidemic via Hektoen International (second hand): 170 deaths among 6100 infected, 2.8 percent; higher with malnutrition and in first-contact outbreaks (recalled)"
+   "source": "Panum 1846 Faroe epidemic via Hektoen International (second hand): 170 deaths among 6100 infected, 2.8 percent; the higher figures for malnutrition and first-contact outbreaks are not from the source opened and are not modelled"
   },
   "immunity": {
    "confidence": "read",

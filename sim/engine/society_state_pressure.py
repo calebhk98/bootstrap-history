@@ -26,6 +26,7 @@ from sim.agents.api import demand_answer
 
 from sim.world import military_logistics
 
+from .military_rules import leverage_of
 from .state_demand import answer_confiscation, answer_state_demand, settle_household_year
 
 
@@ -178,9 +179,7 @@ class StatePressureMixin:
         """
         military_node_count = sum(1 for node_id in self.state.projects.done - self.state.projects.granted
                 if "military" in self.nodes[node_id].get("traits", ()))
-        if military_node_count <= 0:
-            return 0.0
-        return min(1.0, math.sqrt(military_node_count / self.MILITARY_LEVERAGE_SATURATES_AT))
+        return leverage_of(military_node_count, self.MILITARY_LEVERAGE_SATURATES_AT)
 
     MILITARY_LEVERAGE_SATURATES_AT = declare(
         "MILITARY_LEVERAGE_SATURATES_AT", 25.0, kind="temporary_heuristic",
@@ -751,35 +750,14 @@ class StatePressureMixin:
     # away long before a household reaches this scale (see 6b in core.py's
     # step()).
     #
-    # THIS DOES NOT INVENT A SECOND POLITICAL SCALE. Every input below is a
-    # number the engine already tracks for another purpose - eminence,
-    # capital, headcount (labour.py), military_leverage() above, this civil-
-    # isation's own state_capacity - combined freshly for THIS question, the
-    # same way military_leverage() and prominence_hazard() each already
-    # recombine self.household.done/self.household.reputation/self.household.capital for their own
-    # different questions. Nothing here is stored as a new persistent stat
-    # that decays or grows on its own clock the way reputation/scandal/
-    # eminence/protection do; state_notice() is recomputed from those every
-    # time it is read, so there is nothing new to save, load, or drift.
+    # THIS DOES NOT INVENT A SECOND POLITICAL SCALE. Every input is a number the engine already tracks for
+    # another purpose (eminence, capital, headcount, military_leverage(), the state's reach), combined freshly
+    # for this question; nothing here is stored, so there is nothing new to save, load or drift.
     #
-    # state_capacity (0..1 per civilisation, _SCHEMA.md's own "can the state
-    # fund and compel a large project?") is the FIRST factor, not an
-    # afterthought: Rome (0.85) and Han (0.9) start near their own ceiling, so
-    # for them this whole mechanic is gated almost entirely by household scale
-    # below, exactly as history would predict for two empires that already
-    # had annona fleets and salt monopolies running before this household's
-    # founder was born. Norse (0.15) caps the PRODUCT so low that none of the
-    # thresholds below can be crossed at all while the state stays that weak -
-    # "the thing is an assembly, not a state" (that civilisation file's own
-    # institutions note) - which is the honest answer for a society with no
-    # tax office, not a gap in the mechanic. A Norse run that spends centuries
-    # building the institutions this civilisation's own opening text predicts
-    # ("kings, bishops, written law, taxes and towns") raises state_capacity
-    # by the same tech effects (mil_conscription_reserve, fin_central_bank,
-    # telegraph and railway among them - see _TECH_EFFECTS.json) that do it
-    # for everyone else, and can eventually cross these same lines; that is
-    # the mechanic correctly answering "what if the player builds the state
-    # up", not a special case written in for it.
+    # The state's reach (state_reach(), 0..1) is the first factor: the share of what is due that its paid
+    # officials collect over the roads from its seat (Complaint 620, sim/agents/collection.py). A state with few
+    # officials or long roads caps the product so low that no threshold below is crossed, and one that employs
+    # more raises it, by the same rule for every civilisation.
     HOUSEHOLD_HEADCOUNT_SATURATES_AT = declare(
         "HOUSEHOLD_HEADCOUNT_SATURATES_AT", 500.0, kind="temporary_heuristic",
         unit="employees+slaves+freedmen", source=None, confidence="D",
@@ -873,17 +851,17 @@ class StatePressureMixin:
             "docstring). Tuned, not measured.")
 
     def state_notice(self):
-        """0..1: state_capacity times household_scale() - the single gate
+        """0..1: state_reach times household_scale() - the single gate
         every pressure below checks before it does anything. Below its
         thresholds nobody in government has a reason to know this household
         exists; above them, the state's own capacity to organise and compel
-        (state_capacity) decides how hard that interest bites, exactly the
+        (state_reach) decides how hard that interest bites, exactly the
         reading Diocletian's own hazard note in its civilisation file gives that
         field: his reforms make the state heavier, not the household richer,
         and the patronage shift that hazard already carries is the other
         half of the same fact this mechanic spends on requisition instead.
         """
-        return self.state_capacity * self.household_scale()
+        return self.state_reach() * self.household_scale()
 
     # Below this, the state has bigger things to do than assess one
     # household: the measured Han dice-free trial (strategies/planned_han.json,
@@ -986,15 +964,16 @@ class StatePressureMixin:
             return 0.0
         return min(1.0, (notice - threshold) / (1.0 - threshold))
 
-    def notice_over(self, scale):
+    def notice_over(self, scale, capacity=None):
         """0..1: how far past the notice line a taxpayer of this visible scale
-        stands, as a share of the remaining distance to full notice."""
-        notice = self.state_capacity * scale
+        stands, as a share of the remaining distance to full notice. `capacity`
+        is the state's (this one's when not given)."""
+        notice = (self.state_reach() if capacity is None else capacity) * scale
         if notice <= self.STATE_NOTICE_THRESHOLD:
             return 0.0
         return min(1.0, (notice - self.STATE_NOTICE_THRESHOLD) / (1.0 - self.STATE_NOTICE_THRESHOLD))
 
-    def levy_shares(self, scale, protection=0.0):
+    def levy_shares(self, scale, protection=0.0, state=None):
         """(requisition share, office share) of a year's revenue the state
         assesses on a taxpayer of this visible scale: one rule for the
         founder's household, a firm or any other actor. A visible taxpayer pays
@@ -1002,13 +981,19 @@ class StatePressureMixin:
         capacity, as a share of income) plus the rates at full notice that
         raise the need the state could not pay (Government.seek_shortfall), in
         proportion to how far past the notice line he stands. Nothing is taken below the
-        line; protection bargains requisition down, never the office."""
-        over = self.notice_over(scale)
+        line; protection bargains requisition down, never the office.
+        `state` is (capacity, tax share, requisition rate, office rate) of another country's state; the
+        founder's own state when not given."""
+        if state is None:
+            capacity, tax_share = self.state_reach(), float(self.civ["starting_tax_share"])
+            requisition_rate, office_rate = self.state_levy_rates()
+        else:
+            capacity, tax_share, requisition_rate, office_rate = state
+        over = self.notice_over(scale, capacity)
         if over <= 0.0:
             return 0.0, 0.0
-        requisition_rate, office_rate = self.state_levy_rates()
         # the share of income the whole society pays the state, then what the state's shortfall adds
-        ordinary_rate = float(self.civ["starting_tax_share"]) * self.state_capacity
+        ordinary_rate = tax_share * capacity
         requisition = (ordinary_rate + requisition_rate) * over
         if protection > 0:
             requisition *= (1.0 - self.REQUISITION_PROTECTION_DISCOUNT * protection)

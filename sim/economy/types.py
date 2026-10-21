@@ -5,6 +5,7 @@ tested alone. Quantities are in the good's own unit (a `*_kg` good is counted in
 the currency named beside it. Nothing here names a particular good, trade, place or currency.
 """
 import math
+from functools import cached_property
 from dataclasses import dataclass, field
 from typing import Mapping, Optional, Tuple
 
@@ -100,6 +101,32 @@ class MarketArea:
 
 
 @dataclass(frozen=True)
+class ToolFallback:
+    """What a worker does when the tool a recipe's wear names is short: draw `good` instead (`units_per_run` a
+    run), or work by hand when `good` is empty. The hours of `trades` go up by `hours_factor` on the runs it covers."""
+    good: GoodId
+    units_per_run: float
+    hours_factor: float
+    trades: Tuple[TradeId, ...] = ()
+
+
+@dataclass(frozen=True)
+class PlantBuild:
+    """One way to build a part of a plant: what it takes and how long it stands."""
+    goods: Mapping[GoodId, float]
+    labour_hours: Mapping[TradeId, float]
+    life_years: float
+
+
+@dataclass(frozen=True)
+class PlantPart:
+    """A part of a recipe's plant with the ways to build it, the preferred first. `runs_per_year` is the runs
+    the part turns out in a year."""
+    runs_per_year: float
+    builds: Tuple[PlantBuild, ...]
+
+
+@dataclass(frozen=True)
 class Recipe:
     """One way to make goods: per run, what goes in and what comes out. Data, never engine nodes."""
     recipe_id: str
@@ -109,8 +136,19 @@ class Recipe:
     plant_goods: Mapping[GoodId, float] = field(default_factory=dict)        # tied up per run a year of capacity
     plant_labour_hours: Mapping[TradeId, float] = field(default_factory=dict)  # building that capacity
     plant_life_years: float = 0.0
+    plant_parts: Tuple[PlantPart, ...] = ()   # the plant's parts with their alternative builds; plant_goods etc. are the folded first builds
     climate_classes: Tuple[str, ...] = ()   # climates it can be worked in, from data; empty: any
     site_bound: bool = False         # runs only where a site is declared (sites.py); the economy knows nothing else of it
+    tool_wear: Mapping[GoodId, float] = field(default_factory=dict)   # per run: the part of `inputs` that is its workers' tools wearing out
+    tool_fallbacks: Mapping[GoodId, Tuple[ToolFallback, ...]] = field(default_factory=dict)   # per wear good: what is drawn, in order, when it is short
+
+    @cached_property
+    def hard_inputs(self) -> Mapping[GoodId, float]:
+        """`inputs` without the tools' wear: what a run cannot go ahead without. A short tool never stops a run."""
+        if not self.tool_wear:
+            return self.inputs
+        rest = {good: quantity - self.tool_wear.get(good, 0.0) for good, quantity in self.inputs.items()}
+        return {good: quantity for good, quantity in rest.items() if quantity > 1e-12 * max(1.0, self.inputs[good])}
 
 
 @dataclass(frozen=True)
@@ -176,17 +214,35 @@ class Fill:
     side: str                        # "buy" or "sell"
 
 
+QUOTE_BEST_UNFILLED_BID = "best_unfilled_bid"          # the most any buyer would have paid, below every ask
+QUOTE_LOWEST_UNFILLED_ASK = "lowest_unfilled_ask"      # the least any seller would have taken, with nobody bidding
+QUOTE_COST_COVERING = "cost_covering"                  # what a maker would have to ask to cover a unit's cost
+
+
+@dataclass(frozen=True)
+class Quote:
+    """What a market that did not trade shows instead of a price: a bid, an ask or a cost, named as such."""
+    kind: str
+    price: float
+
+
 @dataclass(frozen=True)
 class ClearingResult:
     good: GoodId
     area: AreaId
     currency: CurrencyId
-    price: float
+    price: float                     # the crossing the solver worked from; a price traded at only when quantity > 0
     quantity: float
     demand_at_price: float
     offered_at_price: float
     unmet_floor: float               # floor quantity buyers could not get or pay for
     fills: Tuple[Fill, ...]
+    quote: Optional[Quote] = None    # set when nothing traded
+
+    @property
+    def traded_price(self) -> Optional[float]:
+        """The price both sides traded at; None when nothing traded (then read `quote`)."""
+        return self.price if self.quantity > 0.0 else None
 
 
 @dataclass(frozen=True)

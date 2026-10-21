@@ -1,300 +1,140 @@
-"""round8g_display: regression checks, run individually with `--only round8g_display`."""
-from .harness import *  # noqa: F401,F403
+"""round8g_display: a five-report playtest sweep of the display. The rules run on built inputs, with no game:
+the repeated window of a hazard on `risk`, the money warnings of a `path`, the substitution gate, the society's
+`needs_first` gates, and the data findings of the sweep (the tree's req_any, notes, risks, and which institutions are
+capabilities). The commands through a game are test_round8g_display_scenario."""
+import copy
+import re
+from types import SimpleNamespace
 
-# ======================================================================
-# ROUND 8g: a five-report playtest sweep of protocol.py / cli.py (display).
-# ======================================================================
+from .harness import check, NODES, S
 
-from sim.ui.protocol import render_risk as _RRISK
+from sim.engine.projects_starting import StartingMixin
+from sim.engine.society_diffusion import DiffusionMixin
+from sim.ui.protocol import render_risk as _render_risk
+from sim.ui.proto.dispatch_inspection_path import route_money_warnings
 
-# --- FINDING: "finished, stays finished" meant three different things -
-# a plain prerequisite, a structural bonus, and a non-DAG gate - and the
-# engine said it the same way for all three. `why` now names a
-# CAPABILITY_INSTITUTIONS node for what it is, and leaves an ordinary
-# prerequisite alone.
-_s_cap = sim(civ="rome_100ad", capital=5000000.0)   # shared by the why, ventures and mothball checks below
-_wr_cap = S._agent_dispatch(_s_cap, NODES, {"cmd": "why", "id": "workshop_first"})
-check("why flags a capability institution as needing to stay OPEN, not "
-      "only built",
-      bool(_wr_cap.get("this_is_a_capability_you_must_keep_open")),
-      _wr_cap.get("this_is_a_capability_you_must_keep_open"))
-_wr_plain = S._agent_dispatch(_s_cap, NODES, {"cmd": "why", "id": "scientific_method"})
-check("...while an ordinary prerequisite (not a capability institution) is "
-      "not flagged the same way",
-      _wr_plain.get("this_is_a_capability_you_must_keep_open") is None,
-      _wr_plain.get("this_is_a_capability_you_must_keep_open"))
+QUICK_TOPIC = True
 
-# --- FINDING: `ventures` scored identity_cover/workshop_first (structural
-# bonuses) and patron_local (a non-DAG gate) exactly like an ordinary
-# earn/cost business, so a Rome player could not tell them apart from a
-# shuttered shop. They now get their own list.
-_s_vcap = _s_cap
-_s_vcap.done.update(["identity_cover", "tex_horizontal_loom"])
-_s_vcap._done_changed()
-_vt_cap = S._agent_dispatch(_s_vcap, NODES, {"cmd": "ventures"})
-_cap_ids = [entry.get("id") for entry in (_vt_cap.get(
-    "capabilities_you_know_how_to_run_but_have_not_opened") or [])
-    if isinstance(entry, dict)]
-_ord_ids = [entry.get("id") for entry in (_vt_cap.get(
-    "you_know_how_but_have_not_opened") or []) if isinstance(entry, dict)]
-check("ventures puts an idle capability institution in its own list, not "
-      "the ordinary earn/cost one",
-      "identity_cover" in _cap_ids and "identity_cover" not in _ord_ids,
-      (_cap_ids, _ord_ids))
-check("...and leaves an ordinary idle business in the ordinary list",
-      "tex_horizontal_loom" in _ord_ids and "tex_horizontal_loom" not in _cap_ids,
-      (_cap_ids, _ord_ids))
-
-# --- FINDING: an undocumented per-project throttle (cost divided by the
-# calendar floor, however much cash is in hand) already explained itself on
-# `state`; it said nothing on `why` for that same active project, which is
-# the screen a player checking on one stalled project by name would reach
-# for.
-_s_thr = sim(civ="han_china_100ad", capital=5000000.0)
-_s_thr.done.update(NODES["sc2_method_negative_result"].get("pre", ()))
-_s_thr._done_changed()
-_ok_thr, _ = _s_thr.start_project("sc2_method_negative_result")
-_s_thr.step()
-_wr_thr = S._agent_dispatch(_s_thr, NODES, {"cmd": "why", "id": "sc2_method_negative_result"})
-check("why on an ACTIVE project says what it is waiting on, not just ACTIVE",
-      bool(_wr_thr.get("waiting_on")), _wr_thr.get("waiting_on"))
-check("...and, with abundant cash against a 20-year calendar floor, names "
-      "the pace throttle by the same words `state` uses for it",
-      "pace it can absorb money" in (_wr_thr.get("waiting_on") or ""),
-      _wr_thr.get("waiting_on"))
-
-# --- FINDING: `risk`'s per-year percentages read as one low-stakes roll,
-# when the engine actually checks them independently EVERY year a hazard's
-# window is open. A Rome player was sacked twice in the same window having
-# read exactly this kind of figure as safe. The screen now says the window
-# is repeated and what it adds up to.
-_s_haz = sim(civ="rome_100ad")
-_s_haz.events = True
-# the first window that sacks a site as `risk` reports it (a hazard whose causes do not hold is weakened to nothing)
-_s_haz.year = 100
-_sacking_window = next((hazard for hazard in (_s_haz.knowledge_risk().get("known_hazards_ahead") or [])
-                        if hazard.get("sacks_a_site")), None)
-_s_haz.year = _sacking_window["years"][0] + 5 if _sacking_window else 240   # inside that window
-_rk = S._agent_dispatch(_s_haz, NODES, {"cmd": "risk"})
-_crisis = next((hazard for hazard in (_rk.get("knowledge_risk") or {}).get(
-    "known_hazards_ahead") or [] if hazard.get("sacks_a_site")), None)
-check("a real dated, multi-year sacking hazard exists to check against",
-      _crisis is not None, [hazard.get("name") for hazard in
-      (_rk.get("knowledge_risk") or {}).get("known_hazards_ahead") or []])
-if _crisis:
-    _rendered_risk = _RRISK(_rk)
-    check("risk says a per-year hazard is rolled EVERY year of its window, "
-          "not once",
-          "checked EVERY year" in _rendered_risk and "chance" in _rendered_risk,
-          [line for line in _rendered_risk.splitlines() if "checked EVERY year" in line])
-    check("...and the cumulative chance across the window is higher than "
-          "the bare per-year figure, which is the whole point",
-          any("100%" in line or "chance at least one sacking" in line
-              for line in _rendered_risk.splitlines()),
-          [line for line in _rendered_risk.splitlines() if "sacking lands" in line])
-
-# --- FINDING: `path <goal>` is the actual walkthrough and was buried in one
-# line of `help commands`, absent from the five starter verbs, and answered
-# a different question from `available` - "what the goal still needs" never
-# joined to "what I could start today". A Han player scripted the
-# intersection themselves outside the game. `path` now does the join.
-_s_pth2 = sim(civ="rome_100ad")   # shared by the path checks below
-_rp2 = S._agent_dispatch(_s_pth2, NODES, {"cmd": "path", "id": GOAL})
-check("path names how many of the remaining nodes are startable today",
-      isinstance(_rp2.get("startable_today_count"), int)
-      and _rp2["startable_today_count"] >= 1,
-      _rp2.get("startable_today_count"))
-_av2 = S._agent_dispatch(_s_pth2, NODES, {"cmd": "available", "all": True})
-_av_ids = {entry["id"] for entry in (_av2.get("available") or []) if isinstance(entry, dict)}
-_path_startable_ids = {entry["id"] for entry in (_rp2.get("startable_today_toward_this") or [])
-                       if isinstance(entry, dict)}
-check("...and every one of those is genuinely on `available` too - the "
-      "join is a real intersection, not an invented list",
-      _path_startable_ids <= _av_ids, _path_startable_ids - _av_ids)
-# --- FINDING, RAISED TWICE: `path` was promoted into the welcome screen's
-# starter verbs on the strength of one player calling it decisive, and three
-# MORE players then hit the problem that promotion exposed: early in any
-# tree the critical path is almost pure knowledge, zero revenue, and `path`
-# pointed firmly at it with no word that none of it earns a denarius. One
-# player started four DIFFERENT path items over five years - each
-# individually affordable on the day it was started - and spent the next 24
-# years in a debt spiral with two insolvencies and a reputation crash,
-# because can_start asks "could I begin this, today, alone", never "could I
-# afford several of these together". The fix is NOT gated on the household
-# already being broke, because by the time recurring income actually goes
-# negative the damage from several affordable-alone starts is often already
-# done; it is said plainly, every time the route cannot pay for itself on
-# its own, with the COMBINED bill of everything listed, which individual
-# affordability checks never show.
-_s_pay = _s_pth2
+# --- `risk`: a per-year chance is rolled every year of its window, and the screen says what the window adds up to
+def _risk_reply(year, hazard_years, per_year, after=None):
+    hazard = {"name": "A sacking", "years": hazard_years, "sacks_a_site": True, "sack_chance_per_year": per_year}
+    if after is not None:
+        hazard["sack_chance_after_what_you_have_built"] = after
+    return {"year": year, "knowledge_risk": {"technologies_at_risk": 5, "known_hazards_ahead": [hazard]}}
 
 
-def _knowledge_only_goal(game):
-    """The goal whose route has the dearest startable nodes (at least two) among routes where none of them earns
-    more than it costs to keep running. The founder's businesses pay their crew once (Complaint 514), so the route
-    to GOAL now holds a zinc works that pays its way at the opening; the all-knowledge case is a route that really
-    has none, and the dearest is the one whose combined bill can pass what a poor household can raise."""
-    startable_of = {}
-    best, best_bill = None, 0.0
-    for candidate in sorted(NODES):
-        startable = [node_id for node_id in S.closure(NODES, candidate) if node_id not in game.done
-                     and startable_of.setdefault(node_id, game.can_start(node_id))]
-        if len(startable) >= 2 and not any(
-                game.venture_real_earnings(node_id) > game.venture_upkeep_quote(node_id)["now"]
-                for node_id in startable):
-            bill = sum(game.project_cost(node_id) for node_id in startable)
-            if bill > best_bill:
-                best, best_bill = candidate, bill
-    return best
+def _window_line(reply):
+    return next(line for line in _render_risk(reply).splitlines() if "checked EVERY year" in line)
 
 
-_KNOWLEDGE_ONLY_GOAL = _knowledge_only_goal(_s_pay)
-_rp_pay_ok = S._agent_dispatch(_s_pay, NODES, {"cmd": "path", "id": _KNOWLEDGE_ONLY_GOAL})
-check("set-up: on a fresh turn-one Rome game some goal's startable route nodes earn no more than they cost to "
-      "keep running - this is the real opening, not an invented fixture",
-      _KNOWLEDGE_ONLY_GOAL is not None and bool(_rp_pay_ok.get("startable_today_toward_this"))
-      and all(entry.get("earns_per_year", 0) <= entry.get("costs_per_year_after", 0)
-              for entry in _rp_pay_ok["startable_today_toward_this"]
-              if isinstance(entry, dict)),
-      [(entry.get("id"), entry.get("earns_per_year"), entry.get("costs_per_year_after"))
-       for entry in _rp_pay_ok.get("startable_today_toward_this") or []])
-check("`path` says outright, from turn one, that an all-knowledge route "
-      "will not cover costs and names a command that finds what actually "
-      "pays - not only after the household is already in the red, which "
-      "is too late to prevent the debt these players were carried into",
-      "earns" in (_rp_pay_ok.get("this_route_pays_for_nothing") or "")
-      and '"sort":"earns"' in (_rp_pay_ok.get("this_route_pays_for_nothing") or ""),
-      _rp_pay_ok.get("this_route_pays_for_nothing"))
-# A route with a node that earns more than it costs to keep must NOT get the
-# all-knowledge warning: the condition is "nothing on this list pays its way",
-# not "you are poor" - the goal is found by scanning the tree for a route that
-# holds a revenue-bearing node startable right now, rather than assuming one.
-_s_scan = sim(civ="rome_100ad")
-_earning_node = next((node_id for node_id in NODES if NODES[node_id]["rev"] > 0 and _s_scan.can_start(node_id)), None)
-_earning_goal = next((goal_candidate for goal_candidate in NODES
-                     if _earning_node in S.closure(NODES, goal_candidate)), None)
-check("a goal with a revenue-bearing startable node on its route exists to "
-      "test the negative case against",
-      _earning_goal is not None, (_earning_node, _earning_goal))
-if _earning_goal:
-    # At the real opening no startable node yet pays its way (ventures start
-    # small and ramp), so the earner is made by fixing this one node's
-    # earnings above its upkeep on a fresh game.
-    _upkeep_of_earner = _s_scan.venture_upkeep_quote(_earning_node)["now"]
-    _s_scan.venture_real_earnings = lambda node_id: (
-        _upkeep_of_earner * 2 + 1.0 if node_id == _earning_node else 0.0)
-    _rp_eg = S._agent_dispatch(_s_scan, NODES,
-                               {"cmd": "path", "id": _earning_goal})
-    check("...and that route gets no 'pays for nothing' warning",
-          "this_route_pays_for_nothing" not in _rp_eg,
-          _rp_eg.get("this_route_pays_for_nothing"))
+# presentation: the risk screen says a per-year hazard is checked every year of its window and what that adds up to
+check("risk says a per-year hazard is rolled EVERY year of its window, with the years it spans",
+      "10-year window" in _window_line(_risk_reply(240, [240, 249], 0.1)), _window_line(_risk_reply(240, [240, 249], 0.1)))
+# presentation: the cumulative figure printed beside the per-year one
+check("...and the chance across the window is 1 - (1 - p)^years, higher than the bare per-year figure (10 years at 10% is 65%)",
+      "65%" in _window_line(_risk_reply(240, [240, 249], 0.1)), _window_line(_risk_reply(240, [240, 249], 0.1)))
+# presentation: a window already begun counts only the years that remain
+check("a window already begun counts only the years left in it (from 245: 5 years at 10% is 41%)",
+      "5-year window" in _window_line(_risk_reply(245, [240, 249], 0.1)) and "41%" in _window_line(_risk_reply(245, [240, 249], 0.1)))
+# presentation: the figure uses the chance after what the founder has built
+check("what the founder has built lowers the cumulative figure it prints (5% after defences over 10 years is 40%)",
+      "40%" in _window_line(_risk_reply(240, [240, 249], 0.1, after=0.05)), _window_line(_risk_reply(240, [240, 249], 0.1, after=0.05)))
+check("a hazard with no per-year sack chance prints no window line",
+      "checked EVERY year" not in _render_risk(_risk_reply(240, [240, 249], 0)))
 
-# --- THE COMBINED BILL, not each item's own affordability. Several
-# individually-affordable starts are not one affordable start; this is the
-# exact number the England playtester needed and never had before losing
-# 24 years to debt over it.
-_s_comb = sim(civ="rome_100ad", capital=1.0)
-_rp_comb = S._agent_dispatch(_s_comb, NODES, {"cmd": "path", "id": _KNOWLEDGE_ONLY_GOAL})
-check("set-up: a household with almost nothing to spend, tested against "
-      "the same all-knowledge opening route",
-      bool(_rp_comb.get("startable_today_toward_this")), _rp_comb)
-_comb_total = sum(_s_comb.project_cost(entry["id"])
-                  for entry in _rp_comb["startable_today_toward_this"])
-check("`path` names the combined cost of everything listed against what "
-      "can actually be raised, when that combined cost exceeds it - the "
-      "one number individual affordability checks never show",
-      "these_together_cost_more_than_you_can_raise" in _rp_comb
-      and "{:,.0f}".format(_comb_total) in
-          _rp_comb["these_together_cost_more_than_you_can_raise"],
-      (_comb_total, _rp_comb.get("these_together_cost_more_than_you_can_raise")))
+# --- `path`: the money warnings of the route's startable steps
+def _words(amount):
+    return "{:,.0f} coin".format(amount)
 
-# --- FINDING: `train` and `hire` are two required steps for a taught
-# (TRADES_ABSENT) trade, and neither train's own success message nor a
-# project's `why` said so beforehand - the refusal only ever appeared at
-# `start`.
-_s_th = _s_thr
-_tr = S._agent_dispatch(_s_th, NODES, {"cmd": "train", "trade": "machinist", "n": 1})
-check("train's own success message says a second step (hire) still stands "
-      "between training a taught trade and a project being able to use it",
-      bool(_tr.get("means")) and "hire" in _tr["means"], _tr.get("means"))
-_wr_th = S._agent_dispatch(_s_th, NODES, {"cmd": "why", "id": "ag2_baler"})
-check("why on a project needing that just-taught trade says nobody can do "
-      "the work yet, before `start` ever refuses it",
-      "machinist" in (_wr_th.get("trades_taught_but_nobody_here_to_do_them_yet") or []),
-      _wr_th.get("trades_taught_but_nobody_here_to_do_them_yet"))
-# --- FINDING (same root cause as above): closing a capability institution
-# for the upkeep back used to read exactly like closing an ordinary
-# business - a Mexica player did this and lost the capability silently,
-# twice. `mothball` now says so.
-_s_mb = _s_cap
-_s_mb.done.add("identity_cover"); _s_mb._done_changed()
-_s_mb.open_venture("identity_cover")
-_mb_out = S._agent_dispatch(_s_mb, NODES, {"cmd": "mothball", "id": "identity_cover"})
-check("mothballing a capability institution says more than its upkeep "
-      "stopped",
-      _mb_out.get("ok") and bool(_mb_out.get("but"))
-      and "capability" in _mb_out["but"], _mb_out.get("but"))
-_s_mb2 = _s_cap
-_s_mb2.done.add("tex_horizontal_loom"); _s_mb2._done_changed()
-_s_mb2.open_venture("tex_horizontal_loom")
-_mb_out2 = S._agent_dispatch(_s_mb2, NODES, {"cmd": "mothball", "id": "tex_horizontal_loom"})
-check("...and an ordinary business closing carries no such warning",
-      _mb_out2.get("ok") and "but" not in _mb_out2, _mb_out2)
 
-# --- naive14: AN OUTSIDE PLAYER WON BLIND AS LATER HAN WITH FOG ON AND AN
-# IMMORTAL FOUNDER (grown and alloy junction transistors, 575 AD, 168/168
-# required nodes) and reported what nearly cost them the run anyway. See
-# playtest/naive14/EXTERNAL_TOP_PROBLEMS.md and
-# EXTERNAL_BLIND_PLAYTHROUGH.md.
-#
-# TOP_PROBLEMS #1, rated most damaging: point_contact_transistor's own note
-# says Bardeen and Brattain worked POLYCRYSTALLINE germanium in December
-# 1947 "with no pulled crystal and no zone refining, neither of which
-# existed yet" - and the node still would not start without a semiconductor
-# from single_crystal or silicon_path, which forced an entire post-1947
-# manufacturing programme (arc furnace, zone refining, single-crystal
-# growth, each with a multi-year floor and a near-coinflip failure rate)
-# onto the path to a device whose own text says it did not need any of
-# that. Checked against the tree: the node already lists ge_reduction in
-# `pre` and already consumes 200g of germanium_g in `mat` - the purified
-# polycrystalline metal its note describes - so the req_any group was a
-# second, contradictory gate stacked on a prerequisite the node already
-# had. single_crystal stays required for junction_transistor itself
-# (unconditionally, in `pre`), which is the node whose own note says a
-# single crystal is what makes the device MANUFACTURABLE - so the
-# recommendation (let the 1947 device build on polycrystalline
-# germanium, keep single-crystal growth mandatory for the transistor
-# that replaces it) holds and is now how the tree reads.
-check("point_contact_transistor no longer gates on single_crystal/"
-      "silicon_path - the contradiction between its own note and its "
-      "prerequisite graph is gone",
-      NODES["point_contact_transistor"]["req_any"] == [],
-      NODES["point_contact_transistor"]["req_any"])
-check("...the mechanism that used to refuse to start it (substitution_"
-      "quality, the req_any gate) now clears trivially, with neither "
-      "single_crystal nor silicon_path done",
-      _s_thr.substitution_quality("point_contact_transistor") == (1.0, True),
-      _s_thr.substitution_quality("point_contact_transistor"))
-check("...while single_crystal is still mandatory for the goal itself - "
-      "the manufacturable junction transistor, not its 1947 proof of "
-      "concept, is where single-crystal growth belongs",
-      "single_crystal" in NODES["junction_transistor"]["pre"],
-      NODES["junction_transistor"]["pre"])
-# THE BUG CLASS, not just the one instance: a node's own note disclaiming a
-# prerequisite ("no X and no Y, neither of which existed yet", "X had not
-# yet been invented", ...) while `pre` or a req_any option - single-choice
-# OR a genuine multi-way substitution, since that is exactly how this one
-# shipped invisibly past closure() - still names that same thing. The
-# window searched is the disclaiming sentence itself, narrowed to the
-# actual "no X"/"without X" spans in it, not the whole sentence: a note is
-# allowed to mention germanium (from ge_reduction, a real and correct
-# prerequisite) in the same breath as disclaiming pulled crystals and zone
-# refining, and a keyword match against the whole sentence flagged exactly
-# that as a false positive before the window was narrowed.
+check("with nothing startable on the route there is no warning", route_money_warnings(0, False, 0.0, 100.0, _words) == {})
+check("a route with a step that pays its way gets no 'pays for nothing' warning, whoever is poor",
+      route_money_warnings(3, True, 5000.0, 100.0, _words) == {})
+knowledge = route_money_warnings(3, False, 50.0, 100.0, _words)
+check("a route none of whose startable steps pays its way is told so, from turn one, and where to find what does pay",
+      set(knowledge) == {"this_route_pays_for_nothing"} and "3 things" in knowledge["this_route_pays_for_nothing"]
+      and '"sort":"earns"' in knowledge["this_route_pays_for_nothing"], knowledge)
+combined = route_money_warnings(3, False, 5000.0, 1234.0, _words)
+check("...and when the bill of the listed steps together passes what can be raised, it names both sums",
+      "5,000 coin" in combined["these_together_cost_more_than_you_can_raise"]
+      and "1,234 coin" in combined["these_together_cost_more_than_you_can_raise"], combined)
+check("a combined bill exactly what can be raised is not over it",
+      "these_together_cost_more_than_you_can_raise" not in route_money_warnings(3, False, 100.0, 100.0, _words))
+
+
+# --- the substitution gate: the best option of each group, multiplied; none in a group means none at all
+class _Gate(StartingMixin):
+    def __init__(self, nodes, bests):
+        self.nodes = nodes
+        self.bests = bests
+        self.household = SimpleNamespace(_last_subst_gap="stale")
+        self.gaps = []
+
+    def _substitution_group_best(self, node_id, group):
+        return self.bests[group["group"]]
+
+    def _record_substitution_gap(self, group):
+        self.gaps.append(group["group"])
+
+
+_groups = {"engine": {"req_any": [{"group": "fuel"}, {"group": "vessel"}]}, "plain": {"req_any": []}}
+check("a node with no req_any gate clears it trivially, at full quality",
+      _Gate(_groups, {}).substitution_quality("plain") == (1.0, True))
+check("each group's best option multiplies into the quality",
+      _Gate(_groups, {"fuel": 0.5, "vessel": 0.8}).substitution_quality("engine") == (0.4, True))
+dead = _Gate(_groups, {"fuel": 0.5, "vessel": 0.0})
+check("a group with no option at all fails the gate and records which group was short",
+      dead.substitution_quality("engine") == (0.0, False) and dead.gaps == ["vessel"], dead.gaps)
+
+# --- what the society must have first: the Mexica's draught animals gate the animal-drawn vehicles, and no others
+MEXICA = S.load_civ("mexica_1500")
+GATED_VEHICLES = ("tr_hopper_wagon", "lnd_two_wheel_cart", "lnd_four_wheel_cart", "mil_artillery_carriage", "pwr_animal_treadmill")
+gate_node = MEXICA["needs_first"]["draught animals"]["node"]
+
+
+class _Society(DiffusionMixin):
+    def __init__(self, civ, done=()):
+        self.civ = civ
+        self.state = SimpleNamespace(projects=SimpleNamespace(done=set(done)))
+
+    def stock_holds_met(self, holds):
+        return False
+
+
+check("the wheeled and animal-powered vehicles are in the same needs_first group as the harnesses, not a separate list",
+      all(node_id in MEXICA["needs_first"]["draught animals"]["ids"] for node_id in GATED_VEHICLES)
+      and "horse_collar" in MEXICA["needs_first"]["draught animals"]["ids"])
+mexica = _Society(MEXICA)
+check("a Mexica founder who has not imported draught animals cannot start any of the vehicles",
+      all(mexica.needs_first(node_id)[0] == gate_node for node_id in GATED_VEHICLES),
+      [(node_id, mexica.needs_first(node_id)) for node_id in GATED_VEHICLES])
+check("importing draught animals lifts the gate on all of them",
+      all(_Society(MEXICA, done=(gate_node,)).needs_first(node_id)[0] is None for node_id in GATED_VEHICLES))
+check("the wheel concept, human-powered wheeled transport and water-turned machinery are not swept into the gate",
+      all(mexica.needs_first(node_id)[0] is None for node_id in ("lnd_wheel_spoked", "lnd_litter", "en_overshot_wheel")))
+check("a society with no needs_first has no gate", _Society({}).needs_first("tr_hopper_wagon") == (None, None))
+
+# --- which nodes are capability institutions is data (the `capability` mechanic), not a list in the display code
+capabilities = {node_id for node_id, node in NODES.items() if "capability" in (node.get("mechanics") or {})}
+check("workshop_first and identity_cover declare the capability mechanic, and an ordinary prerequisite does not",
+      {"workshop_first", "identity_cover"} <= capabilities and "scientific_method" not in capabilities
+      and "tex_horizontal_loom" not in capabilities)
+
+# --- data findings of the sweep
+check("point_contact_transistor no longer gates on single_crystal/silicon_path - the contradiction between its own "
+      "note and its prerequisite graph is gone",
+      NODES["point_contact_transistor"]["req_any"] == [], NODES["point_contact_transistor"]["req_any"])
+check("...while single_crystal is still mandatory for the manufacturable junction transistor",
+      "single_crystal" in NODES["junction_transistor"]["pre"], NODES["junction_transistor"]["pre"])
+
+
+# THE BUG CLASS, not just the one instance: a node's own note disclaiming a prerequisite ("no X and no Y, neither of
+# which existed yet", "X had not yet been invented", ...) while `pre` or a req_any option still names that same thing.
+# The window searched is the disclaiming sentence itself, narrowed to the actual "no X"/"without X" spans in it.
 def _disclaimed_prereq_contradictions(nodes):
     disclaim_pats = (r"neither of which existed yet", r"none of which existed yet",
-                      r"did not yet exist", r"had not yet been invented",
-                      r"not yet invented", r"yet to be invented")
+                     r"did not yet exist", r"had not yet been invented",
+                     r"not yet invented", r"yet to be invented")
     negation_span = re.compile(
         r"\b(?:no|without)\s+([a-z][a-z\- ]{2,40}?)"
         r"(?=\s*,|\s+and\s+no\b|\s+and\s+without\b|\s+neither\b|\s+none\b|\s*\.|$)")
@@ -310,139 +150,50 @@ def _disclaimed_prereq_contradictions(nodes):
     for node_id, node in sorted(nodes.items()):
         low = (node.get("note") or "").lower()
         hit = None
-        for pat in disclaim_pats:
-            match = re.search(pat, low)
+        for pattern in disclaim_pats:
+            match = re.search(pattern, low)
             if match:
                 hit = match
                 break
         if not hit:
             continue
-        sent_start = low.rfind(".", 0, hit.start())
-        sent_start = 0 if sent_start == -1 else sent_start + 1
-        window = low[sent_start:hit.start()]
-        wkw = set()
+        sentence_start = low.rfind(".", 0, hit.start())
+        sentence_start = 0 if sentence_start == -1 else sentence_start + 1
+        window = low[sentence_start:hit.start()]
+        window_keywords = set()
         for span in negation_span.findall(window):
-            wkw |= keywords(span)
-        if not wkw:
+            window_keywords |= keywords(span)
+        if not window_keywords:
             continue
         prereq_ids = list(node.get("pre") or [])
         for req_group in (node.get("req_any") or []):
             prereq_ids.extend((req_group.get("options") or {}).keys())
-        for pid in prereq_ids:
-            prereq_node = nodes.get(pid)
+        for prereq_id in prereq_ids:
+            prereq_node = nodes.get(prereq_id)
             if not prereq_node:
                 continue
-            pkw = keywords(prereq_node.get("name") or "") | {pid.lower()}
-            if wkw & pkw:
-                out.append((node_id, pid, hit.group(0), sorted(wkw & pkw)))
+            prereq_keywords = keywords(prereq_node.get("name") or "") | {prereq_id.lower()}
+            if window_keywords & prereq_keywords:
+                out.append((node_id, prereq_id, hit.group(0), sorted(window_keywords & prereq_keywords)))
     return out
 
 
-check("the bug class, not just the instance: no node's note disclaims a "
-      "prerequisite as not having existed yet while the node's own pre "
-      "or req_any (including a genuine multi-option substitution) still "
-      "requires it - re-run against a restored copy of the original "
-      "req_any to confirm this scanner actually catches the fix it is "
-      "here to pin",
-      _disclaimed_prereq_contradictions(NODES) == [],
-      _disclaimed_prereq_contradictions(NODES))
+check("the bug class: no node's note disclaims a prerequisite as not having existed yet while the node's own pre or "
+      "req_any (including a genuine multi-option substitution) still requires it",
+      _disclaimed_prereq_contradictions(NODES) == [], _disclaimed_prereq_contradictions(NODES))
 _nodes_predisclaim = copy.deepcopy(NODES)
 _nodes_predisclaim["point_contact_transistor"]["req_any"] = [
     {"group": "semiconductor", "options": {"silicon_path": 0.9, "single_crystal": 1.0}}]
-check("...and the scanner is not vacuous: it does flag the original, "
-      "now-fixed req_any when restored on a copy of the tree",
-      _disclaimed_prereq_contradictions(_nodes_predisclaim) != [],
-      _disclaimed_prereq_contradictions(_nodes_predisclaim))
+check("...and the scanner is not vacuous: it does flag the original, now-fixed req_any when restored on a copy of the tree",
+      _disclaimed_prereq_contradictions(_nodes_predisclaim) != [], _disclaimed_prereq_contradictions(_nodes_predisclaim))
 
-# --- TOP_PROBLEMS #4, generalised: EVERY `located_material` node rolls
-# `self.rng.random() < n["risk"]` every year it is active, with no modifier
-# of any kind. Ten of the category's eleven nodes shared risk 0.95 - the
-# single highest value anywhere in the 2,833-node tree outside this one
-# category (`expedition`, the category modelling the actual voyage these
-# sit behind in `pre`, averages 0.35 and tops out at 0.55), and the
-# eleventh (med_coca_alkaloid) was already tuned to 0.25, which is why this
-# reads as an unrevisited placeholder rather than a researched figure: none
-# of these notes describe a 19-in-20 failure, they describe buying an
-# already-characterised commodity from people who already produce it, or
-# carrying home seed stock of a crop grown locally forever after. This is
-# what cost the naive14 player "years" on platinum specifically (gating the
-# vacuum tube, hence the goal) with "no visible way to improve the odds" -
-# pinned at the category level so a future located_material node cannot
-# reintroduce the same placeholder unnoticed.
+# EVERY `located_material` node rolls its risk every year it is active, with no modifier: a near-certain failure is an
+# unrevisited placeholder, not a researched figure.
 _located_risks = {node_id: node["risk"] for node_id, node in NODES.items() if node.get("cat") == "located_material"}
-check("no located_material node rolls a near-certain failure every year - "
-      "0.95 was an unrevisited placeholder copied across ten of the "
-      "category's eleven nodes, not a researched figure",
-      _located_risks and max(_located_risks.values()) <= 0.3,
-      sorted(_located_risks.items(), key=lambda kv: -kv[1])[:3])
+check("no located_material node rolls a near-certain failure every year (0.95 was a placeholder copied across ten nodes)",
+      _located_risks and max(_located_risks.values()) <= 0.3, sorted(_located_risks.items(), key=lambda kv: -kv[1])[:3])
 
-# --- TOP_PROBLEMS #12, generalised beyond the one platinum instance
-# already named there: a data file (as opposed to the `kb` field's
-# deliberate knowledge/*.md citations, shown to the player on every
-# `why` screen as an in-fiction "recipe" reference) is not something a
-# player's own note should ever send them to read.
+# a data file is not something a player's own note should ever send them to read
 _geo_leaks = [node_id for node_id, node in NODES.items() if "data/world/" in (node.get("note") or "")]
-check("no node's player-facing note sends the player to read a data file "
-      "out of the game - ten notes did ('See data/world/geography.json "
-      "...'), platinum among them, found and fixed as a family rather "
-      "than one at a time",
+check("no node's player-facing note sends the player to read a data file out of the game",
       _geo_leaks == [], _geo_leaks)
-
-# --- naive14, ROUND 2 (a Mexica fog-off run): the civilization's own intro
-# says "no wheel in practical use... no amount of teaching will fix it", but
-# tr_hopper_wagon was startable turn one with empty `pre`, and the needs_first
-# mechanism that already exists for exactly this purpose (and is already used
-# for harness/saddle/pack-animal nodes) never named it. Verified against the
-# actual tree, not assumed: a wheeled CART needs something to pull it, which
-# is the real Mesoamerican absence (there are wheeled toys; there is no
-# draught animal), so the fix gates the vehicles on exp_import_draught_animals
-# alongside the harnesses, and deliberately leaves the wheel concept itself
-# (lnd_wheel_spoked), human-powered wheeled things (lnd_wheelbarrow,
-# lnd_litter) and anything turned by water or by people (en_overshot_wheel
-# and kin) alone - they owe nothing to a draught animal.
-_mex_needs_first = S.load_civ("mexica_1500")["needs_first"]["draught animals"]["ids"]
-_GATED_VEHICLES = ("tr_hopper_wagon", "lnd_two_wheel_cart", "lnd_four_wheel_cart",
-                   "mil_artillery_carriage", "pwr_animal_treadmill")
-check("the wheeled/animal-powered vehicles a Mexica player actually reached "
-      "turn one are now in the same needs_first group as the harnesses, not "
-      "a separate, unenforced list",
-      all(node_id in _mex_needs_first for node_id in _GATED_VEHICLES),
-      [node_id for node_id in _GATED_VEHICLES if node_id not in _mex_needs_first])
-_s_mex2 = sim(civ="mexica_1500")
-check("...and a fresh Mexica founder cannot start any of them turn one",
-      not any(_s_mex2.can_start(node_id) for node_id in _GATED_VEHICLES),
-      [node_id for node_id in _GATED_VEHICLES if _s_mex2.can_start(node_id)])
-check("...including the ambient-grant path, not only explicit `start` - "
-      "pwr_animal_treadmill is tier 0 with no cost, which is exactly what "
-      "grant_ambient() hands out for free the moment prerequisites clear, "
-      "and it already checks needs_first before doing so",
-      "pwr_animal_treadmill" not in _s_mex2.done, "pwr_animal_treadmill")
-_s_mex3 = sim(civ="mexica_1500")
-_s_mex3.done.add("exp_import_draught_animals")
-_s_mex3._done_changed()
-# needs_first(), not can_start(): mil_artillery_carriage also needs
-# mat_wrought_iron and mil_trunnion, real and unrelated prerequisites this
-# fix does not touch (Mexica's own handicap is "no iron", a separate,
-# legitimate constraint) - so the thing this check must confirm is that the
-# draught-animal GATE specifically is gone, not that every other real
-# requirement has also been met by one node on its own.
-check("...and importing draught animals lifts the gate on all of them, the "
-      "same way it already does for horse_collar and the rest - checked as "
-      "needs_first() clearing, not as can_start(), since a vehicle can "
-      "have its own further, unrelated prerequisites (mil_artillery_carriage "
-      "still wants iron and a trunnion)",
-      all(_s_mex3.needs_first(node_id)[0] is None for node_id in _GATED_VEHICLES),
-      [(node_id, _s_mex3.needs_first(node_id)) for node_id in _GATED_VEHICLES
-       if _s_mex3.needs_first(node_id)[0] is not None])
-_s_mex4 = _s_mex2
-check("the wheel concept itself, human-powered wheeled transport, and "
-      "water/human-turned machinery are NOT swept into the same gate - "
-      "only the animal-drawn vehicles were the bug",
-      _s_mex4.needs_first("lnd_wheel_spoked")[0] is None
-      and _s_mex4.needs_first("lnd_litter")[0] is None
-      and "cap_power_human" in _s_mex4.done
-      and "cap_power_muscle" not in _s_mex4.done,
-      (_s_mex4.can_start("lnd_wheel_spoked"),
-       "lnd_wheel_spoked" in _s_mex4.done,
-       "lnd_litter" in _s_mex4.done,
-       "cap_power_muscle" in _s_mex4.done))

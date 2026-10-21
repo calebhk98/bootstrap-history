@@ -16,7 +16,7 @@
    "unit_dimension": "count",
    "unit_mass_kg": 215.0,
    "basis": "per two-wheeled cart without its team or harness",
-   "yield_basis": "MASS: geography's CART_SELF_MASS_KG (sim/geography/transport.py), 200 kg empty, cited there as 150-250 kg for a two-wheeled wood-and-iron cart; allocated here as 0.25 m3 of retained timber at the timber recipe density of 600 kg/m3 (150 kg) plus about 15 kg of iron tyre strips, nails and axle fittings; 0.4 m3 is bought to allow shaping offcuts. LABOUR: 150 carpenter hours (wheel making is most of it) and 15 smith hours are TEMPORARY HEURISTICS, confidence D, recalled order of magnitude, not a measured work log. No price sets the bill. Retire when a measured wheelwright's work log is found (complaint 629 follow-up).",
+   "yield_basis": "MASS: geography's CART_SELF_MASS_KG (sim/geography/transport.py), 200 kg empty, cited there as 150-250 kg for a two-wheeled wood-and-iron cart; allocated here as 0.25 m3 of retained timber at the timber recipe density of 600 kg/m3 (150 kg) plus about 15 kg of iron tyre strips, nails and axle fittings; 0.4 m3 is bought to allow shaping offcuts. LABOUR: 150 carpenter hours (wheel making is most of it) and 15 smith hours are TEMPORARY HEURISTICS, confidence D, no source found, not a measured work log. No price sets the bill. Retire when a measured wheelwright's work log is found (complaint 629 follow-up).",
    "requires_node": "lnd_two_wheel_cart",
    "conf": "D",
    "capital_asset": true,

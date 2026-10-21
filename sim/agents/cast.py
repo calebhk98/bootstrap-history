@@ -18,13 +18,12 @@ from .records import ActorRecord, CastEntry, CountryProfile
 # keys under "cast" this module reads itself; any others end up in the profile's `extra`
 CONSUMED_CAST_KEYS = ("strata", "countries", "actors", "treasury", "location", "seats")
 # civilisation keys kept in a profile's `extra` for the mechanisms that read them
-CARRIED_CIVILISATION_KEYS = ("standing_army", "values", "debt_bondage", "bondage_years")
+CARRIED_CIVILISATION_KEYS = ("standing_army", "values", "debt_bondage", "bondage_years", "state_revenue", "hazards")
 GOVERNMENT_PREFIX = "government:"
 # record fields a scenario may not set: the purse and its books, what the actor is, and its life
 BOOKKEEPING_FIELDS = frozenset({"money", "income", "outlays", "kind", "exited_year", "founded_year"})
 EXPORT_POLICY_KIND = "export"
-HOME_GOVERNMENT_KIND = "government"
-FOREIGN_GOVERNMENT_KIND = "foreign_government"
+GOVERNMENT_KIND = "government"
 
 
 def _number(value: Any, default: float) -> float:
@@ -44,7 +43,7 @@ def profile_from_civilisation(civ: Mapping[str, Any]) -> CountryProfile:
 	return CountryProfile(
 		country=country, name=str(civ.get("name") or country),
 		population=_number(civ.get("population"), 0.0), urban_fraction=_number(civ.get("urban_fraction"), 0.0),
-		state_capacity=_number(civ.get("state_capacity"), 0.0), tax_share=_number(civ.get("starting_tax_share"), 0.0),
+		tax_share=_number(civ.get("starting_tax_share"), 0.0),
 		wage_index=_number(civ.get("wage_index"), 1.0), price_index=_number(civ.get("price_index"), 1.0),
 		literacy_general=_number(civ.get("literacy_general"), 0.0), literacy_elite=_number(civ.get("literacy_elite"), 0.0),
 		home_tiles=held, location=cast.get("location") or settlement.default_base_tile(held),
@@ -85,10 +84,11 @@ def cast_from_civilisations(home_civ: Mapping[str, Any], foreign_civs: List[Mapp
 		cast = civ.get("cast") or {}
 		entries.append(CastEntry(
 			actor_id=GOVERNMENT_PREFIX + profile.country, country=None if at_home else profile.country,
-			kind=HOME_GOVERNMENT_KIND if at_home else FOREIGN_GOVERNMENT_KIND, name=profile.name,
+			kind=GOVERNMENT_KIND, name=profile.name,
 			money=_number(cast.get("treasury"), 0.0), location=profile.location, policy_kind=EXPORT_POLICY_KIND,
 			params={"state_monopolies": list(civ.get("state_monopolies") or ()),
-					"state_enterprises": list(civ.get("state_enterprises") or ())}))
+					"state_enterprises": list(civ.get("state_enterprises") or ()),
+					"revenue_forms": list(civ.get("state_revenue") or ())}))
 		pending.extend(cast.get("countries") or ())
 		for declared in cast.get("actors") or ():
 			entry = _entry_from_declaration(declared, None if at_home else profile.country)

@@ -62,7 +62,9 @@ from . import commodities as _commod
 from sim.constants import declare
 from . import money_units
 from . import purchase_rule
+from .freight_markup import freight_markup, scarcity_factor
 from .units_prose import area_text, mass_per_area_text, mass_rate_text, money_text
+from .shortage_sizing import mine_shortfall_after_sinking, mine_size_tonnes, nitre_bed_square_metres
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
 from sim.geography.api import freight_cost, provisions, transport as freight_physics
@@ -319,11 +321,8 @@ class FreightMixin:
         route = self.material_haul_route(emp_key)
         if route is None or not route.legs:
             return 1.0
-        freight_per_kg = route.cost_per_tonne / KILOGRAMS_PER_TONNE
-        if freight_per_kg <= 0:
-            return 1.0
-        cargo_share = self.domestic_cargo_cost_share(emp_key, route)
-        return 1.0 + freight_per_kg / book_price_per_kg + cargo_share
+        return freight_markup(book_price_per_kg, route.cost_per_tonne,
+                              self.domestic_cargo_cost_share(emp_key, route))
 
     def material_carriage_per_tonne(self, emp_key, price_per_tonne):
         """Money per tonne to carry a material to the household from the nearest place it comes from, on top of
@@ -376,21 +375,10 @@ class FreightMixin:
         the same saturating curve the 9 curated ones use.
         """
         market = self._material_market_tonnes(emp_key)
-        worst = 1.0
-        # GROUPED BY emp_key, ONCE A TICK, not scanned-and-filtered from the
-        # whole by-tag dict on every one of THIS function's own calls. See
-        # _demand_by_emp_key's comment: this is the same "called once per
-        # material a project buys, once per candidate node, every year"
-        # volume _cached_demand_by_tag() was already added to answer, one
-        # level further in. Only max() is taken below, order-independent,
-        # so - as with _cached_demand_by_tag's own dict - no sort is needed
-        # for the result to be deterministic.
-        for tag, need in self._demand_by_emp_key().get(emp_key, ()):
-            if need <= 0:
-                continue
-            supply = max(1e-9, self._own_material_supply(tag) + market)
-            share = min(self.MATERIAL_PRICE_DEMAND_SHARE_CAP, need / supply)
-            worst = max(worst, 1.0 + self.MATERIAL_PRICE_PRESSURE_SCALE * share * share)
+        # demands grouped by emp_key once a tick (_demand_by_emp_key), not scanned from the whole dict per call
+        demands = [(need, self._own_material_supply(tag)) for tag, need in self._demand_by_emp_key().get(emp_key, ())]
+        worst = scarcity_factor(demands, market, self.MATERIAL_PRICE_DEMAND_SHARE_CAP,
+                                self.MATERIAL_PRICE_PRESSURE_SCALE)
         return worst * self.material_freight_factor(emp_key)
 
     MATERIAL_PRICE_DEMAND_SHARE_CAP = declare(
@@ -566,7 +554,6 @@ class FreightMixin:
         if square_metres <= 0:
             return 0.0
         cost = square_metres * self.NITRE_COST_PER_M2 * self.price_index
-        household = self.state.household
         if not purchase_rule.can_pay(self, cost):
             return 0.0
         self.pay_edge(edges.EDGE_BUILDERS, cost, "nitre beds laid down")
@@ -633,9 +620,7 @@ class FreightMixin:
             # Twenty per cent headroom prevents a tiny change in the portfolio
             # putting the player straight back into shortage, without turning a
             # one-tonne deficit into the old fixed sixteen-tonne recommendation.
-            square_meters = max(100, int(math.ceil(
-                deficit * self.NITRE_SHORTAGE_SAFETY_BUFFER
-                / max(self.NITRE_YIELD_T_PER_M2, 1e-12) / 100.0)) * 100)
+            square_meters = nitre_bed_square_metres(deficit, self.NITRE_SHORTAGE_SAFETY_BUFFER, self.NITRE_YIELD_T_PER_M2)
             return {"text": (
                 "Saltpetre is made in nitre beds, not mined: you are about "
                 "%s short. With a 20%% safety buffer, 'buy "
@@ -647,18 +632,16 @@ class FreightMixin:
                               * self.price_index, self, grouped=True))),
                 "commands": ["buy nitre %d" % square_meters]}
         if binding in self.MINE_OPEX_MATERIALS:
-            sinking = [tranche for tranche in (self.state.holdings.mine_tranches or []) if tranche[0] == binding]
-            sinking_tonnes = sum(tranche[1] for tranche in sinking)
+            sinking_tonnes, ready_year, shortfall_t = mine_shortfall_after_sinking(
+                binding, shortfall_t, self.state.holdings.mine_tranches)
             if sinking_tonnes > 0.0:
-                ready_year = int(min(tranche[2] for tranche in sinking))
-                shortfall_t = max(0.0, shortfall_t - sinking_tonnes)
                 sinking_text = ("A working of %s is already being sunk, ready in %d. "
                                 % (mass_rate_text(sinking_tonnes, self, grouped=True, short=False), ready_year))
                 if shortfall_t < 1.0:
                     return {"text": sinking_text + "It covers the shortfall; wait for it.", "commands": []}
             else:
                 sinking_text = ""
-            tonnes_short = max(1, math.ceil(shortfall_t - 1e-9))
+            tonnes_short = mine_size_tonnes(shortfall_t)
             return {"text": sinking_text + (
                 "The market will not sell you enough %s, so you have to dig "
                 "it: %s. 'quote mine %s %d' for the price, then 'buy mine "

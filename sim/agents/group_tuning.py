@@ -27,13 +27,13 @@ GROUP_PULL_SCALE = declare(
 		"competing petitions.")
 GROUP_BAN_PULL = declare(
 	"GROUP_BAN_PULL", 0.25, kind="temporary_heuristic",
-	unit="pull times state capacity (dimensionless)", source=None, confidence="D",
+	unit="pull times state reach (dimensionless)", source=None, confidence="D",
 	why="The attention a group must command, as the state can act on it, before the state "
 		"will forbid a technique outright rather than only compensate. Stands in for a model "
 		"of what a prohibition costs the state in enforcement and in forgone gains.")
 SCANDAL_PER_PETITION = declare(
 	"SCANDAL_PER_PETITION", 3.0, kind="temporary_heuristic",
-	unit="scandal points a year at full pull and full state capacity", source=None,
+	unit="scandal points a year at full pull and full state reach", source=None,
 	confidence="D",
 	why="Public blame a group's petitions put on the founder, on the same scale as the alarm "
 		"points a technology raises when it is finished.")

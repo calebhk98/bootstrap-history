@@ -25,8 +25,10 @@ from sim.refusal import LogLine
 from sim.unit_conversions import PERCENT_SCALE
 from . import automation_audit
 from .units_prose import money_text, plain_number
+from .bondage_workshop_rules import bondage_repayment, serve_bondage_year
 from .state_demand import answer_confiscation
 from .invariants import check_labour_market_invariants, check_yearly_invariants
+from .eminence_warning import eminence_band_to_announce
 from .step_phase_money import MoneyPhaseMixin
 from .step_phase_project_start import ProjectStartPhaseMixin
 from .step_phase_projects import ProjectProgressPhaseMixin
@@ -422,18 +424,16 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, ProjectStartPhaseMixin, 
         # it beforehand. It is the one hazard that cannot be bribed away,
         # so the player must be told it is closing in.
         _danger = self.cfg["eminence_danger"]
-        if self.state.household.eminence > _danger * 0.75:
-            _said = self.state.household._said_eminence
-            _band = int(self.state.household.eminence / max(1.0, _danger * 0.15))
-            if _band > _said:
-                self.state.household._said_eminence = _band
-                self.state.household.log.append((self.state.scenario.year, LogLine("eminence_warning", "YOU ARE BECOMING CONSPICUOUS: eminence %.0f "
-                                     "against a danger line of %.0f. This is the "
-                                     "one thing no patron and no bribe protects "
-                                     "you from, and it grows with reputation and "
-                                     "visible wealth. A wide, dispersed "
-                                     "institution is what survives you"
-                                 % (self.state.household.eminence, _danger))))
+        _band = eminence_band_to_announce(self.state.household.eminence, _danger, self.state.household._said_eminence)
+        if _band is not None:
+            self.state.household._said_eminence = _band
+            self.state.household.log.append((self.state.scenario.year, LogLine("eminence_warning", "YOU ARE BECOMING CONSPICUOUS: eminence %.0f "
+                                 "against a danger line of %.0f. This is the "
+                                 "one thing no patron and no bribe protects "
+                                 "you from, and it grows with reputation and "
+                                 "visible wealth. A wide, dispersed "
+                                 "institution is what survives you"
+                             % (self.state.household.eminence, _danger))))
         self.update_protection()
         # THE STATE NOTICES YOU. Requisition, the pressed office, a demand
         # for military supply, and the tail confiscation risk at the top of
@@ -529,17 +529,14 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, ProjectStartPhaseMixin, 
         # 6b. serving out a debt. The hours you owe go to the creditor and the
         #     debt falls; when it is done you are free, and you keep everything
         #     you know.
-        if self.state.household.bondage_years_left > 0:
-            self.state.household.bondage_years_left -= 1
-            paid = (self.cfg["founder_hours_per_year"] * self.BONDAGE_LABOUR_SHARE
-                    * self.BONDAGE_WAGE_MARKUP * self.labour.market.quote("labourer"))
-            self.state.household.bondage_debt = max(0.0, self.state.household.bondage_debt - paid)
-            if self.state.household.bondage_debt <= 0 and self.state.household.bondage_years_left > 0:
-                self.state.household.bondage_years_left = 0     # paid early
-            if self.state.household.bondage_years_left <= 0:
-                self.state.household.bondage_years_left = 0.0
-                self.state.household.bondage_debt = 0.0
-                self.state.household.log.append((self.state.scenario.year, LogLine("bondage_served", "your term is served and the debt is discharged; "
+        household = self.state.household
+        if household.bondage_years_left > 0:
+            repayment = bondage_repayment(self.cfg["founder_hours_per_year"], self.BONDAGE_LABOUR_SHARE,
+                                          self.BONDAGE_WAGE_MARKUP, self.labour.market.quote("labourer"))
+            household.bondage_years_left, household.bondage_debt, served = serve_bondage_year(
+                household.bondage_years_left, household.bondage_debt, repayment)
+            if served:
+                household.log.append((self.state.scenario.year, LogLine("bondage_served", "your term is served and the debt is discharged; "
                                      "you are your own man again")))
 
     def _deputy_hours_sentence(self):

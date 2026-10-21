@@ -12,8 +12,8 @@
   "shelter": {
    "subsistence_from_climate": "shelter_m3",
    "surplus_budget_share": 0.12,
-   "satiation_multiple_of_floor": 3.0,
-   "satiation_basis": "Past a roomy dwelling, more wall and roof is not wanted, and a household that has money left builds no more house with it. The floor is the Sphere minimum covered area of 3.5 square metres a head; living space in pre-industrial housing was of the order of ten square metres a head, about three times that (floor areas of peasant and urban tenement dwellings, recalled and not re-opened; confidence D). The limit is that multiple of the tile's own floor, since the floor follows the climate's wall thickness.",
+   "satiation_multiple_of_floor": 2.857,
+   "satiation_basis": "Past a roomy dwelling, more wall and roof is not wanted, and a household that has money left builds no more house with it. The floor is the Sphere minimum covered area of 3.5 square metres a head; living space in pre-industrial housing was of the order of ten square metres a head, 2.857 times that: Naroll, Floor Area and Settlement Population, American Antiquity 27(4) 1962, abstract (opened), population 'very roughly estimated as of the order of one-tenth the floor area in square meters', so about 10 square metres a head, and 10 / 3.5 = 2.857; Brown, Cross-Cultural Research 21 (1987), via the HRAF summary (opened), a constant of 6 square metres a head from a 38 culture sample, which is a mean occupancy and so a lower bound on a roomy dwelling, not the limit. Both are cross-cultural means of settlement dwellings, not a measured limit of wanting more room: confidence D, a labelled heuristic, Complaints/646. The limit is that multiple of the tile's own floor, since the floor follows the climate's wall thickness.",
    "unit": "cubic metres of wall or frame",
    "effectiveness_basis": "volume of structure one unit builds"
   },
@@ -51,15 +51,15 @@
    "surplus_budget_share": 0.01,
    "unit": "kg of salt (sodium chloride)",
    "subsistence_per_capita_per_year": 1.39,
-   "subsistence_basis": "BIOLOGICAL requirement: the Institute of Medicine Adequate Intake for adult sodium is 1.5 g a day (Dietary Reference Intakes for Water, Potassium, Sodium, Chloride, and Sulfate, National Academies Press, 2005), set to cover sodium lost in sweat by people active in heat. Sodium is 39.3 per cent of sodium chloride by mass (22.99 / 58.44), so 1.5 g of sodium is 3.81 g of salt a day, 3.81 * 365 = 1.39 kg a year. Bare survival needs far less on a cool, idle day; this is the floor for working people in a warm climate. The source was recalled, not re-opened; confidence C.",
-   "satiation_per_capita_per_year": 3.65,
-   "satiation_basis": "BIOLOGICAL limit: typical modern adult intake is about 10 g of salt a day (World Health Organization, Guideline: Sodium intake for adults and children, 2012, reports mean intakes of 9 to 12 g a day in most countries), 10 * 365 = 3.65 kg a year, past which the extra only harms. The source was recalled, not re-opened; confidence C.",
+   "subsistence_basis": "BIOLOGICAL requirement: the Institute of Medicine Adequate Intake for adult sodium is 1.5 g a day (Dietary Reference Intakes for Water, Potassium, Sodium, Chloride, and Sulfate, National Academies Press, 2005), set to cover sodium lost in sweat by people active in heat. Sodium is 39.3 per cent of sodium chloride by mass (22.99 / 58.44), so 1.5 g of sodium is 3.81 g of salt a day, 3.81 * 365 = 1.39 kg a year. Bare survival needs far less on a cool, idle day; this is the floor for working people in a warm climate. Source opened (National Academies Press, Dietary Reference Intakes for Water, Potassium, Sodium, Chloride, and Sulfate, 2005, Summary, nationalacademies.org/read/10925/chapter/2): 'The AI for sodium is set for young adults at 1.5 g (65 mmol)/day (3.8 g of sodium chloride)' 'to cover sodium sweat losses in unacclimatized individuals who are exposed to high temperatures'; confidence C.",
+   "satiation_per_capita_per_year": 3.67,
+   "satiation_basis": "BIOLOGICAL limit: the observed world mean salt intake, past which the extra only harms. Source opened (Powles et al., Global, regional and national sodium intakes in 1990 and 2010, BMJ Open 2013;3:e003733, doi:10.1136/bmjopen-2013-003733, abstract): 'In 2010, global mean sodium intake was 3.95 g/day (95% uncertainty interval: 3.89 to 4.01). This was nearly twice the WHO recommended limit of 2 g/day and equivalent to 10.06 (9.88-10.21) g/day of salt.' 10.06 * 365 = 3.67 kg a year (this is an intake people eat, taken as the level past which more is not wanted); confidence C.",
    "effectiveness_basis": "mass of sodium chloride; rock, solar and brine salt are equal"
   },
   "water": {
    "surplus_budget_share": 0.01,
    "subsistence_per_capita_per_year": 7300.0,
-   "subsistence_basis": "20 litres a head a day, the basic-access service level of Howard and Bartram, Domestic Water Quantity, Service Level and Health (WHO, 2003): enough for drinking, cooking and basic hygiene; survival drinking alone is a few litres. One litre is one kilogram, so 20 * 365 = 7300 kg. The source was recalled, not re-opened; confidence C.",
+   "subsistence_basis": "20 litres a head a day, the basic-access service level of Howard and Bartram, Domestic Water Quantity, Service Level and Health (WHO/SDE/WSH/03.02, 2003; opened): service level table, 'Basic access (average quantity unlikely to exceed 20 l/c/d)', with a basic minimum of 7.5 litres a head a day for drinking and food in hot conditions; enough for drinking, cooking and basic hygiene. One litre is one kilogram, so 20 * 365 = 7300 kg; confidence C.",
    "satiation_per_capita_per_year": 36500.0,
    "satiation_basis": "TRANSITIONAL heuristic: 100 litres a head a day, the 'optimal access' level of the same WHO report, past which more water is waste, not use. Roman fountains ran at far higher flows; that is a flow, not a use per head.",
    "unit": "kg of water at the point of use",
@@ -69,7 +69,7 @@
    "surplus_budget_share": 0.02,
    "held_stock_per_capita": 5.0,
    "service_life_years": 4.0,
-   "stock_basis": "A household holds a few dozen vessels (cooking pots, storage jars, bowls, cups) of about a kilogram each, about 5 kg a head, and they break and are replaced within a few years: cooking pots last the least, storage jars the most. Ethnoarchaeological studies of household pottery (Deal, Household Pottery Disposal in the Maya Highlands, 1998, recalled and not re-opened) give the order of the stock and its use-life; confidence D. The floor is the stock over its life, as for any durable.",
+   "stock_basis": "A household holds a few dozen vessels (cooking pots, storage jars, bowls, cups) of about a kilogram each, about 5 kg a head, and they break and are replaced within a few years: cooking pots last the least, storage jars the most. Source opened (Ben A. Nelson, Ceramic Frequency and Use-Life: A Highland Mayan Case in Cross-Cultural Perspective, ch. 8 of W. A. Longacre ed., Ceramic Ethnoarchaeology, University of Arizona Press, 1991, Tables 8.1 and 8.3; open-access PDF, open.uapress.arizona.edu): 'The sampled households in San Mateo Ixtatan have an average of fifty-seven traditional clay vessels. This number is far above the average of other ethnographically documented cases'; Table 8.3 gives cooking-pot use-lives from 0.4 to 13.0 years across the groups compared, 'Pottery having a single function lasts on the order of a few months in my case, and on the order of a few years in Longacre's'. The 4-year life lies inside that range, which is wide; the vessel count and a mass of about a kilogram each (no source found) give the 5 kg a head, so the stock stays confidence D, a labelled heuristic (Complaints/646). The floor is the stock over its life, as for any durable.",
    "unit": "kg of vessel ware",
    "effectiveness_basis": "mass of ware; fired clay and glass are taken equal until a source gives their use-lives separately"
   },
@@ -84,7 +84,7 @@
    "surplus_budget_share": 0.005,
    "held_stock_per_capita": 0.1,
    "service_life_years": 67.0,
-   "stock_basis": "Silver coin in circulation in a large pre-industrial money economy is of the order of a tenth of a kilogram a head, and wear, loss and hoarding take about one and a half per cent of it a year (Duncan-Jones, Money and Government in the Roman Empire, 1994, recalled and not re-opened; confidence D). The mint's own striking and wear are modelled in sim/economy/mint.py; this entry is only so the labour package sees the engravers and furnacemen that coin replacement keeps at work, and households do not buy it.",
+   "stock_basis": "Silver coin in circulation in a large pre-industrial money economy is of the order of a tenth of a kilogram a head, and wear, loss and hoarding take about one and a half per cent of it a year (no source found: Duncan-Jones, Money and Government in the Roman Empire, 1994, was not opened; confidence D, a labelled heuristic, Complaints/646). The mint's own striking and wear are modelled in sim/economy/mint.py; this entry is only so the labour package sees the engravers and furnacemen that coin replacement keeps at work, and households do not buy it.",
    "unit": "kg of struck silver coin",
    "effectiveness_basis": "mass of coin struck"
   },
@@ -97,7 +97,7 @@
   "light": {
    "surplus_budget_share": 0.03,
    "unit": "kilolumen-hours",
-   "floor_basis": "No floor: nobody dies for want of light after dark, and a floor is bought whatever it costs. Households spend a share of their surplus on it. A tallow candle gives about one candela, about 12.6 lumens, so a thousand lumen-hours is about eighty candle-hours (recalled, not re-opened; confidence D).",
+   "floor_basis": "No floor: nobody dies for want of light after dark, and a floor is bought whatever it costs. Households spend a share of their surplus on it. A tallow candle gives about one candela, about 12.6 lumens, so a thousand lumen-hours is about eighty candle-hours (1000 / 12.566 = 79.6; Wikipedia, Candela, opened: 'A common wax candle has a luminous intensity of roughly 1 cd' and 'a uniform 1 candela source emits 4π lumens (approximately 12.566 lumens)'; that a tallow candle matches a wax one has no source found; confidence D).",
    "satiation_per_capita_per_year": 150.0,
    "satiation_basis": "TRANSITIONAL heuristic: about four lit evening hours a day at a few hundred lumens a household's room, shared among its people, is the order of what a household lights in a year before more light is waste; not a measured figure. A model of the hours people stay up and the rooms they light would replace it.",
    "effectiveness_basis": "light given per unit of the good, in thousands of lumen-hours"
@@ -109,6 +109,14 @@
    "satiation_per_capita_per_year": 200.0,
    "satiation_basis": "TRANSITIONAL heuristic: about four hours of play a week for each person, past which a household's spending on stakes and tables turns to other things; not a measured figure. A model of leisure time would replace it.",
    "effectiveness_basis": "one hour of play at a table, or one numbered chance, taken as equal"
+  },
+  "household_work": {
+   "surplus_budget_share": 0.0,
+   "unit": "hours of household work done by another",
+   "floor_basis": "No market floor: a household does its own cooking, water and fuel, cleaning, grinding and childcare with its own hours first, and hires only what its income lets it (sim/economy/households_work.py). A household hires the hours it would rather sell at the market wage than do itself, up to the work there is, and that is its floor of this need (household_work_year.py); it has no share of surplus spending.",
+   "satiation_per_capita_per_year": 383.25,
+   "satiation_basis": "The hours a person's share of the household's work takes a year, from data/world/household_work.json (its tasks summed over 365 days; water, fuel and grinding from Blackden and Wodon 2006, the rest labelled estimates, confidence D); hiring beyond it would be hiring work that is not there. Held equal to that file by a test.",
+   "effectiveness_basis": "one hour of a servant's or cook's work"
   }
  },
  "goods": {
@@ -123,7 +131,8 @@
   "cacao_kg": {"satisfies": {"food": 1.6}},
   "starch_kg": {"satisfies": {"food": 1.05}},
   "flour_kg": {"satisfies": {"food": 1.0}},
-  "bread_kg": {"satisfies": {"food": 0.69}, "basis": "Calories of the flour in a kilogram of loaf: the flour factor times the flour in a kilogram of bread (data/production/95_bread.json); water and baking add no food energy.", "conf": "C"},
+  "bread_kg": {"satisfies": {"food": 0.69}, "ready_to_eat": true, "basis": "Calories of the flour in a kilogram of loaf: the flour factor times the flour in a kilogram of bread (data/production/95_bread.json); water and baking add no food energy.", "conf": "C"},
+  "cooked_meal_kg": {"satisfies": {"food": 0.32}, "ready_to_eat": true, "basis": "The food of the ingredients over the mass of the meal, (300 * 1.0 + 200 * 0.1) / 1000 (data/production/95_household_services.json); boiling adds no food energy.", "conf": "D"},
   "wine_common_kg": {"satisfies": {"food": 0.2}},
 
   "brick_1000": {"satisfies": {"shelter": 1.4}},
@@ -132,6 +141,7 @@
   "cement_portland_kg": {"satisfies": {"shelter": 0.003}},
 
   "cloth_kg": {"satisfies": {"clothing": 1.0}},
+  "dyed_cloth_kg": {"satisfies": {"clothing": 1.0}, "basis": "Dye adds colour, not cover or warmth, so a kilogram counts as plain cloth does. Labelled placeholder, conf D; retire: Complaints/533 when a need for appearance separates the two."},
   "fabric_kg": {"satisfies": {"clothing": 1.0}},
   "linen_kg": {"satisfies": {"clothing": 1.0}},
   "cotton_fabric_kg": {"satisfies": {"clothing": 1.0}},
@@ -141,6 +151,8 @@
   "canvas_kg": {"satisfies": {"clothing": 0.8}},
 
   "bronze_kg": {"satisfies": {"implements_and_arms": 1.0}},
+  "obsidian_blade_kg": {"satisfies": {"implements_and_arms": 0.05}, "basis": "LABELLED HEURISTIC, conf D, no source found for how long a prismatic blade serves before it dulls or breaks. Only a lower bound was read: Hester, Spencer, Busby and Bard, 'Butchering a Deer with Obsidian Tools' (UC Berkeley Archaeological Research Facility, https://digitalassets.lib.berkeley.edu/anthpubs/ucb/proof/pdfs/arf033-04.pdf): a flake \"was used for over 30 minutes in cutting tasks, only very minor wear resulted and the tool was still serviceable at the conclusion of the experiment\" (38 minutes of use; no end of life reached). A kilogram of blades is about 110 edges that blunt at once, so a kilogram counts far below a kilogram of bronze that serves for years. Retire: Complaint 650.", "conf": "D"},
+  "flint_tool_kg": {"satisfies": {"implements_and_arms": 0.03}, "basis": "LABELLED HEURISTIC, conf D, no source found for the service life of a knapped flint tool relative to bronze. Retire: Complaint 650.", "conf": "D"},
   "brass_kg": {"satisfies": {"implements_and_arms": 0.7}},
   "iron_bar_kg": {"satisfies": {"implements_and_arms": 0.9}},
   "cast_iron_kg": {"satisfies": {"implements_and_arms": 0.5}},
@@ -171,24 +183,26 @@
   "struck_silver_coin_kg": {"satisfies": {"money": 1.0}, "bought_by_households": false},
 
   "salt_kg": {"satisfies": {"salt": 1.0}},
-  "cheese_kg": {"satisfies": {"food": 1.2}},
+  "cheese_kg": {"satisfies": {"food": 1.2}, "ready_to_eat": true},
   "meat_kg": {"satisfies": {"food": 0.4}},
   "vegetable_kg": {"satisfies": {"food": 0.1}},
-  "salted_meat_kg": {"satisfies": {"food": 0.5}},
+  "salted_meat_kg": {"satisfies": {"food": 0.5}, "ready_to_eat": true},
   "fish_kg": {"satisfies": {"food": 0.265}, "basis": "Edible fish at 900 kcal a kilogram over wheat grain's 3400 (WHEAT_ENERGY_KCAL_PER_KG); the same energy as the fisher's hours return (data/production/95_fish.json), counted once as the good.", "conf": "D"},
   "salted_fish_kg": {"satisfies": {"food": 0.379}, "basis": "The fresh fish's energy in 700 kg of cured fish from 1000 kg: 0.265 * 1000 / 700; curing adds and loses no energy (data/production/95_fish.json).", "conf": "D"},
   "garum_kg": {"satisfies": {}, "basis": "A condiment: no food energy is counted, and no need ranks fish sauce among the seasonings yet (seasoning is in pepper equivalents). Bought as an input and traded as a good."},
+
+  "domestic_service_hour": {"satisfies": {"household_work": 1.0}},
 
   "water_kg": {"satisfies": {"water": 1.0}},
   "water_well_kg": {"satisfies": {"water": 1.0}},
   "water_piped_kg": {"satisfies": {"water": 1.0}},
 
-  "light_tallow_candle": {"satisfies": {}, "quality": {"light": {"factor": 0.7, "basis": "Quality against beeswax, the clean-burning reference (factor one): tallow smokes, smells of burnt fat, gutters and sags in summer heat, so a household that can afford wax pays more per unit of light for it. The factor is a household's valuation, not light delivered (lumen-hours stay in effectiveness). Beeswax against tallow is recalled from histories of domestic lighting (smokeless, brighter, sweet-smelling, several times dearer); the number is a placeholder, not a measurement.", "conf": "D", "heuristic": true, "retire": "indoor air model (smoke and ventilation), Complaint 565 follow-up"}}},
-  "light_tallow_candle_linen_wick": {"satisfies": {}, "quality": {"light": {"factor": 0.7, "basis": "Quality against beeswax, the clean-burning reference (factor one): tallow smokes, smells of burnt fat, gutters and sags in summer heat, so a household that can afford wax pays more per unit of light for it. The factor is a household's valuation, not light delivered (lumen-hours stay in effectiveness). Beeswax against tallow is recalled from histories of domestic lighting (smokeless, brighter, sweet-smelling, several times dearer); the number is a placeholder, not a measurement.", "conf": "D", "heuristic": true, "retire": "indoor air model (smoke and ventilation), Complaint 565 follow-up"}}},
-  "light_tallow_candle_linen": {"satisfies": {}, "quality": {"light": {"factor": 0.7, "basis": "Quality against beeswax, the clean-burning reference (factor one): tallow smokes, smells of burnt fat, gutters and sags in summer heat, so a household that can afford wax pays more per unit of light for it. The factor is a household's valuation, not light delivered (lumen-hours stay in effectiveness). Beeswax against tallow is recalled from histories of domestic lighting (smokeless, brighter, sweet-smelling, several times dearer); the number is a placeholder, not a measurement.", "conf": "D", "heuristic": true, "retire": "indoor air model (smoke and ventilation), Complaint 565 follow-up"}}},
-  "light_tallow_candle_rush": {"satisfies": {}, "quality": {"light": {"factor": 0.7, "basis": "Quality against beeswax, the clean-burning reference (factor one): tallow smokes, smells of burnt fat, gutters and sags in summer heat, so a household that can afford wax pays more per unit of light for it. The factor is a household's valuation, not light delivered (lumen-hours stay in effectiveness). Beeswax against tallow is recalled from histories of domestic lighting (smokeless, brighter, sweet-smelling, several times dearer); the number is a placeholder, not a measurement.", "conf": "D", "heuristic": true, "retire": "indoor air model (smoke and ventilation), Complaint 565 follow-up"}}},
-  "light_tallow_rushlight": {"satisfies": {}, "quality": {"light": {"factor": 0.7, "basis": "Quality against beeswax, the clean-burning reference (factor one): tallow smokes, smells of burnt fat, gutters and sags in summer heat, so a household that can afford wax pays more per unit of light for it. The factor is a household's valuation, not light delivered (lumen-hours stay in effectiveness). Beeswax against tallow is recalled from histories of domestic lighting (smokeless, brighter, sweet-smelling, several times dearer); the number is a placeholder, not a measurement.", "conf": "D", "heuristic": true, "retire": "indoor air model (smoke and ventilation), Complaint 565 follow-up"}}},
-  "light_oil_lamp": {"satisfies": {}, "quality": {"light": {"factor": 0.85, "basis": "Quality against beeswax (factor one): an open olive-oil lamp burns cleaner than tallow but smokes and needs trimming; a placeholder valuation, recalled, not a measurement.", "conf": "D", "heuristic": true, "retire": "indoor air model (smoke and ventilation), Complaint 565 follow-up"}}},
-  "light_oil_lamp_linen_wick": {"satisfies": {}, "quality": {"light": {"factor": 0.85, "basis": "Quality against beeswax (factor one): an open olive-oil lamp burns cleaner than tallow but smokes and needs trimming; a placeholder valuation, recalled, not a measurement.", "conf": "D", "heuristic": true, "retire": "indoor air model (smoke and ventilation), Complaint 565 follow-up"}}}
+  "light_tallow_candle": {"satisfies": {}, "quality": {"light": {"factor": 0.7, "basis": "Quality against beeswax, the clean-burning reference (factor one): tallow smokes, smells of burnt fat, gutters and sags in summer heat, so a household that can afford wax pays more per unit of light for it. The factor is a household's valuation, not light delivered (lumen-hours stay in effectiveness). Beeswax against tallow: no source found; the number is a placeholder, not a measurement (Complaints/646).", "conf": "D", "heuristic": true, "retire": "indoor air model (smoke and ventilation), Complaint 565 follow-up"}}},
+  "light_tallow_candle_linen_wick": {"satisfies": {}, "quality": {"light": {"factor": 0.7, "basis": "Quality against beeswax, the clean-burning reference (factor one): tallow smokes, smells of burnt fat, gutters and sags in summer heat, so a household that can afford wax pays more per unit of light for it. The factor is a household's valuation, not light delivered (lumen-hours stay in effectiveness). Beeswax against tallow: no source found; the number is a placeholder, not a measurement (Complaints/646).", "conf": "D", "heuristic": true, "retire": "indoor air model (smoke and ventilation), Complaint 565 follow-up"}}},
+  "light_tallow_candle_linen": {"satisfies": {}, "quality": {"light": {"factor": 0.7, "basis": "Quality against beeswax, the clean-burning reference (factor one): tallow smokes, smells of burnt fat, gutters and sags in summer heat, so a household that can afford wax pays more per unit of light for it. The factor is a household's valuation, not light delivered (lumen-hours stay in effectiveness). Beeswax against tallow: no source found; the number is a placeholder, not a measurement (Complaints/646).", "conf": "D", "heuristic": true, "retire": "indoor air model (smoke and ventilation), Complaint 565 follow-up"}}},
+  "light_tallow_candle_rush": {"satisfies": {}, "quality": {"light": {"factor": 0.7, "basis": "Quality against beeswax, the clean-burning reference (factor one): tallow smokes, smells of burnt fat, gutters and sags in summer heat, so a household that can afford wax pays more per unit of light for it. The factor is a household's valuation, not light delivered (lumen-hours stay in effectiveness). Beeswax against tallow: no source found; the number is a placeholder, not a measurement (Complaints/646).", "conf": "D", "heuristic": true, "retire": "indoor air model (smoke and ventilation), Complaint 565 follow-up"}}},
+  "light_tallow_rushlight": {"satisfies": {}, "quality": {"light": {"factor": 0.7, "basis": "Quality against beeswax, the clean-burning reference (factor one): tallow smokes, smells of burnt fat, gutters and sags in summer heat, so a household that can afford wax pays more per unit of light for it. The factor is a household's valuation, not light delivered (lumen-hours stay in effectiveness). Beeswax against tallow: no source found; the number is a placeholder, not a measurement (Complaints/646).", "conf": "D", "heuristic": true, "retire": "indoor air model (smoke and ventilation), Complaint 565 follow-up"}}},
+  "light_oil_lamp": {"satisfies": {}, "quality": {"light": {"factor": 0.85, "basis": "Quality against beeswax (factor one): an open olive-oil lamp burns cleaner than tallow but smokes and needs trimming; a placeholder valuation, no source found, not a measurement (Complaints/646).", "conf": "D", "heuristic": true, "retire": "indoor air model (smoke and ventilation), Complaint 565 follow-up"}}},
+  "light_oil_lamp_linen_wick": {"satisfies": {}, "quality": {"light": {"factor": 0.85, "basis": "Quality against beeswax (factor one): an open olive-oil lamp burns cleaner than tallow but smokes and needs trimming; a placeholder valuation, no source found, not a measurement (Complaints/646).", "conf": "D", "heuristic": true, "retire": "indoor air model (smoke and ventilation), Complaint 565 follow-up"}}}
  }
 }

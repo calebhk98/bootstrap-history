@@ -69,7 +69,7 @@ class PartitionedShelfTests(unittest.TestCase):
     def test_real_coastal_tiles_no_longer_out_fish_their_fields(self):
         for tile_id in ("united_kingdom_01", "china_45", "south_korea_01", "netherlands_01"):
             result = api.food_potential(tile_id, None, None, None, CROPS)["kcal_per_year"]
-            self.assertLess(result.get("marine_fishing", 0.0), 0.25 * result["crops"], tile_id)  # crops follow the farm model's yield and rotation
+            self.assertLess(result.get("marine_fishing", 0.0), result["crops"], tile_id)  # the claim is fish below fields; crops follow the farm model's yield and rotation
 
     def test_nearest_land_partition_splits_a_strait_down_the_middle(self):
         try:

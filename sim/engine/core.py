@@ -1,10 +1,12 @@
 """The simulation itself: what one year does, and the loop over years."""
-import collections, copy, math, os, random, sys
+import collections, copy, os, random, sys
 
 from sim.constants import declare
 from sim.refusal import LogLine
 from . import money_units
 from . import automation_audit
+from .mortality_shock import cut_cohorts
+from .wage_scarcity import wage_index_of
 from sim.engine.state import SimulationState, ActiveProjectState
 from sim.engine.state_seat import bind_seat
 from .data import (DEFAULTS, kit_capital, load_civ, load_geography, load_resources,
@@ -14,6 +16,7 @@ from sim.world import demography
 from sim.world import agriculture
 from sim.world import farming_technique
 from sim.world import land
+from sim.world import weather_pooling
 from sim.geography.api import regions, tiles_held
 # Weather is drawn per the geography data land_tiles cell (see
 # `_compute_farm_weather_cells`).
@@ -38,6 +41,8 @@ from sim.world.shared_constants import (
 from sim.unit_conversions import PERCENT_SCALE
 
 
+from .territory_required import require_territory
+from .starting_techs import declared_starting_techs
 from .economy import EconomyMixin
 from .node_rederive import NodeRederiveMixin
 from .market_clearing import MarketClearingMixin
@@ -101,46 +106,6 @@ from sim.agents.api import Household
 from .agents_port_household import HouseholdPort
 
 
-_EARTH_RADIUS_KM = 6371.0
-# Same figure `haversine_km` (sim/engine/data.py) already uses for great-
-# circle distance - not re-declared as a physical constant of its own (a
-# planet's radius is a fact of nature, not a modelling choice this project
-# has any latitude over), just given a private module-level name here
-# rather than a bare literal, since `_cell_chordal_position_km` below needs
-# it and this file does not own sim/engine/data.py to add a shared export
-# there instead.
-
-def _cell_chordal_position_km(lat_degrees, lon_degrees):
-    """A cell's lat/lon centroid, converted to (x, y, z) kilometres on a
-    sphere of Earth's radius - the CHORDAL (straight-line) position two
-    cells' positions are differenced to get a chordal DISTANCE from, inside
-    `Sim._compute_farm_weather_correlation_cholesky`.
-
-    WHY THIS EXISTS ALONGSIDE `haversine_km` RATHER THAN JUST CALLING IT.
-    `haversine_km` (defined in `engine/data.py`, and imported by the
-    geography and economy mixins rather than by this file) gives the
-    GREAT-CIRCLE distance between two
-    lat/lon points - the right answer for the distance between two places,
-    which is what it is for. It is the WRONG
-    choice for a spatial correlation kernel's distance argument: an
-    isotropic exponential kernel of great-circle distance is not
-    guaranteed positive semi-definite for an arbitrary set of points on a
-    sphere (a known result in the spatial-statistics literature on
-    covariance functions on spheres - see Cholesky's own docstring for the
-    fuller version of this argument), while the SAME kernel of CHORDAL
-    (straight-line, through-the-earth) distance is - it is an ordinary
-    Euclidean-space Matern kernel, valid in any dimension. Returning
-    Cartesian positions here, rather than a distance function directly,
-    lets the caller build every pairwise distance from `len(cells)`
-    conversions instead of `len(cells) ** 2`.
-    """
-    lat_radians = math.radians(lat_degrees)
-    lon_radians = math.radians(lon_degrees)
-    return (_EARTH_RADIUS_KM * math.cos(lat_radians) * math.cos(lon_radians),
-            _EARTH_RADIUS_KM * math.cos(lat_radians) * math.sin(lon_radians),
-            _EARTH_RADIUS_KM * math.sin(lat_radians))
-
-
 def _cell_morton_code(lat_degrees, lon_degrees, bits=16):
     """A Z-order (Morton) code for a lat/lon point. Used only by
     `Sim._cap_pooled_farm_weather_cells` to get a deterministic ordering
@@ -160,7 +125,7 @@ def _cell_morton_code(lat_degrees, lon_degrees, bits=16):
 
     NOT a distance metric, and not used as one anywhere else in this file.
     `_compute_farm_weather_correlation_cholesky` still uses the real
-    chordal distance (`_cell_chordal_position_km`) for every correlation
+    chordal distance (`weather_pooling.chordal_position_km`) for every correlation
     value; this code only decides which raw cells get MERGED together
     before that calculation ever runs, when there are more of them than
     `FARM_WEATHER_POOLED_CELL_CAP` allows.
@@ -248,14 +213,6 @@ class Sim(ModStoresMixin, RealPriceRatiosMixin, CoinRevaluationMixin, MechanicsM
           ProjectsMixin, SeatMixin, SeatRunMixin, SeatBuildsMixin, SeatSightMixin, ShockYearMixin, WaysMixin, WorksMixin, HeldWorksMixin, SocietyMixin, ActorsMixin, DisclosureMixin, FounderSalesMixin, SeatDealingsMixin, InterestGroupsMixin, BenefactionsMixin, RouteDuesMixin, ForwardingPropertiesMixin, GoalsMixin,
           StepPhasesMixin, LivingStockMixin, LivingStockOpeningMixin, CoinHoardMixin, CoinCarriageMixin, TheftChargeMixin,
           LivingStockTradeMixin, LivingStockSmugglingMixin, LivingStockYearlyMixin, FoodSupplyMixin, SoilNitrogenMixin, FoodEatenMixin, DemographicRecoveryMixin, RegionalPeopleMixin, DefenceStoresMixin, EconomyPortMixin, NodeRederiveMixin):
-    STATE_CAPACITY_DEFAULT = declare(
-        "STATE_CAPACITY_DEFAULT", 0.7, kind="temporary_heuristic",
-        unit="dimensionless (0..1)", source=None, confidence="D",
-        why="Fallback state_capacity for a civilisation file that does not "
-            "set its own - every shipped civ file does set one, so this "
-            "only matters for one that omits it. A mid-high default so a "
-            "missing field does not silently cripple every state-notice "
-            "mechanic; not fitted to any specific state.")
     DEFAULT_POPULATION_100AD = declare(
         "DEFAULT_POPULATION_100AD", 65e6, kind="initial_condition",
         unit="people", source="Widely cited estimate of the Roman Empire's "
@@ -365,7 +322,6 @@ class Sim(ModStoresMixin, RealPriceRatiosMixin, CoinRevaluationMixin, MechanicsM
         self.cfg["start_year"] = int(self.civ.get("year", self.cfg["start_year"]))
         self.price_index = float(self.civ.get("price_index", 1.0))
         self._wage_index_base = float(self.civ.get("wage_index", 1.0))
-        self.state_capacity = float(self.civ.get("state_capacity", self.STATE_CAPACITY_DEFAULT))
         # A PLAGUE IS A HIT TO THE WHOLE LABOUR MARKET, NOT ONLY TO YOU. A
         # mortality event large enough to take a third of one household's
         # own staff must not leave everybody ELSE's wages untouched, as if
@@ -394,19 +350,15 @@ class Sim(ModStoresMixin, RealPriceRatiosMixin, CoinRevaluationMixin, MechanicsM
             float(self.civ.get("population", self.DEFAULT_POPULATION_100AD)),
             seed=_population_seed)
         # Initial condition: cleared area is what feeds the starting
-        # population at reference soil, on the best ground the held tiles
+        # population given the yield of the best ground the held tiles
         # offer; later clearing works down the same best-first ladder.
         held_tiles = tiles_held(self.civ, self.world_map)
-        if not held_tiles:
-            raise ValueError("civilisation %r holds no tiles: the agent economy needs a territory to run its markets on; "
-                             "name its starting claim in `home_tiles`" % (self.civ.get("id"),))
+        require_territory(self.civ, held_tiles)
         territory = land.territory_cropland(self.farm_sites())
         self._farm_ladder = territory.ladder
         self._farm_arable_ceiling = territory.cropped_hectares
-        sized = self._agriculture.farmland_for_population(
-            self._adult_equivalent_population(self.population),
-            arable_hectares_ceiling=self._farm_arable_ceiling)
-        self.labour.set_farm_area(sized.hectares)
+        self.labour.set_farm_area(self._agriculture.farmland_for_population(
+            self._adult_equivalent_population(self.population), ladder=self._farm_ladder).hectares)
         self._opening_farmed_hectares = self.farm_land.hectares
         # WIRING THREE (Complaints/49-one-label-draws-one-coin.md), REPLACING
         # WIRING TWO'S OWN `_farm_region_weights`/`_compute_farm_region_
@@ -557,15 +509,7 @@ class Sim(ModStoresMixin, RealPriceRatiosMixin, CoinRevaluationMixin, MechanicsM
         # needs the loaded tree and civ record to validate against (and to
         # raise ValueError on an unknown starting technology) - state this
         # class deliberately does not hold a reference to.
-        starting_techs = self.civ["starting_techs"]
-        missing = sorted(tech_id for tech_id in starting_techs if tech_id not in self.nodes)
-        if missing:
-            # Refuse a corrupt opening rather than merely warning and running a
-            # different scenario: silently dropping an unknown starting
-            # technology changes which civilization is actually being
-            # simulated, without telling anyone.
-            raise ValueError("civilization %r lists unknown starting technologies: %s"
-                             % (self.civ.get("id", "?"), ", ".join(missing)))
+        starting_techs = declared_starting_techs(self.civ, self.nodes)
         for tech_id in starting_techs:
             self.state.projects.done.add(tech_id)
             self._done_changed()
@@ -622,16 +566,11 @@ class Sim(ModStoresMixin, RealPriceRatiosMixin, CoinRevaluationMixin, MechanicsM
                 self.state.population.pop_elderly = float(self.population.elderly)
 
         # Sync civ live state and metadata
-        if self.state._civ_live:
-            for attr, value in self.state._civ_live.items():
-                if value is not None:
-                    self.civ[attr] = value
         if self.state._weights:
             self.value_weights.update(self.state._weights)
         if self.state._rng is not None:
             rng_version, _keys, rng_gaussian = self.state._rng
             self.rng.setstate((rng_version, tuple(int(x) for x in _keys), rng_gaussian))
-        self.state_capacity = float(self.civ.get("state_capacity", self.state_capacity))
 
         # Reset transient caches
         self._reset_economic_caches()
@@ -724,8 +663,7 @@ class Sim(ModStoresMixin, RealPriceRatiosMixin, CoinRevaluationMixin, MechanicsM
             self.POP_SCALE_FLOOR,
             float(self.civ.get("population", self.DEFAULT_POPULATION_100AD))
             / self.DEFAULT_POPULATION_100AD)
-        shortfall = max(0.0, 1.0 - self.pop_scale / unshocked_trend)
-        return self._wage_index_base * (1.0 + self.WAGE_SCARCITY_ELASTICITY * shortfall)
+        return wage_index_of(self._wage_index_base, self.WAGE_SCARCITY_ELASTICITY, self.pop_scale, unshocked_trend)
 
     def _apply_population_mortality_shock(self, raw):
         """Cut `self.population`'s cohorts by `raw` (a fraction of the whole,
@@ -757,19 +695,9 @@ class Sim(ModStoresMixin, RealPriceRatiosMixin, CoinRevaluationMixin, MechanicsM
         directly - as future work, once a hazard can be expressed in
         calories rather than in a bare staff_loss fraction.
         """
-        population = self.population
-        weighted = (population.children * self._demography.STARVATION_VULNERABILITY_CHILD
-                   + population.working_age * self._demography.STARVATION_VULNERABILITY_WORKING_AGE
-                   + population.elderly * self._demography.STARVATION_VULNERABILITY_ELDERLY)
-        if weighted <= 0.0 or raw <= 0.0:
-            return
-        scale = raw * population.total / weighted
-        population.children -= population.children * min(
-            1.0, scale * self._demography.STARVATION_VULNERABILITY_CHILD)
-        population.working_age -= population.working_age * min(
-            1.0, scale * self._demography.STARVATION_VULNERABILITY_WORKING_AGE)
-        population.elderly -= population.elderly * min(
-            1.0, scale * self._demography.STARVATION_VULNERABILITY_ELDERLY)
+        cut_cohorts(self.population, raw, self._demography.STARVATION_VULNERABILITY_CHILD,
+                    self._demography.STARVATION_VULNERABILITY_WORKING_AGE,
+                    self._demography.STARVATION_VULNERABILITY_ELDERLY)
 
     def _adult_equivalent_population(self, population):
         """`population`'s food need in ADULT-EQUIVALENT units - the same
@@ -1115,32 +1043,7 @@ class Sim(ModStoresMixin, RealPriceRatiosMixin, CoinRevaluationMixin, MechanicsM
         cap - under 700,000 elementary operations, not a measurable cost
         against everything else `Sim.__init__` already does.
         """
-        cell_count = len(cells)
-        correlation = [[0.0] * cell_count for _ in range(cell_count)]
-        positions_km = [_cell_chordal_position_km(cell.lat, cell.lon) for cell in cells]
-        decorrelation_length_km = GROWING_SEASON_WEATHER_DECORRELATION_LENGTH_KM
-        for row in range(cell_count):
-            correlation[row][row] = 1.0
-            row_x, row_y, row_z = positions_km[row]
-            for col in range(row):
-                col_x, col_y, col_z = positions_km[col]
-                distance_km = math.sqrt((row_x - col_x) ** 2
-                                         + (row_y - col_y) ** 2
-                                         + (row_z - col_z) ** 2)
-                value = math.exp(-distance_km / decorrelation_length_km)
-                correlation[row][col] = value
-                correlation[col][row] = value
-        lower = [[0.0] * cell_count for _ in range(cell_count)]
-        pivot_floor = 1e-12
-        for row in range(cell_count):
-            for col in range(row + 1):
-                total = sum(lower[row][inner_index] * lower[col][inner_index] for inner_index in range(col))
-                if row == col:
-                    pivot = correlation[row][row] - total
-                    lower[row][col] = math.sqrt(max(pivot, pivot_floor))
-                else:
-                    lower[row][col] = (correlation[row][col] - total) / lower[col][col]
-        return lower
+        return weather_pooling.correlation_cholesky(cells, GROWING_SEASON_WEATHER_DECORRELATION_LENGTH_KM)
 
     def _pooled_farm_weather_multiplier(self, year, weather_stdev_fraction=None):
         """This year's harvest weather multiplier, pooled across this
@@ -1240,15 +1143,9 @@ class Sim(ModStoresMixin, RealPriceRatiosMixin, CoinRevaluationMixin, MechanicsM
             .gauss(0.0, 1.0)
             for cell in cells]
         cholesky_lower = self._farm_weather_correlation_cholesky
-        pooled_multiplier = 0.0
-        for row, cell in enumerate(cells):
-            correlated_z = sum(cholesky_lower[row][col] * independent_draws[col]
-                                for col in range(row + 1))
-            draw = 1.0 + stdev * correlated_z
-            clipped = max(self._agriculture.WEATHER_FLOOR_MULTIPLIER,
-                          min(self._agriculture.WEATHER_CEILING_MULTIPLIER, draw))
-            pooled_multiplier += cell.weight * clipped
-        return pooled_multiplier
+        return weather_pooling.pooled_multiplier(
+            cells, cholesky_lower, independent_draws, stdev,
+            self._agriculture.WEATHER_FLOOR_MULTIPLIER, self._agriculture.WEATHER_CEILING_MULTIPLIER)
 
     def _disease_burden(self):
         """WIRING ONE (Complaints/closed/47-technology-cannot-stop-people-dying-

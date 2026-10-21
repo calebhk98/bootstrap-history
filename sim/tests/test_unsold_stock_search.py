@@ -4,10 +4,11 @@ to the seller unsold (never below what it costs to make). Sellers that sold out 
 
 QUICK_TOPIC = True
 
+import math
 import types
 import unittest
 
-from sim.economy import seller_offers, unsold_search
+from sim.economy import goods_market, seller_offers, unsold_search
 from sim.economy.producers import Producer
 from sim.economy.types import Bid, Offer, Recipe
 
@@ -116,6 +117,50 @@ class UnsoldStockSearchTests(unittest.TestCase):
         final, _result = unsold_search.clear_with_search(setup, record, View(), bids, offers, chosen,
                                                          GOOD, AREA, "coin", None)
         self.assertEqual(final, chosen)
+
+    def crossings_for(self, view, bids, asks):
+        """How many market crossings one search makes for sellers asking `asks` under `view`."""
+        offers = [offer("a", 100.0, ask) for ask in asks]
+        setup, record = game("a")
+        counted, original = [0], goods_market._crossing
+
+        def counting(*arguments, **keywords):
+            counted[0] += 1
+            if counted[0] > 5000:
+                raise RuntimeError("search did not converge")
+            return original(*arguments, **keywords)
+
+        goods_market._crossing = counting
+        try:
+            unsold_search.clear_with_search(setup, record, view, bids, offers, offers, GOOD, AREA, "coin", 100.0)
+        finally:
+            goods_market._crossing = original
+        return counted[0]
+
+    def test_the_search_is_bounded_by_its_precision_when_a_unit_costs_nothing_to_make(self):
+        class Free(View):
+            def price(self, good, area):
+                return 0.0
+
+            def wage(self, trade, area):
+                return 0.0
+
+        # the bracket is [0, ask] and halves each trial: about log2(1 / precision) trials plus the fixed few
+        bound = math.ceil(math.log2(1.0 / unsold_search.SEARCH_PRECISION)) + 6
+        self.assertLessEqual(self.crossings_for(Free(), [], [150.0]), bound)
+
+    def test_the_search_is_bounded_when_the_floor_is_far_below_the_ask(self):
+        class Nearly(View):
+            def price(self, good, area):
+                return 0.0
+
+            def wage(self, trade, area):
+                return 1e-274
+
+        # the log of the ratio of ask to floor halves each trial, so the count grows with its log, not the ratio
+        ratio = math.log(150.0 / 4e-274)
+        bound = math.ceil(math.log2(ratio / unsold_search.SEARCH_PRECISION)) + 6
+        self.assertLessEqual(self.crossings_for(Nearly(), [], [150.0]), bound)
 
 
 if __name__ == "__main__":

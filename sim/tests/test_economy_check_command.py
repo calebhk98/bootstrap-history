@@ -1,4 +1,5 @@
-"""`simulator.py economy-check` (Complaint 445): plays a short game and prints the agent economy's health."""
+"""`simulator.py economy-check` (Complaint 445): the command's loop and printing run on a literal health report; one named
+scenario plays a short game and reads the economy's health report."""
 import contextlib
 import io
 import random
@@ -16,7 +17,7 @@ class EconomyCheckTests(unittest.TestCase):
         cls.game.done_year = {}
         cls.game.step()
 
-    def test_the_port_reports_the_economys_health(self):
+    def test_scenario_the_port_reports_the_economys_health(self):
         report = self.game.economy.health()
         self.assertEqual(report["years"], 1)
         self.assertTrue(report["staple"])

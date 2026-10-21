@@ -127,3 +127,8 @@ Children, in order of work:
 - 619: No check that the occupational distribution of a baseline run is plausible
 
 Kept here as decisions, not work: whether domestic service and religion become needs (owner decision), and cook, tavern keeper, servant, priest and diviner, which wait on it. The Han salt and iron monopolies are 492; seasonal labour and corvee are 542 and 600.
+
+## Owner decision (2026-10-20)
+
+Domestic service, cooks and tavern keepers come from household work as a need met by own hours or hired (645).
+Religion is out of the base game and left to mods (`mods/TASKS.md`); priests and diviners wait on a mod.

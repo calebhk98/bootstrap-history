@@ -28,15 +28,22 @@ LENDABLE_RESERVE_SHARE = declare(
         "bullion). Stands in for a treasury's investment policy.")
 
 
+def state_spare_reserve(money, standing_need, cannot_meet_own_need):
+    """What a state holds beyond its standing need; none while it cannot meet that need."""
+    return 0.0 if cannot_meet_own_need else max(0.0, money - standing_need)
+
+
+def lendable_share_of_reserve(spare):
+    """The part of a state's spare reserve it offers on the loanable market."""
+    return LENDABLE_RESERVE_SHARE * spare
+
+
 class CapitalMarketMixin:
 
     def market_rate(self):
         """The yearly market rate: the agent economy's credit market's, or the civilisation's starting rate while
         the economy opens."""
-        rate = self.economy.agent_rate()
-        if rate is not None:
-            return capital_market.bounded_rate(float(self.civ["starting_interest_rate"]), rate)
-        return float(self.civ["starting_interest_rate"])
+        return capital_market.market_rate_answered(float(self.civ["starting_interest_rate"]), self.economy.agent_rate())
 
     def market_credit_room(self, actor_id):
         """What lenders will advance one borrower beyond what the others owe; None before they have met (the
@@ -48,11 +55,11 @@ class CapitalMarketMixin:
         """Funds lenders hold, by source."""
         gov = self.state_treasury()
         firms = sum(max(0.0, firm.money) for firm in self.actors.active_firms())
-        spare = 0.0 if gov.cannot_meet_own_need() else max(0.0, gov.money - sum(gov.record.need.values()))
+        spare = state_spare_reserve(gov.money, sum(gov.record.need.values()), gov.cannot_meet_own_need())
         funds = {
             "households": LENDING_HORIZON_YEARS * world.household_saving(),
             "firms": firms,
-            "state": LENDABLE_RESERVE_SHARE * spare,
+            "state": lendable_share_of_reserve(spare),
         }
         return funds
 

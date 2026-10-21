@@ -1,0 +1,53 @@
+{
+ "_note": "Stone tools: obsidian and flint are quarried, and a knapper strikes blades and tools from them (Complaint 618, part of 530). Every figure not read from a source is a labelled heuristic with a retire field naming Complaint 650. Complaint 650 research pass (see Complaints/reports/research-stone-and-wooden-tools.md): no new source was found for quarry hours, hours per blade, flint tool mass or knapper training; the mass balance of the blade entry stays the only sourced figure.",
+ "materials": {
+  "obsidian_kg": {
+   "outputs": {"obsidian_kg": 1000.0},
+   "inputs": {},
+   "labour_hours": {"labourer": 20.0},
+   "extracted_from": "quarry",
+   "unit_dimension": "mass",
+   "basis": "per tonne of raw obsidian nodules or flows broken free and carried clear of the outcrop",
+   "yield_basis": "EXTRACTED. LABELLED HEURISTIC (conf D), no source found for hours per tonne of obsidian won from an outcrop or mine: set beside the copper_ore_kg and stone_kg entries' hard-rock effort (labourers only, since glass breaks along its own fracture and needs no wedging). Where obsidian outcrops is a property of the map, not of this recipe; no deposit is placed yet, so any civilisation can run it (retire: Complaint 650).",
+   "retire": "Complaint 650",
+   "conf": "D",
+   "requires_node": null
+  },
+  "flint_kg": {
+   "outputs": {"flint_kg": 1000.0},
+   "inputs": {},
+   "labour_hours": {"labourer": 20.0},
+   "extracted_from": "quarry",
+   "unit_dimension": "mass",
+   "basis": "per tonne of raw flint nodules dug from chalk or gravel and carried clear",
+   "yield_basis": "EXTRACTED. LABELLED HEURISTIC (conf D), no source found for hours per tonne of flint dug; set equal to obsidian_kg and in the range of the stone_kg entry's labour. Where flint lies is a property of the map and no deposit is placed yet (retire: Complaint 650).",
+   "retire": "Complaint 650",
+   "conf": "D",
+   "requires_node": null
+  },
+  "obsidian_blade_kg": {
+   "outputs": {"obsidian_blade_kg": 1000.0},
+   "inputs": {"obsidian_kg": 1099.0},
+   "labour_hours": {"knapper": 4600.0},
+   "unit_dimension": "mass",
+   "unit_mass_kg": 1.0,
+   "basis": "per tonne of pressure-flaked prismatic obsidian blades, before use",
+   "yield_basis": "MASS: SOURCED. Sheets and Muto, 'Pressure Blades and Total Cutting Edge: An Experiment in Lithic Technology', Science 175 (1972), abstract read at https://vivo.colorado.edu/display/pubid_69138 : \"Pressure techniques were used to remove 83 blades from a preformed obsidian core weighing 820 grams\"; \"The blades represented 91 percent of the original weight\"; \"yielding 17.32 meters of acute cutting edge\". So 1000 kg of blades needs 1000 / 0.91 = 1099 kg of preformed core, and a blade weighs about 0.91 * 820 / 83 = 9.0 g (about 110 blades a kilogram). The experiment starts from an already preformed core, so the mass lost shaping raw nodules into cores is NOT counted here (no source found; retire: Complaint 650). LABOUR: LABELLED HEURISTIC (conf D), no source found for hours per blade: Clark's Ojo de Agua workshop estimate, read at https://www.cambridge.org/core/journals/ancient-mesoamerica/article/prismatic-blademaking-craftsmanship-and-production/4DE4B3F54E0E94388CDDD6D11FD7AF52 , gives \"The maximum level of output from his workshop was 26,000, or fewer, fine blades per year\" as \"the equivalent of part-time work during a three-month period\" but no hours. The figure used is 4600 hours a tonne, about three minutes a blade including core preparation (author's estimate; retire: Complaint 650). Gate: the tree node mat_obsidian_blade.",
+   "retire": "Complaint 650",
+   "conf": "D",
+   "requires_node": "mat_obsidian_blade"
+  },
+  "flint_tool_kg": {
+   "outputs": {"flint_tool_kg": 1000.0},
+   "inputs": {"flint_kg": 3000.0},
+   "labour_hours": {"knapper": 3000.0},
+   "unit_dimension": "mass",
+   "unit_mass_kg": 1.0,
+   "basis": "per tonne of knapped flint tools (hand axes, scrapers, flake knives, sickle flints)",
+   "yield_basis": "LABELLED HEURISTIC (conf D), no source found for the finished mass of tools per kilogram of flint or for hours per kilogram of tools. Percussion flaking discards most of a nodule as debitage, taken here as two thirds, and the labour is set below the blade figure because tools are struck by hard-hammer percussion, not fine pressure (author's estimate; retire: Complaint 650). Needs no technology: flaking flint is older than any node in the tree.",
+   "retire": "Complaint 650",
+   "conf": "D",
+   "requires_node": null
+  }
+ }
+}

@@ -8,6 +8,7 @@ import unittest
 from sim.economy import api as economy_api
 from sim.economy import country_figures
 from sim.economy.economy import Economy
+from sim.economy.types import is_edge
 from sim.tests import economy_fixture as fixture
 
 
@@ -68,6 +69,70 @@ class CountryEconomyTests(unittest.TestCase):
         floors = country_figures.need_floor_costs_per_person_year(self.economy, fixture.NORTH)
         self.assertGreater(floors.get(fixture.FOOD, 0.0), 0.0)
         self.assertGreater(country_figures.prices(self.economy, fixture.NORTH).get(fixture.GRAIN, 0.0), 0.0)
+
+    def test_the_money_a_country_holds_is_its_own_agents_share(self):
+        record, money = self.economy.record, self.setup.currency_id
+        north, home = (country_figures.money_held(self.economy, country) for country in (fixture.NORTH, self.setup.civ_id))
+        self.assertGreater(north, 0.0)
+        self.assertGreater(home, 0.0)
+        everyone = sum(record.book.balance(agent, money) for agent in record.book.agents() if not is_edge(agent))
+        self.assertLessEqual(north + home, everyone + 1e-6)
+        self.assertEqual(country_figures.money_held(self.economy, "nowhere"), 0.0)
+
+    def test_a_countrys_answers_give_its_trade_book_in_coin(self):
+        from sim.engine.economy_port_country import CountryAnswers
+        record = self.economy.record
+        kept = record.carried_goods
+        record.carried_goods = {fixture.GRAIN: {fixture.NORTH_FARMS: {fixture.FARMS: [2.0, 10.0, 14.0]}},
+                                fixture.ORE: {fixture.FARMS: {fixture.NORTH_FARMS: [1.0, 6.0, 9.0]}}}
+        try:
+            answers = CountryAnswers(self.economy, fixture.NORTH)
+            coin = self.setup.coin_per_unit
+            book = answers.trade_book()
+            self.assertAlmostEqual(book[fixture.GRAIN]["out_value"], 10.0 * coin)    # left north at the price there
+            self.assertAlmostEqual(book[fixture.ORE]["in_value"], 9.0 * coin)       # landed in north at the price there
+            self.assertEqual(book[fixture.ORE]["in_tonnes"], 1.0)
+            self.assertAlmostEqual(answers.trade_value("in"), 9.0 * coin)
+            self.assertAlmostEqual(answers.trade_value("out"), 10.0 * coin)
+            self.assertAlmostEqual(CountryAnswers(self.economy, self.setup.civ_id).trade_value("in"), 14.0 * coin)
+        finally:
+            record.carried_goods = kept
+
+    def test_a_countrys_answers_count_its_people_by_trade(self):
+        from sim.engine.economy_port_country import CountryAnswers
+        answers = CountryAnswers(self.economy, fixture.NORTH)
+        self.assertEqual(answers.people_of_trade(fixture.LABOURER), country_figures.people_by_trade(self.economy, fixture.NORTH)[fixture.LABOURER])
+        self.assertLess(answers.people_of_trade(fixture.MINER), 0.05 * CountryAnswers(self.economy, self.setup.civ_id).people_of_trade(fixture.MINER))
+        self.assertEqual(answers.people_of_trade("no such trade"), 0.0)
+
+    def test_land_rent_is_received_by_the_countrys_own_cohorts(self):
+        from sim.engine.economy_port_country import CountryAnswers
+        north = [c for c in self.economy.record.cohorts.values() if c.tile in self.setup.tiles_of(fixture.NORTH) and c.people > 0.0]
+        curve = CountryAnswers(self.economy, fixture.NORTH).land_rent_curve()
+        self.assertEqual(sum(people for people, _rent in curve), sum(c.people for c in north))
+        self.assertEqual(CountryAnswers(self.economy, fixture.NORTH).land_rent_curve(set()), [(p, 0.0) for p, _ in curve])
+
+    def test_a_countrys_site_rent_is_its_own_land_markets_not_the_home_mean(self):
+        from sim.engine.economy_port_country import CountryAnswers
+        record, coin = self.economy.record, self.setup.coin_per_unit
+        kept = dict(record.land_rent)
+        north_tiles = set(self.setup.tiles_of(fixture.NORTH))
+        answers = CountryAnswers(self.economy, fixture.NORTH)
+        try:
+            for tile in north_tiles:
+                record.land_rent.pop(tile, None)
+            record.land_rent[fixture.HILLS] = 50.0     # the home country lets land; the north none
+            self.assertIsNone(answers.land_rent_at(None))   # nothing let in the country: none, never the home mean
+            self.assertIsNone(answers.land_rent_at(fixture.NORTH_FARMS))
+            record.land_rent[fixture.NORTH_FARMS] = 2.0
+            record.land_rent[fixture.NORTH_PORT] = 4.0
+            self.assertAlmostEqual(answers.land_rent_at(fixture.NORTH_FARMS), 2.0 * coin)
+            record.land_rent[fixture.NORTH_PORT] = 0.0
+            self.assertAlmostEqual(answers.land_rent_at(fixture.NORTH_PORT), 2.0 * coin)   # none let there: the country's mean
+            self.assertAlmostEqual(answers.land_rent_at(fixture.HILLS), 2.0 * coin)        # a home tile is not the country's
+        finally:
+            record.land_rent.clear()
+            record.land_rent.update(kept)
 
     def test_a_country_with_no_tiles_has_no_figures(self):
         self.assertEqual(country_figures.wages_per_hour(self.economy, "nowhere"), {})

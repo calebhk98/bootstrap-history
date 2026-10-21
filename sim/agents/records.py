@@ -33,6 +33,8 @@ class ActorRecord:
 	# a state's standing need by line last year, and the part it could not pay
 	need: Dict[str, float] = field(default_factory=dict)
 	unfunded: Dict[str, float] = field(default_factory=dict)
+	# how a state met its last shortfall (fiscal_response.py): response -> money of the shortfall covered that way
+	fiscal_response: Dict[str, float] = field(default_factory=dict)
 	# pay a state owes its army and officials from earlier years, by line; paid first from later revenue
 	arrears: Dict[str, float] = field(default_factory=dict)
 	# what the state paid of those arrears this year, by line
@@ -105,12 +107,20 @@ class ActorRecord:
 	# a state's goods it will not sell abroad (its monopolies, set at the start by its country's data), and
 	# the parties it has shut its markets to: party id -> the first year they are open to them again
 	state_monopolies: Set[str] = field(default_factory=set)
+	# the levers a player (or any controller) holds on a state: revenue rates, budget shares, army, navy, works,
+	# reserve, subsidies, mandates (government_levers.py)
+	levers: Dict[str, Any] = field(default_factory=dict)
+	# the revenue forms a state raises (form, basis, rate, ...): copied from its civilisation file once, at setup; every
+	# later year reads these, and a lever or the state's own fiscal choice changes them
+	revenue_forms: List[Dict[str, Any]] = field(default_factory=list)
 	# entries a state runs a plant of besides its monopolies; what its plants took last year and made after costs;
 	# the tonnes of each commodity its standing lines draw (what its own plants keep rather than sell)
 	state_enterprises: Set[str] = field(default_factory=set)
 	enterprise_takings: float = 0.0
 	enterprise_margin: float = 0.0
 	material_need: Dict[str, float] = field(default_factory=dict)
+	# tonnes each standing line needed last year that no market sold, by line name
+	unmet_goods: Dict[str, float] = field(default_factory=dict)
 	closed_markets: Dict[str, int] = field(default_factory=dict)
 	# material -> units of the state's stock that smugglers have taken, which it can no longer sell
 	stock_taken: Dict[str, float] = field(default_factory=dict)
@@ -192,7 +202,6 @@ class CountryProfile:
 	name: str = ""
 	population: float = 0.0
 	urban_fraction: float = 0.0
-	state_capacity: float = 0.0
 	tax_share: float = 0.0
 	wage_index: float = 1.0
 	price_index: float = 1.0

@@ -7,7 +7,7 @@ second scenario may supply another. Nothing here is imported at run time; it nam
 actors call, so a change to what an actor asks shows up as a change to this file.
 """
 import random
-from typing import Any, Dict, FrozenSet, List, Optional, Protocol, Set, Tuple
+from typing import Any, Callable, Dict, FrozenSet, Iterable, List, Optional, Protocol, Set, Tuple
 
 from .revenue import Assessment
 from .sector import Sector
@@ -25,7 +25,7 @@ class World(Protocol):
 	def population_total(self) -> float:
 		...
 
-	def state_capacity(self) -> float:
+	def state_reach(self) -> float:
 		...
 
 	def territory(self) -> Any:
@@ -45,8 +45,8 @@ class World(Protocol):
 	def trade_exists(self, trade: str) -> bool:
 		...
 
-	def fleet_goods(self) -> List[Any]:
-		"""Available naval goods with their crews, service lives and the state's held units."""
+	def fleet_goods(self, holder_id: Optional[str] = None) -> List[Any]:
+		"""Available naval goods with their crews, service lives and the held units of a state (the founder's by default)."""
 		...
 
 	def threat_pressure(self) -> float:
@@ -69,20 +69,33 @@ class World(Protocol):
 	def equipment_kg_per_soldier(self) -> float:
 		...
 
+	def military_work_ids(self) -> Tuple[str, ...]:
+		"""The tree nodes that make up the military work an army can take up."""
+		...
+
+	def equipment_kg_at_adoption(self, adoption: float) -> float:
+		"""Iron and ammunition one equipped soldier uses a year when his army holds this share (0..1) of the military work."""
+		...
+
 	def pay_per_person_year(self, trade: str) -> float:
 		...
 
 	def commodity_of(self, material: str) -> str:
 		...
 
-	def material_cost(self, material: str, tonnes: float) -> float:
-		"""Money to buy this many tonnes of a material at the price the market quotes."""
+	def material_cost(self, material: str, tonnes: float) -> Optional[float]:
+		"""Money to buy this many tonnes of a material at the price the market quotes; None when no market sells it."""
 		...
 
 	def local_staff(self, trade: str, people: float) -> float:
 		...
 
-	def notice_over(self, scale: float) -> float:
+	def notice_over(self, scale: float, capacity: Optional[float] = None) -> float:
+		"""How far past the notice line a taxpayer of this visible scale stands; `capacity` is another state's."""
+		...
+
+	def seat_taxpayers(self, country: str) -> List[Tuple[float, float]]:
+		"""(visible scale, taxable income) of the players' seats that belong to a country."""
 		...
 
 	def visible_taxpayers(self) -> List[Tuple[float, float]]:
@@ -132,6 +145,11 @@ class World(Protocol):
 
 	def held_tiles(self) -> List[str]:
 		"""The tiles the state holds."""
+		...
+
+	def collectible_share(self, tiles: Optional[Iterable[str]] = None) -> float:
+		"""The share of what is due on `tiles` (all the state holds when none) that its officials reach, from their
+		number, their literacy and the road from the seat (collection.py)."""
 		...
 
 	def arable_share(self, tiles: FrozenSet[str]) -> float:
@@ -221,6 +239,10 @@ class World(Protocol):
 		...
 
 	def state_may_borrow(self, state: Any) -> bool:
+		...
+
+	def nodes_with_mechanic(self, mechanic: str) -> Any:
+		"""The tree nodes that declare a mechanic."""
 		...
 
 	def state_lending(self) -> Tuple[float, float]:
@@ -354,8 +376,9 @@ class World(Protocol):
 		"""How large and visible any actor looks to the state: its staff, its wealth and its prominence."""
 		...
 
-	def levy_shares(self, scale: float, protection: float = 0.0) -> Any:
-		"""(requisition, office) shares of income the state assesses at this visible scale."""
+	def levy_shares(self, scale: float, protection: float = 0.0, state: Any = None) -> Any:
+		"""(requisition, office) shares of income the state assesses at this visible scale; `state` is another
+		country's (capacity, tax share, requisition rate, office rate) in place of the founder's state's."""
 		...
 
 	def government(self) -> Any:
@@ -378,8 +401,22 @@ class World(Protocol):
 	def concern_wage_bill(self, node_id: str, capacity: float = 1.0) -> float:
 		...
 
-	def site_rent(self, node_id: str, capacity: float = 1.0, tile: Optional[str] = None) -> float:
-		"""Yearly rent of the site a concern run at `capacity` times its founding size occupies, on `tile`."""
+	def site_rent(self, node_id: str, capacity: float = 1.0, tile: Optional[str] = None) -> Optional[float]:
+		"""Yearly rent of the site a concern run at `capacity` times its founding size occupies, on `tile`; None when
+		the asking actor's country keeps no land rent."""
+		...
+
+	def site_hectares(self, node_id: str, capacity: float = 1.0) -> float:
+		"""Hectares a concern run at `capacity` times its founding size occupies."""
+		...
+
+	def hourly_pay(self, trade: str) -> Optional[float]:
+		"""What an hour of a trade pays in the asking actor's country; None when its labour markets pay nothing for it."""
+		...
+
+	def plant_costs(self, node_id: str) -> Optional[Tuple[float, float]]:
+		"""(upkeep, wage bill) of a plant of the concern at its founding size, in the asking actor's country; None when
+		that country keeps no record of a figure they need."""
 		...
 
 	def free_fte(self, trade: str, actor_id: Optional[str]) -> Optional[float]:
@@ -392,8 +429,8 @@ class World(Protocol):
 	def copy_risk(self, node_id: str) -> float:
 		...
 
-	def concern_gross(self, node_id: str) -> float:
-		"""Yearly takings of the founder's concern once it has ramped up."""
+	def concern_gross(self, node_id: str) -> Optional[float]:
+		"""Yearly takings of the concern once it has ramped up, in the asking actor's country; None when it keeps no record."""
 		...
 
 	def market_key(self, node_id: str) -> str:
@@ -419,6 +456,31 @@ class World(Protocol):
 		...
 
 	def concern_takings(self, node_id: str, opened_year: int, rivals: float = 0.0, capacity: float = 1.0) -> float:
+		...
+
+	def plant_books(self, node_id: str, opened_year: int, rivals: float, size: float) -> Optional[Any]:
+		"""(takings, upkeep, wages) of a plant of the concern at `size` founding sizes, in the economy the asking actor's
+		country stands in; None when that country keeps no record of a figure they need."""
+		...
+
+	def book_takings(self, node_id: str, opened_year: int) -> float:
+		"""Yearly takings of one founding size of a concern at its ramp in the tree's book coin (no cost scale, no hazard factor)."""
+		...
+
+	def book_takings_at_full_ramp(self, node_id: str) -> float:
+		"""Yearly takings of one founding size of a concern once ramped up, in the tree's book coin."""
+		...
+
+	def book_upkeep(self, node_id: str) -> float:
+		"""Yearly upkeep of one founding size of a concern without its crew's pay, in the tree's book coin."""
+		...
+
+	def market_factor_at(self, node_id: str, unit_price: Callable[[str], Optional[float]]) -> float:
+		"""A concern's market over long-run prices at the given prices per unit; one where it has no market model or no quote."""
+		...
+
+	def in_goods_category(self, node_id: str) -> bool:
+		"""Whether the concern sells into a goods category, whose demand the home society's households set."""
 		...
 
 	def concern_inputs(self, node_id: str) -> Dict[str, float]:

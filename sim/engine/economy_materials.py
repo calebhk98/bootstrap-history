@@ -45,7 +45,7 @@ account.
 """
 import collections
 
-from . import commodities as _commod, material_capacity
+from . import commodities as _commod, material_capacity, material_throttle
 from sim.constants import declare
 from sim.geography.api import tiles_held, timber_mean_increment_tonnes_per_hectare_year
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
@@ -778,12 +778,9 @@ class MaterialSupplyMixin:
         of the year works from this snapshot (plus trades made since), so the
         year's own output is banked once however often it is recomputed."""
         holdings = self.state.holdings
-        year = self.state.scenario.year
-        record = holdings._material_stock_opening
-        if not record or record.get("year") != year:
-            record = holdings._material_stock_opening = {
-                "year": year, "tonnes": dict(self._material_stock())}
-        return record["tonnes"]
+        holdings._material_stock_opening = material_throttle.year_opening_record(
+            holdings._material_stock_opening, self.state.scenario.year, self._material_stock())
+        return holdings._material_stock_opening["tonnes"]
 
     def material_stock_t(self, emp_key):
         """Tonnes of `emp_key` currently banked - the STOCK half of stock vs

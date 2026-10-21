@@ -8,7 +8,6 @@ _HELD_MECHANICS = {
 _EFFECT_WORDS = {
     "literacy_general": "general literacy",
     "literacy_elite": "elite literacy",
-    "state_capacity": "state capacity",
     "population": "a lower disease burden, so more people survive",
 }
 

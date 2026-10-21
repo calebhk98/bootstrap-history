@@ -151,3 +151,60 @@ So the year-zero gap is the model's own short-run answer (a trade whose hands ca
 that idled the year before), not a recipe, entry or accounting error. Raising the smith wage above the training-cost
 ceiling in a vacancy, or allocating scarce hours by value, is a labour-core design decision (the `trained_substitute_wage` rule, the
 wall in `sim/labour/`), not made here. No code change; the check is unchanged and stays red.
+
+## Sourced: skill premia (2026-10-20)
+
+`Complaints/reports/research-how-trades-spread-and-skill-premia.md` (each claim with its URL): the English building
+craftsman's wage over the labourer's (Munro's table of Phelps Brown and Hopkins) fell after the Black Death and kept
+falling for decades, since unskilled hands were scarce too; over the early modern centuries it sat near three to two in
+southern England (Allen, through Broadberry and Gupta). No source was found for a short-run premium of one scarce trade
+far above its training cost. The long-run anchor at the cost of training a substitute stands; a short-run premium needs
+a sourced case of one trade short while others were not before it is built.
+
+## Update 6: decomposition of the shown ratio on the current code (no rule defect found)
+
+Measured by stepping `rome_100ad` one year as `test_economy_tin_dearer_than_copper.py` does (`--slow --only
+economy_tin_dearer_than_copper`: shown tin over copper 0.11 against 0.441), then reading `economy.record`
+(`memory.prices`, `producers`, `setup.site_limits`), `country_figures.wages_per_hour`, `notional.cheapest_cost` at the
+shown prices (throwaway in-process probes, not kept). The log of the gap (0.441 over 0.11) splits into two parts:
+- Which price is shown: tin is one market area (`france_05@b3`, the only Roman-touching tin area; its one seller is the
+  UK tin works), copper is `france_05@b4` plus the Egyptian area. Carriage and area choice are not the gap: every
+  shown figure is one area's cleared price over its own producers.
+- Copper clears at about three times its making cost at the shown inputs, tin at about one and a third. Every copper
+  seller's remembered ask sits below the clearing price (asks near twice cost); the price clears above all asks because
+  copper supply is short. Planned runs summed over the copper smelters are about twice the runs achieved (Spain plans
+  2040, achieves 1742; China plans 1620, achieves 6; Algeria 414 to 245), while the tin works achieve nearly all of
+  their plan. The smelters' last-year runs are the opening's seed (idle the year before), so supply cannot follow demand
+  within the 25 percent a year pace, and the hands (smith hours at the training-cost ceiling) cap the rest: Updates 3
+  and 5, not changed by anything here.
+- Copper's inputs carry scarcity that tin's barely do. A kilogram of copper burns four kilograms of charcoal and 50 of ore;
+  a kilogram of tin 0.6 of charcoal and 643 of gravel. Charcoal shows near three times its making cost in the main area, so
+  even with tin and copper both made at cost from the shown inputs the ratio is about 0.24, under the embodied-labour
+  ratio, which prices charcoal at its labour alone.
+Site scarcity and the sellers' asks for tin are not the cause: gravel shows above its labour (not decayed under it), the
+UK gravel site limit sits far above any tin demand, copper ore's sites are not binding in year zero (ore sellers hold seeded
+stock), and no carriage or area rule puts tin low. The cause is the unsettled opening (Complaint 473) acting on copper and
+charcoal, and the labour ceiling on smith hours; a fix is a labour-core and opening change, so none was made here. No
+regression test added, since no rule was found wrong; the slow check stays red and unchanged.
+
+## Update 7: the smith ceiling is not what holds copper down; rule kept (skilled-labour-ceiling-rule)
+
+Rule tests: `sim/tests/test_labour_core_skilled_ceiling.py` (plain records, calls `clearing.clear_all`, `year.run_year`,
+`trained_substitute_wage`). Findings:
+- The ceiling caps the quoted wage, not the hours. Employers bidding far above it are quoted the ceiling and every hand in
+  the trade is hired (hours wanted stay above hours offered); raising the maximum bid changes neither wage nor hours.
+- New hands come only as trainees through the trade's own places (incumbents times `APPRENTICES_PER_MASTER`, plus school
+  seats), never by the wage directly and never by switching from labourers while the wage sits at the ceiling. Once those
+  places are full, removing the ceiling adds no trainees, so in the long run places, not the ceiling, bound growth.
+- Research (`Complaints/reports/research-how-trades-spread-and-skill-premia.md`): no opened source shows a craft premium
+  rising above its long-run level when the craft was short; after the Black Death the premium fell. One-off imports of
+  artisans cost a large multiple (Epstein), which the core already prices as `ImportCosts`, a cap below the ceiling.
+  So the rule is not shown wrong and was not changed.
+- Year zero on `rome_100ad` (spies on `year_labour.run_labour_year`, `producers.plan`, `producers.produce`, as for Update
+  6): the smith ceiling does not bind copper. Smith hours hired meet the smith hours the smelters' runs need in every copper
+  area; the binding terms in `producers.produce` are unskilled labourer hours (employers want more than all offered, in
+  every copper area), furnaceman hours in the one area whose furnacemen are few, and flux in one area. The plan is held by
+  the 25 percent pace from seeded `last_runs` (a smelter idle the year before plans a quarter of capacity), then achieved
+  runs fall below plan on those hours. So the measured split is the opening's seeded `last_runs`/pace (Complaint 473)
+  plus total unskilled hours, not the skilled-labour ceiling. Remeasure: spy as above on one `economy.step` of the suite's
+  opening. The check stays red and unchanged.

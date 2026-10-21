@@ -564,7 +564,7 @@ Two fixes, usable separately or together:
       `{"cmd":"answer","what":"comply"|"refuse"|"negotiate"|"conceal"}` sets how you meet the
       requisition and the supply levy the state assesses and a confiscation it demands (the office it
       presses on you is not declinable); bare `answer` shows the stance. The reply's `note` gives the
-      odds. Refusing: enforced with a chance set by the state's capacity, turned aside in part by your
+      odds. Refusing: enforced with a chance set by the state's reach, turned aside in part by your
       protection; if enforced the state takes the demand and a penalty in proportion to its capacity,
       otherwise nothing; either way the state marks you defiant (it assesses you as more visible, fading
       over the years) and the blame lands on you. Negotiating (with optional `"service": <money's worth
@@ -670,6 +670,39 @@ the same for every seat; reads about a holder (`state`, `available`, `log`,
 `money`) show the addressed seat. `seats` shows another seat's country and
 whether its run has ended, not its purse or its work.
 
+A seat is a household seat unless `join` says otherwise:
+
+    {"cmd":"join","seat":"senate","seat_kind":"country"}                       hold your own country's government
+    {"cmd":"join","seat":"khan","seat_kind":"country","country":"han"}         hold another country's
+
+A country seat's holder is that country's `Government` actor (the reply's `holder`, an actor id such as
+`government:rome_100ad`), and it has no founder and no household: the reply carries `founder: null` and
+`household: null`, and `seats` shows its row with `kind` and `holder` and no purse. It has no kit and knows no
+techniques of its own (a `kit` is refused with `cause` `country_seat_has_no_kit`). It is not among the seats the
+household phases of the year run, and it never ends the game or holds it open; the government acts with the year of
+the actors. Refusals carry `cause`: `unknown_country` (`choices` lists the countries that have a government),
+`unknown_seat_kind`. Commands that need a household (`state`, `available`, the projects, labour and money groups) are
+refused for a country seat with `cause` `country_seat_has_no_household`; the reads about the world, the seats, the
+game and relations work, and `step` runs the year for everyone. The levers of the state itself are Complaint 595.
+Two country seats may name one country (a replacement joins before a handover); until one hands over they share its
+government.
+
+    {"cmd":"handover","to":"second"}   hand your seat to the seat "second", which must already be in the game and empty
+
+A handover gives the replacement the known techniques, works, holdings, cash, institutions, goal, country and notes
+of the seat you play, and your seat leaves the game; the replacement keeps its own founder. The replacement must be
+an empty seat (one `join` just added): it may hold cash, debts and known techniques, which merge with yours, but no
+works, staff, holdings, institutions, arrears or goal record, because those would be overwritten. Your debts and claims
+(facility draws, term loans as borrower or lender, deposits, arrears) pass to the replacement, so a handover never
+forgives a debt, and every store keyed by your seat's id (goods, offers, shares, licences, other actors' records) is
+renamed to the replacement's. Notes belong to the
+seat that wrote them and pass with it. Records kept by country (relations, with their notes) stay with the country,
+which the replacement now plays for. Only your own seat can be handed over (`"from"` naming another is refused).
+Refusals change nothing and carry `cause`: `unknown_seat` (`choices` lists the seats), `same_seat`, `not_your_seat`,
+`no_replacement`, `replacement_not_empty` (`holds` lists what it holds), `replacement_wrong_kind` (a country seat
+passes only to an empty country seat, a household seat to a household seat). The reply carries `from`, `to`, `known_nodes`, `country`, `notes` (how many passed) and `seats`.
+A country seat uses the same command: its kind, holder and country are fields of the seat and move with it.
+
 `step` advances the year for every seat still playing. A seat's run ends for
 that seat alone (a founder who dies with nobody to carry the work in a game
 with mortal founders, a denunciation, a fall): its commands that need a living
@@ -696,6 +729,29 @@ A seat sets only its own country's side: `"side"` naming another country is refu
 `not_your_country` (`choices` lists the one allowed). Other refusal causes: `unknown_country` (`choices` lists
 the countries), `same_country`, `unknown_stance` (`choices` lists them, from `data/world/relation_stances.json`),
 `nothing_to_set`. Replies carry `country`, `with`, `ours` and `theirs`.
+
+### The state's levers
+
+A country seat (`join` with `seat_kind: country`) sets the levers of the government it holds; the next year's budget
+and revenue read them. `levers` lists what is set; `lever` sets one, and a null `value` clears it (the civilisation
+file's figure or the derived one applies again).
+
+    {"cmd":"levers","as":"senate"}                                  the levers set, the kinds, and the budget lines
+    {"cmd":"lever","lever":"revenue","name":"land_tax","value":0.08}   a declared form's rate; a new form also needs "basis"
+    {"cmd":"lever","lever":"budget","name":"dole","value":0.5}      the share of a standing line kept (0 to 1)
+    {"cmd":"lever","lever":"army","value":20000}                    soldiers wanted (the army moves toward it at a bounded rate)
+    {"cmd":"lever","lever":"navy","value":10}                       ships wanted
+    {"cmd":"lever","lever":"works","name":"water_works","value":50000}   m2 of masonry equivalent wanted
+    {"cmd":"lever","lever":"reserve","value":3}                     years of the standing need held before a surplus is spent
+    {"cmd":"lever","lever":"monopoly","name":"salt_kg","value":true}   hold (true) or release (false) a good as a state monopoly
+    {"cmd":"lever","lever":"subsidy","name":"wheat_kg","value":1000}   money a year handed to the good's producers
+    {"cmd":"lever","lever":"mandate","name":"wheat_kg","value":50}     tonnes a year the state must buy of the good
+
+A reply carries `lever`, `name`, `before`, `after`, `country` and `levers`. A seat sets only its own country's levers:
+`country` naming another is refused with `cause` `not_your_country`, a household seat with
+`household_seat_has_no_government`. Other causes: `unknown_lever`, `unknown_name` and `unknown_basis` (`choices` lists
+what is accepted), `value_not_number`, `value_out_of_range` (`low`, `high`), `value_not_boolean`, `nothing_to_clear`.
+Until tax rates are a state choice with consequences (Complaints 625 and 626) a rate may be any share of its base.
 
 ## Commands from mods
 

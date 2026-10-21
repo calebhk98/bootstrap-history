@@ -48,3 +48,23 @@ def _discover_flag(flag, tests_dir):
                     and isinstance(node.value, ast.Constant) and node.value.value is True):
                 found.add(name)
     return found
+
+
+def discover_topic_seconds(tests_dir=TESTS_DIR):
+    """{topic: seconds} for files that set a numeric module-level `TOPIC_SECONDS`: the time limit the topic asks for.
+
+    Read from the syntax tree, like the flags, so finding them imports nothing.
+    """
+    found = {}
+    for name in discover_topics(tests_dir):
+        path = os.path.join(tests_dir, "test_%s.py" % name)
+        with open(path, encoding="utf-8") as handle:
+            source = handle.read()
+        if "TOPIC_SECONDS" not in source:
+            continue
+        for node in ast.parse(source, filename=path).body:
+            if (isinstance(node, ast.Assign)
+                    and any(isinstance(target, ast.Name) and target.id == "TOPIC_SECONDS" for target in node.targets)
+                    and isinstance(node.value, ast.Constant) and isinstance(node.value.value, (int, float))):
+                found[name] = float(node.value.value)
+    return found

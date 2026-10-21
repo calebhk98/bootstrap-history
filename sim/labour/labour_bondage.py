@@ -18,6 +18,7 @@ books - does not overwrite the grant out of existence.
 """
 from sim.constants import declare
 from . import trade_data
+from .buy_cap import over_room_refusal
 
 
 class BondageMixin:
@@ -260,12 +261,9 @@ class BondageMixin:
         # so, so buy_slaves must respect the same household capacity cap as
         # hire rather than bypassing it under a different verb.
         room = self.household_room()
-        if n_people > room:
-            self._world.household._last_buy_refusal = (
-                "you can supervise, house and teach %.2f more people, not %g - "
-                "and a person you own needs feeding and housing exactly as much "
-                "as one you pay. %s"
-                % (max(0.0, room), n_people, self._staff_advice("artisans")))
+        refusal = over_room_refusal(n_people, room, lambda: self._staff_advice("artisans"))
+        if refusal:
+            self._world.household._last_buy_refusal = refusal
             return 0
         # A town's slave market has a depth. Buying beyond it bids the price up.
         price = self.slave_quote(n_people)

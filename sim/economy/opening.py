@@ -12,13 +12,15 @@ from typing import Dict, List, Mapping, Tuple
 
 from sim.constants import declare
 
-from . import currency, goods_market, opening_basket, opening_income, opening_metal, opening_runs, households, households_store, labour_state, location, location_inputs, mint, opening_stores, ownership, sites, titles, unit_cost
+from .household_work_year import basket_key, cohort_basket
+from . import carriage_fleet_book, currency, goods_market, opening_basket, opening_income, opening_metal, opening_runs, households, households_store, labour_state, location, location_inputs, mint, opening_stores, ownership, sites, titles, unit_cost
 from .accounts import Book
 from .market_areas import AreaMap
 from .market_memory import MarketMemory, YearView, market_key
 from .merchants import Merchant
 from .producers import Producer
 from .producers_close import working_capital_target
+from .replaced import replaced
 from .record import EconomyRecord
 from .setup import EconomySetup, labour_area, recipe_tile_key
 from .tile_costs import CarriageTable
@@ -70,11 +72,15 @@ def _open(setup: EconomySetup, replacement: float) -> Tuple[EconomyRecord, AreaM
     opening_runs.fit_to_supply(setup, record)
     _stock_producers_with_inputs(setup, record)
     _open_merchants(setup, record, priced_goods, final_by_tile)
+    carriage_fleet_book.endow(setup, record, carriage, priced_goods, final_by_tile)
     _strike_opening_cash(setup, record)
     record.workforce = labour_state.opening_workforce(setup, record)   # the mint's capacity follows the money struck
     mint.seed_opening_metal(setup, record)
     opening_stores.seed_opening_stores(setup, record, _store_goods(setup, view, area_map, priced_goods))
     record.opening_demand = opening_runs.national_totals(final_by_tile)
+    record.opening_demand_by_country = {
+        country: opening_runs.national_totals({tile: final_by_tile[tile] for tile in setup.tiles_of(country) if tile in final_by_tile})
+        for country in setup.countries()}
     record.opening_basket = opening_basket.supplied_part(setup, record, record.opening_demand)
     return record, area_map, carriage
 
@@ -159,9 +165,10 @@ def _opening_bids(setup, record, view):
     """(cohort, bid, price) for what each cohort would buy at the opening prices with the opening income."""
     priced_by_tile = {}
     for cohort in sorted(record.cohorts.values(), key=lambda each: each.agent_id):
-        priced = priced_by_tile.setdefault(cohort.tile, households.need_prices(setup.basket_for(cohort.tile), view, cohort.tile))
+        basket = cohort_basket(setup, record, cohort)
+        priced = priced_by_tile.setdefault(basket_key(record, cohort), households.need_prices(basket, view, cohort.tile))
         income = cohort.last_year_income
-        orders = households.goods_orders(cohort, view, income, income, setup.basket_for(cohort.tile), setup.specs,
+        orders = households.goods_orders(cohort, view, income, income, basket, setup.specs,
                                          priced)
         for bid in orders.bids:
             price = view.price(bid.good, bid.area)
@@ -322,14 +329,20 @@ def _add_producers(setup, record, recipe, capacity_by_tile, input_demand, by_lim
     working_share = opening_income.working_share(recipe, setup.opening_prices, setup.opening_wages)
     for tile, capacity in capacity_by_tile.items():
         producer_id = "producer:" + recipe_tile_key(recipe.recipe_id, tile)
-        if capacity <= 0.0 or producer_id in record.producers or not _has_people(record, tile):
+        if capacity <= 0.0 or not _has_people(record, tile):
             continue
-        record.producers[producer_id] = Producer(
-            agent_id=producer_id, owner=households.cohort_id(tile, _richest_class(record, tile)),
-            recipe_id=recipe.recipe_id, tile=tile, capacity_runs=capacity / working_share,
-            expected_sales=capacity / (1.0 + OPENING_SPARE_CAPACITY_SHARE),
-            yield_factor=sites.yield_at(recipe, tile, by_limits, setup.yield_factor_by_recipe_tile.get(
-                recipe_tile_key(recipe.recipe_id, tile), 1.0)))     # a crop recipe is sized at its tile's yield; the engine adds the weather each year
+        held = record.producers.get(producer_id)
+        if held is not None:      # a second share of the runs on the same tile (a pooled area's) adds to the producer
+            record.producers[producer_id] = replaced(
+                held, capacity_runs=held.capacity_runs + capacity / working_share,
+                expected_sales=held.expected_sales + capacity / (1.0 + OPENING_SPARE_CAPACITY_SHARE))
+        else:
+            record.producers[producer_id] = Producer(
+                agent_id=producer_id, owner=households.cohort_id(tile, _richest_class(record, tile)),
+                recipe_id=recipe.recipe_id, tile=tile, capacity_runs=capacity / working_share,
+                expected_sales=capacity / (1.0 + OPENING_SPARE_CAPACITY_SHARE),
+                yield_factor=sites.yield_at(recipe, tile, by_limits, setup.yield_factor_by_recipe_tile.get(
+                    recipe_tile_key(recipe.recipe_id, tile), 1.0)))     # a crop recipe is sized at its tile's yield; the engine adds the weather each year
         wanted = input_demand.setdefault(tile, {})
         for good, quantity in recipe.inputs.items():
             wanted[good] = wanted.get(good, 0.0) + capacity * quantity

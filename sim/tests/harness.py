@@ -79,6 +79,8 @@ FAILURES = []
 # literal that three separate rounds of additions had to remember to update.
 CHECKS_RUN = []
 SKIPPED = []
+# Above zero while a topic module is imported only for its helpers: its module-level checks belong to its own topic.
+MUTED = [0]
 _LAST_AT = time.time()
 
 # --- Where does the wall time actually go: waiting on a child process, or
@@ -349,6 +351,8 @@ def check(name, passed, detail=""):
     without timing them one at a time by hand.
     """
     global _LAST_AT
+    if MUTED[0]:
+        return
     now = time.time()
     took = now - _LAST_AT
     _LAST_AT = now

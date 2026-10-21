@@ -1,97 +1,102 @@
-"""Complaint 173: the credit forecast block that `start` prints is shown in
-full once per game year; later starts that year show a one-line summary on
-screen, and the figures stay in the JSON reply."""
-from .harness import *  # noqa: F401,F403
-from sim.ui.proto.render_typed import render_pretty
-from sim.ui.proto.typed import parse_typed
+"""Complaint 173: the credit forecast block that `start` prints is shown in full once per game year; later starts that
+year show a one-line summary on screen, and the figures stay in the JSON reply. The rule is
+sim/ui/proto/credit_forecast.py, called on built replies; the screen is `render_start`. (A real run of starts:
+test_scenarios_batch3_saves.)"""
+QUICK_TOPIC = True
+
+import copy
+import unittest
+
+from sim.ui.proto import credit_forecast
+from sim.ui.proto.render_screens_start import render_start
+
+YEAR = 100
 
 
-def _run(sim_state, text):
-    parsed, error = parse_typed(text)
-    if error:
-        return {"ok": False, "error": error}
-    return S._agent_dispatch(sim_state, NODES, parsed)
+def reply():
+    return {"ok": True, "started": "tr_lateen_sail", "of_which_instalments_still_owed": 12.0,
+            "on_credit": {"you_would_borrow": 400.0, "interest_rate_percent": 6.0, "estimated_annual_interest": 24.0,
+                          "nothing_is_borrowed_yet": "nothing is borrowed yet",
+                          "what_happens_there": "past that limit the lender stops"},
+            "total_committed_across_active_work": {"you_have_promised": 900.0, "across_projects_in_hand": 3,
+                                                   "your_real_ceiling_if_it_comes_to_that": 2000.0,
+                                                   "what_this_means": "the whole of the country above"}}
 
 
-def _credit_lines(text):
-    """Lines of the rendered reply that belong to the two credit blocks."""
-    lines = text.splitlines()
-    kept = []
-    inside = False
-    for line in lines:
-        if line.startswith("on credit") or line.startswith("total committed") or line.startswith("credit:"):
-            inside = True
-            kept.append(line)
-        elif inside and line.startswith("  "):
-            kept.append(line)
-        else:
-            inside = False
-    return kept
+class ShortenTests(unittest.TestCase):
+    def test_the_first_showing_in_a_year_keeps_all_the_prose(self):
+        out, said = reply(), {}
+        self.assertTrue(credit_forecast.shorten(out, said, YEAR, False))
+        self.assertEqual({key: value for key, value in out.items() if key != "credit_forecast_in_full"}, reply())
+        self.assertTrue(out["credit_forecast_in_full"])
+        self.assertEqual(said["credit_forecast"], YEAR)
+
+    def test_a_later_start_the_same_year_keeps_the_figures_and_loses_the_prose(self):
+        out, said = reply(), {"credit_forecast": YEAR}
+        self.assertFalse(credit_forecast.shorten(out, said, YEAR, False))
+        self.assertEqual(out["on_credit"]["you_would_borrow"], 400.0)
+        self.assertEqual(out["total_committed_across_active_work"]["you_have_promised"], 900.0)
+        for block, prose_keys in credit_forecast.CREDIT_PROSE.items():
+            for prose_key in prose_keys:
+                self.assertNotIn(prose_key, out[block])
+        self.assertIs(out["credit_forecast_in_full"], False)
+
+    def test_full_asks_for_the_whole_block_again(self):
+        out, said = reply(), {"credit_forecast": YEAR}
+        self.assertTrue(credit_forecast.shorten(out, said, YEAR, True))
+        self.assertIn("what_happens_there", out["on_credit"])
+
+    def test_a_new_year_shows_the_full_block_again(self):
+        out, said = reply(), {"credit_forecast": YEAR}
+        self.assertTrue(credit_forecast.shorten(out, said, YEAR + 1, False))
+        self.assertIn("what_happens_there", out["on_credit"])
+        self.assertEqual(said["credit_forecast"], YEAR + 1)
+
+    def test_a_short_showing_does_not_move_the_year_said(self):
+        said = {"credit_forecast": YEAR}
+        credit_forecast.shorten(reply(), said, YEAR, False)
+        self.assertEqual(said, {"credit_forecast": YEAR})
+
+    def test_a_reply_with_no_credit_block_is_left_alone(self):
+        out = {"ok": True, "started": "x"}
+        self.assertIsNone(credit_forecast.shorten(out, {}, YEAR, False))
+        self.assertEqual(out, {"ok": True, "started": "x"})
+
+    def test_one_block_alone_is_shortened_too(self):
+        out = {"ok": True, "on_credit": {"you_would_borrow": 5.0, "what_happens_there": "x"}}
+        credit_forecast.shorten(out, {"credit_forecast": YEAR}, YEAR, False)
+        self.assertEqual(out["on_credit"], {"you_would_borrow": 5.0})
 
 
-# enough cash for the first start only: what it pays at once plus its bill, read off a household with
-# cash to spare. What is left after it is less than either later bill, so both draw on credit.
-FIRST_START = "tr_lateen_sail"
-SECOND_START = "cn_damp_proof_course"
-THIRD_START = "mt2_sintering_process"
+class ScreenTests(unittest.TestCase):
+    @staticmethod
+    def shortened():
+        out = reply()
+        credit_forecast.shorten(out, {"credit_forecast": YEAR}, YEAR, False)
+        return out
+
+    def test_the_first_credit_start_prints_the_full_forecast_prose(self):
+        # presentation: the explanation is on screen
+        full = reply()
+        credit_forecast.shorten(full, {}, YEAR, False)
+        self.assertIn("past that limit", render_start(full))
+
+    def test_a_later_start_prints_a_one_line_summary_not_the_prose(self):
+        # presentation: the short form on screen
+        text = render_start(self.shortened())
+        self.assertNotIn("past that limit", text)
+        self.assertNotIn("the whole of the country above", text)
+        credit_lines = [line for line in text.splitlines() if line.startswith("credit:")]
+        self.assertEqual(len(credit_lines), 1)
+        self.assertIn("would borrow 400", credit_lines[0])
+        self.assertIn("900 promised across 3 projects", credit_lines[0])
+
+    def test_the_figures_stay_in_the_reply_the_screen_was_drawn_from(self):
+        out = self.shortened()
+        before = copy.deepcopy(out)
+        render_start(out)
+        self.assertEqual(out, before)
 
 
-def cash_for_one_start():
-    rich = sim(capital=1.0e9)
-    before = rich.capital
-    reply = _run(rich, "start " + FIRST_START)
-    return before - rich.capital + reply["of_which_instalments_still_owed"] + 1.0
-
-
-CASH_FOR_ONE_START = cash_for_one_start()
-
-
-def poor_household():
-    """A fresh game whose cash is set to cover the first start and nothing after it."""
-    household = sim(capital=1.0e6)
-    household.state.household.capital = CASH_FOR_ONE_START
-    return household
-
-
-def spend_remaining_cash(household):
-    """Leave no cash after the first start, so every later start's materials must be borrowed."""
-    household.state.household.capital = 0.0
-
-
-borrower = poor_household()
-first = _run(borrower, "start " + FIRST_START)
-spend_remaining_cash(borrower)
-second = _run(borrower, "start " + SECOND_START)
-third = _run(borrower, "start " + THIRD_START)
-check("set-up: the second and third starts draw on credit",
-      all(reply.get("ok") and "on_credit" in reply for reply in (second, third)), (second, third))
-
-second_text = render_pretty("start", second)
-third_text = render_pretty("start", third)
-check("the first credit start prints the full forecast prose",
-      "what_happens_there" in second["on_credit"] and "past that limit" in second_text, second_text)
-check("a later start the same year keeps the figures in its JSON",
-      third["on_credit"]["you_would_borrow"] > 0
-      and third["total_committed_across_active_work"]["you_have_promised"] > 0
-      and "what_happens_there" not in third["on_credit"]
-      and "what_this_means" not in third["total_committed_across_active_work"], third)
-check("...and prints only a one-line summary of the block on screen",
-      len(_credit_lines(third_text)) <= 1 and "past that limit" not in third_text
-      and "borrow" in third_text, third_text)
-
-forced = poor_household()
-_run(forced, "start " + FIRST_START)
-spend_remaining_cash(forced)
-_run(forced, "start " + SECOND_START)
-again = S._agent_dispatch(forced, NODES, {"cmd": "start", "id": THIRD_START, "full": True})
-check("'full' asks for the whole block again",
-      again.get("ok") and "what_happens_there" in again.get("on_credit", {}), again)
-
-next_year = poor_household()
-_run(next_year, "start " + FIRST_START)
-spend_remaining_cash(next_year)
-_run(next_year, "start " + SECOND_START)
-next_year.year += 1
-later = _run(next_year, "start " + THIRD_START)
-check("a new year shows the full block again",
-      later.get("ok") and "what_happens_there" in later.get("on_credit", {}), later)
+if __name__ == "__main__":
+    unittest.main()

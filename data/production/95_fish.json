@@ -29,7 +29,7 @@
    },
    "unit_dimension": "mass",
    "basis": "per tonne of fresh fish gutted, layered with salt in barrels or pits, and pressed",
-   "yield_basis": "WET SALTING. Fish are gutted, packed in layers with salt at about one part salt to five of fish by mass (recalled from salt-fish and salt-herring practice and Roman salsamenta; not re-opened; conf D) and left to draw their brine. Salt and water leave: the cured product is taken as seven tenths of the fresh weight (recalled; conf D). Food energy is kept: the energy of a kilogram of salted fish in data/world/needs.json is the fresh fish's times 1000/700, so curing adds none and loses none. Labour is gutting, layering and pressing, about 60 hours a tonne, done by the fishing crews on the shore (a rough figure; conf D). The salt comes from the salt worker (salt_kg).",
+   "yield_basis": "WET SALTING. Fish are gutted, packed in layers with salt at about one part salt to five of fish by mass (George J. Flick Jr., Smoked Fish Part II, Global Aquaculture Advocate, March/April 2010, p. 43, opened: \"The ratio of salt to fish by weight may vary from 1:8 for light salting to 1:3 for split fish or 1:1 for heavy salting\"; one to five lies inside that range; conf D) and left to draw their brine. Salt and water leave: the cured product is taken as seven tenths of the fresh weight (no source found; conf D). Food energy is kept: the energy of a kilogram of salted fish in data/world/needs.json is the fresh fish's times 1000/700, so curing adds none and loses none. Labour is gutting, layering and pressing, about 60 hours a tonne, done by the fishing crews on the shore (a rough figure; conf D). The salt comes from the salt worker (salt_kg).",
    "conf": "D",
    "requires_node": null
   },
@@ -48,7 +48,7 @@
    "holding_basis": "Fish and salt ferment in sun-warmed vats for some weeks to a few months before the liquor is drawn off and strained, so the fish and salt are tied up for about that long.",
    "unit_dimension": "mass",
    "basis": "per tonne of small fish and offal fermented to fish sauce",
-   "yield_basis": "FERMENTED FISH SAUCE. Small fish and guts are mixed with salt at about one part to four by mass (the Geoponica gives one part salt to two or three of fish by volume; recalled, not re-opened; conf D) and stirred in vats in the sun for weeks to months until the flesh liquefies; the liquor is drawn off and strained and a dregs paste is left. Roughly half the fish mass is taken as sauce; the rest, with the dregs, is waste here (recalled; conf D). Labour is gutting, mixing, stirring and straining, about 50 hours a tonne (a rough figure; conf D). Fish sauce was a condiment, not a staple, so it is not counted as food energy in data/world/needs.json.",
+   "yield_basis": "FERMENTED FISH SAUCE. Small fish and guts are mixed with salt at about one part to four by mass (no source found: the Geoponica's quantities were searched for and its text, Owen's translation, was not opened; conf D) and stirred in vats in the sun for weeks to months until the flesh liquefies; the liquor is drawn off and strained and a dregs paste is left. Roughly half the fish mass is taken as sauce; the rest, with the dregs, is waste here (no source found; conf D). Labour is gutting, mixing, stirring and straining, about 50 hours a tonne (a rough figure; conf D). Fish sauce was a condiment, not a staple, so it is not counted as food energy in data/world/needs.json.",
    "conf": "D",
    "requires_node": null
   }

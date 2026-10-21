@@ -14,7 +14,7 @@ from typing import List, Optional, Sequence, Tuple
 
 from sim.book import ROUNDING_SHARE
 
-from . import goods_market, inventory, seller_offers
+from . import goods_market, inventory, seller_offers, titles_value
 from .types import Offer
 
 SEARCH_PRECISION = 1e-4     # numerical tolerance of the bisection on the ask level, not a model number
@@ -58,6 +58,10 @@ def _held_value(setup, record, view, offer: Offer) -> float:
     recipe = setup.recipes[producer.recipe_id]
     spec = setup.specs.get(offer.good)
     rate = view.interest_rate(view.currency_of(offer.area))
+    if spec is not None and not spec.portable:
+        # ground never queues behind the stock: every hectare yields its rent while held
+        return titles_value.hectare_value(record.land_rent.get(offer.tile, 0.0),
+                                          titles_value.capitalising_rate(rate, setup.opening_rate))
     return inventory.queued_holding_value(offer.reservation_price, offer.quantity,
                                           producer.expected_sales * recipe.outputs.get(offer.good, 0.0), rate,
                                           spec.spoilage_per_year if spec is not None else 0.0)
@@ -91,8 +95,12 @@ def clear_with_search(setup, record, view, bids, original: Sequence[Offer], offe
     low = min(floors[index] for index in searched)
     best = trial(low)         # every searched ask at its floor: nothing above a floor can stay unsold
     high = max(offers[index].reservation_price for index in searched)
-    while high - low > SEARCH_PRECISION * max(high, 1e-300):
-        middle = math.sqrt(low * high) if low > 0.0 else 0.5 * (low + high)
+    ceiling = high
+    # the gap is judged against the level itself, or against the highest ask when the floor is zero: a bracket
+    # [0, high] never closes relative to its own shrinking top
+    while high - low > SEARCH_PRECISION * (high if low > 0.0 else ceiling):
+        # geometric mean as the product of roots: the product of a tiny floor and an ask underflows
+        middle = math.sqrt(low) * math.sqrt(high) if low > 0.0 else 0.5 * (low + high)
         attempt = trial(middle)
         if attempt[1]:
             high = middle

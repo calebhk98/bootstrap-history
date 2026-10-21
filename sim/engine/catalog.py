@@ -5,6 +5,7 @@ Consumers may still accept an explicit production mapping for small unit tests,
 but their default view must come from here.
 """
 import dataclasses
+from sim.engine import capital_builds
 from dataclasses import dataclass
 import json
 import os
@@ -99,7 +100,8 @@ def material_namespace(production: Mapping[str, Any],
         materials.update((entry.get("outputs") or {}).keys())
         materials.update((entry.get("inputs") or {}).keys())
         for capital in entry.get("capital") or ():
-            materials.update((capital.get("build_materials") or {}).keys())
+            for way in capital_builds.builds(capital):
+                materials.update(way[0].keys())
     for node in nodes:
         materials.update((node.get("mat") or {}).keys())
     return materials

@@ -13,11 +13,21 @@
       "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
       "fatality_confidence": "D"
     },
+    "knapper": {
+      "family": "craft",
+      "note": "Strikes blades, scrapers and axes from obsidian and flint by pressure or percussion flaking (Complaint 618).",
+      "training_years": 3,
+      "training_source": "LABELLED HEURISTIC, conf D, no source found for the years it takes to learn pressure blade making. Retire: Complaint 650.",
+      "tool_basket": ["stone"],
+      "fatality_risk_per_year": 0.0,
+      "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
+      "fatality_confidence": "D"
+    },
     "baker": {
       "family": "craft",
       "note": "Mixes, shapes and bakes bread in a masonry oven and keeps the fire. Cooks and tavern keepers are a separate owner decision (Complaint 530).",
       "training_years": 3,
-      "training_source": "Author's estimate, conf D: bakers were bound as apprentices for several years in medieval guild practice (recalled, not opened); three years is a guess set beside the miller.",
+      "training_source": "Author's estimate, conf D: bakers were bound as apprentices for several years in medieval guild practice (no source found); three years is a guess set beside the miller.",
       "tool_basket": ["timber"],
       "fatality_risk_per_year": 0.0,
       "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
@@ -36,7 +46,7 @@
     },
     "carter": {
       "family": "labour",
-      "note": "Drives a cart or leads a pack train: carter, teamster, muleteer, drover. Land carriage by animal is this trade's work; porters on foot stay labourers.",
+      "note": "Drives a cart or leads a pack train: carter, teamster, muleteer, drover. Land carriage by animal is this trade's work; porters on foot are the porter trade.",
       "training_years": 1,
       "fatality_risk_per_year": 0.0,
       "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
@@ -53,6 +63,14 @@
         "glass",
         "charcoal"
       ],
+      "fatality_risk_per_year": 0.0,
+      "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
+      "fatality_confidence": "D"
+    },
+    "dockworker": {
+      "family": "labour",
+      "note": "Loads and unloads cargo at a port: stevedore, longshoreman, quay porter. Port handling hours of a sea leg are this trade's work (the sailing mode names it as its handling_trade).",
+      "training_years": 0,
       "fatality_risk_per_year": 0.0,
       "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
       "fatality_confidence": "D"
@@ -115,7 +133,7 @@
       "family": "craft",
       "note": "Finishes cloth: scours, fulls, felts, washes, stretches and presses it. Dyeing is done by the same finishing trade but has no recipe of its own yet.",
       "training_years": 3,
-      "training_source": "Author's estimate, conf D: fulling was heavy trampling and washing in a fullonica worked largely by slaves and apprentices (recalled from Pliny, Natural History 35.57, and Roman fullonica studies, not opened), so a few years is a guess.",
+      "training_source": "Author's estimate, conf D: fulling was heavy trampling and washing in a fullonica worked largely by slaves and apprentices (Pliny, Natural History 35.57, Perseus, opened: its heading reads \"Cretaceous earths used for scouring cloth\", the passage was not read; no source found for the training), so a few years is a guess.",
       "tool_basket": ["timber"],
       "fatality_risk_per_year": 0.0,
       "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
@@ -142,11 +160,21 @@
       "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
       "fatality_confidence": "D"
     },
+    "vine_and_olive_tender": {
+      "family": "labour",
+      "note": "Tends vineyards and olive groves (pruning, training, picking) and works the press and cellar of the same estate (Complaint 616). Hands move between it and the farmer within a season or two, so it sits in the labour family.",
+      "training_years": 2,
+      "training_source": "LABELLED HEURISTIC, conf D, no source found for the years it takes to learn vine and olive husbandry. Retire: Complaint 656.",
+      "tool_basket": [],
+      "fatality_risk_per_year": 0.0,
+      "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
+      "fatality_confidence": "D"
+    },
     "herder": {
       "family": "labour",
       "note": "Tends flocks and herds on pasture: shepherd, goatherd, cowherd, with the milking, shearing, calving and dairy work of the same household.",
       "training_years": 2,
-      "training_source": "Author's estimate, conf D: herding was learned from boyhood beside a herder (recalled from pastoral ethnography, not opened); two years is a guess set beside the fisher and hunter.",
+      "training_source": "Author's estimate, conf D: herding was learned from boyhood beside a herder (no source found); two years is a guess set beside the fisher and hunter.",
       "tool_basket": [],
       "fatality_risk_per_year": 0.0,
       "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
@@ -170,6 +198,12 @@
       "family": "labour",
       "note": "Grows crops and tends plantation stock on the household's own or hired land: the work the farm-labour logic sizes. Hands move between it and the unskilled labourer within a season or two, so it sits in the labourer's family; it needs no training time of its own (the labourer carries the fallback flag, so the two do not tie for fewest years).",
       "training_years": 1,
+      "tool_basket": ["iron_tools_kg", "wooden_tools_kg"],
+      "tool_stock_per_worker": {"iron_tools_kg": 1.0, "wooden_tools_kg": 2.0},
+      "tool_hours_factor": {"wooden_tools_kg": 1.4},
+      "tool_hours_factor_by_hand": 2.5,
+      "tool_fallback_source": "WOODEN FACTOR SOURCED, BY-HAND FACTOR AND STOCK ARE LABELLED HEURISTICS. Wooden tools: Semyonov 1974 (pp. 194-226, experiments at the Laboratory of Primitive Techniques, Leningrad, 1969-1970), as reported in Shukurov, Videiko, Sarson, Davison, Shiel, Dolukhanov and Pashkevich, 'Productivity of pre-modern agriculture in the Cucuteni-Trypillia area' (arXiv 1505.05121, read): an oak dibble tilled 'st = 5 m2/person-hour on a dense, half-virgin soil' and 'Adding an iron point to an oak dibble increased the productivity to st = 6-8 m2/person-hour on virgin soil'. The factor is the midpoint of the iron-pointed rate over the wooden rate, 7 / 5 = 1.4 (the range is 1.2 to 1.6). Caveats: the iron tool in the experiment is a pointed dibble, not a hoe or spade, and the two soils are described differently. By hand: no source found for how much longer farm work takes with no tool at all (taken as 2.5 times a run's hours); and no source found for the kilograms of wooden tools a worker keeps in use (twice the iron stock); retire: Complaints/659. The basket is in order: the first tool is what the worker keeps, each later one is drawn when the one before it is short, and then the work is done by hand at the last factor.",
+      "tool_stock_source": "LABELLED HEURISTIC, conf D, no source found for the kilograms of iron tools a farm worker keeps in use; retire: Complaints/533. Only one tool was read: an early iron sickle weighs 0.24 kg overall (Science Museum Group, https://collection.sciencemuseumgroup.org.uk/objects/co38922/early-iron-sickle). Fisher and carter have no basket because no tool source was found.",
       "fatality_risk_per_year": 0.0,
       "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
       "fatality_confidence": "D"
@@ -228,7 +262,7 @@
       "family": "craft",
       "note": "Grinds and sifts grain to flour between stones, by quern, animal mill or water mill. Baking is a separate trade (Complaint 614).",
       "training_years": 3,
-      "training_source": "Author's estimate, conf D: dressing the stones and setting the grind took a few years beside a miller (recalled from milling handbooks, not opened).",
+      "training_source": "Author's estimate, conf D: dressing the stones and setting the grind took a few years beside a miller (no source found).",
       "tool_basket": ["stone", "timber"],
       "fatality_risk_per_year": 0.0,
       "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
@@ -278,6 +312,14 @@
       "tool_basket": [
         "lead"
       ],
+      "fatality_risk_per_year": 0.0,
+      "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
+      "fatality_confidence": "D"
+    },
+    "porter": {
+      "family": "labour",
+      "note": "Carries loads on the back or a tumpline over land: the Mexica tlameme, the Andean and African bearer, the hill porter. Carriage on foot is this trade's work. Trained from childhood in the carrying but asks no craft, so anyone can take it up at once.",
+      "training_years": 0,
       "fatality_risk_per_year": 0.0,
       "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
       "fatality_confidence": "D"
@@ -351,7 +393,7 @@
       "family": "craft",
       "note": "Cards and spins fibre into thread or twine on a spindle or wheel, and twists strands into cordage. The slowest step of hand textile work, done by household and hired hands alike.",
       "training_years": 1,
-      "training_source": "Author's estimate, conf D: spindle spinning was learned in childhood alongside household work (recalled from the textile-history literature, e.g. Barber, Women's Work, 1994, not opened); a year to useful speed is a guess.",
+      "training_source": "Author's estimate, conf D: spindle spinning was learned in childhood alongside household work (no source found; Barber, Women's Work, 1994, was not opened); a year to useful speed is a guess.",
       "tool_basket": ["timber"],
       "fatality_risk_per_year": 0.0,
       "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
@@ -361,7 +403,7 @@
       "family": "craft",
       "note": "Warps and weaves thread into cloth on a loom (horizontal, warp-weighted, vertical or backstrap), plain or fine, silk included.",
       "training_years": 4,
-      "training_source": "Author's estimate, conf D, set at the generic craftsman's four years it replaces for cloth: recalled guild terms for weaving ran longer (seven years under England's Statute of Artificers of 1563, not opened), which is a ceiling, not a Roman or Mexica figure.",
+      "training_source": "Author's estimate, conf D, set at the generic craftsman's four years it replaces for cloth: guild terms for weaving ran longer (Wikipedia, Statute of Artificers 1563, opened: it provided \"a compulsory seven years' apprenticeship\"), which is a ceiling, not a Roman or Mexica figure.",
       "tool_basket": ["timber"],
       "fatality_risk_per_year": 0.0,
       "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
@@ -371,7 +413,7 @@
       "family": "labour",
       "note": "Stacks and covers a clamp of billets, burns it slowly with little air and tends it for days, then rakes and sacks the charcoal. Fuel for smelting and smithing.",
       "training_years": 2,
-      "training_source": "Author's estimate, conf D: managing the burn of a clamp was learned over seasons beside a collier (recalled from woodland-craft accounts, not opened); two years is a guess set beside the furnaceman.",
+      "training_source": "Author's estimate, conf D: managing the burn of a clamp was learned over seasons beside a collier (no source found); two years is a guess set beside the furnaceman.",
       "tool_basket": ["timber"],
       "fatality_risk_per_year": 0.0,
       "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
@@ -381,7 +423,7 @@
       "family": "craft",
       "note": "Cuts and stitches finished leather into shoes, harness and scabbards.",
       "training_years": 4,
-      "training_source": "Author's estimate, conf D: shoemakers and saddlers were bound as apprentices for several years in medieval guild practice (recalled, not opened); four years is a guess.",
+      "training_source": "Author's estimate, conf D: shoemakers and saddlers were bound as apprentices for several years in medieval guild practice (no source found); four years is a guess.",
       "tool_basket": ["iron"],
       "fatality_risk_per_year": 0.0,
       "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
@@ -391,7 +433,7 @@
       "family": "craft",
       "note": "Builds and fires a kiln of limestone with wood or coal until it is quicklime, then draws and slakes it.",
       "training_years": 2,
-      "training_source": "Author's estimate, conf D: judging the burn and drawing the kiln was learned beside a lime burner (recalled from Vitruvius, De architectura II.5, and later building handbooks, not opened); two years is a guess set beside the furnaceman.",
+      "training_source": "Author's estimate, conf D: judging the burn and drawing the kiln was learned beside a lime burner (Vitruvius, De architectura II.5, opened, describes burning and slaking lime and gives no training period; no source found for the training); two years is a guess set beside the furnaceman.",
       "tool_basket": ["stone"],
       "fatality_risk_per_year": 0.0,
       "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
@@ -401,7 +443,7 @@
       "family": "labour",
       "note": "Works salt from sea and brine: fills and rakes solar pans, boils brine in lead or iron pans, and digs and breaks rock salt out of the bed.",
       "training_years": 1,
-      "training_source": "Author's estimate, conf D: the work is mostly hours of raking and carrying and was learned in a season (recalled, not opened).",
+      "training_source": "Author's estimate, conf D: the work is mostly hours of raking and carrying and was learned in a season (no source found).",
       "tool_basket": [],
       "fatality_risk_per_year": 0.0,
       "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
@@ -411,7 +453,7 @@
       "family": "craft",
       "note": "Soaks, limes, scrapes and tans hides into leather in pits of bark liquor, and dresses skins into parchment and vellum.",
       "training_years": 3,
-      "training_source": "Author's estimate, conf D: tanning was a guild trade learned over several years beside a master because pit timing decides the leather (recalled from medieval guild accounts, not opened).",
+      "training_source": "Author's estimate, conf D: tanning was a guild trade learned over several years beside a master because pit timing decides the leather (no source found).",
       "tool_basket": ["iron"],
       "fatality_risk_per_year": 0.0,
       "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
@@ -424,6 +466,14 @@
       "fatality_risk_per_year": 0.02,
       "fatality_confidence": "C",
       "fatality_source": "Peacetime service mortality, mostly disease: about two-fifths of Roman legionaries died during a twenty-five-year term (W. Scheidel, Measuring Sex, Age and Death in the Roman Empire, JRA Suppl. 21 (1996), ch. 3, via secondary quotation). Battle deaths are not a yearly constant and belong to the conflict mechanics."
+    },
+    "domestic_servant": {
+      "family": "labour",
+      "note": "Does a household's work for pay: cooking, carrying water and fuel, cleaning, grinding, minding children; in an eating house or tavern, cooking and serving meals. The work every household otherwise does with its own hours (Complaint 645). Asks no craft.",
+      "training_years": 0,
+      "fatality_risk_per_year": 0.0,
+      "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
+      "fatality_confidence": "D"
     }
   }
 }

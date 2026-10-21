@@ -48,7 +48,8 @@ class MarketView(Protocol):
     year: int
 
     def price(self, good: GoodId, area: AreaId) -> Optional[float]:
-        """Last year's clearing price; None if the market never cleared."""
+        """The planning price: last year's traded price or, where nothing traded, the market's quote (see
+        MarketView.quote_kind in market_memory.py); None if the market never posted anything."""
 
     def cleared_price(self, good: GoodId, area: AreaId) -> Optional[float]:
         """The price the market cleared at last year, as paid, not as remembered (the remembered price moves
@@ -113,6 +114,11 @@ class YearInputs:
     labour_levy_hours_per_worker: float = 0.0               # hours of each working person's year the state takes (a corvee, conscripts)
     debt_relief_tiles: Tuple[TileId, ...] = ()              # tiles whose households' debts the state cancels this year (debt_relief.py)
     farmed_forms: Tuple[str, ...] = ()                      # money revenue forms the state lets to the best bidder this year (tax_farming.py)
+    tax_rates: Tuple[Tuple[str, float], ...] = ()           # (form, rate) the state holds this year; a form not named keeps its rate (taxes.with_rates)
+    land_tax_share_of_rent: float = 0.0                     # share of a rent the state's land forms take from the owner (land_market.settle_year)
     institutions: Tuple[str, ...] = ()                      # the credit institutions the society holds (banks.DEPOSIT_BANKING): without one its households found none
     durable_users: Tuple[AgentId, ...] = ()                 # outside actors' asset accounts whose durables are in use
+    bondage_tiles: Tuple[TileId, ...] = ()                  # tiles whose society recognises bondage: bonded people may be bought there (Complaint 644)
+    bonded_for_sale: Mapping[TileId, Mapping[str, float]] = None   # bonded people of a trade on offer per tile; None is none
+    credit_asks: Tuple[LoanRequest, ...] = ()               # credit lines the engine's seats ask for: they join the year's clearing and are granted a room (credit_lines.py)
     standing_bids: Tuple[Bid, ...] = ()                     # demand settled outside the book (the founder's draws): entry reads it as bids, nothing clears

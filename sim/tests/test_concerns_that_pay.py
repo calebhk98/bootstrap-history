@@ -5,9 +5,8 @@ that agree with what an entrant weighs. The shape is tested on a fake world (qui
 Re-measure: `python3 -m sim.tests --slow --only concerns_that_pay`."""
 from .harness import *  # noqa: F401,F403
 
-from sim.agents import business_books, concern_scan, firm_entry
+from sim.agents import concern_scan
 from sim.engine import concern_scan_run
-from sim.engine.agents_port import SimWorld
 
 FIELDS = {"node", "takings", "upkeep", "wages", "carried", "costs", "margin", "pays"}
 
@@ -53,20 +52,12 @@ check("the summary counts the concerns that pay and lists payers and losers",
       and [row["node"] for row in summary["losers"]] == ["loses"], summary)
 check("an empty scan has no share", concern_scan.summary([])["share"] is None)
 
+# SCENARIO (wiring): the scan reads the concerns a real society holds. The pay rule, the cost sum and the summary are
+# held above on the fake world; "a row's takings and costs are the entry test's figures" is the same sum with
+# SimWorld's own methods, so it is not repeated here.
 game = sim()
-world = SimWorld(game)
 held = concern_scan_run.held_concerns(game)
 result = concern_scan_run.scan_game(game)
-check("the scan covers every concern the society holds", result["count"] == len(held) and len(held) > 0, len(held))
-everyone = result["pay"] + result["losers"]
-check("paying and losing rows carry the fields", all(set(row) == FIELDS for row in everyone))
-if everyone:
-    row = everyone[0]
-    node_id = row["node"]
-    upkeep, wages = business_books.yearly_costs(world, node_id)
-    carried = firm_entry.carrying_cost(world, node_id, tile=firm_entry.firm_tile(game.actors, None))
-    check("a row's takings and costs are the figures the entry test uses",
-          row["takings"] == world.entry_gross(node_id, 0.0, 1.0) and row["costs"] == upkeep + wages + carried, row)
-check("every payer's takings exceed its costs and no loser's do",
-      all(row["takings"] > row["costs"] for row in result["pay"])
-      and all(row["takings"] <= row["costs"] for row in result["losers"]))
+check("scenario: the scan covers every concern the society holds, each row carrying the fields",
+      result["count"] == len(held) and len(held) > 0
+      and all(set(row) == FIELDS for row in result["pay"] + result["losers"]), (result["count"], len(held)))

@@ -46,7 +46,7 @@ leave farming when food is cheap and the price recovers.
   yet fall as intake nears satiation (the household basket caps food at the same level, but the farm sector does
   not see that demand curve), and surplus beyond satiation is not yet sold, stored or fed to animals by anyone.
 
-## Attempt not merged (branch `farm-effort-follows-food-price`, commit `37bb6313`)
+## Attempt not merged (branch `farm-effort-follows-food-price` (deleted unmerged; its code is lost), commit `37bb6313`)
 
 Made farm effort continuous as the share `value / (1 + value)` of surplus hands, where value is a farm hour's food at
 the staple price over the unskilled wage, and counted granary overflow as waste (`carry_forward_and_waste_kg`,

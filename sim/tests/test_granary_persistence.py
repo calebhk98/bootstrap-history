@@ -1,58 +1,19 @@
-"""Regression tests for the granary fix -
-Complaints/44-no-granary-so-the-baseline-collapses.md.
+"""The granary (Complaints/44-no-granary-so-the-baseline-collapses.md), on inputs the test builds.
 
-WHAT THIS GUARDS. Three separate, previously-unguarded properties, each of
-which broke the model in its own way while this fix was being built:
+  1. `agriculture.stock_to_carry_forward_kg`: a caller that persists `Storage` across years must add `seed_retained_kg`
+     back into `stock_after_kg`, or one season's seed is deducted twice a year and the granary starves the population.
+  2. `farm_year.run_farm_year`: the stock carried forward is capped at `agriculture.granary_capacity_kg`, because a granary
+     is a physical structure, not an unlimited ledger, and a debt in seed corn does not pass on as a negative stock.
+  3. The farm workforce share does not respond to famine: it is computed from crop, soil and technique constants only.
 
-  1. `agriculture.stock_to_carry_forward_kg` - a caller that persists
-     `Storage` across years MUST add `seed_retained_kg` back into
-     `stock_after_kg`, or one full season's seed requirement is deducted
-     TWICE per year (once as this year's `seed_retained_kg`, again as next
-     year's `seed_sown_kg`) and a granary that is supposed to buffer a
-     population instead starves it on perfectly ordinary weather. This was
-     caught empirically during this task: the first attempt at persisting
-     `stock_after_kg` alone drove rome_100ad from 65,000,000 to roughly
-     700,000 people over a century of ordinary weather with no hazard -
-     WORSE than Complaints/44's original 21.9%-of-start bug, not better.
-  2. `Sim.farm_stock_kg` round-trips through save/load (SAVE_FIELDS,
-     sim/engine/saveload.py) - the field Complaints/44 says is the
-     one thing standing between "carry the granary across years" and it
-     actually happening, and per CLAUDE.md SS3.5, a field that fails to
-     round-trip breaks the game in normal play the moment `--session` is
-     used, because every command is a save and a load.
-  3. `agriculture.granary_capacity_kg` bounds what a caller carries forward
-     - a granary is a physical structure, not an unlimited ledger, and
-     GRANARY_CAPACITY_YEARS_OF_DEMAND's own declaration (agriculture.py)
-     gives the physical basis. This module checks the cap is respected at
-     the engine boundary (sim/engine/core.py's `_demographic_recovery`),
-     not that any particular numeric value was chosen for other reasons.
-
-This module also PINS the headline measurement Complaints/44 itself is
-about: an unshocked rome_100ad century should land substantially above the
-21.9%-of-start figure the bug produced, without demanding it land at
-exactly 100% (CLAUDE.md SS3.2 - the baseline is allowed to still be
-imperfect; what matters is that a real mechanism, not a tuned number, moved
-it). See CenturyMeasurementTests's own docstring for the exact bound and
-why it is loose.
-
-STYLE: this module needs a real `Sim` (the granary lives at the engine
-boundary, not inside agriculture.py alone), so - unlike test_agriculture.py
-and test_demography.py, which stay off sim/tests/harness.py on purpose -
-this one uses harness.py, the same way test_agriculture_wiring.py does for
-the same reason.
-
-Storage persists across years; the farm workforce share does not respond to famine.
-"""
-import statistics
+The save round trip of the stock is in test_granary_persistence_scenario.py; the century measurement is the slow validation
+in test_granary_persistence_validation.py."""
+import inspect
 import unittest
 
-from .harness import *  # noqa: F401,F403
+from sim.world import agriculture, farming_technique, farm_year as farm_year_model
 
-from sim.world import agriculture
-
-
-def _rome_sim(events=False):
-    return sim(civ="rome_100ad", events=events)
+QUICK_TOPIC = True
 
 
 class DoubleSeedDeductionTests(unittest.TestCase):
@@ -142,180 +103,54 @@ class DoubleSeedDeductionTests(unittest.TestCase):
             flows.stock_after_kg + flows.seed_retained_kg, places=6)
 
 
-class SaveLoadRoundTripTests(unittest.TestCase):
-    """CLAUDE.md SS3.5: no save-format migration, ever - but round-tripping
-    WITHIN a build is not optional, and `--session` makes every command a
-    save and a load, so a field that does not round-trip breaks ordinary
-    play immediately, not just a hypothetical resume.
-    """
-
-    def test_farm_stock_kg_round_trips_through_save_and_load(self):
-        import tempfile, os
-        from sim.engine import saveload as S
-
-        test_sim = _rome_sim(events=False)
-        for year in range(101, 111):
-            test_sim._demographic_recovery(year)
-        before = test_sim.farm_stock_kg
-        self.assertNotEqual(before, 0.0, "expected a nonzero granary after "
-                            "ten years - otherwise this test is not "
-                            "actually exercising round-trip of a moved "
-                            "value")
-
-        path = tempfile.mktemp(suffix=".json")
-        try:
-            S.save_state(test_sim, path)
-            fresh = _rome_sim(events=False)
-            self.assertEqual(fresh.farm_stock_kg, 0.0,
-                             "a freshly constructed Sim's own initial "
-                             "condition - if this ever changes, the "
-                             "assertion below proves nothing")
-            S.load_state(fresh, path)
-            self.assertEqual(fresh.farm_stock_kg, before)
-        finally:
-            if os.path.exists(path):
-                os.remove(path)
-
-    def test_a_save_missing_farm_stock_kg_is_refused_not_silently_defaulted(self):
-        # CLAUDE.md SS3.5's own rule: no upgrade path, no `if "old_key" in
-        # data`. An old save simply does not load - see saveload.py's own
-        # comment on REQUIRED_SAVE_FIELDS for why silently accepting a
-        # partial shape is worse than refusing the file outright.
-        import tempfile, os, json
-        from sim.engine import saveload as S
-
-        test_sim = _rome_sim(events=False)
-        path = tempfile.mktemp(suffix=".json")
-        try:
-            S.save_state(test_sim, path)
-            with open(path) as handle:
-                blob = json.load(handle)
-            if "farm_stock_kg" in blob:
-                del blob["farm_stock_kg"]
-            else:
-                del blob["economy"]
-            with open(path, "w") as handle:
-                json.dump(blob, handle)
-            fresh = _rome_sim(events=False)
-            with self.assertRaises(ValueError):
-                S.load_state(fresh, path)
-        finally:
-            if os.path.exists(path):
-                os.remove(path)
-
-
 class GranaryCapacityTests(unittest.TestCase):
-    """GRANARY_CAPACITY_YEARS_OF_DEMAND's own declaration (agriculture.py)
-    gives the physical basis; this checks the cap the engine boundary
-    (`Sim._demographic_recovery`) actually applies, never lets the carried
-    stock exceed it.
-    """
+    """The stock a farm year carries forward never exceeds what a granary of that year's demand can hold."""
 
-    def test_farm_stock_kg_never_exceeds_capacity_over_many_good_years(self):
-        test_sim = _rome_sim(events=False)
-        # Fertile ground with room to work: a structural surplus, whatever
-        # soil the civilisation's own territory happens to have.
-        test_sim.farm_land.quality = 1.3
-        test_sim.farm_land.hectares *= 2.0
-        max_seen_ratio_to_capacity = 0.0
-        for year in range(101, 161):
-            test_sim._demographic_recovery(year)
-            demand_kg = test_sim._last_farm_year.food_demand_kg
-            capacity_kg = agriculture.granary_capacity_kg(demand_kg)
-            self.assertLessEqual(test_sim.farm_stock_kg, capacity_kg + 1e-6,
-                                 (year, test_sim.farm_stock_kg, capacity_kg))
-            if capacity_kg > 0:
-                max_seen_ratio_to_capacity = max(
-                    max_seen_ratio_to_capacity,
-                    test_sim.farm_stock_kg / capacity_kg)
-        # The cap should actually bind at some point over sixty years of
-        # ordinary weather, given this module's own documented structural
-        # surplus at reference technique (agriculture.py's module
-        # docstring) - otherwise this test would pass trivially even if
-        # the cap were wired in wrong (e.g. capacity_kg computed as zero).
-        self.assertGreater(max_seen_ratio_to_capacity, 0.5)
+    def _run_years(self, years, hectares, quality=1.3, weather=1.0):
+        land = agriculture.Land(hectares, quality=quality)
+        population = 20000.0
+        workers = agriculture.farm_workers_fte_for_population(population)
+        technique = farming_technique.DEFAULT_TECHNIQUE
+        stock = 0.0
+        rows = []
+        for year in range(years):
+            result = farm_year_model.run_farm_year(land, technique, stock, population, workers, 42 + year, weather)
+            stock = result.stock_kg
+            capacity = agriculture.granary_capacity_kg(result.farm_year.food_demand_kg)
+            rows.append((stock, capacity))
+        return rows
 
+    def test_the_carried_stock_never_exceeds_capacity_over_many_good_years(self):
+        land_hectares = agriculture.farmland_for_population(20000.0).hectares * 2.0
+        rows = self._run_years(60, land_hectares)
+        for stock, capacity in rows:
+            self.assertLessEqual(stock, capacity + 1e-6, (stock, capacity))
 
-class CenturyMeasurementTests(unittest.TestCase):
-    """The actual number Complaints/44 is about. Loose bounds, deliberately
-    - see CLAUDE.md SS3.2: the baseline is not required to be flat, and
-    must never be forced flat by tuning a physical quantity (this test
-    would not catch that kind of cheat anyway; hand review is what
-    guards against it). What this DOES guard is the
-    granary regressing back to inert (a fresh `Storage(stock_kg=0.0, ...)`
-    built every year again) or the double-seed-deduction bug returning,
-    either of which would drag the century-end fraction back down toward
-    Complaints/44's original 21.9%, or below it.
-    """
+    def test_the_cap_binds_given_a_structural_surplus(self):
+        # otherwise the cap test above would pass even with capacity computed as zero
+        land_hectares = agriculture.farmland_for_population(20000.0).hectares * 2.0
+        rows = self._run_years(60, land_hectares)
+        self.assertGreater(max(stock / capacity for stock, capacity in rows if capacity > 0), 0.5)
 
-    def test_unshocked_century_lands_well_above_the_pre_fix_measurement(self):
-        test_sim = _rome_sim(events=False)
-        start = test_sim.population.total
-        for year in range(101, 201):
-            test_sim._demographic_recovery(year)
-        end = test_sim.population.total
-        fraction = end / start
-        # Complaints/44's own pre-fix measurement was 0.219 (21.9%); this
-        # task's own re-measurement on this checkout, before the granary
-        # existed, was 0.195. Comfortably above either, without demanding
-        # anything close to 1.0.
-        self.assertGreater(fraction, 0.5, (start, end, fraction))
-
-    def test_mean_nutrition_ratio_is_close_to_one_not_merely_plausible(self):
-        # A tighter bound than test_agriculture_wiring.py's own
-        # NoFamineWithoutCauseTests (which predates the granary and only
-        # asks for > 0.7) - the granary's whole point is to bring this
-        # closer to subsistence than the unbuffered wiring could.
-        test_sim = _rome_sim(events=False)
-        ratios = nutrition_ratios_over_years(test_sim, range(101, 201))
-        mean_ratio = statistics.fmean(ratios)
-        self.assertGreater(mean_ratio, 0.9, ratios)
-        # THE UPPER BOUND IS NOT 1.0: capping the mean at subsistence would
-        # forbid the outcome this whole milestone is for. A population that
-        # grows must, on average, be fed at or above subsistence - that is
-        # what growth IS. With weather drawn per home region and pooled by
-        # land share (Complaints/46), good years survive often enough to
-        # show up in the mean, measured at 1.0042 over this century. The
-        # band is comfortably fed, not gorging - the physical ceiling on
-        # that is MAXIMUM_INTAKE_MULTIPLE_OF_SUBSISTENCE (1.75), and a mean
-        # anywhere near it would mean the farm is badly oversized.
-        self.assertLess(mean_ratio, 1.1, ratios)
+    def test_a_granary_never_holds_less_than_nothing(self):
+        starved = self._run_years(20, agriculture.farmland_for_population(20000.0).hectares * 0.05, weather=0.5)
+        for stock, _capacity in starved:
+            self.assertGreaterEqual(stock, 0.0)
 
 
 class FarmWorkforceShareIsFixedTests(unittest.TestCase):
-    """Answers a stakeholder question with a test rather than only prose:
-    does the model let people move between professions when food gets
-    scarce? `farm_workers_fte_for_population` is
-    `fraction_of_population_that_must_farm() * population` -
-    a fraction computed purely from crop/soil/rotation/toolkit/storage-
-    technique constants, never from the current nutrition ratio, wage,
-    price, or any other scarcity signal `_demographic_recovery` has
-    available. This test pins that: the SAME fraction applies whether the
-    population is comfortably fed or in the middle of a severe,
-    land-caused famine, which is the direct, checked answer to "can a
-    famine turn blacksmiths into farmers" (Complaints/44's fourth
-    question) - not yet, because nothing here reads the famine at all
-    before deciding how many people farm.
-    """
+    """Can a famine turn blacksmiths into farmers? Not yet: the share that farms is computed from crop, soil, rotation,
+    toolkit and storage constants, and takes no nutrition, wage, price or other scarcity signal."""
 
-    def test_the_farm_share_is_identical_whether_or_not_a_famine_is_happening(self):
-        fed = _rome_sim(events=False)
-        fed._demographic_recovery(101)
-        fed_share = (agriculture.fraction_of_population_that_must_farm())
+    def test_the_farm_share_takes_only_technique_arguments(self):
+        self.assertEqual(list(inspect.signature(agriculture.fraction_of_population_that_must_farm).parameters),
+                         ["crop", "soil", "rotation", "toolkit", "storage_technique"])
 
-        starving = _rome_sim(events=False)
-        starving.farm_land.hectares *= 0.15  # a severe, real famine
-        starving._demographic_recovery(101)
-        starving_share = (agriculture.fraction_of_population_that_must_farm())
+    def test_the_workers_are_that_share_of_the_population(self):
+        share = agriculture.fraction_of_population_that_must_farm()
+        for population in (1000.0, 500000.0):
+            self.assertAlmostEqual(agriculture.farm_workers_fte_for_population(population), share * population)
 
-        # Not merely close - EXACTLY the same call, because nothing in the
-        # call site passes anything famine-dependent to it (see
-        # sim/engine/core.py's `_demographic_recovery`: `agriculture.
-        # farm_workers_fte_for_population(adult_equivalent_population)` is
-        # called with no crop/soil/rotation/toolkit override, ever).
-        self.assertEqual(fed_share, starving_share)
-        # And the nutrition ratios differ hugely, confirming the famine
-        # was real and severe while the workforce share never moved at all.
-        self.assertLess(
-            starving._last_demographic_step.nutrition_ratio,
-            fed._last_demographic_step.nutrition_ratio - 0.3)
+
+if __name__ == "__main__":
+    unittest.main()

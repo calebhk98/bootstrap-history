@@ -1,171 +1,225 @@
-"""Regression coverage for Complaint 188: labour needs shown as uncertain
-estimates while something is unknown (option `fuzzy_estimates`, off by default).
+"""Complaint 188: labour needs shown as uncertain estimates while something is unknown (option `fuzzy_estimates`, off by
+default). Only the display is fuzzy. The rules are the functions of sim/engine/fuzzy_estimates.py, called on a stand-in
+for the game that holds only what they read (salt, done and active work, nodes). Whether a saved game keeps the option and
+the start check keeps the real needs: test_scenarios_batch3_saves."""
+QUICK_TOPIC = True
 
-Only the display is fuzzy; the start check, hiring, supervision and bills use
-the real numbers.
-"""
-from .harness import *
-from sim.ui.proto.render import render_pretty
-from sim.engine import saveload as _saveload
+import copy
+import random
+import unittest
+from types import SimpleNamespace
 
-NODE = "fin_lottery"          # a going concern with staff, a foreman-free crew and two hired trades
+from sim.engine import fuzzy_estimates as fuzzy
+from sim.ui.proto.render_screen_why import _est, _est_tag
 
-
-def fuzzy_sim(capital=1_000_000):
-    fuzzy = sim(capital=capital)
-    fuzzy.fuzzy_estimates = True
-    return fuzzy
-
-
-def why_of(sim_state, node_id=NODE):
-    return S._agent_dispatch(sim_state, NODES, {"cmd": "why", "id": node_id})
+NODE_ID = "probe_work"
+NODE = {"id": NODE_ID, "sch": 2, "art": 3, "ph": 400.0, "lab": {"smith": 120.0, "mason": 60.0}}
+REAL_LAB = dict(NODE["lab"])
 
 
-def figures(out):
-    """Every fuzzy-able labour, money and time figure of a `why` reply."""
-    flat = {
-        "founder_hours": out["founder_hours"],
-        "calendar_floor_years": out["calendar_floor_years"],
-        "cost_total": out["cost"]["total"],
-        "scholars": out["staff_needed"]["scholars"],
-        "artisans": out["staff_needed"]["artisans"],
-        "keep_scholars": out["staff_to_keep_it_open"]["scholars"],
-        "keep_artisans": out["staff_to_keep_it_open"]["artisans"],
-    }
-    for trade, hours in out["hired_labour"].items():
+def game(salt=12345, enabled=True, done=(), active=None):
+    """What the estimate functions read of a game."""
+    return SimpleNamespace(state=SimpleNamespace(_fuzzy_estimates=enabled, _fuzzy_salt=salt,
+                                                 scenario=SimpleNamespace(year=100)),
+                           rng=random.Random(1), done=set(done), active=dict(active or {}),
+                           nodes={NODE_ID: NODE, "other_work": dict(NODE, id="other_work")})
+
+
+def why_reply():
+    """The parts of a `why` reply the estimates rewrite."""
+    return {"ok": True, "id": NODE_ID, "staff_needed": {"scholars": 2, "artisans": 3},
+            "staff_to_keep_it_open": {"scholars": 1.0, "artisans": 2.0},
+            "hired_labour": dict(REAL_LAB), "founder_hours": 400.0, "calendar_floor_years": 3.0,
+            "cost": {"total": 1000.0, "labour": 600.0, "materials": 400.0},
+            "failure_costs": 50.0, "failure_costs_hours": 40.0}
+
+
+def figures(reply):
+    flat = {"founder_hours": reply["founder_hours"], "calendar_floor_years": reply["calendar_floor_years"],
+            "cost_total": reply["cost"]["total"], "scholars": reply["staff_needed"]["scholars"],
+            "artisans": reply["staff_needed"]["artisans"], "keep_scholars": reply["staff_to_keep_it_open"]["scholars"],
+            "keep_artisans": reply["staff_to_keep_it_open"]["artisans"]}
+    for trade, hours in reply["hired_labour"].items():
         flat["hired:" + trade] = hours
     return flat
 
 
-REAL = {
-    "founder_hours": NODES[NODE]["ph"],
-    "scholars": NODES[NODE]["sch"],
-    "artisans": NODES[NODE]["art"],
-}
-real_lab = dict(NODES[NODE]["lab"])
+def fuzzed(sim_state, actor=None):
+    return fuzzy.fuzz_why(sim_state, NODE_ID, why_reply(), actor)
 
-# ---- option off: exactly the real figures, and no estimate markers -----------
-plain = sim(capital=1_000_000)
-out_off = why_of(plain)
-check("option off: staff needed is the real figure",
-      out_off["staff_needed"] == {"scholars": REAL["scholars"], "artisans": REAL["artisans"]},
-      out_off["staff_needed"])
-check("option off: hired labour is exactly the node's trades and hours",
-      out_off["hired_labour"] == real_lab, out_off["hired_labour"])
-check("option off: no estimate marker and no '(est.)' text",
-      not out_off.get("figures_are_estimates") and "(est.)" not in render_pretty("why", out_off))
 
-# ---- option on: fuzzy, stable, in range, labelled -----------------------------
-fuzzy = fuzzy_sim()
-first = why_of(fuzzy)
-second = why_of(fuzzy)
-check("fuzzy: repeated why shows identical figures (drawn once, never re-rolled)",
-      figures(first) == figures(second), (figures(first), figures(second)))
-check("fuzzy: figures are marked as estimates in the JSON",
-      bool(first.get("figures_are_estimates")), sorted(first))
-check("fuzzy: the rendered screen labels estimates",
-      "(est.)" in render_pretty("why", first), render_pretty("why", first)[:2000])
+class OptionOffTests(unittest.TestCase):
+    def test_the_reply_is_untouched_with_the_option_off(self):
+        reply = why_reply()
+        self.assertEqual(fuzzy.fuzz_reply(game(enabled=False), "why", {}, copy.deepcopy(reply)), reply)
 
-shown = figures(first)
-differs = [key for key, value in (
-    ("founder_hours", REAL["founder_hours"]), ("scholars", REAL["scholars"]),
-    ("artisans", REAL["artisans"])) if shown[key] != value]
-check("fuzzy: at least one real figure is displayed inexactly", bool(differs), shown)
-in_range = all(0 <= shown[key] <= 2 * REAL[key] + 1e-9 for key in REAL)
-check("fuzzy: each shown value lies in [0, 2 x real]", in_range, shown)
-for trade, hours in real_lab.items():
-    check("fuzzy: hired hours for %s lie in [0, 2 x real]" % trade,
-          0 <= shown["hired:" + trade] <= 2 * hours + 1e-9, shown)
+    def test_no_estimate_marker_with_the_option_off(self):
+        self.assertNotIn("figures_are_estimates", fuzzy.fuzz_reply(game(enabled=False), "why", {}, why_reply()))
 
-# Different actors see different draws for the same node.
-first_actor_total = sum(shown[key] for key in REAL)
-other = fuzzy_sim()
-other.viewer_actor_id = "another_player"
-check("fuzzy: another actor draws its own estimates",
-      figures(why_of(other)) != shown, figures(why_of(other)))
+    def test_a_refused_reply_is_left_alone_with_the_option_on(self):
+        refused = {"ok": False, "error": "no"}
+        self.assertEqual(fuzzy.fuzz_reply(game(), "why", {}, dict(refused)), refused)
 
-# ---- decoys: trades the node does not use, stable, gone after start -----------
-decoys = sorted(set(first["hired_labour"]) - set(real_lab))
-check("fuzzy: one to three decoy trades are listed before starting",
-      1 <= len(decoys) <= 3, first["hired_labour"])
-check("fuzzy: the real trades are all still listed",
-      set(real_lab) <= set(first["hired_labour"]), first["hired_labour"])
-check("fuzzy: decoys are the same on every look",
-      sorted(set(second["hired_labour"]) - set(real_lab)) == decoys)
 
-# ---- save / load round trip ---------------------------------------------------
-import tempfile as _tempfile
-_path = os.path.join(_tempfile.mkdtemp(), "fuzzy192.json")
-_saveload.save_state(fuzzy, _path)
-reloaded = sim(capital=1_000_000)
-_saveload.load_state(reloaded, _path)
-check("fuzzy: the option survives save and load", bool(getattr(reloaded, "fuzzy_estimates", False)))
-check("fuzzy: the same figures are shown after save and load",
-      figures(why_of(reloaded)) == shown, (figures(why_of(reloaded)), shown))
+class StableDrawTests(unittest.TestCase):
+    def test_a_repeated_look_shows_identical_figures(self):
+        self.assertEqual(figures(fuzzed(game())), figures(fuzzed(game())))
 
-# ---- start: spread halves, decoys drop out, start uses the real values --------
-started = S._agent_dispatch(fuzzy, NODES, {"cmd": "start", "id": NODE})
-check("fuzzy: start succeeds on the real check", started.get("ok") is True, started)
-after = why_of(fuzzy)
-check("fuzzy: decoys drop out at start",
-      set(after["hired_labour"]) == set(real_lab), after["hired_labour"])
-sample = "founder_hours"
-deviation_before = shown[sample] / REAL[sample] - 1
-deviation_after = figures(after)[sample] / REAL[sample] - 1
-check("fuzzy: the founder-hours spread halves at start",
-      abs(deviation_before) > 0.02
-      and abs(deviation_after - deviation_before / 2) < 0.02,
-      (deviation_before, deviation_after))
-big_trade = max(real_lab, key=real_lab.get)
-hired_before = shown["hired:" + big_trade] / real_lab[big_trade] - 1
-hired_after = figures(after)["hired:" + big_trade] / real_lab[big_trade] - 1
-check("fuzzy: the hired-hours spread halves at start",
-      abs(hired_after - hired_before / 2) < 0.02, (hired_before, hired_after))
-check("fuzzy: start's own reply shows the same estimate as why, not the exact hours",
-      started["founder_hours_needed"] == figures(after)["founder_hours"]
-      and started["founder_hours_needed"] != REAL["founder_hours"], started)
+    def test_the_same_salt_gives_the_same_figures_in_another_game_object(self):
+        self.assertEqual(figures(fuzzed(game(salt=77))), figures(fuzzed(game(salt=77))))
 
-# ---- narrowing with progress; exact at completion -----------------------------
-active = fuzzy.active[NODE]
-active["ph_left"] = NODES[NODE]["ph"] * 0.5          # half the founder hours spent
-halfway = figures(why_of(fuzzy))[sample] / REAL[sample] - 1
-check("fuzzy: the spread narrows in proportion to work done",
-      abs(halfway - deviation_after / 2) < 0.02, (deviation_after, halfway))
-active["ph_left"] = NODES[NODE]["ph"] * 0.1
-nearly = figures(why_of(fuzzy))[sample] / REAL[sample] - 1
-check("fuzzy: the spread keeps narrowing",
-      abs(nearly) < abs(halfway) + 1e-9, (halfway, nearly))
-del fuzzy.active[NODE]
-fuzzy.done.add(NODE)
-fuzzy._done_changed()
-complete = why_of(fuzzy)
-check("fuzzy: completion shows the exact figures",
-      complete["staff_needed"] == {"scholars": REAL["scholars"], "artisans": REAL["artisans"]}
-      and complete["hired_labour"] == real_lab
-      and complete["founder_hours"] == REAL["founder_hours"], complete["staff_needed"])
+    def test_another_salt_gives_other_figures(self):
+        self.assertNotEqual(figures(fuzzed(game(salt=77))), figures(fuzzed(game(salt=78))))
 
-# ---- other screens: available rows and the compact variant --------------------
-fuzzy2 = fuzzy_sim()
-rows = S._agent_dispatch(fuzzy2, NODES, {"cmd": "available", "limit": 200})["available"]
-row = next((r for r in rows if r["id"] == NODE), None)
-check("fuzzy: available lists the node", row is not None)
-if row is not None:
-    check("fuzzy: available row hours are an estimate within [0, 2 x real]",
-          0 <= row["founder_hours"] <= 2 * REAL["founder_hours"] + 1e-9, row)
-    check("fuzzy: available row hours match what why shows",
-          row["founder_hours"] == why_of(fuzzy2)["founder_hours"], row)
+    def test_another_actor_draws_its_own_estimates(self):
+        self.assertNotEqual(figures(fuzzed(game(), "player")), figures(fuzzed(game(), "another_player")))
 
-# ---- the real need is what start/refusal states ---------------------------------
-refused_sim = fuzzy_sim()
-refused = S._agent_dispatch(refused_sim, NODES, {"cmd": "start", "id": "ag2_botanic_garden"})
-real_art = NODES["ag2_botanic_garden"]["art"]
-check("fuzzy: a refusal at start states the real need",
-      refused.get("ok") is False and ("needs %d trained craftsmen" % real_art) in refused.get("error", ""),
-      refused)
-refused_why = why_of(refused_sim, "ag2_botanic_garden")
-check("fuzzy: why does not print the exact refusal need",
-      ("needs %d trained craftsmen" % real_art) not in json.dumps(refused_why), refused_why.get("start_blocked_reason"))
-compact = S._agent_dispatch(refused_sim, NODES,
-                            {"cmd": "why", "id": "ag2_botanic_garden", "compact": True})
-check("fuzzy: the compact why does not print the exact refusal need",
-      ("needs %d trained craftsmen" % real_art) not in json.dumps(compact), compact)
+    def test_another_node_draws_its_own_ratio(self):
+        self.assertNotEqual(fuzzy.ratio(game(), NODE_ID, "hours"), fuzzy.ratio(game(), "other_work", "hours"))
+
+    def test_the_salt_is_drawn_once_from_the_games_rng_and_kept(self):
+        fresh = game(salt=0)
+        first = fuzzy.salt(fresh)
+        self.assertGreater(first, 0)
+        self.assertEqual(fuzzy.salt(fresh), first)
+
+
+class MarkedAsEstimatesTests(unittest.TestCase):
+    def test_the_reply_marks_the_figures_that_are_estimates(self):
+        reply = fuzzed(game())
+        self.assertTrue(reply["figures_are_estimates"])
+        self.assertIn("founder_hours", reply["figures_are_estimates"])
+        self.assertEqual(reply["estimates_note"], fuzzy.ESTIMATE_NOTE)
+
+    def test_a_marked_field_reads_as_an_estimate_on_the_screen(self):
+        # presentation: the tilde and the (est.) tag
+        reply = {"figures_are_estimates": ["founder_hours"]}
+        self.assertEqual(_est(reply, "founder_hours", 400), "~400")
+        self.assertEqual(_est_tag(reply, "founder_hours"), " (est.)")
+        self.assertEqual(_est(reply, "cost", 400), "400")
+        self.assertEqual(_est_tag(reply, "cost"), "")
+
+
+class RangeTests(unittest.TestCase):
+    def test_each_shown_value_lies_between_nothing_and_twice_the_real_one(self):
+        for salt in range(1, 60):
+            shown = figures(fuzzed(game(salt=salt)))
+            real = {"founder_hours": NODE["ph"], "scholars": NODE["sch"], "artisans": NODE["art"]}
+            for key, value in real.items():
+                self.assertTrue(0 <= shown[key] <= 2 * value + 1e-9, (salt, key, shown[key]))
+            for trade, hours in REAL_LAB.items():
+                self.assertTrue(0 <= shown["hired:" + trade] <= 2 * hours + 1e-9, (salt, trade, shown))
+
+    def test_figures_are_shown_inexactly(self):
+        exact = {"founder_hours": NODE["ph"], "scholars": NODE["sch"], "artisans": NODE["art"]}
+        shown = figures(fuzzed(game()))
+        self.assertTrue([key for key, value in exact.items() if shown[key] != value])
+
+    def test_a_real_figure_of_nothing_stays_nothing(self):
+        self.assertEqual(fuzzy.estimate(game(), NODE_ID, "x", 0, 2), 0)
+        self.assertIsNone(fuzzy.estimate(game(), NODE_ID, "x", None, 2))
+
+
+class DecoyTests(unittest.TestCase):
+    def test_one_to_three_decoy_trades_are_listed_before_starting_beside_the_real_ones(self):
+        for salt in range(1, 40):
+            labour = fuzzed(game(salt=salt))["hired_labour"]
+            decoys = set(labour) - set(REAL_LAB)
+            self.assertTrue(1 <= len(decoys) <= 3, (salt, labour))
+            self.assertTrue(set(REAL_LAB) <= set(labour))
+
+    def test_decoys_are_the_same_on_every_look(self):
+        self.assertEqual(fuzzy.decoy_hours(game(), NODE_ID), fuzzy.decoy_hours(game(), NODE_ID))
+
+    def test_decoys_drop_out_at_start(self):
+        started = game(active={NODE_ID: {"ph_left": NODE["ph"]}})
+        self.assertEqual(set(fuzzed(started)["hired_labour"]), set(REAL_LAB))
+
+    def test_decoys_drop_out_when_done(self):
+        self.assertEqual(fuzzy.decoy_hours(game(done={NODE_ID}), NODE_ID), {})
+
+
+class SpreadTests(unittest.TestCase):
+    def test_the_spread_is_full_before_the_work_starts(self):
+        self.assertEqual(fuzzy.spread(game(), NODE_ID), 1.0)
+
+    def test_the_spread_halves_at_start(self):
+        self.assertEqual(fuzzy.spread(game(active={NODE_ID: {"ph_left": NODE["ph"]}}), NODE_ID), 0.5)
+
+    def test_the_founder_hours_deviation_halves_at_start(self):
+        before = fuzzy.ratio(game(), NODE_ID, "hours") - 1.0
+        after = fuzzy.ratio(game(active={NODE_ID: {"ph_left": NODE["ph"]}}), NODE_ID, "hours") - 1.0
+        self.assertGreater(abs(before), 0.02)
+        self.assertAlmostEqual(after, before / 2.0)
+
+    def test_the_hired_hours_deviation_halves_at_start(self):
+        before = fuzzy.ratio(game(), NODE_ID, "lab.smith") - 1.0
+        after = fuzzy.ratio(game(active={NODE_ID: {"ph_left": NODE["ph"]}}), NODE_ID, "lab.smith") - 1.0
+        self.assertAlmostEqual(after, before / 2.0)
+
+    def test_the_spread_narrows_in_proportion_to_the_work_done(self):
+        spreads = [fuzzy.spread(game(active={NODE_ID: {"ph_left": NODE["ph"] * left}}), NODE_ID)
+                   for left in (1.0, 0.5, 0.1, 0.0)]
+        self.assertEqual(spreads[0], 0.5)
+        self.assertAlmostEqual(spreads[1], 0.25)
+        self.assertAlmostEqual(spreads[2], 0.05)
+        self.assertEqual(spreads[3], 0.0)
+        self.assertEqual(spreads, sorted(spreads, reverse=True))
+
+    def test_the_halfway_deviation_is_half_the_start_deviation(self):
+        start = fuzzy.ratio(game(active={NODE_ID: {"ph_left": NODE["ph"]}}), NODE_ID, "hours") - 1.0
+        halfway = fuzzy.ratio(game(active={NODE_ID: {"ph_left": NODE["ph"] * 0.5}}), NODE_ID, "hours") - 1.0
+        self.assertAlmostEqual(halfway, start / 2.0)
+
+    def test_completion_shows_the_exact_figures(self):
+        done = game(done={NODE_ID})
+        self.assertEqual(fuzzy.spread(done, NODE_ID), 0.0)
+        reply = fuzzy.fuzz_why(done, NODE_ID, why_reply())
+        self.assertEqual(reply, why_reply())
+
+
+class SharedDrawTests(unittest.TestCase):
+    def test_the_available_row_hours_match_what_why_shows(self):
+        sim_state = game()
+        row = {"id": NODE_ID, "cost": 1000.0, "founder_hours": 400.0}
+        fuzzy.fuzz_row(sim_state, NODE_ID, row)
+        self.assertEqual(row["founder_hours"], fuzzed(sim_state)["founder_hours"])
+
+    def test_the_available_row_hours_lie_within_twice_the_real_hours(self):
+        row = {"id": NODE_ID, "founder_hours": 400.0}
+        fuzzy.fuzz_row(game(), NODE_ID, row)
+        self.assertTrue(0 <= row["founder_hours"] <= 2 * NODE["ph"] + 1e-9)
+
+    def test_the_start_reply_shows_the_same_estimate_as_why_not_the_exact_hours(self):
+        started = game(active={NODE_ID: {"ph_left": NODE["ph"]}})
+        reply = {"ok": True, "started": NODE_ID, "founder_hours_needed": 400.0}
+        fuzzy.fuzz_start(started, NODE_ID, reply)
+        self.assertEqual(reply["founder_hours_needed"], fuzzed(started)["founder_hours"])
+        self.assertNotEqual(reply["founder_hours_needed"], NODE["ph"])
+
+    def test_a_row_for_finished_work_is_untouched(self):
+        row = {"id": NODE_ID, "founder_hours": 400.0, "cost": 1000.0}
+        fuzzy.fuzz_row(game(done={NODE_ID}), NODE_ID, row)
+        self.assertEqual(row, {"id": NODE_ID, "founder_hours": 400.0, "cost": 1000.0})
+
+
+class ExactNeedHiddenTests(unittest.TestCase):
+    def test_the_blocked_reason_with_a_number_is_made_vague(self):
+        reply = why_reply()
+        reply["start_blocked_reason"] = "needs 3 trained craftsmen, and only 1.0 can be put on it"
+        fuzzy.fuzz_why(game(), NODE_ID, reply)
+        self.assertNotIn("3 trained craftsmen", reply["start_blocked_reason"])
+        self.assertNotRegex(reply["start_blocked_reason"], r"\d")
+
+    def test_a_blocker_naming_staff_or_money_is_made_vague(self):
+        reply = why_reply()
+        reply["blockers"] = [{"kind": "specialists", "text": "needs 3 smiths"}, {"kind": "money", "text": "short 40 den"},
+                             {"kind": "prerequisite", "text": "needs 3 nodes first"}]
+        fuzzy.fuzz_why(game(), NODE_ID, reply)
+        self.assertNotRegex(reply["blockers"][0]["text"], r"\d")
+        self.assertNotRegex(reply["blockers"][1]["text"], r"\d")
+        self.assertIn("3", reply["blockers"][2]["text"])
+
+
+if __name__ == "__main__":
+    unittest.main()

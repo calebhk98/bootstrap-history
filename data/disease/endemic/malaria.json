@@ -6,14 +6,14 @@
   "_doc": "As trypanosomiasis.json. Host 'people': annual_loss_at_full_challenge is an excess death rate per year for each demography band (children, working_age, elderly), added to baseline mortality and scaled by the disease burden the nation has not yet removed.",
   "range": [],
   "challenge_envelope": [
-    {"layer": "mean_temperature_c", "optimal": [22, 30], "tolerated": [16, 35]},
+    {"layer": "mean_temperature_c", "optimal": [22, 28], "tolerated": [17, 34]},
     {"layer": "annual_precipitation_mm", "optimal": [1000, 4000], "tolerated": [400, 6000]}
   ],
   "hosts": {
     "people": {"annual_loss_at_full_challenge": {"children": 0.015, "working_age": 0.002, "elderly": 0.004}}
   },
   "sources": {
-    "challenge_envelope": {"confidence": "recalled", "source": "Mordecai et al. 2013 Optimal temperature for malaria transmission is dramatically lower than previously predicted, Ecology Letters 16:22 (transmission of P. falciparum between about 17 and 34 C, best near 25 C); standing water for breeding follows rain, so the wet side is wide (Craig et al. 1999 A climate-based distribution model of malaria transmission in sub-Saharan Africa, Parasitology Today 15:105)"},
+    "challenge_envelope": {"confidence": "read", "source": "Mordecai et al. 2013 Ecology Letters 16:22, abstract via USGS (pubs.usgs.gov/publication/70125667): 'predicts optimal malaria transmission at 25 C' and 'transmission decreases dramatically at temperatures > 28 C'; the 17 to 34 C limits are quoted from Ryan et al., Mapping physiological suitability limits for malaria in Africa under climate change (arXiv 1407.7612): 'temperatures between 17-34 C (Mordecai et al. 2013)'. The lower edge of the optimum (22 C) has no source found. Rainfall edges: no source found (Craig et al. 1999 not opened)"},
     "hosts.people": {"confidence": "disputed", "source": "Malaria deaths before control fell mostly on children under five in holoendemic areas, of order one to two percent of them a year, a few per thousand of adults who have acquired partial immunity (Snow et al. 2005 Nature 434:214; Hay et al. 2004). No pre-industrial death register exists, so the rates are an order of magnitude only."}
   }
 }

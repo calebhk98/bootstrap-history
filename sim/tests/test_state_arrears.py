@@ -1,73 +1,109 @@
-"""Complaint 475: collection is a modest part of the state's coin revenue; a state that cannot meet its own
-standing need lends nothing; unpaid army and office pay is arrears the state owes, paid first from later
-revenue, and a mutinous army takes what it is owed."""
-from .harness import *  # noqa: F401,F403
+"""Complaint 475: collection is a modest part of the state's coin revenue; unpaid army and office pay is arrears the
+state owes, paid first from later revenue, and a mutinous army takes what it is owed. A state short of its own need
+lends nothing (the lending rule: test_state_surplus_rules). How a shortfall becomes arrears is
+test_state_fiscal_response. The rules are called on a government and a stub world built here; the whole-game
+scenario is test_state_arrears_scenario."""
 
-from sim.agents import group_servants
-from sim.engine.agents_port import SimWorld
+QUICK_TOPIC = True
 
+from .harness import check
 
-def one_year(game):
-    game.state.scenario.year += 1
-    game.advance_actors(game.state.scenario.year)
+from sim.agents import arrears, budget_works, group_servants, revenue
+from sim.agents.api import ActorRecord
+from sim.agents.budget_line import Line
+from sim.agents.government import Government
 
-
-def short_state():
-    """Rome whose army costs more than any revenue and credit can pay, after its first year."""
-    game = sim()
-    game.civ["standing_army"] = 1.0e8
-    game.state_treasury().money = 0.0
-    one_year(game)
-    return game, game.state_treasury()
+from .agents_fake_world import FakeWorld
 
 
-# ---- collection is not most of the coin revenue ----------------------------------------------------------------
-default = sim()
-default_treasury = default.state_treasury()
-one_year(default)
-collected = default_treasury.record.income.get("taxation", 0.0)
-collection_cost = default_treasury.record.outlays.get("tax_collection", 0.0)
-check("collection costs well under half of the coin the state takes in its first year",
-      collected > 0.0 and collection_cost < 0.5 * collected, (collection_cost, collected))
+class StateWorld(FakeWorld):
+    """The assessments, the wage and the words a collection line and a mutiny use."""
 
-# ---- a state short of its standing need does not lend ------------------------------------------------------------
-game, treasury = short_state()
-check("the short state left need unpaid", sum(treasury.record.unfunded.values()) > 0.0, treasury.record.unfunded)
-treasury.money = 1.0e12   # a windfall after the shortfall: the year's lenders still see a state that could not pay
-check("a state that left its standing need unpaid offers no funds to lend",
-      game.market_funds(SimWorld(game))["state"] == 0.0, game.market_funds(SimWorld(game)))
-solvent = sim()
-solvent_treasury = solvent.state_treasury()
-solvent_treasury.money = 1.0e12
-one_year(solvent)
-check("a state that met its need and holds a reserve still does",
-      solvent.market_funds(SimWorld(solvent))["state"] > 0.0, solvent.market_funds(SimWorld(solvent)))
+    def __init__(self):
+        super().__init__()
+        self.assessments = []
+        self.said = []
 
-# ---- unpaid army and office pay becomes arrears -------------------------------------------------------------------
-game, treasury = short_state()
-owed = treasury.record.arrears
-check("the unpaid army pay is owed as arrears", owed.get("army", 0.0) > 0.0
-      and abs(owed["army"] - treasury.record.unfunded["army"]) < 1e-6 * owed["army"], (owed, treasury.record.unfunded))
-check("the money screen counts the arrears as owed by the state",
-      game.capital_market_report()["the_state_owes"] >= round(sum(owed.values()), 1) - 1.0, game.capital_market_report())
-before = dict(owed)
-game.civ["standing_army"] = 0.0
-treasury.money = 1.0e12
-one_year(game)
-check("later revenue pays the arrears first, in full when the purse covers them",
-      all(treasury.record.arrears.get(line, 0.0) < 1e-6 for line in before), (before, treasury.record.arrears))
+    def pay_per_person_year(self, trade):
+        return 10.0
 
-# ---- the army takes its arrears --------------------------------------------------------------------------------------
-mutinous = sim()
-mutinous_treasury = mutinous.state_treasury()
-one_year(mutinous)
-mutinous_treasury.record.unfunded = {line: 0.0 for line in mutinous_treasury.record.need}   # this year's pay was in full
-mutinous_treasury.record.arrears = {"army": 60000.0}   # but a past shortfall is still owed
-mutinous_treasury.record.loyalty = 0.0
-mutinous_treasury.money = 1.0e9
-held = mutinous_treasury.money
-acted = group_servants.run_army_year(mutinous_treasury, SimWorld(mutinous))
+    def national_people(self, trade):
+        return 1.0e6
+
+    def commodity_of(self, material):
+        return material
+
+    def revenue_assessments(self):
+        return self.assessments
+
+    def money_text(self, amount, grouped=False, short=False):
+        return "%.0f" % amount
+
+    def plain_number(self, value):
+        return "%.0f" % value
+
+    def say(self, line):
+        self.said.append(line)
+
+
+# ---- collection is a modest part of what a form raises -----------------------------------------------------
+world = StateWorld()
+for basis, rate in (("harvest", 0.1), ("imports_value", 0.025)):
+    base = 100000.0
+    world.assessments = [revenue.Assessment("form", basis, base, rate, rate * base)]
+    cost = sum(line.money for line in budget_works.collection_line(world))
+    check("collecting a form on %s costs well under half of what it raises" % basis,
+          0.0 < cost < 0.5 * rate * base, (cost, rate * base))
+
+# ---- the pay the state owes ----------------------------------------------------------------------------------
+owing = Government("government:home", ActorRecord(kind="government", money=0.0))
+owing.record.arrears = {"army": 600.0, "administration": 300.0}
+check("a state's arrears owed are the sum of what it owes its army and officials",
+      owing.arrears_owed() == 900.0 and arrears.total(owing.record) == 900.0, owing.record.arrears)
+check("a state that owes pay is one that cannot meet its own need", owing.cannot_meet_own_need())
+square = Government("government:home", ActorRecord(kind="government", money=0.0))
+check("a state that owes nothing and left nothing unpaid can", not square.cannot_meet_own_need())
+lines = [Line("army", "requisition", transfer=600.0), Line("roads", "office", transfer=100.0)]
+new_debt = ActorRecord(kind="government")
+arrears.owe(new_debt, lines, 0.5)
+check("half the army's pay unpaid is half owed, and a line that is not pay is never owed",
+      new_debt.arrears == {"army": 300.0}, new_debt.arrears)
+
+# ---- later revenue pays the arrears first ---------------------------------------------------------------------
+rich = Government("government:home", ActorRecord(kind="government", money=2000.0))
+rich.record.arrears = {"army": 600.0, "administration": 300.0}
+paid = arrears.settle(rich, world)
+check("a purse that covers the arrears pays them in full", paid == {"army": 600.0, "administration": 300.0}, paid)
+check("...and nothing is owed after", arrears.total(rich.record) == 0.0 and abs(rich.money - 1100.0) < 1e-9,
+      (rich.record.arrears, rich.money))
+thin = Government("government:home", ActorRecord(kind="government", money=450.0))
+thin.record.arrears = {"army": 600.0, "administration": 300.0}
+arrears.settle(thin, world)
+check("a purse that covers half pays half of each line and keeps owing the rest",
+      abs(thin.record.arrears["army"] - 300.0) < 1e-9 and abs(thin.record.arrears["administration"] - 150.0) < 1e-9
+      and abs(thin.money) < 1e-9, (thin.record.arrears, thin.money))
+broke = Government("government:home", ActorRecord(kind="government", money=0.0))
+broke.record.arrears = {"army": 600.0}
+check("an empty purse pays nothing and borrows nothing", arrears.settle(broke, world) == {} and broke.money == 0.0)
+
+
+# ---- the army takes its arrears --------------------------------------------------------------------------------
+def army_owed(loyalty):
+    """An army paid in full this year but owed a past shortfall."""
+    state = Government("government:home", ActorRecord(kind="government", money=1.0e9, army=1000.0))
+    state.record.need = {"army": 180000.0}
+    state.record.unfunded = {"army": 0.0}
+    state.record.income_reference = {group_servants.ARMY_PAY_SHARE: 1.0}
+    state.record.arrears = {"army": 60000.0}
+    state.record.loyalty = loyalty
+    return state
+
+
+mutinous = army_owed(0.0)
+acted = group_servants.run_army_year(mutinous, world)
 check("an army owed arrears that has lost its loyalty takes them, though this year's pay was in full",
-      acted["seized"] > 0.0 and mutinous_treasury.money < held, acted)
-check("what the mutineers took is no longer owed",
-      mutinous_treasury.record.arrears.get("army", 0.0) < 60000.0, mutinous_treasury.record.arrears)
+      acted["seized"] > 0.0 and mutinous.money < 1.0e9, acted)
+check("what the mutineers took is no longer owed", mutinous.record.arrears["army"] < 60000.0, mutinous.record.arrears)
+loyal = army_owed(1.0)
+check("an army that kept its loyalty takes nothing, whatever it is owed",
+      group_servants.run_army_year(loyal, world)["seized"] == 0.0 and loyal.money == 1.0e9)

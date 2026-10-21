@@ -1,5 +1,5 @@
 """Actors other than the founder, run once a year inside the simulation."""
-from sim.agents.api import ActorRegistry, CountryLiteracy, ledger, payroll, seed_strata, SOLDIER_TRADE
+from sim.agents.api import ActorRegistry, true_up_keep, CountryLiteracy, ledger, payroll, seed_strata, SOLDIER_TRADE
 from .actor_kinds_data import register_mod_actor_kinds
 from .agents_port import SimWorld
 from .agents_port_cast import seed_opening_cast
@@ -67,7 +67,7 @@ class ActorsMixin:
         state = self.state.actors
         if state is None or not state.records:
             return 0.0
-        return self.actors.staff_fte(trade)
+        return self.actors.home_staff_fte(trade)
 
     def actor_staff_nationwide(self, trade):
         """People of this trade that firms and governments hold nationwide. Staff in the founder's
@@ -159,7 +159,9 @@ class ActorsMixin:
         seed_opening_cast(self)
         self.state_treasury()
         self.refresh_lender_offers()
-        self.actors.advance(SimWorld(self))
+        world = SimWorld(self)
+        true_up_keep(self.actors, world)
+        self.actors.advance(world)
         self.accrue_industry_experience()
         self.charge_actors_for_keeping_coin()
         self.charge_actors_for_theft()

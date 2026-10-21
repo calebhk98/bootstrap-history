@@ -32,7 +32,7 @@ describe different economies.
   values the first simulated year produces, within a stated tolerance, under no shock.
 - Related: 526 (the opening income fixed point has no investment, so it opens at subsistence), 513.
 
-## Attempt on branch `opening-sizes-producers-net-of-own-grown-food` (reverted)
+## Attempt on branch `opening-sizes-producers-net-of-own-grown-food` (deleted unmerged; its code is lost) (reverted)
 
 Commit `6bfa0b32` ran the year's own-plot rule inside the opening's fixed point (`sim/economy/opening_own.py`, reusing
 `households_own.own_production` and `year_goods._less_what_it_grew`), so the opening's grain demand matched what year

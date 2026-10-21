@@ -1,4 +1,18 @@
-"""early_playtest: regression checks from the first playtests, run with `--only early_playtest`."""
+"""early_playtest: regression checks from the first playtests, run with `--only early_playtest`.
+
+Complaint 640 audit: the rules moved out of this file. The cost factor, the quoted-cost money factor, the hazard relief,
+the value-weight clamp and trade availability are called with figures in test_civ_cost_and_hazard_relief_rules; the
+military leverage and war-relief rules are in test_military_leverage_rules; what each opening grants and cannot start,
+the dated hazards, the policy switches, the command registry and the Rome-only phrases are read off the data in
+test_early_playtest_data. Four named scenarios remain on purpose: the protocol surface (one agent session of malformed
+input, `play` for a civilisation not starting in 100 AD, fog on `why`, the digest as the tree opens up), the turn-one
+Rome game, the Han, Norse and Mexica openings, and an armed empire against an unarmed one.
+Deleted as held elsewhere: a mine topped up delivers capacity and a closed mine stops costing (test_mine_auto_and_capacity
+"resolving the named year commissions the capacity"; test_mines "closing a material closes every working of it and refunds
+the SUM of each working's OWN operating cost"), an unfunded project never completes and manual play buys no people
+(test_start_money_rule; test_blocker_readouts_agree "a bill past cash and credit is a money blocker" and "start_refusal is
+the first blocker's text"; the policy defaults in test_early_playtest_data).
+"""
 from .harness import *  # noqa: F401,F403
 from sim.refusal import cause_of
 
@@ -10,7 +24,7 @@ def without_market(game):
     return game
 
 
-# --- protocol robustness: one agent session carries every malformed or hostile input
+# --- SCENARIO 1: the protocol surface. One agent session carries every malformed or hostile input
 _SESSION = [
     ("bare_null", None), ("bare_number", 42), ("bare_string", "x"), ("bare_list", [1, 2]),
     ("state_first", {"cmd": "state"}),
@@ -66,25 +80,25 @@ check("a mine can be priced before it is bought",
       reply["quote_mine"].get("ok") and reply["quote_mine"].get("to_sink_it", 0) > 0
       and reply["quote_mine"].get("every_year_it_stands", 0) > 0, str(reply["quote_mine"])[:90])
 
-# --- play must run a civilisation that does not start in 100 AD (its loop used to end at 100 + horizon)
+# (still scenario 1) play must run a civilisation that does not start in 100 AD (its loop used to end at 100 + horizon)
 from . import cli_in_process
 _play = cli_in_process.run(["play", "--manual", "--civ", "norse_900ad"], "n\nq\n", cwd=ROOT)
 # presentation: the printed header of the interactive play command
 check("play runs a civilisation that does not start in 100 AD",
       "900 AD" in _play.stdout and "Ended 900 AD" not in _play.stdout, _play.stdout[-120:])
 
-# --- Rome, one game: turn-one state, and what a player can and cannot do
+# --- SCENARIO 2: Rome, one game: turn-one state, and what a player can and cannot do
 rome = unopened_sim(capital=200000.0)
 check("you arrive with no employees and no slaves",
       not rome.employees and rome.slaves == 0 and rome.freedmen == 0 and rome.artisans == 0.0,
       "employees %r artisans %.1f" % (rome.employees, rome.artisans))
 rome_why_cost = S._agent_dispatch(rome, NODES, {"cmd": "why", "id": "blast_furnace"})["cost"]["total"]
 
-_ANACHRONISMS = ["mil_chemical_mustard", "mil_trace_italienne", "mil_general_staff",
-                 "mil_conscription_reserve", "mil_trench", "hot_air_balloon",
-                 "mil_observation_balloon", "mil_gunpowder_base"]
+# the two doctrines whose prerequisites Rome holds, and which a trade Rome lacks holds back (the rest wait on a prerequisite:
+# test_early_playtest_data)
+_ANACHRONISMS = ["mil_general_staff", "hot_air_balloon"]
 startable_turn_one = [node_id for node_id in _ANACHRONISMS if rome.can_start(node_id)]
-check("no anachronistic weapon or doctrine is startable turn one",
+check("no anachronistic doctrine is startable turn one, even with its prerequisites held",
       not startable_turn_one, str(startable_turn_one))
 
 ok_hire, hire_error = rome.labour.hire("engineer", 1)
@@ -96,12 +110,6 @@ ok_train, _ = rome.labour.train("machinist", 2)
 check("you can teach a trade into existence",
       ok_train and "machinist" in rome.trades_created and not rome.labour.trade_available("chemist"),
       "trained %s created %r" % (ok_train, sorted(rome.trades_created)))
-check("every automatic behaviour has a switch",
-      set(rome.policy) >= {"auto_hire", "auto_buy_people", "auto_manumit", "auto_train",
-                           "auto_mine", "auto_forest", "auto_mothball", "auto_shed",
-                           "auto_bribe"},
-      sorted(rome.policy))
-
 # a finished work can be shut to stop its upkeep without forgetting how it worked
 rome.labour.hire("artisan", 2)
 rome.done.add("fin_restaurant")
@@ -116,31 +124,6 @@ check("a finished work can be shut down to stop its upkeep",
 check("shutting a concern down does not make you forget how it worked",
       "fin_restaurant" in rome.done and "fin_restaurant" not in rome.operating,
       "done %s operating %s" % ("fin_restaurant" in rome.done, "fin_restaurant" in rome.operating))
-
-# hazards must be answerable with technology
-bare_relief, _ = rome.hazard_relief("staff_loss")
-rome.done.add("sanitation_antisepsis")
-rome.operating.add("sanitation_antisepsis")
-rome.done.add("germ_theory")
-better_relief, relief_why = rome.hazard_relief("staff_loss")
-check("medicine blunts a plague", bare_relief == 1.0 and better_relief < 0.6 and relief_why,
-      "%.2f -> %.2f %s" % (bare_relief, better_relief, relief_why))
-rome.mines.append({"material": "gold", "capacity": 1.0, "opened_year": rome.year,
-                   "capex_paid": 0.0, "intensity_yrs": 0.0})
-gold_relief, _ = rome.hazard_relief("real_erosion")
-check("your own gold mine blunts a debasement", gold_relief < 0.5, "%.2f" % gold_relief)
-
-weights_before = rome.value_weights["w_magic_fear"]
-rome.apply_tech_effects("scientific_method")
-check("a technology changes the society that built it",
-      rome.value_weights["w_magic_fear"] < weights_before,
-      "%.2f -> %.2f" % (weights_before, rome.value_weights["w_magic_fear"]))
-
-money_factor = rome.cost_money_factor()
-rome.money_real = 0.005
-check("a debased currency does not collapse prices",
-      abs(rome.cost_money_factor() - money_factor) < 1e-9,
-      "%.4f -> %.4f" % (money_factor, rome.cost_money_factor()))
 
 rome.capital = 5000.0
 capital_before_commission = rome.capital
@@ -173,46 +156,22 @@ all_at_once, one_at_a_time = spend(1, 12), spend(12, 1)
 check("buying in slices costs the same as buying at once",
       abs(all_at_once - one_at_a_time) < 1.0, "%.0f / %.0f" % (all_at_once, one_at_a_time))
 
-# --- Han: a civilisation-specific cost, and no other society's institutions
+# --- SCENARIO 3: the Han, Norse and Mexica openings through a game
+# Han: a civilisation-specific cost reaches the quote (the factor itself: test_civ_cost_and_hazard_relief_rules)
 han = without_market(sim(civ="han_china_100ad", manual=False))
 han_why_cost = S._agent_dispatch(han, NODES, {"cmd": "why", "id": "blast_furnace"})["cost"]["total"]
 check("why quotes a civilization-specific cost", rome_why_cost != han_why_cost,
       str((rome_why_cost, han_why_cost)))
-han.step()
-foreign = [node_id for node_id in han.granted if "_roman" in node_id or "annona" in node_id]
-check("a society is not granted another society's institutions", not foreign, str(foreign[:4]))
 
-# --- Norse: handicap remedies, no foreign institutions, no geography-locked crops, no sack-loss risk
+# Norse: no sack-loss risk where nothing sacks
 norse = unopened_sim(civ="norse_900ad", capital=1000000.0)
-_ROMAN_INSTITUTIONS = ["civ_arch_roman", "fin_annona", "fin_argentarii",
-                       "fin_collegium", "fin_societas", "hom_cosmetics_roman"]
-norse_has_them_free = [node_id for node_id in _ROMAN_INSTITUTIONS if node_id in norse.done]
-check("a Norse founder is not handed Rome's institutions for nothing",
-      not norse_has_them_free, str(norse_has_them_free))
-check("chinampa agriculture is not startable in Norway", not norse.can_start("fud_chinampa"))
 knowledge_risk = S._agent_dispatch(norse, NODES, {"cmd": "risk"})["knowledge_risk"]
 check("no loss risk is reported where nothing sacks",
       knowledge_risk["expected_technologies_lost_per_sacking"] == 0.0, str(knowledge_risk)[:80])
-cost_factor_before = norse.civ_cost_factor("blast_furnace")
-norse.done.add("collegium_licensed")
-cost_factor_after = norse.civ_cost_factor("blast_furnace")
-check("building a remedy lifts the handicap", cost_factor_after < cost_factor_before,
-      "%.2f -> %.2f" % (cost_factor_before, cost_factor_after))
-# prerequisite lint: gunpowder's saltpetre comes from nitre beds, not from nowhere
-check("gunpowder claims no saltpetre it has not earned via nitre_beds",
-      "nitre_beds" in NODES["mil_gunpowder_base"]["pre"] and "nitre_beds" in NODES,
-      str(NODES["mil_gunpowder_base"]["pre"]))
 
-# --- Mexica: chinampa is theirs, and military technology blunts but never zeroes a sacking
+# Mexica: military technology and the garrison blunt a sacking but never zero it (the relief arithmetic is in
+# test_civ_cost_and_hazard_relief_rules; here the game's own counters and garrison claims)
 mexica = unopened_sim(civ="mexica_1500")
-check("chinampa agriculture is still free for the Mexica", "fud_chinampa" in mexica.done)
-_spanish = next(hazard for hazard in mexica.civ["hazards"] if "Spanish" in hazard.get("name", ""))
-check("the Spanish invasion still arrives on its historical date, unmoved "
-      "by anything military technology does",
-      _spanish["years"] == [1519, 1521], _spanish["years"])
-check("the Spanish invasion hazard carries no staff_loss of its own, so military "
-      "technology (which never touches staff_loss) cannot appear to cure contact epidemics",
-      "staff_loss" not in _spanish, sorted(_spanish))
 _MIL_NODES = sorted(node_id for node_id in NODES if "military" in (NODES[node_id].get("traits") or ()))
 sack_bare, _ = mexica.hazard_relief("sack_chance")
 for node_id in _MIL_NODES:
@@ -226,25 +185,11 @@ check("a Mexica founder who had built firearms and fortification before "
       "sacking still - the counterfactual is blunted, never zeroed",
       0.0 < sack_armed < sack_bare, (sack_bare, sack_armed, sack_why[:3]))
 
-# --- the military branch matters, without swallowing the tree
-check("the tree still has a real military branch to test against", len(_MIL_NODES) >= 100, len(_MIL_NODES))
+# --- SCENARIO 4: an armed empire against an unarmed one
 unarmed = without_market(sim())
 armed = without_market(sim())
-founder_military_nodes = [node_id for node_id in _MIL_NODES if node_id not in armed.granted]
-leverage_none = armed.military_leverage()
-armed.done.add(founder_military_nodes[0])
-leverage_first = armed.military_leverage()
-for node_id in founder_military_nodes[:25]:
-    armed.done.add(node_id)
-leverage_some = armed.military_leverage()
-for node_id in _MIL_NODES:
-    armed.done.add(node_id)
-leverage_all = armed.military_leverage()
-check("military strength is zero for a founder who has built none of the "
-      "branch, rises with the first node, and saturates well short of the "
-      "whole branch (so the branch cannot be a strategy unto itself)",
-      leverage_none == 0.0 and 0.0 < leverage_first < leverage_some == 1.0 and leverage_all == 1.0,
-      (leverage_none, leverage_first, leverage_some, leverage_all))
+# (leverage and its saturation: test_military_leverage_rules)
+armed.done.update(_MIL_NODES)
 
 unarmed.update_protection()
 armed.update_protection()
@@ -252,20 +197,7 @@ check("a cannon foundry with nobody to sell to protects the founder not at "
       "all - the leverage is with a patron, not the hardware itself",
       abs(armed.protection - unarmed.protection) < 1e-9, (unarmed.protection, armed.protection))
 
-output_unarmed, _ = unarmed.hazard_relief("output_factor")
-output_armed, output_why = armed.hazard_relief("output_factor")
-check("a war costs an armed empire's trade less than an unarmed one's - "
-      "every output_factor hazard in these civilization files is a war or "
-      "its administrative aftermath, and this is the branch's answer to it",
-      output_armed < output_unarmed and any(entry["source"] == "own_military_strength" for entry in armed.hazard_relief_entries("output_factor")),
-      (output_unarmed, output_armed, output_why))
-staff_unarmed, _ = unarmed.hazard_relief("staff_loss")
-staff_armed, _ = armed.hazard_relief("staff_loss")
-check("military technology gives no relief against staff loss - most "
-      "staff_loss hazards in these civilizations are disease and famine, "
-      "not war, and a founder with cannon should not cure the Antonine "
-      "plague",
-      staff_unarmed == staff_armed, (staff_unarmed, staff_armed))
+# (a war costing an armed empire less, and no relief against staff loss: test_military_leverage_rules)
 
 run_it(unarmed, "patron_imperial")
 run_it(armed, "patron_imperial")
@@ -285,7 +217,7 @@ check("an armed empire's trade recovers from a war faster than an unarmed "
       "is recovery speed, not a rewrite of the event",
       armed.output_factor > unarmed.output_factor > 0.7, (unarmed.output_factor, armed.output_factor))
 
-# --- fog hides the exact downstream count
+# --- (scenario 1 again) fog hides the exact downstream count, and the digest stays a summary as the tree opens up
 fogged = unopened_sim()
 fogged.fog = True
 fogged.revealed = set()
@@ -294,40 +226,8 @@ check("fog hides the exact downstream count",
       fog_reply.get("downstream_count") is None and fog_reply.get("how_much_rests_on_this"),
       "downstream %r band %r" % (fog_reply.get("downstream_count"), fog_reply.get("how_much_rests_on_this")))
 
-# --- mines: topping up still delivers capacity, and a mine can be closed
-mine_game = without_market(sim(capital=5e6))
-for _ in range(6):
-    mine_game.open_mine("coal", 200)
-    mine_game.step()
-    if mine_game.mine_capacity.get("coal", 0) > 0:
-        break
-check("topping up a mine still delivers capacity",
-      mine_game.mine_capacity.get("coal", 0) > 0, str(mine_game.mine_capacity))
-cost_open = S._agent_dispatch(mine_game, NODES, {"cmd": "state"}).get("mine_operating_cost", 0)
-S._agent_dispatch(mine_game, NODES, {"cmd": "close", "material": "coal"})
-cost_closed = S._agent_dispatch(mine_game, NODES, {"cmd": "state"}).get("mine_operating_cost")
-check("a mine can be closed, and stops costing", cost_open > 0 and cost_closed == 0,
-      "before %s after %s" % (cost_open, cost_closed))
 
-# --- an unfunded project never completes, and manual play never buys people for you
-# (the lender advances part of a credit line against a purchase, so "unfunded" is a project dearer than cash
-# plus that share; the game refuses to start it)
-unfunded = without_market(sim(capital=hours_money(8060), manual=True))
-too_dear = max((node_id for node_id in ORDER if unfunded.start_reason(node_id)[0]),
-               key=lambda node_id: S._agent_dispatch(unfunded, NODES, {"cmd": "why", "id": node_id})["cost"]["total"])
-ok_start, start_why = unfunded.start_project(too_dear)
-for _ in range(3):
-    unfunded.step()
-paid = unfunded.active.get(too_dear, None)
-paid = paid.spent if paid else 0.0
-check("an unfunded project never completes",
-      not ok_start and unfunded.start_blockers(too_dear)[0]["kind"] == "money" and too_dear not in unfunded.done and paid == 0.0,
-      "started=%s (%s) done=%s paid=%.0f" % (ok_start, start_why, too_dear in unfunded.done, paid))
-check("manual play never buys people for you", unfunded.slaves == 0 and unfunded.freedmen == 0,
-      "slaves %d freedmen %d" % (unfunded.slaves, unfunded.freedmen))
-
-
-# --- available stays a summary as the tree opens up.
+# available stays a summary as the tree opens up.
 # Constructed directly: `_agent_available` reads only done/operating/fog, and cutting an arbitrary
 # slice of ORDER opens far more of the tree at once than a real run does, which is the harder case.
 def _tree_opens_up():
@@ -348,68 +248,7 @@ def _tree_opens_up():
 
 slow_check("available stays a summary as the tree opens up", _tree_opens_up)
 
-# --- the unknown-command message names every command, and every command answers
-answers = unopened_sim()
-_unknown = S._agent_dispatch(answers, NODES, {"cmd": "definitely_not_a_command"}).get("error", "")
-check("the unknown-command message advertises every command there is",
-      all(command in _unknown for command in S.KNOWN_COMMANDS),
-      "missing: %s" % [command for command in S.KNOWN_COMMANDS if command not in _unknown])
-_dead = []
-for _command in S.KNOWN_COMMANDS:
-    if _command in ("quit", "save", "load", "finish", "step"):
-        continue                  # need arguments, write files or end the run
-    try:
-        _answer = S._agent_dispatch(answers, NODES, {"cmd": _command})
-    except Exception:
-        continue                  # a crash is a different bug; this asks only whether the command is known
-    if "unknown cmd" in str(_answer.get("error", "")):
-        _dead.append(_command)
-check("every advertised command is one the game answers to", not _dead, str(_dead))
-_missing_id = S._agent_dispatch(answers, NODES, {"cmd": "why"}).get("error", "")
+_missing_id = S._agent_dispatch(fogged, NODES, {"cmd": "why"}).get("error", "")
 # presentation: the wording of a missing-id refusal
 check("a missing id asks for one rather than naming a Python type",
       "NoneType" not in _missing_id and "available" in _missing_id, _missing_id[:90])
-
-# --- data lints that cost no game (fast payback is a diagnostic, `economy-check --payback`, not a test)
-check("debt bondage follows the society, and is a term of years",
-      S.load_civ("rome_100ad").get("debt_bondage") is False
-      and S.load_civ("han_china_100ad").get("debt_bondage") is True
-      and S.load_civ("han_china_100ad").get("bondage_years", 0) > 0,
-      "rome %r han %r" % (S.load_civ("rome_100ad").get("debt_bondage"),
-                          S.load_civ("han_china_100ad").get("debt_bondage")))
-
-civ_files = [filename for filename in os.listdir(os.path.join(ROOT, "data", "civilizations"))
-             if filename.endswith(".json") and not filename.startswith("_")]
-missing_lore = []
-for civ_file in civ_files:
-    civ_data = json.load(open(os.path.join(ROOT, "data", "civilizations", civ_file)))
-    opening = civ_data.get("opening") or {}
-    if not all(opening.get(field_name) for field_name in ("arrival", "what_you_can_see",
-                                                          "what_is_missing", "what_is_coming")):
-        missing_lore.append(civ_data.get("id", civ_file))
-check("every civilisation has its opening written", not missing_lore, str(missing_lore))
-
-# --- the setting is not Rome wearing a hat: notes must generalise
-_ROME_TEMPLATES = ("ROME ALREADY HAS THIS", "ROME HAS THIS", "ROME POSSIBLY HAS THIS")
-bare_rome_notes = [node_id for node_id, node in NODES.items()
-                   if any(template in (node.get("note") or "") for template in _ROME_TEMPLATES)]
-check("no node note bluntly claims 'Rome [already] has this'", not bare_rome_notes, str(bare_rome_notes[:5]))
-bare_rome_prices = [trade_key for trade_key, value in PRICES["wage_rates_denarii_per_hour"].items()
-                    if not trade_key.startswith("_") and isinstance(value, dict)
-                    and ("Rome has" in (value.get("note") or "")
-                         or "Rome already has" in (value.get("note") or ""))]
-check("no wage-rate note bluntly claims 'Rome has these'", not bare_rome_prices, str(bare_rome_prices))
-check("the cover identity is not named after one civilization's version",
-      "Alexandrian" not in NODES["identity_cover"]["name"], NODES["identity_cover"]["name"])
-rome_missing = [node_id for node_id in _ROMAN_INSTITUTIONS
-                if node_id not in (S.load_civ("rome_100ad").get("starting_techs") or [])]
-check("Rome is granted its own institutions through starting_techs", not rome_missing, str(rome_missing))
-still_free = [node_id for node_id in _ROMAN_INSTITUTIONS if NODES[node_id]["cap"] == 0 and NODES[node_id]["ph"] == 0]
-check("Rome's institutions are not free for whoever starts them", not still_free, str(still_free))
-
-# --- five centuries, two events: Norse hazards must do something the engine reads
-norse_hazards = S.load_civ("norse_900ad")["hazards"]
-check("the Norse civilization has more than one dated hazard", len(norse_hazards) > 1, "only %d" % len(norse_hazards))
-_EFFECT_FIELDS = ("staff_loss", "sack_chance", "output_factor", "real_erosion", "values")
-inert = [hazard["name"] for hazard in norse_hazards if not any(field in hazard for field in _EFFECT_FIELDS)]
-check("no Norse hazard is purely decorative (no effect field the engine reads)", not inert, str(inert))

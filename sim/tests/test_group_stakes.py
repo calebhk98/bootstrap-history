@@ -78,7 +78,7 @@ class StakeWorld(FakeWorld):
     def state_revenue(self):
         return self.revenue
 
-    def state_capacity(self):
+    def state_reach(self):
         return 0.5
 
     def money_text(self, amount, grouped=False, short=False):
@@ -296,7 +296,7 @@ class GroupWorld(StakeWorld):
     def state_in_deficit(self):
         return False
 
-    def state_capacity(self):
+    def state_reach(self):
         return 0.9
 
     def founder_protection(self):

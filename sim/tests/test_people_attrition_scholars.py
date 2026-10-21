@@ -1,245 +1,142 @@
-"""people_attrition_scholars: regression checks, run individually with `--only people_attrition_scholars`."""
+"""people_attrition_scholars: regression checks, run individually with `--only people_attrition_scholars`.
+
+Staff are whole people; the scholar wall; the fog ratchet; the credit forecast and failure quote; the planner's
+closure and ordering; typed-line spellings. The rules are called on the numbers and stand-ins each check states; the
+played household, the save round trip, the closed pipe and the England start are in
+test_people_attrition_scholars_scenario."""
+import math
+from types import SimpleNamespace
+
 from .harness import *  # noqa: F401,F403
 from sim.refusal import cause_of
 
-# =============================================================================
-# PEOPLE ARE WHOLE. The user's objection, and it was right: "how can you have
-# .8 people? I feel like all employees/people should be measured in
-# integers." Attrition used to multiply every trade by (1 - 0.035) every
-# single year, so ten smiths lost exactly 0.35 of a smith and the engine went
-# on carrying the fraction forever - a household could read "1.32 artisans"
-# or "0.03 engineers" on its own roster, the latter drawing 0.03 of a wage
-# while supervising nothing. Attrition is now a per-person roll against
-# self.rng (sorted by trade name, for the same PYTHONHASHSEED-independence
-# every other rng loop over this dict already has); hire() and train() now
-# refuse a fractional `n` outright, and the auto_hire smoothing that used to
-# write a continuous target straight into `employees` now spends its
-# fractional remainder as that year's CHANCE of the next whole hire instead
-# (`_stochastic_round`).
-# =============================================================================
-
-# Only the yearly staff phase matters here, so it is called directly rather than through whole years.
-s = sim(capital=50_000_000.0)
-s.policy["auto_hire"] = False
-s.employees["artisan"] = 500.0
-s.labour._resync_pools()
-_whole_every_year, _never_grew, _prev = True, True, 500.0
-for _ in range(150):
-    s._step_staff()
-    _cur = s.employees.get("artisan", 0.0)
-    if abs(_cur - round(_cur)) > 1e-9:
-        _whole_every_year = False
-    if _cur > _prev + 1e-9:
-        _never_grew = False
-    _prev = _cur
-check("a whole headcount of artisans never picks up a fraction of a person, "
-      "year after year of pure attrition",
-      _whole_every_year, _prev)
-check("...and with auto_hire off and nobody hiring, the headcount only ever "
-      "falls, never climbs on its own",
-      _never_grew, _prev)
-
-# UNBIASED: the realised loss, averaged over many people and many
-# independent seeds, should land on the working-age mortality rate (pay is at the market, so nobody takes a better offer).
-_before_att, _after_att = 0.0, 0.0
-for _seed in range(1, 31):
-    s.rng = random.Random(_seed)
-    s.employees["artisan"] = 2000.0
-    s.labour._resync_pools()
-    s._step_staff()
-    _before_att += 2000.0
-    _after_att += s.employees.get("artisan", 0.0)
-_att_rate = 1.0 - _after_att / _before_att
+from sim.agents.household import Household
+from sim.engine.economy_credit import CreditMixin
+from sim.engine.mechanics import MechanicsMixin
+from sim.engine.project_materials import ProjectMaterialsMixin
+from sim.engine.shortage_sizing import nitre_bed_yearly_spend
+from sim.engine.society_adoption import AdoptionMixin
+from sim.labour.labour_bondage import BondageMixin
+from sim.labour.labour_capacity import CapacityMixin
+from sim.labour.labour_training import TrainingMixin
+from sim.labour.staff_pay_rules import roll_trade
+from sim.labour.staff_targets import scholar_target
+from sim.ui.proto import credit_forecast
 from sim.world import demography
-_death_rate = demography.BASELINE_ANNUAL_MORTALITY_RATE_WORKING_AGE
+
+QUICK_TOPIC = True
+
+# =============================================================================
+# PEOPLE ARE WHOLE. Attrition is a per-person roll (`roll_trade`), so a headcount of whole people only ever loses
+# whole people; hire() and train() refuse a fractional `n` outright.
+# =============================================================================
+
+DEATH_RATE = demography.BASELINE_ANNUAL_MORTALITY_RATE_WORKING_AGE
+draws = random.Random(1)
+headcount, whole_every_year, never_grew = 500, True, True
+for _year in range(150):
+    died, left, survivors = roll_trade(headcount, 0.0, DEATH_RATE, draws.random)
+    whole_every_year = whole_every_year and isinstance(survivors, int) and survivors == headcount - died - left
+    never_grew = never_grew and survivors <= headcount
+    headcount = survivors
+check("a whole headcount never picks up a fraction of a person, year after year of pure attrition",
+      whole_every_year, headcount)
+check("...and with nobody hiring the headcount only ever falls, never climbs on its own", never_grew, headcount)
+
+# UNBIASED: the realised loss, averaged over many people and many independent seeds, should land on the working-age
+# mortality rate (pay is at the market, so nobody takes a better offer).
+lost = 0
+for seed in range(1, 31):
+    lost += roll_trade(2000, 0.0, DEATH_RATE, random.Random(seed).random)[0]
 check("whole-person attrition averages the working-age mortality rate, over many people and many seeds",
-      abs(_att_rate - _death_rate) < 0.003, (_att_rate, _death_rate))
+      abs(lost / (30 * 2000.0) - DEATH_RATE) < 0.003, (lost / (30 * 2000.0), DEATH_RATE))
 
 # HIRE AND TRAIN LAND WHOLE PEOPLE.
-s = sim(capital=1e6)
-# The bare, no-institution ceiling a fresh household sees, read before anything is hired.
-check("the market-reach ceiling for a fresh household is the same as before",
-      5.5 < s.labour.literate_capacity("scholar") < 6.5, s.labour.literate_capacity("scholar"))
-ok2, why2 = s.labour.hire("scholar", 12)
-check("the refusal names the household's market reach, not literacy alone",
-      not ok2 and "reach" in why2 and "literacy" in why2, why2)
-ok_frac_h, why_frac_h = s.labour.hire("smith", 2.5)
-check("hire refuses a fractional number of people",
-      not ok_frac_h and cause_of(why_frac_h) == "count_not_whole", why_frac_h)
-ok_frac_t, why_frac_t = s.labour.train("machinist", 1.5)
-check("...and so does train",
-      not ok_frac_t and cause_of(why_frac_t) == "count_not_whole", why_frac_t)
-ok_whole_h, _ = s.labour.hire("smith", 2)
-check("...but a whole number still goes through, and lands exactly that many",
-      ok_whole_h and s.employees.get("smith") == 2.0, s.employees.get("smith"))
-
+roster = SimpleNamespace(_world=SimpleNamespace(wages={"smith": 1.0, "machinist": 1.0}))
+refused_hire = TrainingMixin.hire_check(roster, "smith", 2.5)[2]
+refused_train = TrainingMixin.train_check(roster, "machinist", 1.5)[1]
+check("hire refuses a fractional number of people", cause_of(refused_hire) == "count_not_whole", refused_hire)
+check("...and so does train", cause_of(refused_train) == "count_not_whole", refused_train)
+check("a whole number is not refused for being fractional",
+      cause_of(TrainingMixin.train_check(roster, "machinist", 0)[1]) == "count_not_positive")
 
 # =============================================================================
-# THE TWO RULEBOOKS. Measured, reproducible: `hire scholar 12` was refused
-# - "this society's literacy will not supply more than 5.9 scholars in
-# total, ever, at any price" - while `policy auto_hire on` mutated
-# self.scholars directly, never once called hire() or literate_capacity(),
-# and reached 146.4 scholars in the same civilisation forty years later. The
-# goal itself, and two nodes on the only road to it, want 25. Both halves are
-# fixed together: step()'s auto_hire now clamps its target to
-# literate_capacity("scholar") (see core.py), and literate_capacity("scholar")
-# now adds the SAME institutional pool staff_capacity() already credited
-# auto_hire with (see labour.py) - so the wall is not only closed, it is wide
-# enough to reach what the tree actually asks for.
+# THE SCHOLAR WALL. A literate trade's headcount ceiling is a floor plus the market's reach scaled by literacy; for
+# scholars the institutions' own capacity is added; nobody can be hired who does not exist.
 # =============================================================================
 
-# The long run this once needed (250 simulated years of a rich household) is
-# replaced by the one-step check below plus the wall-widening check after it.
 
-# The same clamp without the 250 years. hire() refuses past the wall anyway, so
-# the clamp only shows in the headcount much later; it shows at once in the
-# scholar headcount auto_hire ASKS for, which is the last `_stochastic_round`
-# of the step. A wall already reached must cap that ask at the wall. (Remove
-# the `min(..., literate_capacity("scholar"))` in core_step_phases.py and the
-# first check fails.)
-def _scholars_asked_for(wall):
-    household = sim(capital=1e9, manual=False)
-    household.labour.literate_capacity = lambda trade: wall
-    household.labour.hire("scholar", 2)
-    asked = []
-    original = household.labour._stochastic_round
-    def recording_round(value, *args, **kwargs):
-        asked.append(value)
-        return original(value, *args, **kwargs)
-    household.labour._stochastic_round = recording_round
-    household._step_staff()
-    return asked[-1] if asked else None
+def wall_of(trade, institutional=0.0, literacy=1.0, exist=1e9, absent=()):
+    stand_in = SimpleNamespace(
+        LITERATE_TRADES=frozenset({"scholar", "scribe"}), LITERATE_CAPACITY_FLOOR=1.5, POP_SCALE_FLOOR_SHARE=0.5,
+        POP_SCALE_VARIABLE_SHARE=0.5, SCHOLAR_MARKET_SHARE=0.35, local_market_share=lambda: 1.0,
+        literacy_factor=lambda trade: literacy, staff_capacity=lambda: (institutional, 0.0, 0.0),
+        people_who_exist=lambda trade: exist,
+        _world=SimpleNamespace(cfg={"hired_hours_cap_base": 20_000.0}, pop_scale=1.0, HOURS_PER_PERSON_YEAR=2000.0,
+                               trades_absent=set(absent)))
+    return CapacityMixin.literate_capacity(stand_in, trade)
 
-_asked_walled = _scholars_asked_for(2.0)
-_asked_open = _scholars_asked_for(50.0)
-check("auto_hire never asks for more scholars than the wall allows",
-      _asked_walled is not None and _asked_walled <= 2.0 + 1e-6, _asked_walled)
-check("... though the same household asks for more when the wall is open, so "
-      "the check above measures the wall and not an unable household",
-      _asked_open is not None and _asked_open > 2.0 + 1e-6, _asked_open)
 
-# The ceiling grows once the institutions auto_hire was already trusted to grow
-# toward are actually running - not from literacy alone, which is the
-# mechanism that lets a household eventually reach the tree's 25.
-s1 = run_it(sim(capital=1e9), "interchangeable_parts", "power_grid")
-check("building the institutions auto_hire already credited widens the wall "
-      "hire() enforces, which used to move only with literacy",
-      s1.labour.literate_capacity("scholar") > 20.0, s1.labour.literate_capacity("scholar"))
+reach = 20_000.0 * 1.0 * (0.5 + 0.5) * 0.35 / 2000.0
+check("the market-reach ceiling for a fresh household is the floor plus its reach scaled by literacy",
+      abs(wall_of("scholar") - (1.5 + reach)) < 1e-9, wall_of("scholar"))
+check("a trade that does not read has no literacy wall", wall_of("smith") == float("inf"))
+check("a trade nobody can be found in cannot be had past the people who exist",
+      wall_of("scribe", exist=2.0) == 2.0)
+check("building the institutions that train scholars outright widens the wall by what they hold, for scholars alone",
+      abs(wall_of("scholar", institutional=20.0) - wall_of("scholar") - 20.0) < 1e-9
+      and wall_of("scribe", institutional=20.0) == wall_of("scribe"))
+check("teaching the society to read widens the wall", wall_of("scribe", literacy=1.0) > wall_of("scribe", literacy=0.5))
+wall_refusal = CapacityMixin._literate_wall_refusal(SimpleNamespace(), "scholar", 5.9, 0.0)
+check("the refusal at the wall names the households' reach and literacy, and says how many can be taken",
+      cause_of(wall_refusal) == "literacy_wall"
+      and "reach" in str(wall_refusal) and "literacy" in str(wall_refusal)    # presentation: the refusal's wording
+      and "5 more" in str(wall_refusal), wall_refusal)
 
-# =============================================================================
-# ONLY `scholar` COUNTS AS A TRAINED SCHOLAR. TRADE_FAMILY groups scholar,
-# chemist, engineer, scribe and merchant together as "scholar" for
-# market_supply()'s sake - they draw on the same small, literate-or-
-# propertied slice of the population - and an earlier version of
-# _resync_pools() reused that same grouping to decide who counts as a
-# trained scholar for the tech tree's "sch" gate. Hiring three scribes
-# measurably raised effective_scholars() from 0 to 4.0, while STAFF_SOURCES
-# - the advice on how to grow scholars - has only ever named `hire scholar`.
-# Now only the `scholar` trade itself feeds the gate; the market-sizing use
-# of the wider grouping (market_supply, labour_price_factor) is untouched.
-# =============================================================================
+# The same clamp auto_hire respects: a target already at the wall is capped at it.
+check("auto_hire never asks for more scholars than the wall allows", scholar_target(10.0, 6.0, 0.5, 2.0) == 2.0)
+check("...though it asks for more when the wall is open, so the check above measures the wall and not an unable household",
+      scholar_target(10.0, 6.0, 0.5, 50.0) == 13.0)
 
-s.capital = 1e6
-_before_sch = s.labour.effective_scholars()
-ok_scribe, _ = s.labour.hire("scribe", 3)
-check("(three scribes were actually hired)", ok_scribe, s.employees)
-check("hiring scribes does not inflate the trained-scholar headcount any more",
-      abs(s.labour.effective_scholars() - _before_sch) < 1e-6,
-      (s.labour.effective_scholars(), _before_sch))
-s.capital = 1e6
-ok_sch, _ = s.labour.hire("scholar", 2)
-check("...but hiring an actual scholar still does",
-      ok_sch and s.labour.effective_scholars() >= _before_sch + 2 - 1e-6,
-      s.labour.effective_scholars())
-# presentation: the authored wording of the scholar advice
-check("the advice on how to get scholars never points at a different trade "
-      "family's trade, which would not even count",
-      all("scribe" not in why and "chemist" not in why and "merchant" not in why
-          and "engineer" not in why
-          for _node, why in s.STAFF_SOURCES.get("scholars", [])),
-      s.STAFF_SOURCES.get("scholars"))
+# ONLY `scholar` COUNTS AS A TRAINED SCHOLAR, though the market groups scribes with them.
+pools = SimpleNamespace(
+    _world=SimpleNamespace(state=SimpleNamespace(household=SimpleNamespace(
+        freedmen=0.0, slaves=0.0, training=[], granted_staff={"scholars": 1.0}, scholars=0.0, artisans=0.0))),
+    employed_by_trade=lambda: {"scribe": 3.0, "scholar": 2.0, "smith": 4.0},
+    is_craft_trade=lambda trade: trade == "smith", employed=lambda trade: {"scribe": 3.0, "scholar": 2.0}.get(trade, 0.0),
+    WORKER_EQUIVALENT_UNTRAINED=1.0, FREEDMAN_ARTISAN_PRODUCTIVITY=1.0, TRAINED_SLAVE_ARTISAN_PRODUCTIVITY=1.0)
+BondageMixin._resync_pools(pools)
+household = pools._world.state.household
+check("hiring scribes does not inflate the trained-scholar headcount; scholars and what an institution granted count",
+      household.scholars == 2.0 + 1.0 and household.artisans == 4.0, (household.scholars, household.artisans))
 
-# --- SAVE INTEGRITY, JOB 2a: FOG CAN BE REWOUND. A tester described the
-# exploit exactly: "since `load` restores the game but not the player's
-# memory, a player can save, build a node, look at what appeared in
-# `available`, load back, and keep the knowledge. Fog of war is one command
-# away from being off" (playtest/AUDIT_rounds_1_6.md, C1), and reproduced
-# it live: save at year 1300, step to 1350, load the 1300 save, and the fifty
-# years of frontier that had opened up in `available` cost nothing at all,
-# because the ledger went back to 1300 and the knowledge did not. The fix
-# makes `revealed` a ratchet: assigning to it may grow what this running
-# session has seen, never shrink it - a property on FogMixin (engine/fog.py)
-# rather than a change to `load_state` itself, so the guarantee holds for
-# every caller that ever assigns `.revealed`, load_state included, without
-# needing to edit protocol.py. See the comment on the property.
-s_fog = s
-s_fog.fog = True
-s_fog.revealed = {"identity_cover"}
-_fog_save = os.path.join(ROOT, _PLAY_DIR, "fog_rewind.json")
-S.save_state(s_fog, _fog_save)                  # "before you paid for it"
-# Something completes and reveals what it leads to - the same thing
-# _complete() does in projects.py when a project actually finishes.
-s_fog.reveal_from("workshop_first")
-_fog_after = set(s_fog.revealed)
-check("(setup) building something under fog reveals what it leads to",
-      _fog_after > {"identity_cover"}, sorted(_fog_after))
-S.load_state(s_fog, _fog_save)                  # the rewind to before paying
-check("fog cannot be rewound: loading an earlier save keeps everything this "
-      "session has already seen, instead of refunding the look for free",
-      _fog_after <= s_fog.revealed, sorted(_fog_after - s_fog.revealed))
-# A GENUINELY FRESH RESUME - a new process loading someone's save as its very
-# first act, exactly what `--session` does - must be untouched by this: it has
-# seen nothing yet, so the union with nothing is exactly the file's own
-# contents, the same as before this fix existed.
-s_fresh = sim(civ="rome_100ad")
-s_fresh.fog = True
-s_fresh.revealed = set()
-S.load_state(s_fresh, _fog_save)
+
+class Advice(MechanicsMixin, AdoptionMixin):
+    nodes = NODES
+
+
+check("the advice on how to get scholars never points at a different trade family's trade, which would not even count",
+      all("scribe" not in why and "chemist" not in why and "merchant" not in why and "engineer" not in why   # presentation: the authored wording of the advice
+          for _node, why in Advice().STAFF_SOURCES.get("scholars", [])),
+      Advice().STAFF_SOURCES.get("scholars"))
+
+# --- SAVE INTEGRITY, JOB 2a: FOG CAN BE REWOUND. `revealed` is a ratchet: assigning to it may grow what this running
+# session has seen, never shrink it.
+projects = SimpleNamespace(revealed={"identity_cover", "workshop_first"})
+ratchet = SimpleNamespace(_state=SimpleNamespace(projects=projects))
+Household.revealed.fset(ratchet, {"identity_cover"})
+check("fog cannot be rewound: assigning an earlier set keeps everything this session has already seen",
+      projects.revealed == {"identity_cover", "workshop_first"}, sorted(projects.revealed))
+Household.revealed.fset(ratchet, {"identity_cover", "metallurgy"})
+check("...and assigning more grows it", projects.revealed == {"identity_cover", "workshop_first", "metallurgy"})
+fresh = SimpleNamespace(_state=SimpleNamespace(projects=SimpleNamespace(revealed=None)))
+Household.revealed.fset(fresh, {"identity_cover"})
 check("a fresh resume still sees only what that save file actually recorded",
-      s_fresh.revealed == {"identity_cover"}, sorted(s_fresh.revealed))
+      fresh._state.projects.revealed == {"identity_cover"}, fresh._state.projects.revealed)
 
-# --- SAVE INTEGRITY, JOB 2b: SAVE LOST ON A CLOSED PIPE. Two testers found,
-# independently and the same way, that a command's progress could be lost if
-# the process's own stdout closed mid-reply: `naive6/C/WEIRD_C.md` - "I lost
-# 12 years of play twice before I noticed, because I was piping output
-# through `head`" - and `naive5/C/WEIRD_C.md`, against the game's own promise
-# in `help sittings` that you can "close the terminal, anything" and come back
-# to exactly where you left off. `agent`'s stdin loop wrote the reply and
-# saved the session AFTER it, so a SIGPIPE on that write killed the process
-# before `save_state` ever ran, even though `_agent_dispatch` had already
-# mutated `s` in memory. The fix reorders it to save first, the same as
-# `play` already did; this proves it against the real subprocess, a real
-# closed pipe, and a real file on disk.
-_pipe_sess = os.path.join(ROOT, _PLAY_DIR, "closedpipe.json")
-if os.path.exists(_pipe_sess):
-    os.remove(_pipe_sess)
-_pp = subprocess.Popen(
-    [sys.executable, os.path.join(HERE, "simulator.py"), "agent",
-     "--civ", "rome_100ad", "--seed", "1", "--session", _pipe_sess],
-    stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
-    text=True, cwd=ROOT)
-# Close OUR end of stdout before the child ever writes a single byte to it -
-# the same thing `| head -c0`, or a closed terminal, does to a running
-# process. Whatever the child writes after this has nowhere to go.
-_pp.stdout.close()
-try:
-    _pp.stdin.write(json.dumps({"cmd": "step", "years": 1}) + "\n")
-    _pp.stdin.close()
-except BrokenPipeError:
-    pass
-_pp.wait(timeout=60)
-_pipe_saved = json.load(open(_pipe_sess))
-_pipe_year = _pipe_saved.get("scenario", {}).get("year") if "scenario" in _pipe_saved else _pipe_saved.get("year")
-check("a command's progress is saved even when the reply that describes it "
-      "cannot be delivered because the reading end of the pipe is gone",
-      _pipe_year == 101, _pipe_year)
-
-# planner.py works backward from the goal by critical-path
-# method (CPM) over its prerequisite closure, instead of walking a
-# hand-written list. These checks pin the structural properties the measured
-# comparison (playtest or the session report) depends on actually
-# holding, not just the one run that happened to be timed.
-_p_s = sim(civ="rome_100ad")
+# planner.py works backward from the goal by critical-path method (CPM) over its prerequisite closure, instead of
+# walking a hand-written list. These checks pin the structural properties the measured comparison depends on.
+_p_s = SimpleNamespace(done=set(), granted=set(), _is_foreign_only=lambda node_id: False)
 _p_order, _p_c, _p_extras, _p_staff = PLANNER.backward_plan(NODES, GOAL, _p_s, side_branches=0)
 _p_need = S.closure(NODES, GOAL)
 check("the planner's closure matches its own order's count for the goal",
@@ -279,40 +176,51 @@ check("following `pre` alone understates what the goal needs by the "
 # grew an entire age of exploration - six expedition nodes, the sextant, the
 # compass, the lodestone, the cross-staff, the backstaff and a world map,
 # seventeen nodes in all - to fetch a metal the data says is on a wagon road.
-# --- THE ONE REMEDY THE GAME OFFERS, CAPPED AT THE HOUSEHOLD OF YEAR FIVE.
-# Saltpetre has no market to buy from (MARKET_SHARE is 0.0; the only bought
-# supply is sixty tonnes a year of Bengal nitre once the eastern trade route
-# runs), so nitre beds are the whole answer. auto_mine laid
-# min(capital * 0.05, 2000) denarii of bed a year - a flat ceiling, never
-# asking how short it was - while the mine branch beside it took 25% of
-# capital and sized itself to the measured shortfall. A Rome run with
-# staffing and money both solved spent 277 of its years short of saltpetre.
-def _nitre_laid(capital):
-    """One year of the auto_mine nitre branch at a given wealth."""
-    household = sim(civ="rome_100ad")
-    household.capital = float(capital)
-    household.policy["auto_mine"] = True
-    household.nitre_bed_m2 = 0.0
-    household.binding = "saltpetre"
-    before = household.nitre_bed_m2
 
-    def throttle():   # saltpetre is what binds, whatever else a fresh game's demand presses on
-        household.binding = "saltpetre"
-        return 0.5
-    household.resource_throttle = throttle
-    household._step_materials()
-    return household.nitre_bed_m2 - before, household
-
-_nitre_rich, _nitre_game = _nitre_laid(5_000_000.0)
-_nitre_poor, _ = _nitre_laid(3_000.0)
-_nitre_cost_per_m2 = _nitre_game.NITRE_COST_PER_M2
-check("the nitre purchase is held to a flat yearly ceiling "
-      "however rich the household - sizing it to the shortfall instead, "
-      "the way the mine branch beside it does, measured worse on every "
-      "count and is recorded in core.py as a road not to walk again",
-      0.0 < _nitre_rich <= _nitre_game.NITRE_BED_SPEND_CEILING / _nitre_cost_per_m2 + 1e-6, _nitre_rich)
+# --- THE ONE REMEDY THE GAME OFFERS, CAPPED AT THE HOUSEHOLD OF YEAR FIVE. Saltpetre has no market to buy from, so nitre
+# beds are the whole answer; the automatic remedy lays a share of capital a year, held to a flat ceiling and never sized
+# to the shortfall.
+CEILING = 40_000.0
+check("the nitre purchase is held to a flat yearly ceiling however rich the household",
+      nitre_bed_yearly_spend(5_000_000.0, CEILING) == CEILING)
 check("...and a poor household is held to a twentieth of its capital",
-      _nitre_poor <= 3_000.0 * 0.05 / _nitre_cost_per_m2 + 1e-6, _nitre_poor)
+      abs(nitre_bed_yearly_spend(3_000.0, CEILING) - 3_000.0 * 0.05) < 1e-9)
+
+# --- THREE PLAYERS, THREE CIVILISATIONS, THE SAME COMPLAINT: `start` financed the gap between what a project costs and
+# what the household has, silently. Borrowing to build stays allowed; not being told was the bug.
+forecast = credit_forecast.borrowing_forecast(
+    instalments=1000.0, materials_paid_now=100.0, capital=400.0, credit_limit_of=lambda: 5000.0,
+    interest_rate_of=lambda: 0.08, service_forecast_of=lambda owed: {"interest_per_year_at_that_draw": owed * 0.08})
+check("starting a project you cannot cover in cash says you would be borrowing, what it costs a year, and how much room is left",
+      forecast is not None and forecast["you_would_borrow"] == 600.0 and forecast["interest_rate_percent"] == 8.0
+      and forecast["estimated_annual_interest"] == 48.0 and forecast["no_one_advances_past"] == 5000.0
+      and forecast["you_would_then_owe"] == 600.0, forecast)
+check("a household already in debt owes the gap on top of what it owes",
+      credit_forecast.borrowing_forecast(1000.0, 0.0, -200.0, lambda: 5000.0, lambda: 0.08, lambda owed: {})
+      ["you_would_then_owe"] == 1200.0)
+check("a project you can pay for outright says nothing about credit",
+      credit_forecast.borrowing_forecast(1000.0, 0.0, 1000.0, lambda: 1 / 0, lambda: 1 / 0, lambda owed: 1 / 0) is None)
+
+# --- THE RATE WAS ON THE SCREEN AND THE SUM NEVER WAS. A failure takes a flat share of the money bill at risk: the total
+# less the materials bought up front, which stay in stock.
+
+
+def failure_stand_in(risk, cost_now, up_front, active=False):
+    return SimpleNamespace(
+        nodes={"work": {"risk": risk}}, FAILURE_RESET_SHARE=0.4, state=SimpleNamespace(projects=SimpleNamespace(
+            active={"work": {}} if active else {})),
+        project_cost=lambda node_id: cost_now, project_cost_now=lambda node_id: cost_now,
+        _up_front_materials_money=lambda node_id: up_front)
+
+
+stand_in = failure_stand_in(0.1, 1000.0, 300.0)
+stand_in.failure_bill = lambda node_id: ProjectMaterialsMixin.failure_bill(stand_in, node_id)
+loss = ProjectMaterialsMixin.failure_loss(stand_in, "work")
+check("a failure costs the reset share of the money bill at risk, which is never more than that share of the total",
+      abs(loss - 0.4 * (1000.0 - 300.0)) < 1e-9 and loss <= 0.4 * 1000.0, loss)
+check("...and a work that cannot fail is not given an imaginary danger",
+      ProjectMaterialsMixin.failure_loss(failure_stand_in(0, 1000.0, 300.0), "work") == 0.0)
+
 # --- DEVELOPER MARKERS IN PLAYER PROSE, THE SECOND TIME. A strip pass removed
 # 1,108 `[AUDIT: ...]` markers from node notes after a first-time tester found
 # one in the win condition itself. It matched that one phrase, and 22 nodes
@@ -360,54 +268,6 @@ check("a bare subject is still a subject, not mistaken for a flag",
       _PT("available metallurgy")[0] == {"cmd": "available",
                                          "subject": "metallurgy"},
       _PT("available metallurgy")[0])
-
-# --- THREE PLAYERS, THREE CIVILISATIONS, THE SAME COMPLAINT. Norse, England
-# and Rome each independently reported being carried into debt they had not
-# decided to take on, and two of them found out what happens past the credit
-# limit by losing a school and a collegium they had built decades earlier.
-# `start` financed the gap between what a project costs and what the
-# household has, silently, at up to twelve per cent. Borrowing to build is a
-# real move and stays allowed; not being told was the bug.
-_cr = sim(civ="england_1300")
-_cr.capital = 0.5 * _cr.project_cost("identity_cover")   # short of the project's bill, within the credit line
-_cr_out = S._agent_dispatch(_cr, NODES, {"cmd": "start", "id": "identity_cover"})
-check("starting a project you cannot cover in cash says you would be "
-      "borrowing, what it costs a year, and how much room is left",
-      _cr_out.get("ok") and _cr_out.get("on_credit", {}).get("you_would_borrow", 0) > 0
-      and _cr_out["on_credit"].get("interest_rate_percent", 0) > 0
-      and _cr_out["on_credit"].get("estimated_annual_interest", 0) > 0
-      and _cr_out["on_credit"].get("no_one_advances_past", 0) > 0,
-      _cr_out.get("on_credit"))
-_cr_money = S._agent_dispatch(_cr, NODES, {"cmd": "money"})
-check("...and `money` agrees that no credit is actually in use the moment "
-      "after 'start' returns it, matching the forecast framing above",
-      _cr_money.get("of_that_limit_you_have_used") == "none",
-      _cr_money.get("of_that_limit_you_have_used"))
-_cr2 = sim(civ="england_1300")
-_cr2.capital = 20 * _cr2.project_cost("identity_cover")
-_cr2_out = S._agent_dispatch(_cr2, NODES, {"cmd": "start", "id": "identity_cover"})
-check("a project you can pay for outright says nothing about credit",
-      _cr2_out.get("ok") and "on_credit" not in _cr2_out,
-      sorted(_cr2_out))
-
-# --- THE RATE WAS ON THE SCREEN AND THE SUM NEVER WAS. `why` quoted "10% per
-# attempt" and nothing else; a failure takes a flat 40% of the money and puts
-# 40% of the hours back on the slate. An England player read the single digit
-# as a small thing and lost 35,433 pence off a 141,824-pence project.
-# The sum is 40% of the money bill at risk: the total less the materials bought up front, which stay in
-# stock (Sim.failure_bill), so it is never more than 40% of the total.
-_fw_sim = sim(civ="england_1300")
-_fw = S._agent_dispatch(_fw_sim, NODES, {"cmd": "why", "id": "lead_metallurgy"})
-check("why says what a failure costs, not only how likely one is",
-      _fw.get("failure_costs", 0) > 0
-      and abs(_fw["failure_costs"] - _fw_sim.failure_bill("lead_metallurgy") * 0.4) < 1.0
-      and _fw["failure_costs"] <= _fw["cost"]["total"] * 0.4 + 1.0,
-      (_fw.get("failure_costs"), (_fw.get("cost") or {}).get("total")))
-check("...and a work that cannot fail is not given an imaginary danger",
-      S._agent_dispatch(sim(civ="england_1300"), NODES,
-                        {"cmd": "why", "id": "identity_cover"}).get("failure_costs", 0) == 0
-      if NODES["identity_cover"]["risk"] == 0 else True,
-      NODES["identity_cover"]["risk"])
 
 # --- THE HELP ADVERTISED A SPELLING THE PARSER DID NOT ACCEPT, and the
 # failure was silent and expensive. `rush`'s own help says "add limit:N to
@@ -547,6 +407,7 @@ check("the critical-path total the planner computes matches `validate`'s "
 # the unrepaired order has real violations, and this checks the repair that
 # reaches the engine removes every one of them.
 _p_side_branches = PLANNER.pick_side_branches(NODES, _p_need, _p_s, 12)
+os.makedirs(os.path.join(ROOT, _PLAY_DIR), exist_ok=True)
 _p_path = os.path.join(ROOT, _PLAY_DIR, "planned_check.json")
 PLANNER.write_strategy(_p_path, "test", [], PLANNER.interleave(
     _p_order, _p_side_branches, 8))

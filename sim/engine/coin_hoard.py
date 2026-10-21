@@ -49,7 +49,7 @@ class CoinHoardMixin:
         from .agents_port import SimWorld
         world = SimWorld(self)
         home_pay = max(1e-9, world.pay_per_person_year(KEEPING_PAY_TRADE))
-        for actor in self.actors.actors.values():
+        for _, actor in sorted(self.actors.actors.items()):  # id order, as a loaded game wraps them
             record = actor.record
             if record.exited_year is not None or actor.money <= 0.0 or record.stratum:
                 continue

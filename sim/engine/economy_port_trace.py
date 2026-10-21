@@ -37,6 +37,20 @@ def spin_up_trace(game, years):
     return rows
 
 
+def sensitivity_table(game, years, skip, variants=None):
+    """One line per variant of how the economy adjusts (economy_api.spin_up_sensitivity.VARIANTS, or the names in
+    `variants`): the price level's and the wage's drift, cycle amplitude and period over the first stage on `game`'s
+    opening, the first `skip` years left out. One spin-up per variant."""
+    sensitivity = economy_api.spin_up_sensitivity
+
+    def series_of(variant, count):
+        with sensitivity.VARIANTS[variant]():
+            rows = spin_up_trace(game, count)
+        return [row["price_level"] for row in rows], [row["wage"] for row in rows]
+
+    return sensitivity.table(series_of, years, skip, variants)
+
+
 def coin_wear_per_year():
     """Share of the coin stock worn away in a year, as the economy applies it."""
     return economy_api.COIN_WEAR_PER_YEAR

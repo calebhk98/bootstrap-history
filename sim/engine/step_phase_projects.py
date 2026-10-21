@@ -5,6 +5,9 @@ A part of the year's phases (core_step_phases.py); Sim inherits it through StepP
 from sim.refusal import LogLine, Refusal
 from sim.agents.api import edges
 from .units_prose import plain_number
+from .arrears_hours_line import arrears_hours_line
+from .project_funding import fund_year, project_purse, year_bill
+from .hour_offer import hours_offered, unmet_directive_cause
 from .projects_trade_wait import STALL_YEARS_BEFORE_ABANDONMENT
 
 
@@ -160,10 +163,7 @@ class ProjectProgressPhaseMixin:
         _dir_hours = self.state.household.hour_allocations.get(node_id)
         _pace_cap = self.project_hour_pace(node_id)
         _project_throttle = self.project_resource_throttle(node_id)
-        if _dir_hours and _dir_hours > 0:
-            per = min(remaining, _pace_cap, _dir_hours) * _project_throttle
-        else:
-            per = min(remaining, _pace_cap) * _project_throttle
+        per = hours_offered(remaining, _pace_cap, _dir_hours, _project_throttle)
         remaining -= per
         # WHAT WAS ACTUALLY TAKEN OFF, which is not the same as what was
         # offered: `per` is allowed to exceed ph_left (the max() above
@@ -203,28 +203,27 @@ class ProjectProgressPhaseMixin:
         # what is left to do, or its calendar floor - could not use
         # that many hours even with the whole pool behind it. Either
         # is a real, nameable reason; "it disappeared" is not.
-        if _dir_hours and _dir_hours > 0 and _dir_hours - per > 1.0:
-            if (_project_throttle < 0.98 and self.state.holdings.binding
-                    and _pace_cap >= _dir_hours - 0.5):
-                _directed_hours_unused.append((node_id, round(_dir_hours - per, 0),
-                    Refusal("shortage_throttle", "a shortage of %s has every project (this one "
-                            "included) running at %d%% of the pace its "
-                            "hours alone would allow"
-                            % (self.state.holdings.binding, round(_project_throttle * 100)))))
-            elif _pace_cap * _project_throttle < _dir_hours - 0.5:
-                _directed_hours_unused.append((node_id, round(_dir_hours - per, 0),
-                    Refusal("own_pace", "its own pace this year - at most %s hours, set "
-                            "by how much of it is left to do or its "
-                            "calendar floor, not by your hours - could not "
-                            "use the rest" % plain_number(
-                                _pace_cap * _project_throttle))))
-            else:
-                _directed_hours_unused.append((node_id, round(_dir_hours - per, 0),
-                    Refusal("pool_claimed", "your other standing allocations and active "
-                            "work already claimed the rest of this year's "
-                            "%s hours before this one's turn came ('priority "
-                            "<id> first' moves a project up the queue)"
-                            % plain_number(_pool_total_this_year))))
+        _unmet = unmet_directive_cause(_dir_hours, per, _pace_cap, _project_throttle, self.state.holdings.binding)
+        if _unmet == "shortage_throttle":
+            _directed_hours_unused.append((node_id, round(_dir_hours - per, 0),
+                Refusal("shortage_throttle", "a shortage of %s has every project (this one "
+                        "included) running at %d%% of the pace its "
+                        "hours alone would allow"
+                        % (self.state.holdings.binding, round(_project_throttle * 100)))))
+        elif _unmet == "own_pace":
+            _directed_hours_unused.append((node_id, round(_dir_hours - per, 0),
+                Refusal("own_pace", "its own pace this year - at most %s hours, set "
+                        "by how much of it is left to do or its "
+                        "calendar floor, not by your hours - could not "
+                        "use the rest" % plain_number(
+                            _pace_cap * _project_throttle))))
+        elif _unmet == "pool_claimed":
+            _directed_hours_unused.append((node_id, round(_dir_hours - per, 0),
+                Refusal("pool_claimed", "your other standing allocations and active "
+                        "work already claimed the rest of this year's "
+                        "%s hours before this one's turn came ('priority "
+                        "<id> first' moves a project up the queue)"
+                        % plain_number(_pool_total_this_year))))
         return remaining, per, spent_hours, _dir_hours
 
     def _project_progress_labour_and_bill(self, node_id, project_state, node,
@@ -296,7 +295,7 @@ class ProjectProgressPhaseMixin:
         # smaller than a year's instalment - a geometric decay that
         # approaches zero and never reaches it, while completion needs the
         # bill down to half a denarius.
-        money = min(project_state["cost_left"], self.project_cost(node_id) * frac)
+        money = year_bill(project_state["cost_left"], self.project_cost(node_id), frac)
         hired_left -= hired_hours
         return hired_left, money, refunded
 
@@ -340,61 +339,21 @@ class ProjectProgressPhaseMixin:
             + upkeep
             + mine_operating
         )
-        reserve = max(0.0, fixed - revenue)
-        purse = (
-            self.state.household.capital
-            + self.credit_limit(_rev=revenue, _upkeep=upkeep) * 0.6
-            - reserve
-        )
-        # NOTHING OWED IS NOT THE SAME AS NOTHING AFFORDABLE: a project
-        # with cost_left already at zero asks for money=0 this year, and
-        # the money>purse test must not fire just because purse itself has
-        # gone negative from deep arrears unrelated to this project's own
-        # bill - a fully paid project, needing not one more denarius, must
-        # still be free to make purely calendar-waiting progress. The gate
-        # is on the household's purse only when this project actually
-        # needs something from it.
-        if money > 0 and money > purse:
-            # PROPORTIONAL, not a flat half: the refund must scale by how
-            # underfunded the purse actually is (`funded_frac`), the same
-            # way the trade-shortage case two blocks up already scales its
-            # refund by how much of the need went unmet (worst). A flat
-            # per*0.5 refund whenever the purse falls short AT ALL, whether
-            # by one denarius or by the whole bill, would give a project
-            # funded to 95% of what it needed the same fixed half-progress
-            # loss as one funded to 5%.
-            funded_frac = 0.0 if money <= 0 else max(0.0, min(1.0, purse / money))
-            money = max(0.0, purse)
-            # Capped at what was actually taken off, and at what has not
-            # already been handed back by the trade-shortage refund
-            # above. See spent_hours: you cannot be refunded work you
-            # never did, and you cannot be refunded the same hour twice.
-            give_back = min(spent_hours - refunded, per * (1.0 - funded_frac))
-            project_state["ph_left"] += max(0.0, give_back)
-            refunded += max(0.0, give_back)
+        purse = project_purse(self.state.household.capital, self.credit_limit(_rev=revenue, _upkeep=upkeep), fixed, revenue)
+        # A project with nothing left to pay asks for no money, so a purse gone negative from arrears that are not
+        # its own does not stop it making calendar-waiting progress (fund_year).
+        funding = fund_year(money, purse, spent_hours, refunded, per, self.state.household.capital < 0)
+        if funding.underfunded:
+            project_state["ph_left"] += funding.gave_back
             project_state["underfunded_this_year"] = True
-            # WHY, not just that: hours reported as "offered" with none
-            # "effective" is meaningless without a reason. Arrears are the
-            # reason: the purse a project may draw on is what you hold
-            # plus part of your credit, less what your fixed costs need,
-            # and in arrears that is nothing at all.
-            project_state["why_underfunded"] = (
-                "in arrears: after fixed costs there is nothing left to "
-                "draw on, so the hours offered this year did almost "
-                "nothing" if self.state.household.capital < 0 else
-                "this year's instalment is more than the purse will bear")
-            # SAY IT NOW, NOT ONLY WHEN ASKED. `why_underfunded` sits on
-            # the project and answers the question if a player thinks
-            # to check `why` or `portfolio` - but the founder-hours lost
-            # here never come back, whatever the player does next, and
-            # nothing prompted them to look. Recorded here (only the
-            # arrears case, only if it actually cost real hours) and
-            # logged once below, after the loop.
-            if self.state.household.capital < 0 and give_back > 1.0:
-                _arrears_hours_lost.append((node_id, round(give_back, 0)))
+            project_state["why_underfunded"] = funding.why
+            # The founder-hours lost to arrears never come back; they are logged once after the loop.
+            if funding.hours_lost_to_arrears:
+                _arrears_hours_lost.append((node_id, round(funding.hours_lost_to_arrears, 0)))
         else:
             project_state.pop("underfunded_this_year", None)
             project_state.pop("why_underfunded", None)
+        money, refunded = funding.money, funding.refunded
         return money, refunded
 
     def _project_progress_finish(self, node_id, project_state, money, refunded,
@@ -546,18 +505,7 @@ class ProjectProgressPhaseMixin:
         # all. Named per project, so 'why <id>' and this line never disagree
         # about which project or how much.
         if _arrears_hours_lost:
-            _total_lost = sum(hours for _, hours in _arrears_hours_lost)
-            _names = ", ".join("%s (%s hr)" % (node_id, plain_number(hours))
-                                for node_id, hours in _arrears_hours_lost)
-            self.state.household.log.append((self.state.scenario.year, LogLine(
-                "arrears_hours_lost", "IN ARREARS: %s founder-hours meant for %s did "
-                "almost nothing this year, on top of the money "
-                "- that time does not come back, arrears or not. "
-                "'work' sells idle hours for wages instead of "
-                "losing them here; clearing the arrears is what "
-                "stops it happening again"
-                % (plain_number(_total_lost), _names),
-                hours=_total_lost, projects=[node_id for node_id, _hours in _arrears_hours_lost])))
+            self.state.household.log.append((self.state.scenario.year, arrears_hours_line(_arrears_hours_lost)))  # plain line: arrears_hours_line builds the LogLine and its kind
 
         # A STANDING ALLOCATION THE PLAYER GAVE, AND DID NOT GET - SAID, NOT
         # LEFT FOR THEM TO NOTICE. `allocate` is a promise about the one

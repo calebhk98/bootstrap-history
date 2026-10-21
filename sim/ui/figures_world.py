@@ -27,7 +27,7 @@ def _wages(sim):
 def _state_notice(sim):
     report = sim.eminence_report()
     return {"value": sim.state_notice(),
-            "drivers": {"state_capacity": sim.state_capacity,
+            "drivers": {"state_reach": sim.state_reach(),
                         "household_scale": sim.household_scale(),
                         "eminence": report["now"],
                         "eminence_settles_at": report["settles_at_if_nothing_changes"],

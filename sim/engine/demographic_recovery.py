@@ -102,25 +102,16 @@ class DemographicRecoveryMixin:
         the same convention once an adult-equivalent count, not a flat
         headcount, is what goes in).
 
-        THE TWO LABOUR CONVENTIONS AGRICULTURE.PY USES MUST NOT BE MIXED.
-        `self._agriculture.py`'s own `gross_harvest_kg` reads `labour_hours` TWICE,
-        for two DIFFERENT purposes that do not share a convention:
+        THE TWO LABOUR CONVENTIONS AGRICULTURE.PY USES ARE KEPT APART.
+        `gross_harvest_kg` reads `labour_hours` for two purposes:
         `_max_hectares_harvestable_by_labour` divides it by `ANNUAL_LABOUR_
-        HOURS_PER_FARM_WORKER` (1,400) to recover a worker count for the
-        harvest-window cap, while the Cobb-Douglas labour term is calibrated
-        against `REFERENCE_LABOUR_HOURS_PER_HECTARE` (150) - HOURS ACTUALLY
-        WORKED PER HECTARE, not hours per worker-year - the reference-
-        labour-intensity convention sim/tests/test_self._agriculture.py's own
-        HarvestWindowBindsGrossHarvestTests uses. Those two per-worker
-        figures (1,400 and, at this module's own binding harvest-window
-        ceiling, 150 x 2.1 = 315) disagree by ~4.4x (the module's own
-        docstring names "the annual-hours ceiling is slack by more than
-        four to one"), so a single `labour_hours` pool built to satisfy the
-        CAP's convention overshoots the LABOUR TERM's, inflating a year's
-        harvest by roughly the square root of that gap: at Rome's own
-        population this would produce a harvest 2-3x the reference figure
-        `farmland_for_population` is sized against, in EVERY weather draw,
-        never binding a famine at all.
+        HOURS_PER_FARM_WORKER` to recover a worker count for the harvest-
+        window cap, while the Cobb-Douglas labour term is calibrated against
+        `REFERENCE_LABOUR_HOURS_PER_HECTARE` (hours worked per hectare, not
+        hours per worker-year). Where a worker's year and the window ceiling
+        differ, a single pool built to satisfy one convention misstates the
+        other, so the pool is built below from hectares and the worker count
+        is passed separately.
 
         `gross_harvest_kg`'s `worker_count` parameter decides the harvest-
         window cap directly, from the actual number this engine already

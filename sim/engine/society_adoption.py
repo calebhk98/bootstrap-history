@@ -16,7 +16,13 @@ their own. Behaviour is unchanged and verified byte-identical.
 
 from sim.constants import declare
 from sim.refusal import LogLine
+from . import value_weight
+from .literacy_census_phrase import census_phrase
+from .literacy_rules import common_ceiling
 from .data import (TECH_EFFECTS, TRADES_ABSENT)
+from .literacy_effect import literacy_after_effect
+from .trade_absorption import (BECOME_ENDEMIC, GROW, RECORD_INTRODUCTION, absorption_step, absorption_years,
+                               headcount_toward_ceiling)
 
 
 class AdoptionMixin:
@@ -110,23 +116,12 @@ class AdoptionMixin:
                 continue
             if field in self.value_weights:
                 before = self.value_weights[field]
-                self.value_weights[field] = max(
-                    self.VALUE_WEIGHT_FLOOR,
-                    min(self.VALUE_WEIGHT_CEILING, before + delta))
+                self.value_weights[field] = value_weight.shifted(
+                    before, delta, self.VALUE_WEIGHT_FLOOR, self.VALUE_WEIGHT_CEILING)
                 changed.append("%s %.2f -> %.2f" % (
                     field, before, self.value_weights[field]))
                 changed_fields.append(field)
                 changes[field] = (before, self.value_weights[field])
-            elif field == "state_capacity":
-                before = float(self.civ.get(field, 0.0))
-                after = max(0.0, min(1.0, before + delta))
-                self.civ[field] = after
-                self.state_capacity = after
-                changed.append("%s %.1f%% -> %.1f%% (%+.1f points, one step)" % (
-                    field, before * 100, after * 100,
-                    (after - before) * 100))
-                changed_fields.append(field)
-                changes[field] = (before, after)
             elif field == "population" and node_id not in self.coverage_nodes():
                 # Only the disease technologies carry this weight; the
                 # disease burden reads it live from the tree.
@@ -147,7 +142,7 @@ class AdoptionMixin:
                 ceiling = (self.literacy_ceiling_elite() if field == "literacy_elite"
                            else self.literacy_ceiling_general())
                 before = self.literacy(field)
-                target = max(0.0, min(max(ceiling, before), before + delta))
+                target = literacy_after_effect(before, delta, ceiling)
                 learners_ceiling = self.literacy_ceiling_common() if field == "literacy_general" else ceiling
                 self.country_literacy().teach(field, target, learners_ceiling)
         for field, before in literacy_before.items():
@@ -185,8 +180,8 @@ class AdoptionMixin:
 
     def literacy_ceiling_common(self):
         """Commoners who can attend school after the farms' call on their children's time."""
-        kept_home = self.FARM_CHILDREN_KEPT_FROM_SCHOOL * self.labour.farm_share_of_hours()
-        return (1.0 - self.UNABLE_TO_READ_SHARE) * (1.0 - kept_home)
+        return common_ceiling(self.UNABLE_TO_READ_SHARE, self.FARM_CHILDREN_KEPT_FROM_SCHOOL,
+                              self.labour.farm_share_of_hours())
 
     def literacy_ceiling_general(self):
         """The whole population's ceiling, including propertied people free of farm work."""
@@ -335,10 +330,7 @@ class AdoptionMixin:
             if "literacy_elite" in changed:
                 bits.append("the lettered and propertied class is now %d%% "
                             "literate" % round(changed["literacy_elite"] * 100))
-            school_phrase = "schooling shows in the census"
-            school_started = self.done_year.get(self.school_node())
-            if school_started is not None and year - school_started >= self.GENERATION_YEARS:
-                school_phrase = "a generation of schooling shows in the census"
+            school_phrase = census_phrase(year, self.done_year.get(self.school_node()), self.GENERATION_YEARS)
             self.state.household.log.append((year, LogLine("school_progress", "%s: %s" % (school_phrase, "; ".join(bits)))))
 
     # ---- A TRADE THE FOUNDER INTRODUCED BECOMES A TRADE THE SOCIETY HAS ----
@@ -386,8 +378,7 @@ class AdoptionMixin:
             "has always had'. Round figure, not measured.")
 
     def _trade_absorption_years(self, flow):
-        return max(self.TRADE_ABSORPTION_MIN_YEARS,
-                   self.TRADE_ABSORPTION_BASE_YEARS / (1.0 + flow) ** 0.5)
+        return absorption_years(flow, self.TRADE_ABSORPTION_MIN_YEARS, self.TRADE_ABSORPTION_BASE_YEARS)
 
     # Once endemic, the fraction of the remaining gap to literate_capacity()
     # closed each year. A time constant of 1/0.05 == 20 years on top of the
@@ -411,29 +402,17 @@ class AdoptionMixin:
             if trade not in household.trades_created:
                 continue          # never taught here; nothing to naturalise
             intro = household.trade_introduced_year.get(trade)
-            if intro is None:
-                # First year this function has ever seen the trade in
-                # trades_created. Recorded now rather than back-dated,
-                # because train() (labour.py) does not itself timestamp the
-                # set it adds to, and "the year this file first noticed" is
-                # at worst one step later than the true year, which cannot
-                # matter against a minimum absorption time measured in
-                # decades.
-                household.trade_introduced_year[trade] = year
-                continue
-            if trade in household.trades_endemic:
-                self._grow_endemic_trade(trade)
-                continue
             flow = self._schooling_flow()
-            if flow <= 0.0:
-                continue
-            if year - intro >= self._trade_absorption_years(flow):
+            step = absorption_step(intro, trade in household.trades_endemic, flow, year, self._trade_absorption_years)
+            if step == RECORD_INTRODUCTION:
+                # First year this function has ever seen the trade in trades_created; recorded now rather than
+                # back-dated, which is at worst one step late against a minimum measured in decades.
+                household.trade_introduced_year[trade] = year
+            elif step == GROW:
+                self._grow_endemic_trade(trade)
+            elif step == BECOME_ENDEMIC:
                 household.trades_endemic.add(trade)
-                # IN-WORLD, NOT A CHANGE-LOG. This narrates a census fact -
-                # the trade is no longer one household's secret - the same
-                # way every other log line in this file narrates an event
-                # the founder would actually observe, never a note about the
-                # code that produced it.
+                # IN-WORLD, NOT A CHANGE-LOG: a census fact the founder would observe.
                 household.log.append((year, LogLine("trade_no_longer_only_yours", "%s is no longer only your trade: "
                                  "enough schooling has passed through enough "
                                  "hands that this society simply has its own "
@@ -453,15 +432,12 @@ class AdoptionMixin:
         protocol.py), so this is consistent with a number the player already
         sees fluctuate this way from hiring, training and attrition alike.
         """
-        ceiling = self.labour.literate_capacity(trade)
-        if not (ceiling < float("inf")):
-            return
         household = self.state.household
         have = household.employees.get(trade, 0.0)
-        room = ceiling - have
-        if room <= 1e-6:
+        grown = headcount_toward_ceiling(have, self.labour.literate_capacity(trade), self.TRADE_DIFFUSION_APPROACH_RATE)
+        if grown == have:
             return
-        self.labour.set_employed(trade, have + room * self.TRADE_DIFFUSION_APPROACH_RATE)
+        self.labour.set_employed(trade, grown)
         self.labour.resync_pools()
 
     def advance_society(self, year):

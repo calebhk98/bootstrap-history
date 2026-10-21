@@ -26,3 +26,6 @@ The lowest ask is `HOUSEHOLD_TIME_PREFERENCE` plus the saver's expected inflatio
 the ask goes to zero, so a rate drifting down to it with no borrowers is the funds market answering
 deflation, not a separate defect. The jump is the same rate moving off a near-zero base, which looks large
 only as a ratio (548). Re-measure after the opening is fixed (526, 545) before changing `_lend`.
+
+Superseded in substance by 641 (lenders ask nothing for what their money earns elsewhere or for default): the
+lowest ask carries no alternative return and no expected loss, so a glut of funds clears at zero.

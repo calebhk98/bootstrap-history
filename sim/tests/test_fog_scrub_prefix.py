@@ -1,76 +1,36 @@
-"""fog_scrub_prefix: substring replace corrupts ids with shared prefixes."""
+"""fog_scrub_prefix: hidden ids are replaced as whole ids, so an id that prefixes another does not corrupt it."""
 from .harness import *  # noqa: F401,F403
-from sim.engine.fog import HIDDEN_ID_PLACEHOLDER
+from sim.engine.fog import HIDDEN_ID_PLACEHOLDER, scrub_hidden_ids
 
-# =============================================================================
-# FOG SCRUB PREFIX BUG: fog_scrub() uses plain substring replace, so a hidden
-# id that is a prefix of another id corrupts the longer id. The tree contains
-# at least 17 such pairs (cap_measure_temp/cap_measure_temp_hi being one).
-# If cap_measure_temp is hidden and text contains "cap_measure_temp_hi", the
-# replace consumes "cap_measure_temp" and leaves "something you have not heard
-# of_hi", exposing the suffix "_hi". This test covers three cases: a shorter
-# id hidden, a longer id hidden, and both hidden. The fix matches whole ids
-# only (word boundaries: [A-Za-z0-9_]) and replaces longest ids first.
-# =============================================================================
+QUICK_TOPIC = True
 
-# --- Case 1: Only the shorter id (cap_measure_temp) is hidden.
-# The longer id (cap_measure_temp_hi) is visible. The text contains both.
-# After fog_scrub, the visible one should remain, and the hidden one should
-# be replaced. Most importantly: no corrupted suffix like "_hi".
-_test_sim = sim(capital=1000.0)
-_test_sim.fog = True
-_test_sim.revealed = {"cap_measure_temp_hi"}  # longer one visible, shorter one hidden
-_text_both = "the recipe needs cap_measure_temp and cap_measure_temp_hi"
-_result_case1 = _test_sim.fog_scrub(_text_both)
-check("shorter id hidden, longer id visible: longer id stays intact",
-      "cap_measure_temp_hi" in _result_case1,
-      _result_case1)
-check("shorter id hidden, longer id visible: shorter id replaced",
-      HIDDEN_ID_PLACEHOLDER in _result_case1 and "cap_measure_temp_hi" in _result_case1
-      and _result_case1.replace(HIDDEN_ID_PLACEHOLDER, "").count("cap_measure_temp") == 1,
-      _result_case1)
+SHORT = "cap_measure_temp"
+LONG = "cap_measure_temp_hi"
+IDS = [SHORT, LONG]
 
-# --- Case 2: Only the longer id (cap_measure_temp_hi) is hidden.
-# The shorter id (cap_measure_temp) is visible. The text contains both.
-_test_sim2 = sim(capital=1000.0)
-_test_sim2.fog = True
-_test_sim2.revealed = {"cap_measure_temp"}  # shorter one visible
-_text_both = "the recipe needs cap_measure_temp and cap_measure_temp_hi"
-_result_case2 = _test_sim2.fog_scrub(_text_both)
-check("longer id hidden, shorter id visible: shorter id remains",
-      "cap_measure_temp" in _result_case2,
-      _result_case2)
-check("longer id hidden, shorter id visible: longer id replaced",
-      "cap_measure_temp_hi" not in _result_case2,
-      _result_case2)
-check("longer id hidden, shorter id visible: no orphaned fragment",
-      "_hi" not in _result_case2,
-      _result_case2)
 
-# --- Case 3: Both ids are hidden.
-# The text contains both. After fog_scrub, neither should appear.
-_test_sim3 = sim(capital=1000.0)
-_test_sim3.fog = True
-_test_sim3.revealed = set()  # both hidden
-_text_both = "the recipe needs cap_measure_temp and cap_measure_temp_hi"
-_result_case3 = _test_sim3.fog_scrub(_text_both)
-check("both ids hidden: shorter id is replaced",
-      "cap_measure_temp" not in _result_case3,
-      _result_case3)
-check("both ids hidden: longer id is replaced",
-      "cap_measure_temp_hi" not in _result_case3,
-      _result_case3)
-check("both ids hidden: no orphaned fragment",
-      "_hi" not in _result_case3,
-      _result_case3)
+def scrub(text, visible):
+    return scrub_hidden_ids(text, IDS, lambda node_id: node_id in visible)
 
-# --- Case 4: Id at word boundary - should only match whole ids.
-# If scrub matches within a larger word, it could leave corruption.
-_test_sim4 = sim(capital=1000.0)
-_test_sim4.fog = True
-_test_sim4.revealed = set()  # both hidden
-_text_embedded = "my_cap_measure_temp_hi_measurement"
-_result_case4 = _test_sim4.fog_scrub(_text_embedded)
-check("ids embedded in larger word are preserved (no corruption)",
-      "my_cap_measure_temp_hi_measurement" in _result_case4 or "_hi" not in _result_case4,
-      _result_case4)
+
+both = "the recipe needs cap_measure_temp and cap_measure_temp_hi"
+
+shorter_hidden = scrub(both, {LONG})
+check("shorter id hidden, longer id visible: longer id stays intact and the shorter is replaced",
+      shorter_hidden == "the recipe needs %s and %s" % (HIDDEN_ID_PLACEHOLDER, LONG), shorter_hidden)
+
+longer_hidden = scrub(both, {SHORT})
+check("longer id hidden, shorter id visible: only the longer is replaced, no orphaned fragment",
+      longer_hidden == "the recipe needs %s and %s" % (SHORT, HIDDEN_ID_PLACEHOLDER), longer_hidden)
+
+both_hidden = scrub(both, set())
+check("both ids hidden: both are replaced and nothing is left over",
+      both_hidden == "the recipe needs %s and %s" % (HIDDEN_ID_PLACEHOLDER, HIDDEN_ID_PLACEHOLDER), both_hidden)
+
+embedded = scrub("my_cap_measure_temp_hi_measurement", set())
+check("an id embedded in a larger word is not touched", embedded == "my_cap_measure_temp_hi_measurement", embedded)
+
+namespaced = scrub("mod:cap_measure_temp", set())
+check("a namespaced id is not a match for its bare tail", namespaced == "mod:cap_measure_temp", namespaced)
+
+check("all ids visible leaves the text alone", scrub(both, set(IDS)) == both)

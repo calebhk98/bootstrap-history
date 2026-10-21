@@ -20,6 +20,7 @@ from sim.geography.api import layer_value, settlement, tiles_held
 from sim.world import demand, need_basket, need_demand
 
 from . import goods_market_offers
+from .household_demand_key import demand_key, population_of_key
 from .static_book_basket import StaticBookBasketMixin
 
 MEAN_INCOME_HOURS_PER_CAPITA = declare(
@@ -131,8 +132,7 @@ class MarketDemandMixin(StaticBookBasketMixin):
 
     def _household_demand_now(self):
         prices = self.goods_market.household_cost_prices()
-        key = (round(float(self.population.total) / self._opening_population(), 3),
-               round(self.household_income_hours_per_capita(), 3))
+        key = demand_key(self.population.total, self._opening_population(), self.household_income_hours_per_capita())
         cache = getattr(self.household, "_household_demand_cache", None)
         if cache is not None and cache[0] == key and cache[1] is prices:
             return cache[2], cache[3]
@@ -145,7 +145,7 @@ class MarketDemandMixin(StaticBookBasketMixin):
         prices_in_hours = {material: price / per_hour for material, price in prices.items()
                            if price > 0.0 and (material in basket["prices"]
                                                or self.goods_market.offered_by(material) == seller_at_home)}
-        now = household_demand_by_material(prices_in_hours, key[0] * self._opening_population(), key[1],
+        now = household_demand_by_material(prices_in_hours, population_of_key(key, self._opening_population()), key[1],
                                        self.civ, self.world_map)
         opening_by_commodity, now_by_commodity = {}, {}
         for material, units in basket["units"].items():

@@ -21,7 +21,9 @@ class YearLedger:
     hours_hired: Dict[AgentId, Dict[str, float]] = field(default_factory=dict)
     crew_hours_bought: Dict[AgentId, Dict[Tuple[str, str], float]] = field(default_factory=dict)   # merchants that bid for crew: hours sold them by (trade, area)
     hours_sold: Dict[AgentId, float] = field(default_factory=dict)
+    spare_hours: Dict[AgentId, float] = field(default_factory=dict)   # hours a household had left once its own plot took what the land it holds could
     grown: Dict[AgentId, Dict[GoodId, float]] = field(default_factory=dict)       # made for itself
+    own_plot_hours: Dict[AgentId, Dict[str, float]] = field(default_factory=dict)   # hours worked on its own plot, by recipe
     grown_units: Dict[AgentId, Dict[str, float]] = field(default_factory=dict)    # need units of that
     buy_fills: Dict[AgentId, List[Fill]] = field(default_factory=dict)
     sold: Dict[Tuple[AgentId, GoodId], float] = field(default_factory=dict)
@@ -38,6 +40,8 @@ class YearLedger:
     bids_by_market: Dict[Tuple[GoodId, str], list] = field(default_factory=dict)  # (good, area): the year's bids
     import_accounts: frozenset = frozenset()   # accounts whose sales are goods that crossed the border (customs)
     export_accounts: frozenset = frozenset()   # accounts whose purchases leave over the border
+    bonded_bought: Dict[Tuple[str, str], float] = field(default_factory=dict)   # (tile, trade): bonded people bought
+    bonded_paid: float = 0.0               # money paid for them
     wage_floor_per_hour: float = 0.0       # what a worker's household costs less its plot, per hour, over the areas
 
     def note_postings(self, postings: Iterable[object], purpose_kind: str = "") -> None:

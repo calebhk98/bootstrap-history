@@ -8,7 +8,7 @@ from typing import Any, Dict
 
 from . import ledger
 from .edges import EDGE_ECONOMY
-from .tuning_strata import (BIRTH_RATE, BIRTH_WELFARE_RESPONSE, BONDAGE_EXIT_RATE, BONDED_BIRTH_SHARE,
+from .tuning_strata import (BIRTH_RATE, BIRTH_WELFARE_RESPONSE, BONDAGE_EXIT_RATE,
 							DEATH_RATE, EDUCATION_EFFORT_SCALE, FALL_WELFARE, FAMINE_DEATH_RATE,
 							GROWTH_LAG_SHARE, LITERACY_CEILING, LITERACY_DECAY_RATE, LITERACY_GAIN_RATE,
 							LITERACY_WIDTH, MOBILITY_RATE, RISE_LITERACY, RISE_WELFARE, STRATUM_EDUCATION_SHARE,
@@ -124,8 +124,7 @@ def school(stratum: Any, surplus: float, food_bill: float, buffer: float, world:
 def grow(stratum: Any) -> None:
 	"""Births rise gently with welfare, deaths rise steeply with the food unmet; growth follows with a lag."""
 	record = stratum.record
-	birth_rate = BIRTH_RATE * (BONDED_BIRTH_SHARE if stratum.is_bonded() else 1.0)
-	births = birth_rate * (1.0 + BIRTH_WELFARE_RESPONSE * math.tanh(record.welfare - 1.0))
+	births = BIRTH_RATE * (1.0 + BIRTH_WELFARE_RESPONSE * math.tanh(record.welfare - 1.0))
 	deaths = DEATH_RATE + FAMINE_DEATH_RATE * record.shortfall.get("food", 0.0)
 	record.last_growth += GROWTH_LAG_SHARE * ((births - deaths) - record.last_growth)
 	record.members = max(0.0, record.members * (1.0 + record.last_growth))
@@ -183,6 +182,23 @@ def settle_keep(registry: Any, world: Any) -> None:
 		cost = actor.record.members * registry.world_for(actor, world).subsistence_cost_per_person_year()
 		ledger.transfer(owner, actor, cost, "keep of bonded")
 		actor.record.allowance += cost
+
+
+def true_up_keep(registry: Any, world: Any) -> None:
+	"""Before the year's turns, each keeper makes up the bonded's food to the year's own prices: a keep set at
+	the end of last year used last year's prices, and a stratum founded since has none. A fall in prices
+	takes nothing back."""
+	for actor in registry.of_kind("stratum"):
+		if not actor.is_bonded():
+			continue
+		owner = registry.actors.get(actor.neighbour_id(str(actor.record.plan.get("owner") or "")))
+		if owner is None or owner is actor:
+			continue
+		cost = actor.record.members * registry.world_for(actor, world).subsistence_cost_per_person_year()
+		shortfall = cost - actor.record.allowance
+		if shortfall > 0.0:
+			ledger.transfer(owner, actor, shortfall, "keep of bonded")
+			actor.record.allowance += shortfall
 
 
 def settle_strata(registry: Any, world: Any) -> None:

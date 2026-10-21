@@ -170,13 +170,13 @@ check("a hungry nation that is handed food loses fewer people", flows_with.death
 # ---- a free press wears away the state's authority ------------------------------------------------------------
 plain = unopened_sim()
 check("with no work declaring it, the state keeps all its capacity",
-      plain.state_legitimacy() == 1.0 and plain.state_authority() == plain.state_capacity, plain.state_legitimacy())
+      plain.state_legitimacy() == 1.0 and plain.state_authority() == plain.state_reach(), plain.state_legitimacy())
 press = running(PRESS, units=4.0)
 check("an open free press lowers the share of its capacity the state keeps",
       abs(press.state_legitimacy() - (1.0 - 0.02 * 4.0 ** 0.5)) < 1e-12, press.state_legitimacy())
-check("the state's authority is its capacity times that share", abs(press.state_authority() - press.state_capacity * press.state_legitimacy()) < 1e-12)
+check("the state's authority is its capacity times that share", abs(press.state_authority() - press.state_reach() * press.state_legitimacy()) < 1e-12)
 check("what the state's budget and enforcement ask of the world is the authority",
-      SimWorld(press).state_capacity() == press.state_authority(), SimWorld(press).state_capacity())
+      SimWorld(press).state_reach() == press.state_authority(), SimWorld(press).state_reach())
 huge = running(PRESS, units=1.0e6)
 check("however many presses, the state keeps some of its capacity", huge.state_legitimacy() == 0.5, huge.state_legitimacy())
 

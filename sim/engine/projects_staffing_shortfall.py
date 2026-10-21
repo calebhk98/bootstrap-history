@@ -1,6 +1,9 @@
 """The yearly staffing check: which concerns a real shortfall of people forces shut."""
 from collections import defaultdict
 
+from .staffing_choice import (HAND_RESOURCES, closures_for_shortfall, missing_when_opened, shortfalls_beyond,
+                             staffing_allowances)
+
 
 class StaffingShortfallMixin:
 
@@ -44,13 +47,9 @@ class StaffingShortfallMixin:
         concerns must close, so what it names is what would shut it again.
         Pass `staffing_held_totals()` to price many concerns against one walk.
         """
-        totals = defaultdict(float, self.staffing_held_totals() if held_totals is None else held_totals)
-        already = self._staffing_shortfalls(totals, strict=True)
-        for resource, amount in self._staffing_draw_of(node_id, self.reopen_units(node_id)).items():
-            totals[resource] += amount
-        return {resource: amount - already.get(resource, 0.0)
-                for resource, amount in self._staffing_shortfalls(totals, strict=True).items()
-                if amount - already.get(resource, 0.0) > 0.005}
+        return missing_when_opened(self.staffing_held_totals() if held_totals is None else held_totals,
+                                   self._staffing_draw_of(node_id, self.reopen_units(node_id)),
+                                   lambda totals: self._staffing_shortfalls(totals, strict=True))
 
     def _staffing_allowances(self, trades, strict=False):
         """How much of each resource the household carries before a concern must close.
@@ -60,19 +59,13 @@ class StaffingShortfallMixin:
         """
         household = self.state.household
         own = self.FOUNDER_IS_WORTH if self.state.founder.founder_alive else 0.0
-        slack = 0.0 if strict else self.STAFFING_CLOSURE_SLACK
-        allowances = {"scholars": self.labour.effective_scholars() + slack,
-                      "craftsmen": household.artisans + own + slack}
-        for trade in trades:
-            allowances[trade] = household.employees.get(trade, 0.0) + (0.0 if strict else 0.01)
-        return allowances
+        return staffing_allowances(trades, self.labour.effective_scholars(), household.artisans + own,
+                                   household.employees, self.STAFFING_CLOSURE_SLACK, strict)
 
     def _staffing_shortfalls(self, totals, strict=False):
         """Resource -> amount held beyond what the household carries (short ones only)."""
-        allowances = self._staffing_allowances(
-            [resource for resource in totals if resource not in ("scholars", "craftsmen")], strict)
-        return {resource: totals[resource] - allowances[resource]
-                for resource in sorted(totals) if totals[resource] > allowances[resource]}
+        return shortfalls_beyond(totals, self._staffing_allowances(
+            [resource for resource in totals if resource not in HAND_RESOURCES], strict))
 
     def concerns_to_close_for_staffing(self):
         """The fewest running concerns, lowest net value first, whose closure covers every shortfall.
@@ -82,35 +75,6 @@ class StaffingShortfallMixin:
         freed enough is kept, so nothing shut here is one `open` would accept.
         """
         draws = self._staffing_draws()
-        totals = defaultdict(float)
-        for held in draws.values():
-            for resource, amount in held.items():
-                totals[resource] += amount
         net_value = {node_id: self.nodes[node_id]["rev"] - self.nodes[node_id]["up"] for node_id in draws}
         # A concern flagged with `keep <id> staffed` is protected: it closes only after every unflagged one.
-        protected = self.state.projects.keep_staffed
-        order = sorted(draws, key=lambda node_id: (node_id in protected, net_value[node_id], node_id))
-        chosen = []
-        unfixable = set()
-        while True:
-            short = [resource for resource in self._staffing_shortfalls(totals) if resource not in unfixable]
-            if not short:
-                break
-            holders = [node_id for node_id in order
-                       if node_id not in chosen and short[0] in draws[node_id]]
-            if not holders:
-                unfixable.add(short[0])
-                continue
-            chosen.append(holders[0])
-            for resource, amount in draws[holders[0]].items():
-                totals[resource] -= amount
-        kept_open = []
-        for node_id in sorted(chosen, key=lambda node_id: (-net_value[node_id], node_id)):
-            for resource, amount in draws[node_id].items():
-                totals[resource] += amount
-            if self._staffing_shortfalls(totals):
-                for resource, amount in draws[node_id].items():
-                    totals[resource] -= amount
-            else:
-                kept_open.append(node_id)
-        return [node_id for node_id in chosen if node_id not in kept_open]
+        return closures_for_shortfall(draws, net_value, self.state.projects.keep_staffed, self._staffing_shortfalls)

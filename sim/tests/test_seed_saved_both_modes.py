@@ -1,31 +1,21 @@
-"""seed_saved_both_modes: a saved and loaded `play` or `agent` game reports the seed it started with.
+"""Complaint 360: a seed is kept as the game keeps it, a number as the number and a word in lower case, and a saved
+state carries it back unchanged. The rules are called on the seed functions and a bare `SimulationState`; the CLI
+round trip of `play` and `agent` is test_seed_saved_both_modes_scenario."""
 
-Complaints/360. Word seeds are kept as the word, number seeds as the number.
-"""
-from .harness import *  # noqa: F401,F403
-from sim.tests import cli_in_process
-from sim.engine.saveload import load_state
+QUICK_TOPIC = True
 
-_scratch = tempfile.mkdtemp()
+from .harness import check
 
+from sim.engine.settings_table import normal_seed, valid_seed_text
+from sim.engine.state import FounderState, HouseholdState, ProjectsState, SimulationState, deserialize_state, serialize_state
 
-def _start(mode, seed, name):
-    path = os.path.join(_scratch, name + ".json")
-    env = dict(os.environ, ROME_SAVE_DIR=_scratch, ROME_SIM_CONFIG=os.path.join(_scratch, "c.json"))
-    text = '{"cmd":"state"}\n' if mode == "agent" else "quit\n"
-    cli_in_process.run([mode, "--civ", "rome_100ad", "--seed", str(seed), "--session", path],
-                       input_text=text, environment=env)
-    return path
+check("a number seed is kept as the number", normal_seed(7) == 7 and normal_seed("7") == 7 and normal_seed(" 7 ") == 7)
+check("a word seed is kept as the word, in lower case", normal_seed("Dragon") == "dragon")
+check("a seed that mixes letters and digits is a word", normal_seed("Rome42") == "rome42")
+check("a seed is one word of letters, digits, dashes and underscores",
+      valid_seed_text("rome-42_b") and not valid_seed_text("two words") and not valid_seed_text(""))
 
-
-for _mode in ("play", "agent"):
-    for _seed, _expected in ((7, 7), ("Dragon", "dragon")):
-        _path = _start(_mode, _seed, "%s-%s" % (_mode, _seed))
-        _loaded = sim()
-        _loaded.seed = None
-        try:
-            load_state(_loaded, _path)
-        except Exception as error:  # a missing save fails the check below
-            _loaded.seed = "load failed: %s" % error
-        check("%s game: a saved and loaded game reports seed %r" % (_mode, _seed),
-              _loaded.seed == _expected, _loaded.seed)
+for seed in (7, "dragon"):
+    state = SimulationState(household=HouseholdState(capital=1.0), projects=ProjectsState(), founder=FounderState())
+    state._seed = seed
+    check("a saved and loaded state reports seed %r" % (seed,), deserialize_state(serialize_state(state))._seed == seed)

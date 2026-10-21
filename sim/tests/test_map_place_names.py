@@ -2,7 +2,7 @@
 import unittest
 
 from sim.geography import map_source, tile_names
-from sim.tests.test_missing_screens import _ask, _fresh_sim
+from sim.tests.test_missing_screens_scenario import _ask, _fresh_sim
 
 
 def with_places(sim, places):

@@ -6,9 +6,9 @@ dictionaries a test fills in. A test that needs a member this does not have subc
 own file, so tests owning different mechanisms never edit this one together.
 """
 import random
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional, Set, Tuple
 
-from sim.agents import ledger
+from sim.agents import business_plant_books, ledger
 from sim.agents.records import ActorsState
 
 
@@ -82,6 +82,10 @@ class FakeWorld:
 	def state_hands(self) -> Any:
 		return None
 
+	def collectible_share(self, tiles=None) -> float:
+		"""Every officer reaches every tile unless a test sets `collectible`."""
+		return getattr(self, "collectible", 1.0)
+
 	def edge(self, name: str) -> Any:
 		return self.edge_book.edge(name)
 
@@ -147,6 +151,22 @@ class FakeWorld:
 	def starting_rate(self) -> float:
 		return self.rate
 
+	# ---- what a state weighs when it is short (fiscal_response.py): no coin, no taxpayers it can see, no forms
+	def coin_regime(self) -> str:
+		return "commodity"
+
+	def coin_stock_value(self) -> float:
+		return 0.0
+
+	def visible_taxpayers(self) -> List[Any]:
+		return []
+
+	def revenue_forms(self) -> List[Any]:
+		return []
+
+	def revenue_assessments(self) -> List[Any]:
+		return []
+
 	def debt_service_share_of_surplus(self) -> float:
 		return 0.5
 
@@ -170,12 +190,21 @@ class FakeWorld:
 		return {trade: hours / self.hours_per_person_year
 				for trade, hours in (self.nodes[node_id].get("lab") or {}).items()}
 
+	def hourly_pay(self, trade: str) -> Optional[float]:
+		return float(self.labour_market.quote(trade, 0.0))
+
+	def plant_costs(self, node_id: str) -> Optional[Tuple[float, float]]:
+		return self.upkeep(node_id), self.concern_wage_bill(node_id)
+
 	def free_fte(self, trade: str, actor_id: Optional[str]) -> Optional[float]:
 		return self.free_people.get(trade)
 
 	def concern_wage_bill(self, node_id: str, capacity: float = 1.0) -> float:
 		return capacity * sum(people * self.hours_per_person_year * self.labour_market.wage_per_hour
 							  for people in self.concern_staff(node_id).values())
+
+	def plant_books(self, node_id: str, opened_year: int, rivals: float, size: float) -> Any:
+		return business_plant_books.home_books(self, node_id, opened_year, rivals, size)
 
 	def site_rent(self, node_id: str, capacity: float = 1.0, tile: Optional[str] = None) -> float:
 		return 0.0
@@ -269,7 +298,7 @@ class FakeWorld:
 		return self.prices.get(material, 0.0)
 
 	def material_cost(self, material: str, tonnes: float) -> float:
-		return self.material_price(material) * tonnes
+		return self.prices[material] * tonnes if material in self.prices else None
 
 
 def total_money(actors) -> float:

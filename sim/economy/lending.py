@@ -10,7 +10,9 @@ from typing import Dict, List
 
 from sim.world import capital_market
 
-from . import bank_service, banks, bondage, credit, credit_claims, households_credit, merchants_credit, titles, titles_value
+from . import bank_service, banks, bondage, credit, credit_claims, households_credit, lender_ask, loss_memory, merchants_credit, titles, titles_ground, titles_value
+from .households_orders import HOUSEHOLD_TIME_PREFERENCE
+from .household_work_year import basket_key, cohort_basket
 from .producers_close import WORKING_CAPITAL_PURPOSE
 from .types import FundsOffer
 from .households_basket import need_prices
@@ -18,6 +20,13 @@ from .year_goods import _held_stock
 
 
 def service(record, money: str, year: int, bondage_years: float = 0.0) -> Dict[str, float]:
+    """The year's payments (`_collect`), then every lender's loss rate ages by the year's losses."""
+    received = _collect(record, money, year, bondage_years)
+    loss_memory.age(record, money)
+    return received
+
+
+def _collect(record, money: str, year: int, bondage_years: float) -> Dict[str, float]:
     """Collect the year's payments at its end, after sales, from loans made in earlier years (a borrower's
     first payment falls due a year after it borrowed). Books the defaults: a lender's loss, a defaulter's
     record, a merchant's staked capital after what it repaid or was freed of. Returns the interest each
@@ -61,7 +70,9 @@ def lend_working_capital(setup, record, view) -> None:
     spare = {cohort_id: amount for cohort_id, amount in spare.items() if amount > 0.0}
     if not spare:
         return
-    offers = [FundsOffer(cohort_id, money, amount, max(0.0, record.cohorts[cohort_id].expected_inflation))
+    offers = [FundsOffer(cohort_id, money, amount, lender_ask.lowest_ask(
+                  HOUSEHOLD_TIME_PREFERENCE, record.cohorts[cohort_id].expected_inflation,
+                  expected_loss_rate=lender_ask.loss_rate(record.loss_rates.get(cohort_id, 0.0))))
               for cohort_id, amount in spare.items()]
     loans, _rate, _unmet = credit.clear(
         asked, offers, money, record.memory.rates.get(money), credit_claims.principal_by_borrower(record.loans),
@@ -79,7 +90,8 @@ def household_requests(setup, record, view, ledger, priced_by_tile) -> List:
     rate = view.interest_rate(money)
     requests = []
     for cohort_id, cohort in sorted(record.cohorts.items()):
-        priced = _priced(setup, view, cohort.tile, priced_by_tile)
+        key = basket_key(record, cohort)
+        priced = _priced_basket(view, key, cohort_basket(setup, record, cohort), priced_by_tile)
         if not priced or cohort.people <= 0.0:
             continue
         shortfall = (households_credit.floor_cost_unmet(cohort, priced, ledger.grown_units.get(cohort_id))
@@ -96,7 +108,7 @@ def _pledging_title(setup, record, cohort, request, live_rate):
     free = titles.free_share(record, cohort.agent_id, cohort.tile)
     if tile is None or free <= 0.0:
         return request
-    worth = titles_value.share_value(tile, record.land_rent.get(cohort.tile, 0.0), free,
+    worth = titles_value.share_value(titles_ground.arable_hectares(record, cohort.tile, tile), record.land_rent.get(cohort.tile, 0.0), free,
                                      titles_value.capitalising_rate(live_rate, setup.opening_rate))
     if worth <= 0.0:
         return request
@@ -125,10 +137,16 @@ def bid_household_loans(setup, record, view, ledger, loans, order_book, priced_b
             lent[loan.borrower] = lent.get(loan.borrower, 0.0) + loan.principal
     for cohort_id, budget in sorted(lent.items()):
         cohort = record.cohorts[cohort_id]
-        basket = setup.basket_for(cohort.tile)
-        for bid in households_credit.floor_bids(cohort, _priced(setup, view, cohort.tile, priced_by_tile), budget,
+        basket = cohort_basket(setup, record, cohort)
+        for bid in households_credit.floor_bids(cohort, _priced_basket(view, basket_key(record, cohort), basket, priced_by_tile), budget,
                                                 ledger.grown_units.get(cohort_id), setup.specs, view, basket):
             order_book.setdefault((bid.good, bid.area), ([], []))[0].append(bid)
+
+
+def _priced_basket(view, key, basket, priced_by_tile):
+    if key not in priced_by_tile:
+        priced_by_tile[key] = need_prices(basket, view, key[0])
+    return priced_by_tile[key]
 
 
 def _priced(setup, view, tile, priced_by_tile):

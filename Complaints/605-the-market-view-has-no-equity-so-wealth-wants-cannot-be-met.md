@@ -16,7 +16,7 @@ Depends on 538 (land and plot titles carry a value).
 
 **Test.** A test: realised year-0 income is within a band of the opening figure on a fixture with firms owned by households.
 
-## Built and measured (branch `605-607-saving-finds-a-use`)
+## Built and measured (branch `605-607-saving-finds-a-use` (merged as `44cd2125`, then deleted; `equity.py` is in main, `opening_equity.py` is no longer in `sim/economy`))
 
 - `sim/economy/equity.py`: `holdings(setup, record, view)` is each cohort's share (the tile's ownership shares, as
   dividends are split) of the net worth of the producers its tile's owner holds: cash plus plant at replacement cost

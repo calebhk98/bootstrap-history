@@ -36,6 +36,7 @@ add to it.
 - **A process or WASM boundary for mod code.** Consent is the only protection
   today; an allowlisted message interface would let a player run an author they
   do not trust. Not started; the declarative contract covers most needs.
+- **Swappable implementations of engine computations** (speed mods, for example numpy): `Complaints/661`.
 - **Hazard effects beyond the shipped fields.** A hazard is made of the effect
   fields the engine reads; a new effect needs an actor kind or mod code.
 
@@ -56,6 +57,7 @@ whose proof-of-concept engine hook sits on its own `engine-*` branch, not merged
 - Industrial pollution and externalities derived from physical throughput (smoke, runoff, occupational disease, cleanup technology). (`Complaints/closed/108-add-industrial-pollution-and-externalities.md`) Mod `bh_pollution_t9c3`; harm reaching mortality and yields: `Complaints/635`, branch `engine-externality-hook`.
 - Religious institutions as an actor kind holding land, mills and credit, with data per civilisation. (`Complaints/closed/269-religious-institutions-absent-as-economic-actors.md`) Mod `bh_religion_h5p1`; lending from a purse and civilisation variants: `Complaints/636`, branch `engine-actor-lenders` (land ownership has no proof of concept).
 - A town table (name, tile, size at the start date with a source) so `map` and `move` can name places. (`Complaints/closed/289-tiles-have-no-place-names-and-no-towns.md`) Mod `bh_towns_m8d4`; names on the shipped `map` and `move`: `Complaints/637`, branch `engine-map-place-names`.
+- Religion as a household need (rites, offerings, priests and diviners): owner decision 2026-10-20, out of the base game; temples' own consumption can build on `bh_religion_h5p1`. (`Complaints/530`)
 - Sheltering cash from disasters and confiscation (deposits elsewhere, letters of credit); the display part is done. (`Complaints/closed/165-disasters-take-cash.md`) Mod `bh_cashshelter_z6f2`; confiscation counting lodged coin: `Complaints/638`, branch `engine-confiscation-counts-claims`.
 
 A mod civilisation is a full copy of the shipped file it varies (the loader has no `extends`), so

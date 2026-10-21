@@ -4,6 +4,7 @@ import dataclasses
 import hashlib
 import json
 import os
+import types
 
 from . import solve_cache
 
@@ -25,6 +26,8 @@ def _plain(value, ancestors=()):
         return float("%.*g" % (KEY_FLOAT_DIGITS, value))    # a last-place difference (a coin's scale) is not a different setup
     if value is None or isinstance(value, (bool, int)):
         return value
+    if isinstance(value, types.FunctionType):
+        return "%s.%s" % (value.__module__, value.__qualname__)    # a rule handed in; its source is in the key's closure
     if any(value is ancestor for ancestor in ancestors):
         raise TypeError("cannot key the spin-up on a %s that contains itself" % type(value).__name__)
     ancestors = ancestors + (value,)

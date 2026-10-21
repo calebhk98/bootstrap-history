@@ -1,56 +1,60 @@
-"""The step reply and screen say what automation and the standing programme did (Complaints 91, 74)."""
+"""The step screen says what automation and the standing programme did (Complaints 91, 74). Complaint 640: the line, the
+screen and the audit window are called on rows built here; the step reply of a played game is in
+test_ui_step_automation_line_scenario."""
+QUICK_TOPIC = True
+
+import types
+import unittest
+
+from sim.engine import automation_audit
 from sim.ui.proto.render_screen_step import render_step
 from sim.ui.proto.step_automation import automation_lines
-from sim.ui.protocol import _agent_dispatch
 
-from .harness import NODES, check, sim
-
-rows = [{"year": 101, "policy": "auto_hire", "action": "hire", "what": "2 smiths", "reason": "short", "cost": 120},
+ROWS = [{"year": 101, "policy": "auto_hire", "action": "hire", "what": "2 smiths", "reason": "short", "cost": 120},
         {"year": 101, "policy": "auto_hire", "action": "hire", "what": "1 scribe", "reason": "short", "cost": 80},
         {"year": 101, "policy": "auto_open", "action": "reopen", "what": "a mill", "reason": "staffed", "cost": 0}]
-line = automation_lines(rows)
-check("automation is one line counting each policy's actions with their capital",
-      len(line) == 1 and "auto_hire hire x2, 200" in line[0] and "auto_open reopen x1" in line[0], line)
-check("no automation rows means no line", automation_lines([]) == [])
-
-screen = render_step({"ok": True, "completed": [], "events": [], "automation": rows,
-                      "programme": [{"year": 101, "what": "goal route", "started": [], "skipped": [],
-                                     "spent": 0.0, "did_nothing_because": "paused"}]})
-check("the step screen shows the automation line and the programme block",
-      "AUTOMATION:" in screen and "PROGRAMME:" in screen and "paused" in screen, screen[-400:])
-
-def _game():
-    """A game whose year skips the market clearing (most of a step's cost): these checks read the step reply, not prices."""
-    test_sim = sim(surveyed=())
-    test_sim._step_market = lambda: None
-    return test_sim
 
 
-game = _game()
-game.end_year = game.cfg["start_year"] + 50
-game.state.household.automation_audit.append(
-    {"year": game.year, "policy": "auto_hire", "action": "hire", "what": "probe", "reason": "probe", "cost": 0})
-reply = _agent_dispatch(game, NODES, {"cmd": "step"})
-check("a row from the year just played reaches the step reply",
-      any(row.get("what") == "probe" for row in reply.get("automation") or []), sorted(reply)[:40])
-reply = _agent_dispatch(game, NODES, {"cmd": "step"})
-check("an older year's row is not repeated in the next step",
-      not any(row.get("what") == "probe" for row in reply.get("automation") or []))
+class AutomationLineTests(unittest.TestCase):
 
-# The step reply shows the short state and one closing pointer to the full one.
-from sim.ui.proto.render_screen_state_views import render_view
-from sim.ui.proto.render_screen_step import FULL_STATE_POINTER
+    def test_automation_is_one_line_counting_each_policys_actions_with_their_capital(self):
+        line = automation_lines(ROWS)
+        self.assertEqual(len(line), 1)
+        # presentation: the line reads "<policy> <action> xN, capital"
+        self.assertIn("auto_hire hire x2, 200", line[0])
+        self.assertIn("auto_open reopen x1", line[0])
 
-step_game = _game()
-step_game.end_year = step_game.cfg["start_year"] + 50
-step_reply = _agent_dispatch(step_game, NODES, {"cmd": "step", "years": 2})
-step_text = render_step(step_reply)
-short_lines = {line for line in render_view(step_reply, "short") if line.strip()}
-full_only_lines = {line for line in render_view(step_reply, "full") if line.strip()} - short_lines
-check("the step reply text carries the short state's sections",
-      any("state full" in line for line in short_lines) and all(line in step_text for line in short_lines if "more:" in line),
-      step_text[-300:])
-check("the step reply text leaves out the sections only the full state prints",
-      full_only_lines and not any(line in step_text.splitlines() for line in full_only_lines), sorted(full_only_lines)[:3])
-check("the pointer to the full state appears exactly once, as the last line",
-      step_text.count(FULL_STATE_POINTER) == 1 and step_text.splitlines()[-1] == FULL_STATE_POINTER, step_text[-200:])
+    def test_no_automation_rows_means_no_line(self):
+        self.assertEqual(automation_lines([]), [])
+
+    def test_the_step_screen_shows_the_automation_line_and_the_programme_block(self):
+        screen = render_step({"ok": True, "completed": [], "events": [], "automation": ROWS,
+                              "programme": [{"year": 101, "what": "goal route", "started": [], "skipped": [],
+                                             "spent": 0.0, "did_nothing_because": "paused"}]})
+        # presentation: the screen's section headings
+        for word in ("AUTOMATION:", "PROGRAMME:", "paused"):
+            self.assertIn(word, screen)
+
+    def test_the_pointer_to_the_full_state_is_the_last_line_exactly_once(self):
+        from sim.ui.proto.render_screen_step import FULL_STATE_POINTER
+        text = render_step({"ok": True, "completed": [], "events": []})
+        self.assertEqual(text.count(FULL_STATE_POINTER), 1)
+        self.assertEqual(text.splitlines()[-1], FULL_STATE_POINTER)
+
+
+class AuditWindowTests(unittest.TestCase):
+
+    def _game(self, year):
+        household = types.SimpleNamespace(automation_audit=[{"year": 99, "what": "old"}, {"year": 100, "what": "last"},
+                                                            {"year": 101, "what": "now"}])
+        return types.SimpleNamespace(state=types.SimpleNamespace(
+            scenario=types.SimpleNamespace(year=year), household=household))
+
+    def test_the_rows_are_those_of_the_years_just_played_oldest_first(self):
+        game = self._game(102)
+        self.assertEqual([row["what"] for row in automation_audit.rows(game, 1)], ["now"])
+        self.assertEqual([row["what"] for row in automation_audit.rows(game, 3)], ["old", "last", "now"])
+
+
+if __name__ == "__main__":
+    unittest.main()

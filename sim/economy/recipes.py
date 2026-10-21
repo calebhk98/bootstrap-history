@@ -10,7 +10,8 @@ ids. Mapping, field by field:
     capital                         becomes plant: build materials and build hours per run of yearly
                                     capacity (build bill over the runs the plant turns out in a year);
                                     parts of different life are folded onto the longest life by scaling
-                                    the shorter-lived parts by how often they are rebuilt in it
+                                    the shorter-lived parts by how often they are rebuilt in it; a part's
+                                    `build_alternatives` are kept as `plant_parts` (plant_builds.py)
 
 `extracted_from` only sets `site_bound`: the recipe runs only where a site is declared (sites.py); which
 site, and its grade, come from outside as a `SiteLimit`. `grown_in_climate_classes` becomes
@@ -24,9 +25,9 @@ the prose fields. `unmapped_field_counts` measures this.
 `input_depth_order` puts each good after the goods its recipes consume, for the year loop.
 """
 from collections import Counter
-from typing import Any, Dict, Iterable, List, Mapping, Optional, Set
+from typing import Any, Dict, Iterable, List, Mapping, Optional, Set, Tuple
 
-from .types import GoodId, Recipe
+from .types import GoodId, PlantBuild, PlantPart, Recipe
 
 ENERGY_CARRIER_FIELDS = ("thermal_mj", "mechanical_mj", "electrical_mj")
 MAPPED_FIELDS = frozenset(("outputs", "inputs", "labour_hours", "capital", "extracted_from",
@@ -40,20 +41,35 @@ def _basis_output(recipe_id: str, outputs: Mapping[GoodId, float]) -> float:
     return max(outputs.values())
 
 
-def _plant(recipe_id: str, entry: Mapping[str, Any], outputs: Mapping[GoodId, float]):
-    items = [item for item in entry.get("capital") or ()
-             if item.get("annual_output_at_basis", 0) > 0 and item.get("service_life_years", 0) > 0]
-    if not items:
+def plant_parts(recipe_id: str, entry: Mapping[str, Any], outputs: Mapping[GoodId, float]) -> Tuple[PlantPart, ...]:
+    """The entry's capital as parts, each with its preferred build then its `build_alternatives` in order."""
+    parts = []
+    for item in entry.get("capital") or ():
+        if item.get("annual_output_at_basis", 0) <= 0 or item.get("service_life_years", 0) <= 0:
+            continue
+        builds = [PlantBuild(dict(item.get("build_materials") or {}), dict(item.get("build_labour_hours") or {}),
+                             float(item["service_life_years"]))]
+        for alternative in item.get("build_alternatives") or ():
+            builds.append(PlantBuild(
+                dict(alternative.get("build_materials") or {}), dict(alternative.get("build_labour_hours") or {}),
+                float(alternative.get("service_life_years", item["service_life_years"]))))
+        parts.append(PlantPart(item["annual_output_at_basis"] / _basis_output(recipe_id, outputs), tuple(builds)))
+    return tuple(parts)
+
+
+def fold_plant(chosen: Iterable[Any]):
+    """(goods, labour hours, life) per run of yearly capacity for [(runs_per_year, build)] pairs."""
+    chosen = list(chosen)
+    if not chosen:
         return {}, {}, 0.0
-    life = max(float(item["service_life_years"]) for item in items)
+    life = max(build.life_years for _runs, build in chosen)
     goods: Dict[GoodId, float] = {}
     hours: Dict[str, float] = {}
-    for item in items:
-        runs_per_year = item["annual_output_at_basis"] / _basis_output(recipe_id, outputs)
-        rebuilds = life / item["service_life_years"]
-        for good, quantity in (item.get("build_materials") or {}).items():
+    for runs_per_year, build in chosen:
+        rebuilds = life / build.life_years
+        for good, quantity in build.goods.items():
             goods[good] = goods.get(good, 0.0) + quantity * rebuilds / runs_per_year
-        for trade, trade_hours in (item.get("build_labour_hours") or {}).items():
+        for trade, trade_hours in build.labour_hours.items():
             hours[trade] = hours.get(trade, 0.0) + trade_hours * rebuilds / runs_per_year
     return goods, hours, life
 
@@ -65,8 +81,10 @@ def recipe_from_entry(recipe_id: str, entry: Mapping[str, Any]) -> Recipe:
         if entry.get(carrier, 0) > 0:
             inputs[carrier] = inputs.get(carrier, 0.0) + float(entry[carrier])
     labour = {trade: float(hours) for trade, hours in (entry.get("labour_hours") or {}).items() if hours > 0}
-    plant_goods, plant_labour, plant_life = _plant(recipe_id, entry, outputs)
+    parts = plant_parts(recipe_id, entry, outputs)
+    plant_goods, plant_labour, plant_life = fold_plant((part.runs_per_year, part.builds[0]) for part in parts)
     return Recipe(recipe_id, outputs, inputs, labour, plant_goods, plant_labour, plant_life,
+                  plant_parts=parts,
                   site_bound=bool(entry.get("extracted_from")),
                   climate_classes=tuple(entry.get("grown_in_climate_classes") or ()))
 

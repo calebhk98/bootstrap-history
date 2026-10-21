@@ -3,11 +3,11 @@ agrees with the supply the opening builds, good by good, so no good enters the i
 import dataclasses
 import unittest
 
-from sim.economy import api as economy_api
 from sim.economy import opening
 from sim.economy.types import Recipe, SiteLimit
 from sim.tests import economy_fixture as fixture
-from sim.tests import harness
+
+QUICK_TOPIC = True
 
 BAND = 1.05      # the basket may exceed what is left for households by rounding only
 ROUNDING_SHARE = 1e-9    # of the demand: a quantity under it is float residue of sums that cancel to nothing
@@ -58,17 +58,11 @@ class OpeningBasketAgreesTests(unittest.TestCase):
         record, _areas, _carriage = opening.open_economy(setup)
         self.assertEqual(goods_over_supply(setup, record), {})
 
-
-class RomeOpeningBasketTests(unittest.TestCase):
-    def test_no_good_in_the_rome_basket_exceeds_its_supply_and_the_index_starts_at_one(self):
-        from sim.engine.economy_port_setup import build_setup
-        game = harness.sim()
-        setup = build_setup(game, game.state.economy.agent_economy["opening"])
-        economy = economy_api.blank_economy(setup)
-        self.assertEqual(goods_over_supply(setup, economy.record), {})
-        weights = economy.record.opening_basket
+    def test_the_price_level_index_starts_at_one_on_the_opening_prices(self):
         from sim.economy import currency
-        self.assertEqual(currency.basket_price_level(setup.opening_prices, setup.opening_prices, weights), 1.0)
+        setup = fixture.small_setup()
+        record, _areas, _carriage = opening.open_economy(setup)
+        self.assertEqual(currency.basket_price_level(setup.opening_prices, setup.opening_prices, record.opening_basket), 1.0)
 
 
 if __name__ == "__main__":

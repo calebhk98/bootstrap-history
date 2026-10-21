@@ -1,0 +1,52 @@
+{
+  "_about": "Labour of one hectare of wheat cropped for one season, built from sub-tasks. Read by sim/world/farm_labour.py; data/production/40_organics.json wheat_kg and wheat_hoe_kg labour_hours must equal the totals it gives (tested). Sub-task days are per iugerum as Columella gives them, converted to a hectare by iugerum_hectares; person-days convert to hours at the model's own working day (HOURS_PER_PERSON_YEAR over WORKING_DAYS_PER_YEAR).",
+  "source_primary": "Columella, De Re Rustica 2.12 (LacusCurtius page 2*.html of the Thayer Roman Texts, opened). The chapter reckons the days of labour to bring a crop to the threshing-floor; the seed it names for wheat (four or five modii, common wheat and winter wheat alike) is what 2.9.1 gives for one iugerum: \"A iugerum of rich land usually requires four modii of wheat; land of medium quality, five\". So the days are per iugerum.",
+  "iugerum_hectares": {
+    "value": 0.2523,
+    "source": "2,523 square metres to the iugerum (Roman land unit), Wikipedia, as cited in data/production/95_wine_oil_jars.json (the press entry: 'at 2,523 square metres to the Roman land unit, Wikipedia as above')."
+  },
+  "secondary_check": "Shukurov et al., arXiv 1505.05121 section 8.1 quotes White (1965) on Columella as about 44 person-day/ha excluding harvest and 5.7 person-day/ha for reaping. Columella's own text gives 9 days a iugerum excluding reaping (about 35.7 a hectare) and 1.5 for reaping (about 5.9 a hectare); the primary figures are used. They differ from White as relayed: his 44 is above the text's 35.7 and his 5.7 slightly below 5.9.",
+  "wheat": {
+    "tasks": {
+      "ploughing": {
+        "person_days_per_iugerum": 4.0,
+        "quote": "Columella, De Re Rustica 2.12.1 (LacusCurtius, https://penelope.uchicago.edu/Thayer/E/Roman/Texts/Columella/de_Re_Rustica/2*.html, Loeb translation, opened): \"four or five modii of common wheat take up four days' work of the ploughmen, one of the harrower, two of the hoer for the first hoeing and one for the second, one of the weeder, and one and a half of the reaper — a total of ten and one-half days of labour\"; \"Five modii of winter wheat require the same number of days.\""
+      },
+      "harrowing": {
+        "person_days_per_iugerum": 1.0,
+        "quote": "same passage, 2.12.1: \"one of the harrower\""
+      },
+      "first_hoeing": {
+        "person_days_per_iugerum": 2.0,
+        "quote": "same passage, 2.12.1: \"two of the hoer for the first hoeing\""
+      },
+      "second_hoeing": {
+        "person_days_per_iugerum": 1.0,
+        "quote": "same passage, 2.12.1: \"and one for the second\""
+      },
+      "weeding": {
+        "person_days_per_iugerum": 1.0,
+        "quote": "same passage, 2.12.1: \"one of the weeder\""
+      },
+      "reaping": {
+        "person_days_per_iugerum": 1.5,
+        "quote": "same passage, 2.12.1: \"one and a half of the reaper\""
+      },
+      "threshing": {
+        "person_days_as_share_of_reaping": 1.0,
+        "quote": "Columella's count stops at the threshing-floor and gives no threshing days. Halstead and Jones (1989), via Shukurov et al. (arXiv 1505.05121 section 8.1, secondary): \"A typical labour cost of reaping cereals with a modern sickle was 10-30 person-days/ha, and the crop processing (threshing, winnowing, etc.) required about the same amount of labour as the reaping.\" The share, not the days, is taken from them."
+      }
+    },
+    "reaping_range_person_days_halstead_jones": [
+      10.0,
+      30.0
+    ],
+    "reaping_note": "Halstead and Jones give 10-30 person-days/ha for a modern sickle on Greek islands, kept as a modern comparison: Columella's reaping (1.5 a iugerum, about 5.9 a hectare) is below it, and the Roman figure is taken because the recipe is for Roman-period farming. At the Halstead figures reaping and threshing together would exceed what is built here.",
+    "hand_tilling": {
+      "hours_per_hectare_by_hand_tools": 400.0,
+      "hours_per_hectare_with_oxen": 65.0,
+      "quote": "A typical modern productivity of tilling is 25 m2/hour (1 ha in 400 hours) when using hand tools, and about 150 m2/hour (1 ha in 65 hours) when tilling with a pair of oxen (Ellen 1982, p. 137).",
+      "note": "One tilling done by hand instead of by a yoke; the four ploughings of the Columella cycle are not each scaled, so the hoe total is a floor."
+    }
+  }
+}

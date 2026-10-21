@@ -4,7 +4,8 @@ expected loss at sea, and domestic freight that includes the carrier's capital a
 from .harness import *  # noqa: F401,F403
 
 from sim.world import trader_response
-from sim.geography import cargo_cost, freight_cost, sea_freight, transport
+from sim.geography import cargo_cost, freight_cost, transport
+from sim.engine.haul_route import Leg, Route, domestic_cargo_cost_share
 
 RATE = 0.1
 check("a longer voyage charges more interest on the same cargo value",
@@ -25,36 +26,47 @@ check("sea legs charge expected cargo loss by the distance sailed; land legs non
 check("the merchants' share of price rises with spoilage over the same voyage",
       trader_response.cost_share_of_price(0.03, cargo_cost.lost_share(0.3, 0.0), RATE, 0.5)
       > trader_response.cost_share_of_price(0.03, 0.0, RATE, 0.5), None)
+check("a durable good's lost share is unchanged by naming it: no spoilage leaves only the route's loss",
+      abs(cargo_cost.lost_share(0.07, cargo_cost.spoilage_share(0.0, 3.0)) - 0.07) < 1e-12, None)
 
-# --- one freight function for foreign and domestic routes.
-s = sim(civ="rome_100ad", capital=1e9)
-cart_one_sided = s._freight_mode_costs(1.0)["cart"]
-check("domestic freight per tonne-km is the cart's rate with its capital and the empty return",
-      abs(s.land_freight_money_per_tonne_km() - cart_one_sided) < 1e-12, None)
-inputs = s._land_freight_physical_inputs()
-running = (inputs.feed_kg_per_tonne_km * s._material_price_per_kg(s.FREIGHT_FEED_PRICE_MATERIAL)
-           + inputs.driver_hours_per_tonne_km * s.labour.wage_per_hour(s.FREIGHT_DRIVER_WAGE_TRADE))
+# --- the carrier's freight rate, on a cart built from physics and stated prices (no game).
+CART_INPUTS = transport.draught_freight_physical_inputs(transport.OX, 2, transport.CART, transport.DIRT_TRACK)
+CART_PRICES = freight_cost.CarrierPrices(vehicle=50.0, animals=200.0)
+FEED_PRICE, WAGE = 0.02, 0.05
+WORKING_DAYS = freight_cost.LAND_WORKING_DAYS_PER_YEAR
+
+
+def cart_rate(annual_rate=RATE, imbalance=1.0):
+    return freight_cost.freight_money_per_tonne_km(
+        CART_INPUTS, FEED_PRICE, WAGE, CART_PRICES, annual_rate, WORKING_DAYS, imbalance)
+
+
+running = CART_INPUTS.feed_kg_per_tonne_km * FEED_PRICE + CART_INPUTS.driver_hours_per_tonne_km * WAGE
+capital = freight_cost.capital_money_per_tonne_km(CART_INPUTS, CART_PRICES, RATE, WORKING_DAYS)
+check("freight per tonne-km is the round trip of running cost and carrier capital when the carrier returns empty",
+      abs(cart_rate() - 2.0 * (running + capital)) < 1e-12 and capital > 0.0, (cart_rate(), running, capital))
 check("...which is more than twice its feed and driver, since oxen and cart are capital",
-      s.land_freight_money_per_tonne_km() > 2.0 * running, (s.land_freight_money_per_tonne_km(), running))
-check("domestic freight with balanced flows is cheaper than with a one-sided flow",
-      s.land_freight_money_per_tonne_km(0.0) < s.land_freight_money_per_tonne_km(1.0), None)
-_rate = s.market_rate
-s.market_rate = lambda: 4.0 * _rate()
-check("dearer money raises domestic freight",
-      s.land_freight_money_per_tonne_km() > cart_one_sided, None)
-s.market_rate = _rate
+      cart_rate() > 2.0 * running, (cart_rate(), running))
+check("freight with balanced flows is cheaper than with a one-sided flow",
+      abs(cart_rate(imbalance=0.0) - (running + capital)) < 1e-12 and cart_rate(imbalance=0.0) < cart_rate(imbalance=1.0),
+      None)
+check("dearer money raises the carrier's capital cost and so the freight rate",
+      cart_rate(annual_rate=4.0 * RATE) > cart_rate()
+      and freight_cost.capital_money_per_tonne_km(CART_INPUTS, CART_PRICES, 4.0 * RATE, WORKING_DAYS) > capital, None)
 
-# --- the engine's cargo terms: spoilage by good, loss by sea leg, interest by the cycle.
-route = s._foreign_route("han_china_100ad", 1.0)
-check("a perishable good costs merchants more than a durable one on the same route",
-      s._trader_cost_share(route, "milk_kg") > s._trader_cost_share(route, "iron_bar_kg"), None)
-check("a durable good's cost share is unchanged by naming it",
-      abs(s._trader_cost_share(route, "iron_bar_kg") - s._trader_cost_share(route)) < 1e-12, None)
-def _cart_haul(distance_km):
-    from sim.engine.foreign_routes import Leg, Route
-    return Route((Leg("a", "b", "cart", distance_km, 0.0, distance_km / s._carrier_models()["cart"][0].distance_per_day_km),))
+
+# --- the domestic cargo terms: spoilage by good, loss by leg mode, interest by the haul's days.
+def cart_haul(distance_km):
+    return Route((Leg("a", "b", "cart", distance_km, 0.0, distance_km / CART_INPUTS.distance_per_day_km),))
 
 
 check("domestic cargo cost share grows with the distance hauled",
-      s.domestic_cargo_cost_share("wheat_kg", _cart_haul(2000.0)) > s.domestic_cargo_cost_share("wheat_kg", _cart_haul(500.0)) > 0.0,
+      domestic_cargo_cost_share(0.1, {}, cart_haul(2000.0), RATE)
+      > domestic_cargo_cost_share(0.1, {}, cart_haul(500.0), RATE) > 0.0, None)
+check("a perishable good costs more over the same haul than a durable one, which pays interest only",
+      domestic_cargo_cost_share(5.0, {}, cart_haul(1000.0), RATE) > domestic_cargo_cost_share(0.0, {}, cart_haul(1000.0), RATE)
+      and abs(domestic_cargo_cost_share(0.0, {}, cart_haul(1000.0), RATE) - RATE * cart_haul(1000.0).travel_days / 365.0) < 1e-12,
       None)
+check("a mode with a daily loss (a herd on the road) adds to the haul's cost share",
+      domestic_cargo_cost_share(0.0, {"cart": 0.01}, cart_haul(1000.0), RATE)
+      > domestic_cargo_cost_share(0.0, {}, cart_haul(1000.0), RATE), None)

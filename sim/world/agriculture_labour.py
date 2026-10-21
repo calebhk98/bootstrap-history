@@ -50,8 +50,8 @@ def hectares_per_worker_annual_hours_ceiling(
     """One of the two ceilings on a farm worker's cropped area: total hours
     in the farming year divided by hours needed per hectare. Treating this
     ceiling alone as the answer, ignoring the harvest-window one below,
-    produces a 4.8% headline figure - wrong, because the harvest window
-    binds first. See `hectares_cropped_per_farm_worker`.
+    is wrong where the window is the smaller. See
+    `hectares_cropped_per_farm_worker`.
 
     `crop` and `toolkit` default to wheat and the ard-and-sickle baseline;
     `toolkit.labour_hours_multiplier` rescales the hours-per-hectare figure
@@ -90,18 +90,12 @@ def hectares_cropped_per_farm_worker(
     the smaller of the two ceilings above, because a constraint you can
     satisfy is not a constraint.
 
-    At the DEFAULT constants declared in this file the harvest window is
-    the binding one by roughly four to one, and that is the substantive
-    finding: adding hours to the farming year, or shifting
-    REFERENCE_LABOUR_HOURS_PER_HECTARE (or a toolkit that only touches
-    `labour_hours_multiplier`, such as HORSE_COLLAR_AND_MOULDBOARD), changes
-    this number not at all while the window binds. Anything that raises
-    output per worker here has to raise the reaping rate (a better tool -
-    SCYTHE_AND_CRADLE, MECHANICAL_REAPER) or lengthen the harvest window
-    (a crop with a longer one, or staggered sowing dates), which is the
-    correct shape: those are what historically moved it. See the
-    ToolkitAxisTests in sim/tests/test_agriculture.py for both directions
-    demonstrated.
+    Which ceiling binds depends on the crop's hours per hectare. At the
+    sub-task hours of data/world/farm_labour.json the farming year binds,
+    so a labour-saving toolkit (HORSE_COLLAR_AND_MOULDBOARD) raises the
+    area and a faster reaper alone does not; for a crop that takes few
+    hours a hectare the window binds and the reverse holds. See the
+    ToolkitAxisTests in sim/tests/test_agriculture.py for both cases.
     """
     return min(hectares_per_worker_annual_hours_ceiling(crop, toolkit),
                hectares_per_worker_harvest_window_ceiling(crop, toolkit))
@@ -238,13 +232,41 @@ def farm_workers_fte_for_population(
     return fraction * adult_equivalent_population
 
 
+def hectares_netting_reference_food(
+        ladder: list, reference_hectares: float, crop: Optional["Crop"] = None,
+        soil: Optional["Soil"] = None, rotation: Optional["Rotation"] = None,
+        toolkit: Optional["Toolkit"] = None) -> float:
+    """Hectares of the best-first `ladder` that net as much food after seed as `reference_hectares` of
+    reference-quality ground: poorer ground needs more hectares, and each also takes its seed, so ground whose
+    yield does not cover its seed adds nothing. All the ground that nets food when it cannot reach that."""
+    crop = crop or DEFAULT_CROP
+    soil = soil or DEFAULT_SOIL
+    rotation = rotation or DEFAULT_ROTATION
+    toolkit = toolkit or DEFAULT_TOOLKIT
+    seed_kg_per_ha = crop.planting_material_kg_per_ha
+    gross_kg_per_ha = (seed_kg_per_ha * crop.fold_return_on_planting_material * toolkit.ploughing_yield_multiplier
+                       * rotation.soil_fertility_yield_multiplier * soil.quality_multiplier)
+    remaining_kg = max(0.0, reference_hectares) * (gross_kg_per_ha - seed_kg_per_ha)
+    hectares = 0.0
+    for yield_factor, parcel_hectares in ladder:
+        net_kg_per_ha = gross_kg_per_ha * yield_factor - seed_kg_per_ha
+        if net_kg_per_ha <= 0.0:
+            break
+        if net_kg_per_ha * parcel_hectares >= remaining_kg:
+            return hectares + remaining_kg / net_kg_per_ha
+        remaining_kg -= net_kg_per_ha * parcel_hectares
+        hectares += parcel_hectares
+    return hectares
+
+
 def farmland_for_population(
         adult_equivalent_population: float, crop: Optional["Crop"] = None,
         soil: Optional["Soil"] = None, rotation: Optional["Rotation"] = None,
         toolkit: Optional["Toolkit"] = None,
         storage_technique: Optional["StorageTechnique"] = None,
         land_quality: float = 1.0,
-        arable_hectares_ceiling: Optional[float] = None) -> "Land":
+        arable_hectares_ceiling: Optional[float] = None,
+        ladder: Optional[list] = None) -> "Land":
     """A `Land` parcel sized so that the workforce
     `farm_workers_fte_for_population` implies can each crop their full
     `hectares_cropped_per_farm_worker` share - i.e. land is NOT the binding
@@ -264,11 +286,16 @@ def farmland_for_population(
     `land_quality` is the parcel's yield multiplier only; it does not change
     the area. `arable_hectares_ceiling`, when given, caps the area at
     what the territory holds, so a civilisation that cannot be fed from its
-    own ground starts short rather than inventing land.
+    own ground starts short rather than inventing land. `ladder` (best-first
+    (yield factor, hectares) parcels of the ground held) sizes the area on that
+    ground's yield instead: see `hectares_netting_reference_food`; an empty ladder is a territory with no
+    arable ground, which opens no farm.
     """
     workers_fte = farm_workers_fte_for_population(
         adult_equivalent_population, crop, soil, rotation, toolkit, storage_technique)
     hectares = hectares_cropped_per_farm_worker(crop, toolkit) * workers_fte
+    if ladder is not None:
+        hectares = hectares_netting_reference_food(ladder, hectares, crop, soil, rotation, toolkit)
     if arable_hectares_ceiling is not None:
         hectares = min(hectares, arable_hectares_ceiling)
     return Land(hectares, land_quality)

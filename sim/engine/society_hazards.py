@@ -21,9 +21,16 @@ from sim.constants import declare
 from sim.refusal import LogLine
 from . import money_units
 from .units_prose import money_text
+from .military_rules import war_relief
 from .data import closure, critical_path
 from . import event_causes
+from .hazard_condition import hazard_given_condition
 from .hazard_window import hazards_not_yet_past
+from .hazard_hedge_timing import remaining_floor_years
+from .patron_death import patron_dies
+from .capital_loss import capital_lost
+from .hazard_toll import sack_toll
+from .hedge_steps import hedge_wants, startable_first
 from sim.agents.api import edges, ledger
 
 
@@ -109,12 +116,7 @@ class HazardsMixin:
         your own and an army of your own are comparable hedges, and neither
         should dwarf the other.
         """
-        lev = self.military_leverage()
-        if lev <= 0.0:
-            return 1.0, None
-        share = self.MILITARY_WAR_RELIEF_CAP * lev
-        return (1.0 - share), ("an army and treasury the state can call on "
-                               "(military strength %d%%)" % round(lev * 100))
+        return war_relief(self.military_leverage(), self.MILITARY_WAR_RELIEF_CAP)
 
     def _calendar_floor_remaining(self, goal):
         """Minimum calendar years before `goal` is finished, even if every
@@ -144,10 +146,7 @@ class HazardsMixin:
         if goal not in self.nodes:
             return None
         _total, chain = critical_path(self.nodes, goal)
-        done = self.state.projects.done
-        remaining = sum(max(self.nodes[node_id]["yrs"], self.nodes[node_id]["ph"] / 2000.0)
-                        for node_id in chain if node_id not in done)
-        return round(remaining, 1)
+        return remaining_floor_years(self.nodes, chain, self.state.projects.done)
 
     def hazard_advice(self, kind, hazard=None):
         """What KIND of thing would help, without naming what you cannot see.
@@ -228,26 +227,8 @@ class HazardsMixin:
         and useless to a reader. If nothing near is visible, the words on their
         own are the honest answer and this says nothing.
         """
-        want = []
-        leads_to = {}
-        counters = set()
-        done = self.state.projects.done
-        for node, _share, label in self.HAZARD_COUNTERS.get(kind, ()):
-            if node not in self.nodes or node in done:
-                continue
-            want.append((0, node))
-            counters.add(node)
-            leads_to.setdefault(node, label)
-            for pre in self.nodes[node]["pre"]:
-                if pre in self.nodes and pre not in done:
-                    want.append((1, pre))
-                    # SAY WHAT IT LEADS TO: a first-step node can look
-                    # entirely unrelated to the hazard it hedges against
-                    # (a prerequisite of the actual counter, not the
-                    # counter itself), so offering it with no explanation
-                    # reads as the game being broken unless this says what
-                    # it leads to.
-                    leads_to.setdefault(pre, "a step toward %s" % label)
+        want, leads_to, counters = hedge_wants(
+            self.HAZARD_COUNTERS.get(kind, ()), self.nodes, self.state.projects.done)
         memo = {}
         seen, out = set(), []
         for distance, node_id in sorted(want):
@@ -276,8 +257,7 @@ class HazardsMixin:
             if len(out) >= limit:
                 break
         # What you can start comes first: it is the part you can act on today.
-        out.sort(key=lambda entry: not entry["can_begin_now"])
-        return out
+        return startable_first(out)
 
     # Timeline compares "years until hazard" to "lead time of each hedge"
     # (quickest and slowest separately: they escalate at different times).
@@ -409,10 +389,9 @@ class HazardsMixin:
         # skippable would advertise a choice that should not exist here -
         # this function must always destroy at most what is actually held.
         household = self.state.household
-        if household.capital <= 0:
+        lost = capital_lost(household.capital, fraction)
+        if lost <= 0.0:
             return 0.0
-        lost = household.capital * max(0.0, min(1.0, fraction))
-        # what is taken goes to the taker (an actor); what is destroyed goes to the named sink
         ledger.transfer(household, self.edge(edges.EDGE_DESTROYED) if taker is None else taker, lost, cause)
         return lost
 
@@ -454,7 +433,6 @@ class HazardsMixin:
         cond = hazard.get("condition")
         if not cond:
             return hazard
-        field = cond.get("field")
         need = cond.get("requires_all") or []
         met = all(self.has(tech_id) for tech_id in need)
         if year == hazard_start:
@@ -466,19 +444,7 @@ class HazardsMixin:
                 if msg:
                     self.state.household.log.append((year, LogLine(
                         "hazard_condition_met" if met else "hazard_condition_unmet", msg, hazard=key)))
-        if not met or field not in hazard:
-            return hazard
-        adjusted = dict(hazard)
-        outcome = cond.get("outcome")
-        scale = cond.get("alter_scale", 1.0)
-        if outcome == "avert":
-            del adjusted[field]
-        elif outcome == "alter":
-            if field == "output_factor":
-                adjusted[field] = 1.0 - (1.0 - hazard[field]) * scale
-            else:
-                adjusted[field] = hazard[field] * scale
-        return adjusted
+        return hazard_given_condition(hazard, met)
 
     def _apply_event_causes(self, hazard, year, hazard_start):
         """The event as its stated causes leave it this year, or None when they do not hold.
@@ -600,13 +566,15 @@ class HazardsMixin:
         _people_after = (household.artisans + household.scholars
                          + sum(household.employees.values()))
         _took = []
-        if _cap0 - max(0.0, household.capital) > 0.5:
+        _hit_capital, _hit_people, _hit_projects = sack_toll(
+            _cap0 - max(0.0, household.capital), _people0 - _people_after, _act0)
+        if _hit_capital:
             _took.append("%s taken"
                          % money_text(_cap0 - max(0.0, household.capital), self, grouped=True))
-        if _people0 - _people_after > 0.05:
+        if _hit_people:
             _took.append("%.1f of your people gone"
                          % (_people0 - _people_after))
-        if _act0:
+        if _hit_projects:
             _took.append("%d project%s back to the beginning"
                          % (_act0, "" if _act0 == 1 else "s"))
         household.log.append((year, LogLine(
@@ -771,8 +739,8 @@ class HazardsMixin:
         founder = self.state.founder
         household = self.state.household
         last_patron_death = founder.last_patron_death
-        if (rng.random() < self.PATRON_DEATH_ANNUAL_CHANCE and self.running_with_mechanic("patron_mortal")
-                and (last_patron_death is None or year - last_patron_death > self.PATRON_DEATH_COOLDOWN_YEARS)):
+        if patron_dies(rng.random(), self.PATRON_DEATH_ANNUAL_CHANCE, lambda: self.running_with_mechanic("patron_mortal"),
+                       last_patron_death, year, self.PATRON_DEATH_COOLDOWN_YEARS):
             founder.last_patron_death = year
             household.scandal += self.PATRON_DEATH_SCANDAL
             # A one-off jump is not a trend: the year's starting mark moves with it.

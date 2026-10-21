@@ -31,9 +31,12 @@ from sim.refusal import Refusal, LogLine
 from . import money_units
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 from sim.world import deposits as deposit_model, mine_technique
-from sim.geography.api import mine_demand_goods, parameter_value, tile_facts, tiles_held, works_priced_from_deposits
+from sim.geography.api import mine_demand_goods, parameter_value, works_priced_from_deposits
 from . import purchase_rule
+from .mine_ceiling import mine_ceiling_tonnes, room_under_ceiling
+from .forest_ceiling import forest_ceiling_hectares, held_land_area_km2, revenue_scale_multiple
 from .units_prose import area_text
+from .mine_labour_profile import mine_labour_hours_per_tonne
 from .mine_deposits import MineDepositsMixin, NO_DEPOSIT_TEXT
 from sim.agents.api import edges
 
@@ -143,13 +146,8 @@ class MiningMixin(MineDepositsMixin):
         key = (mat, mine_technique.effects_key(effects))
         cached = self._MINE_PROFILE_CACHE.get(key)
         if cached is None:
-            pairs = self._mine_reference_deposits(mat)
-            build = sum(weight * deposit_model.build_cost_labour_hours_per_tonne_year(dep, effects)
-                        for dep, weight in pairs)
-            running = sum(weight * KILOGRAMS_PER_TONNE
-                          * deposit_model.extraction_cost_labour_hours_per_kg(dep, effects)
-                          for dep, weight in pairs)
-            cached = self._MINE_PROFILE_CACHE[key] = (build, running)
+            cached = self._MINE_PROFILE_CACHE[key] = mine_labour_hours_per_tonne(
+                self._mine_reference_deposits(mat), effects)
         return cached
 
     def _mine_capex_opex(self, mat):
@@ -210,53 +208,41 @@ class MiningMixin(MineDepositsMixin):
     # cannot buy much tin also cannot simply out-organise its way to
     # unlimited tin by sinking shafts instead -- the same ground is short
     # either way. Measure it per civilisation with Geography.mineral_scale().
-    STATE_CAPACITY_DEFAULT_FALLBACK = declare(
-        "STATE_CAPACITY_DEFAULT_FALLBACK", 0.5, kind="initial_condition",
-        unit="dimensionless state-capacity index (0-1 scale), fallback",
-        source=None, confidence="D",
-        why="Fallback state_capacity for a civilisation whose own data "
-            "does not specify one - a middling value on the 0-1 scale "
-            "civ.get('state_capacity', ...) otherwise reads from each "
-            "civilisation's own file, used here for both the mine and "
-            "forest land ceilings. Every shipped civilisation defines its "
-            "own state_capacity (out of this file's scope); this is only "
-            "the default a missing or hand-authored one would fall back "
-            "to, not a claim about any specific society.")
-
     def mine_land_ceiling(self, mat):
         """The largest standing capacity of this material you could ever
         organise, in tonnes/yr: how big an enterprise your standing and
         state can run, times whether the ore is actually under your feet,
         (what technology lets a working raise per shaft is in the works cost,
         sim/world/deposits.py, not a multiple here)."""
-        state_capacity = float(self.civ.get("state_capacity", self.STATE_CAPACITY_DEFAULT_FALLBACK))
+        inspection_share = self.inspection_reach()
         favour = self.effect_best("mine_ceiling")
-        if favour is not None:
-            base = favour[1]["base"] + favour[1]["state_scale"] * state_capacity
-        else:
-            base = self.MINE_CEILING_BASE_STRANGER + self.MINE_CEILING_STATE_SCALE_STRANGER * state_capacity
-        base *= 1.0 + min(self.REVENUE_SCALE_CAP_MULTIPLE, max(0.0, self.revenue()) / self.REVENUE_SCALE_DENARII)
-        geo = self.geography.mineral_scale(mat)
-        return base * geo
+        return mine_ceiling_tonnes(
+            favour[1] if favour is not None else None, inspection_share, self.MINE_CEILING_BASE_STRANGER,
+            self.MINE_CEILING_STATE_SCALE_STRANGER,
+            revenue_scale_multiple(self.revenue(), self.REVENUE_SCALE_DENARII, self.REVENUE_SCALE_CAP_MULTIPLE),
+            self.geography.mineral_scale(mat))
 
     MINE_CEILING_BASE_IMPERIAL = declare(
         "MINE_CEILING_BASE_IMPERIAL", 20000.0, kind="temporary_heuristic",
-        unit="tonnes/year (base, before state capacity and revenue scale)",
+        retire="Complaint 660 follow-up: ceiling from tonnes an inspector can keep registered",
+        unit="tonnes/year (base, before state reach and revenue scale)",
         source=None, confidence="D",
         why="Base standing-mine ceiling for an imperial patron before "
-            "state capacity, geology and mining technology are applied. "
+            "state reach, geology and mining technology are applied. "
             "No fiscal or organisational-capacity data backs this figure; "
             "it is a tuned starting point for the four patronage tiers "
             "this method distinguishes.")
     MINE_CEILING_STATE_SCALE_IMPERIAL = declare(
         "MINE_CEILING_STATE_SCALE_IMPERIAL", 60000.0, kind="temporary_heuristic",
-        unit="tonnes/year per unit of state_capacity", source=None,
+        retire="Complaint 660 follow-up: ceiling from tonnes an inspector can keep registered",
+        unit="tonnes/year per unit of inspection reach (share of people whose claims its inspectors check)", source=None,
         confidence="D",
         why="How much further a more capable state extends the imperial-"
             "tier ceiling. Tuned, not derived from any state-capacity "
             "output relationship.")
     MINE_CEILING_BASE_STRANGER = declare(
         "MINE_CEILING_BASE_STRANGER", 3000.0, kind="temporary_heuristic",
+        retire="Complaint 660 follow-up: ceiling from tonnes an inspector can keep registered",
         unit="tonnes/year (base)", source=None, confidence="D",
         why="As MINE_CEILING_BASE_IMPERIAL, for a stranger with no "
             "citizenship or patron - still a real production ceiling, per "
@@ -264,7 +250,8 @@ class MiningMixin(MineDepositsMixin):
             "never simply shut out of mining.")
     MINE_CEILING_STATE_SCALE_STRANGER = declare(
         "MINE_CEILING_STATE_SCALE_STRANGER", 4000.0, kind="temporary_heuristic",
-        unit="tonnes/year per unit of state_capacity", source=None,
+        retire="Complaint 660 follow-up: ceiling from tonnes an inspector can keep registered",
+        unit="tonnes/year per unit of inspection reach", source=None,
         confidence="D",
         why="As MINE_CEILING_STATE_SCALE_IMPERIAL, for the stranger tier.")
     REVENUE_SCALE_CAP_MULTIPLE = declare(
@@ -681,9 +668,9 @@ class MiningMixin(MineDepositsMixin):
             return 0.0
         # Scale beyond a local lease needs a concession, which in practice means
         # the fiscus. Metalla were largely imperial property.
-        # The ceiling is about STANDING, STATE CAPACITY AND GEOLOGY -- see
+        # The ceiling is about STANDING, STATE REACH AND GEOLOGY -- see
         # mine_land_ceiling()'s own comment for why it is geology now, not
-        # standing alone, and for why a society with little state capacity
+        # standing alone, and for why a society with little state reach
         # genuinely cannot organise a very large mine while a chieftain who
         # can raise a crew can still do better than a foreigner with a local
         # lease. Without the state-capacity/revenue half of this the Norse
@@ -696,8 +683,8 @@ class MiningMixin(MineDepositsMixin):
         holdings = self.state.holdings
         household = self.state.household
         scenario = self.state.scenario
-        t_per_yr = min(t_per_yr, max(0.0, ceiling - have_cap.get(mat, 0.0)
-                                          - holdings.mine_pending.get(mat, 0.0)))
+        t_per_yr = min(t_per_yr, room_under_ceiling(ceiling, have_cap.get(mat, 0.0),
+                                                    holdings.mine_pending.get(mat, 0.0)))
         deposit_room = self.mine_room_in_deposits(mat, deposit)
         if deposit_room is not None:
             if deposit_room <= 0.0:
@@ -846,7 +833,7 @@ class MiningMixin(MineDepositsMixin):
     # per-region forest figure to read the way minerals has one, so this is
     # built from the signal that IS there: how much GROUND you actually hold
     # and how good your state is at organising land tenure at all
-    # (state_capacity) -- a coppice is not a metalla, so no imperial
+    # (state_reach) -- a coppice is not a metalla, so no imperial
     # concession gates it, but fencing off and managing a woodland at scale
     # still takes an administration capable of holding the tenure.
     #
@@ -881,7 +868,7 @@ class MiningMixin(MineDepositsMixin):
     # region count moves a great deal, which is the entire point of the fix.
     FOREST_HA_PER_MILLION_KM2_BASE = declare(
         "FOREST_HA_PER_MILLION_KM2_BASE", 1100.0, kind="engineering_estimate",
-        unit="hectares/(million km2 of home land) (base, before state capacity)",
+        unit="hectares/(million km2 of home land) (base, before state reach)",
         source=
         "Re-derived from the same empire-wide charcoal anchor as the old "
         "FOREST_HA_PER_REGION_BASE (500,000 t/yr implying ~667,000 ha "
@@ -894,7 +881,7 @@ class MiningMixin(MineDepositsMixin):
         "the switch from counting labels to reading area.",
         confidence="C",
         why="Base standing-woodland ceiling per million km2 of home land "
-            "held, before state capacity is applied. the geography data carries "
+            "held, before state reach is applied. the geography data carries "
             "no per-region forest figure the way it does for minerals, so "
             "this is still built from a proxy and checked against the one "
             "real empire-wide anchor available, not measured region by "
@@ -903,7 +890,7 @@ class MiningMixin(MineDepositsMixin):
             "many labels that area happens to be filed under.")
     FOREST_HA_PER_MILLION_KM2_PER_SC = declare(
         "FOREST_HA_PER_MILLION_KM2_PER_SC", 2575.0, kind="engineering_estimate",
-        unit="hectares/(million km2 of home land) per unit of state_capacity",
+        unit="hectares/(million km2 of home land) per unit of forest reach (share of people whose woodland tenure its foresters keep)",
         source="Same empire-wide charcoal anchor and Rome-area calibration "
         "as FOREST_HA_PER_MILLION_KM2_BASE.",
         confidence="C",
@@ -916,17 +903,19 @@ class MiningMixin(MineDepositsMixin):
         """Total land area, in km2, of the tiles this civilization holds, not counted by how many
         region labels that ground is filed under (see forest_land_ceiling()). A civilisation holding
         no tile has none."""
-        return sum(float(tile_facts(tile, self.world_map)["land_area_km2"])
-                   for tile in tiles_held(self.civ, self.world_map))
+        return held_land_area_km2(self.civ, self.world_map)
 
     def forest_land_ceiling(self):
         """The largest standing coppice you could ever hold, in hectares."""
-        home_land_million_km2 = self.home_land_area_km2() / 1.0e6
-        state_capacity = float(self.civ.get("state_capacity", self.STATE_CAPACITY_DEFAULT_FALLBACK))
-        base = ((self.FOREST_HA_PER_MILLION_KM2_BASE
-                 + self.FOREST_HA_PER_MILLION_KM2_PER_SC * state_capacity) * home_land_million_km2)
-        return base * (1.0 + min(self.REVENUE_SCALE_CAP_MULTIPLE,
-                                  max(0.0, self.revenue()) / self.REVENUE_SCALE_DENARII))
+        state_reach = self.forest_reach()
+        return forest_ceiling_hectares(
+            self.home_land_area_km2(), state_reach, self.FOREST_HA_PER_MILLION_KM2_BASE,
+            self.FOREST_HA_PER_MILLION_KM2_PER_SC,
+            revenue_scale_multiple(self.revenue(), self.REVENUE_SCALE_DENARII, self.REVENUE_SCALE_CAP_MULTIPLE))
+
+    def forest_price_per_hectare(self):
+        """What a hectare of coppice costs now: the one price `buy forest` charges and `quote forest` shows."""
+        return self.FOREST_COST_PER_HA * self.price_index
 
     def buy_forest(self, hectares):
         """Coppice woodland, bought outright. The cheapest thing in the tree that
@@ -934,7 +923,7 @@ class MiningMixin(MineDepositsMixin):
         holdings = self.state.holdings
         household = self.state.household
         scenario = self.state.scenario
-        room = max(0.0, self.forest_land_ceiling() - holdings.forest_ha)
+        room = room_under_ceiling(self.forest_land_ceiling(), holdings.forest_ha)
         if hectares > room:
             # SILENT TRUNCATION, not a refusal: open_mine's own ceiling does
             # the same (the tranche you get is the room there is, not zero),
@@ -947,7 +936,7 @@ class MiningMixin(MineDepositsMixin):
             hectares = room
         if hectares <= 0:
             return 0.0
-        cost = hectares * self.FOREST_COST_PER_HA * self.price_index
+        cost = hectares * self.forest_price_per_hectare()
         # A shaft that costs nothing needs no budget check.
         if cost > 0 and not purchase_rule.can_pay(self, cost):
             return 0.0

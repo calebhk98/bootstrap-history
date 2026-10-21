@@ -14,7 +14,7 @@ from sim.engine.theft_charge import TheftChargeMixin
 
 VALUE = 1000.0
 ANNUAL = theft_exposure.THEFT_SHARE_PER_YEAR_AT_FULL_EXPOSURE
-CALM = dict(guard_hours_per_tonne_year=0.0, visible_scale=0.5, state_capacity=0.0, protection=0.0)
+CALM = dict(guard_hours_per_tonne_year=0.0, visible_scale=0.5, state_reach=0.0, protection=0.0)
 
 
 def loss_of(holdings, **overrides):
@@ -36,7 +36,7 @@ class TheftExposure(unittest.TestCase):
                         loss_of({"coin": VALUE}, guard_hours_per_tonne_year=60.0))
 
     def test_a_well_ordered_state_lowers_it(self):
-        self.assertLess(loss_of({"coin": VALUE}, state_capacity=0.9), loss_of({"coin": VALUE}, state_capacity=0.1))
+        self.assertLess(loss_of({"coin": VALUE}, state_reach=0.9), loss_of({"coin": VALUE}, state_reach=0.1))
         self.assertLess(loss_of({"coin": VALUE}, protection=0.8), loss_of({"coin": VALUE}))
 
     def test_a_more_visible_holder_loses_more(self):

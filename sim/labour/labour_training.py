@@ -20,7 +20,11 @@ import math
 
 from sim.constants import declare
 from sim.refusal import Refusal
-from . import trade_data
+from . import trade_data, trade_first_hands, trade_formation
+from .hands import contracted_hours_of, hands_available
+from .hire_outcome import hire_result, unfound_note
+from .room_advice import hire_room_refusal
+from .staff_moves import (apprentices_of, commission_spare_hours, crosses_literacy_wall, dismiss)
 
 
 class TrainingMixin:
@@ -239,7 +243,7 @@ class TrainingMixin:
         if trade in self.LITERATE_TRADES:
             cap = self.literate_capacity(trade)
             have = self._trade_headcount_pending(trade)
-            if have + count > cap + 1e-6:
+            if crosses_literacy_wall(have, count, cap):
                 return None, None, self._literate_wall_refusal(trade, cap, have)
         # A finder's fee and the first year in advance, which is what a household
         # actually pays to take a skilled man off someone else's bench. Buying
@@ -278,15 +282,7 @@ class TrainingMixin:
             # refusing exactly that request - a refusal that contradicts
             # itself. A figure a player is meant to act on must never be
             # rounded in the direction that overstates it.
-            room = max(0.0, room)
-            whole = int(room)
-            advice = self._room_advice()
-            return None, None, Refusal("household_room", "you can supervise, house and teach %.2f more people, "
-                                       "not %g%s. %s"
-                                       % (math.floor(room * 100) / 100.0, count,
-                                          " - %d is the most whole people you can take" % whole
-                                          if whole else " - you have no room for even one",
-                                          advice), room=room, remedies=advice.facts["remedies"])
+            return None, None, hire_room_refusal(room, count, self._room_advice())
         return count, fee, None
 
     def hire(self, trade, count, pay_premium=0.0):
@@ -307,8 +303,7 @@ class TrainingMixin:
         self.labour_market.hire(self._world.state.household, trade, float(count) * self._world.HOURS_PER_PERSON_YEAR,
                                 pay_premium)
         self._resync_pools()
-        unfound = (" Found %g of the %g asked for; the rest must be sought next year." % (count, asked)
-                   if count < asked - 1e-6 else "")
+        unfound = unfound_note(count, asked)
         # SAY HOW MANY, AND HOW MANY YOU NOW HAVE: a reply that only names
         # the trade, with no number, gives a player no way to notice a
         # request for eight landing as one. A verb that takes a quantity
@@ -319,9 +314,7 @@ class TrainingMixin:
                 % (count, trade, "" if count == 1 else "s",
                    self._world.money_text(fee, grouped=True), self.employed(trade),
                    max(0.0, self.household_room()), unfound))
-        if unfound:
-            return True, Refusal("search_found_fewer", text, asked=float(asked), hired=float(count))
-        return True, text
+        return hire_result(text, unfound, count, asked)
 
     def fire(self, trade, count):
         """Let staff go. Their wages stop; so does what they were doing.
@@ -336,73 +329,58 @@ class TrainingMixin:
         trade = str(trade or "").strip().lower()
         household = self._world.state.household
         have = self.employed(trade)
-        pending = sum(record[3] for record in household.training
-                      if len(record) > 3 and record[2] == trade)
+        pending = apprentices_of(household.training, trade)
         if have <= 0 and pending <= 0:
             return False, "you employ no %ss, and none are being taught" % trade
-        count = float(count)
-        # THE SAME WHOLENESS hire() AND train() ENFORCE: letting a fraction of
-        # a person go is the mirror image of hiring one, and would reopen
-        # the same hole - a roster that can drift to "0.03 engineers" -
-        # through `fire` alone even though nothing can hire or teach its
-        # way there. Rounded rather than refused, because "let go 2.5" has
-        # an obvious meaning (two, or the two-point-something you actually
-        # have) and refusing outright would only make a player retype it.
-        if have > 0 and abs(count - round(count)) > 1e-6 and count < have:
-            count = float(math.ceil(count))
+        # WHOLE PEOPLE, as hire() and train() enforce, so a roster cannot drift to "0.03 engineers" through `fire`:
+        # a fraction asked for is rounded up rather than refused.
+        gone, left, stopped, household.training, _unmet = dismiss(have, household.training, trade, count)
         note = None
         if have > 0:
-            gone = min(count, have)
             self.labour_market.release(household, trade, gone * self._world.HOURS_PER_PERSON_YEAR)
-            self.set_employed(trade, have - gone if have - gone > 1e-9 else 0.0)
-            count -= gone
+            self.set_employed(trade, left)
             note = "let %g %s%s go" % (gone, trade, "s" if gone != 1 else "")
-        if count > 0 and pending > 0:
-            stopped, still = 0.0, []
-            for record in household.training:
-                if len(record) > 3 and record[2] == trade and count > 0:
-                    take = min(count, record[3])
-                    record[3] -= take
-                    count -= take
-                    stopped += take
-                if len(record) <= 3 or record[3] > 1e-9:
-                    still.append(record)
-            household.training = still
-            if stopped > 0:
-                note = ((note + "; " if note else "")
-                        + "stopped teaching %g more (what you paid to keep them "
-                          "while they learned is gone)" % stopped)
+        if stopped > 0:
+            note = ((note + "; " if note else "")
+                    + "stopped teaching %g more (what you paid to keep them "
+                      "while they learned is gone)" % stopped)
         self._resync_pools()
         return True, note
 
-    TEACHING_HOURS_PER_PERSON = declare(
-        "TEACHING_HOURS_PER_PERSON", 450.0, kind="temporary_heuristic",
-        unit="founder-hours per person taught", source=None,
-        confidence="D",
-        why="How many of the founder's own hours it takes to teach one "
-            "person a new trade. Tuned so teaching is a real, felt cost "
-            "against the roughly 2,000-hour year (see this method's own "
-            "docstring on a play tester who trained 4 machinists and lost "
-            "1,800 of 2,000 founder-hours), not measured against any real "
-            "pre-modern apprenticeship's actual instructional load.")
-    TEACHING_MATURATION_YEARS = declare(
-        "TEACHING_MATURATION_YEARS", 2.0, kind="temporary_heuristic",
-        unit="years", source=None, confidence="D",
-        why="How long after being taught a person takes to mature into a "
-            "working member of the new trade - shorter than TRAINING_YEARS "
-            "(3.0, for a bought and untrained person) because teaching "
-            "starts from an already-skilled craftsman rather than an "
-            "unskilled purchase. Tuned, not measured.")
-    TEACHING_FEE_MULTIPLIER = declare(
-        "TEACHING_FEE_MULTIPLIER", 1.2, kind="temporary_heuristic",
-        unit="dimensionless multiplier on the source trade's annual wage",
-        source=None, confidence="D",
-        why="What it costs, per person taught, to keep the SOURCE "
-            "trade's people fed while they are pulled off their own "
-            "bench to learn something new - a premium over their "
-            "ordinary annual wage, the same idea labour market price_factor "
-            "prices for hiring and market_pressure prices for buying "
-            "slaves. Tuned premium, not a measured opportunity cost.")
+    def training_years_from(self, trade, source):
+        """Years to turn a person of `source` into `trade`: the trade's full apprenticeship scaled by the share
+        of its tasks the source does not do (trade_formation)."""
+        shares = trade_formation.shipped_task_shares()
+        uncovered = trade_formation.uncovered_share(shares.get(trade, {}), shares.get(source, {}))
+        return trade_formation.training_years(self._full_years(trade), uncovered)
+
+    def uncovered_from(self, trade, source):
+        """The share of `trade`'s tasks that people of `source` do not already do."""
+        shares = trade_formation.shipped_task_shares()
+        return trade_formation.uncovered_share(shares.get(trade, {}), shares.get(source, {}))
+
+    def training_hours_per_person(self, trade, source=None):
+        """The teacher's own hours to teach one person `trade` from `source` (default: the nearest practised trade)."""
+        source = source or self._source_trade_for(trade)
+        if not source:
+            return 0.0
+        return trade_formation.teacher_hours_per_person(self.training_years_from(trade, source),
+                                                        self._world.HOURS_PER_PERSON_YEAR)
+
+    def _full_years(self, trade):
+        return float(trade_data.registry_of(self._world).get(trade, {}).get("training_years", 0.0) or 0.0)
+
+    def _source_trade_for(self, trade):
+        """The trade stated as the teacher in the registry, else the practised trade whose tasks cover the most of
+        this one's (ties by id). None when no trade is practised."""
+        stated = trade_data.registry_of(self._world).get(trade, {}).get("taught_from")
+        if stated:
+            return stated
+        created = self._world.state.household.trades_created
+        present = [other for other in self._world.wages
+                   if other != trade and (other not in self._world.trades_absent or other in created)]
+        ranked = trade_formation.nearest_sources(trade, trade_formation.shipped_task_shares(), present)
+        return ranked[0][1] if ranked else None
 
     def train_check(self, trade, count, frm=None):
         """Everything `train` and `quote train` agree on before money or hours
@@ -421,7 +399,9 @@ class TrainingMixin:
             return None, Refusal("count_not_whole", "you teach whole people, not %g of one. Teach %d or %d."
                                  % (count, math.floor(count), math.ceil(count)))
         count = float(round(count))
-        frm = (frm or trade_data.taught_from(trade_data.registry_of(self._world), trade)).strip().lower()
+        frm = (frm or self._source_trade_for(trade) or "").strip().lower()
+        if not frm:
+            return None, Refusal("no_source_trade", "there is no trade here to teach %ss from" % trade)
         if frm in self._world.trades_absent and frm not in self._world.state.household.trades_created:
             return None, Refusal("source_trade_absent", "you cannot teach from %ss; there are none" % frm)
         # LITERACY BOUNDS TEACHING TOO, and this is where it bites hardest:
@@ -434,9 +414,13 @@ class TrainingMixin:
         if trade in self.LITERATE_TRADES:
             cap = self.literate_capacity(trade)
             have = self._trade_headcount_pending(trade)
-            if have + count > cap + 1e-6:
+            if crosses_literacy_wall(have, count, cap):
                 return None, self._literate_wall_refusal(trade, cap, have)
-        hours = self.TEACHING_HOURS_PER_PERSON * count            # your hours, teaching, per person
+        years = self.training_years_from(trade, frm)
+        teaching_hours = trade_formation.teacher_hours_per_person(years, self._world.HOURS_PER_PERSON_YEAR) * count
+        teacher = self.outside_teacher(trade)
+        # another actor holding the knowledge teaches and is paid for their hours; otherwise it is your own
+        hours = 0.0 if teacher else teaching_hours
         pool = self.director_pool() - self.director_hours_committed()
         if hours > pool:
             return None, Refusal("founder_hours_short", "teaching %g %ss takes %.0f of your own hours and you have "
@@ -462,12 +446,27 @@ class TrainingMixin:
         # slaves and labour market price_factor now prices for hiring: the more of
         # `frm` you have already pulled recently, the dearer feeding the next
         # batch while they learn.
-        fee = count * self.labour_market.quote_annual(frm) * self.TEACHING_FEE_MULTIPLIER
+        uncovered = self.uncovered_from(trade, frm)
+        # the early slice is paid as staff from its own date, so the source's wages are kept up front only for the rest
+        kept_years = trade_first_hands.prepaid_keep_years(years, self._full_years(trade), uncovered)
+        fee = count * self.labour_market.quote_annual(frm) * kept_years      # the source's wages while they learn
+        if teacher:
+            fee += teaching_hours * self.labour_market.quote_annual(frm) / self._world.HOURS_PER_PERSON_YEAR
         if fee > self._world.spending_power("buy"):
             return None, self._cash_in_hand_refusal(
                 "keeping %g %s%s fed while they learn"
                 % (count, trade, "" if count == 1 else "s"), fee)
-        return {"count": count, "from": frm, "hours": hours, "fee": fee}, None
+        return {"count": count, "from": frm, "hours": hours, "fee": fee, "years": years, "teacher": teacher,
+                      "uncovered": uncovered}, None
+
+    def outside_teacher(self, trade):
+        """The first actor other than you that holds the knowledge to teach `trade` (trade_formation.teachers_of),
+        or None when you teach it yourself from what you know."""
+        by_actor, baseline, demonstrated = self._world.teaching_knowledge()
+        teachers = trade_formation.teachers_of(trade, trade_formation.shipped_gating_nodes(), by_actor, baseline,
+                                               demonstrated)
+        named = [teacher for teacher in teachers if teacher in by_actor]
+        return named[0] if named else None
 
     def trainee_wage_bill(self, trade, count):
         """Yearly wage the people taught will add once they join the staff."""
@@ -486,13 +485,15 @@ class TrainingMixin:
         plan, refusal = self.train_check(trade, count, frm)
         if refusal:
             return False, refusal
-        count, frm, hours, fee = plan["count"], plan["from"], plan["hours"], plan["fee"]
+        count, frm, hours, fee, years = plan["count"], plan["from"], plan["hours"], plan["fee"], plan["years"]
         household = self._world.state.household
         current_year = self._world.state.scenario.year
         self._world.pay_edge(self._world.EDGE_WORKERS, fee, "training fees")
         household.teaching_hours_this_year = (household.teaching_hours_this_year or 0.0) + hours
         household.trades_created.add(trade)
-        household.training.append([0.0, current_year + self.TEACHING_MATURATION_YEARS, trade, float(count)])
+        rows = trade_first_hands.cohort_rows(
+            current_year, trade, float(count), years, self._full_years(trade), plan["uncovered"])
+        household.training.extend(rows)
         self.labour_market.press(frm, float(count) * self._world.HOURS_PER_PERSON_YEAR)
         # SAY WHAT IT TOOK: teaching can quietly eat most of a year's
         # founder-hours, with nothing left afterward to supervise what it
@@ -511,10 +512,11 @@ class TrainingMixin:
         return True, ("%g %s%s finish training during %d's annual resolution "
                       "and join your staff automatically immediately afterward "
                       "- no 'hire' needed for them. "
-                      "Until then they cannot do a day of the work. It took "
+                      "Part of the cohort, the share of the tasks %ss already do, joins sooner (see the education "
+                      "screen); before that they cannot do a day of the work. It took "
                       "%s of your own hours (%s left this year) and %s "
                       "to keep them while they learn"
-                      % (count, trade, "s" if count != 1 else "", current_year + self.TEACHING_MATURATION_YEARS,
+                      % (count, trade, "s" if count != 1 else "", trade_first_hands.year_joined(rows[-1][1]), frm,
                          self._world.plain_number(hours), self._world.plain_number(_left),
                          self._world.money_text(fee, grouped=True)))
 
@@ -570,7 +572,7 @@ class TrainingMixin:
             for trade in sorted(self._world.wages):
                 if not self.is_craft_trade(trade) or not self.trade_available(trade):
                     continue
-                spare = self.market_supply(trade) - household.contract_hours.get(trade, 0.0)
+                spare = commission_spare_hours(self.market_supply(trade), household.contract_hours.get(trade, 0.0))
                 if spare < hours:
                     continue
                 if best is None or self.wage_per_hour(trade) < self.wage_per_hour(best):
@@ -591,8 +593,7 @@ class TrainingMixin:
         you can attempt a thing that needs one, and buying a job rather than a
         person is the whole point of `commission`."""
         household = self._world.state.household
-        contracted = sum(hours for trade, hours in getattr(household, "contract_hours", {}).items()
-                         if self.is_craft_trade(trade))
+        contracted = contracted_hours_of(getattr(household, "contract_hours", {}), self.is_craft_trade)
         # AND YOURSELF. effective_scholars() has always counted the founder as
         # one of the scholars - "you are your own natural philosopher" - and
         # nothing counted them as a pair of hands, though the premise of the
@@ -601,8 +602,8 @@ class TrainingMixin:
         # and a Norse run that could field one could never build the place
         # craftsmen work, so it ended six hundred years later with 136
         # technologies and no staff at all.
-        own = 1.0 if self._world.state.founder.founder_alive else 0.0
-        return household.artisans + own + contracted / self._world.HOURS_PER_PERSON_YEAR
+        return hands_available(household.artisans, self._world.state.founder.founder_alive, contracted,
+                               self._world.HOURS_PER_PERSON_YEAR)
 
     COMMISSION_PREMIUM_MULTIPLIER = declare(
         "COMMISSION_PREMIUM_MULTIPLIER", 1.6, kind="temporary_heuristic",
@@ -637,7 +638,7 @@ class TrainingMixin:
             return None, ("no %s will take the work; the trade does not exist here: %s"
                            % (trade, self._world.trade_notes.get(trade, "")))
         household = self._world.state.household
-        spare = self.market_supply(trade) - household.contract_hours.get(trade, 0.0)
+        spare = commission_spare_hours(self.market_supply(trade), household.contract_hours.get(trade, 0.0))
         if hours > spare:
             return None, ("the %ss here can spare %.0f more hours this year, not %.0f"
                            % (trade, max(0.0, spare), hours))

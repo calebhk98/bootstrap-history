@@ -1,77 +1,82 @@
-"""Complaint 95: a figure registers its components once, and `figures` / `why <figure>`
-show last year, this year and the named causes, read from the engine's own functions."""
-from .harness import *  # noqa: F401,F403
+"""Complaint 95: a figure registers its components once, and `explain_figure` shows last year, this year and the named causes.
+`figures.register_figure` and `explain_figure` are called on a stub game with figures the test registers; the headline
+figures are checked to be registered. The `figures` and `why` commands on a game are
+`test_figures_inspector_scenario`."""
+QUICK_TOPIC = True
+
+import unittest
+from types import SimpleNamespace
 
 from sim.ui import figures as figure_registry
+from sim.ui import figures_headline  # noqa: F401  (registers the headline figures)
 
 HEADLINE = ("cash", "recurring_net", "income", "upkeep", "population",
             "literacy_general", "price_index", "hazard")
 
 
-def ask(test_sim, **command):
-    return S._agent_dispatch(test_sim, NODES, command)
+class Game(SimpleNamespace):
+    """A game at a year whose figures read from plain attributes."""
 
 
-def played_sim():
-    test_sim = sim(capital=1_000_000.0)
-    test_sim.end_year = test_sim.cfg["start_year"] + test_sim.cfg["horizon_years"]
-    started = next((node_id for node_id in test_sim.order
-                    if NODES[node_id]["rev"] > 0 and test_sim.can_start(node_id)), None)
-    if started:
-        ask(test_sim, cmd="start", id=started)
-    ask(test_sim, cmd="step", years=1)
-    return test_sim
+def history_record(year, figure_name, value, components=None):
+    return {"year": year, "figures": {figure_name: {"value": value, "components": components or {}, "flows": {}, "drivers": {}}}}
 
 
-played = played_sim()
-registered = set(figure_registry.FIGURES)
-check("every headline figure is registered", set(HEADLINE) <= registered, sorted(registered))
+class FigureInspectorTests(unittest.TestCase):
+    def setUp(self):
+        self.registered = []
 
-listing = ask(played, cmd="figures")
-check("figures with no name lists every registered figure",
-      listing.get("ok") and {row["name"] for row in listing["figures"]} == registered, listing)
+    def tearDown(self):
+        for name in self.registered:
+            figure_registry.FIGURES.pop(name, None)
 
-one = ask(played, cmd="figures", id="upkeep")
-check("a figure reports last year, this year and the change",
-      one.get("ok") and {"previous", "current", "change", "causes"} <= set(one), one)
-check("this year's value is the engine's own function",
-      abs(one["current"] - played.upkeep()) < 0.1, (one["current"], played.upkeep()))
-check("the causes add up to the change",
-      abs(sum(cause["contribution"] for cause in one["causes"]) - one["change"]) < 0.5, one)
+    def register(self, name, compute, digits=1):
+        figure_registry.register_figure(name, name, "units", digits, compute)
+        self.registered.append(name)
 
-income = ask(played, cmd="figures", id="income")
-check("income is the engine's revenue", abs(income["current"] - played.revenue()) < 0.1, income)
-check("every income cause names itself",
-      all(cause.get("cause") for cause in income["causes"]), income)
+    def test_every_headline_figure_is_registered(self):
+        self.assertTrue(set(HEADLINE) <= set(figure_registry.FIGURES))
 
-cash = ask(played, cmd="figures", id="cash")
-check("cash is the household's capital", abs(cash["current"] - played.capital) < 0.1, cash)
-check("cash causes add up to the change, unexplained part named",
-      abs(sum(cause["contribution"] for cause in cash["causes"]) - cash["change"]) < 0.5, cash)
+    def test_a_newly_registered_figure_is_explained_with_no_list_edited(self):
+        self.register("test_probe", lambda game: {"value": 7.0, "components": {"alpha": 3.0, "beta": 4.0}})
+        probe = figure_registry.explain_figure(Game(year=1300), "test_probe", [])
+        self.assertTrue(probe["ok"])
+        self.assertEqual(probe["current"], 7.0)
+        self.assertEqual({cause["cause"] for cause in probe["causes"]}, {"alpha", "beta"})
 
-fallback = ask(played, cmd="why", id="recurring_net")
-check("why <figure> falls through to the figure inspector",
-      fallback.get("ok") and fallback.get("name") == "recurring_net", fallback)
+    def test_before_a_year_has_passed_there_is_no_previous_value(self):
+        self.register("test_probe", lambda game: {"value": 7.0, "components": {"alpha": 7.0}})
+        probe = figure_registry.explain_figure(Game(year=1300), "test_probe", [])
+        self.assertIsNone(probe["previous"])
+        self.assertIsNone(probe["change"])
 
-unknown = ask(played, cmd="figures", id="nonsense")
-check("an unknown figure is refused with the list",
-      not unknown.get("ok") and unknown.get("cause") == "unknown_figure" and "upkeep" in unknown.get("choices", ()), unknown)
+    def test_a_figure_reports_last_year_this_year_and_the_change(self):
+        self.register("test_probe", lambda game: {"value": game.value, "components": {"alpha": game.value}})
+        history = [history_record(1299, "test_probe", 4.0, {"alpha": 4.0})]
+        probe = figure_registry.explain_figure(Game(year=1300, value=10.0), "test_probe", history)
+        self.assertEqual((probe["previous"], probe["current"], probe["change"]), (4.0, 10.0, 6.0))
 
-fresh = sim(capital=1_000_000.0)
-before_any_year = ask(fresh, cmd="figures", id="upkeep")
-check("before a year has passed there is no previous value and it says so",
-      before_any_year.get("ok") and before_any_year["previous"] is None, before_any_year)
+    def test_the_causes_add_up_to_the_change(self):
+        self.register("test_probe", lambda game: {"value": 10.0, "components": {"alpha": 6.0, "beta": 4.0}})
+        history = [history_record(1299, "test_probe", 4.0, {"alpha": 3.0, "beta": 1.0})]
+        probe = figure_registry.explain_figure(Game(year=1300), "test_probe", history)
+        self.assertAlmostEqual(sum(cause["contribution"] for cause in probe["causes"]), probe["change"], delta=0.05)
+
+    def test_what_the_named_parts_leave_out_is_reported_as_its_own_cause(self):
+        self.register("test_probe", lambda game: {"value": 10.0, "components": {"alpha": 6.0}})
+        history = [history_record(1299, "test_probe", 4.0, {"alpha": 3.0})]
+        probe = figure_registry.explain_figure(Game(year=1300), "test_probe", history)
+        unexplained = [cause for cause in probe["causes"] if cause["cause"] == figure_registry.UNEXPLAINED_CAUSE]
+        self.assertEqual(len(unexplained), 1)
+        self.assertAlmostEqual(unexplained[0]["contribution"], 3.0)
+        self.assertAlmostEqual(sum(cause["contribution"] for cause in probe["causes"]), probe["change"], delta=0.05)
+
+    def test_only_an_earlier_year_counts_as_last_year(self):
+        self.register("test_probe", lambda game: {"value": 10.0, "components": {}})
+        history = [history_record(1300, "test_probe", 99.0)]
+        probe = figure_registry.explain_figure(Game(year=1300), "test_probe", history)
+        self.assertIsNone(probe["previous"])
 
 
-@figure_registry.figure("test_probe", label="probe", unit="units")
-def _probe(test_sim):
-    return {"value": 7.0, "components": {"alpha": 3.0, "beta": 4.0}}
-
-
-try:
-    probe = ask(played, cmd="figures", id="test_probe")
-    check("a newly registered figure is explained with no list edited",
-          probe.get("ok") and probe["current"] == 7.0
-          and {cause["cause"] for cause in probe["causes"]} == {"alpha", "beta"}, probe)
-finally:
-    figure_registry.FIGURES.pop("test_probe", None)
+if __name__ == "__main__":
+    unittest.main()

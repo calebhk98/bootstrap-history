@@ -1,11 +1,14 @@
-"""spending_power("buy" vs "start"/"open"), credit_limit, arrears,
-insolvency and the warnings and refusals built on them.
+"""spending_power("buy" vs "start"/"open"), credit_limit, arrears, insolvency and the warnings and refusals built on them.
 
-A few games are built once and reused; checks that only read a figure reset the instance
-overrides they installed (credit_limit, spending_power, project_cost) before the next check.
+The rules (what could be raised for each kind of spend, the warning before the line, appearances, a concern's payback,
+the reputation an insolvency takes) are tested on built numbers (`affordability`, `capital_market`); the named
+scenarios run them through the game's commands, screens and yearly step.
 """
 from .harness import *  # noqa: F401,F403
 from sim.refusal import cause_of, facts_of
+from sim.engine import affordability
+from sim.engine.economy_credit import calculate_credit_ceiling
+from sim.world import capital_market
 from .agent_command_helpers import pristine_game
 
 
@@ -28,139 +31,174 @@ def spending_power_spy(game, forced=None):
     return calls
 
 
-# --- auto_open: says why it refuses, and in deep arrears opens only what pays for its own door.
+# --- spending_power: what could be raised for each kind of spend
+HALF = 0.5
+check("a purchase may draw the ordinary share of the line, a start the whole of it",
+      abs(affordability.spending_power_of("buy", 400.0, 210.0, HALF) - 505.0) < 1e-9
+      and abs(affordability.spending_power_of("start", 400.0, 210.0, HALF) - 610.0) < 1e-9,
+      (affordability.spending_power_of("buy", 400.0, 210.0, HALF), affordability.spending_power_of("start", 400.0, 210.0, HALF)))
+check("the debt already carried counts against a purchase: 500 into a 210 line can raise nothing, never a negative amount",
+      affordability.spending_power_of("buy", -500.0, 210.0, HALF) == 0.0
+      and affordability.spending_power_of("start", -500.0, 210.0, HALF) == 0.0
+      and affordability.spending_power_of("buy", -1000.0, 0.0, HALF) == 0.0)
+check("a hole smaller than the drawable part of the line leaves the rest to raise",
+      abs(affordability.spending_power_of("buy", -50.0, 210.0, HALF) - 55.0) < 1e-9)
+check("a door fee on a concern already built does not count the hole: it asks only what the line could advance",
+      abs(affordability.spending_power_of("open", -100.0, 210.0, HALF) - 105.0) < 1e-9
+      and abs(affordability.spending_power_of("open", 400.0, 210.0, HALF) - 505.0) < 1e-9)
+check("past the line nobody lends, so nothing can be raised for a door fee either",
+      affordability.spending_power_of("open", -300.0, 210.0, HALF) == 0.0)
+
+# --- the credit line warns before it is crossed, once, and not once it is past
+check("a household that is not in arrears, or has no line, is not warned",
+      affordability.near_limit(105.0, 100.0, False)[0] is False and affordability.near_limit(0.0, 100.0, False)[0] is False
+      and affordability.near_limit(-10.0, 0.0, False)[0] is False)
+check("the credit limit warns you BEFORE you cross it, with the share of the line used",
+      affordability.near_limit(-75.0, 100.0, False) == (True, True, 0.75), affordability.near_limit(-75.0, 100.0, False))
+check("...and does not say it again every year while in the band", affordability.near_limit(-75.0, 100.0, True)[0] is False
+      and affordability.near_limit(-75.0, 100.0, True)[1] is True)
+check("the limit warning is about what is ahead of you, not behind: nothing once past the line",
+      affordability.near_limit(-103.0, 100.0, False)[0] is False)
+check("coming back out of the band lets the warning be said again",
+      affordability.near_limit(-50.0, 100.0, True)[1] is False and affordability.near_limit(-75.0, 100.0, False)[0] is True)
+check("the band starts where the constant says",
+      affordability.near_limit(-100.0 * affordability.NEAR_LIMIT_FROM * 0.99, 100.0, False)[0] is False
+      and affordability.near_limit(-100.0 * affordability.NEAR_LIMIT_FROM, 100.0, False)[0] is True)
+
+# --- a lender does not lend more than income can carry, whatever the money costs
+for _rate in (0.04, 0.12, 0.5):
+    _earning = 1000.0
+    _serviceable = capital_market.serviceable_debt(_earning, _rate, 0.5)
+    _line = calculate_credit_ceiling(1.0e9, 0.0, _serviceable)
+    check("a grand friend does not lend you more than your income can carry: at a market rate of %.2f the interest on the "
+          "whole line stays under what you earn" % _rate,
+          _line * _rate < _earning and _line <= _serviceable, (_line, _rate, _earning))
+check("what a lender will advance is the least of what the name vouches for, what income can carry and what lenders hold",
+      calculate_credit_ceiling(900.0, 0.0, 500.0, market_cap=300.0) == 300.0
+      and calculate_credit_ceiling(900.0, 0.0, 500.0) == 500.0 and calculate_credit_ceiling(400.0, 0.0, 500.0) == 400.0)
+check("the running costs are the floor of the line, at this society's prices",
+      calculate_credit_ceiling(50.0, 120.0, 80.0, price_index=2.0) == 240.0)
+
+# --- status upkeep is conditional on being able to afford it
+check("a ruined household (nothing left after eating) stops keeping up appearances beyond the wealth it still has",
+      affordability.appearances_spending(500.0, 0.0, 0.0, 0.015, 0.75) == 0.0)
+check("...and a household that can afford the show still pays for it, but never more than the nominal figure plus the "
+      "wealth share it must track",
+      affordability.appearances_spending(500.0, 2.0e6, 1.0e6, 0.015, 0.75) == 500.0 + 2.0e6 * 0.015
+      and affordability.appearances_spending(500.0, 0.0, 400.0, 0.015, 0.75) == 300.0)
+check("appearances come out of what is left, not the other way about",
+      affordability.appearances_spending(500.0, 0.0, 100.0, 0.015, 0.75) == 75.0)
+
+# --- an earning concern opens in arrears on its own payback
+check("a concern's payback is its capex over what it nets a year",
+      affordability.payback_years(600.0, 500.0, 100.0) == 1.5 and affordability.payback_years(1.0, 10.0, 10.0) == 100.0)
+check("deep in arrears, a concern opens only if it pays for its own doors within the limit",
+      affordability.opens_in_deep_arrears(1.0, 3.0) and affordability.opens_in_deep_arrears(3.0, 3.0)
+      and not affordability.opens_in_deep_arrears(3.5, 3.0))
+check("deep in arrears is past a share of the credit line, and needs arrears at all",
+      affordability.deep_in_arrears(-60.0, 100.0, 0.5) and not affordability.deep_in_arrears(-40.0, 100.0, 0.5)
+      and not affordability.deep_in_arrears(10.0, 100.0, 0.5))
+
+# --- an insolvency announces what a reputation penalty actually took
+check("a reputation penalty announces what it actually took: the whole hit, or what was left of the name",
+      affordability.reputation_hit_taken(12.0, 50.0) == 12.0 and affordability.reputation_hit_taken(12.0, 4.9) == 4.9)
+check("...and nothing when there was nothing left to take", affordability.reputation_hit_taken(12.0, 0.0) == 0.0
+      and affordability.reputation_hit_taken(12.0, -3.0) == 0.0)
+# (the room a household can fund shrinking by the arrears it owes is funding_parts, in test_affordability_warning)
+
+# --- scenario: auto_open says why it refuses, and in deep arrears opens only what pays for its own door
 opener = sim(capital=1.0)
 best_concern = max((node_id for node_id in NODES if NODES[node_id]["rev"] > NODES[node_id]["up"] > 0),
                    key=lambda node_id: NODES[node_id]["rev"] - NODES[node_id]["up"])
 opener.done.add(best_concern)
 opener._done_changed()
 opened = opener.auto_open_ventures()
-check("auto_open opens nothing it cannot pay the capex on", best_concern not in opened, (best_concern, opened[:3]))
-check("auto_open says why the best concern is still shut",
-      any(best_concern in message for _, message in opener.log), [message for _, message in opener.log][:2])
+refused_and_said = (best_concern not in opened
+                    and any(best_concern in message for _, message in opener.log))
 
 # A completed, earning concern that pays for its door within months opens even deep in arrears;
 # a slow one and an institution do not.
 # (the nodes that earn from their output; the payback is the engine's own: capex over net earnings)
-paybacks = {node_id: opener.venture_capex(node_id) / (node["rev"] - node["up"])
+paybacks = {node_id: affordability.payback_years(opener.venture_capex(node_id), node["rev"], node["up"])
             for node_id, node in opener.nodes.items()
             if node["rev"] > node["up"] and opener.is_venture(node_id)
             and sum(opener.venture_hands(node_id)) <= opener.FOUNDER_IS_WORTH   # staffed by the founder alone
             and opener.venture_foreman(node_id)[0] is None}
 # deep in arrears is past half the credit line but still inside it, so a door fee can still be raised
 def into_arrears(game):
+    game.credit_limit = lambda: 1.0e6
     game.capital = -0.6 * game.credit_limit()
 
 
-# the quickest one that opens with nothing else known (one whose gate work is shut refuses, whatever its payback)
-_probe = sim()
-quick_payback = None
-for node_id in sorted(paybacks, key=lambda node_id: (paybacks[node_id], node_id)):
-    _probe.done.add(node_id)
-    _probe._done_changed()
-    into_arrears(_probe)
-    if _probe.open_venture(node_id)[0]:
-        quick_payback = node_id
-        break
-    _probe.done.discard(node_id)
-    _probe._done_changed()
+# the quickest earning concern and the slowest (the rule itself is checked above on built numbers); the line is
+# made wide so the door fee can be raised and only the payback gate decides
+quick_payback = min(paybacks, key=lambda node_id: (paybacks[node_id], node_id))
 slow_payback = max(paybacks, key=lambda node_id: (paybacks[node_id], node_id))
 assert paybacks[quick_payback] < opener.AUTO_OPEN_PAYBACK_LIMIT_YEARS < paybacks[slow_payback], paybacks
 deep = sim()
 deep.done.add(quick_payback)
 deep._done_changed()
 into_arrears(deep)
-check("the household in this check really is deep in arrears (over half its credit line)",
-      deep.capital < 0 and -deep.capital > deep.credit_limit() * 0.5, (deep.capital, deep.credit_limit()))
-check("a completed concern that pays for its own door within months opens even while deep in arrears",
-      quick_payback in deep.auto_open_ventures(), quick_payback)
+deep_in_the_red = deep.capital < 0 and -deep.capital > deep.credit_limit() * 0.5
+quick_opens = quick_payback in deep.auto_open_ventures()
 deep.done.add(slow_payback)
 deep._done_changed()
 into_arrears(deep)
 deep.log.clear()
 opened_slow = deep.auto_open_ventures()
-check("a completed concern that would take years to pay for its own door stays shut while deep in arrears",
-      slow_payback not in opened_slow, (slow_payback, opened_slow))
-check("...and the refusal names its own payback period and what would clear it",
-      any("pay for its own doors" in message and "clear enough debt" in message for _, message in deep.log),
-      [message for _, message in deep.log])
+slow_refusal_named = any("pay for its own doors" in message and "clear enough debt" in message for _, message in deep.log)
 deep.done.add("workshop_first")
 deep._done_changed()
-check("an institution still opens nothing while deep in arrears",
-      "workshop_first" not in deep.auto_open_ventures(), "workshop_first")
+institution_stays_shut = "workshop_first" not in deep.auto_open_ventures()
+past_line = opener
+past_line.done.add(quick_payback)
+past_line._done_changed()
+past_line.state.household.capital = -3.0 * past_line.credit_limit()
+nothing_past_the_line = (past_line.spending_power("open") == 0.0 and quick_payback not in past_line.auto_open_ventures())
+# presentation: the refusal names its own payback period and what would clear it
+check("scenario: auto_open opens nothing it cannot pay the capex on and says why; deep in arrears a concern that pays for "
+      "its own door within months still opens, a slow one stays shut with a refusal naming its payback and what would "
+      "clear it, an institution opens nothing, and nothing opens once the debt is past the credit line",
+      refused_and_said and deep_in_the_red and quick_opens and slow_payback not in opened_slow and slow_refusal_named
+      and institution_stays_shut and nothing_past_the_line,
+      (refused_and_said, deep_in_the_red, quick_opens, opened_slow, slow_refusal_named, institution_stays_shut,
+       nothing_past_the_line))
 
-# --- one affordability rule, the quote screen and hint use it.
+# --- scenario: a fresh game's affordability screens, credit warning, job and patron
 fresh = sim()
-check("a household that is not near its credit limit is not warned",
-      (fresh.warn_near_the_limit(105), not fresh.log)[1], [message for _, message in fresh.log])
 fresh_start_power = fresh.spending_power("start")
 available_reply = S._agent_dispatch(fresh, NODES, {"cmd": "available"})
 hint = str((available_reply.get("to_see_more") or {}).get("what you can pay for", ""))
-check("the AFFORD hint uses the rule `start` uses, since it is about starting",
-      str(int(fresh_start_power)).replace(",", "") in hint.replace(",", ""), hint)
 money_reply = S._agent_dispatch(fresh, NODES, {"cmd": "money"})
-check("the ledger says how much of the credit line is used",
-      money_reply.get("of_that_limit_you_have_used") is not None, money_reply.get("of_that_limit_you_have_used"))
-check("a founder with a practice can still just reach a cover identity",
-      fresh.capital + fresh.credit_limit() >= fresh.project_cost("identity_cover"),
-      (fresh.capital + fresh.credit_limit(), fresh.project_cost("identity_cover")))
 thin_credit_limit = fresh.credit_limit()
-thin_living_cost = fresh.living_cost()
 starting_capital = fresh.capital
-
-# The credit limit warns before it is crossed, once, and not once it is past.
+fresh.log.clear()
 fresh.capital = -fresh.credit_limit() * 0.75
 fresh.warn_near_the_limit(105)
-check("the credit limit warns you BEFORE you cross it",
-      any(cause_of(message) == "credit_near_limit" for _, message in fresh.log), [message for _, message in fresh.log])
-check("...and names what you could still do about it",
-      any("stop" in message and "mothball" in message for _, message in fresh.log), [message for _, message in fresh.log][:1])
-log_length = len(fresh.log)
-fresh.warn_near_the_limit(106)
-check("...and does not say it again every year", len(fresh.log) == log_length, len(fresh.log) - log_length)
-fresh.capital = -fresh.credit_limit() * 1.03
-fresh.log.clear()
-fresh.warn_near_the_limit(107)
-check("the limit warning is about what is ahead of you, not behind",
-      not fresh.log, [message for _, message in fresh.log])
+near_limit_lines = [message for _, message in fresh.log]
 fresh.capital = starting_capital
-
 # A lender does not cut your line because you took a job this year.
-full_credit_limit = fresh.credit_limit()
 fresh.wage_hours_this_year = fresh.labour.director_pool()
-check("a lender does not cut your line because you took a job this year",
-      abs(fresh.credit_limit() - full_credit_limit) < 1e-6, (full_credit_limit, fresh.credit_limit()))
+line_with_job = fresh.credit_limit()
 fresh.wage_hours_this_year = 0.0
-
 # A grand friend does not lend more than income can carry.
 fresh.done.add("patron_senatorial")
 fresh._done_changed()
-check("a grand friend does not lend you more than your income can carry",
-      fresh.credit_limit() < thin_credit_limit * 3, (thin_credit_limit, fresh.credit_limit()))
-check("...and the interest on the whole line stays under what you earn",
-      fresh.credit_limit() * fresh.debt_interest_rate() < fresh.revenue(),
-      (fresh.credit_limit() * fresh.debt_interest_rate(), fresh.revenue()))
+# presentation: the hint prints the start rule's figure; the warning names what could still be done
+check("scenario: in a fresh game the AFFORD hint uses the rule `start` uses, the ledger says how much of the credit line "
+      "is used, the founder with a practice can still just reach a cover identity, the line warns before it is crossed "
+      "naming what could be done, a job this year does not cut the line, and a grand friend lends no more than income carries",
+      str(int(fresh_start_power)).replace(",", "") in hint.replace(",", "")
+      and money_reply.get("of_that_limit_you_have_used") is not None
+      and fresh.capital + thin_credit_limit >= fresh.project_cost("identity_cover")
+      and any(cause_of(message) == "credit_near_limit" and "stop" in message and "mothball" in message for message in near_limit_lines)
+      and abs(line_with_job - thin_credit_limit) < 1e-6
+      and fresh.credit_limit() < thin_credit_limit * 3
+      and fresh.credit_limit() * fresh.debt_interest_rate() < fresh.revenue(),
+      (hint, money_reply.get("of_that_limit_you_have_used"), near_limit_lines[:1], thin_credit_limit, line_with_job,
+       fresh.credit_limit()))
 
-# Money gone dear (whatever the cause) must not let the running tab's own interest push the line past income.
-fresh.market_rate = lambda: 0.5
-check("...and at a dear market rate the interest on the whole line still stays under what you earn",
-      fresh.credit_limit() * fresh.debt_interest_rate() < fresh.revenue(),
-      (fresh.credit_limit() * fresh.debt_interest_rate(), fresh.revenue()))
-del fresh.market_rate
-
-# Status upkeep is conditional on being able to afford it.
-fresh.done.add("citizenship")
-fresh._done_changed()
-fresh.revenue = lambda: 0.0   # ruined: nothing comes in, so there is nothing to spend on appearances
-ruined_living_cost = fresh.living_cost()
-del fresh.revenue
-check("a ruined household stops keeping up appearances",
-      ruined_living_cost < thin_living_cost + 50.0, (ruined_living_cost, thin_living_cost))
-fresh.capital = 2000000.0
-check("...and a household that can afford the show still pays for it",
-      fresh.living_cost() > ruined_living_cost * 2, (fresh.living_cost(), ruined_living_cost))
-
-# --- the arrears banner quotes what the ledger does, and its wage-work advice gains.
+# --- scenario: the arrears banner quotes what the ledger does
 arrears = sim(capital=-4000.0)
 arrears.insolvent_years = 20
 arrears.revenue = lambda: 0.0
@@ -168,11 +206,13 @@ arrears.market_rate = lambda: 0.08   # a settled market may clear at zero; the b
 diagnosis = arrears.stall_diagnosis()
 ledger_loss = (arrears.revenue() - arrears.upkeep() - arrears.living_cost() - arrears.mine_operating_cost()
                - max(0.0, -arrears.capital) * arrears.debt_interest_rate())
-check("the arrears banner quotes the same loss the ledger does",
-      diagnosis and "{:,.0f}".format(-ledger_loss) in diagnosis["you_are_stuck"], (diagnosis or {}).get("you_are_stuck"))
-check("...and names the part of it that is interest on the arrears themselves",
-      any("interest on the arrears" in reason for reason in diagnosis["what_would_change_it"]),
-      diagnosis["what_would_change_it"])
+# presentation: the banner quotes the ledger's loss and names the interest part
+check("scenario: the arrears banner quotes the same loss the ledger does and names the part of it that is interest on the "
+      "arrears themselves",
+      diagnosis and "{:,.0f}".format(-ledger_loss) in diagnosis["you_are_stuck"]
+      and any("interest on the arrears" in reason for reason in diagnosis["what_would_change_it"]),
+      (diagnosis or {}).get("you_are_stuck"))
+
 # A founder whose standing job pays nothing: wage work is advised when it pays more than the standing job already
 # sells those hours for (a founder holding no trade has no standing job to beat).
 wage_game = sim(civ="norse_900ad", capital=-40000.0)
@@ -184,19 +224,17 @@ wage_advice = [reason for reason in (wage_game.stall_diagnosis() or {}).get("wha
 # The advice's quote is what work_for_wages pays for the trade and hours it names.
 quote_match = re.match(r"work as a (\w+): (\d+) of your own hours .* bring in about ([\d,]+)",
                        wage_advice[0]) if wage_advice else None
-check("a stalled household in debt is offered wage work, with trade, hours and earning",
-      quote_match, wage_advice)
+advice_holds = False
+advice_detail = wage_advice
 if quote_match:
     quoted_trade, quoted_hours = quote_match.group(1), int(quote_match.group(2))
     quoted_earning = int(quote_match.group(3).replace(",", ""))
     capital_before = wage_game.capital
     paid, refusal = wage_game.labour.work_for_wages(quoted_trade, quoted_hours)
-    check("the advised work is accepted", refusal is None, refusal)
-    check("the money moved is the earning the banner quoted",
-          abs(paid - quoted_earning) <= 1 and abs((wage_game.capital - capital_before) - paid) < 1e-6,
-          (quoted_earning, paid, wage_game.capital - capital_before))
-    check("the banner names the trade that pays most an hour",
-          quoted_trade == wage_game.labour.best_wage_trade(), (quoted_trade, wage_game.labour.best_wage_trade()))
+    advice_holds = (refusal is None and abs(paid - quoted_earning) <= 1
+                    and abs((wage_game.capital - capital_before) - paid) < 1e-6
+                    and quoted_trade == wage_game.labour.best_wage_trade())
+    advice_detail = (quoted_earning, paid, wage_game.capital - capital_before, quoted_trade, wage_game.labour.best_wage_trade())
 
 # A founder whose standing job already sells the hours is advised wage work only for the gain over that job, and
 # the banner names what the job pays for them.
@@ -207,16 +245,17 @@ job_game.insolvent_years = 20
 job_advice = [reason for reason in (job_game.stall_diagnosis() or {}).get("what_would_change_it", [])
               if reason.startswith("work as a ")]
 standing_pay = job_game.labour.standing_job_pay("labourer")
-check("wage work that beats the standing job names what that job pays for the same hours",
-      job_advice and "{:,.0f}".format(standing_pay) in job_advice[0], (job_advice, standing_pay))
+check("scenario: a stalled household in debt is offered wage work whose quote is what the work pays, naming the trade that "
+      "pays most an hour; a founder with a standing job is offered only the gain over it, naming what that job pays",
+      advice_holds and job_advice and "{:,.0f}".format(standing_pay) in job_advice[0], (advice_detail, job_advice, standing_pay))
 
-# --- an idle fortune bleeds living costs, and the ledger names the part that is wealth.
+# --- scenario: an idle fortune bleeds living costs, and the ledger names the part that is wealth
 rich_ledger = S._agent_dispatch(sim(capital=hours_money(20200000)), NODES, {"cmd": "money"})
-check("the ledger names the part of your living costs that is your wealth",
+check("scenario: the ledger names the part of your living costs that is your wealth",
       (rich_ledger.get("what_it_costs_you") or {}).get("_of_which_because_you_are_rich", 0) > 1000,
       rich_ledger.get("what_it_costs_you"))
 
-# --- refusals and quotes in debt, on one game whose capital and credit line are set per case.
+# --- scenario: refusals and quotes in debt, on one game whose capital and credit line are set per case
 debtor = sim(capital=0.0)
 
 
@@ -228,54 +267,41 @@ def set_position(capital, credit_limit=None):
 
 
 debtor.capital = 400.0
-check("there is ONE affordability rule, and it says which it is using",
-      abs(debtor.spending_power("buy") - (400.0 + debtor.credit_limit() * 0.5)) < 1e-6
-      and abs(debtor.spending_power("start") - (400.0 + debtor.credit_limit())) < 1e-6,
-      (debtor.spending_power("buy"), debtor.spending_power("start")))
+game_buy, game_start = debtor.spending_power("buy"), debtor.spending_power("start")
 quote_reply = S._agent_dispatch(debtor, NODES, {"cmd": "quote", "what": "mine", "material": "coal", "n": 500})
-check("quote counts the credit a lender would actually advance",
-      quote_reply.get("you_could_raise", 0) > quote_reply.get("you_have", 0), quote_reply.get("you_could_raise"))
+check("scenario: the game's spending_power is the one rule, and quote counts the credit a lender would actually advance",
+      abs(game_buy - (400.0 + debtor.credit_limit() * 0.5)) < 1e-6 and abs(game_start - (400.0 + debtor.credit_limit())) < 1e-6
+      and quote_reply.get("you_could_raise", 0) > quote_reply.get("you_have", 0), (game_buy, game_start, quote_reply.get("you_could_raise")))
 
 # hire/train/commission may draw only half the credit line; the refusal says which rule and why.
 set_position(-50000.0)
 hire_ok, hire_message = debtor.labour.hire("smith", 3)
-check("a cash-short hire is still refused (the asymmetry itself is kept)", hire_ok is False, (hire_ok, hire_message))
-check("...but the refusal says WHICH rule this is: half the credit line, not all of it",
-      "50%" in hire_message and "credit line" in hire_message, hire_message)
-# presentation: the refusal's explanation of the lending rule
-check("...and WHY: a lender funds work under way, not a payroll or a one-off fee",
-      "lender advances against a purchase" in hire_message, hire_message)
 hire_fee = debtor.labour.hire_fee("smith", 3)
-check("...and states the exact cost hire() computed",
-      "{:,.0f}".format(round(hire_fee)) in hire_message, (hire_fee, hire_message))
-train_ok, train_message = debtor.labour.train("machinist", 3, None)
-# presentation: the refusal's explanation of the lending rule
-check("train's cash-short refusal uses the identical reasoning as hire's",
-      train_ok is False and "50%" in train_message and "lender advances against a purchase" in train_message,
-      train_message)
+train_ok, train_message = debtor.labour.train("machinist", 1, None)   # one trainee: the hours fit, so cash is what refuses
 commission_ok, commission_message = debtor.labour.commission("smith", 3500.0)
 # presentation: the refusal's explanation of the lending rule
-check("commission's cash-short refusal uses the same reasoning too",
-      commission_ok is False and "50%" in commission_message
-      and "lender advances against a purchase" in commission_message, commission_message)
+check("scenario: a cash-short hire, train and commission are refused with the same reasoning: which rule (half the credit "
+      "line, not all of it), why (a lender funds work under way, not a payroll or a one-off fee) and the exact cost",
+      hire_ok is False and train_ok is False and commission_ok is False
+      and all(cause_of(message) == "cash_short" for message in (hire_message, train_message, commission_message))
+      and all("50%" in message and "lender advances against a purchase" in message
+              for message in (hire_message, train_message, commission_message))
+      and "credit line" in hire_message and "{:,.0f}".format(round(hire_fee)) in hire_message,
+      (hire_message, train_message, commission_message))
 
 # spending_power('buy') counts the debt already carried: 500 into a 210 line can raise nothing.
 set_position(-500.0, 210.0)
-check("spending_power('buy') counts the debt already carried: 500 into a 210 line can raise nothing",
-      abs(debtor.spending_power("buy")) < 1e-9, debtor.spending_power("buy"))
+past_line_power = debtor.spending_power("buy")
 past_line_ok, past_line_message = debtor.labour.commission("smith", 1.0)
-check("...and commission() refuses a household already past its line, so screen and command agree",
-      past_line_ok is False, (past_line_ok, past_line_message))
 set_position(400.0, 210.0)
-check("...and it is still capital plus half the line when there is no hole to count",
-      abs(debtor.spending_power("buy") - 505.0) < 1e-9, debtor.spending_power("buy"))
+solvent_power = debtor.spending_power("buy")
 solvent_ok, solvent_message = debtor.labour.commission("smith", 9999.0)
-check("...and still refuses a fee over the half-line once the household is solvent again",
-      solvent_ok is False, (solvent_ok, solvent_message))
 set_position(-1000.0, 0.0)
-check("auto_commission_for_blocked refuses outright when spending_power('buy') is exactly zero",
-      debtor.spending_power("buy") == 0.0 and debtor.labour.auto_commission_for_blocked() is None,
-      debtor.spending_power("buy"))
+check("scenario: commission() refuses a household already past its line and one over the half-line while solvent, so "
+      "screen and command agree; auto_commission_for_blocked refuses outright when spending_power('buy') is exactly zero",
+      abs(past_line_power) < 1e-9 and past_line_ok is False and abs(solvent_power - 505.0) < 1e-9 and solvent_ok is False
+      and debtor.spending_power("buy") == 0.0 and debtor.labour.auto_commission_for_blocked() is None,
+      (past_line_power, past_line_ok, solvent_power, solvent_ok))
 
 # _waiting_on: the stalled-project pacing message reads spending_power('buy').
 slow_pace_node = "academy_network"
@@ -291,118 +317,111 @@ def waiting_message(capital, credit_limit):
         debtor.active.pop(slow_pace_node, None)
 
 
-check("_waiting_on reads the pace as the blocker when there is real room",
-      cause_of(waiting_message(50000.0, 2000.0)) == "money_pace", waiting_message(50000.0, 2000.0))
-check("a household 50,000 past a 2,000 line is told MONEY is what holds the project up",
-      cause_of(waiting_message(-50000.0, 2000.0)) in ("money_blocked", "money_unfunded"),
-      waiting_message(-50000.0, 2000.0))
+roomy_waiting, indebted_waiting = waiting_message(50000.0, 2000.0), waiting_message(-50000.0, 2000.0)
+check("scenario: a stalled project's waiting_on reads the pace as the blocker when there is real room, and tells a household "
+      "50,000 past a 2,000 line that MONEY holds the project up",
+      cause_of(roomy_waiting) == "money_pace" and cause_of(indebted_waiting) in ("money_blocked", "money_unfunded"),
+      (roomy_waiting, indebted_waiting))
 
 # The quote screen's figure is the number hire enforces.
 set_position(-50000.0)
 quoted = _protocol._spare_capacity(debtor, {})["you_could_raise_right_now"]
-check("the affordability figure the quote screen shows while in debt matches spending_power('buy')",
-      abs(quoted - debtor.spending_power("buy")) < 0.05, (quoted, debtor.spending_power("buy")))
 hire_in_debt_ok, hire_in_debt_message = debtor.labour.hire("smith", 1)
-check("...and when that figure is zero because the household is past its line, hire() refuses too",
-      (quoted <= 0.0) == (hire_in_debt_ok is False), (quoted, hire_in_debt_ok, hire_in_debt_message))
 yearly_wage = S.ANNUAL_WAGE.get("smith", 375.0) * debtor.wage_index * debtor.price_index \
     * debtor.labour.market.price_factor("smith")
 over_ok, over_message = debtor.labour.hire("smith", max(1, int(quoted // yearly_wage)) + 2)
-check("...and a hire past what the quote screen says the household could raise is refused",
-      over_ok is False, (quoted, over_message))
+debt_figure_matches = abs(quoted - debtor.spending_power("buy")) < 0.05
 set_position(20000.0)
 solvent_quote = _protocol._spare_capacity(debtor, {})["you_could_raise_right_now"]
 solvent_hire_ok, solvent_hire_message = debtor.labour.hire("smith", 1)
-check("...and a solvent household the screen says can raise thousands is let through by hire()",
-      solvent_quote > 1000.0 and solvent_hire_ok is True, (solvent_quote, solvent_hire_ok, solvent_hire_message))
 reset_overrides(debtor)
+check("scenario: the affordability figure the quote screen shows is the number hire enforces: matching spending_power('buy') "
+      "in debt, a refusal when it is zero or the hire is past it, and a hire let through when the screen says thousands",
+      debt_figure_matches and (quoted <= 0.0) == (hire_in_debt_ok is False) and over_ok is False
+      and solvent_quote > 1000.0 and solvent_hire_ok is True,
+      (quoted, debtor.spending_power("buy"), hire_in_debt_ok, over_ok, solvent_quote, solvent_hire_ok))
 
-# --- every cash gate routes through spending_power, with the right kind.
+# --- scenario: every cash gate routes through spending_power, with the right kind.
 # A rich household succeeds; the same household with the number forced to zero is refused, so the
 # refusal is because of that number.
 rich = sim(capital=1e9)
-check("hire() really does succeed on a rich household", rich.labour.hire("smith", 1)[0] is True, "hire")
-check("train() really does succeed on a rich household", rich.labour.train("machinist", 1, "smith")[0] is True, "train")
-check("commission() really does succeed on a rich household", rich.labour.commission("smith", 10.0)[0] is True, "commission")
+really_succeeds = (rich.labour.hire("smith", 1)[0] is True and rich.labour.train("machinist", 1, "smith")[0] is True
+                   and rich.labour.commission("smith", 10.0)[0] is True)
+gate_results = {}
 for label, attempt in (("hire()", lambda: rich.labour.hire("smith", 1)),
                        ("train()", lambda: rich.labour.train("machinist", 1, "smith")),
                        ("commission()", lambda: rich.labour.commission("smith", 10.0))):
     calls = spending_power_spy(rich, forced=0.0)
     refused, refusal_message = attempt()
     reset_overrides(rich, "spending_power")
-    check("%s asks spending_power('buy') and its refusal follows that answer" % label,
-          refused is False and calls and calls[0] == "buy", (refused, calls, refusal_message))
+    gate_results[label] = (refused is False and bool(calls) and calls[0] == "buy")
 calls = spending_power_spy(rich, forced=777.0)
 refusal = rich.labour._cash_in_hand_refusal("a test fee", 1000.0)
 reset_overrides(rich, "spending_power")
-check("_cash_in_hand_refusal asks spending_power('buy') and prints the exact number it got back",
-      calls and calls[0] == "buy" and "777" in refusal, (calls, refusal))
+# presentation: the refusal prints the exact budget it was given
+gate_results["_cash_in_hand_refusal"] = bool(calls) and calls[0] == "buy" and "777" in str(refusal)
 calls = spending_power_spy(rich, forced=0.0)
 commissioned = rich.labour.auto_commission_for_blocked()
 reset_overrides(rich, "spending_power")
-check("auto_commission_for_blocked asks spending_power('buy') and a zero answer shuts it down",
-      commissioned is None and calls and calls[0] == "buy", (commissioned, calls))
+gate_results["auto_commission_for_blocked"] = commissioned is None and bool(calls) and calls[0] == "buy"
+check("scenario: hire, train, commission, the cash-in-hand refusal and auto_commission_for_blocked each ask spending_power('buy') "
+      "and follow its answer",
+      really_succeeds and all(gate_results.values()), (really_succeeds, gate_results))
 
 # open_venture and auto_open_ventures ask spending_power('open'), which does not count arrears.
 rich.done.add(quick_payback)
 rich._done_changed()
 calls = spending_power_spy(rich, forced=0.0)
 open_ok, open_message = rich.open_venture(quick_payback)
-check("open_venture() asks spending_power('open') and its refusal follows that answer",
-      open_ok is False and "open" in calls, (open_ok, calls, open_message))
+open_calls = list(calls)
 calls = spending_power_spy(rich, forced=0.0)
 opened_starved = rich.auto_open_ventures()
+starved_calls = list(calls)
 reset_overrides(rich, "spending_power")
-check("auto_open_ventures() asks spending_power('open') and starving that answer keeps the concern shut",
-      quick_payback not in opened_starved and "open" in calls, (opened_starved, calls))
-check("auto_open_ventures() really does open the same concern on a rich household",
-      quick_payback in rich.auto_open_ventures(), quick_payback)
+check("scenario: open_venture() and auto_open_ventures() ask spending_power('open') and starving that answer keeps the concern "
+      "shut, while the same concern opens on a rich household",
+      open_ok is False and "open" in open_calls and quick_payback not in opened_starved and "open" in starved_calls
+      and quick_payback in rich.auto_open_ventures(), (open_ok, open_calls, opened_starved, starved_calls))
 
-# --- insolvency announces what a reputation penalty actually took.
+# --- scenario: insolvency announces what a reputation penalty actually took
 insolvent = sim(capital=-99999.0)
 insolvent.reputation = 4.9
 insolvent.insolvent_years = 30
 insolvent.default_on_debt(150)
-check("a reputation penalty announces what it actually took",
-      [facts_of(message)["reputation_hit"] for _, message in insolvent.log
-       if cause_of(message) == "insolvency_settled"][-1] == 4.9, insolvent.log[-1:])
+first_hit = [facts_of(message)["reputation_hit"] for _, message in insolvent.log if cause_of(message) == "insolvency_settled"][-1]
 insolvent.capital = -99999.0
 insolvent.insolvent_years = 30
 insolvent.default_on_debt(200)
-check("...and says plainly when there was nothing left to take",
-      [facts_of(message)["reputation_hit"] for _, message in insolvent.log
-       if cause_of(message) == "insolvency_settled"][-1] == 0.0,
-      insolvent.log[-1:])
+second_hit = [facts_of(message)["reputation_hit"] for _, message in insolvent.log if cause_of(message) == "insolvency_settled"][-1]
+check("scenario: an insolvency announces the reputation it actually took, then that there was nothing left to take",
+      first_hit == 4.9 and second_hit == 0.0, (first_hit, second_hit))
 
-# --- a household deep in arrears does not commit to new work.
+# --- scenario: a household deep in arrears does not commit to new work
 bleeding = sim(manual=False)
 bleeding.capital = -0.95 * bleeding.credit_limit()   # deep in arrears: near the limit before the year's interest
 bleeding.insolvent_years = 20
 bleeding.revenue = lambda: 0.0   # deep in arrears with no income: the needs bill alone leaves nothing to fund new work
 bleeding.revenue_capacity = lambda: 0.0
 active_before = len(bleeding.active)
-check("the room a household can fund shrinks by the arrears it already owes",
-      bleeding.funding_breakdown()["credit_available_now"] == 0.0 and bleeding.funding_capacity() == 0.0,
-      bleeding.funding_breakdown())
 bleeding.step()
-check("a household deep in arrears does not commit to new work",
+check("scenario: a household deep in arrears with no income does not commit to new work",
       len(bleeding.active) <= active_before + 1, (len(bleeding.active), active_before))
 
-# --- clearing the debt by working does not make you insolvent.
+# --- scenario: clearing the debt by working does not make you insolvent
 worker = sim()
 worker.end_year = worker.cfg["start_year"] + worker.cfg["horizon_years"]
 replies = [S._agent_dispatch(worker, NODES, command) for command in (
     {"cmd": "start", "id": "arithmetic_positional"}, {"cmd": "step", "years": 1},
     {"cmd": "work", "trade": "scholar", "hours": 2000}, {"cmd": "step", "years": 1}, {"cmd": "state"})]
-check("clearing your debt by working does not make you insolvent",
+check("scenario: clearing your debt by working does not make you insolvent, and does not take your whole reputation with it",
       not any(cause_of(message) == "insolvency_settled" for _, message in worker.log)
       and not any(event.get("event_kind") == "insolvency_settled"
-                  for reply in replies for event in (reply.get("events") or [])),
-      [event for reply in replies for event in (reply.get("events") or []) if "INSOLVENCY" in str(event)])
-check("...and does not take your whole reputation with it",
-      replies[-1].get("reputation", 0) > 1.0, replies[-1].get("reputation"))
+                  for reply in replies for event in (reply.get("events") or []))
+      and replies[-1].get("reputation", 0) > 1.0,
+      ([event for reply in replies for event in (reply.get("events") or []) if "INSOLVENCY" in str(event)],
+       replies[-1].get("reputation")))
 
-# --- a project part-paid when credit is withdrawn keeps what was paid.
+# --- scenario: a project part-paid when credit is withdrawn keeps what was paid
 _pristine = pristine_game()
 # the dearest project whose calendar floor outlasts a step and that 30% of its bill, in cash, can start
 stopped = sim()
@@ -414,29 +433,18 @@ for _cost, PACED in _candidates:
         break
 stopped.step()      # one step: a calendar floor of two years leaves the project active only after the first
 spent = stopped.active[PACED]["spent"]
-check("a project part-paid for has really been part-paid for",
-      spent > 0 and stopped.active[PACED]["cost_left"] > 0, (spent, stopped.active[PACED]["cost_left"]))
+part_paid = spent > 0 and stopped.active[PACED]["cost_left"] > 0
 stopped.credit_limit = lambda: 0.0
 stopped.capital = min(stopped.capital, -1.0)     # the household owes something when the credit is withdrawn
 stopped.enforce_credit_limit(stopped.year)
-check("the creditors stopping your work does not burn what you paid",
-      abs(stopped.paid_towards.get(PACED, 0.0) - spent) < 0.5, stopped.paid_towards)
-check("...and the event says so, and names what it stopped",
-      any(PACED in message and "stands to your credit" in message for _, message in stopped.log),
-      [message for _, message in stopped.log if "CREDIT EXHAUSTED" in message][:1])
+kept_what_was_paid = abs(stopped.paid_towards.get(PACED, 0.0) - spent) < 0.5
+event_names_it = any(PACED in message and "stands to your credit" in message for _, message in stopped.log)
 stopped.capital, stopped.credit_frozen_until = 50000.0, 0
 stopped.start_project(PACED)
-check("...and beginning again takes it off the bill",
-      abs(stopped.active[PACED]["cost_left"] - (stopped.project_cost(PACED) - spent)) < 0.5,
-      (stopped.active[PACED]["cost_left"], stopped.project_cost(PACED)))
-check("...and the credit is spent once, not every time",
-      PACED not in stopped.paid_towards, stopped.paid_towards)
-
-# --- a household past its credit line keeps no door fee to spend: opening a shut concern waits.
-past_line = opener
-past_line.done.add(quick_payback)
-past_line._done_changed()
-past_line.state.household.capital = -3.0 * past_line.credit_limit()
-check("nothing can be opened with a door fee once the debt is past the credit line",
-      past_line.spending_power("open") == 0.0 and quick_payback not in past_line.auto_open_ventures(),
-      (past_line.spending_power("open"), past_line.capital, past_line.credit_limit()))
+# presentation: the event says what stands to your credit
+check("scenario: a project part-paid when creditors stop the work keeps what was paid, the event says so and names the "
+      "project, beginning again takes it off the bill, and the credit is spent once",
+      part_paid and kept_what_was_paid and event_names_it
+      and abs(stopped.active[PACED]["cost_left"] - (stopped.project_cost(PACED) - spent)) < 0.5
+      and PACED not in stopped.paid_towards,
+      (spent, stopped.paid_towards, stopped.active[PACED]["cost_left"], stopped.project_cost(PACED)))

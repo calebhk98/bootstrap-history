@@ -22,7 +22,7 @@ from typing import Dict, List, Mapping, Optional, Tuple
 
 from sim.constants import declare
 
-from . import ask_raise, inventory, unit_cost
+from . import ask_raise, inventory, tool_fallback, unit_cost
 from .protocols import MarketView
 from .types import (AgentId, Bid, EDGE_CONSUMPTION, EDGE_PRODUCTION, GoodId, GoodSpec, GoodsMove, LabourBid,
                     Offer, Recipe, TileId)
@@ -110,12 +110,16 @@ def expected_output_prices(producer: Producer, recipe: Recipe, view: MarketView)
 _names_of_recipe: Dict[int, tuple] = {}      # id of a recipe -> (recipe, its goods and its trades, sorted)
 
 
+def _fallback_goods(recipe: Recipe) -> set:
+    return {step.good for steps in recipe.tool_fallbacks.values() for step in steps if step.good}
+
+
 def _priced_names(recipe: Recipe) -> tuple:
     """(goods, trades) a recipe's costs need prices for, sorted; worked out once per recipe."""
     kept = _names_of_recipe.get(id(recipe))
     if kept is None or kept[0] is not recipe:
         kept = _names_of_recipe[id(recipe)] = (
-            recipe, tuple(sorted(set(recipe.inputs) | set(recipe.plant_goods))),
+            recipe, tuple(sorted(set(recipe.inputs) | set(recipe.plant_goods) | _fallback_goods(recipe))),
             tuple(sorted(set(recipe.labour_hours) | set(recipe.plant_labour_hours))))
     return kept[1], kept[2]
 
@@ -212,12 +216,13 @@ def next_expectations(producer: Producer, recipe: Recipe, view: MarketView,
             updated[good] = latest if previous is None else (
                 previous + EXPECTATION_ADJUSTMENT_SHARE * (latest - previous))
     break_even = _break_even_scale(producer, recipe, view, updated, live_inputs, wages)
+    cost_covering = {good: updated[good] * break_even for good in latest_prices} if break_even is not None else {}
     if break_even is not None:
         for good in latest_prices:
             updated[good] += REGRESSIVE_EXPECTATION_WEIGHT * (updated[good] * break_even - updated[good])
     for good in ask_raise.sold_out_outputs(producer, recipe, view):
         if good in latest_prices:
-            updated[good] *= 1.0 + ask_raise.SOLD_OUT_ASK_RAISE_SHARE
+            updated[good] = ask_raise.raised_within_band(updated[good], cost_covering.get(good))
     return updated
 
 
@@ -383,7 +388,7 @@ def runs_for_stock(producer: Producer, recipe: Recipe, view: MarketView, run_cos
     if run_cost is not None and output_prices is not None:
         sells = math.fsum(made * output_prices.get(good, 0.0) for good, made in recipe.outputs.items()
                           if good not in piling) * producer.yield_factor
-        if sells >= run_cost:
+        if sells > 0.0 and sells >= run_cost:      # nothing else sold covers nothing: a costless run is not paid for by it
             return math.inf
     return max(0.0, sales - max(excess[good] for good in piling))
 
@@ -410,11 +415,16 @@ def _input_bids(producer, recipe, view, runs, prices, budget_for_inputs, margin_
         short = runs * per_run - view.stock(producer.agent_id, good, producer.tile)
         if short > 0.0:
             needs[good] = short
+    for steps in recipe.tool_fallbacks.values():     # the tools drawn when the first is short are held against it
+        for step in steps:
+            short = runs * step.units_per_run - view.stock(producer.agent_id, step.good, producer.tile) if step.good else 0.0
+            if short > 0.0 and prices.get(step.good, 0.0) > 0.0:
+                needs[step.good] = needs.get(step.good, 0.0) + short
     total_cost = sum(quantity * prices[good] for good, quantity in needs.items())
     bids = []
     for good, quantity in needs.items():
         share = quantity * prices[good] / total_cost if total_cost > 0.0 else 0.0
-        worth = prices[good] + max(0.0, margin_per_run) / recipe.inputs[good]
+        worth = prices[good] + max(0.0, margin_per_run) / recipe.inputs.get(good, 1.0)
         bids.append(Bid(producer.agent_id, good, view.area_of(good, producer.tile), producer.tile,
                         quantity, 0.0, prices[good], 0.0, max(0.0, budget_for_inputs) * share,
                         maximum_price=worth))
@@ -426,9 +436,11 @@ def produce(producer: Producer, recipe: Recipe, inputs_held: Mapping[GoodId, flo
             ) -> Tuple[float, List[GoodsMove]]:
     """Runs achieved, with the goods moves that book them. The scarcest of inputs, hours, the plan and
     the capacity sets how many runs go ahead (Leontief); the yield factor scales what comes out, not
-    what goes in."""
+    what goes in. Tools are not an input that stops a run: a run short of its tool draws the recipe's next
+    tool (`tool_fallbacks`), then works by hand, and the extra hours that takes can lower the runs the hours
+    hired allow."""
     limit = producer.capacity_runs if runs_planned is None else min(runs_planned, producer.capacity_runs)
-    for good, per_run in recipe.inputs.items():
+    for good, per_run in recipe.hard_inputs.items():
         limit = min(limit, inputs_held.get(good, 0.0) / per_run)
     for trade, per_run in recipe.labour_hours.items():
         limit = min(limit, hours_hired.get(trade, 0.0) / per_run)
@@ -436,9 +448,21 @@ def produce(producer: Producer, recipe: Recipe, inputs_held: Mapping[GoodId, flo
     moves = []
     if limit <= 0.0:
         return 0.0, moves
-    for good, per_run in sorted(recipe.inputs.items()):
+    draws, extra_hours = tool_fallback.draws(recipe, inputs_held, limit)
+    for trade, extra in extra_hours.items():
+        stretched = recipe.labour_hours[trade] * limit + extra
+        if stretched > hours_hired.get(trade, 0.0):
+            limit *= max(0.0, hours_hired.get(trade, 0.0) / stretched)
+    if limit <= 0.0:
+        return 0.0, moves
+    if extra_hours:
+        draws, extra_hours = tool_fallback.draws(recipe, inputs_held, limit)
+    for good, per_run in sorted(recipe.hard_inputs.items()):
         used = min(limit * per_run, inputs_held.get(good, 0.0))   # never more than held, to the last bit
         moves.append(GoodsMove(producer.agent_id, EDGE_CONSUMPTION, good, producer.tile, used, "input"))
+    for good, used in sorted(draws.items()):
+        if used > 0.0:
+            moves.append(GoodsMove(producer.agent_id, EDGE_CONSUMPTION, good, producer.tile, used, "input"))
     achieved = limit * producer.yield_factor
     for good, per_run in sorted(recipe.outputs.items()):
         if achieved * per_run > 0.0:

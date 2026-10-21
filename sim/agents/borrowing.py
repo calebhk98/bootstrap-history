@@ -100,7 +100,10 @@ class Borrower:
 		if paid > 0.0:
 			world.pay_interest(self, paid, "interest")
 		record.interest_arrears += unpaid
-		record.arrears_years = record.arrears_years + 1 if record.interest_arrears > DEBT_FLOOR else 0
+		# A debt over its ceiling owes the excess as principal due (a margin call); unpaid, it is arrears at any rate.
+		margin_call = max(0.0, debt - self.credit_ceiling(world))
+		in_arrears = record.interest_arrears > DEBT_FLOOR or margin_call > DEBT_FLOOR
+		record.arrears_years = record.arrears_years + 1 if in_arrears else 0
 		if borrowing_arrears.in_default(record.arrears_years):
 			self.default(world)
 		return owed, paid

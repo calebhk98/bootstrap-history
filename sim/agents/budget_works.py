@@ -7,7 +7,7 @@ import math
 from typing import Any, List
 
 from . import budget_lines, state_works
-from .budget_line import Line
+from .budget_line import Line, goods
 from .tuning_spending import (CAMPAIGN_SHARE_OF_ARMY_PER_UNIT_THREAT, CUSTOMS_BASE_PER_COLLECTOR_WAGE_YEAR,
 							  DONATIVE_SHARE_OF_ANNUAL_PAY, FARM_TAX_BASE_PER_COLLECTOR_WAGE_YEAR, MARCH_KM_PER_DAY,
 							  MASONRY_PERSON_YEARS_PER_M2, POLL_TAX_BASE_PER_COLLECTOR_WAGE_YEAR,
@@ -60,8 +60,7 @@ def campaign_line(world: Any, soldiers: float) -> List[Line]:
 	tonnes = marching * days * SOLDIER_GRAIN_KG_PER_DAY / 1000.0
 	if tonnes <= 0.0:
 		return []
-	return [Line("campaign", "requisition", {}, 0.0, {world.commodity_of(budget_lines.DOLE_MATERIAL): tonnes},
-				 world.material_cost(budget_lines.DOLE_MATERIAL, tonnes))]
+	return [Line("campaign", "requisition", {}, 0.0, **goods(world, budget_lines.DOLE_MATERIAL, tonnes))]
 
 
 def donative_line(world: Any, soldiers: float) -> List[Line]:

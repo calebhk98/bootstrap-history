@@ -6,9 +6,9 @@ of the engine and lets a test or a second scenario supply another one.
 import hashlib
 import math
 import random
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional, Set, Tuple
 
-from sim.agents.api import OBSERVATION_RANGE_KM, SECRET_EXPOSURE, demand_answer, payroll, supply
+from sim.agents.api import OBSERVATION_RANGE_KM, business_books, business_plant_books, SECRET_EXPOSURE, demand_answer, payroll, supply
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
 from .agents_port_budget import BudgetView
@@ -161,9 +161,9 @@ class SimWorld(BudgetView, SiteView, RevenueView, GroupView, StakeView, Disclosu
 		return self._sim.visible_scale(sum(actor.workforce.values()), demand_answer.visible_wealth(actor.money, actor.concealed_wealth()),
 									   actor.prominence(), actor.defiance())
 
-	def levy_shares(self, scale: float, protection: float = 0.0) -> Any:
+	def levy_shares(self, scale: float, protection: float = 0.0, state: Any = None) -> Any:
 		"""(requisition, office) shares of income the state assesses at this visible scale."""
-		return self._sim.levy_shares(scale, protection)
+		return self._sim.levy_shares(scale, protection, state)
 
 	def government(self) -> Any:
 		"""The government actor of the founder's civilisation."""
@@ -179,17 +179,8 @@ class SimWorld(BudgetView, SiteView, RevenueView, GroupView, StakeView, Disclosu
 		return self._sim.HOURS_PER_PERSON_YEAR
 
 	def concern_staff(self, node_id: str) -> Dict[str, float]:
-		"""People of each trade one plant of this concern needs: the founder's own rule, which reads the plant's data (plant_figures.crew_people)."""
-		sim = self._sim
-		scholars = sim.venture_hands(node_id)[0]
-		foreman_trade, foreman_fte = sim.venture_foreman(node_id)
-		staff = dict(sim.venture_crew_by_trade(node_id))
-		staff["scholar"] = scholars
-		if foreman_trade:
-			staff[foreman_trade] = staff.get(foreman_trade, 0.0) + foreman_fte
-		for trade, people in sim.venture_garrison(node_id).items():
-			staff[trade] = staff.get(trade, 0.0) + people
-		return {trade: people for trade, people in staff.items() if people > 0.0}
+		"""People of each trade one plant of this concern needs: the one crew rule (business_crew_rule), which reads the plant's data."""
+		return self._sim.concern_staff_by_trade(node_id)
 
 	def concern_wage_bill(self, node_id: str, capacity: float = 1.0) -> float:
 		"""Yearly wages of the people running this concern needs, at the going wage, for a firm
@@ -197,6 +188,14 @@ class SimWorld(BudgetView, SiteView, RevenueView, GroupView, StakeView, Disclosu
 		return self.span_factor(capacity) * sum(
 			people * self.hours_per_person_year * self.labour_market.quote(trade)
 			for trade, people in self.concern_staff(node_id).items())
+
+	def hourly_pay(self, trade: str) -> Optional[float]:
+		"""What an hour of a trade pays at the going wage of the home labour market."""
+		return float(self.labour_market.quote(trade, 0.0))
+
+	def plant_costs(self, node_id: str) -> Optional[Tuple[float, float]]:
+		"""(upkeep, wage bill) of a plant of the concern at its founding size at home."""
+		return business_plant_books.home_costs(self, node_id)
 
 	def free_fte(self, trade: str, actor_id: Optional[str]) -> Optional[float]:
 		"""People of a trade left in the pool for this actor after the founder's staff and
@@ -207,7 +206,7 @@ class SimWorld(BudgetView, SiteView, RevenueView, GroupView, StakeView, Disclosu
 			return None
 		exist = sim.labour.taught_trade_people(trade) if trade in TRADES_ABSENT else sim.labour.people_who_exist(trade)
 		founder = sum(seat.household.employees.get(trade, 0.0) for seat in sim.state.seats.values())
-		return max(0.0, exist - founder - sim.actors.staff_fte(trade, excluding=actor_id))
+		return max(0.0, exist - founder - sim.actors.home_staff_fte(trade, excluding=actor_id))
 
 	def copy_cost(self, node_id: str) -> float:
 		"""Money the pioneer's version of this work costs, labour included."""
@@ -275,8 +274,8 @@ class SimWorld(BudgetView, SiteView, RevenueView, GroupView, StakeView, Disclosu
 		of capacity gets its share of the demand; a concern with no market model splits with the
 		capacity of its rivals."""
 		sim = self._sim
-		takings = (sim.concern_takings(node_id, self.ramp(opened_year, node_id)) * capacity
-				   * sim.node_output_market_factor(self.nodes[node_id]))
+		takings = business_books.takings_of_size(sim.concern_takings(node_id, self.ramp(opened_year, node_id)), capacity,
+												 sim.node_output_market_factor(self.nodes[node_id]))
 		category = self.nodes[node_id].get("cat")
 		if category in sim.GOODS_CATEGORIES:
 			return takings * sim.goods_category_factor(category)

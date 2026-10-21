@@ -1,10 +1,7 @@
-"""What a market with buyers and no sellers remembers: the price moves toward what the good costs to make.
+"""What a thinly traded market remembers: a traded price relaxed toward what the good costs to make.
 
-A market nobody offered in never trades, so its remembered price would stay wherever it was last set.
-Households share their spending by those prices, so a good nobody sells at a stale low price draws the
-budget away from foods that are on offer, and people go hungry with money in hand; newcomers judge the
-market by the same price and never come. The cost of making the good at the live prices and wages is
-what a seller would have to ask, so the memory follows it part of the way, up or down.
+A market with buyers and no sellers reports a cost-covering quote instead (market_quote.py); a market that
+traded only a sliver of what is usual keeps its traded price but moves it part of the way to the cost.
 """
 from typing import Optional
 
@@ -14,19 +11,18 @@ from .market_memory_asks import REPRESENTATIVE_TRADE_SHARE
 
 NO_OFFER_MEMORY_SHARE = declare(
     "NO_OFFER_MEMORY_SHARE", 0.3, kind="temporary_heuristic",
-    unit="share of the gap to the cost of making closed in a year with bids and no offers", source=None,
-    confidence="D",
-    why="Pairs with NO_BID_MEMORY_SHARE: buyers who find nothing on offer learn what the good would cost "
-        "from traders and makers elsewhere, partway in a year. How fast that news travelled is not "
-        "modelled.")
+    unit="share of the gap to a year's quote closed in a year in which the market did not trade", source=None,
+    confidence="D", retire="Complaints/642-a-market-shows-and-uses-a-price-where-nothing-traded.md",
+    why="Planners who find nothing traded learn what the posted bids, asks or making cost say, partway in a "
+        "year: a cost-covering quote taken whole would tell every maker its runs pay and no maker would "
+        "ever leave. How fast that news travelled is not modelled; a planner that reads the quote itself "
+        "(MarketView.quote_kind) needs no speed.")
 
 
-def price_after_no_offers(old: Optional[float], cost: Optional[float]) -> Optional[float]:
-    """The remembered price after a year with bids and no offers: part of the way to the cost of making
-    the good. None when nothing was remembered or the good cannot be made."""
-    if old is None or cost is None or cost <= 0.0:
-        return None
-    return old + NO_OFFER_MEMORY_SHARE * (cost - old)
+def price_toward_quote(old: Optional[float], quote_price: float) -> float:
+    """The planning price after a year with no trade: part of the way from the old one to the quote's
+    price (the quote itself where nothing was remembered)."""
+    return quote_price if old is None else old + NO_OFFER_MEMORY_SHARE * (quote_price - old)
 
 
 def price_after_thin_trade(price: Optional[float], cost: Optional[float], quantity: float,
@@ -41,21 +37,3 @@ def price_after_thin_trade(price: Optional[float], cost: Optional[float], quanti
         return price
     shortfall = max(0.0, 1.0 - quantity / (REPRESENTATIVE_TRADE_SHARE * usual_volume))
     return price + NO_OFFER_MEMORY_SHARE * shortfall * (cost - price)
-
-
-PRICE_OVER_MAKING_COST_LIMIT = declare(
-    "PRICE_OVER_MAKING_COST_LIMIT", 4.0, kind="temporary_heuristic",
-    unit="times the cost of making a good", source=None, confidence="D",
-    why="Buyers with a fixed want and few sellers bid a thin market up year on year (a cart for a merchant's "
-        "wear, brick, a joint by-product nobody makes), and no seller or entrant is modelled to answer the "
-        "scarcity rent. In the long run a good sells for about what it costs to make, so the remembered price "
-        "is held within a multiple of that cost; how large a rent lasts has no measured basis.",
-    retire="Complaints/473: entry into a scarce good's making answers its rent")
-
-
-def price_within_making_cost(price: float, cost: Optional[float]) -> float:
-    """A remembered price held to PRICE_OVER_MAKING_COST_LIMIT times the cost of making the good. A good with
-    no cost (nobody can make it) is not capped here: it has no cost to bound it by."""
-    if cost is None or cost <= 0.0:
-        return price
-    return min(price, PRICE_OVER_MAKING_COST_LIMIT * cost)

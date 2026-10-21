@@ -1,6 +1,12 @@
-"""Complaint 554: baseline checks on a controlled run of the small fixture economy (fixed people, no shocks, no
-engine orders): physical feasibility of every year's accounts, reproduction of stocks and food, and the settling
-statistics of sim/economy/settling.py. Uses the three-tile fixture, not Rome, so it finishes in well under a minute.
+"""Complaint 554, classified under Complaint 640. Two kinds of test live here.
+
+Rules: `SeriesStatisticTests` calls `series_settling` (sim/economy/settling.py) on built series, so a failure names
+the statistic.
+
+Baseline validations (CLAUDE.md 4.2): `BaselineValidationFixtureRunTests` runs the small three-tile fixture economy
+(fixed people, no shocks, no engine orders) and asserts relationships a quiet economy must show: every year's accounts
+are physically feasible, stocks are not eaten through, food is eaten in every tile, and the price level, wage, money
+supply and rate settle. They read the whole economy, so they are slow-only; a failure names the series, not a rule.
 The Rome run is in test_baseline_rome."""
 import math
 import unittest
@@ -60,7 +66,7 @@ class SeriesStatisticTests(unittest.TestCase):
         self.assertTrue(item.drifting)
 
 
-class ControlledFixtureRunTests(unittest.TestCase):
+class BaselineValidationFixtureRunTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.economy, cls.outcomes, cls.rows = controlled_run()
@@ -82,10 +88,13 @@ class ControlledFixtureRunTests(unittest.TestCase):
         for item in report:
             self.assertTrue(math.isfinite(item.largest_step) and math.isfinite(item.trend_per_year), item.name)
 
-    def test_the_fixture_settles(self):
-        # FAILS today by design (Complaint 473: the fixture cycles and drifts as the Rome spin-up does); do not loosen
+    def test_validation_the_quiet_fixture_settles(self):
+        # Validation, not a rule. The bounds are the declared temporary heuristics of settling.py. It fails while the
+        # economy does not settle (Complaint 473: the fixture cycles and drifts as the Rome spin-up does); that is an
+        # honest result, so do not loosen it.
         report = settling_report(self.rows)
-        self.assertEqual([item.name for item in report if not item.settled], [], format_report(report))
+        self.assertEqual([item.name for item in report if not item.settled], [],
+                         "the economy does not settle (Complaint 473)\n" + format_report(report))
 
     def test_food_is_eaten_in_every_tile_in_the_last_year(self):
         eaten = food_eaten_over_need(self.accounts)

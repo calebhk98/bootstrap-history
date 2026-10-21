@@ -1,10 +1,20 @@
-"""Replay carry-over (Complaint 267): known routes lift fog only for their ids."""
+"""Replay carry-over (Complaint 267): known routes lift fog only for their ids (a stub game: the done set, the
+granted set, fog, the revealed set and the interface memory, no game)."""
 import os
 import tempfile
+from types import SimpleNamespace
 
-from .harness import *  # noqa: F401,F403
+from .harness import check
 from sim.ui import replay
 from sim.ui.memory import remembered
+
+QUICK_TOPIC = True
+
+
+def _stub(done=(), granted=(), fog=True, revealed=()):
+    return SimpleNamespace(done=set(done), granted=set(granted), fog=fog, revealed=set(revealed), capital=100.0,
+                           state=SimpleNamespace(interface={}))
+
 
 with tempfile.TemporaryDirectory() as folder:
     path = os.path.join(folder, "run.json.routes.json")
@@ -13,29 +23,28 @@ with tempfile.TemporaryDirectory() as folder:
         handle.write("{not json")
     check("a corrupt routes file reads as empty", replay.read_known_routes(path) == [])
 
-_game = sim()
-_game.fog = True
-_game.revealed = set()
-_built = sorted(_game.done - _game.granted)
-_unknown_id = "no_such_node_for_replay_test"
-_hidden = sorted(set(NODES) - set(_game.done) - _game.revealed)[:3]
+built = _stub(done={"a", "b", "granted_one"}, granted={"granted_one"})
+check("the routes a run built leave out what the society already had", replay.built_routes(built) == ["a", "b"])
 
 with tempfile.TemporaryDirectory() as folder:
     path = os.path.join(folder, "run.routes.json")
-    _game.done.add(_hidden[0])
-    ids = replay.write_known_routes(_game, path)
-    check("the file lists what the player built", _hidden[0] in ids and replay.read_known_routes(path) == ids)
-    _game.done.discard(_hidden[0])
+    ids = replay.write_known_routes(built, path)
+    check("the file lists what the player built", ids == ["a", "b"] and replay.read_known_routes(path) == ids)
 
-_done_before, _cash_before = set(_game.done), _game.capital
-applied = replay.apply_known_routes(_game, [_hidden[0], _hidden[1], _unknown_id], NODES)
-check("only ids in the new tree are applied", applied == sorted([_hidden[0], _hidden[1]]))
-check("applied ids are revealed, others are not",
-      {_hidden[0], _hidden[1]} <= set(_game.revealed) and _hidden[2] not in _game.revealed)
-check("nothing is completed or paid", set(_game.done) == _done_before and _game.capital == _cash_before)
-check("memory records what was carried", remembered(_game, "replay")["carried"] == applied)
+carrying = _stub(done={"a"})
+remembered(carrying, replay.TOPIC)["carried"] = ["old"]
+check("the routes to carry are what was built plus what was already carried",
+      replay.routes_to_carry(carrying) == ["a", "old"], replay.routes_to_carry(carrying))
 
-_game.fog = False
-_revealed_before = set(_game.revealed)
+game = _stub(done={"built"}, revealed={"seen"})
+done_before, cash_before = set(game.done), game.capital
+applied = replay.apply_known_routes(game, ["h0", "h1", "no_such_node"], {"h0", "h1", "h2", "built", "seen"})
+check("only ids in the new tree are applied", applied == ["h0", "h1"], applied)
+check("applied ids are revealed, others are not", {"h0", "h1", "seen"} <= game.revealed and "h2" not in game.revealed)
+check("nothing is completed or paid", game.done == done_before and game.capital == cash_before)
+check("memory records what was carried", remembered(game, "replay")["carried"] == applied)
+
+game.fog = False
+revealed_before = set(game.revealed)
 check("with fog off nothing is applied",
-      replay.apply_known_routes(_game, [_hidden[2]], NODES) == [] and set(_game.revealed) == _revealed_before)
+      replay.apply_known_routes(game, ["h2"], {"h2"}) == [] and game.revealed == revealed_before)

@@ -66,9 +66,9 @@ def demand_at(bids: Sequence[Bid], price: float, price_now: float) -> float:
 
 def capacity_terms_by_good(producers: Mapping[str, Producer], recipes: Mapping[str, Recipe],
                            coming: Mapping[str, float]) -> Dict[GoodId, List[Tuple[str, float]]]:
-    """Per good, each maker's (tile, reachable output of the good) in producer order, plant to come counted."""
+    """Per good, each maker's (tile, reachable output of the good) in producer id order, plant to come counted."""
     terms: Dict[GoodId, List[Tuple[str, float]]] = {}
-    for producer_id, producer in producers.items():
+    for producer_id, producer in sorted(producers.items()):
         for good, made in recipes[producer.recipe_id].outputs.items():
             if made > 0.0:
                 terms.setdefault(good, []).append(

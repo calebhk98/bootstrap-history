@@ -7,6 +7,12 @@ from sim.agents.api import CONCESSION_PREFIX, Sector, sector_key
 from .units_prose import mass_rate_text, money_text, plain_number
 
 
+def founder_share_of_sellers(sellers, other_actors_concerns):
+    """The founder's share of the concerns selling into a category: every seller's concerns (`sellers`, the
+    founder's included) less the other actors' (`other_actors_concerns`), over every seller's, held to 0..1."""
+    return min(1.0, max(0.0, 1.0 - other_actors_concerns / sellers))
+
+
 class GroupView:
 	"""Read-only questions behind who organises and what it asks of the state."""
 
@@ -89,7 +95,7 @@ class GroupView:
 			sellers = sim._goods_category_state(category)[0]
 			categories[category] = {"price_depression": 1.0 - ratio, "trade_weights": {
 				trade: trade_hours / totals[trade] for trade, trade_hours in hours[category].items()},
-				"founder_share": min(1.0, max(0.0, 1.0 - sim.actor_concerns_in(category) / sellers))}
+				"founder_share": founder_share_of_sellers(sellers, sim.actor_concerns_in(category))}
 		return categories
 
 	def sectors(self) -> Dict[str, Sector]:

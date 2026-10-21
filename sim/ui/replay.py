@@ -30,10 +30,15 @@ def read_known_routes(path):
     return [item for item in data if isinstance(item, str)] if isinstance(data, list) else []
 
 
-def write_known_routes(sim, path):
-    """Write what this run built plus what it was carrying, so lessons accumulate across runs."""
+def routes_to_carry(sim):
+    """What this run built plus what it was carrying, so lessons accumulate across runs."""
     carried = remembered(sim, TOPIC).get("carried", [])
-    ids = sorted(set(built_routes(sim)) | set(carried))
+    return sorted(set(built_routes(sim)) | set(carried))
+
+
+def write_known_routes(sim, path):
+    """Write the routes to carry into a file."""
+    ids = routes_to_carry(sim)
     with open(path, "w", encoding="utf-8") as handle:
         json.dump(ids, handle)
     return ids

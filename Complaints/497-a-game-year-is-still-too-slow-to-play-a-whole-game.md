@@ -338,3 +338,17 @@ Left, measured: `AgentEconomy.people_by_trade` is still summed about 160 times a
 cache needs every writer of the economy's workforce (the labour year, population scaling, `trim_to_expected_hours`)
 to drop it, which was not built. `strata_observed.rank_key` and the labour `_odds` (a column-wise rewrite measured
 no faster) are each about one percent.
+
+## numpy tried, not adopted (owner asked for a measurement, 2026-10-21)
+
+Branch `numpy-speed-probe` (kept, not merged) vectorises the merchants' route search, the largest single phase of a
+warm Rome year, over a cached carriage-cost matrix per good; `sim/tests/test_merchant_routes_array.py` holds it equal
+to the scalar search exactly. The phase got only about a tenth faster: the scalar search is already pruned and
+memoised, and what is left is building output rows and numpy's per-call cost on small arrays. Whole warm years on the
+old and new trees, alternated, are inside each other's noise with identical price digests. Measure: step
+`harness.sim()` once, then `time.process_time` around each further `step()`, on a worktree of each branch.
+
+What would let arrays pay: batching across goods and distinct price vectors in one call a year, which means
+reworking the merchants' sequential route commitment (each merchant's commits change what the next sees), and
+array-shaped data for `clear_goods`, `clear_labour`, `close_agents` and `open_entrants`. That is the model change of
+option 1 or 3 above, not a translation. A mod-swappable kernel for such a change is Complaint 661.

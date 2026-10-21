@@ -19,10 +19,9 @@ import collections
 
 from sim.constants import declare
 from sim.refusal import Refusal
-from sim.world import plant_figures
 from . import cause_book, money_units
 from .units_prose import money_text
-from sim.agents.api import edges
+from sim.agents.api import business_crew_rule, edges
 
 
 class VenturesMixin:
@@ -80,39 +79,30 @@ class VenturesMixin:
             "supervisor-to-revenue ratio for any real enterprise.")
     VENTURE_HANDS_PER_REVENUE = money_units.PricedInLabourHours("VENTURE_HANDS_PER_REVENUE_LABOUR_HOURS")
 
+    def crew_figures(self, node_id):
+        """The plant's own data for the one crew rule (sim/agents/business_crew_rule.py)."""
+        return business_crew_rule.figures_of(
+            self.nodes[node_id], lambda: self.labour.unskilled_trade(), self.HOURS_PER_PERSON_YEAR, self.VENTURE_SUPERVISION,
+            lambda: self.VENTURE_HANDS_PER_REVENUE, self.VENTURE_FOREMAN_SHARE, node_id in self.CAPABILITY_INSTITUTIONS,
+            self.venture_garrison(node_id))
+
     def venture_hands(self, node_id):
-        """(scholars, craftsmen) of your own that running this ties up. Once the staff hold a year's
-        running of the technique, the concern runs without its founder: the scholars drop out."""
-        scholars, craftsmen = self.venture_hands_founder_staffed(node_id)
-        if scholars > 0.0 and self.concern_runs_without_founder(node_id):
-            return 0.0, craftsmen
-        return scholars, craftsmen
+        """(scholars, craftsmen) of your own that running this ties up (the crew rule, business_crew_rule.hands)."""
+        return business_crew_rule.hands(self.crew_figures(node_id), lambda: self.concern_runs_without_founder(node_id))
 
     def venture_hands_founder_staffed(self, node_id):
         """(scholars, craftsmen) a concern of this kind needs while its founder still runs it."""
-        node = self.nodes[node_id]
-        # Capability institutions (school, workshop) and net-loss concerns
-        # don't tie up supervision staff (avoids circular dependency).
-        if (node_id in self.CAPABILITY_INSTITUTIONS and node["rev"] <= node["up"]):
-            return 0.0, 0.0
-        supervision_share = self.VENTURE_SUPERVISION
-        by_size = max(0.0, node["rev"]) / self.VENTURE_HANDS_PER_REVENUE
-        # the crew is the plant's own (plant_figures.crew_people) for every actor running the concern; the
-        # takings-based rule is only its fallback where the data states no plant
-        derived_hours = plant_figures.derived_crew_hours(node.get("_revenue_basis"), node.get("_labour_hours_per_year"))
-        crew = plant_figures.crew_people(derived_hours, self.HOURS_PER_PERSON_YEAR, node.get("plant_crew_people"),
-                                         max(node["art"] * supervision_share, by_size))
-        return node["sch"] * supervision_share, crew
+        return business_crew_rule.founder_staffed_hands(self.crew_figures(node_id))
 
     def venture_crew_by_trade(self, node_id):
-        """{trade: people} a concern's plant keeps busy: the trades its recipe names, whoever runs it. A plant
-        whose data states no hours has its crew (the fallback rule above) from the unskilled trade."""
-        node = self.nodes[node_id]
-        craftsmen = self.venture_hands_founder_staffed(node_id)[1]
-        hours = node.get("_labour_hours_per_year")
-        if craftsmen > 0.0 and plant_figures.derived_crew_hours(node.get("_revenue_basis"), hours) > 0.0:
-            return plant_figures.crew_by_trade(hours, self.HOURS_PER_PERSON_YEAR)
-        return {self.labour.unskilled_trade(): craftsmen} if craftsmen > 0.0 else {}
+        """{trade: people} a concern's plant keeps busy, whoever runs it."""
+        return business_crew_rule.crew_by_trade(self.crew_figures(node_id))
+
+    def concern_staff_by_trade(self, node_id):
+        """{trade: people} one plant of this concern needs of the shared pool, for any owner."""
+        figures = self.crew_figures(node_id)
+        scholars = business_crew_rule.hands(figures, lambda: self.concern_runs_without_founder(node_id))[0]
+        return business_crew_rule.staff_by_trade(figures, scholars)
 
     VENTURE_FOREMAN_SHARE = declare(
         "VENTURE_FOREMAN_SHARE", 0.25, kind="temporary_heuristic",
@@ -123,27 +113,8 @@ class VenturesMixin:
             "game balance, not a measured foreman-to-shop ratio.")
 
     def venture_foreman(self, node_id):
-        """Return the skilled trade and FTE needed to supervise a concern.
-
-        A concern whose build crew mixes generic artisans with a skilled trade
-        cannot be supervised by interchangeable generic hands alone.  Retain
-        the largest non-generic skilled contribution as its operating foreman;
-        one specialist can oversee at most four ordinary concerns.  Purely
-        generic concerns and knowledge/capability institutions keep the older
-        scholar/craftsman rule.
-        """
-        node = self.nodes[node_id]
-        lab = node.get("lab") or {}
-        if (node_id in self.CAPABILITY_INSTITUTIONS or node.get("rev", 0) <= 0
-                or lab.get("artisan", 0) <= 0):
-            return None, 0.0
-        skilled = [(hours, trade) for trade, hours in lab.items()
-                   if trade not in ("artisan", "labourer", "slave")
-                   and hours > 0]
-        if not skilled:
-            return None, 0.0
-        _hours, trade = max(skilled, key=lambda row: (row[0], row[1]))
-        return trade, self.VENTURE_FOREMAN_SHARE
+        """The skilled trade and FTE that supervise a concern (business_crew_rule.foreman)."""
+        return business_crew_rule.foreman(self.crew_figures(node_id))
 
     def venture_foremen_used(self, excluding=None):
         """Skilled-foreman FTE held by operating concerns, by trade."""

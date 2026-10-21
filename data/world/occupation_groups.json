@@ -9,7 +9,7 @@
   },
   "groups": {
     "agriculture": {
-      "trades": ["farmer", "herder", "fisher", "hunter"],
+      "trades": ["farmer", "vine_and_olive_tender", "herder", "fisher", "hunter"],
       "band": [0.55, 0.92],
       "sources": ["scheidel_friesen_2009", "allen_2000", "bairoch_1988"]
     },
@@ -29,17 +29,17 @@
       "sources": ["wilson_2002"]
     },
     "transport": {
-      "trades": ["carter", "sailor"],
+      "trades": ["carter", "sailor", "porter", "dockworker"],
       "band": [0.005, 0.06],
       "sources": ["allen_2000", "wilson_2002"]
     },
     "other_crafts": {
-      "trades": ["potter", "smith", "furnaceman", "glassblower", "engraver", "artisan", "charcoal_burner", "tanner", "leatherworker", "miner", "optician", "machinist", "engineer", "chemist", "electrician", "shipwright"],
+      "trades": ["potter", "smith", "furnaceman", "glassblower", "engraver", "artisan", "charcoal_burner", "tanner", "leatherworker", "miner", "optician", "machinist", "engineer", "chemist", "electrician", "shipwright", "knapper"],
       "band": [0.01, 0.10],
       "sources": ["allen_2000", "broadberry_2015"]
     },
     "services_state": {
-      "trades": ["soldier", "scribe", "merchant", "scholar", "master"],
+      "trades": ["soldier", "scribe", "merchant", "scholar", "master", "domestic_servant"],
       "band": [0.01, 0.10],
       "sources": ["scheidel_friesen_2009", "allen_2000"]
     },

@@ -55,11 +55,14 @@ class CarriageHireTests(unittest.TestCase):
         self.assertTrue(self.planned_years(), "no merchant shipped, so the scenario shows nothing")
 
     def test_the_carrier_trade_hires_hours_for_the_plan_and_no_more(self):
+        # a year can hire nothing (see EntrantInAHeldMarketTests); what is hired never passes the plan
         for year in self.planned_years():
             for agent, plan_ in year["planned"].items():
-                hours = year["hired"][agent]["hours"]
-                self.assertGreater(hours, 0.0)
-                self.assertLessEqual(hours, sum(plan_.values()) + 1e-9)
+                self.assertLessEqual(year["hired"][agent]["hours"], sum(plan_.values()) + 1e-9)
+
+    def test_some_planned_year_hires_carriers(self):
+        self.assertTrue(any(year["hired"][agent]["hours"] > 0.0
+                            for year in self.planned_years() for agent in year["planned"]))
 
     def test_a_plan_the_market_can_fill_is_hired_in_full(self):
         full = [year for year in self.planned_years()
@@ -68,19 +71,67 @@ class CarriageHireTests(unittest.TestCase):
         self.assertTrue(full)
 
     def test_hired_carriers_are_paid_the_labour_markets_wage(self):
-        for year in self.planned_years():
-            for agent, plan_ in year["planned"].items():
-                if sum(plan_.values()) > 0.0:
-                    self.assertGreater(year["hired"][agent]["wage"], 0.0)
-
-    def test_hours_given_to_carriage_are_taken_from_what_other_employers_hire(self):
-        index = self.hiring.index(self.planned_years()[0])   # the two runs are alike until the first bid
-        self.assertLess(self.hiring[index]["others_hired"], self.plain[index]["others_hired"])
+        for year in self.hiring:
+            for hire_ in year["hired"].values():
+                if hire_["hours"] > 0.0:
+                    self.assertGreater(hire_["wage"], 0.0)
 
     def test_money_is_still_conserved(self):
         report = money_audit.year_report(self.hiring_economy.record)
         self.assertTrue(report.ok, report.unexpected)
         self.assertAlmostEqual(self.hiring_economy.record.book.check_conservation(1e-9).money["coin"], 0.0)
+
+
+class EntrantInAHeldMarketTests(unittest.TestCase):
+    def test_a_merchant_with_no_hires_gets_none_where_incumbents_hold_all_the_hours_at_the_same_pay(self):
+        from sim.tests.test_labour_core_clearing import bid, make_state, run
+        state = make_state(people=10.0, wage=1.0)
+        state.hired_hours = {"vale": {"digger": {"farm": 1000.0}}}
+        result = run(state, [bid("farm", 2000.0), bid("merchant", 50.0)])
+        self.assertEqual(result.hired_by_employer.get("merchant", 0.0), 0.0)
+
+    def test_the_same_merchant_paying_a_premium_takes_hours_from_the_incumbent(self):
+        from sim.tests.test_labour_core_clearing import bid, make_state, run
+        state = make_state(people=10.0, wage=1.0)
+        state.hired_hours = {"vale": {"digger": {"farm": 1000.0}}}
+        result = run(state, [bid("farm", 2000.0), bid("merchant", 50.0, premium=0.5)])
+        self.assertGreater(result.hired_by_employer.get("merchant", 0.0), 0.0)
+
+
+def hours_hired_by_farm(merchant_bid_hours):
+    """Hours the farm is hired for in a labour market of scarce supply, when a merchant also bids `merchant_bid_hours`
+    for its carriers at a higher wage; the bids go through the year's labour clearing together."""
+    import types
+    from sim.economy.accounts import Book
+    from sim.economy.market_memory import MarketMemory
+    from sim.economy.types import EDGE_MINT, LabourBid, LabourOffer, Transfer
+    from sim.economy.year_labour import clear_labour
+    from sim.economy.year_ledger import YearLedger
+    from sim.labour.api import MarketState, YearInputs as CoreInputs
+    from sim.labour.market.aptitude import split_evenly
+    book = Book()
+    for employer in ("farm", "merchant"):
+        book.transfer(Transfer(EDGE_MINT, employer, "coin", 1e9, "opening"))
+    area = "labour:t1"
+    record = types.SimpleNamespace(book=book, memory=MarketMemory(),
+                                   workforce=MarketState(workers={area: {"plough": split_evenly(0.05)}}))
+    setup = types.SimpleNamespace(currency_id="coin", trades={}, unskilled_trade="plough")
+    bids = [LabourBid("farm", "plough", area, 100.0, 5.0)]
+    if merchant_bid_hours:
+        bids.append(LabourBid("merchant", "plough", area, merchant_bid_hours, 9.0))
+    ledger = YearLedger()
+    context = CoreInputs(trades={}, bids=(), subsistence_per_worker_year={area: 2000.0},
+                         hours_per_worker_year=2000.0, discount_rate=0.05, career_years=30.0)
+    clear_labour(setup, record, bids, [LabourOffer("family", "plough", area, 100.0, 1.0)], ledger, context)
+    return ledger.hours_hired.get("farm", {}).get("plough", 0.0), ledger.hours_hired.get("merchant", {}).get("plough", 0.0)
+
+
+class CarriageTakesHoursTests(unittest.TestCase):
+    def test_hours_given_to_carriage_are_taken_from_what_other_employers_hire(self):
+        farm_alone, _none = hours_hired_by_farm(0.0)
+        farm_with_carriers, carriers = hours_hired_by_farm(40.0)
+        self.assertGreater(carriers, 0.0)
+        self.assertLess(farm_with_carriers, farm_alone)
 
 
 def hire(hours_hired, hours_per_unit=0.5, wage=1.0, market_wage=1.0, area_of=None):
@@ -273,6 +324,18 @@ class BidAreaTests(unittest.TestCase):
 
     def test_where_nobody_lives_the_bid_is_placed_where_the_merchant_lives(self):
         self.assertEqual(self.bids(["town", "farms"]), {"work@town": 40.0, "work@farms": 10.0})
+
+
+class BidMaximumTests(unittest.TestCase):
+    def test_the_maximum_bid_for_an_hour_is_the_carriage_money_the_hour_stands_for(self):
+        key = market_key(fixture.LABOURER, "farms")
+        who = Merchant("m1", "town", "owner", 1.0)
+        who.carriage_hours_wanted = {key: 40.0}
+        who.carriage_money_wanted = {key: 90.0}
+        cohorts = {tile: type("Cohort", (), {"tile": tile})() for tile in ("town", "farms")}
+        record = type("Record", (), {"merchants": {"m1": who}, "cohorts": cohorts, "area_imbalance": 1.0})()
+        found = carriage_hours.bids(trading_setup(), record)
+        self.assertEqual([bid.maximum_wage for bid in found], [90.0 / 40.0])
 
 
 class WageLoanTests(unittest.TestCase):

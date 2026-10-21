@@ -138,31 +138,14 @@ WHEAT_ENERGY_KCAL_PER_KG = declare(
 # ============================================================================
 # FARM LABOUR AND TECHNIQUE - the Cobb-Douglas anchor
 # ============================================================================
-# These three numbers are what land.py's own LABOUR INTENSITY section
+# REFERENCE_LABOUR_HOURS_PER_HECTARE lives in sim/world/farm_labour.py (built from sub-tasks in data, which
+# this module may not read). The other numbers here are what land.py's own LABOUR INTENSITY section
 # duplicated from agriculture.py to build the SAME diminishing-returns curve
 # (output scales with labour_hours ** LABOUR_OUTPUT_ELASTICITY, anchored to
 # reproduce the reference yield at the reference labour intensity) on a
 # per-hectare basis without importing agriculture.py itself. See land.py's
 # own module docstring, LABOUR INTENSITY section, for the physics; this is
 # now the one place that physics's own numbers live.
-
-REFERENCE_LABOUR_HOURS_PER_HECTARE = declare(
-    "REFERENCE_LABOUR_HOURS_PER_HECTARE", 150.0,
-    kind="engineering_estimate",
-    unit="labourer-hours/hectare/season, at the reference (quality-1.0, "
-         "fold-return-4.5) wheat yield",
-    source="data/production/40_organics.json wheat_kg entry, "
-           "labour_hours.labourer: cross-ploughing, broadcast sowing, "
-           "weeding, sickle reaping and threshing/winnowing aggregated to "
-           "about 150 hours/ha. sim/world/agriculture.py (as "
-           "REFERENCE_LABOUR_HOURS_PER_HECTARE), sim/world/land.py (as "
-           "LAND_REFERENCE_LABOUR_HOURS_PER_HECTARE) and "
-           "sim/labour/labour_market.py all import this declaration, so all "
-           "four sites are one number.",
-    confidence="B",
-    why="The labour intensity the reference yield is quoted at, and the "
-        "anchor every Cobb-Douglas yield curve in either consuming module "
-        "is calibrated to reproduce exactly at that one point.")
 
 LABOUR_OUTPUT_ELASTICITY = declare(
     "LABOUR_OUTPUT_ELASTICITY", 0.5,

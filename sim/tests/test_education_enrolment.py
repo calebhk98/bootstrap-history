@@ -1,38 +1,98 @@
-"""education_enrolment: regression checks, run with `--only education_enrolment`."""
-from .harness import *  # noqa: F401,F403
-from sim.ui.proto.render_typed import render_pretty as _render_pretty
+"""The `education` screen's enrolment (Complaint 94): each running school shows its share of the schooling flow, its pupils
+made literate next year are that share of the whole society's literacy gain, and the limit on literacy is named by an
+enumerated field. `screen_education._enrolment` and `_limited_by` are called on a stub society, and the screen's
+rendering on a built reply. The screen on a game is `test_education_enrolment_scenario`."""
+QUICK_TOPIC = True
+
+import unittest
+from types import SimpleNamespace
+
+from sim.ui.proto import screen_education
+from sim.ui.proto.render_screens_world import render_education
+
+POPULATION = 1_000_000.0
 
 
-def _education(game):
-    return S._agent_dispatch(game, NODES, {"cmd": "education"})
+class StubSociety:
+    """What the enrolment reads of a game: today's literacy, next year's, the population and the schooling flow."""
+
+    def __init__(self, today=0.20, next_year=0.21, effective_flow=1.0):
+        self.population = SimpleNamespace(total=POPULATION)
+        self._today, self._next_year, self._flow = today, next_year, effective_flow
+
+    def literacy(self, name):
+        return self._today
+
+    def literacy_next_year(self):
+        return {"literacy_general": self._next_year}
+
+    def effective_schooling_flow(self):
+        return self._flow
 
 
-none_running = sim()
-reply = _education(none_running)
-# not text: an enumerated field value
-check("with no school running, literacy is limited by the missing schools",
-      reply["literacy_limited_by"] == "no school running", reply.get("literacy_limited_by"))
+def school(flow, name="school"):
+    return {"id": name, "name": name, "built": True, "running": flow > 0, "flow_added": flow}
 
-game = sim()
-for node_id, spec in game._effect_terms("schooling_flow"):
-    if node_id in NODES:
-        game.done.add(node_id)
-        game.operating.add(node_id)
-game._done_changed()
-reply = _education(game)
-running = [row for row in reply["schools"] if row["flow_added"] > 0]
-check("some school is running in the fixture", len(running) > 0, reply["schools"][:3])
-_total = sum(row["flow_added"] for row in running)
-check("each running school shows its share of the schooling flow, summing to one",
-      abs(sum(row["share_of_schooling_flow"] for row in running) - 1.0) < 0.01
-      and all(abs(row["share_of_schooling_flow"] - row["flow_added"] / _total) < 0.001 for row in running),
-      running[:3])
-population = game.population.total
-gain = (reply["literacy"]["general_next_year"] - reply["literacy"]["general"]) * population
-check("each school's pupils made literate next year are its share of the whole society's gain",
-      abs(sum(row["people_made_literate_next_year"] for row in running) - gain) <= 1.0 + 0.01 * abs(gain),
-      (gain, [row["people_made_literate_next_year"] for row in running]))
-check("the screen prints the enrolment column",
-      "PUPILS" in _render_pretty("education", reply).upper(), _render_pretty("education", reply)[:600])
-check("not_held no longer says there is no per-school enrolment",
-      not any("per-school enrolment" in line for line in reply["not_held"]), reply["not_held"])
+
+class EnrolmentTests(unittest.TestCase):
+    def enrolled(self, flows, **society):
+        rows = [school(flow, "school %d" % number) for number, flow in enumerate(flows)]
+        screen_education._enrolment(StubSociety(**society), rows)
+        return rows
+
+    def test_shares_of_the_running_schools_sum_to_one(self):
+        rows = self.enrolled([1.0, 3.0, 4.0])
+        self.assertAlmostEqual(sum(row["share_of_schooling_flow"] for row in rows), 1.0, places=3)
+
+    def test_each_share_is_the_schools_flow_over_the_total(self):
+        rows = self.enrolled([1.0, 3.0, 4.0])
+        for row, expected in zip(rows, (1 / 8, 3 / 8, 4 / 8)):
+            self.assertAlmostEqual(row["share_of_schooling_flow"], expected, places=3)
+
+    def test_pupils_made_literate_sum_to_the_whole_societys_gain(self):
+        rows = self.enrolled([1.0, 3.0, 4.0], today=0.20, next_year=0.21)
+        gain = 0.01 * POPULATION
+        self.assertAlmostEqual(sum(row["people_made_literate_next_year"] for row in rows), gain, delta=1.0 + 0.01 * gain)
+
+    def test_a_bigger_school_makes_more_pupils_literate(self):
+        small, big = self.enrolled([1.0, 3.0])
+        self.assertLess(small["people_made_literate_next_year"], big["people_made_literate_next_year"])
+
+    def test_a_school_that_is_not_running_has_no_share_and_no_pupils(self):
+        idle, running = self.enrolled([0.0, 2.0])
+        self.assertEqual(idle["share_of_schooling_flow"], 0.0)
+        self.assertEqual(idle["people_made_literate_next_year"], 0.0)
+        self.assertAlmostEqual(running["share_of_schooling_flow"], 1.0)
+
+    def test_with_no_school_running_nobody_is_credited(self):
+        rows = self.enrolled([0.0, 0.0])
+        self.assertTrue(all(row["share_of_schooling_flow"] == 0.0 for row in rows))
+
+
+class LiteracyLimitTests(unittest.TestCase):
+    def test_with_no_school_running_literacy_is_limited_by_the_missing_schools(self):
+        self.assertEqual(screen_education._limited_by(StubSociety(effective_flow=0.0), 0.5), "no school running")
+
+    def test_near_the_ceiling_it_is_limited_by_the_ceiling(self):
+        self.assertEqual(screen_education._limited_by(StubSociety(), 0.99), "the ceiling (farm share and unschooled share)")
+
+    def test_otherwise_it_is_limited_by_the_flow(self):
+        self.assertEqual(screen_education._limited_by(StubSociety(), 0.5), "the schooling flow")
+
+
+class RenderTests(unittest.TestCase):
+    def reply(self):
+        schools = [school(2.0, "grammar school")]
+        screen_education._enrolment(StubSociety(), schools)
+        literacy = {kind + suffix: 0.2 for kind in ("general", "elite")
+                    for suffix in ("", "_ceiling", "_next_year", "_share")}
+        literacy.update({"share_of_ceiling_general": 0.5, "share_of_ceiling_elite": 0.5})
+        return {"literacy": literacy, "schooling_flow": 2.0, "effective_schooling_flow": 2.0, "printing_adopted": 0.0,
+                "farm_share_of_hours": 0.5, "schools": schools, "literate_trades": [], "trainees": [], "not_held": []}
+
+    def test_the_screen_prints_the_enrolment_column(self):
+        self.assertIn("PUPILS", render_education(self.reply()).upper())  # presentation: the column's header word
+
+
+if __name__ == "__main__":
+    unittest.main()

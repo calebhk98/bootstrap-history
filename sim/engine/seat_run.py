@@ -7,7 +7,8 @@ still playing has reached its goal."""
 from typing import Iterable, List, Mapping
 
 from .data import kit_capital
-from .state_seat import SeatState, seat_from_template
+from .seat_handover import SeatHandoverMixin
+from .state_seat import COUNTRY_SEAT, SeatState, seat_from_template
 
 
 def seat_ended(seat: SeatState) -> bool:
@@ -21,16 +22,18 @@ def seat_finished(seat: SeatState) -> bool:
 
 
 def seats_playing(seats: Mapping[str, SeatState]) -> List[str]:
-	"""Ids of the seats whose run has not ended, in the fixed order they joined."""
-	return [seat_id for seat_id, seat in seats.items() if not seat_ended(seat)]
+	"""Ids of the household seats whose run has not ended, in the fixed order they joined. A country seat is not
+	among them: it has no household to run through the seat phases; its government acts with the actors' year."""
+	return [seat_id for seat_id, seat in seats.items() if seat.holds_household and not seat_ended(seat)]
 
 
 def run_is_over(seats: Mapping[str, SeatState]) -> bool:
-	"""True when every seat has ended or reached its goal."""
-	return all(seat_finished(seat) for seat in seats.values())
+	"""True when every household seat has ended or reached its goal (a country seat has neither); false with none."""
+	households = [seat for seat in seats.values() if seat.holds_household]
+	return bool(households) and all(seat_finished(seat) for seat in households)
 
 
-class SeatRunMixin:
+class SeatRunMixin(SeatHandoverMixin):
 
 	def playing_seats(self) -> List[str]:
 		return seats_playing(self.state.seats)
@@ -53,10 +56,17 @@ class SeatRunMixin:
 			capital = kit_capital(template["kit"], self.civ) * self.price_index
 		else:
 			capital = 0.0
+		if template.get("kind") == COUNTRY_SEAT:
+			country = template.get("country") or str(self.civ.get("id"))
+			if country not in self.governed_countries():
+				raise ValueError("seat %r: no government of %r to hold" % (seat_id, country))
+			template = dict(template, country=None if country == self.civ.get("id") else country)
 		seat = seat_from_template(template, capital, self._new_founder_years(), self._new_seat_policy())
 		self.add_seat(seat_id, seat)
 		with self.act_as(seat_id):
 			self._wrap_seat_containers()
+			if seat.kind == COUNTRY_SEAT:
+				seat.holder = self.state_treasury().actor_id
 		return seat
 
 	def acting_country(self):
@@ -64,6 +74,14 @@ class SeatRunMixin:
 		wages and prices the seat deals in are that country's own."""
 		country = self.state.seats[self.state.acting_seat].country
 		return None if country in (None, self.civ.get("id")) else country
+
+	def governed_countries(self) -> List[str]:
+		"""The countries that have a government a country seat can hold, the game's own first."""
+		from .society_actors import seed_opening_cast
+		seed_opening_cast(self)
+		home = str(self.civ.get("id"))
+		others = sorted(country for country in self.actors.state.countries if country != home)
+		return [country for country in [home] + others if self.actors.government_of(country) is not None]
 
 	def society_techs_now(self) -> set:
 		"""The techniques the society holds now: what a seat joining today is granted."""

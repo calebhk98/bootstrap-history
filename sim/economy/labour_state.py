@@ -28,10 +28,11 @@ def core_trades(setup, extra_trades: Iterable[str] = ()) -> Dict[str, TradeSpec]
 
 def plot_trade(setup) -> str:
     """The trade of people working their own land: the trade whose hours the land-only recipes (no bought
-    inputs, the ones households grow for themselves, households_own.py) ask most of. Empty when none do."""
+    inputs but the tools their workers wear, the ones households grow for themselves, households_own.py) ask
+    most of. Empty when none do."""
     hours: Dict[str, float] = {}
     for recipe_id, recipe in setup.recipes.items():
-        if recipe.inputs or setup.land_per_run.get(recipe_id, 0.0) <= 0.0:
+        if any(good not in recipe.tool_wear for good in recipe.inputs) or setup.land_per_run.get(recipe_id, 0.0) <= 0.0:
             continue
         for trade, trade_hours in recipe.labour_hours.items():
             hours[trade] = hours.get(trade, 0.0) + trade_hours

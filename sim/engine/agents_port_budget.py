@@ -1,5 +1,5 @@
 """What a state asks the simulated world when it budgets: its people, its prices, its taxpayers."""
-from typing import Any, List, Tuple
+from typing import Any, List, Optional, Tuple
 
 from sim.agents.api import DOLE_MATERIAL, THREAT_ARMY_RESPONSE, Hands
 from sim.world import agriculture, demand
@@ -14,7 +14,7 @@ class BudgetView:
 	def population_total(self) -> float:
 		return self._sim.population.total
 
-	def state_capacity(self) -> float:
+	def state_reach(self) -> float:
 		return self._sim.state_authority()
 
 	def territory(self) -> Any:
@@ -85,20 +85,26 @@ class BudgetView:
 		sim = self._sim
 		return sim.military_equipment_burden_kg_per_soldier_per_year(sim.state_military_diffusion())
 
+	def military_work_ids(self) -> Tuple[str, ...]:
+		return tuple(self._sim._diffusible_ids("military"))
+
+	def equipment_kg_at_adoption(self, adoption: float) -> float:
+		return self._sim.military_equipment_burden_kg_per_soldier_per_year(adoption)
+
 	def pay_per_person_year(self, trade: str) -> float:
 		return self.labour_market.quote_annual(trade)  # type: ignore[attr-defined]
 
 	def commodity_of(self, material: str) -> str:
 		return self._sim.economy.commodity_of(material)
 
-	def material_cost(self, material: str, tonnes: float) -> float:
-		"""Money to buy this many tonnes of a material at the price the market quotes."""
+	def material_cost(self, material: str, tonnes: float) -> Optional[float]:
+		"""Money to buy this many tonnes of a material at the price the market quotes; None when nothing sells it."""
 		quote = self._sim.economy.purchase_cost(material, tonnes)
-		return 0.0 if quote is None else quote[0]
+		return None if quote is None else quote[0]
 
-	def fleet_goods(self) -> List[Any]:
-		"""Available naval vessels, their crews, service lives and the state's holdings."""
-		return self._sim.economy.fleet_goods(self.government().actor_id)
+	def fleet_goods(self, holder_id: Optional[str] = None) -> List[Any]:
+		"""Available naval vessels, their crews, service lives and a state's holdings (the founder's state's by default)."""
+		return self._sim.economy.fleet_goods(holder_id or self.government().actor_id)
 
 	def local_staff(self, trade: str, people: float) -> float:
 		"""How many of `people` kept in a trade nationwide come out of the founder's own labour
@@ -111,16 +117,35 @@ class BudgetView:
 		reach = sim.labour.reachable_trade_population(trade) + sim.actor_staff_fte(trade)
 		return min(1.0, people / nation) * reach
 
-	def notice_over(self, scale: float) -> float:
-		return self._sim.notice_over(scale)
+	def notice_over(self, scale: float, capacity: Optional[float] = None) -> float:
+		return self._sim.notice_over(scale, capacity)
+
+	def seat_taxpayers(self, country: Optional[str]) -> List[Tuple[float, float]]:
+		"""(visible scale, taxable income) of the playing household seats that belong to `country`; a seat with no
+		country belongs to the game's own (home) country."""
+		sim = self._sim
+		home = sim.actors.state.home_country
+		payers = []
+		for seat_id in sim.playing_seats():
+			seat = sim.state.seats[seat_id]
+			if (seat.country or home) == (country or home) and seat.holds_household:
+				with sim.act_as(seat_id):
+					payers.append((self.visible_scale_of(sim.household), max(0.0, sim.revenue())))  # type: ignore[attr-defined]
+		return payers
+
+	def firm_taxpayers(self, country: Optional[str]) -> List[Tuple[float, float]]:
+		"""(visible scale, taxable income) of the firms that answer to `country`; a firm with no country answers to the
+		home country. A firm has one country (it does not split its income across the countries it trades in)."""
+		actors = self._sim.actors
+		home = actors.state.home_country
+		return [(self.visible_scale_of(firm), max(0.0, firm.record.last_margin))  # type: ignore[attr-defined]
+				for firm in actors.active_firms() if actors.country_of(firm) == (country or home)]
 
 	def visible_taxpayers(self) -> List[Tuple[float, float]]:
-		"""(visible scale, taxable income) of every actor the state can see: the seats still playing and the firms."""
+		"""(visible scale, taxable income) of every actor the home state can see: the home country's playing seats and the firms that answer to it."""
 		sim = self._sim
-		payers = []
-		for seat_id in sim.playing_seats() or [sim.state.acting_seat]:
-			with sim.act_as(seat_id):
+		payers = self.seat_taxpayers(sim.actors.state.home_country)
+		if not sim.playing_seats():
+			with sim.act_as(sim.state.acting_seat):
 				payers.append((self.visible_scale_of(sim.household), max(0.0, sim.revenue())))  # type: ignore[attr-defined]
-		for firm in sim.actors.active_firms():
-			payers.append((self.visible_scale_of(firm), max(0.0, firm.record.last_margin)))  # type: ignore[attr-defined]
-		return payers
+		return payers + self.firm_taxpayers(sim.actors.state.home_country)

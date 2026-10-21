@@ -9,13 +9,13 @@ import dataclasses
 import math
 from typing import Dict, List, Tuple
 
-from . import (carriage_wear, goods_market, households, market_curves, merchants, producers, seller_cash, seller_offers, settlement,
-               state_budget, state_store, taxes, unsold_search)
+from . import (land_bid_year, carriage_fleet_book, carriage_wear, goods_market, households, market_curves, market_quote, merchants, producers, seller_cash, seller_offers, settlement,
+               state_budget, state_store, taxes, tool_wear, unsold_search)
+from .household_work_year import basket_key, cohort_basket
 from .market_memory import market_key
-from .market_memory_asks import (memory_reference_volume, note_bids, note_offers, price_after_no_bids,
-                                 price_after_resumed_trade, wanted_at)
+from .market_memory_asks import memory_reference_volume, note_bids, note_offers, price_after_resumed_trade, wanted_at
 from .market_memory_asks import REPRESENTATIVE_TRADE_SHARE
-from .market_memory_offers import price_after_no_offers, price_after_thin_trade, price_within_making_cost
+from .market_memory_offers import price_after_thin_trade, price_toward_quote
 from .notional import making_costs
 from .protocols import AgentOrders
 from .recipes import input_depth_order
@@ -37,21 +37,34 @@ def add_orders(book: OrderBook, orders: AgentOrders) -> None:
         book.setdefault((offer.good, offer.area), ([], []))[1].append(offer)
 
 
-def cohort_orders(setup, record, view, ledger: YearLedger, order_book: OrderBook) -> List:
+def cohort_orders(setup, record, view, ledger: YearLedger, order_book: OrderBook, own_options=None) -> List:
     """Households' bids for the year; returns their savings offers for the credit market."""
     funds = []
     priced_by_tile = {}
     store_by_tile = {}
     money = setup.currency_id
     for cohort in sorted(record.cohorts.values(), key=lambda each: each.agent_id):
-        priced = priced_by_tile.get(cohort.tile)
+        basket = cohort_basket(setup, record, cohort)
+        key = basket_key(record, cohort)
+        priced = priced_by_tile.get(key)
         if priced is None:
-            priced = priced_by_tile[cohort.tile] = households.need_prices(setup.basket_for(cohort.tile), view, cohort.tile)
+            priced = priced_by_tile[key] = households.need_prices(basket, view, cohort.tile)
         income = ledger.wages_in.get(cohort.agent_id, 0.0) + record.property_income.get(cohort.agent_id, 0.0)
-        orders = households.goods_orders(cohort, view, record.book.balance(cohort.agent_id, money), income,
-                                         setup.basket_for(cohort.tile), setup.specs, priced,
+        cash = record.book.balance(cohort.agent_id, money)
+        tool_bids = tool_wear.tool_bids(
+            cohort.agent_id, cohort.tile, lambda good: view.area_of(good, cohort.tile), lambda good: view.price(good, view.area_of(good, cohort.tile)),
+            lambda good: view.stock(cohort.agent_id, good, cohort.tile), setup.recipes, ledger.own_plot_hours.get(cohort.agent_id, {}),
+            setup.specs, cash)
+        add_orders(order_book, AgentOrders(bids=tuple(tool_bids)))
+        orders = households.goods_orders(cohort, view, cash - sum(bid.budget for bid in tool_bids), income,
+                                         basket, setup.specs, priced,
                                          smooth_rise=not record.settling, shared_store=store_by_tile)
-        add_orders(order_book, _less_what_it_grew(orders, cohort, setup.basket_for(cohort.tile), ledger.grown_units.get(cohort.agent_id)))
+        orders = _less_what_it_grew(orders, cohort, basket, ledger.grown_units.get(cohort.agent_id))
+        if own_options:
+            savings = sum(offer.amount for offer in orders.funds_offers)     # only what it would otherwise lend
+            orders = land_bid_year.with_land_bids(orders, land_bid_year.land_bids(
+                setup, record, view, cohort, own_options, ledger.spare_hours.get(cohort.agent_id, 0.0), savings))
+        add_orders(order_book, orders)
         funds.extend(orders.funds_offers)
     return funds
 
@@ -86,7 +99,7 @@ def merchant_orders(setup, record, view, area_map, carriage, order_book: OrderBo
     rate = view.interest_rate(money)
     shares = merchants.RouteShares()
     ordered = sorted(record.merchants.values(), key=lambda each: each.agent_id)
-    carrier_bids, carrier_budget = (carriage_wear.bids(setup, record, view, area_map,
+    carrier_bids, carrier_budget = (carriage_fleet_book.bids(setup, record, view, area_map,
                                                        {each.agent_id: record.book.balance(each.agent_id, money) for each in ordered})
                                     if carriage_wear.wears(setup) else ([], {}))
     add_orders(order_book, AgentOrders(bids=tuple(carrier_bids)))     # replacements for the carriers last year's shipments wore
@@ -190,24 +203,15 @@ def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, led
                         costs = making_costs(setup, record)
                     signal = price_after_thin_trade(signal, costs.get(good), result.quantity, usual)
             else:
-                signal = _unsold_signal(bids, offers)
-                if signal is None:
-                    signal = price_after_no_bids(old, bids, offers)
-                if signal is None and bids and not any(offer.quantity > 0.0 for offer in offers):
+                quote = result.quote
+                if bids and not any(offer.quantity > 0.0 for offer in offers):
                     if costs is None:
                         costs = making_costs(setup, record)
-                    signal = price_after_no_offers(old, costs.get(good))
-                if signal is None and bids and offers and old is not None:
-                    # both sides present and nothing traded: the remembered price relaxes toward the making cost
-                    if costs is None:
-                        costs = making_costs(setup, record)
-                    relaxed = price_after_thin_trade(old, costs.get(good), 0.0, record.memory.volume_weights.get(key, 0.0))
-                    signal = relaxed if relaxed != old else None
+                    quote = market_quote.no_trade_quote(bids, offers, costs.get(good))
+                signal = price_toward_quote(old, quote.price) if quote is not None else None
+                if signal is not None:
+                    record.memory.quote_kinds[key] = quote.kind
             if signal is not None and signal > 0.0:
-                if result.quantity <= REPRESENTATIVE_TRADE_SHARE * record.memory.volume_weights.get(key, 0.0):
-                    if costs is None:
-                        costs = making_costs(setup, record)
-                    signal = price_within_making_cost(signal, costs.get(good))
                 floor = setup.opening_prices.get(good, signal) * PRICE_MEMORY_FLOOR_SHARE
                 record.memory.prices[key] = max(signal, floor)
                 record.memory.note_usual_price(key)
@@ -216,6 +220,8 @@ def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, led
             record.unmet[key] = unmet
             record.memory.note_volume(key, delivered)
             record.memory.note_cleared(key, result.price, delivered)
+            if delivered > 0.0:
+                record.memory.quote_kinds.pop(key, None)
             cleared.add(key)
             if delivered > 0.0:
                 traded.add(key)
@@ -232,18 +238,6 @@ def remembered_price(old, cleared, quantity, usual_volume):
     if old is None or usual_volume <= 0.0:
         return cleared
     return old + min(1.0, quantity / usual_volume) * (cleared - old)
-
-
-def _unsold_signal(bids, offers):
-    """What a market that cleared nothing tells its sellers: the most any buyer would have paid, which
-    is below every seller's ask. None when nobody bid or nobody offered, or when a seller asked less
-    than that (nothing real was on offer)."""
-    if not offers:
-        return None
-    ceilings = [bid.maximum_price for bid in bids if bid.budget > 0.0 and math.isfinite(bid.maximum_price)]
-    if not ceilings or min(offer.reservation_price for offer in offers) <= max(ceilings):
-        return None
-    return max(ceilings)
 
 
 def _produce_and_offer(setup, record, view, producer_id, plan, in_kind, order_book, ledger) -> None:
@@ -274,5 +268,5 @@ def _tax_in_kind(setup, record, producer, recipe, forms, ledger) -> None:
             for good in recipe.outputs}
     facts = YearFacts(currency=setup.currency_id, output=output, producer_tile={producer.agent_id: producer.tile},
                       held_goods=held)
-    _transfers, moves, _assessments = taxes.assess(forms, facts, setup.state_agent, {}, setup.state_capacity)
+    _transfers, moves, _assessments = taxes.assess(forms, facts, setup.state_agent, {}, setup.state_capacity, setup.hiding)
     record.book.move_many(moves)

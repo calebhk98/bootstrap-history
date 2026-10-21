@@ -15,8 +15,13 @@ household-room ceiling; this file only prices the trade once a person is
 in it.
 """
 from . import trade_data, wage_provider
+from .wage_factors import tools_factor, weighted_factor
 from .labour_market_api import LabourMarket
+from .hours_sale_warning import sale_at_a_loss_note, starving_warning
 from .labour_wage_ledger import WageLedgerMixin
+from .staff_moves import (FOUNDER_DEAD, HOURS_NOT_POSITIVE, HOURS_SHORT, NO_SUCH_TRADE, TRADE_ABSENT,
+                          wage_work_blocker)
+from .staff_pay_rules import wage_bill_of
 from sim.constants import declare
 
 
@@ -76,37 +81,31 @@ class WagesMixin(WageLedgerMixin):
         nothing else can buy: hours sold here are hours the standing job
         (labour_job.py) does not sell and your own projects cannot have.
         """
-        if not self._world.state.founder.founder_alive:
+        blocker = wage_work_blocker(
+            self._world.state.founder.founder_alive, trade in self._world.wages,
+            lambda: self.trade_available(trade), hours,
+            lambda: self.director_pool() - self.director_hours_committed())
+        # A TRADE NOBODY HERE PRACTISES IS A TRADE NOBODY HERE WILL PAY YOU FOR: the gate is trade_available(), the
+        # same test `hire` uses. The founder really does know chemistry; what he lacks is a customer, until the
+        # trade has been taught and trade_available() turns true.
+        if blocker == FOUNDER_DEAD:
             return 0.0, ("there is nobody left to do the work: these are YOUR "
                          "hours, and the founder is dead. What you built goes "
                          "on; you do not.")
-        if trade not in self._world.wages:
+        if blocker == NO_SUCH_TRADE:
             here = sorted(candidate_trade for candidate_trade in self._world.wages if self.trade_available(candidate_trade))
             return 0.0, ("no such trade. you could work as: " + ", ".join(here))
-        # A TRADE NOBODY HERE PRACTISES IS A TRADE NOBODY HERE WILL PAY YOU
-        # FOR: this has to gate on trade_available(), the same test `hire`
-        # uses, or a founder could earn wages in a trade the society does
-        # not yet have any employer for.
-        #
-        # The founder really does know chemistry - that is the premise. What he
-        # does not have is a customer. Wage labour is somebody else deciding
-        # your work is worth money, and there is nobody here to decide that
-        # until you have taught the trade, at which point trade_available()
-        # turns true and this opens by itself.
-        if not self.trade_available(trade):
+        if blocker == TRADE_ABSENT:
             return 0.0, ("nobody here will pay you to be a %s: the trade does "
                          "not exist in this society, so there is no employer "
                          "for it. Teach it first with train, or work at "
                          "something they do recognise." % trade)
         hours = float(hours)
-        if hours <= 0:
+        if blocker == HOURS_NOT_POSITIVE:
             return 0.0, "hours must be greater than zero"
-        # EVERY HOUR ALREADY SPOKEN FOR, not just the ones sold for wages:
-        # this must check against director_hours_committed(), which counts
-        # teaching as well as wage work, or the two together can spend more
-        # hours than exist in the year.
-        left = self.director_pool() - self.director_hours_committed()
-        if hours > left:
+        # EVERY HOUR ALREADY SPOKEN FOR, not just the ones sold for wages: teaching counts as well as wage work.
+        if blocker == HOURS_SHORT:
+            left = self.director_pool() - self.director_hours_committed()
             return 0.0, ("you have %.0f of your own hours left this year, not %.0f"
                          % (max(0.0, left), hours))
         # Your own labour is worth the trade rate: the SAME rate the game
@@ -128,38 +127,16 @@ class WagesMixin(WageLedgerMixin):
         # active_hours_still_wanted (projects.py), the same formula step()
         # itself uses to hand out the pool, so this can never warn about a
         # shortfall step() would not also produce.
-        _starve = None
         _wanted = self._world.active_hours_still_wanted()
+        _starve = None
         if _wanted:
-            _after = max(0.0, self.director_pool() - self.director_hours_committed())
-            _short = {trade_id: hours_wanted for trade_id, hours_wanted in _wanted.items() if hours_wanted > _after + 0.5}
-            if _short:
-                _named = sorted(_short.items(), key=lambda kv: -kv[1])[:2]
-                _more = len(_short) - len(_named)
-                _bits = ["%s (wants about %.0f more of your hours this year)"
-                        % (trade_id, hours_wanted) for trade_id, hours_wanted in _named]
-                _starve = (
-                    "this leaves only %.0f of your own hours for the rest of "
-                    "the year, and %s: %s%s. Nothing is lost - what it does "
-                    "not get this year it gets next - but if that is not what "
-                    "you meant, work fewer hours. Selling them anyway is a "
-                    "fair move if it is cash you need right now."
-                    % (_after,
-                       "it still wants more than that" if len(_short) == 1
-                       else "these still want more than that",
-                       "; ".join(_bits),
-                       (", and %d more" % _more) if _more else ""))
+            _starve = starving_warning(_wanted, max(0.0, self.director_pool() - self.director_hours_committed()))
         self.log_wage_work(trade, hours, pay)
         # SAY WHEN IT IS A BAD TRADE: hours sold here are hours the standing job does not sell, and when
         # that job pays more than this trade the sale loses money. The sale still happens.
-        job_pay_given_up = revenue_before - self._world.revenue()
-        if job_pay_given_up > pay:
-            earned, given_up = round(pay), round(job_pay_given_up)
-            message = ("you earned %s, and the standing job those hours were selling was paying %s a year - "
-                       "so this cost you %s. Selling hours in a lower-paid trade is for when you need the "
-                       "cash more than the job."
-                       % (self._world.money_text(earned, grouped=True), self._world.money_text(given_up, grouped=True),
-                          self._world.money_text(given_up - earned, grouped=True)))
+        message = sale_at_a_loss_note(pay, revenue_before - self._world.revenue(),
+                                      lambda amount: self._world.money_text(amount, grouped=True))
+        if message:
             return pay, message + (" Also: " + _starve if _starve else "")
         return pay, _starve
 
@@ -177,10 +154,7 @@ class WagesMixin(WageLedgerMixin):
         smith more for a few years, yours included, until the pressure decays
         or the supply of smiths genuinely grows.
         """
-        total = 0.0
-        for trade, count in self.employed_by_trade().items():
-            total += count * self.staff_pay(trade)
-        return total
+        return wage_bill_of(self.employed_by_trade(), self.staff_pay)
 
     HOUSING_PRESSURE_START_OCCUPANCY = declare(
         "HOUSING_PRESSURE_START_OCCUPANCY", 0.75, kind="temporary_heuristic",
@@ -257,13 +231,11 @@ class WagesMixin(WageLedgerMixin):
         food = self._world.last_market_price_ratio(wage_provider.staple_material(self._world.civ))
         housing = self.labour_market.town_housing_factor()
         basket = trade_data.tool_basket(trade_data.registry_of(self._world), trade)
-        tools = (sum(self._world.material_price_factor(material) * self._world.last_market_price_ratio(material)
-                     for material in basket) / len(basket)
-                 if basket else 1.0)
+        tools = tools_factor(basket, self._world.material_price_factor, self._world.last_market_price_ratio)
         return {"food": food, "housing": housing, "tools": tools,
                 "skill_and_difficulty": 1.0,
-                "weighted": self.WAGE_SHARE_FOOD * food + self.WAGE_SHARE_HOUSING * housing
-                            + self.WAGE_SHARE_TOOLS * tools + self.WAGE_SHARE_SKILL_AND_DIFFICULTY}
+                "weighted": weighted_factor(self.WAGE_SHARE_FOOD, self.WAGE_SHARE_HOUSING, self.WAGE_SHARE_TOOLS,
+                                            self.WAGE_SHARE_SKILL_AND_DIFFICULTY, food, housing, tools)}
 
     def _opening_wage_schedule(self):
         """The wage schedule at the opening's price level; its tightness factors live in the economy

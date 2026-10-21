@@ -70,5 +70,97 @@
   "up_hours": 0,
   "note": "A herd of about fifty cattle: beef, milk, hides, tallow and horn from the same animals. It cannot be researched; the cattle have to be held.",
   "unheld_reason": "the society had no sheep, goats or cattle to start with; the founder brings them by trade or an expedition"
+ },
+ {
+  "id": "fud_turkey_flock",
+  "name": "A flock of turkeys",
+  "cat": "livestock",
+  "kind": "RESOURCE",
+  "pre": [],
+  "holds": {
+   "turkey_kg": 593
+  },
+  "traits": [
+   "food"
+  ],
+  "kb": "75_agriculture_food.md",
+  "ph": 10,
+  "lab": {
+   "labourer": 100
+  },
+  "mat": {},
+  "build_yrs": 0,
+  "adopt_yrs": 0,
+  "up_hours": 0,
+  "note": "A flock of about a hundred domestic turkeys fed on maize: meat, fat and feathers from the same birds. It cannot be researched; the birds have to be held. Recipe feather_kg in data/production/95_mesoamerican_stock_and_game.json.",
+  "unheld_reason": "the turkey was domesticated in Mesoamerica; no other start kept it"
+ },
+ {
+  "id": "fud_dog_pack",
+  "name": "A pack of household dogs",
+  "cat": "livestock",
+  "kind": "RESOURCE",
+  "pre": [],
+  "holds": {
+   "dog_kg": 1000
+  },
+  "traits": [
+   "food"
+  ],
+  "kb": "75_agriculture_food.md",
+  "ph": 10,
+  "lab": {
+   "labourer": 100
+  },
+  "mat": {},
+  "build_yrs": 0,
+  "adopt_yrs": 0,
+  "up_hours": 0,
+  "note": "About a hundred small dogs kept in households and fed on maize scraps, some of them eaten: meat, fat and skins. It cannot be researched; the dogs have to be held. Recipe hide_kg in data/production/95_mesoamerican_stock_and_game.json.",
+  "unheld_reason": "only the Mesoamerican start is modelled as raising dogs for the table"
+ },
+ {
+  "id": "fud_game_hunting",
+  "name": "Deer hunting with bow, atlatl and snare",
+  "cat": "located_material",
+  "kind": "RESOURCE",
+  "pre": [],
+  "holds": {},
+  "traits": [
+   "food"
+  ],
+  "kb": "75_agriculture_food.md",
+  "ph": 10,
+  "lab": {
+   "labourer": 100
+  },
+  "mat": {},
+  "build_yrs": 0,
+  "adopt_yrs": 0,
+  "up_hours": 0,
+  "note": "The knowledge and kit to take deer and other forest game: meat, fat and skins from the same animals. The ceiling on what the land gives is the geography wild-game rows. Recipe fat_kg in data/production/95_mesoamerican_stock_and_game.json.",
+  "unheld_reason": "no other start's hunting is modelled as a source of meat and skins"
+ },
+ {
+  "id": "fud_fowling",
+  "name": "Fowling on lake and marsh",
+  "cat": "located_material",
+  "kind": "RESOURCE",
+  "pre": [],
+  "holds": {},
+  "traits": [
+   "food"
+  ],
+  "kb": "75_agriculture_food.md",
+  "ph": 10,
+  "lab": {
+   "labourer": 100
+  },
+  "mat": {},
+  "build_yrs": 0,
+  "adopt_yrs": 0,
+  "up_hours": 0,
+  "note": "The knowledge and kit to net and snare wildfowl on the lake and marsh: meat, fat and down from the same birds. The ceiling is the geography wild-game rows. Recipe down_kg in data/production/95_mesoamerican_stock_and_game.json.",
+  "unheld_reason": "no other start's fowling is modelled as a source of meat and down"
  }
 ]

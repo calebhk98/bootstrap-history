@@ -129,12 +129,14 @@ def top_holder_share(record, tile: TileId) -> float:
 
 
 def settle_tenancies(record, currency: CurrencyId, arable_by_tile: Mapping[TileId, float],
-                     management_cost_per_extra_tenancy: float = titles_management.COST_SHARE_PER_EXTRA_TENANCY
-                     ) -> List[Transfer]:
+                     management_cost_per_extra_tenancy: float = titles_management.COST_SHARE_PER_EXTRA_TENANCY,
+                     land_tax_share_of_rent: float = 0.0) -> List[Transfer]:
     """Each tenant pays its lessor the tile's rent on the share it works, and any arrears, as far as its cash
     goes; the lessor spends the managing cost of its tenancies (titles_management.py) of it on stewards, and
     a tenancy whose cost eats all its rent is given up to the tenant. A tenant more than a year's rent
-    behind has left the land: the lessor's title on it goes back to nobody. Returns the payments."""
+    behind has left the land: the lessor's title on it goes back to nobody. A lessor whose managing cost and the
+    state's land tax (`land_tax_share_of_rent`) together take more than the rent holds a loss, and lets the title
+    go. Returns the payments."""
     payments: List[Transfer] = []
     if not getattr(record, "tenancies", None):
         return payments
@@ -150,6 +152,9 @@ def settle_tenancies(record, currency: CurrencyId, arable_by_tile: Mapping[TileI
             cost = titles_management.cost_share(counts.get(lessor, 1), management_cost_per_extra_tenancy)
             if cost >= 1.0 - EPSILON:
                 pass_title(record, tile, lessor, tenant, row["share"])        # the tenant now holds it outright
+                continue
+            if cost + land_tax_share_of_rent >= 1.0 - EPSILON:
+                release(record, tile, lessor, row["share"])                   # holding it costs more than it earns
                 continue
             if tenant not in cash:
                 cash[tenant] = max(0.0, record.book.balance(tenant, currency))

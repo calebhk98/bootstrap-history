@@ -29,7 +29,7 @@
         },
         "days_per_year": 150.0,
         "payload_tonnes": 25.0,
-        "payload_basis": "Kyrenia ship cargo about 25 tonnes (Katzev and Katzev, INA Newsletter 13(3), 1986; recalled, not reopened for this figure), confidence D. Days: geography's SAILING_DAYS_PER_YEAR."
+        "payload_basis": "Kyrenia ship cargo about 25 tonnes (Katzev and Katzev, INA Newsletter 13(3), 1986; INA Newsletter not opened; Wikipedia, The Kyrenia Ship, opened, gives 381 amphoras and 29 millstones but no tonnage; no source found for the 25 tonnes), confidence D. Days: geography's SAILING_DAYS_PER_YEAR."
       }
     },
     "warship": {
@@ -53,7 +53,7 @@
         "sailor": 200.0
       },
       "basis": "per light wooden oared warship, rigged with oars and ram, without crew",
-      "yield_basis": "MASS: Morrison, Coates and Rankov, The Athenian Trireme (2000), empty Olympias about 25 tonnes; recalled, not opened in full. Hellenic Navy construction account (https://averof.hellenicnavy.gr/en/trireme-olympias/construction-of-the-trireme-by-the-hn/), opened, records a 200 kg cast ram. Estimated allocation: 40 m3 retained timber at the existing timber recipe density of 600 kg/m3 is 24000 kg, plus 400 kg coating, 200 kg each of rope, sail and bronze ram gives 25000 kg. Purchase 50 m3 to allow 10 m3 shaping waste. Pitch coating and rope/cloth follow the observed wooden merchant construction described in merchant_ship. Crew: 170 rowers plus other crew, rounded to 200 sailors, from Morrison, Coates and Rankov (2000), recalled. The material allocations and 24000 shipwright plus 6000 helper hours are TEMPORARY HEURISTICS, confidence D: three times the small merchant construction work for a longer hull with oar fittings. Retire these estimates under complaint 629 with measured warship scantlings and construction logs. No price or historical fleet size sets the bill.",
+      "yield_basis": "MASS: Morrison, Coates and Rankov, The Athenian Trireme (2000), empty Olympias about 25 tonnes (no source found: the book was not opened, and Wikipedia, Olympias (trireme), opened, gives a displacement of 47 tonnes with no citation). Hellenic Navy construction account (https://averof.hellenicnavy.gr/en/trireme-olympias/construction-of-the-trireme-by-the-hn/), opened, records a 200 kg cast ram. Estimated allocation: 40 m3 retained timber at the existing timber recipe density of 600 kg/m3 is 24000 kg, plus 400 kg coating, 200 kg each of rope, sail and bronze ram gives 25000 kg. Purchase 50 m3 to allow 10 m3 shaping waste. Pitch coating and rope/cloth follow the observed wooden merchant construction described in merchant_ship. Crew: 170 rowers plus other crew, rounded to 200 sailors, (Wikipedia, Olympias (trireme), opened, lists 170 eretai, uncited; no source found beyond it). The material allocations and 24000 shipwright plus 6000 helper hours are TEMPORARY HEURISTICS, confidence D: three times the small merchant construction work for a longer hull with oar fittings. Retire these estimates under complaint 629 with measured warship scantlings and construction logs. No price or historical fleet size sets the bill.",
       "conf": "D",
       "requires_node": "sea_mortise_tenon",
       "capital_asset": true

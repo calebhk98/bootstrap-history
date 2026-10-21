@@ -13,7 +13,7 @@ from sim.geography.map_source import WorldMap
 
 
 def carriage_rates(world_map: WorldMap, mode_ids: Iterable[str]) -> Dict[str, Dict[str, Any]]:
-    """{mode_id: {carriers, tonne_km_per_team_day, team_payload_tonnes, team_days_per_tonne_km, carrier_days_per_tonne_km, crew_trade, crew_hours_per_tonne_km, cost_hours_per_tonne_km, handling_hours_per_tonne, edge_classes}} for each
+    """{mode_id: {carriers, tonne_km_per_team_day, team_payload_tonnes, animal_feed_kg_per_tonne_km (what the team's animals eat per tonne-km at the team's day pace, so a day's feed is this times the team's tonne-km a day; a crew's own ration is its wage's, not here), team_days_per_tonne_km, carrier_days_per_tonne_km, crew_trade, crew_hours_per_tonne_km, cost_hours_per_tonne_km, handling_hours_per_tonne, edge_classes}} for each
     named mode with a crew trade and a rate on level, still ground or water."""
     known = routes_modes.modes(world_map)
     found: Dict[str, Dict[str, Any]] = {}
@@ -29,10 +29,12 @@ def carriage_rates(world_map: WorldMap, mode_ids: Iterable[str]) -> Dict[str, Di
                           "tonne_km_per_team_day": team[1] if team else 0.0,
                           "team_payload_tonnes": team[2] if team else 0.0,
                           "team_days_per_tonne_km": rate.team_days,
+                          "animal_feed_kg_per_tonne_km": _animal_feed(team, rate),
                           "carrier_days_per_tonne_km": [list(each) for each in rate.carrier_days],
                           "crew_trade": mode["crew_trade"],
                           "crew_hours_per_tonne_km": rate.labour_hours,
                           "cost_hours_per_tonne_km": routes_rates.physical_cost(world_map, rate),
+                          "handling_trade": str(mode.get("handling_trade", "")),
                           "handling_hours_per_tonne": float(mode.get("handling_hours_per_tonne", 0.0)),
                           "edge_classes": list(mode["edge_classes"]),
                           "needs_improvement": mode.get("needs_improvement")}
@@ -45,3 +47,11 @@ def _level_rate(world_map: WorldMap, mode: Dict[str, Any]) -> Optional[routes_ra
         if rate is not None:
             return rate
     return None
+
+
+def _animal_feed(team, rate: routes_rates.Rate) -> float:
+    """Kilograms of feed the team's animals eat per tonne-km at the team's own day pace (the edge's pace cancels),
+    or 0 for a team with no animal."""
+    if not team or rate.team_days <= 0.0 or team[1] <= 0.0 or not any(each[0] == "animal" for each in team[0]):
+        return 0.0
+    return rate.feed_kg / (rate.team_days * team[1])

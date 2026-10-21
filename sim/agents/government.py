@@ -5,8 +5,8 @@ models, in coin or in kind (`revenue.py`, `government_stores.py`); spending is w
 keeps up (`budget.py`: army, officials, roads, public buildings, court, dole, works, collection, campaign, donative,
 navy), paid from the purse. A deficit comes out of the reserve, then is
 borrowed up to its credit ceiling (only once it holds the technology of public
-debt), and only then is every line cut by the same share. What it could not
-pay is what it seeks from the taxpayers it can see. What is left of the purse
+debt). What it still lacks it meets by a choice among borrowing, cutting lines, deferring
+pay, debasing, levying and demanding in kind (`fiscal_response.py`), as its policy picks. What is left of the purse
 funds copying know-how it values by the gains its civilisation's priorities
 weight (military, infrastructure, prestige, ...), through its policy.
 """
@@ -18,7 +18,9 @@ from .government_coinage import CoinageMixin
 from .government_enterprises import EnterpriseMixin
 from .government_corvee import CorveeMixin
 from .government_credit import CreditRecordMixin
+from .government_fiscal import FiscalMixin
 from .government_granary import GranaryMixin
+from .government_markets import MarketsMixin
 from .government_stores import StoresMixin
 from .edges import EDGE_PATRONAGE, EDGE_STATE_SPENDING
 from .government_surplus import SurplusMixin
@@ -27,9 +29,14 @@ from .tuning_spending import ACCESSION_PROBABILITY_PER_YEAR, PUBLIC_BUILDING_LIF
 from .values import invention_gains, weighted_gain
 
 
-class Government(CorveeMixin, CreditRecordMixin, CoinageMixin, EnterpriseMixin, GranaryMixin, StoresMixin, SurplusMixin, RecordedActor):
+class Government(CorveeMixin, CreditRecordMixin, FiscalMixin, CoinageMixin, EnterpriseMixin, GranaryMixin, MarketsMixin, StoresMixin, SurplusMixin, RecordedActor):
 	kind = "government"
-	researches = True
+
+	@property
+	def researches(self) -> bool:  # type: ignore[override]
+		"""Only the founder's country's state originates research: it spends the founder's research hands. A
+		country's state copies what it sees (retire: Complaint 649, research hands by country)."""
+		return self.record.country is None
 
 	def imitation_worth(self, node_id: str, world: Any) -> float:
 		gains = invention_gains(world.nodes[node_id])
@@ -50,7 +57,7 @@ class Government(CorveeMixin, CreditRecordMixin, CoinageMixin, EnterpriseMixin, 
 
 	def credit_standing(self, world: Any) -> float:
 		"""Lenders trust a state as far as it can assess and collect."""
-		return world.state_capacity()
+		return world.state_reach()
 
 	# ---- what it takes -------------------------------------------------------
 	def levy_rates(self) -> Tuple[float, float]:
@@ -74,7 +81,7 @@ class Government(CorveeMixin, CreditRecordMixin, CoinageMixin, EnterpriseMixin, 
 			# a refused requisition is paid, with a penalty, only if the state can enforce it; a negotiated
 			# one is paid in part, and in service, if the state takes the offer
 			draw = world.rng_for("demand", getattr(payer, "actor_id", ""), world.year).random()
-			answer = demand_answer.settle_demand(payer.demand_stance(), parts["requisition"], world.state_capacity(),
+			answer = demand_answer.settle_demand(payer.demand_stance(), parts["requisition"], world.state_reach(),
 												 payer.standing(), draw, payer.service_worth())
 			parts["requisition"] = answer["paid"] - answer["penalty"]
 			if answer["penalty"] > 0.0:
@@ -102,8 +109,9 @@ class Government(CorveeMixin, CreditRecordMixin, CoinageMixin, EnterpriseMixin, 
 		return arrears.total(self.record)
 
 	def cannot_meet_own_need(self) -> bool:
-		"""Whether last year's standing need went partly unpaid, or pay is still owed: such a state lends nothing."""
-		return sum(self.record.unfunded.values()) > 1e-9 or arrears.total(self.record) > 1e-9
+		"""Whether last year's standing need went partly unpaid or unsupplied, or pay is still owed: such a state lends nothing."""
+		return (sum(self.record.unfunded.values()) > 1e-9 or sum(self.record.unmet_goods.values()) > 1e-9
+				or arrears.total(self.record) > 1e-9)
 
 	# ---- what it keeps up ---------------------------------------------------
 	def pay_standing_need(self, world: Any) -> Tuple[List[budget.Line], float]:
@@ -113,7 +121,7 @@ class Government(CorveeMixin, CreditRecordMixin, CoinageMixin, EnterpriseMixin, 
 		self.receive_revenue(world)
 		arrears.settle(self, world)
 		conscripts = self.conscript_years(world)
-		wanted = max(world.army_wanted(), conscripts)
+		wanted = max(budget.army_wanted(world), conscripts)
 		soldiers = self.record.army if self.record.army > 0.0 else wanted
 		others = headcount.people_in(budget.standing_lines(world, 0.0))
 		soldiers, wanted = headcount.checked_army(world, self.record, wanted, soldiers, others)
@@ -124,11 +132,13 @@ class Government(CorveeMixin, CreditRecordMixin, CoinageMixin, EnterpriseMixin, 
 		self.record.material_need = state_enterprises.needs_of(standing)
 		lines = self.draw_stores(standing, world)
 		self.keep_granary(world)
-		share = budget.funded_share(sum(line.money for line in lines), self.money + self.credit_ceiling(world))
-		self.record.army = budget.army_next_year(soldiers, wanted, share)
+		share = self.meet_shortfall(lines, world)
+		army_supplied = min([share] + [budget.supplied_share(line) for line in lines if line.name == "army"])
+		self.record.army = budget.army_next_year(soldiers, wanted, army_supplied)
+		self.record.unmet_goods = budget.unmet_goods(lines)
 		self.record.need = {line.name: line.money for line in lines}
-		self.record.unfunded = {line.name: line.money * (1.0 - share) for line in lines}
-		arrears.owe(self.record, lines, share)
+		self.record.unfunded = budget.unfunded_by_line(lines, share)
+		arrears.owe(self.record, lines, share, self.deferred_fraction(lines, share))
 		state_works.wear(state_works.held(world), share, PUBLIC_BUILDING_LIFE_YEARS)
 		if any(line.name == "donative" for line in lines):
 			self.record.accession_due = False
@@ -165,7 +175,7 @@ class Government(CorveeMixin, CreditRecordMixin, CoinageMixin, EnterpriseMixin, 
 		self.record.levy_base = sum(world.notice_over(scale) * income for scale, income in payers)
 		kinds = {line.name: line.kind for line in lines}
 		self.record.levy_requisition_rate, self.record.levy_office_rate = budget.levy_rates(
-			self.record.unfunded, kinds, self.record.levy_base)
+			self.levy_sought(), kinds, self.record.levy_base)
 
 	def accede(self, world: Any) -> None:
 		"""A new ruler accedes with a yearly chance, and owes the army a donative until it is paid."""
@@ -180,7 +190,6 @@ class Government(CorveeMixin, CreditRecordMixin, CoinageMixin, EnterpriseMixin, 
 		self.purses.redeem_bonds(self.account_id)
 		self.accede(world)
 		lines, share = self.pay_standing_need(world)
-		self.decide_debasement(world)
 		self.pay_patron(share, world)
 		self.act(world)
 		self.run_enterprises(world)
@@ -188,4 +197,6 @@ class Government(CorveeMixin, CreditRecordMixin, CoinageMixin, EnterpriseMixin, 
 		self.build_works(lines, world)
 		self.employ_standing(lines, share, world)
 		self.seek_shortfall(lines, world)
+		if self.record.country is not None:
+			self.workforce.clear()   # a country's state staff are its own people: not the founder's pool, nor counted in it
 		self.press_new_staff(held, world)

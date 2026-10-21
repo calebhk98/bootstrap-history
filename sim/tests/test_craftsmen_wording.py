@@ -1,6 +1,10 @@
-"""craftsmen_wording: regression checks, run individually with `--only craftsmen_wording`."""
+"""craftsmen_wording: the diffusion and relief rules are called with figures built here (diffusion_rules, a fake hazard
+mixin); what stays through a game is named "scenario" or marked presentation. Run with `--only craftsmen_wording`."""
 from .harness import *  # noqa: F401,F403
 from .plague_fixture import ANTONINE, BLACK_DEATH, with_hazard
+
+from sim.engine.diffusion_rules import medical_relief, spread_share, weapons_relief
+from sim.engine.hazard_relief import HazardReliefMixin
 
 # ===========================================================================
 # "What does it mean when it says I need 2.13 craftsmen?" - wording only,
@@ -14,7 +18,7 @@ for _p in S.closure(NODES, "lens_grinding"):
 s_shut.done.add("lens_grinding")
 s_shut._done_changed()
 _why_sg = S._agent_dispatch(s_shut, NODES, {"cmd": "why", "id": "lens_grinding"})
-check("`why`'s staff_to_keep_it_open is exactly venture_hands's own number",
+check("scenario: `why`'s staff_to_keep_it_open is exactly venture_hands's own number",
       (_why_sg.get("staff_to_keep_it_open") or {}).get("artisans")
       == round(s_shut.venture_hands("lens_grinding")[1], 2),
       _why_sg.get("staff_to_keep_it_open"))
@@ -26,17 +30,18 @@ check("`why`'s staff_to_keep_it_open is exactly venture_hands's own number",
 s_cc = unopened_sim(civ="rome_100ad", capital=1e6, manual=True, events=False)
 s_cc.done.update(NODES["ag2_cold_store"]["pre"])  # prerequisites held, so only staffing can refuse
 _ok_cc, _why_cc = s_cc.start_reason("ag2_cold_store", ignore_trade=True)
-check("the craftsmen staffing refusal still refuses for the same reason, "
+check("scenario: the craftsmen staffing refusal still refuses for the same reason, "
       "unchanged arithmetic",
       not _ok_cc and "craftsmen" in _why_cc, _why_cc)
 
 # ONE NAME FOR THE FOUNDER'S OWN WORK. The wage-work reply once called it
 # "the practice" and then "the surgery"; a Roman founder selling a year of a
 # smith's labour has neither. It is a job and the reply says wage, not practice.
+# presentation: the wage-work reply's wording (no practice or surgery)
 _s_wg = unopened_sim()
 _wg = S._agent_dispatch(_s_wg, NODES, {"cmd": "work", "trade": "labourer",
                                        "hours": 2000})
-check("wage work states what a year of labourer's time paid, with no practice or surgery in the reply",
+check("scenario: wage work states what a year of labourer's time paid, with no practice or surgery in the reply",
       (_wg.get("earned") or 0) > 0 and "practice" not in str(_wg).lower() and "surgery" not in str(_wg).lower(),
       _wg)
 
@@ -67,25 +72,25 @@ check("the four diffusion categories this section reads are real nodes with "
       and "information" in NODES[_INFO_NODE]["traits"],
       (_FOOD_NODE, _MED_NODES, _MIL_NODES2, _INFO_NODE))
 
-# --- civ_diffusion itself: zero until done, zero the instant it is done,
-# grows with age, bounded at 1.0, deterministic over a sorted sum.
+# --- spread_share: zero at once, half after one half-life, bounded at all of it.
+check("nothing has spread the instant a technology completes - diffusion takes time",
+      spread_share(0.0, 25.0) == 0.0)
+check("half is spread after one half-life, and a quarter remains after two",
+      abs(spread_share(25.0, 25.0) - 0.5) < 1e-12 and abs(spread_share(50.0, 25.0) - 0.75) < 1e-12)
+check("however long it has had, the share never exceeds one", spread_share(1.0e6, 25.0) <= 1.0)
+check("a negative age (the clock before completion) spreads nothing", spread_share(-5.0, 25.0) == 0.0)
+
+# --- SCENARIO (wiring): civ_diffusion reads the built node's age through the diffusion category's half-life, and is
+# zero for a node outside the four categories.
 s = unopened_sim(civ="rome_100ad")
-check("civ_diffusion is zero for a technology nobody has built",
+check("scenario: civ_diffusion is zero for a technology nobody has built",
       s.civ_diffusion(_FOOD_NODE) == 0.0, s.civ_diffusion(_FOOD_NODE))
 s.done.add(_FOOD_NODE); s.done_year[_FOOD_NODE] = s.year
-check("...and zero the instant it completes - diffusion takes time, it is "
-      "not a second instant effect layered on apply_tech_effects",
-      s.civ_diffusion(_FOOD_NODE) == 0.0, s.civ_diffusion(_FOOD_NODE))
 s.year += 25   # one DIFFUSION_HALF_LIFE_YEARS["food"]
 _half = s.civ_diffusion(_FOOD_NODE)
-s.year += 1000
-_far = s.civ_diffusion(_FOOD_NODE)
-check("diffusion is about half-spread after one half-life and never "
-      "exceeds 1.0 however long it has had",
-      0.45 < _half < 0.55 and _far <= 1.0 + 1e-9,
-      (_half, _far))
-check("a node with none of the four diffusible traits never diffuses at "
-      "all - this mechanism has nothing to say about a lathe or a ledger",
+check("scenario: ...and about half-spread after the food half-life once built",
+      0.45 < _half < 0.55, _half)
+check("scenario: a node with none of the four diffusible traits never diffuses at all",
       s.civ_diffusion("workshop_first") == 0.0
       and not any(trait in ("food", "medical", "military", "information")
                   for trait in NODES["workshop_first"]["traits"]),
@@ -102,12 +107,12 @@ run_it(s_patron, "patron_imperial")
 for k in _MIL_NODES2:
     s_patron.done.add(k); s_patron.done_year[k] = s_patron.year
 s_patron.year += 200
-check("military technology the founder built never reaches the state's "
+check("scenario: military technology the founder built never reaches the state's "
       "hands however long it has had, unless the government holds it",
       s_nopatron.state_military_diffusion() == 0.0
       and s_patron.state_military_diffusion() == 0.0, s_patron.state_military_diffusion())
 s_patron.state_treasury().knowledge.update(_MIL_NODES2)
-check("...but once the government actor holds it, it genuinely has - the "
+check("scenario: ...but once the government actor holds it, it genuinely has - the "
       "user's own 'give the Roman government cannons' scenario",
       s_patron.state_military_diffusion() > 0.5, s_patron.state_military_diffusion())
 
@@ -132,50 +137,42 @@ def _plague_line2(civ, hazard_substr, med_nodes, years_before, capital=1e9):
     return next((message for _year, message in household.log if hazard_substr in message), "")
 
 
+# The national toll is read from the log line's structured fact (`national_toll_percent`), not from its wording.
 _antonine_fresh = _plague_line2("rome_100ad", "Antonine plague", _MED_NODES, 0)
 _antonine_old = _plague_line2("rome_100ad", "Antonine plague", _MED_NODES, 300)
-check("medicine the founder has only JUST built gives the empire at large "
+_HISTORICAL_PERCENT = round(100 * ANTONINE["staff_loss"])
+check("scenario: medicine the founder has only JUST built gives the empire at large "
       "no relief yet - diffusion has not had time to happen",
-      "Empire-wide, population -28%" in _antonine_fresh
-      and "softer" not in _antonine_fresh,
-      _antonine_fresh)
-check("the SAME medicine, diffused through three centuries, visibly softens "
+      _antonine_fresh.facts["national_toll_percent"] > 0
+      and _antonine_fresh.facts["national_toll_percent"] == _HISTORICAL_PERCENT, _antonine_fresh.facts)
+check("scenario: the SAME medicine, diffused through three centuries, visibly softens "
       "the empire-wide toll - the user's 'minor sickness' claim, answered "
       "against the empire's own figure, never against the founder's",
-      "softer" in _antonine_old
-      and "Empire-wide, population -28%" not in _antonine_old,
-      _antonine_old)
+      _antonine_old.facts["national_toll_percent"] < _antonine_fresh.facts["national_toll_percent"],
+      (_antonine_old.facts, _antonine_fresh.facts))
 
 _black_death = _plague_line2("england_1300", "Black Death", _MED_NODES, 400)
-check("diffused medicine four centuries deep can turn even the Black Death "
+check("scenario: diffused medicine four centuries deep can turn even the Black Death "
       "into a barely-registering empire-wide event - the user's example by "
       "name",
-      "barely registers" in _black_death or "softer" in _black_death,
-      _black_death)
+      _black_death.facts["national_toll_percent"] <= 1, _black_death.facts)
 
-check("medical diffusion relief has no fixed ceiling: full coverage with a "
-      "capable state can remove the epidemic entirely",
-      (lambda nation: (setattr(nation, "state_capacity", 1.0),
-                       setattr(nation, "medical_diffusion_index", lambda: 1.0),
-                       nation.medical_diffusion_relief())[-1])(unopened_sim(civ="rome_100ad")) >= 1.0,
-      "relief at full coverage")
+check("medical diffusion relief has no fixed ceiling: full coverage with a capable state removes the epidemic entirely",
+      medical_relief(1.0, 0.5, 1.0) >= 1.0)
+check("...with no state the guidance is followed by the base share alone",
+      abs(medical_relief(1.0, 0.5, 0.0) - 0.5) < 1e-12)
+check("...no coverage, no relief; and relief never exceeds one", medical_relief(0.0, 0.5, 1.0) == 0.0
+      and medical_relief(5.0, 0.5, 1.0) == 1.0)
 
-# --- and this never touches the founder's own, personal figure (`loss`),
-# nor sack_chance/output_factor, which are a different category entirely.
-s_bare_h = unopened_sim(civ="rome_100ad")   # never changed: only read below, then shared with later read-only checks
-s_med_mil = unopened_sim(civ="rome_100ad")
-for k in _MED_NODES:
-    s_med_mil.done.add(k); s_med_mil.done_year[k] = s_med_mil.year - 300
-_out_nomed = s_bare_h.hazard_relief("output_factor")[0]
-_out_med = s_med_mil.hazard_relief("output_factor")[0]
-_sack_nomed = s_bare_h.hazard_relief("sack_chance")[0]
-_sack_med = s_med_mil.hazard_relief("sack_chance")[0]
-check("diffused medicine gives no relief against output_factor or "
-      "sack_chance - those are war's categories, not medicine's, the same "
-      "boundary the pre-existing 'military gives no relief against staff "
-      "loss' check already holds in the other direction",
-      _out_med == _out_nomed and _sack_med == _sack_nomed,
-      (_out_nomed, _out_med, _sack_nomed, _sack_med))
+# --- and this never touches the founder's own, personal figure (`loss`), nor sack_chance/output_factor, which are a
+# different category entirely: no medical node is a counter of war's kinds (data, no game).
+_medical_war_counters = [
+    (node_id, counter["kind"]) for node_id, node in sorted(NODES.items()) if "medical" in node.get("traits", ())
+    for counter in (node.get("mechanics") or {}).get("hazard_counters") or ()
+    if counter["kind"] in ("output_factor", "sack_chance")]
+s_bare_h = unopened_sim(civ="rome_100ad")   # only read below, shared with later read-only checks
+check("diffused medicine gives no relief against output_factor or sack_chance: those are war's categories, not "
+      "medicine's", not _medical_war_counters, _medical_war_counters)
 
 # =============================================================================
 # WAR: a state that is actually armed, not only a founder who privately is,
@@ -183,30 +180,42 @@ check("diffused medicine gives no relief against output_factor or "
 # line the brief draws around it: the Gothic wars cost the country less -
 # they do not stop happening, and nothing here ever deletes a hazard or
 # moves its calendar.
-s_armed_h = unopened_sim(civ="rome_100ad")
-run_it(s_armed_h, "patron_imperial")
-for k in _MIL_NODES2:
-    s_armed_h.done.add(k); s_armed_h.done_year[k] = s_armed_h.year - 200
-s_armed_h.state_treasury().knowledge.update(_MIL_NODES2)
-_of_bare, _ = s_bare_h.hazard_relief("output_factor")
-_of_armed, _of_why = s_armed_h.hazard_relief("output_factor")
-_sk_bare, _ = s_bare_h.hazard_relief("sack_chance")
-_sk_armed, _sk_why = s_armed_h.hazard_relief("sack_chance")
-check("a state that has actually absorbed the founder's cannon loses less "
-      "trade to a dated war...",
-      _of_armed < _of_bare
+class ArmedState(HazardReliefMixin):
+    """Just what hazard_relief_entries reads: no node counters, the founder's own strength nil, a state holding weapons."""
+    HAZARD_COUNTERS = {}
+    STATE_MIL_RELIEF_PER_WEAPON_OUTPUT = 0.04
+    STATE_MIL_RELIEF_PER_WEAPON_SACK = 0.06
+
+    def __init__(self, weapons):
+        self.weapons = weapons
+
+    def _military_war_relief(self):
+        return 1.0, None
+
+    def _state_military_diffusion_relief(self, per_weapon):
+        return weapons_relief(per_weapon, self.weapons)
+
+    def _entry_words(self, entry):
+        return entry["label"]
+
+
+_of_bare, _ = ArmedState(0).hazard_relief("output_factor")
+_of_armed, _of_why = ArmedState(2).hazard_relief("output_factor")
+_sk_bare, _ = ArmedState(0).hazard_relief("sack_chance")
+_sk_armed, _sk_why = ArmedState(2).hazard_relief("sack_chance")
+check("a state that holds the founder's weapons loses less trade to a dated war, and says why",
+      _of_bare == 1.0 and abs(_of_armed - (1 - 0.04) ** 2) < 1e-12
       and any("state's own armies" in explanation for explanation in _of_why),
       (_of_bare, _of_armed, _of_why))
-check("...and is measurably less likely to be sacked, which before this "
-      "change was true of the founder's OWN walls and guns but never of "
-      "the state's - this is the user's cannon example",
-      _sk_armed < _sk_bare
+check("...and is less likely to be sacked, by the sack share per weapon and not the output share",
+      _sk_bare == 1.0 and abs(_sk_armed - (1 - 0.06) ** 2) < 1e-12
       and any("state's own armies" in explanation for explanation in _sk_why),
       (_sk_bare, _sk_armed, _sk_why))
-check("the relief is bounded on both fields, never enough on its own to "
-      "erase a war's cost or a raid's chance entirely",
-      0.0 < _of_armed and 0.0 < _sk_armed,
-      (_of_armed, _sk_armed))
+check("the relief is bounded on both fields, never enough on its own to erase a war's cost or a raid's chance",
+      0.0 < _of_armed < 1.0 and 0.0 < _sk_armed < 1.0 and 0.0 < ArmedState(1000).hazard_relief("sack_chance")[0])
+check("each weapon removes its share of what is left, so the first removes more than the next",
+      (1.0 - ArmedState(1).hazard_relief("sack_chance")[0]) > (ArmedState(1).hazard_relief("sack_chance")[0]
+                                                           - ArmedState(2).hazard_relief("sack_chance")[0]))
 
 _rome_gothic = _hazard("rome_100ad", "Adrianople and the Gothic settlement")
 check("the Gothic settlement hazard itself still has no `condition` and no "
@@ -232,7 +241,7 @@ def _literacy_after(info_done, years=60):
 
 _lit_no_info = _literacy_after(False)
 _lit_with_info = _literacy_after(True)
-check("a diffused printing press measurably speeds up how fast a running "
+check("scenario: a diffused printing press measurably speeds up how fast a running "
       "school raises general literacy, holding the school itself fixed - "
       "the user's fourth point given the mechanical home the brief named",
       _lit_with_info > _lit_no_info,
@@ -247,7 +256,7 @@ check("a diffused printing press measurably speeds up how fast a running "
 _wd_fresh = unopened_sim(civ="rome_100ad")
 _wd_fresh.fog = True
 _wd_start = S._agent_dispatch(_wd_fresh, NODES, {"cmd": "state", "full": True})
-check("'world_diffusion' is not merely null but genuinely ABSENT from "
+check("scenario: 'world_diffusion' is not merely null but genuinely ABSENT from "
       "`state full` at the start of a run - zero added bytes against an "
       "already nearly-full byte budget",
       "world_diffusion" not in _wd_start, sorted(_wd_start))
@@ -257,7 +266,7 @@ s_cli.done.add(_FOOD_NODE); s_cli.done_year[_FOOD_NODE] = s_cli.year
 for i in range(1, 31):
     s_cli.year += 1
     s_cli.advance_society(s_cli.year)
-check("once something has genuinely diffused, world_diffusion_report is no "
+check("scenario: once something has genuinely diffused, world_diffusion_report is no "
       "longer None and names how much of farming the country has adopted",
       s_cli.world_diffusion_report() is not None
       and s_cli.world_diffusion_report()["food_and_farming_the_country_has_adopted"] > 0,
@@ -302,7 +311,7 @@ def _diffusion_snapshot(seed_env):
 
 
 _dif_a, _dif_b = _par_map(_diffusion_snapshot, ("0", "24680"))
-check("the whole diffusion mechanism - food, medical, military, "
+check("scenario: the whole diffusion mechanism - food, medical, military, "
       "information and the population bonus it drives - gives identical "
       "results under a different PYTHONHASHSEED",
       _dif_a == _dif_b and not _dif_a.startswith("ERROR"), (_dif_a, _dif_b))
@@ -322,13 +331,13 @@ for _civ in ("rome_100ad", "han_china_100ad", "norse_900ad", "england_1300",
              "mexica_1500"):
     _s_soc = _soc_sims[_civ] = s_bare_h if _civ == "rome_100ad" else unopened_sim(civ=_civ)
     _soc_room[_civ] = (_s_soc.has("fin_societas"), _s_soc.labour.supervision_room())
-check("Rome alone starts with a partnership, and so oversees more people in "
+check("scenario: Rome alone starts with a partnership, and so oversees more people in "
       "its first year than the four civilisations that must build one",
       _soc_room["rome_100ad"][0]
       and not any(_soc_room[civ_id][0] for civ_id in _soc_room if civ_id != "rome_100ad")
       and all(_soc_room["rome_100ad"][1] > _soc_room[civ_id][1]
               for civ_id in _soc_room if civ_id != "rome_100ad"), _soc_room)
-check("...and the four without it all start level with each other, so this is "
+check("scenario: ...and the four without it all start level with each other, so this is "
       "the one technology doing it and not a population effect",
       len({round(_soc_room[civ_id][1], 3) for civ_id in _soc_room
            if civ_id != "rome_100ad"}) == 1, _soc_room)
@@ -336,13 +345,14 @@ check("...and the four without it all start level with each other, so this is "
 # AND IT IS NOT SILENT. The breakdown names the partnership, and it is the
 # same walk supervision_room sums, so it cannot drift from the total.
 _s_soc_r = _soc_sims["rome_100ad"]
+# presentation: the capacity screen names its source
 _soc_cap = S._agent_dispatch(_s_soc_r, NODES, {"cmd": "capacity"})
 _soc_sc = _soc_cap.get("spare_capacity") or {}
 _soc_rows = _soc_sc.get("and_where_that_comes_from") or []
-check("the capacity screen says where the headroom comes from, and names the "
+check("scenario: the capacity screen says where the headroom comes from, and names the "
       "partnership rather than leaving a Roman player to wonder",
       any(source_row.get("source") == "fin_societas" for source_row in _soc_rows), _soc_rows)
-check("...and the rows add up to exactly the figure they explain, for every "
+check("scenario: ...and the rows add up to exactly the figure they explain, for every "
       "civilisation, so the breakdown cannot drift from the total",
       all(abs(sum(source_row["people"] for source_row in _soc_sims[civ_id].labour.supervision_room_from())
               - _soc_sims[civ_id].labour.supervision_room()) < 1e-9
@@ -355,6 +365,7 @@ check("...and the rows add up to exactly the figure they explain, for every "
 # AI agent that has played built a tmux or FIFO harness to hold the process
 # open, because the one place that explained otherwise was filed under
 # "sittings" - a word about a person at a keyboard over several evenings.
+# presentation: the help pages' wording
 _s_sit = s_bare_h
 for _alias in ("script", "agent", "batch", "oneshot", "non-interactive"):
     _h = S._agent_dispatch(_s_sit, NODES, {"cmd": "help", "topic": _alias})

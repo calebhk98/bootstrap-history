@@ -2,6 +2,9 @@
 from dataclasses import dataclass
 from typing import Tuple
 
+from sim.geography.api import cargo_cost
+from sim.world import trader_response
+
 
 @dataclass(frozen=True)
 class Leg:
@@ -40,3 +43,14 @@ def route_from_geography(found):
         Leg(leg["from"], leg["to"], leg["mode"], leg["km"], leg["cost_per_tonne"],
             leg["days"] + leg.get("handling_days", 0.0))
         for leg in found["legs"]))
+
+
+def domestic_cargo_cost_share(spoilage_rate_per_year, loss_per_day_by_mode, route, annual_rate):
+    """The cargo's own cost over a domestic haul as a share of its price: interest at `annual_rate` while it
+    travels, spoilage over that time, and the daily loss each leg's mode states (a herd on the road). No
+    merchant margin."""
+    years = route.travel_days / 365.0
+    spoilage = cargo_cost.spoilage_share(spoilage_rate_per_year, years)
+    road = cargo_cost.lost_share(*(cargo_cost.daily_loss_share(loss_per_day_by_mode.get(leg.mode, 0.0), leg.travel_days)
+                                   for leg in route.legs))
+    return trader_response.cost_share_of_price(0.0, cargo_cost.lost_share(spoilage, road), annual_rate, years)

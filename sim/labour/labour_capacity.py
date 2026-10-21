@@ -27,6 +27,11 @@ import math
 from sim.constants import declare
 from sim.refusal import Refusal
 from . import legacy_trade_defaults, trade_data
+from .founder_hours import hours_committed, hours_pool
+from .hire_outcome import craft_trades_report
+from .room_advice import room_advice, sources_to_build, sources_to_reopen
+from .staff_advice import staff_remedies
+from .staff_moves import whole_people_under_wall
 from .wage_provider import reference_civilisation
 
 
@@ -86,17 +91,10 @@ class CapacityMixin:
             "being a total stop.")
 
     def director_pool(self):
-        total_hours = 0.0
-        if self._world.state.founder.founder_alive:
-            own = self._world.cfg["founder_hours_per_year"]
-            # In bondage most of your hours are owed to somebody else. Not all
-            # of them: nobody worked every waking hour, and the evenings are
-            # where the work gets done. This is the cost, and it is temporary.
-            if self._world.state.household.bondage_years_left > 0:
-                own *= self.BONDAGE_HOURS_SHARE
-            total_hours += own
-        total_hours += self._world.state.household.directors_extra * self._world.cfg["director_hours_per_year"]
-        return total_hours
+        # In bondage most of your hours are owed to somebody else, not all: the evenings are where the work gets done.
+        return hours_pool(self._world.state.founder.founder_alive, self._world.cfg["founder_hours_per_year"],
+                          self._world.state.household.bondage_years_left > 0, self.BONDAGE_HOURS_SHARE,
+                          self._world.state.household.directors_extra, self._world.cfg["director_hours_per_year"])
 
     # ---- literacy bounds who you can hire ----------------------------------
     # FINDINGS_ROUND2 section Q: every civ file carries literacy_general and
@@ -123,9 +121,7 @@ class CapacityMixin:
 
     def craft_trades_report(self):
         """The trades that supervise as craft and those that do not, by the same test `is_craft_trade` applies."""
-        trades = sorted(self._world.wages)
-        return {"craft": [trade for trade in trades if self.is_craft_trade(trade)],
-                "not_craft": [trade for trade in trades if not self.is_craft_trade(trade)]}
+        return craft_trades_report(self._world.wages, self.is_craft_trade)
     # The literacy this file's trade shares and staff ceilings were already
     # tuned against, before literacy was read anywhere: the default
     # civilisation's own numbers, because every other constant in this economy -
@@ -337,8 +333,7 @@ class CapacityMixin:
         "literacy" when the market-reach term is doing most of the work
         misleads a player into pulling the wrong lever.
         """
-        _room = max(0.0, cap - have)
-        _whole = int(_room + 1e-9)
+        _whole = whole_people_under_wall(cap, have)
         lever = (
             "Building the institutions that train scholars outright - a "
             "school, an academy, an imperial patron - is what actually "
@@ -422,49 +417,17 @@ class CapacityMixin:
         # endowment_land or court an imperial patron, instead of simply
         # reopening what they already own.
         projects = self._world.state.projects
-        reopen = [(node_id, add) for node_id, add in self._world.ROOM_SOURCES
-                  if node_id in projects.done and node_id in self._world.nodes and node_id not in projects.operating
-                  and self._world.is_venture(node_id)]
-        reopen.sort(key=lambda kv: -kv[1])
-        want = [(node_id, add) for node_id, add in self._world.ROOM_SOURCES
-                if node_id not in projects.done and node_id in self._world.nodes
-                and self._world.is_visible(node_id)]
+        reopen = sources_to_reopen(self._world.ROOM_SOURCES, projects.done, projects.operating, self._world.nodes,
+                                   self._world.is_venture)
         # NEAREST FIRST, and nearest means how much of the tree stands between
         # you and it. Sorted on size alone this offered power_grid (+130) to a
         # founder with six places - the last node in the game, true and
         # useless - while workshop_first, one prerequisite away, went unnamed.
-        def _distance(node_id):
-            return len(self._world.closure(self._world.nodes, node_id) - projects.done)
-        want.sort(key=lambda kv: (_distance(kv[0]), -kv[1]))
-        _reopen_bit = (
-            ("you already have %s, shut: reopening %s is cheaper than "
-             "building anything else. "
-             % (" and ".join("%s (+%s)" % (node_id, self._places_text(places)) for node_id, places in reopen[:2]),
-                "it" if len(reopen) == 1 else "them"))
-            if reopen else "")
-        _housing_bit = ("Housing is bought: 'buy housing N' adds N places at %s each. "
-                        % self._world.money_text(self._world.housing_price_per_place(), grouped=True))
-        _housing = [{"action": "buy_housing", "node": None}]
-        _reopens = [{"action": "reopen", "node": node_id} for node_id, _places in reopen[:2]]
-        if not want:
-            if reopen:
-                return Refusal("room_advice", "%sThe rest is built - or in this case, "
-                               "reopened: %s'open %s'."
-                               % (_housing_bit, _reopen_bit, reopen[0][0]), remedies=_housing + _reopens)
-            return Refusal("room_advice", "%sBeyond that, room comes from institutions and heavy "
-                           "industry, and you have every one of them this society "
-                           "offers; what is left grows on its own as they run."
-                           % _housing_bit, remedies=_housing)
-        _now = [(node_id, places) for node_id, places in want if self._world.start_reason(node_id, _why=False)[0]]
-        return Refusal("room_advice", "%sMore room is built: %s%s at your present income (the places grow "
-                       "with surplus, since each needs people you can pay). Each is somewhere for "
-                       "people to work and somebody to oversee them.%s"
-                       % (_housing_bit, _reopen_bit,
-                          "; ".join("%s (+%s places)" % (node_id, self._places_text(places)) for node_id, places in want[:3]),
-                          "" if _now else " None is startable today; they are listed "
-                                          "nearest first, so the first is what to work "
-                                          "towards."),
-                       remedies=_housing + _reopens + [{"action": "build", "node": node_id} for node_id, _places in want[:3]])
+        want = sources_to_build(self._world.ROOM_SOURCES, projects.done, self._world.nodes, self._world.is_visible,
+                                lambda node_id: len(self._world.closure(self._world.nodes, node_id) - projects.done))
+        startable_now = any(self._world.start_reason(node_id, _why=False)[0] for node_id, _places in want)
+        return room_advice(self._world.money_text(self._world.housing_price_per_place(), grouped=True),
+                           reopen, want, startable_now, self._places_text)
 
     # WHO TRAINS PEOPLE, AND HOW MANY OF THEM.
     #
@@ -884,47 +847,19 @@ class CapacityMixin:
         `deficit` is how many more people the caller is short; the hire
         advice is sized to it.
         """
-        bits, remedies = [], []
-        for node, why in self._world.STAFF_SOURCES.get(kind, []):
-            if node == "HIRE" and deficit:
-                bits.append(self._world.staff_hire_advice(kind, math.ceil(deficit - 1e-9)))
-                remedies.append({"action": "hire", "node": None})
-            elif node in ("BUY", "HIRE"):
-                bits.append(why)
-                remedies.append({"action": node.lower(), "node": None})
-            # CLOSED IS NOT MISSING. market_supply() only applies a source's
-            # multiplier via running(node), so a school built and then shut
-            # for want of a supervisor stops widening the hiring pool exactly
-            # as if it had never been built - and this advice, filtering on
-            # `node not in self.household.done`, fell silent about it rather than
-            # naming the actual remedy. Reopening costs a supervisor, not a
-            # second institution; say that first.
-            elif node in self._world.state.projects.done and node not in self._world.state.projects.operating and self._world.is_venture(node):
-                bits.append("reopen %s ('open %s') - you already built this; "
-                            "it is only shut" % (node, node))
-                remedies.append({"action": "reopen", "node": node})
-            elif node not in self._world.state.projects.done and self._world.is_visible(node):
-                # NOT A CIRCLE. `why workshop_first` says it is blocked for want
-                # of artisans, and the advice on how to get artisans said "build
-                # workshop_first (you need somewhere for them to work)" - a play
-                # tester quoted the two lines against each other. If the remedy
-                # is itself waiting on the very thing it is meant to supply,
-                # naming it is worse than saying nothing: say what it is waiting
-                # on instead, so the reader knows which end to start at.
-                # Asked DIRECTLY of the node's own requirement, never through
-                # start_reason - which calls this function, so the obvious
-                # version of this test recurses until the stack gives out.
-                _node = self._world.nodes[node]
-                _short = (_node["art"] > self._world.state.household.artisans + 1e-9 if kind == "artisans"
-                          else _node["sch"] > self.effective_scholars() + 1e-9)
-                if _short:
-                    bits.append("build %s eventually (%s) - but it is itself "
-                                "waiting on %s, so hire or commission first"
-                                % (node, why, kind))
-                    remedies.append({"action": "build_after_hiring", "node": node})
-                else:
-                    bits.append("build %s (%s)" % (node, why))
-                    remedies.append({"action": "build", "node": node})
+        projects = self._world.state.projects
+
+        def waiting_on_kind(node_id):
+            # Asked DIRECTLY of the node's own requirement, never through start_reason, which calls this function.
+            node = self._world.nodes[node_id]
+            return (node["art"] > self._world.state.household.artisans + 1e-9 if kind == "artisans"
+                    else node["sch"] > self.effective_scholars() + 1e-9)
+
+        steps = staff_remedies(kind, self._world.STAFF_SOURCES.get(kind, []), deficit, projects.done,
+                               projects.operating, self._world.is_venture, self._world.is_visible, waiting_on_kind,
+                               self._world.staff_hire_advice)
+        bits = [sentence for sentence, _remedy in steps]
+        remedies = [remedy for _sentence, remedy in steps]
         if not bits:
             return Refusal("staff_advice", "wait: your existing institutions add %s each year." % kind, remedies=[])
         return Refusal("staff_advice", "To get more %s: %s." % (kind, "; ".join(bits[:3])), remedies=remedies[:3])
@@ -942,10 +877,10 @@ class CapacityMixin:
         a free second year inside every year. There is one year, and one
         pair of hands.
         """
-        return (getattr(self._world.household, "teaching_hours_this_year", 0.0)
-                + (getattr(self._world.household, "relocation_hours_this_year", 0.0) or 0.0)
-                + (getattr(self._world.household, "supervision_hours_this_year", 0.0) or 0.0)
-                + self._world.household.wage_hours_this_year)
+        household = self._world.household
+        return hours_committed(getattr(household, "teaching_hours_this_year", 0.0),
+                               getattr(household, "relocation_hours_this_year", 0.0),
+                               getattr(household, "supervision_hours_this_year", 0.0), household.wage_hours_this_year)
 
     def household_room(self):
         """How many more people this household can feed, house and oversee.

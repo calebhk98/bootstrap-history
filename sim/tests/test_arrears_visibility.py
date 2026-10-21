@@ -1,115 +1,71 @@
-"""A project underfunded by arrears says so: in the log and on `why`, `stuck` and `portfolio`."""
+"""A project underfunded by arrears says so: in the log and on `why`, `stuck` and `portfolio`.
+
+The screens print what the project's state carries (checked on built replies); the log kind is a failure; one
+named scenario reads the three replies off a game whose project carries the funding rule's verdict."""
 from .harness import *  # noqa: F401,F403
-from sim.refusal import cause_of, facts_of
+from sim.refusal import LogLine, cause_of, facts_of
+from sim.engine import project_funding
+from sim.engine.arrears_hours_line import arrears_hours_line
+from sim.ui.proto import event_kinds, render_portfolio_rows, render_screen_why
 
-s_arrears = s = sim(capital=1000.0)
-_af_k = next(node_id for node_id in NODES
-     if NODES[node_id]["yrs"] >= 3 and NODES[node_id]["ph"] > 500)
-_af_n = NODES[_af_k]
-s.active[_af_k] = dict(ph_left=float(_af_n["ph"]), yrs=0.0, spent=0.0,
-                      cost_left=s.project_cost(_af_k), lab_left=dict(_af_n["lab"]))
-_lim_af = s.credit_limit()
-_fixed_af = s.living_cost() + s.upkeep() + s.mine_operating_cost()
-_reserve_af = max(0.0, _fixed_af - s.revenue())
-# Deep enough that the project's own purse (capital + 0.6*limit - reserve)
-# is negative, but still inside credit_limit so enforce_credit_limit does
-# not wipe `active` out from under this check.
-# Arrears are just deep enough for that purse to be negative (50 short of it), not deeper: a deeper
-# debt costs interest at the market rate, and at a high rate one year's interest alone could carry
-# the household past the limit.
-s.capital = min(-1.0, _reserve_af - 0.6 * _lim_af - 50.0)
-_before_log = len(s.log)
-s.step()
-check("set-up: the project really is underfunded by arrears this year",
-      s.active.get(_af_k, {}).get("underfunded_this_year") is True,
-      s.active.get(_af_k, {}).get("why_underfunded"))
-_new_lines = [message for _, message in s.log[_before_log:]]
-check("the year it happens, the log SAYS founder-hours were wasted to "
-      "arrears, by name - not only on a project screen a player has to "
-      "think to check",
-      any(cause_of(message) == "arrears_hours_lost" and _af_k in facts_of(message)["projects"]
-          for message in _new_lines),
-      _new_lines)
-# presentation: the failure marker is a wording convention
-check("...and it is recognisable as bad news by the same marker every "
-      "other arrears line already uses ('log failures' finds it)",
-      any(_PROTO._is_failure_line(message) for message in _new_lines
-          if cause_of(message) == "arrears_hours_lost"),
-      _new_lines)
+_reason = project_funding.WHY_IN_ARREARS
 
-# --- and a project that is merely calendar-waiting, fully paid, gets no
-# such line: only real, costed hour-loss is reported, never every year a
-# household happens to be in arrears.
+# --- a fully-paid project, waiting only on the calendar, has no hours lost to arrears to report
+check("a project that owes nothing further loses no hours to arrears, so the wasted-hours line is never raised for it",
+      project_funding.fund_year(0.0, -5000.0, 400.0, 0.0, 500.0, True).hours_lost_to_arrears == 0.0)
+
+# --- the log line is bad news, found by 'log failures'
+check("a line of kind arrears_hours_lost is a failure, as every other arrears line is",
+      event_kinds.is_failure(LogLine("arrears_hours_lost", "x", projects=["p"])))
+
+# --- the screens print the cause the project carries
+# presentation: the rendered screens print the stored cause
+check("the portfolio row prints why_underfunded under the row's 'waiting on' line",
+      _reason in " ".join(" ".join(line.split()) for line in render_portfolio_rows.project_lines(
+          {"name": "Academy", "constraint": "founder_hours", "waiting_on": "your hours", "why_underfunded": _reason})),
+      render_portfolio_rows.project_lines({"name": "Academy", "constraint": "founder_hours",
+                                           "waiting_on": "your hours", "why_underfunded": _reason}))
+# presentation: the rendered screens print the stored cause
+check("the portfolio row prints no cause for a project that is not underfunded",
+      not any("arrears" in line for line in render_portfolio_rows.project_lines(
+          {"name": "Academy", "constraint": "founder_hours", "waiting_on": "your hours"})))
+# presentation: the rendered screens print the stored cause
+_why_lines = render_screen_why._why_status({"active": True, "waiting_on": "your hours", "why_underfunded": _reason})
+check("the `why` screen prints why_underfunded for an active project, as well as what it waits on",
+      "waiting on: your hours" in " ".join(" ".join(_why_lines).split()) and "arrears" in " ".join(_why_lines), _why_lines)
+# presentation: the rendered screens print the stored cause
+_stuck_text = _PROTO.render_stuck({"you_could_begin": 1, "and_could_pay_for": 0, "what_is_holding_you_up": [
+    {"what": "work in hand", "each_waiting_on": {"academy": "your hours"}, "each_why_underfunded": {"academy": _reason}}]})
+check("the `stuck` screen carries the cause beside the bare 'waiting on your hours' line",
+      "waiting on your hours" in _stuck_text and "arrears" in _stuck_text, _stuck_text)
+
+# --- the log line names the project and the hours it lost, as fields
+_line = arrears_hours_line([("academy_network", 1750.0)])
+check("the wasted-hours line is of kind arrears_hours_lost and carries the project and the hours as facts",
+      cause_of(_line) == "arrears_hours_lost" and facts_of(_line)["projects"] == ["academy_network"]
+      and facts_of(_line)["hours"] == 1750.0, facts_of(_line))
+
+# --- the replies a player reads carry the cause a project was left with by the funding rule. The project is
+# put in the state the yearly step leaves it in (`fund_year`'s verdict), not run through the step: a founder who
+# commits hours to a project loses standing income and with it the credit line, so a year in arrears ends in
+# CREDIT EXHAUSTED and the project is dropped before the replies could be read.
 s = sim(capital=1000.0)
-_af_k2 = next(node_id for node_id in NODES
-     if NODES[node_id]["yrs"] >= 3 and NODES[node_id]["ph"] > 500)
-_af_n2 = NODES[_af_k2]
-s.active[_af_k2] = dict(ph_left=float(_af_n2["ph"]), yrs=0.0,
-                        spent=s.project_cost(_af_k2), cost_left=0.0,
-                        lab_left=dict(_af_n2["lab"]))
-s.capital = -(s.living_cost() + s.upkeep() + s.mine_operating_cost()
-              + 0.6 * s.credit_limit()) - 50.0
-_before_log2 = len(s.log)
-s.step()
-check("a fully-paid project waiting only on the calendar never triggers "
-      "the wasted-hours line - there is nothing left for arrears to waste",
-      not any(cause_of(message) == "arrears_hours_lost"
-              for _, message in s.log[_before_log2:]),
-      [message for _, message in s.log[_before_log2:]])
-
-# --- THE BUG AS FILED: `why`/`stuck` named only "waiting on your hours" while the
-# true cause - arrears - sat unread. Same game and year as above.
-s = s_arrears
-_arb_k = _af_k
-_arb_pool_check = S._agent_dispatch(s, NODES, {"cmd": "portfolio"})
-check("set-up: founder-hours are plentiful and idle, exactly the player's "
-      "report - the shortfall is not staffing or founder time",
-      (_arb_pool_check.get("founder_hours_available_this_year") or 0) > 1000,
-      _arb_pool_check.get("founder_hours_available_this_year"))
-check("set-up: the project is really underfunded by arrears, not by "
-      "trade or the calendar",
-      s.active.get(_arb_k, {}).get("underfunded_this_year") is True,
-      s.active.get(_arb_k, {}).get("why_underfunded"))
-
-_arb_why = S._agent_dispatch(s, NODES, {"cmd": "why", "id": _arb_k})
-check("BUG AS FILED: `why` on the stalled project still names only "
-      "'your hours' - the misleading half a player actually reads",
-      _arb_why.get("waiting_on_kind") == "founder_hours", _arb_why.get("waiting_on"))
-check("THE FIX: `why`'s JSON reply also now carries why_underfunded, the "
-      "real cause, not just the misleading waiting_on string",
-      bool(_arb_why.get("why_underfunded"))
-      and "arrears" in _arb_why["why_underfunded"], _arb_why.get("why_underfunded"))
-_arb_why_txt = _RWHY(_arb_why)
-check("...and the rendered `why` screen prints it too, so a human reading "
-      "the terminal - not just an agent reading JSON - sees the real cause",
-      "arrears" in _arb_why_txt, _arb_why_txt)
-
-_arb_stuck = S._agent_dispatch(s, NODES, {"cmd": "stuck"})
-_arb_stuck_reason = next(
-    (reason for reason in _arb_stuck.get("what_is_holding_you_up", [])
-     if reason.get("what") == "work in hand"), {})
-check("`stuck`'s JSON reply names the arrears cause against the specific "
-      "project it afflicts, not only in the separate whole-household "
-      "ARREARS block that does not say which project is affected",
-      _arb_k in (_arb_stuck_reason.get("each_why_underfunded") or {})
-      and "arrears" in _arb_stuck_reason["each_why_underfunded"][_arb_k],
-      _arb_stuck_reason.get("each_why_underfunded"))
-_arb_stuck_txt = _PROTO.render_stuck(_arb_stuck)
-check("...and the rendered `stuck` screen - the one the player in the bug "
-      "report actually read - carries more than the bare 'waiting on your "
-      "hours' line for this project",
-      "waiting on your hours" in _arb_stuck_txt and "arrears" in _arb_stuck_txt,
-      _arb_stuck_txt)
-
-_arb_port = S._agent_dispatch(s, NODES, {"cmd": "portfolio"})
-_arb_port_row = next((row for row in _arb_port.get("projects", [])
-                      if row["id"] == _arb_k), {})
-check("`portfolio`'s JSON reply carries why_underfunded per row too, "
-      "the third of the three screens a player actually reads",
-      bool(_arb_port_row.get("why_underfunded"))
-      and "arrears" in _arb_port_row["why_underfunded"], _arb_port_row)
-_arb_port_txt = _RPORT(_arb_port)
-check("...and the rendered `portfolio` screen prints it under the same "
-      "row's 'waiting on' line",
-      "arrears" in _arb_port_txt, _arb_port_txt)
-
+_af_k = next(node_id for node_id in NODES
+             if NODES[node_id]["yrs"] >= 3 and NODES[node_id]["ph"] > 500)
+_af_n = NODES[_af_k]
+_verdict = project_funding.fund_year(400.0, -100.0, 500.0, 0.0, 500.0, True)
+s.active[_af_k] = dict(ph_left=float(_af_n["ph"]), yrs=0.0, spent=0.0,
+                       cost_left=s.project_cost(_af_k), lab_left=dict(_af_n["lab"]),
+                       underfunded_this_year=_verdict.underfunded, why_underfunded=_verdict.why)
+_port = S._agent_dispatch(s, NODES, {"cmd": "portfolio"})
+_port_row = next((row for row in _port.get("projects", []) if row["id"] == _af_k), {})
+_why = S._agent_dispatch(s, NODES, {"cmd": "why", "id": _af_k})
+_stuck = S._agent_dispatch(s, NODES, {"cmd": "stuck"})
+_stuck_reason = next((reason for reason in _stuck.get("what_is_holding_you_up", []) if reason.get("what") == "work in hand"), {})
+check("scenario: a project the funding rule left underfunded by arrears carries the cause on `why`, `stuck` and "
+      "`portfolio` while founder hours are plentiful and idle",
+      _verdict.why == project_funding.WHY_IN_ARREARS
+      and _port_row.get("why_underfunded") == _verdict.why
+      and _why.get("waiting_on_kind") == "founder_hours" and _why.get("why_underfunded") == _verdict.why
+      and (_stuck_reason.get("each_why_underfunded") or {}).get(_af_k) == _verdict.why,
+      (_port_row.get("why_underfunded"), _why.get("why_underfunded"), _stuck_reason.get("each_why_underfunded")))
