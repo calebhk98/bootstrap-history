@@ -128,6 +128,12 @@ def opening_values(sim):
     }
 
 
+def society_at_opening(civ, opening):
+    """The civilisation's fields with the literacy the opening saved, so a setup rebuilt after literacy has moved scales the
+    needs as the first setup did."""
+    return dict(civ, **opening["literacy"])
+
+
 def baskets_by_tile(basket, need_data, world_map, tile_ids):
     """The household basket on each tile, with the floors its climate sets (sim/world/climate_needs.py)
     for every need whose data names one in `subsistence_from_climate`."""
@@ -189,9 +195,7 @@ def build_setup(sim, opening=None, production=None):
     mint_recipe = (recipes_from_production_data(production, [opening["mint_recipe"]])[opening["mint_recipe"]]
                    if opening.get("mint_recipe") else None)
     need_data = _load("world", "needs.json")
-    literate = opening["literacy"]
-    society = dict(civ, **literate)       # the opening's literacy, so a rebuilt setup scales the needs as the first did
-    basket = households.make_basket(need_data, production, civ_values=society)
+    basket = households.make_basket(need_data, production, civ_values=society_at_opening(civ, opening))
     goods = set()
     for recipe in recipes.values():
         goods.update(recipe.outputs, recipe.inputs, recipe.plant_goods)
