@@ -122,6 +122,23 @@ class TrafficTest(unittest.TestCase):
         self.assertAlmostEqual(trips[("a", "b")], 750.0)
         self.assertAlmostEqual(trips[("a", "c")], 250.0)
 
+    def test_an_empty_tile_does_not_stop_its_neighbours_meeting(self):
+        tile_people = {"a": people(1000), "empty": people(0), "b": people(1000)}
+        reached = spread.borders_through_empty(tile_people, {"a": ["empty"], "empty": ["a", "b"], "b": ["empty"]})
+        self.assertEqual(reached["a"], ["b"])
+        self.assertEqual(reached["b"], ["a"])
+        self.assertNotIn("empty", reached["a"])
+
+    def test_an_arrival_enters_each_group_of_joined_tiles_the_routes_reach_about_as_soon(self):
+        groups = [["a", "b"], ["c"], ["d"]]
+        days = {"a": 10.0, "b": 12.0, "c": 40.0, "d": 400.0}
+        self.assertEqual(spread.entry_tiles(days, groups, margin_days=150.0), ["a", "c"])
+        self.assertEqual(spread.entry_tiles({}, groups, margin_days=150.0), [])
+
+    def test_groups_of_joined_tiles_follow_the_contacts(self):
+        contacts = {"a": [("b", 0.1)], "b": [("a", 0.1)]}
+        self.assertEqual(spread.components(contacts, {"a", "b", "c"}), [["a", "b"], ["c"]])
+
     def test_contact_shares_scale_with_trips_and_never_pass_all_of_a_tiles_time(self):
         tile_people = {"a": people(1000), "b": people(1000)}
         small = dict(spread.contacts_from_trips({("a", "b"): 10.0}, tile_people, visit_days=1.0)["a"])
@@ -196,7 +213,7 @@ class RecordsTest(unittest.TestCase):
             return deaths
 
         straight = {}
-        one_year(straight, {"test_pathogen": "a"})
+        one_year(straight, {"test_pathogen": ["a"]})
         import json
         loaded = json.loads(json.dumps(straight))
         second_straight, second_loaded = json.loads(json.dumps(straight)), loaded
@@ -209,7 +226,7 @@ class RecordsTest(unittest.TestCase):
         known = {"test_pathogen": test_pathogen}
         tile_people, crowding = two_tiles(20000, 20000), {"a": 1.0, "b": 1.0}
         records = {}
-        spread.run_year(known, records, {}, {}, tile_people, {}, crowding, {}, {"test_pathogen": "a"}, "seed", 1)
+        spread.run_year(known, records, {}, {}, tile_people, {}, crowding, {}, {"test_pathogen": ["a"]}, "seed", 1)
         after = {tile: {band: dict(counts) for band, counts in bands.items()} for tile, bands in records["test_pathogen"].items()}
         quiet = {"test_pathogen": {tile: {band: dict(counts, **{name: 0 for name in network_names(test_pathogen)
                                                                 if name not in ("susceptible", "recovered")})

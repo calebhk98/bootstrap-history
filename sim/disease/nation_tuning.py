@@ -15,7 +15,7 @@ CAREGIVER_BANDS = ("working_age",)
 DISEASE_TRAVELLER_ANNUAL_CHANCE = declare(
     "DISEASE_TRAVELLER_ANNUAL_CHANCE", 0.6, kind="temporary_heuristic",
     unit="dimensionless (chance per year, per pathogen, that an infected party sets out from a source where it is always present)",
-    source=None, confidence="D", retire="Complaints/674: the outside world is simulated actors whose own people carry infection along the routes",
+    source=None, confidence="D", retire="Complaints/676: the outside world is simulated actors whose own people carry infection along the routes",
     why="Stands in for the outside world exporting infected travellers: while the pathogen is absent from the nation, "
         "one party with it reaches the nation with this chance each year, times the share of the source's contact "
         "that the routes let through (`DISEASE_TRAVEL_DECAY_DAYS`). Drawn from the disease package's own hash of the "
@@ -23,7 +23,7 @@ DISEASE_TRAVELLER_ANNUAL_CHANCE = declare(
 DISEASE_EMERGENCE_ANNUAL_CHANCE = declare(
     "DISEASE_EMERGENCE_ANNUAL_CHANCE", 0.0015, kind="temporary_heuristic",
     unit="dimensionless (chance per year, per pathogen, that it starts to spread at a source where it is not always present)",
-    source=None, confidence="D", retire="Complaints/674: the outside world is simulated actors whose own people carry infection along the routes",
+    source=None, confidence="D", retire="Complaints/676: the outside world is simulated actors whose own people carry infection along the routes",
     why="The outside world is not simulated, so a pathogen that is not always present at a source starts there at "
         "random: a spill-over from animals, a mutation, a long-dormant focus. Its arrival at the nation then follows "
         "the same contact rule as a pathogen that is always there. No dated outbreak is stated anywhere; the value "
@@ -32,14 +32,14 @@ DISEASE_EMERGENCE_ANNUAL_CHANCE = declare(
 DISEASE_TRAVEL_DECAY_DAYS = declare(
     "DISEASE_TRAVEL_DECAY_DAYS", 150.0, kind="temporary_heuristic",
     unit="days of travel (the distance at which a source's contact falls to a third)",
-    source=None, confidence="D", retire="Complaints/674: the outside world is simulated actors, so contact comes from their traffic and not from distance",
+    source=None, confidence="D", retire="Complaints/676: the outside world is simulated actors, so contact comes from their traffic and not from distance",
     why="Contact between a source and the nation falls off with the fewest days of travel between them over the "
         "routes the nation's technologies and the outsiders' carriers open (geography's reach), as exp(-days / this). "
         "Inside the nation the contact between tiles is read from the traffic on each edge; the outside world has no "
         "actors yet, so its contact is only this distance rule.")
 DISEASE_CONTACT_INFECTED_PEOPLE = declare(
     "DISEASE_CONTACT_INFECTED_PEOPLE", 10, kind="temporary_heuristic", unit="people",
-    source=None, confidence="D", retire="Complaints/674: the outside world's own travellers set how many arrive",
+    source=None, confidence="D", retire="Complaints/676: the outside world's own travellers set how many arrive",
     why="Infected working-age people an introduction brings to the tile it enters at. Stands in for the outside "
         "world's traveller flux; an arrival of a few people dies out by chance in a small share of draws, which the chain-binomial "
         "step produces by itself.")

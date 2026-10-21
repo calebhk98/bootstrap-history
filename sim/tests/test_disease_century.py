@@ -9,6 +9,8 @@ A failure here reopens Complaint 386 (near extinction) or 471 (care collapse and
 """
 
 QUICK_TOPIC = False
+# nine runs of a hundred years over the country's tiles (one patch of age bands per tile): minutes, not seconds
+TOPIC_SECONDS = 1800
 
 import functools
 import json
@@ -55,6 +57,9 @@ class StandInSim(disease_port.DiseasePortMixin):
 
     def held_and_running(self):
         return frozenset(self.civ.get("starting_techs", ()))
+
+    def urban_fraction(self):
+        return float(self.civ.get("urban_fraction", 0.0))
 
     def _effect_terms(self, channel):
         return []

@@ -48,8 +48,10 @@ class ArrivalTest(unittest.TestCase):
         sim = StandInSim(civilisation("rome_100ad"), 1)
         world = disease_port.DiseaseWorld(sim)
         people = world.people_by_tile()
-        entered = world.entry_tiles(["smallpox"], sim.year, people)
-        self.assertIn(entered["smallpox"], people)
+        entered = world.entry_tiles(["smallpox"], sim.year, people, world.contacts(people))
+        self.assertTrue(entered["smallpox"])
+        for tile in entered["smallpox"]:
+            self.assertGreater(sum(people[tile].values()), 0.0)
         sim.disease_year(sim.food, sim.year)
         introduced_by = disease_port.DiseaseWorld.introductions
         try:

@@ -67,6 +67,59 @@ def migrant_trips(emigrants, immigrants, borders):
     return trips
 
 
+def borders_through_empty(people_by_tile, borders):
+    """{tile: populated tiles it borders, reaching past tiles with nobody on them}: a tile that holds no people
+    (no food) does not stop neighbours on either side of it meeting."""
+    populated = {tile for tile, bands in people_by_tile.items() if sum(bands.values()) > 0.0}
+    reached = {}
+    for tile in sorted(populated):
+        seen, frontier, found = {tile}, [tile], set()
+        while frontier:
+            current = frontier.pop()
+            for other in borders.get(current, ()):
+                if other in seen or other not in people_by_tile:
+                    continue
+                seen.add(other)
+                if other in populated:
+                    found.add(other)
+                else:
+                    frontier.append(other)
+        reached[tile] = sorted(found)
+    return reached
+
+
+def components(contacts, tiles):
+    """[sorted tiles] of each group of tiles joined to one another by contact (a tile with none is its own group)."""
+    seen, groups = set(), []
+    for tile in sorted(tiles):
+        if tile in seen:
+            continue
+        group, stack = set(), [tile]
+        while stack:
+            current = stack.pop()
+            if current in group:
+                continue
+            group.add(current)
+            stack.extend(other for other, _ in contacts.get(current, ()) if other in tiles)
+        seen |= group
+        groups.append(sorted(group))
+    return groups
+
+
+def entry_tiles(days_by_tile, groups, margin_days):
+    """The tiles an arrival enters at: in every group of joined tiles, the tile the routes reach soonest, when that
+    is within `margin_days` of the soonest of all (a pocket the carriers reach about as fast is reached too)."""
+    if not days_by_tile:
+        return []
+    best = min(days_by_tile.values())
+    entered = []
+    for group in groups:
+        reached = [(days_by_tile[tile], tile) for tile in group if tile in days_by_tile]
+        if reached and min(reached)[0] <= best + margin_days:
+            entered.append(min(reached)[1])
+    return sorted(entered)
+
+
 def local_trips(people_by_tile, borders, trips_per_person=DISEASE_LOCAL_TRIPS_PER_PERSON_YEAR):
     """{(tile, tile): trips} between bordering tiles: every person makes `trips_per_person` trips a year to the
     tiles the tile borders, shared out by those tiles' people."""
@@ -249,7 +302,7 @@ def _deaths(tiles):
 
 def run_year(known, records, introduced, deaths, people_by_tile, contacts, crowding, fatality_scale, arrivals,
              seed_text, year, fatality_factor=None, transmission_scale=None, care_sensitivity=None, endemic=()):
-    """Advance every pathogen in `records` or `arrivals` (`{pathogen id: tile it enters at}`) by a year over the
+    """Advance every pathogen in `records` or `arrivals` (`{pathogen id: [tiles it enters at]}`) by a year over the
     tiles, rewriting `records` (`{pathogen id: {tile: {band: counts}}}`), the `introduced` years and the running
     `deaths` per pathogen in place. A pathogen in `endemic` with no record opens at its endemic equilibrium. Returns
     `{tile: {band: deaths}}` for the year. Does nothing, at no cost, when there is no arrival, no endemic
@@ -263,8 +316,9 @@ def run_year(known, records, introduced, deaths, people_by_tile, contacts, crowd
         pathogen = known[pathogen_id]
         tiles = patches_for(pathogen, records.get(pathogen_id), people_by_tile, crowding, seed_text, year,
                             endemic=pathogen_id in endemic)
-        if pathogen_id in arrivals and arrivals[pathogen_id] in tiles:
-            tiles[arrivals[pathogen_id]][INTRODUCTION_BAND].seed_infection(pathogen, DISEASE_CONTACT_INFECTED_PEOPLE)
+        if pathogen_id in arrivals:
+            for tile in arrivals[pathogen_id]:
+                tiles[tile][INTRODUCTION_BAND].seed_infection(pathogen, DISEASE_CONTACT_INFECTED_PEOPLE)
             introduced.setdefault(pathogen_id, []).append(year)
         if any(patch.infected_now() for patches in tiles.values() for patch in patches.values()):
             scale = {band: fatality_scale.get(band, 1.0) * fatality_factor.get(pathogen_id, 1.0) for band in BANDS}

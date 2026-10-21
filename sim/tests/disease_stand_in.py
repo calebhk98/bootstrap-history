@@ -40,6 +40,9 @@ class StandInSim(disease_port.DiseasePortMixin):
     def _farm_year_weather_seed(self, year, region=None):
         return self.seed * 7919 + year
 
+    def urban_fraction(self):
+        return float(self.civ.get("urban_fraction", 0.0))
+
     def _effect_terms(self, channel):
         return []
 

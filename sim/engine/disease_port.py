@@ -86,20 +86,21 @@ class DiseaseWorld:
         sim = self._sim
         held = self.held_tiles()
         borders = settlement.borders_among(held, sim.world_map)
+        local_borders = spread.borders_through_empty(people_by_tile, borders)
         carried = sim._domestic_flow_ledger() if hasattr(sim, "_domestic_flow_ledger") else {}
         flows = getattr(sim, "_last_regional_step", None) or {}
         emigrants = {tile: flow.emigration for tile, flow in flows.items()}
         immigrants = {tile: flow.immigration for tile, flow in flows.items()}
         return spread.add_trips(spread.trade_trips(carried, held), spread.migrant_trips(emigrants, immigrants, borders),
-                                spread.local_trips(people_by_tile, borders))
+                                spread.local_trips(people_by_tile, local_borders))
 
     def contacts(self, people_by_tile):
         return spread.contacts_from_trips(self.trips(people_by_tile), people_by_tile)
 
     def entry(self, source):
-        """(fewest days, held tile reached first) from the nearest of the source's tiles to a tile the nation
-        holds, over the modes the nation's technologies open plus those the outsiders bring; (None, None) when no
-        route joins them. Kept until the tiles held or the modes change."""
+        """{held tile: fewest days} from the nearest of the source's tiles, over the modes the nation's
+        technologies open plus those the outsiders bring; empty when no route joins them. Kept until the tiles
+        held or the modes change."""
         sim = self._sim
         held = tuple(self.held_tiles())
         modes = tuple(sorted(set(usable_modes([sim.held_and_running()], sim.world_map)) | set(source["carrier_modes"])))
@@ -109,21 +110,25 @@ class DiseaseWorld:
             if len(cache) > 32:
                 cache.clear()
             days = reach(source["tiles"], modes, 1.0e9, world_map=sim.world_map) if held and source["tiles"] else {}
-            reached = [(days[tile], tile) for tile in held if tile in days]
-            cache[key] = min(reached) if reached else (None, None)
+            cache[key] = {tile: days[tile] for tile in held if tile in days}
         return cache[key]
 
     def travel_days(self, source):
-        return self.entry(source)[0]
+        reached = self.entry(source)
+        return min(reached.values()) if reached else None
 
     def contact_weight(self, source):
         """The share of the source's contact the routes let through; one for a source that names no tiles."""
         return nation.contact_weight(self.travel_days(source)) if source["tiles"] else 1.0
 
-    def entry_tiles(self, arrivals, year, people_by_tile):
-        """{arriving pathogen: tile it enters at}: where the open source with the most contact reaches the nation;
-        a source naming no tiles enters at the most populous tile."""
+    def entry_tiles(self, arrivals, year, people_by_tile, contacts):
+        """{arriving pathogen: [tiles it enters at]}: of the open sources, the one with the most contact; the
+        populated held tile its routes reach first in each group of tiles the traffic joins, so long as the group
+        is within one travel-decay distance of the soonest reached (a source naming no tiles enters at the most
+        populous tile)."""
+        populated = {tile for tile, bands in people_by_tile.items() if sum(bands.values()) > 0.0}
         busiest = max(sorted(people_by_tile), key=lambda tile: sum(people_by_tile[tile].values()), default=None)
+        groups = [[tile for tile in group if tile in populated] for group in spread.components(contacts, set(people_by_tile))]
         entered = {}
         for pathogen_id in arrivals:
             best = None
@@ -132,10 +137,11 @@ class DiseaseWorld:
                         source["first_year"] is not None and not source["first_year"] <= year <= source["last_year"]):
                     continue
                 weight = self.contact_weight(source)
-                tile = self.entry(source)[1] if source["tiles"] else busiest
-                if weight > 0.0 and tile is not None and (best is None or weight > best[0]):
-                    best = (weight, tile)
-            entered[pathogen_id] = best[1] if best else busiest
+                days = {tile: days for tile, days in self.entry(source).items() if tile in populated}
+                tiles = spread.entry_tiles(days, groups, DISEASE_TRAVEL_DECAY_DAYS) if source["tiles"] else [busiest]
+                if weight > 0.0 and tiles and (best is None or weight > best[0]):
+                    best = (weight, tiles)
+            entered[pathogen_id] = best[1] if best else [busiest]
         return entered
 
     def endemic_pathogens(self):
@@ -150,7 +156,7 @@ class DiseaseWorld:
 
     def crowding_index(self):
         """The person-weighted density of the nation relative to a rural settlement."""
-        return nation.crowding_index(self._sim.civ.get("urban_fraction", 0.0), DISEASE_URBAN_DENSITY_RATIO)
+        return nation.crowding_index(self._sim.urban_fraction(), DISEASE_URBAN_DENSITY_RATIO)
 
     def fatality_scale_by_band(self, nutrition_ratio):
         """Each band's multiplier on a pathogen's case fatality (see `nation.fatality_scale_by_band`)."""
@@ -192,10 +198,11 @@ class DiseasePortMixin:
         pathogen_ids = sorted(set(state.records) | set(arrivals) | set(endemic))
         fatality_by_pathogen, transmission = world.technology_scales(pathogen_ids)
         killed_before = dict(state.deaths)
+        contacts = world.contacts(people)
         by_tile = spread.run_year(
-            pathogens(), state.records, state.introduced, state.deaths, people, world.contacts(people),
+            pathogens(), state.records, state.introduced, state.deaths, people, contacts,
             world.crowding_by_tile(people), world.fatality_scale_by_band(nutrition_ratio),
-            world.entry_tiles(arrivals, year, people), world.seed_text(), year, fatality_factor=fatality_by_pathogen,
+            world.entry_tiles(arrivals, year, people, contacts), world.seed_text(), year, fatality_factor=fatality_by_pathogen,
             transmission_scale=transmission, care_sensitivity=DISEASE_CARE_COLLAPSE_SENSITIVITY, endemic=endemic)
         self.__dict__["_epidemic_deaths_by_tile"] = by_tile
         self.__dict__["_epidemic_names"] = [pathogens()[pathogen_id].name for pathogen_id in sorted(state.deaths)
