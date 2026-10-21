@@ -1,5 +1,6 @@
-# Main fails three slow topics
+# History of 558: main fails three slow topics (as of the rewrite)
 
+Moved out of `Complaints/558-*.md` when that file became the current slow-suite red list. Topic names, branches and numbers below describe older states of main and are not current.
 **Status:** open
 
 Measured on `origin/main` at f0ff751d with `python3 -m sim.tests --slow --only market_records_ownership,economy_tin_dearer_than_copper,insolvency_whole_game`:
