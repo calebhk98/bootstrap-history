@@ -12,6 +12,7 @@ from sim.labour.api import MarketState, market_state_from_plain, market_state_to
 
 from .accounts import Book
 from .banks import Bank
+from .capital_state import CapitalState
 from .households_cohort import Cohort
 from .market_memory import KEY_SEPARATOR, MarketMemory
 from .merchants import Merchant
@@ -25,7 +26,7 @@ from .types import AgentId, CurrencySpec, Loan, LoanRequest, TileId, TradeId
 # the record's fields whose annotation names an AgentId (a test reads the source and holds this list to it)
 AGENT_KEYED_FIELDS = ("cohorts", "producers", "merchants", "remembered_defaults", "credit_losses", "loss_rates", "losses_seen", "property_income",
                       "expansion_runs", "worn_runs", "titles", "bondage", "lent_by_borrower", "credit_granted", "banks", "shares",
-                      "last_dividends")
+                      "last_dividends", "capital")
 
 # the stores `to_record` writes sorted by key, and so a load reads back in that order
 SAVED_SORTED_FIELDS = ("cohorts", "producers", "merchants", "titles", "tenancies", "bondage", "tax_history", "banks", "shares",
@@ -81,6 +82,7 @@ class EconomyRecord:
     banks: Dict[AgentId, Bank] = field(default_factory=dict)             # the banks households deposit with (banks.py)
     shares: Dict[AgentId, Dict[AgentId, float]] = field(default_factory=dict)   # producer -> holder -> part of its equity the holder bought (shares.py)
     last_dividends: Dict[AgentId, float] = field(default_factory=dict)   # producer -> the dividend it paid at its last close
+    capital: CapitalState = field(default_factory=CapitalState)          # hazard records, insurers with their policies, and funds, keyed by AgentId (capital_state.py)
     curves: Dict[str, Any] = field(default_factory=dict)                 # market_key -> the book of the last clearing at the port (market_curves.py)
     ways: Dict[str, Dict[str, Any]] = field(default_factory=dict)        # the built ways the market areas are partitioned for
     area_imbalance: float = 1.0                                          # the return-trip emptiness the market areas were partitioned for (its memory is keyed by those areas)
@@ -159,6 +161,7 @@ class EconomyRecord:
             "banks": {key: plain(value) for key, value in sorted(self.banks.items())},
             "shares": {producer: dict(sorted(held.items())) for producer, held in sorted(self.shares.items())},
             "last_dividends": dict(sorted(self.last_dividends.items())),
+            "capital": self.capital.to_plain(),
             "curves": self.curves,
             "ways": {key: dict(built) for key, built in sorted(self.ways.items())},
             "area_imbalance": self.area_imbalance,
@@ -209,6 +212,7 @@ class EconomyRecord:
             banks={key: Bank(**value) for key, value in record["banks"].items()},
             shares={producer: dict(held) for producer, held in record["shares"].items()},
             last_dividends=dict(record["last_dividends"]),
+            capital=CapitalState.from_plain(record["capital"]),
             curves=dict(record["curves"]),
             ways={key: dict(built) for key, built in record["ways"].items()},
             area_imbalance=record["area_imbalance"],

@@ -65,6 +65,11 @@ change; read them from the node data (no command summarises them).
 | `patent_grant` | a state that knows the node grants term-limited exclusive rights to inventions (`sim/agents/patent.py`); without a node declaring it no patent is ever granted |
 | `state_credit` | holding it lets a state borrow against its revenue (`source`); without a holder a deficit cuts spending |
 | `deposit_banking` | a society holding it lets its households found banks that take deposits and lend them on (`source`); without a holder none is founded (`sim/economy/banks.py`) |
+| `share_trading` | a society holding it lets holders of shares sell them to other savers once a year at the price that clears (`source`); without a holder none is sold on (`sim/economy/secondary_trade.py`) |
+| `bond_market` | a society holding it lets lenders sell loans and bonds on, banks short of cash sell loans, and firms issue bonds as a state does (`source`); without a holder none (`sim/economy/secondary_trade.py`, `sim/agents/borrowing.py`) |
+| `insurance_underwriting` | a society holding it lets a household found an insurance company that sells cover priced from the hazard's own record (`source`) (`sim/economy/insurance.py`) |
+| `risk_pooling` | a society holding it lets households insure one another in a mutual that charges no premium and shares the year's claims (`source`) (`sim/economy/insurance.py`) |
+| `pooled_funds` | a society holding it lets a household found a fund that holds shares and loans, which households buy units in with savings they did not lend and redeem for cash (`source`) (`sim/economy/funds.py`) |
 | `disease_effects` | `acts_on` (`case_fatality` or `transmission`), `factor` (a multiplier between 0 and 1), optional `pathogens` and `label`: what a running work does to how deadly or how contagious a disease is, to the extent the nation has taken the work up (`sim/engine/disease_port.py`) |
 | `disease_burden` | counts toward the society's disease burden (weights live in the civilisation tech effects); a work that also declares `coverage` counts for the share of the people it reaches while it is open |
 | `founder_life_extension` | extends the founder's life while operating |

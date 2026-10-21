@@ -77,6 +77,7 @@ class Firm(ExpansionMixin, RecordedActor):
 		super().default(world)
 
 	def act(self, world: Any) -> None:
+		self.prepare_bonds(world)
 		interest = self.pay_interest(world)
 		if self.record.exited_year is not None:
 			return

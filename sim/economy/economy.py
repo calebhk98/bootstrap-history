@@ -187,7 +187,9 @@ class Economy:
         self._leisure_hours = supply.leisure
         ledger.bonded_bought, ledger.bonded_paid = bonded_purchase.settle(
             record.book, money, labour_report.formed, labour_bids, context.ask_floor_per_worker_year)
+        capital_year.insure(setup, record, view, inputs.harvest_factor, view.year, inputs.institutions)     # cover is bought and the weather settles it
         self._grow_own(offers, ledger, inputs.harvest_factor, kept)
+        capital_year.note_exposure(setup, record, view, self.area_map, ledger, inputs.harvest_factor, inputs.institutions)
         order_book = {}
         funds = cohort_orders(setup, record, view, ledger, order_book, self._own_plot_options())
         state_orders(setup, record, view, self.area_map, order_book, {})
@@ -200,7 +202,9 @@ class Economy:
                 order_book.setdefault((bid.good, bid.area), ([], []))[0].append(bid)
         funds = capital_year.before_lending(setup, record, view, ledger, funds, view.year, inputs.institutions)   # holders sell shares and loans; depositors run on banks
         funds, pledged = banks.intermediate(setup, record, funds, view.year, inputs.institutions)
+        kept = capital_year.snapshot(record, money, funds)
         plant_runs = self._lend(funds, view, order_book, ledger, pledged, inputs.credit_asks)
+        capital_year.invest_idle(setup, record, view, funds, kept, inputs.institutions)       # savings neither lent nor put in shares go into a fund
         merchant_orders(setup, record, view, self.area_map, self.carriage, order_book)
         for producer_id, runs in self._rebuild_worn_plant(view, order_book).items():
             plant_runs[producer_id] = plant_runs.get(producer_id, 0.0) + runs

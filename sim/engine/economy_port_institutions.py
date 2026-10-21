@@ -6,7 +6,9 @@ its society already knows, gives the economy the institution it names; without o
 from sim.economy import api as economy_api
 
 # node mechanic -> the institution the economy names
-MECHANIC_INSTITUTIONS = {"deposit_banking": economy_api.DEPOSIT_BANKING}
+MECHANIC_INSTITUTIONS = {"deposit_banking": economy_api.DEPOSIT_BANKING, "share_trading": economy_api.SHARE_TRADING,
+                         "bond_market": economy_api.BOND_MARKET, "insurance_underwriting": economy_api.INSURANCE_UNDERWRITING,
+                         "risk_pooling": economy_api.RISK_POOLING, "pooled_funds": economy_api.POOLED_FUNDS}
 
 
 def institutions_of(mechanics_known):

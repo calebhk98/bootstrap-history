@@ -38,6 +38,11 @@ class Shortfall:
     borrowing_rate: float
 
 
+def participants(record) -> set:
+    """Who holds and buys claims: the households, and the funds they hold units in."""
+    return set(record.cohorts) | set(record.capital.funds)
+
+
 def tradable(record, loan: Loan) -> bool:
     """A claim a lender may sell: not a deposit with a bank, not a household's own debt (it pledges land or binds it)."""
     return (not banks.is_deposit(record, loan) and loan.borrower not in record.cohorts and not loan.collateral_tile
@@ -78,7 +83,8 @@ def _own_rate(offers: Mapping[AgentId, FundsOffer], agent: AgentId, market_rate:
 
 def _loan_items(record, forced: Mapping[AgentId, Shortfall]) -> List[Loan]:
     """The loans a household lender or a lender short of cash may sell."""
-    return sorted((loan for loan in record.loans if tradable(record, loan) and (loan.lender in record.cohorts or loan.lender in forced)),
+    holders = participants(record)
+    return sorted((loan for loan in record.loans if tradable(record, loan) and (loan.lender in holders or loan.lender in forced)),
                   key=lambda loan: loan.loan_id)
 
 
@@ -88,7 +94,8 @@ def asks_and_bids(setup, record, offers: Sequence[FundsOffer], short: Mapping[Ag
     """Every holder's asks and every saver's bids for the claims its society lets it trade. `short` names the holders
     (households, or any lender such as a bank) that need cash; with `sellers` only those holders ask."""
     money = setup.currency_id
-    offered = {offer.lender: offer for offer in offers if offer.currency == money and offer.lender in record.cohorts
+    holders = participants(record)
+    offered = {offer.lender: offer for offer in offers if offer.currency == money and offer.lender in holders
                and offer.amount > EPSILON}
     debts = credit_claims.principal_by_borrower(record.loans)
     arrears = credit_claims.arrears_history(record.loans, record.remembered_defaults)
@@ -104,9 +111,9 @@ def asks_and_bids(setup, record, offers: Sequence[FundsOffer], short: Mapping[Ag
                                      share_value(record, producer_id, market_rate, rate_floor))
             item = SHARE_ITEM + producer_id
             for holder, part in sorted(record.shares[producer_id].items()):
-                if holder in record.cohorts and part > EPSILON and (allowed is None or holder in allowed):
+                if holder in holders and part > EPSILON and (allowed is None or holder in allowed):
                     asks.extend(_asks(item, holder, part, _own_rate(offered, holder, market_rate) + premium, needed, short.get(holder),
-                                      premium, lambda rate: share_value(record, producer_id, rate, rate_floor)))
+                                      premium, lambda rate: share_value(record, producer_id, rate, rate_floor), allowed is not None))
             bids.extend(Bid(buyer, item, offer.amount, share_value(record, producer_id, offer.minimum_rate + premium, rate_floor))
                         for buyer, offer in sorted(offered.items()))
     if BOND_MARKET in institutions:
@@ -116,25 +123,26 @@ def asks_and_bids(setup, record, offers: Sequence[FundsOffer], short: Mapping[Ag
             per_unit = lambda rate, each=loan: loan_value(each, rate) / each.principal
             if allowed is None or loan.lender in allowed:
                 asks.extend(_asks(item, loan.lender, loan.principal, _own_rate(offered, loan.lender, market_rate) + premium, needed,
-                                  short.get(loan.lender), premium, per_unit))
+                                  short.get(loan.lender), premium, per_unit, allowed is not None))
             bids.extend(Bid(buyer, item, offer.amount, per_unit(offer.minimum_rate + premium))
                         for buyer, offer in sorted(offered.items()))
     return asks, bids
 
 
 def _asks(item: str, holder: AgentId, quantity: float, own_rate: float, needed: Dict[AgentId, float],
-          shortfall: Optional[Shortfall], premium: float, value_at) -> List[Ask]:
+          shortfall: Optional[Shortfall], premium: float, value_at, forced_only: bool = False) -> List[Ask]:
     """The holder's asks for one claim: all of it at what it is worth at the holder's own rate; where the holder is
     short of cash, the part that raises what it still needs at the lower worth at the rate it would pay to borrow
-    (`needed` falls by what this claim is asked to raise, so the next claim raises only the rest)."""
+    (`needed` falls by what this claim is asked to raise, so the next claim raises only the rest). A holder that sells
+    only for the cash it needs (`forced_only`: a bank, a fund) asks for no more than that part."""
     ordinary = value_at(own_rate)
     if shortfall is None or needed.get(holder, 0.0) <= EPSILON:
-        return [Ask(holder, item, quantity, ordinary)]
+        return [] if forced_only else [Ask(holder, item, quantity, ordinary)]
     hurried = min(ordinary, value_at(max(own_rate, shortfall.borrowing_rate + premium)))
     units = quantity if hurried <= 0.0 else min(quantity, needed[holder] / hurried)
     needed[holder] -= units * hurried
     asks = [Ask(holder, item, units, hurried)]
-    if quantity - units > EPSILON:
+    if quantity - units > EPSILON and not forced_only:
         asks.append(Ask(holder, item, quantity - units, ordinary))
     return asks
 

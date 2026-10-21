@@ -68,6 +68,23 @@ class Borrower:
 		used = (self.debt() + amount) / ceiling if ceiling > 0.0 else 1.0
 		return capital_market.borrower_rate(world.market_rate(), self.standing_discount(world), used)
 
+	def may_issue_bonds(self, world: Any) -> bool:
+		"""Whether the actor's society holds a technology declaring the `bond_market` mechanic, in the actor's own
+		knowledge or in what its society already knows."""
+		return any(self.knows(node_id, world) for node_id in world.nodes_with_mechanic("bond_market"))  # type: ignore[attr-defined]
+
+	def prepare_bonds(self, world: Any) -> None:
+		"""The year's bond terms and redemptions for an actor that is not a state: where its society holds the bond
+		market it sells bonds for the cash it lacks, at the going rate as coupon and its own borrowing rate (its
+		leverage and standing) as the yield the market asks; elsewhere it draws on its facility. Bonds at their
+		term are repaid."""
+		bonds = self.purses.bonds  # type: ignore[attr-defined]
+		if self.may_issue_bonds(world):
+			bonds.set_terms(self.account_id, world.market_rate(), self.borrowing_rate(world))  # type: ignore[attr-defined]
+		else:
+			bonds.terms.pop(self.account_id, None)  # type: ignore[attr-defined]
+		self.purses.redeem_bonds(self.account_id)  # type: ignore[attr-defined]
+
 	def borrowing_rate(self, world: Any) -> float:
 		debt = self.debt()
 		used = 0.0
