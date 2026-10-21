@@ -41,6 +41,14 @@ class ShedOnCostNotYearsTests(unittest.TestCase):
         self.assertEqual(result.producer.years_of_loss, 1)
         self.assertTrue(result.exited)
 
+    def test_a_producer_the_market_still_buys_from_does_not_exit_while_its_price_is_below_cost(self):
+        # the price it expects is a fraction of cost, but it still expects to sell: buyers with nobody else to
+        # buy from lift the price, so the maker waits (its sales' expectation fades by itself while nothing sells)
+        selling = farmer(capacity_runs=10.0, expected_sales=8.0, last_runs=0.0)
+        result = producers_close.close_year(selling, FARM, 0.0, 0.0, farm_view(0.001), 0.0)
+        self.assertFalse(result.exited)
+        self.assertAlmostEqual(result.producer.capacity_runs, 10.0)
+
     def test_a_producer_whose_sales_cover_cost_is_never_shed_whatever_its_years_of_loss(self):
         producer = farmer(capacity_runs=10.0, years_of_loss=50)
         result = producers_close.close_year(producer, FARM, 10.0, 100.0, farm_view(2.0), 5.0)

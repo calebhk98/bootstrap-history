@@ -88,7 +88,9 @@ def close_year(producer: Producer, recipe: Recipe, revenue: float, costs: float,
     margin = revenue_per_run - cost_per_run
     paying = share_working(revenue_per_run, cost_per_run) if math.isfinite(margin) else 0.0
     shedding = margin <= 0.0      # expected sales do not cover running cost, whatever the years behind
-    if shedding and paying < CLOSED_CAPACITY_SHARE:
+    # it leaves at once only when no workplace pays and the market no longer calls for its output: while it still
+    # expects sales, buyers with no other seller lift the price, and the shed below goes no faster than workplaces change
+    if shedding and paying < CLOSED_CAPACITY_SHARE and producer.expected_sales <= CLOSED_CAPACITY_SHARE * producer.capacity_runs:
         payout = _dividend(producer, currency, cash)
         gone = replaced(producer, capacity_runs=0.0, years_of_loss=losses, expected_prices=expectations,
                        cash_target=0.0)
