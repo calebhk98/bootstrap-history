@@ -114,3 +114,12 @@ staff phases) and are now `_scenario` files; their rules sit in `Sim` methods th
 (`seed_opening_industry_experience`, `_step_staff`, `train`, `fire`, `commission`) and are still to be pulled out.
 `labour_margins_whole_game` is now `test_labour_margins_baseline_validation` (a baseline validation, 4.2, naming Complaints 398
 and 640) plus a scenario for the draught-animal recipes.
+
+## Applied: deep extraction 1
+
+`early_playtest`, `concern_volume`, `demographics_and_plague` and `economic_levers_inventory`, which batch 4 had left
+mostly whole, now hold at most four named scenarios each; their rules moved to five quick files
+(`test_early_playtest_data`, `test_civ_cost_and_hazard_relief_rules`, `test_concern_volume_rules`,
+`test_mortality_shock_rules`, `test_material_throttle_rules`) over new plain functions (`material_throttle.py`,
+`staff_loss_words.py`, `civ_cost.py`, `value_weight.py`). The `hazard_hit` log line now carries `defence` and
+`national_toll_percent` as facts, so scenarios read values, not prose.
