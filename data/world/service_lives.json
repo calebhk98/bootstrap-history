@@ -89,12 +89,12 @@
     "ox": {
       "years": 5,
       "confidence": "C",
-      "source": "Langdon (Horses, Oxen and Technological Innovation, 1986) via Medievalists.net, https://www.medievalists.net/2023/02/horse-ox-medieval-times/ (search summary read, book recalled): medieval plough oxen and horses lived a little over five years in work. A working life, not an age at death; the butchered animal's byproducts are the herd recipes' business, not carriage's."
+      "source": "Langdon (Horses, Oxen and Technological Innovation, 1986) via Medievalists.net, https://www.medievalists.net/2023/02/horse-ox-medieval-times/ (the Medievalists.net page was opened in Complaint 646 pass 5; the book was not): 'plow horses and oxen typically have roughly the same life expectancy (a little over 5 years)' and 'the cart horse lives an average of around 7 years'. Five kept. A working life, not an age at death; the butchered animal's byproducts are the herd recipes' business, not carriage's."
     },
     "mule": {
       "years": 10,
       "confidence": "D",
-      "source": "Estimate: Langdon puts the medieval cart horse at about seven working years (see ox); mules are taken as longer lived in work than horses and oxen. Recalled, no source opened for the mule."
+      "source": "LABELLED HEURISTIC, no source found for a mule's working life (Complaint 646 pass 5: NCAT Draft Animal Power for Farming gives 'Approximately 15 years; ages 3-18' for draft horses only and nothing for mules; Langdon via Medievalists.net gives about 7 years for the cart horse, see ox); mules are taken as longer lived in work than horses and oxen; retire: Complaints/646."
     },
     "cart": {
       "years": 10,
