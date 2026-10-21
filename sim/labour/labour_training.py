@@ -412,7 +412,10 @@ class TrainingMixin:
             if crosses_literacy_wall(have, count, cap):
                 return None, self._literate_wall_refusal(trade, cap, have)
         years = self.training_years_from(trade, frm)
-        hours = trade_formation.teacher_hours_per_person(years, self._world.HOURS_PER_PERSON_YEAR) * count   # your hours, teaching
+        teaching_hours = trade_formation.teacher_hours_per_person(years, self._world.HOURS_PER_PERSON_YEAR) * count
+        teacher = self.outside_teacher(trade)
+        # another actor holding the knowledge teaches and is paid for their hours; otherwise it is your own
+        hours = 0.0 if teacher else teaching_hours
         pool = self.director_pool() - self.director_hours_committed()
         if hours > pool:
             return None, Refusal("founder_hours_short", "teaching %g %ss takes %.0f of your own hours and you have "
@@ -439,11 +442,22 @@ class TrainingMixin:
         # `frm` you have already pulled recently, the dearer feeding the next
         # batch while they learn.
         fee = count * self.labour_market.quote_annual(frm) * years      # the source's wages while they learn
+        if teacher:
+            fee += teaching_hours * self.labour_market.quote_annual(frm) / self._world.HOURS_PER_PERSON_YEAR
         if fee > self._world.spending_power("buy"):
             return None, self._cash_in_hand_refusal(
                 "keeping %g %s%s fed while they learn"
                 % (count, trade, "" if count == 1 else "s"), fee)
-        return {"count": count, "from": frm, "hours": hours, "fee": fee, "years": years}, None
+        return {"count": count, "from": frm, "hours": hours, "fee": fee, "years": years, "teacher": teacher}, None
+
+    def outside_teacher(self, trade):
+        """The first actor other than you that holds the knowledge to teach `trade` (trade_formation.teachers_of),
+        or None when you teach it yourself from what you know."""
+        by_actor, baseline, demonstrated = self._world.teaching_knowledge()
+        teachers = trade_formation.teachers_of(trade, trade_formation.shipped_gating_nodes(), by_actor, baseline,
+                                               demonstrated)
+        named = [teacher for teacher in teachers if teacher in by_actor]
+        return named[0] if named else None
 
     def trainee_wage_bill(self, trade, count):
         """Yearly wage the people taught will add once they join the staff."""

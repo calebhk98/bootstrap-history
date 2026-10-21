@@ -22,6 +22,7 @@ class YearLedger:
     crew_hours_bought: Dict[AgentId, Dict[Tuple[str, str], float]] = field(default_factory=dict)   # merchants that bid for crew: hours sold them by (trade, area)
     hours_sold: Dict[AgentId, float] = field(default_factory=dict)
     grown: Dict[AgentId, Dict[GoodId, float]] = field(default_factory=dict)       # made for itself
+    own_plot_hours: Dict[AgentId, Dict[str, float]] = field(default_factory=dict)   # hours worked on its own plot, by recipe
     grown_units: Dict[AgentId, Dict[str, float]] = field(default_factory=dict)    # need units of that
     buy_fills: Dict[AgentId, List[Fill]] = field(default_factory=dict)
     sold: Dict[Tuple[AgentId, GoodId], float] = field(default_factory=dict)

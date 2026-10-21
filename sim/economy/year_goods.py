@@ -10,7 +10,7 @@ import math
 from typing import Dict, List, Tuple
 
 from . import (carriage_wear, goods_market, households, market_curves, market_quote, merchants, producers, seller_cash, seller_offers, settlement,
-               state_budget, state_store, taxes, unsold_search)
+               state_budget, state_store, taxes, tool_wear, unsold_search)
 from .market_memory import market_key
 from .market_memory_asks import memory_reference_volume, note_bids, note_offers, price_after_resumed_trade, wanted_at
 from .market_memory_asks import REPRESENTATIVE_TRADE_SHARE
@@ -47,7 +47,13 @@ def cohort_orders(setup, record, view, ledger: YearLedger, order_book: OrderBook
         if priced is None:
             priced = priced_by_tile[cohort.tile] = households.need_prices(setup.basket_for(cohort.tile), view, cohort.tile)
         income = ledger.wages_in.get(cohort.agent_id, 0.0) + record.property_income.get(cohort.agent_id, 0.0)
-        orders = households.goods_orders(cohort, view, record.book.balance(cohort.agent_id, money), income,
+        cash = record.book.balance(cohort.agent_id, money)
+        tool_bids = tool_wear.tool_bids(
+            cohort.agent_id, cohort.tile, lambda good: view.area_of(good, cohort.tile), lambda good: view.price(good, view.area_of(good, cohort.tile)),
+            lambda good: view.stock(cohort.agent_id, good, cohort.tile), setup.recipes, ledger.own_plot_hours.get(cohort.agent_id, {}),
+            setup.specs, cash)
+        add_orders(order_book, AgentOrders(bids=tuple(tool_bids)))
+        orders = households.goods_orders(cohort, view, cash - sum(bid.budget for bid in tool_bids), income,
                                          setup.basket_for(cohort.tile), setup.specs, priced,
                                          smooth_rise=not record.settling, shared_store=store_by_tile)
         add_orders(order_book, _less_what_it_grew(orders, cohort, setup.basket_for(cohort.tile), ledger.grown_units.get(cohort.agent_id)))
