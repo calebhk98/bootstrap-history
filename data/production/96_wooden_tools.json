@@ -1,5 +1,5 @@
 {
- "_note": "Wooden farm tools: hoes, spades, rakes and forks cut and shaped from seasoned timber. The tool a farm worker draws when iron tools are short (data/world/trades.json tool_basket order). Every figure is a labelled heuristic with a retire field naming Complaint 659; no source was opened.",
+ "_note": "Wooden farm tools: hoes, spades, rakes and forks cut and shaped from seasoned timber. The tool a farm worker draws when iron tools are short (data/world/trades.json tool_basket order). The hours factor against iron is sourced in data/world/trades.json (Semyonov 1974 via Shukurov et al.). Wood per tonne and carpenter hours are labelled heuristics with a retire field naming Complaint 659; searches (Complaint 650 pass) found no timed replication of making a wooden spade or hoe.",
  "materials": {
   "wooden_tools_kg": {
    "outputs": {"wooden_tools_kg": 1000.0},
@@ -8,7 +8,7 @@
    "unit_dimension": "mass",
    "unit_mass_kg": 1.0,
    "basis": "per tonne of finished wooden farm tools (hoes, spades, rakes, forks, sickle handles), counted by the mass of the tools",
-   "yield_basis": "LABELLED HEURISTIC (conf D), no source found for the timber a tonne of wooden tools takes nor for the carpenter hours. Hewing a blade or tine from a log wastes most of it and green wood is part water, so a tonne of tools is taken to start as three tonnes of green roundwood (wood_kg); shaping each tool by axe, adze and knife is taken as about two hours a kilogram (author's estimate; retire: Complaint 659). Needs no technology.",
+   "yield_basis": "LABELLED HEURISTIC (conf D), no source found for the timber a tonne of wooden tools takes nor for the carpenter hours. Hewing a blade or tine from a log wastes most of it and green wood is part water, so a tonne of tools is taken to start as three tonnes of green roundwood (wood_kg); shaping each tool by axe, adze and knife is taken as about two hours a kilogram (author's estimate; searched for a timed replication of wooden spades and hoes and found none; the Danish T-shaped wooden spade replication at https://tidsskrift.dk/dja/article/view/138710 reports that the spades 'are relatively easy to produce' but its abstract gives no hours or timber mass; retire: Complaint 659). Needs no technology.",
    "retire": "Complaint 659",
    "conf": "D",
    "requires_node": null

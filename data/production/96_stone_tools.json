@@ -1,5 +1,5 @@
 {
- "_note": "Stone tools: obsidian and flint are quarried, and a knapper strikes blades and tools from them (Complaint 618, part of 530). Every figure not read from a source is a labelled heuristic with a retire field naming Complaint 650.",
+ "_note": "Stone tools: obsidian and flint are quarried, and a knapper strikes blades and tools from them (Complaint 618, part of 530). Every figure not read from a source is a labelled heuristic with a retire field naming Complaint 650. Complaint 650 research pass (see Complaints/reports/research-stone-and-wooden-tools.md): no new source was found for quarry hours, hours per blade, flint tool mass or knapper training; the mass balance of the blade entry stays the only sourced figure.",
  "materials": {
   "obsidian_kg": {
    "outputs": {"obsidian_kg": 1000.0},
