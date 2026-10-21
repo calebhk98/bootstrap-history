@@ -2,6 +2,7 @@
 import os
 from typing import Any, Dict, Iterable, Mapping
 
+from sim.engine import capital_builds
 from sim.json_files import json_files, read_json
 
 from .mods_base import ModError, ModManifest
@@ -65,7 +66,8 @@ def recipe_references(entry: Mapping[str, Any]) -> Iterable[str]:
     yield from (entry.get("inputs") or {})
     yield from (entry.get("outputs") or {})
     for capital in entry.get("capital") or ():
-        yield from (capital.get("build_materials") or {})
+        for way in capital_builds.builds(capital):
+            yield from way[0]
 
 
 def check_recipe_references(production: Mapping[str, Any], removed: Mapping[str, str]) -> None:

@@ -20,6 +20,7 @@ from .notional import shown_prices
 from .producers import Producer, expected_output_prices, live_input_prices, live_wages
 from .protocols import AgentOrders, YearInputs
 from .recipes import recipes_from_production_data
+from . import plant_builds
 from .tool_wear import with_tool_wear
 from .record import EconomyRecord
 from .setup import EconomySetup, TradeSpec, goods_specs, recipe_tile_key
@@ -40,7 +41,7 @@ __all__ = [
     "carriage_wear", "diagnostics", "households", "households_work", "taxes", "tile_costs", "currency_from_coin_standard", "Economy", "external_orders",
     "price_response", "prices_at", "offered_units", "watch_tiles",
     "shown_prices", "Producer", "expected_output_prices", "live_input_prices", "live_wages", "AgentOrders",
-    "YearInputs", "recipe_tile_key", "recipes_from_production_data", "with_tool_wear", "EconomyRecord", "EconomySetup", "TradeSpec", "SiteLimit",
+    "YearInputs", "recipe_tile_key", "recipes_from_production_data", "plant_builds", "with_tool_wear", "EconomyRecord", "EconomySetup", "TradeSpec", "SiteLimit",
     "goods_specs", "EDGE_EXTERNAL", "EDGE_LEGACY", "EDGE_CARGO", "EDGE_CONSUMPTION", "EDGE_PRODUCTION", "EDGE_EXCHANGE", "external_edge", "Bid", "GoodsMove", "Offer", "Transfer",
     "variable_cost_per_run", "rebase_basket_price_level", "trade_premium", "title_wealth",
     "traded_volumes", "country_traded_volumes", "country_opening_basket", "market_record", "opening_quantities", "opening_prices_in_hours", "wages_by_trade", "wages_by_trade_weighted", "interest_rate", "producers_of",

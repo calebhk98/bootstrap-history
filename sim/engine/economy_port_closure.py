@@ -1,10 +1,13 @@
 """Which opening prices stand: a good is priced only when it can be made at that start."""
 
 
+from sim.economy.api import plant_builds
+
+
 def makeable_prices(prices, production, recipes):
     """`prices` without the goods that cannot be made at the start. A good some production entry makes is kept
-    only when a recipe the society can run makes it and every input of that recipe but its worn tools is itself kept (a missing
-    input is not free; a short tool never stops a run). A good no entry makes (raw, imported, found) keeps its price."""
+    only when a recipe the society can run makes it and every input of that recipe but its worn tools is itself kept and its plant can be
+    built from kept goods in some alternative (a missing input is not free; a short tool never stops a run). A good no entry makes (raw, imported, found) keeps its price."""
     makers_anywhere = {good for entry_id, entry in production.items()
                        if not entry_id.startswith("_") and isinstance(entry, dict)
                        for good in (entry.get("outputs") or {})}
@@ -15,7 +18,7 @@ def makeable_prices(prices, production, recipes):
         for good in sorted(kept):
             if good not in makers_anywhere:
                 continue
-            if not any(good in recipe.outputs and all(item in kept for item in recipe.hard_inputs)
+            if not any(good in recipe.outputs and all(item in kept for item in recipe.hard_inputs) and plant_builds.buildable(recipe, kept)
                        for recipe in recipes.values()):
                 del kept[good]
                 changed = True

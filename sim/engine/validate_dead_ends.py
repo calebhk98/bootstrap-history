@@ -7,6 +7,7 @@ A good that only tech-tree nodes consume is listed apart, since a node's materia
 and not a flow of demand.
 """
 from typing import Any, Iterable, List, Mapping, Set, Tuple
+from sim.engine import capital_builds
 
 
 def produced_goods(production: Mapping[str, Mapping[str, Any]]) -> Set[str]:
@@ -31,7 +32,8 @@ def consumed_goods(production: Mapping[str, Mapping[str, Any]], need_goods: Mapp
             consumed.update(("mechanical_mj",) if entry.get("mechanical_mj") else ())
             consumed.update(("electrical_mj",) if entry.get("electrical_mj") else ())
         for capital in entry.get("capital") or []:
-            consumed.update(capital.get("build_materials") or {})
+            for way in capital_builds.builds(capital):
+                consumed.update(way[0])
         if entry.get("carrier_use") or entry.get("naval_crew") or entry.get("capital_asset"):
             consumed.update((entry.get("outputs") or {key: 1}))
         if entry.get("satisfies"):

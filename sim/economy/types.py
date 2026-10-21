@@ -111,6 +111,22 @@ class ToolFallback:
 
 
 @dataclass(frozen=True)
+class PlantBuild:
+    """One way to build a part of a plant: what it takes and how long it stands."""
+    goods: Mapping[GoodId, float]
+    labour_hours: Mapping[TradeId, float]
+    life_years: float
+
+
+@dataclass(frozen=True)
+class PlantPart:
+    """A part of a recipe's plant with the ways to build it, the preferred first. `runs_per_year` is the runs
+    the part turns out in a year."""
+    runs_per_year: float
+    builds: Tuple[PlantBuild, ...]
+
+
+@dataclass(frozen=True)
 class Recipe:
     """One way to make goods: per run, what goes in and what comes out. Data, never engine nodes."""
     recipe_id: str
@@ -120,6 +136,7 @@ class Recipe:
     plant_goods: Mapping[GoodId, float] = field(default_factory=dict)        # tied up per run a year of capacity
     plant_labour_hours: Mapping[TradeId, float] = field(default_factory=dict)  # building that capacity
     plant_life_years: float = 0.0
+    plant_parts: Tuple[PlantPart, ...] = ()   # the plant's parts with their alternative builds; plant_goods etc. are the folded first builds
     climate_classes: Tuple[str, ...] = ()   # climates it can be worked in, from data; empty: any
     site_bound: bool = False         # runs only where a site is declared (sites.py); the economy knows nothing else of it
     tool_wear: Mapping[GoodId, float] = field(default_factory=dict)   # per run: the part of `inputs` that is its workers' tools wearing out

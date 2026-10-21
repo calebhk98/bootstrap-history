@@ -10,7 +10,7 @@ import os
 from typing import Dict
 
 from sim.economy.api import (EconomySetup, carriage_wear, SiteLimit, TradeSpec, currency_from_coin_standard, goods_specs, households, households_work,
-                             recipe_tile_key,
+                             plant_builds, recipe_tile_key,
                              recipes_from_production_data, taxes, tile_costs, with_tool_wear)
 from sim.agents import api as agents_api
 from sim.world import demand, need_basket
@@ -213,6 +213,7 @@ def build_setup(sim, opening=None, production=None):
     specs = goods_specs({good: "" for good in goods}, spoilage, service_lives)
     prices = {good: price for good, price in opening["prices"].items() if good in specs and price > 0.0}
     prices = economy_port_closure.makeable_prices(prices, production, recipes)
+    recipes = {recipe_id: plant_builds.with_plant_from(recipe, prices) for recipe_id, recipe in recipes.items()}
     trades = {trade: TradeSpec(trade, float(spec.get("training_years", 0.0)),
                                float(spec.get("fatality_risk_per_year", 0.0)), str(spec.get("family", "")))
               for trade, spec in sorted(trades_data.items())}

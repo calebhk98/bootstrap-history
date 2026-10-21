@@ -8,7 +8,7 @@ in the same order using only the price lookups that move. The results are identi
 """
 import collections
 
-from sim.engine import solve_prices_core as core
+from sim.engine import capital_builds, solve_prices_core as core
 from sim.world.capital_market import stand_yearly_share
 
 
@@ -30,12 +30,12 @@ class RecipePlan:
         self.labour_cost_hours = core._labour_cost_hours(entry.get("labour_hours") or {}, wage_by_trade)
         self.rent_hours = core._extraction_rent_cost_hours(outputs, rent_by_kg)
         self.land_hectare_years = entry.get("land_hectare_years") or 0.0
+        # per capital good, its builds in preference order: (materials, labour cost, yearly share), and its output
         self.capital_goods = tuple(
-            (tuple((capital_good.get("build_materials") or {}).items()),
-             tuple(hours * wage_by_trade[trade]
-                   for trade, hours in (capital_good.get("build_labour_hours") or {}).items()),
-             stand_yearly_share(
-                interest_rate, capital_good["service_life_years"], capital_good.get("establishment_years") or 0.0),
+            (tuple((tuple(materials.items()),
+                    tuple(hours * wage_by_trade[trade] for trade, hours in labour.items()),
+                    stand_yearly_share(interest_rate, life, capital_good.get("establishment_years") or 0.0))
+                   for materials, labour, life in capital_builds.builds(capital_good)),
              capital_good["annual_output_at_basis"])
             for capital_good in (entry.get("capital") or []))
         self.energy = tuple(
@@ -69,13 +69,15 @@ def plan_cost(plan, prices, wage_by_trade, band_price_by_carrier, interest_rate,
         land_cost_hours = 0.0
 
     capital_cost_hours = 0.0
-    for build_materials, build_labour_costs, yearly_share, annual_output in plan.capital_goods:
+    for ways, annual_output in plan.capital_goods:
+        for build_materials, build_labour_costs, yearly_share in ways:
+            if all(build_material in prices for build_material, _quantity in build_materials):
+                break
+        else:
+            return None
         build_cost_hours = 0.0
         for build_material, quantity_per_build in build_materials:
-            build_material_price = prices.get(build_material)
-            if build_material_price is None:
-                return None
-            build_cost_hours += quantity_per_build * build_material_price
+            build_cost_hours += quantity_per_build * prices[build_material]
         for labour_cost in build_labour_costs:
             build_cost_hours += labour_cost
         capital_cost_hours += build_cost_hours * yearly_share / annual_output

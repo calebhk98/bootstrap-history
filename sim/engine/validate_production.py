@@ -346,6 +346,38 @@ def check_one_capital_good(good_where, good, known_materials, known_trades):
             "from nothing" % good_where)
 
     problems.extend(check_capital_physical_facts(good_where, good))
+    problems.extend(check_build_alternatives(good_where, good, known_materials, known_trades))
+    return problems
+
+
+def check_build_alternatives(good_where, good, known_materials, known_trades):
+    """`build_alternatives`, when present, is an ordered list of other ways to build the part: each with real
+    materials and trades, a basis, and a source or a labelled heuristic with `retire`."""
+    alternatives = good.get("build_alternatives")
+    if alternatives is None:
+        return []
+    if not isinstance(alternatives, list) or not alternatives:
+        return ["%s: build_alternatives must be a non-empty list" % good_where]
+    problems = []
+    for index, alternative in enumerate(alternatives):
+        where = "%s: build_alternatives[%d]" % (good_where, index)
+        if not isinstance(alternative, dict):
+            problems.append("%s is not an object" % where)
+            continue
+        materials = alternative.get("build_materials") or {}
+        labour = alternative.get("build_labour_hours") or {}
+        problems.extend(check_capital_build_materials(where, materials, known_materials))
+        problems.extend(check_capital_build_labour(where, labour, known_trades))
+        if not materials and not labour:
+            problems.append("%s: built from nothing" % where)
+        life = alternative.get("service_life_years", good.get("service_life_years"))
+        if not isinstance(life, (int, float)) or life <= 0:
+            problems.append("%s: service_life_years must be positive" % where)
+        if len((alternative.get("alternative_basis") or "").strip()) < 50:
+            problems.append("%s: alternative_basis (at least 50 characters) must say where the bill and life "
+                            "come from, or label them a heuristic" % where)
+        if alternative.get("conf") == "D" and not alternative.get("retire"):
+            problems.append("%s: a conf D alternative needs a retire field" % where)
     return problems
 
 
