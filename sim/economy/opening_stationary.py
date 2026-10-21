@@ -11,7 +11,7 @@ are the cost-price dual (`unit_cost`). From the runs come the flows that a year 
   `labour_ask_floor` sets), against the wage the cost table states.
 
 Nothing here reads a game; the opening calls it with its own final demand, and a test calls it with the small
-fixture's. The opening does not yet seed its producers from it (Complaint 473).
+fixture's. The opening does not yet seed its producers or its wage from it (Complaint 473).
 """
 import math
 from dataclasses import dataclass
@@ -85,8 +85,10 @@ def survival_wage_per_hour(floor_cost_per_person: float, people_per_worker: floa
     return floor_cost_per_person * people_per_worker / hours_per_worker_year
 
 
-def hours_that_clear_at(demanded_hours: float, workers: float, slack_share: float) -> float:
-    """Hours a worker offers a year so that the hours offered exceed the hours demanded by `slack_share`."""
+def hours_that_clear_at(demanded_hours: float, workers: float, slack_share: float,
+                        kept_per_worker: float = 0.0) -> float:
+    """Hours a worker has a year so that the hours he offers exceed the hours demanded by `slack_share`, after the
+    hours `kept_per_worker` that he keeps for his plot at the wage (`households_hours_offered.plot_hours_kept`)."""
     if workers <= 0.0:
         return 0.0
-    return demanded_hours * (1.0 + slack_share) / workers
+    return demanded_hours * (1.0 + slack_share) / workers + max(0.0, kept_per_worker)

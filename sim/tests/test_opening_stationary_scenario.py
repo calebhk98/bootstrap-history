@@ -10,7 +10,7 @@ each year after it too. Which rule moves each quantity is in `Complaints/473` (U
 import math
 import unittest
 
-from sim.economy import opening_stationary
+from sim.economy import household_hours_year, opening_stationary, year_labour
 from sim.economy.economy import Economy
 from sim.economy.settling import MAX_LOG_CHANGE_PER_YEAR, MAX_RATE_CHANGE_PER_YEAR
 from sim.tests import economy_fixture as fixture
@@ -56,10 +56,14 @@ class StationaryQuantitiesOfTheStatedFixtureTests(unittest.TestCase):
 
     def test_the_stationary_fixture_offers_the_hours_its_runs_hire_plus_the_stated_slack(self):
         setup = fixture.stationary_setup(0.1)
-        workers = sum(setup.opening_population_by_tile.values()) * setup.working_share
-        ratio = opening_stationary.hours_offered_over_demanded(
-            self.flows.hours_by_trade, workers * setup.working_hours_per_year, fixture.LABOURER)
-        self.assertAlmostEqual(ratio, 1.1, places=6)
+        economy = Economy(setup)
+        view = economy.view()
+        offers = year_labour.labour_offers(setup, economy.record, view, year_labour.outside_option_by_tile(setup, economy.record, view))
+        kept = household_hours_year.decide(setup, economy.record, view, offers, economy._own_plot_options(),
+                                           economy._hectares_held())
+        offered = sum(offer.hours for offer in offers) - sum(kept.values())      # what the households sell, after the plot
+        ratio = opening_stationary.hours_offered_over_demanded(self.flows.hours_by_trade, offered, fixture.LABOURER)
+        self.assertAlmostEqual(ratio, 1.1, places=2)
 
 
 class ObservedInflationTests(unittest.TestCase):

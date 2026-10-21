@@ -10,7 +10,7 @@ import contextlib
 import dataclasses
 from unittest import mock
 
-from sim.economy import opening_income, opening_stationary
+from sim.economy import household_hours_year, opening_income, opening_stationary, year_labour
 from sim.economy.economy import Economy
 from sim.world.need_demand import NEED_SUBSTITUTION_ELASTICITY
 from sim.economy.households_basket import Basket, NeedSpec
@@ -79,18 +79,27 @@ def small_setup(**changes) -> EconomySetup:
     return dataclasses.replace(setup, **changes) if changes else setup
 
 
+PLOT_LAND_PER_RUN = 1.0       # hectare-years a farm run takes, for fixtures whose households grow some of their own grain
+
+
 def stationary_setup(slack_share: float = 0.1, **changes) -> EconomySetup:
-    """The three-tile economy with each worker offering the hours its opening's runs hire plus `slack_share`
-    (opening_stationary.py), not the stated 2000 a year, which is many times what the fixture's recipes hire: at
-    those hours the labour market clears at the workers' survival wage a dozen times below the stated one, and no
-    year repeats itself. The runs are those of the stated fixture's opening demand."""
-    stated = small_setup()
-    demand = Economy(stated).record.opening_demand
-    flows = opening_stationary.solve({TOWN: demand}, stated.recipes, stated.opening_prices, stated.opening_wages,
-                                     stated.opening_rate)
+    """The three-tile economy with each worker having the hours its opening's runs hire plus `slack_share`, and the
+    hours it keeps for its own plot at the stated wage (households_hours_offered.py), not the stated 2000 a year, which
+    is many times what the fixture's recipes hire: at those hours the labour market clears at the workers' survival
+    wage a dozen times below the stated one, and no year repeats itself. Households work a plot (`land_per_run` on the
+    farm recipe), so an hour not sold has a use at home. The runs are those of the stated fixture's opening demand."""
+    stated = small_setup(land_per_run={FARM: PLOT_LAND_PER_RUN})
+    economy = Economy(stated)
+    flows = opening_stationary.solve({TOWN: economy.record.opening_demand}, stated.recipes, stated.opening_prices,
+                                     stated.opening_wages, stated.opening_rate)
     workers = sum(stated.opening_population_by_tile.values()) * stated.working_share
-    hours = opening_stationary.hours_that_clear_at(flows.hours_by_trade[LABOURER], workers, slack_share)
-    return small_setup(working_hours_per_year=hours, **changes)
+    view = economy.view()
+    offers = year_labour.labour_offers(stated, economy.record, view, year_labour.outside_option_by_tile(stated, economy.record, view))
+    kept = household_hours_year.decide(stated, economy.record, view, offers, economy._own_plot_options(),
+                                       economy._hectares_held())
+    hours = opening_stationary.hours_that_clear_at(flows.hours_by_trade[LABOURER], workers, slack_share,
+                                                   sum(kept.values()) / workers)
+    return dataclasses.replace(stated, working_hours_per_year=hours, **changes)
 
 
 def quiet_year(setup: EconomySetup, **changes) -> YearInputs:
