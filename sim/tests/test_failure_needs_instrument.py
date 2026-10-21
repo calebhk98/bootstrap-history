@@ -1,71 +1,76 @@
 """Complaint 274: a failure you cannot measure teaches nothing, and says so.
 
-A node that declares `diagnosis_instrument` lets its failures improve the
-retry odds only when the instrument is held; the failure report names the
-figure needed and, without the instrument, which instrument would measure it.
-"""
-from .harness import *  # noqa: F401,F403
+A node that declares `diagnosis_instrument` lets its failures improve the retry odds only when the instrument is held;
+the failure report names the figure needed and, without the instrument, which instrument would measure it.
+
+Rules, called on a stub game: `failure_diagnosis.failure_teaches` and `note_failure`. The tree's data (the instrument is
+not a prerequisite, so it can be lacked) is read as data. The failures played through a game are
+`test_failure_needs_instrument_scenario`."""
+QUICK_TOPIC = True
+
+import random
+import unittest
+from types import SimpleNamespace
+
 from sim.engine.data import closure
-from sim.engine.projects_completion import FAILED_PREFIX
+from sim.engine.failure_diagnosis import SHORTFALL_FACTOR_RANGE, failure_teaches, note_failure
+from sim.tests.harness import NODES
 
 NODE_ID = "cap_tol_1um"
 SPEC = NODES[NODE_ID]["mechanics"]["diagnosis_instrument"]
 INSTRUMENT = SPEC["instrument"]
 
 
-class _Forced(random.Random):
-    def __init__(self, draw):
-        super().__init__(1)
-        self.draw = draw
+class StubGame:
+	"""The few things the diagnosis reads: the node's mechanics, the nodes, what is done, and a random stream."""
 
-    def random(self):
-        return self.draw
+	def __init__(self, holds_instrument):
+		self.nodes = NODES
+		self.rng = random.Random(1)
+		self.state = SimpleNamespace(projects=SimpleNamespace(done={INSTRUMENT} if holds_instrument else set()))
 
-
-def _fail_twice(holds_instrument):
-    test_sim = sim(capital=1000000.0)
-    test_sim.rng = _Forced(0.0)
-    if holds_instrument:
-        test_sim.state.projects.done.add(INSTRUMENT)
-    test_sim.initialize_project(NODE_ID, spent=0.0, cost_left=0.0)
-    for _ in range(2):
-        test_sim._complete(NODE_ID)
-    return test_sim
+	def mechanic(self, node_id, name):
+		return (NODES[node_id].get("mechanics") or {}).get(name)
 
 
-def _last_failure_text(test_sim):
-    return [text for _year, text in test_sim.state.household.log if FAILED_PREFIX in text][-1]
+class FailureNeedsInstrumentTests(unittest.TestCase):
+	def test_the_instrument_is_not_a_prerequisite_so_it_can_be_lacked(self):
+		self.assertNotIn(INSTRUMENT, closure(NODES, NODE_ID))
+
+	def test_without_the_instrument_the_failure_teaches_nothing(self):
+		self.assertFalse(failure_teaches(StubGame(False), NODE_ID))
+
+	def test_with_the_instrument_the_failure_teaches(self):
+		self.assertTrue(failure_teaches(StubGame(True), NODE_ID))
+
+	def test_the_blind_failure_names_the_instrument_and_the_figure_needed_and_says_it_cannot_be_diagnosed(self):
+		text = note_failure(StubGame(False), NODE_ID)
+		self.assertIn(NODES[INSTRUMENT]["name"], text)  # presentation: the sentence names the instrument
+		self.assertIn(SPEC["needed_words"], text)  # presentation: the sentence states the figure the work needed
+		self.assertIn("cannot", text)  # presentation: the sentence says it cannot be diagnosed
+
+	def test_the_equipped_failure_reports_what_was_reached_against_what_was_needed(self):
+		text = note_failure(StubGame(True), NODE_ID)
+		self.assertIn(SPEC["needed_words"], text)  # presentation: the failure line's wording
+		self.assertIn("reached", text)  # presentation: the failure line's wording
+
+	def test_the_reported_shortfall_lies_in_the_declared_range(self):
+		low, high = SHORTFALL_FACTOR_RANGE
+		for seed in range(20):
+			game = StubGame(True)
+			game.rng = random.Random(seed)
+			text = note_failure(game, NODE_ID)
+			reached = float(text.split("reached ")[1].split(" ")[0])  # presentation: reads the figure out of the sentence
+			self.assertGreaterEqual(reached, SPEC["needed"] * low * 0.999)
+			self.assertLessEqual(reached, SPEC["needed"] * high * 1.001)
+
+	def test_a_node_without_the_mechanic_always_teaches_and_adds_no_sentence(self):
+		other = next(node_id for node_id, node in NODES.items() if "diagnosis_instrument" not in (node.get("mechanics") or {}))
+		for holds in (False, True):
+			game = StubGame(holds)
+			self.assertTrue(failure_teaches(game, other))
+			self.assertEqual(note_failure(game, other), "")
 
 
-check("set-up: the instrument is not a prerequisite, so it can be lacked",
-      INSTRUMENT not in closure(NODES, NODE_ID))
-_blind = _fail_twice(False)
-_equipped = _fail_twice(True)
-check("both attempts failed", _blind.state.projects.failed_attempts[NODE_ID] == 2
-      and _equipped.state.projects.failed_attempts[NODE_ID] == 2)
-check("without the instrument the failures buy no risk learning",
-      abs(_blind.effective_risk(NODE_ID) - NODES[NODE_ID]["risk"]) < 1e-12,
-      _blind.effective_risk(NODE_ID))
-check("with the instrument the same failures do lower the risk",
-      _equipped.effective_risk(NODE_ID) < NODES[NODE_ID]["risk"] - 1e-6,
-      _equipped.effective_risk(NODE_ID))
-_blind_text = _last_failure_text(_blind)
-check("the blind failure names the instrument that would have measured it",
-      NODES[INSTRUMENT]["name"] in _blind_text, _blind_text)
-check("the blind failure states the figure the work needed",
-      SPEC["needed_words"] in _blind_text, _blind_text)
-check("the blind failure says it cannot be diagnosed", "cannot" in _blind_text, _blind_text)
-_equipped_text = _last_failure_text(_equipped)
-# presentation: the failure line's wording
-check("the equipped failure reports what was reached against what was needed",
-      SPEC["needed_words"] in _equipped_text and "reached" in _equipped_text, _equipped_text)
-_other = next(node_id for node_id in ORDER
-              if "diagnosis_instrument" not in (NODES[node_id].get("mechanics") or {})
-              and 0.1 < NODES[node_id]["risk"] < 0.9)
-_plain = sim(capital=1000000.0)
-_plain.rng = _Forced(0.0)
-_plain.initialize_project(_other, spent=0.0, cost_left=0.0)
-_plain._complete(_other)
-_plain._complete(_other)
-check("a node without the mechanic still learns from every failure",
-      _plain.effective_risk(_other) < NODES[_other]["risk"] - 1e-6)
+if __name__ == "__main__":
+	unittest.main()

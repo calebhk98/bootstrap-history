@@ -11,6 +11,7 @@ here. Behaviour is unchanged and moved verbatim.
 
 import sim.engine.ui_port as ui_port
 from sim.refusal import LogLine
+from . import credit_forecast
 from .command_registry import command
 from .explain_once import already_explained
 import os
@@ -42,10 +43,6 @@ def _non_craft_labour_names(sim):
     return ", ".join(names)
 
 
-_CREDIT_PROSE = {"on_credit": ("nothing_is_borrowed_yet", "what_happens_there"),
-                 "total_committed_across_active_work": ("what_this_means",)}
-
-
 def _shorten_credit_forecast(sim, cmd, out):
     """Keep the credit forecast's explanatory prose to once per game year.
 
@@ -53,20 +50,10 @@ def _shorten_credit_forecast(sim, cmd, out):
     `credit_forecast_in_full` says which the reply is, and the text screen
     prints a one-line summary for the short form. `full` asks for it all again.
     """
-    blocks = [key for key in _CREDIT_PROSE if key in out]
-    if not blocks:
-        return
     seat_progress = sim.state.seat_progress
     said = ui_port.said_explanations(seat_progress) or {}
-    full = bool(cmd.get("full")) or said.get("credit_forecast") != sim.year
-    if full:
-        said["credit_forecast"] = sim.year
+    if credit_forecast.shorten(out, said, sim.year, cmd.get("full")):
         ui_port.set_said_explanations(seat_progress, said)
-    else:
-        for key in blocks:
-            for prose_key in _CREDIT_PROSE[key]:
-                out[key].pop(prose_key, None)
-    out["credit_forecast_in_full"] = full
 
 
 @command("start", shape="tech", group="projects", aliases=("begin", "research", "build"),

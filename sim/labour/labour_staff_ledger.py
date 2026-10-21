@@ -10,6 +10,7 @@ from sim.refusal import LogLine
 from sim.world import demography
 
 from . import trade_data
+from .staff_events import staff_lost_line
 
 
 class StaffLedgerMixin:
@@ -23,21 +24,12 @@ class StaffLedgerMixin:
 
         `cause` completes "you lose <people> to <cause>". A loss that leaves a concern the staffing rule will
         shut is its own kind of event, one that stops a multi-year step."""
-        counts = {trade: count for trade, count in counts.items() if count > 0}
-        if not counts:
+        if not any(count > 0 for count in counts.values()):
             return
         world = self._world
-        people = ", ".join("%s %s%s" % (("%d" % round(count) if abs(count - round(count)) < 0.05 else "%.1f" % count),
-                                        trade, "" if abs(count - 1) < 0.05 else "s")
-                           for trade, count in sorted(counts.items()))
         stops = sorted(world.concerns_to_close_for_staffing())
-        text = "you lose %s to %s" % (people, cause)
-        if stops:
-            text += "; %s will close for want of staff unless you replace them" % ", ".join(stops[:4])
-        world.state.household.log.append((world.state.scenario.year, LogLine(
-            "staff_lost_stops_concerns" if stops else "staff_lost", text, reason=cause.replace(" ", "_"),
-            trades=counts, stops=stops,
-            stops_earnings_per_year=round(self.yearly_value_of(stops), 1))))
+        world.state.household.log.append((world.state.scenario.year, staff_lost_line(
+            cause, counts, stops, self.yearly_value_of(stops))))
 
     def yearly_value_of(self, node_ids):
         """What the named running concerns take in a year, as the ledger credits it."""

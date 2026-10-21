@@ -1,86 +1,114 @@
 """Complaints/59: a quoted affordable amount must be purchasable as quoted.
 
-For each buy kind with a quote, the quoted affordable amount is bought on an
-unchanged Sim and must succeed in full.
+Every quote of an affordable amount and every purchase gate asks sim/engine/purchase_rule.py, so the rule is tested
+here on an actor built for the purpose. (That each buy kind's quote and purchase call it: test_scenarios_batch3.)"""
+QUICK_TOPIC = True
 
-Every quoted affordable amount is purchasable as quoted.
-"""
-from .harness import *  # noqa: F401,F403
-from sim.ui.proto.dispatch_money import _cmd_quote
+import unittest
+from unittest import mock
 
-
-def _quoted(quote_cmd, capital):
-    test_sim = sim(capital=capital)
-    return test_sim, _cmd_quote(test_sim, NODES, quote_cmd, None)
+from sim.engine import purchase_rule
+from sim.refusal import cause_of, facts_of
 
 
-# Little cash, so a quoted figure that counts credit differs from cash alone.
-_CAPITAL = 3000.0
+class Actor:
+    """The parts of a household the rule reads: a spending power, cash and a credit line."""
+    SPENDING_DRAW_SHARE_ORDINARY = 0.5
+    civ = None
 
-_forest_sim, _forest_quote = _quoted({"what": "forest", "n": 100}, _CAPITAL)
-_forest_ha = _forest_quote["you_can_afford_about"]
-check("forest: the quote gives a positive affordable amount",
-      _forest_ha > 0, _forest_quote)
-check("forest: the quoted affordable hectares are bought in full",
-      _forest_sim.buy_forest(_forest_ha) == _forest_ha, _forest_ha)
+    def __init__(self, budget, capital=None, credit=0.0):
+        self.budget = budget
+        self.capital = budget if capital is None else capital
+        self._credit = credit
 
-_nitre_sim, _nitre_quote = _quoted({"what": "nitre_bed", "n": 10000}, _CAPITAL)
-_nitre_m2 = _nitre_quote["you_can_afford_about"]
-check("nitre: the quote gives a positive affordable amount",
-      _nitre_m2 > 0, _nitre_quote)
-check("nitre: the quoted affordable square metres are laid in full",
-      _nitre_sim.build_nitre(_nitre_m2) == _nitre_m2, _nitre_m2)
+    def spending_power(self, kind):
+        assert kind == "buy"
+        return self.budget
 
-_mine_sim, _mine_quote = _quoted(
-    {"what": "mine", "material": "coal", "n": 500}, _CAPITAL)
-_mine_tonnes = _mine_quote["you_can_afford_about"]
-check("mine: the quote gives a positive affordable amount",
-      _mine_tonnes > 0, _mine_quote)
-check("mine: the quoted affordable tonnage is sunk in full",
-      _mine_sim.open_mine("coal", _mine_tonnes, partial=False) == _mine_tonnes,
-      _mine_tonnes)
+    def credit_limit(self):
+        return self._credit
 
-# Past the quoted amount is refused, and the refusal cites the same budget.
-_over_sim, _over_quote = _quoted({"what": "forest", "n": 100}, _CAPITAL)
-check("forest: twice the quoted amount is refused",
-      _over_sim.buy_forest(_over_quote["you_can_afford_about"] * 2 + 1) == 0.0,
-      _over_quote)
-_refusal = proto([{"cmd": "buy", "what": "forest", "n": 100000}])[0][0]
-check("forest: the refusal names what you could raise, as the quote does",
-      not _refusal.get("ok") and "could raise" in str(_refusal.get("error")),
-      _refusal)
 
-# Slaves quote must show the shared budget (cash + credit), like forest does.
-_slaves_sim, _slaves_quote = _quoted({"what": "slaves", "n": 100}, _CAPITAL)
-check("slaves: the quote includes shared budget info",
-      "you_could_raise" in _slaves_quote and "you_can_afford_about" in _slaves_quote,
-      _slaves_quote)
-_slaves_people = _slaves_quote["you_can_afford_about"]
-check("slaves: the quote gives a positive affordable amount",
-      _slaves_people > 0, _slaves_quote)
-check("slaves: the quoted affordable people are bought in full",
-      _slaves_sim.labour.buy_slaves(_slaves_people) == _slaves_people, _slaves_people)
+class AffordableUnitsTests(unittest.TestCase):
+    def test_the_affordable_amount_is_always_payable(self):
+        for budget in (0.37, 1.0, 3000.0, 2999.999999, 123456.789, 1.0e-7):
+            for unit_cost in (0.013, 0.5, 7.0, 29.99, 3000.0, 1.0e6):
+                for decimals in (0, 1, 2):
+                    actor = Actor(budget)
+                    units = purchase_rule.affordable_units(actor, unit_cost, decimals)
+                    self.assertTrue(purchase_rule.can_pay(actor, units * unit_cost), (budget, unit_cost, decimals, units))
 
-# Affordability with credit: household with little cash but enough credit can buy
-_credit_sim = sim(capital=_CAPITAL)
-# Ensure spending_power allows using credit
-_budget = _credit_sim.spending_power("buy")
-if _budget > _CAPITAL:
-    # We have credit available; try to buy something that costs more than cash alone
-    cost_with_credit = _CAPITAL * 0.5 + (_budget - _CAPITAL) * 0.5
-    # This should be affordable via shared budget but not via cash alone
-    if cost_with_credit > _CAPITAL:
-        check("slaves: affordable via credit when cash alone is insufficient",
-              cost_with_credit <= _budget, (cost_with_credit, _budget, _CAPITAL))
+    def test_one_more_step_than_the_affordable_amount_is_refused(self):
+        for budget, unit_cost in ((3000.0, 7.0), (3000.0, 29.99), (500.0, 3.0)):
+            actor = Actor(budget)
+            units = purchase_rule.affordable_units(actor, unit_cost, 1)
+            self.assertFalse(purchase_rule.can_pay(actor, (units + 0.2) * unit_cost), (budget, unit_cost))
 
-# Bought material stock draws on the same budget.
-_stock_sim = sim(capital=_CAPITAL)
-_material_quote = _stock_sim.material_trade_quote("iron")
-if _material_quote:
-    _tonnes = min(_stock_sim.spending_power("buy") / _material_quote["buy_per_tonne"] * 0.999,
-                  _material_quote["market_available_tonnes_per_year"])
-    # the price climbs as the order is filled, so the amount that fits the budget is the one whose bill does
-    while _stock_sim.material_purchase_cost("iron", _tonnes)[0] > 0.999 * _stock_sim.spending_power("buy"):
-        _tonnes *= 0.9
-    check("material: an amount within the shared budget is bought in full",
-          _stock_sim.buy_material_stock("iron", _tonnes) == _tonnes, _tonnes)
+    def test_twice_the_affordable_amount_is_refused(self):
+        actor = Actor(3000.0)
+        units = purchase_rule.affordable_units(actor, 12.0)
+        self.assertFalse(purchase_rule.can_pay(actor, (units * 2 + 1) * 12.0))
+
+    def test_the_amount_is_rounded_down_to_the_decimals_asked(self):
+        actor = Actor(100.0)
+        self.assertEqual(purchase_rule.affordable_units(actor, 30.0, 0), 3)
+        self.assertEqual(purchase_rule.affordable_units(actor, 30.0, 1), 3.3)
+        self.assertEqual(purchase_rule.affordable_units(actor, 30.0, 2), 3.33)
+
+    def test_a_cost_exactly_the_budget_is_payable(self):
+        self.assertTrue(purchase_rule.can_pay(Actor(90.0), 90.0))
+        self.assertEqual(purchase_rule.affordable_units(Actor(90.0), 30.0, 0), 3)
+
+    def test_nothing_is_affordable_with_no_budget_and_a_free_unit_does_not_divide_by_zero(self):
+        self.assertEqual(purchase_rule.affordable_units(Actor(0.0), 5.0), 0.0)
+        self.assertGreater(purchase_rule.affordable_units(Actor(10.0), 0.0), 0.0)
+
+    def test_the_budget_is_the_actors_spending_power_not_its_cash(self):
+        actor = Actor(budget=3000.0, capital=1000.0, credit=4000.0)
+        self.assertEqual(purchase_rule.purchase_budget(actor), 3000.0)
+        self.assertTrue(purchase_rule.can_pay(actor, 2500.0))
+        self.assertEqual(purchase_rule.affordable_units(actor, 100.0, 0), 30)
+
+
+class AffordableWholeUnitsTests(unittest.TestCase):
+    """Units whose bill rises with the number taken (slaves): the amount quoted is payable and the next is not."""
+
+    @staticmethod
+    def bill(people):
+        return 100.0 * people * (1.0 + 0.01 * people)
+
+    def test_the_quoted_people_are_payable_and_one_more_is_not(self):
+        for budget in (50.0, 1000.0, 3000.0, 25000.0):
+            people = purchase_rule.affordable_whole_units(budget, 100.0, self.bill)
+            self.assertLessEqual(self.bill(people), budget, budget)
+            self.assertGreater(self.bill(people + 1), budget, budget)
+
+    def test_a_budget_below_one_unit_buys_none(self):
+        self.assertEqual(purchase_rule.affordable_whole_units(40.0, 100.0, self.bill), 0)
+
+    def test_a_flat_price_gives_the_division(self):
+        self.assertEqual(purchase_rule.affordable_whole_units(950.0, 100.0, lambda people: 100.0 * people), 9)
+
+
+class RefusalTests(unittest.TestCase):
+    def refusal(self, budget=3000.0, cost=5000.0):
+        with mock.patch.object(purchase_rule, "remedies_text", lambda actor: ""):
+            return purchase_rule.refusal_text(Actor(budget, capital=1000.0, credit=4000.0), "forest", cost)
+
+    def test_the_refusal_states_cost_budget_and_shortfall_as_values(self):
+        refusal = self.refusal()
+        self.assertEqual(cause_of(refusal), "cash_short")
+        self.assertEqual((facts_of(refusal)["cost"], facts_of(refusal)["budget"], facts_of(refusal)["short"]),
+                         (5000.0, 3000.0, 2000.0))
+
+    def test_the_refusal_cites_the_budget_the_quote_does(self):
+        # presentation: the sentence that names what you could raise
+        self.assertIn("you could raise", str(self.refusal()))
+        self.assertIn(purchase_rule.afford_means(), str(self.refusal()))
+
+    def test_a_cost_inside_the_budget_is_short_of_nothing(self):
+        self.assertEqual(facts_of(self.refusal(budget=3000.0, cost=1000.0))["short"], 0.0)
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -16,6 +16,7 @@ file of their own.
 """
 from sim.constants import declare
 from sim.refusal import LogLine
+from .completion_rules import road_line, severity_of_loss, staff_shortfall
 from .data import closure
 from .failure_cause import failure_cause
 from .failure_diagnosis import failure_teaches, note_failure
@@ -89,8 +90,8 @@ class CompletionMixin:
     def failure_severity(self, node_id, lost, means):
         """'minor' or 'major', from the loss against the player's means and
         whether the failed project sits on the goal's road."""
-        weight = self.GOAL_PATH_FAILURE_WEIGHT if node_id in self.goal_closure_ids() else 1.0
-        return "minor" if lost * weight < self.MINOR_FAILURE_SHARE * max(means, 1.0) else "major"
+        return severity_of_loss(lost, means, node_id in self.goal_closure_ids(), self.MINOR_FAILURE_SHARE,
+                                self.GOAL_PATH_FAILURE_WEIGHT)
 
     def goal_snapshot(self):
         """The goal's live measure(s) and road progress, or None without a goal."""
@@ -120,11 +121,7 @@ class CompletionMixin:
         lines = ["goal effect: %s %s -> %s" % row for row in moved]
         if (before and node_id != self.goal and node_id in self.goal_closure_ids()
                 and self.goal not in self.state.projects.done):
-            if self.fog:
-                lines.append("goal effect: this is on the road to your goal")
-            else:
-                lines.append("goal effect: on the road to your goal, %d of %d steps done"
-                             % (after["road_done"], after["road_total"]))
+            lines.append(road_line(self.fog, after["road_done"], after["road_total"]))
         return lines
 
     def opening_shortfall(self, node_id):
@@ -132,9 +129,7 @@ class CompletionMixin:
         today's free staff could not supervise this concern, else None."""
         need_scholars, need_craftsmen = self.venture_hands(node_id)
         free_scholars, free_craftsmen = self.venture_staff_free()
-        if need_scholars > free_scholars + 0.01 or need_craftsmen > free_craftsmen + 0.01:
-            return need_scholars, need_craftsmen, free_scholars, free_craftsmen
-        return None
+        return staff_shortfall(need_scholars, need_craftsmen, free_scholars, free_craftsmen)
 
     FAILURE_RESET_SHARE = declare(
         "FAILURE_RESET_SHARE", 0.4, kind="temporary_heuristic",

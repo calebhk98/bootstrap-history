@@ -1,258 +1,111 @@
-"""mines: regression checks, run individually with `--only mines`."""
+"""mines: depletion and the cost scale of a working (Complaint 640 audit: rules on a stub founder holding workings, no
+game). The land ceilings, the works technology, the quote, the determinism and the save round trip are
+test_mines_scenario."""
+import types
+
 from .harness import *  # noqa: F401,F403
+from sim.engine import purchase_rule  # noqa: F401  (first: the engine modules import each other in a fixed order)
+from sim.engine.economy_mining import MiningMixin
 
-# =============================================================================
-# MINES: LAND, DEPLETION AND TECHNOLOGY. A tester asked three questions
-# nothing in the model answered: can you sink unlimited mines of one
-# material, does yield fall as the easy ore is worked out, and does
-# technology fight back. See economy.py's mine_land_ceiling()/
-# mine_depletion_factor() and sim/world/mine_technique.py for the reasoning and the numbers.
-# =============================================================================
+QUICK_TOPIC = True
 
-# --- (a) LAND: the ceiling differs by material and by civilization, because
-# geology is not standing. Reuses mineral_scale(), already used for the
-# MARKET half of supply, for the OWN-MINE half too.
-s_land = unopened_sim(capital=1.0)
-check("a civilization with little tin under its home regions has a lower "
-      "tin ceiling than one with plenty of the same standing",
-      s_land.mine_land_ceiling("tin") != s_land.mine_land_ceiling("coal"),
-      (s_land.mine_land_ceiling("tin"), s_land.mine_land_ceiling("coal")))
-s_mex = unopened_sim(civ="mexica_1500", capital=1.0)
-check("Mesoamerica, which worked copper but not iron or coal, has a lower "
-      "land ceiling for iron than for copper",
-      s_mex.mine_land_ceiling("iron") < s_mex.mine_land_ceiling("copper"),
-      (s_mex.mine_land_ceiling("iron"), s_mex.mine_land_ceiling("copper")))
 
-# --- open_mine() actually respects the land ceiling: sinking far more than
-# the ground can support delivers only what the ground can support, not
-# whatever standing alone would have allowed.
-s_dig = unopened_sim(capital=1e12)
-ceiling_before = s_dig.mine_land_ceiling("tin")
-got_tin = s_dig.open_mine("tin", ceiling_before * 50.0, partial=False)
-check("sinking far more of a scarce material than the land ceiling allows "
-      "delivers only room up to that ceiling, not the full amount asked",
-      0 < got_tin <= ceiling_before + 1.0,
-      (got_tin, ceiling_before))
+class _Founder(MiningMixin):
+    """The part of a Sim that a working's depletion reads: a list of workings, the land ceiling and the year."""
 
-# --- woodland is bounded too, the tester's other named case ("mines/woods").
-s_wood = unopened_sim(civ="norse_900ad", capital=1e12)
-wood_ceiling = s_wood.forest_land_ceiling()
-got_ha = s_wood.buy_forest(wood_ceiling * 100.0)
-check("buying far more coppice than the land can support delivers only up "
-      "to the ceiling, not the full amount asked",
-      0 < got_ha <= wood_ceiling + 1.0, (got_ha, wood_ceiling))
-check("...and the ceiling itself is nowhere near the WHOLE EMPIRE's own "
-      "managed coppice (500,000 t/yr charcoal implies ~667,000 ha)",
-      s_wood.forest_land_ceiling() < 667000.0, s_wood.forest_land_ceiling())
+    def __init__(self, ceiling=100.0, year=1):
+        self.holdings = types.SimpleNamespace(mines=[], mine_tranches=[], mine_pending={})
+        self.household = self.holdings
+        self.state = types.SimpleNamespace(holdings=self.holdings, scenario=types.SimpleNamespace(year=year))
+        self._ceiling = ceiling
 
-# --- (b) DEPLETION: yield falls as a working is worked hard relative to
-# what the ground can support, and never below the stated floor.
-s_dep = unopened_sim(capital=1e9)
-s_dep.open_mine("coal", s_dep.mine_land_ceiling("coal") * 0.9, partial=False)
-for _ in range(int(s_dep.MINE_LEAD_YEARS) + 1):
-    s_dep.year += 1
-    s_dep.commission_mines()
-yield_early = s_dep.mine_yield_t("coal")
-for _ in range(150):
-    s_dep.year += 1
-    s_dep.commission_mines()
-yield_late = s_dep.mine_yield_t("coal")
-check("a coal working driven hard for a century and a half yields less than "
-      "it did when it opened",
-      yield_late < yield_early, (yield_early, yield_late))
-check("...but never below the stated floor, however long it is driven",
-      s_dep.mine_depletion_factor("coal") >= s_dep.DEPLETION_FLOOR - 1e-9,
-      s_dep.mine_depletion_factor("coal"))
-for _ in range(2000):
-    s_dep.year += 1
-    s_dep.commission_mines()
-check("...and depletion saturates at the floor rather than continuing to "
-      "fall without limit (not an exponential collapse), unless the deposits are "
-      "worked out and the workings have closed",
-      abs(s_dep.mine_depletion_factor("coal") - s_dep.DEPLETION_FLOOR) < 1e-6
-      or not s_dep._workings_of("coal"),
-      s_dep.mine_depletion_factor("coal"))
+    def mine_land_ceiling(self, mat):
+        return self._ceiling
 
-# --- a working driven gently (a small fraction of what the ground could
-# support) depletes far slower than one driven hard, for the same years.
-s_gentle = unopened_sim(capital=1e9)
-s_gentle.open_mine("coal", s_gentle.mine_land_ceiling("coal") * 0.1, partial=False)
-for _ in range(int(s_gentle.MINE_LEAD_YEARS) + 1 + 150):
-    s_gentle.year += 1
-    s_gentle.commission_mines()
-check("a working driven at a tenth of what the land could support depletes "
-      "far slower than one driven at nine tenths, over the same years",
-      s_gentle.mine_depletion_factor("coal") > s_dep.mine_depletion_factor("coal")
-      or s_gentle.mine_depletion_factor("coal") == 1.0,
-      (s_gentle.mine_depletion_factor("coal"), s_dep.mine_depletion_factor("coal")))
+    def _draw_working(self, working):
+        pass
 
-# --- (c) TECHNOLOGY fights back: each technique changes the physical term of the works it acts on,
-# so the running cost per tonne falls, and the cheapest of several lifting devices is used rather
-# than the devices compounding (mine pumping and the Newcomen engine both address drainage).
-s_tech = s_land
-c0 = s_tech._mine_opex("coal")
-run_it(s_tech, "met_mine_pumping")
-c1 = s_tech._mine_opex("coal")
-run_it(s_tech, "steam_atmospheric")
-c2 = s_tech._mine_opex("coal")
-check("mine pumping alone lowers the running cost of coal mining",
-      c1 < c0, (c0, c1))
-check("the Newcomen engine on top of mine pumping does not cost more than mine pumping alone",
-      c2 <= c1, (c1, c2))
+    def add_working(self, material="coal", capacity=10.0, opened_year=1, intensity=0.0):
+        working = {"material": material, "capacity": capacity, "opened_year": opened_year,
+                   "capex_paid": 0.0, "intensity_yrs": intensity}
+        self.holdings.mines.append(working)
+        return working
 
-# --- technology lowers what an EXISTING, already-depleted working costs to run.
-before_tech = s_dep.mine_operating_cost_for(s_dep.mines[0])
-run_it(s_dep, "met_mine_pumping")
-run_it(s_dep, "steam_atmospheric")
-after_tech = s_dep.mine_operating_cost_for(s_dep.mines[0])
-check("mine pumping and the Newcomen engine lower a depleted working's running cost",
-      after_tech < before_tech, (before_tech, after_tech))
+    def pass_years(self, years):
+        for _ in range(years):
+            self.state.scenario.year += 1
+            self.commission_mines()
 
-# --- the interaction the brief asked for: a real decision, not an
-# exponential. Cost is bounded on both ends even at maximum depletion with
-# every relevant technology built.
-s_bound = unopened_sim(capital=1.0)
-for _t in s_bound.nodes_with_mechanic("mine_works"):
-    s_bound.done.add(_t); s_bound.operating.add(_t)
-s_bound._done_changed()
-# A working of its own, fully depleted from its own commissioning year (see
-# economy.py's class comment above _workings_of) - mine_intensity_yrs no
-# longer exists at all; depletion is per-working now.
-s_bound.mines.append({"material": "coal", "capacity": 1.0, "opened_year": 1,
-                      "capex_paid": 0.0, "intensity_yrs": 1e9})
-check("even fully depleted with every relevant technology built, a tonne "
-      "still costs something (not free) and not a runaway multiple of book",
-      0.4 <= s_bound.mining_cost_scale("coal") <= 2.5,
-      s_bound.mining_cost_scale("coal"))
-s_bound2 = unopened_sim(capital=1.0)
-s_bound2.mines.append({"material": "coal", "capacity": 1.0, "opened_year": 1,
-                       "capex_paid": 0.0, "intensity_yrs": 1e9})
-# the scale is depletion alone; what the techniques do to the works is in the running cost itself
-check("fully depleted with NO relevant technology, the running cost is higher, not "
-      "lower, than the technology-equipped case above",
-      s_bound2.mine_operating_cost_for(s_bound2.mines[0]) > s_bound.mine_operating_cost_for(s_bound.mines[0]),
-      (s_bound2.mine_operating_cost_for(s_bound2.mines[0]), s_bound.mine_operating_cost_for(s_bound.mines[0])))
 
-# --- THE PLAYER MUST SEE IT: mine_quote() names the land ceiling, current
-# yield fraction and why cost differs from book, before any capital moves.
-q_dep = s_dep.mine_quote("coal", 100.0)
-check("mine_quote names the ground's own ceiling and how much room is left "
-      "before it, not just a price",
-      q_dep["the_ground_here_could_ever_support"] > 0
-      and "room_left_before_geology_stops_you" in q_dep, q_dep)
-check("...and the current yield fraction, so a player can see a working "
-      "has depleted without guessing",
-      q_dep["current_yield_is_this_fraction_of_day_one"] < 1.0, q_dep)
+# --- yield falls as a working is worked hard relative to what the ground can support, never below the floor.
+hard = _Founder(ceiling=100.0)
+hard_working = hard.add_working(capacity=90.0)
+check("a new working yields its whole rated capacity", hard.mine_yield_t_for(hard_working) == 90.0,
+      hard.mine_yield_t_for(hard_working))
+hard.pass_years(int(hard.DEPLETION_HALF_LIFE_YRS))
+check("a working driven hard for the half-life years yields less than it did when it opened",
+      hard.mine_yield_t_for(hard_working) < 90.0, hard.mine_yield_t_for(hard_working))
+check("...and its depletion factor is the share of day one still left",
+      abs(hard.mine_depletion_factor_for(hard_working)
+          - max(hard.DEPLETION_FLOOR, 1.0 - hard_working["intensity_yrs"] / hard.DEPLETION_HALF_LIFE_YRS)) < 1e-12, None)
+hard.pass_years(2000)
+check("...and depletion saturates at the floor rather than falling without limit",
+      abs(hard.mine_depletion_factor_for(hard_working) - hard.DEPLETION_FLOOR) < 1e-12,
+      hard.mine_depletion_factor_for(hard_working))
+check("a working below the floor never yields less than the floor share of its capacity",
+      hard.mine_yield_t_for(hard_working) >= hard.DEPLETION_FLOOR * 90.0 - 1e-9, hard.mine_yield_t_for(hard_working))
 
-# =============================================================================
-# A WORKING IS A THING: self.mines is a list of individual workings, each
-# with its own material, rated capacity, commissioning year and depletion
-# clock, rather than one float per material - see economy.py's class
-# comment above _workings_of(). mine_capacity is now a property SUMMED
-# over that list, not a second number kept in sync by hand.
-# =============================================================================
+# --- a working driven gently depletes slower than one driven hard, for the same years.
+gentle = _Founder(ceiling=100.0)
+gentle_working = gentle.add_working(capacity=10.0)
+hard_again = _Founder(ceiling=100.0)
+hard_again_working = hard_again.add_working(capacity=90.0)
+gentle.pass_years(20)
+hard_again.pass_years(20)
+check("a working driven at a tenth of what the land could support depletes slower than one driven at nine tenths",
+      gentle.mine_depletion_factor_for(gentle_working) > hard_again.mine_depletion_factor_for(hard_again_working),
+      (gentle.mine_depletion_factor_for(gentle_working), hard_again.mine_depletion_factor_for(hard_again_working)))
+check("a year adds the working's capacity over the ceiling to its intensity",
+      abs(gentle_working["intensity_yrs"] - 20 * 10.0 / 100.0) < 1e-9, gentle_working["intensity_yrs"])
 
-# --- the actual bug this exists to fix: two workings of the SAME material,
-# opened at different times, must not share one depletion clock. A shaft
-# opened later must end up LESS worked-out than one opened earlier and
-# driven the same way for longer - "a shaft opened in year 400 is not
-# three centuries into its seam because an earlier one was."
-s_two = unopened_sim(capital=1e9)
-s_two.open_mine("coal", s_two.mine_land_ceiling("coal") * 0.4, partial=False)
-for _ in range(50):
-    s_two.year += 1
-    s_two.commission_mines()
-s_two.open_mine("coal", s_two.mine_land_ceiling("coal") * 0.2, partial=False)
-for _ in range(50):
-    s_two.year += 1
-    s_two.commission_mines()
-check("opening a second coal working later gives TWO distinct workings of "
-      "the same material, not one merged capacity number",
-      len(s_two.mines) == 2 and len(set(working["opened_year"] for working in s_two.mines)) == 2,
-      [(working["opened_year"], working["capacity"]) for working in s_two.mines])
-_older = min(s_two.mines, key=lambda w: w["opened_year"])
-_newer = max(s_two.mines, key=lambda w: w["opened_year"])
-check("...and the newer working is measurably LESS worked-out than the "
-      "older one, having had less time to deplete from its OWN "
-      "commissioning year rather than inheriting the older one's clock",
-      s_two.mine_depletion_factor_for(_newer)
-      > s_two.mine_depletion_factor_for(_older),
-      (s_two.mine_depletion_factor_for(_older),
-       s_two.mine_depletion_factor_for(_newer)))
-check("...and mine_yield_t (the material total) is exactly the sum of "
-      "each working's own actual output, not the nominal tonnage sunk",
-      abs(s_two.mine_yield_t("coal")
-          - sum(s_two.mine_yield_t_for(working) for working in s_two.mines)) < 1e-6,
-      s_two.mine_yield_t("coal"))
-_saved_expected = sum(s_two.mine_operating_cost_for(working) for working in s_two.mines)
-_ok, _msg = s_two.close_mine("coal")
-check("closing a material closes every working of it and refunds the SUM "
-      "of each working's OWN operating cost, not a material-average figure",
-      _ok and abs(round(_saved_expected, 0)
-                  - float(re.search(r"stop paying ([\d.]+)", _msg).group(1))) < 1.0,
-      _msg)
-check("...and every coal working is actually gone, not just one of them",
-      not s_two._workings_of("coal"), s_two.mines)
+# --- a working is a thing: two workings of one material keep their own clocks.
+two = _Founder(ceiling=100.0)
+older = two.add_working(capacity=40.0, opened_year=1)
+two.holdings.mine_tranches = [("coal", 20.0, 51)]
+two.pass_years(50)
+newer = two.holdings.mines[1]
+two.pass_years(50)
+check("a tranche that comes on stream later becomes its own working, not merged into the older one",
+      len(two.holdings.mines) == 2 and newer["opened_year"] == 51 and older["opened_year"] == 1,
+      [(working["opened_year"], working["capacity"]) for working in two.holdings.mines])
+check("the newer working is less worked-out than the older, having aged from its own commissioning year",
+      two.mine_depletion_factor_for(newer) > two.mine_depletion_factor_for(older),
+      (two.mine_depletion_factor_for(older), two.mine_depletion_factor_for(newer)))
+check("the material's yield is the sum of each working's own actual output",
+      abs(two.mine_yield_t("coal") - sum(two.mine_yield_t_for(working) for working in two.holdings.mines)) < 1e-9,
+      two.mine_yield_t("coal"))
+check("the material's depletion is the capacity-weighted average of its workings'",
+      abs(two.mine_depletion_factor("coal")
+          - (two.mine_depletion_factor_for(older) * 40.0 + two.mine_depletion_factor_for(newer) * 20.0) / 60.0) < 1e-12,
+      two.mine_depletion_factor("coal"))
+check("rated capacity is summed over the workings of a material", two.mine_capacity == {"coal": 60.0}, two.mine_capacity)
+check("a material with no workings has no history: depletion is one", two.mine_depletion_factor("tin") == 1.0, None)
 
-# --- determinism, extended to SEVERAL workings across SEVERAL materials at
-# once: self.mines is a list (append/commission order), not a set, and
-# mine_capacity/mine_operating_cost/mine_yield_t/mine_depletion_factor all
-# derive from it, so none of that arithmetic may depend on PYTHONHASHSEED
-# even with more than one working of the same material in play together -
-# proven across two hash seeds: a regression here would most plausibly
-# come from a dict/set built while grouping workings by material.
-def _mines_snapshot(seed_env):
-    completed_process = subprocess.run(
-        [sys.executable, "-c",
-         "import sys; import random; from sim import simulator as S; "
-         "T,P,N,W,G = S.load(); _l,O,_b = S.load_strategy('recommended', N, T['meta']['goal_node']); "
-         "s = S.Sim(N, O, random.Random(1), events=False, manual=True, "
-         "civ=S.load_civ('rome_100ad'), cfg={'start_capital':1e9}); "
-         "s.open_mine('coal', s.mine_land_ceiling('coal')*0.4, partial=False); "
-         "s.open_mine('iron', s.mine_land_ceiling('iron')*0.3, partial=False); "
-         "[s.__setattr__('year', s.year+1) or s.commission_mines() for _ in range(6)]; "
-         "s.open_mine('coal', s.mine_land_ceiling('coal')*0.2, partial=False); "
-         "s.open_mine('copper', s.mine_land_ceiling('copper')*0.5, partial=False); "
-         "[s.__setattr__('year', s.year+1) or s.commission_mines() for _ in range(80)]; "
-         "print(repr(sorted((m, round(v, 9)) for m, v in s.mine_capacity.items()))); "
-         "print(round(s.mine_yield_t('coal'), 9)); "
-         "print(round(s.mine_operating_cost(), 9)); "
-         "print(sorted((w['material'], w['opened_year'], round(w['intensity_yrs'], 9)) for w in s.mines))"],
-        capture_output=True, text=True, timeout=60, cwd=ROOT,
-        env=dict(os.environ, PYTHONHASHSEED=seed_env))
-    return completed_process.stdout
-_mines_seeds = ("0", "12345")
-_snaps = dict(zip(_mines_seeds, _par_map(_mines_snapshot, _mines_seeds)))
-check("several workings across several materials give byte-identical "
-      "mine_capacity/mine_yield_t/mine_operating_cost and per-working "
-      "intensity under two different PYTHONHASHSEED values",
-      len(set(_snaps.values())) == 1 and all(_snaps.values()), _snaps)
-
-# --- SAVES: a working survives a save and resume, with its own material,
-# capacity, commissioning year and depletion clock intact - not merely
-# the aggregate mine_capacity total.
-s_sv = unopened_sim(capital=1e9)
-s_sv.open_mine("coal", s_sv.mine_land_ceiling("coal") * 0.4, partial=False)
-for _ in range(6):
-    s_sv.year += 1
-    s_sv.commission_mines()
-_sv_path = os.path.join(HERE, "_test_mines_save.json")
-S.save_state(s_sv, _sv_path)
-s_sv2 = unopened_sim(capital=1.0)
-S.load_state(s_sv2, _sv_path)
-os.remove(_sv_path)
-check("a save/resume round-trip keeps the SAME working - material, rated "
-      "capacity, commissioning year and its own depletion clock - not just "
-      "the aggregate tonnage",
-      len(s_sv2.mines) == 1
-      and s_sv2.mines[0]["material"] == "coal"
-      and abs(s_sv2.mines[0]["capacity"] - s_sv.mines[0]["capacity"]) < 1e-6
-      and s_sv2.mines[0]["opened_year"] == s_sv.mines[0]["opened_year"]
-      and abs(s_sv2.mines[0]["intensity_yrs"] - s_sv.mines[0]["intensity_yrs"]) < 1e-9,
-      s_sv2.mines)
-check("...and mine_capacity (the derived property) agrees after the "
-      "round-trip, exactly as it did before saving",
-      abs(s_sv2.mine_capacity.get("coal", 0.0)
-          - s_sv.mine_capacity.get("coal", 0.0)) < 1e-6,
-      (s_sv.mine_capacity, s_sv2.mine_capacity))
-
+# --- the cost scale is depletion inverted, bounded on both ends.
+fresh = _Founder()
+fresh_working = fresh.add_working()
+check("a fresh working costs book: scale one", fresh.mining_cost_scale_for(fresh_working) == 1.0,
+      fresh.mining_cost_scale_for(fresh_working))
+half = _Founder()
+half_working = half.add_working(intensity=half.DEPLETION_HALF_LIFE_YRS / 2.0)
+check("a working that has lost a share of its yield costs the inverse share more",
+      abs(half.mining_cost_scale_for(half_working) - 1.0 / half.mine_depletion_factor_for(half_working)) < 1e-12,
+      half.mining_cost_scale_for(half_working))
+worn = _Founder()
+worn_working = worn.add_working(intensity=1e9)
+check("fully depleted, a tonne costs more than book but never more than the ceiling multiple",
+      1.0 < worn.mining_cost_scale_for(worn_working) <= worn.MINING_COST_SCALE_CEILING,
+      worn.mining_cost_scale_for(worn_working))
+check("the material's scale agrees with its only working's", worn.mining_cost_scale("coal") == worn.mining_cost_scale_for(worn_working), None)
+check("the cost scale bounds are a real floor below one and a ceiling above one",
+      0.0 < worn.MINING_COST_SCALE_FLOOR < 1.0 < worn.MINING_COST_SCALE_CEILING, None)

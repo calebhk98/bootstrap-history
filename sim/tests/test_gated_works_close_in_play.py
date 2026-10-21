@@ -1,19 +1,19 @@
 """Complaint 133, played: Rome builds the water works, one closes, and what needs it running lapses.
 
-SLOW TOPIC (it builds whole games and steps them). It is written to be run by the orchestrator after
-merging, not on a small fixture; the quick tiers cover the same rules with fakes
-(test_running_gates, test_held_and_running, test_works_register, test_failed_voyage_loses_what_it_risked).
+SLOW SCENARIO (it builds a whole game and steps it): the one played chain. The rules are held on fakes by
+test_running_gates (a shut work closes its dependents down the chain, the closure is logged, opening a dependent is refused
+while its work is shut), test_held_and_running (a shut venture is not held; a voyage returns its route),
+test_failed_voyage_loses_what_it_risked (a failed crossing takes crew and hull) and test_works_register (the register is
+saved state as a field), and the buoy lapsing with its harbour is the same gate as the tower with the pumping station.
 """
 from .harness import *  # noqa: F401,F403
 from sim.refusal import cause_of
 from .harness import _LOADTEST_DIR
 from .agent_command_helpers import ask_agent, with_end_year
 
-AQUEDUCT, PUMPING, TOWER, TREATMENT = "civ_aqueduct_roman", "civ_pumping_station", "civ_water_tower", "civ_water_treatment"
+AQUEDUCT, PUMPING, TOWER = "civ_aqueduct_roman", "civ_pumping_station", "civ_water_tower"
 CHAIN = (TOWER,)   # the aqueduct is held by the society at the opening, so the pumping station is the gate that can close
 OPENING_PURSE_PER_PROJECT_COST = 10.0   # a purse many times the works' project cost covers their opening stock
-VOYAGE = "exp_atlantic_crossing"
-HARBOUR, BUOY = "civ_harbour_dock", "sea_drydock"
 
 # --- a chain of works: each needs the one before it running.
 game = with_end_year(sim())
@@ -41,31 +41,6 @@ reopened, message = game.open_venture(PUMPING)
 check("the pumping station can be reopened", reopened, message)
 again, why = game.open_venture(TOWER)
 check("with the pumping station back, the tower can be opened again", again, why)
-
-# --- a harbour and its buoy.
-harbour_game = with_end_year(sim())
-run_it(harbour_game, HARBOUR, BUOY)
-check("a buoy runs while the harbour that tends it runs", harbour_game.running(BUOY), None)
-harbour_game.close_work(HARBOUR, "closed_by_the_player")
-check("a buoy lapses when the harbour that tends it is shut", not harbour_game.running(BUOY), None)
-check("the harbour and the buoy now carry an upkeep to gate on",
-      harbour_game.nodes[HARBOUR]["up"] > 0 and harbour_game.nodes[BUOY]["up"] > 0, None)
-
-# --- what an expedition returns stands while it is held.
-voyage_game = with_end_year(sim())
-check("before the crossing, the open Atlantic is not a route the people hold",
-      "route:open_atlantic" not in voyage_game.held_and_running(), None)
-run_it(voyage_game, VOYAGE)
-check("after it, the route is held", "route:open_atlantic" in voyage_game.held_and_running(), None)
-
-# --- a failed voyage takes what it risked.
-loss_game = with_end_year(sim())
-loss_game.grant_stock("timber_m3", 100.0)
-loss_game.state.household.employees["sailor"] = 400.0
-before_timber = loss_game.stock_held("timber_m3")
-lines = loss_game.lose_what_was_risked(VOYAGE)
-check("a failed crossing loses crew and hull", loss_game.state.household.employees.get("sailor", 0.0) < 400.0
-      and loss_game.stock_held("timber_m3") < before_timber, lines)
 
 # --- a work built on a tile is kept in the saved register and survives a save and a load.
 works_game = with_end_year(sim())

@@ -1,18 +1,14 @@
-"""What a hazard or event tells the player: no internal jargon, a fire
-or raid naming what it took, the patron-death cooldown, debasement stated in
-real terms, and a mitigated plague never re-quoting the raw historical toll
-as if it were the outcome.
-
-Regrouped from test_round8_fixes.py - see CLAUDE.md's test-file
-reorganisation note. Checks moved verbatim; each one's own comment explains
-the break it guards.
-"""
+"""What a hazard tells the player and how a patron's death is rolled: no internal jargon in hazard notes, and a patron
+cannot die twice inside the cooling-off period (wording of a running game: test_hazard_and_event_messaging_scenario.py)."""
 from .harness import *  # noqa: F401,F403
 
+from sim.engine.patron_death import patron_dies
+from sim.engine.society_hazards import HazardsMixin
 
-# --- BREAK: player-facing hazard notes quoted the values vector by its
-# internal names ("raises w_magic_fear"), which is engine jargon a player has
-# no way to read. Nothing shown to a player may name a values-vector key.
+QUICK_TOPIC = True
+
+# --- player-facing hazard notes quoted the values vector by its internal names ("raises w_magic_fear"), which a player
+# cannot read. Nothing shown to a player may name a values-vector key.
 _JARGON = ("w_magic_fear", "w_eminence_danger", "w_religious_rigidity",
            "w_labour_saving", "w_commerce", "w_information", "w_novelty",
            "w_military", "adaptation_rate", "patronage_weight", "bribability")
@@ -24,61 +20,27 @@ for _f in sorted(os.listdir(os.path.join(ROOT, "data/civilizations"))):
     for _h in _civ.get("hazards", []):
         _txt = " ".join(str(_h.get(x, "")) for x in ("name", "note"))
         _dirty += [(_f, _h.get("name"), _jargon_term) for _jargon_term in _JARGON if _jargon_term in _txt]
-check("no hazard a player reads names an internal values-vector key",
-      not _dirty, _dirty[:3])
+check("no hazard a player reads names an internal values-vector key", not _dirty, _dirty[:3])
 
-# --- BREAK: the patron-death guard read `_last_patron_death` and the body set
-# `last_patron_death`, so the 25-year cooling-off never applied and the 5%
-# roll fired every year for ever - the exact bug its comment claims to fix.
-s_pd = sim(capital=50000.0, events=True)
-s_pd.done.add("patron_local"); s_pd._done_changed()
-s_pd.rng = random.Random(4)
-_deaths = []
-for _y in range(100, 400):
-    s_pd.year = _y
-    _before = len(s_pd.log)
-    s_pd._random_events(_y)
-    _deaths += [message for _, message in s_pd.log[_before:] if "patron dies" in message]
-check("a patron cannot die twice inside the cooling-off period",
-      len(_deaths) <= 300 // 25 + 1,
-      "%d deaths in 300 years" % len(_deaths))
-_years = [y for y, message in s_pd.log if "patron dies" in message]
-check("...and the gap between them is at least the 25 years it promises",
-      all(later_year - earlier_year > 25 for earlier_year, later_year in zip(_years, _years[1:])), _years)
-check("a patron's death names what it cost you",
-      not _years or any(("courts his heir" in message or "No money was spent" in message) and "protection falls" in message
-                        for _, message in s_pd.log if "patron dies" in message),
-      [message for _, message in s_pd.log if "patron dies" in message][:1])
+# --- the cooling-off guard read one name and the body set another, so the roll fired every year for ever.
+CHANCE, COOLDOWN = HazardsMixin.PATRON_DEATH_ANNUAL_CHANCE, HazardsMixin.PATRON_DEATH_COOLDOWN_YEARS
+MORTAL = lambda: True
+check("a roll under the chance kills a mortal patron who has not died before",
+      patron_dies(0.0, CHANCE, MORTAL, None, 100, COOLDOWN))
+check("a roll over the chance kills nobody", not patron_dies(1.0, CHANCE, MORTAL, None, 100, COOLDOWN))
+check("a patron who is not mortal is not asked about when the roll is over the chance",
+      not patron_dies(1.0, CHANCE, lambda: 1 / 0, None, 100, COOLDOWN))
+check("a patron who is not mortal does not die", not patron_dies(0.0, CHANCE, lambda: False, None, 100, COOLDOWN))
+check("a patron cannot die again inside the cooling-off period",
+      not patron_dies(0.0, CHANCE, MORTAL, 100, 100 + COOLDOWN, COOLDOWN))
+check("...but can the year after it", patron_dies(0.0, CHANCE, MORTAL, 100, 100 + COOLDOWN + 1, COOLDOWN))
 
-# --- BREAK: a fire and a raid announced themselves and left the player to
-# diff their own state to find out whether anything had happened.
-s_fx = sim(capital=10000.0, events=True)
-s_fx.rng = random.Random(7)
-for _y in range(100, 200):
-    s_fx.year = _y
-    s_fx._random_events(_y)
-_dis = [message for _, message in s_fx.log if "fire in" in message or "banditry" in message]
-check("a fire or a raid says what it took",
-      _dis and all("denarii" in message or "holding none" in message for message in _dis),
-      _dis[:2])
-
-# --- BREAK: a debasement announced itself and moved no price a player could
-# see, because the model is in real terms. Say so, and name the real bite.
-s_db = sim(capital=100000.0, events=True)
-# Apply one debasement shock directly. Counterfactual at the same state: the
-# full quote (materials included) with the coin as debased, and with it restored.
-s_db._shock_real_erosion({"name": "debasement", "real_erosion": 0.2}, 210)
-_debased_price = s_db.project_cost("horse_collar")
-_real_money_kept = s_db.state.economy.money_real
-s_db.state.economy.money_real = 1.0
-_undebased_price = s_db.project_cost("horse_collar")
-s_db.state.economy.money_real = _real_money_kept
-check("debasement does not move a real price quote (the model is real terms)",
-      _real_money_kept < 1.0 and abs(_debased_price - _undebased_price) / _undebased_price < 1e-5,
-      (_real_money_kept, _debased_price, _undebased_price))
-_dbm = [message for _, message in s_db.log if "coin is worth" in message]
-check("...and the announcement says so, rather than leaving it to be found",
-      _dbm and "do not move" in _dbm[0] and "your chest" in _dbm[0],
-      _dbm[:1])
-check("...and names what the debasement actually took this year",
-      _dbm and ("denarii" in _dbm[0] or "holding none" in _dbm[0]), _dbm[:1])
+rolls = random.Random(4)
+deaths, last = [], None
+for year in range(100, 400):
+    if patron_dies(rolls.random(), CHANCE, MORTAL, last, year, COOLDOWN):
+        deaths.append(year)
+        last = year
+check("over three centuries of rolls the deaths are at least the cooling-off period apart",
+      all(later - earlier > COOLDOWN for earlier, later in zip(deaths, deaths[1:])), deaths)
+check("...so there are at most one per cooling-off period", len(deaths) <= 300 // COOLDOWN + 1, deaths)

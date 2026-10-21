@@ -1,17 +1,17 @@
 """Complaint 382 step 1: every money posting names a counterparty or a named edge.
 
-Money changes a purse only through `ledger.transfer`; where the other side is not an actor the
-simulation models, it is a named edge, an account outside the actors in the purses' book (`state.actors.purses`).
-So all purses together plus all edges together stay what they were, and a new one-sided posting fails the scan below.
-The households' purses are accounts in that book too; a posting that names no counterparty (an assignment to a
-purse) would show as a balance on `edge:outside the book`, so the total below holds only while none is made."""
+Money changes a purse only through `ledger.transfer`; where the other side is not an actor the simulation models, it is a
+named edge, an account outside the actors in the purses' book (`state.actors.purses`). A new one-sided posting fails the
+scan of the source below, and `ledger.transfer` against an edge is called on built purses. That all purses together plus
+all edges together stay what they were over a year of a game is `test_every_posting_names_a_counterparty_scenario`."""
+QUICK_TOPIC = True
+
 import os
 import re
-
-from .harness import *  # noqa: F401,F403
+import unittest
 
 from sim.agents import ledger
-from sim.agents.purses import COIN, EDGE_OUTSIDE
+from sim.engine.state import ActorsState
 
 SIM_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SCANNED = ("engine", "agents", "labour", "geography", "economy")
@@ -20,70 +20,46 @@ POSTING_WRITERS = {os.path.join("agents", "ledger.py"), os.path.join("engine", "
                    os.path.join("agents", "household.py"), os.path.join("agents", "household_party.py")}
 ONE_SIDED = re.compile(r"\.(credit|debit|add_capital|cost_capital|costCapital|reset_cash)\(")
 
-offenders = []
-for package in SCANNED:
-    for folder, _dirs, files in os.walk(os.path.join(SIM_DIR, package)):
-        for name in sorted(files):
-            path = os.path.join(folder, name)
-            relative = os.path.relpath(path, SIM_DIR)
-            if not name.endswith(".py") or relative in POSTING_WRITERS:
-                continue
-            with open(path, encoding="utf-8") as source:
-                for number, line in enumerate(source, 1):
-                    if ONE_SIDED.search(line.split("#", 1)[0]):
-                        offenders.append("%s:%d" % (relative, number))
-check("no engine or agent code posts money to one side only", not offenders, offenders[:20])
+
+def one_sided_postings():
+    offenders = []
+    for package in SCANNED:
+        for folder, _dirs, files in os.walk(os.path.join(SIM_DIR, package)):
+            for name in sorted(files):
+                path = os.path.join(folder, name)
+                relative = os.path.relpath(path, SIM_DIR)
+                if not name.endswith(".py") or relative in POSTING_WRITERS:
+                    continue
+                with open(path, encoding="utf-8") as source:
+                    for number, line in enumerate(source, 1):
+                        if ONE_SIDED.search(line.split("#", 1)[0]):
+                            offenders.append("%s:%d" % (relative, number))
+    return offenders
 
 
-def purses(game):
-    book = game.state.actors.purses.book
-    return sum(book.balance(account, COIN) for account in book.agents() if not account.startswith("edge:"))
+class PostingTests(unittest.TestCase):
+    def test_no_engine_or_agent_code_posts_money_to_one_side_only(self):
+        self.assertEqual(one_sided_postings()[:20], [])
+
+    def test_an_edge_takes_what_a_payer_loses_and_gives_what_a_payee_gains(self):
+        state = ActorsState()
+        payer = type("Purse", (), {"money": 10.0})()
+        payer.debit = lambda amount, purpose: setattr(payer, "money", payer.money - amount)
+        payer.credit = lambda amount, purpose: setattr(payer, "money", payer.money + amount)
+        ledger.transfer(payer, state.edge("edge:test"), 4.0, "a payment")
+        ledger.transfer(state.edge("edge:test"), payer, 1.0, "a refund")
+        self.assertEqual(payer.money, 7.0)
+        self.assertEqual(state.edge("edge:test").balance(), 3.0)
+
+    def test_an_edge_keeps_the_volume_that_crossed_it(self):
+        state = ActorsState()
+        payer = type("Purse", (), {"money": 10.0})()
+        payer.debit = lambda amount, purpose: setattr(payer, "money", payer.money - amount)
+        payer.credit = lambda amount, purpose: setattr(payer, "money", payer.money + amount)
+        ledger.transfer(payer, state.edge("edge:test"), 4.0, "a payment")
+        ledger.transfer(state.edge("edge:test"), payer, 1.0, "a refund")
+        self.assertEqual(state.edge("edge:test").volume(), 5.0)
 
 
-def edges(game):
-    book = game.state.actors.purses.book
-    return sum(book.balance(account, COIN) for account in book.agents()
-               if account.startswith("edge:") and account != EDGE_OUTSIDE)
-
-
-def ask(game, **command):
-    return S._agent_dispatch(game, NODES, command)
-
-
-# the people's purses receive wages and the state's pay only from the second year, so the rich game plays two
-for label, capital, years in (("a rich household", 300_000.0, 2), ("a poor household", 2_000.0, 1)):
-    game = sim(capital=capital, manual=False, events=True)
-    game.end_year = game.cfg["start_year"] + game.cfg["horizon_years"]
-    if capital > 100_000.0:
-        rich_game = game
-    opening = purses(game) + edges(game)
-    for _year in range(years):
-        ask(game, cmd="step", years=1)
-    total = purses(game) + edges(game)
-    check("%s: all purses and all named edges together stay what they were over %d year(s)" % (label, years),
-          abs(total - opening) <= 1e-6 * max(1.0, abs(opening)), (opening, total))
-    crossed = game.state.actors.purses.book.edge_agents()
-    check("%s: money moved through named edges" % label, bool(crossed), crossed)
-    check("%s: every edge is named" % label, all(name.startswith("edge:") for name in crossed), crossed)
-
-# an edge takes what a payer loses and gives what a payee gains, and keeps its volume
-from sim.engine.state import ActorsState
-
-state = ActorsState()
-payer = type("Purse", (), {"money": 10.0})()
-payer.debit = lambda amount, purpose: setattr(payer, "money", payer.money - amount)
-payer.credit = lambda amount, purpose: setattr(payer, "money", payer.money + amount)
-ledger.transfer(payer, state.edge("edge:test"), 4.0, "a payment")
-ledger.transfer(state.edge("edge:test"), payer, 1.0, "a refund")
-check("a payer's loss is the edge's gain", payer.money == 7.0 and state.edge("edge:test").balance() == 3.0,
-      state.edge("edge:test").balance())
-check("an edge keeps the volume that crossed it", state.edge("edge:test").volume() == 5.0, state.edge("edge:test").volume())
-
-# step 2: wages and the state's pay land in the people's purses
-# the rich household's game, already stepped, is the one read
-strata = [record for record in rich_game.state.actors.records.values() if record.stratum and record.country is None]
-received = {label for record in strata for label in record.income if label != "edge:economy"}
-check("the home country has strata", bool(strata), len(strata))
-# not text: ledger posting reasons are recorded labels
-check("the founder's payroll and the state's pay reach the people's purses",
-      "living costs" in received and ("army" in received or "administration" in received), sorted(received))
+if __name__ == "__main__":
+    unittest.main()

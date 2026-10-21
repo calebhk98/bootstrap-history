@@ -10,7 +10,8 @@ these live in a separate file).
 
 from sim.refusal import Refusal
 import sim.engine.ui_port as ui_port
-from sim.engine.ui_port import area_text, mass_per_area_text, mass_rate_text, mass_text, money_text
+from sim.engine import sale_orders
+from sim.engine.ui_port import area_text, mass_per_area_text, mass_rate_text, money_text
 from .command_registry import command
 from .util import _qty
 from .quantity_units import read_quantity, read_target_quantity
@@ -270,22 +271,13 @@ def _cmd_sell(sim, nodes, cmd, ended):
     if err or quantity <= 0:
         return {"ok": False, "error": err or "n must be greater than zero"}
     held, market_room = sim.goods_market.sale_limits(material)
-    if quantity > held + 1e-9:
-        return {"ok": False, "error": Refusal(
-            "not_enough_held", "you hold %s of %s, not %s. Nothing was sold." % (
-                mass_text(held), material, mass_text(quantity)),
-            material=material, held_tonnes=held, asked_tonnes=quantity)}
+    if sale_orders.asks_more_than_held(quantity, held):
+        return {"ok": False, "error": sale_orders.not_enough_held_refusal(material, held, quantity)}
     sold = sim.sell_material_stock(material, quantity)
     if sold <= 0:
-        return {"ok": False, "error": Refusal(
-            "market_full", "the market has taken all of %s that it will absorb this year. Nothing was sold." % material,
-            material=material, held_tonnes=held, market_room_tonnes=market_room)}
+        return {"ok": False, "error": sale_orders.market_full_refusal(material, held, market_room)}
     held_after, room_after = sim.goods_market.sale_limits(material)
-    return {"ok": True, "material": material, "sold_tonnes": sold,
-            "asked_tonnes": quantity,
-            "stock_on_hand_tonnes": held_after,
-            "market_will_still_take_tonnes": room_after,
-            "capital": round(sim.capital, 1)}
+    return sale_orders.sale_reply(material, sold, quantity, held_after, room_after, sim.capital)
 
 
 
@@ -448,17 +440,7 @@ def _cmd_quote(sim, nodes, cmd, ended):
             return {"ok": False, "error": err_s}
         budget = purchase_rule.purchase_budget(sim)
         per_person_base = sim.labour.SLAVE_BASE_PRICE * sim.price_index
-        lower, upper = 0.0, budget / max(per_person_base, 1e-9)
-        affordable = 0.0
-        for _ in range(20):
-            mid = (lower + upper) / 2.0
-            cost = sim.labour.slave_quote(mid)
-            if cost <= budget:
-                affordable = mid
-                lower = mid
-            else:
-                upper = mid
-        affordable = int(affordable)
+        affordable = purchase_rule.affordable_whole_units(budget, per_person_base, sim.labour.slave_quote)
         return {"ok": True, "what": "slaves", "people": n_s,
                 "to_buy_them": round(sim.labour.slave_quote(n_s), 1),
                 "per_person_base": round(per_person_base, 2),

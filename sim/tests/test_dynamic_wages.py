@@ -1,72 +1,69 @@
-"""Endogenous wage foundations: food, housing, tools, skill, and scarcity."""
+"""Endogenous wage foundations: food, housing, tools, skill, and scarcity. The wage arithmetic (sim/labour/wage_factors.py)
+is called with prices built here, so a failure names the line of arithmetic; three named scenarios read a game."""
 from .harness import *
 
 sim = unopened_sim   # legacy: pins the engine's wage table and loanable-funds rate; the agent economy sets both in sim/economy
 
 from sim.engine.data import ANNUAL_WAGE
-from sim.labour import wage_provider
+from sim.labour.labour_wages import WagesMixin
+from sim.labour.wage_factors import annual_wage, housing_factor, tools_factor, weighted_factor
+
+SHARES = (WagesMixin.WAGE_SHARE_FOOD, WagesMixin.WAGE_SHARE_HOUSING, WagesMixin.WAGE_SHARE_TOOLS,
+          WagesMixin.WAGE_SHARE_SKILL_AND_DIFFICULTY)
+HOUSING = (WagesMixin.HOUSING_PRESSURE_START_OCCUPANCY, WagesMixin.HOUSING_PRESSURE_BAND,
+           WagesMixin.HOUSING_PRESSURE_MAX_MARKUP)
 
 
+def weighted(food=1.0, housing=1.0, tools=1.0):
+    return weighted_factor(*SHARES, food, housing, tools)
+
+
+check("at neutral prices the cost-of-living shares sum to a factor of one", abs(weighted() - 1.0) < 1e-12, SHARES)
+check("cheaper staple food lowers the wage required to live",
+      weighted(food=0.60) < weighted() * 0.85, (weighted(food=0.60), weighted()))
+
+# --- housing: a town with room charges nothing extra, a full one marks the wage up, and more housing relieves it
+check("a town with room to spare adds no housing markup", housing_factor(40.0, 100.0, *HOUSING) == 1.0)
+crowded = housing_factor(95.0, 100.0, *HOUSING)
+check("a crowded town marks the wage up", 1.0 < crowded <= 1.0 + HOUSING[2], crowded)
+check("expanding housing capacity relieves wage pressure", housing_factor(95.0, 200.0, *HOUSING) < crowded)
+check("the markup stops at its maximum however crowded the town",
+      abs(housing_factor(1000.0, 100.0, *HOUSING) - (1.0 + HOUSING[2])) < 1e-12)
+
+# --- tools: scarce materials raise the wage of the trade that maintains them
+basket = ["iron", "charcoal"]
+neutral_tools = tools_factor(basket, lambda material: 1.0, lambda material: 1.0)
+scarce_tools = tools_factor(basket, lambda material: 2.0 if material == "iron" else 1.0, lambda material: 1.0)
+check("scarce job tools raise the wage of a trade that must maintain them",
+      neutral_tools == 1.0 and scarce_tools == 1.5 and weighted(tools=scarce_tools) > weighted())
+check("a trade with no tools is not affected by tool prices", tools_factor([], lambda m: 9.0, lambda m: 9.0) == 1.0)
+check("the market ratio of a tool scales its factor",
+      tools_factor(["iron"], lambda m: 1.0, lambda m: 0.5) == 0.5)
+
+# --- the annual figure is the base through every factor
+check("the annual wage is the base times every factor on it",
+      abs(annual_wage(1000.0, 1.1, 1.2, 1.3, 1.4, 1.5) - 1000.0 * 1.1 * 1.2 * 1.3 * 1.4 * 1.5) < 1e-9)
+check("skill and job difficulty still distinguish trades at neutral prices (the calibrated table)",
+      ANNUAL_WAGE["chemist"] > ANNUAL_WAGE["labourer"] * 2, (ANNUAL_WAGE["chemist"], ANNUAL_WAGE["labourer"]))
+
+# --- SCENARIOS: the market's quote in a game
 s = sim()
-# THE TOLERANCE IS RELATIVE, AND IT IS NOT ZERO, FOR A REAL REASON.
-#
-# This check had never run. It sat behind test_demographics.py's stray
-# sys.exit, which ended every full-suite run ten topics before this one, so
-# nobody saw that it fails on an absolute 1e-6 against a number of magnitude
-# 281 - a demand for nine significant figures.
-#
-# It fails by 9.2e-7 relative, and the cause is the model being right rather
-# than wrong. A smith's tool basket is iron and charcoal, and Rome at year
-# zero already holds 223 inherited technologies that burn charcoal, so the
-# charcoal market opens the game with 5.0 t/yr of real demand against it and
-# material_price_factor("charcoal") is 1.0000183, not 1.0. A society that
-# already smelts iron SHOULD price charcoal a hair above nothing, and the
-# smith's wage should carry that hair; wage_cost_factors's own docstring
-# states that, rather than claiming charcoal sits at exactly 1.0.
-#
-# 1e-4 relative keeps this check doing its job - every other check in this
-# file looks for moves of 15% or more, and this one still catches any drift
-# a thousand times smaller than those - without demanding that an endogenous
-# market round-trip to a book value it is supposed to be replacing.
+# THE TOLERANCE IS RELATIVE, AND IT IS NOT ZERO, FOR A REAL REASON: a smith's tool basket is iron and charcoal, and Rome
+# at year zero already holds inherited technologies that burn charcoal, so charcoal opens the game a hair above neutral
+# (wage_cost_factors says so); 1e-4 relative still catches any drift a thousand times smaller than the moves the rule
+# tests above look for.
 _expected = ANNUAL_WAGE["smith"] * s.price_index * s.wage_index
-check("neutral starting conditions preserve the calibrated wage table",
+check("scenario: neutral starting conditions preserve the calibrated wage table",
       abs(s.labour.market.quote_annual("smith") - _expected) / _expected < 1e-4,
       (s.labour.market.quote_annual("smith"), _expected))
 
-baseline = s.labour.market.quote_annual("smith")
-_real_ratio = s.last_market_price_ratio
-_staple = wage_provider.staple_material(s.civ)
-s.last_market_price_ratio = lambda material: 0.60 if material == _staple else _real_ratio(material)   # the staple's market has fallen
-check("cheaper staple food lowers the wage required to live",
-      s.labour.market.quote_annual("smith") < baseline * 0.85,
-      (baseline, s.labour.market.quote_annual("smith")))
-
-s = sim()
-_crowd = s.labour.market.town_housing_room() * 0.95
-s.labour.headcount = lambda: _crowd
-crowded = s.labour.market.quote_annual("smith")
-s.state.household.worker_housing_places = s.labour.market.town_housing_room()
-check("expanding housing capacity relieves wage pressure",
-      s.labour.market.quote_annual("smith") < crowded, (crowded, s.labour.market.quote_annual("smith")))
-
-s = sim()
-normal = s.labour.market.quote_annual("smith")
-s.material_price_factor = lambda material: 2.0 if material == "iron" else 1.0
-check("scarce job tools raise the wage of a trade that must maintain them",
-      s.labour.market.quote_annual("smith") > normal, (normal, s.labour.market.quote_annual("smith")))
-
-s = sim()
-check("skill and job difficulty still distinguish trades at neutral prices",
-      s.labour.market.quote_annual("chemist") > s.labour.market.quote_annual("labourer") * 2,
-      (s.labour.market.quote_annual("chemist"), s.labour.market.quote_annual("labourer")))
-
 s.employees["smith"] = 1
-check("the payroll uses the same derived wage quoted for one employee",
+check("scenario: the payroll uses the same derived wage quoted for one employee",
       abs(s.labour.wage_bill() - s.labour.market.quote_annual("smith")) < 1e-6,
       (s.labour.wage_bill(), s.labour.market.quote_annual("smith")))
 
 detail = S._agent_dispatch(s, NODES, {"cmd": "labour", "trade": "smith"})
-check("labour detail exposes every wage component",
+check("scenario: labour detail exposes every wage component",
       all(component in detail["trade"]["wage_foundation"] for component in
           ("food", "housing", "tools", "skill_and_difficulty",
            "demographic_scarcity", "local_trade_scarcity")), detail)

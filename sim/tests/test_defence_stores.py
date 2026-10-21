@@ -9,6 +9,7 @@ or whose garrison is not present counts for the part that is. Small fixtures, no
 QUICK_TOPIC = True
 
 import collections
+import random
 import unittest
 from types import SimpleNamespace
 
@@ -49,6 +50,10 @@ class _Host(DefenceStoresMixin, HazardReliefMixin, HazardsMixin, LivingStockMixi
     STATE_MIL_RELIEF_PER_WEAPON_SACK = 0.0
     HAZARD_EROSION_OWN_GOLD = HAZARD_EROSION_OWN_SILVER = 0.0
     mine_capacity = {}
+    civ_diffusion_share = 0.0
+
+    def civ_diffusion(self, node_id):
+        return self.civ_diffusion_share
 
     def __init__(self, powder_kg=0.0, soldiers=0.0, works_open=True, wall_open=True, year=100):
         self.nodes = _nodes()
@@ -58,7 +63,7 @@ class _Host(DefenceStoresMixin, HazardReliefMixin, HazardsMixin, LivingStockMixi
         self.civ = {"hazards": [{"name": "siege", "years": [year, year + 2], "sack_chance": 0.5}]}
         self.year = year
         self.state = SimpleNamespace(
-            projects=SimpleNamespace(done=done, granted=set(), operating=operating),
+            projects=SimpleNamespace(done=done, granted=set(), operating=operating, closures={}),
             household=SimpleNamespace(employees={"soldier": soldiers}, log=[], _stock_throttle_sig=None),
             scenario=SimpleNamespace(year=year))
 
@@ -122,6 +127,88 @@ class PowderIsAHeldMaterial(unittest.TestCase):
         host.civ["hazards"][0]["years"] = [200, 210]
         host.step_defence_stores()
         self.assertEqual(host.stock_held(POWDER_KG), 900.0)
+
+
+class GunsNeedThePowderWorksRunning(unittest.TestCase):
+
+    def test_guns_lapse_while_the_powder_works_is_closed(self):
+        host = _Host(powder_kg=1000.0, soldiers=30.0, works_open=False)
+        entry = _factor(host, "guns on the walls")[0]
+        self.assertEqual(entry["lapsed_node"], WORKS)
+        self.assertIn("lapsed", host.hazard_relief("sack_chance")[1][0])
+
+    def test_closing_the_powder_works_weakens_the_defence(self):
+        closed = _Host(powder_kg=1000.0, soldiers=30.0, works_open=False).hazard_relief("sack_chance")[0]
+        running = _Host(powder_kg=1000.0, soldiers=30.0, works_open=True).hazard_relief("sack_chance")[0]
+        self.assertGreater(closed, running)
+
+    def test_guns_count_while_the_powder_works_runs(self):
+        entry = _factor(_Host(powder_kg=1000.0, soldiers=30.0, works_open=True), "guns on the walls")[0]
+        self.assertIsNone(entry["lapsed_node"])
+
+
+class HazardLabelsFollowTheMechanics(unittest.TestCase):
+    """The words on a defence say what the mechanics did: lapsed only when the concern is closed, and the national
+    adoption it was discounted by."""
+
+    def _wall(self, host):
+        return [entry for entry in host.hazard_relief_entries("sack_chance", beyond_national=True)
+                if entry["label"] == "a bastioned enclosure"][0]
+
+    def test_a_running_counter_partly_adopted_nationally_is_not_lapsed(self):
+        host = _Host(powder_kg=1000.0, soldiers=30.0)
+        host.civ_diffusion_share = 0.4
+        entry = self._wall(host)
+        self.assertAlmostEqual(entry["factor"], 1.0 - 0.5 * 0.6)
+        words = host._entry_words(entry)
+        self.assertNotIn("lapsed", words)
+        self.assertNotIn("is closed", words)
+
+    def test_national_adoption_is_named_in_the_label(self):
+        host = _Host(powder_kg=1000.0, soldiers=30.0)
+        host.civ_diffusion_share = 0.4
+        self.assertTrue(self._wall(host)["partly_adopted_nationally"])
+        self.assertIn("adopted nationally", host._entry_words(self._wall(host)))
+
+    def test_a_closed_concern_is_still_labelled_lapsed(self):
+        host = _Host(powder_kg=1000.0, soldiers=30.0, wall_open=False)
+        entry = self._wall(host)
+        self.assertEqual(entry["lapsed_node"], WALL)
+        self.assertIn("lapsed", host._entry_words(entry))
+        self.assertLess(entry["factor"], 1.0)
+
+
+class _Survivors(HazardsMixin):
+    """The people of a household and the dice that decide who lives (`apply_staff_survival`)."""
+
+    def __init__(self, seed):
+        self.rng = random.Random(seed)
+        self.state = SimpleNamespace(household=SimpleNamespace(
+            scholars=7.0, artisans=9.0, employees={"carpenter": 3.0, "smith": 5.0}))
+
+
+class PeopleStayWhole(unittest.TestCase):
+
+    def test_a_shock_leaves_whole_people_and_never_more_than_before(self):
+        for seed in range(6):
+            for survival_share in (0.9, 0.5, 0.1, 0.0):
+                host = _Survivors(seed)
+                host.apply_staff_survival(survival_share)
+                household = host.state.household
+                counts = [household.scholars, household.artisans] + list(household.employees.values())
+                self.assertEqual(counts, [float(round(count)) for count in counts], (seed, survival_share, counts))
+                self.assertLessEqual(household.scholars, 7.0)
+                self.assertLessEqual(household.artisans, 9.0)
+
+    def test_a_trade_that_loses_everyone_leaves_the_books(self):
+        host = _Survivors(1)
+        host.apply_staff_survival(0.0)
+        self.assertEqual(host.state.household.employees, {})
+
+    def test_everyone_survives_a_share_of_one(self):
+        host = _Survivors(1)
+        host.apply_staff_survival(1.0)
+        self.assertEqual((host.state.household.scholars, host.state.household.artisans), (7.0, 9.0))
 
 
 class TheMagazineRunsDry(unittest.TestCase):

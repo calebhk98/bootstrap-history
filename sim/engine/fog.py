@@ -11,6 +11,7 @@ from . import category_traits
 from .data import closure, JSONDict, Nodes
 from . import event_causes
 from .hazard_window import hazards_not_yet_past
+from .staff_loss_waves import wave_exposure
 from .hazard_hedge_timing import add_timing_to_steps
 
 # What a node id the player has not heard of is replaced with.
@@ -55,6 +56,17 @@ def strip_self_play_advice(text: Optional[str]) -> Optional[str]:
         return bool(_SELF_PLAY_META.search(sentence) and _SELF_PLAY_RANK.search(sentence))
 
     return " ".join(sentence for sentence in parts if not _is_self_play(sentence)).strip()
+
+
+def scrub_hidden_ids(text: str, node_ids: Any, is_visible: Callable[[str], bool]) -> str:
+    """Replace every whole node id the player cannot see; longest ids first."""
+    scrubbed = text
+    for node_id in sorted(node_ids, key=lambda candidate: -len(candidate)):
+        if not is_visible(node_id):
+            # Whole ids only; ':' joins a namespaced id, so it is not a boundary either
+            pattern = r'(?<![\w:])' + re.escape(node_id) + r'(?![\w:])'
+            scrubbed = re.sub(pattern, HIDDEN_ID_PLACEHOLDER, scrubbed)
+    return scrubbed
 
 
 class FogMixin:
@@ -224,16 +236,7 @@ class FogMixin:
         """Strip node ids the player has not discovered out of a message."""
         if not text or not self.state._fog:
             return text
-        scrubbed = text
-        # Sort by length descending to replace longer ids first, avoiding
-        # corruption when one id is a prefix of another.
-        sorted_ids = sorted(self.nodes, key=lambda node_id: -len(node_id))
-        for node_id in sorted_ids:
-            if not self.is_visible(node_id):
-                # Whole ids only; ':' joins a namespaced id, so it is not a boundary either
-                pattern = r'(?<![\w:])' + re.escape(node_id) + r'(?![\w:])'
-                scrubbed = re.sub(pattern, HIDDEN_ID_PLACEHOLDER, scrubbed)
-        return scrubbed
+        return scrub_hidden_ids(text, self.nodes, self.is_visible)
 
     def fog_summary(self, node_id: str) -> str:
         """One sentence. Deliberately not the whole note, and never the unlocks."""
@@ -326,14 +329,9 @@ class FogMixin:
                     row["national_public_health"] = {
                         "share_removed": round(exposure["national_relief"], 4),
                         "from": self.national_public_health_sources()}
-                remaining = max(year_start, scenario.year)
-                waves = max(1, year_end - remaining + 1)
-                per_wave = row["staff_loss_after_what_you_have_built"]
-                row["remaining_annual_wave_checks"] = waves
-                row["chance_of_at_least_one_staff_loss_wave"] = round(
-                    1.0 - (1.0 - 0.32) ** waves, 4)
-                row["expected_cumulative_staff_loss"] = round(
-                    1.0 - (1.0 - 0.32 * per_wave) ** waves, 4)
+                row.update(wave_exposure(self.STAFF_LOSS_HAZARD_ANNUAL_CHANCE,
+                                         row["staff_loss_after_what_you_have_built"],
+                                         year_start, year_end, scenario.year))
             upcoming.append(row)
         # Show full records for next 4 actionable hazards, rest by name only (avoid bloat).
         _soon = [row for row in upcoming

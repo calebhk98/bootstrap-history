@@ -1,4 +1,9 @@
-"""early_playtest: regression checks from the first playtests, run with `--only early_playtest`."""
+"""early_playtest: regression checks from the first playtests, run with `--only early_playtest`.
+
+Complaint 640 audit: the military leverage and war-relief rules moved to test_military_leverage_rules (called with
+figures). What stays through a game is a named scenario on purpose: the protocol robustness session (one agent session
+of malformed input), `play` for a civilisation not starting in 100 AD, the turn-one Rome game, and the per-civilisation
+openings (Han, Norse, Mexica). The data lints at the end read the files and build no game."""
 from .harness import *  # noqa: F401,F403
 from sim.refusal import cause_of
 
@@ -231,20 +236,8 @@ check("the tree still has a real military branch to test against", len(_MIL_NODE
 unarmed = without_market(sim())
 armed = without_market(sim())
 founder_military_nodes = [node_id for node_id in _MIL_NODES if node_id not in armed.granted]
-leverage_none = armed.military_leverage()
-armed.done.add(founder_military_nodes[0])
-leverage_first = armed.military_leverage()
-for node_id in founder_military_nodes[:25]:
-    armed.done.add(node_id)
-leverage_some = armed.military_leverage()
-for node_id in _MIL_NODES:
-    armed.done.add(node_id)
-leverage_all = armed.military_leverage()
-check("military strength is zero for a founder who has built none of the "
-      "branch, rises with the first node, and saturates well short of the "
-      "whole branch (so the branch cannot be a strategy unto itself)",
-      leverage_none == 0.0 and 0.0 < leverage_first < leverage_some == 1.0 and leverage_all == 1.0,
-      (leverage_none, leverage_first, leverage_some, leverage_all))
+# (leverage and its saturation: test_military_leverage_rules)
+armed.done.update(_MIL_NODES)
 
 unarmed.update_protection()
 armed.update_protection()
@@ -252,20 +245,7 @@ check("a cannon foundry with nobody to sell to protects the founder not at "
       "all - the leverage is with a patron, not the hardware itself",
       abs(armed.protection - unarmed.protection) < 1e-9, (unarmed.protection, armed.protection))
 
-output_unarmed, _ = unarmed.hazard_relief("output_factor")
-output_armed, output_why = armed.hazard_relief("output_factor")
-check("a war costs an armed empire's trade less than an unarmed one's - "
-      "every output_factor hazard in these civilization files is a war or "
-      "its administrative aftermath, and this is the branch's answer to it",
-      output_armed < output_unarmed and any(entry["source"] == "own_military_strength" for entry in armed.hazard_relief_entries("output_factor")),
-      (output_unarmed, output_armed, output_why))
-staff_unarmed, _ = unarmed.hazard_relief("staff_loss")
-staff_armed, _ = armed.hazard_relief("staff_loss")
-check("military technology gives no relief against staff loss - most "
-      "staff_loss hazards in these civilizations are disease and famine, "
-      "not war, and a founder with cannon should not cure the Antonine "
-      "plague",
-      staff_unarmed == staff_armed, (staff_unarmed, staff_armed))
+# (a war costing an armed empire less, and no relief against staff loss: test_military_leverage_rules)
 
 run_it(unarmed, "patron_imperial")
 run_it(armed, "patron_imperial")

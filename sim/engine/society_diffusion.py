@@ -23,7 +23,9 @@ verified byte-identical.
 """
 from sim.constants import declare
 from . import category_traits, seat_builds
+from .diffusion_rules import medical_compliance, medical_relief, spread_share, weapons_relief
 from .institution_societies import belongs_to_other_society
+from .diffusion_curve import knowledge_half_life, leaked_share
 
 
 class DiffusionMixin:
@@ -142,20 +144,16 @@ class DiffusionMixin:
             return 0.0
         done_year_map = projects.done_year or {}
         started = projects.business.opened_year_of(node_id, done_year_map.get(node_id, scenario.year))
-        age = max(0.0, scenario.year - started)
-        share = 1.0 - 0.5 ** (age / self.knowledge_half_life_years())
-        return min(self.VENTURE_DIFFUSION_CAP, max(0.0, share))
+        return leaked_share(scenario.year - started, self.knowledge_half_life_years(), self.VENTURE_DIFFUSION_CAP)
 
     def knowledge_half_life_years(self, country=None):
         """Years for half of those who could copy a technique to have done so: faster with a written, dispersed
         corpus and with the country's general literacy."""
-        pace = self.corpus_diffusion_pace()
-        gen_lit = float(self.literacy("literacy_general", country))
-        pace *= (self.LITERACY_DIFFUSION_PACE_BASE
-                 + self.LITERACY_DIFFUSION_PACE_SPAN
-                 * min(self.LITERACY_DIFFUSION_PACE_CAP_RATIO,
-                       gen_lit / max(0.02, self.labour.LITERACY_REFERENCE_GENERAL)))
-        return self.VENTURE_DIFFUSION_HALF_LIFE_YEARS / max(self.DIFFUSION_PACE_FLOOR, pace)
+        return knowledge_half_life(
+            self.VENTURE_DIFFUSION_HALF_LIFE_YEARS, self.corpus_diffusion_pace(),
+            float(self.literacy("literacy_general", country)), self.labour.LITERACY_REFERENCE_GENERAL,
+            self.LITERACY_DIFFUSION_PACE_BASE, self.LITERACY_DIFFUSION_PACE_SPAN,
+            self.LITERACY_DIFFUSION_PACE_CAP_RATIO, self.DIFFUSION_PACE_FLOOR)
 
     def diffusion_index(self):
         """One number for the whole household: the revenue-weighted average
@@ -329,7 +327,7 @@ class DiffusionMixin:
         age = max(0.0, scenario.year - seat_builds.earliest_done_year(self.state.seats, node_id, scenario.year))
         half_life = (self._diffusion_half_life_years(cat)
                      / max(0.4, self._diffusion_pace(cat)))
-        return max(0.0, min(1.0, 1.0 - 0.5 ** (age / half_life)))
+        return spread_share(age, half_life)
 
     def _category_diffusion_index(self, cat):
         """Plain average across every founder-built DONE node in `cat` -
@@ -378,11 +376,10 @@ class DiffusionMixin:
             "the rest. Not derived from a behavioural model.")
 
     def medical_compliance(self):
-        return (self.MEDICAL_COMPLIANCE_BASE
-                + (1.0 - self.MEDICAL_COMPLIANCE_BASE) * self.state_capacity)
+        return medical_compliance(self.MEDICAL_COMPLIANCE_BASE, self.state_capacity)
 
     def medical_diffusion_relief(self):
-        return min(1.0, self.medical_diffusion_index() * self.medical_compliance())
+        return medical_relief(self.medical_diffusion_index(), self.MEDICAL_COMPLIANCE_BASE, self.state_capacity)
 
     # ---- WAR: A STATE THAT IS ACTUALLY ARMED LOSES LESS, AND SACKS LESS ----
     # military_leverage() and _military_war_relief() (further below)
@@ -417,11 +414,7 @@ class DiffusionMixin:
                    if node_id in held)
 
     def _state_military_diffusion_relief(self, per_weapon):
-        weapons = self.state_military_weapons_held()
-        if weapons <= 0:
-            return 1.0, None
-        return ((1.0 - per_weapon) ** weapons,
-                "the state's own armies now carry %d of the weapons you worked out" % weapons)
+        return weapons_relief(per_weapon, self.state_military_weapons_held())
 
     def world_diffusion_report(self):
         """None while nothing the founder has built is spreading into the

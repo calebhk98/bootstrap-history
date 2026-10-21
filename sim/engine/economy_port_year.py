@@ -500,9 +500,7 @@ class AgentEconomy(TilePricesMixin):
         economy = self._economy
         harmed = externalities.yield_factors(sim, sim.state.scenario.year)
         yields = economy_port_sites.crop_yields(economy, weather)
-        if harmed:
-            yields = {producer_id: factor * harmed.get(economy_api.producers_of(economy)[producer_id].tile, 1.0)
-                      for producer_id, factor in yields.items()}
+        yields = economy_port_sites.harmed_yields(yields, harmed, economy_api.producers_of(economy))
         entrant_share, attrition_share = working_age_turnover(population)
         return YearInputs(year=sim.state.scenario.year, population_by_tile=sim.labour.settlement_tiles(),
                           working_age_share=population.working_age / total if total > 0.0 else 0.0,

@@ -24,6 +24,7 @@ answers for craft hours.
 from sim.constants import declare, REGISTRY
 
 from . import legacy_trade_defaults, trade_data
+from .hands import contracted_hours_of, hands_available
 from .workforce_spinup import FARM_TRADE
 
 
@@ -36,7 +37,7 @@ class PopulationMixin:
 
     def effective_scholars(self):
         """You are your own natural philosopher; everyone else is hired."""
-        return self._world.state.household.scholars + (1.0 if self._world.state.founder.founder_alive else 0.0)
+        return hands_available(self._world.state.household.scholars, self._world.state.founder.founder_alive, 0.0, 1.0)
 
     def scholar_hands_available(self):
         """Scholars you can actually put on a project this year: the ones on
@@ -62,9 +63,9 @@ class PopulationMixin:
         the person is the whole point of `commission`, and it is what
         somebody in this position actually did.
         """
-        contracted = sum(hours for trade, hours
-                         in getattr(self._world.household, "contract_hours", {}).items()
-                         if self._world.trade_family(trade) == self._world.trade_family(trade_data.scholar_trade()))
+        scholar_family = self._world.trade_family(trade_data.scholar_trade())
+        contracted = contracted_hours_of(getattr(self._world.household, "contract_hours", {}),
+                                         lambda trade: self._world.trade_family(trade) == scholar_family)
         return (self.effective_scholars()
                 + contracted / self._world.HOURS_PER_PERSON_YEAR)
 

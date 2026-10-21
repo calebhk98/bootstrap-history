@@ -1,0 +1,65 @@
+"""Scenario: Complaint 95 in a game. `figures` and `why <figure>` show last year, this year and the named causes, read from the
+engine's own functions (upkeep, revenue, capital); a figure not yet recorded says so, an unknown one is refused with the list.
+The inspector's arithmetic (causes add up to the change, a new figure is explained with no list edited) is in
+test_figures_inspector."""
+from .harness import *  # noqa: F401,F403
+
+from sim.ui import figures as figure_registry
+
+HEADLINE = ("cash", "recurring_net", "income", "upkeep", "population",
+            "literacy_general", "price_index", "hazard")
+
+
+def ask(test_sim, **command):
+    return S._agent_dispatch(test_sim, NODES, command)
+
+
+def played_sim():
+    test_sim = sim(capital=1_000_000.0)
+    test_sim.end_year = test_sim.cfg["start_year"] + test_sim.cfg["horizon_years"]
+    started = next((node_id for node_id in test_sim.order
+                    if NODES[node_id]["rev"] > 0 and test_sim.can_start(node_id)), None)
+    if started:
+        ask(test_sim, cmd="start", id=started)
+    ask(test_sim, cmd="step", years=1)
+    return test_sim
+
+
+played = played_sim()
+registered = set(figure_registry.FIGURES)
+check("every headline figure is registered", set(HEADLINE) <= registered, sorted(registered))
+
+listing = ask(played, cmd="figures")
+check("figures with no name lists every registered figure",
+      listing.get("ok") and {row["name"] for row in listing["figures"]} == registered, listing)
+
+one = ask(played, cmd="figures", id="upkeep")
+check("a figure reports last year, this year and the change",
+      one.get("ok") and {"previous", "current", "change", "causes"} <= set(one), one)
+check("this year's value is the engine's own function",
+      abs(one["current"] - played.upkeep()) < 0.1, (one["current"], played.upkeep()))
+check("the causes add up to the change",
+      abs(sum(cause["contribution"] for cause in one["causes"]) - one["change"]) < 0.5, one)
+
+income = ask(played, cmd="figures", id="income")
+check("income is the engine's revenue", abs(income["current"] - played.revenue()) < 0.1, income)
+check("every income cause names itself",
+      all(cause.get("cause") for cause in income["causes"]), income)
+
+cash = ask(played, cmd="figures", id="cash")
+check("cash is the household's capital", abs(cash["current"] - played.capital) < 0.1, cash)
+check("cash causes add up to the change, unexplained part named",
+      abs(sum(cause["contribution"] for cause in cash["causes"]) - cash["change"]) < 0.5, cash)
+
+fallback = ask(played, cmd="why", id="recurring_net")
+check("why <figure> falls through to the figure inspector",
+      fallback.get("ok") and fallback.get("name") == "recurring_net", fallback)
+
+unknown = ask(played, cmd="figures", id="nonsense")
+check("an unknown figure is refused with the list",
+      not unknown.get("ok") and unknown.get("cause") == "unknown_figure" and "upkeep" in unknown.get("choices", ()), unknown)
+
+fresh = sim(capital=1_000_000.0)
+before_any_year = ask(fresh, cmd="figures", id="upkeep")
+check("before a year has passed there is no previous value and it says so",
+      before_any_year.get("ok") and before_any_year["previous"] is None, before_any_year)
