@@ -48,6 +48,10 @@ class CollectionView:
 		return self.staff_employed(order.INSPECTORS_LINE, order.INSPECTOR_TRADE,
 								   order.inspectors_kept(self.population_total(), self.working_days_per_year()))  # type: ignore[attr-defined]
 
+	def foresters_employed(self) -> float:
+		return self.staff_employed(order.FORESTERS_LINE, order.FORESTER_TRADE,
+								   order.foresters_kept(self.population_total(), self.working_days_per_year()))  # type: ignore[attr-defined]
+
 	def _collection_ground(self) -> Dict[str, Any]:
 		"""The people on each tile and the days of road from the seat to it, kept for the year."""
 		memo = self.__dict__.setdefault("_collection_memo", {})
@@ -91,3 +95,11 @@ class CollectionView:
 			memo["inspection"] = collection.tile_shares(self.inspectors_employed(), self.working_days_per_year(), 0.0,
 														memo["people"], memo["days"], order.INSPECTION_DAYS_PER_PERSON)
 		return collection.collectible_share(memo["inspection"], memo["people"], tiles)
+
+	def forest_share(self, tiles: Optional[Iterable[str]] = None) -> float:
+		"""The share of the people on `tiles` (all the state holds when none) whose woodland tenure its employed foresters keep."""
+		memo = self._collection_ground()
+		if "forest" not in memo:
+			memo["forest"] = collection.tile_shares(self.foresters_employed(), self.working_days_per_year(), 0.0, memo["people"],
+													memo["days"], order.FORESTER_DAYS_PER_PERSON)
+		return collection.collectible_share(memo["forest"], memo["people"], tiles)

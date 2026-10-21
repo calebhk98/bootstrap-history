@@ -886,7 +886,7 @@ class MiningMixin(MineDepositsMixin):
             "many labels that area happens to be filed under.")
     FOREST_HA_PER_MILLION_KM2_PER_SC = declare(
         "FOREST_HA_PER_MILLION_KM2_PER_SC", 2575.0, kind="engineering_estimate",
-        unit="hectares/(million km2 of home land) per unit of state_reach",
+        unit="hectares/(million km2 of home land) per unit of forest reach (share of people whose woodland tenure its foresters keep)",
         source="Same empire-wide charcoal anchor and Rome-area calibration "
         "as FOREST_HA_PER_MILLION_KM2_BASE.",
         confidence="C",
@@ -903,7 +903,7 @@ class MiningMixin(MineDepositsMixin):
 
     def forest_land_ceiling(self):
         """The largest standing coppice you could ever hold, in hectares."""
-        state_reach = self.state_reach()
+        state_reach = self.forest_reach()
         return forest_ceiling_hectares(
             self.home_land_area_km2(), state_reach, self.FOREST_HA_PER_MILLION_KM2_BASE,
             self.FOREST_HA_PER_MILLION_KM2_PER_SC,

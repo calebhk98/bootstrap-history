@@ -1,6 +1,6 @@
 """The staff that keep order and keep the mines' claims: how many a state keeps, and the two budget lines that pay them.
 
-Guards watch the people of a tile against thieves; inspectors check the claims and workings of a tile against the
+Guards watch the people of a tile against thieves; foresters keep the woodland tenure of a tile; inspectors check the claims and workings of a tile against the
 registry. Each is people hired in a trade at the going wage, so the state competes for them in the labour market like
 any employer. How far they reach is read the way collection is (`collection.tile_shares`): their working year, the days
 a person's tile asks of them, the road from the seat.
@@ -11,12 +11,14 @@ from typing import Any, List
 
 from .budget_line import Line
 from .revenue_labour import HOURS_PER_WORKING_DAY
-from .tuning_order import INSPECTION_DAYS_PER_PERSON, PATROL_DAYS_PER_PERSON
+from .tuning_order import FORESTER_DAYS_PER_PERSON, INSPECTION_DAYS_PER_PERSON, PATROL_DAYS_PER_PERSON
 
 GUARDS_LINE = "guards"
 INSPECTORS_LINE = "inspectors"
+FORESTERS_LINE = "foresters"
 GUARD_TRADE = "labourer"
 INSPECTOR_TRADE = "scribe"
+FORESTER_TRADE = "labourer"
 
 
 def staff_kept(people: float, days_per_person: float, working_days: float) -> float:
@@ -32,6 +34,10 @@ def guards_kept(people: float, working_days: float) -> float:
 
 def inspectors_kept(people: float, working_days: float) -> float:
 	return staff_kept(people, INSPECTION_DAYS_PER_PERSON, working_days)
+
+
+def foresters_kept(people: float, working_days: float) -> float:
+	return staff_kept(people, FORESTER_DAYS_PER_PERSON, working_days)
 
 
 def working_days_of(world: Any) -> float:
@@ -51,3 +57,8 @@ def guards_line(world: Any) -> List[Line]:
 def inspectors_line(world: Any) -> List[Line]:
 	return staff_line(world, INSPECTORS_LINE, INSPECTOR_TRADE,
 					  inspectors_kept(world.population_total(), working_days_of(world)))
+
+
+def foresters_line(world: Any) -> List[Line]:
+	return staff_line(world, FORESTERS_LINE, FORESTER_TRADE,
+					  foresters_kept(world.population_total(), working_days_of(world)))
