@@ -12,6 +12,7 @@ from typing import Any, List, Tuple
 from sim.constants import declare
 from sim.world.climate_needs import PERSONS_PER_HOUSEHOLD
 
+from . import authority
 from .budget_line import Line
 from .state_works import WORKS
 
@@ -48,7 +49,7 @@ def levy_of(declared: Any, world: Any) -> Levy:
 		raise ValueError("form %r: labour is owed per %r|%r to %r|%r and commuted by a share of 0..1"
 						 % (declared["form"], PERSON, HOUSEHOLD, WORKS_DUE, ARMY_DUE))
 	people = world.national_people("labourer") if per == PERSON else world.population_total() / PERSONS_PER_HOUSEHOLD
-	return Levy(float(declared["rate"]) * max(0.0, people), max(0.0, people), destination, commute)
+	return Levy(float(declared["rate"]) * max(0.0, people) * authority.levy_reach(world), max(0.0, people), destination, commute)
 
 
 def person_years(hours: float, world: Any) -> float:

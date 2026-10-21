@@ -134,11 +134,6 @@ SOLDIER_GRAIN_KG_PER_DAY = declare(
 	"SOLDIER_GRAIN_KG_PER_DAY", 1.15, kind="temporary_heuristic",
 	unit="kg of wheat per soldier per day", source="Polybius 6.39: about two-thirds of an Attic medimnus of wheat a month", confidence="C",
 	why="Ration a legionary was issued; the grain a campaign must carry or buy for each marching soldier.")
-ACCESSION_PROBABILITY_PER_YEAR = declare(
-	"ACCESSION_PROBABILITY_PER_YEAR", 0.07, kind="temporary_heuristic",
-	unit="per year", source=None, confidence="D",
-	why="Chance in a year that the ruler dies or is replaced, so a new one accedes. Stands in for a model of "
-		"rulers' lives and of succession.")
 DONATIVE_SHARE_OF_ANNUAL_PAY = declare(
 	"DONATIVE_SHARE_OF_ANNUAL_PAY", 1.0, kind="temporary_heuristic",
 	unit="years of a soldier's pay per soldier", source=None, confidence="D",

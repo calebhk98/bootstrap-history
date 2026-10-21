@@ -7,10 +7,10 @@ good (grain, wine, oil, cloth, livestock: any good the country's producers make)
 A form on land may be limited to the provinces it is levied in (`tiles`, or `except_tiles` of those held), so
 one state can take a share of the crop in some and a share of assessed property in others.
 """
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Any, FrozenSet, List, Optional, Tuple
 
-from . import evasion, revenue_labour
+from . import authority, evasion, revenue_labour
 from .revenue_bases import BASES, GOOD_BASES, TILE_BASES
 
 
@@ -29,6 +29,7 @@ class Assessment:
 	commute: float = 0.0  # the share of a labour due paid in coin instead
 	collectible: float = 1.0  # share of what is due that the state's officials reach (collection.py); money and tonnes are after it
 	concealed: float = 0.0  # money's worth of the payers' income kept off the rolls (evasion.py); `base` is what remains
+	kept_by_officials: float = 0.0  # share of what was collected that officials kept (authority.py); money and tonnes are after it
 
 	@property
 	def in_kind(self) -> bool:
@@ -83,13 +84,24 @@ def assess(world: Any) -> List[Assessment]:
 			raise ValueError("form %r is paid in %r but its basis %r yields %r"
 							 % (declared["form"], material, declared["basis"], base.material))
 		collectible = world.collectible_share(tiles)
+		kept = authority.kept_on(world, tiles)
 		if base.payers:
-			assessments.append(taxed_actors(declared, base, collectible))
+			assessments.append(leaked(taxed_actors(declared, base, collectible), kept))
 			continue
-		assessments.append(Assessment(declared["form"], declared["basis"], base.value, rate, collectible * rate * base.value,
-									  collectible * rate * base.tonnes if material else 0.0, material,
-									  collectible=collectible))
+		assessments.append(leaked(Assessment(declared["form"], declared["basis"], base.value, rate, collectible * rate * base.value,
+											 collectible * rate * base.tonnes if material else 0.0, material,
+											 collectible=collectible), kept))
 	return assessments
+
+
+def leaked(assessment: Assessment, kept: float) -> Assessment:
+	"""The assessment after officials have kept their share of what they collected (the share is not booked as revenue)."""
+	if kept <= 0.0:
+		return assessment
+	return replace(assessment, money=authority.after_leakage(assessment.money, kept),
+				   tonnes=authority.after_leakage(assessment.tonnes, kept),
+				   payers=tuple((payer, authority.after_leakage(owed, kept)) for payer, owed in assessment.payers),
+				   kept_by_officials=kept)
 
 
 def taxed_actors(declared: Any, base: Any, collectible: float = 1.0) -> Assessment:

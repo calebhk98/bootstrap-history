@@ -536,6 +536,7 @@ class AgentEconomy(TilePricesMixin):
                           import_accounts=border_accounts[0], export_accounts=border_accounts[1],
                           labour_levy_hours_per_worker=economy_port_levy.levy_hours_per_worker(sim),
                           debt_relief_tiles=economy_port_land.debt_relief_tiles(sim, economy),
+                          title_moves=economy_port_land.title_moves(sim, economy),
                           farmed_forms=economy_port_land.farmed_forms(sim, economy),
                           tax_rates=economy_port_land.tax_rates(sim),
                           land_tax_share_of_rent=economy_port_land.land_tax_share_of_rent(sim),

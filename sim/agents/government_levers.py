@@ -13,6 +13,7 @@ from typing import Any, Collection, Dict, List, Union
 from sim.refusal import Refusal
 
 from . import state_works
+from .government_levers_land import LAND_KINDS, set_land_lever
 from .government_levers_tax import TAX_KINDS, remission_share, set_tax_lever
 from .budget_line import Line, goods
 from .revenue_bases import BASES
@@ -24,8 +25,8 @@ REVENUE, BUDGET, ARMY, NAVY, WORKS, RESERVE, MONOPOLY, SUBSIDY, MANDATE = (
 # production the state orders onto it
 TRIAL_SUBSIDY, TECH_MANDATE = "trial_subsidy", "tech_mandate"
 LEVER_KINDS = (REVENUE, BUDGET, ARMY, NAVY, WORKS, RESERVE, MONOPOLY, SUBSIDY, MANDATE,
-			   TRIAL_SUBSIDY, TECH_MANDATE) + TAX_KINDS
-SCALAR_KINDS = (ARMY, NAVY, RESERVE) + TAX_KINDS   # one figure (or a rule), no name
+			   TRIAL_SUBSIDY, TECH_MANDATE) + TAX_KINDS + LAND_KINDS
+SCALAR_KINDS = (ARMY, NAVY, RESERVE) + TAX_KINDS + LAND_KINDS   # one figure (or a rule), no name
 DAYS_PER_YEAR = 365.0                  # the most days of labour a due can take
 
 # the standing lines a budget lever can cut; each work's upkeep line is named for the work
@@ -138,6 +139,8 @@ def set_lever(record: Any, request: Dict[str, Any], context: LeverContext) -> Un
 		return _set_monopoly(record, request, context)
 	if kind in TAX_KINDS:
 		return set_tax_lever(record.levers, kind, request.get("value"), _number, _refuse)
+	if kind in LAND_KINDS:
+		return set_land_lever(record.levers, kind, request.get("value"), _number, _refuse)
 	name, value = request.get("name"), request.get("value")
 	if kind not in SCALAR_KINDS:
 		choices = {BUDGET: budget_line_names(), WORKS: [work.name for work in state_works.WORKS],

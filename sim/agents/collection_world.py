@@ -8,7 +8,7 @@ from typing import Any, Dict, Optional, Iterable
 
 from sim.geography.api import reach
 
-from . import budget, collection, order
+from . import authority, budget, collection, order
 from .revenue_labour import HOURS_PER_WORKING_DAY
 
 ADMINISTRATION_LINE = "administration"
@@ -71,9 +71,15 @@ class CollectionView:
 		"""{tile: share of what is due there that the state collects} this year."""
 		memo = self._collection_ground()
 		if "shares" not in memo:
-			memo["shares"] = collection.tile_shares(self.officials_employed(), self.working_days_per_year(),
-													self.literacy("literacy_elite"), memo["people"], memo["days"])  # type: ignore[attr-defined]
+			shares = collection.tile_shares(self.officials_employed(), self.working_days_per_year(),
+											self.literacy("literacy_elite"), memo["people"], memo["days"])  # type: ignore[attr-defined]
+			memo["shares"] = self._held(shares)
 		return memo["shares"]  # type: ignore[no-any-return]
+
+	def _held(self, shares: Dict[str, float]) -> Dict[str, float]:
+		"""Each tile's reach scaled by the share of risings its garrison puts down (the last stability phase's reading)."""
+		held = self.government().record.hold_by_tile  # type: ignore[attr-defined]
+		return {tile: authority.authority(share, held.get(tile, 1.0)) for tile, share in shares.items()}
 
 	def collectible_share(self, tiles: Optional[Iterable[str]] = None) -> float:
 		"""The share of what is due on `tiles` (all the state holds when none) that its officials collect."""
@@ -84,8 +90,8 @@ class CollectionView:
 		"""The share of the people on `tiles` (all the state holds when none) that its employed guards watch."""
 		memo = self._collection_ground()
 		if "order" not in memo:
-			memo["order"] = collection.tile_shares(self.guards_employed(), self.working_days_per_year(), 0.0, memo["people"],
-												   memo["days"], order.PATROL_DAYS_PER_PERSON)
+			memo["order"] = self._held(collection.tile_shares(self.guards_employed(), self.working_days_per_year(), 0.0, memo["people"],
+															  memo["days"], order.PATROL_DAYS_PER_PERSON))
 		return collection.collectible_share(memo["order"], memo["people"], tiles)
 
 	def inspection_share(self, tiles: Optional[Iterable[str]] = None) -> float:
@@ -95,6 +101,13 @@ class CollectionView:
 			memo["inspection"] = collection.tile_shares(self.inspectors_employed(), self.working_days_per_year(), 0.0,
 														memo["people"], memo["days"], order.INSPECTION_DAYS_PER_PERSON)
 		return collection.collectible_share(memo["inspection"], memo["people"], tiles)
+
+	def corruption_share(self, tiles: Optional[Iterable[str]] = None) -> float:
+		"""The share of what officials collect on `tiles` (all the state holds when none) that they keep: it rises with the
+		days of road from the seat and falls with the share of the people its inspectors check (authority.py)."""
+		self.inspection_share()
+		memo = self._collection_ground()
+		return authority.people_weighted_kept(memo["people"], memo["days"], memo["inspection"], tiles)
 
 	def forest_share(self, tiles: Optional[Iterable[str]] = None) -> float:
 		"""The share of the people on `tiles` (all the state holds when none) whose woodland tenure its employed foresters keep."""
