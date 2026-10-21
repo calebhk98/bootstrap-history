@@ -1,0 +1,30 @@
+"""Per-good contributions to the basket price level over a Rome spin-up (years given on the command line)."""
+import os, sys
+sys.path.insert(0, os.getcwd())
+from sim.tests import harness
+os.environ.pop("ROME_SPIN_UP_YEARS", None)
+from sim.economy import api as economy_api
+from sim.economy.year_close import recently_traded_goods
+from sim.economy.national_prices import national_prices
+from sim.engine import economy_port_sites
+from sim.engine.economy_port_setup import build_setup
+from sim.engine.economy_port_year import YearInputs
+years = int(sys.argv[1]) if len(sys.argv) > 1 else 25
+game = harness.sim(capital=1e7)
+setup = build_setup(game, game.state.economy.agent_economy["opening"])
+economy = economy_api.blank_economy(setup)
+economy_api.begin_spin_up(economy)
+inputs = YearInputs(year=0, population_by_tile={}, working_age_share=setup.working_share,
+                    yield_factor_by_producer=economy_port_sites.crop_yields(economy), engine_orders={})
+for year in range(years):
+    outcome = economy.step(inputs)
+    record = economy.record
+    recent = recently_traded_goods(record.memory)
+    prices = national_prices(record)
+    base = record.index_base_prices or setup.opening_prices
+    basket = record.opening_basket
+    base_cost = sum(q * base.get(g, 0.0) for g, q in basket.items() if g in prices and g in recent and g in base)
+    parts = sorted(((q * prices[g] / base_cost, g, prices[g] / base[g] if base.get(g) else 0.0)
+                    for g, q in basket.items() if g in prices and g in recent and base.get(g)), reverse=True)[:6]
+    if year >= int(os.environ.get("FROM_YEAR", "0")): print("%2d level %8.3f hired %.3g | %s" % (year, outcome.basket_price_level, outcome.hired_hours,
+          "  ".join("%s %.2f (x%.1f)" % (g, c, r) for c, g, r in parts)), flush=True)

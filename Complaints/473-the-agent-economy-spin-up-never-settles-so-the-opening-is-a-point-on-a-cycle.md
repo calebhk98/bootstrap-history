@@ -292,3 +292,10 @@ Output: `Complaints/reports/473-trace-9eb35921.txt`. The first four decades are 
 a hundred at year forty instead of nearer two hundred, hired hours steady), then the economy explodes after year forty: the
 price level, the wage and the rate run away together within a few years (the rate far above one, the wage thousands of
 times its opening). A per-good decomposition of years 35 to 52 is running (`decomp.py` probe, the same as for 72e81e68).
+
+Decomposition of the late runaway (years 35 to 51 at 9eb35921, `Complaints/reports/473-decomposition-9eb35921.txt`; the probe
+is `Complaints/reports/473-decomposition-probe.py.txt`, run from a checkout root with `FROM_YEAR=35 python3 <probe> 52`): wheat,
+starch, leather and iron tools carry the index at hundreds to thousands of times base through year 43; thin goods spike in
+year 44 (felt, milk, bricks); from year 45 nearly every good jumps at once while the wage rises many-fold, which points at the
+unit of account (a real figure turned nominal with an index that thin goods spike) rather than one good's market. Being
+traced as an indexation spiral (the leisure anchor and other real figures converted with `basket_price_level`).
