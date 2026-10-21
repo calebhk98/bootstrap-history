@@ -37,3 +37,9 @@ back-calculation from the target total; a flow set from that would pin the share
 
 What would close it: an ensemble check over seeds of the bonded share after a few years against Scheidel's eight to
 fifteen per cent range (validation, not a target), and a supply mechanism once a supply-side source is opened.
+
+Caveat on the births source (checked against the same PDF, p. 75): Scheidel draws the equal-fertility finding from the
+Egyptian census returns and adds "Yet we cannot know how this compares to conditions in Roman Italy"; p. 69 allows
+that "slave fertility may well have fallen below replacement levels", and p. 75 names "above-average mortality in
+cities and rural gravia loca" as the larger constraint. Equal birth rates are the sourced default; a residence-driven
+mortality difference is the open part.
