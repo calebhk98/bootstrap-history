@@ -256,10 +256,9 @@ def gross_harvest_kg(
     1,400`. `labour_hours` here also drives the Cobb-Douglas LABOUR term,
     which sim/tests/test_agriculture.py's own
     HarvestWindowBindsGrossHarvestTests calibrates in the OTHER convention -
-    hours actually worked, `REFERENCE_LABOUR_HOURS_PER_HECTARE` (150) times
-    hectares actually worked - and 150 h/ha and 1,400 h/worker/year do not
-    agree (that gap IS the module's own "harvest window leaves the annual-
-    hours ceiling slack by 4:1" finding). A caller that sizes `labour_hours`
+    hours actually worked, `REFERENCE_LABOUR_HOURS_PER_HECTARE` times
+    hectares actually worked - and that need not equal a worker's year
+    over the hectares the window lets them reap. A caller that sizes `labour_hours`
     to satisfy one convention and lets this function guess the workforce
     from it via the OTHER is silently double-counting or under-counting the
     window cap - not a bug in either convention alone, only in combining

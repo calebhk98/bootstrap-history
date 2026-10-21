@@ -128,10 +128,11 @@ class SingleSourceTests(unittest.TestCase):
         cls.shared = shared_constants
 
     def test_reference_labour_hours_per_hectare_is_one_value(self):
+        from sim.world import farm_labour
         self.assertIs(self.agriculture.REFERENCE_LABOUR_HOURS_PER_HECTARE,
-                      self.shared.REFERENCE_LABOUR_HOURS_PER_HECTARE)
+                      farm_labour.REFERENCE_LABOUR_HOURS_PER_HECTARE)
         self.assertEqual(self.land.LAND_REFERENCE_LABOUR_HOURS_PER_HECTARE,
-                         self.shared.REFERENCE_LABOUR_HOURS_PER_HECTARE)
+                         farm_labour.REFERENCE_LABOUR_HOURS_PER_HECTARE)
 
     def test_labour_output_elasticity_is_one_value(self):
         self.assertIs(self.agriculture.LABOUR_OUTPUT_ELASTICITY,
@@ -278,8 +279,8 @@ class UndeclaredLiteralDuplicateTests(unittest.TestCase):
         Checked against the live declaration, so moving the declared value
         re-aims this test instead of breaking it.
         """
-        from sim.world import shared_constants
-        expected = getattr(shared_constants, self._SHARED_NAME)
+        from sim.world import farm_labour
+        expected = getattr(farm_labour, self._SHARED_NAME)
         offenders = []
         for node in ast.walk(self._parsed_labour_market()):
             if (isinstance(node, ast.Constant)

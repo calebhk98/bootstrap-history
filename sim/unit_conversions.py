@@ -209,6 +209,16 @@ HOURS_PER_PERSON_YEAR = declare(
         "to labour hours: the one working-year convention every wage quote, "
         "staff count and hours ledger uses.")
 
+WORKING_DAYS_PER_YEAR = declare(
+    "WORKING_DAYS_PER_YEAR", 200.0, kind="engineering_estimate",
+    unit="days/person/year",
+    source="The 200 working days of the ten-hour day that HOURS_PER_PERSON_YEAR counts a year in "
+           "(Complaints/reports/research-working-year.md: 184 to 292 days in the opened sources, under 200 "
+           "late medieval, 250 the usual convention).",
+    confidence="C",
+    why="With HOURS_PER_PERSON_YEAR gives the hours of a person-day, which turns a labour cost quoted in "
+        "person-days into the hours every recipe books.")
+
 CIVIL_DAYS_PER_YEAR = declare(
     "CIVIL_DAYS_PER_YEAR", 365.0, kind="physical_constant",
     unit="days/year",

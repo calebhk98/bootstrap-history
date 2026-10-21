@@ -1,0 +1,28 @@
+{
+  "_about": "Labour of one hectare of wheat cropped for one season, built from sub-tasks. Read by sim/world/farm_labour.py; data/production/40_organics.json wheat_kg and wheat_hoe_kg labour_hours must equal the totals it gives (tested). Person-days convert to hours at the model's own working day (HOURS_PER_PERSON_YEAR over WORKING_DAYS_PER_YEAR).",
+  "source_paper": "Shukurov et al., arXiv 1505.05121 (PDF), section 8.1. A secondary source: White (1965), Halstead and Jones (1989) and Ellen (1982) were not opened.",
+  "wheat": {
+    "tasks": {
+      "cultivation_cycle": {
+        "person_days": 44.0,
+        "quote": "White (1965) assesses as credible Columella's estimates of the average labour cost for Roman Italy to be about 44 person-day/ha (18 person-day/acre) for the whole wheat cultivation cycle, excluding harvesting, with four ploughings (including ploughing-in the seed)"
+      },
+      "reaping": {
+        "person_days": 5.7,
+        "quote": "and further 5.7 person-day/ha (1.5 person-day/iugerum) for reaping."
+      },
+      "threshing": {
+        "person_days_as_share_of_reaping": 1.0,
+        "quote": "A typical labour cost of reaping cereals with a modern sickle was 10-30 person-days/ha, and the crop processing (threshing, winnowing, etc.) required about the same amount of labour as the reaping. (Halstead and Jones 1989, via the same paper)"
+      }
+    },
+    "reaping_range_person_days_halstead_jones": [10.0, 30.0],
+    "reaping_note": "Halstead and Jones give 10-30 person-days/ha for a modern sickle on Greek islands, above Columella's 5.7 for Roman Italy; the Roman figure is taken because the recipe is for Roman-period farming. At the Halstead figures reaping and threshing together would exceed what is built here.",
+    "hand_tilling": {
+      "hours_per_hectare_by_hand_tools": 400.0,
+      "hours_per_hectare_with_oxen": 65.0,
+      "quote": "A typical modern productivity of tilling is 25 m2/hour (1 ha in 400 hours) when using hand tools, and about 150 m2/hour (1 ha in 65 hours) when tilling with a pair of oxen (Ellen 1982, p. 137).",
+      "note": "One tilling done by hand instead of by a yoke; the four ploughings of the Columella cycle are not each scaled, so the hoe total is a floor."
+    }
+  }
+}

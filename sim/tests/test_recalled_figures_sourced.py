@@ -130,13 +130,12 @@ class PassFiveFigures(unittest.TestCase):
         self.assertAlmostEqual(shelter["satiation_multiple_of_floor"],
                                multiple_of_floor(NAROLL_SQUARE_METRES_PER_PERSON, SPHERE_FLOOR_SQUARE_METRES_PER_PERSON), places=2)
 
-    def test_the_sourced_wheat_cycle_exceeds_the_labour_the_data_still_carries(self):
-        # The data keeps its unsourced figure until the farm-year model that is built on it is re-derived
-        # (Complaint 646 pass 5); this records the gap the sourced arithmetic shows.
+    def test_the_data_carries_the_sourced_wheat_cycle(self):
+        # The recipe books the hours the sourced arithmetic gives (Complaint 646 pass 6).
         wheat = self._load("data", "production", "40_organics.json")["materials"]["wheat_kg"]
         sourced_hours = wheat_cycle_hours(COLUMELLA_CYCLE_PERSON_DAYS, COLUMELLA_REAPING_PERSON_DAYS,
                                           THRESHING_PERSON_DAYS_AS_MANY_AS_REAPING, HOURS_IN_THE_PERSON_DAY)
-        self.assertGreater(sourced_hours, wheat["labour_hours"]["farmer"])
+        self.assertAlmostEqual(sourced_hours, wheat["labour_hours"]["farmer"])
 
     def test_the_arithmetic_of_the_conversions(self):
         self.assertAlmostEqual(wheat_cycle_hours(10.0, 1.0, 1.0, 10.0), 120.0)

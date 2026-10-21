@@ -50,8 +50,8 @@ def hectares_per_worker_annual_hours_ceiling(
     """One of the two ceilings on a farm worker's cropped area: total hours
     in the farming year divided by hours needed per hectare. Treating this
     ceiling alone as the answer, ignoring the harvest-window one below,
-    produces a 4.8% headline figure - wrong, because the harvest window
-    binds first. See `hectares_cropped_per_farm_worker`.
+    is wrong where the window is the smaller. See
+    `hectares_cropped_per_farm_worker`.
 
     `crop` and `toolkit` default to wheat and the ard-and-sickle baseline;
     `toolkit.labour_hours_multiplier` rescales the hours-per-hectare figure
@@ -90,18 +90,12 @@ def hectares_cropped_per_farm_worker(
     the smaller of the two ceilings above, because a constraint you can
     satisfy is not a constraint.
 
-    At the DEFAULT constants declared in this file the harvest window is
-    the binding one by roughly four to one, and that is the substantive
-    finding: adding hours to the farming year, or shifting
-    REFERENCE_LABOUR_HOURS_PER_HECTARE (or a toolkit that only touches
-    `labour_hours_multiplier`, such as HORSE_COLLAR_AND_MOULDBOARD), changes
-    this number not at all while the window binds. Anything that raises
-    output per worker here has to raise the reaping rate (a better tool -
-    SCYTHE_AND_CRADLE, MECHANICAL_REAPER) or lengthen the harvest window
-    (a crop with a longer one, or staggered sowing dates), which is the
-    correct shape: those are what historically moved it. See the
-    ToolkitAxisTests in sim/tests/test_agriculture.py for both directions
-    demonstrated.
+    Which ceiling binds depends on the crop's hours per hectare. At the
+    sub-task hours of data/world/farm_labour.json the farming year binds,
+    so a labour-saving toolkit (HORSE_COLLAR_AND_MOULDBOARD) raises the
+    area and a faster reaper alone does not; for a crop that takes few
+    hours a hectare the window binds and the reverse holds. See the
+    ToolkitAxisTests in sim/tests/test_agriculture.py for both cases.
     """
     return min(hectares_per_worker_annual_hours_ceiling(crop, toolkit),
                hectares_per_worker_harvest_window_ceiling(crop, toolkit))

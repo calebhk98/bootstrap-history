@@ -168,3 +168,36 @@ No source found: iron tool 4 years, wooden tool 2 years, bronze, brass, iron, st
 pack saddle, barge (searched for Roman and medieval iron hoe and spade use-life: only typology and single worn
 specimens, no duration; the Swedish 100 g of share iron per hectare of ard ploughing, gupea thesis, was a search
 summary, not opened); household time preference and savings constants were not re-searched.
+
+## Pass 6 (wheat labour built from sub-tasks)
+
+Re-opened Shukurov et al., arXiv 1505.05121 (PDF text extracted), section 8.1; the passages quoted in pass 5 are
+there as written (White 1965 on Columella: 44 person-day/ha for the cycle excluding harvest, 5.7 for reaping;
+Halstead and Jones 1989: processing about the same labour as reaping, reaping 10-30 person-days/ha; Ellen 1982 p. 137:
+1 ha in 400 hours by hand tools, in 65 with a pair of oxen). All secondary; White, Columella, Halstead and Jones and
+Ellen were not opened.
+
+Done:
+- `data/world/farm_labour.json` holds the sub-tasks (cultivation cycle, reaping, threshing as a share of reaping, hand
+  tilling) with the quotes; `sim/world/farm_labour.py` builds the hours (person-days at the model's day,
+  `HOURS_PER_PERSON_YEAR` over the new declared `WORKING_DAYS_PER_YEAR` in `sim/unit_conversions.py`), the hoe extra
+  hours, and the reaping rate (inverse of the reaping sub-task). `REFERENCE_LABOUR_HOURS_PER_HECTARE` is declared there
+  (it left `shared_constants.py`, which may import only the registry) and `HECTARES_REAPED_PER_WORKER_DAY` in
+  `agriculture.py` follows the same sub-task, so the window ceiling and the hours cannot disagree.
+- `wheat_kg` farmer hours 150 to 554, `wheat_hoe_kg` 350 to 889 (`sim/tests/test_farm_labour.py` holds the recipes
+  equal to the build).
+- Effect on the farm-year model: the annual-hours ceiling is now the smaller one, not the harvest window, so the area
+  one worker crops rose and `fraction_of_population_that_must_farm` fell (compute: `python3 -c "from sim.world import
+  agriculture; print(agriculture.fraction_of_population_that_must_farm())"`; before 0.2118). The game's farm share fell
+  with it: the undisturbed Rome scenario (`_undisturbed_run` in `test_farm_edges_scenario`) read 0.340 / 0.342 / 0.346
+  at year index 9 / 19 / 29 and now reads 0.280 / 0.287 / 0.292. So the change moves the farm share further from the
+  sourced band (issue 64, Complaint 619), not toward it: more hours per hectare did not raise the share because the
+  model's worker was previously window-limited and is now year-limited at a larger area.
+- Tests re-derived from rules (never loosened): the pinned headline value is computed from its parts; the "window
+  binds" tests build a window-bound crop (`_replace` of the hours) and a year-bound one; the land-cap tests use
+  labour built from the reference hours; the demand continuity bound follows the fixture's wheat price; the rescue
+  scenario doubles both ceilings; the baseline scenario was re-recorded.
+- Halstead and Jones's higher reaping figure (10-30 person-days/ha) is recorded as a range in the data and not used.
+
+Long command for the occupational shares (did not finish inside 4 minutes on this loaded machine, before or after):
+`python3 sim/simulator.py economy-check --civs rome_100ad --years 1 --occupations`.
