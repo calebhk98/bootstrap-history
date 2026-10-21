@@ -151,7 +151,7 @@
   "canvas_kg": {"satisfies": {"clothing": 0.8}},
 
   "bronze_kg": {"satisfies": {"implements_and_arms": 1.0}},
-  "obsidian_blade_kg": {"satisfies": {"implements_and_arms": 0.05}, "basis": "LABELLED HEURISTIC, conf D, no source found for how long a prismatic blade serves before it dulls or breaks. A kilogram of blades is about 110 edges that blunt at once, so a kilogram counts far below a kilogram of bronze that serves for years. Retire: Complaint 650.", "conf": "D"},
+  "obsidian_blade_kg": {"satisfies": {"implements_and_arms": 0.05}, "basis": "LABELLED HEURISTIC, conf D, no source found for how long a prismatic blade serves before it dulls or breaks. Only a lower bound was read: Hester, Spencer, Busby and Bard, 'Butchering a Deer with Obsidian Tools' (UC Berkeley Archaeological Research Facility, https://digitalassets.lib.berkeley.edu/anthpubs/ucb/proof/pdfs/arf033-04.pdf): a flake \"was used for over 30 minutes in cutting tasks, only very minor wear resulted and the tool was still serviceable at the conclusion of the experiment\" (38 minutes of use; no end of life reached). A kilogram of blades is about 110 edges that blunt at once, so a kilogram counts far below a kilogram of bronze that serves for years. Retire: Complaint 650.", "conf": "D"},
   "flint_tool_kg": {"satisfies": {"implements_and_arms": 0.03}, "basis": "LABELLED HEURISTIC, conf D, no source found for the service life of a knapped flint tool relative to bronze. Retire: Complaint 650.", "conf": "D"},
   "brass_kg": {"satisfies": {"implements_and_arms": 0.7}},
   "iron_bar_kg": {"satisfies": {"implements_and_arms": 0.9}},

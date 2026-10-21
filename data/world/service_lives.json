@@ -9,7 +9,7 @@
     "wooden_tools_kg": {
       "years": 2,
       "confidence": "D",
-      "source": "LABELLED HEURISTIC, no source found for the working life of a wooden hoe, spade or rake before wear or breakage; taken as half an iron tool's, since wood wears and splits faster than iron; retire: Complaint 659."
+      "source": "LABELLED HEURISTIC, no source found for the working life of a wooden hoe, spade or rake before wear or breakage; taken as half an iron tool's, since wood wears and splits faster than iron; searched in the Complaint 650 pass and no timed wear study of wooden farm tools was found; retire: Complaint 659."
     },
     "brick_1000": {
       "years": 80,
