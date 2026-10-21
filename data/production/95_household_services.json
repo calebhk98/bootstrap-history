@@ -1,0 +1,39 @@
+{
+ "_note": "Household work bought and cooked food bought (Complaint 645). A domestic servant's hour stands for the household work another household would otherwise do with its own hours (data/world/household_work.json). A cooked meal is what a cook or an eating house turns out for a household that has no hearth of its own. Sizes are estimates of the work, confidence D.",
+ "materials": {
+  "domestic_service_hour": {
+   "outputs": {
+    "domestic_service_hour": 1.0
+   },
+   "labour_hours": {
+    "domestic_servant": 1.0
+   },
+   "service": true,
+   "unit_dimension": "count",
+   "basis": "per hour of household work done for another household",
+   "yield_basis": "An hour of a servant's work does an hour of household work: the need counts hours (data/world/needs.json, household_work), so one hour gives one unit. Confidence D: a servant is taken to work at the pace of the household member whose hour she replaces.",
+   "conf": "D",
+   "requires_node": null
+  },
+  "cooked_meal_kg": {
+   "outputs": {
+    "cooked_meal_kg": 1000.0
+   },
+   "inputs": {
+    "flour_kg": 300.0,
+    "vegetable_kg": 200.0,
+    "water_kg": 500.0
+   },
+   "labour_hours": {
+    "domestic_servant": 40.0
+   },
+   "thermal_mj": 3000.0,
+   "temperature_needed_c": 100.0,
+   "unit_dimension": "mass",
+   "basis": "per 1000 kg of cooked pottage or stew",
+   "yield_basis": "A pot of meal and vegetables boiled in water: 300 kg of flour and 200 kg of vegetables with 500 kg of water make about a tonne of pottage (mass balance: 300 + 200 + 500 = 1000, the water of boiling and the water in the vegetables roughly cancelling; no source found, conf D). Heat: bringing a tonne of mostly water to the boil from cool takes about 0.3 MJ a kilogram, and an open hearth delivers about a tenth of the fuel's heat to the pot, so about 3 MJ of thermal heat a kilogram (author's estimate, conf D), priced through the thermal_mj market. Labour: cutting, stirring and serving, about 40 hours to a tonne (author's estimate, conf D). Calories: the satisfaction factor in data/world/needs.json is the food of the ingredients over the mass of the meal, (300 * 1.0 + 200 * 0.1) / 1000, so cooking adds no food energy.",
+   "conf": "D",
+   "requires_node": null
+  }
+ }
+}

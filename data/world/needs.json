@@ -109,6 +109,14 @@
    "satiation_per_capita_per_year": 200.0,
    "satiation_basis": "TRANSITIONAL heuristic: about four hours of play a week for each person, past which a household's spending on stakes and tables turns to other things; not a measured figure. A model of leisure time would replace it.",
    "effectiveness_basis": "one hour of play at a table, or one numbered chance, taken as equal"
+  },
+  "household_work": {
+   "surplus_budget_share": 0.04,
+   "unit": "hours of household work done by another",
+   "floor_basis": "No market floor: a household does its own cooking, water and fuel, cleaning, grinding and childcare with its own hours first, and hires only what its income lets it (sim/economy/households_work.py). A richer household hires more, as its own hours are worth more. The share is a labelled heuristic, confidence D, retire: Complaints/645 follow-up (a measured share of spending on paid household work).",
+   "satiation_per_capita_per_year": 383.25,
+   "satiation_basis": "The hours a person's share of the household's work takes a year, from data/world/household_work.json (its tasks summed over 365 days; water, fuel and grinding from Blackden and Wodon 2006, the rest labelled estimates, confidence D); hiring beyond it would be hiring work that is not there. Held equal to that file by a test.",
+   "effectiveness_basis": "one hour of a servant's or cook's work"
   }
  },
  "goods": {
@@ -123,7 +131,8 @@
   "cacao_kg": {"satisfies": {"food": 1.6}},
   "starch_kg": {"satisfies": {"food": 1.05}},
   "flour_kg": {"satisfies": {"food": 1.0}},
-  "bread_kg": {"satisfies": {"food": 0.69}, "basis": "Calories of the flour in a kilogram of loaf: the flour factor times the flour in a kilogram of bread (data/production/95_bread.json); water and baking add no food energy.", "conf": "C"},
+  "bread_kg": {"satisfies": {"food": 0.69}, "ready_to_eat": true, "basis": "Calories of the flour in a kilogram of loaf: the flour factor times the flour in a kilogram of bread (data/production/95_bread.json); water and baking add no food energy.", "conf": "C"},
+  "cooked_meal_kg": {"satisfies": {"food": 0.32}, "ready_to_eat": true, "basis": "The food of the ingredients over the mass of the meal, (300 * 1.0 + 200 * 0.1) / 1000 (data/production/95_household_services.json); boiling adds no food energy.", "conf": "D"},
   "wine_common_kg": {"satisfies": {"food": 0.2}},
 
   "brick_1000": {"satisfies": {"shelter": 1.4}},
@@ -174,13 +183,15 @@
   "struck_silver_coin_kg": {"satisfies": {"money": 1.0}, "bought_by_households": false},
 
   "salt_kg": {"satisfies": {"salt": 1.0}},
-  "cheese_kg": {"satisfies": {"food": 1.2}},
+  "cheese_kg": {"satisfies": {"food": 1.2}, "ready_to_eat": true},
   "meat_kg": {"satisfies": {"food": 0.4}},
   "vegetable_kg": {"satisfies": {"food": 0.1}},
-  "salted_meat_kg": {"satisfies": {"food": 0.5}},
+  "salted_meat_kg": {"satisfies": {"food": 0.5}, "ready_to_eat": true},
   "fish_kg": {"satisfies": {"food": 0.265}, "basis": "Edible fish at 900 kcal a kilogram over wheat grain's 3400 (WHEAT_ENERGY_KCAL_PER_KG); the same energy as the fisher's hours return (data/production/95_fish.json), counted once as the good.", "conf": "D"},
   "salted_fish_kg": {"satisfies": {"food": 0.379}, "basis": "The fresh fish's energy in 700 kg of cured fish from 1000 kg: 0.265 * 1000 / 700; curing adds and loses no energy (data/production/95_fish.json).", "conf": "D"},
   "garum_kg": {"satisfies": {}, "basis": "A condiment: no food energy is counted, and no need ranks fish sauce among the seasonings yet (seasoning is in pepper equivalents). Bought as an input and traded as a good."},
+
+  "domestic_service_hour": {"satisfies": {"household_work": 1.0}},
 
   "water_kg": {"satisfies": {"water": 1.0}},
   "water_well_kg": {"satisfies": {"water": 1.0}},

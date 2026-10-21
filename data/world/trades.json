@@ -463,6 +463,14 @@
       "fatality_risk_per_year": 0.02,
       "fatality_confidence": "C",
       "fatality_source": "Peacetime service mortality, mostly disease: about two-fifths of Roman legionaries died during a twenty-five-year term (W. Scheidel, Measuring Sex, Age and Death in the Roman Empire, JRA Suppl. 21 (1996), ch. 3, via secondary quotation). Battle deaths are not a yearly constant and belong to the conflict mechanics."
+    },
+    "domestic_servant": {
+      "family": "labour",
+      "note": "Does a household's work for pay: cooking, carrying water and fuel, cleaning, grinding, minding children; in an eating house or tavern, cooking and serving meals. The work every household otherwise does with its own hours (Complaint 645). Asks no craft.",
+      "training_years": 0,
+      "fatality_risk_per_year": 0.0,
+      "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
+      "fatality_confidence": "D"
     }
   }
 }
