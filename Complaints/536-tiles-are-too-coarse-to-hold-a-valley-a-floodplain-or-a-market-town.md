@@ -36,7 +36,7 @@ hinterland cannot differ, and a founder cannot pick one valley over the next.
   built from the map layers, read by food, rent and fuel instead of each deriving shares.
 - Sub-tile places (market towns, river strips, ports) with their own catchment, or a finer grid where
   a game needs it; the cost in run time is Complaint 497.
-- Related: 483 (tile control), 489 (population is national).
+- Related: 483 (tile control), 603 (population per region).
 
 ## Second note from the same source
 

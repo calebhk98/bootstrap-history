@@ -1,6 +1,6 @@
 # The full test suite takes far longer than fifteen minutes
 
-**Status:** partly - a cold full suite runs inside thirty minutes on four cores; three topics still time out cold
+**Status:** partly - a cold full suite runs inside thirty minutes on four cores; some topics still time out cold (see Where it stands; re-measure)
 
 The quick tier (`python3 -m sim.tests`) runs only topics marked `QUICK_TOPIC = True`, a few to
 a process, and stays fast after engine edits. The full suite (`python3 -m sim.tests --slow
