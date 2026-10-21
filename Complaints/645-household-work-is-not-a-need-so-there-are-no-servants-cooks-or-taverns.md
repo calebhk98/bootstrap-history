@@ -35,3 +35,11 @@ Religion as a need is out of scope by owner decision; it is a mod (`mods/TASKS.m
   `setup.basket_for(cohort.tile)` sites.
 - Cooking needs fuel at a hearth: the household's own fuel use is not yet counted apart from the warmth need.
 - Land after the opening settles (473).
+
+## PM note (2026-10-21)
+
+The first stage's hired-hours rule takes a typed budget share (0.04) of the cohort's surplus. That is a spending share
+typed into the data, the kind of cultural constant 530's decision ruled out. Replace it with the household's own
+choice: it hires an hour of household work when an hour of its own labour is worth more at the market than the
+servant's price, up to the work there is, so hiring follows income and the wage with no typed share. Retire the
+0.04 when that lands.
