@@ -21,3 +21,5 @@ Still open:
   the ceiling should follow tonnes an inspector can keep registered.
 - Guards and foresters are booked in the unskilled trade and inspectors in the scribe trade; a watchman trade in
   `data/world/trades.json` would let the labour market price them apart.
+
+Research (Complaints/reports/research-state-staffing.md): the capital's standing watch (vigiles plus urban cohorts) gives an upper bound on guard density, now tested (`sim/tests/test_order_staffing_sourced.py`); no source found for a state-wide guard ratio, inspectors per tonne or claim, or foresters per hectare, so those stay labelled heuristics (the `MINE_CEILING_*` scales gained `retire`).
