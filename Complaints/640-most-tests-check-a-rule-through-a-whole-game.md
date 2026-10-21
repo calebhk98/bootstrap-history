@@ -1,6 +1,6 @@
 # Most tests check a rule through a whole game, so a failure cannot say which rule broke
 
-**Status:** open. Audit of the existing files done (the batches below); the guard that stops a new undeclared whole-game test is in place; what remains is the leftover list the guard prints.
+**Status:** partly - every test module that builds a whole game is declared a scenario, validation or smoke test or converted (the guard's leftover list is empty); open: rules still inside `Sim` methods whose checks can only run in a scenario until they are plain functions
 
 A large share of `sim/tests/test_*.py` builds a whole game (`harness.sim()`, `opened()`, `close_years`) and reads a
 value off it, to check a rule that is one function. Such a test passes only while the live game happens to hold the
@@ -300,34 +300,26 @@ Split, the rule checks staying quick and the game-building checks moving to a `_
 `concerns_that_pay`, `dynamic_wages`, `demography_history`, `alerts_staffing_finish`, `automation_audit`. `concerns_that_pay`
 had been failing before this pass (its fake world lacked `plant_costs`, which the scan reads); the stub now has it.
 
-## Remaining: the guard's leftover list
+## Remaining: rules still checked only through a game
 
-`python3 -m sim.tests --whole-game-checks` prints the list (`sim/tests/whole_game_leftovers.txt`); each line is a module whose rules
-are checked through a game and that still needs a split or a conversion. By how they build the game:
+The guard's leftover list (`sim/tests/whole_game_leftovers.txt`) is empty: `python3 -m sim.tests --whole-game-checks` lists no
+undeclared module, and the quick topic `whole_game_declared` fails on any new one. Some modules were declared rather than converted
+because their rule sits inline in a `Sim` mixin; their `_scenario` files hold rule checks until the rule is a plain function:
 
-- `unopened_sim` only (about 55): mostly rules that read the data or the setup of a civilisation; each becomes a call of the
-  rule on a stand-in (`sim/tests/labour_stand_in.py`, `disease_stand_in.py`, `score_game.py` and the stub games of the
-  converted files are the pattern), or a `_scenario` file where the point is the setup.
-- `sim` on a live game (about 23): the rule needs the yearly step; pull it out of the `Sim` method first (508).
-- the in-process CLI (about 10): the typed and JSON front end; the parse is a rule on a string, the reply a scenario.
-- spin-up and others (about 8): measurements of the spin-up; they belong in `simulator.py` subcommands or validations.
+- the state budget and spending lines, the army and revenue rules, and the requisition, office and confiscation notices
+  (`state_budget_scenario`, `state_spending_scenario`, `state_notices_scenario`);
+- the effective-risk multipliers of a retried project (`project_retry_and_risk_scenario`; the retry calendar itself is now
+  `sim/engine/retry_calendar.py`);
+- the domestic haul arithmetic (`freight_domestic_haul_scenario`);
+- the colonies' settlement geography, and the free press, dole, schooling and lighting rules in the public-works scenario;
+- `seed_opening_industry_experience`, `_step_staff`, `train`, `fire`, `commission`, load validation, the staffing gates of `open`
+  and `start`, `work_for_wages`, and the `Sim.start_reason` deficit sizing.
 
-Two leftovers recorded earlier stay open:
+Converted in this round (rule now a plain function with a quick rule test): `start_blockers` (`blockers.collect_blockers`), the
+automation start rule (`auto_start_rule.judge_start_candidate`), auto-mine sizing (`shortage_sizing.auto_mine_order_tonnes`),
+the colony rules (`colony_rules`), coverage and disease burden (`coverage_rules`, `disease_burden.burden_from_holdings`), route
+dues and handling, settlement owed, halting projects on exhausted credit, non-labour upkeep, project throttles, the nitre deficit,
+instantaneous projects, the eminence hazard rules, dependants beyond means, prerequisite names. `start_and_upkeep_quotes_scenario`'s
+`people_exist` refusal is gone (659, closed).
 
-- `start_and_upkeep_quotes_scenario`: the `people_exist` refusal of `start horse_collar` in an opened game is gone since 659's tool
-  fallback (an opened Rome game with the full spin-up holds smiths in the thousands and `start horse_collar` succeeds; measure with
-  `harness.sim(capital=1e7)` after unsetting `ROME_SPIN_UP_YEARS`, then `game.labour.national_trade_population("smith")` and the
-  `start` command). Re-read the scenario's own result in the next full slow run.
-- Converted since: `start_blockers` (`collect_blockers`, `classify_plain_check` in `sim/engine/blockers.py`, rule test `blockers_rule`), the
-  automation skip rule and mine sizing (`sim/engine/auto_start_rule.py`, `auto_start_rule`), the colony rules (`sim/engine/colony_rules.py`,
-  `colony_rules`) and the public-works coverage, burden and roll-out rules (`sim/engine/coverage_rules.py`, `coverage_rules`). Their
-  `_scenario` files (`blocker_readouts_agree`, `automation_skips`, `complaint_190_colonies`, `complaint_190_public_works`) keep only wiring
-  checks, plus the rules that still sit in a mixin and are not listed here (the colonies' `settlement` geography, the free press, the dole,
-  schooling and lighting in the public-works scenario).
-- (`project_cost_now`, `venture_upkeep_quote` and `staffing_missing_to_open` are already thin callers of `quote_figures` and `staffing_choice`, with rule tests `quote_figures_rules` and `staffing_choice_rules`.)
-- Rules still inside `Sim` methods that need pulling out into plain functions before their checks can leave a scenario:
-  `seed_opening_industry_experience`, `_step_staff`, `train`,
-  `fire`, `commission`, load validation, the staffing gates of `open` and `start`, `work_for_wages`, and the `Sim.start_reason`
-  deficit sizing.
-
-The complaint closes when the leftover list is empty and the rules above are plain functions.
+The complaint closes when the rules above are plain functions and their checks have left the scenarios.
