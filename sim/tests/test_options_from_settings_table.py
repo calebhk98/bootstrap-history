@@ -1,15 +1,10 @@
-"""options_from_settings_table: the options screens are generated from the settings table.
-
-Complaint 363. Every key of settings.CONFIG_DEFAULTS has a description in
-settings_table, the main menu's Options screen and the `agent` `options`
-command are both generated from that table, and the settings that were once
-flag- or file-only (commission display, default seed, events, deterministic)
-are on them.
-"""
+"""options_from_settings_table: the settings table describes every setting; the agent `options` command and the
+play dice read it (Complaint 363). The Options screen through the menu is in `test_options_from_settings_table_scenario`."""
+import os
+import tempfile
 from types import SimpleNamespace
 
 from .harness import *  # noqa: F401,F403
-from sim.tests import cli_in_process
 from sim.engine import settings as _settings
 from sim.engine import settings_table as _table
 from sim.engine.ui_port import DetRNG
@@ -20,15 +15,6 @@ QUICK_TOPIC = True
 
 _scratch = tempfile.mkdtemp()
 
-
-def _menu(keystrokes, name):
-    config = os.path.join(_scratch, name + ".json")
-    env = dict(os.environ, ROME_SIM_CONFIG=config, ROME_SAVE_DIR=os.path.join(_scratch, name))
-    done = cli_in_process.run([], input_text=keystrokes, environment=env)
-    saved = json.load(open(config)) if os.path.exists(config) else {}
-    return done.stdout, saved
-
-
 # --- the table covers every setting, and nothing else
 check("every setting has a description in the settings table",
       not _table.undescribed(), _table.undescribed())
@@ -37,29 +23,6 @@ check("the table names no setting that does not exist",
       set(_table.SETTINGS) - set(_settings.CONFIG_DEFAULTS))
 for _key in ("commission_display", "default_seed", "default_events", "default_deterministic"):
     check("%s is a setting" % _key, _key in _settings.CONFIG_DEFAULTS)
-
-# --- the main menu lists every setting, and says which apply only at game start
-_screen, _ = _menu("3\nb\nq\n", "screen")
-_missing = [key for key, spec in _table.SETTINGS.items() if spec.label not in _screen]
-check("the main-menu Options screen lists every setting",   # presentation: the screen is text
-      not _missing, (_missing, _screen[-1500:]))
-_fog_line = [line for line in _screen.splitlines() if "fog of war" in line]
-check("a game-start setting is shown and says it applies when a game starts",   # presentation: the screen's wording
-      _fog_line and "game starts" in " ".join(_fog_line), _fog_line)
-
-# --- the new ones can be changed from the menu
-_number = {key: index + 1 for index, key in enumerate(_table.SETTINGS)}
-_, _saved = _menu("3\n%d\nready\nb\nq\n" % _number["commission_display"], "commission")
-check("commission display can be set from the menu",
-      _saved.get("commission_display") == "ready", _saved)
-_, _saved = _menu("3\n%d\ndragon\nb\nq\n" % _number["default_seed"], "seed")
-check("a default seed (a word) can be set from the menu",
-      _saved.get("default_seed") == "dragon", _saved)
-_, _saved = _menu("3\n%d\nn\nb\nq\n" % _number["default_events"], "events")
-check("events can be turned off from the menu", _saved.get("default_events") is False, _saved)
-_, _saved = _menu("3\n%d\ny\nb\nq\n" % _number["default_deterministic"], "deterministic")
-check("deterministic mode can be turned on from the menu",
-      _saved.get("default_deterministic") is True, _saved)
 
 # --- a throwaway setting appears on the screen with no menu edit
 _settings.CONFIG_DEFAULTS["zz_probe"] = 3

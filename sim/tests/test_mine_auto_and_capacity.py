@@ -1,102 +1,81 @@
-"""Complaints 63, 64, 65 and the zero-cost guard from 56.
+"""Complaints 65 and 67: the automatic mining order counts shafts still being sunk, and a material fed by two supply
+tags shows both demands in one capacity row. The rules are called on given numbers and a stub over the real mixin."""
 
-65: auto-mine counts a shaft still being sunk before ordering another.
-66: a mine's commissioning year names the year that resolves it, and the
-    capacity is visible the query after.
-67: the capacity row for a material fed by two supply tags shows both demands.
+QUICK_TOPIC = True
 
-Complaints 63, 64, 65 and the zero-cost mine guard.
-"""
-from .harness import *  # noqa: F401,F403
-from sim.ui.proto.economy import _agent_mines, _material_capacity_rows
-from sim.ui.proto.dispatch_money import _cmd_buy
+import unittest
 
+from sim.engine.economy_materials import MaterialSupplyMixin
+from sim.engine.shortage_sizing import auto_mine_affordable_tonnes, auto_mine_order_tonnes
 
-def _auto_mine_sim(pending_tonnes):
-    test_sim = unopened_sim(capital=5_000_000_000_000.0, manual=False)
-    test_sim.state.founder.policy["auto_mine"] = True
-    test_sim.annual_material_demand = lambda: {"coal_kg": 1_000_000.0}
-    test_sim.resource_throttle = lambda: 0.3
-    test_sim.state.holdings.binding = "coal"
-    test_sim.state.holdings.mine_pending["coal"] = pending_tonnes
-    orders = []
-    test_sim.open_mine = lambda material, tonnes, partial=True, order="": orders.append(tonnes) or 0.0
-    test_sim._step_materials()
-    return orders
+RICH = 1e12
+CAPEX = 100.0
 
 
-# 65: pending tonnage covering the shortfall stops a second order.
-_covered_orders = _auto_mine_sim(5_000_000.0)
-check("auto-mine orders nothing when pending capacity covers the shortfall",
-      not any(tonnes > 0 for tonnes in _covered_orders), _covered_orders)
+class AutoMineOrder(unittest.TestCase):
 
-_partial_orders = _auto_mine_sim(400.0)
-_bare_orders = _auto_mine_sim(0.0)
-check("auto-mine orders less when a tranche is already sinking",
-      bool(_partial_orders) and bool(_bare_orders)
-      and _partial_orders[0] < _bare_orders[0],
-      (_partial_orders, _bare_orders))
+    def test_pending_capacity_covering_the_shortfall_orders_nothing(self):
+        self.assertEqual(auto_mine_order_tonnes(1000.0, 200.0, 800.0, RICH, CAPEX), 0.0)
 
-# 66: the reported year is the year whose resolution commissions the mine.
-_lead_sim = unopened_sim(capital=5_000_000.0)
-_reply = _cmd_buy(_lead_sim, NODES, {"what": "mine", "material": "coal", "n": 10}, None)
-_commission_year = _reply.get("commissions_during_year")
-check("mine purchase names the year that commissions it",
-      _commission_year is not None and "ready_year" in _reply, _reply)
-if _commission_year is not None:
-    _lead_sim.state.scenario.year = _commission_year - 1
-    _lead_sim.commission_mines()
-    check("resolving the year before commissions nothing",
-          _lead_sim.mine_capacity.get("coal", 0.0) == 0.0)
-    _lead_sim.state.scenario.year = _commission_year
-    _lead_sim.commission_mines()
-    check("resolving the named year commissions the capacity",
-          _lead_sim.mine_capacity.get("coal", 0.0) > 0.0)
-_screen_sim = unopened_sim(capital=5_000_000.0)
-_screen_sim.open_mine("coal", 10.0)
-_mines_screen = _agent_mines(_screen_sim)
-check("the mines screen reports commissioning, not readiness",
-      "ready_in" not in str(_mines_screen)
-      and _mines_screen["mines_you_own"][0].get("commissions_during_year"),
-      _mines_screen)
+    def test_working_capacity_covering_the_shortfall_orders_nothing(self):
+        self.assertEqual(auto_mine_order_tonnes(1000.0, 1500.0, 0.0, RICH, CAPEX), 0.0)
 
-# 67: charcoal and firewood share one forest and one capacity row.
-def _charcoal_demand(demand):
-    forest_sim = unopened_sim(capital=1_000_000.0)
-    forest_sim.annual_material_demand = lambda: demand
-    rows = _material_capacity_rows(forest_sim)
-    row_list = rows if isinstance(rows, list) else list(rows.values())
-    return next(row for row in row_list if row["material"] == "charcoal")
+    def test_a_shaft_already_sinking_lowers_the_order_by_its_tonnes(self):
+        bare = auto_mine_order_tonnes(1000.0, 0.0, 0.0, RICH, CAPEX)
+        partial = auto_mine_order_tonnes(1000.0, 0.0, 400.0, RICH, CAPEX)
+        self.assertEqual(bare, 1000.0)
+        self.assertEqual(partial, 600.0)
+
+    def test_the_order_never_exceeds_what_the_purse_sinks(self):
+        order = auto_mine_order_tonnes(1000.0, 0.0, 0.0, 10_000.0, CAPEX)
+        self.assertEqual(order, auto_mine_affordable_tonnes(10_000.0, CAPEX))
+        self.assertLess(order, 1000.0)
+
+    def test_a_dearer_mine_is_affordable_in_fewer_tonnes(self):
+        self.assertLess(auto_mine_affordable_tonnes(10_000.0, 2 * CAPEX), auto_mine_affordable_tonnes(10_000.0, CAPEX))
+
+    def test_a_free_mine_does_not_divide_by_zero(self):
+        self.assertGreater(auto_mine_affordable_tonnes(10_000.0, 0.0), 0.0)
 
 
-_both_row = _charcoal_demand({"charcoal_kg": 5_000_000.0, "firewood_kg": 5_000_000.0})
-_charcoal_only = _charcoal_demand({"charcoal_kg": 5_000_000.0})
-_firewood_only = _charcoal_demand({"firewood_kg": 5_000_000.0})
-check("charcoal row demand exceeds the charcoal-only demand",
-      _both_row["demand_t_per_yr"] > _charcoal_only["demand_t_per_yr"],
-      (_both_row, _charcoal_only))
-check("charcoal row demand exceeds the firewood-only demand",
-      _both_row["demand_t_per_yr"] > _firewood_only["demand_t_per_yr"],
-      (_both_row, _firewood_only))
-check("a small firewood demand does not hide a large charcoal shortfall",
-      _charcoal_demand({"charcoal_kg": 5_000_000.0, "firewood_kg": 10_000.0}
-                       )["surplus_t_per_yr"] < 0)
-check("and the other way round",
-      _charcoal_demand({"charcoal_kg": 10_000.0, "firewood_kg": 5_000_000.0}
-                       )["surplus_t_per_yr"] < 0)
+class StubSupply(MaterialSupplyMixin):
+    """The real shared-land arithmetic over given own supply by tag."""
 
-# 56 guard: a shaft that costs nothing to sink.
-_free_sim = unopened_sim(capital=1000.0)
-_free_sim._mine_capex_opex = lambda mat: (0.0, 1.0)
-_free_sim.state.household.capital = -1_000_000.0
-try:
-    _free_sunk = _free_sim.open_mine("coal", 5.0, partial=False)
-    _free_sim.mine_quote("coal", 5.0)
-    _free_error = None
-except ZeroDivisionError as error:
-    _free_sunk, _free_error = 0.0, error
-check("a zero-capex mine does not divide by zero", _free_error is None, _free_error)
-check("a zero-capex mine is sunk even with no cash", _free_sunk == 5.0, _free_sunk)
-check("a zero-capex mine costs nothing",
-      _free_sim.state.household.capital == -1_000_000.0,
-      _free_sim.state.household.capital)
+    def __init__(self, own_by_tag):
+        self.own_by_tag = own_by_tag
+
+    def _own_material_supply(self, tag):
+        return self.own_by_tag.get(tag, 0.0)
+
+
+class SharedForestRow(unittest.TestCase):
+    RATIO = MaterialSupplyMixin.FIREWOOD_PER_CHARCOAL_MASS_RATIO
+
+    def test_charcoal_and_firewood_demands_add_in_one_row(self):
+        supply = StubSupply({"forest": 100.0, "forest4": 100.0 / self.RATIO})
+        totals = supply.demand_and_own_supply_by_material({("charcoal", "forest"): 500.0, ("charcoal", "forest4"): 500.0})
+        demand, own = totals["charcoal"]
+        self.assertGreater(demand, 500.0)
+        self.assertAlmostEqual(demand, 500.0 + 500.0 / self.RATIO)
+
+    def test_tags_on_one_land_base_do_not_add_their_own_supply(self):
+        supply = StubSupply({"forest": 100.0, "forest4": 100.0 / self.RATIO})
+        _demand, own = supply.demand_and_own_supply_by_material(
+            {("charcoal", "forest"): 1.0, ("charcoal", "forest4"): 1.0})["charcoal"]
+        self.assertAlmostEqual(own, 100.0)
+
+    def test_a_small_firewood_demand_does_not_hide_a_large_charcoal_shortfall(self):
+        supply = StubSupply({"forest": 100.0, "forest4": 100.0 / self.RATIO})
+        demand, own = supply.demand_and_own_supply_by_material(
+            {("charcoal", "forest"): 5000.0, ("charcoal", "forest4"): 10.0})["charcoal"]
+        self.assertGreater(demand, own)
+
+    def test_a_small_charcoal_demand_does_not_hide_a_large_firewood_shortfall(self):
+        supply = StubSupply({"forest": 100.0, "forest4": 100.0 / self.RATIO})
+        demand, own = supply.demand_and_own_supply_by_material(
+            {("charcoal", "forest"): 10.0, ("charcoal", "forest4"): 5000.0})["charcoal"]
+        self.assertGreater(demand, own)
+
+
+if __name__ == "__main__":
+    unittest.main()

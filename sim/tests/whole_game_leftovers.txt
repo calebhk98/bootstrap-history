@@ -53,14 +53,11 @@ interest_groups
 interface_honesty
 knowledge_loss_and_consequences
 lighting_inputs
-material_haul_legs
 military_logistics_wiring
-mine_auto_and_capacity
 mod_effects
 mod_stores
 money_readouts_finish
 opening_floor_and_thin_trades
-options_from_settings_table
 plague_mitigation_realism
 plague_no_double_count
 player_choice_routes
