@@ -503,7 +503,7 @@ def _play_handle_session_command(_word0, _tokens, sim, session, app_cfg, args):
             print("   'again' is for once this game has ended. 'restart' starts a different game now.")
             return True, session, False, None
         known = replay.write_known_routes(sim, replay.routes_path(session)) if session \
-            else sorted(set(replay.built_routes(sim)) | set(replay.remembered(sim, replay.TOPIC).get("carried", [])))
+            else replay.routes_to_carry(sim)
         print()
         return True, session, True, _new_game(_load_civ_list(), app_cfg, known_routes=known)
     if _word0 == "restart" and len(_tokens) == 1:

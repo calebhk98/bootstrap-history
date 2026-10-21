@@ -1,6 +1,6 @@
 # Request: a replay option that remembers which technologies you built in an earlier run, with fog lifted only for those
 
-**Status:** closed - `again` in `play` and `--known-routes` carry the built ids with fog lifted only for them; tests `sim/tests/test_replay_known_routes.py` and `sim/tests/test_replay_again_prompt.py` (drives the `again` command)
+**Status:** closed - `again` in `play` and `--known-routes` carry the built ids with fog lifted only for them; tests `sim/tests/test_replay_known_routes.py` and `sim/tests/test_replay_again_prompt_scenario.py` (drives the `again` command)
 
 C: fog resets between runs; for a mortal scenario meant to be replayed, a "lessons" carry-over after a death (a new run that remembers which nodes you built before, fog lifted only for them) would make replays less of a re-discovery grind. Not a defect; fog staying serious was praised by both Rome testers ("please retain fog").
 
