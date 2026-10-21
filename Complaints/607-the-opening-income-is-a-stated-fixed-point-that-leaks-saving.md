@@ -1,6 +1,6 @@
 # The opening's income is a fixed point that leaks saving, and fixtures state an income to avoid it
 
-**Status:** open - households count their firms' equity (605, closed), which lifts spending and lending a little; the leak is not closed
+**Status:** open - `opening_stationary.py` solves the stationary runs, hours and incomes but is not yet what the opening seeds from (473 Update 6); households count their firms' equity (605, closed), which lifts spending and lending a little; the leak is not closed
 
 Part of Complaint 526 (The opening's income leaks saving, so the economy opens at subsistence and its wage keeps falling).
 

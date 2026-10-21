@@ -1,6 +1,6 @@
 # The opening's income leaks saving, so the economy opens at subsistence and its wage keeps falling
 
-**Status:** open - umbrella; the plan is carried by 606, 605, 608, 607 (closes when they do); measurement history in `Complaints/reports/526-history.md`
+**Status:** open - umbrella (stationary solver started, 473 Update 6); the plan is carried by 606, 605, 608, 607 (closes when they do); measurement history in `Complaints/reports/526-history.md`
 
 **What is wrong now.** The opening sets household income as the fixed point of income and the demand it pays for
 (`sim/economy/opening_income.py`). Households save part of any surplus and nothing in the fixed point spends that saving
