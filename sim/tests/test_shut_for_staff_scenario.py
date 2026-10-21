@@ -1,5 +1,6 @@
 """Scenarios for Complaint 87 in a whole game: state names the missing foreman behind a shut, profitable concern, and stops
-when the foreman is on the payroll. The row building and the rendering are in test_shut_for_staff."""
+when the foreman is on the payroll. The row building and the rendering are in test_shut_for_staff;
+what a concern lacks (`staffing_missing_to_open`) is `missing_when_opened`, called in test_staffing_choice_rules."""
 from .harness import *  # noqa: F401,F403
 
 # Complaint 87: state names the missing specialist behind each shut concern.
