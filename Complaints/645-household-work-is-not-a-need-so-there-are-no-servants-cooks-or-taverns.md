@@ -68,6 +68,5 @@ Cooked food, cleaning and childcare as bought substitutes are not yet data in `h
 
 ## Effect measured after the sourced hours (PM)
 
-The opening's typical traded good now sells below its making cost (`price_over_making_cost_band_validation`, see 558): the
-stationary opening (473) does not yet take the larger household day out of the hours it plans with. The figures stay; the
-opening is what has to read them.
+The opening's typical traded good now sells below its making cost (`price_over_making_cost_band_validation`, see 558). The
+cause in the stationary opening (473) is not yet traced. The sourced figures stay.

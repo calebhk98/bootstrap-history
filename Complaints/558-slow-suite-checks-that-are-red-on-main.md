@@ -18,8 +18,8 @@ that commit. Re-run the same command for the current list; this section is repla
   basket), `economy_money_regimes_norse` (weighed-metal price level): 473, the opening that never settles.
 - `price_over_making_cost_band_validation` (the typical traded good sells at no less than its cost of making): red since the
   sourced household work hours (645, merge e72b36c0) took about two thirds more of each household's day; the median good opens
-  at about nine tenths of its making cost. Owner: 473 (the opening is solved before households' own hours are counted out of
-  the offer); measured with `python3 -m sim.tests --slow --only price_over_making_cost_band_validation --jobs 1`.
+  at about nine tenths of its making cost. Owner: 473; why the opening does not
+  carry the larger household day into its prices is not yet traced. Measured with `python3 -m sim.tests --slow --only price_over_making_cost_band_validation --jobs 1`.
 - `economy_state_budget_validation` (a balanced budget keeps the state's coin share; printing raises prices): 526 and 473.
 - `economy_tin_dearer_than_copper`: 511 (GitHub #65).
 - `economy_bronze_market_price`: passes at the owner's bound (an order of magnitude; 502 closed).
