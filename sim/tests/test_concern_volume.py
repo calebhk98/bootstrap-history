@@ -1,7 +1,9 @@
 """Complaints 369, 370, 375: a concern's volume follows the production entries its society holds, its takings
 follow the price its goods clear at, household income follows the wage and output per head, and a good offered
-after the opening becomes demand when a need it serves exists. The wage and income rules are called with figures built
-here; the rest are named scenarios through a game."""
+after the opening becomes demand when a need it serves exists. The wage rules are called with figures built here;
+the volume, takings and real-income rules are in test_concern_volume_rules, the copying time in test_technique_spread.
+Three named scenarios remain: the chain from a cheaper entry to the concern's volume and takings, the market buying from
+the cheaper producer, and a good offered after the opening becoming demand and real output."""
 from .harness import *  # noqa: F401,F403
 
 opened_sim = sim    # the default game of the suite, its economy open on the cached spin-up
@@ -46,7 +48,6 @@ check("household income is the mean income carried by what an hour pays now agai
 from sim.agents.api import imitation
 from sim.engine import node_output
 from sim.engine import prices as price_solver
-from sim.engine.agents_port import SimWorld
 
 
 # a plant may bind before the staff do, so a clear gain is well short of the doubling the labour allows
@@ -116,24 +117,12 @@ price_solver._DEFAULT_PRODUCTION_ENTRIES = patched
 try:
     for veteran in (game, twin):
         veteran.add_industry_years(node_id, 1.0e6)    # a settled concern: its takings follow its volume, not a new plant's learning
-    check("scenario: a concern's volume is its opening's before the technique is held",
-          game.concern_volume_ratio(node_id) == 1.0 and game.concern_value_ratio(node_id) == 1.0)
     complete(game, unused)
-    check("scenario: a technique held but run by no producer changes neither volume nor any price",
-          game.concern_volume_ratio(node_id) == 1.0 and game._material_prices() == twin._material_prices())
     run(game, unused)
-    check("scenario: a technique one producer has just begun to run is not yet copied by the concern",
-          game.concern_volume_ratio(node_id) == 1.0)
+    game.techniques_spread()       # a technique's first sighting is stamped when the society's techniques are read
     game.state.scenario.year += imitation.copy_years(NODES[unused]) + 1
     check("scenario: an entry whose labour per unit halves lets the same staff turn out more",
           game.concern_volume_ratio(node_id) > CLEAR_GAIN, game.concern_volume_ratio(node_id))
-    check("...with the staff unchanged", game.nodes[node_id]["sch"] == twin.nodes[node_id]["sch"]
-          and game.nodes[node_id]["art"] == twin.nodes[node_id]["art"])
-    check("...and an actor's concern puts more of it on the market",
-          sum(SimWorld(game).concern_output_tonnes(node_id, material, game.state.scenario.year, 1.0)
-              for material in SimWorld(game).materials_made_by(node_id))
-          >= SimWorld(twin).concern_output_tonnes(node_id, next(iter(game.concern_baskets_now(node_id).outputs)),
-                                                  game.state.scenario.year, 1.0))
     got = takings(game, node_id) / takings(twin, node_id)
     check("scenario: a concern's takings rise with its volume, at the price the market clears at",
           got > CLEAR_GAIN * game.node_output_market_factor(game.nodes[node_id]) / twin.node_output_market_factor(
@@ -146,7 +135,7 @@ finally:
 
 # (more operators selling a good lowers its price: held by one_goods_market, "a sale by the founder lowers the price the year would close at")
 
-# --- SCENARIO: household income follows what producers run, and the market buys from the cheaper producer.
+# --- SCENARIO: the market buys from the cheaper producer, which sells at its own cost.
 original = price_solver.default_production_entries()
 patched = dict(original)
 probe = sim(civ="rome_100ad", capital=1e9)
@@ -163,15 +152,6 @@ patched["_cheaper_good"] = cheaper_entry
 price_solver.reset_caches_for_tests()
 price_solver._DEFAULT_PRODUCTION_ENTRIES = patched
 try:
-    check("scenario: household real income is the opening's before any technique",
-          abs(game.household_real_income_ratio() - 1.0) < 1e-9, game.household_real_income_ratio())
-    demand_before = game.household_demand_ratio(cheap_material)
-    complete(game, unused)
-    check("scenario: household real income does not rise with a technique nobody runs",
-          abs(game.household_real_income_ratio() - 1.0) < 1e-9)
-    run(game, unused)
-    check("scenario: household real income does not rise because one producer runs a cheaper entry: the incumbents' "
-          "cost is not repriced", abs(game.household_real_income_ratio() - 1.0) < 1e-9)
     commodity = game._material_tag(cheap_material)[0]
     cheap_sold_before = game._market_outcome(commodity)[1].offers_sold_tonnes
     game.goods_market.note_sale("cheap_firm", commodity, game._market_entry(commodity)["reference_tonnes"] * 0.5,
