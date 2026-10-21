@@ -526,7 +526,7 @@ class AgentEconomy(TilePricesMixin):
         weather = sim._pooled_farm_weather_multiplier(sim.state.scenario.year, harmed=False)   # harm is applied per producer below
         economy = self._economy
         harmed = externalities.yield_factors(sim, sim.state.scenario.year)
-        yields = economy_port_sites.crop_yields(economy, weather)
+        yields = economy_port_sites.crop_yields(economy, weather, sim.farm_weather_by_tile(sim.state.scenario.year))
         yields = economy_port_sites.harmed_yields(yields, harmed, economy_api.producers_of(economy))
         entrant_share, attrition_share = working_age_turnover(population)
         return YearInputs(year=sim.state.scenario.year, population_by_tile=sim.labour.settlement_tiles(),

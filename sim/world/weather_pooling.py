@@ -43,13 +43,18 @@ def correlation_cholesky(cells, decorrelation_length_km):
     return lower
 
 
+def cell_multipliers(cells, cholesky_lower, independent_draws, stdev, floor, ceiling):
+    """[harvest multiplier of each cell, in order]: its standard-normal draw correlated through the factor, scaled to
+    1 + stdev * z and clipped to [floor, ceiling]."""
+    return [max(floor, min(ceiling, 1.0 + stdev * sum(cholesky_lower[row][col] * independent_draws[col] for col in range(row + 1))))
+            for row in range(len(cells))]
+
+
 def pooled_multiplier(cells, cholesky_lower, independent_draws, stdev, floor, ceiling):
-    """The weight-averaged harvest multiplier: each cell's standard-normal draw is correlated through the factor,
-    scaled to 1 + stdev * z, and clipped to [floor, ceiling] before the cells are averaged by weight."""
+    """The weight-averaged harvest multiplier: the cells' own multipliers (`cell_multipliers`) averaged by weight."""
     pooled = 0.0
-    for row, cell in enumerate(cells):
-        correlated_z = sum(cholesky_lower[row][col] * independent_draws[col] for col in range(row + 1))
-        pooled += cell.weight * max(floor, min(ceiling, 1.0 + stdev * correlated_z))
+    for cell, multiplier in zip(cells, cell_multipliers(cells, cholesky_lower, independent_draws, stdev, floor, ceiling)):
+        pooled += cell.weight * multiplier
     return pooled
 
 
