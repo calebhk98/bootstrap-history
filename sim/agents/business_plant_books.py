@@ -5,7 +5,7 @@ country's own part of the economy (`books_at_country_prices`): its prices value 
 crew, its cost scale carries the tree's book-coin money. A figure the country has no record of makes the whole
 reading None, never the home figure; the plant then stands idle that year.
 """
-from typing import Any, Callable, Mapping, NamedTuple, Optional
+from typing import Any, Callable, Mapping, NamedTuple, Optional, Tuple
 
 
 class PlantBooks(NamedTuple):
@@ -19,6 +19,11 @@ def home_books(world: Any, entry_key: str, opened_year: int, rivals: float, size
 	"""The books of a plant in the home economy."""
 	return PlantBooks(world.concern_takings(entry_key, opened_year, rivals, size), world.upkeep(entry_key, size),
 					  world.concern_wage_bill(entry_key, size))
+
+
+def home_costs(world: Any, entry_key: str) -> Tuple[float, float]:
+	"""(upkeep, wage bill) of a plant of the concern at its founding size in the home economy."""
+	return world.upkeep(entry_key), world.concern_wage_bill(entry_key)
 
 
 def book_takings(sim: Any, node_id: str, ramp: float) -> float:

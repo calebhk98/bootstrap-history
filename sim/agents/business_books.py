@@ -1,5 +1,5 @@
 """A business's yearly books: what a plant takes, costs and pays, the same arithmetic for any owner."""
-from typing import Any, Tuple
+from typing import Any, Optional, Tuple
 
 from . import firm_entry, ledger
 from .business import Business
@@ -47,6 +47,8 @@ def carry(business: Business, owner: Any, entry_key: str, world: Any) -> float:
 	size = business.size_of(entry_key)
 	rent = world.site_rent(entry_key, size, owner.location())
 	management = firm_entry.management_cost(world, entry_key, size)
+	if rent is None or management is None:   # the plant's country keeps no record of a figure: it pays nothing it cannot read
+		return 0.0
 	ledger.transfer(owner, world.edge(EDGE_LANDOWNERS), rent, "site rent")
 	if owner.record.country is None:
 		world.pay_wages(owner, management, "management")
@@ -55,9 +57,10 @@ def carry(business: Business, owner: Any, entry_key: str, world: Any) -> float:
 	return rent + management
 
 
-def yearly_costs(world: Any, entry_key: str) -> Tuple[float, float]:
-	"""(upkeep, wage bill) of a plant of the entry at its founding size: what a new operator expects to pay."""
-	return world.upkeep(entry_key), world.concern_wage_bill(entry_key)
+def yearly_costs(world: Any, entry_key: str) -> Optional[Tuple[float, float]]:
+	"""(upkeep, wage bill) of a plant of the entry at its founding size: what a new operator expects to pay; None
+	when the actor's country keeps no record of a figure they need."""
+	return world.plant_costs(entry_key)
 
 
 def ramp(business: Business, entry_key: str, world: Any) -> float:

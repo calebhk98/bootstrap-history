@@ -127,11 +127,12 @@ def land_rent_per_hectare(economy, country=None):
     return sum(rents) / len(rents) if rents else 0.0
 
 
-def land_rent_at_tile(economy, tile):
-    """Rent per hectare-year the land market let land at on one tile last year; the mean over the tiles where
-    land was let where none was let on this tile (zero where none was let anywhere)."""
+def land_rent_at_tile(economy, tile, country=None):
+    """Rent per hectare-year the land market let land at on one tile last year; the mean over the tiles of `country`
+    (the home country's when none is named) where land was let where none was let on this tile (zero where none was let
+    anywhere)."""
     rent = economy.record.land_rent.get(tile, 0.0)
-    return rent if rent > 0.0 else land_rent_per_hectare(economy)
+    return rent if rent > 0.0 else land_rent_per_hectare(economy, country)
 
 
 def output_by_tile(economy):

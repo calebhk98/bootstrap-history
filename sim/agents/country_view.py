@@ -12,6 +12,7 @@ from .country_population import people_counted
 from .country_state import CountryStateView
 from .country_state_books import CountryBooksView
 from .country_state_crew import CountryCrewView
+from .country_state_site import CountrySiteView
 from .no_country_economy import NoCountryEconomy
 from .protocols import World
 from .records import CountryProfile
@@ -36,7 +37,7 @@ class _NoGovernment:
 		return 0.0, 0.0
 
 
-class CountryWorld(CountryStateView, CountryBooksView, CountryCrewView):
+class CountryWorld(CountryStateView, CountryBooksView, CountryCrewView, CountrySiteView):
 	"""What an actor of `profile`'s country sees. `holder` is the registry (or its saved state)."""
 
 	def __init__(self, shared: Any, profile: CountryProfile, holder: Any) -> None:

@@ -401,8 +401,22 @@ class World(Protocol):
 	def concern_wage_bill(self, node_id: str, capacity: float = 1.0) -> float:
 		...
 
-	def site_rent(self, node_id: str, capacity: float = 1.0, tile: Optional[str] = None) -> float:
-		"""Yearly rent of the site a concern run at `capacity` times its founding size occupies, on `tile`."""
+	def site_rent(self, node_id: str, capacity: float = 1.0, tile: Optional[str] = None) -> Optional[float]:
+		"""Yearly rent of the site a concern run at `capacity` times its founding size occupies, on `tile`; None when
+		the asking actor's country keeps no land rent."""
+		...
+
+	def site_hectares(self, node_id: str, capacity: float = 1.0) -> float:
+		"""Hectares a concern run at `capacity` times its founding size occupies."""
+		...
+
+	def hourly_pay(self, trade: str) -> Optional[float]:
+		"""What an hour of a trade pays in the asking actor's country; None when its labour markets pay nothing for it."""
+		...
+
+	def plant_costs(self, node_id: str) -> Optional[Tuple[float, float]]:
+		"""(upkeep, wage bill) of a plant of the concern at its founding size, in the asking actor's country; None when
+		that country keeps no record of a figure they need."""
 		...
 
 	def free_fte(self, trade: str, actor_id: Optional[str]) -> Optional[float]:
@@ -415,8 +429,8 @@ class World(Protocol):
 	def copy_risk(self, node_id: str) -> float:
 		...
 
-	def concern_gross(self, node_id: str) -> float:
-		"""Yearly takings of the founder's concern once it has ramped up."""
+	def concern_gross(self, node_id: str) -> Optional[float]:
+		"""Yearly takings of the concern once it has ramped up, in the asking actor's country; None when it keeps no record."""
 		...
 
 	def market_key(self, node_id: str) -> str:
@@ -451,6 +465,10 @@ class World(Protocol):
 
 	def book_takings(self, node_id: str, opened_year: int) -> float:
 		"""Yearly takings of one founding size of a concern at its ramp in the tree's book coin (no cost scale, no hazard factor)."""
+		...
+
+	def book_takings_at_full_ramp(self, node_id: str) -> float:
+		"""Yearly takings of one founding size of a concern once ramped up, in the tree's book coin."""
 		...
 
 	def book_upkeep(self, node_id: str) -> float:

@@ -112,6 +112,28 @@ class CountryEconomyTests(unittest.TestCase):
         self.assertEqual(sum(people for people, _rent in curve), sum(c.people for c in north))
         self.assertEqual(CountryAnswers(self.economy, fixture.NORTH).land_rent_curve(set()), [(p, 0.0) for p, _ in curve])
 
+    def test_a_countrys_site_rent_is_its_own_land_markets_not_the_home_mean(self):
+        from sim.engine.economy_port_country import CountryAnswers
+        record, coin = self.economy.record, self.setup.coin_per_unit
+        kept = dict(record.land_rent)
+        north_tiles = set(self.setup.tiles_of(fixture.NORTH))
+        answers = CountryAnswers(self.economy, fixture.NORTH)
+        try:
+            for tile in north_tiles:
+                record.land_rent.pop(tile, None)
+            record.land_rent[fixture.HILLS] = 50.0     # the home country lets land; the north none
+            self.assertIsNone(answers.land_rent_at(None))   # nothing let in the country: none, never the home mean
+            self.assertIsNone(answers.land_rent_at(fixture.NORTH_FARMS))
+            record.land_rent[fixture.NORTH_FARMS] = 2.0
+            record.land_rent[fixture.NORTH_PORT] = 4.0
+            self.assertAlmostEqual(answers.land_rent_at(fixture.NORTH_FARMS), 2.0 * coin)
+            record.land_rent[fixture.NORTH_PORT] = 0.0
+            self.assertAlmostEqual(answers.land_rent_at(fixture.NORTH_PORT), 2.0 * coin)   # none let there: the country's mean
+            self.assertAlmostEqual(answers.land_rent_at(fixture.HILLS), 2.0 * coin)        # a home tile is not the country's
+        finally:
+            record.land_rent.clear()
+            record.land_rent.update(kept)
+
     def test_a_country_with_no_tiles_has_no_figures(self):
         self.assertEqual(country_figures.wages_per_hour(self.economy, "nowhere"), {})
         self.assertIsNone(country_figures.output_value(self.economy, "nowhere"))

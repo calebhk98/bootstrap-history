@@ -107,10 +107,11 @@ def _found_rival(registry: Any, world: Any, parent: Any, node_id: str, pool: Lis
 	"""A rival of the parent founded into its concern, or None when an entrant would not earn enough."""
 	rivals = registry.rivals_of(node_id, "")
 	tile = firm_entry.firm_tile(registry, parent)
-	upkeep, wages = business_books.yearly_costs(world, node_id)
-	expected = (firm_entry.expected_entry_gross(registry, world, node_id, rivals, 1.0)
-				- upkeep - wages
-				- firm_entry.carrying_cost(world, node_id, tile=tile))
+	yearly = business_books.yearly_costs(world, node_id)
+	carried = firm_entry.carrying_cost(world, node_id, tile=tile)
+	if yearly is None or carried is None:   # the parent's country keeps no record of a cost: no rival is founded
+		return None
+	expected = firm_entry.expected_entry_gross(registry, world, node_id, rivals, 1.0) - sum(yearly) - carried
 	expected -= enforcement.expected_damages(world, "", node_id, expected)
 	if expected <= 0.0:
 		return None

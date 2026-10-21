@@ -6,7 +6,7 @@ dictionaries a test fills in. A test that needs a member this does not have subc
 own file, so tests owning different mechanisms never edit this one together.
 """
 import random
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 from sim.agents import business_plant_books, ledger
 from sim.agents.records import ActorsState
@@ -189,6 +189,12 @@ class FakeWorld:
 	def concern_staff(self, node_id: str) -> Dict[str, float]:
 		return {trade: hours / self.hours_per_person_year
 				for trade, hours in (self.nodes[node_id].get("lab") or {}).items()}
+
+	def hourly_pay(self, trade: str) -> Optional[float]:
+		return float(self.labour_market.quote(trade, 0.0))
+
+	def plant_costs(self, node_id: str) -> Optional[Tuple[float, float]]:
+		return self.upkeep(node_id), self.concern_wage_bill(node_id)
 
 	def free_fte(self, trade: str, actor_id: Optional[str]) -> Optional[float]:
 		return self.free_people.get(trade)

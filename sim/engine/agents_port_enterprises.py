@@ -32,6 +32,10 @@ class EnterpriseView:
 		"""Yearly takings of one founding size of a concern at its ramp, in the tree's book coin: no cost scale, no hazard factor."""
 		return business_plant_books.book_takings(self._sim, node_id, self.ramp(opened_year, node_id))  # type: ignore[attr-defined]
 
+	def book_takings_at_full_ramp(self, node_id: str) -> float:
+		"""Yearly takings of one founding size of a concern once ramped up, in the tree's book coin."""
+		return business_plant_books.book_takings(self._sim, node_id, 1.0)
+
 	def book_upkeep(self, node_id: str) -> float:
 		"""Yearly upkeep of one founding size of a concern without its crew's pay, in the tree's book coin."""
 		return business_plant_books.book_upkeep(self._sim, node_id)

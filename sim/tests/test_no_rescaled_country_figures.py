@@ -10,9 +10,9 @@ from .harness import check
 
 root = pathlib.Path(__file__).resolve().parents[1]
 LEVELS = {"wage_index", "price_index"}
-# where a country profile's levels may be read: building the profile and its record, and the plant books, which read
+# where a country profile's levels may be read: building the profile and its record, and the plant books, which and the entry figures read
 # the country's own declared scale on the tree's book coin (as the home books read the home civilisation's), never a home answer scaled
-PROFILE_LEVEL_READERS = {"agents/cast.py", "agents/records.py", "agents/country_state_books.py"}
+PROFILE_LEVEL_READERS = {"agents/cast.py", "agents/records.py", "agents/country_state_books.py", "agents/country_state_site.py"}
 # the helpers that used to scale a home answer
 REMOVED = {"_relative", "_home_profile"}
 
