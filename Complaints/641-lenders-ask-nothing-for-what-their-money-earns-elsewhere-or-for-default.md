@@ -1,6 +1,6 @@
 # Lenders ask nothing for what their money earns elsewhere or for default, so the rate clears at zero
 
-**Status:** partly - the credit bound is now on the real rate with quantity rationing by risk (see Changes after the probe; the opening rate is not yet re-measured), the lowest ask (time preference plus expected inflation, plus the lender's own loss record) and the bank's spread (loss record plus capital shortfall) are built; still open: the land-yield and public-debt alternatives are computed but have no live input (no title sale price, no state bond sold to households), see Open
+**Status:** partly - the credit bound is now on the real rate with quantity rationing by risk (see Changes after the probe; re-measured: credit now clears at the opening, at a nominal rate that follows the runaway expected inflation of 473), the lowest ask (time preference plus expected inflation, plus the lender's own loss record) and the bank's spread (loss record plus capital shortfall) are built; still open: the land-yield and public-debt alternatives are computed but have no live input (no title sale price, no state bond sold to households), see Open
 
 **What was wrong.** Households lent at `max(0, expected_inflation)`, `credit.clear` (`sim/economy/credit.py`) floored the rate at zero
 and dropped it to the lowest ask when funds sat idle, and a bank asked its depositors' rate plus a fixed margin. So a
@@ -69,3 +69,15 @@ functions with built offers: a glut leaves the rate at the lenders' floor, not z
   unsettled price level is 473's). `capital_market.market_rate_answered` still bounds the engine-facing rate nominally
   (`bounded_rate` takes `expected_inflation` but `economy_capital_market.market_rate` does not pass it); `no_offer_at_rate` is
   returned but not stored on the record.
+
+## Re-measured after the real-rate bound (2026-10-21)
+
+Probe: `Complaints/reports/641-rate-probe.md`, with the spy on `credit.clear_with_cause` and loans summed by `principal`, on an
+opened Rome game with the full spin-up at the merge of the real-rate change. The working-capital clearing now lends a large share
+of the funds offered (before: nothing), with borrowers rationed by risk; the second clearing still returns `no_offer_at_rate`
+when its few lenders ask above what borrowers can pay. The nominal rate is above one hundred per cent a year because cohorts
+expect inflation of that order: the credit rules now pass expected inflation through as they should, and the level itself is
+473's runaway price index. Borrowers' caps are still very large because revenue over cost is, at runaway prices. No firm had
+entered in the measured year (`game.actors.active_firms()`). What is left here: the land-yield and public-debt inputs; the
+engine-facing `economy_capital_market.market_rate` still clamps nominally; the clearing's cause is not yet stored on the record
+or shown. The rate's level closes with 473.
