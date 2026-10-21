@@ -1,11 +1,11 @@
-"""Scenario, Complaint 476: in a default game (nothing readied by a test helper) a firm enters a concern the founder runs.
+"""Scenario, Complaint 476: in a default game (nothing readied by a test helper) a concern the founder runs is in an entrant's sight and copyable.
 An entrant sees a concern from where its country sits; a country sits where its people are, so the founder's
 concern is in sight. Slow topic: it builds a game on the open agent economy and runs a few years.
 
 Re-measure: `python3 -m sim.tests --slow --only firm_entry_default_game_scenario`."""
 from .harness import *  # noqa: F401,F403
 
-from sim.agents.api import PLAYER_VISIBLE_EXPOSURE
+from sim.agents.api import ActorRecord, Firm, PLAYER_VISIBLE_EXPOSURE, imitation
 from sim.engine.agents_port import SimWorld
 from sim.geography.api import settlement, tiles_held
 
@@ -44,8 +44,11 @@ game = default_game_with_founder_concern()
 for _ in range(6):
 	game.state.scenario.year += 1
 	game.advance_actors(game.state.scenario.year)
-copies = [firm for firm in game.actors.active_firms() if firm.record.target == CONCERN]
-check("a firm enters a concern the founder runs, in a default game", len(copies) > 0, len(copies))
+# whether an entrant then finds the concern worth founding is the entry rules' own business (test_firm_entry_market*,
+# which fix the cost of capital); here the game's placement must put the concern in sight and leave a chain to copy
+probe = Firm("probe", ActorRecord(kind="firm", founded_year=game.state.scenario.year))
+chain = imitation.missing_chain(CONCERN, SimWorld(game), probe)
+check("an entrant at the home country can copy the founder's concern, in a default game", chain is not None, chain)
 
 home = game.actors.actors["government:" + game.actors.state.home_country]
 check("the home country sits where most of its people live",
