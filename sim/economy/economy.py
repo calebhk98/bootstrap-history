@@ -20,7 +20,7 @@ from .mint_labour import close_year as close_mint_year, mint_agent
 from .money_audit import MoneyAudit, year_report
 from .flow_rates import flow_imbalance
 from .entry_year import close_idle_producers, open_entrants, restake_owners
-from . import household_hours_year, household_work_year, land_bid_year, opening_leisure
+from . import capital_year, household_hours_year, household_work_year, land_bid_year, opening_leisure
 from .households_own import (hours_for_own_plan, own_production, own_production_options, plot_hectares)
 from .labour_inputs import labour_context
 from .labour_state import scale_people
@@ -198,6 +198,7 @@ class Economy:
         for plan in plans.values():
             for bid in plan.bids:
                 order_book.setdefault((bid.good, bid.area), ([], []))[0].append(bid)
+        funds = capital_year.before_lending(setup, record, view, ledger, funds, view.year, inputs.institutions)   # holders sell shares and loans; depositors run on banks
         funds, pledged = banks.intermediate(setup, record, funds, view.year, inputs.institutions)
         plant_runs = self._lend(funds, view, order_book, ledger, pledged, inputs.credit_asks)
         merchant_orders(setup, record, view, self.area_map, self.carriage, order_book)
