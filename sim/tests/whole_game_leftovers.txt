@@ -55,8 +55,6 @@ knowledge_loss_and_consequences
 military_logistics_wiring
 mod_effects
 mod_stores
-plague_mitigation_realism
-plague_no_double_count
 player_choice_routes
 player_guidance_commands
 player_log
