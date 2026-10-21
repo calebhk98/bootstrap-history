@@ -11,12 +11,11 @@ from typing import Any, Dict, FrozenSet, List, Optional, Tuple
 from sim.geography.api import arable_hectares, settlement, territory, usable_modes
 from sim.world import demography
 
-from . import collection, government_levers, ledger, revenue, strata_observed
+from . import budget, collection, government_levers, ledger, revenue, strata_observed
 from .collection_world import CollectionView
 from .edges import EDGE_STATE_SPENDING, EDGE_WORKERS
 from .no_country_economy import NoCountryEconomy
 from .payroll import share_out
-from .tuning_spending import THREAT_ARMY_RESPONSE
 from .tuning_country import ARMY_SHARE_OF_POPULATION
 
 # the keys of a civilisation's data a country's state reads
@@ -149,16 +148,14 @@ class CountryStateView(CollectionView):
 
 	def threat_pressure(self) -> float:
 		"""Probability a year of the country's own declared hazards sack a site."""
-		year = self._shared.year
-		return sum(float(hazard.get("sack_chance", 0.0)) for hazard in self.profile.extra.get(HAZARDS_KEY, [])
-				   if hazard.get("years") and hazard["years"][0] <= year <= hazard["years"][1])
+		return budget.sack_pressure(self.profile.extra.get(HAZARDS_KEY, []), self._shared.year)
 
 	def army_wanted(self) -> float:
 		"""Soldiers the state wants: the force its civilisation declares, else a share of its people, raised by
 		the threat its hazards describe."""
 		declared = self.profile.extra.get(STANDING_ARMY_KEY)
 		opening = float(declared) if declared is not None else self.population_total() * ARMY_SHARE_OF_POPULATION
-		return max(0.0, opening * (1.0 + THREAT_ARMY_RESPONSE * self.threat_pressure()))
+		return budget.army_goal(opening, self.threat_pressure())
 
 	def soldiers_under_arms(self) -> float:
 		"""Soldiers the state keeps now: what it paid for last year, else the force it wants."""

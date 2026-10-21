@@ -26,7 +26,7 @@ from sim.agents.api import demand_answer
 
 from sim.world import military_logistics
 
-from . import eminence_rules
+from . import eminence_rules, state_notice_rules
 from .military_rules import leverage_of
 from .state_demand import answer_confiscation, answer_state_demand, settle_household_year
 
@@ -949,19 +949,14 @@ class StatePressureMixin:
         `settles_at` use for "starts at nothing right at the line and closes
         in on its ceiling", not a cliff the year the line is crossed.
         """
-        notice = self.state_notice()
-        if notice <= threshold:
-            return 0.0
-        return min(1.0, (notice - threshold) / (1.0 - threshold))
+        return state_notice_rules.share_past(self.state_notice(), threshold)
 
     def notice_over(self, scale, capacity=None):
         """0..1: how far past the notice line a taxpayer of this visible scale
         stands, as a share of the remaining distance to full notice. `capacity`
         is the state's (this one's when not given)."""
         notice = (self.state_reach() if capacity is None else capacity) * scale
-        if notice <= self.STATE_NOTICE_THRESHOLD:
-            return 0.0
-        return min(1.0, (notice - self.STATE_NOTICE_THRESHOLD) / (1.0 - self.STATE_NOTICE_THRESHOLD))
+        return state_notice_rules.share_past(notice, self.STATE_NOTICE_THRESHOLD)
 
     def levy_shares(self, scale, protection=0.0, state=None):
         """(requisition share, office share) of a year's revenue the state
@@ -979,15 +974,9 @@ class StatePressureMixin:
             requisition_rate, office_rate = self.state_levy_rates()
         else:
             capacity, tax_share, requisition_rate, office_rate = state
-        over = self.notice_over(scale, capacity)
-        if over <= 0.0:
-            return 0.0, 0.0
         # the share of income the whole society pays the state, then what the state's shortfall adds
-        ordinary_rate = tax_share * capacity
-        requisition = (ordinary_rate + requisition_rate) * over
-        if protection > 0:
-            requisition *= (1.0 - self.REQUISITION_PROTECTION_DISCOUNT * protection)
-        return max(0.0, requisition), max(0.0, office_rate * over)
+        return state_notice_rules.levy_shares_at(self.notice_over(scale, capacity), tax_share * capacity, requisition_rate,
+                                                 office_rate, protection, self.REQUISITION_PROTECTION_DISCOUNT)
 
     def requisition_report(self):
         """(share of this year's revenue, [why it is smaller than listed])
@@ -1055,8 +1044,8 @@ class StatePressureMixin:
         third reader does not get to define "militarily significant" its own
         way.
         """
-        return (self.military_leverage() >= self.MIL_LEVERAGE_FLOOR_FOR_DEMAND
-                and self.state_notice() > self.STATE_NOTICE_THRESHOLD_MILITARY)
+        return state_notice_rules.military_demand_eligible(
+            self.military_leverage(), self.MIL_LEVERAGE_FLOOR_FOR_DEMAND, self.state_notice(), self.STATE_NOTICE_THRESHOLD_MILITARY)
 
     def confiscation_risk(self):
         """(yearly probability, [what is holding it off]) of the tail risk at
@@ -1076,23 +1065,14 @@ class StatePressureMixin:
         over = self._notice_over(self.STATE_NOTICE_THRESHOLD_CONFISCATION)
         if over <= 0.0:
             return 0.0, []
-        probability = self.CONFISCATION_MAX_RATE * over
-        mitig, why = 1.0, []
-        if self.state.household.protection > 0:
-            mitig *= (1.0 - self.CONFISCATION_PROTECTION_DISCOUNT * self.state.household.protection)
-            why.append(self.CONFISCATION_PROTECTION_LABELS[0])
         dispersal = 0.0
         held = self.effect_best("confiscation_dispersal")
         if held is not None:
             dispersal = max(dispersal, held[1]["flat"])
-        if dispersal > 0:
-            mitig *= (1.0 - dispersal)
-            why.append(self.CONFISCATION_PROTECTION_LABELS[1])
-        lev = self.military_leverage()
-        if lev > 0:
-            mitig *= (1.0 - self.CONFISCATION_MILITARY_USEFULNESS_DISCOUNT * lev)
-            why.append(self.CONFISCATION_PROTECTION_LABELS[2])
-        return probability * mitig, why
+        chance, active = state_notice_rules.confiscation_chance(
+            over, self.CONFISCATION_MAX_RATE, self.state.household.protection, self.CONFISCATION_PROTECTION_DISCOUNT,
+            dispersal, self.military_leverage(), self.CONFISCATION_MILITARY_USEFULNESS_DISCOUNT)
+        return chance, [self.CONFISCATION_PROTECTION_LABELS[index] for index in active]
 
     CONFISCATION_PROTECTION_LABELS = (
         "a patron and standing high enough to matter",

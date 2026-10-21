@@ -13,6 +13,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from . import budget_lines, budget_works, government_levers, order
 from .budget_line import Line, goods
 from .tuning import ADMINISTRATIVE_SPAN, ARMY_ADJUSTMENT_RATE, LEVY_RATE_CEILING
+from .tuning_spending import THREAT_ARMY_RESPONSE
 
 # What an army wears out, as a material in the tree's own terms.
 EQUIPMENT_MATERIAL = "iron_bar_kg"
@@ -91,6 +92,17 @@ def standing_lines(world: Any, soldiers: Optional[float] = None, conscripts: flo
 	return government_levers.scaled(record, lines) + government_levers.lever_lines(record, world)
 
 
+def sack_pressure(hazards: List[Dict[str, Any]], year: float) -> float:
+	"""Probability a year of the declared hazards running in `year` sacks a site: their sack chances added."""
+	return sum(float(hazard.get("sack_chance", 0.0)) for hazard in hazards
+			   if hazard.get("years") and hazard["years"][0] <= year <= hazard["years"][1])
+
+
+def army_goal(opening: float, pressure: float) -> float:
+	"""Soldiers a state wants: its opening force, raised in proportion to the threat of a sack."""
+	return max(0.0, opening * (1.0 + THREAT_ARMY_RESPONSE * pressure))
+
+
 def army_wanted(world: Any) -> float:
 	"""The force the state wants: the army lever its controller set, else what the world derives."""
 	return government_levers.army_target(world.government().record, world.army_wanted())
@@ -110,6 +122,15 @@ def funded_share(need: float, available: float) -> float:
 	if need <= 0.0 or available >= need:
 		return 1.0
 	return max(0.0, available) / need
+
+
+def military_ask_of(unfunded_army: float, levy_base: float, notice_over: float, taxable: float) -> float:
+	"""Arms asked of a taxpayer with `taxable` income at `notice_over` past the notice line: the unfunded army need in
+	proportion to the taxpayer's part of the visible income base, never past the ceiling on its income."""
+	if unfunded_army <= 0.0 or levy_base <= 0.0:
+		return 0.0
+	own = notice_over * max(0.0, taxable)
+	return min(LEVY_RATE_CEILING * max(0.0, taxable), unfunded_army * own / levy_base)
 
 
 def levy_rates(unfunded: Dict[str, float], kinds: Dict[str, str], visible_income: float) -> Tuple[float, float]:

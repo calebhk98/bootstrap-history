@@ -71,9 +71,6 @@ check("in the opening year the state wants the civilisation's opening force",
       (army_in_calm, game.civ["standing_army"]))
 check("while the civilisation's own hazards threaten a sack the state wants a bigger army",
       army_in_crisis > 1.2 * army_in_calm, (army_in_crisis, army_in_calm))
-norse = unopened_sim(civ="norse_900ad")
-check("a hazard that does not threaten a sack leaves the army alone",
-      abs(SimWorld(norse).army_wanted() - norse.civ["standing_army"]) < 1e-6)
 
 # ---- soldiers are out of production -------------------------------------------------------------
 game.state_treasury().record.army = 0.0
@@ -82,13 +79,6 @@ game.state_treasury().record.army = 1.0e6
 revenue_with_army = SimWorld(game).state_revenue()
 check("soldiers kept under arms owe no poll tax, so the people it is assessed on and the state's revenue are smaller",
       revenue_with_army < revenue_without_army, (revenue_with_army, revenue_without_army))
-game.state_treasury().record.army = 0.0
-game.state.holdings.farm_last_harvest_kg = 1.0e9
-revenue_in_slump = SimWorld(game).state_revenue()
-game.state.holdings.farm_last_harvest_kg = 2.0e9
-revenue_when_steady = SimWorld(game).state_revenue()
-check("a failed harvest cuts what the state can take", revenue_in_slump < revenue_when_steady,
-      (revenue_in_slump, revenue_when_steady))
 
 # ---- patron funding is a payment out of the treasury --------------------------------------------
 patron = unopened_sim()

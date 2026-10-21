@@ -98,11 +98,7 @@ class Government(CorveeMixin, CreditRecordMixin, FiscalMixin, CoinageMixin, Ente
 	def military_ask(self, taxable: float, scale: float, world: Any) -> float:
 		"""What the state asks of a militarily useful taxpayer in arms: its unfunded army need,
 		in proportion to the taxpayer's part of the visible income, never past the ceiling."""
-		unfunded = self.record.unfunded.get("army", 0.0)
-		if unfunded <= 0.0 or self.record.levy_base <= 0.0:
-			return 0.0
-		own = world.notice_over(scale) * max(0.0, taxable)
-		return min(budget.LEVY_RATE_CEILING * max(0.0, taxable), unfunded * own / self.record.levy_base)
+		return budget.military_ask_of(self.record.unfunded.get("army", 0.0), self.record.levy_base, world.notice_over(scale), taxable)
 
 	def arrears_owed(self) -> float:
 		"""Pay the state owes its army and officials from earlier years."""

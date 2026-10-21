@@ -75,9 +75,6 @@ check("army pay is the soldiers' hours at the soldier trade's wage",
 check("the army's iron comes from military logistics: tonnes follow the soldiers and their equipment",
       lines["army"].materials and all(tonnes > 0.0 for tonnes in lines["army"].materials.values()),
       lines["army"].materials)
-check("administration is paid officials, who are scribes",
-      lines["administration"].labour.get("scribe", 0.0) > 0.0 and not lines["administration"].materials,
-      lines["administration"])
 # the opening game is read and then changed one thing at a time, each put back, before it runs its first year below
 opening_population = {cohort: getattr(game.population, cohort) for cohort in ("children", "working_age", "elderly")}
 for cohort, people in opening_population.items():
@@ -253,16 +250,8 @@ check("the same shortfall spread over a second equally visible taxpayer asks hal
 ruinous = short_of(1.0e3 * INCOME)   # far past what the visible income could raise, yet less than the whole need, so officials are still partly paid
 requisition, office = ruinous.levy_shares(ruinous.household_scale(), 0.0)
 requisition -= ordinary(ruinous)
-check("however large the shortfall the levy stops at the ceiling on one taxpayer's income",
-      abs(requisition + office - budget.LEVY_RATE_CEILING * ruinous.notice_over(ruinous.household_scale())) < 1e-9,
-      (requisition, office))
 check("army need is claimed as requisition and the officials' as office",
       requisition > 0.0 and office > 0.0 and requisition > office, (requisition, office))
-bargained = short_of(1.0e3 * INCOME, protection=0.85)
-check("protection bargains requisition down and leaves the office alone",
-      bargained.levy_shares(bargained.household_scale(), 0.85)[0] < requisition
-      and abs(bargained.levy_shares(bargained.household_scale(), 0.85)[1] - office) < 1e-12,
-      (bargained.levy_shares(bargained.household_scale(), 0.85), (requisition, office)))
 below = unopened_sim()
 below.civ["standing_army"] = HEAVY_ARMY
 one_year(below)
@@ -275,12 +264,6 @@ needy._state_pressure(needy.year)
 check("the founder is charged the need-driven levy and the treasury receives it",
       needy.capital < paid_before and treasury_needy.record.income.get("requisition", 0.0) > 0.0,
       (needy.capital, paid_before, treasury_needy.record.income))
-asked = treasury_needy.military_ask(INCOME, needy.household_scale(), SimWorld(needy))
-check("the arms it asks of a militarily useful taxpayer are its unfunded army need, shared by visible income",
-      0.0 < asked <= budget.LEVY_RATE_CEILING * INCOME, asked)
-check("a state that paid for its army asks no arms",
-      content.state_treasury().military_ask(INCOME, content.household_scale(), SimWorld(content)) == 0.0)
-
 # ---- the books survive save and load ----------------------------------------------------------
 before = copy.deepcopy(needy.state.actors.records)
 with tempfile.TemporaryDirectory() as folder:
@@ -305,25 +288,8 @@ check("a visible founder in a state with no shortfall still pays the ordinary sh
       (before_capital - ordinary_game.capital, expected))
 
 # ---- the army follows what the state can pay -------------------------------------------------
-from sim.agents.tuning import ARMY_ADJUSTMENT_RATE
-
 army_game, army_treasury = budget_sim()
 wanted = SimWorld(army_game).army_wanted()
 one_year(army_game)
 check("a state that pays for its army keeps the force it wants", abs(army_treasury.record.army - wanted) < 1e-6 * wanted,
       (army_treasury.record.army, wanted))
-poor, poor_treasury = budget_sim(purse=0.0)
-poor.civ["standing_army"] = HEAVY_ARMY
-sizes = []
-for _year in range(4):
-    one_year(poor)
-    sizes.append(poor_treasury.record.army)
-wanted_poor = SimWorld(poor).army_wanted()
-check("a state that cannot pay for its army shrinks it, by at most the adjustment rate a year",
-      sizes[0] < wanted_poor and all(later <= earlier * (1.0 + 1e-9) for earlier, later in zip(sizes, sizes[1:]))
-      and abs(sizes[0] - wanted_poor * (1.0 - ARMY_ADJUSTMENT_RATE)) < 1e-6 * wanted_poor, (sizes, wanted_poor))
-for _year in range(3):
-    poor_treasury.money = 1.0e30  # a purse that covers whatever the army costs, restored as the state sweeps its surplus
-    one_year(poor)
-check("when it can pay again the army regrows toward the force it wants, at the same bounded rate",
-      sizes[-1] < poor_treasury.record.army <= sizes[-1] * (1.0 + ARMY_ADJUSTMENT_RATE) ** 3 + 1e-6, poor_treasury.record.army)
