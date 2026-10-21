@@ -5,7 +5,7 @@ prices, the baseline year worth the opening basket, new goods at their introduct
 test_engine_prices (a technology gates a production entry or it changes no recipe), a cheaper entry's price and
 quantity in test_cheaper_entry_lowers_price. This file is the whole-game scenario that the wiring joins them: the
 Sim reads the economy's own basket and baseline, society output is that less those under arms, and a population
-that falls without a technique leaves output per head near where it was (a relationship, with a stated band)."""
+that falls without a technique leaves output per head near where it would have been undisturbed (a relationship, with a stated band)."""
 from .harness import *  # noqa: F401,F403
 from .real_output_helpers import close_years
 
@@ -39,15 +39,21 @@ check("society output is the real output, less the share of working people under
       abs(_world.society_output() - _expected) <= 1e-9 * _expected, (_world.society_output(), _expected))
 
 # --- BASELINE VALIDATION (CLAUDE.md 4.2): a population that falls without a technique lowers output with the people
-# and leaves output per head within a quarter of where it was. The quarter is a declared band, not a sourced figure.
+# and leaves output per head within a quarter of where it would have been. The quarter is a declared band, not a
+# sourced figure. The reference is a run of the same game with no fall, closed the same number of years: the first
+# settled year is a ramp (the economy's plants and stocks are still settling), so it is no stand-in for "where it was".
 PER_HEAD_BAND = 0.25
+YEARS_AFTER_FALL = 2
+undisturbed = sim(civ="rome_100ad", capital=1e9)
+close_years(undisturbed, 1 + YEARS_AFTER_FALL)
 fallen = sim(civ="rome_100ad", capital=1e9)
 close_years(fallen, 1)
-output_before, per_head_before, people_before = fallen.real_output_hours(), fallen.real_output_per_head(), fallen.population.total
+people_before = fallen.population.total
 fallen._apply_population_mortality_shock(0.4)
-close_years(fallen, 2)
-check("validation: a population fall without a technique lowers real output", fallen.real_output_hours() < output_before,
-      (output_before, fallen.real_output_hours()))
-check("validation: ...but not output per head, which stays near where it was",
-      abs(fallen.real_output_per_head() / per_head_before - 1.0) <= PER_HEAD_BAND,
-      (per_head_before, fallen.real_output_per_head(), people_before, fallen.population.total))
+close_years(fallen, YEARS_AFTER_FALL)
+check("validation: a population fall without a technique lowers real output against the same years undisturbed",
+      fallen.real_output_hours() < undisturbed.real_output_hours(),
+      (undisturbed.real_output_hours(), fallen.real_output_hours()))
+check("validation: ...but not output per head, which stays near where it would have been",
+      abs(fallen.real_output_per_head() / undisturbed.real_output_per_head() - 1.0) <= PER_HEAD_BAND,
+      (undisturbed.real_output_per_head(), fallen.real_output_per_head(), people_before, fallen.population.total))

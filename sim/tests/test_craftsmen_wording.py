@@ -137,27 +137,25 @@ def _plague_line2(civ, hazard_substr, med_nodes, years_before, capital=1e9):
     return next((message for _year, message in household.log if hazard_substr in message), "")
 
 
-# presentation: the hazard log line's wording (whether it says the toll was softened)
+# The national toll is read from the log line's structured fact (`national_toll_percent`), not from its wording.
 _antonine_fresh = _plague_line2("rome_100ad", "Antonine plague", _MED_NODES, 0)
 _antonine_old = _plague_line2("rome_100ad", "Antonine plague", _MED_NODES, 300)
+_HISTORICAL_PERCENT = round(100 * ANTONINE["staff_loss"])
 check("scenario: medicine the founder has only JUST built gives the empire at large "
       "no relief yet - diffusion has not had time to happen",
-      "Empire-wide, population -28%" in _antonine_fresh
-      and "softer" not in _antonine_fresh,
-      _antonine_fresh)
+      _antonine_fresh.facts["national_toll_percent"] > 0
+      and _antonine_fresh.facts["national_toll_percent"] == _HISTORICAL_PERCENT, _antonine_fresh.facts)
 check("scenario: the SAME medicine, diffused through three centuries, visibly softens "
       "the empire-wide toll - the user's 'minor sickness' claim, answered "
       "against the empire's own figure, never against the founder's",
-      "softer" in _antonine_old
-      and "Empire-wide, population -28%" not in _antonine_old,
-      _antonine_old)
+      _antonine_old.facts["national_toll_percent"] < _antonine_fresh.facts["national_toll_percent"],
+      (_antonine_old.facts, _antonine_fresh.facts))
 
 _black_death = _plague_line2("england_1300", "Black Death", _MED_NODES, 400)
 check("scenario: diffused medicine four centuries deep can turn even the Black Death "
       "into a barely-registering empire-wide event - the user's example by "
       "name",
-      "barely registers" in _black_death or "softer" in _black_death,
-      _black_death)
+      _black_death.facts["national_toll_percent"] <= 1, _black_death.facts)
 
 check("medical diffusion relief has no fixed ceiling: full coverage with a capable state removes the epidemic entirely",
       medical_relief(1.0, 0.5, 1.0) >= 1.0)
