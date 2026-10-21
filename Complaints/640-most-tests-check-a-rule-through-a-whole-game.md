@@ -304,16 +304,30 @@ had been failing before this pass (its fake world lacked `plant_costs`, which th
 
 The guard's leftover list (`sim/tests/whole_game_leftovers.txt`) is empty: `python3 -m sim.tests --whole-game-checks` lists no
 undeclared module, and the quick topic `whole_game_declared` fails on any new one. Some modules were declared rather than converted
-because their rule sits inline in a `Sim` mixin; their `_scenario` files hold rule checks until the rule is a plain function:
+because their rule sits inline in a `Sim` mixin or a phase; their `_scenario` files hold rule checks until the rule is a plain
+function. What is left, after the rules named in the list below were pulled out (each with a quick rule test):
 
-- the state budget and spending lines, the army and revenue rules, and the requisition, office and confiscation notices
-  (`state_budget_scenario`, `state_spending_scenario`, `state_notices_scenario`);
-- the effective-risk multipliers of a retried project (`project_retry_and_risk_scenario`; the retry calendar itself is now
-  `sim/engine/retry_calendar.py`);
-- the domestic haul arithmetic (`freight_domestic_haul_scenario`);
-- the colonies' settlement geography, and the free press, dole, schooling and lighting rules in the public-works scenario;
-- `seed_opening_industry_experience`, `_step_staff`, `train`, `fire`, `commission`, load validation, the staffing gates of `open`
-  and `start`, `work_for_wages`, and the `Sim.start_reason` deficit sizing.
+- the state's year as a ledger: how a reserve finances a deficit and the rest is cut, and the founder paying the ordinary share
+  and the need-driven levy (`Government.pay_standing_need`, `Sim._state_pressure`; `state_budget_scenario`); the requisition,
+  office and confiscation reports that call the extracted functions stay as wiring in `state_notices_scenario`;
+- the expected calendar years of a risky project and the calendar floor (`Sim.expected_calendar_years`, `calendar_floor`;
+  `project_retry_and_risk_scenario`);
+- the rest of `_step_staff`: the `_grow_to` closure and the per-trade replacement loop (the arithmetic around them is plain);
+- the `Sim` methods that compose the domestic haul from prices (`_freight_mode_costs`, `_haul_route`), which only run in a game.
+
+Converted in the second round (rule now a plain function with a quick rule test, its checks moved out of the scenario):
+`state_notice_rules` (the notice line, the levy shares, protection bargaining, the confiscation chance and its mitigations,
+military demand), `budget.military_ask_of`, `budget.sack_pressure` and `budget.army_goal` (the army the threat asks for,
+shared by the home and country views), the standing lines (`test_state_budget_lines`) and the army, administration and army
+size rules (`test_state_budget_rules`); `risk_rules` (control relief and the compounding of the multipliers of a retried
+project); `haul_route.cargo_class_of`, `domestic_haul_mode` and `unjoined_haul_cost`; `colony_rules.best_settlement_work`,
+`outfit_cost` and `colony_people`, with the settlement geography rule-tested on built inputs; `public_works_rules` (the free
+press, the dole, the lit working day, schooling by group and printing); `industry_depth_rules.opening_seed` and the
+once-only guard of the seed; `staff_phase_rules` (smoothing toward a target, the craft headcount, the hiring goals, the
+deputies, replacement affordability); `labour/request_rules` (the preconditions of `train`, `fire` and `commission`, now
+refusals with a `cause`, and the teaching fee); `staff_pay_rules.wage_for_hours_of` (`work_for_wages`). Load validation
+(`test_save_refusal_rules`), the staffing gates of `open` and `start` and the hire advice sized to the deficit of
+`start_reason` (`test_founder_hours_rules`) were already plain functions with rule tests.
 
 Converted in this round (rule now a plain function with a quick rule test): `start_blockers` (`blockers.collect_blockers`), the
 automation start rule (`auto_start_rule.judge_start_candidate`), auto-mine sizing (`shortage_sizing.auto_mine_order_tonnes`),
