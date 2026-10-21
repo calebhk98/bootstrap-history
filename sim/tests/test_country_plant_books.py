@@ -114,3 +114,42 @@ class NoPart(HomeShared):
 
 check("a country the economy has no part for has no books (None), not the home figures",
 	  country_world(profile, NoPart()).plant_books("kiln", 90, 0.0, 2.0) is None)
+
+
+# ---- the country's plant finds its crew in the country's own labour markets (Complaint 649) ------
+from sim.agents.country_state_crew import people_left
+
+check("people left are the markets' people less what the country's other employers hold", people_left(10.0, 4.0) == 6.0)
+check("...and never below nothing", people_left(3.0, 4.0) == 0.0)
+
+
+class CrewAnswers(Answers):
+	def people_of_trade(self, trade):
+		return {"mason": 9.0}.get(trade, 0.0)
+
+
+class CrewShared(HomeShared):
+	def country_economy(self, country):
+		return CrewAnswers()
+
+	def free_fte(self, trade, actor_id):
+		return 999.0    # the founder's pool: a country's plant must not read it
+
+
+class CrewRegistry(ActorRegistry):
+	def staff_fte_in_country(self, trade, country, excluding=None):
+		return 4.0 if (trade, country) == ("mason", "far") else 0.0
+
+
+def crew_world(shared):
+	registry = CrewRegistry(ActorsState(home_country="home"))
+	entry = CastEntry(actor_id="government:far", country="far", kind="government", money=1.0e6, params={})
+	seed_cast(registry, "home", [entry], {"home": CountryProfile(country="home"), "far": profile})
+	return CountryWorld(shared, registry.state.countries["far"], registry)
+
+
+check("a country's plant finds the people its own markets hold less its other employers' staff, not the founder's pool",
+	  crew_world(CrewShared()).free_fte("mason", "firm:far") == 5.0, crew_world(CrewShared()).free_fte("mason", "firm:far"))
+check("a trade nobody in the country practises has no one to hire", crew_world(CrewShared()).free_fte("smith", "firm:far") == 0.0)
+check("a country the economy has no part for has no crew to hire (None), not the founder's pool",
+	  crew_world(NoPart()).free_fte("mason", "firm:far") is None)

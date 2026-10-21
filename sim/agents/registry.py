@@ -256,6 +256,12 @@ class ActorRegistry:
 			total -= self.actors[excluding].workforce.get(trade, 0.0)
 		return max(0.0, total)
 
+	def staff_fte_in_country(self, trade: str, country: str, excluding: Optional[str] = None) -> float:
+		"""People of one trade the actors of one country employ, leaving out one actor's own staff."""
+		total = sum(actor.workforce.get(trade, 0.0) for actor_id, actor in sorted(self.actors.items())
+					if actor_id != excluding and self.country_of(actor) == country)
+		return max(0.0, total)
+
 	def add(self, actor_id: str, record: ActorRecord) -> RecordedActor:
 		self.state.records[actor_id] = record
 		return self._wrap(actor_id)

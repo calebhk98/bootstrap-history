@@ -1,6 +1,6 @@
 # A country's state still reads some home figures, or none: no trade book, coin stock, prices, equipment, trade counts or research hands of its own
 
-**Status:** open (partly done: prices, coin, trade book, people by trade, equipment, rent owners and seat taxpayers (home and abroad) read the country's own part of the economy; plant books of state enterprises and of any firm abroad; research hands, interest groups and unskilled people remain below)
+**Status:** open (partly done: prices, coin, trade book, people by trade, equipment, rent owners and seat taxpayers (home and abroad) read the country's own part of the economy; plant books and crew of state enterprises and of any firm abroad; research hands, interest groups and unskilled people remain below)
 
 Follow-up to Complaint 593 (the foreign state is now the one `Government`, scoped to its country; `sim/agents/country_state.py`).
 
@@ -10,7 +10,7 @@ readings from its profile and its part of the one economy, but these have no per
 - Unskilled people: `national_people("labourer")` is still the working age, as at home (labelled heuristic in `country_state.py`, with the fallback for a country the economy has no part for).
 - Interest groups and patronage: `group_claims` is empty and `patron_ask` is zero abroad.
 - Research: a country's state copies but does not originate research (`Government.researches`), as research hands are the founder's.
-- A country's plants: their crew is still drawn from the founder's labour pool (`free_fte`, `concern_staff`), and site rent, the manager's hours (`carry`) and the choice of which entry to open (`concern_gross`) and entry decisions (`yearly_costs`) read home figures; the books themselves are done (below).
+- A country's plants: site rent, the manager's hours (`carry`, `management_cost` reads the home labour quote) and the choice of which entry to open (`concern_gross`) and entry decisions (`yearly_costs`) read home figures; the books and the crew are done (below). `concern_staff` is the plant's own technology (people per trade), not a country figure. The home `free_fte` and `actor_staff_fte` still subtract every actor's staff, foreign included, from the home pool.
 
 **Done.** A country's `material_cost` and `material_price` are its own market areas' quote (`CountryAnswers.price_per_tonne`,
 nothing where they quote none); its `coin_regime` is the one economy's money standard and its `coin_stock_value` is the
@@ -44,6 +44,11 @@ market over long-run prices (`market_factor_at` with `CountryAnswers.price_per_u
 (`pay_per_person_year`). A figure the country keeps no record of (no part of the economy, a trade nobody pays, a concern in a goods
 category, whose demand is the home households') makes the reading None and the plant stands idle that year. TEMPORARY HEURISTIC:
 no hazard or war factor applies abroad (retire: this complaint). Checks: `sim/tests/test_country_plant_books.py`.
+
+A country's plant takes its crew from that country's labour markets: `CountryWorld.free_fte` is the people its labour markets hold in the
+trade (`CountryAnswers.people_of_trade`) less what the other actors of that country employ (`ActorRegistry.staff_fte_in_country`,
+`people_left` in `sim/agents/country_state_crew.py`); a country the economy has no part for gives None and the plant finds no crew,
+never the founder's pool. Checks: `sim/tests/test_country_plant_books.py`.
 
 **Why it matters.** A country's revenue and war capacity are inputs of the game (481); each of these makes a country's
 state read the founder's side of the world or nothing.

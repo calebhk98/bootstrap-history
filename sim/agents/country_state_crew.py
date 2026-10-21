@@ -1,0 +1,32 @@
+"""Where a country's plants find their crew: the people of the trade in that country's own labour markets, less those
+its other actors already employ (Complaint 649)."""
+from typing import Any, Optional
+
+from .no_country_economy import NoCountryEconomy
+
+
+def people_left(people_in_markets: float, held_by_others: float) -> float:
+	"""People of a trade the markets hold that no other employer of the country has."""
+	return max(0.0, people_in_markets - held_by_others)
+
+
+class CountryCrewView:
+	"""The crew reading of `CountryWorld`; `profile`, `_holder` and `_own_economy` are its."""
+
+	profile: Any
+	_holder: Any
+
+	def _own_economy(self) -> Any:
+		raise NotImplementedError
+
+	def free_fte(self, trade: str, actor_id: Optional[str]) -> Optional[float]:
+		"""People of a trade left in this country's labour markets for `actor_id`; None when the economy has no part for the
+		country or the holder cannot count its employers, never the founder's pool."""
+		try:
+			economy = self._own_economy()
+		except NoCountryEconomy:
+			return None
+		count = getattr(self._holder, "staff_fte_in_country", None)
+		if not callable(count):
+			return None
+		return people_left(economy.people_of_trade(trade), count(trade, self.profile.country, actor_id))
