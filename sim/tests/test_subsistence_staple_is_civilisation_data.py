@@ -42,15 +42,19 @@ class StapleIsData(unittest.TestCase):
         _scaled_labour(entries, "maize_kg", 2.0)
         self.assertGreater(_schedule(civ, entries).subsistence_hours_per_hour, normal.subsistence_hours_per_hour)
 
-    def test_the_staple_moves_the_floor_more_than_wheat_does(self):
-        civ = data.load_civ("han_china_100ad")
-        normal = _schedule(civ).subsistence_hours_per_hour
-        wheat_entries, millet_entries = _entries(), _entries()
-        _scaled_labour(wheat_entries, "wheat_kg", 2.0)
-        _scaled_labour(millet_entries, "millet_kg", 2.0)
-        wheat_shift = abs(_schedule(civ, wheat_entries).subsistence_hours_per_hour - normal)
-        millet_shift = abs(_schedule(civ, millet_entries).subsistence_hours_per_hour - normal)
-        self.assertGreater(millet_shift, wheat_shift)
+    def test_the_floor_reads_the_named_staple_and_not_another_grain(self):
+        # Land rent is stated in wheat (the solver's rent unit), so every grain's cost moves with wheat's labour; the
+        # floor of a wheat-staple civilisation must move with wheat's labour by more than a millet-staple one's does,
+        # and a grain that is not the staple (millet, for a wheat civilisation) must not move it at all.
+        def floor_shift(staple, grain):
+            civ = dict(data.load_civ("han_china_100ad"), staple=staple)
+            normal = _schedule(civ).subsistence_hours_per_hour
+            entries = _entries()
+            _scaled_labour(entries, grain, 2.0)
+            return _schedule(civ, entries).subsistence_hours_per_hour - normal
+        self.assertGreater(floor_shift("millet_kg", "millet_kg"), 0.0)
+        self.assertAlmostEqual(floor_shift("wheat_kg", "millet_kg"), 0.0, places=9)
+        self.assertGreater(floor_shift("wheat_kg", "wheat_kg"), floor_shift("millet_kg", "wheat_kg"))
 
 
 if __name__ == "__main__":
