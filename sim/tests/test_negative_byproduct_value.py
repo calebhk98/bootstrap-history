@@ -178,7 +178,7 @@ def solve_kiln(sink=True, rule=0.0, gate=None, tar_reference=-1.0):
     resolvable = solve_prices.compute_resolvable_materials(
         entries, producers, rent_hours_per_kg_by_material={"hectare_land": 40.0})
     prices, _i, _r, chosen = solve_prices.solve(
-        entries, producers, resolvable, {"labourer": 1.0},
+        entries, producers, resolvable, {"labourer": 1.0, "carter": 1.0, "porter": 1.0},
         rent_hours_per_kg_by_material={"hectare_land": 40.0}, interest_rate=0.05,
         reference_price_by_material=None if tar_reference is None else {"tar_kg": tar_reference},
         dump_minimum_distance_kilometres=rule)

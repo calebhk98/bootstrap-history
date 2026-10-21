@@ -615,7 +615,7 @@
    },
    "inputs": {},
    "labour_hours": {
-    "labourer": 4.0
+    "salt_worker": 4.0
    },
    "extracted_from": "natron salt-pan deposit",
    "unit_dimension": "mass",

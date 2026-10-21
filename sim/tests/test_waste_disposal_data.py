@@ -13,6 +13,7 @@ SINK_KEYS = ("waste_handling_job", "waste_haulage_on_foot", "waste_haulage_by_pa
              "waste_haulage_by_cart", "dump_ground_m2")
 HAULAGE_BY_MODE = {"waste_haulage_on_foot": "foot", "waste_haulage_by_pack_animal": "pack",
                    "waste_haulage_by_cart": "cart"}
+HAULING_TRADE = {"foot": "porter", "pack": "carter", "cart": "carter"}
 
 
 class SinkAgreesWithGeographyTests(unittest.TestCase):
@@ -23,7 +24,7 @@ class SinkAgreesWithGeographyTests(unittest.TestCase):
 
     def test_each_haulage_technique_costs_its_modes_crew_hours_per_tonne_kilometre(self):
         for key, mode in HAULAGE_BY_MODE.items():
-            stated = self.production[key]["labour_hours"]["labourer"]
+            stated = self.production[key]["labour_hours"][HAULING_TRADE[mode]]
             self.assertAlmostEqual(stated / self.rates[mode]["crew_hours_per_tonne_km"], 1.0, places=2, msg=key)
 
     def test_handling_is_the_modes_load_and_unload_hours_per_tonne(self):
