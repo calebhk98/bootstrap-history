@@ -49,3 +49,21 @@ nitre-bed sizes), `sim/engine/territory_required.py` (the landless refusal), `co
 `sim/engine/project_materials.py`. Deleted as held elsewhere: the two other `test_complaint_147_*` files (now
 `test_complaint_147_project_materials`), the loss-making and creditor-seizure closures (`test_business_review`), the foreman
 choice (`test_business_crew_rule`).
+
+## Applied: audit batch 5 (test_economy_reads_tile_yield through test_fog_leak3)
+
+Rules now called on inputs the test builds, quick tier: `test_firm_borrows_to_enter` (`stake_split`, entry on credit, copy
+budget), `test_firm_entry_market`, `test_firm_expansion` (`Firm.expand` on a return-per-step world, `rivals_of`),
+`test_fog_leak3` (`missing_prereq_message` and `bounty_refusal` on a fogged stub, the parser's bare flags),
+`test_typed_json_modes_parse`, `test_farm_clearing` (ladder and clearing), `test_farm_land_quality`, `test_farm_edges`,
+`test_failure_needs_instrument` (`failure_teaches`, `note_failure`), `test_failure_and_bounty_money` (`bearable_part_of`),
+`test_economy_crop_yields`, `test_economy_state_budget` (the budget's record round trip), `test_education_enrolment`
+(`_enrolment`, `_limited_by`), `test_entry_cost_at_economy_prices` (`CostBook`), `test_every_posting_names_a_counterparty`
+(source scan, edges), `test_explicit_starting_techs`, `test_figures_inspector` (`explain_figure`), `test_mechanics_documented`.
+Extractions, behaviour unchanged: `hours_spent_clearing`, `cleared_hectares`, `quality_of_area` in
+`sim/labour/labour_allocation.py`; `harmed_yields` in `sim/engine/economy_port_sites.py`; `declared_starting_techs` in
+`sim/engine/starting_techs.py`. Whole-game checks stay as named `_scenario` files next to their rules. Deleted as held
+elsewhere: the state budget's debasing, borrowing-first and hours-and-goods runs (`test_economy_agent_state`), the firm
+count and expansion dynamics repeated across the firm scenarios (`test_firm_count_from_costs`, `test_firm_expansion`).
+The state budget's runs over years on an opened England are `test_economy_state_budget_validation` (baseline validations,
+4.2, naming Complaint 526); `economy_tin_dearer_than_copper` stays the slow validation naming Complaint 511.

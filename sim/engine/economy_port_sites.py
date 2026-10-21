@@ -80,3 +80,11 @@ def crop_yields(economy, weather=1.0):
     return {producer_id: weather * site_yield.get(recipe_tile_key(producer.recipe_id, producer.tile), 1.0)
             for producer_id, producer in economy_api.producers_of(economy).items()
             if setup.land_per_run.get(producer.recipe_id, 0.0) > 0.0}
+
+
+def harmed_yields(yields, harm_by_tile, producers):
+    """`yields` with each producer's factor scaled by the harm factor of the tile it stands on (a tile no provider
+    names is unharmed); the same mapping when nothing is harmed."""
+    if not harm_by_tile:
+        return yields
+    return {producer_id: factor * harm_by_tile.get(producers[producer_id].tile, 1.0) for producer_id, factor in yields.items()}

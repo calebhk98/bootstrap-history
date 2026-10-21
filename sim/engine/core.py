@@ -39,6 +39,7 @@ from sim.unit_conversions import PERCENT_SCALE
 
 
 from .territory_required import require_territory
+from .starting_techs import declared_starting_techs
 from .economy import EconomyMixin
 from .node_rederive import NodeRederiveMixin
 from .market_clearing import MarketClearingMixin
@@ -556,15 +557,7 @@ class Sim(ModStoresMixin, RealPriceRatiosMixin, CoinRevaluationMixin, MechanicsM
         # needs the loaded tree and civ record to validate against (and to
         # raise ValueError on an unknown starting technology) - state this
         # class deliberately does not hold a reference to.
-        starting_techs = self.civ["starting_techs"]
-        missing = sorted(tech_id for tech_id in starting_techs if tech_id not in self.nodes)
-        if missing:
-            # Refuse a corrupt opening rather than merely warning and running a
-            # different scenario: silently dropping an unknown starting
-            # technology changes which civilization is actually being
-            # simulated, without telling anyone.
-            raise ValueError("civilization %r lists unknown starting technologies: %s"
-                             % (self.civ.get("id", "?"), ", ".join(missing)))
+        starting_techs = declared_starting_techs(self.civ, self.nodes)
         for tech_id in starting_techs:
             self.state.projects.done.add(tech_id)
             self._done_changed()

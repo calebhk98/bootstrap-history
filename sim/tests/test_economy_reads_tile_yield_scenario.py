@@ -1,5 +1,7 @@
-"""Complaint 537: the agent economy's land is geography's cropland and its farms yield what the tile's soil,
-climate and river water give (geography's `crop_site`), the same ground the farm model and the tile food view read."""
+"""Scenario: Complaint 537 in a game. The agent economy's land is geography's cropland and its farms yield what the tile's soil,
+climate and river water give (geography's `crop_site`), the same ground the farm model and the tile food view read; once the
+economy opens its farm producers carry their tile's factor. The year's yield being that factor times the weather, and the
+pasture and mine producers following the weather alone, are rules in test_economy_crop_yields."""
 import math
 
 from .harness import *  # noqa: F401,F403
@@ -40,7 +42,7 @@ for recipe_id in farm_recipes[:1]:
           math.isclose(setup.yield_factor_by_recipe_tile[recipe_tile_key(recipe_id, best)], sites[best].yield_factor))
 
 # The opened economy: farm producers carry their tile's yield factor (after the hidden years), so the same run
-# gives more on the better tile, and each year's inputs scale it by the one pooled weather draw.
+# gives more on the better tile.
 opened = sim()
 agent = opened.economy.agent
 economy = agent.economy()
@@ -54,11 +56,3 @@ if len(ranked) >= 2:
           (farms[ranked[-1]].yield_factor, farms[ranked[0]].yield_factor))
     check("a farm run's yield is its tile's factor",
           all(math.isclose(farms[tile_id].yield_factor, sites[tile_id].yield_factor, rel_tol=1e-9) for tile_id in ranked))
-weather = opened._pooled_farm_weather_multiplier(opened.state.scenario.year)
-yields = agent._inputs({}).yield_factor_by_producer
-check("each year's yield is the tile's factor times the weather",
-      all(math.isclose(yields[producer_id], weather * economy.setup.yield_factor_by_recipe_tile.get(
-          recipe_tile_key(economy.record.producers[producer_id].recipe_id, economy.record.producers[producer_id].tile), 1.0),
-                       rel_tol=1e-9) for producer_id in yields))
-check("a crop producer's year yield follows its tile", any(
-    economy.record.producers[producer_id].recipe_id in keyed and yields[producer_id] != weather for producer_id in yields))

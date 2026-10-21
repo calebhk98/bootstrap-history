@@ -1,4 +1,5 @@
-"""A provider's deaths reach the population step and its yield factor reaches land-bound producers in a real game."""
+"""Scenario: a provider's deaths reach the population step and its yield factor reaches land-bound producers in a real game.
+The provider door is test_externalities; the yield arithmetic is test_economy_crop_yields."""
 
 import unittest
 
