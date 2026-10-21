@@ -1,4 +1,6 @@
-"""Hazard, risk and score screens agree with what the engine applies: Complaints/194, 195, 196, 197, 198, 199, 200, 219."""
+"""SCENARIO: in an England and a Rome game the hazard, risk, why and score screens agree with what the engine applies
+(Complaints/194 to 204, 219, 223). Each check reads a screen and the function that applies the same figure from one game,
+so there is no rule to call on its own."""
 from .harness import *  # noqa: F401,F403
 from sim.engine.data import money_word
 from sim.ui.proto.render_screen_why import render_why

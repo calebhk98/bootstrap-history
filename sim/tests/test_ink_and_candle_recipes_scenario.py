@@ -1,4 +1,7 @@
-"""England 1300 can make ink, a written page and a tallow candle from what it has (Complaint 567)."""
+"""SCENARIO: an unopened England 1300 and Rome opening each price ink, a written page and a tallow candle (Complaint 567).
+
+The opening prices come from the whole opening (recipes, deposits, the price closure), so this reads them off built games.
+"""
 
 import unittest
 
@@ -24,11 +27,6 @@ class InkAndCandleRecipeTests(unittest.TestCase):
         for good in GOODS:
             with self.subTest(good=good):
                 self.assertGreater(prices.get(good, 0.0), 0.0)
-
-    def test_other_starts_reported(self):
-        for civilisation_id in ("mexica_1500", "norse_900ad"):
-            prices = _opening_prices(civilisation_id)
-            print(civilisation_id, {good: prices.get(good) for good in GOODS})
 
 
 if __name__ == "__main__":

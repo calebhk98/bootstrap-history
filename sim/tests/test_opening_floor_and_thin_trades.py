@@ -1,4 +1,4 @@
-"""On a real default game (agent economy on) the household wage floor stays near the food floor and no trade
+"""BASELINE VALIDATION (CLAUDE.md 4.2): on a real default game (agent economy on) the household wage floor stays near the food floor and no trade
 quotes above what training a substitute costs (Complaint 434). Builds a game, so it is a slow topic."""
 import statistics
 import unittest

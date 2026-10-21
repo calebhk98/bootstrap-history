@@ -27,3 +27,18 @@ NITRE_SPEND_SHARE_OF_CAPITAL = 0.05     # of capital a year; automatic nitre bed
 def nitre_bed_yearly_spend(capital, ceiling):
     """Money the automatic remedy lays into nitre beds in a year: a share of capital, never past a flat ceiling."""
     return min(capital * NITRE_SPEND_SHARE_OF_CAPITAL, ceiling)
+
+
+AUTO_MINE_SPEND_SHARE_OF_CAPITAL = 0.25     # of capital the automatic mining policy commits to one order
+
+
+def auto_mine_affordable_tonnes(capital, capex_per_tonne):
+    """Tonnes a year of new working a share of the purse sinks at the mine's capital cost per tonne."""
+    return capital * AUTO_MINE_SPEND_SHARE_OF_CAPITAL / max(1.0, capex_per_tonne)
+
+
+def auto_mine_order_tonnes(demand_tonnes, active_tonnes, pending_tonnes, capital, capex_per_tonne):
+    """Tonnes a year the automatic policy orders: the demand left once working mines and shafts still being
+    sunk count (so a tranche about to commission is not ordered twice), never more than the purse affords."""
+    want = max(0.0, demand_tonnes - active_tonnes - pending_tonnes)
+    return min(want, auto_mine_affordable_tonnes(capital, capex_per_tonne))

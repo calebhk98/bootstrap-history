@@ -1,4 +1,6 @@
-"""Regression tests for complaint 203 (money unit anchoring) and complaint
+"""SCENARIO (presentation): the start text, `help money` and the menu, read off the CLI run in process.
+
+Regression tests for complaint 203 (money unit anchoring) and complaint
 232 item 5 (mortality wording). Tests that the money unit is explained in
 the start text, and that the mortality question uses neutral wording."""
 from .harness import *
@@ -29,20 +31,25 @@ _out_207 = _run(["play", "--civ", "england_1300", "--kit", "poor_scholar",
                  "--fog", "--seed", "1", "--session",
                  os.path.join(_saves_207, "test.json")],
                 "quit\n", _env_207).stdout
+# presentation: the start text names where the money comes from
 check("207: start text says the wage behind the money comes from the game's labour market",
       "labour market" in " ".join(_out_207.split()) and "price records" in " ".join(_out_207.split()), _out_207[:1500])
+# presentation: the start text
 check("207: start text does not claim the money is detached from the civilisation's coin",
       "not to any historical coin" not in _out_207, _out_207[:1500])
 _help_207 = _run(["play", "--civ", "england_1300", "--seed", "1", "--session",
                   os.path.join(_saves_207, "help.json")], "help money\nquit\n", _env_207).stdout
+# presentation: the help text
 check("207: help money explains the unit the same way",
       "labour market" in _help_207 and "price records" in _help_207, _help_207[-2500:])
+# presentation: the help text
 check("207: help money does not claim every price is calculated",
       "calculated from production and demand" not in _help_207, _help_207[-2500:])
 
 # ---- Complaint 232 item 5: mortality wording is neutral, not prescriptive
 _saves_236, _env_236 = _env("236-mortality-text")
 _out_236 = _run(["menu"], "1\n" + "\n" * 5 + "quit\n", _env_236).stdout
+# presentation: the menu wording
 check("236: mortality text does not use 'honest number' (prescriptive wording)",
       "honest number" not in _out_236,
       _out_236)

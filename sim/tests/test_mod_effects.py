@@ -1,138 +1,92 @@
-"""Complaint 496: mod code changes the world through effect operations that follow the normal rules.
+"""Complaint 496: the rules of a mod effect operation that hold before it touches the world: a mod's kinds and edges are
+forced into its namespace, every change needs a cause, an amount is a number of zero or more, a death share is a share, and a
+store is written only by the mod that declared it. Called with no game, or a host that holds only its stores. What the
+operations do to a two-country game is in `test_mod_effects_scenario`."""
 
-Slow topic: it builds a two-country game (not in the quick tier)."""
-import random
+QUICK_TOPIC = True
+
 import unittest
-from unittest import mock
+from types import SimpleNamespace
 
-from .harness import *  # noqa: F401,F403
-
-from sim.agents.api import edges, seed_strata
-from sim.engine import mod_code, mod_stores, world_events, world_hazards
-from sim.engine.agents_port import SimWorld
-from sim.engine.agents_port_cast import seed_opening_cast
-from sim.engine.mod_effects import ModEffects, people_of
+from sim.agents.api import edges
+from sim.engine import mod_stores
+from sim.engine.mod_effects import ModEffects
+from sim.engine.mod_stores import ModStoresMixin
 from sim.engine.mods import ModError
-from sim.tests import economy_fixture
 
-PARTNER = "han_china_100ad"
 ACME, BETA = "test_acme_k3f9", "test_beta_k3f9"
 
 
-def two_country_game():
-    civ = S.load_civ("rome_100ad")
-    game = build_unopened(lambda: S.Sim(NODES, list(ORDER), random.Random(1), events=True, manual=True, civ=civ))
-    game.partner_countries = lambda: [PARTNER]
-    game.partners_in_agent_economy = lambda: [PARTNER]
-    game.goal, game.done_year = GOAL, {}
-    seed_opening_cast(game)
-    seed_strata(game.actors, SimWorld(game))
-    return game
+class Host(ModStoresMixin):
+    """A game with nothing but its saved stores."""
+
+    def __init__(self):
+        self.state = SimpleNamespace(stores={})
 
 
-class StubPort:
-    """Stands in for `sim.economy`: hands out a small hand-built economy."""
+class Names(unittest.TestCase):
 
-    def __init__(self, economy):
-        self.agent = self
-        self._economy = economy
+    def test_a_mods_kind_is_forced_into_its_namespace_and_not_doubled(self):
+        self.assertEqual(ModEffects(ACME).kind("deaths"), ACME + ":deaths")
+        self.assertEqual(ModEffects(ACME).kind(ACME + ":deaths"), ACME + ":deaths")
 
-    def economy(self):
-        return self._economy
+    def test_the_base_game_keeps_its_kinds_bare(self):
+        self.assertEqual(ModEffects().kind("flood"), "flood")
+
+    def test_a_declared_edge_and_the_mods_own_edge_are_accepted(self):
+        effects = ModEffects(ACME)
+        self.assertEqual(effects.edge_name(edges.EDGE_OFFICIALS), edges.EDGE_OFFICIALS)
+        self.assertEqual(effects.edge_name("edge:%s:tithe" % ACME), "edge:%s:tithe" % ACME)
+
+    def test_an_undeclared_edge_or_another_mods_edge_is_refused(self):
+        effects = ModEffects(ACME)
+        for edge in ("nowhere", "edge:%s:tithe" % BETA, None):
+            with self.assertRaises(ModError, msg=edge):
+                effects.edge_name(edge)
 
 
-class EffectsTests(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        mod_stores.forget_mod_stores()
-        mod_stores.declare(mod_stores.StoreSpec(ACME + ":mana", ACME, "tile", 0.0, "mana"), "test")
-        cls.api = mod_code.ModCodeApi(ACME)
+class Arguments(unittest.TestCase):
 
-    @classmethod
-    def tearDownClass(cls):
-        mod_stores.forget_mod_stores()
+    def test_a_change_needs_a_cause_in_words(self):
+        effects = ModEffects(ACME)
+        for cause in ("", "  ", None, 3):
+            with self.assertRaises(ModError, msg=cause):
+                effects.need_cause(cause)
+        self.assertEqual(effects.need_cause("a curse"), "a curse")
+
+    def test_an_amount_is_a_number_of_zero_or_more(self):
+        effects = ModEffects(ACME)
+        for amount in (-1.0, True, "5", float("nan"), None):
+            with self.assertRaises(ModError, msg=amount):
+                effects.add_goods(None, "account", "grain", "tile", amount, "a gift")
+        with self.assertRaises(ModError):
+            effects.add_goods(None, "account", "grain", "tile", 1.0, "a gift", edge="somewhere")
+
+    def test_a_death_share_is_between_zero_and_one_and_needs_a_cause(self):
+        effects = ModEffects(ACME)
+        for share in (-0.1, 1.5):
+            with self.assertRaises(ModError, msg=share):
+                effects.kill_people(None, "country", share, "too many")
+        with self.assertRaises(ModError):
+            effects.kill_people(None, "country", 0.1, "")
+
+
+class StoreWrites(unittest.TestCase):
 
     def setUp(self):
-        self.game = two_country_game()
-        self.effects = self.api.effects
+        mod_stores.forget_mod_stores()
+        mod_stores.declare(mod_stores.StoreSpec(ACME + ":mana", ACME, "tile", 0.0, "mana"), "test")
+        self.host = Host()
 
-    def test_money_through_a_named_edge_keeps_the_books(self):
-        government = self.game.actors.get("government:rome_100ad")
-        held = government.money
-        self.effects.pay_edge(self.game, government.actor_id, edges.EDGE_OFFICIALS, 10.0, "a bribe")
-        self.assertAlmostEqual(government.money, held - 10.0)
-        self.assertAlmostEqual(self.game.edge(edges.EDGE_OFFICIALS).volume(), 10.0)
-        self.effects.receive_from_edge(self.game, government.actor_id, edges.EDGE_OFFICIALS, 10.0, "returned")
-        self.assertAlmostEqual(government.money, held)
-        self.assertTrue(self.game.state.actors.purses.book.check_conservation(1e-9).ok)
-
-    def test_a_money_move_to_the_mods_own_edge_is_accepted(self):
-        government = self.game.actors.get("government:rome_100ad")
-        self.effects.pay_edge(self.game, government.actor_id, "edge:%s:tithe" % ACME, 1.0, "own edge")
-        self.assertAlmostEqual(self.game.edge("edge:%s:tithe" % ACME).volume(), 1.0)
-        with self.assertRaises(ModError):
-            self.effects.pay_edge(self.game, government.actor_id, edges.EDGE_OFFICIALS, -1.0, "x")
-        with self.assertRaises(ModError):
-            self.effects.pay_edge(self.game, government.actor_id, "nowhere", 1.0, "x")
-
-    def test_goods_added_and_removed_appear_in_the_book(self):
-        economy, _ = economy_fixture.run(years=1)
-        self.game.__dict__["_economy_port"] = StubPort(economy)
-        book, tile, grain = economy.record.book, economy_fixture.TOWN, economy_fixture.GRAIN
-        net_before = book.edge_goods_net("edge:production", grain)
-        consumed_before = book.edge_goods_net("edge:consumption", grain)
-        self.effects.add_goods(self.game, "mod_account", grain, tile, 5.0, "a gift of grain")
-        self.assertAlmostEqual(book.stock("mod_account", grain, tile), 5.0)
-        self.effects.remove_goods(self.game, "mod_account", grain, tile, 2.0, "a fire")
-        self.assertAlmostEqual(book.stock("mod_account", grain, tile), 3.0)
-        self.assertAlmostEqual(abs(book.edge_goods_net("edge:production", grain) - net_before), 5.0)
-        self.assertAlmostEqual(abs(book.edge_goods_net("edge:consumption", grain) - consumed_before), 2.0)
-        self.assertTrue(book.check_conservation(1e-9).ok)
-        with self.assertRaises(Exception):
-            self.effects.remove_goods(self.game, "mod_account", grain, tile, 99.0, "too much")
-        with self.assertRaises(ModError):
-            self.effects.add_goods(self.game, "mod_account", grain, tile, 1.0, "x", edge="somewhere")
-
-    def test_killing_people_cuts_the_country_and_writes_an_event(self):
-        before = people_of(self.game, PARTNER)
-        entry = self.effects.kill_people(self.game, PARTNER, 0.25, "a curse")
-        self.assertAlmostEqual(people_of(self.game, PARTNER), before * 0.75)
-        self.assertEqual(entry["kind"], ACME + ":deaths")
-        self.assertAlmostEqual(entry["facts"]["died"], before * 0.25)
-        home = people_of(self.game, "rome_100ad")
-        self.effects.kill_people(self.game, "rome_100ad", 0.1, "a curse")
-        self.assertAlmostEqual(people_of(self.game, "rome_100ad"), home * 0.9, delta=home * 1e-6)
-        with self.assertRaises(ModError):
-            self.effects.kill_people(self.game, PARTNER, 0.1, "")
-        with self.assertRaises(ModError):
-            self.effects.kill_people(self.game, PARTNER, 1.5, "too many")
-
-    def test_a_tile_transfer_writes_a_world_event_with_its_cause(self):
-        tile = self.game.tiles_owned_by("rome_100ad")[0]
-        self.effects.transfer_tile(self.game, tile, PARTNER, "a treaty")
-        self.assertEqual(self.game.tile_owner(tile), PARTNER)
-        self.assertEqual([row["cause"] for row in world_events.rows(self.game, "tile_transfer")], ["a treaty"])
-        with self.assertRaises(ModError):
-            self.effects.transfer_tile(self.game, tile, "rome_100ad", " ")
+    def tearDown(self):
+        mod_stores.forget_mod_stores()
 
     def test_a_store_write_is_the_declaring_mods_only(self):
-        tile = sorted(self.game.tile_owner_map())[0]
-        self.effects.write_store(self.game, ACME + ":mana", tile, 3.0)
-        self.assertEqual(self.game.stores.view(ACME + ":mana").get(tile), 3.0)
+        ModEffects(ACME).write_store(self.host, ACME + ":mana", "tile_1", 3.0)
+        self.assertEqual(self.host.stores.view(ACME + ":mana").get("tile_1"), 3.0)
         with self.assertRaises(ModError):
-            ModEffects(BETA).write_store(self.game, ACME + ":mana", tile, 1.0)
-
-    def test_the_base_game_hazards_use_the_same_operation(self):
-        owners = []
-        real = ModEffects.kill_people
-
-        def spy(effects, *args, **kwargs):
-            owners.append(effects.owner)
-            return real(effects, *args, **kwargs)
-        with mock.patch.object(ModEffects, "kill_people", spy):
-            world_hazards.hit(self.game, PARTNER, {"kind": "flood", "cause": "a flood", "population_loss": 0.1})
-        self.assertEqual(owners, [""])
-        self.assertEqual(world_events.rows(self.game, "flood")[0]["kind"], "flood")
+            ModEffects(BETA).write_store(self.host, ACME + ":mana", "tile_1", 1.0)
+        self.assertEqual(self.host.stores.view(ACME + ":mana").get("tile_1"), 3.0)
 
 
 if __name__ == "__main__":
