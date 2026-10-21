@@ -20,9 +20,10 @@ Measured by walking `inputs` and `outputs` of `data/production/*.json` and the g
   the only iron a grain field draws is in the plough-team capital of one wheat technique. Fishers,
   carters and soldiers have no tool basket either. Farms take no manure or storage jars, and seed is
   netted out of the yield (`sim/world/agriculture.py` docstring says the physical form lists it).
-- **Dead ends.** Nothing consumes `dye_kg`, so dyers make a good nobody uses and cloth is never dyed.
-  `cloth_kg` (fulling) takes no fuller's earth or urine. `wine_common_kg` and `olive_oil_kg` need no
-  press and travel without jars. Millstone wear is not charged (`data/production/95_grain_milling.json`).
+- **Dead ends.** Nothing consumes some produced goods; `python3 sim/simulator.py validate` lists them (see Done, stage 1).
+  Still open from the original list: `cloth_kg` (fulling) takes no fuller's earth or urine; millstone wear is not charged
+  (`data/production/95_grain_milling.json`). Jars and presses for wine and oil, amphorae, ships and bread are now 616, 617
+  and 614 (closed).
 
 ## Why it matters
 
@@ -33,11 +34,11 @@ business to improve. It also hides the crafts from the non-farm need shares (530
 
 ## What it would take
 
-- Finished goods with their own recipes and wear lives (`data/world/service_lives.json`): iron tools,
-  nails, amphorae, tiles, ships, carts, footwear; needs and the army buy these instead of materials.
+- Finished goods with their own recipes and wear lives (`data/world/service_lives.json`): nails, tiles, carts, footwear,
+  and the army's equipment; needs and the army buy these instead of materials (iron tools, amphorae, ships and bread are
+  done or filed as 614, 616, 617).
 - Tool baskets for the farm, fishing, carting and soldiering trades, so field work consumes iron.
-- Close the dead ends: dyed cloth from cloth and `dye_kg`; fulling inputs; jars as an input or
-  carriage cost of wine and oil; a press as capital.
+- Close the remaining dead ends: fulling inputs; millstone wear.
 - A check in `simulator.py validate` listing produced goods nothing consumes, so a new dead end shows.
 
 ## Done (stage 1)
