@@ -174,15 +174,18 @@ check("a one tonne sale is paid at about the quoted sell price",
       _sold_small == 1.0 and abs(_small_price - _quote["sell_per_tonne"]) < 0.02 * _quote["sell_per_tonne"],
       (_small_price, _quote["sell_per_tonne"]))
 _cash = _sell.capital
-_sold_big = _sell.sell_material_stock("coal", 40 * _absorbed)
-check("a sale is cut to what the market absorbs in a year", _sold_big <= _absorbed + 1e-6,
-      (_sold_big, _absorbed))
+_room = _sell.goods_market.sale_limits("coal")[1]   # the buyers' take last year, less what this seat sold (Complaint 668)
+_sell._material_stock()["coal"] += 2 * _room          # more than the buyers take, so the market and not the stock binds
+_sold_big = _sell.sell_material_stock("coal", 3 * _room)
+check("a sale is cut to what the market's buyers take in a year", abs(_sold_big - _room) <= 1e-6 * _room,
+      (_sold_big, _room))
 _big_average = (_sell.capital - _cash) / max(_sold_big, 1e-9)
 # the fall is the economy's own: its book cleared again with the tonnes sold as one more offer (stage 3 of Complaint 507);
 # how deep that is follows how many tonnes the engine's year of market is until stage 4 reads the offered quantity there
 _fall = _sell.economy.agent_price_response(_sell.goods_market._economy_good("coal"), _sold_big, 0.0, _sell.economy.acting_tile())
-check("selling a year's market at once pays less per tonne than one tonne",
-      _big_average < _small_price, (_big_average, _small_price))
+check("selling a year's market at once pays no more per tonne than one tonne, and less unless the economy's sellers give way",
+      _big_average <= _small_price * (1.0 + 1e-6) and (_big_average < _small_price or (_fall is not None and _fall >= 1.0 - 1e-6)),
+      (_big_average, _small_price, _fall))
 check("...and no less than the economy's price after all of it is on offer",
       _fall is not None and _big_average >= _small_price * _fall * (1.0 - 1e-3), (_big_average, _small_price, _fall))
 _cash = _sell.capital
