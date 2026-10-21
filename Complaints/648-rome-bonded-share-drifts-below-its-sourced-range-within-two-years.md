@@ -1,6 +1,6 @@
 # Rome's bonded share drifts below its sourced range within two years
 
-**Status:** open
+**Status:** partly fixed: the first-year famine is fixed; the slow decline from `BONDED_BIRTH_SHARE` remains open
 
 Found rewriting `rome_slave_stratum` (640). Rome seeds its bonded stratum at its declared share of the people; after
 two simulated years the share is below the low end of the range its source note gives (Scheidel 2005, cited in

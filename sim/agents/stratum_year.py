@@ -185,6 +185,23 @@ def settle_keep(registry: Any, world: Any) -> None:
 		actor.record.allowance += cost
 
 
+def true_up_keep(registry: Any, world: Any) -> None:
+	"""Before the year's turns, each keeper makes up the bonded's food to the year's own prices: a keep set at
+	the end of last year used last year's prices, and a stratum founded since has none. A fall in prices
+	takes nothing back."""
+	for actor in registry.of_kind("stratum"):
+		if not actor.is_bonded():
+			continue
+		owner = registry.actors.get(actor.neighbour_id(str(actor.record.plan.get("owner") or "")))
+		if owner is None or owner is actor:
+			continue
+		cost = actor.record.members * registry.world_for(actor, world).subsistence_cost_per_person_year()
+		shortfall = cost - actor.record.allowance
+		if shortfall > 0.0:
+			ledger.transfer(owner, actor, shortfall, "keep of bonded")
+			actor.record.allowance += shortfall
+
+
 def settle_strata(registry: Any, world: Any) -> None:
 	settle_moves(registry)
 	settle_keep(registry, world)
