@@ -114,6 +114,22 @@ class PressAndJars(unittest.TestCase):
         self.assertAlmostEqual(oil, 48.0 * 0.2523 * 300.0, delta=1.0)
 
 
+class CropLabourFromTheAgronomists(unittest.TestCase):
+
+    def test_a_working_year_covers_the_area_columella_and_varro_give_one_man(self):
+        from sim.unit_conversions import HOURS_PER_PERSON_YEAR
+        iugerum_hectares = 0.2523
+        for material, iugera in (("grapes_kg", 7.0), ("olives_kg", 8.0)):  # Columella 3.8, Varro 1.18.2
+            hours = _PRODUCTION[material]["labour_hours"]["vine_and_olive_tender"]
+            self.assertAlmostEqual(hours, HOURS_PER_PERSON_YEAR / (iugera * iugerum_hectares), delta=2.0, msg=material)
+
+    def test_oil_jars_hold_the_oil_at_its_density(self):
+        jar_litres, oil_density = 26.0, 0.911
+        entry = _PRODUCTION["olive_oil_kg"]
+        self.assertAlmostEqual(entry["inputs"]["amphora_count"],
+                               entry["outputs"]["olive_oil_kg"] / (jar_litres * oil_density), delta=0.01)
+
+
 class HoldingInterestRule(unittest.TestCase):
 
     def test_stock_held_is_charged_on_the_inputs_laid_out_not_on_the_labour_after(self):
