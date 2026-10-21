@@ -1,84 +1,69 @@
-"""player_command_fixes: sort words, quote for every buy target, rush preview, buy school."""
-from .harness import *
+"""player_command_fixes: sort words, a quote handler for every buy target, the rush preview's wording, the school spellings.
+The parser, the sort and the dispatch tables run on inputs and stubs the test builds; the commands on a running game (a quote
+for every target, the rush preview, founding a school) are test_player_command_fixes_scenario."""
+QUICK_TOPIC = True
+
+from types import SimpleNamespace
+
+from .harness import check
+
 from sim.ui.proto import buy_targets
 from sim.ui.proto.dispatch_money import _BUY_HANDLERS
 from sim.ui.proto.render_typed import render_pretty
+from sim.ui.proto.techtree import _SORT_KEYS, _SORT_KEY_NAMES, _agent_available, _available_params, _sort_startable_list
 from sim.ui.proto.typed import parse_typed
 
-
-def _run(sim_state, text):
-    parsed, error = parse_typed(text)
-    if error:
-        return {"ok": False, "error": error}
-    return S._agent_dispatch(sim_state, NODES, parsed)
-
-
-def _ids(rows):
-    return [row["id"] for row in rows]
-
-
 # --- 146: `available sort earns` sorts, and an unknown sort key is refused
-rich = sim(capital=1_000_000)
-spaced = _run(rich, "available sort earns limit 200")
-coloned = _run(rich, "available sort:earns limit 200")
-check("sort with a space sorts by earnings like the colon form",
-      spaced.get("sorted_by") == "earns" and _ids(spaced["available"]) == _ids(coloned["available"]),
-      spaced.get("sorted_by"))
+spaced = parse_typed("available sort earns limit 200")
+coloned = parse_typed("available sort:earns limit 200")
+check("sort with a space parses like the colon form", spaced == coloned and spaced[0].get("sort") == "earns", (spaced, coloned))
+reversed_form = parse_typed("available sort earns reverse limit 5")[0]
+check("reverse parses as a flag next to the sort key", reversed_form.get("sort") == "earns" and reversed_form.get("reverse"), reversed_form)
+
+earnings = {"low": 1.0, "mid": 5.0, "high": 9.0}
+sorting_game = SimpleNamespace(venture_real_earnings=lambda node_id: earnings[node_id], project_cost=lambda node_id: 1.0)
+earns_fn = _available_params({"sort": "earns"})[7]
+check("sort earns orders the smallest earner first",
+      _sort_startable_list(sorting_game, {}, ["mid", "high", "low"], earns_fn, False) == ["low", "mid", "high"])
 check("sort earns reverse puts the biggest earner first",
-      _run(rich, "available sort earns reverse limit 5")["available"][0]["earns_per_year"]
-      >= _run(rich, "available sort earns limit 5")["available"][0]["earns_per_year"])
-refused = _run(rich, "available sort bogus limit 5")
+      _sort_startable_list(sorting_game, {}, ["mid", "high", "low"], earns_fn, True) == ["high", "mid", "low"])
+check("every advertised sort key is a sort", all(name in _SORT_KEYS for name in _SORT_KEY_NAMES))
+
+empty_game = SimpleNamespace(nodes={}, fog=False, order=[], can_start=lambda node_id, _memo=None: False)
+refused = _agent_available(empty_game, {}, {"sort": "bogus", "limit": 5})
 check("an unknown sort key is refused, naming the valid ones",
-      not refused["ok"] and refused.get("cause") == "unknown_sort_key" and "earns" in refused.get("choices", ()), refused)
+      not refused["ok"] and refused["error"].cause == "unknown_sort_key" and "earns" in refused["error"].choices, refused)
 
-# --- 147: quote covers every buy target
-for target in buy_targets.target_names():
-    check("buy handler exists for target %s" % target, target in _BUY_HANDLERS)
-quotable = {"forest": "quote forest 10", "nitre": "quote nitre 100", "farm": "quote farm 20",
-            "housing": "quote housing 5", "school": "quote school smith 2",
-            "material": "quote material iron 10", "mine": "quote mine coal 100",
-            "slaves": "quote slaves 2", "manumit": "quote manumit 1",
-            "living_stock": "quote living_stock ramie_stock_kg 100",
-            "smuggled_stock": "quote smuggled_stock silkworm_eggs_kg 0.1"}
-check("the quote test names every buy target", set(quotable) == set(buy_targets.target_names()))
-for target, text in quotable.items():
-    # stock is only for sale by a partner economy, so it is quoted from Rome (which buys from Han China)
-    reply = _run(rich, text)
-    check("quote works for buy target %s" % target, reply.get("ok"), (text, reply))
-farm_reply = _run(rich, "quote farm 20")
-check("quote farm prices what buy farm charges",
-      abs(farm_reply["to_buy_it"] - 20 * rich.FARM_COST_PER_HA * rich.price_index) < 0.1, farm_reply)
-material_reply = _run(rich, "quote material iron 10")
-check("quote material gives the current market price per tonne",
-      material_reply["per_tonne"] > 0, material_reply)
-capital_before = rich.capital
-_run(rich, "quote farm 20")
-check("quote changes nothing", rich.capital == capital_before)
+# --- 147: every buy target has a handler (a quote for each, taken on a running game, is in the scenario)
+check("a buy handler exists for every buy target", set(buy_targets.target_names()) == set(_BUY_HANDLERS),
+      set(buy_targets.target_names()) ^ set(_BUY_HANDLERS))
+check("every spelling of a target reaches a handler",
+      all(buy_targets.canonical_target(spelling) in _BUY_HANDLERS
+          for target, (spellings, _usage) in buy_targets.BUY_TARGETS.items() for spelling in (target,) + tuple(spellings)))
 
-# --- 155: rush preview lists what rush would start
-rush_game = sim(capital=20000.0)
-preview = _run(rush_game, "rush preview limit:3")
-check("rush preview limit starts nothing", not rush_game.active, rush_game.active)
-bare = _run(rush_game, "rush preview")
-check("bare rush preview lists what it would start and starts nothing",
-      bare.get("preview") and bare.get("count_would_start", 0) > 0
-      and "total_cost" in bare and not rush_game.active, bare)
-check("bare rush preview renders as a preview, not as '0 started'",
-      "RUSH PREVIEW" in render_pretty("rush", bare), render_pretty("rush", bare)[:80])
-plain = _run(rush_game, "rush")
-check("unbounded rush still only previews and renders as one",
-      plain.get("preview") and "RUSH PREVIEW" in render_pretty("rush", plain))
-real = _run(rush_game, "rush limit:3")
-check("rush preview lists exactly the ids rush limit starts",
-      _ids(preview["would_start"]) == _ids(real["started"]) and len(real["started"]) == 3,
-      (preview, real))
+# --- 155: the rush preview is rendered as a preview
+preview = {"ok": True, "preview": True, "nothing_changed": True, "count_would_start": 2, "would_start": [], "total_cost": 10.0,
+           "total_annual_draw": 3.0, "total_founder_hours": 4.0, "filters": {}, "trade_bottlenecks": [], "risk_exposure": None,
+           "count_not_started": 0, "not_started": [], "excluded": []}
+check("a rush preview renders as a preview, not as '0 started'",
+      "RUSH PREVIEW" in render_pretty("rush", preview), render_pretty("rush", preview)[:80])  # presentation: the preview heading
+check("a rush that started things renders as a rush",
+      "RUSH PREVIEW" not in render_pretty("rush", {"ok": True, "started": [], "count_started": 0, "count_not_started": 0}))  # presentation: the heading
 
-# --- 156: buy school <trade> <n> works, as do `trade school` and `trade_school`
-school_sim = rich
-school_sim.trades_created.add("chemist")
-school_sim.labour.market.press("chemist", 100)
-for text in ("buy school chemist 1", "buy trade school chemist 1", "buy trade_school chemist 1"):
-    reply = _run(school_sim, text)
-    check("%r founds a school" % text, reply.get("ok") and reply["trade"] == "chemist", reply)
-check("the help example for schools is the form that works",
-      "buy school smith 2" in json.dumps(_run(rich, "help economy")))
+# --- 156: buy school <trade> <n> reads as a school purchase whichever way it is spelled
+def founded_by(text):
+    """(target the words name, trade the school is founded for) when the typed line is run through the school handler."""
+    founded = []
+    school_game = SimpleNamespace(
+        labour=SimpleNamespace(found_trade_school=lambda trade, seats: (founded.append((trade, seats)) or True, ""),
+                               market_supply=lambda trade: 0.0),
+        trade_schools={"chemist": 1, "smith": 2}, capital=0.0)
+    reply = parse_typed(text)[0]
+    _BUY_HANDLERS[buy_targets.canonical_target(reply["what"])](school_game, reply, reply["n"])
+    return buy_targets.canonical_target(reply["what"]), founded
+
+
+for words in ("buy school chemist 1", "buy trade school chemist 1", "buy trade_school chemist 1"):
+    check("%r founds a school for the trade named" % words, founded_by(words) == ("school", [("chemist", 1.0)]), founded_by(words))
+check("the help example for schools is the form that founds one", founded_by("buy school smith 2") == ("school", [("smith", 2.0)]),
+      founded_by("buy school smith 2"))

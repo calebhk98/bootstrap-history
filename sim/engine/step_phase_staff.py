@@ -1,12 +1,12 @@
 """The yearly staff phase: attrition, wage affordability and keeping concerns staffed.
 
 A part of the year's phases (core_step_phases.py); Sim inherits it through StepPhasesMixin."""
-import math
 
 from sim.refusal import LogLine
 from sim.world import demography
 from . import automation_audit
 from .units_prose import plain_number
+from .payroll_trim import payroll_means, staff_to_let_go
 from .staff_replacement import REPLACE_ONLY, replace_lost_staff
 from sim.agents.api import edges
 
@@ -71,10 +71,7 @@ class StaffPhaseMixin:
         payroll = self.labour.wage_bill()
         other = (self.upkeep() + (self.living_cost() - payroll)
                  + self.mine_operating_cost())
-        # capital is negative in arrears; credit_limit() is how far into arrears
-        # anyone will let you go, so this is what you can actually still spend.
-        headroom = max(0.0, self.state.household.capital + self.credit_limit())
-        can_pay = self.revenue() - other + headroom
+        can_pay = payroll_means(self.revenue(), other, self.state.household.capital, self.credit_limit())
         # NOT GATED BY A POLICY, and this is the one automatic thing that is not.
         # A policy switch is for something the game decides FOR you - who to
         # hire, what to mothball - and every one of those is yours to turn off.
@@ -83,26 +80,12 @@ class StaffPhaseMixin:
         # answering one you already made, the same as the arrears bleed below.
         # The `policy` reply says so in as many words.
         if payroll > can_pay and self.state.household.employees:
-            short = payroll - can_pay
             gone = 0.0
             _before_shed = self.labour.staff_snapshot()
-            # shed, dearest first, until the wages you are left with fit
-            for trade_id in sorted(self.state.household.employees, key=lambda t: -self.labour.market.quote_annual(t)):
-                if short <= 0:
-                    break
-                wage = self.labour.market.quote_annual(trade_id)
-                if wage <= 0:
-                    continue
-                # A WHOLE PERSON, ROUNDED UP. `short / wage` is a quantity of
-                # wages, not a quantity of people: cutting that fraction
-                # straight would leave "0.3 smiths" still on the books, still
-                # drawing 0.3 of a wage that was just found unaffordable.
-                # Rounding up sheds one whole person too many at worst,
-                # which is the safe direction for a household that genuinely
-                # cannot make payroll.
-                cut = min(self.state.household.employees[trade_id], math.ceil(short / wage - 1e-9))
+            # shed, dearest first, whole people, until the wages you are left with fit
+            for trade_id, cut in staff_to_let_go(payroll, can_pay, dict(self.state.household.employees),
+                                                 self.labour.market.quote_annual).items():
                 self.labour.add_employed(trade_id, -cut)
-                short -= cut * wage
                 gone += cut
                 if self.labour.employed(trade_id) < 0.5:
                     self.labour.set_employed(trade_id, 0.0)
