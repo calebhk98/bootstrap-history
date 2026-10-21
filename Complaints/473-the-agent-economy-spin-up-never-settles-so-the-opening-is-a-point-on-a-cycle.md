@@ -285,3 +285,10 @@ rome_100ad --years 60`; `python3 -m sim.tests --slow --only baseline_fixture,bas
 Leisure is limited to hours the plot could not still use (`HourSupply.parts`): without that limit Rome's one-year hunger share rose to
 0.49 (`labour_margins_baseline_validation`), since hours that used to grow food became leisure. Now, Rome one year: hired share 0.33
 (was 0.04), wage over floor 4.8 (was 3.4), hunger share 0.17 (was 0.15). `baseline_fixture` passes whole.
+
+## Measured (2026-10-21, 60-year Rome trace at 9eb35921: hour supply schedule plus supply fixes)
+
+Output: `Complaints/reports/473-trace-9eb35921.txt`. The first four decades are calmer than at 72e81e68 (the price level near
+a hundred at year forty instead of nearer two hundred, hired hours steady), then the economy explodes after year forty: the
+price level, the wage and the rate run away together within a few years (the rate far above one, the wage thousands of
+times its opening). A per-good decomposition of years 35 to 52 is running (`decomp.py` probe, the same as for 72e81e68).
