@@ -10,7 +10,7 @@ from typing import Any, Dict, Mapping, Optional, Tuple
 
 from sim.world import capital_market
 
-from . import taxes, bondage, bonded_purchase, banks, carriage_hours, credit, credit_lines, debt_relief, credit_claims, currency, equity, labour, land_market, lending, merchants_credit, producers, shares, sites, state_budget, tax_farming, titles_ground, titles_inheritance, titles_worked, unit_cost
+from . import taxes, bondage, bondage_hours, bonded_purchase, banks, carriage_hours, credit, credit_lines, debt_relief, credit_claims, currency, equity, labour, land_market, lending, merchants_credit, producers, shares, sites, state_budget, tax_farming, titles_ground, titles_inheritance, titles_worked, unit_cost
 from .credit_view import CreditView
 from .market_areas import AreaMap
 from .market_areas_follow import follow
@@ -20,7 +20,7 @@ from .mint_labour import close_year as close_mint_year, mint_agent
 from .money_audit import MoneyAudit, year_report
 from .flow_rates import flow_imbalance
 from .entry_year import close_idle_producers, open_entrants, restake_owners
-from . import household_hours_year, household_work_year, land_bid_year, opening_leisure
+from . import household_hours_year, household_work_year, land_bid_year, land_lease_year, opening_leisure
 from .households_own import (hours_for_own_plan, own_production, own_production_options, plot_hectares)
 from .labour_inputs import labour_context
 from .labour_state import scale_people
@@ -178,8 +178,12 @@ class Economy:
         staff_mint(setup, record, view, labour_bids)
         labour_bids.extend(carriage_hours.bids(setup, record))    # merchants' carriers, from last year's shipments
         outside_option = outside_option_by_tile(setup, record, view)
+        land_lease_year.lease_in_market(setup, record, view, self._own_plot_options())
         land_bid_year.take_up_own(setup, record, self._own_plot_options())
         everyone = labour_offers(setup, record, view, outside_option, inputs.labour_levy_hours_per_worker)
+        placed = bondage_hours.place(record.bondage, everyone, labour_bids, bondage_hours.works_of_producers(record),
+                                     bondage.BONDED_HOURS_OWED_SHARE)
+        everyone, labour_bids = placed.offers, placed.bids
         supply = self._hour_supply(everyone, view, outside_option)
         context = labour_context(setup, record, view, self.carriage, inputs, self._own_plot_options(), outside_option)
         labour_report = clear_labour(setup, record, labour_bids, everyone, ledger, context, supply=supply)
@@ -187,6 +191,7 @@ class Economy:
         self._leisure_hours = supply.leisure
         ledger.bonded_bought, ledger.bonded_paid = bonded_purchase.settle(
             record.book, money, labour_report.formed, labour_bids, context.ask_floor_per_worker_year)
+        bondage_hours.deliver(ledger.hours_hired, placed)
         self._grow_own(offers, ledger, inputs.harvest_factor, kept)
         order_book = {}
         funds = cohort_orders(setup, record, view, ledger, order_book, self._own_plot_options())
@@ -198,6 +203,9 @@ class Economy:
         for plan in plans.values():
             for bid in plan.bids:
                 order_book.setdefault((bid.good, bid.area), ([], []))[0].append(bid)
+        for bid in land_bid_year.firm_land_bids(setup, record, view, {producer_id: plan.wanted_runs for producer_id, plan in plans.items()},
+                                                {producer_id: sum(bid.budget for bid in plan.bids) for producer_id, plan in plans.items()}):
+            order_book.setdefault((bid.good, bid.area), ([], []))[0].append(bid)
         funds, pledged = banks.intermediate(setup, record, funds, view.year, inputs.institutions)
         plant_runs = self._lend(funds, view, order_book, ledger, pledged, inputs.credit_asks)
         merchant_orders(setup, record, view, self.area_map, self.carriage, order_book)
@@ -209,9 +217,10 @@ class Economy:
         close_mint_year(setup, record)
         rent = land_market.settle_year(setup, record, view,
                                        {producer_id: plan.wanted_runs for producer_id, plan in plans.items()},
-                                       self._own_hectares, inputs.land_tax_share_of_rent)
+                                       self._own_hectares, inputs.land_tax_share_of_rent,
+                                       land_lease_year.asks(setup, record, view, self._own_plot_options()))
         interest = self._service_loans(view.year)
-        bonded = bondage.service(record, money, ledger.wages_in)
+        bonded = bondage.service(record, money, ledger.wages_in, placed.value_placed, placed.cash_share)
         record.book.transfer_many(bonded)
         for payment in bonded:
             interest[payment.payee] = interest.get(payment.payee, 0.0) + payment.amount

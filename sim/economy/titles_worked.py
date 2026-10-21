@@ -8,8 +8,7 @@ from .types import AgentId, TileId
 def worked_share(record, tile: TileId, holder: AgentId) -> float:
     """Share of the tile's land the holder works with its own hands: titles it holds that no tenant works,
     plus the shares it works as a tenant under another holder."""
-    let_out = sum(row["share"] for row in getattr(record, "tenancies", {}).get(tile, ()) if row["lessor"] == holder)
-    return max(0.0, titles.holding(record, tile, holder) - let_out) + titles.tenant_share(record, tile, holder)
+    return max(0.0, titles.holding(record, tile, holder) - titles.let_out_share(record, tile, holder)) + titles.tenant_share(record, tile, holder)
 
 
 def allocate_hectares(asked_by_holder: Mapping[AgentId, float], arable_hectares: float) -> Dict[AgentId, float]:

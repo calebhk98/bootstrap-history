@@ -7,7 +7,7 @@ foreclosure: a loan pledges a share, and on default the share passes to the lend
 family stays on it as a tenant (`record.tenancies`: tile -> rows of tenant, lessor, share, rent arrears).
 Reads fall back on ownership shares for a record that has no titles yet.
 """
-from typing import Dict, List, Mapping
+from typing import Dict, List, Mapping, Optional
 
 from . import titles_management
 from .types import AgentId, CurrencyId, TileId, Transfer
@@ -64,6 +64,22 @@ def _add_tenancy(record, tile: TileId, tenant: AgentId, lessor: AgentId, share: 
             row["share"] += share
             return
     rows.append({"tenant": tenant, "lessor": lessor, "share": share, "arrears": 0.0})
+
+
+def let_out_share(record, tile: TileId, lessor: AgentId) -> float:
+    return sum(row["share"] for row in getattr(record, "tenancies", {}).get(tile, ()) if row["lessor"] == lessor)
+
+
+def lease(record, tile: TileId, tenant: AgentId, lessor: AgentId, share: float) -> float:
+    """A tenancy made in the market, not by default: the lessor lets `share` of the tile to the tenant, no more than
+    the title it holds and has not pledged or already let out. The title stays with the lessor. Returns the share let."""
+    if tenant == lessor or share <= EPSILON:
+        return 0.0
+    let = min(share, free_share(record, lessor, tile) - let_out_share(record, tile, lessor))
+    if let <= EPSILON:
+        return 0.0
+    _add_tenancy(record, tile, tenant, lessor, let)
+    return let
 
 
 def foreclose(record, loan) -> float:
@@ -130,20 +146,23 @@ def top_holder_share(record, tile: TileId) -> float:
 
 def settle_tenancies(record, currency: CurrencyId, arable_by_tile: Mapping[TileId, float],
                      management_cost_per_extra_tenancy: float = titles_management.COST_SHARE_PER_EXTRA_TENANCY,
-                     land_tax_share_of_rent: float = 0.0) -> List[Transfer]:
+                     land_tax_share_of_rent: float = 0.0,
+                     ask_by_tile: Optional[Mapping[TileId, float]] = None) -> List[Transfer]:
     """Each tenant pays its lessor the tile's rent on the share it works, and any arrears, as far as its cash
     goes; the lessor spends the managing cost of its tenancies (titles_management.py) of it on stewards, and
     a tenancy whose cost eats all its rent is given up to the tenant. A tenant more than a year's rent
     behind has left the land: the lessor's title on it goes back to nobody. A lessor whose managing cost and the
     state's land tax (`land_tax_share_of_rent`) together take more than the rent holds a loss, and lets the title
-    go. Returns the payments."""
+    go. `ask_by_tile` is the rent per hectare a landlord can ask of tenants (land_tenancy.rent_ask), which cuts the
+    posted rent where the tenants' outside option is better. Returns the payments."""
     payments: List[Transfer] = []
     if not getattr(record, "tenancies", None):
         return payments
     cash: Dict[AgentId, float] = {}
     counts = titles_management.tenancies_by_lessor(record.tenancies)
     for tile, rows in sorted(record.tenancies.items()):
-        rent = record.land_rent.get(tile, 0.0) * arable_by_tile.get(tile, 0.0)
+        posted = record.land_rent.get(tile, 0.0)
+        rent = (posted if ask_by_tile is None or tile not in ask_by_tile else min(posted, ask_by_tile[tile])) * arable_by_tile.get(tile, 0.0)
         stewards = min((cohort for cohort in record.cohorts.values() if cohort.tile == tile),
                        key=lambda cohort: (cohort.income_class, cohort.agent_id), default=None)
         kept = []
