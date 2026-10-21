@@ -48,14 +48,10 @@ firm_count_from_costs
 firm_crew_paid_once
 five_things_winner
 freight_domestic_haul
-hazard_risk_screens
-interest_groups
 interface_honesty
 knowledge_loss_and_consequences
-military_logistics_wiring
 mod_effects
 mod_stores
-player_choice_routes
 player_guidance_commands
 player_log
 prerequisite_names_shown
