@@ -6,7 +6,7 @@ import os
 import unittest
 
 from sim.engine import data, money_units
-from sim.tests.test_money_units_one_boundary import BASE_CIVS, build
+from sim.tests.test_money_units_one_boundary_scenario import BASE_CIVS, build
 
 BRANCH_DIRECTORY = os.path.join(data.ROOT, "data", "branches")
 AUTHORED_FIELDS = ("cap", "up", "rev")
