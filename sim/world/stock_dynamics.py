@@ -23,10 +23,10 @@ def feed_room(capacity, held):
     return max(0.0, float(capacity) - float(held))
 
 
-def catch_chance(state_capacity, visibility):
+def catch_chance(state_reach, visibility):
     """Chance a theft of stock is found out: the owning state's reach (the share of its offences it
     catches) times how visible the taking is, both 0..1."""
-    return min(1.0, max(0.0, float(state_capacity)) * min(1.0, max(0.0, float(visibility))))
+    return min(1.0, max(0.0, float(state_reach)) * min(1.0, max(0.0, float(visibility))))
 
 
 def is_caught(draw, chance):

@@ -43,7 +43,7 @@ def profile_from_civilisation(civ: Mapping[str, Any]) -> CountryProfile:
 	return CountryProfile(
 		country=country, name=str(civ.get("name") or country),
 		population=_number(civ.get("population"), 0.0), urban_fraction=_number(civ.get("urban_fraction"), 0.0),
-		state_capacity=_number(civ.get("state_capacity"), 0.0), tax_share=_number(civ.get("starting_tax_share"), 0.0),
+		tax_share=_number(civ.get("starting_tax_share"), 0.0),
 		wage_index=_number(civ.get("wage_index"), 1.0), price_index=_number(civ.get("price_index"), 1.0),
 		literacy_general=_number(civ.get("literacy_general"), 0.0), literacy_elite=_number(civ.get("literacy_elite"), 0.0),
 		home_tiles=held, location=cast.get("location") or settlement.default_base_tile(held),

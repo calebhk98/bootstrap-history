@@ -13,7 +13,7 @@ YEARS_KEPT = 5
 ROWS_KEPT = 400   # a hard cap for runs that never close a period
 WAGE = "wage"
 NOTICE = "notice"
-STATE_CAUSE = "state capacity"
+STATE_CAUSE = "state reach"
 SCALE_CAUSES = ("headcount", "wealth", "eminence", "defiance")
 UNSHOCKED_WAGE_CAUSE = "births and deaths outside dated shocks"
 
@@ -44,7 +44,7 @@ def record_wage_shock(sim, cause, index_before):
 
 def _readings(sim):
     household = sim.state.household
-    return {"wage_index": sim.labour.market.wage_index(), "state_capacity": sim.state_capacity,
+    return {"wage_index": sim.labour.market.wage_index(), "state_reach": sim.state_reach(),
             "headcount": sim.labour.headcount(), "wealth": demand_answer.visible_wealth(household.capital, household.concealed),
             "eminence": household.eminence, "defiance": household.defiance}
 
@@ -52,14 +52,14 @@ def _readings(sim):
 def _notice_steps(sim, before, after):
     """The notice change, one input at a time so the parts add to it exactly."""
     inputs = dict(before)
-    capacity = before["state_capacity"]
+    capacity = before["state_reach"]
 
     def level():
         return capacity * sim.visible_scale(inputs["headcount"], inputs["wealth"], inputs["eminence"], inputs["defiance"])
 
     parts = {}
     last = level()
-    capacity = after["state_capacity"]
+    capacity = after["state_reach"]
     now = level()
     parts[STATE_CAUSE], last = now - last, now
     for name in SCALE_CAUSES:

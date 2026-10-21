@@ -13,7 +13,7 @@ def grievance_game(civ="rome_100ad", share=0.6, capacity=None, purse=1.0e12):
     """A game whose founder has sold `share` of the opening iron market this year."""
     game = unopened_sim(civ=civ)   # the displaced-sales market is the engine's own
     if capacity is not None:
-        game.state_capacity = capacity
+        game.state_reach = lambda: capacity
     game._open_market_book()
     game.goods_market.note_sale(game.goods_market.acting_party_id, "iron", game._market_entry("iron")["reference_tonnes"] * share)
     game.state_treasury().money = purse

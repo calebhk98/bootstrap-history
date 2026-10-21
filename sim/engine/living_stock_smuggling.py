@@ -39,8 +39,14 @@ class LivingStockSmugglingMixin:
     def _smuggling_chance(self, civilization_id, material, units):
         """Chance the partner's state finds the taking out: its reach times how much of what it holds goes."""
         holding = max(1e-12, self._partner_holding(civilization_id, material))
-        capacity = float(self.partner_civ(civilization_id).get("state_capacity", self.STATE_CAPACITY_DEFAULT))
-        return stock_dynamics.catch_chance(capacity, visibility_factor(units / holding))
+        return stock_dynamics.catch_chance(self.partner_state_reach(civilization_id), visibility_factor(units / holding))
+
+    def partner_state_reach(self, civilization_id):
+        """What the partner's paid officials collect of what is due over its roads: the reach its state catches with."""
+        from .agents_port import SimWorld
+        from .agents_port_cast import seed_opening_cast
+        seed_opening_cast(self)
+        return float(self.actors.world_for(self.partner_government(civilization_id), SimWorld(self)).state_reach())
 
     def stock_smuggle_quote(self, material, units, partner=None):
         """What taking `units` of a stock material from a partner that will not sell it costs and risks:

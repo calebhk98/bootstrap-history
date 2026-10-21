@@ -913,9 +913,8 @@ def cmd_civs(args):
         print("   %s" % civ_data.get("blurb", ""))
         homes = [region_names.get(region_id, region_id) for region_id in regions_of_tiles(tiles_held(civ_data))]
         print("   home ground: %s" % (", ".join(homes) if homes else "(none set)"))
-        print("   population %s   state capacity %.2f   starts with %d technologies"
-              % (f"{civ_data.get('population',0):,}", civ_data.get("state_capacity", 0),
-                 len(civ_data.get("starting_techs", []))))
+        print("   population %s   starts with %d technologies"
+              % (f"{civ_data.get('population',0):,}", len(civ_data.get("starting_techs", []))))
         print("   fears the inexplicable %.2f | fears heterodoxy %.2f | resents machines %+.2f "
               "| bribable %.2f | habituates %.2f"
               % (value["w_magic_fear"], value["w_religious_rigidity"], value["w_labour_saving"],
@@ -1080,9 +1079,8 @@ def _new_game_pick_civ(civs, cfg):
         print()
         print("   %d) %s" % (i, _civ_title(civ_record)))
         print(_wrap(civ_record.get("blurb", ""), indent="      "))
-        print("      %s people   state capacity %.2f   prices %.2fx the default scenario"
-              % (f"{civ_record.get('population', 0):,}", civ_record.get("state_capacity", 0),
-                 civ_record.get("price_index", 1.0)))
+        print("      %s people   prices %.2fx the default scenario"
+              % (f"{civ_record.get('population', 0):,}", civ_record.get("price_index", 1.0)))
     print()
     default_i = next((i for i, civ_record in enumerate(civs, 1)
                       if civ_record.get("id") == cfg.get("default_civ")), None)

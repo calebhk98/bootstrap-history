@@ -147,13 +147,13 @@ class CountryStateView(CollectionView):
 				for firm in firms if firm.record.country == self.profile.country]
 
 	def notice_over(self, scale: float, capacity: Optional[float] = None) -> float:
-		return self._shared.notice_over(scale, self.state_capacity() if capacity is None else capacity)
+		return self._shared.notice_over(scale, self.state_reach() if capacity is None else capacity)
 
 	def levy_shares(self, scale: float, protection: float = 0.0, state: Any = None) -> Any:
 		"""(requisition, office) shares of income this country's state assesses at a visible scale: its own capacity,
 		tax share and the rates its shortfall set last year."""
 		requisition, office = self.government().levy_rates() if hasattr(self.government(), "levy_rates") else (0.0, 0.0)
-		return self._shared.levy_shares(scale, protection, (self.state_capacity(), self.tax_share(), requisition, office))
+		return self._shared.levy_shares(scale, protection, (self.state_reach(), self.tax_share(), requisition, office))
 
 	# ---- credit
 	def state_may_borrow(self, state: Any) -> bool:

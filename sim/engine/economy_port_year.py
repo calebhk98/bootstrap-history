@@ -208,6 +208,7 @@ class AgentEconomy(TilePricesMixin):
     def run_year(self):
         economy = self.economy()
         economy_port_cropland.follow_farm_sites(self._sim, economy.setup)
+        economy.setup.state_capacity = self._sim.state_reach()
         self.sync_ways()
         self.admit_techniques()
         orders = self._seat_orders()

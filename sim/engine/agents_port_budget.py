@@ -14,7 +14,7 @@ class BudgetView:
 	def population_total(self) -> float:
 		return self._sim.population.total
 
-	def state_capacity(self) -> float:
+	def state_reach(self) -> float:
 		return self._sim.state_authority()
 
 	def territory(self) -> Any:

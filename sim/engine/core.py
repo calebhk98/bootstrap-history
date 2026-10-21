@@ -213,14 +213,6 @@ class Sim(ModStoresMixin, RealPriceRatiosMixin, CoinRevaluationMixin, MechanicsM
           ProjectsMixin, SeatMixin, SeatRunMixin, SeatBuildsMixin, SeatSightMixin, ShockYearMixin, WaysMixin, WorksMixin, HeldWorksMixin, SocietyMixin, ActorsMixin, DisclosureMixin, FounderSalesMixin, SeatDealingsMixin, InterestGroupsMixin, BenefactionsMixin, RouteDuesMixin, ForwardingPropertiesMixin, GoalsMixin,
           StepPhasesMixin, LivingStockMixin, LivingStockOpeningMixin, CoinHoardMixin, CoinCarriageMixin, TheftChargeMixin,
           LivingStockTradeMixin, LivingStockSmugglingMixin, LivingStockYearlyMixin, FoodSupplyMixin, SoilNitrogenMixin, FoodEatenMixin, DemographicRecoveryMixin, RegionalPeopleMixin, DefenceStoresMixin, EconomyPortMixin, NodeRederiveMixin):
-    STATE_CAPACITY_DEFAULT = declare(
-        "STATE_CAPACITY_DEFAULT", 0.7, kind="temporary_heuristic",
-        unit="dimensionless (0..1)", source=None, confidence="D",
-        why="Fallback state_capacity for a civilisation file that does not "
-            "set its own - every shipped civ file does set one, so this "
-            "only matters for one that omits it. A mid-high default so a "
-            "missing field does not silently cripple every state-notice "
-            "mechanic; not fitted to any specific state.")
     DEFAULT_POPULATION_100AD = declare(
         "DEFAULT_POPULATION_100AD", 65e6, kind="initial_condition",
         unit="people", source="Widely cited estimate of the Roman Empire's "
@@ -330,7 +322,6 @@ class Sim(ModStoresMixin, RealPriceRatiosMixin, CoinRevaluationMixin, MechanicsM
         self.cfg["start_year"] = int(self.civ.get("year", self.cfg["start_year"]))
         self.price_index = float(self.civ.get("price_index", 1.0))
         self._wage_index_base = float(self.civ.get("wage_index", 1.0))
-        self.state_capacity = float(self.civ.get("state_capacity", self.STATE_CAPACITY_DEFAULT))
         # A PLAGUE IS A HIT TO THE WHOLE LABOUR MARKET, NOT ONLY TO YOU. A
         # mortality event large enough to take a third of one household's
         # own staff must not leave everybody ELSE's wages untouched, as if
@@ -577,16 +568,11 @@ class Sim(ModStoresMixin, RealPriceRatiosMixin, CoinRevaluationMixin, MechanicsM
                 self.state.population.pop_elderly = float(self.population.elderly)
 
         # Sync civ live state and metadata
-        if self.state._civ_live:
-            for attr, value in self.state._civ_live.items():
-                if value is not None:
-                    self.civ[attr] = value
         if self.state._weights:
             self.value_weights.update(self.state._weights)
         if self.state._rng is not None:
             rng_version, _keys, rng_gaussian = self.state._rng
             self.rng.setstate((rng_version, tuple(int(x) for x in _keys), rng_gaussian))
-        self.state_capacity = float(self.civ.get("state_capacity", self.state_capacity))
 
         # Reset transient caches
         self._reset_economic_caches()

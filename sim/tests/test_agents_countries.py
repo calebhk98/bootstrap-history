@@ -68,14 +68,14 @@ bare = profile_from_civilisation({"id": "alpha"})
 check("a civilisation with almost nothing in it still gives a profile",
 	  bare.country == "alpha" and bare.name == "alpha" and bare.population == 0.0 and bare.location is None
 	  and bare.starting_techs == set() and bare.wage_index == 1.0 and bare.strata == [], bare)
-HOME = {"id": "alpha", "name": "Alpha", "population": 1_000_000, "urban_fraction": 0.1, "state_capacity": 0.8,
+HOME = {"id": "alpha", "name": "Alpha", "population": 1_000_000, "urban_fraction": 0.1,
 		"starting_tax_share": 0.1, "wage_index": 1.0, "price_index": 1.0, "literacy_general": 0.2, "literacy_elite": 0.9,
 		"home_tiles": ["algeria_01"], "starting_techs": ["plough", "wheel"], "standing_army": 5000,
 		"values": {"w_military": 0.9},
 		"cast": {"strata": [{"name": "farmers", "share": 0.9}], "treasury": 50.0, "mood": "calm",
 				 "actors": [{"actor_id": "observer:1", "kind": "observer", "controller": "llm", "money": 20.0,
 							 "knowledge": ["wheel"]}]}}
-BETA = {"id": "beta", "name": "Beta", "population": 500_000, "state_capacity": 0.5, "starting_tax_share": 0.2,
+BETA = {"id": "beta", "name": "Beta", "population": 500_000, "starting_tax_share": 0.2,
 		"wage_index": 0.5, "home_tiles": ["algeria_02"], "starting_techs": ["loom"],
 		"state_revenue": [{"form": "poll_tax", "basis": "adult_labour_years", "rate": 0.2}], "cast": {"treasury": 10.0, "countries": [
 			{"id": "gamma", "name": "Gamma", "population": 100_000, "starting_techs": ["raft"], "home_tiles": ["algeria_03"]}]}}
@@ -150,7 +150,7 @@ check("a foreign actor's baseline tree is its own country's techniques",
 	  and not beta_actor.knows("shared_tech", beta_world))
 check("a home actor's baseline tree is the shared world's", home_actor.knows("shared_tech", world))
 check("a country answers for its own people and state",
-	  beta_world.population_total() == 500_000 and beta_world.state_capacity() == 0.5
+	  beta_world.population_total() == 500_000
 	  and beta_world.urban_population() == 0.0 and beta_world.tax_share() == 0.2)
 check("a country's wages are what its own labour markets pay, not the home pay scaled",
 	  beta_world.pay_per_person_year("labourer") == 50.0 and world.pay_per_person_year("labourer") == 100.0)
@@ -168,8 +168,8 @@ check("a country's government is its own actor in the registry", own_view.govern
 beta_firm = registry.add("firm:beta", ActorRecord(kind="firm", country="beta", money=100.0))
 beta_purse = beta_actor.money
 taken = registry.world_for(beta_firm, world).government().collect(beta_firm, 100.0, beta_world)
-check("a foreign state levies a firm of its own country at its tax share and capacity, money moving across",
-	  abs(taken - 100.0 * 0.2 * 0.5) < 1e-9 and abs(beta_firm.money - (100.0 - taken)) < 1e-9
+check("a foreign state levies a firm of its own country at its tax share and reach, money moving across",
+	  abs(taken - 100.0 * 0.2 * beta_world.state_reach()) < 1e-9 and abs(beta_firm.money - (100.0 - taken)) < 1e-9
 	  and abs(beta_actor.money - (beta_purse + taken)) < 1e-9, (taken, beta_firm.money, beta_actor.money))
 world.rate = 0.07
 check("an arbitrary shared member passes straight through", beta_world.market_rate() == 0.07)

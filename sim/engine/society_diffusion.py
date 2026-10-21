@@ -371,16 +371,16 @@ class DiffusionMixin:
     MEDICAL_COMPLIANCE_BASE = declare(
         "MEDICAL_COMPLIANCE_BASE", 0.5, kind="temporary_heuristic",
         unit="dimensionless (share following public-health guidance at "
-             "zero state capacity)", source=None, confidence="D",
+             "zero state reach)", source=None, confidence="D",
         why="Share of people who follow quarantine and hygiene guidance "
-            "with no administration behind it; state capacity supplies "
+            "with no administration behind it; state reach supplies "
             "the rest. Not derived from a behavioural model.")
 
     def medical_compliance(self):
-        return medical_compliance(self.MEDICAL_COMPLIANCE_BASE, self.state_capacity)
+        return medical_compliance(self.MEDICAL_COMPLIANCE_BASE, self.state_reach())
 
     def medical_diffusion_relief(self):
-        return medical_relief(self.medical_diffusion_index(), self.MEDICAL_COMPLIANCE_BASE, self.state_capacity)
+        return medical_relief(self.medical_diffusion_index(), self.MEDICAL_COMPLIANCE_BASE, self.state_reach())
 
     # ---- WAR: A STATE THAT IS ACTUALLY ARMED LOSES LESS, AND SACKS LESS ----
     # military_leverage() and _military_war_relief() (further below)

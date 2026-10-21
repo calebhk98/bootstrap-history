@@ -18,7 +18,7 @@ class StubGame:
         self.year = 100
         self.state = types.SimpleNamespace(household=HouseholdState(capital=1000.0))
         self.nodes = {"mill": {"rev": 40.0, "up": 15.0}}
-        self.state_capacity = 2.0
+        self.reach = 2.0
         self.wage_index_now = 1.0
         self.headcount_now = 100
         self.labour = types.SimpleNamespace(
@@ -26,12 +26,15 @@ class StubGame:
             market=types.SimpleNamespace(wage_index=lambda: self.wage_index_now,
                                          wage_index_change=lambda before: self.wage_index_now - before))
 
+    def state_reach(self):
+        return self.reach
+
     def visible_scale(self, headcount, wealth, eminence, defiance):
         return 1.0 + headcount / 1000.0 + wealth / 100000.0 + eminence / 10.0 + defiance
 
     def notice(self):
         household = self.state.household
-        return self.state_capacity * self.visible_scale(self.headcount_now, household.capital, household.eminence,
+        return self.reach * self.visible_scale(self.headcount_now, household.capital, household.eminence,
                                                         household.defiance)
 
 
@@ -56,7 +59,7 @@ game.wage_index_now = 0.8   # 0.1 more than the shock named
 game.state.household.capital += 500000.0
 game.state.household.eminence += 3.0
 game.headcount_now = 80
-game.state_capacity = 2.5
+game.reach = 2.5
 game.year = 101
 cause_book.close_period(game)
 wage = cause_book.causes_since(game, "wage", None)

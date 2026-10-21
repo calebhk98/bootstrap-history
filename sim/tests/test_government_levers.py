@@ -84,7 +84,7 @@ class LeverWorld(FakeWorld):
     def population_total(self):
         return 1.0e5
 
-    def state_capacity(self):
+    def state_reach(self):
         return 0.5
 
     def equipment_kg_per_soldier(self):

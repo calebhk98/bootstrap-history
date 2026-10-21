@@ -35,7 +35,7 @@ for _cv in _ALL_CIVS:
 
 def _grown(civ, employees=300.0, capital=3000000.0, eminence=20.0):
     """A household large enough to be past STATE_NOTICE_THRESHOLD on every
-    civilisation whose state_capacity is not Norse's - built once here
+    civilisation whose state reaches its people - built once here
     rather than copied into every check below.
     """
     grown_sim = unopened_sim(civ=civ, events=True)
@@ -49,7 +49,7 @@ def _grown(civ, employees=300.0, capital=3000000.0, eminence=20.0):
 
 _big = _grown("rome_100ad")
 check("a household with 300 employees, 3,000,000 denarii and an eminence "
-      "of 20 is past the general notice line for Rome (state_capacity 0.85)",
+      "of 20 is past the general notice line for Rome",
       _big.state_notice() > _big.STATE_NOTICE_THRESHOLD, _big.state_notice())
 _req_share, _req_why = _big.requisition_report()
 _off_share, _off_name = _big.office_report()
@@ -134,7 +134,8 @@ _norse_extreme.employees["artisan"] = 2000.0
 _norse_extreme.labour._resync_pools()
 _norse_extreme.capital = 60000000.0
 _norse_extreme.eminence = 30.0
-check("Norse state_capacity (0.15) caps notice so low that even an "
+_norse_extreme.state_reach = lambda: 0.15   # a state whose officials reach few of its people
+check("a state that reaches few of its people caps notice so low that even an "
       "extravagantly large household crosses no threshold here - 'the "
       "thing is an assembly, not a state' is a real mechanical floor, not "
       "only a line in the opening text",
@@ -142,14 +143,13 @@ check("Norse state_capacity (0.15) caps notice so low that even an "
       and _norse_extreme.requisition_report()[0] == 0.0,
       _norse_extreme.state_notice())
 _norse_built = state_seeking(unopened_sim(civ="norse_900ad"))
-_norse_built.civ["state_capacity"] = 0.9          # as if centuries of kings,
-_norse_built.state_capacity = 0.9                 # bishops and taxes arrived
+_norse_built.state_reach = lambda: 0.9      # as if centuries of kings, bishops and taxes arrived
 _norse_built.employees["artisan"] = 2000.0
 _norse_built.labour._resync_pools()
 _norse_built.capital = 60000000.0
 _norse_built.eminence = 30.0
-check("...but a Norse state that DID build up state_capacity (the same "
-      "tech-effect field every civilisation reads) is judged by the exact "
+check("...but a state that DID build up its reach (more officials paid, "
+      "nearer roads) is judged by the exact "
       "same rule as everyone else, not given a permanent exemption",
       _norse_built.requisition_report()[0] > 0.0, _norse_built.requisition_report())
 

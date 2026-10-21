@@ -427,9 +427,8 @@
     "tx2_warp_sizing",
     "tx2_wool_fibre"
   ],
-  "state_capacity": 0.15,
   "state_pressure": {
-    "_doc": "See rome_100ad.json's own state_pressure._doc for the shape this object takes and how society.py reads it. With state_capacity this low, state_notice() (society.py) almost never crosses even the lowest threshold here - correctly: 'the thing is an assembly, not a state' (this file's own institutions.note). Were this society to spend centuries building the kings, bishops, written law and towns its own opening.what_is_coming already promises, state_capacity rises (the same _TECH_EFFECTS.json deltas every civilisation reads) and this mechanic starts to bite on its own, which is the honest way for that promise to come true.",
+    "_doc": "See rome_100ad.json's own state_pressure._doc for the shape this object takes and how society.py reads it. With a state reach this low (few officials paid, long roads), state_notice() (society.py) almost never crosses even the lowest threshold here - correctly: 'the thing is an assembly, not a state' (this file's own institutions.note). Were this society to spend centuries building the kings, bishops, written law and towns its own opening.what_is_coming already promises, state_capacity rises (the same _TECH_EFFECTS.json deltas every civilisation reads) and this mechanic starts to bite on its own, which is the honest way for that promise to come true.",
     "requisition_name": "what is owed at the thing",
     "requisition_note": "There is no tax office in Viking-age Scandinavia. What a household owes is assessed and announced at the thing, the assembly of free men, as a levy toward a specific expedition, a hosting obligation (veizla) to a chieftain's retinue, or a fine set by the law-speaker. It is real, and it is also the weakest version of this pressure in the whole file, because there is barely a state to enforce it.",
     "office_name": "standing watch for the leidang",

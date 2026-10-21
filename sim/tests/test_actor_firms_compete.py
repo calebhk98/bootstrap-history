@@ -173,7 +173,7 @@ small_levy = treasury.assess(small_firm, 1.0e6, world)[0]
 founder_scale_matches = abs(game.household_scale() - game.visible_scale(
     game.labour.headcount(), game.state.household.capital, game.state.household.eminence)) == 0.0
 founder_rate = sum(game.levy_shares(scale_of_founder))
-game.state_capacity = 0.0
+game.state_reach = lambda: 0.0
 world = SimWorld(game)
 check("scenario: in a game the scale is one function for any taxpayer and the founder's own, a firm of the founder's "
       "visible scale is assessed at the founder's rate, a small firm pays nothing, and a state with no capacity collects "
