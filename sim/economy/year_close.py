@@ -309,8 +309,12 @@ def remember_basket_price_level(setup, record) -> float:
     stay those of the opening; which goods are priced follows trade."""
     recent = recently_traded_goods(record.memory)
     prices = {good: price for good, price in national_prices(record).items() if good in recent}
-    level = currency.basket_price_level(prices, record.index_base_prices or setup.opening_prices, record.opening_basket)
-    record.memory.note_basket_price_level(setup.currency_id, level)
+    base = record.index_base_prices or setup.opening_prices
+    level = currency.basket_price_level(prices, base, record.opening_basket)
+    spending = {good: quantity * base.get(good, 0.0) for good, quantity in record.opening_basket.items()}
+    record.memory.note_basket_price_level(
+        setup.currency_id, level, currency.price_inflation(prices, record.memory.last_year_prices, spending))
+    record.memory.last_year_prices = dict(prices)
     return level
 
 

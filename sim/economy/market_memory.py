@@ -48,6 +48,8 @@ class MarketMemory:
     rates: Dict[CurrencyId, float] = field(default_factory=dict)
     basket_price_levels: Dict[CurrencyId, float] = field(default_factory=dict)
     expected_inflation: Dict[CurrencyId, float] = field(default_factory=dict)
+    observed_inflation: Dict[CurrencyId, float] = field(default_factory=dict)   # last year's, the weighted median of price changes
+    last_year_prices: Dict[str, float] = field(default_factory=dict)    # good: national price the year before, for that median
     currency_of_area: Dict[AreaId, CurrencyId] = field(default_factory=dict)
     usual_prices: Dict[str, float] = field(default_factory=dict)        # market_key(good, area), slow average
     volume_weights: Dict[str, float] = field(default_factory=dict)      # market_key(good, area), smoothed
@@ -88,13 +90,16 @@ class MarketMemory:
         old = self.volume_weights.get(key)
         self.volume_weights[key] = quantity if old is None else old + VOLUME_WEIGHT_SPEED * (quantity - old)
 
-    def note_basket_price_level(self, currency: CurrencyId, level: float) -> None:
-        """Record this year's price level and move the expectation of inflation after it."""
+    def note_basket_price_level(self, currency: CurrencyId, level: float, observed_inflation: Optional[float] = None) -> None:
+        """Record this year's price level and move the expectation of inflation after the year's observed inflation
+        (the weighted median of the goods' price changes when the caller has it, else the change in the level)."""
         previous = self.basket_price_levels.get(currency)
-        if previous and previous > 0.0:
-            observed = level / previous - 1.0
+        if observed_inflation is None and previous and previous > 0.0:
+            observed_inflation = level / previous - 1.0
+        if observed_inflation is not None:
             expected = self.expected_inflation.get(currency, OPENING_EXPECTED_INFLATION)
-            self.expected_inflation[currency] = update_expected_inflation(expected, observed)
+            self.expected_inflation[currency] = update_expected_inflation(expected, observed_inflation)
+            self.observed_inflation[currency] = observed_inflation
         self.basket_price_levels[currency] = level
 
 
@@ -174,6 +179,9 @@ class YearView:
 
     def expected_inflation(self, currency: CurrencyId) -> float:
         return self._memory.expected_inflation.get(currency, OPENING_EXPECTED_INFLATION)
+
+    def observed_inflation(self, currency: CurrencyId) -> Optional[float]:
+        return self._memory.observed_inflation.get(currency)
 
     def cash(self, agent: AgentId, currency: CurrencyId) -> float:
         return self._book.balance(agent, currency)

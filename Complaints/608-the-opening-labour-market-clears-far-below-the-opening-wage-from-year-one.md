@@ -1,6 +1,6 @@
 # The opening's labour market clears far below the opening wage from year one
 
-**Status:** open - measured cause is the opening's demand for hours (a stock glut, traced in 473 and 545), not the wage anchor the first title named
+**Status:** open - on the small fixture the stated wage is above the clearing wage whenever hours offered exceed hours hired, and scaling prices with it does not help (473 Update 6); measured cause is the opening's demand for hours (a stock glut, traced in 473 and 545), not the wage anchor the first title named
 
 Part of Complaint 526 (The opening's income leaks saving, so the economy opens at subsistence and its wage keeps falling).
 

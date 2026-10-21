@@ -1,6 +1,6 @@
 # The agent economy's spin-up never settles, so the opening is a point on a cycle
 
-**Status:** partly - the money stock is sustained (Update 4, `spin_up_money_supply` passes); the spin-up still does not settle: the price level and wage drift for decades because the labour market clears far below the cost table's wage (Update 4)
+**Status:** partly - a one-year closure test and the stationary quantities now exist (Update 6); the money stock is sustained (Update 4, `spin_up_money_supply` passes); the spin-up still does not settle: the price level and wage drift for decades because the labour market clears far below the cost table's wage (Update 4)
 
 Research on reference models for making the opening a steady state (issue #61): `Complaints/reports/research-reference-economy-models.md`.
 
@@ -120,3 +120,50 @@ its base price by year five, and wheat is already about 0.37 of base in year 0. 
 level follows the same food collapse a year earlier (the money stock does double). So the slow validation "more metal
 raises the price level" (`check_more_metal_raises_price_level`) is drowned by the unsettled economy for Norse; the
 transmission rules are held by `test_money_reaches_prices`.
+
+## Update 6: a one-year closure test on the small fixture, and the movers it finds (branch opening-stationary-state)
+
+What is built: `sim/economy/opening_stationary.py` (a plain function: the runs that meet a final demand by the
+input-output solve in `opening_runs`, the hours they hire, and the incomes they pay, so wages plus profit equal the
+value of final demand), `economy_fixture.stationary_setup` (the fixture with each worker offering the hours its runs
+hire plus a stated slack), and `sim/tests/test_opening_stationary_scenario.py` (a stepped year against the settling
+bounds in `sim/economy/settling.py`). The opening does not yet seed its producers from the solver. Run:
+`python3 -m unittest sim.tests.test_opening_stationary_scenario sim.tests.test_opening_input_stocks`; the red parts are
+marked `expectedFailure`, so an unexpected success shows when one of them is fixed. The figures below came from throwaway
+probes (no committed command prints the year-by-year table).
+
+Movers, in the order they bite:
+
+1. **Hours offered against hours hired; the wage is a unit root.** The stated fixture offers many times the hours its
+   runs hire, so year 1 clears the wage at the workers' survival wage (`labour_ask_floor`), an order of magnitude below
+   the stated wage, and grain follows it down because sellers price at cost. The stated wage is not a clearing wage
+   (608). Scaling every price and wage down does not help: the survival wage is the floors' cost over the hours, so it
+   scales with the prices. The nominal level has no restoring force: with hours short of demand wage and price jump
+   once and stay; with hours in excess they drift down a few per cent a year; only the knife edge where hours offered
+   equal hours demanded rests. The stationary opening therefore has to fix the hours offered or the wage jointly with
+   the runs (`opening_stationary.hours_offered_over_demanded`), not take the cost table's wage.
+2. **Seeded inputs the same year's market also supplies** (`opening._stock_producers_with_inputs`). Producers produce
+   and clear in input-depth order, so a user buys its input from an earlier maker in year 0 and works it the same year; the
+   seed makes year 0 buy none, the maker's year piles up unsold, its sales estimate halves and the stock gate
+   (`producers.runs_for_stock`) plans it down the next year. Built and measured (year 0 then trades the input), then not
+   landed: the dug input's cobweb moves a year earlier and two fixed-bound tests fail (`economy_vessel_price_fixture`
+   year-to-year swing, `economy_no_offer_memory` price floor). Bounds were not widened. The rule's test is kept as an
+   expected failure (`test_opening_input_stocks`).
+3. **Input bids reach the buyer's whole run margin** (`producers._input_bids`: price plus margin per run over the input
+   per run). With the coin metal's price pinned by the mint, the smelters' margin grows as wages fall and the ore price
+   climbs to the cap; the sellers' own ask is bounded at a multiple of unit cost (`ask_raise.ASK_BAND_CEILING`, retire
+   643), so a buyer-side cap at the input's cost would only restate that band. Not changed.
+4. **The mint strikes less than the coin wears** (14 per cent short in year 1 on the stationary fixture): the metal
+   demand the opening sizes (`opening_metal.yearly_replacement`) is met by capacity the chain places with the opening's
+   spare share, then the smelters' expansion swings it. Owned by mint/entry work.
+5. **The rate moves by several points in year 3** on the stationary fixture (credit clearing; owned by the credit work).
+6. **Expected inflation read the basket index.** Fixed: `currency.price_inflation` (weighted median of the goods' price
+   changes) feeds the households' expectation (`households_close.close_year`) and the memory's
+   (`MarketMemory.note_basket_price_level`); rule tests in `test_economy_price_inflation`. On the fixture the heavy good
+   moves, so the median follows it and the fixture's figures do not change; it matters where thin goods run away.
+
+Not reproducible on the fixture: 545 (the fixture has no land per run, so households grow nothing for themselves);
+the stock gate is not the first mover once the seed is gone (the gate binds in year 1 only on the seeded run).
+
+Orchestrator commands (minutes each, shared cores; not run here): `python3 sim/simulator.py spin-up-trace --civ rome_100ad --years 60`
+and the settling statistic over its rows (`sim.economy.settling.settling_report`, as `economy_port_trace.spin_up_trace` feeds it).

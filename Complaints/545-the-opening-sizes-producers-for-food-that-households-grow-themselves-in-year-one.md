@@ -1,6 +1,6 @@
 # The opening sizes producers for food that households grow themselves in year one
 
-**Status:** open
+**Status:** open - not reproducible on the small fixture (no land per run, so households grow nothing); the test it needs is a fixture with plots (473 Update 6)
 
 Found by an outside reviewer reading the repository, checked against the code.
 
