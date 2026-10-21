@@ -16,6 +16,7 @@ Choices:
 """
 import bisect
 import math
+from functools import cached_property
 from itertools import groupby
 from operator import attrgetter, itemgetter
 from typing import List, Optional, Sequence, Tuple
@@ -83,11 +84,15 @@ class Buyers:
 
     def __init__(self, bids: Sequence[Bid], last_price: Optional[float]):
         self.bids = sorted(bids, key=_BID_ORDER)
-        self.schedule = DemandSchedule(self.bids)
         self.minimum_price = MINIMUM_PRICE_SHARE_OF_REFERENCE * _price_scale(self.bids, last_price)
         self.last_price = last_price
         self._wants: dict = {}     # price -> (each buyer's want, their total)
         self._traded: dict = {}    # (price, quantity available) -> what the buyers are served in all
+
+    @cached_property
+    def schedule(self) -> DemandSchedule:
+        """The bids' demand schedule, built when a market with offers first reads it."""
+        return DemandSchedule(self.bids)
 
     def traded_at(self, price: float, supply: float) -> float:
         """The total the buyers are served at a price when `supply` is on offer there."""

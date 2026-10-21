@@ -97,8 +97,7 @@ def clear_with_search(setup, record, view, bids, original: Sequence[Offer], offe
     buyers = goods_market.Buyers(bids, last_price)       # the same bids meet every trial book
     result = goods_market.clear(bids, offers, good, area, currency, last_price, buyers)
     floors = _floors(setup, record, view, offers, original, costs if costs is not None else {})
-    unsold = _unsold(_sold_by_offer(result, offers), offers, list(floors))
-    if not unsold:
+    if not floors or not _unsold(_sold_by_offer(result, offers), offers, list(floors)):
         return offers, result
     return search_asks(bids, offers, floors, buyers, good, area, currency, last_price)
 
