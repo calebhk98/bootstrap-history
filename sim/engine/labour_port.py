@@ -50,6 +50,16 @@ class LabourWorld:
     def wages(self):
         return data.WAGES
 
+    def teaching_knowledge(self):
+        """(nodes held by each active actor, what the society already knows, what has been demonstrated): who
+        can teach a trade (labour trade_formation.teachers_of)."""
+        from .agents_port import SimWorld
+        sim = self._sim
+        registry = getattr(sim, "actors", None)
+        by_actor = {actor.identity(): set(actor.knowledge) for actor in (registry.actors.values() if registry is not None else ())
+                    if actor.record.exited_year is None}
+        return by_actor, set(sim.state.projects.granted), SimWorld(sim).demonstrated()
+
     @property
     def trades_absent(self):
         return data.TRADES_ABSENT
