@@ -201,3 +201,25 @@ Done:
 
 Long command for the occupational shares (did not finish inside 4 minutes on this loaded machine, before or after):
 `python3 sim/simulator.py economy-check --civs rome_100ad --years 1 --occupations`.
+
+## Pass 7 (Columella read in the primary)
+
+Opened Columella, De Re Rustica 2.12.1 and 2.9.1 (LacusCurtius, Thayer, Loeb translation). 2.12.1: "four or five
+modii of common wheat take up four days' work of the ploughmen, one of the harrower, two of the hoer for the first
+hoeing and one for the second, one of the weeder, and one and a half of the reaper - a total of ten and one-half days
+of labour. Five modii of winter wheat require the same number of days." 2.9.1 gives four modii of wheat to the
+iugerum on rich land and five on medium land, so the days are per iugerum. The chapter counts to the threshing-floor
+and gives no threshing days.
+- `data/world/farm_labour.json` now holds those tasks per iugerum (ploughing 4, harrowing 1, hoeing 2 and 1,
+  weeding 1, reaping 1.5) and the iugerum in hectares (0.2523, the 2,523 square metres the wine and press entries of
+  `data/production/95_wine_oil_jars.json` cite from Wikipedia); `sim/world/farm_labour.py` converts to a hectare.
+- Differs from the secondary figures: cycle excluding reaping is about 35.7 person-days/ha (White as relayed by
+  Shukurov et al.: 44) and reaping about 5.9 (White as relayed: 5.7). Columella's are used. Halstead and Jones
+  (reaping 10-30 person-days/ha, modern sickle) stay recorded as a modern comparison; their "processing about the same
+  as reaping" still sets threshing.
+- `wheat_kg` farmer hours 554 to about 475.6; `wheat_hoe_kg` 889 to about 810.6 (`python3 -c "from sim.world import
+  farm_labour; print(farm_labour.WHEAT_HOURS_PER_HECTARE, farm_labour.WHEAT_HOE_HOURS_PER_HECTARE)"`). The reaping rate
+  rose slightly (about 0.168 ha/day).
+- Tests: `test_farm_labour.py` builds data per iugerum, checks the iugerum-to-hectare rule and that the conversion
+  matches the one the wine file cites; `test_recalled_figures_sourced.py` restated with Columella's per-iugerum days.
+- Not run (long): the farm-share scenario `test_farm_edges_scenario` baseline was recorded at the old hours.
