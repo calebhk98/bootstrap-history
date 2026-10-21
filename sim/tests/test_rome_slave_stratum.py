@@ -9,7 +9,7 @@ from .harness import *  # noqa: F401,F403
 from sim.agents import ledger
 from sim.agents.api import ActorsState, ActorRegistry, profile_from_civilisation, seed_strata, stratum_id
 from sim.agents.strata_seed import follow_population
-from sim.agents.stratum_year import settle_keep, EDGE_ECONOMY
+from sim.agents.stratum_year import settle_keep, true_up_keep, EDGE_ECONOMY
 
 from .agents_fake_world import FakeWorld
 
@@ -92,3 +92,23 @@ check("the keep is recorded as the bonded's allowance", abs(slaves.record.allowa
 # Left out on purpose: whether a live game's bonded stratum still holds about the sourced share of the people after
 # two years (Scheidel 2005: eight to fifteen per cent) is baseline validation (CLAUDE.md 4.2), not a unit rule. It
 # belongs in an ensemble run over seeds that asserts the distribution of the share.
+
+
+# The keep is made up to the year's prices before the year's turns. A bonded stratum with no keep yet (just founded) or
+# a keep set at last year's lower prices would otherwise meet the year with part of its food unmet, and the famine
+# rule would kill a share of the bonded in the first year.
+fresh_registry = founded_registry(1.0e6)
+fresh_slaves = [actor for actor in fresh_registry.of_kind("stratum") if actor.is_bonded()][0]
+fresh_owner = fresh_registry.actors[fresh_slaves.neighbour_id(fresh_slaves.record.plan["owner"])]
+check("a bonded stratum starts with no keep", fresh_slaves.record.allowance == 0.0)
+true_up_keep(fresh_registry, CostedWorld(1.0e6, 2.0))
+check("making up the keep feeds a newly founded bonded stratum its whole food at the year's price",
+      abs(fresh_slaves.record.allowance - fresh_slaves.record.members * 2.0) < 1e-6, fresh_slaves.record.allowance)
+check("the keeper paid it", abs(fresh_owner.money + fresh_slaves.record.allowance) < 1e-6, fresh_owner.money)
+true_up_keep(fresh_registry, CostedWorld(1.0e6, 3.0))
+check("when prices rise the keeper pays only the difference",
+      abs(fresh_slaves.record.allowance - fresh_slaves.record.members * 3.0) < 1e-6, fresh_slaves.record.allowance)
+check("and the keeper's purse fell by exactly the keep", abs(fresh_owner.money + fresh_slaves.record.allowance) < 1e-6)
+paid_so_far = fresh_slaves.record.allowance
+true_up_keep(fresh_registry, CostedWorld(1.0e6, 1.0))
+check("when prices fall nothing is taken back", fresh_slaves.record.allowance == paid_so_far, fresh_slaves.record.allowance)

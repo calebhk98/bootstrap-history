@@ -26,7 +26,7 @@ from .tuning_spending import THREAT_ARMY_RESPONSE
 from .budget import EQUIPMENT_MATERIAL, SOLDIER_TRADE
 from .budget_lines import DOLE_MATERIAL
 from .headcount import Hands
-from .stratum_year import FOOD_NEED
+from .stratum_year import FOOD_NEED, true_up_keep
 # importing these registers their kinds, spawners, commands and the country scope
 from .cast import GOVERNMENT_PREFIX, cast_from_civilisations, profile_from_civilisation, seed_cast
 from .country_view import CountryWorld
@@ -53,6 +53,6 @@ __all__ = ["Hands", "PURSE_CURRENCY", "EDGE_EXCHANGE", "EDGE_OUTSIDE", "EDGE_SAV
            "SAVING_SHARE_OF_SURPLUS", "CONCESSION_PREFIX", "Sector", "sector_key",
            "MANAGEMENT_SPAN_EXPONENT", "OBSERVATION_RANGE_KM", "PLAYER_VISIBLE_EXPOSURE", "PROOF_YEARS", "SECRET_EXPOSURE",
            "THREAT_ARMY_RESPONSE", "SOLDIER_TRADE", "EQUIPMENT_MATERIAL", "DOLE_MATERIAL", "FOOD_NEED", "cast_from_civilisations", "profile_from_civilisation", "seed_cast",
-           "CountryWorld", "CountryLiteracy", "Player", "Stratum", "stratum_id", "seed_strata", "bondage_tiles", "bonded_for_sale", "buy_bonded",
+           "CountryWorld", "CountryLiteracy", "Player", "Stratum", "stratum_id", "seed_strata", "true_up_keep", "bondage_tiles", "bonded_for_sale", "buy_bonded",
            "strata_definitions", "strata_spawner", "CommandRejected", "register_command", "exchange", "Trader",
            "trader_entry", "DUES_CAUSE", "pay_dues", "treasury_of", "DeclaredKind", "register_declared_kinds"]
