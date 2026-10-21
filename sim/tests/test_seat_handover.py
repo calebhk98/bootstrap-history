@@ -62,6 +62,7 @@ check("the replacement reads both its own and the inherited notes",
       [row["text"] for row in all_notes(game)] == ["build the bloomery first", "the heir's own note"], all_notes(game))
 game.state.acting_seat = "leaver"
 check("the leaver no longer has the notes", all_notes(game) == [], None)
+# not text: a stored relation note round-trips between seats
 check("the country's relation note stays with the country the replacement now plays for",
       relations.read(game.stores, "han", "rome")["note"] == "never trust their envoys", None)
 

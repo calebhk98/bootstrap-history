@@ -32,6 +32,7 @@ _dead = _new_sim()
 _die(_dead)
 _dead_text = _RSTATE(S._agent_state(_dead, NODES))
 check("after death the status line does not say ageing", "ageing" not in _dead_text, _dead_text[:300])
+# presentation: the state screen prints an age line only for a mortal founder
 check("an immortal founder's state has no age line",
       "aged about" not in _RSTATE(S._agent_state(_new_sim(mortal=False), NODES)), None)
 
@@ -39,6 +40,7 @@ check("an immortal founder's state has no age line",
 _fraction = _new_sim()
 _fraction.directors_extra = 0.15
 _fraction_log = " ".join(_die(_fraction))
+# presentation: the death notice's wording about deputies
 check("the death notice does not deny deputies who carry hours",
       "no deputy" not in _fraction_log and "nobody to" not in _fraction_log, _fraction_log)
 check("the death notice says how many hours the deputies carry",

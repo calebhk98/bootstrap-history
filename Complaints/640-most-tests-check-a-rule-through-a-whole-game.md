@@ -162,3 +162,25 @@ did; they now run on a fogged stand-in. Baseline validation: `test_regional_weat
 Kept as scenarios: `run_reproducibility` (determinism), the save round trips and two-game match of the weather, the
 `again` command, the Options menu, the starting grants per civilisation.
 
+
+## Applied: audit batch 14 (test_training_ledger_and_hazard_reports through test_year_phases)
+
+Rules are called on inputs the test builds (stand-in games holding only what the command reads, built replies, the real
+tree); whole-game checks that remain are named `_scenario` files next to their rules. Extractions into plain functions,
+behaviour unchanged: `assemble_ledger` (`sim/engine/revenue_ledger.py`), `hedge_wants` and `startable_first`
+(`hedge_steps.py`), `capital_lost` (`capital_loss.py`), `staff_loss_toll` and `sack_toll` (`hazard_toll.py`),
+`eminence_band_to_announce` (`eminence_warning.py`), `year_bill` (`project_funding.py`), `closure_at_risk`
+(`staffing_guarantee.py`), `capped_to_useful` (`sim/ui/proto/allocation_cap.py`). Quick rule files: the training ledger,
+`workforce_spinup`, `upkeep_quote_matches_ledger`, `whole_game_no_seller_no_price` (Complaint 642: no seller gives no
+traded price and a named quote; import volume bounds), `why_foreman_and_remaining_floor`, `wild_stock_whole_game`,
+`ui_anatomy`, `ui_figures_more`, `ui_goals_watch`, `ui_memory`, `ui_notes`, `ui_step_automation_line`, `wage_provider`,
+`wage_work_ledger`, `wage_floor_and_coin_standard`, `workforce_advice_and_allocate_cap`, `world_events_and_hazards`,
+`ventures_saves_and_dice` (the identity_cover prerequisites). Deleted as held elsewhere: the refund-cap, arrears-cause and
+effective-hours checks (`test_arrears_hours`), the failed-attempt announcement (`test_completion_messaging`), the
+tight-trade wage check (`test_wage_provider`). Found vacuous: the "every household material has a seller" check
+(true by construction) and the import bounds in the Rome game (it opens with no partner-sold material); both dropped, the
+bounds are now `import_tonnes_left` rule tests. Baseline validation: `test_whole_game_gold_silver_ratio_validation`
+(Complaint 442). Still to pull out of `Sim` methods: load validation, the staffing gates of `open` and `start`,
+`work_for_wages`, and the `Sim.start_reason` deficit sizing (all kept whole in `test_ventures_saves_and_dice_scenario` and
+`test_workforce_advice_and_allocate_cap_scenario`). `test_two_seats_whole_game` is wholly a scenario and `test_year_phases`
+already runs on a stand-in.

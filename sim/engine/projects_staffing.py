@@ -20,6 +20,7 @@ from sim.constants import declare
 from . import cause_book, category_traits
 from .agents_port import SimWorld
 from .staffing_events import unstaffed_closure_line
+from .staffing_guarantee import closure_at_risk
 from .affordability import deep_in_arrears, payback_years
 from .units_prose import money_text, per_year
 from sim.agents.api import business_review, edges
@@ -260,9 +261,9 @@ class StaffingMixin:
             # Only hired people leave; with a founder who cannot, the room
             # left after losing every hired one is guaranteed, so no
             # closure is coming from attrition.
-            if sch_need > 0.005 and not (founder_fixed and sch_room - household.scholars >= 0):
+            if closure_at_risk(sch_need, sch_room, household.scholars, founder_fixed):
                 candidates.append(("scholars", sch_room))
-            if art_need > 0.005 and not (founder_fixed and art_room - household.artisans >= 0):
+            if closure_at_risk(art_need, art_room, household.artisans, founder_fixed):
                 candidates.append(("craftsmen", art_room))
             if not candidates:
                 continue
