@@ -38,20 +38,22 @@ class HoursTests(unittest.TestCase):
 
 
 class HiringTests(unittest.TestCase):
-    def test_a_richer_cohort_hires_more_at_the_same_wage(self):
+    def test_a_cohort_whose_hour_is_worth_more_than_the_servants_price_hires(self):
         needed = households_work.hours_needed(100.0, DATA)
-        poor = households_work.hired_hours(needed, 500.0, 2.0, 0.1)
-        rich = households_work.hired_hours(needed, 5000.0, 2.0, 0.1)
-        self.assertGreater(rich, poor)
-        self.assertAlmostEqual(poor, 25.0)
+        self.assertAlmostEqual(households_work.hired_hours(needed, 3.0, 2.0), needed)
+
+    def test_a_cohort_whose_hour_is_worth_less_does_not_hire(self):
+        needed = households_work.hours_needed(100.0, DATA)
+        self.assertEqual(households_work.hired_hours(needed, 1.0, 2.0), 0.0)
+        self.assertEqual(households_work.hired_hours(needed, 2.0, 2.0), 0.0)
 
     def test_nobody_hires_more_than_the_work_there_is(self):
-        self.assertAlmostEqual(households_work.hired_hours(40.0, 1e9, 2.0, 0.1), 40.0)
+        self.assertAlmostEqual(households_work.hired_hours(40.0, 1e9, 2.0), 40.0)
+        self.assertEqual(households_work.hired_hours(0.0, 1e9, 2.0), 0.0)
 
-    def test_a_cohort_with_no_surplus_hires_none_and_does_it_all_itself(self):
-        hired = households_work.hired_hours(1000.0, 0.0, 2.0, 0.1)
-        self.assertEqual(hired, 0.0)
-        self.assertEqual(households_work.own_hours(1000.0, hired), 1000.0)
+    def test_the_hour_is_worth_the_wage_averaged_over_the_hours_it_would_sell(self):
+        self.assertAlmostEqual(households_work.hour_value([(100.0, 1.0), (300.0, 2.0)]), 1.75)
+        self.assertEqual(households_work.hour_value([]), 0.0)
 
     def test_own_hours_are_the_work_less_the_hired(self):
         self.assertAlmostEqual(households_work.own_hours(1000.0, 250.0), 750.0)

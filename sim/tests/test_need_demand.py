@@ -259,7 +259,8 @@ class NeedDataFileTests(unittest.TestCase):
             for need in attributes.get("satisfies", {}):
                 self.assertIn(need, loaded["needs"], material)
         shares = [need["surplus_budget_share"] for need in loaded["needs"].values()]
-        self.assertGreater(min(shares), 0.0)
+        self.assertGreaterEqual(min(shares), 0.0)   # a need met by floors alone (household work) has no share
+        self.assertGreater(sum(1 for share in shares if share > 0.0), len(shares) // 2)
 
 
 class RealDataTests(unittest.TestCase):

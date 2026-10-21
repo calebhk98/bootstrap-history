@@ -9,7 +9,7 @@ import json
 import os
 from typing import Dict
 
-from sim.economy.api import (EconomySetup, carriage_wear, SiteLimit, TradeSpec, currency_from_coin_standard, goods_specs, households,
+from sim.economy.api import (EconomySetup, carriage_wear, SiteLimit, TradeSpec, currency_from_coin_standard, goods_specs, households, households_work,
                              recipe_tile_key,
                              recipes_from_production_data, taxes, tile_costs, with_tool_wear)
 from sim.world import demand, need_basket
@@ -245,6 +245,7 @@ def build_setup(sim, opening=None, production=None):
                       for recipe_id in recipes if production[recipe_id].get("land_hectare_years")},
         yield_factor_by_recipe_tile=cropland_yields(production, recipes, tiles),
         basket_by_tile=baskets_by_tile(basket, need_data, world_map, all_tile_ids), coin_per_unit=unit,
+        household_work=households_work.load_household_work(), ready_to_eat=households_work.ready_to_eat_goods(need_data),
         opening_income_per_head=opening.get("opening_income_per_head"),
         recipes_by_country=recipes_by_country(str(civ["id"]), opening["recipes"], partners),
         tile_owners=sim.tile_owner_map(),

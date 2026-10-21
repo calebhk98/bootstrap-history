@@ -41,10 +41,10 @@ def load_needs(root: str, mods_dir: Optional[str] = None) -> Dict[str, Dict[str,
 
 
 def check_needs(needs: Dict[str, Any], goods: Dict[str, Any]) -> None:
-    """Every good names known needs; every need has a positive budget weight."""
+    """Every good names known needs; every need has a budget weight, none negative (a need met by floors alone has none)."""
     for need_id, spec in needs.items():
-        if not spec.get("surplus_budget_share", 0) > 0:
-            raise ModError("need %r needs a positive surplus_budget_share" % need_id)
+        if "surplus_budget_share" not in spec or not spec["surplus_budget_share"] >= 0:
+            raise ModError("need %r needs a surplus_budget_share that is not negative" % need_id)
         if not spec.get("satiation_per_capita_per_year", 1) > 0:
             raise ModError("need %r needs a positive satiation_per_capita_per_year" % need_id)
         if not spec.get("satiation_multiple_of_floor", 1) >= 1:

@@ -11,6 +11,7 @@ from typing import Dict, List, Tuple
 
 from . import (carriage_wear, goods_market, households, market_curves, market_quote, merchants, producers, seller_cash, seller_offers, settlement,
                state_budget, state_store, taxes, tool_wear, unsold_search)
+from .household_work_year import basket_key, cohort_basket
 from .market_memory import market_key
 from .market_memory_asks import memory_reference_volume, note_bids, note_offers, price_after_resumed_trade, wanted_at
 from .market_memory_asks import REPRESENTATIVE_TRADE_SHARE
@@ -43,9 +44,11 @@ def cohort_orders(setup, record, view, ledger: YearLedger, order_book: OrderBook
     store_by_tile = {}
     money = setup.currency_id
     for cohort in sorted(record.cohorts.values(), key=lambda each: each.agent_id):
-        priced = priced_by_tile.get(cohort.tile)
+        basket = cohort_basket(setup, record, cohort)
+        key = basket_key(record, cohort)
+        priced = priced_by_tile.get(key)
         if priced is None:
-            priced = priced_by_tile[cohort.tile] = households.need_prices(setup.basket_for(cohort.tile), view, cohort.tile)
+            priced = priced_by_tile[key] = households.need_prices(basket, view, cohort.tile)
         income = ledger.wages_in.get(cohort.agent_id, 0.0) + record.property_income.get(cohort.agent_id, 0.0)
         cash = record.book.balance(cohort.agent_id, money)
         tool_bids = tool_wear.tool_bids(
@@ -54,9 +57,9 @@ def cohort_orders(setup, record, view, ledger: YearLedger, order_book: OrderBook
             setup.specs, cash)
         add_orders(order_book, AgentOrders(bids=tuple(tool_bids)))
         orders = households.goods_orders(cohort, view, cash - sum(bid.budget for bid in tool_bids), income,
-                                         setup.basket_for(cohort.tile), setup.specs, priced,
+                                         basket, setup.specs, priced,
                                          smooth_rise=not record.settling, shared_store=store_by_tile)
-        add_orders(order_book, _less_what_it_grew(orders, cohort, setup.basket_for(cohort.tile), ledger.grown_units.get(cohort.agent_id)))
+        add_orders(order_book, _less_what_it_grew(orders, cohort, basket, ledger.grown_units.get(cohort.agent_id)))
         funds.extend(orders.funds_offers)
     return funds
 

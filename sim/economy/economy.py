@@ -20,6 +20,7 @@ from .mint_labour import close_year as close_mint_year, mint_agent
 from .money_audit import MoneyAudit, year_report
 from .flow_rates import flow_imbalance
 from .entry_year import close_idle_producers, open_entrants, restake_owners
+from . import household_work_year
 from .households_own import (hours_for_own_plan, own_production, own_production_options, plot_hectares,
                              withhold_hours)
 from .labour_inputs import labour_context
@@ -174,7 +175,7 @@ class Economy:
         labour_bids.extend(carriage_hours.bids(setup, record))    # merchants' carriers, from last year's shipments
         outside_option = outside_option_by_tile(setup, record, view)
         everyone = labour_offers(setup, record, view, outside_option, inputs.labour_levy_hours_per_worker)
-        offers, kept = withhold_hours(everyone, self._shortfall_hours())
+        offers, kept = withhold_hours(everyone, self._shortfall_hours(everyone, view, outside_option))
         context = labour_context(setup, record, view, self.carriage, inputs, self._own_plot_options(), outside_option)
         labour_report = clear_labour(setup, record, labour_bids, offers, ledger, context, held_share_by_area(everyone, offers))
         ledger.bonded_bought, ledger.bonded_paid = bonded_purchase.settle(
@@ -262,15 +263,20 @@ class Economy:
             self._own_options = own_production_options(setup.recipes, setup.land_per_run, setup.basket)
         return self._own_options
 
-    def _shortfall_hours(self) -> Dict[str, float]:
+    def _shortfall_hours(self, everyone=(), view=None, outside_option=None) -> Dict[str, float]:
         """Hours each cohort keeps back for its own-plot plan, at the tile's usual fertility (it plants
-        before it knows the harvest)."""
+        before it knows the harvest), and for the household work it does itself (household_work_year.py)."""
         hours, held = {}, self._hectares_held()
         for cohort_id, cohort in sorted(self.record.cohorts.items()):
             tile = self.setup.tiles.get(cohort.tile)
             hours[cohort_id] = hours_for_own_plan(cohort, self._own_plot_options(),
                                                   tile.fertility if tile else 0.0, self.setup.recipes,
                                                   self.setup.land_per_run, held.get(cohort_id, 0.0))
+        self._work_hours = {}
+        if view is not None:
+            self._work_hours = household_work_year.decide(self.setup, self.record, view, everyone, outside_option or {})
+            for cohort_id, work in self._work_hours.items():
+                hours[cohort_id] = hours.get(cohort_id, 0.0) + work
         return hours
 
     def _hectares_held(self) -> Dict[str, float]:
@@ -297,7 +303,8 @@ class Economy:
         for offer in offers:
             offered[offer.worker] = offered.get(offer.worker, 0.0) + offer.hours
         for cohort_id, cohort in sorted(record.cohorts.items()):
-            idle = offered.get(cohort_id, 0.0) + kept.get(cohort_id, 0.0) - ledger.hours_sold.get(cohort_id, 0.0)
+            idle = (offered.get(cohort_id, 0.0) + kept.get(cohort_id, 0.0) - ledger.hours_sold.get(cohort_id, 0.0)
+                    - min(kept.get(cohort_id, 0.0), getattr(self, "_work_hours", {}).get(cohort_id, 0.0)))   # household work is not spare hours
             tile = setup.tiles.get(cohort.tile)
             hours_used: Dict[str, float] = {}
             moves, grown, units = own_production(cohort, idle, self._own_options, setup.recipes,

@@ -41,14 +41,21 @@ def hours_needed(people: float, data: Mapping[str, Any], has_hearth: bool = True
     return max(0.0, people) * hours_per_person_per_year(data, has_hearth)
 
 
-def hired_hours(needed_hours: float, surplus_income: float, service_price_per_hour: float,
-                budget_share: float) -> float:
-    """Hours of the work a household hires: what its surplus spending on the need buys at the service's price
-    (the need's share of the money it has above its floors), never more than the work there is. A household with
-    no surplus hires none."""
-    if needed_hours <= 0.0 or service_price_per_hour <= 0.0 or surplus_income <= 0.0:
+def hour_value(hours_and_wages) -> float:
+    """What an hour of the household's own labour is worth at the market: the wage per hour it faces, averaged
+    over the hours it would sell, as (hours, wage per hour) rows. Zero when it would sell none."""
+    rows = [(max(0.0, hours), wage) for hours, wage in hours_and_wages if hours > 0.0]
+    total = sum(hours for hours, _wage in rows)
+    return sum(hours * wage for hours, wage in rows) / total if total > 0.0 else 0.0
+
+
+def hired_hours(needed_hours: float, own_hour_value: float, service_price_per_hour: float) -> float:
+    """Hours of the work a household hires: all of it when an hour of its own labour is worth more at the market
+    than the servant's price (it would rather sell the hour and pay), none otherwise. Never more than the work
+    there is. Cohorts differ in what their hours earn, so the aggregate hired rises step by step with the wage."""
+    if needed_hours <= 0.0 or service_price_per_hour <= 0.0:
         return 0.0
-    return min(needed_hours, surplus_income * budget_share / service_price_per_hour)
+    return needed_hours if own_hour_value > service_price_per_hour else 0.0
 
 
 def own_hours(needed_hours: float, hired: float) -> float:
