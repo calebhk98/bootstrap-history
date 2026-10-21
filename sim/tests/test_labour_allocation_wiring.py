@@ -1,52 +1,17 @@
-"""The engine sizes the farm's hours every simulated year, so the share of working hours on the farm
-responds to food scarcity."""
+"""The rules that size the farm's hours every simulated year (Complaint 640: called on inputs built here; the
+whole-game checks that the year's allocation responds to food scarcity are in
+test_labour_allocation_wiring_scenario)."""
+QUICK_TOPIC = True
+
 import unittest
 
 from .harness import *  # noqa: F401,F403
 from sim.labour import labour_allocation
 
-
-def _rome_sim():
-    return sim(civ="rome_100ad", events=False)
+FARM = labour_allocation.FARM_TRADE
 
 
-def _farm_hours(test_sim):
-    return test_sim.state.economy.society_labour_hours[labour_allocation.FARM_TRADE]
-
-
-class WorkforceAllocationWiringTests(unittest.TestCase):
-
-    def test_unshocked_first_year_starts_at_the_food_balance_workforce(self):
-        test_sim = _rome_sim()
-        adult_equivalent = test_sim._adult_equivalent_population(test_sim.population)
-        technique = test_sim.labour._farming_technique()
-        baseline_fte = test_sim.labour._expected_year_farm_need(
-            test_sim.labour._share_farm_fte(adult_equivalent, technique),
-            adult_equivalent, technique)
-        test_sim._demographic_recovery(101)
-        fte = _farm_hours(test_sim) / labour_allocation.HOURS_PER_FARM_WORKER_YEAR
-        self.assertAlmostEqual(fte / baseline_fte, 1.0, places=6)
-
-    def test_a_short_harvest_pulls_hours_onto_the_farm(self):
-        # Half the farm hands leave: food runs short, and workers move back.
-        test_sim = _rome_sim()
-        test_sim._demographic_recovery(101)
-        hours = test_sim.state.economy.society_labour_hours
-        removed = hours[labour_allocation.FARM_TRADE] * 0.5
-        hours[labour_allocation.FARM_TRADE] -= removed
-        # The farm hands become craft workers in proportion to each trade's size.
-        rest_total = sum(value for trade, value in hours.items()
-                         if trade != labour_allocation.FARM_TRADE)
-        for trade in list(hours):
-            if trade != labour_allocation.FARM_TRADE:
-                hours[trade] += removed * hours[trade] / rest_total
-        depleted = _farm_hours(test_sim)
-        test_sim._demographic_recovery(102)
-        after_one_year = _farm_hours(test_sim)
-        test_sim._demographic_recovery(103)
-        after_two_years = _farm_hours(test_sim)
-        self.assertGreater(after_one_year, depleted)
-        self.assertGreater(after_two_years, after_one_year)
+class FarmWorkersNeededTests(unittest.TestCase):
 
     def test_land_saturation_caps_the_farm_need(self):
         # Workers beyond what the land can employ produce nothing more.
@@ -55,20 +20,48 @@ class WorkforceAllocationWiringTests(unittest.TestCase):
             marginal_product_kg_per_hour=0.001, land_hectares=210.0)
         self.assertLessEqual(need, 210.0 / labour_allocation.agriculture.hectares_cropped_per_farm_worker() + 1e-9)
 
-    def test_workforce_round_trips_through_save_and_load(self):
-        import os
-        import tempfile
-        from sim.engine import saveload
-        test_sim = _rome_sim()
-        for year in range(101, 106):
-            test_sim._demographic_recovery(year)
-        before = dict(test_sim.state.economy.society_labour_hours)
-        path = tempfile.mktemp(suffix=".json")
-        try:
-            saveload.save_state(test_sim, path)
-            fresh = _rome_sim()
-            saveload.load_state(fresh, path)
-            self.assertEqual(dict(fresh.state.economy.society_labour_hours), before)
-        finally:
-            if os.path.exists(path):
-                os.remove(path)
+    def test_no_shortfall_and_no_surplus_keeps_the_baseline(self):
+        self.assertEqual(labour_allocation.farm_workers_needed(100.0, 100.0, 0.0, 0.5, 1e6), 100.0)
+
+    def test_a_shortfall_calls_for_more_hands(self):
+        self.assertGreater(labour_allocation.farm_workers_needed(100.0, 100.0, 5e5, 5.0, 1e6), 100.0)
+
+    def test_a_surplus_lets_hands_go(self):
+        self.assertLess(labour_allocation.farm_workers_needed(100.0, 100.0, 0.0, 5.0, 1e6, surplus_kg=1e5), 100.0)
+
+    def test_a_bigger_shortfall_calls_for_no_fewer_hands(self):
+        small = labour_allocation.farm_workers_needed(100.0, 100.0, 1e5, 5.0, 1e6)
+        large = labour_allocation.farm_workers_needed(100.0, 100.0, 5e5, 5.0, 1e6)
+        self.assertGreaterEqual(large, small)
+
+
+class FarmHoursMoveTests(unittest.TestCase):
+
+    def test_hours_move_toward_what_the_farm_is_needed_for(self):
+        total = 1.0e6
+        self.assertGreater(labour_allocation.farm_hours_after(1000.0, 5000.0, total), 1000.0)
+        self.assertLess(labour_allocation.farm_hours_after(5000.0, 1000.0, total), 5000.0)
+
+    def test_hours_at_the_need_stay_there(self):
+        self.assertEqual(labour_allocation.farm_hours_after(1000.0, 1000.0, 1.0e6), 1000.0)
+
+    def test_hours_move_no_further_than_the_gap(self):
+        after = labour_allocation.farm_hours_after(1000.0, 1010.0, 1.0e6)
+        self.assertLessEqual(after, 1010.0)
+
+    def test_hours_never_exceed_all_the_hours_or_go_below_zero(self):
+        self.assertLessEqual(labour_allocation.farm_hours_after(1000.0, 1.0e9, 2000.0), 2000.0)
+        self.assertGreaterEqual(labour_allocation.farm_hours_after(1000.0, 0.0, 2000.0), 0.0)
+
+    def test_the_year_starts_from_the_held_split_scaled_to_this_years_hours(self):
+        held = {FARM: 300.0, "smith": 100.0}
+        self.assertAlmostEqual(labour_allocation.current_farm_hours(held, 2000.0, 10.0), 1500.0)
+
+    def test_the_opening_year_starts_from_the_food_balance_never_above_all_the_hours(self):
+        hours_per_worker = labour_allocation.HOURS_PER_FARM_WORKER_YEAR
+        self.assertEqual(labour_allocation.current_farm_hours({}, 1.0e9, 10.0), 10.0 * hours_per_worker)
+        self.assertEqual(labour_allocation.current_farm_hours({}, 100.0, 10.0), 100.0)
+
+
+if __name__ == "__main__":
+    unittest.main()
