@@ -16,10 +16,10 @@ def unworn_sites(civ, world_map, cropped_share: float):
     return {tile_id: crop_site(tile_id, cropped_share, world_map) for tile_id in tiles_held(civ, world_map)}
 
 
-def manure_nitrogen_per_hectare(herd_kg: float, sites) -> float:
-    """Transitional: nitrogen of the draught herd's collected dung over the cropped hectares of `sites`, kg per hectare of holding."""
+def manure_nitrogen_per_hectare(manure_kg: float, sites) -> float:
+    """Transitional: nitrogen of `manure_kg` of collected dung spread over the cropped hectares of `sites`, kg per hectare of holding."""
     hectares = sum(site.cropped_hectares for site in sites.values())
-    return 0.0 if hectares <= 0.0 else soil_nutrients.herd_manure_nitrogen_kg(herd_kg) / hectares
+    return 0.0 if hectares <= 0.0 else soil_nutrients.manure_nitrogen_kg(manure_kg) / hectares
 
 
 def yield_factors(stock: Dict[str, float], held_tiles: Iterable[str], cropped_share: float,
