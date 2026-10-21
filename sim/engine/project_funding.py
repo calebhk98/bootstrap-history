@@ -19,6 +19,13 @@ class YearFunding(NamedTuple):
     hours_lost_to_arrears: float   # the hours given back while in arrears, when they were worth reporting
 
 
+def year_bill(cost_left, project_cost, year_share):
+    """What a project asks for this year: the instalment its constrained year can do (the whole cost scaled by the
+    share of the work the year managed), never more than is left. A shortage so sets how fast the bill is paid and
+    never stops the last payment landing."""
+    return min(cost_left, project_cost * year_share)
+
+
 def project_purse(capital, credit_limit, fixed_costs, revenue):
     """What the household may draw on for projects: its capital and part of its credit line, less the shortfall of
     its fixed costs over revenue (revenue already covers the rest)."""

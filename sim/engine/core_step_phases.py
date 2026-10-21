@@ -28,6 +28,7 @@ from .units_prose import money_text, plain_number
 from .bondage_workshop_rules import bondage_repayment, serve_bondage_year
 from .state_demand import answer_confiscation
 from .invariants import check_labour_market_invariants, check_yearly_invariants
+from .eminence_warning import eminence_band_to_announce
 from .step_phase_money import MoneyPhaseMixin
 from .step_phase_project_start import ProjectStartPhaseMixin
 from .step_phase_projects import ProjectProgressPhaseMixin
@@ -423,18 +424,16 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, ProjectStartPhaseMixin, 
         # it beforehand. It is the one hazard that cannot be bribed away,
         # so the player must be told it is closing in.
         _danger = self.cfg["eminence_danger"]
-        if self.state.household.eminence > _danger * 0.75:
-            _said = self.state.household._said_eminence
-            _band = int(self.state.household.eminence / max(1.0, _danger * 0.15))
-            if _band > _said:
-                self.state.household._said_eminence = _band
-                self.state.household.log.append((self.state.scenario.year, LogLine("eminence_warning", "YOU ARE BECOMING CONSPICUOUS: eminence %.0f "
-                                     "against a danger line of %.0f. This is the "
-                                     "one thing no patron and no bribe protects "
-                                     "you from, and it grows with reputation and "
-                                     "visible wealth. A wide, dispersed "
-                                     "institution is what survives you"
-                                 % (self.state.household.eminence, _danger))))
+        _band = eminence_band_to_announce(self.state.household.eminence, _danger, self.state.household._said_eminence)
+        if _band is not None:
+            self.state.household._said_eminence = _band
+            self.state.household.log.append((self.state.scenario.year, LogLine("eminence_warning", "YOU ARE BECOMING CONSPICUOUS: eminence %.0f "
+                                 "against a danger line of %.0f. This is the "
+                                 "one thing no patron and no bribe protects "
+                                 "you from, and it grows with reputation and "
+                                 "visible wealth. A wide, dispersed "
+                                 "institution is what survives you"
+                             % (self.state.household.eminence, _danger))))
         self.update_protection()
         # THE STATE NOTICES YOU. Requisition, the pressed office, a demand
         # for military supply, and the tail confiscation risk at the top of

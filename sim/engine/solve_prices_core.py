@@ -27,7 +27,7 @@ if REPO_ROOT not in sys.path:
 from sim.engine import disposal_cost  # noqa: E402
 from sim.engine.joint_allocation import allocate_joint_cost, outputs_split_by_mass  # noqa: E402
 from sim.engine.price_change import relative_price_change  # noqa: E402
-from sim.world.capital_market import capital_recovery_factor  # noqa: E402  (CAPITAL)
+from sim.world.capital_market import stand_yearly_share  # noqa: E402  (CAPITAL)
 # DAMPING_FACTOR, MAXIMUM_ITERATIONS, CONVERGENCE_TOLERANCE, INITIAL_PRICE_
 # GUESS_HOURS and GROWTH_BOUND_HOURS live in sim/algorithm_parameters.py and
 # are imported back here under their original names, so every existing
@@ -830,7 +830,8 @@ def _capital_cost_hours_per_unit(capital_goods, current_prices, wage_by_trade, i
         for trade, hours_per_build in build_labour_hours.items():
             build_cost_hours += hours_per_build * wage_by_trade[trade]
 
-        yearly_share = capital_recovery_factor(interest_rate, capital_good["service_life_years"])
+        yearly_share = stand_yearly_share(
+                interest_rate, capital_good["service_life_years"], capital_good.get("establishment_years") or 0.0)
         capital_cost_hours += build_cost_hours * yearly_share / capital_good["annual_output_at_basis"]
     return capital_cost_hours
 

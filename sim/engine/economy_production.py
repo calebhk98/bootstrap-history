@@ -25,6 +25,7 @@ from .data import trade_family
 from sim.constants import declare
 from . import category_traits, money_units, node_revenue_market, node_upkeep
 from .readable import readable
+from .revenue_ledger import assemble_ledger
 from sim.world import plant_figures
 from .industry_depth import RAMP_SHARE_AT_FULL_DEPTH
 
@@ -425,47 +426,11 @@ class ProductionMixin:
         anywhere else in the interface.
         """
         economy = self.state.economy
-        rows = self.ledger_concern_rows()
-        # ALL OF IT, OR SAY WHAT IS MISSING: a ledger that shows only the
-        # fifteen largest rows and nothing else does not add up to the
-        # revenue it states. Every running earner has to be represented -
-        # the rest as one summed row, the workshop's own output, state
-        # funding, and whatever the market saturation absorbs - or the
-        # accounts are visibly wrong.
-        ranked = sorted(rows.items(), key=lambda entry: -entry[1])
-        out = dict(ranked[:15])
-        rest = sum(value for _node_id, value in ranked[15:])
-        if rest > 0.5:
-            out["_and_%d_smaller_concerns" % len(ranked[15:])] = round(rest, 1)
-        workshop_total = self.workshop_output() * economy.output_factor
-        if workshop_total > 0.5:
-            out["_what_your_own_workshop_sells"] = round(workshop_total, 1)
-        wage_total = self.founder_wage_income() * economy.output_factor
-        if wage_total > 0.5:
-            out["_wages_for_your_own_work"] = round(wage_total, 1)
-        if self.state_funding() > 0.5:
-            out["_state_funding"] = round(self.state_funding() * economy.output_factor, 1)
-        # And the difference between the parts and the whole, which is the
-        # market saturating: you cannot sell more inns than the town wants.
-        gap = round(self.revenue() - sum(out.values()), 1)
-        if abs(gap) > 1.0:
-            out["_what_the_market_will_not_absorb"] = gap
-        else:
-            # ROUNDING IS NOT A ROW: every entry is rounded to a tenth so it
-            # can be read, and a ledger that says "these add up to the
-            # revenue above" has to actually survive being added up by hand
-            # at that precision. Push the residue into the largest row,
-            # which is the one place a tenth cannot be noticed.
-            # AT ONE DECIMAL, like every other row: the residue itself has
-            # to be rounded to a tenth before being added in, or it
-            # reintroduces the exact mismatch this is fixing.
-            resid = round(round(self.revenue(), 1) - sum(out.values()), 1)
-            if out and abs(resid) > 0.049:
-                # sorted(): a tie in max() over a dict falls back to insertion
-                # order, which came from a set.
-                big = max(sorted(out), key=lambda key: abs(out[key]))
-                out[big] = round(out[big] + resid, 1)
-        return out
+        funding = self.state_funding()
+        return assemble_ledger(
+            self.ledger_concern_rows(), self.workshop_output() * economy.output_factor,
+            self.founder_wage_income() * economy.output_factor,
+            funding * economy.output_factor if funding > 0.5 else None, self.revenue())
 
     # A granted node whose category is flagged practisable is a skill the founder holds and works with their own
     # hands; the held skills choose the trade the founder's hours are sold in (held_trade). A granted fleet of

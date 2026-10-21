@@ -11,6 +11,7 @@ these live in a separate file).
 
 from sim.geography.api import tile_names
 from sim.refusal import Refusal, LogLine
+from .allocation_cap import capped_to_useful
 from .command_registry import command
 from .hire_reply import hire_reply
 from sim.engine.ui_port import TRADES_ABSENT, TRADE_NOTES, WAGES, trade_family
@@ -138,11 +139,8 @@ def _cmd_allocate(sim, nodes, cmd, ended):
         had = sim.hour_allocations.pop(target_id, None)
         return ({"ok": True, "cleared": target_id, "had_been_a_year": had}
                 if had else {"ok": True, "cleared": target_id})
-    capped_from = None
-    if cmd.get("useful"):
-        useful = sim.project_useful_hours(target_id)
-        if hours > useful:
-            capped_from, hours = hours, useful
+    hours, capped_from = capped_to_useful(
+        hours, sim.project_useful_hours(target_id) if cmd.get("useful") else 0.0, bool(cmd.get("useful")))
     sim.hour_allocations[target_id] = float(hours)
     return {"ok": True, "set": target_id, "name": nodes[target_id]["name"],
             "hours_a_year": float(hours),

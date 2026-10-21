@@ -160,6 +160,16 @@
       "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
       "fatality_confidence": "D"
     },
+    "vine_and_olive_tender": {
+      "family": "labour",
+      "note": "Tends vineyards and olive groves (pruning, training, picking) and works the press and cellar of the same estate (Complaint 616). Hands move between it and the farmer within a season or two, so it sits in the labour family.",
+      "training_years": 2,
+      "training_source": "LABELLED HEURISTIC, conf D, no source found for the years it takes to learn vine and olive husbandry. Retire: Complaint 656.",
+      "tool_basket": [],
+      "fatality_risk_per_year": 0.0,
+      "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
+      "fatality_confidence": "D"
+    },
     "herder": {
       "family": "labour",
       "note": "Tends flocks and herds on pasture: shepherd, goatherd, cowherd, with the milking, shearing, calving and dairy work of the same household.",

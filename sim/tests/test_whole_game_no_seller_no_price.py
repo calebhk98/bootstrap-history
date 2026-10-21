@@ -1,56 +1,60 @@
-"""Complaints/38, whole game: a price needs a seller, and an import is bounded by what the partner makes and
-the carriers lift. Slow topic: it builds a game and derives the node revenue of the whole tree for Rome.
+"""Complaints 38 and 642: a price needs a seller and a trade. A market where buyers bid and nobody offers shows no traded
+price, only a quote named as what it is (a cost-covering quote when a maker could make the good, else the best unfilled
+bid); an import is bounded by what the partner makes and the carriers lift. Complaint 640: the rules are called on
+books and numbers built here; the played-game checks are in test_whole_game_no_seller_no_price_scenario."""
+QUICK_TOPIC = True
 
-It also prints what the change does to node revenue and to the opening basket, so the re-measure is one
-command: `python3 -m sim.tests --slow --only whole_game_no_seller_no_price`."""
-from .harness import *  # noqa: F401,F403
+import unittest
 
-import math
+from sim.economy import goods_market, market_quote
+from sim.economy.types import QUOTE_BEST_UNFILLED_BID, QUOTE_COST_COVERING, Bid
+from sim.engine.goods_market_imports import import_tonnes_left
 
-from sim.engine import data, energy_prices
+GOOD, AREA, TILE = "cobalt_kg", "area", "tile"
+LAST_PRICE = 7.0
 
-game = sim(civ="rome_100ad", capital=1e9)
-market = game.goods_market
-household = market.household_prices()
-sellers = {material: market.offered_by(material) for material in household}
 
-check("every material households are asked to pay for has a seller in reach",
-      all(seller is not None for seller in sellers.values()),
-      sorted(material for material, seller in sellers.items() if seller is None)[:10])
-check("a material no home technique and no partner makes has no price and cannot be bought",
-      all(not market.can_be_bought(material) for material in ("cobalt_kg", "germanium_g")
-          if material not in household),
-      [material for material in ("cobalt_kg", "germanium_g") if material not in household and market.can_be_bought(material)])
+def bid(maximum_price=float("inf"), budget=1e9):
+    return Bid("buyer", GOOD, AREA, TILE, 10.0, 0.0, 1.0, 0.0, budget, 0, maximum_price)
 
-partner_sold = sorted(material for material, seller in sellers.items() if seller not in (None, "home"))
-available = {material: market.import_tonnes_available(material) for material in partner_sold}
-check("every import has a finite, non-negative volume of at most what its partner makes and holds",
-      all(tonnes is not None and 0.0 <= tonnes <= game.foreign_supply_tonnes(sellers[material], material) + 1e-9
-          for material, tonnes in available.items()),
-      [(material, tonnes) for material, tonnes in available.items()
-       if tonnes is None or tonnes > game.foreign_supply_tonnes(sellers[material], material) + 1e-9][:5])
-check("...and of at most the lift the route's carriers have left",
-      all(tonnes <= game.foreign_lift_left_tonnes(sellers[material], market._route_from(sellers[material]))[0] + 1e-9
-          for material, tonnes in available.items()),
-      [material for material, tonnes in available.items()
-       if tonnes > game.foreign_lift_left_tonnes(sellers[material], market._route_from(sellers[material]))[0] + 1e-9][:5])
-check("a quote of an import states its own volume, not the home output curve's",
-      all(abs(market.quote(material)["market_available_tonnes_per_year"] - available[material]) < 1e-9
-          for material in partner_sold if market.quote(material) is not None))
-check("the market screen calls a partner-sold material imported",
-      all(game.material_price_basis(material) == "imported" for material in partner_sold))
 
-# measurement: the derived revenue of every node with heat grades nothing held supplies priced out
-civ = data.load_civ("rome_100ad")
-_tree, document, nodes, _wages, goods = data.load(civ["starting_techs"], "rome_100ad")
-energy = energy_prices.graded(civ["starting_techs"], document, goods, "rome_100ad")
-check("a grade of heat no technique Rome holds supplies has no band", all(
-    (carrier, required) not in energy.bands for (carrier, required) in energy.unreachable))
-revenues = [node["rev_hours"] for node in nodes.values() if node.get("_revenue_basis") == "output"]
-check("every derived node revenue is finite", all(math.isfinite(revenue) for revenue in revenues))
-basket = game.base_basket()
-opening_cost = sum(units * basket["prices"][material] for material, units in basket["units"].items())
-print("MEASURE rome_100ad: derived-output nodes %d, total rev_hours %.1f, unreachable heat grades %d, "
-      "imported materials %d, opening basket cost %.1f hours a year"
-      % (len(revenues), sum(revenues), len(energy.unreachable), len(partner_sold), opening_cost))
-check("the opening basket is priced", opening_cost > 0.0 and math.isfinite(opening_cost))
+class NoSellerNoPriceTests(unittest.TestCase):
+
+    def test_buyers_and_no_seller_give_no_traded_price_and_not_the_last_one_remembered(self):
+        result = goods_market.clear([bid(maximum_price=4.0)], [], GOOD, AREA, "coin", LAST_PRICE)
+        self.assertIsNone(result.traded_price)
+        self.assertEqual(result.quantity, 0.0)
+        self.assertEqual((result.quote.kind, result.quote.price), (QUOTE_BEST_UNFILLED_BID, 4.0))
+
+    def test_where_a_maker_could_make_it_the_quote_is_what_covers_the_cost_and_is_named_so(self):
+        quote = market_quote.no_trade_quote([bid()], [], cost=2.5)
+        self.assertEqual((quote.kind, quote.price), (QUOTE_COST_COVERING, 2.5))
+
+    def test_a_cost_quote_needs_a_buyer_with_money(self):
+        quote = market_quote.no_trade_quote([bid(budget=0.0)], [], cost=2.5)
+        self.assertIsNone(quote)
+
+    def test_a_good_no_one_wants_and_no_one_offers_has_no_price_and_no_quote(self):
+        result = goods_market.clear([], [], GOOD, AREA, "coin", LAST_PRICE)
+        self.assertIsNone(result.traded_price)
+        self.assertIsNone(result.quote)
+
+
+class ImportBoundTests(unittest.TestCase):
+
+    def test_an_import_is_at_most_what_the_partner_makes(self):
+        self.assertEqual(import_tonnes_left(50.0, 500.0, 0.0), 50.0)
+
+    def test_an_import_is_at_most_the_lift_the_carriers_have_left(self):
+        self.assertEqual(import_tonnes_left(500.0, 30.0, 0.0), 30.0)
+
+    def test_what_has_been_bought_this_year_comes_off_and_the_volume_is_never_negative(self):
+        self.assertEqual(import_tonnes_left(50.0, 500.0, 20.0), 30.0)
+        self.assertEqual(import_tonnes_left(50.0, 500.0, 80.0), 0.0)
+
+    def test_an_unlimited_supply_and_lift_is_unlimited(self):
+        self.assertEqual(import_tonnes_left(float("inf"), float("inf"), 5.0), float("inf"))
+
+
+if __name__ == "__main__":
+    unittest.main()

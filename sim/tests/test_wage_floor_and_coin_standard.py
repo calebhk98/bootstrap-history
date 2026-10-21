@@ -1,5 +1,7 @@
 """The wage floor comes from the solved cost of food in labour hours, and
-money is anchored to the civilisation's coin, not to a book price."""
+money is anchored to the civilisation's coin, not to a book price. Complaint 640: every check calls the wage schedule on
+inputs built here; the played-game check that the smallest kit affords a hire is in test_wage_floor_and_coin_standard_scenario."""
+QUICK_TOPIC = True
 import copy
 import json
 import os
@@ -183,15 +185,6 @@ class tempfile_civ(object):
 
 class OpeningCapitalTests(unittest.TestCase):
 
-    def _sim(self, civ_name, kit):
-        import random
-        from sim.tests import harness
-        from sim.engine.core import Sim
-        # unopened: the claim is the opening purse against the opening wage quote, neither of which needs the agent economy
-        return harness.build_unopened(lambda: Sim(
-            harness.NODES, harness.ORDER, random.Random(1), events=False, manual=True,
-            civ=data.load_civ(civ_name), cfg={"start_kit": kit}))
-
     def test_a_kit_is_labourer_years_of_the_opening_wage(self):
         civ = data.load_civ("rome_100ad")
         expected = (data.STARTING_KITS["merchant"]["labourer_years"]
@@ -204,16 +197,6 @@ class OpeningCapitalTests(unittest.TestCase):
         heavier["coin_standard"]["kg_per_unit"] *= 2.0
         self.assertAlmostEqual(data.kit_capital("artisan", heavier) * 2.0,
                                data.kit_capital("artisan", civ))
-
-    def test_the_smallest_funded_kit_affords_a_skilled_hire_for_a_year(self):
-        # Capital grows with the kit, so the smallest funded kit is the binding case.
-        smallest_kit = min((kit for kit, kit_data in data.STARTING_KITS.items()
-                            if kit_data["labourer_years"] > 0.0),
-                           key=lambda kit: data.STARTING_KITS[kit]["labourer_years"])
-        for civ_name in CIVILISATIONS + ["sample_egypt_100bc_e7k2:egypt"]:
-            engine = self._sim(civ_name, smallest_kit)
-            self.assertGreaterEqual(
-                engine.household.capital, engine.labour.market.quote_annual("smith"), (civ_name, smallest_kit))
 
 
 if __name__ == "__main__":

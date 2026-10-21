@@ -118,6 +118,8 @@ a new field's name. A furnace priced in bricks is a furnace whose cost falls
 when bricks get cheaper, and a lump-sum "cap_cost_denarii" field would not do
 that - it would just be `prices.json` again, one field over.
 
+A capital item may also carry `establishment_years`: the years after the build bill is spent before the capital first yields (a vine or an olive tree bearing nothing for its first years). It must be below `service_life_years`, which counts from planting. The bill is spent evenly over those years, so interest runs on each part only from when it is spent (`sim/world/capital_market.py` `establishment_carry_factor`), and the carried bill is repaid over the bearing years alone (`stand_yearly_share`). Omit it for capital that yields at once. Land held through the barren years is a `hectare_land` entry in `build_materials`.
+
 `service_life_years` and `annual_output_at_basis` turn a build bill into a
 cost per basis-unit: `(cost of build_materials + cost of build_labour_hours)
 * capital_recovery_factor(market rate, service_life_years) / annual_output_at_basis`, where the factor is the
