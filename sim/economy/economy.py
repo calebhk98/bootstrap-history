@@ -189,8 +189,8 @@ class Economy:
         held_placed = bondage_hours.place_held(
             record.bonded_held, lambda area, trade: people_by_trade(record.workforce, area).get(trade, 0.0), everyone, labour_bids,
             setup.working_hours_per_year, context.ask_floor_per_worker_year, labour_area)
-        record.book.transfer_many([Transfer(employer, cohort, money, min(amount, max(0.0, record.book.balance(employer, money))),
-                                            "keep of bonded") for employer, cohort, amount in held_placed.keep if amount > 0.0])
+        record.book.transfer_many([Transfer(employer, cohort, money, amount, "keep of bonded") for employer, cohort, amount
+                                   in bondage_hours.payable_keep(held_placed.keep, lambda employer: record.book.balance(employer, money))])
         placed = bondage_hours.place(record.bondage, held_placed.offers, held_placed.bids,
                                      bondage_hours.works_of_producers(record), bondage.BONDED_HOURS_OWED_SHARE)
         everyone, labour_bids = placed.offers, placed.bids

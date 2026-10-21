@@ -142,3 +142,18 @@ def place_held(held: Dict[str, Dict[str, Dict[AgentId, float]]], workers: Callab
                     rows[trade] = rows.get(trade, 0.0) + taken
                     want -= taken
     return HeldPlacement(new_offers, new_bids, hired, keep)
+
+
+def payable_keep(keep: Sequence[Tuple[AgentId, AgentId, float]], balance_of: Callable[[AgentId], float]) -> List[Tuple[AgentId, AgentId, float]]:
+    """The keep rows a holder can pay from what it holds: rows are paid in order until the holder's balance is spent, so
+    several rows of one holder never overdraw it together."""
+    left: Dict[AgentId, float] = {}
+    payable = []
+    for employer, cohort, amount in keep:
+        if employer not in left:
+            left[employer] = max(0.0, balance_of(employer))
+        paid = min(amount, left[employer])
+        if paid > 0.0:
+            payable.append((employer, cohort, paid))
+            left[employer] -= paid
+    return payable
