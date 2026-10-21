@@ -87,6 +87,13 @@ def pay(government: Any, actor: Any, amount: float, purpose: str) -> float:
 	return paid
 
 
+def displaces_nothing(actor: Any, node_id: str) -> bool:
+	"""Whether the technique is the only thing the actor runs: there is no incumbent plant for a trial to take a share from,
+	so the plant runs the technique whole."""
+	running = set(actor.concerns)
+	return bool(running) and running <= {node_id}
+
+
 def advance_actor(actor: Any, world: Any) -> List[str]:
 	"""One year for one actor: begin trials, judge them, move shares; subsidies and mandates paid by its state.
 	Returns "stage:node" events in order."""
@@ -102,7 +109,7 @@ def advance_actor(actor: Any, world: Any) -> List[str]:
 		gap = observed_gap(actor, node_id, world)
 		entry = actor.adoption.get(node_id)
 		if entry is None:
-			wanted = node_id in subsidies or node_id in mandates or gap > 0.0
+			wanted = node_id in subsidies or node_id in mandates or (gap > 0.0 and not displaces_nothing(actor, node_id))
 			if wanted and not trial_refusals(actor, node_id, world):
 				actor.adoption[node_id] = {"stage": TRYING, "share": PILOT_SHARE, "since": world.year}
 				events.append("trying:" + node_id)
