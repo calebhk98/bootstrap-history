@@ -20,7 +20,7 @@ import math
 
 from sim.constants import declare
 from sim.refusal import Refusal
-from . import trade_data, trade_formation
+from . import trade_data, trade_first_hands, trade_formation
 from .hands import contracted_hours_of, hands_available
 from .hire_outcome import hire_result, unfound_note
 from .room_advice import hire_room_refusal
@@ -354,6 +354,11 @@ class TrainingMixin:
         uncovered = trade_formation.uncovered_share(shares.get(trade, {}), shares.get(source, {}))
         return trade_formation.training_years(self._full_years(trade), uncovered)
 
+    def uncovered_from(self, trade, source):
+        """The share of `trade`'s tasks that people of `source` do not already do."""
+        shares = trade_formation.shipped_task_shares()
+        return trade_formation.uncovered_share(shares.get(trade, {}), shares.get(source, {}))
+
     def training_hours_per_person(self, trade, source=None):
         """The teacher's own hours to teach one person `trade` from `source` (default: the nearest practised trade)."""
         source = source or self._source_trade_for(trade)
@@ -441,14 +446,18 @@ class TrainingMixin:
         # slaves and labour market price_factor now prices for hiring: the more of
         # `frm` you have already pulled recently, the dearer feeding the next
         # batch while they learn.
-        fee = count * self.labour_market.quote_annual(frm) * years      # the source's wages while they learn
+        uncovered = self.uncovered_from(trade, frm)
+        # the early slice is paid as staff from its own date, so the source's wages are kept up front only for the rest
+        kept_years = trade_first_hands.prepaid_keep_years(years, self._full_years(trade), uncovered)
+        fee = count * self.labour_market.quote_annual(frm) * kept_years      # the source's wages while they learn
         if teacher:
             fee += teaching_hours * self.labour_market.quote_annual(frm) / self._world.HOURS_PER_PERSON_YEAR
         if fee > self._world.spending_power("buy"):
             return None, self._cash_in_hand_refusal(
                 "keeping %g %s%s fed while they learn"
                 % (count, trade, "" if count == 1 else "s"), fee)
-        return {"count": count, "from": frm, "hours": hours, "fee": fee, "years": years, "teacher": teacher}, None
+        return {"count": count, "from": frm, "hours": hours, "fee": fee, "years": years, "teacher": teacher,
+                      "uncovered": uncovered}, None
 
     def outside_teacher(self, trade):
         """The first actor other than you that holds the knowledge to teach `trade` (trade_formation.teachers_of),
@@ -482,7 +491,8 @@ class TrainingMixin:
         self._world.pay_edge(self._world.EDGE_WORKERS, fee, "training fees")
         household.teaching_hours_this_year = (household.teaching_hours_this_year or 0.0) + hours
         household.trades_created.add(trade)
-        household.training.append([0.0, current_year + years, trade, float(count)])
+        household.training.extend(trade_first_hands.cohort_rows(
+            current_year, trade, float(count), years, self._full_years(trade), plan["uncovered"]))
         self.labour_market.press(frm, float(count) * self._world.HOURS_PER_PERSON_YEAR)
         # SAY WHAT IT TOOK: teaching can quietly eat most of a year's
         # founder-hours, with nothing left afterward to supervise what it
@@ -501,10 +511,11 @@ class TrainingMixin:
         return True, ("%g %s%s finish training during %d's annual resolution "
                       "and join your staff automatically immediately afterward "
                       "- no 'hire' needed for them. "
-                      "Until then they cannot do a day of the work. It took "
+                      "Part of the cohort, the share of the tasks %ss already do, joins sooner (see the education "
+                      "screen); before that they cannot do a day of the work. It took "
                       "%s of your own hours (%s left this year) and %s "
                       "to keep them while they learn"
-                      % (count, trade, "s" if count != 1 else "", current_year + years,
+                      % (count, trade, "s" if count != 1 else "", current_year + years, frm,
                          self._world.plain_number(hours), self._world.plain_number(_left),
                          self._world.money_text(fee, grouped=True)))
 

@@ -1,6 +1,6 @@
 # A trade that has never existed has no way to form
 
-**Status:** open
+**Status:** open (fourth stage done: partial hands from a converted cohort; learning curve on output still open)
 
 When a technique needs a trade nobody in the world practises (the first engine fitters, machinists, printers), the
 labour model has no rule for where its first people come from. `data/world/trades.json` links a trade to the trade it
@@ -35,3 +35,9 @@ Done: the labour core's yearly step (`sim/labour/market/year.py`) now runs `mark
 Done: bonded purchase is wired into a game. `sim/agents/bonded_sale.py` gives the tiles of countries whose profile has bondage (`has_bondage`), the bonded strata's people by trade on offer there (a labelled share, `BONDED_SALE_SHARE_PER_YEAR`, retire: owners' sale rule) and `buy_bonded`, which moves people out of the bonded stratum and pays its owner through the ledger. `sim/engine/economy_port_bondage.py` hands tiles and offer to the economy in `YearInputs.bondage_tiles` and `bonded_for_sale`; `labour_context` turns them into `bondage_allowed` and `bonded_for_sale` areas. The economy charges the employers bidding for the trade (`sim/economy/bonded_purchase.py`, price a labelled number of years of the area's ask floor) over the exchange edge, reports `YearOutcome.bonded_bought` and `bonded_paid`, and the port pays the owners from the economy edge. Tests: `sim/tests/test_bonded_purchase.py`.
 
 Still open: the owners' sale rule and a price from the person's remaining service; people bought arrive with the bonded stratum's trade only, and are not held bonded in the economy's workforce (they work as free hands); a country without home tiles offers none; conversion is still carried out only through `train`; a learning curve on output (Wright) with an error rate and a floor is a later stage.
+
+## Progress (fourth stage)
+
+Done: a conversion cohort no longer arrives all at once at the end of its time, which for every founding-absent trade with a practised near source was longer than the stall window (`STALL_YEARS_BEFORE_ABANDONMENT`), so a founder could never start such work. `sim/labour/trade_first_hands.py` writes a cohort as two training records: an early slice of person-equivalents equal to the covered share of the new trade's tasks (Gathmann and Schonberg: human capital carries over by task distance; research report 4.3, proficiency starts at one minus the distance shortfall), joining the staff after the floor share of a full apprenticeship (`SOURCE_TASK_FLOOR_FRACTION`, no new number; Smiles: Boulton and Watt put men on narrow classes of work as soon as they could do them, Murdock was entered as a regular hand after a trial job), and the rest at the end. The keep paid up front stops short of the early slice, which is on the payroll from its date. Tests: `sim/tests/test_trade_first_hands.py` (rules, and each founding-absent trade with a practised near source gets first hands inside the stall window), `sim/tests/test_trade_first_hands_scenario.py` (machinists in Rome 100 AD).
+
+Still open: a trade no recipe books hours to (optician) has no task description, so no source covers it and it gets no early hands; the early slice is a flat share, not a rising proficiency by repetition (Wright, Thornton and Thompson), so the error rate and the floor are not modelled; the teacher's proficiency does not cap the first cohort's start; `taught_from` links are still few (the registry link overrides the nearest trade when present); owners' sale rule and bonded price (third stage).
