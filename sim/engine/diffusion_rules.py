@@ -6,14 +6,14 @@ def spread_share(age_years, half_life_years):
     return max(0.0, min(1.0, 1.0 - 0.5 ** (age_years / half_life_years)))
 
 
-def medical_compliance(compliance_base, state_capacity):
-    """The share following public-health guidance: a base with no administration, the rest from state capacity."""
-    return compliance_base + (1.0 - compliance_base) * state_capacity
+def medical_compliance(compliance_base, state_reach):
+    """The share following public-health guidance: a base with no administration, the rest from state reach."""
+    return compliance_base + (1.0 - compliance_base) * state_reach
 
 
-def medical_relief(diffusion_index, compliance_base, state_capacity):
+def medical_relief(diffusion_index, compliance_base, state_reach):
     """Coverage times how far people follow the guidance; no fixed ceiling short of full coverage and compliance."""
-    return min(1.0, diffusion_index * medical_compliance(compliance_base, state_capacity))
+    return min(1.0, diffusion_index * medical_compliance(compliance_base, state_reach))
 
 
 def weapons_relief(per_weapon, weapons):

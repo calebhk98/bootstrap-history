@@ -11,7 +11,7 @@ from sim.engine.forest_ceiling import forest_ceiling_hectares, held_land_area_km
 from sim.geography.api import layer_value, open_map
 
 WORLD_MAP = open_map()
-STATE_CAPACITY = 0.6
+REACH = 0.6
 BASE = MiningMixin.FOREST_HA_PER_MILLION_KM2_BASE
 PER_CAPACITY = MiningMixin.FOREST_HA_PER_MILLION_KM2_PER_SC
 
@@ -26,8 +26,8 @@ def area_of_labelled_tiles(*region_labels):
                if layer_value(tile_id, "region", WORLD_MAP) in region_labels)
 
 
-def ceiling_of(civilisation, state_capacity=STATE_CAPACITY, revenue_multiple=1.0):
-    return forest_ceiling_hectares(held_land_area_km2(civilisation, WORLD_MAP), state_capacity, BASE, PER_CAPACITY,
+def ceiling_of(civilisation, state_reach=REACH, revenue_multiple=1.0):
+    return forest_ceiling_hectares(held_land_area_km2(civilisation, WORLD_MAP), state_reach, BASE, PER_CAPACITY,
                                    revenue_multiple)
 
 
@@ -50,8 +50,8 @@ class HeldLandAreaTests(unittest.TestCase):
 
 class CeilingFormulaTests(unittest.TestCase):
     def test_the_ceiling_is_proportional_to_land_area(self):
-        one = forest_ceiling_hectares(1.0e6, STATE_CAPACITY, BASE, PER_CAPACITY, 1.0)
-        self.assertAlmostEqual(forest_ceiling_hectares(3.0e6, STATE_CAPACITY, BASE, PER_CAPACITY, 1.0), 3.0 * one)
+        one = forest_ceiling_hectares(1.0e6, REACH, BASE, PER_CAPACITY, 1.0)
+        self.assertAlmostEqual(forest_ceiling_hectares(3.0e6, REACH, BASE, PER_CAPACITY, 1.0), 3.0 * one)
 
     def test_a_more_capable_state_holds_more_of_the_same_ground(self):
         self.assertGreater(forest_ceiling_hectares(1.0e6, 0.9, BASE, PER_CAPACITY, 1.0),
@@ -64,8 +64,8 @@ class CeilingFormulaTests(unittest.TestCase):
         self.assertEqual(forest_ceiling_hectares(0.0, 1.0, BASE, PER_CAPACITY, 5.0), 0.0)
 
     def test_the_revenue_multiple_scales_the_ceiling(self):
-        plain = forest_ceiling_hectares(1.0e6, STATE_CAPACITY, BASE, PER_CAPACITY, 1.0)
-        self.assertAlmostEqual(forest_ceiling_hectares(1.0e6, STATE_CAPACITY, BASE, PER_CAPACITY, 2.5), 2.5 * plain)
+        plain = forest_ceiling_hectares(1.0e6, REACH, BASE, PER_CAPACITY, 1.0)
+        self.assertAlmostEqual(forest_ceiling_hectares(1.0e6, REACH, BASE, PER_CAPACITY, 2.5), 2.5 * plain)
 
 
 class RevenueMultipleTests(unittest.TestCase):
@@ -112,7 +112,7 @@ class RomeCalibrationTests(unittest.TestCase):
     def test_rome_before_revenue_is_near_the_figure_the_old_region_count_formula_gave(self):
         old_formula_ceiling = 31325.0
         rome = load_civ("rome_100ad")
-        ceiling = ceiling_of(rome, float(rome["state_capacity"]))
+        ceiling = ceiling_of(rome, 0.85)   # the reach the old calibration took for Rome
         self.assertLess(abs(ceiling - old_formula_ceiling) / old_formula_ceiling, 0.10, ceiling)
 
 

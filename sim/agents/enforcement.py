@@ -1,6 +1,6 @@
 """Enforcing a patent: the state backs the holder only as far as its reach, so infringing is a risk, not a block.
 
-An unlicensed operator of a patented concern is found out each year with the chance the state's capacity gives;
+An unlicensed operator of a patented concern is found out each year with the chance the state's reach gives;
 a holder who finds one is paid the margin the infringer made from it. An entrant weighs the same odds as an
 expected cost before it goes ahead."""
 from typing import Any
@@ -19,7 +19,7 @@ def expected_damages(world: Any, actor_id: str, node_id: str, margin: float) -> 
 	entry = lookup(node_id) if lookup is not None else None
 	if not unlicensed(entry, actor_id):
 		return 0.0
-	return float(world.state_capacity()) * max(0.0, margin)
+	return float(world.state_reach()) * max(0.0, margin)
 
 
 def holder_actor(registry: Any, world: Any, holder_id: str) -> Any:
@@ -47,7 +47,7 @@ def margin_of(operator: Any, world: Any) -> float:
 
 
 def enforce_patents(registry: Any, world: Any) -> float:
-	"""Each unlicensed operator of a patented concern is caught with the chance of the state's capacity and
+	"""Each unlicensed operator of a patented concern is caught with the chance of the state's reach and
 	pays its margin on the concern to the holder, never more than its purse; the total paid."""
 	paid = 0.0
 	for node_id in sorted(patented_nodes(registry, world)):
@@ -61,7 +61,7 @@ def enforce_patents(registry: Any, world: Any) -> float:
 			if not unlicensed(entry, operator.actor_id):
 				continue
 			draw = world.rng_for(world.year, "enforcement", operator.actor_id, node_id).random()
-			if draw >= world.state_capacity():
+			if draw >= world.state_reach():
 				continue
 			damages = min(max(0.0, operator.money), margin_of(operator, world))
 			ledger.transfer(operator, holder, damages, "damages")

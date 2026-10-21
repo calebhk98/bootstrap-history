@@ -104,7 +104,7 @@ class InterestGroup(RecordedActor):
 			return
 		record.strength = pull_of(record.lost_income, revenue)
 		record.peak_strength = max(record.peak_strength, record.strength)
-		response = state_response(record.strength, world.state_capacity(), world.state_in_deficit(),
+		response = state_response(record.strength, world.state_reach(), world.state_in_deficit(),
 								  record.group_kind, record.lost_income, revenue)
 		record.claim = response["claim"]
 		record.demands = ([("ban the technique that does their work with fewer hands" if record.technique

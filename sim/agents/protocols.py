@@ -25,7 +25,7 @@ class World(Protocol):
 	def population_total(self) -> float:
 		...
 
-	def state_capacity(self) -> float:
+	def state_reach(self) -> float:
 		...
 
 	def territory(self) -> Any:

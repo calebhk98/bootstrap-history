@@ -227,7 +227,7 @@ def _valid_save():
 		population=PopulationState())
 	state._goal = "aqueduct"
 	blob = serialize_state(state)
-	blob.update({"_civ": "rome_100ad", "_civ_live": {}, "_weights": {}, "_fog": False, "_immortal": True,
+	blob.update({"_civ": "rome_100ad", "_weights": {}, "_fog": False, "_immortal": True,
 	             "_rng": [3, list(random.Random(1).getstate()[1]), None]})
 	game = SimpleNamespace(nodes={"aqueduct": {}, "stone_cutting": {}}, civ={"id": "rome_100ad"})
 	return blob, game
@@ -324,7 +324,6 @@ def _test_flat_legacy_v2_save_rejected_by_load_state():
 	flat_v2_blob = {
 		"_civ": "rome_100ad",
 		"_goal": "printing_press",
-		"_civ_live": {},
 		"_weights": {},
 		"_rng": [3, [0] * 624, 0],
 		"capital": 999999.0,

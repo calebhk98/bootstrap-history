@@ -435,7 +435,6 @@ class SimulationState:
 	disease: DiseaseState = field(default_factory=DiseaseState)
 	actors: Optional[ActorsState] = None
 	_civ: Optional[str] = None
-	_civ_live: Dict[str, Any] = field(default_factory=dict)
 	_weights: Dict[str, Any] = field(default_factory=dict)
 	_fog: bool = False
 	_fuzzy_estimates: bool = False

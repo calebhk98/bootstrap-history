@@ -1,6 +1,6 @@
 # Household work is not a need, so there are no servants, cooks or taverns
 
-**Status:** open
+**Status:** partly done: data, trade, recipes and the pure rules are in; the engine does not yet keep own hours back or give a hearth-less cohort its own basket
 
 Owner decision (530, 2026-10-20). Cooking, fetching water and fuel, cleaning, grinding and childcare take hours every
 household spends. Nothing in `data/world/needs.json` or the household model books them, so domestic service, cooks and
@@ -14,3 +14,32 @@ Land after the opening settles (473), since a new need moves the opening's deman
 household work; a cohort without a hearth buys cooked food.
 
 Religion as a need is out of scope by owner decision; it is a mod (`mods/TASKS.md`).
+
+## Done
+
+- `data/world/household_work.json`: hours a person's share of household work takes, by task. Water, fuel and grinding
+  come from Blackden and Wodon (eds), Gender, Time Use, and Poverty in Sub-Saharan Africa, World Bank Working Paper 73,
+  2006, overview p. 9 (opened): an average adult female spends from just under 1 hour to 2 hours 20 minutes a day
+  carrying water, firewood and crops for grinding. Cooking, cleaning and childcare hours: no source found, labelled
+  estimates (confidence D) with a `retire`.
+- `household_work` need in `data/world/needs.json`, no floor, satiation held equal to that file by a test, met by
+  `domestic_service_hour` (`data/production/95_household_services.json`), made by the new `domestic_servant` trade
+  (`data/world/trades.json`, group `services_state`). `cooked_meal_kg` is the cooked food a cook or eating house makes.
+- `sim/economy/households_work.py`: hours needed, hired hours (a richer cohort hires more), own hours, and the basket
+  of a household with no hearth (food only from goods marked `ready_to_eat`). Tests: `sim/tests/test_economy_households_work.py`.
+
+## Still to do
+
+- Keep a cohort's own household-work hours back from its labour offers (`withhold_hours`), from last year's hired hours.
+- Decide which cohorts have a hearth (551: no land or tenancy; urban) and give them `without_hearth_basket` at the
+  `setup.basket_for(cohort.tile)` sites.
+- Cooking needs fuel at a hearth: the household's own fuel use is not yet counted apart from the warmth need.
+- Land after the opening settles (473).
+
+## PM note (2026-10-21)
+
+The first stage's hired-hours rule takes a typed budget share (0.04) of the cohort's surplus. That is a spending share
+typed into the data, the kind of cultural constant 530's decision ruled out. Replace it with the household's own
+choice: it hires an hour of household work when an hour of its own labour is worth more at the market than the
+servant's price, up to the work there is, so hiring follows income and the wage with no typed share. Retire the
+0.04 when that lands.

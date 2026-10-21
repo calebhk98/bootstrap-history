@@ -39,7 +39,7 @@
       "sources": ["allen_2000", "broadberry_2015"]
     },
     "services_state": {
-      "trades": ["soldier", "scribe", "merchant", "scholar", "master"],
+      "trades": ["soldier", "scribe", "merchant", "scholar", "master", "domestic_servant"],
       "band": [0.01, 0.10],
       "sources": ["scheidel_friesen_2009", "allen_2000"]
     },

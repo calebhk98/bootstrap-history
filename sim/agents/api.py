@@ -12,7 +12,7 @@ from .household_party import HouseholdParty
 from . import business_books, business_crew_rule, business_review, concern_scan, imitation, research, research_gate, joint_stock, ledger, licence, patent, relations, revenue, supply
 from . import government_levers
 from .policy import CallbackPolicy, Decision, ExportPolicy, IdlePolicy, Option, Policy, ValuePolicy, exports_allowed, register_policy
-from . import policy_land
+from . import policy_land, tax_burden
 from . import edges, payroll
 from .records import ActorRecord, ActorsState, CastEntry, CountryProfile
 from .registry import ActorRegistry, register_actor_kind, register_spawner, register_world_scope

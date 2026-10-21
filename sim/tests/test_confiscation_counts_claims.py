@@ -37,7 +37,7 @@ def fixture(capital, owed):
 		return seized
 
 	sim = SimpleNamespace(state=SimpleNamespace(household=household), rng=SimpleNamespace(random=lambda: 0.5),
-						  state_capacity=0.5, lose_capital=lose_capital, state_treasury=lambda: treasury,
+						  state_reach=lambda: 0.5, lose_capital=lose_capital, state_treasury=lambda: treasury,
 						  pay_edge=lambda *args: None)
 	return sim, household, treasury, owed_box, reader, seizer
 

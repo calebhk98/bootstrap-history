@@ -57,7 +57,7 @@ class Government(CorveeMixin, CreditRecordMixin, FiscalMixin, CoinageMixin, Ente
 
 	def credit_standing(self, world: Any) -> float:
 		"""Lenders trust a state as far as it can assess and collect."""
-		return world.state_capacity()
+		return world.state_reach()
 
 	# ---- what it takes -------------------------------------------------------
 	def levy_rates(self) -> Tuple[float, float]:
@@ -81,7 +81,7 @@ class Government(CorveeMixin, CreditRecordMixin, FiscalMixin, CoinageMixin, Ente
 			# a refused requisition is paid, with a penalty, only if the state can enforce it; a negotiated
 			# one is paid in part, and in service, if the state takes the offer
 			draw = world.rng_for("demand", getattr(payer, "actor_id", ""), world.year).random()
-			answer = demand_answer.settle_demand(payer.demand_stance(), parts["requisition"], world.state_capacity(),
+			answer = demand_answer.settle_demand(payer.demand_stance(), parts["requisition"], world.state_reach(),
 												 payer.standing(), draw, payer.service_worth())
 			parts["requisition"] = answer["paid"] - answer["penalty"]
 			if answer["penalty"] > 0.0:

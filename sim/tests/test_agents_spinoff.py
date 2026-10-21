@@ -16,7 +16,7 @@ class SpinWorld(FakeWorld):
 	patent = None
 	capacity = 1.0
 
-	def state_capacity(self):
+	def state_reach(self):
 		return self.capacity
 
 	def entry_gross(self, node_id, rivals, entrants):

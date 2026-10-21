@@ -50,8 +50,8 @@ class HomeInputs(Shared):
 	def population_total(self):
 		return self.profile.population
 
-	def state_capacity(self):
-		return self.profile.state_capacity
+	def state_reach(self):
+		return 0.5
 
 	def urban_population(self):
 		return self.profile.population * self.profile.urban_fraction
@@ -81,7 +81,7 @@ FORMS = [{"form": "poll_tax", "basis": "adult_labour_years", "rate": 0.1},
 
 
 def profile_with(forms, army=100.0):
-	profile = CountryProfile(country="far", population=24000.0, urban_fraction=0.1, state_capacity=0.5, tax_share=0.1,
+	profile = CountryProfile(country="far", population=24000.0, urban_fraction=0.1, tax_share=0.1,
 							 home_tiles=[], extra={"standing_army": army, "state_revenue": forms})
 	profile.cohorts = {"children": 10000.0, "working_age": WORKING_AGE, "elderly": 8000.0}
 	profile.farm = {"hectares": 500.0, "quality": 1.0, "stock_kg": 0.0, "harvest_kg": 900000.0, "shortfall_kg": 0.0, "years": 3.0}

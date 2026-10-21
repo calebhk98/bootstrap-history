@@ -1,0 +1,29 @@
+{
+ "_doc": "Hours a household's own work takes a year, by task (Complaint 645). A household meets these with its own hours or hires them (the domestic_servant trade; the household_work need in needs.json). Cooking needs a hearth and fuel: a household without one buys cooked food instead (sim/economy/households_work.py). Hours are per person of the household, worked from a per-day figure.",
+ "days_per_year": 365,
+ "tasks": {
+  "water_fuel_and_grinding": {
+   "needs_hearth": false,
+   "hours_per_adult_woman_per_day": 1.0,
+   "adult_women_per_person": 0.25,
+   "basis": "Carrying water and firewood and bringing crops for grinding falls mostly on women: 'These figures equate to a time input for an average adult female ranging from just under 1 hour to 2 hours 20 minutes every day' (C. Mark Blackden and Quentin Wodon, eds, Gender, Time Use, and Poverty in Sub-Saharan Africa, World Bank Working Paper 73, 2006, overview, p. 9, citing Malmberg-Calvo 1994 village transport surveys in Ghana, Tanzania and Zambia; opened). The low end of the range is taken. Adult women as a quarter of a household's people: no source found, confidence D.",
+   "conf": "C"
+  },
+  "cooking": {
+   "needs_hearth": true,
+   "hours_per_person_per_day": 0.3,
+   "basis": "Preparing meals is named among the basic chores of the 'household time overhead' (Harvey and Taylor 2000, as quoted in the overview of Blackden and Wodon 2006; opened as a quotation, no hours given there). No source found for the hours; about an hour and a half a day for a household of five is an estimate.",
+   "conf": "D",
+   "heuristic": true,
+   "retire": "Complaints/645 follow-up: a time-use survey figure for cooking and cleaning hours"
+  },
+  "cleaning_and_childcare": {
+   "needs_hearth": false,
+   "hours_per_person_per_day": 0.5,
+   "basis": "Washing clothes, cleaning and minding children are named among the household time overhead (Harvey and Taylor 2000, as quoted in the overview of Blackden and Wodon 2006; no hours given there). No source found for the hours; an estimate.",
+   "conf": "D",
+   "heuristic": true,
+   "retire": "Complaints/645 follow-up: a time-use survey figure for cooking and cleaning hours"
+  }
+ }
+}

@@ -9,7 +9,7 @@ DEMAND_STANDING_DISCOUNT = declare(
 		"and who the state can afford to offend.")
 REFUSAL_PENALTY_MULTIPLE = declare(
 	"REFUSAL_PENALTY_MULTIPLE", 1.0, kind="temporary_heuristic",
-	unit="demands, at full state capacity", source=None, confidence="D",
+	unit="demands, at full state reach", source=None, confidence="D",
 	why="What an enforced refusal adds to the demand itself, in demands, for a state of full "
 		"capacity; scaled down by the capacity. Stands in for fines, seizure of the goods "
 		"withheld and the cost of the officers sent to collect.")
