@@ -19,7 +19,8 @@ from sim.agents.records import ActorRecord
 from .country_state_world import StateWorld
 
 TRADES = {"labourer": 10.0, "soldier": 12.0, "scribe": 15.0, "mason": 14.0}
-WORKING_AGE = 6000.0
+WORKING_AGE = 6000.0     # the working age of the profile's own cohorts: the state must not read it for unskilled labour
+LABOUR_MARKET_PEOPLE = 5400.0     # the working people the country's labour markets hold
 COUNTRY_PRICE = 5.0     # the country's own price of any material; the home world quotes 2 (StateWorld)
 COUNTRY_COIN_STOCK = 700.0
 SKILLED_PEOPLE = 0.25 * WORKING_AGE    # the people the country's labour markets hold in any skilled trade
@@ -54,6 +55,9 @@ class CountryAnswers:
 
 	def people_of_trade(self, trade):
 		return SKILLED_PEOPLE
+
+	def working_people(self):
+		return LABOUR_MARKET_PEOPLE
 
 	def land_rent_curve(self, tiles=None):
 		"""(people, rent received) of the country's cohorts, poorest first."""
@@ -100,7 +104,7 @@ class HomeInputs(Shared):
 		return territory.holdings(self.profile.home_tiles)
 
 	def national_people(self, trade):
-		return WORKING_AGE if trade == "labourer" else SKILLED_PEOPLE
+		return LABOUR_MARKET_PEOPLE if trade == "labourer" else SKILLED_PEOPLE
 
 	def threat_pressure(self):
 		return 0.0
@@ -169,15 +173,15 @@ check("every declared form is assessed, in order", list(assessed) == [form["form
 soldiers = world.soldiers_under_arms()
 poll = assessed["poll_tax"]
 check("a poll tax is its rate on the working age less the soldiers, at the country's own pay",
-	  abs(poll.base - (WORKING_AGE - soldiers) * 10.0) < 1e-6 and abs(poll.money - 0.1 * poll.base) < 1e-6, poll)
+	  abs(poll.base - (LABOUR_MARKET_PEOPLE - soldiers) * 10.0) < 1e-6 and abs(poll.money - 0.1 * poll.base) < 1e-6, poll)
 land = assessed["land_tax"]
 check("a levy on the harvest is its rate on the country's own harvest, taken in kind",
 	  abs(land.tonnes - 0.2 * 900.0) < 1e-9 and land.material == "wheat_kg" and abs(land.money - 0.2 * 900.0 * COUNTRY_PRICE) < 1e-9, land)
 duty = assessed["import_duty"]
 check("a customs form is its rate on the imports the country's own trade book shows",
 	  abs(duty.base - COUNTRY_TRADE["in"]) < 1e-9 and abs(duty.money - 0.05 * COUNTRY_TRADE["in"]) < 1e-9, duty)
-check("a skilled trade's people are those its own labour markets hold; unskilled labour is the working age",
-	  world.national_people("scribe") == SKILLED_PEOPLE and world.national_people("labourer") == WORKING_AGE)
+check("a skilled trade's people are those its own labour markets hold; unskilled labour is every working person they hold, not the profile's working age",
+	  world.national_people("scribe") == SKILLED_PEOPLE and world.national_people("labourer") == LABOUR_MARKET_PEOPLE != WORKING_AGE)
 check("the country's trade book is its own, not the home world's", world.trade_value("out") == COUNTRY_TRADE["out"])
 check("the state's revenue is what its forms yield", abs(world.state_revenue() - sum(a.money for a in assessed.values())) < 1e-9)
 bare_world, _ = country_world(profile_with([]))

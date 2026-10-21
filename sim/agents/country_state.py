@@ -5,13 +5,11 @@ by the same rules as the home one (revenue.py, budget.py) over the country's fig
 A reading the world keeps for the home country alone (no trade book, no interest groups) is
 answered with nothing here, never with the home figure; Complaint 649 lists them.
 """
-import functools
 from typing import Any, Dict, FrozenSet, List, Optional, Tuple
 
 from sim.geography.api import arable_hectares, settlement, territory, usable_modes
-from sim.world import demography
 
-from . import budget, collection, government_levers, ledger, revenue, strata_observed
+from . import budget, collection, country_hazards, government_levers, ledger, revenue, strata_observed
 from .collection_world import CollectionView
 from .edges import EDGE_STATE_SPENDING, EDGE_WORKERS
 from .no_country_economy import NoCountryEconomy
@@ -21,12 +19,8 @@ from .tuning_country import ARMY_SHARE_OF_POPULATION
 # the keys of a civilisation's data a country's state reads
 HAZARDS_KEY = "hazards"
 STANDING_ARMY_KEY = "standing_army"
-
-
-@functools.lru_cache(maxsize=64)
-def working_age_of_stationary(population: float) -> float:
-	"""Working-age people among `population` in the model's stable age structure (before a country's Population has stepped)."""
-	return demography.Population.stationary(population, seed=0).working_age if population > 0.0 else 0.0
+# the trade whose people are everyone able to work (the budget and revenue rules ask for it by this name)
+UNSKILLED_TRADE = "labourer"
 
 
 class CountryStateView(CollectionView):
@@ -122,17 +116,13 @@ class CountryStateView(CollectionView):
 
 	# ---- people and holdings
 	def national_people(self, trade: str) -> float:
-		"""People of a trade in the country: those the labour markets of its tiles hold in the trade. Unskilled
-		labour, and a country the economy has no part for, is bounded by the working age. TEMPORARY HEURISTIC
-		(CLAUDE.md 4.4) for those two (retire: Complaint 649)."""
-		if trade != "labourer":
-			try:
-				return float(self._own_economy().people_of_trade(trade))
-			except NoCountryEconomy:
-				pass
-		if self.profile.cohorts:
-			return float(self.profile.cohorts.get("working_age", 0.0))
-		return working_age_of_stationary(self.profile.population)
+		"""People of a trade in the country: those its labour markets hold in the trade; for unskilled labour, every
+		working person its labour markets hold (the working age, as at home). Refuses (NoCountryEconomy) where the
+		economy has no part for the country or its labour markets hold nobody; never the profile's working age."""
+		economy = self._own_economy()
+		if trade == UNSKILLED_TRADE:
+			return float(self._answer("working people", economy.working_people()))
+		return float(economy.people_of_trade(trade))
 
 	def local_staff(self, trade: str, people: float) -> float:
 		"""A country's state staff are its own people, not the founder's labour pool."""
@@ -149,6 +139,10 @@ class CountryStateView(CollectionView):
 	def threat_pressure(self) -> float:
 		"""Probability a year of the country's own declared hazards sack a site."""
 		return budget.sack_pressure(self.profile.extra.get(HAZARDS_KEY, []), self._shared.year)
+
+	def output_factor(self) -> float:
+		"""Share of its output the country keeps this year after the war and aftermath its own hazards describe."""
+		return country_hazards.output_factor(self.profile.extra.get(HAZARDS_KEY, []), self._shared.year)
 
 	def army_wanted(self) -> float:
 		"""Soldiers the state wants: the force its civilisation declares, else a share of its people, raised by

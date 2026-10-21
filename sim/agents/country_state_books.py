@@ -12,6 +12,9 @@ class CountryBooksView:
 	profile: Any
 	_shared: Any
 
+	def output_factor(self) -> float:
+		raise NotImplementedError
+
 	def _own_economy(self) -> Any:
 		raise NotImplementedError
 
@@ -27,4 +30,4 @@ class CountryBooksView:
 		return books_at_country_prices(
 			shared.book_takings(node_id, opened_year), shared.book_upkeep(node_id), shared.concern_staff(node_id), size,
 			shared.span_factor(size), self.profile.price_index, shared.market_factor_at(node_id, economy.price_per_unit),
-			economy.pay_per_person_year, shared.in_goods_category(node_id), rivals)
+			economy.pay_per_person_year, shared.in_goods_category(node_id), rivals, self.output_factor())

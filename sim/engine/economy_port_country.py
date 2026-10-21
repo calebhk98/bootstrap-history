@@ -3,6 +3,7 @@
 The wage, the output, the cost of living and the prices are read from the country's own tiles in the one
 economy (sim/economy/country_figures.py); a figure it has no record of is None and the caller keeps its
 labelled estimate."""
+import math
 from typing import Dict, Optional
 
 from .material_units import tonnes_per_unit
@@ -85,6 +86,12 @@ class CountryAnswers:
     def people_of_trade(self, trade: str) -> float:
         """Working people of a trade in the labour markets of the country's tiles (nobody for a trade none practise)."""
         return country_figures.people_by_trade(self._economy, self._country).get(trade, 0.0)
+
+    def working_people(self) -> Optional[float]:
+        """Every working person in the labour markets of the country's tiles, whatever the trade: the hands unskilled
+        labour can draw on (the working age at home). None where the country's labour markets hold nobody."""
+        people = math.fsum(country_figures.people_by_trade(self._economy, self._country).values())
+        return people if people > 0.0 else None
 
     def land_rent_at(self, tile: Optional[str]) -> Optional[float]:
         """Rent per hectare-year in coin on a tile of the country, the mean of the country's let land where none was let

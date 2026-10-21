@@ -98,6 +98,9 @@ class FakeWorld:
 	def research_hands(self, actor: Any, family: str) -> float:
 		return self.hands.get(family, 0.0)
 
+	def research_trades(self, family: str) -> List[str]:
+		return list(getattr(self, "trades_of_family", {}).get(family, ()))
+
 	def unsold_materials(self, actor: Any, node_id: str) -> List[str]:
 		return list(self.unsold.get(node_id, ()))
 

@@ -28,16 +28,16 @@ wages = wage_bill_at(STAFF, 2.0, SPAN, pay)
 check("wages are each trade's people times a person-year of its pay in the country, lifted by the span of the size",
 	  wages == SPAN * CREW_PAY, wages)
 check("a crew with a trade the country pays nothing for has no wage bill (None)", wage_bill_at({"astronomer": 1.0}, 1.0, 1.0, pay) is None)
-books = books_at_country_prices(BOOK_TAKINGS, BOOK_UPKEEP, STAFF, 2.0, SPAN, COUNTRY_COST_SCALE, 1.25, pay, False, 0.0)
+books = books_at_country_prices(BOOK_TAKINGS, BOOK_UPKEEP, STAFF, 2.0, SPAN, COUNTRY_COST_SCALE, 1.25, pay, False, 0.0, 1.0)
 # a lone operator's takings are its size's share of the market it fills: the figure per founding size
 check("takings and upkeep are the tree's book figures at the country's cost scale, the size and the country's market factor",
 	  books == PlantBooks(BOOK_TAKINGS * COUNTRY_COST_SCALE * 1.25, BOOK_UPKEEP * COUNTRY_COST_SCALE * 2.0, SPAN * CREW_PAY), books)
 check("a concern with no market model splits its takings with its rivals",
-	  books_at_country_prices(BOOK_TAKINGS, BOOK_UPKEEP, STAFF, 1.0, 1.0, 1.0, 1.0, pay, False, 1.0).takings == BOOK_TAKINGS / 2.0)
+	  books_at_country_prices(BOOK_TAKINGS, BOOK_UPKEEP, STAFF, 1.0, 1.0, 1.0, 1.0, pay, False, 1.0, 1.0).takings == BOOK_TAKINGS / 2.0)
 check("a goods category shares the home society's demand, which has no country record (None)",
-	  books_at_country_prices(BOOK_TAKINGS, BOOK_UPKEEP, STAFF, 1.0, 1.0, 1.0, 1.0, pay, True, 0.0) is None)
+	  books_at_country_prices(BOOK_TAKINGS, BOOK_UPKEEP, STAFF, 1.0, 1.0, 1.0, 1.0, pay, True, 0.0, 1.0) is None)
 check("a plant with a trade nobody pays for in the country has no books (None)",
-	  books_at_country_prices(BOOK_TAKINGS, BOOK_UPKEEP, {"astronomer": 1.0}, 1.0, 1.0, 1.0, 1.0, pay, False, 0.0) is None)
+	  books_at_country_prices(BOOK_TAKINGS, BOOK_UPKEEP, {"astronomer": 1.0}, 1.0, 1.0, 1.0, 1.0, pay, False, 0.0, 1.0) is None)
 
 
 # ---- the country's world reads them from its own economy, not the home world --------------------

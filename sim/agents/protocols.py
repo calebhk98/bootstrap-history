@@ -342,6 +342,10 @@ class World(Protocol):
 		and the free people it could take on."""
 		...
 
+	def research_trades(self, family: str) -> List[str]:
+		"""The trades whose people are hands of a trade family."""
+		...
+
 	def unsold_materials(self, actor: Any, node_id: str) -> List[str]:
 		"""Materials the node buys that no one in reach sells, sorted."""
 		...
