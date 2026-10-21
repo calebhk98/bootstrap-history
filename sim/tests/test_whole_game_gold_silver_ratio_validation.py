@@ -1,9 +1,10 @@
-"""Complaint 442, whole game: the price of gold against silver follows the stocks and where the mines are.
+"""Baseline validation (CLAUDE.md 4.2, Complaint 442, Complaint 640): the price of gold against silver follows the stocks and
+where the mines are. Slow-only: it is a property of a baseline game per civilisation, not a rule.
 
 Slow topic: it builds a game per civilisation and steps it YEARS times. It prints the gold-to-silver price ratio at
 the capital each year read (the re-measure of Complaint 442), the deposits left out of each opening stock, and
 what the state and the households hold of each metal, so the check is one command:
-`python3 -m sim.tests --slow --only whole_game_gold_silver_ratio`.
+`python3 -m sim.tests --slow --only whole_game_gold_silver_ratio_validation`.
 
 The only hard check is the physical one: where both metals trade, a kilogram of gold is dearer than a
 kilogram of silver (a ratio below one is a bug). The size of the ratio is measured, not asserted."""
@@ -60,8 +61,10 @@ for civ_id in CIVILISATIONS:
         print("MEASURE %s: %s state holds %.0f in value, households hold %.0f"
               % (civ_id, good, held_value(record, setup.state_agent, good, price),
                  sum(held_value(record, cohort.agent_id, good, price) for cohort in record.cohorts.values())))
-    check("%s: where both metals trade, gold costs more per kilogram than silver" % civ_id,
-          all(ratio > 1.0 for ratio in ratios), [round(ratio, 2) for ratio in ratios if ratio <= 1.0][:5])
+    check("%s: baseline validation: where both metals trade, gold costs more per kilogram than silver" % civ_id,
+          all(ratio > 1.0 for ratio in ratios),
+          "Complaint 442 (baseline validation): ratios at or below one: %s"
+          % [round(ratio, 2) for ratio in ratios if ratio <= 1.0][:5])
 
 world_map = open_map()
 for civ_id in CIVILISATIONS:

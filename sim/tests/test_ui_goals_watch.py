@@ -1,69 +1,137 @@
-"""ui_goals_watch: the in-game goals view and watched goals (Complaint 268), run with `--only ui_goals_watch`."""
-import os
-import tempfile
+"""ui_goals_watch: the in-game goals view and watched goals (Complaint 268). Complaint 640: the rules are called on a
+stand-in game holding a small tree; the save round trip and the `commitments` wiring of a played game are in
+test_ui_goals_watch_scenario."""
+QUICK_TOPIC = True
 
-from .harness import *  # noqa: F401,F403
-from sim.ui import memory
+import types
+import unittest
+from unittest import mock
+
+from sim.ui.proto import goals_watch
 from sim.ui.proto.render_typed import render_pretty
 from sim.ui.proto.typed import parse_typed
 
-# Renderers, on hand-written replies.
-formal = {"id": None, "name": None, "done": 4, "total": 40, "reached": False, "year_reached": None}
-hidden = {"id": None, "name": None, "done": 1, "total": 9, "reached": False}
-text = render_pretty("goals", {"ok": True, "formal": formal, "watched": [hidden], "choices": [],
-                               "unknown_goals": 3, "fog": True, "note": "n"})
-check("a fogged goal shows only counts", "4 of 40" in text and "1 of 9" in text and "3 more" in text, text)
-check("typed goals watch carries the goal words",
-      parse_typed("goals watch Steam engine")[0] == {"cmd": "goals", "action": "watch", "goal": "Steam engine"})
-check("bare goals stays bare", parse_typed("goals")[0] == {"cmd": "goals"})
+CATALOG = [{"node": "steam", "name": "Steam engine"}, {"node": "radio", "name": "Radio"},
+           {"node": "genes", "name": "Genetics"}, {"node": "formal", "name": "The formal goal"}]
 
 
-def ask(**fields):
-    return S._agent_dispatch(game, NODES, fields)
+def _game(fog=False, visible=("steam", "radio", "formal"), goal="formal", goal_year=None, done=()):
+    nodes = {"base": {"name": "Base", "pre": []},
+             "steam": {"name": "Steam engine", "pre": ["base"]},
+             "radio": {"name": "Radio", "pre": ["steam"]},
+             "genes": {"name": "Genetics", "pre": ["base"]},
+             "formal": {"name": "The formal goal", "pre": ["steam", "radio"]}}
+    game = types.SimpleNamespace(
+        nodes=nodes, goal=goal, goal_year=goal_year, fog=fog, done=set(done),
+        state=types.SimpleNamespace(interface={}))
+    game.is_visible = lambda node_id: node_id in visible
+    return game
 
 
-game = sim()
-report = ask(cmd="goals")
-check("the view shows progress toward the formal goal",
-      report["formal"]["id"] == game.goal and report["formal"]["total"] > 0
-      and report["formal"]["done"] <= report["formal"]["total"], report.get("formal"))
-other = report["choices"][0]
-reply = ask(cmd="goals", action="watch", goal=other["name"])
-check("a goal can be watched by name", [row["id"] for row in reply["watched"]] == [other["id"]], reply)
-check("the formal goal is untouched", game.goal == report["formal"]["id"])
-check("the reply says a watched goal is only tracked", "tracked here only" in reply["note"])
-check("a watched goal leaves the choices", all(row["id"] != other["id"] for row in reply["choices"]))
-check("the formal goal cannot be watched", ask(cmd="goals", action="watch", goal=game.goal)["ok"] is False)
-check("commitments lists the watched goal",
-      [row["id"] for row in ask(cmd="commitments")["secondary_goals"]] == [other["id"]])
-check("an unknown goal is refused", ask(cmd="goals", action="watch", goal="no such goal at all")["ok"] is False)
+def _in(game, function, *arguments):
+    with mock.patch.object(goals_watch, "_catalog", lambda sim: [goal for goal in CATALOG if goal["node"] in sim.nodes]):
+        return function(game, *arguments)
 
-# Fog: a goal the player cannot know is never named and cannot be watched.
-game.fog, game.revealed = True, set()
-unseen = next((row for row in report["choices"] + [report["formal"]]
-               if row["id"] != other["id"] and not game.is_visible(row["id"])), None)
-check("the fogged game hides some goal", unseen is not None)
-fogged = ask(cmd="goals")
-check("under fog the formal goal is a count", fogged["formal"]["id"] is None and fogged["formal"]["name"] is None
-      and fogged["formal"]["total"] > 0, fogged["formal"])
-check("under fog hidden goals are only counted", fogged["unknown_goals"] > 0
-      and all(game.is_visible(row["id"]) for row in fogged["choices"]), fogged)
-refusal = ask(cmd="goals", action="watch", goal=NODES[unseen["id"]]["name"])
-check("a fogged goal's name cannot be watched", refusal["ok"] is False and NODES[unseen["id"]]["name"] not in refusal["error"].replace(
-    "%r" % NODES[unseen["id"]]["name"], ""), refusal)
-check("the fogged commitments screen has no hidden name",
-      all(row["name"] is None or game.is_visible(row["id"]) for row in ask(cmd="commitments")["secondary_goals"]))
-game.fog = False
 
-unwatched = ask(cmd="goals", action="unwatch", goal=other["id"])
-check("a goal can be unwatched", unwatched["watched"] == [], unwatched)
+class GoalsReportTests(unittest.TestCase):
 
-# What is watched survives a save and a load.
-ask(cmd="goals", action="watch", goal=other["id"])
-with tempfile.TemporaryDirectory() as folder:
-    path = os.path.join(folder, "game.json")
-    memory.save_state(game, path)
-    memory.restore(game, {})
-    check("forgotten watches are gone", ask(cmd="goals")["watched"] == [])
-    memory.load_state(game, path)
-    check("watched goals persist", [row["id"] for row in ask(cmd="goals")["watched"]] == [other["id"]])
+    def test_the_view_shows_progress_toward_the_formal_goal_counting_its_prerequisites(self):
+        report = _in(_game(done={"base"}), goals_watch.goals_report)
+        self.assertEqual(report["formal"]["id"], "formal")
+        self.assertEqual((report["formal"]["done"], report["formal"]["total"]), (1, 4))
+
+    def test_a_goal_can_be_watched_by_name_and_the_formal_goal_is_untouched(self):
+        game = _game()
+        reply = _in(game, goals_watch.watch, "Steam engine")
+        self.assertEqual([row["id"] for row in reply["watched"]], ["steam"])
+        self.assertEqual(game.goal, "formal")
+
+    def test_a_watched_goal_leaves_the_choices(self):
+        reply = _in(_game(), goals_watch.watch, "steam")
+        self.assertTrue(all(row["id"] != "steam" for row in reply["choices"]))
+
+    def test_the_formal_goal_cannot_be_watched(self):
+        self.assertFalse(_in(_game(), goals_watch.watch, "formal")["ok"])
+
+    def test_an_unknown_goal_is_refused(self):
+        self.assertFalse(_in(_game(), goals_watch.watch, "no such goal at all")["ok"])
+
+    def test_a_goal_can_be_unwatched(self):
+        game = _game()
+        _in(game, goals_watch.watch, "radio")
+        self.assertEqual(_in(game, goals_watch.unwatch, "radio")["watched"], [])
+
+    def test_a_goal_not_watched_cannot_be_unwatched(self):
+        self.assertFalse(_in(_game(), goals_watch.unwatch, "radio")["ok"])
+
+    def test_watching_twice_lists_the_goal_once(self):
+        game = _game()
+        _in(game, goals_watch.watch, "radio")
+        reply = _in(game, goals_watch.watch, "radio")
+        self.assertEqual([row["id"] for row in reply["watched"]], ["radio"])
+
+    def test_only_so_many_goals_can_be_watched(self):
+        game = _game()
+        game.state.interface["goals_watch"] = {"ids": ["g%d" % number for number in range(goals_watch.MAX_WATCHED)]}
+        self.assertFalse(_in(game, goals_watch.watch, "radio")["ok"])
+
+    def test_promote_needs_the_formal_goal_reached_and_then_makes_a_watched_goal_formal(self):
+        game = _game()
+        _in(game, goals_watch.watch, "radio")
+        self.assertFalse(_in(game, goals_watch.promote, "radio")["ok"])
+        game.goal_year = 100
+        with mock.patch.object(goals_watch.ui_port, "set_goal", lambda sim, node_id: setattr(sim, "goal", node_id)):
+            reply = _in(game, goals_watch.promote, "radio")
+        self.assertTrue(reply.get("ok") is not False)
+        self.assertEqual(game.goal, "radio")
+        self.assertEqual(reply["watched"], [])
+
+
+class FogTests(unittest.TestCase):
+    """A goal the player cannot know is never named and cannot be watched."""
+
+    def test_under_fog_hidden_goals_are_only_counted_and_the_choices_are_all_in_view(self):
+        game = _game(fog=True, visible=("steam", "radio"))
+        report = _in(game, goals_watch.goals_report)
+        self.assertEqual(report["unknown_goals"], 1)
+        self.assertTrue(all(game.is_visible(row["id"]) for row in report["choices"]))
+
+    def test_under_fog_a_formal_goal_out_of_view_is_a_count_with_no_name(self):
+        report = _in(_game(fog=True, visible=("steam",)), goals_watch.goals_report)
+        self.assertIsNone(report["formal"]["id"])
+        self.assertIsNone(report["formal"]["name"])
+        self.assertGreater(report["formal"]["total"], 0)
+
+    def test_a_fogged_goals_name_cannot_be_watched_and_the_refusal_does_not_confirm_it(self):
+        refusal = _in(_game(fog=True, visible=("steam",)), goals_watch.watch, "Genetics")
+        self.assertFalse(refusal["ok"])
+        self.assertNotIn("Genetics", refusal["error"].replace("%r" % "Genetics", ""))
+
+    def test_a_watched_goal_that_fog_hides_is_listed_without_its_name(self):
+        game = _game(fog=True, visible=("steam",))
+        game.state.interface["goals_watch"] = {"ids": ["genes"]}
+        row = goals_watch.watched_rows(game)[0]
+        self.assertEqual((row["id"], row["name"]), (None, None))
+
+
+class TypedAndScreenTests(unittest.TestCase):
+
+    def test_typed_goals_watch_carries_the_goal_words(self):
+        self.assertEqual(parse_typed("goals watch Steam engine")[0],
+                         {"cmd": "goals", "action": "watch", "goal": "Steam engine"})
+
+    def test_bare_goals_stays_bare(self):
+        self.assertEqual(parse_typed("goals")[0], {"cmd": "goals"})
+
+    def test_a_fogged_goal_shows_only_counts(self):
+        formal = {"id": None, "name": None, "done": 4, "total": 40, "reached": False, "year_reached": None}
+        hidden = {"id": None, "name": None, "done": 1, "total": 9, "reached": False}
+        text = render_pretty("goals", {"ok": True, "formal": formal, "watched": [hidden], "choices": [],
+                                       "unknown_goals": 3, "fog": True, "note": "n"})
+        # presentation: counts are shown as "N of M" and unknown goals as "N more"
+        for word in ("4 of 40", "1 of 9", "3 more"):
+            self.assertIn(word, text)
+
+
+if __name__ == "__main__":
+    unittest.main()

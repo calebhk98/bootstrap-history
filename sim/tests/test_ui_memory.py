@@ -1,45 +1,75 @@
-"""The UI's own memory (sim/ui/memory.py) lives in the save's `interface` slot and rides along
-with every save and load, forks included. Run with `--only ui_memory`."""
+"""The UI's own memory (sim/ui/memory.py) lives in the save's `interface` slot. Complaint 640: the slot's rules are called on
+a stand-in game; the save, load and fork round trips of played games are in test_ui_memory_scenario."""
+QUICK_TOPIC = True
+
 import os
 import tempfile
+import types
+import unittest
 
 from sim.ui import memory
 
-from .harness import check, sim
 
-game = sim()
-check("a new game's interface slot starts empty", game.state.interface == {})
+def _game(interface=None):
+    return types.SimpleNamespace(state=types.SimpleNamespace(interface={} if interface is None else interface))
 
-with tempfile.TemporaryDirectory() as folder:
-    first, fork = os.path.join(folder, "game.json"), os.path.join(folder, "fork.json")
-    memory.remembered(game, "notes")["1"] = {"year": 100, "text": "aqueduct for the mill town"}
-    check("what the UI remembers sits in the state's interface slot",
-          game.state.interface.get("notes", {}).get("1", {}).get("year") == 100, game.state.interface)
 
-    memory.save_state(game, first)
-    check("saving writes no sidecar for the memory", not os.path.exists(first + ".meta.json"))
+class RememberedTests(unittest.TestCase):
 
-    later = sim()
-    memory.load_state(later, first)
-    # not text: a stored note round-trips
-    check("loading restores the memory into a fresh game",
-          memory.remembered(later, "notes").get("1", {}).get("text") == "aqueduct for the mill town")
+    def test_a_topic_starts_empty_and_is_kept_in_the_interface_slot(self):
+        game = _game()
+        self.assertEqual(memory.remembered(game, "notes"), {})
+        memory.remembered(game, "notes")["1"] = {"year": 100}
+        self.assertEqual(game.state.interface, {"notes": {"1": {"year": 100}}})
 
-    memory.save_state(later, fork)
-    reread = sim()
-    memory.load_state(reread, fork)
-    check("a fork saved under a new name carries the memory", "1" in memory.remembered(reread, "notes"))
+    def test_asking_again_returns_the_same_dict(self):
+        game = _game()
+        self.assertIs(memory.remembered(game, "notes"), memory.remembered(game, "notes"))
 
-    memory.remembered(later, "notes")["2"] = {"year": 101, "text": "only in the copy"}
-    check("two games never share one memory", "2" not in memory.remembered(reread, "notes"))
+    def test_two_topics_do_not_share_a_dict(self):
+        game = _game()
+        memory.remembered(game, "notes")["a"] = 1
+        self.assertEqual(memory.remembered(game, "goals"), {})
 
-    bare = sim()
-    bare_path = os.path.join(folder, "bare.json")
-    memory.save_state(bare, bare_path)
-    memory.load_state(later, bare_path)
-    check("loading a save with nothing remembered forgets the previous game's memory",
-          memory.remembered(later, "notes") == {})
+    def test_two_games_never_share_one_memory(self):
+        first, second = _game(), _game()
+        memory.remembered(first, "notes")["1"] = {"text": "only here"}
+        self.assertEqual(memory.remembered(second, "notes"), {})
 
-    memory.merge_session_meta(first, {"checkpoint": True})
-    check("another writer of the sidecar still works",
-          memory.settings.load_session_meta(first).get("checkpoint") is True)
+
+class SnapshotTests(unittest.TestCase):
+
+    def test_a_snapshot_is_a_copy_that_later_writes_do_not_change(self):
+        game = _game()
+        memory.remembered(game, "notes")["1"] = {"text": "first"}
+        taken = memory.snapshot(game)
+        memory.remembered(game, "notes")["1"]["text"] = "changed"
+        self.assertEqual(taken["notes"]["1"]["text"], "first")
+
+    def test_restore_puts_a_copy_in_the_slot_and_forgets_what_was_there(self):
+        game = _game({"old": {"x": 1}})
+        saved = {"notes": {"1": {"text": "kept"}}}
+        memory.restore(game, saved)
+        self.assertEqual(game.state.interface, saved)
+        game.state.interface["notes"]["1"]["text"] = "edited"
+        self.assertEqual(saved["notes"]["1"]["text"], "kept")
+
+    def test_restoring_nothing_leaves_an_empty_memory(self):
+        game = _game({"old": {"x": 1}})
+        memory.restore(game, None)
+        self.assertEqual(game.state.interface, {})
+
+
+class SidecarTests(unittest.TestCase):
+
+    def test_merging_into_the_sidecar_keeps_what_another_writer_put_there(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = os.path.join(folder, "game.json")
+            memory.merge_session_meta(path, {"other_writer": "kept"})
+            memory.merge_session_meta(path, {"checkpoint": True})
+            meta = memory.settings.load_session_meta(path)
+        self.assertEqual((meta.get("other_writer"), meta.get("checkpoint")), ("kept", True))
+
+
+if __name__ == "__main__":
+    unittest.main()
