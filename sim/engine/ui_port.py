@@ -16,7 +16,7 @@ from sim.engine.data import (  # noqa: F401
     topo_order, trade_family, TRADE_FAMILY, TRADE_NOTES, TRADES_ABSENT, WAGES,
     win_condition_describe)
 from sim.engine.default_civilisation import default_civilisation_id  # noqa: F401
-from sim.engine.fog import strip_self_play_advice  # noqa: F401
+from sim.engine.fog import prerequisite_names, strip_self_play_advice  # noqa: F401
 from sim.engine.mod_code import COMMAND_REGISTRATIONS, code_report, run_mod_code  # noqa: F401
 from sim.engine.mod_code import allow as allow_mod_code  # noqa: F401
 from sim.engine import mod_stores  # noqa: F401

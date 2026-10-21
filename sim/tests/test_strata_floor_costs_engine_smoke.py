@@ -1,4 +1,4 @@
-"""The engine answers the strata's cost questions from the need-basket kernel on its own goods market."""
+"""SMOKE: The engine answers the strata's cost questions from the need-basket kernel on its own goods market."""
 import unittest
 
 from sim.engine.agents_port import SimWorld
