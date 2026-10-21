@@ -1,5 +1,7 @@
-"""staffing_closure_minimal: the yearly staff check closes only what a real shortfall requires,
-and never a concern that `open` would accept with the same staff."""
+"""SCENARIO: the yearly staff check on a real game with crowded concerns closes the smith concerns a smith shortfall forces, and
+what `open` refuses stays shut; reopening keeps the ramp; `open` and `mothball` quote the same earnings and reopening price.
+Which concerns close (fewest, lowest net value first, only holders of the short resource, none that `open` would accept) is
+rule-tested in test_staffing_choice_rules (closures_for_shortfall)."""
 from .harness import *  # noqa: F401,F403
 
 
@@ -60,40 +62,12 @@ check("a smith shortfall of two concerns' worth closes exactly two concerns",
       len(closed) == 2, closed)
 check("only concerns drawing on smiths close",
       all(crowded.venture_foreman(node_id)[0] == "smith" for node_id in closed), closed)
-check("the lowest net value goes first",
-      sorted(closed, key=lambda k: NODES[k]["rev"] - NODES[k]["up"])
-      == sorted(sorted(smiths, key=lambda k: NODES[k]["rev"] - NODES[k]["up"])[:2],
-                key=lambda k: NODES[k]["rev"] - NODES[k]["up"]), closed)
 check("concerns needing other trades stay open",
       all(node_id in crowded.operating for node_id in others))
 check("open is refused for what the check closed, with the same staff",
       all(not crowded.open_venture(node_id, pay=False)[0] for node_id in closed))
 check("the closure is recorded as a staffing closure",
       all(crowded.staff_closure_age(node_id) == 0 for node_id in closed))
-
-# --- a generic craftsmen shortage closes the minimum, and nothing closed would fit
-generic = crowded_sim(smiths, others)
-used_art = generic.venture_staff_used()[1]
-generic.employees["artisan"] = 0.0
-generic.state.household.artisans = used_art - 1.0 - generic.FOUNDER_IS_WORTH
-generic_closed = generic.close_unstaffed_ventures(generic.year)
-artisans_after = generic.venture_staff_used()[1]
-allowance = generic.state.household.artisans + generic.FOUNDER_IS_WORTH + generic.STAFFING_CLOSURE_SLACK
-check("a generic shortage is covered", artisans_after <= allowance + 1e-9, (artisans_after, allowance))
-check("a generic shortage does not close everything",
-      len(generic.operating) > 0 and len(generic_closed) < len(smiths + others), generic_closed)
-check("nothing closed for craftsmen would be accepted by open with the same staff",
-      all(not generic.open_venture(node_id, pay=False)[0] for node_id in generic_closed),
-      [node_id for node_id in generic_closed if generic.open_venture(node_id, pay=False)[0]])
-
-# --- a shortage of one trade does not close concerns that hold nothing of it
-lone = crowded_sim(smiths, others)
-lone.employees["smith"] = 0.0
-lone.labour._resync_pools()
-lone_closed = lone.close_unstaffed_ventures(lone.year)
-check("losing every smith closes the smith concerns and only those",
-      sorted(lone_closed) == sorted(smiths) and all(node_id in lone.operating for node_id in others),
-      lone_closed)
 
 # --- reopening after a closure does not restart the revenue ramp
 ramp = crowded_sim(smiths, others)

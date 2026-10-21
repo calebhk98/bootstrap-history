@@ -74,12 +74,10 @@ plague_no_double_count
 player_choice_routes
 player_guidance_commands
 project_retry_and_risk
-staffing_closure_minimal
 state_budget
 state_collection_follows_officials
 state_guards_and_inspectors
 state_notices
 state_reach_readers
 state_spending
-step_interrupts_and_alerts
 ventures_lifecycle
