@@ -29,7 +29,6 @@ cross_screen_consistency
 demographics
 demographics_and_plague
 early_playtest
-eminence_scandal_and_reputation
 freight_domestic_haul
 freight_dues
 freight_money_ratio

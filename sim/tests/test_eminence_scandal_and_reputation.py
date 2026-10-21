@@ -1,147 +1,97 @@
-"""Eminence and prominence (withdraw_from_public_life, the eminence
-report's chance-of-ruin split) and the separate scandal/denouncement risk.
+"""Eminence and prominence, one rule at a time on built figures (Complaint 640): the yearly hazard and its familiarity relief, the
+chance of ruin, and when and how far withdrawing from public life lowers prominence. The same through a real game (the
+command, the report, the saved withdrawal, the scandal screen) is in test_eminence_scandal_and_reputation_scenario."""
+QUICK_TOPIC = True
 
-Regrouped from test_round8_fixes.py and test_round9.py - see CLAUDE.md's
-test-file reorganisation note. Checks moved verbatim; each one's own comment
-explains the break it guards.
-"""
-from .harness import *  # noqa: F401,F403
+import unittest
+
+from sim.engine import eminence_rules
+from sim.engine.society_state_pressure import StatePressureMixin as Pressure
+
+DANGER = 30.0
+FLOOR = 20.0
+YEAR = 250
+WAIT = Pressure.WITHDRAW_EVERY
+MIN_FRACTION = Pressure.WITHDRAW_MIN_EMINENCE_FRACTION
+RETENTION = Pressure.WITHDRAW_REPUTATION_RETENTION, Pressure.WITHDRAW_EMINENCE_RETENTION
 
 
-def _big(rep=98.0, eminence=39.0, year=250, cap=5000000.0):
-    big_sim = unopened_sim(capital=cap)
-    big_sim.done.update(list(NODES)[:1400]); big_sim._done_changed()
-    big_sim.reputation, big_sim.eminence, big_sim.year = rep, eminence, year
-    return big_sim
+def hazard(familiarity=0.0, reputation=98.0, capital=5.0e6, effect_factor=lambda value: value):
+    return eminence_rules.yearly_hazard(
+        reputation, capital, familiarity, Pressure.EMINENCE_DANGER_WEIGHT_DEFAULT, Pressure.EMINENCE_REPUTATION_SCALE,
+        1.0e6, Pressure.EMINENCE_HAZARD_BASE_SCALE, Pressure.EMINENCE_HAZARD_REPUTATION_SHARE,
+        Pressure.EMINENCE_HAZARD_WEALTH_SHARE, Pressure.EMINENCE_FAMILIARITY_RELIEF, effect_factor)
 
-_em = _big()
-_rep0, _em0, _cash0 = _em.reputation, _em.eminence, _em.capital
-_ok_w, _why_w = _em.withdraw_from_public_life()
-check("there is a command that lowers prominence the year you use it",
-      _ok_w and _em.eminence < _em0 * 0.6, (_em0, _em.eminence))
-check("...and its price is reputation, not money",
-      _em.reputation < _rep0 - 5 and abs(_em.capital - _cash0) < 1e-6,
-      (_rep0, _em.reputation, _em.capital, _cash0))
-check("...but never below what the work you built is worth on its own",
-      _em.reputation >= _em.standing_floor() - 1e-6,
-      (_em.reputation, _em.standing_floor()))
-check("...and it cannot be done twice in a decade",
-      _em.withdraw_from_public_life()[0] is False,
-      _em.withdraw_from_public_life()[1])
-_em2 = _big()
-_em2.year += _em2.WITHDRAW_EVERY + 1
-check("...and can be done again once enough years have passed",
-      _em2.withdraw_from_public_life()[0], _em2.year)
 
-# It must not take the price when there is nothing to buy - the same rule
-# `bribe` learned the hard way.
-_quiet = _big(rep=40.0, eminence=1.0)
-_rq = _quiet.reputation
-check("withdrawing when nobody is watching is refused, not charged",
-      _quiet.withdraw_from_public_life()[0] is False
-      and _quiet.reputation == _rq,
-      (_quiet.reputation, _rq))
+def refusal(alive=True, last=None, eminence=39.0, reputation=98.0):
+    return eminence_rules.withdrawal_refusal(alive, last, YEAR, WAIT, eminence, DANGER, MIN_FRACTION, reputation, FLOOR)
 
-# The settling point was ABOVE the danger line, which is a promise that a
-# successful run dies. Familiarity - the model's own measure of how
-# unsurprising you have become - now damps it.
-_fam = _big()
-_fam.familiarity = 0.0
-_cold = _fam.prominence_hazard()
-_fam.familiarity = 0.9
-_warm = _fam.prominence_hazard()
-check("a city that has watched you for a century is less alarmed by you",
-      _warm < _cold * 0.92, (_cold, _warm))
-# A sixth off, not a third: the first attempt at this damping took the hazard
-# so far down that a break tester measured three thousand run-years with the
-# sum of every reported chance of ruin at exactly 0.00.
-check("...but never stops being alarmed altogether",
-      _warm > _cold * 0.8, (_cold, _warm))
-# The shape that matters: build the counter and you sit under the line;
-# do not and you sit well over it.
-_em_shape = {}
-for _acad in (False, True):
-    _s = unopened_sim(capital=50000000.0)
-    _s.done.update(list(NODES)[:1400])
-    run_it(_s, "patron_imperial", "academy_network")
-    if not _acad:
-        _s.done.discard("academy_network")
-        _s.operating.discard("academy_network")
-    _s._done_changed()
-    _s.reputation, _s.year, _s.familiarity = 98.0, 400, 0.9
-    _em_shape[_acad] = _s.eminence_report()["settles_at_if_nothing_changes"]
-check("a great man near the throne who built no academies is over the line",
-      _em_shape[False] > unopened_sim().cfg["eminence_danger"], _em_shape)
-check("...and the same man who built them is under it",
-      _em_shape[True] < unopened_sim().cfg["eminence_danger"], _em_shape)
 
-# "7% chance of ruin" was the chance SOMETHING landed; four fifths of those
-# are survivable. A play tester survived two and was ended by the third.
-_rep = _big().eminence_report()
-check("the report separates 'something happens' from 'the run ends'",
-      _rep["chance_the_run_ENDS_this_year"] < _rep["chance_of_ruin_this_year"],
-      (_rep["chance_of_ruin_this_year"], _rep["chance_the_run_ENDS_this_year"]))
-check("...and says which outcomes there are and how likely each is",
-      abs(sum(_rep["if_it_lands_it_is"].values()) - 1.0) < 1e-9,
-      _rep["if_it_lands_it_is"])
-check("...and names the lever, by the word you would type",
-      "withdraw" in str(_rep["the_one_lever"]), _rep["the_one_lever"])
+class Familiarity(unittest.TestCase):
+    def test_a_city_that_has_watched_you_for_a_century_is_less_alarmed_by_you(self):
+        self.assertLess(hazard(familiarity=0.9), hazard(familiarity=0.0) * 0.92)
 
-# It has to survive a save, or a --session game gets a free retirement a year.
-_wsv = "_withdrawtest.json"
-_wsvp = os.path.join(ROOT, _wsv)
-if os.path.exists(_wsvp):
-    os.remove(_wsvp)
-_rw, _, _ = proto([{"cmd": "withdraw"}, {"cmd": "save", "file": _wsv},
-                   {"cmd": "load", "file": _wsv}, {"cmd": "withdraw"}])
-check("a retirement cannot be repeated by saving and reloading",
-      _rw[-1].get("ok") is False, _rw[-1])
-if os.path.exists(_wsvp):
-    os.remove(_wsvp)
+    def test_but_never_stops_being_alarmed_altogether(self):
+        self.assertGreater(hazard(familiarity=0.9), hazard(familiarity=0.0) * 0.8)
+        self.assertGreater(hazard(familiarity=1.0), 0.0)
 
-# --- BREAK: "RUN ENDS: denounced: as a sorcerer" after eleven quiet years,
-# with `state` showing "scandal 33.55" and no threshold and no probability -
-# on the same screen where eminence explains itself in full.
-s_sc = unopened_sim(events=True)
-s_sc.scandal = 30.0
-s_sc.year = 150
-s_sc._said_scandal = 0
-_st_sc = S._agent_state(s_sc, NODES)
-check("state says what scandal is dangerous above",
-      _st_sc.get("scandal_danger") is not None, _st_sc.get("scandal_danger"))
-check("...and what the chance of being denounced this year is",
-      _st_sc.get("chance_of_being_denounced_this_year", 0) > 0,
-      _st_sc.get("chance_of_being_denounced_this_year"))
-check("...and the page prints both, next to the eminence line that already did",
-      "SCANDAL is dangerous above" in _RP("state", _st_sc),
-      [line for line in _RP("state", _st_sc).splitlines() if "dangerous above" in line])
 
-# The "visibly rich" line is an amount of labour, so it follows the coin: the
-# same capital in labour hours is the same wealth term whatever the money is.
-from sim.constants import REGISTRY as _REGISTRY
-_wealth_sims = {}
-for _civ_name in ("rome_100ad", "han_china_100ad"):
-    _w = unopened_sim(civ=_civ_name)
-    _w.reputation, _w.familiarity = 0.0, 0.0
-    _wealth_sims[_civ_name] = _w
-_rome_sim, _han_sim = _wealth_sims["rome_100ad"], _wealth_sims["han_china_100ad"]
-_rome_mph = _rome_sim.labour.money_per_labour_hour()
-_han_mph = _han_sim.labour.money_per_labour_hour()
-# Same capital in labour hours, as a share of the hazard at saturated wealth
-# (other civilisation-specific weights cancel in the ratio).
-_hours = 1.0e6  # below the threshold in hours, so the term is not saturated
-_wealth_share = {}
-for _civ_name, _s in _wealth_sims.items():
-    _s.capital = 1.0e6 * _hours * _s.labour.money_per_labour_hour()
-    _saturated = _s.prominence_hazard()
-    _s.capital = _hours * _s.labour.money_per_labour_hour()
-    _wealth_share[_civ_name] = _s.prominence_hazard() / _saturated
-_rome_fixed, _han_fixed = _wealth_share["rome_100ad"], _wealth_share["han_china_100ad"]
-check("the two civilisations' coins differ, so the test means something",
-      abs(_rome_mph - _han_mph) > 1e-9 * max(_rome_mph, _han_mph), (_rome_mph, _han_mph))
-check("the wealth term of the prominence hazard is the same at the same capital in labour hours",
-      abs(_rome_fixed - _han_fixed) <= 1e-9 * max(_rome_fixed, _han_fixed, 1e-12)
-      and _rome_fixed > 0.0, (_rome_fixed, _han_fixed))
-# presentation: a declared unit string
-check("the visibly-rich threshold is declared in labour hours",
-      "labour hour" in _REGISTRY["EMINENCE_WEALTH_VISIBLE_THRESHOLD_LABOUR_HOURS"]["unit"])
+class HazardShape(unittest.TestCase):
+    def test_reputation_raises_it_faster_than_proportionally(self):
+        low, high = hazard(reputation=40.0, capital=0.0), hazard(reputation=80.0, capital=0.0)
+        self.assertAlmostEqual(high / low, 4.0)
+
+    def test_visible_wealth_adds_to_it_up_to_the_threshold_and_no_further(self):
+        self.assertLess(hazard(capital=0.0), hazard(capital=5.0e5))
+        self.assertEqual(hazard(capital=1.0e6), hazard(capital=1.0e9))
+
+    def test_what_stands_between_you_and_the_throne_shapes_it(self):
+        self.assertAlmostEqual(hazard(effect_factor=lambda value: value * 2.0), 2.0 * hazard())
+
+
+class ChanceOfRuin(unittest.TestCase):
+    def test_nothing_below_the_danger_line_and_rising_above_it(self):
+        scale = Pressure.EMINENCE_HAZARD_SCALE
+        self.assertEqual(eminence_rules.chance_of_ruin(DANGER - 1.0, DANGER, scale), 0.0)
+        self.assertAlmostEqual(eminence_rules.chance_of_ruin(DANGER + 9.0, DANGER, scale), 9.0 / scale)
+
+    def test_the_outcomes_a_ruin_can_take_account_for_all_of_it_and_the_run_ends_in_a_part(self):
+        shares = (Pressure.EMINENCE_OUTCOME_CONFISCATION_SHARE, Pressure.EMINENCE_OUTCOME_PATRON_LOST_SHARE,
+                  Pressure.EMINENCE_OUTCOME_RUN_ENDS_SHARE)
+        self.assertAlmostEqual(sum(shares), 1.0)
+        self.assertLess(Pressure.EMINENCE_OUTCOME_RUN_ENDS_SHARE, 1.0)
+
+
+class WithdrawalRefusal(unittest.TestCase):
+    def test_a_prominent_founder_with_standing_to_give_up_may_withdraw(self):
+        self.assertIsNone(refusal())
+
+    def test_the_dead_cannot(self):
+        self.assertEqual(refusal(alive=False), eminence_rules.WITHDRAW_DEAD)
+
+    def test_it_cannot_be_done_twice_in_a_decade_and_can_once_enough_years_have_passed(self):
+        self.assertEqual(refusal(last=YEAR - 1), eminence_rules.WITHDRAW_TOO_SOON)
+        self.assertEqual(refusal(last=YEAR - WAIT + 1), eminence_rules.WITHDRAW_TOO_SOON)
+        self.assertIsNone(refusal(last=YEAR - WAIT))
+
+    def test_nobody_watching_means_nothing_to_buy_and_it_is_refused(self):
+        self.assertEqual(refusal(eminence=DANGER * MIN_FRACTION - 0.1), eminence_rules.WITHDRAW_UNNOTICED)
+        self.assertIsNone(refusal(eminence=DANGER * MIN_FRACTION))
+
+    def test_a_founder_already_as_obscure_as_the_work_allows_is_refused(self):
+        self.assertEqual(refusal(reputation=FLOOR + 0.25), eminence_rules.WITHDRAW_ALREADY_OBSCURE)
+
+
+class AfterWithdrawal(unittest.TestCase):
+    def test_prominence_falls_by_more_than_a_third_and_reputation_by_something(self):
+        reputation, eminence = eminence_rules.after_withdrawal(98.0, 39.0, FLOOR, *RETENTION)
+        self.assertLess(eminence, 39.0 * 0.6)
+        self.assertLess(reputation, 98.0 - 5.0)
+
+    def test_what_you_built_you_keep_reputation_never_falls_below_the_floor(self):
+        for reputation in (FLOOR + 1.0, 60.0, 100.0):
+            self.assertGreaterEqual(eminence_rules.after_withdrawal(reputation, 39.0, FLOOR, *RETENTION)[0], FLOOR)
+
+
+if __name__ == "__main__":
+    unittest.main()
