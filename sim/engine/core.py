@@ -1173,6 +1173,21 @@ class Sim(ModStoresMixin, RealPriceRatiosMixin, CoinRevaluationMixin, MechanicsM
         # pooled harvest, weighted by the tile's share of the arable land.
         return pooled * weather_pooling.harm_multiplier(self._farm_tile_arable_share, externalities.yield_factors(self, year))
 
+    def farm_weather_by_tile(self, year):
+        """{tile id: this year's harvest multiplier on that tile's own weather cell}, from the same correlated draws the
+        pooled multiplier averages (`_pooled_farm_weather_multiplier`, unharmed). A tile merged into a pooled cell, or with no
+        cell, is absent; callers give it the pooled multiplier."""
+        cells = self._farm_weather_cells
+        if not cells:
+            return {}
+        independent_draws = [random.Random(self._farm_year_weather_seed(year, region=cell.cell_id)).gauss(0.0, 1.0)
+                             for cell in cells]
+        multipliers = weather_pooling.cell_multipliers(
+            cells, self._farm_weather_correlation_cholesky, independent_draws,
+            self._agriculture.DEFAULT_SOIL.weather_stdev_fraction,
+            self._agriculture.WEATHER_FLOOR_MULTIPLIER, self._agriculture.WEATHER_CEILING_MULTIPLIER)
+        return {cell.cell_id: multiplier for cell, multiplier in zip(cells, multipliers)}
+
     def _disease_burden(self):
         """WIRING ONE (Complaints/closed/47-technology-cannot-stop-people-dying-
         young.md): this civilisation's CURRENT disease burden, 1.0 being

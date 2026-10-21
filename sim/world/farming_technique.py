@@ -15,6 +15,10 @@ Technique = collections.namedtuple("Technique", ["crop", "rotation", "toolkit"])
 DEFAULT_TECHNIQUE = Technique(
     agriculture.DEFAULT_CROP, agriculture.DEFAULT_ROTATION, agriculture.DEFAULT_TOOLKIT)
 
+# What a society farms with before any technology says otherwise: a hand hoe. The draught-animal capability declares
+# the ard behind its team; the rest of the toolkits are declared by the technologies that bring them.
+BASE_TOOLKIT = agriculture.HAND_HOE
+
 
 
 def entries_by_axis(declarations):
@@ -52,6 +56,8 @@ def _blend(base, other, share):
     fields = {name: value + share * (getattr(other, name) - value)
               for name, value in base._asdict().items()
               if isinstance(value, (int, float))}
+    if share >= 0.5 and hasattr(other, "name"):
+        fields["name"] = other.name   # the entry the society has mostly taken up
     return base._replace(**fields)
 
 
@@ -86,7 +92,7 @@ def technique_from_adoption(adoption, declarations):
     return Technique(
         crop,
         _axis(DEFAULT_TECHNIQUE.rotation, entries["rotation"], adoption),
-        _axis(DEFAULT_TECHNIQUE.toolkit, entries["toolkit"], adoption))
+        _axis(BASE_TOOLKIT, entries["toolkit"], adoption))
 
 
 def hours_per_hectare(technique):

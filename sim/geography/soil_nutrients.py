@@ -76,14 +76,6 @@ HALF_SATURATION_SUPPLY_KG_PER_HECTARE = declare(
     confidence="D", retire="a crop growth model against nitrogen supply and demand",
     why="Supply at which a crop reaches half its nitrogen-saturated yield.")
 
-HERD_EXCRETA_KG_PER_LIVE_WEIGHT_KG_YEAR = declare(
-    "HERD_EXCRETA_KG_PER_LIVE_WEIGHT_KG_YEAR", 23.0,
-    kind="biological_parameter", unit="kg fresh dung and urine per kg live weight per year",
-    source="USDA NRCS, Agricultural Waste Management Field Handbook, Part 651 chapter 4 (rev. July 1996; opened), "
-           "Table 4-8: beef cow manure as excreted 63.00 lb per day per 1000 lb of animal, 0.063 of live weight a "
-           "day; dairy cows are 80.00 (Table 4-5)",
-    confidence="C", why="Manure the society's draught herd drops.")
-
 MANURE_NITROGEN_FRACTION = declare(
     "MANURE_NITROGEN_FRACTION", 0.005,
     kind="biological_parameter", unit="kg nitrogen per kg fresh dung and urine",
@@ -91,13 +83,39 @@ MANURE_NITROGEN_FRACTION = declare(
            "cow manure as excreted 63.00 lb and N 0.33 lb per day per 1000 lb of animal, 0.52 percent nitrogen",
     confidence="C", why="Nitrogen in the herd's excreta.")
 
-MANURE_COLLECTED_SHARE = declare(
-    "MANURE_COLLECTED_SHARE", 0.3,
-    kind="temporary_heuristic", unit="share of the herd's excreta carried to the fields",
-    source="Share dropped in byre, fold and yard rather than on pasture; invented",
-    confidence="D", retire="farmers buying manure goods through the economy (Complaints/543)",
-    why="Transitional rule: the society's draught herd manures its cropland for free until farm producers buy the "
-        "manure goods.")
+FREE_MANURE_SPREAD_SHARE = declare(
+    "FREE_MANURE_SPREAD_SHARE", 1.0,
+    kind="temporary_heuristic", unit="share of the draught herd's collected dung that reaches the held cropland",
+    source="Transitional rule: the dung the herd's recipes collect (data/world/living_stock.json manure_collected_share) is "
+           "spread over the held cropland without being bought, though the same dung is also sold as manure_kg",
+    confidence="D", retire="Complaints/543: crop recipes that take manure_kg as an input, so the soil gets what farms buy",
+    why="Until farm producers buy manure, the draught herd's dung manures the cropland for free.")
+
+SILT_DEPOSITION_METRES_PER_YEAR = declare(
+    "SILT_DEPOSITION_METRES_PER_YEAR", 0.0008,
+    kind="temporary_heuristic", unit="metres of silt laid on flooded land per year",
+    source="Pre-High-Dam Nile overbank deposition 0.6 to 1.5 mm a year, mean 0.8 mm (a Springer Environmental Earth Sciences "
+           "article on the Aswan High Dam's effects, seen as a search snippet only, page not opened; a 2009 EGU abstract "
+           "doubts a steady rate); other rivers differ and the figure is taken for every flooded tile",
+    confidence="D", retire="Complaints/543: a sediment load per river layer",
+    why="Silt a river lays on the land it waters each year.")
+
+SILT_BULK_DENSITY_KG_PER_CUBIC_METRE = declare(
+    "SILT_BULK_DENSITY_KG_PER_CUBIC_METRE", 1300.0,
+    kind="temporary_heuristic", unit="kg per cubic metre of dry silt",
+    source="Mineral soil bulk density 1.1 to 1.6 tonnes per cubic metre (no source found, not opened)",
+    confidence="D", retire="Complaints/543: a source read for the figure", why="Turns silt depth into mass.")
+
+SILT_NITROGEN_FRACTION = declare(
+    "SILT_NITROGEN_FRACTION", NATIVE_POOL_KG_PER_HECTARE / 3.0e6,
+    kind="temporary_heuristic", unit="kg nitrogen per kg of silt",
+    source="Taken equal to the native topsoil's nitrogen share (NATIVE_POOL_KG_PER_HECTARE over the mass of the rooting "
+           "zone, 3000 tonnes a hectare); river silt is the washed topsoil of its basin",
+    confidence="D", retire="Complaints/543: a source read for the figure", why="Nitrogen a river's silt carries to the land.")
+
+SQUARE_METRES_PER_HECTARE = 10000.0
+SILT_NITROGEN_KG_PER_FLOODED_HECTARE = (SILT_DEPOSITION_METRES_PER_YEAR * SQUARE_METRES_PER_HECTARE
+                                        * SILT_BULK_DENSITY_KG_PER_CUBIC_METRE * SILT_NITROGEN_FRACTION)
 
 NATURAL_INPUT_KG_PER_HECTARE = NATIVE_POOL_KG_PER_HECTARE * LOSS_RATE_PER_YEAR   # keeps a native soil level
 
@@ -124,20 +142,21 @@ def yield_response(pool_share, cropped_share, reference_cropped_share, manure_ni
 
 
 def next_share(pool_share, cropped_share, harvest_kg_per_cropped_hectare, legume_share=0.0,
-               manure_nitrogen_kg_per_hectare=0.0, reference_cropped_share=0.5):
+               manure_nitrogen_kg_per_hectare=0.0, reference_cropped_share=0.5, flooded_share=0.0):
     """The pool share after one year. `harvest_kg_per_cropped_hectare` is the reference field's harvest; the
-    tile's own response scales it. `legume_share` is the share of the holding in grain legumes."""
+    tile's own response scales it. `legume_share` is the share of the holding in grain legumes;
+    `flooded_share` the share a river floods and silts each year."""
     pool = pool_share * NATIVE_POOL_KG_PER_HECTARE
     harvest_kg = harvest_kg_per_cropped_hectare * yield_response(
         pool_share, cropped_share, reference_cropped_share, manure_nitrogen_kg_per_hectare)
     removal = cropped_share * harvest_kg * GRAIN_NITROGEN_FRACTION
     gain = (NATURAL_INPUT_KG_PER_HECTARE + legume_share * LEGUME_NET_NITROGEN_KG_PER_HECTARE
-            + MANURE_RETAINED_IN_POOL * manure_nitrogen_kg_per_hectare)
+            + MANURE_RETAINED_IN_POOL * manure_nitrogen_kg_per_hectare
+            + flooded_share * SILT_NITROGEN_KG_PER_FLOODED_HECTARE)
     pool = max(0.0, pool + gain - removal - LOSS_RATE_PER_YEAR * pool)
     return pool / NATIVE_POOL_KG_PER_HECTARE
 
 
-def herd_manure_nitrogen_kg(herd_live_weight_kg):
-    """Nitrogen a herd's collected excreta carries to the fields in a year."""
-    return (herd_live_weight_kg * HERD_EXCRETA_KG_PER_LIVE_WEIGHT_KG_YEAR * MANURE_NITROGEN_FRACTION
-            * MANURE_COLLECTED_SHARE)
+def manure_nitrogen_kg(collected_manure_kg):
+    """Nitrogen that `collected_manure_kg` of dung and urine a year carries to the fields under the free-spread rule."""
+    return collected_manure_kg * MANURE_NITROGEN_FRACTION * FREE_MANURE_SPREAD_SHARE

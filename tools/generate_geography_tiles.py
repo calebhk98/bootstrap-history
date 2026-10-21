@@ -49,45 +49,13 @@ for it (CLAUDE.md SS3.1):
      tile's clipped land - used only for producing a readable id and for
      reporting the old-region mapping below, never for arable_fraction or
      fertility.
-  6. ARABLE FRACTION AND FERTILITY. Both come from ONE lookup table,
-     KOPPEN_ARABLE_AND_FERTILITY below, keyed by Koppen-Geiger climate
-     class, classified by the `kgcpy` package's bundled raster (the Rubel et
-     al. 2016 present-day maps, not Beck et al. 2018 - see that package's
-     own citation). The dataset is the `koppen_class` option in
-     sim/geography/map_data_sources.py (see DATA SOURCES below). This is the actual
-     generating rule for the two numbers Complaints/45 is about: a desert
-     tile gets a low arable fraction wherever on Earth it is, a
-     Mediterranean-climate tile gets fertility 1.0 wherever on Earth it is,
-     never region by region. A tile is classified by SAMPLING A REGULAR
-     GRID OF POINTS across its own land area (SAMPLES_PER_AXIS^2 points,
-     default 25), not by its single centroid: a 150,000-km2 cell can
-     straddle real terrain boundaries (the Alps sit inside the same cell as
-     lowland Lombardy in one Italy-majority tile, and a single centroid
-     sample happened to land above the tree line, scoring the WHOLE tile as
-     tundra even though most of its land is not) - see LIMITS below for
-     what this still cannot see. Each cell's arable_fraction and fertility
-     are the plain average of KOPPEN_ARABLE_AND_FERTILITY's own numbers
-     across every sample point that landed on that tile's actual land, an
-     area-weighted blend because the sample grid is evenly spaced. The
-     single most common class among the samples is kept too, as
-     `koppen_class`, for a readable label - it plays no part in the
-     arithmetic.
-  7. ANCHORS, NOT TUNING. The table's two anchor points are FIXED before
-     the rest of the table is filled in, exactly the way italia's own
-     fertility is fixed today: Csa (the class Italy's own tiles fall in)
-     is defined as 1.0, because that is the ground data/production/
-     40_organics.json's own wheat_kg yield already describes (see
-     sim/world/land.py's own module docstring for the identical anchor);
-     ET (tundra) is set to 0.05, EXACTLY sim/world/agriculture.py's own
-     ARCTIC_TUNDRA quality multiplier, not a coincidentally close number.
-     Every other class is filled in relative to those two, by ordinary
-     agronomic reasoning (a rainforest's canopy leaches its soil even
-     though it never lacks rain; a steppe has thin soil but is not desert;
-     a floodplain-fed desert oasis is not modelled as such - see LIMITS
-     below), the same reasoning already used, region by region, when this
-     project's 21 hand-written regions were written. The difference is
-     that this file states the reasoning ONCE, as a table, and applies it
-     by rule instead of by 21 separate paragraphs.
+  6. CLIMATE CLASS. A tile's `koppen_class` is the most common class among a regular grid of sample points over its
+     land (the `kgcpy` bundled raster, Rubel et al. 2016); `koppen_sample_mix` keeps the whole mix. The class is a
+     label; it plays no part in the arithmetic of rule 7.
+  7. ARABLE FRACTION, FERTILITY AND HEAVY-SOIL SHARE (Complaint 543). Derived from the tile's layers by
+     `rederive_soils` below: rain against FAO-56 evaporation, growing months and ruggedness, through
+     sim/geography/soil_derivation.py and the coefficients in data/world/geography/parameters/soil.json. The
+     Koppen-keyed table these once came from is kept as a test reference only (sim/tests/koppen_soil_reference.py).
   8. BORDERS. Two tiles border each other if and only if they are edge-
      adjacent (not merely corner-touching) in the SAME regular grid rule 1
      built - i.e. one of (row-1,col), (row+1,col), (row,col-1), (row,col+1)
@@ -261,92 +229,28 @@ CLIMATE_SAMPLES_PER_AXIS = 5   # rule 6: a 5x5 = 25-point grid per tile,
 
 
 # ============================================================================
-# THE CLIMATE TABLE - rule 6/7. ONE table, applied by lookup, never by
-# looking at where a tile happens to be.
+# SOILS - arable share, fertility and heavy-soil share are DERIVED, not looked up (Complaint 543).
 #
-# Values are (arable_fraction, fertility_quality_multiplier). Both are
-# engineering estimates in the same sense every non-italia region in the
-# existing the geography data is one (confidence D): the DIRECTION each one
-# encodes is well attested agronomically, the exact SIZE is a placeholder
-# pending a real soil survey, exactly the discipline sim/world/land.py's
-# own module docstring already states for the hand-written file this
-# table's own output sits alongside.
-#
-#   Csa is fixed at fertility 1.0: this is the class Italy's own tiles
-#       fall in, and data/production/40_organics.json's wheat_kg entry IS
-#       Roman-Italian dry-farmed wheat - the SAME anchor the hand-written
-#       the geography data already uses, reached here by climate class instead
-#       of by name.
-#   ET is fixed at fertility 0.05: sim/world/agriculture.py's own
-#       ARCTIC_TUNDRA quality multiplier, reused exactly rather than
-#       independently re-estimated, because the two describe the same
-#       physical ground (growing-season length, not soil, is what limits
-#       tundra) - see that module's own note on this figure.
-#   EF (permanent ice) is 0.0 arable, 0.0 fertility: nothing grows on an
-#       ice sheet regardless of what "fertility" a soil survey there would
-#       even mean.
-# Every other row is ordinary agronomic reasoning: a hot desert's arable
-# share is whatever oases and the rare river give it (see LIMITS in the
-# module docstring for why river silt itself is not modelled); a tropical
-# rainforest is never short of rain but its canopy leaches the soil below
-# it; a humid subtropical class with no dry season and a hot summer (the
-# Yangtze basin's own class) is given fertility slightly ABOVE the
-# Mediterranean anchor for the same reason the map folder (data/world/geography/)'s own
-# china entry already gives China's arable sliver 1.3: this is rice
-# country, and rice yields more calories per hectare than wheat under
-# comparable technology, well attested agronomically and independent of
-# any per-region judgement about China specifically.
+# `rederive_soils` writes them from the map's own layers (rain, temperature, latitude, ruggedness) through
+# sim/geography/soil_derivation.py: FAO-56 evaporation, the aridity index, growing months. The Koppen-keyed
+# table that used to give them lives on as a test reference only (sim/tests/koppen_soil_reference.py).
 # ============================================================================
 
-KOPPEN_ARABLE_AND_FERTILITY = {
-    # ---- A: tropical -------------------------------------------------
-    "Af": (0.30, 0.65),  # rainforest, no dry season: leaches soil; clearing is limited by the forest layer in sim/geography/food_land.py
-    "Am": (0.30, 0.90),  # monsoon: a real dry season aids clearing; rice country
-    "Aw": (0.30, 0.75),  # savanna, dry winter: workable but thinner, erodible soils
-    "As": (0.30, 0.75),  # savanna, dry summer: same treatment as Aw
-    # ---- B: arid -------------------------------------------------------
-    "BWh": (0.02, 0.55),  # hot desert: almost nothing arable outside oases (see LIMITS)
-    "BWk": (0.02, 0.45),  # cold desert: same, shorter growing season where anything grows
-    "BSh": (0.20, 0.60),  # hot semi-arid steppe: dryland grain, thin soils
-    "BSk": (0.22, 0.55),  # cold semi-arid steppe: same, cooler
-    # ---- C: temperate ----------------------------------------------------
-    "Csa": (0.35, 1.00),  # Mediterranean, hot summer - THE ANCHOR (Italy's own class)
-    "Csb": (0.32, 0.95),  # Mediterranean, warm summer: cooler/wetter than Csa
-    "Csc": (0.25, 0.85),  # Mediterranean, cold summer: rare, montane
-    "Cwa": (0.32, 0.95),  # dry-winter subtropical, hot summer: monsoon-adjacent, good grain land
-    "Cwb": (0.28, 0.85),  # dry-winter subtropical, warm summer: highland version of the above
-    "Cwc": (0.20, 0.70),  # dry-winter subtropical, cold summer: montane, marginal
-    "Cfa": (0.35, 1.05),  # humid subtropical, no dry season: the Yangtze basin's own class, rice country
-    "Cfb": (0.30, 0.90),  # oceanic: Britain and Gaul's own class, temperate lowland
-    "Cfc": (0.22, 0.75),  # subpolar oceanic: short cool summer
-    # ---- D: continental --------------------------------------------------
-    "Dsa": (0.28, 0.80), "Dsb": (0.24, 0.75), "Dsc": (0.10, 0.55), "Dsd": (0.08, 0.50),
-    "Dwa": (0.28, 0.85), "Dwb": (0.24, 0.80), "Dwc": (0.10, 0.55), "Dwd": (0.06, 0.45),
-    "Dfa": (0.30, 0.90), "Dfb": (0.26, 0.85), "Dfc": (0.08, 0.45), "Dfd": (0.04, 0.35),
-    # ---- E: polar ----------------------------------------------------------
-    "ET": (0.005, 0.05),  # tundra - matches sim/world/agriculture.py's ARCTIC_TUNDRA exactly
-    "EF": (0.0, 0.0),     # permanent ice
-}
-
-
-def arable_and_fertility_from_mix(sample_mix):
-    """(arable_fraction, fertility) of a tile from its {climate class: sample
-    count} mix. Arable fraction is the plain mean over samples; fertility is
-    the mean over the ARABLE ground, so a tundra corner of a Mediterranean
-    tile does not dilute the fertility of the land that is actually farmed."""
-    samples = sum(sample_mix.values())
-    arable_total = 0.0
-    fertile_total = 0.0
-    plain_fertility_total = 0.0
-    for koppen_class, count in sample_mix.items():
-        arable, fertility = KOPPEN_ARABLE_AND_FERTILITY[koppen_class]
-        arable_total += arable * count
-        fertile_total += arable * fertility * count
-        plain_fertility_total += fertility * count
-    arable_fraction = arable_total / samples
-    if arable_total > 0.0:
-        return arable_fraction, fertile_total / arable_total
-    return arable_fraction, plain_fertility_total / samples
+def rederive_soils(path):
+    """Rewrite every tile's arable_fraction, fertility_quality_multiplier and heavy_soil_share in the tile grid at `path`
+    from the map's layers. Needs no network: run it after any change to sim/geography/soil_derivation.py or
+    data/world/geography/parameters/soil.json."""
+    from sim.geography import soil_derivation
+    world_map = geography_api.open_map()
+    with open(path, encoding="utf-8") as handle:
+        grid = json.load(handle)
+    for tile_id, tile in grid["tiles"].items():
+        tile["arable_fraction"] = round(soil_derivation.arable_fraction(world_map, tile_id), 4)
+        tile["fertility_quality_multiplier"] = round(soil_derivation.fertility(world_map, tile_id), 4)
+        tile["heavy_soil_share"] = round(soil_derivation.heavy_soil_share(world_map, tile_id), 4)
+    with open(path, "w", encoding="utf-8") as handle:
+        json.dump(grid, handle, indent=1, sort_keys=False, ensure_ascii=False)
+        handle.write("\n")
 
 
 # ============================================================================
@@ -592,7 +496,6 @@ def build_tiles(cache_dir, sources=None, verbose=True):
         inside = [p for p in points if shapely.intersects(tile_geometry, p)]
         return inside if inside else [tile_geometry.representative_point()]
 
-    unclassified_count = 0
     for tile in tiles:
         sample_points = sample_points_within(tile["geometry"])
         sample_points_lonlat = geopandas.GeoSeries(
@@ -600,17 +503,9 @@ def build_tiles(cache_dir, sources=None, verbose=True):
         sample_classes = [classify_koppen(point.y, point.x) for point in sample_points_lonlat]
 
         sample_mix = dict(collections.Counter(sample_classes))
-        for koppen_class in sample_mix:
-            if koppen_class not in KOPPEN_ARABLE_AND_FERTILITY:
-                unclassified_count += 1
-                # Fails loudly rather than inventing a number (CLAUDE.md SS3.1).
-                raise ValueError(
-                    "tile %r sample classified as %r, which is not in "
-                    "KOPPEN_ARABLE_AND_FERTILITY" % (tile.get("country_majority"), koppen_class))
         tile["koppen_class"] = collections.Counter(sample_classes).most_common(1)[0][0]
         tile["koppen_sample_mix"] = sample_mix
-        (tile["arable_fraction"],
-         tile["fertility_quality_multiplier"]) = arable_and_fertility_from_mix(sample_mix)
+        tile["arable_fraction"] = tile["fertility_quality_multiplier"] = 0.0   # rederive_soils fills them from the layers
     log("  classified climate (%d samples/tile) and looked up arable/fertility "
         "for %d tiles in %.2fs"
         % (CLIMATE_SAMPLES_PER_AXIS ** 2, len(tiles), time.time() - stage_start))
@@ -672,9 +567,8 @@ def build_land_tiles_section(tiles):
                 "Generated by tools/generate_geography_tiles.py: an equal-area "
                 "%.0f-km2 grid cell (rule 1), clipped to Natural Earth 1:50m land "
                 "(rule 2), classified %s by Koppen-Geiger climate (rule 6) via the "
-                "kgcpy package, arable_fraction and fertility_quality_multiplier "
-                "read off that class from KOPPEN_ARABLE_AND_FERTILITY - never "
-                "estimated for this tile individually."
+                "kgcpy package; arable_fraction, fertility_quality_multiplier and "
+                "heavy_soil_share derived from its layers by rederive_soils."
                 % (TARGET_TILE_AREA_KM2, tile["koppen_class"])),
         }
         tiles_by_id[tile_id] = tile_record
@@ -712,11 +606,8 @@ def build_land_tiles_section(tiles):
             "Equal-area %.0f km2 grid cells (EPSG:6933) intersected with "
             "Natural Earth 1:50m land; cells under 10%% land dropped; "
             "Antarctica dropped outright; each tile's arable_fraction and "
-            "fertility_quality_multiplier read from ONE table keyed by its "
-            "centroid's Koppen-Geiger climate class, anchored at Csa=1.0 "
-            "(Italy's own class, matching data/production/40_organics.json's "
-            "wheat_kg) and ET=0.05 (matching sim/world/agriculture.py's own "
-            "ARCTIC_TUNDRA); borders are grid edge-adjacency; a tile is "
+            "fertility_quality_multiplier derived from the tile's water balance, growing "
+            "months and ruggedness (sim/geography/soil_derivation.py, rederive_soils); borders are grid edge-adjacency; a tile is "
             "coastal if part of its own cell is water or a grid neighbour "
             "was dropped." % TARGET_TILE_AREA_KM2
         ),
@@ -744,8 +635,8 @@ def main():
     parser.add_argument("--list-sources", action="store_true",
         help="print every layer's source options and exit")
     parser.add_argument("--rederive", action="store_true",
-        help="recompute every stored tile's arable_fraction and fertility from its "
-             "koppen_sample_mix with the current rule (no download, no classification)")
+        help="recompute every stored tile's arable_fraction, fertility and heavy-soil share from the "
+             "map's layers with the current rule (no download, no classification)")
     parser.add_argument("--report-only", action="store_true",
         help="build the tiles and print the summary report, but write nothing")
     arguments = parser.parse_args()
@@ -761,15 +652,8 @@ def main():
         parser.error(str(error))
 
     if arguments.rederive:
-        with open(arguments.out) as handle:
-            grid = json.load(handle)
-        for tile in grid["tiles"].values():
-            arable, fertility = arable_and_fertility_from_mix(tile["koppen_sample_mix"])
-            tile["arable_fraction"] = round(arable, 4)
-            tile["fertility_quality_multiplier"] = round(fertility, 4)
-        with open(arguments.out, "w") as handle:
-            json.dump(grid, handle, indent=1, sort_keys=False)
-        print("rederived tile arable/fertility from koppen_sample_mix")
+        rederive_soils(arguments.out)
+        print("rederived tile arable, fertility and heavy-soil share from the layers")
         return
 
     print("Building land tiles (target %.0f km2 each)..." % TARGET_TILE_AREA_KM2)
@@ -804,6 +688,7 @@ def main():
     with open(geography_path, "w") as handle:
         json.dump(grid, handle, indent=1, sort_keys=False)
         handle.write("\n")
+    rederive_soils(geography_path)
     print("\nWrote %d tiles to %s." % (len(tiles), geography_path))
 
 

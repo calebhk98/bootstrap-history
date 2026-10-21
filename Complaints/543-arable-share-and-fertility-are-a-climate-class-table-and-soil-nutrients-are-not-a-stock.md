@@ -1,6 +1,6 @@
 # Arable share and fertility are a climate-class table, and soil nutrients are not a stock
 
-**Status:** partly done: the soil nitrogen stock (below); arable share and fertility from the water balance, slope and silt, and tillage resistance, remain open
+**Status:** partly done: the soil nitrogen stock, arable share and fertility from the water balance, silt as an input and heavy-soil tillage (below). Open: manure bought by farms through the economy; a soil texture layer; sourced constants.
 
 Reference (an outside design note, not code-aware): soil should be derived from the physical inputs a
 tile already has, not looked up. Plant growth is limited by the scarcer of heat and water; rain far
@@ -63,7 +63,32 @@ soils resist tillage until the tool and team can pull hard enough.
   ground's quality over thirty years; three-field with legumes holds a higher stock and harvest than without; the ceiling
   follows a rotation change). The Nile rotation keeps its own silt multiplier until silt is an input.
 
+## Done: arable share, fertility, silt and tillage (this round)
+
+- `sim/geography/soil_water_balance.py`: FAO-56 (Allen et al. 1998, chapter 3, opened at fao.org/4/x0490e/x0490e07.htm) extraterrestrial radiation
+  (eq 21 with 23 to 25; checked against Example 8) and Hargreaves evaporation (eq 52) on twelve monthly temperatures from the map's mean, coldest and
+  warmest month; the aridity index is rain over that (UNEP classes, en.wikipedia.org/wiki/Aridity_index, opened).
+- `sim/geography/soil_derivation.py`: arable share (ceiling times a rainfed moisture ramp over the UNEP bounds times growing months), fertility (humus peaking
+  where rain nearly balances evaporation, less leaching of hot wet ground) and a heavy-soil share (flat wet ground; a stand-in for texture). Coefficients are
+  `data/world/geography/parameters/soil.json`, each with its source or "no source found". `tools/generate_geography_tiles.py --rederive` writes the three
+  tile fields from the layers (no network); `test_soil_derivation` holds the stored values equal to the rule, and checks the rule against the old
+  Koppen-keyed table, now only `sim/tests/koppen_soil_reference.py`, by class (CLAUDE.md 4.2). Deviations: tropical savanna and dry steppe come out more fertile than the
+  table's judgement, because the rule has no weathering age.
+- Silt is a nitrogen input of flooded hectares (`soil_nutrients.SILT_NITROGEN_KG_PER_FLOODED_HECTARE`, from the pre-dam Nile overbank rate seen in a search snippet, page not
+  opened, confidence D); `NILE_FLOOD_RECESSION`, its constants and `Rotation.soil_fertility_yield_multiplier` are deleted. Flooded tiles with no rainfed arable ground now
+  hold a stock too (`soil_nitrogen.step_year`).
+- Tillage: see Complaint 537. `test_tillage_and_silt`.
+- The draught herd's dung is the cattle species row's data (`manure_share_of_live_weight_per_day`, `manure_collected_share`); the two invented constants are deleted.
+  The free-spread rule is still transitional (`FREE_MANURE_SPREAD_SHARE`, retire: this complaint).
+
+- Open question: the rainforest-against-savanna check (`test_geography_food_gaps`) is an expected failure. Derived savanna fertility sits near the
+  Mediterranean reference because the rule has no weathering age; an opened lecture says tropical soils in general are leached and unproductive.
+
 ## Left
 
-- Per-tile manure from market purchase (a farm recipe with manure as an input, so 544's dung reaches the soil); silt as an input on flooded tiles (then the Nile multiplier goes); arable share and
-  fertility derivation; tillage resistance.
+- **Manure bought by farms.** No crop recipe takes `manure_kg` or `nightsoil_kg` as an input, and a recipe's yield is fixed per run, so a bought input
+  cannot raise it. It needs an optional-input yield response in the producers (`sim/economy/producers*`, owned by another agent) that reports the nitrogen
+  applied per tile to `state.economy.soil_nitrogen`; then `FREE_MANURE_SPREAD_SHARE` goes. A shortage of manure must lower yield, not stop the farm.
+- A soil texture layer (SoilGrids or HWSD) in place of the heavy-soil stand-in and the daily temperature range stand-in; a land-cover layer in place of the arable ceiling.
+- Sources: the humus, leaching and heavy-soil constants and the nitrogen pool constants are labelled heuristics (`kind: heuristic` in `soil.json`; `temporary_heuristic` in `soil_nutrients.py`).
+- A draught force per toolkit against a tillage resistance per soil texture, in place of `Toolkit.tillage_capacity`.

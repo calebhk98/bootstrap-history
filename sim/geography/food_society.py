@@ -8,10 +8,11 @@ from sim.geography.queries import crop_site, draw_wild_stock, food_potential, hu
 from sim.geography.tile_holdings import tiles_held
 
 
-def crop_sites(civ, world_map, cropped_share, nutrient_factors):
+def crop_sites(civ, world_map, cropped_share, nutrient_factors, tillage_capacity=1.0):
     """{tile: crop site} over the held tiles under a rotation that crops `cropped_share`; `nutrient_factors` is the
-    soil nitrogen yield factor by tile (a tile with none is native)."""
-    return {tile_id: crop_site(tile_id, cropped_share, world_map, nutrient_factors.get(tile_id, 1.0))
+    soil nitrogen yield factor by tile (a tile with none is native);
+    `tillage_capacity` is the share of heavy ground the toolkit opens."""
+    return {tile_id: crop_site(tile_id, cropped_share, world_map, nutrient_factors.get(tile_id, 1.0), tillage_capacity)
             for tile_id in tiles_held(civ, world_map)}
 
 

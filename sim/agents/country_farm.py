@@ -29,7 +29,8 @@ def _arable_ground(profile: Any) -> Any:
 		return float(declared), [(quality, float(declared))]
 	if profile.home_tiles:
 		share = 1.0 - farming_technique.DEFAULT_TECHNIQUE.rotation.fallow_share_of_holding
-		territory = land.territory_cropland({tile_id: crop_site(tile_id, share) for tile_id in profile.home_tiles})
+		tillage = farming_technique.DEFAULT_TECHNIQUE.toolkit.tillage_capacity
+		territory = land.territory_cropland({tile_id: crop_site(tile_id, share, tillage_capacity=tillage) for tile_id in profile.home_tiles})
 		return territory.cropped_hectares, territory.ladder
 	return None, None
 

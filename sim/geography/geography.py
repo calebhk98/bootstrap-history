@@ -79,25 +79,25 @@ class Geography:
         return self._reach_table()["levels"].get(region_id, farthest)
 
     def soil_nitrogen_factors(self, stock: Dict[str, float], cropped_share: float, reference_cropped_share: float,
-                              herd_kg: float) -> Dict[str, float]:
+                              manure_kg: float) -> Dict[str, float]:
         """{tile: yield factor of its soil nitrogen stock} for the held tiles below native, under a rotation that crops
-        `cropped_share` of the holding with a draught herd of `herd_kg`."""
+        `cropped_share` of the holding with `manure_kg` of collected dung a year."""
         if not stock:
             return {}
-        manure = self._manure_per_hectare(cropped_share, herd_kg)
+        manure = self._manure_per_hectare(cropped_share, manure_kg)
         return soil_nitrogen.yield_factors(stock, tile_holdings.tiles_held(self._world.civ, self._world.world_map),
                                            cropped_share, reference_cropped_share, manure)
 
     def step_soil_nitrogen(self, stock: Dict[str, float], cropped_share: float, reference_cropped_share: float,
-                           kg_per_cropped_hectare: float, legume_share: float, herd_kg: float) -> None:
+                           kg_per_cropped_hectare: float, legume_share: float, manure_kg: float) -> None:
         """One year of cropping, legumes and manure on every held tile that has cropland, written into `stock`."""
         sites = soil_nitrogen.unworn_sites(self._world.civ, self._world.world_map, cropped_share)
-        manure = soil_nitrogen.manure_nitrogen_per_hectare(herd_kg, sites)
+        manure = soil_nitrogen.manure_nitrogen_per_hectare(manure_kg, sites)
         soil_nitrogen.step_year(stock, sites, kg_per_cropped_hectare, legume_share, reference_cropped_share, manure)
 
-    def _manure_per_hectare(self, cropped_share: float, herd_kg: float) -> float:
+    def _manure_per_hectare(self, cropped_share: float, manure_kg: float) -> float:
         sites = soil_nitrogen.unworn_sites(self._world.civ, self._world.world_map, cropped_share)
-        return soil_nitrogen.manure_nitrogen_per_hectare(herd_kg, sites)
+        return soil_nitrogen.manure_nitrogen_per_hectare(manure_kg, sites)
 
     def stock_place(self) -> Optional[str]:
         """The tile the held stock stands on: the held tile nearest the middle of the holding; None with no tiles."""
@@ -123,9 +123,9 @@ class Geography:
         """Units the place's arable land raises in a year at a production entry's output and land use per batch."""
         return stock_land.nursery_room_units(place, output_per_batch, hectare_years_per_batch, self._world.world_map)
 
-    def crop_sites(self, cropped_share: float, nutrient_factors: Dict[str, float]) -> Dict[str, Any]:
+    def crop_sites(self, cropped_share: float, nutrient_factors: Dict[str, float], tillage_capacity: float = 1.0) -> Dict[str, Any]:
         """{tile: crop site} over the held tiles under a rotation that crops `cropped_share`, each under its soil nitrogen factor."""
-        return food_society.crop_sites(self._world.civ, self._world.world_map, cropped_share, nutrient_factors)
+        return food_society.crop_sites(self._world.civ, self._world.world_map, cropped_share, nutrient_factors, tillage_capacity)
 
     def food_kcal_by_source(self, wild_stock: Any, crop_technique: Any, nutrient_factors: Dict[str, float]) -> Dict[str, float]:
         """{source id: kcal a year} over the held tiles, game thinned by `wild_stock`, before any labour bound."""

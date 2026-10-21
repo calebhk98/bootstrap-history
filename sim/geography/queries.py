@@ -59,10 +59,10 @@ def food_potential(tile_id: str, technique_factors: Optional[Mapping[str, float]
 
 
 def crop_site(tile_id: str, open_field_cropped_share: float, world_map: Optional[WorldMap] = None,
-              nutrient_factor: float = 1.0) -> CropSite:
+              nutrient_factor: float = 1.0, tillage_capacity: float = 1.0) -> CropSite:
     """The tile's cropland: arable hectares, hectares cropped in a year under a rotation that crops
     `open_field_cropped_share` of open fields, and the mean yield of a cropped hectare against the reference field."""
-    return food_crops.crop_site(_map(world_map), tile_id, open_field_cropped_share, nutrient_factor)
+    return food_crops.crop_site(_map(world_map), tile_id, open_field_cropped_share, nutrient_factor, tillage_capacity)
 
 
 def endemic_animal_loss(tile_id: str, species: Iterable[str], world_map: Optional[WorldMap] = None) -> float:

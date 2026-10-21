@@ -44,7 +44,7 @@ class TileCropCapacityIsTheFarmHarvestTests(unittest.TestCase):
 
     def _techniques(self):
         base = farming_technique.DEFAULT_TECHNIQUE
-        three_field = agriculture.Rotation(name="three_field", fallow_share_of_holding=1.0 / 3.0, soil_fertility_yield_multiplier=1.0)
+        three_field = agriculture.Rotation(name="three_field", fallow_share_of_holding=1.0 / 3.0)
         return [base, _toolkit_with_better_ploughing(base.toolkit.ploughing_yield_multiplier * 1.2), base._replace(rotation=three_field)]
 
     def test_every_held_tile_agrees_with_the_farm_model_on_its_harvest_under_each_technique(self):
@@ -52,7 +52,7 @@ class TileCropCapacityIsTheFarmHarvestTests(unittest.TestCase):
         for technique in self._techniques():
             share = 1.0 - technique.rotation.fallow_share_of_holding
             for tile in self.tiles:
-                site = crop_site(tile, share, self.world_map)
+                site = crop_site(tile, share, self.world_map, tillage_capacity=technique.toolkit.tillage_capacity)
                 expected = _farm_net_kcal(technique, site.cropped_hectares, site.yield_factor)
                 self.assertAlmostEqual(self._tile_crop_kcal(tile, technique), expected, delta=RELATIVE_TOLERANCE * max(expected, 1.0), msg=tile)
 
@@ -69,7 +69,7 @@ class TileCropCapacityIsTheFarmHarvestTests(unittest.TestCase):
 
     def test_a_rotation_that_fallows_less_crops_more_of_each_open_field(self):
         base = farming_technique.DEFAULT_TECHNIQUE
-        rotation = agriculture.Rotation(name="three_field", fallow_share_of_holding=1.0 / 3.0, soil_fertility_yield_multiplier=1.0)
+        rotation = agriculture.Rotation(name="three_field", fallow_share_of_holding=1.0 / 3.0)
         three_field = base._replace(rotation=rotation)
         tile = max(self.tiles, key=lambda candidate: crop_site(candidate, 0.5, self.world_map).cropped_hectares)
         self.assertGreater(self._tile_crop_kcal(tile, three_field), self._tile_crop_kcal(tile, base))
