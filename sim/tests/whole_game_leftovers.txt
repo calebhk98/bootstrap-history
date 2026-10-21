@@ -74,8 +74,6 @@ plague_no_double_count
 player_choice_routes
 player_guidance_commands
 project_retry_and_risk
-rush_filters
-rush_fiscal_controls
 staffing_closure_minimal
 state_budget
 state_collection_follows_officials
