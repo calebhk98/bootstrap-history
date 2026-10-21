@@ -32,12 +32,13 @@ describe different economies.
   values the first simulated year produces, within a stated tolerance, under no shock.
 - Related: 526 (the opening income fixed point has no investment, so it opens at subsistence), 513.
 
-## Attempt on branch `opening-sizes-producers-net-of-own-grown-food` (deleted unmerged; its code is lost) (reverted)
+## Tried and failed (code not kept)
 
-Commit `6bfa0b32` ran the year's own-plot rule inside the opening's fixed point (`sim/economy/opening_own.py`, reusing
-`households_own.own_production` and `year_goods._less_what_it_grew`), so the opening's grain demand matched what year
-one grows. It passed the quick tier but broke the slow topic `agent_economy_wiring` on Rome: after the opening,
-households offer no savings at all (`record.funds_offered` is zero, so `economy_api.credit_room` is None). That is the
-collapse recorded in 526: with the food floor grown at home, the saving leak drives the settled income toward zero.
-Reproduce: check out `6bfa0b32` and run `python3 -m sim.tests --slow --only agent_economy_wiring --topic-seconds 900`.
-The branch is kept; land it together with 526, with `agent_economy_wiring` and `full_length_opening_checks` green.
+An attempt (commit `6bfa0b32` on a branch named `opening-sizes-producers-net-of-own-grown-food`) ran the year's own-plot rule inside the
+opening's fixed point (a module `opening_own.py`, reusing `households_own.own_production` and `year_goods._less_what_it_grew`), so
+the opening's grain demand matched what year one grows. The branch is deleted and the commit is not in this repository, so the code
+cannot be recovered; `sim/economy/opening_own.py` does not exist. It passed the quick tier but broke the slow topic
+`agent_economy_wiring` on Rome: after the opening, households offered no savings at all (`record.funds_offered` zero, so
+`economy_api.credit_room` is None). That is the collapse recorded in 526: with the food floor grown at home, the saving leak drives
+the settled income toward zero. So the work lands together with 526 (607), with `agent_economy_wiring` and
+`full_length_opening_checks` green. Reproduce the symptom on any rebuilt attempt: `python3 -m sim.tests --slow --only agent_economy_wiring --topic-seconds 900`.

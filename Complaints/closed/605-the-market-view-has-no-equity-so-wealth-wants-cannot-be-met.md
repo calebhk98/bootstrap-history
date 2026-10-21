@@ -1,6 +1,6 @@
 # The market view has no `equity(agent)`, so the opening's wealth wish is never set against what households own
 
-**Status:** partly done - `equity(agent)` is on the view and counted in households' wealth, in the year loop and in the opening's settlement; the wish still exceeds what households own (see 607)
+**Status:** closed - `equity(agent)` is on the view and counted in the year loop and the opening's settlement (`sim/economy/equity.py`); the wish still exceeding what households own is 606 (the wish) and 607 (the opening income)
 
 Part of Complaint 526 (The opening's income leaks saving, so the economy opens at subsistence and its wage keeps falling).
 
@@ -23,7 +23,7 @@ Depends on 538 (land and plot titles carry a value).
   at the view's prices less debt, floored at zero. `CreditView.equity(agent)` answers from it (once per view);
   `credit_view.equity_of` reads it from any view. `households_orders.goods_orders` adds it to the wealth the drawdown
   compares with the savings wish.
-- `sim/economy/opening_equity.py`: the opening has no producers when it settles income, so `OpeningView.owned` holds the
+- `sim/economy/opening_equity.py` (since removed): the opening has no producers when it settles income, so `OpeningView.owned` holds the
   firms the settlement's own runs imply (plant at replacement and working capital), shared by people and ownership
   share. A scenario that states its income skips it, as before.
 - Value tests: `sim/tests/test_saving_finds_a_use.py` (shares follow ownership; a household that owns firms spends more

@@ -36,3 +36,7 @@ Reuses the colony stepping in `sim/engine/colonies.py`. Foreign countries need 5
 - Cost: `python3 -W ignore` six years of rome_100ad (88 tiles), CPU per year before and after: 7.23 s and 7.36 s (loaded
   machine); a region per tile is cheap.
 - Still open: urban share from the regions; per-tile endemic disease; foreign countries (590).
+
+## Research needed
+
+- What sets the urban share of a pre-industrial society from physical inputs (agricultural surplus per farmer, transport cost of grain to the town, the sea and river share, taxes and rents that feed non-farmers), so the share emerges instead of being the civilisation's `urban_fraction`: Wrigley on urban growth and agricultural productivity, Bairoch on city populations, Malanima, Allen on the English agricultural revolution and urbanisation, Hanson on Roman cities. Existing urbanisation models and economic-history simulations would also answer how to model it. Nothing has been opened for this yet.
