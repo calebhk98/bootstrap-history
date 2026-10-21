@@ -21,6 +21,8 @@ from .literacy_census_phrase import census_phrase
 from .literacy_rules import common_ceiling
 from .data import (TECH_EFFECTS, TRADES_ABSENT)
 from .literacy_effect import literacy_after_effect
+from .trade_absorption import (BECOME_ENDEMIC, GROW, RECORD_INTRODUCTION, absorption_step, absorption_years,
+                               headcount_toward_ceiling)
 
 
 class AdoptionMixin:
@@ -386,8 +388,7 @@ class AdoptionMixin:
             "has always had'. Round figure, not measured.")
 
     def _trade_absorption_years(self, flow):
-        return max(self.TRADE_ABSORPTION_MIN_YEARS,
-                   self.TRADE_ABSORPTION_BASE_YEARS / (1.0 + flow) ** 0.5)
+        return absorption_years(flow, self.TRADE_ABSORPTION_MIN_YEARS, self.TRADE_ABSORPTION_BASE_YEARS)
 
     # Once endemic, the fraction of the remaining gap to literate_capacity()
     # closed each year. A time constant of 1/0.05 == 20 years on top of the
@@ -411,29 +412,17 @@ class AdoptionMixin:
             if trade not in household.trades_created:
                 continue          # never taught here; nothing to naturalise
             intro = household.trade_introduced_year.get(trade)
-            if intro is None:
-                # First year this function has ever seen the trade in
-                # trades_created. Recorded now rather than back-dated,
-                # because train() (labour.py) does not itself timestamp the
-                # set it adds to, and "the year this file first noticed" is
-                # at worst one step later than the true year, which cannot
-                # matter against a minimum absorption time measured in
-                # decades.
-                household.trade_introduced_year[trade] = year
-                continue
-            if trade in household.trades_endemic:
-                self._grow_endemic_trade(trade)
-                continue
             flow = self._schooling_flow()
-            if flow <= 0.0:
-                continue
-            if year - intro >= self._trade_absorption_years(flow):
+            step = absorption_step(intro, trade in household.trades_endemic, flow, year, self._trade_absorption_years)
+            if step == RECORD_INTRODUCTION:
+                # First year this function has ever seen the trade in trades_created; recorded now rather than
+                # back-dated, which is at worst one step late against a minimum measured in decades.
+                household.trade_introduced_year[trade] = year
+            elif step == GROW:
+                self._grow_endemic_trade(trade)
+            elif step == BECOME_ENDEMIC:
                 household.trades_endemic.add(trade)
-                # IN-WORLD, NOT A CHANGE-LOG. This narrates a census fact -
-                # the trade is no longer one household's secret - the same
-                # way every other log line in this file narrates an event
-                # the founder would actually observe, never a note about the
-                # code that produced it.
+                # IN-WORLD, NOT A CHANGE-LOG: a census fact the founder would observe.
                 household.log.append((year, LogLine("trade_no_longer_only_yours", "%s is no longer only your trade: "
                                  "enough schooling has passed through enough "
                                  "hands that this society simply has its own "
@@ -453,15 +442,12 @@ class AdoptionMixin:
         protocol.py), so this is consistent with a number the player already
         sees fluctuate this way from hiring, training and attrition alike.
         """
-        ceiling = self.labour.literate_capacity(trade)
-        if not (ceiling < float("inf")):
-            return
         household = self.state.household
         have = household.employees.get(trade, 0.0)
-        room = ceiling - have
-        if room <= 1e-6:
+        grown = headcount_toward_ceiling(have, self.labour.literate_capacity(trade), self.TRADE_DIFFUSION_APPROACH_RATE)
+        if grown == have:
             return
-        self.labour.set_employed(trade, have + room * self.TRADE_DIFFUSION_APPROACH_RATE)
+        self.labour.set_employed(trade, grown)
         self.labour.resync_pools()
 
     def advance_society(self, year):

@@ -20,6 +20,7 @@ from sim.constants import declare
 from . import cause_book, category_traits
 from .agents_port import SimWorld
 from .staffing_events import unstaffed_closure_line
+from .closure_grace import grace_note, within_grace
 from .affordability import deep_in_arrears, payback_years
 from .units_prose import money_text, per_year
 from sim.agents.api import business_review, edges
@@ -826,27 +827,10 @@ class StaffingMixin:
         # `open` quotes the same price for a concern.
         fee = self.reopen_fee(node_id, self.reopen_units(node_id))
         _age = self.staff_closure_age(node_id)
-        _in_grace = _age is not None and _age <= self.STAFF_CLOSURE_GRACE
-        # SAY WHICH CASE THIS IS, not just a number: the closing message
-        # promises "reopening soon costs a tenth of what opening did", so a
-        # player who comes back to `restore` after the grace window has
-        # lapsed and is billed the full price needs a line connecting that
-        # to the promise and saying the window is gone - a number with no
-        # account of itself reads as broken whether it is wrong or merely
-        # unexplained.
-        _grace_note = None
-        if _age is not None:
-            if _in_grace:
-                _grace_note = ("the staffing window is still open (shut %d "
-                               "years ago, of %d allowed), so this is the "
-                               "discounted tenth, not the full price"
-                               % (_age, self.STAFF_CLOSURE_GRACE))
-            else:
-                _grace_note = ("the staffing discount only lasts %d years "
-                               "after a closure, and it has been %d - too "
-                               "long for the tenth, so this is the "
-                               "ordinary opening price"
-                               % (self.STAFF_CLOSURE_GRACE, _age))
+        _in_grace = within_grace(_age, self.STAFF_CLOSURE_GRACE)
+        # SAY WHICH CASE THIS IS, not just a number: the closing message promises a discount inside the window, so
+        # a player billed the full price after it needs a line saying the window is gone.
+        _grace_note = grace_note(_age, self.STAFF_CLOSURE_GRACE)
         if fee > self.spending_power("buy"):
             return False, ("bringing it back costs %s%s, and between "
                            "%s in cash and what anyone will advance against a "

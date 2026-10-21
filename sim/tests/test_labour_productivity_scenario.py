@@ -1,6 +1,9 @@
-"""labour_productivity scenario (Complaint 640 audit): hiring, productivity, schooling, trade absorption, diffusion,
-staffing closures and the credit freeze through a game. The productivity arithmetic, the diffusion curve and the
-material-gating rule are tests in test_labour_productivity."""
+"""labour_productivity scenario (Complaint 640 audit): four named scenarios through a game: the price of a settled trade,
+a society over centuries (schooling, trade absorption, diffusion), a staffing closure and its reopening, and the
+standing money figures. The productivity arithmetic, the diffusion curve and the material-gating rule are tests in
+test_labour_productivity; trade absorption is test_trade_absorption_rules, the closure choice
+test_staffing_choice_rules, the grace window test_closure_grace_rules, the credit freeze and the stall
+test_credit_freeze_rules, the `why` supervision block test_why_supervision_rules."""
 from .harness import *  # noqa: F401,F403
 from sim.refusal import cause_of, facts_of
 from sim.labour.api import Labour
@@ -67,47 +70,24 @@ finally:
 
 # --- Q2: technology that raises output per worker without replacing them.
 s = unopened_sim(capital=1e9)
-check("with nothing built, an hour of a trade's time is worth exactly an "
-      "hour - labour_productivity changes nothing until a real technology "
-      "earns it",
-      s.labour.labour_productivity("smith") == 1.0, s.labour.labour_productivity("smith"))
-
 before_call_on = s.labour.hours_you_can_call_on("smith")
 before_supply = s.labour.market_supply("smith")
 s.done.add("met_trip_hammer")
 after_call_on = s.labour.hours_you_can_call_on("smith")
 after_supply = s.labour.market_supply("smith")
-check("a real productivity technology (the trip hammer, whose note says "
-      "'much faster than hand hammering') raises the WORK a smith's hours "
-      "can produce this year",
-      after_call_on > before_call_on * 1.05, (before_call_on, after_call_on))
-check("...without changing market_supply - the technology makes the "
-      "existing smiths faster, it does not conjure more of them, so hiring "
-      "capacity and labour_price_factor are untouched",
-      after_supply == before_supply, (before_supply, after_supply))
-check("...and leaves an UNRELATED trade's productivity at exactly 1.0 - a "
-      "trip hammer for smiths does not make carpenters faster too",
-      s.labour.labour_productivity("carpenter") == 1.0, s.labour.labour_productivity("carpenter"))
-
-s2 = s
-for _node, _tr, _add in s2.LABOUR_PRODUCTIVITY_SOURCES:
-    s2.done.add(_node)
-check("stacking every productivity technology this run has wired in never "
-      "pushes any trade's multiplier past the cap, however many technologies "
-      "a civilization eventually builds",
-      all(s2.labour.labour_productivity(trade) <= s2.labour.LABOUR_PRODUCTIVITY_CAP + 1e-9
-          for _, trade, _ in s2.LABOUR_PRODUCTIVITY_SOURCES),
-      [(trade, s2.labour.labour_productivity(trade)) for _, trade, _ in sorted(
-          s2.LABOUR_PRODUCTIVITY_SOURCES, key=lambda r: r[1])])
+check("a real productivity technology (the trip hammer) raises the WORK a smith's hours can produce this year, "
+      "without changing market_supply: it makes the existing smiths faster, it does not conjure more of them",
+      after_call_on > before_call_on * 1.05 and after_supply == before_supply,
+      (before_call_on, after_call_on, before_supply, after_supply))
 
 check("every node named in LABOUR_PRODUCTIVITY_SOURCES is a real node in "
       "the compiled tree, not a name that was never wired to anything",
-      all(node_id in NODES for node_id, _, _ in s2.LABOUR_PRODUCTIVITY_SOURCES),
-      [node_id for node_id, _, _ in s2.LABOUR_PRODUCTIVITY_SOURCES if node_id not in NODES])
+      all(node_id in NODES for node_id, _, _ in s.LABOUR_PRODUCTIVITY_SOURCES),
+      [node_id for node_id, _, _ in s.LABOUR_PRODUCTIVITY_SOURCES if node_id not in NODES])
 check("every trade named in LABOUR_PRODUCTIVITY_SOURCES is a real trade in "
       "the wage table",
-      all(trade in WAGES for _, trade, _ in s2.LABOUR_PRODUCTIVITY_SOURCES),
-      [trade for _, trade, _ in s2.LABOUR_PRODUCTIVITY_SOURCES if trade not in WAGES])
+      all(trade in WAGES for _, trade, _ in s.LABOUR_PRODUCTIVITY_SOURCES),
+      [trade for _, trade, _ in s.LABOUR_PRODUCTIVITY_SOURCES if trade not in WAGES])
 # EDUCATING A WHOLE SOCIETY. The user's own question: "can we make the whole
 # country's literacy rates improve? What if we make 5,000 schools and
 # tractors and food production... can I create a 90%+ literate population?"
@@ -127,17 +107,6 @@ check("a taught trade never naturalises without a single school ever "
       "electrician" not in s_noschool.trades_endemic
       and s_noschool.employees.get("electrician", 0.0) == 0.0,
       (sorted(s_noschool.trades_endemic), s_noschool.employees.get("electrician")))
-
-s_school = run_it(unopened_sim(capital=2000000.0, manual=False), "school_founded")
-_gen0b = s_school.literacy("literacy_general")
-_ceil_farming = s_school.literacy_ceiling_general()
-for i in range(1, 401):
-    s_school.advance_society(s_school.year + i)
-check("a single running school in a farming society raises literacy over "
-      "generations but plateaus at the ceiling the farm share sets",
-      _gen0b < s_school.literacy("literacy_general") <= _ceil_farming + 1e-6
-      and _ceil_farming < 0.9,
-      (round(s_school.literacy("literacy_general"), 3), round(_ceil_farming, 3)))
 
 s_max = run_it(unopened_sim(capital=2000000.0, manual=False),
                "school_founded", "academy_network")
@@ -167,15 +136,10 @@ for _institution in ("school_founded", "academy_network"):
     s_teach.state.projects.business.set_size(_institution, 9.0)
 s_teach.trades_created.add("electrician")
 _yrs_needed = s_teach._trade_absorption_years(s_teach._schooling_flow())
-check("heavy schooling brings absorption well under the ~110-year "
-      "unschooled base, and never under the 35-year one-lifetime floor",
-      35.0 <= _yrs_needed < 110.0, _yrs_needed)
 _y0 = s_teach.year
 _not_yet_year = _y0 + max(1, int(_yrs_needed) - 5)
 for yr in range(_y0 + 1, _not_yet_year + 1):
     s_teach.advance_society(yr)
-check("...and not endemic before that many years have actually passed",
-      "electrician" not in s_teach.trades_endemic, s_teach.year - _y0)
 _after_year = _y0 + int(_yrs_needed) + 10
 for yr in range(_not_yet_year + 1, _after_year + 1):
     s_teach.advance_society(yr)
@@ -233,9 +197,6 @@ check("a technology nobody has opened for business has nothing to leak",
       s_dif.diffusion_share(_rev_node) == 0.0, s_dif.diffusion_share(_rev_node))
 s_dif.done.add(_rev_node); s_dif.operating.add(_rev_node)
 s_dif.done_year[_rev_node] = s_dif.year
-check("freshly opened, on the day the doors open, none of its edge has "
-      "leaked yet - the brief's own requirement, echoing goods_market_factor's",
-      s_dif.diffusion_share(_rev_node) == 0.0, s_dif.diffusion_share(_rev_node))
 s_dif.done.add(_no_rev_node); s_dif.operating.add(_no_rev_node)
 s_dif.done_year[_no_rev_node] = s_dif.cfg["start_year"] - 200
 check("a concern with no revenue at all has no market to leak into, "
@@ -273,19 +234,6 @@ check("`why`'s supervision figure is computed by the same function `open` "
       abs(_why_open["scholars"] - round(_expect_sch, 2)) < 0.01
       and abs(_why_open["artisans"] - round(_expect_art, 2)) < 0.01,
       "why said %s, venture_hands says %.2f/%.2f" % (_why_open, _expect_sch, _expect_art))
-# the concern that fits the six hired craftsmen has a small crew, so the comparison uses one whose
-# supervision does outgrow its build crew (a big earner)
-_EXCEEDING = next(node_id for node_id in sorted(NODES)
-                  if s_staff.is_venture(node_id) and s_staff.venture_hands(node_id)[1] > NODES[node_id]["art"])
-_why_big = S._agent_dispatch(s_staff, NODES, {"cmd": "why", "id": _EXCEEDING})
-check("the supervision figure can genuinely exceed the build crew shown as staff_needed",
-      _why_big["staff_to_keep_it_open"]["artisans"] > _why_big["staff_needed"]["artisans"],
-      "staff_needed %s, staff_to_keep_it_open %s" % (_why_big["staff_needed"], _why_big["staff_to_keep_it_open"]))
-_pure = S._agent_dispatch(s_staff, NODES, {"cmd": "why", "id": "ag2_adulteration_law"})
-check("a pure-knowledge node (no revenue, no upkeep) carries no "
-      "staff_to_keep_it_open - there is no concern to supervise",
-      _pure.get("staff_to_keep_it_open") is None, _pure.get("staff_to_keep_it_open"))
-
 # A concern the staffing rule shut never came back on its own once restaffed.
 s_staff.done.update(NODES[_SUPERVISED]["pre"])
 s_staff.done.add(_SUPERVISED)
@@ -315,8 +263,7 @@ s_staff.close_unstaffed_ventures(s_staff.year)
 check("set-up: the closure is recorded as staffing-caused",
       _SUPERVISED in getattr(s_staff, "shut_for_staff", {}), s_staff.shut_for_staff)
 _ok_in_grace, _msg_in_grace = s_staff.restore_work(_SUPERVISED)
-check("restoring within the grace window names that it is the discounted "
-      "price, not a bare number",
+check("restoring within the grace window is charged the discounted price, and the closure says so",
       _ok_in_grace and facts_of(_msg_in_grace)["discounted"] and facts_of(_msg_in_grace)["closure_age"] is not None,
       _msg_in_grace)
 s_staff.employees["artisan"] = 0.0
@@ -324,37 +271,25 @@ s_staff.labour._resync_pools()
 s_staff.close_unstaffed_ventures(s_staff.year)
 s_staff.year += s_staff.STAFF_CLOSURE_GRACE + 1
 _ok_lapsed, _msg_lapsed = s_staff.restore_work(_SUPERVISED)
-check("...and restoring after the window has lapsed says outright that the "
-      "discount window is gone and this is the full price",
-      _ok_lapsed and not facts_of(_msg_lapsed)["discounted"] and facts_of(_msg_lapsed)["closure_age"] is not None,
-      _msg_lapsed)
-check("...and the lapsed-window fee really is about ten times the in-grace one",
-      facts_of(_msg_lapsed)["fee"] > 5 * facts_of(_msg_in_grace)["fee"],
+check("...and restoring after the window has lapsed is charged the full price, and the closure says so",
+      _ok_lapsed and not facts_of(_msg_lapsed)["discounted"] and facts_of(_msg_lapsed)["closure_age"] is not None
+      and facts_of(_msg_lapsed)["fee"] > facts_of(_msg_in_grace)["fee"],
       (_msg_in_grace, _msg_lapsed))
 
 # --- One game for the credit freeze, the standing-figure regression and the stall diagnosis.
 s_money = unopened_sim(capital=100000.0)
 
-# A first-ever settlement says nothing about a moved date.
+# Settling again while an earlier freeze is in force: the date rule is settlement_freeze (test_credit_freeze_rules); here
+# the settlement reads it and records the old and new dates as facts.
 s_money.capital = -(s_money.credit_limit() * 1.5)
 s_money.last_settlement = -999
+s_money.credit_frozen_until = 110
 _log_start = len(s_money.log)
 s_money.default_on_debt(105)
-_first_messages = [message for _, message in s_money.log[_log_start:] if cause_of(message) == "insolvency_settled"]
-check("a first-ever settlement, with nothing to extend, says nothing about a moved date",
-      bool(_first_messages) and not facts_of(_first_messages[0])["freeze_moved"], _first_messages)
-# A second settlement while an earlier freeze is in force moves the date, and says so.
-s_money.capital = -(s_money.credit_limit() * 1.5)
-s_money.last_settlement = -999
-s_money.credit_frozen_until = 110   # an earlier freeze, STILL in force at yr=105
-_log_start = len(s_money.log)
-s_money.default_on_debt(105)
-check("settling again while an earlier freeze is still in force extends the unlock date...",
-      s_money.credit_frozen_until == 117, s_money.credit_frozen_until)
 _freeze_messages = [message for _, message in s_money.log[_log_start:] if cause_of(message) == "insolvency_settled"]
-check("...and says so in the same event, naming both the old and the new date",
-      bool(_freeze_messages) and facts_of(_freeze_messages[0])["freeze_moved"]
-      and facts_of(_freeze_messages[0])["frozen_before"] == 110 and facts_of(_freeze_messages[0])["credit_frozen_until"] == 117,
+check("a settlement while an earlier freeze is in force moves the unlock date and records both dates",
+      bool(_freeze_messages) and s_money.credit_frozen_until == facts_of(_freeze_messages[0])["credit_frozen_until"]
+      and facts_of(_freeze_messages[0])["freeze_moved"] and facts_of(_freeze_messages[0])["frozen_before"] == 110,
       _freeze_messages)
 
 # `state`'s and `money`'s recurring net_per_year is the STANDING figure: selling
