@@ -1,4 +1,4 @@
-"""Replay carry-over (Complaint 267): the `again` command of `play` starts a new game with the built routes."""
+"""Replay carry-over (Complaint 267), wiring scenario: the `again` command of `play` starts a new game with the built routes (the rules are in test_replay_known_routes)."""
 import contextlib
 import io
 import os

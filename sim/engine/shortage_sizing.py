@@ -19,3 +19,11 @@ def mine_shortfall_after_sinking(material, shortfall_tonnes, mine_tranches):
 def mine_size_tonnes(shortfall_tonnes):
     """Tonnes a year of new working to quote and buy: the shortfall rounded up, at least one."""
     return max(1, math.ceil(shortfall_tonnes - 1e-9))
+
+
+NITRE_SPEND_SHARE_OF_CAPITAL = 0.05     # of capital a year; automatic nitre beds are held to a flat ceiling, never sized to the gap
+
+
+def nitre_bed_yearly_spend(capital, ceiling):
+    """Money the automatic remedy lays into nitre beds in a year: a share of capital, never past a flat ceiling."""
+    return min(capital * NITRE_SPEND_SHARE_OF_CAPITAL, ceiling)

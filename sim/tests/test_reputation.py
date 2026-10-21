@@ -1,30 +1,61 @@
 """reputation: regression checks, run individually with `--only reputation`."""
 from .harness import *  # noqa: F401,F403
 
-# =============================================================================
-# REPUTATION: a tester reported it rewards raw completion count, so it can
-# be maximised by building trinkets you never use. Confirmed against the
-# real gain formula in projects.py: it reads n["rev"]/traits and
-# self.done, and never reads self.operating at all. This is diagnosed and
-# left as a finding, not fixed here: the fix lives in projects.py, which
-# this pass does not own (see the task's own file-ownership boundary) -
-# see the final report for the recommended change.
-# =============================================================================
-s_rep = sim()
-_rep_cands = [node_id for node_id, node in NODES.items() if node.get("rev", 0) > 0]
-_rk = sorted(_rep_cands)[0]
-_n = NODES[_rk]
-_rep0 = s_rep.reputation
-s_rep.done.add(_rk); s_rep._done_changed(); s_rep.done_year[_rk] = s_rep.year
-s_rep.apply_tech_effects(_rk)
-_gain = (0.6 + 0.5 * max(0.0, s_rep.state_interest(_n))
-         + (1.2 if _n["rev"] > 0 else 0.0))
-s_rep.reputation = min(100.0, s_rep.reputation + _gain)
-check("FINDING (not fixed here, see report): completing a revenue-bearing "
-      "node raises reputation even when it is never opened as a concern",
-      s_rep.reputation > _rep0 and _rk not in s_rep.operating,
-      (_rep0, s_rep.reputation, _rk in s_rep.operating))
+"""reputation: the tree's data after the tester reports (upkeep of techniques, rubber made not bought, England's iron,
+the Norse keel, the blind prerequisite audit), the standing finishing a node adds, and what makes a node a concern. The
+data checks read the tree; the gain and the concern rule run on a stand-in game (no game is built). Who a society is
+granted at the start is test_reputation_scenario."""
+from types import SimpleNamespace
 
+from .harness import *  # noqa: F401,F403
+
+from sim.engine.projects_capability import CapabilityMixin
+from sim.engine.projects_completion import CompletionMixin
+
+QUICK_TOPIC = True
+
+
+class _Finishing(CompletionMixin):
+    """The reputation gain of a finished node, over a state interest the test sets. It has no `operating` of any kind,
+    so the gain cannot read whether the node was ever opened."""
+
+    def __init__(self, interest):
+        self.interest = interest
+
+    def state_interest(self, node):
+        return self.interest
+
+
+_base = _Finishing(0.0).reputation_gain_of({"rev": 0})
+check("finishing a node with no revenue and no state interest adds the base standing",
+      _base == CompletionMixin.REPUTATION_GAIN_BASE, _base)
+check("revenue adds the revenue bonus",
+      abs(_Finishing(0.0).reputation_gain_of({"rev": 5}) - _base - CompletionMixin.REPUTATION_GAIN_REVENUE_BONUS) < 1e-12)
+check("state approval adds its coefficient times the interest, and disapproval subtracts nothing",
+      abs(_Finishing(2.0).reputation_gain_of({"rev": 0}) - _base - 2.0 * CompletionMixin.REPUTATION_GAIN_STATE_INTEREST_COEFFICIENT) < 1e-12
+      and _Finishing(-3.0).reputation_gain_of({"rev": 0}) == _base)
+# FINDING (diagnosed, not changed): standing rewards completion, not use. The stand-in above has no set of running
+# concerns, so a gain that read one would raise; it does not.
+check("the gain reads only the node and the state's regard, so a node finished and never opened earns the same standing as one that runs",
+      _Finishing(1.0).reputation_gain_of({"rev": 1}) > _base)
+
+
+class _Concerns(CapabilityMixin):
+    """What makes a node a going concern: it earns or costs to keep, and the society did not already have it."""
+
+    def __init__(self, nodes, granted=()):
+        self.nodes = nodes
+        self.state = SimpleNamespace(projects=SimpleNamespace(granted=set(granted)))
+
+
+_nodes = {"theory": {"rev": 0.0, "up": 0.0}, "shop": {"rev": 10.0, "up": 0.0}, "plant": {"rev": 0.0, "up": 5.0}}
+_concerns = _Concerns(_nodes, granted=("plant",))
+check("a node that neither earns nor costs to keep is knowledge, not a concern to open",
+      _concerns.is_venture("theory") is False)
+check("a node that earns, or costs to keep, is a concern",
+      _concerns.is_venture("shop") is True and _Concerns(_nodes).is_venture("plant") is True)
+check("...but not one the society was already given", _concerns.is_venture("plant") is False and _concerns.is_concern_node("plant") is True)
+check("an unknown node is no concern", _concerns.is_venture("nothing") is False)
 
 # --- JOB 1: techniques should not cost upkeep. A play tester asked "should
 # any techs cost upkeep? Shouldn't that all be on the building/thing it
@@ -41,7 +72,7 @@ check("a pure technique no longer costs anything to keep knowing",
       NODES["em_theory"]["up"] == 0.0 and NODES["em_theory"]["rev"] == 0.0,
       (NODES["em_theory"]["up"], NODES["em_theory"]["rev"]))
 check("that same technique is no longer offered as a going concern to open",
-      sim().is_venture("em_theory") is False, sim().is_venture("em_theory"))
+      _Concerns(NODES).is_venture("em_theory") is False)
 # And the flip side: an actual furnace you fire every day still costs
 # something to keep firing, same as before the audit.
 check("a furnace you actually run still carries real upkeep",
@@ -91,19 +122,6 @@ check("England no longer starts already owning the iron gap its own briefing des
            & set(_eng["starting_techs"])),
       _eng["starting_techs"])
 
-# --- JOB 3b: the cursus publicus (Roman imperial dispatch relay) and the
-# Pharos (one specific Ptolemaic building at Alexandria) are not a generic
-# capability any society might have. data/institution_societies.json already
-# catches both by name; this pins that Han China - which has no Roman
-# citizenship, no Roman roads and no Alexandria - is never handed either one
-# for free, the way testers kept finding Roman-branded grants in other
-# people's civilisations.
-_han = sim(civ="han_china_100ad")
-check("Han China is never handed Rome's courier relay or Ptolemy's lighthouse for free",
-      "lnd_cursus_publicus" not in _han.granted
-      and "sea_pharos_lighthouse" not in _han.granted,
-      (sorted(_han.granted & {"lnd_cursus_publicus", "sea_pharos_lighthouse"})))
-
 # --- JOB 3c: the Norse civilisation's flagship starting technologies -
 # clinker hull, deep keel, bog-iron bloomery - are supposed to be its
 # superb shipbuilding and ironworking, but `why sea_keel_deep` reported
@@ -116,36 +134,6 @@ check("the Norse deep keel now genuinely enables open-ocean navigation",
       any("sea_keel_deep" in group.get("options", {})
           for group in NODES["exp_openocean_navigation"]["req_any"]),
       NODES["exp_openocean_navigation"]["req_any"])
-
-# --- FREE AND WEIGHTLESS IS NOT THE SAME AS UNIVERSALLY AVAILABLE. The
-# ambient grant hands a society anything tier 0 that costs nothing and takes
-# nobody's attention, which is right for a craft that society actually has
-# and wrong for one it demonstrably does not. The Mexica were handed the
-# square sail, the spritsail, a mortise-and-tenon Mediterranean hull, large
-# merchant sailing ships and the monsoon route to India, before turn one, in
-# a civilisation whose own menu says every load moves on a human back and
-# whose water transport is the paddled canoe. needs_first already existed to
-# say a thing is impossible here rather than merely dear; both grant paths
-# now consult it.
-_mex = sim(civ="mexica_1500")
-check("the Mexica are not handed other people's seas: no sail, no "
-      "Mediterranean hull, no merchant fleet, no monsoon crossing",
-      not any(tech_id in _mex.granted for tech_id in
-              ("sea_square_sail", "sea_spritsail", "sea_mortise_tenon",
-               "sea_merchant_ships_large", "sea_monsoon_route")),
-      sorted(tech_id for tech_id in _mex.granted if tech_id.startswith("sea_")))
-check("...and canoe use does not silently grant an Old World nautical package",
-      not any(tech_id in _mex.granted for tech_id in
-              ("sea_anchor", "sea_sounding_lines", "sea_coastal_pilotage",
-               "sea_steering_oars")),
-      sorted(tech_id for tech_id in _mex.granted if tech_id.startswith("sea_")))
-check("the ocean-going hull gate remains a buildable route, not an inherited gift",
-      "exp_oceangoing_hull" not in _mex.granted
-      and "exp_oceangoing_hull" in NODES,
-      sorted(x for x in PLANNER.closure(NODES, "exp_oceangoing_hull")
-             if x.startswith("sea_")))
-check("a seafaring society is untouched by the gate",
-      "sea_square_sail" in sim(civ="norse_900ad").granted, True)
 
 # --- JOB 4: the blind prerequisite audit (BLIND_TREE_phase2.md) found three
 # genuine small gaps and this implements all three, marginal cost verified

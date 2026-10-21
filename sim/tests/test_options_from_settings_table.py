@@ -6,12 +6,17 @@ command are both generated from that table, and the settings that were once
 flag- or file-only (commission display, default seed, events, deterministic)
 are on them.
 """
-import argparse
+from types import SimpleNamespace
 
 from .harness import *  # noqa: F401,F403
 from sim.tests import cli_in_process
 from sim.engine import settings as _settings
 from sim.engine import settings_table as _table
+from sim.engine.ui_port import DetRNG
+from sim.ui.play_dice import dice_for_play
+from sim.ui.proto.dispatch_options import _cmd_options
+
+QUICK_TOPIC = True
 
 _scratch = tempfile.mkdtemp()
 
@@ -36,9 +41,10 @@ for _key in ("commission_display", "default_seed", "default_events", "default_de
 # --- the main menu lists every setting, and says which apply only at game start
 _screen, _ = _menu("3\nb\nq\n", "screen")
 _missing = [key for key, spec in _table.SETTINGS.items() if spec.label not in _screen]
-check("the main-menu Options screen lists every setting", not _missing, (_missing, _screen[-1500:]))
+check("the main-menu Options screen lists every setting",   # presentation: the screen is text
+      not _missing, (_missing, _screen[-1500:]))
 _fog_line = [line for line in _screen.splitlines() if "fog of war" in line]
-check("a game-start setting is shown and says it applies when a game starts",
+check("a game-start setting is shown and says it applies when a game starts",   # presentation: the screen's wording
       _fog_line and "game starts" in " ".join(_fog_line), _fog_line)
 
 # --- the new ones can be changed from the menu
@@ -68,35 +74,41 @@ finally:
 # --- `agent` has an options command, from the same table
 _saved_config_path = os.environ.get("ROME_SIM_CONFIG")
 os.environ["ROME_SIM_CONFIG"] = os.path.join(_scratch, "agent.json")
-_listing = S._agent_dispatch(sim(), NODES, {"cmd": "options"})
+_stand_in = SimpleNamespace(is_visible=lambda node_id: True)    # the handler ignores the game but for hiding technologies
+
+
+def _options(**fields):
+    return _cmd_options(_stand_in, {}, dict(cmd="options", **fields), False)
+
+
+_listing = _options()
 _listed = [row["key"] for row in _listing.get("options", [])]
 check("agent `options` lists every setting", _listing.get("ok") and set(_listed) == set(_table.SETTINGS),
       (_listing.get("error"), _listed))
-_set = S._agent_dispatch(sim(), NODES, {"cmd": "options", "set": "rows_per_page", "value": 12})
+_set = _options(set="rows_per_page", value=12)
 check("agent `options` sets a setting and saves it",
       _set.get("ok") and _settings.load_config()["rows_per_page"] == 12, _set)
-_bad = S._agent_dispatch(sim(), NODES, {"cmd": "options", "set": "rows_per_page", "value": "many"})
+_bad = _options(set="rows_per_page", value="many")
 check("...and refuses a value that does not fit", not _bad.get("ok") and "error" in _bad, _bad)
-_unknown = S._agent_dispatch(sim(), NODES, {"cmd": "options", "set": "no_such", "value": 1})
+_unknown = _options(set="no_such", value=1)
 check("...and an unknown setting", not _unknown.get("ok") and "error" in _unknown, _unknown)
-_word = S._agent_dispatch(sim(), NODES, {"cmd": "options", "set": "default_seed", "value": "dragon"})
+_word = _options(set="default_seed", value="dragon")
 check("...and takes a seed word", _word.get("ok") and _settings.load_config()["default_seed"] == "dragon", _word)
-_off = S._agent_dispatch(sim(), NODES, {"cmd": "options", "set": "default_events", "value": False})
+_off = _options(set="default_events", value=False)
 check("...and a yes/no setting given as a JSON boolean",
       _off.get("ok") and _settings.load_config()["default_events"] is False, _off)
 
-# --- events and deterministic reach a typed game
-from sim.ui import cli_interactive as _play  # noqa: E402
-from sim.ui.cli import DetRNG  # noqa: E402
-_args = argparse.Namespace(strategy="recommended", goal=None, civ="rome_100ad", session=None,
-                           horizon=100, seed=3, kit=None, mortal=False, fog=False, deterministic=False)
-_play_sim = _play._play_build_sim(_args)[0]
-check("play honours default_events off", _play_sim.events is False, _play_sim.events)
-_settings.save_config(dict(_settings.load_config(), default_events=True, default_deterministic=True))
-_play_sim = _play._play_build_sim(_args)[0]
-check("play honours default_events on and default_deterministic",
-      _play_sim.events is True and isinstance(_play_sim.rng, DetRNG), type(_play_sim.rng))
 if _saved_config_path is None:
     os.environ.pop("ROME_SIM_CONFIG", None)
 else:
     os.environ["ROME_SIM_CONFIG"] = _saved_config_path
+
+# --- events and deterministic reach a typed game's dice
+_dice, _events = dice_for_play({"default_events": False}, False, 3)
+check("play honours default_events off", _events is False and not isinstance(_dice, DetRNG), (_events, type(_dice)))
+_dice, _events = dice_for_play({"default_events": True, "default_deterministic": True}, False, 3)
+check("play honours default_events on and default_deterministic",
+      _events is True and isinstance(_dice, DetRNG), (_events, type(_dice)))
+_dice, _events = dice_for_play({}, True, 3)
+check("the deterministic flag asks for the deterministic dice whatever is saved, and events default on",
+      isinstance(_dice, DetRNG) and _events is True, (_events, type(_dice)))

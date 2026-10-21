@@ -16,6 +16,7 @@ their own. Behaviour is unchanged and verified byte-identical.
 
 from sim.constants import declare
 from sim.refusal import LogLine
+from . import value_weight
 from .literacy_census_phrase import census_phrase
 from .literacy_rules import common_ceiling
 from .data import (TECH_EFFECTS, TRADES_ABSENT)
@@ -113,9 +114,8 @@ class AdoptionMixin:
                 continue
             if field in self.value_weights:
                 before = self.value_weights[field]
-                self.value_weights[field] = max(
-                    self.VALUE_WEIGHT_FLOOR,
-                    min(self.VALUE_WEIGHT_CEILING, before + delta))
+                self.value_weights[field] = value_weight.shifted(
+                    before, delta, self.VALUE_WEIGHT_FLOOR, self.VALUE_WEIGHT_CEILING)
                 changed.append("%s %.2f -> %.2f" % (
                     field, before, self.value_weights[field]))
                 changed_fields.append(field)

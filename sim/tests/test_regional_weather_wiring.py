@@ -1,208 +1,80 @@
-"""WIRING TWO (Complaints/closed/46-one-weather-draw-for-a-continent.md): does the
-engine actually draw one weather multiplier PER HOME REGION and pool them
-weighted by cultivable land share, or does the whole territory still share
-a single draw?
-
-This module is the seam test between sim/engine/core.py and sim/world/land.
-py (read-only - see core.py's own comment on that import): sim/world/
-agriculture.py's own test suite proves `draw_weather_multiplier` and
-`Storage.step`'s new `weather_multiplier` override correct in isolation;
-this checks that core.py actually builds land-share weights from Rome's
-seven home_regions, draws one independent multiplier per region, and pools
-them - and that the century-level acceptance target this wiring exists for
-is actually met.
-
-Weather is drawn per home region and pooled by cultivable-land share; the seed is a pure function of (civ, region, year).
-"""
-
-import os
+"""WIRING TWO (Complaints/closed/46-one-weather-draw-for-a-continent.md): the weather is drawn per land cell of the
+civilisation's own territory and pooled by cultivable-land share, and the seed of a draw is a pure function of
+(civilisation, cell, year, the game's weather salt). Each rule is called on the real method over a stand-in holding a
+civilisation's data, a salt and a dice (no game is built). Determinism across two games and a save is
+test_regional_weather_wiring_scenario; the century bar is test_regional_weather_century_validation."""
+import collections
+import random
 import statistics
-import tempfile
-import unittest
+from types import SimpleNamespace
 
-from .harness import *  # noqa: F401,F403
+from .harness import check
 
-from sim.engine.core import agriculture
+from sim import simulator
 from sim.engine import data
+from sim.engine.core import Sim
 from sim.geography import api as geography_api
-from sim.tests.weather_test_helpers import assert_matching_century, assert_save_reload_trajectory
+from sim.world import agriculture
+from sim.world.weather_pooling import correlation_cholesky, pooled_multiplier
 
-# Long enough for weather to shape population and stock, short enough to stay cheap; the
-# engine's own yearly market keeps each year fast and weather does not depend on the market.
-DETERMINISM_YEARS = 20
+QUICK_TOPIC = True
 
-
-def _market_free_rome():
-    """A game whose steps leave out the year's market close: weather, farming and people do not read it."""
-    game = _rome_sim()
-    game._step_market = lambda: None
-    return game
+ROME = simulator.load_civ("rome_100ad")
 
 
-
-def _rome_sim(events=False):
-    return sim(civ="rome_100ad", events=events)
-
-
-# Read-only checks share one game; checks that change the civilisation restore it.
-SHARED_ROME = _rome_sim()
-HOME_REGIONS = geography_api.regions_of_tiles(geography_api.tiles_held(SHARED_ROME.civ))
+def _stub(civ, salt=0, seed=1):
+    """What the weather rules read of a game: the civilisation, its map, the weather salt and the game's dice."""
+    stub = SimpleNamespace(civ=civ, world_map=None, rng=random.Random(seed),
+                           state=SimpleNamespace(scenario=SimpleNamespace(weather_salt=salt)))
+    stub._cap_pooled_farm_weather_cells = lambda cells: Sim._cap_pooled_farm_weather_cells(stub, cells)
+    return stub
 
 
-class RegionWeightsTests(unittest.TestCase):
-    """`Sim._farm_weather_cells`, precomputed once in `__init__` - see its
-    own docstring for why this does not recompute every year.
-    """
+# --- the cells and their weights
+cells = Sim._compute_farm_weather_cells(_stub(ROME))
+home_regions = set(geography_api.regions_of_tiles(geography_api.tiles_held(ROME)))
+tiles = data.load_geography()["land_tiles"]["tiles"]
+check("the weights are shares of the territory's cultivable land: they sum to one",
+      abs(sum(cell.weight for cell in cells) - 1.0) < 1e-9, sum(cell.weight for cell in cells))
+check("every cell sits in a region the civilisation holds, and the territory breaks into more cells than regions",
+      all(tiles[cell.cell_id]["old_region"] in home_regions for cell in cells) and len(cells) > len(home_regions), (len(cells), len(home_regions)))
+check("the weighting is by land, not by counting: a desert cell and a fertile one weigh differently",
+      max(cell.weight for cell in cells) > min(cell.weight for cell in cells))
+check("a civilisation with no territory has no cells", Sim._compute_farm_weather_cells(_stub(dict(ROME, home_regions=[], home_tiles=[]))) == [])
+check("cells are the same every time they are derived",
+      Sim._compute_farm_weather_cells(_stub(ROME)) == cells)
 
-    def test_weights_sum_to_one_and_every_cell_sits_in_a_home_region(self):
-        # Complaints/49: cell ids are geography.json's 150,000 km2
-        # land_tiles, not Rome's seven home_regions - asserting the cell ids
-        # WERE the home_regions would be precisely the equation that
-        # complaint is about, one row in a data file as one weather draw.
-        # So this is a containment check, not an identity one: every cell
-        # must belong to a region Rome actually holds, and no cell may come
-        # from a region it does not.
-        test_sim = SHARED_ROME
-        cells = list(test_sim._farm_weather_cells)
-        home_regions = set(geography_api.regions_of_tiles(geography_api.tiles_held(test_sim.civ)))
-        tiles = data.load_geography()["land_tiles"]["tiles"]
-        for cell in cells:
-            self.assertIn(tiles[cell.cell_id]["old_region"], home_regions,
-                          "cell %s is not in any region Rome holds" % cell.cell_id)
-        self.assertGreater(len(cells), len(home_regions),
-                           "Rome's territory should break into more cells "
-                           "than it has region records, or nothing about "
-                           "Complaints/49 has changed")
-        self.assertAlmostEqual(sum(cell.weight for cell in cells), 1.0, places=9)
+# --- the pooled multiplier: steadier than one draw, and centred on a normal year
+lower = correlation_cholesky(cells, 800.0)
+generator = random.Random(7)
+pooled = [pooled_multiplier(cells, lower, [generator.gauss(0.0, 1.0) for _ in cells],
+                            agriculture.WEATHER_YIELD_STDEV_FRACTION, agriculture.WEATHER_FLOOR_MULTIPLIER,
+                            agriculture.WEATHER_CEILING_MULTIPLIER) for _ in range(1000)]
+check("pooling a territory's cells reduces the spread of the harvest multiplier well below a single draw's, yet not to zero",
+      0.03 < statistics.pstdev(pooled) < agriculture.WEATHER_YIELD_STDEV_FRACTION * 0.6, statistics.pstdev(pooled))
+check("the pooled multiplier averages close to one", abs(statistics.fmean(pooled) - 1.0) < 0.02, statistics.fmean(pooled))
 
-    def test_weights_are_a_genuine_land_share_not_an_equal_split(self):
-        # Complaints/49: cells are geography.json's 150,000 km2 land_tiles,
-        # which carry their own arable_fraction, so land.py does not feed
-        # this mechanism at all - comparing each weight against
-        # land.cultivable_land_for_civilization's per-REGION arable_hectares
-        # would assert against a source the code does not read. What the
-        # test is FOR survives unchanged: the weighting must be by land,
-        # not by counting.
-        test_sim = SHARED_ROME
-        weights = [cell.weight for cell in test_sim._farm_weather_cells]
-        self.assertGreater(len(weights), 7,
-                           "Rome's territory should break into many more "
-                           "cells than its seven region records")
-        self.assertAlmostEqual(sum(weights), 1.0, places=9)
-        # An equal split would make every weight identical. A real
-        # land-share weighting does not - a desert cell and a Nile cell
-        # are not the same size of harvest.
-        self.assertGreater(max(weights), min(weights),
-                           "every cell carries the same weight, which means "
-                           "the weighting is a count and not an area")
-
-class PooledWeatherMultiplierTests(unittest.TestCase):
-    """`Sim._pooled_farm_weather_multiplier` - the land-share-weighted
-    average of one independent draw per home region.
-    """
-
-    def test_pooling_seven_regions_measurably_reduces_variance(self):
-        # Complaints/46's own measurement: pooling seven independent regions
-        # should take the effective standard deviation from 0.20 (one draw)
-        # to roughly 0.076 (seven EQUALLY weighted draws) - Rome's actual
-        # weights are unequal (see RegionWeightsTests above), so the real
-        # figure sits a bit higher than that, but it must still be far
-        # below the single-draw stdev.
-        test_sim = SHARED_ROME
-        draws = [test_sim._pooled_farm_weather_multiplier(year)
-                 for year in range(101, 101 + 1000)]
-        pooled_stdev = statistics.pstdev(draws)
-        self.assertLess(pooled_stdev, agriculture.WEATHER_YIELD_STDEV_FRACTION * 0.6)
-        self.assertGreater(pooled_stdev, 0.03)  # not literally zero variance
-
-    def test_each_region_actually_draws_independently_not_the_same_number_repeated(self):
-        test_sim = SHARED_ROME
-        year = 150
-        draws = {cell.cell_id: agriculture.draw_weather_multiplier(
-                    random.Random(
-                        test_sim._farm_year_weather_seed(year, region=cell.cell_id)),
-                    agriculture.DEFAULT_SOIL.weather_stdev_fraction)
-                 for cell in test_sim._farm_weather_cells}
-        # Dozens of independent draws landing on the exact same float by
-        # chance is vanishingly unlikely - if this ever fires, the cell id
-        # is not actually reaching the seed.
-        self.assertGreater(len(set(draws.values())), 1, draws)
-
-
-class WeatherSeedPurityTests(unittest.TestCase):
-    """`_farm_year_weather_seed(yr, region=...)` must stay a pure function
-    of (civilisation id, region, year) - no long-lived generator, so a
-    --session save/reload cannot lose or repeat a draw. See the method's
-    own docstring for why this matters more than it looks like it should.
-    """
-
-    def test_same_inputs_always_give_the_same_seed(self):
-        first, second = SHARED_ROME, _rome_sim()
-        self.assertEqual(first._farm_year_weather_seed(150, region="italia"),
-                          second._farm_year_weather_seed(150, region="italia"))
-
-    def test_different_regions_give_different_seeds(self):
-        test_sim = SHARED_ROME
-        seeds = {test_sim._farm_year_weather_seed(150, region=region)
-                 for region in HOME_REGIONS}
-        self.assertEqual(len(seeds), len(HOME_REGIONS), seeds)
-
-    def test_omitting_region_mixes_in_no_region_ingredient(self):
-        # Without a region the seed is a function of civilisation id, year and the game's
-        # weather salt only (the salt is the game's own dice, so each game has its own weather).
-        test_sim = SHARED_ROME
-        seed = test_sim._farm_year_weather_seed(150)
-        salt = test_sim.state.scenario.weather_salt
-        self.assertTrue(salt)
-        civ_component = sum((index + 1) * ord(character) for index, character
-                            in enumerate(str(test_sim.civ.get("id", "civ"))))
-        expected = (civ_component * 1000003 + 150 * 97 + salt * 104729) % (2 ** 32)
-        self.assertEqual(seed, expected)
-
-    def test_two_civilisations_sharing_a_region_name_still_draw_different_weather(self):
-        rome_seed = SHARED_ROME._farm_year_weather_seed(150, region="italia")
-        original_civ = SHARED_ROME.civ
-        SHARED_ROME.civ = dict(original_civ, id="some_other_civ")
-        try:
-            other_seed = SHARED_ROME._farm_year_weather_seed(150, region="italia")
-        finally:
-            SHARED_ROME.civ = original_civ
-        self.assertNotEqual(rome_seed, other_seed)
-
-
-class DeterminismAcrossSaveAndReloadTests(unittest.TestCase):
-    """Weather is a pure function of (civ, region, year, salt): two games match, and a save/reload mid-run loses no draw."""
-
-    def test_two_games_stay_identical_year_for_year(self):
-        assert_matching_century(self, _market_free_rome, years=DETERMINISM_YEARS)
-
-    def test_a_mid_run_save_and_reload_follows_the_same_trajectory(self):
-        with tempfile.TemporaryDirectory() as folder:
-            assert_save_reload_trajectory(
-                self, _market_free_rome, os.path.join(folder, "weather_trajectory.json"),
-                years=DETERMINISM_YEARS)
-
-    def test_pooled_multiplier_averages_close_to_one(self):
-        draws = [SHARED_ROME._pooled_farm_weather_multiplier(year)
-                 for year in range(101, 101 + 400)]
-        self.assertAlmostEqual(statistics.fmean(draws), 1.0, delta=0.02)
-
-
-class UnshockedCenturyAcceptanceTests(unittest.TestCase):
-    """The stakeholder's own bar (this task's brief): the unshocked
-    rome_100ad century, events=False, should end ABOVE 100% of its starting
-    population. Measured directly against the real engine, both wirings in
-    place - not a re-typed constant, a live run.
-    """
-
-    def test_unshocked_century_ends_above_its_starting_population(self):
-        test_sim = _rome_sim(events=False)
-        start = test_sim.population.total
-        for year in range(101, 201):
-            test_sim._demographic_recovery(year)
-        end = test_sim.population.total
-        self.assertGreater(end, start, (start, end))
-
-
-if __name__ == "__main__":
-    unittest.main()
+# --- the seed is a pure function of (civilisation, region, year, salt)
+first, second = _stub(ROME, salt=424242), _stub(ROME, salt=424242, seed=99)
+check("the same inputs always give the same seed, whatever the dice",
+      Sim._farm_year_weather_seed(first, 150, region="italia") == Sim._farm_year_weather_seed(second, 150, region="italia"))
+seeds = {Sim._farm_year_weather_seed(first, 150, region=region) for region in sorted(home_regions)}
+check("different regions give different seeds", len(seeds) == len(home_regions), seeds)
+check("different years give different seeds",
+      len({Sim._farm_year_weather_seed(first, year, region="italia") for year in range(100, 130)}) == 30)
+civ_component = sum((index + 1) * ord(character) for index, character in enumerate(str(ROME.get("id", "civ"))))
+check("omitting the region mixes in no region ingredient: the seed is the civilisation, year and salt only",
+      Sim._farm_year_weather_seed(first, 150) == (civ_component * 1000003 + 150 * 97 + 424242 * 104729) % (2 ** 32))
+check("two civilisations sharing a region name still draw different weather for it",
+      Sim._farm_year_weather_seed(first, 150, region="italia")
+      != Sim._farm_year_weather_seed(_stub(dict(ROME, id="some_other_civ"), salt=424242), 150, region="italia"))
+check("a different salt gives a different seed, so each game has its own weather",
+      Sim._farm_year_weather_seed(first, 150, region="italia")
+      != Sim._farm_year_weather_seed(_stub(ROME, salt=424243), 150, region="italia"))
+unsalted = _stub(ROME, salt=0, seed=5)
+drawn = Sim._farm_year_weather_seed(unsalted, 150, region="italia")
+check("a game with no salt draws one from its dice, keeps it, and then seeds the same way every time",
+      unsalted.state.scenario.weather_salt > 0 and Sim._farm_year_weather_seed(unsalted, 150, region="italia") == drawn)
+check("...and another game's dice give another salt",
+      _stub(ROME, salt=0, seed=6).state.scenario.weather_salt == 0
+      and Sim._farm_year_weather_seed(_stub(ROME, salt=0, seed=6), 150, region="italia") != drawn)

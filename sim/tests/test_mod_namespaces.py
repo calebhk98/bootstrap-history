@@ -3,10 +3,12 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
-from unittest import mock
 
+from sim.engine.fog import HIDDEN_ID_PLACEHOLDER, scrub_hidden_ids
 from sim.engine.mods import ModError, get_ordered_mods, load_mod_production, load_mod_tree
 from sim.ui.proto.typed import parse_typed
+
+QUICK_TOPIC = True
 
 STEAM = "ana_steam_k3f9"
 STEAM_POWER = "ana_steam_power_x7y2"
@@ -179,31 +181,18 @@ class PlayerFacingTests(unittest.TestCase):
         self.assertTrue(command.get("all"))
 
     def test_fog_scrubs_a_namespaced_id_whole(self):
-        from sim.tests.harness import sim
-        game = sim(capital=1000.0)
-        game.fog = True
         hidden, visible = STEAM + ":engine", STEAM + ":gear"
         text = "needs %s and %s, then %s." % (hidden, visible, hidden)
-        # patch.dict restores the shared node table afterwards
-        with mock.patch.dict(game.nodes, {hidden: {"name": "x"}, visible: {"name": "x"}}), \
-                mock.patch.object(game, "is_visible",
-                                  side_effect=lambda node_id, **_: node_id == visible):
-            scrubbed = game.fog_scrub(text)
+        scrubbed = scrub_hidden_ids(text, [hidden, visible], lambda node_id: node_id == visible)
         self.assertNotIn("engine", scrubbed)
         self.assertIn(visible, scrubbed)
-        self.assertEqual(2, scrubbed.count("something you have not heard of"))
+        self.assertEqual(2, scrubbed.count(HIDDEN_ID_PLACEHOLDER))
 
     def test_fog_does_not_cut_a_visible_id_at_the_colon(self):
-        from sim.tests.harness import sim
-        game = sim(capital=1000.0)
-        game.fog = True
         visible = STEAM + ":wheel"
-        with mock.patch.dict(game.nodes, {visible: {"name": "x"}, "wheel": {"name": "y"}}), \
-                mock.patch.object(game, "is_visible",
-                                  side_effect=lambda node_id, **_: node_id == visible):
-            scrubbed = game.fog_scrub("the %s and the wheel" % visible)
+        scrubbed = scrub_hidden_ids("the %s and the wheel" % visible, [visible, "wheel"], lambda node_id: node_id == visible)
         self.assertIn(visible, scrubbed)
-        self.assertEqual(1, scrubbed.count("something you have not heard of"))
+        self.assertEqual(1, scrubbed.count(HIDDEN_ID_PLACEHOLDER))
 
 
 class BundledModsTests(unittest.TestCase):

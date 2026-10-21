@@ -58,7 +58,8 @@ from sim.constants import declare
 # mutate a module-level _DISPLAY_WIDTH that only means what it says while it
 # stays beside the function that writes it - see cli.py's own comments on
 # both for the full reasoning.
-from .cli import (DetRNG, ENDLESS_HORIZON_YEARS, HORIZON_MODES,
+from .play_dice import dice_for_play
+from .cli import (ENDLESS_HORIZON_YEARS, HORIZON_MODES,
                   _apply_display_prefs, _civ_for_session, _goal_for_session,
                   _is_claimed_slot, _is_endless_horizon, _pick_session_filename,
                   _resolve_horizon, _wrap, load_strategy)
@@ -243,11 +244,9 @@ def _play_build_sim(args, defer_economy=False):
     if kit:
         cfg["start_kit"] = kit
     seed = resolve_seed(getattr(args, "seed", None))
-    deterministic = (getattr(args, "deterministic", False)
-                     or bool(app_cfg.get("default_deterministic", False)))
-    sim = Sim(nodes, order,
-            DetRNG(seed) if deterministic else random.Random(seed),
-            events=bool(app_cfg.get("default_events", True)), bounty_set=set(),
+    dice, events = dice_for_play(app_cfg, getattr(args, "deterministic", False), seed)
+    sim = Sim(nodes, order, dice,
+            events=events, bounty_set=set(),
             manual=True, civ=load_civ(_civ_for_session(args)), cfg=cfg, defer_economy=defer_economy)
     sim.seed = seed
     sim.session_seat = getattr(args, "seat", None)
@@ -503,7 +502,7 @@ def _play_handle_session_command(_word0, _tokens, sim, session, app_cfg, args):
             print("   'again' is for once this game has ended. 'restart' starts a different game now.")
             return True, session, False, None
         known = replay.write_known_routes(sim, replay.routes_path(session)) if session \
-            else sorted(set(replay.built_routes(sim)) | set(replay.remembered(sim, replay.TOPIC).get("carried", [])))
+            else replay.routes_to_carry(sim)
         print()
         return True, session, True, _new_game(_load_civ_list(), app_cfg, known_routes=known)
     if _word0 == "restart" and len(_tokens) == 1:
