@@ -52,12 +52,9 @@ hazard_risk_screens
 interest_groups
 interface_honesty
 knowledge_loss_and_consequences
-lighting_inputs
 military_logistics_wiring
 mod_effects
 mod_stores
-money_readouts_finish
-opening_floor_and_thin_trades
 plague_mitigation_realism
 plague_no_double_count
 player_choice_routes
