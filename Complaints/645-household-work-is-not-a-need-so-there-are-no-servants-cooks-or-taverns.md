@@ -37,8 +37,18 @@ it is a mod (`mods/TASKS.md`).
 
 ## Research needed
 
-Cooking, cleaning and childcare hours per person (time-use studies for pre-industrial or subsistence households), which
-replace the labelled estimates in `data/world/household_work.json`.
+Done in part. The hours in `data/world/household_work.json` now come from opened sources, per adult woman: water, fuel and
+grinding from a rural Burkina Faso time allocation table (Carr and Sandhu 1988, as reproduced in Gordon, Swetman and Albright,
+Issues Paper 6, 2002, Box 1); cooking, cleaning, laundry and care from the Ghana 2009 time-use diary (Dinkelman and Ngai, JEP
+36(1), 2022, Online Data Appendix, Table A.1). Both are confidence C. What is still open:
+
+- The share of adult women among a household's people is still a labelled estimate (confidence D); every task multiplies by it.
+- The Ghana diary is a national sample with some piped water and mills, not a pure subsistence household, and its cooking
+  category includes some wood and water fetching that the first task also counts. A time allocation study of a society
+  without either (Minge-Klevana 1980, the UCLA Time Allocation project) was not found open online.
+- The Burkina Faso table is a secondary reproduction with no survey year or sample size, and its "Household" line (cooking
+  among it) is not broken down.
+- Servants per household (the historical servant literature) was not searched; the hire switch rests on wages, not on a count.
 
 ## Update: household work shares the choice
 

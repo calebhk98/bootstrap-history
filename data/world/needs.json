@@ -114,8 +114,8 @@
    "surplus_budget_share": 0.0,
    "unit": "hours of household work done by another",
    "floor_basis": "No market floor: a household does its own cooking, water and fuel, cleaning, grinding and childcare with its own hours first, and hires only what its income lets it (sim/economy/households_work.py). A household hires the hours it would rather sell at the market wage than do itself, up to the work there is, and that is its floor of this need (household_work_year.py); it has no share of surplus spending.",
-   "satiation_per_capita_per_year": 383.25,
-   "satiation_basis": "The hours a person's share of the household's work takes a year, from data/world/household_work.json (its tasks summed over 365 days; water, fuel and grinding from Blackden and Wodon 2006, the rest labelled estimates, confidence D); hiring beyond it would be hiring work that is not there. Held equal to that file by a test.",
+   "satiation_per_capita_per_year": 629.625,
+   "satiation_basis": "The hours a person's share of the household's work takes a year, from data/world/household_work.json (its tasks summed over 365 days; water, fuel and grinding from a Burkina Faso time allocation survey, cooking, cleaning and childcare from Ghana and Sierra Leone time use data, each per adult woman, with the share of adult women a labelled estimate, confidence D); hiring beyond it would be hiring work that is not there. Held equal to that file by a test.",
    "effectiveness_basis": "one hour of a servant's or cook's work"
   }
  },
