@@ -1,29 +1,5 @@
 # Undeclared test modules that build a whole game (Complaint 640). Convert one to a rule test or declare it, then delete its line.
 # `python3 -m sim.tests --whole-game-checks` fails when this list and the tree disagree.
-actor_firms_compete
-actor_treasury
-actors
-affordability_and_credit
-affordability_warning
-agent_economy_wiring
-agriculture_wiring
-allocate
-arrears_visibility
-automation_modes
-automation_skips
-backing_margin_cache
-blocker_readouts_agree
-bounty_save_and_credit_freeze
-built_ways
-business_review
-carters_and_plumbers_exist_in_a_game
-civilisation_without_tiles_is_refused
-cli_small_fixes
-complaint_190_colonies
-complaint_190_public_works
-complaint_190_transfers
-complaint_191_fuzzy_option_and_readme
-complaint_492_han_iron_monopoly
 complaint_505_room_advice_income
 complaints_09_16
 concern_volume

@@ -1,4 +1,4 @@
-"""In a whole game the labour core holds carters and plumbers, sized from the need the recipe graph puts on
+"""SCENARIO: in a whole game the labour core holds carters and plumbers, sized from the need the recipe graph puts on
 them (Complaint 434). Builds a game, so it is a slow topic; the pure checks are in test_need_shares_trade_demand."""
 import unittest
 

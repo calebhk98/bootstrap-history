@@ -1,4 +1,4 @@
-"""One classifier names every blocker: Complaints/125, 263 (and 234, 238, 239, 268 below)."""
+"""SCENARIO: one classifier names every blocker: Complaints/125, 263 (and 234, 238, 239, 268 below)."""
 from .harness import *  # noqa: F401,F403
 
 from sim.ui.proto.render_screen_why import render_why

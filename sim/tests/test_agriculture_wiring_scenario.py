@@ -1,4 +1,4 @@
-"""agriculture_wiring: does a real harvest now feed sim.population, and can
+"""SCENARIO (agriculture wiring): does a real harvest now feed sim.population, and can
 a famine actually happen because of it?
 
 WIRING MILESTONE 4's SPECIFIC HOLE (docs/architecture/WIRING_MILESTONE_4.md,

@@ -1,4 +1,4 @@
-"""Complaint 492 in a built game: Han's state owns a blast furnace it owns, staffed from the
+"""SCENARIO (Complaint 492): in a built game Han's state owns a blast furnace it owns, staffed from the
 labour pool, and its takings are the state's monopoly revenue."""
 
 from .harness import *  # noqa: F401,F403
