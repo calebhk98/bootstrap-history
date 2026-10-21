@@ -11,6 +11,7 @@ QUICK_TOPIC = True
 
 import os
 import unittest
+from unittest import mock
 
 from sim.engine import disease_port
 from sim.tests.disease_stand_in import ROOT, SEEDS, StandInSim, civilisation, mexica_with_source, world_map
@@ -53,10 +54,15 @@ class NoContactTest(unittest.TestCase):
 class DeathsComeFromTheModelTest(unittest.TestCase):
     def test_the_deaths_handed_to_population_are_the_models_own_count(self):
         sim = StandInSim(civilisation("rome_100ad"), 1)
-        handed = 0
-        for _ in range(150):
-            handed += sum(sim.disease_year(sim.food, sim.year).values())
-            sim.year += 1
+        pathogen_id = sorted(civilisation("rome_100ad")["disease_exposure"]["outside_contact"][0]["pathogens"])[0]
+        handed, sim_start = 0, sim.year
+        # The epidemic arrives in the first year, so a few years show the hand-off without waiting for a draw.
+        with mock.patch.object(disease_port.DiseaseWorld, "introductions",
+                               lambda world, records, year: [pathogen_id] if year == sim_start else []):
+            for _ in range(5):
+                handed += sum(sim.disease_year(sim.food, sim.year).values())
+                sim.year += 1
+        self.assertGreater(handed, 0)
         self.assertEqual(handed, sum(sim.state.disease.deaths.values()))
 
     def test_no_civilisation_file_carries_a_dated_plague(self):
