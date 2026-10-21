@@ -13,6 +13,9 @@ from sim.agents.api import ActorRegistry, ActorsState, CastEntry, CountryProfile
 from sim.agents.cast import profile_from_civilisation
 from sim.geography.api import territory
 
+from sim.agents.api import Stratum, stratum_id
+from sim.agents.records import ActorRecord
+
 from .country_state_world import StateWorld
 
 TRADES = {"labourer": 10.0, "soldier": 12.0, "scribe": 15.0, "mason": 14.0}
@@ -20,6 +23,10 @@ WORKING_AGE = 6000.0
 COUNTRY_PRICE = 5.0     # the country's own price of any material; the home world quotes 2 (StateWorld)
 COUNTRY_COIN_STOCK = 700.0
 SKILLED_PEOPLE = 0.25 * WORKING_AGE    # the people the country's labour markets hold in any skilled trade
+SEAT_TAXPAYER = (2.0, 7.0)    # a player's seat in the country: (visible scale, taxable income)
+RENT_TO_THE_RICH =40.0     # what the better-off half of the country's cohorts received in land rent
+MILITARY_WORK = ("sword", "pike", "musket", "rifle")     # the founder's military work the tree names
+EQUIPMENT_KG_AT_NO_ADOPTION, EQUIPMENT_KG_PER_ADOPTION = 1.0, 10.0
 COUNTRY_TRADE = {"in": 4000.0, "out": 1500.0}     # what crossed the country's border last year, in its money
 
 
@@ -48,8 +55,22 @@ class CountryAnswers:
 	def people_of_trade(self, trade):
 		return SKILLED_PEOPLE
 
+	def land_rent_curve(self, tiles=None):
+		"""(people, rent received) of the country's cohorts, poorest first."""
+		return [(50.0, 0.0), (50.0, RENT_TO_THE_RICH)]
+
 
 class Shared(StateWorld):
+	def seat_taxpayers(self, country):
+		"""(visible scale, taxable income) of the players' seats that belong to a country."""
+		return [SEAT_TAXPAYER] if country == "far" else []
+
+	def military_work_ids(self):
+		return MILITARY_WORK
+
+	def equipment_kg_at_adoption(self, adoption):
+		return EQUIPMENT_KG_AT_NO_ADOPTION + EQUIPMENT_KG_PER_ADOPTION * adoption
+
 	def country_economy(self, country):
 		return CountryAnswers()
 
@@ -92,6 +113,9 @@ class HomeInputs(Shared):
 
 	def pay_per_person_year(self, trade):
 		return TRADES.get(trade, 11.0)
+
+	def equipment_kg_per_soldier(self):
+		return EQUIPMENT_KG_AT_NO_ADOPTION
 
 	def material_cost(self, material, tonnes):
 		return COUNTRY_PRICE * tonnes
@@ -198,3 +222,30 @@ check("revenue by form is booked for the forms it declares",
 check("what it takes in kind enters its stores", government.record.stores.get("wheat_kg", 0.0) > 0.0, government.record.stores)
 check("its own staff are not the founder's labour pool", world.local_staff("scribe", 50.0) == 0.0)
 check("nobody is its patron and no interest group holds a claim on it", world.patron_ask() == 0.0 and world.group_claims() == {})
+
+# ---- equipment per soldier follows how much of the military work the country's own state holds --------------
+armed = profile_with(FORMS)
+armed.starting_techs = ["sword"]
+armed_world, armed_registry = country_world(armed)
+armed_registry.actors["government:far"].knowledge.add("pike")
+check("a country's equipment per soldier is its own adoption of the military work, not the home figure",
+	  abs(armed_world.equipment_kg_per_soldier() - (EQUIPMENT_KG_AT_NO_ADOPTION + EQUIPMENT_KG_PER_ADOPTION * 0.5)) < 1e-9,
+	  armed_world.equipment_kg_per_soldier())
+check("a country holding none of it keeps the floor equipment",
+	  abs(country_world(profile_with(FORMS))[0].equipment_kg_per_soldier() - EQUIPMENT_KG_AT_NO_ADOPTION) < 1e-9)
+
+# ---- rent owners are the country's own strata, by the rent its cohorts received ------------------------------
+rent_world, rent_registry = country_world(profile_with(FORMS))
+poor = rent_registry.add(stratum_id("far", "poor"), ActorRecord(kind="stratum", country="far", stratum="poor", members=50.0,
+																 plan={"trade": "labourer"}))
+rich = rent_registry.add(stratum_id("far", "rich"), ActorRecord(kind="stratum", country="far", stratum="rich", members=50.0,
+																 plan={"property_share": 0.5}))
+home_stratum = rent_registry.add(stratum_id("home", "rich"), ActorRecord(kind="stratum", stratum="rich", members=50.0,
+																		  plan={"property_share": 0.5}))
+owners = rent_world.land_rent_owners()
+check("the rent a country's tiles pay is received by that country's strata, by the rent of their slice of its cohorts",
+	  [(who.actor_id, rent) for who, rent in owners] == [(rich.actor_id, RENT_TO_THE_RICH)], [(who.actor_id, rent) for who, rent in owners])
+check("the seats of the country are among the taxpayers its state can see",
+	  rent_world.visible_taxpayers() == [SEAT_TAXPAYER], rent_world.visible_taxpayers())
+check("a land-rent form is drawn from those owners, never the home strata",
+	  all(who.record.country == "far" for who, _rent in owners))

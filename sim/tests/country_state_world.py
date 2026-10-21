@@ -18,6 +18,15 @@ class StateWorld(FakeWorld):
 	def equipment_kg_per_soldier(self):
 		return 3.0
 
+	def military_work_ids(self):
+		return ()
+
+	def equipment_kg_at_adoption(self, adoption):
+		return 3.0
+
+	def seat_taxpayers(self, country):
+		return []
+
 	def subsistence_kg_per_person_year(self):
 		return 200.0
 

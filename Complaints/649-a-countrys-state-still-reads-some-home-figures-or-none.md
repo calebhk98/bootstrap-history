@@ -1,19 +1,16 @@
 # A country's state still reads some home figures, or none: no trade book, coin stock, prices, equipment, trade counts or research hands of its own
 
-**Status:** open (partly done: prices, coin, trade book and people by trade read the country's own part of the economy; the rest below remains)
+**Status:** open (partly done: prices, coin, trade book, people by trade, equipment, rent owners and seat taxpayers read the country's own part of the economy; research hands, state enterprises, interest groups and unskilled people remain below)
 
 Follow-up to Complaint 593 (the foreign state is now the one `Government`, scoped to its country; `sim/agents/country_state.py`).
 
 **What is wrong.** The home `Government` reads the home-only engine; a country's `CountryWorld` now answers most of those
 readings from its profile and its part of the one economy, but these have no per-country source yet:
 
-- Equipment: `equipment_kg_per_soldier` is the home diffusion of the founder's military work.
 - Unskilled people: `national_people("labourer")` is still the working age, as at home (labelled heuristic in `country_state.py`, with the fallback for a country the economy has no part for).
-- Rent owners: `land_rent_owners` names nobody, so a land-rent form is drawn from the edge.
 - Interest groups and patronage: `group_claims` is empty and `patron_ask` is zero abroad.
 - Research: a country's state copies but does not originate research (`Government.researches`), as research hands are the founder's.
 - State enterprises and monopolies declared in a country's file run against the founder's concerns.
-- Taxpayers: a country's visible taxpayers are its firms only; seats of that country are not listed.
 
 **Done.** A country's `material_cost` and `material_price` are its own market areas' quote (`CountryAnswers.price_per_tonne`,
 nothing where they quote none); its `coin_regime` is the one economy's money standard and its `coin_stock_value` is the
@@ -27,6 +24,12 @@ price), and what crossed the country's border is valued as imports where they la
 people its labour markets hold in it (`CountryAnswers.people_of_trade`). The trade book counts the merchants' carried
 goods only; the home state's `foreign_trade_by_year` (trade with off-map partners) has no country counterpart. Checks:
 `sim/tests/test_carried_book.py`, `sim/tests/test_country_economy.py`, `sim/tests/test_country_state.py`.
+
+A country's `equipment_kg_per_soldier` is the burden at the share of the military work its own state holds (its knowledge and
+its civilisation's starting techs), read through `military_work_ids` and `equipment_kg_at_adoption`. Its `land_rent_owners` are its
+own strata laid along its own cohorts' rent curve (`CountryAnswers.land_rent_curve`; nobody while its economy keeps no cohorts). Its
+visible taxpayers include the playing seats of that country (`seat_taxpayers`). Checks: `sim/tests/test_country_state.py`,
+`sim/tests/test_country_economy.py`. Not done: the home `visible_taxpayers` also lists seats of other countries.
 
 **Why it matters.** A country's revenue and war capacity are inputs of the game (481); each of these makes a country's
 state read the founder's side of the world or nothing.

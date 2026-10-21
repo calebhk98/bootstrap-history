@@ -6,7 +6,7 @@ labelled estimate."""
 from typing import Dict, Optional
 
 from .material_units import tonnes_per_unit
-from sim.economy.api import carried_book, country_figures, trade_premium
+from sim.economy.api import carried_book, cohort_land_rents, country_figures, trade_premium
 
 
 class CountryAnswers:
@@ -79,3 +79,10 @@ class CountryAnswers:
     def people_of_trade(self, trade: str) -> float:
         """Working people of a trade in the labour markets of the country's tiles (nobody for a trade none practise)."""
         return country_figures.people_by_trade(self._economy, self._country).get(trade, 0.0)
+
+    def land_rent_curve(self, tiles=None):
+        """(people, rent received in coin) of the country's household cohorts, poorest first: the rent paid on its
+        tiles (only `tiles` of them when given) goes to the cohorts that own the land."""
+        tiles = None if tiles is None else set(tiles)
+        return [(people, rent * self._coin)
+                for people, rent in cohort_land_rents(self._economy, tiles, self._country)]
