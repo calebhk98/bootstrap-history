@@ -53,7 +53,7 @@ def staff(setup, record, view, labour_bids: List[LabourBid], capacity_fine_kilog
     if not _striking(setup, spec) or capacity_fine_kilograms <= 0.0:
         return
     agent, area = mint_agent(setup), labour_area(setup.capital_tile)
-    level = view.basket_price_level(setup.currency_id)
+    level = view.chained_price_level(setup.currency_id)
     bids = []
     for trade, per_kilogram in sorted(hours_per_fine_kilogram(setup.mint_recipe, spec).items()):
         wage = view.wage(trade, area) or setup.opening_wages.get(trade, 0.0) * level

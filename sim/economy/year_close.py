@@ -327,6 +327,7 @@ def rebase_basket_price_level(setup, record) -> None:
     money = setup.currency_id
     record.index_base_prices = national_prices(record)
     record.memory.basket_price_levels[money] = 1.0
+    record.memory.price_levels[money] = 1.0
     record.cohorts = {agent: renewed(cohort, last_basket_price_level=1.0)
                       for agent, cohort in record.cohorts.items()}
 

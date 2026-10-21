@@ -74,6 +74,11 @@ class MarketView(Protocol):
     def basket_price_level(self, currency: CurrencyId) -> float:
         """Last year's price level against the opening year (1.0 at the opening)."""
 
+    def chained_price_level(self, currency: CurrencyId) -> float:
+        """The level real figures (anchor wages, spending targets) are turned nominal with: the opening's 1.0 chained by
+        each year's observed inflation, the weighted median of the goods' price changes. Unlike `basket_price_level`
+        (a reported statistic) a few thin goods whose asks run away do not move it."""
+
     def expected_inflation(self, currency: CurrencyId) -> float:
         """Adaptive expectation of next year's rise in the price level, as a share."""
 
