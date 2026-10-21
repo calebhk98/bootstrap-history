@@ -1,196 +1,69 @@
-"""Complaints 103, 185, 287: an actor chooses what to do with an invention (keep it secret, license
-it, publish it), and the state's military adoption is what the government actually holds."""
-import copy
-import json
-import os
-import random
-import tempfile
+"""Complaints 103, 185, 287: an actor chooses what to do with an invention (keep it secret, publish it), and
+how hard it is to copy and how long it takes to be believed follow from that choice. Complaint 640: the rules
+are called on a stub game and plain nodes built here; licensing, saving and the command on a whole game are in
+test_invention_disclosure_scenario."""
+QUICK_TOPIC = True
+
+import types
 
 from .harness import *  # noqa: F401,F403
 
-from sim.engine.agents_port import SimWorld
-from sim.agents.tuning import PROOF_YEARS, SECRET_EXPOSURE
-from sim.engine.saveload import load_state, save_state
-from sim.engine.state import ActorRecord
+from sim.engine.society_disclosure import DisclosureMixin
+from sim.engine.visibility import copy_difficulty_of, years_to_be_believed
 
-_TEMPLATE_ID = next(node_id for node_id, node in NODES.items()
-                    if not node["pre"] and node["cap"] >= 0)
+# --- how hard an invention is to copy from sight.
+check("a declared copy visibility gives its reciprocal as difficulty", copy_difficulty_of({"copy_visibility": 0.25}) == 4.0)
+check("without one, difficulty is the number of trades and materials the know-how needs",
+      copy_difficulty_of({"lab": {"smith": 5.0, "mason": 3.0, "idle": 0.0}, "mat": {"iron": 2.0, "wood": 0}}) == 3)
+check("a node that needs nothing is still at least as hard as one", copy_difficulty_of({"lab": {}, "mat": {}}) == 1)
+check("more trades make it harder to copy",
+      copy_difficulty_of({"lab": {"a": 1.0, "b": 1.0, "c": 1.0}}) > copy_difficulty_of({"lab": {"a": 1.0}}))
 
-
-def make_node(node_id, lab=None, traits=("commerce",), revenue=5000.0, upkeep=100.0, years=1.0):
-    node = copy.deepcopy(NODES[_TEMPLATE_ID])
-    node.update(id=node_id, name=node_id, traits=list(traits), pre=[], lab=lab or {"labourer": 100.0},
-                mat={}, rev=revenue, up=upkeep, yrs=years, risk=0.0, ph=0.0,
-                dev_years=None, dev_people=None, cap=0.0, art=0.2, sch=0.0)
-    node.pop("gains", None)
-    node.pop("copy_visibility", None)   # difficulty falls back to the trades and materials it needs
-    return node
-
-
-def actor_sim(extra_nodes):
-    nodes = copy.deepcopy(NODES)
-    for node in extra_nodes:
-        nodes[node["id"]] = node
-    game = build_unopened(lambda: S.Sim(nodes, list(ORDER), random.Random(1), events=False, manual=True,
-                                        civ=S.load_civ("rome_100ad")))
-    game.goal, game.done_year = GOAL, {}
-    return game
+# --- how long a running concern takes to be believed.
+check("a published invention is believed at once", years_to_be_believed("publish", 5.0, 0.1) == 0.0)
+check("an invention on the default needs the proof years", years_to_be_believed("default", 5.0, 0.1) == 5.0)
+check("a secret takes the proof years over the share that leaks, so it takes longer",
+      years_to_be_believed("secret", 5.0, 0.25) == 20.0)
+check("a licensed one is kept as shut as a secret", years_to_be_believed("license", 5.0, 0.25) == 20.0)
+check("the harder to copy, the longer a secret is in being believed",
+      years_to_be_believed("secret", 5.0, 0.1) > years_to_be_believed("secret", 5.0, 0.25))
 
 
-def founder_runs(game, node_id, opened_ago=0):
-    year = game.state.scenario.year
-    projects = game.state.projects
-    projects.done.add(node_id)
-    projects.done_year[node_id] = year - opened_ago
-    projects.operating.add(node_id)
-    projects.business.set_opened_year(node_id, year - opened_ago)
-    game._done_changed()
+# --- choosing what to do with an invention.
+class _DisclosureGame(DisclosureMixin):
+    REPUTATION_CEILING = 10.0
+
+    def __init__(self, made=("alpha",), granted=(), reputation=1.0):
+        self.nodes = {"alpha": {}, "beta": {}, "gamma": {}}
+        self.state = types.SimpleNamespace(
+            projects=types.SimpleNamespace(done=set(made) | set(granted), granted=set(granted), disclosures={}, operating=set()),
+            scenario=types.SimpleNamespace(year=120), household=types.SimpleNamespace(reputation=reputation))
+
+    def reputation_gain_of(self, node):
+        return 2.0
 
 
-EASY = make_node("zz_easy", lab={"labourer": 100.0})
-HARD = make_node("zz_hard", lab={"smith": 50.0, "carpenter": 50.0, "mason": 50.0, "labourer": 50.0})
-EXTRA = [EASY, HARD]
+_game = _DisclosureGame()
+check("an invention with no choice made is on the default", _game.disclosure_of("alpha")["mode"] == "default")
+check("choosing secret is accepted for an invention the founder made", _game.disclose("alpha", "secret")["ok"])
+check("...and is recorded", _game.disclosure_of("alpha")["mode"] == "secret")
+check("choosing for something the founder has not made is refused", not _game.disclose("beta", "secret")["ok"])
+check("choosing for something that is not a node is refused", not _game.disclose("not_a_node", "secret")["ok"])
+check("choosing for a granted technology (not made by the founder) is refused",
+      not _DisclosureGame(granted=("gamma",)).disclose("gamma", "publish")["ok"])
+check("a mode that is not a choice is refused", not _game.disclose("alpha", "gift")["ok"])
+check("'default' is not a choice to make", not _game.disclose("alpha", "default")["ok"])
 
-# ---- the default is today's behaviour ----------------------------------------------------
-game = actor_sim(EXTRA)
-founder_runs(game, "zz_easy", opened_ago=PROOF_YEARS)
-founder_runs(game, "zz_hard", opened_ago=PROOF_YEARS)
-world = SimWorld(game)
-check("an invention with no choice made is on the default, which is today's rule",
-      game.disclosure_of("zz_easy")["mode"] == "default")
-default_exposure = world.exposure("zz_easy", None)
-check("the default exposure is full visibility for a concern in public use",
-      abs(default_exposure - 1.0) < 1e-9, default_exposure)
-check("a proven concern is believed after the proof years on the default",
-      "zz_easy" in world.proven_concerns(), world.proven_concerns())
-
-# ---- keep secret: slowed by how hard the know-how is to copy -----------------------------
-check("choosing secret is accepted for an invention the founder holds",
-      game.disclose("zz_easy", "secret")["ok"])
-check("choosing secret for something the founder has not made is refused",
-      not game.disclose("not_a_node", "secret")["ok"])
-game.disclose("zz_hard", "secret")
-world = SimWorld(game)
-easy_secret, hard_secret = world.exposure("zz_easy", None), world.exposure("zz_hard", None)
-check("a secret is copied more slowly than the same concern kept on the default",
-      easy_secret < default_exposure, (easy_secret, default_exposure))
-check("a secret needing more trades is harder to copy than a simple one",
-      hard_secret < easy_secret, (hard_secret, easy_secret))
-check("a secret concern is not believed by outsiders as soon as the default would believe it",
-      "zz_easy" not in world.proven_concerns(), world.proven_concerns())
-founder_runs(game, "zz_easy", opened_ago=PROOF_YEARS + 60)
-check("...but it is believed in the end, after the delay its difficulty sets",
-      "zz_easy" in SimWorld(game).proven_concerns())
-
-# ---- publish: anyone copies, the publisher gains standing --------------------------------
-game = actor_sim(EXTRA)
-founder_runs(game, "zz_easy", opened_ago=PROOF_YEARS - 1)
-reputation_before = game.reputation
-result = game.disclose("zz_easy", "publish")
-check("publishing is accepted and raises the publisher's reputation",
-      result["ok"] and game.reputation > reputation_before, (result, reputation_before, game.reputation))
-reputation_after = game.reputation
-game.disclose("zz_easy", "publish")
-check("publishing again earns nothing more", abs(game.reputation - reputation_after) < 1e-9)
-check("a published concern is believed without waiting out the proof years",
-      "zz_easy" in SimWorld(game).proven_concerns())
-game.state.projects.operating.discard("zz_easy")
-check("a published invention is fully visible even when the founder runs no concern from it",
-      abs(SimWorld(game).exposure("zz_easy", None) - 1.0) < 1e-9, SimWorld(game).exposure("zz_easy", None))
-with tempfile.TemporaryDirectory() as folder:
-    path = os.path.join(folder, "save.json")
-    save_state(game, path)
-    revived = actor_sim(EXTRA)
-    load_state(revived, path)
-check("the choice survives a save and load", revived.disclosure_of("zz_easy")["mode"] == "publish")
-
-# ---- license: a named firm or the state pays through the ledger and copies at once -------
-game = actor_sim(EXTRA)
-founder_runs(game, "zz_easy", opened_ago=5)
-firm = game.actors.add("firm:licensee", ActorRecord(kind="firm", money=1.0e6, target="zz_easy", last_margin=1.0e5))
-capital_before, firm_before = game.household.capital, firm.money
-result = game.disclose("zz_easy", "license", licensee="firm:licensee", fee=1000.0)
-check("a licence to a named firm is accepted", result["ok"], result)
-check("the firm paid the fee and the founder received it, nothing created or destroyed",
-      abs((firm_before - firm.money) - 1000.0) < 1e-6
-      and abs((game.household.capital - capital_before) - 1000.0) < 1e-6,
-      (firm_before - firm.money, game.household.capital - capital_before))
-check("the licensee can make it at once: the know-how and the concern are its own",
-      "zz_easy" in firm.knowledge and "zz_easy" in firm.concerns)
-check("the licence is on the founder's record",
-      "firm:licensee" in game.disclosure_of("zz_easy")["licensees"])
-poor = game.actors.add("firm:poor", ActorRecord(kind="firm", money=10.0, target="zz_easy"))
-check("a licensee that cannot pay the fee is refused and learns nothing",
-      not game.disclose("zz_easy", "license", licensee="firm:poor", fee=1000.0)["ok"]
-      and "zz_easy" not in poor.knowledge)
-check("a licence to nobody is refused",
-      not game.disclose("zz_easy", "license", licensee="firm:nobody", fee=1.0)["ok"])
-
-government = game.state_treasury()
-government.credit(1.0e6, "taxation")
-treasury_before = government.money
-# ---- a fee above the licensee's own valuation is refused whatever its treasury holds ------
-founder_before, treasury_before = game.household.capital, government.money
-worth = government.imitation_worth("zz_easy", SimWorld(game))
-for fee in (worth * 10.0, 1.0e5):
-    reply = game.disclose("zz_easy", "license", licensee=government.actor_id, fee=fee)
-    check("a fee the state values the know-how below is refused with a cause, the money unmoved",
-          not reply["ok"] and reply["cause"] == "fee_above_value" and game.household.capital == founder_before
-          and government.money == treasury_before and "zz_easy" not in government.knowledge, reply)
-government.money = 5.0
-reply = game.disclose("zz_easy", "license", licensee=government.actor_id, fee=10.0)
-check("a fee above what the treasury holds is refused with a cause",
-      not reply["ok"] and reply["cause"] == "licensee_cannot_pay", reply)
-government.money = treasury_before
-miser = game.actors.add("firm:miser", ActorRecord(kind="firm", money=1.0e6, target="zz_easy", last_margin=10.0))
-reply = game.disclose("zz_easy", "license", licensee="firm:miser", fee=0.0, royalty=0.9)
-check("a royalty whose expected stream exceeds the firm's valuation is refused too",
-      not reply["ok"] and reply["cause"] == "fee_above_value", reply)
-
-result = game.disclose("zz_easy", "license", licensee=government.actor_id, fee=1000.0)
-check("the state can be the licensee, paying from its treasury",
-      result["ok"] and abs((treasury_before - government.money) - 1000.0) < 1e-6
-      and "zz_easy" in government.knowledge, result)
-
-# ---- a royalty is paid from the licensee's takings every year ---------------------------
-game = actor_sim(EXTRA)
-founder_runs(game, "zz_easy", opened_ago=5)
-firm = game.actors.add("firm:royal", ActorRecord(kind="firm", money=1.0e6, target="zz_easy", last_margin=1.0e5))
-game.disclose("zz_easy", "license", licensee="firm:royal", fee=0.0, royalty=0.1)
-capital_before = game.household.capital
-game.state.scenario.year += 1
-game.advance_actors(game.state.scenario.year)
-check("a licensed firm pays the founder its royalty on takings",
-      game.household.capital > capital_before and firm.record.outlays.get("licence", 0.0) > 0.0,
-      (game.household.capital - capital_before, firm.record.outlays))
-
-# ---- the command ------------------------------------------------------------------------
-replies, _, _ = proto([{"cmd": "disclose"}, {"cmd": "disclose", "id": "no_such_node", "mode": "publish"},
-                 {"cmd": "help", "topic": "disclose"}])
-check("the disclose command lists the inventions and says what it takes",
-      replies and replies[0].get("ok") and "inventions" in replies[0], replies[:1])
-check("a bad node is refused with a reason", replies[1].get("ok") is False and replies[1].get("error"))
-check("help documents it", replies[2].get("ok") is not False, replies[2])
-
-# ---- increment 3: the state's military adoption is what the government holds -------------
-military = sorted(node_id for node_id, node in NODES.items()
-                  if "military" in (node.get("traits") or ()) and node_id != "patron_imperial")[:2]
-game = sim(civ="rome_100ad")
-run_it(game, "patron_imperial")
-for node_id in military:
-    game.done.add(node_id)
-    game.done_year[node_id] = game.year - 200
-check("the founder's military work does not reach the state however long it has had",
-      game.state_military_diffusion() == 0.0, game.state_military_diffusion())
-check("no half-life curve for the state's armies remains",
-      not hasattr(game, "DIFFUSION_HALF_LIFE_MILITARY_YEARS"))
-government = game.state_treasury()
-government.knowledge.add(military[0])
-held = game.state_military_diffusion()
-check("what the government holds is the state's adoption", 0.0 < held < 1.0 + 1e-9, held)
-government.knowledge.update(military)
-check("holding all of it is full adoption", abs(game.state_military_diffusion() - 1.0) < 1e-9)
-relief, why = game.hazard_relief("sack_chance")
-check("war relief follows what the state holds",
-      relief < 1.0 and any(entry["source"] == "state_weapons" for entry in game.hazard_relief_entries("sack_chance")),
-      (relief, why))
+_reputation_before = _game.state.household.reputation
+_published = _game.disclose("alpha", "publish")
+check("publishing is accepted, raises the publisher's reputation and notes the year",
+      _published["ok"] and _game.state.household.reputation == _reputation_before + 2.0
+      and _game.disclosure_of("alpha")["published_year"] == 120, (_published, _game.state.household.reputation))
+check("publishing cannot be taken back", not _game.disclose("alpha", "secret")["ok"] and _game.disclosure_of("alpha")["mode"] == "publish")
+check("publishing again earns nothing more", not _game.disclose("alpha", "publish")["ok"]
+      and _game.state.household.reputation == _reputation_before + 2.0)
+_near_ceiling = _DisclosureGame(reputation=9.5)
+_near_ceiling.disclose("alpha", "publish")
+check("reputation from publishing stops at the ceiling", _near_ceiling.state.household.reputation == 10.0, _near_ceiling.state.household.reputation)
+check("the listing carries every invention of the founder's with its mode",
+      [(row["id"], row["mode"]) for row in _game.disclosure_listing()] == [("alpha", "publish")], _game.disclosure_listing())

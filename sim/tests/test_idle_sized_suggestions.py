@@ -1,48 +1,33 @@
-"""Complaint 99: `idle` sizes what the hours could do (people to teach, a development program), and a
-multi-year `step` names the kind of delay behind the idle hours before it proceeds."""
+"""Complaint 99: `idle` sizes what the hours could do (people to teach, a development program). Complaint 640:
+rules on a stub game built here; the whole-game replies are in test_idle_sized_suggestions_scenario."""
+QUICK_TOPIC = True
+
+import types
+
 from .harness import *  # noqa: F401,F403
+from sim.ui.proto.guidance import development_program, training_suggestions
 
+_game = types.SimpleNamespace(HOURS_PER_PERSON_YEAR=2000.0, labour=types.SimpleNamespace(TEACHING_HOURS_PER_PERSON=300.0),
+                              project_cost=lambda node_id: {"dear": 900.0, "cheap": 40.0, "also_cheap": 40.0}[node_id])
 
-def ask(test_sim, **command):
-    return S._agent_dispatch(test_sim, NODES, command)
+_rows = training_suggestions(_game, [
+    {"trade": "machinist", "oversubscribed": True, "demand_hours_this_year": 5000.0, "supply_hours_this_year": 1000.0},
+    {"trade": "smith", "oversubscribed": False, "demand_hours_this_year": 500.0, "supply_hours_this_year": 1000.0},
+    {"trade": "mason", "oversubscribed": True, "demand_hours_this_year": 1001.0, "supply_hours_this_year": 1000.0}])
+check("only oversubscribed trades get a teaching suggestion", [row["trade"] for row in _rows] == ["machinist", "mason"], _rows)
+check("the people short are the shortfall in hours over a person's year, rounded up", _rows[0]["people_short"] == 2, _rows[0])
+check("a shortfall of a single hour still asks for one person", _rows[1]["people_short"] == 1, _rows[1])
+check("the teaching hours are the people times the hours teaching one takes", _rows[0]["teaching_hours"] == 600.0, _rows[0])
+check("the command is the train command for that trade and number", _rows[0]["command"] == "train machinist 2", _rows[0])
+check("no oversubscribed trade, no suggestion", training_suggestions(_game, []) == [])
 
-
-test_sim = sim(capital=1_000_000.0)
-idle = ask(test_sim, cmd="idle")
-uses = idle.get("potential_uses", {})
-program = uses.get("development_program")
-check("idle offers a development program sized by its own hours and cost", isinstance(program, dict)
-      and {"id", "cash_cost", "directed_hours_per_year", "years"} <= set(program), uses)
-check("the program is something startable today", program and test_sim.can_start(program["id"]), program)
-check("the program's cash cost is the engine's project cost",
-      program and abs(program["cash_cost"] - test_sim.project_cost(program["id"])) < 1.0, program)
-check("it never spends hours itself", test_sim.labour.director_hours_committed() == idle["committed_hours"])
-
-# a sized training suggestion for each oversubscribed trade
-crowded = test_sim
-crowded.trade_demand_vs_supply = lambda: {"machinist": {
-    "demand_hours_this_year": 5000.0, "supply_hours_this_year": 1000.0, "oversubscribed": True,
-    "projects_drawing_on_it": ["x"]}}
-sized = ask(crowded, cmd="idle")["potential_uses"]["train_oversubscribed_trades"]
-check("an oversubscribed trade gets a sized teaching suggestion", isinstance(sized, list) and len(sized) == 1, sized)
-if isinstance(sized, list) and sized:
-    row = sized[0]
-    check("it names the trade, the people the shortfall needs and the hours teaching them takes",
-          row["trade"] == "machinist"
-          and row["people_short"] == -(-4000 // int(crowded.HOURS_PER_PERSON_YEAR))
-          and abs(row["teaching_hours"] - row["people_short"] * crowded.labour.TEACHING_HOURS_PER_PERSON) < 1e-6
-          and row["command"].startswith("train machinist"), row)
-
-# the pre-step warning names the delay kind
-waiting = sim(capital=1_000_000.0)
-target = next((node_id for node_id in waiting.order
-               if NODES[node_id]["yrs"] >= 3 and NODES[node_id]["ph"] > 0 and waiting.can_start(node_id)), None)
-waiting.end_year = waiting.cfg["start_year"] + waiting.cfg["horizon_years"]
-ask(waiting, cmd="start", id=target)
-waiting.active[target]["ph_left"] = 0.0
-waiting.active[target]["cost_left"] = 0.0
-waiting.active[target]["lab_left"] = {}
-stepped = ask(waiting, cmd="step", years=2)
-warning = stepped.get("multi_year_hours_warning") or ""
-check("a multi-year step with idle hours names what the running projects wait on", "calendar" in (stepped.get("multi_year_hours_waiting_on") or ()),
-      stepped.get("multi_year_hours_warning") or sorted(stepped))
+_nodes = {"dear": {"name": "Dear", "yrs": 4, "lab": {"smith": 800.0, "mason": 400.0}},
+          "cheap": {"name": "Cheap", "yrs": 0, "lab": {"smith": 90.0}},
+          "also_cheap": {"name": "Also", "yrs": 2, "lab": {}}}
+_program = development_program(_game, _nodes, ["dear", "cheap", "also_cheap"])
+check("the program is the startable project that costs least cash, ties by id", _program["id"] == "also_cheap", _program)
+check("its cash cost is the project's cost", _program["cash_cost"] == 40.0, _program)
+_dear = development_program(_game, _nodes, ["dear"])
+check("its directed hours a year are its labour hours spread over its years", _dear["directed_hours_per_year"] == 300.0 and _dear["years"] == 4.0, _dear)
+check("a project with no years is spread over one", development_program(_game, _nodes, ["cheap"])["directed_hours_per_year"] == 90.0)
+check("with nothing startable there is no program", development_program(_game, _nodes, []) is None)

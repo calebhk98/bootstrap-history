@@ -1,42 +1,23 @@
-"""Complaint 99: an `idle` view of directed hours, what they could do, and why the wait."""
+"""Complaint 99: the explanation of why directed hours wait (Complaint 640: rules on built inputs; the `idle`
+reply on a whole game is in test_idle_capacity_view_scenario)."""
+QUICK_TOPIC = True
+
 from .harness import *  # noqa: F401,F403
 
 from sim.ui.proto import command_registry
+from sim.ui.proto.guidance import delay_phrase, wait_explanation
 
-
-def ask(test_sim, **command):
-    return S._agent_dispatch(test_sim, NODES, command)
-
-
-test_sim = sim(capital=1_000_000.0)
-idle = ask(test_sim, cmd="idle")
-check("idle answers", idle.get("ok"), idle)
-check("directed capacity is the engine's director pool",
-      abs(idle["directed_hours_this_year"] - test_sim.labour.director_pool()) < 1, idle)
-check("committed is the engine's committed hours",
-      abs(idle["committed_hours"] - test_sim.labour.director_hours_committed()) < 1, idle)
-check("idle is capacity less committed",
-      abs(idle["idle_hours"] - max(0.0, idle["directed_hours_this_year"] - idle["committed_hours"])) < 1, idle)
-uses = idle.get("potential_uses", {})
-startable = [node_id for node_id in NODES if node_id not in test_sim.done and node_id not in test_sim.active
-             and test_sim.can_start(node_id)]
-check("potential uses count what is startable today", uses.get("startable_today") == len(startable),
-      (uses, len(startable)))
-check("potential uses count the free ones", uses.get("startable_at_no_cash_cost")
-      == sum(1 for node_id in startable if test_sim.project_cost(node_id) <= 0), uses)
-check("it offers selling hours for wages as a use", uses.get("wage_work") is not None, uses)
-check("it never spends hours itself", test_sim.labour.director_hours_committed() == idle["committed_hours"])
-
-target = next((node_id for node_id in test_sim.order
-               if NODES[node_id]["yrs"] >= 3 and NODES[node_id]["ph"] > 0 and test_sim.can_start(node_id)), None)
-ask(test_sim, cmd="start", id=target)
-test_sim.active[target]["ph_left"] = 0.0
-test_sim.active[target]["cost_left"] = 0.0
-test_sim.active[target]["lab_left"] = {}
-waiting = ask(test_sim, cmd="idle")
-check("when every project is only waiting on the calendar it says the delay is the calendar",
-      waiting["delay_kinds"].get("calendar") == [target], waiting.get("delay_kinds"))
-check("a calendar wait is explained as not removable and not exclusive",
-      "calendar" in waiting.get("what_the_wait_is", "") and "else" in waiting.get("what_the_wait_is", ""),
-      waiting.get("what_the_wait_is"))
 check("idle is in the command registry", "idle" in command_registry.COMMANDS)
+
+# presentation: the explanation is wording a player reads
+_calendar = wait_explanation({"calendar": ["a", "b"]})
+check("when every project only waits on the calendar the explanation says the wait is the calendar, not removable and not exclusive",
+      "calendar" in _calendar and "not exclusive" in _calendar and "cannot be bought down" in _calendar, _calendar)
+_mixed = wait_explanation({"calendar": ["a"], "money": ["b", "c"]})
+check("when something waits on more than the calendar the explanation says so and names each kind with its count",
+      "not only the calendar" in _mixed and "money (2)" in _mixed and "calendar (1)" in _mixed, _mixed)
+check("with nothing running nothing is waited on and the hours are free",
+      "nothing is running" in wait_explanation({}), wait_explanation({}))
+check("the delay phrase lists kinds in order with counts", delay_phrase({"money": ["x"], "calendar": ["a", "b"]}) == "calendar (2), money (1)",
+      delay_phrase({"money": ["x"], "calendar": ["a", "b"]}))
+check("the delay phrase of nothing running says so", delay_phrase({}) == "nothing running")
