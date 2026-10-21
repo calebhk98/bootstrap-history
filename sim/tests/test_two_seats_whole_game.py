@@ -1,4 +1,4 @@
-"""Two seats in one whole game (slow: builds a game): both step with the year, hazards hit each by its own works
+"""SCENARIO (Complaint 640): Two seats in one whole game (slow: builds a game): both step with the year, hazards hit each by its own works
 and the world once, one seat's end leaves the other playing, and a save keeps both."""
 import os
 import tempfile

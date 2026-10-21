@@ -1,4 +1,4 @@
-"""The founder's business and a firm's are one object: the same plant owned by a seat and by a firm gives the same
+"""SCENARIO (Complaint 640): The founder's business and a firm's are one object: the same plant owned by a seat and by a firm gives the same
 crew, upkeep, takings and closing-decision inputs, and the founder's verbs move the plant, not a set of ids.
 
 Stage 3a of docs/architecture/FIRMS_OWN_PLANTS_PLAN.md."""

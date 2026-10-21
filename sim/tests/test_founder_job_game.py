@@ -1,4 +1,4 @@
-"""The founder's job on a whole Rome game (Complaint 518): the income line is the unspoken-for hours times the
+"""SCENARIO (Complaint 640): The founder's job on a whole Rome game (Complaint 518): the income line is the unspoken-for hours times the
 market wage of the trade the founder holds, and it moves with that wage and with the hours supervising take."""
 from .harness import *  # noqa: F401,F403
 

@@ -1,4 +1,4 @@
-"""The in-process CLI runner prints what a real `simulator.py` subprocess prints."""
+"""SCENARIO (Complaint 640): The in-process CLI runner prints what a real `simulator.py` subprocess prints."""
 import subprocess
 import sys
 

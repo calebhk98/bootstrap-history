@@ -1,4 +1,4 @@
-"""The spin-up's second stage, after the workforce is trimmed, runs a bounded number of years on the economy
+"""SCENARIO (Complaint 640): The spin-up's second stage, after the workforce is trimmed, runs a bounded number of years on the economy
 the first stage left; it settles wages and entry and does not wait for a tolerance that thin labour markets
 never meet."""
 QUICK_TOPIC = True

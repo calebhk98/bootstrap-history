@@ -1,4 +1,4 @@
-"""Two named scenarios. A founder holding a large purse, measured in what a labourer costs to hire,
+"""SCENARIO (Complaint 640): Two named scenarios. A founder holding a large purse, measured in what a labourer costs to hire,
 and auto_hire on, ends up with staff. Run with `--only auto_hire_rich_founder`."""
 from .harness import *  # noqa: F401,F403
 

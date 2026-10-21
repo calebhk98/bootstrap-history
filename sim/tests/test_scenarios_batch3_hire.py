@@ -1,4 +1,4 @@
-"""Complaint 640, audit batch 3, scenario: the `hire` command reports a short hire, and `ventures` carries the craft
+"""SCENARIO (Complaint 640): Complaint 640, audit batch 3, scenario: the `hire` command reports a short hire, and `ventures` carries the craft
 lists the supervision check counts. The rules are plain functions with tests of their own:
 test_complaint_583_partial_hire_and_craft_help."""
 from unittest import mock

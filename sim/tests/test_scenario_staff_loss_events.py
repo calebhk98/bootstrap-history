@@ -1,4 +1,4 @@
-"""Complaint 640, audit batch 3, scenario: staff who take better offers close a concern, and the step's reply carries
+"""SCENARIO (Complaint 640): Complaint 640, audit batch 3, scenario: staff who take better offers close a concern, and the step's reply carries
 both events and stops on it. The rules are plain functions with tests of their own: test_complaint_579_staff_loss_events.
 This builds a game and steps three years, which is why it is a topic of its own (it runs past two minutes)."""
 from .harness import *  # noqa: F401,F403

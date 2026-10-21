@@ -1,4 +1,4 @@
-"""Complaint 480, scenario (Complaint 640 audit): in a fresh game a good with no deposit and no producer plant (alum)
+"""SCENARIO (Complaint 640): Complaint 480, scenario (Complaint 640 audit): in a fresh game a good with no deposit and no producer plant (alum)
 sits on a named route. The routes are rule tests in test_material_reach; this holds that the shipped data places three
 real goods on the three routes, and that the quote and the throttle read one market figure."""
 from .harness import *  # noqa: F401,F403

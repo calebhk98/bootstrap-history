@@ -1,4 +1,4 @@
-"""Complaint 537: the opening sizes crop producers at their tile's yield factor, so what they make in a year is what the
+"""SCENARIO (Complaint 640): Complaint 537: the opening sizes crop producers at their tile's yield factor, so what they make in a year is what the
 opening demands (final demand and the inputs of the producers sized beside them), and the year-one yields agree."""
 import unittest
 

@@ -1,4 +1,4 @@
-"""Complaint 478: a technique the society gains after the opening reaches the agent economy. The recipes its
+"""SCENARIO (Complaint 640): Complaint 478: a technique the society gains after the opening reaches the agent economy. The recipes its
 producers can run follow the techniques in use; a good that had no market gets one; a saved game resumes
 with them; and nothing is rebuilt in a year when nothing changed."""
 from .harness import *  # noqa: F401,F403

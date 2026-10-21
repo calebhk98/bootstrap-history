@@ -1,4 +1,4 @@
-"""Complaints 554 and 473, the full-length part: baseline validations (CLAUDE.md 4.2) of the Rome agent economy's hidden
+"""BASELINE VALIDATION (CLAUDE.md 4.2, Complaint 640): Complaints 554 and 473, the full-length part: baseline validations (CLAUDE.md 4.2) of the Rome agent economy's hidden
 first stage run with fixed people and no shocks (the run `simulator.py spin-up-trace` prints). The subject is the
 spin-up's whole length: whether the mint replaces what wears and whether the price level, wage, money and rate come
 to rest are relations of the whole economy, not of one rule.

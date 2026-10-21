@@ -1,4 +1,4 @@
-"""Complaint 640, audit batch 3, scenario: a late-game household opens each benefaction, and the channel the work
+"""SCENARIO (Complaint 640): Complaint 640, audit batch 3, scenario: a late-game household opens each benefaction, and the channel the work
 declares moves the way it declares, its upkeep is real, closing it switches the effect off, and a scalable work comes in
 bigger sizes at a higher price. What the branch declares is validated in test_complaint_190_benefactions; the gate on
 prerequisites is test_research_start_gates."""

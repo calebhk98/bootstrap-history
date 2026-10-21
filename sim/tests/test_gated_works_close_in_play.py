@@ -1,4 +1,4 @@
-"""Complaint 133, played: Rome builds the water works, one closes, and what needs it running lapses.
+"""SCENARIO (Complaint 640): Complaint 133, played: Rome builds the water works, one closes, and what needs it running lapses.
 
 SLOW SCENARIO (it builds a whole game and steps it): the one played chain. The rules are held on fakes by
 test_running_gates (a shut work closes its dependents down the chain, the closure is logged, opening a dependent is refused

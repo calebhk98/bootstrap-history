@@ -1,4 +1,4 @@
-"""A no-intervention baseline's occupational distribution is plausible (Complaint 619, DESIGN 4.2): each
+"""BASELINE VALIDATION (CLAUDE.md 4.2, Complaint 640): A no-intervention baseline's occupational distribution is plausible (Complaint 619, DESIGN 4.2): each
 occupation group's share of working hours lies inside a wide band taken from the literature
 (data/world/occupation_groups.json, which cites each source and marks recalled figures). A plausibility band,
 not a fit. Whole games (slow). Run with `python3 -m sim.tests --slow --only occupational_distribution`."""

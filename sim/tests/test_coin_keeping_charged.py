@@ -1,4 +1,4 @@
-"""Scenario for Complaint 273 in a whole game: a step charges the household's purse for keeping its coin under guard, as
+"""SCENARIO (Complaint 640): for Complaint 273 in a whole game: a step charges the household's purse for keeping its coin under guard, as
 its own cause in the cash ledger, and the money and state screens report the hoard's mass. The rules (the mass, the
 keeping cost) are in test_coin_hoard_mass."""
 from .harness import *  # noqa: F401,F403

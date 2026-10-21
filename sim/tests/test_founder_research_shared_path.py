@@ -1,4 +1,4 @@
-"""Complaint 491: the founder's start is a caller of `research.begin`, the path every actor uses, and the same
+"""SCENARIO (Complaint 640): Complaint 491: the founder's start is a caller of `research.begin`, the path every actor uses, and the same
 node costs the founder and an actor the same bill."""
 
 from .harness import *  # noqa: F401,F403

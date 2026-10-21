@@ -1,4 +1,4 @@
-"""Scenario (Complaint 640): partial hires in a running game. The reply fields (people found, people asked, the cause) are
+"""SCENARIO (Complaint 640): partial hires in a running game. The reply fields (people found, people asked, the cause) are
 tested on built numbers in test_complaint_583_partial_hire_and_craft_help.py.
 
 Complaint 425: a hire the market fills only in part reports the people found, not the people asked for."""

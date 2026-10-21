@@ -1,4 +1,4 @@
-"""Complaint 570: at the opening every input the sized producers take is made, in the quantity they take, by the
+"""SCENARIO (Complaint 640): Complaint 570: at the opening every input the sized producers take is made, in the quantity they take, by the
 producers sized beside them. A fuel made from timber is held to the timber, and so is every processor that burns it."""
 import types
 import unittest

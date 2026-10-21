@@ -1,4 +1,4 @@
-"""Complaint 473, the short part: the spin-up trace records the money stock, price level and mint's strikes, and the
+"""SCENARIO (Complaint 640): Complaint 473, the short part: the spin-up trace records the money stock, price level and mint's strikes, and the
 money audit's edge accounts balance. These are rules of the books, so a few years of the Rome agent economy's first
 stage (sim/engine/economy_port_trace.py, the command `simulator.py spin-up-trace`) hold them; a year costs about
 twelve seconds. The decades-long question, whether the mint keeps the stock up with wear, is a full-length spin-up

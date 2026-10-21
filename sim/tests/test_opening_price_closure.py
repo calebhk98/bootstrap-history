@@ -1,4 +1,4 @@
-"""Opening prices are a closed set: a good is priced only when it can be made at that start (Complaint 566)."""
+"""SCENARIO (Complaint 640): Opening prices are a closed set: a good is priced only when it can be made at that start (Complaint 566)."""
 
 import os
 import unittest
