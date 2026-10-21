@@ -9,7 +9,7 @@ from .harness import *  # noqa: F401,F403
 from sim.agents import ledger
 from sim.agents.api import ActorsState, ActorRegistry, profile_from_civilisation, seed_strata, stratum_id
 from sim.agents.strata_seed import follow_population
-from sim.agents.stratum_year import settle_keep, true_up_keep, EDGE_ECONOMY
+from sim.agents.stratum_year import settle_keep, true_up_keep, grow, EDGE_ECONOMY
 
 from .agents_fake_world import FakeWorld
 
@@ -112,3 +112,16 @@ check("and the keeper's purse fell by exactly the keep", abs(fresh_owner.money +
 paid_so_far = fresh_slaves.record.allowance
 true_up_keep(fresh_registry, CostedWorld(1.0e6, 1.0))
 check("when prices fall nothing is taken back", fresh_slaves.record.allowance == paid_so_far, fresh_slaves.record.allowance)
+
+
+# Births: Bagnall and Frier found slave women's fertility similar to all women's (quoted in Scheidel 2005, JRS 95: 75),
+# so a bonded stratum fed and at the same welfare grows at the same rate as a free one; nothing here trims its births.
+grow_registry = founded_registry(1.0e6)
+for actor in grow_registry.of_kind("stratum"):
+	actor.record.welfare = 1.0
+	actor.record.shortfall = {}
+	actor.record.last_growth = 0.0
+	grow(actor)
+rates = {actor.record.stratum: actor.record.last_growth for actor in grow_registry.of_kind("stratum")}
+check("a fed bonded stratum grows at the rate a fed free stratum does",
+      abs(rates["slaves"] - rates[[name for name in rates if name != "slaves"][0]]) < 1e-12, rates)
