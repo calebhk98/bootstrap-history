@@ -32,11 +32,13 @@ MINERALISATION_RATE_PER_YEAR = declare(
     confidence="C", why="Nitrogen a crop can take from the pool in a year.")
 
 GRAIN_NITROGEN_FRACTION = declare(
-    "GRAIN_NITROGEN_FRACTION", 0.02,
-    kind="temporary_heuristic", unit="kg nitrogen per kg of grain harvested",
-    source="No source found for wheat grain nitrogen (1.8 to 2.4 percent was recalled; no composition table opened). "
-           "Straw is taken to stay on the field",
-    confidence="D", retire="Complaints/646: a source read for the figure", why="What each harvest removes from the pool.")
+    "GRAIN_NITROGEN_FRACTION", 0.025,
+    kind="biological_parameter", unit="kg nitrogen per kg of grain harvested",
+    source="Clay and Carlson, Estimating Nutrient Removal in Wheat Grain and Straw (South Dakota State University "
+           "iGrow Wheat, Best Management Practices ch. 12, 2019; opened): 'If 1 bushel wheat contains 1.5 lbs of N' "
+           "and 'they would weigh 60 and 51.9 lbs each' (13.5% and 0% moisture), so 1.5 / 60 = 2.5 percent. A "
+           "modern wheat; older varieties carried less protein. Straw is taken to stay on the field",
+    confidence="C", why="What each harvest removes from the pool.")
 
 LEGUME_NET_NITROGEN_KG_PER_HECTARE = declare(
     "LEGUME_NET_NITROGEN_KG_PER_HECTARE", 25.0,

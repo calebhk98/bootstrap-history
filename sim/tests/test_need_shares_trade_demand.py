@@ -168,7 +168,7 @@ class TradesWithoutANamedNeedTests(unittest.TestCase):
         for need_id in ("vessels", "writing", "money"):
             self.assertIn(need_id, needs["needs"])
         self.assertTrue(need_basket.need_floor(needs["needs"]["vessels"]) > 0.0)
-        self.assertIn("Deal", needs["needs"]["vessels"]["stock_basis"])
+        self.assertIn("Nelson", needs["needs"]["vessels"]["stock_basis"])  # presentation: the cited source is named
         self.assertIn("Duncan-Jones", needs["needs"]["money"]["stock_basis"])
 
     def test_a_held_stock_floor_is_the_stock_over_its_service_life(self):

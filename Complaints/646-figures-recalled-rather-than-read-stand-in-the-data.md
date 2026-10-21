@@ -96,3 +96,21 @@ uncited); `spoilage.json:10,12,13,14,15`; `trades.json:30,177,262,393,413,423,44
 Still open: 34 lines (disease, civilisation notes, `needs.json`, `agriculture.py`, `soil_nutrients.py`,
 `service_lives.json`, deposits, wine/oil/jars). Several "no source found" figures have candidate sources not yet
 opened: tallow candle burn rate (Nature 16, 1877, p. 361), Geoponica 20.46 (Owen), King, Farmers of Forty Centuries.
+
+## Pass 3 (needs and soil)
+
+Remaining lines: `grep -rn "recalled" data sim --include=*.json --include=*.py | wc -l` (the rest are disease files,
+civilisation notes, deposits, service lives, the three-field legume share in `agriculture.py`, wine/oil/jars, and test
+docstrings).
+
+Sourced (opened), with changed values:
+- `data/world/needs.json` salt `satiation_per_capita_per_year` 3.65 to 3.67: Powles et al., BMJ Open 2013;3:e003733,
+  abstract, 'global mean sodium intake was 3.95 g/day ... equivalent to 10.06 (9.88-10.21) g/day of salt'.
+- `sim/geography/soil_nutrients.py` `GRAIN_NITROGEN_FRACTION` 0.02 to 0.025, no longer a heuristic: Clay and Carlson,
+  SDSU iGrow Wheat ch. 12 (2019), 'If 1 bushel wheat contains 1.5 lbs of N' with a 60 lb bushel. A modern wheat.
+- `needs.json` vessels: Nelson, ch. 8 of Longacre ed., Ceramic Ethnoarchaeology (1991), Tables 8.1 and 8.3: the 4 year
+  use-life lies inside the reported range (cooking pots 0.4 to 13 years); values kept, mass per vessel still no source.
+Tests: `sim/tests/test_recalled_figures_sourced.py`.
+
+No source found: three-field legume share (searches gave the crops of the spring field, no share); Peoples 2009
+legume balance not opened; Deal 1985 and Straight 2017 are paywalled; MSU nutrient removal page blocked.
