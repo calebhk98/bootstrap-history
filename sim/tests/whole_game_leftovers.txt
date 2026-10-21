@@ -39,7 +39,6 @@ economy_entry_for_standing_bids
 economy_reads_map_through_geography
 eminence_scandal_and_reputation
 firm_count_from_costs
-firm_crew_paid_once
 five_things_winner
 freight_domestic_haul
 freight_dues
