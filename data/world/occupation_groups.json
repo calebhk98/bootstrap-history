@@ -29,7 +29,7 @@
       "sources": ["wilson_2002"]
     },
     "transport": {
-      "trades": ["carter", "sailor"],
+      "trades": ["carter", "sailor", "porter", "dockworker"],
       "band": [0.005, 0.06],
       "sources": ["allen_2000", "wilson_2002"]
     },
