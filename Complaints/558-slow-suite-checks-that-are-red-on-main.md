@@ -44,9 +44,9 @@ that commit. Re-run the same command for the current list; this section is repla
   priced in wheat (`solve_prices.land_rent_hours_per_hectare`), so wheat's sourced labour reaches every grain; now a rule test
   of the floor schedule (fixed).
 
-- `firm_count_whole_game_scenario` ("entry does not overshoot"): new on this branch after the credit market began to clear at
-  the opening; entry now fills niches faster than the check allows. Owner: 473 (the entry rule reads the unsettled opening's
-  margins); recheck once the opening settles before changing the check.
+- `firm_count_whole_game_scenario` ("entry does not overshoot"): new on this branch; the cause is not yet measured (a
+  likely suspect is that credit now clears at the opening, so entrants can borrow). Owner until measured: 473. Run
+  `python3 -m sim.tests --slow --only firm_count_whole_game_scenario --jobs 1` and read which niche overshoots before changing anything.
 - Baselines re-run on this branch (`--only baseline_fixture,baseline_rome_full_length,spin_up_money_supply_full_length,real_output_baseline,real_output_validation,occupational_distribution,farm_edges_scenario --topic-seconds 3000`):
   the same reds as above, all 473 or 619; a population fall still raises output per head well above the undisturbed run.
 
