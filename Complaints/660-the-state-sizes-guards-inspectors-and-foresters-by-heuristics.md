@@ -22,6 +22,13 @@ lines. Tests: `sim/tests/test_state_guards_and_inspectors.py`.
 - Guards and foresters are booked in the unskilled trade and inspectors in the scribe trade; a watchman trade in
   `data/world/trades.json` would let the labour market price them apart.
 
+**Validation against staff-per-head anchors** (`sim/tests/test_guard_staff_per_head_anchors.py`, rule called on Rome's opening
+population): the sized guards come to 0.0001 staff per head, below every sourced anchor (a nome capital 0.0017, Egyptian villages
+0.0077 to 0.020, Rome's capital watch 0.0085). The anchors are settled places with an organised watch, not province-wide
+averages, so a state-wide figure under them is expected, but the gap is about a factor of seventeen below the lowest, and
+the test pins only that the figure is positive, under the densest anchor and under the lowest. It does not show the value is
+right. `PATROL_DAYS_PER_PERSON` stays labelled.
+
 **Research done** (`Complaints/reports/research-state-staffing.md`): the capital's standing watch (vigiles plus urban cohorts) gives an
 upper bound on guard density, tested in `sim/tests/test_order_staffing_sourced.py`. No source was found for a state-wide guard
 ratio, inspectors per tonne or claim, or foresters per hectare, so those stay labelled heuristics (the `MINE_CEILING_*` scales
