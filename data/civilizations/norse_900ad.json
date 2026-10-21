@@ -457,11 +457,11 @@
   },
   "wage_index": 0.6,
   "imported_ores": {
-    "tin": "Scandinavia has no workable cassiterite; Norse bronze and pewter used tin that came from Cornwall and Devon through English and Frankish trade; recalled, not a figure from a source read for this entry",
+    "tin": "Scandinavia has no workable cassiterite; Norse bronze and pewter used tin that came from Cornwall and Devon through English and Frankish trade; a note on where the metal came from, with no figure to source",
     "gold": "no native gold lies in the Norse lands; their gold arrived as Byzantine and Arab coin, Frankish and English tribute and plunder, not from a mine they worked",
     "mercury": "no cinnabar lies in Scandinavia; any mercury came by Frankish trade from the Iberian and Alpine deposits, not from a Norse working",
-    "lead": "the Swedish lead of the Sala mine is dated by its catalogue entry to the fifteenth century at the latest, so no Scandinavian lead deposit was worked in 900; lead reached the Norse by trade from English and Frankish workings; recalled, not a figure from a source read for this entry",
-    "silver": "the Sala silver mine is dated by its catalogue entry to the fifteenth century at the latest, so no Scandinavian silver was mined in 900; Norse silver was hack-silver and Arab coin that came east to west through trade and plunder; recalled, not a figure from a source read for this entry"
+    "lead": "the Swedish lead of the Sala mine is dated by its catalogue entry to the fifteenth century at the latest, so no Scandinavian lead deposit was worked in 900; lead reached the Norse by trade from English and Frankish workings; a note on where the metal came from, with no figure to source",
+    "silver": "the Sala silver mine is dated by its catalogue entry to the fifteenth century at the latest, so no Scandinavian silver was mined in 900; Norse silver was hack-silver and Arab coin that came east to west through trade and plunder; a note on where the metal came from, with no figure to source"
   },
   "unsupplied_basket_goods": {
     "light_oil_lamp": "the lamp recipe's gate is held but its input olive_oil_kg is gated on a node this society does not hold and no partner supplies it, so no lamp can be filled; light came from other sources the recipe set does not model",
