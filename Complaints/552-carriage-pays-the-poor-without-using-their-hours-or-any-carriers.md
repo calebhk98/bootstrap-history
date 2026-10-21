@@ -1,6 +1,6 @@
 # Carriage pays the poor without using their hours or any carriers
 
-**Status:** partly - split into 627, 628, 629, 630, 631, 632 (closes when they do); carriage hours are hired in the labour market, and carts, ships and animals as capital, with dispatch limited by them, stay open
+**Status:** partly - split into 627, 628, 629, 630, 631, 632 (all closed); closes when a real-game trace shows carrier trades answering the bids
 
 Found by an outside reviewer reading the repository; checked against the code.
 
@@ -34,7 +34,7 @@ demand for carters, sailors and porters (530).
   paid less the crew's wages, which the labour market has already paid to the households that sold the
   hours. Those hours are no longer offered to other employers or left for the household's own plot.
 - Done (632, closed): the rest of a fee is paid by supplier: the carriers worn and the animals' feed are bought in the goods market, the remainder stays with the merchant that owns the carriers. Only a first-year merchant's unhired crew pay still goes to the poorest.
-- Dispatch limited by the fleet (631) is not built.
+- Dispatch limited by the fleet (631, closed; `carriage_fleet.py`, `carriage_fleet_book.py`, `sim/tests/test_merchant_fleet.py`): a merchant holds carriers in its carrier account, ships no more than their wear a year bears plus idle fleets it hires from other merchants, buys the fleet its routes call for, and carriers age by service life.
 - Carriers must exist to be hired: the opening places people by the runs producers expect, so no carters
   exist when merchants first ship, and the labour core does not grow a new trade fast enough (measured
   below). The crew hours are therefore bid in the unskilled trade (`CARRIAGE_CREW_UNSKILLED_SHARE`, a
@@ -65,11 +65,11 @@ demand for carters, sailors and porters (530).
   mule carry a `carrier_use` too, and all have sourced service lives in `data/world/service_lives.json`.
 - `sim/economy/carriage_wear.py`: a tonne-km on a mode wears each carrier of its team by the team's count over
   (service life x days a unit works a year x tonne-km the team moves a day). A merchant keeps carriers in its own
-  account, wears them by the year's shipments, and bids next year for as many units as were worn. The fee it pays
+  account; feed is used up by the tonne-km, a carrier with a life ages by it (see 631 below). The fee it pays
   the households of the source tile is less what those carriers cost at last year's price.
 - Exposed for 630: `Merchant.carrier_wear` (units by good), `Merchant.carrier_team_days` (by mode), and geography's
   `carriage_rates` entries carry `carriers`, `tonne_km_per_team_day`, `team_payload_tonnes`.
-- Not done (631): wear does not limit dispatch, merchants have no opening fleet, and on a real opening only carts and
+- Done (631): wear limits dispatch and merchants open with fleets (below). Still open: on a real opening only carts and
   pack animals are supplied in the first years (no shipwright or saddler trade exists to answer the bids).
 - Tests: `sim/tests/test_carriage_wear.py`.
 
