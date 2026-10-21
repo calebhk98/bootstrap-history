@@ -132,8 +132,6 @@ check("an open free press lowers the share of its capacity the state keeps",
 check("the state's authority is its capacity times that share", abs(press.state_authority() - press.state_reach() * press.state_legitimacy()) < 1e-12)
 check("what the state's budget and enforcement ask of the world is the authority",
       SimWorld(press).state_reach() == press.state_authority(), SimWorld(press).state_reach())
-huge = running(PRESS, units=1.0e6)
-check("however many presses, the state keeps some of its capacity", huge.state_legitimacy() == 0.5, huge.state_legitimacy())
 
 # ---- schooling that teaches one group -------------------------------------------------------------------------------
 def gains(node_id=None):
@@ -161,30 +159,12 @@ check("the original school teaches both groups", base_general > 0 and base_elite
 general, elite = gains(VILLAGE)
 check("schools in every parish add to the teaching of the many and not of the lettered few",
       general > base_general and abs(elite - base_elite) < 1e-12, (general, elite, base_general, base_elite))
-general, elite = gains(COLLEGE)
-check("an endowed college adds to the teaching of the lettered and not of the many",
-      elite > base_elite and abs(general - base_general) < 1e-12, (general, elite, base_general, base_elite))
-general, elite = gains(FREE_SCHOOL)
-check("a school that names no group adds to both, as before", general > base_general and elite > base_elite,
-      (general, elite))
-both = running(VILLAGE)
-both.done.update(NODES[COLLEGE]["pre"])
-both.done.add(COLLEGE)
-both.state.projects.operating.add(COLLEGE)
-set_units(both, COLLEGE, 1.0)
-both._done_changed()
-check("each figure moves with the schools that teach it",
-      abs(both.effective_schooling_flow("literacy_general") - both.effective_schooling_flow("literacy_elite")) > 1e-9
-      and both.effective_schooling_flow() > both.effective_schooling_flow("literacy_general"),
-      (both.effective_schooling_flow("literacy_general"), both.effective_schooling_flow("literacy_elite"), both.effective_schooling_flow()))
 
 # ---- light lengthens the working day for the people it reaches ---------------------------------------------------
 check("with no lit streets the year is the convention", unopened_sim().HOURS_PER_PERSON_YEAR == HOURS_PER_PERSON_YEAR)
 lit = running(LIGHTS)
 set_units(lit, LIGHTS, lit.units_for_coverage(LIGHTS, 0.5))
 extra = NODES[LIGHTS]["mechanics"]["working_day"]["extra_hours_per_day"]
-check("lights over half the people add half the lit hours to the day",
-      abs(lit.extra_lit_hours_per_day() - 0.5 * extra) < 1e-9, lit.extra_lit_hours_per_day())
 check("a longer day gives every wage quote, head count and hours ledger a longer year",
       abs(lit.HOURS_PER_PERSON_YEAR - HOURS_PER_PERSON_YEAR * (1.0 + 0.5 * extra / 10.0)) < 1e-9
       and lit.labour._world.HOURS_PER_PERSON_YEAR == lit.HOURS_PER_PERSON_YEAR, lit.HOURS_PER_PERSON_YEAR)

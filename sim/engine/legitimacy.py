@@ -8,6 +8,8 @@ reach times this share (`sim/engine/agents_port_budget.py`). No civilisation fil
 """
 from sim.constants import declare
 
+from .public_works_rules import legitimacy_share
+
 LEGITIMACY_FLOOR = declare(
     "LEGITIMACY_FLOOR", 0.5, kind="temporary_heuristic", unit="share of the state's reach", source=None,
     confidence="D",
@@ -24,7 +26,7 @@ class LegitimacyMixin:
 
     def state_legitimacy(self):
         """The share of its reach that the people's consent leaves the state, between the floor and the ceiling."""
-        return max(LEGITIMACY_FLOOR, min(LEGITIMACY_CEILING, self.effect_sum("state_legitimacy", 1.0)))
+        return legitimacy_share(self.effect_sum("state_legitimacy", 1.0), LEGITIMACY_FLOOR, LEGITIMACY_CEILING)
 
     def state_authority(self):
         """What the state can actually organise and compel: its reach, held up or worn down by consent."""
