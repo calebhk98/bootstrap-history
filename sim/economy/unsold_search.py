@@ -91,8 +91,12 @@ def clear_with_search(setup, record, view, bids, original: Sequence[Offer], offe
     low = min(floors[index] for index in searched)
     best = trial(low)         # every searched ask at its floor: nothing above a floor can stay unsold
     high = max(offers[index].reservation_price for index in searched)
-    while high - low > SEARCH_PRECISION * max(high, 1e-300):
-        middle = math.sqrt(low * high) if low > 0.0 else 0.5 * (low + high)
+    ceiling = high
+    # the gap is judged against the level itself, or against the highest ask when the floor is zero: a bracket
+    # [0, high] never closes relative to its own shrinking top
+    while high - low > SEARCH_PRECISION * (high if low > 0.0 else ceiling):
+        # geometric mean as the product of roots: the product of a tiny floor and an ask underflows
+        middle = math.sqrt(low) * math.sqrt(high) if low > 0.0 else 0.5 * (low + high)
         attempt = trial(middle)
         if attempt[1]:
             high = middle
