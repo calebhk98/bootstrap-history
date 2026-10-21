@@ -29,8 +29,8 @@ def budget_sim(civ="rome_100ad", army=None, purse=None, cut_when_short=False):
     game = unopened_sim(civ=civ)
     game.market_credit_room = lambda actor_id: 0.0
     # revenue in coin only, so a deficit is measured against money (in-kind revenue: test_state_revenue_forms)
-    game.civ["state_revenue"] = [{key: value for key, value in form.items() if key != "paid_in"}
-                                 for form in game.civ["state_revenue"]]
+    record = game.state_treasury().record   # the state's own forms, copied from the civilisation's file at setup
+    record.revenue_forms = [{key: value for key, value in form.items() if key != "paid_in"} for form in record.revenue_forms]
     # the goods the state buys are bid for in the agent economy's book and paid when the year clears, not booked as outlays
     game.bids = []   # (buyer, commodity, tonnes, money)
     real_note_purchase = game.economy.note_actor_purchase

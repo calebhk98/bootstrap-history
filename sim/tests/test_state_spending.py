@@ -5,7 +5,7 @@ the treasury."""
 from .harness import *  # noqa: F401,F403
 
 from sim.engine.agents_port import SimWorld
-from sim.agents import budget
+from sim.agents import budget, government_levers, order
 from sim.agents.purses import DEPOSIT_LOST
 from sim.engine.coin_hoard import KEEPING_CAUSE
 from sim.engine.theft_charge import THEFT_CAUSE
@@ -38,9 +38,8 @@ game = unopened_sim()
 lines = lines_of(game)
 check("a coastal state with cities keeps an army, officials, roads, public buildings, a court, a dole and a navy",
       {"army", "administration", "roads", "public_buildings", "court", "dole", "navy"} <= set(lines), sorted(lines))
-check("and no line the budget does not name (works, collection, a campaign and a donative are named lines)",
-      set(lines) <= {"army", "administration", "roads", "public_buildings", "court", "dole", "navy", "fortifications",
-                     "water_works", "capital_buildings", "tax_collection", "campaign", "donative"}, sorted(lines))
+check("and no line the budget does not name (the lever-named lines, the works, the order staff, a campaign and a donative)",
+      set(lines) <= set(government_levers.budget_line_names()) | set(order.STAFF_LINES), sorted(lines))
 check("every line is priced from people at wages or goods at the market's price",
       all(line.money > 0.0 for line in lines.values()), {name: line.money for name, line in lines.items()})
 check("the navy is manned by sailors, the dole is grain, public buildings are masons' work",
@@ -143,7 +142,8 @@ check("the purse still equals income less outlays after the works",
       abs(hoard_treasury.money - (1.0e18 + sum(hoard_treasury.record.income.values())
                                   - sum(hoard_treasury.record.outlays.values()))) < 1e-6 * 1.0e18, hoard_treasury.money)
 collapse = unopened_sim()
-collapse.civ["state_revenue"] = [form for form in collapse.civ["state_revenue"] if form["basis"] == "harvest"]
+collapse_record = collapse.state_treasury().record
+collapse_record.revenue_forms = [form for form in collapse_record.revenue_forms if form["basis"] == "harvest"]   # the state's own forms, copied from the file at setup
 collapse.state.holdings.farm_last_harvest_kg = 1.0  # what the farms yield all but stops
 for _year in range(8):
     one_year(collapse)

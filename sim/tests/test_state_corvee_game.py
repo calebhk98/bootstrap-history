@@ -19,7 +19,8 @@ def one_year(game):
 
 def with_dues(*forms):
     game = sim()
-    game.civ["state_revenue"] = list(game.civ.get("state_revenue") or []) + list(forms)
+    record = game.state_treasury().record   # the state's own forms, copied from the civilisation's file at setup
+    record.revenue_forms = list(record.revenue_forms) + list(forms)
     return game
 
 

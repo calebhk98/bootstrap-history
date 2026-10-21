@@ -16,6 +16,7 @@ from .tuning_order import FORESTER_DAYS_PER_PERSON, INSPECTION_DAYS_PER_PERSON, 
 GUARDS_LINE = "guards"
 INSPECTORS_LINE = "inspectors"
 FORESTERS_LINE = "foresters"
+STAFF_LINES = (GUARDS_LINE, INSPECTORS_LINE, FORESTERS_LINE)   # the standing lines of the state's order staff
 GUARD_TRADE = "labourer"
 INSPECTOR_TRADE = "scribe"
 FORESTER_TRADE = "labourer"
