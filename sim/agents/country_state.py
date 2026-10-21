@@ -2,8 +2,8 @@
 its payroll and its purchases. `CountryWorld` mixes this in, so the one `Government` actor runs a foreign country
 by the same rules as the home one (revenue.py, budget.py) over the country's figures.
 
-A reading the world keeps for the home country alone (no trade book, no interest groups) is
-answered with nothing here, never with the home figure; Complaint 649 lists them.
+A reading the country's own part of the economy keeps no record of is a refusal (`NoCountryEconomy`, naming the country) or
+None, never the home figure.
 """
 from typing import Any, Dict, FrozenSet, List, Optional, Tuple
 

@@ -56,7 +56,7 @@ whatever is pending and a replay reproduces it.
 | `firm` | `firm.py`, `business*.py` | spawner `firm_entry` after any player's proven concern | entry value, exit on losses |
 | `trader` | `trader.py`, `trader_entry.py` | spawner `trader_entry` when a route's gap pays | best margin within capital, sized to a share of depth |
 | `stratum` | `stratum.py`, `stratum_year.py`, `strata_seed.py` | spawner `strata` for every country | income against needs in tiers; growth, schooling and mobility follow |
-| `interest_group` | `group.py` | spawner `interest_groups` | presses the state |
+| `interest_group` | `group.py`, `country_groups.py` | spawner `interest_groups`, once for each country | presses its own country's state |
 
 A stratum's data says what its people earn by. `trade` gives wages, `property_share` gives a share
 of output, `bonded` means kept by an `owner` stratum, and `own_plot` means it falls back on its own

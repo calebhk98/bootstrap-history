@@ -113,7 +113,7 @@ check("a state that left need unpaid funds nobody", unpaid[1].actors["government
 
 
 # ---- the engine's side ---------------------------------------------------------------------------------------
-class Sim:
+class Engine:
 	STATE_FUNDING_BASE_LABOUR_HOURS = 100.0
 	STATE_FUNDING_POP_SCALE_EXPONENT = 0.4
 	STATE_FUNDING_GOV_QUALITY_SCALE = 25.0
@@ -125,9 +125,9 @@ class Sim:
 
 
 view = PatronageView()
-view._sim = Sim()
+view._sim = Engine()
 check("the funding terms carry the size of the country against the reference one, floored",
-	  view.state_funding_terms(500.0)["population_scale"] == 0.5 and view.state_funding_terms(1.0)["population_scale"] == Sim.POP_SCALE_FLOOR)
+	  view.state_funding_terms(500.0)["population_scale"] == 0.5 and view.state_funding_terms(1.0)["population_scale"] == Engine.POP_SCALE_FLOOR)
 check("the clients a country's state is asked about are the seats' governance and reputation", view.patron_clients("far") == [(3.0, 1.1), (0.0, 1.0)])
 
 

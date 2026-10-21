@@ -36,7 +36,7 @@ class Government(CorveeMixin, CreditRecordMixin, FiscalMixin, CoinageMixin, Ente
 	@property
 	def researches(self) -> bool:  # type: ignore[override]
 		"""Only the founder's country's state originates research: it spends the founder's research hands. A
-		country's state copies what it sees (retire: Complaint 649, research hands by country)."""
+		country's state copies what it sees; its research would be priced at the founder's figures (retire: Complaint 674)."""
 		return self.record.country is None
 
 	def imitation_worth(self, node_id: str, world: Any) -> float:
