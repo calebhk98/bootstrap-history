@@ -4,6 +4,7 @@ A part of the year's phases (core_step_phases.py); Sim inherits it through StepP
 from sim.refusal import LogLine
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 from . import automation_audit, shortage_conditions
+from .auto_start_rule import judge_start_candidate, size_mine_order
 from .shortage_sizing import nitre_bed_yearly_spend
 from sim.agents.api import edges
 from sim.constants import declare
@@ -108,13 +109,15 @@ class ProjectStartPhaseMixin:
             _said_blocked = False
             _too_dear = []
             for node_id in candidates:
-                if _non_bountied_active >= max_active:
+                verdict = judge_start_candidate(_non_bountied_active, max_active, lambda: self.can_start(node_id),
+                                                lambda: self.project_cost(node_id), _room)
+                if verdict == "cap":
                     automation_audit.record_skip(
                         self, "auto_start", "further projects",
                         "%d projects already active; the cap is %d" % (_non_bountied_active, max_active),
                         reason_kind="active_project_cap", active=_non_bountied_active, cap=max_active)
                     break
-                if not self.can_start(node_id):
+                if verdict == "blocked":
                     # one row a year, for the highest-priority candidate; the rest would flood the trail
                     if not _said_blocked:
                         _said_blocked = True
@@ -143,7 +146,7 @@ class ProjectStartPhaseMixin:
                 # warning in `start` (protocol.py) answers the identical
                 # question by calling the same two functions, so the two
                 # cannot drift apart.
-                if self.project_cost(node_id) > _room:
+                if verdict == "too_dear":
                     _too_dear.append((node_id, _room))
                     continue
                 _before = self.state.household.capital
@@ -246,12 +249,11 @@ class ProjectStartPhaseMixin:
                 short = sum(dem.get(material, 0.0) for material in keys)
                 # Shafts already sinking count, so a tranche about to
                 # commission is not ordered twice.
-                want = max(0.0, short - self.mine_capacity.get(self.state.holdings.binding, 0.0)
-                           - self.state.holdings.mine_pending.get(self.state.holdings.binding, 0.0))
-                _before = self.state.household.capital
                 _pending = self.state.holdings.mine_pending.get(self.state.holdings.binding, 0.0)
-                _ordered = min(want, self.state.household.capital * 0.25
-                               / max(1.0, self._mine_capex(self.state.holdings.binding)))
+                _want, _ordered = size_mine_order(
+                    short, self.mine_capacity.get(self.state.holdings.binding, 0.0), _pending,
+                    self.state.household.capital, self._mine_capex(self.state.holdings.binding))
+                _before = self.state.household.capital
                 _order = automation_audit.order_id("auto_mine", self.state.holdings.binding, self.state.scenario.year)
                 self.auto_prospect(self.state.holdings.binding)
                 self.open_mine(self.state.holdings.binding, _ordered, order=_order)
