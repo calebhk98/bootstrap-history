@@ -41,13 +41,13 @@ class RouteMemoTests(unittest.TestCase):
 
     def test_one_search_per_good_for_merchants_with_the_same_prices(self):
         searches = []
-        original = merchants._good_routes
-        merchants._good_routes = lambda *args: searches.append(args[0]) or original(*args)
+        original = merchants.merchants_routes_array.good_routes_aligned
+        merchants.merchants_routes_array.good_routes_aligned = lambda *args: searches.append(args[0]) or original(*args)
         try:
             for name in ("a", "b", "c"):
                 routes(self.merchant_at(2.0, 4.0, name), self.carriage, self.area_map, 0.05)
         finally:
-            merchants._good_routes = original
+            merchants.merchants_routes_array.good_routes_aligned = original
         self.assertEqual(sorted(searches), sorted(GOODS))
 
     def test_a_different_rate_is_searched_again(self):

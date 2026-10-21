@@ -28,7 +28,7 @@ from typing import Callable, Dict, List, Mapping, Optional, Sequence, Tuple
 
 from sim.constants import declare
 
-from . import carriage_fleet, inventory, merchants_nearest, merchants_route_memo, merchants_transit
+from . import carriage_fleet, inventory, merchants_nearest, merchants_route_memo, merchants_routes_array, merchants_transit
 from .accounts import DeliveredMove
 from .households_orders import BUDGET_SAFETY_SHARE
 from .market_areas import AreaMap
@@ -231,13 +231,12 @@ def _candidate_routes(merchant, view, carriage, area_map, held_stock, specs, int
                 else (price if news_current(area.anchor_tile) else None)
                 for area, price in zip(areas, seen)]
         if only_held is not None:
-            parts.append(_good_routes(good, spec, areas, {area.area_id: price for area, price in zip(areas, seen)},
-                                      carriage, interest_rate, _areas_holding(area_map, good, only_held[good])))
+            parts.append(merchants_routes_array.good_routes_aligned(good, spec, areas, seen, carriage, interest_rate,
+                                                                    _areas_holding(area_map, good, only_held[good])))
             continue
         parts.append(merchants_route_memo.routes_for_good(
             carriage, good, areas, spec, tuple(seen), interest_rate,
-            lambda: _good_routes(good, spec, areas, {area.area_id: price for area, price in zip(areas, seen)},
-                                 carriage, interest_rate)))
+            lambda: merchants_routes_array.good_routes_aligned(good, spec, areas, seen, carriage, interest_rate)))
     def by_rank(rows):
         return sorted(rows, key=lambda row: (row[0], row[1], row[2].area_id))
 
