@@ -45,7 +45,7 @@ class TheftChargeMixin(HoldingsExposureMixin):
         from .agents_port import SimWorld
         world = SimWorld(self)
         lent_share = self.lent_share()   # theft moves coin out of purses, never into a loan: one reading serves every actor
-        for actor in self.actors.actors.values():
+        for _, actor in sorted(self.actors.actors.items()):  # id order, as a loaded game wraps them
             record = actor.record
             if record.exited_year is not None or record.stratum:
                 continue

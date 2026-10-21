@@ -52,6 +52,16 @@ class CapacityTests(unittest.TestCase):
         self.assertEqual(entry_trial.capacity_in_area(terms, "grain", ["t3"]), 0.0)
         self.assertEqual(entry_trial.capacity_in_area(terms, "iron", ["t1"]), 0.0)
 
+    def test_capacity_is_the_same_whatever_order_the_producers_were_made_in(self):
+        # a producer dict is in creation order live and in id order once loaded; the sum must not tell them apart
+        farm = Recipe("farm", {"grain": 1.0}, {}, {})
+        capacities = {"a": 1e16, "b": 1.0, "c": -1e16, "d": 1.0}
+        in_order = {name: Producer(name, "owner", "farm", "t1", runs) for name, runs in capacities.items()}
+        shuffled = {name: in_order[name] for name in ["c", "a", "d", "b"]}
+        totals = [entry_trial.capacity_in_area(entry_trial.capacity_terms_by_good(each, {"farm": farm}, {}), "grain", ["t1"])
+                  for each in (in_order, shuffled)]
+        self.assertEqual(totals[0], totals[1])
+
 
 class TrialPlanTests(unittest.TestCase):
     def test_no_newcomer_where_no_buyer_bid(self):
