@@ -127,7 +127,7 @@ def close_year(producer: Producer, recipe: Recipe, revenue: float, costs: float,
 def _expected_run(producer, recipe, view, expectations, inputs, wages, ground_goods=()) -> Tuple[float, float]:
     """(expected revenue, variable cost) of one run at expected prices; plant already built is sunk and left
     out. A cost or price that cannot be known counts as no margin: (0, infinity)."""
-    prices = {good: expectations.get(good, view.price(good, view.area_of(good, producer.tile)))
+    prices = {good: expectations[good] if good in expectations else view.price(good, view.area_of(good, producer.tile))
               for good in recipe.outputs}
     if any(price is None for price in prices.values()):
         return 0.0, math.inf

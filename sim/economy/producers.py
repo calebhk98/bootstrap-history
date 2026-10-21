@@ -131,8 +131,12 @@ def live_input_prices(producer: Producer, recipe: Recipe, view: MarketView) -> D
 
 def live_input_prices_at(tile: TileId, recipe: Recipe, view: MarketView) -> Dict[GoodId, float]:
     """`live_input_prices` for a recipe worked on a tile, with no producer there yet."""
+    goods = _priced_names(recipe)[0]
+    present_prices_at = getattr(view, "present_prices_at", None)
+    if present_prices_at is not None:
+        return present_prices_at(goods, tile)
     prices = {}
-    for good in _priced_names(recipe)[0]:
+    for good in goods:
         price = view.price(good, view.area_of(good, tile))
         if price is not None:
             prices[good] = price
@@ -180,8 +184,12 @@ def live_wages(producer: Producer, recipe: Recipe, view: MarketView) -> Dict[str
 
 def live_wages_at(tile: TileId, recipe: Recipe, view: MarketView) -> Dict[str, float]:
     """`live_wages` for a recipe worked on a tile, with no producer there yet."""
+    trades = _priced_names(recipe)[1]
+    present_prices_at = getattr(view, "present_prices_at", None)
+    if present_prices_at is not None:
+        return present_prices_at(trades, tile, True)
     wages = {}
-    for trade in _priced_names(recipe)[1]:
+    for trade in trades:
         wage = view.wage(trade, view.area_of(trade, tile))
         if wage is not None:
             wages[trade] = wage
@@ -206,9 +214,12 @@ def next_expectations(producer: Producer, recipe: Recipe, view: MarketView,
         previous = updated.get(good)
         updated[good] = latest if previous is None else (
             previous + EXPECTATION_ADJUSTMENT_SHARE * (latest - previous))
-    paid_inputs = paid_input_prices(producer, recipe, view, {
-        good: price for good, price in ((good, view.price(good, view.area_of(good, producer.tile))) for good in recipe.inputs)
-        if price is not None})
+    if live_inputs is None:
+        seen_inputs = {good: price for good, price in ((good, view.price(good, view.area_of(good, producer.tile)))
+                                                       for good in recipe.inputs) if price is not None}
+    else:
+        seen_inputs = live_inputs       # the same prices, read already for every good the run or its plant uses
+    paid_inputs = paid_input_prices(producer, recipe, view, seen_inputs)
     for good in recipe.inputs:
         latest = paid_inputs.get(good)
         if latest is not None and good not in recipe.outputs:
@@ -300,11 +311,13 @@ def next_years_runs_ceiling(producer: Producer) -> float:
     return min(producer.capacity_runs, scale + OUTPUT_CHANGE_SHARE_PER_YEAR * producer.capacity_runs)
 
 
-def share_that_pays(producer: Producer, recipe: Recipe, view: MarketView) -> float:
+def share_that_pays(producer: Producer, recipe: Recipe, view: MarketView,
+                    outputs: Optional[Mapping[GoodId, float]] = None) -> float:
     """Share of the plant a run pays at the prices it plans with (the share `plan` would work at no cash
     limit): none when a run's expected revenue does not cover its variable cost or an input cannot be
-    priced."""
-    outputs = expected_output_prices(producer, recipe, view)
+    priced. `outputs` is `expected_output_prices` when the caller has it already."""
+    if outputs is None:
+        outputs = expected_output_prices(producer, recipe, view)
     variable = (unit_cost.variable_cost_per_run(recipe, expected_input_prices(producer, recipe, view),
                                                 live_wages(producer, recipe, view), producer.land_rent_per_run))
     if not math.isfinite(variable):
@@ -312,15 +325,17 @@ def share_that_pays(producer: Producer, recipe: Recipe, view: MarketView) -> flo
     return share_working(unit_cost.revenue_per_run(recipe, outputs) * producer.yield_factor, variable)
 
 
-def shortfall_at_working_scale(producer: Producer, recipe: Recipe, view: MarketView, cash_shortfall: float) -> float:
+def shortfall_at_working_scale(producer: Producer, recipe: Recipe, view: MarketView, cash_shortfall: float,
+                               outputs: Optional[Mapping[GoodId, float]] = None) -> float:
     """The cash it lacks for the runs it could plan next year and that would pay. The cash target covers
     the whole plant; a producer working a small part of it, or none because a run does not pay, is not
-    pressed to sell stock at any price for want of working capital it has no use for."""
+    pressed to sell stock at any price for want of working capital it has no use for. `outputs` is
+    `expected_output_prices` when the caller has it already."""
     if producer.capacity_runs <= 0.0:
         return cash_shortfall
     if not cash_shortfall > 0.0:
         return 0.0          # nothing is lacking, so there is no shortfall to shrink
-    scale = next_years_runs_ceiling(producer) * share_that_pays(producer, recipe, view)
+    scale = next_years_runs_ceiling(producer) * share_that_pays(producer, recipe, view, outputs)
     unused_share = 1.0 - scale / producer.capacity_runs
     return max(0.0, cash_shortfall - unused_share * producer.cash_target)
 
@@ -490,7 +505,7 @@ def offers(producer: Producer, recipe: Recipe, view: MarketView, stock_by_good: 
                                                     STORAGE_COST_PER_UNIT)
         rows.append((good, quantity, reservation))
     stock_value = sum(quantity * max(reservation, 0.0) for _good, quantity, reservation in rows)
-    cash_shortfall = shortfall_at_working_scale(producer, recipe, view, cash_shortfall)
+    cash_shortfall = shortfall_at_working_scale(producer, recipe, view, cash_shortfall, expected)
     return [Offer(producer.agent_id, good, view.area_of(good, producer.tile), producer.tile, quantity,
                   inventory.distressed_reservation(reservation, cash_shortfall, stock_value))
             for good, quantity, reservation in rows]
