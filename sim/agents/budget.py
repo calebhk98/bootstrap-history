@@ -34,7 +34,8 @@ def army_line(world: Any, soldiers: float, conscripts: float = 0.0) -> List[Line
 
 
 def officials_kept(world: Any) -> float:
-	return world.population_total() * world.state_capacity() / ADMINISTRATIVE_SPAN
+	"""Officials the state keeps on its rolls: its people over the number one official can keep on them."""
+	return world.population_total() / ADMINISTRATIVE_SPAN
 
 
 def administration_line(world: Any) -> List[Line]:
