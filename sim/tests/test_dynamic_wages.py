@@ -1,8 +1,7 @@
 """Endogenous wage foundations: food, housing, tools, skill, and scarcity. The wage arithmetic (sim/labour/wage_factors.py)
-is called with prices built here, so a failure names the line of arithmetic; three named scenarios read a game."""
+is called with prices built here, so a failure names the line of arithmetic; the three scenarios that read a game are test_dynamic_wages_scenario."""
+QUICK_TOPIC = True
 from .harness import *
-
-sim = unopened_sim   # legacy: pins the engine's wage table and loanable-funds rate; the agent economy sets both in sim/economy
 
 from sim.engine.data import ANNUAL_WAGE
 from sim.labour.labour_wages import WagesMixin
@@ -45,25 +44,3 @@ check("the annual wage is the base times every factor on it",
       abs(annual_wage(1000.0, 1.1, 1.2, 1.3, 1.4, 1.5) - 1000.0 * 1.1 * 1.2 * 1.3 * 1.4 * 1.5) < 1e-9)
 check("skill and job difficulty still distinguish trades at neutral prices (the calibrated table)",
       ANNUAL_WAGE["chemist"] > ANNUAL_WAGE["labourer"] * 2, (ANNUAL_WAGE["chemist"], ANNUAL_WAGE["labourer"]))
-
-# --- SCENARIOS: the market's quote in a game
-s = sim()
-# THE TOLERANCE IS RELATIVE, AND IT IS NOT ZERO, FOR A REAL REASON: a smith's tool basket is iron and charcoal, and Rome
-# at year zero already holds inherited technologies that burn charcoal, so charcoal opens the game a hair above neutral
-# (wage_cost_factors says so); 1e-4 relative still catches any drift a thousand times smaller than the moves the rule
-# tests above look for.
-_expected = ANNUAL_WAGE["smith"] * s.price_index * s.wage_index
-check("scenario: neutral starting conditions preserve the calibrated wage table",
-      abs(s.labour.market.quote_annual("smith") - _expected) / _expected < 1e-4,
-      (s.labour.market.quote_annual("smith"), _expected))
-
-s.employees["smith"] = 1
-check("scenario: the payroll uses the same derived wage quoted for one employee",
-      abs(s.labour.wage_bill() - s.labour.market.quote_annual("smith")) < 1e-6,
-      (s.labour.wage_bill(), s.labour.market.quote_annual("smith")))
-
-detail = S._agent_dispatch(s, NODES, {"cmd": "labour", "trade": "smith"})
-check("scenario: labour detail exposes every wage component",
-      all(component in detail["trade"]["wage_foundation"] for component in
-          ("food", "housing", "tools", "skill_and_difficulty",
-           "demographic_scarcity", "local_trade_scarcity")), detail)

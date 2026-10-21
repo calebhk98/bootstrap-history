@@ -1,8 +1,7 @@
 """Complaint 528: the scan of the concerns a society holds for whether they pay their way returns structured figures
-that agree with what an entrant weighs. The shape is tested on a fake world (quick); the figures on a test game
-(slow topic). Nothing here asserts that any share pays: the share is reported, not gated.
-
-Re-measure: `python3 -m sim.tests --slow --only concerns_that_pay`."""
+that agree with what an entrant weighs, tested on a fake world; the scan on a real game is
+test_concerns_that_pay_scenario. Nothing here asserts that any share pays: the share is reported, not gated."""
+QUICK_TOPIC = True
 from .harness import *  # noqa: F401,F403
 
 from sim.agents import concern_scan
@@ -18,6 +17,9 @@ class FakeWorld:
 
     def entry_gross(self, node_id, rivals, entrants):
         return 10.0 if node_id == "pays" else 4.0
+
+    def plant_costs(self, node_id):
+        return 2.0, 3.0
 
     def upkeep(self, node_id, capacity=1.0):
         return 2.0
@@ -51,13 +53,3 @@ check("the summary counts the concerns that pay and lists payers and losers",
       (summary["count"], summary["paying"]) == (2, 1) and [row["node"] for row in summary["pay"]] == ["pays"]
       and [row["node"] for row in summary["losers"]] == ["loses"], summary)
 check("an empty scan has no share", concern_scan.summary([])["share"] is None)
-
-# SCENARIO (wiring): the scan reads the concerns a real society holds. The pay rule, the cost sum and the summary are
-# held above on the fake world; "a row's takings and costs are the entry test's figures" is the same sum with
-# SimWorld's own methods, so it is not repeated here.
-game = sim()
-held = concern_scan_run.held_concerns(game)
-result = concern_scan_run.scan_game(game)
-check("scenario: the scan covers every concern the society holds, each row carrying the fields",
-      result["count"] == len(held) and len(held) > 0
-      and all(set(row) == FIELDS for row in result["pay"] + result["losers"]), (result["count"], len(held)))

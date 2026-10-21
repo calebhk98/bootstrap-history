@@ -7,17 +7,12 @@ affordability_and_credit
 affordability_warning
 agent_economy_wiring
 agriculture_wiring
-alerts_staffing_finish
 allocate
-arrears_hours
 arrears_visibility
 auto_hire_buys_room
-automation_audit
 automation_modes
 automation_skips
 backing_margin_cache
-bank_institution_gate
-bearable_part_pure
 blocker_readouts_agree
 bounty_save_and_credit_freeze
 built_ways
@@ -35,7 +30,6 @@ complaints_09_16
 complaints_17_24
 completion_messaging
 concern_volume
-concerns_that_pay
 country_literacy
 craftsmen_wording
 credit_warning_rules
@@ -44,9 +38,7 @@ cross_screen_consistency
 dashboard_history_cap
 demographics
 demographics_and_plague
-demography_history
 disease_burden_wiring
-dynamic_wages
 early_playtest
 economic_caching
 economic_levers_inventory
