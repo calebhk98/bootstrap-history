@@ -318,13 +318,15 @@ Two leftovers recorded earlier stay open:
   fallback (an opened Rome game with the full spin-up holds smiths in the thousands and `start horse_collar` succeeds; measure with
   `harness.sim(capital=1e7)` after unsetting `ROME_SPIN_UP_YEARS`, then `game.labour.national_trade_population("smith")` and the
   `start` command). Re-read the scenario's own result in the next full slow run.
-- Declared without converting: these were renamed `_scenario` or `_smoke` because their rule sits inline in a `Sim` mixin or phase,
-  so the guard no longer lists them, but they still check a rule through a game: `blocker_readouts_agree` (`start_blockers` in
-  `sim/engine/blockers.py`), `automation_skips` (the skip rule inline in the phase's candidate loop), the colony rules
-  (`found_colony`, `advance_colonies` in `sim/engine/colonies.py`), the public-works coverage, burden and roll-out rules
-  (`complaint_190_public_works_scenario`). Each leaves the scenario once its rule is a plain function.
+- Converted since: `start_blockers` (`collect_blockers`, `classify_plain_check` in `sim/engine/blockers.py`, rule test `blockers_rule`), the
+  automation skip rule and mine sizing (`sim/engine/auto_start_rule.py`, `auto_start_rule`), the colony rules (`sim/engine/colony_rules.py`,
+  `colony_rules`) and the public-works coverage, burden and roll-out rules (`sim/engine/coverage_rules.py`, `coverage_rules`). Their
+  `_scenario` files (`blocker_readouts_agree`, `automation_skips`, `complaint_190_colonies`, `complaint_190_public_works`) keep only wiring
+  checks, plus the rules that still sit in a mixin and are not listed here (the colonies' `settlement` geography, the free press, the dole,
+  schooling and lighting in the public-works scenario).
+- (`project_cost_now`, `venture_upkeep_quote` and `staffing_missing_to_open` are already thin callers of `quote_figures` and `staffing_choice`, with rule tests `quote_figures_rules` and `staffing_choice_rules`.)
 - Rules still inside `Sim` methods that need pulling out into plain functions before their checks can leave a scenario:
-  `project_cost_now`, `venture_upkeep_quote`, `staffing_missing_to_open`, `seed_opening_industry_experience`, `_step_staff`, `train`,
+  `seed_opening_industry_experience`, `_step_staff`, `train`,
   `fire`, `commission`, load validation, the staffing gates of `open` and `start`, `work_for_wages`, and the `Sim.start_reason`
   deficit sizing.
 
