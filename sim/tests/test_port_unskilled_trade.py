@@ -1,4 +1,7 @@
-"""Complaint 446: the economy port takes the unskilled trade from the trade registry, not from a name in code."""
+"""Complaint 446: the economy port takes the unskilled trade from the trade registry, not from a name in code.
+The shipped data's setup is in test_port_unskilled_trade_scenario."""
+QUICK_TOPIC = True
+
 from .harness import *  # noqa: F401,F403
 
 from sim.engine import economy_port_setup
@@ -17,9 +20,3 @@ check("its wages are counted against that trade's wage",
       counted["wages"] == {"hand": 1.0, "wright": 3.0}, counted["wages"])
 
 check("the carriage wage is counted in that trade's hour too", counted["carriage_wage"] == 1.0, counted["carriage_wage"])
-
-game = sim()
-setup = economy_port_setup.build_setup(game)
-check("the shipped data's setup carries the trade the registry names",
-      setup.unskilled_trade == economy_port_setup.opening_values(game)["unskilled_trade"]
-      and setup.unskilled_trade in setup.opening_wages, setup.unskilled_trade)

@@ -1,13 +1,19 @@
 """Constants that are really physical quantities are declared in labour hours
-(or derived from the deposits) and priced in a coin only when read."""
-import random
+(or derived from the deposits) and priced in a coin only when read.
+Nothing here builds a game; the miner's wage applied to the live deposits is test_physical_money_constants_scenario."""
+QUICK_TOPIC = True
+
+import inspect
 import unittest
+from types import SimpleNamespace
 
 from sim.constants import REGISTRY
-from sim.engine import data
 from sim.engine.core import Sim
-from sim.world import deposits
+from sim.engine.mine_labour_profile import mine_labour_hours_per_tonne
+from sim.engine.money_units import PricedInLabourHours
+from sim.labour.labour_bondage import BondageMixin
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
+from sim.world import deposits
 
 PHYSICAL_COSTS = {
     "FARM_COST_PER_HA": "FARM_LABOUR_HOURS_PER_HA",
@@ -17,7 +23,6 @@ PHYSICAL_COSTS = {
     "NITRE_COST_PER_M2": "NITRE_LABOUR_HOURS_PER_M2",
     "INSTITUTION_PLACES_FALLBACK_UPKEEP_PER_HEAD": "INSTITUTION_PLACES_FALLBACK_UPKEEP_LABOUR_HOURS_PER_HEAD",
     "VENTURE_HANDS_PER_REVENUE": "VENTURE_HANDS_PER_REVENUE_LABOUR_HOURS",
-    "SLAVE_BASE_PRICE": "SLAVE_BASE_PRICE_LABOUR_HOURS",
     "CREDIT_LINE_PER_FOREST_HA": "CREDIT_LINE_LABOUR_HOURS_PER_FOREST_HA",
     "CAPABILITY_FACTOR_HALF_SATURATION_REV": "CAPABILITY_FACTOR_HALF_SATURATION_REV_LABOUR_HOURS",
     "REVENUE_CEILING_PER_POP_SCALE": "REVENUE_CEILING_LABOUR_HOURS_PER_POP_SCALE",
@@ -25,46 +30,61 @@ PHYSICAL_COSTS = {
     "REVENUE_SCALE_DENARII": "REVENUE_SCALE_LABOUR_HOURS",
     "PATRON_DEATH_COURTING_GIFT": "PATRON_DEATH_COURTING_GIFT_LABOUR_HOURS",
 }
+SLAVE_PRICE = ("SLAVE_BASE_PRICE", "SLAVE_BASE_PRICE_LABOUR_HOURS")
 
 
-def build(civ_name, opened=False):
-    from sim.tests import harness
-    def make():
-        return Sim(harness.NODES, harness.ORDER, random.Random(1), events=False,
-                   manual=True, civ=data.load_civ(civ_name))
-    sim = make() if opened else harness.build_unopened(make)
-    sim.goal, sim.done_year = harness.GOAL, {}
-    return sim
+def _deposit(name, grade, depth="surface"):
+    return deposits.Deposit(
+        name=name, metal="test_metal", tile="nowhere", material_moved="ore", ore_grade_kg_per_tonne=grade,
+        depth_class=depth, hardness_class="medium", quantity_tonnes_per_year=100.0, note="")
 
 
 class PhysicalConstantsAreInHours(unittest.TestCase):
 
     def test_each_is_declared_in_labour_hours(self):
-        for money_name, hours_name in PHYSICAL_COSTS.items():
+        for money_name, hours_name in list(PHYSICAL_COSTS.items()) + [SLAVE_PRICE]:
             self.assertTrue(hours_name in REGISTRY, hours_name)
             self.assertIn("labour hour", REGISTRY[hours_name]["unit"], hours_name)
 
-    def test_price_is_hours_times_the_coin_per_hour(self):
-        for civ_name in ("rome_100ad", "han_china_100ad"):
-            sim = build(civ_name)
-            for money_name, hours_name in PHYSICAL_COSTS.items():
-                self.assertAlmostEqual(
-                    getattr(sim.labour if hasattr(sim.labour, money_name) else sim, money_name),
-                    REGISTRY[hours_name]["value"] * sim.labour.money_per_labour_hour(),
-                    delta=1e-9, msg=(civ_name, money_name))
+    def test_each_money_name_is_priced_from_its_hours_constant(self):
+        for money_name, hours_name in PHYSICAL_COSTS.items():
+            declared = inspect.getattr_static(Sim, money_name, None)
+            self.assertIsInstance(declared, PricedInLabourHours, money_name)
+            self.assertEqual(declared.hours_name, hours_name, money_name)
+
+    def test_a_priced_cost_is_hours_times_the_coin_per_hour(self):
+        class Holder:
+            COST = PricedInLabourHours("COST_HOURS")
+            COST_HOURS = 12.0
+
+            def __init__(self, coin_per_hour):
+                self.labour = SimpleNamespace(money_per_labour_hour=lambda: coin_per_hour)
+
+        self.assertAlmostEqual(Holder(0.5).COST, 6.0)
+        self.assertAlmostEqual(Holder(4.0).COST, 48.0)
+        self.assertEqual(Holder.COST, 12.0)
+
+    def test_the_base_price_of_a_person_is_hours_times_the_coin_per_hour(self):
+        host = SimpleNamespace(SLAVE_BASE_PRICE_LABOUR_HOURS=300.0, money_per_labour_hour=lambda: 0.25)
+        self.assertAlmostEqual(BondageMixin.SLAVE_BASE_PRICE.fget(host), 75.0)
 
     def test_no_curated_mining_opex_remains(self):
         self.assertFalse([name for name in REGISTRY if name.startswith("MINE_OPEX_PER_T_")])
 
-    def test_mining_opex_is_the_deposits_extraction_labour_at_the_miner_wage(self):
-        sim = build("rome_100ad", opened=True)
-        effects = sim.mine_works_effects()   # the running techniques change the works
-        for metal in ("lead", "silver", "copper"):
-            hours = sum(weight * KILOGRAMS_PER_TONNE
-                        * deposits.extraction_cost_labour_hours_per_kg(deposit, effects)
-                        for deposit, weight in sim._mine_reference_deposits(metal))
-            self.assertAlmostEqual(sim._mine_opex(metal), hours * sim.labour.wage_per_hour("miner"),
-                                   delta=1e-6, msg=metal)
+    def test_mining_running_hours_are_the_deposits_extraction_labour_weighted_by_output(self):
+        lean, rich = _deposit("lean", 5.0, "deep_vein"), _deposit("rich", 50.0)
+        _build, running = mine_labour_hours_per_tonne([(lean, 0.25), (rich, 0.75)], {})
+        expected = KILOGRAMS_PER_TONNE * (0.25 * deposits.extraction_cost_labour_hours_per_kg(lean)
+                                          + 0.75 * deposits.extraction_cost_labour_hours_per_kg(rich))
+        self.assertAlmostEqual(running, expected, delta=1e-9)
+        self.assertGreater(running, mine_labour_hours_per_tonne([(rich, 1.0)], {})[1])
+
+    def test_mining_build_hours_are_the_deposits_shaft_labour_weighted_by_output(self):
+        lean, rich = _deposit("lean", 5.0, "deep_vein"), _deposit("rich", 50.0)
+        build, _running = mine_labour_hours_per_tonne([(lean, 0.5), (rich, 0.5)], {})
+        expected = 0.5 * (deposits.build_cost_labour_hours_per_tonne_year(lean)
+                          + deposits.build_cost_labour_hours_per_tonne_year(rich))
+        self.assertAlmostEqual(build, expected, delta=1e-9)
 
 
 if __name__ == "__main__":
