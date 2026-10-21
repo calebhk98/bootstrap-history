@@ -1,44 +1,93 @@
-"""one_money_per_labour_hour: regression checks, run individually with `--only one_money_per_labour_hour`."""
-from .harness import *  # noqa: F401,F403
+"""One money per labour hour: the figure an hour of work is counted at, and what the economy's opening reprices."""
 
-# The money an hour of work is worth is the agent economy's wage for the unskilled trade, once it has opened.
-# Before it opens the opening's figure answers, and opening reprices what was counted at the opening's figure:
-# the purse and the tree's money fields. Opening the economy spins it up, so this topic is slow.
+QUICK_TOPIC = True
 
-_unopened = unopened_sim(civ="rome_100ad")
-_opening_figure = _unopened.labour.money_per_labour_hour()
-check("a game whose economy has not opened counts an hour at the opening's figure",
-      _unopened.state.economy.money_from_economy is False and _opening_figure > 0.0, _opening_figure)
+import contextlib
+import unittest
+from types import SimpleNamespace
+from unittest import mock
 
-_game = unopened_sim(civ="rome_100ad")
-_game.economy._opening = False     # the economy is left to open here, with the money counted at the opening's figure
-_figure_before = _game.labour.money_per_labour_hour()
-_purse_before = _game.state.household.capital
-_node_id, _node = next((key, each) for key, each in _game.nodes.items() if each.get("cap_hours", 0.0) > 0.0)
-_cap_hours = _node["cap_hours"]
-_game.economy.open_agent()
-_agent = _game.economy.agent
-_unskilled = _agent.economy().setup.unskilled_trade
-_economy_wage = _agent.wage_per_hour(_unskilled)
-_figure = _game.labour.money_per_labour_hour()
+from sim.engine import data, money_units, opening_money
+from sim.engine.wage_schedule import build_schedule
+from sim.labour.labour import Labour
+from sim.tests.labour_stand_in import stand_in_world
 
-check("the engine's money per labour hour is the economy's wage for the unskilled trade",
-      abs(_figure - _economy_wage) <= 1e-12 * max(1.0, _economy_wage), (_figure, _economy_wage))
-check("...and the economy's wage differs from the opening's figure, so the opening was repriced",
-      abs(_figure - _figure_before) > 1e-6 * _figure_before, (_figure, _figure_before))
-check("the founder's purse moved by the ratio of the figures, so it buys the hours it bought",
-      abs(_game.state.household.capital / _figure - _purse_before / _figure_before) <= 1e-6 * _purse_before / _figure_before,
-      (_game.state.household.capital, _purse_before, _figure, _figure_before))
-_priced_node = _game.nodes[_node_id]
-check("the tree's money fields are at the same figure",
-      abs(_priced_node["cap"] - _cap_hours * _figure) <= 1e-9 * max(1.0, _priced_node["cap"]),
-      (_priced_node["cap"], _cap_hours * _figure))
-check("living costs are the need floors at the economy's prices, in the same coin",
-      abs(_game.household_bill_per_person() - sum(_game.economy.agent_need_floor_costs_at().values())) <= 1e-9,
-      _game.household_bill_per_person())
 
-_game.step()
-_after_year = _game.labour.money_per_labour_hour()
-check("after a year it is still the economy's wage",
-      abs(_after_year - _agent.wage_per_hour(_unskilled)) <= 1e-12 * max(1.0, _after_year),
-      (_after_year, _agent.wage_per_hour(_unskilled)))
+def _labour(paid, price_level=1.0):
+    world = stand_in_world()
+    world.state.economy.wage_tightness_factors = {}
+    world.build_wage_schedule = lambda civ, tightness_factors=None: build_schedule(
+        data.TRADE_REGISTRY, civ, tightness_factors=tightness_factors)
+    world.economy_unskilled_wage = lambda: paid
+    world.home_price_level = lambda: price_level
+    return Labour(world)
+
+
+class FigureInUse(unittest.TestCase):
+
+    def test_the_economy_wage_is_the_figure_once_it_is_paid(self):
+        self.assertEqual(_labour(paid=7.25).money_per_labour_hour(), 7.25)
+
+    def test_before_the_economy_pays_the_opening_figure_follows_the_price_level(self):
+        opening = _labour(paid=None).money_per_labour_hour()
+        self.assertGreater(opening, 0.0)
+        self.assertAlmostEqual(_labour(paid=None, price_level=2.0).money_per_labour_hour(), 2.0 * opening)
+
+    def test_the_economy_wage_replaces_the_opening_figure_whatever_the_price_level(self):
+        self.assertEqual(_labour(paid=7.25, price_level=3.0).money_per_labour_hour(), 7.25)
+
+
+class RepriceAtOpening(unittest.TestCase):
+
+    @staticmethod
+    def _game(before, after):
+        purse = SimpleNamespace(capital=100.0, cash_mark=40.0)
+        unmarked = SimpleNamespace(capital=10.0, cash_mark=None)
+        households = {"first": purse, "second": unmarked}
+        game = SimpleNamespace(state=SimpleNamespace(economy=SimpleNamespace(money_from_economy=False), seats=households),
+                               labour=SimpleNamespace(money_per_labour_hour=lambda: after))
+
+        @contextlib.contextmanager
+        def act_as(seat_id):
+            game.state.household = households[seat_id]
+            yield
+        game.act_as = act_as
+        return game, purse, unmarked
+
+    def test_every_purse_moves_by_the_ratio_of_the_figures_so_it_buys_the_same_hours(self):
+        game, purse, unmarked = self._game(before=2.0, after=3.0)
+        with mock.patch.object(opening_money, "reprice_tree"):
+            opening_money.reprice_opening_money(game, 2.0)
+        self.assertTrue(game.state.economy.money_from_economy)
+        self.assertAlmostEqual(purse.capital / 3.0, 100.0 / 2.0)
+        self.assertAlmostEqual(purse.cash_mark, 60.0)
+        self.assertAlmostEqual(unmarked.capital, 15.0)
+        self.assertIsNone(unmarked.cash_mark)
+
+
+class TreeInTheCoin(unittest.TestCase):
+
+    @staticmethod
+    def _tree():
+        return {"node": {"rev_hours": 1.0, "up_hours": 2.0, "cap_hours": 5.0, "lab": {"farmer": 3.0}, "_material_hours": 4.0}}
+
+    def test_money_fields_are_hours_times_the_figure(self):
+        tree = money_units.rebased_nodes(self._tree(), {"farmer": 0.5}, 2.0)
+        node = tree["node"]
+        self.assertEqual((node["rev"], node["up"], node["cap"]), (2.0, 4.0, 10.0))
+        self.assertEqual(node["_material_cost"], 8.0)
+        self.assertEqual(node["_labour_cost"], 1.5)
+        self.assertEqual(node["_money_per_labour_hour"], 2.0)
+
+    def test_a_tree_already_in_that_coin_is_returned_unchanged(self):
+        tree = money_units.rebased_nodes(self._tree(), {"farmer": 0.5}, 2.0)
+        self.assertIs(money_units.rebased_nodes(tree, {"farmer": 0.5}, 2.0), tree)
+
+    def test_rebasing_never_mutates_the_shared_tree(self):
+        shared = self._tree()
+        money_units.rebased_nodes(shared, {"farmer": 0.5}, 2.0)
+        self.assertNotIn("cap", shared["node"])
+
+
+if __name__ == "__main__":
+    unittest.main()
