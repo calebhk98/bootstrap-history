@@ -13,7 +13,7 @@
   },
   "waste_haulage_on_foot": {
    "outputs": {"waste_haulage_tkm": 1.0},
-   "labour_hours": {"labourer": 16.835},
+   "labour_hours": {"porter": 16.835},
    "service": true,
    "unit_dimension": "count",
    "basis": "one tonne of waste carried one kilometre on level ground by porters on foot",
@@ -23,7 +23,7 @@
   },
   "waste_haulage_by_pack_animal": {
    "outputs": {"waste_haulage_tkm": 1.0},
-   "labour_hours": {"labourer": 0.6897},
+   "labour_hours": {"carter": 0.6897},
    "service": true,
    "unit_dimension": "count",
    "basis": "one tonne of waste carried one kilometre on level ground by a string of mules",
@@ -33,7 +33,7 @@
   },
   "waste_haulage_by_cart": {
    "outputs": {"waste_haulage_tkm": 1.0},
-   "labour_hours": {"labourer": 0.2988},
+   "labour_hours": {"carter": 0.2988},
    "service": true,
    "unit_dimension": "count",
    "basis": "one tonne of waste carried one kilometre on level ground by an ox cart on a track",

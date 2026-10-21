@@ -51,3 +51,19 @@ record the figure (page, table) for the share of the labour force in agriculture
 processing, for Roman Italy and the provinces and for medieval England. The model aims at realism, so the check
 compares hours the model books with what the sources give, and a band the sources cannot support is widened or dropped,
 not tuned to the run.
+
+## Measure and recipe billing (this pass)
+
+- The measure is `sim/labour/occupational_shares.py` `hours_by_trade`: the society's hours (own-plot and hired farming,
+  household work and the unskilled pool are all inside them, since the society's total is every working-age person less
+  the army), plus what employers hold on staff. Staff above the society's hours for their trade now come out of the
+  unskilled pool (they were added on top, counting the same people twice); the army, which the society's total already
+  gave up, is added whole (`outside_society_trades` in `data/world/occupation_groups.json`). Rule tests on built inputs:
+  `sim/tests/test_occupational_hours_rule.py` (quick).
+- Own-plot farm work was not kept out: farm hours are the society's farm trade. Household work a cohort does itself is not
+  persisted as hours, so it is not separately measured (it sits inside the pool); open.
+- Recipes: the wool, wine, oil, brick, milling and baking recipes already bill their trade. The ones still on `labourer`
+  are mostly crushing, digging, quarrying and hauling, which the trade's own note gives to the labourer. Rebilled now:
+  waste haulage (porters on foot, carters for pack and cart) and natron (salt worker, as the recipe's own basis says).
+- Not measured: the Rome and England shares after these changes. `economy-check --occupations` does not finish in five
+  minutes; the slow topic `occupational_distribution` is still to be run by the orchestrator.

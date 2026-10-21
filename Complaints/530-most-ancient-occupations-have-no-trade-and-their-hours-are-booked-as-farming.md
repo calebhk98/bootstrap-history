@@ -34,3 +34,11 @@ Open:
 ## Not filed
 
 India (caste, cotton weaving) and Egypt have no civilisation in `data/civilizations/`; nothing to file until one is added.
+
+## Update (619 pass)
+
+`sim/tests/test_occupational_hours_rule.py` (quick) now holds the rule that the occupational shares are each group's hours
+over all hours with every employer's staff counted once, and that a list of named crafts' recipes never bill only
+`labourer`. Waste haulage and natron were rebilled to porter, carter and salt worker. The remaining `labourer` recipes are
+crushing, digging, quarrying and hauling work; whether any of them should name a trade is an open question for the
+sourced trade notes. Re-measure Rome with the slow topic before closing 619.
