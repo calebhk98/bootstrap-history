@@ -33,6 +33,7 @@ def carriage_rates(world_map: WorldMap, mode_ids: Iterable[str]) -> Dict[str, Di
                           "crew_trade": mode["crew_trade"],
                           "crew_hours_per_tonne_km": rate.labour_hours,
                           "cost_hours_per_tonne_km": routes_rates.physical_cost(world_map, rate),
+                          "handling_trade": str(mode.get("handling_trade", "")),
                           "handling_hours_per_tonne": float(mode.get("handling_hours_per_tonne", 0.0)),
                           "edge_classes": list(mode["edge_classes"]),
                           "needs_improvement": mode.get("needs_improvement")}

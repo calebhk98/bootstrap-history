@@ -1,31 +1,51 @@
 """A home stratum's income is the earnings of the household cohorts in its slice of the population, not members x work
-share x pay; before the economy has opened (it answers nothing yet) the wage bridge stays. Money is conserved."""
-import random
+share x pay; before the economy has opened (it answers nothing yet) the wage bridge stays. Complaint 640: the slice, the
+mapping and the view's answers are called on strata and cohort curves built here. The strata's books over a year (income
+credited, the keep of the bonded, money conserved) are test_agents_strata, and the rank tie-break is test_stratum_rank_ties."""
+QUICK_TOPIC = True
 
-from .harness import *  # noqa: F401,F403
+from types import SimpleNamespace
+
+from .harness import check
 
 from sim.agents import stratum_year
-from sim.agents.api import observed_incomes
+from sim.agents.api import Stratum, observed_incomes, stratum_id
+from sim.agents.records import ActorRecord
 from sim.agents.strata_observed import slice_income
-from sim.engine.agents_port import SimWorld
+from sim.engine.agents_port_cast import CastView
+
+from .agents_fake_world import FakeWorld
+
+PAY = {"labourer": 100.0, "artisan": 400.0}
+WORK_SHARE = 0.5
 
 
-def rome_game(opened):
-    def build():
-        return S.Sim(NODES, list(ORDER), random.Random(1), events=False, manual=True, civ=S.load_civ("rome_100ad"))
-    game = build() if opened else build_unopened(build)
-    for _ in range(2):  # the first year only seeds the roster
-        game.state.scenario.year += 1
-        game.advance_actors(game.state.scenario.year)
-    return game
+class PayWorld(FakeWorld):
+    """Pays each trade a flat yearly figure, and answers no cohort curve (the economy is opening)."""
+
+    def pay_per_person_year(self, trade):
+        return PAY[trade]
+
+    def observed_stratum(self, country, name):
+        return None
+
+    def society_output(self):
+        return 1.0e6
+
+    def subsistence_cost_per_person_year(self):
+        return 10.0
+
+    def need_floor_costs_per_person_year(self):
+        return {"food": 10.0}
 
 
-def home(game):
-    return [actor for actor in game.actors.of_kind("stratum") if actor.record.country is None]
-
-
-def edge_in(actors):
-    return sum(actor.record.income.get("edge:economy", 0.0) for actor in actors)
+def stratum(name, members, trade=None, bonded=False, owner=None):
+    plan = {"work_share": WORK_SHARE, "bonded": bonded}
+    if trade:
+        plan["trade"] = trade
+    if owner:
+        plan["owner"] = owner
+    return Stratum(stratum_id("home", name), ActorRecord(kind="stratum", stratum=name, members=members, plan=plan))
 
 
 # ---- slices of a curve ----------------------------------------------------------------------
@@ -33,78 +53,79 @@ rows = [(10.0, 10.0), (10.0, 40.0), (20.0, 200.0)]
 check("the whole curve is every cohort's income", abs(slice_income(rows, 0.0, 40.0) - 250.0) < 1e-9)
 check("a slice inside one row takes its share", abs(slice_income(rows, 15.0, 20.0) - 20.0) < 1e-9)
 check("a slice across rows adds the parts", abs(slice_income(rows, 5.0, 25.0) - (5.0 + 40.0 + 50.0)) < 1e-9)
+check("a slice past the end of the curve earns nothing", slice_income(rows, 40.0, 50.0) == 0.0)
 
 # ---- before the economy has opened: the wage bridge stays -----------------------------------------------
-off = rome_game(False)
-check("before the economy has opened no cohort curve is offered", off.economy.agent_cohort_incomes() is None)
-check("before the economy has opened strata observe nothing", SimWorld(off).observed_stratum(None, "labourers") is None)
-check("before the economy has opened the strata still earn by the bridge", edge_in(home(off)) > 0.0)
+class OpeningSim:
+    """A game whose economy answers no cohort curve."""
 
-# ---- the economy open -----------------------------------------------------------------------
-on = rome_game(True)
-curve = on.economy.agent_cohort_incomes()
-check("the agent economy offers its cohorts' incomes", bool(curve) and all(people > 0.0 for people, _ in curve))
-check("the curve runs poorest per head first",
-      all(a[1] / a[0] <= b[1] / b[0] + 1e-9 for a, b in zip(curve, curve[1:])))
-strata = home(on)
-world = SimWorld(on)
-incomes = observed_incomes(strata, world, curve)
-check("every home stratum is mapped to a slice", set(incomes) == {actor.record.stratum for actor in strata}, incomes)
+    def __init__(self, strata):
+        self.economy = SimpleNamespace(agent_cohort_incomes=lambda: None)
+        self.actors = SimpleNamespace(of_kind=lambda kind: strata)
+
+
+class View(CastView):
+    def __init__(self, sim):
+        self._sim = sim
+
+    def pay_per_person_year(self, trade):
+        return PAY[trade]
+
+    def society_output(self):
+        return 1.0e6
+
+
+toilers, artisans = stratum("toilers", 8000.0, "labourer"), stratum("artisans", 2000.0, "artisan")
+check("before the economy has opened strata observe nothing", View(OpeningSim([toilers, artisans])).observed_stratum(None, "toilers") is None)
+bridge = PayWorld()
+before = toilers.money
+stratum_year.run_year(toilers, bridge)
+check("before the economy has opened the strata still earn by the bridge: members x work share x pay",
+      abs(toilers.record.income.get("edge:economy", 0.0) - 8000.0 * WORK_SHARE * PAY["labourer"]) < 1e-6, toilers.record.income)
+
+# ---- the economy open ------------------------------------------------------------------------------
+curve = [(2000.0, 1.0e5), (3000.0, 6.0e5), (5000.0, 5.0e6)]   # poorest per head first
+check("the fixture curve runs poorest per head first", all(a[1] / a[0] <= b[1] / b[0] for a, b in zip(curve, curve[1:])))
+strata = [toilers, artisans]
+incomes = observed_incomes(strata, bridge, curve)
+check("every home stratum is mapped to a slice", set(incomes) == {"toilers", "artisans"}, incomes)
 cohort_total = sum(income for _people, income in curve)
 cohort_people = sum(people for people, _income in curve)
 members = sum(actor.record.members for actor in strata)
 check("the strata's incomes add up to the cohorts' (scaled to the strata's people)",
-      abs(sum(incomes.values()) - cohort_total * members / cohort_people) <= 1e-6 * max(1.0, cohort_total),
-      (sum(incomes.values()), cohort_total))
+      abs(sum(incomes.values()) - cohort_total * members / cohort_people) <= 1e-6 * cohort_total, (sum(incomes.values()), cohort_total))
+check("the stratum that would earn less per head takes the poorer slice", incomes["toilers"] / 8000.0 < incomes["artisans"] / 2000.0, incomes)
+check("no curve gives no incomes", observed_incomes(strata, bridge, []) == {})
+
+open_sim = SimpleNamespace(economy=SimpleNamespace(agent_cohort_incomes=lambda: curve),
+                           actors=SimpleNamespace(of_kind=lambda kind: strata))
+view = View(open_sim)
 check("the world answers a stratum's income from the mapping, once the economy runs",
-      all(abs(world.observed_stratum(None, name)["income"] - income) <= 1e-6 * max(1.0, income)
-          for name, income in incomes.items()))
-check("another country's strata are not the home cohorts", world.observed_stratum("elsewhere", "labourers") is None)
+      all(abs(view.observed_stratum(None, name)["income"] - income) <= 1e-6 * max(1.0, income) for name, income in incomes.items()))
+check("another country's strata are not the home cohorts", view.observed_stratum("elsewhere", "toilers") is None)
+check("a stratum that is not in the roster has no slice", view.observed_stratum(None, "nobody") is None)
+exited = stratum("gone", 500.0, "labourer")
+exited.record.exited_year = 5
+roster = SimpleNamespace(economy=open_sim.economy, actors=SimpleNamespace(of_kind=lambda kind: strata + [exited]))
+check("a stratum that exited takes no slice", View(roster).observed_stratum(None, "gone") is None)
 
-print("Rome, stratum income: cohort-mapped vs the wage bridge (agent economy on):")
-for actor in sorted(strata, key=lambda actor: actor.record.stratum):
-    bridge = stratum_year.bonded_product(actor, world) if actor.is_bonded() else stratum_year.own_income(actor, world)
-    print("  %-10s members %10.0f  cohorts %14.0f  bridge %14.0f" % (
-        actor.record.stratum, actor.record.members, incomes[actor.record.stratum], bridge))
-
-# ---- the books after a year: income is the mapped cohort income ------------------------------
-before = {actor.actor_id: actor.record.income.get("edge:economy", 0.0) for actor in home(on)}
-expected = observed_incomes(home(on), SimWorld(on), on.economy.agent_cohort_incomes())
-on.state.scenario.year += 1
-on.advance_actors(on.state.scenario.year)
-bonded_product_of_keeper = {}   # keeper stratum -> the mapped income of the bonded it holds, which is its to be credited
-for actor in home(on):
-    if actor.is_bonded():
-        owner_name = actor.record.plan["owner"]
-        bonded_product_of_keeper[owner_name] = bonded_product_of_keeper.get(owner_name, 0.0) + expected[actor.record.stratum]
-for actor in home(on):
-    credited = actor.record.income.get("edge:economy", 0.0) - before[actor.actor_id]
-    if actor.is_bonded():
-        check("the bonded earn nothing of their own", credited <= 1e-9, credited)
-        keeper = on.actors.actors[actor.neighbour_id(actor.record.plan["owner"])]
-        check("the bonded stratum keeps a labour product for its keeper to be credited", keeper.record.income.get("edge:economy", 0.0) > 0.0)
-        continue
-    mapped = expected[actor.record.stratum] + bonded_product_of_keeper.get(actor.record.stratum, 0.0)
-    check("%s is credited about its mapped cohort income, with the product of the bonded it keeps" % actor.record.stratum,
-          credited > 0.0 and abs(credited - mapped) <= 0.25 * mapped, (credited, mapped))
+# ---- the economy offers its cohorts poorest per head first, the home country's only ------------------------
+from sim.economy import api as economy_api
 
 
-# money that passes between strata (people moving with their savings, the keep of the bonded) is not money crossing
-# the strata's edge; everything else (the economy, the state's pay and relief, interest) is
-BETWEEN_STRATA = ("migration", "keep of bonded")
+def cohort(agent_id, tile, people, income):
+    return SimpleNamespace(agent_id=agent_id, tile=tile, people=people, last_year_income=income)
 
 
-def edge_net(actors):
-    """Money in less money out across the edge of the strata: every income and outlay that is not a move between strata."""
-    return sum(sum(v for k, v in a.record.income.items() if k not in BETWEEN_STRATA)
-               - sum(v for k, v in a.record.outlays.items() if k not in BETWEEN_STRATA) for a in actors)
-
-
-all_strata = on.actors.of_kind("stratum")
-money_before, edge_before = sum(a.money for a in all_strata), edge_net(all_strata)
-on.state.scenario.year += 1
-on.advance_actors(on.state.scenario.year)
-all_strata = on.actors.of_kind("stratum")
-check("strata money changes only by what crossed the edge and the state's relief (moves, keep and allowances net to zero)",
-      abs((sum(a.money for a in all_strata) - money_before) - (edge_net(all_strata) - edge_before))
-      <= 1e-6 * max(1.0, abs(money_before)), (sum(a.money for a in all_strata) - money_before, edge_net(all_strata) - edge_before))
+cohorts = {entry.agent_id: entry for entry in (cohort("b", "home1", 10.0, 500.0), cohort("a", "home1", 10.0, 500.0),
+                                               cohort("c", "home2", 40.0, 100.0), cohort("rich", "home2", 5.0, 5000.0),
+                                               cohort("empty", "home1", 0.0, 0.0), cohort("far", "away", 100.0, 1.0))}
+setup = SimpleNamespace(tiles=("home1", "home2", "away"), civ_id="rome", countries=lambda: ["rome", "han"],
+                        tiles_of=lambda country: ("home1", "home2") if country == "rome" else ("away",))
+shared = SimpleNamespace(setup=setup, record=SimpleNamespace(cohorts=cohorts))
+offered = economy_api.cohort_incomes(shared)
+check("the curve runs poorest per head first", all(a[1] / a[0] <= b[1] / b[0] for a, b in zip(offered, offered[1:])), offered)
+check("cohorts earning the same per head keep the order of their people, so the curve is stable",
+      offered == [(40.0, 100.0), (10.0, 500.0), (10.0, 500.0), (5.0, 5000.0)], offered)
+check("a cohort of another country or of nobody is left out", sum(people for people, _income in offered) == 65.0, offered)
+check("the curve of the other country is its own", economy_api.cohort_incomes(shared, "han") == [(100.0, 1.0)])

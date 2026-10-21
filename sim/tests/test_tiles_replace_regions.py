@@ -2,8 +2,11 @@
 
 A region is a label over tiles. These tests alter or remove the region-level
 copy and require the answer not to move, so any reader that still goes
-through the region layer fails here.
+through the region layer fails here. Complaint 640: every reader is called on a civilisation built here or on the
+shipped data; no game is played.
 """
+QUICK_TOPIC = True
+
 import json
 import os
 import unittest
@@ -84,19 +87,16 @@ class RegionRecordsHoldNoTileDataTests(unittest.TestCase):
 class ForestAreaReadsTilesTests(unittest.TestCase):
 
     def test_home_land_area_is_the_sum_of_the_tiles(self):
-        from sim.tests.harness import sim
-        test_sim = sim(civ="rome_100ad")
-        geography = _geography()
-        tiles = geography["land_tiles"]["tiles"]
-        from sim.geography.api import tiles_held
-        expected = sum(tiles[tile_id]["land_area_km2"] for tile_id in tiles_held(test_sim.civ))
-        self.assertAlmostEqual(test_sim.home_land_area_km2(), expected, places=6)
+        from sim.engine.data import load_civ
+        from sim.engine.forest_ceiling import held_land_area_km2
+        civilisation = load_civ("rome_100ad")
+        tiles = _geography()["land_tiles"]["tiles"]
+        expected = sum(tiles[tile_id]["land_area_km2"] for tile_id in tiles_held(civilisation))
+        self.assertAlmostEqual(held_land_area_km2(civilisation), expected, places=6)
 
-    def test_region_records_hold_no_land_figures(self):
-        from sim.tests.harness import sim
-        test_sim = sim(civ="rome_100ad")
-        for region in test_sim.geography.regions.values():
-            self.assertNotIn("land", region)
+    def test_a_civilisation_holding_no_tile_has_no_land(self):
+        from sim.engine.forest_ceiling import held_land_area_km2
+        self.assertEqual(held_land_area_km2({"home_tiles": []}), 0.0)
 
 
 class NoModuleReadsRegionLabelsForTileDataTests(unittest.TestCase):
@@ -113,16 +113,27 @@ class NoModuleReadsRegionLabelsForTileDataTests(unittest.TestCase):
         return civilisation
 
     def test_farm_land_and_weather_cells_follow_the_tiles_held(self):
-        from sim.tests.harness import sim
-        labelled = sim(civ="rome_100ad")
-        tiled = sim(civ="rome_100ad")
-        tiled.civ = self._civilisation(True)
-        territory = tiled._compute_farm_weather_cells()
-        self.assertEqual([cell.cell_id for cell in territory],
-                         [cell.cell_id for cell in labelled._compute_farm_weather_cells()])
+        from types import SimpleNamespace
+        from sim.engine.core import Sim
+        from sim.geography import food_society
         from sim.world import land
-        self.assertEqual(land.territory_cropland(tiled.farm_sites()).cropped_hectares,
-                         land.territory_cropland(labelled.farm_sites()).cropped_hectares)
+
+        def stand_in(civilisation):
+            game = SimpleNamespace(civ=civilisation, world_map=None)
+            game._cap_pooled_farm_weather_cells = lambda cells: Sim._cap_pooled_farm_weather_cells(game, cells)
+            return game
+
+        labelled, tiled = self._civilisation(False), self._civilisation(True)
+        territory = Sim._compute_farm_weather_cells(stand_in(tiled))
+        self.assertTrue(territory)
+        self.assertEqual([cell.cell_id for cell in territory],
+                         [cell.cell_id for cell in Sim._compute_farm_weather_cells(stand_in(labelled))])
+        self.assertAlmostEqual(sum(cell.weight for cell in territory), 1.0)
+        tiled_sites = food_society.crop_sites(tiled, None, 0.7, {})
+        labelled_sites = food_society.crop_sites(labelled, None, 0.7, {})
+        self.assertEqual(sorted(tiled_sites), sorted(labelled_sites))
+        self.assertEqual(land.territory_cropland(tiled_sites).cropped_hectares,
+                         land.territory_cropland(labelled_sites).cropped_hectares)
 
     def test_crop_climate_and_cast_place_follow_the_tiles_held(self):
         from sim.agents.cast import profile_from_civilisation
