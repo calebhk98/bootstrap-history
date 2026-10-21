@@ -218,6 +218,40 @@
       "source": "FAO, 'Production parameters of ruminants in traditional systems' (chapter 5 of the FAO review of ruminant production in sub-Saharan Africa; fao.org/4/Y4176E/y4176e08.htm; undated, 1990s), the same source as dairy_cattle_kg: calving rate 58.7 percent, calf mortality 21.7 percent, adult cow mortality 6.3 percent, milk offtake about 250 kg per lactation. Offtake 10 percent, live weight, dressing (45 to 50 percent for zebu-type cattle), fat, hide and horn shares, salt lick (about 30 g a day) and stocking rate are recalled and not checked against a source.",
       "confidence": "D",
       "basis": "Live weight of unselected cattle, in kilograms. Rates are dairy_cattle_kg's (half the herd breeding cows x 0.587 calving x (1 - 0.217) calf survival; adult loss 0.063). Milk per head-year is half the herd x 0.587 calvings x 250 kg a lactation = 73.375 kg. Herd parameters for data/production/95_herds.json: 0.5 head per hectare of extensive grazing, 250 kg live weight at slaughter, dressing 0.48, rendered fat 6 percent of the carcass, green hide 7 percent of live weight, 0.5 kg of horn sheaths a slaughtered animal, 11 kg of salt a head-year. Offtake 0.10 is below natural increase less loss (0.167). Draught animals (draught_animal_kg) are not yet drawn from this herd (Complaints/532)."
+    },
+    "turkey_kg": {
+        "walks": false,
+        "natural_increase": 1.6,
+        "annual_loss": 0.15,
+        "breeding_minimum_units": 18,
+        "live_weight_kg_per_head": 5.93,
+        "offtake_per_head_year": 1.0,
+        "dressing_fraction": 0.7,
+        "fat_share_of_carcass": 0.05,
+        "feather_share_of_live_weight": 0.06,
+        "maize_kg_per_head_year": 25.0,
+        "head_per_keeper": 200.0,
+        "slaughter_hours_per_animal": 0.5,
+        "source": "Wikipedia, Wild turkey (https://en.wikipedia.org/wiki/Wild_turkey, opened): 'An adult male (tom or gobbler) normally weighs from 5 to 11 kg', 'the average weight of adult males is 7.6 kg', 'The adult female (hen) is typically much smaller at 2.5-5.4 kg', 'the average weight of adult females is 4.26 kg', 'Hens lay a clutch of 10-14 eggs, usually one per day'. Speller et al. 2018, Diversity of management strategies in Mesoamerican turkeys (https://pmc.ncbi.nlm.nih.gov/articles/PMC5792941/, opened): in the Postclassic 'turkeys were relying ever more heavily on provisioned maize or other C4 plants', and 'the number of turkey bones in archaeological sites overtakes those of leporids, dogs or white-tailed deer' in the Middle/Late Postclassic (1250-1521 CE). It gives no body weight, egg, flock or offtake figure. Nothing else was read; LABELLED HEURISTIC, conf D, no source found for the increase and loss rates, the breeding group, dressing percentage, fat and feather shares, maize ration and keeper ratio.",
+        "confidence": "D",
+        "basis": "Live weight of the domestic turkey, kilograms. 5.93 kg is the mean of the opened wild-turkey averages for a tom (7.6 kg) and a hen (4.26 kg), an even sex ratio at slaughter assumed (the Mesoamerican domestic bird's own weight was not found). Increase 1.6 a head: a hen lays one clutch of 12 (middle of the opened 10-14), half the flock are hens, and about a third of eggs reach slaughter age, which is 2 young a bird before losses; 1.6 allows for that being optimistic. TEMPORARY HEURISTIC, retire: Complaints/654 follow-up (a zooarchaeological flock reconstruction). Loss 0.15 and a breeding group of 18 birds (about one tom to five hens, 5.93 kg each is 107 kg, rounded) are estimates of the same kind. Offtake 1.0 a head-year is below increase less loss (1.45). The birds are fed maize (opened: Postclassic isotopes show provisioned maize), 25 kg a head-year, no source found for the quantity. No pasture: a yard bird, so no land entry and no grows_on."
+    },
+    "dog_kg": {
+        "walks": false,
+        "natural_increase": 1.2,
+        "annual_loss": 0.15,
+        "breeding_minimum_units": 30,
+        "live_weight_kg_per_head": 10.0,
+        "offtake_per_head_year": 0.5,
+        "dressing_fraction": 0.55,
+        "fat_share_of_carcass": 0.08,
+        "hide_share_of_live_weight": 0.08,
+        "maize_kg_per_head_year": 60.0,
+        "head_per_keeper": 200.0,
+        "slaughter_hours_per_animal": 1.0,
+        "source": "A museum note (https://www.monah.org/artifact-blog/2020/8/21/colima-dogs, opened) cites Sahagun, Florentine Codex 9:48 (Sahagun 1950-1982; the Codex itself not opened): dogs were 'bought ... to provide the people as food'. The note gives no weight, litter or offtake figure. No Mesoamerican dog body mass was found (a search summary gave only a Pathe-site dog about 40.5 cm high, a height, not a weight, and not opened). Nothing else was read; LABELLED HEURISTIC, conf D, no source found for live weight, increase, loss, breeding group, dressing, fat and hide shares, ration and keeper ratio.",
+        "confidence": "D",
+        "basis": "Live weight of the small Mesoamerican dog, 10 kg: TEMPORARY HEURISTIC, retire: Complaints/654 follow-up (a zooarchaeological body-mass estimate), no source found. Increase 1.2 and loss 0.15 a head are estimates of the same kind (a bitch rearing a couple of pups a year, half the pack bitches); offtake 0.5 is below increase less loss (1.05). A breeding group of 30 kg is three animals. Fed household maize scraps, 60 kg a head-year (no source found). No pasture: a household animal."
     }
   }
 }

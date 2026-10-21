@@ -1,0 +1,111 @@
+{
+ "_note": "Animals the Mexica kept and hunted: turkey flock, dog pack, deer hunt and fowling as joint-product recipes (Complaints/654), after the herd pattern of 95_herds.json. Each recipe is keyed by one of its products.",
+ "materials": {
+  "feather_kg": {
+   "outputs": {
+    "feather_kg": 35.58,
+    "meat_kg": 394.345,
+    "fat_kg": 20.755
+   },
+   "inputs": {
+    "maize_kg": 2500.0
+   },
+   "labour_hours": {
+    "herder": 1250.0
+   },
+   "unit_dimension": "mass",
+   "basis": "per flock of 100 turkeys kept for a year (turkey_kg)",
+   "yield_basis": "TURKEY FLOCK, meat, fat and feathers from the same birds. Every figure is the species row's in data/world/living_stock.json times 100 head; its source field names what was read (Wikipedia wild-turkey weights and clutch size; Speller et al. 2018 on maize-fed Postclassic turkeys) and which figures are labelled heuristics with no source found. Carcass = slaughtered birds x live weight x dressing fraction, of which rendered fat is fat_kg and the rest meat_kg; feathers are a share of live weight. Maize is the ration. Labour is a keeper tending 200 birds at 2400 hours a keeper-year (recalled) plus plucking and dressing each bird. No land entry: a yard flock fed from the household store. Conf D throughout; the cost is split by mass (sim/engine/joint_allocation.py, retire: Complaints/507). herd_stock is the live weight of the 100 birds kept.",
+   "conf": "D",
+   "requires_node": "fud_turkey_flock",
+   "herd_stock": {
+    "turkey_kg": 593.0
+   }
+  },
+  "hide_kg": {
+   "outputs": {
+    "hide_kg": 40.0,
+    "meat_kg": 253.0,
+    "fat_kg": 22.0
+   },
+   "inputs": {
+    "maize_kg": 6000.0
+   },
+   "labour_hours": {
+    "herder": 1250.0
+   },
+   "unit_dimension": "mass",
+   "basis": "per pack of 100 dogs kept for a year (dog_kg)",
+   "yield_basis": "DOG PACK, meat, fat and skins from the animals eaten. Every figure is the species row's in data/world/living_stock.json times 100 head; the row's source is a museum note citing Sahagun (Florentine Codex 9:48: dogs bought 'to provide the people as food') and nothing else was found, so weight, offtake, dressing, fat and hide shares, ration and keeper ratio are labelled heuristics (conf D, no source found). Carcass = eaten dogs x live weight x dressing fraction, split into fat_kg and meat_kg; the skin is a share of live weight. Fed maize scraps. Labour as the turkey flock. Cost split by mass (retire: Complaints/507). herd_stock is the live weight of the 100 dogs kept.",
+   "conf": "D",
+   "requires_node": "fud_dog_pack",
+   "herd_stock": {
+    "dog_kg": 1000.0
+   }
+  },
+  "fat_kg": {
+   "outputs": {
+    "fat_kg": 195.154,
+    "meat_kg": 2367.299,
+    "hide_kg": 390.307
+   },
+   "inputs": {},
+   "labour_hours": {
+    "hunter": 5159.937
+   },
+   "extracted_from": "forest",
+   "unit_dimension": "mass",
+   "basis": "per 100 deer taken: boneless venison, trimmed fat and raw skins",
+   "yield_basis": "HUNT. Meat per deer is from Ohio Division of Wildlife, Venison Meat Yield (https://dam.assets.ohio.gov/image/upload/ohiodnr.gov/documents/wildlife/wild-ohio-harvest-community/Venison%20Yield.pdf, opened): 'The average deer weighed 107.56 pounds field dressed and yielded 52.19 pounds of venison, or a 48.52% meat yield' (115 white-tailed deer, 2017, boneless venison after butchering): 23.67 kg boneless venison from a deer of 48.79 kg field-dressed weight; boneless, so conservative beside the bone-in meat_kg of the herds, and a temperate-zone stand-in for the Mexican white-tailed deer, whose weight was not found. Trimmed fat is 4 percent and the raw skin 8 percent of field-dressed weight (LABELLED HEURISTIC, conf D, no source found). The hunter's hours are the energy of the products at the hunter trade's return (data/world/trades.json trade 'hunter': 1115 kcal an hour, Kelly 2013, The Lifeways of Hunter-Gatherers ch. 3, the Ache average from hunting alone with search time; already in the repo at conf C, that page not re-opened here): venison 1500 kcal and fat 9000 kcal a kilogram (LABELLED HEURISTIC, conf D, no source found) over 1115 kcal an hour, plus 4 hours a carcass to flay and joint (LABELLED HEURISTIC, conf D, no source found). The ceiling on what a place's wild game gives stays in the geography wild-game rows (data/world/geography/resources/animals.json) and the hunter hours cap (sim/labour/food_gathering.py); as with fish_kg the recipe books the hours and the schema has no siting field, so forest siting is carried by those rows. No land entry, so the stand pays no arable rent. Conf D. Cost split by mass (retire: Complaints/507).",
+   "conf": "D",
+   "requires_node": "fud_game_hunting"
+  },
+  "down_kg": {
+   "outputs": {
+    "down_kg": 5.0,
+    "meat_kg": 59.0,
+    "fat_kg": 6.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "hunter": 152.803
+   },
+   "extracted_from": "wetland",
+   "unit_dimension": "mass",
+   "basis": "per 100 kg live weight of wildfowl netted or snared on lake and marsh",
+   "yield_basis": "FOWLING. No source for wildfowl carcass fractions or catch rate was found (a search summary says only that aquatic birds gathered at the lake 'in the millions', not a yield), so everything here is a LABELLED HEURISTIC, conf D, no source found: 65 percent of live weight edible, 6 points of it fat, 5 percent feathers and down, hours at the hunter trade's return (data/world/trades.json trade 'hunter': 1115 kcal an hour, Kelly 2013, The Lifeways of Hunter-Gatherers ch. 3, the Ache average from hunting alone with search time; already in the repo at conf C, that page not re-opened here) with meat at 1500 and fat at 9000 kcal a kilogram, plus 0.25 hour per kilogram of bird to pluck and dress. retire: Complaints/654 follow-up (a sourced fowling return). Ceiling and siting as the hunt: the wild-game rows and the hunter hours cap. Conf D. Cost split by mass (retire: Complaints/507).",
+   "conf": "D",
+   "requires_node": "fud_fowling"
+  },
+  "turkey_kg": {
+   "outputs": {
+    "turkey_kg": 948.8
+   },
+   "inputs": {},
+   "labour_hours": {
+    "herder": 1200.0
+   },
+   "unit_dimension": "mass",
+   "basis": "per 100 head kept for a year, output as kg of live weight added to the stock",
+   "yield_basis": "GROWN. 100 head at the row's live weight times its natural increase (rates and sources in data/world/living_stock.json; the products the head give meanwhile are in the recipe of this file that holds the stock). Labour is the keeper's year shared among the head a keeper tends, as in the sheep_kg entry. The ration is charged in the product recipe, not twice. No land: a household animal. Conf D. Made only where the stock is already held.",
+   "conf": "D",
+   "requires_node": "fud_turkey_flock",
+   "extracted_from": "household breeding stock"
+  },
+  "dog_kg": {
+   "outputs": {
+    "dog_kg": 1200.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "herder": 1200.0
+   },
+   "unit_dimension": "mass",
+   "basis": "per 100 head kept for a year, output as kg of live weight added to the stock",
+   "yield_basis": "GROWN. 100 head at the row's live weight times its natural increase (rates and sources in data/world/living_stock.json; the products the head give meanwhile are in the recipe of this file that holds the stock). Labour is the keeper's year shared among the head a keeper tends, as in the sheep_kg entry. The ration is charged in the product recipe, not twice. No land: a household animal. Conf D. Made only where the stock is already held.",
+   "conf": "D",
+   "requires_node": "fud_dog_pack",
+   "extracted_from": "household breeding stock"
+  }
+ }
+}

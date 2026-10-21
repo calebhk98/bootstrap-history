@@ -27,6 +27,9 @@ HERDS = {
 }
 
 
+MESOAMERICAN_STOCK_AND_GAME_NODES = ("fud_turkey_flock", "fud_dog_pack", "fud_game_hunting", "fud_fowling")
+
+
 def stock_rows():
     with open(os.path.join(ROOT, "data", "world", "living_stock.json"), encoding="utf-8") as handle:
         return json.load(handle)["materials"]
@@ -135,6 +138,8 @@ class SocietyWithoutTheAnimalCannotMakeItsProducts(unittest.TestCase):
         for key, entry in self.production.items():
             if any(good in HERD_PRODUCTS for good in entry["outputs"]):
                 gate = entry.get("requires_node", None)
+                if gate in MESOAMERICAN_STOCK_AND_GAME_NODES:
+                    continue  # the animals and game the Mexica do hold (Complaints/654)
                 self.assertTrue(gate is not None and gate not in mexica_techs, key)
 
 

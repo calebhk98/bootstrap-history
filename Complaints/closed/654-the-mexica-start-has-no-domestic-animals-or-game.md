@@ -1,6 +1,6 @@
 # The Mexica start has no domestic animals or game, so meat, fat, hides and their goods cannot be made
 
-**Status:** open
+**Status:** closed - turkey and dog stock rows (`data/world/living_stock.json`), joint recipes `feather_kg`, `hide_kg` (dog), `fat_kg` (deer hunt) and `down_kg` (fowling) in `data/production/95_mesoamerican_stock_and_game.json`, nodes `fud_turkey_flock`, `fud_dog_pack`, `fud_game_hunting`, `fud_fowling` held by Mexica; the nine declared entries they supply are removed; `sim/tests/test_mexica_stock_and_game.py`. Still open (cheese, felt, milk, olive oil, tallow lamps of other fuels stay declared): the animal weights, offtake, dressing and fowling return are labelled heuristics with no source found, retire by a zooarchaeological sourcing pass.
 
 Found closing 652. With the basket check walking whole input chains, Mexica 1500 cannot make cheese, felt, leather,
 tallow candles, salted meat or any lamp: every chain ends at a herd good (`meat_kg`, `milk_kg`, `fat_kg`, `hide_kg`,
