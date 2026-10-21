@@ -135,3 +135,36 @@ immunity and infectious stage, smallpox immunity, tsetse range box and climate e
 2020 are fitting constants, not limits). Horse loss 0.9 stays `disputed`: Wikivet (secondary) says horses need drugs in
 tsetse areas; no magnitude.
 Tests: `sim/tests/test_recalled_figures_sourced.py` (`DiseaseFigures`).
+
+## Pass 5 (widened to heuristics and unsourced D entries that shape the opening and labour)
+
+Worklists: `python3 sim/constants.py --burndown` (declared temporary heuristics); data entries with confidence D and no
+source: `grep -n '"confidence": "D"' data/world/service_lives.json` and the `conf` D rows of `data/production`.
+Tests: `python3 -m sim.tests --only recalled_figures_sourced,shelter_satiation`.
+
+Sourced (opened), with changed values:
+- `data/world/needs.json` shelter `satiation_multiple_of_floor` 3.0 to 2.857: Naroll, Floor Area and Settlement
+  Population, American Antiquity 27(4), 1962, abstract: population 'very roughly estimated as of the order of one-tenth
+  the floor area in square meters' (10 square metres a head); 10 / 3.5 (Sphere floor) = 2.857. Brown, Cross-Cultural
+  Research 21 (1987), via the HRAF summary: 6 square metres a head, 38 culture sample (a mean occupancy, lower bound).
+  Both are cross-cultural means of settlement dwellings, not a measured limit of wanting more room: still confidence D.
+  The Sphere 3.5 itself was not re-opened (spherestandards.org PDF returned 403; shelterprojects PDF unreadable).
+- `data/world/service_lives.json` ox 5 years kept: the Medievalists.net page on Langdon was opened ('roughly the same
+  life expectancy (a little over 5 years)'; cart horse about 7). Mule 10 years: no source found (NCAT Draft Animal Power
+  for Farming gives 15 years for draft horses only); now a labelled heuristic retiring to this complaint.
+
+Found, NOT changed (the value is built into code and tests): `wheat_kg` labour (`data/production/40_organics.json`),
+the biggest recipe by volume, carries 150 hours a hectare with no source. Shukurov et al., arXiv 1505.05121 section 8.1
+(opened as PDF; secondary), quoting White 1965 on Columella: 44 person-days a hectare for the cycle without harvest and
+5.7 for reaping, and Halstead and Jones 1989: threshing takes about as much as reaping. (44 + 5.7 + 5.7) x 10 hour
+day = 554 hours; hand tilling 400 h/ha against 65 with oxen (Ellen 1982, same paper) puts `wheat_hoe_kg` at 554 + 335 = 889
+against 350 now. Setting 554 (and the `REFERENCE_LABOUR_HOURS_PER_HECTARE` declaration in
+`sim/world/shared_constants.py`, which the farm-year model, `land.py` and the labour market share) was tried: the quick
+tier then failed in `agriculture` (three tests built on 150 hours, including the reaping window and the land cap) and
+`demand_at_scale` (wheat's price rose). Follow-up: re-derive the farm-year model and those tests from the sub-task
+hours, then apply 554 and 889. The yield_basis text now cites the opened source and says the value is unchanged.
+
+No source found: iron tool 4 years, wooden tool 2 years, bronze, brass, iron, steel lives, brick, stone, cart,
+pack saddle, barge (searched for Roman and medieval iron hoe and spade use-life: only typology and single worn
+specimens, no duration; the Swedish 100 g of share iron per hectare of ard ploughing, gupea thesis, was a search
+summary, not opened); household time preference and savings constants were not re-searched.

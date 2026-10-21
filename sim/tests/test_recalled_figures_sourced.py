@@ -90,3 +90,56 @@ class DiseaseFigures(unittest.TestCase):
                       ("endemic", "malaria.json"), ("endemic", "trypanosomiasis.json")):
             for key, entry in _disease(*parts)["sources"].items():
                 self.assertNotEqual(entry["confidence"], "recalled", "%s %s" % (parts[-1], key))
+
+
+# Naroll, American Antiquity 27(4), 1962, abstract: about one-tenth of the dwelling floor area in square metres is the population
+NAROLL_SQUARE_METRES_PER_PERSON = 10.0
+# Sphere minimum covered area, square metres a head (the shelter floor, sim/world/climate_needs.py)
+SPHERE_FLOOR_SQUARE_METRES_PER_PERSON = 3.5
+# Shukurov et al. (arXiv 1505.05121) section 8.1, quoting White 1965 on Columella and Halstead and Jones 1989, person-days a hectare
+COLUMELLA_CYCLE_PERSON_DAYS = 44.0
+COLUMELLA_REAPING_PERSON_DAYS = 5.7
+THRESHING_PERSON_DAYS_AS_MANY_AS_REAPING = 1.0
+HOURS_IN_THE_PERSON_DAY = 10.0
+# Ellen 1982 via the same paper: hours a hectare to till with hand tools and with a pair of oxen
+HAND_TILLING_HOURS = 400.0
+OX_TILLING_HOURS = 65.0
+
+
+def multiple_of_floor(area_per_person, floor_area_per_person):
+    return area_per_person / floor_area_per_person
+
+
+def wheat_cycle_hours(cycle_days, reaping_days, threshing_share_of_reaping, hours_per_day):
+    return (cycle_days + reaping_days * (1.0 + threshing_share_of_reaping)) * hours_per_day
+
+
+def hand_tilled_hours(team_hours, hand_tilling_hours, team_tilling_hours):
+    return team_hours + hand_tilling_hours - team_tilling_hours
+
+
+class PassFiveFigures(unittest.TestCase):
+
+    @staticmethod
+    def _load(*parts):
+        with open(os.path.join(_ROOT, *parts), encoding="utf-8") as handle:
+            return json.load(handle)
+
+    def test_shelter_satiation_multiple_is_naroll_over_the_sphere_floor(self):
+        shelter = self._load("data", "world", "needs.json")["needs"]["shelter"]
+        self.assertAlmostEqual(shelter["satiation_multiple_of_floor"],
+                               multiple_of_floor(NAROLL_SQUARE_METRES_PER_PERSON, SPHERE_FLOOR_SQUARE_METRES_PER_PERSON), places=2)
+
+    def test_the_sourced_wheat_cycle_exceeds_the_labour_the_data_still_carries(self):
+        # The data keeps its unsourced figure until the farm-year model that is built on it is re-derived
+        # (Complaint 646 pass 5); this records the gap the sourced arithmetic shows.
+        wheat = self._load("data", "production", "40_organics.json")["materials"]["wheat_kg"]
+        sourced_hours = wheat_cycle_hours(COLUMELLA_CYCLE_PERSON_DAYS, COLUMELLA_REAPING_PERSON_DAYS,
+                                          THRESHING_PERSON_DAYS_AS_MANY_AS_REAPING, HOURS_IN_THE_PERSON_DAY)
+        self.assertGreater(sourced_hours, wheat["labour_hours"]["farmer"])
+
+    def test_the_arithmetic_of_the_conversions(self):
+        self.assertAlmostEqual(wheat_cycle_hours(10.0, 1.0, 1.0, 10.0), 120.0)
+        self.assertAlmostEqual(wheat_cycle_hours(COLUMELLA_CYCLE_PERSON_DAYS, COLUMELLA_REAPING_PERSON_DAYS,
+                                                 THRESHING_PERSON_DAYS_AS_MANY_AS_REAPING, HOURS_IN_THE_PERSON_DAY), 554.0)
+        self.assertAlmostEqual(hand_tilled_hours(100.0, 40.0, 10.0), 130.0)
