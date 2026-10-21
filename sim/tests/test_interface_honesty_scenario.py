@@ -1,4 +1,6 @@
-"""interface_honesty: regression checks, run individually with `--only interface_honesty`."""
+"""SCENARIO: what the protocol and screens tell a player in a real game is honest: fogged estimates are ranges, notes do not
+rank themselves, prerequisites must be finished, progress and values are readable, and a step stops at a warning. Each
+check reads the reply of a built game; the credit-warning rules are in `test_credit_warning_rules`."""
 from .harness import *  # noqa: F401,F403
 from sim.refusal import LogLine
 

@@ -1,217 +1,72 @@
-"""knowledge_loss_and_consequences: complaints 233 (a rebuild keeps what
-survives), 237 (failures say what failed, and which risk is live), 238
-(effect lines carry before and after), 241 (a BENEFIT block in `why`), 243
-(patron death recovery and the scandal trend) and 252 (a visible successor
-objective)."""
-from .harness import *  # noqa: F401,F403
-from sim.refusal import cause_of, facts_of
-from sim.engine.data import closure as _closure_of
-from sim.ui.proto.techtree import _node_explain
-from sim.ui.proto.state import _agent_state_founder
-from sim.ui.proto.economy import _agent_portfolio
+"""Complaint 233/237: a rebuild keeps what survives, derived from state: a dispersed copy of the record, people who still
+practise the node's trades, and plant built on it. Called on a stub over the real `RebuildMixin`; the effect on a game's
+cost and the failure, effect, benefit, patron and succession readouts are in `test_knowledge_loss_and_consequences_scenario`."""
+
+QUICK_TOPIC = True
+
+import unittest
+from types import SimpleNamespace
+
+from sim.engine.projects_rebuild import RebuildMixin
+
+NODE = "furnace"
+NONE_CHANCE = 0.5      # the corpus hedge's loss chance with no copy dispersed
 
 
-def _forgotten_sim(node_id, forgotten=True):
-    """A society holding every prerequisite of `node_id`; the node itself
-    is either never built or (`forgotten`) built and since lost."""
-    test_sim = unopened_sim(capital=1e10)
-    for prerequisite in _closure_of(NODES, node_id) - {node_id}:
-        test_sim.done.add(prerequisite)
-    test_sim.employees.clear()
-    test_sim._done_changed()
-    if forgotten:
-        test_sim.forgotten[node_id] = test_sim.year - 10
-    return test_sim
+class Society(RebuildMixin):
+    """A society holding a forgotten node, with the survivors given."""
+    CORPUS_HEDGE_LOSS_CHANCE_NONE = NONE_CHANCE
+
+    def __init__(self, forgotten=True, hedge_chance=NONE_CHANCE, practitioners=(), dependents_done=0, dependents=4):
+        self.nodes = {NODE: {"pre": [], "lab": {"smith": 1.0, "miner": 1.0}}}
+        done = set()
+        for index in range(dependents):
+            dependent = "dependent_%d" % index
+            self.nodes[dependent] = {"pre": [NODE], "lab": {}}
+            if index < dependents_done:
+                done.add(dependent)
+        self.state = SimpleNamespace(
+            projects=SimpleNamespace(forgotten={NODE: 100} if forgotten else {}, done=done, active={}),
+            household=SimpleNamespace(employees={trade: 5.0 for trade in practitioners}))
+        self.hedge_chance = hedge_chance
+
+    def corpus_hedge(self):
+        return self.hedge_chance, None, None
 
 
-_plain = unopened_sim()   # shared by the checks that only read a game
-_NODE = "blast_furnace"
-_first = _forgotten_sim(_NODE, forgotten=False)
-_bare = _forgotten_sim(_NODE)
+class RebuildRetainedShare(unittest.TestCase):
 
-# --- 237: a rebuild keeps what survives, derived from state ---------------
-check("237: a forgotten node with nothing surviving costs what a first build does",
-      abs(_bare.project_cost_without_materials(_NODE)
-          - _first.project_cost_without_materials(_NODE)) < 1e-6
-      and _bare.payment_schedule_years(_NODE) == _first.payment_schedule_years(_NODE),
-      (_bare.rebuild_retained_share(_NODE),))
+    def test_a_node_never_lost_keeps_nothing(self):
+        self.assertEqual(Society(forgotten=False, hedge_chance=0.0, practitioners=("smith",)).rebuild_retained_share(NODE), 0.0)
 
-_copy = _forgotten_sim(_NODE)
-_copy.done.add("corpus_dispersed")
-_copy._done_changed()
-check("237: a dispersed copy of the corpus makes the rebuild cheaper than a first build",
-      _copy.project_cost_without_materials(_NODE)
-      < _first.project_cost_without_materials(_NODE)
-      and _copy.payment_schedule_years(_NODE) < _first.payment_schedule_years(_NODE),
-      (_copy.rebuild_retained_share(_NODE),))
-_copy_record = _copy.initialize_project(_NODE)
-check("237: ...and fewer of the founder's hours are still to do",
-      _copy_record["ph_left"] < NODES[_NODE]["ph"], _copy_record["ph_left"])
+    def test_a_forgotten_node_with_nothing_surviving_keeps_nothing_so_it_costs_a_first_build(self):
+        self.assertEqual(Society().rebuild_retained_share(NODE), 0.0)
 
-_crew = _forgotten_sim(_NODE)
-_crew.done.add("corpus_dispersed")
-for _trade in NODES[_NODE]["lab"]:
-    _crew.employees[_trade] = 5.0
-check("237: living practitioners of the node's trades keep more of it",
-      _crew.rebuild_retained_share(_NODE) > _copy.rebuild_retained_share(_NODE),
-      (_crew.rebuild_retained_share(_NODE), _copy.rebuild_retained_share(_NODE)))
+    def test_a_dispersed_copy_of_the_record_keeps_a_share(self):
+        self.assertGreater(Society(hedge_chance=0.1).rebuild_retained_share(NODE), 0.0)
 
-_plant = _forgotten_sim(_NODE)
-_dependents = [node_id for node_id, node in NODES.items() if _NODE in node["pre"]]
-for _dependent in _dependents[:3]:
-    _plant.done.add(_dependent)
-_plant._done_changed()
-check("237: surviving plant built on it keeps more of it",
-      _plant.rebuild_retained_share(_NODE) > _bare.rebuild_retained_share(_NODE),
-      (_plant.rebuild_retained_share(_NODE),))
+    def test_a_better_hedged_record_keeps_more(self):
+        self.assertGreater(Society(hedge_chance=0.05).rebuild_retained_share(NODE),
+                           Society(hedge_chance=0.25).rebuild_retained_share(NODE))
 
-_explained = _node_explain(_crew, NODES, _NODE)
-check("237: `why` says what a rebuild keeps and why",
-      "rebuild" in _explained and "forgotten" in str(_explained["rebuild"]).lower()
-      and "%" in str(_explained["rebuild"]), _explained.get("rebuild"))
-check("237: a node that was never lost carries no rebuild line",
-      "rebuild" not in _node_explain(_first, NODES, _NODE))
+    def test_living_practitioners_of_the_nodes_trades_keep_more_of_it(self):
+        bare = Society(hedge_chance=0.1).rebuild_retained_share(NODE)
+        half = Society(hedge_chance=0.1, practitioners=("smith",)).rebuild_retained_share(NODE)
+        all_trades = Society(hedge_chance=0.1, practitioners=("smith", "miner")).rebuild_retained_share(NODE)
+        self.assertLess(bare, half)
+        self.assertLess(half, all_trades)
+
+    def test_surviving_plant_built_on_it_keeps_more_of_it(self):
+        self.assertGreater(Society(dependents_done=2).rebuild_retained_share(NODE), Society().rebuild_retained_share(NODE))
+
+    def test_everything_surviving_keeps_the_ceiling_and_never_more(self):
+        full = Society(hedge_chance=0.0, practitioners=("smith", "miner"), dependents_done=4)
+        self.assertAlmostEqual(full.rebuild_retained_share(NODE), full.REBUILD_RETAINED_CEILING)
+
+    def test_the_work_left_is_what_the_rebuild_does_not_keep(self):
+        society = Society(hedge_chance=0.1, practitioners=("smith",))
+        self.assertAlmostEqual(society.rebuild_work_factor(NODE), 1.0 - society.rebuild_retained_share(NODE))
 
 
-# --- 241: a failure says what failed, and which risk is live --------------
-class _AlwaysFail(random.Random):
-    def random(self):
-        return 0.0
-
-
-def _failure_line(test_sim, node_id):
-    test_sim.funding_capacity = lambda: 1.0
-    test_sim.rng = _AlwaysFail(1)
-    test_sim.initialize_project(node_id)
-    before = len(test_sim.log)
-    test_sim._complete(node_id)
-    return " ".join(message for _year, message in test_sim.log[before:])
-
-
-_science = next(node_id for node_id, node in NODES.items()
-                if node.get("kind") == "SCIENCE" and node["risk"] and not node["mat"])
-_engineering = next(node_id for node_id, node in NODES.items()
-                    if node.get("kind") == "ENGINEERING" and node["risk"] and node["mat"]
-                    and node["lab"])
-_science_line = _failure_line(unopened_sim(capital=1e10), _science)
-_engineering_line = _failure_line(unopened_sim(capital=1e10), _engineering)
-check("241: a failed science node names a teaching or adoption failure",
-      "what failed" in _science_line.lower()
-      and ("teach" in _science_line or "adopt" in _science_line), _science_line)
-check("241: a failed engineering node names its apparatus and materials",
-      "what failed" in _engineering_line.lower()
-      and "apparatus" in _engineering_line
-      and sorted(NODES[_engineering]["mat"])[0].split("_")[0] in _engineering_line,
-      _engineering_line)
-_active_sim = unopened_sim(capital=1e10)
-_active_sim.initialize_project(_engineering)
-for _attempt in range(2):
-    _active_sim.learn_from_failed_attempt(_engineering)
-_portfolio = _agent_portfolio(_active_sim, NODES)["projects"][0]
-check("241: portfolio shows the live risk, labelled, beside the first-attempt risk",
-      abs(_portfolio["chance_of_failure"] - _active_sim.effective_risk(_engineering)) < 1e-9
-      and _portfolio["chance_of_failure_before_any_attempt"] == NODES[_engineering]["risk"]
-      and _portfolio["chance_of_failure"] < NODES[_engineering]["risk"],
-      _portfolio)
-
-# --- 242: effect lines carry before and after, and the reach --------------
-_effect_node = next(node_id for node_id in sorted(S.TECH_EFFECTS)
-                    if "literacy_general" in S.TECH_EFFECTS[node_id]
-                    and node_id in NODES and node_id not in _plain.done)
-_effect_sim = unopened_sim()
-_effect_before = float(_effect_sim.literacy("literacy_general"))
-_effect_sim.done.add(_effect_node)
-_effect_sim.apply_tech_effects(_effect_node)
-_effect_lines = [message for _year, message in _effect_sim.log if cause_of(message) == "society_changed"]
-_effect_after = float(_effect_sim.literacy("literacy_general"))
-check("242: a literacy effect names the old and new value",
-      any(abs(facts_of(line)["changes"]["literacy_general"][0] - _effect_before) < 1e-9
-          and abs(facts_of(line)["changes"]["literacy_general"][1] - _effect_after) < 1e-9
-          for line in _effect_lines if "literacy_general" in facts_of(line)["changes"]), _effect_lines)
-_disease_node = next(node_id for node_id in _plain.DISEASE_BURDEN_TECH_IDS
-                     if node_id not in _plain.done and node_id not in _plain.coverage_nodes())
-_disease_sim = unopened_sim()
-_burden_before = _disease_sim._disease_burden()
-_disease_sim.done.add(_disease_node)
-_disease_sim._done_changed()
-_disease_sim.apply_tech_effects(_disease_node)
-_burden_after = _disease_sim._disease_burden()
-_disease_lines = [message for _year, message in _disease_sim.log if cause_of(message) == "society_changed"]
-check("242: a population effect names the disease burden before and after",
-      any(abs(facts_of(line)["changes"]["population"][0] - _burden_before) < 0.005
-          and abs(facts_of(line)["changes"]["population"][1] - _burden_after) < 0.005
-          for line in _disease_lines if "population" in facts_of(line)["changes"]), _disease_lines)
-
-# --- 245: a BENEFIT block in `why` ----------------------------------------
-_school = _node_explain(_plain, NODES, "school_founded")
-_benefit = _school.get("benefit") or {}
-check("245: a service node's `why` has a BENEFIT block with the four labelled parts",
-      all(key in _benefit for key in
-          ("permanent", "while_open", "cost_of_opening", "if_shut")), _benefit)
-check("245: ...the while-open part is the engine's own lost-benefit text",
-      "training" in str(_benefit.get("while_open", "")).lower(), _benefit)
-check("245: ...and the cost of opening names a yearly figure",
-      any(character.isdigit() for character in str(_benefit.get("cost_of_opening", ""))),
-      _benefit)
-_corpus = _node_explain(_plain, NODES, "corpus_written").get("benefit") or {}
-check("245: the corpus says its hedge holds while shut and its standing needs it open",
-      "hedge" in str(_corpus.get("permanent", "")).lower()
-      and "tanding" in str(_corpus.get("while_open", "")), _corpus)
-_vaccination = next(node_id for node_id in _plain.DISEASE_BURDEN_TECH_IDS if node_id not in _plain.coverage_nodes())
-_vaccination_benefit = _node_explain(_plain, NODES, _vaccination).get("benefit") or {}
-check("245: a knowledge node says its effect is permanent and needs no concern open",
-      "permanent" in _vaccination_benefit
-      and "disease" in str(_vaccination_benefit["permanent"]).lower(), _vaccination_benefit)
-
-
-# --- 247: a patron's death says what recovers and is not a yearly trend ---
-class _EventsRng(random.Random):
-    """Draws low for the first roll (the patron) and high for the rest."""
-    def __init__(self):
-        super().__init__(1)
-        self.calls = 0
-
-    def random(self):
-        self.calls += 1
-        return 0.0 if self.calls == 1 else 0.99
-
-
-_patron_sim = unopened_sim(capital=1e10)
-run_it(_patron_sim, "patron_local")
-_patron_sim.protection = 0.9
-_patron_sim.scandal_last_year = _patron_sim.scandal
-_patron_sim.rng = _EventsRng()
-_scandal_before = _patron_sim.scandal
-_patron_sim._random_events(_patron_sim.year)
-_patron_line = " ".join(message for _year, message in _patron_sim.log if "patron dies" in message)
-check("247: the death line says what brings protection back and when",
-      "recount" in _patron_line and "heir" in _patron_line, _patron_line)
-check("247: set-up: scandal did jump",
-      _patron_sim.scandal - _scandal_before >= _patron_sim.PATRON_DEATH_SCANDAL - 1e-9)
-_patron_state = S._agent_state(_patron_sim, NODES)
-check("247: a one-off scandal jump is not extrapolated into a trend",
-      _patron_state["years_until_scandal_crosses_the_line"] is None
-      and (_patron_state["scandal_rose_by_last_year"] or 0.0) < 0.05,
-      (_patron_state["years_until_scandal_crosses_the_line"],
-       _patron_state["scandal_rose_by_last_year"]))
-_policy_reply = S._agent_dispatch(_plain, NODES, {"cmd": "policy"})
-_heir_description = _policy_reply["what_each_does"]["auto_court_heir"]
-check("247: auto_court_heir describes the by-hand route", "bribe" in _heir_description,
-      _heir_description)
-
-# --- 256: a named, visible successor objective ----------------------------
-_deputy_sim = _plain
-_deputy_sim.directors_extra = 0.2
-_succession = _agent_state_founder(_deputy_sim).get("succession") or {}
-check("256: state shows the deputy count, their hours and whether they carry the work",
-      _succession.get("deputies") == 0.2 and _succession.get("deputy_hours_a_year")
-      and _succession.get("deputies_carry_the_work") is False, _succession)
-# presentation: the succession objective's wording
-check("256: ...and a named objective with the gap and where deputies come from",
-      "train a successor" in str(_succession.get("objective", "")).lower()
-      and "more" in str(_succession.get("objective", "")), _succession)
-_deputy_sim.directors_extra = 5.0
-_covered = _agent_state_founder(_deputy_sim).get("succession") or {}
-check("256: once deputies carry the work the objective says it is met",
-      _covered.get("deputies_carry_the_work") is True
-      and "met" in str(_covered.get("objective", "")), _covered)
+if __name__ == "__main__":
+    unittest.main()
