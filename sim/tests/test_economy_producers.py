@@ -171,13 +171,12 @@ class CloseYearTests(unittest.TestCase):
         result = producers_close.close_year(farmer(), FARM, 300.0, 100.0, farm_view(2.0, cash=5.0))
         self.assertEqual(result.transfers, ())
 
-    def test_exit_after_persistent_losses_pays_out_the_cash(self):
+    def test_exit_when_no_workplace_covers_running_cost_pays_out_the_cash(self):
         view = farm_view(0.001, cash=50.0)     # no workplace of the producer's covers its cost
         producer = farmer()
-        for _year in range(producers_close.LOSS_YEARS_BEFORE_EXIT):
-            self.assertGreater(producer.capacity_runs, 0.0)
-            result = producers_close.close_year(producer, FARM, 10.0, 100.0, view)
-            producer = result.producer
+        self.assertGreater(producer.capacity_runs, 0.0)
+        result = producers_close.close_year(producer, FARM, 10.0, 100.0, view)
+        producer = result.producer
         self.assertTrue(result.exited)
         self.assertEqual(producer.capacity_runs, 0.0)
         self.assertAlmostEqual(sum(transfer.amount for transfer in result.transfers), 50.0)
@@ -192,7 +191,10 @@ class CloseYearTests(unittest.TestCase):
         view = View({"metal": 0.1, "silver": 0.1, "ore": 1.0, "stone": 1.0}, {"smith": 1.0})
         producer = farmer(recipe_id="smelt", capacity_runs=10.0)
         result = producers_close.close_year(producer, SMELT, 100.0, 50.0, view)
-        self.assertAlmostEqual(result.producer.capacity_runs, 9.0)
+        # the plant wears by its life (one in ten); where the run no longer covers its cost the workplaces that do not pay
+        # also close, no faster than workplaces open
+        self.assertLessEqual(result.producer.capacity_runs, 9.0)
+        self.assertGreaterEqual(result.producer.capacity_runs, (1.0 - producers.OUTPUT_CHANGE_SHARE_PER_YEAR) * 10.0 - 1e-9)
         self.assertIsNone(result.loan_request)
 
     def test_a_loan_to_expand_is_asked_only_when_new_plant_beats_the_rate(self):

@@ -57,6 +57,15 @@ OUTPUT_CHANGE_SHARE_PER_YEAR = declare(
         "last year's price swings its whole output, and a chain of such producers feeding each other "
         "amplifies the swing every year instead of settling. A model of hiring and training would "
         "derive the speed per trade.")
+STOCK_CLEARING_YEARS = declare(
+    "STOCK_CLEARING_YEARS", 2.0, kind="temporary_heuristic",
+    unit="years over which a producer works off stock held beyond its target", source=None, confidence="D",
+    retire="Complaints/473-the-agent-economy-spin-up-never-settles-so-the-opening-is-a-point-on-a-cycle.md",
+    why="Eurace firms plan output from expected sales and an inventory target (Eurace@Unibi user manual 2011, as read in "
+        "Complaints/reports/research-reference-economy-models.md), and Caiani et al. 2016 (eq 3.7) move the markup with "
+        "inventory, so excess stock is drawn down over a stretch of years and not in one: a producer with a positive "
+        "margin whose stock clears in the stretch keeps working. The stretch itself has no source; it follows spoilage, "
+        "interest and the cost of closing a workshop, which are not tied to this rule yet.")
 STORAGE_COST_PER_UNIT = declare(
     "STORAGE_COST_PER_UNIT", 0.0, kind="temporary_heuristic",
     unit="money per unit of good per year", source=None, confidence="D",
@@ -226,20 +235,21 @@ def next_expectations(producer: Producer, recipe: Recipe, view: MarketView,
             previous = updated.get(good)
             updated[good] = latest if previous is None else (
                 previous + EXPECTATION_ADJUSTMENT_SHARE * (latest - previous))
-    break_even = _break_even_scale(producer, recipe, view, updated, live_inputs, wages)
+    break_even, input_share = _break_even_scale(producer, recipe, view, updated, live_inputs, wages)
     cost_covering = {good: updated[good] * break_even for good in latest_prices} if break_even is not None else {}
     if break_even is not None:
         for good in latest_prices:
             updated[good] += REGRESSIVE_EXPECTATION_WEIGHT * (updated[good] * break_even - updated[good])
     for good in ask_raise.sold_out_outputs(producer, recipe, view):
         if good in latest_prices:
-            updated[good] = ask_raise.raised_within_band(updated[good], cost_covering.get(good))
+            updated[good] = ask_raise.raised_within_band(updated[good], cost_covering.get(good), input_share=input_share)
     return updated
 
 
-def _break_even_scale(producer, recipe, view, prices, live_inputs=None, wages=None) -> Optional[float]:
-    """What the output prices would have to be multiplied by for a run to just repay its variable cost
-    and its plant at the live rate; None when it cannot be worked out."""
+def _break_even_scale(producer, recipe, view, prices, live_inputs=None, wages=None) -> Tuple[Optional[float], float]:
+    """(what the output prices would have to be multiplied by for a run to just repay its variable cost
+    and its plant at the live rate, the share of that cost that is bought inputs); the scale is None when it
+    cannot be worked out."""
     inputs = _with_expected(live_input_prices(producer, recipe, view) if live_inputs is None else dict(live_inputs),
                             recipe, prices)
     wages = live_wages(producer, recipe, view) if wages is None else wages
@@ -248,8 +258,8 @@ def _break_even_scale(producer, recipe, view, prices, live_inputs=None, wages=No
     cost = unit_cost.variable_cost_per_run(recipe, inputs, wages, producer.land_rent_per_run) + unit_cost.capital_charge_per_run(
         recipe, inputs, wages, rate)
     if not (revenue > 0.0 and math.isfinite(cost) and cost > 0.0):
-        return None
-    return cost / revenue
+        return None, 0.0
+    return cost / revenue, unit_cost.input_cost_per_run(recipe, inputs) / cost
 
 
 def plan(producer: Producer, recipe: Recipe, view: MarketView, cash: float) -> Plan:
@@ -290,7 +300,7 @@ def plan(producer: Producer, recipe: Recipe, view: MarketView, cash: float) -> P
     # lagging expectation the run is planned on, or a scarce input's price ratchets up on its own bid
     live_variable = unit_cost.input_cost_per_run(recipe, {**inputs, **market_inputs}) + labour_cost + rent
     bids = _input_bids(producer, recipe, view, runs, market_inputs, max(cash, 0.0) - runs * labour_cost,
-                       revenue / ratio - live_variable)
+                       revenue / ratio - live_variable, live_variable, wages)
     return Plan(runs, tuple(labour_bids), tuple(bids), margin, wanted)
 
 
@@ -387,7 +397,7 @@ def main_output(recipe: Recipe) -> GoodId:
 def runs_for_stock(producer: Producer, recipe: Recipe, view: MarketView, run_cost: Optional[float] = None,
                    output_prices: Optional[Mapping[GoodId, float]] = None) -> float:
     """Runs a producer holding more than its target stock of an output limits itself to: what it expects to
-    sell less the excess, so unsold output is worked off. Below its target, the price decides alone (a cap tied
+    sell less a share of the excess (one over STOCK_CLEARING_YEARS), so unsold output is worked off over those years. Below its target, the price decides alone (a cap tied
     to past sales would follow output down, since nothing sells that is not made). Unlimited while it has no
     record of sales. With the run's cost and the outputs' prices, outputs that are piling up do not count while
     what a run makes of the others, at those prices, covers the cost: a joint recipe runs for the output that pays."""
@@ -405,7 +415,8 @@ def runs_for_stock(producer: Producer, recipe: Recipe, view: MarketView, run_cos
                           if good not in piling) * producer.yield_factor
         if sells > 0.0 and sells >= run_cost:      # nothing else sold covers nothing: a costless run is not paid for by it
             return math.inf
-    return max(0.0, sales - max(excess[good] for good in piling))
+    # excess is drawn down over STOCK_CLEARING_YEARS: output falls to zero only for stock that cannot clear in them
+    return max(0.0, sales - max(excess[good] for good in piling) / STOCK_CLEARING_YEARS)
 
 
 def _labour_bids(producer, recipe, view, runs, revenue, input_cost, wages) -> List[LabourBid]:
@@ -421,10 +432,22 @@ def _labour_bids(producer, recipe, view, runs, revenue, input_cost, wages) -> Li
     return bids
 
 
-def _input_bids(producer, recipe, view, runs, prices, budget_for_inputs, margin_per_run) -> List[Bid]:
+def input_ceiling(price: float, margin_per_run: float, variable_cost_per_run: float,
+                  value_in_use: Optional[float] = None) -> float:
+    """The most a buyer bids for an input: its price plus the share of the run's margin the input accounts for
+    (its share of the run's variable cost), and never more than the input is worth against its cheapest
+    substitute when it has one. Short supply is rationed by bid inside this bound, not by a bound that moves
+    with the price bid."""
+    worth = price * (1.0 + max(0.0, margin_per_run) / variable_cost_per_run) if variable_cost_per_run > 0.0 else price
+    return worth if value_in_use is None else min(worth, value_in_use)
+
+
+def _input_bids(producer, recipe, view, runs, prices, budget_for_inputs, margin_per_run, variable_cost_per_run=0.0,
+                wages=None) -> List[Bid]:
     """Inputs for the planned runs, net of what is held: a floor, not price-sensitive. The budget is
     the cash left after wages, split by cost share, so the bids never add up to more than the cash.
-    No input is bought above the price at which the run would just cover its variable cost."""
+    No input is bid for above `input_ceiling`: the run's margin shared by the input's cost share, and the
+    input's value against its cheapest substitute (the tool basket's later tools, or working by hand)."""
     needs = {}
     for good, per_run in sorted(recipe.inputs.items()):
         short = runs * per_run - view.stock(producer.agent_id, good, producer.tile)
@@ -439,7 +462,8 @@ def _input_bids(producer, recipe, view, runs, prices, budget_for_inputs, margin_
     bids = []
     for good, quantity in needs.items():
         share = quantity * prices[good] / total_cost if total_cost > 0.0 else 0.0
-        worth = prices[good] + max(0.0, margin_per_run) / recipe.inputs.get(good, 1.0)
+        worth = input_ceiling(prices[good], margin_per_run, variable_cost_per_run,
+                              tool_fallback.value_in_use(recipe, good, prices, wages or {}))
         bids.append(Bid(producer.agent_id, good, view.area_of(good, producer.tile), producer.tile,
                         quantity, 0.0, prices[good], 0.0, max(0.0, budget_for_inputs) * share,
                         maximum_price=worth))

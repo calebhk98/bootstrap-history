@@ -194,6 +194,7 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage) ->
     property_income: Dict[str, float] = {}
     traded = {(result.good, result.area): result.quantity for result in ledger.clearings}
     prepared_buyers: Dict = {}
+    service_lives = {good: spec.service_life_years for good, spec in setup.specs.items()}
     cohorts_by_tile: Dict = {}           # the tiles' cohorts, unchanged until the households close below
     for producer_id, producer in sorted(record.producers.items()):
         recipe = setup.recipes[producer.recipe_id]
@@ -205,7 +206,8 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage) ->
         price_share = expansion_price.price_share_of(ledger.bids_by_market, traded, area_map.area_of, producer.tile,
                                                    prepared_buyers)
         closed = producers_close.close_year(producer, recipe, revenue, costs, view, worked, price_share,
-                                            [good for good in recipe.outputs if good in setup.specs and not setup.specs[good].portable])
+                                            [good for good in recipe.outputs if good in setup.specs and not setup.specs[good].portable],
+                                            service_lives)
         shares.note_dividend(record, producer_id, closed.transfers)
         if closed.exited:
             paid = producer_exit.exit_producer(record, producer_id, list(closed.transfers))

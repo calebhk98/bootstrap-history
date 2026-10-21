@@ -5,6 +5,7 @@ search itself is the real one."""
 
 QUICK_TOPIC = True
 
+import contextlib
 import dataclasses
 import math
 import random
@@ -77,7 +78,11 @@ def stub_costs(producers):
     def cost(_setup, _record, _view, offer):
         producer = producers.get(offer.seller)
         return None if producer is None else producer.cost
-    return mock.patch.object(seller_offers, "unit_cost", cost)
+    no_inputs = mock.patch.object(seller_offers, "input_share_of_cost", lambda *_arguments: 0.0)   # the copy below bands the whole cost
+    stack = contextlib.ExitStack()
+    stack.enter_context(mock.patch.object(seller_offers, "unit_cost", cost))
+    stack.enter_context(no_inputs)
+    return stack
 
 
 class LazyBuyersTests(unittest.TestCase):

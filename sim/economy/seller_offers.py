@@ -18,7 +18,8 @@ import math
 from typing import List, Optional, Sequence
 
 from . import entry_trial, goods_market, market_curves, seller_pricing
-from .ask_raise import ASK_BAND_CEILING, SOLD_OUT_ASK_RAISE_SHARE
+from . import unit_cost as run_cost
+from .ask_raise import ASK_BAND_CEILING, SOLD_OUT_ASK_RAISE_SHARE, band_edge
 from .producers import expected_output_prices, live_input_prices, live_wages
 from .types import EDGE_EXTERNAL, Bid, Offer
 
@@ -40,6 +41,18 @@ def unit_cost(setup, record, view, offer: Offer) -> Optional[float]:
     return entry_trial.full_cost_per_unit(
         recipe, offer.good, expected_output_prices(producer, recipe, view), live_input_prices(producer, recipe, view),
         live_wages(producer, recipe, view), 0.0, producer.land_rent_per_run, producer.yield_factor)
+
+
+def input_share_of_cost(setup, record, view, offer: Offer) -> float:
+    """The share of a run's variable cost the producer pays for bought inputs (none for a seller that is not a
+    producer or whose cost cannot be priced): the band above cost marks up only the rest (ask_raise.band_edge)."""
+    producer = record.producers.get(offer.seller)
+    if producer is None:
+        return 0.0
+    recipe = setup.recipes[producer.recipe_id]
+    inputs = live_input_prices(producer, recipe, view)
+    variable = run_cost.variable_cost_per_run(recipe, inputs, live_wages(producer, recipe, view), producer.land_rent_per_run)
+    return run_cost.input_cost_per_run(recipe, inputs) / variable if math.isfinite(variable) and variable > 0.0 else 0.0
 
 
 def unit_value(offer: Offer, cost: float) -> float:
@@ -95,7 +108,8 @@ def strategic_offers(setup, record, view, bids: Sequence[Bid], offers: Sequence[
         if buyers is None:
             book = merged_bids(bids, good)
             buyers = goods_market.Buyers(book, last_price)
-        limit = cost * ask_band_multiple(setup, offer) if math.isfinite(cost) else math.inf
+        limit = (band_edge(cost, input_share_of_cost(setup, record, view, offer), ask_band_multiple(setup, offer))
+                 if math.isfinite(cost) else math.inf)
         step = SOLD_OUT_ASK_RAISE_SHARE * (ask if ask > 0.0 else max(last_price or 0.0, 0.0))
         choice = seller_pricing.best_reservation(
             book, rivals, offer, value, last_price, ceiling=min(ask + step, max(limit, value)), floor=value,
