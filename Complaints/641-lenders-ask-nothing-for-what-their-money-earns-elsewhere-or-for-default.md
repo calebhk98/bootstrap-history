@@ -30,9 +30,23 @@ sides would agree to.
 - The opening rate in the default game reads at the lenders' ceiling, and at that rate `NicheEntry.found` rejected every
   concern tried, so no firm entered in the default game. Two causes were fixed (665: an idle plant's request for more
   plant, and the lender reserve never held), and seats' credit lines now join `credit.clear`. Measured after those: Measured 2026-10-21 on main 3cb9c9a0, an opened Rome game with the full spin-up: from a checkout root, `from sim.tests import harness; import os; os.environ.pop("ROME_SPIN_UP_YEARS", None); game = harness.sim(capital=1e7)`, then the reads named below. `game.economy._answering_agent().economy().record.memory.rates` still reads
-  the lenders' ceiling, so the 665 fixes did not bring it down. Which rule holds it there is being diagnosed with rule tests
-  (the candidates: demand above funds at every lower rate, the lowest ask itself reaching the ceiling through loss memory or
-  an expected inflation read off a runaway price index, or the ceiling clamping a rate with no clearing point). A default game in which no firm can ever enter is a defect, not a setting;
+  the lenders' ceiling, so the 665 fixes did not bring it down. Cause, measured by wrapping `credit.clear` and stepping that game one year
+  (probe: `Complaints/reports/641-rate-probe.md`): every household cohort's `expected_inflation` reads far above the time
+  preference, so every lender's lowest ask (`lender_ask.lowest_ask`: time preference plus expected inflation plus remembered
+  loss) is above the ceiling (`capital_market.RATE_CEILING_SHARE` times `setup.opening_rate`, a nominal rate). Funds offered
+  exceed requests several times over, yet `credit.clear` lends nothing: the rate is clamped to a ceiling no lender accepts, and
+  every request is left unmet. Borrowers' caps are also unbounded (the largest caps run to many times a hundred per cent).
+  Rule tests of the three shapes (rationed caps above the ceiling, the ask above it, a clamp with no clearing point):
+  `sim/tests/test_economy_credit_rate_at_ceiling.py`.
+
+  Two defects meet here. (1) Expected inflation is read from a price level that runs away while the opening does not settle
+  (473, GitHub #61), so the opening's lenders expect a large yearly inflation. (2) The ceiling is nominal: under high expected
+  inflation it shuts the credit market instead of bounding a rate. Realistic rules (`Complaints/reports/research-reference-economy-models.md`:
+  Eurace, Caiani et al.) price the loan rate from the lenders' side (an ask plus a default premium, a spread that widens as
+  bank capital thins) and ration by quantity and risk when demand exceeds funds; a bound, if kept, applies to the real rate.
+  What it would take: the ceiling on the real rate (or removed, with rationing by quantity), expected inflation read from a
+  settled index (473), and borrowers' caps bounded by what a loan can earn. `NicheEntry.found` should compare an entrant's
+  return with the lenders' ask plus the loss premium, not the clamped rate. A default game in which no firm can ever enter is a defect, not a setting;
   `test_firm_entry_default_game_scenario` checks placement without a founding.
 
 **What it would take.** Feed the two alternatives (titles at a price, a state bond reachable by households), re-measure the
