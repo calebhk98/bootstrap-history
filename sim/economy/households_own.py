@@ -30,15 +30,15 @@ Option = Tuple[float, str, GoodId, float]      # (hours per need unit, recipe id
 
 def own_production_options(recipes: Mapping[str, Recipe], land_per_run: Mapping[str, float],
                            basket: Basket) -> Dict[str, List[Option]]:
-    """For each need, the recipes whose output serves it that buy nothing on the market (land and the household's
-    own team held as plant are not inputs), fewest hours first. Only needs with a
+    """For each need, the recipes whose output serves it that buy nothing on the market but the tools their
+    workers wear (land and the household's own team held as plant are not inputs), fewest hours first. Only needs with a
     floor where the cohort lives are grown (own_production reads the cohort's own floors)."""
     options: Dict[str, List[Option]] = {}
     for need in basket.needs:
         rows = []
         for recipe_id, recipe in sorted(recipes.items()):
             hours = math.fsum(recipe.labour_hours.values())
-            if recipe.inputs or land_per_run.get(recipe_id, 0.0) <= 0.0 or hours <= 0.0:
+            if any(good not in recipe.tool_wear for good in recipe.inputs) or land_per_run.get(recipe_id, 0.0) <= 0.0 or hours <= 0.0:
                 continue
             for good, effect in need.goods:
                 made = recipe.outputs.get(good, 0.0)
@@ -58,11 +58,12 @@ def hours_on_land(hectares: float, recipe: Recipe, land_per_run: float) -> float
 
 def own_production(cohort: Cohort, idle_hours: float, options: Mapping[str, List[Option]],
                    recipes: Mapping[str, Recipe], fertility: float, basket: Basket,
-                   land_per_run: Optional[Mapping[str, float]] = None, hectares_held: float = 0.0
+                   land_per_run: Optional[Mapping[str, float]] = None, hectares_held: float = 0.0,
+                   hours_used: Optional[Dict[str, float]] = None
                    ) -> Tuple[List[GoodsMove], Dict[GoodId, float], Dict[str, float]]:
     """(moves booking what it grew, goods grown, need units grown) for one cohort's idle hours. It grows
     only on land it holds (owned or leased): `hectares_held` is shared among the needs in turn, and a
-    cohort with none grows nothing."""
+    cohort with none grows nothing. `hours_used`, if given, is filled with the hours worked by recipe."""
     land_per_run = land_per_run or {}
     hectares_left = max(0.0, hectares_held)
     moves: List[GoodsMove] = []
@@ -81,6 +82,8 @@ def own_production(cohort: Cohort, idle_hours: float, options: Mapping[str, List
         if used <= 0.0:
             continue
         hours_left -= used
+        if hours_used is not None:
+            hours_used[recipe_id] = hours_used.get(recipe_id, 0.0) + used
         hectares_left -= used / math.fsum(recipes[recipe_id].labour_hours.values()) * land_per_run[recipe_id]
         made_units = used / hours_per_unit
         quantity = made_units / effect
