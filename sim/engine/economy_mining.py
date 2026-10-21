@@ -224,6 +224,7 @@ class MiningMixin(MineDepositsMixin):
 
     MINE_CEILING_BASE_IMPERIAL = declare(
         "MINE_CEILING_BASE_IMPERIAL", 20000.0, kind="temporary_heuristic",
+        retire="Complaint 660 follow-up: ceiling from tonnes an inspector can keep registered",
         unit="tonnes/year (base, before state reach and revenue scale)",
         source=None, confidence="D",
         why="Base standing-mine ceiling for an imperial patron before "
@@ -233,6 +234,7 @@ class MiningMixin(MineDepositsMixin):
             "this method distinguishes.")
     MINE_CEILING_STATE_SCALE_IMPERIAL = declare(
         "MINE_CEILING_STATE_SCALE_IMPERIAL", 60000.0, kind="temporary_heuristic",
+        retire="Complaint 660 follow-up: ceiling from tonnes an inspector can keep registered",
         unit="tonnes/year per unit of inspection reach (share of people whose claims its inspectors check)", source=None,
         confidence="D",
         why="How much further a more capable state extends the imperial-"
@@ -240,6 +242,7 @@ class MiningMixin(MineDepositsMixin):
             "output relationship.")
     MINE_CEILING_BASE_STRANGER = declare(
         "MINE_CEILING_BASE_STRANGER", 3000.0, kind="temporary_heuristic",
+        retire="Complaint 660 follow-up: ceiling from tonnes an inspector can keep registered",
         unit="tonnes/year (base)", source=None, confidence="D",
         why="As MINE_CEILING_BASE_IMPERIAL, for a stranger with no "
             "citizenship or patron - still a real production ceiling, per "
@@ -247,6 +250,7 @@ class MiningMixin(MineDepositsMixin):
             "never simply shut out of mining.")
     MINE_CEILING_STATE_SCALE_STRANGER = declare(
         "MINE_CEILING_STATE_SCALE_STRANGER", 4000.0, kind="temporary_heuristic",
+        retire="Complaint 660 follow-up: ceiling from tonnes an inspector can keep registered",
         unit="tonnes/year per unit of inspection reach", source=None,
         confidence="D",
         why="As MINE_CEILING_STATE_SCALE_IMPERIAL, for the stranger tier.")
