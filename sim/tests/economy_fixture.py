@@ -10,7 +10,7 @@ import contextlib
 import dataclasses
 from unittest import mock
 
-from sim.economy import opening_income
+from sim.economy import opening_income, opening_stationary
 from sim.economy.economy import Economy
 from sim.world.need_demand import NEED_SUBSTITUTION_ELASTICITY
 from sim.economy.households_basket import Basket, NeedSpec
@@ -77,6 +77,20 @@ def small_setup(**changes) -> EconomySetup:
         opening_prices=prices, opening_wages=wages, opening_rate=0.06,
         capital_tile=TOWN, port_tile=TOWN)
     return dataclasses.replace(setup, **changes) if changes else setup
+
+
+def stationary_setup(slack_share: float = 0.1, **changes) -> EconomySetup:
+    """The three-tile economy with each worker offering the hours its opening's runs hire plus `slack_share`
+    (opening_stationary.py), not the stated 2000 a year, which is many times what the fixture's recipes hire: at
+    those hours the labour market clears at the workers' survival wage a dozen times below the stated one, and no
+    year repeats itself. The runs are those of the stated fixture's opening demand."""
+    stated = small_setup()
+    demand = Economy(stated).record.opening_demand
+    flows = opening_stationary.solve({TOWN: demand}, stated.recipes, stated.opening_prices, stated.opening_wages,
+                                     stated.opening_rate)
+    workers = sum(stated.opening_population_by_tile.values()) * stated.working_share
+    hours = opening_stationary.hours_that_clear_at(flows.hours_by_trade[LABOURER], workers, slack_share)
+    return small_setup(working_hours_per_year=hours, **changes)
 
 
 def quiet_year(setup: EconomySetup, **changes) -> YearInputs:
