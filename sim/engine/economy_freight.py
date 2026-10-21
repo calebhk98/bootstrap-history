@@ -64,7 +64,7 @@ from . import money_units
 from . import purchase_rule
 from .freight_markup import freight_markup, scarcity_factor
 from .units_prose import area_text, mass_per_area_text, mass_rate_text, money_text
-from .shortage_sizing import mine_shortfall_after_sinking, mine_size_tonnes, nitre_bed_square_metres
+from .shortage_sizing import mine_shortfall_after_sinking, mine_size_tonnes, nitre_bed_square_metres, nitre_deficit_tonnes
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
 from sim.geography.api import freight_cost, provisions, transport as freight_physics
@@ -613,10 +613,9 @@ class FreightMixin:
             shortfall_t = self.material_shortfall_t(binding)
         if binding == "saltpetre":
             demand = self.annual_material_demand().get("saltpetre_kg", 0.0) / KILOGRAMS_PER_TONNE
-            available = (self.state.holdings.nitre_bed_m2 * self.NITRE_YIELD_T_PER_M2
-                         + self._material_market_tonnes("saltpetre")
-                         + self._material_stock().get("saltpetre", 0.0))
-            deficit = max(shortfall_t, demand - available, 0.0)
+            deficit = nitre_deficit_tonnes(
+                shortfall_t, demand, self.state.holdings.nitre_bed_m2, self.NITRE_YIELD_T_PER_M2,
+                self._material_market_tonnes("saltpetre"), self._material_stock().get("saltpetre", 0.0))
             # Twenty per cent headroom prevents a tiny change in the portfolio
             # putting the player straight back into shortage, without turning a
             # one-tonne deficit into the old fixed sixteen-tonne recommendation.

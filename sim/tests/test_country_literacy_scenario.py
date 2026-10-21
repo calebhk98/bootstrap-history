@@ -1,4 +1,5 @@
-"""Complaint 604: the people who can read govern hiring and research together."""
+"""SCENARIO (Complaint 604): in a real game the people who can read govern hiring and research together. The reading-share
+rules are in test_country_literacy_totals, test_complaint_62_literacy_ceiling and test_household_capacity_and_literacy."""
 import unittest
 from unittest.mock import patch
 

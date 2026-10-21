@@ -1,24 +1,17 @@
-"""Complaint 640: the credit warnings and the rule that lets a long step stop on them, one rule at a time. The
-old check ran a hundred-year step to see a warning stop it; the rules are the warning itself
-(`warn_near_the_limit`), the answer to exhausted credit (`answer_exhausted_credit`) and the table that says which
-lines interrupt a multi-year step (`stops_a_step`). One short step in test_interface_honesty.py keeps the loop that
-reads the table."""
+"""Complaint 640: the credit warnings and the rule that lets a long step stop on them, one rule at a time: the warning
+band (`near_limit`), the halt of work in hand (`halt_active_projects`) and the table that says which lines interrupt a
+multi-year step (`stops_a_step`). The same rules in a real household's log are in test_credit_warning_rules_scenario.py."""
 
+import types
 import unittest
 
-from .harness import *  # noqa: F401,F403
+from sim.engine.affordability import NEAR_LIMIT_FROM, near_limit
+from sim.engine.credit_freeze import halt_active_projects
 from sim.refusal import LogLine
 from sim.ui.proto.event_kinds import stops_a_step
 
-
-def game_owing(share_of_limit):
-    game = unopened_sim(civ="rome_100ad", capital=500.0)
-    game.capital = -share_of_limit * game.credit_limit()
-    return game
-
-
-def kinds(game):
-    return [line.kind for _year, line in game.state.household.log if hasattr(line, "kind")]
+QUICK_TOPIC = True
+LIMIT = 1000.0
 
 
 class StopsAStep(unittest.TestCase):
@@ -30,45 +23,42 @@ class StopsAStep(unittest.TestCase):
 
 
 class NearTheLimit(unittest.TestCase):
-    def test_the_warning_is_given_between_the_warning_line_and_the_limit_and_only_once(self):
-        game = game_owing(0.8)
-        game.warn_near_the_limit(game.year)
-        game.warn_near_the_limit(game.year + 1)
-        self.assertEqual(kinds(game).count("credit_near_limit"), 1)
+    def test_the_warning_is_given_on_entering_the_band_and_not_again_while_in_it(self):
+        warn, said, used = near_limit(-0.8 * LIMIT, LIMIT, False)
+        self.assertTrue(warn)
+        self.assertTrue(said)
+        self.assertAlmostEqual(used, 0.8)
+        self.assertEqual(near_limit(-0.8 * LIMIT, LIMIT, said)[0], False)
 
     def test_no_warning_far_from_the_limit_or_past_it(self):
-        for share in (0.3, 1.2):
-            game = game_owing(share)
-            game.warn_near_the_limit(game.year)
-            self.assertNotIn("credit_near_limit", kinds(game), share)
+        below_band = -0.5 * NEAR_LIMIT_FROM * LIMIT
+        self.assertEqual(near_limit(below_band, LIMIT, False)[:2], (False, False))
+        self.assertEqual(near_limit(-1.2 * LIMIT, LIMIT, False)[0], False)
 
     def test_the_warning_is_given_again_after_the_household_recovers(self):
-        game = game_owing(0.8)
-        game.warn_near_the_limit(game.year)
-        game.capital = 0.0
-        game.warn_near_the_limit(game.year + 1)
-        game.capital = -0.8 * game.credit_limit()
-        game.warn_near_the_limit(game.year + 2)
-        self.assertEqual(kinds(game).count("credit_near_limit"), 2)
+        _warn, said, _used = near_limit(-0.8 * LIMIT, LIMIT, False)
+        _warn, said, _used = near_limit(0.0, LIMIT, said)
+        self.assertFalse(said)
+        self.assertTrue(near_limit(-0.8 * LIMIT, LIMIT, said)[0])
+
+    def test_no_credit_line_gives_no_warning(self):
+        self.assertEqual(near_limit(-10.0, 0.0, False), (False, False, 0.0))
 
 
-class ExhaustedCredit(unittest.TestCase):
-    def test_past_the_limit_work_in_hand_stops_credit_freezes_and_the_line_says_so(self):
-        game = game_owing(1.5)
-        game.state.projects.active["a_project"] = {"spent": 40.0}
-        year = game.year
-        game.answer_exhausted_credit(year)
-        self.assertNotIn("a_project", game.state.projects.active)
-        self.assertEqual(game.state.household.credit_frozen_until, year + game.CREDIT_FREEZE_YEARS_AFTER_HALT)
-        self.assertIn("credit_exhausted", kinds(game))
-        self.assertEqual(game.state.projects.paid_towards["a_project"], 40.0)   # paid work stands to its credit
+class HaltedProjects(unittest.TestCase):
+    def test_work_in_hand_stops_and_what_was_paid_stands_to_its_credit(self):
+        projects = types.SimpleNamespace(active={"b": {"spent": 40.0}, "a": {"spent": 5.0}}, bountied={"a", "z"})
+        halted, kept = halt_active_projects(projects)
+        self.assertEqual(halted, ["a", "b"])
+        self.assertEqual(kept, 45.0)
+        self.assertEqual(projects.active, {})
+        self.assertEqual(projects.paid_towards, {"a": 5.0, "b": 40.0})
+        self.assertEqual(projects.bountied, {"z"})
 
-    def test_inside_the_limit_nothing_is_stopped(self):
-        game = game_owing(0.5)
-        game.state.projects.active["a_project"] = {"spent": 40.0}
-        game.answer_exhausted_credit(game.year)
-        self.assertIn("a_project", game.state.projects.active)
-        self.assertNotIn("credit_exhausted", kinds(game))
+    def test_payment_adds_to_what_was_already_credited(self):
+        projects = types.SimpleNamespace(active={"a": {"spent": 5.0}}, bountied=set(), paid_towards={"a": 10.0})
+        halt_active_projects(projects)
+        self.assertEqual(projects.paid_towards["a"], 15.0)
 
 
 if __name__ == "__main__":

@@ -18,7 +18,8 @@ other economy sub-mixins; see that file for the composition and for the
 grouping evidence.
 """
 from .data import WAGES
-from .credit_freeze import STALL_MINIMUM_INSOLVENT_YEARS, is_stalled, loss_makers, settlement_freeze, settlement_owed, standing_net
+from .credit_freeze import (STALL_MINIMUM_INSOLVENT_YEARS, halt_active_projects, is_stalled, loss_makers, settlement_freeze,
+                            settlement_owed, standing_net)
 from sim.constants import declare
 from sim.refusal import LogLine
 from . import money_units
@@ -431,19 +432,7 @@ class CreditMixin:
             return
         # stop everything in progress: you cannot fund it
         if projects.active:
-            dropped = sorted(projects.active)
-            # Payments on halted projects are credited, not burned.
-            _paid = getattr(projects, "paid_towards", None)
-            if _paid is None:
-                _paid = projects.paid_towards = {}
-            _kept = 0.0
-            for node_id in dropped:
-                active_entry = projects.active.pop(node_id, None)
-                if active_entry:
-                    spent_val = active_entry.get("spent", 0.0) if isinstance(active_entry, dict) else getattr(active_entry, "spent", 0.0)
-                    _paid[node_id] = _paid.get(node_id, 0.0) + max(0.0, spent_val)
-                    _kept += max(0.0, spent_val)
-                projects.bountied.discard(node_id)
+            dropped, _kept = halt_active_projects(projects)
             household.credit_frozen_until = year + self.CREDIT_FREEZE_YEARS_AFTER_HALT
             household.log.append((year, LogLine(
                 "credit_exhausted", "CREDIT EXHAUSTED: %d project%s stopped, "

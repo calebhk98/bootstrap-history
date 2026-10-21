@@ -1,26 +1,2 @@
 # Undeclared test modules that build a whole game (Complaint 640). Convert one to a rule test or declare it, then delete its line.
 # `python3 -m sim.tests --whole-game-checks` fails when this list and the tree disagree.
-complaint_505_room_advice_income
-complaints_09_16
-concern_volume
-country_literacy
-craftsmen_wording
-credit_warning_rules
-crew_is_the_recipes_trades
-cross_screen_consistency
-dashboard_history_cap
-demographics
-demographics_and_plague
-disease_burden_wiring
-early_playtest
-economic_levers_inventory
-economy_check_command
-economy_entry_for_standing_bids
-economy_follows_rotation
-economy_reads_map_through_geography
-eminence_scandal_and_reputation
-farm_follows_soil
-firm_count_from_costs
-firm_crew_paid_once
-five_things_winner
-freight_domestic_haul

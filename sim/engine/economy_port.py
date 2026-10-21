@@ -376,7 +376,7 @@ class EconomyPort:
         """Yearly upkeep of a concern at a given capacity, without its crew's pay: an actor that runs a concern
         hires the crew through the labour market and pays wages there."""
         node = self._sim.nodes[node_id]
-        return node["up"] * node_upkeep.non_labour_share(node) * (self.cost_scale() if cost_scale is None else cost_scale) * capacity
+        return node_upkeep.non_labour_upkeep_money(node["up"], node, capacity, self.cost_scale() if cost_scale is None else cost_scale)
 
     def project_cost(self, node_id):
         """What a project costs to carry out now."""

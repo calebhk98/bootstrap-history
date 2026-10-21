@@ -1,4 +1,4 @@
-"""Numbers that have to agree because a player reads them side by
+"""SCENARIO: Numbers that have to agree because a player reads them side by
 side: `ventures` against the `money` ledger, `labour`'s wage bill against
 the per-head quote, `work`'s three figures, three different screens'
 counts of the founder's own staff, and `why`'s FULL CHAIN total against the

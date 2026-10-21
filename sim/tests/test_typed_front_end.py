@@ -52,3 +52,10 @@ check("typed 'sell farm <ha>' parses", parse_typed("sell farm 40")[0] == {"cmd":
       parse_typed("sell farm 40"))
 check("typed 'sell <material> <tonnes>' is unchanged", parse_typed("sell iron 5")[0]
       == {"cmd": "sell", "material": "iron", "n": 5}, parse_typed("sell iron 5"))
+
+check("typed economic levers reach their protocol actions",
+      parse_typed("buy farm 120")[0] == {"cmd": "buy", "what": "farm", "n": 120}
+      and parse_typed("buy housing 5")[0] == {"cmd": "buy", "what": "housing", "n": 5}
+      and parse_typed("buy trade_school smith 2")[0]
+          == {"cmd": "buy", "what": "trade_school", "material": "smith", "n": 2}
+      and parse_typed("materials")[0] == {"cmd": "materials"})

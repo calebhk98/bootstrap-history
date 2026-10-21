@@ -7,6 +7,13 @@ def nitre_bed_square_metres(deficit_tonnes, safety_buffer, yield_tonnes_per_squa
     return max(100, int(math.ceil(deficit_tonnes * safety_buffer / max(yield_tonnes_per_square_metre, 1e-12) / 100.0)) * 100)
 
 
+def nitre_deficit_tonnes(shortfall_tonnes, demand_tonnes, bed_square_metres, yield_tonnes_per_square_metre, market_tonnes, stock_tonnes):
+    """Tonnes a year of saltpetre still to cover: the larger of the reported shortfall and the demand left after the
+    beds' yield, the market and the stock."""
+    available = bed_square_metres * yield_tonnes_per_square_metre + market_tonnes + stock_tonnes
+    return max(shortfall_tonnes, demand_tonnes - available, 0.0)
+
+
 def mine_shortfall_after_sinking(material, shortfall_tonnes, mine_tranches):
     """(tonnes being sunk, year the earliest is ready, shortfall left) once the tranches of `material` already being sunk count."""
     sinking = [tranche for tranche in (mine_tranches or []) if tranche[0] == material]
