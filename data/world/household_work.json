@@ -6,26 +6,28 @@
  "tasks": {
   "water_fuel_and_grinding": {
    "needs_hearth": false,
-   "hours_per_adult_woman_per_day": 1.0,
+   "hours_per_adult_woman_per_day": 2.5,
    "adult_women_per_person": 0.25,
-   "basis": "Carrying water and firewood and bringing crops for grinding falls mostly on women: 'These figures equate to a time input for an average adult female ranging from just under 1 hour to 2 hours 20 minutes every day' (C. Mark Blackden and Quentin Wodon, eds, Gender, Time Use, and Poverty in Sub-Saharan Africa, World Bank Working Paper 73, 2006, overview, p. 9, citing Malmberg-Calvo 1994 village transport surveys in Ghana, Tanzania and Zambia; opened). The low end of the range is taken. Adult women as a quarter of a household's people: no source found, confidence D.",
+   "basis": "Rural Burkina Faso, average minutes a day for women: grinding and pounding grain 108, water supply 38, fuel supply 6 (Box 1, 'Rural activities, comparison of time allocation by sex, Burkina Faso', source line 'Carr and Sandhu, 1988', in A Gordon, A Swetman and K Albright, 'Women in post-harvest operations: reducing the drudgery', Issues Paper 6, June 2002, p. 2; opened; a secondary reproduction, survey year and sample not given there). The three sum to 152 minutes, 2.5 hours. The earlier figure took only the carrying range of Blackden and Wodon (eds), Gender, Time Use, and Poverty in Sub-Saharan Africa, World Bank Working Paper 73, 2006, overview p. 9: 'These figures equate to a time input for an average adult female ranging from just under 1 hour to 2 hours 20 minutes every day' (carrying of water, firewood and crops for grinding; Ghana, Tanzania and Zambia), which leaves out the grinding itself. Adult women as a quarter of a household's people: no source found, confidence D.",
    "conf": "C"
   },
   "cooking": {
    "needs_hearth": true,
-   "hours_per_person_per_day": 0.3,
-   "basis": "Preparing meals is named among the basic chores of the 'household time overhead' (Harvey and Taylor 2000, as quoted in the overview of Blackden and Wodon 2006; opened as a quotation, no hours given there). No source found for the hours; about an hour and a half a day for a household of five is an estimate.",
-   "conf": "D",
+   "basis": "Ghana 2009 national time-use diary, women aged 15-59, mean 18.1 hours a week in cooking (food preparation, clean up, fetching wood and water), 2.6 hours a day; Sierra Leone 2003 labour force survey, 8.7 hours a week (Taryn Dinkelman and L. Rachel Ngai, 'Time Use and Gender in Africa in Times of Structural Transformation', Journal of Economic Perspectives 36(1), 2022, pp. 57-80; Online Data Appendix, Table A.1, 'Weekly Hours in Home Production among All Women'; appendix opened, the article itself not). Ghana is taken: a diary survey that counts secondary activities. It is a national sample with some piped water and mills, so not a pure subsistence household, and its cooking category includes some wood and water fetching, which the water_fuel_and_grinding task also counts. Adult women as a quarter of a household's people: no source found, confidence D.",
+   "conf": "C",
    "heuristic": true,
-   "retire": "Complaints/645 follow-up: a time-use survey figure for cooking and cleaning hours"
+   "retire": "Complaints/645 follow-up: a share of adult women per household from a demographic source, and a time-use survey of a society without piped water or mills",
+   "hours_per_adult_woman_per_day": 2.6,
+   "adult_women_per_person": 0.25
   },
   "cleaning_and_childcare": {
    "needs_hearth": false,
-   "hours_per_person_per_day": 0.5,
-   "basis": "Washing clothes, cleaning and minding children are named among the household time overhead (Harvey and Taylor 2000, as quoted in the overview of Blackden and Wodon 2006; no hours given there). No source found for the hours; an estimate.",
-   "conf": "D",
+   "basis": "Ghana 2009 national time-use diary, women aged 15-59, mean weekly hours: cleaning 2.4, laundry 2.4, care of children and adults 7.8, together 12.6 hours a week, 1.8 hours a day; Sierra Leone 2003 sums to 19.2 (Dinkelman and Ngai, JEP 36(1), 2022, Online Data Appendix, Table A.1; appendix opened). Household management (shopping, travel) is left out. Ghana is taken, with the caveats of the cooking task. Adult women as a quarter of a household's people: no source found, confidence D.",
+   "conf": "C",
    "heuristic": true,
-   "retire": "Complaints/645 follow-up: a time-use survey figure for cooking and cleaning hours"
+   "retire": "Complaints/645 follow-up: a share of adult women per household from a demographic source, and a time-use survey of a society without piped water or mills",
+   "hours_per_adult_woman_per_day": 1.8,
+   "adult_women_per_person": 0.25
   }
  }
 }
