@@ -7,7 +7,7 @@
    },
    "inputs": {},
    "labour_hours": {
-    "vine_and_olive_tender": 170.0
+    "vine_and_olive_tender": 1132.0
    },
    "land_hectare_years": 0.99999105,
    "extracted_from": "arable land",
@@ -22,7 +22,7 @@
    ],
    "unit_dimension": "mass",
    "basis": "per hectare of bearing vineyard per year, output as kg of grapes at the vintage",
-   "yield_basis": "GROWN. The 4000 kg/ha grape yield and the climate classes are the figures the wine entry carried before this split (an unsourced estimate, conf C; the pre-modern unfertilised vineyard it describes). Labour is the viticulture share of that entry's 200 hours (pruning, tying, hoeing, pest work and the picking); the 170 / 30 split between vineyard and cellar is a LABELLED HEURISTIC, no source found, retire: Complaint 656. LAND: one hectare-year, as in wheat_kg. WAITING YEARS: a new vineyard bears nothing for its first years; that is the `capital` stand below (establishment_years), not a share of this batch. Columella, De Re Rustica 3 (LacusCurtius, https://penelope.uchicago.edu/Thayer/E/Roman/Texts/Columella/de_Re_Rustica/3*.html), counts interest over \"the two-year period when the vineyards, in their infancy as it were, are delayed in bearing\" (section 3.9 of that page). Columella 3.8 sets the labour scale: \"seven iugera require the labour of not more than one vinedresser\" (about 1.8 hectares to one man); the hours per hectare here are far below a full working year for that, a gap filed as Complaint 656.",
+   "yield_basis": "GROWN. The 4000 kg/ha grape yield and the climate classes are the figures the wine entry carried before this split (an unsourced estimate, conf C; the pre-modern unfertilised vineyard it describes). Labour is read from Columella 3.8: \"seven iugera require the labour of not more than one vinedresser\", so one working year (HOURS_PER_PERSON_YEAR, an engineering estimate in sim/unit_conversions.py, conf D) over 7 iugera at 2,523 square metres each (1.766 ha) is about 1132 hours a hectare for the vineyard; the 30 cellar hours stay a separate LABELLED HEURISTIC, no source found, retire: Complaint 656. YIELD CHECK: Columella 3.7 reports Graecinus, \"setting the lowest estimate\", at \"twenty amphorae from every iugerum\", and 3.11 says vineyards which yield less than three cullei to the iugerum should be rooted out (a culleus is 20 amphorae, Loeb note). At 26 litres an amphora and 2,523 square metres an iugerum that spans about 2000 to 6200 litres of wine a hectare, so the 2700 kg of wine from this entry sits inside the quoted range; the 4000 kg of grapes itself stays an unsourced estimate. LAND: one hectare-year, as in wheat_kg. WAITING YEARS: a new vineyard bears nothing for its first years; that is the `capital` stand below (establishment_years), not a share of this batch. Columella, De Re Rustica 3 (LacusCurtius, https://penelope.uchicago.edu/Thayer/E/Roman/Texts/Columella/de_Re_Rustica/3*.html), counts interest over \"the two-year period when the vineyards, in their infancy as it were, are delayed in bearing\" (section 3.9 of that page). Columella 3.8 sets the labour scale: \"seven iugera require the labour of not more than one vinedresser\" (about 1.8 hectares to one man); the labour above is that figure.",
    "capital": [
     {
      "good": "vineyard stand, one hectare of planted and trained vines",
@@ -48,7 +48,7 @@
    },
    "inputs": {},
    "labour_hours": {
-    "vine_and_olive_tender": 160.0
+    "vine_and_olive_tender": 165.0
    },
    "land_hectare_years": 0.99999105,
    "extracted_from": "arable land",
@@ -61,7 +61,7 @@
    ],
    "unit_dimension": "mass",
    "basis": "per hectare of bearing, unirrigated olive grove per year, long-run average across on- and off-bearing years, output as kg of olives",
-   "yield_basis": "GROWN. The oil entry carried 300 kg oil/ha/yr from a recalled 15-20 percent press recovery of a few tonnes of olives; 1700 kg of olives here is that oil figure over 17.6 percent recovery (inside the stated range), an unsourced estimate, conf C. Labour is the harvest and grove share of the oil entry's 190 hours; the 160 / 30 split is a LABELLED HEURISTIC, no source found, retire: Complaint 656. Varro, De Re Rustica 1.18.2 (LacusCurtius, https://penelope.uchicago.edu/Thayer/E/Roman/Texts/Varro/de_Re_Rustica/1*.html): \"Saserna states that one man is enough for eight iugera\" of olives (about 2 hectares to a man); as for the vine, the hours here are far below a working year, filed as Complaint 656. KNOWLEDGE (Complaints/531): the tree is an Old World cultigen, gated on mat_olive_oil. LAND: one hectare-year.",
+   "yield_basis": "GROWN. The oil entry carried 300 kg oil/ha/yr from a recalled 15-20 percent press recovery of a few tonnes of olives; 1700 kg of olives here is that oil figure over 17.6 percent recovery (inside the stated range), an unsourced estimate, conf C. Labour is read from Cato's staffing as Varro 1.18.1 reports it: an oliveyard of 240 iugera has \"an overseer, a housekeeper, five labourers, three teamsters, one muleteer, one swineherd, one shepherd\" (13 slaves). Only the five labourers are counted, one working year each (HOURS_PER_PERSON_YEAR, an engineering estimate, conf D) over 240 iugera at 2,523 square metres each (60.6 ha), about 165 hours a hectare. This is the lower bound: the overseer and housekeeper are overhead (Varro 1.18.3 says they are not clearly counted in the number), and the teamsters, muleteer and herdsmen serve the whole estate, not the grove; counting all 13 would give about 430 hours. Varro 1.18.3 also notes the figures do not scale with farm size. Saserna's \"one man is enough for eight iugera\" (1.18.2) is a general rule for land, not for olives, and is not used. Vineyard cross-check: Cato's 100-iugera vineyard has ten labourers among fifteen slaves (1.18.1), about 790 hours a hectare on the same basis, the same order as the Columella figure (1132) which is kept. the 30 pressing hours stay a separate LABELLED HEURISTIC, no source found, retire: Complaint 656. Varro, De Re Rustica 1.18 (LacusCurtius, https://penelope.uchicago.edu/Thayer/E/Roman/Texts/Varro/de_Re_Rustica/1*.html), as used for labour above. KNOWLEDGE (Complaints/531): the tree is an Old World cultigen, gated on mat_olive_oil. LAND: one hectare-year.",
    "capital": [
     {
      "good": "olive grove stand, one hectare of planted trees",
@@ -94,7 +94,7 @@
    "unit_dimension": "count",
    "unit_mass_kg": 15.0,
    "basis": "per hundred empty transport jars (amphorae) of about 26 litres",
-   "yield_basis": "MADE. The jar is fired earthenware, so its clay and fuel are the ceramic_kg recipe's (clay at the pit, firewood, wheel time); this entry adds the neck, handles and stamp. Capacity: the Roman amphora quadrantal, the standard liquid measure, is \"approximately 25.9 L\" (Wikipedia, Ancient Roman units of measurement, https://en.wikipedia.org/wiki/Ancient_Roman_units_of_measurement, which tabulates 26.2 L); a Dressel 20 oil jar averaged 62.83 litres (Peacock and Williams, listed on Roman Inscriptions of Britain, https://romaninscriptionsofbritain.org/instrumentum/2494), so 26 litres is a small standard jar, not the large oil type. No source found for the empty mass of a jar (15 kg) or the 40 extra potter hours per hundred: LABELLED HEURISTICS, conf D, retire: Complaint 656.",
+   "yield_basis": "MADE. The jar is fired earthenware, so its clay and fuel are the ceramic_kg recipe's (clay at the pit, firewood, wheel time); this entry adds the neck, handles and stamp. Capacity: the Roman amphora quadrantal, the standard liquid measure, is \"approximately 25.9 L\" (Wikipedia, Ancient Roman units of measurement, https://en.wikipedia.org/wiki/Ancient_Roman_units_of_measurement, which tabulates 26.2 L); a Dressel 20 oil jar averaged 62.83 litres (Peacock and Williams, listed on Roman Inscriptions of Britain, https://romaninscriptionsofbritain.org/instrumentum/2494), so 26 litres is a small standard jar, not the large oil type. The one empty mass found is for another type: a Dressel 20 oil jar (about 70 litres) had an empty weight (tara) of \"unos 30 kg\" (Aguilera Martin, as cited under olive_oil_kg p. 15); no source found for the mass of this 26-litre jar (15 kg) or the 40 extra potter hours per hundred: LABELLED HEURISTICS, conf D, retire: Complaint 656.",
    "conf": "D",
    "requires_node": "cap_heat_0700"
   },
@@ -111,7 +111,7 @@
    },
    "unit_dimension": "mass",
    "basis": "per hectare of vineyard per year, output as kg of fermented common (table) wine, taking wine's density as close to water's",
-   "yield_basis": "MADE from grapes_kg. Treading and pressing recovers roughly 65-70 percent of the grapes' weight as must, fermentation loses a few percent as CO2, so 4000 kg of grapes gives 2700 kg of wine (the same unsourced estimate the entry carried before, conf C). The wine is stored and shipped in jars: 26 litres to a jar at wine's density near water's is 2700/26 jars, each used once (no source found for how often a jar was refilled; Monte Testaccio's discard of oil jars was not opened here; LABELLED HEURISTIC, retire: Complaint 656). Cellar labour is the 30 hours of treading and racking (heuristic split, see grapes_kg). PRESS: Cato, De Agricultura 11 (LacusCurtius, https://penelope.uchicago.edu/Thayer/E/Roman/Texts/Cato/De_Agricultura/A*.html), equips a vineyard of 100 iugera with \"3 complete presses\"; one press serves 100/3 iugera (at 2,523 square metres to the iugerum, Wikipedia as above), so its yearly capacity is that area times the 2700 kg/ha. Build bill and life of a press: no source found (Cato 18 and 19 give the pressing-room and the posts; their timber and stone were not totalled): LABELLED HEURISTICS, conf D, retire: Complaint 656.",
+   "yield_basis": "MADE from grapes_kg. Treading and pressing recovers roughly 65-70 percent of the grapes' weight as must, fermentation loses a few percent as CO2, so 4000 kg of grapes gives 2700 kg of wine (the same unsourced estimate the entry carried before, conf C). The wine is stored and shipped in jars: 26 litres to a jar at wine's density near water's is 2700/26 jars, each used once (Aguilera Martin, as cited under olive_oil_kg p. 15, says wine jars, unlike oil jars, were reused, but no count of refills was found, so one use is a LABELLED HEURISTIC that overstates the jar share, retire: Complaint 656). Cellar labour is the 30 hours of treading and racking (heuristic split, see grapes_kg). PRESS: Cato, De Agricultura 11 (LacusCurtius, https://penelope.uchicago.edu/Thayer/E/Roman/Texts/Cato/De_Agricultura/A*.html), equips a vineyard of 100 iugera with \"3 complete presses\"; one press serves 100/3 iugera (at 2,523 square metres to the iugerum, Wikipedia as above), so its yearly capacity is that area times the 2700 kg/ha. Build bill and life of a press: no source found (Cato 18 and 19 give the pressing-room and the posts; their timber and stone were not totalled): LABELLED HEURISTICS, conf D, retire: Complaint 656.",
    "capital": [
     {
      "good": "wine press, beam press with its pressing floor",
@@ -138,14 +138,14 @@
    },
    "inputs": {
     "olives_kg": 1700.0,
-    "amphora_count": 12.68
+    "amphora_count": 12.666
    },
    "labour_hours": {
     "vine_and_olive_tender": 30.0
    },
    "unit_dimension": "mass",
    "basis": "per hectare of mature olive grove per year, long-run average, output as kg of pressed oil",
-   "yield_basis": "MADE from olives_kg. 1700 kg of olives at about 17.6 percent recovery is 300 kg of oil (recovery from the entry's earlier recalled 15-20 percent range for a lever-and-screw press, not re-opened). Oil is held in jars of 26 litres, filled at oil's density of about 0.91 kg a litre (recalled, not opened), each used once (heuristic, as for wine). Pressing and settling labour is 30 hours (heuristic split). PRESS: Cato 10 (https://penelope.uchicago.edu/Thayer/E/Roman/Texts/Cato/De_Agricultura/A*.html) equips an oliveyard of 240 iugera with \"5 complete oil-pressing equipments\", so a press serves 48 iugera, at 2,523 square metres to the iugerum (Wikipedia, as in amphora_count), and its yearly capacity is that area times 300 kg/ha. Build bill and life: no source found, LABELLED HEURISTICS, conf D, retire: Complaint 656.",
+   "yield_basis": "MADE from olives_kg. 1700 kg of olives at about 17.6 percent recovery is 300 kg of oil (recovery from the entry's earlier recalled 15-20 percent range for a lever-and-screw press, not re-opened). Oil is held in jars of 26 litres, filled at oil's density, specific gravity 0.911 at 20 C (Wikipedia, Olive oil infobox, https://en.wikipedia.org/wiki/Olive_oil), so 26 litres hold 23.7 kg and 300 kg of oil fills 12.67 jars, each used once: oil jars were not refilled, \"constituir envases no reutilizables\" because the oil soaked the ceramic and went rancid (Aguilera Martin, Evolucion de los tituli picti de las anforas Dressel 20, Acta XII Congressus Internationalis Epigraphiae Graecae et Latinae, p. 15), and the Dressel 20 jars were discarded at Monte Testaccio rather than recycled (Wikipedia, Monte Testaccio, https://en.wikipedia.org/wiki/Monte_Testaccio). Pressing and settling labour is 30 hours (heuristic split). PRESS: Cato 10 (https://penelope.uchicago.edu/Thayer/E/Roman/Texts/Cato/De_Agricultura/A*.html) equips an oliveyard of 240 iugera with \"5 complete oil-pressing equipments\", so a press serves 48 iugera, at 2,523 square metres to the iugerum (Wikipedia, as in amphora_count), and its yearly capacity is that area times 300 kg/ha. Build bill and life: no source found, LABELLED HEURISTICS, conf D, retire: Complaint 656.",
    "capital": [
     {
      "good": "oil press, beam press with mill and settling vats",
