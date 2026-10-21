@@ -16,6 +16,14 @@ class RevenueView(CollectionView):
 		"""The forms of revenue the civilisation's state raises, as its data declares them."""
 		return government_levers.revenue_forms(self.government().record)  # type: ignore[attr-defined]
 
+	def fugitive_share(self) -> float:
+		"""Share of the country's people who are away, having fled the state's take (the economy's fugitives, by tile)."""
+		agent = self._sim.economy.agent
+		away = {} if agent is None else agent.fugitive_share_by_tile()
+		people = self.collection_people_by_tile()  # type: ignore[attr-defined]
+		total = sum(people.values())
+		return sum(count * away.get(tile, 0.0) for tile, count in people.items()) / total if total > 0.0 else 0.0
+
 	def revenue_assessments(self) -> List[revenue.Assessment]:
 		return self._once("assessments", lambda: revenue.assess(self))  # type: ignore[attr-defined,no-any-return]
 

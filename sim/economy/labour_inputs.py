@@ -11,6 +11,7 @@ from typing import Dict, List
 from sim.constants import declare
 from sim.labour.api import CAREER_YEARS, Route, YearInputs as CoreInputs, people_in
 
+from . import flight_routes
 from .households_cohort import VALUE_OF_LIFE_YEARS_OF_INCOME
 from .households_orders import HOUSEHOLD_TIME_PREFERENCE
 from .labour_ask_floor import ask_floor_by_tile
@@ -45,15 +46,19 @@ def labour_context(setup, record, view, carriage, inputs, own_plot_options=None,
         outside = outside_option_by_tile(setup, record, view)
     plot = ask_floor_by_tile(setup, record, view, own_plot_options or {})
     areas = [labour_area(tile) for tile in sorted(setup.tiles)]
+    subsistence = {labour_area(tile): cost for tile, cost in outside.items()}
+    taxed = flight_routes.taxed_share_by_area(inputs.taxed_share_by_tile)
     return CoreInputs(
         trades={}, bids=(),
-        subsistence_per_worker_year={labour_area(tile): cost for tile, cost in outside.items()},
+        subsistence_per_worker_year=subsistence, taxed_share=taxed,
         ask_floor_per_worker_year={labour_area(tile): value for tile, value in plot.items()},
         hours_per_worker_year=setup.working_hours_per_year,
         discount_rate=HOUSEHOLD_TIME_PREFERENCE, career_years=CAREER_YEARS,
         entrants={area: people_in(record.workforce, area) * inputs.entrant_share for area in areas},
         attrition_share={area: inputs.attrition_share for area in areas},
-        routes=routes_by_area(setup, carriage),
+        routes=flight_routes.with_recapture_penalty(
+            routes_by_area(setup, carriage), taxed, inputs.state_reach_by_tile, subsistence,
+            None if setup.flight is None else setup.flight.expected_penalty_of_leaving),
         value_of_life_years_of_income=VALUE_OF_LIFE_YEARS_OF_INCOME,
         bondage_allowed=frozenset(labour_area(tile) for tile in inputs.bondage_tiles),
         bonded_for_sale={labour_area(tile): dict(by_trade)

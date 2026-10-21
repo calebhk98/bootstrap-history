@@ -92,6 +92,7 @@ class EconomyRecord:
     carried: Dict[str, Dict[str, float]] = field(default_factory=dict)   # tonnes the merchants carried last year: origin tile -> destination tile (sim.geography.flow_ledger)
     carried_goods: Dict[str, Dict[str, Dict[str, List[float]]]] = field(default_factory=dict)   # the same flows by good: good -> origin -> destination -> [tonnes, value at origin's price, value at destination's price] (carried_book.py)
     leisure_anchor_wage: Dict[TradeId, float] = field(default_factory=dict)   # trade -> the wage at which its workers keep half their free hours as leisure, at the opening's price level (opening_leisure.py)
+    fugitives: Dict[str, Dict[str, Any]] = field(default_factory=dict)   # labour area people fled from -> people still away, arrears owed per head, the area they went to (flight_year.py)
     output_by_tile: Dict[TileId, Dict[str, float]] = field(default_factory=dict)   # tile -> good -> units the home producers made last year
 
     @property
@@ -151,6 +152,7 @@ class EconomyRecord:
             "titles": {tile: dict(held) for tile, held in sorted(self.titles.items())},
             "tenancies": {tile: [dict(row) for row in rows] for tile, rows in sorted(self.tenancies.items())},
             "cleared_hectares": dict(sorted(self.cleared_hectares.items())),
+            "fugitives": {area: dict(row) for area, row in sorted(self.fugitives.items())},
             "bondage": {cohort: dict(bond) for cohort, bond in sorted(self.bondage.items())},
             "bonded_held": plain(self.bonded_held),
             "tax_history": {form: dict(row) for form, row in sorted(self.tax_history.items())},
@@ -203,6 +205,7 @@ class EconomyRecord:
             titles={tile: dict(held) for tile, held in record["titles"].items()},
             tenancies={tile: [dict(row) for row in rows] for tile, rows in record["tenancies"].items()},
             cleared_hectares=dict(record["cleared_hectares"]),
+            fugitives={area: dict(row) for area, row in record["fugitives"].items()},
             bondage={cohort: dict(bond) for cohort, bond in record["bondage"].items()},
             bonded_held=plain(record["bonded_held"]),
             tax_history={form: dict(row) for form, row in record["tax_history"].items()},

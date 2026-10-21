@@ -52,7 +52,7 @@ __all__ = [
     "traded_volumes", "country_traded_volumes", "country_opening_basket", "market_record", "opening_quantities", "opening_prices_in_hours", "wages_by_trade", "wages_by_trade_weighted", "interest_rate", "producers_of",
     "external_trade_net", "external_trade_volume", "account_balance", "account_holdings",
     "credit_room", "credit_line_request", "economy_from_record", "blank_economy", "export_record", "economy_book", "economy_contracts", "finish_spin_up", "note_spin_up_result", "spin_up_state", "money_year_figures","shown_prices_of","shown_price_kinds_of",
-    "settle_agent_takings", "indebted_tiles", "title_holdings", "money_revenue_forms", "admit_recipes", "move_goods", "post_transfers", "cohort_incomes", "cohort_land_rents", "land_rent_per_hectare",
+    "settle_agent_takings", "indebted_tiles", "fugitive_share_by_tile", "title_holdings", "money_revenue_forms", "admit_recipes", "move_goods", "post_transfers", "cohort_incomes", "cohort_land_rents", "land_rent_per_hectare",
     "land_rent_paid_by_tile", "land_rent_at_tile", "DEPOSIT_BANKING", "POOLED_FUNDS", "INSURANCE_UNDERWRITING", "RISK_POOLING", "BOND_MARKET", "SHARE_TRADING", "country_figures", "carried_book", "idle_hours_by_trade", "output_by_tile",
 ]
 
@@ -451,6 +451,18 @@ def indebted_tiles(economy):
 def title_holdings(economy, tiles):
     """(holder -> share by tile, tenancy rows by tile) for the tiles: what a state plans a land decree from."""
     return record_title_holdings(economy.record, tiles)
+
+
+def fugitive_share_by_tile(economy):
+    """{tile: share of the people who belonged to it that are away, having fled the state's take} (flight_year.py)."""
+    from .setup import area_tile
+    workforce = economy.record.workforce
+    shares = {}
+    for area, row in sorted(economy.record.fugitives.items()):
+        present = sum(sum(bands) for bands in workforce.workers.get(area, {}).values())
+        if row["people"] > 0.0:
+            shares[area_tile(area)] = row["people"] / (present + row["people"])
+    return shares
 
 
 def money_revenue_forms(economy):

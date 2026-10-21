@@ -12,7 +12,7 @@ nothing set against them cannot be paid.
 import dataclasses
 from typing import Any, Dict, Iterable, List, Optional, Sequence
 
-from . import arrears, evasion
+from . import arrears, evasion, fiscal_flight, government_levers_tax
 from .policy import CallbackPolicy, Decision, IdlePolicy, Option, Policy, register_policy
 from .tuning import LEVY_RATE_CEILING
 from .tuning_coinage import COIN_RESTRIKE_SHARE_PER_YEAR, DEBASEMENT_SHARE_CEILING
@@ -22,7 +22,8 @@ from .tuning_fiscal import (FISCAL_BURDEN_WEIGHT, FISCAL_DEBT_CARRY_YEARS, FISCA
 FISCAL_DECISION = "fiscal_response"
 BORROW, CUT, ARREARS, DEBASE, LEVY, KIND, RATE = ("borrow", "cut_lines", "arrears", "debase", "levy", "demand_in_kind",
 												  "raise_rate")
-RESPONSES = (BORROW, CUT, ARREARS, DEBASE, LEVY, KIND, RATE)
+LIABILITY, AMNESTY, REMISSION = government_levers_tax.LIABILITY, government_levers_tax.AMNESTY, government_levers_tax.REMISSION
+RESPONSES = (BORROW, CUT, ARREARS, DEBASE, LEVY, KIND, RATE, LIABILITY, AMNESTY, REMISSION)
 STRUCK_COIN = "struck_coin"
 _TINY = 1e-12
 
@@ -57,6 +58,7 @@ def menu(government: Any, world: Any, lines: Sequence[Any], gap: float) -> Decis
 	coin_base = coin_rate_base(world)
 	if coin_base > 0.0:
 		options.append(_option(RATE, rate_raise_yield(world), dict(carry, income_taken=need / coin_base)))
+		options.extend(flight_options(government, world, need, coin_base, carry))
 	return Decision(FISCAL_DECISION, options, gap)
 
 
@@ -84,12 +86,69 @@ def rate_raise_yield(world: Any) -> float:
 	extra = 0.0
 	for assessed in raisable_coin_forms(world):
 		raised = new_rate_of(assessed.rate)
-		if assessed.payers:
-			gross = assessed.base + assessed.concealed
-			extra += (evasion.yield_of_rate(gross, raised, assessed.collectible)
-					  - evasion.yield_of_rate(gross, assessed.rate, assessed.collectible))
+		if fiscal_flight.on_income(assessed):
+			kept = fiscal_flight.base_after(fiscal_flight.gross_of(assessed), assessed.rate * assessed.collectible,
+											raised * assessed.collectible, assessed.collectible)
 		else:
-			extra += assessed.collectible * (raised - assessed.rate) * assessed.base
+			kept = fiscal_flight.gross_of(assessed)
+		if assessed.payers:
+			extra += (evasion.yield_of_rate(kept, raised, assessed.collectible)
+					  - evasion.yield_of_rate(fiscal_flight.gross_of(assessed), assessed.rate, assessed.collectible))
+		else:
+			extra += assessed.collectible * (raised * kept - assessed.rate * assessed.base)
+	return max(0.0, extra)
+
+
+def flight_options(government: Any, world: Any, need: float, coin_base: float, carry: Dict[str, float]) -> List[Option]:
+	"""The tax-response levers as ways to raise money next year through the payers' own choices (fiscal_flight.py): remitting
+	part of the rate (worth money only where the rate is past the one that yields most), an amnesty that brings fugitives
+	home, collective liability that puts the leavers' assessment on the stayers. Each is offered only when it yields."""
+	options: List[Option] = []
+	forms = raisable_coin_forms(world)
+	remitted = rate_cut_yield(world)
+	if remitted > 0.0:
+		options.append(_option(REMISSION, remitted, dict(carry, income_taken=-need / coin_base)))
+	away = fiscal_flight.fugitive_share(world)
+	amnesty = amnesty_yield(forms, away)
+	if amnesty > 0.0 and government_levers_tax.amnesty_share(government.record) < 1.0:
+		options.append(_option(AMNESTY, amnesty, dict(carry)))
+	recovered, lost = fiscal_flight.collective_yield(world, forms)
+	if recovered > lost and government_levers_tax.liability_rule(government.record) != collective_rule():
+		options.append(_option(LIABILITY, recovered - lost, dict(carry, income_taken=need / coin_base)))
+	return options
+
+
+def collective_rule() -> str:
+	from .liability import COLLECTIVE
+	return COLLECTIVE
+
+
+def amnesty_yield(forms: Sequence[Any], away: float) -> float:
+	"""Money the fugitives' return yields a year if their arrears are waived: the take on the income of those who come
+	home with the arrears waived and did not with them owed."""
+	base = fiscal_flight.fugitive_base(list(forms), away)
+	if base <= 0.0:
+		return 0.0
+	total = 0.0
+	for assessed in forms:
+		if fiscal_flight.on_income(assessed):
+			owed, waived = fiscal_flight.amnesty_return(assessed.rate * assessed.collectible, assessed.collectible)
+			total += assessed.collectible * assessed.rate * fiscal_flight.gross_of(assessed) * away / (1.0 - away) * max(0.0, waived - owed)
+	return total
+
+
+def rate_cut_yield(world: Any) -> float:
+	"""Money the state's forms on income yield more next year at a full step of rate cut, the payers who fled having come
+	home and those who hide hiding less; zero where cutting yields less than it costs."""
+	extra = 0.0
+	for assessed in raisable_coin_forms(world):
+		if not fiscal_flight.on_income(assessed):
+			continue
+		cut = fiscal_flight.stepped(assessed, -1.0)
+		gross = fiscal_flight.base_after(fiscal_flight.gross_of(assessed), assessed.rate * assessed.collectible,
+										 cut * assessed.collectible, assessed.collectible)
+		extra += (evasion.yield_of_rate(gross, cut, assessed.collectible)
+				  - evasion.yield_of_rate(fiscal_flight.gross_of(assessed), assessed.rate, assessed.collectible))
 	return max(0.0, extra)
 
 

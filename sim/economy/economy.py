@@ -22,6 +22,7 @@ from .flow_rates import flow_imbalance
 from .entry_year import close_idle_producers, open_entrants, restake_owners
 from . import capital_year, household_hours_year, household_work_year, land_bid_year, land_lease_year, opening_leisure
 from .households_own import (hours_for_own_plan, own_production, own_production_options, plot_hectares)
+from . import flight_step
 from .labour_inputs import labour_context
 from .labour_state import scale_people
 from .opening import open_economy
@@ -194,7 +195,9 @@ class Economy:
                                      bondage_hours.works_of_producers(record), bondage.BONDED_HOURS_OWED_SHARE)
         everyone, labour_bids = placed.offers, placed.bids
         supply = self._hour_supply(everyone, view, outside_option)
+        people_before = flight_step.people_before(setup, record)
         labour_report = clear_labour(setup, record, labour_bids, everyone, ledger, context, supply=supply)
+        flight_step.settle(setup, record, inputs, labour_report, people_before, context, self.carriage)
         offers, kept = supply.sold, supply.kept
         self._leisure_hours = supply.leisure
         ledger.bonded_bought, ledger.bonded_paid, ledger.bonded_lots, bought_held = bonded_purchase.settle(
