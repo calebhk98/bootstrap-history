@@ -127,8 +127,8 @@ A state's debt to its named lenders (623) can be repaid in land once titles exis
 
 ## Finding (2026-10-21, from Complaint 662's capture)
 
-In a Norse game in its sixth year a `hectare_land` market had one seller, no buyers, and a seller's floor about
-273 orders of magnitude below its ask (`/tmp` capture, re-made by `sim/tests/test_staff_closure_reopening_scenario.py`'s
-game and a wrapper around `unsold_search.clear_with_search`). A land seller's lowest acceptable price that close to
+In a Norse game in its sixth year a `hectare_land` market had one seller, no buyers, and a seller's floor hundreds
+of orders of magnitude below its ask. Measure: step the game of `sim/tests/test_staff_closure_reopening_scenario.py`
+and print the floors `unsold_search.clear_with_search` receives for land markets. A land seller's lowest acceptable price that close to
 zero says the reservation it is built from (rent or yield over the rate) has collapsed. Measure where that floor
 comes from before trusting land prices in that game.
