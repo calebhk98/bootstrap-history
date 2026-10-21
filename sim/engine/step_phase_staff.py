@@ -1,12 +1,13 @@
 """The yearly staff phase: attrition, wage affordability and keeping concerns staffed.
 
 A part of the year's phases (core_step_phases.py); Sim inherits it through StepPhasesMixin."""
-import math
 
 from sim.refusal import LogLine
 from sim.world import demography
 from . import automation_audit
 from .units_prose import plain_number
+from .staff_phase_rules import (has_room_to_hire, hires_needed, payroll_shortfall, replacement_shortfall,
+                                shed_for_payroll, staff_targets)
 from .staff_replacement import REPLACE_ONLY, replace_lost_staff
 from sim.agents.api import edges
 
@@ -71,10 +72,7 @@ class StaffPhaseMixin:
         payroll = self.labour.wage_bill()
         other = (self.upkeep() + (self.living_cost() - payroll)
                  + self.mine_operating_cost())
-        # capital is negative in arrears; credit_limit() is how far into arrears
-        # anyone will let you go, so this is what you can actually still spend.
-        headroom = max(0.0, self.state.household.capital + self.credit_limit())
-        can_pay = self.revenue() - other + headroom
+        short = payroll_shortfall(payroll, self.revenue(), other, self.state.household.capital, self.credit_limit())
         # NOT GATED BY A POLICY, and this is the one automatic thing that is not.
         # A policy switch is for something the game decides FOR you - who to
         # hire, what to mothball - and every one of those is yours to turn off.
@@ -82,29 +80,15 @@ class StaffPhaseMixin:
         # is not a decision the game is making on your behalf, it is the world
         # answering one you already made, the same as the arrears bleed below.
         # The `policy` reply says so in as many words.
-        if payroll > can_pay and self.state.household.employees:
-            short = payroll - can_pay
+        if short > 0 and self.state.household.employees:
             gone = 0.0
             _before_shed = self.labour.staff_snapshot()
             # shed, dearest first, until the wages you are left with fit
-            for trade_id in sorted(self.state.household.employees, key=lambda t: -self.labour.market.quote_annual(t)):
-                if short <= 0:
-                    break
-                wage = self.labour.market.quote_annual(trade_id)
-                if wage <= 0:
-                    continue
-                # A WHOLE PERSON, ROUNDED UP. `short / wage` is a quantity of
-                # wages, not a quantity of people: cutting that fraction
-                # straight would leave "0.3 smiths" still on the books, still
-                # drawing 0.3 of a wage that was just found unaffordable.
-                # Rounding up sheds one whole person too many at worst,
-                # which is the safe direction for a household that genuinely
-                # cannot make payroll.
-                cut = min(self.state.household.employees[trade_id], math.ceil(short / wage - 1e-9))
+            for trade_id, cut, left in shed_for_payroll(short, self.state.household.employees,
+                                                        self.labour.market.quote_annual):
                 self.labour.add_employed(trade_id, -cut)
-                short -= cut * wage
                 gone += cut
-                if self.labour.employed(trade_id) < 0.5:
+                if left == 0.0:
                     self.labour.set_employed(trade_id, 0.0)
             self.labour.resync_pools()
             self.labour.log_staff_reduction("a payroll you cannot meet", _before_shed)
@@ -125,8 +109,7 @@ class StaffPhaseMixin:
         # below - which already subtracts living cost, upkeep and the wages
         # you are carrying - is what decides how many to hire, and correctly
         # says nobody when there is nothing spare.
-        _hire_room = (self.state.household.capital >= 0
-                      or -self.state.household.capital <= self.credit_limit() * self.AUTO_HIRE_CREDIT_ROOM_SHARE)
+        _hire_room = has_room_to_hire(self.state.household.capital, self.credit_limit(), self.AUTO_HIRE_CREDIT_ROOM_SHARE)
         _hire_mode = self.state.founder.policy.get("auto_hire", not self.manual)
         if _hire_mode == REPLACE_ONLY and _hire_room:
             replace_lost_staff(self, _lost)
@@ -148,13 +131,14 @@ class StaffPhaseMixin:
             # building the institutions staff_capacity() already credits
             # widens this same wall past that well before the goal is in
             # reach).
-            target_sc = min(sc_cap + extra * self.AUTO_HIRE_SCHOLAR_EXTRA_SHARE, self.labour.literate_capacity("scholar"))
-            desired_sc = self.state.household.scholars + (target_sc - self.state.household.scholars) * self.AUTO_HIRE_SCHOLAR_APPROACH_RATE
-            target_ar = ar_cap + extra
-            desired_ar = self.state.household.artisans + (target_ar - self.state.household.artisans) * self.AUTO_HIRE_ARTISAN_APPROACH_RATE
+            household = self.state.household
+            desired_sc, craft = staff_targets(
+                household.scholars, household.artisans, sc_cap, ar_cap, extra, self.AUTO_HIRE_SCHOLAR_EXTRA_SHARE,
+                self.labour.literate_capacity("scholar"), self.AUTO_HIRE_SCHOLAR_APPROACH_RATE,
+                self.AUTO_HIRE_ARTISAN_APPROACH_RATE, household.freedmen, household.slaves,
+                self.AUTO_HIRE_SLAVE_CRAFT_CREDIT)
             # Keep the per-trade books honest about the aggregate: staff taken on
             # for you are generic craftsmen and scribes, and that is all they are.
-            craft = max(0.0, desired_ar - self.state.household.freedmen - self.state.household.slaves * self.AUTO_HIRE_SLAVE_CRAFT_CREDIT)
             specials = sum(value for trade_id, value in self.state.household.employees.items()
                            if trade_id not in ("artisan", "scholar") and self.step_context.trade_family(trade_id) == "craft")
             # SPECIALISTS MUST NOT EAT THE GENERALISTS: the generic bucket is
@@ -184,13 +168,13 @@ class StaffPhaseMixin:
             # player hits - so it is simply not acted on.
             def _grow_to(trade, want, closure_need=0.0):
                 have = self.state.household.employees.get(trade, 0.0)
-                delta = self.labour.stochastic_round(want) - have
-                if delta >= 1.0:
+                change = hires_needed(have, self.labour.stochastic_round(want))
+                if change > 0:
                     _before = self.state.household.capital
-                    _hired, _why = self.labour.hire_buying_room(trade, int(delta))
+                    _hired, _why = self.labour.hire_buying_room(trade, change)
                     if not _hired and closure_need >= 1.0:
                         automation_audit.record_skip(
-                            self, "auto_hire", "hire %d %s" % (int(delta), trade),
+                            self, "auto_hire", "hire %d %s" % (change, trade),
                             "concerns shut for want of staff need %.1f more: %s" % (closure_need, _why))
                     if _hired:
                         # the people the market found, which can be fewer than sought
@@ -199,11 +183,11 @@ class StaffPhaseMixin:
                             self, "auto_hire", "hire", "%d %s" % (_found, trade),
                             "staff target %.1f against %.1f held, with %.1f supervision room"
                             % (want, have, self.labour.supervision_room()), _before)
-                elif delta <= -1.0:
+                elif change < 0:
                     _before = self.state.household.capital
-                    self.labour.fire(trade, int(-delta))
+                    self.labour.fire(trade, -change)
                     automation_audit.record(
-                        self, "auto_hire", "release", "%d %s" % (int(-delta), trade),
+                        self, "auto_hire", "release", "%d %s" % (-change, trade),
                         "staff target %.1f is below the %.1f held" % (want, have), _before)
             # THE HANDS A SHUT CONCERN NEEDS, within the affordability scale the extra room uses; hire() then
             # applies the cash, room and literacy rules, and a refusal is recorded as a skip with its reason.
@@ -242,9 +226,12 @@ class StaffPhaseMixin:
                 if trade_id in ("artisan", "scholar") or trade_id not in _drawn_on:
                     continue
                 have = self.state.household.employees.get(trade_id, 0.0)
-                want = max(have, self.TRADE_REPLACEMENT_TARGET_HEADCOUNT if trade_id in self.state.household.trades_created else 0.0)
-                short = want - have
-                if short > 0.02 and self.state.household.capital > self.labour.market.quote_annual(trade_id) * self.TRADE_REPLACEMENT_AFFORDABILITY_YEARS:
+                short = replacement_shortfall(
+                    have, trade_id in self.state.household.trades_created, self.TRADE_REPLACEMENT_TARGET_HEADCOUNT,
+                    self.state.household.capital, lambda: self.labour.market.quote_annual(trade_id),
+                    self.TRADE_REPLACEMENT_AFFORDABILITY_YEARS)
+                want = have + short if short else have
+                if short:
                     _before = self.state.household.capital
                     self.labour.set_employed(trade_id, have + short)
                     self.pay_edge(edges.EDGE_WORKERS, short * self.labour.market.quote_annual(trade_id), "wages advanced for replacement staff")
