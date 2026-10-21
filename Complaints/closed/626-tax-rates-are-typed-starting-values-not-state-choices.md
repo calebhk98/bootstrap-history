@@ -27,5 +27,5 @@ Depends on 625 (consequences) and 595 (levers).
   the yield, the economy collects at the state's rates, a save keeps the rates) and `sim/tests/test_state_fiscal_response.py`
   (an AI state under a shortfall raises a coin form's rate).
 - Left: no consequence of a higher rate exists beyond the revenue and the burden weight, so no elasticity was invented.
-  Complaint 656 files the missing ones (flight from a taxed base, resentment). A form a state starts by lever is assessed
+  Complaint 657 files the missing ones (flight from a taxed base, resentment). A form a state starts by lever is assessed
   by the actor layer but the economy collects only the forms it was set up with.
