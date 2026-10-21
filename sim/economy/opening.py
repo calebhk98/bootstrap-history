@@ -139,9 +139,6 @@ def _settle_income(setup, record, view, priced_goods, replacement) -> None:
     """Households' opening income is the value of the final demand it pays for, not the full-employment ceiling
     (opening_income.py): the producers sized to that demand then pay out the income the households received.
     Workers are paid alike out of the labour share of it; owners receive the rest by what they own."""
-    if setup.opening_income_per_head is not None:      # the scenario states its households' income
-        record.cohorts.update(opening_income.with_income(record.cohorts, setup.opening_income_per_head, 0.0))
-        return
     people = math.fsum(cohort.people for cohort in record.cohorts.values())
     recipes = setup.recipes
     ceilings = opening_runs.run_ceilings(recipes, sites.limits_by_recipe(setup.site_limits))

@@ -36,7 +36,7 @@ def run_watching(setup, years):
         market = sum(hours for key, hours in record.hours_hired.items() if key.startswith(trade + "|"))
         others = market - sum(each["hours"] for each in hired.values())
         watched.append({"planned": before, "hired": hired, "wanted_after": after, "others_hired": others})
-    with mock.patch.object(economy, "dispatch_merchants", watch):
+    with mock.patch.object(economy, "dispatch_merchants", watch), fixture.surplus_households():   # goods are carried out of a surplus
         done, _outcomes = fixture.run(setup, years)
     return done, watched
 
@@ -304,7 +304,7 @@ class LoanTimingTests(unittest.TestCase):
                      if request.borrower in record.merchants}
             wanted = {request.borrower: request.amount for request in carriage_hours.wage_loans(setup, record)}
             seen.append((asked, wanted))
-        with mock.patch.object(economy, "close_agents", watch):
+        with mock.patch.object(economy, "close_agents", watch), fixture.surplus_households():
             fixture.run(trading_setup(), 20)
         self.assertTrue(any(wanted for _asked, wanted in seen), "no merchant needed a loan, so the scenario shows nothing")
         for asked, wanted in seen:

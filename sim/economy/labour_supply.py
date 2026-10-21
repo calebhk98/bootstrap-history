@@ -1,0 +1,71 @@
+"""The hours households sell, as a schedule against the wage (Complaints 473, 608).
+
+A household's year of hours goes first to its own-plot plan and the household work it does itself (both fixed for the
+year), then to its plot as far as an hour there beats the wage (`households_hours_offered.plot_hours_kept`), and of
+what is left a share to leisure by the preference of its trade (`leisure_hours_kept`); the rest it sells. Every use but
+the plan and the work depends on the wage, so the hours sold rise smoothly with it. The labour core clears each market
+against this schedule (`hours_share_at`), then the hours each offer sold, and the hours kept for each use, are read
+at the wage the market cleared at. Plain functions of built inputs.
+"""
+import dataclasses
+from typing import Callable, Dict, List, Mapping, Sequence, Tuple
+
+from . import households_hours_offered
+from .types import AgentId, LabourOffer
+
+
+@dataclasses.dataclass
+class HourSupply:
+    offers: Sequence[LabourOffer]                       # every offer, with the cohort's whole year of hours
+    plan_hours: Mapping[AgentId, float]                 # own-plot plan hours a cohort keeps whatever the wage
+    work_hours: Mapping[AgentId, float]                 # household work it does itself
+    plot_hours_at: Mapping[AgentId, Callable[[float], float]]   # hours its plot keeps at a wage (households_hours_offered.plot_hours_kept)
+    anchor_wage: Mapping[str, float]                    # trade -> leisure anchor wage, in this year's prices
+    faced_wage: Mapping[Tuple[str, str], float] = dataclasses.field(default_factory=dict)   # (trade, area) -> wage where no market cleared
+    # filled by `settle`
+    sold: List[LabourOffer] = dataclasses.field(default_factory=list)
+    kept: Dict[AgentId, float] = dataclasses.field(default_factory=dict)
+    leisure: Dict[AgentId, float] = dataclasses.field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        self._hours: Dict[AgentId, float] = {}
+        for offer in self.offers:
+            self._hours[offer.worker] = self._hours.get(offer.worker, 0.0) + offer.hours
+
+    def split(self, offer: LabourOffer, wage: float) -> Tuple[float, float, float]:
+        """(hours sold, hours kept for plot and household work, hours at leisure) of one offer at this wage."""
+        whole = self._hours.get(offer.worker, 0.0)
+        if whole <= 0.0 or offer.hours <= 0.0:
+            return 0.0, 0.0, 0.0
+        plot = self.plot_hours_at.get(offer.worker)
+        fixed = max(self.plan_hours.get(offer.worker, 0.0), plot(wage) if plot else 0.0) + self.work_hours.get(offer.worker, 0.0)
+        at_home = offer.hours * min(1.0, fixed / whole)
+        free = offer.hours - at_home
+        rest = households_hours_offered.leisure_hours_kept(free, wage, self.anchor_wage.get(offer.trade))
+        return free - rest, at_home, rest
+
+    def share_at(self, trade: str, area: str) -> Callable[[float], float]:
+        """The share of a market's hours sold at a wage, over the offers in it."""
+        mine = [offer for offer in self.offers if offer.trade == trade and offer.area == area and offer.hours > 0.0]
+        total = sum(offer.hours for offer in mine)
+
+        def share(wage: float) -> float:
+            return sum(self.split(offer, wage)[0] for offer in mine) / total if total > 0.0 else 0.0
+        return share
+
+    def shares(self) -> Dict[Tuple[str, str], Callable[[float], float]]:
+        return {market: self.share_at(*market) for market in sorted({(offer.trade, offer.area) for offer in self.offers})}
+
+    def settle(self, wage_by_market: Mapping[Tuple[str, str], float]) -> List[LabourOffer]:
+        """The offers as sold at the wages the markets cleared at (the faced wage where one did not), and the hours
+        each cohort kept in all and as leisure."""
+        self.sold, self.kept, self.leisure = [], {}, {}
+        for offer in self.offers:
+            market = (offer.trade, offer.area)
+            wage = wage_by_market.get(market, self.faced_wage.get(market, offer.reservation_wage))
+            sold, at_home, rest = self.split(offer, wage)
+            self.sold.append(dataclasses.replace(offer, hours=sold))
+            self.kept[offer.worker] = self.kept.get(offer.worker, 0.0) + (offer.hours - sold)
+            if rest > 0.0:
+                self.leisure[offer.worker] = self.leisure.get(offer.worker, 0.0) + rest
+        return self.sold

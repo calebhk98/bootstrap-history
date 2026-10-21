@@ -7,11 +7,13 @@ of final demand) and the coin the mint strikes against the coin that wears. A st
 the wage, the rate and the money stock within the bounds the settling statistic uses (`sim/economy/settling.py`), and
 each year after it too. Which rule moves each quantity is in `Complaints/473` (Update 6).
 """
+import dataclasses
 import math
 import unittest
 
-from sim.economy import household_hours_year, opening_stationary, year_labour
+from sim.economy import household_hours_year, opening_leisure, opening_stationary, year_labour
 from sim.economy.economy import Economy
+from sim.economy.setup import EconomySetup
 from sim.economy.settling import MAX_LOG_CHANGE_PER_YEAR, MAX_RATE_CHANGE_PER_YEAR
 from sim.tests import economy_fixture as fixture
 
@@ -66,6 +68,56 @@ class StationaryQuantitiesOfTheStatedFixtureTests(unittest.TestCase):
         self.assertAlmostEqual(ratio, 1.1, places=2)
 
 
+class OpeningHoursTests(unittest.TestCase):
+    """The opening's households split their time so the hours they sell equal the hours its runs hire (opening_leisure.py)."""
+    def sold_and_hired(self, setup):
+        economy = Economy(setup)
+        view = economy.view()
+        outside = year_labour.outside_option_by_tile(setup, economy.record, view)
+        offers = year_labour.labour_offers(setup, economy.record, view, outside)
+        supply = economy._hour_supply(offers, view, outside)
+        sold = {}
+        for offer in offers:
+            wage = view.wage(offer.trade, offer.area) or offer.reservation_wage
+            sold[offer.trade] = sold.get(offer.trade, 0.0) + supply.split(offer, wage)[0]
+        hired = opening_leisure.hours_hired_by_trade(economy.record.producers, setup.recipes)
+        return sold, hired
+
+    def test_the_stated_fixtures_workers_with_two_thousand_hours_sell_the_hours_its_runs_hire(self):
+        sold, hired = self.sold_and_hired(fixture.small_setup(land_per_run={fixture.FARM: fixture.PLOT_LAND_PER_RUN}))
+        self.assertAlmostEqual(sold[fixture.LABOURER] / hired[fixture.LABOURER], 1.0, places=6)
+
+    def test_the_hours_the_workers_do_not_sell_are_leisure_not_idleness_the_plot_could_use(self):
+        setup = fixture.small_setup(land_per_run={fixture.FARM: fixture.PLOT_LAND_PER_RUN})
+        economy = Economy(setup)
+        self.assertGreater(economy.record.leisure_anchor_wage[fixture.LABOURER], 0.0)
+
+    def test_no_scenario_states_the_incomes_of_its_households(self):
+        self.assertNotIn("opening_income_per_head", {field.name for field in dataclasses.fields(EconomySetup)})
+
+
+class KnifeEdgeTests(unittest.TestCase):
+    """A few per cent more hours than the runs hire moved the wage down a third in the first year (473 Update 7); the
+    hours sold now rise with the wage, so the wage moves a few per cent. The excess is given after the opening has split
+    its households' time, so it is hours the opening did not count."""
+    def first_year_wage_change(self, excess):
+        setup = fixture.stationary_setup()
+        economy = Economy(setup)
+        economy.setup = dataclasses.replace(setup, working_hours_per_year=setup.working_hours_per_year * (1.0 + excess))
+        outcome = economy.step(fixture.quiet_year(economy.setup))
+        return log_change(setup.opening_wages[fixture.LABOURER], outcome.wages[fixture.LABOURER])
+
+    def test_the_first_years_wage_moves_by_at_most_three_times_the_excess_of_hours(self):
+        # the plot alone makes hours sold rise by about half a per cent for each per cent of wage; before the schedule
+        # three per cent of excess moved the wage by thirty-five per cent, twelve times the excess
+        for excess in (0.03, 0.1):
+            with self.subTest(excess=excess):
+                self.assertLess(abs(self.first_year_wage_change(excess)), 3.0 * excess)
+
+    def test_the_wage_moves_less_than_the_excess_hours_would_move_it_if_all_were_offered_at_the_ask(self):
+        self.assertLess(abs(self.first_year_wage_change(0.03)), abs(self.first_year_wage_change(0.1)))
+
+
 class ObservedInflationTests(unittest.TestCase):
     def test_the_opening_remembers_its_prices_and_a_year_reads_inflation_from_them(self):
         setup = fixture.small_setup()
@@ -109,6 +161,25 @@ class EveryYearOfTheStationaryFixtureTests(unittest.TestCase):
             if series in ("wage", "money", "price:" + fixture.GRAIN, "price:" + fixture.METAL):
                 with self.subTest(year=year, series=series):
                     self.assertLessEqual(abs(log_change(before, after)), MAX_LOG_CHANGE_PER_YEAR)
+
+    @unittest.expectedFailure       # cause: households add to their own cash each year and no lender returns it, so the farms' cash, and the runs it pays for (producers.plan, `affordable`), fall (607, 606)
+    def test_the_hours_hired_hold_from_year_to_year(self):
+        hired = [outcome.hired_hours for outcome in self.outcomes]
+        for before, after in zip(hired, hired[1:]):
+            self.assertGreater(after, 0.9 * before)
+
+    def test_the_cash_the_households_add_in_the_first_year_is_the_cash_the_producers_lose(self):
+        setup = fixture.stationary_setup()
+        economy = Economy(setup)
+
+        def cash(agents):
+            return sum(economy.record.book.balance(agent, setup.currency_id) for agent in agents)
+        households, producers = list(economy.record.cohorts), list(economy.record.producers)
+        households_before, producers_before = cash(households), cash(producers)
+        economy.step(fixture.quiet_year(setup))
+        added, lost = cash(households) - households_before, producers_before - cash(producers)
+        self.assertGreater(added, 0.0)
+        self.assertAlmostEqual(added / lost, 1.0, delta=0.2)
 
     @unittest.expectedFailure       # cause: the ore price, which the smelters' bids lift to the ask band's cap in year 2 (473 mover 3)
     def test_the_ore_price_moves_within_the_bound_each_year(self):

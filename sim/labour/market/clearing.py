@@ -1,6 +1,6 @@
 """Step 1 of the year: per (trade, area), set the market wage and share the hours among employers (DESIGN.md)."""
 import math
-from typing import Dict, List, Optional, Sequence, Set, Tuple
+from typing import Callable, Dict, List, Optional, Sequence, Set, Tuple
 
 from sim.constants import declare
 
@@ -39,6 +39,9 @@ ON_THE_JOB_SEARCH_SHARE = declare(
     source=None, confidence="D",
     why="The most of a lower-paying employer's hours a better payer can draw off in a year, by workers who "
         "look while employed; not fitted.")
+
+
+SUPPLY_SOLVE_STEPS = 60      # a numerical bound: the bisection for the wage a rising supply meets a step of demand at
 
 
 def reservation_wage(inputs: YearInputs, area: str, risk: float) -> float:
@@ -81,6 +84,33 @@ def clearing_target(reservation: float, offered: float, bids: Sequence[Bid]) -> 
             beyond = live[index + 1][0] if taken <= offered and index + 1 < len(live) else (
                 cap if taken > offered else -math.inf)
             return (max(reservation, beyond) + cap) / 2.0
+    return reservation
+
+
+def supply_target(reservation: float, supply: Callable[[float], float], bids: Sequence[Bid]) -> float:
+    """The lowest wage at which the hours sold (`supply`, rising in the wage) cover the hours employers want at it
+    (bids taken highest maximum first): the reservation wage where they do already. Within a step of demand it is
+    the wage the supply reaches that step's hours at, so a small excess of hours moves the wage a little, where hours
+    all offered at the reservation wage move it all the way."""
+    caps = sorted({bid.maximum_wage for bid in bids if bid.maximum_wage >= reservation})       # lowest first
+    edges = [reservation] + caps
+    for index in range(len(edges)):      # the demand on (edges[index], edges[index + 1]] is that of the bids at or above edges[index + 1]
+        low = edges[index]
+        high = edges[index + 1] if index + 1 < len(edges) else None
+        wanted = math.fsum(bid.hours for bid in bids if bid.maximum_wage >= (high if high is not None else math.inf))
+        if high is None:
+            return low           # above every cap nobody wants an hour, so the wage cannot be above the highest cap
+        if supply(high) < wanted:
+            continue
+        if supply(low) >= wanted:
+            return low
+        for _step in range(SUPPLY_SOLVE_STEPS):
+            middle = (low + high) / 2.0
+            if supply(middle) >= wanted:
+                high = middle
+            else:
+                low = middle
+        return high
     return reservation
 
 
@@ -192,11 +222,32 @@ def poach(hired: Dict[str, float], wanted: Dict[str, float], paid: Dict[str, flo
             hired[employer] += moved
 
 
+def _wage_with_supply(last, reservation, ceiling, supply, bids):
+    """(wage, heading wage) of a market whose hours sold rise with the wage: the wage moves toward where the supply
+    meets the demand, by the imbalance at last year's wage, as `market_wage` does for hours all offered at the ask."""
+    if not bids:
+        wage = reservation if last is None else last + WAGE_SHARE_CLOSED_PER_YEAR * (reservation - last)
+        return min(wage, ceiling), None
+    goal = supply_target(reservation, supply, bids)
+
+    def moved(wage_now):
+        offered = supply(max(wage_now, reservation))
+        gap = 1.0 if offered <= 0.0 else min(1.0, abs(sum(bid.hours for bid in bids if bid.maximum_wage >= max(wage_now, reservation)) - offered) / offered)
+        return wage_now + gap * (min(goal, ceiling) - wage_now)
+
+    wage = goal if last is None else last + WAGE_SHARE_CLOSED_PER_YEAR * (moved(last) - last)
+    if any(bid.maximum_wage >= reservation for bid in bids):
+        wage = max(wage, reservation)
+    wage = min(wage, max(max(bid.maximum_wage for bid in bids), reservation), ceiling)
+    return wage, moved(wage)
+
+
 def clear_one(state: MarketState, inputs: YearInputs, trade: str, area: str, bids: Sequence[Bid],
               import_costs: Optional[ImportCosts] = None) -> Clearing:
     spec = inputs.trades[trade]
     workers = sum(state.workers.get(area, {}).get(trade, []))
-    offered = workers * inputs.hours_per_worker_year
+    full = workers * inputs.hours_per_worker_year
+    share_at = inputs.hours_share_at.get((trade, area))
     base_reservation = reservation_wage(inputs, area, spec.fatality_risk_per_year)
     lowest = inputs.ask_floor_per_worker_year.get(area, 0.0) / max(inputs.hours_per_worker_year, 1e-12)
     reservation = max(base_reservation * asks.scale_of(state, area, trade), lowest, unskilled_option(state, inputs, area, trade))
@@ -206,11 +257,16 @@ def clear_one(state: MarketState, inputs: YearInputs, trade: str, area: str, bid
         imported = (import_costs or ImportCosts(state, inputs)).wage(area, trade)
         if imported is not None:
             ceiling = max(min(ceiling, imported), reservation)
-    wage = min(market_wage(last, reservation, offered, bids), ceiling)
-    # heading: the wage moves toward the clearing target by the same imbalance scaling `market_wage` applies, so
-    # the expectation it feeds is continuous across balance (Complaint 664)
-    target = (wage + pressure(wage, reservation, offered, bids) * (min(clearing_target(reservation, offered, bids), ceiling) - wage)
-              if offered > 0.0 and bids else wage)
+    if share_at is None or full <= 0.0:
+        offered = full
+        wage = min(market_wage(last, reservation, offered, bids), ceiling)
+        # heading: the wage moves toward the clearing target by the same imbalance scaling `market_wage` applies, so
+        # the expectation it feeds is continuous across balance (Complaint 664)
+        target = (wage + pressure(wage, reservation, offered, bids) * (min(clearing_target(reservation, offered, bids), ceiling) - wage)
+                  if offered > 0.0 and bids else wage)
+    else:
+        wage, target = _wage_with_supply(last, reservation, ceiling, lambda wage_now: full * share_at(wage_now), bids)
+        offered = full * share_at(wage)
     wanted, paid, ranks = eligible_bids(bids, wage)
     previous = state.hired_hours.get(area, {}).get(trade, {})
     hired = retain(wanted, previous, offered) if offered > 0.0 else {employer: 0.0 for employer in wanted}

@@ -1,6 +1,6 @@
 # The opening's income is a fixed point that leaks saving, and fixtures state an income to avoid it
 
-**Status:** open - `opening_stationary.py` solves the stationary runs, hours and incomes but is not yet what the opening seeds from (473 Update 6); households count their firms' equity (605, closed), which lifts spending and lending a little; the leak is not closed
+**Status:** partly - `opening_income_per_head` is deleted; the settled income still leaks saving (households' cash rises, producers' cash and runs fall) and eight test modules state a surplus through `surplus_households`
 
 Part of Complaint 526 (The opening's income leaks saving, so the economy opens at subsistence and its wage keeps falling).
 
@@ -65,3 +65,17 @@ mostly as land titles; the leak closes by giving saving that asset (538, 551) be
 
 `opening_income_per_head` is still used by the engine's opening and by `surplus_game_openings`; deleting it waits for the
 opening to seed its wage and runs from `opening_stationary` (473 Update 7). The stationary fixture states no income.
+
+## Update: `opening_income_per_head` deleted (473 Update 8)
+
+The field was set only by `surplus_game_openings`, which no test called; it, the branch in `opening._settle_income`, the
+engine port's read of it and `EconomySetup.opening_income_per_head` are gone (`test_opening_stationary_scenario`,
+`test_no_scenario_states_the_incomes_of_its_households`). What still states an income: `economy_fixture.surplus_households`
+(eight test modules) patches the settled income to the full-employment ceiling; replacing it needs the opening to hold what
+its households want (606, 538). Seeding the real opening from `opening_stationary` is done for the hours (producers' runs are
+the solved runs; the households' time split makes offered equal hired) and not for the income, which stays the fixed point of
+`opening_income`.
+
+Measured cause of the leak, on the stationary fixture: households' cash rises by 41, 76, 24 and 52 thousand in years one to
+four while the producers' cash falls by the same amounts (throwaway probe of `record.book` balances), so savings are not
+returned to producers: this is the leak this complaint is about, and it is what cuts runs year on year (473 Update 8).
