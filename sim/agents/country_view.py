@@ -71,8 +71,9 @@ class CountryWorld(CountryStateView):
 	def urban_population(self) -> float:
 		return people_counted(self.profile) * self.profile.urban_fraction
 
-	def state_capacity(self) -> float:
-		return self.profile.state_capacity
+	def state_reach(self) -> float:
+		"""What the country's paid officials collect of what is due, over its roads (collection_world.py)."""
+		return self.collectible_share()
 
 	def tax_share(self) -> float:
 		"""Share of its taxpayers' income the country's state starts out taking."""

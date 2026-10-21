@@ -57,11 +57,11 @@ class CapacityRead(Exception):
 
 
 def refuse():
-    raise CapacityRead("the typed state capacity was read")
+    raise CapacityRead("the state reach was read")
 
 
 world = SimWorld(game)
-world.state_capacity = refuse   # any read of the typed capacity during collection fails the check
+world.state_reach = refuse   # any read of the state reach during collection fails the check
 read_typed = False
 try:
     kept = budget.officials_kept(world)
@@ -69,13 +69,11 @@ try:
     assessed = revenue.assess(world)
 except CapacityRead:
     read_typed = True
-check("neither the officials kept, the collectible share nor the assessment read the typed state capacity", not read_typed)
+check("neither the officials kept, the collectible share nor the assessment read the state reach", not read_typed)
 check("the state keeps officials from its people alone", abs(kept - world.population_total() / budget.ADMINISTRATIVE_SPAN) < 1e-9, kept)
 check("an assessment records the share it reached", all(0.0 <= each.collectible <= 1.0 for each in assessed), assessed)
 
-game.civ["state_capacity"] = 0.01
-check("changing the civilisation's typed capacity does not move what is collected",
-      abs(SimWorld(game).collectible_share() - full) < 1e-12, (SimWorld(game).collectible_share(), full))
+check("no civilisation file carries a typed state capacity", "state_capacity" not in game.civ, sorted(game.civ))
 
 record = SimWorld(game).government().record
 need = budget.officials_kept(world) * world.pay_per_person_year("scribe")

@@ -80,14 +80,14 @@ class NationalRelief(unittest.TestCase):
 
     def test_full_coverage_exceeds_the_old_fixed_cap(self):
         nation = _fresh()
-        nation.state_capacity = 1.0
+        nation.state_reach = lambda: 1.0
         nation.medical_diffusion_index = lambda: 1.0
         self.assertFalse(hasattr(nation, "MEDICAL_DIFFUSION_RELIEF_CAP"))
         self.assertGreater(nation.medical_diffusion_relief(), 0.85)
 
     def test_weak_state_leaves_a_residual_through_compliance(self):
         weak, strong = _fresh(), _fresh()
-        weak.state_capacity, strong.state_capacity = 0.0, 1.0
+        weak.state_reach, strong.state_reach = (lambda: 0.0), (lambda: 1.0)
         for nation in (weak, strong):
             nation.medical_diffusion_index = lambda: 1.0
         self.assertLess(weak.medical_diffusion_relief(),

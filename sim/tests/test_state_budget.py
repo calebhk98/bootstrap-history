@@ -226,7 +226,7 @@ def short_of(unfunded, firms=0, protection=None):
 
 def ordinary(game):
     """The share of income the society pays the state, as it falls on a visible taxpayer."""
-    return game.civ["starting_tax_share"] * game.state_capacity * game.notice_over(game.household_scale())
+    return game.civ["starting_tax_share"] * game.state_reach() * game.notice_over(game.household_scale())
 
 
 def charged(game):

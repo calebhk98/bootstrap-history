@@ -122,16 +122,6 @@ class AdoptionMixin:
                     field, before, self.value_weights[field]))
                 changed_fields.append(field)
                 changes[field] = (before, self.value_weights[field])
-            elif field == "state_capacity":
-                before = float(self.civ.get(field, 0.0))
-                after = max(0.0, min(1.0, before + delta))
-                self.civ[field] = after
-                self.state_capacity = after
-                changed.append("%s %.1f%% -> %.1f%% (%+.1f points, one step)" % (
-                    field, before * 100, after * 100,
-                    (after - before) * 100))
-                changed_fields.append(field)
-                changes[field] = (before, after)
             elif field == "population" and node_id not in self.coverage_nodes():
                 # Only the disease technologies carry this weight; the
                 # disease burden reads it live from the tree.

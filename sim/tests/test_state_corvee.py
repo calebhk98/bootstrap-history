@@ -88,7 +88,7 @@ class CorveeWorld(FakeWorld):
 	def trade_exists(self, trade):
 		return False
 
-	def state_capacity(self):
+	def state_reach(self):
 		return 0.5
 
 	def state_hands(self):

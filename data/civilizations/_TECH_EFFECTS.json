@@ -3,7 +3,6 @@
  "_fields": {
   "literacy_general": "fraction of the whole population that can read",
   "literacy_elite": "fraction of the propertied class that can read",
-  "state_capacity": "how much the state can actually organise and compel",
   "w_labour_saving": "how a labour-saving device is received. Negative means resented.",
   "w_magic_fear": "how readily the inexplicable is read as sorcery",
   "w_novelty": "appetite for the new",
@@ -39,7 +38,6 @@
   "literacy_elite": 0.08,
   "literacy_general": 0.02,
   "w_novelty": 0.08,
-  "state_capacity": 0.03,
   "adaptation_rate": 0.015
  },
  "scientific_method": {
@@ -61,20 +59,16 @@
   "w_novelty": 0.05
  },
  "semaphore_telegraph": {
-  "state_capacity": 0.05,
   "_why": "An empire that can hear from its frontier in days rather than weeks is a materially more capable state, which is exactly the argument that buys imperial patronage."
  },
  "telegraph_electric": {
-  "state_capacity": 0.06,
   "w_information": 0.06
  },
  "railway": {
-  "state_capacity": 0.07,
   "w_labour_saving": 0.05,
   "_why": "Moving grain and soldiers cheaply is state capacity in the most literal sense."
  },
  "power_grid": {
-  "state_capacity": 0.05,
   "w_labour_saving": 0.08,
   "adaptation_rate": 0.02
  },
@@ -93,7 +87,6 @@
  },
  "sanitation_antisepsis": {
   "w_magic_fear": -0.04,
-  "state_capacity": 0.03,
   "population": 0.02,
   "_why": "Boiled water and handwashing cut exactly the childhood diarrhoeal and puerperal mortality that kept pre-modern populations flat for centuries."
  },
@@ -127,11 +120,9 @@
  },
  "arithmetic_positional": {
   "literacy_elite": 0.03,
-  "state_capacity": 0.02,
   "_why": "You cannot administer at scale with numerals you cannot calculate in."
  },
  "fin_central_bank": {
-  "state_capacity": 0.05
  },
  "citizenship": {},
  "exp_import_draught_animals": {
@@ -139,7 +130,6 @@
   "_why": "A society that has always carried loads on human backs and now has oxen revalues muscle-saving overnight."
  },
  "fin_double_entry": {
-  "state_capacity": 0.03,
   "bribability": -0.05,
   "_why": "Books that must balance make theft visible. This is the one technology in the file that makes a society LESS corruptible, and it does it by accounting rather than by virtue."
  },
@@ -148,18 +138,14 @@
   "w_novelty": 0.05
  },
  "mil_general_staff": {
-  "state_capacity": 0.03,
   "_why": "A standing body that plans war as a profession rather than an amateur's occasional business is exactly the kind of organisational capacity railway (0.07) and semaphore_telegraph (0.05) are already scored for, at a smaller weight because a staff without the railway or the wire to move on is still mostly paperwork."
  },
  "mil_conscription_reserve": {
-  "state_capacity": 0.04,
   "_why": "Registering, calling up and accounting for a fraction of the whole adult population, on a schedule, is a bureaucratic reach no earlier institution in this tree needed - the same reach a census or a land survey needs, applied to people instead of fields."
  },
  "mil_logistics_discipline": {
-  "state_capacity": 0.02
  },
  "mil_arsenal_manufacturing": {
-  "state_capacity": 0.02,
   "_why": "A state that manufactures its own arms to a standard, rather than buying them piecemeal from smiths, is administering an industry - the same category of capacity fin_double_entry and arithmetic_positional are scored for, applied to gunmaking instead of the treasury."
  }
 }

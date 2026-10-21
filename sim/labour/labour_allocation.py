@@ -265,15 +265,17 @@ class LabourAllocationMixin:
 
     def _farm_hour_value_over_wage(self, technique):
         """What an extra hand's hour on the cleared land (the harvest model's marginal product) is worth in
-        food at the staple's price, over an hour of the unskilled wage, both from the agent economy; None
-        while either is missing."""
+        food at the staple's price, less the share of the harvest the state takes, over an hour of the unskilled wage,
+        both from the agent economy; None while either is missing."""
         marginal_product = self._world.state.holdings.farm_last_marginal_product
         wage = self._world.economy_unskilled_wage()
         prices = self._world.economy.agent_prices()
         price = prices.get(wage_provider.staple_material(self._world.civ)) if prices else None
         if not marginal_product or not wage or not price:
             return None
-        return price * marginal_product / wage
+        return farm_intake.value_over_wage_after_tax(
+            price * marginal_product / wage,
+            self._world.harvest_share_taken(wage_provider.staple_material(self._world.civ)))
 
     def _food_balance_step(self, baseline_fte, adult_equivalent_population, technique, intake_multiple=1.0):
         hectares_per_worker = agriculture.hectares_cropped_per_farm_worker(

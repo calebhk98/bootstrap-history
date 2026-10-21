@@ -200,7 +200,6 @@ class CountryProfile:
 	name: str = ""
 	population: float = 0.0
 	urban_fraction: float = 0.0
-	state_capacity: float = 0.0
 	tax_share: float = 0.0
 	wage_index: float = 1.0
 	price_index: float = 1.0

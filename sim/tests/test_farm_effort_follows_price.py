@@ -8,7 +8,7 @@ from sim.labour import farm_intake
 from sim.labour import labour_allocation
 
 from .test_farm_surplus_intake import FOOD_TECHNIQUE, _nutrition_ratio
-from .test_population_farm_technique import _complete, _rome, _run_years
+from .test_population_farm_technique_scenario import _complete, _rome, _run_years
 
 ELASTICITY = 0.5
 YEARS = 12

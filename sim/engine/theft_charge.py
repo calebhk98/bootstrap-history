@@ -19,12 +19,12 @@ GUARDED_KINDS = ("coin",)
 class TheftChargeMixin(HoldingsExposureMixin):
     """Mixed into `Sim`."""
 
-    def steal_from(self, holder, exposure, strength, guard_hours_per_tonne_year, visible_scale, state_capacity,
+    def steal_from(self, holder, exposure, strength, guard_hours_per_tonne_year, visible_scale, state_reach,
                    protection, cause=THEFT_CAUSE):
         """Thieves take a theft of this strength from what the holder keeps: money to the thieves' edge, goods
         out of its stock to the edge's goods. Returns the money taken, never more than the purse."""
         shares = theft_exposure.theft_shares_by_kind(exposure.values, strength, guard_hours_per_tonne_year,
-                                                     visible_scale, state_capacity, protection)
+                                                     visible_scale, state_reach, protection)
         thieves = self.edge(edges.EDGE_THIEVES)
         for lot in exposure.lots:
             tonnes = min(lot.tonnes, lot.tonnes * shares.get("goods", 0.0))
@@ -41,7 +41,7 @@ class TheftChargeMixin(HoldingsExposureMixin):
     def charge_actors_for_theft(self):
         """Every home-country actor in business (a state, a firm) loses its expected theft of what it keeps.
         Guarding is the keeping cost `charge_actors_for_keeping_coin` charges in full; the state's order is
-        the country's state capacity."""
+        the country's state reach."""
         from .agents_port import SimWorld
         world = SimWorld(self)
         lent_share = self.lent_share()   # theft moves coin out of purses, never into a loan: one reading serves every actor
@@ -57,7 +57,7 @@ class TheftChargeMixin(HoldingsExposureMixin):
             scale = self.visible_scale(sum(actor.workforce.values()), actor.money, actor.prominence())
             self.steal_from(actor, exposure, theft_exposure.THEFT_SHARE_PER_YEAR_AT_FULL_EXPOSURE,
                             {kind: COIN_GUARD_HOURS_PER_TONNE_YEAR for kind in GUARDED_KINDS}, scale,
-                            self.state_capacity, 0.0)
+                            self.state_reach(), 0.0)
 
     def founder_visible_scale(self):
         household = self.state.household
@@ -71,14 +71,14 @@ class TheftChargeMixin(HoldingsExposureMixin):
         guard = {kind: COIN_GUARD_HOURS_PER_TONNE_YEAR * paid_share for kind in GUARDED_KINDS}
         return self.steal_from(household, self.founder_exposure(),
                                theft_exposure.THEFT_SHARE_PER_YEAR_AT_FULL_EXPOSURE, guard,
-                               self.founder_visible_scale(), self.state_capacity, household.protection)
+                               self.founder_visible_scale(), self.state_reach(), household.protection)
 
     def plunder_founder(self, strength, cause, order_holds):
         """A sack or a bandit year takes from the founder by the same exposure: what is portable and visible,
         less what is guarded. A sack comes where order has failed (`order_holds` False). Returns the money taken."""
         household = self.state.household
         if order_holds:
-            capacity, protection = self.state_capacity, household.protection
+            capacity, protection = self.state_reach(), household.protection
         else:
             capacity, protection = 0.0, 0.0
         guard = {kind: COIN_GUARD_HOURS_PER_TONNE_YEAR for kind in GUARDED_KINDS}

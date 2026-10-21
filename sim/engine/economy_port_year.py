@@ -208,6 +208,7 @@ class AgentEconomy(TilePricesMixin):
     def run_year(self):
         economy = self.economy()
         economy_port_cropland.follow_farm_sites(self._sim, economy.setup)
+        economy.setup.state_capacity = self._sim.state_reach()
         self.sync_ways()
         self.admit_techniques()
         orders = self._seat_orders()
@@ -512,6 +513,7 @@ class AgentEconomy(TilePricesMixin):
                           debt_relief_tiles=economy_port_land.debt_relief_tiles(sim, economy),
                           farmed_forms=economy_port_land.farmed_forms(sim, economy),
                           tax_rates=economy_port_land.tax_rates(sim),
+                          land_tax_share_of_rent=economy_port_land.land_tax_share_of_rent(sim),
                           institutions=economy_port_institutions.held(sim),
                           durable_users=tuple(economy_port_actors.held_account(buyer)
                                               for buyer in sorted(sim.actors.actors)),

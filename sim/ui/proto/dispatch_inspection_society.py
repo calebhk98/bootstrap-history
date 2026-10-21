@@ -43,7 +43,7 @@ def _cmd_groups(sim, nodes, cmd, ended):
                   "conceal": "hold part of your wealth where the state cannot count it, so it assesses you as smaller; costs a share a year and is seized if found"},
          description="How you answer what the state demands of you (the requisition, the supply levy and a "
                      "confiscation; the office it presses on you is not a demand you can decline cheaply). A refusal "
-                     "is a gamble the state's capacity and your standing decide, raises the state's notice of you "
+                     "is a gamble the state's reach and your standing decide, raises the state's notice of you "
                      "and puts blame on you; the reply gives the odds. Negotiating offers a smaller sum, with "
                      "'service' (money's worth of work) to improve the odds. Concealing lowers the wealth the state "
                      "can see. Bare 'answer' shows your current stance.")

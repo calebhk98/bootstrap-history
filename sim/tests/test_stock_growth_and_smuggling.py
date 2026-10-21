@@ -209,7 +209,7 @@ tonnes = 0.1 * tonnes_per_unit(EGGS)
 check("the carrying is agents and freight over the tonnes, and not the price",
       abs(terms["cost"] - 15.0 * tonnes) < 1e-12, terms["cost"])
 check("what the route loses is lost from what arrives", abs(terms["arrives_units"] - 0.09) < 1e-12, terms)
-capacity = load_civ(PARTNER)["state_capacity"]
+capacity = buyer.partner_state_reach(PARTNER)
 check("the chance of being caught is the state's reach times how much of its holding goes",
       0.0 < terms["chance_caught"] <= capacity, terms["chance_caught"])
 bigger = buyer.stock_smuggle_quote(EGGS, 0.4, PARTNER)

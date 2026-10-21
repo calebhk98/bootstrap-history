@@ -12,8 +12,8 @@ def revenue_scale_multiple(revenue, revenue_scale, cap_multiple):
     return 1.0 + min(cap_multiple, max(0.0, revenue) / revenue_scale)
 
 
-def forest_ceiling_hectares(land_area_km2, state_capacity, base_per_million_km2, per_million_km2_per_capacity,
+def forest_ceiling_hectares(land_area_km2, state_reach, base_per_million_km2, per_million_km2_per_capacity,
                             revenue_multiple):
     """Hectares of woodland per million km2 of land (more for a more capable state), scaled by the revenue multiple."""
-    return ((base_per_million_km2 + per_million_km2_per_capacity * state_capacity)
+    return ((base_per_million_km2 + per_million_km2_per_capacity * state_reach)
             * (land_area_km2 / 1.0e6) * revenue_multiple)

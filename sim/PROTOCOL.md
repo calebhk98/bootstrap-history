@@ -564,7 +564,7 @@ Two fixes, usable separately or together:
       `{"cmd":"answer","what":"comply"|"refuse"|"negotiate"|"conceal"}` sets how you meet the
       requisition and the supply levy the state assesses and a confiscation it demands (the office it
       presses on you is not declinable); bare `answer` shows the stance. The reply's `note` gives the
-      odds. Refusing: enforced with a chance set by the state's capacity, turned aside in part by your
+      odds. Refusing: enforced with a chance set by the state's reach, turned aside in part by your
       protection; if enforced the state takes the demand and a penalty in proportion to its capacity,
       otherwise nothing; either way the state marks you defiant (it assesses you as more visible, fading
       over the years) and the blame lands on you. Negotiating (with optional `"service": <money's worth

@@ -1,6 +1,6 @@
 # State capacity and tax rates are typed, there is no corvée, and the fiscal crisis is a fixed cascade
 
-**Status:** open - split into 620, 621, 622, 623, 624, 625, 626 (620 is closed for collection only, in Complaints/; 657 follows from 626)
+**Status:** closed - every child (620 to 626) is closed; follow-ups are 657 and 660
 
 Reference (an outside design note, not code-aware): the tax a state can actually collect should depend
 on its administrators and its reach (Egypt's single river corridor was easy to survey; a far

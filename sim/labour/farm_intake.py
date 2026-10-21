@@ -21,3 +21,11 @@ def kept_farm_workers(current_fte: float, satiation_fte: float, land_limit_fte: 
         return 0.0
     wanted = current_fte * farm_hour_value_over_wage ** (1.0 / (1.0 - labour_elasticity))
     return max(0.0, min(wanted, current_fte, satiation_fte, land_limit_fte))
+
+
+def value_over_wage_after_tax(value_over_wage: Optional[float], harvest_share_taken: float) -> Optional[float]:
+    """The ratio a farmer decides on: a farm hour's food is worth only the share of the harvest the state leaves him,
+    against a wage the harvest tax does not touch. None stays None."""
+    if value_over_wage is None:
+        return None
+    return value_over_wage * (1.0 - min(1.0, max(0.0, harvest_share_taken)))
