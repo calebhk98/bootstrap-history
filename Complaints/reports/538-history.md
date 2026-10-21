@@ -203,10 +203,13 @@ Built after that (2026-10-21): the clearer's own use, the ask, and where cleared
   price (`sim/tests/test_economy_ground_not_queued.py`). The seller floor and the stock gate are unchanged. No
   between-years markdown was added, the markdown stays inside the year's clearing.
 
+Built after: any actor bids (`land_bid_year.actor_bids`; farms through `firm_land_bids`, wired in `Economy.step`), and
+any holder's bought ground becomes its title (`take_up_bought`); an actor with no hands bids only for the rent and its land
+is let in the market (`land_lease_year.lease_in_market`). Rent asks follow the wage (`land_tenancy.rent_ask`), bonded hours
+are worked in the creditor's works (`bondage_hours.py`), and the concentration check runs on a village where borrowers
+default (`sim/tests/land_fixture.py`) against the sourced band (`titles_concentration.LAND_GINI_SOURCED`).
+
 Not built, still open:
-- Only household cohorts bid. A farm producer or another actor can call the same rules; no wiring yet. The clearer's own
-  use is only for a clearer a cohort owns (a firm owner would need own plots of its own).
-- The bid is for hours-limited farming; a cohort that would only let the hectare (rent branch of the earning) is
-  not modelled as a buyer without hands to work it.
+- The clearer's own use is only for a clearer a cohort owns (a firm owner would need own plots of its own).
 - The ground goods are found as immobile goods a recipe makes from nothing (`land_bid.land_goods`); the data has no
   land marker.
