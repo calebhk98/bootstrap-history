@@ -1,6 +1,6 @@
 # River and road freight money sit below the Edict ratio
 
-**Status:** open
+**Status:** closed - river and road freight money now sit at the Edict's ratios over sail (`test_freight_money_ratio` passes); the unsourced carriage inputs moved to 671
 
 Split from 541. `sim/tests/test_freight_money_ratio.py` reads the money rate per tonne-km the route search
 charges (`unopened_sim()._freight_mode_costs(imbalance)`) and holds wide bands. Two modes pass only near the
