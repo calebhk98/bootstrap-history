@@ -60,7 +60,7 @@ def non_labour_share(node: Mapping) -> float:
     return plant_figures.non_labour_share(node.get("_upkeep_hours_parts"), node.get("_upkeep_basis"))
 
 
-def concern_upkeep_money(node: Mapping, capacity: float, cost_scale: float) -> float:
-    """Yearly upkeep money of a concern at `capacity` times its founding size, without its crew's pay (the crew is hired
+def non_labour_upkeep_money(upkeep: float, node: Mapping, capacity: float, cost_scale: float) -> float:
+    """Yearly upkeep money (`upkeep`, the node's stated figure) of a concern at `capacity` times its founding size, without its crew's pay (the crew is hired
     through the labour market and paid wages there)."""
-    return node["up"] * non_labour_share(node) * cost_scale * capacity
+    return upkeep * non_labour_share(node) * cost_scale * capacity
