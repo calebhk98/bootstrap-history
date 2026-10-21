@@ -30,13 +30,11 @@ concern_volume
 country_literacy
 craftsmen_wording
 cross_screen_consistency
-dashboard_history_cap
 demographics
 demographics_and_plague
 disease_burden_wiring
 early_playtest
 economic_levers_inventory
-economy_check_command
 economy_entry_for_standing_bids
 economy_follows_rotation
 economy_reads_map_through_geography
