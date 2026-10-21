@@ -77,4 +77,3 @@ project_retry_and_risk
 state_budget
 state_notices
 state_spending
-ventures_lifecycle

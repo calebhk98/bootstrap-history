@@ -1,14 +1,13 @@
-"""Concerns (revenue-earning ventures): opening, closing, staffing,
-ramping, restoring and mothballing them, plus the "done but not operating"
-capability-institution warning and the mines-you-own screen.
+"""SCENARIO: concerns (revenue-earning ventures) in a real game: a staffing closure keeps what it closed known, a concern reopened
+soon pays the difference, `state` and `risk` warn of shut concerns and capabilities not operating, `mines` lists what you own,
+a late-opened concern ramps from small, restore costs the tenth promised, mothball releases staff time, and opening a net-loss
+concern says so.
 
-Regrouped from test_round8_fixes.py, test_round9.py, test_round10.py and
-test_round12_naive15.py (see CLAUDE.md's test-file reorganisation note); the
-original round numbering recorded when a check was written, not what it
-tests, so it is regrouped here by subject. Checks moved verbatim - see each
-one's own comment for the break it guards.
+Held as rule tests elsewhere: which concerns close and in what order, and that a part of a hand short closes nothing
+(test_staffing_choice_rules); the grace window and its discounted fee (test_closure_grace_rules).
 
-Venture lifecycle checks, grouped by theme.
+Regrouped from test_round8_fixes.py, test_round9.py, test_round10.py and test_round12_naive15.py; each check's own comment
+records the break it guards.
 """
 from .harness import *  # noqa: F401,F403
 from sim.engine import category_traits
@@ -47,11 +46,7 @@ s_cl.operating.update([_rich, _poor])
 s_cl.scholars = s_cl.artisans = 0
 s_cl.founder_alive = False              # nobody at all: it must close both,
 _shut = s_cl.close_unstaffed_ventures(200)      # and in the right ORDER
-check("an unstaffed shutdown closes the least valuable concern first",
-      _shut[0] == _poor, (_shut[:2], _rich, _poor))
-check("...and keeps going until the payroll actually covers what is left",
-      not s_cl.operating, sorted(s_cl.operating)[:4])
-check("...and what it closed is still KNOWN, only stopped",
+check("what the staffing closure closed is still KNOWN, only stopped",
       _rich in s_cl.done and _rich in s_cl.mothballed)
 
 # --- BREAK: shed_loss_makers scanned `done`, so it could unlearn a concern
@@ -79,31 +74,6 @@ _cap = s_ch.capital
 s_ch.open_venture(_v)
 check("...and reopening it soon costs the difference, not the whole shop",
       (_cap - s_ch.capital) < _full * 0.2, (_cap - s_ch.capital, _full))
-# Past the grace it really has been given up.
-s_ch2 = unopened_sim(capital=500000.0)
-s_ch2.done.update(NODES); s_ch2._done_changed()
-s_ch2.artisans = s_ch2.scholars = 5.0
-s_ch2.open_venture(_v)
-s_ch2.artisans = s_ch2.scholars = 0.0
-s_ch2.founder_alive = False
-s_ch2.close_unstaffed_ventures(105)
-s_ch2.artisans = s_ch2.scholars = 5.0
-s_ch2.founder_alive = True
-s_ch2.year = 105 + s_ch2.STAFF_CLOSURE_GRACE + 1
-_cap2 = s_ch2.capital
-s_ch2.open_venture(_v)
-check("...but a shop left shut for years is opened again in full",
-      (_cap2 - s_ch2.capital) > _full * 0.8, (_cap2 - s_ch2.capital, _full))
-# A shop you closed BY CHOICE was never cheap, and must not become cheap.
-s_ch3 = unopened_sim(capital=500000.0)
-s_ch3.done.update(NODES); s_ch3._done_changed()
-s_ch3.artisans = s_ch3.scholars = 5.0
-s_ch3.open_venture(_v)
-s_ch3.close_venture(_v)
-_cap3 = s_ch3.capital
-s_ch3.open_venture(_v)
-check("a concern you shut on purpose still costs the full price to reopen",
-      (_cap3 - s_ch3.capital) > _full * 0.8, (_cap3 - s_ch3.capital, _full))
 
 # --- BREAK: twenty concerns, twenty-five years, income flat, because nothing
 # said on the main screen what leaving them shut was costing.
@@ -246,37 +216,6 @@ s_rs.restore_work(_vv)
 check("restoring a shop the staffing rule shut costs the tenth it promised",
       (_cap_rs - s_rs.capital) < _fullfee * 0.2,
       (_cap_rs - s_rs.capital, _fullfee))
-
-# --- BREAK: the supervision test was an exact comparison, and attrition moves
-# the payroll by fractions of a man every single year. A play tester watched
-# the same concern close and reopen "every single turn for four centuries" and
-# called it endless busywork. Nobody shuts a shop over a fortieth of a man.
-s_hy = unopened_sim(capital=500000.0)
-s_hy.done.update(NODES); s_hy._done_changed()
-s_hy.artisans = s_hy.scholars = 6.0
-_vh_candidates = sorted((node_id for node_id in sorted(NODES)
-                         if s_hy.is_venture(node_id) and NODES[node_id]["rev"] > 500
-                         and s_hy.STAFFING_CLOSURE_SLACK < s_hy.venture_hands(node_id)[1] <= 5.0
-                         and s_hy.venture_hands(node_id)[0] <= 5.0),
-                        key=lambda k: -s_hy.venture_hands(k)[1])
-# the largest of them that can be opened at all (a concern may also wait on a power grid or a material)
-_vh = next((node_id for node_id in _vh_candidates if s_hy.open_venture(node_id)[0]), _vh_candidates[0])
-_ok_hy = _vh in s_hy.operating
-check("(a shop to test the staffing rule on is open)",
-      _vh in s_hy.operating, (_vh, _ok_hy, s_hy.venture_hands(_vh)))
-_need_s, _need_a = s_hy.venture_staff_used()
-_own = s_hy.FOUNDER_IS_WORTH if s_hy.founder_alive else 0.0
-# stand the payroll exactly on the line, then let a tenth of a man die
-s_hy.artisans = _need_a - _own - 0.1
-s_hy.scholars = max(0.0, _need_s - 1.0)
-s_hy.close_unstaffed_ventures(110)
-check("a tenth of a man short does not shut the shop",
-      _vh in s_hy.operating, (s_hy.artisans, _need_a, sorted(s_hy.operating)))
-# but a real pair of hands gone does
-s_hy.artisans = _need_a - _own - 0.6
-s_hy.close_unstaffed_ventures(111)
-check("...but a whole hand short still does",
-      _vh not in s_hy.operating, (s_hy.artisans, _need_a))
 
 s_misc = unopened_sim(capital=1_000_000.0)
 
