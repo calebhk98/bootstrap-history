@@ -10,5 +10,11 @@
     "ungoverned":  {"rank": 1, "description": "owned on paper with no one governing it"}
   },
   "seed_level": "core",
-  "settlement_level": "claimed"
+  "settlement_level": "claimed",
+  "conquest": {
+    "_note": "A tile taken by an army is held at `initial`; each step names the level it rises to after the owner has held the tile that many years with an army on it. The years are a labelled heuristic.",
+    "initial": "garrisoned",
+    "steps": [{"level": "integrated", "after_years": 30}],
+    "retire": "Complaints/484: control from garrison against unrest and distance"
+  }
 }

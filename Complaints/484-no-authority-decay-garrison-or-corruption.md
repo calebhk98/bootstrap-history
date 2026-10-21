@@ -19,3 +19,10 @@ visible.
 What it would take: garrisons located on tiles (485); an effective-control figure per tile from garrison
 strength, route cost from the seat of government and local unrest (486); revenue assessment that takes
 that figure, so leakage is an outcome. 483 (tile control) is closed.
+
+**What 485 now gives this:** armies are located (`state.economy.campaigns["armies"]`, `Army.tile`), so a garrison on a tile is
+a record to count: the soldiers of an owner standing on a tile, by tile. A taken tile enters at the `conquest` level of
+`data/world/control_levels.json` and rises with the years an army stays on it (`campaign_year._consolidate_conquests`):
+that rule is the first control level read from a garrison, and its step years are a heuristic that retires to this
+complaint. Left for this one: control from garrison against unrest and route cost from the seat (`reach`), and revenue that
+takes the figure.

@@ -8,6 +8,21 @@ from sim.geography.api import tile_owners, tiles_held
 from . import world_events
 
 
+def _follow_in_country_profiles(sim, tile_id, previous, to_actor):
+    """A foreign country's state reads its tiles from its profile: move the tile between the profiles of the
+    countries that lost and gained it, so its people and taxes pass with it."""
+    registry = getattr(sim, "actors", None)
+    countries = getattr(getattr(registry, "state", None), "countries", None) or {}
+    for country, profile in countries.items():
+        if country == previous and tile_id in profile.home_tiles:
+            profile.home_tiles.remove(tile_id)
+        if country == to_actor and tile_id not in profile.home_tiles:
+            profile.home_tiles.append(tile_id)
+            profile.home_tiles.sort()
+    if registry is not None:
+        registry.__dict__.pop("_tile_owners", None)
+
+
 class TileOwnershipMixin:
 
     def tile_owner_map(self):
@@ -69,6 +84,7 @@ class TileOwnershipMixin:
         controls = self.stores.view("control")
         self.__dict__["_tile_transfers"] = self.__dict__.get("_tile_transfers", 0) + 1
         previous = tile_owners.transfer(self.tile_owner_map(), tile_id, to_actor, control, self.world_map, controls)
+        _follow_in_country_profiles(self, tile_id, previous, to_actor)
         world_events.record(self, "tile_transfer", actors=[actor for actor in (previous, to_actor) if actor],
                             tiles=[tile_id], cause=cause, from_owner=previous, to_owner=to_actor,
                             control=tile_owners.control_of(controls, tile_id))
