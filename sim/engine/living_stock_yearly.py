@@ -8,6 +8,7 @@ from sim.world import stock_dynamics
 from .data import ROOT
 from .living_stock_growth import GROWS_ON_ARABLE, GROWS_ON_PASTURE, LivingStockGrowthMixin, kilograms_per_unit
 from .material_units import tonnes_per_unit
+from .stock_growth_billing import founder_billed_growth
 
 LIVING_STOCK_PATH = os.path.join(ROOT, "data", "world", "living_stock.json")
 
@@ -45,8 +46,7 @@ class LivingStockYearlyMixin(LivingStockGrowthMixin):
                 held, rates["natural_increase"], 0.0, rates["breeding_minimum_units"], room) - held
             if grown > 0.0:
                 # the society's herd is raised by its producers' recipes; only the founder's own head is billed here
-                society = min(held, society_herds.get(material, 0.0))
-                billed = grown * (held - society) / held
+                billed = founder_billed_growth(grown, held, society_herds.get(material, 0.0))
                 grown -= billed * (1.0 - self.pay_growth_labour(material, billed))
             after = stock_dynamics.next_units(
                 held, rates["natural_increase"], loss, rates["breeding_minimum_units"], grown)

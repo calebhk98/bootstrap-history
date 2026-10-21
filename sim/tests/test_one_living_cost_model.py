@@ -1,37 +1,44 @@
-"""Complaint 564: the founder's household buys its needs through the economy's need basket and floors at the prices
-on its tile, so its living cost is a read of that bill and a cohort household of the same size pays the same."""
+"""Complaint 564: the founder's household buys its needs through the economy's need basket and floors, so its living
+cost is a read of that bill and a household of the same size pays the same. The rules are called on stubs that hold only
+what each reads; the economy's floors against a running game are in test_one_living_cost_model_scenario."""
+from types import SimpleNamespace
 
 from .harness import *  # noqa: F401,F403
-from sim.economy import households
-from sim.economy.api import country_figures
 
-game = sim(manual=False)
-economy = game.economy.agent._economy
-tile = game.economy.acting_tile()
-coin = economy.setup.coin_per_unit
-view = country_figures._floor_view(economy)
-cohort_floor_per_person = coin * sum(need.price_index * need.spec.subsistence_per_person
-                                     for need in households.need_prices(economy.setup.basket_for(tile), view, tile))
-floors = game.economy.agent_need_floor_costs_at()
-people = 1.0 + game.household_dependant_people()
-state = game.state.household
+from sim.engine.economy_credit import CreditMixin
+from sim.engine.economy_household_bill import HouseholdBillMixin
 
-check("the seat's floors are the economy's floors at its tile",
-      abs(sum(floors.values()) - cohort_floor_per_person) <= 1e-9 * cohort_floor_per_person, (floors, cohort_floor_per_person))
-check("a founder and a cohort household of the same size pay the same for their needs",
-      abs((game.household_bill_per_person() + game.dependants_cost()) - people * cohort_floor_per_person)
-      <= 1e-9 * people * cohort_floor_per_person,
-      (game.household_bill_per_person(), game.dependants_cost(), cohort_floor_per_person))
-check("the dependants are people with the founder's needs, one bill each",
-      abs(game.dependants_cost() - game.household_dependant_people() * game.household_bill_per_person()) <= 1e-9,
-      game.dependants_cost())
-state.freedmen, state.slaves = 2, 3
+QUICK_TOPIC = True
+
+FLOORS = {"grain": 30.0, "cloth": 12.0, "fuel": 8.0}
+
+
+def seat(freedmen=0, slaves=0, capital=0.0, tax_share=0.0, wages=0.0, status_per_capital=0.0):
+    """Just what the bill, the dependants' cost and the living cost read."""
+    stub = SimpleNamespace(
+        HOUSEHOLD_DEPENDANT_PEOPLE=1.0, LIVING_COST_STATUS_PER_CAPITAL=status_per_capital,
+        LIVING_COST_APPEARANCES_SHARE_OF_ROOM=0.5, price_index=1.0, civ={"starting_tax_share": tax_share},
+        state=SimpleNamespace(household=SimpleNamespace(freedmen=freedmen, slaves=slaves, capital=capital)),
+        labour=SimpleNamespace(wage_bill=lambda: wages),
+        household_need_floors_per_person=lambda: dict(FLOORS),
+        effect_values=lambda name: [], upkeep=lambda: 0.0, revenue=lambda: 0.0)
+    stub.household_bill_per_person = lambda: HouseholdBillMixin.household_bill_per_person(stub)
+    stub.household_dependant_people = lambda: HouseholdBillMixin.household_dependant_people(stub)
+    stub.dependants_cost = lambda: CreditMixin.dependants_cost(stub)
+    return stub
+
+
+bill = sum(FLOORS.values())
+check("a person's bill is the sum of every need's floor", seat().household_bill_per_person() == bill)
 check("freedmen and slaves are people too",
-      game.household_dependant_people() == game.HOUSEHOLD_DEPENDANT_PEOPLE + 5, game.household_dependant_people())
-state.freedmen, state.slaves = 0, 0
-
-game.LIVING_COST_STATUS_PER_CAPITAL = 0.0
-state.capital = 0.0
-check("with no tax, status or wages, the living cost is the household's need bill",
-      abs(game.living_cost(_rev=0.0, _upkeep=0.0) - (game.labour.wage_bill() + people * game.household_bill_per_person()))
-      <= 1e-6, (game.living_cost(_rev=0.0, _upkeep=0.0), people * game.household_bill_per_person()))
+      seat(freedmen=2, slaves=3).household_dependant_people() == HouseholdBillMixin.HOUSEHOLD_DEPENDANT_PEOPLE + 5,
+      seat(freedmen=2, slaves=3).household_dependant_people())
+check("the dependants are people with the founder's needs, one bill each",
+      abs(seat(freedmen=2, slaves=3).dependants_cost() - seat(freedmen=2, slaves=3).household_dependant_people() * bill) < 1e-9)
+check("with no tax, status or wages, the living cost is the founder's bill and the dependants'",
+      abs(CreditMixin.living_cost(seat(freedmen=1)) - 3.0 * bill) < 1e-9, CreditMixin.living_cost(seat(freedmen=1)))
+check("wages the household pays add to its living cost",
+      abs(CreditMixin.living_cost(seat(wages=100.0)) - (2.0 * bill + 100.0)) < 1e-9)
+check("tax is the civilisation's share of revenue",
+      abs(CreditMixin.living_cost(seat(tax_share=0.1), _rev=1000.0, _upkeep=0.0) - (2.0 * bill + 100.0)) < 1e-9,
+      CreditMixin.living_cost(seat(tax_share=0.1), _rev=1000.0, _upkeep=0.0))

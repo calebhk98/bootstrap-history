@@ -1,4 +1,4 @@
-"""A partner country in the agent economy, in a whole game (slow: builds a game and its spun-up economy).
+"""Scenario: a partner country in the agent economy, in a whole game (slow: builds a game and its spun-up economy).
 
 Rome with the Han economy switched into the agent economy: its people sit on the tiles it holds as its census
 places them, its producers run only what its techniques allow, its pay, prices and output are read from its own
@@ -22,21 +22,23 @@ check("the partner is in the agent economy and no longer trades by the partner b
 agent = game.economy.agent
 economy = agent.economy()
 setup = economy.setup
-check("the economy holds two countries", setup.countries() == ("rome_100ad", "han_china_100ad"), setup.countries())
 han_people = economy_api.country_figures.population(economy, "han_china_100ad")
-check("the Han people on its tiles are the census total", abs(han_people - 57_671_402) < 0.5 * 57_671_402 * 0.01 + 1.0, han_people)
+check("the economy holds the two countries, and the Han people on its tiles are the census total",
+      setup.countries() == ("rome_100ad", "han_china_100ad") and abs(han_people - 57_671_402) < 0.5 * 57_671_402 * 0.01 + 1.0,
+      (setup.countries(), han_people))
 
 han_recipes = set(setup.recipes_by_country["han_china_100ad"])
 producers = economy_api.producers_of(economy, "han_china_100ad")
-check("Han producers run only recipes its techniques allow", producers and all(p.recipe_id in han_recipes for p in producers.values()), None)
 rome_producers = economy_api.producers_of(economy)
-check("Rome's producers are on Rome's tiles", all(setup.country_of(p.tile) == "rome_100ad" for p in rome_producers.values()), None)
+check("each country's producers run only its own recipes, on its own tiles",
+      producers and all(p.recipe_id in han_recipes for p in producers.values())
+      and all(setup.country_of(p.tile) == "rome_100ad" for p in rome_producers.values()), None)
 
 game.step()
 answers = game.economy.agent_country("han_china_100ad")
-check("the economy answers for Han once its labour markets have a wage", answers is not None and answers.pay_per_person_year("labourer") > 0.0, answers)
-check("Han's pay is its own markets', not Rome's rescaled",
-      abs(answers.pay_per_person_year("labourer") - game.labour.market.quote_annual("labourer")) > 1e-9, None)
-check("money and goods are conserved across both countries", economy.record.book.check_conservation(1e-6).breaches == (), None)
+check("after a year the economy answers for Han with its own markets' pay, not Rome's rescaled, and money and goods are conserved across both countries",
+      answers is not None and answers.pay_per_person_year("labourer") > 0.0
+      and abs(answers.pay_per_person_year("labourer") - game.labour.market.quote_annual("labourer")) > 1e-9
+      and economy.record.book.check_conservation(1e-6).breaches == (), answers)
 
 foreign_module.foreign_economy_records = original
