@@ -22,6 +22,7 @@ from .projects_training_advice import training_advice, training_advice_text
 from .projects_trade_wait import trade_wait_outlasts_the_project
 from .interest_groups import check_group_prohibition
 from .living_stock import check_unheld_stock
+from .instantaneous_project import is_instantaneous
 from .projects_running_gates import check_running_gates
 from .material_availability import check_materials_have_a_seller
 from .data import win_condition_describe
@@ -1008,8 +1009,7 @@ class StartingMixin:
         # Keep anything with money, labour, risk, or a calendar floor on the
         # normal path: those are projects even when founder-hours happen to be
         # zero.
-        if (node["ph"] <= 0 and self.calendar_floor(node_id) <= 0 and price <= 0.5
-                and not node["lab"] and self.effective_risk(node_id) <= 0):
+        if is_instantaneous(node["ph"], self.calendar_floor(node_id), price, node["lab"], self.effective_risk(node_id)):
             self._complete(node_id)
             return "done"
         if _already > 0.5:

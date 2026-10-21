@@ -23,6 +23,7 @@ import collections
 import copy
 
 from . import material_throttle
+from .project_throttle import input_pools, shared_throttle
 from .data import hard_pre
 from sim.constants import declare
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
@@ -562,16 +563,8 @@ class ElectricityMixin:
         if factor >= 0.999 or not binding:
             return 1.0
         if binding == "electricity":
-            return factor if node_id in self._electricity_load_node_ids() else 1.0
-        node = self.nodes.get(node_id) or {}
-        coke = self.chosen_fuel(node_id) == "coke"
-        for mat in (node.get("mat") or {}):
-            effective_mat = ("coal_kg" if coke
-                             and mat in ("charcoal_kg", "firewood_kg") else mat)
-            # Gram-scale purchases never participate in the flow throttle.
-            if effective_mat.endswith(self.LAB_SCALE_SUFFIX) \
-                    and not effective_mat.endswith("_kg"):
-                continue
-            if self._material_tag(effective_mat)[0] == binding:
-                return factor
-        return 1.0
+            pools = {"electricity"} if node_id in self._electricity_load_node_ids() else set()
+        else:
+            pools = input_pools(((self.nodes.get(node_id) or {}).get("mat") or {}), self.chosen_fuel(node_id) == "coke",
+                                lambda material: self._material_tag(material)[0], self.LAB_SCALE_SUFFIX)
+        return shared_throttle(factor, binding, pools)

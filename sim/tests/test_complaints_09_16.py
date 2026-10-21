@@ -1,94 +1,101 @@
-"""Focused regressions for the second group of playtest complaints."""
-from .harness import *  # noqa: F401,F403
-from sim.refusal import cause_of
-from sim.ui.protocol import _waiting_on as _waiting_on
+"""Focused regressions for the second group of playtest complaints, one rule at a time on built inputs (Complaint 640):
+which projects a material shortage slows, the sizes of a saltpetre remedy, whether a capability is instantaneous, what a
+credit forecast calls its figures, and the help index. The same in a real game is test_complaints_09_16_scenario.
+(The money_blocked and money_unfunded waiting causes are held by test_project_pacing and test_scheduling_legibility.)"""
+QUICK_TOPIC = True
+
+import types
+import unittest
+
+from sim.engine.instantaneous_project import is_instantaneous
+from sim.engine.project_throttle import input_pools, shared_throttle
+from sim.engine.shortage_sizing import nitre_bed_square_metres, nitre_deficit_tonnes
+from sim.ui.proto import credit_forecast
+from sim.ui.proto.help import _agent_help
+
+LAB = "_g"
 
 
-# Complaint 02 requires two genuinely different states: a project that can
-# consume revenue arriving later in the year, and one beyond all cash/credit
-# that cannot progress until its finances change.
-_money_node = "academy_network"
-_money_state = dict(ph_left=0.0, yrs=1.0, spent=0.0, cost_left=hours_money(181000))
-_blocked = unopened_sim(capital=0.0)
-_blocked.capital = -50_000.0
-_blocked.credit_limit = lambda: 2_000.0
-_blocked.project_cost = lambda k: 9_000.0
-_blocked.active[_money_node] = dict(_money_state)
-_blocked_message = _waiting_on(_blocked, NODES, _money_node,
-                               _blocked.active[_money_node], 9000.0)
-check("a project with no spending power is labelled fully blocked",
-      cause_of(_blocked_message) == "money_blocked", _blocked_message)
-
-_opportunistic = unopened_sim(capital=hours_money(20.2))
-_opportunistic.project_cost = lambda k: hours_money(181000)
-_opportunistic.active[_money_node] = dict(_money_state)
-_opportunistic_message = _waiting_on(
-    _opportunistic, NODES, _money_node, _opportunistic.active[_money_node], hours_money(181000))
-check("a project with some funding access is labelled opportunistic",
-      cause_of(_opportunistic_message) == "money_unfunded",
-      _opportunistic_message)
+def pool_of(material):
+    return {"saltpetre_kg": "saltpetre", "coal_kg": "coal", "charcoal_kg": "charcoal"}.get(material, "other")
 
 
-# A binding material is a property of its consumers, not of the whole research
-# portfolio.  Stub only the aggregate accounting result here; the project
-# selector must inspect each node's own material inputs.
-s = unopened_sim()
-s.binding = "saltpetre"
-s.resource_throttle = lambda: 0.05
-check("a nitre shortage throttles a project that consumes nitre",
-      s.project_resource_throttle("gunpowder") == 0.05)
-check("the same nitre shortage leaves an unrelated research project at full pace",
-      s.project_resource_throttle("scientific_method") == 1.0)
+class ProjectThrottle(unittest.TestCase):
+    def test_a_nitre_shortage_throttles_a_project_that_consumes_nitre(self):
+        pools = input_pools(["saltpetre_kg", "charcoal_kg"], False, pool_of, LAB)
+        self.assertEqual(shared_throttle(0.05, "saltpetre", pools), 0.05)
+
+    def test_the_same_shortage_leaves_a_project_with_no_matching_input_at_full_pace(self):
+        self.assertEqual(shared_throttle(0.05, "saltpetre", input_pools([], False, pool_of, LAB)), 1.0)
+        self.assertEqual(shared_throttle(0.05, "saltpetre", input_pools(["charcoal_kg"], False, pool_of, LAB)), 1.0)
+
+    def test_a_slight_throttle_or_no_binding_pool_slows_nothing(self):
+        self.assertEqual(shared_throttle(0.9995, "saltpetre", {"saltpetre"}), 1.0)
+        self.assertEqual(shared_throttle(0.05, None, {"saltpetre"}), 1.0)
+
+    def test_a_project_on_coke_draws_coal_in_place_of_charcoal(self):
+        self.assertEqual(input_pools(["charcoal_kg"], True, pool_of, LAB), {"coal"})
+        self.assertEqual(input_pools(["charcoal_kg"], False, pool_of, LAB), {"charcoal"})
+
+    def test_gram_scale_purchases_never_take_part(self):
+        self.assertEqual(input_pools(["saltpetre_g", "saltpetre_kg"], False, lambda material: material, LAB), {"saltpetre_kg"})
 
 
-# Capacity is the diagnostic that explains those per-project limits.  It must
-# be in the command index rather than discoverable only by guessing it, and it
-# must distinguish annual flow from durable inventory.
-_commands = S._agent_help(unopened_sim(), "commands")["commands"]
-check("capacity is discoverable in the main command index",
-      "capacity" in _commands, sorted(_commands))
-check("capacity help distinguishes throughput from material stock",
-      "throughput" in _commands["capacity"]
-      and "stock" in _commands["capacity"]
-      and "materials" in _commands["capacity"], _commands["capacity"])
+class NitreRemedySize(unittest.TestCase):
+    YIELD = 0.0008
+    BUFFER = 1.2
+
+    def test_the_deficit_is_the_demand_the_beds_market_and_stock_do_not_cover(self):
+        self.assertAlmostEqual(nitre_deficit_tonnes(0.0, 1.1, 0.0, self.YIELD, 0.0, 0.0), 1.1)
+        self.assertAlmostEqual(nitre_deficit_tonnes(0.0, 1.1, 500.0, self.YIELD, 0.2, 0.1), 1.1 - 0.4 - 0.2 - 0.1)
+
+    def test_a_reported_shortfall_larger_than_the_gap_governs_and_a_surplus_needs_nothing(self):
+        self.assertEqual(nitre_deficit_tonnes(2.0, 1.1, 0.0, self.YIELD, 0.0, 0.0), 2.0)
+        self.assertEqual(nitre_deficit_tonnes(0.0, 1.1, 5000.0, self.YIELD, 0.0, 0.0), 0.0)
+
+    def test_the_bed_is_sized_from_the_deficit_plus_its_buffer_not_a_fixed_area(self):
+        beds = nitre_bed_square_metres(nitre_deficit_tonnes(0.0, 1.1, 0.0, self.YIELD, 0.0, 0.0), self.BUFFER, self.YIELD)
+        self.assertGreaterEqual(beds, 1.1 * self.BUFFER / self.YIELD)
+        self.assertLess(beds, 1.1 * self.BUFFER / self.YIELD + 100.0)
+        self.assertNotEqual(beds, 20000)
 
 
-# A zero-hour, zero-cost, zero-risk capability is a state transition, not a
-# one-year undertaking.  Its prerequisite is supplied directly so the check
-# isolates start_project's timing.
-s = unopened_sim()
-s.done.add("thermometer")
-s._done_changed()
-ok, why = s.start_project("cap_measure_temp")
-check("a genuinely instantaneous capability completes when it is started",
-      ok and "cap_measure_temp" in s.done and "cap_measure_temp" not in s.active,
-      why)
+class InstantaneousCapability(unittest.TestCase):
+    def test_a_capability_with_no_hours_money_labour_or_risk_completes_when_started(self):
+        self.assertTrue(is_instantaneous(0.0, 0.0, 0.0, {}, 0.0))
+
+    def test_anything_with_hours_a_calendar_floor_money_labour_or_risk_is_a_project(self):
+        for arguments in ((1.0, 0.0, 0.0, {}, 0.0), (0.0, 2.0, 0.0, {}, 0.0), (0.0, 0.0, 10.0, {}, 0.0),
+                          (0.0, 0.0, 0.0, {"smith": 5.0}, 0.0), (0.0, 0.0, 0.0, {}, 0.1)):
+            self.assertFalse(is_instantaneous(*arguments), arguments)
 
 
-# The credit forecast used to put the percentage itself in a field labelled
-# "interest per year".  Pin both dimensions and their units independently.
-s = unopened_sim(civ="england_1300", capital=30000.0)
-s.state.household.capital = 50.0    # short of the bill, within the credit line
-out = S._agent_dispatch(s, NODES, {"cmd": "start", "id": "identity_cover"})
-credit = out.get("on_credit", {})
-check("credit forecasts label the percentage as a rate",
-      credit.get("interest_rate_percent")
-      == round(s.debt_interest_rate() * 100, 1), credit)
-check("credit forecasts calculate the annual denarius charge",
-      credit.get("estimated_annual_interest")
-      == round(credit["you_would_borrow"] * s.debt_interest_rate(), 1), credit)
-check("the misleading old interest-per-year field is gone",
-      "interest_per_year_on_it" not in credit, credit)
+class CreditForecastLabels(unittest.TestCase):
+    RATE = 0.075
+
+    def forecast(self):
+        return credit_forecast.borrowing_forecast(900.0, 0.0, 500.0, lambda: 2000.0, lambda: self.RATE, lambda after: {})
+
+    def test_the_percentage_is_labelled_as_a_rate(self):
+        self.assertEqual(self.forecast()["interest_rate_percent"], round(self.RATE * 100, 1))
+
+    def test_the_annual_charge_is_the_borrowed_sum_at_that_rate(self):
+        forecast = self.forecast()
+        self.assertEqual(forecast["estimated_annual_interest"], round(forecast["you_would_borrow"] * self.RATE, 1))
+        self.assertEqual(forecast["you_would_borrow"], 400.0)
+
+    def test_the_misleading_old_interest_per_year_field_is_gone(self):
+        self.assertNotIn("interest_per_year_on_it", self.forecast())
 
 
-# Recommendation size follows the live deficit.  Isolate it from the market
-# so 1.1 t/year reproduces the reported shortage: 1,375 m2 bare, rounded to
-# 1,700 m2 after the documented twenty-percent buffer.
-s = unopened_sim()
-s.annual_material_demand = lambda: {"saltpetre_kg": 1100.0}
-s._material_market_tonnes = lambda material: 0.0
-plan = s.shortage_remedy_plan("saltpetre")
-check("nitre advice is sized from the current deficit plus its stated buffer",
-      plan["commands"] == ["buy nitre 1700"], plan)
-check("nitre advice no longer recommends a fixed twenty-thousand-square-metre bed",
-      "buy nitre 20000" not in plan["commands"], plan)
+class CapacityHelp(unittest.TestCase):
+    def test_capacity_is_in_the_command_index_and_distinguishes_flow_from_stock(self):
+        commands = _agent_help(types.SimpleNamespace(fog=None), "commands")["commands"]
+        self.assertIn("capacity", commands)
+        # presentation: the help text tells the player flow from durable stock
+        for word in ("throughput", "stock", "materials"):
+            self.assertIn(word, commands["capacity"])
+
+
+if __name__ == "__main__":
+    unittest.main()
