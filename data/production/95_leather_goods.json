@@ -1,5 +1,5 @@
 {
- "_note": "Finished leather goods made by the leatherworker from the tanner's leather (Complaints/612): shoes, a draught animal's harness and a sword scabbard. Every mass, hour count and life is a recalled or estimated figure, marked in each yield_basis.",
+ "_note": "Finished leather goods made by the leatherworker from the tanner's leather (Complaints/612): shoes, a draught animal's harness and a sword scabbard. Every mass, hour count and life has no source found and is an estimate, marked in each yield_basis.",
  "materials": {
   "shoes_pair": {
    "outputs": {
@@ -14,7 +14,7 @@
    "unit_dimension": "count",
    "unit_mass_kg": 0.9,
    "basis": "per pair of stitched leather shoes",
-   "yield_basis": "A pair of hand-stitched leather shoes or boots uses a bit under a kilogram of finished leather for sole, upper and thongs (recalled from museum finds of Roman and medieval shoes, not opened; conf D), cut and sewn by a leatherworker in about a working day (author's estimate, conf D). Thread and nails are a few grams and are left out. CLOTHING: the pair satisfies the clothing need at the factor leather_kg already carries per kilogram of leather it holds (data/world/needs.json), so a worked pair is worth its leather and no more until a source gives cover and warmth of footwear separately; a labelled placeholder, retire with a need for footwear.",
+   "yield_basis": "A pair of hand-stitched leather shoes or boots uses a bit under a kilogram of finished leather for sole, upper and thongs (no source found; conf D), cut and sewn by a leatherworker in about a working day (author's estimate, conf D). Thread and nails are a few grams and are left out. CLOTHING: the pair satisfies the clothing need at the factor leather_kg already carries per kilogram of leather it holds (data/world/needs.json), so a worked pair is worth its leather and no more until a source gives cover and warmth of footwear separately; a labelled placeholder, retire with a need for footwear.",
    "requires_node": "tex_vegetable_tanning",
    "conf": "D",
    "satisfies": {

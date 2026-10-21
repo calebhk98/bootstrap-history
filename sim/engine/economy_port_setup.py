@@ -11,7 +11,7 @@ from typing import Dict
 
 from sim.economy.api import (EconomySetup, carriage_wear, SiteLimit, TradeSpec, currency_from_coin_standard, goods_specs, households,
                              recipe_tile_key,
-                             recipes_from_production_data, taxes, tile_costs)
+                             recipes_from_production_data, taxes, tile_costs, with_tool_wear)
 from sim.world import demand, need_basket
 from sim.geography.api import carriage_rates, layer_value, sea_freight, settlement, tiles_held
 from sim.labour import api as labour_api
@@ -193,6 +193,9 @@ def build_setup(sim, opening=None, production=None):
     production = production or demand.production_data()
     every_recipe = sorted(set(opening["recipes"]).union(*(opened["recipes"] for opened in partners.values())))
     recipes = recipes_from_production_data(production, every_recipe)
+    trades_data = _load("world", "trades.json").get("trades", {})
+    life_years = {good: float(entry["years"]) for good, entry in _load("world", "service_lives.json").get("years", {}).items()}
+    recipes = tool_wear_recipes(recipes, trades_data, life_years, float(sim.HOURS_PER_PERSON_YEAR))
     mint_recipe = (recipes_from_production_data(production, [opening["mint_recipe"]])[opening["mint_recipe"]]
                    if opening.get("mint_recipe") else None)
     need_data = _load("world", "needs.json")
@@ -208,7 +211,6 @@ def build_setup(sim, opening=None, production=None):
     specs = goods_specs({good: "" for good in goods}, spoilage, service_lives)
     prices = {good: price for good, price in opening["prices"].items() if good in specs and price > 0.0}
     prices = economy_port_closure.makeable_prices(prices, production, recipes)
-    trades_data = _load("world", "trades.json").get("trades", {})
     trades = {trade: TradeSpec(trade, float(spec.get("training_years", 0.0)),
                                float(spec.get("fatality_risk_per_year", 0.0)), str(spec.get("family", "")))
               for trade, spec in sorted(trades_data.items())}
@@ -249,6 +251,19 @@ def build_setup(sim, opening=None, production=None):
         opening_store_output={good: tuple(tuple(working) for working in entry["workings"])
                               for good, entry in sorted(opening["stores"].items()) if entry["workings"]},
         opening_store_gaps={good: entry["gap"] for good, entry in sorted(opening["stores"].items()) if entry["gap"]})
+
+
+def tool_wear_recipes(recipes, trades_data, life_years, hours_per_worker_year):
+    """The recipes with the tools their hired hours wear out added as inputs: each trade's basket and stock
+    (data/world/trades.json) over the goods' service lives, per hour a worker works. A tool no recipe makes is
+    left out."""
+    wear_per_hour = {}
+    for trade in sorted(trades_data):
+        draw = labour_api.tool_draw(trades_data, trade, 1.0, life_years)
+        if draw:
+            wear_per_hour[trade] = {good: row["wear_per_year"] / hours_per_worker_year for good, row in draw.items()}
+    makeable = {good for recipe in recipes.values() for good in recipe.outputs}
+    return {recipe_id: with_tool_wear(recipe, wear_per_hour, makeable) for recipe_id, recipe in recipes.items()}
 
 
 def cropland_yields(production, recipes, tiles):

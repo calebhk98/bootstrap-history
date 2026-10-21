@@ -14,7 +14,7 @@
    "heap_height_m": 3.0,
    "kind": "measured",
    "conf": "D",
-   "source": "Density and height are recalled, none opened offline: loose wheat bran about 250 kg per cubic metre (feed handbooks); a hand-tipped heap three metres, a labelled heuristic. Conf D.",
+   "source": "Density and height: no source found, labelled heuristics: loose wheat bran about 250 kg per cubic metre (feed handbooks); a hand-tipped heap three metres, a labelled heuristic. Conf D.",
    "why": "Light flaky husk."
   },
   "coal_tar_kg": {
@@ -26,11 +26,11 @@
    "why": "A viscous liquid, held in a pit, so the footprint is its volume over the pit depth."
   },
   "manure_kg": {
-   "bulk_density_kg_per_m3": 750.0,
+   "bulk_density_kg_per_m3": 1009.0,
    "heap_height_m": 2.0,
    "kind": "measured",
    "conf": "D",
-   "source": "Density and height are recalled, none opened offline: fresh farmyard manure 700 to 800 kg per cubic metre (agricultural engineering handbooks); a heap two metres, the height a fork can turn. Conf D.",
+   "source": "Density: USDA NRCS, Agricultural Waste Management Field Handbook Part 651 chapter 4 (4/92), Table 4-8 beef cow as excreted, opened: weight 63.00 lb/d/1000# over volume 1.00 ft3/d/1000#, so 63 lb/ft3, 1009 kg/m3. Height: no source found, a labelled heuristic; a heap two metres, the height a fork can turn. Conf D.",
    "why": "Wet, dense and self-heating, so kept low."
   },
   "nightsoil_kg": {
@@ -38,7 +38,7 @@
    "heap_height_m": 2.0,
    "kind": "measured",
    "conf": "D",
-   "source": "Density and height are recalled, none opened offline: a wet slurry at about the density of water; a pit two metres deep, a labelled heuristic. Conf D.",
+   "source": "Density and height: no source found, labelled heuristics: a wet slurry at about the density of water; a pit two metres deep, a labelled heuristic. Conf D.",
    "why": "A slurry, held in a pit."
   },
   "straw_kg": {
@@ -46,7 +46,7 @@
    "heap_height_m": 4.0,
    "kind": "measured",
    "conf": "D",
-   "source": "Density and height are recalled, none opened offline: loose stacked straw 50 to 80 kg per cubic metre (a thatcher's or farm-engineering figure); a rick four metres, a labelled heuristic. Conf D.",
+   "source": "Density: NRCS Part 651 chapter 4 (4/92), Table 4-3, opened: straw 2.50 lb/ft3 loose (40 kg/m3) and 7.0 lb/ft3 chopped (112 kg/m3); 60 is taken between them for a stack, no source found for it. Height: a rick four metres, a labelled heuristic. Conf D.",
    "why": "Very light, stacked high."
   },
   "urine_kg": {
@@ -54,7 +54,7 @@
    "heap_height_m": 2.0,
    "kind": "measured",
    "conf": "D",
-   "source": "Density and height are recalled, none opened offline: urine specific gravity about 1.01 (clinical references); a pit two metres deep, a labelled heuristic. Conf D.",
+   "source": "Density: Rose et al. 2015, PMC4500995, opened: \"The specific gravity of urine ranged from 1.002 to 1.037\", 1.01 taken. Height: a pit two metres deep, a labelled heuristic. Conf D.",
    "why": "A liquid, held in a pit."
   },
   "wood_ash_kg": {

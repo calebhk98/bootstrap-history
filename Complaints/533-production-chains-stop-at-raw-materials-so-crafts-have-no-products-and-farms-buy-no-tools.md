@@ -1,6 +1,6 @@
 # Production chains stop at raw materials, so crafts have no products and farms buy no tools
 
-**Status:** open (stage 1 done; stages 2 onward below)
+**Status:** open (stages 1 and 2 done; later stages below)
 
 Reference (an outside table of ancient supply chains, not code-aware): each trade bought inputs from
 named trades and sold finished goods to named ones, for example the smith sells ploughshares, sickles
@@ -49,3 +49,10 @@ business to improve. It also hides the crafts from the non-farm need shares (530
 - **Labelled heuristics, no source found (retire: this complaint).** Bar per kg of tool, smith hours per kg of tool, tool service life, tool kg per farm worker, dyer hours per kg, and dyed cloth counting as plain cloth for clothing. Sources looked for and not opened (blocked pages): the Hallen 2003 thesis on Swedish farm iron and Catarina Karlsson's 2015 thesis on iron wear per hectare (abstracts seen in search results only, so not used).
 - **Left for later stages.** Fisher and carter tool baskets (no tool source found), nails, amphorae, tiles, ships, carts, footwear as household goods, the army's bar iron, fulling inputs, jars and presses.
 - **Tests.** `sim/tests/test_production_chain_stage_one.py`.
+
+## Done (stage 2)
+
+- **Tool wear is a demand.** `sim/economy/tool_wear.py`. The port (`tool_wear_recipes` in `sim/engine/economy_port_setup.py`) turns each trade's `tool_basket` and `tool_stock_per_worker` (`trade_data.tool_draw`, now exported by `sim/labour/api.py`) into wear per hour worked, and `with_tool_wear` adds the wear of a recipe's hired hours to its `inputs` (and lists it in the new `Recipe.tool_wear`). Producers then plan, bid for, buy and consume it through the ordinary input path, so smiths are sized by farm demand. A tool no recipe in the society makes is not charged, and a recipe never wears the tool it makes. The data names no good in code.
+- **Own-plot households.** `own_production_options` accepts a recipe whose only inputs are tool wear. A household's own-plot hours are recorded by recipe (`YearLedger.own_plot_hours`), and `cohort_orders` (`sim/economy/year_goods.py`) adds `tool_bids`: the stock those hours keep in use, less what it holds after this year's wear (the durable rule), paid from its cash before its other goods. The tools it holds wear as any cohort durable.
+- **Left out.** Employers do not hold a tool stock, only buy the yearly wear (a flow). A household's first year buys the whole stock. A society with no recipe for the tool charges none.
+- **Tests.** `sim/tests/test_complaint_533_stage_two_tool_wear.py`. Not run, being whole-game: `python3 sim/simulator.py economy-check`, and the shipped openings (`openings/`) are likely to need recomputing (`openings`, `opening-checks`).
