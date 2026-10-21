@@ -16,7 +16,7 @@ the researcher's own, with its expression. Nothing here is a model input: figure
 
 ### 1.1 Flight and anachoresis, Roman Egypt
 
-All from Naphtali Lewis, "A Reversal of a Tax Policy in Roman Egypt", *Greek, Roman and Byzantine Studies* 34 (1993) 101-108
+All from Naphtali Lewis, "A Reversal of a Tax Policy in Roman Egypt", *Greek, Roman and Byzantine Studies* 34 (1993) 101-118
 (open PDF, Duke GRBS). OPENED.
 
 - p. 101: under the Ptolemies flight was "in the nature of a strike", workers waiting to negotiate a return. Under Rome
