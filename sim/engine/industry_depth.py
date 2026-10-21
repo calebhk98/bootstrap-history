@@ -19,7 +19,7 @@ from sim.constants import declare
 from sim.labour.api import add_tenure, fade_tenure, outflow_shares, tenure_by_trade, tenure_held
 from sim.world.demography_turnover import working_age_turnover
 
-from .industry_depth_rules import firm_worker_years, opening_rates, seed_stock, society_worker_years
+from .industry_depth_rules import firm_worker_years, opening_seed, society_worker_years
 from .prices import default_production_entries
 
 YEARS_STAFF_TAKE_TO_MASTER = declare(
@@ -120,10 +120,10 @@ class IndustryDepthMixin:
         projects.industry_seeded = True
         opening = self.opening_worker_years_by_node() or {}
         fade = self.tenure_leavers_share()
-        rates = opening_rates(projects.granted, self.is_concern_node, opening, self.founding_worker_years)
-        for node_id, rate in rates.items():
+        for node_id, (rate, stock) in opening_seed(projects.granted, self.is_concern_node, opening,
+                                                   self.founding_worker_years, fade).items():
             projects.industry_opening_rate[node_id] = rate
-            self.add_industry_years(node_id, seed_stock(rate, fade))
+            self.add_industry_years(node_id, stock)
 
     def opening_worker_years_by_node(self):
         """Worker-years a year the agent economy's producers put into each technique's own entries; None
