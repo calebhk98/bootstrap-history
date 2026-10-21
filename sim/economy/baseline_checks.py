@@ -60,8 +60,8 @@ def stock_depletion(accounts_by_year: Sequence[YearAccounts]) -> Dict[str, float
     first, last = accounts_by_year[0], accounts_by_year[-1]
     shares = {}
     for good, account in first.goods.items():
-        if account.stock_at_start <= 0.0:
-            continue
+        if account.stock_at_start <= FEASIBILITY_TOLERANCE * _scale(account):
+            continue      # float dust beside the year's flows is no stock, so it cannot be eaten through
         final = last.goods[good].stock_at_start + last.goods[good].stock_change if good in last.goods else 0.0
         shares[good] = max(0.0, 1.0 - final / account.stock_at_start)
     return shares

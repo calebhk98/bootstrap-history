@@ -325,3 +325,43 @@ target) still wanders over an order of magnitude and more, carried by thin goods
 Left for the settling check: the fixed-basket level's wander (drop thin goods' asks from it, or weight by what traded), the
 rate's year-to-year steps against `settling_report`'s bound, and the slow baseline validations (`baseline_rome_full_length`,
 `spin_up_money_supply_full_length`, `baseline_fixture`, `real_output_baseline`) re-run on this head.
+
+## Update 9: the wheat run-up decomposed by year; it follows the iron chain starved of furnaceman hours (branch wheat-price-runaway)
+
+Throwaway probes (per-good price multiple, `market_record`, producers' capacity, runs and expected sales; a wrapper on `producers.produce`
+printing planned runs against the input and hour limits), 18 to 22 years after the cached spin-up, at 72e81e68 and again at 221bb02e.
+No committed command prints the tables. No wheat rule was landed (last paragraphs).
+
+Before the merge (72e81e68), wheat price multiple of base, years 0 to 17: 1.0, 0.72, 0.76, 0.74, 0.72, 0.73, 0.77, 0.79, 0.85, 0.92, 0.92,
+1.0, 2.5, 3.5, 7.8, 14, 13.5, 13.5. Wheat producers' capacity falls from 3.06 million runs to 17 thousand; runs worked 2.5 million
+(year 0), 0.3 million (1), 4 thousand (2), then hundreds, while unmet demand stays at 1 to 25 million kg. After the merge the path
+changed: wheat sits low first (0.22, 0.19, 0.17, 0.15, 0.14, 0.11, 0.11, 0.10, 0.09, 0.09, 0.10, 0.12 in year 12) with runs zero or
+hundreds in years 5 to 12 under a stock overhang of 1.5e8 kg; capacity falls to 3.6e4 runs by year 13; then wheat rises 0.42, 0.70,
+1.0, 1.5, 3.5, 8.4 (years 14 to 19), 20 in year 20.
+
+Which side moved first: supply, upstream of wheat. Leaders after the merge: bread (240 times base in year 5), thermal energy, mortar
+and flint (170 times in year 9), then iron bar (3 in year 5, 10 in 11, 25 in 13, 47 in 14), iron tools (0.8 in year 10, 3 in 12, 19 in
+14, 62 in 15, 210 in 16, 1000 in 20), and wheat follows iron tools. Wheat's recipe takes `iron_tools_kg` as a tool; by year 20 a
+run's tool bill is 745 against a run revenue of 7900, so it is the shortage of hours that holds wheat output down: farmer hours hired
+fall from 3.0e9 (year 0) to 4e7 (year 10) with 3e9 idle in other areas, and wheat producers in several areas get zero farmer hours in
+years 17 to 19 (china_32, spain_03: planned 856 and 758 runs, hour limit 0.0).
+
+The tool chain, from the produce wrapper: iron tools need iron bar (hard input), iron bar needs iron bloom and charcoal, and bloom is
+made in four areas only. In year 12 the bloom makers plan 498, 4090, 1340 and 2150 runs and achieve 2.3, 1130, 10.6 and 35.7: the
+limit is furnaceman hours (italy_02 hired 2.9e4 hours against 3.6e5 a year earlier), not ore or charcoal (held at three to ten times
+the run's need), not cash and not the plan. Furnaceman hours are fully taken (idle 0) at a wage of 0.05 to 0.09 while the employers'
+bids carry a worth of 3.6 to 8.6 an hour. The wage is held down by `sim/labour/market/clearing.py` `ceiling` (the trained
+substitute wage, the unskilled wage times a training premium, then the import cost), and the trade's people shrink while the
+vacancy stands (furnaceman hours in italy_02 for years 10 to 13: 6.8e5, 3.6e5, 2.9e4, 3.5e4). Owner: the labour work.
+
+Tried and not landed: a producer's expected sales are what it sold (`year_close._with_sales`), so a seller that sells out in a market
+with unmet demand expects only its own shrunken sales and its exit and shedding (`producers_close.close_year`) read that. A rule
+adding a sold-out seller's share of the unmet demand (pure function, tested on built numbers) kept ten times the wheat capacity in
+year 12 (3.8e5 against 4.6e4 runs) but wheat still falls to 3.6e4 runs in year 13 and reaches 8.4 times base in year 19, and it
+failed `economy_service_lives` (a cash shortage sells more of the stock than the fixed bound allows). Not committed, bound not widened.
+
+The slow baseline failure "stocks are not eaten through" on grain is not this runaway: on the fixture grain price drifts 0.36 to 0.40
+over 60 years with the wage (1.0 to 1.29), and the grain stock is float dust (1e-10 kg) against sales of 1.8e6 kg a year. The check
+`baseline_checks.stock_depletion` counted a start-of-window dust stock as a stock and its disappearance as a draw-down of 1.0. It now
+skips a stock under `FEASIBILITY_TOLERANCE` of the good's largest flow (test_baseline_stock_depletion). The fixture's own drift (price
+level up 0.4 per cent a year with the wage) remains, and is the settling failure above, not a runaway.
