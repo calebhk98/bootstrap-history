@@ -34,7 +34,7 @@
       "sources": ["allen_2000", "wilson_2002"]
     },
     "other_crafts": {
-      "trades": ["potter", "smith", "furnaceman", "glassblower", "engraver", "artisan", "charcoal_burner", "tanner", "leatherworker", "miner", "optician", "machinist", "engineer", "chemist", "electrician", "shipwright"],
+      "trades": ["potter", "smith", "furnaceman", "glassblower", "engraver", "artisan", "charcoal_burner", "tanner", "leatherworker", "miner", "optician", "machinist", "engineer", "chemist", "electrician", "shipwright", "knapper"],
       "band": [0.01, 0.10],
       "sources": ["allen_2000", "broadberry_2015"]
     },
