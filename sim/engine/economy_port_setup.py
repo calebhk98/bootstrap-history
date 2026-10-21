@@ -116,7 +116,8 @@ def opening_values(sim):
         "carriage_crew": {mode: [rate["crew_trade"], rate["crew_hours_per_tonne_km"]]
                           for mode, rate in rates.items()},
         "carriage_handling_trade": {mode: rate["handling_trade"] for mode, rate in rates.items() if rate.get("handling_trade")},
-        "carriage_teams": {mode: {key: rate[key] for key in ("carriers", "tonne_km_per_team_day", "team_payload_tonnes")}
+        "carriage_feed_good": sim.FREIGHT_FEED_PRICE_MATERIAL,
+        "carriage_teams": {mode: {key: rate[key] for key in ("carriers", "tonne_km_per_team_day", "team_payload_tonnes", "animal_feed_kg_per_tonne_km")}
                            for mode, rate in rates.items()},
         "held_nodes": sorted(sim.held_and_running(include_starting=False)),
         "ways": {key: dict(way) for key, way in sorted(sim.state.economy.improvements.items())},
@@ -226,7 +227,8 @@ def build_setup(sim, opening=None, production=None):
         carriage_carriers=carriage_wear.table(
             opening["carriage_teams"],
             {good: production[good]["carrier_use"] for good in sorted(specs) if production.get(good, {}).get("carrier_use")},
-            {good: spec.service_life_years for good, spec in specs.items()}),
+            {good: spec.service_life_years for good, spec in specs.items()},
+            (opening["carriage_feed_good"], specs[opening["carriage_feed_good"]].unit_mass_kg) if opening["carriage_feed_good"] in specs else None),
         carriage_handling={SEA_MODE: sea_freight.PORT_HANDLING_HOURS_PER_TONNE},
         carriage_handling_trade={mode: str(trade) for mode, trade in opening["carriage_handling_trade"].items()},
         held_nodes=tuple(opening["held_nodes"]),

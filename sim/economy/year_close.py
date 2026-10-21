@@ -23,8 +23,11 @@ from .replaced import replaced
 def dispatch_merchants(setup, record, carriage, ledger: YearLedger, area_map) -> None:
     """Merchants carry what they bought. The crew hours the shipments need were hired in the year's labour
     market (carriage_hours.bids) and limit what is carried; a merchant with no plan yet (it has not shipped)
-    is not limited. The part of a fee that is not crew pay goes, as wages, to the poorest households of the
-    tile the goods leave: a shortcut until carts, ships and animals are capital (Complaints/552)."""
+    is not limited. A fee is paid in parts to those who supply them: the crew by the labour market, the carriers
+    worn and the feed the animals eat by the merchant buying them in the goods market (carriage_wear), and
+    what is left (the carriers' interest, their losses, the margin) stays with the merchant that owns the carriers,
+    whose owner draws it as profit. Where the setup names no carriers the whole fee still goes to the poorest
+    households of the tile the goods leave (Complaints/552)."""
     money = setup.currency_id
     crew = carriage_hours.crew_for(setup, record, carriage)
     index = carriage_hours.hired_index(ledger) if crew is not None else {}
@@ -64,7 +67,8 @@ def dispatch_merchants(setup, record, carriage, ledger: YearLedger, area_map) ->
                                   carrier_of=carriers.get, crew=hire,
                                   carrier_money=None if wear is None else (
                                       lambda source, destination, each=merchant: carriage_wear.money_per_tonne(
-                                          prices, wear, source, destination)))
+                                          prices, wear, source, destination)),
+                                  margin_kept=wear is not None)
         record.book.post(done.transfers, done.moves)
         ledger.note_postings(done.transfers, "wages")
         if crew is not None:

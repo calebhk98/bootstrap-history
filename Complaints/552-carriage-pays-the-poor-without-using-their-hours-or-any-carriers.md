@@ -33,8 +33,8 @@ demand for carters, sailors and porters (530).
 - `merchants.dispatch` cuts every route by the same share when the hours hired fall short, and the fee is
   paid less the crew's wages, which the labour market has already paid to the households that sold the
   hours. Those hours are no longer offered to other employers or left for the household's own plot.
-- Still a shortcut: the rest of a fee (feed, carts, ships, animals, losses) goes to the poorest
-  households of the source tile. Capital for carriers with service lives, and dispatch limited by it, are not built.
+- Done (632, closed): the rest of a fee is paid by supplier: the carriers worn and the animals' feed are bought in the goods market, the remainder stays with the merchant that owns the carriers. Only a first-year merchant's unhired crew pay still goes to the poorest.
+- Dispatch limited by the fleet (631) is not built.
 - Carriers must exist to be hired: the opening places people by the runs producers expect, so no carters
   exist when merchants first ship, and the labour core does not grow a new trade fast enough (measured
   below). The crew hours are therefore bid in the unskilled trade (`CARRIAGE_CREW_UNSKILLED_SHARE`, a
