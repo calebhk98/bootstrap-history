@@ -20,13 +20,13 @@ economy = game.economy.agent.economy()
 check("...and at the baseline, the first settled year",
       abs(game.real_output_per_head() - 1.0) <= 1e-9, game.real_output_per_head())
 basket = game.base_basket()
-opening = economy_api.opening_quantities(economy)
+opening = economy_api.country_opening_basket(economy)
 check("the opening basket is the economy's own, every good in it",
       all(abs(basket["units"][good] - opening[good]) <= 1e-12 * opening[good] for good in basket["units"])
       and set(basket["units"]) <= set(opening) and bool(basket["units"]))
-baseline = game.economy.agent.stored["volume_baseline"]
+baseline = game.economy.agent.volume_baseline()
 check("the baseline holds every good the economy traded in its first year",
-      all(baseline.get(good, 0.0) > 0.0 for good in basket["units"] if economy_api.traded_volumes(economy).get(good, 0.0) > 0.0))
+      all(baseline.get(good, 0.0) > 0.0 for good in basket["units"] if economy_api.country_traded_volumes(economy).get(good, 0.0) > 0.0))
 check("the engine keeps no volume of its own: no follower of the economy's cleared volumes, no reference tonnes split",
       not hasattr(game, "_follow_cleared_volumes") and not hasattr(game, "traded_ratio"))
 

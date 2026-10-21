@@ -166,22 +166,25 @@ class AgentEconomy(TilePricesMixin):
         self._record_stale = True
 
     def _note_volume_baseline(self):
-        """The first year a good clears any quantity is the quantity later years are measured against."""
+        """The first year a good clears any quantity in a country's markets is the quantity later years are
+        measured against there."""
         baseline = self.stored.setdefault("volume_baseline", {})
-        for good, volume in economy_api.traded_volumes(self._economy).items():
-            if volume > 0.0 and good not in baseline:
-                baseline[good] = volume
+        for country in self._economy.setup.countries():
+            noted = baseline.setdefault(country, {})
+            for good, volume in economy_api.country_traded_volumes(self._economy, country).items():
+                if volume > 0.0 and good not in noted:
+                    noted[good] = volume
 
-    def volume_baseline(self):
-        return dict(self.stored.get("volume_baseline", {}))
+    def volume_baseline(self, country=None):
+        return dict(self.stored.get("volume_baseline", {}).get(country or self._economy.setup.civ_id, {}))
 
-    def traded_volumes(self):
-        return economy_api.traded_volumes(self.economy())
+    def traded_volumes(self, country=None):
+        return economy_api.country_traded_volumes(self.economy(), country)
 
-    def opening_basket(self):
-        """(units a year of each good in the opening basket, opening price of each in labour hours)."""
+    def opening_basket(self, country=None):
+        """(units a year of each good in the country's opening basket, opening price of each in labour hours)."""
         economy = self.economy()
-        return economy_api.opening_quantities(economy), economy_api.opening_prices_in_hours(economy)
+        return economy_api.country_opening_basket(economy, country), economy_api.opening_prices_in_hours(economy)
 
     def producers_stamp(self):
         return self._years_run

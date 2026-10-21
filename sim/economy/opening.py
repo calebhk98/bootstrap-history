@@ -78,6 +78,9 @@ def _open(setup: EconomySetup, replacement: float) -> Tuple[EconomyRecord, AreaM
     mint.seed_opening_metal(setup, record)
     opening_stores.seed_opening_stores(setup, record, _store_goods(setup, view, area_map, priced_goods))
     record.opening_demand = opening_runs.national_totals(final_by_tile)
+    record.opening_demand_by_country = {
+        country: opening_runs.national_totals({tile: final_by_tile[tile] for tile in setup.tiles_of(country) if tile in final_by_tile})
+        for country in setup.countries()}
     record.opening_basket = opening_basket.supplied_part(setup, record, record.opening_demand)
     return record, area_map, carriage
 

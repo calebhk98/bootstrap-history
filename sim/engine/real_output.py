@@ -2,7 +2,8 @@
 
 No technology count and no index stand in for it. The opening basket is the economy's own: the quantity of each
 good households bought when it opened (`economy.api.opening_quantities`), valued at the economy's opening prices in
-hours of the unskilled trade's opening wage. The economy's volumes (`economy.api.traded_volumes`) do not start at
+hours of the unskilled trade's opening wage. The economy's volumes (`economy.api.country_traded_volumes`, over the markets of the country measured, so a partner
+country's trade does not stand in a home population's output) do not start at
 those quantities, so they are measured against the first year each good cleared any, recorded in
 `stored["volume_baseline"]`, and a single scale carries that year onto the opening basket's value. With the traded
 units of a good, its baseline, its opening price and the scale,
