@@ -62,7 +62,7 @@ for _year in range(4):
 prices.append(SimWorld(game).price_at(material, PARTNER))
 # a cargo smaller than the partner's demand displaces the partner's own producers (they idle) and the price stays at
 # their floor; it gives way only once the cargo outgrows what the partner takes (Complaint 672: idle output is not stock)
-check("the partner's price never climbs above where it began (the cargo displaces its producers, who idle)",
+check("the partner's price never climbs above where it began (the cargo displaces its producers, who idle; Complaint 673: a cheaper import should lower it)",
       all(later <= prices[0] * (1.0 + 1e-6) for later in prices[1:]), prices)
 home_price = SimWorld(game).price_at(material, SimWorld(game)._home_place())
 check("...so the gap traders serve is no wider than it was",
