@@ -55,6 +55,25 @@ def tool_basket(registry: Mapping[str, Mapping[str, Any]], trade: str) -> Tuple[
     return tuple(registry.get(trade, {}).get("tool_basket", ()))
 
 
+def tool_stock_per_worker(registry: Mapping[str, Mapping[str, Any]], trade: str) -> Dict[str, float]:
+    """Units of each basket good one worker of the trade keeps in use; a basket good with no stated stock is
+    only a price factor on the wage (it draws and wears nothing)."""
+    basket = tool_basket(registry, trade)
+    stock = registry.get(trade, {}).get("tool_stock_per_worker", {}) or {}
+    return {good: float(units) for good, units in stock.items() if good in basket and units > 0.0}
+
+
+def tool_draw(registry: Mapping[str, Mapping[str, Any]], trade: str, workers: float,
+              service_life_years: Mapping[str, float]) -> Dict[str, Dict[str, float]]:
+    """What `workers` of the trade hold and wear: {good: {"stock": units in use, "wear_per_year": units worn out a year}}.
+    A tool wears out at its stock over its service life; a good with no life is not worn (it is not a durable)."""
+    draw = {}
+    for good, units in tool_stock_per_worker(registry, trade).items():
+        life = float(service_life_years.get(good, 0.0))
+        draw[good] = {"stock": units * workers, "wear_per_year": units * workers / life if life > 0.0 else 0.0}
+    return draw
+
+
 def staff_resource_trade(registry: Mapping[str, Mapping[str, Any]], resource: str) -> str:
     """The trade that fills a generic staffing resource (the first by id that names it)."""
     filling = sorted(trade for trade, fields in registry.items() if fields.get("staff_resource") == resource)

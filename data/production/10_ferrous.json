@@ -128,6 +128,22 @@
    "operated_by": ["blast_furnace"],
    "conf": "C"
   },
+  "iron_tools_kg": {
+   "outputs": {
+    "iron_tools_kg": 1.0
+   },
+   "inputs": {
+    "iron_bar_kg": 1.15
+   },
+   "labour_hours": {
+    "smith": 4.0
+   },
+   "unit_dimension": "mass",
+   "basis": "per kg of finished hand-forged iron farm tools (sickle, hoe, spade shoe, ploughshare), counted by the mass of the tools",
+   "yield_basis": "Finished edge and digging tools are drawn and forged from iron bar. LABELLED HEURISTIC, conf D, no source found for the bar consumed per kilogram of tool (1.15 allows scale loss and offcuts in drawing, punching and welding on a steel edge) nor for the smith hours per kilogram (4.0); retire: Complaints/533 when an archaeometallurgical or smithy-account source is read. Only the size of one tool was read: the Science Museum Group record of an early iron sickle (https://collection.sciencemuseumgroup.org.uk/objects/co38922/early-iron-sickle) gives 'overall (laid flat): 55 mm x 500 mm x 250 mm, 0.24 kg', the weight with any handle. It fixes the unit as a quarter-kilogram-class tool, not the forging loss or the hours.",
+   "requires_node": null,
+   "conf": "D"
+  },
   "iron_bar_kg": {
    "outputs": {
     "iron_bar_kg": 1000.0

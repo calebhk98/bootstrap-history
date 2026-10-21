@@ -1,4 +1,8 @@
-"""Test suite for automatic state serialization, deserialization, and schema migration."""
+"""Automatic state serialization and deserialization, and the save file's validation. Complaint 640: every check builds
+its state or save here (a stand-in game holds only the tree and civilisation id the validation reads); a save written
+by a played game and loaded back is held by test_complaint_320_save_round_trip and test_save_round_trip_every_year."""
+QUICK_TOPIC = True
+
 import collections
 import os
 import random
@@ -209,43 +213,46 @@ _ok, _detail = _test_transient_cache_exclusion()
 check("Transient cache exclusion in serialization", _ok, _detail)
 
 
-def _make_sim(civ_id="rome_100ad", seed=1, events=False, fog=False):
-	from sim import simulator as S
-	tree, prices, nodes, wages, goods = S.load()
-	goal = tree["meta"]["goal_node"]
-	_lab, order, _b = S.load_strategy("recommended", nodes, goal)
-	sim = S.Sim(nodes, order, random.Random(seed), events=events, manual=False, civ=S.load_civ(civ_id))
-	sim.goal = goal
-	sim.fog = fog
-	return sim
 
-
-SHARED_SIM = _make_sim("rome_100ad", seed=1, events=False, fog=False)
+def _valid_save():
+	"""A save blob a state serializes to, with the metadata the writer adds, and the stand-in game that would load it."""
+	from types import SimpleNamespace
+	from sim.engine.state import (
+		EconomyState, FounderState, GovernanceState, HoldingsState, HouseholdState, PopulationState, ProjectsState,
+		ScenarioState, SimulationState, serialize_state,
+	)
+	state = SimulationState(
+		household=HouseholdState(capital=1250.0), projects=ProjectsState(done={"stone_cutting"}), economy=EconomyState(),
+		holdings=HoldingsState(), governance=GovernanceState(gov=0.5), founder=FounderState(), scenario=ScenarioState(year=115),
+		population=PopulationState())
+	state._goal = "aqueduct"
+	blob = serialize_state(state)
+	blob.update({"_civ": "rome_100ad", "_civ_live": {}, "_weights": {}, "_fog": False, "_immortal": True,
+	             "_rng": [3, list(random.Random(1).getstate()[1]), None]})
+	game = SimpleNamespace(nodes={"aqueduct": {}, "stone_cutting": {}}, civ={"id": "rome_100ad"})
+	return blob, game
 
 
 def _test_cache_reset_after_load():
-	"""Verify economic caches start clean after load."""
-	from sim.engine.saveload import load_state, save_state
+	"""Verify the caches a game derives from its state are wiped, and its containers re-wrapped, on save and load."""
+	from types import SimpleNamespace
+	from sim.engine.economy import EconomyMixin
 
-	sim = SHARED_SIM
-	# Prime capability factor cache
-	cap1 = sim.capability_factor()
-	with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as f:
-		save_path = f.name
-	try:
-		save_state(sim, save_path)
-		# Load into sim and verify caches are clean
-		load_state(sim, save_path)
-		# capability_factor cache should have been reset (_cap_factor is None)
-		if sim.household._cap_factor is not None:
-			return False, f"sim.household._cap_factor not None after load: {sim.household._cap_factor}"
-		cap2 = sim.capability_factor()
-		if cap1 != cap2:
-			return False, f"Capability factor mismatch after load: {cap1} != {cap2}"
-	finally:
-		if os.path.exists(save_path):
-			os.remove(save_path)
-
+	caches = ("_done_seq", "_cap_factor", "_revenue_cache_key", "_revenue_cache_val", "_annual_mat_demand_cache",
+	          "_rev_up_candidates_cache", "_practice_cache", "_goods_cat_state_cache", "_goods_category_ratios_cache",
+	          "_income_factor_cache", "_goods_mkt_op_factor_cache", "_material_demand_cache", "_demand_by_tag_cache")
+	household = SimpleNamespace(**{name: 1.7 for name in caches})
+	rewrapped = []
+	game = SimpleNamespace(household=household, _done_changed=lambda: rewrapped.append("done"),
+	                       _reset_operating=lambda: rewrapped.append("operating"),
+	                       _reset_active=lambda: rewrapped.append("active"),
+	                       _reset_workforce=lambda: rewrapped.append("workforce"))
+	EconomyMixin._reset_economic_caches(game)
+	held = [name for name in caches if getattr(household, name) is not None]
+	if held:
+		return False, f"caches still held after the reset: {held}"
+	if rewrapped != ["done", "operating", "active", "workforce"]:
+		return False, f"containers not re-wrapped: {rewrapped}"
 	return True, "Cache reset after load verified"
 
 
@@ -253,49 +260,32 @@ _ok, _detail = _test_cache_reset_after_load()
 check("Cache reset after load", _ok, _detail)
 
 
-
 def _test_v3_save_shape_validation():
 	"""Verify _validate_save accepts valid v3 saves and rejects structurally incomplete ones for exact reasons."""
-	from sim.engine.saveload import _validate_save, save_state, load_state
-	import json
+	from sim.engine.saveload import _validate_save
 
-	sim = SHARED_SIM
-	with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as f:
-		save_path = f.name
-	try:
-		save_state(sim, save_path)
-		with open(save_path) as handle:
-			valid_blob = json.load(handle)
+	valid_blob, game = _valid_save()
+	err = _validate_save(valid_blob, game)
+	if err is not None:
+		return False, f"Valid v3 save was rejected: {err}"
 
-		# 1. Valid save passes validation
-		err = _validate_save(valid_blob, sim)
-		if err is not None:
-			return False, f"Valid v3 save was rejected: {err}"
+	bad_missing_section = dict(valid_blob)
+	bad_missing_section["seats"] = {"founder": {k: v for k, v in valid_blob["seats"]["founder"].items() if k != "projects"}}
+	err = _validate_save(bad_missing_section, game)
+	if not err or "projects" not in err:
+		return False, f"Missing section was not rejected properly: {err}"
 
-		# 2. Missing top-level section (e.g. projects)
-		bad_missing_section = dict(valid_blob)
-		bad_missing_section["seats"] = {"founder": {k: v for k, v in valid_blob["seats"]["founder"].items() if k != "projects"}}
-		err = _validate_save(bad_missing_section, sim)
-		if not err or "projects" not in err:
-			return False, f"Missing section was not rejected properly: {err}"
+	bad_missing_meta = dict(valid_blob)
+	del bad_missing_meta["_civ"]
+	err = _validate_save(bad_missing_meta, game)
+	if not err or "_civ" not in err:
+		return False, f"Missing _civ was not rejected properly: {err}"
 
-		# 3. Missing metadata field (e.g. _civ)
-		bad_missing_meta = dict(valid_blob)
-		del bad_missing_meta["_civ"]
-		err = _validate_save(bad_missing_meta, sim)
-		if not err or "_civ" not in err:
-			return False, f"Missing _civ was not rejected properly: {err}"
-
-		# 4. Corrupt section shape (section is not an object)
-		bad_section_type = dict(valid_blob)
-		bad_section_type["seats"] = {"founder": dict(valid_blob["seats"]["founder"], household="corrupt_string")}
-		err = _validate_save(bad_section_type, sim)
-		if not err or "household" not in err or "object" not in err:
-			return False, f"Corrupt section type was not rejected properly: {err}"
-
-	finally:
-		if os.path.exists(save_path):
-			os.remove(save_path)
+	bad_section_type = dict(valid_blob)
+	bad_section_type["seats"] = {"founder": dict(valid_blob["seats"]["founder"], household="corrupt_string")}
+	err = _validate_save(bad_section_type, game)
+	if not err or "household" not in err or "object" not in err:
+		return False, f"Corrupt section type was not rejected properly: {err}"
 
 	return True, "v3 save shape validation and rejection verified"
 
@@ -304,12 +294,33 @@ _ok, _detail = _test_v3_save_shape_validation()
 check("v3 save shape validation and rejection", _ok, _detail)
 
 
+def _test_save_from_another_civilisation_or_tree_is_refused():
+	"""Verify a save of another civilisation, or naming nodes the tree lacks, is refused with its cause."""
+	from sim.engine.saveload import _validate_save
+	from sim.refusal import cause_of
+
+	valid_blob, game = _valid_save()
+	err = _validate_save(dict(valid_blob, _civ="han_china_100ad"), game)
+	if cause_of(err) != "save_wrong_civilisation":
+		return False, f"a save of another civilisation was not refused for that cause: {err}"
+	game.nodes.pop("stone_cutting")
+	err = _validate_save(valid_blob, game)
+	if cause_of(err) != "save_unknown_nodes" or err.facts.get("nodes") != ["stone_cutting"]:
+		return False, f"a save naming a node the tree lacks was not refused with the node: {err}"
+	return True, "wrong civilisation and unknown nodes refused"
+
+
+_ok, _detail = _test_save_from_another_civilisation_or_tree_is_refused()
+check("a save of another civilisation or tree is refused with its cause", _ok, _detail)
+
+
 def _test_flat_legacy_v2_save_rejected_by_load_state():
-	"""Verify load_state raises ValueError on legacy v2 save and leaves sim untouched."""
+	"""Verify loading a legacy flat save raises ValueError and leaves the game untouched."""
 	import json
+	from types import SimpleNamespace
 	from sim.engine.saveload import load_state
-	sim = SHARED_SIM
-	initial_capital = sim.household.capital
+	state = SimpleNamespace(household=SimpleNamespace(capital=1250.0))
+	game = SimpleNamespace(nodes={"printing_press": {}}, civ={"id": "rome_100ad"}, state=state, fog=False)
 	flat_v2_blob = {
 		"_civ": "rome_100ad",
 		"_goal": "printing_press",
@@ -327,18 +338,17 @@ def _test_flat_legacy_v2_save_rejected_by_load_state():
 			json.dump(flat_v2_blob, handle)
 		raised_err = None
 		try:
-			load_state(sim, save_path)
+			load_state(game, save_path)
 		except ValueError as err:
 			raised_err = str(err)
 		if raised_err is None:
 			return False, "load_state unexpectedly succeeded on flat v2 save file"
-		# Verify sim state was left completely untouched
-		if sim.household.capital != initial_capital:
-			return False, f"sim capital was mutated despite load failure: {sim.household.capital} != {initial_capital}"
+		if game.state is not state or state.household.capital != 1250.0:
+			return False, "the game was changed despite the load failing"
 	finally:
 		if os.path.exists(save_path):
 			os.remove(save_path)
-	return True, "load_state rejects flat legacy v2 save and preserves sim state"
+	return True, "load_state rejects flat legacy v2 save and preserves the game"
 
 
 _ok, _detail = _test_flat_legacy_v2_save_rejected_by_load_state()

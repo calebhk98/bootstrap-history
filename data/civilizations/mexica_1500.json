@@ -600,6 +600,7 @@
   "unsupplied_basket_goods": {
     "bronze_kg": "the bronze gate is held but its input tin_kg is gated on a node this society does not hold and no partner supplies tin; implements are met by stone and obsidian tools instead",
     "cheese_kg": "cheese needs milk_kg, and with no milking animals in the Americas the herd nodes are not held",
+    "dyed_cloth_kg": "the dyed-cloth recipe is gated on the madder dyeing node, which this society does not hold (it is listed among its gated nodes), and no partner supplies the dyed cloth; the recipe set has no other dye gate for it (Complaints/533)",
     "felt_kg": "the felting gate is held but its input wool_kg needs a sheep flock this society never kept",
     "leather_kg": "the tanning gate is held but its input hide_kg needs herd animals the herd nodes (not held) provide; hides of hunted game are not modelled",
     "light_oil_lamp": "the lamp recipe's gate is held but its input olive_oil_kg is gated on a node this society does not hold and no partner supplies it, so no lamp can be filled; light came from other sources the recipe set does not model",
