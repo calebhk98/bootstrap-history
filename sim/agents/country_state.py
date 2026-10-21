@@ -100,15 +100,15 @@ class CountryStateView(CollectionView):
 		"""The standard of the money the country's economy uses."""
 		return str(self._own_economy().coin_regime())
 
-	def material_cost(self, material: str, tonnes: float) -> float:
-		"""Money to buy this many tonnes of a material at the price the country's own markets quote (nothing
-		when they quote none)."""
+	def material_cost(self, material: str, tonnes: float) -> Optional[float]:
+		"""Money to buy this many tonnes of a material at the price the country's own markets quote; None when
+		they quote none (not on sale)."""
 		price = self._own_economy().price_per_tonne(material)
-		return 0.0 if price is None else price * tonnes
+		return None if price is None else price * tonnes
 
 	def material_price(self, material: str) -> float:
-		"""Money for one tonne of a material at the country's own quote."""
-		return self.material_cost(material, 1.0)
+		"""Money for one tonne of a material at the country's own quote (nothing when it is not on sale)."""
+		return self.material_cost(material, 1.0) or 0.0
 
 	# ---- people and holdings
 	def national_people(self, trade: str) -> float:
@@ -197,4 +197,4 @@ class CountryStateView(CollectionView):
 		"""What a country's state sells is paid for at the price the market quotes."""
 		seller = getattr(self._holder, "actors", {}).get(seller_id)
 		if seller is not None and tonnes > 0.0:
-			ledger.transfer(self.edge(EDGE_STATE_SPENDING), seller, self.material_cost(material, tonnes), "sale")
+			ledger.transfer(self.edge(EDGE_STATE_SPENDING), seller, self.material_cost(material, tonnes) or 0.0, "sale")

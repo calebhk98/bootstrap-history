@@ -91,10 +91,10 @@ class BudgetView:
 	def commodity_of(self, material: str) -> str:
 		return self._sim.economy.commodity_of(material)
 
-	def material_cost(self, material: str, tonnes: float) -> float:
-		"""Money to buy this many tonnes of a material at the price the market quotes."""
+	def material_cost(self, material: str, tonnes: float) -> Optional[float]:
+		"""Money to buy this many tonnes of a material at the price the market quotes; None when nothing sells it."""
 		quote = self._sim.economy.purchase_cost(material, tonnes)
-		return 0.0 if quote is None else quote[0]
+		return None if quote is None else quote[0]
 
 	def fleet_goods(self, holder_id: Optional[str] = None) -> List[Any]:
 		"""Available naval vessels, their crews, service lives and a state's holdings (the founder's state's by default)."""

@@ -11,7 +11,7 @@ line: goods in kind (requisition) or service in office.
 from typing import Any, Dict, List, Optional, Tuple
 
 from . import budget_lines, budget_works, government_levers
-from .budget_line import Line
+from .budget_line import Line, goods
 from .tuning import ADMINISTRATIVE_SPAN, ARMY_ADJUSTMENT_RATE, LEVY_RATE_CEILING
 
 # What an army wears out, as a material in the tree's own terms.
@@ -28,9 +28,7 @@ def army_line(world: Any, soldiers: float, conscripts: float = 0.0) -> List[Line
 	paid = max(0.0, soldiers - conscripts)
 	tonnes = soldiers * world.equipment_kg_per_soldier() / 1000.0
 	return [Line("army", "requisition", {SOLDIER_TRADE: paid} if paid > 0.0 else {},
-				 paid * world.pay_per_person_year(SOLDIER_TRADE),
-				 {world.commodity_of(EQUIPMENT_MATERIAL): tonnes},
-				 world.material_cost(EQUIPMENT_MATERIAL, tonnes))]
+				 paid * world.pay_per_person_year(SOLDIER_TRADE), **goods(world, EQUIPMENT_MATERIAL, tonnes))]
 
 
 def officials_kept(world: Any) -> float:
@@ -58,6 +56,18 @@ def share_paid(need: float, purse: float, borrowed: float = 0.0) -> float:
 		return 1.0
 	gap = max(0.0, need - max(0.0, purse))
 	return max(0.0, 1.0 - (gap - borrowed) / need)
+
+
+def supplied_share(line: Line) -> float:
+	"""The share of the goods a line needs that can be had at all: what is on sale over that and what nobody sells."""
+	unbuyable = sum(line.unbuyable.values())
+	total = unbuyable + sum(line.materials.values())
+	return 1.0 if unbuyable <= 0.0 or total <= 0.0 else 1.0 - unbuyable / total
+
+
+def unmet_goods(lines: List[Line]) -> Dict[str, float]:
+	"""Tonnes each line needs that no market sells, by line name."""
+	return {line.name: sum(line.unbuyable.values()) for line in lines if sum(line.unbuyable.values()) > 0.0}
 
 
 def unfunded_by_line(lines: List[Line], share: float) -> Dict[str, float]:

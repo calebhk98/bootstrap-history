@@ -42,7 +42,7 @@ class RevenueView(CollectionView):
 
 	def material_price(self, material: str) -> float:
 		"""Money for one tonne of a material at the price the market quotes."""
-		return self.material_cost(material, 1.0)  # type: ignore[attr-defined,no-any-return]
+		return self.material_cost(material, 1.0) or 0.0  # type: ignore[attr-defined]
 
 	def trade_value(self, direction: str) -> float:
 		"""Money's worth of goods imported ("in") or exported ("out") in the last completed year."""

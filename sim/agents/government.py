@@ -109,8 +109,9 @@ class Government(CorveeMixin, CreditRecordMixin, FiscalMixin, CoinageMixin, Ente
 		return arrears.total(self.record)
 
 	def cannot_meet_own_need(self) -> bool:
-		"""Whether last year's standing need went partly unpaid, or pay is still owed: such a state lends nothing."""
-		return sum(self.record.unfunded.values()) > 1e-9 or arrears.total(self.record) > 1e-9
+		"""Whether last year's standing need went partly unpaid or unsupplied, or pay is still owed: such a state lends nothing."""
+		return (sum(self.record.unfunded.values()) > 1e-9 or sum(self.record.unmet_goods.values()) > 1e-9
+				or arrears.total(self.record) > 1e-9)
 
 	# ---- what it keeps up ---------------------------------------------------
 	def pay_standing_need(self, world: Any) -> Tuple[List[budget.Line], float]:
@@ -132,7 +133,9 @@ class Government(CorveeMixin, CreditRecordMixin, FiscalMixin, CoinageMixin, Ente
 		lines = self.draw_stores(standing, world)
 		self.keep_granary(world)
 		share = self.meet_shortfall(lines, world)
-		self.record.army = budget.army_next_year(soldiers, wanted, share)
+		army_supplied = min([share] + [budget.supplied_share(line) for line in lines if line.name == "army"])
+		self.record.army = budget.army_next_year(soldiers, wanted, army_supplied)
+		self.record.unmet_goods = budget.unmet_goods(lines)
 		self.record.need = {line.name: line.money for line in lines}
 		self.record.unfunded = budget.unfunded_by_line(lines, share)
 		arrears.owe(self.record, lines, share, self.deferred_fraction(lines, share))

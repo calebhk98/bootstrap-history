@@ -119,6 +119,8 @@ class ActorRecord:
 	enterprise_takings: float = 0.0
 	enterprise_margin: float = 0.0
 	material_need: Dict[str, float] = field(default_factory=dict)
+	# tonnes each standing line needed last year that no market sold, by line name
+	unmet_goods: Dict[str, float] = field(default_factory=dict)
 	closed_markets: Dict[str, int] = field(default_factory=dict)
 	# material -> units of the state's stock that smugglers have taken, which it can no longer sell
 	stock_taken: Dict[str, float] = field(default_factory=dict)
