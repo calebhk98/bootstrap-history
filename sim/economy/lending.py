@@ -55,6 +55,16 @@ def _collect(record, money: str, year: int, bondage_years: float) -> Dict[str, f
     return received
 
 
+def expected_inflation_of(record) -> float:
+    """The inflation lenders expect, as the people-weighted mean of the cohorts' own expectations; none before
+    any cohort has people. The real-rate bound on the credit market adds it to the bound."""
+    cohorts = getattr(record, "cohorts", {})
+    people = sum(max(0.0, cohort.people) for cohort in cohorts.values())
+    if people <= 0.0:
+        return 0.0
+    return sum(max(0.0, cohort.people) * cohort.expected_inflation for cohort in cohorts.values()) / people
+
+
 def lend_working_capital(setup, record, view) -> None:
     """Strike the producers' working-capital loans before the year's plans, so the cash is there to plan with.
     Each is dated to the last close, which makes its one payment fall due at this year's end, out of the sales
@@ -77,7 +87,8 @@ def lend_working_capital(setup, record, view) -> None:
     loans, _rate, _unmet = credit.clear(
         asked, offers, money, record.memory.rates.get(money), credit_claims.principal_by_borrower(record.loans),
         credit_claims.arrears_history(record.loans, record.remembered_defaults), year=view.year - 1,
-        rate_ceiling=capital_market.RATE_CEILING_SHARE * setup.opening_rate)
+        rate_ceiling=capital_market.RATE_CEILING_SHARE * setup.opening_rate,
+        expected_inflation=expected_inflation_of(record))
     record.book.transfer_many(credit.disbursements(loans))
     record.loans.extend(loans)
     merchants_credit.stake(record.merchants, {loan.borrower: loan.principal for loan in loans})

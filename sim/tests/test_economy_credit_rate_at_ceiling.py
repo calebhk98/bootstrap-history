@@ -54,15 +54,41 @@ class RateAtCeilingCandidateTests(unittest.TestCase):
         self.assertGreaterEqual(lender_ask.lowest_ask(0.05, 0.20, expected_loss_rate=lender_ask.loss_rate(0.25)),
                                 CEILING)
 
-    def test_every_ask_above_the_ceiling_lends_nothing_while_the_rate_reads_the_ceiling(self):
-        # the clamp turns a rate with no clearing point into the ceiling and then nobody lends at it
+    def test_every_ask_above_a_nominal_ceiling_lends_nothing_and_says_why_without_a_fake_rate(self):
+        # nothing can clear at the bound: the rate is held (never the ceiling nobody accepts) and the cause is named
         offers = [funds("lender", 1000.0, 0.60)]
-        loans, rate, unmet = clear([request("plant_a", 100.0, 1.5)], offers, last_rate=0.12)
-        self.assertEqual(rate, CEILING)
-        self.assertEqual(loans, [])
-        self.assertAlmostEqual(sum(left.amount for left in unmet), 100.0)
+        result = credit.clear_with_cause([request("plant_a", 100.0, 1.5)], offers, "coin", 0.12, {},
+                                         rate_ceiling=CEILING)
+        self.assertEqual(result.cause, credit.NO_OFFER_AT_RATE)
+        self.assertEqual(result.rate, 0.12)
+        self.assertEqual(result.loans, [])
+        self.assertAlmostEqual(sum(left.amount for left in result.unmet), 100.0)
 
-    def test_the_ceiling_clamp_hides_how_far_the_unclamped_clearing_point_lies(self):
+    def test_the_bound_is_on_the_real_rate_so_expected_inflation_lets_the_ask_clear(self):
+        # asks of 0.60 are time preference plus 0.55 expected inflation: real 0.05, under a real bound of 0.48
+        offers = [funds("lender", 1000.0, 0.60)]
+        loans, rate, unmet = credit.clear([request("plant_a", 100.0, 1.5)], offers, "coin", 0.12, {},
+                                          rate_ceiling=CEILING, expected_inflation=0.55)
+        self.assertAlmostEqual(rate, 0.60)
+        self.assertAlmostEqual(sum(loan.principal for loan in loans), 100.0)
+        self.assertEqual(unmet, [])
+
+    def test_rationed_at_the_bound_the_least_risky_borrower_is_served_first(self):
+        offers = [funds("lender", 100.0, 0.10)]
+        safe = request("plant_a", 100.0, 3.0, collateral=1e9)
+        risky = request("plant_b", 100.0, 5.0, collateral=0.0)      # the keener cap, but no collateral
+        result = credit.clear_with_cause([risky, safe], offers, "coin", None, {}, rate_ceiling=CEILING)
+        self.assertEqual(result.rate, CEILING)
+        self.assertIsNone(result.cause)
+        self.assertEqual({loan.borrower for loan in result.loans}, {"plant_a"})
+        self.assertEqual([left.borrower for left in result.unmet], ["plant_b"])
+
+    def test_a_cap_is_what_the_loan_earns_and_never_unbounded(self):
+        self.assertAlmostEqual(credit.earnable_rate(30.0, 100.0), 0.30)
+        for gain, outlay in ((1.0, 0.0), (float("inf"), 1.0), (float("nan"), 1.0), (-5.0, 10.0), (1.0, float("inf"))):
+            self.assertEqual(credit.earnable_rate(gain, outlay), 0.0)
+
+    def test_the_ceiling_clamp_hides_how_far_the_unclamped_clearing_point_lies(self):  # shape kept: the bound still binds
         offers = [funds("lender", 100.0, 0.10)]
         requests = [request("plant_a", 150.0, 3.0)]
         _loans, clamped, _unmet = clear(requests, offers, last_rate=None)

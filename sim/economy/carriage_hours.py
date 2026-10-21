@@ -13,6 +13,7 @@ from typing import Dict, List, Optional, Tuple
 
 from sim.constants import declare
 
+from . import credit
 from .market_memory import KEY_SEPARATOR as MARKET_KEY_SEPARATOR, market_key
 from .merchants import Merchant
 from .producers_close import WORKING_CAPITAL_PURPOSE
@@ -256,6 +257,6 @@ def wage_loans(setup, record, hired_last_year=None, supply_last_year=None) -> Li
             worth += merchant.carriage_money_wanted.get(key, 0.0) * share
         short = bill - max(0.0, record.book.balance(merchant.agent_id, money))
         if short > 0.0 and bill > 0.0 and worth > bill:
-            requests.append(LoanRequest(merchant.agent_id, money, short, (worth - bill) / bill, 1.0, short,
+            requests.append(LoanRequest(merchant.agent_id, money, short, credit.earnable_rate(worth - bill, bill), 1.0, short,
                                         WORKING_CAPITAL_PURPOSE))
     return requests

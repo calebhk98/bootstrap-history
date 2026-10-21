@@ -8,6 +8,13 @@ from .records import ActorRecord
 from .tuning import ENTRY_EQUITY_SHARE, ENTRY_STAKE_BUFFER, VALUE_HORIZON_YEARS
 
 
+def capital_cost(pooled: float, borrowed: float, market_rate: float, loan_rate: float) -> float:
+    """The yearly cost of an entrant's stake: pooled savings earn at least the market rate elsewhere, and a loan
+    costs the rate lenders ask of this borrower, never less than the market's (the cleared rate, which sits at
+    the lenders' ask and loss premium). Money not borrowed adds no loan rate."""
+    return pooled * market_rate + (borrowed * max(loan_rate, market_rate) if borrowed > 0.0 else 0.0)
+
+
 class NicheEntry:
 	"""Founds firms into one proven concern, one at a time, for as long as an entrant would earn after
 	what a firm carries more than the capital it ties up would earn at the market's rate. Nothing caps
@@ -47,9 +54,9 @@ class NicheEntry:
 			return None  # the pooled savings are spent: lenders back no entrant who puts up too little
 		if borrowed > probe.spare_credit(world):
 			return None
-		capital_cost = pooled * world.market_rate() + (
-			borrowed * probe.rate_on_loan(world, borrowed) if borrowed > 0.0 else 0.0)
-		if (expected * VALUE_HORIZON_YEARS - foregone) * chance <= self.plan["total"] or expected * chance <= capital_cost:
+		stake_cost = capital_cost(pooled, borrowed, world.market_rate(),
+								  probe.rate_on_loan(world, borrowed) if borrowed > 0.0 else 0.0)
+		if (expected * VALUE_HORIZON_YEARS - foregone) * chance <= self.plan["total"] or expected * chance <= stake_cost:
 			return None
 		serial = len(registry.state.records) + 1
 		while "firm:%d" % serial in registry.state.records:

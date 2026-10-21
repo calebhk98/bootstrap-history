@@ -1,7 +1,7 @@
 """A household borrows to cover a subsistence shortfall when it has income ahead (consumption smoothing).
 
 `subsistence_request` asks for the floor cost its cash does not cover, no more than its expected income can
-service; what it will pay is what that income allows, up to a ceiling. The credit market rations it through
+service; what it will pay is what that income allows. The credit market rations it through
 the risk premium on a borrower with no collateral. `floor_bids` spends a loan on the floors it was for.
 """
 import dataclasses
@@ -10,6 +10,7 @@ from typing import List, Mapping, Optional
 
 from sim.constants import declare
 
+from . import credit
 from .households_basket import Basket, PricedNeed
 from .households_cohort import Cohort
 from .households_orders import FLOOR_BUDGET_PRICE_MARGIN
@@ -26,11 +27,6 @@ HOUSEHOLD_SERVICE_SHARE = declare(
     source=None, confidence="D",
     why="The most of its income a household commits to debt service before it would rather go short. "
         "Stands in for what lenders will accept and what a family can bear, which are not modelled.")
-HOUSEHOLD_RATE_CEILING = declare(
-    "HOUSEHOLD_RATE_CEILING", 0.5, kind="temporary_heuristic", unit="rate a year",
-    source=None, confidence="D",
-    why="No household pays more than this to borrow, whatever its income allows. Stands in for usury "
-        "norms and the borrower's search for cheaper credit, which are not modelled.")
 
 
 def floor_cost_unmet(cohort: Cohort, priced: List[PricedNeed], grown_units: Optional[Mapping[str, float]]) -> float:
@@ -51,7 +47,7 @@ def subsistence_request(cohort: Cohort, shortfall: float, currency: CurrencyId, 
     per_unit_service = 1.0 / HOUSEHOLD_LOAN_YEARS + max(0.0, live_rate)
     amount = min(shortfall, capacity / per_unit_service)
     affordable_rate = (capacity - amount / HOUSEHOLD_LOAN_YEARS) / amount
-    return LoanRequest(cohort.agent_id, currency, amount, min(HOUSEHOLD_RATE_CEILING, affordable_rate),
+    return LoanRequest(cohort.agent_id, currency, amount, credit.earnable_rate(affordable_rate),
                        HOUSEHOLD_LOAN_YEARS, 0.0, "subsistence")
 
 

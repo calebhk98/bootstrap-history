@@ -86,10 +86,11 @@ class ClearingTests(unittest.TestCase):
         self.assertAlmostEqual(sum(item.amount for item in unmet), 999.0)
 
     def test_a_ceiling_below_every_lenders_ask_lends_nothing(self):
-        loans, rate, _ = credit.clear([request("b", 10.0, 0.9, 1.0e9)], [funds("l", 100.0, 0.2)], "coin", None, {},
-                                      rate_ceiling=0.1)
-        self.assertEqual(loans, [])
-        self.assertLessEqual(rate, 0.1)
+        result = credit.clear_with_cause([request("b", 10.0, 0.9, 1.0e9)], [funds("l", 100.0, 0.2)], "coin", None, {},
+                                         rate_ceiling=0.1)
+        self.assertEqual(result.loans, [])
+        self.assertEqual(result.cause, credit.NO_OFFER_AT_RATE)
+        self.assertAlmostEqual(result.rate, 0.2)      # no history: the lowest ask, a rate someone quoted
 
     def test_other_currencies_are_ignored(self):
         other = LoanRequest("b", "bronze", 10.0, 0.5, 5.0, 100.0, "x")
