@@ -19,3 +19,15 @@ def replace_lost_staff(sim, lost):
         found = round(household.employees.get(trade, 0.0) - have)
         automation_audit.record(sim, "auto_hire", "replace", "%d %s" % (found, trade),
                                 "replace-only mode: %d lost this year, none hired beyond that" % people, before)
+
+
+GENERIC_STAFF = ("artisan", "scholar")
+
+
+def replacement_wanted(trade_id, have, taught, drawn_on, target_headcount):
+    """The headcount a specialist trade is topped back up to, or None when it is not. Only a trade something draws on
+    (a project in hand or an open concern) is replaced, so idle specialists are not paid for decades; of those only a trade
+    the household taught is raised to `target_headcount`, and the generic bucket trades are left to the staff target."""
+    if trade_id in GENERIC_STAFF or trade_id not in drawn_on:
+        return None
+    return max(have, target_headcount if taught else 0.0)

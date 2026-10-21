@@ -1,8 +1,10 @@
-"""quote_matches_charge: every command with a quote is charged what it quoted.
+"""Scenario: every command with a quote is charged what it quoted.
 
-One parametrised table: each row is a quote command, the command that spends,
-and the reply key holding the quoted price. Each quote is taken on the state its
-action then runs on, so the rows share one game and run in turn.
+The subject is the agreement of two paths through the dispatcher (a quote handler and the action's handler), so it is
+read on running games, not on one function. Two scenarios: a parametrised table (each row is a quote command, the command
+that spends, and the reply key holding the quoted price; the rows share one game and run in turn), and the same comparison
+through the cash ledger (open, research and project bills, the hire wage, stock bought abroad and smuggled). The price
+rules each quote reads are in the tests of the module that prices it (test_purchase_reads_economy_price, test_physical_money_constants).
 """
 from .harness import *  # noqa: F401,F403
 

@@ -1,5 +1,6 @@
-"""Player-facing replies in a non-Rome game use that civilisation's own money word and do
-not name Rome (Complaints/132)."""
+"""Scenario (Complaints/132): player-facing replies in a non-Rome game use that civilisation's own money word and do
+not name Rome. The leak is across every reply builder, so it is read on a running Han game (the words each builder takes from the
+civilisation record are the unit-and-money tests of the module that builds the text)."""
 import json
 import re
 

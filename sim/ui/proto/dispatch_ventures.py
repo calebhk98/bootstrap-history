@@ -11,7 +11,7 @@ here. Behaviour is unchanged and moved verbatim.
 
 import sim.engine.ui_port as ui_port
 from sim.refusal import LogLine
-from . import credit_forecast
+from . import credit_forecast, venture_paging
 from .command_registry import command
 from .parallelism_notes import calendar_floor_note
 from .explain_once import already_explained
@@ -107,26 +107,9 @@ def _cmd_start(sim, nodes, cmd, ended):
     # calls `portfolio` makes to build the aggregate table - reused
     # here, not re-derived, so `start`'s warning and `portfolio`'s own
     # figures can never tell two different stories about the same year.
-    _demand_now = sim.trade_demand_vs_supply()
-    _oversub = []
-    for _trade, _plan in sim.trade_draw_plan(node_id, None).items():
-        if _trade in _impossible_trades:
-            continue          # already said, and said more plainly
-        _supply = sim.labour.hours_you_can_call_on(_trade)
-        if _supply <= 0:
-            continue
-        _existing = _demand_now.get(_trade, {}).get("demand_hours_this_year", 0.0)
-        _competitors = len(_demand_now.get(_trade, {}).get("projects_drawing_on_it", ()))
-        _new_total = _existing + _plan["desired"]
-        if _new_total > _supply + 1e-6:
-            _oversub.append(
-                "%s: this portfolio would want %s hours a year against "
-                "%s this society can supply (%d other active project%s "
-                "already drawing on it); this one competes for what is "
-                "left, it does not get %s to itself"
-                % (_trade, plain_number(_new_total), plain_number(_supply),
-                   _competitors, "" if _competitors == 1 else "s",
-                   plain_number(_plan["desired"])))
+    _oversub = ui_port.oversubscription_notes(
+        sim.trade_demand_vs_supply(), sim.trade_draw_plan(node_id, None), sim.labour.hours_you_can_call_on,
+        _impossible_trades, plain_number)
     started, why = sim.start_project(node_id, precaution=bool(cmd.get("precaution")))
     if not started:
         return {"ok": False, "error": why, **refusal_fields(sim, node_id)}
@@ -354,9 +337,8 @@ def _rush_caps(cmd, sim):
 
 def _rush_cost_left(sim, node_id):
     """Money still owed to begin this project, net of what was already sunk."""
-    paid = (sim.state.projects.paid_towards or {}).get(node_id, 0.0)
     price = sim.project_cost(node_id)
-    return price - min(price, max(0.0, paid))
+    return price - ui_port.paid_credit(price, (sim.state.projects.paid_towards or {}).get(node_id, 0.0))
 
 
 def _rush_cap_refusal(sim, caps, budget, cost, draw, cost_so_far, draw_so_far, hours=0.0, hours_so_far=0.0):
@@ -668,15 +650,7 @@ _VENTURES_PAGE = 20
          description="What you are running, and what you know how to run and have not opened, "
                      "twenty at a time.")
 def _cmd_ventures(sim, nodes, cmd, ended):
-    try:
-        offset = max(0, int(cmd.get("offset", 0)))
-    except (TypeError, ValueError):
-        offset = 0
-    try:
-        limit = int(cmd.get("limit", 0)) or _VENTURES_PAGE
-    except (TypeError, ValueError):
-        limit = _VENTURES_PAGE
-    limit = max(1, limit)
+    offset, limit = venture_paging.page_request(cmd, _VENTURES_PAGE)
     sch_free, art_free = sim.venture_staff_free()
     running = sorted(sim.operating)
     idle = sorted(node_id for node_id in sim.done
@@ -795,11 +769,7 @@ def _cmd_ventures(sim, nodes, cmd, ended):
         out["these_are_a_share_of_their_year_not_a_headcount"] = (
             "Staff figures here are a share of a person's year, not a "
             "headcount ('ventures full' explains it again).")
-    out["shut_concerns_in_all"] = len(_idle_ordinary)
-    out["showing_from"] = offset
-    if len(_idle_ordinary) > offset + limit:
-        out["and_more_you_could_open"] = len(_idle_ordinary) - offset - limit
-        out["next_page"] = "ventures offset:%d limit:%d" % (offset + limit, limit)
+    out.update(venture_paging.page_fields(len(_idle_ordinary), offset, limit))
     return out
 
 

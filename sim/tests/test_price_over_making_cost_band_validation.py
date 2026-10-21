@@ -1,7 +1,8 @@
-"""Complaints/507 stage 5: in a settled economy a traded good sells near what it costs to make at the economy's own
+"""Baseline validation (CLAUDE.md 4.2, Complaints/507 stage 5; slow-only): in a settled economy a traded good sells near what it costs to make at the economy's own
 input prices and wages. The cost is the calculator's (`CostBook.cheapest_cost`, plant charged), the price the
 economy's. Bounds are from the subject: a market that wanders from cost by more than a factor of three for most of
-its goods is not pricing off cost, and a typical good selling below its full cost would not be remade."""
+its goods is not pricing off cost, and a typical good selling below its full cost would not be remade.
+Only goods the economy traded are read, so a quote a market reports where nothing traded (Complaint 642) is not in the band."""
 from .harness import *  # noqa: F401,F403
 
 from sim.engine.economy_cost_book import economy_cost_book
@@ -23,6 +24,6 @@ check("the economy trades goods the calculator can cost", len(ratios) >= 30, len
 median = ratios[len(ratios) // 2]
 within = sum(1 for ratio in ratios if 1.0 / FACTOR <= ratio <= FACTOR) / max(1, len(ratios))
 check("the typical traded good sells at no less than its cost of making and no more than a factor over it",
-      1.0 <= median <= FACTOR, median)
+      1.0 <= median <= FACTOR, ("baseline validation, Complaint 507", median))
 check("at least half the traded goods sell within a factor of three of their cost, either way",
-      within >= SHARE_WITHIN_FACTOR, within)
+      within >= SHARE_WITHIN_FACTOR, ("baseline validation, Complaint 507", within))
