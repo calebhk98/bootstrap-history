@@ -6,7 +6,7 @@ from typing import Dict, Tuple
 from sim.geography.api import flow_ledger
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
-from . import (carriage_fleet_book, tax_farming, merchants_transit, carriage_hours, carriage_wear, currency, expansion_price, households, inventory, merchants, metal_stock, ownership, producer_exit, shares,
+from . import (carried_book, carriage_fleet_book, tax_farming, merchants_transit, carriage_hours, carriage_wear, currency, expansion_price, households, inventory, merchants, metal_stock, ownership, producer_exit, shares,
                producers, producers_close, state_budget, tariffs, taxes)
 from .household_work_year import basket_key, cohort_basket
 from .households_cohort import renewed
@@ -38,6 +38,7 @@ def dispatch_merchants(setup, record, carriage, ledger: YearLedger, area_map) ->
         if held is None or cohort.income_class < record.cohorts[held].income_class:
             carriers[cohort.tile] = cohort.agent_id
     carried: dict = {}
+    carried_goods: dict = {}
     carrier_goods = carriage_wear.carrier_goods(setup)
     prices = carriage_wear.last_prices(setup, record) if carrier_goods else {}
     wear = carriage_wear.Wear(setup, carriage, record.area_imbalance) if carriage_wear.wears(setup) else None
@@ -99,9 +100,22 @@ def dispatch_merchants(setup, record, carriage, ledger: YearLedger, area_map) ->
                 record.book.transfer_many(rent)
                 ledger.note_postings(rent)
         for move in done.moves:
-            flow_ledger.record_flow(carried, move.tile, move.receiver_tile,
-                                    move.quantity * setup.specs[move.good].unit_mass_kg / KILOGRAMS_PER_TONNE)
+            tonnes = move.quantity * setup.specs[move.good].unit_mass_kg / KILOGRAMS_PER_TONNE
+            flow_ledger.record_flow(carried, move.tile, move.receiver_tile, tonnes)
+            carried_book.note_carried(carried_goods, move.good, move.tile, move.receiver_tile, move.quantity, tonnes,
+                                      _price_on(record, area_map, move.good, move.tile),
+                                      _price_on(record, area_map, move.good, move.receiver_tile))
     record.carried = carried
+    record.carried_goods = carried_goods
+
+
+def _price_on(record, area_map, good, tile):
+    """The price the good's market area holding the tile last cleared at; None when it has no market there or
+    none has cleared."""
+    try:
+        return record.memory.prices.get(market_key(good, area_map.area_of(good, tile)))
+    except KeyError:
+        return None
 
 
 def foreign_agents(setup, record) -> set:

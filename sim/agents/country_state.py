@@ -14,6 +14,7 @@ from sim.world import demography
 from . import collection, government_levers, ledger, revenue
 from .collection_world import CollectionView
 from .edges import EDGE_STATE_SPENDING, EDGE_WORKERS
+from .no_country_economy import NoCountryEconomy
 from .payroll import share_out
 from .tuning_spending import THREAT_ARMY_RESPONSE
 from .tuning_country import ARMY_SHARE_OF_POPULATION
@@ -89,8 +90,9 @@ class CountryStateView(CollectionView):
 		return []
 
 	def trade_value(self, direction: str) -> float:
-		"""No country keeps a trade book of its own yet (Complaint 647)."""
-		return 0.0
+		"""Money's worth of the goods that crossed the country's border last year, as its own part of the economy
+		recorded them (imports where they landed, exports where they left)."""
+		return float(self._own_economy().trade_value(direction))
 
 	def coin_stock_value(self) -> float:
 		"""Money's worth of the metal in the money the country's own people and producers hold."""
@@ -112,8 +114,14 @@ class CountryStateView(CollectionView):
 
 	# ---- people and holdings
 	def national_people(self, trade: str) -> float:
-		"""People of a trade in the country. TEMPORARY HEURISTIC (CLAUDE.md 4.4): no country counts its people by
-		trade, so every trade is bounded by the working age, the unskilled labourers' count (retire: Complaint 647)."""
+		"""People of a trade in the country: those the labour markets of its tiles hold in the trade. Unskilled
+		labour, and a country the economy has no part for, is bounded by the working age. TEMPORARY HEURISTIC
+		(CLAUDE.md 4.4) for those two (retire: Complaint 649)."""
+		if trade != "labourer":
+			try:
+				return float(self._own_economy().people_of_trade(trade))
+			except NoCountryEconomy:
+				pass
 		if self.profile.cohorts:
 			return float(self.profile.cohorts.get("working_age", 0.0))
 		return working_age_of_stationary(self.profile.population)

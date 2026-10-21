@@ -6,7 +6,7 @@ labelled estimate."""
 from typing import Dict, Optional
 
 from .material_units import tonnes_per_unit
-from sim.economy.api import country_figures, trade_premium
+from sim.economy.api import carried_book, country_figures, trade_premium
 
 
 class CountryAnswers:
@@ -65,3 +65,17 @@ class CountryAnswers:
             return 0.0
         held = country_figures.money_held(self._economy, self._country)
         return held * spec.backing_per_unit * price * self._coin
+
+    def trade_book(self) -> Dict[str, Dict[str, float]]:
+        """The goods that crossed the country's border last year: tonnes and money each way, by good (imports at the
+        price where they landed, exports at the price where they left)."""
+        return {good: {key: value * self._coin if key.endswith("_value") else value for key, value in entry.items()}
+                for good, entry in country_figures.trade_book(self._economy, self._country).items()}
+
+    def trade_value(self, direction: str) -> float:
+        """Money's worth of the goods imported ("in") or exported ("out") last year."""
+        return carried_book.trade_value(self.trade_book(), direction)
+
+    def people_of_trade(self, trade: str) -> float:
+        """Working people of a trade in the labour markets of the country's tiles (nobody for a trade none practise)."""
+        return country_figures.people_by_trade(self._economy, self._country).get(trade, 0.0)

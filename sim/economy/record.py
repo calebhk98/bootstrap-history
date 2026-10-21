@@ -73,6 +73,7 @@ class EconomyRecord:
     settling: bool = False                                               # in the hidden spin-up: households' spending rises as far as their wealth allows
     spin_up_result: Dict[str, Any] = field(default_factory=dict)         # how the hidden first stage ended: settled, years run, last gap (empty: no spin-up ran)
     carried: Dict[str, Dict[str, float]] = field(default_factory=dict)   # tonnes the merchants carried last year: origin tile -> destination tile (sim.geography.flow_ledger)
+    carried_goods: Dict[str, Dict[str, Dict[str, List[float]]]] = field(default_factory=dict)   # the same flows by good: good -> origin -> destination -> [tonnes, value at origin's price, value at destination's price] (carried_book.py)
     output_by_tile: Dict[TileId, Dict[str, float]] = field(default_factory=dict)   # tile -> good -> units the home producers made last year
 
     @property
@@ -136,6 +137,7 @@ class EconomyRecord:
             "ways": {key: dict(built) for key, built in sorted(self.ways.items())},
             "area_imbalance": self.area_imbalance,
             "carried": {key: dict(row) for key, row in sorted(self.carried.items())},
+            "carried_goods": self.carried_goods,
             "spin_up_result": dict(self.spin_up_result),
         }
 
@@ -181,6 +183,7 @@ class EconomyRecord:
             ways={key: dict(built) for key, built in record["ways"].items()},
             area_imbalance=record["area_imbalance"],
             carried={key: dict(row) for key, row in record["carried"].items()},
+            carried_goods=record["carried_goods"],
             spin_up_result=dict(record["spin_up_result"]),
         )
         built.contracts.load_records(record["loans"])

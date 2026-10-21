@@ -79,6 +79,32 @@ class CountryEconomyTests(unittest.TestCase):
         self.assertLessEqual(north + home, everyone + 1e-6)
         self.assertEqual(country_figures.money_held(self.economy, "nowhere"), 0.0)
 
+    def test_a_countrys_answers_give_its_trade_book_in_coin(self):
+        from sim.engine.economy_port_country import CountryAnswers
+        record = self.economy.record
+        kept = record.carried_goods
+        record.carried_goods = {fixture.GRAIN: {fixture.NORTH_FARMS: {fixture.FARMS: [2.0, 10.0, 14.0]}},
+                                fixture.ORE: {fixture.FARMS: {fixture.NORTH_FARMS: [1.0, 6.0, 9.0]}}}
+        try:
+            answers = CountryAnswers(self.economy, fixture.NORTH)
+            coin = self.setup.coin_per_unit
+            book = answers.trade_book()
+            self.assertAlmostEqual(book[fixture.GRAIN]["out_value"], 10.0 * coin)    # left north at the price there
+            self.assertAlmostEqual(book[fixture.ORE]["in_value"], 9.0 * coin)       # landed in north at the price there
+            self.assertEqual(book[fixture.ORE]["in_tonnes"], 1.0)
+            self.assertAlmostEqual(answers.trade_value("in"), 9.0 * coin)
+            self.assertAlmostEqual(answers.trade_value("out"), 10.0 * coin)
+            self.assertAlmostEqual(CountryAnswers(self.economy, self.setup.civ_id).trade_value("in"), 14.0 * coin)
+        finally:
+            record.carried_goods = kept
+
+    def test_a_countrys_answers_count_its_people_by_trade(self):
+        from sim.engine.economy_port_country import CountryAnswers
+        answers = CountryAnswers(self.economy, fixture.NORTH)
+        self.assertEqual(answers.people_of_trade(fixture.LABOURER), country_figures.people_by_trade(self.economy, fixture.NORTH)[fixture.LABOURER])
+        self.assertLess(answers.people_of_trade(fixture.MINER), 0.05 * CountryAnswers(self.economy, self.setup.civ_id).people_of_trade(fixture.MINER))
+        self.assertEqual(answers.people_of_trade("no such trade"), 0.0)
+
     def test_a_country_with_no_tiles_has_no_figures(self):
         self.assertEqual(country_figures.wages_per_hour(self.economy, "nowhere"), {})
         self.assertIsNone(country_figures.output_value(self.economy, "nowhere"))
