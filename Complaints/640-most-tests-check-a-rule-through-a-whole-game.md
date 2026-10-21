@@ -123,3 +123,22 @@ mostly whole, now hold at most four named scenarios each; their rules moved to f
 `test_mortality_shock_rules`, `test_material_throttle_rules`) over new plain functions (`material_throttle.py`,
 `staff_loss_words.py`, `civ_cost.py`, `value_weight.py`). The `hazard_hit` log line now carries `defence` and
 `national_toll_percent` as facts, so scenarios read values, not prose.
+
+## Applied: audit batch 9 (test_mod_namespaces through test_perf_optimizations)
+
+Rules are called on inputs the test builds (stand-in games that hold only what the method reads); whole-game checks that
+remain are named `_scenario` files next to them. Extractions into plain functions: `founder_billed_growth`
+(`sim/engine/stock_growth_billing.py`), `herd_units_kept` and `opening_herds` (`sim/engine/opening_herd_rules.py`),
+`dice_for_play` (`sim/ui/play_dice.py`), `calendar_floor_note` and `free_hours_note` (`sim/ui/proto/parallelism_notes.py`),
+`candidates_the_player_may_see` (`sim/ui/proto/name_candidates.py`), `borrowing_forecast` (`sim/ui/proto/credit_forecast.py`),
+`scholar_target` (`sim/labour/staff_targets.py`), `nitre_bed_yearly_spend` (`sim/engine/shortage_sizing.py`). New quick rule
+files or topics: `node_factor_is_economy_over_cost`, `one_living_cost_model`, `partner_quote_cargo`, `peek_resource_throttle`,
+`opening_herd_growth_unbilled`, `opening_herds_follow_producers`, `opening_smelters_beside_ore`, `opening_basket_agrees`,
+`options_from_settings_table`, `parallelism_note`, `mod_namespaces`, `names_and_fog`, `one_goods_market`, `one_labour_market`,
+`people_attrition_scholars`, `perf_optimizations`. Deleted as held elsewhere: the afford-gate return-shape check (funding
+arithmetic is `test_arrears_hours`), the source-text read of `_agent_state` for the free-hours field (the scenario reads the
+reply), the whole-run 150-year attrition (`roll_trade`, also `test_complaint_585_staff_pay_retention`). Kept as scenarios:
+`node_revenue`, `node_revenue_follows_research`, `node_revenue_per_civ`, `money_units_one_boundary`, `multi_year_step_log`,
+`names_and_fog`, `one_goods_market`, `one_labour_market`, `one_living_cost_model`, `opening_herds_follow_producers`,
+`opening_basket_agrees`, `opening_smelters_beside_ore`, `parallelism_note`, `partner_in_agent_economy`, `peek_resource_throttle`,
+`people_attrition_scholars`, `people_by_trade_cache_year`, `perf_optimizations`.
