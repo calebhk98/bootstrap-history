@@ -8,6 +8,7 @@ import unittest
 from sim.economy import api as economy_api
 from sim.economy import country_figures
 from sim.economy.economy import Economy
+from sim.economy.types import is_edge
 from sim.tests import economy_fixture as fixture
 
 
@@ -68,6 +69,15 @@ class CountryEconomyTests(unittest.TestCase):
         floors = country_figures.need_floor_costs_per_person_year(self.economy, fixture.NORTH)
         self.assertGreater(floors.get(fixture.FOOD, 0.0), 0.0)
         self.assertGreater(country_figures.prices(self.economy, fixture.NORTH).get(fixture.GRAIN, 0.0), 0.0)
+
+    def test_the_money_a_country_holds_is_its_own_agents_share(self):
+        record, money = self.economy.record, self.setup.currency_id
+        north, home = (country_figures.money_held(self.economy, country) for country in (fixture.NORTH, self.setup.civ_id))
+        self.assertGreater(north, 0.0)
+        self.assertGreater(home, 0.0)
+        everyone = sum(record.book.balance(agent, money) for agent in record.book.agents() if not is_edge(agent))
+        self.assertLessEqual(north + home, everyone + 1e-6)
+        self.assertEqual(country_figures.money_held(self.economy, "nowhere"), 0.0)
 
     def test_a_country_with_no_tiles_has_no_figures(self):
         self.assertEqual(country_figures.wages_per_hour(self.economy, "nowhere"), {})

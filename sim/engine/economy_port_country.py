@@ -5,6 +5,7 @@ economy (sim/economy/country_figures.py); a figure it has no record of is None a
 labelled estimate."""
 from typing import Dict, Optional
 
+from .material_units import tonnes_per_unit
 from sim.economy.api import country_figures, trade_premium
 
 
@@ -44,3 +45,23 @@ class CountryAnswers:
 
     def population(self) -> float:
         return country_figures.population(self._economy, self._country)
+
+    def price_per_tonne(self, material: str) -> Optional[float]:
+        """Money for a tonne of a material at the price its market areas touching the country quote; None when
+        none of them trades it."""
+        price = country_figures.prices(self._economy, self._country).get(material)
+        return None if price is None else price * self._coin / tonnes_per_unit(material)
+
+    def coin_regime(self) -> str:
+        """The standard of the money the one economy uses."""
+        return self._economy.record.currency.regime
+
+    def coin_stock_value(self) -> float:
+        """Money's worth of the backing metal in the money held on the country's tiles, at the country's price of
+        that metal (none for fiat money, which has no metal)."""
+        spec = self._economy.record.currency
+        price = country_figures.prices(self._economy, self._country).get(spec.backing_good) if spec.backing_good else None
+        if price is None:
+            return 0.0
+        held = country_figures.money_held(self._economy, self._country)
+        return held * spec.backing_per_unit * price * self._coin

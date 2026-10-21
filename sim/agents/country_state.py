@@ -2,7 +2,7 @@
 its payroll and its purchases. `CountryWorld` mixes this in, so the one `Government` actor runs a foreign country
 by the same rules as the home one (revenue.py, budget.py) over the country's figures.
 
-A reading the world keeps for the home country alone (no trade book, no coin stock, no interest groups) is
+A reading the world keeps for the home country alone (no trade book, no interest groups) is
 answered with nothing here, never with the home figure; Complaint 647 lists them.
 """
 import functools
@@ -93,8 +93,22 @@ class CountryStateView(CollectionView):
 		return 0.0
 
 	def coin_stock_value(self) -> float:
-		"""No country keeps a coin stock of its own yet (Complaint 647)."""
-		return 0.0
+		"""Money's worth of the metal in the money the country's own people and producers hold."""
+		return float(self._own_economy().coin_stock_value())
+
+	def coin_regime(self) -> str:
+		"""The standard of the money the country's economy uses."""
+		return str(self._own_economy().coin_regime())
+
+	def material_cost(self, material: str, tonnes: float) -> float:
+		"""Money to buy this many tonnes of a material at the price the country's own markets quote (nothing
+		when they quote none)."""
+		price = self._own_economy().price_per_tonne(material)
+		return 0.0 if price is None else price * tonnes
+
+	def material_price(self, material: str) -> float:
+		"""Money for one tonne of a material at the country's own quote."""
+		return self.material_cost(material, 1.0)
 
 	# ---- people and holdings
 	def national_people(self, trade: str) -> float:

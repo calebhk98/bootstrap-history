@@ -17,6 +17,8 @@ from .country_state_world import StateWorld
 
 TRADES = {"labourer": 10.0, "soldier": 12.0, "scribe": 15.0, "mason": 14.0}
 WORKING_AGE = 6000.0
+COUNTRY_PRICE = 5.0     # the country's own price of any material; the home world quotes 2 (StateWorld)
+COUNTRY_COIN_STOCK = 700.0
 
 
 class CountryAnswers:
@@ -28,6 +30,15 @@ class CountryAnswers:
 
 	def need_floor_costs_per_person_year(self):
 		return {"food": 5.0}
+
+	def price_per_tonne(self, material):
+		return COUNTRY_PRICE if material != "unpriced_kg" else None
+
+	def coin_regime(self):
+		return "struck_coin"
+
+	def coin_stock_value(self):
+		return COUNTRY_COIN_STOCK
 
 
 class Shared(StateWorld):
@@ -74,6 +85,12 @@ class HomeInputs(Shared):
 	def pay_per_person_year(self, trade):
 		return TRADES.get(trade, 11.0)
 
+	def material_cost(self, material, tonnes):
+		return COUNTRY_PRICE * tonnes
+
+	def material_price(self, material):
+		return COUNTRY_PRICE
+
 
 FORMS = [{"form": "poll_tax", "basis": "adult_labour_years", "rate": 0.1},
 		 {"form": "land_tax", "basis": "harvest", "rate": 0.2, "paid_in": "wheat_kg"},
@@ -99,6 +116,12 @@ def country_world(profile, shared=None):
 # ---- there is one kind of state --------------------------------------------------------------
 check("no foreign-government class remains", not hasattr(agents_api, "Foreign" + "Government"))
 world, registry = country_world(profile_with(FORMS))
+check("a country buys at its own prices, not the home market's",
+	  world.material_cost("iron_kg", 3.0) == 3.0 * COUNTRY_PRICE and world.material_price("iron_kg") == COUNTRY_PRICE,
+	  (world.material_cost("iron_kg", 3.0), world.material_price("iron_kg")))
+check("a material its markets do not quote costs nothing to buy, not the home price", world.material_cost("unpriced_kg", 3.0) == 0.0)
+check("its coin standard and coin stock are its own, not the home's",
+	  world.coin_regime() == "struck_coin" and world.coin_stock_value() == COUNTRY_COIN_STOCK)
 check("a country's state is the one Government, scoped to the country",
 	  type(registry.actors["government:far"]) is Government and registry.actors["government:far"].record.country == "far")
 
@@ -117,7 +140,7 @@ check("a poll tax is its rate on the working age less the soldiers, at the count
 	  abs(poll.base - (WORKING_AGE - soldiers) * 10.0) < 1e-6 and abs(poll.money - 0.1 * poll.base) < 1e-6, poll)
 land = assessed["land_tax"]
 check("a levy on the harvest is its rate on the country's own harvest, taken in kind",
-	  abs(land.tonnes - 0.2 * 900.0) < 1e-9 and land.material == "wheat_kg" and abs(land.money - 0.2 * 900.0 * 2.0) < 1e-9, land)
+	  abs(land.tonnes - 0.2 * 900.0) < 1e-9 and land.material == "wheat_kg" and abs(land.money - 0.2 * 900.0 * COUNTRY_PRICE) < 1e-9, land)
 check("a form on a trade book the country does not keep yields nothing, not the home figure", assessed["import_duty"].money == 0.0)
 check("the state's revenue is what its forms yield", abs(world.state_revenue() - sum(a.money for a in assessed.values())) < 1e-9)
 bare_world, _ = country_world(profile_with([]))
