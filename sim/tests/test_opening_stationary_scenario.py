@@ -79,7 +79,7 @@ class ObservedInflationTests(unittest.TestCase):
 
 
 class OneYearOfTheStatedFixtureTests(unittest.TestCase):
-    @unittest.expectedFailure
+    @unittest.expectedFailure       # cause: the stated fixture's workers have far more hours than its runs hire, and nothing at home uses them (it has no plots)
     def test_a_year_leaves_the_wage_and_the_grain_price_within_the_settling_bounds(self):
         _economy, start, outcomes = stepped(fixture.small_setup(), 1)
         self.assertLessEqual(abs(log_change(start["wage"], outcomes[0].wages[fixture.LABOURER])), MAX_LOG_CHANGE_PER_YEAR)
@@ -104,21 +104,26 @@ class EveryYearOfTheStationaryFixtureTests(unittest.TestCase):
                 yield outcome.year, series, before[series], after[series]
             before = after
 
-    @unittest.expectedFailure
-    def test_each_price_the_wage_and_the_money_stock_move_within_the_bound_each_year(self):
+    def test_the_wage_the_grain_price_and_the_money_stock_move_within_the_bound_each_year(self):
         for year, series, before, after in self.steps():
-            if series != "rate":
+            if series in ("wage", "money", "price:" + fixture.GRAIN, "price:" + fixture.METAL):
                 with self.subTest(year=year, series=series):
                     self.assertLessEqual(abs(log_change(before, after)), MAX_LOG_CHANGE_PER_YEAR)
 
-    @unittest.expectedFailure
+    @unittest.expectedFailure       # cause: the ore price, which the smelters' bids lift to the ask band's cap in year 2 (473 mover 3)
+    def test_the_ore_price_moves_within_the_bound_each_year(self):
+        for year, series, before, after in self.steps():
+            if series == "price:" + fixture.ORE:
+                with self.subTest(year=year):
+                    self.assertLessEqual(abs(log_change(before, after)), MAX_LOG_CHANGE_PER_YEAR)
+
     def test_the_rate_moves_within_the_bound_each_year(self):
         for year, series, before, after in self.steps():
             if series == "rate":
                 with self.subTest(year=year):
                     self.assertLessEqual(abs(after - before), MAX_RATE_CHANGE_PER_YEAR)
 
-    @unittest.expectedFailure
+    @unittest.expectedFailure       # cause: the metal demand the opening sizes is met by capacity the chain places elsewhere (473 mover 4)
     def test_the_mint_strikes_about_the_coin_that_wears(self):
         for outcome in self.outcomes:
             net = outcome.money_audit.edge_net

@@ -82,8 +82,8 @@ def small_setup(**changes) -> EconomySetup:
 PLOT_LAND_PER_RUN = 1.0       # hectare-years a farm run takes, for fixtures whose households grow some of their own grain
 
 
-def stationary_setup(slack_share: float = 0.1, **changes) -> EconomySetup:
-    """The three-tile economy with each worker having the hours its opening's runs hire plus `slack_share`, and the
+def stationary_setup(slack_share: float = 0.0, **changes) -> EconomySetup:
+    """The three-tile economy with each worker having the hours its opening's runs hire (plus `slack_share`, none by default: only hours offered equal to hours hired rests), and the
     hours it keeps for its own plot at the stated wage (households_hours_offered.py), not the stated 2000 a year, which
     is many times what the fixture's recipes hire: at those hours the labour market clears at the workers' survival
     wage a dozen times below the stated one, and no year repeats itself. Households work a plot (`land_per_run` on the
