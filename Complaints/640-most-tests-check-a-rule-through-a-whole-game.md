@@ -178,3 +178,12 @@ did; they now run on a fogged stand-in. Baseline validation: `test_regional_weat
 Kept as scenarios: `run_reproducibility` (determinism), the save round trips and two-game match of the weather, the
 `again` command, the Options menu, the starting grants per civilisation.
 
+
+## Applied: audit batch 12
+
+24 files (test_seat_state through test_state_debasement_prices): rule tests on stubs and built records, a few named
+scenarios each; `sited_ore_price_over_cost` is a baseline validation naming 519. Extractions: `society_at_opening`,
+`replacement_wanted`, `staffing_warning_rows`. Two vacuous checks fixed (a refused project that read nothing; a quote
+compared against capital taken after it). `state_debasement_prices` was red after 625 (its hook no longer set the cut);
+it now drives `Government.apply_debasement`. Still Sim-only: `project_cost_now`, `venture_upkeep_quote`,
+`staffing_missing_to_open`.

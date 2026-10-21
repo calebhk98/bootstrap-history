@@ -8,7 +8,7 @@ from sim.world import demography
 from . import automation_audit
 from .units_prose import plain_number
 from .payroll_trim import payroll_means, staff_to_let_go
-from .staff_replacement import REPLACE_ONLY, replace_lost_staff
+from .staff_replacement import REPLACE_ONLY, replace_lost_staff, replacement_wanted
 from sim.agents.api import edges
 
 
@@ -223,10 +223,11 @@ class StaffPhaseMixin:
             # and rehires ones the player fired (see idle_specialists).
             _drawn_on = self.labour.trades_drawn_on()
             for trade_id in sorted(set(self.state.household.employees) | set(self.state.household.trades_created)):
-                if trade_id in ("artisan", "scholar") or trade_id not in _drawn_on:
-                    continue
                 have = self.state.household.employees.get(trade_id, 0.0)
-                want = max(have, self.TRADE_REPLACEMENT_TARGET_HEADCOUNT if trade_id in self.state.household.trades_created else 0.0)
+                want = replacement_wanted(trade_id, have, trade_id in self.state.household.trades_created, _drawn_on,
+                                          self.TRADE_REPLACEMENT_TARGET_HEADCOUNT)
+                if want is None:
+                    continue
                 short = want - have
                 if short > 0.02 and self.state.household.capital > self.labour.market.quote_annual(trade_id) * self.TRADE_REPLACEMENT_AFFORDABILITY_YEARS:
                     _before = self.state.household.capital
