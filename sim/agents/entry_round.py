@@ -39,11 +39,12 @@ class NicheEntry:
 		if self.plan is None or self.costs is None:   # no plan, or costs the country keeps no record of: no entry
 			return None
 		gross = firm_entry.expected_entry_gross(registry, world, node_id, rivals, waiting + 1)
-		expected = gross - self.costs
+		probe = Firm("probe", ActorRecord(kind="firm", founded_year=world.year))
+		expected = gross - self.costs - firm_entry.expected_levy(world, probe, gross)
 		expected -= enforcement.expected_damages(world, "", node_id, expected)
 		if expected <= 0:
 			return None
-		probe = Firm("probe", ActorRecord(kind="firm", last_margin=expected, founded_year=world.year))
+		probe.record.last_margin = expected
 		founders = firm_entry.founder_candidates(registry) if self.strata_exist else []
 		founder = founders[0] if founders else None
 		chance = imitation.copy_chance(self.chain, world) * firm_entry.copy_ease(founder)

@@ -1,13 +1,21 @@
 """A firm grows the concerns it runs while the market's return on the added capacity beats its cost of capital."""
 from typing import Any
 
-from . import equity_need, ledger
+from . import equity_need, firm_entry, ledger
 from .edges import EDGE_BUILDERS
 from .tuning import EXPANSION_RATE
 
 
 class ExpansionMixin:
 	"""Mixed into `Firm`: capacity is bought with the purse or with credit, one step a year."""
+
+	def _added_carry(self, node_id: str, capacity: float, step: float, world: Any) -> float:
+		"""What `step` more founding sizes add to the site rent and the manager's hours a plant carries whatever it sells
+		(the figure `business_books.carry` pays); nothing when the country keeps no record of either."""
+		tile = self.location()  # type: ignore[attr-defined]
+		before = firm_entry.carrying_cost(world, node_id, capacity, tile)
+		after = firm_entry.carrying_cost(world, node_id, capacity + step, tile)
+		return 0.0 if before is None or after is None else after - before
 
 	def expand(self, world: Any) -> None:
 		"""Add capacity to each concern whose staff was found in full and whose added margin pays
@@ -23,6 +31,7 @@ class ExpansionMixin:
 			step = capacity * EXPANSION_RATE
 			rivals = self.rivals_of(node_id, self.actor_id) if self.rivals_of else 0.0  # type: ignore[attr-defined]
 			gain = world.expansion_gain(node_id, self.opened_year_of(node_id, world.year), capacity, step, rivals)  # type: ignore[attr-defined]
+			gain -= self._added_carry(node_id, capacity, step, world)
 			cost = world.plant_cost(node_id, self, step)
 			if gain <= 0.0:
 				continue

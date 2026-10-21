@@ -66,6 +66,12 @@ def expected_entry_gross(registry: Any, world: Any, node_id: str, rivals: float,
 	return spot * min(1.0, expected_takings(registry, world, node_id) / spot_alone)
 
 
+def expected_levy(world: Any, payer: Any, takings: float) -> float:
+	"""What the state would levy a year on `payer` from `takings`: the same assessment a firm's books pay, so an
+	entrant weighs the margin it will keep, not the margin before the state's share."""
+	return float(world.government().assess(payer, takings, world)[0])
+
+
 def personal_capital(stratum: Any) -> float:
 	"""What one founder of this stratum can put up: its best-placed household's free wealth."""
 	return household_wealth.personal_capital(stratum)

@@ -39,6 +39,9 @@ class FakeGovernment:
 		self.asked.append(takings)
 		return 0.0
 
+	def assess(self, payer: Any, taxable: float, world: Any) -> Any:
+		return 0.0, {}
+
 
 def make_node(node_id: str, prerequisites=(), hours: float = 100.0, years: float = 1.0,
 			  revenue: float = 0.0, upkeep: float = 0.0, makes=()) -> Dict[str, Any]:
