@@ -94,3 +94,23 @@ elsewhere: the state budget's debasing, borrowing-first and hours-and-goods runs
 count and expansion dynamics repeated across the firm scenarios (`test_firm_count_from_costs`, `test_firm_expansion`).
 The state budget's runs over years on an opened England are `test_economy_state_budget_validation` (baseline validations,
 4.2, naming Complaint 526); `economy_tin_dearer_than_copper` stays the slow validation naming Complaint 511.
+
+## Applied: audit batch 7 (test_historical_events through test_labour_population_derived)
+
+Rules now called on inputs the test builds, quick tier: `test_historical_events` (`hazard_given_condition`),
+`test_home_cargo_price` (the quote's rules), `test_hot_path_caches`, `test_hour_pool_standing_is_live` (`hour_standing` and
+the active-project builder on a stub game), `test_hours_by_trade_from_core` (`shares_from_people`),
+`test_household_capacity_and_literacy` (`literate_capacity`, `household_room`, `_room_advice` on a stub labour),
+`test_household_never_happened_fields`, `test_idle_capacity_view`, `test_idle_sized_suggestions`, `test_industrial_dashboard`
+(the `changes` window checks, the typed front end), `test_invention_disclosure` (`disclose`, `copy_difficulty_of`,
+`years_to_be_believed`), `test_keep_staffed` (the parser), `test_knowledge_loss_warning`, `test_knowledge_risk_and_sacking`
+(`corpus_hedge`, `_sack_corpus_loss`, `_log_corpus_loss` on a stub game), `test_labour_allocation_wiring`,
+`test_labour_follows_need`, `test_labour_market_town_pricing` (`LabourMarket` over a stub labour), `test_labour_population_derived`.
+Extractions, behaviour unchanged: `hazard_given_condition` in `sim/engine/hazard_condition.py`; `shares_from_people` in
+`sim/labour/labour_allocation.py`; `copy_difficulty_of` and `years_to_be_believed` in `sim/engine/visibility.py`.
+Whole-game checks stay as named `_scenario` files next to their rules. `test_in_memory_civilisation`, `test_industry_depth_game`,
+`test_home_floors_from_economy` and `test_labour_hiring_and_wages` are wholly wiring (screens, save round trips, the yearly
+staff phases) and are now `_scenario` files; their rules sit in `Sim` methods that read much of the state
+(`seed_opening_industry_experience`, `_step_staff`, `train`, `fire`, `commission`) and are still to be pulled out.
+`labour_margins_whole_game` is now `test_labour_margins_baseline_validation` (a baseline validation, 4.2, naming Complaints 398
+and 640) plus a scenario for the draught-animal recipes.
