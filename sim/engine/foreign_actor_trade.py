@@ -26,7 +26,10 @@ class ForeignActorTradeMixin:
         flow = by_material.setdefault(material, {SOLD: 0.0, BOUGHT: 0.0})
         flow[SOLD if to_partner else BOUGHT] += tonnes
         if to_partner:
-            flow[LANDED_COST] = flow.get(LANDED_COST, 0.0) + landed_cost
+            before = flow[SOLD] - tonnes
+            if tonnes < 0.0 and before > 0.0 and not landed_cost:
+                landed_cost = flow.get(LANDED_COST, 0.0) * tonnes / before   # a part of the cargo is taken back: its cost with it
+            flow[LANDED_COST] = max(0.0, flow.get(LANDED_COST, 0.0) + landed_cost)
 
     def landed_cost(self, paid, carriage):
         """What a cargo costs its carrier on landing: the purchase, a year's return on it (the carrier's margin)
