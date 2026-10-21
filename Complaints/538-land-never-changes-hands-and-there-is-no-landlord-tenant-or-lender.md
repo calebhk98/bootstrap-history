@@ -133,5 +133,18 @@ and print the floors `unsold_search.clear_with_search` receives for land markets
 zero says the reservation it is built from (rent or yield over the rate) has collapsed. Measure where that floor
 comes from before trusting land prices in that game.
 
-Checked against 647 (2026-10-21): the 647 cause (opening area sized at reference soil, so the Norse farm fed too few) is
-fixed, but whether it moves this floor was not measured, so this finding stays open on its own cause.
+Diagnosed and fixed (2026-10-21). After 647 it still reproduces: stepping the Norse game of the scenario with the
+floors printed (a scratch script wrapping `unsold_search._floors`), the `hectare_land` seller's floor fell from the
+order of thousands in year 0 to a tiny fraction in year 2, then to nothing within a few more years, while its ask stayed in the thousands.
+Cause: the floor was `unsold_search._held_value`, `inventory.queued_holding_value`, which queues a stock behind the
+yearly sales it expects and discounts a year of interest per year waited. The land producer's stock grows every year
+and its expected sales decay (nobody buys), so the years waited ran to hundreds and the discount to zero. Ground does not queue: every
+hectare yields its rent the whole time it is held. A function test on built inputs
+(`sim/tests/test_economy_land_seller_floor.py`) shows the collapse; the rule now values a non-portable good (the ground) at
+the tile's rent per hectare capitalised at the rate (never under the opening's, as titles are), so a land seller's
+reservation follows what the land yields it, and rent-free land is worth nothing to hold. With the fix the same probe
+shows the floor stay a bounded share of the capitalised rent in every year (no collapse).
+
+Still open on its own cause: the land producer still adds hectares to a stock that no one buys and the ask falls year
+on year with no buyer; land is treated as a flow producer, and who buys land (a market of buyers) is the remaining
+part of this complaint.

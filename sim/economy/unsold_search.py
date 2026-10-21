@@ -14,7 +14,7 @@ from typing import List, Optional, Sequence, Tuple
 
 from sim.book import ROUNDING_SHARE
 
-from . import goods_market, inventory, seller_offers
+from . import goods_market, inventory, seller_offers, titles_value
 from .types import Offer
 
 SEARCH_PRECISION = 1e-4     # numerical tolerance of the bisection on the ask level, not a model number
@@ -58,6 +58,10 @@ def _held_value(setup, record, view, offer: Offer) -> float:
     recipe = setup.recipes[producer.recipe_id]
     spec = setup.specs.get(offer.good)
     rate = view.interest_rate(view.currency_of(offer.area))
+    if spec is not None and not spec.portable:
+        # ground never queues behind the stock: every hectare yields its rent while held
+        return titles_value.hectare_value(record.land_rent.get(offer.tile, 0.0),
+                                          titles_value.capitalising_rate(rate, setup.opening_rate))
     return inventory.queued_holding_value(offer.reservation_price, offer.quantity,
                                           producer.expected_sales * recipe.outputs.get(offer.good, 0.0), rate,
                                           spec.spoilage_per_year if spec is not None else 0.0)
