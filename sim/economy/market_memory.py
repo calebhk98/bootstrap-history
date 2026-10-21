@@ -10,9 +10,10 @@ from sim.constants import declare
 
 from .accounts import Book
 from .currency import update_expected_inflation
-from .types import AgentId, AreaId, CurrencyId, GoodId, TileId, TradeId
+from .types import QUOTE_OPENING_ESTIMATE, AgentId, AreaId, CurrencyId, GoodId, TileId, TradeId
 
 KEY_SEPARATOR = "|"
+PRICE_TRADED = "traded"     # the kind of a price a market cleared at; any other kind is a quote or an estimate
 
 OPENING_EXPECTED_INFLATION = declare(
     "OPENING_EXPECTED_INFLATION", 0.0, kind="initial_condition",
@@ -58,6 +59,26 @@ class MarketMemory:
     years_without_offers: Dict[str, int] = field(default_factory=dict)   # market_key(good, area); absent: offers last year
     cleared_prices: Dict[str, float] = field(default_factory=dict)      # market_key(good, area); absent: nothing traded last year
     quote_kinds: Dict[str, str] = field(default_factory=dict)           # market_key(good, area); what `prices` holds when nothing traded
+
+    def price_kind(self, key: str) -> Optional[str]:
+        """What the price remembered for a market is: PRICE_TRADED when it traded last year, else the quote's
+        kind, else the opening estimate no clearing has replaced; None when the market has no price."""
+        if key in self.cleared_prices:
+            return PRICE_TRADED
+        if key not in self.prices:
+            return None
+        return self.quote_kinds.get(key, QUOTE_OPENING_ESTIMATE)
+
+    def price_kinds_by_good(self) -> Dict[str, str]:
+        """The kind each good's price has across its markets: traded when any market of it traded last year,
+        else the first quote kind in market order (so a price no one traded at is never shown as a trade)."""
+        kinds: Dict[str, str] = {}
+        for key in sorted(self.prices):
+            good = key.split(KEY_SEPARATOR, 1)[0]
+            kind = self.price_kind(key)
+            if kinds.get(good) != PRICE_TRADED and (kind == PRICE_TRADED or good not in kinds):
+                kinds[good] = kind
+        return kinds
 
     def note_cleared(self, key: str, price: float, quantity: float) -> None:
         """Keep the price a market cleared at when it traded; forget it when it did not."""
@@ -143,8 +164,12 @@ class YearView:
 
     def quote_kind(self, good: GoodId, area: AreaId) -> Optional[str]:
         """What `price` is when nothing traded last year (a QUOTE_* kind); None when it is a traded price or
-        the opening estimate no market has replaced."""
+        the opening estimate no market has replaced (`price_kind` names those too)."""
         return self._memory.quote_kinds.get(good + KEY_SEPARATOR + area)
+
+    def price_kind(self, good: GoodId, area: AreaId) -> Optional[str]:
+        """PRICE_TRADED, or the kind of quote or estimate `price` is; None when the market has no price."""
+        return self._memory.price_kind(good + KEY_SEPARATOR + area)
 
     def cleared_price(self, good: GoodId, area: AreaId) -> Optional[float]:
         """The price the market cleared at last year; None when nothing traded in it."""

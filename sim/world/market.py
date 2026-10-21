@@ -16,9 +16,10 @@ against what is wanted, with capacity already built treated as sunk:
 The price ratio (price over long-run cost) is the one that clears the two.
 It is held between a ceiling and two floors. Producers' floor: what running built capacity costs
 without paying its capital back; below it society producers idle. Stock's floor: stock and price takers
-(the founder's sales, actors' output) sell below any producer's cost, down to their own bound. Above the
+(the founder's sales, actors' output) sell below any producer's cost, down to a holder's reservation
+(stock_reservation_ratio: the producers' floor less the cost of carrying it a year); below that they hold. Above the
 producers' floor everything on offer sells; at it the surplus goes unsold, society producers (who can
-idle) take the unsold part, and it is carried as stock. Capacity then follows the price:
+idle) take the unsold part and idle: only goods that exist are carried as stock. Capacity then follows the price:
 it grows while the price sits above cost and shrinks while below.
 
 Standalone: it takes tonnes and returns tonnes. `sim/engine/market_clearing.py`
@@ -26,7 +27,7 @@ supplies the figures.
 """
 import math
 from dataclasses import dataclass
-from typing import Tuple
+from typing import Optional, Tuple
 
 from sim.constants import declare
 
@@ -55,11 +56,13 @@ CLEARING_BISECTION_STEPS = 34
 
 UNSPLIT_FLOOR_RATIO = 1.0   # a producer whose cost has no running part to idle on sells at no less than its cost
 
-STOCK_FLOOR_RATIO = declare(
-    "STOCK_FLOOR_RATIO", 0.01, kind="temporary_heuristic",
-    unit="price over long-run cost (minimum for stock)", source=None, confidence="D",
-    why="Stock already made sells at whatever it fetches, below any producer's cost, down to this "
-        "share. A holder's reservation (salvage value, the loss from carrying it on) would replace it.")
+CARRYING_RATE_PER_YEAR = declare(
+    "CARRYING_RATE_PER_YEAR", 0.1, kind="temporary_heuristic",
+    unit="fraction of a held good's value per year (storage and interest)", source=None, confidence="D",
+    retire="the agent economy's seller reservation search (sim/economy) reading storage cost and the interest rate",
+    why="A holder of stock keeps it while selling now fetches less than selling later net of what holding "
+        "costs. One figure for every material; a per-material storage cost and the economy's own interest "
+        "rate would replace it. Spoilage is STOCK_RETENTION.")
 
 DEFAULT_CEILING_RATIO = declare(
     "DEFAULT_CEILING_RATIO", 6.0, kind="temporary_heuristic",
@@ -106,7 +109,8 @@ class MarketConditions:
     demand_price_elasticity: float = DEFAULT_DEMAND_PRICE_ELASTICITY
     supply_price_elasticity: float = SHORT_RUN_SUPPLY_PRICE_ELASTICITY
     floor_ratio: float = UNSPLIT_FLOOR_RATIO
-    stock_floor_ratio: float = STOCK_FLOOR_RATIO
+    stock_floor_ratio: Optional[float] = None   # a holder's reservation override; None reads the carrying cost
+    carrying_rate: float = CARRYING_RATE_PER_YEAR
     ceiling_ratio: float = DEFAULT_CEILING_RATIO
 
 
@@ -118,6 +122,7 @@ class MarketOutcome:
     unsold_tonnes: float
     unmet_demand_tonnes: float
     offers_sold_tonnes: float = 0.0
+    held_over_tonnes: float = 0.0   # goods that exist and did not sell: the stock carried on
 
 
 def _demand_at(conditions: MarketConditions, price_ratio: float) -> float:
@@ -136,16 +141,29 @@ def _society_output_at(conditions: MarketConditions, price_ratio: float) -> floa
         price_ratio ** conditions.supply_price_elasticity)
 
 
+def stock_reservation_ratio(conditions: MarketConditions) -> float:
+    """The price over long-run cost below which a holder keeps stock: what the market returns to once the
+    stock is gone (the producers' floor), brought back a year at the cost of carrying it (spoilage, storage,
+    interest)."""
+    if conditions.stock_floor_ratio is not None:
+        return conditions.stock_floor_ratio
+    return conditions.floor_ratio * STOCK_RETENTION / (1.0 + conditions.carrying_rate)
+
+
+def _stock_on_offer(conditions: MarketConditions, price_ratio: float) -> float:
+    return conditions.stock_tonnes if price_ratio >= stock_reservation_ratio(conditions) else 0.0
+
+
 def _supply_at(conditions: MarketConditions, price_ratio: float) -> float:
     return (_society_output_at(conditions, price_ratio) + conditions.actor_supply_tonnes
             + offered_tonnes(conditions.offers, price_ratio)
-            + conditions.founder_sales_tonnes + conditions.stock_tonnes)
+            + conditions.founder_sales_tonnes + _stock_on_offer(conditions, price_ratio))
 
 
 def clearing_price_ratio(conditions: MarketConditions) -> float:
     """The price over long-run cost at which demand equals the supply on
     offer, held between the stock's floor and the ceiling."""
-    low, high = min(conditions.stock_floor_ratio, conditions.floor_ratio), conditions.ceiling_ratio
+    low, high = min(stock_reservation_ratio(conditions), conditions.floor_ratio), conditions.ceiling_ratio
     if (conditions.committed_demand_tonnes == 0.0 and conditions.actor_demand_tonnes == 0.0
             and conditions.actor_supply_tonnes == 0.0 and not conditions.offers
             and conditions.founder_sales_tonnes == 0.0 and conditions.stock_tonnes == 0.0
@@ -182,13 +200,19 @@ def clear_market(conditions: MarketConditions) -> MarketOutcome:
     offers_sold = min(offered_tonnes(conditions.offers, price_ratio), traded)
     after_outsiders = max(0.0, traded - conditions.founder_sales_tonnes
                           - conditions.actor_supply_tonnes - offers_sold)
-    from_stock = min(conditions.stock_tonnes, after_outsiders)
+    on_offer = _stock_on_offer(conditions, price_ratio)
+    from_stock = min(on_offer, after_outsiders)
+    # what exists and did not sell: stock held back or unsold, and outsiders' goods the market did not take
+    outsiders = (conditions.founder_sales_tonnes + conditions.actor_supply_tonnes
+                 + offered_tonnes(conditions.offers, price_ratio))
+    held_over = outsiders + conditions.stock_tonnes - min(traded, outsiders + on_offer)
     society_sales = min(output, after_outsiders - from_stock)
     return MarketOutcome(
         price_ratio=price_ratio, quantity_traded_tonnes=traded,
         society_sales_tonnes=society_sales,
         unsold_tonnes=max(0.0, supply - traded),
-        unmet_demand_tonnes=max(0.0, demand - supply), offers_sold_tonnes=offers_sold)
+        unmet_demand_tonnes=max(0.0, demand - supply), offers_sold_tonnes=offers_sold,
+        held_over_tonnes=max(0.0, held_over))
 
 
 def society_sales_displaced_by_founder(conditions: MarketConditions) -> float:
@@ -209,5 +233,6 @@ def adjusted_capacity(capacity_tonnes: float, price_ratio: float) -> float:
 
 
 def stock_after_year(outcome: MarketOutcome) -> float:
-    """Stock carried into next year: what went unsold, less what is lost."""
-    return outcome.unsold_tonnes * STOCK_RETENTION
+    """Stock carried into next year: goods that exist and did not sell, less what spoils. Idle capacity
+    is not stock: a producer that cannot sell at its cost does not make the output."""
+    return outcome.held_over_tonnes * STOCK_RETENTION

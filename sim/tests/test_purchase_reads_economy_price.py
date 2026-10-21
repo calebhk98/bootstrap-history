@@ -31,6 +31,9 @@ class _Economy:
     def agent_prices_at(self, tile=None):
         return self.paid
 
+    def agent_price_kind(self, good):
+        return "traded" if good in self.paid else None
+
     def acting_tile(self):
         return "tile"
 

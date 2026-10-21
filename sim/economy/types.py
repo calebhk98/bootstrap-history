@@ -217,6 +217,7 @@ class Fill:
 QUOTE_BEST_UNFILLED_BID = "best_unfilled_bid"          # the most any buyer would have paid, below every ask
 QUOTE_LOWEST_UNFILLED_ASK = "lowest_unfilled_ask"      # the least any seller would have taken, with nobody bidding
 QUOTE_COST_COVERING = "cost_covering"                  # what a maker would have to ask to cover a unit's cost
+QUOTE_OPENING_ESTIMATE = "opening_estimate"            # the opening's figure, which no clearing has replaced yet
 
 
 @dataclass(frozen=True)

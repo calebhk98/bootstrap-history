@@ -21,7 +21,8 @@ def record_year(economy, offered_by_seat, proceeds_units, coin):
     view = economy.view()
     kept = {}
     for seat_id, (tile, offered) in sorted(offered_by_seat.items()):
-        prices = {good: view.price(good, economy.area_map.area_of(good, tile)) or 0.0 for good in offered}
+        quoted = {good: view.price(good, economy.area_map.area_of(good, tile)) for good in offered}
+        prices = {good: price for good, price in quoted.items() if price is not None}     # a good with no price is weighted by units
         results = concern_sales.settle_sales(offered, unsold_units(economy, seat_id), proceeds_units.get(seat_id, 0.0), prices)
         kept[seat_id] = {material: [result.offered, result.sold, result.proceeds * coin]
                          for material, result in results.items()}

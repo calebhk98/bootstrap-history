@@ -16,7 +16,7 @@ from .economy import Economy
 from .foreign import external_orders
 from .market_memory import market_key
 from .metal_stock import COIN_WEAR_PER_YEAR
-from .notional import shown_prices
+from .notional import shown_prices, shown_prices_with_kinds
 from .producers import Producer, expected_output_prices, live_input_prices, live_wages
 from .protocols import AgentOrders, YearInputs
 from .recipes import recipes_from_production_data
@@ -46,7 +46,7 @@ __all__ = [
     "variable_cost_per_run", "rebase_basket_price_level", "trade_premium", "title_wealth",
     "traded_volumes", "country_traded_volumes", "country_opening_basket", "market_record", "opening_quantities", "opening_prices_in_hours", "wages_by_trade", "wages_by_trade_weighted", "interest_rate", "producers_of",
     "external_trade_net", "external_trade_volume", "account_balance", "account_holdings",
-    "credit_room", "credit_line_request", "economy_from_record", "blank_economy", "export_record", "economy_book", "economy_contracts", "finish_spin_up", "note_spin_up_result", "spin_up_state", "money_year_figures","shown_prices_of",
+    "credit_room", "credit_line_request", "economy_from_record", "blank_economy", "export_record", "economy_book", "economy_contracts", "finish_spin_up", "note_spin_up_result", "spin_up_state", "money_year_figures","shown_prices_of","shown_price_kinds_of",
     "settle_agent_takings", "indebted_tiles", "money_revenue_forms", "admit_recipes", "move_goods", "post_transfers", "cohort_incomes", "cohort_land_rents", "land_rent_per_hectare",
     "land_rent_paid_by_tile", "land_rent_at_tile", "DEPOSIT_BANKING", "country_figures", "carried_book", "idle_hours_by_trade", "output_by_tile",
 ]
@@ -406,6 +406,14 @@ def shown_prices_of(economy, country=None):
     if scope is None:
         return shown_prices(economy.setup, economy.record)
     return shown_prices(economy.setup, economy.record, country_figures.prices(economy, scope))
+
+
+def shown_price_kinds_of(economy, country=None):
+    """What each shown price is, by good: PRICE_TRADED, a quote kind (QUOTE_*) or an estimate (`notional.KIND_*`).
+    Same scope as `shown_prices_of`."""
+    scope = country_figures.home_when_shared(economy, country)
+    market = None if scope is None else country_figures.prices(economy, scope)
+    return shown_prices_with_kinds(economy.setup, economy.record, market)[2]
 
 
 def move_goods(economy, moves):

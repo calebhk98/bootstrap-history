@@ -42,7 +42,8 @@ def material_rows(sim, offset, limit, only=None):
                      "market_available_tonnes_per_year":
                          round(quote["market_available_tonnes_per_year"], 2),
                      "own_supply": material in own,
-                     "price_basis": sim.material_price_basis(material)})
+                     "price_basis": sim.material_price_basis(material),
+                     "price_kind": quote["price_kind"]})
     return {"total": len(materials), "offset": offset, "limit": limit, "rows": rows}
 
 

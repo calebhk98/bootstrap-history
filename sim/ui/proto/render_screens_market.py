@@ -5,6 +5,21 @@ from .util import _fmt_num, _pct
 
 PRICE_BASIS_NOTE = {"gated": "priced at a technique you do not have",
                     "imported": "bought from a trading partner, delivered"}
+# what the shown price is when nothing traded: a bid, an ask or an estimate, never read as a trade
+NO_TRADE_CAUSE = {"best_unfilled_bid": "buyers bid but no seller took it",
+                  "lowest_unfilled_ask": "sellers asked but no buyer bid",
+                  "cost_covering": "no buyer or seller; a maker's cost",
+                  "opening_estimate": "no year has traded it yet",
+                  "making_cost_estimate": "not traded lately; its cost to make",
+                  "thin_trade_blend": "trades a sliver; blended toward its cost to make",
+                  "remembered_price": "not traded lately; the last price"}
+
+
+def price_note(row):
+    """The note on a price row: what a price is when nothing traded (its cause), and the basis it is priced at."""
+    cause = NO_TRADE_CAUSE.get(row.get("price_kind"))
+    notes = (["no trade: " + cause] if cause else []) + [PRICE_BASIS_NOTE.get(row.get("price_basis"), "")]
+    return "; ".join(note for note in notes if note)
 
 
 def render_market(out):
@@ -21,7 +36,7 @@ def render_market(out):
                          _fmt_num(row["sell_per_tonne"]),
                          _fmt_num(row["market_available_tonnes_per_year"]),
                          "own" if row["own_supply"] else "",
-                         PRICE_BASIS_NOTE.get(row.get("price_basis"), ""))).rstrip())
+                         price_note(row))).rstrip())
     if materials.get("offset", 0) + len(rows) < materials.get("total", 0):
         lines.append("  more: market offset %d" % (materials["offset"] + len(rows)))
     if not out.get("wages"):
