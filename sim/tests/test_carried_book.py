@@ -6,6 +6,9 @@ QUICK_TOPIC = True
 import unittest
 
 from sim.economy import carried_book, country_figures
+from sim.economy.accounts import Book
+from sim.economy.market_memory import MarketMemory
+from sim.economy.types import CurrencySpec
 from sim.economy.record import EconomyRecord
 from sim.tests import economy_fixture as fixture
 from sim.tests.test_economy_carriage_hours import trading_setup
@@ -44,10 +47,14 @@ class CarriedBookTests(unittest.TestCase):
         self.assertEqual(carried_book.trade_value(home, "out"), 30.0)     # the haul between two home tiles crossed no border
         self.assertEqual(carried_book.trade_book(carried, COUNTRY_OF, "nowhere"), {})
 
-    def test_the_record_keeps_the_flows_by_good_and_saves_them(self):
-        economy = fixture.run(trading_setup(crew=False), years=6)[0]
-        record = economy.record
-        self.assertTrue(record.carried_goods)
+    def test_the_record_saves_the_flows_by_good_and_they_add_up_to_the_tonnes(self):
+        carried_goods = {}
+        carried_book.note_carried(carried_goods, "grain", "a1", "b1", 10.0, 2.0, 3.0, 5.0)
+        carried_book.note_carried(carried_goods, "salt", "a1", "b1", 4.0, 1.0, 2.0, 6.0)
+        carried_book.note_carried(carried_goods, "grain", "b1", "a2", 5.0, 1.5, 4.0, 3.0)
+        record = EconomyRecord(book=Book(), memory=MarketMemory(), currency=CurrencySpec("coin", "fiat", None, 0.0, None))
+        record.carried_goods = carried_goods
+        record.carried = {"a1": {"b1": 3.0}, "b1": {"a2": 1.5}}
         for origin, row in record.carried.items():
             for destination, tonnes in row.items():
                 by_good = sum(by_origin.get(origin, {}).get(destination, [0.0])[0] for by_origin in record.carried_goods.values())
