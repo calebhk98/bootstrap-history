@@ -1,173 +1,138 @@
-"""refusal_wording_and_screens: regression checks, run individually with `--only refusal_wording_and_screens`."""
-from .harness import *  # noqa: F401,F403
+"""Refusal wording and screens: the patronage refusal never leaks an id nor recommends a refusal, the policy screen
+groups what is running from what is not, and "nothing else rests on this" means zero. The start rule is the real mixin
+over a stand-in game (stage of the patron, interest and fog set by the test); the screens are rendered from built
+replies (no game). The auto_open policy through a game is test_refusal_wording_and_screens_scenario."""
+import collections
+from types import SimpleNamespace
+
+from .harness import check, NODES
+
+from sim.engine.projects_starting import StartingMixin
+from sim.engine.ui_port import downstream_count
 from sim.ui import protocol as _PROTO
+from sim.ui.proto.techtree import _explain_unlocks, _rests_band
 
-# THE PATRONAGE REFUSAL LEAKED AN ID, AND HANDED OUT A COMMAND THAT WOULD BE
-# REFUSED. A naive Mexica player read "get at least a local patron first:
-# 'start patron_local'" in `available`, typed exactly that, and was told by
-# the same engine one command later: "you have never heard of any such
-# thing." Two faults in one line. Under fog it is a free reveal of an
-# undiscovered node, which is the third time this exact filter has been
-# skipped by a second caller (start_reason had it, `bounty` skipped it, and
-# `why` leaked another node's id through its kb path). And the advice is
-# worth nothing in any case when the command it names is refused.
-_s_pat = sim(civ="mexica_1500")
-_s_pat.fog = True
-_s_pat.revealed = set()
-_pat_wary = None
-for _k in sorted(NODES):
-    _ok, _w = _s_pat.start_reason(_k)
-    if _w and "state is wary" in _w:
-        _pat_wary = _w
-        break
-check("the patronage refusal fires for a fogged Mexica founder at all, so "
-      "the rest of these checks are testing something real",
-      _pat_wary is not None, _pat_wary)
-check("...and does not name patron_local, which this founder has never "
-      "heard of and could not start if they tried",
-      _pat_wary is not None and "patron_local" not in _pat_wary, _pat_wary)
-check("...and still says what is actually wanted, in words rather than an "
-      "id, so the refusal remains useful advice",
-      _pat_wary is not None and "patron" in _pat_wary
-      and "before anyone here will let you begin" in _pat_wary, _pat_wary)
+QUICK_TOPIC = True
 
-_s_pat2 = _s_pat      # no fog: the id IS the useful answer
-_s_pat2.fog = False
-_pat_wary2 = None
-for _k in sorted(NODES):
-    _ok, _w = _s_pat2.start_reason(_k)
-    if _w and "state is wary" in _w:
-        _pat_wary2 = _w
-        break
-# A REFUSAL MAY NEVER RECOMMEND A REFUSAL. That was the whole complaint, and
-# the fog was only half of it: patron_local itself wants identity_cover, so
-# even with the fog off "get a local patron first: 'start patron_local'" sent
-# the player into "missing prerequisites: identity_cover". So the rule is
-# conditional, and both branches are checked: name the command only when it
-# would actually be accepted, and otherwise name what is standing in the way.
-_pat_can2, _ = _s_pat2.start_reason("patron_local")
-check("without fog, the refusal names 'start patron_local' only when that "
-      "command would actually be accepted, and otherwise says what "
-      "patron_local is itself waiting on",
-      (("start patron_local" in _pat_wary2) if _pat_can2
-       else ("start patron_local" not in _pat_wary2
-             and "itself wants" in _pat_wary2)), (_pat_can2, _pat_wary2))
 
-_s_pat4 = _s_pat
-_s_pat4.done.add("identity_cover")
-_s_pat4._done_changed()
-_pat_wary4 = None
-for _k in sorted(NODES):
-    _ok, _w = _s_pat4.start_reason(_k)
-    if _w and "state is wary" in _w:
-        _pat_wary4 = _w
-        break
-_pat_can4, _pat_why4 = _s_pat4.start_reason("patron_local")
-check("...and once patron_local IS startable, the refusal hands over the "
-      "exact command, and that command is genuinely accepted",
-      _pat_can4 and _pat_wary4 is not None
-      and "start patron_local" in _pat_wary4, (_pat_why4, _pat_wary4))
+class _World(StartingMixin):
+    """The social approval rule and the patron advice, over a patron, a state interest and a fog switch."""
 
-# THE SENATORIAL HALF OF THE SAME LINE, which had the identical hardcoded id.
-_s_pat3 = sim(civ="rome_100ad")
-_s_pat3.fog = True
-_s_pat3.revealed = set()
-_pat_sen = [_warning for _warning in
-            (_s_pat3.start_reason(_node_id)[1] for _node_id in sorted(NODES))
-            if _warning and "actively opposes" in _warning]
-check("the senatorial-patronage refusal does not leak its id under fog "
-      "either",
-      not any("patron_senatorial" in _warning for _warning in _pat_sen),
-      _pat_sen[:1])
+    def __init__(self, interest=-0.8, fog=False, visible=("patron_local",), done=(), running=(),
+                 protection=0.0, prereqs=(), opposed_patron=None):
+        self.fog_on = fog
+        self.interest = interest
+        self.visible = set(visible)
+        self.running_ids = set(running)
+        self.nodes = {"patron_local": {"pre": list(prereqs)}, "patron_senatorial": {"pre": []},
+                      "plain": {"cat": "technique"}}
+        self.state = SimpleNamespace(projects=SimpleNamespace(done=set(done)),
+                                     household=SimpleNamespace(protection=protection))
+        self.opposed_patron = opposed_patron
 
-# THE POLICY SCREEN GROUPS BY WHAT IS ACTUALLY RUNNING. An England play
-# tester read auto_open's description ("opens concerns that plainly pay for
-# themselves"), built a pawnshop that plainly paid for itself, watched
-# nothing happen, and reported the policy as not matching its own
-# description. The screen was correct - "off" was printed directly above that
-# sentence - but every description is in the present indicative, so a reader
-# scanning them reads eleven statements of what the game is doing while ten
-# of them are hypothetical. Verified separately that auto_open itself is not
-# broken: with the policy on, auto_open_ventures does open that pawnshop.
-_s_pol = sim(civ="england_1300")
-_pol_out = S._agent_dispatch(_s_pol, NODES, {"cmd": "policy"})
-_pol_txt = _PROTO.render_policy(_pol_out)
-check("the policy screen says which automatic behaviours are running now "
-      "and which are only descriptions of what would happen",
-      "RUNNING NOW:" in _pol_txt and "NOT RUNNING" in _pol_txt
-      and "WOULD do if you turned it on" in _pol_txt, _pol_txt[:300])
-check("...with every switch still listed exactly once between the two "
-      "groups, none dropped by the grouping",
-      all(_node_id in _pol_txt for _node_id in (_pol_out.get("policy") or {}))
-      and all(_pol_txt.count("  %-18s " % _node_id) == 1
-              for _node_id in (_pol_out.get("policy") or {})),
-      sorted(_pol_out.get("policy") or {}))
+    def state_interest(self, node):
+        return self.interest
 
-# AND THE THING THEY THOUGHT WAS BROKEN IS NOT BROKEN.
-_s_pol2 = _s_pol
-# the concerns the household's free hands can staff (the gate `open` applies) that clear the most a year for
-# the money to open them; their takings come from what they make
-_pays_best = sorted((node_id for node_id, node in _s_pol2.nodes.items()
-                     if node["rev"] > node["up"] and _s_pol2.is_venture(node_id)
-                     and _s_pol2.staffing_open_refusal(node_id) is None),
-                    key=lambda node_id: -(_s_pol2.nodes[node_id]["rev"] - _s_pol2.nodes[node_id]["up"])
-                    / max(1.0, _s_pol2.venture_capex(node_id)))[:5]
-_s_pol2.done.update(_pays_best)
-_s_pol2._done_changed()
-_opened = _s_pol2.auto_open_ventures()
-check("auto_open really would open a concern that plainly pays for itself: "
-      "of the five that clear the most a year against what they cost to open, auto_open_ventures takes one",
-      any(node_id in _opened for node_id in _pays_best),
-      (_pays_best, _opened))
-check("...and it was off by default, which is the whole of why they did not "
-      "see it happen",
-      _s_pol.policy.get("auto_open") is False,
-      _s_pol.policy)
+    def approval_patron(self, gate):
+        return "patron_local" if gate == "wary" else self.opposed_patron
 
-# "NOTHING ELSE RESTS ON THIS" HAS TO MEAN ZERO. A naive Rome player caught
-# the game contradicting itself inside a minute: `why met_ore_crushing_sorting`
-# answered "HOW MUCH RESTS ON THIS: nothing else; this is worth having for
-# itself", while met_jigging_gravity, visible in their own list, refused with
-# "missing prerequisites: met_ore_crushing_sorting". They found the same pair
-# again in in2_tape_measure_steel and in2_baseline_measurement_apparatus. The
-# bottom band covered 0 through 3. Banding is the right answer to the spoiler
-# problem - the exact count is a map of the tree - but a band whose words are
-# false is not. Vague is allowed, wrong is not.
+    def running(self, node_id):
+        return node_id in self.running_ids
+
+    def is_visible(self, node_id):
+        return not self.fog_on or node_id in self.visible
+
+
+def _refusal(world, category="technique"):
+    return world._check_social_approval("plain", {"cat": category}, False, {}, True)
+
+
+# --- the patronage refusal under fog: no id for a node the founder has never heard of
+fogged = _World(fog=True, visible=())
+allowed, wary = _refusal(fogged)
+check("the patronage refusal fires for a wary state at all, so the rest of these checks test something real",
+      allowed is False and wary, wary)
+check("...and does not name patron_local, which this founder has never heard of and could not start",
+      "patron_local" not in wary, wary)
+# presentation: the advice stays useful in words once the id is withheld
+check("...and still says what is wanted, in words rather than an id",
+      "patron" in wary and "before anyone here will let you begin" in wary, wary)
+
+# --- a refusal may never recommend a refusal: name the command only when it would be accepted
+blocked_patron = _World(fog=False, visible=("patron_local",), prereqs=("identity_cover",))
+_allowed, advice = _refusal(blocked_patron)
+check("without fog, a patron that itself lacks a prerequisite is not recommended by command: the refusal says what it wants",
+      "start patron_local" not in advice and "identity_cover" in advice, advice)
+fog_missing = _World(fog=True, visible=("patron_local",), prereqs=("identity_cover",))
+_allowed, advice = _refusal(fog_missing)
+check("...and a missing prerequisite the founder has not heard of is not named either",
+      "identity_cover" not in advice and "something you have not heard of" in advice, advice)
+startable = _World(fog=False, visible=("patron_local",), prereqs=())
+_allowed, advice = _refusal(startable)
+check("once patron_local IS startable, the refusal hands over the exact command",
+      "start patron_local" in advice, advice)
+built = _World(fog=False, done=("patron_local",))
+_allowed, advice = _refusal(built)
+check("a patron already built but not open is to be opened, not started", "open patron_local" in advice, advice)
+
+# --- the gate itself
+check("a state that is not wary lets the work begin", _refusal(_World(interest=0.5)) is None)
+check("a wary state with the patron's concern running lets the work begin",
+      _refusal(_World(running=("patron_local",))) is None)
+check("the patronage, institution and material categories are never asked for permission",
+      all(_refusal(_World(), category) == (True, None) for category in ("social", "institution", "foundation", "capability", "material")))
+opposed = _World(interest=-2.0, opposed_patron="patron_senatorial", fog=True, visible=(), running=("patron_local",))
+_allowed, text = _refusal(opposed)
+check("a state that actively opposes the work refuses it, and does not leak the senatorial patron's id under fog",
+      _allowed is False and "patron_senatorial" not in text and "protection" in text, text)
+opposed.state.household.protection = 100.0
+check("enough protection overrides an opposing state", _refusal(opposed) is None)
+
+# --- the policy screen groups by what is actually running
+reply = {"policy": {"auto_open": False, "auto_hire": True, "reserve_staff": False, "auto_replace_foreman": True},
+         "what_each_does": {name: "does %s" % name for name in ("auto_open", "auto_hire", "reserve_staff", "auto_replace_foreman")}}
+screen = _PROTO.render_policy(reply)
+# presentation: the policy screen heads the running and not-running switches
+check("the policy screen says which automatic behaviours are running now and which are only descriptions",
+      "RUNNING NOW:" in screen and "NOT RUNNING" in screen and "WOULD do if you turned it on" in screen, screen[:300])
+running_part, not_running_part = screen.split("NOT RUNNING")
+check("...with the running switches in the first group and the others in the second, each listed exactly once",
+      all(name in running_part for name in ("auto_hire", "auto_replace_foreman"))
+      and all(name in not_running_part for name in ("auto_open", "reserve_staff"))
+      and all(screen.count("  %-18s " % name) == 1 for name in reply["policy"]), screen)
+nothing = _PROTO.render_policy({"policy": {"auto_open": False}, "what_each_does": {}})
+# presentation: the policy screen says plainly that nothing is automatic
+check("with every switch off the screen says nothing is automatic", "nothing is automatic" in nothing, nothing)
+
+# --- "nothing else rests on this" has to mean zero
 check("only a genuine zero is described as having nothing resting on it",
-      _PROTO._rests_band(0).startswith("nothing else")
-      and not any(_PROTO._rests_band(_downstream_count).startswith("nothing else")
-                  for _downstream_count in (1, 2, 3, 4, 41, 301, 1201)),
-      [(_downstream_count, _PROTO._rests_band(_downstream_count)) for _downstream_count in (0, 1, 2, 3, 4)])
-check("...and the bands still climb, so the new rung did not break the "
-      "ladder",
-      len({_PROTO._rests_band(_downstream_count) for _downstream_count in (0, 1, 4, 41, 301, 1201)}) == 6,
-      [_PROTO._rests_band(_downstream_count) for _downstream_count in (0, 1, 4, 41, 301, 1201)])
+      _rests_band(0).startswith("nothing else")
+      and not any(_rests_band(count).startswith("nothing else") for count in (1, 2, 3, 4, 41, 301, 1201)),
+      [(count, _rests_band(count)) for count in (0, 1, 2, 3, 4)])
+check("...and the bands still climb, so the new rung did not break the ladder",
+      len({_rests_band(count) for count in (0, 1, 4, 41, 301, 1201)}) == 6)
 check("...and every band has a short form for the column that renders it",
-      all(_PROTO._rests_band(_downstream_count) in _PROTO._RESTS_SHORT
-          for _downstream_count in (0, 1, 4, 41, 301, 1201)),
-      sorted(_PROTO._RESTS_SHORT))
+      all(_rests_band(count) in _PROTO._RESTS_SHORT for count in (0, 1, 4, 41, 301, 1201)), sorted(_PROTO._RESTS_SHORT))
 
-# THE TWO PAIRS THEY ACTUALLY REPORTED, end to end through `why`.
-_s_rb = sim()
-for _a, _b in (("met_ore_crushing_sorting", "met_jigging_gravity"),
-               ("in2_tape_measure_steel",
-                "in2_baseline_measurement_apparatus")):
-    _rb_why = S._agent_dispatch(_s_rb, NODES, {"cmd": "why", "id": _a})
-    _rb_rests = _rb_why.get("how_much_rests_on_this")
-    check("%s does not claim nothing rests on it, when %s names it as a "
-          "missing prerequisite" % (_a, _b),
-          _a in NODES[_b]["pre"]
-          and not (_rb_rests or "").startswith("nothing else"),
-          (_rb_rests, NODES[_b]["pre"]))
+# the two pairs a player reported, through the part of `why` that states it (under fog, where it is banded)
+fog_game = SimpleNamespace(fog=True, goal="nowhere")
+for prerequisite, dependent in (("met_ore_crushing_sorting", "met_jigging_gravity"),
+                                ("in2_tape_measure_steel", "in2_baseline_measurement_apparatus")):
+    dependents = downstream_count(NODES, prerequisite)
+    rests = _explain_unlocks(fog_game, NODES, prerequisite, [], dependents)["how_much_rests_on_this"]
+    check("%s does not claim nothing rests on it, when %s names it as a missing prerequisite" % (prerequisite, dependent),
+          prerequisite in NODES[dependent]["pre"] and dependents >= 1 and not rests.startswith("nothing else"),
+          (rests, NODES[dependent]["pre"]))
+check("off fog `why` gives the exact count and no band",
+      _explain_unlocks(SimpleNamespace(fog=False, goal="nowhere"), NODES, "met_ore_crushing_sorting", [], 7)["downstream_count"] == 7
+      and _explain_unlocks(SimpleNamespace(fog=False, goal="nowhere"), NODES, "met_ore_crushing_sorting", [], 7)["how_much_rests_on_this"] is None)
 
-# AND THE CLASS: no node with a dependent may say nothing rests on it.
-_rb_kids = collections.Counter()
-for _k, _n in NODES.items():
-    for _p in _n["pre"]:
-        _rb_kids[_p] += 1
-_rb_liars = [_node_id for _node_id in sorted(NODES)
-             if _rb_kids[_node_id] > 0
-             and _PROTO._rests_band(_rb_kids[_node_id]).startswith("nothing else")]
-check("no node in the whole tree that something else depends on is "
-      "described as having nothing resting on it",
-      not _rb_liars, _rb_liars[:8])
+# and the class: no node with a dependent may say nothing rests on it
+dependents_of = collections.Counter()
+for node in NODES.values():
+    for prerequisite in node["pre"]:
+        dependents_of[prerequisite] += 1
+liars = [node_id for node_id in sorted(NODES)
+         if dependents_of[node_id] > 0 and _rests_band(dependents_of[node_id]).startswith("nothing else")]
+check("no node in the whole tree that something else depends on is described as having nothing resting on it",
+      not liars, liars[:8])
