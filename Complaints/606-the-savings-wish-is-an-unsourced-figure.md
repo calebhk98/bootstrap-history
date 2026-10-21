@@ -20,3 +20,7 @@ Part of Complaint 526 (The opening's income leaks saving, so the economy opens a
 Britain around 1700 was several times national income and mostly land, and coin a small share (Gregory King for
 England). So a wish to hold several years of income is not implausible; what the opening lacks is the asset, land
 titles at a price (538, 551). Household-level multiples from probate: no source found.
+
+## Research needed
+
+- Household-level wealth held per head or per household as a multiple of annual income in pre-modern societies, by class: probate inventories (England 1300 onward, Rome's Egyptian papyri and testaments, Han tomb inventories, Norse estate records), dowry records, and economic-history estimates (Allen, Broadberry, Scheidel). No source has been opened for this yet; the national figure is sourced in `Complaints/reports/research-pre-modern-interest-rates.md`.

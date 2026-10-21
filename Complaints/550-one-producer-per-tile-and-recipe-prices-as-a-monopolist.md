@@ -35,3 +35,7 @@ several-fold (savings offered fell and loans asked rose; not traced), a thin sit
 scarcity price far above cost, iron opened at its floor, and `economy_innovator_pricing` swung with the schedule's
 slicing. The merge is reverted on `economy-accounting-and-speed`; both branches are kept. Entry aggregates still
 price as takers.
+
+## Research needed
+
+- How many independent workshops one recipe at one tile stood for in the periods the civilisations cover, per recipe class (a grain farm, a smithy, a mill, a mine, a furnace): crew size and plant scale as physical data, from archaeology and economic history (for example excavated workshop counts, Roman Egypt and Pompeii workshop surveys, Han iron foundry sizes, Domesday mills per settlement). The opening's producers cannot be split into a crowd until this datum exists per recipe. Nothing has been opened for this yet.
