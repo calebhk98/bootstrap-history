@@ -75,6 +75,8 @@ def switch_trades(state: MarketState, inputs: YearInputs, clearings: Mapping, re
                   for trade in sources}
         vacancies = {trade for trade in destinations
                      if (area, trade) in clearings and clearings[(area, trade)].vacant_hours > 0.0}
+        # a switcher trains first, so a destination is weighed by its income after training (capped at the long-run
+        # training cost), not by today's scarcity wage; a source is weighed by what it pays today (Complaint 678)
         later_income: Dict[str, float] = {}
         planned: Dict[str, tuple] = {}   # source -> (later income it was planned on, odds of each target per band)
         stale = destinations   # trades whose income after training must be re-read (enrolling changes it)
