@@ -2,7 +2,6 @@
 
 Moved from the complaint file. Figures and line numbers here are as of the time they were written and may be stale; the complaint carries the current state.
 
-**Status:** fixed in part: items 1 to 3 changed (see Changes); the rate and the founder's line in a full-length game are not re-measured
 
 Measured on a fresh `rome_100ad` game, default kit (`poor_scholar`), seed 1, opened with the tests' short spin-up
 (`ROME_SPIN_UP_YEARS=3,2`, a full cold spin-up is minutes; re-measure with the full one):

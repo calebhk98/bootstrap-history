@@ -2,7 +2,6 @@
 
 Moved from the complaint file. Figures and line numbers here are as of the time they were written and may be stale; the complaint carries the current state. The wheat-labour figures of pass 5 (150 hours, then 554) are superseded by passes 6 and 7 (Columella read in the primary).
 
-**Status:** open
 
 Owner direction (2026-10-20): a figure needs a source someone read; "recalled" is not a source. The data and the
 declared constants carry many figures marked as recalled (confidence D), from the herd rows (532) to the savings

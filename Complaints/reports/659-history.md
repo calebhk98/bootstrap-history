@@ -2,7 +2,6 @@
 
 Moved from the complaint file. Figures and line numbers here are as of the time they were written and may be stale; the complaint carries the current state.
 
-**Status:** fixed on branch tool-fallback-and-iron-site-room (the full opened-game smith count was not re-measured: a cold spin-up does not finish inside the two-minute rule; re-measure with `national_trade_population("smith")` on `sim(civ="rome_100ad")`)
 
 Found in deep extraction 3 (640). In an opened `rome_100ad` game the labour core's people of the smith trade read
 about a thousandth of a person, against tens of thousands in an unopened game; `start horse_collar` is then refused
