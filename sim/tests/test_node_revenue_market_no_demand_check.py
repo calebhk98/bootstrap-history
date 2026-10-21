@@ -1,6 +1,6 @@
-"""PINS CURRENT BEHAVIOUR, Complaints/710: a founder concern's takings are its physical yearly output at the ask the
+"""PINS CURRENT BEHAVIOUR, Complaints/668: a founder concern's takings are its physical yearly output at the ask the
 home sellers show, with no check that buyers exist for that quantity at that price. The rule is called on built
-baskets (sim/engine/node_revenue_market.py, sim/world/plant_figures.py), not a game. Fix this test with 710."""
+baskets (sim/engine/node_revenue_market.py, sim/world/plant_figures.py), not a game. Fix this test with 668."""
 QUICK_TOPIC = True
 
 import unittest
