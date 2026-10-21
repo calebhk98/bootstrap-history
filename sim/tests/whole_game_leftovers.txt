@@ -29,7 +29,6 @@ complaints_09_16
 concern_volume
 country_literacy
 craftsmen_wording
-crew_is_the_recipes_trades
 cross_screen_consistency
 dashboard_history_cap
 demographics
