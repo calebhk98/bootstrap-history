@@ -8,7 +8,8 @@ from .harness import *  # noqa: F401,F403
 
 from sim.engine import year_phases
 from sim.engine.saveload import load_state, save_state
-from sim.geography.api import tile_facts, tile_owners
+from sim.agents import api as agents_api
+from sim.geography.api import settlement, tile_facts, tile_owners
 from sim.ui.proto import command_registry, dispatch_armies
 
 TOPIC_SECONDS = 900
@@ -73,6 +74,22 @@ check("scenario: a disbanded army's soldiers are free again", game.army_records(
 # ---- an attack on a tile of a state nobody plays: it raises a defence, the battle is fought, the tile follows the result
 game.transfer_tile(border[0] if border else target, han, "core", "scenario: a frontier tile of the rival's")
 frontier = border[0] if border else target
+# captives (Complaint 648): the hooks the battle and the conquest call add people to the winner's bonded stratum
+rome_bonded = [actor for actor in game.actors.of_kind("stratum") if actor.is_bonded() and actor.country_key() == rome][0]
+members_before = rome_bonded.record.members
+taken = game.take_captives_from_battle(rome, han, 1000.0, frontier)
+check("scenario: the winner's bonded stratum takes a share of the beaten side's losses as captives",
+      taken > 0.0 and abs(taken - agents_api.captives_from_losses(1000.0)) < 1e-9
+      and abs(rome_bonded.record.members - members_before - taken) < 1e-9, (taken, members_before, rome_bonded.record.members))
+settled_tile = max(game.tiles_owned_by(han), key=lambda tile: settlement.population_share(game.tiles_owned_by(han), tile))   # a tile with people on it
+taken_conquest = game.take_captives_from_conquest(rome, han, settled_tile)
+check("scenario: a tile taken by force gives a share of its people as captives",
+      taken_conquest > 0.0 and rome_bonded.record.members > members_before + taken, taken_conquest)
+check("scenario: captives are logged with the winner first and their cause",
+      [(row["actors"], row["cause"]) for row in game.state.economy.world_events if row["kind"] == "captives"][-2:]
+      == [([rome, han], "battle"), ([rome, han], "conquest")],
+      [row for row in game.state.economy.world_events if row["kind"] == "captives"])
+rome_bonded.record.members = members_before
 attacker = game.raise_army(rome, 30000.0, home_tile)
 game.order_army(rome, attacker.army_id, frontier)
 han_force, rome_force = game.owner_force(han), game.owner_force(rome)
@@ -95,6 +112,11 @@ if won:
           and game.campaign_store()["held_since"][frontier]["by"] == rome)
 else:
     check("scenario: a tile not won stays the rival's", game.tile_owner(frontier) == han and frontier in han_profile.home_tiles)
+captive_rows = [row for row in game.state.economy.world_events if row["kind"] == "captives"]
+check("scenario: captives are taken only by a winner (Complaint 648), by cause, and only where its society keeps bonded people",
+      all(row["facts"]["people"] > 0.0 and row["actors"][0] in (rome, han) and row["cause"] in ("battle", "conquest")
+          for row in captive_rows) and (not won or any(row["cause"] == "conquest" and row["actors"] == [rome, han]
+                                                       for row in captive_rows)), captive_rows)
 check("scenario: both states' forces fell by what their armies lost",
       game.owner_force(han) <= han_force and game.owner_force(rome) <= rome_force
       and game.owner_force(han) + game.owner_force(rome) < han_force + rome_force)

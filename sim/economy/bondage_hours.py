@@ -77,3 +77,68 @@ def deliver(hours_hired: Dict[AgentId, Dict[str, float]], placement: Placement) 
 def works_of_producers(record) -> Callable[[AgentId], Optional[AgentId]]:
     """Employer -> the owner of its works: a producer's owner, or the employer itself when it is no producer."""
     return lambda employer: record.producers[employer].owner if employer in record.producers else employer
+
+
+def deliver_held(hours_hired: Dict[AgentId, Dict[str, float]], placement: "HeldPlacement") -> None:
+    """Book the hours worked by held bonded people as hired hours of their holders."""
+    for employer, by_trade in placement.hired.items():
+        rows = hours_hired.setdefault(employer, {})
+        for trade, hours in by_trade.items():
+            rows[trade] = rows.get(trade, 0.0) + hours
+
+
+def hold(held: Dict[str, Dict[str, Dict[AgentId, float]]], bought: Mapping[Tuple[str, str], Mapping[AgentId, float]]) -> None:
+    """Record the bought bonded people each employer holds, by tile and trade (bonded_purchase.settle)."""
+    for (tile, trade), by_employer in sorted(bought.items()):
+        rows = held.setdefault(tile, {}).setdefault(trade, {})
+        for employer, people in sorted(by_employer.items()):
+            rows[employer] = rows.get(employer, 0.0) + people
+
+
+@dataclasses.dataclass
+class HeldPlacement:
+    offers: List[LabourOffer]
+    bids: List[LabourBid]
+    hired: Dict[AgentId, Dict[str, float]]          # employer -> trade -> hours worked by the people it holds
+    keep: List[Tuple[AgentId, AgentId, float]]      # (employer, cohort, money): the keep the holder owes for those hours
+
+
+def place_held(held: Dict[str, Dict[str, Dict[AgentId, float]]], workers: Callable[[str, str], float],
+               offers: Sequence[LabourOffer], bids: Sequence[LabourBid], hours_per_worker: float,
+               keep_per_worker_year: Mapping[str, float], area_of: Callable[[str], str]) -> HeldPlacement:
+    """The hours of bought bonded people are their holders': for each (tile, trade) the people held (no more than the
+    trade's workers there, so deaths and retirements thin them) work for the employer that holds them, off the
+    market, as far as that employer bids hours for the trade there. They come off the offers of the households the
+    workers live in, in proportion, and the holder pays the keep of the people working for it, which the hours no
+    longer earn their households."""
+    new_offers, new_bids = list(offers), list(bids)
+    hired: Dict[AgentId, Dict[str, float]] = {}
+    keep: List[Tuple[AgentId, AgentId, float]] = []
+    for tile in sorted(held):
+        area = area_of(tile)
+        for trade in sorted(held[tile]):
+            available = workers(area, trade)
+            for employer in sorted(held[tile][trade]):
+                people = min(held[tile][trade][employer], available)
+                held[tile][trade][employer] = people
+                available -= people
+                want = people * hours_per_worker
+                for slot, bid in enumerate(new_bids):
+                    if want <= 1e-12:
+                        break
+                    if bid.employer != employer or bid.trade != trade or bid.area != area or bid.hours <= 0.0:
+                        continue
+                    offered = sum(offer.hours for offer in new_offers if offer.trade == trade and offer.area == area)
+                    taken = min(want, bid.hours, offered)
+                    if taken <= 1e-12:
+                        continue
+                    cut = taken / offered
+                    for index, offer in enumerate(new_offers):
+                        if offer.trade == trade and offer.area == area and offer.hours > 0.0:
+                            keep.append((employer, offer.worker, offer.hours * cut / hours_per_worker * keep_per_worker_year.get(area, 0.0)))
+                            new_offers[index] = dataclasses.replace(offer, hours=offer.hours * (1.0 - cut))
+                    new_bids[slot] = dataclasses.replace(bid, hours=bid.hours - taken)
+                    rows = hired.setdefault(employer, {})
+                    rows[trade] = rows.get(trade, 0.0) + taken
+                    want -= taken
+    return HeldPlacement(new_offers, new_bids, hired, keep)

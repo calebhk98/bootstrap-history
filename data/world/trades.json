@@ -272,6 +272,8 @@
       "family": "craft",
       "note": "Water-mill builder. Scarce wherever milling by water is already established; the scarcest useful trade you can hire.",
       "training_years": 5,
+      "taught_from": "carpenter",
+      "taught_from_source": "Wikipedia, 'Millwright' (opened): 'Originally, millwrights were specialized carpenters who completely designed and constructed mills'; Fairbairn's millwright used 'the axe, the hammer, and the plane'. Smiles, Lives of Boulton and Watt: Murdock's father was a millwright; Soho's engine erectors came from millwright stock.",
       "tool_basket": [
         "timber",
         "iron"

@@ -139,6 +139,7 @@ class YearReport:
     graduated: Dict[AreaId, Dict[TradeId, float]] = dataclasses.field(default_factory=dict)
     left_work: Dict[AreaId, float] = dataclasses.field(default_factory=dict)
     formed: Dict[AreaId, Dict[TradeId, Dict[str, float]]] = dataclasses.field(default_factory=dict)   # first hands of an empty trade by route (formation.py)
+    bonded_lots: list = dataclasses.field(default_factory=list)   # BondedLot rows: bonded people bought, from where, at what ask and carriage (bonded_worth.py)
 
     def clearing(self, trade: TradeId, area: AreaId) -> Optional[Clearing]:
         for each in self.clearings:

@@ -26,7 +26,7 @@ from .types import AgentId, CurrencySpec, Loan, LoanRequest, TileId, TradeId
 # the record's fields whose annotation names an AgentId (a test reads the source and holds this list to it)
 AGENT_KEYED_FIELDS = ("cohorts", "producers", "merchants", "remembered_defaults", "credit_losses", "loss_rates", "losses_seen", "property_income",
                       "expansion_runs", "worn_runs", "titles", "bondage", "lent_by_borrower", "credit_granted", "banks", "shares",
-                      "last_dividends", "capital")
+                      "last_dividends", "capital", "bonded_held")
 
 # the stores `to_record` writes sorted by key, and so a load reads back in that order
 SAVED_SORTED_FIELDS = ("cohorts", "producers", "merchants", "titles", "tenancies", "bondage", "tax_history", "banks", "shares",
@@ -71,6 +71,7 @@ class EconomyRecord:
     tenancies: Dict[TileId, List[Dict[str, Any]]] = field(default_factory=dict)   # tile -> rows of tenant, lessor, share, arrears
     cleared_hectares: Dict[TileId, float] = field(default_factory=dict)   # tile -> ground cleared and taken up, added to its cropland (titles_ground.py)
     bondage: Dict[AgentId, Dict[str, Any]] = field(default_factory=dict)   # household cohort -> creditor, debt left, years left (bondage.py)
+    bonded_held: Dict[TileId, Dict[TradeId, Dict[AgentId, float]]] = field(default_factory=dict)   # tile -> trade -> employer -> bought bonded people it holds (bondage_hours.py)
     tax_history: Dict[str, Dict[str, float]] = field(default_factory=dict)   # form -> last year's base and the state's own take (tax_farming.py)
     tax_farms: Dict[str, Dict[str, Any]] = field(default_factory=dict)   # form -> this year's farmer and price; empty between years
     margin_years: Dict[str, int] = field(default_factory=dict)           # market_key -> years in a row the expected price stood above the entry price
@@ -151,6 +152,7 @@ class EconomyRecord:
             "tenancies": {tile: [dict(row) for row in rows] for tile, rows in sorted(self.tenancies.items())},
             "cleared_hectares": dict(sorted(self.cleared_hectares.items())),
             "bondage": {cohort: dict(bond) for cohort, bond in sorted(self.bondage.items())},
+            "bonded_held": plain(self.bonded_held),
             "tax_history": {form: dict(row) for form, row in sorted(self.tax_history.items())},
             "margin_years": self.margin_years,
             "hours_hired": self.hours_hired,
@@ -202,6 +204,7 @@ class EconomyRecord:
             tenancies={tile: [dict(row) for row in rows] for tile, rows in record["tenancies"].items()},
             cleared_hectares=dict(record["cleared_hectares"]),
             bondage={cohort: dict(bond) for cohort, bond in record["bondage"].items()},
+            bonded_held=plain(record["bonded_held"]),
             tax_history={form: dict(row) for form, row in record["tax_history"].items()},
             margin_years=dict(record["margin_years"]),
             hours_hired=dict(record["hours_hired"]),

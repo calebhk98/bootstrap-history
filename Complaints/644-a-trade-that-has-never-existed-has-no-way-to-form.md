@@ -1,21 +1,13 @@
 # A trade that has never existed has no way to form
 
-**Status:** open - four stages built (first hands from the nearest trades, migration and bonded purchase, a converted cohort's early slice); the owners' sale rule, a bonded price and a learning curve on output are open
+**Status:** partly - first hands, migration, an owners' ask and a buyers' bid for bonded people, held bonded, carried between areas by merchants and a learning-curve rule are built; a trade whose work is a service, wiring the curve into the economy's hours and spoilage, and more `taught_from` links are open (see What is wrong now)
 
-**What is wrong now.** When a technique needs a trade nobody in the world practises (the first engine fitters, machinists,
-printers), the first people now come from the nearest practised trade, by migration, conversion or bonded purchase. What is
-still missing:
+**What is wrong now.**
 
-- Owners' sale rule and a price from the person's remaining service: `BONDED_SALE_SHARE_PER_YEAR`
-  (`sim/agents/bonded_sale.py`) is a labelled share with `retire`; the price is a labelled number of years of the area's
-  ask floor (`sim/economy/bonded_purchase.py`). People bought arrive with the bonded stratum's trade only and are not held
-  bonded in the economy's workforce (they work as free hands); a country without home tiles offers none.
-- A trade no recipe books hours to (optician) has no task description, so no source trade covers it and it gets no early hands.
-- The early slice of a converted cohort is a flat share (`SOURCE_TASK_FLOOR_FRACTION`), not a proficiency rising by
-  repetition (Wright 1936; Thornton and Thompson), so the error rate and the floor of output are not modelled; the
-  teacher's proficiency does not cap the first cohort's start.
-- `taught_from` links in `data/world/trades.json` are few (count with a `python3 -c` over the file); the registry link
-  overrides the nearest trade when present. Conversion is carried out only through `train`.
+- A trade no recipe books hours to (optician, scholar, soldier, sailor, dockworker, master) has no task description, so no source trade covers it and it trains at the full apprenticeship with no early hands. The service it sells has no demand side the formation reads: its first hands should come from the people who demand the service (an unmet need for it pulling hands in), and no data or economy reading names that demand yet.
+- The learning-curve rule exists (`sim/labour/learning_curve.py`: Wright's curve with a floor, an error share that falls with proficiency, pooled spillover) but nothing keeps cumulative output per (trade, actor) or applies it to the hours a recipe books or to spoilage, and `train_check` does not pass the teacher's proficiency to `trade_first_hands.cohort_rows`. `SOURCE_TASK_FLOOR_FRACTION` therefore stays a labelled heuristic.
+- `taught_from` in `data/world/trades.json`: one link was added with an opened source (millwright from carpenter). No opened source supports electrician, engraver or the other trades without a link; Wikipedia's Electrician page says only that electricians "were originally people who demonstrated or studied the principles of electricity".
+- Bought bonded people arrive in the area's workers at a trade; the engine holds them for the buyer's works through `record.bonded_held`, but a person is a headcount (strata count all ages, the labour core working people), and the keep the holder pays is the area's wage floor, not a measured cost of keeping a bonded household.
 
 **What it would take.** Output and error following a learning curve with a physical floor for any actor and trade; a
 first cohort whose start is capped by the teacher; the owners' sale rule from the owner's own choice. Tests call the
@@ -27,22 +19,34 @@ narrow tasks; it was slow and early work was poor. Skill distance between occupa
 (Gathmann and Schonberg). Learning curves: Wright 1936 with quality change and spillovers (Thompson; Thornton and Thompson).
 How an existing trade spreads is in `research-how-trades-spread-and-skill-premia.md`.
 
-**Research needed.** A supply-side source for bonded or captive labour as a market (what a trained slave craftsman sold
-for against an untrained one in the Roman or Atlantic market, and how owners chose to sell), to replace the typed sale share.
-See also 648, which needs the same supply side.
+**Research needed.** A sourced price of a trained bonded craftsman against an untrained one (Roman or Atlantic sale records): Scheidel
+2005 (JRS 95, read in the Gwern copy) says only that "Republican slave prices are unknown" (note 82) and defers real prices to a later
+paper, so the owner's ask here is derived from the present value of the hours (Complaint 644 item 3 above), not checked against
+sale records. See also 648.
 
 ## Built (one line each)
 
 1. `sim/labour/trade_formation.py`: task shares per trade from the hours recipes book to it; distance is the cosine angle
    between shares; `first_people_plan` orders migration, conversion and bonded purchase; `train` and `train_check` pick the
-   nearest practised trade as source and take time and teacher hours from the uncovered share. The three flat teaching
-   constants are retired. Tests: `test_trade_formation.py`.
+   nearest practised trade as source and take time and teacher hours from the uncovered share. Tests: `test_trade_formation.py`.
 2. `sim/labour/market/formation.py` runs after migration each year for every (area, trade) with vacancies and no one of the
-   trade: migrants from areas with a route in, then bonded people where the area allows. Teachers are any actor that holds
-   the knowledge (`teachers_of`, `teacher_present`). Tests: `test_trade_formation_routes.py`.
-3. Bonded purchase is wired into a game (`sim/agents/bonded_sale.py`, `sim/engine/economy_port_bondage.py`,
-   `sim/economy/bonded_purchase.py`). Tests: `test_bonded_purchase.py`.
-4. A conversion cohort is written as two training records (`sim/labour/trade_first_hands.py`): an early slice equal to the
-   covered share of the new trade's tasks joins after the floor share of a full apprenticeship, the rest at the end, so a
-   founder can start such work inside the stall window (`STALL_YEARS_BEFORE_ABANDONMENT`). Tests: `test_trade_first_hands.py`,
-   `test_trade_first_hands_scenario.py`.
+   trade: migrants from areas with a route in, then bonded people. A trade with some hands and vacancies left buys bonded people
+   too. Tests: `test_trade_formation_routes.py`.
+3. Owners' sale rule and the bonded price (`sim/labour/market/bonded_worth.py`, `formation_bonded.py`): a person is worth the
+   present value of their hours over a working life at the household discount rate (`worth_of_hours`); a trained person's hour
+   fetches the trade's wage where it is practised, never less than the floor wage times the trade's training premium
+   (`trained_wage_per_hour`), so a trained person is dearer than an untrained one. The owner's ask is that worth where the owner is
+   (its practised wage or the premium wage); the buyer's bid is that worth where the buyer is; a person is bought where ask plus
+   carriage stays under the bid. `BONDED_SALE_SHARE_PER_YEAR` and `BONDED_PRICE_YEARS_OF_FLOOR` are deleted: every member of a
+   bonded stratum is on offer at its owners' price, and how many are bought is the buyers' vacancies. Tests: `test_bonded_worth.py`,
+   `test_trade_formation_routes.py`, `test_bonded_purchase.py`.
+4. Held bonded (`sim/economy/bondage_hours.py` `hold`, `place_held`; `bonded_purchase.settle`): the employers that bid for the
+   trade where the people were bought hold them (`record.bonded_held`); each year their hours come off the households' offers and
+   work for the holder, off the market, as far as the holder bids for them; the holder pays their keep to the households whose hours
+   were taken. Deaths thin the holding (no more held than the trade's workers there). Tests: `test_bonded_worth.py`.
+5. A conversion cohort is written as two training records (`sim/labour/trade_first_hands.py`), now capped at the teacher's
+   proficiency (`capped_by_teacher`). Tests: `test_trade_first_hands.py`, `test_learning_curve.py`.
+6. `sim/labour/learning_curve.py`: Wright's curve (`unit_time_ratio`, `proficiency`, `cumulative_for_proficiency`), an error share
+   with a floor above zero, pooled spillover. `LEARNING_RATE` is sourced (Wright 1936 as stated on en.wikipedia.org/wiki/Learning_curve,
+   opened; Thompson, econwpa 9712001, 12 to 24 per cent per doubling in shipbuilding). Tests: `test_learning_curve.py`.
+7. Data: `millwright` `taught_from: carpenter` with `taught_from_source` (Wikipedia 'Millwright', opened).
