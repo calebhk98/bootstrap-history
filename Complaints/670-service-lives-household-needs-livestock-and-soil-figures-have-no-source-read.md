@@ -40,3 +40,20 @@ Split from 646 (figures recalled rather than read; closed). Each entry below is 
 
 **Test.** `sim/tests/test_recalled_figures_sourced.py` holds what was sourced; `sim/tests/test_constants_retirement.py` keeps
 the `retire` fields.
+
+**Pass 6 (source-recipes-and-service-lives).** Sourced and opened:
+
+- `sheep_kg` and `goat_kg` offtake per head-year now read from FAO, "Production parameters of ruminants in traditional systems"
+  (fao.org/4/Y4176E/y4176e08.htm): the mean offtake rate for sheep and for goats in traditional systems. The herd recipes in
+  `data/production/95_herds.json` were recomputed from the rows (the herd-joint-products test checks they follow).
+- Sheep and goat dressing fractions: the Montana State University Extension (Sanders County) dressing-percentage note, opened as a
+  PDF, now cited as read; value unchanged. Okello, "A survey of the productivity and functions of goats in Uganda"
+  (fao.org/4/x5464b/x5464b16.htm, Tables 1-3, opened) gives a wider and higher range for Ugandan goats, so the goat fraction is
+  at the low end of a traditional-system survey; kept.
+
+Searched and not sourced: service lives (manorial-account searches found no tool replacement interval; a Swedish thesis on iron
+use in farming turned up in search but its host redirects and could not be opened; Langdon on carts not reachable); sheep fleece
+(search summaries give roughly one to two kilograms for indigenous breeds from papers on Omani, Iraqi and Egyptian sheep, none
+opened); zebu cattle dressing (Ethiopian and Malawian studies in search summaries only, not opened). Left: every service life at
+confidence D, the fleece, stocking, salt, hide, horn and fat shares, milk of goats, spoilage rows, household needs and the soil
+heuristics (soil stays with 543). Status stays open.

@@ -4,9 +4,9 @@
   "wool_kg": {
    "outputs": {
     "wool_kg": 100.0,
-    "meat_kg": 276.0,
-    "hide_kg": 48.0,
-    "fat_kg": 24.0,
+    "meat_kg": 287.04,
+    "hide_kg": 49.92,
+    "fat_kg": 24.96,
     "manure_kg": 14454.0
    },
    "inputs": {
@@ -43,10 +43,10 @@
   "milk_kg": {
    "outputs": {
     "milk_kg": 5000.0,
-    "meat_kg": 256.5,
-    "hide_kg": 48.0,
-    "fat_kg": 13.5,
-    "horn_kg": 2.4,
+    "meat_kg": 228.7125,
+    "hide_kg": 42.8,
+    "fat_kg": 12.0375,
+    "horn_kg": 2.14,
     "manure_kg": 12045.0
    },
    "inputs": {
