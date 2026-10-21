@@ -272,6 +272,7 @@
   },
   "starting_techs": [
     "fud_cattle_herd",
+    "fud_pig_herd",
     "fud_goat_herd",
     "fud_sheep_flock",
     "ag2_composting",

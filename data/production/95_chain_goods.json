@@ -1,0 +1,37 @@
+{
+ "_note": "Finished goods between a raw material and a household need or a producer's capital (Complaints/533): nails and roof tiles. Each has a maker recipe here and users named in its yield_basis.",
+ "materials": {
+  "nails_kg": {
+   "outputs": {
+    "nails_kg": 1.0
+   },
+   "inputs": {
+    "iron_bar_kg": 1.1
+   },
+   "labour_hours": {
+    "smith": 12.0
+   },
+   "unit_dimension": "mass",
+   "basis": "per kg of hand-forged iron nails",
+   "yield_basis": "MEAN NAIL: the Inchtuthil hoard is 875,400 hand-forged nails 'in four sizes, weighing approximately seven tonnes' (ANU Classics Museum catalogue, https://slll.cass.anu.edu.au/classics-museum/catalogue/objects/five-roman-nails-201214, opened), so a mean nail is about 8 g; five sampled nails run 3.0 g to 212.5 g, 63 to 260 mm. It fixes the unit (a kilogram is about 125 nails), not the bar or the hours. BAR: 1.1 kg of bar a kilogram of nails (scale loss and cut-off heads) and 12 smith hours a kilogram (about 0.1 hour a nail) are LABELLED HEURISTICS, conf D, no source found; retire: Complaints/533 when a smithy account or a replica forging time is read. USERS: carts (data/production/99_carriers.json) and timber frames (97_building_services.json).",
+   "conf": "D",
+   "requires_node": null
+  },
+  "roof_tile_kg": {
+   "outputs": {
+    "roof_tile_kg": 1.0
+   },
+   "inputs": {
+    "ceramic_kg": 1.05
+   },
+   "labour_hours": {
+    "potter": 0.1
+   },
+   "unit_dimension": "mass",
+   "basis": "per kg of fired clay roof tile",
+   "yield_basis": "A roof tile is fired earthenware (ceramic_kg's basis names tile). BREAKAGE: 1.05 kg of fired ware a kilogram of laid tile, and 0.1 potter hour a kilogram of extra moulding and trimming beyond the ware's own hours, are LABELLED HEURISTICS, conf D, no source found; retire: Complaints/533. No weight of a whole Roman tegula or imbrex was found: the Wessex Archaeology Dorchester report (wessexarch.co.uk, 13_Ceramic_build_mat.pdf, opened) tabulates imbrex and tegula sherds by count and weight only, which says nothing about a whole tile. USERS: brick and stone walls, which are roofed in tile (97_building_services.json).",
+   "conf": "D",
+   "requires_node": "cap_heat_0700"
+  }
+ }
+}

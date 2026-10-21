@@ -162,5 +162,29 @@
   "up_hours": 0,
   "note": "The knowledge and kit to net and snare wildfowl on the lake and marsh: meat, fat and down from the same birds. The ceiling is the geography wild-game rows. Recipe down_kg in data/production/95_mesoamerican_stock_and_game.json.",
   "unheld_reason": "no other start's fowling is modelled as a source of meat and down"
+ },
+ {
+  "id": "fud_pig_herd",
+  "name": "A herd of pigs",
+  "cat": "livestock",
+  "kind": "RESOURCE",
+  "pre": [],
+  "holds": {
+   "pig_kg": 6000
+  },
+  "traits": [
+   "food"
+  ],
+  "kb": "75_agriculture_food.md",
+  "ph": 10,
+  "lab": {
+   "labourer": 100
+  },
+  "mat": {},
+  "build_yrs": 0,
+  "adopt_yrs": 0,
+  "up_hours": 0,
+  "note": "A herd of about a hundred pigs: pork, lard and skins from the same animals. It cannot be researched; the pigs have to be held.",
+  "unheld_reason": "the society had no pigs to start with; the founder brings them by trade or an expedition"
  }
 ]
