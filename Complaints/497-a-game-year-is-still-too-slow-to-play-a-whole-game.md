@@ -85,6 +85,31 @@ Related: 473 (the spin-up does not settle, so a longer spin-up cannot replace sh
 - Round 4: the unsold-stock search clears without building fills; the year is flat again.
 - Round 5: a warm-year profile; the allowed small readers were cut; merchants are a fifth to a quarter of the year.
 
+## Round 6: the unsold search ends at a shared floor without its trials; buyers prepared on demand
+
+Branch `year-speed-clearing`. All exact: the sorted-key dump of the save after a warm-up and three or four warm
+stepped Rome years (`harness.sim()`) is byte-identical before and after.
+
+- `unsold_search.search_asks`: when every searched ask has one floor and the buyers want, at that floor's effective
+  price, less than the searched offers hold (each of a distinct seller and tile), every higher level leaves one of
+  them unsold, so the bisection ends at the floor and its trials are skipped
+  (`unsold_search.unsold_above_the_floor`). Measured: in a warm year about 1300 markets search, the condition holds in
+  all but a few dozen, and it removes about 16000 of 16700 trials. Test: `test_unsold_search_floor_shortcut` (random
+  books, against a copy of the bisection without the shortcut).
+- `seller_offers.strategic_offers` merges the bids and prepares the buyers when a seller first searches, not before
+  (about two thirds of markets have no searching seller); `Buyers.schedule` is built when a market with offers reads it;
+  a market with no searchable floors skips the unsold check. Tests: `test_strategic_offers_lazy_buyers`,
+  `test_buyers_schedule_lazy`.
+
+Measured (CPU per warm year, years after one warm-up, alternating an exported copy of the old tree and this one, same
+machine): old 6.57, 6.46, 6.37; new 6.25, 6.01, 5.99, about 0.4 s or six percent. Command: `time.process_time` around
+`Sim.step()` of `harness.sim()`.
+
+Left, measured by `cProfile` of a warm year: `strategic_offers` is `best_reservation` (about 0.5 s of a profiled 15 s
+year) and unit costs; `clear` is mostly `solve_price` and per-market setup, over half of its calls trade nothing;
+`close_agents` is `producers_close.close_year` per producer (expectations and expected run), flat; settlement posting
+and `producers.plan`/`offers` are outside the files this round owned.
+
 ## numpy tried, not adopted (owner asked for a measurement, 2026-10-21)
 
 Branch `numpy-speed-probe` (kept, not merged) vectorises the merchants' route search, the largest single phase of a
