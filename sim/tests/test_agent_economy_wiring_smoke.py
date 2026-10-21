@@ -1,9 +1,7 @@
-"""The game on the agent economy (sim/economy/, through sim/engine/economy_port*.py): prices and wages
-come from it and move, money is conserved, the state's tax grain no longer swamps the wheat market
-(Complaint 383), a saved game resumes the same economy, and every civilisation plays on it.
-
-Seven named scenarios: each is wiring between the engine and the economy package, whose own rules are tested in
-sim/tests/test_economy_*.py."""
+"""SMOKE: the game runs on the agent economy (sim/economy/, through sim/engine/economy_port*.py): prices and wages come
+from it and move, money is conserved, the state's tax grain no longer swamps the wheat market (Complaint 383), a saved
+game resumes the same economy, and every civilisation plays on it. Seven wiring scenarios between the engine and the
+economy package, whose own rules are tested in sim/tests/test_economy_*.py."""
 from .harness import *  # noqa: F401,F403
 import math
 import os

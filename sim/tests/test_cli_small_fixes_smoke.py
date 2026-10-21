@@ -1,4 +1,4 @@
-"""Tests for CLI small fixes (complaints 155, 156, 157, 168)."""
+"""SMOKE: CLI small fixes (complaints 155, 156, 157, 168): a new --session needs --civ, `goals` marks the default, `help commands` and `--help` read for a player; each runs the command line in process."""
 import json
 import os
 import tempfile
