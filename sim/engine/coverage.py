@@ -8,6 +8,8 @@ in) until the share asked for is reached or the nation can fill no more.
 """
 from sim.refusal import Refusal
 
+from . import coverage_rules
+
 
 class CoverageMixin:
 
@@ -26,22 +28,23 @@ class CoverageMixin:
         """How many people one unit of the work serves: its yearly staff hours over the hours each person needs."""
         spec = self.mechanic(node_id, "coverage")
         hours = sum((self.nodes[node_id].get("annual_labour_hours") or {}).values())
-        return hours / spec["staff_hours_per_person_year"]
+        return coverage_rules.people_per_unit(hours, spec["staff_hours_per_person_year"])
 
     def people_who_can_use(self, node_id):
         """The people the work could serve: the nation's, or the share of them its `eligible_share` names."""
-        return max(1.0, self.population.total * self.mechanic(node_id, "coverage").get("eligible_share", 1.0))
+        return coverage_rules.people_who_can_use(self.population.total,
+                                                 self.mechanic(node_id, "coverage").get("eligible_share", 1.0))
 
     def coverage_share(self, node_id):
         """The share of the people who can use the work that it serves while it is open, 0 to 1."""
         if not self.running(node_id):
             return 0.0
-        people = self.institution_units(node_id) * self.people_per_unit(node_id)
-        return min(1.0, people / self.people_who_can_use(node_id))
+        return coverage_rules.coverage_share(True, self.institution_units(node_id), self.people_per_unit(node_id),
+                                             self.people_who_can_use(node_id))
 
     def units_for_coverage(self, node_id, share):
         """The units that serve `share` of the people who can use the work."""
-        return share * self.people_who_can_use(node_id) / self.people_per_unit(node_id)
+        return coverage_rules.units_for_coverage(share, self.people_who_can_use(node_id), self.people_per_unit(node_id))
 
     def coverage_row(self, node_id):
         """What the `rollout` listing says of one work."""
@@ -62,10 +65,11 @@ class CoverageMixin:
             return False, "you have not worked out how to do that yet"
         wanted = self.units_for_coverage(node_id, share)
         have = self.institution_units(node_id)
-        if wanted - have < 0.02:
+        to_open = coverage_rules.rollout_units(wanted, have)
+        if to_open is None:
             return False, Refusal("already_covered", "%s already covers %d%% of the people" % (
                 self.nodes[node_id]["name"], round(100 * self.coverage_share(node_id))))
-        ok, text = self.open_venture(node_id, units=wanted - have if have > 0.0 else wanted)
+        ok, text = self.open_venture(node_id, units=to_open)
         if not ok:
             return False, text
         return True, "%s. It now covers %d%% of the people." % (text.rstrip("."), round(100 * self.coverage_share(node_id)))

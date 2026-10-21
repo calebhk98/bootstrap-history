@@ -5,6 +5,7 @@ from sim.constants import declare
 from sim.refusal import LogLine
 from . import money_units
 from . import automation_audit
+from . import coverage_rules
 from .mortality_shock import cut_cohorts
 from .wage_scarcity import wage_index_of
 from sim.engine.state import SimulationState, ActiveProjectState
@@ -1174,15 +1175,9 @@ class Sim(ModStoresMixin, RealPriceRatiosMixin, CoinRevaluationMixin, MechanicsM
         weights' sum should not be able to hand `self._demography.Population.
         step` a burden outside the range it declares valid).
         """
-        unlocked_weight = sum(
-            self._tech_effects[tech_id].get("population", 0.0) * self.disease_burden_held(tech_id)
-            for tech_id in self.DISEASE_BURDEN_TECH_IDS)
-        total_weight = sum(
-            self._tech_effects[tech_id].get("population", 0.0)
-            for tech_id in self.DISEASE_BURDEN_TECH_IDS)
-        if total_weight <= 0.0:
-            return self._demography.PRE_INDUSTRIAL_DISEASE_BURDEN
-        return max(0.0, min(1.0, 1.0 - unlocked_weight / total_weight))
+        weights = {tech_id: self._tech_effects[tech_id].get("population", 0.0) for tech_id in self.DISEASE_BURDEN_TECH_IDS}
+        return coverage_rules.disease_burden(weights, self.disease_burden_held,
+                                             self._demography.PRE_INDUSTRIAL_DISEASE_BURDEN)
 
     def _refresh_demographic_indexes(self, year):
         """Say why the wage bill moved, if it moved enough to be worth
