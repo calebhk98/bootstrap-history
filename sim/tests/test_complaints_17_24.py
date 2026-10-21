@@ -1,56 +1,53 @@
-"""Regression coverage for playtest complaints 17 through 24."""
+"""Regression coverage for playtest complaints 17 through 24: each rule is called with inputs built here; one scenario
+check keeps the mortality shock wired to the displayed population."""
 from .harness import *  # noqa: F401,F403
-from .plague_fixture import ANTONINE, BLACK_DEATH, with_hazard
 
+from sim.engine.staff_loss_waves import wave_exposure
+from sim.ui.proto import tree_filters
 
-# A mortality shock changes the screens and hiring multiplier immediately.
-# WIRING MILESTONE 4 (docs/architecture/WIRING_MILESTONE_4.md): a hazard
-# cuts self.population's own cohorts directly (see core.py's
-# _apply_population_mortality_shock), and pop_scale/wage_index are computed
-# properties that read the gap this opens - there is no separate deficit
-# scalar to poke, so this test drives
-# the same shock through the real mechanism instead of poking a scalar.
+# --- SCENARIO (wiring): a mortality shock reaches the displayed population at once. The wage half is held by
+# demographics_and_plague ("wage_index > normal * 1.2" after a shock) and the share removed by cross_system_invariants.
 _plague = sim(civ="rome_100ad")
 _plague._apply_population_mortality_shock(0.28)
 _plague._refresh_demographic_indexes(_plague.year)
 _population = _plague.labour.population_report()
-check("plague mortality immediately lowers displayed current population",
+check("scenario: plague mortality immediately lowers displayed current population",
       _population["population"] <
       _population["reference_population_before_simulated_changes"], _population)
-check("plague mortality immediately raises wages",
-      _plague.wage_index > _plague._wage_index_base, _plague.wage_index)
 
-# The risk response says that staff loss is an independently repeated wave.
-_risk = S._agent_dispatch(with_hazard(sim(civ="rome_100ad"), ANTONINE), NODES, {"cmd": "risk"})
-_antonine = next(hazard for hazard in _risk["knowledge_risk"]["known_hazards_ahead"]
-                 if "Antonine" in hazard["name"])
-check("plague risk exposes annual wave cadence and cumulative exposure",
-      _antonine["staff_loss_wave_chance_per_year"] == 0.32
-      and _antonine["remaining_annual_wave_checks"] > 1
-      and _antonine["chance_of_at_least_one_staff_loss_wave"] > 0.32,
-      _antonine)
+# --- the staff-loss wave exposure over the years left (the rule behind the `risk` reply)
+_wave = 0.32
+_exposure = wave_exposure(_wave, 0.1, 165, 180, 100)
+check("a hazard still ahead is checked once for every year it runs",
+      _exposure["remaining_annual_wave_checks"] == 16, _exposure)
+check("a hazard under way is checked only for the years left",
+      wave_exposure(_wave, 0.1, 165, 180, 170)["remaining_annual_wave_checks"] == 11)
+check("a hazard past its last year still counts one check, never zero",
+      wave_exposure(_wave, 0.1, 165, 180, 400)["remaining_annual_wave_checks"] == 1)
+check("the chance of at least one wave is one minus every year passing, and exceeds a single year's chance",
+      abs(_exposure["chance_of_at_least_one_staff_loss_wave"] - round(1.0 - (1.0 - _wave) ** 16, 4)) < 1e-12
+      and _exposure["chance_of_at_least_one_staff_loss_wave"] > _wave, _exposure)
+check("the expected cumulative loss is one minus every wave sparing, each wave costing its share",
+      abs(_exposure["expected_cumulative_staff_loss"] - round(1.0 - (1.0 - _wave * 0.1) ** 16, 4)) < 1e-12, _exposure)
+check("a hazard that costs no staff exposes none",
+      wave_exposure(_wave, 0.0, 165, 180, 100)["expected_cumulative_staff_loss"] == 0.0)
 
-# Bare rush is a preview; bounded or explicitly forced forms remain actions.
-_rush = sim(capital=1_000_000)
-_before = dict(_rush.active)
-_preview = S._agent_dispatch(_rush, NODES, {"cmd": "rush"})
-check("bare rush previews and does not mutate the portfolio",
-      _preview.get("preview") and _preview.get("nothing_changed")
-      and _rush.active == _before, _preview)
+# --- DUPLICATE: bare rush previews and changes nothing. Held by test_rush_fiscal_controls ("rush preview changes no
+# state", "rush preview says nothing was changed").
 check("typed rush force is an explicit action", _PT("rush force")[0] ==
       {"cmd": "rush", "force": True}, _PT("rush force"))
 
-# Phrase search does not require words to be adjacent in the display name.
-_lap = sim(capital=1_000_000)
-_lap.done.update(NODES["prc_lapping_plate"]["pre"])
-_lap.done.add("ch2_process_bayer")
-_lap.done.add("patron_local")
-_lap.operating.add("patron_local")
-_found = S._agent_available(_lap, NODES, {"find": "lapping plate", "all": True})
-check("available phrase search includes a currently legal lapping plate",
-      "prc_lapping_plate" in {node_entry["id"] for node_entry in _found["available"]}, _found)
+# --- phrase search does not require words to be adjacent in the display name
+_names = {"prc_lapping_plate": {"name": "Lapping with cast-iron plate and abrasive compound", "cat": "machine_tools",
+                                "pre": []},
+          "other": {"name": "Weaving with a loom", "cat": "textiles", "pre": []}}
+check("a phrase search matches a name that holds its words apart",
+      tree_filters.matches_find(_names, "lapping plate", "prc_lapping_plate"))
+check("...and not a name that holds neither word", not tree_filters.matches_find(_names, "lapping plate", "other"))
+check("...and not a name that holds only one of them",
+      not tree_filters.matches_find(_names, "lapping loom", "prc_lapping_plate"))
 
-# The two power projects require the capabilities claimed by their prose.
+# --- the two power projects require the capabilities claimed by their prose (data, no game)
 _hp_pre = set(NODES["en_high_pressure_engine"]["pre"])
 check("high-pressure engine requires the established safe steam chain",
       {"steam_high_pressure", "thermodynamics_theory", "mat_bulk_steel"}

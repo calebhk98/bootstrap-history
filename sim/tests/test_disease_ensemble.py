@@ -1,11 +1,12 @@
-"""Whole Mexica games on the agent economy, checked against the validation envelope of
+"""BASELINE VALIDATION (CLAUDE.md 4.2), slow-only: whole Mexica games on the agent economy, checked against the validation envelope of
 Complaints/reports/epidemic-model-research.md section 11.5 (Complaint 386's evidence command).
 
 SLOW: each game builds the whole agent economy and plays decades. Left out of the quick tier; run with
 `python3 -m sim.tests --slow --only disease_ensemble`. Population and disease come from the engine's own
 farming and demography step, not from the year's market close, so the close (nearly all of a step's cost) is
 left out of the years played; the fast stand-in for the same gates is test_disease_century.py. Prints the people per year of each
-seed so a run can be compared before and after a change. The gates are ranges for a distribution, not targets."""
+seed so a run can be compared before and after a change. The gates are ranges for a distribution, not targets. They are the sourced band of the report; a failure reopens
+Complaint 386 (near extinction under repeated waves)."""
 
 QUICK_TOPIC = False
 
@@ -46,7 +47,10 @@ def play(seed):
     return people, game.state.disease
 
 
-class EnsembleTest(unittest.TestCase):
+class EnsembleValidationTest(unittest.TestCase):
+    """Validation against the sourced band; a failure reopens Complaint 386."""
+
+
     @classmethod
     def setUpClass(cls):
         cls.runs = {seed: play(seed) for seed in SEEDS}
@@ -61,23 +65,23 @@ class EnsembleTest(unittest.TestCase):
 
     def test_a_pathogen_reaches_every_seed(self):
         for seed in SEEDS:
-            self.assertTrue(self.runs[seed][1].introduced, "seed %d" % seed)
+            self.assertTrue(self.runs[seed][1].introduced, "seed %d: validation against the sourced band failed, reopens Complaint 386" % seed)
 
     def test_no_seed_nears_extinction_within_twenty_years_of_contact(self):
         for seed in SEEDS:
             counts = self.after_contact(seed)
-            self.assertGreater(min(counts[:20]) / counts[0], MAXIMALIST_SURVIVING_SHARE_AFTER_30_YEARS, "seed %d" % seed)
+            self.assertGreater(min(counts[:20]) / counts[0], MAXIMALIST_SURVIVING_SHARE_AFTER_30_YEARS, "seed %d: validation against the sourced band failed, reopens Complaint 386" % seed)
 
     def test_the_fall_stays_inside_the_published_span(self):
         for seed in SEEDS:
             counts = self.after_contact(seed)
-            self.assertLessEqual(1.0 - min(counts) / counts[0], PUBLISHED_DECLINE_HIGHEST, "seed %d" % seed)
+            self.assertLessEqual(1.0 - min(counts) / counts[0], PUBLISHED_DECLINE_HIGHEST, "seed %d: validation against the sourced band failed, reopens Complaint 386" % seed)
 
     def test_disease_killed_people_and_not_everyone(self):
         for seed in SEEDS:
             deaths = sum(self.runs[seed][1].deaths.values())
-            self.assertGreater(deaths, 0, "seed %d" % seed)
-            self.assertLess(deaths, 5 * self.runs[seed][0][0][1], "seed %d" % seed)
+            self.assertGreater(deaths, 0, "seed %d: validation against the sourced band failed, reopens Complaint 386" % seed)
+            self.assertLess(deaths, 5 * self.runs[seed][0][0][1], "seed %d: validation against the sourced band failed, reopens Complaint 386" % seed)
 
 
 if __name__ == "__main__":

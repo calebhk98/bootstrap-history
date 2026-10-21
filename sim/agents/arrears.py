@@ -12,10 +12,11 @@ def total(record: Any) -> float:
 	return sum(record.arrears.values())
 
 
-def owe(record: Any, lines: List[Line], share: float) -> None:
-	"""Book the part of each pay line the year's purse did not cover as owed."""
+def owe(record: Any, lines: List[Line], share: float, owed_fraction: float = 1.0) -> None:
+	"""Book the part of each pay line the year's purse did not cover as owed, as far as the state chose to defer it
+	(`owed_fraction` of what is unpaid; the rest is cut and never owed)."""
 	for line in lines:
-		unpaid = line.money * (1.0 - share)
+		unpaid = line.money * (1.0 - share) * owed_fraction
 		if line.name in PAY_LINES and unpaid > 0.0:
 			record.arrears[line.name] = record.arrears.get(line.name, 0.0) + unpaid
 

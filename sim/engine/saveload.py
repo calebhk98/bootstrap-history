@@ -42,10 +42,14 @@ def state_text(sim):
 	held_demand = sim.household._material_demand_cache
 	sim.state.holdings.material_demand_at_last_throttle = None if held_demand is None else dict(held_demand)
 
-	# dumps (not dump, not indent) so the C encoder does the work
 	# the agent economy's record is most of the file and already plain JSON: the encoder takes it as it is
 	with verbatim(sim.state.economy.agent_economy.get("record")):
-		return json.dumps(serialize_state(sim.state), default=str, separators=(",", ":"))
+		return state_json(serialize_state(sim.state))
+
+
+def state_json(serialized):
+	"""JSON text of a serialized state: dumps (not dump, not indent) so the C encoder does the work."""
+	return json.dumps(serialized, default=str, separators=(",", ":"))
 
 
 def restore_state_text(sim, text):

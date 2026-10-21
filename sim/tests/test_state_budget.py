@@ -9,6 +9,8 @@ import tempfile
 
 from .harness import *  # noqa: F401,F403
 
+from sim.agents.policy import make_policy
+
 
 
 from sim.engine.agents_port import SimWorld
@@ -202,6 +204,8 @@ def short_of(unfunded, firms=0, protection=None):
         world = SimWorld(game)  # soldiers leave production, so revenue is read afresh
     need = sum(line.money for line in budget.standing_lines(world))
     game.state_treasury().money = need - world.state_revenue() - unfunded
+    game.state_treasury().record.policy_kind = "fiscal_levy_first"   # this state meets a shortfall by levying what it can see
+    game.state_treasury().decision_policy = make_policy("fiscal_levy_first")
     one_year(game)
     world = SimWorld(game)
     household_scale = world.visible_taxpayers()[0][0]

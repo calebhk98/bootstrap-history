@@ -3,6 +3,10 @@ plague), the wage premium they leave behind, the food technologies that
 slowly raise the population, and the save/load round-trip of the cohort
 state all of this depends on.
 
+The wage rule is called with figures (wage_scarcity). Every other check drives a hazard through a game on purpose
+(`_shocks`, the wage cascade's log line, the recovery over decades, a save round trip, the hazard line's clauses):
+named scenarios.
+
 Regrouped from test_round10.py - see CLAUDE.md's test-file reorganisation
 note. Checks moved verbatim; each one's own comment explains the break it
 guards.
@@ -10,6 +14,7 @@ guards.
 from .harness import *  # noqa: F401,F403
 from sim.refusal import cause_of, facts_of
 from .plague_fixture import ANTONINE, BLACK_DEATH, with_hazard
+from sim.engine.wage_scarcity import wage_index_of
 
 
 def plague_sim(civ, **options):
@@ -63,9 +68,14 @@ check("a hedge against plague shields your own staff, not the whole "
 
 # --- scarcer labour is dearer labour immediately: the event and the economy
 # screen must not disagree for the remainder of the year in which it fires.
+check("wages rise by the scarcity elasticity times the shortfall in the population scale (rule, no game)",
+      abs(wage_index_of(1.0, 2.0, 0.55, 1.0) - (1.0 + 2.0 * 0.45)) < 1e-12
+      and wage_index_of(1.0, 2.0, 1.0, 1.0) == 1.0 and wage_index_of(1.0, 2.0, 1.4, 1.0) == 1.0
+      and wage_index_of(1.5, 2.0, 1.0, 1.0) == 1.5)
+check("a 45% mortality shock raises the wage index by more than a fifth at the engine's own elasticity",
+      wage_index_of(1.0, S.Sim.WAGE_SCARCITY_ELASTICITY, 0.55, 1.0) > 1.2, S.Sim.WAGE_SCARCITY_ELASTICITY)
 _shock_wage = s.wage_index
-check("wages rise immediately after a mortality shock, because the labour "
-      "market just got smaller",
+check("scenario: wages rise immediately after a mortality shock, because the labour market just got smaller",
       _shock_wage > _normal_wage * 1.2, (_normal_wage, _shock_wage))
 s.year = 1349
 s._demographic_recovery(1349)

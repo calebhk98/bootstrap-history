@@ -44,6 +44,10 @@ rather than a module:
     given year (see Sim._farm_year_weather_seed's own docstring).
 
 The seam where Sim demographic recovery feeds the real harvest to Population.step, so famine falls out of land, labour and weather. Needs sim/engine (unittest-style).
+
+Every test here is a scenario of that seam or a baseline validation (CLAUDE.md 4.2), and is named so; the rules on
+either side are in test_agriculture.py and test_demography.py (that children and the old starve before working
+age adults is test_demography's `test_children_and_elderly_are_more_vulnerable_than_working_age`).
 """
 import statistics
 import unittest
@@ -99,13 +103,8 @@ def _first_year_after_land_loss():
         return _FIRST_YEAR_LOSS[0]
     shocked = _rome_sim(events=False)
     shocked.farm_land.hectares *= 0.15   # a land loss, not a famine flag
-    before_children = shocked.population.children
-    before_working_age = shocked.population.working_age
     shocked._demographic_recovery(101)
-    step = shocked._last_demographic_step
-    record = {"ratio": step.nutrition_ratio,
-              "child_death_share": step.deaths_children / before_children,
-              "working_age_death_share": step.deaths_working_age / before_working_age}
+    record = {"ratio": shocked._last_demographic_step.nutrition_ratio}
     _FIRST_YEAR_LOSS.append(record)
     return record
 
@@ -137,7 +136,7 @@ class VariesWithWeatherTests(unittest.TestCase):
     actually move on its own, from nothing but a fresh weather draw.
     """
 
-    def test_food_and_nutrition_ratio_are_not_a_constant(self):
+    def test_scenario_food_and_nutrition_ratio_are_not_a_constant(self):
         # A century, because correlated weather makes bad years rare (Complaints/49).
         ratios = _unshocked_century()["ratios"]
         # NOT a flat distinct-value count: nutrition_ratio is structurally
@@ -174,11 +173,10 @@ class VariesWithWeatherTests(unittest.TestCase):
         # present but inert and this test would pass against the old cap.
         self.assertGreater(max(ratios), 1.0, ratios)
 
-    def test_gross_harvest_is_a_real_computed_number_not_zero(self):
-        century = _unshocked_century()
-        flows = century["first_year_flows"]
+        # and the harvest behind it is a real computed number
+        flows = _unshocked_century()["first_year_flows"]
         self.assertGreater(flows.gross_harvest_kg, 0.0, flows)
-        self.assertGreater(century["first_year_hectares"], 0.0)
+        self.assertGreater(_unshocked_century()["first_year_hectares"], 0.0)
 
 
 class NoFamineWithoutCauseTests(unittest.TestCase):
@@ -213,7 +211,7 @@ class NoFamineWithoutCauseTests(unittest.TestCase):
     own, because it only ever runs one or ten years).
     """
 
-    def test_mean_nutrition_ratio_over_many_unshocked_years_is_plausible(self):
+    def test_baseline_validation_mean_nutrition_ratio_over_many_unshocked_years_is_plausible(self):
         ratios = _unshocked_century()["ratios"]
         mean_ratio = statistics.fmean(ratios)
         # Loose band: a calibration sanity check ("is the farm roughly the
@@ -233,7 +231,7 @@ class NoFamineWithoutCauseTests(unittest.TestCase):
         # MAXIMUM_INTAKE_MULTIPLE_OF_SUBSISTENCE, 1.75.
         self.assertLess(mean_ratio, 1.1, ratios)
 
-    def test_population_declines_but_does_not_run_away_to_extinction(self):
+    def test_baseline_validation_population_declines_but_does_not_run_away_to_extinction(self):
         century = _unshocked_century()
         start_total = century["start_total"]
         never_hit_zero_consumption = all(ratio >= 1e-6 for ratio in century["ratios"])
@@ -266,7 +264,7 @@ class FamineHasAPhysicalCauseTests(unittest.TestCase):
     depressed fertility, with no `famine` flag anywhere in the chain.
     """
 
-    def test_losing_most_of_the_farmland_drops_nutrition_ratio_hard(self):
+    def test_scenario_losing_most_of_the_farmland_drops_nutrition_ratio_hard(self):
         control_ratio = _unshocked_century()["ratios"][0]
 
         shocked_ratio = _first_year_after_land_loss()["ratio"]
@@ -275,7 +273,7 @@ class FamineHasAPhysicalCauseTests(unittest.TestCase):
         self.assertLess(shocked_ratio, control_ratio - 0.3,
                         (control_ratio, shocked_ratio))
 
-    def test_the_same_land_loss_costs_more_lives_than_the_unshocked_control(self):
+    def test_scenario_the_same_land_loss_costs_more_lives_than_the_unshocked_control(self):
         century = _unshocked_century()
         control_start = century["start_total"]
         control_end = century["total_after"][110]
@@ -294,23 +292,6 @@ class FamineHasAPhysicalCauseTests(unittest.TestCase):
         self.assertGreater(shocked_loss, control_loss + 0.05,
                            (control_loss, shocked_loss))
 
-    def test_children_and_elderly_absorb_more_of_a_famine_than_working_age(self):
-        # The SAME age-differentiated vulnerability
-        # _apply_population_mortality_shock already uses for a staff_loss
-        # hazard also applies to a nutrition-driven famine, because both
-        # ultimately go through demography.Population.step's excess-
-        # mortality machinery (see Population.step and
-        # _excess_mortality_multiplier in sim/world/demography.py) - one
-        # mechanism, two different ways of arriving at a low
-        # nutrition_ratio, not two different mechanisms.
-        shocked = _first_year_after_land_loss()
-        # Both are the SAME kind of figure - this year's deaths in a band
-        # divided by that band's own starting count - so they are directly
-        # comparable shares, and STARVATION_VULNERABILITY_CHILD (1.6x) >
-        # STARVATION_VULNERABILITY_WORKING_AGE (1.0x, the reference) says
-        # the child share must come out higher.
-        self.assertGreater(shocked["child_death_share"], shocked["working_age_death_share"])
-
 
 class DeterminismTests(unittest.TestCase):
     """The weather feeding this wiring is a pure function of (civilisation
@@ -322,7 +303,7 @@ class DeterminismTests(unittest.TestCase):
     years, must land on bit-identical population counts.
     """
 
-    def test_two_independent_sims_reach_the_same_population(self):
+    def test_scenario_two_independent_sims_reach_the_same_population(self):
         # The shared century run is the first sim; one fresh sim is the second.
         first_children, first_working_age, first_elderly = _unshocked_century()["cohorts_after"][110]
         second_children, second_working_age, second_elderly = _replayed_ten_years()["cohorts_at_110"]
@@ -330,7 +311,7 @@ class DeterminismTests(unittest.TestCase):
         self.assertEqual(first_working_age, second_working_age)
         self.assertEqual(first_elderly, second_elderly)
 
-    def test_a_forced_shortfall_year_reproduces_exactly_on_replay(self):
+    def test_scenario_a_forced_shortfall_year_reproduces_exactly_on_replay(self):
         # Same idea as the whole-run check above, but specifically across
         # the one operation this milestone's own brief singled out as the
         # historical trap for exactly this kind of state (WIRING_MILESTONE_

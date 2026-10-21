@@ -50,6 +50,22 @@ nitre-bed sizes), `sim/engine/territory_required.py` (the landless refusal), `co
 `test_complaint_147_project_materials`), the loss-making and creditor-seizure closures (`test_business_review`), the foreman
 choice (`test_business_crew_rule`).
 
+## Applied: audit batch 6 (test_fog_leaks_and_typed_wording through test_hire_reports_count_found)
+
+Rules are called on inputs the test builds; whole-game checks that remain are named `_scenario` files next to them.
+Extractions into plain functions: `scrub_hidden_ids` (`sim/engine/fog.py`), `sim/world/weather_pooling.py` (the cell correlation
+factor and the pooled harvest multiplier), `remaining_floor_years` (`sim/engine/hazard_hedge_timing.py`), `patron_dies`
+(`sim/engine/patron_death.py`), `dependants_not_carried` (`sim/engine/economy_debt_service.py`).
+New quick rule files: `test_typed_front_end` (every typed-line check, taken from the fog, founder-sells and wording files),
+`test_trader_routes_rules`, `test_losable_nodes`; the guns-on-walls, hazard-label and staff-survival rules are classes in
+`test_defence_stores`. Deleted as held elsewhere: `test_hazard_messages_match_mechanics` (now `test_defence_stores`), the
+harbour, voyage and failed-voyage checks of `gated_works_close_in_play` (`test_running_gates`, `test_held_and_running`,
+`test_failed_voyage_loses_what_it_risked`), the magazine, crew and powder-stock whole-game checks of
+`guns_on_walls_need_powder` (`test_defence_stores`). Baseline validation: `test_granary_persistence_validation` (the century
+and nutrition bounds, failing on Complaint 44). Kept as scenarios, with no rule function to pull out: `founder_and_firm_agree`,
+`founder_job_game`, `founder_research_shared_path`, `goal_leverage`, `forest_timber_whole_game`, `hire_reports_count_found`,
+`hash_seed_order` (determinism).
+
 ## Applied: audit batch 5 (test_economy_reads_tile_yield through test_fog_leak3)
 
 Rules now called on inputs the test builds, quick tier: `test_firm_borrows_to_enter` (`stake_split`, entry on credit, copy

@@ -43,10 +43,7 @@ class CapitalMarketMixin:
     def market_rate(self):
         """The yearly market rate: the agent economy's credit market's, or the civilisation's starting rate while
         the economy opens."""
-        rate = self.economy.agent_rate()
-        if rate is not None:
-            return capital_market.bounded_rate(float(self.civ["starting_interest_rate"]), rate)
-        return float(self.civ["starting_interest_rate"])
+        return capital_market.market_rate_answered(float(self.civ["starting_interest_rate"]), self.economy.agent_rate())
 
     def market_credit_room(self, actor_id):
         """What lenders will advance one borrower beyond what the others owe; None before they have met (the

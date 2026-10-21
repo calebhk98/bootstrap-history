@@ -1,12 +1,18 @@
 """help_registry: help is generated from the command registry, so no command can be missing from it."""
 from .harness import *  # noqa: F401,F403
 
-_help_sim = sim()
+from types import SimpleNamespace
+from sim.ui.proto.help import _agent_help
+
+QUICK_TOPIC = True
+
+# the pages read only what a stub game holds; the dispatch wiring of `help` is one line in the dispatcher
+_help_sim = SimpleNamespace(fog=False, civ={"name": "Testland"}, cfg={"start_year": 100, "horizon_years": 50},
+                            nodes=NODES, goal=GOAL, end_year=150)
 
 
 def _dispatch_help(topic=None):
-    reply = S._agent_dispatch(_help_sim, NODES, {"cmd": "help", "topic": topic})
-    return reply["help"]
+    return _agent_help(_help_sim, topic)
 
 
 def _mentioned(text, word):

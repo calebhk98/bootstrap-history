@@ -1,7 +1,8 @@
-"""What fog may not leak (ids, prerequisites, enumeration through typos) and how typed commands are parsed and answered."""
+"""Scenario (Complaint 640): what a fogged game may not leak (ids, prerequisites, enumeration through typos), answered through the agent protocol.
+
+The typed-line parsing rules are in test_typed_front_end.py."""
 from .harness import *  # noqa: F401,F403
 from .agent_command_helpers import ask_agent, with_end_year, fogged_game, pristine_game
-from sim.ui.proto.typed import parse_typed as _parse_typed
 
 # 4. `path` under fog said "you have not discovered this" about a technology
 #    the same session reported as done.
@@ -24,13 +25,6 @@ _fy = [ask_agent(_fy_game, cmd="step", years=1.99), ask_agent(_fy_game, cmd="ste
 check("a fractional number of years is refused, not silently rounded",
       _fy[0].get("ok") is False and _fy[1].get("ok") is True,
       [result.get("ok") or result.get("error") for result in _fy])
-
-# --- the England weird-play tester -------------------------------------------
-# 2. Every documented three-word buy lost its material to the typed parser, so
-#    the whole mining subsystem was unreachable from the front door.
-_mq = [_parse_typed("quote mine coal 500")[0], _parse_typed("quote coal 500")[0]]
-check("the mining commands the help gives actually parse",
-      all(command and command.get("material") == "coal" and command.get("n") == 500 for command in _mq), _mq)
 
 # --- the England break tester -------------------------------------------------
 # 1. THE FOG EXPLOIT. `bounty` checked prerequisites before it checked whether
@@ -86,22 +80,6 @@ check("fog hides the road to the goal, not the goal",
       and _gh[1].get("goal") is None and _gh[1].get("goal_in_words"),
       (_gh[1].get("goal"), _gh[1].get("goal_in_words")))
 
-# 4. downstream_count is asked for once a row now, so it cannot be the old
-#    per-call closure over all 2,831 nodes.
-_t0 = time.time()
-for _k in list(NODES)[:400]:
-    S.downstream_count(NODES, _k)
-check("what rests on a node is cheap enough to put in a table",
-      time.time() - _t0 < 1.0, "%.2fs for 400" % (time.time() - _t0))
-
-# S23/S24, both in the typed front end.
-_command, _error = _parse_typed("step 1; step 1")
-check("two commands on one line are refused, not half-executed",
-      _command is None and "one command per line" in (_error or ""), (_command, _error))
-_upper = ask_agent(sim(civ="england_1300"), cmd="why", id=(_parse_typed("why AG2_MARLING")[0] or {}).get("id", "AG2_MARLING"))
-check("a typed id is not case-sensitive when the game knows the right one",
-      _upper.get("ok") is not False and "cost" in _upper, list(_upper)[:6])
-
 # A3. `why cap_heat_1300` on Han reported done:true and
 # missing_prerequisites:["cap_heat_1100"] in the same object. Nothing a player
 # reads should be able to say a thing they have is missing something.
@@ -125,16 +103,6 @@ check("a misspelling cannot be used to enumerate the tree through the fog",
       all("transistor" not in (result.get("error") or "").replace("'transistor'", "")
           and "vacuum_tube" not in (result.get("error") or "") for result in _fg),
       [result.get("error", "")[:80] for result in _fg])
-
-# 4. Eleven ids carry capitals, among them the whole cap_pure_2N..9N purity
-#    ladder on the critical path to germanium. Lowercasing what the player
-#    typed made them unreachable from the typed front end.
-_cap_game = sim()
-_cap_replies = [ask_agent(_cap_game, cmd="why", id=(_parse_typed("why " + word)[0] or {}).get("id", word))
-                for word in ("cap_pure_2N", "CAP_PURE_2N", "AG2_MARLING")]
-check("ids that carry capitals are reachable, and case is not the player's problem",
-      all(reply.get("ok") is not False and "cost" in reply for reply in _cap_replies),
-      [reply.get("error") for reply in _cap_replies])
 
 # --- the history notes must not rebuild the wall ----------------------------
 # Every dated hazard now carries a real historical note and England has
@@ -161,12 +129,6 @@ _msgs = {(response.get("error") or "").split("Did you mean")[0].strip() for resp
 check("a name you have not heard of and a name that does not exist read alike",
       len(_msgs) == 1, [message[:60] for message in _msgs])
 
-# The help shows {"cmd":"labour","trade":"smith"}, so `labour trade smith` is
-# the obvious typed reading of it - and was answered "no such trade: trade".
-_syn_command, _syn_error = _parse_typed("labour trade smith")
-check("the typed form of what the help shows actually works",
-      _syn_error is None and (_syn_command or {}).get("trade") == "smith", (_syn_command, _syn_error))
-
 # "Zero-cost nodes gate whole ages and are invisible... twice one of them was
 # the only thing between me and a branch." The two digest lists deduplicated
 # the wrong way round: the leverage column dropped anything that was also in
@@ -181,7 +143,3 @@ check("...and it really is the highest-leverage work available",
       _lev and S.downstream_count(NODES, _lev[0]) >= 50,
       [(node_id, S.downstream_count(NODES, node_id)) for node_id in _lev])
 
-# 4. `step abc` silently advanced a year while step 0 and step -5 were refused.
-_sa_command, _sa_error = _parse_typed("step abc")
-check("a step that is not a number is refused, not silently taken as one",
-      _sa_command is None and "not a number" in (_sa_error or ""), (_sa_command, _sa_error))
