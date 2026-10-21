@@ -73,7 +73,6 @@ plague_mitigation_realism
 plague_no_double_count
 player_choice_routes
 player_guidance_commands
-project_retry_and_risk
 state_budget
 state_notices
 state_spending

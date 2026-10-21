@@ -1,4 +1,5 @@
-"""project_retry_and_risk: regression checks, run individually with `--only project_retry_and_risk`."""
+"""SCENARIO: retry learning, the risk timeline, expected calendar years, the free-prerequisite hint and process-control relief on
+real games, through the Sim methods that own them. The banked-calendar arithmetic is rule-tested in test_retry_calendar."""
 from .harness import *  # noqa: F401,F403
 from sim.ui import protocol as _PROTO
 from sim.engine.industry_depth import RISK_SHARE_AT_FULL_DEPTH

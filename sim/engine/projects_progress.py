@@ -21,6 +21,7 @@ from sim.constants import declare
 from .completion_schedule import calendar_floor_years, earliest_completion_years, payment_schedule_years
 from .failure_diagnosis import failure_teaches
 from .industry_depth import depth_risk_multiplier
+from .retry_calendar import retry_calendar_retain
 from .trade_demand import trade_demand_table
 from .projects_precaution import chosen as precaution_chosen, relief_multiplier as precaution_relief, quote as precaution_quote
 
@@ -317,9 +318,7 @@ class ProgressMixin:
         # `attempt_index` only lets a projection ask about a hypothetical one.
         if attempt_index is None:
             attempt_index = self.state.projects.failed_attempts.get(node_id, 0)
-        if attempt_index <= 0:
-            return 0.0
-        return self.RETRY_CALENDAR_CAP * (1.0 - self.RETRY_CALENDAR_DECAY ** attempt_index)
+        return retry_calendar_retain(self.RETRY_CALENDAR_CAP, self.RETRY_CALENDAR_DECAY, attempt_index)
 
     # CONTROL RELIEF: Process controller cuts risk by 35% for process-control nodes.
     # Earned once, independent of failed_attempts. Nodes opt in via tree data.
