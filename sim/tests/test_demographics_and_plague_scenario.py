@@ -1,4 +1,4 @@
-"""Population-wide mortality shocks (the Black Death, the Antonine plague) driven through a game, and the save/load
+"""SCENARIO: Population-wide mortality shocks (the Black Death, the Antonine plague) driven through a game, and the save/load
 round trip of the cohort state they depend on.
 
 The rules are called with figures in test_mortality_shock_rules (the exposure a hedge leaves, the wage premium, the

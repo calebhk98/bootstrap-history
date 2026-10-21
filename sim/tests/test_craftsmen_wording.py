@@ -1,4 +1,4 @@
-"""craftsmen_wording: the diffusion and relief rules are called with figures built here (diffusion_rules, a fake hazard
+"""SCENARIO: craftsmen_wording: the diffusion and relief rules are called with figures built here (diffusion_rules, a fake hazard
 mixin); what stays through a game is named "scenario" or marked presentation. Run with `--only craftsmen_wording`."""
 from .harness import *  # noqa: F401,F403
 from .plague_fixture import ANTONINE, BLACK_DEATH, with_hazard

@@ -1,4 +1,4 @@
-"""early_playtest: regression checks from the first playtests, run with `--only early_playtest`.
+"""SCENARIO: early_playtest: regression checks from the first playtests, run with `--only early_playtest`.
 
 Complaint 640 audit: the rules moved out of this file. The cost factor, the quoted-cost money factor, the hazard relief,
 the value-weight clamp and trade availability are called with figures in test_civ_cost_and_hazard_relief_rules; the

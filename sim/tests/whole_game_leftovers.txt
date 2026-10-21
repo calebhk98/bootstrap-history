@@ -24,12 +24,6 @@ complaint_190_public_works
 complaint_190_transfers
 complaint_191_fuzzy_option_and_readme
 complaint_492_han_iron_monopoly
-craftsmen_wording
-cross_screen_consistency
-demographics
-demographics_and_plague
-early_playtest
-freight_domestic_haul
 freight_dues
 freight_money_ratio
 goals_several
