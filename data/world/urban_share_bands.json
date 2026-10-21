@@ -1,0 +1,22 @@
+{
+  "_doc": "Validation bands for the share of a civilisation's people living in towns at its start date (Complaints/reports/research-urban-share.md section 3). The simulator's computed share must fall inside its band; the band is a check, never an input. A civilisation with no band has no source found. `threshold` names what counts as a town, since sources differ.",
+  "bands": {
+    "rome_100ad": {
+      "low": 0.10, "high": 0.15, "threshold": "towns of roughly 5,000 or more",
+      "source": "Scheidel 2007, as quoted in Hanson and Ortman 2017, JRA 30 (the empire-wide 10 to 15 per cent was not found in the opened text; a lead, not a verified figure)",
+      "confidence": "D"
+    },
+    "england_1300": {
+      "low": 0.05, "high": 0.15, "threshold": "any town (upper) and towns over 10,000 (lower)",
+      "source": "Britnell, up to about 15 per cent in towns, via the Cambridge Urban History conclusion (search summary, not opened); all Europe under 5 per cent in 1300 for towns over 10,000, de Vries via Clark chapter 4 (opened)",
+      "confidence": "D"
+    },
+    "norse_900ad": {
+      "low": 0.005, "high": 0.03, "threshold": "towns",
+      "source": "Helle, Cambridge History of Scandinavia, chapter summary: barely over 0.5 per cent in the Viking Age, about 3 per cent at the end of the high Middle Ages (search summary, not opened)",
+      "confidence": "D"
+    },
+    "han_china_100ad": null,
+    "mexica_1500": null
+  }
+}

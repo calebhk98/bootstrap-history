@@ -26,7 +26,7 @@ class _Labour(PopulationMixin):
         household = types.SimpleNamespace(trades_created=set(), trade_schools={})
         self._world = types.SimpleNamespace(
             wages={trade: 1.0 for trade in families}, trades_absent=set(), trade_family=lambda trade: families[trade],
-            civ={"urban_fraction": URBAN_FRACTION}, trade_registry={"labourer": {"fallback": True}},
+            civ={"urban_fraction": URBAN_FRACTION}, urban_fraction=lambda: URBAN_FRACTION, trade_registry={"labourer": {"fallback": True}},
             state=types.SimpleNamespace(household=household, economy=types.SimpleNamespace(society_labour_hours={})),
             population=types.SimpleNamespace(working_age=WORKING, total=TOTAL))
 

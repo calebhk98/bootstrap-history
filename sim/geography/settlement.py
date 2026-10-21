@@ -131,3 +131,22 @@ def people_by_tile(stored_regions, total_people: float, held_tiles: List[str]) -
     held = sum(sum(bands) for bands in stored_regions.values())
     scale = total_people / held if held > 0.0 else 0.0
     return {tile: sum(bands) * scale for tile, bands in stored_regions.items()}
+
+
+def capacity_kcal_per_year(tile_id: str) -> float:
+    """The food energy a year a tile's land gives at a full stock under the reference crop technique."""
+    return _carrying_capacity(tile_id)
+
+
+def cropped_hectares(tile_id: str) -> float:
+    """Hectares of the tile cropped in a year under the reference crop technique (0 without one)."""
+    if _reference_crop_technique is None:
+        return 0.0
+    return float(queries.crop_site(tile_id, _reference_crop_technique.open_field_cropped_share).cropped_hectares)
+
+
+def reference_kcal_per_tonne() -> float:
+    """Food energy in a tonne of the reference crop's grain."""
+    if _reference_crop_technique is None:
+        raise ValueError("no reference crop technique is set")
+    return _reference_crop_technique.kcal_per_kg * 1000.0
