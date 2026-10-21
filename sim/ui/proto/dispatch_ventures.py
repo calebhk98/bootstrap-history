@@ -237,31 +237,11 @@ def _cmd_start(sim, nodes, cmd, ended):
     # would contradict `money`'s own "(none used)" reading of the same
     # moment.
     # Cash already has the materials paid at start taken out, so the gap is the instalments against it.
-    _gap = instalments - max(0.0, sim.capital)
-    if _gap > 0:
-        _lim = sim.credit_limit()
-        _after = -(min(0.0, sim.capital) - _gap)
-        out["on_credit"] = {
-            "nothing_is_borrowed_yet": (
-                "this is a forecast, not a receipt: credit only actually "
-                "draws down at step resolution, if cash runs short paying "
-                "this year's share. These figures are what happens if it "
-                "does, on today's numbers."),
-            "instalments_still_owed": instalments,
-            "materials_already_paid_from_cash": materials_paid_now,
-            "you_would_borrow": round(_gap, 1),
-            "interest_rate_percent": round(sim.debt_interest_rate() * 100, 1),
-            "estimated_annual_interest": round(
-                _gap * sim.debt_interest_rate(), 1),
-            "you_would_then_owe": round(_after, 1),
-            **sim.debt_service_forecast(_after),
-            "no_one_advances_past": round(_lim, 1),
-            "what_happens_there":
-                "past that limit every project in hand halts unfinished, "
-                "nobody funds new work for some years, and your creditors "
-                "take and sell what you are running - including things you "
-                "built long ago and had no debt against.",
-        }
+    _borrowing = credit_forecast.borrowing_forecast(
+        instalments, materials_paid_now, sim.capital, sim.credit_limit, sim.debt_interest_rate,
+        sim.debt_service_forecast)
+    if _borrowing is not None:
+        out["on_credit"] = _borrowing
     # THE AGGREGATE ANSWER, NOT A SECOND ONE. `on_credit` just above
     # already answers "can THIS project be financed" - correctly - by
     # comparing THIS project's own bill to cash on hand. What it cannot

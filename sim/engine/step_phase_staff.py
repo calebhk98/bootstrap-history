@@ -4,6 +4,7 @@ A part of the year's phases (core_step_phases.py); Sim inherits it through StepP
 import math
 
 from sim.refusal import LogLine
+from sim.labour.api import scholar_target
 from sim.world import demography
 from . import automation_audit
 from .units_prose import plain_number
@@ -148,7 +149,7 @@ class StaffPhaseMixin:
             # building the institutions staff_capacity() already credits
             # widens this same wall past that well before the goal is in
             # reach).
-            target_sc = min(sc_cap + extra * self.AUTO_HIRE_SCHOLAR_EXTRA_SHARE, self.labour.literate_capacity("scholar"))
+            target_sc = scholar_target(sc_cap, extra, self.AUTO_HIRE_SCHOLAR_EXTRA_SHARE, self.labour.literate_capacity("scholar"))
             desired_sc = self.state.household.scholars + (target_sc - self.state.household.scholars) * self.AUTO_HIRE_SCHOLAR_APPROACH_RATE
             target_ar = ar_cap + extra
             desired_ar = self.state.household.artisans + (target_ar - self.state.household.artisans) * self.AUTO_HIRE_ARTISAN_APPROACH_RATE
