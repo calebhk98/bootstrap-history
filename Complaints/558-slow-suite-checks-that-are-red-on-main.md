@@ -12,7 +12,7 @@ that commit. Re-run the same command for the current list; this section is repla
 
 ## Honest validations of open problems (stay red until the owner closes)
 
-- `baseline_fixture` (rate not settled), `baseline_rome_full_length` (rate not settled; the mint replaces a small share of the
+- `baseline_fixture` (rate not settled; the opening's grain stock is eaten through, the same runaway as the wheat price), `baseline_rome_full_length` (rate not settled; the mint replaces a small share of the
   coin that wears), `spin_up_money_supply_full_length` (money stock falls against wear; mint replacement negative),
   `real_output` (output per head after a population fall), `real_output_baseline` (goods far from baseline carry much of the
   basket), `economy_money_regimes_norse` (weighed-metal price level): 473, the opening that never settles.
@@ -43,6 +43,12 @@ that commit. Re-run the same command for the current list; this section is repla
 - `subsistence_staple_is_civilisation_data`: expected the staple's labour to move the floor more than wheat's, but land rent is
   priced in wheat (`solve_prices.land_rent_hours_per_hectare`), so wheat's sourced labour reaches every grain; now a rule test
   of the floor schedule (fixed).
+
+- `firm_count_whole_game_scenario` ("entry does not overshoot"): new on this branch after the credit market began to clear at
+  the opening; entry now fills niches faster than the check allows. Owner: 473 (the entry rule reads the unsettled opening's
+  margins); recheck once the opening settles before changing the check.
+- Baselines re-run on this branch (`--only baseline_fixture,baseline_rome_full_length,spin_up_money_supply_full_length,real_output_baseline,real_output_validation,occupational_distribution,farm_edges_scenario --topic-seconds 3000`):
+  the same reds as above, all 473 or 619; a population fall still raises output per head well above the undisturbed run.
 
 ## Timed out at the default topic limit
 
