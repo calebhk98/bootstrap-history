@@ -9,7 +9,7 @@ in the same order using only the price lookups that move. The results are identi
 import collections
 
 from sim.engine import solve_prices_core as core
-from sim.world.capital_market import capital_recovery_factor
+from sim.world.capital_market import stand_yearly_share
 
 
 class RecipePlan:
@@ -34,7 +34,8 @@ class RecipePlan:
             (tuple((capital_good.get("build_materials") or {}).items()),
              tuple(hours * wage_by_trade[trade]
                    for trade, hours in (capital_good.get("build_labour_hours") or {}).items()),
-             capital_recovery_factor(interest_rate, capital_good["service_life_years"]),
+             stand_yearly_share(
+                interest_rate, capital_good["service_life_years"], capital_good.get("establishment_years") or 0.0),
              capital_good["annual_output_at_basis"])
             for capital_good in (entry.get("capital") or []))
         self.energy = tuple(

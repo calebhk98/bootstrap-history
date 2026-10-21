@@ -9,7 +9,7 @@
   },
   "groups": {
     "agriculture": {
-      "trades": ["farmer", "herder", "fisher", "hunter"],
+      "trades": ["farmer", "vine_and_olive_tender", "herder", "fisher", "hunter"],
       "band": [0.55, 0.92],
       "sources": ["scheidel_friesen_2009", "allen_2000", "bairoch_1988"]
     },

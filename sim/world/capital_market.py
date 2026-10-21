@@ -65,6 +65,31 @@ def capital_recovery_factor(rate: float, life_years: float) -> float:
     return rate / (1.0 - (1.0 + rate) ** -life_years)
 
 
+def establishment_carry_factor(rate: float, establishment_years: float) -> float:
+    """What a build bill spent evenly over `establishment_years` has grown to by the first bearing year, per unit
+    of the bill: each year's outlay earns interest only from the year it is spent. One at a nil rate or no wait."""
+    if establishment_years < 0.0:
+        raise ValueError("establishment years cannot be negative")
+    if rate <= 0.0 or establishment_years == 0.0:
+        return 1.0
+    return ((1.0 + rate) ** establishment_years - 1.0) / (rate * establishment_years)
+
+
+def bearing_years(life_years: float, establishment_years: float) -> float:
+    """Years a stand yields in: its life from planting less the years before it first bears (none are yielded in)."""
+    if establishment_years >= life_years:
+        raise ValueError("a stand must outlive the years before it bears")
+    return life_years - establishment_years
+
+
+def stand_yearly_share(rate: float, life_years: float, establishment_years: float = 0.0) -> float:
+    """The yearly share of a stand's build bill that its bearing years repay: the bill carried to first bearing
+    (`establishment_carry_factor`), then recovered over the bearing years. As `capital_recovery_factor` when
+    there is no wait."""
+    return (establishment_carry_factor(rate, establishment_years)
+            * capital_recovery_factor(rate, bearing_years(life_years, establishment_years)))
+
+
 def borrower_rate(market_rate: float, standing_discount: float, share_of_ceiling_used: float) -> float:
     """What one borrower pays: never less than the market rate (what the market itself pays savers), plus
     the part of the arrears premium that its standing does not remove. A discount only removes premium."""

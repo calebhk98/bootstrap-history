@@ -298,6 +298,13 @@ def check_capital_physical_facts(good_where, good):
             "%s: annual_output_at_basis must be a positive "
             "number, not %r" % (good_where, annual_output))
 
+    establishment = good.get("establishment_years", 0)
+    if (not isinstance(establishment, (int, float)) or establishment < 0
+            or (isinstance(service_life, (int, float)) and establishment >= service_life)):
+        problems.append(
+            "%s: establishment_years must be a number of years from 0 up to less than service_life_years, "
+            "not %r" % (good_where, establishment))
+
     capital_basis = (good.get("capital_basis") or "").strip()
     if len(capital_basis) < 50:
         problems.append(
