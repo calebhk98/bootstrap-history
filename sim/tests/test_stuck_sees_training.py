@@ -1,16 +1,30 @@
-"""Complaint 573: `stuck` reads the same work in hand as `state`, training included."""
-from .harness import *  # noqa: F401,F403
-from .agent_command_helpers import ask_agent
+"""Complaint 573: `stuck` reads the same work in hand as `state`, training included. Complaint 640: the readings are
+called on a stand-in game that holds only its projects and its training; no game is played."""
+QUICK_TOPIC = True
 
-game = sim(civ="rome_100ad", capital=500000)
-ask_agent(game, cmd="train", trade="machinist", n=1)
-state = ask_agent(game, cmd="state", full=True)
-stuck = ask_agent(game, cmd="stuck")
-reasons = stuck["what_is_holding_you_up"]
-rows = reasons if isinstance(reasons, list) else []
-training_rows = [row for row in rows if row.get("each_training") is not None]
+from types import SimpleNamespace
+
+from .harness import check
+
+from sim.ui.proto.dispatch_inspection_stuck import _stuck_started_nothing, _stuck_training_in_hand
+from sim.ui.proto.state_projects import training_in_hand
+
+# rows are [capacity, ready_year] for people bought and trained, [0, ready_year, trade, count] for a trade being taught
+TRAINING = [[1.5, 105], [0, 107, "machinist", 2]]
+training_game = SimpleNamespace(active={}, training=TRAINING, project_cost=lambda node_id: 1.0)
+idle_game = SimpleNamespace(active={}, training=[], project_cost=lambda node_id: 1.0)
+
 check("with only training running stuck does not report an idle household",
-      "idle" not in [row.get("kind") for row in rows], rows)
-check("stuck names the training state shows",
-      bool(training_rows) and training_rows[0].get("each_training") == state["training_pending"],
-      (training_rows, state["training_pending"]))
+      _stuck_started_nothing(training_game, ["a"], ["a"]) is None)
+check("with nothing running stuck reports an idle household",
+      (_stuck_started_nothing(idle_game, ["a"], ["a"]) or {}).get("kind") == "idle")
+check("a project in hand is not idle either", _stuck_started_nothing(SimpleNamespace(active={"p": {}}, training=[]), [], []) is None)
+
+rows = training_in_hand(training_game)
+check("training rows read by index: people bought and trained, and a trade being taught",
+      rows == [{"artisan_capacity": 1.5, "ready_year": 105, "trade": None, "people": None},
+               {"artisan_capacity": 0, "ready_year": 107, "trade": "machinist", "people": 2}], rows)
+reason = _stuck_training_in_hand(training_game)
+check("stuck names the training state shows", reason["each_training"] == rows and reason["how_many"] == 2 and reason["kind"] == "active",
+      reason)
+check("stuck names no training when there is none", _stuck_training_in_hand(idle_game) is None)

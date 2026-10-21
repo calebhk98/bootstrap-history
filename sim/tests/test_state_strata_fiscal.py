@@ -1,14 +1,13 @@
 """Complaints 286 and 315: a state taxes what the bodies of people it governs earn, and a surplus beyond its
 reserve goes to named people (relief of the hunger its strata report, then works), by `ledger.transfer`, so no
-money appears or vanishes between actors."""
+money appears or vanishes between actors. Complaint 640: every check is on a stand-in world; no game is played."""
+QUICK_TOPIC = True
 from .harness import *  # noqa: F401,F403
 
 from sim.agents import revenue
 from sim.agents.api import Government, Stratum, stratum_id
 from sim.agents.records import ActorRecord
 from sim.tests.agents_fake_world import FakeWorld
-
-sim = unopened_sim   # legacy: pins the engine's budget by stratum; the agent-economy budget is test_economy_agent_state.py
 
 
 class FiscalWorld(FakeWorld):
@@ -117,24 +116,23 @@ world.state.relieve_strata(hunger / 4.0, world)
 check("relief is no more than the surplus", abs(world.state.record.outlays.get("relief", 0.0) - hunger / 4.0) < 1e-6,
       world.state.record.outlays)
 
-# ---- end to end on a played start --------------------------------------------------------------------
-def one_year(game):
-	game.state.scenario.year += 1
-	game.advance_actors(game.state.scenario.year)
+# ---- the home state taxes its own country's strata only, and reports the levy -------------------------
+from types import SimpleNamespace
+from sim.engine.agents_port_budget import BudgetView
 
 
-game = sim()
-game.civ["state_revenue"] = list(game.civ["state_revenue"]) + [dict(LEVY, rate=0.01)]
-treasury = game.state_treasury()
-for _year in range(3):
-	one_year(game)
-home_strata = [body for body in game.actors.of_kind("stratum") if body.record.country is None]
-check("the home state's strata are the ones it taxes", home_strata and all(
-      body.record.outlays.get("taxation", 0.0) > 0.0 for body in home_strata if body.record.stratum != "bonded"
-      and body.record.income.get("edge:economy", 0.0) > 0.0 and body.record.stratum != "poor"),
-      [(body.record.stratum, body.record.outlays) for body in home_strata])
-check("a foreign country's strata pay the home state nothing", all(
-      body.record.outlays.get("taxation", 0.0) == 0.0 for body in game.actors.of_kind("stratum")
-      if body.record.country is not None), "foreign strata taxed")
-check("the levy is a form of revenue the state reports", treasury.record.revenue_by_form.get("income_levy", 0.0) > 0.0,
-      treasury.record.revenue_by_form)
+class BudgetStubView(BudgetView):
+	def __init__(self, strata):
+		self._sim = SimpleNamespace(actors=SimpleNamespace(of_kind=lambda kind: strata))
+
+
+home_body = make_stratum("rich", 1.0e3, 1.0e6, 5.0e6)
+foreign_body = make_stratum("rich", 1.0e3, 1.0e6, 5.0e6)
+foreign_body.record.country = "han"
+check("the home state's strata are the ones it taxes: the bodies of its own country, not a foreign one's",
+      BudgetStubView([home_body, foreign_body]).country_strata() == [home_body])
+world = make_world()
+world.forms = [dict(LEVY, rate=0.01)]
+world.state.receive_revenue(world)
+check("the levy is a form of revenue the state reports", world.state.record.revenue_by_form.get("income_levy", 0.0) > 0.0,
+      world.state.record.revenue_by_form)
