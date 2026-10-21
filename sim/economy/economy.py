@@ -28,11 +28,12 @@ from .opening import open_economy
 from .protocols import YearInputs
 from .record import EconomyRecord
 from .setup import EconomySetup, labour_area
-from .types import Bid, EDGE_CONSUMPTION, GoodsMove, is_edge
+from .types import Bid, EDGE_CONSUMPTION, GoodsMove, Transfer, is_edge
 from .year_close import (check_money, close_agents, dispatch_merchants, money_taxes, national_prices,
                          remember_basket_price_level, wear_and_spoilage)
 from .year_goods import add_orders, clear_goods, cohort_orders, merchant_orders, state_orders
 from .labour_supply import HourSupply
+from .labour_state import people_by_trade
 from .year_labour import clear_labour, labour_offers, outside_option_by_tile
 from .year_accounts import YearAccounts, build as build_accounts, stocks as stocks_held
 from .standing_demand import with_standing_bids
@@ -61,6 +62,7 @@ class YearOutcome:
     money_audit: Optional[MoneyAudit] = None       # where money entered and left this year
     bonded_bought: Dict[Tuple[str, str], float] = field(default_factory=dict)   # (tile, trade): bonded people bought this year
     bonded_paid: float = 0.0                       # money the buyers paid for them over the exchange edge
+    bonded_lots: list = field(default_factory=list)   # the lots bought: origin and destination tile, trade, people, the owners' ask and the carriage paid
     accounts: Optional[YearAccounts] = None        # production, use, consumption, investment, stocks; food eaten; real wage
 
 
@@ -181,17 +183,24 @@ class Economy:
         land_lease_year.lease_in_market(setup, record, view, self._own_plot_options())
         land_bid_year.take_up_own(setup, record, self._own_plot_options())
         everyone = labour_offers(setup, record, view, outside_option, inputs.labour_levy_hours_per_worker)
-        placed = bondage_hours.place(record.bondage, everyone, labour_bids, bondage_hours.works_of_producers(record),
-                                     bondage.BONDED_HOURS_OWED_SHARE)
+        context = labour_context(setup, record, view, self.carriage, inputs, self._own_plot_options(), outside_option)
+        held_placed = bondage_hours.place_held(
+            record.bonded_held, lambda area, trade: people_by_trade(record.workforce, area).get(trade, 0.0), everyone, labour_bids,
+            setup.working_hours_per_year, context.ask_floor_per_worker_year, labour_area)
+        record.book.transfer_many([Transfer(employer, cohort, money, min(amount, max(0.0, record.book.balance(employer, money))),
+                                            "keep of bonded") for employer, cohort, amount in held_placed.keep if amount > 0.0])
+        placed = bondage_hours.place(record.bondage, held_placed.offers, held_placed.bids,
+                                     bondage_hours.works_of_producers(record), bondage.BONDED_HOURS_OWED_SHARE)
         everyone, labour_bids = placed.offers, placed.bids
         supply = self._hour_supply(everyone, view, outside_option)
-        context = labour_context(setup, record, view, self.carriage, inputs, self._own_plot_options(), outside_option)
         labour_report = clear_labour(setup, record, labour_bids, everyone, ledger, context, supply=supply)
         offers, kept = supply.sold, supply.kept
         self._leisure_hours = supply.leisure
-        ledger.bonded_bought, ledger.bonded_paid = bonded_purchase.settle(
-            record.book, money, labour_report.formed, labour_bids, context.ask_floor_per_worker_year)
+        ledger.bonded_bought, ledger.bonded_paid, ledger.bonded_lots, bought_held = bonded_purchase.settle(
+            record.book, money, labour_report.bonded_lots, labour_bids)
+        bondage_hours.hold(record.bonded_held, bought_held)
         bondage_hours.deliver(ledger.hours_hired, placed)
+        bondage_hours.deliver_held(ledger.hours_hired, held_placed)
         capital_year.insure(setup, record, view, inputs.harvest_factor, view.year, inputs.institutions)     # cover is bought and the weather settles it
         self._grow_own(offers, ledger, inputs.harvest_factor, kept)
         capital_year.note_exposure(setup, record, view, self.area_map, ledger, inputs.harvest_factor, inputs.institutions)
@@ -511,5 +520,5 @@ class Economy:
                            wage_floor_per_hour=ledger.wage_floor_per_hour, extraction=extraction,
                            conservation_residual=check_money(record), money_audit=year_report(record),
                            state_cash=record.book.balance(setup.state_agent, money),
-                           bonded_bought=dict(ledger.bonded_bought), bonded_paid=ledger.bonded_paid,
+                           bonded_bought=dict(ledger.bonded_bought), bonded_paid=ledger.bonded_paid, bonded_lots=list(ledger.bonded_lots),
                            accounts=build_accounts(setup, record, ledger, stocks_at_start, prices, mean_wages))

@@ -37,7 +37,7 @@ from .stratum import Stratum, stratum_id
 from .literacy import CountryLiteracy
 from .declared_kind import DeclaredKind, register_declared_kinds
 from .strata_observed import observed_incomes
-from .bonded_sale import bondage_tiles, bonded_for_sale, buy_bonded
+from .bonded_sale import add_captives, bondage_tiles, captives_from_conquest, captives_from_losses, bonded_for_sale, buy_bonded
 from .strata_seed import seed_strata, strata_definitions, strata_spawner
 from .player_commands import CommandRejected, register_command
 from . import equity_round, exchange, exchange_commands, exchange_sale  # noqa: F401  (registers the offer commands, the answers and equity rounds)
@@ -55,6 +55,6 @@ __all__ = ["Hands", "PURSE_CURRENCY", "EDGE_EXCHANGE", "EDGE_OUTSIDE", "EDGE_SAV
            "SAVING_SHARE_OF_SURPLUS", "CONCESSION_PREFIX", "Sector", "sector_key",
            "MANAGEMENT_SPAN_EXPONENT", "TRADE_TONNES_FOR_UNIT_CONTACT", "adoption", "awareness", "OBSERVATION_RANGE_KM", "PLAYER_VISIBLE_EXPOSURE", "PROOF_YEARS", "SECRET_EXPOSURE",
            "THREAT_ARMY_RESPONSE", "army_goal", "sack_pressure", "SOLDIER_TRADE", "EQUIPMENT_MATERIAL", "DOLE_MATERIAL", "FOOD_NEED", "cast_from_civilisations", "profile_from_civilisation", "seed_cast",
-           "CountryWorld", "CountryLiteracy", "Player", "Stratum", "stratum_id", "seed_strata", "true_up_keep", "bondage_tiles", "bonded_for_sale", "buy_bonded",
+           "CountryWorld", "CountryLiteracy", "Player", "Stratum", "stratum_id", "seed_strata", "true_up_keep", "bondage_tiles", "bonded_for_sale", "buy_bonded", "add_captives", "captives_from_losses", "captives_from_conquest",
            "strata_definitions", "strata_spawner", "CommandRejected", "register_command", "exchange", "Trader",
            "trader_entry", "DUES_CAUSE", "pay_dues", "treasury_of", "DeclaredKind", "register_declared_kinds"]

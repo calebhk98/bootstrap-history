@@ -208,6 +208,10 @@ class CampaignYearMixin:
                                     cause="assault", attacker_won=turn["outcome"].attacker_won,
                                     attacker_win_probability=turn["outcome"].attacker_win_probability,
                                     attacker_lost=turn["outcome"].attacker_lost, defender_lost=turn["outcome"].defender_lost)
+                if turn["outcome"].attacker_won:   # captives of the defeated join the winner's bonded (648; engine/captives.py)
+                    self.take_captives_from_battle(army.owner, defender, turn["outcome"].defender_lost, tile)
+                else:
+                    self.take_captives_from_battle(defender, army.owner, turn["outcome"].attacker_lost, tile)
             if result != "continues":
                 break
         if result in ("attacker_won", "defenders_gone"):
@@ -230,6 +234,7 @@ class CampaignYearMixin:
         """The army holds a tile whose defenders are gone: it passes to the army's owner at the level newly taken ground
         is held at, and the tile's people and taxes follow through the owner map."""
         tile = army.tile
+        self.take_captives_from_conquest(army.owner, defender, tile)   # before the tile changes hands (648; engine/captives.py)
         previous = self.transfer_tile(tile, army.owner, tile_owners.conquest_level(0.0), cause="conquest")
         self.campaign_store()["held_since"][tile] = {"year": int(self.state.scenario.year), "by": army.owner,
                                                       "from": previous}

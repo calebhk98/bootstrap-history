@@ -62,22 +62,43 @@ state.workers["dale"] = {"fitter": [0.5] * BANDS}
 run(state, inputs(routes={"vale": [Route("dale", 1.0)]}), clearings)
 check("a trade that already has people in the area is not formed", abs(people(state, "dale", "fitter") - 0.5 * BANDS) < 1e-9)
 
-# bonded purchase only where the civilisation allows it
-check("a civilisation that does not allow bondage buys none", formation.bonded_available(False, 9.0) == 0.0)
-check("where bondage is recognised the bonded for sale can be bought", formation.bonded_available(True, 9.0) == 9.0)
+# bonded purchase only where the civilisation allows it, at the owners' ask and the buyers' bid (bonded_worth.py)
+FLOORS = {"dale": 100.0, "vale": 100.0}
+
+
+def priced(**changes):
+    year_inputs = inputs(**changes)
+    year_inputs.ask_floor_per_worker_year = dict(FLOORS)
+    return year_inputs
+
 
 state = MarketState()
-report = run(state, inputs(allowed=frozenset(), for_sale={"dale": {"fitter": 9.0}}), [clearing("dale", "fitter", 8.0)])
+report = run(state, priced(allowed=frozenset(), for_sale={"dale": {"fitter": 9.0}}), [clearing("dale", "fitter", 8.0)])
 check("an area whose civilisation forbids bondage buys none", people(state, "dale", "fitter") == 0.0 and not report.formed, report.formed)
 state = MarketState()
-report = run(state, inputs(allowed=frozenset({"dale"}), for_sale={"dale": {"fitter": 5.0}}), [clearing("dale", "fitter", 8.0)])
+report = run(state, priced(allowed=frozenset({"dale"}), for_sale={"dale": {"fitter": 5.0}}), [clearing("dale", "fitter", 8.0)])
 check("where bondage is allowed it buys up to what is for sale",
       abs(people(state, "dale", "fitter") - 5.0) < 1e-9 and abs(report.formed["dale"]["fitter"]["bonded"] - 5.0) < 1e-9, report.formed)
+check("the lot is priced: the ask is the trained person's worth where the owner is, no carriage at home",
+      len(report.bonded_lots) == 1 and report.bonded_lots[0].origin == "dale" and report.bonded_lots[0].carriage == 0.0
+      and report.bonded_lots[0].ask > 0.0, report.bonded_lots)
+state = MarketState()
+report = run(state, inputs(allowed=frozenset({"dale"}), for_sale={"dale": {"fitter": 5.0}}), [clearing("dale", "fitter", 8.0)])
+check("with no wage floor and no practised wage anywhere no price can be named, so none is bought",
+      people(state, "dale", "fitter") == 0.0 and not report.bonded_lots, report.bonded_lots)
 
 state, clearings = held_elsewhere()
-run(state, inputs(routes={"vale": [Route("dale", 1.0)]}, allowed=frozenset({"dale"}), for_sale={"dale": {"fitter": 5.0}}), clearings)
+report = run(state, priced(routes={"vale": [Route("dale", 1.0)]}, allowed=frozenset({"dale"}), for_sale={"dale": {"fitter": 5.0}}), clearings)
 check("migration comes before purchase", abs(people(state, "dale", "fitter") - 8.0) < 1e-9 and abs(people(state, "vale", "fitter") - 3.0) < 1e-9
-      and abs(people(state, "dale", "fitter") - 7.0 - 1.0) < 1e-9)
+      and abs(report.formed["dale"]["fitter"]["bonded"] - 1.0) < 1e-9, report.formed)
+
+# a trade with some hands but vacancies left buys bonded people too: the slave trade between areas
+state = MarketState(workers={"dale": {"fitter": [1.0 / BANDS] * BANDS}})
+report = run(state, priced(routes={"vale": [Route("dale", 5.0)]}, allowed=frozenset({"dale", "vale"}),
+                           for_sale={"vale": {"fitter": 50.0}}), [clearing("dale", "fitter", 4.0, hired_people=1.0)])
+check("a short trade buys bonded people from an area with a route in, carriage paid",
+      abs(report.formed["dale"]["fitter"]["bonded"] - 4.0) < 1e-9 and report.bonded_lots[0].origin == "vale"
+      and report.bonded_lots[0].carriage == 5.0, report.bonded_lots)
 
 # teachers: knowledge held by any actor
 GATING = {"fitter": frozenset({"steam_engine"}), "smith": frozenset({""})}
