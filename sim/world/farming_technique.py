@@ -56,6 +56,8 @@ def _blend(base, other, share):
     fields = {name: value + share * (getattr(other, name) - value)
               for name, value in base._asdict().items()
               if isinstance(value, (int, float))}
+    if share >= 0.5 and hasattr(other, "name"):
+        fields["name"] = other.name   # the entry the society has mostly taken up
     return base._replace(**fields)
 
 
