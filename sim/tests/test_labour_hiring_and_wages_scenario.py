@@ -5,6 +5,7 @@ forecast; the founder's own practice income; and a dead founder's effect on
 all of it.
 """
 from .harness import *  # noqa: F401,F403
+from sim.labour import trade_first_hands
 
 
 def _ask(household, command, **arguments):
@@ -47,10 +48,12 @@ check("...and the hours leave the standing job, so revenue falls by the wage of 
           - household.labour.wage_for_hours(household.held_trade(), 500) * household.state.economy.output_factor) < 0.5,
       (_revenue_before_work, household.revenue()))
 
-# --- Dismissing a trade you are teaching must cancel the apprenticeship.
-_trained, _ = household.labour.train("machinist", 3)
-check("teaching a trade puts people in training", _trained and household.training, household.training)
-_fired, _fire_note = household.labour.fire("machinist", 3)
+# --- Dismissing a trade you are teaching must cancel the apprenticeship (the rules are in test_trade_first_hands and
+# test_staff_moves_rules; here the command reaches them on the household's own records).
+_trained, _ = household.labour.train("machinist", 1)
+_taught = [record for record in household.training if len(record) > 3 and record[2] == "machinist"]
+check("teaching a trade puts people in training", _trained and abs(sum(record[3] for record in _taught) - 1) < 1e-9, household.training)
+_fired, _fire_note = household.labour.fire("machinist", 1)
 check("dismissing a trade you are teaching cancels the apprenticeship",
       _fired and not [record for record in household.training if len(record) > 3 and record[2] == "machinist"],
       (_fire_note, household.training))
@@ -120,11 +123,15 @@ check("...and it is the real forecast: hiring one for real lands on the number q
 # does not ramp up over those years.
 household_training = sim(capital=100000.0)
 _trained, _train_message = household_training.labour.train("machinist", 2, None)
-for _ in range(3):
+_named_year = trade_first_hands.year_joined(max(record[1] for record in household_training.training))
+_years_to_play = _named_year - household_training.state.scenario.year + 1    # the step at the turn of the named year counts
+for _ in range(_years_to_play):
     _play_year(household_training)
 check("trained apprentices are really on the books, unprompted, by the year named",
       _trained and household_training.employees.get("machinist", 0.0) >= 1.999,
-      (_train_message, household_training.employees.get("machinist")))
+      (household_training.training, household_training.employees.get("machinist")))
+# presentation: the reply names the year the last of the cohort joins
+check("...and the reply names that year", str(_named_year) in _train_message, _train_message)
 _practice_expected = household_training.founder_wage_income()
 check("...and the founder's job does not grow into the full figure over the ramp years",
       _practice_expected > 0.0 and abs(household_training.revenue() - _practice_expected) < 1e-3 * _practice_expected,

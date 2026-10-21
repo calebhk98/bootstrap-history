@@ -62,3 +62,17 @@ for trade in absent:
     arrive = hands.first_hands_years(full)
     check("%s has first hands inside the stall window" % trade, arrive < STALL_YEARS_BEFORE_ABANDONMENT - 1, (arrive, uncovered))
     check("%s needs the whole apprenticeship for full hands" % trade, formation.training_years(full, uncovered) > arrive)
+
+# the year a record joins the staff is the first whole year at or after its ready year (the step runs at each year turn)
+check("a whole ready year joins in that year", hands.year_joined(103.0) == 103)
+check("a fractional ready year joins in the next whole year", hands.year_joined(103.4) == 104 and hands.year_joined(101.2) == 102)
+check("float noise just above a whole year does not push it a year later", hands.year_joined(103.0 + 1e-12) == 103)
+
+# a cohort dismissed whole cancels both of its records, and half of it takes the early slice first
+from sim.labour.staff_moves import apprentices_of, dismiss
+cohort = hands.cohort_rows(YEAR, "fitter", COUNT, years, FULL, UNCOVERED)
+gone, left, stopped, still, unmet = dismiss(0.0, cohort, "fitter", COUNT)
+check("dismissing a whole cohort stops every person in both records", abs(stopped - COUNT) < 1e-9 and not still and unmet == 0.0,
+      (stopped, still, unmet))
+gone, left, stopped, still, unmet = dismiss(0.0, cohort, "fitter", 1)
+check("dismissing part of a cohort leaves the rest in training", abs(apprentices_of(still, "fitter") - (COUNT - 1.0)) < 1e-9, still)

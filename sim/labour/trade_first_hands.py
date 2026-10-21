@@ -7,6 +7,7 @@ Boulton and Watt, ch. on Soho). So a cohort is written as two training records: 
 person-equivalents (covered share of the cohort) that joins the staff once the part of an apprenticeship even a
 fully covered trade needs has passed, and the rest at the end of the full conversion time.
 """
+import math
 from typing import List
 
 from .trade_formation import SOURCE_TASK_FLOOR_FRACTION
@@ -40,3 +41,10 @@ def cohort_rows(current_year: float, trade: str, count: float, conversion_years:
         return [[0.0, current_year + conversion_years, trade, float(count)]]
     return [[0.0, current_year + first, trade, early],
             [0.0, current_year + conversion_years, trade, float(count) - early]]
+
+
+def year_joined(ready_year: float) -> int:
+    """The calendar year a record ready at `ready_year` joins the staff: the apprenticeship step runs at the turn
+    of each whole year and moves every record whose ready year has been reached, so a fractional ready year lands
+    on the next whole one."""
+    return int(math.ceil(ready_year - 1e-9))
