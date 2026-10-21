@@ -9,7 +9,7 @@ import collections
 import math
 import os
 
-from sim.agents.api import COIN_RESTRIKE_SHARE_PER_YEAR, EDGE_EXCHANGE as COIN_EXCHANGE, PURSE_CURRENCY
+from sim.agents.api import COIN_RESTRIKE_SHARE_PER_YEAR, EDGE_EXCHANGE as COIN_EXCHANGE, PURSE_CURRENCY, stock_keeping
 from sim.constants import declare
 from sim.economy import api as economy_api
 from sim.rekey import rekey
@@ -318,13 +318,23 @@ class AgentEconomy(TilePricesMixin):
     def _settle_actor_trade(self, sales, purchases):
         """What the actors' sales fetched and their budgets left over turn back into their coin; the goods unsold go
         back out. Bought capital assets stay with their buyer and materials are used up."""
-        proceeds, refunds, _bought = economy_port_actors.close(self._economy, sales, purchases)
+        proceeds, refunds, _bought, delivered = economy_port_actors.close(self._economy, sales, purchases)
+        self._keep_deliveries(delivered)
         coin = self._economy.setup.coin_per_unit
         purses, known = self._sim.actors.state.purses, self._sim.actors.actors
         for amounts, label in ((proceeds, "market sales"), (refunds, "market purchases returned")):
             for actor_id, units in sorted(amounts.items()):
                 purses.transfer(COIN_EXCHANGE, actor_id, units * coin, "exchange")
                 known[actor_id].note_income(label, units * coin)
+
+    def _keep_deliveries(self, delivered):
+        """Goods a buyer that keeps its purchases bought at the market join its stores, in tonnes."""
+        from .material_units import tonnes_per_unit
+        known = self._sim.actors.actors
+        for buyer in sorted(delivered):
+            if getattr(known[buyer], "keeps_purchases", False):
+                stock_keeping.add_delivery(known[buyer].record.stores, {
+                    good: units * tonnes_per_unit(good) for good, units in delivered[buyer].items()})
 
     def _strike_state_coin(self, economy):
         """The cut the home state decided on this year lowers the metal in the coin it issues."""

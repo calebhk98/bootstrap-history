@@ -8,9 +8,11 @@ working-age people to a bordering region where people ate better, by the labour 
 from typing import Dict
 
 from sim.geography.api import settlement
-from sim.labour.api import moves_between_regions
+from sim.labour.api import migrant_pairs, totals_of_pairs
 from sim.world import regional_population
 from sim.world.demography import Population
+
+from . import contact_events
 
 
 class RegionalPeopleMixin:
@@ -35,9 +37,11 @@ class RegionalPeopleMixin:
 
     def step_regions_of_people(self, regions, kcal_by_region, year):
         """Step every region a year and return the nation's flows; the nation's `Population` becomes their sum."""
-        leaving, arriving = moves_between_regions(
-            regions, self.state.population.regional_eaten_over_need, self.geography.borders_among(list(regions)),
-            settlement.distance_between_tiles_km)
+        borders = self.geography.borders_among(list(regions))
+        pairs = migrant_pairs(regions, self.state.population.regional_eaten_over_need, borders,
+                              settlement.distance_between_tiles_km)
+        contact_events.after_migration(self, pairs)
+        leaving, arriving = totals_of_pairs(pairs)
         food = sum(kcal_by_region.values())
         epidemic_deaths, disease_burden, endemic_death_rates = self.epidemic_year(food, year)
         ratio = self.population.nutrition_ratio(food)

@@ -166,7 +166,7 @@ def fund(economy, funding: Sequence[Tuple[str, float, float]]) -> None:
 def close(economy, sales: Sequence[dict], purchases: Sequence[dict]):
     """Close every account after the clear. Unsold goods go back out; bought capital assets are retained; the money each
     account holds goes to the exchange edge. Returns ({seller: units of money its sales fetched}, {buyer: units of
-    its budget left unspent}, {buyer: units of goods it bought})."""
+    its budget left unspent}, {buyer: units of goods it bought}, {buyer: {good: units}} delivered)."""
     book, currency = economy_api.economy_book(economy), economy.setup.currency_id
     accounts = ([(sale_account(actor), actor, EDGE_LEGACY, "unsold actor output")
                  for actor in sorted({sale["seller"] for sale in sales})]
@@ -175,6 +175,7 @@ def close(economy, sales: Sequence[dict], purchases: Sequence[dict]):
     proceeds: Dict[str, float] = {}
     refunds: Dict[str, float] = {}
     bought: Dict[str, float] = {}
+    delivered: Dict[str, Dict[str, float]] = {}
     moves, transfers = [], []
     for account, actor, outflow, label in accounts:
         for good, tiles in book.holdings(account)["goods"].items():
@@ -187,10 +188,12 @@ def close(economy, sales: Sequence[dict], purchases: Sequence[dict]):
                                            "durable purchase" if receiver != outflow else label))
                     if outflow == EDGE_CONSUMPTION:
                         bought[actor] = bought.get(actor, 0.0) + quantity
+                        by_good = delivered.setdefault(actor, {})
+                        by_good[good] = by_good.get(good, 0.0) + quantity
         money = max(0.0, book.balance(account, currency))
         if money > 0.0:
             transfers.append(Transfer(account, EDGE_EXCHANGE, currency, money, "exchange"))
             (proceeds if outflow == EDGE_LEGACY else refunds)[actor] = money
     economy_api.move_goods(economy, moves)
     economy_api.post_transfers(economy, transfers)
-    return proceeds, refunds, bought
+    return proceeds, refunds, bought, delivered

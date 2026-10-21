@@ -36,6 +36,14 @@ def record_contact(actor: Any, source_place: Any, volume: float) -> None:
 	actor.contacts[key] = actor.contacts.get(key, 0.0) + volume
 
 
+def record_contacts(learners: Iterable[Any], places: Iterable[Any], volume: float) -> None:
+	"""Each learner has met each place's people once: an event's contact, recorded on every receiver."""
+	places = list(places)
+	for learner in learners:
+		for place in places:
+			record_contact(learner, place, volume)
+
+
 def fade_contacts(actor: Any) -> None:
 	for key in sorted(actor.contacts):
 		actor.contacts[key] *= CONTACT_FADE_PER_YEAR

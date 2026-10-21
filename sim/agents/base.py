@@ -23,6 +23,7 @@ from .tuning import ATTENTION_SPAN
 
 class Actor(Reviewable, Borrower):
 	kind = "actor"
+	keeps_purchases = False   # whether what the actor buys at the market joins its stores
 	researches = False   # whether the actor does research and takes part in knowledge spreading (`research.py`)
 	purses: Any = None   # the book of purses the actor keeps its account in, when it keeps one
 
