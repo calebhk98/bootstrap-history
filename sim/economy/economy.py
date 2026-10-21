@@ -20,7 +20,7 @@ from .mint_labour import close_year as close_mint_year, mint_agent
 from .money_audit import MoneyAudit, year_report
 from .flow_rates import flow_imbalance
 from .entry_year import close_idle_producers, open_entrants, restake_owners
-from . import household_hours_year, household_work_year, land_bid_year
+from . import household_hours_year, household_work_year, land_bid_year, land_lease_year
 from .households_own import (hours_for_own_plan, own_production, own_production_options, plot_hectares,
                              withhold_hours)
 from .labour_inputs import labour_context
@@ -175,6 +175,7 @@ class Economy:
         staff_mint(setup, record, view, labour_bids)
         labour_bids.extend(carriage_hours.bids(setup, record))    # merchants' carriers, from last year's shipments
         outside_option = outside_option_by_tile(setup, record, view)
+        land_lease_year.lease_in_market(setup, record, view, self._own_plot_options())
         land_bid_year.take_up_own(setup, record, self._own_plot_options())
         everyone = labour_offers(setup, record, view, outside_option, inputs.labour_levy_hours_per_worker)
         offers, kept = withhold_hours(everyone, self._shortfall_hours(everyone, view, outside_option))
@@ -204,7 +205,8 @@ class Economy:
         close_mint_year(setup, record)
         rent = land_market.settle_year(setup, record, view,
                                        {producer_id: plan.wanted_runs for producer_id, plan in plans.items()},
-                                       self._own_hectares, inputs.land_tax_share_of_rent)
+                                       self._own_hectares, inputs.land_tax_share_of_rent,
+                                       land_lease_year.asks(setup, record, view, self._own_plot_options()))
         interest = self._service_loans(view.year)
         bonded = bondage.service(record, money, ledger.wages_in)
         record.book.transfer_many(bonded)

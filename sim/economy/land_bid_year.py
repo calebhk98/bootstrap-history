@@ -11,9 +11,9 @@ from .setup import labour_area
 from .types import EDGE_CONSUMPTION, Bid, GoodsMove
 
 
-def _best_earning(setup, view, cohort, options: Mapping[str, List[Option]], tile_spec, rent: float):
-    """(earning per hectare, hours a hectare takes) for the recipe, of those it grows its needs with, that nets most, at the prices
-    and the wage it sees; the tile's rent is the floor on the earning."""
+def best_margin(setup, view, cohort, options: Mapping[str, List[Option]], tile_spec):
+    """(crop margin per hectare, hours a hectare takes, recipe id) of the recipe, of those the cohort grows its needs
+    with, that nets most at the prices and the wage it sees. The margin is net of the wage, so a rising wage lowers it."""
     wage = view.wage(setup.servant_trade, labour_area(cohort.tile)) or 0.0
     rows = []
     for recipe_id in sorted({rows_of_need[0][1] for rows_of_need in options.values() if rows_of_need}):   # the recipe it grows each need with
@@ -22,8 +22,13 @@ def _best_earning(setup, view, cohort, options: Mapping[str, List[Option]], tile
             continue
         prices = {good: view.price(good, view.area_of(good, cohort.tile)) or 0.0 for good in recipe.outputs}
         rows.append((land_bid.crop_margin_per_hectare(recipe, land, tile_spec.fertility, prices, wage),
-                     land_bid.hours_per_hectare(recipe, land)))
-    margin, hours = max(rows, default=(0.0, 0.0))
+                     land_bid.hours_per_hectare(recipe, land), recipe_id))
+    return max(rows, default=(0.0, 0.0, ""))
+
+
+def _best_earning(setup, view, cohort, options: Mapping[str, List[Option]], tile_spec, rent: float):
+    """(earning per hectare, hours a hectare takes): the best crop margin, with the tile's rent as the floor."""
+    margin, hours, _recipe_id = best_margin(setup, view, cohort, options, tile_spec)
     return land_bid.earning_per_hectare(margin, rent), hours
 
 
