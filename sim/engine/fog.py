@@ -14,6 +14,17 @@ from .hazard_window import hazards_not_yet_past
 from .staff_loss_waves import wave_exposure
 from .hazard_hedge_timing import add_timing_to_steps
 
+def prerequisite_label(nodes, prereq_id):
+    """The id with the node's name beside it, so the id is identifiable."""
+    name = nodes.get(prereq_id, {}).get("name")
+    return "%s (%s)" % (prereq_id, name) if name and name != prereq_id else prereq_id
+
+
+def prerequisite_names(nodes, prerequisite_ids):
+    """{id: name} for each prerequisite the tree knows, in the words of the civilisation the nodes were built for."""
+    return {prereq_id: nodes[prereq_id]["name"] for prereq_id in prerequisite_ids if prereq_id in nodes}
+
+
 # What a node id the player has not heard of is replaced with.
 HIDDEN_ID_PLACEHOLDER = "something you have not heard of"
 
@@ -142,8 +153,7 @@ class FogMixin:
 
     def prerequisite_label(self, prereq_id: str) -> str:
         """The id with the node's name beside it, so the id is identifiable."""
-        name = self.nodes.get(prereq_id, {}).get("name")
-        return "%s (%s)" % (prereq_id, name) if name and name != prereq_id else prereq_id
+        return prerequisite_label(self.nodes, prereq_id)
 
     def missing_prereq_message(self, missing: List[str],
                                _memo: Optional[Dict[str, bool]] = None) -> Optional[str]:

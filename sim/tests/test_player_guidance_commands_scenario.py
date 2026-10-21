@@ -1,4 +1,4 @@
-"""The commands that tell a player what is going on and what to do
+"""SCENARIO: the commands that tell a player what is going on and what to do
 next: `available`, `why` (including its FULL CHAIN figures and its
 substitution-group wording), `stuck`, `path`, `help`, the end-of-run report,
 and the small refusal-message fixes (a mistyped id, an absurd quantity, a
