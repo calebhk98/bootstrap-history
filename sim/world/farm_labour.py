@@ -24,10 +24,15 @@ def hours_per_working_day() -> float:
 
 
 def wheat_task_person_days(data: Dict[str, Any]) -> Dict[str, float]:
-    """Person-days a hectare takes by sub-task (cultivation cycle, reaping, threshing)."""
+    """Person-days a hectare takes by sub-task (cultivation cycle, reaping, threshing).
+
+    Columella's days are per iugerum; the cycle is every task but reaping and threshing."""
     tasks = data["wheat"]["tasks"]
-    reaping = float(tasks["reaping"]["person_days"])
-    return {"cultivation_cycle": float(tasks["cultivation_cycle"]["person_days"]),
+    per_hectare = 1.0 / float(data["iugerum_hectares"]["value"])
+    reaping = float(tasks["reaping"]["person_days_per_iugerum"]) * per_hectare
+    cycle = sum(float(task["person_days_per_iugerum"]) for name, task in tasks.items()
+                if name not in ("reaping", "threshing")) * per_hectare
+    return {"cultivation_cycle": cycle,
             "reaping": reaping,
             "threshing": reaping * float(tasks["threshing"]["person_days_as_share_of_reaping"])}
 
@@ -62,10 +67,10 @@ REFERENCE_LABOUR_HOURS_PER_HECTARE = declare(
     kind="engineering_estimate",
     unit="labourer-hours/hectare/season, at the reference (quality-1.0, "
          "fold-return-4.5) wheat yield",
-    source="Built from sub-tasks in data/world/farm_labour.json by this module: Shukurov et al., "
-           "arXiv 1505.05121 section 8.1 (secondary), White (1965) on Columella, 44 person-days/ha for the "
-           "cultivation cycle excluding harvest and 5.7 for reaping; Halstead and Jones (1989), threshing "
-           "about the same as reaping; person-days at the model's working day. Equals data/production/"
+    source="Built from sub-tasks in data/world/farm_labour.json by this module: Columella, De Re "
+           "Rustica 2.12.1 (LacusCurtius, opened), days of work a iugerum of wheat takes by task, converted at "
+           "2,523 square metres to the iugerum; Halstead and Jones (1989) via Shukurov et al., arXiv 1505.05121 "
+           "section 8.1 (secondary), threshing about the same as reaping; person-days at the model's working day. Equals data/production/"
            "40_organics.json wheat_kg labour_hours (tested). sim/world/agriculture.py, sim/world/land.py (as "
            "LAND_REFERENCE_LABOUR_HOURS_PER_HECTARE) and sim/engine/colonies.py import this declaration.",
     confidence="C",

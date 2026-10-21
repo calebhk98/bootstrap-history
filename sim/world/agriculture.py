@@ -442,9 +442,10 @@ HECTARES_REAPED_PER_WORKER_DAY = declare(
     "HECTARES_REAPED_PER_WORKER_DAY", WHEAT_REAPED_HECTARES_PER_PERSON_DAY,
     kind="engineering_estimate",
     unit="hectares/worker/day",
-    source="The inverse of the reaping sub-task in data/world/farm_labour.json: White (1965) on Columella, "
-           "5.7 person-days/ha for reaping Roman Italian wheat, via Shukurov et al., arXiv 1505.05121 "
-           "section 8.1 (secondary; White and Columella not opened). The same paper quotes Halstead and "
+    source="The inverse of the reaping sub-task in data/world/farm_labour.json: Columella, De Re Rustica "
+           "2.12.1 (LacusCurtius, opened), one and a half days of the reaper to the iugerum of wheat, per "
+           "hectare at 2,523 square metres to the iugerum. Shukurov et al., arXiv 1505.05121 section 8.1 "
+           "(secondary) quotes Halstead and "
            "Jones (1989), 10-30 person-days/ha for a modern sickle on Greek islands, a slower rate "
            "(0.03-0.1 ha/day) that would tighten the harvest window; the Roman figure is taken.",
     confidence="C",

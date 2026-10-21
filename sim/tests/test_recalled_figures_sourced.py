@@ -96,9 +96,11 @@ class DiseaseFigures(unittest.TestCase):
 NAROLL_SQUARE_METRES_PER_PERSON = 10.0
 # Sphere minimum covered area, square metres a head (the shelter floor, sim/world/climate_needs.py)
 SPHERE_FLOOR_SQUARE_METRES_PER_PERSON = 3.5
-# Shukurov et al. (arXiv 1505.05121) section 8.1, quoting White 1965 on Columella and Halstead and Jones 1989, person-days a hectare
-COLUMELLA_CYCLE_PERSON_DAYS = 44.0
-COLUMELLA_REAPING_PERSON_DAYS = 5.7
+# Columella, De Re Rustica 2.12.1 (LacusCurtius), person-days a iugerum of wheat: ploughing, harrowing, two hoeings, weeding
+COLUMELLA_CYCLE_PERSON_DAYS_PER_IUGERUM = 4.0 + 1.0 + 2.0 + 1.0 + 1.0
+COLUMELLA_REAPING_PERSON_DAYS_PER_IUGERUM = 1.5
+HECTARES_PER_IUGERUM = 0.2523
+# Halstead and Jones 1989 via Shukurov et al. (arXiv 1505.05121) section 8.1: processing about as much as reaping
 THRESHING_PERSON_DAYS_AS_MANY_AS_REAPING = 1.0
 HOURS_IN_THE_PERSON_DAY = 10.0
 # Ellen 1982 via the same paper: hours a hectare to till with hand tools and with a pair of oxen
@@ -110,8 +112,8 @@ def multiple_of_floor(area_per_person, floor_area_per_person):
     return area_per_person / floor_area_per_person
 
 
-def wheat_cycle_hours(cycle_days, reaping_days, threshing_share_of_reaping, hours_per_day):
-    return (cycle_days + reaping_days * (1.0 + threshing_share_of_reaping)) * hours_per_day
+def wheat_cycle_hours(cycle_days, reaping_days, threshing_share_of_reaping, hours_per_day, hectares_per_iugerum):
+    return (cycle_days + reaping_days * (1.0 + threshing_share_of_reaping)) * hours_per_day / hectares_per_iugerum
 
 
 def hand_tilled_hours(team_hours, hand_tilling_hours, team_tilling_hours):
@@ -133,12 +135,12 @@ class PassFiveFigures(unittest.TestCase):
     def test_the_data_carries_the_sourced_wheat_cycle(self):
         # The recipe books the hours the sourced arithmetic gives (Complaint 646 pass 6).
         wheat = self._load("data", "production", "40_organics.json")["materials"]["wheat_kg"]
-        sourced_hours = wheat_cycle_hours(COLUMELLA_CYCLE_PERSON_DAYS, COLUMELLA_REAPING_PERSON_DAYS,
-                                          THRESHING_PERSON_DAYS_AS_MANY_AS_REAPING, HOURS_IN_THE_PERSON_DAY)
+        sourced_hours = wheat_cycle_hours(COLUMELLA_CYCLE_PERSON_DAYS_PER_IUGERUM,
+                                          COLUMELLA_REAPING_PERSON_DAYS_PER_IUGERUM,
+                                          THRESHING_PERSON_DAYS_AS_MANY_AS_REAPING, HOURS_IN_THE_PERSON_DAY,
+                                          HECTARES_PER_IUGERUM)
         self.assertAlmostEqual(sourced_hours, wheat["labour_hours"]["farmer"])
 
     def test_the_arithmetic_of_the_conversions(self):
-        self.assertAlmostEqual(wheat_cycle_hours(10.0, 1.0, 1.0, 10.0), 120.0)
-        self.assertAlmostEqual(wheat_cycle_hours(COLUMELLA_CYCLE_PERSON_DAYS, COLUMELLA_REAPING_PERSON_DAYS,
-                                                 THRESHING_PERSON_DAYS_AS_MANY_AS_REAPING, HOURS_IN_THE_PERSON_DAY), 554.0)
+        self.assertAlmostEqual(wheat_cycle_hours(10.0, 1.0, 1.0, 10.0, 0.5), 240.0)
         self.assertAlmostEqual(hand_tilled_hours(100.0, 40.0, 10.0), 130.0)
