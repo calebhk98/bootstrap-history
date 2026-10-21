@@ -36,6 +36,7 @@ add to it.
 - **A process or WASM boundary for mod code.** Consent is the only protection
   today; an allowlisted message interface would let a player run an author they
   do not trust. Not started; the declarative contract covers most needs.
+- **Swappable implementations of engine computations** (speed mods, for example numpy): `Complaints/661`.
 - **Hazard effects beyond the shipped fields.** A hazard is made of the effect
   fields the engine reads; a new effect needs an actor kind or mod code.
 
