@@ -21,7 +21,7 @@ from typing import Dict, List, Mapping, Optional, Sequence
 
 from sim.constants import declare
 
-from . import ownership, titles, unit_cost
+from . import ownership, titles, titles_ground, unit_cost
 from .land_lease import LAND_RENT_ADJUSTMENT_SHARE, posted_rents  # noqa: F401
 from .producers import expected_output_prices, live_input_prices, live_wages
 from .types import AgentId, CurrencyId, TileId, Transfer
@@ -178,7 +178,7 @@ def settle_year(setup, record, view, wanted_runs: Mapping[AgentId, float],
     and its producers, and book the rent: producers pay the tile's owner, shared by ownership.spread.
     Returns the payments made (to cohorts), for the year's property income."""
     demands = demands_of(setup, record, view, wanted_runs)
-    arable = {tile_id: tile.cropland_hectares for tile_id, tile in setup.tiles.items()}
+    arable = {tile_id: titles_ground.arable_hectares(record, tile_id, tile) for tile_id, tile in setup.tiles.items()}
     cleared = clear_land(arable, demands, own_plot_hectares)
     result = replaced(cleared, rent_per_hectare_by_tile=posted_rents(record.land_rent,
                                                                               cleared.rent_per_hectare_by_tile))

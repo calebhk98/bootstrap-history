@@ -2,7 +2,7 @@
 and a Gini over holders. A validation read (CLAUDE.md 4.2), never an input to the model."""
 from typing import Dict, Mapping, Sequence
 
-from . import titles
+from . import titles, titles_ground
 from .types import AgentId, TileId
 
 
@@ -11,7 +11,7 @@ def hectares_by_holder(tiles: Mapping[TileId, object], record) -> Dict[AgentId, 
     held: Dict[AgentId, float] = {cohort_id: 0.0 for cohort_id in record.cohorts}
     for tile_id, tile in sorted(tiles.items()):
         for holder, share in titles.shares(record, tile_id).items():
-            held[holder] = held.get(holder, 0.0) + share * tile.cropland_hectares
+            held[holder] = held.get(holder, 0.0) + share * titles_ground.arable_hectares(record, tile_id, tile)
     return held
 
 
