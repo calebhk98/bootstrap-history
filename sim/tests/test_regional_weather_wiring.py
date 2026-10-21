@@ -27,6 +27,7 @@ def _stub(civ, salt=0, seed=1):
     stub = SimpleNamespace(civ=civ, world_map=None, rng=random.Random(seed),
                            state=SimpleNamespace(scenario=SimpleNamespace(weather_salt=salt)))
     stub._cap_pooled_farm_weather_cells = lambda cells: Sim._cap_pooled_farm_weather_cells(stub, cells)
+    stub._raw_farm_weather_cells = lambda: Sim._raw_farm_weather_cells(stub)
     return stub
 
 

@@ -145,10 +145,26 @@ def externalities(sim, year):
     return {"deaths_by_band": picture["deaths_by_band"], "yield_factor_by_tile": picture["yield_factor_by_tile"]}
 
 
+def record_pollution(sim, write):
+    """Hand `write(store, tile, value)` the year's particulate concentration and yield factor of every settled or emitting tile."""
+    picture = assess(sim)
+    rows = {row["tile"]: row for row in picture["tiles"]}
+    for tile in sorted(set(rows) | set(_people_by_tile(sim))):
+        row = rows.get(tile)
+        write("particulate_micrograms_per_cubic_metre", tile, row["micrograms_per_cubic_metre"].get("particulate", 0.0) if row else 0.0)
+        write("pollution_yield_factor", tile, row["yield_factor"] if row else 1.0)
+
+
 def register(api):
     register_externality = getattr(api, "externality", None)
     if register_externality is not None:
         register_externality(externalities)
+    # Each year's picture is kept in tile stores, so `map layer <store>` shows where the air is foul and the harvest harmed.
+    api.store("particulate_micrograms_per_cubic_metre", keyed_by="tile", default=None, unit="micrograms per cubic metre")
+    api.store("pollution_yield_factor", keyed_by="tile", default=None, unit="share of the harvest left")
+    api.phase("record_pollution", "world",
+              lambda sim, seats: record_pollution(sim, lambda store, tile, value: api.write_store(sim, store, tile, value)),
+              after="market")
 
     @api.command("pollution", group="mods",
                  summary="Emissions, exposure and harm from the year's industrial throughput, by tile",

@@ -1,6 +1,6 @@
 # The deferred-feature mods predate mod phases, stores and effects
 
-**Status:** open
+**Status:** closed
 
 **What is wrong.** The six mods built for the "Deferred to mods" list in `mods/TASKS.md` (`bh_orghierarchy_r4k8`,
 `bh_urbanisation_w2n6`, `bh_pollution_t9c3`, `bh_religion_h5p1`, `bh_towns_m8d4`, `bh_cashshelter_z6f2`) were written
@@ -30,3 +30,23 @@ command, and an engine change that the shipped API already makes unnecessary is 
 **What it would take.** Per mod, try the new API; move what works into the mod; narrow or close 633 to 636 for what it
 covers. Prove each against a seeded game with the mod allowed, and that the shipped game is unchanged without consent (the
 check in PR #52: `agent --civ X --kit merchant --seed 7 --deterministic` output compared with and without the mods).
+
+## Done
+
+Each mod tried against `api.phase`, `api.store` and `api.effects`:
+
+- `bh_orghierarchy_r4k8`: a phase could run `staff_managers`, but that spends money, so it stays a command; the overhead
+  uses the new `api.director_overhead` (633). Nothing else fits.
+- `bh_urbanisation_w2n6`: ported. A phase and two tile stores feed the town provider (634). `move_people` moves strata,
+  not tiles, and `kill_people` takes a country and a share, so the premium goes through `Population.step`.
+- `bh_pollution_t9c3`: the externality hook was already used (635). Ported: a phase keeps each tile's particulate
+  concentration and yield factor in tile stores, shown by `map layer`. Test: `sim/tests/test_pollution_mod_stores.py`.
+- `bh_religion_h5p1`: lending through `lends_from_purse` and variants as patches (636). `transfer_tile` hands a whole tile,
+  so land holding waits for 538's titles.
+- `bh_towns_m8d4`: a read-only catalogue and a `go` command over `move_base`; nothing yearly, nothing to store.
+- `bh_cashshelter_z6f2`: moves coin with `ledger.transfer` from the household, which is not an actor id, so `effects.pay`
+  does not fit; claims are counted through `register_wealth_claims` and held in the mod's own saved state. A claim table
+  could become an actor-pair store, but nothing reads it as one, so it stays.
+
+Checked: with no mod allowed, a seeded game (`agent --civ rome_100ad --kit merchant --seed 7 --deterministic`) gives the
+same first-year capital before and after these changes.

@@ -515,7 +515,7 @@ class AgentEconomy(TilePricesMixin):
         sim = self._sim
         population = sim.population
         total = float(population.total)
-        weather = sim._pooled_farm_weather_multiplier(sim.state.scenario.year)
+        weather = sim._pooled_farm_weather_multiplier(sim.state.scenario.year, harmed=False)   # harm is applied per producer below
         economy = self._economy
         harmed = externalities.yield_factors(sim, sim.state.scenario.year)
         yields = economy_port_sites.crop_yields(economy, weather)

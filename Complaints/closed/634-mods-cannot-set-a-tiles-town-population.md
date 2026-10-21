@@ -1,6 +1,6 @@
 # A mod cannot make its derived tile towns count in the game
 
-**Status:** partly - the hook is in main (`ModCodeApi.town_provider`); left: the mod registering its derivation, moving households between tiles, and the urban mortality premium in `Population.step`
+**Status:** closed
 
 **What is wrong.** The mod `bh_urbanisation_w2n6` derives a town per land tile from non-farm jobs, food reachable within a
 haul and a disease premium (command `bh_urbanisation_w2n6:towns`), as `Complaints/closed/107` asks, but only shows the
@@ -21,3 +21,20 @@ Tests: `sim/tests/test_town_providers.py`.
   per-tile migration is not tried (see 639).
 - The urban mortality premium: `Population.step` (`sim/world/demography.py`) takes one national disease burden, and
   `kill_people` takes a country and a share, not a tile (see 639; 635's externality hook feeds deaths by band, not by tile).
+
+## Done
+
+- The mod registers its derivation. `bh_urbanisation_w2n6` (`mods/bh_urbanisation_w2n6/hooks.py`) declares tile stores
+  `town_people` and `urban_mortality_premium`, a world phase `derive_towns` (after `money_world`) that stores each tile's
+  derived values, and `api.town_provider("towns", ...)` reading the stores. It is behind the mod's consent like all mod
+  code. Until the first phase has run the provider has no opinion. Test: `sim/tests/test_urbanisation_mod_scenario.py`.
+- The urban mortality premium reaches `Population.step` as `urban_mortality_premium` (a share of the baseline death
+  rate of every band, `sim/world/demography.py`). `api.town_provider(..., mortality_premium=...)` registers it
+  (`sim/labour/town_providers.py`); `SettlementMixin.town_mortality_premium_by_tile` averages it over the tile's people and
+  `step_regions` passes it per region. No number is typed in the engine: the figure is the mod's own labelled heuristic
+  (`URBAN_DISEASE_PREMIUM_AT_FULL_CROWDING`, with its retire text). Tests: `sim/tests/test_urban_mortality_premium.py`.
+- Moving households between tiles: not built, by decision. The engine has one migration rule
+  (`sim/labour/regional_migration.py`: working-age people move toward better-fed bordering tiles) and a town cannot
+  exceed its tile's people, so a second jobs-driven rule would duplicate it with no source. `ModEffects.move_people`
+  moves people between strata, not tiles, so it does not fit either (639). If towns should pull migrants, that is a
+  change to the one rule, filed as its own complaint.

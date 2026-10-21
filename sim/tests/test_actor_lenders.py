@@ -1,0 +1,71 @@
+"""An actor whose class sets `lends_from_purse` is offered to borrowers by the credit market (Complaint 636), and a
+variant civilisation is not played beside its base as a foreign partner.
+
+Each rule is called on the real method over a stand-in holding what it reads."""
+QUICK_TOPIC = True
+
+import unittest
+from types import SimpleNamespace
+
+from sim.agents.registry import ActorRegistry
+from sim.engine.economy_capital_market import EDGE_SAVERS, CapitalMarketMixin
+from sim.engine.foreign_economies import ForeignEconomiesMixin, foreign_economy_records
+from sim.tests import harness  # noqa: F401  (isolates the home directory)
+
+
+def actor(actor_id, lends, exited_year=None):
+    return SimpleNamespace(actor_id=actor_id, lends_from_purse=lends, record=SimpleNamespace(exited_year=exited_year))
+
+
+class Purses:
+    def __init__(self, purses, deposits):
+        self.purses, self.deposits = purses, deposits
+
+    def purse(self, actor_id):
+        return self.purses.get(actor_id, 0.0)
+
+    def deposit(self, actor_id):
+        return self.deposits.get(actor_id, 0.0)
+
+
+class Lenders(unittest.TestCase):
+    def test_the_registry_lists_lending_actors_in_play_in_id_order(self):
+        registry = SimpleNamespace(actors={"b": actor("b", True), "a": actor("a", True), "c": actor("c", False),
+                                           "gone": actor("gone", True, exited_year=100)})
+        self.assertEqual([found.actor_id for found in ActorRegistry.purse_lenders(registry)], ["a", "b"])
+
+    def test_a_lending_actors_purse_is_offered_as_a_firms_is(self):
+        purses = Purses({"abbey": 700.0, "firm": 50.0}, {"abbey": 30.0})
+        lenders = [actor("abbey", True)]
+        market = SimpleNamespace(
+            state_treasury=lambda: SimpleNamespace(actor_id="state"),
+            actors=SimpleNamespace(state=SimpleNamespace(purses=purses), active_firms=lambda: [SimpleNamespace(actor_id="firm")],
+                                   purse_lenders=lambda: lenders))
+        offers = CapitalMarketMixin.lender_offers(market, {"households": 5.0, "state": 9.0})
+        self.assertEqual(offers["abbey"], 730.0)
+        self.assertEqual(offers["firm"], 50.0)
+        self.assertEqual(offers["state"], 9.0)
+
+    def test_no_lending_actor_changes_no_offer(self):
+        market = SimpleNamespace(
+            state_treasury=lambda: SimpleNamespace(actor_id="state"),
+            actors=SimpleNamespace(state=SimpleNamespace(purses=Purses({}, {})), active_firms=lambda: [], purse_lenders=lambda: []))
+        offers = CapitalMarketMixin.lender_offers(market, {"households": 1.0, "state": 2.0})
+        self.assertEqual(offers, {EDGE_SAVERS: 1.0, "state": 2.0})
+
+
+class VariantPartners(unittest.TestCase):
+    def partners(self, civ):
+        stub = SimpleNamespace(civ=civ, state=SimpleNamespace(scenario=SimpleNamespace(year=100)))
+        return ForeignEconomiesMixin.partner_countries(stub)
+
+    def test_a_variant_is_played_without_its_base_as_a_partner(self):
+        partner = next(record["civilization"] for record in foreign_economy_records()
+                       if record.get("enabled", False) and record["from_year"] <= 100 <= record["until_year"])
+        self.assertIn(partner, self.partners({"id": "rome_100ad"}))
+        self.assertNotIn(partner, self.partners({"id": "mod:variant", "variant_of": partner}))
+        self.assertNotIn(partner, self.partners({"id": partner}))
+
+
+if __name__ == "__main__":
+    unittest.main()

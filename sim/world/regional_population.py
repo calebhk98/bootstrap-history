@@ -70,9 +70,11 @@ def keep_to_nation(regions: Dict[str, Population], national: Population, tiles: 
 
 def step_regions(regions: Dict[str, Population], kcal_per_day_by_region: Mapping[str, float], disease_burden: float,
                  epidemic_deaths: Mapping[str, float], endemic_death_rates: Optional[Mapping[str, float]],
-                 emigration: Mapping[str, float], immigration: Mapping[str, float]) -> Dict[str, StepFlows]:
+                 emigration: Mapping[str, float], immigration: Mapping[str, float],
+                 urban_mortality_premium: Optional[Mapping[str, float]] = None) -> Dict[str, StepFlows]:
     """One year for every region, each fed its own calories. The nation's epidemic deaths fall on a region in the
-    share of the nation's band it holds; migrants leave and arrive in the working-age band. Returns each region's flows."""
+    share of the nation's band it holds; migrants leave and arrive in the working-age band; a region's urban mortality
+    premium (a share of its baseline death rate, absent for none) comes from the town providers. Returns each region's flows."""
     band_totals = {band: sum(getattr(region, band) for region in regions.values()) for band in BANDS}
     flows = {}
     for tile in sorted(regions):
@@ -81,7 +83,8 @@ def step_regions(regions: Dict[str, Population], kcal_per_day_by_region: Mapping
                     for band in BANDS if band_totals[band] > 0.0}
         flows[tile] = region.step(
             kcal_per_day_by_region[tile], immigration=immigration.get(tile, 0.0), emigration=emigration.get(tile, 0.0),
-            jitter=False, disease_burden=disease_burden, epidemic_deaths=epidemic, endemic_death_rates=endemic_death_rates)
+            jitter=False, disease_burden=disease_burden, epidemic_deaths=epidemic, endemic_death_rates=endemic_death_rates,
+            urban_mortality_premium=(urban_mortality_premium or {}).get(tile, 0.0))
     return flows
 
 

@@ -113,6 +113,12 @@ class ModCodeApi:
         from sim.agents.api import register_spawner
         register_spawner(self.qualified(name), function)
 
+    def director_overhead(self, function: Callable) -> Callable:
+        """Charge `function(sim) -> hours` against the directed-hours pool (management layers, say). The hours count as
+        committed, so every free-hours check sees them; a negative answer counts as zero (sim/engine/director_overhead.py)."""
+        from . import director_overhead
+        return director_overhead.register(function)
+
     def phase(self, name: str, scope: str, handler: Callable, after: Any = (), before: Any = ()) -> None:
         """A step in the year: `scope` is "seat" (`handler(sim, seat_id)`, once per seat) or "world" (`handler(sim, seats)`,
         once). Placed right after its latest `after` and/or right before its earliest `before`; each names a shipped
@@ -149,10 +155,14 @@ class ModCodeApi:
         from .mod_effects import ModEffects
         return ModEffects(self.mod_id)
 
-    def town_provider(self, name: str, function: Callable) -> None:
-        """Say how many people live in a tile's town: `function(labour, tile, nominal_people) -> people or None`."""
-        from sim.labour.api import register_town_provider
+    def town_provider(self, name: str, function: Callable, mortality_premium: Optional[Callable] = None) -> None:
+        """Say how many people live in a tile's town: `function(labour, tile, nominal_people) -> people or None`. The
+        optional `mortality_premium(labour, tile, town_people) -> share of the baseline death rate or None` is the
+        town's excess mortality, which reaches `Population.step`. `labour.simulation_for_providers()` is the sim."""
+        from sim.labour.api import register_town_premium, register_town_provider
         register_town_provider(self.qualified(name), function)
+        if mortality_premium is not None:
+            register_town_premium(self.qualified(name), mortality_premium)
 
     def externality(self, provider: Callable) -> None:
         """Feed harm into the year: `(sim, year) -> {"deaths_by_band": {...}, "yield_factor_by_tile": {...}}`

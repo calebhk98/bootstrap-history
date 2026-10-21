@@ -1,6 +1,6 @@
 # A mod's actor cannot lend into the credit market, hold land in the land market, or replace its base civilisation as a partner
 
-**Status:** open - lending and the variant civilisation are the work here; land holding is tracked by 538
+**Status:** closed - land holding is 538's
 
 Found building `mods/bh_religion_h5p1` (religious houses that hold land, mill and lend). The complaint behind the mod
 (`closed/269`) is that religious bodies competed with the founder for land, labour and credit. The filename stays because
@@ -34,3 +34,17 @@ Found building `mods/bh_religion_h5p1` (religious houses that hold land, mill an
 
 Tried: branch `engine-actor-lenders` did both bullets; it was never merged (`grep -rn "lends_from_purse\|variant_of" sim`
 is empty on main).
+
+## Done
+
+- Lending: `lender_offers` (`sim/engine/economy_capital_market.py`, the place offers are gathered; `sim/economy/credit.py`
+  is untouched) also offers the purse and deposit of every actor `ActorRegistry.purse_lenders` returns, those whose class
+  sets `lends_from_purse` and that are still in play (`sim/agents/registry.py`). The religion mod's house sets it.
+  Tests: `sim/tests/test_actor_lenders.py` (rules on stand-ins), `sim/tests/test_actor_lenders_scenario.py` (a game).
+- Variants: a new civilisation file with `variant_of` is that civilisation with the file's fields merged over it
+  (`variant_of_base`, `sim/engine/mods_civ.py`; `data.load_civ`), with `append` / `remove_items` for inherited lists; a loop or
+  a missing base is an error. `partner_countries` leaves the base out while a variant is played
+  (`sim/engine/foreign_economies.py`). The religion mod's three civilisations and the urbanisation mod's tenement
+  civilisation are now patches of a few lines, and the Han variant is no longer hidden. Tests:
+  `sim/tests/test_mod_civilization_variants.py`, `sim/tests/test_actor_lenders.py` (partners).
+- Land holding stays with 538.

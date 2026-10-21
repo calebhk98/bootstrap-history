@@ -1011,7 +1011,8 @@ class Population(object):
              emigration: float = 0.0, jitter: bool = False,
              disease_burden: float = PRE_INDUSTRIAL_DISEASE_BURDEN,
              epidemic_deaths: Optional[Mapping[str, float]] = None,
-             endemic_death_rates: Optional[Mapping[str, float]] = None) -> "StepFlows":
+             endemic_death_rates: Optional[Mapping[str, float]] = None,
+             urban_mortality_premium: float = 0.0) -> "StepFlows":
         """Advance by one year. Mutates this Population in place and returns
         the flows that moved it, for the caller (a test, or eventually an
         engine) to check the accounting against.
@@ -1070,19 +1071,22 @@ class Population(object):
         """
         start_total = self.total
         ratio = self.nutrition_ratio(food_available_calories_per_day, jitter=jitter)
+        # Excess baseline mortality of crowded towns, as a share of the baseline rate, supplied by a town provider
+        # (sim/labour/town_providers.py); zero when no provider gives one.
+        urban_premium = max(0.0, urban_mortality_premium)
 
         deaths_children = self.children * min(
-            1.0, BASELINE_ANNUAL_MORTALITY_RATE_CHILD
+            1.0, BASELINE_ANNUAL_MORTALITY_RATE_CHILD * (1.0 + urban_premium)
             * _disease_mortality_multiplier(
                 disease_burden, DISEASE_MORTALITY_FLOOR_MULTIPLIER_CHILD)
             * _excess_mortality_multiplier(ratio, STARVATION_VULNERABILITY_CHILD))
         deaths_working_age = self.working_age * min(
-            1.0, BASELINE_ANNUAL_MORTALITY_RATE_WORKING_AGE
+            1.0, BASELINE_ANNUAL_MORTALITY_RATE_WORKING_AGE * (1.0 + urban_premium)
             * _disease_mortality_multiplier(
                 disease_burden, DISEASE_MORTALITY_FLOOR_MULTIPLIER_WORKING_AGE)
             * _excess_mortality_multiplier(ratio, STARVATION_VULNERABILITY_WORKING_AGE))
         deaths_elderly = self.elderly * min(
-            1.0, BASELINE_ANNUAL_MORTALITY_RATE_ELDERLY
+            1.0, BASELINE_ANNUAL_MORTALITY_RATE_ELDERLY * (1.0 + urban_premium)
             * _disease_mortality_multiplier(
                 disease_burden, DISEASE_MORTALITY_FLOOR_MULTIPLIER_ELDERLY)
             * _excess_mortality_multiplier(ratio, STARVATION_VULNERABILITY_ELDERLY))
