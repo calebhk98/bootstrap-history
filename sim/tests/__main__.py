@@ -69,6 +69,7 @@ if _REPO_ROOT not in sys.path:
 
 from sim import cache_root
 from sim.tests import machine_slots
+from sim.tests import topic_import_guard
 from sim.tests import discovery  # noqa: E402
 from sim.tests.discovery import discover_topics  # noqa: E402
 
@@ -92,7 +93,13 @@ def _run_topic(slug, harness):
     reports in the same summary, the same count, and the same exit code as
     every other topic.
     """
-    mod = importlib.import_module("sim.tests.test_%s" % slug)
+    own_name = "sim.tests.test_%s" % slug
+    with topic_import_guard.own_checks_only(own_name):
+        return _run_topic_module(slug, harness, own_name)
+
+
+def _run_topic_module(slug, harness, own_name):
+    mod = importlib.import_module(own_name)
 
     # Only the module's own classes: a TestCase imported from another topic is that topic's to run.
     loader = unittest.TestLoader()

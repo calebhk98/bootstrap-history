@@ -18,6 +18,7 @@ from sim.refusal import LogLine, Refusal
 from . import money_units, purchase_rule
 from .blockers import blocker_kind
 from .project_funding import cash_covers_start, paid_credit
+from .projects_training_advice import training_advice, training_advice_text
 from .projects_trade_wait import trade_wait_outlasts_the_project
 from .interest_groups import check_group_prohibition
 from .living_stock import check_unheld_stock
@@ -742,13 +743,9 @@ class StartingMixin:
         if absent:
             if not _why:
                 return False, None
-            source = self.labour._source_trade_for(absent[0])
-            cost = ("about %.0f of your own hours each, %.1f years"
-                    % (self.labour.training_hours_per_person(absent[0], source),
-                       self.labour.training_years_from(absent[0], source))) if source else "no trade here to teach it from"
-            return False, ("this needs %s and there are none in this society. "
-                           'Teach one: {"cmd":"train","trade":"%s","n":1} (%s)'
-                           % (", ".join(trade_id + "s" for trade_id in absent), absent[0], cost))
+            return False, ("this needs %s and there are none in this society. Teach one: %s"
+                           % (", ".join(trade_id + "s" for trade_id in absent),
+                              training_advice_text(training_advice(self.labour, absent[0]))))
         return None
 
     @blocker_kind("specialists")
@@ -768,10 +765,9 @@ class StartingMixin:
         if _none_left:
             return False, (("this needs %s and there is not one left here to do "
                            "it: nobody holds the trade and nobody is being taught it "
-                           "in time. "
-                           '{"cmd":"train","trade":"%s","n":2} makes '
-                           "more, or hire from your own if you have any"
-                           % (", ".join(trade_id + "s" for trade_id in _none_left), _none_left[0]))
+                           "in time. Teach more: %s, or hire from your own if you have any"
+                           % (", ".join(trade_id + "s" for trade_id in _none_left),
+                              training_advice_text(training_advice(self.labour, _none_left[0]))))
                            if _why else None)
         return None
 
