@@ -197,8 +197,14 @@ KILOGRAMS_PER_GRAM = declare(
 HOURS_PER_PERSON_YEAR = declare(
     "HOURS_PER_PERSON_YEAR", 2000.0, kind="engineering_estimate",
     unit="hours/person/year",
-    source="A 10-hour day, 250 working days a year, less feasts and holidays.",
-    confidence="B",
+    source="A ten-hour day over 200 working days, inside the range the opened sources give "
+           "(Complaints/reports/research-working-year.md): Jensen, Radu and Sharp, Days Worked "
+           "and Seasonality Patterns of Work in Eighteenth Century Denmark (SDU DPBE 10/2019), "
+           "184 days for a casual worker with winter idleness, 292 at full employment, \"a workday "
+           "of 10 hours\"; Allen and Weisdorf, Was there an industrious revolution (Copenhagen DP "
+           "10-14), under 200 days a year late medieval, 250 days the usual convention. No "
+           "Roman source found for days a year or hours a day.",
+    confidence="C",
     why="Converts an hourly wage to an annual one and back, and a head count "
         "to labour hours: the one working-year convention every wage quote, "
         "staff count and hours ledger uses.")
