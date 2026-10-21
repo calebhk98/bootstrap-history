@@ -1,6 +1,6 @@
 # The unsold-stock search runs for minutes in a Norse game with many concerns
 
-**Status:** open
+**Status:** closed - the bisection on the ask level never closed when the lowest floor was zero or underflowed to zero (see Cause). Fixed in `sim/economy/unsold_search.py`; regression tests in `sim/tests/test_unsold_stock_search.py`; the scenario now finishes (`python3 -m sim.tests --slow --only staff_closure_reopening_scenario`).
 
 `sim/tests/test_staff_closure_reopening_scenario.py` (a Norse game with many concerns and `auto_hire`, moved
 unchanged out of `arrears_hours`) steps its first years in seconds, then one further year runs for minutes. A
@@ -18,3 +18,12 @@ What it would take: capture the inputs of the slow `clear_with_search` call from
 function test that times it and counts `_crossing` calls, find why the search's iteration count explodes (a bracket
 that does not shrink, a fallback that restarts, a seller loop that is quadratic), and bound it by its own rule, not by
 a cap on years in the scenario.
+
+## Cause
+
+The search judged its bracket against its own top (`high - low > precision * high`). With a lowest floor of zero
+(a good with free inputs), the bracket [0, high] halves forever against a shrinking top, about a thousand trials down
+to the smallest float, each a market crossing. A floor tiny but positive hit the same loop, because the geometric
+mean `sqrt(low * high)` underflows to zero. The scenario reaches it with a land-rent seller with no buyers.
+The gap is now judged against the highest ask when the floor is zero, and the geometric mean is taken as a product
+of roots. Both cases are counted-crossings tests (`crossings_for`).
