@@ -37,8 +37,9 @@ check("the opening herds equal the producers' head (pasture permitting) and stan
 
 _record, _areas, _carriage = opening.open_economy(build_setup(unopened_sim(civ="rome_100ad")))
 producers = list(_record.producers.values())
-wool_made = sum(p.capacity_runs * production[p.recipe_id]["outputs"].get("wool_kg", 0.0) for p in producers)
-wool_used = sum(p.capacity_runs * (production[p.recipe_id].get("inputs") or {}).get("wool_kg", 0.0) for p in producers)
+# the runs a year the opening works (expected_sales), not the plant: each recipe's plant is sized by its own working share
+wool_made = sum(p.expected_sales * production[p.recipe_id]["outputs"].get("wool_kg", 0.0) for p in producers)
+wool_used = sum(p.expected_sales * (production[p.recipe_id].get("inputs") or {}).get("wool_kg", 0.0) for p in producers)
 check("Rome's opening flock supplies its opening wool demand within a tenth",
       wool_used > 0.0 and abs(wool_made / wool_used - 1.0) <= 0.1, (wool_made, wool_used))
 
