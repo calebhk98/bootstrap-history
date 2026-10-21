@@ -11,6 +11,7 @@ from sim.engine.state import FounderState, GovernanceState, HouseholdState, Proj
 from sim.engine.state_holdings import HoldingsState, SeatProgressState
 
 FIRST_SEAT_ID = "founder"   # the one id the party-id constants agree on
+FOUNDER_SECTION = "founder"   # the seat section (and reply key) holding the founder, absent for a country seat
 HOUSEHOLD_SEAT = "household"
 COUNTRY_SEAT = "country"
 

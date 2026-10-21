@@ -69,7 +69,8 @@ MONEY_ARGUMENT_EXEMPT = {
 }
 # Reply keys whose names read like a quantity but whose values are not a number of money, mass or area.
 NOT_NUMERIC_KEYS = {
-    "and_could_pay_for", "capacity_gained_or_lost", "cash_book", "coin_hoard", "could_pay_for", "debt", "done_earned",
+    "and_could_pay_for", "budget_lines",  # names of budget lines
+    "capacity_gained_or_lost", "cash_book", "coin_hoard", "could_pay_for", "debt", "done_earned",
     "expected_lost_per_sacking", "failure_costs_hours", "interest_groups", "it_yields_per_hectare_per_year",
     "keep_pay_at_market",  # a yes/no option
     "max_cost", "max_total_cost", "pay_to_lower_the_risk", "reserve_cash", "revenue_and_upkeep_apply_only_once_opened",

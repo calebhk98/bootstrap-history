@@ -94,6 +94,7 @@ class StaffingMixin:
         closed = [closure.entry_key for closure in self.review_ventures((business_review.STAFF_SHORT,), year)]
         if closed:
             self.record_staffing_closures(len(closed), shortfalls)
+            # plain line: unstaffed_closure_line builds the LogLine and its kind
             household.log.append((year, unstaffed_closure_line(
                 closed, shortfalls, self.staffing_shortfall_words(shortfalls), self.staffing_shut_count(),
                 self.STAFFING_REMEDIES, earnings_stopped)))
