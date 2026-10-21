@@ -1,6 +1,6 @@
 # Staged adoption, awareness, contact triggers and subsidy levers are missing from research and diffusion
 
-**Status:** partly (research and actor-to-actor diffusion work for every actor; the gaps below remain)
+**Status:** partly (awareness, staged adoption, technique levers and own stock are built and tested; the remainder is at the end)
 
 What is wrong now:
 
@@ -56,3 +56,23 @@ unit count; subsidy and mandate levers on the government (481).
   `exposure` reads the holders' distance for those nodes, so imitation can copy from any actor
   (`--only demonstrated_reads_actor_knowledge`).
 - Left: the gaps listed at the top; a state's research choice is only as good as the node `gains` and `traits` data it weighs.
+- Done: awareness (`sim/agents/awareness.py`). An actor that takes part in knowledge spreading may take up a node
+  someone has shown only once it is aware of it (`knows_it_exists`; imitation candidates, the research gate's
+  `unaware` cause and `research.diffuse` all read it). Awareness comes yearly with chance `hazard(volume)` from the
+  contact volume with the holders (`world.contact_volume`: neighbours by observation range plus tonnes carried
+  between the places, `sim/engine/agents_port_research.py`), recorded contact events (`record_contact`, fading) and a
+  founder's demonstration (`world.exposure`). It gives no skill. Test: `--only staged_adoption`.
+- Done: staged adoption (`sim/agents/adoption.py`): aware, trying (pilot share), adopted; the share follows
+  share' = speed * gap * share * (1 - share) with the gap the relative margin over the actor's other concerns
+  (Griliches 1957 logistic, slope tied to profitability; the speed constant is a labelled heuristic). A technique
+  that does not pay is dropped after the trial.
+- Done: levers `trial_subsidy` and `tech_mandate` (`sim/agents/government_levers.py`), paid from the state's treasury
+  in `adoption.advance_actor` (subsidy per trying actor; the state makes a mandated actor whole for realised losses).
+- Done: the start gate counts the actor's own stock (`research_gate.materials_short_of_stock`, `Actor.held_tonnes`
+  from the record's `stores`).
+- Remainder: (1) the engine does not yet call `awareness.record_contact` on a conquest or a migration, and a new
+  route raises awareness only through the carried-tonnes reading of `contact_volume`; (2) the share is state only:
+  no production code reads `adoption` yet, so a share does not yet change a plant's output or crew; (3) no node
+  requires samples brought back from a region (expedition `returns`, rubber and latex); (4) the contact and speed
+  constants are heuristics (`sim/agents/tuning_adoption.py`) awaiting measured carriers and fitted curves; (5) a firm's
+  `stores` is not yet filled by its purchases, so its own stock is mostly empty in a real game.

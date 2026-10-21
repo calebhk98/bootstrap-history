@@ -362,6 +362,11 @@ class World(Protocol):
 		"""0..1: how much of a node an actor holds shows to an onlooker `distance_km` away."""
 		...
 
+	def contact_volume(self, place_a: Optional[str], place_b: Optional[str]) -> float:
+		"""How much news passes between two places in a year (neighbours, trade carried), 0 for none;
+		unit contact is what makes a technique known with the chance `awareness.hazard` gives."""
+		...
+
 	def exposure(self, node_id: str, location: Optional[str]) -> float:
 		"""How much of an invention an observer at `location` can learn, 0..1."""
 		...

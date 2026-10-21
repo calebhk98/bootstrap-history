@@ -49,6 +49,7 @@ for shows, expected in ((0.9, True), (0.1, False)):
 	registry = ActorRegistry(ActorsState(home_country="home"))
 	firm = registry.add("firm:1", ActorRecord(kind="firm", money=1.0e6, target="shop", founded_year=0, last_margin=5000.0))
 	world.baseline = set()
+	firm.record.aware["shop"] = 0   # the firm has heard of it; sight is what this check varies
 	options = firm.imitation_options(world)
 	check("a firm copies a target it sees (%s) or cannot (%s)" % (expected, not expected), bool(options) == expected, (shows, options))
 

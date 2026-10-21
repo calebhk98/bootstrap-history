@@ -1,7 +1,10 @@
 """What a researching actor asks of the world: hands, sellers and substitutes (mixed into `SimWorld`)."""
-from typing import Any, List
+from typing import Any, List, Optional
 
-from sim.agents.api import research_gate
+from sim.agents.api import OBSERVATION_RANGE_KM, TRADE_TONNES_FOR_UNIT_CONTACT, research_gate
+from sim.geography.api import flow_ledger
+
+from . import visibility as visibility_of
 
 from .material_availability import materials_without_a_seller
 
@@ -27,6 +30,16 @@ class ResearchView:
 		if holding is None:
 			return materials_without_a_seller(self._sim, node_id, held_tonnes=lambda material: 0.0)
 		return materials_without_a_seller(self._sim, node_id, held_tonnes=holding)
+
+	def contact_volume(self, place_a: Optional[str], place_b: Optional[str]) -> float:
+		"""News passing between two places in a year: neighbours see each other's work (the range an onlooker
+		sees at), and each tonne carried between them is a visit (`TRADE_TONNES_FOR_UNIT_CONTACT`)."""
+		sim = self._sim
+		neighbour = visibility_of.seen_from(1.0, self.distance_km(place_a, place_b), OBSERVATION_RANGE_KM)
+		carried = sim.economy.agent.carried_last_year()
+		tonnes = flow_ledger.tonnes_between(carried, str(place_a), str(place_b)) + flow_ledger.tonnes_between(
+			carried, str(place_b), str(place_a))
+		return neighbour + tonnes / TRADE_TONNES_FOR_UNIT_CONTACT
 
 	def purchasable_substitute_discount(self) -> float:
 		return self._sim.PURCHASABLE_SUBSTITUTE_QUALITY_DISCOUNT

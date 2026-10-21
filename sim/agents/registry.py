@@ -8,7 +8,7 @@ from .records import ActorRecord, ActorsState
 from .base import RecordedActor
 from .concern_totals import ConcernTotals
 from .entry_round import NicheEntry
-from . import patent_index, research
+from . import adoption, awareness, patent_index, research
 from .firm import Firm
 from .government import Government
 from .group import InterestGroup
@@ -403,8 +403,11 @@ class ActorRegistry:
 				self._columns_synced = False
 			first = False
 		self._acting = None
-		research.diffuse([actor for actor in self.actors.values()
-						  if actor.researches and actor.record.exited_year is None], world)
+		researchers = [actor for actor in self.actors.values() if actor.researches and actor.record.exited_year is None]
+		awareness.spread(researchers, world)
+		research.diffuse(researchers, world)
+		for actor in sorted(researchers, key=lambda each: each.identity()):
+			adoption.advance_actor(actor, self.world_for(actor, world))
 		for _name, spawner in list(SPAWNERS):
 			spawner(self, world)
 		# entry and group formation change staff after the last count; whatever reads before the next
