@@ -37,6 +37,15 @@ class UnfundedClaimTests(unittest.TestCase):
         share = budget.share_paid(need, 0.0, borrowed=need)
         self.assertEqual(budget.unfunded_by_line(lines, share)[GROUP_CLAIM_NAME], 0.0)
 
+    def test_the_levy_rate_is_the_unfunded_need_over_visible_income_split_by_kind_and_stops_at_the_ceiling(self):
+        kinds = {"army": "requisition", "administration": "office"}
+        requisition, office = budget.levy_rates({"army": 30.0, "administration": 10.0}, kinds, 1000.0)
+        self.assertAlmostEqual(requisition + office, 40.0 / 1000.0)
+        self.assertAlmostEqual(requisition, 3.0 * office)
+        capped = budget.levy_rates({"army": 30.0, "administration": 10.0}, kinds, 1.0)
+        self.assertAlmostEqual(sum(capped), budget.LEVY_RATE_CEILING)
+        self.assertEqual(budget.levy_rates({"army": 0.0}, kinds, 1000.0), (0.0, 0.0))
+
 
 if __name__ == "__main__":
     unittest.main()
