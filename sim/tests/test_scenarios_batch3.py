@@ -82,7 +82,12 @@ check("scenario quote and purchase: the quoted tonnage of mine is sunk in full",
       _mine_quote["you_can_afford_about"] > 0
       and _mine_game.open_mine("coal", _mine_quote["you_can_afford_about"], partial=False)
       == _mine_quote["you_can_afford_about"], _mine_quote)
-_slaves_game, _slaves_quote = _quoted({"what": "slaves", "n": 100})
+# a few people cost more than the little cash buys, so the cash is a multiple of one person's price (in the same
+# units the little cash is quoted in), and the quote is asked again
+_one_person = _quoted({"what": "slaves", "n": 1})[1]
+_slaves_cash = _LITTLE_CASH * 10 * _one_person["per_person_base"] / _one_person["you_have"]
+_slaves_game = sim(capital=_slaves_cash)
+_slaves_quote = _cmd_quote(_slaves_game, NODES, {"what": "slaves", "n": 100}, None)
 check("scenario quote and purchase: the slaves quote shows the shared budget and the people are bought in full",
       "you_could_raise" in _slaves_quote and _slaves_quote["you_can_afford_about"] > 0
       and _slaves_game.labour.buy_slaves(_slaves_quote["you_can_afford_about"]) == _slaves_quote["you_can_afford_about"],

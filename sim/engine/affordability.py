@@ -53,6 +53,11 @@ def payback_years(capex, revenue, upkeep):
     return capex / max(0.01, revenue - upkeep)
 
 
+def opens_in_deep_arrears(payback, limit_years):
+    """Whether a concern may be opened while deep in arrears: only one that pays for its own doors within the limit."""
+    return payback <= limit_years
+
+
 def deep_in_arrears(capital, credit_limit, share):
     """Whether the debt carried is past a share of the credit line."""
     return capital < 0 and -capital > credit_limit * share

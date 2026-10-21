@@ -27,7 +27,7 @@ _before = ask_agent(_load_game, cmd="state")
 _resp = ask_agent(_load_game, cmd="load", file=_rel("bad.json"))
 _after = ask_agent(_load_game, cmd="state")
 check("the protocol answers a refused load with a refusal and leaves the running game untouched",
-      _resp.get("ok") is False and "Traceback" not in _resp.get("error", "")
+      _resp.get("ok") is False and _resp.get("cause") == "save_invalid"
       and _before.get("year") == _after.get("year") and _before.get("capital") == _after.get("capital"), _resp)
 
 # a save for a civilisation other than the one currently running

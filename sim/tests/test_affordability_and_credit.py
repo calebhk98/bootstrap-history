@@ -92,6 +92,9 @@ check("appearances come out of what is left, not the other way about",
 # --- an earning concern opens in arrears on its own payback
 check("a concern's payback is its capex over what it nets a year",
       affordability.payback_years(600.0, 500.0, 100.0) == 1.5 and affordability.payback_years(1.0, 10.0, 10.0) == 100.0)
+check("deep in arrears, a concern opens only if it pays for its own doors within the limit",
+      affordability.opens_in_deep_arrears(1.0, 3.0) and affordability.opens_in_deep_arrears(3.0, 3.0)
+      and not affordability.opens_in_deep_arrears(3.5, 3.0))
 check("deep in arrears is past a share of the credit line, and needs arrears at all",
       affordability.deep_in_arrears(-60.0, 100.0, 0.5) and not affordability.deep_in_arrears(-40.0, 100.0, 0.5)
       and not affordability.deep_in_arrears(10.0, 100.0, 0.5))
@@ -123,21 +126,13 @@ paybacks = {node_id: affordability.payback_years(opener.venture_capex(node_id), 
             and opener.venture_foreman(node_id)[0] is None}
 # deep in arrears is past half the credit line but still inside it, so a door fee can still be raised
 def into_arrears(game):
+    game.credit_limit = lambda: 1.0e6
     game.capital = -0.6 * game.credit_limit()
 
 
-# the quickest one that opens with nothing else known (one whose gate work is shut refuses, whatever its payback)
-_probe = sim()
-quick_payback = None
-for node_id in sorted(paybacks, key=lambda node_id: (paybacks[node_id], node_id)):
-    _probe.done.add(node_id)
-    _probe._done_changed()
-    into_arrears(_probe)
-    if _probe.open_venture(node_id)[0]:
-        quick_payback = node_id
-        break
-    _probe.done.discard(node_id)
-    _probe._done_changed()
+# the quickest earning concern and the slowest (the rule itself is checked above on built numbers); the line is
+# made wide so the door fee can be raised and only the payback gate decides
+quick_payback = min(paybacks, key=lambda node_id: (paybacks[node_id], node_id))
 slow_payback = max(paybacks, key=lambda node_id: (paybacks[node_id], node_id))
 assert paybacks[quick_payback] < opener.AUTO_OPEN_PAYBACK_LIMIT_YEARS < paybacks[slow_payback], paybacks
 deep = sim()
@@ -282,7 +277,7 @@ check("scenario: the game's spending_power is the one rule, and quote counts the
 set_position(-50000.0)
 hire_ok, hire_message = debtor.labour.hire("smith", 3)
 hire_fee = debtor.labour.hire_fee("smith", 3)
-train_ok, train_message = debtor.labour.train("machinist", 3, None)
+train_ok, train_message = debtor.labour.train("machinist", 1, None)   # one trainee: the hours fit, so cash is what refuses
 commission_ok, commission_message = debtor.labour.commission("smith", 3500.0)
 # presentation: the refusal's explanation of the lending rule
 check("scenario: a cash-short hire, train and commission are refused with the same reasoning: which rule (half the credit "
