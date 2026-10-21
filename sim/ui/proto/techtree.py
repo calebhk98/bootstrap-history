@@ -970,12 +970,10 @@ def _explain_cost(sim, nodes, node_id, node):
                  # is planning against a number the engine would never
                  # actually charge.
                  **({"already_paid_towards_this": round(
-                        min(sim.project_cost(node_id),
-                            max(0.0, sim.paid_towards.get(node_id, 0.0))), 1),
+                        ui_port.paid_credit(sim.project_cost(node_id), sim.paid_towards.get(node_id, 0.0)), 1),
                      "what_start_would_actually_charge": round(
                         max(0.0, sim.project_cost(node_id)
-                            - min(sim.project_cost(node_id),
-                                  max(0.0, sim.paid_towards.get(node_id, 0.0)))), 1),
+                            - ui_port.paid_credit(sim.project_cost(node_id), sim.paid_towards.get(node_id, 0.0))), 1),
                      "why_less_than_the_total_above":
                         "this much was already paid in before the work "
                         "stopped, halted by a creditor or by your own "

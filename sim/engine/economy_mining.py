@@ -36,6 +36,7 @@ from . import purchase_rule
 from .mine_ceiling import mine_ceiling_tonnes, room_under_ceiling
 from .forest_ceiling import forest_ceiling_hectares, held_land_area_km2, revenue_scale_multiple
 from .units_prose import area_text
+from .mine_labour_profile import mine_labour_hours_per_tonne
 from .mine_deposits import MineDepositsMixin, NO_DEPOSIT_TEXT
 from sim.agents.api import edges
 
@@ -145,13 +146,8 @@ class MiningMixin(MineDepositsMixin):
         key = (mat, mine_technique.effects_key(effects))
         cached = self._MINE_PROFILE_CACHE.get(key)
         if cached is None:
-            pairs = self._mine_reference_deposits(mat)
-            build = sum(weight * deposit_model.build_cost_labour_hours_per_tonne_year(dep, effects)
-                        for dep, weight in pairs)
-            running = sum(weight * KILOGRAMS_PER_TONNE
-                          * deposit_model.extraction_cost_labour_hours_per_kg(dep, effects)
-                          for dep, weight in pairs)
-            cached = self._MINE_PROFILE_CACHE[key] = (build, running)
+            cached = self._MINE_PROFILE_CACHE[key] = mine_labour_hours_per_tonne(
+                self._mine_reference_deposits(mat), effects)
         return cached
 
     def _mine_capex_opex(self, mat):

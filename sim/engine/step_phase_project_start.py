@@ -4,6 +4,7 @@ A part of the year's phases (core_step_phases.py); Sim inherits it through StepP
 from sim.refusal import LogLine
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 from . import automation_audit, shortage_conditions
+from .shortage_sizing import nitre_bed_yearly_spend
 from sim.agents.api import edges
 from sim.constants import declare
 from . import money_units
@@ -295,7 +296,7 @@ class ProjectStartPhaseMixin:
                 #
                 # The shortage is real and unresolved; more money is not the
                 # answer to it.
-                spend = min(self.state.household.capital * 0.05, self.NITRE_BED_SPEND_CEILING)
+                spend = nitre_bed_yearly_spend(self.state.household.capital, self.NITRE_BED_SPEND_CEILING)
                 self.pay_edge(edges.EDGE_BUILDERS, spend, "nitre beds laid down")
                 self.state.holdings.nitre_bed_m2 += spend / self.NITRE_COST_PER_M2
                 automation_audit.record(

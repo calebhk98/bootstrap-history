@@ -1,4 +1,7 @@
-"""Complaints 88 and 98: portfolio paging, readouts and group drill-down; stuck on a calendar-bound goal path."""
+"""Complaints 88 and 98: portfolio paging, readouts and group drill-down; stuck on a calendar-bound goal path.
+The replies of a running game are test_portfolio_scale_stuck_advice_scenario."""
+QUICK_TOPIC = True
+
 from types import SimpleNamespace
 
 from .harness import *  # noqa: F401,F403
@@ -45,6 +48,7 @@ check("earliest completion is the slowest of calendar, hours and money",
 stalled = add_readouts(SimpleNamespace(year=1000), nodes, [row("p1", "hours", 1, effective=0.0)])[0]
 check("no effective hours means no finish forecast", stalled["earliest_completion_year"] is None, stalled)
 
+# presentation: the project block labels the allocation and the forecast apart, and the paging line points at the next page
 text = "\n".join(project_lines(dict(readout, waiting_on="x", hours_offered_this_year=50.0)))
 check("allocation and forecast are labelled apart", "last allocation" in text and "forecast from now" in text, text)
 check("paging line points at the next page", "and 12 more" in paging_line(paging), paging_line(paging))
@@ -69,13 +73,8 @@ try:
           stuck_advice.calendar_bound_advice(clear, graph) is None)
 finally:
     stuck_advice.delay_kinds, stuck_advice.lever_line = real_kinds, real_levers
+# presentation: the stuck screen renders the wait, side work and filler
 stuck_text = render_stuck({"what_is_holding_you_up": "x", "goal_path_is_calendar_bound": advice,
                            "the_cheapest_start_is_filler": "a is only the cheapest startable thing"})
 check("stuck renders the wait, side work and filler",
       "CALENDAR" in stuck_text and "coverage" in stuck_text and "only the cheapest" in stuck_text, stuck_text)
-
-live = sim()
-reply = S._agent_dispatch(live, NODES, {"cmd": "stuck"})
-check("stuck on a real game carries live lever figures and the filler note",
-      reply.get("lever_figures") and "filler" in str(reply.get("the_cheapest_start_is_filler")), reply)
-check("portfolio on a real game replies with paging", S._agent_dispatch(live, NODES, {"cmd": "portfolio"})["paging"]["total"] == 0)

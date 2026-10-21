@@ -5,6 +5,8 @@ can spend) from its own books, and `commit_research` begins the project there in
 """
 from typing import Any, Dict
 
+from .project_funding import paid_credit
+
 
 class SeatResearcher:
 	researches = True
@@ -39,8 +41,8 @@ class SeatResearcher:
 	def research_price(self, costs: Dict[str, Any], node_id: str, world: Any) -> float:
 		"""What the seat still owes on the node: the shared bill less what it already paid towards it."""
 		sim = self._sim
-		paid = max(0.0, (sim.state.projects.paid_towards or {}).get(node_id, 0.0))
-		return max(0.0, sim.project_cost(node_id) - min(sim.project_cost(node_id), paid))
+		price = sim.project_cost(node_id)
+		return max(0.0, price - paid_credit(price, (sim.state.projects.paid_towards or {}).get(node_id, 0.0)))
 
 	def commit_research(self, node_id: str, costs: Dict[str, Any], world: Any) -> str:
 		return self._sim.begin_seat_project(node_id, self.precaution)

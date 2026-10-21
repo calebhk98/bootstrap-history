@@ -3,12 +3,13 @@
 A part of the year's phases (core_step_phases.py); Sim inherits it through StepPhasesMixin."""
 
 from sim.refusal import LogLine
+from sim.labour.api import scholar_target
 from sim.world import demography
 from . import automation_audit
 from .units_prose import plain_number
-from .staff_phase_rules import (has_room_to_hire, hires_needed, payroll_shortfall, replacement_shortfall,
-                                shed_for_payroll, staff_targets)
-from .staff_replacement import REPLACE_ONLY, replace_lost_staff
+from .payroll_trim import payroll_means, staff_to_let_go
+from .staff_phase_rules import has_room_to_hire, hires_needed
+from .staff_replacement import REPLACE_ONLY, replace_lost_staff, replacement_wanted
 from sim.agents.api import edges
 
 
@@ -72,7 +73,7 @@ class StaffPhaseMixin:
         payroll = self.labour.wage_bill()
         other = (self.upkeep() + (self.living_cost() - payroll)
                  + self.mine_operating_cost())
-        short = payroll_shortfall(payroll, self.revenue(), other, self.state.household.capital, self.credit_limit())
+        can_pay = payroll_means(self.revenue(), other, self.state.household.capital, self.credit_limit())
         # NOT GATED BY A POLICY, and this is the one automatic thing that is not.
         # A policy switch is for something the game decides FOR you - who to
         # hire, what to mothball - and every one of those is yours to turn off.
@@ -80,15 +81,15 @@ class StaffPhaseMixin:
         # is not a decision the game is making on your behalf, it is the world
         # answering one you already made, the same as the arrears bleed below.
         # The `policy` reply says so in as many words.
-        if short > 0 and self.state.household.employees:
+        if payroll > can_pay and self.state.household.employees:
             gone = 0.0
             _before_shed = self.labour.staff_snapshot()
-            # shed, dearest first, until the wages you are left with fit
-            for trade_id, cut, left in shed_for_payroll(short, self.state.household.employees,
-                                                        self.labour.market.quote_annual):
+            # shed, dearest first, whole people, until the wages you are left with fit
+            for trade_id, cut in staff_to_let_go(payroll, can_pay, dict(self.state.household.employees),
+                                                 self.labour.market.quote_annual).items():
                 self.labour.add_employed(trade_id, -cut)
                 gone += cut
-                if left == 0.0:
+                if self.labour.employed(trade_id) < 0.5:
                     self.labour.set_employed(trade_id, 0.0)
             self.labour.resync_pools()
             self.labour.log_staff_reduction("a payroll you cannot meet", _before_shed)
@@ -131,14 +132,13 @@ class StaffPhaseMixin:
             # building the institutions staff_capacity() already credits
             # widens this same wall past that well before the goal is in
             # reach).
-            household = self.state.household
-            desired_sc, craft = staff_targets(
-                household.scholars, household.artisans, sc_cap, ar_cap, extra, self.AUTO_HIRE_SCHOLAR_EXTRA_SHARE,
-                self.labour.literate_capacity("scholar"), self.AUTO_HIRE_SCHOLAR_APPROACH_RATE,
-                self.AUTO_HIRE_ARTISAN_APPROACH_RATE, household.freedmen, household.slaves,
-                self.AUTO_HIRE_SLAVE_CRAFT_CREDIT)
+            target_sc = scholar_target(sc_cap, extra, self.AUTO_HIRE_SCHOLAR_EXTRA_SHARE, self.labour.literate_capacity("scholar"))
+            desired_sc = self.state.household.scholars + (target_sc - self.state.household.scholars) * self.AUTO_HIRE_SCHOLAR_APPROACH_RATE
+            target_ar = ar_cap + extra
+            desired_ar = self.state.household.artisans + (target_ar - self.state.household.artisans) * self.AUTO_HIRE_ARTISAN_APPROACH_RATE
             # Keep the per-trade books honest about the aggregate: staff taken on
             # for you are generic craftsmen and scribes, and that is all they are.
+            craft = max(0.0, desired_ar - self.state.household.freedmen - self.state.household.slaves * self.AUTO_HIRE_SLAVE_CRAFT_CREDIT)
             specials = sum(value for trade_id, value in self.state.household.employees.items()
                            if trade_id not in ("artisan", "scholar") and self.step_context.trade_family(trade_id) == "craft")
             # SPECIALISTS MUST NOT EAT THE GENERALISTS: the generic bucket is
@@ -223,15 +223,13 @@ class StaffPhaseMixin:
             # and rehires ones the player fired (see idle_specialists).
             _drawn_on = self.labour.trades_drawn_on()
             for trade_id in sorted(set(self.state.household.employees) | set(self.state.household.trades_created)):
-                if trade_id in ("artisan", "scholar") or trade_id not in _drawn_on:
-                    continue
                 have = self.state.household.employees.get(trade_id, 0.0)
-                short = replacement_shortfall(
-                    have, trade_id in self.state.household.trades_created, self.TRADE_REPLACEMENT_TARGET_HEADCOUNT,
-                    self.state.household.capital, lambda: self.labour.market.quote_annual(trade_id),
-                    self.TRADE_REPLACEMENT_AFFORDABILITY_YEARS)
-                want = have + short if short else have
-                if short:
+                want = replacement_wanted(trade_id, have, trade_id in self.state.household.trades_created, _drawn_on,
+                                          self.TRADE_REPLACEMENT_TARGET_HEADCOUNT)
+                if want is None:
+                    continue
+                short = want - have
+                if short > 0.02 and self.state.household.capital > self.labour.market.quote_annual(trade_id) * self.TRADE_REPLACEMENT_AFFORDABILITY_YEARS:
                     _before = self.state.household.capital
                     self.labour.set_employed(trade_id, have + short)
                     self.pay_edge(edges.EDGE_WORKERS, short * self.labour.market.quote_annual(trade_id), "wages advanced for replacement staff")

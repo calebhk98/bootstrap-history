@@ -1,70 +1,90 @@
-"""Complaint 120: money can buy a lower chance of failing, at a stated cost.
+"""Complaint 120: money can buy a lower chance of failing, at a stated cost. The precaution's resolution, cost, hours,
+relief and quote, each on a stand-in game holding one declared node (no game). The start through the dispatcher is
+test_risk_precaution_scenario."""
+from types import SimpleNamespace
 
-A node declaring the `precaution` mechanic quotes what a pilot plant or a
-redundant team costs and what it does to the failure chance; starting with it
-adds that cost and those hours to the project and lowers the dice's chance.
-"""
-from .harness import *  # noqa: F401,F403
-from sim.engine.projects_precaution import KINDS
+from .harness import check, NODES
 
-NODE_ID = "cap_heat_1600"
-SPEC = NODES[NODE_ID]["mechanics"]["precaution"]
-LABEL = SPEC["kind"].replace("_", " ")
-UNOFFERED = "cap_tol_1mm"
+from sim.engine import projects_precaution as rules
 
+QUICK_TOPIC = True
 
-def _fresh():
-    test_sim = sim(capital=10000000.0)
-    test_sim.start_refusal = lambda node_id: None   # staff and prerequisites are not under test
-    test_sim.state.projects.done.update(NODES[NODE_ID]["pre"])   # the shared research gate still reads what is known
-    test_sim._done_changed()
-    test_sim.labour.craft_hands_available = lambda: 1.0e6   # nor is how many hands the shared gate counts
-    test_sim.labour.scholar_hands_available = lambda: 1.0e6
-    return test_sim
+BILL = 1000.0
+HOURS = 200.0
+BASE_RISK = 0.4
 
 
-check("set-up: the node offers a precaution and its risk is above zero",
-      SPEC["kind"] in KINDS and "cost_share" not in SPEC and NODES[NODE_ID]["risk"] > 0)
-check("a node that declares none quotes none", _fresh().precaution_quote(UNOFFERED) is None)
+def _game(mechanics, work_factor=1.0):
+    nodes = {"declared": {"ph": HOURS, "mechanics": mechanics}, "plain": {"ph": HOURS, "mechanics": {}}}
 
-_quote = _fresh().precaution_quote(NODE_ID)
-check("the quote names what is bought", _quote["label"] == LABEL, _quote)
-check("the quote shows a cost", _quote["extra_cost"] > 0, _quote)
-check("the quote shows the extra hours", _quote["extra_founder_hours"] > 0, _quote)
-check("the quote shows a lower chance with the lever than without",
-      _quote["chance_of_failure_with"] < _quote["chance_of_failure_without"], _quote)
-check("without the lever the chance is the ordinary one",
-      abs(_quote["chance_of_failure_without"] - _fresh().effective_risk(NODE_ID)) < 1e-12)
-check("the lever never makes the work safe", _quote["chance_of_failure_with"] > 0, _quote)
+    def effective_risk(node_id, precaution=False):
+        declared = rules.spec(game, node_id)
+        return BASE_RISK * rules.relief_multiplier(game, node_id, precaution) if declared else BASE_RISK
 
-_plain = _fresh()
-_bought = _fresh()
-_plain_ok, _plain_why = _plain.start_project(NODE_ID)
-_bought_ok, _bought_why = _bought.start_project(NODE_ID, precaution=True)
-check("both starts went ahead", _plain_ok and _bought_ok, (_plain_why, _bought_why))
-_plain_record = _plain.state.projects.active[NODE_ID]
-_bought_record = _bought.state.projects.active[NODE_ID]
-check("the bought project carries a larger bill",
-      _bought_record["bill"] > _plain_record["bill"] + 1.0, (_bought_record["bill"], _plain_record["bill"]))
-check("the bill grew by the quoted cost",
-      abs(_bought_record["bill"] - _plain_record["bill"] - _quote["extra_cost"]) < 1.0)
-check("the bought project needs more founder hours",
-      _bought_record["ph_left"] > _plain_record["ph_left"] + 1.0)
-check("the dice use the lowered chance once it is bought",
-      _bought.effective_risk(NODE_ID) < _plain.effective_risk(NODE_ID) - 1e-6,
-      (_bought.effective_risk(NODE_ID), _plain.effective_risk(NODE_ID)))
-check("the quote after starting agrees with the lowered chance",
-      abs(_bought.effective_risk(NODE_ID) - _quote["chance_of_failure_with"]) < 1e-12)
+    game = SimpleNamespace(
+        nodes=nodes, project_cost=lambda node_id: BILL, rebuild_work_factor=lambda node_id: work_factor,
+        mechanic=lambda node_id, name: nodes[node_id]["mechanics"].get(name), effective_risk=effective_risk,
+        state=SimpleNamespace(projects=SimpleNamespace(active={})))
+    return game
 
-_refused_game = _fresh()
-_refused_ok, _refused_why = _refused_game.start_project(UNOFFERED, precaution=True)
-_refused_reply = S._agent_dispatch(_refused_game, NODES, {"cmd": "start", "id": UNOFFERED, "precaution": True})
-check("buying a precaution a node does not offer is refused, and nothing starts",
-      not _refused_ok and not _refused_reply["ok"] and UNOFFERED not in _refused_game.active
-      and _refused_game.precaution_quote(UNOFFERED) is None, _refused_why)
 
+PILOT = _game({"precaution": {"kind": "pilot_plant"}})
+TEAM = _game({"precaution": {"kind": "redundant_team"}})
+KINDS = rules.KINDS
+
+# --- resolution
+resolved = rules.spec(PILOT, "declared")
+check("a declared kind resolves to its figures and a label made of its name",
+      resolved["label"] == "pilot plant" and resolved["cost_share"] == KINDS["pilot_plant"]["cost_share"], resolved)
+check("a node that declares none has none", rules.spec(PILOT, "plain") is None and rules.quote(PILOT, "plain") is None)
+unsourced = _game({"precaution": {"kind": "pilot_plant", "cost_share": 0.9}})
+check("a figure overridden without a source is ignored",
+      rules.spec(unsourced, "declared")["cost_share"] == KINDS["pilot_plant"]["cost_share"])
+sourced = _game({"precaution": {"kind": "pilot_plant", "cost_share": 0.9, "source": "a trial report"}})
+check("a figure overridden with a source is used",
+      rules.spec(sourced, "declared")["cost_share"] == 0.9
+      and rules.spec(sourced, "declared")["hours_share"] == KINDS["pilot_plant"]["hours_share"])
+
+# --- cost and hours
+check("the extra cost is the bill times the kind's cost share",
+      abs(rules.extra_cost(PILOT, "declared", BILL) - BILL * KINDS["pilot_plant"]["cost_share"]) < 1e-9)
+check("a node with none adds no cost or hours",
+      rules.extra_cost(PILOT, "plain", BILL) == 0.0 and rules.extra_hours(PILOT, "plain") == 0.0)
+check("the extra hours are the node's hours times the kind's hours share",
+      abs(rules.extra_hours(PILOT, "declared") - HOURS * KINDS["pilot_plant"]["hours_share"]) < 1e-9)
+check("rebuilding a lost technology scales the extra hours with the work factor",
+      abs(rules.extra_hours(_game({"precaution": {"kind": "redundant_team"}}, work_factor=0.5), "declared")
+          - HOURS * 0.5 * KINDS["redundant_team"]["hours_share"]) < 1e-9)
+check("the two kinds are different figures", KINDS["pilot_plant"] != KINDS["redundant_team"])
+
+# --- relief
+for name, kind in KINDS.items():
+    figure = 1.0 / (1.0 + kind["relief_per_cost_share"] * kind["cost_share"])
+    check("%s: the relief divides the chance by one plus strength times share spent, and never reaches zero" % name,
+          abs(rules.relief_multiplier(_game({"precaution": {"kind": name}}), "declared", True) - figure) < 1e-12
+          and 0.0 < figure < 1.0, figure)
+check("a precaution not bought, or not offered, changes nothing",
+      rules.relief_multiplier(PILOT, "declared", False) == 1.0 and rules.relief_multiplier(PILOT, "plain", True) == 1.0)
+
+# --- the quote
+quote = rules.quote(PILOT, "declared")
+check("the quote names what is bought", quote["label"] == "pilot plant", quote)
+check("the quote shows the cost and the hours",
+      quote["extra_cost"] == round(BILL * KINDS["pilot_plant"]["cost_share"], 1)
+      and quote["extra_founder_hours"] == round(HOURS * KINDS["pilot_plant"]["hours_share"], 1), quote)
+check("the quote shows a lower chance with the lever than without, and the ordinary one without",
+      quote["chance_of_failure_with"] < quote["chance_of_failure_without"] == BASE_RISK, quote)
+check("the lever never makes the work safe", quote["chance_of_failure_with"] > 0, quote)
+check("a project that bought it is reported as having chosen it",
+      not rules.chosen(PILOT, "declared")
+      and rules.chosen(SimpleNamespace(state=SimpleNamespace(projects=SimpleNamespace(
+          active={"declared": {"precaution": True}}))), "declared"))
+
+# --- the data: every declared precaution names a known kind and overrides figures only with a source
 check("every declared precaution names a known kind and overrides figures only with a source",
       all(node["mechanics"]["precaution"]["kind"] in KINDS
           and ("source" in node["mechanics"]["precaution"]
                or not {"cost_share", "hours_share", "relief_per_cost_share"} & set(node["mechanics"]["precaution"]))
           for node in NODES.values() if "precaution" in node.get("mechanics", {})))
+check("the node of the scenario offers a precaution and its risk is above zero",
+      "precaution" in NODES["cap_heat_1600"]["mechanics"] and NODES["cap_heat_1600"]["risk"] > 0)

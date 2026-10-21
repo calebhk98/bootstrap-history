@@ -1,138 +1,81 @@
-"""Regression coverage for placeholder markers in the population screen
-(complaint 172). Trades with placeholder density estimates show an asterisk marker."""
-from .harness import *
-from sim.tests import cli_in_process
+"""Complaint 172: trades whose population estimate rests on a placeholder (a `temporary_heuristic` constant) show an asterisk in the
+population screen, with a legend; trades on a cited estimate or derived from need do not. The screen runs on a reply the test
+builds, and which trades are placeholders on a `Labour` over a stand-in world (no game); the screen of a played session is
+test_population_placeholder_marks_scenario."""
+QUICK_TOPIC = True
 
-_scratch = tempfile.mkdtemp()
+import unittest
 
-
-def _env(name, config=None):
-    saves = os.path.join(_scratch, name)
-    os.makedirs(saves, exist_ok=True)
-    config_file = os.path.join(_scratch, name + "-config.json")
-    if config is not None:
-        with open(config_file, "w") as handle:
-            json.dump(config, handle)
-    env = dict(os.environ, ROME_SAVE_DIR=saves, ROME_SIM_CONFIG=config_file)
-    env.pop("ROME_DEFAULT_SEED", None)
-    return saves, env
+from sim.constants import REGISTRY
+from sim.labour.labour import Labour
+from sim.tests.labour_stand_in import stand_in_world
+from sim.ui.proto.render_screens_economy import render_population
 
 
-def _run(arguments, text, env, cwd=None):
-    return cli_in_process.run(arguments, input_text=text, environment=env, cwd=cwd)
+def _reply(placeholder_trades, plain_trades):
+    rows = [{"trade": trade, "is_placeholder": True, "estimated_in_the_country": 100, "within_your_reach": 10, "exists_here": True,
+             "you_employ": 0, "share_of_the_reachable_pool_you_employ": 0.0} for trade in placeholder_trades]
+    rows += [{"trade": trade, "is_placeholder": False, "estimated_in_the_country": 100, "within_your_reach": 10, "exists_here": True,
+              "you_employ": 0, "share_of_the_reachable_pool_you_employ": 0.0} for trade in plain_trades]
+    return {"civilisation": "Rome", "population": 1000, "urban_fraction": 0.1, "urban_population_estimate": 100, "trades": rows}
 
 
-def _get_population_text(name):
-    """Run population command and get the rendered text output."""
-    saves, env = _env(name)
-    session = os.path.join(saves, "test.json")
-    result = _run(["play", "--civ", "rome_100ad", "--seed", "1", "--session", session],
-                  "population\nquit\n", env)
-    lines = result.stdout.split('\n')
-    in_population = False
-    population_lines = []
-    for line in lines:
-        if 'POPULATION:' in line:
-            in_population = True
-            population_lines.append(line)
-        elif in_population:
-            if line.strip().startswith('[') and 'AD' in line:
-                break
-            population_lines.append(line)
-    return '\n'.join(population_lines)
+def _trade_lines(text):
+    return {line.split()[0].lower(): line for line in text.split("\n") if line.strip() and line.split()[0][0].isalpha()}
 
 
-# Test 1: Population screen contains table with trades
-text_output = _get_population_text("test_output")
-check("population: output contains POPULATION header", "POPULATION:" in text_output,
-      text_output[:200])
-check("population: output contains trade table header", "TRADE" in text_output and "IN THE COUNTRY" in text_output,
-      text_output[:500])
+class PopulationScreenMarks(unittest.TestCase):
+    # presentation: the asterisk, its legend and the table header are the subject of these checks
 
-# Test 2: Known placeholder trades have asterisk marker
-placeholder_trades = ("engraver", "glassblower", "master", "millwright", "chemist",
-                     "electrician", "engineer", "machinist", "optician", "merchant",
-                     "scholar", "scribe")
-if text_output:
-    marked_placeholders = []
-    for trade in placeholder_trades:
-        if trade in text_output:
-            # Find the line with this trade
-            for line in text_output.split('\n'):
-                if trade in line.lower():
-                    if line.strip() and line.strip()[0].isalpha():
-                        # This is a trade line (not a header or note)
-                        if "*" in line:
-                            marked_placeholders.append(trade)
-                    break
+    def test_a_placeholder_trade_carries_an_asterisk_and_a_plain_one_does_not(self):
+        lines = _trade_lines(render_population(_reply(["scribe"], ["smith"])))
+        self.assertIn("scribe*", lines["scribe*"])
+        self.assertNotIn("*", lines["smith"])
 
-    check("population: placeholder trades show asterisk marker",
-          len(marked_placeholders) >= 5,
-          "found %d placeholder trades with marker: %s" % (len(marked_placeholders), marked_placeholders))
+    def test_the_legend_explains_the_asterisk_when_a_placeholder_is_shown(self):
+        text = render_population(_reply(["scribe"], ["smith"]))
+        self.assertIn("* =", text)
+        self.assertIn("placeholder", text.lower())
 
-# Test 3: Non-placeholder common trades do not have asterisk
-non_placeholder_trades = ("artisan", "carpenter", "furnaceman", "labourer", "miner",
-                         "potter", "smith", "mason", "plumber", "sailor")
-if text_output:
-    unmarked_non_placeholders = []
-    for trade in non_placeholder_trades:
-        if trade in text_output:
-            for line in text_output.split('\n'):
-                if trade in line.lower():
-                    if line.strip() and line.strip()[0].isalpha():
-                        # Check if first word is the trade name without asterisk
-                        first_word = line.split()[0].lower()
-                        if trade in first_word and not first_word.endswith("*"):
-                            unmarked_non_placeholders.append(trade)
-                    break
+    def test_there_is_no_legend_when_nothing_is_a_placeholder(self):
+        text = render_population(_reply([], ["smith"]))
+        self.assertNotIn("* =", text)
 
-    check("population: non-placeholder trades do not show asterisk",
-          len(unmarked_non_placeholders) >= 5,
-          "found %d non-placeholder trades without marker: %s" % (len(unmarked_non_placeholders), unmarked_non_placeholders))
+    def test_the_screen_has_its_header_and_trade_table(self):
+        text = render_population(_reply([], ["smith"]))
+        self.assertIn("POPULATION:", text)
+        self.assertIn("TRADE", text)
+        self.assertIn("IN THE COUNTRY", text)
 
-# Test 4: Legend line explains the asterisk marker
-has_legend = "* =" in text_output and "placeholder" in text_output.lower()
-check("population: has legend line for asterisk marker",
-      has_legend,
-      text_output.split('\n')[-15:] if has_legend else text_output[-500:])
 
-# Test 5: Verify is_placeholder consistency with REGISTRY
-# This test imports the engine and checks that is_placeholder matches the
-# kind field of the constant that computes the trade's density, so the
-# answer stays in sync with declarations rather than being hand-copied.
-from sim.labour.labour_population import PopulationMixin
-from ..constants import REGISTRY
-from .harness import *
+class PlaceholderFollowsTheRegistry(unittest.TestCase):
+    """A trade is a placeholder exactly when the constant its population estimate rests on is a temporary heuristic."""
 
-# Create a minimal test sim instance
-test_sim = sim(civ="rome_100ad")
-pop_report = test_sim.labour.population_report()
-trades = pop_report.get("trades", [])
+    def setUp(self):
+        self.labour = Labour(stand_in_world())
 
-is_placeholder_mismatches = []
-for trade_row in trades:
-    trade = trade_row.get("trade")
-    is_placeholder = trade_row.get("is_placeholder")
+    def test_the_flag_matches_the_kind_of_the_source_constant_for_every_trade(self):
+        mismatches = []
+        for trade in sorted(self.labour._world.wages):
+            source = self.labour._trade_density_source(trade)
+            expected = source is not None and source in REGISTRY and REGISTRY[source].get("kind") == "temporary_heuristic"
+            if self.labour._density_is_placeholder(trade) != expected:
+                mismatches.append((trade, source))
+        self.assertEqual(mismatches, [])
 
-    # Get the source constant name
-    source_name = test_sim.labour._trade_density_source(trade)
+    def test_every_source_constant_a_trade_rests_on_is_declared(self):
+        for trade in sorted(self.labour._world.wages):
+            source = self.labour._trade_density_source(trade)
+            if source is not None:
+                self.assertIn(source, REGISTRY, (trade, source))
 
-    if source_name is None:
-        # Taught trades or unavailable trades have no source
-        expected_placeholder = False
-    elif source_name not in REGISTRY:
-        expected_placeholder = False
-    else:
-        expected_placeholder = REGISTRY[source_name].get("kind") == "temporary_heuristic"
+    def test_a_trade_derived_from_need_is_not_a_placeholder_and_one_on_a_declared_share_is(self):
+        derived = [trade for trade in self.labour._world.wages if self.labour._trade_density_source(trade) is None]
+        declared = [trade for trade in self.labour._world.wages if self.labour._trade_density_source(trade) is not None]
+        self.assertTrue(derived and declared)
+        self.assertFalse(any(self.labour._density_is_placeholder(trade) for trade in derived))
+        self.assertTrue(any(self.labour._density_is_placeholder(trade) for trade in declared))
 
-    if is_placeholder != expected_placeholder:
-        is_placeholder_mismatches.append({
-            "trade": trade,
-            "source": source_name,
-            "reported_is_placeholder": is_placeholder,
-            "expected_from_registry": expected_placeholder,
-        })
 
-check("population: is_placeholder field matches REGISTRY kind for all trades",
-      len(is_placeholder_mismatches) == 0,
-      is_placeholder_mismatches if is_placeholder_mismatches else "all trades consistent")
+if __name__ == "__main__":
+    unittest.main()

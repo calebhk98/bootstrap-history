@@ -21,13 +21,10 @@ from . import cause_book, category_traits
 from .agents_port import SimWorld
 from .staffing_events import unstaffed_closure_line
 from .closure_grace import grace_note, within_grace
+from .staffing_warning_rows import staffing_warning_rows
 from .affordability import deep_in_arrears, payback_years
 from .units_prose import money_text, per_year
 from sim.agents.api import business_review, edges
-
-
-def _trim(amount):
-    return ("%.2f" % amount).rstrip("0").rstrip(".")
 
 
 class StaffingMixin:
@@ -236,108 +233,15 @@ class StaffingMixin:
             return []
         sch_used, art_used = self.venture_staff_used()
         own = self.FOUNDER_IS_WORTH if self.state.founder.founder_alive else 0.0
-        founder_fixed = bool(self.cfg.get("immortal")) or not self.state.founder.founder_alive
-        SLACK = self.STAFFING_CLOSURE_SLACK   # close_unstaffed_ventures' own hysteresis band
-        sch_room = self.labour.effective_scholars() + SLACK - sch_used
-        art_room = household.artisans + own + SLACK - art_used
-        if sch_room > self.STAFFING_WARNING_BAND and art_room > self.STAFFING_WARNING_BAND:
-            return []
-        _holders = [node_id for node_id in sorted(projects.operating)
-                    if self.venture_hands(node_id)[1] > 0.005
-                    or self.venture_hands(node_id)[0] > 0.005]
-        if not _holders:
-            return []
-        # SAME ORDER close_unstaffed_ventures would close in - dearest to
-        # keep, for what it ties up, first - so the concerns named here are
-        # exactly the ones actually at risk, not merely the largest.
-        ranked = sorted(_holders,
-                        key=lambda k: ((self.nodes[k]["rev"] - self.nodes[k]["up"])
-                                       / max(0.01, self.venture_hands(k)[1]),
-                                       -self.venture_hands(k)[1]))
-        out = []
-        for node_id in ranked:
-            sch_need, art_need = self.venture_hands(node_id)
-            candidates = []
-            # Only hired people leave; with a founder who cannot, the room
-            # left after losing every hired one is guaranteed, so no
-            # closure is coming from attrition.
-            if sch_need > 0.005 and not (founder_fixed and sch_room - household.scholars >= 0):
-                candidates.append(("scholars", sch_room))
-            if art_need > 0.005 and not (founder_fixed and art_room - household.artisans >= 0):
-                candidates.append(("craftsmen", art_room))
-            if not candidates:
-                continue
-            # WHICHEVER OF ITS OWN TRADES IS SCARCEST, not whichever this
-            # concern happens to need most: a concern that ties up both a
-            # scholar and three craftsmen is at risk the moment EITHER pool
-            # runs out, so the tighter of the two is what actually decides
-            # when it closes.
-            word, room = min(candidates, key=lambda c: c[1])
-            if room > self.STAFFING_WARNING_BAND:
-                continue
-            name = self.nodes[node_id]["name"]
-            # WHAT IT COSTS TO LOSE, in the same recurring den/yr the player
-            # already judges every concern by (rev - up, the same figure
-            # `ventures` and the ranking above use) - not just that it would
-            # close, but whether closing it is worth reacting to.
-            net = max(0.0, self.nodes[node_id]["rev"] - self.nodes[node_id]["up"])
-            cost = per_year(money_text(net, self, grouped=True, short=True), short=True)
-            # THE COMMAND THAT FIXES IT, named, not left for the player to
-            # infer from "craftsmen"/"scholars" alone - hire is always
-            # sayable (STAFF_SOURCES' own reasoning: the labour market is in
-            # front of you whether or not any institution is), so this is the
-            # one remedy safe to name inline rather than routing through the
-            # fuller, sometimes-circular advice _staff_advice gives.
-            _kind = "scholars" if word == "scholars" else "artisans"
-            fix = next(why for node, why in self.STAFF_SOURCES[_kind]
-                       if node == "HIRE")
-            one_loss_closes = room <= self.STAFFING_NO_SLACK_BAND + 1e-9
-            if room <= 0.05:
-                headline = ("%s has no %s free this year and is next in "
-                            "line to close - that would cost %s in "
-                            "recurring income. %s"
-                            % (name, word, cost, fix))
-            elif one_loss_closes:
-                # THE MISSING CASE: no slack at all. Room here is under one
-                # whole person, so losing even ONE %s of this trade - one
-                # death, one who leaves - closes this outright the same
-                # year, not "eventually" and not "if things get worse".
-                headline = ("%s has no spare %s: losing just one more "
-                            "closes it outright, costing %s in "
-                            "recurring income. %s"
-                            % (name, word, cost, fix))
-            else:
-                # THE DIRECTION OF SAFETY, UNMISTAKABLE. "is within N
-                # craftsmen of closure" read, on first sight, like a
-                # countdown - an England player hired more staff, watched
-                # this number climb 1.3 to 2.3, and took the rise for the
-                # situation getting WORSE before working out that bigger
-                # here means safer. "has N spare craftsmen before it
-                # closes" cannot be misread the same way: spare is
-                # obviously a good thing to have more of, and it is the
-                # same word the no-slack branch just above already uses
-                # ("has no spare %s: losing just one more closes it
-                # outright") - the two headlines now share one vocabulary
-                # for the same fact instead of two that could be read as
-                # opposites of each other.
-                headline = ("%s has %s spare %s before it closes"
-                            % (name, ("%.1f" % room).rstrip("0").rstrip("."),
-                               word))
-            held, in_use = ((self.labour.effective_scholars(), sch_used) if word == "scholars"
-                            else (household.artisans + own, art_used))
-            explained = ("spare %s = %s held (you included) + %s allowed before a closure - "
-                         "%s in use by running concerns, all in full-time equivalents; a "
-                         "concern ties up a share of a person's year, so spare is not a headcount"
-                         % (word, _trim(held), _trim(SLACK), _trim(in_use)))
-            out.append({"id": node_id, "name": name, "within": round(max(0.0, room), 1),
-                       "of": word, "headline": headline, "held": round(held, 2),
-                       "in_use": round(in_use, 2), "allowance": SLACK, "explained": explained,
-                       "recurring_income_at_risk": round(net, 1),
-                       "one_loss_closes_it": one_loss_closes,
-                       "fix": fix})
-            if len(out) >= limit:
-                break
-        return out
+        concerns = [{"id": node_id, "name": self.nodes[node_id]["name"], "revenue": self.nodes[node_id]["rev"],
+                     "upkeep": self.nodes[node_id]["up"], "hands": self.venture_hands(node_id)}
+                    for node_id in sorted(projects.operating)]
+        return staffing_warning_rows(
+            concerns, self.labour.effective_scholars(), household.artisans + own, household.scholars, household.artisans,
+            sch_used, art_used, bool(self.cfg.get("immortal")) or not self.state.founder.founder_alive,
+            self.STAFFING_CLOSURE_SLACK, self.STAFFING_WARNING_BAND, self.STAFFING_NO_SLACK_BAND, limit,
+            lambda kind: next(why for node, why in self.STAFF_SOURCES[kind] if node == "HIRE"),
+            lambda net: per_year(money_text(net, self, grouped=True, short=True), short=True))
 
     AUTO_OPEN_DEEP_ARREARS_CREDIT_SHARE = declare(
         "AUTO_OPEN_DEEP_ARREARS_CREDIT_SHARE", 0.5, kind="temporary_heuristic",
