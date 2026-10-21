@@ -18,6 +18,7 @@ other economy sub-mixins; see that file for the composition and for the
 grouping evidence.
 """
 from .data import WAGES
+from .credit_freeze import STALL_MINIMUM_INSOLVENT_YEARS, is_stalled, loss_makers, settlement_freeze, standing_net
 from sim.constants import declare
 from sim.refusal import LogLine
 from . import money_units
@@ -537,10 +538,7 @@ class CreditMixin:
         # grows back. A person who has just been written off does not get
         # a fresh line of credit the following morning.
         _frozen_before = getattr(household, "credit_frozen_until", 0)
-        household.credit_frozen_until = max(_frozen_before, year + self.SETTLEMENT_CREDIT_FREEZE_YEARS)
-        # Say what actually happened and if the freeze date moved (not on first settlement).
-        _moved = (_frozen_before > year
-                 and household.credit_frozen_until > _frozen_before)
+        household.credit_frozen_until, _moved = settlement_freeze(_frozen_before, year, self.SETTLEMENT_CREDIT_FREEZE_YEARS)
         household.log.append((year, LogLine(
             "insolvency_settled",
             "INSOLVENCY SETTLED: most of the debt is written "
@@ -578,7 +576,7 @@ class CreditMixin:
         household = self.state.household
         projects = self.state.projects
         insolvent_years = household.insolvent_years
-        if household.capital >= 0 or insolvent_years < 8:
+        if household.capital >= 0 or insolvent_years < STALL_MINIMUM_INSOLVENT_YEARS:
             return None
         # Must include interest on arrears; use revenue_capacity() to match ledger.
         interest = max(0.0, -household.capital) * self.debt_interest_rate()
@@ -586,9 +584,8 @@ class CreditMixin:
         standing_upkeep = self.upkeep()
         standing_living = self.living_cost(
             _rev=standing_revenue, _upkeep=standing_upkeep)
-        net = (standing_revenue - standing_upkeep - standing_living
-               - self.mine_operating_cost() - interest)
-        if net >= 0:
+        net = standing_net(standing_revenue, standing_upkeep, standing_living, self.mine_operating_cost(), interest)
+        if not is_stalled(household.capital, insolvent_years, net):
             return None
         ways = []
         hours = self.labour.hours_for_sale()
@@ -609,9 +606,8 @@ class CreditMixin:
                                     % (money_text(standing, self, grouped=True),
                                        money_text(would_earn - standing, self, grouped=True)))
                                    if standing > 0.5 else ""))
-        losers = sorted((node_id for node_id in projects.operating
-                         if self.nodes[node_id]["up"] > self.nodes[node_id]["rev"]),
-                        key=lambda node_id: self.nodes[node_id]["rev"] - self.nodes[node_id]["up"])
+        losers = loss_makers(projects.operating, {node_id: self.nodes[node_id]["rev"] for node_id in projects.operating},
+                             {node_id: self.nodes[node_id]["up"] for node_id in projects.operating})
         if losers:
             ways.append("close what costs more than it brings in: %s"
                         % ", ".join("%s (%+.0f a year)"

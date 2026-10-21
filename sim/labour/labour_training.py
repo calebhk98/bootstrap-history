@@ -24,6 +24,7 @@ from . import trade_data, trade_formation
 from .hands import contracted_hours_of, hands_available
 from .hire_outcome import hire_result, unfound_note
 from .room_advice import hire_room_refusal
+from .staff_moves import (apprentices_of, commission_spare_hours, crosses_literacy_wall, dismiss)
 
 
 class TrainingMixin:
@@ -242,7 +243,7 @@ class TrainingMixin:
         if trade in self.LITERATE_TRADES:
             cap = self.literate_capacity(trade)
             have = self._trade_headcount_pending(trade)
-            if have + count > cap + 1e-6:
+            if crosses_literacy_wall(have, count, cap):
                 return None, None, self._literate_wall_refusal(trade, cap, have)
         # A finder's fee and the first year in advance, which is what a household
         # actually pays to take a skilled man off someone else's bench. Buying
@@ -328,42 +329,21 @@ class TrainingMixin:
         trade = str(trade or "").strip().lower()
         household = self._world.state.household
         have = self.employed(trade)
-        pending = sum(record[3] for record in household.training
-                      if len(record) > 3 and record[2] == trade)
+        pending = apprentices_of(household.training, trade)
         if have <= 0 and pending <= 0:
             return False, "you employ no %ss, and none are being taught" % trade
-        count = float(count)
-        # THE SAME WHOLENESS hire() AND train() ENFORCE: letting a fraction of
-        # a person go is the mirror image of hiring one, and would reopen
-        # the same hole - a roster that can drift to "0.03 engineers" -
-        # through `fire` alone even though nothing can hire or teach its
-        # way there. Rounded rather than refused, because "let go 2.5" has
-        # an obvious meaning (two, or the two-point-something you actually
-        # have) and refusing outright would only make a player retype it.
-        if have > 0 and abs(count - round(count)) > 1e-6 and count < have:
-            count = float(math.ceil(count))
+        # WHOLE PEOPLE, as hire() and train() enforce, so a roster cannot drift to "0.03 engineers" through `fire`:
+        # a fraction asked for is rounded up rather than refused.
+        gone, left, stopped, household.training, _unmet = dismiss(have, household.training, trade, count)
         note = None
         if have > 0:
-            gone = min(count, have)
             self.labour_market.release(household, trade, gone * self._world.HOURS_PER_PERSON_YEAR)
-            self.set_employed(trade, have - gone if have - gone > 1e-9 else 0.0)
-            count -= gone
+            self.set_employed(trade, left)
             note = "let %g %s%s go" % (gone, trade, "s" if gone != 1 else "")
-        if count > 0 and pending > 0:
-            stopped, still = 0.0, []
-            for record in household.training:
-                if len(record) > 3 and record[2] == trade and count > 0:
-                    take = min(count, record[3])
-                    record[3] -= take
-                    count -= take
-                    stopped += take
-                if len(record) <= 3 or record[3] > 1e-9:
-                    still.append(record)
-            household.training = still
-            if stopped > 0:
-                note = ((note + "; " if note else "")
-                        + "stopped teaching %g more (what you paid to keep them "
-                          "while they learned is gone)" % stopped)
+        if stopped > 0:
+            note = ((note + "; " if note else "")
+                    + "stopped teaching %g more (what you paid to keep them "
+                      "while they learned is gone)" % stopped)
         self._resync_pools()
         return True, note
 
@@ -429,7 +409,7 @@ class TrainingMixin:
         if trade in self.LITERATE_TRADES:
             cap = self.literate_capacity(trade)
             have = self._trade_headcount_pending(trade)
-            if have + count > cap + 1e-6:
+            if crosses_literacy_wall(have, count, cap):
                 return None, self._literate_wall_refusal(trade, cap, have)
         years = self.training_years_from(trade, frm)
         hours = trade_formation.teacher_hours_per_person(years, self._world.HOURS_PER_PERSON_YEAR) * count   # your hours, teaching
@@ -566,7 +546,7 @@ class TrainingMixin:
             for trade in sorted(self._world.wages):
                 if not self.is_craft_trade(trade) or not self.trade_available(trade):
                     continue
-                spare = self.market_supply(trade) - household.contract_hours.get(trade, 0.0)
+                spare = commission_spare_hours(self.market_supply(trade), household.contract_hours.get(trade, 0.0))
                 if spare < hours:
                     continue
                 if best is None or self.wage_per_hour(trade) < self.wage_per_hour(best):
@@ -632,7 +612,7 @@ class TrainingMixin:
             return None, ("no %s will take the work; the trade does not exist here: %s"
                            % (trade, self._world.trade_notes.get(trade, "")))
         household = self._world.state.household
-        spare = self.market_supply(trade) - household.contract_hours.get(trade, 0.0)
+        spare = commission_spare_hours(self.market_supply(trade), household.contract_hours.get(trade, 0.0))
         if hours > spare:
             return None, ("the %ss here can spare %.0f more hours this year, not %.0f"
                            % (trade, max(0.0, spare), hours))

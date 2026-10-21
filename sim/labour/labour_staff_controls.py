@@ -22,6 +22,17 @@ def housing_places_to_buy(count, room, cost_per_place, hiring_outlay, spending_p
     return places
 
 
+def people_to_hire_for(claimed, shortfalls):
+    """Resource -> whole people to hire so flagged concerns stay staffed: the shortfall, no more than the flagged
+    concerns themselves hold, rounded up past a hundredth of a person; resources with nothing to hire are left out."""
+    hires = {}
+    for resource in sorted(claimed):
+        short = math.ceil(min(shortfalls.get(resource, 0.0), claimed[resource]) - 0.01)
+        if short > 0:
+            hires[resource] = short
+    return hires
+
+
 class StaffControlsMixin:
 
     def keep_staffed_concerns(self):
@@ -51,8 +62,7 @@ class StaffControlsMixin:
                 if shut:
                     totals[resource] += amount
         shortfalls = self._world.staffing_shortfalls(totals, strict=True)
-        for resource in sorted(claimed):
-            short = math.ceil(min(shortfalls.get(resource, 0.0), claimed[resource]) - 0.01)
+        for resource, short in people_to_hire_for(claimed, shortfalls).items():
             self.hire_to_cover(trade_data.staff_resource_trade(trade_data.registry_of(self._world), resource), short,
                                "keep_staffed", partial=True)
 

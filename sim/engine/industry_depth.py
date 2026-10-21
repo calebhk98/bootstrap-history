@@ -19,6 +19,7 @@ from sim.constants import declare
 from sim.labour.api import add_tenure, fade_tenure, outflow_shares, tenure_by_trade, tenure_held
 from sim.world.demography_turnover import working_age_turnover
 
+from .industry_depth_rules import firm_worker_years, opening_rates, seed_stock, society_worker_years
 from .prices import default_production_entries
 
 YEARS_STAFF_TAKE_TO_MASTER = declare(
@@ -118,12 +119,11 @@ class IndustryDepthMixin:
             return
         projects.industry_seeded = True
         opening = self.opening_worker_years_by_node() or {}
-        fade = self.tenure_leavers_share() or 1.0
-        for node_id in sorted(projects.granted):
-            if self.is_concern_node(node_id):
-                rate = opening.get(node_id, self.founding_worker_years(node_id))
-                projects.industry_opening_rate[node_id] = rate
-                self.add_industry_years(node_id, rate / fade)
+        fade = self.tenure_leavers_share()
+        rates = opening_rates(projects.granted, self.is_concern_node, opening, self.founding_worker_years)
+        for node_id, rate in rates.items():
+            projects.industry_opening_rate[node_id] = rate
+            self.add_industry_years(node_id, seed_stock(rate, fade))
 
     def opening_worker_years_by_node(self):
         """Worker-years a year the agent economy's producers put into each technique's own entries; None
@@ -167,19 +167,14 @@ class IndustryDepthMixin:
 
     def concern_worker_years_this_year(self):
         """Worker-years each technique's operating concerns employed this year, the founder's and the firms'."""
-        years = {}
         projects = self.state.projects
-        for node_id in sorted(projects.granted | projects.operating):
-            if self.is_concern_node(node_id):
-                held_by_society = projects.industry_opening_rate.get(node_id) if node_id in projects.granted else None
-                years[node_id] = years.get(node_id, 0.0) + (
-                    self.founding_worker_years(node_id) if held_by_society is None else held_by_society)
+        years = society_worker_years(projects.granted | projects.operating, self.is_concern_node, projects.granted,
+                                     projects.industry_opening_rate, self.founding_worker_years)
         if self.state.actors is not None and self.state.actors.records:
             for firm in self.actors.active_firms():
                 for node_id in firm.concerns:
-                    staffed = firm.staffed_share(node_id)
-                    years[node_id] = (years.get(node_id, 0.0)
-                                      + self.founding_worker_years(node_id) * firm.capacity_of(node_id) * staffed)
+                    years[node_id] = years.get(node_id, 0.0) + firm_worker_years(
+                        self.founding_worker_years(node_id), firm.capacity_of(node_id), firm.staffed_share(node_id))
         return years
 
     def fade_industry_tenure(self):

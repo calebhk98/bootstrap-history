@@ -1,5 +1,6 @@
 """What a concern really earns and costs, and what reopening it costs: one figure for every screen."""
 from sim.agents.api import business_books
+from .closure_grace import fee_after_grace
 from .concern_earnings import forecast_basis, quoted_ramp, quoted_units
 
 
@@ -57,7 +58,5 @@ class VentureQuotesMixin:
         else:
             fee = max(self.project_cost(node_id) * self.RESTORE_COST_SHARE_OF_BUILD,
                       self.nodes[node_id]["up"] * self.RESTORE_COST_MIN_UPKEEP_YEARS)
-        age = self.staff_closure_age(node_id)
-        if age is not None and age <= self.STAFF_CLOSURE_GRACE:
-            fee *= self.STAFF_CLOSURE_DISCOUNT
-        return fee
+        return fee_after_grace(fee, self.staff_closure_age(node_id), self.STAFF_CLOSURE_GRACE,
+                               self.STAFF_CLOSURE_DISCOUNT)

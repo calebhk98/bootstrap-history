@@ -1,5 +1,5 @@
-"""Scenarios (Complaint 640; the rules are in test_household_capacity_and_literacy): the household room, the
-literacy ceiling and the advice, reached through the player's commands on a whole game."""
+"""Scenarios (Complaint 640; the rules are in test_household_capacity_and_literacy and test_staff_advice_rules): the
+household room, the literacy ceiling and the advice, reached through the player's commands on a whole game."""
 from .harness import *  # noqa: F401,F403
 from sim.refusal import cause_of, facts_of
 
@@ -37,10 +37,6 @@ check("...and says nothing of the kind about a node you could staff",
 check("every taught trade is bounded by literacy, electrician included",
       all(trade in core.labour.LITERATE_TRADES for trade in S.TRADES_ABSENT),
       sorted(set(S.TRADES_ABSENT) - set(core.labour.LITERATE_TRADES)))
-_ok_el, _why_el = core.labour.train("electrician", 20)
-check("...so twenty electricians cannot be taught into a society of twelve",
-      not _ok_el and cause_of(_why_el) == "literacy_wall", _why_el)
-
 # The household-room refusal names what raises the room, not what buys people.
 _ok_rm, _why_rm = core.labour.hire("smith", 20)
 check("a room refusal names what raises the room, not what buys people",
@@ -80,24 +76,11 @@ check("hire, buy and train are all bounded by the same one number",
       core.labour.hire("smith", 1)[0] is False and core.labour.train("machinist", 1)[0] is False
       and core.labour.buy_slaves(1) <= 0, (_room0, core.labour.household_room()))
 
-# --- advice on how to get artisans, scholars and room never points at a remedy waiting on what it
-# supplies, and offers a shut institution back as the cheap fix.
+# --- the staff advice itself is test_staff_advice_rules; here it is read through the real game's room sources and
+# the start reason that calls it.
 advice = unopened_sim(capital=1000000.0)
 check("giving staff advice does not recurse into itself",
       isinstance(advice.start_reason("workshop_first")[1], str), "no RecursionError")
-advice.done.add("patron_local"); advice._done_changed()
-_adv = advice.labour._staff_advice("artisans")
-check("advice never points at a remedy waiting on the thing it supplies",
-      {"action": "build", "node": "workshop_first"} not in facts_of(_adv)["remedies"], _adv)
-advice.artisans = 20.0
-check("...and names it plainly once it is actually reachable",
-      {"action": "build_after_hiring", "node": "workshop_first"} not in facts_of(advice.labour._staff_advice("artisans"))["remedies"],
-      advice.labour._staff_advice("artisans"))
-run_it(advice, "workshop_first", "school_founded")
-advice.operating.discard("school_founded")
-_staff_shut = advice.labour._staff_advice("scholars")
-check("the scholar-pool advice offers to reopen a shut school rather than treating it as covered",
-      {"action": "reopen", "node": "school_founded"} in facts_of(_staff_shut)["remedies"], _staff_shut)
 check("ROOM_SOURCES names real node ids only - no stale reference silently filtered out",
       all(node_id in NODES for node_id, _ in advice.ROOM_SOURCES),
       [node_id for node_id, _ in advice.ROOM_SOURCES if node_id not in NODES])

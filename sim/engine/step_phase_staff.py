@@ -8,6 +8,7 @@ from sim.world import demography
 from . import automation_audit
 from .units_prose import plain_number
 from .payroll_trim import payroll_means, staff_to_let_go
+from .staff_phase_rules import has_room_to_hire, hires_needed
 from .staff_replacement import REPLACE_ONLY, replace_lost_staff, replacement_wanted
 from sim.agents.api import edges
 
@@ -109,8 +110,7 @@ class StaffPhaseMixin:
         # below - which already subtracts living cost, upkeep and the wages
         # you are carrying - is what decides how many to hire, and correctly
         # says nobody when there is nothing spare.
-        _hire_room = (self.state.household.capital >= 0
-                      or -self.state.household.capital <= self.credit_limit() * self.AUTO_HIRE_CREDIT_ROOM_SHARE)
+        _hire_room = has_room_to_hire(self.state.household.capital, self.credit_limit(), self.AUTO_HIRE_CREDIT_ROOM_SHARE)
         _hire_mode = self.state.founder.policy.get("auto_hire", not self.manual)
         if _hire_mode == REPLACE_ONLY and _hire_room:
             replace_lost_staff(self, _lost)
@@ -168,13 +168,13 @@ class StaffPhaseMixin:
             # player hits - so it is simply not acted on.
             def _grow_to(trade, want, closure_need=0.0):
                 have = self.state.household.employees.get(trade, 0.0)
-                delta = self.labour.stochastic_round(want) - have
-                if delta >= 1.0:
+                change = hires_needed(have, self.labour.stochastic_round(want))
+                if change > 0:
                     _before = self.state.household.capital
-                    _hired, _why = self.labour.hire_buying_room(trade, int(delta))
+                    _hired, _why = self.labour.hire_buying_room(trade, change)
                     if not _hired and closure_need >= 1.0:
                         automation_audit.record_skip(
-                            self, "auto_hire", "hire %d %s" % (int(delta), trade),
+                            self, "auto_hire", "hire %d %s" % (change, trade),
                             "concerns shut for want of staff need %.1f more: %s" % (closure_need, _why))
                     if _hired:
                         # the people the market found, which can be fewer than sought
@@ -183,11 +183,11 @@ class StaffPhaseMixin:
                             self, "auto_hire", "hire", "%d %s" % (_found, trade),
                             "staff target %.1f against %.1f held, with %.1f supervision room"
                             % (want, have, self.labour.supervision_room()), _before)
-                elif delta <= -1.0:
+                elif change < 0:
                     _before = self.state.household.capital
-                    self.labour.fire(trade, int(-delta))
+                    self.labour.fire(trade, -change)
                     automation_audit.record(
-                        self, "auto_hire", "release", "%d %s" % (int(-delta), trade),
+                        self, "auto_hire", "release", "%d %s" % (-change, trade),
                         "staff target %.1f is below the %.1f held" % (want, have), _before)
             # THE HANDS A SHUT CONCERN NEEDS, within the affordability scale the extra room uses; hire() then
             # applies the cash, room and literacy rules, and a refusal is recorded as a skip with its reason.
