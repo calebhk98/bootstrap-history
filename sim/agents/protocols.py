@@ -7,7 +7,7 @@ second scenario may supply another. Nothing here is imported at run time; it nam
 actors call, so a change to what an actor asks shows up as a change to this file.
 """
 import random
-from typing import Any, Dict, FrozenSet, Iterable, List, Optional, Protocol, Set, Tuple
+from typing import Any, Callable, Dict, FrozenSet, Iterable, List, Optional, Protocol, Set, Tuple
 
 from .revenue import Assessment
 from .sector import Sector
@@ -442,6 +442,27 @@ class World(Protocol):
 		...
 
 	def concern_takings(self, node_id: str, opened_year: int, rivals: float = 0.0, capacity: float = 1.0) -> float:
+		...
+
+	def plant_books(self, node_id: str, opened_year: int, rivals: float, size: float) -> Optional[Any]:
+		"""(takings, upkeep, wages) of a plant of the concern at `size` founding sizes, in the economy the asking actor's
+		country stands in; None when that country keeps no record of a figure they need."""
+		...
+
+	def book_takings(self, node_id: str, opened_year: int) -> float:
+		"""Yearly takings of one founding size of a concern at its ramp in the tree's book coin (no cost scale, no hazard factor)."""
+		...
+
+	def book_upkeep(self, node_id: str) -> float:
+		"""Yearly upkeep of one founding size of a concern without its crew's pay, in the tree's book coin."""
+		...
+
+	def market_factor_at(self, node_id: str, unit_price: Callable[[str], Optional[float]]) -> float:
+		"""A concern's market over long-run prices at the given prices per unit; one where it has no market model or no quote."""
+		...
+
+	def in_goods_category(self, node_id: str) -> bool:
+		"""Whether the concern sells into a goods category, whose demand the home society's households set."""
 		...
 
 	def concern_inputs(self, node_id: str) -> Dict[str, float]:

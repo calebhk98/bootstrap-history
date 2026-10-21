@@ -10,6 +10,7 @@ from typing import Any, Dict, Optional, Set
 from .country_hands import hands_of
 from .country_population import people_counted
 from .country_state import CountryStateView
+from .country_state_books import CountryBooksView
 from .no_country_economy import NoCountryEconomy
 from .protocols import World
 from .records import CountryProfile
@@ -34,7 +35,7 @@ class _NoGovernment:
 		return 0.0, 0.0
 
 
-class CountryWorld(CountryStateView):
+class CountryWorld(CountryStateView, CountryBooksView):
 	"""What an actor of `profile`'s country sees. `holder` is the registry (or its saved state)."""
 
 	def __init__(self, shared: Any, profile: CountryProfile, holder: Any) -> None:

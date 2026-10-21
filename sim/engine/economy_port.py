@@ -372,11 +372,11 @@ class EconomyPort:
         sim = self._sim
         return sim.concern_takings(node_id, 1.0) * sim.node_output_market_factor(sim.nodes[node_id])
 
-    def concern_upkeep(self, node_id, capacity=1.0):
+    def concern_upkeep(self, node_id, capacity=1.0, cost_scale=None):
         """Yearly upkeep of a concern at a given capacity, without its crew's pay: an actor that runs a concern
         hires the crew through the labour market and pays wages there."""
         node = self._sim.nodes[node_id]
-        return node["up"] * node_upkeep.non_labour_share(node) * self.cost_scale() * capacity
+        return node["up"] * node_upkeep.non_labour_share(node) * (self.cost_scale() if cost_scale is None else cost_scale) * capacity
 
     def project_cost(self, node_id):
         """What a project costs to carry out now."""

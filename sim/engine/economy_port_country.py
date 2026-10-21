@@ -52,6 +52,12 @@ class CountryAnswers:
         price = country_figures.prices(self._economy, self._country).get(material)
         return None if price is None else price * self._coin / tonnes_per_unit(material)
 
+    def price_per_unit(self, material: str) -> Optional[float]:
+        """Money for one unit of a material at the price its market areas touching the country quote; None when none
+        of them trades it."""
+        price = country_figures.prices(self._economy, self._country).get(material)
+        return None if price is None else price * self._coin
+
     def coin_regime(self) -> str:
         """The standard of the money the one economy uses."""
         return country_figures.currency(self._economy).regime

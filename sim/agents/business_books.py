@@ -17,12 +17,17 @@ def operate(business: Business, owner: Any, entry_key: str, world: Any, rivals: 
 	"""One year of a plant: staff it, take its takings, pay upkeep, wages, levy and royalty.
 	Returns the year's margin."""
 	size = business.size_of(entry_key)
+	books = world.plant_books(entry_key, business.opened_year_of(entry_key, world.year), rivals, size)
+	if books is None:   # the plant's country keeps no record of a figure its books need: it stands idle
+		business.note_crew_found(entry_key, 0.0)
+		business.note_takings(entry_key, 0.0)
+		return 0.0
 	found = staff(business, owner, entry_key, world)
 	business.note_crew_found(entry_key, found)
-	takings = found * world.concern_takings(entry_key, business.opened_year_of(entry_key, world.year), rivals, size)
+	takings = found * books.takings
 	business.note_takings(entry_key, takings)
-	upkeep = world.upkeep(entry_key, size)
-	wages = found * world.concern_wage_bill(entry_key, size)
+	upkeep = books.upkeep
+	wages = found * books.wages
 	if not world.sells_on_book(entry_key):   # what sells in the book is paid when the year's market clears
 		ledger.transfer(world.edge(EDGE_CUSTOMERS), owner, takings, "takings")
 	ledger.transfer(owner, world.edge(EDGE_SUPPLIERS), upkeep, "upkeep")
