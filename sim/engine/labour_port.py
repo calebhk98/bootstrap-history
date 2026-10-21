@@ -1,6 +1,6 @@
 """The engine's side of the labour wall: what the labour package reads from the simulation, and where
 the simulation keeps its `Labour`."""
-from sim.agents.api import edges
+from sim.agents.api import edges, tax_burden
 from sim.labour.api import Labour
 from . import data, purchase_rule, solve_prices_core, units_prose, wage_schedule
 
@@ -96,6 +96,13 @@ class LabourWorld:
         """Money one hour of the unskilled trade is paid in the agent economy; None until the game's money
         is priced at the economy (its opening)."""
         return self._sim.economy.unskilled_wage()
+
+    def harvest_share_taken(self, material):
+        """Share of the harvest of a material the home state's forms take from growers; none without a government."""
+        if self._sim.actors.government_of(None) is None:
+            return 0.0
+        from .agents_port import SimWorld
+        return tax_burden.harvest_share_taken(SimWorld(self._sim), material)
 
     def build_wage_schedule(self, civ, tightness_factors=None):
         return wage_schedule.build_schedule(data.TRADE_REGISTRY, civ, tightness_factors=tightness_factors)

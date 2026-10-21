@@ -171,7 +171,8 @@ def demands_of(setup, record, view, wanted_runs: Mapping[AgentId, float]) -> Lis
 
 
 def settle_year(setup, record, view, wanted_runs: Mapping[AgentId, float],
-                own_plot_hectares: Optional[Mapping[TileId, float]] = None) -> List[Transfer]:
+                own_plot_hectares: Optional[Mapping[TileId, float]] = None,
+                land_tax_share_of_rent: float = 0.0) -> List[Transfer]:
     """Clear each tile's land for the runs producers want, set next year's rent (land_lease.posted_rents
     follows the clearing rent slowly) and caps on the record
     and its producers, and book the rent: producers pay the tile's owner, shared by ownership.spread.
@@ -196,6 +197,6 @@ def settle_year(setup, record, view, wanted_runs: Mapping[AgentId, float],
     cash = {demand.agent_id: record.book.balance(demand.agent_id, money) for demand in demands}
     payments = ownership.spread(record, rent_postings(result, demands, owners, money, cash))
     record.book.transfer_many(payments)
-    tenant_payments = titles.settle_tenancies(record, money, arable)
+    tenant_payments = titles.settle_tenancies(record, money, arable, land_tax_share_of_rent=land_tax_share_of_rent)
     record.book.transfer_many(tenant_payments)
     return payments + [payment for payment in tenant_payments if payment.purpose != "steward_pay"]    # stewards' pay is a wage, not property income

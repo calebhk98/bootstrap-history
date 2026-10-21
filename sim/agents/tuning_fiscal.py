@@ -24,14 +24,15 @@ FISCAL_PRICE_RISE_WEIGHT = declare(
 FISCAL_BURDEN_WEIGHT = declare(
 	"FISCAL_BURDEN_WEIGHT", 0.1, kind="temporary_heuristic", unit="cost per share of income taken",
 	source=None, confidence="D", retire=_RETIRE,
-	why="What a state counts as lost for each share of its taxpayers' income it takes more, which wears down "
-		"their compliance.")
+	why="What a state counts as lost for each share of its taxpayers' income it takes more. Stays until the state's menu "
+		"values the base its own rate shrinks through the payers' decisions (Complaints/657: concealment, flight and "
+		"unrest, 486, are not modelled, so the loss cannot yet be derived).")
 RATE_RAISE_STEP = declare(
 	"RATE_RAISE_STEP", 0.25, kind="temporary_heuristic", unit="share of the present rate",
 	source=None, confidence="D", retire=_RETIRE,
 	why="The most a state raises the rate of each of its forms collected in coin in one year when it covers a shortfall "
-		"that way. The only consequence of a higher rate that exists is the burden the state counts (FISCAL_BURDEN_WEIGHT); "
-		"Complaints/627 files the missing ones.")
+		"that way. A harvest tax and a land tax now reach the farmer's and the owner's own decisions (tax_burden.py); the state "
+		"does not yet foresee that loss, so it counts the burden (FISCAL_BURDEN_WEIGHT); Complaints/657 files the rest.")
 KIND_DEMAND_RATE_STEP = declare(
 	"KIND_DEMAND_RATE_STEP", 0.25, kind="temporary_heuristic", unit="share of the present rate",
 	source=None, confidence="D", retire=_RETIRE,
