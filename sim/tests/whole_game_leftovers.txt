@@ -72,7 +72,6 @@ options_from_settings_table
 plague_mitigation_realism
 plague_no_double_count
 player_choice_routes
-player_guidance_commands
 state_budget
 state_notices
 state_spending
