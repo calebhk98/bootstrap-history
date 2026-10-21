@@ -232,3 +232,12 @@ price still falls in later years: the wage unit root (mover 1) and the demand si
 
 Not done: a Rome trace (orchestrator: `python3 sim/simulator.py spin-up-trace --civ rome_100ad --years 60`, then the
 settling statistic). Left: the cost spread is re-drawn each year; the ore price and mint movers (3, 4 above).
+
+## Measured (2026-10-21, 60-year Rome trace at 72e81e68, after Update 8)
+
+Same command, checkout pinned to the merge of the supply-collapse fixes (stock drawn down over a horizon, idle capacity worn by
+tool life, plant shed by margin, input bids bounded, ask band on value added). Output: `Complaints/reports/473-trace-72e81e68.txt`.
+Against the 3d05ffbe trace: hired hours no longer collapse (they hold within a few-fold of the opening instead of falling
+twenty-fold), and the price level's peak is an order of magnitude lower. It still rises by about two orders of magnitude between
+the first and third decades and then wanders; not settled. Next: decompose the run-up by good (probe in the session's notes,
+per-good contributions to `basket_price_level`) and fix the rule that moves the leading goods.
