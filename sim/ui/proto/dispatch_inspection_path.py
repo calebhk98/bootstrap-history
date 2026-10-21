@@ -10,6 +10,39 @@ from sim.engine.ui_port import closure, topo_order
 from .techtree import _brief
 
 
+def route_money_warnings(startable_count, any_pays_its_way, combined_bill, can_raise, money_words):
+    """The money warnings of a route's startable steps, as reply fields.
+
+    A route can be entirely true and entirely unable to pay the rent: early in any tree its critical path is almost
+    pure knowledge, so following it with no word of that walks a new player into the opening debt trap. The warning
+    is not gated on already being insolvent, which catches the damage and never the cause; it fires whenever nothing
+    on the list earns more than it costs to keep running. And it states the COMBINED bill of everything listed,
+    because several individually affordable starts are not one affordable start (`can_start` has no memory of its
+    earlier answers). `money_words` turns an amount into the player's coin."""
+    if not startable_count or any_pays_its_way:
+        return {}
+    out = {"this_route_pays_for_nothing": (
+        "none of the %d things above earns more than it costs to "
+        "keep running - they are knowledge or infrastructure, or "
+        "trades that do not yet pay their way. This "
+        "route will not cover your costs; something off it has to. "
+        "{\"cmd\":\"available\",\"sort\":\"earns\",\"reverse\":true} "
+        "finds what actually pays today - building one of those "
+        "alongside the route is not a detour from it, it is how you "
+        "afford to keep walking it." % startable_count)}
+    if combined_bill > can_raise:
+        out["these_together_cost_more_than_you_can_raise"] = (
+            "starting everything listed above would cost %s in "
+            "all, against %s you could actually raise today. Each "
+            "one passed its OWN affordability check when it was "
+            "priced; that is not the same question as whether you "
+            "can afford several of them at once. Pick one, or a few, "
+            "not all of them - and see what pays before spending "
+            "the rest."
+            % (money_words(combined_bill), money_words(can_raise)))
+    return out
+
+
 @command("path", shape="tech", group="overview", aliases=("route", "plan"), fog_hidden=True,
          summary="the route to one thing",
          usage=["path <id or name>"], options={"<id>": "the goal or any target"},
@@ -58,51 +91,14 @@ def _cmd_path(sim, nodes, cmd, ended):
     if remaining and not _startable:
         out["note"] = "nothing on the route is startable today"
         out["nearest_blockers"] = route_blockers(sim, nodes, remaining, 3)
-    # A ROUTE CAN BE ENTIRELY TRUE AND ENTIRELY UNABLE TO PAY THE RENT.
-    # Early in any tree the critical path is almost pure knowledge, zero
-    # revenue; following `path` with no word of that walks a new player
-    # straight into the opening debt trap this engine otherwise warns
-    # about everywhere else, unless this screen says so itself.
-    #
-    # The warning must not be gated on already being insolvent: that
-    # catches the damage, never the cause, and by the time recurring
-    # income actually goes negative the debt is often already taken. It
-    # has to fire every time the route itself cannot pay for itself,
-    # whether or not today's ledger happens to look fine yet - and it has
-    # to be said with the COMBINED bill of everything listed above, not
-    # each item's own affordability, because several individually
-    # affordable path items can be collectively unaffordable: `can_start`
-    # asks "could I begin this, today, on its own", which is a different
-    # and smaller question than "could I finish several of these
-    # together".
-    if _startable and not any(
-            sim.venture_real_earnings(node_id) > sim.venture_upkeep_quote(node_id)["now"]
-            for node_id in _startable):
-        _combined = sum(sim.project_cost(node_id) for node_id in _startable)
-        _raise = sim.spending_power("start")
-        out["this_route_pays_for_nothing"] = (
-            "none of the %d things above earns more than it costs to "
-            "keep running - they are knowledge or infrastructure, or "
-            "trades that do not yet pay their way. This "
-            "route will not cover your costs; something off it has to. "
-            "{\"cmd\":\"available\",\"sort\":\"earns\",\"reverse\":true} "
-            "finds what actually pays today - building one of those "
-            "alongside the route is not a detour from it, it is how you "
-            "afford to keep walking it." % len(_startable))
-        # THE COMBINED BILL, not each item's own affordability: several
-        # individually-affordable starts are not one affordable start, and
-        # `can_start` has no memory of its own earlier answers, so this is
-        # where the total has to be added up.
-        if _combined > _raise:
-            out["these_together_cost_more_than_you_can_raise"] = (
-                "starting everything listed above would cost %s in "
-                "all, against %s you could actually raise today. Each "
-                "one passed its OWN affordability check when it was "
-                "priced; that is not the same question as whether you "
-                "can afford several of them at once. Pick one, or a few, "
-                "not all of them - and see what pays before spending "
-                "the rest."
-                % (money_text(_combined, sim, grouped=True), money_text(_raise, sim, grouped=True)))
+    # A ROUTE CAN BE ENTIRELY TRUE AND ENTIRELY UNABLE TO PAY THE RENT: say so every time, not only once in debt
+    # (see route_money_warnings).
+    out.update(route_money_warnings(
+        len(_startable),
+        any(sim.venture_real_earnings(node_id) > sim.venture_upkeep_quote(node_id)["now"] for node_id in _startable),
+        sum(sim.project_cost(node_id) for node_id in _startable),
+        sim.spending_power("start"),
+        lambda amount: money_text(amount, sim, grouped=True)))
     # A ROUTE THAT DOES NOT SAY "RESTORE" IS A ROUTE YOU CANNOT FOLLOW: a
     # node you know but have SHUT does not appear above (it is done, so it
     # is not remaining, and nothing downstream is blocked by it), yet
