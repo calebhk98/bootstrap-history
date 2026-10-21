@@ -491,8 +491,9 @@ class TrainingMixin:
         self._world.pay_edge(self._world.EDGE_WORKERS, fee, "training fees")
         household.teaching_hours_this_year = (household.teaching_hours_this_year or 0.0) + hours
         household.trades_created.add(trade)
-        household.training.extend(trade_first_hands.cohort_rows(
-            current_year, trade, float(count), years, self._full_years(trade), plan["uncovered"]))
+        rows = trade_first_hands.cohort_rows(
+            current_year, trade, float(count), years, self._full_years(trade), plan["uncovered"])
+        household.training.extend(rows)
         self.labour_market.press(frm, float(count) * self._world.HOURS_PER_PERSON_YEAR)
         # SAY WHAT IT TOOK: teaching can quietly eat most of a year's
         # founder-hours, with nothing left afterward to supervise what it
@@ -515,7 +516,7 @@ class TrainingMixin:
                       "screen); before that they cannot do a day of the work. It took "
                       "%s of your own hours (%s left this year) and %s "
                       "to keep them while they learn"
-                      % (count, trade, "s" if count != 1 else "", current_year + years, frm,
+                      % (count, trade, "s" if count != 1 else "", trade_first_hands.year_joined(rows[-1][1]), frm,
                          self._world.plain_number(hours), self._world.plain_number(_left),
                          self._world.money_text(fee, grouped=True)))
 
