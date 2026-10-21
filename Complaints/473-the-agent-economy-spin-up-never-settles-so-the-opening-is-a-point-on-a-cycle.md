@@ -365,3 +365,10 @@ over 60 years with the wage (1.0 to 1.29), and the grain stock is float dust (1e
 `baseline_checks.stock_depletion` counted a start-of-window dust stock as a stock and its disappearance as a draw-down of 1.0. It now
 skips a stock under `FEASIBILITY_TOLERANCE` of the good's largest flow (test_baseline_stock_depletion). The fixture's own drift (price
 level up 0.4 per cent a year with the wage) remains, and is the settling failure above, not a runaway.
+
+## Update 10: the scarce skilled trade's wage clears against bids (branch scarcity-wage, Complaint 678)
+
+`clear_one` no longer caps this year's wage at the training cost; the cap stays on what entrants expect. Probe (`probe10.py` with the
+shortened hidden spin-up, 5 years; a full spin-up exceeds five minutes): wheat price multiple years 0 to 4 was 1, 0.21, 0.19, 0.17, 0.16 and
+is 1, 0.75, 0.73, 0.74, 0.72; iron bar year 4 was 3.2 and is 1.4; furnaceman hours hired hold at 2.5e8 to 2.7e8 (were 1.7e8 to 2.4e8). The
+run-up after year 12 is not yet re-measured; command: `ROME_SPIN_UP_YEARS` unset, `python3 probe10.py 20` from the worktree root.

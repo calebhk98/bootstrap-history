@@ -9,6 +9,7 @@ from .import_cost import ImportCosts
 from .premium import training_premium
 from .trades import fallback_trade
 from .records import Bid, Clearing, MarketState, YearInputs
+from .scarcity import short_run_ceiling
 
 WAGE_SHARE_CLOSED_PER_YEAR = declare(
     "WAGE_SHARE_CLOSED_PER_YEAR", 0.3, kind="temporary_heuristic", unit="share of the gap per year",
@@ -252,11 +253,10 @@ def clear_one(state: MarketState, inputs: YearInputs, trade: str, area: str, bid
     lowest = inputs.ask_floor_per_worker_year.get(area, 0.0) / max(inputs.hours_per_worker_year, 1e-12)
     reservation = max(base_reservation * asks.scale_of(state, area, trade), lowest, unskilled_option(state, inputs, area, trade))
     last = state.wages.get(area, {}).get(trade)
-    ceiling = max(trained_substitute_wage(state, inputs, area, trade), reservation)
-    if bids:      # employers can bring the trade's workers in, so bids no one here can fill do not set the wage
-        imported = (import_costs or ImportCosts(state, inputs)).wage(area, trade)
-        if imported is not None:
-            ceiling = max(min(ceiling, imported), reservation)
+    long_run = max(trained_substitute_wage(state, inputs, area, trade), reservation)
+    imported = (import_costs or ImportCosts(state, inputs)).wage(area, trade) if bids else None
+    # this year's wage may pass the long-run cost (trainees take years to arrive); what entrants expect stays at it
+    ceiling = short_run_ceiling(long_run, reservation, spec.training_years, bids, imported)
     if share_at is None or full <= 0.0:
         offered = full
         wage = min(market_wage(last, reservation, offered, bids), ceiling)
@@ -267,6 +267,7 @@ def clear_one(state: MarketState, inputs: YearInputs, trade: str, area: str, bid
     else:
         wage, target = _wage_with_supply(last, reservation, ceiling, lambda wage_now: full * share_at(wage_now), bids)
         offered = full * share_at(wage)
+    target = min(target, long_run) if target is not None else None
     wanted, paid, ranks = eligible_bids(bids, wage)
     previous = state.hired_hours.get(area, {}).get(trade, {})
     hired = retain(wanted, previous, offered) if offered > 0.0 else {employer: 0.0 for employer in wanted}
