@@ -53,13 +53,13 @@ does, because every table just rescales the same Cobb-Douglas curve; see
 NET YIELD MUST MATCH data/production/40_organics.json's `wheat_kg` ENTRY, BY
 CONSTRUCTION. Fold-return is measured against the seed sown, so a fold-return
 figure produces a GROSS harvest with the seed inside it; net of seed, wheat's
-4.5-fold return on 165 kg/ha of seed corn gives 577.5 kg/ha, which is what
+fold return on the seed corn of one hectare, less that seed, is what
 this module computes and what the data file states -
 `sim/tests/test_agriculture.py`'s DataConsistencyTests reads the file and
 checks it, so the two cannot drift apart unnoticed.
 
 The physically right form of that entry lists seed among wheat's own inputs
-and outputs the gross 742.5 kg/ha, which would make seed corn a visible first
+and outputs the gross yield, which would make seed corn a visible first
 claim on the harvest (and a famine eating next year's seed a representable
 event). It is written net instead because `sim/engine/solve_prices.py`'s
 resolvability pass refuses any material that appears among its own inputs -
@@ -259,6 +259,7 @@ from typing import Optional
 
 from sim.constants import declare
 from sim.world.farm_labour import REFERENCE_LABOUR_HOURS_PER_HECTARE, WHEAT_REAPED_HECTARES_PER_PERSON_DAY
+from sim.world.grain_yield import FOLD_RETURN, SEED_KG_PER_HECTARE
 from sim.world.shared_constants import (
     ANNUAL_LABOUR_HOURS_PER_FARM_WORKER,
     FALLOW_SHARE_OF_HOLDING,
@@ -285,27 +286,23 @@ from sim.world.shared_constants import (
 # SEED AND YIELD BIOLOGY
 # ============================================================================
 # These two numbers are Roman-wheat-specific facts about the crop and the
-# sowing practice, not properties of this simulation. Both are read from
-# data/production/40_organics.json's wheat_kg entry (itself sourced to
-# Columella and modern archaeobotanical estimates for Roman Italy), and from
-# the same range the task that produced this module names independently:
-# "Roman wheat returned something like four to five times the seed sown on
-# decent land, around a tonne per hectare gross." See the module docstring's
-# NET YIELD MUST MATCH section for the gross-versus-net distinction that
-# governs how these two numbers are used.
+# sowing practice, not properties of this simulation. Both are built from
+# Columella's text in data/world/grain_yield.json (sim/world/grain_yield.py).
+# See the module docstring's NET YIELD MUST MATCH section for the
+# gross-versus-net distinction that governs how they are used.
 
 SEED_SOWING_RATE_KG_PER_HA = declare(
-    "SEED_SOWING_RATE_KG_PER_HA", 165.0,
+    "SEED_SOWING_RATE_KG_PER_HA", SEED_KG_PER_HECTARE,
     kind="engineering_estimate",
     unit="kg seed/hectare",
-    source="data/production/40_organics.json wheat_kg entry: broadcast "
-           "sowing rate for ancient Mediterranean wheat under an ard, "
-           "given there as \"around 150-180 kg/ha\"; taken here as the "
-           "midpoint of that stated range.",
+    source="Built in data/world/grain_yield.json by sim/world/grain_yield.py: Columella, De Re Rustica 2.9.1 "
+           "(LacusCurtius, opened), five modii of wheat to the iugerum of medium land; twenty Roman pounds to the "
+           "modius of the lightest wheat, Pliny, Natural History 18.12 (Perseus, opened); 328.9 g to the Roman "
+           "pound (Wikipedia, opened); 0.2523 hectares to the iugerum (data/world/farm_labour.json).",
     confidence="B",
     why="Sets how much of every harvest must be paid back to the ground "
         "before anything is food, and is the yardstick fold-return is "
-        "quoted against - 'four to five times the seed sown' means nothing "
+        "quoted against - 'four times the seed sown' means nothing "
         "without this number.")
 
 CLEARING_LABOUR_HOURS_PER_HECTARE = declare(
@@ -322,14 +319,13 @@ CLEARING_LABOUR_HOURS_PER_HECTARE = declare(
         "tracked process.")
 
 FOLD_RETURN_ON_SEED_SOWN = declare(
-    "FOLD_RETURN_ON_SEED_SOWN", 4.5,
+    "FOLD_RETURN_ON_SEED_SOWN", FOLD_RETURN,
     kind="biological_parameter",
     unit="kg reaped / kg sown (dimensionless)",
-    source="Columella's own figures and modern archaeobotanical estimates "
-           "for Roman Italy, both giving roughly 4-5 fold return under an "
-           "ard without heavy manuring; same range independently named in "
-           "data/production/40_organics.json and in the task that produced "
-           "this module. Taken as the midpoint.",
+    source="data/world/grain_yield.json: Columella, De Re Rustica 3.3.4 (LacusCurtius, opened), grain crops "
+           "\"throughout at least the greater part of Italy\" hardly returned \"a yield of four for one\". "
+           "Varro 1.44.1 gives tenfold to fifteen-fold for the best districts of Etruria, carried here by a tile "
+           "yield factor above 1.0, not by this reference.",
     confidence="B",
     why="The crop's biological response to being sown at all, at reference "
         "labour and average land quality in an average year - the single "
@@ -339,9 +335,7 @@ FOLD_RETURN_ON_SEED_SOWN = declare(
 
 GROSS_YIELD_AT_REFERENCE_LABOUR_KG_PER_HA = (
     SEED_SOWING_RATE_KG_PER_HA * FOLD_RETURN_ON_SEED_SOWN)
-# 742.5 kg/ha - inside the 700-900 kg/ha range data/production/40_organics.json
-# itself derives from the same fold-return arithmetic. Not a `declare()`:
-# it is arithmetic on two already-declared numbers, not a fact of its own.
+# Not a `declare()`: it is arithmetic on two already-declared numbers, not a fact of its own.
 
 # ============================================================================
 # LABOUR AND TECHNIQUE

@@ -51,3 +51,13 @@ because a worker's cropped area is now set by the farming year, not the harvest 
 `society_labour_hours` rise with the 554; re-measure the groups with
 `python3 sim/simulator.py economy-check --civs rome_100ad --years 1 --occupations` (not finished inside 4 minutes on
 the machine used). The table above is from before this change.
+
+## Note: grain inputs sourced; farm-share check now reads the band (pass 7)
+
+The farm share of Rome's no-intervention run is validated against the agriculture band above in
+`test_farm_edges_scenario` (slow), replacing a test that pinned values recorded from a run. The inputs of
+`fraction_of_population_that_must_farm` were re-read: seed and fold return now come from Columella 2.9.1 and 3.3.4
+(`data/world/grain_yield.json`), which raised the fraction (one farmer feeds fewer people); measure it with
+`python3 -c "from sim.world import agriculture as a; print(a.fraction_of_population_that_must_farm())"`.
+Still unsourced: `ANNUAL_LABOUR_HOURS_PER_FARM_WORKER` (a labelled heuristic), grain spoilage, the draught-animal fodder
+taken from the harvest (not modelled), and the single-staple ration.

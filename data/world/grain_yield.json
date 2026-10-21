@@ -1,0 +1,16 @@
+{
+  "_about": "Seed rate and fold return of wheat in Roman Italy, read by sim/world/grain_yield.py. The seed a hectare takes is Columella's modii to the iugerum, at the weight of a modius of wheat and the Roman pound, over the iugerum in hectares (data/world/farm_labour.json). data/production/40_organics.json wheat_kg and wheat_hoe_kg outputs must equal the net yield it gives (tested).",
+  "seed": {
+    "modii_per_iugerum": 5.0,
+    "modii_per_iugerum_quote": "Columella, De Re Rustica 2.9.1 (LacusCurtius, https://penelope.uchicago.edu/Thayer/E/Roman/Texts/Columella/de_Re_Rustica/2*.html, opened): \"A iugerum of rich land usually requires four modii of wheat; land of medium quality, five\". Five is taken: the model's reference land is ordinary (quality 1.0), not rich.",
+    "pounds_per_modius": 20.0,
+    "pounds_per_modius_quote": "Pliny, Natural History 18.12 (Bostock and Riley translation, Perseus, https://www.perseus.tufts.edu/hopper/text?doc=Perseus:text:1999.02.0137:book=18:chapter=12, opened): \"the lightest in weight are those which come from Gaul and Chersonnesus; for, upon weighing them, it will be found that they do not yield more than twenty pounds to the modius. The grain of Sardinia weighs half a pound more, and that of Alexandria one-third of a pound more than that of Sardinia\". The lightest is taken; no Italian wheat weight was found.",
+    "kg_per_roman_pound": 0.3289,
+    "kg_per_roman_pound_quote": "Wikipedia, Ancient Roman units of measurement (opened): Roman pound (libra) \"328.9 g (11.60 oz)\"."
+  },
+  "fold_return": {
+    "value": 4.0,
+    "quote": "Columella, De Re Rustica 3.3.4 (LacusCurtius, opened): \"For we can hardly recall a time when grain crops, throughout at least the greater part of Italy, returned a yield of four for one.\" Four fold, seed inside it, is the figure he gives for Italy at large.",
+    "upper_range_note": "Varro, De Re Rustica 1.44.1 (LacusCurtius, opened): \"the same seed in one district yields tenfold and in another fifteen-fold — as at some places in Etruria\"; 'around Sybaris ... even a hundred to one' is reported, not measured. These are the best districts, which the tile yield factor (a quality above 1.0) carries; the reference hectare is the Italian run of land."
+  }
+}

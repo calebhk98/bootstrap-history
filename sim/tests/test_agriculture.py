@@ -326,7 +326,7 @@ class HeadlineCalibrationTests(unittest.TestCase):
         # headline docstring - so the honest comparison is a range, not a
         # number, and it is wide.
         #
-        # This module computes about 4.7 people fed per FTE farm worker.
+        # This module computes the people fed per FTE farm worker (the reciprocal of the fraction).
         # The assertion below is loose on purpose: it records that the
         # figure is still on the wrong side of anything history allows,
         # without pretending to a precision the FTE conversion does not
@@ -803,23 +803,6 @@ class DataConsistencyTests(unittest.TestCase):
 
         self.assertEqual(wheat["labour_hours"]["farmer"],
                          agriculture.REFERENCE_LABOUR_HOURS_PER_HECTARE)
-        # Seed rate is a midpoint this module read out of that entry's prose
-        # ("around 150-180 kg/ha"), not a machine-readable field, so this
-        # checks it falls inside the stated range rather than matching a
-        # field exactly.
-        self.assertGreaterEqual(agriculture.SEED_SOWING_RATE_KG_PER_HA, 150.0)
-        self.assertLessEqual(agriculture.SEED_SOWING_RATE_KG_PER_HA, 180.0)
-
-    def test_gross_reference_yield_falls_inside_the_files_own_derived_range(self):
-        # The production file derives "roughly 700-900 kg/ha" gross from
-        # the same fold-return arithmetic this module uses (see both
-        # modules' docstrings) - this module's GROSS figure must land
-        # inside that range even though it disagrees with the file's own
-        # NET-of-seed label on 800 kg/ha.
-        self.assertGreaterEqual(
-            agriculture.GROSS_YIELD_AT_REFERENCE_LABOUR_KG_PER_HA, 700.0)
-        self.assertLessEqual(
-            agriculture.GROSS_YIELD_AT_REFERENCE_LABOUR_KG_PER_HA, 900.0)
 
     def test_the_file_and_this_module_agree_on_the_net_yield(self):
         # These two used to disagree: the file said 800 kg/ha net while

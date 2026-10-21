@@ -8,6 +8,7 @@ from unittest import mock
 
 from .harness import *  # noqa: F401,F403
 from sim.engine import invariants
+from sim.labour import api as labour_api
 from sim.labour import labour_allocation
 from sim.engine.food_supply import FoodSupplyMixin
 from sim.geography.api import crop_site, tiles_held
@@ -260,20 +261,21 @@ class ClearingLadderTests(unittest.TestCase):
 
 
 class BaselineValidationTests(unittest.TestCase):
-    def test_baseline_validation_ordinary_land_is_farmed_as_before(self):
-        # Reference values recorded from the suite's short spin-up with endemic disease (malaria and the herd
-        # losses it brings) in the baseline: the people it kills and the herds it thins shift the farm share.
-        # Re-recorded when the wheat hectare's hours came from its sub-tasks (data/world/farm_labour.json, Complaint 646): a
-        # worker's cropped area now follows the farming year, not the harvest window, so the same people need fewer hands.
-        # Earlier, re-recorded when the farm's land quality became the tiles' yield factor (Complaint 537): Rome's cleared best
-        # ground includes flood-watered land, so the same people need fewer hands. The tolerances are unchanged.
-        history = _undisturbed_run(WARM_UP_YEARS + _SETTLE_YEARS_AFTER_WARM_UP)[0]
-        for year_index, population, farm_share in (
-                (9, 65341964.0, 0.28007), (19, 65925204.3, 0.28693),
-                (29, 66827551.7, 0.29161)):
-            note = "baseline validation (4.2), reference values re-recorded under Complaint 646, year index %d" % year_index
-            self.assertAlmostEqual(history[year_index][0] / population, 1.0, delta=0.01, msg=note)
-            self.assertAlmostEqual(history[year_index][1], farm_share, delta=0.01, msg=note)
+    """Baseline validation (CLAUDE.md 4.2, Complaint 619): the share of working hours on the land in Rome's
+    no-intervention run lies inside the agriculture band of data/world/occupation_groups.json, sourced there to
+    Scheidel and Friesen (2009), Allen (2000) and Bairoch (1988). No value is recorded from a run. The rule that
+    sizes the farm is held on built inputs in test_grain_yield and test_agriculture."""
+
+    def test_baseline_validation_farm_share_is_inside_the_sourced_agriculture_band(self):
+        game = sim(CIV_ID, events=False)
+        history = _run(game, WARM_UP_YEARS + _SETTLE_YEARS_AFTER_WARM_UP)
+        hours = labour_api.hours_by_trade_of_all_employers(game.labour, game.state.economy.society_labour_hours)
+        agriculture_share = labour_api.shares_by_group(hours)["agriculture"]
+        low, high = labour_api.occupation_groups()["groups"]["agriculture"]["band"]
+        self.assertGreaterEqual(history[-1][1], 0.0)
+        self.assertTrue(low <= agriculture_share <= high,
+                        "Complaint 619 (open): agriculture share %.3f outside the sourced band %s..%s (farm trade alone %.3f)"
+                        % (agriculture_share, low, high, history[-1][1]))
 
 
 if __name__ == "__main__":
