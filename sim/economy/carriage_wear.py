@@ -1,5 +1,6 @@
 """Carriers as durable goods: carriage wears the stock of carts, pack saddles, animals and hulls that a mode uses,
-and the merchants buy them back in the goods market.
+and the merchants buy them back in the goods market. The feed the team's animals eat is used up the same way
+(a row with no life: eaten by the tonne-km), so a merchant buys it in the goods market too.
 
 A mode's team (a cart and its two oxen, a string of mules with their saddles, a hull) moves a known tonne-km
 a working day (geography). A unit of a carrier good works `days_per_year` days a year for its service life, so
@@ -34,12 +35,14 @@ def units_per_tonne_km(count: float, life_years: float, days_per_year: float, to
     return count / capacity if capacity > 0.0 else 0.0
 
 
-def table(teams: Mapping[str, Mapping], uses: Mapping[GoodId, Mapping], lives: Mapping[GoodId, float]
-          ) -> Dict[str, Tuple[float, CarrierRows]]:
+def table(teams: Mapping[str, Mapping], uses: Mapping[GoodId, Mapping], lives: Mapping[GoodId, float],
+          feed: Optional[Tuple[GoodId, float]] = None) -> Dict[str, Tuple[float, CarrierRows]]:
     """{mode: (tonne-km per team-day, ((carrier good, units worn per tonne-km),))} for each mode with a team.
     `teams` is geography's carriage rates (carriers, tonne_km_per_team_day, team_payload_tonnes); `uses` the
     `carrier_use` of each good that has one; `lives` the goods' service lives. A team member no good serves,
-    or a good with no life, wears nothing here."""
+    or a good with no life, wears nothing here. `feed` is (feed good, kilograms in a unit of it): a team with
+    animals also uses up that good, at geography's `animal_feed_kg_per_tonne_km`, a row like a carrier's whose
+    units are eaten rather than worn by a life."""
     served: Dict[Tuple[str, str], GoodId] = {}
     for good, use in sorted(uses.items()):
         for kind, name in sorted(use["serves"].items()):
@@ -58,6 +61,9 @@ def table(teams: Mapping[str, Mapping], uses: Mapping[GoodId, Mapping], lives: M
             day_tonne_km = per_day * (float(payload) / float(team["team_payload_tonnes"])
                                       if payload and team.get("team_payload_tonnes") else 1.0)
             rows.append((good, units_per_tonne_km(float(count), life, float(use["days_per_year"]), day_tonne_km)))
+        eaten = float(team.get("animal_feed_kg_per_tonne_km", 0.0))
+        if feed is not None and eaten > 0.0 and feed[1] > 0.0 and per_day > 0.0:
+            rows.append((feed[0], eaten / feed[1]))
         if rows:
             found[mode] = (per_day, tuple(rows))
     return found

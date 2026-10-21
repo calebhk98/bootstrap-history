@@ -381,15 +381,18 @@ def dispatch(merchant: Merchant, fills: Sequence[Fill], carriage: CarriageTable,
              held_stock: Mapping[Tuple[GoodId, TileId], float],
              carrier_of: Callable[[TileId], Optional[AgentId]] = lambda _tile: EDGE_CARRIAGE,
              crew: Optional[CrewHire] = None,
-             carrier_money: Optional[Callable[[TileId, TileId], float]] = None) -> Dispatch:
+             carrier_money: Optional[Callable[[TileId, TileId], float]] = None,
+             margin_kept: bool = False) -> Dispatch:
     """Carry what the merchant holds on each route's source tile (this year's purchases and older stock)
     to the route's destination, paying carriage from `cash` to `carrier_of(source tile)` (the edge when
     it names nobody). `fills` are not needed: what settled is what is held.
     With `crew`, a shipment's crew hours (the hours its haul needs of each trade at the tile, `hours_per_tonne`)
     must have been hired: a route is cut by the share hired of its scarcest crew hours, and the fee is paid
     less the crew's wages, which the labour market has already paid; with `carrier_money(source, destination)`
-    (what the carriers a tonne wears cost) the merchant buys them in the goods market, so the fee is paid
-    less that too."""
+    (what the carriers a tonne wears and the animals eat cost) the merchant buys them in the goods market, so the
+    fee is paid less that too. With `margin_kept` the rest of the fee (the carriers' interest, their losses and
+    the margin) stays with the merchant that owns the carriers and is paid to nobody; only crew pay owed for
+    hours not yet hired (the first year of shipping, which has no plan) still goes to `carrier_of`, as before."""
     shipments = []
     remaining = max(0.0, cash)
     wanted: Dict[str, float] = {}
@@ -404,10 +407,13 @@ def dispatch(merchant: Merchant, fills: Sequence[Fill], carriage: CarriageTable,
         crew_money = 0.0 if crew is None else min(per_unit, math.fsum(hours * crew.wage.get(key, 0.0)
                                                                       for key, hours in crew_rows))
         quantity = held_stock.get((good, tile), 0.0)
-        if carrier_money is not None:
-            crew_money += min(max(0.0, per_unit - crew_money), carrier_money(tile, route[0]) * tonnes_per_unit)
-        net_unit = per_unit - crew_money
-        affordable = quantity if net_unit <= 0.0 else min(quantity, remaining / net_unit)
+        supplied_money = 0.0 if carrier_money is None else min(max(0.0, per_unit - crew_money), carrier_money(tile, route[0]) * tonnes_per_unit)
+        payout_unit = per_unit - crew_money - supplied_money
+        if margin_kept:     # what is left is the owner's: only crew pay for hours nobody was hired for is still paid out
+            unhired = 0.0 if crew is None or crew.hours_hired is not None else math.fsum(
+                hours * crew.market_wage(key) for key, hours in crew_rows)
+            payout_unit = min(payout_unit, unhired)
+        affordable = quantity if payout_unit <= 0.0 else min(quantity, remaining / payout_unit)
         route_hours = math.fsum(hours for _key, hours in crew_rows)
         gain = per_unit
         if crew is not None and crew_rows:      # what an hour is worth is the haul's gain once the fee's other parts (feed, carts, animals, tolls) are paid
@@ -418,19 +424,19 @@ def dispatch(merchant: Merchant, fills: Sequence[Fill], carriage: CarriageTable,
         for key, hours in crew_rows:      # shared by the route's hours
             wanted[key] = wanted.get(key, 0.0) + quantity * hours
             worth[key] = worth.get(key, 0.0) + quantity * gain * hours / route_hours
-        shipments.append([good, tile, route, quantity, affordable, per_unit, crew_money, crew_rows])
-        remaining -= affordable * net_unit
+        shipments.append([good, tile, route, quantity, affordable, payout_unit, crew_rows])
+        remaining -= affordable * payout_unit
     cut: Dict[str, float] = {}       # the share of a crew key's hours that was hired, where it falls short
     if crew is not None and crew.hours_hired is not None:
         needed: Dict[str, float] = {}
         for row in shipments:
-            for key, hours in row[7]:
+            for key, hours in row[6]:
                 needed[key] = needed.get(key, 0.0) + row[4] * hours
         cut = {key: max(0.0, crew.hours_hired.get(key, 0.0)) / total for key, total in needed.items()
                if total > crew.hours_hired.get(key, 0.0)}
     moves, transfers, stranded = [], [], []
     purse = max(0.0, cash) * (1.0 - PURSE_ROUNDING_MARGIN)
-    for good, tile, route, quantity, affordable, per_unit, crew_money, crew_rows in shipments:
+    for good, tile, route, quantity, affordable, payout_unit, crew_rows in shipments:
         carried = affordable * min([cut[key] for key, _hours in crew_rows if key in cut], default=1.0)
         if carried < quantity:
             stranded.append((good, tile, quantity - carried))
@@ -441,7 +447,7 @@ def dispatch(merchant: Merchant, fills: Sequence[Fill], carriage: CarriageTable,
             merchant.in_transit.append(merchants_transit.Shipment(good, carried, route[0], years - 1))
         moves.append(DeliveredMove(merchant.agent_id, merchants_transit.EDGE_TRANSIT if years > 1 else merchant.agent_id,
                                    good, tile, carried, "carried to market", route[0]))
-        fee = max(0.0, min(carried * (per_unit - crew_money), purse))      # never above the purse, and a rounding sliver below zero is not cash paid back
+        fee = max(0.0, min(carried * payout_unit, purse))      # never above the purse, and a rounding sliver below zero is not cash paid back
         purse -= fee
         if fee > 0.0:
             transfers.append(Transfer(merchant.agent_id, carrier_of(tile) or EDGE_CARRIAGE, currency, fee,
