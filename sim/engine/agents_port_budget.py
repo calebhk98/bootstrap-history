@@ -36,7 +36,7 @@ class BudgetView:
 		return self._sim.research_productivity(country)
 
 	def urban_population(self) -> float:
-		return self.population_total() * float(self._sim.civ.get("urban_fraction", 0.0))
+		return self.population_total() * self._sim.urban_fraction()
 
 	def subsistence_kg_per_person_year(self) -> float:
 		return demand.FOOD_SUBSISTENCE_QUANTITY_KG_PER_CAPITA_PER_YEAR

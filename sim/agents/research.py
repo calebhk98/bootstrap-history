@@ -10,7 +10,7 @@ from typing import Any, Dict, Iterable, List
 
 from sim.refusal import Refusal
 
-from . import imitation, research_gate
+from . import awareness, imitation, research_gate
 from .player_commands import CommandRejected
 from .tuning import HIRING_PREMIUM, RESEARCH_REVIEW_YEARS
 
@@ -90,7 +90,8 @@ def diffuse(actors: Iterable[Any], world: Any) -> List[str]:
 			continue
 		holders = [actor for actor in ordered if node_id in actor.knowledge]
 		for learner in ordered:
-			if learner.knows(node_id, world) or missing_prerequisites(learner, node_id, world):
+			if learner.knows(node_id, world) or missing_prerequisites(learner, node_id, world) \
+					or not awareness.knows_it_exists(learner, node_id, world):
 				continue
 			roll = world.rng_for(world.year, "diffusion", node_id, learner.identity()).random()
 			if roll >= hazard:

@@ -251,7 +251,6 @@ def build_setup(sim, opening=None, production=None):
         yield_factor_by_recipe_tile=cropland_yields(production, recipes, tiles),
         basket_by_tile=baskets_by_tile(basket, need_data, world_map, all_tile_ids), coin_per_unit=unit,
         household_work=households_work.load_household_work(), ready_to_eat=households_work.ready_to_eat_goods(need_data),
-        opening_income_per_head=opening.get("opening_income_per_head"),
         recipes_by_country=recipes_by_country(str(civ["id"]), opening["recipes"], partners),
         tile_owners=sim.tile_owner_map(),
         world_map=world_map, improvements=dict(opening["ways"]),

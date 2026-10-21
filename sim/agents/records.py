@@ -16,6 +16,11 @@ class ActorRecord:
 	money: float = 0.0
 	workforce: Dict[str, float] = field(default_factory=dict)
 	knowledge: Set[str] = field(default_factory=set)
+	# node id -> year the actor learned it exists (awareness.py); node id -> {stage, share, since} (adoption.py);
+	# place -> contact volume from recent routes, conquests and migrations (awareness.record_contact)
+	aware: Dict[str, int] = field(default_factory=dict)
+	adoption: Dict[str, Dict[str, Any]] = field(default_factory=dict)
+	contacts: Dict[str, float] = field(default_factory=dict)
 	# the plants the actor runs, with their sizes, opening years, crews and margins
 	business: Business = field(default_factory=Business)
 	# node id -> copy work in progress (hours_left, money_left, years, ...)

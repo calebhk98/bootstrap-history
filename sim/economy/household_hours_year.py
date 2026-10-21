@@ -1,7 +1,8 @@
 """A cohort's hours kept for its own plot rather than offered (Complaints 473, 608): the choice of
 `households_hours_offered` against the wage it faced and what its plot yields at the prices of what it grows. The
-hours kept are added to those the own-plot plan and the household work already keep back (`Economy._shortfall_hours`)."""
-from typing import Dict, Mapping, Sequence
+hours kept are added to those the own-plot plan and the household work already keep back (`labour_supply.HourSupply`)."""
+import functools
+from typing import Callable, Dict, Mapping, Optional, Sequence
 
 from . import households_hours_offered
 from .households_basket import need_prices
@@ -31,27 +32,46 @@ def usable_plot_hours(setup, cohort, options: Mapping[str, Sequence[Option]], he
     return sum(used.values())
 
 
-def decide(setup, record, view, offers: Sequence[LabourOffer], options: Mapping[str, Sequence[Option]],
-           hectares_held: Mapping[AgentId, float]) -> Dict[AgentId, float]:
-    """Hours each cohort keeps for its plot at the wage it faces; a cohort with no land held, or none that grows a
-    need's floor, keeps none."""
-    kept: Dict[AgentId, float] = {}
+def plot_schedules(setup, record, view, offers: Sequence[LabourOffer], options: Mapping[str, Sequence[Option]],
+                   hectares_held: Mapping[AgentId, float], usable_out: Optional[Dict[AgentId, float]] = None
+                   ) -> Dict[AgentId, Callable[[float], float]]:
+    """For each cohort with a plot, the hours it keeps for the plot at a wage an hour (a function of the wage); a
+    cohort with no land held, or none that grows a need's floor, has none. `usable_out`, if given, is filled with
+    the hours each plot could use in all."""
+    schedules: Dict[AgentId, Callable[[float], float]] = {}
     hectares_per_hour = hectares_per_hour_by_recipe(setup.recipes, setup.land_per_run)
     for cohort_id, cohort in sorted(record.cohorts.items()):
-        mine = [offer for offer in offers if offer.worker == cohort_id]
-        available = sum(offer.hours for offer in mine)
+        available = sum(offer.hours for offer in offers if offer.worker == cohort_id)
         tile = setup.tiles.get(cohort.tile)
         held = hectares_held.get(cohort_id, 0.0)
         if available <= 0.0 or tile is None or held <= 0.0 or tile.fertility <= 0.0 or cohort.working_people <= 0.0:
             continue
         basket = setup.basket_for(cohort.tile)
         usable = usable_plot_hours(setup, cohort, options, held)
+        if usable_out is not None:
+            usable_out[cohort_id] = usable
         per_worker_hours = available / cohort.working_people
         marginal = plot_return_per_hour(need_prices(basket, view, cohort.tile), options, tile.fertility, per_worker_hours,
                                         cohort.people / cohort.working_people, hectares_per_hour,
                                         held / cohort.working_people)
-        hours = households_hours_offered.plot_hours_kept(per_worker_hours, wage_faced_per_hour(view, mine), marginal,
-                                                         usable / cohort.working_people) * cohort.working_people
+        schedules[cohort_id] = functools.partial(_plot_hours_kept, per_worker_hours, marginal,
+                                                 usable / cohort.working_people, cohort.working_people)
+    return schedules
+
+
+def _plot_hours_kept(per_worker_hours: float, marginal: float, usable_per_worker: float, workers: float,
+                     wage_per_hour: float) -> float:
+    return households_hours_offered.plot_hours_kept(per_worker_hours, wage_per_hour, marginal, usable_per_worker) * workers
+
+
+def decide(setup, record, view, offers: Sequence[LabourOffer], options: Mapping[str, Sequence[Option]],
+           hectares_held: Mapping[AgentId, float]) -> Dict[AgentId, float]:
+    """Hours each cohort keeps for its plot at the wage it faces (last year's, from the view); a cohort with no
+    land held, or none that grows a need's floor, keeps none."""
+    kept: Dict[AgentId, float] = {}
+    for cohort_id, schedule in plot_schedules(setup, record, view, offers, options, hectares_held).items():
+        hours = schedule(wage_faced_per_hour(view, [offer for offer in offers if offer.worker == cohort_id]))
         if hours > 0.0:
             kept[cohort_id] = hours
     return kept
+

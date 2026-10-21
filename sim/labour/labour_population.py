@@ -452,7 +452,7 @@ class PopulationMixin:
             return 0.0
         # The age-cohort model's running headcount is the actual population.
         pop = self._world.population.total
-        urban = pop * float(self._world.civ.get("urban_fraction", 0.0))
+        urban = pop * self._world.urban_fraction()
         working = self._world.population.working_age
         if trade_data.drawn_from_unskilled_pool(trade):
             return working   # any of the working age may be called up
@@ -468,7 +468,7 @@ class PopulationMixin:
         if in_core > 0.0:
             return in_core   # the labour core's headcount; the shares below stand in only where it holds nobody
         if trade == FARM_TRADE:
-            return working * (1.0 - float(self._world.civ.get("urban_fraction", 0.0)))
+            return working * (1.0 - self._world.urban_fraction())
         if trade_data.registry_of(self._world).get(trade, {}).get("fallback", False):   # the unskilled pool
             return urban * self._working_fraction() * self.UNSKILLED_POOL_TOWN_SHARE
         return (urban * self._working_fraction()
@@ -498,7 +498,7 @@ class PopulationMixin:
         reference_pop = float(self._world.civ.get("population", 0.0))
         pop = self._world.population.total
         scale_from_baseline = (pop / reference_pop) if reference_pop else 1.0
-        urban_frac = float(self._world.civ.get("urban_fraction", 0.0))
+        urban_frac = self._world.urban_fraction()
         trades = []
         for trade in sorted(self._world.wages):
             national = self.national_trade_population(trade)

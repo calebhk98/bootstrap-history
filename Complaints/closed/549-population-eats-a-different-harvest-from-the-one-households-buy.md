@@ -1,6 +1,6 @@
 # Population eats a different harvest from the one households buy and grow
 
-**Status:** partly done. Demography is fed what households ate (national); the farm model still runs for labour, land and the state. Per-tile hunger waits on 603.
+**Status:** closed - each region is fed what its own households ate, or its land's share of the harvest; the farm model that remains is 537's.
 
 Found by an outside reviewer reading the repository; checked against the code.
 
@@ -38,3 +38,12 @@ Found by an outside reviewer reading the repository; checked against the code.
   nutrition ratio demography sees is above one (the farm path capped it at one) and the baseline grows faster. The
   economy rebalances toward need in the engine-free fixture (it did not go hungry when land or harvest was cut), so a
   famine from the market has yet to be exercised end to end.
+
+## Closed
+
+- Per-tile hunger (603 gave people by tile): `regional_population.kcal_per_day_by_region` feeds each region the food its own
+  households ate; a region with no booked figure gets its land's share of the farm model's harvest, never the nation's average, so
+  a regional shortfall raises that region's mortality and not the nation's (`sim/tests/test_regional_hunger_is_the_regions_own.py`).
+- Not deleted, because other code reads it: the farm model (`farm_year`, the labour split, land clearing, the state's grain revenue and
+  the granary exposure) still runs every year and still feeds a region before the economy has closed a year. Moving production, storage and
+  consumption into the agent economy's one book is 537's work; nothing here waits on it.

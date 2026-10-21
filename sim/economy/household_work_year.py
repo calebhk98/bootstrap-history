@@ -1,5 +1,5 @@
 """A cohort's household work in a year (Complaint 645): which hours it hires and which it does itself, and the
-basket that follows. Its own hours are kept back from the labour it offers (`Economy._shortfall_hours`); the hours
+basket that follows. Its own hours are kept back from the labour it offers (`labour_supply.HourSupply`); the hours
 it hires become its floor of the `household_work` need, bought from domestic servants like any floor."""
 import dataclasses
 from typing import Dict, Mapping, Sequence, Tuple

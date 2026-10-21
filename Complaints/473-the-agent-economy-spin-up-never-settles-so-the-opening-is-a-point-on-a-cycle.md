@@ -232,3 +232,56 @@ price still falls in later years: the wage unit root (mover 1) and the demand si
 
 Not done: a Rome trace (orchestrator: `python3 sim/simulator.py spin-up-trace --civ rome_100ad --years 60`, then the
 settling statistic). Left: the cost spread is re-drawn each year; the ore price and mint movers (3, 4 above).
+
+## Measured (2026-10-21, 60-year Rome trace at 72e81e68, after Update 8)
+
+Same command, checkout pinned to the merge of the supply-collapse fixes (stock drawn down over a horizon, idle capacity worn by
+tool life, plant shed by margin, input bids bounded, ask band on value added). Output: `Complaints/reports/473-trace-72e81e68.txt`.
+Against the 3d05ffbe trace: hired hours no longer collapse (they hold within a few-fold of the opening instead of falling
+twenty-fold), and the price level's peak is an order of magnitude lower. It still rises by about two orders of magnitude between
+the first and third decades and then wanders; not settled. Next: decompose the run-up by good (probe in the session's notes,
+per-good contributions to `basket_price_level`) and fix the rule that moves the leading goods.
+
+## Update 8: hours sold are a schedule against the wage; the opening splits time so offered equals hired (branch opening-elastic-hours-and-seed)
+
+Cause of the knife edge found: the labour core cleared a market with all offered hours at the ask floor (`clearing_target`:
+bids taken highest first, and when the bids' hours fall short of the offered hours the target is the ask itself), so a sliver
+of excess hours took the wage to the floor. Built:
+
+- `households_hours_offered.leisure_share / leisure_hours_kept / leisure_anchor_wage`: of the hours the plot and household
+  work leave, a share falls to leisure, one half at an anchor wage, falling smoothly as the wage rises. The elasticity is a
+  labelled heuristic (`LEISURE_ELASTICITY`, retire 675).
+- `labour_supply.HourSupply`: a cohort's hours sold as a function of the wage (own-plot plan and household work fixed, plot by
+  `plot_hours_kept`, leisure by the above). `Clearing` in the labour core takes it (`YearInputs.hours_share_at`) and finds the
+  wage where hours sold meet the hours wanted (`clearing.supply_target`); hours kept, sold and at leisure are then read at the
+  wage the market cleared at, and `_grow_own` no longer counts leisure as spare hours.
+- `opening_leisure.seed`: at the opening, each trade's anchor wage is solved so the hours sold at the opening wage equal the hours
+  the opening's producers hire (Eurace initialises so labour demand equals supply; Caiani et al. 2016). Stored in
+  `EconomyRecord.leisure_anchor_wage` (real, at the opening's price level). Where the free hours do not exceed the hours hired
+  there is no leisure.
+- Tests: rules in `test_economy_households_hours_offered` (LeisureTests) and `test_labour_core_supply_schedule`; the fixture in
+  `test_opening_stationary_scenario` (OpeningHoursTests, KnifeEdgeTests).
+
+Measured (throwaway probes over `economy_fixture.stationary_setup`, year 1 to 6): hours the households have beyond the opening's
+split (given after the opening, `KnifeEdgeTests`): first-year log wage change -0.07 for three per cent more hours and -0.22 for ten
+per cent, where before it was -0.35 and -0.41 (the wage fell to the ask floor for any excess); with the excess fitted into the
+fixture's hours the opening's leisure absorbs it, and year-by-year wage over six years is 1.00 0.99 0.97 0.95 0.93 0.90 (three per
+cent) against 0.70 0.70 0.67 0.64 0.53 0.46 before. The stated fixture (2000 hours a worker, plot) opens with offered over hired 1.01
+and the wage 1.0 in year one, where the earlier fixture's wage fell to 0.075 and offered over hired was 11.6. The wage moves about
+twice the excess: the plot alone makes hours sold rise by half a per cent for each per cent of wage; leisure adds to that only where
+the opening found hours to spare.
+
+The decline of hired hours is not gone (stationary fixture, slack none: 0.68 0.59 0.56 0.55 0.50 0.43 million hours, was 0.68 0.57
+0.53 0.50 0.44 0.36). Traced: the grain farms' planned runs are the cash they hold over the cost of a run (`producers.plan`,
+`affordable`), and their cash falls every year by what the households add to their own cash (about 41 thousand in year one, 76
+thousand in year two, on a wage bill of 680 thousand): spending is below income and no lender takes the difference (607, 606). Year
+one's revenue is also below its wage bill because the price falls to clear (the opening prices leave no margin). Not a defect of
+the hours rules, so not changed here.
+
+Rome is not measured here. Commands to run: `python3 sim/simulator.py spin-up-trace --civ
+rome_100ad --years 60`; `python3 -m sim.tests --slow --only baseline_fixture,baseline_rome_full_length,real_output_baseline,spin_up_money_supply_full_length --jobs 1`;
+`python3 sim/simulator.py opening-checks`.
+
+Leisure is limited to hours the plot could not still use (`HourSupply.parts`): without that limit Rome's one-year hunger share rose to
+0.49 (`labour_margins_baseline_validation`), since hours that used to grow food became leisure. Now, Rome one year: hired share 0.33
+(was 0.04), wage over floor 4.8 (was 3.4), hunger share 0.17 (was 0.15). `baseline_fixture` passes whole.
