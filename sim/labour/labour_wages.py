@@ -21,7 +21,7 @@ from .hours_sale_warning import sale_at_a_loss_note, starving_warning
 from .labour_wage_ledger import WageLedgerMixin
 from .staff_moves import (FOUNDER_DEAD, HOURS_NOT_POSITIVE, HOURS_SHORT, NO_SUCH_TRADE, TRADE_ABSENT,
                           wage_work_blocker)
-from .staff_pay_rules import wage_bill_of
+from .staff_pay_rules import wage_bill_of, wage_for_hours_of
 from sim.constants import declare
 
 
@@ -58,9 +58,8 @@ class WagesMixin(WageLedgerMixin):
     def wage_for_hours(self, trade, hours):
         """What `hours` of the founder's own work in `trade` pay now. The one answer work_for_wages
         pays and every quote of that pay (the stall banner, the year's wage-work rule) reads."""
-        rate = self.labour_market.quote_annual(trade) / self._world.HOURS_PER_PERSON_YEAR
-        reputation = self._world.state.household.reputation
-        return hours * rate * (1.0 + min(self.WAGE_REPUTATION_BONUS_CAP, reputation / self.WAGE_REPUTATION_SCALE))
+        return wage_for_hours_of(self.labour_market.quote_annual(trade), self._world.HOURS_PER_PERSON_YEAR, hours,
+                                 self._world.state.household.reputation, self.WAGE_REPUTATION_BONUS_CAP, self.WAGE_REPUTATION_SCALE)
 
     def best_wage_trade(self):
         """The trade open to the founder that pays most an hour, or None when none is open."""

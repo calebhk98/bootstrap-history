@@ -38,3 +38,10 @@ def roll_trade(head, offer_rate, death_rate, draw):
         elif roll < death_rate + (1.0 - death_rate) * offer_rate:
             left += 1
     return died, left, head - died - left
+
+
+def wage_for_hours_of(annual_wage, hours_per_person_year, hours, reputation, bonus_cap, bonus_scale):
+    """What `hours` of the founder's own work pay: the trade's hourly rate (its yearly wage over the hours in a year) times a
+    bonus of reputation over `bonus_scale`, capped at `bonus_cap`; a reputation below nothing earns a smaller rate."""
+    rate = annual_wage / hours_per_person_year
+    return hours * rate * (1.0 + min(bonus_cap, reputation / bonus_scale))

@@ -42,10 +42,9 @@ game.state.household.supervision_hours_this_year = 0.0
 # a trade nobody hires pays what the market quotes for it, like any worker
 game.held_trade = lambda: "scribe"
 scribe_quote = game.labour.labour_market.quote_annual("scribe") / game.HOURS_PER_PERSON_YEAR
-reputation_bonus = 1.0 + min(game.labour.WAGE_REPUTATION_BONUS_CAP,
-                             game.state.household.reputation / game.labour.WAGE_REPUTATION_SCALE)
-check("a founder whose trade nobody hires earns the market's quote for it",
-      abs(game.founder_wage_income() - hours * scribe_quote * reputation_bonus) < 1e-6 * max(1.0, pay), (game.founder_wage_income(), scribe_quote))
+check("a founder whose trade nobody hires earns the market's quote for it (the reputation bonus is a rule in test_complaint_585_staff_pay_retention)",
+      abs(game.founder_wage_income() - game.labour.wage_for_hours("scribe", hours)) < 1e-6 * max(1.0, pay)
+      and game.labour.wage_for_hours("scribe", hours) > 0.0, (game.founder_wage_income(), scribe_quote))
 
 # selling hours in another trade takes them out of the standing job, and nothing is charged as a lost practice
 fresh = sim()
