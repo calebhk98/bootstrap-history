@@ -42,3 +42,12 @@ an entrant's graduation income stays at the cap. Then re-run the 473 wheat probe
   fail or need rewriting to the heading wage; not run here. A thin trade in the opening could again quote a very high wage (434's potter and
   glassblower): check with that test.
 - Related-trade switchers do not read the scarcity wage.
+
+## Open: the cost book prices own-account hours at a thin hired market's wage
+
+473 Update 11 measured Rome's farmer wage at year 4 at more than ten times the unskilled wage, set in markets that hired few
+hours (`economy_api.wages_by_trade_weighted`), and the making cost of farm goods followed it (olives priced far below that
+cost). Most farm hours are worked on the household's own plots, not hired. Since this complaint lets a thin trade's wage rise
+to its bids, the cost side should value a trade's hours at what an hour of it is worth to the people who work it (the hired
+wage only for the share that is hired, the household's own reservation for the rest), not price every hour at the thin hired
+market's wage. Not yet traced whether that is the whole of the farmer spike. Measure with the 473 Update 11 probe.
