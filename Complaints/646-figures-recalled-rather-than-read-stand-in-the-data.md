@@ -114,3 +114,24 @@ Tests: `sim/tests/test_recalled_figures_sourced.py`.
 
 No source found: three-field legume share (searches gave the crops of the spring field, no share); Peoples 2009
 legume balance not opened; Deal 1985 and Straight 2017 are paywalled; MSU nutrient removal page blocked.
+
+## Pass 4 (disease files and civilisation starts)
+
+Remaining lines: `grep -rn "recalled" data sim --include=*.json --include=*.py` (the rest are civilisation deposit notes,
+deposits, service lives, the three-field legume share in `agriculture.py`, wine/oil/jars, and test docstrings).
+No disease source entry is tagged `recalled` now. The civilisation starting figures carry A to D grades, not `recalled`;
+only the Mexica and Norse mineral-reach notes contain the word, and those state no figure.
+
+Sourced (opened), with changed values:
+- `bubonic_plague.json` `case_fatality` 0.5 to 0.45: WHO plague fact sheet, 'a case-fatality ratio of 30% to 60% for the
+  bubonic type' (midpoint). Incubation 4 days kept as the midpoint of WHO 'one to seven days'.
+- `malaria.json` temperature envelope tolerated 16-35 to 17-34, optimum upper edge 30 to 28: Mordecai et al. 2013
+  (abstract via USGS: optimum 25 C, 'decreases dramatically at temperatures > 28 C'); 17-34 C from Ryan et al.,
+  arXiv 1407.7612, quoting Mordecai. Lower optimum edge and rainfall edges: no source found.
+- `smallpox.json` infectious stage 21 days kept: CDC overview, scabs fallen 'three weeks after the rash appears'.
+- `measles.json`: the unsourced 'higher with malnutrition' clause dropped from the citation.
+No source found, now `unsourced`: plague reproduction range (Dean et al. 2018 abstract gives none; full text 403), plague
+immunity and infectious stage, smallpox immunity, tsetse range box and climate envelope (the 16 and 32 C of Longbottom
+2020 are fitting constants, not limits). Horse loss 0.9 stays `disputed`: Wikivet (secondary) says horses need drugs in
+tsetse areas; no magnitude.
+Tests: `sim/tests/test_recalled_figures_sourced.py` (`DiseaseFigures`).

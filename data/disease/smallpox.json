@@ -44,16 +44,16 @@
    "source": "CDC smallpox overview, stacks.cdc.gov/view/cdc/26503: about 30 percent overall in variola major (first-contact fatality is disputed and is not this number)"
   },
   "immunity": {
-   "confidence": "recalled",
-   "source": "Lifelong after recovery; not found in the CDC document, re-check before relying on it"
+   "confidence": "unsourced",
+   "source": "No source found: the CDC smallpox overview (stacks.cdc.gov/view/cdc/26503) states no immunity duration after recovery; lifelong immunity is a labelled assumption"
   },
   "stage.incubating": {
    "confidence": "read",
    "source": "CDC smallpox overview: incubation averages about 12 to 14 days, range 7 to 17. Shape 8 is a derived Erlang approximation of a bell-shaped period"
   },
   "stage.infectious": {
-   "confidence": "recalled",
-   "source": "CDC overview says contagious from fever onset, most from rash, until the last scab falls; the 21 day mean is recalled, not read"
+   "confidence": "read",
+   "source": "CDC smallpox overview, stacks.cdc.gov/view/cdc/26503: 'Most scabs will have fallen off three weeks after the rash appears' and 'The person is contagious to others until all of the scabs have fallen off'; the 21 day mean is the rash-to-scab span (the 2 to 4 day prodrome, when only sometimes contagious, is not counted)"
   },
   "density_exponent": {
    "confidence": "unsourced",
