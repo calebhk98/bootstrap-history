@@ -42,3 +42,9 @@ cannot be recovered; `sim/economy/opening_own.py` does not exist. It passed the 
 `economy_api.credit_room` is None). That is the collapse recorded in 526: with the food floor grown at home, the saving leak drives
 the settled income toward zero. So the work lands together with 526 (607), with `agent_economy_wiring` and
 `full_length_opening_checks` green. Reproduce the symptom on any rebuilt attempt: `python3 -m sim.tests --slow --only agent_economy_wiring --topic-seconds 900`.
+
+## Update: the fixture now has plots
+
+`economy_fixture.stationary_setup` gives the farm recipe a `land_per_run`, so households grow part of their own grain in
+the fixture and the own-plot cut can be reproduced there (previously not reproducible: 473 Update 6). The opening still
+sizes producers for the whole food demand; sizing net of the plot is not done.

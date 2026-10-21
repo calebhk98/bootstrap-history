@@ -9,7 +9,7 @@ from one more, which is why a worker with idle hours takes little for them; a pl
 leaves only what the family needs beyond the plot to keep it fed.
 """
 import math
-from typing import Dict, Mapping, Sequence
+from typing import Dict, Mapping, Optional, Sequence
 
 from sim.world.need_basket import PricedNeed, subsistence_cost_per_person
 from sim.world.shared_constants import LABOUR_OUTPUT_ELASTICITY
@@ -38,8 +38,9 @@ def plot_value_per_worker_year(priced: Sequence[PricedNeed], options: Mapping[st
 
 def plot_return_per_hour(priced: Sequence[PricedNeed], options: Mapping[str, Sequence[Option]],
                          fertility: float, hours_per_worker_year: float, people_per_worker: float,
-                         hectares_per_hour: Mapping[str, float]) -> float:
-    """Money the next hour on the family's plot adds, with the worker's year of hours on it.
+                         hectares_per_hour: Mapping[str, float], hectares_held: Optional[float] = None) -> float:
+    """Money the next hour on the family's plot adds, with the worker's year of hours on it. `hectares_held`, when
+    given and less than the land the floors take, is the land the worker has: the hours are worked on that.
 
     `hectares_per_hour` is the land by recipe that one hour of its work takes at the recipe's own intensity.
     The plot is the land that grows the floors of the needs it can (households_own.own_production_options),
@@ -63,7 +64,10 @@ def plot_return_per_hour(priced: Sequence[PricedNeed], options: Mapping[str, Seq
     plot = math.fsum(row[1] for row in grown)
     if plot <= 0.0:
         return 0.0
-    hours_per_hectare = hours_per_worker_year / plot
+    worked = plot if hectares_held is None else min(plot, hectares_held)
+    if worked <= 0.0:
+        return 0.0
+    hours_per_hectare = hours_per_worker_year / worked
     elasticity = LABOUR_OUTPUT_ELASTICITY
     total = 0.0
     for price, hectares, per_unit, reference_hours in grown:

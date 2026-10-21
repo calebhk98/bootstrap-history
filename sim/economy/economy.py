@@ -20,7 +20,7 @@ from .mint_labour import close_year as close_mint_year, mint_agent
 from .money_audit import MoneyAudit, year_report
 from .flow_rates import flow_imbalance
 from .entry_year import close_idle_producers, open_entrants, restake_owners
-from . import household_work_year, land_bid_year
+from . import household_hours_year, household_work_year, land_bid_year
 from .households_own import (hours_for_own_plan, own_production, own_production_options, plot_hectares,
                              withhold_hours)
 from .labour_inputs import labour_context
@@ -275,6 +275,10 @@ class Economy:
             hours[cohort_id] = hours_for_own_plan(cohort, self._own_plot_options(),
                                                   tile.fertility if tile else 0.0, self.setup.recipes,
                                                   self.setup.land_per_run, held.get(cohort_id, 0.0))
+        if view is not None and everyone:       # hours the household would rather work its plot than sell at this wage
+            for cohort_id, choice in household_hours_year.decide(self.setup, self.record, view, everyone,
+                                                                 self._own_plot_options(), held).items():
+                hours[cohort_id] = max(hours.get(cohort_id, 0.0), choice)
         self._work_hours = {}
         if view is not None:
             self._work_hours = household_work_year.decide(self.setup, self.record, view, everyone, outside_option or {})

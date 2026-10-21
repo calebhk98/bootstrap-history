@@ -167,3 +167,26 @@ the stock gate is not the first mover once the seed is gone (the gate binds in y
 
 Orchestrator commands (minutes each, shared cores; not run here): `python3 sim/simulator.py spin-up-trace --civ rome_100ad --years 60`
 and the settling statistic over its rows (`sim.economy.settling.settling_report`, as `economy_port_trace.spin_up_trace` feeds it).
+
+## Update 7: hours offered are a choice against the plot; the stationary fixture rests (branch opening-labour-supply-and-seed)
+
+Built: `households_hours_offered.py` (a household keeps hours for its plot down to where the next hour adds no more
+than the wage it faces; no land or nothing the land grows serving a need means all hours offered; hours nobody hired go
+back to own production, `own_production`), `household_hours_year.py` (the rule per cohort, wired into
+`Economy._shortfall_hours` beside the own-plot plan and household work, so the kept hours leave the offer and the
+clearing's workforce), tests in `test_economy_households_hours_offered`. The hours kept at a wage do not depend on the
+hours a worker has (the marginal hour is in absolute hours on the plot), so the fixture's hours are the hours its runs
+hire plus the hours kept at the stated wage (`economy_fixture.stationary_setup`, now with a plot: `land_per_run` on the
+farm recipe, and no slack by default).
+
+Measured (python3, seconds, throwaway probe): stated fixture, hours offered over hired 11.6, wage 1.0 to 0.075 in year 1,
+grain 0.3 to 0.045. Stationary fixture before (no plot, 10 per cent slack): wage 0.795 in year 1, grain 0.294 then 0.249.
+Stationary fixture now (plot, no slack): log changes in year 1 wage +0.03, grain -0.05; year 2 wage -0.02, grain -0.08;
+year 3 wage -0.03, grain +0.02; with 10 per cent slack the wage still drops by a third in year 1 (the knife edge:
+only offered equal to hired rests). Closure checks now plain: wage, grain, metal price and money within the bound each
+year; the rate within its bound. Still expectedFailure with causes named: the stated fixture's one-year check (it has no
+plot, so 2000 hours a worker cannot be used at home; leisure and household work do not exist in it), the ore price (year 3,
+log +0.5, the smelters' bids against the ask band, mover 3) and the mint (strikes about 30 per cent less than wears, mover 4).
+Hired hours still fall in later years (0.68 to 0.53 million over 3 years, demand side). Not done: seeding the engine's
+opening wage and `opening_income_per_head` from `opening_stationary` (Rome offers 2000 hours a worker against what its
+recipes hire; the household-work hours (645) are what should take the difference, unmeasured).
