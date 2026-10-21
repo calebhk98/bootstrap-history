@@ -1,11 +1,13 @@
 """What a state asks the simulated world when it assesses revenue: its declared forms and the bases they read."""
 from typing import Any, Dict, FrozenSet, List, Optional, Tuple
 
+from sim.agents.collection_world import CollectionView
+from sim.agents import collection
 from sim.agents.api import government_levers, observed_incomes, revenue
-from sim.geography.api import arable_hectares, tiles_held
+from sim.geography.api import arable_hectares, settlement, tiles_held, usable_modes
 
 
-class RevenueView:
+class RevenueView(CollectionView):
 	"""Read-only questions behind a state's revenue; mixed into `SimWorld`."""
 
 	_sim: Any
@@ -53,6 +55,21 @@ class RevenueView:
 
 	def held_tiles(self) -> List[str]:
 		return tiles_held(self._sim.civ)
+
+	def collection_people_by_tile(self) -> Dict[str, float]:
+		"""People on each tile the state holds: the tracked regions' where they cover the tiles, else the nation spread by settlement."""
+		tracked = self._sim.people_by_tile()
+		if tracked is not None:
+			return dict(tracked)
+		held = self.held_tiles()
+		return collection.spread_people(self._sim.population.total, settlement.population_shares(held))
+
+	def collection_modes(self) -> List[str]:
+		"""The route modes the state's held technologies open."""
+		return usable_modes([self._sim.held_and_running()], self._sim.world_map)
+
+	def collection_world_map(self) -> Any:
+		return self._sim.world_map
 
 	def arable_share(self, tiles: FrozenSet[str]) -> float:
 		"""The share of the arable land the state holds that lies on `tiles`."""

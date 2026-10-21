@@ -8,10 +8,11 @@ answered with nothing here, never with the home figure; Complaint 647 lists them
 import functools
 from typing import Any, Dict, FrozenSet, List, Optional, Tuple
 
-from sim.geography.api import arable_hectares, territory
+from sim.geography.api import arable_hectares, settlement, territory, usable_modes
 from sim.world import demography
 
-from . import government_levers, ledger, revenue
+from . import collection, government_levers, ledger, revenue
+from .collection_world import CollectionView
 from .edges import EDGE_STATE_SPENDING, EDGE_WORKERS
 from .payroll import share_out
 from .tuning_spending import THREAT_ARMY_RESPONSE
@@ -29,7 +30,7 @@ def working_age_of_stationary(population: float) -> float:
 	return demography.Population.stationary(population, seed=0).working_age if population > 0.0 else 0.0
 
 
-class CountryStateView:
+class CountryStateView(CollectionView):
 	"""The state-facing readings of `CountryWorld`; `profile`, `_shared` and `_holder` are its."""
 
 	profile: Any
@@ -56,6 +57,14 @@ class CountryStateView:
 
 	def held_tiles(self) -> List[str]:
 		return list(self.profile.home_tiles)
+
+	def collection_people_by_tile(self) -> Dict[str, float]:
+		"""The country's people spread over its tiles by settlement."""
+		return collection.spread_people(self.population_total(), settlement.population_shares(self.held_tiles()))
+
+	def collection_modes(self) -> List[str]:
+		"""The route modes the country's starting technologies open."""
+		return usable_modes([self.baseline_knowledge()])
 
 	def territory(self) -> Any:
 		"""Frontier, coast and road length of the tiles the country holds."""
