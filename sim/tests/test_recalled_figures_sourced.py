@@ -42,3 +42,51 @@ class GrainNitrogen(unittest.TestCase):
     def test_the_grain_fraction_is_nitrogen_per_bushel_over_the_bushel_weight(self):
         self.assertAlmostEqual(soil_nutrients.GRAIN_NITROGEN_FRACTION,
                                nitrogen_fraction_of_grain(WHEAT_NITROGEN_POUNDS_PER_BUSHEL, WHEAT_POUNDS_PER_BUSHEL))
+
+
+# WHO plague fact sheet: bubonic case-fatality ratio 30% to 60%; incubation one to seven days
+WHO_BUBONIC_FATALITY_RANGE = (0.30, 0.60)
+WHO_INCUBATION_DAYS_RANGE = (1.0, 7.0)
+# Mordecai et al. 2013 via USGS abstract and Ryan et al. (arXiv 1407.7612): limits and decline, degrees C
+MALARIA_TRANSMISSION_LIMITS_C = (17.0, 34.0)
+MALARIA_DECLINE_ABOVE_C = 28.0
+# CDC smallpox overview: scabs fallen three weeks after rash
+SMALLPOX_RASH_TO_SCAB_DAYS = 21.0
+
+
+def midpoint(low, high):
+    return (low + high) / 2.0
+
+
+def _disease(*parts):
+    with open(os.path.join(_ROOT, "data", "disease", *parts), encoding="utf-8") as handle:
+        return json.load(handle)
+
+
+class DiseaseFigures(unittest.TestCase):
+
+    def test_the_midpoint_function(self):
+        self.assertAlmostEqual(midpoint(0.2, 0.4), 0.3)
+
+    def test_bubonic_fatality_is_the_midpoint_of_the_who_range(self):
+        self.assertAlmostEqual(_disease("bubonic_plague.json")["case_fatality"], midpoint(*WHO_BUBONIC_FATALITY_RANGE))
+
+    def test_bubonic_incubation_is_the_midpoint_of_the_who_range(self):
+        stage = _disease("bubonic_plague.json")["stages"][0]
+        self.assertAlmostEqual(stage["mean_duration_in_days"], midpoint(*WHO_INCUBATION_DAYS_RANGE))
+
+    def test_smallpox_infectious_stage_is_rash_to_scab(self):
+        stage = _disease("smallpox.json")["stages"][1]
+        self.assertAlmostEqual(stage["mean_duration_in_days"], SMALLPOX_RASH_TO_SCAB_DAYS)
+
+    def test_malaria_envelope_follows_the_transmission_limits(self):
+        envelope = {row["layer"]: row for row in _disease("endemic", "malaria.json")["challenge_envelope"]}
+        temperature = envelope["mean_temperature_c"]
+        self.assertEqual(tuple(temperature["tolerated"]), MALARIA_TRANSMISSION_LIMITS_C)
+        self.assertEqual(temperature["optimal"][1], MALARIA_DECLINE_ABOVE_C)
+
+    def test_no_disease_figure_is_still_tagged_recalled(self):
+        for parts in (("bubonic_plague.json",), ("smallpox.json",), ("measles.json",),
+                      ("endemic", "malaria.json"), ("endemic", "trypanosomiasis.json")):
+            for key, entry in _disease(*parts)["sources"].items():
+                self.assertNotEqual(entry["confidence"], "recalled", "%s %s" % (parts[-1], key))
