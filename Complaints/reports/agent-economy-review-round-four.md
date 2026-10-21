@@ -1,6 +1,6 @@
 # The agent economy, round four
 
-Follows `agent-economy-review-round-three.md`. Again only `sim/economy/`, new tests and new files in
+Only `sim/economy/`, new tests and new files in
 `Complaints/` could change; what needs other folders is filed as complaints 439-447.
 
 ## How it was measured
@@ -114,7 +114,7 @@ Reading it (tip measured after the idle-capacity fix below; seeds 1-2):
     the stuck chain of 398.
 - **Gold** is wrong everywhere: Complaint 442 (valued like silver per kg, no store-of-value demand)
   and 443 (no durable goods in the economy). The store-of-value mechanism is built and tested on the
-  fixture (`households_store.py`; `agent-economy-store-of-value-design.md`) and is inert until the
+  fixture (`households_store.py`) and is inert until the
   port passes service lives (443). Opening stocks and behaviour checks (steps 6-7) remain.
 - **The trial newcomer** was the main cause of England's grain swing before the idle-capacity fix.
   Whether it still is, and what it does for Mexica, needs re-measuring.
