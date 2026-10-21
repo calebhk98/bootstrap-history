@@ -111,7 +111,10 @@ r0 = S._agent_dispatch(s, NODES, {"cmd": "start", "id": node})
 check("start refuses outright when a needed trade has never been taught",
       not r0["ok"] and r0.get("blocked_cause") == "absent_trades"
       and "engineer" in [trade for trade in NODES[node]["lab"] if not s.labour.trade_available(trade)], r0)
-s.labour.train("engineer", 2)          # training begun; nobody is ready for two years
+trained, train_reply = s.labour.train("engineer", 1)          # training begun
+check("teaching one engineer is within the founder's hours", trained, train_reply)
+for row in s.state.household.training:
+    row[1] = s.year + 1.0     # an apprenticeship that ends inside the stall window, so the gate warns instead of refusing
 r1 = S._agent_dispatch(s, NODES, {"cmd": "start", "id": node})
 check("start accepts work nobody can do yet only WITH a warning naming the trade",
       r1["ok"] and "engineer" in r1.get("warning", ""), r1)
@@ -120,6 +123,8 @@ check("start accepts work nobody can do yet only WITH a warning naming the trade
 # Scenario 3: where the founder's hours went in a year
 # ============================================================================
 ratios = []
+s = sim(civ="rome_100ad", capital=1e6, manual=True, events=False, surveyed=())   # the teaching above spent the founder's hours
+s.artisans, s.scholars = 10.0, 10.0
 # a project the society can staff, with the purse far short of its instalment, so the very first year shows a refund
 s.start_project("scientific_method")
 s.capital = -s.credit_limit() * 0.1
