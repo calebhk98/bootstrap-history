@@ -19,7 +19,7 @@ def one_year(game):
 
 
 def declared(game, forms):
-    game.civ["state_revenue"] = forms
+    game.state_treasury().record.revenue_forms = list(forms)   # the state's own forms, copied from the file at setup
     return SimWorld(game)
 
 

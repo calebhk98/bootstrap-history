@@ -116,6 +116,12 @@ class ObjectContentTests(unittest.TestCase):
         with self.assertRaises(TypeError):
             economy_port_key.setup_digest(_Setup(world_map=object()))
 
+    def test_a_plain_function_is_keyed_by_its_name_and_the_same_function_keys_alike(self):
+        from sim.agents import api as agents_api
+        first = economy_port_key.setup_digest(_Setup(world_map=agents_api.evasion.hidden_share))
+        self.assertEqual(first, economy_port_key.setup_digest(_Setup(world_map=agents_api.evasion.hidden_share)))
+        self.assertNotEqual(first, economy_port_key.setup_digest(_Setup(world_map=agents_api.evasion.declared_income)))
+
 
 def _rule_one(rate, reach):
     return rate * (1.0 - reach)
@@ -190,6 +196,11 @@ class RealClosureTests(unittest.TestCase):
         self.assertIn(os.path.join("sim", "engine", "economy_port_year.py"), relative)
         self.assertIn(os.path.join("sim", "economy", "api.py"), relative)
         self.assertFalse([path for path in relative if path.startswith(os.path.join("sim", "ui") + os.sep)])
+
+    def test_the_rules_the_port_hands_the_economy_are_in_the_closure(self):
+        files = source_closure.source_files(ROOT, economy_port_key.SPIN_UP_SOURCE_MODULES)
+        relative = {os.path.relpath(path, ROOT) for path in files}
+        self.assertIn(os.path.join("sim", "agents", "evasion.py"), relative)
 
 
 if __name__ == "__main__":
