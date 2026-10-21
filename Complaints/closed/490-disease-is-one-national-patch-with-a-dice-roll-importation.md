@@ -1,6 +1,6 @@
 # Disease is one national patch with a dice-roll importation
 
-**Status:** closed - one patch per tile, contact from traffic and density, endemic start, regional cost readers, model forecast on the risk screens; the outside world as actors moved to 676
+**Status:** closed - one patch per tile, contact from traffic and density, endemic start, regional cost readers, model forecast on the risk screens; the outside world as actors moved to 677
 
 What was done (rules in `sim/disease/metapopulation.py` and `sim/disease/endemic_state.py`, wiring in `sim/engine/disease_port.py`):
 
@@ -17,4 +17,4 @@ What was done (rules in `sim/disease/metapopulation.py` and `sim/disease/endemic
 - Risk screens (`knowledge_risk`, `demography`, the `epidemic` figure) show the model's forecast from current infections and
   contact, not dated hazards. Deaths are kept by tile (`epidemic_deaths_by_tile`).
 
-Remainder is filed as 676.
+Remainder is filed as 677.

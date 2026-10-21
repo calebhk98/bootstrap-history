@@ -9,7 +9,7 @@
     "value": 0.15,
     "status": "temporary_heuristic",
     "source": "A cut-off for what counts as a famine worth recording; the sources name no common threshold (the IPC famine phase uses a fifth of households with extreme food gaps, a different measure).",
-    "retire": "Complaint 676"
+    "retire": "Complaint 677"
   },
   "event_log_years_kept": 400,
   "hazards": [
@@ -20,7 +20,7 @@
       "cause": "river flood",
       "status": "temporary_heuristic",
       "source": "Order of a damaging river flood per country per generation; no per-tile flood frequency layer exists yet, so the rate is not read from the tiles.",
-      "retire": "Complaint 676"
+      "retire": "Complaint 677"
     },
     {
       "kind": "earthquake",
@@ -29,7 +29,7 @@
       "cause": "earthquake",
       "status": "temporary_heuristic",
       "source": "Order of a destructive earthquake per country per two centuries; no seismic layer exists in the map data yet, so the rate is not read from the tiles.",
-      "retire": "Complaint 676"
+      "retire": "Complaint 677"
     },
     {
       "kind": "bad_ruler",
@@ -38,7 +38,7 @@
       "cause": "misrule",
       "status": "temporary_heuristic",
       "source": "Order of a ruinous reign per country per century; no succession model draws rulers yet.",
-      "retire": "Complaint 676"
+      "retire": "Complaint 677"
     }
   ]
 }
