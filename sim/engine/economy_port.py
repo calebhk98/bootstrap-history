@@ -132,6 +132,11 @@ class EconomyPort:
         agent = self.agent
         return None if agent is None or self._opening else agent.people_by_trade()
 
+    def agent_people_by_tile_and_trade(self):
+        """Working people by tile and trade in the agent economy's labour core; None while it opens."""
+        agent = self.agent
+        return None if agent is None or self._opening else agent.people_by_tile_and_trade()
+
     def agent_rate(self):
         agent = self._answering_agent()
         return None if agent is None else agent.rate()

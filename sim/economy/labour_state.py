@@ -6,11 +6,11 @@ comes from the setup's trade registry; the unskilled trade is the work anyone ca
 import math
 from typing import Dict, Iterable, Mapping, Tuple
 
-from sim.labour.api import MarketState, TradeSpec, opening_labour_market, trade_specs
+from sim.labour.api import MarketState, TradeSpec, opening_labour_market, seed_hours, trade_specs
 
 from . import mint, mint_labour, workforce_version
 from .market_memory import market_key
-from .setup import labour_area
+from .setup import area_tile, labour_area
 
 
 def core_trades(setup, extra_trades: Iterable[str] = ()) -> Dict[str, TradeSpec]:
@@ -39,10 +39,8 @@ def plot_trade(setup) -> str:
     return max(sorted(hours), key=lambda trade: hours[trade]) if hours else ""
 
 
-def opening_workforce(setup, record) -> MarketState:
-    """Each tile's working people placed in the trades its producers need for the runs they expect to sell
-    (the opening sized them to final demand) and its mint at capacity; hard
-    trades are staffed from the able, the rest work unskilled. No wage is seeded: the first year's clearing sets them."""
+def producers_hours_needed(setup, record) -> Dict[str, Dict[str, float]]:
+    """Yearly hours each labour area's producers need of each trade for the runs they expect to sell, and the mint at capacity."""
     hours_needed: Dict[str, Dict[str, float]] = {}
     for producer in record.producers.values():
         recipe = setup.recipes[producer.recipe_id]
@@ -52,6 +50,25 @@ def opening_workforce(setup, record) -> MarketState:
     mint_needed = hours_needed.setdefault(labour_area(setup.capital_tile), {})
     for trade, hours in mint_labour.capacity_hours(setup, record.currency, mint.capacity_fine_kilograms(setup, record)).items():
         mint_needed[trade] = mint_needed.get(trade, 0.0) + hours
+    return hours_needed
+
+
+def seeded_hours(setup, hours_needed: Mapping[str, Mapping[str, float]]) -> Dict[str, Dict[str, float]]:
+    """Hours each area's work needs of the trades no producer's runs staff, from the society's need shares
+    (carriage and the recipes no producer runs yet): the trades the labour core would otherwise hold nobody in."""
+    left_out = {plot_trade(setup)}
+    return {area: seeds for area, needed in sorted(hours_needed.items())
+            for seeds in [seed_hours(setup.need_share_by_trade, needed, setup.trades, left_out)] if seeds}
+
+
+def opening_workforce(setup, record) -> MarketState:
+    """Each tile's working people placed in the trades its producers need for the runs they expect to sell
+    (the opening sized them to final demand) and its mint at capacity, and in the trades the society's need
+    holds that no producer runs staff (seeded_hours); hard trades are staffed from the able, the rest work
+    unskilled. No wage is seeded: the first year's clearing sets them."""
+    hours_needed = producers_hours_needed(setup, record)
+    for area, seeds in seeded_hours(setup, hours_needed).items():
+        hours_needed[area].update(seeds)
     working = {labour_area(tile): people * setup.working_share
                for tile, people in sorted(setup.opening_population_by_tile.items())}
     trades = core_trades(setup, {trade for needed in hours_needed.values() for trade in needed})

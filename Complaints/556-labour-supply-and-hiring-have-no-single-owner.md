@@ -1,6 +1,6 @@
 # Labour supply and hiring have no single owner
 
-**Status:** partly done. The founder's staff book has one owner (`sim/labour/staff_book.py`), and the supply estimate now reads the core's people where the core holds the trade; hires are not yet taken out of the core (below).
+**Status:** partly done. The founder's staff book has one owner (`sim/labour/staff_book.py`); the core is seeded with every trade the society's need names (`labour_state.seeded_hours`, `sim/labour/trade_seed.py`); hires are viewed out of the core's people by tile and trade (`core_reservations.py`); open: the real-game check and the two share heuristics (below).
 
 Found by an outside reviewer reading the repository; checked against the code. An integration risk:
 no worker has been shown counted twice.
@@ -59,8 +59,18 @@ Done (behaviour change; the figures below are one measurement on an opened Rome 
   labourer 181k -> 1.19M (core was 29.6M), smith 79.7k -> 1.2k, mason 38.6k -> 305k, weaver 70.3k -> 33.2k.
   Hiring caps (`market_supply`) are unchanged: the town cap binds, not the national count.
 
+Done (seeding and reservations; rule tests in `test_labour_core_seed_and_reservations.py` and `test_labour_population_unskilled_family_share.py`):
+
+- A trade the society's recipes and carriage need but no producer's runs staff (carter, porter, sailor, artisan, ...) is seeded in the opening
+  with hours in the ratio of its need share to the staffed trades' (`trade_seed.seed_hours`); the post-spin-up trim keeps those hours. The
+  need shares ride in the opening values (`need_shares`, `EconomySetup.need_share_by_trade`).
+- Before the core opens, a labour-family trade's national estimate is its own share of work (porters and carters differ), not one town share.
+- The founder's hires are taken out of the core's people at the base tile by trade (`Labour.free_core_people_by_tile`, `reservations_over_core`);
+  `core_reservations.reserved_hours_within_people` is the hours-reserved boundary.
+- Carriage crews are bid in each mode's own trade; `CARRIAGE_CREW_UNSKILLED_SHARE` is deleted (552).
+
 ## Remaining
 
-- Seed the core with the trades it holds nobody in (artisan, carter, sailor, ...); then the estimate shares in `labour_population` and `CARRIAGE_CREW_UNSKILLED_SHARE` (552) retire.
-- Take hires out of the core's people by tile and trade, so a reservation cannot exceed the supply, and add the boundary test above.
+- Run a real Rome game and read the headcounts the seeding gave (carter, porter, sailor); the seeds keep their people only while an employer bids for them, and the core's yearly clearing moves unemployed people away (re-measure before closing).
 - Move the plague survival roll (`sim/engine/society_hazards.py`) and the `core.py` / `economy.py` dict wrapper under the owner.
+- `UNSKILLED_POOL_TOWN_SHARE` (the town's hiring cap for the farm, army and fallback trades) and `NO_DEMAND_TRADE_SHARE` (rank trades and the estimate before the core opens) stay, each with `retire` naming this complaint, until the town cap reads the core's people by tile.

@@ -163,6 +163,10 @@ class LabourAllocationMixin:
         return {trade: value / rest for trade, value in hours.items()
                 if trade != FARM_TRADE and rest > 0.0}
 
+    def need_shares(self):
+        """Each non-farm trade's share of the society's labour need, from the recipes and the carriage."""
+        return dict(self._non_farm_need_shares())
+
     def unskilled_trade(self):
         """The registry's flagged fallback trade: the one anyone can take up at once."""
         return trade_data.fallback_trade_of(self._world, self.wage_schedule().training_years)

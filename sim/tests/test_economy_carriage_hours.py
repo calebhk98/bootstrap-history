@@ -223,11 +223,13 @@ class CrewTests(unittest.TestCase):
         self.assertEqual(list(hours), [fixture.LABOURER])
         self.assertAlmostEqual(hours[fixture.LABOURER], fee / CART_RATE * CREW_HOURS_PER_TONNE_KM * 2.0)   # carriers return empty: two legs of crew
 
-    def test_the_modes_own_crew_trade_is_not_hired_while_carriage_is_bid_in_the_unskilled_trade(self):
+    def test_the_modes_own_crew_trade_is_the_one_hired(self):
         setup = fixture.small_setup(carriage_rates={"cart": CART_RATE}, carriage_crew={"cart": ("carter", 0.1)})
-        self.assertEqual(carriage_hours.crew_trades(setup, "carter"), ((fixture.LABOURER, 1.0),))
-        with mock.patch.object(carriage_hours, "CARRIAGE_CREW_UNSKILLED_SHARE", 0.25):
-            self.assertEqual(carriage_hours.crew_trades(setup, "carter"), (("carter", 0.75), (fixture.LABOURER, 0.25)))
+        self.assertEqual(carriage_hours.crew_trades(setup, "carter"), (("carter", 1.0),))
+
+    def test_a_mode_that_names_no_crew_trade_is_crewed_by_the_unskilled_trade(self):
+        setup = fixture.small_setup(carriage_rates={"cart": CART_RATE}, carriage_crew={"cart": ("carter", 0.1)})
+        self.assertEqual(carriage_hours.crew_trades(setup, ""), ((fixture.LABOURER, 1.0),))
 
     def test_a_merchant_that_shipped_nothing_has_no_plan_and_bids_nothing(self):
         record = type("Record", (), {"merchants": {"m": Merchant("m", "a", "owner", 1.0)}, "cohorts": {}, "area_imbalance": 1.0})()

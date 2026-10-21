@@ -47,11 +47,6 @@ CART_HAUL = Haul(3.0, (("cart", 4.0),), (("cart", 1),))
 
 
 class SailorHoursTests(unittest.TestCase):
-    def setUp(self):
-        patched = mock.patch.object(carriage_hours, "CARRIAGE_CREW_UNSKILLED_SHARE", 0.0)   # each mode in its own trade
-        patched.start()
-        self.addCleanup(patched.stop)
-
     def test_a_sea_haul_hires_sailor_hours_over_the_tonne_km_its_sea_money_stands_for(self):
         hours = by_trade(sea_setup(), SEA_HAUL)
         self.assertAlmostEqual(hours["sailor"], 10.0 / SAIL_RATE * SAIL_HOURS * 2.0)
@@ -72,8 +67,7 @@ class SailorHoursTests(unittest.TestCase):
 class PortHandlingTests(unittest.TestCase):
     def test_a_handled_port_adds_its_handling_hours_in_the_unskilled_trade(self):
         hours = by_trade(sea_setup(), SEA_HAUL)
-        self.assertAlmostEqual(hours[fixture.LABOURER], PORT_HOURS + 5.0 / CART_RATE * CART_HOURS * 2.0
-                               + 10.0 / SAIL_RATE * SAIL_HOURS * 2.0)      # all crew hours are unskilled for now
+        self.assertAlmostEqual(hours[fixture.LABOURER], PORT_HOURS)      # the legs' crews are carters and sailors
 
     def test_handling_hours_are_counted_for_each_change_to_the_mode(self):
         twice = Haul(30.0, (("cart", 5.0), ("sail", 10.0 + 2 * PORT_MONEY)), (("cart", 1), ("sail", 2)))   # the same legs, a second port
@@ -81,14 +75,14 @@ class PortHandlingTests(unittest.TestCase):
         self.assertAlmostEqual(gap, PORT_HOURS)
 
     def test_the_money_of_a_handling_is_not_counted_as_a_legs_crew_hours(self):
-        with mock.patch.object(carriage_hours, "CARRIAGE_CREW_UNSKILLED_SHARE", 0.0):
-            hours = by_trade(sea_setup(), Haul(30.0, (("sail", PORT_MONEY),), (("sail", 1),)))
+        hours = by_trade(sea_setup(), Haul(30.0, (("sail", PORT_MONEY),), (("sail", 1),)))
         self.assertNotIn("sailor", hours)
         self.assertAlmostEqual(hours[fixture.LABOURER], PORT_HOURS)
 
     def test_a_mode_whose_handling_the_rates_do_not_price_has_no_handling_hours(self):
         hours = by_trade(sea_setup(), CART_HAUL)
-        self.assertAlmostEqual(hours[fixture.LABOURER], 4.0 / CART_RATE * CART_HOURS * 2.0)
+        self.assertNotIn(fixture.LABOURER, hours)
+        self.assertAlmostEqual(hours["carter"], 4.0 / CART_RATE * CART_HOURS * 2.0)
 
 
 class AreaWageTests(unittest.TestCase):

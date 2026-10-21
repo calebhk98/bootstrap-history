@@ -110,6 +110,7 @@ def opening_values(sim):
         "prices": prices,
         "wages": {trade: sim.economy.labour.quote(trade) for trade in labour_trades if trade in trades_data},
         "unskilled_trade": unskilled,
+        "need_shares": sim.labour.need_shares(),
         "rate": float(sim.economy.base_rate()),
         "carriage": dict(modes),
         "carriage_balanced": sim._freight_mode_costs(0.0, cargo="goods"),
@@ -242,6 +243,7 @@ def build_setup(sim, opening=None, production=None):
         hiding=agents_api.evasion.hidden_share,   # the one hiding rule the actor layer uses (Complaint 657)
         working_hours_per_year=float(sim.HOURS_PER_PERSON_YEAR), working_share=float(opening["working_share"]),
         gini=demand.GINI_COEFFICIENT_PREINDUSTRIAL_AGRARIAN, opening_population_by_tile=population_by_tile,
+        need_share_by_trade={trade: float(share) for trade, share in (opening.get("need_shares") or {}).items()},
         unskilled_trade=opening["unskilled_trade"], debt_bondage_years=sim.debt_bondage_term_years(), opening_prices=prices, opening_wages=wages, opening_rate=float(opening["rate"]),
         capital_tile=by_people[0], port_tile=(coastal or by_people)[0],
         land_per_run={recipe_id: float(production[recipe_id].get("land_hectare_years") or 0.0)
