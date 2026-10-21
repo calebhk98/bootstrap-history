@@ -33,9 +33,10 @@ def step_year(stock: Dict[str, float], sites, kg_per_cropped_hectare: float, leg
               reference_cropped_share: float, manure_per_hectare: float) -> None:
     """One year of cropping, legumes and manure on every site with cropland; writes the new shares into `stock`."""
     for tile_id, site in sites.items():
-        if site.arable_hectares <= 0.0 or site.cropped_hectares <= 0.0:
+        if site.cropped_hectares <= 0.0:
             continue
-        cropped_share = min(1.0, site.cropped_hectares / site.arable_hectares)
+        # River-watered land counts beyond the rainfed arable ground, so the holding is whichever is larger.
+        cropped_share = site.cropped_hectares / max(site.arable_hectares, site.cropped_hectares)
         stock[tile_id] = soil_nutrients.next_share(
             stock.get(tile_id, 1.0), cropped_share, kg_per_cropped_hectare * site.yield_factor,
             legume_share, manure_per_hectare, reference_cropped_share)

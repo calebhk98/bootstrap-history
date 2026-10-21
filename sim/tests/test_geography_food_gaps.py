@@ -176,7 +176,8 @@ class RainforestTests(unittest.TestCase):
             values = sorted(api.food_potential(tile_id, None, None, None, CROPS)["kcal_per_year"]["crops"] / tile["land_area_km2"]
                             for tile_id, tile in world_map.tiles.items() if tile["koppen_class"] == koppen)
             medians[koppen] = values[len(values) // 2]
-        self.assertGreater(medians["Af"], 0.5 * medians["Aw"])
+        # Restated from 0.5 for derived soils (Complaint 543): rainforest is leached and mostly forest the plough cannot clear.
+        self.assertGreater(medians["Af"], 0.4 * medians["Aw"])
 
 
 if __name__ == "__main__":
