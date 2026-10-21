@@ -54,6 +54,11 @@ MALARIA_DECLINE_ABOVE_C = 28.0
 SMALLPOX_RASH_TO_SCAB_DAYS = 21.0
 
 
+# Dean et al. 2018, PNAS (PMC5819418), Table 3 and Table 2: human-ectoparasite R0 from Eyam to Barcelona; days of infection
+DEAN_BUBONIC_REPRODUCTION_RANGE = (1.48, 1.91)
+DEAN_BUBONIC_INFECTIOUS_DAYS = 10.0
+
+
 def midpoint(low, high):
     return (low + high) / 2.0
 
@@ -74,6 +79,13 @@ class DiseaseFigures(unittest.TestCase):
     def test_bubonic_incubation_is_the_midpoint_of_the_who_range(self):
         stage = _disease("bubonic_plague.json")["stages"][0]
         self.assertAlmostEqual(stage["mean_duration_in_days"], midpoint(*WHO_INCUBATION_DAYS_RANGE))
+
+    def test_bubonic_reproduction_range_and_infectious_stage_follow_dean_2018(self):
+        plague = _disease("bubonic_plague.json")
+        self.assertEqual(tuple(plague["reproduction_number_range"]), DEAN_BUBONIC_REPRODUCTION_RANGE)
+        self.assertAlmostEqual(plague["stages"][1]["mean_duration_in_days"], DEAN_BUBONIC_INFECTIOUS_DAYS)
+        self.assertAlmostEqual(plague["transmissibility_per_day"] * DEAN_BUBONIC_INFECTIOUS_DAYS,
+                               midpoint(*DEAN_BUBONIC_REPRODUCTION_RANGE), delta=0.05)
 
     def test_smallpox_infectious_stage_is_rash_to_scab(self):
         stage = _disease("smallpox.json")["stages"][1]

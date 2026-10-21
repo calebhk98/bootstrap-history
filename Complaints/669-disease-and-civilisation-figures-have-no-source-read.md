@@ -38,3 +38,23 @@ primary source is needed.
    source on Mesoamerican cinnabar.
 
 **Test.** `sim/tests/test_recalled_figures_sourced.py` (`DiseaseFigures`) holds what was sourced.
+
+## Progress (second pass)
+
+Sourced, source opened this session:
+
+- Bubonic plague reproduction range: Dean et al. 2018 (PNAS, PMC5819418, full text opened) gives human-ectoparasite R0 from Eyam to Barcelona; the file now holds that range and its transmissibility follows the midpoint.
+- Bubonic plague infectious stage: same paper, Table 2, ten days of infection.
+- Smallpox immunity: CDC clinical signs page and Vichniakov 1968 (Bull. WHO 39(3):433-437, abstract opened): lifelong for most, lost quickly by some; permanent stays as the majority case, exceptions not quantified. Fenner 1988 itself could not be opened (WHO and LSU copies returned errors).
+- Deposits: Mexica Sierra Gorda cinnabar (Mejia Perez Campos and Herrera Munoz 2013, Chungara 45(1)). Han gold: Hanshu ch. 28 says Yuzhang produced gold but barely paid its cost; the Poyang county placement is not confirmed by a text read and the entry says so.
+- The Mexica and Norse mineral-reach notes no longer use "recalled".
+
+Still open (no source found, left labelled):
+
+- Plague immunity (Dean et al. say their models ignore immunity); pneumonic and other density exponents.
+- Tsetse range box and climate envelope; horse loss in tsetse areas.
+- Malaria lower optimum edge and annual rainfall edges (Craig et al. 1999 not opened; a secondary report gives only a monthly 80 mm rule).
+- Tlapa/Oaxaca gold (Codex Mendoza folios not reached).
+- Civilisation D grades: nearly all are already labelled temporary heuristics or placeholders; the Roman poll tax rate (no source for the drachma rate was opened), the standing armies of Han, Norse and Mexica, and the England 1300 entries were not sourced.
+- Spatial stage tuning and the England 1300 `endemic` list (already labelled with `retire` to 677).
+- Influenza case fatality and immunity placeholders.

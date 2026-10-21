@@ -19,25 +19,25 @@
    "shape": 2
   }
  ],
- "transmissibility_per_day": 0.14,
+ "transmissibility_per_day": 0.17,
  "case_fatality": 0.45,
  "immunity": {
   "permanent": true,
   "duration_in_days": null
  },
  "reproduction_number_range": [
-  1.1,
-  1.8
+  1.48,
+  1.91
  ],
  "density_exponent": 0.5,
  "sources": {
   "reproduction_number_range": {
-   "confidence": "unsourced",
-   "source": "No source found: the Dean et al. 2018 PNAS abstract (doi 10.1073/pnas.1715640115, via Europe PMC) fits a human-ectoparasite model to nine European outbreaks but states no reproduction number, and the full text was not reachable (403); the range is kept as a labelled stand-in"
+   "confidence": "read",
+   "source": "Dean et al. 2018, PNAS, doi 10.1073/pnas.1715640115, full text at pmc.ncbi.nlm.nih.gov/articles/PMC5819418 (opened): the human-ectoparasite model gives an estimated R0 from 1.48 (Eyam) to 1.91 (Barcelona) across nine pre-industrial outbreaks (Table 3 and Results); the pneumonic and rat-flea model variants give other ranges and are not used here"
   },
   "transmissibility_per_day": {
    "confidence": "derived",
-   "source": "A reproduction number of 1.4 divided by the infectious days"
+   "source": "The midpoint of the sourced reproduction number range (1.695) divided by the infectious days, rounded"
   },
   "case_fatality": {
    "confidence": "read",
@@ -45,15 +45,15 @@
   },
   "immunity": {
    "confidence": "unsourced",
-   "source": "No source found: the WHO plague fact sheet makes no statement on immunity; lifelong immunity is a labelled assumption"
+   "source": "No source found: the WHO plague fact sheet makes no statement on immunity, and Dean et al. 2018 (PMC5819418) say their models ignore immunity; lifelong immunity is a labelled assumption"
   },
   "stage.incubating": {
    "confidence": "read",
    "source": "WHO plague fact sheet: 'an incubation period of one to seven days'; the 4 day mean is the midpoint. Shape 4 is a middling spread, not sourced"
   },
   "stage.infectious": {
-   "confidence": "unsourced",
-   "source": "No source found for the length of the infectious stage; kept as a labelled stand-in. Shape 2 is a broad spread, not sourced"
+   "confidence": "read",
+   "source": "Dean et al. 2018 (PMC5819418, Table 2): an average duration of infection of 10 days for bubonic plague in humans in the rat-flea model (the human-ectoparasite model splits it into 8 mildly and 2 highly infectious days, the same 10 total). Shape 2 is a broad spread, not sourced"
   },
   "density_exponent": {
    "confidence": "unsourced",
