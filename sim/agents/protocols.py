@@ -75,8 +75,8 @@ class World(Protocol):
 	def commodity_of(self, material: str) -> str:
 		...
 
-	def material_cost(self, material: str, tonnes: float) -> float:
-		"""Money to buy this many tonnes of a material at the price the market quotes."""
+	def material_cost(self, material: str, tonnes: float) -> Optional[float]:
+		"""Money to buy this many tonnes of a material at the price the market quotes; None when no market sells it."""
 		...
 
 	def local_staff(self, trade: str, people: float) -> float:

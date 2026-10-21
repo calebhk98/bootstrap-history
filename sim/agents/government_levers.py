@@ -13,7 +13,7 @@ from typing import Any, Collection, Dict, List, Union
 from sim.refusal import Refusal
 
 from . import state_works
-from .budget_line import Line
+from .budget_line import Line, goods
 from .revenue_bases import BASES
 from .revenue_labour import BASIS as LABOUR_BASIS
 
@@ -183,7 +183,7 @@ def scaled(record: Any, lines: List[Line]) -> List[Line]:
 		result.append(line if share == 1.0 else Line(
 			line.name, line.kind, {trade: people * share for trade, people in line.labour.items()}, line.wages * share,
 			{commodity: tonnes * share for commodity, tonnes in line.materials.items()}, line.material_cost * share,
-			line.transfer * share))
+			line.transfer * share, {commodity: tonnes * share for commodity, tonnes in line.unbuyable.items()}))
 	return result
 
 
@@ -193,6 +193,5 @@ def lever_lines(record: Any, world: Any) -> List[Line]:
 			 for material, amount in sorted((record.levers.get(SUBSIDY) or {}).items()) if amount > 0.0]
 	for material, tonnes in sorted((record.levers.get(MANDATE) or {}).items()):
 		if tonnes > 0.0:
-			lines.append(Line("mandate " + material, "requisition", {}, 0.0, {world.commodity_of(material): tonnes},
-							  world.material_cost(material, tonnes)))
+			lines.append(Line("mandate " + material, "requisition", {}, 0.0, **goods(world, material, tonnes)))
 	return lines

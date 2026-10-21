@@ -54,7 +54,9 @@ class CastView:
 				 for need in need_basket.need_prices(basket, prices.get) if need.spec.subsistence_per_person > 0.0}
 		if not costs:
 			tonnes = self.subsistence_kg_per_person_year() / 1000.0  # type: ignore[attr-defined]
-			costs[FOOD_NEED] = self.material_cost(DOLE_MATERIAL, tonnes)  # type: ignore[attr-defined]
+			food_cost = self.material_cost(DOLE_MATERIAL, tonnes)  # type: ignore[attr-defined]
+			if food_cost is not None:
+				costs[FOOD_NEED] = food_cost
 		return costs
 
 	def country_economy(self, country: str) -> Any:

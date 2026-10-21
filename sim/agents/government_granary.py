@@ -43,7 +43,7 @@ class GranaryMixin:
 		if excess <= 0.0 or shortfall <= 0.0 or world.material_price(DOLE_MATERIAL) >= record.grain_price_reference:
 			return 0.0
 		cost = world.material_cost(DOLE_MATERIAL, shortfall)
-		if cost <= 0.0:
+		if cost is None or cost <= 0.0:
 			return 0.0
 		bought = min(1.0, excess / cost)
 		world.market_purchase(self.actor_id, world.commodity_of(DOLE_MATERIAL), shortfall * bought, cost * bought)  # type: ignore[attr-defined]

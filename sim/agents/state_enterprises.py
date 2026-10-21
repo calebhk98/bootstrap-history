@@ -68,18 +68,22 @@ def input_share(government: Any, entry_key: str, size: float, world: Any) -> flo
 		return 1.0
 	stores = government.record.stores
 	shortfalls = {material: max(0.0, tonnes - stores.get(material, 0.0)) for material, tonnes in needs.items()}
-	cost = sum(world.material_cost(material, tonnes) for material, tonnes in shortfalls.items())
+	quotes = {material: world.material_cost(material, tonnes) for material, tonnes in shortfalls.items()}
+	cost = sum(quote for quote in quotes.values() if quote is not None)
 	affordable = 1.0 if cost <= 0.0 else min(1.0, max(0.0, government.money) / cost)
-	share = min((tonnes - shortfalls[material] * (1.0 - affordable)) / tonnes for material, tonnes in needs.items())
+	# a shortfall nobody sells cannot be bought at any price: the plant makes only what the stores cover of it
+	share = min((tonnes - shortfalls[material] * (1.0 if quotes[material] is None else 1.0 - affordable)) / tonnes
+				for material, tonnes in needs.items())
 	value = 0.0
 	for material, tonnes in sorted(needs.items()):
 		used = tonnes * share
 		drawn = min(used, stores.get(material, 0.0))
 		stores[material] = stores.get(material, 0.0) - drawn
 		if used - drawn > 1e-12:
-			world.market_purchase(government.actor_id, world.commodity_of(material), used - drawn,
-								  world.material_cost(material, used - drawn))
-		value += world.material_cost(material, used)
+			bought_cost = world.material_cost(material, used - drawn)
+			if bought_cost is not None:
+				world.market_purchase(government.actor_id, world.commodity_of(material), used - drawn, bought_cost)
+		value += world.material_cost(material, used) or 0.0
 	if not world.sells_on_book(entry_key):
 		# takings here are net of the inputs at the market's price, which the state has now paid for itself
 		ledger.transfer(world.edge(EDGE_CUSTOMERS), government, value, "takings")
@@ -107,9 +111,9 @@ def sell(government: Any, world: Any) -> None:
 
 
 def needs_of(lines: List[Any]) -> Dict[str, float]:
-	"""Tonnes of each commodity the lines draw."""
+	"""Tonnes of each commodity the lines draw, those no market sells included."""
 	need: Dict[str, float] = {}
 	for line in lines:
-		for commodity, tonnes in line.materials.items():
+		for commodity, tonnes in list(line.materials.items()) + list(line.unbuyable.items()):
 			need[commodity] = need.get(commodity, 0.0) + tonnes
 	return need

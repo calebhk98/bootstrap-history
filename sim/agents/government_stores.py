@@ -66,10 +66,14 @@ class StoresMixin:
 		stores = self.record.stores  # type: ignore[attr-defined]
 		drawn_lines = []
 		for line in lines:
-			materials, cost = dict(line.materials), line.material_cost
+			materials, cost, unbuyable = dict(line.materials), line.material_cost, dict(line.unbuyable)
 			price_per_tonne = line.material_cost / sum(line.materials.values()) if line.materials else 0.0
 			for material in sorted(stores):
 				commodity = world.commodity_of(material)
+				take = min(stores[material], unbuyable.get(commodity, 0.0))   # what nobody sells is met from the stores first
+				if take > 0.0:
+					unbuyable[commodity] -= take
+					stores[material] -= take
 				wanted = materials.get(commodity, 0.0)
 				take = min(stores[material], wanted)
 				if take > 0.0:
@@ -77,5 +81,6 @@ class StoresMixin:
 					materials[commodity] = wanted - take
 					stores[material] -= take
 			drawn_lines.append(dataclasses.replace(line, materials={c: t for c, t in materials.items() if t > 0.0},
-												   material_cost=max(0.0, cost)))
+												   material_cost=max(0.0, cost),
+												   unbuyable={c: t for c, t in unbuyable.items() if t > 1e-12}))
 		return drawn_lines

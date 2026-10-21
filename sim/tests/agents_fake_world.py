@@ -289,7 +289,7 @@ class FakeWorld:
 		return self.prices.get(material, 0.0)
 
 	def material_cost(self, material: str, tonnes: float) -> float:
-		return self.material_price(material) * tonnes
+		return self.prices[material] * tonnes if material in self.prices else None
 
 
 def total_money(actors) -> float:

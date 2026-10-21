@@ -119,7 +119,7 @@ world, registry = country_world(profile_with(FORMS))
 check("a country buys at its own prices, not the home market's",
 	  world.material_cost("iron_kg", 3.0) == 3.0 * COUNTRY_PRICE and world.material_price("iron_kg") == COUNTRY_PRICE,
 	  (world.material_cost("iron_kg", 3.0), world.material_price("iron_kg")))
-check("a material its markets do not quote costs nothing to buy, not the home price", world.material_cost("unpriced_kg", 3.0) == 0.0)
+check("a material its markets do not quote is not on sale (None), not free and not the home price", world.material_cost("unpriced_kg", 3.0) is None)
 check("its coin standard and coin stock are its own, not the home's",
 	  world.coin_regime() == "struck_coin" and world.coin_stock_value() == COUNTRY_COIN_STOCK)
 check("a country's state is the one Government, scoped to the country",
