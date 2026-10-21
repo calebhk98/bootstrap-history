@@ -118,17 +118,27 @@ def on_the_job_loss_share(paid: float, rival_paid: float) -> float:
     return min(1.0, ON_THE_JOB_SEARCH_SHARE * premium_factor(rival_paid, paid))
 
 
-def eligible_bids(bids: Sequence[Bid], wage: float) -> Tuple[Dict[str, float], Dict[str, float]]:
-    """Hours wanted and the wage paid, per employer, among bids that can afford the market wage."""
+def standing(maximum_wage: float, pay_premium: float) -> float:
+    """How strongly an employer draws hours: the most an hour is worth to it, raised by the premium it offers.
+    Employers are ranked, and hours move between them, by this and not by the wage paid, which the ceiling caps
+    (Complaint 667). Stands in for the entrant's own means of drawing hours (advertising, a signing cost) that no
+    mechanism yet supplies; the incumbent's edge is the matching friction and `ON_THE_JOB_SEARCH_SHARE` alone."""
+    return maximum_wage * (1.0 + pay_premium)
+
+
+def eligible_bids(bids: Sequence[Bid], wage: float) -> Tuple[Dict[str, float], Dict[str, float], Dict[str, float]]:
+    """Hours wanted, the wage paid and the standing, per employer, among bids that can afford the market wage."""
     wanted: Dict[str, float] = {}
     paid: Dict[str, float] = {}
+    ranks: Dict[str, float] = {}
     for bid in sorted(bids, key=lambda each: (each.employer, each.maximum_wage, each.hours)):
         if bid.maximum_wage < wage:
             continue
         wanted[bid.employer] = wanted.get(bid.employer, 0.0) + bid.hours
         paid[bid.employer] = max(paid.get(bid.employer, 0.0),
                                  min(bid.maximum_wage, wage * (1.0 + bid.pay_premium)))
-    return wanted, paid
+        ranks[bid.employer] = max(ranks.get(bid.employer, 0.0), standing(bid.maximum_wage, bid.pay_premium))
+    return wanted, paid, ranks
 
 
 def retain(wanted: Dict[str, float], previous: Dict[str, float], offered: float) -> Dict[str, float]:
@@ -138,17 +148,17 @@ def retain(wanted: Dict[str, float], previous: Dict[str, float], offered: float)
     return {employer: hours * scale for employer, hours in kept.items()}
 
 
-def pay_groups(paid: Dict[str, float], employers: Sequence[str]) -> List[List[str]]:
-    """Employers grouped by wage paid, highest first, names sorted within a group."""
+def pay_groups(ranks: Dict[str, float], employers: Sequence[str]) -> List[List[str]]:
+    """Employers grouped by standing, highest first, names sorted within a group."""
     groups: Dict[float, List[str]] = {}
     for employer in sorted(employers):
-        groups.setdefault(paid[employer], []).append(employer)
+        groups.setdefault(ranks[employer], []).append(employer)
     return [groups[wage] for wage in sorted(groups, reverse=True)]
 
 
 def hire_new(hired: Dict[str, float], wanted: Dict[str, float], paid: Dict[str, float], offered: float,
              wage: float) -> None:
-    """Employers in descending pay take new hours from the unretained pool, limited by matching friction."""
+    """Employers in descending standing (`paid` here is the standing) take new hours from the unretained pool, limited by matching friction."""
     pool = max(0.0, offered - sum(hired.values()))
     unserved = sum(wanted[employer] - hired[employer] for employer in wanted)
     for group in pay_groups(paid, list(wanted)):
@@ -167,7 +177,7 @@ def hire_new(hired: Dict[str, float], wanted: Dict[str, float], paid: Dict[str, 
 
 
 def poach(hired: Dict[str, float], wanted: Dict[str, float], paid: Dict[str, float]) -> None:
-    """Short employers draw hours off strictly lower payers, in proportion to what each can give."""
+    """Short employers (`paid` here is the standing) draw hours off strictly lower ones, in proportion to what each can give."""
     for group in pay_groups(paid, list(wanted)):
         for employer in group:
             short = wanted[employer] - hired[employer]
@@ -201,12 +211,12 @@ def clear_one(state: MarketState, inputs: YearInputs, trade: str, area: str, bid
     # the expectation it feeds is continuous across balance (Complaint 664)
     target = (wage + pressure(wage, reservation, offered, bids) * (min(clearing_target(reservation, offered, bids), ceiling) - wage)
               if offered > 0.0 and bids else wage)
-    wanted, paid = eligible_bids(bids, wage)
+    wanted, paid, ranks = eligible_bids(bids, wage)
     previous = state.hired_hours.get(area, {}).get(trade, {})
     hired = retain(wanted, previous, offered) if offered > 0.0 else {employer: 0.0 for employer in wanted}
     if offered > 0.0:
-        hire_new(hired, wanted, paid, offered, wage)
-        poach(hired, wanted, paid)
+        hire_new(hired, wanted, ranks, offered, wage)
+        poach(hired, wanted, ranks)
     hired = {employer: hours for employer, hours in hired.items() if hours > 0.0}
     state.wages.setdefault(area, {})[trade] = wage
     asks.record(state, area, trade, offered, sum(wanted.values()), wage, base_reservation, lowest)

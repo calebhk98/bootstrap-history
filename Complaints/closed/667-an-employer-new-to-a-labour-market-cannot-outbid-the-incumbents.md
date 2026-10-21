@@ -1,6 +1,6 @@
 # An employer new to a labour market cannot outbid the incumbents
 
-**Status:** open
+**Status:** closed - employers are ranked by their maximum bid (`clearing.standing`); the wage paid still follows the clearing rule and the ceiling
 
 Found while fixing `economy_carriage_hours` (its tests were rewritten to the rule: `clearing.clear_one` on built
 inputs). The labour core keeps incumbent hires first, and the market wage is held under the import and substitute
@@ -21,3 +21,16 @@ What it would take: decide the rule from the labour-market design (docs/architec
 incumbents keep hires only up to the wage the highest bidder would pay (they lose hours to a higher bid), or the
 ceiling caps what is paid but bids above it still rank employers. A function test on built inputs that an entrant
 whose maximum bid beats an incumbent's takes hours from it.
+
+
+## Finding
+
+Employers were grouped and served by the wage they paid, which the ceiling caps, so an entrant bidding far above the
+incumbents paid the same as they did and ranked level with them. Fix (`sim/labour/market/clearing.py`): `eligible_bids`
+also returns each employer's `standing` (its maximum bid raised by the premium it offers) and `hire_new` and `poach`
+rank and draw by it. `market_wage`, the ceiling and the wage paid are unchanged, so Complaint 651's step (and its test)
+is untouched. The incumbent's edge is what the engine already models: retained hours first, and the matching friction
+and `ON_THE_JOB_SEARCH_SHARE` per year, so a higher bidder takes hours over a few years, not at once. Equal maxima still
+leave an entrant nothing. No hiring cost is added: none has a source, and standing is a stand-in for the entrant's own
+means of drawing hours, noted in its docstring. Test: `sim/tests/test_labour_core_bid_ranking.py` (an entrant with a far
+higher maximum takes hours from the incumbent; a lower maximum takes none; the wage paid stays at the clearing wage).
