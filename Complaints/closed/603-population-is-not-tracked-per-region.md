@@ -1,6 +1,6 @@
 # Population, carrying capacity, famine and migration are national, not per region
 
-**Status:** partly done. People are tracked per tile, fed by their own households, and migrate; urban share is still the civilisation's fixed `urban_fraction`.
+**Status:** closed - people are tracked per tile, fed by their own households, migrate; urban share is read from the regions through one function, bounded by the food each town can draw. What stays open is filed as 674.
 
 Part of Complaint 489 (Population is one national figure, and soldiers, scholars and builders are not checked against food and people).
 
@@ -35,7 +35,22 @@ Reuses the colony stepping in `sim/engine/colonies.py`. Foreign countries need 5
   lowers its nutrition and raises its mortality, other tiles unchanged).
 - Cost: `python3 -W ignore` six years of rome_100ad (88 tiles), CPU per year before and after: 7.23 s and 7.36 s (loaded
   machine); a region per tile is cheap.
-- Still open: urban share from the regions; per-tile endemic disease; foreign countries (590).
+- Urban share from the regions: `Sim.urban_fraction()` (`sim/engine/urban_share.py`) is the only reading of the national share;
+  the readers in `sim/labour/labour_population.py` and `sim/engine/agents_port_budget.py` call it; `sim/engine/disease_port.py` (two reads of the file's figure) is left for the disease change to switch to `Sim.urban_fraction()`. Each region's
+  town is bounded by the surplus of its farms beyond their own households' need plus what it draws from other regions at
+  the carriage cost of grain (`geography.route_costs`: land, river and sea; `sim/world/urban_share.py`, `town_ceilings`),
+  a source's surplus shared among the towns that can reach it. A sea or river tile reaches far more farms than an inland
+  one (`python3 -m sim.tests.urban_share_opening` prints each civilisation's most-fed share).
+- The civilisation's `urban_fraction` is read once, at the opening, to seed each region's share of its people in town
+  (`state.population.urban_share_of_people`, shared by what each town can feed); afterwards a region's townspeople are
+  that share of its people, never more than its town can feed, so a food shock shrinks the towns. The computed opening share
+  is checked against the civilisation's band in `data/world/urban_share_bands.json` (source and confidence per band;
+  Han China and the Mexica have none: no source found).
+- Tests: `sim/tests/test_urban_share_rules.py` (richer surplus raises the ceiling; cheaper carriage widens the draw; a port
+  carries more than a landlocked town with the same hinterland, on built tiles), `sim/tests/test_urban_share_scenario.py`.
+- Still open, filed as 674: what makes demand for town people (the state's and landowners' claims on the harvest, trade),
+  so the share itself is computed and not only bounded; an urban band that migrants fill; per-tile endemic disease; foreign
+  countries (590; their `CountryProfile.urban_fraction` and the strata seed still read the file's figure).
 
 ## Research needed
 

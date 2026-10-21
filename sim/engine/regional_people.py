@@ -27,12 +27,11 @@ class RegionalPeopleMixin:
         return settlement.people_by_tile(self.state.population.regions, self.population.total, self.home_tiles_held())
 
     def regional_kcal_per_day(self, regions, farm_kcal_per_day):
-        """{region: calories a day it is fed}: its households' eaten over need where the economy has booked it, else
-        the nation's, else its share of the farm model's harvest; open works' relief is shared by need."""
-        state = self.state.population
+        """{region: calories a day it is fed}: its own households' eaten over need where the economy has booked it, else
+        its land's share of the farm model's harvest; open works' relief is shared by need."""
         return regional_population.kcal_per_day_by_region(
-            regions, state.regional_eaten_over_need, state.food_eaten_over_need, farm_kcal_per_day,
-            self.relief_kcal_per_day())
+            regions, self.state.population.regional_eaten_over_need, farm_kcal_per_day, self.relief_kcal_per_day(),
+            settlement.population_shares(self.home_tiles_held()))
 
     def step_regions_of_people(self, regions, kcal_by_region, year):
         """Step every region a year and return the nation's flows; the nation's `Population` becomes their sum."""

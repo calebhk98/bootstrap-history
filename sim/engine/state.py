@@ -405,6 +405,8 @@ class PopulationState:
 	# the same by tile, and the people by tile as [children, working_age, elderly] (regional_people.py)
 	regional_eaten_over_need: Dict[str, float] = field(default_factory=dict)
 	regions: Dict[str, List[float]] = field(default_factory=dict)
+	# the share of each region's people living in town, seeded at the opening from the civilisation's typed urban share (urban_share.py)
+	urban_share_of_people: Dict[str, float] = field(default_factory=dict)
 	# one dict per simulated year: year, population, births, deaths, nutrition_ratio
 	yearly_record: List[Any] = field(default_factory=list)
 

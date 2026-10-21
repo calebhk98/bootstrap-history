@@ -31,18 +31,20 @@ def kcal_per_day_fed(population: Population, eaten_over_need: float) -> float:
 
 
 def kcal_per_day_by_region(regions: Mapping[str, Population], eaten_over_need_by_region: Mapping[str, float],
-                           national_eaten_over_need: Optional[float], farm_kcal_per_day: float,
-                           relief_kcal_per_day: float) -> Dict[str, float]:
-    """{region: calories a day it is fed}: its households' eaten over need where the economy has booked it, else
-    the nation's, else its share of the farm model's harvest; open works' relief is shared by need."""
+                           farm_kcal_per_day: float, relief_kcal_per_day: float,
+                           land_share_by_region: Mapping[str, float]) -> Dict[str, float]:
+    """{region: calories a day it is fed}: what its own households ate where the economy has booked it, else its land's
+    share of the farm model's harvest (never the nation's average, so a region's shortfall is its own); open works'
+    relief is shared by need."""
     need = {tile: adult_equivalents(region) for tile, region in regions.items()}
     total_need = sum(need.values())
+    total_land = sum(land_share_by_region.get(tile, 0.0) for tile in regions)
     fed = {}
     for tile, region in regions.items():
-        ratio = eaten_over_need_by_region.get(tile, national_eaten_over_need)
-        share = need[tile] / total_need if total_need > 0.0 else 0.0
-        base = kcal_per_day_fed(region, ratio) if ratio is not None else farm_kcal_per_day * share
-        fed[tile] = base + relief_kcal_per_day * share
+        ratio = eaten_over_need_by_region.get(tile)
+        land = land_share_by_region.get(tile, 0.0) / total_land if total_land > 0.0 else 0.0
+        base = kcal_per_day_fed(region, ratio) if ratio is not None else farm_kcal_per_day * land
+        fed[tile] = base + relief_kcal_per_day * (need[tile] / total_need if total_need > 0.0 else 0.0)
     return fed
 
 

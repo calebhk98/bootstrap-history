@@ -105,6 +105,10 @@ class LabourWorld:
         is priced at the economy (its opening)."""
         return self._sim.economy.unskilled_wage()
 
+    def urban_fraction(self):
+        """Share of the nation's people living in town, from its regions (urban_share.py)."""
+        return self._sim.urban_fraction()
+
     def harvest_share_taken(self, material):
         """Share of the harvest of a material the home state's forms take from growers; none without a government."""
         if self._sim.actors.government_of(None) is None:
