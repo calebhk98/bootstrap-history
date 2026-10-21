@@ -31,6 +31,15 @@ check("the same guards at a nearer tile leave less theft",
       order_factor(shares_for(1.0, days=dict(DAYS, far=4.0))["far"], 0.0) < order_factor(few["far"], 0.0))
 check("more guards leave less theft on the tile", order_factor(many["far"], 0.0) < order_factor(few["far"], 0.0))
 
+# ---- foresters keep woodland tenure by the same time rule; the forest ceiling reads their reach ---------------------
+from sim.engine.forest_ceiling import forest_ceiling_hectares
+
+check("more foresters raise the share of a tile whose woodland is kept",
+      shares_for(2.0, per_person=order.FORESTER_DAYS_PER_PERSON)["far"] > shares_for(1.0, per_person=order.FORESTER_DAYS_PER_PERSON)["far"])
+check("no foresters keep nothing", sum(shares_for(0.0, per_person=order.FORESTER_DAYS_PER_PERSON).values()) == 0.0)
+check("more forester reach raises the forest ceiling",
+      forest_ceiling_hectares(1.0e6, 0.8, 1000.0, 2000.0, 1.0) > forest_ceiling_hectares(1.0e6, 0.3, 1000.0, 2000.0, 1.0))
+
 # ---- inspectors raise the mine ceiling ----------------------------------------------------------------------------
 terms = {"base": 1000.0, "state_scale": 5000.0}
 check("more inspectors raise the mine ceiling",
@@ -58,8 +67,12 @@ inspectors = order.inspectors_kept(world.population_total(), WORKING_DAYS)
 check("guards kept follow the people and the days one person's watch takes",
       abs(guards - 40_000.0 * order.PATROL_DAYS_PER_PERSON / WORKING_DAYS) < 1e-9, guards)
 check("no people need no guards and no inspectors", order.guards_kept(0.0, WORKING_DAYS) == 0.0 and order.inspectors_kept(0.0, WORKING_DAYS) == 0.0)
-by_name = {line.name: line for line in order.guards_line(world) + order.inspectors_line(world)}
-check("the state keeps a guards line and an inspectors line", {"guards", "inspectors"} == set(by_name), sorted(by_name))
+by_name = {line.name: line for line in order.guards_line(world) + order.inspectors_line(world) + order.foresters_line(world)}
+foresters = order.foresters_kept(world.population_total(), WORKING_DAYS)
+check("the state keeps a guards, an inspectors and a foresters line", {"guards", "inspectors", "foresters"} == set(by_name), sorted(by_name))
+check("the foresters line pays the foresters kept at the going wage",
+      abs(by_name["foresters"].wages - foresters * 10.0) < 1e-6 and by_name["foresters"].transfer == 0.0, by_name["foresters"])
+check("no people need no foresters", order.foresters_kept(0.0, WORKING_DAYS) == 0.0)
 check("the guards line pays the guards kept at the going wage",
       abs(by_name["guards"].wages - guards * 10.0) < 1e-6 and abs(sum(by_name["guards"].labour.values()) - guards) < 1e-9,
       by_name["guards"])
@@ -71,7 +84,7 @@ check("both are staff the state hires, not a transfer", by_name["guards"].transf
 # ---- the game: unpaid staff weaken only the thing they staff, whatever the collection share is --------------------
 from sim.engine.agents_port import SimWorld
 
-fed, no_guards, no_inspectors = sim(civ="rome_100ad"), sim(civ="rome_100ad"), sim(civ="rome_100ad")
+fed, no_guards, no_inspectors, no_foresters = (sim(civ="rome_100ad") for _ in range(4))
 
 
 def leave_unpaid(game, line, share=0.999):
@@ -82,7 +95,8 @@ def leave_unpaid(game, line, share=0.999):
 
 leave_unpaid(no_guards, "guards")
 leave_unpaid(no_inspectors, "inspectors")
-for each in (fed, no_guards, no_inspectors):
+leave_unpaid(no_foresters, "foresters")
+for each in (fed, no_guards, no_inspectors, no_foresters):
     each.household.capital = 1.0e6
     each.state_reach = lambda: 0.5   # the collection share is fixed: only the staff may move the answers below
 stolen = {name: each.plunder_founder(0.2, "bandits", True)
@@ -92,3 +106,8 @@ check("guards left unpaid raise what thieves take from the founder", stolen["gua
 check("inspectors left unpaid lower the mine ceiling", ceiling["inspectors"] < ceiling["fed"], ceiling)
 check("guards left unpaid leave the mine ceiling alone", abs(ceiling["guards"] - ceiling["fed"]) < 1e-9, ceiling)
 check("inspectors left unpaid leave theft alone", abs(stolen["inspectors"] - stolen["fed"]) < 1e-9, stolen)
+forest = {name: each.forest_land_ceiling() for name, each in (("fed", fed), ("guards", no_guards), ("foresters", no_foresters))}
+check("foresters left unpaid lower the forest ceiling", forest["foresters"] < forest["fed"], forest)
+check("guards left unpaid leave the forest ceiling alone", abs(forest["guards"] - forest["fed"]) < 1e-9, forest)
+check("foresters left unpaid leave the mine ceiling alone",
+      abs(no_foresters.mine_land_ceiling("iron") - ceiling["fed"]) < 1e-9)

@@ -54,10 +54,7 @@ check("public-health guidance is followed less where the state reaches less",
       starved.medical_diffusion_relief() < fed.medical_diffusion_relief(),
       (starved.medical_diffusion_relief(), fed.medical_diffusion_relief()))
 
-# ---- (b) needs specific staff: woods need wardens (no such line yet, so reach stands in); mines and order are in
-# test_state_guards_and_inspectors.py
-check("the forest ceiling falls with the reach", starved.forest_land_ceiling() < fed.forest_land_ceiling(),
-      (starved.forest_land_ceiling(), fed.forest_land_ceiling()))
+# ---- (b) needs specific staff: mines, order and woods are in test_state_guards_and_inspectors.py
 
 # ---- the partner's reach is its own country's, from its own officials and roads --------------------------------------
 partner = "han_china_100ad"

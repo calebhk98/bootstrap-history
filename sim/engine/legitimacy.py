@@ -50,6 +50,10 @@ class LegitimacyMixin:
         """The share of the home people whose claims and workings its employed inspectors check (Complaint 660)."""
         return self._staff_reach("inspectors", "inspection_share")
 
+    def forest_reach(self):
+        """The share of the home people whose woodland tenure its employed foresters keep (Complaint 660)."""
+        return self._staff_reach("foresters", "forest_share")
+
     def _staff_reach(self, line_name, share_name):
         from .agents_port import SimWorld
         world = SimWorld(self)

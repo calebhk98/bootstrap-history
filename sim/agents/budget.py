@@ -81,7 +81,8 @@ def standing_lines(world: Any, soldiers: Optional[float] = None, conscripts: flo
 	if soldiers is None:
 		soldiers = army_wanted(world)
 	lines = (army_line(world, soldiers, conscripts) + administration_line(world) + order.guards_line(world)
-			+ order.inspectors_line(world) + budget_lines.roads_line(world)
+			+ order.inspectors_line(world) + order.foresters_line(world)
+			+ budget_lines.roads_line(world)
 			+ budget_lines.public_buildings_line(world) + budget_lines.court_line(world, officials_kept(world))
 			+ budget_lines.dole_line(world) + budget_lines.navy_line(world) + budget_works.works_upkeep_lines(world)
 			+ budget_works.collection_line(world) + budget_works.campaign_line(world, soldiers)
