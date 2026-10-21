@@ -52,7 +52,7 @@ def plan_year(setup, record, view, labour_bids: List[LabourBid]) -> None:
     budget.unplanned_cash = max(0.0, cash - spendable - reserve)
     if policy.real_spending_target > 0.0:
         # a stated programme is paid from every coin on hand first, then financed
-        planned = policy.real_spending_target * view.basket_price_level(money)
+        planned = policy.real_spending_target * view.chained_price_level(money)
         budget.real_programme = True
         spendable = min(cash, planned)
     deficit = max(0.0, planned - spendable)
@@ -82,7 +82,7 @@ def _labour_bids(setup, record, view, wage_budget: float) -> List[LabourBid]:
     if total_working <= 0.0:
         return []
     trades = _trades(setup)
-    level = view.basket_price_level(setup.currency_id)
+    level = view.chained_price_level(setup.currency_id)
     bids = []
     for trade in trades:
         for tile, people in sorted(working.items()):
@@ -154,7 +154,7 @@ def close_year(setup, record, ledger, tax_received: float) -> None:
             moves.append(GoodsMove(state, EDGE_CONSUMPTION, good, tile, used, "state purchases used"))
     record.book.move_many(moves)
     record.state_budget.revenue = tax_received + ledger.sales_in.get(state, 0.0)
-    level = record.memory.basket_price_levels.get(setup.currency_id)
+    level = record.memory.price_levels.get(setup.currency_id)
     budget = record.state_budget
     if level and budget.last_price_level > 0.0:
         budget.expected_inflation = currency.update_expected_inflation(budget.expected_inflation,

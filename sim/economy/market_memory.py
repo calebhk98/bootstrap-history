@@ -13,6 +13,7 @@ from .currency import update_expected_inflation
 from .types import QUOTE_OPENING_ESTIMATE, AgentId, AreaId, CurrencyId, GoodId, TileId, TradeId
 
 KEY_SEPARATOR = "|"
+PRICE_LEVEL_FLOOR_RATIO = 1e-9   # a year in which the median price fell to nothing still leaves a positive level to chain from
 PRICE_TRADED = "traded"     # the kind of a price a market cleared at; any other kind is a quote or an estimate
 
 OPENING_EXPECTED_INFLATION = declare(
@@ -49,6 +50,7 @@ class MarketMemory:
     rates: Dict[CurrencyId, float] = field(default_factory=dict)
     basket_price_levels: Dict[CurrencyId, float] = field(default_factory=dict)
     expected_inflation: Dict[CurrencyId, float] = field(default_factory=dict)
+    price_levels: Dict[CurrencyId, float] = field(default_factory=dict)   # the opening's level (1.0) chained by each year's observed inflation (the weighted median): what real figures are turned nominal with
     observed_inflation: Dict[CurrencyId, float] = field(default_factory=dict)   # last year's, the weighted median of price changes
     last_year_prices: Dict[str, float] = field(default_factory=dict)    # good: national price the year before, for that median
     currency_of_area: Dict[AreaId, CurrencyId] = field(default_factory=dict)
@@ -121,6 +123,7 @@ class MarketMemory:
             expected = self.expected_inflation.get(currency, OPENING_EXPECTED_INFLATION)
             self.expected_inflation[currency] = update_expected_inflation(expected, observed_inflation)
             self.observed_inflation[currency] = observed_inflation
+            self.price_levels[currency] = self.price_levels.get(currency, 1.0) * max(PRICE_LEVEL_FLOOR_RATIO, 1.0 + observed_inflation)
         self.basket_price_levels[currency] = level
 
 
@@ -219,6 +222,9 @@ class YearView:
 
     def basket_price_level(self, currency: CurrencyId) -> float:
         return self._memory.basket_price_levels.get(currency, 1.0)
+
+    def chained_price_level(self, currency: CurrencyId) -> float:
+        return self._memory.price_levels.get(currency, 1.0)
 
     def expected_inflation(self, currency: CurrencyId) -> float:
         return self._memory.expected_inflation.get(currency, OPENING_EXPECTED_INFLATION)

@@ -52,6 +52,8 @@ class FakeView:
     def basket_price_level(self, money):
         return 1.0
 
+    chained_price_level = basket_price_level
+
 
 def world(spec, recipe="default"):
     book = Book()

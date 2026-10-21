@@ -292,3 +292,19 @@ Output: `Complaints/reports/473-trace-9eb35921.txt`. The first four decades are 
 a hundred at year forty instead of nearer two hundred, hired hours steady), then the economy explodes after year forty: the
 price level, the wage and the rate run away together within a few years (the rate far above one, the wage thousands of
 times its opening). A per-good decomposition of years 35 to 52 is running (`decomp.py` probe, the same as for 72e81e68).
+
+## Update 9: real figures were turned nominal with the fixed-basket index (branch late-indexation-spiral)
+
+Hypothesis from the year-44 to 50 trace: an indexation spiral. Conversion sites that used `basket_price_level` (the fixed basket over
+recently traded goods at their remembered prices): `Economy._hour_supply` (the leisure anchor wage, economy.py), `state_budget.py`
+(the real spending target and the state's wage fallback, and its inflation expectation), `mint_labour.py` (the wage fallback),
+`opening_leisure.seed` (equal to one at the opening). A thin good's remembered ask spiking moves that index, so the nominal anchor
+wage moved with it: built input in `sim/tests/test_price_level_indexation.py` (stationary fixture, anchor of one in real terms, the
+thin `metal_kg` price multiplied by a million): the anchor wage was the basket level, about ten thousand; it is now 0.94.
+
+Fix: `MarketMemory.price_levels` chains the opening's one by each year's observed inflation (the weighted median `price_inflation`),
+read through `MarketView.chained_price_level`; the four sites use it, and `rebase_basket_price_level` resets it. `basket_price_level`
+stays a reported statistic (outcome, trace, cohorts' cash target comparison). Not changed: weights in `price_inflation` use each
+good's full opening quantity, so a sliver-trade good still weighs fully in the median; the cohorts' reservation wages and survival
+wage were not found to use the index. Whether the late explosion goes away needs the 60-year Rome trace
+(`python3 sim/simulator.py spin-up-trace --civ rome_100ad --years 60`), not run here.
