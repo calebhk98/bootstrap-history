@@ -21,6 +21,7 @@ class YearLedger:
     hours_hired: Dict[AgentId, Dict[str, float]] = field(default_factory=dict)
     crew_hours_bought: Dict[AgentId, Dict[Tuple[str, str], float]] = field(default_factory=dict)   # merchants that bid for crew: hours sold them by (trade, area)
     hours_sold: Dict[AgentId, float] = field(default_factory=dict)
+    spare_hours: Dict[AgentId, float] = field(default_factory=dict)   # hours a household had left once its own plot took what the land it holds could
     grown: Dict[AgentId, Dict[GoodId, float]] = field(default_factory=dict)       # made for itself
     own_plot_hours: Dict[AgentId, Dict[str, float]] = field(default_factory=dict)   # hours worked on its own plot, by recipe
     grown_units: Dict[AgentId, Dict[str, float]] = field(default_factory=dict)    # need units of that

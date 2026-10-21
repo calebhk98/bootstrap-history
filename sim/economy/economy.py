@@ -20,7 +20,7 @@ from .mint_labour import close_year as close_mint_year, mint_agent
 from .money_audit import MoneyAudit, year_report
 from .flow_rates import flow_imbalance
 from .entry_year import close_idle_producers, open_entrants, restake_owners
-from . import household_work_year
+from . import household_work_year, land_bid_year
 from .households_own import (hours_for_own_plan, own_production, own_production_options, plot_hectares,
                              withhold_hours)
 from .labour_inputs import labour_context
@@ -182,7 +182,7 @@ class Economy:
             record.book, money, labour_report.formed, labour_bids, context.ask_floor_per_worker_year)
         self._grow_own(offers, ledger, inputs.harvest_factor, kept)
         order_book = {}
-        funds = cohort_orders(setup, record, view, ledger, order_book)
+        funds = cohort_orders(setup, record, view, ledger, order_book, self._own_plot_options())
         state_orders(setup, record, view, self.area_map, order_book, {})
         mint_held = mint_orders(setup, record, self.area_map, order_book,
                                 ledger.hours_hired.get(mint_agent(setup), {}))
@@ -197,6 +197,7 @@ class Economy:
         for producer_id, runs in self._rebuild_worn_plant(view, order_book).items():
             plant_runs[producer_id] = plant_runs.get(producer_id, 0.0) + runs
         clear_goods(setup, record, view, self.area_map, order_book, plans, ledger, self.watched_tiles)
+        land_bid_year.take_up_bought(setup, record)
         settle_mint(record, mint_held)
         close_mint_year(setup, record)
         rent = land_market.settle_year(setup, record, view,
@@ -313,6 +314,7 @@ class Economy:
                                                  held.get(cohort.agent_id, 0.0), hours_used)
             if hours_used:
                 ledger.own_plot_hours[cohort_id] = hours_used
+            ledger.spare_hours[cohort_id] = max(0.0, idle - sum(hours_used.values()))
             if moves:
                 record.book.move_many(moves)
                 ledger.grown[cohort_id] = grown
