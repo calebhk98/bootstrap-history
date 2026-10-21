@@ -1,6 +1,6 @@
 # A higher tax rate has no consequence beyond revenue and a typed burden weight
 
-**Status:** partly - a harvest tax and a land tax reach the farmer's and the owner's own rules; concealment of income from a form on what actors hold now follows the rate and the officials' reach, and the AI state's rate-raise yield counts it; flight, unrest (486) and concealment under the harvest and trade forms are open, so `FISCAL_BURDEN_WEIGHT` stays
+**Status:** partly - a harvest tax and a land tax reach the farmer's and the owner's own rules; concealment of income from a form follows the rate and the officials' reach in both layers (actors and the economy's money, harvest and trade forms), and the AI state's rate-raise yield counts it; flight, withdrawal of labour and unrest (486) are open, so `FISCAL_BURDEN_WEIGHT` stays
 
 Follows from 626 (tax rates as a state choice).
 
@@ -52,10 +52,17 @@ loss in its menu raises a rate less than one without.
   existing purse rules. The cost of hiding is an expected cost in the choice, not a cash flow.
   Constants `HIDEABLE_SHARE_OF_INCOME`, `HIDING_MARGINAL_COST_AT_CEILING` (`sim/agents/tuning_evasion.py`) are labelled heuristics
   with `retire` 657; no source found. Tests: `sim/tests/test_tax_evasion.py`.
-- Still open: flight from a taxed tile and withdrawal of labour (a stronger form of the above, for households' choice of
-  place); hiding under the harvest and trade forms; the economy layer's money forms (`sim/economy/taxes.py`) still evade only
-  by the state's capacity; no unrest or flight (486); the producers' land demand and run decisions in the economy do not net a harvest
+- **The economy's forms hide by the same rule.** `taxes.assess` takes `hiding(rate, reach)`; `EconomySetup.hiding` is set by
+  `sim/engine/economy_port_setup.py` to `agents.api.evasion.hidden_share`, so the economy imports nothing from the actors (one rule,
+  handed through the port; `docs/architecture/PACKAGE_WALLS.md`). Money forms (poll, imports, exports, sales, coin stock) and in-kind
+  harvest levies assess `(1 - hidden)` of each payer's base; `Assessment.concealed_value` is the tax on the hidden part and
+  `evaded_value` is now only what the officials did not reach of the declared part. Tax-farmed forms use it too. Customs duties on
+  border imports (`tariffs.duty_transfers`) are not under it. Tests: `sim/tests/test_tax_evasion_economy.py`.
+- Flight needs: the existing mechanism is `sim/labour/market/migration.py` (workers weigh the log of expected income over
+  subsistence in each area against their own, less moving cost). It would need a per-area after-tax figure: a tile's share taken
+  (`tax_burden.harvest_share_taken` already gives one for the harvest) passed through `YearInputs` into `_real_income`. Not built;
+  withdrawal of labour is the farm-hour rule above and already follows the harvest tax.
+- Still open: flight from a taxed tile (above); no unrest (486); the producers' land demand and run decisions in the economy do not net a harvest
   tax off expected revenue (`land_market.demands_of`); the AI state's `raise_rate` option does not yet count the base lost
-  through these. `FISCAL_BURDEN_WEIGHT` therefore stays as the labelled stand-in (the menu now counts the lost yield but not the
-  flight or unrest); it retires when the menu values those too.
-- Sources: no source on pre-modern tax pressure and abandonment (agri deserti) was opened in this session, so none is cited.
+  through flight or unrest. `FISCAL_BURDEN_WEIGHT` therefore stays as the labelled stand-in; it retires when the menu values those too.
+- Sources: no source on pre-modern tax pressure and abandonment (agri deserti) was opened in this session, so none is cited; the hiding constants stay labelled heuristics with `retire`.

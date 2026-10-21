@@ -12,6 +12,7 @@ from typing import Dict
 from sim.economy.api import (EconomySetup, carriage_wear, SiteLimit, TradeSpec, currency_from_coin_standard, goods_specs, households, households_work,
                              recipe_tile_key,
                              recipes_from_production_data, taxes, tile_costs, with_tool_wear)
+from sim.agents import api as agents_api
 from sim.world import demand, need_basket
 from sim.geography.api import carriage_rates, layer_value, sea_freight, settlement, tiles_held
 from sim.labour import api as labour_api
@@ -237,6 +238,7 @@ def build_setup(sim, opening=None, production=None):
         specs=specs, recipes=recipes, mint_recipe=mint_recipe, basket=basket, trades=trades,
         tax_forms=taxes.forms_from_civ_data(civ.get("state_revenue") or []),
         state_capacity=1.0,   # follows the officials: `run_year` sets it from `Sim.state_reach()` before each year
+        hiding=agents_api.evasion.hidden_share,   # the one hiding rule the actor layer uses (Complaint 657)
         working_hours_per_year=float(sim.HOURS_PER_PERSON_YEAR), working_share=float(opening["working_share"]),
         gini=demand.GINI_COEFFICIENT_PREINDUSTRIAL_AGRARIAN, opening_population_by_tile=population_by_tile,
         unskilled_trade=opening["unskilled_trade"], debt_bondage_years=sim.debt_bondage_term_years(), opening_prices=prices, opening_wages=wages, opening_rate=float(opening["rate"]),

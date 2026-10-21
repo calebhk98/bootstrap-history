@@ -5,10 +5,12 @@ share of the base (taxes_bases.py). In-kind forms move goods from the payers to 
 transfers to it. A payer who cannot pay owes arrears; a purse is never overdrawn. Collection is imperfect by
 the state's capacity: the share of each liability the state's officials can assess and collect (the engine
 reads the same 0..1 field as how far the state's writ runs). What is not collected is evaded, not owed.
+A payer also keeps part of its base off the rolls: `hiding(rate, state_capacity)` is the share it hides, the one rule the
+actor layer uses too (sim/agents/evasion.py), handed in by the port so this package imports nothing from the actors.
 """
 import dataclasses
 from dataclasses import dataclass
-from typing import Dict, FrozenSet, List, Mapping, Optional, Sequence, Tuple
+from typing import Callable, Dict, FrozenSet, List, Mapping, Optional, Sequence, Tuple
 
 from .taxes_bases import Base, YearFacts, measure
 from .types import AgentId, GoodId, GoodsMove, TileId, Transfer, is_edge
@@ -44,9 +46,14 @@ class Assessment:
     base_value: float                # money's worth of the whole base
     due_value: float                 # money's worth the state's officials could assess
     collected_value: float           # money's worth that reached the state (goods at the year's price)
-    evaded_value: float              # money's worth the state could not assess
+    evaded_value: float              # money's worth the state's officials did not reach
     collected_quantity: float        # goods collected in kind; zero for a money form
     arrears: Tuple[Arrear, ...]
+    concealed_value: float = 0.0     # money's worth of tax on the part of the base the payers kept off the rolls
+
+
+# (rate, share of payers the officials reach) -> share of its base a payer hides; None: nothing is hidden
+Hiding = Optional[Callable[[float, float], float]]
 
 
 # Bases the actor layer assesses on the purses of the actors it names (sim/agents/revenue_bases.py), not the economy.
@@ -68,7 +75,7 @@ def with_rates(forms: Sequence[TaxForm], rates: Sequence[Tuple[str, float]]) -> 
 
 
 def assess(forms: Sequence[TaxForm], facts: YearFacts, state_agent_id: AgentId, prices: Mapping[GoodId, float],
-           state_capacity: float = 1.0) -> Tuple[List[Transfer], List[GoodsMove], List[Assessment]]:
+           state_capacity: float = 1.0, hiding: Hiding = None) -> Tuple[List[Transfer], List[GoodsMove], List[Assessment]]:
     if not 0.0 <= state_capacity <= 1.0:
         raise ValueError("state_capacity must lie in 0..1, got %r" % state_capacity)
     cash_left: Dict[AgentId, float] = dict(facts.cash)
@@ -77,24 +84,25 @@ def assess(forms: Sequence[TaxForm], facts: YearFacts, state_agent_id: AgentId, 
     moves: List[GoodsMove] = []
     assessments: List[Assessment] = []
     for form in forms:
+        hidden = 0.0 if hiding is None else max(0.0, min(1.0, hiding(form.rate, state_capacity)))
         bases = measure(form.basis, form, facts, prices)
         if form.paid_in:
             assessments.append(_collect_in_kind(form, bases, facts, state_agent_id, prices, state_capacity,
-                                                held_left, moves))
+                                                held_left, moves, hidden))
         else:
             assessments.append(_collect_money(form, bases, facts, state_agent_id, state_capacity, cash_left,
-                                              transfers))
+                                              transfers, hidden))
     return transfers, moves, assessments
 
 
 def _collect_money(form, bases: Mapping[AgentId, Base], facts: YearFacts, state_agent_id, state_capacity,
-                   cash_left: Dict[AgentId, float], transfers: List[Transfer]) -> Assessment:
+                   cash_left: Dict[AgentId, float], transfers: List[Transfer], hidden: float = 0.0) -> Assessment:
     base_total = due_total = collected_total = 0.0
     arrears = []
     for payer, base in sorted(bases.items()):
         if payer == state_agent_id:
             continue
-        due = form.rate * base.value * state_capacity
+        due = form.rate * base.value * (1.0 - hidden) * state_capacity
         available = 0.0 if is_edge(payer) else max(0.0, cash_left.get(payer, 0.0))
         paid = min(due, available)
         if paid > 0.0:
@@ -106,18 +114,20 @@ def _collect_money(form, bases: Mapping[AgentId, Base], facts: YearFacts, state_
         due_total += due
         collected_total += paid
     return Assessment(form.name, form.basis, base_total, due_total, collected_total,
-                      form.rate * base_total * (1.0 - state_capacity), 0.0, tuple(arrears))
+                      form.rate * base_total * (1.0 - hidden) * (1.0 - state_capacity), 0.0, tuple(arrears),
+                      form.rate * base_total * hidden)
 
 
 def _collect_in_kind(form, bases: Mapping[AgentId, Base], facts: YearFacts, state_agent_id, prices, state_capacity,
-                     held_left: Dict[Tuple[AgentId, GoodId], float], moves: List[GoodsMove]) -> Assessment:
+                     held_left: Dict[Tuple[AgentId, GoodId], float], moves: List[GoodsMove],
+                     hidden: float = 0.0) -> Assessment:
     price = prices.get(form.paid_in, 0.0)
     base_total = due_total = collected_quantity = 0.0
     arrears = []
     for payer, base in sorted(bases.items()):
         if payer == state_agent_id:
             continue
-        due = form.rate * base.quantity * state_capacity
+        due = form.rate * base.quantity * (1.0 - hidden) * state_capacity
         key = (payer, base.good)
         if key not in held_left:
             held_left[key] = base.quantity if facts.held_goods is None else facts.held_goods.get(key, 0.0)
@@ -131,4 +141,5 @@ def _collect_in_kind(form, bases: Mapping[AgentId, Base], facts: YearFacts, stat
         due_total += due * price
         collected_quantity += paid
     return Assessment(form.name, form.basis, base_total, due_total, collected_quantity * price,
-                      form.rate * base_total * (1.0 - state_capacity), collected_quantity, tuple(arrears))
+                      form.rate * base_total * (1.0 - hidden) * (1.0 - state_capacity), collected_quantity, tuple(arrears),
+                      form.rate * base_total * hidden)

@@ -155,11 +155,12 @@ def money_taxes(setup, record, view, ledger: YearLedger) -> None:
     if forms:
         facts = tax_facts(setup, record, view, ledger)
         owed_to_state = [form for form in forms if form.name not in farmed]
-        transfers, _moves, assessments = taxes.assess(owed_to_state, facts, setup.state_agent, {}, setup.state_capacity)
+        transfers, _moves, assessments = taxes.assess(owed_to_state, facts, setup.state_agent, {}, setup.state_capacity,
+                                                       setup.hiding)
         for form in forms:
             if form.name in farmed:
                 farmed_transfers, _farmed_moves, farmed_assessments = taxes.assess(
-                    [form], facts, farmed[form.name]["farmer"], {}, tax_farming.TAX_FARMER_REACH)
+                    [form], facts, farmed[form.name]["farmer"], {}, tax_farming.TAX_FARMER_REACH, setup.hiding)
                 record.book.transfer_many(farmed_transfers)
                 ledger.note_postings(farmed_transfers)
                 assessments = assessments + farmed_assessments

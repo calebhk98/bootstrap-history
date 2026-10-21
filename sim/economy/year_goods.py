@@ -268,5 +268,5 @@ def _tax_in_kind(setup, record, producer, recipe, forms, ledger) -> None:
             for good in recipe.outputs}
     facts = YearFacts(currency=setup.currency_id, output=output, producer_tile={producer.agent_id: producer.tile},
                       held_goods=held)
-    _transfers, moves, _assessments = taxes.assess(forms, facts, setup.state_agent, {}, setup.state_capacity)
+    _transfers, moves, _assessments = taxes.assess(forms, facts, setup.state_agent, {}, setup.state_capacity, setup.hiding)
     record.book.move_many(moves)
