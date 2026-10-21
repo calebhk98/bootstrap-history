@@ -133,13 +133,19 @@ class BudgetView:
 					payers.append((self.visible_scale_of(sim.household), max(0.0, sim.revenue())))  # type: ignore[attr-defined]
 		return payers
 
+	def firm_taxpayers(self, country: Optional[str]) -> List[Tuple[float, float]]:
+		"""(visible scale, taxable income) of the firms that answer to `country`; a firm with no country answers to the
+		home country. A firm has one country (it does not split its income across the countries it trades in)."""
+		actors = self._sim.actors
+		home = actors.state.home_country
+		return [(self.visible_scale_of(firm), max(0.0, firm.record.last_margin))  # type: ignore[attr-defined]
+				for firm in actors.active_firms() if actors.country_of(firm) == (country or home)]
+
 	def visible_taxpayers(self) -> List[Tuple[float, float]]:
-		"""(visible scale, taxable income) of every actor the home state can see: the home country's playing seats and the firms."""
+		"""(visible scale, taxable income) of every actor the home state can see: the home country's playing seats and the firms that answer to it."""
 		sim = self._sim
 		payers = self.seat_taxpayers(sim.actors.state.home_country)
 		if not sim.playing_seats():
 			with sim.act_as(sim.state.acting_seat):
 				payers.append((self.visible_scale_of(sim.household), max(0.0, sim.revenue())))  # type: ignore[attr-defined]
-		for firm in sim.actors.active_firms():
-			payers.append((self.visible_scale_of(firm), max(0.0, firm.record.last_margin)))  # type: ignore[attr-defined]
-		return payers
+		return payers + self.firm_taxpayers(sim.actors.state.home_country)

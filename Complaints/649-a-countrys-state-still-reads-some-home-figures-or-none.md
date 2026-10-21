@@ -30,8 +30,12 @@ its civilisation's starting techs), read through `military_work_ids` and `equipm
 own strata laid along its own cohorts' rent curve (`CountryAnswers.land_rent_curve`; nobody while its economy keeps no cohorts). Its
 visible taxpayers include the playing seats of that country (`seat_taxpayers`); the home state's visible taxpayers use the same
 selection for the home country, where a seat with no country is the game's own. Checks: `sim/tests/test_country_state.py`,
-`sim/tests/test_country_economy.py`, `sim/tests/test_home_state_taxpayers.py`. The home state's firms are not yet
-scoped by country (`active_firms` lists every firm).
+`sim/tests/test_country_economy.py`, `sim/tests/test_home_state_taxpayers.py`. A firm's country is the one its record names
+(`ActorRecord.country`, none meaning the home country; `ActorRegistry.country_of`), the same field that picks its world scope; the home
+state's visible taxpayers take firms by that rule (`firm_taxpayers(country)`, beside `seat_taxpayers`), and a country's state
+selects its firms by the same field. A plant carries no tile and a firm one `location`, so a firm has one country: its taxable
+income is not split by where its plants earn. Splitting it needs a tile on each plant and the country of that tile
+(`setup.country_of`), which is a mechanism not built yet.
 
 **Why it matters.** A country's revenue and war capacity are inputs of the game (481); each of these makes a country's
 state read the founder's side of the world or nothing.

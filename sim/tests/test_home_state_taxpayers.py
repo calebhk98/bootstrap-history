@@ -41,3 +41,25 @@ check("the home state sees the seat with no country and the seat of its own coun
 	  incomes == [SEAT_INCOME["founder"], SEAT_INCOME["native"]], incomes)
 check("a foreign state's seats are the ones the same rule selects for that country",
 	  [income for _scale, income in view.seat_taxpayers("far")] == [SEAT_INCOME["stranger"]], view.seat_taxpayers("far"))
+
+
+# firms: a firm belongs to the country its record names (none is the game's own), whatever tile it stands on
+def firm(country, margin):
+	return SimpleNamespace(record=SimpleNamespace(country=country, last_margin=margin))
+
+
+def country_of(actor):
+	return actor.record.country or HOME
+
+
+firms = [firm(None, 17.0), firm(HOME, 19.0), firm("far", 23.0)]
+view._sim.actors.active_firms = lambda: firms
+view._sim.actors.country_of = country_of
+home_firm_incomes = sorted(income for _scale, income in view.firm_taxpayers(HOME))
+check("the home state sees the firm with no country and the firm of its own country, not a foreign firm",
+	  home_firm_incomes == [17.0, 19.0], home_firm_incomes)
+check("a foreign state's firms are the ones the same rule selects for that country",
+	  [income for _scale, income in view.firm_taxpayers("far")] == [23.0], view.firm_taxpayers("far"))
+visible = sorted(income for _scale, income in view.visible_taxpayers())
+check("the home state's visible taxpayers are its seats and its own firms only",
+	  visible == sorted([SEAT_INCOME["founder"], SEAT_INCOME["native"], 17.0, 19.0]), visible)
