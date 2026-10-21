@@ -123,3 +123,29 @@ mostly whole, now hold at most four named scenarios each; their rules moved to f
 `test_mortality_shock_rules`, `test_material_throttle_rules`) over new plain functions (`material_throttle.py`,
 `staff_loss_words.py`, `civ_cost.py`, `value_weight.py`). The `hazard_hit` log line now carries `defence` and
 `national_toll_percent` as facts, so scenarios read values, not prose.
+
+## Applied: deep extraction 2
+
+Batches 7 and 8 had left their rules inside `Sim` and labour methods, so their checks stayed whole-game scenarios. The rules
+now sit in plain functions in small modules, the methods call them, and the quick files below call the functions on inputs
+they build. Extractions (behaviour unchanged):
+
+- `sim/engine/mine_ceiling.py` (`mine_ceiling_tonnes`, `room_under_ceiling`, shared by `open_mine` and `buy_forest`):
+  `test_mine_ceiling_rules`.
+- `sim/engine/trade_absorption.py` (the years, the yearly step, the drift toward the literacy ceiling):
+  `test_trade_absorption_rules`.
+- `sim/engine/staffing_choice.py` (allowances, shortfalls, which concerns close) and `people_to_hire_for` in
+  `sim/labour/labour_staff_controls.py` (the `keep ... staffed` hire): `test_staffing_choice_rules`.
+- `sim/engine/closure_grace.py` (the grace window, the discounted fee, the note): `test_closure_grace_rules`.
+- `sim/engine/credit_freeze.py` (`settlement_freeze`, the stall rule, the loss makers): `test_credit_freeze_rules`.
+- `_staffing_standing_crew` (the `why` supervision block) on a stub game: `test_why_supervision_rules`.
+- `sim/engine/industry_depth_rules.py` (the opening seed and the yearly accrual): `test_industry_experience_rules`.
+- `sim/engine/adoption_share.py` (`state_military_diffusion`): `test_adoption_share_rules`.
+- `sim/engine/bondage_workshop_rules.py` (`_step_bondage`, `workshop_output`): `test_bondage_workshop_rules`.
+- `sim/engine/staff_phase_rules.py` (`_step_staff`: the payroll shortfall and who is let go, the room to hire, the staff
+  targets, whole-person moves, the replacement of a taught trade): `test_staff_phase_rules`.
+- `sim/labour/staff_moves.py` (the literacy wall, `fire`, the spare hours of `commission`, what stops `work_for_wages`):
+  `test_staff_moves_rules`; `sim/labour/staff_advice.py` (`_staff_advice`): `test_staff_advice_rules`.
+
+The scenario files kept their wiring checks only. The determinism subprocess in `test_mines_scenario` now builds its game
+the way the harness does, so it reuses the warm spin-up instead of paying a cold one that overran its sixty seconds.

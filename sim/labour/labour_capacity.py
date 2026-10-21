@@ -29,6 +29,8 @@ from sim.refusal import Refusal
 from . import legacy_trade_defaults, trade_data
 from .hire_outcome import craft_trades_report
 from .room_advice import room_advice, sources_to_build, sources_to_reopen
+from .staff_advice import staff_remedies
+from .staff_moves import whole_people_under_wall
 from .wage_provider import reference_civilisation
 
 
@@ -337,8 +339,7 @@ class CapacityMixin:
         "literacy" when the market-reach term is doing most of the work
         misleads a player into pulling the wrong lever.
         """
-        _room = max(0.0, cap - have)
-        _whole = int(_room + 1e-9)
+        _whole = whole_people_under_wall(cap, have)
         lever = (
             "Building the institutions that train scholars outright - a "
             "school, an academy, an imperial patron - is what actually "
@@ -852,47 +853,19 @@ class CapacityMixin:
         `deficit` is how many more people the caller is short; the hire
         advice is sized to it.
         """
-        bits, remedies = [], []
-        for node, why in self._world.STAFF_SOURCES.get(kind, []):
-            if node == "HIRE" and deficit:
-                bits.append(self._world.staff_hire_advice(kind, math.ceil(deficit - 1e-9)))
-                remedies.append({"action": "hire", "node": None})
-            elif node in ("BUY", "HIRE"):
-                bits.append(why)
-                remedies.append({"action": node.lower(), "node": None})
-            # CLOSED IS NOT MISSING. market_supply() only applies a source's
-            # multiplier via running(node), so a school built and then shut
-            # for want of a supervisor stops widening the hiring pool exactly
-            # as if it had never been built - and this advice, filtering on
-            # `node not in self.household.done`, fell silent about it rather than
-            # naming the actual remedy. Reopening costs a supervisor, not a
-            # second institution; say that first.
-            elif node in self._world.state.projects.done and node not in self._world.state.projects.operating and self._world.is_venture(node):
-                bits.append("reopen %s ('open %s') - you already built this; "
-                            "it is only shut" % (node, node))
-                remedies.append({"action": "reopen", "node": node})
-            elif node not in self._world.state.projects.done and self._world.is_visible(node):
-                # NOT A CIRCLE. `why workshop_first` says it is blocked for want
-                # of artisans, and the advice on how to get artisans said "build
-                # workshop_first (you need somewhere for them to work)" - a play
-                # tester quoted the two lines against each other. If the remedy
-                # is itself waiting on the very thing it is meant to supply,
-                # naming it is worse than saying nothing: say what it is waiting
-                # on instead, so the reader knows which end to start at.
-                # Asked DIRECTLY of the node's own requirement, never through
-                # start_reason - which calls this function, so the obvious
-                # version of this test recurses until the stack gives out.
-                _node = self._world.nodes[node]
-                _short = (_node["art"] > self._world.state.household.artisans + 1e-9 if kind == "artisans"
-                          else _node["sch"] > self.effective_scholars() + 1e-9)
-                if _short:
-                    bits.append("build %s eventually (%s) - but it is itself "
-                                "waiting on %s, so hire or commission first"
-                                % (node, why, kind))
-                    remedies.append({"action": "build_after_hiring", "node": node})
-                else:
-                    bits.append("build %s (%s)" % (node, why))
-                    remedies.append({"action": "build", "node": node})
+        projects = self._world.state.projects
+
+        def waiting_on_kind(node_id):
+            # Asked DIRECTLY of the node's own requirement, never through start_reason, which calls this function.
+            node = self._world.nodes[node_id]
+            return (node["art"] > self._world.state.household.artisans + 1e-9 if kind == "artisans"
+                    else node["sch"] > self.effective_scholars() + 1e-9)
+
+        steps = staff_remedies(kind, self._world.STAFF_SOURCES.get(kind, []), deficit, projects.done,
+                               projects.operating, self._world.is_venture, self._world.is_visible, waiting_on_kind,
+                               self._world.staff_hire_advice)
+        bits = [sentence for sentence, _remedy in steps]
+        remedies = [remedy for _sentence, remedy in steps]
         if not bits:
             return Refusal("staff_advice", "wait: your existing institutions add %s each year." % kind, remedies=[])
         return Refusal("staff_advice", "To get more %s: %s." % (kind, "; ".join(bits[:3])), remedies=remedies[:3])

@@ -18,6 +18,8 @@ from . import trade_data, wage_provider
 from .wage_factors import tools_factor, weighted_factor
 from .labour_market_api import LabourMarket
 from .labour_wage_ledger import WageLedgerMixin
+from .staff_moves import (FOUNDER_DEAD, HOURS_NOT_POSITIVE, HOURS_SHORT, NO_SUCH_TRADE, TRADE_ABSENT,
+                          wage_work_blocker)
 from .staff_pay_rules import wage_bill_of
 from sim.constants import declare
 
@@ -78,37 +80,31 @@ class WagesMixin(WageLedgerMixin):
         nothing else can buy: hours sold here are hours the standing job
         (labour_job.py) does not sell and your own projects cannot have.
         """
-        if not self._world.state.founder.founder_alive:
+        blocker = wage_work_blocker(
+            self._world.state.founder.founder_alive, trade in self._world.wages,
+            lambda: self.trade_available(trade), hours,
+            lambda: self.director_pool() - self.director_hours_committed())
+        # A TRADE NOBODY HERE PRACTISES IS A TRADE NOBODY HERE WILL PAY YOU FOR: the gate is trade_available(), the
+        # same test `hire` uses. The founder really does know chemistry; what he lacks is a customer, until the
+        # trade has been taught and trade_available() turns true.
+        if blocker == FOUNDER_DEAD:
             return 0.0, ("there is nobody left to do the work: these are YOUR "
                          "hours, and the founder is dead. What you built goes "
                          "on; you do not.")
-        if trade not in self._world.wages:
+        if blocker == NO_SUCH_TRADE:
             here = sorted(candidate_trade for candidate_trade in self._world.wages if self.trade_available(candidate_trade))
             return 0.0, ("no such trade. you could work as: " + ", ".join(here))
-        # A TRADE NOBODY HERE PRACTISES IS A TRADE NOBODY HERE WILL PAY YOU
-        # FOR: this has to gate on trade_available(), the same test `hire`
-        # uses, or a founder could earn wages in a trade the society does
-        # not yet have any employer for.
-        #
-        # The founder really does know chemistry - that is the premise. What he
-        # does not have is a customer. Wage labour is somebody else deciding
-        # your work is worth money, and there is nobody here to decide that
-        # until you have taught the trade, at which point trade_available()
-        # turns true and this opens by itself.
-        if not self.trade_available(trade):
+        if blocker == TRADE_ABSENT:
             return 0.0, ("nobody here will pay you to be a %s: the trade does "
                          "not exist in this society, so there is no employer "
                          "for it. Teach it first with train, or work at "
                          "something they do recognise." % trade)
         hours = float(hours)
-        if hours <= 0:
+        if blocker == HOURS_NOT_POSITIVE:
             return 0.0, "hours must be greater than zero"
-        # EVERY HOUR ALREADY SPOKEN FOR, not just the ones sold for wages:
-        # this must check against director_hours_committed(), which counts
-        # teaching as well as wage work, or the two together can spend more
-        # hours than exist in the year.
-        left = self.director_pool() - self.director_hours_committed()
-        if hours > left:
+        # EVERY HOUR ALREADY SPOKEN FOR, not just the ones sold for wages: teaching counts as well as wage work.
+        if blocker == HOURS_SHORT:
+            left = self.director_pool() - self.director_hours_committed()
             return 0.0, ("you have %.0f of your own hours left this year, not %.0f"
                          % (max(0.0, left), hours))
         # Your own labour is worth the trade rate: the SAME rate the game
