@@ -1,6 +1,8 @@
 {
  "_doc": "Hours a household's own work takes a year, by task (Complaint 645). A household meets these with its own hours or hires them (the domestic_servant trade; the household_work need in needs.json). Cooking needs a hearth and fuel: a household without one buys cooked food instead (sim/economy/households_work.py). Hours are per person of the household, worked from a per-day figure.",
  "days_per_year": 365,
+ "cooking_fuel_mj_per_person_per_day": 20.6,
+ "cooking_fuel_basis": "Fuelwood burnt in household cookstoves in an isolated rural West African village fell 'from 20.6 MJ cap-1 day-1 to 10.5 MJ cap-1 day-1' as household size rose from five to 20 (Nathan G. Johnson and Kenneth M. Bryden, 'Factors affecting fuelwood consumption in household cookstoves in an isolated rural West African village', Energy 46(1), 2012, pp. 310-321; abstract opened; stove type and sample size not given there). The five-person figure is taken, as the household size of climate_needs.PERSONS_PER_HOUSEHOLD. Megajoules of fuel heat, the unit of the warmth need; added to a hearth's warmth floor. One village, open stoves: confidence C.",
  "tasks": {
   "water_fuel_and_grinding": {
    "needs_hearth": false,

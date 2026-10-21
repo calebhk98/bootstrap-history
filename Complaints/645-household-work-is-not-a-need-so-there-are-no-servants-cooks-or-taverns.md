@@ -1,6 +1,6 @@
 # Household work is not a need, so there are no servants, cooks or taverns
 
-**Status:** mostly done: the household chooses by the worth of its hour, own hours are kept out of the labour offered, and a cohort with no hearth buys cooked food; fuel at the hearth and land after the opening (473) remain
+**Status:** mostly done: the household chooses by the worth of its hour, own hours are kept out of the labour offered, a cohort with no hearth buys cooked food, and a hearth burns cooking fuel; land after the opening (473) and an urban marker remain
 
 Owner decision (530, 2026-10-20). Cooking, fetching water and fuel, cleaning, grinding and childcare take hours every
 household spends. Nothing in `data/world/needs.json` or the household model books them, so domestic service, cooks and
@@ -45,7 +45,7 @@ Religion as a need is out of scope by owner decision; it is a mod (`mods/TASKS.m
 
 ## Still to do
 
-- Cooking needs fuel at a hearth: the household's own fuel use is not yet counted apart from the warmth need.
+- (Done) Cooking fuel: `cooking_fuel_mj_per_person_per_day` in `data/world/household_work.json` (Johnson and Bryden 2012, abstract opened) is added to the warmth floor of a cohort with a hearth (`households_work.with_cooking_fuel`, `household_work_year.cohort_basket`); a hearth-less cohort burns none. Not yet measured in a whole game: compare `simulator.py economy-check` fuel prices before and after.
 - Land after the opening settles (473). Re-measure with a whole game: the hours kept back are a large share of the
   offered hours (compare `simulator.py economy-check` hired share and wage over floor before and after).
 - An urban marker, when one exists, should also remove the hearth.

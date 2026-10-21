@@ -28,7 +28,8 @@ def record_with(cash_by_agent):
 
 
 def setup_for(record):
-    return types.SimpleNamespace(currency_id=MONEY, basket_for=lambda tile: BASKET, specs=SPECS, tiles={}, opening_rate=0.05)
+    return types.SimpleNamespace(currency_id=MONEY, basket_for=lambda tile: BASKET, specs=SPECS, tiles={}, opening_rate=0.05,
+                                  household_work={}, fuel_need="warmth")
 
 
 def ledger():
