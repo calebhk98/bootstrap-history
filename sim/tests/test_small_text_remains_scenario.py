@@ -1,4 +1,5 @@
-"""Regression tests for remaining small text defects in complaints 194 and 232.
+"""SCENARIO: the wording a played game prints through the command line (a presentation check on the real data and
+real screens, with no rule to call). Regression tests for remaining small text defects in complaints 194 and 232.
 
 Complaint 194: Imperial edict node has Rome-specific flavour text
 Complaint 232 item 8: "people kept on your own staff" text appears with no context

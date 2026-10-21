@@ -74,10 +74,8 @@ plague_no_double_count
 player_choice_routes
 player_guidance_commands
 project_retry_and_risk
-route_dues_owner
 rush_filters
 rush_fiscal_controls
-small_text_remains
 staffing_closure_minimal
 state_budget
 state_collection_follows_officials
@@ -87,5 +85,4 @@ state_reach_readers
 state_spending
 step_interrupts_and_alerts
 sugar_maize_knowledge
-tile_owners
 ventures_lifecycle

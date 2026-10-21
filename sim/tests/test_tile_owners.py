@@ -1,5 +1,6 @@
 """Complaint 483: an owner map (tile -> owner and control level) seeded from the civilisation files, read by
-`tiles_held`, `country_of` and the ways record, changed only by one transfer, with one owner per tile."""
+`tiles_held`, `country_of` and the ways record, changed only by one transfer, with one owner per tile. Each rule is called on
+an owner map and stand-ins the test builds; the game wiring is in test_tile_owners_scenario."""
 import glob
 import json
 from types import SimpleNamespace
@@ -7,8 +8,26 @@ from types import SimpleNamespace
 from .harness import *  # noqa: F401,F403
 from sim.economy.api import EconomySetup
 from sim.engine import invariants
-from sim.engine.saveload import load_state, save_state
 from sim.geography.api import tile_owners, tiles_held
+
+QUICK_TOPIC = True
+
+
+class ControlStore:
+    """The `control` tile store: a tile's control level, or None."""
+
+    def __init__(self):
+        self.levels = {}
+
+    def set(self, tile, level):
+        if level is None:
+            self.levels.pop(tile, None)
+        else:
+            self.levels[tile] = level
+
+    def get(self, tile):
+        return self.levels.get(tile)
+
 
 # ---- seeded owners match the civilisation files -------------------------------------------------------------
 for path in sorted(glob.glob(os.path.join(ROOT, "data", "civilizations", "*_*.json"))):
@@ -36,70 +55,45 @@ check("a control level that the data does not list is refused", refused)
 check("the control levels are data", {"core", "tributary", "enclave", "claimed", "ungoverned"} <= set(tile_owners.control_levels()))
 
 # ---- transfer ----------------------------------------------------------------------------------------------------
-game = unopened_sim()
-home = game.civ["id"]
-held = game.home_tiles_held()
-check("the game's seeded owners match the civilisation file's tiles", held == tiles_held(game.civ) and bool(held)
-      and all(game.tile_control(tile) == tile_owners.seed_level() for tile in held))
-tile = held[0]
-setup = SimpleNamespace(tile_owners=game.tile_owner_map(), tiles={}, civ_id=home)
-check("country_of reads the owner map", EconomySetup.country_of(setup, tile) == home)
-previous = game.transfer_tile(tile, "rival", "garrisoned")
+owners, _conflicts = tile_owners.seed({"home": ["t1", "t2", "t3"]})
+controls = ControlStore()
+tile_owners.seed_controls(owners, controls)
+check("seeding writes the seed level for every owned tile", set(controls.levels.values()) == {tile_owners.seed_level()}
+      and set(controls.levels) == {"t1", "t2", "t3"})
+setup = SimpleNamespace(tile_owners=owners, tiles={}, civ_id="home")
+check("country_of reads the owner map", EconomySetup.country_of(setup, "t1") == "home")
+previous = tile_owners.transfer(owners, "t1", "rival", "garrisoned", controls=controls)
 check("a transfer moves the tile, keeps one owner and sets the level",
-      previous == home and game.tile_owner(tile) == "rival" and game.tile_control(tile) == "garrisoned"
-      and tile not in game.home_tiles_held() and game.tiles_owned_by("rival") == [tile])
-check("country_of follows the transfer", EconomySetup.country_of(setup, tile) == "rival")
+      previous == "home" and tile_owners.owner_of(owners, "t1") == "rival" and controls.get("t1") == "garrisoned"
+      and tile_owners.tiles_of(owners, "home") == ["t2", "t3"] and tile_owners.tiles_of(owners, "rival") == ["t1"])
+check("country_of follows the transfer", EconomySetup.country_of(setup, "t1") == "rival")
+check("releasing a tile leaves it unowned and clears its level",
+      tile_owners.transfer(owners, "t1", None, controls=controls) == "rival" and tile_owners.owner_of(owners, "t1") is None
+      and controls.get("t1") is None)
+tile_owners.transfer(owners, "t1", "rival", "garrisoned", controls=controls)
 check("built ways take their owner from the tiles they stand on",
-      tile_owners.way_owner(game.tile_owner_map(), tile) == "rival"
-      and tile_owners.way_owner(game.tile_owner_map(), "%s|%s" % (tile, held[1])) is None
-      and tile_owners.way_owner(game.tile_owner_map(), "%s|%s" % (held[1], held[2])) == home)
-game.state.economy.improvements["%s|%s" % (held[1], held[2])] = {"road": True}
-check("the game reports a way's owner", game.way_owners() == {"%s|%s" % (held[1], held[2]): home})
+      tile_owners.way_owner(owners, "t1") == "rival" and tile_owners.way_owner(owners, "t1|t2") is None
+      and tile_owners.way_owner(owners, "t2|t3") == "home")
 
 # ---- the invariant -------------------------------------------------------------------------------------------------
-check("the invariant holds on a fresh game", invariants.check_tile_owner_invariants(game))
-colony = {"tile": held[1], "founded_year": 0, "by": "x", "children": 0.0, "working_age": 1.0, "elderly": 0.0}
-game.state.holdings.colonies.append(dict(colony))
-try:
-    invariants.check_tile_owner_invariants(game)
-    caught = False
-except AssertionError:
-    caught = True
-check("the invariant fails when a colony stands on a tile another actor owns", caught)
-game.transfer_tile(held[1], game.state.acting_seat, "claimed")
-check("the invariant holds when the colony's seat owns its tile", invariants.check_tile_owner_invariants(game))
-game.state.seats["other"] = SimpleNamespace(holdings=SimpleNamespace(colonies=[dict(colony)]))
-try:
-    invariants.check_tile_owner_invariants(game)
-    caught = False
-except AssertionError:
-    caught = True
-del game.state.seats["other"]
-check("the invariant fails when two seats' colonies stand on one tile", caught)
-game.state.holdings.colonies.clear()
+def stand_in_game(colonies_by_seat):
+    """A game of the pieces the invariant reads: the seats' colonies, the owner map and the control store."""
+    seats = {seat: SimpleNamespace(holdings=SimpleNamespace(colonies=[{"tile": tile} for tile in tiles]))
+             for seat, tiles in colonies_by_seat.items()}
+    return SimpleNamespace(state=SimpleNamespace(seats=seats, economy=SimpleNamespace(tile_owners=owners)),
+                           world_map=None, stores=SimpleNamespace(view=lambda _name: controls))
 
-# ---- save round-trip ------------------------------------------------------------------------------------------------
-with tempfile.TemporaryDirectory() as folder:
-    path = os.path.join(folder, "save.json")
-    save_state(game, path)
-    revived = unopened_sim()
-    load_state(revived, path)
-check("owners and control levels round-trip through save and load",
-      revived.state.economy.tile_owners == game.state.economy.tile_owners
-      and revived.tile_owner(tile) == "rival" and revived.tile_control(tile) == "garrisoned")
 
-# ---- colonies use the transfer ---------------------------------------------------------------------------------------
-settler = unopened_sim(capital=1.0e12)
-settler.done.update(NODES["ben_settlement_charter"]["pre"])
-settler.done.add("ben_settlement_charter")
-settler._done_changed()
-settler.spending_power = lambda kind: settler.state.household.capital
-target = settler.settlement_candidates(False)[0]
-ok, text = settler.found_colony(target)
-check("a founded colony's tile is owned by the founding seat at the settlement level",
-      ok and settler.tile_owner(target) == settler.state.acting_seat
-      and settler.tile_control(target) == tile_owners.settlement_level() and target in settler.claimed_tiles(), text)
-check("a second claim on that tile is refused", not settler.found_colony(target)[0])
-settler.state.holdings.colonies[0].update(children=0.0, working_age=0.0, elderly=0.0)
-settler.advance_colonies(settler.state.scenario.year)
-check("a colony that dies out releases its tile", settler.tile_owner(target) is None)
+def fails(game):
+    try:
+        invariants.check_tile_owner_invariants(game)
+    except AssertionError:
+        return True
+    return False
+
+
+tile_owners.transfer(owners, "t1", "home", "garrisoned", controls=controls)
+check("the invariant holds when no colony stands on another's tile", invariants.check_tile_owner_invariants(stand_in_game({"home": []})))
+check("the invariant fails when a colony stands on a tile another actor owns", fails(stand_in_game({"other": ["t1"]})))
+check("the invariant holds when the colony's seat owns its tile", not fails(stand_in_game({"home": ["t1"]})))
+check("the invariant fails when two seats' colonies stand on one tile", fails(stand_in_game({"home": ["t1"], "other": ["t1"]})))
