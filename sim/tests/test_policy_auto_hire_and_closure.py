@@ -1,520 +1,366 @@
-"""Policies, creditors and hazard value shifts: knowledge is kept while plant is shed, the automatic hiring and training policies, staff trimming against credit, work in hand, and a hazard's gradual values delta."""
-from .harness import *  # noqa: F401,F403
+"""Policies, creditors and hazard value shifts: what a business review spares and closes, the log naming what a seat shed or
+creditors took, the payroll a household lets go, the default policy, a switch that cannot act, the stall diagnosis, the fee to
+bring a shut work back and a hazard's gradual values delta. Each rule runs on inputs or a stub the test builds. The states of a
+running game (a mothballed or forgotten work, the start gates, the year's hours, auto-hire on a rich household) are
+test_policy_auto_hire_and_closure_scenario. That knowledge categories are never abandoned is test_category_traits; the loss rule
+and the seizure of a plant are test_business_review; the cap on work in hand is test_start_money_rule."""
+QUICK_TOPIC = True
+
+import unittest
+from types import SimpleNamespace
+
+from sim.agents import business_review
+from sim.agents.api import Business
+from sim.constants import REGISTRY
+from sim.engine import data as engine_data
+from sim.engine.economy_credit import CreditMixin
+from sim.engine.hazard_window import hazards_not_yet_past
+from sim.engine.payroll_trim import payroll_means, staff_to_let_go
+from sim.engine.projects_review import SeatReview
+from sim.engine.projects_venture_quotes import VentureQuotesMixin
+from sim.engine.seat_defaults import default_policy
+from sim.engine.shock_year import ShockYearMixin
 from sim.refusal import cause_of, facts_of
-from .agent_command_helpers import ask_agent, pristine_game
+from sim.ui.proto.dispatch_ventures import _cmd_policy
+from sim.ui.proto.state_waiting import _staff_fraction_note
 
 
-def _reset_loss_scenario(game, loss):
-    """Put a shared game back to 'the loss-maker is known and nothing has acted on it yet'."""
-    for name in ("revenue", "credit_limit"):
-        game.__dict__.pop(name, None)
-    game.mothballed.discard(loss)
-    game.operating.discard(loss)
-    game.log.clear()
+class _Owner(business_review.Reviewable):
+    """An owner whose books force losses to be cut and whose creditors press; `spared` are the plants it keeps whatever they lose."""
 
-# ============================================================================
-# Round two, sections C-F: knowledge vs plant, the automatic policies, warning
-# a player before they commit to work nobody can do, and legible hours.
-# ============================================================================
-import time as _time
+    def __init__(self, business, spared=(), margins=None, cuts=True, presses=True):
+        self.business = business
+        self.spared, self.margins, self.cuts, self.presses = set(spared), margins or {}, cuts, presses
+        self.shut_plants, self.seized = [], []
 
-# --- C: knowledge is not a building. A tester watched creditors make the
-# founder forget Newton's laws and basic textile technique. "physics" was
-# already protected; "theory" and "knowledge" (what the tree itself calls the
-# rest of abstract science) were not, even though several of those nodes carry
-# real upkeep the same way Newton's laws does. A loss-making node that is
-# neither is the control: it SHOULD still be shed.
-# The control must be a real establishment node that still carries upkeep
-# under the JOB 1 upkeep audit - a technique such as hom_eraser_breadcrumb has
-# zero upkeep there (a rubber eraser is a technique, not an establishment) and
-# so never exercises this path. md2_sand_filtration stayed in the audit's
-# kept "mining" category and still carries upkeep.
-_KNOW1, _KNOW2, _LOSS = "md2_cell_theory", "md2_dna", "md2_sand_filtration"
-s = pristine_game()
-check("theory and knowledge categories are protected the same way physics is",
-      s.never_abandon(_KNOW1) and s.never_abandon("sc2_physics_newtons_laws"),
-      "%s cat=%s" % (_KNOW1, NODES[_KNOW1]["cat"]))
-check("a loss-making, non-knowledge node is NOT protected (the control case)",
-      not s.never_abandon(_LOSS), NODES[_LOSS]["cat"])
+    def cuts_losses_now(self, world):
+        return self.cuts and bool([key for key in self.business.operating() if self.margins.get(key, 0.0) < 0.0])
 
-# One household in arrears takes the loss-shedding scenarios in turn (the control first, while the loss-maker is still shut).
-_neg = unopened_sim(capital=-100000.0)
-_neg.state.founder.policy["auto_shed"] = True   # shedding is the owner's policy; these checks are about what it sheds
-# The control: a loss-maker that is SHUT is left alone entirely.
-s_sh = _neg
-s_sh.done.add(_LOSS); s_sh._done_changed()
-s_sh.revenue = lambda: 0.0
-s_sh.shed_loss_makers(100)
-check("a loss-maker that is already shut is not unlearned to no purpose",
-      _LOSS in s_sh.done and _LOSS not in s_sh.mothballed,
-      "known=%s mothballed=%s" % (_LOSS in s_sh.done, _LOSS in s_sh.mothballed))
+    def spares_plant(self, entry_key, world):
+        return entry_key in self.spared
 
-_reset_loss_scenario(_neg, _LOSS)
-s = _neg
-s.done.add(_LOSS); s.done.add(_KNOW1)
-s._done_changed()
-# IT HAS TO BE OPEN TO BE WORTH CLOSING. Upkeep follows `operating`, so a
-# concern already shut is already costing nothing; shedding it saves nothing
-# and would only destroy what you know. shed_loss_makers scanned `done` and
-# did exactly that.
-s.operating.add(_LOSS); s.operating.add(_KNOW1)
-s.revenue = lambda: 0.0        # force a loss regardless of the rest of the economy
-s.shed_loss_makers(100)
-check("shed_loss_makers closes a loss-making concern, and spares knowledge",
-      _LOSS not in s.operating and _KNOW1 in s.operating,
-      "loss-maker closed=%s knowledge closed=%s"
-      % (_LOSS not in s.operating, _KNOW1 not in s.operating))
-check("...and what it closed is still something you know how to do",
-      _LOSS in s.done and _KNOW1 in s.done,
-      "still known: %s %s" % (_LOSS in s.done, _KNOW1 in s.done))
-check("shed_loss_makers mothballs, and NAMES, what it takes",
-      _LOSS in s.mothballed and any(_LOSS in message for _, message in s.log),
-      [message for _, message in s.log])
-_reset_loss_scenario(_neg, _LOSS)
-s = _neg
-s.done.add(_LOSS); s.done.add(_KNOW2)
-s._done_changed()
-# A creditor seizes a CONCERN, not a memory, so it has to be open to be taken.
-s.operating.add(_LOSS); s.operating.add(_KNOW2)
-s.credit_limit = lambda: 0.0   # force straight past the credit floor
-s.enforce_credit_limit(100)
-# NOW ABOUT WHAT IS RUNNING, not about what is known. Creditors close and sell
-# up a concern; they cannot take away your memory of how it worked, which is
-# also why a weird-play tester could reach a state where a node was
-# simultaneously forgotten and running and no verb would touch it.
-check("creditors close a loss-making concern and cannot touch knowledge",
-      _LOSS not in s.operating and _KNOW2 in s.operating,
-      "loss-maker closed=%s knowledge closed=%s"
-      % (_LOSS not in s.operating, _KNOW2 not in s.operating))
-check("a concern the creditors took is still a thing you know how to do",
-      _LOSS in s.done,
-      "still known: %s" % (_LOSS in s.done))
-check("creditors' seizure mothballs, and NAMES, what it takes",
-      _LOSS in s.mothballed and any(_LOSS in message for _, message in s.log),
-      [message for _, message in s.log])
+    def standing_margin(self, entry_key, world):
+        return self.margins.get(entry_key, 0.0)
 
-# --- C: a repossessed work must not look like fresh research
-_pos = unopened_sim(capital=100000.0)
-s = _pos
-s.done.add(_LOSS); s._done_changed()      # you BUILT it; that is what mothballing means
-s.mothballed.add(_LOSS)
-ok, why = s.start_reason(_LOSS)
-check("a mothballed work refuses to be started as if it were new research",
-      not ok and s.start_blockers(_LOSS)[0]["cause"] == "mothballed", s.start_blockers(_LOSS))
-avail = S._agent_available(s, NODES, {"all": True})
-check("a mothballed work does not appear in available looking like new research",
-      not any(entry["id"] == _LOSS for entry in avail["available"]), avail["count"])
+    def creditors_press(self, world):
+        return self.presses and bool([key for key in self.business.operating() if self.margins.get(key, 0.0) < 0.0])
 
-# --- ROUND 8: THE DEADLOCK. A play tester lost precision_three_plate to a
-# third-century sack and could not get it back by any verb: `start` sent them
-# to `restore`, `restore` said they no longer knew how, `open` said they had
-# not built it, `mothball` said there was nothing to shut. That node gates the
-# whole precision branch, so `available` read "0 startable now" for a hundred
-# and eighty years while they held a quarter of a billion denarii.
-_pos.done.discard(_LOSS)                  # known no longer, but still mothballed
-_pos._done_changed()
-s_dl = _pos
-s_dl.trades_created.add("engineer")
-s_dl.employees["engineer"] = 2.0
-s_dl.mothballed.add(_LOSS)                # mothballed, and NOT known: the trap
-ok_dl, why_dl = s_dl.start_reason(_LOSS)
-check("a work whose knowledge was destroyed can be built again",
-      ok_dl, why_dl)
-ok_rs, why_rs = s_dl.restore_work(_LOSS)
-check("...and restore says to build it, not that it cannot be restored",
-      not ok_rs and "start" in why_rs, why_rs)
-_av_dl = S._agent_available(s_dl, NODES, {"all": True})
-check("...and it is visible in available, not hidden behind a stale mothball",
-      any(entry["id"] == _LOSS for entry in _av_dl["available"]), _av_dl["count"])
-s_dl.start_project(_LOSS)
-check("...and starting it clears the stale mothball entry",
-      _LOSS not in s_dl.mothballed and _LOSS in s_dl.active,
-      (_LOSS in s_dl.mothballed, _LOSS in s_dl.active))
+    def shut(self, entry_key, reason, world):
+        self.shut_plants.append((entry_key, reason))
+        self.business.mothball(entry_key, 100, reason)
 
-# The path that created it: insolvency abandonment discarded from `done` AND
-# added to `mothballed`, the same pair of lines already fixed twice elsewhere.
-_reset_loss_scenario(_neg, _LOSS)
-s_ab = _neg
-s_ab.done.add(_LOSS); s_ab._done_changed()
-s_ab.operating.add(_LOSS)
-s_ab.revenue = lambda: 0.0
-s_ab.state.household.capital = -100000.0   # in arrears, as the household was made; earlier scenarios settled the debt
-s_ab._step_money_seat()    # the year's money phase is where insolvency sheds
-check("no path in the engine leaves a work mothballed but unknown",
-      _LOSS in s_ab.mothballed and not (s_ab.mothballed - s_ab.done),
-      sorted(s_ab.mothballed - s_ab.done)[:4])
-
-# --- D1: auto_hire must not take on staff this year's income cannot carry
-s = unopened_sim(civ="rome_100ad", capital=400.0, manual=False, events=False)
-s._step_staff()    # the year's staff phase is where auto_hire acts
-check("auto_hire does not overcommit turn one against a thin surplus",
-      s.scholars < 0.2 and s.artisans < 0.6,
-      "scholars %.3f artisans %.3f capital %.1f" % (s.scholars, s.artisans, s.capital))
-
-# --- D2/E: auto_train (and a `start` warning) must be demand-led: driven by
-# what is startable now but for the trade, not by every node whose direct
-# prerequisites happen to be satisfied somewhere deep in the tree.
-s = sim(civ="rome_100ad", capital=1e6, manual=True, events=False, surveyed=())
-ok_ig, why_ig = s.start_reason("ag2_hydrometer", ignore_trade=True)
-check("ignore_trade accepts a node that is startable but for the trade alone",
-      ok_ig, why_ig)
-ok_norm, why_norm = s.start_reason("ag2_hydrometer")
-_blocker_norm = s.start_blockers("ag2_hydrometer")[0]
-check("without ignore_trade the same node is refused specifically for the trade",
-      not ok_norm and _blocker_norm["cause"] == "absent_trades"
-      and "optician" in [trade for trade in NODES["ag2_hydrometer"]["lab"] if not s.labour.trade_available(trade)],
-      _blocker_norm)
-s.done.update(NODES["ag2_cold_store"]["pre"])  # prerequisites held, so only staffing can refuse
-ok_staff, why_staff = s.start_reason("ag2_cold_store", ignore_trade=True)
-check("ignore_trade still refuses a node blocked by missing STAFF, not just the trade",
-      not ok_staff and s.start_blockers("ag2_cold_store")[0]["cause"] == "craft_staff", why_staff)
-
-node = "ag2_cold_store"
-for p in NODES[node]["pre"]:
-    s.done.add(p)
-s.artisans, s.scholars = 10.0, 10.0
-r0 = S._agent_dispatch(s, NODES, {"cmd": "start", "id": node})
-check("start refuses outright when a needed trade has never been taught",
-      not r0["ok"] and r0.get("blocked_cause") == "absent_trades"
-      and "engineer" in [trade for trade in NODES[node]["lab"] if not s.labour.trade_available(trade)], r0)
-s.labour.train("engineer", 2)          # training begun; nobody is ready for two years
-r1 = S._agent_dispatch(s, NODES, {"cmd": "start", "id": node})
-check("start accepts work nobody can do yet only WITH a warning naming the trade",
-      r1["ok"] and "engineer" in r1.get("warning", ""), r1)
-
-# --- D4: fractional staff counts are explained, not silently shown (D1's game, one year in)
-st = S._agent_state(s, NODES, {})
-check("a fractional staff count comes with an explanation of what the fraction means",
-      (abs(s.scholars - round(s.scholars)) < 0.02 and abs(s.artisans - round(s.artisans)) < 0.02)
-      or bool(st.get("staff_are_fractional_because")),
-      "scholars %.3f artisans %.3f" % (s.scholars, s.artisans))
-st2 = S._agent_state(pristine_game(), NODES, {})
-check("a whole-number staff carries no fraction footnote",
-      st2.get("staff_are_fractional_because") is None, st2.get("staff_are_fractional_because"))
-
-# --- F: say how the founder's hours were spent
-ratios = []
-# a project the society can staff, with the purse far short of its instalment, so the very first year shows a refund
-s.start_project("scientific_method")
-s.capital = -s.credit_limit() * 0.1
-s._step_market = lambda: None   # the hours and the refund come from the work phases; the market close adds nothing to them
-for _ in range(3):
-    s.step()
-    h = s.hours_this_year
-    total = h["wage_work"] + h["teaching"] + h["offered_to_projects"] + h["unused"]
-    check("a year's founder hours are fully accounted for (year %d)" % s.year,
-          abs(total - h["available"]) < 1e-6, h)
-    for k, pst in s.active.items():
-        off = pst.get("hours_offered_this_year", 0.0)
-        eff = pst.get("hours_effective_this_year", 0.0)
-        if off > 1:
-            ratios.append(eff / off)
-    if any(abs(ratio - 0.5) > 0.02 for ratio in ratios):
-        break     # the property is shown; further years only cost time
-check("an underfunded project's refund is proportional, not always exactly half",
-      any(abs(ratio - 0.5) > 0.02 for ratio in ratios), ratios)
-st = S._agent_state(s, NODES, {})
-check("state reports the year's hours summary",
-      st.get("hours_this_year") == s.hours_this_year, st.get("hours_this_year"))
-check("state reports hours offered/effective per active project",
-      not st["active"] or any("hours_offered_this_year" in value for value in st["active"].values()),
-      st["active"])
-
-# --- performance: `available` must return quickly even deep in the tree under
-# fog. A regression here (start_reason recursing into is_visible, which
-# recurses into start_reason, unmemoised) took a single `available` call under
-# fog on norse_900ad from instant to over a minute.
-_norse = sim(civ="norse_900ad")
-s = _norse
-s.fog = True
-s.revealed = set()
-t0 = _time.time()
-S._agent_available(s, NODES, {})
-elapsed = _time.time() - t0
-check("available returns quickly under fog, not in tens of seconds",
-      elapsed < 5.0, "%.2fs" % elapsed)
-s.fog = False
-s.revealed = set()
-
-# ============================================================================
-# Round two, section P: a hazard can carry a `values` delta, the same way a
-# technology does, and it must land gradually and be visible while it is
-# happening. Norse Christianisation (995-1100) is the case in point: it
-# carries a `values` block in the civ file, not a placeholder ENGINE TODO
-# note.
-# ============================================================================
-
-_christ = next(hazard for hazard in S.load_civ("norse_900ad")["hazards"]
-              if hazard["name"].startswith("Christianisation"))
-check("Christianisation now carries a values delta, not just a TODO note",
-      bool(_christ.get("values")), _christ.get("values"))
-
-# --- gradual, not a single jump: one year of a 106-year hazard should move
-# the needle by roughly a hundredth of the total, not all of it at once.
-s = _norse
-before = dict(s.value_weights)
-s._shocks(995)
-step1 = s.value_weights["w_religious_rigidity"] - before["w_religious_rigidity"]
-total_asked = _christ["values"]["w_religious_rigidity"]
-check("a hazard's values shift lands gradually: one year moves it a fraction "
-      "of the total, not the whole amount",
-      0 < step1 < total_asked * 0.5, "%.4f of %.2f" % (step1, total_asked))
-
-# --- and by the hazard's last year the FULL delta has landed, spread evenly
-# across every year in between (995 already applied above; finish the span).
-for yr in range(996, 1101):
-    s._shocks(yr)
-total_moved = s.value_weights["w_religious_rigidity"] - before["w_religious_rigidity"]
-check("a hazard's values shift reaches its full stated amount across the "
-      "full span of years",
-      abs(total_moved - total_asked) < 1e-6,
-      "%.6f vs %.2f asked" % (total_moved, total_asked))
-
-# --- visible WHILE it happens: the society turning against the player has to
-# show up in the log more than once, and not only at the first or last year,
-# or a player has no way to see it coming except by reading the future.
-shift_years = [y for y, msg in s.log if "values are shifting" in msg]
-check("a values shift is logged more than once while the hazard is running, "
-      "not only as a single note",
-      len(shift_years) >= 3, shift_years)
-check("some of those log lines land mid-hazard, not only at the first or "
-      "last year",
-      any(995 < y < 1100 for y in shift_years), shift_years)
-
-# --- a hazard with no staff_loss/sack_chance/output_factor/real_erosion at
-# all, only `values`, must still be applied (the mechanism must not be
-# piggy-backing on one of the four old fields being present).
-s2 = _norse
-s2.civ = dict(s2.civ)
-s2.civ["hazards"] = [{"name": "values-only test hazard",
-                      "values": {"w_novelty": -0.2}, "years": [900, 909]}]
-s2.value_weights = s2.civ["values"] = dict(s2.value_weights)
-f0 = s2.value_weights["w_novelty"]
-for yr in range(900, 910):
-    s2._shocks(yr)
-check("a hazard that carries ONLY a values delta (no staff_loss, sack_chance, "
-      "output_factor or real_erosion) still moves the society",
-      abs(s2.value_weights["w_novelty"] - (f0 - 0.2)) < 1e-6,
-      "%.4f -> %.4f" % (f0, s2.value_weights["w_novelty"]))
-
-# --- foreseeable, not just felt: knowledge_risk must let a player see the
-# shift coming before it starts, the same complaint that section G raised
-# about Christianisation producing "no event and no visible consequence".
-kr = ask_agent(pristine_game("norse_900ad"), cmd="risk")["knowledge_risk"]
-christ_row = next((hazard for hazard in kr["known_hazards_ahead"]
-                   if hazard["name"].startswith("Christianisation")), None)
-check("knowledge_risk lists Christianisation among the hazards ahead, "
-      "before it starts",
-      christ_row is not None, kr.get("known_hazards_ahead"))
-check("knowledge_risk's note on Christianisation says what it does to the "
-      "society, not only what it does to output",
-      christ_row is not None and "values" in christ_row.get("note", "").lower(),
-      christ_row and christ_row.get("note"))
-
-# --- the "Norse cannot be sacked" finding this mechanism must not disturb:
-# a values shift is not a sack, and Christianisation still has none of the
-# sack_chance fields that would make it one.
-check("Christianisation still carries no sack_chance (a values shift is not "
-      "a sacking, and Norse assembly society still has no capital to sack)",
-      "sack_chance" not in _christ, _christ)
-
-# 2. Staff force-fired to zero with credit still to spare, and nothing logged.
-# The tester's exact condition: staff on the books, capital NEGATIVE but only a
-# third of the way into a credit line nobody has withdrawn. A household with
-# credit left borrows and makes payroll; that is what credit is for.
-# (a) A payroll the remaining credit COVERS costs you nobody but attrition.
-s = sim(surveyed=())
-s.capital = 22400.0 * s.labour.money_per_labour_hour()   # 22400 labour hours in coin (sim(capital=) is in the opening's units, which the economy then reprices)
-s.policy["auto_hire"] = False
-# One labourer: wages track labour tightness now, so a smith or two people
-# would exceed the credit line and rightly be trimmed. The precondition on
-# the check keeps the case honest.
-s.labour.hire("labourer", 1)
-s.capital = -s.credit_limit() * 0.35
-_before = sum(s.employees.values())
-# What the household can still spend on wages: income plus remaining credit,
-# after the costs that are not wages.
-_room = (s.revenue() + s.capital + s.credit_limit()
-         - (s.living_cost() - s.labour.wage_bill()) - s.upkeep())
-_payroll_before = s.labour.wage_bill()
-s._step_staff()    # the staff phase is where a payroll is trimmed
-_after = sum(s.employees.values())
-check("staff are not let go while there is still credit to pay them",
-      _room > _payroll_before and _after > _before * 0.95,
-      "%.2f -> %.2f with %.0f still to spend against a %.0f payroll"
-      % (_before, _after, _room, s.labour.wage_bill()))
-
-# (b) A payroll it only PARTLY covers costs you part of the staff, not all of
-#     it. The tester's five went to zero in one step with two thirds of the
-#     credit line untouched; what should happen is that you keep as many as
-#     your remaining means will pay for.
-s = sim(surveyed=())
-s.capital = 22400.0 * s.labour.money_per_labour_hour()   # 22400 labour hours in coin (sim(capital=) is in the opening's units, which the economy then reprices)
-s.policy["auto_hire"] = False
-s.labour.hire("smith", 5)
-# Means that cover a bit over half the payroll: what is left of the credit line plus the year's revenue,
-# after upkeep, mining and living costs other than wages, as the staff step measures it. Living costs
-# can move with capital, so settle capital until the means match.
-for _settle in range(20):
-    _means = (s.revenue() - s.upkeep() - (s.living_cost() - s.labour.wage_bill()) - s.mine_operating_cost()
-              + s.capital + s.credit_limit())
-    s.capital += 0.6 * s.labour.wage_bill() - _means
-_b3 = sum(s.employees.values())
-s._step_staff()
-check("an unaffordable payroll is trimmed to what you can pay, not emptied",
-      0.5 < sum(s.employees.values()) < _b3,
-      "%.2f -> %.2f" % (_b3, sum(s.employees.values())))
-
-# ...and when they DO go, because there is genuinely no money left to borrow,
-# it is said. The old code logged only in the branch that never happened.
-s = sim(surveyed=())
-s.capital = 22400.0 * s.labour.money_per_labour_hour()   # 22400 labour hours in coin (sim(capital=) is in the opening's units, which the economy then reprices)
-s.policy["auto_hire"] = False
-s.labour.hire("smith", 5)
-s.capital = -s.credit_limit() * 1.5
-_b2 = sum(s.employees.values())
-s._step_staff()
-check("losing staff you cannot pay is written in the log, never silent",
-      sum(s.employees.values()) < _b2
-      and any(cause_of(message) == "staff_left_unpaid" for _year, message in s.log),
-      "%.2f -> %.2f, log %r" % (_b2, sum(s.employees.values()), s.log[-3:]))
-
-# 4. auto_shed discards technologies you built - under fog the only score there
-#    is - and it was on by default for a player.
-_manual_policy, _optimizer_policy = pristine_game().policy, unopened_sim(manual=False).policy
-check("nothing that deletes your work is on by default for a player",
-      _manual_policy["auto_shed"] is False and _optimizer_policy["auto_shed"] is True,
-      (_manual_policy["auto_shed"], _optimizer_policy["auto_shed"]))
-
-# --- the sweep of every playtest note: what was still live ------------------
-# S2. `start` took all 104 available projects in a fresh England game - 43,914
-# denarii of work in hand against 400 in cash and a displayed credit limit of
-# 1,503 - and put the player at -3,672 one step later. `help economy` promises
-# "as far as somebody will lend you and no further"; nothing enforced it.
-s = unopened_sim(civ="england_1300")
-_taken, _refused = 0, None
-for _k in list(s.order):
-    if s.can_start(_k):
-        _ok, _why = s.start_project(_k)
-        if _ok:
-            _taken += 1
-        elif "work in hand" in (_why or ""):
-            _refused = _why
-            break
-_owed = sum(project_state.get("cost_left") or 0.0 for project_state in s.active.values())
-check("you cannot commit to more work than cash and credit could ever cover",
-      _refused is not None and _owed <= max(0.0, s.capital) + s.credit_limit() + 1,
-      "took %d projects, owing %.0f against %.0f of cash and credit"
-      % (_taken, _owed, max(0.0, s.capital) + s.credit_limit()))
-
-# S14. A node that costs nothing to build and 20 a year to keep could be shut
-# down and brought back around the annual tick for nothing, so its upkeep was
-# optional. The engine already gets this right for mines.
-# The candidate is named directly rather than found by filter (up>0, no
-# prerequisite, project_cost under 1 denarius): the JOB 1 upkeep audit zeros
-# `up` on every technique that filter would match, and every remaining
-# up>0/no-prerequisite/near-free node turns out to be something auto-granted
-# on turn one (a capability rung, a road network) - excluded by `not in
-# s.granted` and so invisible to the filter too. There is also a sharper
-# reason not to compute this dynamically: `s.done.add` below bypasses
-# `start`'s own prerequisite check, but restore_work has its OWN separate
-# check ("you no longer have what it stands on") that reads real
-# prerequisites regardless of how `done` was populated, so a candidate with
-# unmet prerequisites makes restore_work silently refuse and charge nothing -
-# which reads as exactly the bug this check exists to catch, for a completely
-# different reason. md2_sand_filtration is not
-# auto-granted (its `ph` is not zero), and keeps real mining-establishment
-# upkeep under the audit, so it is named directly rather than found.
-s.capital = 50000.0
-_free = ["md2_sand_filtration"]
-run_it(s, _free[0], *NODES[_free[0]]["pre"])  # the work runs, and restore_work refuses while a prerequisite is shut
-s.mothball_work(_free[0])
-_cap = s.capital
-s.restore_work(_free[0])
-check("shutting a work down and reopening it is never free",
-      _cap - s.capital >= NODES[_free[0]]["up"],
-      "%s round trip cost %.0f against %.0f a year of upkeep"
-      % (_free[0], _cap - s.capital, NODES[_free[0]]["up"]))
-
-# --- a run that has stopped has to say so --------------------------------
-# A weird-play tester's "most important finding": a run sat at exactly -924.5
-# denarii for fifty years, completing nothing, while INSOLVENCY SETTLED fired
-# once a decade for ever, and nothing anywhere said the run had effectively
-# stopped or that it was escapable. It WAS escapable - they got out by working
-# for wages - which is exactly why silence was the defect.
-s = _norse
-s.capital = 40000.0
-s.labour.hire("smith", 3)
-_loser = [node_id for node_id in NODES if NODES[node_id]["up"] - NODES[node_id]["rev"] > 1e-6 and NODES[node_id]["rev"] > 0][:1]
-if _loser:
-    s.done.add(_loser[0]); s._done_changed(); s.open_venture(_loser[0])
-s.capital = -900.0
-s.insolvent_years = 12
-# wage work is advised only when it pays more than the standing job already sells those hours for, so this
-# founder holds no trade to beat
-s.revenue = s.revenue_capacity = lambda: 0.0
-s.held_trade = lambda: None
-_diag = s.stall_diagnosis()
-check("a run that has effectively stopped says so, and says what would restart it",
-      _diag and _diag["what_would_change_it"]
-      # "work for wages" became "work as a <trade>", because advice that does
-      # not say which job to take can be followed into a loss.
-      and any(reason.startswith("work as a ") for reason in _diag["what_would_change_it"]),
-      _diag)
-_solvent_diagnosis = pristine_game("norse_900ad").stall_diagnosis()
-check("a solvent run is not told it is stuck", _solvent_diagnosis is None, _solvent_diagnosis)
-
-# --- the invariant behind a whole class of contradiction ---------------------
-# A weird-play tester reached, in seven years from a fresh start, a node that
-# was simultaneously forgotten and running: `state` said the concern was
-# running, `ventures` billed for it, `money` charged nothing, and all four
-# verbs refused it on mutually contradictory grounds - `start` said restore it,
-# `restore` said start it, `open` said you do not know it, `mothball` said you
-# never built it. The entry could never be cleared. Every one of those symptoms
-# is the same broken invariant: you cannot be running something you do not know
-# how to do.
-def _operating_subset_of_done(sim_state):
-    return sorted(sim_state.operating - sim_state.done)
+    def receive_seizure(self, entry_key, proceeds, world):
+        self.seized.append(entry_key)
 
 
-s = _norse
-s.capital = -100000.0
-s.done.add(_LOSS); s._done_changed(); s.operating.add(_LOSS)
-s.credit_limit = lambda: 0.0
-s.enforce_credit_limit(100)
-check("creditors' seizure cannot leave you running what you no longer know",
-      not _operating_subset_of_done(s), _operating_subset_of_done(s))
+class BusinessReviewSparesAndLeavesAlone(unittest.TestCase):
+    """A loss-maker is shut and a spared one (knowledge, or what the goal needs) is not; a shut plant is left alone."""
 
-# One optimizer game in Han: a rich household's first year hires, and the invariant is read after it.
-s = sim(civ="han_china_100ad", manual=False)
-# 8. `policy auto_hire on` must still grow the staff of a household that can pay for it. The
-#    no-surplus case (no hiring floor under the affordability scale) is the D1 check above.
-# Han's coin is small, so a fixed purse is a fraction of a labourer-year.
-s.capital = 1000 * s.labour.market.quote_annual("labourer")
-s.policy["auto_hire"] = True
-run_it(s, _LOSS, *NODES[_LOSS]["pre"])   # a household with something running, so the invariant read below is not vacuous
-s._step_market = lambda: None            # hiring and shedding act in the staff and money phases, not in the market close
-s.step()
-check("auto_hire on a rich household actually hires",
-      sum(s.employees.values()) > 1.0,
-      "staff %.2f on %.0f" % (sum(s.employees.values()), s.capital))
+    def _review(self, rules, spared=(), shut=()):
+        business = Business.running(["shop", "school", "theory"])
+        for entry_key in shut:
+            business.mothball(entry_key, 99, "by_choice")
+        owner = _Owner(business, spared=spared, margins={"shop": -5.0, "school": -1.0, "theory": -9.0})
+        closed = business.review(owner, None, rules)
+        return business, owner, closed
 
-check("a long run never ends up running something it does not know",
-      s.operating and not _operating_subset_of_done(s), _operating_subset_of_done(s)[:5])
+    def test_a_loss_making_plant_that_is_not_spared_is_shut_and_a_spared_one_is_kept(self):
+        business, owner, closed = self._review((business_review.LOSS_MAKING,), spared={"theory"})
+        self.assertEqual({entry_key for entry_key, _reason in owner.shut_plants}, {"shop", "school"})
+        self.assertEqual(business.state_of("theory"), "operating")
 
-# A play tester spent about eight years and 5,952 denarii working out that
-# negative capital silently disables hiring and opening while both switches
-# still read ON.
-s = _pos
-s.policy["auto_hire"] = True
-s.policy["auto_open"] = True
-s.capital = -500.0
-_pol = S._agent_dispatch(s, NODES, {"cmd": "policy"})
-check("a switch that is on but cannot act says so",
-      set(_pol.get("switched_on_but_cannot_act_right_now") or {})
-      >= {"auto_hire", "auto_open"},
-      _pol.get("switched_on_but_cannot_act_right_now"))
-check("...and says nothing when they all can",
-      "switched_on_but_cannot_act_right_now" not in
-      S._agent_dispatch(unopened_sim(capital=50000.0), NODES, {"cmd": "policy"}),
-      "field present on a solvent household")
+    def test_the_creditors_take_the_worst_loss_makers_but_not_what_is_spared(self):
+        business, owner, closed = self._review((business_review.CREDITOR_SEIZURE,), spared={"theory"})
+        self.assertNotIn("theory", owner.seized)
+        self.assertEqual(business.state_of("theory"), "operating")
+        self.assertEqual(owner.seized[0], "shop")
+        self.assertTrue(all(reason == business_review.CREDITOR_SEIZURE for _key, reason in closed))
+
+    def test_a_plant_already_shut_is_not_shut_again(self):
+        _business, owner, closed = self._review((business_review.LOSS_MAKING,), shut={"shop"})
+        self.assertNotIn("shop", [entry_key for entry_key, _reason in owner.shut_plants])
+        self.assertNotIn("shop", [closure.entry_key for closure in closed])
+
+
+class SeatSparesWhatItMustKeep(unittest.TestCase):
+    """The founder's seat spares knowledge (never abandoned) and what the society granted; the rest it may shed."""
+
+    def _seat(self, never_abandoned=(), granted=()):
+        sim = SimpleNamespace(state=SimpleNamespace(scenario=SimpleNamespace(year=1), projects=SimpleNamespace(granted=set(granted))),
+                              never_abandon=lambda node_id: node_id in never_abandoned)
+        return SeatReview(SimpleNamespace(_sim=sim))
+
+    def test_knowledge_and_what_is_granted_are_spared(self):
+        seat = self._seat(never_abandoned={"theory"}, granted={"road"})
+        self.assertTrue(seat.spares_plant("theory"))
+        self.assertTrue(seat.spares_plant("road"))
+
+    def test_an_ordinary_concern_is_not(self):
+        self.assertFalse(self._seat(never_abandoned={"theory"}).spares_plant("shop"))
+
+
+class LogNamesWhatClosed(unittest.TestCase):
+    """The log says which concerns a seat shed, so a player can see what was lost and that the knowledge is kept."""
+
+    def _household(self, capital):
+        return SimpleNamespace(capital=capital, log=[])
+
+    def _shed(self, closed, capital):
+        household = self._household(capital)
+        host = SimpleNamespace(state=SimpleNamespace(household=household),
+                               review_ventures=lambda rules, year: [business_review.Closure(key, business_review.LOSS_MAKING) for key in closed])
+        CreditMixin.shed_loss_makers(host, 100)
+        return household.log
+
+    def test_a_shed_concern_is_named_in_the_log_with_a_coded_kind(self):
+        log = self._shed(["md2_sand_filtration"], -5.0)
+        self.assertEqual(len(log), 1)
+        self.assertEqual(cause_of(log[0][1]), "arrears_closed_concerns")
+        self.assertEqual(facts_of(log[0][1])["concerns"], ["md2_sand_filtration"])
+
+    def test_nothing_shed_logs_nothing(self):
+        self.assertEqual(self._shed([], -5.0), [])
+
+    def test_the_log_says_when_it_was_arrears_that_forced_it(self):
+        in_arrears = str(self._shed(["a"], -5.0)[0][1])
+        solvent = str(self._shed(["a"], 5.0)[0][1])
+        # presentation: the line says the closure was forced by arrears only when it was
+        self.assertIn("in arrears", in_arrears)
+        self.assertNotIn("in arrears", solvent)
+
+    def test_creditors_taking_concerns_are_named_in_the_log(self):
+        household = SimpleNamespace(capital=-1000.0, log=[], slaves=0, freedmen=0)
+        host = SimpleNamespace(
+            state=SimpleNamespace(household=household, projects=SimpleNamespace(active={})),
+            credit_limit=lambda: 0.0, mothball_mines=lambda: None,
+            review_ventures=lambda rules, year: [business_review.Closure("shop", business_review.CREDITOR_SEIZURE)])
+        CreditMixin.answer_exhausted_credit(host, 100)
+        taken = [line for _year, line in household.log if cause_of(line) == "creditors_took"]
+        self.assertEqual(len(taken), 1)
+        # presentation: the line names the concern and promises the knowledge is kept
+        self.assertIn("shop", taken[0])
+        self.assertIn("knowledge", taken[0])
+
+    def test_creditors_who_took_nothing_say_nothing(self):
+        household = SimpleNamespace(capital=-1000.0, log=[], slaves=0, freedmen=0)
+        host = SimpleNamespace(state=SimpleNamespace(household=household, projects=SimpleNamespace(active={})),
+                               credit_limit=lambda: 0.0, mothball_mines=lambda: None, review_ventures=lambda rules, year: [])
+        CreditMixin.answer_exhausted_credit(host, 100)
+        self.assertEqual(household.log, [])
+
+
+class PayrollLetGo(unittest.TestCase):
+    """A household that cannot pay its people lets go only the part of the payroll its means do not cover."""
+
+    WAGES = {"smith": 100.0, "labourer": 20.0}
+
+    def _cuts(self, payroll, means, employees):
+        return staff_to_let_go(payroll, means, employees, lambda trade: self.WAGES.get(trade, 0.0))
+
+    def test_the_means_are_the_takings_after_other_costs_plus_what_a_lender_will_still_advance(self):
+        self.assertEqual(payroll_means(1000.0, 800.0, 50.0, 300.0), 200.0 + 350.0)
+        self.assertEqual(payroll_means(1000.0, 800.0, -100.0, 300.0), 200.0 + 200.0)       # arrears use up the line
+        self.assertEqual(payroll_means(1000.0, 800.0, -900.0, 300.0), 200.0)                # past the line adds nothing
+
+    def test_nobody_goes_while_the_means_cover_the_payroll(self):
+        self.assertEqual(self._cuts(500.0, 500.0, {"smith": 5.0}), {})
+        self.assertEqual(self._cuts(500.0, 900.0, {"smith": 5.0}), {})
+
+    def test_an_unaffordable_payroll_is_trimmed_to_what_can_be_paid_not_emptied(self):
+        cuts = self._cuts(500.0, 300.0, {"smith": 5.0})
+        self.assertEqual(cuts, {"smith": 2})          # 200 short is two smiths
+        self.assertLess(sum(cuts.values()), 5.0)
+
+    def test_the_dearest_trade_goes_first_and_whole_people_are_let_go(self):
+        cuts = self._cuts(1000.0, 880.0, {"smith": 5.0, "labourer": 20.0})
+        self.assertEqual(cuts, {"smith": 2})          # 120 short: two smiths (200) rather than six labourers
+        short_by_a_little = self._cuts(1000.0, 999.0, {"smith": 5.0, "labourer": 20.0})
+        self.assertEqual(short_by_a_little, {"smith": 1})   # rounded up to a whole person
+
+    def test_with_no_money_left_to_borrow_the_whole_staff_can_go(self):
+        cuts = self._cuts(600.0, 0.0, {"smith": 5.0, "labourer": 5.0})
+        self.assertEqual(cuts, {"smith": 5.0, "labourer": 5.0})
+
+    def test_nobody_is_cut_beyond_the_staff_held(self):
+        self.assertEqual(self._cuts(1000.0, 0.0, {"smith": 2.0}), {"smith": 2.0})
+
+    def test_a_trade_with_no_wage_is_skipped(self):
+        self.assertEqual(self._cuts(100.0, 0.0, {"ghost": 3.0, "labourer": 5.0}), {"labourer": 5.0})
+
+
+class PolicyDefaults(unittest.TestCase):
+    def test_nothing_that_deletes_your_work_is_on_by_default_for_a_player(self):
+        self.assertIs(default_policy(True)["auto_shed"], False)
+        self.assertIs(default_policy(False)["auto_shed"], True)
+
+    def test_a_player_plays_by_hand_and_the_optimizer_automates(self):
+        player, optimizer = default_policy(True), default_policy(False)
+        for name in ("auto_hire", "auto_buy_people", "auto_train", "auto_open"):
+            self.assertIs(player[name], False, name)
+            self.assertIs(optimizer[name], True, name)
+
+
+class SwitchThatCannotAct(unittest.TestCase):
+    """`policy` says which switches are on but cannot act today."""
+
+    def _policy_reply(self, capital, frozen_until=0, year=100):
+        household = SimpleNamespace(reserve_craftsmen=0, reserve_scholars=0)
+        game = SimpleNamespace(policy={"auto_hire": True, "auto_open": True}, capital=capital, year=year,
+                               credit_frozen_until=frozen_until, state=SimpleNamespace(household=household,
+                                                                                     projects=SimpleNamespace(excluded=set())))
+        return _cmd_policy(game, {}, {"cmd": "policy"}, None)
+
+    def test_in_arrears_hiring_and_opening_say_they_cannot_act(self):
+        stopped = self._policy_reply(-500.0)["switched_on_but_cannot_act_right_now"]
+        self.assertGreaterEqual(set(stopped), {"auto_hire", "auto_open"})
+
+    def test_a_solvent_household_has_nothing_stopped(self):
+        self.assertNotIn("switched_on_but_cannot_act_right_now", self._policy_reply(50000.0))
+
+    def test_a_credit_freeze_is_said(self):
+        self.assertIn("credit", self._policy_reply(50000.0, frozen_until=130)["switched_on_but_cannot_act_right_now"])
+
+
+class StallDiagnosis(unittest.TestCase):
+    """A run that has effectively stopped says so and what would restart it; a solvent one is not told it is stuck."""
+
+    def _household(self, capital=-900.0, insolvent_years=12):
+        return SimpleNamespace(capital=capital, insolvent_years=insolvent_years)
+
+    def _host(self, capital=-900.0, insolvent_years=12, revenue=0.0, standing_pay=0.0, would_earn=500.0, hours=2000.0):
+        return SimpleNamespace(
+            state=SimpleNamespace(household=self._household(capital, insolvent_years),
+                                  projects=SimpleNamespace(operating=set())),
+            nodes={}, debt_interest_rate=lambda: 0.05, revenue_capacity=lambda: revenue, upkeep=lambda: 100.0,
+            living_cost=lambda _rev=0, _upkeep=0: 200.0, mine_operating_cost=lambda: 0.0, held_trade=lambda: None,
+            labour=SimpleNamespace(hours_for_sale=lambda: hours, best_wage_trade=lambda: "scribe",
+                                   work_for_wages_dry_run=lambda trade, hours: (would_earn, None),
+                                   standing_job_pay=lambda trade: standing_pay, wage_bill=lambda: 0.0))
+
+    def test_a_long_arrears_run_that_loses_money_says_it_is_stuck_and_what_would_change_it(self):
+        diagnosis = CreditMixin.stall_diagnosis(self._host())
+        self.assertTrue(diagnosis)
+        self.assertTrue(any(reason.startswith("work as a ") for reason in diagnosis["what_would_change_it"]))
+
+    def test_wage_work_is_advised_only_when_it_pays_more_than_the_standing_job(self):
+        better = CreditMixin.stall_diagnosis(self._host(standing_pay=100.0, would_earn=500.0))
+        worse = CreditMixin.stall_diagnosis(self._host(standing_pay=900.0, would_earn=500.0))
+        self.assertTrue(any(reason.startswith("work as a ") for reason in better["what_would_change_it"]))
+        self.assertFalse(any(reason.startswith("work as a ") for reason in worse["what_would_change_it"]))
+
+    def test_a_solvent_run_is_not_told_it_is_stuck(self):
+        self.assertIsNone(CreditMixin.stall_diagnosis(self._host(capital=500.0)))
+
+    def test_a_short_spell_in_arrears_is_not_a_stall(self):
+        self.assertIsNone(CreditMixin.stall_diagnosis(self._host(insolvent_years=3)))
+
+    def test_a_run_that_earns_more_than_it_costs_is_not_stuck(self):
+        self.assertIsNone(CreditMixin.stall_diagnosis(self._host(revenue=1.0e6)))
+
+
+class StaffFractions(unittest.TestCase):
+    def _staff(self, scholars, artisans, employees=None):
+        return SimpleNamespace(scholars=scholars, artisans=artisans, employees=employees or {})
+
+    def test_a_fractional_staff_count_comes_with_an_explanation(self):
+        self.assertTrue(_staff_fraction_note(self._staff(1.32, 3.0)))
+        self.assertTrue(_staff_fraction_note(self._staff(2.0, 3.0, {"smith": 0.4})))
+
+    def test_a_whole_number_staff_carries_no_footnote(self):
+        self.assertIsNone(_staff_fraction_note(self._staff(2.0, 3.0, {"smith": 4.0})))
+
+
+class ReopeningIsNeverFree(unittest.TestCase):
+    """Shutting a work down and bringing it back costs at least some years of its upkeep, however cheap it was to build."""
+
+    def _host(self, upkeep, build_cost, venture=False):
+        return SimpleNamespace(
+            nodes={"w": {"up": upkeep}}, is_venture=lambda node_id: venture, venture_capex=lambda node_id: 7.0,
+            project_cost=lambda node_id: build_cost, RESTORE_COST_SHARE_OF_BUILD=0.3,
+            RESTORE_COST_MIN_UPKEEP_YEARS=REGISTRY["RESTORE_COST_MIN_UPKEEP_YEARS"]["value"],
+            staff_closure_age=lambda node_id: None, STAFF_CLOSURE_GRACE=3, STAFF_CLOSURE_DISCOUNT=0.1)
+
+    def test_the_floor_is_the_declared_years_of_upkeep(self):
+        self.assertGreaterEqual(REGISTRY["RESTORE_COST_MIN_UPKEEP_YEARS"]["value"], 1.0)
+        host = self._host(upkeep=20.0, build_cost=1.0)
+        self.assertEqual(VentureQuotesMixin.reopen_fee(host, "w"), 20.0 * host.RESTORE_COST_MIN_UPKEEP_YEARS)
+
+    def test_a_costly_build_costs_its_share_to_restore(self):
+        self.assertEqual(VentureQuotesMixin.reopen_fee(self._host(upkeep=1.0, build_cost=1000.0), "w"), 300.0)
+
+    def test_a_round_trip_costs_at_least_a_year_of_upkeep(self):
+        self.assertGreaterEqual(VentureQuotesMixin.reopen_fee(self._host(upkeep=20.0, build_cost=0.0), "w"), 20.0)
+
+
+class HazardValuesLandGradually(unittest.TestCase):
+    """A hazard's `values` delta lands evenly across its own window and is logged while it runs (Christianisation)."""
+
+    START, END = 995, 1100
+
+    def _host(self, weights):
+        household = SimpleNamespace(log=[])
+        return SimpleNamespace(value_weights=dict(weights), VALUE_WEIGHT_FLOOR=-5.0, VALUE_WEIGHT_CEILING=5.0,
+                               state=SimpleNamespace(seats={"seat": SimpleNamespace(household=household)})), household
+
+    def _run(self, hazard, weights, years):
+        host, household = self._host(weights)
+        for year in years:
+            ShockYearMixin._shock_values_seats(host, {"seat": hazard}, year, hazard["years"][0], hazard["years"][1])
+        return host, household
+
+    def test_one_year_moves_a_fraction_of_the_total_not_the_whole_amount(self):
+        hazard = {"name": "Christianisation", "years": [self.START, self.END], "values": {"w_religious_rigidity": 1.06}}
+        host, _household = self._run(hazard, {"w_religious_rigidity": 0.0}, [self.START])
+        self.assertGreater(host.value_weights["w_religious_rigidity"], 0.0)
+        self.assertLess(host.value_weights["w_religious_rigidity"], 0.5 * 1.06)
+
+    def test_the_full_delta_has_landed_by_the_last_year(self):
+        hazard = {"name": "Christianisation", "years": [self.START, self.END], "values": {"w_religious_rigidity": 1.06}}
+        host, _household = self._run(hazard, {"w_religious_rigidity": 0.0}, range(self.START, self.END + 1))
+        self.assertAlmostEqual(host.value_weights["w_religious_rigidity"], 1.06, places=6)
+
+    def test_it_is_logged_at_the_start_every_ten_years_and_at_the_end_not_only_once(self):
+        hazard = {"name": "Christianisation", "years": [self.START, self.END], "values": {"w_religious_rigidity": 1.06}}
+        _host, household = self._run(hazard, {"w_religious_rigidity": 0.0}, range(self.START, self.END + 1))
+        years = [year for year, _line in household.log]
+        self.assertIn(self.START, years)
+        self.assertIn(self.END, years)
+        self.assertTrue(any(self.START < year < self.END for year in years))
+        self.assertGreaterEqual(len(years), 3)
+        self.assertTrue(all(cause_of(line) == "hazard_values_shift" for _year, line in household.log))
+
+    def test_a_hazard_that_carries_only_a_values_delta_still_moves_the_society(self):
+        hazard = {"name": "values-only test hazard", "values": {"w_novelty": -0.2}, "years": [900, 909]}
+        host, _household = self._run(hazard, {"w_novelty": 0.5}, range(900, 910))
+        self.assertAlmostEqual(host.value_weights["w_novelty"], 0.3, places=6)
+
+    def test_a_field_the_society_does_not_have_is_ignored(self):
+        hazard = {"name": "x", "values": {"w_unknown": 1.0}, "years": [900, 909]}
+        host, household = self._run(hazard, {"w_novelty": 0.5}, range(900, 910))
+        self.assertEqual(host.value_weights, {"w_novelty": 0.5})
+        self.assertEqual(household.log, [])
+
+
+class ChristianisationIsData(unittest.TestCase):
+    """Norse Christianisation carries a values delta in the civilisation file, is listed ahead before it starts, and sacks nothing."""
+
+    def setUp(self):
+        self.civ = engine_data.load_civ("norse_900ad")
+        self.hazard = next(hazard for hazard in self.civ["hazards"] if hazard["name"].startswith("Christianisation"))
+
+    def test_it_carries_a_values_delta_not_just_a_note(self):
+        self.assertTrue(self.hazard.get("values"))
+
+    def test_it_is_listed_among_the_hazards_ahead_at_the_start_of_the_game(self):
+        ahead = [(hazard["name"], in_progress) for hazard, _start, _end, in_progress in hazards_not_yet_past(self.civ, self.civ["year"])]
+        self.assertIn((self.hazard["name"], False), ahead)
+
+    def test_the_note_says_what_it_does_to_the_society(self):
+        self.assertIn("values", self.hazard.get("note", "").lower())
+
+    def test_a_values_shift_is_not_a_sacking(self):
+        self.assertNotIn("sack_chance", self.hazard)
+
+
+if __name__ == "__main__":
+    unittest.main()

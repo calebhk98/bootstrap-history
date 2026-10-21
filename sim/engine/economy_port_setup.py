@@ -115,6 +115,7 @@ def opening_values(sim):
         "carriage_wage": sim.labour.wage_per_hour(sim.FREIGHT_DRIVER_WAGE_TRADE),
         "carriage_crew": {mode: [rate["crew_trade"], rate["crew_hours_per_tonne_km"]]
                           for mode, rate in rates.items()},
+        "carriage_handling_trade": {mode: rate["handling_trade"] for mode, rate in rates.items() if rate.get("handling_trade")},
         "carriage_teams": {mode: {key: rate[key] for key in ("carriers", "tonne_km_per_team_day", "team_payload_tonnes")}
                            for mode, rate in rates.items()},
         "held_nodes": sorted(sim.held_and_running(include_starting=False)),
@@ -126,6 +127,12 @@ def opening_values(sim):
         "stores": opening_store_values(sim.world_map, tile_ids, int(sim.cfg["start_year"])),
         "literacy": {field: sim.literacy(field) for field in LITERACY_FIELDS},
     }
+
+
+def society_at_opening(civ, opening):
+    """The civilisation's fields with the literacy the opening saved, so a setup rebuilt after literacy has moved scales the
+    needs as the first setup did."""
+    return dict(civ, **opening["literacy"])
 
 
 def baskets_by_tile(basket, need_data, world_map, tile_ids):
@@ -189,9 +196,7 @@ def build_setup(sim, opening=None, production=None):
     mint_recipe = (recipes_from_production_data(production, [opening["mint_recipe"]])[opening["mint_recipe"]]
                    if opening.get("mint_recipe") else None)
     need_data = _load("world", "needs.json")
-    literate = opening["literacy"]
-    society = dict(civ, **literate)       # the opening's literacy, so a rebuilt setup scales the needs as the first did
-    basket = households.make_basket(need_data, production, civ_values=society)
+    basket = households.make_basket(need_data, production, civ_values=society_at_opening(civ, opening))
     goods = set()
     for recipe in recipes.values():
         goods.update(recipe.outputs, recipe.inputs, recipe.plant_goods)
@@ -223,6 +228,7 @@ def build_setup(sim, opening=None, production=None):
             {good: production[good]["carrier_use"] for good in sorted(specs) if production.get(good, {}).get("carrier_use")},
             {good: spec.service_life_years for good, spec in specs.items()}),
         carriage_handling={SEA_MODE: sea_freight.PORT_HANDLING_HOURS_PER_TONNE},
+        carriage_handling_trade={mode: str(trade) for mode, trade in opening["carriage_handling_trade"].items()},
         held_nodes=tuple(opening["held_nodes"]),
         specs=specs, recipes=recipes, mint_recipe=mint_recipe, basket=basket, trades=trades,
         tax_forms=taxes.forms_from_civ_data(civ.get("state_revenue") or []),

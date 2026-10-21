@@ -25,6 +25,7 @@ from sim.constants import declare
 from . import category_traits, civ_cost, seat_builds
 from .diffusion_rules import medical_compliance, medical_relief, spread_share, weapons_relief
 from .institution_societies import belongs_to_other_society
+from .adoption_share import held_share
 from .diffusion_curve import knowledge_half_life, leaked_share
 
 
@@ -360,7 +361,7 @@ class DiffusionMixin:
         """Share of the founder's military work the government actor holds."""
         held = self.state_treasury().knowledge
         ids = sorted(seat_builds.built_by_any(self.state.seats, self._diffusible_ids("military")))
-        return sum(1 for node_id in ids if node_id in held) / len(ids) if ids else 0.0
+        return held_share(ids, held)
 
     # ---- DISEASE: THE COUNTRY IS HARDER TO KILL WHOLESALE ------------------
     # National prevalence of an epidemic falls as the country absorbs the

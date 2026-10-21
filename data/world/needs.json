@@ -132,6 +132,7 @@
   "cement_portland_kg": {"satisfies": {"shelter": 0.003}},
 
   "cloth_kg": {"satisfies": {"clothing": 1.0}},
+  "dyed_cloth_kg": {"satisfies": {"clothing": 1.0}, "basis": "Dye adds colour, not cover or warmth, so a kilogram counts as plain cloth does. Labelled placeholder, conf D; retire: Complaints/533 when a need for appearance separates the two."},
   "fabric_kg": {"satisfies": {"clothing": 1.0}},
   "linen_kg": {"satisfies": {"clothing": 1.0}},
   "cotton_fabric_kg": {"satisfies": {"clothing": 1.0}},

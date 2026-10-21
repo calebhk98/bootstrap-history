@@ -1,5 +1,6 @@
 """Scenario (Complaint 640: these are the player-facing commands and the yearly staff phases reached on one game; the
-price-pressure rules are in test_labour_market_town_pricing). Hiring, training and commissioning a trade; wage pricing and its
+price-pressure rules are in test_labour_market_town_pricing; dismissing, the spare hours of a trade, the literacy wall and
+what stops the founder selling his own hours are test_staff_moves_rules, the staff advice test_staff_advice_rules). Hiring, training and commissioning a trade; wage pricing and its
 forecast; the founder's own practice income; and a dead founder's effect on
 all of it.
 """
@@ -85,8 +86,6 @@ check("commissioning does not raise how many of a trade LIVE here",
       household.labour.market_supply_split("scribe")[0])
 check("...and it does add hours you can actually call on",
       household.labour.hours_you_can_call_on("scribe") > _ceiling, (_ceiling, household.labour.hours_you_can_call_on("scribe")))
-check("...and you cannot commission past what the trade here can spare",
-      household.labour.commission("scribe", _ceiling)[0] is False, household.labour.commission("scribe", _ceiling)[1])
 _scribe_trade = _ask(household, "labour", trade="scribe")["trade"]
 check("...and `labour` names both channels, not one ceiling",
       _scribe_trade.get("hours_you_could_still_commission") is not None
@@ -98,8 +97,6 @@ _alive_revenue = household.revenue()
 household.founder_alive = False
 check("a dead physician has no practice",
       _alive_revenue > 0 and household.revenue() == 0.0, (_alive_revenue, household.revenue()))
-check("...and cannot sell hours he does not have",
-      household.labour.work_for_wages("scholar", 100)[0] == 0.0, household.labour.work_for_wages("scholar", 100)[1])
 check("...and cannot take anyone on with no deputy to direct them",
       _ask(household, "hire", trade="smith", n=1).get("ok") is False,
       _ask(household, "hire", trade="smith", n=1))

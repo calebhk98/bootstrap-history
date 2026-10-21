@@ -20,11 +20,11 @@ GOVERNMENT_WORTH_SHARE_PER_GAIN = declare(
 		"and prestige return.")
 ADMINISTRATIVE_SPAN = declare(
 	"ADMINISTRATIVE_SPAN", 5000.0, kind="temporary_heuristic",
-	unit="people governed per official at full state capacity", source=None,
+	unit="people governed per official", source=None,
 	confidence="D",
 	why="How many people one paid official can keep on the rolls and the "
-		"assessments; a state with less capacity keeps proportionally fewer "
-		"officials. Stands in for a model of what administration is for "
+		"assessments. What the officials then collect follows from their "
+		"number, their literacy and the road (collection.py). Stands in for a model of what administration is for "
 		"(census, assessment, courts, posts).")
 LEVY_RATE_CEILING = declare(
 	"LEVY_RATE_CEILING", 0.3, kind="temporary_heuristic",

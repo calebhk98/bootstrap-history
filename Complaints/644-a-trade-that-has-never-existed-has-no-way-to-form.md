@@ -21,3 +21,9 @@ trades at a training time set by the uncovered share of tasks; taught only by an
 trainee starting no better than the teacher; output and error following a learning curve with a physical floor. The
 three flat teaching constants retire. Tests call the training functions: a trade with no teacher stays empty; a nearer
 source trade trains faster.
+
+## Progress (first stage)
+
+Done: `sim/labour/trade_formation.py` derives each trade task shares from the hours recipes book to it, by recipe and input material; distance is the cosine angle between shares; `first_people_plan` orders migration (limited to spare hands), conversion (time from the uncovered share of tasks, needs a teacher) and bonded purchase, and leaves a trade with none of them empty. `train` and `train_check` now pick the nearest practised trade as source (a registry `taught_from` still overrides), take their time and teacher hours from the uncovered share, and charge the source wage for the years. The three flat constants are retired; two labelled heuristics replace them (`SOURCE_TASK_FLOOR_FRACTION`, `TEACHER_ATTENTION_SHARE`, retire: this complaint). Tests: `sim/tests/test_trade_formation.py`.
+
+Still open: migration and bonded routes are not yet called by the yearly step (only conversion is wired through `train`); the founder is always the teacher, so knowledge held by other actors is not yet read; a learning curve on output (Wright) with an error rate and a floor is a later stage.

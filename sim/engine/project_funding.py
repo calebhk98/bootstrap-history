@@ -46,11 +46,16 @@ def fund_year(money, purse, spent_hours, refunded, hours_offered, in_arrears):
                        WHY_IN_ARREARS if in_arrears else WHY_INSTALMENT, lost)
 
 
+def paid_credit(price, paid_towards):
+    """What of `price` is already paid: money sunk into a project that was stopped or halted stands to its credit and
+    comes off the bill if it is begun again, never more than the price."""
+    return min(price, max(0.0, paid_towards or 0.0))
+
+
 def cash_covers_start(price, paid_towards, owed_on_work_in_hand, capital):
     """Whether cash in hand pays for a start (its price less what is already paid towards it) on top of what work
     in hand still owes."""
-    price -= min(price, max(0.0, paid_towards or 0.0))
-    return owed_on_work_in_hand + price <= capital
+    return owed_on_work_in_hand + price - paid_credit(price, paid_towards) <= capital
 
 
 def funding_parts(capital, revenue, fixed_costs, debt_interest_rate, credit_line, draw_share, surplus_years,

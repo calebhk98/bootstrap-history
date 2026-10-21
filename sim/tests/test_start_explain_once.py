@@ -1,36 +1,34 @@
-"""start_explain_once: regression checks, run individually with `--only start_explain_once`."""
-from .harness import *  # noqa: F401,F403
+"""Complaint 76: a long explanation is shown once per game, then a pointer; a command's `full` flag shows it again. The
+rule (`already_explained`) is called on a stub game holding a seat's progress record; `start` through a whole game is
+test_start_explain_once_scenario."""
 
-from sim.ui.proto.render_screens_start import render_start
+QUICK_TOPIC = True
 
-# Complaint 76: `start` explains the fixed price and the untrained-trade warning once, then points back.
+from types import SimpleNamespace
 
-test_sim = sim(capital=1_000_000)
-first = S._agent_dispatch(test_sim, NODES, {"cmd": "start", "id": "tx2_shed"})
-second = S._agent_dispatch(test_sim, NODES, {"cmd": "start", "id": "tx2_retting"})
-third = S._agent_dispatch(test_sim, NODES, {"cmd": "start", "id": "tx2_count_standard"})
+from .harness import check
 
-check("the first start explains the fixed price in full", "fixed for this project" in first.get("note", ""), first.get("note"))
-for label, reply in (("second", second), ("third", third)):
-    check("the %s start keeps the bill as a number" % label,
-          isinstance(reply.get("the_bill_you_have_taken_on"), (int, float)), reply)
-    check("the %s start drops the fixed-price paragraph" % label,
-          "Quotes move with prices" not in reply.get("note", ""), reply.get("note"))
-    check("...but still says the price is fixed", "fixed" in reply.get("note", ""), reply.get("note"))
-    check("the %s start's text screen does not repeat the paragraph" % label,
-          "Quotes move with prices" not in render_start(reply), render_start(reply))
+from sim.engine.state_holdings import SeatProgressState
+from sim.ui.proto.explain_once import already_explained
 
-again = S._agent_dispatch(test_sim, NODES, {"cmd": "start", "id": "tx2_bleaching_sun", "full": True})
-check("`full` shows the fixed-price paragraph again", "Quotes move with prices" in again.get("note", ""), again.get("note"))
 
-# The untrained-trade warning keeps its trade names but loses its instructions after the first showing.
-untrained_sim = sim(capital=1_000_000)
-untrained_sim.labour.market_supply = lambda trade: 0.0
-untrained_sim.start_project = lambda node_id, precaution=False: (True, "")
-one = S._agent_dispatch(untrained_sim, NODES, {"cmd": "start", "id": "ag2_composting"})
-two = S._agent_dispatch(untrained_sim, NODES, {"cmd": "start", "id": "ag2_grafting"})
-trades = sorted(NODES["ag2_grafting"]["lab"])
-check("the first untrained-trade warning gives the full instructions", "four years" in one.get("warning", ""), one.get("warning"))
-check("a later one still names the trades", bool(trades) and all(trade in two.get("warning", "") for trade in trades),
-      two.get("warning"))
-check("...without repeating the instructions", "four years" not in two.get("warning", ""), two.get("warning"))
+def stub_game(year=100):
+    return SimpleNamespace(state=SimpleNamespace(seat_progress=SeatProgressState()), year=year)
+
+
+game = stub_game()
+check("the first time a topic is shown it is not yet explained", already_explained(game, "start_price_fixed", {}) is False)
+check("the second time it is", already_explained(game, "start_price_fixed", {}) is True)
+check("`full` shows it again, and the record is not forgotten", already_explained(game, "start_price_fixed", {"full": True}) is False
+      and already_explained(game, "start_price_fixed", {}) is True)
+check("another topic is explained on its own", already_explained(game, "start_untrained_trade", {}) is False)
+check("`full` on a topic never shown still marks it shown",
+      already_explained(game, "third", {"full": True}) is False and already_explained(game, "third", {}) is True)
+check("the record keeps the year each topic was first shown",
+      game.state.seat_progress._said_explanations == {"start_price_fixed": 100, "start_untrained_trade": 100, "third": 100},
+      game.state.seat_progress._said_explanations)
+later = stub_game(year=130)
+later.state.seat_progress._said_explanations = {"start_price_fixed": 100}
+already_explained(later, "other", {})
+check("a topic first shown later is dated then, and the old one keeps its year",
+      later.state.seat_progress._said_explanations == {"start_price_fixed": 100, "other": 130}, later.state.seat_progress._said_explanations)

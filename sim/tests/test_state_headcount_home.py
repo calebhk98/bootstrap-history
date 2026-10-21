@@ -1,28 +1,53 @@
-"""Complaint 602, home country: the founder's civilisation's state cannot keep an army larger than its people can spare."""
-from .harness import *  # noqa: F401,F403
+"""Complaint 602, home country: the founder's civilisation's state cannot keep an army larger than its people can spare.
+Complaint 640: the view's hands and the army check are called on a stand-in game that holds only what they read."""
+QUICK_TOPIC = True
 
-from sim.engine.agents_port import SimWorld
+from types import SimpleNamespace
+
+from .harness import check
+
+from sim.agents import headcount
+from sim.agents.records import ActorRecord
+from sim.engine.agents_port_budget import BudgetView
+
+WORKING_AGE = 1.0e6
 
 
-def one_year(game):
-    game.state.scenario.year += 1
-    game.advance_actors(game.state.scenario.year)
+class HomeView(BudgetView):
+    """The budget questions over a stand-in game: its working age, farm hours, last nutrition and the state's granary."""
+
+    def __init__(self, farm_hours=None, nutrition=None, granary=0.0):
+        record = ActorRecord(kind="government")
+        record.stores["wheat_kg"] = granary
+        flows = None if nutrition is None else SimpleNamespace(nutrition_ratio=nutrition)
+        self._sim = SimpleNamespace(
+            population=SimpleNamespace(working_age=WORKING_AGE, total=4.0 * WORKING_AGE),
+            state=SimpleNamespace(holdings=SimpleNamespace(farm_hours_needed=farm_hours)),
+            _last_demographic_step=flows, civ={})
+        self._record = record
+
+    def government(self):
+        return SimpleNamespace(record=self._record)
 
 
-game = sim()
-world = SimWorld(game)
-hands = world.state_hands()
-check("the home country's hands are its working age", hands.working_age == game.population.working_age, hands)
+hands = HomeView().state_hands()
+check("the home country's hands are its working age", hands.working_age == WORKING_AGE, hands)
+check("with no farming allocation yet and no famine, no hands are held back", hands.farm_hands == 0.0 and hands.food_ratio == 1.0, hands)
 
-game.civ["standing_army"] = 10.0 * game.population.working_age
-one_year(game)
-record = game.state_treasury().record
+view = HomeView()
+record = ActorRecord(kind="government")
+soldiers, wanted = headcount.checked_army(view, record, 10.0 * WORKING_AGE, 10.0 * WORKING_AGE, 0.0)
 booked = record.headcount["army"]
 check("an army many times the working age is cut to the people free to serve, with the cause",
-      record.army <= game.population.working_age and booked["shortfall"] > 0.0 and booked["cause"] == "working_age", (record.army, booked))
+      soldiers <= WORKING_AGE and wanted <= WORKING_AGE and booked["shortfall"] > 0.0 and booked["cause"] == headcount.WORKING_AGE,
+      (soldiers, wanted, booked))
 
-small = sim()
-small.civ["standing_army"] = 0.001 * small.population.working_age
-one_year(small)
-check("a feasible home army is untouched", small.state_treasury().record.headcount["army"]["shortfall"] == 0.0,
-      small.state_treasury().record.headcount)
+record = ActorRecord(kind="government")
+soldiers, wanted = headcount.checked_army(view, record, 0.001 * WORKING_AGE, 0.001 * WORKING_AGE, 0.0)
+check("a feasible home army is untouched", record.headcount["army"]["shortfall"] == 0.0 and soldiers == wanted == 0.001 * WORKING_AGE,
+      record.headcount)
+
+record = ActorRecord(kind="government")
+others = 0.4 * WORKING_AGE
+soldiers, _wanted = headcount.checked_army(view, record, 0.9 * WORKING_AGE, 0.9 * WORKING_AGE, others)
+check("the state's other people are taken from the same working age", soldiers <= WORKING_AGE - others, soldiers)

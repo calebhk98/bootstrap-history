@@ -1,0 +1,32 @@
+"""A stand-in world for `Labour` (a real civilisation file and a real `Population`), so labour rules run with no game built."""
+from types import SimpleNamespace
+
+from sim.engine import data, solve_prices_core
+from sim.geography import api as geography
+from sim.world import demography
+
+
+def stand_in_world(civ_id="rome_100ad", total=None):
+    civ = data.load_civ(civ_id)
+    population = demography.Population.stationary(float(civ["population"]) / 50.0, seed=1)
+    if total is not None:
+        shrink(population, total)
+    return SimpleNamespace(
+        civ=civ, home_tiles_held=lambda: geography.tiles_held(civ), people_by_tile=lambda: None, pop_scale=1.0,
+        population=population, state=SimpleNamespace(household=SimpleNamespace(base_tile=None, employees={}, trades_created=set(),
+                                                                                  trade_schools={}),
+                                                     economy=SimpleNamespace(improvements={}, society_labour_hours={}),
+                                                     projects=SimpleNamespace(done=set())),
+        held_and_running=lambda: frozenset(civ.get("starting_techs", ())), trades_absent=set(), wages=data.WAGES, trade_family=data.trade_family,
+        literacy=lambda field: 0.05, HOURS_PER_PERSON_YEAR=2000.0, actor_staff_fte=lambda trade: 0.0, economy=SimpleNamespace(agent_people_by_trade=lambda: None),
+        techniques_available_to=solve_prices_core.techniques_available_to,
+        trade_registry={trade_id: {"family": trade.family, "training_years": trade.training_years, **trade.extra}
+                        for trade_id, trade in data.TRADE_REGISTRY.items()})
+
+
+def shrink(population, total):
+    """Scale every age cohort so the nation holds `total` people."""
+    factor = total / population.total
+    population.children *= factor
+    population.working_age *= factor
+    population.elderly *= factor

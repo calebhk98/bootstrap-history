@@ -95,6 +95,22 @@ count and expansion dynamics repeated across the firm scenarios (`test_firm_coun
 The state budget's runs over years on an opened England are `test_economy_state_budget_validation` (baseline validations,
 4.2, naming Complaint 526); `economy_tin_dearer_than_copper` stays the slow validation naming Complaint 511.
 
+## Applied: audit batch 10 (test_physical_money_constants through test_readouts_timing_power_mines_road)
+
+Rules are called on inputs or stubs the test builds (quick tier); the whole-game checks that remain are named `_scenario` files
+next to them. Extractions, behaviour unchanged: `mine_labour_hours_per_tonne` (`sim/engine/mine_labour_profile.py`),
+`calendar_floor_years`, `payment_schedule_years`, `earliest_completion_years` (`sim/engine/completion_schedule.py`),
+`payroll_means` and `staff_to_let_go` (`sim/engine/payroll_trim.py`), `paid_credit` (`sim/engine/project_funding.py`, now the one
+place the credit for money already paid is worked out; `ui_port` re-exports it), `starving_warning` (`sim/labour/hours_sale_warning.py`).
+Shared stand-ins: `sim/tests/disease_stand_in.py` (the disease model with no game), `sim/tests/labour_stand_in.py` (`Labour` over a
+real civilisation and `Population`). Baseline validations (4.2): `test_plagues_from_contact_validation` (Complaint 490) and
+`test_price_over_making_cost_band_validation` (Complaint 507; it reads only goods the economy traded, so the quote a market reports
+where nothing traded, Complaint 642, is not in its band). Deleted as held elsewhere: the knowledge categories never abandoned
+(`test_category_traits`), the loss rule and seizure closing a plant and keeping its knowledge (`test_business_review`), the cap on
+work in hand (`test_start_money_rule`), the carriage and spin-up-key checks of the port's built ways (`test_economy_built_ways`),
+the project bill as tonnes times the quote (`test_complaint_147_project_materials`), the working-age death share
+(`test_sixth_step_pure_functions`). `quote_matches_charge` and `player_text_names_own_civilisation` are scenarios by nature (two paths
+through the dispatcher agreeing; a leak across every reply builder).
 
 ## Applied: audit batch 7 (test_historical_events through test_labour_population_derived)
 
@@ -125,6 +141,32 @@ mostly whole, now hold at most four named scenarios each; their rules moved to f
 `staff_loss_words.py`, `civ_cost.py`, `value_weight.py`). The `hazard_hit` log line now carries `defence` and
 `national_toll_percent` as facts, so scenarios read values, not prose.
 
+## Applied: deep extraction 2
+
+Batches 7 and 8 had left their rules inside `Sim` and labour methods, so their checks stayed whole-game scenarios. The rules
+now sit in plain functions in small modules, the methods call them, and the quick files below call the functions on inputs
+they build. Extractions (behaviour unchanged):
+
+- `sim/engine/mine_ceiling.py` (`mine_ceiling_tonnes`, `room_under_ceiling`, shared by `open_mine` and `buy_forest`):
+  `test_mine_ceiling_rules`.
+- `sim/engine/trade_absorption.py` (the years, the yearly step, the drift toward the literacy ceiling):
+  `test_trade_absorption_rules`.
+- `sim/engine/staffing_choice.py` (allowances, shortfalls, which concerns close) and `people_to_hire_for` in
+  `sim/labour/labour_staff_controls.py` (the `keep ... staffed` hire): `test_staffing_choice_rules`.
+- `sim/engine/closure_grace.py` (the grace window, the discounted fee, the note): `test_closure_grace_rules`.
+- `sim/engine/credit_freeze.py` (`settlement_freeze`, the stall rule, the loss makers): `test_credit_freeze_rules`.
+- `_staffing_standing_crew` (the `why` supervision block) on a stub game: `test_why_supervision_rules`.
+- `sim/engine/industry_depth_rules.py` (the opening seed and the yearly accrual): `test_industry_experience_rules`.
+- `sim/engine/adoption_share.py` (`state_military_diffusion`): `test_adoption_share_rules`.
+- `sim/engine/bondage_workshop_rules.py` (`_step_bondage`, `workshop_output`): `test_bondage_workshop_rules`.
+- `sim/engine/staff_phase_rules.py` (`_step_staff`: the room to hire and the move by whole people; the payroll trim,
+  replacement and scholar target were pulled out in parallel by batches 9 and 12): `test_staff_phase_rules`.
+- `sim/labour/staff_moves.py` (the literacy wall, `fire`, the spare hours of `commission`, what stops `work_for_wages`):
+  `test_staff_moves_rules`; `sim/labour/staff_advice.py` (`_staff_advice`): `test_staff_advice_rules`.
+
+The scenario files kept their wiring checks only. The determinism subprocess in `test_mines_scenario` now builds its game
+the way the harness does, so it reuses the warm spin-up instead of paying a cold one that overran its sixty seconds.
+
 ## Applied: audit batch 9 (test_mod_namespaces through test_perf_optimizations)
 
 Rules are called on inputs the test builds (stand-in games that hold only what the method reads); whole-game checks that
@@ -143,6 +185,25 @@ reply), the whole-run 150-year attrition (`roll_trade`, also `test_complaint_585
 `names_and_fog`, `one_goods_market`, `one_labour_market`, `one_living_cost_model`, `opening_herds_follow_producers`,
 `opening_basket_agrees`, `opening_smelters_beside_ore`, `parallelism_note`, `partner_in_agent_economy`, `peek_resource_throttle`,
 `people_attrition_scholars`, `people_by_trade_cache_year`, `perf_optimizations`.
+
+## Applied: audit batch 13 (test_state_debases_coin through test_trade_shortage_kind)
+
+Rules are called on inputs the test builds (stand-in games and worlds holding only what the rule reads); all of these topics
+are now quick except three named scenarios. New or rewritten quick rule files: `test_state_debases_coin` (`Economy.strike_lighter_coin`,
+the yearly `_strike_state_coin`), `test_state_headcount_home` (`state_hands`, `checked_army`), `test_state_repetition`
+(`already_explained`), `test_state_revenue_forms` (the forms over a stand-in world, the lever on a rate), `test_state_taxes_in_kind_economy`
+(units to tonnes, the held tiles), `test_state_serialization` (the cache reset, the save validation on a built save),
+`test_state_soldier_trade` (the army line, the standing draw on the unskilled trade, the state's hiring pressing the market),
+`test_state_strata_fiscal`, `test_state_weapon_relief` (the relief over a stand-in game), `test_step_problems`,
+`test_strata_income_from_cohorts`, `test_stuck_matches_start`, `test_stuck_sees_training`, `test_tiles_replace_regions`,
+`test_town_providers`, `test_trade_reach_transport`, `test_trade_school_rename`, `test_trade_shortage_kind`. Extractions, behaviour
+unchanged: `score_total` (`sim/ui/proto/score_total.py`); the start money refusal (`_money_refusal`) now carries its cause
+`cash_short` and facts `owed`, `price`, `ceiling`, `short`. Scenarios kept: `test_state_repetition_scenario` (`state` and `ventures`
+mark an explanation as seen), `test_state_revenue_forms_scenario` (one played year of grain taken in kind),
+`test_step_reply_severity_scenario` (the `step` command tags every event). Deleted as held elsewhere: the in-kind levy, price and stores
+checks of `test_state_taxes_in_kind_economy` (`test_state_taxes_in_kind`); the strata's books over a year and the conservation of money
+in `test_strata_income_from_cohorts` (`test_agents_strata`); the region-record land check of `test_tiles_replace_regions`
+(`test_a_region_record_is_only_a_label`). `test_tariffs_and_embargoes` and `test_state_land_revenue` were already stand-in tests.
 
 ## Applied: audit batch 11 (test_refusal_cash_remedies through test_seat_sight)
 
@@ -169,8 +230,7 @@ Rules are called on inputs the test builds (stand-in games holding only what the
 tree); whole-game checks that remain are named `_scenario` files next to their rules. Extractions into plain functions,
 behaviour unchanged: `assemble_ledger` (`sim/engine/revenue_ledger.py`), `hedge_wants` and `startable_first`
 (`hedge_steps.py`), `capital_lost` (`capital_loss.py`), `staff_loss_toll` and `sack_toll` (`hazard_toll.py`),
-`eminence_band_to_announce` (`eminence_warning.py`), `year_bill` (`project_funding.py`), `closure_at_risk`
-(`staffing_guarantee.py`), `capped_to_useful` (`sim/ui/proto/allocation_cap.py`). Quick rule files: the training ledger,
+`eminence_band_to_announce` (`eminence_warning.py`), `year_bill` (`project_funding.py`), `capped_to_useful` (`sim/ui/proto/allocation_cap.py`). Quick rule files: the training ledger,
 `workforce_spinup`, `upkeep_quote_matches_ledger`, `whole_game_no_seller_no_price` (Complaint 642: no seller gives no
 traded price and a named quote; import volume bounds), `why_foreman_and_remaining_floor`, `wild_stock_whole_game`,
 `ui_anatomy`, `ui_figures_more`, `ui_goals_watch`, `ui_memory`, `ui_notes`, `ui_step_automation_line`, `wage_provider`,
@@ -184,3 +244,12 @@ bounds are now `import_tonnes_left` rule tests. Baseline validation: `test_whole
 `work_for_wages`, and the `Sim.start_reason` deficit sizing (all kept whole in `test_ventures_saves_and_dice_scenario` and
 `test_workforce_advice_and_allocate_cap_scenario`). `test_two_seats_whole_game` is wholly a scenario and `test_year_phases`
 already runs on a stand-in.
+
+## Applied: audit batch 12
+
+24 files (test_seat_state through test_state_debasement_prices): rule tests on stubs and built records, a few named
+scenarios each; `sited_ore_price_over_cost` is a baseline validation naming 519. Extractions: `society_at_opening`,
+`replacement_wanted`, `staffing_warning_rows`. Two vacuous checks fixed (a refused project that read nothing; a quote
+compared against capital taken after it). `state_debasement_prices` was red after 625 (its hook no longer set the cut);
+it now drives `Government.apply_debasement`. Still Sim-only: `project_cost_now`, `venture_upkeep_quote`,
+`staffing_missing_to_open`.

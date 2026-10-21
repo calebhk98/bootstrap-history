@@ -1,5 +1,6 @@
 """literacy_market_pricing scenario (Complaint 640 audit): literacy bounds hiring, and materials and hires respond to
-demand, through a game. The labour price pressure and the commodity ledger are tests in test_literacy_market_pricing."""
+demand, through a game. The labour price pressure and the commodity ledger are tests in test_literacy_market_pricing;
+the literate-trade ceiling is test_household_capacity_and_literacy and the wall itself test_staff_moves_rules."""
 import collections
 
 from .harness import *  # noqa: F401,F403
@@ -14,11 +15,6 @@ from sim.refusal import cause_of
 # only 0.001% of the population can read... you can only hire 0.001%".
 s_hi = unopened_sim(civ="rome_100ad", capital=1e9)
 s_lo = unopened_sim(civ="norse_900ad", capital=1e9)
-check("a low-literacy society's literate-trade pool is smaller than a "
-      "high-literacy one's",
-      s_lo.labour.literate_capacity("scribe") < s_hi.labour.literate_capacity("scribe"),
-      "norse=%.2f rome=%.2f" % (s_lo.labour.literate_capacity("scribe"),
-                                s_hi.labour.literate_capacity("scribe")))
 ok_hi, why_hi = s_hi.labour.hire("scribe", 3)
 ok_lo, why_lo = s_lo.labour.hire("scribe", 3)
 check("money alone cannot hire scribes a low-literacy society has nobody to "

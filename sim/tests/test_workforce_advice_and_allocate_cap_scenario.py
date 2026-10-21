@@ -1,5 +1,4 @@
-"""Scenarios (Complaint 640): in a built game the refusal on a project one scholar short says to hire one, the closure
-warning is silent for what an immortal founder guarantees, and `allocate ... useful` caps at the useful work. The rules are
+"""Scenarios (Complaint 640): in a built game the refusal on a project one scholar short says to hire one, and `allocate ... useful` caps at the useful work. The rules are
 in test_workforce_advice_and_allocate_cap."""
 import unittest
 
@@ -22,34 +21,6 @@ class HireAdviceMatchesDeficit(unittest.TestCase):
         _, why = _scholar_blocked_node(household)
         self.assertIn('"n":1', why)
         self.assertNotIn('"n":2', why)
-
-
-class ImmortalFounderScholarWarning(unittest.TestCase):
-
-    def _household_with_concern(self):
-        household = sim(civ="rome_100ad", capital=1e7)
-        node_id = next(node_id for node_id, node in NODES.items()
-                       if 0 < node["sch"] <= 1.0 and node["up"] > 0 and node["art"] == 0
-                       and node_id not in household.done)
-        household.done.add(node_id)
-        household._done_changed()
-        household.state.projects.operating.add(node_id)
-        household.state.household.artisans = 50.0
-        return household, node_id
-
-    def test_no_scholar_warning_when_only_the_immortal_founder_holds_the_work(self):
-        household, _node_id = self._household_with_concern()
-        household.cfg["immortal"] = True
-        household.state.household.scholars = 0.0
-        scholar_rows = [row for row in household.staffing_closure_warnings() if row["of"] == "scholars"]
-        self.assertEqual(scholar_rows, [])
-
-    def test_mortal_founder_still_gets_the_scholar_warning(self):
-        household, _node_id = self._household_with_concern()
-        household.cfg["immortal"] = False
-        household.state.household.scholars = 0.0
-        scholar_rows = [row for row in household.staffing_closure_warnings() if row["of"] == "scholars"]
-        self.assertTrue(scholar_rows)
 
 
 class AllocateUseful(unittest.TestCase):

@@ -19,6 +19,7 @@ ProductionMixin is composed into EconomyMixin (economy.py) alongside the
 other economy sub-mixins; see that file for the composition and for the
 grouping evidence, and for why this lives in a separate file.
 """
+from .bondage_workshop_rules import workshop_craft_wages, workshop_output_value
 from .concern_earnings import ledger_row, output_market_factor, takings_at
 from .data import trade_family
 from sim.constants import declare
@@ -267,15 +268,10 @@ class ProductionMixin:
         if not self.running_with_mechanic("workshop_site"):
             return 0.0
         household = self.state.household
-        craft = sum(count for trade, count in household.employees.items() if trade_family(trade) == "craft")
-        craft += household.freedmen + household.slaves * self.SLAVE_LABOUR_PRODUCTIVITY_SHARE
         market = self.labour.market
-        wage = 0.0
-        for trade, count in household.employees.items():
-            if trade_family(trade) == "craft":
-                wage += count * market.quote_annual(trade)
-        wage += ((household.freedmen + household.slaves * self.SLAVE_LABOUR_PRODUCTIVITY_SHARE)
-                 * market.quote_annual("artisan"))
+        wage = workshop_craft_wages(
+            household.employees, lambda trade: trade_family(trade) == "craft", market.quote_annual,
+            household.freedmen + household.slaves * self.SLAVE_LABOUR_PRODUCTIVITY_SHARE, market.quote_annual("artisan"))
         mark = self.WORKSHOP_WAGE_MARKUP_BASE
         mark = self.effect_sum("workshop_markup", mark)
         # AND EVERYTHING YOU KNOW HOW TO DO, which is where the value of a
@@ -294,7 +290,7 @@ class ProductionMixin:
         # makes the workshop you actually staff and pay for more productive,
         # which is how method has always paid. It needs a workshop and it needs
         # people; with neither, it is still worth nothing.
-        return wage * mark * self.capability_factor()
+        return workshop_output_value(wage, mark, self.capability_factor())
 
     def capability_factor(self):
         """How much better your methods make the same pair of hands.

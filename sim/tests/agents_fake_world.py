@@ -82,6 +82,10 @@ class FakeWorld:
 	def state_hands(self) -> Any:
 		return None
 
+	def collectible_share(self, tiles=None) -> float:
+		"""Every officer reaches every tile unless a test sets `collectible`."""
+		return getattr(self, "collectible", 1.0)
+
 	def edge(self, name: str) -> Any:
 		return self.edge_book.edge(name)
 

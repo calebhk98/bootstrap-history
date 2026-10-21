@@ -1,6 +1,11 @@
 {
   "_doc": "Service life of a durable good: the years a stock of it serves before it is worn out or lost, so users hold it and buy only to keep it up (the economy reads a good with a service life as a durable; a good not listed is used up within the year). Keyed by the good ids of data/production. Estimates, confidence C or D; a wear model per good (use, material, maintenance) would derive them. Carts are not goods in the production data yet, so they have no entry; timber, cloth and other materials that are also consumed as inputs are left out until a held-stock model separates the two uses.",
   "years": {
+    "iron_tools_kg": {
+      "years": 4,
+      "confidence": "D",
+      "source": "LABELLED HEURISTIC, no source found for the working life of an iron farm tool before wear, breakage or loss replaces it; retire: Complaints/533."
+    },
     "brick_1000": {
       "years": 80,
       "confidence": "D",
