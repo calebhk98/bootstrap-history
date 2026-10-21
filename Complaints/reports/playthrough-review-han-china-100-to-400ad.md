@@ -15,20 +15,20 @@ about the world, not just optimize numbers."
 
 ## Where each item went
 
-| Item | Where it is tracked |
+| Item | Where it is tracked (all closed; numbers as of `Complaints/RENUMBERED.md`) |
 |---|---|
-| 1. Agent-oriented compact mode | Done: the `json` and `compact` words on commands (`help commands`); output-length follow-ups were `closed/173` and `closed/267`. |
-| 2. State monopolies (Salt and Iron) | 109 (state fiscal model), 114 (interest groups), 32 (mercury monopoly evidence). |
-| 2. Geographic logistics and raw material transport | 113 (international economy and freight), 138 (reach ignores transport), 151 (project materials). |
-| 2. Religious upheaval | 273 (new). |
-| 2. Diplomacy and military command | 274 (new). |
-| 3. Instantaneous hiring pools | 275 (new); skilled-hours half was `closed/34`. |
-| 3. Epidemics and demographic pyramids | 184 (dated hazards until dynamic systems exist), `closed/19`. |
-| 4. Currency debasement | 276 (new); 184 for Rome's dated debasement. |
-| 4. Aggregate demand | 106 (no closed demand loop). |
-| 5. Weight of bronze coinage | 277 (new). |
-| 6. Tacit supply chain and the purity trap | 278 (new); related 241 and 124. |
-| 6. Societal and political immune response | 114 (interest groups), 169 (wealth exposure and confiscation), `closed/182`; 198 for the related English edict defect. |
+| 1. Agent-oriented compact mode | Done: the `json` and `compact` words on commands (`help commands`); output-length follow-ups were `closed/169` and `closed/173`. |
+| 2. State monopolies (Salt and Iron) | `closed/105` (state fiscal model), `closed/110` (interest groups), `closed/32` (mercury monopoly evidence). |
+| 2. Geographic logistics and raw material transport | `closed/109` (international economy and freight), `closed/134` (reach ignores transport), `closed/147` (project materials). |
+| 2. Religious upheaval | `closed/269`. |
+| 2. Diplomacy and military command | `closed/270`. |
+| 3. Instantaneous hiring pools | `closed/271`; skilled-hours half was `closed/34`. |
+| 3. Epidemics and demographic pyramids | `closed/180` (dated hazards until dynamic systems exist), `closed/19`. |
+| 4. Currency debasement | `closed/272`; `closed/180` for Rome's dated debasement. |
+| 4. Aggregate demand | `closed/102` (no closed demand loop). |
+| 5. Weight of bronze coinage | `closed/273`. |
+| 6. Tacit supply chain and the purity trap | `closed/274`; related `closed/237` and `closed/120`. |
+| 6. Societal and political immune response | `closed/110` (interest groups), `closed/178` (wealth exposure and confiscation); `closed/194` for the related English edict defect. |
 
 ---
 

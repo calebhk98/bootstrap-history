@@ -297,4 +297,4 @@ Snippet only: Wikipedia Great County Adit and Sough (https://en.wikipedia.org/wi
 
 Read in the public-domain pass (archive.org OCR full text, details and links in 2.11): Agricola, De Re Metallica, Hoover translation 1912; Hoover, Principles of Mining 1909; Pryce, Mineralogia Cornubiensis 1778; Farey, Treatise on the Steam Engine 1827; Percy, Metallurgy of Lead 1870; Rose, Metallurgy of Gold 1915; Ure, Dictionary of Arts, Manufactures, and Mines; Ruding, Annals of the Coinage vol. 2. Opened but not usable because the OCR is too damaged: Peele, Mining Engineers' Handbook 1918 (archive.org miningengineers00peelgoog).
 
-Project documents read: Complaint 374, `Complaints/reports/silver-mining-and-minting-review.md` (the precious-metal sources report was not read in full), `sim/world/mine_works.py`, `sim/world/mine_fire_setting.py`, `sim/world/deposits.py`, `sim/engine/economy_mining.py`, `sim/economy/mint.py`.
+Project documents read: Complaint 374, `sim/world/mine_works.py`, `sim/world/mine_fire_setting.py`, `sim/world/deposits.py`, `sim/engine/economy_mining.py`, `sim/economy/mint.py`.
