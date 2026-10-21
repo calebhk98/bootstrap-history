@@ -44,9 +44,12 @@ that commit. Re-run the same command for the current list; this section is repla
   priced in wheat (`solve_prices.land_rent_hours_per_hectare`), so wheat's sourced labour reaches every grain; now a rule test
   of the floor schedule (fixed).
 
-- `firm_count_whole_game_scenario` ("entry does not overshoot"): new on this branch; the cause is not yet measured (a
-  likely suspect is that credit now clears at the opening, so entrants can borrow). Owner until measured: 473. Run
-  `python3 -m sim.tests --slow --only firm_count_whole_game_scenario --jobs 1` and read which niche overshoots before changing anything.
+- `firm_count_whole_game_scenario` ("entry does not overshoot", largest market only): measured on 221bb02e, the count runs
+  23, 27, 27, 27, 27, then falls to 8 by year 20 and stays. Entrants in one year do count each other
+  (`entry_round.NicheEntry.found` passes `waiting + 1`), and firms start leaving once their ramp ends
+  (`firm_exit.earns_less_than_plant_would_lend_for`), so the realised margin of 27 firms falls short of what the entry
+  forecast (`AgentsPort.entry_gross` with those entrants) promised. The gap between forecast and realised takings is the
+  bug; nobody owns it yet (to be filed). Command: `python3 -m sim.tests --slow --only firm_count_whole_game_scenario --jobs 1`.
 - Baselines re-run on this branch (`--only baseline_fixture,baseline_rome_full_length,spin_up_money_supply_full_length,real_output_baseline,real_output_validation,occupational_distribution,farm_edges_scenario --topic-seconds 3000`):
   the same reds as above, all 473 or 619; a population fall still raises output per head well above the undisturbed run.
 
