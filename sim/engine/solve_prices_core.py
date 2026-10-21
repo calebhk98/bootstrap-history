@@ -24,7 +24,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT = os.path.dirname(os.path.dirname(HERE))
 if REPO_ROOT not in sys.path:
     sys.path.insert(0, REPO_ROOT)
-from sim.engine import disposal_cost  # noqa: E402
+from sim.engine import capital_builds, disposal_cost  # noqa: E402
 from sim.engine.joint_allocation import allocate_joint_cost, outputs_split_by_mass  # noqa: E402
 from sim.engine.price_change import relative_price_change  # noqa: E402
 from sim.world.capital_market import stand_yearly_share  # noqa: E402  (CAPITAL)
@@ -392,7 +392,7 @@ def build_producers_index(production_entries):
     return dict(producers_of)
 
 
-def _dependency_materials(entry):
+def _dependency_materials(entry, resolved=frozenset()):
     """Every material one recipe's price computation needs a price FOR:
     its ordinary process `inputs`, plus every capital good's own
     `build_materials` (see the module docstring's CAPITAL section), plus
@@ -403,11 +403,12 @@ def _dependency_materials(entry):
     four, or a capital-only cycle - `iron_bar_kg` priced partly in
     `iron_bar_kg`, via its own finery hammer's iron fittings - or an energy
     or land dependency that happened not to resolve, would never appear in
-    the graph that decides whether a price exists at all.
+    the graph that decides whether a price exists at all. A capital good with `build_alternatives` needs only
+    the materials of one build (`capital_builds.materials_needed`, judged against `resolved`).
     """
     dependencies = set((entry.get("inputs") or {}).keys())
     for capital_good in (entry.get("capital") or []):
-        dependencies.update((capital_good.get("build_materials") or {}).keys())
+        dependencies.update(capital_builds.materials_needed(capital_good, resolved))
     for energy_key in ENERGY_CARRIER_FIELDS:
         if entry.get(energy_key):
             dependencies.add(energy_key)
@@ -434,7 +435,7 @@ def _grow_resolvable_by_topological_pass(production_entries, resolvable):
             outputs = entry.get("outputs") or {}
             if not outputs or all(output in resolvable for output in outputs):
                 continue
-            if all(dependency in resolvable for dependency in _dependency_materials(entry)):
+            if all(dependency in resolvable for dependency in _dependency_materials(entry, resolvable)):
                 for output in outputs:
                     if output not in resolvable:
                         resolvable.add(output)
@@ -460,7 +461,7 @@ def _build_material_dependency_graph(pending_entries, resolvable):
     for entry in pending_entries.values():
         outputs = entry.get("outputs") or {}
         still_needed_outputs = [output for output in outputs if output not in resolvable]
-        remaining_dependencies = [dependency for dependency in _dependency_materials(entry)
+        remaining_dependencies = [dependency for dependency in _dependency_materials(entry, resolvable)
                                   if dependency not in resolvable]
         for output in still_needed_outputs:
             graph[output]  # a node even if this entry alone has no remaining dependency
@@ -545,7 +546,7 @@ def _entries_relevant_to_component(production_entries, component, resolved_so_fa
         if not outputs or not all(output in component for output in outputs):
             continue
         if all(dependency in component or dependency in resolved_so_far
-               for dependency in _dependency_materials(entry)):
+               for dependency in _dependency_materials(entry, set(component) | set(resolved_so_far))):
             relevant[recipe_id] = entry
     return relevant
 
@@ -569,7 +570,7 @@ def _has_external_anchor(entry, resolved_so_far):
         if sum((capital_good.get("build_labour_hours") or {}).values()) > 0:
             return True
         if any(material in resolved_so_far
-               for material in (capital_good.get("build_materials") or {})):
+               for way in capital_builds.builds(capital_good) for material in way[0]):
             return True
     if entry.get("land_hectare_years") and "hectare_land" in resolved_so_far:
         return True
@@ -818,20 +819,19 @@ def _capital_cost_hours_per_unit(capital_goods, current_prices, wage_by_trade, i
     # unpaid (`capital_recovery_factor`); at a nil rate that is the build bill over the life.
     capital_cost_hours = 0.0
     for capital_good in capital_goods:
-        build_materials = capital_good.get("build_materials") or {}
-        build_labour_hours = capital_good.get("build_labour_hours") or {}
+        way = capital_builds.first_buildable(capital_good, current_prices)
+        if way is None:
+            return None
+        build_materials, build_labour_hours, service_life_years = way
 
         build_cost_hours = 0.0
         for build_material, quantity_per_build in build_materials.items():
-            build_material_price = current_prices.get(build_material)
-            if build_material_price is None:
-                return None
-            build_cost_hours += quantity_per_build * build_material_price
+            build_cost_hours += quantity_per_build * current_prices[build_material]
         for trade, hours_per_build in build_labour_hours.items():
             build_cost_hours += hours_per_build * wage_by_trade[trade]
 
         yearly_share = stand_yearly_share(
-                interest_rate, capital_good["service_life_years"], capital_good.get("establishment_years") or 0.0)
+                interest_rate, service_life_years, capital_good.get("establishment_years") or 0.0)
         capital_cost_hours += build_cost_hours * yearly_share / capital_good["annual_output_at_basis"]
     return capital_cost_hours
 
