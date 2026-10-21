@@ -48,7 +48,7 @@
    },
    "inputs": {},
    "labour_hours": {
-    "vine_and_olive_tender": 991.0
+    "vine_and_olive_tender": 165.0
    },
    "land_hectare_years": 0.99999105,
    "extracted_from": "arable land",
@@ -61,7 +61,7 @@
    ],
    "unit_dimension": "mass",
    "basis": "per hectare of bearing, unirrigated olive grove per year, long-run average across on- and off-bearing years, output as kg of olives",
-   "yield_basis": "GROWN. The oil entry carried 300 kg oil/ha/yr from a recalled 15-20 percent press recovery of a few tonnes of olives; 1700 kg of olives here is that oil figure over 17.6 percent recovery (inside the stated range), an unsourced estimate, conf C. Labour is read from Varro 1.18.2 (below): one working year (HOURS_PER_PERSON_YEAR, an engineering estimate, conf D) over 8 iugera at 2,523 square metres each (2.018 ha) is about 991 hours a hectare for the grove; the 30 pressing hours stay a separate LABELLED HEURISTIC, no source found, retire: Complaint 656. Varro, De Re Rustica 1.18.2 (LacusCurtius, https://penelope.uchicago.edu/Thayer/E/Roman/Texts/Varro/de_Re_Rustica/1*.html): \"Saserna states that one man is enough for eight iugera\" of olives (about 2 hectares to a man). KNOWLEDGE (Complaints/531): the tree is an Old World cultigen, gated on mat_olive_oil. LAND: one hectare-year.",
+   "yield_basis": "GROWN. The oil entry carried 300 kg oil/ha/yr from a recalled 15-20 percent press recovery of a few tonnes of olives; 1700 kg of olives here is that oil figure over 17.6 percent recovery (inside the stated range), an unsourced estimate, conf C. Labour is read from Cato's staffing as Varro 1.18.1 reports it: an oliveyard of 240 iugera has \"an overseer, a housekeeper, five labourers, three teamsters, one muleteer, one swineherd, one shepherd\" (13 slaves). Only the five labourers are counted, one working year each (HOURS_PER_PERSON_YEAR, an engineering estimate, conf D) over 240 iugera at 2,523 square metres each (60.6 ha), about 165 hours a hectare. This is the lower bound: the overseer and housekeeper are overhead (Varro 1.18.3 says they are not clearly counted in the number), and the teamsters, muleteer and herdsmen serve the whole estate, not the grove; counting all 13 would give about 430 hours. Varro 1.18.3 also notes the figures do not scale with farm size. Saserna's \"one man is enough for eight iugera\" (1.18.2) is a general rule for land, not for olives, and is not used. Vineyard cross-check: Cato's 100-iugera vineyard has ten labourers among fifteen slaves (1.18.1), about 790 hours a hectare on the same basis, the same order as the Columella figure (1132) which is kept. the 30 pressing hours stay a separate LABELLED HEURISTIC, no source found, retire: Complaint 656. Varro, De Re Rustica 1.18 (LacusCurtius, https://penelope.uchicago.edu/Thayer/E/Roman/Texts/Varro/de_Re_Rustica/1*.html), as used for labour above. KNOWLEDGE (Complaints/531): the tree is an Old World cultigen, gated on mat_olive_oil. LAND: one hectare-year.",
    "capital": [
     {
      "good": "olive grove stand, one hectare of planted trees",
