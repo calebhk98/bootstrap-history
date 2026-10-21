@@ -56,6 +56,7 @@ SHIPPED: List[Phase] = [
 	Phase("defence_stores", SEAT, lambda sim, seat_id: sim.step_defence_stores()),
 	Phase("random_events", WORLD, _random_events),
 	Phase("world_hazards", WORLD, lambda sim, seats: sim.step_world_hazards(seats)),
+	Phase("campaigns", WORLD, lambda sim, seats: sim.step_campaigns()),
 	Phase("famine_watch", WORLD, lambda sim, seats: sim.step_famine_watch(seats)),
 	Phase("credit_limit", SEAT, lambda sim, seat_id: sim.enforce_credit_limit(sim.state.scenario.year)),
 	Phase("advance_year", WORLD, _advance_year),

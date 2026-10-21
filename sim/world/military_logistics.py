@@ -17,7 +17,11 @@ it go before the supply train is eating more than it delivers. That distance
 early-modern warfare was actually bounded by, which is why campaigns hugged
 rivers and coasts and sieges starved besiegers as often as the besieged.
 
-BUILT STANDALONE; NOW WIRED IN, ONE CROSSING ONLY. Nothing here imports
+BUILT STANDALONE; NOW WIRED IN. The engine's army records (sim/engine/campaign_actors.py) feed the ration, the pack
+animal's load and fodder and the equipment burden to the campaign rules in this package; the paragraph below describes
+the first, single crossing and is otherwise still true of this file's imports.
+
+BUILT STANDALONE; FIRST CROSSING. Nothing here imports
 from sim/engine/, sim/world/agriculture.py or sim/geography/transport.py, and
 that remains true - this module still has no engine dependency in this
 direction, for the reason below. But sim/engine/society.py now imports
@@ -99,11 +103,11 @@ SHAPE.
                      with different numbers, per CLAUDE.md SS3.3, rather
                      than "modern weapon" getting its own code path.
 
-WHAT THIS MODEL DOES NOT DO (see also NON-GOALS in the task this module
-answers to): no combat resolution, no casualties, no morale, no recruitment,
-no pay, no money anywhere in this file. It does not decide who wins a war;
-it decides what fighting one costs in food, fodder, iron and ammunition, and
-how far from a supply base that cost can be sustained.
+WHAT THIS MODEL DOES NOT DO: no combat resolution, no casualties, no morale, no recruitment, no pay, no money
+anywhere in this file. It decides what fighting costs in food, fodder, iron and ammunition and how far from a
+supply base that cost can be sustained. Armies, campaigns, battles and sieges are built on these figures in
+campaign_supply.py, campaign_attrition.py, campaign_contest.py and battle.py (Complaint 485); the engine's phase is
+sim/engine/campaign_year.py.
 
 WHERE THIS MODEL IS WRONG, stated plainly rather than left for someone else
 to discover:

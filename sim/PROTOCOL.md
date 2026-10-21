@@ -753,6 +753,28 @@ A reply carries `lever`, `name`, `before`, `after`, `country` and `levers`. A se
 what is accepted), `value_not_number`, `value_out_of_range` (`low`, `high`), `value_not_boolean`, `nothing_to_clear`.
 Until tax rates are a state choice with consequences (Complaints 625 and 626) a rate may be any share of its base.
 
+### Armies and campaigns
+
+A country seat raises armies out of the soldiers its state keeps (the army line), sends them to a tile, recalls them and
+stands them down. `armies` lists them; `army` acts. The year's campaign phase (run on `step`) marches each army along
+the route graph, feeds it from what it carries, the land it crosses and a pack-animal column from the country's own
+tiles within reach, takes its losses to hunger, disease and unpaid pay, and where it ends on another actor's tile
+besieges and storms it. A tile it wins passes to its country at the control level the data names, and rises with the
+years it is held with an army on it. There is no declaration of war: an army that ends on another actor's tile is an
+attack on it. A state no seat plays raises and orders armies to the tiles other armies threaten, and attacks nobody.
+
+    {"cmd":"army","action":"raise","soldiers":5000,"tile":"italy_03"}   a new army on a tile of yours (your best-endowed when none)
+    {"cmd":"army","action":"march","army":"army_1","tile":"iran_03"}     orders it to a tile; it marches in the year's phase
+    {"cmd":"army","action":"recall","army":"army_1"}                     orders it back to the tile it was raised on
+    {"cmd":"army","action":"disband","army":"army_1"}                    its soldiers return to the state's force
+    {"cmd":"armies"}                                                      your armies, and the soldiers in none
+
+A reply carries the army's `army`, `tile`, `soldiers`, `target`, `food_kg`, `supply_state` (share of its ration met in the
+last stretch), `pay_owed` and this year's `events` (hunger, disease, desertion, withdrew, conquest). Refusals carry a
+`cause`: `household_seat_has_no_government`, `army_size_not_positive`, `not_enough_soldiers` (`available`), `tile_not_yours`,
+`unknown_tile`, `unknown_army` (`choices`), `not_your_army`, `unknown_action`. Battles go to the world event log as
+kind `battle` (`attacker_win_probability`, `attacker_lost`, `defender_lost`).
+
 ## Commands from mods
 
 A mod may add commands, named `<mod_id>:<name>` (typed or as `{"cmd": "<mod_id>:<name>"}`), with an optional bare

@@ -18,3 +18,9 @@ needs revolt risk from slaves and resentment from badly held provinces to come o
 What it would take: per-tile integration and unrest fed by stratum shortfall, bonded share, control (484)
 and identity; a ruler or council record with a competence draw and a switch; faction actors that press
 budget lines the way interest groups press bans.
+
+**What 485 now gives this:** the army in the field is a body with `supply_state`, `pay_owed` (the army line's arrears shared
+by head) and desertion that rises with the years of pay owed (`sim/world/campaign_attrition.py`). A faction of the army
+(loyalty, mutiny, a ruler it backs) has a located force to act with; `group_servants.py` still acts on the headcount.
+The heuristics `STARVATION_LOSS_PER_UNFED_DAY`, `DESERTION_PER_YEAR_OF_PAY_OWED`, `ASSAULT_MIN_CHANCE` and
+`RETREAT_BELOW_FED_SHARE` retire to this complaint (morale and commanders as actors).

@@ -7,7 +7,7 @@ from .command_registry import command
          summary="what changed in the world lately: tile owners, floods, famines, with dates and causes",
          usage=["world_events", "world_events <years>", "world_events <kind>"],
          options={"<years>": "how many years back (default: the last ten)",
-                  "<kind>": "tile_transfer, flood, earthquake, bad_ruler or famine"},
+                  "<kind>": "tile_transfer, battle, flood, earthquake, bad_ruler or famine"},
          description="One row per record: its year, kind, the countries or seats involved, the tiles, the "
                      "cause and the figures. Every seat reads the same log.")
 def _cmd_world_events(sim, nodes, cmd, ended):
