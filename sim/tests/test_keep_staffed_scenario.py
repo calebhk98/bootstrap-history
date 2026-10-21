@@ -1,4 +1,6 @@
-"""Scenario (Complaint 640: the yearly staff phase, the closure rule, the command and the save are wiring on one game). keep_staffed: complaint 126 (name the concerns that must stay staffed through attrition)."""
+"""Scenario (Complaint 640: the yearly staff phase, the closure rule, the command and the save are wiring on one game). keep_staffed: complaint 126 (name the concerns that must stay staffed through attrition).
+The choice of what closes is test_staffing_choice_rules, the hires a flagged concern gets people_to_hire_for there, the
+yearly staff phase's own arithmetic test_staff_phase_rules."""
 from .harness import *  # noqa: F401,F403
 from sim.refusal import facts_of
 from sim.ui.proto.typed import parse_typed
@@ -71,10 +73,7 @@ check("the flag is part of the saved state", CONCERN in getattr(control.state.pr
 off = _dispatch(flagged, "keep %s off" % CONCERN)
 check("keep <id> off clears the flag",
       off.get("ok") is True and CONCERN not in getattr(flagged.state.projects, "keep_staffed", set()), off)
-flagged.employees.pop("glassblower", None)
-flagged.labour._resync_pools()
-_staff_and_money(flagged)
-check("once off, the concern closes again", CONCERN not in flagged.operating)
+# (a concern no longer flagged closes first when people run short: test_staffing_choice_rules)
 
 # Within cash: a flagged concern is not hired for when the household is broke.
 poor = _lost_foreman_sim()

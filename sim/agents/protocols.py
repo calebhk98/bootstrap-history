@@ -7,7 +7,7 @@ second scenario may supply another. Nothing here is imported at run time; it nam
 actors call, so a change to what an actor asks shows up as a change to this file.
 """
 import random
-from typing import Any, Dict, FrozenSet, List, Optional, Protocol, Set, Tuple
+from typing import Any, Dict, FrozenSet, Iterable, List, Optional, Protocol, Set, Tuple
 
 from .revenue import Assessment
 from .sector import Sector
@@ -133,6 +133,11 @@ class World(Protocol):
 
 	def held_tiles(self) -> List[str]:
 		"""The tiles the state holds."""
+		...
+
+	def collectible_share(self, tiles: Optional[Iterable[str]] = None) -> float:
+		"""The share of what is due on `tiles` (all the state holds when none) that its officials reach, from their
+		number, their literacy and the road from the seat (collection.py)."""
 		...
 
 	def arable_share(self, tiles: FrozenSet[str]) -> float:

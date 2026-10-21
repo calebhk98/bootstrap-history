@@ -171,16 +171,14 @@ run_it(game, "patron_imperial")
 for node_id in military:
     game.done.add(node_id)
     game.done_year[node_id] = game.year - 200
-check("the founder's military work does not reach the state however long it has had",
-      game.state_military_diffusion() == 0.0, game.state_military_diffusion())
 check("no half-life curve for the state's armies remains",
       not hasattr(game, "DIFFUSION_HALF_LIFE_MILITARY_YEARS"))
 government = game.state_treasury()
 government.knowledge.add(military[0])
 held = game.state_military_diffusion()
-check("what the government holds is the state's adoption", 0.0 < held < 1.0 + 1e-9, held)
+check("what the government holds is the state's adoption, whatever the founder's own work has had: the share rule "
+      "is test_adoption_share_rules", 0.0 < held < 1.0 + 1e-9, held)
 government.knowledge.update(military)
-check("holding all of it is full adoption", abs(game.state_military_diffusion() - 1.0) < 1e-9)
 relief, why = game.hazard_relief("sack_chance")
 check("war relief follows what the state holds",
       relief < 1.0 and any(entry["source"] == "state_weapons" for entry in game.hazard_relief_entries("sack_chance")),

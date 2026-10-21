@@ -1,5 +1,5 @@
-"""mines scenario (Complaint 640 audit): land ceilings, works technology, the quote, determinism and the save round trip
-through a game. Depletion and the cost scale are rule tests in test_mines."""
+"""mines scenario (Complaint 640 audit): where the ground's geology sets the ceiling, works technology, the quote, determinism and the save round trip
+through a game. Depletion and the cost scale are rule tests in test_mines; the ceiling arithmetic is test_mine_ceiling_rules."""
 from .harness import *  # noqa: F401,F403
 
 # =============================================================================
@@ -38,11 +38,7 @@ check("sinking far more of a scarce material than the land ceiling allows "
 # --- woodland is bounded too, the tester's other named case ("mines/woods").
 s_wood = unopened_sim(civ="norse_900ad", capital=1e12)
 wood_ceiling = s_wood.forest_land_ceiling()
-got_ha = s_wood.buy_forest(wood_ceiling * 100.0)
-check("buying far more coppice than the land can support delivers only up "
-      "to the ceiling, not the full amount asked",
-      0 < got_ha <= wood_ceiling + 1.0, (got_ha, wood_ceiling))
-check("...and the ceiling itself is nowhere near the WHOLE EMPIRE's own "
+check("the coppice ceiling is nowhere near the WHOLE EMPIRE's own "
       "managed coppice (500,000 t/yr charcoal implies ~667,000 ha)",
       s_wood.forest_land_ceiling() < 667000.0, s_wood.forest_land_ceiling())
 
@@ -171,9 +167,8 @@ check("...and every coal working is actually gone, not just one of them",
 def _mines_snapshot(seed_env):
     completed_process = subprocess.run(
         [sys.executable, "-c",
-         "import sys; import random; from sim import simulator as S; "
-         "T,P,N,W,G = S.load(); _l,O,_b = S.load_strategy('recommended', N, T['meta']['goal_node']); "
-         "s = S.Sim(N, O, random.Random(1), events=False, manual=True, "
+         "import sys; import random; from sim import simulator as S; from sim.tests import harness as H; "
+         "s = S.Sim(H.NODES, H.ORDER, random.Random(1), events=False, manual=True, "
          "civ=S.load_civ('rome_100ad'), cfg={'start_capital':1e9}); "
          "s.open_mine('coal', s.mine_land_ceiling('coal')*0.4, partial=False); "
          "s.open_mine('iron', s.mine_land_ceiling('iron')*0.3, partial=False); "

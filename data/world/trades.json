@@ -46,7 +46,7 @@
     },
     "carter": {
       "family": "labour",
-      "note": "Drives a cart or leads a pack train: carter, teamster, muleteer, drover. Land carriage by animal is this trade's work; porters on foot stay labourers.",
+      "note": "Drives a cart or leads a pack train: carter, teamster, muleteer, drover. Land carriage by animal is this trade's work; porters on foot are the porter trade.",
       "training_years": 1,
       "fatality_risk_per_year": 0.0,
       "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
@@ -63,6 +63,14 @@
         "glass",
         "charcoal"
       ],
+      "fatality_risk_per_year": 0.0,
+      "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
+      "fatality_confidence": "D"
+    },
+    "dockworker": {
+      "family": "labour",
+      "note": "Loads and unloads cargo at a port: stevedore, longshoreman, quay porter. Port handling hours of a sea leg are this trade's work (the sailing mode names it as its handling_trade).",
+      "training_years": 0,
       "fatality_risk_per_year": 0.0,
       "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
       "fatality_confidence": "D"
@@ -291,6 +299,14 @@
       "tool_basket": [
         "lead"
       ],
+      "fatality_risk_per_year": 0.0,
+      "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
+      "fatality_confidence": "D"
+    },
+    "porter": {
+      "family": "labour",
+      "note": "Carries loads on the back or a tumpline over land: the Mexica tlameme, the Andean and African bearer, the hill porter. Carriage on foot is this trade's work. Trained from childhood in the carrying but asks no craft, so anyone can take it up at once.",
+      "training_years": 0,
       "fatality_risk_per_year": 0.0,
       "fatality_source": "Zero: no sourced rate for this trade was found, so it carries no danger pay. A statement of absence of data, not of safety.",
       "fatality_confidence": "D"

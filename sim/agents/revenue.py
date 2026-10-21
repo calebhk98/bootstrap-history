@@ -27,6 +27,7 @@ class Assessment:
 	person_days: float = 0.0  # labour owed, in days of work, where the form is a labour due (revenue_labour.py)
 	labour_to: str = ""  # what the labour is for: the state's works or its army
 	commute: float = 0.0  # the share of a labour due paid in coin instead
+	collectible: float = 1.0  # share of what is due that the state's officials reach (collection.py); money and tonnes are after it
 
 	@property
 	def in_kind(self) -> bool:
@@ -80,23 +81,25 @@ def assess(world: Any) -> List[Assessment]:
 		if material and material != base.material:
 			raise ValueError("form %r is paid in %r but its basis %r yields %r"
 							 % (declared["form"], material, declared["basis"], base.material))
+		collectible = world.collectible_share(tiles)
 		if base.payers:
-			assessments.append(taxed_actors(declared, base))
+			assessments.append(taxed_actors(declared, base, collectible))
 			continue
-		assessments.append(Assessment(declared["form"], declared["basis"], base.value, rate, rate * base.value,
-									  rate * base.tonnes if material else 0.0, material))
+		assessments.append(Assessment(declared["form"], declared["basis"], base.value, rate, collectible * rate * base.value,
+									  collectible * rate * base.tonnes if material else 0.0, material,
+									  collectible=collectible))
 	return assessments
 
 
-def taxed_actors(declared: Any, base: Any) -> Assessment:
-	"""A form on what actors hold: each payer owes the rate of its own income, no more than its purse holds.
-	A form may name the bodies it falls on (`from_strata`)."""
+def taxed_actors(declared: Any, base: Any, collectible: float = 1.0) -> Assessment:
+	"""A form on what actors hold: each payer owes the rate of its own income, no more than its purse holds, and
+	the state reaches the `collectible` share of it. A form may name the bodies it falls on (`from_strata`)."""
 	rate = float(declared["rate"])
 	names = declared.get("from_strata")
 	chosen = [(payer, income) for payer, income in base.payers if names is None or payer.record.stratum in names]
-	owed = tuple((payer, min(rate * income, max(0.0, payer.money))) for payer, income in chosen)
+	owed = tuple((payer, collectible * min(rate * income, max(0.0, payer.money))) for payer, income in chosen)
 	return Assessment(declared["form"], declared["basis"], sum(income for _payer, income in chosen), rate,
-					  sum(amount for _payer, amount in owed), payers=owed)
+					  sum(amount for _payer, amount in owed), payers=owed, collectible=collectible)
 
 
 def labour_due(declared: Any, world: Any) -> Assessment:
