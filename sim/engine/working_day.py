@@ -9,6 +9,8 @@ same people at the same hourly wage.
 from sim.constants import declare
 from sim.unit_conversions import HOURS_PER_PERSON_YEAR
 
+from .public_works_rules import extra_lit_hours, working_hours_per_year
+
 BASE_WORKING_DAY_HOURS = declare(
     "BASE_WORKING_DAY_HOURS", 10.0, kind="engineering_estimate", unit="hours per working day",
     source="The ten-hour day behind HOURS_PER_PERSON_YEAR in sim/unit_conversions.py.", confidence="B",
@@ -19,16 +21,16 @@ class WorkingDayMixin:
 
     def extra_lit_hours_per_day(self):
         """Hours a day added by the open works that declare `working_day`, each for the people it covers."""
-        total = 0.0
+        works = []
         for node_id in self.nodes_with_mechanic("working_day"):
             if not self.running(node_id):
                 continue
             share = self.coverage_share(node_id) if node_id in self.coverage_nodes() else 1.0
-            total += self.mechanic(node_id, "working_day")["extra_hours_per_day"] * share
-        return total
+            works.append((self.mechanic(node_id, "working_day")["extra_hours_per_day"], share))
+        return extra_lit_hours(works)
 
     def working_hours_per_person_year(self):
         """Hours one person gives in a year: the convention, stretched by the lit hours added to the day."""
         if not self.nodes_with_mechanic("working_day"):
             return HOURS_PER_PERSON_YEAR
-        return HOURS_PER_PERSON_YEAR * (1.0 + self.extra_lit_hours_per_day() / BASE_WORKING_DAY_HOURS)
+        return working_hours_per_year(HOURS_PER_PERSON_YEAR, self.extra_lit_hours_per_day(), BASE_WORKING_DAY_HOURS)

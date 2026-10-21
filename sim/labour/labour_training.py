@@ -23,6 +23,8 @@ from sim.refusal import Refusal
 from . import trade_data, trade_first_hands, trade_formation
 from .hands import contracted_hours_of, hands_available
 from .hire_outcome import hire_result, unfound_note
+from .request_rules import (commission_request_refusal, fire_refusal, teaching_fee, teaching_hours_refusal,
+                            train_request_refusal)
 from .room_advice import hire_room_refusal
 from .staff_moves import (apprentices_of, commission_spare_hours, crosses_literacy_wall, dismiss)
 
@@ -330,8 +332,9 @@ class TrainingMixin:
         household = self._world.state.household
         have = self.employed(trade)
         pending = apprentices_of(household.training, trade)
-        if have <= 0 and pending <= 0:
-            return False, "you employ no %ss, and none are being taught" % trade
+        refusal = fire_refusal(trade, have, pending)
+        if refusal:
+            return False, refusal
         # WHOLE PEOPLE, as hire() and train() enforce, so a roster cannot drift to "0.03 engineers" through `fire`:
         # a fraction asked for is rounded up rather than refused.
         gone, left, stopped, household.training, _unmet = dismiss(have, household.training, trade, count)
@@ -387,23 +390,16 @@ class TrainingMixin:
         move. Returns (plan, refusal); the plan holds the whole-person count,
         the source trade, the founder hours and the keep paid now."""
         trade = str(trade or "").strip().lower()
-        if trade not in self._world.wages:
-            return None, Refusal("no_such_trade", "no such trade: %s" % trade)
-        if count <= 0:
-            return None, Refusal("count_not_positive", "n must be greater than zero. Nothing was changed.")
         # PEOPLE ARE WHOLE. See the identical check in hire() for why: a
         # taught trade is still a roster of actual people, not a quantity of
         # training-hours, and "0.03 engineers" was exactly as false whichever
         # verb put it there.
-        if abs(count - round(count)) > 1e-6:
-            return None, Refusal("count_not_whole", "you teach whole people, not %g of one. Teach %d or %d."
-                                 % (count, math.floor(count), math.ceil(count)))
+        frm, refusal = train_request_refusal(
+            trade in self._world.wages, trade, count, lambda: frm or self._source_trade_for(trade),
+            lambda source: source in self._world.trades_absent and source not in self._world.state.household.trades_created)
+        if refusal:
+            return None, refusal
         count = float(round(count))
-        frm = (frm or self._source_trade_for(trade) or "").strip().lower()
-        if not frm:
-            return None, Refusal("no_source_trade", "there is no trade here to teach %ss from" % trade)
-        if frm in self._world.trades_absent and frm not in self._world.state.household.trades_created:
-            return None, Refusal("source_trade_absent", "you cannot teach from %ss; there are none" % frm)
         # LITERACY BOUNDS TEACHING TOO, and this is where it bites hardest:
         # engineer, chemist, machinist and optician can ONLY be had this way
         # (trade_available refuses to hire them at all), so without this check
@@ -422,9 +418,9 @@ class TrainingMixin:
         # another actor holding the knowledge teaches and is paid for their hours; otherwise it is your own
         hours = 0.0 if teacher else teaching_hours
         pool = self.director_pool() - self.director_hours_committed()
-        if hours > pool:
-            return None, Refusal("founder_hours_short", "teaching %g %ss takes %.0f of your own hours and you have "
-                                 "%.0f uncommitted this year" % (count, trade, hours, max(0.0, pool)))
+        refusal = teaching_hours_refusal(hours, pool, count, trade)
+        if refusal:
+            return None, refusal
         # THE SAME ROOM `hire` AND `buy` SHARE: household_room exists so all
         # three verbs agree on the same ceiling. `train` must check it too,
         # or a household could teach its way past its actual capacity to
@@ -449,9 +445,8 @@ class TrainingMixin:
         uncovered = self.uncovered_from(trade, frm)
         # the early slice is paid as staff from its own date, so the source's wages are kept up front only for the rest
         kept_years = trade_first_hands.prepaid_keep_years(years, self._full_years(trade), uncovered)
-        fee = count * self.labour_market.quote_annual(frm) * kept_years      # the source's wages while they learn
-        if teacher:
-            fee += teaching_hours * self.labour_market.quote_annual(frm) / self._world.HOURS_PER_PERSON_YEAR
+        fee = teaching_fee(count, self.labour_market.quote_annual(frm), kept_years, teacher, teaching_hours,
+                           self._world.HOURS_PER_PERSON_YEAR)      # the source's wages while they learn
         if fee > self._world.spending_power("buy"):
             return None, self._cash_in_hand_refusal(
                 "keeping %g %s%s fed while they learn"
@@ -630,18 +625,13 @@ class TrainingMixin:
         """What `commission` and `quote commission` agree on before money
         moves. Returns (fee, refusal)."""
         trade = str(trade or "").strip().lower()
-        if trade not in self._world.wages:
-            return None, "no such trade: %s" % trade
-        if hours <= 0:
-            return None, "hours must be greater than zero. Nothing was changed."
-        if not self.trade_available(trade):
-            return None, ("no %s will take the work; the trade does not exist here: %s"
-                           % (trade, self._world.trade_notes.get(trade, "")))
         household = self._world.state.household
-        spare = commission_spare_hours(self.market_supply(trade), household.contract_hours.get(trade, 0.0))
-        if hours > spare:
-            return None, ("the %ss here can spare %.0f more hours this year, not %.0f"
-                           % (trade, max(0.0, spare), hours))
+        known = trade in self._world.wages
+        exists = known and hours > 0 and self.trade_available(trade)
+        spare = commission_spare_hours(self.market_supply(trade), household.contract_hours.get(trade, 0.0)) if exists else 0.0
+        refusal = commission_request_refusal(known, trade, hours, exists, self._world.trade_notes.get(trade, ""), spare)
+        if refusal:
+            return None, refusal
         # A shop charges more for a one-off than it pays its own man for a
         # year, and more again if you are buying deep into what the local
         # market can spare this year (see labour market price_factor).

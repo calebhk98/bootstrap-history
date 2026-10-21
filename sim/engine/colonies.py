@@ -15,7 +15,7 @@ from sim.world.shared_constants import (
     ANNUAL_LABOUR_HOURS_PER_FARM_WORKER, FALLOW_SHARE_OF_HOLDING)
 from sim.world.farm_labour import REFERENCE_LABOUR_HOURS_PER_HECTARE
 
-from .colony_rules import advance_colony, founding_refusal
+from .colony_rules import advance_colony, best_settlement_work, colony_people, founding_refusal, outfit_cost
 from .units_prose import money_text, plain_number
 
 # land one farm worker holds, fallow included: the hours a worker gives a year over the hours a cropped hectare takes
@@ -30,8 +30,7 @@ class ColoniesMixin:
         sends the most settlers, ties by id."""
         known = [(node_id, self.mechanic(node_id, "settlement")) for node_id in self.nodes_with_mechanic("settlement")
                  if node_id in self.state.projects.done]
-        fit = [(node_id, spec) for node_id, spec in known if spec.get("by_sea") or not by_sea]
-        return max(fit, key=lambda item: (item[1]["settlers"], item[0]), default=None)
+        return best_settlement_work(known, by_sea)
 
     def claimed_tiles(self):
         """Tiles some other actor owns (a seat's colony, a partner's land): a tile has one owner."""
@@ -44,7 +43,7 @@ class ColoniesMixin:
 
     def settlement_outfit_cost(self, spec):
         """What outfitting the settlers costs: a year's work for each at the society's wage."""
-        return spec["settlers"] * spec["outfit_hours_per_settler"] * self.labour.money_per_labour_hour()
+        return outfit_cost(spec, self.labour.money_per_labour_hour())
 
     def found_colony(self, tile_id):
         """(ok, text): found a colony on `tile_id`."""
@@ -83,8 +82,7 @@ class ColoniesMixin:
         """What the `colonies` listing shows of each colony the acting seat holds."""
         rows = []
         for colony in self.state.holdings.colonies:
-            people = colony["children"] + colony["working_age"] + colony["elderly"]
-            rows.append({"tile": colony["tile"], "founded_year": colony["founded_year"], "people": round(people),
+            rows.append({"tile": colony["tile"], "founded_year": colony["founded_year"], "people": round(colony_people(colony)),
                          "most_the_land_feeds": round(settlement.capacity_kcal_per_day(colony["tile"])
                                                       / self._demography.SUBSISTENCE_CALORIES_PER_ADULT_EQUIVALENT_DAY)})
         return rows

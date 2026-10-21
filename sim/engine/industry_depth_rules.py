@@ -33,3 +33,9 @@ def firm_worker_years(founding_years, capacity, staffed_share):
     """Worker-years a firm's concern puts in this year: a founding-size concern's, times its capacity and the
     share of it that is staffed."""
     return founding_years * capacity * staffed_share
+
+
+def opening_seed(granted, is_concern, opening, founding_years_of, fade):
+    """{technique: (worker-years a year, the steady-state stock they seed)} for each concern the society already runs."""
+    return {node_id: (rate, seed_stock(rate, fade))
+            for node_id, rate in opening_rates(granted, is_concern, opening, founding_years_of).items()}

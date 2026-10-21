@@ -124,6 +124,20 @@ class IndustryDepth(unittest.TestCase):
         self.assertGreater(Depth.industry_scale_ceiling(opening, "loom"), 1.0)
         self.assertEqual(opening.industry_depth("anvil"), 0.0)
 
+    def test_the_opening_is_seeded_once_whatever_is_read_first(self):
+        opening = world(seeded=False, granted={"loom"}, opening={"loom": 7.0})
+        first = opening.industry_depth("loom")
+        Depth.seed_opening_industry_experience(opening)
+        Depth.seed_opening_industry_experience(opening)
+        self.assertAlmostEqual(opening.industry_depth("loom"), first, places=12)
+        self.assertTrue(opening.state.projects.industry_seeded)
+        self.assertEqual(opening.state.projects.industry_opening_rate, {"loom": 7.0})
+
+    def test_nothing_is_seeded_while_nothing_is_granted(self):
+        bare = world(seeded=False, granted=set())
+        Depth.seed_opening_industry_experience(bare)
+        self.assertFalse(bare.state.projects.industry_seeded)
+
     def test_an_opening_workforce_of_many_workshops_sizes_the_seed(self):
         one = world(seeded=False, granted={"loom"})
         many = world(seeded=False, granted={"loom"}, opening={"loom": 40.0})

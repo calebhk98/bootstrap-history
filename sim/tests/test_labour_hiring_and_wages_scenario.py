@@ -48,8 +48,8 @@ check("...and the hours leave the standing job, so revenue falls by the wage of 
           - household.labour.wage_for_hours(household.held_trade(), 500) * household.state.economy.output_factor) < 0.5,
       (_revenue_before_work, household.revenue()))
 
-# --- Dismissing a trade you are teaching must cancel the apprenticeship (the rules are in test_trade_first_hands and
-# test_staff_moves_rules; here the command reaches them on the household's own records).
+# --- Dismissing a trade you are teaching must cancel the apprenticeship (the rules are in test_trade_first_hands, test_staff_moves_rules
+# and test_labour_request_rules; here the command reaches them on the household's own records).
 _trained, _ = household.labour.train("machinist", 1)
 _taught = [record for record in household.training if len(record) > 3 and record[2] == "machinist"]
 check("teaching a trade puts people in training", _trained and abs(sum(record[3] for record in _taught) - 1) < 1e-9, household.training)
@@ -57,8 +57,6 @@ _fired, _fire_note = household.labour.fire("machinist", 1)
 check("dismissing a trade you are teaching cancels the apprenticeship",
       _fired and not [record for record in household.training if len(record) > 3 and record[2] == "machinist"],
       (_fire_note, household.training))
-check("firing a trade you neither employ nor teach is still refused",
-      household.labour.fire("machinist", 1)[0] is False, household.labour.fire("machinist", 1)[1])
 
 # --- Leaning on a scarce trade must show in its quoted price. Millwright is
 # the scarcest useful trade; a common trade has a town's worth of pool.

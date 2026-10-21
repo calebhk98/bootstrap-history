@@ -135,6 +135,36 @@ class Droving(unittest.TestCase):
         self.assertGreater(len(reached), 1)
 
 
+class HaulArithmetic(unittest.TestCase):
+    """The class, mode and unjoined-haul rules (`haul_route`) and the herd's loss on the road, on given inputs."""
+
+    def test_stock_that_walks_is_living_stock_and_anything_else_is_goods(self):
+        from sim.engine.haul_route import cargo_class_of
+        self.assertEqual(cargo_class_of({"walks": True}), "living_stock")
+        self.assertEqual(cargo_class_of({"walks": False}), "goods")
+        self.assertEqual(cargo_class_of({}), "goods")
+        self.assertEqual(cargo_class_of(None), "goods")
+
+    def test_goods_go_by_the_cart_and_stock_by_the_first_walking_mode_else_the_cart(self):
+        from sim.engine.haul_route import domestic_haul_mode
+        self.assertEqual(domestic_haul_mode("goods", ["drove"], "cart"), "cart")
+        self.assertEqual(domestic_haul_mode("living_stock", ["drove", "foot"], "cart"), "drove")
+        self.assertEqual(domestic_haul_mode("living_stock", [], "cart"), "cart")
+
+    def test_an_unjoined_haul_is_one_leg_at_the_rate_plus_the_dues_once(self):
+        from sim.engine.haul_route import unjoined_haul_cost
+        self.assertAlmostEqual(unjoined_haul_cost(0.5, 200.0, 7.0), 107.0)
+        self.assertAlmostEqual(unjoined_haul_cost(0.5, 0.0, 7.0), 7.0)
+
+    def test_the_cargo_share_counts_a_herds_loss_on_the_road_over_interest_alone(self):
+        from sim.engine.haul_route import Leg, Route, domestic_cargo_cost_share
+        route = Route((Leg("a", "b", "drove", 400.0, 0.0, 20.0),))
+        interest_only = domestic_cargo_cost_share(0.0, {}, route, 0.05)
+        with_loss = domestic_cargo_cost_share(0.0, {"drove": 0.01}, route, 0.05)
+        self.assertGreater(with_loss, interest_only)
+        self.assertGreater(interest_only, 0.0)
+
+
 class Rivers(unittest.TestCase):
     """Rivers are edges between tiles derived from the tile layers, not reaches authored inside regions."""
 

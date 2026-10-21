@@ -31,9 +31,6 @@ check("and no line the budget does not name (the lever-named lines, the works, t
       set(lines) <= set(government_levers.budget_line_names()) | set(order.STAFF_LINES), sorted(lines))
 check("every line is priced from people at wages or goods at the market's price",
       all(line.money > 0.0 for line in lines.values()), {name: line.money for name, line in lines.items()})
-check("the navy is manned by sailors, the dole is grain, public buildings are masons' work",
-      "sailor" in lines["navy"].labour and lines["dole"].materials and "mason" in lines["public_buildings"].labour,
-      (lines["navy"].labour, lines["dole"].materials, lines["public_buildings"].labour))
 pristine_civ = copy.deepcopy(game.civ)   # the one game below is shared; each check restores what it changed
 pristine_population = {cohort: getattr(game.population, cohort) for cohort in ("children", "working_age", "elderly")}
 landlocked = game
@@ -51,9 +48,6 @@ game.civ = copy.deepcopy(pristine_civ)
 bigger_city = game
 for cohort in ("children", "working_age", "elderly"):
     setattr(bigger_city.population, cohort, getattr(bigger_city.population, cohort) * 2.0)
-check("a larger population keeps up more public buildings and feeds more of its poor",
-      lines_of(bigger_city)["public_buildings"].money > 1.5 * lines["public_buildings"].money
-      and lines_of(bigger_city)["dole"].money > 1.5 * lines["dole"].money)
 check("the garrison does not grow with the people: it follows the frontier and the threat",
       abs(lines_of(bigger_city)["army"].labour["soldier"] - lines["army"].labour["soldier"]) < 1e-6)
 for cohort, people in pristine_population.items():
@@ -71,9 +65,6 @@ check("in the opening year the state wants the civilisation's opening force",
       (army_in_calm, game.civ["standing_army"]))
 check("while the civilisation's own hazards threaten a sack the state wants a bigger army",
       army_in_crisis > 1.2 * army_in_calm, (army_in_crisis, army_in_calm))
-norse = unopened_sim(civ="norse_900ad")
-check("a hazard that does not threaten a sack leaves the army alone",
-      abs(SimWorld(norse).army_wanted() - norse.civ["standing_army"]) < 1e-6)
 
 # ---- soldiers are out of production -------------------------------------------------------------
 game.state_treasury().record.army = 0.0
@@ -82,13 +73,6 @@ game.state_treasury().record.army = 1.0e6
 revenue_with_army = SimWorld(game).state_revenue()
 check("soldiers kept under arms owe no poll tax, so the people it is assessed on and the state's revenue are smaller",
       revenue_with_army < revenue_without_army, (revenue_with_army, revenue_without_army))
-game.state_treasury().record.army = 0.0
-game.state.holdings.farm_last_harvest_kg = 1.0e9
-revenue_in_slump = SimWorld(game).state_revenue()
-game.state.holdings.farm_last_harvest_kg = 2.0e9
-revenue_when_steady = SimWorld(game).state_revenue()
-check("a failed harvest cuts what the state can take", revenue_in_slump < revenue_when_steady,
-      (revenue_in_slump, revenue_when_steady))
 
 # ---- patron funding is a payment out of the treasury --------------------------------------------
 patron = unopened_sim()

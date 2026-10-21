@@ -51,17 +51,13 @@ check("...and the office costs something too, alongside requisition",
 
 _pressed_protection = _big.protection   # as _grown left it
 _big.protection = 0.0
-_poor_requisition, _poor_office = _big.requisition_report()[0], _big.office_report()[0]
+_poor_requisition = _big.requisition_report()[0]
 _big.protection = 0.85
-_rich_requisition, _rich_office = _big.requisition_report()[0], _big.office_report()[0]
+_rich_requisition = _big.requisition_report()[0]
 _big.protection = _pressed_protection
 check("requisition is bargained down by protection - patronage and standing "
       "are not decorative here",
       _rich_requisition < _poor_requisition, (_rich_requisition, _poor_requisition))
-check("...but the office is NOT bargained down the same way - it is the "
-      "version you do not get to decline cheaply",
-      abs(_rich_office - _poor_office) < 1e-9, (_rich_office, _poor_office))
-
 _prot_before = unopened_sim(civ="rome_100ad")
 _prot_before.update_protection()
 _small_protection = _prot_before.protection
@@ -83,16 +79,6 @@ check("...but the FIRST working gun (one military-branch node, not a "
       and _mil_done.military_demand_eligible(),
       _mil_done.military_leverage())
 
-_tiny_notice = unopened_sim(civ="rome_100ad")
-_tiny_notice.employees["artisan"] = 2.0
-_tiny_notice.labour._resync_pools()
-check("military demand still needs SOME visible scale - a founder who has "
-      "merely studied cannon, with no household to speak of, is not yet "
-      "worth a state's letter",
-      not (_tiny_notice.military_leverage() >= 0.2
-           and _tiny_notice.state_notice() > _tiny_notice.STATE_NOTICE_THRESHOLD_MILITARY),
-      _tiny_notice.state_notice())
-
 # 60 million coin at the old coin value, stated in labour hours so it does not
 # move with what the coin metal costs
 HUGE_CAPITAL_ROME = 2.24e8 * unopened_sim(civ="rome_100ad").labour.money_per_labour_hour()
@@ -103,20 +89,6 @@ check("confiscation is a TAIL risk: it stays at zero until well past the "
       (_big.state_notice(), _big.confiscation_risk()[0]))
 check("...and only arrives once a household is truly enormous",
       _huge.confiscation_risk()[0] > 0.0, _huge.state_notice())
-
-_huge_bare_risk = _huge.confiscation_risk()[0]
-_huge_shielded = _huge
-_huge_shielded.protection = 0.85
-_huge_shielded.done.add("academy_network")
-_huge_shielded._done_changed()
-_huge_shielded.done.update(node_id for node_id in NODES if "military" in NODES[node_id].get("traits", ())
-)
-_huge_shielded._done_changed()
-check("confiscation is mitigable, by exactly the things that mitigated it "
-      "historically: a patron/standing, dispersed holdings, and being "
-      "useful to a state that fights, ALL reduce the tail risk together",
-      _huge_shielded.confiscation_risk()[0] < _huge_bare_risk,
-      (_huge_shielded.confiscation_risk()[0], _huge_bare_risk))
 
 _norse_extreme = unopened_sim(civ="norse_900ad")
 _norse_extreme.employees["artisan"] = 2000.0

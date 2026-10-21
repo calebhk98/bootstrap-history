@@ -8,6 +8,8 @@ born (`sim/world/demography.py`), counts them with the year's food.
 
 from sim.unit_conversions import CIVIL_DAYS_PER_YEAR
 
+from .public_works_rules import relief_kcal_per_day
+
 
 class FoodReliefMixin:
 
@@ -23,7 +25,5 @@ class FoodReliefMixin:
 
     def relief_kcal_per_day(self):
         """The food energy a day, over the whole nation, that open works hand out."""
-        total = 0.0
-        for node_id, kilograms in self.relief_kilograms_per_year().items():
-            total += kilograms * self.mechanic(node_id, "food_relief")["energy_kcal_per_kg"]
-        return total / CIVIL_DAYS_PER_YEAR
+        return relief_kcal_per_day([(kilograms, self.mechanic(node_id, "food_relief")["energy_kcal_per_kg"])
+                                    for node_id, kilograms in self.relief_kilograms_per_year().items()], CIVIL_DAYS_PER_YEAR)
