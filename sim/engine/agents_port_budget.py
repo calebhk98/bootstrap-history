@@ -85,6 +85,12 @@ class BudgetView:
 		sim = self._sim
 		return sim.military_equipment_burden_kg_per_soldier_per_year(sim.state_military_diffusion())
 
+	def military_work_ids(self) -> Tuple[str, ...]:
+		return tuple(self._sim._diffusible_ids("military"))
+
+	def equipment_kg_at_adoption(self, adoption: float) -> float:
+		return self._sim.military_equipment_burden_kg_per_soldier_per_year(adoption)
+
 	def pay_per_person_year(self, trade: str) -> float:
 		return self.labour_market.quote_annual(trade)  # type: ignore[attr-defined]
 
@@ -113,6 +119,16 @@ class BudgetView:
 
 	def notice_over(self, scale: float, capacity: Optional[float] = None) -> float:
 		return self._sim.notice_over(scale, capacity)
+
+	def seat_taxpayers(self, country: str) -> List[Tuple[float, float]]:
+		"""(visible scale, taxable income) of the playing household seats that belong to `country`."""
+		sim = self._sim
+		payers = []
+		for seat_id in sim.playing_seats():
+			if sim.state.seats[seat_id].country == country and sim.state.seats[seat_id].holds_household:
+				with sim.act_as(seat_id):
+					payers.append((self.visible_scale_of(sim.household), max(0.0, sim.revenue())))  # type: ignore[attr-defined]
+		return payers
 
 	def visible_taxpayers(self) -> List[Tuple[float, float]]:
 		"""(visible scale, taxable income) of every actor the state can see: the seats still playing and the firms."""

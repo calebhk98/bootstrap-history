@@ -105,6 +105,13 @@ class CountryEconomyTests(unittest.TestCase):
         self.assertLess(answers.people_of_trade(fixture.MINER), 0.05 * CountryAnswers(self.economy, self.setup.civ_id).people_of_trade(fixture.MINER))
         self.assertEqual(answers.people_of_trade("no such trade"), 0.0)
 
+    def test_land_rent_is_received_by_the_countrys_own_cohorts(self):
+        from sim.engine.economy_port_country import CountryAnswers
+        north = [c for c in self.economy.record.cohorts.values() if c.tile in self.setup.tiles_of(fixture.NORTH) and c.people > 0.0]
+        curve = CountryAnswers(self.economy, fixture.NORTH).land_rent_curve()
+        self.assertEqual(sum(people for people, _rent in curve), sum(c.people for c in north))
+        self.assertEqual(CountryAnswers(self.economy, fixture.NORTH).land_rent_curve(set()), [(p, 0.0) for p, _ in curve])
+
     def test_a_country_with_no_tiles_has_no_figures(self):
         self.assertEqual(country_figures.wages_per_hour(self.economy, "nowhere"), {})
         self.assertIsNone(country_figures.output_value(self.economy, "nowhere"))

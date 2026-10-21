@@ -3,7 +3,7 @@ its payroll and its purchases. `CountryWorld` mixes this in, so the one `Governm
 by the same rules as the home one (revenue.py, budget.py) over the country's figures.
 
 A reading the world keeps for the home country alone (no trade book, no interest groups) is
-answered with nothing here, never with the home figure; Complaint 647 lists them.
+answered with nothing here, never with the home figure; Complaint 649 lists them.
 """
 import functools
 from typing import Any, Dict, FrozenSet, List, Optional, Tuple
@@ -11,7 +11,7 @@ from typing import Any, Dict, FrozenSet, List, Optional, Tuple
 from sim.geography.api import arable_hectares, settlement, territory, usable_modes
 from sim.world import demography
 
-from . import collection, government_levers, ledger, revenue
+from . import collection, government_levers, ledger, revenue, strata_observed
 from .collection_world import CollectionView
 from .edges import EDGE_STATE_SPENDING, EDGE_WORKERS
 from .no_country_economy import NoCountryEconomy
@@ -86,8 +86,17 @@ class CountryStateView(CollectionView):
 		return {tile: rent for tile, rent in self._shared.land_rent_paid_by_tile().items() if tile in held}
 
 	def land_rent_owners(self, tiles: Optional[FrozenSet[str]] = None) -> List[Tuple[Any, float]]:
-		"""Nobody is named: the rent a country's tiles pay is drawn from the edge (retire: Complaint 647)."""
-		return []
+		"""(stratum, rent received) of the rent paid on the country's `tiles` (all it holds when none): its own cohorts
+		keep the rent by what each owns, and its strata are slices of those cohorts ranked by income. Nobody while its
+		economy keeps no cohorts, when the tax is drawn from the edge."""
+		held = frozenset(self.held_tiles())
+		try:
+			curve = self._own_economy().land_rent_curve(held if tiles is None else held & frozenset(tiles))
+		except NoCountryEconomy:
+			return []
+		strata = [stratum for stratum in self.country_strata() if stratum.record.exited_year is None]
+		received = strata_observed.observed_incomes(strata, self, curve) if curve else {}
+		return [(stratum, received[stratum.record.stratum]) for stratum in strata if received.get(stratum.record.stratum, 0.0) > 0.0]
 
 	def trade_value(self, direction: str) -> float:
 		"""Money's worth of the goods that crossed the country's border last year, as its own part of the economy
@@ -131,6 +140,13 @@ class CountryStateView(CollectionView):
 		return 0.0
 
 	# ---- the army
+	def equipment_kg_per_soldier(self) -> float:
+		"""Iron and ammunition one equipped soldier uses a year at the share of the military work the country's own
+		state holds (its knowledge and what its civilisation starts with)."""
+		work = self._shared.military_work_ids()
+		known = set(getattr(self.government(), "knowledge", ())) | set(self.baseline_knowledge())
+		return self._shared.equipment_kg_at_adoption(sum(1 for node_id in work if node_id in known) / len(work) if work else 0.0)
+
 	def threat_pressure(self) -> float:
 		"""Probability a year of the country's own declared hazards sack a site."""
 		year = self._shared.year
@@ -158,15 +174,16 @@ class CountryStateView(CollectionView):
 		return 0.0
 
 	def group_claims(self) -> Dict[str, float]:
-		"""Interest groups form around the founder's economy; a country's state owes none yet (Complaint 647)."""
+		"""Interest groups form around the founder's economy; a country's state owes none yet (Complaint 649)."""
 		return {}
 
 	def visible_taxpayers(self) -> List[Tuple[float, float]]:
-		"""(visible scale, taxable income) of the firms of the country the state can see."""
+		"""(visible scale, taxable income) of the firms and the players' seats of the country the state can see."""
 		lookup = getattr(self._holder, "active_firms", None)
 		firms = lookup() if callable(lookup) else []
-		return [(self.visible_scale_of(firm), max(0.0, firm.record.last_margin))
-				for firm in firms if firm.record.country == self.profile.country]
+		seats = list(self._shared.seat_taxpayers(self.profile.country))
+		return seats + [(self.visible_scale_of(firm), max(0.0, firm.record.last_margin))
+						for firm in firms if firm.record.country == self.profile.country]
 
 	def notice_over(self, scale: float, capacity: Optional[float] = None) -> float:
 		return self._shared.notice_over(scale, self.state_reach() if capacity is None else capacity)

@@ -69,6 +69,14 @@ class World(Protocol):
 	def equipment_kg_per_soldier(self) -> float:
 		...
 
+	def military_work_ids(self) -> Tuple[str, ...]:
+		"""The tree nodes that make up the military work an army can take up."""
+		...
+
+	def equipment_kg_at_adoption(self, adoption: float) -> float:
+		"""Iron and ammunition one equipped soldier uses a year when his army holds this share (0..1) of the military work."""
+		...
+
 	def pay_per_person_year(self, trade: str) -> float:
 		...
 
@@ -84,6 +92,10 @@ class World(Protocol):
 
 	def notice_over(self, scale: float, capacity: Optional[float] = None) -> float:
 		"""How far past the notice line a taxpayer of this visible scale stands; `capacity` is another state's."""
+		...
+
+	def seat_taxpayers(self, country: str) -> List[Tuple[float, float]]:
+		"""(visible scale, taxable income) of the players' seats that belong to a country."""
 		...
 
 	def visible_taxpayers(self) -> List[Tuple[float, float]]:
