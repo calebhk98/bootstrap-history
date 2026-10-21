@@ -55,3 +55,44 @@ value moved. `currency.py` carried no "recalled" line; the 606 constants are tho
 
 Not touched, still open: `data/production` rows (organics, lighting, herds labour), `trades.json`, `spoilage.json`,
 `waste_heaps.json`, disease files, civilisation notes, `agriculture.py`, test docstrings.
+
+## Pass 2
+
+Scope: `data/production` rows, `data/world/trades.json`, `spoilage.json`, `waste_heaps.json`. Skipped: disease files,
+test docstrings, `95_wine_oil_jars.json` (Complaint 656). Count of "recalled" lines in `data` and `sim` (`.json`,
+`.py`) fell from 102 to 34 with the grep above (the rest are disease, civilisation, geography, needs, agriculture,
+soil, service-life and wine/oil/jar lines).
+
+Sourced (opened), with changed values:
+- `data/production/95_herds.json:23`, `:17`, `:92`, `:98`: Varro, De re rustica 2.2.20 and 2.10.11 (LacusCurtius):
+  one shepherd to a hundred rough-fleeced sheep. Head per shepherd changed 150 to 100; sheep herd `herder` hours
+  1743.362 to 2543.362 and sheep_kg `herder` 24.0 to 36.0 follow. No test pinned them.
+- `data/world/waste_heaps.json:29` (manure, text at `:33`): NRCS Part 651 chapter 4, Table 4-8 beef cow, 63.00 lb/d
+  over 1.00 ft3/d = 63 lb/ft3; density changed 750 to 1009 kg/m3. Straw (`:49`): Table 4-3 gives 40 loose and 112
+  chopped kg/m3; 60 kept, labelled. Urine (`:57`): Rose et al. 2015 (PMC4500995), specific gravity 1.002 to 1.037;
+  1.01 kept.
+- `data/production/95_town_excreta_and_gardens.json:12`, `:24`: Rose et al. 2015, urine median 1.4 L a day,
+  faeces median 128 g wet a day. Values kept.
+- `data/production/95_fish.json:32`: Flick, Global Aquaculture Advocate 2010, p. 43, salt to fish 1:8 to 1:1; 1:5
+  kept.
+- `data/production/99_water_supply.json:78`: Encyclopaedia Romana "Quinaria" (41.5, 38.0, 32.8 m3 a day) and
+  Frontinus De aquis 25; 40 kept.
+- `data/production/40_organics.json:94`: Cato 162, half a modius of salt a ham (gives no share by mass).
+- `data/production/40_organics.json:983`: Gilbert White, Selborne Letter XXVI via Wikipedia "Rushlight" (burn time
+  only).
+- `data/world/spoilage.json:11`: Clemson HGIC 3525, bread 3 to 7 days.
+- `data/world/trades.json:403`: Statute of Artificers 1563, seven years (via Wikipedia); `:136`, `:433`: Pliny 35.57
+  heading and Vitruvius II.5 opened, neither gives a training period.
+
+No source found, now labelled (file:line): `40_organics.json:43,60,77,94,255,345,360,380,398,732,983,121`;
+`95_staple_grains.json:17,34` (Donald and Hamblin 1976 not openable); `94_agri_organics_gaps.json:205`;
+`95_bread.json:19`; `95_fish.json:32,51`; `95_grain_milling.json:18,36,54`; `95_herds.json:23,51,79,98,114,130`
+(2400-hour year, goat and cattle head per herder); `95_mesoamerican_stock_and_game.json:18`;
+`95_leather_goods.json:2,17`; `95_town_excreta_and_gardens.json:36`; `99_carriers.json:19`;
+`99_lighting.json` (all rows); `99_ships.json:32,56` (Kyrenia 25 t, Olympias 25 t; Wikipedia gives 47 t displacement
+uncited); `spoilage.json:10,12,13,14,15`; `trades.json:30,177,262,393,413,423,443,453`;
+`waste_heaps.json:17,41` and all heights.
+
+Still open: 34 lines (disease, civilisation notes, `needs.json`, `agriculture.py`, `soil_nutrients.py`,
+`service_lives.json`, deposits, wine/oil/jars). Several "no source found" figures have candidate sources not yet
+opened: tallow candle burn rate (Nature 16, 1877, p. 361), Geoponica 20.46 (Owen), King, Farmers of Forty Centuries.
