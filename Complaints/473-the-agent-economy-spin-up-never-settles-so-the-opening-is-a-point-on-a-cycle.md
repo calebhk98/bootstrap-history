@@ -678,3 +678,7 @@ models start from a solved stationary state spread over the agents (Caiani) or a
 spin-up hoped to settle; and labour demand there comes from vacancies, with hires bounded by the smaller of the jobless
 and the vacancies. The share of offered hours unhired here may count own-plot hours as idle; report them apart before
 reading it as unemployment. Pricing departures are 642 and 643, the rate 641.
+
+## Update 5: the replacement figure goes negative because the mint melts coin once the price level runs away
+
+money_replacement (sim/economy/baseline_checks.py) is struck net of melted, over wear; its sign is right (in the cached 40-year Rome traces the stock change equals struck less wear each year). The mint rule is intended: it sells the metal it holds at parity (mint.mint_orders), so when other buyers pay more than the mint pays for bullion it melts coin, and the measure counts that on purpose. Early years strike a large share of wear; as the price level climbs the run (the food shortage owned by other work) metal becomes dearer than coin, the mint stops buying and sells, and the last decade nets to melting. So silver not reaching the mint is no longer the binding cause late in the run; the price level is. Rows: python3 sim/simulator.py spin-up-trace --civ rome_100ad --years 40.
