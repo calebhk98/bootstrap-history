@@ -1,6 +1,6 @@
 # No check that the occupational distribution of a baseline run is plausible
 
-**Status:** open - check written (fails on the measured shares below)
+**Status:** open - check written; it was last measured before the wheat-labour and grain-input changes, so the table below is historical and needs a re-measure (GitHub #64 tracks)
 
 Part of Complaint 530 (Most ancient occupations have no trade, and their hours are booked as farming).
 
@@ -16,48 +16,38 @@ Last: depends on 609 to 618.
 
 **Test.** The test passes on a Rome run after the trades above exist.
 
-## Check added, and what it finds
+## Check added, and what it found (historical)
 
 `sim/tests/test_occupational_distribution.py` (slow) groups `economy.society_labour_hours` after a year of a
-no-intervention game by `data/world/occupation_groups.json` (groups, wide bands, sources; the figures are marked
-recalled there, not looked up). Print the shares with
-`python3 sim/simulator.py economy-check --civs rome_100ad --years 1 --occupations`. The ordering test (textiles or
-building the largest classified non-farm group) passed then and now fails (services and state lead after the 640 rewrite's run); the band test fails honestly, bands unchanged.
+no-intervention game by `data/world/occupation_groups.json` (groups, wide bands, sources). Print the shares with
+`python3 sim/simulator.py economy-check --civs rome_100ad --years 1 --occupations`. When written, the band test failed
+honestly (bands unchanged) and the ordering test (textiles or building the largest classified non-farm group) passed; a
+later run had services and state leading. Neither has been re-run since the changes below. The measured shares then were:
+agriculture about 0.36 for Rome, the generic `labourer` pool about 0.63, every other group near zero, transport and services
+zero.
 
-Measured (one year, seed 1, `python3 -m sim.tests --slow --only occupational_distribution --jobs 1`), share of hours:
+Causes found then: (1) most hours were still the generic `labourer` pool, which the recipes for wool, wine, oil, brick and
+the like bill instead of the new trades; (2) soldiers, merchants, scribes and carters booked no hours into
+`society_labour_hours`, so transport and services read zero; (3) the new spinner, weaver, miller and baker trades held
+hours of a few thousandths. The test closes this complaint once these are fixed, not by moving the bands.
 
-| group | rome_100ad | england_1300 |
-|---|---|---|
-| agriculture (farmer, herder, fisher) | 0.361 | 0.397 |
-| unattributed (`labourer`) | 0.625 | 0.580 |
-| textiles | 0.003 | 0.004 |
-| building | 0.007 | 0.012 |
-| food processing | 0.0001 | 0.001 |
-| other crafts | 0.004 | 0.007 |
-| transport | 0 | 0 |
-| services and state | 0 | 0 |
+## Changes since that measurement
 
-Causes: (1) most hours are still the generic `labourer` pool, which the recipes for wool, wine, oil, brick and the
-like bill instead of the new trades, so the farm group reads low and nothing is attributed; (2) soldiers, merchants,
-scribes and carters book no hours into `society_labour_hours`, so transport and services read zero; (3) the new
-spinner, weaver, miller and baker trades hold hours of a few thousandths. The test closes this complaint once these
-are fixed, not by moving the bands.
+- Wheat labour is sourced: `wheat_kg` books about 475 farmer-hours a hectare from Columella 2.12.1 (was 150), built in
+  `data/world/farm_labour.json` (Complaint 646, passes 6 and 7). The farm share in the undisturbed Rome scenario fell,
+  because a worker's cropped area is now set by the farming year, not the harvest window.
+- The farm share of Rome's no-intervention run is checked against the agriculture band in `test_farm_edges_scenario`
+  (slow), not against recorded values. The inputs of `fraction_of_population_that_must_farm` were re-read (Columella 2.9.1
+  and 3.3.4, `data/world/grain_yield.json`); measure it with
+  `python3 -c "from sim.world import agriculture as a; print(a.fraction_of_population_that_must_farm())"`.
+- Still unsourced: `ANNUAL_LABOUR_HOURS_PER_FARM_WORKER` (a labelled heuristic), grain spoilage, the draught-animal fodder
+  taken from the harvest (not modelled), and the single-staple ration.
 
-## Note: wheat labour now sourced (Complaint 646, pass 6)
+## Research needed
 
-`wheat_kg` books 554 farmer-hours a hectare (was 150), built from sourced sub-tasks in `data/world/farm_labour.json`.
-The farm share in the undisturbed Rome scenario fell (0.340 to 0.280 at year index 9, `test_farm_edges_scenario`),
-because a worker's cropped area is now set by the farming year, not the harvest window. The recipe-booked hours in
-`society_labour_hours` rise with the 554; re-measure the groups with
-`python3 sim/simulator.py economy-check --civs rome_100ad --years 1 --occupations` (not finished inside 4 minutes on
-the machine used). The table above is from before this change.
-
-## Note: grain inputs sourced; farm-share check now reads the band (pass 7)
-
-The farm share of Rome's no-intervention run is validated against the agriculture band above in
-`test_farm_edges_scenario` (slow), replacing a test that pinned values recorded from a run. The inputs of
-`fraction_of_population_that_must_farm` were re-read: seed and fold return now come from Columella 2.9.1 and 3.3.4
-(`data/world/grain_yield.json`), which raised the fraction (one farmer feeds fewer people); measure it with
-`python3 -c "from sim.world import agriculture as a; print(a.fraction_of_population_that_must_farm())"`.
-Still unsourced: `ANNUAL_LABOUR_HOURS_PER_FARM_WORKER` (a labelled heuristic), grain spoilage, the draught-animal fodder
-taken from the harvest (not modelled), and the single-staple ration.
+The bands in `occupation_groups.json` rest on sources the file itself marks "Recalled" (Scheidel and Friesen 2009, Allen
+2000, Bairoch 1988, Broadberry et al. 2015, Wilson 2002). A validation band is only as good as its source: open each and
+record the figure (page, table) for the share of the labour force in agriculture and in textiles, building and food
+processing, for Roman Italy and the provinces and for medieval England. The model aims at realism, so the check
+compares hours the model books with what the sources give, and a band the sources cannot support is widened or dropped,
+not tuned to the run.
