@@ -92,24 +92,24 @@ class LeisureTests(unittest.TestCase):
         self.assertEqual(rule.leisure_hours_kept(1000.0, 1.0, 0.0, self.ELASTICITY), 0.0)
 
     def test_the_anchor_that_offers_the_hours_wanted_inverts_the_choice(self):
-        anchor = rule.leisure_anchor_wage(1000.0, 640.0, 1.2, self.ELASTICITY)
-        self.assertAlmostEqual(1000.0 - rule.leisure_hours_kept(1000.0, 1.2, anchor, self.ELASTICITY), 640.0)
+        anchor = rule.leisure_anchor_wage(1000.0, 360.0, 1.2, self.ELASTICITY)
+        self.assertAlmostEqual(rule.leisure_hours_kept(1000.0, 1.2, anchor, self.ELASTICITY), 360.0)
 
     def test_no_anchor_offers_more_hours_than_there_are_free(self):
-        self.assertIsNone(rule.leisure_anchor_wage(1000.0, 1000.0, 1.2, self.ELASTICITY))
+        self.assertIsNone(rule.leisure_anchor_wage(1000.0, 1000.0, 1.2, self.ELASTICITY))     # more leisure wanted than there are hours
         self.assertIsNone(rule.leisure_anchor_wage(1000.0, 1200.0, 1.2, self.ELASTICITY))
         self.assertIsNone(rule.leisure_anchor_wage(1000.0, 0.0, 1.2, self.ELASTICITY))
 
     def test_hours_offered_equal_the_hours_hired_at_the_wage_the_anchor_was_set_at(self):
         wage, hired = 1.0, 1100.0
         free = HOURS - rule.plot_hours_kept(HOURS, wage, RETURN, USABLE)
-        anchor = rule.leisure_anchor_wage(free, hired, wage, self.ELASTICITY)
+        anchor = rule.leisure_anchor_wage(free, free - hired, wage, self.ELASTICITY)
         self.assertAlmostEqual(self.market_hours(wage, anchor=anchor), hired)
 
     def test_a_few_per_cent_of_excess_hours_moves_the_wage_a_few_per_cent_not_a_third(self):
         wage, hired = 1.0, 1100.0
         free = HOURS - rule.plot_hours_kept(HOURS, wage, RETURN, USABLE)
-        anchor = rule.leisure_anchor_wage(free, hired, wage, self.ELASTICITY)
+        anchor = rule.leisure_anchor_wage(free, free - hired, wage, self.ELASTICITY)
         for excess in (0.03, 0.05):
             target = hired / (1.0 + excess)       # hours offered fall to this when the wage falls enough to remove the excess
             low_wage, high_wage = 0.3, wage

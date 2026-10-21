@@ -24,19 +24,23 @@ def hours_hired_by_trade(producers: Mapping[AgentId, object], recipes: Mapping[s
 
 def anchors(supply, hired_by_trade: Mapping[str, float], price_level: float = 1.0) -> Dict[str, float]:
     """The anchor wage a trade (at the opening's price level) at which its workers sell the hours hired: the hours
-    each offer leaves free at the wage it faces (`supply`, built with no leisure) against the hours hired."""
+    each offer leaves free at the wage it faces (`supply`, built with no leisure) against the hours hired; the
+    difference is leisure, and only the hours the plot could not still use may be."""
     free: Dict[str, float] = {}
+    eligible: Dict[str, float] = {}
     weighted_wage: Dict[str, float] = {}
     for offer in supply.offers:
         wage = supply.faced_wage.get((offer.trade, offer.area), offer.reservation_wage)
-        sold = supply.split(offer, wage)[0]
-        free[offer.trade] = free.get(offer.trade, 0.0) + sold
-        weighted_wage[offer.trade] = weighted_wage.get(offer.trade, 0.0) + sold * wage
+        _home, left, may_rest = supply.parts(offer, wage)
+        free[offer.trade] = free.get(offer.trade, 0.0) + left
+        eligible[offer.trade] = eligible.get(offer.trade, 0.0) + may_rest
+        weighted_wage[offer.trade] = weighted_wage.get(offer.trade, 0.0) + may_rest * wage
     result: Dict[str, float] = {}
     for trade, hired in sorted(hired_by_trade.items()):
-        if free.get(trade, 0.0) <= 0.0:
+        if eligible.get(trade, 0.0) <= 0.0:
             continue
-        anchor = households_hours_offered.leisure_anchor_wage(free[trade], hired, weighted_wage[trade] / free[trade])
+        anchor = households_hours_offered.leisure_anchor_wage(
+            eligible[trade], free[trade] - hired, weighted_wage[trade] / eligible[trade])
         if anchor is not None and price_level > 0.0:
             result[trade] = anchor / price_level
     return result

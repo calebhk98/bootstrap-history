@@ -20,6 +20,7 @@ class HourSupply:
     plan_hours: Mapping[AgentId, float]                 # own-plot plan hours a cohort keeps whatever the wage
     work_hours: Mapping[AgentId, float]                 # household work it does itself
     plot_hours_at: Mapping[AgentId, Callable[[float], float]]   # hours its plot keeps at a wage (households_hours_offered.plot_hours_kept)
+    plot_usable: Mapping[AgentId, float]                # hours its plot could use in all, whatever the wage
     anchor_wage: Mapping[str, float]                    # trade -> leisure anchor wage, in this year's prices
     faced_wage: Mapping[Tuple[str, str], float] = dataclasses.field(default_factory=dict)   # (trade, area) -> wage where no market cleared
     # filled by `settle`
@@ -32,16 +33,24 @@ class HourSupply:
         for offer in self.offers:
             self._hours[offer.worker] = self._hours.get(offer.worker, 0.0) + offer.hours
 
-    def split(self, offer: LabourOffer, wage: float) -> Tuple[float, float, float]:
-        """(hours sold, hours kept for plot and household work, hours at leisure) of one offer at this wage."""
+    def parts(self, offer: LabourOffer, wage: float) -> Tuple[float, float, float]:
+        """(hours kept for plot and household work, hours free after them, hours of those free that may be leisure) of
+        one offer at this wage: hours the plot could still use to grow the floors are not leisure."""
         whole = self._hours.get(offer.worker, 0.0)
         if whole <= 0.0 or offer.hours <= 0.0:
             return 0.0, 0.0, 0.0
         plot = self.plot_hours_at.get(offer.worker)
-        fixed = max(self.plan_hours.get(offer.worker, 0.0), plot(wage) if plot else 0.0) + self.work_hours.get(offer.worker, 0.0)
-        at_home = offer.hours * min(1.0, fixed / whole)
-        free = offer.hours - at_home
-        rest = households_hours_offered.leisure_hours_kept(free, wage, self.anchor_wage.get(offer.trade))
+        plot_kept = max(self.plan_hours.get(offer.worker, 0.0), plot(wage) if plot else 0.0)
+        fixed = plot_kept + self.work_hours.get(offer.worker, 0.0)
+        share = offer.hours / whole
+        free = offer.hours - min(fixed, whole) * share
+        still_usable = max(0.0, self.plot_usable.get(offer.worker, 0.0) - plot_kept) * share
+        return min(fixed, whole) * share, free, max(0.0, free - still_usable)
+
+    def split(self, offer: LabourOffer, wage: float) -> Tuple[float, float, float]:
+        """(hours sold, hours kept for plot and household work, hours at leisure) of one offer at this wage."""
+        at_home, free, eligible = self.parts(offer, wage)
+        rest = households_hours_offered.leisure_hours_kept(eligible, wage, self.anchor_wage.get(offer.trade))
         return free - rest, at_home, rest
 
     def share_at(self, trade: str, area: str) -> Callable[[float], float]:

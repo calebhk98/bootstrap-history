@@ -75,18 +75,19 @@ def leisure_share(wage_per_hour: float, anchor_wage_per_hour: Optional[float], e
     return 1.0 / (1.0 + (wage_per_hour / anchor_wage_per_hour) ** elasticity)
 
 
-def leisure_hours_kept(free_hours: float, wage_per_hour: float, anchor_wage_per_hour: Optional[float],
+def leisure_hours_kept(eligible_hours: float, wage_per_hour: float, anchor_wage_per_hour: Optional[float],
                        elasticity: float = LEISURE_ELASTICITY) -> float:
-    """Hours of the `free_hours` (after the plot and household work) a household keeps as leisure at this wage."""
-    return max(0.0, free_hours) * leisure_share(wage_per_hour, anchor_wage_per_hour, elasticity)
+    """Hours of the `eligible_hours` a household keeps as leisure at this wage: the hours left after the plot and
+    household work, less those its plot could still use (an hour it needs to grow its floors is not leisure)."""
+    return max(0.0, eligible_hours) * leisure_share(wage_per_hour, anchor_wage_per_hour, elasticity)
 
 
-def leisure_anchor_wage(free_hours: float, hours_to_sell: float, wage_per_hour: float,
+def leisure_anchor_wage(eligible_hours: float, leisure_wanted: float, wage_per_hour: float,
                         elasticity: float = LEISURE_ELASTICITY) -> Optional[float]:
-    """The anchor wage at which households sell exactly `hours_to_sell` of their `free_hours` at `wage_per_hour`
-    (the inverse of `leisure_hours_kept`); None where none does: nothing to sell, or more to sell than there are
-    free hours, which no leisure preference can bring about."""
-    if free_hours <= 0.0 or hours_to_sell <= 0.0 or hours_to_sell >= free_hours or wage_per_hour <= 0.0:
+    """The anchor wage at which households keep exactly `leisure_wanted` of their `eligible_hours` as leisure at
+    `wage_per_hour` (the inverse of `leisure_hours_kept`); None where none does: nothing wanted, or more wanted than
+    there are hours to keep, which no leisure preference can bring about."""
+    if eligible_hours <= 0.0 or leisure_wanted <= 0.0 or leisure_wanted >= eligible_hours or wage_per_hour <= 0.0:
         return None
-    leisure = 1.0 - hours_to_sell / free_hours
-    return wage_per_hour * (leisure / (1.0 - leisure)) ** (1.0 / elasticity)
+    share = leisure_wanted / eligible_hours
+    return wage_per_hour * (share / (1.0 - share)) ** (1.0 / elasticity)
