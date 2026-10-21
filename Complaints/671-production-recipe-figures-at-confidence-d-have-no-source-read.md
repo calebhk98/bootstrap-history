@@ -30,3 +30,17 @@ cart's structural payload (only the team's pull limits it), river current and to
 "ORBISprices" (2013 working paper) pp. 6-7: the Edict's land and river rates take no account of river velocity, so the Edict
 cannot validate a current-dependent river rate. Not opened: Raepsaet on Roman carts, the Edict's freight chapters, river towing
 studies. The money ratio across modes is validated by `sim/tests/test_freight_money_ratio.py`.
+
+**Pass 7 (source-recipes-and-service-lives).** Sourced and opened:
+
+- `flour_kg` (wheat) extraction: Khalid, Hameed and Tahir, "Wheat quality: a review ...", Frontiers in Nutrition 2023
+  (pmc.ncbi.nlm.nih.gov/articles/PMC9998918/): the kernel is 80 to 85 percent endosperm, 13 to 17 percent bran, 2 to 3 percent
+  germ. This bounds the recipe's extraction and bran share; values unchanged, still D because the extraction a pre-industrial
+  stone and sieve reached has no source.
+- `nails_kg`: the SPACO page "Making Hand Forged Nails" gives 87 and 230 nails an hour for modern demonstrators with no nail size,
+  so it cannot fix hours per kilogram; it suggests the recipe's smith hours are high. Value unchanged.
+
+Searched and not sourced: bread hydration and baking loss (forum and bakery-blog sources only), the 1842 Britannica "Candle"
+table of Ure's burn experiments (opened but the table is garbled in the transcription, so no burn rate was taken), the Monticello
+nailery loss records (403), candle photometry. Left: all other D rows in the list above; the carriage inputs are untouched.
+Status stays open.
