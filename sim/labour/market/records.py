@@ -106,7 +106,7 @@ class Clearing:
     hired_by_employer: Dict[str, float]
     paid_by_employer: Dict[str, float]
     average_wage: float
-    target_wage: Optional[float] = None   # where the wage is heading: hours offered meet hours wanted; none: the wage
+    target_wage: Optional[float] = None   # where the wage is heading: toward the price where offered meets wanted hours, scaled by the imbalance; none: the wage
 
     @property
     def heading_wage(self) -> float:
