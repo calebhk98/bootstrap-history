@@ -26,7 +26,7 @@ Standalone: it takes tonnes and returns tonnes. `sim/engine/market_clearing.py`
 supplies the figures.
 """
 import math
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Optional, Tuple
 
 from sim.constants import declare
@@ -106,6 +106,7 @@ class MarketConditions:
     stock_tonnes: float
     actor_demand_tonnes: float = 0.0
     offers: Tuple[Offer, ...] = ()
+    imports: Tuple[Offer, ...] = ()   # foreign cargo at its landed cost, as a ratio to the long-run cost
     demand_price_elasticity: float = DEFAULT_DEMAND_PRICE_ELASTICITY
     supply_price_elasticity: float = SHORT_RUN_SUPPLY_PRICE_ELASTICITY
     floor_ratio: float = UNSPLIT_FLOOR_RATIO
@@ -123,12 +124,13 @@ class MarketOutcome:
     unmet_demand_tonnes: float
     offers_sold_tonnes: float = 0.0
     held_over_tonnes: float = 0.0   # goods that exist and did not sell: the stock carried on
+    imports_sold_tonnes: float = 0.0
 
 
 def _demand_at(conditions: MarketConditions, price_ratio: float) -> float:
     household = conditions.household_demand_at_anchor_tonnes * (
         price_ratio ** -conditions.demand_price_elasticity)
-    return household + conditions.committed_demand_tonnes + conditions.actor_demand_tonnes
+    return max(0.0, household + conditions.committed_demand_tonnes + conditions.actor_demand_tonnes)
 
 
 def _society_output_at(conditions: MarketConditions, price_ratio: float) -> float:
@@ -189,7 +191,31 @@ def clearing_price_ratio(conditions: MarketConditions) -> float:
 
 
 def clear_market(conditions: MarketConditions) -> MarketOutcome:
-    """The year's price ratio and who sells what at it."""
+    """The year's price ratio and who sells what at it. Cargo asking less than the producers' floor sells first,
+    cheapest first, each lot at its own landed cost and only as far as demand at that price takes it; the rest
+    of the market clears on what is left of demand, and the price ratio reported is the average the tonnes sold
+    fetched. Cargo asking the floor or more is an ordinary offer."""
+    cheap = sorted((offer for offer in conditions.imports if offer.reservation_ratio < conditions.floor_ratio),
+                   key=lambda offer: offer.reservation_ratio)
+    dearer = tuple(offer for offer in conditions.imports if offer.reservation_ratio >= conditions.floor_ratio)
+    if not cheap:
+        return _clear_at_one_price(replace(conditions, imports=(), offers=conditions.offers + dearer))
+    sold_tonnes, takings, unsold_cargo = 0.0, 0.0, 0.0
+    for offer in cheap:
+        taken = min(offer.tonnes, max(0.0, _demand_at(conditions, offer.reservation_ratio) - sold_tonnes))
+        sold_tonnes += taken
+        takings += taken * offer.reservation_ratio
+        unsold_cargo += offer.tonnes - taken
+    rest = _clear_at_one_price(replace(
+        conditions, imports=(), offers=conditions.offers + dearer,
+        committed_demand_tonnes=conditions.committed_demand_tonnes - sold_tonnes))
+    traded = sold_tonnes + rest.quantity_traded_tonnes
+    price_ratio = (takings + rest.price_ratio * rest.quantity_traded_tonnes) / traded if traded > 0.0 else rest.price_ratio
+    return replace(rest, price_ratio=price_ratio, quantity_traded_tonnes=traded, imports_sold_tonnes=sold_tonnes,
+                   held_over_tonnes=rest.held_over_tonnes + unsold_cargo)
+
+
+def _clear_at_one_price(conditions: MarketConditions) -> MarketOutcome:
     price_ratio = clearing_price_ratio(conditions)
     output = _society_output_at(conditions, price_ratio)
     supply = _supply_at(conditions, price_ratio)

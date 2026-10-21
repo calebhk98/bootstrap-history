@@ -8,19 +8,30 @@ economy's stand-in external orders leave that direction alone (`actors_carry`).
 """
 from sim.world import market
 
+from .material_units import tonnes_per_unit
+
 LANDED = "landed_tonnes"   # carried into the home market
 TAKEN = "taken_tonnes"     # carried out of the home market
 SOLD = "sold_tonnes"       # carried to the partner
 BOUGHT = "bought_tonnes"   # carried from the partner
+LANDED_COST = "landed_cost_money"   # what the tonnes carried to the partner cost the carriers there: purchase, carriage, dues, margin
 
 
 class ForeignActorTradeMixin:
 
-    def note_actor_trade(self, partner, material, tonnes, to_partner):
-        """Tally a cargo of `material` an actor carried to (or from) a partner this year."""
+    def note_actor_trade(self, partner, material, tonnes, to_partner, landed_cost=0.0):
+        """Tally a cargo of `material` an actor carried to (or from) a partner this year; `landed_cost` is what
+        a cargo to the partner cost its carrier to land (home money)."""
         by_material = self.state.economy.foreign_actor_trade.setdefault(partner, {})
         flow = by_material.setdefault(material, {SOLD: 0.0, BOUGHT: 0.0})
         flow[SOLD if to_partner else BOUGHT] += tonnes
+        if to_partner:
+            flow[LANDED_COST] = flow.get(LANDED_COST, 0.0) + landed_cost
+
+    def landed_cost(self, paid, carriage):
+        """What a cargo costs its carrier on landing: the purchase, a year's return on it (the carrier's margin)
+        and the carriage with its dues."""
+        return paid * (1.0 + self.market_rate()) + carriage
 
     def note_actor_home_trade(self, material, tonnes, landing):
         """Tally a cargo of `material` that actors landed in the home market (or took out of it) this year, so the
@@ -51,13 +62,32 @@ class ForeignActorTradeMixin:
         ratio = entry["price_ratio"] if entry else 1.0
         return price * self.partner_price_level(partner) * ratio
 
-    def _partner_outcome(self, entry, commodity, sold, bought):
-        """The partner's market for a commodity cleared on `sold` tonnes landed there and `bought` taken from it."""
+    def _import_offers(self, partner, cargo_by_material):
+        """The cargo landed at a partner as offers at its landed cost, a ratio to the partner's long-run cost of
+        the material; cargo with no landed cost noted is a price taker (returned as plain tonnes)."""
+        facts = self._foreign_economy_facts(partner)
+        offers, price_taking = {}, {}
+        for material, flow in cargo_by_material.items():
+            commodity = self._material_tag(material)[0]
+            tonnes_each = tonnes_per_unit(material)
+            base = facts["prices_in_home_money"].get(material)
+            base = base / tonnes_each if base and tonnes_each else None   # per tonne, as the cargo is costed
+            tonnes = flow[SOLD]
+            if base and tonnes > 0.0 and flow.get(LANDED_COST, 0.0) > 0.0:
+                ratio = flow[LANDED_COST] / tonnes / (base * self.partner_price_level(partner))
+                offers.setdefault(commodity, []).append(market.Offer(tonnes, ratio))
+            else:
+                price_taking[commodity] = price_taking.get(commodity, 0.0) + tonnes
+        return offers, price_taking
+
+    def _partner_outcome(self, entry, commodity, sold, bought, imports=()):
+        """The partner's market for a commodity cleared on `sold` tonnes landed there at no ask, `imports` landed
+        at their landed cost, and `bought` taken from it."""
         record = self._commodity_ledger().commodities.get(commodity) or {}
         return market.clear_market(market.MarketConditions(
             household_demand_at_anchor_tonnes=entry["reference_tonnes"], committed_demand_tonnes=0.0,
             society_capacity_tonnes=entry["capacity_tonnes"], actor_supply_tonnes=sold,
-            founder_sales_tonnes=0.0, stock_tonnes=entry["stock_tonnes"], actor_demand_tonnes=bought,
+            founder_sales_tonnes=0.0, stock_tonnes=entry["stock_tonnes"], actor_demand_tonnes=bought, imports=tuple(imports),
             floor_ratio=self._floor_ratio(commodity),
             ceiling_ratio=float(record.get("price_ceiling_factor", market.DEFAULT_CEILING_RATIO))))
 
@@ -81,6 +111,7 @@ class ForeignActorTradeMixin:
         for partner in sorted(set(tally) | set(book)):
             facts = self._foreign_economy_facts(partner)
             cargo = {}
+            imports, price_taking = self._import_offers(partner, tally.get(partner, {}))
             for material, flow in tally.get(partner, {}).items():
                 sold_bought = cargo.setdefault(self._material_tag(material)[0], [0.0, 0.0])
                 sold_bought[0] += flow[SOLD]
@@ -90,7 +121,8 @@ class ForeignActorTradeMixin:
                 if entry is None:
                     continue
                 sold, bought = cargo.get(commodity, (0.0, 0.0))
-                outcome = self._partner_outcome(entry, commodity, sold, bought)
+                outcome = self._partner_outcome(entry, commodity, price_taking.get(commodity, 0.0), bought,
+                                                imports.get(commodity, ()))
                 entry["capacity_tonnes"] = market.adjusted_capacity(entry["capacity_tonnes"], outcome.price_ratio)
                 entry["stock_tonnes"] = market.stock_after_year(outcome)
                 entry["price_ratio"] = outcome.price_ratio

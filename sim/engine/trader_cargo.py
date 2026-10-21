@@ -68,7 +68,8 @@ class TraderCargoMixin:
                     share = min(1.0, result["tonnes"] / tonnes) if tonnes > 0.0 else 0.0
                     delta = leg["received"] * (share - 1.0) + result["money"]
                     if share < 1.0:
-                        self.note_actor_trade(partner, leg["material"], -tonnes * (1.0 - share), True)
+                        self.note_actor_trade(partner, leg["material"], -tonnes * (1.0 - share), True,
+                                              -self.landed_cost(leg["paid"], leg["carriage"]) * (1.0 - share))
                 self._pay_partner(partner, -tonnes * share, leg["received"] * share)
             else:
                 self._pay_partner(leg["source"], tonnes, leg["paid"])
