@@ -68,6 +68,10 @@ Open: `finery_puddling` pays with takings several times what `origin/main` showe
   minutes, so the command is for the orchestrator: `python3 sim/simulator.py opening-checks --civs rome_100ad --concerns-only --json`.
   Open: the `finery_puddling` question above is untouched.
 
+- **The founder's concerns that sell in the book are paid by the clearing** (514, item 2): on a Rome game the clearing paid the one
+  staffed lead concern several times the estimate's figure for it (`python3 -m sim.tests.income_probe`), so the estimate was not the
+  evidence for or against plants paying their way; the scan above should read the clearing's proceeds (`stored["seat_takings"]`).
+
 ### Remainder, in order
 
 1. Stage 5a of the plan: author an entry (with demand side) for each product-making node on `data/unlinked_upkeep_nodes.txt`, a

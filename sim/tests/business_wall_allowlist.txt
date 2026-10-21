@@ -9,6 +9,7 @@ sim/engine/agents_port_capacity.py::running_cost
 sim/engine/cash_remedies.py::cash_remedies
 sim/engine/cause_book.py::concern_effect
 sim/engine/commodities.py::material_kg_per_yr
+sim/engine/concern_book_sales.py::concern_book_scale
 sim/engine/economy_credit.py::stall_diagnosis
 sim/engine/economy_electricity.py::_electricity_demand_kw
 sim/engine/economy_electricity.py::_node_annual_tonnes
@@ -16,7 +17,6 @@ sim/engine/economy_materials.py::_standing_material_terms
 sim/engine/economy_port.py::concern_gross
 sim/engine/economy_port.py::concern_takings
 sim/engine/economy_port.py::concern_upkeep
-sim/engine/economy_port_year.py::_acting_seat_orders
 sim/engine/economy_production.py::_compute_revenue_uncached
 sim/engine/economy_production.py::capability_factor
 sim/engine/economy_production.py::concern_revenue

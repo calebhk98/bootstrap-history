@@ -49,7 +49,8 @@ class MoneyPhaseMixin:
         room = max(0.0, self.state.household.capital + self.credit_limit() + revenue - upkeep - living_cost - mine_cost)
         keeping_owed = self.coin_hoard()["keeping_cost_per_year"]
         keeping = min(keeping_owed, room)
-        self.receive_from_edge(edges.EDGE_CUSTOMERS, revenue, "venture revenue")
+        # the concerns the clearing pays are credited when it clears (economy_port_year `_settle_seats`)
+        self.receive_from_edge(edges.EDGE_CUSTOMERS, self.estimated_revenue(), "venture revenue")
         self.pay_edge(edges.EDGE_SUPPLIERS, upkeep, "running costs of concerns")
         self.pay_wages(living_cost, "living costs")
         self.pay_edge(edges.EDGE_SUPPLIERS, mine_cost, "mine running costs")
