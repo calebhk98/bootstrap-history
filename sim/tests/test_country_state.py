@@ -90,7 +90,8 @@ def profile_with(forms, army=100.0):
 
 def country_world(profile, shared=None):
 	registry = ActorRegistry(ActorsState(home_country="home"))
-	entry = CastEntry(actor_id="government:far", country="far", kind="government", money=1.0e6)
+	entry = CastEntry(actor_id="government:far", country="far", kind="government", money=1.0e6,
+					  params={"revenue_forms": list(profile.extra.get("state_revenue") or ())})
 	seed_cast(registry, "home", [entry], {"home": CountryProfile(country="home"), "far": profile})
 	return CountryWorld(shared or Shared(), registry.state.countries["far"], registry), registry
 

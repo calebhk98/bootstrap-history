@@ -510,6 +510,7 @@ class AgentEconomy(TilePricesMixin):
                           labour_levy_hours_per_worker=economy_port_levy.levy_hours_per_worker(sim),
                           debt_relief_tiles=economy_port_land.debt_relief_tiles(sim, economy),
                           farmed_forms=economy_port_land.farmed_forms(sim, economy),
+                          tax_rates=economy_port_land.tax_rates(sim),
                           institutions=economy_port_institutions.held(sim),
                           durable_users=tuple(economy_port_actors.held_account(buyer)
                                               for buyer in sorted(sim.actors.actors)),

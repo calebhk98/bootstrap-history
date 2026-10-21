@@ -4,7 +4,7 @@ from typing import Any, Dict, List
 from . import arrears, fiscal_response, government_levers
 from .government_coinage import debasement_decision
 from .budget_line import Line
-from .tuning_fiscal import KIND_DEMAND_RATE_STEP
+from .tuning_fiscal import KIND_DEMAND_RATE_STEP, RATE_RAISE_STEP
 
 
 class FiscalMixin:
@@ -19,9 +19,12 @@ class FiscalMixin:
 		self.record.fiscal_response = choice  # type: ignore[attr-defined]
 		unpaid = gap - choice.get(fiscal_response.BORROW, 0.0)
 		kind = choice.get(fiscal_response.KIND, 0.0)
+		raised = choice.get(fiscal_response.RATE, 0.0)
 		self.apply_debasement(choice.get(fiscal_response.DEBASE, 0.0), world)
 		if kind > 0.0:
 			self.demand_in_kind(kind, world)
+		if raised > 0.0:
+			self.raise_coin_rates(raised, world)
 		return 1.0 if need <= 0.0 else max(0.0, 1.0 - unpaid / need)
 
 	def apply_debasement(self, amount: float, world: Any) -> float:
@@ -35,7 +38,7 @@ class FiscalMixin:
 		"""Share of the pay left unpaid that the state's choice defers as owed (the rest is cut and never owed)."""
 		choice = self.record.fiscal_response  # type: ignore[attr-defined]
 		owing = sum(choice.get(name, 0.0) for name in (fiscal_response.ARREARS, fiscal_response.DEBASE,
-														fiscal_response.LEVY, fiscal_response.KIND))
+														fiscal_response.LEVY, fiscal_response.KIND, fiscal_response.RATE))
 		pay_unpaid = sum(line.money * (1.0 - share) for line in lines if line.name in arrears.PAY_LINES)
 		return min(1.0, owing / pay_unpaid) if pay_unpaid > 0.0 else 0.0
 
@@ -56,6 +59,24 @@ class FiscalMixin:
 														 "value": rate}, context)
 			if not hasattr(change, "cause"):
 				rates[form["form"]] = rate
+		return rates
+
+	def raise_coin_rates(self, amount: float, world: Any) -> Dict[str, float]:
+		"""Raise the rate of each form collected in coin, as far as `amount` of money's worth of the base reaches,
+		through the same lever a player pulls; the rates it set. Next year's assessment is on them."""
+		raisable = fiscal_response.raisable_coin_forms(world)
+		capacity = fiscal_response.coin_rate_base(world) * RATE_RAISE_STEP
+		if capacity <= 0.0:
+			return {}
+		fraction = min(1.0, amount / capacity)
+		context = government_levers.LeverContext(declared_forms=world.revenue_forms())
+		rates: Dict[str, float] = {}
+		for assessed in raisable:
+			rate = min(1.0, assessed.rate * (1.0 + RATE_RAISE_STEP * fraction))
+			change = government_levers.set_lever(self.record, {"lever": government_levers.REVENUE, "name": assessed.form,  # type: ignore[attr-defined]
+																 "value": rate}, context)
+			if not hasattr(change, "cause"):
+				rates[assessed.form] = rate
 		return rates
 
 	def levy_sought(self) -> Dict[str, float]:

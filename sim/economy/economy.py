@@ -3,13 +3,14 @@
 `Economy(setup)` opens it; `Economy(setup, EconomyRecord.from_record(saved))` resumes it.
 `step(inputs)` runs a year and returns what the engine reads back.
 """
+import dataclasses
 import math
 from dataclasses import dataclass, field
 from typing import Any, Dict, Mapping, Optional, Tuple
 
 from sim.world import capital_market
 
-from . import bondage, banks, carriage_hours, credit, debt_relief, credit_claims, currency, equity, labour, land_market, lending, merchants_credit, producers, shares, sites, state_budget, tax_farming, titles_inheritance, titles_worked, unit_cost
+from . import taxes, bondage, banks, carriage_hours, credit, debt_relief, credit_claims, currency, equity, labour, land_market, lending, merchants_credit, producers, shares, sites, state_budget, tax_farming, titles_inheritance, titles_worked, unit_cost
 from .credit_view import CreditView
 from .market_areas import AreaMap
 from .market_areas_follow import follow
@@ -143,6 +144,8 @@ class Economy:
             return self._run_year(inputs)
 
     def _run_year(self, inputs: YearInputs) -> YearOutcome:
+        if inputs.tax_rates:
+            self.setup = dataclasses.replace(self.setup, tax_forms=taxes.with_rates(self.setup.tax_forms, inputs.tax_rates))
         setup, record = self.setup, self.record
         self.__dict__.pop("_port_shares", None)
         self.follow_flows()

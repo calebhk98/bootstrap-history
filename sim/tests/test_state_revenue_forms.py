@@ -73,7 +73,7 @@ class StateView(RevenueView):
     def __init__(self, civ, forms_world):
         self._sim = SimpleNamespace(civ=civ)
         self._forms_world = forms_world
-        self._government = Government("government:home", ActorRecord(kind="government"))
+        self._government = Government("government:home", ActorRecord(kind="government", revenue_forms=list(civ.get("state_revenue") or ())))
 
     def government(self):
         return self._government

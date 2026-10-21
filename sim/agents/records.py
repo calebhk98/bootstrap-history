@@ -110,6 +110,9 @@ class ActorRecord:
 	# the levers a player (or any controller) holds on a state: revenue rates, budget shares, army, navy, works,
 	# reserve, subsidies, mandates (government_levers.py)
 	levers: Dict[str, Any] = field(default_factory=dict)
+	# the revenue forms a state raises (form, basis, rate, ...): copied from its civilisation file once, at setup; every
+	# later year reads these, and a lever or the state's own fiscal choice changes them
+	revenue_forms: List[Dict[str, Any]] = field(default_factory=list)
 	# entries a state runs a plant of besides its monopolies; what its plants took last year and made after costs;
 	# the tonnes of each commodity its standing lines draw (what its own plants keep rather than sell)
 	state_enterprises: Set[str] = field(default_factory=set)

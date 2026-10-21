@@ -6,13 +6,14 @@ transfers to it. A payer who cannot pay owes arrears; a purse is never overdrawn
 the state's capacity: the share of each liability the state's officials can assess and collect (the engine
 reads the same 0..1 field as how far the state's writ runs). What is not collected is evaded, not owed.
 """
+import dataclasses
 from dataclasses import dataclass
 from typing import Dict, FrozenSet, List, Mapping, Optional, Sequence, Tuple
 
 from .taxes_bases import Base, YearFacts, measure
 from .types import AgentId, GoodId, GoodsMove, TileId, Transfer, is_edge
 
-__all__ = ["TaxForm", "Arrear", "Assessment", "YearFacts", "forms_from_civ_data", "assess"]
+__all__ = ["TaxForm", "Arrear", "Assessment", "YearFacts", "forms_from_civ_data", "with_rates", "assess"]
 
 
 @dataclass(frozen=True)
@@ -58,6 +59,12 @@ def forms_from_civ_data(state_revenue: Sequence[Mapping]) -> Tuple[TaxForm, ...]
                          None if entry.get("tiles") is None else frozenset(entry["tiles"]),
                          frozenset(entry.get("except_tiles") or ()))
                  for entry in state_revenue if entry["basis"] not in ACTOR_LAYER_BASES)
+
+
+def with_rates(forms: Sequence[TaxForm], rates: Sequence[Tuple[str, float]]) -> Tuple[TaxForm, ...]:
+    """The forms at the rates the state holds this year; a form the rates do not name keeps its own."""
+    held = dict(rates)
+    return tuple(dataclasses.replace(form, rate=float(held[form.name])) if form.name in held else form for form in forms)
 
 
 def assess(forms: Sequence[TaxForm], facts: YearFacts, state_agent_id: AgentId, prices: Mapping[GoodId, float],
