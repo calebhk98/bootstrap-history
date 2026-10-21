@@ -2,6 +2,8 @@
 
 **Status:** partly - the money stock is sustained (Update 4, `spin_up_money_supply` passes); the spin-up still does not settle: the price level and wage drift for decades because the labour market clears far below the cost table's wage (Update 4)
 
+Research on reference models for making the opening a steady state (issue #61): `Complaints/reports/research-reference-economy-models.md`.
+
 Found while tracing why the opening money wage moved several-fold between builds of the same branch (the
 fix for that is in `Complaints/closed/470`). The price level in the hidden spin-up cycles with a period of
 about twenty-five years (one Rome trace: about 0.94 at the start, 2.7 a dozen years on with the interest rate
