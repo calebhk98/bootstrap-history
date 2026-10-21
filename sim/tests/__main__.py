@@ -12,7 +12,8 @@ A topic belongs in the quick tier when it runs in well under a second inside an 
 started process: it tests functions or small fixtures, not a whole game over years. New topics
 start outside it, so the quick run stays quick by default.
 
-`--topic-seconds N` (default TOPIC_SECONDS) fails any topic, or quick batch, still running after N seconds and
+`--topic-seconds N` (default TOPIC_SECONDS; a topic file may raise its own limit with a module-level
+`TOPIC_SECONDS`, which `--topic-seconds` overrides) fails any topic, or quick batch, still running after N seconds and
 stops it with its subprocesses, so a run always ends and names what is too slow. Before the first topic, one
 game of every civilisation is built, so spin-ups are on disk and no topic pays for one. The forked
 parallel run stops a topic over the limit; the sequential run (`--jobs 1`, or a single topic) cannot stop one
@@ -32,6 +33,7 @@ the parallel batch. Per-topic times are remembered in `.cache/` so the next run 
 longest work first.
 """
 import contextlib
+import functools
 import importlib
 import io
 import json
@@ -67,6 +69,7 @@ if _REPO_ROOT not in sys.path:
 
 from sim import cache_root
 from sim.tests import machine_slots
+from sim.tests import discovery  # noqa: E402
 from sim.tests.discovery import discover_topics  # noqa: E402
 
 # Every sim/tests/test_*.py is a topic, in sorted order (see discovery.py).
@@ -372,16 +375,36 @@ def _split_stopped_batch(slugs, results):
     return unfinished[0], unfinished[1:]
 
 
+def topic_limit(own_seconds, default_seconds, explicit_seconds):
+    """Seconds a topic may run: --topic-seconds when given, else the larger of the default and what the topic
+    declares with a module-level `TOPIC_SECONDS`."""
+    if explicit_seconds is not None:
+        return explicit_seconds
+    return max(default_seconds, own_seconds or 0.0)
+
+
+@functools.lru_cache(maxsize=1)
+def _declared_limits():
+    return discovery.discover_topic_seconds()
+
+
+def _limit_of_topics(slugs, topic_seconds):
+    """The limit for a worker running `slugs`: each topic's own, the largest of them for a quick batch."""
+    explicit, default = topic_seconds
+    own = _declared_limits()
+    return max(topic_limit(own.get(slug), default, explicit) for slug in slugs)
+
+
 def _wait_for_a_worker(running, topic_seconds):
     """(pid, wait status, stopped for time) of the next worker to finish; a worker whose current topic is
-    past its time is killed with its process group."""
+    past its time (its own limit, see topic_limit) is killed with its process group."""
     while True:
         pid, wait_status = os.waitpid(-1, os.WNOHANG)
         if pid:
             return pid, wait_status, pid in running and running[pid][5]
         now = time.time()
         for worker, entry in running.items():
-            if not entry[5] and now - _current_topic_started(entry[4], entry[1]) > topic_seconds:
+            if not entry[5] and now - _current_topic_started(entry[4], entry[1]) > _limit_of_topics(entry[0], topic_seconds):
                 running[worker] = entry[:5] + (True,)
                 try:
                     os.killpg(worker, 9)
@@ -434,7 +457,8 @@ def _run_topics_forked(run_now, harness, jobs, topic_seconds):
                 error_text = ""
             if stopped:
                 topic_started = _current_topic_started(started_at, result_path)
-                error_text = TIMED_OUT + " after %.0fs (--topic-seconds %g)" % (time.time() - topic_started, topic_seconds)
+                error_text = TIMED_OUT + " after %.0fs (--topic-seconds %g)" % (
+                    time.time() - topic_started, _limit_of_topics(slugs, topic_seconds))
                 stopped_slug, never_started = _split_stopped_batch(slugs, results)
                 # Remembered as slow, so the next run starts it first; the topics behind it run in a worker of their own.
                 _save_topic_seconds([(stopped_slug, time.time() - topic_started, 0)])
@@ -514,12 +538,13 @@ def _merge_outcomes(run_now, outcomes, harness):
 
 
 def _parse_topic_seconds(argv):
+    """(the --topic-seconds given or None, the default): topic_limit decides each topic's limit from them."""
     for i, arg in enumerate(argv):
         if arg == "--topic-seconds" and i + 1 < len(argv):
-            return float(argv[i + 1])
+            return float(argv[i + 1]), TOPIC_SECONDS
         if arg.startswith("--topic-seconds="):
-            return float(arg.split("=", 1)[1])
-    return TOPIC_SECONDS
+            return float(arg.split("=", 1)[1]), TOPIC_SECONDS
+    return None, TOPIC_SECONDS
 
 
 def _parse_only(argv):
@@ -588,7 +613,7 @@ def main(argv=None):
         topic_costs = _run_topics_parallel(
             [slug for slug in TOPICS if slug in run_now], harness, harness.JOBS)
     else:
-        topic_limit = _parse_topic_seconds(argv)
+        topic_seconds_setting = _parse_topic_seconds(argv)
         for slug in TOPICS:
             if slug in run_now:
                 checks_before = len(harness.CHECKS_RUN)
@@ -597,9 +622,10 @@ def main(argv=None):
                 topic_seconds_used = time.time() - started_at
                 topic_costs.append((slug, topic_seconds_used,
                                     len(harness.CHECKS_RUN) - checks_before))
-                if topic_seconds_used > topic_limit:
+                limit = _limit_of_topics([slug], topic_seconds_setting)
+                if topic_seconds_used > limit:
                     message = "%s: %s after %.0fs (--topic-seconds %g; ran to the end in-process)" % (
-                        slug, TIMED_OUT, topic_seconds_used, topic_limit)
+                        slug, TIMED_OUT, topic_seconds_used, limit)
                     print("  " + message)
                     harness.FAILURES.append(message)
 

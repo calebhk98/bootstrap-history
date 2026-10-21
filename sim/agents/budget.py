@@ -52,6 +52,19 @@ def concession_lines(claims: Dict[str, float]) -> List[Line]:
 	return [Line(name, "requisition", transfer=amount) for name, amount in sorted(claims.items()) if amount > 0.0]
 
 
+def share_paid(need: float, purse: float, borrowed: float = 0.0) -> float:
+	"""The share of a year's need that is paid: all of it but the gap between need and purse that is not borrowed."""
+	if need <= 0.0:
+		return 1.0
+	gap = max(0.0, need - max(0.0, purse))
+	return max(0.0, 1.0 - (gap - borrowed) / need)
+
+
+def unfunded_by_line(lines: List[Line], share: float) -> Dict[str, float]:
+	"""What each line is short of when only `share` of the need is paid, by line name."""
+	return {line.name: line.money * (1.0 - share) for line in lines}
+
+
 def standing_lines(world: Any, soldiers: Optional[float] = None, conscripts: float = 0.0) -> List[Line]:
 	"""Everything the state keeps up this year, in a fixed order, for an army of `soldiers`, `conscripts` of them unpaid
 	(the force it wants when not given)."""

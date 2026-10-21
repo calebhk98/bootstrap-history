@@ -134,7 +134,7 @@ class Government(CorveeMixin, CreditRecordMixin, FiscalMixin, CoinageMixin, Ente
 		share = self.meet_shortfall(lines, world)
 		self.record.army = budget.army_next_year(soldiers, wanted, share)
 		self.record.need = {line.name: line.money for line in lines}
-		self.record.unfunded = {line.name: line.money * (1.0 - share) for line in lines}
+		self.record.unfunded = budget.unfunded_by_line(lines, share)
 		arrears.owe(self.record, lines, share, self.deferred_fraction(lines, share))
 		state_works.wear(state_works.held(world), share, PUBLIC_BUILDING_LIFE_YEARS)
 		if any(line.name == "donative" for line in lines):

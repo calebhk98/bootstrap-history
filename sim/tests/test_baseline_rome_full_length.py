@@ -5,9 +5,8 @@ to rest are relations of the whole economy, not of one rule.
 
 The 40-year trace is cached on disk beside the opening checks' traces and is shared with
 test_spin_up_money_supply_full_length.py (same years, so one run feeds both). Cold it is about twelve seconds a year,
-over the runner's topic limit: run `python3 -m sim.tests --slow --only baseline_rome_full_length,
-spin_up_money_supply_full_length --topic-seconds 900` once, and later runs read the cache until the spin-up's source
-modules change (Complaint 557).
+over the runner's default topic limit, so this file declares its own (TOPIC_SECONDS below). Later runs read the cache
+until the spin-up's source modules change (Complaint 557).
 
 `test_the_price_level_wage_money_and_rate_settle` is THE settling test for Complaint 473 and FAILS on the current
 code: the spin-up does not settle (the price level and wage drift for decades). Do not loosen it; it passes when
@@ -19,6 +18,10 @@ from sim.economy.baseline_checks import MIN_MONEY_REPLACEMENT, money_replacement
 from sim.economy.settling import SETTLING_WINDOW_YEARS, format_report, settling_report
 from sim.tests import harness
 from sim.tests.test_spin_up_money_supply import YEARS, cached_spin_up_trace
+
+
+# A cold run builds the 40-year trace: longer than the runner's default limit (read by sim/tests/discovery.py).
+TOPIC_SECONDS = 900
 
 
 class RomeBaselineFullLength(unittest.TestCase):

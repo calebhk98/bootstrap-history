@@ -4,8 +4,8 @@ whether the mint strikes depends on the metal chain, the price level and the min
 
 Reads the 40-year trace of the Rome agent economy's first stage (the command `simulator.py spin-up-trace`) through the
 disk cache beside the opening checks' traces. Cold, that is one economy stepped for forty years (about twelve seconds a
-year), over the runner's topic limit: run it with `python3 -m sim.tests --slow --only spin_up_money_supply_full_length
---topic-seconds 900` once, and later runs read the cache until the spin-up's source modules change (Complaint 557).
+year), over the runner's default topic limit, so this file declares its own (TOPIC_SECONDS below). Later runs read the cache
+until the spin-up's source modules change (Complaint 557).
 
 `test_the_money_stock_keeps_up_with_wear` FAILS on the current code and is meant to (Complaint 473, open): the mint
 strikes next to nothing because the silver chain stops supplying it. Do not loosen it; it passes when the metal
@@ -18,6 +18,9 @@ from sim.tests import harness
 from sim.tests.test_spin_up_money_supply import YEARS, cached_spin_up_trace
 
 DECADE = 10
+
+# A cold run builds the 40-year trace: longer than the runner's default limit (read by sim/tests/discovery.py).
+TOPIC_SECONDS = 900
 
 
 def mean(values):

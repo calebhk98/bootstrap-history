@@ -1,7 +1,7 @@
 """A state's choice of how to meet a shortfall, and the parts of it that reach the books (fiscal_response.py)."""
 from typing import Any, Dict, List
 
-from . import arrears, fiscal_response, government_levers
+from . import arrears, budget, fiscal_response, government_levers
 from .government_coinage import debasement_decision
 from .budget_line import Line
 from .tuning_fiscal import KIND_DEMAND_RATE_STEP, RATE_RAISE_STEP
@@ -17,7 +17,6 @@ class FiscalMixin:
 		gap = max(0.0, need - max(0.0, self.money))  # type: ignore[attr-defined]
 		choice = fiscal_response.respond(self, world, lines, gap)
 		self.record.fiscal_response = choice  # type: ignore[attr-defined]
-		unpaid = gap - choice.get(fiscal_response.BORROW, 0.0)
 		kind = choice.get(fiscal_response.KIND, 0.0)
 		raised = choice.get(fiscal_response.RATE, 0.0)
 		self.apply_debasement(choice.get(fiscal_response.DEBASE, 0.0), world)
@@ -25,7 +24,7 @@ class FiscalMixin:
 			self.demand_in_kind(kind, world)
 		if raised > 0.0:
 			self.raise_coin_rates(raised, world)
-		return 1.0 if need <= 0.0 else max(0.0, 1.0 - unpaid / need)
+		return budget.share_paid(need, self.money, choice.get(fiscal_response.BORROW, 0.0))  # type: ignore[attr-defined]
 
 	def apply_debasement(self, amount: float, world: Any) -> float:
 		"""Cut the metal in the coin as far as covering `amount` of the shortfall takes; the cut, recorded."""
