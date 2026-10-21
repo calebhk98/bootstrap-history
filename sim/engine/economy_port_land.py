@@ -16,7 +16,7 @@ def tax_rates(sim):
     government = sim.actors.government_of(None)
     if government is None:
         return ()
-    return tuple((form["form"], float(form["rate"])) for form in government_levers.revenue_forms(government.record))
+    return tuple((form["form"], float(form["rate"])) for form in government_levers.revenue_forms_of(government))
 
 
 def farmed_forms(sim, economy):

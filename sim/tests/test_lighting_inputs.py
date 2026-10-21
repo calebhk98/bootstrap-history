@@ -28,11 +28,12 @@ class LightingInputTests(unittest.TestCase):
         cls.entries = _entries()
 
     def test_the_three_crops_declare_climates(self):
-        for crop in ("olive_oil_kg", "wine_common_kg", "cotton_kg"):
+        # the grown crops (olives, grapes), not the oil and wine made from them
+        for crop in ("olives_kg", "grapes_kg", "cotton_kg"):
             self.assertTrue(self.entries[crop].get(crop_climate.CLASSES_FIELD), crop)
 
     def test_a_cold_climate_cannot_grow_olives_but_a_mediterranean_one_can(self):
-        olives = self.entries["olive_oil_kg"]
+        olives = self.entries["olives_kg"]
         self.assertFalse(crop_climate.territory_suits(olives, {"Dfc", "ET", "Cfb"}))
         self.assertTrue(crop_climate.territory_suits(olives, {"Csa"}))
 
@@ -59,7 +60,9 @@ class LightingInputTests(unittest.TestCase):
         makers = [name for name, entry in self.entries.items() if "fat_kg" in (entry.get("outputs") or {})]
         self.assertTrue(makers)
         for name in makers:
-            self.assertTrue(self.entries[name].get("herd_stock"), name)
+            # fat is rendered from animals: a held herd or a hunted wild stock
+            entry = self.entries[name]
+            self.assertTrue(entry.get("herd_stock") or entry.get("extracted_from") in ("forest", "wetland"), name)
         self.assertIn("fat_kg", self.entries["tallow_kg"]["inputs"])
 
     def test_a_rush_wick_candle_exists_and_the_rush_is_gathered_not_spun(self):

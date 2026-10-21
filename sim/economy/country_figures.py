@@ -195,6 +195,11 @@ def output_value(economy, country: Optional[str]) -> Optional[float]:
     return total if seen else None
 
 
+def currency(economy):
+    """The money standard the one economy uses (regime, backing good and amount)."""
+    return economy.record.currency
+
+
 def money_held(economy, country: Optional[str]) -> float:
     """The money held by the household cohorts and producers on the country's tiles."""
     tiles = country_tiles(economy, country)

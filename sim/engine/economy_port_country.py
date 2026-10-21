@@ -54,12 +54,12 @@ class CountryAnswers:
 
     def coin_regime(self) -> str:
         """The standard of the money the one economy uses."""
-        return self._economy.record.currency.regime
+        return country_figures.currency(self._economy).regime
 
     def coin_stock_value(self) -> float:
         """Money's worth of the backing metal in the money held on the country's tiles, at the country's price of
         that metal (none for fiat money, which has no metal)."""
-        spec = self._economy.record.currency
+        spec = country_figures.currency(self._economy)
         price = country_figures.prices(self._economy, self._country).get(spec.backing_good) if spec.backing_good else None
         if price is None:
             return 0.0

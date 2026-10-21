@@ -55,11 +55,14 @@ class CarriageHireTests(unittest.TestCase):
         self.assertTrue(self.planned_years(), "no merchant shipped, so the scenario shows nothing")
 
     def test_the_carrier_trade_hires_hours_for_the_plan_and_no_more(self):
+        # a year can hire nothing (see EntrantInAHeldMarketTests); what is hired never passes the plan
         for year in self.planned_years():
             for agent, plan_ in year["planned"].items():
-                hours = year["hired"][agent]["hours"]
-                self.assertGreater(hours, 0.0)
-                self.assertLessEqual(hours, sum(plan_.values()) + 1e-9)
+                self.assertLessEqual(year["hired"][agent]["hours"], sum(plan_.values()) + 1e-9)
+
+    def test_some_planned_year_hires_carriers(self):
+        self.assertTrue(any(year["hired"][agent]["hours"] > 0.0
+                            for year in self.planned_years() for agent in year["planned"]))
 
     def test_a_plan_the_market_can_fill_is_hired_in_full(self):
         full = [year for year in self.planned_years()
@@ -68,15 +71,31 @@ class CarriageHireTests(unittest.TestCase):
         self.assertTrue(full)
 
     def test_hired_carriers_are_paid_the_labour_markets_wage(self):
-        for year in self.planned_years():
-            for agent, plan_ in year["planned"].items():
-                if sum(plan_.values()) > 0.0:
-                    self.assertGreater(year["hired"][agent]["wage"], 0.0)
+        for year in self.hiring:
+            for hire_ in year["hired"].values():
+                if hire_["hours"] > 0.0:
+                    self.assertGreater(hire_["wage"], 0.0)
 
     def test_money_is_still_conserved(self):
         report = money_audit.year_report(self.hiring_economy.record)
         self.assertTrue(report.ok, report.unexpected)
         self.assertAlmostEqual(self.hiring_economy.record.book.check_conservation(1e-9).money["coin"], 0.0)
+
+
+class EntrantInAHeldMarketTests(unittest.TestCase):
+    def test_a_merchant_with_no_hires_gets_none_where_incumbents_hold_all_the_hours_at_the_same_pay(self):
+        from sim.tests.test_labour_core_clearing import bid, make_state, run
+        state = make_state(people=10.0, wage=1.0)
+        state.hired_hours = {"vale": {"digger": {"farm": 1000.0}}}
+        result = run(state, [bid("farm", 2000.0), bid("merchant", 50.0)])
+        self.assertEqual(result.hired_by_employer.get("merchant", 0.0), 0.0)
+
+    def test_the_same_merchant_paying_a_premium_takes_hours_from_the_incumbent(self):
+        from sim.tests.test_labour_core_clearing import bid, make_state, run
+        state = make_state(people=10.0, wage=1.0)
+        state.hired_hours = {"vale": {"digger": {"farm": 1000.0}}}
+        result = run(state, [bid("farm", 2000.0), bid("merchant", 50.0, premium=0.5)])
+        self.assertGreater(result.hired_by_employer.get("merchant", 0.0), 0.0)
 
 
 def hours_hired_by_farm(merchant_bid_hours):

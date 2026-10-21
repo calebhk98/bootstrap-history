@@ -8,6 +8,8 @@ import types
 
 from .harness import NODES, ROOT, check
 from sim.refusal import cause_of
+from sim.agents.no_country_economy import NoCountryEconomy
+from sim.unit_conversions import HOURS_PER_PERSON_YEAR
 
 from sim.agents.api import ActorRegistry, ActorsState, cast_from_civilisations, seed_cast
 from sim.engine import living_stock_growth, living_stock_smuggling
@@ -54,9 +56,24 @@ class Market:
         self.pressed[trade] = self.pressed.get(trade, 0.0) + hours
 
 
+class CountryAnswers:
+    """A country's labour markets pay every trade the same hourly wage the founder's does."""
+    def pay_per_person_year(self, trade):
+        return WAGE * HOURS_PER_PERSON_YEAR
+
+    def __getattr__(self, name):
+        raise NoCountryEconomy("stub", name)
+
+
+class StubEconomy:
+    def agent_country(self, country):
+        return CountryAnswers()
+
+
 class Game(LivingStockMixin, LivingStockTradeMixin, LivingStockSmugglingMixin, LivingStockYearlyMixin):
     """Just enough of the game for held stock: the home society is Rome, the partner is Han."""
     STATE_CAPACITY_DEFAULT = 0.7
+    HOURS_PER_PERSON_YEAR = HOURS_PER_PERSON_YEAR
     partner_civ = ForeignEconomiesMixin.partner_civ
     society_herds = LivingStockOpeningMixin.society_herds
     partner_refusal = ForeignEconomiesMixin.partner_refusal
@@ -76,6 +93,7 @@ class Game(LivingStockMixin, LivingStockTradeMixin, LivingStockSmugglingMixin, L
             "economy": type("Economy", (), {"wild_stock": {}, "society_herds": {}})(),
             "household": type("Household", (), {})()})()
         self.actors = ActorRegistry(ActorsState())
+        self.economy = StubEconomy()
         if governed:
             home, entries, profiles = cast_from_civilisations(self.civ, [load_civ(PARTNER)])
             seed_cast(self.actors, home, entries, profiles)
