@@ -1,20 +1,64 @@
 """Complaints/416 and 136: a region's reach is the fewest days from the tiles a civilisation holds,
 over the modes it holds and the ways it has built; no region id is special-cased and no region
-carries a hand-set distance."""
+carries a hand-set distance.
+
+Geography is opened on the real map and geography data with a small stand-in for the engine, so no game is built."""
+QUICK_TOPIC = True
+
+import json
 import os
-import random
 import unittest
 
-from sim import simulator
-from sim.engine.core import Sim
 from sim.geography import api as geography
+from sim.geography import map_source
+from sim.geography.geography import Geography
 
-_TREE, _PRICES, _NODES, _WAGES, _GOODS = simulator.load()
 _ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
+class _World:
+    """The parts of the engine that Geography reads."""
+
+    pop_scale = 1.0
+
+    def __init__(self, civilisation):
+        self.civ = civilisation
+        self.held_nodes = set(civilisation.get("starting_techs") or ())
+        self.improvements = {}
+        self.world_map = map_source.load_map()
+
+    def civilisation(self, civilisation_id):
+        return _civilisation(civilisation_id)
+
+
+def _civilisation(civilisation_id):
+    with open(os.path.join(_ROOT, "data", "civilizations", civilisation_id + ".json"), encoding="utf-8") as handle:
+        return json.load(handle)
+
+
+class _Sim:
+    """A civilisation's geography on the real map, with the civilisation and the nodes held open to change."""
+
+    def __init__(self, civilisation_id):
+        self.world = _World(_civilisation(civilisation_id))
+        self.geography = Geography(self.world)
+        self.geography.open(geography.load_geography())
+
+    @property
+    def civ(self):
+        return self.world.civ
+
+    @civ.setter
+    def civ(self, value):
+        self.world.civ = value
+
+    @property
+    def world_map(self):
+        return self.world.world_map
+
+
 def _fresh_sim(civ):
-    return Sim(_NODES, list(_NODES), random.Random(1), civ=simulator.load_civ(civ))
+    return _Sim(civ)
 
 
 def _total_reach(sim):
@@ -42,8 +86,7 @@ class ReachFromTilesTests(unittest.TestCase):
     def test_more_carriage_techniques_bring_places_nearer(self):
         sim = _fresh_sim("mexica_1500")
         before = _total_reach(sim)
-        sim.state.projects.granted.update({"sea_square_sail", "lnd_two_wheel_cart", "lnd_mule_transport"})
-        sim._done_changed()
+        sim.world.held_nodes.update({"sea_square_sail", "lnd_two_wheel_cart", "lnd_mule_transport"})
         self.assertLess(_total_reach(sim), before)
 
     def test_a_region_no_route_joins_is_the_farthest_level(self):

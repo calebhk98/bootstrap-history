@@ -1,108 +1,191 @@
-"""Readouts agree with the engine's own checks: Complaints/230, 234, 235, 264."""
-from .harness import *  # noqa: F401,F403
+"""Readouts agree with the engine's own checks: Complaints/230, 234, 235, 264. Each rule runs on inputs or a stub the test
+builds; the readouts on a running game (the quoted finish against a stepped run, `why`, `available`) are
+test_readouts_timing_power_mines_road_scenario."""
+QUICK_TOPIC = True
 
-from sim.ui.proto.economy import _power_status
+import unittest
+from types import SimpleNamespace
 
-# ===========================================================================
-# Complaints/230: the quoted finish is the earliest the payment schedule allows
-# ===========================================================================
-SLOW_NODE = "civ_sewer_separate"
+from sim.engine.blockers import BlockersMixin
+from sim.engine.completion_schedule import calendar_floor_years, earliest_completion_years, payment_schedule_years
+from sim.engine.economy_electricity import ElectricityMixin
+from sim.engine.economy_freight import FreightMixin
+from sim.engine.fog import FogMixin
+from sim.ui.proto.economy import _power_tiers
 
-
-def stepped_completion(reputation):
-	test_sim = sim(capital=1e12)
-	test_sim.state.household.reputation = reputation
-	saved_risk = test_sim.nodes[SLOW_NODE]["risk"]
-	test_sim.nodes[SLOW_NODE]["risk"] = 0.0
-	try:
-		quoted = test_sim.earliest_completion_years(SLOW_NODE)
-		test_sim.start_project(SLOW_NODE)
-		seat = test_sim.playing_seats()[0]
-		for steps in range(1, 40):
-			# The year's project work and the calendar, without the economy around it (money is not the limit here).
-			with test_sim.act_as(seat):
-				test_sim.begin_seat_year()
-				test_sim.begin_world_year()
-				test_sim._run_seat_work()
-			test_sim.state.scenario.year += 1
-			if SLOW_NODE in test_sim.done:
-				return quoted, steps
-	finally:
-		test_sim.nodes[SLOW_NODE]["risk"] = saved_risk
-	return quoted, None
+THRESHOLD, MINIMUM, SCALE = 5, 2.0, 90.0
 
 
-quoted_years, real_steps = stepped_completion(80)
-check("the quoted earliest completion matches the steps a clean run takes",
-      real_steps is not None and real_steps - 1 < quoted_years <= real_steps, (quoted_years, real_steps))
-reputation_sim = sim(capital=1e12)
-reputation_sim.state.household.reputation = 80
-check("the calendar floor alone stays shorter than the payment schedule",
-      reputation_sim.calendar_floor(SLOW_NODE) < reputation_sim.earliest_completion_years(SLOW_NODE))
-why_timing = S._agent_dispatch(reputation_sim, NODES, {"cmd": "why", "id": SLOW_NODE})
-check("why quotes the earliest completion year count and calendar year",
-      why_timing.get("earliest_completion_years") == round(reputation_sim.earliest_completion_years(SLOW_NODE), 2)
-      and isinstance(why_timing.get("earliest_completion_year"), (int, float)),
-      why_timing.get("earliest_completion_years"))
-check("the retry expectation is never below the earliest completion",
-      reputation_sim.expected_calendar_years(SLOW_NODE) >= reputation_sim.earliest_completion_years(SLOW_NODE) - 1e-9)
+def floor(nominal, reputation, rebuild=1.0):
+    return calendar_floor_years(nominal, reputation, rebuild, THRESHOLD, MINIMUM, SCALE)
 
 
-# ===========================================================================
-# Complaints/234: a capability flag is labelled as knowledge and shows the kW behind it
-# ===========================================================================
-power_sim = reputation_sim
-power_sim.done.update({"cap_power_water", "cap_power_electric", "power_grid", "cap_power_grid"})
-power_sim._done_changed()
-tiers = {tier["id"]: tier for tier in _power_status(power_sim, NODES)["power_tiers_you_have_discovered"]}
-check("a grid capability with no station reports zero installed generation",
-      tiers["cap_power_grid"]["built"] and tiers["cap_power_grid"]["installed_kw"] == 0.0, tiers.get("cap_power_grid"))
-check("a built tier with nothing installed says so",
-      tiers["cap_power_grid"].get("no_generation_installed") is True, tiers.get("cap_power_grid"))
-power_sim.done.add("en_alternator")
-power_sim._done_changed()
-tiers = {tier["id"]: tier for tier in _power_status(power_sim, NODES)["power_tiers_you_have_discovered"]}
-check("generation installed under a tier is counted against that tier",
-      tiers["cap_power_steam"]["installed_kw"] > 0, tiers.get("cap_power_steam"))
-gate_sim = sim(capital=1e9)
-gate_sim.done.update({"en_alternator"})
-gate_sim._done_changed()
-needs_electric = next(node_id for node_id, node in NODES.items()
-                      if "cap_power_electric" in node["pre"] and node_id not in gate_sim.done)
-knowledge_blocker = next(blocker for blocker in gate_sim.start_blockers(needs_electric)
-                         if blocker["kind"] == "power")
-check("a power capability gate says installed generation does not satisfy it",
-      "installed" in knowledge_blocker["text"] and "knowledge" in knowledge_blocker["text"], knowledge_blocker)
+class QuotedCompletion(unittest.TestCase):
+    """Complaints/230: the quoted finish is the earliest the payment schedule allows."""
+
+    def test_a_short_node_keeps_its_nominal_floor_whatever_the_reputation(self):
+        self.assertEqual(floor(3, 0.0), 3)
+        self.assertEqual(floor(3, 500.0), 3)
+
+    def test_a_diffusion_limited_node_shrinks_with_reputation_but_not_below_the_minimum(self):
+        self.assertEqual(floor(10, 0.0), 10)
+        self.assertLess(floor(10, 80.0), floor(10, 0.0))
+        self.assertAlmostEqual(floor(10, SCALE), 5.0)       # reputation of one scale halves the floor
+        self.assertEqual(floor(10, 1.0e9), MINIMUM)
+
+    def test_the_floor_scales_with_what_is_left_to_rebuild(self):
+        self.assertAlmostEqual(floor(10, 0.0, 0.25), 2.5)
+
+    def test_the_payment_schedule_is_the_nominal_years_and_reputation_never_shortens_it(self):
+        self.assertEqual(payment_schedule_years(10, 1.0), 10)
+        self.assertEqual(payment_schedule_years(10, 0.5), 5)
+        self.assertEqual(payment_schedule_years(1, 0.1), 1.0)       # never under a year
+
+    def test_the_calendar_floor_alone_stays_shorter_than_the_payment_schedule_at_high_reputation(self):
+        self.assertLess(floor(10, 80.0), payment_schedule_years(10, 1.0))
+
+    def test_the_earliest_completion_is_the_longer_of_floor_and_schedule(self):
+        self.assertEqual(earliest_completion_years(5.0, 10.0), 10.0)
+        self.assertEqual(earliest_completion_years(12.0, 10.0), 12.0)
+
+    def test_a_running_attempt_has_its_served_years_taken_off_and_never_goes_below_zero(self):
+        self.assertEqual(earliest_completion_years(5.0, 10.0, 4.0), 6.0)
+        self.assertEqual(earliest_completion_years(5.0, 10.0, 0.0), 10.0)
+        self.assertEqual(earliest_completion_years(5.0, 10.0, 99.0), 0.0)
 
 
-# ===========================================================================
-# Complaints/235: a mine already being sunk is subtracted from the shortfall
-# ===========================================================================
-mine_sim = reputation_sim
-before = mine_sim.shortage_remedy_plan("coal", 100.0)
-check("set-up: with nothing sunk the plan proposes the full mine", "buy mine coal 100" in before["commands"], before)
-ready_year = int(mine_sim.state.scenario.year) + 3
-mine_sim.state.holdings.mine_tranches = [["coal", 100.0, ready_year, 1000.0]]
-after = mine_sim.shortage_remedy_plan("coal", 100.0)
-check("a mine already being sunk is not recommended again", not after["commands"], after)
-check("the plan says the commissioned tonnage and the year it is ready",
-      "already being sunk" in after["text"] and str(ready_year) in after["text"], after["text"])
-mine_sim.state.holdings.mine_tranches = [["coal", 40.0, ready_year, 400.0]]
-partial = mine_sim.shortage_remedy_plan("coal", 100.0)
-check("only the tonnage still uncovered is proposed", "buy mine coal 60" in partial["commands"], partial)
+class PowerCapabilityReadouts(unittest.TestCase):
+    """Complaints/234: a capability flag is labelled as knowledge and shows the kW behind it."""
+
+    NODES = {
+        "cap_power_water": {"mechanics": {"power_tier": {"rank": 1, "label": "water", "scale": "workshop", "anchor_kw": 10.0}}},
+        "cap_power_steam": {"mechanics": {"power_tier": {"rank": 2, "label": "steam", "scale": "workshop", "anchor_kw": 50.0}}},
+        "cap_power_grid": {"mechanics": {"power_tier": {"rank": 3, "label": "grid", "scale": "grid", "anchor_kw": 900.0}}},
+        "en_alternator": {"mechanics": {"power_generation": {"tier": "cap_power_steam", "role": "generator"}}},
+        "power_line": {"mechanics": {"power_generation": {"tier": "cap_power_grid", "role": "transmission"}}},
+    }
+
+    def _generation_host(self, done):
+        nodes = self.NODES
+        return SimpleNamespace(
+            state=SimpleNamespace(projects=SimpleNamespace(done=set(done))), nodes=nodes,
+            nodes_with_mechanic=lambda mechanic: [node_id for node_id, node in nodes.items() if mechanic in node["mechanics"]],
+            mechanic=lambda node_id, mechanic: nodes[node_id]["mechanics"][mechanic])
+
+    def _installed(self, done):
+        return ElectricityMixin.installed_generation_kw_by_tier(self._generation_host(done))
+
+    def test_a_grid_capability_with_no_station_has_no_installed_generation(self):
+        self.assertEqual(self._installed({"cap_power_grid"}), {})
+
+    def test_generation_installed_is_counted_against_its_tier(self):
+        self.assertEqual(self._installed({"en_alternator"}), {"cap_power_steam": 50.0})
+
+    def test_transmission_is_not_generation(self):
+        self.assertEqual(self._installed({"power_line"}), {})
+
+    def _tiers(self, done, installed):
+        host = SimpleNamespace(installed_generation_kw_by_tier=lambda: installed, is_visible=lambda node_id: True,
+                               has=lambda node_id: node_id in done)
+        tiers, highest = _power_tiers(host, self.NODES)
+        return {tier["id"]: tier for tier in tiers}, highest
+
+    def test_a_built_tier_with_nothing_installed_says_so(self):
+        tiers, highest = self._tiers({"cap_power_grid"}, {})
+        self.assertTrue(tiers["cap_power_grid"]["built"])
+        self.assertEqual(tiers["cap_power_grid"]["installed_kw"], 0.0)
+        self.assertTrue(tiers["cap_power_grid"]["no_generation_installed"])
+        self.assertEqual(highest, "grid")
+
+    def test_installed_generation_shows_against_its_tier(self):
+        tiers, _highest = self._tiers({"cap_power_steam"}, {"cap_power_steam": 50.0})
+        self.assertEqual(tiers["cap_power_steam"]["installed_kw"], 50.0)
+        self.assertFalse(tiers["cap_power_steam"]["no_generation_installed"])
+
+    def test_a_tier_not_visible_is_not_named(self):
+        host = SimpleNamespace(installed_generation_kw_by_tier=dict, is_visible=lambda node_id: node_id == "cap_power_water",
+                               has=lambda node_id: False)
+        tiers, _highest = _power_tiers(host, self.NODES)
+        self.assertEqual([tier["id"] for tier in tiers], ["cap_power_water"])
+
+    def _gate_host(self, done):
+        nodes = self.NODES
+
+        class Host(BlockersMixin):
+            state = SimpleNamespace(projects=SimpleNamespace(done=set(done)))
+            nodes = None
+
+            def _visible_to_player(self, node_id):
+                return True
+
+            def missing_prereq_message(self, missing):
+                return "needs " + ", ".join(missing)
+
+            def generation_capacity_kw(self):
+                return 120.0
+        Host.nodes = nodes
+        return Host()
+
+    def test_a_missing_power_capability_is_a_power_gate_that_installed_generation_does_not_satisfy(self):
+        entries = self._gate_host({"en_alternator"})._missing_prereq_entries(
+            "electric_thing", {"pre": ["cap_power_grid", "plain_node"]}, "text")
+        by_kind = {entry["kind"]: entry for entry in entries}
+        self.assertEqual(by_kind["power"]["cause"], "power_gate")
+        self.assertEqual(by_kind["power"]["ids"], ["cap_power_grid"])
+        self.assertEqual(by_kind["knowledge"]["ids"], ["plain_node"])
+        # presentation: the gate says installed generation does not satisfy a knowledge gate
+        self.assertIn("not installed capacity", by_kind["power"]["text"])
+        self.assertIn("120 kW", by_kind["power"]["text"])
+
+    def test_a_node_missing_only_a_power_capability_has_only_the_power_entry(self):
+        entries = self._gate_host(set())._missing_prereq_entries("electric_thing", {"pre": ["cap_power_grid"]}, "text")
+        self.assertEqual([entry["kind"] for entry in entries], ["power"])
 
 
-# ===========================================================================
-# Complaints/264: a fog-safe marker for what lies on the road to the goal
-# ===========================================================================
-road_sim = reputation_sim
-road_available = S._agent_dispatch(road_sim, NODES, {"cmd": "available", "all": True, "limit": 100})
-rows = road_available.get("startable") or road_available.get("available") or []
-check("set-up: available has rows", bool(rows), list(road_available)[:12])
-check("every startable row says whether it is on the road to the goal",
-      all(isinstance(row.get("on_road_to_goal"), bool) for row in rows), rows[:1])
-check("some startable rows are on the road and some are not",
-      {row.get("on_road_to_goal") for row in rows} == {True, False})
-check("supplies and capabilities carry their own mark",
-      all(row.get("is_supply_or_capability") == (NODES[row["id"]]["cat"] in ("material", "capability"))
-          for row in rows))
+class MineAlreadyBeingSunk(unittest.TestCase):
+    """Complaints/235: a mine already being sunk is subtracted from the shortfall."""
+
+    def _plan(self, tranches, shortfall=100.0):
+        host = SimpleNamespace(MINE_OPEX_MATERIALS=("coal", "lead"), mine_capacity={}, civ={},
+                               state=SimpleNamespace(holdings=SimpleNamespace(mine_tranches=tranches)))
+        return FreightMixin.shortage_remedy_plan(host, "coal", shortfall)
+
+    def test_with_nothing_sunk_the_plan_proposes_the_full_mine(self):
+        self.assertIn("buy mine coal 100", self._plan([])["commands"])
+
+    def test_a_mine_already_being_sunk_is_not_recommended_again_and_the_plan_says_when_it_is_ready(self):
+        plan = self._plan([["coal", 100.0, 1103, 1000.0]])
+        self.assertEqual(plan["commands"], [])
+        # presentation: the plan names the working being sunk and its year
+        self.assertIn("already being sunk", plan["text"])
+        self.assertIn("1103", plan["text"])
+
+    def test_only_the_tonnage_still_uncovered_is_proposed(self):
+        plan = self._plan([["coal", 40.0, 1103, 400.0]])
+        self.assertIn("buy mine coal 60", plan["commands"])
+        self.assertEqual(plan["short_tonnes"], 60.0)
+
+    def test_a_mine_of_another_metal_does_not_count(self):
+        self.assertIn("buy mine coal 100", self._plan([["lead", 100.0, 1103, 1000.0]])["commands"])
+
+
+class OnTheRoadToTheGoal(unittest.TestCase):
+    """Complaints/264: a fog-safe yes or no for what lies on the road to the goal."""
+
+    def _host(self):
+        nodes = {"goal": {"pre": ["middle"], "req_any": []}, "middle": {"pre": ["root"], "req_any": []},
+                 "root": {"pre": [], "req_any": []}, "side": {"pre": ["root"], "req_any": []}}
+        return SimpleNamespace(nodes=nodes, state=SimpleNamespace(_goal="goal"))
+
+    def test_a_node_the_goal_needs_is_on_the_road_and_one_it_does_not_is_off_it(self):
+        host = self._host()
+        self.assertTrue(FogMixin.on_road_to_goal(host, "middle"))
+        self.assertTrue(FogMixin.on_road_to_goal(host, "root"))
+        self.assertFalse(FogMixin.on_road_to_goal(host, "side"))
+
+    def test_the_answer_is_a_bool_with_no_distance(self):
+        self.assertIsInstance(FogMixin.on_road_to_goal(self._host(), "middle"), bool)
+
+
+if __name__ == "__main__":
+    unittest.main()

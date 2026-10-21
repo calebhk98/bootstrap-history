@@ -19,6 +19,7 @@ file of their own. Behaviour is unchanged and verified byte-identical.
 import collections
 
 from sim.constants import declare
+from .completion_schedule import calendar_floor_years, earliest_completion_years, payment_schedule_years
 from .failure_diagnosis import failure_teaches
 from .industry_depth import depth_risk_multiplier
 from .projects_precaution import chosen as precaution_chosen, relief_multiplier as precaution_relief, quote as precaution_quote
@@ -426,26 +427,23 @@ class ProgressMixin:
         already does a hundred complicated things does not start the social
         diffusion of the hundred-and-first from zero credibility.
         """
-        node = self.nodes[node_id]
-        floor = node["yrs"]
-        if node["yrs"] >= self.DIFFUSION_LIMITED_YEARS_THRESHOLD:   # diffusion-limited nodes, not physical curing
-            floor = max(self.CALENDAR_FLOOR_MIN_YEARS,
-                        node["yrs"] / (1.0 + self.state.household.reputation / self.CALENDAR_FLOOR_REPUTATION_SCALE))
-        return floor * self.rebuild_work_factor(node_id)
+        return calendar_floor_years(
+            self.nodes[node_id]["yrs"], self.state.household.reputation, self.rebuild_work_factor(node_id),
+            self.DIFFUSION_LIMITED_YEARS_THRESHOLD, self.CALENDAR_FLOOR_MIN_YEARS, self.CALENDAR_FLOOR_REPUTATION_SCALE)
 
     def payment_schedule_years(self, node_id):
         """Years the bill takes to pay in full: it is paid in equal yearly
         instalments over the node's nominal years, which reputation never
         shortens."""
-        return max(1.0, self.nodes[node_id]["yrs"] * self.rebuild_work_factor(node_id))
+        return payment_schedule_years(self.nodes[node_id]["yrs"], self.rebuild_work_factor(node_id))
 
     def earliest_completion_years(self, node_id):
         """The soonest the project can finish, with no failure: the longer of
         the calendar floor and the payment schedule, less what a running
         attempt has already served."""
-        earliest = max(self.calendar_floor(node_id), self.payment_schedule_years(node_id))
         running = self.state.projects.active.get(node_id)
-        return max(0.0, earliest - running.get("yrs", 0.0)) if running else earliest
+        return earliest_completion_years(self.calendar_floor(node_id), self.payment_schedule_years(node_id),
+                                         running.get("yrs", 0.0) if running else None)
 
     def expected_calendar_years(self, node_id, _max_extra_attempts=500):
         """Expected calendar years to SUCCEED at node_id, counting every retry the
