@@ -22,7 +22,7 @@ from .agents_port import SimWorld
 from .staffing_events import unstaffed_closure_line
 from .closure_grace import grace_note, within_grace
 from .staffing_warning_rows import staffing_warning_rows
-from .affordability import deep_in_arrears, payback_years
+from .affordability import deep_in_arrears, opens_in_deep_arrears, payback_years
 from .units_prose import money_text, per_year
 from sim.agents.api import business_review, edges
 
@@ -583,7 +583,7 @@ class StaffingMixin:
             if _deep_arrears:
                 node = self.nodes[node_id]
                 _payback = payback_years(self.venture_capex(node_id), node["rev"], node["up"])
-                if _payback > PAYBACK_LIMIT_YEARS:
+                if not opens_in_deep_arrears(_payback, PAYBACK_LIMIT_YEARS):
                     if blocked is None:
                         blocked = (node_id, ("it would take %.1f years to pay for its "
                                        "own doors, and nothing slower than %.0f "

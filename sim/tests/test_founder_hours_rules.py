@@ -6,6 +6,7 @@ QUICK_TOPIC = True
 from types import SimpleNamespace
 
 from .harness import check
+from sim.refusal import cause_of, facts_of
 from sim.engine.society_adoption import AdoptionMixin
 from sim.engine.staff_gate import craftsmen_gate_text, scholar_gate_text
 from sim.labour.buy_cap import over_room_refusal
@@ -53,8 +54,9 @@ check("a sale that pays at least what it displaced carries no note", sale_at_a_l
 # --- the cap on buying people is the room hire enforces
 check("buying within the room is not refused", over_room_refusal(3, 3.0, lambda: "advice") is None)
 refusal = over_room_refusal(7, 6.4, lambda: "hire fewer")
-check("buying beyond the room is refused with the room and the advice", refusal and "6.40 more people" in refusal and "hire fewer" in refusal, refusal)
-check("a negative room reads as none", "0.00 more people" in over_room_refusal(1, -2.0, lambda: ""))
+check("buying beyond the room is refused as a household_room refusal stating the room and the people asked for",
+      refusal and cause_of(refusal) == "household_room" and facts_of(refusal) == {"room": 6.4, "people": 7}, refusal)
+check("a negative room reads as none", facts_of(over_room_refusal(1, -2.0, lambda: ""))["room"] == 0.0)
 
 # --- the staffing gates
 HOURS_PER_YEAR = 2000.0
@@ -81,5 +83,8 @@ text = scholar_gate_text(2, 1.0, lambda deficit: asked.append(deficit) or hire_a
 check("the gate hands the advice the people short", asked == [1.0], asked)
 check("one scholar short says hire one, not two", text and '"n":1' in text and '"n":2' not in text, text)
 check("two scholars short says hire two", '"n":2' in scholar_gate_text(3, 1.0, hire_advice))
-check("a fraction short rounds up to the whole person", '"n":2' in scholar_gate_text(2, 0.4, hire_advice))
+people_asked_for = []
+staff_remedies("scholars", [("HIRE", "hire somebody")], 0.4, set(), set(), lambda node: False, lambda node: False,
+               lambda node: False, lambda kind, count: people_asked_for.append(count) or "")
+check("a fraction short rounds up to the whole person", people_asked_for == [1], people_asked_for)
 check("a project the staff cover has no gate", scholar_gate_text(2, 2.0, hire_advice) is None)
