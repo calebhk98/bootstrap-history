@@ -53,3 +53,11 @@ not zero; a lender with past losses asks more.
 `sim/tests/test_economy_lender_ask.py`: the floor, past losses, land yield, public yield, a glut leaving the rate at
 the floor (`credit.clear`), a thin-capital bank and a bank with losses asking more (`banks.ask_of`), the view's loss
 rate. `test_economy_banks.py` holds a bank with capital and no losses asking its depositors' rate.
+
+## Finding (2026-10-21, firm entry scenario)
+
+In the default Rome game the tests open (`harness.sim()`, the short spin-up) the market rate reads at the lenders'
+ceiling, and at that rate `NicheEntry.found` rejects every concern tried, so no firm enters in the default game.
+`test_firm_entry_default_game_scenario` now checks placement without a founding. Re-measure the opening rate
+(`game.economy.agent.economy().record.memory.rates`) once the land-yield and public-yield inputs are fed; a default
+game in which no firm can ever enter is a defect, not a setting.
