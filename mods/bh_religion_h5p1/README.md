@@ -47,7 +47,7 @@ All figures sit in the cast entry (`members`, `endowment_hectares`, and `plan`: 
 
 * The credit market only offers the purses of households, the state and firms, so a house's purse is not lent
   to the founder or to firms yet; and the land market has no owners, so land a house buys does not leave the
-  founder's market. `Complaints/636-actors-cannot-lend-or-hold-land-in-the-markets.md` describes both and the
+  founder's market. `Complaints/538` holds land titles and `Complaints/636-actors-cannot-lend-or-hold-land-in-the-markets.md` the lending half, with the
   proof of concept for the lending half (branch `engine-actor-lenders`, not merged).
 * The Han variant is `hidden` because it cannot run: the shipped Han economy stays a foreign partner beside the
   variant (partners are excluded by exact civilisation id), which raises `NoCountryEconomy`. The same complaint

@@ -14,14 +14,14 @@ NATIVE_POOL_KG_PER_HECTARE = declare(
     kind="temporary_heuristic", unit="kg nitrogen per hectare in the rooting zone",
     source="Topsoil carries about 0.1 percent nitrogen (0.05 to 0.3), over about 3000 tonnes of soil to 25 cm "
            "(no source found; Brady and Weil was not opened)",
-    confidence="D", retire="Complaints/646: a source read for the figure", why="Size of the organic nitrogen pool a harvest draws on; the stock is kept as a share of it.")
+    confidence="D", retire="Complaints/670: a source read for the figure", why="Size of the organic nitrogen pool a harvest draws on; the stock is kept as a share of it.")
 
 LOSS_RATE_PER_YEAR = declare(
     "LOSS_RATE_PER_YEAR", 0.01,
     kind="temporary_heuristic", unit="share of the pool per year",
     source="Leaching and denitrification take about a percent of soil organic nitrogen a year (order of magnitude "
            "no source found; Brady and Weil was not opened)",
-    confidence="D", retire="Complaints/646: a source read for the figure", why="Sets both the natural input that keeps native soil level and how fast a worn pool recovers.")
+    confidence="D", retire="Complaints/670: a source read for the figure", why="Sets both the natural input that keeps native soil level and how fast a worn pool recovers.")
 
 MINERALISATION_RATE_PER_YEAR = declare(
     "MINERALISATION_RATE_PER_YEAR", 0.02,
@@ -45,21 +45,21 @@ LEGUME_NET_NITROGEN_KG_PER_HECTARE = declare(
     kind="temporary_heuristic", unit="kg nitrogen per hectare of a grain legume crop, fixation less grain removal",
     source="Net nitrogen balance of harvested grain legumes runs from about -20 to +40 kg a hectare (Peoples and "
            "others 2009, Symbiosis 48; no source found, not opened)",
-    confidence="D", retire="Complaints/646: a source read for the figure", why="Why a legume in the rotation holds the pool up.")
+    confidence="D", retire="Complaints/670: a source read for the figure", why="Why a legume in the rotation holds the pool up.")
 
 MANURE_AVAILABLE_FIRST_YEAR = declare(
     "MANURE_AVAILABLE_FIRST_YEAR", 0.3,
     kind="temporary_heuristic", unit="share of applied manure nitrogen a crop can take that year",
     source="Farmyard manure gives a crop 10 to 30 percent of its nitrogen in the year of application (UK "
            "RB209 fertiliser manual; no source found, not opened)",
-    confidence="D", retire="Complaints/646: a source read for the figure", why="Immediate yield effect of manure.")
+    confidence="D", retire="Complaints/670: a source read for the figure", why="Immediate yield effect of manure.")
 
 MANURE_RETAINED_IN_POOL = declare(
     "MANURE_RETAINED_IN_POOL", 0.4,
     kind="temporary_heuristic", unit="share of applied manure nitrogen that settles into the pool",
     source="Long-term manured plots (Rothamsted Broadbalk, Hoosfield) gain soil nitrogen from the organic fraction "
            "of manure; the share has no source found, conf D",
-    confidence="D", retire="Complaints/646: a source read for the figure", why="Why repeated manuring builds a lasting stock rather than one good year.")
+    confidence="D", retire="Complaints/670: a source read for the figure", why="Why repeated manuring builds a lasting stock rather than one good year.")
 
 FALLOW_NITRATE_RETENTION = declare(
     "FALLOW_NITRATE_RETENTION", 0.5,

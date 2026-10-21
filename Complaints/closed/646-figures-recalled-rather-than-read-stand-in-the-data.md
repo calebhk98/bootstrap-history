@@ -1,6 +1,6 @@
 # Figures recalled rather than read stand in the data and the constants
 
-**Status:** closed - an umbrella whose passes sourced what could be found; the rest is split by domain into 650, 656, 700, 701 and 702 (and 619, 607)
+**Status:** closed - an umbrella whose passes sourced what could be found; the rest is split by domain into 650, 656, 669, 670 and 671 (and 619, 607)
 
 Owner direction (2026-10-20): a figure needs a source someone read; "recalled" is not a source. The data and the declared
 constants carried many figures marked as recalled (confidence D), from the herd rows (532) to the savings constants (606). The
@@ -17,9 +17,9 @@ domain has its own list and its own research question.
 |---|---|
 | Stone tool figures (hours per blade, knapper years, blade life) and the wooden tool's other figures | 650 |
 | Wine, oil and jar figures (press, jar, stand years, yields) | 656 |
-| Disease figures, civilisation starting figures (grade D), three deposit entries | 700 |
-| Service lives, livestock, spoilage, household needs, soil nitrogen, the three-field legume share | 701 |
-| Production recipe rows at `"conf": "D"` | 702 |
+| Disease figures, civilisation starting figures (grade D), three deposit entries | 669 |
+| Service lives, livestock, spoilage, household needs, soil nitrogen, the three-field legume share | 670 |
+| Production recipe rows at `"conf": "D"` | 671 |
 | Plausibility bands of the occupational distribution (`data/world/occupation_groups.json`, "Recalled" entries) | 619 |
 | Savings and time-preference constants (`households_orders.py`) | 607 |
 | Land-concentration bands in `sim/tests/test_economy_land_concentration.py` (recalled, not looked up) | 538 |

@@ -32,4 +32,4 @@ Tests: `sim/tests/test_complaint_659_tool_fallback_and_site_room.py`, `test_comp
 tool: the by-hand-versus-wooden hours factor is sourced (Semyonov 1974 via Shukurov et al., `sim/tests/test_tool_hours_sourced.py`;
 see 650 and `Complaints/reports/research-stone-and-wooden-tools.md`); wood per tonne, carpenter hours, the stock per worker, the
 by-hand factor and the service life of a wooden tool are labelled heuristics with `retire` naming this complaint (no source
-found). They are tracked with the other service lives in 701 and the tool figures in 650.
+found). They are tracked with the other service lives in 670 and the tool figures in 650.
