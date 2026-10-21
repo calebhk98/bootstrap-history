@@ -1,6 +1,6 @@
 # History of Complaint 646 (as it stood before it was trimmed)
 
-Moved from the complaint file. Figures and line numbers here are as of the time they were written and may be stale; the complaint carries the current state.
+Moved from the complaint file. Figures and line numbers here are as of the time they were written and may be stale; the complaint carries the current state. The wheat-labour figures of pass 5 (150 hours, then 554) are superseded by passes 6 and 7 (Columella read in the primary).
 
 **Status:** open
 
