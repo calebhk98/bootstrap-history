@@ -42,3 +42,12 @@ like bill instead of the new trades, so the farm group reads low and nothing is 
 scribes and carters book no hours into `society_labour_hours`, so transport and services read zero; (3) the new
 spinner, weaver, miller and baker trades hold hours of a few thousandths. The test closes this complaint once these
 are fixed, not by moving the bands.
+
+## Note: wheat labour now sourced (Complaint 646, pass 6)
+
+`wheat_kg` books 554 farmer-hours a hectare (was 150), built from sourced sub-tasks in `data/world/farm_labour.json`.
+The farm share in the undisturbed Rome scenario fell (0.340 to 0.280 at year index 9, `test_farm_edges_scenario`),
+because a worker's cropped area is now set by the farming year, not the harvest window. The recipe-booked hours in
+`society_labour_hours` rise with the 554; re-measure the groups with
+`python3 sim/simulator.py economy-check --civs rome_100ad --years 1 --occupations` (not finished inside 4 minutes on
+the machine used). The table above is from before this change.

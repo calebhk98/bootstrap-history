@@ -184,7 +184,17 @@ class SubsistenceFloorIsNowTradeableTests(unittest.TestCase):
         quantity_at_the_line = demand.household_quantity_demanded_per_capita(
             self.phone, self.prices, self.committed_food_cost_per_capita, self.basket)
         self.assertEqual(quantity_at_the_line, 0.0)
-        self.assertLess(quantity_just_below, 0.2)
+        # Continuity, built from the formula's own response: a 0.1% step of
+        # income either side of the line moves phone demand by at most the
+        # phone's marginal budget share over its price times the income
+        # step, the ordinary response above the line. Not a typed bound, so
+        # it follows the wheat price the fixture derives.
+        income_step = 0.001 * self.committed_food_cost_per_capita
+        ordinary_response = self.phone.marginal_budget_share / self.prices["phone"] * income_step
+        quantity_just_above = demand.household_quantity_demanded_per_capita(
+            self.phone, self.prices, self.committed_food_cost_per_capita + income_step, self.basket)
+        self.assertAlmostEqual(quantity_just_above, ordinary_response, places=9)
+        self.assertLessEqual(quantity_just_below, quantity_just_above)
 
     def test_food_still_dominates_a_household_at_half_the_subsistence_floor(self):
         # A household at HALF its own committed food cost - severely

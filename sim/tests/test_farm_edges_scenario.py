@@ -185,8 +185,12 @@ class TechnologyRescueTests(unittest.TestCase):
         trough = decline[-1][0]
         self.assertLess(trough, decline[5][0])
         base = test_sim.labour._farming_technique()
+        # Both ceilings on a worker's cropped area double: a reaper twice as fast and half the hours a hectare takes.
         doubled = base._replace(toolkit=base.toolkit._replace(
-            reaping_rate_multiplier=base.toolkit.reaping_rate_multiplier * 2.0))
+            reaping_rate_multiplier=base.toolkit.reaping_rate_multiplier * 2.0,
+            labour_hours_multiplier=base.toolkit.labour_hours_multiplier / 2.0))
+        self.assertAlmostEqual(agriculture.hectares_cropped_per_farm_worker(doubled.crop, doubled.toolkit),
+                               2.0 * agriculture.hectares_cropped_per_farm_worker(base.crop, base.toolkit), places=9)
         test_sim.labour._farming_technique = lambda: doubled
         def recovered(rows):
             return (max(row[0] for row in rows) > trough * 1.05 and rows[-1][0] > trough
@@ -259,13 +263,15 @@ class BaselineValidationTests(unittest.TestCase):
     def test_baseline_validation_ordinary_land_is_farmed_as_before(self):
         # Reference values recorded from the suite's short spin-up with endemic disease (malaria and the herd
         # losses it brings) in the baseline: the people it kills and the herds it thins shift the farm share.
-        # Re-recorded when the farm's land quality became the tiles' yield factor (Complaint 537): Rome's cleared best
+        # Re-recorded when the wheat hectare's hours came from its sub-tasks (data/world/farm_labour.json, Complaint 646): a
+        # worker's cropped area now follows the farming year, not the harvest window, so the same people need fewer hands.
+        # Earlier, re-recorded when the farm's land quality became the tiles' yield factor (Complaint 537): Rome's cleared best
         # ground includes flood-watered land, so the same people need fewer hands. The tolerances are unchanged.
         history = _undisturbed_run(WARM_UP_YEARS + _SETTLE_YEARS_AFTER_WARM_UP)[0]
         for year_index, population, farm_share in (
-                (9, 65332987.2, 0.33958), (19, 65910166.3, 0.34187),
-                (29, 66478368.4, 0.34584)):
-            note = "baseline validation (4.2), reference values re-recorded under Complaint 537, year index %d" % year_index
+                (9, 65341964.0, 0.28007), (19, 65925204.3, 0.28693),
+                (29, 66827551.7, 0.29161)):
+            note = "baseline validation (4.2), reference values re-recorded under Complaint 646, year index %d" % year_index
             self.assertAlmostEqual(history[year_index][0] / population, 1.0, delta=0.01, msg=note)
             self.assertAlmostEqual(history[year_index][1], farm_share, delta=0.01, msg=note)
 

@@ -296,11 +296,17 @@ class HeadlineCalibrationTests(unittest.TestCase):
 
     def test_current_computed_value_and_its_relation_to_the_historical_target(self):
         fraction = agriculture.fraction_of_population_that_must_farm()
-        # Pinned regression value - see this module's own module docstring
-        # for the derivation (seed rate x fold return, minus seed, minus
-        # spoilage, divided across the hectares one worker can cover in a
-        # year, against one person's annual caloric need).
-        self.assertAlmostEqual(fraction, 0.21181, places=4)
+        # Built from the rule's own parts (seed rate x fold return, minus
+        # seed, minus spoilage, times the hectares one worker covers, against
+        # one person's annual caloric need), not a typed value: the hectares
+        # per worker follow the sub-task hours of data/world/farm_labour.json.
+        crop = agriculture.DEFAULT_CROP
+        food_per_hectare = ((crop.planting_material_kg_per_ha * crop.fold_return_on_planting_material
+                             - crop.planting_material_kg_per_ha)
+                            * (1.0 - agriculture.GRAIN_SPOILAGE_RATE_PER_YEAR))
+        expected = (agriculture.annual_food_demand_kg_per_person()
+                    / (agriculture.hectares_cropped_per_farm_worker() * food_per_hectare))
+        self.assertAlmostEqual(fraction, expected, places=9)
         self.assertLess(
             fraction, agriculture.HISTORICAL_FARM_POPULATION_SHARE_LOW,
             "the computed farm-population share now falls inside or above "
@@ -328,23 +334,35 @@ class HeadlineCalibrationTests(unittest.TestCase):
         people_fed = 1.0 / agriculture.fraction_of_population_that_must_farm()
         self.assertGreater(people_fed, 3.0)
 
-    def test_the_harvest_window_is_what_binds_not_the_farming_year(self):
-        # The substantive finding of the seasonality work, asserted rather
-        # than only written down: at the declared constants the annual-hours
-        # ceiling is slack by a wide margin, so changing it does not move
-        # the headline number at all. If a future edit makes annual hours
-        # bind again, this fails and whoever made it has to say why.
+    def test_the_smaller_of_the_two_ceilings_is_what_binds(self):
+        # The cropped area is the smaller of the annual-hours ceiling and the
+        # harvest-window ceiling, whichever it is. Both cases are built: a
+        # crop whose hectare takes few hours (the window binds) and one whose
+        # hectare takes many (the year binds).
+        few_hours = agriculture.DEFAULT_CROP._replace(base_labour_hours_per_hectare=100.0)
+        many_hours = agriculture.DEFAULT_CROP._replace(base_labour_hours_per_hectare=1000.0)
+        self.assertLess(agriculture.hectares_per_worker_harvest_window_ceiling(few_hours),
+                        agriculture.hectares_per_worker_annual_hours_ceiling(few_hours))
+        self.assertAlmostEqual(
+            agriculture.hectares_cropped_per_farm_worker(few_hours),
+            agriculture.hectares_per_worker_harvest_window_ceiling(few_hours), places=9)
+        self.assertLess(agriculture.hectares_per_worker_annual_hours_ceiling(many_hours),
+                        agriculture.hectares_per_worker_harvest_window_ceiling(many_hours))
+        self.assertAlmostEqual(
+            agriculture.hectares_cropped_per_farm_worker(many_hours),
+            agriculture.hectares_per_worker_annual_hours_ceiling(many_hours), places=9)
+
+    def test_the_sourced_hours_per_hectare_make_the_farming_year_bind(self):
+        # With the reaping rate and the hours per hectare both taken from the
+        # same sub-tasks (data/world/farm_labour.json), a hectare takes more
+        # hours than the window leaves a worker, so the year, not the window,
+        # sets the area one worker crops.
         self.assertLess(
-            agriculture.hectares_per_worker_harvest_window_ceiling(),
             agriculture.hectares_per_worker_annual_hours_ceiling(),
-            "the harvest window no longer binds - the headline number is "
-            "now sensitive to REFERENCE_LABOUR_HOURS_PER_HECTARE and "
-            "ANNUAL_LABOUR_HOURS_PER_FARM_WORKER again, which changes what "
-            "agriculture.py's docstring claims about them.")
+            agriculture.hectares_per_worker_harvest_window_ceiling())
         self.assertAlmostEqual(
             agriculture.hectares_cropped_per_farm_worker(),
-            agriculture.hectares_per_worker_harvest_window_ceiling(),
-            places=9)
+            agriculture.hectares_per_worker_annual_hours_ceiling(), places=9)
 
     def test_fallow_changes_the_land_requirement_and_not_the_output(self):
         # Guards the other half of the finding: fallow is a land fact here,
@@ -408,21 +426,30 @@ class HarvestWindowBindsGrossHarvestTests(unittest.TestCase):
     WINDOW NOW ALSO BINDS" section, and _max_hectares_harvestable_by_labour.
     """
 
-    def test_a_large_land_at_reference_labour_intensity_is_capped_below_its_full_area(self):
-        # 1000 ha "worked" at exactly REFERENCE_LABOUR_HOURS_PER_HECTARE
-        # (150 h/ha) is precisely the scenario the old, unfixed
-        # gross_harvest_kg treated as fully reaped - it is what the
-        # per-hectare labour constants were quoted at. It implies about
-        # 107 worker-years of labour, and 107 workers can each crop at
-        # most hectares_cropped_per_farm_worker() ~= 2.1 ha inside the
-        # harvest window, i.e. about 225 ha total - far short of 1000.
+    @staticmethod
+    def _extensive_labour_hours(hectares):
+        # Half the reference hours per hectare: fewer than a worker needs to
+        # work a hectare through the year, so the crew those hours imply
+        # covers fewer hectares than the land holds.
+        return hectares * 0.5 * agriculture.REFERENCE_LABOUR_HOURS_PER_HECTARE
+
+    def test_a_large_land_worked_extensively_is_capped_below_its_full_area(self):
+        # 1000 ha worked at half the reference hours per hectare: the crew
+        # those hours imply (worker-years) times the hectares one worker
+        # crops covers only part of the land. (At the reference intensity
+        # itself the cap equals the land; the next-but-one test is that
+        # case.)
         land = agriculture.Land(hectares=1000.0, quality=1.0)
-        labour_hours = 1000.0 * agriculture.REFERENCE_LABOUR_HOURS_PER_HECTARE
+        labour_hours = self._extensive_labour_hours(1000.0)
 
         cap_hectares = agriculture._max_hectares_harvestable_by_labour(
             labour_hours, agriculture.DEFAULT_CROP, agriculture.DEFAULT_TOOLKIT)
         self.assertLess(cap_hectares, land.hectares)
-        self.assertAlmostEqual(cap_hectares, 225.0, places=6)
+        self.assertAlmostEqual(
+            cap_hectares,
+            labour_hours / agriculture.ANNUAL_LABOUR_HOURS_PER_FARM_WORKER
+            * agriculture.hectares_cropped_per_farm_worker(),
+            places=6)
 
         capped_harvest = agriculture.gross_harvest_kg(land, labour_hours)
 
@@ -457,7 +484,7 @@ class HarvestWindowBindsGrossHarvestTests(unittest.TestCase):
         # EXACTLY what the labour pool can reap - the excess hectares
         # contribute nothing, which is the honest statement that they are
         # never actually harvested.
-        labour_hours = 1000.0 * agriculture.REFERENCE_LABOUR_HOURS_PER_HECTARE
+        labour_hours = self._extensive_labour_hours(1000.0)
         oversized_land = agriculture.Land(hectares=1000.0, quality=1.0)
         cap_hectares = agriculture._max_hectares_harvestable_by_labour(
             labour_hours, agriculture.DEFAULT_CROP, agriculture.DEFAULT_TOOLKIT)
@@ -466,6 +493,16 @@ class HarvestWindowBindsGrossHarvestTests(unittest.TestCase):
         self.assertEqual(
             agriculture.gross_harvest_kg(oversized_land, labour_hours),
             agriculture.gross_harvest_kg(reapable_land, labour_hours))
+
+    def test_at_the_reference_intensity_the_year_binds_so_the_land_is_fully_reaped(self):
+        # The complement: at REFERENCE_LABOUR_HOURS_PER_HECTARE (the sourced
+        # sub-task hours) a hectare takes more hours than the window leaves a
+        # worker, so the crew implied by the hours can reap all the land.
+        land = agriculture.Land(hectares=1000.0, quality=1.0)
+        labour_hours = 1000.0 * agriculture.REFERENCE_LABOUR_HOURS_PER_HECTARE
+        cap_hectares = agriculture._max_hectares_harvestable_by_labour(
+            labour_hours, agriculture.DEFAULT_CROP, agriculture.DEFAULT_TOOLKIT)
+        self.assertGreaterEqual(cap_hectares, land.hectares)
 
     def test_autonomous_labour_with_unlimited_hours_still_cannot_exceed_full_land_use(self):
         # The stakeholder's own question: what happens with autonomous
@@ -575,35 +612,35 @@ class CropSoilRotationToolkitAxisTests(unittest.TestCase):
             rotation=agriculture.THREE_FIELD)
         self.assertLess(nile_holding, three_field_holding)
 
-    def test_horse_collar_toolkit_saves_labour_but_the_window_still_absorbs_it(self):
-        # The stakeholder's own example, and the module's own central
-        # finding extended to a new technique: the horse collar and
-        # mouldboard need fewer hours per hectare of PLOUGHING
+    def test_horse_collar_toolkit_saves_labour_and_raises_the_area_when_the_year_binds(self):
+        # The horse collar and mouldboard need fewer hours per hectare
         # (HORSE_COLLAR_LABOUR_HOURS_MULTIPLIER < 1), which raises the
-        # annual-hours ceiling - but does nothing to the reaping rate, so
-        # the harvest-window ceiling is unchanged and stays the binding
-        # one. hectares_cropped_per_farm_worker must therefore NOT move at
-        # all from this toolkit alone.
-        default_annual_ceiling = agriculture.hectares_per_worker_annual_hours_ceiling()
-        horse_collar_annual_ceiling = agriculture.hectares_per_worker_annual_hours_ceiling(
-            toolkit=agriculture.HORSE_COLLAR_AND_MOULDBOARD)
-        self.assertGreater(horse_collar_annual_ceiling, default_annual_ceiling)
-
+        # annual-hours ceiling and leaves the reaping rate alone. Where the
+        # year binds (the default crop at its sourced hours) the cropped
+        # area rises by exactly that ceiling's gain; where the window binds
+        # (a crop with few hours per hectare) it does not move.
+        collar = agriculture.HORSE_COLLAR_AND_MOULDBOARD
+        self.assertGreater(
+            agriculture.hectares_per_worker_annual_hours_ceiling(toolkit=collar),
+            agriculture.hectares_per_worker_annual_hours_ceiling())
         self.assertAlmostEqual(
-            agriculture.hectares_cropped_per_farm_worker(
-                toolkit=agriculture.HORSE_COLLAR_AND_MOULDBOARD),
-            agriculture.hectares_cropped_per_farm_worker(),
+            agriculture.hectares_cropped_per_farm_worker(toolkit=collar),
+            min(agriculture.hectares_per_worker_annual_hours_ceiling(toolkit=collar),
+                agriculture.hectares_per_worker_harvest_window_ceiling(toolkit=collar)),
+            places=9)
+        self.assertGreater(agriculture.hectares_cropped_per_farm_worker(toolkit=collar),
+                           agriculture.hectares_cropped_per_farm_worker())
+        window_bound_crop = agriculture.DEFAULT_CROP._replace(base_labour_hours_per_hectare=100.0)
+        self.assertAlmostEqual(
+            agriculture.hectares_cropped_per_farm_worker(window_bound_crop, collar),
+            agriculture.hectares_cropped_per_farm_worker(window_bound_crop),
             places=9,
-            msg="the horse collar only touches ploughing hours, which the "
-                "harvest window already made slack - it must not move the "
-                "binding hectares-per-worker figure by itself")
+            msg="the horse collar only touches ploughing hours; where the window binds it must not move "
+                "the hectares per worker by itself")
 
         # The toolkit's OWN small ploughing-yield bonus is a separate,
-        # independent effect and is the only thing that should move the
-        # headline number here - hectares_cropped_per_farm_worker is
-        # unchanged (just asserted above), so any movement has to come
-        # from HORSE_COLLAR_PLOUGHING_YIELD_MULTIPLIER raising the GROSS
-        # yield before seed is paid back. That subtraction is not scaled,
+        # independent effect on top of the area gain just asserted: it
+        # raises the GROSS yield before seed is paid back. That subtraction is not scaled,
         # so the expected fraction is computed from the same formula
         # fraction_of_population_that_must_farm uses, not from a simple
         # division by the multiplier (which would ignore the unscaled
@@ -617,7 +654,7 @@ class CropSoilRotationToolkitAxisTests(unittest.TestCase):
         food_available_per_ha = (
             net_yield_with_horse_collar * (1.0 - agriculture.GRAIN_SPOILAGE_RATE_PER_YEAR))
         expected_output_per_worker = (
-            agriculture.hectares_cropped_per_farm_worker() * food_available_per_ha)
+            agriculture.hectares_cropped_per_farm_worker(toolkit=collar) * food_available_per_ha)
         expected_fraction = (
             agriculture.annual_food_demand_kg_per_person() / expected_output_per_worker)
 
@@ -628,42 +665,51 @@ class CropSoilRotationToolkitAxisTests(unittest.TestCase):
         self.assertAlmostEqual(horse_collar_fraction, expected_fraction, places=6)
 
     def test_a_better_reaping_tool_is_what_actually_loosens_the_window(self):
-        # Unlike the horse collar, a scythe-and-cradle changes ONLY the
-        # reaping rate, which is exactly the harvest window's ceiling -
-        # this is what the module's own docstring says would have to
-        # change to move the headline number, and here it does, by
-        # exactly the declared multiplier.
-        default_cropped = agriculture.hectares_cropped_per_farm_worker()
-        scythe_cropped = agriculture.hectares_cropped_per_farm_worker(
-            toolkit=agriculture.SCYTHE_AND_CRADLE)
+        # A scythe-and-cradle changes ONLY the reaping rate, which is the
+        # harvest window's ceiling. It moves the cropped area exactly by the
+        # declared multiplier where the window binds (a crop with few hours
+        # per hectare), and not at all where the year binds.
+        window_bound_crop = agriculture.DEFAULT_CROP._replace(base_labour_hours_per_hectare=100.0)
+        scythe = agriculture.SCYTHE_AND_CRADLE
+        default_cropped = agriculture.hectares_cropped_per_farm_worker(window_bound_crop)
+        scythe_cropped = agriculture.hectares_cropped_per_farm_worker(window_bound_crop, scythe)
         self.assertAlmostEqual(
             scythe_cropped,
             default_cropped * agriculture.SCYTHE_AND_CRADLE_REAPING_RATE_MULTIPLIER,
             places=6)
 
-        default_fraction = agriculture.fraction_of_population_that_must_farm()
-        scythe_fraction = agriculture.fraction_of_population_that_must_farm(
-            toolkit=agriculture.SCYTHE_AND_CRADLE)
+        default_fraction = agriculture.fraction_of_population_that_must_farm(window_bound_crop)
+        scythe_fraction = agriculture.fraction_of_population_that_must_farm(window_bound_crop, toolkit=scythe)
         self.assertLess(scythe_fraction, default_fraction)
         self.assertAlmostEqual(
             scythe_fraction,
             default_fraction / agriculture.SCYTHE_AND_CRADLE_REAPING_RATE_MULTIPLIER,
             places=6)
 
+        self.assertAlmostEqual(
+            agriculture.hectares_cropped_per_farm_worker(toolkit=scythe),
+            agriculture.hectares_cropped_per_farm_worker(),
+            places=9,
+            msg="where the farming year binds, a faster reaper alone must not raise the area one worker crops")
+
     def test_a_mechanical_reaper_loosens_the_window_further_than_a_scythe_does(self):
+        window_bound_crop = agriculture.DEFAULT_CROP._replace(base_labour_hours_per_hectare=100.0)
         scythe_cropped = agriculture.hectares_cropped_per_farm_worker(
-            toolkit=agriculture.SCYTHE_AND_CRADLE)
+            window_bound_crop, agriculture.SCYTHE_AND_CRADLE)
         reaper_cropped = agriculture.hectares_cropped_per_farm_worker(
-            toolkit=agriculture.MECHANICAL_REAPER)
+            window_bound_crop, agriculture.MECHANICAL_REAPER)
         self.assertGreater(reaper_cropped, scythe_cropped)
-        # At MECHANICAL_REAPER_REAPING_RATE_MULTIPLIER=10, the harvest-
-        # window ceiling (21.0 ha) exceeds even the annual-hours ceiling
-        # (9.33 ha), so the ANNUAL-HOURS ceiling becomes the new binding
-        # one - the module's own predicted shape once reaping is fast
-        # enough, stated as a test rather than only as prose.
+        # Once reaping is fast enough the window ceiling passes the annual-
+        # hours ceiling and the year takes back over as the binding one.
+        self.assertGreater(
+            agriculture.hectares_per_worker_harvest_window_ceiling(
+                window_bound_crop, agriculture.MECHANICAL_REAPER),
+            agriculture.hectares_per_worker_annual_hours_ceiling(
+                window_bound_crop, agriculture.MECHANICAL_REAPER))
         self.assertAlmostEqual(
             reaper_cropped,
-            agriculture.hectares_per_worker_annual_hours_ceiling(),
+            agriculture.hectares_per_worker_annual_hours_ceiling(
+                window_bound_crop, agriculture.MECHANICAL_REAPER),
             places=6,
             msg="once reaping is fast enough, the annual-hours ceiling "
                 "should take back over as the binding one")
@@ -883,9 +929,15 @@ class HarvestWindowIsCalendarTimeTests(unittest.TestCase):
     def test_the_default_path_is_unchanged_by_all_of_this(self):
         # Nothing above may move the headline number. worker_count is opt-in
         # precisely so the ordinary-human case keeps its old derivation.
+        crop = agriculture.DEFAULT_CROP
+        food_per_hectare = ((crop.planting_material_kg_per_ha * crop.fold_return_on_planting_material
+                             - crop.planting_material_kg_per_ha)
+                            * (1.0 - agriculture.GRAIN_SPOILAGE_RATE_PER_YEAR))
         self.assertAlmostEqual(
             agriculture.fraction_of_population_that_must_farm(),
-            0.21181, places=4)
+            agriculture.annual_food_demand_kg_per_person()
+            / (agriculture.hectares_cropped_per_farm_worker() * food_per_hectare),
+            places=9)
 
 
 if __name__ == "__main__":
