@@ -18,7 +18,7 @@ that commit. Re-run the same command for the current list; this section is repla
   basket), `economy_money_regimes_norse` (weighed-metal price level): 473, the opening that never settles.
 - `economy_state_budget_validation` (a balanced budget keeps the state's coin share; printing raises prices): 526 and 473.
 - `economy_tin_dearer_than_copper`: 511 (GitHub #65).
-- `economy_bronze_market_price`: 502 (GitHub #66). Its worst traded price over recipe cost rose between the last two full runs.
+- `economy_bronze_market_price`: passes at the owner's bound (an order of magnitude; 502 closed).
 - `occupational_distribution` (agriculture share below its band; services and state the largest non-farm group): 619 (GitHub #64).
 - `sited_ore_price_over_cost_validation`: the ratio bound holds for every common ore; the red line is the not-vacuous guard,
   because Rome's cassiterite market holds the opening stock unsold with no buyer (its smelters have not bought yet): 473.
