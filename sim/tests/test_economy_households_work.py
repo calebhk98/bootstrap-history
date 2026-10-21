@@ -59,6 +59,30 @@ class HiringTests(unittest.TestCase):
         self.assertAlmostEqual(households_work.own_hours(1000.0, 250.0), 750.0)
 
 
+class CookingFuelTests(unittest.TestCase):
+    FUEL = {"days_per_year": 100, "tasks": {}, "cooking_fuel_mj_per_person_per_day": 20.0}
+
+    def test_cooking_fuel_follows_the_figure_of_the_data(self):
+        self.assertAlmostEqual(households_work.cooking_fuel_per_person_per_year(self.FUEL, True), 2000.0)
+
+    def test_a_household_without_a_hearth_burns_no_cooking_fuel(self):
+        self.assertEqual(households_work.cooking_fuel_per_person_per_year(self.FUEL, False), 0.0)
+
+    def test_data_with_no_fuel_figure_adds_none(self):
+        self.assertEqual(households_work.cooking_fuel_per_person_per_year(DATA, True), 0.0)
+
+    def test_the_fuel_is_added_to_the_warmth_floor_and_leaves_other_needs(self):
+        need_data = {"needs": {"warmth": {"surplus_budget_share": 0.1, "subsistence_per_capita_per_year": 300.0},
+                               "food": {"surplus_budget_share": 0.5, "subsistence_per_capita_per_year": 10.0}},
+                     "goods": {"wood_kg": {"satisfies": {"warmth": 15.0}}, "wheat_kg": {"satisfies": {"food": 1.0}}}}
+        basket = make_basket(need_data, {})
+        floors = {need.need_id: need.subsistence_per_person
+                  for need in households_work.with_cooking_fuel(basket, 2000.0, "warmth").needs}
+        self.assertAlmostEqual(floors["warmth"], 2300.0)
+        self.assertAlmostEqual(floors["food"], 10.0)
+        self.assertIs(households_work.with_cooking_fuel(basket, 0.0, "warmth"), basket)
+
+
 class CookedFoodTests(unittest.TestCase):
     def _shares(self, basket):
         priced = need_basket.need_prices(basket, {"wheat_kg": 1.0, "cooked_meal_kg": 1.0}.get)

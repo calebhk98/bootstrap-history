@@ -69,6 +69,7 @@ class EconomySetup:
     carriage_handling_trade: Dict[str, str] = field(default_factory=dict)   # mode id -> the trade that works those handling hours (geography's `handling_trade`); a mode with none is handled by the unskilled trade
     carriage_carriers: Dict[str, Tuple[float, Tuple[Tuple[str, float], ...]]] = field(default_factory=dict)   # mode id -> (tonne-km a team moves a day, ((carrier good, units worn per tonne-km),)): what a tonne-km wears (carriage_wear); none: carriage wears nothing
     carriage_wage: float = 0.0     # the wage an hour (unskilled trade) the land carriage rates were priced at; 0: they follow no wage
+    fuel_need: str = "warmth"           # the basket need fuel meets; a hearth's cooking fuel is added to its floor
     hunger_need: str = "food"           # the basket need whose unmet floor counts as hunger
     yield_factor_by_recipe_tile: Dict[str, float] = field(default_factory=dict)
     land_per_run: Dict[str, float] = field(default_factory=dict)      # hectare-years of land a run takes

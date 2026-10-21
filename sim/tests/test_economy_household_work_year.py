@@ -16,12 +16,15 @@ from sim.world import need_basket
 
 DATA = {"days_per_year": 100, "tasks": {"carrying": {"needs_hearth": False, "hours_per_adult_woman_per_day": 2.0,
                                                     "adult_women_per_person": 0.25},
-                                        "cooking": {"needs_hearth": True, "hours_per_person_per_day": 0.5}}}
+                                        "cooking": {"needs_hearth": True, "hours_per_person_per_day": 0.5}},
+        "cooking_fuel_mj_per_person_per_day": 2.0}
 NEED_DATA = {"needs": {"food": {"surplus_budget_share": 0.5, "subsistence_per_capita_per_year": 10.0},
+                       "warmth": {"surplus_budget_share": 0.1, "subsistence_per_capita_per_year": 300.0},
                        "household_work": {"surplus_budget_share": 0.0, "subsistence_per_capita_per_year": 0.0}},
              "goods": {"wheat_kg": {"satisfies": {"food": 1.0}},
                        "cooked_meal_kg": {"satisfies": {"food": 0.3}, "ready_to_eat": True},
-                       "domestic_service_hour": {"satisfies": {"household_work": 1.0}}}}
+                       "domestic_service_hour": {"satisfies": {"household_work": 1.0}},
+                       "wood_kg": {"satisfies": {"warmth": 15.0}}}}
 
 
 class View:
@@ -39,7 +42,7 @@ def cohort(name, tile="t1", people=100.0):
 
 def setup():
     return types.SimpleNamespace(
-        household_work=DATA, working_hours_per_year=1000.0, servant_trade="servant", hunger_need="food",
+        household_work=DATA, working_hours_per_year=1000.0, servant_trade="servant", hunger_need="food", fuel_need="warmth",
         ready_to_eat=households_work.ready_to_eat_goods(NEED_DATA),
         basket_for=lambda tile: make_basket(NEED_DATA, {}))
 
@@ -122,6 +125,23 @@ class HearthTests(unittest.TestCase):
         self.assertTrue(household_work_year.has_hearth(rec, owner))
         self.assertTrue(household_work_year.has_hearth(rec, tenant))
         self.assertIn("wheat_kg", self._foods(household_work_year.cohort_basket(setup(), rec, owner)))
+
+
+class CookingFuelTests(unittest.TestCase):
+    def _warmth_floor(self, basket):
+        return next(need.subsistence_per_person for need in basket.needs if need.need_id == "warmth")
+
+    def test_a_cohort_with_a_hearth_burns_cooking_fuel_on_top_of_the_warmth_floor(self):
+        owner = cohort("owner")
+        rec = record({"t1": {"owner": 1.0}}, cohorts=[owner])
+        floor = self._warmth_floor(household_work_year.cohort_basket(setup(), rec, owner))
+        self.assertAlmostEqual(floor, 300.0 + households_work.cooking_fuel_per_person_per_year(DATA, True))
+        self.assertGreater(floor, 300.0)
+
+    def test_a_cohort_with_no_hearth_burns_none(self):
+        landless = cohort("landless")
+        rec = record({"t1": {}}, cohorts=[landless])
+        self.assertAlmostEqual(self._warmth_floor(household_work_year.cohort_basket(setup(), rec, landless)), 300.0)
 
 
 if __name__ == "__main__":

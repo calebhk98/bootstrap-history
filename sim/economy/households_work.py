@@ -36,6 +36,25 @@ def hours_per_person_per_year(data: Mapping[str, Any], has_hearth: bool = True) 
     return total
 
 
+def cooking_fuel_per_person_per_year(data: Mapping[str, Any], has_hearth: bool = True) -> float:
+    """Megajoules of fuel heat a person's share of the cooking burns a year, in the units of the warmth need. A
+    household with no hearth burns none (it buys cooked food); data with no figure adds none."""
+    if not has_hearth:
+        return 0.0
+    per_day = float(data.get("cooking_fuel_mj_per_person_per_day", 0.0))
+    return per_day * float(data["days_per_year"]) if per_day else 0.0
+
+
+def with_cooking_fuel(basket: Basket, fuel_per_person: float, fuel_need: str = "warmth") -> Basket:
+    """The basket with a cooking fuel floor added to the fuel need's floor (the climate floor heats the dwelling;
+    cooking burns fuel beyond it). Left whole when there is none to add."""
+    if fuel_per_person <= 0.0:
+        return basket
+    return dataclasses.replace(basket, needs=tuple(
+        dataclasses.replace(need, subsistence_per_person=need.subsistence_per_person + fuel_per_person)
+        if need.need_id == fuel_need else need for need in basket.needs))
+
+
 def hours_needed(people: float, data: Mapping[str, Any], has_hearth: bool = True) -> float:
     """Hours of household work a cohort's people need done in the year."""
     return max(0.0, people) * hours_per_person_per_year(data, has_hearth)

@@ -20,11 +20,14 @@ def has_hearth(record, cohort: Cohort) -> bool:
 
 
 def cohort_basket(setup, record, cohort: Cohort):
-    """The basket of a cohort: the tile's, with food bought only as ready to eat when it has no hearth, and
+    """The basket of a cohort: the tile's, with food bought only as ready to eat when it has no hearth (else cooking fuel on its warmth floor), and
     this year's hired household work as the floor of that need."""
     basket = setup.basket_for(cohort.tile)
     if not has_hearth(record, cohort):
         basket = households_work.without_hearth_basket(basket, setup.ready_to_eat, setup.hunger_need)
+    else:
+        basket = households_work.with_cooking_fuel(
+            basket, households_work.cooking_fuel_per_person_per_year(setup.household_work), setup.fuel_need)
     if cohort.hired_work_per_person > 0.0:
         basket = dataclasses.replace(basket, needs=tuple(
             dataclasses.replace(need, subsistence_per_person=cohort.hired_work_per_person)
