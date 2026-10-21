@@ -20,19 +20,19 @@ from sim.constants import declare
 ASSESSMENT_DAYS_PER_PERSON = declare(
 	"ASSESSMENT_DAYS_PER_PERSON", 0.02, kind="temporary_heuristic",
 	unit="official-days per person per round of collection (rolls kept without writing)", source=None, confidence="D",
-	retire="Complaint 620 follow-up: collection time derived from the census and receipt records an administration keeps",
+	retire="Complaints/660: collection time derived from the census and receipt records an administration keeps",
 	why="The time an official needs to enter, check and receive one person's dues in a round when rolls are kept by "
 		"memory and tally. No source found that gives it for a pre-modern state; stands in for a model of the work.")
 WRITING_SAVES_SHARE_OF_ASSESSMENT = declare(
 	"WRITING_SAVES_SHARE_OF_ASSESSMENT", 0.5, kind="temporary_heuristic",
 	unit="share of assessment time saved at full literacy of the officials", source=None, confidence="D",
-	retire="Complaint 620 follow-up: collection time derived from the census and receipt records an administration keeps",
+	retire="Complaints/660: collection time derived from the census and receipt records an administration keeps",
 	why="How much of an official's assessment time written rolls and receipts save when every official and clerk "
 		"reads and writes. No source found; the saving is taken as linear in the officials' literacy.")
 ROUNDS_OF_COLLECTION_PER_YEAR = declare(
 	"ROUNDS_OF_COLLECTION_PER_YEAR", 1.0, kind="temporary_heuristic",
 	unit="visits per tile per year", source=None, confidence="D",
-	retire="Complaint 620 follow-up: rounds set by when the base is due (harvest, market days)",
+	retire="Complaints/660: rounds set by when the base is due (harvest, market days)",
 	why="How often an official travels to a tile to collect, out and back; one round at the harvest stands in for "
 		"the dates each base falls due.")
 

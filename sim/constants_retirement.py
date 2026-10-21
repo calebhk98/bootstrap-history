@@ -48,6 +48,27 @@ def missing_retirement(registry, baseline):
             if name not in known and not has_retirement(registry[name])]
 
 
+COMPLAINTS_PATH = os.path.join(os.path.dirname(BASELINE_PATH), "..", "..", "Complaints")
+_CITED_COMPLAINT = re.compile(r"Complaints?(?:/closed)?[/ ](\d+)")
+
+
+def cited_complaints(retire):
+    """Complaint numbers a `retire` text cites as `Complaints/N` or `Complaint N`."""
+    return {int(number) for number in _CITED_COMPLAINT.findall(retire or "")}
+
+
+def open_complaint_numbers(path=COMPLAINTS_PATH):
+    """Numbers of the issue files in Complaints/ (closed ones live in Complaints/closed/)."""
+    return {int(match.group(1)) for name in os.listdir(path) for match in [re.match(r"(\d+)-", name)] if match}
+
+
+def closed_retirements(registry, open_numbers):
+    """Promises whose `retire` cites complaints and none of them is open: the retirement points nowhere."""
+    return [name for name in promise_names(registry)
+            if cited_complaints(registry[name].get("retire")) and
+            not cited_complaints(registry[name].get("retire")) & set(open_numbers)]
+
+
 def stale_baseline(registry, baseline):
     """Baseline names that are no longer declared as a promise."""
     current = set(promise_names(registry))

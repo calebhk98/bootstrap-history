@@ -14,7 +14,7 @@ from .credit_claims import claims_by_lender
 LOSS_RATE_SMOOTHING_SHARE = declare(
     "LOSS_RATE_SMOOTHING_SHARE", 0.3, kind="temporary_heuristic",
     unit="share of the year's loss rate blended into the lender's remembered rate each year", source=None, confidence="D",
-    retire="Complaints/655: a lender's expectation follows from the default process it faces, not a fixed memory share",
+    retire="Complaints/641: a lender's expectation follows from the default process it faces, not a fixed memory share",
     why="How fast a lender's expected loss follows its latest year. Larger forgets sooner; the size is not derived.")
 
 

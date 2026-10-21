@@ -95,7 +95,7 @@ MANURE_COLLECTED_SHARE = declare(
     "MANURE_COLLECTED_SHARE", 0.3,
     kind="temporary_heuristic", unit="share of the herd's excreta carried to the fields",
     source="Share dropped in byre, fold and yard rather than on pasture; invented",
-    confidence="D", retire="farmers buying manure goods through the economy (Complaints/544)",
+    confidence="D", retire="farmers buying manure goods through the economy (Complaints/543)",
     why="Transitional rule: the society's draught herd manures its cropland for free until farm producers buy the "
         "manure goods.")
 

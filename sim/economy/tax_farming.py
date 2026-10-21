@@ -19,7 +19,7 @@ TAX_FARMER_REACH = declare(
     source=None, confidence="D",
     why="A farmer collects with its own agents, locally; how far its writ runs depends on the staff it hires "
         "and the force it can call on, which are not modelled. The state's own reach is its capacity.",
-    retire="542 state officials and collectors as actors")
+    retire="Complaints/660: state officials and collectors as actors")
 
 
 def expected_take(rate: float, base: float, reach: float) -> float:

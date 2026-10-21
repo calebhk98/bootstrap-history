@@ -1,7 +1,7 @@
 """Provisional weights a state's own valuation puts on the consequences of each way to meet a shortfall."""
 from sim.constants import declare
 
-_RETIRE = "Complaints/625: a ruler's valuation comes from the interest groups that hold it, not from one weight per consequence"
+_RETIRE = "Complaints/486: a ruler's valuation comes from the interest groups that hold it, not from one weight per consequence"
 
 FISCAL_DEBT_CARRY_YEARS = declare(
 	"FISCAL_DEBT_CARRY_YEARS", 3.0, kind="temporary_heuristic", unit="years of interest",
