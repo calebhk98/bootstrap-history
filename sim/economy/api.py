@@ -43,7 +43,7 @@ __all__ = [
     "YearInputs", "recipe_tile_key", "recipes_from_production_data", "with_tool_wear", "EconomyRecord", "EconomySetup", "TradeSpec", "SiteLimit",
     "goods_specs", "EDGE_EXTERNAL", "EDGE_LEGACY", "EDGE_CARGO", "EDGE_CONSUMPTION", "EDGE_PRODUCTION", "EDGE_EXCHANGE", "external_edge", "Bid", "GoodsMove", "Offer", "Transfer",
     "variable_cost_per_run", "rebase_basket_price_level", "trade_premium", "title_wealth",
-    "traded_volumes", "market_record", "opening_quantities", "opening_prices_in_hours", "wages_by_trade", "wages_by_trade_weighted", "interest_rate", "producers_of",
+    "traded_volumes", "country_traded_volumes", "country_opening_basket", "market_record", "opening_quantities", "opening_prices_in_hours", "wages_by_trade", "wages_by_trade_weighted", "interest_rate", "producers_of",
     "external_trade_net", "external_trade_volume", "account_balance", "account_holdings",
     "credit_room", "credit_line_request", "economy_from_record", "blank_economy", "export_record", "economy_book", "economy_contracts", "finish_spin_up", "note_spin_up_result", "spin_up_state", "money_year_figures","shown_prices_of",
     "settle_agent_takings", "indebted_tiles", "money_revenue_forms", "admit_recipes", "move_goods", "post_transfers", "cohort_incomes", "cohort_land_rents", "land_rent_per_hectare",
@@ -60,6 +60,16 @@ def traded_volumes(economy):
         good = key.split(_KEY_SEPARATOR, 1)[0]
         totals[good] = totals.get(good, 0.0) + volume
     return totals
+
+
+def country_traded_volumes(economy, country=None):
+    """Last year's traded quantity of each good over the markets of `country` (the home country when none is named)."""
+    return country_figures.traded_volumes(economy, country or economy.setup.civ_id)
+
+
+def country_opening_basket(economy, country=None):
+    """Quantity of each good in the opening basket that falls to `country` (the home country when none is named)."""
+    return country_figures.opening_basket(economy, country or economy.setup.civ_id)
 
 
 def market_record(economy, good):

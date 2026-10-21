@@ -49,6 +49,7 @@ class EconomyRecord:
     unmet: Dict[str, float] = field(default_factory=dict)                # market_key -> quantity buyers wanted at the year's price beyond what was sold
     opening_basket: Dict[str, float] = field(default_factory=dict)       # good -> quantity at the opening, as far as the opening supplies it
     opening_demand: Dict[str, float] = field(default_factory=dict)       # good -> quantity households were seeded to want, supplied or not
+    opening_demand_by_country: Dict[str, Dict[str, float]] = field(default_factory=dict)  # country -> good -> quantity its households were seeded to want
     expansion_runs: Dict[AgentId, float] = field(default_factory=dict)   # capacity a loan request would build
     index_base_prices: Dict[str, float] = field(default_factory=dict)    # the price level's base; opening if empty
     worn_runs: Dict[AgentId, float] = field(default_factory=dict)        # plant that wore out last year, to rebuild
@@ -117,6 +118,7 @@ class EconomyRecord:
             "unmet": self.unmet,
             "opening_basket": self.opening_basket,
             "opening_demand": self.opening_demand,
+            "opening_demand_by_country": self.opening_demand_by_country,
             "expansion_runs": self.expansion_runs,
             "index_base_prices": self.index_base_prices,
             "worn_runs": self.worn_runs,
@@ -164,6 +166,7 @@ class EconomyRecord:
             unmet=dict(record["unmet"]),
             opening_basket=dict(record["opening_basket"]),
             opening_demand=dict(record["opening_demand"]),
+            opening_demand_by_country={country: dict(demand) for country, demand in record["opening_demand_by_country"].items()},
             expansion_runs=dict(record["expansion_runs"]),
             index_base_prices=dict(record["index_base_prices"]),
             worn_runs=dict(record["worn_runs"]),

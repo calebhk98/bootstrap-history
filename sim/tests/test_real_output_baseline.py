@@ -19,7 +19,7 @@ RATIO_BAND = 2.0
 MOVED_SHARE = 0.1
 
 game = sim(civ="rome_100ad", capital=1e9)
-check("the economy's opening basket is not empty", bool(economy_api.opening_quantities(game.economy.agent.economy())))
+check("the economy's opening basket is not empty", bool(economy_api.country_opening_basket(game.economy.agent.economy())))
 per_head = []
 shares_moved = []
 for _year in range(YEARS):
@@ -27,7 +27,7 @@ for _year in range(YEARS):
     per_head.append(game.real_output_per_head())
     traded, _scale = game.traded_measure()
     basket = game.base_basket()
-    baseline = game.economy.agent.stored["volume_baseline"]
+    baseline = game.economy.agent.volume_baseline()
     weight = {good: baseline[good] * basket["prices"][good] for good in traded}
     # the share of the baseline year's traded value carried by goods now far from their baseline volume
     shares_moved.append(sum(weight[good] for good in traded

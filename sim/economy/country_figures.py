@@ -108,6 +108,39 @@ def prices(economy, country: Optional[str]) -> Dict[str, float]:
     return {good: (value / quantity if quantity > 0.0 else plain) for good, (value, quantity, plain) in sorted(totals.items())}
 
 
+def traded_volumes(economy, country: Optional[str]) -> Dict[str, float]:
+    """Last year's traded quantity of each good over the market areas that touch the country's tiles (every
+    market for None)."""
+    tiles = country_tiles(economy, country)
+    totals: Dict[str, float] = {}
+    areas_of: Dict[str, Dict[str, Set[TileId]]] = {}
+    for key, volume in economy.record.volumes.items():
+        good, area = key.split(KEY_SEPARATOR, 1)
+        if country is not None:
+            by_area = areas_of.get(good)
+            if by_area is None:
+                by_area = areas_of[good] = _area_tiles(economy, good)
+            if area in by_area and not (by_area[area] & tiles):
+                continue
+        totals[good] = totals.get(good, 0.0) + volume
+    return totals
+
+
+def opening_basket(economy, country: Optional[str]) -> Dict[str, float]:
+    """The opening basket's part for the country: what the economy's producers supplied of each good, shared
+    out in proportion to the demand each country's households were seeded with (the whole basket for None)."""
+    record = economy.record
+    if country is None:
+        return dict(record.opening_basket)
+    wanted = record.opening_demand_by_country.get(country, {})
+    basket = {}
+    for good, supplied in record.opening_basket.items():
+        total = record.opening_demand.get(good, 0.0)
+        if total > 0.0 and wanted.get(good, 0.0) > 0.0:
+            basket[good] = supplied * wanted[good] / total
+    return basket
+
+
 def _floor_view(economy):
     setup, record = economy.setup, economy.record
     return YearView(record.memory, record.book, economy.area_map, setup.currency_id, labour_area)

@@ -208,21 +208,21 @@ class EconomyPort:
                  "held": 0.0, "crew": production[good]["naval_crew"]}
                 for good in allowed if production[good].get("naval_crew")]
 
-    def agent_volume_baseline(self):
+    def agent_volume_baseline(self, country=None):
         """{good: units the agent economy cleared in the first year it cleared any}; None while it opens."""
         agent = self._answering_agent()
-        return None if agent is None else agent.volume_baseline()
+        return None if agent is None else agent.volume_baseline(country)
 
-    def agent_traded_volumes(self):
+    def agent_traded_volumes(self, country=None):
         """{good: units the agent economy traded last year}; None while it opens."""
         agent = self._answering_agent()
-        return None if agent is None else agent.traded_volumes()
+        return None if agent is None else agent.traded_volumes(country)
 
-    def agent_opening_basket(self):
+    def agent_opening_basket(self, country=None):
         """({good: units a year households bought at the opening}, {good: opening price in labour hours}) of the
         agent economy; None while it opens."""
         agent = self._answering_agent()
-        return None if agent is None else agent.opening_basket()
+        return None if agent is None else agent.opening_basket(country)
 
     def producers_stamp(self):
         """Changes whenever the agent economy's producers might (each year it runs, and when it gains recipes)."""
