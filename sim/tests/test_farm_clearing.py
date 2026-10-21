@@ -13,12 +13,17 @@ The years of clearing in a game, the save round trip and the price tables follow
 `test_farm_clearing_scenario`."""
 QUICK_TOPIC = True
 
+import json
+import os
 import unittest
 
+from sim.geography.api import crop_site, tiles_held
 from sim.geography.food_crops import CropSite
+from sim.world import demography
 from sim.labour import labour_allocation
-from sim.world import agriculture, farming_technique, land
+from sim.world import agriculture, agriculture_labour, farming_technique, land
 
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 HOURS = labour_allocation.HOURS_PER_FARM_WORKER_YEAR
 TECHNIQUE = farming_technique.DEFAULT_TECHNIQUE
 
@@ -96,6 +101,57 @@ class ClearingRuleTests(unittest.TestCase):
 
     def test_without_a_ladder_quality_is_the_reference_field(self):
         self.assertEqual(labour_allocation.quality_of_area([], 500.0), 1.0)
+
+
+class OpeningAreaTests(unittest.TestCase):
+    """The ground cleared at the opening nets as much food after seed as the population's reference-soil area."""
+    crop = TECHNIQUE.crop
+
+    def _net_kg(self, ladder, hectares):
+        gross_per_hectare = (self.crop.planting_material_kg_per_ha * self.crop.fold_return_on_planting_material
+                             * TECHNIQUE.toolkit.ploughing_yield_multiplier
+                             * TECHNIQUE.rotation.soil_fertility_yield_multiplier)
+        total = 0.0
+        for fertility, parcel_hectares in ladder:
+            step = min(parcel_hectares, hectares)
+            total += step * (gross_per_hectare * fertility - self.crop.planting_material_kg_per_ha)
+            hectares -= step
+        return total
+
+    def test_reference_ground_needs_the_reference_hectares(self):
+        sized = agriculture_labour.hectares_netting_reference_food([(1.0, 9000.0)], 1000.0, TECHNIQUE.crop,
+                                                                   None, TECHNIQUE.rotation, TECHNIQUE.toolkit)
+        self.assertAlmostEqual(sized, 1000.0, places=6)
+
+    def test_poorer_ground_takes_more_hectares_than_the_yield_ratio_because_seed_is_sown_on_all(self):
+        ladder = [(0.6, 100000.0)]
+        sized = agriculture_labour.hectares_netting_reference_food(ladder, 1000.0, TECHNIQUE.crop,
+                                                                   None, TECHNIQUE.rotation, TECHNIQUE.toolkit)
+        self.assertGreater(sized, 1000.0 / 0.6)
+        reference_net = self._net_kg([(1.0, 1000.0)], 1000.0)
+        self.assertAlmostEqual(self._net_kg(ladder, sized), reference_net, delta=reference_net * 1e-9)
+
+    def test_ground_that_does_not_cover_its_seed_is_left_out_and_the_ground_held_caps_it(self):
+        sized = agriculture_labour.hectares_netting_reference_food([(1.4, 100.0), (0.1, 1e6)], 1000.0,
+                                                                   TECHNIQUE.crop, None, TECHNIQUE.rotation,
+                                                                   TECHNIQUE.toolkit)
+        self.assertAlmostEqual(sized, 100.0, places=9)
+        self.assertEqual(agriculture_labour.hectares_netting_reference_food([], 1000.0), 0.0)
+
+    def test_the_norse_opening_ground_nets_what_its_people_eat(self):
+        civ = json.load(open(os.path.join(ROOT, "data", "civilizations", "norse_900ad.json"), encoding="utf-8"))
+        share = 1.0 - agriculture.DEFAULT_ROTATION.fallow_share_of_holding
+        ladder = land.territory_cropland({tile: crop_site(tile, share) for tile in tiles_held(civ)}).ladder
+        people = demography.Population.stationary(float(civ["population"]), seed=1)
+        adult_equivalents = (people.children * demography.CHILD_CALORIE_EQUIVALENT + people.working_age
+                             + people.elderly * demography.ELDERLY_CALORIE_EQUIVALENT)
+        reference = agriculture.farmland_for_population(adult_equivalents).hectares
+        hectares = agriculture.farmland_for_population(adult_equivalents, ladder=ladder).hectares
+        self.assertGreater(hectares, reference)
+        self.assertAlmostEqual(self._net_kg(ladder, hectares), self._net_kg([(1.0, reference)], reference),
+                               delta=self._net_kg([(1.0, reference)], reference) * 1e-6)
+        workers = hectares / agriculture.hectares_cropped_per_farm_worker(TECHNIQUE.crop, TECHNIQUE.toolkit)
+        self.assertLess(workers, people.working_age)
 
 
 class RentReadsTheFarmedAreaTests(unittest.TestCase):

@@ -132,3 +132,6 @@ of orders of magnitude below its ask. Measure: step the game of `sim/tests/test_
 and print the floors `unsold_search.clear_with_search` receives for land markets. A land seller's lowest acceptable price that close to
 zero says the reservation it is built from (rent or yield over the rate) has collapsed. Measure where that floor
 comes from before trusting land prices in that game.
+
+Checked against 647 (2026-10-21): the 647 cause (opening area sized at reference soil, so the Norse farm fed too few) is
+fixed, but whether it moves this floor was not measured, so this finding stays open on its own cause.

@@ -238,13 +238,41 @@ def farm_workers_fte_for_population(
     return fraction * adult_equivalent_population
 
 
+def hectares_netting_reference_food(
+        ladder: list, reference_hectares: float, crop: Optional["Crop"] = None,
+        soil: Optional["Soil"] = None, rotation: Optional["Rotation"] = None,
+        toolkit: Optional["Toolkit"] = None) -> float:
+    """Hectares of the best-first `ladder` that net as much food after seed as `reference_hectares` of
+    reference-quality ground: poorer ground needs more hectares, and each also takes its seed, so ground whose
+    yield does not cover its seed adds nothing. All the ground that nets food when it cannot reach that."""
+    crop = crop or DEFAULT_CROP
+    soil = soil or DEFAULT_SOIL
+    rotation = rotation or DEFAULT_ROTATION
+    toolkit = toolkit or DEFAULT_TOOLKIT
+    seed_kg_per_ha = crop.planting_material_kg_per_ha
+    gross_kg_per_ha = (seed_kg_per_ha * crop.fold_return_on_planting_material * toolkit.ploughing_yield_multiplier
+                       * rotation.soil_fertility_yield_multiplier * soil.quality_multiplier)
+    remaining_kg = max(0.0, reference_hectares) * (gross_kg_per_ha - seed_kg_per_ha)
+    hectares = 0.0
+    for yield_factor, parcel_hectares in ladder:
+        net_kg_per_ha = gross_kg_per_ha * yield_factor - seed_kg_per_ha
+        if net_kg_per_ha <= 0.0:
+            break
+        if net_kg_per_ha * parcel_hectares >= remaining_kg:
+            return hectares + remaining_kg / net_kg_per_ha
+        remaining_kg -= net_kg_per_ha * parcel_hectares
+        hectares += parcel_hectares
+    return hectares
+
+
 def farmland_for_population(
         adult_equivalent_population: float, crop: Optional["Crop"] = None,
         soil: Optional["Soil"] = None, rotation: Optional["Rotation"] = None,
         toolkit: Optional["Toolkit"] = None,
         storage_technique: Optional["StorageTechnique"] = None,
         land_quality: float = 1.0,
-        arable_hectares_ceiling: Optional[float] = None) -> "Land":
+        arable_hectares_ceiling: Optional[float] = None,
+        ladder: Optional[list] = None) -> "Land":
     """A `Land` parcel sized so that the workforce
     `farm_workers_fte_for_population` implies can each crop their full
     `hectares_cropped_per_farm_worker` share - i.e. land is NOT the binding
@@ -264,11 +292,15 @@ def farmland_for_population(
     `land_quality` is the parcel's yield multiplier only; it does not change
     the area. `arable_hectares_ceiling`, when given, caps the area at
     what the territory holds, so a civilisation that cannot be fed from its
-    own ground starts short rather than inventing land.
+    own ground starts short rather than inventing land. `ladder` (best-first
+    (yield factor, hectares) parcels of the ground held) sizes the area on that
+    ground's yield instead: see `hectares_netting_reference_food`.
     """
     workers_fte = farm_workers_fte_for_population(
         adult_equivalent_population, crop, soil, rotation, toolkit, storage_technique)
     hectares = hectares_cropped_per_farm_worker(crop, toolkit) * workers_fte
+    if ladder:
+        hectares = hectares_netting_reference_food(ladder, hectares, crop, soil, rotation, toolkit)
     if arable_hectares_ceiling is not None:
         hectares = min(hectares, arable_hectares_ceiling)
     return Land(hectares, land_quality)
