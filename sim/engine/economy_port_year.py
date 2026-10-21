@@ -18,7 +18,7 @@ from sim.economy.api import (EDGE_EXTERNAL, EDGE_LEGACY, AgentOrders, Economy, G
                              YearInputs, expected_output_prices, external_orders, live_input_prices, live_wages,
                              trade_premium, variable_cost_per_run)
 
-from . import trade_duty, economy_port_levy, economy_port_actors, economy_port_cargo, economy_port_cropland, economy_port_institutions, economy_port_land, economy_port_late, economy_port_sites, externalities, material_capacity, solve_cache
+from . import trade_duty, economy_port_bondage, economy_port_levy, economy_port_actors, economy_port_cargo, economy_port_cropland, economy_port_institutions, economy_port_land, economy_port_late, economy_port_sites, externalities, material_capacity, solve_cache
 from .economy_port_key import spin_up_key
 from .economy_port_coin import priced_at_the_margin
 from .economy_port_setup import build_setup, opening_values
@@ -223,6 +223,7 @@ class AgentEconomy(TilePricesMixin):
         economy_api.watch_tiles(economy, self._seat_tiles())
         outcome = economy.step(self._inputs(orders, economy_port_cargo.border_accounts(economy, legs)))
         self._floor_costs = {}
+        economy_port_bondage.settle_purchases(self._sim, economy, outcome)
         economy_port_sites.deplete(self._sim, outcome.extraction, self._recipe_outputs())
         self.outcomes.append(outcome)
         self._settle_actor_trade(sales, purchases)
@@ -514,6 +515,8 @@ class AgentEconomy(TilePricesMixin):
                           institutions=economy_port_institutions.held(sim),
                           durable_users=tuple(economy_port_actors.held_account(buyer)
                                               for buyer in sorted(sim.actors.actors)),
+                          bondage_tiles=economy_port_bondage.bondage_tiles(sim, economy),
+                          bonded_for_sale=economy_port_bondage.bonded_for_sale(sim, economy),
                           standing_bids=self._founder_standing_bids(),
                           site_limits=tuple(economy_port_sites.site_limits(sim, self._recipe_outputs(), self._economy.setup.tiles)))
 

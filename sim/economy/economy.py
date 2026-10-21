@@ -10,7 +10,7 @@ from typing import Any, Dict, Mapping, Optional, Tuple
 
 from sim.world import capital_market
 
-from . import taxes, bondage, banks, carriage_hours, credit, debt_relief, credit_claims, currency, equity, labour, land_market, lending, merchants_credit, producers, shares, sites, state_budget, tax_farming, titles_inheritance, titles_worked, unit_cost
+from . import taxes, bondage, bonded_purchase, banks, carriage_hours, credit, debt_relief, credit_claims, currency, equity, labour, land_market, lending, merchants_credit, producers, shares, sites, state_budget, tax_farming, titles_inheritance, titles_worked, unit_cost
 from .credit_view import CreditView
 from .market_areas import AreaMap
 from .market_areas_follow import follow
@@ -58,6 +58,8 @@ class YearOutcome:
     conservation_residual: float = 0.0
     state_cash: float = 0.0
     money_audit: Optional[MoneyAudit] = None       # where money entered and left this year
+    bonded_bought: Dict[Tuple[str, str], float] = field(default_factory=dict)   # (tile, trade): bonded people bought this year
+    bonded_paid: float = 0.0                       # money the buyers paid for them over the exchange edge
     accounts: Optional[YearAccounts] = None        # production, use, consumption, investment, stocks; food eaten; real wage
 
 
@@ -174,7 +176,9 @@ class Economy:
         everyone = labour_offers(setup, record, view, outside_option, inputs.labour_levy_hours_per_worker)
         offers, kept = withhold_hours(everyone, self._shortfall_hours())
         context = labour_context(setup, record, view, self.carriage, inputs, self._own_plot_options(), outside_option)
-        clear_labour(setup, record, labour_bids, offers, ledger, context, held_share_by_area(everyone, offers))
+        labour_report = clear_labour(setup, record, labour_bids, offers, ledger, context, held_share_by_area(everyone, offers))
+        ledger.bonded_bought, ledger.bonded_paid = bonded_purchase.settle(
+            record.book, money, labour_report.formed, labour_bids, context.ask_floor_per_worker_year)
         self._grow_own(offers, ledger, inputs.harvest_factor, kept)
         order_book = {}
         funds = cohort_orders(setup, record, view, ledger, order_book)
@@ -459,4 +463,5 @@ class Economy:
                            wage_floor_per_hour=ledger.wage_floor_per_hour, extraction=extraction,
                            conservation_residual=check_money(record), money_audit=year_report(record),
                            state_cash=record.book.balance(setup.state_agent, money),
+                           bonded_bought=dict(ledger.bonded_bought), bonded_paid=ledger.bonded_paid,
                            accounts=build_accounts(setup, record, ledger, stocks_at_start, prices, mean_wages))

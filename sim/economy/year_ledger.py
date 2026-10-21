@@ -38,6 +38,8 @@ class YearLedger:
     bids_by_market: Dict[Tuple[GoodId, str], list] = field(default_factory=dict)  # (good, area): the year's bids
     import_accounts: frozenset = frozenset()   # accounts whose sales are goods that crossed the border (customs)
     export_accounts: frozenset = frozenset()   # accounts whose purchases leave over the border
+    bonded_bought: Dict[Tuple[str, str], float] = field(default_factory=dict)   # (tile, trade): bonded people bought
+    bonded_paid: float = 0.0               # money paid for them
     wage_floor_per_hour: float = 0.0       # what a worker's household costs less its plot, per hour, over the areas
 
     def note_postings(self, postings: Iterable[object], purpose_kind: str = "") -> None:

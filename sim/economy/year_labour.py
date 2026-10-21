@@ -106,9 +106,9 @@ def _result(clearing, currency: str, offers: Sequence[LabourOffer]) -> LabourRes
 
 
 def clear_labour(setup, record, bids: Sequence[LabourBid], offers: Sequence[LabourOffer], ledger: YearLedger,
-                 context, held_share: Mapping[str, float] = None) -> None:
+                 context, held_share: Mapping[str, float] = None):
     """Run the core's year on the record's workforce: wages, hires, training, entry, switching and
-    migration. Then settle each market's wages. `context` is the core's inputs without trades and bids
+    migration; returns the core's report. Then settle each market's wages. `context` is the core's inputs without trades and bids
     (labour_inputs.labour_context). `held_share` is the share of each area's workers whose hours
     households keep for their own plots: the market does not see them this year."""
     core_bids = sloped_bids(bids)
@@ -135,3 +135,4 @@ def clear_labour(setup, record, bids: Sequence[LabourBid], offers: Sequence[Labo
         record.hours_hired[market_key(clearing.trade, clearing.area)] = clearing.hours_hired
         record.hours_idle[market_key(clearing.trade, clearing.area)] = clearing.idle_hours
     mirror_wages(record.memory.wages, record.workforce)
+    return report

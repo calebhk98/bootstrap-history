@@ -117,4 +117,6 @@ class YearInputs:
     tax_rates: Tuple[Tuple[str, float], ...] = ()           # (form, rate) the state holds this year; a form not named keeps its rate (taxes.with_rates)
     institutions: Tuple[str, ...] = ()                      # the credit institutions the society holds (banks.DEPOSIT_BANKING): without one its households found none
     durable_users: Tuple[AgentId, ...] = ()                 # outside actors' asset accounts whose durables are in use
+    bondage_tiles: Tuple[TileId, ...] = ()                  # tiles whose society recognises bondage: bonded people may be bought there (Complaint 644)
+    bonded_for_sale: Mapping[TileId, Mapping[str, float]] = None   # bonded people of a trade on offer per tile; None is none
     standing_bids: Tuple[Bid, ...] = ()                     # demand settled outside the book (the founder's draws): entry reads it as bids, nothing clears
