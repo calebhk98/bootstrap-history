@@ -105,8 +105,11 @@ class CreditMixin:
         held = self.state.household.capital
         return bearable_part(amount, held, self.credit_limit(_capital=held - amount))
 
-    def credit_limit(self, _rev=None, _upkeep=None, _capital=None):
-        """How far into arrears anyone will actually let you go.
+    def credit_line_sought(self, _rev=None, _upkeep=None, _capital=None):
+        """The credit line this household asks lenders for, before the market's room: (the raw line its name and
+        earning give, the running-cost floor, the most its earning can service), in the household's real units.
+
+        How far into arrears anyone will actually let you go.
 
         Unbounded debt is an accounting fiction: a household could sit
         deeply negative for centuries, making no progress, with the clock
@@ -155,7 +158,13 @@ class CreditMixin:
             years *= min(1.0, self.civ["starting_interest_rate"] / market_rate)
         # The running tab carries interest too, so only the earning left after that interest backs new advances.
         serviceable = floor + max(0.0, earning - floor * market_rate) * years
-        # And never more than lenders still hold beyond what everyone else owes them.
+        return base, floor, serviceable
+
+    def credit_limit(self, _rev=None, _upkeep=None, _capital=None):
+        """How far into arrears anyone will actually let you go: the line the household's own standing earns
+        (`credit_line_sought`), never more than lenders still hold beyond what everyone else owes them (the
+        room the credit market's clearing granted this borrower), never less than a year's running costs."""
+        base, floor, serviceable = self.credit_line_sought(_rev, _upkeep, _capital)
         room = self.market_credit_room(self.state.acting_seat)
         return calculate_credit_ceiling(base, floor, serviceable, self.price_index,
                                         None if room is None else room / self.price_index)

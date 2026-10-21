@@ -519,8 +519,22 @@ class AgentEconomy(TilePricesMixin):
                                               for buyer in sorted(sim.actors.actors)),
                           bondage_tiles=economy_port_bondage.bondage_tiles(sim, economy),
                           bonded_for_sale=economy_port_bondage.bonded_for_sale(sim, economy),
-                          standing_bids=self._founder_standing_bids(),
+                          standing_bids=self._founder_standing_bids(), credit_asks=self._credit_asks(),
                           site_limits=tuple(economy_port_sites.site_limits(sim, self._recipe_outputs(), self._economy.setup.tiles)))
+
+    def _credit_asks(self):
+        """Each playing seat's credit line, as a request for the year's clearing: the line its name and earning
+        give (the market's room not yet applied) in the economy's money."""
+        sim, setup = self._sim, self._economy.setup
+        rate = sim.market_rate()
+        asks = []
+        for seat_id in sorted(sim.playing_seats() or sim.state.seats):
+            with sim.act_as(seat_id):
+                base, _floor, serviceable = sim.credit_line_sought()
+                line = max(0.0, min(base, serviceable)) * sim.price_index / setup.coin_per_unit
+            if line > 0.0:
+                asks.append(economy_api.credit_line_request(seat_id, setup.currency_id, line, rate))
+        return tuple(asks)
 
     def _founder_standing_bids(self):
         """The founder's year of draws on materials, as bids for firm entry to read (economy_port_actors.standing_bids)."""

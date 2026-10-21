@@ -10,7 +10,7 @@ from typing import Any, Dict, Mapping, Optional, Tuple
 
 from sim.world import capital_market
 
-from . import taxes, bondage, bonded_purchase, banks, carriage_hours, credit, debt_relief, credit_claims, currency, equity, labour, land_market, lending, merchants_credit, producers, shares, sites, state_budget, tax_farming, titles_inheritance, titles_worked, unit_cost
+from . import taxes, bondage, bonded_purchase, banks, carriage_hours, credit, credit_lines, debt_relief, credit_claims, currency, equity, labour, land_market, lending, merchants_credit, producers, shares, sites, state_budget, tax_farming, titles_inheritance, titles_worked, unit_cost
 from .credit_view import CreditView
 from .market_areas import AreaMap
 from .market_areas_follow import follow
@@ -192,7 +192,7 @@ class Economy:
             for bid in plan.bids:
                 order_book.setdefault((bid.good, bid.area), ([], []))[0].append(bid)
         funds, pledged = banks.intermediate(setup, record, funds, view.year, inputs.institutions)
-        plant_runs = self._lend(funds, view, order_book, ledger, pledged)
+        plant_runs = self._lend(funds, view, order_book, ledger, pledged, inputs.credit_asks)
         merchant_orders(setup, record, view, self.area_map, self.carriage, order_book)
         for producer_id, runs in self._rebuild_worn_plant(view, order_book).items():
             plant_runs[producer_id] = plant_runs.get(producer_id, 0.0) + runs
@@ -326,17 +326,18 @@ class Economy:
         dividends, since a lender is paid ahead of them."""
         return lending.service(self.record, self.setup.currency_id, year, self.setup.debt_bondage_years)
 
-    def _lend(self, funds, view, order_book, ledger, pledged=None) -> Dict[str, float]:
+    def _lend(self, funds, view, order_book, ledger, pledged=None, credit_asks=()) -> Dict[str, float]:
         """New loans from savings. A producer that borrowed to build bids for its plant goods, a household
         for its floors; a merchant's cargo is bought from its enlarged cash (merchant_orders follows)."""
         record, setup = self.record, self.setup
         money = setup.currency_id
         priced_by_tile: Dict[str, list] = {}
         requests, record.loan_requests = record.loan_requests, []
-        requests = (requests + lending.household_requests(setup, record, view, ledger, priced_by_tile)
+        requests = (requests + list(credit_asks) + lending.household_requests(setup, record, view, ledger, priced_by_tile)
                     + lending.merchant_requests(setup, record, view, self.area_map, self.carriage))
         record.funds_offered = sum(offer.amount for offer in funds if offer.currency == money)
         record.lent_by_borrower = {}
+        record.credit_granted = {}
         if not requests:
             record.expansion_runs = {}      # a working-capital loan struck ahead of the year left no plant to wait for
             if funds:
@@ -347,18 +348,23 @@ class Economy:
                                                                 credit.RATE_ADJUSTMENT_SHARE_PER_YEAR)
             return {}
         debt = credit_claims.principal_by_borrower(record.loans)
-        loans, rate, unmet = credit.clear(requests, funds, money, record.memory.rates.get(money), debt,
+        offered = credit_lines.hold_reserve(funds, record.banks)     # the reserve is held out of every lender's offer
+        loans, rate, unmet = credit.clear(requests, offered, money, record.memory.rates.get(money), debt,
                                            credit_claims.arrears_history(record.loans, record.remembered_defaults),
                                            year=view.year,
                                            rate_ceiling=capital_market.RATE_CEILING_SHARE * setup.opening_rate)
+        every_loan = loans
+        loans, record.credit_granted = credit_lines.split_lines(loans, [ask.borrower for ask in credit_asks])
+        for ask in credit_asks:
+            record.credit_granted.setdefault(ask.borrower, 0.0)
         banks.draw_deposits(record, loans, pledged or {}, view.year, money)       # a bank takes its depositors' funds for the loans it makes
         record.book.transfer_many(credit.disbursements(loans))
         record.loans.extend(loans)
-        for loan in loans:
+        for loan in every_loan:
             record.lent_by_borrower[loan.borrower] = record.lent_by_borrower.get(loan.borrower, 0.0) + loan.principal
         record.memory.rates[money] = rate
         # a plant request lenders left unmet is offered to the savers as shares (the money they raise is plant like a loan's)
-        raised = shares.raise_equity(record, money, unmet, funds, loans, rate, shares.rate_floor_of(setup))
+        raised = shares.raise_equity(record, money, unmet, funds, every_loan, rate, shares.rate_floor_of(setup))
         merchants_credit.stake(record.merchants, {loan.borrower: loan.principal for loan in loans})
         lending.bid_household_loans(setup, record, view, ledger, loans, order_book, priced_by_tile)
         asked = {request.borrower: request.amount for request in requests}

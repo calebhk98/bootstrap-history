@@ -1,6 +1,6 @@
 # The founder is last in the credit queue, so the line is only the running costs whenever lenders are rationed
 
-**Status:** open
+**Status:** fixed in part: items 1 to 3 changed (see Changes); the rate and the founder's line in a full-length game are not re-measured
 
 Measured on a fresh `rome_100ad` game, default kit (`poor_scholar`), seed 1, opened with the tests' short spin-up
 (`ROME_SPIN_UP_YEARS=3,2`, a full cold spin-up is minutes; re-measure with the full one):
@@ -50,3 +50,23 @@ What it would take: put a seat's borrowing request into `credit.clear` (through 
 seat's collateral and arrears history), hold the reserve out of the offers, bound one borrower's share of the funds;
 tests call `clear` with the founder's request among others and assert the founder gets a share ordered by its
 ceiling, and that total lent never passes the lendable capacity.
+
+## Changes
+
+- Defect 3, traced: the "expand" request in `producers_close._expansion` was a tenth of standing capacity times the
+  plant's value whatever the producer worked. The olive producer on `libya_13` stood at about twice the runs it
+  expected to sell, and its plant value per run swung with the price of `hectare_land` its own bids moved, so the
+  request ran to the size of the savings. Plant is now sized to the runs next year can work (last year's work or
+  expected sales, plus a year's allowed change) beyond the capacity left after wear, capped at the old growth share;
+  the term stays the plant's life. Tests: `test_economy_producers.py` (idle capacity borrows nothing; the request
+  follows the shortfall).
+- Defect 1: `YearInputs.credit_asks` carries each playing seat's line (`credit_line_sought`, the engine's raw line and
+  serviceable bound) into `credit.clear` as a `LoanRequest` (`credit_lines.line_request`); the grant is stored in
+  `record.credit_granted` and is the seat's room (`api.credit_room`); no money moves in the economy's book for it.
+  Tests: `test_economy_credit_lines.py`.
+- Defect 2: `credit_lines.hold_reserve` holds `LENDER_RESERVE_SHARE` out of every offer except a bank's (a bank keeps its
+  own reserve against deposits), so no borrower is lent from the reserve.
+- Not done: firms and the state (state deficit requests already join the clearing) via purses are unchanged; no
+  per-borrower share bound was added, since sizing from what the plant must build removed the single large request.
+  Re-measure: `printf '{"cmd":"state"}\n' | python3 sim/simulator.py agent --civ rome_100ad` for the founder's line, and a
+  spy on `credit.clear` for the largest request per lending.

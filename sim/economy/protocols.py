@@ -120,4 +120,5 @@ class YearInputs:
     durable_users: Tuple[AgentId, ...] = ()                 # outside actors' asset accounts whose durables are in use
     bondage_tiles: Tuple[TileId, ...] = ()                  # tiles whose society recognises bondage: bonded people may be bought there (Complaint 644)
     bonded_for_sale: Mapping[TileId, Mapping[str, float]] = None   # bonded people of a trade on offer per tile; None is none
+    credit_asks: Tuple[LoanRequest, ...] = ()               # credit lines the engine's seats ask for: they join the year's clearing and are granted a room (credit_lines.py)
     standing_bids: Tuple[Bid, ...] = ()                     # demand settled outside the book (the founder's draws): entry reads it as bids, nothing clears

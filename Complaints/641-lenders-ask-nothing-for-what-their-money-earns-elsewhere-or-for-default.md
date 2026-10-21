@@ -61,3 +61,12 @@ ceiling, and at that rate `NicheEntry.found` rejects every concern tried, so no 
 `test_firm_entry_default_game_scenario` now checks placement without a founding. Re-measure the opening rate
 (`game.economy.agent.economy().record.memory.rates`) once the land-yield and public-yield inputs are fed; a default
 game in which no firm can ever enter is a defect, not a setting.
+
+## Finding (Complaint 665 changes)
+
+The rate's high reading came partly from demand that was not a demand: one olive plant's request for plant while its
+standing capacity sat idle (`producers_close._expansion` now sizes plant to the runs next year can work beyond the
+capacity left standing) and the reserve lenders keep back never being held (`credit_lines.hold_reserve` now holds it out
+of every non-bank offer). Seats' credit lines now join `credit.clear`, so they add demand the old clearing did not
+see. Re-measure the opening rate in the default game (`game.economy._answering_agent().economy().record.memory.rates`)
+after these; the cleared rate was not re-measured in a full-length game here.
