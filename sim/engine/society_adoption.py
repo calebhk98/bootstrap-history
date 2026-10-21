@@ -16,6 +16,8 @@ their own. Behaviour is unchanged and verified byte-identical.
 
 from sim.constants import declare
 from sim.refusal import LogLine
+from .literacy_census_phrase import census_phrase
+from .literacy_rules import common_ceiling
 from .data import (TECH_EFFECTS, TRADES_ABSENT)
 from .literacy_effect import literacy_after_effect
 
@@ -186,8 +188,8 @@ class AdoptionMixin:
 
     def literacy_ceiling_common(self):
         """Commoners who can attend school after the farms' call on their children's time."""
-        kept_home = self.FARM_CHILDREN_KEPT_FROM_SCHOOL * self.labour.farm_share_of_hours()
-        return (1.0 - self.UNABLE_TO_READ_SHARE) * (1.0 - kept_home)
+        return common_ceiling(self.UNABLE_TO_READ_SHARE, self.FARM_CHILDREN_KEPT_FROM_SCHOOL,
+                              self.labour.farm_share_of_hours())
 
     def literacy_ceiling_general(self):
         """The whole population's ceiling, including propertied people free of farm work."""
@@ -336,10 +338,7 @@ class AdoptionMixin:
             if "literacy_elite" in changed:
                 bits.append("the lettered and propertied class is now %d%% "
                             "literate" % round(changed["literacy_elite"] * 100))
-            school_phrase = "schooling shows in the census"
-            school_started = self.done_year.get(self.school_node())
-            if school_started is not None and year - school_started >= self.GENERATION_YEARS:
-                school_phrase = "a generation of schooling shows in the census"
+            school_phrase = census_phrase(year, self.done_year.get(self.school_node()), self.GENERATION_YEARS)
             self.state.household.log.append((year, LogLine("school_progress", "%s: %s" % (school_phrase, "; ".join(bits)))))
 
     # ---- A TRADE THE FOUNDER INTRODUCED BECOMES A TRADE THE SOCIETY HAS ----

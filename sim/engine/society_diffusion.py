@@ -23,6 +23,7 @@ verified byte-identical.
 """
 from sim.constants import declare
 from . import category_traits, seat_builds
+from .diffusion_rules import medical_compliance, medical_relief, spread_share, weapons_relief
 from .institution_societies import belongs_to_other_society
 from .diffusion_curve import knowledge_half_life, leaked_share
 
@@ -326,7 +327,7 @@ class DiffusionMixin:
         age = max(0.0, scenario.year - seat_builds.earliest_done_year(self.state.seats, node_id, scenario.year))
         half_life = (self._diffusion_half_life_years(cat)
                      / max(0.4, self._diffusion_pace(cat)))
-        return max(0.0, min(1.0, 1.0 - 0.5 ** (age / half_life)))
+        return spread_share(age, half_life)
 
     def _category_diffusion_index(self, cat):
         """Plain average across every founder-built DONE node in `cat` -
@@ -375,11 +376,10 @@ class DiffusionMixin:
             "the rest. Not derived from a behavioural model.")
 
     def medical_compliance(self):
-        return (self.MEDICAL_COMPLIANCE_BASE
-                + (1.0 - self.MEDICAL_COMPLIANCE_BASE) * self.state_capacity)
+        return medical_compliance(self.MEDICAL_COMPLIANCE_BASE, self.state_capacity)
 
     def medical_diffusion_relief(self):
-        return min(1.0, self.medical_diffusion_index() * self.medical_compliance())
+        return medical_relief(self.medical_diffusion_index(), self.MEDICAL_COMPLIANCE_BASE, self.state_capacity)
 
     # ---- WAR: A STATE THAT IS ACTUALLY ARMED LOSES LESS, AND SACKS LESS ----
     # military_leverage() and _military_war_relief() (further below)
@@ -414,11 +414,7 @@ class DiffusionMixin:
                    if node_id in held)
 
     def _state_military_diffusion_relief(self, per_weapon):
-        weapons = self.state_military_weapons_held()
-        if weapons <= 0:
-            return 1.0, None
-        return ((1.0 - per_weapon) ** weapons,
-                "the state's own armies now carry %d of the weapons you worked out" % weapons)
+        return weapons_relief(per_weapon, self.state_military_weapons_held())
 
     def world_diffusion_report(self):
         """None while nothing the founder has built is spreading into the

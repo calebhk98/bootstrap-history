@@ -1,10 +1,11 @@
-"""The disease model alone, a century of sub-year steps, on the Mexica start's population (Complaint 386).
+"""BASELINE VALIDATION (CLAUDE.md 4.2), slow-only: the disease model alone, a century of sub-year steps, on the Mexica start's population (Complaint 386).
 
 No game is built: a stand-in with the few members `DiseasePortMixin` reads carries the real civilisation file,
 a real `Population` and the real pathogen files. Food is held at what the opening people need, so the people
 who survive an epidemic meet the same land they had; births and baseline deaths come from `Population.step`.
-The gates are the validation envelope of Complaints/reports/epidemic-model-research.md section 11.5, stated as
-ranges for a distribution, never as targets the model was tuned to.
+The gates are the validation envelope of Complaints/reports/epidemic-model-research.md section 11.5 (sourced published
+estimates, McCaa and Cook and Borah), stated as ranges for a distribution, never as targets the model was tuned to.
+A failure here reopens Complaint 386 (near extinction) or 471 (care collapse and density); it names a mechanism, not a rule.
 """
 
 QUICK_TOPIC = False
@@ -115,7 +116,9 @@ def first_forty_years_deaths(runs, seed):
     return sum(row[2] for row in runs[seed][1] if row[0] >= first_year)
 
 
-class CenturyTest(unittest.TestCase):
+class CenturyValidationTest(unittest.TestCase):
+    """Validation against the sourced band; a failure reopens Complaint 386 or 471."""
+
     @property
     def runs(self):
         return century_runs()
@@ -135,15 +138,15 @@ class CenturyTest(unittest.TestCase):
         for seed in SEEDS:
             _first, rows = self.contact_row(seed)
             lowest = min(people for _year, people, _deaths in rows[:20])
-            self.assertGreater(lowest / rows[0][1], MAXIMALIST_SURVIVING_SHARE_AFTER_30_YEARS, "seed %d" % seed)
+            self.assertGreater(lowest / rows[0][1], MAXIMALIST_SURVIVING_SHARE_AFTER_30_YEARS, "seed %d: validation against the sourced band failed, reopens Complaint 386" % seed)
 
     def test_the_deepest_fall_in_seventy_five_years_is_inside_the_published_span(self):
         for seed in SEEDS:
             _first, rows = self.contact_row(seed)
             at_contact = rows[0][1]
             deepest = 1.0 - min(people for _year, people, _deaths in rows[:YEARS_AFTER_CONTACT]) / at_contact
-            self.assertGreaterEqual(deepest, PUBLISHED_DECLINE_LOWEST, "seed %d" % seed)
-            self.assertLessEqual(deepest, PUBLISHED_DECLINE_HIGHEST, "seed %d" % seed)
+            self.assertGreaterEqual(deepest, PUBLISHED_DECLINE_LOWEST, "seed %d: validation against the sourced band failed, reopens Complaint 386" % seed)
+            self.assertLessEqual(deepest, PUBLISHED_DECLINE_HIGHEST, "seed %d: validation against the sourced band failed, reopens Complaint 386" % seed)
 
     def test_the_seeds_do_not_all_land_on_one_value(self):
         falls = []

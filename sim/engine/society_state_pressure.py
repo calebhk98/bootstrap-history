@@ -26,6 +26,7 @@ from sim.agents.api import demand_answer
 
 from sim.world import military_logistics
 
+from .military_rules import leverage_of
 from .state_demand import answer_confiscation, answer_state_demand, settle_household_year
 
 
@@ -178,9 +179,7 @@ class StatePressureMixin:
         """
         military_node_count = sum(1 for node_id in self.state.projects.done - self.state.projects.granted
                 if "military" in self.nodes[node_id].get("traits", ()))
-        if military_node_count <= 0:
-            return 0.0
-        return min(1.0, math.sqrt(military_node_count / self.MILITARY_LEVERAGE_SATURATES_AT))
+        return leverage_of(military_node_count, self.MILITARY_LEVERAGE_SATURATES_AT)
 
     MILITARY_LEVERAGE_SATURATES_AT = declare(
         "MILITARY_LEVERAGE_SATURATES_AT", 25.0, kind="temporary_heuristic",

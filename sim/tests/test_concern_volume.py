@@ -1,6 +1,7 @@
 """Complaints 369, 370, 375: a concern's volume follows the production entries its society holds, its takings
-follow the price its goods clear at, wider adoption lowers that price, household income follows the wage and
-output per head, and a good offered after the opening becomes demand when a need it serves exists."""
+follow the price its goods clear at, household income follows the wage and output per head, and a good offered
+after the opening becomes demand when a need it serves exists. The wage and income rules are called with figures built
+here; the rest are named scenarios through a game."""
 from .harness import *  # noqa: F401,F403
 
 opened_sim = sim    # the default game of the suite, its economy open on the cached spin-up
@@ -8,6 +9,39 @@ sim = unopened_sim   # legacy: pins concern takings through the engine's yearly 
 
 
 import copy
+from types import SimpleNamespace
+
+from sim.engine.market_demand import MEAN_INCOME_HOURS_PER_CAPITA, MarketDemandMixin
+from sim.labour.labour_market_api import LabourMarket
+
+
+def wage_market(wage_index, wage_index_base, output_per_head, pay_share):
+    market = LabourMarket.__new__(LabourMarket)
+    market._world = SimpleNamespace(wage_index=wage_index, wage_index_base=wage_index_base,
+                                    real_output_per_head=lambda: output_per_head)
+    market._labour = SimpleNamespace(LABOUR_PAY_SHARE_OF_OUTPUT_GAIN=pay_share)
+    return market
+
+
+check("an hour pays the opening's when hands are as scarce as at the opening and output has not moved",
+      wage_market(1.0, 1.0, 1.0, 1.0).household_wage_ratio() == 1.0)
+check("a wage index that rises with the scarcity of hands raises the pay of an hour in proportion",
+      abs(wage_market(1.3, 1.0, 1.0, 0.0).household_wage_ratio() - 1.3) < 1e-12)
+check("pay follows output per head by the share it passes on",
+      abs(wage_market(1.0, 1.0, 1.44, 0.5).household_wage_ratio() - 1.2) < 1e-12
+      and wage_market(1.0, 1.0, 1.44, 0.0).household_wage_ratio() == 1.0)
+check("the scarcity is read against the opening's index, not against one",
+      abs(wage_market(1.2, 1.2, 1.0, 0.0).household_wage_ratio() - 1.0) < 1e-12)
+
+
+class IncomeFromWage(MarketDemandMixin):
+    def __init__(self, ratio):
+        self.labour = SimpleNamespace(market=SimpleNamespace(household_wage_ratio=lambda: ratio))
+
+
+check("household income is the mean income carried by what an hour pays now against the opening",
+      abs(IncomeFromWage(1.25).household_income_hours_per_capita() - 1.25 * MEAN_INCOME_HOURS_PER_CAPITA) < 1e-9
+      and IncomeFromWage(1.0).household_income_hours_per_capita() == MEAN_INCOME_HOURS_PER_CAPITA)
 
 from sim.agents.api import imitation
 from sim.engine import node_output
@@ -61,7 +95,7 @@ def takings(game, node_id):
     return game.concern_takings(node_id, 1.0) * game.node_output_market_factor(game.nodes[node_id])
 
 
-# --- an entry whose labour per unit halves: the same staff turn out more, and takings follow the price.
+# --- SCENARIO: an entry whose labour per unit halves: the same staff turn out more, and takings follow the price.
 probe = sim(civ="rome_100ad", capital=1e9)
 node_id, entry = staff_bound_node(probe)
 original = price_solver.default_production_entries()
@@ -82,16 +116,16 @@ price_solver._DEFAULT_PRODUCTION_ENTRIES = patched
 try:
     for veteran in (game, twin):
         veteran.add_industry_years(node_id, 1.0e6)    # a settled concern: its takings follow its volume, not a new plant's learning
-    check("a concern's volume is its opening's before the technique is held",
+    check("scenario: a concern's volume is its opening's before the technique is held",
           game.concern_volume_ratio(node_id) == 1.0 and game.concern_value_ratio(node_id) == 1.0)
     complete(game, unused)
-    check("a technique held but run by no producer changes neither volume nor any price",
+    check("scenario: a technique held but run by no producer changes neither volume nor any price",
           game.concern_volume_ratio(node_id) == 1.0 and game._material_prices() == twin._material_prices())
     run(game, unused)
-    check("a technique one producer has just begun to run is not yet copied by the concern",
+    check("scenario: a technique one producer has just begun to run is not yet copied by the concern",
           game.concern_volume_ratio(node_id) == 1.0)
     game.state.scenario.year += imitation.copy_years(NODES[unused]) + 1
-    check("an entry whose labour per unit halves lets the same staff turn out more",
+    check("scenario: an entry whose labour per unit halves lets the same staff turn out more",
           game.concern_volume_ratio(node_id) > CLEAR_GAIN, game.concern_volume_ratio(node_id))
     check("...with the staff unchanged", game.nodes[node_id]["sch"] == twin.nodes[node_id]["sch"]
           and game.nodes[node_id]["art"] == twin.nodes[node_id]["art"])
@@ -101,7 +135,7 @@ try:
           >= SimWorld(twin).concern_output_tonnes(node_id, next(iter(game.concern_baskets_now(node_id).outputs)),
                                                   game.state.scenario.year, 1.0))
     got = takings(game, node_id) / takings(twin, node_id)
-    check("a concern's takings rise with its volume, at the price the market clears at",
+    check("scenario: a concern's takings rise with its volume, at the price the market clears at",
           got > CLEAR_GAIN * game.node_output_market_factor(game.nodes[node_id]) / twin.node_output_market_factor(
               twin.nodes[node_id]), got)
     check("...and the technique run by one producer leaves the incumbents' cost of every good they make alone",
@@ -110,19 +144,9 @@ try:
 finally:
     price_solver.reset_caches_for_tests()
 
-# --- wider adoption lowers the price: more sellers of a good push its clearing price down.
-game = sim(civ="rome_100ad", capital=1e9)
-material = "iron_bar_kg"
-commodity = game._material_tag(material)[0]
-# this module's games are unopened (the engine's yearly material market answers), so the book's own ratio is read
-price_before = game.market_state(material)["price_ratio"]
-# a seller whose output meets the demand at the incumbents' cost leaves the price at it; more than that pushes it below
-game.goods_market.note_sale("another_operator", commodity, 2.0 * game._market_entry(commodity)["reference_tonnes"])
-price_after = game.market_state(material)["price_ratio"]
-check("more operators selling a good lower the price it clears at", price_after < price_before,
-      (price_before, price_after))
+# (more operators selling a good lowers its price: held by one_goods_market, "a sale by the founder lowers the price the year would close at")
 
-# --- household income follows productivity and the wage; they buy more.
+# --- SCENARIO: household income follows what producers run, and the market buys from the cheaper producer.
 original = price_solver.default_production_entries()
 patched = dict(original)
 probe = sim(civ="rome_100ad", capital=1e9)
@@ -139,14 +163,14 @@ patched["_cheaper_good"] = cheaper_entry
 price_solver.reset_caches_for_tests()
 price_solver._DEFAULT_PRODUCTION_ENTRIES = patched
 try:
-    check("household real income is the opening's before any technique",
+    check("scenario: household real income is the opening's before any technique",
           abs(game.household_real_income_ratio() - 1.0) < 1e-9, game.household_real_income_ratio())
     demand_before = game.household_demand_ratio(cheap_material)
     complete(game, unused)
-    check("household real income does not rise with a technique nobody runs",
+    check("scenario: household real income does not rise with a technique nobody runs",
           abs(game.household_real_income_ratio() - 1.0) < 1e-9)
     run(game, unused)
-    check("household real income does not rise because one producer runs a cheaper entry: the incumbents' "
+    check("scenario: household real income does not rise because one producer runs a cheaper entry: the incumbents' "
           "cost is not repriced", abs(game.household_real_income_ratio() - 1.0) < 1e-9)
     commodity = game._material_tag(cheap_material)[0]
     cheap_sold_before = game._market_outcome(commodity)[1].offers_sold_tonnes
@@ -154,33 +178,21 @@ try:
                                 game.entry_cost_ratio("_cheaper_good", cheap_material))
     check("...but the market buys more from the producer whose entry is cheaper, which sells at its own cost",
           game._market_outcome(commodity)[1].offers_sold_tonnes > cheap_sold_before)
-    income_before = game.household_income_hours_per_capita()
-    demand_before = game.household_demand_ratio(cheap_material)
-    game._apply_population_mortality_shock(0.3)
-    check("a wage that rises with the scarcity of hands raises household income",
-          game.household_income_hours_per_capita() > income_before,
-          (income_before, game.household_income_hours_per_capita()))
-    income_before = game.household_income_hours_per_capita()
-    game.labour.LABOUR_PAY_SHARE_OF_OUTPUT_GAIN = 1.0
-    game.state.economy.output_per_head = 1.2
-    check("...and so does pay that follows output per head",
-          game.household_income_hours_per_capita() > 1.19 * income_before,
-          (income_before, game.household_income_hours_per_capita()))
 finally:
     price_solver.reset_caches_for_tests()
 
-# --- a good offered after the opening becomes demand when a need it serves exists and it is priced.
+# --- SCENARIO: a good offered after the opening becomes demand when a need it serves exists and it is priced.
 GATE = "cn_portland_cement"
 HEAT = "cap_heat_3000"      # the clinker needs a heat only this reaches
 NEW_GOOD = "cement_portland_kg"
 game = opened_sim(civ="rome_100ad", capital=1e9)   # opened first, so the good is offered after the opening
-check("a good nothing offers at the opening draws no household demand",
+check("scenario: a good nothing offers at the opening draws no household demand",
       NEW_GOOD not in game.household_new_goods_units() and NEW_GOOD not in game.base_basket()["units"])
 complete(game, HEAT)
 complete(game, GATE)
 run(game, HEAT)
 run(game, GATE)
-check("once it is priced, households want it", game.household_new_goods_units().get(NEW_GOOD, 0.0) > 0.0)
+check("scenario: once it is priced, households want it", game.household_new_goods_units().get(NEW_GOOD, 0.0) > 0.0)
 close_years(game, 3)       # the first close values the new good; producers take some years to enter and the economy to trade it
 check("...it is valued at its introduction price", game.state.economy.introduction_prices.get(NEW_GOOD, 0.0) > 0.0)
 twin = opened_sim(civ="rome_100ad", capital=1e9)

@@ -15,6 +15,7 @@ household-room ceiling; this file only prices the trade once a person is
 in it.
 """
 from . import trade_data, wage_provider
+from .wage_factors import tools_factor, weighted_factor
 from .labour_market_api import LabourMarket
 from .labour_wage_ledger import WageLedgerMixin
 from .staff_pay_rules import wage_bill_of
@@ -255,13 +256,11 @@ class WagesMixin(WageLedgerMixin):
         food = self._world.last_market_price_ratio(wage_provider.staple_material(self._world.civ))
         housing = self.labour_market.town_housing_factor()
         basket = trade_data.tool_basket(trade_data.registry_of(self._world), trade)
-        tools = (sum(self._world.material_price_factor(material) * self._world.last_market_price_ratio(material)
-                     for material in basket) / len(basket)
-                 if basket else 1.0)
+        tools = tools_factor(basket, self._world.material_price_factor, self._world.last_market_price_ratio)
         return {"food": food, "housing": housing, "tools": tools,
                 "skill_and_difficulty": 1.0,
-                "weighted": self.WAGE_SHARE_FOOD * food + self.WAGE_SHARE_HOUSING * housing
-                            + self.WAGE_SHARE_TOOLS * tools + self.WAGE_SHARE_SKILL_AND_DIFFICULTY}
+                "weighted": weighted_factor(self.WAGE_SHARE_FOOD, self.WAGE_SHARE_HOUSING, self.WAGE_SHARE_TOOLS,
+                                            self.WAGE_SHARE_SKILL_AND_DIFFICULTY, food, housing, tools)}
 
     def _opening_wage_schedule(self):
         """The wage schedule at the opening's price level; its tightness factors live in the economy

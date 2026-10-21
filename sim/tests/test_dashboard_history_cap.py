@@ -1,4 +1,5 @@
-"""Dashboard history capping: test the per-game option to keep only recent years."""
+"""Dashboard history capping: the trim rule is called with a built state; the save round trip and the game_options
+command are two named scenarios through a game."""
 from .harness import *
 from sim.engine.state import SimulationState, HouseholdState, ProjectsState, ScenarioState
 import sim.engine.ui_port as ui_port
@@ -19,7 +20,8 @@ check("can set dashboard_history_years to positive integer",
 
 # Test 3: Trimming function works correctly.
 hist = [{"year": i, "capital": i * 100} for i in range(100, 110)]
-sim_obj = sim(capital=100_000)
+from types import SimpleNamespace
+sim_obj = SimpleNamespace(state=state)   # the trim reads only the seat progress
 sim_obj.state.seat_progress.dashboard_history_years = 3
 
 from sim.ui.proto.dispatch import _trim_dashboard_history
@@ -54,22 +56,15 @@ with tempfile.TemporaryDirectory() as tmpdir:
     S.save_state(test_sim_save, save_path)
     test_sim_loaded = sim(capital=100_000)
     S.load_state(test_sim_loaded, save_path)
-    check("save/load preserves dashboard_history_years option",
+    check("scenario: save/load preserves dashboard_history_years option",
           test_sim_loaded.state.seat_progress.dashboard_history_years == 7,
           test_sim_loaded.state.seat_progress.dashboard_history_years)
 
-# Test 7: game_options command exists and can list options.
+# SCENARIO (wiring): the game_options command sets the option and lists it back.
 test_sim_cmd = sim(capital=100_000)
-test_sim_cmd.state.seat_progress.dashboard_history_years = 5
+reply = S._agent_dispatch(test_sim_cmd, NODES, {"cmd": "game_options", "set": {"dashboard_history_years": 10}})
 reply_list = S._agent_dispatch(test_sim_cmd, NODES, {"cmd": "game_options"})
-check("game_options command lists current value",
-      reply_list["ok"] and reply_list["game_options"]["dashboard_history_years"] == 5,
-      reply_list.get("game_options"))
-
-# Test 8: game_options command can set dashboard_history_years to integer.
-test_sim_cmd2 = sim(capital=100_000)
-reply = S._agent_dispatch(test_sim_cmd2, NODES,
-                         {"cmd": "game_options", "set": {"dashboard_history_years": 10}})
-check("game_options command sets dashboard_history_years to integer",
-      reply["ok"] and test_sim_cmd2.state.seat_progress.dashboard_history_years == 10,
-      {"ok": reply["ok"], "value": test_sim_cmd2.state.seat_progress.dashboard_history_years})
+check("scenario: game_options sets dashboard_history_years to an integer and lists the current value",
+      reply["ok"] and test_sim_cmd.state.seat_progress.dashboard_history_years == 10
+      and reply_list["ok"] and reply_list["game_options"]["dashboard_history_years"] == 10,
+      {"ok": reply["ok"], "listed": reply_list.get("game_options")})

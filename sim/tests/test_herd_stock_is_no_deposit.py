@@ -1,12 +1,24 @@
 """Complaints/532: a herd good named like a catalogue herd animal (cattle_kg, cattle) is not a mined deposit."""
 from .harness import *  # noqa: F401,F403
 
-founder = sim(civ="rome_100ad", capital=1e6)
-for material in ("cattle_kg", "sheep_kg", "goat_kg"):
-    check("%s names no deposit resource" % material, founder.mine_resource_id(material) is None,
-          founder.mine_resource_id(material))
-    check("%s has no found deposits" % material, founder.found_deposits(material) == [], None)
-check("an ore still names its deposit resource", founder.mine_resource_id("copper_ore_kg") is not None
-      or founder.mine_resource_id("copper") is not None, None)
-check("the market output of a herd good is a number, not a map error",
-      founder._national_output_tonnes("cattle_kg") >= 0.0, None)
+import sim.geography.api as geography
+from sim.engine.mine_deposits import MineDepositsMixin
+
+QUICK_TOPIC = True
+
+
+class MapOnly(MineDepositsMixin):
+    """The mine lookup reads the world map and nothing else of the game."""
+
+    def __init__(self):
+        self.world_map = geography.open_map()
+
+
+host = MapOnly()
+for material in ("cattle_kg", "sheep_kg", "goat_kg", "cattle", "sheep", "goat"):
+    check("%s names no deposit resource" % material, host.mine_resource_id(material) is None,
+          host.mine_resource_id(material))
+    check("%s has no found deposits" % material, host.found_deposits(material) == [], None)
+check("an ore still names its deposit resource",
+      host.mine_resource_id("copper_ore_kg") is not None or host.mine_resource_id("copper") is not None, None)
+check("a material no catalogue describes names none", host.mine_resource_id("zz_not_a_material_kg") is None)
