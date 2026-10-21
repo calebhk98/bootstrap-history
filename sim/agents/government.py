@@ -25,8 +25,9 @@ from .government_stores import StoresMixin
 from .edges import EDGE_PATRONAGE, EDGE_STATE_SPENDING
 from .government_surplus import SurplusMixin
 from .no_country_economy import NoCountryEconomy
+from . import ruler
 from .tuning import GOVERNMENT_WORTH_SHARE_PER_GAIN
-from .tuning_spending import ACCESSION_PROBABILITY_PER_YEAR, PUBLIC_BUILDING_LIFE_YEARS
+from .tuning_spending import PUBLIC_BUILDING_LIFE_YEARS
 from .values import invention_gains, weighted_gain
 
 
@@ -179,10 +180,21 @@ class Government(CorveeMixin, CreditRecordMixin, FiscalMixin, CoinageMixin, Ente
 			self.levy_sought(), kinds, self.record.levy_base)
 
 	def accede(self, world: Any) -> None:
-		"""A new ruler accedes with a yearly chance, and owes the army a donative until it is paid."""
-		draw = world.rng_for("accession", self.actor_id, world.year).random()
-		if draw < ACCESSION_PROBABILITY_PER_YEAR:
-			self.record.accession_due = True
+		"""The ruler ages a year and may die at his age band's mortality; his heir accedes, backed by the strongest faction
+		and owing the army a donative until it is paid. Where the two strongest factions are evenly matched the runner-up
+		may dispute the accession by arms (settled at the seat in the revolt phase)."""
+		record = self.record
+		record.ruler_age = ruler.opening_age() if record.ruler_age is None else record.ruler_age + 1.0
+		rng = world.rng_for("accession", self.actor_id, world.year)
+		if not ruler.dies(record.ruler_age, 1.0, rng.random()):
+			return
+		backing = world.faction_backing() if hasattr(world, "faction_backing") else {}
+		leader, challenger = ruler.contenders(backing)
+		record.ruler_age = ruler.heir_age(record.ruler_age)
+		record.ruler_backer = leader or ""
+		record.accession_due = True
+		disputed = challenger is not None and rng.random() < ruler.dispute_probability(backing)
+		record.succession_challenger = challenger if disputed and challenger else ""
 
 	def advance(self, world: Any) -> None:
 		held = dict(self.workforce)

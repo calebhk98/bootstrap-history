@@ -15,7 +15,7 @@ ALPHA, BETA = "test_alpha_p1xz", "test_beta_p1xz"
 SHIPPED_ORDER = [
     "begin_seat_year", "begin_world_year", "apprenticeships", "staff", "money_seat", "money_world",
     "win_conditions", "dated_shocks", "drop_ended_seats", "seat_work", "market", "wild_stock", "soil_nitrogen", "living_stock",
-    "defence_stores", "random_events", "world_hazards", "campaigns", "famine_watch", "credit_limit", "advance_year"]
+    "defence_stores", "random_events", "world_hazards", "campaigns", "revolts", "famine_watch", "credit_limit", "advance_year"]
 
 
 class FakeSim:

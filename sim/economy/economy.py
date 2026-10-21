@@ -10,7 +10,7 @@ from typing import Any, Dict, Mapping, Optional, Tuple
 
 from sim.world import capital_market
 
-from . import taxes, bondage, bondage_hours, bonded_purchase, banks, carriage_hours, credit, credit_lines, debt_relief, credit_claims, currency, equity, labour, land_market, lending, merchants_credit, producers, shares, sites, state_budget, tax_farming, titles_ground, titles_inheritance, titles_worked, unit_cost
+from . import taxes, bondage, bondage_hours, bonded_purchase, banks, carriage_hours, credit, credit_lines, debt_relief, credit_claims, currency, equity, labour, land_market, lending, merchants_credit, producers, shares, sites, state_budget, tax_farming, titles_ground, titles_inheritance, titles_moves, titles_worked, unit_cost
 from .credit_view import CreditView
 from .market_areas import AreaMap
 from .market_areas_follow import follow
@@ -166,6 +166,7 @@ class Economy:
         view = self.view()
         money = setup.currency_id
         debt_relief.forgive(record, inputs.debt_relief_tiles)
+        titles_moves.apply(record, inputs.title_moves)
         tax_farming.run_auctions(setup, record, inputs.farmed_forms, record.memory.rates.get(setup.currency_id, 0.0))
         lending.lend_working_capital(setup, record, view)
         plans = {producer_id: producers.plan(producer, setup.recipes[producer.recipe_id], view,

@@ -69,6 +69,11 @@ class CountryGroupsView:
 		return {CONCESSION_PREFIX + group.actor_id: group.record.claim for group in self._country_actors(("interest_group",))
 				if group.organised()}
 
+	def faction_backing(self) -> Dict[str, float]:
+		"""The weight each organised group of the country can put behind a claimant to the throne: its strength."""
+		return {group.actor_id: group.record.strength for group in self._country_actors(("interest_group",))
+				if group.organised() and group.record.strength > 0.0}
+
 	def scope_revenue(self, scope: float) -> float:
 		"""The state's yearly revenue from a territory holding `scope` of the country."""
 		return max(1e-9, self.state_revenue() * scope)  # type: ignore[attr-defined,no-any-return]

@@ -72,6 +72,17 @@ class ActorRecord:
 	works_stock: Dict[str, float] = field(default_factory=dict)
 	grain_price_reference: float = 0.0
 	accession_due: bool = False
+	# the ruler's age (None until the state's first year), the faction that put him on the throne, the faction that
+	# disputes his accession by arms (settled at the seat in the revolt phase), and the state's unrest and risings
+	ruler_age: Optional[float] = None
+	ruler_backer: str = ""
+	succession_challenger: str = ""
+	unrest_by_tile: Dict[str, float] = field(default_factory=dict)
+	land_taken_by_tile: Dict[str, float] = field(default_factory=dict)   # share of a tile's land taken off holders, fading (unrest.py)
+	hold_by_tile: Dict[str, float] = field(default_factory=dict)   # share of risings the garrison on a tile would put down (authority.hold)
+	grievance_reference: Optional[float] = None   # the take the people are used to (unrest.adapt)
+	registered_people: Dict[str, float] = field(default_factory=dict)   # most people seen on a tile: the payers it is assessed for
+	risings: List[Dict[str, Any]] = field(default_factory=list)          # {year, tile, kind, soldiers}, the last few years' risings
 	# an interest group's kind (what hurt it), subject (the commodity or trade), what caused the
 	# hurt in words, people it speaks for, the income it lost (net of what the state made good),
 	# the share of the state's attention it commands, and what it asks of the state

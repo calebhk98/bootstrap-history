@@ -128,6 +128,12 @@ class GroupView:
 		return {CONCESSION_PREFIX + group.actor_id: group.record.claim
 				for group in self._sim.actors.home_actors("interest_group") if group.organised()}  # type: ignore[attr-defined]
 
+	def faction_backing(self) -> Dict[str, float]:
+		"""The weight each organised group can put behind a claimant to the throne: its strength."""
+		return {group.actor_id: group.record.strength
+				for group in self._sim.actors.home_actors("interest_group")
+				if group.organised() and group.record.strength > 0.0}  # type: ignore[attr-defined]
+
 	def scope_revenue(self, scope: float) -> float:
 		"""The state's yearly revenue from a territory holding `scope` of the whole."""
 		return max(1e-9, self.state_revenue() * scope)  # type: ignore[attr-defined,no-any-return]
