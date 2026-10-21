@@ -112,6 +112,35 @@ the project bill as tonnes times the quote (`test_complaint_147_project_material
 (`test_sixth_step_pure_functions`). `quote_matches_charge` and `player_text_names_own_civilisation` are scenarios by nature (two paths
 through the dispatcher agreeing; a leak across every reply builder).
 
+## Applied: deep extraction 3
+
+The last scenario-heavy files of the audit. Rules now sit in plain functions and the quick files call them on inputs they
+build; the scenarios keep wiring only. Extractions (behaviour unchanged):
+
+- `sim/labour/founder_hours.py` (`hours_pool`, `hours_committed`, `hours_free`; `director_pool`, `director_hours_committed`
+  and the standing job's `hours_for_sale` call them), `sale_at_a_loss_note` in `sim/labour/hours_sale_warning.py` (the cost
+  note of `work_for_wages`), `sim/labour/buy_cap.py` (`over_room_refusal`, the cap `buy_slaves` shares with `hire`), and
+  `sim/engine/staff_gate.py` (the scholar and craftsmen refusals of `start_reason`, sized by the people short): all in
+  `test_founder_hours_rules`.
+- `missing_when_opened` in `sim/engine/staffing_choice.py` (`staffing_missing_to_open`): `test_staffing_choice_rules`.
+- `sim/engine/quote_figures.py` (`cost_if_started_now` behind `project_cost_now`, `upkeep_quote` behind
+  `venture_upkeep_quote`): `test_quote_figures_rules`. `forest_price_per_hectare` is the one price `buy forest` charges and
+  `quote forest` shows.
+- The load refusals (`_validate_save`, `load_state` leaving the game untouched) over a built save: `test_save_refusal_rules`.
+- Hazard hits on a country's strata and the home cohort shock, `transfer_tile`, the famine watch and the three yearly
+  invariants over a stand-in game built from strata, actors, tile owners and a control store (the stand-in was not too large
+  once built from those parts): `test_world_hazard_rules`.
+
+Checks per scenario file, before and after: `ventures_saves_and_dice` 46 to 41, `workforce_advice_and_allocate_cap` 2 to 1,
+`world_events_and_hazards` 13 to 8; `shut_for_staff` (3) and `start_and_upkeep_quotes` (5) keep their wiring checks.
+
+Failing on the integration branch before these changes, and still open: `start_and_upkeep_quotes_scenario` (two checks: a
+`start horse_collar` in an opened game is refused `people_exist` because the labour core holds about 0.001 smiths there,
+against tens of thousands in an unopened game of the same civilisation). In `ventures_saves_and_dice_scenario` two fixtures had
+drifted: `train optician` was unaffordable on the default purse (now given a purse, the subject being the save) and the
+bound of 400 founder hours left after teaching no longer matched what teaching costs (now read from the pool and the hours
+committed).
+
 ## Applied: audit batch 7 (test_historical_events through test_labour_population_derived)
 
 Rules now called on inputs the test builds, quick tier: `test_historical_events` (`hazard_given_condition`),

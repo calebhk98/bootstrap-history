@@ -24,6 +24,11 @@ def labour_area(tile: TileId) -> str:
     return LABOUR_AREA_PREFIX + tile
 
 
+def area_tile(area: str) -> TileId:
+    """The tile a labour area stands for (the inverse of `labour_area`)."""
+    return area[len(LABOUR_AREA_PREFIX):] if area.startswith(LABOUR_AREA_PREFIX) else area
+
+
 @dataclass(frozen=True)
 class TradeSpec:
     trade_id: TradeId

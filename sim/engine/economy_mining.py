@@ -909,6 +909,10 @@ class MiningMixin(MineDepositsMixin):
             self.FOREST_HA_PER_MILLION_KM2_PER_SC,
             revenue_scale_multiple(self.revenue(), self.REVENUE_SCALE_DENARII, self.REVENUE_SCALE_CAP_MULTIPLE))
 
+    def forest_price_per_hectare(self):
+        """What a hectare of coppice costs now: the one price `buy forest` charges and `quote forest` shows."""
+        return self.FOREST_COST_PER_HA * self.price_index
+
     def buy_forest(self, hectares):
         """Coppice woodland, bought outright. The cheapest thing in the tree that
         nobody thinks to buy, and the one that decides whether a furnace runs."""
@@ -928,7 +932,7 @@ class MiningMixin(MineDepositsMixin):
             hectares = room
         if hectares <= 0:
             return 0.0
-        cost = hectares * self.FOREST_COST_PER_HA * self.price_index
+        cost = hectares * self.forest_price_per_hectare()
         # A shaft that costs nothing needs no budget check.
         if cost > 0 and not purchase_rule.can_pay(self, cost):
             return 0.0

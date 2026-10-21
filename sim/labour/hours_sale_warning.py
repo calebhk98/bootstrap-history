@@ -1,4 +1,14 @@
-"""The warning a sale of the founder's own hours carries when it would starve a project in hand."""
+"""The warnings a sale of the founder's own hours carries: starving a project in hand, or losing money."""
+
+
+def sale_at_a_loss_note(pay, job_pay_given_up, money_text):
+    """The sentence saying a sale cost more than it paid (the standing job it displaced paid more), or None when it did not."""
+    if job_pay_given_up <= pay:
+        return None
+    earned, given_up = round(pay), round(job_pay_given_up)
+    return ("you earned %s, and the standing job those hours were selling was paying %s a year - so this cost you %s. "
+            "Selling hours in a lower-paid trade is for when you need the cash more than the job."
+            % (money_text(earned), money_text(given_up), money_text(given_up - earned)))
 
 
 def starved_projects(wanted, hours_left):
