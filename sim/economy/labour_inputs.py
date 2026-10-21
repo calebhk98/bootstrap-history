@@ -54,4 +54,7 @@ def labour_context(setup, record, view, carriage, inputs, own_plot_options=None,
         entrants={area: people_in(record.workforce, area) * inputs.entrant_share for area in areas},
         attrition_share={area: inputs.attrition_share for area in areas},
         routes=routes_by_area(setup, carriage),
-        value_of_life_years_of_income=VALUE_OF_LIFE_YEARS_OF_INCOME)
+        value_of_life_years_of_income=VALUE_OF_LIFE_YEARS_OF_INCOME,
+        bondage_allowed=frozenset(labour_area(tile) for tile in inputs.bondage_tiles),
+        bonded_for_sale={labour_area(tile): dict(by_trade)
+                         for tile, by_trade in (inputs.bonded_for_sale or {}).items()})
