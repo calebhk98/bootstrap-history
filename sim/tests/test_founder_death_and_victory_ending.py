@@ -1,4 +1,6 @@
-"""Complaints 220, 251, 252, 253, 255, 260: founder age and death text, deputies,
+"""Scenario (Complaint 640): founder death and the ending in a running game (the losable list is test_losable_nodes.py).
+
+Complaints 220, 251, 252, 253, 255, 260: founder age and death text, deputies,
 the ending after a dispersed corpus, achievements announced once, the civilisation
 label after the start, and the victory screen with a finish-and-score command."""
 from .harness import *  # noqa: F401,F403
@@ -67,10 +69,6 @@ _forget._done_changed()
 _forget.state.projects.stalled = _forget.DISSOLUTION_YEARS_BEFORE_FORGETTING - 1
 _forget._step_founder_mortality()
 check("dissolution does not forget a measured goal node", _win_id in _forget.done, None)
-_sack = _new_sim()
-_sack.done.add(_win_id)
-_sack._done_changed()
-check("the losable list excludes measured goal nodes", _win_id not in _sack.losable_node_ids(), None)
 
 # 264: the running game names the civilisation by its short name
 _pop = S._agent_dispatch(_new_sim(), NODES, {"cmd": "population"})

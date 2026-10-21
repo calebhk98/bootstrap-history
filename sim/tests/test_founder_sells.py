@@ -1,4 +1,6 @@
-"""Complaint 288: the founder sells a built concern to another actor through the exchange, and sells
+"""Scenario (Complaint 640): selling in a running game; the typed forms of `sell` parse in test_typed_front_end.py.
+
+Complaint 288: the founder sells a built concern to another actor through the exchange, and sells
 farmland back to the land market at the value `buy farm` uses."""
 import copy
 import os
@@ -11,7 +13,6 @@ from sim.agents.api import ActorRecord
 from sim.agents.tuning import VALUE_HORIZON_YEARS
 from sim.engine.agents_port import SimWorld
 from sim.engine.saveload import load_state, save_state
-from sim.ui.proto.typed import parse_typed
 
 _TEMPLATE_ID = next(node_id for node_id, node in NODES.items()
                     if not node["pre"] and node["cap"] >= 0)
@@ -91,11 +92,3 @@ check("it pays what buy farm charges per hectare",
 check("more than is owned is refused and changes nothing",
       not land.sell_farm(61.0)["ok"] and abs(land.farm_hectares - 60.0) < 1e-9)
 check("a sale of nothing is refused", not land.sell_farm(0.0)["ok"])
-
-# ---- the protocol ---------------------------------------------------------------------------
-check("typed 'sell concern <id>' parses", parse_typed("sell concern zz_easy")[0]
-      == {"cmd": "sell", "what": "concern", "id": "zz_easy"}, parse_typed("sell concern zz_easy"))
-check("typed 'sell farm <ha>' parses", parse_typed("sell farm 40")[0] == {"cmd": "sell", "what": "farm", "n": 40},
-      parse_typed("sell farm 40"))
-check("typed 'sell <material> <tonnes>' is unchanged", parse_typed("sell iron 5")[0]
-      == {"cmd": "sell", "material": "iron", "n": 5}, parse_typed("sell iron 5"))

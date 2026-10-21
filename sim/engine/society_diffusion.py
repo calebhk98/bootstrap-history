@@ -25,6 +25,7 @@ from sim.constants import declare
 from . import category_traits, civ_cost, seat_builds
 from .diffusion_rules import medical_compliance, medical_relief, spread_share, weapons_relief
 from .institution_societies import belongs_to_other_society
+from .diffusion_curve import knowledge_half_life, leaked_share
 
 
 class DiffusionMixin:
@@ -143,20 +144,16 @@ class DiffusionMixin:
             return 0.0
         done_year_map = projects.done_year or {}
         started = projects.business.opened_year_of(node_id, done_year_map.get(node_id, scenario.year))
-        age = max(0.0, scenario.year - started)
-        share = 1.0 - 0.5 ** (age / self.knowledge_half_life_years())
-        return min(self.VENTURE_DIFFUSION_CAP, max(0.0, share))
+        return leaked_share(scenario.year - started, self.knowledge_half_life_years(), self.VENTURE_DIFFUSION_CAP)
 
     def knowledge_half_life_years(self, country=None):
         """Years for half of those who could copy a technique to have done so: faster with a written, dispersed
         corpus and with the country's general literacy."""
-        pace = self.corpus_diffusion_pace()
-        gen_lit = float(self.literacy("literacy_general", country))
-        pace *= (self.LITERACY_DIFFUSION_PACE_BASE
-                 + self.LITERACY_DIFFUSION_PACE_SPAN
-                 * min(self.LITERACY_DIFFUSION_PACE_CAP_RATIO,
-                       gen_lit / max(0.02, self.labour.LITERACY_REFERENCE_GENERAL)))
-        return self.VENTURE_DIFFUSION_HALF_LIFE_YEARS / max(self.DIFFUSION_PACE_FLOOR, pace)
+        return knowledge_half_life(
+            self.VENTURE_DIFFUSION_HALF_LIFE_YEARS, self.corpus_diffusion_pace(),
+            float(self.literacy("literacy_general", country)), self.labour.LITERACY_REFERENCE_GENERAL,
+            self.LITERACY_DIFFUSION_PACE_BASE, self.LITERACY_DIFFUSION_PACE_SPAN,
+            self.LITERACY_DIFFUSION_PACE_CAP_RATIO, self.DIFFUSION_PACE_FLOOR)
 
     def diffusion_index(self):
         """One number for the whole household: the revenue-weighted average

@@ -69,6 +69,23 @@ def farm_workers_needed(baseline_fte, current_fte, shortfall_kg,
     return min(wanted, land_limit_fte)
 
 
+def hours_spent_clearing(farm_fte, land_hectares, technique):
+    """Hours the farm's hands put into clearing: those of the hands beyond what the cleared land can crop."""
+    crop_limit_fte = land_hectares / agriculture.hectares_cropped_per_farm_worker(technique.crop, technique.toolkit)
+    return max(0.0, farm_fte - crop_limit_fte) * HOURS_PER_FARM_WORKER_YEAR
+
+
+def cleared_hectares(clearing_hours, land_hectares, arable_ceiling):
+    """Hectares the year's clearing hours open, never past the arable ground held (`None` ceiling: none to clear)."""
+    clearable = 0.0 if arable_ceiling is None else max(0.0, arable_ceiling - land_hectares)
+    return min(clearing_hours / agriculture.CLEARING_LABOUR_HOURS_PER_HECTARE, clearable)
+
+
+def quality_of_area(ladder, hectares):
+    """Mean yield of the best `hectares` of the best-first ladder; reference quality with no ladder."""
+    return land.ladder_quality(ladder, hectares) if ladder else 1.0
+
+
 def hours_needed_by_trade(need_shares, total_hours, farm_hours_needed):
     """Hours each trade is needed for: the farm need, and the rest of the
     society's hours split by each trade's share of non-farm need."""
@@ -77,6 +94,23 @@ def hours_needed_by_trade(need_shares, total_hours, farm_hours_needed):
     needed = {trade: share * rest_hours for trade, share in need_shares.items()}
     needed[FARM_TRADE] = farm_hours_needed
     return needed
+
+
+def shares_from_people(people, pool_trade, rest_hours):
+    """Each non-farm trade's share of `rest_hours` from the people in it: the specialists work their people's
+    hours and the hours left over go to the unskilled `pool_trade`, whose headcount says nothing about them.
+    None when there are no people by trade or no hours to share."""
+    if not people:
+        return None
+    held = {trade: count for trade, count in people.items()
+            if trade not in (FARM_TRADE, pool_trade) and count > 0.0}
+    total = sum(held.values())
+    if total <= 0.0 or rest_hours <= 0.0:
+        return None
+    specialist_share = min(1.0, total * HOURS_PER_FARM_WORKER_YEAR / rest_hours)
+    shares = {trade: specialist_share * count / total for trade, count in held.items()}
+    shares[pool_trade] = 1.0 - specialist_share
+    return shares
 
 
 def society_hours(total_hours, farm_hours, shares):
@@ -138,17 +172,9 @@ class LabourAllocationMixin:
         it while the agent economy runs (the specialists work their people's hours, and the hours left over
         go to the unskilled fallback trade, whose headcount is the pool and says nothing about them), else
         the need the recipe graph puts on it."""
-        people = self._world.economy.agent_people_by_trade()
-        if people:
-            pool = self.unskilled_trade()
-            held = {trade: count for trade, count in people.items()
-                    if trade not in (FARM_TRADE, pool) and count > 0.0}
-            total = sum(held.values())
-            if total > 0.0 and rest_hours > 0.0:
-                specialist_share = min(1.0, total * HOURS_PER_FARM_WORKER_YEAR / rest_hours)
-                shares = {trade: specialist_share * count / total for trade, count in held.items()}
-                shares[pool] = 1.0 - specialist_share
-                return shares
+        shares = shares_from_people(self._world.economy.agent_people_by_trade(), self.unskilled_trade(), rest_hours)
+        if shares is not None:
+            return shares
         return self._non_farm_need_shares()
 
     def _hours_needed_by_trade(self, total_hours=None):
@@ -179,17 +205,14 @@ class LabourAllocationMixin:
 
     def _set_farm_area(self, hectares):
         """Cleared area and the quality of the best-first ground it covers."""
-        quality = (land.ladder_quality(self._world.farm_ladder, hectares)
-                   if self._world.farm_ladder else 1.0)
-        self._world.farm_land = agriculture.Land(hectares, quality)
+        self._world.farm_land = agriculture.Land(hectares, quality_of_area(self._world.farm_ladder, hectares))
         self._world.state.holdings.farm_cleared_hectares = hectares
 
     def _apply_land_clearing(self):
         """Hands beyond what the farm can crop spent the year clearing;
         the ground is ready for next year."""
         hours = getattr(self, "_clearing_hours_this_year", 0.0)
-        cleared = min(hours / agriculture.CLEARING_LABOUR_HOURS_PER_HECTARE,
-                      self._clearable_hectares())
+        cleared = cleared_hectares(hours, self._world.farm_land.hectares, self._world.farm_arable_ceiling)
         if cleared > 0.0:
             self._set_farm_area(self._world.farm_land.hectares + cleared)
 
@@ -330,8 +353,6 @@ class LabourAllocationMixin:
         economy.society_labour_hours = society_hours(
             total_hours, farm_hours, self._non_farm_shares(total_hours - farm_hours))
         farm_fte = economy.society_labour_hours[FARM_TRADE] / HOURS_PER_FARM_WORKER_YEAR
-        crop_limit_fte = (self._world.farm_land.hectares / agriculture.hectares_cropped_per_farm_worker(
-            technique.crop, technique.toolkit))
-        self._clearing_hours_this_year = max(0.0, farm_fte - crop_limit_fte) * HOURS_PER_FARM_WORKER_YEAR
+        self._clearing_hours_this_year = hours_spent_clearing(farm_fte, self._world.farm_land.hectares, technique)
         self._world.farm_technique_this_year = technique
         return farm_fte

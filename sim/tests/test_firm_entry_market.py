@@ -1,80 +1,69 @@
-"""Complaint 330, part 1: entry is bounded by the market. An entrant expects what it would earn after
-its own output and that of the entrants already waiting reaches the market, and enters only while
-that covers the capital it ties up at the market's rate; nothing caps the number of firms."""
-from .harness import *  # noqa: F401,F403
+"""Complaint 330, part 1: entry is bounded by the market. An entrant expects what it would earn after its own output and
+that of the entrants already waiting reaches the market, and enters only while that covers the capital it ties up at
+the market's rate; nothing caps the number of firms.
 
-from sim.engine.agents_port import SimWorld
+`ActorRegistry.consider_entry` is called on the fake world with a concern whose takings are shared among its sellers.
+The wiring of `SimWorld.entry_gross` and the rate in a game is `test_firm_entry_market_scenario`."""
+QUICK_TOPIC = True
 
-import copy
-import random
-from unittest import mock
+import unittest
 
-from sim.engine.state import ActorRecord  # noqa: F401
+from sim.agents.api import ActorRecord, ActorRegistry, ActorsState
 
-_TEMPLATE_ID = next(node_id for node_id, node in NODES.items()
-                    if not node["pre"] and node["cap"] >= 0)
+from .agents_fake_world import FakeWorld, make_node
 
 
-def make_node(node_id, category, revenue, upkeep, hours):
-	node = copy.deepcopy(NODES[_TEMPLATE_ID])
-	node.update(id=node_id, name=node_id, traits=["commerce"], pre=[], lab={"labourer": hours},
-	            mat={}, rev=revenue, up=upkeep, yrs=1.0, risk=0.0, ph=0.0,
-	            dev_years=None, dev_people=None, cat=category)
-	node.pop("gains", None)
-	return node
+class SharedMarketWorld(FakeWorld):
+	"""A proven concern whose takings are shared among its sellers, with a copy dear enough that capital matters."""
+
+	def entry_gross(self, node_id, rivals, entrants):
+		return float(self.nodes[node_id]["rev"]) / (rivals + entrants)
+
+	def plant_cost(self, node_id, actor, step):
+		return 1000.0 * step
+
+	def ramp(self, opened_year, node_id=None):
+		return min(1.0, (self.year - opened_year + 1) / 5.0)
 
 
-def actor_sim(extra_nodes):
-	nodes = copy.deepcopy(NODES)
-	for node in extra_nodes:
-		nodes[node["id"]] = node
-	game = build_unopened(lambda: S.Sim(nodes, list(ORDER), random.Random(1), events=False, manual=True,
-	             civ=S.load_civ("rome_100ad")))
-	game.goal, game.done_year = GOAL, {}
-	return ready_for_entry(game)
+def make_world(rate=0.12, takings=60000.0):
+	world = SharedMarketWorld()
+	world.rate = rate
+	world.nodes["shop"] = make_node("shop", hours=100.0, revenue=takings, upkeep=1000.0)
+	world.nodes["shop"]["cost"] = 6000.0
+	world.demonstrated_nodes = {"shop"}
+	world.proven = {"shop"}
+	return world
 
 
-def founder_runs(game, node_id, opened_ago):
-	year = game.state.scenario.year
-	projects = game.state.projects
-	projects.done.add(node_id)
-	projects.done_year[node_id] = year - opened_ago
-	projects.operating.add(node_id)
-	projects.business.set_opened_year(node_id, year - opened_ago)
-	game._done_changed()
+def make_registry():
+	registry = ActorRegistry(ActorsState(home_country="home"))
+	registry.add("stratum:home:merchants", ActorRecord(
+		kind="stratum", stratum="merchants", members=100.0, money=1.0e9, literacy=0.5))
+	return registry
 
 
-def next_year(game):
-	game.state.scenario.year += 1
-	game.advance_actors(game.state.scenario.year)
+class EntryBoundedByTheMarketTests(unittest.TestCase):
+	def test_some_firms_enter_a_proven_concern(self):
+		self.assertGreater(len(make_registry().consider_entry(make_world())), 0)
 
-CATEGORY = sorted(S.Sim.GOODS_CATEGORIES)[0]
-NODE = make_node("zz_entry", CATEGORY, revenue=2.2e5, upkeep=5000.0, hours=50.0)
+	def test_entry_stops_by_itself_with_no_cap(self):
+		registry = make_registry()
+		world = make_world()
+		first = registry.consider_entry(world)
+		self.assertGreater(len(first), 1)
+		self.assertEqual(registry.consider_entry(world), [])
+
+	def test_a_bigger_market_holds_more_firms(self):
+		small = len(make_registry().consider_entry(make_world(takings=60000.0)))
+		large = len(make_registry().consider_entry(make_world(takings=240000.0)))
+		self.assertGreater(large, small)
+
+	def test_a_dearer_market_rate_for_capital_leaves_fewer_entrants(self):
+		usual = len(make_registry().consider_entry(make_world(rate=0.12)))
+		dear = len(make_registry().consider_entry(make_world(rate=120.0)))
+		self.assertLess(dear, usual)
 
 
-def run_entry(years, rate_scale=1.0):
-	"""A game played `years`; capital costs the entrants `rate_scale` times the usual rate (their own cost of
-	capital: re-solving every price at another rate is the price solver's work, not under test)."""
-	game = actor_sim([NODE])
-	game.market_rate = lambda: 0.12
-	founder_runs(game, "zz_entry", opened_ago=10)
-	counts = []
-	with mock.patch.object(SimWorld, "market_rate", lambda self: rate_scale * 0.12):
-		for _ in range(years):
-			next_year(game)
-			counts.append(len(game.actors.active_firms()))
-	return game, counts
-
-
-game, counts = run_entry(14)
-world = SimWorld(game)
-check("more sellers in a market leave each an entrant less: the clearing price falls with supply",
-      world.entry_gross("zz_entry", 1, 1) > world.entry_gross("zz_entry", 1, 6) > 0.0,
-      (world.entry_gross("zz_entry", 1, 1), world.entry_gross("zz_entry", 1, 6)))
-check("some firms enter a proven concern", counts[-1] > 0, counts)
-check("entry stops by itself with no cap: the last five years add no firm", counts[-1] == counts[-6], counts)
-
-_, dear = run_entry(14, rate_scale=1000.0)
-check("a dearer market rate for capital leaves fewer entrants", dear[-1] < counts[-1], (dear[-1], counts[-1]))
-
-check("the entrant's cost of capital is the capital market's rate", world.market_rate() == game.market_rate())
+if __name__ == "__main__":
+	unittest.main()

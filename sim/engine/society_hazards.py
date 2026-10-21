@@ -24,7 +24,10 @@ from .units_prose import money_text
 from .military_rules import war_relief
 from .data import closure, critical_path
 from . import event_causes
+from .hazard_condition import hazard_given_condition
 from .hazard_window import hazards_not_yet_past
+from .hazard_hedge_timing import remaining_floor_years
+from .patron_death import patron_dies
 from sim.agents.api import edges, ledger
 
 
@@ -140,10 +143,7 @@ class HazardsMixin:
         if goal not in self.nodes:
             return None
         _total, chain = critical_path(self.nodes, goal)
-        done = self.state.projects.done
-        remaining = sum(max(self.nodes[node_id]["yrs"], self.nodes[node_id]["ph"] / 2000.0)
-                        for node_id in chain if node_id not in done)
-        return round(remaining, 1)
+        return remaining_floor_years(self.nodes, chain, self.state.projects.done)
 
     def hazard_advice(self, kind, hazard=None):
         """What KIND of thing would help, without naming what you cannot see.
@@ -450,7 +450,6 @@ class HazardsMixin:
         cond = hazard.get("condition")
         if not cond:
             return hazard
-        field = cond.get("field")
         need = cond.get("requires_all") or []
         met = all(self.has(tech_id) for tech_id in need)
         if year == hazard_start:
@@ -462,19 +461,7 @@ class HazardsMixin:
                 if msg:
                     self.state.household.log.append((year, LogLine(
                         "hazard_condition_met" if met else "hazard_condition_unmet", msg, hazard=key)))
-        if not met or field not in hazard:
-            return hazard
-        adjusted = dict(hazard)
-        outcome = cond.get("outcome")
-        scale = cond.get("alter_scale", 1.0)
-        if outcome == "avert":
-            del adjusted[field]
-        elif outcome == "alter":
-            if field == "output_factor":
-                adjusted[field] = 1.0 - (1.0 - hazard[field]) * scale
-            else:
-                adjusted[field] = hazard[field] * scale
-        return adjusted
+        return hazard_given_condition(hazard, met)
 
     def _apply_event_causes(self, hazard, year, hazard_start):
         """The event as its stated causes leave it this year, or None when they do not hold.
@@ -767,8 +754,8 @@ class HazardsMixin:
         founder = self.state.founder
         household = self.state.household
         last_patron_death = founder.last_patron_death
-        if (rng.random() < self.PATRON_DEATH_ANNUAL_CHANCE and self.running_with_mechanic("patron_mortal")
-                and (last_patron_death is None or year - last_patron_death > self.PATRON_DEATH_COOLDOWN_YEARS)):
+        if patron_dies(rng.random(), self.PATRON_DEATH_ANNUAL_CHANCE, lambda: self.running_with_mechanic("patron_mortal"),
+                       last_patron_death, year, self.PATRON_DEATH_COOLDOWN_YEARS):
             founder.last_patron_death = year
             household.scandal += self.PATRON_DEATH_SCANDAL
             # A one-off jump is not a trend: the year's starting mark moves with it.

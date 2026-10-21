@@ -17,6 +17,13 @@ def net_after_interest(net_before_interest, capital, rate):
     return net_before_interest - interest_on_arrears(capital, rate)
 
 
+def dependants_not_carried(dependants, surplus, creditors_share):
+    """The part of the dependants' cost the income cannot carry: what the surplus leaves after the creditors' share,
+    never more than the dependants cost and never less than nothing."""
+    carried = surplus * (1.0 - creditors_share)
+    return dependants - min(dependants, max(0.0, carried))
+
+
 class DebtServiceMixin:
 
     DEBT_SERVICE_SHARE_OF_SURPLUS = declare(
@@ -46,8 +53,7 @@ class DebtServiceMixin:
         interest = interest_on_arrears(capital, self.debt_interest_rate())
         surplus = revenue - upkeep - mine_cost - (living - dependants) - interest
         creditors_share = self.DEBT_SERVICE_SHARE_OF_SURPLUS if capital < 0 else 0.0
-        carried = surplus * (1.0 - creditors_share)
-        return dependants - min(dependants, max(0.0, carried))
+        return dependants_not_carried(dependants, surplus, creditors_share)
 
     def recurring_living_cost(self, revenue, upkeep):
         """The living cost of an ordinary next year: what is paid once the dependants the income cannot carry are shed."""

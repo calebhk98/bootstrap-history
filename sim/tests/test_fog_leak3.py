@@ -1,123 +1,112 @@
-"""fog_leak3: regression checks, run individually with `--only fog_leak3`."""
-from .harness import *  # noqa: F401,F403
+"""Fog leak 3: `bounty` named hidden prerequisites outright where `why` correctly said only "N other things you have not
+heard of yet", because `bounty` built its own missing-prerequisites list with no fog filter. There is now one filter,
+`FogMixin.missing_prereq_message`, and `bounty_refusal` calls it. Rules, each called on built inputs (a fogged stub
+with a tree of a few nodes, no game):
 
-# =============================================================================
-# FOG LEAK #3: `bounty` named hidden prerequisites outright where `why` -
-# reading the exact same missing list through start_reason's visibility
-# filter - correctly said only "N other things you have not heard of yet".
-# An external blind playthrough found three examples (industrial zinc
-# leaking power_grid, the getter leaking its induction-coupling prerequisite,
-# the vacuum tube leaking its hidden cathode) because `bounty` built its own
-# "missing prerequisites" list straight off n["pre"], with no fog filter of
-# its own. Reproduced generically below rather than pinned to one node name,
-# so it keeps catching this the next time a command grows a second copy of
-# the missing-prerequisite sentence instead of calling
-# missing_prereq_message (fog.py) - the one place this is now written.
-# =============================================================================
-_bl = sim(capital=1_000_000.0)
-_bl.fog = True
-_bl.revealed = set()
-_bl_cats = ("glass_optics", "metallurgy", "precision", "power", "agriculture",
-           "information", "instruments")
-_bl_candidates = [node_id for node_id, node in NODES.items()
-                  if node["cat"] in _bl_cats and node["pre"]
-                  and any(prereq_id not in _bl.done for prereq_id in node["pre"])]
-_bl_target = None
-_bl_hidden = []
-for _k in _bl_candidates:
-    _n = NODES[_k]
-    _missing = [prereq_id for prereq_id in _n["pre"] if prereq_id not in _bl.done]
-    _hidden = [prereq_id for prereq_id in _missing if not _bl.is_visible(prereq_id)]
-    if _hidden:
-        _bl_target, _bl_hidden = _k, _hidden
-        break
-check("a bounty-eligible-by-type node with at least one hidden prerequisite "
-      "exists to test against - this is a property of the live tree, not "
-      "an invented fixture",
-      _bl_target is not None, _bl_target)
-if _bl_target:
-    # HEARD OF THE NODE ITSELF, not its prerequisites - the same state a
-    # revealed-but-not-yet-startable entry is in under ordinary play.
-    _bl.revealed = {_bl_target}
-    _bl_out = S._agent_dispatch(_bl, NODES, {"cmd": "bounty", "id": _bl_target})
-    _bl_why = S._agent_dispatch(_bl, NODES, {"cmd": "why", "id": _bl_target})
-    check("`bounty` does not print the raw id of a prerequisite the player "
-          "has not heard of",
-          _bl_out.get("ok") is False
-          and not any(hidden_prereq_id in (_bl_out.get("error") or "")
-                  for hidden_prereq_id in _bl_hidden),
-          (_bl_out.get("error"), _bl_hidden))
-    check("...and says the same 'N things you have not heard of' shape `why` "
-          "gives for the identical node, not a different, leakier sentence",
-          "have not heard of" in (_bl_out.get("error") or ""),
-          _bl_out.get("error"))
-    check("...matching exactly what start_reason/`why` computes for the same "
-          "missing list - one fog filter, not two that could drift apart",
-          _bl_out.get("error") == _bl.missing_prereq_message(
-              [prereq_id for prereq_id in NODES[_bl_target]["pre"]
-               if prereq_id not in _bl.done]),
-          (_bl_out.get("error"),
-           _bl.missing_prereq_message(
-               [prereq_id for prereq_id in NODES[_bl_target]["pre"]
-                if prereq_id not in _bl.done])))
+1. `missing_prereq_message` prints no id the player has not heard of, and says "have not heard of" instead.
+2. `bounty_refusal` returns exactly that message for the same missing list, and refuses an active never-eligible node
+   for ineligibility, not with advice to "stop it first".
+3. The typed parser reads `reverse:true`, `failures:true` and the bare-flag words of `log` as flags, not as subjects.
 
-# --- the second half of the same finding: the game told a player "X is
-# already active; stop it first if you want to switch to a bounty instead",
-# they stopped it, and `bounty` then refused as not bounty-eligible - advice
-# to make an irreversible move (losing the hours and money already spent)
-# toward an outcome the game could have ruled out before ever suggesting it.
-# Find a real node that is tier>2 (never bounty-eligible) and has no missing
-# prerequisites, so it can actually be made `active`.
-_bls = sim(capital=1_000_000.0)
-_bls_target = next((node_id for node_id in _bls.order
-                    if not _bls.bounty_eligible(node_id)
-                    and _bls.can_start(node_id)), None)
-check("a real, startable, never-bounty-eligible node exists to "
-      "test the ordering against",
-      _bls_target is not None, _bls_target)
-if _bls_target:
-    _ok_bls, _why_bls = _bls.start_project(_bls_target)
-    check("set-up: the node is actually active",
-          _ok_bls and _bls_target in _bls.active, _why_bls)
-    _bls_out = S._agent_dispatch(_bls, NODES, {"cmd": "bounty", "id": _bls_target})
-    check("bounty on an active, never-eligible node is refused for "
-          "ineligibility, not advised to 'stop it first' toward an outcome "
-          "that was never going to work",
-          _bls_out.get("ok") is False
-          and _bls_out.get("cause") == "not_bounty_eligible",
-          _bls_out.get("error"))
-    check("...and the refusal actually explains why it is not eligible "
-          "(tier/category), the real reason, rather than a generic one",
-          _bls_out.get("cause") == "not_bounty_eligible",
-          _bls_out.get("error"))
+The wiring through a fogged game is `test_fog_and_command_scanners_scenario`."""
+QUICK_TOPIC = True
+
+import unittest
+from types import SimpleNamespace
+
+from sim.engine.fog import FogMixin
+from sim.refusal import cause_of
+from sim.ui.proto.quote_spending import bounty_refusal
+from sim.ui.protocol import parse_typed
+
+NODES = {
+	"target": {"id": "target", "name": "Target", "pre": ["seen_prereq", "hidden_prereq_a", "hidden_prereq_b"],
+	           "cat": "metallurgy", "kind": "ENGINEERING"},
+	"seen_prereq": {"id": "seen_prereq", "name": "Seen", "pre": [], "cat": "metallurgy", "kind": "ENGINEERING",
+	                "ph": 100, "yrs": 1, "risk": 0.1},
+	"hidden_prereq_a": {"id": "hidden_prereq_a", "name": "Hidden A", "pre": [], "cat": "metallurgy", "kind": "SCIENCE",
+	                    "ph": 100, "yrs": 1, "risk": 0.1},
+	"hidden_prereq_b": {"id": "hidden_prereq_b", "name": "Hidden B", "pre": [], "cat": "metallurgy", "kind": "SCIENCE",
+	                    "ph": 100, "yrs": 1, "risk": 0.1},
+	"never_eligible": {"id": "never_eligible", "name": "Theory", "pre": [], "cat": "science"},
+}
+HIDDEN = ("hidden_prereq_a", "hidden_prereq_b")
 
 
-# --- BREAK: 'available reverse:true' - the exact key:value spelling
-# `help commands` advertises - fell through to the subject branch and was
-# read as a search for the literal text "reverse:true", matching nothing,
-# with no error. Same shape as the all:true/limit:N hole fixed earlier;
-# 'reverse' is a bare flag like 'all', not a value key, and had never been
-# added to the colon pre-pass. 'log failures:true' carried the identical
-# hole with an even quieter failure (no subject fallback there at all, so
-# the flag was just silently dropped).
-_rt1, _ = _PT("available sort:risk reverse:true")
-check("'available sort:risk reverse:true' parses reverse as the boolean "
-      "flag it is, not as a search subject",
-      _rt1 == {"cmd": "available", "sort": "risk", "reverse": True}, _rt1)
-_rt2, _ = _PT("available reverse:true")
-check("...and the same spelling with nothing else on the line still works",
-      _rt2 == {"cmd": "available", "reverse": True}, _rt2)
-_rt3, _ = _PT("available reverse:false")
-check("...and reverse:false means leave it off, the same as never typing "
-      "the word, exactly like all:false already does",
-      _rt3 == {"cmd": "available"}, _rt3)
-_rt4, _ = _PT("log failures:true")
-check("'log failures:true' sets the failures flag rather than being "
-      "silently dropped",
-      _rt4 == {"cmd": "log", "failures": True}, _rt4)
-_rt5, _ = _PT("log oldest:true")
-check("...and the same fix covers log's other bare-flag words (oldest, "
-      "newest, forward, backward, recent), not only 'failures'",
-      _rt5.get("order") == "oldest", _rt5)
+class FoggedStub(FogMixin):
+	"""A fogged founder who has heard of every node but the two hidden prerequisites."""
+
+	FOG_KIND_HINTS = FogMixin.FOG_KIND_HINTS
+	civ = {"name": "Stubland"}
+
+	def __init__(self, fog=True):
+		self.nodes = NODES
+		self.state = SimpleNamespace(_fog=fog, projects=SimpleNamespace(done=set(), active={}, revealed=set()))
+		self.done = self.state.projects.done
+		self.active = self.state.projects.active
+
+	def is_visible(self, node_id, _memo=None):
+		return not self.state._fog or node_id not in HIDDEN
+
+	def bounty_eligible(self, node_id):
+		return False
 
 
+class MissingPrerequisiteMessageTests(unittest.TestCase):
+	def test_no_id_the_player_has_not_heard_of_is_printed(self):
+		message = FoggedStub().missing_prereq_message(list(NODES["target"]["pre"]))
+		for hidden_id in HIDDEN:
+			self.assertNotIn(hidden_id, message)
+		self.assertIn("seen_prereq", message)
+
+	def test_the_hidden_ones_are_counted_in_words(self):
+		message = FoggedStub().missing_prereq_message(list(NODES["target"]["pre"]))
+		self.assertIn("2 other things you have not heard of", message)  # presentation: the fog sentence the player reads
+
+	def test_without_fog_every_missing_id_is_named(self):
+		message = FoggedStub(fog=False).missing_prereq_message(list(NODES["target"]["pre"]))
+		for node_id in NODES["target"]["pre"]:
+			self.assertIn(node_id, message)
+
+	def test_nothing_missing_is_no_message(self):
+		self.assertIsNone(FoggedStub().missing_prereq_message([]))
+
+
+class BountyRefusalTests(unittest.TestCase):
+	def test_bounty_prints_the_one_fog_filtered_message_for_the_same_missing_list(self):
+		stub = FoggedStub()
+		refusal = bounty_refusal(stub, NODES, "target")
+		self.assertEqual(refusal, stub.missing_prereq_message(list(NODES["target"]["pre"])))
+		for hidden_id in HIDDEN:
+			self.assertNotIn(hidden_id, refusal)
+
+	def test_an_active_never_eligible_node_is_refused_for_ineligibility_not_told_to_stop_it(self):
+		stub = FoggedStub()
+		stub.active["never_eligible"] = {}
+		refusal = bounty_refusal(stub, NODES, "never_eligible")
+		self.assertEqual(cause_of(refusal), "not_bounty_eligible")
+
+
+class BareFlagParsingTests(unittest.TestCase):
+	def parsed(self, text):
+		return parse_typed(text)[0]
+
+	def test_reverse_true_is_the_boolean_flag_not_a_search_subject(self):
+		self.assertEqual(self.parsed("available sort:risk reverse:true"),
+		                 {"cmd": "available", "sort": "risk", "reverse": True})
+
+	def test_reverse_true_alone_still_works(self):
+		self.assertEqual(self.parsed("available reverse:true"), {"cmd": "available", "reverse": True})
+
+	def test_reverse_false_leaves_it_off(self):
+		self.assertEqual(self.parsed("available reverse:false"), {"cmd": "available"})
+
+	def test_log_failures_true_sets_the_flag(self):
+		self.assertEqual(self.parsed("log failures:true"), {"cmd": "log", "failures": True})
+
+	def test_log_oldest_true_sets_the_order(self):
+		self.assertEqual(self.parsed("log oldest:true").get("order"), "oldest")
+
+
+if __name__ == "__main__":
+	unittest.main()

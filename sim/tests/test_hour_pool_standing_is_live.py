@@ -1,51 +1,90 @@
-"""The hour pool and priority rank a screen shows come from the live active
-list, not from the record written when hours were last allocated."""
+"""The hour pool and priority rank a screen shows come from the live active list, not from the record written
+when hours were last allocated (Complaint 640: rules on a stub game; the whole-game screen checks are in
+test_hour_pool_standing_is_live_scenario)."""
+QUICK_TOPIC = True
+
+import types
 import unittest
 
 from .harness import *  # noqa: F401,F403
+from sim.engine.projects_hour_queue import HourQueueMixin
 from sim.ui.proto import state_projects as proto_state
 
 
-def _household_with_projects(count):
-    household = sim(civ="rome_100ad", capital=1e7)
-    node_ids = [node_id for node_id in household.order
-                if household.start_reason(node_id)[0] and NODES[node_id]["ph"] > 0][:count]
-    for node_id in node_ids:
-        household.start_project(node_id)
-    return household, node_ids
+class _Labour:
+    def __init__(self, pool, committed):
+        self.pool, self.committed = pool, committed
+
+    def director_pool(self):
+        return self.pool
+
+    def director_hours_committed(self):
+        return self.committed
 
 
-def _stale_record(household):
-    for progress in household.active.values():
-        progress["pool_rank_this_year"] = 9
-        progress["pool_active_count_this_year"] = 9
-        progress["pool_total_this_year"] = 200.0
+class _HourGame(HourQueueMixin):
+    """Only what the hour queue and the active-project builder read."""
+    goal = None
+    bountied = frozenset()
+
+    def __init__(self, node_ids, pool=120.0, committed=20.0, allocations=None):
+        self.order = ["alpha", "beta", "gamma", "delta"]
+        self.state = types.SimpleNamespace(
+            projects=types.SimpleNamespace(active={node_id: self._stale_progress() for node_id in node_ids}),
+            household=types.SimpleNamespace(hour_allocations=allocations or {}))
+        self.labour = _Labour(pool, committed)
+        self.active = self.state.projects.active
+
+    @staticmethod
+    def _stale_progress():
+        return {"ph_left": 10.0, "spent": 0.0, "yrs": 0, "pool_rank_this_year": 9,
+                "pool_active_count_this_year": 9, "pool_total_this_year": 200.0}
+
+    def project_cost(self, node_id):
+        return 0.0
+
+    def effective_risk(self, node_id):
+        return 0.0
+
+
+NODES_STUB = {name: {"name": name, "ph": 10, "risk": 0.0} for name in ("alpha", "beta", "gamma", "delta")}
 
 
 class HourStandingIsLive(unittest.TestCase):
 
     def test_rank_and_count_follow_the_live_active_list(self):
-        household, node_ids = _household_with_projects(3)
-        _stale_record(household)
-        active = proto_state._agent_state_active_projects(household, household.nodes)
-        ranks = sorted(active[node_id]["pool_rank_this_year"] for node_id in node_ids)
-        self.assertEqual(ranks, [1, 2, 3])
-        for node_id in node_ids:
-            self.assertEqual(active[node_id]["pool_active_count_this_year"], 3)
+        game = _HourGame(["gamma", "alpha", "beta"])
+        self.assertEqual([game.hour_standing(name)[:2] for name in ("alpha", "beta", "gamma")], [(1, 3), (2, 3), (3, 3)])
 
-    def test_pool_is_this_years_live_pool(self):
-        household, node_ids = _household_with_projects(2)
-        _stale_record(household)
-        active = proto_state._agent_state_active_projects(household, household.nodes)
-        live_pool = max(0.0, household.labour.director_pool() - household.labour.director_hours_committed())
-        self.assertAlmostEqual(active[node_ids[0]]["pool_total_this_year"], live_pool)
+    def test_a_standing_allocation_moves_a_project_to_the_front(self):
+        game = _HourGame(["alpha", "beta", "gamma"], allocations={"gamma": 40.0})
+        self.assertEqual(game.hour_standing("gamma")[0], 1)
+        self.assertEqual(game.hour_standing("alpha")[0], 2)
 
-    def test_waiting_line_does_not_quote_the_stale_pool(self):
-        household, node_ids = _household_with_projects(2)
-        _stale_record(household)
-        active = proto_state._agent_state_active_projects(household, household.nodes)
-        for node_id in node_ids:
-            text = str(active[node_id]["waiting_on"])
-            self.assertNotIn("#9", text)
-            self.assertNotIn("of 9", text)
-            self.assertNotIn("200 directed", text)
+    def test_a_project_not_in_hand_has_no_standing(self):
+        self.assertIsNone(_HourGame(["alpha"]).hour_standing("delta"))
+
+    def test_pool_is_the_hours_not_yet_committed(self):
+        game = _HourGame(["alpha", "beta"], pool=120.0, committed=20.0)
+        self.assertAlmostEqual(game.hour_standing("alpha")[2], 100.0)
+
+    def test_pool_never_goes_below_zero(self):
+        game = _HourGame(["alpha"], pool=10.0, committed=50.0)
+        self.assertEqual(game.hour_standing("alpha")[2], 0.0)
+
+    def test_the_builder_reads_standing_not_the_stale_record(self):
+        game = _HourGame(["beta", "alpha"], pool=120.0, committed=20.0)
+        original = proto_state._waiting_on
+        proto_state._waiting_on = lambda *arguments: ""
+        try:
+            rows = proto_state._agent_state_active_projects(game, NODES_STUB)
+        finally:
+            proto_state._waiting_on = original
+        self.assertEqual((rows["alpha"]["pool_rank_this_year"], rows["beta"]["pool_rank_this_year"]), (1, 2))
+        for row in rows.values():
+            self.assertEqual(row["pool_active_count_this_year"], 2)
+            self.assertAlmostEqual(row["pool_total_this_year"], 100.0)
+
+
+if __name__ == "__main__":
+    unittest.main()

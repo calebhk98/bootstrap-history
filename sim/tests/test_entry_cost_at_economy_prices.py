@@ -1,59 +1,74 @@
-"""Complaints/507 stage 5: what an entry costs a producer is the calculator at the economy's prices, wages, rate and
-rent. A plant that exists offers at its running cost, a new one is judged at its full cost, and the cost moves with
-the economy's input prices and wages (not with the long-run table)."""
-from .harness import *  # noqa: F401,F403
+"""Complaints/507 stage 5: what an entry costs a producer is the calculator at the economy's prices, wages, rate and rent.
+A plant that exists offers at its running cost, a new one is judged at its full cost, and the cost moves with the economy's
+input prices and wages (not with the long-run table). `CostBook` is called with price and wage functions the test builds,
+and `ProducerCostsMixin.entry_cost_ratio` on a stub game; the cost book of a real game is
+`test_entry_cost_at_economy_prices_scenario`."""
+QUICK_TOPIC = True
 
-from sim.engine import prices as price_solver
-from sim.engine.economy_cost_book import economy_cost_book
+import unittest
 
-game = sim(civ="rome_100ad", capital=5_000_000.0)
-production = price_solver.default_production_entries()
-home_prices = game.goods_market.household_prices
+from sim.engine import entry_cost
+from sim.engine.producer_costs import ProducerCostsMixin
+from sim.tests.test_capital_charge import works_entry
 
-
-def a_plant_bearing_entry():
-    """(entry key, material) of an entry the incumbents run that has a plant, an input and labour, and costs."""
-    book = economy_cost_book(game)
-    for key in sorted(production):
-        entry = production[key]
-        if not (entry.get("capital") and entry.get("inputs") and entry.get("labour_hours") and entry.get("outputs")):
-            continue
-        material = sorted(entry["outputs"])[0]
-        if game._reference_entry(material) == key and book.unit_cost(key, material) and \
-                book.running_unit_cost(key, material) is not None:
-            return key, material
-    return None, None
+RATE = 0.12
+ENTRY = "widget_kg"
 
 
-entry_key, material = a_plant_bearing_entry()
-check("an incumbent entry with a plant, an input and labour can be costed at the economy's prices",
-      entry_key is not None)
-book = economy_cost_book(game)
-full, running = book.unit_cost(entry_key, material), book.running_unit_cost(entry_key, material)
-check("a plant that exists offers at its running cost, below the full cost a new one is judged at",
-      0.0 < running < full, (running, full))
-check("the incumbents' own entry costs the same as itself: ratio one at full cost",
-      abs(game.entry_cost_ratio(entry_key, material) - 1.0) < 1e-9, game.entry_cost_ratio(entry_key, material))
-check("...and its running ratio is below one",
-      game.entry_cost_ratio(entry_key, material, running=True) < 1.0)
-check("...and is the running cost over the full cost",
-      abs(game.entry_cost_ratio(entry_key, material, running=True) - running / full) < 1e-9)
+def book(ore_price=1.0, wage=1.0, rate=RATE, entry=None):
+    return entry_cost.CostBook({"ore_kg": ore_price}.get, {"labourer": wage}.get, rate,
+                               production={ENTRY: entry or works_entry()})
 
-# the cost reads the economy's prices: dearer inputs, dearer making
-inputs = set(production[entry_key]["inputs"])
-check("the entry's inputs have prices at the economy", all(home_prices().get(good) for good in inputs))
-real_prices = game.goods_market.household_prices
-game.goods_market.household_prices = lambda: {good: price * (2.0 if good in inputs else 1.0)
-                                              for good, price in real_prices().items()}
-dearer_inputs = economy_cost_book(game).unit_cost(entry_key, material)
-game.goods_market.household_prices = real_prices
-check("dearer inputs at the economy raise the cost of making", dearer_inputs > full, (dearer_inputs, full))
 
-# ...and so do dearer wages
-real_wage = game.economy.agent_wage_per_hour
-game.economy.agent_wage_per_hour = lambda trade: 2.0 * (real_wage(trade) or game.labour.market.quote(trade))
-dearer_labour = economy_cost_book(game).unit_cost(entry_key, material)
-game.economy.agent_wage_per_hour = real_wage
-check("dearer wages at the economy raise the cost of making", dearer_labour > full, (dearer_labour, full))
-check("the cost book is remembered while the economy's prices stand",
-      game._cost_book() is game._cost_book())
+class StubGame(ProducerCostsMixin):
+    """One good made by one entry, the incumbents' own."""
+
+    def __init__(self, cost_book):
+        self.cost_book = cost_book
+        self.memo = {}
+
+    def _cost_book(self):
+        return None, self.cost_book, self.memo
+
+    def _reference_entry(self, material):
+        return ENTRY
+
+
+class CostAtEconomyPricesTests(unittest.TestCase):
+    def test_a_plant_that_exists_offers_at_its_running_cost_below_the_full_cost(self):
+        cost_book = book()
+        running, full = cost_book.running_unit_cost(ENTRY, ENTRY), cost_book.unit_cost(ENTRY, ENTRY)
+        self.assertTrue(0.0 < running < full)
+
+    def test_dearer_inputs_at_the_economy_raise_the_cost_of_making(self):
+        self.assertGreater(book(ore_price=2.0).unit_cost(ENTRY, ENTRY), book().unit_cost(ENTRY, ENTRY))
+
+    def test_dearer_inputs_raise_the_running_cost_too(self):
+        self.assertGreater(book(ore_price=2.0).running_unit_cost(ENTRY, ENTRY), book().running_unit_cost(ENTRY, ENTRY))
+
+    def test_dearer_wages_at_the_economy_raise_the_cost_of_making(self):
+        self.assertGreater(book(wage=2.0).unit_cost(ENTRY, ENTRY), book().unit_cost(ENTRY, ENTRY))
+
+    def test_a_dearer_rate_raises_the_full_cost_and_leaves_the_running_cost_alone(self):
+        cheap, dear = book(rate=0.05), book(rate=0.20)
+        self.assertGreater(dear.unit_cost(ENTRY, ENTRY), cheap.unit_cost(ENTRY, ENTRY))
+        self.assertAlmostEqual(dear.running_unit_cost(ENTRY, ENTRY), cheap.running_unit_cost(ENTRY, ENTRY))
+
+    def test_an_input_with_no_price_cannot_be_costed(self):
+        priceless = entry_cost.CostBook({}.get, {"labourer": 1.0}.get, RATE, production={ENTRY: works_entry()})
+        self.assertIsNone(priceless.unit_cost(ENTRY, ENTRY))
+
+
+class EntryCostRatioTests(unittest.TestCase):
+    def test_the_incumbents_own_entry_costs_the_same_as_itself(self):
+        self.assertAlmostEqual(StubGame(book()).entry_cost_ratio(ENTRY, ENTRY), 1.0)
+
+    def test_its_running_ratio_is_the_running_cost_over_the_full_cost(self):
+        cost_book = book()
+        ratio = StubGame(cost_book).entry_cost_ratio(ENTRY, ENTRY, running=True)
+        self.assertLess(ratio, 1.0)
+        self.assertAlmostEqual(ratio, cost_book.running_unit_cost(ENTRY, ENTRY) / cost_book.unit_cost(ENTRY, ENTRY))
+
+
+if __name__ == "__main__":
+    unittest.main()

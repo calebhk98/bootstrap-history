@@ -1,5 +1,6 @@
-"""Complaint 480: a fresh game's goods with no deposit and no producer plant (alum) used to throttle work to the
-floor with the one line "the market is out of it". Each now sits on a named route and the shortage says why."""
+"""Complaint 480, scenario (Complaint 640 audit): in a fresh game a good with no deposit and no producer plant (alum)
+sits on a named route. The routes are rule tests in test_material_reach; this holds that the shipped data places three
+real goods on the three routes, and that the quote and the throttle read one market figure."""
 from .harness import *  # noqa: F401,F403
 
 game = sim(civ="rome_100ad", events=False, capital=1e9)
@@ -12,9 +13,3 @@ check("a good the market brings is on the market route", routes["wheat_kg"] == "
 check("the quote's volume and the throttle's market tonnes agree",
       game.goods_market.quote("alum_kg")["market_available_tonnes_per_year"]
       == game._material_market_tonnes("alum_kg"))
-game.step()
-remedy = game.shortage_remedy("alum_kg")
-check("a shortage of a good nothing makes names the cause",
-      game.material_supply_route("alum_kg")["route"] == "makeable", remedy)
-check("...and a good nobody can sell is told as unavailable",
-      game.material_supply_route("cobalt_kg")["route"] == "unavailable", game.shortage_remedy("cobalt_kg"))
