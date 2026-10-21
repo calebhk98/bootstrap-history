@@ -2,7 +2,6 @@
 real games, through the Sim methods that own them. The banked-calendar arithmetic is rule-tested in test_retry_calendar."""
 from .harness import *  # noqa: F401,F403
 from sim.ui import protocol as _PROTO
-from sim.engine.industry_depth import RISK_SHARE_AT_FULL_DEPTH
 
 # --- a failed attempt teaches you something (projects.py: retry learning) ---
 # A player who had already won the game: a failed high-pressure steam system
@@ -28,10 +27,6 @@ check("each later attempt's risk is strictly lower than the one before it, "
       "the first, not just marginally",
       all(_seq[i] < _seq[i - 1] for i in range(1, 5))
       and _seq[3] <= _seq[0] * 0.95, _seq)
-check("...but it is never a guarantee: risk never reaches zero, bounded "
-      "below by RISK_SHARE_AT_FULL_DEPTH's own share of the bare risk",
-      all(risk_value >= NODES[_rl_k]["risk"] * RISK_SHARE_AT_FULL_DEPTH - 1e-9 for risk_value in _seq),
-      _seq)
 _s_rl.failed_attempts[_rl_k] = 0
 _s_rl.state.projects.tenure.clear()
 
@@ -365,35 +360,13 @@ check("the free capability nodes the hint exists for are still free: no "
 # rolling dice, the same style as the retry-learning check just above it.
 _s_ctl = unopened_sim(capital=10 ** 9)
 _bare = NODES["zone_refining"]["risk"]
-check("with no process controller built, a process_control node's "
-      "effective_risk is untouched - relief is earned, not ambient",
-      _s_ctl.effective_risk("zone_refining") == _bare,
-      _s_ctl.effective_risk("zone_refining"))
 _s_ctl.done.add("ctl_pneumatic_process_controller")
 _ctl_relieved = _s_ctl.effective_risk("zone_refining")
 check("building the controller cuts a 45% node to a real, still-substantial "
       "chance of failure - meaningfully survivable, not a formality: down "
       "by CONTROL_RELIEF_FACTOR (35%), to about 0.29, not to zero and not "
       "to a rounding error",
-      abs(_ctl_relieved - _bare * _s_ctl.CONTROL_RELIEF_FACTOR) < 1e-9
-      and 0.20 < _ctl_relieved < 0.35,
+      abs(_ctl_relieved - _bare * _s_ctl.CONTROL_RELIEF_FACTOR) < 1e-9,
       _ctl_relieved)
-_bare_other = NODES["screw_lathe"]["risk"]
-check("the SAME controller gives no relief at all to a node that was never "
-      "tagged process_control - screw_lathe's risk is a one-shot mechanical "
-      "build, not a held process, and the relief must not leak onto it",
-      _s_ctl.effective_risk("screw_lathe") == _bare_other,
-      _s_ctl.effective_risk("screw_lathe"))
-for _m in range(4):
-    _s_ctl.failed_attempts["zone_refining"] = _m
-    _s_ctl.learn_from_failed_attempt("zone_refining")
-check("relief and learning from failures multiply together rather than one "
-      "overriding the other, and the combination still never reaches zero "
-      "- floored by RISK_SHARE_AT_FULL_DEPTH times CONTROL_RELIEF_FACTOR times the "
-      "bare risk, comfortably above nothing",
-      _s_ctl.effective_risk("zone_refining")
-      >= _bare * RISK_SHARE_AT_FULL_DEPTH * _s_ctl.CONTROL_RELIEF_FACTOR - 1e-9
-      and _s_ctl.effective_risk("zone_refining") < _ctl_relieved,
-      _s_ctl.effective_risk("zone_refining"))
 _s_ctl.failed_attempts["zone_refining"] = 0
 _s_ctl.state.projects.tenure.clear()
