@@ -160,3 +160,13 @@ def output_value(economy, country: Optional[str]) -> Optional[float]:
         total += runs * producer.yield_factor * math.fsum(quantity * own_prices.get(good, 0.0)
                                                           for good, quantity in recipe.outputs.items())
     return total if seen else None
+
+
+def money_held(economy, country: Optional[str]) -> float:
+    """The money held by the household cohorts and producers on the country's tiles."""
+    tiles = country_tiles(economy, country)
+    record = economy.record
+    money = economy.setup.currency_id
+    holders = [cohort.agent_id for cohort in record.cohorts.values() if cohort.tile in tiles]
+    holders += [producer.agent_id for producer in record.producers.values() if producer.tile in tiles]
+    return math.fsum(record.book.balance(holder, money) for holder in holders)

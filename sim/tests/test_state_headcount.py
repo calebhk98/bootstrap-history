@@ -37,6 +37,15 @@ class CountryAnswers:
 	def society_output(self):
 		return 1.0e6
 
+	def price_per_tonne(self, material):
+		return 2.0
+
+	def coin_regime(self):
+		return "commodity"
+
+	def coin_stock_value(self):
+		return 0.0
+
 	def need_floor_costs_per_person_year(self):
 		return {"food": 5.0}
 
