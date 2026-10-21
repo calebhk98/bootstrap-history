@@ -148,3 +148,18 @@ shows the floor stay a bounded share of the capitalised rent in every year (no c
 Still open on its own cause: the land producer still adds hectares to a stock that no one buys and the ask falls year
 on year with no buyer; land is treated as a flow producer, and who buys land (a market of buyers) is the remaining
 part of this complaint.
+
+Runaway fixed (2026-10-21). Land was not exempt from the stock gate and its expected sales were read right. The
+gate (`producers.runs_for_stock`) lets a recipe run on when what its non-piling outputs sell covers the run's cost;
+clearing land has no cost (no inputs, no hours) and one output, so the sum over no outputs (zero) met the cost
+(zero) and the gate opened for ever. Fix: that exit needs something else to sell (`sells > 0.0`). Rule test:
+`sim/tests/test_economy_costless_run_stock_gate.py`. With the fix the probe (`unsold_search._floors` wrapped, Norse game) shows the
+stock stop growing after the years the yearly change limit allows, where it used to add the full capacity every year.
+
+Still open, the buyer side: nothing wants cleared hectares, so expected sales still decay to nothing and the
+ask still falls with no taker. A buyer needs (a) a household or farm cohort that takes up open ground when its
+crop margin on a hectare, at the going rent, beats its other use, as a bid for `hectare_land` rather than a
+lease read off `titles_*.py`; (b) the clearer's own use, the plot it farms itself (the 551 own-plot
+rule on held land) taking hectares from its own stock instead of selling them; (c) the ask falling toward the
+capitalised rent (`unsold_search._held_value`) instead of an expected-sales ratchet. Not built; it touches
+`sim/economy/titles_*.py` and the households' land demand, and is a mechanism of its own.

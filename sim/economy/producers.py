@@ -388,7 +388,7 @@ def runs_for_stock(producer: Producer, recipe: Recipe, view: MarketView, run_cos
     if run_cost is not None and output_prices is not None:
         sells = math.fsum(made * output_prices.get(good, 0.0) for good, made in recipe.outputs.items()
                           if good not in piling) * producer.yield_factor
-        if sells >= run_cost:
+        if sells > 0.0 and sells >= run_cost:      # nothing else sold covers nothing: a costless run is not paid for by it
             return math.inf
     return max(0.0, sales - max(excess[good] for good in piling))
 
