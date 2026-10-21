@@ -18,7 +18,7 @@ other economy sub-mixins; see that file for the composition and for the
 grouping evidence.
 """
 from .data import WAGES
-from .credit_freeze import STALL_MINIMUM_INSOLVENT_YEARS, is_stalled, loss_makers, settlement_freeze, standing_net
+from .credit_freeze import STALL_MINIMUM_INSOLVENT_YEARS, is_stalled, loss_makers, settlement_freeze, settlement_owed, standing_net
 from sim.constants import declare
 from sim.refusal import LogLine
 from . import money_units
@@ -532,9 +532,9 @@ class CreditMixin:
         # The balance left is measured against the line that stands once the name has been marked down, so it never starts outside it.
         _rep_before = household.reputation
         household.reputation = max(0.0, _rep_before - self.SETTLEMENT_REPUTATION_HIT)
-        limit = min(limit, self.credit_limit())
+        owed = settlement_owed(limit, self.credit_limit(), self.SETTLEMENT_CAPITAL_RETAINED_FRACTION)
         household.reputation = _rep_before
-        ledger.settle(self.household, self.edge(edges.EDGE_CREDITORS), -limit * self.SETTLEMENT_CAPITAL_RETAINED_FRACTION, "debts written off in settlement")
+        ledger.settle(self.household, self.edge(edges.EDGE_CREDITORS), -owed, "debts written off in settlement")
         # THE NUMBER ANNOUNCED HAS TO BE THE NUMBER APPLIED: quoting a
         # fixed "reputation -12" against a reputation of 4.9 would say
         # the same thing twice while the second application does
@@ -554,7 +554,7 @@ class CreditMixin:
             "off and you still owe about %s. Your "
             "name is worth less for it (reputation %s), and "
             "you keep your knowledge and your practice%s"
-            % (money_text(limit * self.SETTLEMENT_CAPITAL_RETAINED_FRACTION, self, grouped=True),
+            % (money_text(owed, self, grouped=True),
                "-%.1f" % _rep_hit if _rep_hit > 0.05
                else "already at nothing, so no further",
                (". Settling again while still frozen out "

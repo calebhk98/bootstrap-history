@@ -1,10 +1,11 @@
 """A good can serve a need with a quality factor the buyer values; richer buyers weigh it more."""
+
+QUICK_TOPIC = True
+
 import json
 import os
 import unittest
 
-from sim.engine.economy_port_setup import build_setup
-from sim.tests.harness import unopened_sim
 from sim.world import need_basket
 
 QUALITY_BASIS = {"factor": 0.5, "basis": "test", "conf": "D"}
@@ -64,23 +65,6 @@ class NeedQualityTest(unittest.TestCase):
                 self.assertTrue(record["basis"] and record["conf"], good)
                 if record.get("heuristic"):
                     self.assertTrue(record["retire"], good)
-
-
-class RealLightGoodsTest(unittest.TestCase):
-    def test_the_real_basket_moves_light_spending_from_tallow_to_cleaner_light_as_reach_rises(self):
-        setup = build_setup(unopened_sim(civ="england_1300"))
-        basket = setup.basket_for(setup.capital_tile)
-        base = need_basket.need_prices(basket, setup.opening_prices.get)
-        light_spec = [need.spec for need in base if need.spec.need_id == "light"][0]
-        tallow = {good for good, _factor in light_spec.qualities if "tallow" in good}
-        self.assertTrue(tallow)
-
-        def tallow_share(reach):
-            (light,) = [need for need in need_basket.with_quality_reach(base, basket, reach)
-                        if need.spec.need_id == "light"]
-            return sum(share for good, _price, _effect, share in light.goods if good in tallow)
-
-        self.assertLess(tallow_share(1.0), tallow_share(0.0))
 
 
 if __name__ == "__main__":

@@ -11,6 +11,12 @@ def settlement_freeze(frozen_before, year, freeze_years):
     return frozen_until, moved
 
 
+def settlement_owed(limit, marked_down_limit, retained_fraction):
+    """What is still owed after a write-off: a share of the line that stands once the name has been marked down
+    (never of a line above the one the debtor had), so the balance never starts outside the line."""
+    return min(limit, marked_down_limit) * retained_fraction
+
+
 def standing_net(revenue, upkeep, living_cost, mine_cost, interest):
     """The yearly balance of a household on its standing figures: what comes in less every recurring cost."""
     return revenue - upkeep - living_cost - mine_cost - interest

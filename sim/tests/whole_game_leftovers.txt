@@ -48,9 +48,7 @@ firm_count_from_costs
 firm_crew_paid_once
 five_things_winner
 freight_domestic_haul
-goals_several
 hazard_risk_screens
-insolvency_rules
 interest_groups
 interface_honesty
 knowledge_loss_and_consequences
@@ -61,8 +59,6 @@ mine_auto_and_capacity
 mod_effects
 mod_stores
 money_readouts_finish
-money_unit_and_menu_text
-need_quality
 opening_floor_and_thin_trades
 options_from_settings_table
 plague_mitigation_realism
