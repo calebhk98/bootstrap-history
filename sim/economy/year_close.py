@@ -204,7 +204,8 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage) ->
             per_run * producer.yield_factor or per_run)
         price_share = expansion_price.price_share_of(ledger.bids_by_market, traded, area_map.area_of, producer.tile,
                                                    prepared_buyers)
-        closed = producers_close.close_year(producer, recipe, revenue, costs, view, worked, price_share)
+        closed = producers_close.close_year(producer, recipe, revenue, costs, view, worked, price_share,
+                                            [good for good in recipe.outputs if good in setup.specs and not setup.specs[good].portable])
         shares.note_dividend(record, producer_id, closed.transfers)
         if closed.exited:
             paid = producer_exit.exit_producer(record, producer_id, list(closed.transfers))

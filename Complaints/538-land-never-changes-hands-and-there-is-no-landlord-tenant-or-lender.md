@@ -165,7 +165,7 @@ less its hours at the servant wage) and the tile's rent; it is worth that earnin
 the going price; the money comes from the savings it would otherwise lend (the funds offer is cut by the bid's
 budget), never from its cash buffer (a first cut that spent the whole cash left the poorest cohort short of its
 floors and defaulting). After the goods clear, `land_bid_year.take_up_bought` turns the hectares a cohort holds in
-stock into a title passed from the seller's owner (`titles.pass_title`), and the stock is consumed. Measure: step the
+stock into a title (first cut: passed from the seller's owner; now new arable land, see below), and the stock is consumed. Measure: step the
 Norse game of `sim/tests/test_staff_closure_reopening_scenario.py` and print the clearer's stock, the remembered
 price and the titles of `sweden_01` each year.
 
@@ -177,14 +177,35 @@ above the floor and cohorts buy tens of thousands of hectares from the clearer's
 with a climate list count as crops (`sites.climate_allows`): a mine's recipe has a tiny land per run and would make
 every hectare look worth a fortune.
 
+Built after that (2026-10-21): the clearer's own use, the ask, and where cleared ground goes.
+
+- Where cleared ground adds to a tile's arable land (decided): at the moment an actor takes it up. A tile's arable land
+  is its cropland plus `record.cleared_hectares` (`titles_ground.arable_hectares`, saved). Ground in a clearer's stock
+  is not arable and has no title until taken up; `titles_ground.add_ground` then grows the arable land by those hectares
+  and gives them to the taker, and every other holder's share, every tenancy's share and every pledged share on the tile
+  shrinks by the same factor so each keeps its hectares (shares still sum as before). Nobody gives up a hectare, so a
+  clearer whose owner holds no free share still sells (the earlier cap that left such ground in the buyer's stock is
+  gone). Readers of the arable area use the helper: the land market's clearing, the own-plot allocation
+  (`Economy._hectares_held`), title value and collateral, the concentration check. Rule tests:
+  `sim/tests/test_economy_land_bid.py` (`TitleTests`).
+- (b) The clearer's own use (`land_bid.own_use`, wired by `land_bid_year.take_up_own`, called in the year before hours
+  are kept back): a cohort that owns a clearer keeps from the clearer's stock the hectares its own plots need to grow its
+  floors beyond the land it holds, as its own title, before the rest is offered. Where its titles already cover the
+  floors it keeps nothing, which is the Norse game's case (measure: `unsold_search._floors` wrapped and the clearer's stock
+  printed each year; the stock does not change from own use there). Rule tests: `TitleTests` and `YearWiringTests` in the
+  same file.
+- (c) The ask: the seller's floor was already the capitalised rent (`unsold_search._held_value`); the year's search
+  (`unsold_search.clear_with_search`) lowers an unsold land ask to that floor and no lower, and sells out at what a
+  buyer pays above it, whatever the stock and expected sales (`AskFallsToTheCapitalisedRentTests` in
+  `sim/tests/test_economy_land_seller_floor.py`). The remaining expected-sales ratchet was the clearer's plan margin:
+  `producers_close._behind_the_stock` queued ground behind its stock and valued a run at nothing; ground now keeps its
+  price (`sim/tests/test_economy_ground_not_queued.py`). The seller floor and the stock gate are unchanged. No
+  between-years markdown was added, the markdown stays inside the year's clearing.
+
 Not built, still open:
-- Only household cohorts bid. A farm producer or another actor can call the same rules; no wiring yet.
-- (b) the clearer's own use (551 own plots on held land taking hectares from its own stock) and (c) the ask falling
-  toward the capitalised rent instead of an expected-sales ratchet.
+- Only household cohorts bid. A farm producer or another actor can call the same rules; no wiring yet. The clearer's own
+  use is only for a clearer a cohort owns (a firm owner would need own plots of its own).
 - The bid is for hours-limited farming; a cohort that would only let the hectare (rent branch of the earning) is
   not modelled as a buyer without hands to work it.
-- A hectare is a title passed from the seller's owner, not new ground: the tile's titles already sum to one and the
-  clearer's stock is not backed by land the owner holds, so an owner with no free share sells nothing (the stock stays
-  with the buyer). Where cleared hectares add to the tile's arable land is undecided.
 - The ground goods are found as immobile goods a recipe makes from nothing (`land_bid.land_goods`); the data has no
   land marker.

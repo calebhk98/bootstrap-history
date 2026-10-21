@@ -1,10 +1,11 @@
-"""Households and cleared ground in the year (Complaint 538): a cohort with hours left over bids for ground it could
-farm, and the hectares it bought become its title. The rules are in land_bid.py."""
+"""Households and cleared ground in the year (Complaint 538): a clearer's owner farms what its floors need of the
+clearer's stock first, a cohort with hours left over bids for ground it could farm, and the hectares it bought
+become its title. The rules are in land_bid.py."""
 import dataclasses
 from typing import Dict, List, Mapping
 
-from . import land_bid, sites, titles_value
-from .households_own import Option
+from . import land_bid, sites, titles_ground, titles_value, titles_worked
+from .households_own import Option, plot_hectares
 from .protocols import AgentOrders
 from .setup import labour_area
 from .types import EDGE_CONSUMPTION, Bid, GoodsMove
@@ -63,8 +64,8 @@ def with_land_bids(orders: AgentOrders, bids: List[Bid]) -> AgentOrders:
 
 
 def take_up_bought(setup, record) -> Dict[str, float]:
-    """Every cohort's ground bought this year becomes its title, passed from the owner of the seller; what the
-    seller's owner could not give stays in the cohort's stock. Returns hectares titled by cohort."""
+    """Every cohort's ground bought this year becomes its title: new arable land on its tile (land_bid.take_up),
+    and the stock is consumed. Returns hectares titled by cohort."""
     titled: Dict[str, float] = {}
     for good in land_bid.land_goods(setup.specs, setup.recipes):
         for cohort in sorted(record.cohorts.values(), key=lambda each: each.agent_id):
@@ -72,13 +73,32 @@ def take_up_bought(setup, record) -> Dict[str, float]:
             tile = setup.tiles.get(cohort.tile)
             if bought <= 0.0 or tile is None:
                 continue
-            for giver in land_bid.owners_of_sellers(record, setup.recipes, good, cohort.tile):
-                moved = land_bid.take_up(record, giver, cohort.agent_id, cohort.tile, bought, tile.cropland_hectares)
-                if moved > 0.0:
-                    record.book.move_many([GoodsMove(cohort.agent_id, EDGE_CONSUMPTION, good, cohort.tile, moved,
-                                                     "ground taken up as a title")])
-                    titled[cohort.agent_id] = titled.get(cohort.agent_id, 0.0) + moved
-                    bought -= moved
-                if bought <= 0.0:
-                    break
+            added = land_bid.take_up(record, cohort.agent_id, cohort.tile, bought,
+                                     titles_ground.arable_hectares(record, cohort.tile, tile))
+            if added > 0.0:
+                record.book.move_many([GoodsMove(cohort.agent_id, EDGE_CONSUMPTION, good, cohort.tile, added,
+                                                 "ground taken up as a title")])
+                titled[cohort.agent_id] = titled.get(cohort.agent_id, 0.0) + added
     return titled
+
+
+def take_up_own(setup, record, options: Mapping[str, List[Option]]) -> Dict[str, float]:
+    """A cohort that owns a clearer farms what it needs of the clearer's stock itself before anything is sold: the
+    hectares its own plots need to grow its floors beyond the land it holds (land_bid.own_use) become its title.
+    Returns hectares kept by cohort."""
+    kept: Dict[str, float] = {}
+    for good in land_bid.land_goods(setup.specs, setup.recipes):
+        for producer_id, producer in sorted(record.producers.items()):
+            owner, tile = record.cohorts.get(producer.owner), setup.tiles.get(producer.tile)
+            if owner is None or tile is None or good not in setup.recipes[producer.recipe_id].outputs:
+                continue
+            arable = titles_ground.arable_hectares(record, producer.tile, tile)
+            floors = {need.need_id: need.subsistence_per_person * owner.people for need in setup.basket_for(owner.tile).needs}
+            needed = plot_hectares(floors, options, setup.recipes, setup.land_per_run, tile.fertility)
+            held = titles_worked.worked_share(record, owner.tile, owner.agent_id) * arable
+            taken = land_bid.own_use(record.book.stock(producer_id, good, producer.tile), needed, held)
+            if titles_ground.add_ground(record, producer.tile, owner.agent_id, taken, arable) > 0.0:
+                record.book.move_many([GoodsMove(producer_id, EDGE_CONSUMPTION, good, producer.tile, taken,
+                                                 "ground kept for its owner's own plots")])
+                kept[owner.agent_id] = kept.get(owner.agent_id, 0.0) + taken
+    return kept

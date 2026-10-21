@@ -1,13 +1,13 @@
 """Complaint 538, the buyer of cleared ground: a hectare is worth its earning (crop margin or rent) capitalised, an
-actor bids for it only when that beats the going price and only for what its spare hours can work, and a bought
-hectare is a title passed from the seller's owner. Built inputs, the rules (`sim/economy/land_bid.py`) called."""
+actor bids for it only when that beats the going price and only for what its spare hours can work, and a hectare it
+takes up (bought, or kept from its own clearer's stock) is new arable land titled to it. Built inputs, the rules (`sim/economy/land_bid.py`) called."""
 
 QUICK_TOPIC = True
 
 import types
 import unittest
 
-from sim.economy import land_bid, land_bid_year, titles, titles_value
+from sim.economy import land_bid, land_bid_year, titles, titles_ground, titles_value
 from sim.economy.accounts import Book
 from sim.economy.households_cohort import cohort_id, cohorts_for_tile
 from sim.economy.market_memory import MarketMemory
@@ -81,30 +81,54 @@ class TitleTests(unittest.TestCase):
         titles.seed(record)
         return record
 
-    def test_a_bought_hectare_passes_from_the_seller_to_the_buyer(self):
+    def test_cleared_ground_is_new_arable_land_titled_to_the_taker(self):
         record = self.world()
-        seller_before, buyer_before = titles.holding(record, TILE, SELLER), titles.holding(record, TILE, BUYER)
-        moved = land_bid.take_up(record, SELLER, BUYER, TILE, 5.0, HECTARES_ON_TILE)
-        self.assertAlmostEqual(moved, 5.0)
-        self.assertAlmostEqual(titles.holding(record, TILE, BUYER) - buyer_before, 0.05)
-        self.assertAlmostEqual(seller_before - titles.holding(record, TILE, SELLER), 0.05)
+        seller_hectares = titles.holding(record, TILE, SELLER) * HECTARES_ON_TILE
+        added = land_bid.take_up(record, BUYER, TILE, 25.0, HECTARES_ON_TILE)
+        self.assertAlmostEqual(added, 25.0)
         self.assertAlmostEqual(sum(titles.shares(record, TILE).values()), 1.0)
+        self.assertAlmostEqual(record.cleared_hectares[TILE], 25.0)
+        self.assertAlmostEqual(titles.holding(record, TILE, SELLER) * (HECTARES_ON_TILE + 25.0), seller_hectares)
 
-    def test_no_more_passes_than_the_seller_holds(self):
+    def test_nobody_else_gives_up_a_hectare(self):
         record = self.world()
-        held = titles.holding(record, TILE, SELLER) * HECTARES_ON_TILE
-        moved = land_bid.take_up(record, SELLER, BUYER, TILE, held + 50.0, HECTARES_ON_TILE)
-        self.assertAlmostEqual(moved, held)
-        self.assertEqual(titles.holding(record, TILE, SELLER), 0.0)
+        before = {holder: share * HECTARES_ON_TILE for holder, share in titles.shares(record, TILE).items()}
+        land_bid.take_up(record, BUYER, TILE, 25.0, HECTARES_ON_TILE)
+        after = {holder: share * (HECTARES_ON_TILE + 25.0) for holder, share in titles.shares(record, TILE).items()}
+        for holder, hectares in before.items():
+            self.assertAlmostEqual(after[holder] - hectares, 25.0 if holder == BUYER else 0.0)
 
-    def test_pledged_land_does_not_pass(self):
+    def test_tenancies_and_pledges_keep_their_hectares(self):
         record = self.world()
-        record.loans = [types.SimpleNamespace(borrower=SELLER, collateral_tile=TILE,
-                                              collateral_share=titles.holding(record, TILE, SELLER))]
-        self.assertEqual(land_bid.take_up(record, SELLER, BUYER, TILE, 5.0, HECTARES_ON_TILE), 0.0)
+        record.tenancies = {TILE: [{"tenant": BUYER, "lessor": SELLER, "share": 0.2, "arrears": 0.0}]}
+        record.loans = [types.SimpleNamespace(borrower=SELLER, collateral_tile=TILE, collateral_share=0.1)]
+        land_bid.take_up(record, BUYER, TILE, 100.0, HECTARES_ON_TILE)
+        self.assertAlmostEqual(record.tenancies[TILE][0]["share"] * 2.0 * HECTARES_ON_TILE, 0.2 * HECTARES_ON_TILE)
+        self.assertAlmostEqual(record.loans[0].collateral_share * 2.0 * HECTARES_ON_TILE, 0.1 * HECTARES_ON_TILE)
 
-    def test_an_actor_buying_from_itself_moves_nothing(self):
-        self.assertEqual(land_bid.take_up(self.world(), BUYER, BUYER, TILE, 5.0, HECTARES_ON_TILE), 0.0)
+    def test_no_ground_or_no_arable_land_adds_nothing(self):
+        record = self.world()
+        self.assertEqual(land_bid.take_up(record, BUYER, TILE, 0.0, HECTARES_ON_TILE), 0.0)
+        self.assertEqual(land_bid.take_up(record, BUYER, TILE, 5.0, 0.0), 0.0)
+        self.assertEqual(record.cleared_hectares, {})
+
+    def test_the_tiles_arable_land_counts_what_was_cleared(self):
+        record = self.world()
+        tile = TileSpec(TILE, 40.0, 10.0, 1.0, False, (), 1.0, 1.0)
+        land_bid.take_up(record, BUYER, TILE, 25.0, titles_ground.arable_hectares(record, TILE, tile))
+        self.assertAlmostEqual(titles_ground.arable_hectares(record, TILE, tile), HECTARES_ON_TILE + 25.0)
+        self.assertEqual(titles_ground.arable_hectares(record, TILE, None), 0.0)
+
+    def test_cleared_hectares_survive_a_save_and_load(self):
+        record = self.world()
+        land_bid.take_up(record, BUYER, TILE, 25.0, HECTARES_ON_TILE)
+        loaded = EconomyRecord.from_record(record.to_record())
+        self.assertEqual(loaded.cleared_hectares, record.cleared_hectares)
+
+    def test_an_owner_keeps_of_its_own_stock_what_its_plots_need_beyond_its_land(self):
+        self.assertAlmostEqual(land_bid.own_use(stock=50.0, hectares_needed=30.0, hectares_held=12.0), 18.0)
+        self.assertAlmostEqual(land_bid.own_use(stock=10.0, hectares_needed=30.0, hectares_held=12.0), 10.0)
+        self.assertEqual(land_bid.own_use(stock=50.0, hectares_needed=30.0, hectares_held=40.0), 0.0)
 
 
 class SellerAndGroundTests(unittest.TestCase):
@@ -134,18 +158,46 @@ class YearWiringTests(unittest.TestCase):
     def test_ground_a_cohort_bought_becomes_its_title_and_leaves_its_stock(self):
         setup, record = self.world()
         record.book.move_many([GoodsMove("edge:production", BUYER, GROUND, TILE, 5.0, "bought")])
-        before = titles.holding(record, TILE, BUYER)
         titled = land_bid_year.take_up_bought(setup, record)
         self.assertAlmostEqual(titled[BUYER], 5.0)
-        self.assertAlmostEqual(titles.holding(record, TILE, BUYER) - before, 0.05)
+        self.assertAlmostEqual(record.cleared_hectares[TILE], 5.0)
         self.assertEqual(record.book.stock(BUYER, GROUND, TILE), 0.0)
 
-    def test_ground_the_sellers_owner_cannot_give_stays_in_stock(self):
+    def test_a_seller_with_no_land_of_its_own_still_sells_ground_it_cleared(self):
         setup, record = self.world()
-        held = titles.holding(record, TILE, SELLER) * HECTARES_ON_TILE
-        record.book.move_many([GoodsMove("edge:production", BUYER, GROUND, TILE, held + 10.0, "bought")])
+        record.titles[TILE] = {BUYER: 1.0}
+        record.book.move_many([GoodsMove("edge:production", BUYER, GROUND, TILE, 10.0, "bought")])
         land_bid_year.take_up_bought(setup, record)
-        self.assertAlmostEqual(record.book.stock(BUYER, GROUND, TILE), 10.0)
+        self.assertEqual(record.book.stock(BUYER, GROUND, TILE), 0.0)
+
+    def own_world(self, stock, people_floor_hectares):
+        setup, record = self.world()
+        setup.basket_for = lambda tile: types.SimpleNamespace(needs=(types.SimpleNamespace(need_id="food", subsistence_per_person=1.0),))
+        setup.land_per_run = {"farm": 1.0}
+        setup.recipes["farm"] = Recipe("farm", {CROP: 1.0}, {}, {"farmer": 1.0})
+        setup.tiles[TILE] = TileSpec(TILE, 40.0, 10.0, 1.0, False, (), 1.0, 1.0)
+        owner = record.cohorts[SELLER]
+        options = {"food": [(1.0, "farm", CROP, 1.0)]}
+        record.book.move_many([GoodsMove("edge:production", "p", GROUND, TILE, stock, "cleared")])
+        record.titles[TILE] = {SELLER: people_floor_hectares / HECTARES_ON_TILE}
+        return setup, record, options, owner
+
+    def test_the_clearers_owner_farms_what_its_floors_need_of_its_own_stock_before_it_is_sold(self):
+        setup, record, options, owner = self.own_world(stock=1000.0, people_floor_hectares=0.0)
+        needed = owner.people          # one hectare grows one need unit at fertility one
+        kept = land_bid_year.take_up_own(setup, record, options)
+        self.assertAlmostEqual(kept[SELLER], needed)
+        self.assertAlmostEqual(record.book.stock("p", GROUND, TILE), 1000.0 - needed)
+        self.assertAlmostEqual(titles.holding(record, TILE, SELLER) * (HECTARES_ON_TILE + needed), needed)
+
+    def test_an_owner_that_holds_enough_land_keeps_nothing_of_its_stock(self):
+        setup, record, options, owner = self.own_world(stock=1000.0, people_floor_hectares=HECTARES_ON_TILE)
+        self.assertEqual(land_bid_year.take_up_own(setup, record, options), {})
+        self.assertAlmostEqual(record.book.stock("p", GROUND, TILE), 1000.0)
+
+    def test_what_the_owner_keeps_is_no_more_than_the_stock(self):
+        setup, record, options, owner = self.own_world(stock=3.0, people_floor_hectares=0.0)
+        self.assertAlmostEqual(land_bid_year.take_up_own(setup, record, options)[SELLER], 3.0)
 
     def test_the_money_set_aside_for_ground_comes_off_the_savings_on_offer(self):
         bid = land_bid.hectare_bid(BUYER, GROUND, AREA, TILE, 1.0, 5.0, RATE, 4.0, 30.0)

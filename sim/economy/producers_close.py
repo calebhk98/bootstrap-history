@@ -72,7 +72,8 @@ def working_capital_target(recipe: Recipe, capacity_runs: float, input_prices, w
 
 def close_year(producer: Producer, recipe: Recipe, revenue: float, costs: float, view: MarketView,
                worked_runs: Optional[float] = None,
-               price_share_after: Optional[Callable[[GoodId, float], float]] = None) -> YearClose:
+               price_share_after: Optional[Callable[[GoodId, float], float]] = None,
+               ground_goods: Collection[GoodId] = ()) -> YearClose:
     """`worked_runs` is what the producer ran this year (all its capacity when not given). Idle plant is
     sunk, so the year's capital charge falls only on the capacity worked. `price_share_after(good, added)` is
     the share of a good's price that remains when the producer adds that much output a year (expansion_price.py);
@@ -89,7 +90,7 @@ def close_year(producer: Producer, recipe: Recipe, revenue: float, costs: float,
     loss = worked <= 0.0 or revenue < costs + (charge if math.isfinite(charge) else 0.0)
     losses = producer.years_of_loss + 1 if loss else 0
     has_plant = recipe.plant_life_years > 0.0
-    revenue_per_run, cost_per_run = _expected_run(producer, recipe, view, expectations, inputs, wages)
+    revenue_per_run, cost_per_run = _expected_run(producer, recipe, view, expectations, inputs, wages, ground_goods)
     margin = revenue_per_run - cost_per_run
     paying = share_working(revenue_per_run, cost_per_run) if math.isfinite(margin) else 0.0
     shedding = losses >= LOSS_YEARS_BEFORE_EXIT and margin <= 0.0
@@ -123,30 +124,32 @@ def close_year(producer: Producer, recipe: Recipe, revenue: float, costs: float,
     return YearClose(survivor, _dividend(producer, currency, surplus), request, rebuilt)
 
 
-def _expected_run(producer, recipe, view, expectations, inputs, wages) -> Tuple[float, float]:
+def _expected_run(producer, recipe, view, expectations, inputs, wages, ground_goods=()) -> Tuple[float, float]:
     """(expected revenue, variable cost) of one run at expected prices; plant already built is sunk and left
     out. A cost or price that cannot be known counts as no margin: (0, infinity)."""
     prices = {good: expectations.get(good, view.price(good, view.area_of(good, producer.tile)))
               for good in recipe.outputs}
     if any(price is None for price in prices.values()):
         return 0.0, math.inf
-    prices = _behind_the_stock(producer, recipe, view, prices)
+    prices = _behind_the_stock(producer, recipe, view, prices, ground_goods)
     cost = unit_cost.variable_cost_per_run(recipe, inputs, wages, producer.land_rent_per_run)
     if not math.isfinite(cost):
         return 0.0, math.inf
     return unit_cost.revenue_per_run(recipe, prices) * producer.yield_factor, cost
 
 
-def _behind_the_stock(producer, recipe, view, prices):
+def _behind_the_stock(producer, recipe, view, prices, ground_goods):
     """A run's output joins the queue behind the stock the producer holds beyond its own runs' inputs, so it is
     worth what the last unit of that queue fetches (inventory.queued_holding_value): a producer holding years of
-    unsold output does not count on the market's price, which a market with no trade leaves standing."""
+    unsold output does not count on the market's price, which a market with no trade leaves standing. Ground does
+    not queue (every hectare yields its rent while held): its price stands."""
     if producer.expected_sales <= 0.0:
         return prices
     rate = view.interest_rate(view.currency_of(view.area_of(min(recipe.outputs), producer.tile)))
     return {good: inventory.queued_holding_value(
         price, max(0.0, view.stock(producer.agent_id, good, producer.tile) - recipe.inputs.get(good, 0.0) * producer.capacity_runs),
-        producer.expected_sales * recipe.outputs[good], rate, 0.0) for good, price in prices.items()}
+        producer.expected_sales * recipe.outputs[good], rate, 0.0) if good not in ground_goods else price
+        for good, price in prices.items()}
 
 
 def _working_capital(producer, recipe, currency, worked, capacity, cash_kept, paying, revenue_per_run, inputs, wages):

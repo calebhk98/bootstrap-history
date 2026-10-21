@@ -4,13 +4,14 @@ bid and the title that follow. Plain functions of the actor's figures; any actor
 A hectare earns its holder the better of the crop margin on it (what the recipe's output fetches at the prices
 the actor sees, less its hours at the wage) and the tile's rent (what it pays as a tenant or would get by
 letting it). It is worth that earning capitalised at the rate (titles_value.hectare_value), and the actor bids
-no more than that for it, and only for the hectares its spare hours can work. A bought hectare is a title: the
-share of the tile that the seller's owner held passes to the buyer (titles.pass_title).
+no more than that for it, and only for the hectares its spare hours can work. Cleared ground is new arable land: a
+hectare an actor takes up, bought or drawn from its own clearer's stock, is added to the tile's arable land and
+becomes that actor's title (titles_ground.add_ground); no other holder gives up a hectare.
 """
 import math
 from typing import Mapping, Optional, Sequence, Tuple
 
-from . import titles, titles_value
+from . import titles_ground, titles_value
 from .types import AgentId, AreaId, Bid, GoodId, Recipe, TileId
 
 
@@ -58,13 +59,16 @@ def hectare_bid(buyer: AgentId, good: GoodId, area: AreaId, tile: TileId, earnin
                maximum_price=worth)
 
 
-def take_up(record, giver: AgentId, receiver: AgentId, tile: TileId, hectares: float, arable_hectares: float) -> float:
-    """The hectares of `tile` that pass from the seller's owner to the buyer as a title: no more than the
-    giver holds free of pledges. Returns the hectares that changed hands."""
-    if hectares <= 0.0 or arable_hectares <= 0.0 or giver == receiver:
-        return 0.0
-    share = min(hectares / arable_hectares, titles.free_share(record, giver, tile))
-    return titles.pass_title(record, tile, giver, receiver, share) * arable_hectares
+def take_up(record, receiver: AgentId, tile_id: TileId, hectares: float, arable_hectares: float) -> float:
+    """Cleared ground the receiver holds becomes its title: new arable land on the tile (titles_ground.add_ground),
+    not a share of anyone's. Returns the hectares added."""
+    return titles_ground.add_ground(record, tile_id, receiver, hectares, arable_hectares)
+
+
+def own_use(stock: float, hectares_needed: float, hectares_held: float) -> float:
+    """The hectares a clearer's owner keeps from the clearer's own stock to farm itself: what its own plots need
+    beyond the land it holds, no more than the stock. Nothing is sold of what it keeps."""
+    return max(0.0, min(stock, hectares_needed - hectares_held))
 
 
 def owners_of_sellers(record, recipes: Mapping[str, Recipe], good: GoodId, tile: TileId) -> Sequence[AgentId]:
