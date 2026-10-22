@@ -44,11 +44,13 @@ def grinding_plan(setup, record, view, cohort: Cohort, hour_value: float) -> Tup
     return bought, household_grinding.ground_share(food.goods, setup.milled_as, bought)
 
 
-def cohort_basket(setup, record, cohort: Cohort):
+def cohort_basket(setup, record, cohort: Cohort, buying: bool = True):
     """The basket of a cohort: the tile's, with food bought only as ready to eat when it has no hearth (else cooking fuel on its warmth floor), and
-    this year's hired household work as the floor of that need."""
+    this year's hired household work as the floor of that need. `buying` leaves out the grains it buys milled, which
+    it does not bid for; the basket that counts what it ate (`buying` False) keeps them, since a grain it grew on
+    its own plot is eaten whatever it buys."""
     basket = food_basket(setup, record, cohort)
-    if cohort.milled_grains:
+    if buying and cohort.milled_grains:
         basket = household_grinding.without_goods(basket, cohort.milled_grains, setup.hunger_need)
     if has_hearth(record, cohort):
         basket = households_work.with_cooking_fuel(
