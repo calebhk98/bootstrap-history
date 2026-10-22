@@ -6,7 +6,7 @@ QUICK_TOPIC = True
 import types
 import unittest
 
-from sim.economy import household_grinding, household_work_year, households_work
+from sim.economy import household_grinding, household_work_year, households, households_work
 from sim.economy.households_basket import make_basket
 from sim.economy.households_cohort import Cohort
 from sim.economy.setup import labour_area
@@ -95,6 +95,18 @@ class GrindingChoiceTests(unittest.TestCase):
         basket = make_basket({"needs": NEED_DATA["needs"], "goods": {"wheat_kg": NEED_DATA["goods"]["wheat_kg"]}}, {})
         food = next(need for need in household_grinding.without_goods(basket, ("wheat_kg",)).needs if need.need_id == "food")
         self.assertEqual([good for good, _effect in food.goods], ["wheat_kg"])
+
+    def test_grain_a_household_grew_and_ate_counts_toward_its_floor_though_it_buys_that_grain_milled(self):
+        # Complaint 640: the bids leave the grain out, but what the household ate of it from its own plot is food
+        worker = Cohort(agent_id="c", tile="t1", income_class=0, people=100.0, working_people=50.0, ownership_share=0.0,
+                        milled_grains=("wheat_kg",))
+        rec = types.SimpleNamespace(titles={"t1": {"c": 1.0}}, tenancies={}, cohorts={"c": worker})
+        bidding = household_work_year.cohort_basket(setup(), rec, worker)
+        eating = household_work_year.cohort_basket(setup(), rec, worker, buying=False)
+        self.assertEqual([good for need in bidding.needs if need.need_id == "food" for good, _effect in need.goods], ["flour_kg"])
+        grown = {"wheat_kg": 1000.0}
+        self.assertEqual(households.unmet_floor_by_need(worker, grown, View({}, {}), {}, eating).get("food", 0.0), 0.0)
+        self.assertGreater(households.unmet_floor_by_need(worker, grown, View({}, {}), {}, bidding)["food"], 0.0)
 
 
 if __name__ == "__main__":

@@ -250,7 +250,7 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage) ->
             received[good] = received.get(good, 0.0) + quantity
         income = ledger.wages_in.get(cohort_id, 0.0) + record.property_income.get(cohort_id, 0.0)
         spent = ledger.money_out.get(cohort_id, 0.0)
-        closed, moves = households.close_year(cohort, received, view, setup.specs, cohort_basket(setup, record, cohort),
+        closed, moves = households.close_year(cohort, received, view, setup.specs, cohort_basket(setup, record, cohort, buying=False),
                                                    income, spent)
         record.book.move_many(held_only(moves, record.book))
         record.cohorts[cohort_id] = closed
