@@ -110,7 +110,7 @@ levied._done_changed()
 levied.state.projects.operating.add("fin_gambling_house")
 levied.state.projects.business.set_opened_year("fin_gambling_house", levied.state.scenario.year - 100)
 # the market's room for the output is the agent economy's answer; one open concern's takings are what is measured
-levied.node_output_market_factor = lambda node: 1.0
+levied.node_output_market_factor = lambda node, selling_seat=None: 1.0
 due = levied.concern_levy_due()
 takings = levied.concern_revenue("fin_gambling_house") * levied.state.economy.output_factor
 check("an open gambling house owes the state its share of what it earns",

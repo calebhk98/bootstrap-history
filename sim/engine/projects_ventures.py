@@ -18,7 +18,7 @@ of Sim; they are a mixin only so that they can live in a file of their own
 import collections
 
 from sim.constants import declare
-from sim.refusal import Refusal
+from sim.refusal import LogLine, Refusal
 from . import cause_book, money_units
 from .units_prose import money_text
 from sim.agents.api import business_crew_rule, edges
@@ -278,11 +278,12 @@ class VenturesMixin:
                           if upkeep["at_full_staffing"] > up_now + 0.5 else "")
         _charge_note = (" The opening charge was %s, for stock and premises."
                         % money_text(fee, self, grouped=True) if pay else "")
-        return True, ("%s open%s: it earns %s a year and costs %s a year to "
-                      "run at today's staffing%s.%s%s%s"
-                      % (node_id, "" if unit_count == 1.0 else " at %.2f of a full founding" % unit_count,
-                         money_text(rev_now, self, grouped=True), money_text(up_now, self, grouped=True),
-                         _staffing_note, _charge_note, _ramp_note, _loss_note))
+        return True, LogLine("venture_opened", "%s open%s: it earns %s a year and costs %s a year to "
+                             "run at today's staffing%s.%s%s%s"
+                             % (node_id, "" if unit_count == 1.0 else " at %.2f of a full founding" % unit_count,
+                                money_text(rev_now, self, grouped=True), money_text(up_now, self, grouped=True),
+                                _staffing_note, _charge_note, _ramp_note, _loss_note),
+                             net_loss_warned=bool(_loss_note))
 
     # Expansion: reusing "open" with units field keeps protocol backward-compatible.
     def _expand_institution(self, node_id, add_units, pay=True):

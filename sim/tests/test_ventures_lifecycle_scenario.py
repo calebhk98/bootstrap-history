@@ -12,6 +12,7 @@ records the break it guards.
 from .harness import *  # noqa: F401,F403
 from sim.engine import category_traits
 from sim.engine.units_prose import money_text
+from sim.refusal import cause_of, facts_of
 
 
 # Concerns that earn, tie up more craftsmen than the closure slack and need no foreman, and that a
@@ -253,7 +254,7 @@ _s_mb2.done.add(_mb2_id); _s_mb2._done_changed()
 _mb2_ok, _mb2_msg = _s_mb2.mothball_work(_mb2_id)
 check("...but a thing with genuinely nothing to save (no money, no staff "
       "held) is still refused, honestly",
-      not _mb2_ok and "nothing to save" in _mb2_msg, _mb2_msg)
+      not _mb2_ok and cause_of(_mb2_msg) == "nothing_to_save", _mb2_msg)
 
 # --- BREAK: a Han playtester opened a net-loss concern four separate
 # times, three of them after already having caught and written up the
@@ -312,4 +313,4 @@ check("a capability institution that runs at a loss by design, and can "
 if _ln2_k:
     check("...and opening it gets no 'costs more than it earns' warning - "
           "that loss is the point, not a mistake",
-          _ln2_ok and "costs more than it earns" not in _ln2_msg, _ln2_msg)
+          _ln2_ok and facts_of(_ln2_msg)["net_loss_warned"] is False, _ln2_msg)

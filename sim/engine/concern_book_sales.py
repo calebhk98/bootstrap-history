@@ -35,12 +35,13 @@ class ConcernBookSalesMixin:
         baskets = self.concern_baskets_now(node_id)
         if baskets is None:
             return 0.0
-        long_run = self._material_prices()
+
+        economy_prices = self.economy.agent_prices_at() or {}
 
         def price_of(material):
-            paid = self.goods_market.home_unit_price(material)
-            if paid is not None:
-                return paid
-            cost = long_run.get(material)
+            key = self._priced_key(material, economy_prices)
+            if key is not None:
+                return economy_prices[key]
+            cost = self._material_prices().get(material)    # read only for a good the economy has no price for
             return None if cost is None else cost * self.price_index
         return concern_sales.inputs_cost(baskets.purchases, self.concern_book_scale(node_id), price_of)
