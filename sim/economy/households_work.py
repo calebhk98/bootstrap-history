@@ -84,6 +84,22 @@ def hired_hours(needed_hours: float, own_hour_value: float, service_price_per_ho
     return needed_hours if own_hour_value > service_price_per_hour else 0.0
 
 
+def service_price_that_fits(households, room_hours: float) -> float:
+    """The price of an hour hired at which the households that still hire need no more hours than `room_hours`: the
+    servants there are not more than that, so where households would hire more the price rises until hiring falls
+    (the one whose hour is worth least of those hiring drops out first). `households` are (worth of an hour, hours
+    it would hire, price an hour costs it) rows; the price is the worth of the dearest hour that no longer hires,
+    zero where every household that hires fits."""
+    hiring = sorted(((value, hours) for value, hours, price in households if hours > 0.0 and value > price),
+                    key=lambda row: -row[0])
+    total = 0.0
+    for value, hours in hiring:
+        total += hours
+        if total > room_hours:
+            return value
+    return 0.0
+
+
 def own_hours(needed_hours: float, hired: float) -> float:
     """Hours the household does itself: the work less what it hired. These come out of the hours it could sell."""
     return max(0.0, needed_hours - hired)
