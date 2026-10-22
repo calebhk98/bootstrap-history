@@ -36,6 +36,11 @@ entry below is updated as its group lands.
   agents); under the budget alone after the fetch-cost search was made fast (678). Re-measure alone before treating it as red.
 - `purchase_limited_by_offered_volume_scenario` "the economy offers the staple on the founder's tile": no wheat grown at Rome's
   opening (473 Update 15).
+- Full run on d3151cb2: the red list is down to the 473 and 619 family, the stale openings and the entries in this section;
+  `staff_closure_reopening_scenario`, `business_review_scenario`, `complaint_147_project_materials_scenario`,
+  `purchase_limited_by_offered_volume_scenario` and `economy_money_regimes_norse` are green. New: `carters_and_plumbers_exist_in_a_game_scenario`
+  (no carters after the seed bound, 556, being fixed) and `economy_state_budget_validation` (printing more no longer raises the
+  price level more; red at 3cb9c9a0 too, then green, now red again: 526).
 - `real_output_validation`: not new; the same output-per-head check `real_output` failed on 3cb9c9a0 (473).
 
 ## Honest validations of open problems (stay red until the owner closes)
