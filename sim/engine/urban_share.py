@@ -8,8 +8,7 @@ town can feed. `urban_fraction()` is the one reading of the national share; no o
 """
 from typing import Dict
 
-from sim.geography import api as geography
-from sim.geography.api import settlement
+from sim.geography.api import parameter_value, route_costs, settlement, usable_modes
 from sim.world import agriculture, urban_share
 
 URBAN_SHARE_BAND_KEYS = ("low", "high", "threshold", "source", "confidence")
@@ -40,7 +39,7 @@ class UrbanShareMixin:
     def _computed_urban_ceilings(self, people, held, improvements) -> Dict[str, float]:
         technique = self.labour._farming_technique()
         hectares_per_worker = agriculture.hectares_cropped_per_farm_worker(technique.crop, technique.toolkit)
-        need = geography.parameter_value("food_kcal_per_person_year")
+        need = parameter_value("food_kcal_per_person_year")
         working_share = self.population.working_age / self.population.total if self.population.total > 0.0 else 0.0
         grain_kcal_per_tonne = settlement.reference_kcal_per_tonne()
         surplus, tonne_hours = {}, {}
@@ -56,9 +55,9 @@ class UrbanShareMixin:
                 min(workers_wanted, tile_people * working_share), kcal_per_worker, 1.0 / working_share, need)
             tonne_hours[tile] = (agriculture.ANNUAL_LABOUR_HOURS_PER_FARM_WORKER * grain_kcal_per_tonne
                                  / kcal_per_worker)
-        modes = geography.usable_modes([held])
+        modes = usable_modes([held])
         towns = sorted(people)
-        carriage = {tile: geography.route_costs([tile], modes, improvements, None, None, held, None, towns)
+        carriage = {tile: route_costs([tile], modes, improvements, None, None, held, None, towns)
                     for tile in towns if surplus[tile] > 0.0}
         return urban_share.town_ceilings(surplus, carriage, tonne_hours)
 
