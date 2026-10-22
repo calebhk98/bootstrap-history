@@ -10,6 +10,16 @@ are in `Complaints/reports/558-history.md`.
 Measured: the full slow run on main 3cb9c9a0, 2026-10-21, `python3 -m sim.tests --slow --jobs 3 --timing` in a checkout pinned to
 that commit. Re-run the same command for the current list; this section is replaced, not appended, each time.
 
+## Full run on 35396164 (2026-10-22)
+
+`python3 -m sim.tests --slow --jobs 3 --timing --topic-seconds 1500` in a checkout pinned to 35396164: the topics that failed
+against the run on 3cb9c9a0 are listed by `comm` of the two runs' failing topics. Ten earlier reds are green (among them
+`baseline_fixture`, `economy_bronze_market_price`, `real_output`, `scenarios_batch3`, `one_goods_market_scenario`); the new reds
+came with this branch's merges and are being fixed in four groups: founder pay and affordability (crashes in
+`estimated_revenue` and `venture_real_earnings` after the merge that pays the founder from the clearing), state budget and
+actors, merchants that stopped shipping with the wage and firm checks, and soils, farm and the package and unit guards. Each
+entry below is updated as its group lands.
+
 ## Honest validations of open problems (stay red until the owner closes)
 
 - `baseline_fixture` (rate not settled; the opening's grain stock is eaten through, the same runaway as the wheat price), `baseline_rome_full_length` (rate not settled; the mint replaces a small share of the
