@@ -113,7 +113,7 @@ def hours_hired_by_farm(merchant_bid_hours):
     for employer in ("farm", "merchant"):
         book.transfer(Transfer(EDGE_MINT, employer, "coin", 1e9, "opening"))
     area = "labour:t1"
-    record = types.SimpleNamespace(book=book, memory=MarketMemory(),
+    record = types.SimpleNamespace(book=book, memory=MarketMemory(), producers={},
                                    workforce=MarketState(workers={area: {"plough": split_evenly(0.05)}}))
     setup = types.SimpleNamespace(currency_id="coin", trades={}, unskilled_trade="plough")
     bids = [LabourBid("farm", "plough", area, 100.0, 5.0)]
