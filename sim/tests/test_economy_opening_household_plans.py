@@ -291,5 +291,23 @@ class FixedPointTests(unittest.TestCase):
         self.assertEqual(len(opened), 5)
 
 
+    def test_a_choice_that_cycles_between_all_hiring_and_none_settles_on_those_who_gain_most(self):
+        margins = {"a": 3.5, "b": 2.5, "c": 1.5, "d": 0.5}      # what an hour hired gains each household when none else hires
+
+        def cohorts(plans):
+            return {name: Cohort(agent_id=name, tile="t1", income_class=0, people=100.0, working_people=50.0,
+                                 ownership_share=0.0, hired_work_per_person=plans.by_cohort[name][0] if plans else 0.0)
+                    for name in margins}
+
+        def choose(opened):
+            hiring = sum(1 for cohort in opened.values() if cohort.hired_work_per_person > 0.0)
+            # each extra household hiring takes an hour's worth of the gain from all: hiring is dearer the more there are
+            return opening_plans.HouseholdPlans({name: (1.0 if gain - hiring > 0.0 else 0.0, 0.0, ()) for name, gain in margins.items()},
+                                                margin_by_cohort=margins)
+        result = opening_plans.settle(cohorts, choose, lambda opened: opened)
+        self.assertEqual(sorted(name for name, cohort in result.items() if cohort.hired_work_per_person > 0.0), ["a", "b"])
+        self.assertTrue(opening_plans.agree(result, choose(result)))
+
+
 if __name__ == "__main__":
     unittest.main()

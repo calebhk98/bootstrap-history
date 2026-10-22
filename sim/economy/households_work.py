@@ -75,6 +75,24 @@ def hour_value(hours_and_wages) -> float:
     return sum(hours * wage for hours, wage in rows) / total if total > 0.0 else 0.0
 
 
+def supervision_share(data: Mapping[str, Any]) -> float:
+    """Hours of the household's own that each hour of hired work takes to direct (data file; none when it gives no figure)."""
+    return max(0.0, float(data.get("supervision_hours_per_hired_hour", 0.0)))
+
+
+def net_hour_value(own_hour_value: float, supervision: float) -> float:
+    """What an hour hired is worth to the household for the hours it frees: of every hour hired the household
+    spends `supervision` hours directing it, so only the rest are freed to sell at the worth of its hour."""
+    return own_hour_value * max(0.0, 1.0 - supervision)
+
+
+def sold_share(hours_hired: float, hours_idle: float) -> float:
+    """Share of the hours offered in a labour market that found a buyer last year; all of them when none were offered
+    (no history is no evidence that hours go unsold)."""
+    offered = max(0.0, hours_hired) + max(0.0, hours_idle)
+    return max(0.0, hours_hired) / offered if offered > 0.0 else 1.0
+
+
 def hired_hours(needed_hours: float, own_hour_value: float, service_price_per_hour: float) -> float:
     """Hours of the work a household hires: all of it when an hour of its own labour is worth more at the market
     than the servant's price (it would rather sell the hour and pay), none otherwise. Never more than the work
