@@ -34,6 +34,7 @@ class StateBudget:
     financed: Dict[str, float] = field(default_factory=dict)   # what each method supplied this year
     issued_total: float = 0.0
     unplanned_cash: float = 0.0          # cash left after the plan and the reserve: what the store may buy with
+    held_back: float = 0.0               # cash the plan keeps off its lines: the reserve and the unplanned cash
     need_wanted: Dict[str, float] = field(default_factory=dict)   # goods the lines bid for, so the rest bought is store
     expected_inflation: float = 0.0      # what the treasury expects of prices, as households do
     last_price_level: float = 0.0        # the basket price level when it last updated that expectation
@@ -50,6 +51,7 @@ def plan_year(setup, record, view, labour_bids: List[LabourBid]) -> None:
     spendable = min(cash, budget.revenue + policy.cash_spend_share * max(0.0, cash - budget.revenue - reserve))
     planned = spendable
     budget.unplanned_cash = max(0.0, cash - spendable - reserve)
+    budget.held_back = reserve + budget.unplanned_cash
     if policy.real_spending_target > 0.0:
         # a stated programme is paid from every coin on hand first, then financed
         planned = policy.real_spending_target * view.chained_price_level(money)

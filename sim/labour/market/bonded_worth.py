@@ -24,6 +24,7 @@ class BondedLot:
     people: float
     ask: float
     carriage: float
+    payers: Tuple[Tuple[str, float], ...] = ()   # (employer, share of the price) of those who pay and hold the people
 
     @property
     def price(self) -> float:
