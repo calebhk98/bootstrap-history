@@ -95,3 +95,9 @@ neither), and the state does not bid them, so every carter seed went to the fall
 (`carriage_hours.bids`, summed by `workforce_settle.carriage_plan_hours`) are now a hirer in `hours_kept`, as producers' plans are. A seeded
 trade nobody plans for or hires is still bounded to nothing. Rule tests: `SeedBoundedByHirersTests`. Re-measure the counts with
 `python3 -m sim.tests --slow --only carters_and_plumbers_exist_in_a_game_scenario,complaint_467_trades_open_to_the_jobs`.
+
+## Two readers disagree on the merchant count (PM, 2026-10-22)
+
+After the seed bound, the labour core's opening count of merchants in Rome was measured in the tens, while the population
+report's `estimated_in_the_country` gives tens of thousands. Either the report reads a different stock (the merchant stratum,
+not the trade's workforce) or the two readings disagree; check which before trusting either figure.
