@@ -20,6 +20,17 @@ came with this branch's merges and are being fixed in four groups: founder pay a
 actors, merchants that stopped shipping with the wage and firm checks, and soils, farm and the package and unit guards. Each
 entry below is updated as its group lands.
 
+## Left red after the four fix groups (2026-10-22)
+
+- `firm_expansion_scenario` "a firm ends larger than it was founded" (bound: more than one and a half founding sizes): after a
+  tenfold market, eight firms end at one and a half (one expansion step) and the rest at one. Since 679 an added step weighs
+  the site rent and manager hours it carries, so no firm takes a second step and entry serves the rest. Whether one step is
+  right is not measured; the bound is kept. Command: `python3 -m sim.tests --slow --only firm_expansion_scenario --jobs 1`.
+- `complaint_467_trades_open_to_the_jobs`: the opening seeds trades no producer staffs by need share (556), for example tens
+  of thousands of merchants against a few hundred worker-years of producer bids; the glut check stays red and the seeding is
+  556's to fix.
+- `real_output_validation`: not new; the same output-per-head check `real_output` failed on 3cb9c9a0 (473).
+
 ## Honest validations of open problems (stay red until the owner closes)
 
 - `baseline_fixture` (rate not settled; the opening's grain stock is eaten through, the same runaway as the wheat price), `baseline_rome_full_length` (rate not settled; the mint replaces a small share of the

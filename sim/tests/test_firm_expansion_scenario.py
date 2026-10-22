@@ -119,7 +119,8 @@ check("the market's growth is served by capacity at least as much as by firm cou
       capacity_after / capacity_before >= firms_after / firms_before,
       (capacity_before, capacity_after, firms_before, firms_after))
 check("a firm ends larger than it was founded",
-      max(firm.capacity_of("zz_grow") for firm in game.actors.active_firms()) > 1.5)
+      max(firm.capacity_of("zz_grow") for firm in game.actors.active_firms()) > 1.5,
+      sorted(firm.capacity_of("zz_grow") for firm in game.actors.active_firms()))
 
 # capacity survives a save and load
 with tempfile.TemporaryDirectory() as folder:

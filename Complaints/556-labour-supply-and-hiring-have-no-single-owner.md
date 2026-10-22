@@ -74,3 +74,10 @@ Done (seeding and reservations; rule tests in `test_labour_core_seed_and_reserva
 - Run a real Rome game and read the headcounts the seeding gave (carter, porter, sailor); the seeds keep their people only while an employer bids for them, and the core's yearly clearing moves unemployed people away (re-measure before closing).
 - Move the plague survival roll (`sim/engine/society_hazards.py`) and the `core.py` / `economy.py` dict wrapper under the owner.
 - `UNSKILLED_POOL_TOWN_SHARE` (the town's hiring cap for the farm, army and fallback trades) and `NO_DEMAND_TRADE_SHARE` (rank trades and the estimate before the core opens) stay, each with `retire` naming this complaint, until the town cap reads the core's people by tile.
+
+## The opening seeds a glut in trades no producer staffs (PM, measured 2026-10-22)
+
+`complaint_467_trades_open_to_the_jobs` is red: the opening seeds glassblowers, knappers, plumbers and merchants by need share
+(`labour_state.seeded_hours`), for example about eighteen thousand merchants against about a hundred and fifty worker-years of
+producer bids, so they wait for carriage crews and recipes no producer runs. A seed by need share should be bounded by the work
+the opening's producers, carriers and state will hire. Command: `python3 -m sim.tests --slow --only complaint_467_trades_open_to_the_jobs --jobs 1`.
