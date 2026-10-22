@@ -56,7 +56,7 @@ CATEGORY = sorted(S.Sim.GOODS_CATEGORIES)[0]
 NODE = make_node("zz_grow", CATEGORY, revenue=2.0e5, upkeep=5000.0, hours=50.0)
 
 
-def settled(rate=0.12, years=12):
+def settled(rate=0.12, years=24):     # entry weighs the levy and expansion the carry it adds (679), so the count takes longer to rest
 	game = actor_sim([NODE])
 	game.market_rate = lambda: rate
 	founder_runs(game, "zz_grow", opened_ago=10)
@@ -73,8 +73,10 @@ def market_grows(sim_game, times):
 	"""Demand for the good rises `times`-fold while the same hands tend it: a bigger market, not a
 	bigger economy, so what a concern must carry stays put (the economy index scales costs with takings)."""
 	hands = sim_game.venture_hands("zz_grow")
+	staff = sim_game.concern_staff_by_trade("zz_grow")       # the site rent and manager hours an added step carries read the crew
 	sim_game.nodes["zz_grow"]["rev"] *= times
 	sim_game.venture_hands = lambda node_id: hands
+	sim_game.concern_staff_by_trade = lambda node_id: staff
 
 
 game = settled()
