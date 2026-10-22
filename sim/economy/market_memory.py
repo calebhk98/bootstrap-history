@@ -29,6 +29,16 @@ VOLUME_WEIGHT_SPEED = declare(
         "between areas from year to year does not swing it. How long 'usually' is has no measured "
         "basis; a fixed-basket index with weights from earlier years is the same idea.")
 
+PERCEIVED_PRICE_LEVEL_SHARE = declare(
+    "PERCEIVED_PRICE_LEVEL_SHARE", 0.5, kind="temporary_heuristic",
+    unit="share of the gap to last year's chained price level closed in the level households judge prices by",
+    source=None, confidence="D", retire="Complaints/473-the-agent-economy-spin-up-never-settles-so-the-opening-is-a-point-on-a-cycle.md",
+    why="Households' leisure is worth what it buys, and what it buys is judged against the level they have come to "
+        "expect, not last year's reading alone: a level that jumps up and down year to year, with income following the "
+        "hours worked, sets up a period-two swing in the hours sold (473). The share equals the producers' "
+        "EXPECTATION_ADJUSTMENT_SHARE, another unsourced adaptive-expectation share; it was not tuned to this "
+        "fixture. A derived rule would take households' own expected inflation and its uncertainty.")
+
 USUAL_PRICE_SPEED = declare(
     "USUAL_PRICE_SPEED", 0.1, kind="temporary_heuristic",
     unit="share of the gap to this year's price closed in a year", source=None, confidence="D",
@@ -51,6 +61,7 @@ class MarketMemory:
     basket_price_levels: Dict[CurrencyId, float] = field(default_factory=dict)
     expected_inflation: Dict[CurrencyId, float] = field(default_factory=dict)
     price_levels: Dict[CurrencyId, float] = field(default_factory=dict)   # the opening's level (1.0) chained by each year's observed inflation (the weighted median): what real figures are turned nominal with
+    perceived_price_levels: Dict[CurrencyId, float] = field(default_factory=dict)   # `price_levels` moved part of the way each year: the level households scale their leisure anchor by
     observed_inflation: Dict[CurrencyId, float] = field(default_factory=dict)   # last year's, the weighted median of price changes
     last_year_prices: Dict[str, float] = field(default_factory=dict)    # good: national price the year before, for that median
     currency_of_area: Dict[AreaId, CurrencyId] = field(default_factory=dict)
@@ -123,7 +134,10 @@ class MarketMemory:
             expected = self.expected_inflation.get(currency, OPENING_EXPECTED_INFLATION)
             self.expected_inflation[currency] = update_expected_inflation(expected, observed_inflation)
             self.observed_inflation[currency] = observed_inflation
-            self.price_levels[currency] = self.price_levels.get(currency, 1.0) * max(PRICE_LEVEL_FLOOR_RATIO, 1.0 + observed_inflation)
+            before = self.price_levels.get(currency, 1.0)
+            self.price_levels[currency] = before * max(PRICE_LEVEL_FLOOR_RATIO, 1.0 + observed_inflation)
+            perceived = self.perceived_price_levels.get(currency, before)
+            self.perceived_price_levels[currency] = perceived + PERCEIVED_PRICE_LEVEL_SHARE * (self.price_levels[currency] - perceived)
         self.basket_price_levels[currency] = level
 
 
@@ -225,6 +239,9 @@ class YearView:
 
     def chained_price_level(self, currency: CurrencyId) -> float:
         return self._memory.price_levels.get(currency, 1.0)
+
+    def perceived_price_level(self, currency: CurrencyId) -> float:
+        return self._memory.perceived_price_levels.get(currency, self.chained_price_level(currency))
 
     def expected_inflation(self, currency: CurrencyId) -> float:
         return self._memory.expected_inflation.get(currency, OPENING_EXPECTED_INFLATION)

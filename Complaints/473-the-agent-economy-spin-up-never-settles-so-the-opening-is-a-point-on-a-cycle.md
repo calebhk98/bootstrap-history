@@ -451,3 +451,27 @@ complaint: in that fixture the staple's output and price alternate year to year 
 `producers.next_expectations` with `EXPECTATION_ADJUSTMENT_SHARE` and `OUTPUT_CHANGE_SHARE_PER_YEAR`), the leisure anchor and so
 the hours offered follow, and the labourer wage follows them. Trace in 641. It turns into an unexpected success when the
 producers' expectations stop alternating.
+
+## Update 14: the staple's period-two cycle is the hours households sell, not the producers' expectations (branch producer-expectations-stable)
+
+Measured on the 651 fixture (`economy_fixture.small_setup()`, one `Economy.step` a year; probes not committed): the staple
+producers' plans do not alternate. Planned runs and expected prices move monotonically (`producers.plan` and the expectation
+after `next_expectations`, years 0 to 70), while the runs achieved alternate, because the hours hired alternate: hours wanted
+exceed hours offered every year, so output is the hours offered over the hours a run takes. The hours offered alternate with
+the leisure anchor, `record.leisure_anchor_wage` times the chained price level (`Economy._hour_supply`). That level is last
+year's reading, and the staple's price follows the hours worked the same year (income, then demand), so: a high level, fewer
+hours offered, less income, a low price and a low level, more hours, and so on. Holding the level at one removed the wage
+sawtooth (4 flips in 46 years). Producers on the fixture: price elasticity of supply (plan against a one per cent move of the
+expected price, year 20) was 1.7 for the hills farm and 0 for the other two, which plan at what their cash affords; the market
+curve (`api.price_response`) gave a price elasticity of demand near 1.8 at a one per cent change in units landed. A plan from
+price alone is stable here by Nerlove's condition (the share of last year's surprise folded in is 0.5, and the regressive weight
+adds damping); unsold stock and unmet demand enter only through `runs_for_stock` (excess stock) and `ask_raise` (sold out).
+
+Fix: households scale the leisure anchor by a perceived level, the chained level moved part of the way each year
+(`market_memory.PERCEIVED_PRICE_LEVEL_SHARE`, a labelled heuristic that retires here; its value equals the producers' share and was
+not tuned). Tests: `sim/tests/test_complaint_473_expectation_damping.py` (producer rule on built inputs: an alternating price and a
+step; the perceived level on alternating inflation; the anchor reads it). `test_labourer_wage_does_not_sawtooth` is now a plain
+test. Before: 10 sign flips of the wage change in the town's labourer market (limit 8.55); after: passes (4 of 56 flips from
+year 12; staple price still changes sign most years but the swing is about a third of what it was). Not closed: the ore cycle of
+`baseline_fixture` (period near seven years) is not re-measured; `baseline_fixture` `test stocks are not eaten through` fails before
+(metal_kg) and after (ore_kg), unrelated to this change.

@@ -447,3 +447,14 @@ and re-measure with `python3 sim/simulator.py spin-up-trace`. Run the fingerprin
 - Capitalism Lab: the page fetches return summaries, not verbatim pages, and none of the pages state formulas.
 - Nothing here was run in the simulator. Statements about this repository's modules are from reading the file names and
   the functions named; the earlier report has the line-level departures.
+
+## Cobweb stability under adaptive expectations (read for Complaint 473, Update 14)
+
+Opened: C.H. Hommes, "Dynamics of the cobweb model with adaptive expectations and non-linear supply and demand", Journal of
+Economic Behavior & Organization 24(3), 1994, pp. 315-335, abstract only (https://www.dare.uva.nl/id/af381b7e-55e2-48e6-ad2e-66381b2fee05):
+adaptive expectations give price-quantity fluctuations of smaller amplitude than naive ones, yet cycles may become unstable
+and chaotic oscillations may arise, even with monotonic supply and demand. Not opened (page blocked or unreachable): Nerlove 1958
+and the other search hits; the inequality below is my own derivation, not a citation. Linear demand with slope b and supply
+with slope d on the expected price, expectation moved by share s of last year's surprise: stable when s(b+d) < 2b, which at
+s = 1 is the naive condition d < b. Caiani et al. 2016 and Eurace plan from sales and inventories as noted above; nothing new
+was read of Assenza, Delli Gatti and Grazzini in this session.

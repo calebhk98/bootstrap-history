@@ -318,7 +318,7 @@ class Economy:
         usable: Dict[str, float] = {}
         plot = household_hours_year.plot_schedules(self.setup, self.record, view, everyone, self._own_plot_options(),
                                                    self._hectares_held(), usable)
-        level = view.chained_price_level(self.setup.currency_id)
+        level = view.perceived_price_level(self.setup.currency_id)
         anchor_wage = {trade: anchor * level for trade, anchor in (self.record.leisure_anchor_wage if anchors is None else anchors).items()}
         faced = {(offer.trade, offer.area): view.wage(offer.trade, offer.area) or offer.reservation_wage for offer in everyone}
         return HourSupply(everyone, plan, work, plot, usable, anchor_wage, faced)
