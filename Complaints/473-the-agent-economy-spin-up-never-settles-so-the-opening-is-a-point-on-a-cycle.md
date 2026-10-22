@@ -572,3 +572,64 @@ PM note on Update 17: the first-year cap on stationary quantities (branch `spin-
 not merged. It barely binds at this commit, so it does not move the transient, and it shifts the phase of a fixture that
 swings for decades. The lead to follow is the demand side named above: nothing sells in the first year because goods made in
 a year are offered the next, and the households' settling spend is what the cobweb starts from.
+
+## Update 18: the first year's demand side, measured; two opening rules disagree with year one and no fix lands yet (branch spin-up-demand-side)
+
+Measured with the spin-up uncached (`ROME_CACHE_DIR` an empty directory; scratch probe, not committed: `economy_api.blank_economy` + `begin_spin_up` + `step`
+for seven years, wrapping `households_orders.goods_orders`, `producers.plan` and the ledger's clearings), Rome, national figures, millions of kg
+unless stated. Each year, wheat: made, sold, stock at the year's end, price.
+
+| year | made | sold | stock | price |
+|---|---|---|---|---|
+| 1 | 787 | 0 | 694 | 2.15 |
+| 2 | 1 | 250 | 411 | 0.23 |
+| 3 | 3 | 131 | 262 | 0.38 |
+| 4 | 3 | 2.5 | 242 | 0.41 |
+| 5 | 92 | 4.9 | 296 | 1.83 |
+| 6 | 9 | 176 | 118 | 0.78 |
+| 7 | 0 | 23 | 88 | 1.25 |
+
+**The households' spend is not what is short.** Household income swings by half and back (year 1 about 2.7e10 coin, year 2 1.4e10, year 3 3.5e10, year 4
+1.3e10) because wages follow the producers' plans, which follow last year's prices; but households hold cash of the order of a year's income and their
+bids sum to all of that cash, while wheat is a few percent of what they would spend. The spending band does not bind (`expected_spending` is zero in year
+1, and `smooth_rise` is off in the spin-up), no food is met from own plots (`grown_own` is zero), and the bids are not under the asks (the one buyer's
+ceiling is above the reservation). The wheat buyers are not households at all.
+
+**Who buys wheat.** Households bid for no wheat in years 1 and 2: every cohort's `milled_grains` holds wheat and millet, so its food bids go to flour and
+bread. The only user of wheat that works is the starch maker, and in year 1 it opens holding a year of wheat (`opening._stock_producers_with_inputs`),
+so it bids for none: the farmers' whole year piles up unsold (694 of 787). In year 2 the starch maker plans from a lagging expectation (runs fall to about
+half its first year's) and buys 250 million kg.
+
+**Timing rule (item 2).** A good made in a year is offered the same year (`year_goods._produce_and_offer` produces, then offers the stock), and goods clear in
+input-depth order, so an input is bought and used in the year it is made. "Made in a year, offered the next" is true only of an input the user already
+holds at the opening, which is the seed above: the opening carries a year of inputs *and* the makers make a year, a year of the intermediate goods more
+than the stationary solve has (that solve has each year's output meet the year's use, nothing in store at the start). Households eat in year 1 from what is
+made in year 1 (flour and bread sold, from the seeded stock of inputs), so the first year's food is not the problem.
+
+**Opening against year one, found by reading the opening.** The opening's final demand is solved with every cohort's `milled_grains` empty and no household
+work hired (`opening._opening_bids` takes `cohort_basket` before `opening_leisure.seed`, via `household_work_year.decide`, sets them). Opening demand for
+wheat is 660 million kg and for millet 1.2e10 kg (households grinding by hand), with no hired domestic service; one economy-step later every cohort buys
+both grains milled and hires 468 hours a person. So the wheat farmers are sized for 660 million kg that no household bids for, and the whole of the
+household-work hiring (over half of year 1's household budget) is demand the opening never sized labour for.
+
+Tried and not landed (patches kept in the scratchpad, not committed):
+- Dropping the input seed for an input whose maker is opened and clears before the user works (a plain function over recipes and the clearing order; its
+  rule test passes, the existing expected-failure test `test_a_smelter_does_not_open_holding_ore_the_miners_sell_it_in_year_zero` turns green). Rome year 1:
+  wheat made falls to 319 million and the wheat market leaves 113 million kg unmet (the chain's later stages are not ready), then wheat sold is 303, 32, 10; the
+  quick tier fails four checks of the small fixture (`economy_vessel_price_fixture` twice, `complaint_651_wage_step_gain`, `economy_tax_farming`): the
+  fixture's dug input cobwebs once it is bought in year 0 (the vessel price reaches more than two orders of magnitude above its opening price in year 23).
+- Solving the opening's second pass with the cohorts' year-one plans (`household_work_year.plans` read from the first pass, put on the cohorts before the
+  income and demand solve). With both the milled grains and the hired work: the hired work asks for more hours than there are, the opening's labour fit
+  drops the bakers (bread demand 9 billion kg, no bread producer opened), year 1 bread is not sold. With the milled grains alone (quick tier green, rule
+  tests pass): wheat demand at the opening is zero, bread is sold in year 1, wheat price stays between 0.84 and 2.15 instead of 0.23 and 2.15, but wheat
+  sold is 0, 402, 37, 39, 2.6, 7.9, 10.8 with stock 462, 102, 174, 200, 182, 165, 142. Bronze over cost: 1.0, 7.8, 13.7, 31.0, 9.3, 7.6, 4.0 before and
+  1.0, 11.4, 20.1, 50.2, 4.0, 2.4, 1.05 after. Slow topics (`--slow --only economy_bronze_market_price,price_over_making_cost_band_validation,baseline_fixture,purchase_limited_by_offered_volume_scenario --jobs 1`):
+  at the parent `baseline_fixture` (stocks are not eaten through, ore), the bronze band (`price_over_making_cost_band_validation`, shown over cost worst 11.1)
+  and "the typical traded good sells at no less than its cost of making" (0.9987) are red; with the grain plan the same band check is red at worst 32.7, the
+  typical-good check is green, baseline_fixture stays red. The band is worse, not better, so it was not committed.
+
+What this leaves: the cobweb's starting point is not the households' settling spend but two opening rules that disagree with the first year (the intermediate
+input seed, and the final demand solved before the households' grinding and hiring choices). Both need the opening solved together with them: sizing labour
+for the household work the households hire (Complaint 645's decision postdates the opening solve), then carrying the intermediate stock only for what a
+cycle cannot buy in time. The input-seed removal wants a fix for the small fixture's dug-input cobweb first (the input's price swings once it is traded in
+year 0), which is the open item in `test_opening_input_stocks`.
