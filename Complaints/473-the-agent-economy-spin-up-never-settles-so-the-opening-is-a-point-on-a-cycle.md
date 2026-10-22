@@ -696,3 +696,20 @@ table), and skilled pay rose several times (the mint's furnacemen and engravers)
 or project the opening still trades so their own subject stays testable. The leading suspect is the household-service hiring
 (645, last section): domestic service near half the opening basket draws hands and income away from goods. Re-measure coal and
 wheat volumes after 645's hiring fix before tracing further.
+
+## Update 21: the opening's income is where households stop saving, not where a pass bound stops (branch opening-income-fixed-point)
+
+The income the opening pays was whatever 60 passes of income-into-demand reached (about 0.99 to the 60th of the ceiling).
+Measured on Rome: demand over income is one below a kink at about 0.48 of the ceiling (first solve, no replacement) and
+falls above it, because households' saving has no user in the final demand (607). The income is now the largest at which
+households save nothing net (`opening_income.settled_income_per_head`, a root find; 497 Round 10). First solve: 443 a head
+(0.477 of the ceiling) against 467 (about 0.50) from the pass bound; the final solve, which carries the coin metal's
+replacement as demand that is not from households' income, 748 against 752 (0.806 against 0.810 of the ceiling).
+
+Spin-up years 1 to 7 (scratch probe, not committed; unskilled wage, wheat, coal, bronze price), before then after:
+wage 0.726, 0.668, 0.635, 0.553, 0.422, 0.386, 0.380 then 0.719, 0.659, 0.630, 0.511, 0.414, 0.379, 0.374; wheat 2.139, 1.511,
+1.685, 1.433, 1.404, 1.321, 1.280 then 2.152, 1.424, 1.683, 1.421, 1.383, 1.292, 1.314; coal 0.0146, 0.0323, 0.0652, 0.1230,
+0.1528, 0.1592, 0.1731 then 0.0146, 0.0319, 0.0632, 0.1161, 0.1427, 0.1787, 0.1984; bronze 4.79, 43.8, 121.3, 96.3, 113.0,
+135.4, 132.6 then 4.79, 29.0, 35.3, 44.5, 77.7, 137.6, 140.9. The drift is unchanged in kind (wage falls by half over the years,
+bronze is thin and jumps): the income was never what set it. Still open: counting the demand that matches households'
+saving (607) would raise the income at which they stop saving.

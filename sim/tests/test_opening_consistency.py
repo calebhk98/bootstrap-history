@@ -9,9 +9,11 @@ import dataclasses
 import unittest
 
 from sim.economy import opening, opening_income, opening_metal, opening_runs
+from sim.economy.households_orders import BUDGET_SAFETY_SHARE
 from sim.economy.economy import Economy
 from sim.economy.types import Recipe, SiteLimit
 from sim.tests import economy_fixture as fixture
+from sim.refusal import cause_of, facts_of
 from sim.tests import harness
 
 
@@ -34,6 +36,46 @@ class OpeningIncomeTests(unittest.TestCase):
         per_head, _labour = opening_income.settled_income_per_head(
             3.0, 10.0, lambda income: (10.0 * (income + 5.0), 0.5))
         self.assertEqual(per_head, 3.0)
+
+    def test_a_demand_with_an_autonomous_part_settles_at_the_closed_form_income(self):
+        autonomous, propensity, people, ceiling = 40.0, 0.8, 1000.0, 1.0e6
+        per_head, labour = opening_income.settled_income_per_head(
+            ceiling, people, lambda income: (people * (autonomous + propensity * income), 0.25))
+        self.assertAlmostEqual(per_head / (autonomous / (1.0 - propensity)), 1.0, places=6)
+        self.assertEqual(labour, 0.25)
+
+    def test_a_demand_that_equals_income_at_every_level_settles_at_the_ceiling_in_one_pass(self):
+        asked = []
+
+        def demand_at(income):
+            asked.append(income)
+            return 10.0 * income, 0.5
+        per_head, _labour = opening_income.settled_income_per_head(7.0, 10.0, demand_at)
+        self.assertEqual(per_head, 7.0)
+        self.assertEqual(asked, [7.0])
+
+    def test_a_demand_below_income_at_every_level_has_no_positive_fixed_point_and_is_refused(self):
+        refused = opening_income.settled_income_per_head(100.0, 10.0, lambda income: (10.0 * 0.9 * income, 0.5))
+        self.assertEqual(cause_of(refused), "no_positive_income_fixed_point")
+        self.assertIn("ceiling", facts_of(refused))
+
+    def test_no_people_is_refused_not_given_an_income_of_zero(self):
+        self.assertEqual(cause_of(opening_income.settled_income_per_head(100.0, 0.0, lambda income: (0.0, 0.0))),
+                         "no_people_to_pay")
+
+    def test_the_income_where_households_stop_saving_is_found_in_few_passes(self):
+        # households spend all they are paid up to 300 a head and a falling share of the rest, as Rome's do
+        asked = []
+
+        def demand_at(income):
+            asked.append(income)
+            return 10.0 * (income if income <= 300.0 else 300.0 + 0.5 * (income - 300.0)), 0.5
+        per_head, _labour = opening_income.settled_income_per_head(900.0, 10.0, demand_at)
+        self.assertAlmostEqual(per_head / 300.0, 1.0, delta=2.0 * opening_income.OPENING_INCOME_TOLERANCE)
+        self.assertLessEqual(len(asked), 20)
+
+    def test_the_tolerance_for_saving_covers_the_margin_the_bids_leave_unspent(self):
+        self.assertGreater(opening_income.SAVING_TOLERANCE, BUDGET_SAFETY_SHARE)
 
     def test_workers_are_paid_alike_and_owners_by_what_they_own(self):
         setup = fixture.small_setup()
