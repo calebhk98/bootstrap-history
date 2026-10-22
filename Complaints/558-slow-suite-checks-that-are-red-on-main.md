@@ -31,7 +31,7 @@ entry below is updated as its group lands.
   and the joint bids (more concerns open) but some stay shut because the founder's household runs out of cash in the first
   years; its input bill reads making costs that sit far above the engine's table while some outputs' prices carry surpluses
   worth thousands of coin an hour to an employer (473). Command: `python3 -m sim.tests --slow --only staff_closure_reopening_scenario --jobs 1`.
-- `state_debasement_prices_scenario`: green again on 941dd628 (after households read a perceived price level, 473 Update 14).
+- `state_debasement_prices_scenario`: green again on fc5ef363 (after households read a perceived price level, 473 Update 14).
 - `hot_path_caches_scenario` CPU budget: an early year measured just over its budget on a loaded machine (three slow jobs and
   agents); under the budget alone after the fetch-cost search was made fast (678). Re-measure alone before treating it as red.
 - `real_output_validation`: not new; the same output-per-head check `real_output` failed on 3cb9c9a0 (473).
