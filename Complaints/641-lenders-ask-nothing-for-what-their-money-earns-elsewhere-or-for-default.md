@@ -127,7 +127,14 @@ Why it sat below the median ask: the median ask is not the clearing price; the m
 Tests: `sim/tests/test_economy_credit_rate_below_asks.py` (built offers and requests); three tests that asserted the old rule
 ("borrowers with no lenders pull the rate up") now assert the held rate. 
 
-Left open: the late-run labourer wage in `test_complaint_651_wage_step_gain.SmallEconomy` now flips sign more often (the fixture
-has no lenders, so its rate is now held at the opening rate instead of drifting to the borrowers' bid); the amplitudes are small
-and no fall nears the test's bound, but the count passes its limit. Not retuned. The rate and the lenders' asks after the change are
-in the report of this commit.
+Left open: `test_complaint_651_wage_step_gain.SmallEconomy` (labourer wage flips) counts more sign flips in `work@town` once
+the lender-less fixture holds its rate at the opening rate instead of drifting to the borrowers' bid. Traced (a spy on
+`clearing.clear_one`, on `labour_supply.HourSupply` and the year's output; the fixture has no entry, exit or plant, the producer
+count is constant): the town's hours offered alternate year to year with no change in workers, plan hours or household work; only
+the leisure anchor wage moves (`labour_supply`, `households_hours_offered.leisure_hours_kept`), and it follows the staple's price,
+which alternates with the staple's output (1.82 to 1.88 million kg, price 0.361 to 0.365), the period-two cobweb of producers'
+adaptive expectations (`producers.next_expectations`, `EXPECTATION_ADJUSTMENT_SHARE`, `OUTPUT_CHANGE_SHARE_PER_YEAR`; 473). It is
+there before this change at the same size (staple price flips sign in 43 of 57 years before, 49 after; hours offered 42 and 43);
+hours wanted flip less after (8 of 57 against 17). The wage step meets that supply ripple; before, hours wanted ran well above
+hours offered and the wage rose through it, so few flips showed. The labour step is not the source and the rate does not
+make demand alternate. Closing it means closing the producers' cobweb (473), not a change here.
