@@ -4,12 +4,22 @@
  "cooking_fuel_mj_per_person_per_day": 20.6,
  "cooking_fuel_basis": "Fuelwood burnt in household cookstoves in an isolated rural West African village fell 'from 20.6 MJ cap-1 day-1 to 10.5 MJ cap-1 day-1' as household size rose from five to 20 (Nathan G. Johnson and Kenneth M. Bryden, 'Factors affecting fuelwood consumption in household cookstoves in an isolated rural West African village', Energy 46(1), 2012, pp. 310-321; abstract opened; stove type and sample size not given there). The five-person figure is taken, as the household size of climate_needs.PERSONS_PER_HOUSEHOLD. Megajoules of fuel heat, the unit of the warmth need; added to a hearth's warmth floor. One village, open stoves: confidence C.",
  "tasks": {
-  "water_fuel_and_grinding": {
+  "water_and_fuel": {
    "needs_hearth": false,
-   "hours_per_adult_woman_per_day": 2.5,
+   "hours_per_adult_woman_per_day": 0.7333333333333333,
    "adult_women_per_person": 0.25,
-   "basis": "Rural Burkina Faso, average minutes a day for women: grinding and pounding grain 108, water supply 38, fuel supply 6 (Box 1, 'Rural activities, comparison of time allocation by sex, Burkina Faso', source line 'Carr and Sandhu, 1988', in A Gordon, A Swetman and K Albright, 'Women in post-harvest operations: reducing the drudgery', Issues Paper 6, June 2002, p. 2; opened; a secondary reproduction, survey year and sample not given there). The three sum to 152 minutes, 2.5 hours. The earlier figure took only the carrying range of Blackden and Wodon (eds), Gender, Time Use, and Poverty in Sub-Saharan Africa, World Bank Working Paper 73, 2006, overview p. 9: 'These figures equate to a time input for an average adult female ranging from just under 1 hour to 2 hours 20 minutes every day' (carrying of water, firewood and crops for grinding; Ghana, Tanzania and Zambia), which leaves out the grinding itself. Adult women as a quarter of a household's people: no source found, confidence D.",
+   "basis": "Rural Burkina Faso, average minutes a day for women (Box 1, 'Rural activities, comparison of time allocation by sex, Burkina Faso', source line 'Carr and Sandhu, 1988', in A Gordon, A Swetman and K Albright, 'Women in post-harvest operations: reducing the drudgery', Issues Paper 6, June 2002, p. 2; opened; a secondary reproduction, survey year and sample not given there): water supply 38 minutes and fuel supply 6 minutes, 44 minutes a day. A fixed load: no market good stands in for fetching. The earlier figure took only the carrying range of Blackden and Wodon (eds), Gender, Time Use, and Poverty in Sub-Saharan Africa, World Bank Working Paper 73, 2006, overview p. 9: 'These figures equate to a time input for an average adult female ranging from just under 1 hour to 2 hours 20 minutes every day'. Adult women as a quarter of a household's people: no source found, confidence D.",
    "conf": "C"
+  },
+  "grinding": {
+   "needs_hearth": false,
+   "scales_with_ground_grain": true,
+   "hours_per_adult_woman_per_day": 1.8,
+   "adult_women_per_person": 0.25,
+   "basis": "Rural Burkina Faso, average minutes a day for women (Box 1, 'Rural activities, comparison of time allocation by sex, Burkina Faso', source line 'Carr and Sandhu, 1988', in A Gordon, A Swetman and K Albright, 'Women in post-harvest operations: reducing the drudgery', Issues Paper 6, June 2002, p. 2; opened; a secondary reproduction, survey year and sample not given there): grinding and pounding grain 108 minutes a day. The two lines sum to 152 minutes a day (the earlier single task rounded that to 2.5 hours). Grinding is a way of making flour, so a household bears it only on the grain it grinds itself: the hours are scaled by the share of its food it grinds by hand, and a household that can buy flour for less than its hours are worth buys it (sim/economy/household_grinding.py). The table gives no kilograms ground, so the full load is taken as the grinding of a diet wholly of grain at the food floor. Adult women as a quarter of a household's people: no source found, confidence D.",
+   "conf": "C",
+   "heuristic": true,
+   "retire": "Complaints/645 follow-up: kilograms of grain ground per hour by hand from a grain-processing study, replacing the assumption that the surveyed load ground a diet wholly of grain"
   },
   "cooking": {
    "needs_hearth": true,

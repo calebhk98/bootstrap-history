@@ -7,7 +7,7 @@ it earns (wages for the hours its workers sell) and owns (a share of the tile's 
 Functions here: `cohorts_for_tile`, `distribute_property_income`, `labour_offers`.
 """
 from dataclasses import dataclass, field
-from typing import Dict, List, Mapping, Optional
+from typing import Dict, List, Mapping, Optional, Tuple
 
 from sim.constants import declare
 from sim.world import demand
@@ -49,6 +49,7 @@ class Cohort:
     unmet_floor_by_need: Dict[str, float] = field(default_factory=dict)   # need units short of the floor
     own_plan_by_need: Dict[str, float] = field(default_factory=dict)      # need units it grows with hours kept back
     hired_work_per_person: float = 0.0  # hours of household work a person's share hires this year (household_work_year.py)
+    milled_grains: Tuple[str, ...] = ()  # grains it buys milled rather than grinds by hand this year (household_grinding.py)
 
 
 def cohort_id(tile: TileId, income_class: int) -> AgentId:

@@ -80,3 +80,24 @@ Most of `water_fuel_and_grinding` is hand grinding (the Burkina Faso table), cha
 while the economy also mills grain into flour (`data/production/95_grain_milling.json`) that households can buy. Grinding is a
 way of making flour, so it belongs with the household's choice of making or buying (the rule this complaint already has for
 cooked food), not in a fixed daily charge. Water and fuel fetching stay household work.
+
+## Update: grinding is make-or-buy (measured)
+
+- Verified: households eat grain and flour as well as bread. The food need lists wheat, millet and maize (grain), `flour_kg`
+  and `bread_kg` (ready to eat) among others; they buy a mix by cost per unit. `flour_kg` is an ordinary household good in
+  the goods market (priced at the Rome opening; milled by `data/production/95_grain_milling.json`), so no new flour path
+  was needed. What was missing was the weighing of a grain against its milled good.
+- `water_fuel_and_grinding` is split in `data/world/household_work.json` into `water_and_fuel` (44 minutes, fixed) and
+  `grinding` (108 minutes, flagged `scales_with_ground_grain`), from the same Burkina Faso table. The two sum to 152
+  minutes; the old figure rounded that to 2.5 hours, so the needs file satiation moved with it.
+- The rule (`sim/economy/household_grinding.py`, used by `household_work_year.cohort_plan`): the needs file marks a grain
+  `milled_as` its flour. A cohort buys a grain milled when the milled good costs less per need unit than the grain plus
+  the sourced grinding hours per need unit at the worth of its hour (`Cohort.milled_grains`; the grain leaves its food
+  basket). Hours fall only on the share of food it grinds by hand. With no priced milled good, it grinds at the sourced load.
+- Labelled heuristic (`retire` in the data): the table gives no kilograms, so the full load is taken as grinding a diet
+  wholly of grain at the food floor.
+- Tests: `sim/tests/test_economy_household_grinding.py`.
+- Measured market rate (command above), before then after: rome_100ad 0.48 then 0.48; han_china_100ad 0.8 then 0.8;
+  england_1300 0.1919 then 0.147; mexica_1500 0.4 then 0.3. Rome stays at the ceiling: at its opening most cohorts now buy
+  wheat and millet milled, but they still hire nearly all the remaining household work (about 470 hours a person), so
+  grinding was not what held the rate up. Nothing was tuned.

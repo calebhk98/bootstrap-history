@@ -79,6 +79,7 @@ class EconomySetup:
     basket_by_tile: Dict[TileId, Any] = field(default_factory=dict)   # floors that follow the tile's climate
     household_work: Dict[str, Any] = field(default_factory=dict)      # hours of household work by task (data/world/household_work.json); empty: none is modelled
     ready_to_eat: frozenset = frozenset()                             # goods a household with no hearth can eat as bought
+    milled_as: Dict[str, str] = field(default_factory=dict)           # per grain, the good it is milled into (needs.json); a household weighs grinding it against buying that
     servant_trade: str = "domestic_servant"                           # the trade whose wage is the price of an hour of household work
     state_policy: StatePolicy = field(default_factory=StatePolicy)   # how the state budgets and finances a deficit
     site_limits: Tuple[SiteLimit, ...] = ()     # where site-bound recipes can run, and how much (sites.py)

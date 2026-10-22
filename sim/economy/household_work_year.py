@@ -4,7 +4,8 @@ it hires become its floor of the `household_work` need, bought from domestic ser
 import dataclasses
 from typing import Dict, Mapping, Sequence, Tuple
 
-from . import households_work, titles_worked
+from . import household_grinding, households_work, titles_worked
+from .households_basket import need_prices
 from .households_cohort import Cohort
 from .setup import labour_area
 from .types import AgentId, LabourOffer
@@ -19,13 +20,37 @@ def has_hearth(record, cohort: Cohort) -> bool:
     return titles_worked.worked_share(record, cohort.tile, cohort.agent_id) > HEARTH_EPSILON
 
 
-def cohort_basket(setup, record, cohort: Cohort):
-    """The basket of a cohort: the tile's, with food bought only as ready to eat when it has no hearth (else cooking fuel on its warmth floor), and
-    this year's hired household work as the floor of that need."""
+def food_basket(setup, record, cohort: Cohort):
+    """The tile's basket, with food only as ready to eat when the cohort has no hearth."""
     basket = setup.basket_for(cohort.tile)
     if not has_hearth(record, cohort):
         basket = households_work.without_hearth_basket(basket, setup.ready_to_eat, setup.hunger_need)
-    else:
+    return basket
+
+
+def grinding_plan(setup, record, view, cohort: Cohort, hour_value: float) -> Tuple[Tuple[str, ...], float]:
+    """(grains the cohort buys milled, share of its food it grinds by hand): a grain is bought milled when the
+    milled good costs less per need unit than the grain plus the worth of its hours of grinding. With no grain
+    marked as milled, or no priced food, the whole sourced load is its own."""
+    if not setup.milled_as:
+        return (), 1.0
+    food = next((need for need in need_prices(food_basket(setup, record, cohort), view, cohort.tile)
+                 if need.spec.need_id == setup.hunger_need), None)
+    if food is None:
+        return (), 1.0
+    floor = food.spec.subsistence_per_person
+    hours_per_unit = households_work.hours_per_person_per_year(setup.household_work, True, 1.0, True) / floor if floor > 0.0 else 0.0
+    bought = household_grinding.bought_milled(food.goods, setup.milled_as, hours_per_unit, hour_value)
+    return bought, household_grinding.ground_share(food.goods, setup.milled_as, bought)
+
+
+def cohort_basket(setup, record, cohort: Cohort):
+    """The basket of a cohort: the tile's, with food bought only as ready to eat when it has no hearth (else cooking fuel on its warmth floor), and
+    this year's hired household work as the floor of that need."""
+    basket = food_basket(setup, record, cohort)
+    if cohort.milled_grains:
+        basket = household_grinding.without_goods(basket, cohort.milled_grains, setup.hunger_need)
+    if has_hearth(record, cohort):
         basket = households_work.with_cooking_fuel(
             basket, households_work.cooking_fuel_per_person_per_year(setup.household_work), setup.fuel_need)
     if cohort.hired_work_per_person > 0.0:
@@ -39,15 +64,24 @@ def cohort_split(setup, record, view, cohort: Cohort, offers: Sequence[LabourOff
                  servant_price_fallback_per_hour: float) -> Tuple[float, float]:
     """(hours hired, hours done itself) for one cohort: an hour of its own labour at the wage it faces against the
     servant's price (the servant trade's wage last year, else the fallback)."""
+    hired, own, _milled = cohort_plan(setup, record, view, cohort, offers, servant_price_fallback_per_hour)
+    return hired, own
+
+
+def cohort_plan(setup, record, view, cohort: Cohort, offers: Sequence[LabourOffer],
+                servant_price_fallback_per_hour: float) -> Tuple[float, float, Tuple[str, ...]]:
+    """(hours hired, hours done itself, grains bought milled) for one cohort. Grinding falls only on the food it
+    grinds by hand, decided at the worth of its hour (the water and fuel are a fixed load either way)."""
     if not setup.household_work:
-        return 0.0, 0.0
-    needed = households_work.hours_needed(cohort.people, setup.household_work, has_hearth(record, cohort))
+        return 0.0, 0.0, ()
     mine = [offer for offer in offers if offer.worker == cohort.agent_id]
     value = households_work.hour_value(
         [(offer.hours, view.wage(offer.trade, offer.area) or offer.reservation_wage) for offer in mine])
+    milled, ground = grinding_plan(setup, record, view, cohort, value)
+    needed = households_work.hours_needed(cohort.people, setup.household_work, has_hearth(record, cohort), ground)
     price = view.wage(setup.servant_trade, labour_area(cohort.tile)) or servant_price_fallback_per_hour
     hired = households_work.hired_hours(needed, value, price)
-    return hired, households_work.own_hours(needed, hired)
+    return hired, households_work.own_hours(needed, hired), milled
 
 
 def decide(setup, record, view, offers: Sequence[LabourOffer], outside_option_by_tile: Mapping[str, float]
@@ -57,13 +91,13 @@ def decide(setup, record, view, offers: Sequence[LabourOffer], outside_option_by
     own: Dict[AgentId, float] = {}
     for cohort_id, cohort in sorted(record.cohorts.items()):
         fallback = outside_option_by_tile.get(cohort.tile, 0.0) / max(setup.working_hours_per_year, 1e-9)
-        hired, own[cohort_id] = cohort_split(setup, record, view, cohort, offers, fallback)
+        hired, own[cohort_id], milled = cohort_plan(setup, record, view, cohort, offers, fallback)
         per_person = hired / cohort.people if cohort.people > 0.0 else 0.0
-        if per_person != cohort.hired_work_per_person:
-            record.cohorts[cohort_id] = dataclasses.replace(cohort, hired_work_per_person=per_person)
+        if per_person != cohort.hired_work_per_person or milled != tuple(cohort.milled_grains):
+            record.cohorts[cohort_id] = dataclasses.replace(cohort, hired_work_per_person=per_person, milled_grains=milled)
     return own
 
 
 def basket_key(record, cohort: Cohort):
     """What distinguishes one cohort's basket from another's on the same tile, for caching priced needs."""
-    return (cohort.tile, has_hearth(record, cohort), cohort.hired_work_per_person)
+    return (cohort.tile, has_hearth(record, cohort), cohort.hired_work_per_person, tuple(cohort.milled_grains))
