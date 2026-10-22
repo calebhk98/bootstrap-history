@@ -45,9 +45,17 @@ class LossRuleOnASeat(unittest.TestCase):
 		self.assertEqual(kept.state.projects.business.state_of(kept_id), "operating")
 
 
+def at_long_run_prices(game):
+	"""The game with the market's price factor on a concern's takings held at one: the seizure rule is asked about the
+	plant's own book, not about whatever this year's asks for its inputs and output happen to be."""
+	game.node_output_market_factor = lambda node, selling_seat=None: 1.0
+	return game
+
+
 class SeizureTakesTheBusiness(unittest.TestCase):
 	def test_scenario_creditors_take_a_plant_that_does_not_pay_and_leave_one_that_does(self):
 		game, node_id = founder_running_an_artisan_concern()
+		at_long_run_prices(game)
 		node = game.nodes[node_id]
 		saved = (node["rev"], node["up"])
 		node["rev"], node["up"] = 0.0, max(node["up"], 1000.0)
@@ -62,6 +70,7 @@ class SeizureTakesTheBusiness(unittest.TestCase):
 		finally:
 			node["rev"], node["up"] = saved
 		paying, paying_id = founder_running_an_artisan_concern()
+		at_long_run_prices(paying)
 		node = paying.nodes[paying_id]
 		saved = (node["rev"], node["up"])
 		node["rev"], node["up"] = 10.0 * max(node["up"], 1.0), max(node["up"], 1.0)
