@@ -404,3 +404,42 @@ still in the thousands of coin an hour in years 0 to 5, against an unskilled wag
 above what its inputs and hours cost. Which recipes set those maxima is not yet isolated; it is the price side of this
 complaint (an output whose price is many times its making cost). Probe: wrap `sim/labour/market/clearing.clear_one` and
 record the highest `maximum_wage` per trade and the recipe behind it.
+
+### Update 12 result: the outsized surpluses are mostly planning on quotes from markets that did not trade (branch outsized-run-surplus)
+
+Probe (not committed; `sim(civ="rome_100ad", capital=1e9)`, `ROME_SPIN_UP_YEARS=3,2`, wrapping `producers._labour_bids`, years 0 to 5, every country's
+producers since the game runs the partners too; 25 thousand plans). Highest surplus an hour (`revenue / working_cost_ratio - inputs`), one row per output, years 0 to 5:
+
+- cooked meal, china_29, year 4: 9.2e3 an hour; expected price 367 a kg against a making cost of 0.93; 4 hours-trade (domestic servant); 59 makers; sold 1.5e8 kg of 1.1e8 more wanted, stock 6e9; the price was a `best_unfilled_bid` quote.
+- salted meat, china_02 and twenty more china tiles, year 3: 8.4e3; expected 448 against 2.2; 98 makers; sold 2.5e4 kg, 1.1e9 wanted, stock 7.5e3; `best_unfilled_bid`.
+- water, china_40, year 0: 6.6e3 for half an hour a run; expected 3.3 against 0.0002; 104 makers; sold 2e11, stock 1.5e11; `best_unfilled_bid`.
+- bread, china_54, year 5: 4.3e3; expected 262 against 5.8; 88 makers; `traded` (the year after a quote).
+- gold, spain_03, year 4: 3.3e3 an hour; expected 5.8e3 against 2.5e3 (2.3 times; two makers; sold 4e3 kg, stock 1.1e5): a genuine ratio, the hours are a thousandth of the run's cost, so the whole surplus per hour is large; `traded`.
+- piped water, turkey_05, year 5: 2.3e3; plumber maximum 7.9e3, last wage 13; expected 0.016 a kg against 2.6e-5 (the run's labour is its only cost); 70 makers; sold 1.3e10, wanted 9.5e10 more, stock 3.2e10; `traded`.
+- timber, china_55, year 5: 2.0e3; 5.8 times its cost; 102 makers; `traded`.
+- cattle, china_43, year 2: 1.9e3; 65 times; 19 makers; `traded`.
+- glass, france_01, years 0 to 3: 1.4e3; 105 times; 6 makers; `lowest_unfilled_ask`.
+- timber frame, china_55, year 4: 1.4e3 though price is 0.4 of cost (the working-cost ratio multiplies the revenue of a run that barely pays).
+
+Cause. `producers.next_expectations` moves a maker's expected price toward `view.price`, which for a market that did not trade is a quote:
+the best unfilled bid (the largest maximum any one buyer would pay, not a price anyone paid) or the lowest unfilled ask (a seller's own ask coming
+back). In the first rows above the market had sold nothing; the quote (a household's ceiling of hundreds a kg for a floor good) moved the expectation
+from 1.5 to 206 to 448 in two years, the maker's ask and its labour ceiling followed, and the next year a thin sale at that ask became a traded
+price. Of the 200 plans with the highest surplus a hour, 80 read a `best_unfilled_bid`, 7 a `lowest_unfilled_ask`, 95 a traded price (mostly the next year's echo), 16 the opening estimate.
+Not the cause: the ask band (643) bounds a seller's ask from the break-even price, but the break-even was the expected price's own scale; the founder and
+the state buy none of these goods.
+
+Fix (`sim/economy/planning_price.py`, called from `producers.next_expectations`): an output whose latest price is a bare quote lifts the expectation
+no further than `ask_raise.band_edge` around the unit's cost-covering price (and never cuts an existing expectation). Gating the quote out
+altogether was tried and broke `economy_vessel_price_fixture`: a market with buyers and no seller shows only that quote, and a maker needs it to start. Tests:
+`sim/tests/test_economy_planning_price.py` (pure `held_to_band`, and `next_expectations` on a built view).
+
+Measured, same probe, plans with positive runs: top five surplus an hour in year 3 were 8.4e3 x5, now 1.6e3 to 1.5e3; year 4 9.2e3, 7.9e3 now 2.6e3, 2.2e3;
+year 5 7.7e3 now 2.7e3; plans more than 100 times their making cost, years 3 to 5: 39, 57, 110 before and 14, 30, 48 after. Highest furnaceman maximum 2.6e3, 3.3e3, 2.4e3 before and
+1.5e3, 2.1e3, 1.9e3 after. Not closed: the plumber's maximum (thin piped water; a traded price, 8e3 before and 1.1e4 after in year 5, the market sells 1.3e10 of 1.1e11 wanted,
+and the trade needs years of training: a real scarcity rent with entry blocked by training, whose rule is 678's short-run wage and the training lag), and thin sellers
+asking far above cost in a traded market (salted meat sells 2.5e3 kg of 9e8 wanted at 55 times cost; the ask band is about the seller's ask from the expectation, which has no quote now; the remaining chain is the ask side, 643).
+
+Slow topics (`--jobs 1`): `opening_floor_and_thin_trades` green before and after. `staff_closure_reopening_scenario` red before (1 closed concern left shut) and after (6),
+a cycle phase more than a rule. `price_over_making_cost_band_validation` green before and RED after (median 0.9905, the check's lower bound is one): the unsettled
+cycle (Update 11) lands a year lower. Not loosened; not resolved.
