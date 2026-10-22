@@ -219,3 +219,20 @@ point with the households' first-year choices (`opening_plans.settle`, `_by_marg
 - Not done: bisecting on the ranking with the solve's prices held (it re-solves less, but the producers' sizing and
   prices move with hiring, so the result would differ from the fixed point); the per-pass work left is `goods_orders`
   itself, flat in the profile.
+
+## Round 10: the opening's income is a root find, not a pass-bound iteration (branch `opening-income-fixed-point`)
+
+`opening_income.settled_income_per_head` iterated income into demand from the full-employment ceiling and ran its whole
+pass bound every time (Round 9). Measured with a scratch wrapper around it on the Rome opening: households spend all of a
+low income (demand over income is one less the margin their bids leave unspent), and above a kink they save a surplus
+(a savings target on income above their floors) that nothing in `_final_demand` spends, so demand over income falls
+from there up. Demand is therefore income below the kink (every income there is a fixed point) and below income above
+it: the map slid down the saved share a pass and stopped where the bound did.
+
+The solve is now a root find on the income left unspent (the largest income at which households save nothing net;
+docstring of `opening_income.py`), by a line through the lowest incomes that still save, bisection where the line leaves
+the bracket. No positive root, or no close, is a `Refusal` (`no_positive_income_fixed_point`, `income_root_not_found`),
+raised by the opening as `OpeningIncomeRefused`. Rule tests in `test_opening_consistency`.
+
+Measured, uncached Rome opening (`ROME_CACHE_DIR` on an empty directory, one machine, two runs of a wrapper, 32 and 31 income
+solves): income passes 1649 before, 466 after; opening 269 s before, 171 s after. Passes per solve were 60 before, 11 to 23 after.

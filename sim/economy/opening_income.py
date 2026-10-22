@@ -5,17 +5,37 @@ households spend (their needs are met well short of it) and far more than the pr
 spend can pay: the first year's realised income is a fraction of the opening figure and the wage falls to
 meet the hours nobody hires. Here income is the value of what the opening makes. At prices that equal costs
 the factor payments (wages, rent, the plant's charge) add up to the value of final demand, so the income the
-households receive is the income that pays for the demand producers are sized to: a fixed point of income,
-demand and prices, found by iterating from the full-employment ceiling.
+households receive is the income that pays for the demand producers are sized to.
+
+The rule: the opening's income per head is the largest income, up to the full-employment ceiling, at which
+households save nothing net. Households spend all of a low income (less the margin their bids leave unspent),
+and above some income they begin to keep a surplus (a savings target on income above their floors). Nothing
+in the final demand spends that saving (no plant, working capital or lending demand is counted), so demand falls
+short of income from there up; income then has no fixed point above that kink and every income below it is one
+(demand equals income). A stationary economy saves nothing net: its saving is matched by demand that does not
+come from its own income (replacement, investment, the state's spending, exports), and the demand counted here
+carries only the metal the money loses (an autonomous part). Where more of that demand is counted (Complaint 607),
+the income at which households stop saving rises with it, with no change here. The income is found by a root
+find on the income left unspent, not by iterating income into demand: that map has propensity almost one with no
+intercept, so it falls a little a pass without reaching a fixed point and stops wherever its pass bound does.
 """
 import math
-from typing import Callable, Dict, Mapping, Tuple
+from typing import Callable, Dict, Mapping, Tuple, Union
+
+from sim.refusal import Refusal
 
 from .households_cohort import Cohort
+from .households_orders import BUDGET_SAFETY_SHARE
 from .types import GoodId, TileId
 
-OPENING_INCOME_PASSES = 60     # a numerical bound: demand saturates with income, so the iteration stops well before it
-OPENING_INCOME_TOLERANCE = 1e-9
+# the share of its income a household may leave unspent and still count as saving nothing: above the margin its bids
+# leave unspent by construction (BUDGET_SAFETY_SHARE), below any saving that moves a price
+SAVING_TOLERANCE = 5e-8
+OPENING_INCOME_TOLERANCE = 1e-6     # relative width of the bracket the income is found in
+# numerical bounds, not behaviour: the halvings that look for an income at which households save nothing (below the
+# ceiling by a factor no income is bought at) and the passes of the root find, which converges in a handful
+OPENING_INCOME_HALVINGS = 30
+OPENING_INCOME_PASSES = 100
 
 
 def value_of(final_by_tile: Mapping[TileId, Mapping[GoodId, float]], prices: Mapping[GoodId, float]) -> float:
@@ -25,21 +45,60 @@ def value_of(final_by_tile: Mapping[TileId, Mapping[GoodId, float]], prices: Map
 
 
 def settled_income_per_head(ceiling: float, people: float, demand_at: Callable[[float], Tuple[float, float]]
-                            ) -> Tuple[float, float]:
-    """(income per head, labour share of it) at which the value of final demand equals the income paid, found
-    from the `ceiling` (full employment at the opening wage) downward. `demand_at(income per head)` gives the
-    value of the demand that income buys and the share of that value which pays labour."""
-    if people <= 0.0:
-        return 0.0, 0.0
-    income = ceiling
-    labour_share = 0.0
-    for _pass in range(OPENING_INCOME_PASSES):
+                            ) -> Union[Tuple[float, float], Refusal]:
+    """(income per head, labour share of it) at which households save nothing net: the `ceiling` (full employment at
+    the opening wage) when they spend all of it, else the largest income below it at which the value of the demand
+    that income buys, per head, covers the income (up to SAVING_TOLERANCE of it). `demand_at(income per head)` gives
+    the value of the demand that income buys and the share of that value which pays labour. A Refusal when there are
+    no people, or no positive income at which households save nothing (`no_positive_income_fixed_point`), or the root
+    find does not close (`income_root_not_found`)."""
+    if people <= 0.0 or ceiling <= 0.0:
+        return Refusal("no_people_to_pay", "The opening has no people to pay an income to.", people=people, ceiling=ceiling)
+    seen: Dict[float, float] = {}
+
+    def unspent(income):
+        """Income left unspent past the tolerance (at most zero where households save nothing net)."""
         value, labour_share = demand_at(income)
-        paid = min(ceiling, value / people)
-        if abs(paid - income) <= OPENING_INCOME_TOLERANCE * max(paid, 1e-300):
-            return paid, labour_share
-        income = paid
-    return income, labour_share
+        seen[income] = labour_share
+        return income - value / people - SAVING_TOLERANCE * income
+
+    unspent_high = unspent(ceiling)
+    if unspent_high <= 0.0:
+        return ceiling, seen[ceiling]
+    # Above the kink the unspent income is smooth and rises, so a line through the two lowest incomes that still
+    # save finds where it crosses zero; an income that saves nothing brackets the root, and where the line leaves
+    # the bracket (or there is only one such income) the bracket is halved.
+    high, previous_high, previous_unspent = ceiling, None, 0.0
+    low = None
+    looked_past_low = False
+    for _pass in range(OPENING_INCOME_PASSES):
+        floor = 0.0 if low is None else low
+        income = None
+        if previous_high is not None and unspent_high != previous_unspent:
+            income = high - unspent_high * (high - previous_high) / (unspent_high - previous_unspent)
+        if low is not None and not looked_past_low and (income is None or income <= floor):
+            looked_past_low = True      # the line puts the root at the bracket's low end: look just past it, once
+            income = floor * (1.0 + OPENING_INCOME_TOLERANCE)
+        if income is None or not floor < income < high:
+            income = (floor + high) / 2.0
+            if low is None and income < ceiling * 0.5 ** OPENING_INCOME_HALVINGS:
+                return Refusal("no_positive_income_fixed_point",
+                               "At no income does the demand it buys cover the income: households save at every level.",
+                               ceiling=ceiling, lowest_income_tried=high, halvings=OPENING_INCOME_HALVINGS)
+        unspent_income = unspent(income)
+        if unspent_income <= 0.0:
+            low = income
+            if high - low <= OPENING_INCOME_TOLERANCE * high:
+                return low, seen[low]
+        else:
+            if low is not None and income - low <= OPENING_INCOME_TOLERANCE * income:
+                return low, seen[low]
+            converged = high - income <= OPENING_INCOME_TOLERANCE * income
+            previous_high, previous_unspent, high, unspent_high = high, unspent_high, income, unspent_income
+            if converged:
+                return high, seen[high]
+    return Refusal("income_root_not_found", "The income at which households stop saving was not found within the passes allowed.",
+                   ceiling=ceiling, low=low, high=high, passes=OPENING_INCOME_PASSES)
 
 
 def labour_share_of(runs: Mapping[str, float], recipes: Mapping[str, object], wages: Mapping[str, float],

@@ -11,6 +11,7 @@ import math
 from typing import Dict, List, Mapping, Tuple
 
 from sim.constants import declare
+from sim.refusal import Refusal
 
 from . import carriage_fleet_book, currency, goods_market, opening_basket, opening_bid_memory, opening_income, opening_metal, opening_plans, opening_runs, households, households_store, labour_state, location, location_inputs, mint, opening_stores, ownership, sites, titles, unit_cost
 from .accounts import Book
@@ -42,6 +43,13 @@ MERCHANT_CAPITAL_SHARE_OF_OUTPUT = declare(
     why="The merchant class's working capital against what the economy makes in a year. Not measured "
         "for any civilisation here; the engine's merchant class capital (merchant_terms) is a "
         "different estimate of the same thing.")
+
+
+class OpeningIncomeRefused(ValueError):
+    """The opening has no income at which its households save nothing; `refusal` says why (its `cause` and `facts`)."""
+    def __init__(self, refusal: Refusal):
+        super().__init__(str(refusal))
+        self.refusal = refusal
 
 
 def open_economy(setup: EconomySetup) -> Tuple[EconomyRecord, AreaMap, CarriageTable]:
@@ -186,7 +194,10 @@ def _settle_income(setup, record, view, priced_goods, replacement) -> None:
         share["labour"] = opening_income.labour_share_of(runs, recipes, setup.opening_wages, value)
         return value, share["labour"]
 
-    per_head, labour_share = opening_income.settled_income_per_head(_full_employment_income_per_head(setup), people, demand_at)
+    settled = opening_income.settled_income_per_head(_full_employment_income_per_head(setup), people, demand_at)
+    if isinstance(settled, Refusal):
+        raise OpeningIncomeRefused(settled)
+    per_head, labour_share = settled
     record.cohorts.update(opening_income.with_income(record.cohorts, per_head, labour_share))
 
 
