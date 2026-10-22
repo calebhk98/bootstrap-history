@@ -41,7 +41,9 @@ entry below is updated as its group lands.
   coin that wears), `spin_up_money_supply_full_length` (money stock falls against wear; mint replacement negative),
   `real_output` (output per head after a population fall), `real_output_baseline` (goods far from baseline carry much of the
   basket), `economy_money_regimes_norse` (weighed-metal price level): 473, the opening that never settles.
-- `price_over_making_cost_band_validation` (the typical traded good sells at no less than its cost of making): red since the
+- `price_over_making_cost_band_validation` (the typical traded good sells at no less than its cost of making): it reads one
+  year of the unsettled cycle (473 Update 11), so it flips with the cycle's phase; red again after the planning-price cap
+  (473 Update 12) at a median just under one. Earlier: red since the
   sourced household work hours (645, merge e72b36c0) took about two thirds more of each household's day; the median good opens
   at about nine tenths of its making cost at year 4. Traced (473 Update 11): the data change alone does it, the opening
   (year 0) is unchanged and both sides read the same wages; the sourced day moves the unsettled cycle's phase, so year 4 lands in a
