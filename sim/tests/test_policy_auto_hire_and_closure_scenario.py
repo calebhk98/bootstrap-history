@@ -51,6 +51,7 @@ s_ab = _neg
 s_ab.done.add(_LOSS); s_ab._done_changed()
 s_ab.operating.add(_LOSS)
 s_ab.revenue = lambda: 0.0
+s_ab.estimated_revenue = lambda: 0.0    # the money phase credits the estimate, not the total
 s_ab._step_money_seat()    # the year's money phase is where insolvency sheds
 check("no path in the engine leaves a work mothballed but unknown",
       _LOSS in s_ab.mothballed and not (s_ab.mothballed - s_ab.done), sorted(s_ab.mothballed - s_ab.done)[:4])
@@ -81,7 +82,7 @@ check("auto_hire does not overcommit turn one against a thin surplus",
 
 # Losing staff you cannot pay is written in the log, never silent.
 s = sim(surveyed=())
-s.capital = 22400.0 * s.labour.money_per_labour_hour()   # 22400 labour hours in coin
+s.capital = 40000.0 * s.labour.money_per_labour_hour()   # enough labour hours in coin to hire five smiths outright
 s.policy["auto_hire"] = False
 s.labour.hire("smith", 5)
 s.capital = -s.credit_limit() * 1.5
