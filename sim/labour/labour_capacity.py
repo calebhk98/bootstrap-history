@@ -28,6 +28,7 @@ from sim.constants import declare
 from sim.refusal import Refusal
 from . import legacy_trade_defaults, trade_data
 from .founder_hours import hours_committed, hours_pool
+from .staff_wage_reference import blended_annual_wage
 from .hire_outcome import craft_trades_report
 from .room_advice import room_advice, sources_to_build, sources_to_reopen
 from .staff_advice import staff_remedies
@@ -487,7 +488,8 @@ class CapacityMixin:
         market = self.labour_market
         wages = [market.unscarce_annual(trade) for trade in sorted(self._world.wages)
                  if trade not in self._world.trades_absent]
-        return sum(wages) / len(wages) if wages else market.unscarce_annual(
+        blended = blended_annual_wage(wages)
+        return blended if blended is not None else market.unscarce_annual(
             trade_data.fallback_trade_of(self._world, self.wage_schedule().training_years))
 
     STAFF_EXTRA_HEADROOM_WEIGHT = declare(

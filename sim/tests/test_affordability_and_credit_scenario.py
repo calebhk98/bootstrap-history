@@ -87,6 +87,7 @@ check("scenario: auto_open opens nothing it cannot pay the capex on and says why
 
 # --- scenario: a fresh game's affordability screens, credit warning, job and patron
 fresh = sim()
+fresh.market_credit_room = lambda actor_id: None    # the household's own standing sets the line; the opening's loan book is fully lent to others
 fresh_start_power = fresh.spending_power("start")
 available_reply = S._agent_dispatch(fresh, NODES, {"cmd": "available"})
 hint = str((available_reply.get("to_see_more") or {}).get("what you can pay for", ""))

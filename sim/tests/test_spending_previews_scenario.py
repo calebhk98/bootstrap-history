@@ -90,6 +90,7 @@ check("a few cash units left after the final instalment do not cost another year
 
 # --- 214: sustainable debt beside the formal ceiling
 debt_sim = sim(capital=2e4)
+debt_sim.market_credit_room = lambda actor_id: None    # the household's own standing sets the line; the opening's loan book is fully lent to others
 debt_money = _ask(debt_sim, cmd="money")
 check("money shows the debt the recurring surplus can carry, from the shared method",
       abs(debt_money.get("sustainable_debt", -1e9) - debt_sim.sustainable_debt()) < 0.1, debt_money.get("sustainable_debt"))

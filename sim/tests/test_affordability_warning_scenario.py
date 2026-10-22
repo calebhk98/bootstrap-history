@@ -28,6 +28,7 @@ _sci_cost = _probe.project_cost("scientific_method")
 _units_cost = _probe.project_cost("mt2_sintering_process")
 _purse = round(_units_cost) - 44.0     # just short of the second project alone
 s = sim(surveyed=())
+s.market_credit_room = lambda actor_id: None    # the household's own standing sets the line; the opening's loan book is fully lent to others
 s.capital = _purse      # in the game's own money, the unit project_cost is quoted in
 r_sci = S._agent_dispatch(s, NODES, {"cmd": "start", "id": "scientific_method"})
 r_units = S._agent_dispatch(s, NODES, {"cmd": "start", "id": "mt2_sintering_process"})
