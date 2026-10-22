@@ -12,6 +12,9 @@ def one_year(game):
 def short_state():
     """Rome whose army costs more than any revenue and credit can pay, after its first year."""
     game = sim()
+    # the settled opening leaves nothing saved and the market at its ceiling (Complaints 607, 645), where a state weighing
+    # deferred pay against cut services cuts; this scenario is about deferred pay, so it states the civilisation's own rate
+    game.market_rate = lambda: float(game.civ["starting_interest_rate"])
     game.civ["standing_army"] = 1.0e8
     game.state_treasury().money = 0.0
     one_year(game)
