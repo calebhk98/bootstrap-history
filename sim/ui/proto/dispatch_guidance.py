@@ -6,7 +6,7 @@ from .guidance import (LEVERAGE_NOTE, delay_kinds, development_program, leverage
                        training_suggestions, wait_explanation)
 
 
-@command("leverage", group="overview", aliases=("levers",),
+@command("leverage", group="overview",
          summary="the system levers that make any goal cheaper",
          usage=["leverage"], options={},
          description="Literacy, labour, finance, institutions, knowledge and materials, each "

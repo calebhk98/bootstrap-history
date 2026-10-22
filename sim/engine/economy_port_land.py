@@ -1,6 +1,8 @@
 """What the home state decides about land and debt this year, handed to the economy as plain tiles."""
-from sim.agents.api import government_levers, government_levers_land, land_moves, policy_land, tax_burden
+from sim.agents.api import government_levers, land_moves, policy_land, tax_burden
 from sim.economy import api as economy_api
+
+from . import agents_port_land
 
 
 def debt_relief_tiles(sim, economy):
@@ -17,17 +19,12 @@ def title_moves(sim, economy):
     government = sim.actors.government_of(None)
     if government is None:
         return ()
-    record = government.record
-    confiscate, cap = government_levers_land.confiscation_share(record), government_levers_land.reform_cap(record)
+    confiscate, cap = agents_port_land.decree(government)
     if confiscate <= 0.0 and cap is None:
         return ()
     held, tenancies = economy_api.title_holdings(economy, sim.tiles_owned_by(str(sim.civ["id"])))
     plan = land_moves.planned(held, tenancies, government.actor_id, confiscate, cap)
-    record.levers.pop(government_levers_land.CONFISCATION, None)
-    for tile, moves in plan.items():
-        taken = land_moves.taken_from_private(moves, government.actor_id)
-        if taken > 0.0:
-            record.land_taken_by_tile[tile] = min(1.0, record.land_taken_by_tile.get(tile, 0.0) + taken)
+    agents_port_land.record_decree(government, plan)
     return tuple((tile, move.giver, move.receiver, move.share) for tile, moves in sorted(plan.items()) for move in moves)
 
 
