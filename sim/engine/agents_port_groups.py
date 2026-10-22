@@ -149,7 +149,7 @@ class GroupView:
 		last = group_record.last_logged_year
 		if last is None or self.year - last >= year_gap:  # type: ignore[attr-defined]
 			group_record.last_logged_year = self.year  # type: ignore[attr-defined]
-			household.log.append((self.year, LogLine("group_petition", text)))  # type: ignore[attr-defined]
+			household.log.append((self.year, text if isinstance(text, LogLine) else LogLine("group_petition", text)))  # type: ignore[attr-defined]
 
 	def money_text(self, amount: float, grouped: bool = False, short: bool = False) -> str:
 		return money_text(amount, self._sim, grouped=grouped, short=short)
