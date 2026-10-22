@@ -196,6 +196,7 @@ check("scenario cash book: once it sells, its goods have a market price and the 
       _book.venture_forecast_basis(_NODE) == "market", _book.venture_forecast_basis(_NODE))
 _quote = _book.venture_real_earnings(_NODE)
 _itemised_again = ask_agent(_book, cmd="money")["where_the_money_comes_from"]
+_estimate_again = _book.estimated_revenue()
 ask_agent(_book, cmd="step", years=1)
 _causes_again = ask_agent(_book, cmd="money")["cash_book"]["earlier_years"][-1]["causes"]
 _booked_again = _causes_again.get("venture revenue", 0.0)
@@ -206,10 +207,11 @@ check("scenario cash book: a running concern's forecast is within the year's pri
       "residue aside",
       0.0 <= _quote - _itemised_again[_NODE] <= revenue_ledger.GAP_SHOWN_ABOVE, (_quote, _itemised_again))
 # a concern the clearing pays is credited what the clearing paid (gross) less its inputs, as its own cash book lines; the
-# line `venture revenue` is the estimate's rows alone
+# line `venture revenue` is the estimate alone: the engine's estimate read before the year, to the booking's rounding (the
+# shown rows are rounded and carry the ledger's residue, so their sum is not the estimate to the cent)
 check("scenario cash book: the revenue line is the itemised rows the engine estimates, and a concern sold in the book is "
       "credited the clearing's proceeds beside the inputs it bought",
-      abs(_booked_again - _estimated_rows) < 0.2
+      abs(_booked_again - _estimate_again) < 0.06
       and abs(_causes_again.get("concern sales", 0.0)
               - _book.economy.agent.stored["seat_takings"][_book.state.acting_seat]) < 0.2
       and _causes_again.get("inputs of concerns sold in the book", 0.0) <= 0.0,

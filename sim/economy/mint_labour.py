@@ -46,9 +46,11 @@ def _striking(setup, spec) -> bool:
             and spec.backing_per_unit > 0.0)
 
 
-def staff(setup, record, view, labour_bids: List[LabourBid], capacity_fine_kilograms: float) -> None:
+def staff(setup, record, view, labour_bids: List[LabourBid], capacity_fine_kilograms: float,
+          committed_cash: float = 0.0) -> None:
     """Bid for the hours the mint needs to strike `capacity_fine_kilograms` this year, at the capital,
-    and fund the mint account from the issuer's cash for the wages it bids."""
+    and fund the mint account for the wages it bids from the issuer's cash beyond `committed_cash`, which the
+    issuer's own plan for the year spends."""
     spec = record.currency
     if not _striking(setup, spec) or capacity_fine_kilograms <= 0.0:
         return
@@ -61,7 +63,7 @@ def staff(setup, record, view, labour_bids: List[LabourBid], capacity_fine_kilog
             bids.append(LabourBid(agent, trade, area, capacity_fine_kilograms * per_kilogram,
                                   wage * STATE_WAGE_CEILING_MULTIPLE))
     wage_bill = math.fsum(bid.hours * bid.maximum_wage for bid in bids)
-    funded = min(wage_bill, record.book.balance(setup.state_agent, setup.currency_id))
+    funded = min(wage_bill, max(0.0, record.book.balance(setup.state_agent, setup.currency_id) - committed_cash))
     if funded > 0.0:
         record.book.transfer(Transfer(setup.state_agent, agent, setup.currency_id, funded, "mint wages funded"))
     labour_bids.extend(bids)

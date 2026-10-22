@@ -11,8 +11,12 @@ pay = game.labour.wage_for_hours(trade, hours)
 output_factor = game.state.economy.output_factor
 check("the founder's job pays the hours sold times the market wage of the trade",
       hours > 0 and pay > 0 and abs(game.founder_wage_income() - pay) < 1e-6 * pay, (hours, pay, game.founder_wage_income()))
+# the estimate passes through the market's saturating ceiling (`_compute_revenue_uncached`), which takes a share of the pay that
+# grows with it; the line is the pay after that, so the wage level of the opening does not move the check's meaning
+ceiling = game.REVENUE_CEILING_PER_POP_SCALE * game.pop_scale * game.real_output_per_head() * game.price_index
 check("it shows as one income line, the wages of the founder's own work, and no practice line",
-      abs(game.revenue_sources().get("_wages_for_your_own_work", 0.0) - round(pay * output_factor, 1)) < 0.11
+      abs(game.revenue_sources().get("_wages_for_your_own_work", 0.0)
+          - round(pay / (1.0 + pay / max(1.0, ceiling)) * output_factor, 1)) < 0.11
       and "_your_own_practice" not in game.revenue_sources(), game.revenue_sources())
 check("the practice income and its displacement are gone from the engine",
       not hasattr(game, "practice_income") and not hasattr(game.labour, "practice_income_displaced"), None)
