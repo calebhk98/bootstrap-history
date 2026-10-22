@@ -43,7 +43,7 @@ def cohort(name, tile="t1", people=100.0):
 def setup():
     return types.SimpleNamespace(
         household_work=DATA, working_hours_per_year=1000.0, servant_trade="servant", hunger_need="food", fuel_need="warmth",
-        ready_to_eat=households_work.ready_to_eat_goods(NEED_DATA),
+        ready_to_eat=households_work.ready_to_eat_goods(NEED_DATA), milled_as={},
         basket_for=lambda tile: make_basket(NEED_DATA, {}))
 
 

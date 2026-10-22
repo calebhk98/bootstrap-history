@@ -21,18 +21,25 @@ def load_household_work(path: str = _DATA_PATH) -> Dict[str, Any]:
         return json.load(handle)
 
 
-def hours_per_person_per_year(data: Mapping[str, Any], has_hearth: bool = True) -> float:
+def hours_per_person_per_year(data: Mapping[str, Any], has_hearth: bool = True, ground_share: float = 1.0,
+                              only_grinding: bool = False) -> float:
     """Hours of household work one person's share takes a year. A household with no hearth does no
-    cooking of its own (its cooking task is left out: it buys cooked food, see `without_hearth_basket`)."""
+    cooking of its own (its cooking task is left out: it buys cooked food, see `without_hearth_basket`). A task
+    that scales with ground grain (grinding) takes the sourced hours times the share of its food the household
+    grinds itself. `only_grinding` counts that task alone."""
     days = float(data["days_per_year"])
     total = 0.0
     for task in data["tasks"].values():
         if task.get("needs_hearth") and not has_hearth:
             continue
+        grinding = bool(task.get("scales_with_ground_grain"))
+        if only_grinding and not grinding:
+            continue
+        scale = max(0.0, ground_share) if grinding else 1.0
         if "hours_per_person_per_day" in task:
-            total += float(task["hours_per_person_per_day"]) * days
+            total += float(task["hours_per_person_per_day"]) * days * scale
         else:
-            total += float(task["hours_per_adult_woman_per_day"]) * float(task["adult_women_per_person"]) * days
+            total += float(task["hours_per_adult_woman_per_day"]) * float(task["adult_women_per_person"]) * days * scale
     return total
 
 
@@ -55,9 +62,9 @@ def with_cooking_fuel(basket: Basket, fuel_per_person: float, fuel_need: str = "
         if need.need_id == fuel_need else need for need in basket.needs))
 
 
-def hours_needed(people: float, data: Mapping[str, Any], has_hearth: bool = True) -> float:
+def hours_needed(people: float, data: Mapping[str, Any], has_hearth: bool = True, ground_share: float = 1.0) -> float:
     """Hours of household work a cohort's people need done in the year."""
-    return max(0.0, people) * hours_per_person_per_year(data, has_hearth)
+    return max(0.0, people) * hours_per_person_per_year(data, has_hearth, ground_share)
 
 
 def hour_value(hours_and_wages) -> float:
