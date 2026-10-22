@@ -22,8 +22,8 @@ def _sized_game(civ_id):
     return _SIZED_GAMES[civ_id]
 
 
-def _expected_quality(held_tiles, hectares):
-    sites = {tile_id: crop_site(tile_id, OPEN_FIELD_SHARE) for tile_id in held_tiles}
+def _expected_quality(sites, hectares):
+    """Mean yield of the best `hectares` of `sites`, the game's own (they carry the toolkit's tillage capacity and the soil nitrogen stock)."""
     ranked = sorted((tile_id for tile_id, site in sites.items() if site.yield_factor > 0.0 and site.cropped_hectares > 0.0),
                     key=lambda tile_id: (-sites[tile_id].yield_factor, tile_id))
     remaining, taken, weighted = hectares, 0.0, 0.0
@@ -42,7 +42,7 @@ class FarmSizingTests(unittest.TestCase):
         for civ_id in _CIVILISATIONS:
             test_sim = _sized_game(civ_id)
             self.assertAlmostEqual(test_sim.farm_land.quality,
-                                   _expected_quality(tiles_held(S.load_civ(civ_id)), test_sim.farm_land.hectares),
+                                   _expected_quality(test_sim.farm_sites(), test_sim.farm_land.hectares),
                                    places=9, msg=civ_id)
 
     def test_game_farm_never_exceeds_the_arable_ceiling(self):
@@ -57,8 +57,9 @@ class FarmSizingTests(unittest.TestCase):
         civ.pop("home_tiles", None)
         civ["home_regions"] = ["scandinavia"]
         test_sim = build_unopened(lambda: S.Sim(NODES, ORDER, random.Random(1), events=False, manual=True, civ=civ))
+        self.assertEqual(set(test_sim.farm_sites()), set(tiles_of_regions(["scandinavia"])))
         self.assertAlmostEqual(test_sim.farm_land.quality,
-                               _expected_quality(tiles_of_regions(["scandinavia"]), test_sim.farm_land.hectares))
+                               _expected_quality(test_sim.farm_sites(), test_sim.farm_land.hectares))
 
     def test_region_without_land_data_fails_loudly(self):
         civ = copy.deepcopy(S.load_civ("rome_100ad"))

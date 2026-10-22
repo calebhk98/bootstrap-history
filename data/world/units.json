@@ -40,6 +40,8 @@
     {"pattern": "^(earns_a_year(_when_ramped)?|costs_a_year(_to_run|_at_full_staffing)?|costs_per_year_at_full_staffing|upkeep_at_full_staffing|instalments_still_owed|of_which_instalments_still_owed|materials_already_paid_from_cash|of_which_materials_paid_now|costs_you_a_year|wage_bill_added_per_year|net_income_per_year|estimated_annual_interest|would_earn_a_year|shut_concerns_would_earn_a_year)$", "dimension": "money", "native": "civ_coin"},
     {"pattern": "^(a_year_of_one(_after_you_hire_one)?|wage_bill_for_this_trade_(now|after_hiring_one_more)|charge_to_open|what_start_would_actually_charge|but_it_pays_YOU|_wages_for_your_own_work)$", "dimension": "money", "native": "civ_coin"},
     {"pattern": "^(total|labour|materials)$", "within": "^cost$", "dimension": "money", "native": "civ_coin"},
+    {"pattern": "^(pay_owed|outfit_cost_by_tile)$", "dimension": "money", "native": "civ_coin"},
+    {"pattern": ".+", "within": "^outfit_cost_by_tile$", "dimension": "money", "native": "civ_coin"},
     {"pattern": "^(annual_draw|total_annual_draw|base_total|cheapest|dearest|committed_so_far|credit_limit|from_next_year_per_year|likely_to_draw_on_credit_between_them|mines_standing|no_one_advances_past|opening_charge|per_person_base|to_buy_it|to_buy_them|to_lay_it|you_could_actually_fund_up_to|you_could_raise(_for_a_project|_now|_right_now)?|you_currently_hold|you_have|you_have_promised|you_would_borrow|your_real_ceiling_if_it_comes_to_that)$", "dimension": "money", "native": "civ_coin"},
     {"pattern": "^per_square_metre$", "dimension": "money", "native": "civ_coin", "per_dimension": "area", "per_native": "square_metre"},
     {"pattern": "^square_metres$", "dimension": "area", "native": "square_metre"},

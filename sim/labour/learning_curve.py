@@ -22,7 +22,7 @@ LEARNING_RATE = declare(
 
 
 def learning_exponent(learning_rate: float) -> float:
-    """The exponent n of Wright's y = K x^n: log of the progress ratio over log of two (negative for a ratio under one)."""
+    """The exponent of Wright's law, cost = first_unit_cost * cumulative_units ** exponent: log of the progress ratio over log of two (negative for a ratio under one)."""
     if not 0.0 < learning_rate <= 1.0:
         raise ValueError("a progress ratio is in (0, 1]: %r" % (learning_rate,))
     return math.log(learning_rate) / math.log(2.0)

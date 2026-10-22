@@ -4,7 +4,7 @@ import json
 import os
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple
 
-from .mods_base import ModError, ModManifest, claim_fields, deep_merge, unrelated as _unrelated_claim
+from .mods_base import MissingVariantBase, ModError, ModManifest, claim_fields, deep_merge, unrelated as _unrelated_claim
 from .mods_ids import SEPARATOR, check_new_id
 from .mods_remove import TECH, scan_removed
 
@@ -169,14 +169,18 @@ def check_all_civilizations(base_dir: str, manifests: Iterable[ModManifest]) -> 
                 base = json.load(source)
         civ = apply_mod_civilization(name, base, manifests, load_variant_base, chain)
         if civ is None:
-            raise ModError("civilization %s is a variant of %r, which does not exist" % (chain[-1] if chain else name, name))
+            raise MissingVariantBase("civilization %s is a variant of %r, which does not exist" % (chain[-1] if chain else name, name))
         return civ
 
     def load_variant_base(base_id: str, chain: Tuple[str, ...]) -> Dict[str, Any]:
         return load(base_id, chain)
 
     for name in civilization_names(base_dir, manifests):
-        check_starting_techs(load(name), manifests, removed)
+        try:
+            civ = load(name)
+        except MissingVariantBase:
+            continue                              # a variant of an absent base is unavailable, not a failed start
+        check_starting_techs(civ, manifests, removed)
 
 
 def is_hidden(civ: Dict[str, Any]) -> bool:

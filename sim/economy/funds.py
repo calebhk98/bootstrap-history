@@ -32,8 +32,9 @@ def standing(record) -> List[Fund]:
 
 def found(record, manager: AgentId, year: int) -> Fund:
     """A new fund run by `manager`, with no money in it and no units."""
-    fund = Fund("fund:%d" % len(record.capital.funds), manager, year)
-    record.capital.funds[fund.agent_id] = fund
+    funds = record.capital.funds
+    fund = Fund("fund:%d" % len(funds), manager, year)
+    funds[fund.agent_id] = fund
     return fund
 
 

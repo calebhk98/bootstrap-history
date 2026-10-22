@@ -41,7 +41,8 @@ class ClearingTests(unittest.TestCase):
             test_sim._demographic_recovery(year)
         # Cleared ground comes from the best-first ladder, so quality never rises.
         self.assertLessEqual(test_sim.farm_land.quality, quality_before)
-        expected = land.ladder_quality(_ladder("norse_900ad").ladder,
+        # the ladder is the one the game farms: its sites carry the toolkit's tillage capacity and the soil nitrogen stock
+        expected = land.ladder_quality(land.territory_cropland(test_sim.farm_sites()).ladder,
                                        test_sim.farm_land.hectares)
         self.assertAlmostEqual(test_sim.farm_land.quality, expected, places=9)
 
