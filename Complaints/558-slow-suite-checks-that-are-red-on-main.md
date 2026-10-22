@@ -33,6 +33,10 @@ entry below is updated as its group lands.
   and the joint bids (more concerns open) but some stay shut because the founder's household runs out of cash in the first
   years; its input bill reads making costs that sit far above the engine's table while some outputs' prices carry surpluses
   worth thousands of coin an hour to an employer (473). Command: `python3 -m sim.tests --slow --only staff_closure_reopening_scenario --jobs 1`.
+- `state_debasement_prices_scenario` "the price level rises against the twin within a few years": a quarter more coin now
+  raises the price level by only a few per cent in the first years (red since the wage bound, 678, removed the opening wage
+  spike; turning the bound off does not restore it). How a larger coin stock reaches prices is the question (526, 473); the
+  bar is kept. Command: `python3 -m sim.tests --slow --only state_debasement_prices_scenario --jobs 1`.
 - `real_output_validation`: not new; the same output-per-head check `real_output` failed on 3cb9c9a0 (473).
 
 ## Honest validations of open problems (stay red until the owner closes)
