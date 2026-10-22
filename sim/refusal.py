@@ -76,3 +76,13 @@ def choices_of(refusal):
 def facts_of(text):
     """The figures a refusal or log line states, as a dict (empty for a plain string)."""
     return getattr(text, "facts", None) or {}
+
+
+def rendered(text, money_text):
+    """The player text of a line that states sums of money, with each sum written by `money_text` now. A line
+    built as `facts["parts"]` (a list of text pieces and `{"money": amount}` pieces) is written from them, so a
+    unit chosen after the line was logged still shows in it; any other text comes back as it is."""
+    parts = facts_of(text).get("parts")
+    if not parts:
+        return text
+    return "".join(part if isinstance(part, str) else money_text(part["money"]) for part in parts)

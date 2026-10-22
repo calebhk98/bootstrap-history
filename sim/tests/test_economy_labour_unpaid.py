@@ -19,7 +19,7 @@ def cleared(employer_cash):
     book.transfer(Transfer(EDGE_MINT, "farm", "coin", employer_cash, "opening"))
     state = MarketState(workers={"labour:t1": {"plough": split_evenly(0.05)}},
                         hired_hours={"labour:t1": {"plough": {"farm": 100.0}}})   # the farm's hands stay on
-    record = types.SimpleNamespace(book=book, memory=MarketMemory(), workforce=state)
+    record = types.SimpleNamespace(book=book, memory=MarketMemory(), workforce=state, producers={})
     setup = types.SimpleNamespace(currency_id="coin", trades={}, unskilled_trade="plough")
     bids = [LabourBid("farm", "plough", "labour:t1", 100.0, 5.0)]
     offers = [LabourOffer("family", "plough", "labour:t1", 100.0, 1.0)]

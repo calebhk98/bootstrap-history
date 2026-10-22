@@ -77,6 +77,7 @@ class EconomyRecord:
     tax_farms: Dict[str, Dict[str, Any]] = field(default_factory=dict)   # form -> this year's farmer and price; empty between years
     margin_years: Dict[str, int] = field(default_factory=dict)           # market_key -> years in a row the expected price stood above the entry price
     hours_hired: Dict[str, float] = field(default_factory=dict)          # labour market_key -> hours hired last year
+    hours_hired_by_others: Dict[str, float] = field(default_factory=dict)   # labour market_key -> hours hired last year by employers that are not producers (hours_hired_by_others.py)
     hours_idle: Dict[str, float] = field(default_factory=dict)           # labour market_key -> hours offered and not hired last year
     funds_offered: float = 0.0                                           # savings on offer at the last lending, home currency
     lent_by_borrower: Dict[AgentId, float] = field(default_factory=dict)  # what each borrower was lent at the last lending
@@ -160,6 +161,7 @@ class EconomyRecord:
             "tax_history": {form: dict(row) for form, row in sorted(self.tax_history.items())},
             "margin_years": self.margin_years,
             "hours_hired": self.hours_hired,
+            "hours_hired_by_others": self.hours_hired_by_others,
             "hours_idle": self.hours_idle,
             "funds_offered": self.funds_offered,
             "lent_by_borrower": self.lent_by_borrower,
@@ -214,6 +216,7 @@ class EconomyRecord:
             tax_history={form: dict(row) for form, row in record["tax_history"].items()},
             margin_years=dict(record["margin_years"]),
             hours_hired=dict(record["hours_hired"]),
+            hours_hired_by_others=dict(record["hours_hired_by_others"]),
             hours_idle=dict(record["hours_idle"]),
             funds_offered=record["funds_offered"],
             lent_by_borrower=dict(record["lent_by_borrower"]),
