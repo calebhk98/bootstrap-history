@@ -13,5 +13,8 @@ game = sim()
 before = economy_port_institutions.held(game)
 game.state_treasury().knowledge.add(declaring[0][0])
 after = economy_port_institutions.held(game)
+# Rome's society already holds a node declaring risk pooling (Complaint 106's other institutions are gated the same way), so
+# the rule is that the node adds the bank and nothing else
 check("scenario: Rome starts without the institution; a state that then holds the node gives the economy it",
-      before == () and after == (economy_api.DEPOSIT_BANKING,), (before, after))
+      economy_api.DEPOSIT_BANKING not in before and set(after) - set(before) == {economy_api.DEPOSIT_BANKING}
+      and set(before) <= set(after), (before, after))
