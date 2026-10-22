@@ -6,9 +6,10 @@ QUICK_TOPIC = True
 import unittest
 from types import SimpleNamespace
 
-from sim.economy import labour_state
+from sim.economy import labour_state, workforce_settle
 from sim.labour import core_reservations, trade_seed
 from sim.labour.market import aptitude, opening, records, trades
+from sim.labour.market.records import MarketState
 from sim.labour.staff_book import StaffBookMixin
 
 HOURS = 2000.0
@@ -44,6 +45,39 @@ class SeedHoursTests(unittest.TestCase):
     def test_with_no_staffed_trade_to_scale_from_nothing_is_seeded(self):
         self.assertEqual(trade_seed.seed_hours(SHARES, {}, REGISTRY), {})
         self.assertEqual(trade_seed.seed_hours(SHARES, {"farmer": 9 * HOURS}, REGISTRY), {})
+
+
+class SeedBoundedByHirersTests(unittest.TestCase):
+    """Complaint 556: a trade's seed is bounded by the work its hirers will give it (producers' plans and last
+    year's hires, the state's bids), and people beyond it go to the fallback trade."""
+    SEEDS = {"merchant": 500 * HOURS, "porter": 40 * HOURS}
+
+    def test_a_trade_with_a_need_share_and_no_hirer_is_seeded_no_hours(self):
+        self.assertEqual(trade_seed.bound_by_hirers(self.SEEDS, {}), {})
+
+    def test_a_trade_is_seeded_no_more_than_its_hirers_hours(self):
+        bounded = trade_seed.bound_by_hirers(self.SEEDS, {"merchant": 30 * HOURS})
+        self.assertEqual(bounded, {"merchant": 30 * HOURS})
+
+    def test_a_trade_whose_hirers_bid_more_keeps_its_need_share_seed(self):
+        bounded = trade_seed.bound_by_hirers(self.SEEDS, {"porter": 90 * HOURS})
+        self.assertEqual(bounded, {"porter": 40 * HOURS})
+
+    def test_the_kept_hours_of_a_seeded_trade_are_its_hirers_hours_when_they_are_below_the_seed(self):
+        wanted = {("vale", "merchant"): 20 * HOURS}
+        state_bids = {("vale", "merchant"): 5 * HOURS}
+        kept = workforce_settle.hours_kept({"vale": self.SEEDS}, wanted, state_bids)
+        self.assertEqual(kept[("vale", "merchant")], 25 * HOURS)
+        self.assertNotIn(("vale", "porter"), kept)
+
+    def test_the_people_a_seed_no_hirer_wants_go_to_the_fallback_trade(self):
+        state = MarketState()
+        state.workers = {"vale": {"merchant": [300.0, 200.0], "labourer": [100.0, 100.0]}}
+        state.trainees = {}
+        kept = workforce_settle.hours_kept({"vale": self.SEEDS}, {("vale", "merchant"): 50 * HOURS}, {})
+        workforce_settle.trim_people(state, kept, "labourer", HOURS)
+        self.assertAlmostEqual(sum(state.workers["vale"]["merchant"]), 50.0)
+        self.assertAlmostEqual(sum(state.workers["vale"]["labourer"]), 650.0)
 
 
 class OpeningHoldsSeededTradesTests(unittest.TestCase):

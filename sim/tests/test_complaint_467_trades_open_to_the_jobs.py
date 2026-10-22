@@ -23,7 +23,7 @@ for producer_id, producer in sorted(record.producers.items()):
 # the other employers' jobs are jobs too: the mint's yearly capacity and the state's wage bids, as the year posts them
 for trade, hours in mint_labour.capacity_hours(setup, record.currency, mint.capacity_fine_kilograms(setup, record)).items():
     bid_hours[trade] = bid_hours.get(trade, 0.0) + hours
-for bid in state_budget._labour_bids(setup, record, view, record.state_budget.wage_budget):
+for bid in state_budget.wage_labour_bids(setup, record, view, record.state_budget.wage_budget):
     bid_hours[bid.trade] = bid_hours.get(bid.trade, 0.0) + bid.hours
 people = labour_state.people_by_trade_everywhere(record.workforce)
 # the plot trade's people work their own land (556b), so no employer's bid is what they wait on

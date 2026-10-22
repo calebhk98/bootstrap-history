@@ -22,3 +22,9 @@ def seed_hours(shares: Mapping[str, float], hours_needed: Mapping[str, float],
     return {trade: shares[trade] / staffed_share * staffed_hours
             for trade in sorted(set(available))
             if trade not in skipped and hours_needed.get(trade, 0.0) <= 0.0 and shares.get(trade, 0.0) > 0.0}
+
+
+def bound_by_hirers(seeds: Mapping[str, float], hirers_hours: Mapping[str, float]) -> Dict[str, float]:
+    """Each seeded trade's hours cut to the hours its hirers (producers, carriage crews, the state, the founder)
+    will give it; a trade no hirer asks anything of keeps none, and its people take up the fallback trade."""
+    return {trade: min(hours, hirers_hours[trade]) for trade, hours in seeds.items() if hirers_hours.get(trade, 0.0) > 0.0}

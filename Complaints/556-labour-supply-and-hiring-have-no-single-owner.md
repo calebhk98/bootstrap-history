@@ -81,3 +81,10 @@ Done (seeding and reservations; rule tests in `test_labour_core_seed_and_reserva
 (`labour_state.seeded_hours`), for example about eighteen thousand merchants against about a hundred and fifty worker-years of
 producer bids, so they wait for carriage crews and recipes no producer runs. A seed by need share should be bounded by the work
 the opening's producers, carriers and state will hire. Command: `python3 -m sim.tests --slow --only complaint_467_trades_open_to_the_jobs --jobs 1`.
+
+Done: the trim after the spin-up keeps a seeded trade only as far as its hirers' hours go (`workforce_settle.hours_kept`: what
+producers plan and others hired last year, plus the state's bids; `trade_seed.bound_by_hirers`); the people beyond that join the
+fallback trade. A trade whose hirers bid more than the seed is unchanged. The opening's own seed is still by need share (the
+spin-up's carriage bids need those people); the bound applies at each trim. Rule tests: `SeedBoundedByHirersTests` in
+`test_labour_core_seed_and_reservations.py`. `complaint_467_trades_open_to_the_jobs` is green. Merchants, glassblowers, knappers and plumbers
+after the open: see the commit message. Still open: the opening seed itself is not bounded by the carriage crews it will hire.
