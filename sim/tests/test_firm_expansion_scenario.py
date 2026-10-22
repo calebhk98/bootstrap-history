@@ -56,7 +56,7 @@ CATEGORY = sorted(S.Sim.GOODS_CATEGORIES)[0]
 NODE = make_node("zz_grow", CATEGORY, revenue=2.0e5, upkeep=5000.0, hours=50.0)
 
 
-def settled(rate=0.12, years=24):     # entry weighs the levy and expansion the carry it adds (679), so the count takes longer to rest
+def settled(rate=0.12, years=24):     # since 679 the count and capacity come to rest more slowly: at 12 years capacity is still rising
 	game = actor_sim([NODE])
 	game.market_rate = lambda: rate
 	founder_runs(game, "zz_grow", opened_ago=10)
