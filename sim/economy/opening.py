@@ -12,8 +12,7 @@ from typing import Dict, List, Mapping, Tuple
 
 from sim.constants import declare
 
-from .household_work_year import basket_key, cohort_basket
-from . import carriage_fleet_book, currency, goods_market, opening_basket, opening_income, opening_metal, opening_plans, opening_runs, households, households_store, labour_state, location, location_inputs, mint, opening_stores, ownership, sites, titles, unit_cost
+from . import carriage_fleet_book, currency, goods_market, opening_basket, opening_bid_memory, opening_income, opening_metal, opening_plans, opening_runs, households, households_store, labour_state, location, location_inputs, mint, opening_stores, ownership, sites, titles, unit_cost
 from .accounts import Book
 from .market_areas import AreaMap
 from .market_memory import MarketMemory, YearView, market_key
@@ -177,10 +176,11 @@ def _settle_income(setup, record, view, priced_goods, replacement) -> None:
     yields = opening_runs.mean_yields(setup, recipes)
     ranked = opening_runs.ranked_recipes(recipes, priced_goods, setup.opening_wages, setup.opening_rate, None, yields)
     share = {"labour": 0.0}
+    memory = opening_bid_memory.BidMemory()
 
     def demand_at(per_head):
         record.cohorts.update(opening_income.with_income(record.cohorts, per_head, share["labour"]))
-        final = _final_demand(setup, record, view, replacement)
+        final = _final_demand(setup, record, view, replacement, memory)
         value = opening_income.value_of(final, priced_goods)
         runs = opening_runs.required_runs(final, ranked, recipes, ceilings, yields)
         share["labour"] = opening_income.labour_share_of(runs, recipes, setup.opening_wages, value)
@@ -190,15 +190,16 @@ def _settle_income(setup, record, view, priced_goods, replacement) -> None:
     record.cohorts.update(opening_income.with_income(record.cohorts, per_head, labour_share))
 
 
-def _opening_bids(setup, record, view):
-    """(cohort, bid, price) for what each cohort would buy at the opening prices with the opening income."""
-    priced_by_tile = {}
+def _opening_bids(setup, record, view, memory=None):
+    """(cohort, bid, price) for what each cohort would buy at the opening prices with the opening income. A `memory`
+    (opening_bid_memory.py) kept across calls that change only incomes spares the work that does not depend on them."""
+    memory = opening_bid_memory.BidMemory() if memory is None else memory
     for cohort in sorted(record.cohorts.values(), key=lambda each: each.agent_id):
-        basket = cohort_basket(setup, record, cohort)
-        priced = priced_by_tile.setdefault(basket_key(record, cohort), households.need_prices(basket, view, cohort.tile))
+        basket = memory.basket(setup, record, cohort)
+        priced = memory.priced(setup, record, view, cohort, basket)
         income = cohort.last_year_income
         orders = households.goods_orders(cohort, view, income, income, basket, setup.specs,
-                                         priced)
+                                         priced, shared_store=memory.stores(record, cohort))
         for bid in orders.bids:
             price = view.price(bid.good, bid.area)
             if price:
@@ -223,11 +224,11 @@ def _seed_durable_stocks(setup, record, view) -> None:
         record.book.move_many(moves)
 
 
-def _final_demand(setup, record, view, replacement=0.0) -> Dict[TileId, Dict[GoodId, float]]:
+def _final_demand(setup, record, view, replacement=0.0, memory=None) -> Dict[TileId, Dict[GoodId, float]]:
     """What each tile's households buy at the opening prices with the opening income, and the metal the mint
     buys to replace what the money loses (at the capital)."""
     final: Dict[TileId, Dict[GoodId, float]] = {}
-    for cohort, bid, price in _opening_bids(setup, record, view):
+    for cohort, bid, price in _opening_bids(setup, record, view, memory):
         demand = final.setdefault(cohort.tile, {})
         demand[bid.good] = demand.get(bid.good, 0.0) + goods_market.quantity_at(bid, price)
     if replacement > 0.0:

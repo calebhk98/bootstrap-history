@@ -192,3 +192,30 @@ share schedules are computed afresh, about 1.1 million `hours_at` misses in thre
 sorted sources would cut it but relies on the schedule being exactly monotone, which rounding does not promise); merchants'
 route searches for orders and credit requests (per-merchant expectations make the shared route memo miss); `switching`
 (`_carry_out`, `_odds`); `land_bid.owners_of_sellers` scans every producer per (good, tile).
+
+## Round 9: the opening solved with households' plans (branch `opening-plans-speed`)
+
+An uncached Rome opening had gone from tens of seconds to several minutes when `open_economy` began solving to a fixed
+point with the households' first-year choices (`opening_plans.settle`, `_by_margin`). Measured with a script that wraps
+`opening._open` and `open_economy` around `harness.sim(civ="rome_100ad")` with `ROME_CACHE_DIR` on an empty directory:
+
+- Solves: the replacement-free first solve, the metal-replacement solve, the settle passes and the bisection on the
+  households ranked by what an hour hired gains them make 16 full solves of the opening in all (the same 16 after the
+  change; none repeats a plan, so remembering solves by plan was tried and dropped). Each took about 16 s (a few 4 to 7 s
+  where a price solve was cached).
+- Where one solve spends it (cProfile of one solve): about nine tenths is `_settle_income`, the income fixed point
+  (`opening_income.settled_income_per_head`), which asks `_final_demand` (every cohort's bids) once per pass. It runs its
+  whole pass bound every time: income falls by about one percent a pass and never reaches the tolerance, so the result
+  is the income after that many passes (a separate issue: the bound, not a fixed point, sets the opening's income).
+  Because the answer is where the iteration stops, starting a solve from the last one's income would change the result,
+  so it was not done.
+- The cut: the basket, the priced needs and the store weights of a cohort do not depend on its income, so
+  `opening_bid_memory.BidMemory` holds them for the passes of one `_settle_income` (exact: the same calls, made once).
+  Uncached Rome opening 231 s before, 108 s after (two runs, one machine, `prof.py`-style wrapper); a solve about 7 s.
+- Exactness: the cohorts' plans, `opening_demand`, `opening_basket` and every price in the opening memory are equal
+  (`==`, not within tolerance) before and after on the Rome opening. Test: `test_opening_plans_speed` (the same bids at
+  several incomes with and without the memory; a small economy whose choice settles, and one whose choice is made to
+  cycle so the bisection runs, give equal plans, quantities, prices and producers with and without it).
+- Not done: bisecting on the ranking with the solve's prices held (it re-solves less, but the producers' sizing and
+  prices move with hiring, so the result would differ from the fixed point); the per-pass work left is `goods_orders`
+  itself, flat in the profile.
