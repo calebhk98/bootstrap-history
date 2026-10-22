@@ -85,7 +85,7 @@ class FeedCrewAndCartsAreBought(unittest.TestCase):
             real_close(setup, record, carriage, ledger, area_map)
             cls.years[-1]["eaten"] = {each.agent_id: each.carrier_wear.get(FEED_GOOD, 0.0) for each in record.merchants.values()}
             cls.years[-1]["worn_carts"] = {each.agent_id: each.carrier_wear.get(wear_fixture.CART, 0.0) for each in record.merchants.values()}
-        with mock.patch.object(economy, "dispatch_merchants", watch_close), \
+        with mock.patch.object(economy, "dispatch_merchants", watch_close), fixture.surplus_households(), \
                 mock.patch.object(merchants, "dispatch", watch_dispatch):
             cls.economy, cls.outcomes = fixture.run(cls.setup, 25)
 

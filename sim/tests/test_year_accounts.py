@@ -65,7 +65,11 @@ class YearAccountsTests(unittest.TestCase):
         grain = self.grown_outcome.accounts.goods[fixture.GRAIN]
         self.assertGreater(grain.production_grown, 0.0)
         self.assertGreater(grain.final_consumption_grown, 0.0)
-        self.assertGreater(grain.final_consumption_grown, grain.market_turnover)
+        # what households grow is eaten without a market clearing it: the same year with households buying all their
+        # food clears the same grain, whatever share of the food they grow (households_hours_offered)
+        bought_grain = self.accounts.goods[fixture.GRAIN]
+        self.assertAlmostEqual(grain.market_turnover, bought_grain.market_turnover, delta=1e-6 * bought_grain.market_turnover)
+        self.assertGreater(grain.market_turnover, 0.0)
         self.assertAlmostEqual(grain.residual() / grain.production, 0.0, places=6)
         for cohort in self.grown_outcome.accounts.cohorts:
             self.assertGreater(cohort.own_plot_per_head, 0.0)

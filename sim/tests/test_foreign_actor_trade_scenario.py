@@ -25,6 +25,9 @@ TRADER = "trader:test"
 def agent_game():
     game = S.Sim(NODES, ORDER, random.Random(1), events=True, manual=False, civ=S.load_civ("rome_100ad"))
     game.goal, game.done_year = GOAL, {}
+    # the rate a cargo must earn is a stated input: the credit market's own rate depends on where the opening's cycle
+    # stands (Complaint 473), and a cargo's gap with the partner is a smaller thing than that swing
+    game.market_rate = lambda: float(game.civ["starting_interest_rate"])
     return game
 
 
