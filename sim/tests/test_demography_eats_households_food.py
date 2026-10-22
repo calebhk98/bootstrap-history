@@ -50,6 +50,8 @@ class DemographyReadsTheHouseholdsTests(unittest.TestCase):
         game = self.game
         game.population = copy.deepcopy(self.start_population)
         game.state.population.food_eaten_over_need = eaten_over_need
+        # each region is fed what its own households ate (regional_people.py, Complaint 603); the nation's figure is the record beside
+        game.state.population.regional_eaten_over_need = {tile: eaten_over_need for tile in game.home_tiles_held()}
         game._demographic_recovery(game.state.scenario.year)
         return game._last_demographic_step
 
