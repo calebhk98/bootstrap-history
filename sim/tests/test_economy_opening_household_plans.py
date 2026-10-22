@@ -18,6 +18,7 @@ from sim.economy import (goods_market, household_grinding, household_work_year, 
 from sim.economy.households_basket import Basket, NeedSpec, make_basket
 from sim.economy.households_cohort import Cohort
 from sim.economy.market_memory import YearView, market_key
+from sim.economy.recipes import recipe_from_entry as recipes_from_entry
 from sim.economy.setup import TradeSpec, labour_area
 from sim.economy.types import GoodSpec, LabourOffer, Recipe
 from sim.tests import economy_fixture as fixture
@@ -232,6 +233,22 @@ class PlacementTests(unittest.TestCase):
         recipes = {recipe_id: setup.recipes[recipe_id] for recipe_id in (fixture.FARM, MILL, SERVE, fixture.MINE)}
         order = opening._placement_order({recipe_id: 1.0 for recipe_id in recipes}, recipes, setup)
         self.assertEqual(order[-1], SERVE)
+
+    def test_a_service_flagged_in_data_is_placed_last_though_its_unit_has_a_mass(self):
+        setup = household_work_setup()
+        specs = dict(setup.specs)
+        specs[SERVICE] = GoodSpec(SERVICE, 1.0, 0.0, 0.0, "service")
+        flagged = dataclasses.replace(setup.recipes[SERVE], service=True)
+        recipes = {recipe_id: setup.recipes[recipe_id] for recipe_id in (fixture.FARM, MILL, fixture.MINE)}
+        recipes[SERVE] = flagged
+        order = opening._placement_order({recipe_id: 1.0 for recipe_id in recipes},
+                                         recipes, dataclasses.replace(setup, specs=specs))
+        self.assertEqual(order[-1], SERVE)
+
+    def test_a_recipe_entry_marked_service_in_data_is_a_service_recipe(self):
+        entry = {"outputs": {SERVICE: 1.0}, "labour_hours": {SERVANT: 1.0}, "service": True}
+        self.assertTrue(recipes_from_entry(SERVE, entry).service)
+        self.assertFalse(recipes_from_entry(SERVE, {"outputs": {SERVICE: 1.0}, "labour_hours": {SERVANT: 1.0}}).service)
 
 
 class FixedPointTests(unittest.TestCase):
