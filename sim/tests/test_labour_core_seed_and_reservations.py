@@ -66,15 +66,34 @@ class SeedBoundedByHirersTests(unittest.TestCase):
     def test_the_kept_hours_of_a_seeded_trade_are_its_hirers_hours_when_they_are_below_the_seed(self):
         wanted = {("vale", "merchant"): 20 * HOURS}
         state_bids = {("vale", "merchant"): 5 * HOURS}
-        kept = workforce_settle.hours_kept({"vale": self.SEEDS}, wanted, state_bids)
+        kept = workforce_settle.hours_kept({"vale": self.SEEDS}, wanted, state_bids, {})
         self.assertEqual(kept[("vale", "merchant")], 25 * HOURS)
         self.assertNotIn(("vale", "porter"), kept)
+
+    def test_a_trade_whose_only_hirer_is_planned_carriage_keeps_the_hours_carriage_plans_for_it(self):
+        carriage_plans = {("vale", "porter"): 25 * HOURS}
+        kept = workforce_settle.hours_kept({"vale": self.SEEDS}, {}, {}, carriage_plans)
+        self.assertEqual(kept[("vale", "porter")], 25 * HOURS)
+        self.assertNotIn(("vale", "merchant"), kept)
+
+    def test_carriage_plans_add_to_the_producers_and_the_states_hours_up_to_the_seed(self):
+        carriage_plans = {("vale", "porter"): 30 * HOURS}
+        kept = workforce_settle.hours_kept({"vale": self.SEEDS}, {("vale", "porter"): 5 * HOURS},
+                                           {("vale", "porter"): 20 * HOURS}, carriage_plans)
+        self.assertEqual(kept[("vale", "porter")], 40 * HOURS)
+
+    def test_the_hours_merchants_plan_for_carriage_are_summed_by_area_and_trade(self):
+        bids = [SimpleNamespace(area="vale", trade="porter", hours=10 * HOURS),
+                SimpleNamespace(area="vale", trade="porter", hours=5 * HOURS),
+                SimpleNamespace(area="dale", trade="porter", hours=2 * HOURS)]
+        self.assertEqual(workforce_settle.hours_by_area_and_trade(bids),
+                         {("vale", "porter"): 15 * HOURS, ("dale", "porter"): 2 * HOURS})
 
     def test_the_people_a_seed_no_hirer_wants_go_to_the_fallback_trade(self):
         state = MarketState()
         state.workers = {"vale": {"merchant": [300.0, 200.0], "labourer": [100.0, 100.0]}}
         state.trainees = {}
-        kept = workforce_settle.hours_kept({"vale": self.SEEDS}, {("vale", "merchant"): 50 * HOURS}, {})
+        kept = workforce_settle.hours_kept({"vale": self.SEEDS}, {("vale", "merchant"): 50 * HOURS}, {}, {})
         workforce_settle.trim_people(state, kept, "labourer", HOURS)
         self.assertAlmostEqual(sum(state.workers["vale"]["merchant"]), 50.0)
         self.assertAlmostEqual(sum(state.workers["vale"]["labourer"]), 650.0)

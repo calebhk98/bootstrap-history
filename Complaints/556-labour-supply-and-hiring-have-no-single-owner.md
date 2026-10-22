@@ -88,3 +88,10 @@ fallback trade. A trade whose hirers bid more than the seed is unchanged. The op
 spin-up's carriage bids need those people); the bound applies at each trim. Rule tests: `SeedBoundedByHirersTests` in
 `test_labour_core_seed_and_reservations.py`. `complaint_467_trades_open_to_the_jobs` is green. Merchants, glassblowers, knappers and plumbers
 after the open: see the commit message. Still open: the opening seed itself is not bounded by the carriage crews it will hire.
+
+Done (carters, 2026-10-22): `carters_and_plumbers_exist_in_a_game_scenario` went red because the bound read no hirer for the carriage
+trades: at the trim the producers' plans and last year's hires (`expected_hours`) hold none of them (the carriage crews' hours are in
+neither), and the state does not bid them, so every carter seed went to the fallback. The merchants' planned carriage hours
+(`carriage_hours.bids`, summed by `workforce_settle.carriage_plan_hours`) are now a hirer in `hours_kept`, as producers' plans are. A seeded
+trade nobody plans for or hires is still bounded to nothing. Rule tests: `SeedBoundedByHirersTests`. Re-measure the counts with
+`python3 -m sim.tests --slow --only carters_and_plumbers_exist_in_a_game_scenario,complaint_467_trades_open_to_the_jobs`.

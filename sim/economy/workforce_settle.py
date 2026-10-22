@@ -10,7 +10,7 @@ from typing import Dict, Mapping, Tuple
 
 from sim.labour.api import bound_by_hirers, fallback_trade
 
-from . import producers, state_budget, workforce_version
+from . import carriage_hours, producers, state_budget, workforce_version
 from .labour_state import core_trades, plot_trade, producers_hours_needed, seeded_hours
 from .market_memory import market_key
 from .setup import labour_area
@@ -42,27 +42,41 @@ def trim_to_expected_hours(setup, record, view) -> None:
     fallback trade in the same ability bands."""
     fallback = fallback_trade(core_trades(setup))
     wanted = hours_kept(seeded_hours(setup, producers_hours_needed(setup, record)),
-                        expected_hours(setup, record, view), state_hours(setup, record, view))
+                        expected_hours(setup, record, view), state_hours(setup, record, view),
+                        carriage_plan_hours(setup, record))
     trim_people(record.workforce, wanted, fallback, setup.working_hours_per_year)
     send_idle_to_plots(record.workforce, wanted, fallback, plot_trade(setup), setup.working_hours_per_year)
 
 
 def state_hours(setup, record, view) -> Dict[Tuple[str, str], float]:
     """Hours the state's wage budget bids by (labour area, trade)."""
+    return hours_by_area_and_trade(state_budget.wage_labour_bids(setup, record, view, record.state_budget.wage_budget))
+
+
+def carriage_plan_hours(setup, record) -> Dict[Tuple[str, str], float]:
+    """Hours the merchants' carriage crews are planned to bid by (labour area, trade): the carriers' own demand."""
+    return hours_by_area_and_trade(carriage_hours.bids(setup, record))
+
+
+def hours_by_area_and_trade(bids) -> Dict[Tuple[str, str], float]:
+    """The bids' hours summed by (labour area, trade)."""
     hours: Dict[Tuple[str, str], float] = {}
-    for bid in state_budget.wage_labour_bids(setup, record, view, record.state_budget.wage_budget):
+    for bid in bids:
         hours[(bid.area, bid.trade)] = hours.get((bid.area, bid.trade), 0.0) + bid.hours
     return hours
 
 
 def hours_kept(seeds_by_area: Mapping[str, Mapping[str, float]], wanted: Mapping[Tuple[str, str], float],
-               state_wanted: Mapping[Tuple[str, str], float]) -> Dict[Tuple[str, str], float]:
+               state_wanted: Mapping[Tuple[str, str], float],
+               carriage_wanted: Mapping[Tuple[str, str], float]) -> Dict[Tuple[str, str], float]:
     """`wanted` with each seeded trade (the society's need, for trades no producer's runs staff) kept at its seed
-    only as far as its hirers' hours go: what producers plan and others hired, and the state's bids. The people
+    only as far as its hirers' hours go: what producers plan and others hired, the state's bids and the hours the
+    merchants' carriage crews are planned to bid. The people
     beyond that are not kept (Complaint 556)."""
     kept = dict(wanted)
     for area, seeds in seeds_by_area.items():
-        hirers = {trade: wanted.get((area, trade), 0.0) + state_wanted.get((area, trade), 0.0) for trade in seeds}
+        hirers = {trade: wanted.get((area, trade), 0.0) + state_wanted.get((area, trade), 0.0)
+                  + carriage_wanted.get((area, trade), 0.0) for trade in seeds}
         for trade, hours in bound_by_hirers(seeds, hirers).items():
             kept[(area, trade)] = max(kept.get((area, trade), 0.0), hours)
     return kept
