@@ -66,7 +66,7 @@ def plan_year(setup, record, view, labour_bids: List[LabourBid]) -> None:
     budget.deficit = deficit
     budget.financed = supplied
     budget.issued_total += supplied.get("issue", 0.0) + supplied.get("debase", 0.0)
-    labour_bids.extend(_labour_bids(setup, record, view, budget.wage_budget))
+    labour_bids.extend(wage_labour_bids(setup, record, view, budget.wage_budget))
 
 
 def _trades(setup):
@@ -74,7 +74,7 @@ def _trades(setup):
     return trades or [setup.unskilled_trade]
 
 
-def _labour_bids(setup, record, view, wage_budget: float) -> List[LabourBid]:
+def wage_labour_bids(setup, record, view, wage_budget: float) -> List[LabourBid]:
     if wage_budget <= 0.0:
         return []
     working: Dict[str, float] = {}

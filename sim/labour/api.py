@@ -17,7 +17,7 @@ from .regional_migration import migrant_pairs, moves_between_regions, totals_of_
 from .market.records import (Bid, Clearing, MarketState, Route, School, TradeSpec, YearInputs, YearReport,
                              copy_state as copy_market_state, from_plain as market_state_from_plain, people_in, to_plain as market_state_to_plain)
 from .market.trades import fallback_trade, trade_specs
-from .trade_seed import seed_hours
+from .trade_seed import bound_by_hirers, seed_hours
 from .market.year import run_year as run_labour_year
 from .labour_market import production_data
 from .food_gathering import cap_share, capped_kcal, hours_cap_kcal
@@ -35,7 +35,7 @@ __all__ = [
     "people_fed_per_worker", "CAREER_YEARS", "tool_draw", "tool_hours_factors", "tool_order",
     "add_tenure", "fade_tenure", "outflow_shares", "tenure_by_trade", "tenure_held", "hours_cap_kcal", "capped_kcal", "cap_share",
     # the labour-market core (sim/labour/market/DESIGN.md): plain records in, plain records out
-    "run_labour_year", "migration_shares", "moves_between_regions", "migrant_pairs", "totals_of_pairs", "clear_labour_markets", "opening_labour_market", "seed_hours", "trade_specs", "fallback_trade", "people_in",
+    "run_labour_year", "migration_shares", "moves_between_regions", "migrant_pairs", "totals_of_pairs", "clear_labour_markets", "opening_labour_market", "seed_hours", "bound_by_hirers", "trade_specs", "fallback_trade", "people_in",
     "Bid", "Clearing", "MarketState", "Route", "School", "TradeSpec", "YearInputs", "YearReport",
     "market_state_to_plain", "market_state_from_plain", "copy_market_state",
 ]

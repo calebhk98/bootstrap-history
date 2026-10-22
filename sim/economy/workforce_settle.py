@@ -6,11 +6,11 @@ the floor. The spin-up's few years cannot thin it (a trade's people leave slowly
 is cut to the hours producers plan for the coming year plus what other buyers hired in the last;
 the people cut take up the unskilled trade, as the opening gives them to it.
 """
-from typing import Dict, Tuple
+from typing import Dict, Mapping, Tuple
 
-from sim.labour.api import fallback_trade
+from sim.labour.api import bound_by_hirers, fallback_trade
 
-from . import producers, workforce_version
+from . import producers, state_budget, workforce_version
 from .labour_state import core_trades, plot_trade, producers_hours_needed, seeded_hours
 from .market_memory import market_key
 from .setup import labour_area
@@ -41,12 +41,31 @@ def trim_to_expected_hours(setup, record, view) -> None:
     """Cut every non-fallback trade holding more people than the hours wanted need; the rest join the
     fallback trade in the same ability bands."""
     fallback = fallback_trade(core_trades(setup))
-    wanted = expected_hours(setup, record, view)
-    for area, seeds in seeded_hours(setup, producers_hours_needed(setup, record)).items():
-        for trade, hours in seeds.items():
-            wanted[(area, trade)] = max(wanted.get((area, trade), 0.0), hours)   # the society's need keeps the trades no run staffs
+    wanted = hours_kept(seeded_hours(setup, producers_hours_needed(setup, record)),
+                        expected_hours(setup, record, view), state_hours(setup, record, view))
     trim_people(record.workforce, wanted, fallback, setup.working_hours_per_year)
     send_idle_to_plots(record.workforce, wanted, fallback, plot_trade(setup), setup.working_hours_per_year)
+
+
+def state_hours(setup, record, view) -> Dict[Tuple[str, str], float]:
+    """Hours the state's wage budget bids by (labour area, trade)."""
+    hours: Dict[Tuple[str, str], float] = {}
+    for bid in state_budget.wage_labour_bids(setup, record, view, record.state_budget.wage_budget):
+        hours[(bid.area, bid.trade)] = hours.get((bid.area, bid.trade), 0.0) + bid.hours
+    return hours
+
+
+def hours_kept(seeds_by_area: Mapping[str, Mapping[str, float]], wanted: Mapping[Tuple[str, str], float],
+               state_wanted: Mapping[Tuple[str, str], float]) -> Dict[Tuple[str, str], float]:
+    """`wanted` with each seeded trade (the society's need, for trades no producer's runs staff) kept at its seed
+    only as far as its hirers' hours go: what producers plan and others hired, and the state's bids. The people
+    beyond that are not kept (Complaint 556)."""
+    kept = dict(wanted)
+    for area, seeds in seeds_by_area.items():
+        hirers = {trade: wanted.get((area, trade), 0.0) + state_wanted.get((area, trade), 0.0) for trade in seeds}
+        for trade, hours in bound_by_hirers(seeds, hirers).items():
+            kept[(area, trade)] = max(kept.get((area, trade), 0.0), hours)
+    return kept
 
 
 def trim_people(state, wanted: Dict[Tuple[str, str], float], fallback: str, working_hours_per_year: float) -> None:
