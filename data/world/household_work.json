@@ -3,6 +3,10 @@
  "days_per_year": 365,
  "cooking_fuel_mj_per_person_per_day": 20.6,
  "cooking_fuel_basis": "Fuelwood burnt in household cookstoves in an isolated rural West African village fell 'from 20.6 MJ cap-1 day-1 to 10.5 MJ cap-1 day-1' as household size rose from five to 20 (Nathan G. Johnson and Kenneth M. Bryden, 'Factors affecting fuelwood consumption in household cookstoves in an isolated rural West African village', Energy 46(1), 2012, pp. 310-321; abstract opened; stove type and sample size not given there). The five-person figure is taken, as the household size of climate_needs.PERSONS_PER_HOUSEHOLD. Megajoules of fuel heat, the unit of the warmth need; added to a hearth's warmth floor. One village, open stoves: confidence C.",
+ "supervision_hours_per_hired_hour": 0.1,
+ "supervision_basis": "Hours of a household's own it spends directing and checking each hour a servant works for it. No source found: a labelled estimate, confidence D. The servant's keep is already in the price an hour of service sells at (the servant's wage and the cost of what makes the service).",
+ "supervision_retire": "Complaints/645 follow-up: a time-use or servant-management source for the hours a household spends directing servants, then derive it from the servant's hours and the household's staff",
+ "supervision_conf": "D",
  "tasks": {
   "water_and_fuel": {
    "needs_hearth": false,

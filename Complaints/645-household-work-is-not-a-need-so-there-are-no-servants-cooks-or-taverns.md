@@ -132,3 +132,32 @@ own costs (the servant's keep, supervision, the household's own hour not otherwi
 freed hours at that worth gains nothing by hiring. Measure: hired hours per person and the service share of the opening
 basket on a default Rome game; a source for the share of servants in a pre-modern workforce should be opened before any figure
 is used.
+
+## Update: hiring pays only for the service's full cost (2026-10-22)
+
+Sources opened: `humanprogress.org/grim-old-days-peter-lasletts-the-world-we-have-lost/` (a summary of Laslett, The World We Have
+Lost): servants "varied from as low as 4 percent to as high as a third of the population", the high end "in relatively wealthy
+times and places, such as London and parts of Norwich in the 1690s"; `johnhearfield.com/History/Breadt.htm` (King's 1688 table):
+no servants line, only "Labourers & Outservants" and the households above them, whose counts include their servants. Not found
+open: Massie 1759, Laslett's own tables, Roman household slaves. So only a range and the point that the wealthy kept servants
+rest on a source (secondary).
+
+Gap: the rule hired all when the average wage over the cohort's offers beat the service's price. It counted every freed hour as
+sold, whatever share of the hours offered found a buyer last year, and it counted no hours spent directing the servant.
+Fix: `household_work_year.work_terms` weights each offer's wage by the share of that labour market's offered hours that sold
+(`households_work.sold_share`, from `record.hours_hired` and `hours_idle`; no history counts as sold) and takes off the
+hours spent directing (`households_work.net_hour_value`; `supervision_hours_per_hired_hour` in the data file, no source found,
+confidence D, with a `retire`). The servant's keep is already in the price. Grinding's make-or-buy keeps the gross hour.
+Tests: `FullCostOfServiceTests` in `sim/tests/test_economy_household_work_year.py`.
+
+Consequence for the opening: with the cost counted, all-hire and none-hire cycled (at everyone hiring the posted service price
+exceeds every hour's worth; at nobody hiring it pays again). `opening_plans.settle` now, on a cycle, bisects on how many of
+the households, ranked by what an hour hired gains them, hire (`_by_margin`); test in
+`sim/tests/test_economy_opening_household_plans.py`. It costs about nine more opening solves: the Rome opening goes from about
+40 s to about 240 s uncached (measured with a scratch probe, `open_economy` on the Rome setup).
+
+Measured on the Rome opening, before then after: hired hours a person a year 456 then 28; service share of the opening's
+priced demand 0.52 then 0.05; domestic service hours per worker 982 then 52, of a 2000 hour year (49% then 2.6% of a worker's
+year). The source's range is 4% to a third of the population, higher where wealthy, so the result sits just under it.
+Still open: the indivisibility of a servant below some share of a year, the marginal rather than the average wage as the
+worth of a freed hour, and the opening's own sale share (it has no labour history, so only the supervision term acts there).

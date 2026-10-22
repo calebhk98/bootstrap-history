@@ -7,6 +7,7 @@ from typing import Dict, Mapping, Sequence, Tuple
 from . import household_grinding, households_work, titles_worked
 from .households_basket import need_prices
 from .households_cohort import Cohort
+from .market_memory import market_key
 from .setup import labour_area
 from .types import AgentId, LabourOffer
 
@@ -86,18 +87,29 @@ def cohort_split(setup, record, view, cohort: Cohort, offers: Sequence[LabourOff
     return hired, own
 
 
+def sold_share_at(record, trade, area) -> float:
+    """Share of the hours offered in a labour market that sold last year (all of them with no history)."""
+    key = market_key(trade, area)
+    return households_work.sold_share(getattr(record, "hours_hired", {}).get(key, 0.0),
+                                      getattr(record, "hours_idle", {}).get(key, 0.0))
+
+
 def work_terms(setup, record, view, cohort: Cohort, offers: Sequence[LabourOffer],
                servant_price_fallback_per_hour: float) -> Tuple[float, float, float, Tuple[str, ...]]:
-    """(worth of the cohort's hour, hours of household work it needs, price of an hour hired, grains bought milled):
-    what its choice between hiring and doing the work is read from. Grinding falls only on the food it grinds by
-    hand, decided at the worth of its hour (the water and fuel are a fixed load either way)."""
+    """(worth to the cohort of an hour hired, hours of household work it needs, price of an hour hired, grains bought
+    milled): what its choice between hiring and doing the work is read from. The worth of an hour is the wage its
+    offers face, counted only for the share of hours that sold, less the hours spent directing the servant. Grinding
+    falls only on the food it grinds by hand, decided at the worth of its own hour (the water and fuel are a fixed
+    load either way)."""
     mine = [offer for offer in offers if offer.worker == cohort.agent_id]
     value = households_work.hour_value(
-        [(offer.hours, view.wage(offer.trade, offer.area) or offer.reservation_wage) for offer in mine])
+        [(offer.hours, (view.wage(offer.trade, offer.area) or offer.reservation_wage) * sold_share_at(record, offer.trade, offer.area))
+         for offer in mine])
     milled, ground = grinding_plan(setup, record, view, cohort, value)
     needed = households_work.hours_needed(cohort.people, setup.household_work, has_hearth(record, cohort), ground)
     wage_price = view.wage(setup.servant_trade, labour_area(cohort.tile)) or servant_price_fallback_per_hour
-    return value, needed, service_price_per_hour(setup, view, cohort.tile, wage_price), milled
+    return (households_work.net_hour_value(value, households_work.supervision_share(setup.household_work)), needed,
+            service_price_per_hour(setup, view, cohort.tile, wage_price), milled)
 
 
 def cohort_plan(setup, record, view, cohort: Cohort, offers: Sequence[LabourOffer],

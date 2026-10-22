@@ -10,6 +10,7 @@ from sim.economy import household_work_year, households_work
 from sim.economy.households_basket import make_basket
 from sim.economy.households_cohort import Cohort
 from sim.economy.households_own import withhold_hours
+from sim.economy.market_memory import market_key
 from sim.economy.setup import labour_area
 from sim.economy.types import LabourOffer
 from sim.world import need_basket
@@ -131,6 +132,52 @@ class SplitTests(unittest.TestCase):
         spec = next(need for need in household_work_year.cohort_basket(setup(), rec, hired_cohort).needs
                     if need.need_id == "household_work")
         self.assertAlmostEqual(spec.subsistence_per_person, hired_cohort.hired_work_per_person)
+
+
+class FullCostOfServiceTests(unittest.TestCase):
+    """A household hires only where the hours it frees pay the service's full cost: the price, the hours spent directing
+    the servant, and the freed hours finding a buyer."""
+
+    def _hired(self, wage, price, supervision=0.0, sold=None):
+        worker, area = cohort("worker"), labour_area("t1")
+        rec = record({"t1": {"worker": 1.0}}, cohorts=[worker])
+        if sold is not None:
+            key = market_key("smith", area)
+            rec.hours_hired, rec.hours_idle = {key: 1000.0 * sold}, {key: 1000.0 * (1.0 - sold)}
+        plan = setup()
+        plan.household_work = dict(DATA, supervision_hours_per_hired_hour=supervision)
+        offers = [LabourOffer("worker", "smith", area, 500.0, 0.1)]
+        view = View({("smith", area): wage, ("servant", area): 1.0}, {"domestic_service_hour": price})
+        hired, _own = household_work_year.cohort_split(plan, rec, view, worker, offers, 0.0)
+        return hired
+
+    def test_a_household_whose_freed_hours_would_go_unsold_does_not_hire(self):
+        self.assertGreater(self._hired(3.0, 2.0), 0.0)
+        self.assertEqual(self._hired(3.0, 2.0, sold=0.2), 0.0)
+
+    def test_a_household_whose_hour_is_worth_well_above_the_full_cost_hires(self):
+        self.assertGreater(self._hired(10.0, 2.0, supervision=0.1, sold=0.9), 0.0)
+
+    def test_a_household_whose_hour_barely_beats_the_price_does_not_hire_once_directing_costs_hours(self):
+        self.assertGreater(self._hired(2.1, 2.0), 0.0)
+        self.assertEqual(self._hired(2.1, 2.0, supervision=0.2), 0.0)
+
+    def test_hiring_falls_as_the_full_cost_rises(self):
+        wages = [1.5 + 0.5 * step for step in range(10)]
+
+        def hirers(price, supervision):
+            return sum(1 for wage in wages if self._hired(wage, price, supervision) > 0.0)
+
+        by_price = [hirers(price, 0.1) for price in (1.0, 2.0, 3.0, 4.0)]
+        self.assertEqual(by_price, sorted(by_price, reverse=True))
+        self.assertGreater(by_price[0], by_price[-1])
+        by_supervision = [hirers(2.0, share) for share in (0.0, 0.2, 0.4, 0.6)]
+        self.assertEqual(by_supervision, sorted(by_supervision, reverse=True))
+        self.assertGreater(by_supervision[0], by_supervision[-1])
+
+    def test_the_sold_share_counts_hours_with_a_buyer(self):
+        self.assertAlmostEqual(households_work.sold_share(25.0, 75.0), 0.25)
+        self.assertEqual(households_work.sold_share(0.0, 0.0), 1.0)
 
 
 class HearthTests(unittest.TestCase):

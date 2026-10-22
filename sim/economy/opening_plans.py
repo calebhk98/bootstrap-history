@@ -25,6 +25,7 @@ PLAN_PASSES = 6          # a numerical bound on solving the opening against the 
 class HouseholdPlans:
     by_cohort: Mapping[AgentId, CohortPlan]
     service_price_by_tile: Mapping[TileId, float] = dataclasses.field(default_factory=dict)   # an hour hired costs at least this, where servants are scarce
+    margin_by_cohort: Mapping[AgentId, float] = dataclasses.field(default_factory=dict)       # worth of an hour hired less its price: who hires first
 
 
 def hands_left_by_tile(setup, record) -> Dict[TileId, float]:
@@ -50,6 +51,7 @@ def household_plans(setup, record, area_map, room_by_tile: Optional[Mapping[Tile
     outside = year_labour.outside_option_by_tile(setup, record, view)
     offers = year_labour.labour_offers(setup, record, view, outside)
     floors: Dict[TileId, float] = {}
+    margins: Dict[AgentId, float] = {}
     if room_by_tile is not None and setup.household_work:
         rows: Dict[str, list] = {}
         tiles_of: Dict[str, set] = {}
@@ -57,6 +59,7 @@ def household_plans(setup, record, area_map, room_by_tile: Optional[Mapping[Tile
             fallback = outside.get(cohort.tile, 0.0) / max(setup.working_hours_per_year, 1e-9)
             value, needed, price, _milled = household_work_year.work_terms(setup, record, view, cohort, offers, fallback)
             market = _service_market(setup, area_map, cohort.tile)
+            margins[_cohort_id] = value - price
             rows.setdefault(market, []).append((value, needed, price))
             tiles_of.setdefault(market, set()).add(cohort.tile)
         for market, market_rows in sorted(rows.items()):
@@ -64,7 +67,7 @@ def household_plans(setup, record, area_map, room_by_tile: Optional[Mapping[Tile
                 market_rows, math.fsum(room_by_tile.get(tile, 0.0) for tile in tiles_of[market]))
             if floor > 0.0:
                 floors.update({tile: floor for tile in tiles_of[market]})
-    return HouseholdPlans(household_work_year.plans(setup, record, view, offers, outside, floors), floors)
+    return HouseholdPlans(household_work_year.plans(setup, record, view, offers, outside, floors), floors, margins)
 
 
 def _service_market(setup, area_map, tile: TileId) -> str:
@@ -107,9 +110,46 @@ def settle(open_with: Callable[[Optional[HouseholdPlans]], object], choose: Call
     holding `plans` (None: none), `choose(opened)` is what its households then plan. Stops at the first opening that
     holds what its households then plan; after `passes` solves, at the last (a choice that cycles has no fixed point)."""
     opened = open_with(None)
+    tried, seen = [], set()
     for _pass in range(passes):
         chosen = choose(opened)
         if agree(cohorts_of(opened), chosen):
             return opened
+        pattern = tuple(sorted((cohort_id, plan[0] > 0.0) for cohort_id, plan in chosen.by_cohort.items()))
+        if chosen.margin_by_cohort and pattern in seen:
+            break       # the choice has come back to a hiring pattern it had: it cycles
+        seen.add(pattern)
+        tried.append(chosen)
         opened = open_with(chosen)
-    return opened
+    widest = max(tried, key=lambda plans: sum(plan[0] for plan in plans.by_cohort.values()), default=None)
+    if widest is None or not widest.margin_by_cohort:
+        return opened
+    return _by_margin(open_with, choose, widest)
+
+
+def _only_the_first(plans: HouseholdPlans, ranked, count: int) -> HouseholdPlans:
+    """The plans with only the first `count` of the ranked cohorts hiring."""
+    dropped = set(ranked[count:])
+    return HouseholdPlans({cohort_id: ((0.0,) + tuple(plan[1:]) if cohort_id in dropped else plan)
+                           for cohort_id, plan in plans.by_cohort.items()})
+
+
+def _by_margin(open_with, choose, widest: HouseholdPlans):
+    """A choice that cycles (everyone hires, which makes hiring dear, so none does) has its fixed point in between: the
+    households that gain most from hiring hire, as many as still gain at the prices that many hiring brings. Bisects
+    on how many of the households, ranked by what an hour hired gains them, hire (hiring more raises the price, so
+    the household that gains least is the first to find it no longer pays)."""
+    ranked = sorted((cohort_id for cohort_id, plan in widest.by_cohort.items() if plan[0] > 0.0),
+                    key=lambda cohort_id: (-widest.margin_by_cohort.get(cohort_id, 0.0), cohort_id))
+    low, high = 0, len(ranked)
+    opened_with = {}
+    while low < high:
+        middle = (low + high + 1) // 2
+        trial = _only_the_first(widest, ranked, middle)
+        opened = opened_with[middle] = open_with(trial)
+        chosen = choose(opened)
+        if any(chosen.by_cohort[cohort_id][0] <= 0.0 for cohort_id in ranked[:middle] if cohort_id in chosen.by_cohort):
+            high = middle - 1
+        else:
+            low = middle
+    return opened_with[low] if low in opened_with else open_with(_only_the_first(widest, ranked, low))
