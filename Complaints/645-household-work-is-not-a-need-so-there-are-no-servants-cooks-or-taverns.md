@@ -119,3 +119,16 @@ unchanged. After: Rome hires almost nothing (6 of 312 cohorts), does about 466 h
 its cash as savings, and the clearings lend at 0.07 to 0.08. Market rate (command above): rome_100ad 0.016, han_china_100ad 0.132,
 england_1300 0.049, mexica_1500 0.375. Rome now reads below the households' own ask floor (the loss share): the opening is
 unsettled, not tuned. Mexica stays high and is not traced here.
+
+## Hired household work is most of the opening's spending (PM, 2026-10-22)
+
+Since the opening is solved with the households' first-year choices (473 Update 19), Rome's households hire about four
+hundred and fifty hours a person a year of domestic service, and domestic service is close to half the opening basket's
+value. The hours come from the same population, so the economy mostly trades household chores between households. The
+hiring rule compares a household's hour worth with the service price and hires all or none; with a narrow gap between the
+two, nearly every household hires everything. Pre-modern sources put domestic service at a minority of the workforce, kept by
+households whose time was worth well above a servant's; the rule should hire only where the gap pays for the service's
+own costs (the servant's keep, supervision, the household's own hour not otherwise sold), and a household that cannot sell its
+freed hours at that worth gains nothing by hiring. Measure: hired hours per person and the service share of the opening
+basket on a default Rome game; a source for the share of servants in a pre-modern workforce should be opened before any figure
+is used.
