@@ -475,3 +475,12 @@ test. Before: 10 sign flips of the wage change in the town's labourer market (li
 year 12; staple price still changes sign most years but the swing is about a third of what it was). Not closed: the ore cycle of
 `baseline_fixture` (period near seven years) is not re-measured; `baseline_fixture` `test stocks are not eaten through` fails before
 (metal_kg) and after (ore_kg), unrelated to this change.
+
+## Update 15 (PM): no one grows wheat at Rome's opening
+
+`purchase_limited_by_offered_volume_scenario` "the economy offers the staple on the founder's tile" is red: at france_05 no
+wheat is offered for five years while its price climbs. The wheat producer stays idle because a run's planned labour and rent
+cost more than its revenue, while most farmer hours sit idle and millet and flour supply the grain. Before the held rate (641)
+the check passed only on leftover stock. A staple whose producers cannot cover labour and rent at the opening, with farm
+hours idle, is the opening's prices and wages failing to meet (this complaint); the check stays red. Command:
+`python3 -m sim.tests --slow --only purchase_limited_by_offered_volume_scenario --jobs 1`.

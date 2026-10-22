@@ -34,6 +34,8 @@ entry below is updated as its group lands.
 - `state_debasement_prices_scenario`: green again on fc5ef363 (after households read a perceived price level, 473 Update 14).
 - `hot_path_caches_scenario` CPU budget: an early year measured just over its budget on a loaded machine (three slow jobs and
   agents); under the budget alone after the fetch-cost search was made fast (678). Re-measure alone before treating it as red.
+- `purchase_limited_by_offered_volume_scenario` "the economy offers the staple on the founder's tile": no wheat grown at Rome's
+  opening (473 Update 15).
 - `real_output_validation`: not new; the same output-per-head check `real_output` failed on 3cb9c9a0 (473).
 
 ## Honest validations of open problems (stay red until the owner closes)
