@@ -24,6 +24,7 @@ from sim.constants import declare
 
 from . import ask_raise, inventory, tool_fallback, unit_cost
 from .labour_ceilings import joint_labour_ceilings
+from .planning_price import held_to_band, is_bare_quote
 from .protocols import MarketView
 from .types import (AgentId, Bid, EDGE_CONSUMPTION, EDGE_PRODUCTION, GoodId, GoodSpec, GoodsMove, LabourBid,
                     Offer, Recipe, TileId)
@@ -217,11 +218,14 @@ def next_expectations(producer: Producer, recipe: Recipe, view: MarketView,
     `live_input_prices` and `live_wages` when the caller has them already."""
     updated = dict(producer.expected_prices)
     latest_prices = {}
+    bare_quotes = set()      # outputs whose latest price is a bid ceiling or an ask, not a price that traded
     for good in recipe.outputs:
         latest = view.price(good, view.area_of(good, producer.tile))
         if latest is None:
             continue
         latest_prices[good] = latest
+        if is_bare_quote(view, good, view.area_of(good, producer.tile)):
+            bare_quotes.add(good)
         previous = updated.get(good)
         updated[good] = latest if previous is None else (
             previous + EXPECTATION_ADJUSTMENT_SHARE * (latest - previous))
@@ -242,6 +246,8 @@ def next_expectations(producer: Producer, recipe: Recipe, view: MarketView,
     if break_even is not None:
         for good in latest_prices:
             updated[good] += REGRESSIVE_EXPECTATION_WEIGHT * (updated[good] * break_even - updated[good])
+    for good in sorted(bare_quotes & set(cost_covering)):
+        updated[good] = held_to_band(updated[good], producer.expected_prices.get(good), cost_covering[good], input_share)
     for good in ask_raise.sold_out_outputs(producer, recipe, view):
         if good in latest_prices:
             updated[good] = ask_raise.raised_within_band(updated[good], cost_covering.get(good), input_share=input_share)
