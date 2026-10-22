@@ -540,3 +540,35 @@ the market shows it, times the site's yield, over the land a run takes). `settle
 Tests: `sim/tests/test_economy_entrant_rent.py` (a grain entrant beside a mine pays its own rent; a use at the tile mean pays the tile rent; siting picks
 the tile where its own use's rent is lowest, and the mean-rent reading would pick another). Quick tier green; `firm_count_whole_game_scenario`,
 `firm_borrows_to_enter_scenario`, `purchase_limited_by_offered_volume_scenario` green with `--slow --jobs 1`.
+
+## Update 17: the first year's plan starts from the stationary runs, not the plant (branch spin-up-plans-from-demand)
+
+Where capacity was read: `producers.plan` bounds a producer's runs by `capacity_runs * share_working` and `within_a_years_change`, which for a producer
+with `last_runs < 0` (its first year) returned the runs unchanged, so only the plant, cash and `runs_for_stock` bound them. The opening sizes the plant at
+the stationary runs times the spare share over the share that works (`opening._add_producers`) and keeps the stationary runs in `expected_sales`, but
+nothing in the first plan read them.
+
+Fix (`producers.within_a_years_change`): a producer in its first year plans at most its `expected_sales` (the stationary runs) when it has one; with
+none it plans from its expectation as before. Tests: `sim/tests/test_economy_first_year_plans_from_stationary.py` (a stationary quantity below capacity is
+planned; none plans from expectation; one above capacity does not lift the plant; after the first year the cap is gone).
+
+Measured with the spin-up uncached (`ROME_CACHE_DIR` empty; probe not committed, `economy_api.blank_economy` + `begin_spin_up` + `step`, Rome, years 1 to 6),
+national figures, runs last year / price:
+- wheat: the first plan was already under the stationary runs (1.98 million of 3.0 million; the 1.26 million of Update 16 was before the rent fix), so the
+  cap does not bind and wheat is unchanged: stock after year 1 is 694 million kg before and 698 million after, price 2.15 and 2.49, then 0.25 and 0.23 in year 2.
+  The stock is not planned capacity: year 1 sells nothing (goods made in a year are offered in the next) and years 2 and 3 sell 172 and 42 million kg
+  against an opening demand of 660 million, so the transient is the households' settling spend, not the plan.
+- bronze: year 1 runs 13.5 thousand before, 12.3 thousand after (the stationary runs; capacity 24 thousand); stock 13.5 and 12.3 million kg; shown over cost
+  1.00, 6.38, 12.37, 30.6, 8.6, 7.6 before and 1.00, 8.12, 14.77, 33.4, 8.85, 8.28 after. The opening's first-year price over making cost is 1.00 both ways.
+- iron bar: year 1 runs 27.1 thousand both ways (stationary 44 thousand); price 5.44 and 5.90.
+
+So the premise that the first year plans capacity does not hold at this commit for these goods; the cap is correct and tested but moves bronze by a tenth.
+The cobweb comes from the demand side of the spin-up. Slow topics: `economy_bronze_market_price`, `price_over_making_cost_band_validation`,
+`staff_closure_reopening_scenario`, `purchase_limited_by_offered_volume_scenario` green; `baseline_fixture` "stocks are not eaten through" red before (ore_kg)
+and after (metal_kg). Quick tier: `economy_service_lives` "a year of cash shortage sells at most a third of the stock" goes red; it is phase-sensitive
+(spin-up lengths 56, 58, 60, 62, 64 and 70 years: base fails at 56 and 62, with the change at 56, 58, 60, 62 and 70) because the fixture swings for decades (398).
+
+PM note on Update 17: the first-year cap on stationary quantities (branch `spin-up-plans-from-demand`, commit 7175c621) was
+not merged. It barely binds at this commit, so it does not move the transient, and it shifts the phase of a fixture that
+swings for decades. The lead to follow is the demand side named above: nothing sells in the first year because goods made in
+a year are offered the next, and the households' settling spend is what the cobweb starts from.
