@@ -51,6 +51,20 @@ def hours_by_trade_of_all_employers(labour, society_hours: Mapping[str, float]) 
     return hours_by_trade(society_hours, held, frozenset(data["outside_society_trades"]), labour.unskilled_trade())
 
 
+def people_by_trade_of_all_employers(labour):
+    """Working people by main occupation: the labour core's people in each trade, with what employers hold on
+    staff counted once as in `hours_by_trade` (the standing army whole). The sources the bands rest on count
+    the labour force by occupation, so a household that farms its own plot and spends the rest of its year on
+    other work is counted in farming here, as a head count and not by the hours it spent in the field. None
+    while the agent economy has not opened."""
+    core = labour.core_people_by_trade()
+    if core is None:
+        return None
+    data = groups_data()
+    held = {trade: labour.reserved_people(trade) for group in data["groups"].values() for trade in group["trades"]}
+    return hours_by_trade(core, held, frozenset(data["outside_society_trades"]), labour.unskilled_trade())
+
+
 def shares_by_group(hours_by_trade: Mapping[str, float]) -> Dict[str, float]:
     """Each group's share of all hours; a trade in no group raises, so the data cannot silently lag the registry."""
     groups = groups_data()["groups"]

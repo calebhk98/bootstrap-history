@@ -8,7 +8,7 @@ import os
 import unittest
 
 from sim.engine.ui_port import ROOT
-from sim.labour.api import hours_by_trade, shares_by_group
+from sim.labour.api import hours_by_trade, people_by_trade_of_all_employers, shares_by_group
 
 POOL = "labourer"
 ARMY = frozenset({"soldier"})
@@ -45,8 +45,41 @@ class HoursByTrade(unittest.TestCase):
         shares = shares_by_group(hours_by_trade({"farmer": 80.0, POOL: 20.0}, {}, ARMY, POOL))
         self.assertAlmostEqual(shares["agriculture"], 0.8)
 
+    def test_a_household_farming_part_time_is_counted_by_head_not_by_field_hours(self):
+        # a head count of main occupation: the same people, read as hours in the field, would be a minority
+        field_hours = {"farmer": 400.0, POOL: 600.0}
+        people = {"farmer": 800.0, POOL: 200.0}
+        self.assertAlmostEqual(shares_by_group(hours_by_trade(field_hours, {}, ARMY, POOL))["agriculture"], 0.4)
+        self.assertAlmostEqual(shares_by_group(hours_by_trade(people, {}, ARMY, POOL))["agriculture"], 0.8)
+
     def test_no_hours_gives_zero_shares(self):
         self.assertEqual(set(shares_by_group(hours_by_trade({}, {}, ARMY, POOL)).values()), {0.0})
+
+
+class _StubLabour:
+    def __init__(self, core, reserved):
+        self._core, self._reserved = core, reserved
+
+    def core_people_by_trade(self):
+        return self._core
+
+    def reserved_people(self, trade):
+        return self._reserved.get(trade, 0.0)
+
+    def unskilled_trade(self):
+        return POOL
+
+
+class PeopleByMainOccupation(unittest.TestCase):
+    def test_core_people_are_counted_once_and_the_army_whole(self):
+        labour = _StubLabour({"farmer": 700.0, POOL: 100.0, "weaver": 20.0}, {"weaver": 15.0, "soldier": 50.0})
+        people = people_by_trade_of_all_employers(labour)
+        self.assertEqual(people["weaver"], 20.0)
+        self.assertEqual(people["soldier"], 50.0)
+        self.assertAlmostEqual(shares_by_group(people)["agriculture"], 700.0 / 870.0)
+
+    def test_none_while_the_economy_has_not_opened(self):
+        self.assertIsNone(people_by_trade_of_all_employers(_StubLabour(None, {})))
 
 
 class NamedCraftsBillTheirTrade(unittest.TestCase):

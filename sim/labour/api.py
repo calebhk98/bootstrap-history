@@ -24,13 +24,13 @@ from .food_gathering import cap_share, capped_kcal, hours_cap_kcal
 from .wage_provider import people_fed_per_worker
 from .wages import CAREER_YEARS
 from .trade_data import tool_draw, tool_hours_factors, tool_order
-from .occupational_shares import occupational_report, shares_by_group, hours_by_trade, hours_by_trade_of_all_employers, format_report as format_occupational_report, groups_data as occupation_groups
+from .occupational_shares import occupational_report, shares_by_group, hours_by_trade, hours_by_trade_of_all_employers, people_by_trade_of_all_employers, format_report as format_occupational_report, groups_data as occupation_groups
 from .town_providers import register_town_premium, register_town_provider
 from .staff_targets import scholar_target
 from .tenure import add_tenure, fade_tenure, outflow_shares, tenure_by_trade, tenure_held
 
 __all__ = [
-    "occupational_report", "shares_by_group", "hours_by_trade", "hours_by_trade_of_all_employers", "format_occupational_report", "occupation_groups",
+    "occupational_report", "shares_by_group", "hours_by_trade", "hours_by_trade_of_all_employers", "people_by_trade_of_all_employers", "format_occupational_report", "occupation_groups",
     "wage_provider", "wages", "scholar_target", "Labour", "register_town_provider", "register_town_premium", "production_data",
     "people_fed_per_worker", "CAREER_YEARS", "tool_draw", "tool_hours_factors", "tool_order",
     "add_tenure", "fade_tenure", "outflow_shares", "tenure_by_trade", "tenure_held", "hours_cap_kcal", "capped_kcal", "cap_share",
