@@ -104,6 +104,58 @@ class OwnWorkersOfferMoreHoursAtTheScarcityWage(unittest.TestCase):
         self.assertGreater(result.hours_offered, 10.0 * HOURS * share(cap))
 
 
+class HoursWorkersKeepBackAreNotHandsInHand(unittest.TestCase):
+    """Workers who keep their hours (plots, leisure) until the wage is high do not fill the area's bids, here or
+    in the areas hands are fetched from: the hands count at the hours sold at the wage, not the hours they have."""
+
+    @staticmethod
+    def withholding(wage):
+        return 0.0 if wage < 50.0 else 1.0
+
+    @staticmethod
+    def gradually(wage):
+        return min(1.0, wage / 100.0)
+
+    def test_the_fetch_cost_exists_when_the_workers_on_the_spot_have_the_hours_but_sell_none_at_the_going_wage(self):
+        held = state(healers=10.0, hill_healers=5000.0)
+        bids, routes = [hungry(hours=HOURS * 5.0)], {"vale": [Route("hill", 20.0)]}
+        self.assertIsNone(ImportCosts(held, inputs(bids, routes)).wage("vale", "healer"))
+        withheld = inputs(bids, routes, {("healer", "vale"): self.withholding})
+        self.assertIsNotNone(ImportCosts(held, withheld).wage("vale", "healer"))
+
+    def test_hands_to_fetch_are_those_the_other_area_sells_not_all_it_has(self):
+        held = state(healers=1.0, hill_healers=5000.0)
+        bids, routes = [hungry(hours=HOURS * 300.0)], {"vale": [Route("hill", 20.0)]}
+        every_hour = ImportCosts(held, inputs(bids, routes)).wage("vale", "healer")
+        partial = ImportCosts(held, inputs(bids, routes, {("healer", "hill"): self.gradually})).wage("vale", "healer")
+        self.assertGreater(partial, every_hour)
+
+    def test_the_cap_is_where_hours_sold_here_and_fetched_first_fill_the_bids(self):
+        held = state(healers=1.0, hill_healers=5000.0)
+        year_inputs = inputs([hungry(hours=HOURS * 300.0)], {"vale": [Route("hill", 20.0)]},
+                             {("healer", "hill"): self.gradually})
+        costs = ImportCosts(held, year_inputs)
+        cap = costs.wage("vale", "healer")
+        filled = costs.hours_at("vale", "healer", cap) + costs._fetched("vale", "healer", ["hill"], cap)
+        self.assertAlmostEqual(filled, HOURS * 300.0, delta=1e-3 * HOURS * 300.0)
+
+    def test_the_unskilled_wage_stops_at_the_fetch_cost_when_the_hands_on_the_spot_withhold_their_hours(self):
+        specs = trades.trade_specs({"digger": {"family": "earth", "training_years": 0, "fallback": True}})
+        held = MarketState(workers={"vale": {"digger": [500.0, 0.0, 0.0, 0.0, 0.0]},
+                                    "hill": {"digger": [5000.0, 0.0, 0.0, 0.0, 0.0]}})
+        held.wages = {"vale": {"digger": 1.0}, "hill": {"digger": 1.0}}
+        year_inputs = YearInputs(trades=specs, bids=[Bid("works", "digger", "vale", HOURS * 400.0, 900.0)],
+                                 subsistence_per_worker_year={"vale": 100.0, "hill": 100.0},
+                                 hours_per_worker_year=HOURS, discount_rate=DISCOUNT, career_years=CAREER,
+                                 routes={"vale": [Route("hill", 20.0)]},
+                                 hours_share_at={("digger", "vale"): self.withholding, ("digger", "hill"): lambda wage: 1.0})
+        fetch = ImportCosts(held, year_inputs).wage("vale", "digger")
+        result = [each for each in clearing.clear_all(held, year_inputs) if each.area == "vale"][0]
+        self.assertIsNotNone(fetch)
+        self.assertLess(fetch, 50.0)
+        self.assertLessEqual(result.wage, fetch + 1e-9)
+
+
 class EntrantsExpectTheLongRunCap(unittest.TestCase):
 
     def test_graduation_income_stays_at_the_cap_while_today_pays_more(self):
