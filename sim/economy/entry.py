@@ -106,7 +106,7 @@ def entry_plans(recipes: Mapping[str, Recipe], view: MarketView,
                 unmet: Mapping[Tuple[GoodId, AreaId], UnmetDemand],
                 rent_by_tile: Optional[Mapping[TileId, float]] = None,
                 land_per_run: Optional[Mapping[str, float]] = None,
-                traded: Optional[Traded] = None, siting=None, unfilled=None) -> List[EntryPlan]:
+                traded: Optional[Traded] = None, siting=None, unfilled=None, rent_of=None) -> List[EntryPlan]:
     """New makers for each market with unmet demand: the known recipes making the good, best return on
     capital at last year's prices first, each that beats the interest rate, each built for a share of what
     the better ones leave of the gap (no limit on how many a year: the gap and the returns decide). Rent per
@@ -114,7 +114,8 @@ def entry_plans(recipes: Mapping[str, Recipe], view: MarketView,
     the size is held to the trade the market and its suppliers' markets carried (entry_sizing.py), and
     a recipe whose size comes to nothing gives way to the next best. With `siting` (location.py) a newcomer
     goes to the tile that suits it, else to the market's anchor. With `unfilled` (entry_backed.py) the bids left
-    unfilled at the recipe's full cost count with the trade."""
+    unfilled at the recipe's full cost count with the trade. With `rent_of(recipe_id, tile)` a newcomer's rent is what its own use pays there
+    (entrant_rent.py), not the tile's mean rent."""
     rent_by_tile, land_per_run = rent_by_tile or {}, land_per_run or {}
     makers: Dict[GoodId, List[str]] = {}
     for recipe_id in sorted(recipes):
@@ -128,7 +129,8 @@ def entry_plans(recipes: Mapping[str, Recipe], view: MarketView,
         currency = view.currency_of(demand.area)
         ranked = []
         for recipe_id in makers.get(demand.good, ()):
-            rent = rent_by_tile.get(demand.anchor_tile, 0.0) * land_per_run.get(recipe_id, 0.0)
+            rent = rent_of(recipe_id, demand.anchor_tile) if rent_of is not None else \
+                rent_by_tile.get(demand.anchor_tile, 0.0) * land_per_run.get(recipe_id, 0.0)
             yearly_return = _return_at(recipes[recipe_id], recipe_id, demand.anchor_tile, view, rent)
             if yearly_return > view.interest_rate(currency):
                 ranked.append((-yearly_return, recipe_id))
