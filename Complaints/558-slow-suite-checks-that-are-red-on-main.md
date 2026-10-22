@@ -27,10 +27,6 @@ entry below is updated as its group lands.
   the site rent and manager hours it carries, so no firm takes a second step and entry serves the rest. Whether one step is
   right is not measured; the bound is kept. Command: `python3 -m sim.tests --slow --only firm_expansion_scenario --jobs 1`.
 - `complaint_467_trades_open_to_the_jobs`: green since seeded trades are bounded by their hirers' hours (556).
-- `staff_closure_reopening_scenario` (auto_hire reopens every closure that free staff could run): improved by the wage bound
-  and the joint bids (more concerns open) but some stay shut because the founder's household runs out of cash in the first
-  years; its input bill reads making costs that sit far above the engine's table while some outputs' prices carry surpluses
-  worth thousands of coin an hour to an employer (473). Command: `python3 -m sim.tests --slow --only staff_closure_reopening_scenario --jobs 1`.
 - `state_debasement_prices_scenario`: green again on fc5ef363 (after households read a perceived price level, 473 Update 14).
 - `hot_path_caches_scenario` CPU budget: an early year measured just over its budget on a loaded machine (three slow jobs and
   agents); under the budget alone after the fetch-cost search was made fast (678). Re-measure alone before treating it as red.
