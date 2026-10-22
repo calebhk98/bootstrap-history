@@ -25,11 +25,6 @@ for trade, hours in mint_labour.capacity_hours(setup, record.currency, mint.capa
     bid_hours[trade] = bid_hours.get(trade, 0.0) + hours
 for bid in state_budget._labour_bids(setup, record, view, record.state_budget.wage_budget):
     bid_hours[bid.trade] = bid_hours.get(bid.trade, 0.0) + bid.hours
-# the trades no producer's runs staff (carriage crews, recipes no producer runs yet) are placed by the society's need
-# (labour_state.seeded_hours, Complaint 556): those hours are the jobs they wait on, which no producer's plan posts
-for seeds in labour_state.seeded_hours(setup, labour_state.producers_hours_needed(setup, record)).values():
-    for trade, hours in seeds.items():
-        bid_hours[trade] = bid_hours.get(trade, 0.0) + hours
 people = labour_state.people_by_trade_everywhere(record.workforce)
 # the plot trade's people work their own land (556b), so no employer's bid is what they wait on
 plots = labour_state.plot_trade(setup)
