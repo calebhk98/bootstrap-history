@@ -396,3 +396,11 @@ follows only the next year. So the median at year 4 sits in a dip of a series th
 one year of a cycle that does not settle, which is this complaint, not a mispriced opening; the check and its bounds are left
 as they are, and it should go green when the cycle settles. Open question for whoever settles it: an hours-weighted wage over
 markets that hired few hours (`wages_by_trade_weighted`) lets a thin market set a trade's cost; not changed here.
+
+## Update 12 (PM): runs whose surplus is worth thousands of coin an hour
+
+After the joint labour bids (678), the highest maximum wage any run bids for plumbers, masons and furnacemen in a Rome game is
+still in the thousands of coin an hour in years 0 to 5, against an unskilled wage under one: the run's output is priced far
+above what its inputs and hours cost. Which recipes set those maxima is not yet isolated; it is the price side of this
+complaint (an output whose price is many times its making cost). Probe: wrap `sim/labour/market/clearing.clear_one` and
+record the highest `maximum_wage` per trade and the recipe behind it.

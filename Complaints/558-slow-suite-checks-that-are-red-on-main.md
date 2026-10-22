@@ -29,6 +29,10 @@ entry below is updated as its group lands.
 - `complaint_467_trades_open_to_the_jobs`: the opening seeds trades no producer staffs by need share (556), for example tens
   of thousands of merchants against a few hundred worker-years of producer bids; the glut check stays red and the seeding is
   556's to fix.
+- `staff_closure_reopening_scenario` (auto_hire reopens every closure that free staff could run): improved by the wage bound
+  and the joint bids (more concerns open) but some stay shut because the founder's household runs out of cash in the first
+  years; its input bill reads making costs that sit far above the engine's table while some outputs' prices carry surpluses
+  worth thousands of coin an hour to an employer (473). Command: `python3 -m sim.tests --slow --only staff_closure_reopening_scenario --jobs 1`.
 - `real_output_validation`: not new; the same output-per-head check `real_output` failed on 3cb9c9a0 (473).
 
 ## Honest validations of open problems (stay red until the owner closes)
