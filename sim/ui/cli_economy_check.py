@@ -4,7 +4,8 @@ import random
 
 from sim.engine import node_payback_diagnostic
 from sim.engine.ui_port import (Sim, civilization_ids, default_civilisation_id, format_occupational_report,
-                                hours_by_trade_of_all_employers, load, load_civ, occupational_report)
+                                hours_by_trade_of_all_employers, load, load_civ, occupational_report,
+                                people_by_trade_of_all_employers)
 
 FIGURE_LABELS = (
     ("staple_volatility", "std dev of the staple's yearly log price change"),
@@ -27,8 +28,12 @@ def _format(value):
 
 
 def occupation_lines(game):
-    """Each occupation group's share of the year's working hours against its plausibility band."""
-    return format_occupational_report(occupational_report(hours_by_trade_of_all_employers(game.labour, game.state.economy.society_labour_hours)))
+    """Each occupation group's share of working people (the basis of the bands), then of the year's hours, against
+    its plausibility band."""
+    people = people_by_trade_of_all_employers(game.labour)
+    hours = hours_by_trade_of_all_employers(game.labour, game.state.economy.society_labour_hours)
+    return (["by people (main occupation)"] + ([] if people is None else format_occupational_report(occupational_report(people)))
+            + ["by hours worked"] + format_occupational_report(occupational_report(hours)))
 
 
 def check_one(nodes, civ_id, seed, years, metals, staple=None, occupations=None):
