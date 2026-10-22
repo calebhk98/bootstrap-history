@@ -81,3 +81,10 @@ expect inflation of that order: the credit rules now pass expected inflation thr
 entered in the measured year (`game.actors.active_firms()`). What is left here: the land-yield and public-debt inputs; the
 engine-facing `economy_capital_market.market_rate` still clamps nominally; the clearing's cause is not yet stored on the record
 or shown. The rate's level closes with 473.
+
+## Rome's opening rate at the ceiling: cause found (2026-10-22)
+
+The ceiling was not the lenders' ask: households had no savings to offer, because the hire rule priced household work at the
+servant's wage while they paid the service's price (645, last section), so the second clearing had funds of about a millionth of
+requests. With the rule reading the price, Rome's households offer savings and the opening rate is 0.016 (command in 645). The
+scarcity wage (8e354ebe) moved the rate only from 0.126 to 0.147; the wage bound in `sim/labour/market/scarcity.py` is not the cause.

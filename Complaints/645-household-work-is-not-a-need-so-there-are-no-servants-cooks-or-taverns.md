@@ -101,3 +101,21 @@ cooked food), not in a fixed daily charge. Water and fuel fetching stay househol
   england_1300 0.1919 then 0.147; mexica_1500 0.4 then 0.3. Rome stays at the ceiling: at its opening most cohorts now buy
   wheat and millet milled, but they still hire nearly all the remaining household work (about 470 hours a person), so
   grinding was not what held the rate up. Nothing was tuned.
+
+## Why Rome saved nothing: the hire rule priced an hour at the servant's wage, the household paid the service's price (measured)
+
+Trace (scratch probe, not kept; Rome opening, one stepped year, per person, aggregated by income class): at the branch tip and at
+1cd50f79 alike, households spent nearly their whole income on the `household_work` floor (`domestic_service_hour` bids took 231 to
+921 a person of an income of 234 to 887 at 1cd50f79; 237 to 891 of 239 to 905 at the tip), left almost nothing in goods or the
+store, and offered savings of about one thousandth of their cash (cohorts offering: 1 and 3 of 312). The hire switch compared the
+worth of the household's hour with the servant's wage (0.40 to 0.42 an hour), but the household paid the market price of the hour
+of service (9.1 at 1cd50f79, 2.9 at the tip, for a hired 378 and 439 hours a person). So the rule hired at a price it did not pay.
+The rate itself: scarcity wage (8e354ebe) moved it from 0.126 to 0.147; the sourced hours (e72b36c0) took it to 0.48; the second
+credit clearing, with savings of about a millionth of requests, returns the ceiling in both builds (1cd50f79 read 0.199 by where the
+spin-up stopped).
+Fix: `household_work_year.service_price_per_hour` reads the price of the goods that serve the household-work need per need unit,
+the servant's wage only when none is posted. Rule tests in `sim/tests/test_economy_household_work_year.py`. The sourced hours are
+unchanged. After: Rome hires almost nothing (6 of 312 cohorts), does about 466 hours a person itself, offers about a quarter of
+its cash as savings, and the clearings lend at 0.07 to 0.08. Market rate (command above): rome_100ad 0.016, han_china_100ad 0.132,
+england_1300 0.049, mexica_1500 0.375. Rome now reads below the households' own ask floor (the loss share): the opening is
+unsettled, not tuned. Mexica stays high and is not traced here.
