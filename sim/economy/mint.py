@@ -113,7 +113,9 @@ def capacity_fine_kilograms(setup, record) -> float:
 def staff(setup, record, view, labour_bids) -> None:
     """Before the labour market clears: the mint bids for the hours of its yearly capacity."""
     if record.currency.backing_per_unit > 0.0:
-        mint_labour.staff(setup, record, view, labour_bids, capacity_fine_kilograms(setup, record))
+        budget = record.state_budget
+        mint_labour.staff(setup, record, view, labour_bids, capacity_fine_kilograms(setup, record),
+                          committed_cash=budget.wage_budget + budget.goods_budget)
 
 
 def mint_orders(setup, record, area_map, order_book, hours_hired=None) -> Dict[str, float]:

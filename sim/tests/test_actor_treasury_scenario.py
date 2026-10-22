@@ -9,6 +9,7 @@ import tempfile
 from .harness import *  # noqa: F401,F403
 
 from sim.agents.api import ledger
+from sim.engine.agents_port import SimWorld
 from sim.engine.saveload import load_state, save_state
 
 _TEMPLATE_ID = next(node_id for node_id, node in NODES.items()
@@ -75,8 +76,11 @@ mill = make_node(mill_id, traits=["commerce"], revenue=5000.0, upkeep=100.0, hou
 game = actor_sim([mill])
 # a node earns only from output, which the game derives at its start; this fixture states the takings and upkeep it
 # wants booked, in hours, so they survive the repricing when the economy opens
+# its takings are a multiple of what its crew is paid, since the opening's pay for a trade is whatever that trade's
+# scarcity makes it and a firm enters only where the niche pays its crew
 hour = game.labour.money_per_labour_hour()
-game.nodes[mill_id].update(rev=5000.0, up=100.0, rev_hours=5000.0 / hour, up_hours=100.0 / hour)
+takings = max(5000.0, 10.0 * SimWorld(game).concern_wage_bill(mill_id))
+game.nodes[mill_id].update(rev=takings, up=100.0, rev_hours=takings / hour, up_hours=100.0 / hour)
 year = game.state.scenario.year
 game.state.projects.done.add(mill_id)
 game.state.projects.done_year[mill_id] = year - 6

@@ -101,6 +101,28 @@ class Staffing(unittest.TestCase):
         self.assertGreater(record.book.balance(mint_labour.mint_agent(setup), "coin"), 0.0)
         self.assertTrue(record.book.check_conservation(1e-9).ok)
 
+    def test_funding_leaves_the_state_the_cash_its_own_plan_spends(self):
+        # a wage ceiling above every wage cannot lock the state's whole purse in the mint's account: what the
+        # state plans to spend this year stays with it, the mint is funded from the rest
+        setup, record = world(spec_of())
+        purse = record.book.balance("state", "coin")
+        wanted = []
+        mint_labour.staff(setup, record, FakeView(), wanted, capacity_fine_kilograms=1.0e6)
+        bill = sum(bid.hours * bid.maximum_wage for bid in wanted)
+        self.assertGreater(bill, purse)    # the fixture's bill is more than the purse, as a scarce trade's ceiling makes it
+        setup, record = world(spec_of())
+        committed = 0.75 * purse
+        mint_labour.staff(setup, record, FakeView(), [], capacity_fine_kilograms=1.0e6, committed_cash=committed)
+        self.assertAlmostEqual(record.book.balance("state", "coin"), committed)
+        self.assertAlmostEqual(record.book.balance(mint_labour.mint_agent(setup), "coin"), purse - committed)
+
+    def test_funding_is_nothing_where_the_plan_commits_the_whole_purse(self):
+        setup, record = world(spec_of())
+        purse = record.book.balance("state", "coin")
+        mint_labour.staff(setup, record, FakeView(), [], capacity_fine_kilograms=10.0, committed_cash=2.0 * purse)
+        self.assertEqual(record.book.balance(mint_labour.mint_agent(setup), "coin"), 0.0)
+        self.assertEqual(record.book.balance("state", "coin"), purse)
+
     def test_no_recipe_means_no_staff_and_no_limit(self):
         setup, record = world(spec_of(), recipe=None)
         bids = []
