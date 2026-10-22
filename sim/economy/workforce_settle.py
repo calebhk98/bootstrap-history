@@ -13,28 +13,28 @@ from sim.labour.api import bound_by_hirers, fallback_trade
 from . import carriage_hours, producers, state_budget, workforce_version
 from .labour_state import core_trades, plot_trade, producers_hours_needed, seeded_hours
 from .market_memory import market_key
-from .setup import labour_area
 
 
 def expected_hours(setup, record, view) -> Dict[Tuple[str, str], float]:
     """Hours wanted next year by (labour area, trade): what each producer plans to bid, plus what the
-    market hired last year beyond the producers' own runs (state and other buyers show up there)."""
+    employers other than producers hired last year (the state and other buyers show up there)."""
     wanted: Dict[Tuple[str, str], float] = {}
-    worked: Dict[str, float] = {}      # market key -> hours the producers' own runs last year asked of it
     for producer_id, producer in sorted(record.producers.items()):
         recipe = setup.recipes[producer.recipe_id]
         plan = producers.plan(producer, recipe, view, record.book.balance(producer_id, setup.currency_id))
         for bid in plan.labour_bids:
             wanted[(bid.area, bid.trade)] = wanted.get((bid.area, bid.trade), 0.0) + bid.hours
-        for trade, hours in recipe.labour_hours.items():
-            key = market_key(trade, labour_area(producer.tile))
-            worked[key] = worked.get(key, 0.0) + max(0.0, producer.last_runs) * hours
-    for area, by_trade in record.workforce.workers.items():
+    return add_others_hired(wanted, record.workforce.workers, record.hours_hired_by_others)
+
+
+def add_others_hired(wanted: Mapping[Tuple[str, str], float], workers: Mapping[str, Mapping[str, object]],
+                     hired_by_others: Mapping[str, float]) -> Dict[Tuple[str, str], float]:
+    """`wanted` plus, for each trade the workers hold in an area, the hours the other employers hired there."""
+    total = dict(wanted)
+    for area, by_trade in workers.items():
         for trade in by_trade:
-            key = market_key(trade, area)
-            others = max(0.0, record.hours_hired.get(key, 0.0) - worked.get(key, 0.0))
-            wanted[(area, trade)] = wanted.get((area, trade), 0.0) + others
-    return wanted
+            total[(area, trade)] = total.get((area, trade), 0.0) + hired_by_others.get(market_key(trade, area), 0.0)
+    return total
 
 
 def trim_to_expected_hours(setup, record, view) -> None:
