@@ -26,9 +26,7 @@ entry below is updated as its group lands.
   tenfold market, eight firms end at one and a half (one expansion step) and the rest at one. Since 679 an added step weighs
   the site rent and manager hours it carries, so no firm takes a second step and entry serves the rest. Whether one step is
   right is not measured; the bound is kept. Command: `python3 -m sim.tests --slow --only firm_expansion_scenario --jobs 1`.
-- `complaint_467_trades_open_to_the_jobs`: the opening seeds trades no producer staffs by need share (556), for example tens
-  of thousands of merchants against a few hundred worker-years of producer bids; the glut check stays red and the seeding is
-  556's to fix.
+- `complaint_467_trades_open_to_the_jobs`: green since seeded trades are bounded by their hirers' hours (556).
 - `staff_closure_reopening_scenario` (auto_hire reopens every closure that free staff could run): improved by the wage bound
   and the joint bids (more concerns open) but some stay shut because the founder's household runs out of cash in the first
   years; its input bill reads making costs that sit far above the engine's table while some outputs' prices carry surpluses
