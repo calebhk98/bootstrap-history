@@ -687,3 +687,12 @@ intermediate-input seed (`opening._stock_producers_with_inputs`) is left alone, 
 
 Topics: quick tier green; `economy_bronze_market_price`, `price_over_making_cost_band_validation`, `purchase_limited_by_offered_volume_scenario`,
 `opening_consistency`, `opening_basket_agrees_scenario`, `economy_vessel_price_fixture` green with `--slow --jobs 1 --topic-seconds 290`.
+
+## Update 20 (PM): after the opening solved with household choices, markets thin out
+
+Two fix groups after 31b70bc5 found the same pattern: coal sells almost nothing in nearly every market area after the opening
+(producers fell by about a fifth while coal demand rose about fourfold), wheat sells almost nothing from year three (Update 19's
+table), and skilled pay rose several times (the mint's furnacemen and engravers). Several founder scenarios now pick a good
+or project the opening still trades so their own subject stays testable. The leading suspect is the household-service hiring
+(645, last section): domestic service near half the opening basket draws hands and income away from goods. Re-measure coal and
+wheat volumes after 645's hiring fix before tracing further.
