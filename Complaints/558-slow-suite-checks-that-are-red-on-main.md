@@ -37,7 +37,8 @@ entry below is updated as its group lands.
 
 ## Honest validations of open problems (stay red until the owner closes)
 
-- `baseline_fixture` (rate not settled; the opening's grain stock is eaten through, the same runaway as the wheat price), `baseline_rome_full_length` (rate not settled; the mint replaces a small share of the
+- `baseline_fixture` (rate not settled by a hair; since the wage bound, 678, the quiet fixture's ore output runs a cycle of
+  about seven years and the first-to-last stock comparison lands peak against trough), `baseline_rome_full_length` (rate not settled; the mint replaces a small share of the
   coin that wears), `spin_up_money_supply_full_length` (money stock falls against wear; mint replacement negative),
   `real_output` (output per head after a population fall), `real_output_baseline` (goods far from baseline carry much of the
   basket), `economy_money_regimes_norse` (weighed-metal price level): 473, the opening that never settles.
