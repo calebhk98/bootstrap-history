@@ -233,7 +233,10 @@ def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, led
 def price_after_trade(old, old_was_quote, cleared, quantity, reference_volume, quiet_years):
     """The price a market remembers after a year in which it traded: `remembered_price` and the resumed-trade rule
     against the old price, unless the old price was a quote (a bid ceiling, an ask, a cost): no one paid it, so the
-    trade replaces it whole rather than being weighed against it."""
+    trade replaces it whole rather than being weighed against it. A sliver cleared above a quote is the exception: thin
+    supply meets the highest bid, so a sliver can only overstate the price and moves the quote in proportion to its share."""
+    if old_was_quote and old is not None and cleared > old:
+        return remembered_price(old, cleared, quantity, reference_volume)
     paid = None if old_was_quote else old
     return price_after_resumed_trade(paid, remembered_price(paid, cleared, quantity, reference_volume), quiet_years)
 

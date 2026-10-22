@@ -55,6 +55,14 @@ class PriceAfterTradeTests(unittest.TestCase):
     def test_a_sliver_of_trade_still_moves_a_remembered_traded_price_a_sliver(self):
         self.assertAlmostEqual(price_after_trade(130.0, False, 13.0, 10.0, 1000.0, 0), 130.0 + 0.01 * (13.0 - 130.0))
 
+    def test_a_sliver_cleared_above_a_remembered_quote_moves_it_a_sliver(self):
+        # thin supply meets the highest bid, so a sliver can only overstate the price: it may lower a quote whole but
+        # raises it only in proportion to its share of the usual volume
+        self.assertAlmostEqual(price_after_trade(3.0, True, 17e6, 1e-9, 5e4, 0), 3.0 + 1e-9 / 5e4 * (17e6 - 3.0))
+
+    def test_a_representative_trade_above_a_remembered_quote_replaces_it_whole(self):
+        self.assertEqual(price_after_trade(3.0, True, 5.0, 100.0, 100.0, 0), 5.0)
+
     def test_a_trade_after_quiet_years_replaces_a_quote_too(self):
         self.assertEqual(price_after_trade(130.0, True, 13.0, 1.0, 1000.0, 2), 13.0)
 
