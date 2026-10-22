@@ -47,7 +47,7 @@ class IndexationTests(unittest.TestCase):
         outside = year_labour.outside_option_by_tile(setup, economy.record, view)
         offers = year_labour.labour_offers(setup, economy.record, view, outside)
         supply = economy._hour_supply(offers, view, outside)
-        self.assertAlmostEqual(supply.anchor_wage[fixture.LABOURER], view.chained_price_level(setup.currency_id))
+        self.assertAlmostEqual(supply.anchor_wage[fixture.LABOURER], view.perceived_price_level(setup.currency_id))
         self.assertLess(supply.anchor_wage[fixture.LABOURER], 10.0)
 
 

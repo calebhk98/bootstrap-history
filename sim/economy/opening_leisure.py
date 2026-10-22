@@ -56,4 +56,4 @@ def seed(economy) -> None:
     offers = year_labour.labour_offers(setup, record, view, outside)
     supply = economy._hour_supply(offers, view, outside, anchors={})
     record.leisure_anchor_wage = anchors(supply, hours_hired_by_trade(record.producers, setup.recipes),
-                                         view.chained_price_level(setup.currency_id))
+                                         view.perceived_price_level(setup.currency_id))
