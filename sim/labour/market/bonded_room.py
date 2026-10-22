@@ -18,12 +18,21 @@ class Buyer:
     free_cash: float        # money the plan assigns to no line, still unspent
 
 
-def buyers_in(bids: Sequence, clearing, unassigned: Mapping[str, float]) -> List[Buyer]:
-    """The employers with a vacancy in the market (`clearing`) and some room to pay for a person, in id order."""
-    hours: Dict[str, float] = {}
+def hours_by_market(bids: Sequence) -> Dict[Tuple[str, str], Dict[str, float]]:
+    """(area, trade) -> employer -> hours bid for, over the bids with hours: what `buyers_in` reads, built once."""
+    grouped: Dict[Tuple[str, str], Dict[str, float]] = {}
     for bid in bids:
-        if bid.area == clearing.area and bid.trade == clearing.trade and bid.hours > 0.0:
+        if bid.hours > 0.0:
+            hours = grouped.setdefault((bid.area, bid.trade), {})
             hours[bid.employer] = hours.get(bid.employer, 0.0) + bid.hours
+    return grouped
+
+
+def buyers_in(bid_hours: Mapping[Tuple[str, str], Mapping[str, float]], clearing,
+              unassigned: Mapping[str, float]) -> List[Buyer]:
+    """The employers with a vacancy in the market (`clearing`) and some room to pay for a person, in id order.
+    `bid_hours` is `hours_by_market(bids)`."""
+    hours = bid_hours.get((clearing.area, clearing.trade), {})
     found = []
     for employer in sorted(hours):
         vacant = max(0.0, hours[employer] - clearing.hired_by_employer.get(employer, 0.0))

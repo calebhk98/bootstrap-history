@@ -66,26 +66,38 @@ class HourSupply:
         anchor = self.anchor_wage.get(offer.trade)
         share = offer.hours / whole
         hours = offer.hours
+        elasticity = households_hours_offered.LEISURE_ELASTICITY
+        leisure_valued = anchor is not None and anchor > 0.0      # `leisure_share`, with its tests done once
 
         def sold(wage: float) -> float:
             plot_kept = max(plan, plot(wage) if plot else 0.0)
             free = hours - min(plot_kept + work, whole) * share
+            if not leisure_valued:
+                return free
             eligible = max(0.0, free - max(0.0, usable - plot_kept) * share)
-            return free - households_hours_offered.leisure_hours_kept(eligible, wage, anchor)
+            if wage <= 0.0:
+                return free - eligible * 1.0
+            return free - eligible * (1.0 / (1.0 + (wage / anchor) ** elasticity))
         return sold
 
     def share_at(self, trade: str, area: str) -> Callable[[float], float]:
         """The share of a market's hours sold at a wage, over the offers in it."""
-        mine = [offer for offer in self.offers if offer.trade == trade and offer.area == area and offer.hours > 0.0]
+        return self._share_over([offer for offer in self.offers if offer.trade == trade and offer.area == area])
+
+    def _share_over(self, in_market: Sequence[LabourOffer]) -> Callable[[float], float]:
+        mine = [offer for offer in in_market if offer.hours > 0.0]
         total = sum(offer.hours for offer in mine)
         schedules = [self.sold_hours_schedule(offer) for offer in mine]
 
         def share(wage: float) -> float:
-            return sum(schedule(wage) for schedule in schedules) / total if total > 0.0 else 0.0
+            return sum([schedule(wage) for schedule in schedules]) / total if total > 0.0 else 0.0
         return share
 
     def shares(self) -> Dict[Tuple[str, str], Callable[[float], float]]:
-        return {market: self.share_at(*market) for market in sorted({(offer.trade, offer.area) for offer in self.offers})}
+        by_market: Dict[Tuple[str, str], List[LabourOffer]] = {}
+        for offer in self.offers:
+            by_market.setdefault((offer.trade, offer.area), []).append(offer)      # in offer order, as share_at reads them
+        return {market: self._share_over(by_market[market]) for market in sorted(by_market)}
 
     def settle(self, wage_by_market: Mapping[Tuple[str, str], float]) -> List[LabourOffer]:
         """The offers as sold at the wages the markets cleared at (the faced wage where one did not), and the hours
