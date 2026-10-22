@@ -46,6 +46,9 @@ entry below is updated as its group lands.
   just over the owner's order-of-magnitude bound in year one and falls below cost by year four), `price_over_making_cost_band_validation`
   (the median a hair under one) and `staff_closure_reopening_scenario`. They have flipped between successive runs today; they
   are 473's opening transient, and the bounds are kept.
+- Full run on 31b70bc5 (the opening solved with households' first-year choices, 473 Update 19): the bronze band, the price band,
+  `real_output_validation` and the closure scenario are green; fourteen topics went red with it (opening placement and diet,
+  founder and money scenarios, one crash) and are being fixed in two groups.
 - `real_output_validation`: not new; the same output-per-head check `real_output` failed on 3cb9c9a0 (473).
 
 ## Honest validations of open problems (stay red until the owner closes)
