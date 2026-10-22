@@ -31,7 +31,7 @@ from .types import GoodId, PlantBuild, PlantPart, Recipe
 
 ENERGY_CARRIER_FIELDS = ("thermal_mj", "mechanical_mj", "electrical_mj")
 MAPPED_FIELDS = frozenset(("outputs", "inputs", "labour_hours", "capital", "extracted_from",
-                           "grown_in_climate_classes") + ENERGY_CARRIER_FIELDS)
+                           "grown_in_climate_classes", "service") + ENERGY_CARRIER_FIELDS)
 
 
 def _basis_output(recipe_id: str, outputs: Mapping[GoodId, float]) -> float:
@@ -85,7 +85,7 @@ def recipe_from_entry(recipe_id: str, entry: Mapping[str, Any]) -> Recipe:
     plant_goods, plant_labour, plant_life = fold_plant((part.runs_per_year, part.builds[0]) for part in parts)
     return Recipe(recipe_id, outputs, inputs, labour, plant_goods, plant_labour, plant_life,
                   plant_parts=parts,
-                  site_bound=bool(entry.get("extracted_from")),
+                  site_bound=bool(entry.get("extracted_from")), service=entry.get("service") is True,
                   climate_classes=tuple(entry.get("grown_in_climate_classes") or ()))
 
 

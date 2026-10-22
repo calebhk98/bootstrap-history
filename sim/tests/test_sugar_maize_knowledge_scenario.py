@@ -21,12 +21,53 @@ def _read(*parts):
 _OPENED = {}
 
 
+def _production_entry(good):
+    """The production entry whose id is the good (a prepared food is made by one recipe of its own name)."""
+    directory = os.path.join(ROOT, "data", "production")
+    for name in sorted(os.listdir(directory)):
+        if name.endswith(".json"):
+            entry = _read("data", "production", name).get("materials", {}).get(good)
+            if entry is not None:
+                return entry
+    return None
+
+
+def cereal_units(units, needs):
+    """The food units of `units` that come from grain: a grain counts whole, and a food made from grain counts the part
+    of its food that its grain inputs carry (bread is all flour; a meal is flour and vegetables), since a household that
+    buys flour or bread rather than grinding eats the same cereal."""
+    cereal = 0.0
+    for good, value in units.items():
+        if good in GRAINS:
+            cereal += value
+            continue
+        entry = _production_entry(good)
+        if entry is None or not value:
+            continue
+        food_of = lambda made: needs.get(made, {}).get("satisfies", {}).get("food", 0.0)
+        inputs = entry.get("inputs", {})
+        in_grain = sum(quantity * food_of(made) for made, quantity in inputs.items() if made in GRAINS)
+        in_all = sum(quantity * food_of(made) for made, quantity in inputs.items())
+        cereal += value * in_grain / in_all if in_all > 0.0 else 0.0
+    return cereal
+
+
 def _rome_opening():
     """Rome's setup and opened economy record, opened once for the topic (the opening is a few seconds of solving)."""
     if "rome" not in _OPENED:
         setup = build_setup(unopened_sim(civ="rome_100ad"))
         _OPENED["rome"] = (setup, opening.open_economy(setup)[0])
     return _OPENED["rome"]
+
+
+class CerealUnitsTests(unittest.TestCase):
+    def test_flour_and_bread_are_cereal_and_a_meal_is_cereal_by_its_flour(self):
+        needs = _read("data", "world", "needs.json")["goods"]
+        self.assertAlmostEqual(cereal_units({"flour_kg": 1.0, "bread_kg": 2.0}, needs), 3.0)
+        flour_food = 300.0 * needs["flour_kg"]["satisfies"]["food"]
+        vegetable_food = 200.0 * needs["vegetable_kg"]["satisfies"]["food"]
+        self.assertAlmostEqual(cereal_units({"cooked_meal_kg": 1.0}, needs), flour_food / (flour_food + vegetable_food))
+        self.assertEqual(cereal_units({"olive_oil_kg": 5.0}, needs), 0.0)
 
 
 class RomeOpeningTests(unittest.TestCase):
@@ -40,7 +81,7 @@ class RomeOpeningTests(unittest.TestCase):
         self.assertEqual(units["mat_sugar"], 0.0)
         self.assertEqual(units["maize_kg"], 0.0)
         total = sum(units.values())
-        grains = sum(units.get(good, 0.0) for good in GRAINS)
+        grains = cereal_units(units, needs)
         self.assertGreater(grains / total, 0.5, {good: round(value / total, 3) for good, value in units.items() if value})
 
     def test_rome_food_units_follow_a_pre_modern_diet_and_no_one_good_dominates(self):
@@ -54,7 +95,7 @@ class RomeOpeningTests(unittest.TestCase):
                  for good, attributes in needs.items() if "food" in attributes["satisfies"]}
         total = sum(units.values())
         shares = {good: value / total for good, value in units.items() if value}
-        self.assertGreater(sum(shares.get(good, 0.0) for good in GRAINS), 0.5, shares)
+        self.assertGreater(cereal_units(shares, needs), 0.5, shares)
         for good, share in shares.items():
             if good not in GRAINS:
                 self.assertLess(share, 1 / 3, (good, shares))

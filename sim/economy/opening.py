@@ -265,10 +265,11 @@ def _placement_order(runs, recipes, setup) -> List[str]:
 
 
 def _only_hands(recipe: Recipe, setup) -> bool:
-    """A service made from hours alone (nothing bought, no plant, nothing to carry): it is made where it is wanted by
+    """A service made from hours alone (nothing bought, no plant, flagged a service in data or with nothing to carry): it is made where it is wanted by
     whoever has hands left, so it is placed after the producers that need a place for their inputs."""
     spec = getattr(setup, "specs", {}).get(_main_output(recipe, setup.opening_prices))
-    return bool(recipe.labour_hours) and not recipe.inputs and not recipe.plant_goods and spec is not None and not spec.portable
+    return (bool(recipe.labour_hours) and not recipe.inputs and not recipe.plant_goods
+            and (recipe.service or (spec is not None and not spec.portable)))
 
 
 def _within(area, tiles):

@@ -32,9 +32,15 @@ check("stock on hand equals the yearly yield times the years it has run (nothing
 # Anything that recomputes the year's materials mid-year must not bank the year again.
 mine_sim.resource_throttle()   # the new year's output is banked by the first recompute
 stock_before = mine_sim.material_stock_t(_KEY)
+# The market's room to take the sales is not this check's subject (test_sale_room_follows_buyers): buyers who took
+# plenty last year are given, so whether a smelter happened to buy the ore in the spin-up does not decide it.
+_BUYERS_LAST_YEAR = {"sold": 250.0, "unsold": 0.0, "unmet": 0.0}
+_answers = mine_sim.economy.agent_good_market_record
+mine_sim.economy.agent_good_market_record = lambda good: _BUYERS_LAST_YEAR if good == _KEY else _answers(good)
 for _ in range(25):
     mine_sim.sell_material_stock(_KEY, 1.0)
     mine_sim.resource_throttle()
+mine_sim.economy.agent_good_market_record = _answers
 check("selling 1 t twenty-five times in one year removes 25 t and banks nothing new",
       abs(mine_sim.material_stock_t(_KEY) - (stock_before - 25.0)) < 1e-6,
       (stock_before, mine_sim.material_stock_t(_KEY)))
