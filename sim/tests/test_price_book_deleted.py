@@ -49,9 +49,13 @@ class PriceBookIsGone(unittest.TestCase):
     def test_gated_material_is_priced_as_if_the_technology_were_held(self):
         for civilization in BASE_CIVS:
             rate = data.starting_schedule(civilization).money_per_labour_hour
-            goods = data.calculated_goods_prices([], civilization, rate)
+            # the society's own starting techniques: with none held at all, no mechanical source is in reach for the
+            # dynamo (oxen are a herd product, not a gated recipe, since the herds merge), so electricity has no price
+            held = data.load_civ(civilization)["starting_techs"]
+            self.assertNotIn("mat_aluminium", held, civilization)
+            goods = data.calculated_goods_prices(held, civilization, rate)
             self.assertGreater(goods["aluminium_kg"], 0.0, civilization)
-            self.assertEqual(data.goods_provenance([], civilization)["aluminium_kg"], "gated")
+            self.assertEqual(data.goods_provenance(held, civilization)["aluminium_kg"], "gated")
 
 
 if __name__ == "__main__":
