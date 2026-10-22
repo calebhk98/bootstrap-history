@@ -77,6 +77,6 @@ A default Rome game's market rate is 0.199 at 1cd50f79 and 0.48 (the ceiling) af
 households have nothing left to save and no lender can be met (state scenarios restated around it; credit work 641).
 Command: `PYTHONPATH=. python3 -W ignore -c "from sim.tests.harness import sim; print(sim(civ='rome_100ad').market_rate())"`.
 Most of `water_fuel_and_grinding` is hand grinding (the Burkina Faso table), charged to every household of every civilisation,
-while the economy also mills grain into flour (`data/production/95_grain_milling.json`) that households can buy. Grinding is a
+while the economy also mills grain into flour (`data/production/95_grain_milling.json`) (whether a household can buy it is being checked). Grinding is a
 way of making flour, so it belongs with the household's choice of making or buying (the rule this complaint already has for
 cooked food), not in a fixed daily charge. Water and fuel fetching stay household work.
