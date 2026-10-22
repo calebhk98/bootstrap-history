@@ -7,6 +7,18 @@ from sim.engine.agents_port import SimWorld
 from sim.agents import budget
 
 
+# The settled opening leaves the households nothing to save (Complaints 607, 645), so no lender has room for the state. These
+# scenarios are about the gate, not about the lenders, so they state the room lenders have for one borrower and the
+# rate they lend at (the civilisation's own, not the ceiling the empty market sits at).
+LENDERS_ROOM = 5.0e10
+
+
+def with_lenders(game):
+    game.market_credit_room = lambda actor_id: LENDERS_ROOM
+    game.market_rate = lambda: float(game.civ["starting_interest_rate"])
+    return game
+
+
 def one_year(game):
     game.state.scenario.year += 1
     game.advance_actors(game.state.scenario.year)
@@ -15,7 +27,7 @@ def one_year(game):
 def army_between_revenue_and_credit():
     """An army whose bill is half of what the state could borrow against its revenue once it holds the
     technology: more than its revenue carries, less than its credit could."""
-    game = sim()
+    game = with_lenders(sim())
     treasury = game.state_treasury()
     treasury.knowledge.add(game.nodes_with_mechanic("state_credit")[0])
     world = SimWorld(game)
@@ -30,7 +42,7 @@ ARMY = army_between_revenue_and_credit()
 
 def deficit_game(holds_node=False, baseline=False):
     """Rome with an army its revenue cannot carry but its credit could, and an empty purse."""
-    game = sim()
+    game = with_lenders(sim())
     game.civ["standing_army"] = ARMY
     treasury = game.state_treasury()
     treasury.money = 0.0

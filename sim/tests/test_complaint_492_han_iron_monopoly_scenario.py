@@ -6,7 +6,7 @@ from .harness import *  # noqa: F401,F403
 from sim.agents import state_enterprises
 from sim.engine.agents_port import SimWorld
 
-from .test_state_budget import unopened_sim
+from .harness import unopened_sim
 
 game = unopened_sim(civ="han_china_100ad")
 state = game.state_treasury()

@@ -136,7 +136,12 @@ def _lent_share(years=YEARS, warm_up=WARM_UP_YEARS):
 class BaselineValidationSavingReachesAProducerTests(unittest.TestCase):
     """Baseline validation (CLAUDE.md 4.2, Complaint 640), slow only: in a quiet economy with plant on its farms and
     mines, some of the savings on offer are lent to producers. It reads the whole run, so a failure names no rule;
-    the rules (equity counts as wealth held, so less cash is offered idle) are held by EquityTests."""
+    the rules (equity counts as wealth held, so less cash is offered idle) are held by EquityTests.
+    The households have a surplus to save: the settled opening leaves none (Complaint 607), and the question here is
+    whether a surplus finds a use."""
+
+    def setUp(self):
+        fixture.households_with_a_surplus(self)
 
     def test_validation_some_savings_on_offer_are_lent_to_producers(self):
         lent, offered = _lent_share()

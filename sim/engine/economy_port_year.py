@@ -9,7 +9,7 @@ import collections
 import math
 import os
 
-from sim.agents.api import COIN_RESTRIKE_SHARE_PER_YEAR, EDGE_EXCHANGE as COIN_EXCHANGE, PURSE_CURRENCY, stock_keeping
+from sim.agents.api import COIN_RESTRIKE_SHARE_PER_YEAR, EDGE_EXCHANGE as COIN_EXCHANGE, PURSE_CURRENCY
 from sim.constants import declare
 from sim.economy import api as economy_api
 from sim.rekey import rekey
@@ -18,7 +18,7 @@ from sim.economy.api import (EDGE_EXTERNAL, EDGE_LEGACY, AgentOrders, Economy, G
                              YearInputs, expected_output_prices, external_orders, live_input_prices, live_wages,
                              trade_premium, variable_cost_per_run)
 
-from . import country_trade_years, trade_duty, economy_port_bondage, economy_port_levy, economy_port_actors, economy_port_cargo, economy_port_cropland, economy_port_flight, economy_port_institutions, economy_port_land, economy_port_late, economy_port_seats, economy_port_sites, externalities, material_capacity, solve_cache
+from . import agents_port_stores, country_trade_years, trade_duty, economy_port_bondage, economy_port_levy, economy_port_actors, economy_port_cargo, economy_port_cropland, economy_port_flight, economy_port_institutions, economy_port_land, economy_port_late, economy_port_seats, economy_port_sites, externalities, material_capacity, solve_cache
 from .economy_port_key import spin_up_key
 from .economy_port_coin import priced_at_the_margin
 from .economy_port_setup import build_setup, opening_values
@@ -333,12 +333,7 @@ class AgentEconomy(TilePricesMixin):
 
     def _keep_deliveries(self, delivered):
         """Goods a buyer that keeps its purchases bought at the market join its stores, in tonnes."""
-        from .material_units import tonnes_per_unit
-        known = self._sim.actors.actors
-        for buyer in sorted(delivered):
-            if getattr(known[buyer], "keeps_purchases", False):
-                stock_keeping.add_delivery(known[buyer].record.stores, {
-                    good: units * tonnes_per_unit(good) for good, units in delivered[buyer].items()})
+        agents_port_stores.keep_deliveries(self._sim.actors.actors, delivered)
 
     def _strike_state_coin(self, economy):
         """The cut the home state decided on this year lowers the metal in the coin it issues."""

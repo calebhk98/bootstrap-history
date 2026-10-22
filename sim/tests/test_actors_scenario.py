@@ -75,6 +75,9 @@ for node_id in ("test_gun", "test_cartoons"):
     founder_completes(game, node_id, operating=True)
 government = game.actors.ensure_government("rome_100ad")
 government.money = 0.0
+# a state takes up only what it knows exists, and comes to know by chance through contact (awareness.py, its own rule tests);
+# this scenario is about what it does with what it knows
+government.record.aware.update({node_id: game.state.scenario.year for node_id in ("test_gun", "test_cartoons")})
 founder_purse = game.state.household.capital
 next_year(game)
 begun_after_one = (set(government.works), "test_gun" in government.knowledge)
