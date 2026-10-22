@@ -29,9 +29,9 @@ def lend_without_funds(last_rate, ceiling):
 
 
 class LendWithoutFundsTests(unittest.TestCase):
-    def test_borrowers_with_no_lenders_pull_the_rate_up_toward_their_ceiling(self):
+    def test_borrowers_with_no_lenders_leave_the_rate_where_it_was(self):
         record, _runs = lend_without_funds(0.05, 0.30)
-        self.assertGreater(record.memory.rates[MONEY], 0.05)
+        self.assertEqual(record.memory.rates[MONEY], 0.05)
 
     def test_the_years_expansion_requests_are_cleared_even_when_nothing_was_lent(self):
         record, plant_runs = lend_without_funds(0.05, 0.30)

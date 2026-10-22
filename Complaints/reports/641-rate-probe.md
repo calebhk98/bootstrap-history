@@ -87,3 +87,44 @@ cohort loss rates: min 0.000 median 0.004 max 0.411; nonzero 312 of 312
 
 Reading: the ask is time preference plus expected inflation (plus a small loss rate for most cohorts), above the ceiling for
 every lender, so nothing is lent although funds exceed requests in the first clearing.
+
+## Probe 3: what `market_rate()` reads, clearing by clearing (2026-10-22)
+
+Run from a checkout root with `ROME_CACHE_DIR` set to an empty directory (the cached spin-up would skip the clearings), once per
+civilisation: `ROME_CACHE_DIR=<empty dir> python3 -W ignore probe3.py england_1300`.
+
+```python
+import sys, statistics
+sys.path.insert(0, ".")
+from sim.economy import credit, economy as eco
+events = []
+orig = credit.clear_with_cause
+def spy(requests, offers, currency, last_rate, *a, **k):
+    r = orig(requests, offers, currency, last_rate, *a, **k)
+    rq = [x for x in requests if x.amount > 0 and x.currency == currency]
+    of = [o for o in offers if o.amount > 0 and o.currency == currency]
+    asks = sorted(o.minimum_rate for o in of)
+    # ask of the marginal lender: funds at or below base
+    at_rate = sum(o.amount for o in of if r.rate is not None and o.minimum_rate <= r.rate)
+    events.append("CLEAR year=%s reqs=%d asked=%.3g offers=%d funds=%.3g asks(min/med/max)=%s last=%s rate=%s cause=%s lent=%.3g funds_at_rate=%.3g mean_loan_rate=%s" % (
+        k.get("year"), len(rq), sum(x.amount for x in rq), len(of), sum(o.amount for o in of),
+        tuple(round(v,4) for v in (asks[0], statistics.median(asks), asks[-1])) if asks else None,
+        None if last_rate is None else round(last_rate,4), r.rate, r.cause, sum(l.principal for l in r.loans), at_rate,
+        round(sum(l.rate*l.principal for l in r.loans)/sum(l.principal for l in r.loans),4) if r.loans else None))
+    return r
+credit.clear_with_cause = spy
+os = eco.labour.sticky_move
+def sm(cur, tgt, share):
+    r = os(cur, tgt, share); events.append("NO_REQUESTS_DRIFT cur=%s floor=%s -> %.4f" % (cur, tgt, r)); return r
+eco.labour.sticky_move = sm
+from sim.tests.harness import sim
+g = sim(civ=sys.argv[1])
+print(sys.argv[1], "market_rate", g.market_rate(), "starting", g.civ["starting_interest_rate"])
+for e in events: print(e)
+```
+
+The last clearing line of the output is the year's second clearing, the one whose rate memory keeps. At the opening, before the
+change: england_1300 0.0043, rome_100ad 0.0255, han_china_100ad 0.122. After: england_1300 0.0 (asks 0.0 to 0.07, median 0.0014;
+funds at the rate exceed the request), rome_100ad 0.031 (asks 0.0 to 0.36, median 0.147; mean loan rate 0.115 with premiums),
+han_china_100ad 0.138 (asks 0.13 to 0.48, median 0.147; mean loan rate 0.24). Each rate is at or above the lowest ask, and the
+lenders asking no more than it hold at least what was lent.

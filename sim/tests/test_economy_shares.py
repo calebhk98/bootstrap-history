@@ -162,7 +162,7 @@ class ExpansionThroughShares(unittest.TestCase):
         record.expansion_runs = {producer_id: 4.0}
         offers = [FundsOffer(saver, money, 500.0, 0.06)]
         cash = record.book.balance(producer_id, money)
-        with mock.patch.object(economy_module.credit, "clear", return_value=([], 0.06, [request])):
+        with mock.patch.object(economy_module.credit, "clear_with_cause", return_value=credit.Clearing([], 0.06, [request])):
             plant_runs = economy._lend(offers, economy.view(), {}, YearLedger())
         self.assertEqual(record.loans, [])
         self.assertAlmostEqual(plant_runs[producer_id], 4.0)
