@@ -66,7 +66,11 @@ into another, and a test checks that people are conserved.
 Training takes years, so a trade whose employers bid far above the cost of training a substitute pays a scarcity
 wage this year. `scarcity.py` bounds it: no training needed means the long-run cost (`clearing.trained_substitute_wage`,
 the unskilled wage times the training premium); otherwise the hours-weighted worth of the bids (one stray bid with few
-hours does not set it), and where trained hands can be fetched, no more than `ImportCosts` says. What entrants and
+hours does not set it), and where trained hands can be fetched, no more than `ImportCosts` says. Fetching counts
+only the hours workers sell at the wage (`hours_share_at`), here and where the hands come from: hours kept for plots
+and leisure are not hands in hand, so an area whose workers sell nothing at the going wage has its shortage priced by
+what fetching costs, not by the dearest bid (an unskilled wage that jumped to a plot's worth and pulled every skilled
+trade with it, Complaint 678). What entrants and
 switchers weigh is the clearing's `target_wage`, capped at the long-run cost: a person who trains arrives after the
 training years, when the shortage the apprentices fill is gone. A worker already in the trade reads today's wage
 (`expected_income`) and offers more hours at it through `hours_share_at`. A switcher into a trade also trains, so it
