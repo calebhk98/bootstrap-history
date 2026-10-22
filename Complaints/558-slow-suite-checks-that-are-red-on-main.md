@@ -49,6 +49,10 @@ entry below is updated as its group lands.
 - Full run on 31b70bc5 (the opening solved with households' first-year choices, 473 Update 19): the bronze band, the price band,
   `real_output_validation` and the closure scenario are green; fourteen topics went red with it (opening placement and diet,
   founder and money scenarios, one crash) and are being fixed in two groups.
+- Full run on 9d23505d (after the household hiring rule and the opening income root search): the fourteen reds from 31b70bc5
+  are green but for two; eleven others went red (England's struck-coin price level in the tens of thousands, a rich founder deep
+  in debt, the 467 glut back, a ventures crash, two display checks, stability and farm clearing near-ties), being fixed in two
+  groups.
 - `real_output_validation`: not new; the same output-per-head check `real_output` failed on 3cb9c9a0 (473).
 
 ## Honest validations of open problems (stay red until the owner closes)
