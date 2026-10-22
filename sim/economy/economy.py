@@ -395,11 +395,12 @@ class Economy:
             return {}
         debt = credit_claims.principal_by_borrower(record.loans)
         offered = credit_lines.hold_reserve(funds, record.banks)     # the reserve is held out of every lender's offer
-        loans, rate, unmet = credit.clear(requests, offered, money, record.memory.rates.get(money), debt,
+        clearing = credit.clear_with_cause(requests, offered, money, record.memory.rates.get(money), debt,
                                            credit_claims.arrears_history(record.loans, record.remembered_defaults),
                                            year=view.year,
                                            rate_ceiling=capital_market.RATE_CEILING_SHARE * setup.opening_rate,
                                            expected_inflation=lending.expected_inflation_of(record))
+        loans, unmet = clearing.loans, clearing.unmet
         every_loan = loans
         loans, record.credit_granted = credit_lines.split_lines(loans, [ask.borrower for ask in credit_asks])
         for ask in credit_asks:
@@ -409,7 +410,9 @@ class Economy:
         record.loans.extend(loans)
         for loan in every_loan:
             record.lent_by_borrower[loan.borrower] = record.lent_by_borrower.get(loan.borrower, 0.0) + loan.principal
-        record.memory.rates[money] = rate
+        if clearing.cause is None and clearing.rate is not None:
+            record.memory.rates[money] = clearing.rate      # a year in which nothing cleared leaves the last cleared rate
+        rate = record.memory.rates[money]       # the opening sets one
         # a plant request lenders left unmet is offered to the savers as shares (the money they raise is plant like a loan's)
         raised = shares.raise_equity(record, money, unmet, funds, every_loan, rate, shares.rate_floor_of(setup))
         merchants_credit.stake(record.merchants, {loan.borrower: loan.principal for loan in loans})

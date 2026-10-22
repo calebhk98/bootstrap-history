@@ -96,3 +96,38 @@ scarcity wage (8e354ebe) moved the rate only from 0.126 to 0.147; the wage bound
   sits below the lenders' ask is not yet checked.
 - The domestic service good priced at several times the servant's wage (about nine at 1cd50f79, about three at the tip,
   against a wage under one half) is a seller's markup the ask band (643) or the opening (473) should explain.
+
+## What `market_rate()` reports, and why it sat below the asks (2026-10-22)
+
+Probe: `Complaints/reports/641-rate-probe.md` (probe 3, a spy on `credit.clear_with_cause` and on the no-request drift, run with
+`ROME_CACHE_DIR` pointing at an empty directory so the cached spin-up does not hide the clearings).
+
+What it reports: `Sim.market_rate` -> `economy_port.agent_rate` -> `api.interest_rate` -> `record.memory.rates[currency]`. That is the
+economy's memory, the nominal base rate (before each borrower's risk premium) of the last `_lend` clearing of the spin-up, the
+year's second clearing. The first clearing (`lending.lend_working_capital`) discards its rate and writes nothing to memory, so the
+rate comes from the smaller clearing: a year's few plant and entry requests, not the bulk of the year's loans. It is a marginal
+rate (the clearing point, moved by `RATE_ADJUSTMENT_SHARE_PER_YEAR`), not a loan-weighted average, and not a real rate.
+
+Why it sat below the median ask: the median ask is not the clearing price; the marginal lender's is. Three causes, measured:
+
+1. Glut: where the cheapest lender's funds cover the whole request (England: the cheapest ask funds many times the demand), the
+   rate is that lender's ask, far under the median. This is a clearing price. (Households that expect deflation ask only their
+   loss rate, since the ask is floored at zero nominal.)
+2. Stickiness one way only: a rate falls to the clearing point at once when funds sit idle, but rose only by a share of the gap.
+   Rome's final clearing, before the change, stood at 0.0255 after a last rate of nil: the lenders asking no more than that held a
+   small share of the request (the probe's `funds_at_rate` against `asked`), so borrowers who would pay more were rationed. Fixed: the rate lifts to the clearing point when
+   borrowers who would pay it ask for more than the lenders at or under the held rate hold
+   (`credit._borrowers_rationed_below_clearing_rate`).
+3. A bid or an ask reported as a rate where nothing cleared: with no offers the clearing returned the keenest borrower's cap moved
+   a step (the opening year's 0.8, and the small fixture's whole run), and `_lend` wrote it to memory; with offers but no borrower
+   able to pay the cheapest ask the rate crept toward that ask. Fixed: `credit.clear_with_cause` returns the held rate with cause
+   `no_offers` or `no_borrower_at_ask` (`None` when there was none), and `_lend` leaves memory at the last cleared rate then.
+   `no_offer_at_rate` leaves memory alone too.
+
+Tests: `sim/tests/test_economy_credit_rate_below_asks.py` (built offers and requests); three tests that asserted the old rule
+("borrowers with no lenders pull the rate up") now assert the held rate. 
+
+Left open: the late-run labourer wage in `test_complaint_651_wage_step_gain.SmallEconomy` now flips sign more often (the fixture
+has no lenders, so its rate is now held at the opening rate instead of drifting to the borrowers' bid); the amplitudes are small
+and no fall nears the test's bound, but the count passes its limit. Not retuned. The rate and the lenders' asks after the change are
+in the report of this commit.
