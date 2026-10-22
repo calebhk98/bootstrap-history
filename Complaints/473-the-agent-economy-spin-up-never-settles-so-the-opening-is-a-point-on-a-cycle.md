@@ -515,3 +515,19 @@ complaint), not a price the rent produces. Entrants (`entry_trial`, `location`) 
 Slow topics (`--jobs 2`): `farm_land_quality_scenario`, `opening_floor_and_thin_trades`, `opening_consistency`, `opening_basket_agrees_scenario`,
 `price_over_making_cost_band_validation` (red after Update 12, now green) and `land_tile_partition_invariance` green. `baseline_fixture` "stocks are not eaten
 through" (ore_kg) fails before and after, as noted in Update 14.
+
+### Update 16 (later): the 92 a kg was a remembered bid ceiling blended with a sliver of trade
+
+Traced with the spin-up uncached (probe not committed: `economy_port_year.SPIN_UP_CACHE_DIRECTORY` set to a temporary directory, wrapping `producers.plan`
+and `unsold_search.clear_with_search` for wheat at france_05). The parent's 0.71 was a `cost_covering` quote on a market where nothing traded and the
+producer held no stock, not a price. With wheat running, the spin-up cobwebs: year 1 plans the plant's whole capacity at the opening estimate (238 million kg
+held after it), the price falls to 0.1, no one plans in year 4 (stock gone), a buyer's ceiling of 130 is remembered as a `best_unfilled_bid`, year 5 plans
+231 thousand runs. The opening year then cleared 1.5 thousand kg of 94 million at 13 a kg, and the remembered price moved from the ceiling toward 13 by the
+share of a usual volume that sliver was (`year_goods.remembered_price`): 92, then 65 and 48 in the next years, while the market itself cleared at 13, 8.7 and 3.3.
+The ask path is not a raise: the producer holds stock, `ask_raise.sold_out_outputs` is empty for it, its reservation is the holding reservation and the unsold
+search brings it to its queue-held floor.
+
+Fix: a trade replaces a remembered quote whole (`year_goods.price_after_trade`; `record.memory.quote_kinds` says which), since no one paid a quote and the volume
+weight is for blending traded prices. Tests: `test_economy_year_goods.py` `PriceAfterTradeTests`. Wheat at france_05 after, price at the year's plan, years 0 to 5:
+2.28, 2.17, 0.75, 0.46, 0.84 and 0.84 after; stock at the producer 76, 75, 48, 25, 0 million kg. `purchase_limited_by_offered_volume_scenario`,
+`price_over_making_cost_band_validation` green, quick tier green. The spin-up's own cobweb (a plant planned at capacity on the opening estimate) is this complaint.
