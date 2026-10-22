@@ -78,6 +78,7 @@ class YearInputs:
     value_of_life_years_of_income: float = 0.0          # prices a trade's fatality risk into its ask
     bondage_allowed: frozenset = frozenset()            # areas whose civilisation recognises bondage; others buy none
     bonded_for_sale: Dict[AreaId, Dict[TradeId, float]] = dataclasses.field(default_factory=dict)   # bonded people of a trade on offer in an area
+    outlay_room: Dict[str, float] = dataclasses.field(default_factory=dict)   # money each employer's plan assigns to no line: with the wage line of its vacancies, all it may spend on bonded people (bonded_room.py)
     taxed_share: Dict[AreaId, float] = dataclasses.field(default_factory=dict)   # share of a worker's income the state takes from those who stay in the area, liability included
     hours_share_at: Dict[Tuple[TradeId, AreaId], Callable[[float], float]] = dataclasses.field(default_factory=dict)   # (trade, area) -> share of the workers' hours they sell at a wage an hour (rising); absent: all of them, at any wage
 

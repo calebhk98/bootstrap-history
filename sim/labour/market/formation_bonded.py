@@ -2,7 +2,9 @@
 (bonded_worth.py). Used by formation.py for an empty trade after migration, and for any trade with vacancies left."""
 from typing import Dict, Optional
 
-from . import aptitude, bonded_worth
+import dataclasses
+
+from . import aptitude, bonded_room, bonded_worth
 from .records import Clearing, MarketState, YearInputs, YearReport
 
 
@@ -40,10 +42,12 @@ def untrained_worth_in(inputs: YearInputs, area: str) -> float:
 
 
 def buy(state: MarketState, inputs: YearInputs, index: Dict, area: str, trade: str, wanted: float,
-        pool: Dict[str, Dict[str, float]], report: YearReport) -> float:
+        pool: Dict[str, Dict[str, float]], report: YearReport, unassigned: Dict[str, float]) -> float:
     """Buy up to `wanted` bonded people of `trade` for `area` out of `pool` (origin -> trade -> people left, drawn down);
     they join the area's workers and are recorded in `report.bonded_lots`. Returns the people bought. Nothing is bought
-    in an area whose civilisation does not recognise bondage, or when the buyers' bid cannot be priced."""
+    in an area whose civilisation does not recognise bondage, or when the buyers' bid cannot be priced. Only the
+    employers with a vacancy and room in their plans buy (bonded_room.py); `unassigned` (employer -> free cash) is
+    drawn down by what they pay."""
     if wanted <= 0.0 or area not in inputs.bondage_allowed:
         return 0.0
     clearing: Optional[Clearing] = index.get((area, trade))
@@ -57,9 +61,18 @@ def buy(state: MarketState, inputs: YearInputs, index: Dict, area: str, trade: s
         if price is not None:
             ask[origin] = price
             carriage[origin] = bonded_worth.cheapest_carriage(inputs.routes, origin, area)
-    lots = bonded_worth.buy_lots(area, trade, wanted, bid, offers, ask, carriage)
-    for origin, left in offers.items():
-        pool[origin][trade] = left
+    buyers = bonded_room.buyers_in(inputs.bids, clearing, unassigned) if clearing is not None else []
+    shares, ceiling, vacant = bonded_room.shares_and_ceiling(buyers)
+    if not shares:
+        return 0.0
+    left = dict(offers)
+    lots = bonded_worth.buy_lots(area, trade, min(wanted, vacant / inputs.hours_per_worker_year), bid, left, ask, carriage)
+    lots = _within(lots, ceiling, tuple(sorted(shares.items())))
+    for lot in lots:
+        offers[lot.origin] -= lot.people
+    for origin, remaining in offers.items():
+        pool[origin][trade] = remaining
+    bonded_room.spend(buyers, shares, sum(lot.people * lot.price for lot in lots), unassigned)
     bought = sum(lot.people for lot in lots)
     if bought > 0.0:
         count = aptitude.band_count()
@@ -70,3 +83,15 @@ def buy(state: MarketState, inputs: YearInputs, index: Dict, area: str, trade: s
         by_route = report.formed.setdefault(area, {}).setdefault(trade, {})
         by_route["bonded"] = by_route.get("bonded", 0.0) + bought
     return bought
+
+
+def _within(lots, ceiling: float, payers) -> list:
+    """The lots, cheapest first, cut where their cost reaches `ceiling`, each naming who pays."""
+    kept, spent = [], 0.0
+    for lot in lots:
+        people = min(lot.people, (ceiling - spent) / lot.price) if lot.price > 0.0 else lot.people
+        if people <= 1e-12:
+            break
+        kept.append(dataclasses.replace(lot, people=people, payers=payers))
+        spent += people * lot.price
+    return kept
