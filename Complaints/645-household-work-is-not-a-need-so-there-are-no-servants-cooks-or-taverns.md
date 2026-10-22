@@ -70,3 +70,13 @@ Cooked food, cleaning and childcare as bought substitutes are not yet data in `h
 
 The opening's typical traded good now sells below its making cost (`price_over_making_cost_band_validation`, see 558). The
 cause is traced in 473 Update 11: the opening is unchanged and the cycle takes a different path. The sourced figures stay.
+
+## Grinding is charged to households that can buy flour (PM, measured)
+
+A default Rome game's market rate is 0.199 at 1cd50f79 and 0.48 (the ceiling) after the sourced hours merged (e72b36c0):
+households have nothing left to save and no lender can be met (state scenarios restated around it; credit work 641).
+Command: `PYTHONPATH=. python3 -W ignore -c "from sim.tests.harness import sim; print(sim(civ='rome_100ad').market_rate())"`.
+Most of `water_fuel_and_grinding` is hand grinding (the Burkina Faso table), charged to every household of every civilisation,
+while the economy also mills grain into flour (`data/production/95_grain_milling.json`) that households can buy. Grinding is a
+way of making flour, so it belongs with the household's choice of making or buying (the rule this complaint already has for
+cooked food), not in a fixed daily charge. Water and fuel fetching stay household work.
