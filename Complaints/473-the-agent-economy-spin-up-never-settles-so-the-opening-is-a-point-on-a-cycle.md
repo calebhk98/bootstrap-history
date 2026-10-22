@@ -484,3 +484,34 @@ cost more than its revenue, while most farmer hours sit idle and millet and flou
 the check passed only on leftover stock. A staple whose producers cannot cover labour and rent at the opening, with farm
 hours idle, is the opening's prices and wages failing to meet (this complaint); the check stays red. Command:
 `python3 -m sim.tests --slow --only purchase_limited_by_offered_volume_scenario --jobs 1`.
+
+## Update 16: the idle wheat producer was charged the rent a mine bids the tile up to (branch wheat-at-the-opening)
+
+Probe (not committed; `sim(civ="rome_100ad", capital=1e12)`, `_step_market()` a year at a time, wrapping `producers.plan`, the wheat producer at
+france_05, years 0 to 5; a second wrap of `land_market.clear_land` printed the tile's demands). Before the fix, plan margin per run was
+negative every year because of rent, not wages or price:
+
+- Expected wheat price 1.17 rising to 1.50, traded 0.71 to 1.18 (a traded price, not a quote; the expectation sits above it, so no cap holds it down).
+- Farmer wage the plan reads, 0.91 falling to 0.61 (the labourer's 0.47 to 0.57): the wage side does move with the idle hours. Labour a run 431 falling to 292
+  against revenue 557 rising to 711, so a run pays its labour at every year; with no rent the margin is positive from year 0.
+- Rent a run 247 rising to 595; margin -122, -159, -207, -201, -196, -180. Millet, hemp and vegetables were idle for the same reason; opium (a dearer crop a hectare) ran.
+- Cause: `land_market.clear_land` charges every use on a tile the tile's differential rent at the hectare-weighted mean value a hectare gives its uses. At
+  france_05 year 0 the demands were 229 thousand hectares at a mean value of 3.6 thousand a hectare, of which coal (2.7 thousand hectares at 221 thousand a
+  hectare) alone carried the mean: the rent clears at 507 a hectare, and about 140 without coal. Wheat earns about 450 a hectare. A use that earns little a
+  hectare was charged what the use that earns most bids the tile up to, and an idle producer asks for no land, so it reads that tile figure.
+
+Fix (`sim/economy/land_market.py`, `land_rents.py`): a use pays the tile's rent in proportion to its own value a hectare over the tile's mean
+(`use_rent_per_hectare`); the tile's total, `record.land_rent` and the tenancy and title readers are unchanged. Producers that ask no land this year are
+priced at the value their runs would fetch at the prices they expect. `rent_paid_by_tile` now sums each producer's rent a run times its runs. Tests:
+`sim/tests/test_economy_land_rent_by_use.py` (the pure rule on built demands: proportion, the mean-valued use pays the tile rent, totals conserved, nothing
+asked; `settle_year` on a built record with an idle grain producer next to a mine); `test_state_land_revenue.py` fixtures carry each producer's rent a run.
+
+After (same probe): the wheat producer plans 22 thousand runs in year 0 (rent a run 183), the economy offers 94 thousand tonnes of wheat on the tile and
+`purchase_limited_by_offered_volume_scenario` is green. Not settled: the opening now holds 76 million kg of wheat stock at the producer, which
+`runs_for_stock` works off (no runs in years 1 to 5 although the margin is positive), and the price of wheat there is 92 falling 30 per cent a year to 17
+while millet is 0.3 and bread 0.12; a price that high for a good whose labour cost is about a coin a kg is the sold-out ask raise and the spin-up cycle (this
+complaint), not a price the rent produces. Entrants (`entry_trial`, `location`) still read the tile rent, not a use's share.
+
+Slow topics (`--jobs 2`): `farm_land_quality_scenario`, `opening_floor_and_thin_trades`, `opening_consistency`, `opening_basket_agrees_scenario`,
+`price_over_making_cost_band_validation` (red after Update 12, now green) and `land_tile_partition_invariance` green. `baseline_fixture` "stocks are not eaten
+through" (ore_kg) fails before and after, as noted in Update 14.
