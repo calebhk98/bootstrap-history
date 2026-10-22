@@ -53,13 +53,35 @@ class HourSupply:
         rest = households_hours_offered.leisure_hours_kept(eligible, wage, self.anchor_wage.get(offer.trade))
         return free - rest, at_home, rest
 
+    def sold_hours_schedule(self, offer: LabourOffer) -> Callable[[float], float]:
+        """The hours of one offer sold at a wage, as `split(offer, wage)[0]` gives them, with what does not depend on
+        the wage worked out once: for a schedule asked at many wages."""
+        whole = self._hours.get(offer.worker, 0.0)
+        if whole <= 0.0 or offer.hours <= 0.0:
+            return lambda wage: 0.0
+        plot = self.plot_hours_at.get(offer.worker)
+        plan = self.plan_hours.get(offer.worker, 0.0)
+        work = self.work_hours.get(offer.worker, 0.0)
+        usable = self.plot_usable.get(offer.worker, 0.0)
+        anchor = self.anchor_wage.get(offer.trade)
+        share = offer.hours / whole
+        hours = offer.hours
+
+        def sold(wage: float) -> float:
+            plot_kept = max(plan, plot(wage) if plot else 0.0)
+            free = hours - min(plot_kept + work, whole) * share
+            eligible = max(0.0, free - max(0.0, usable - plot_kept) * share)
+            return free - households_hours_offered.leisure_hours_kept(eligible, wage, anchor)
+        return sold
+
     def share_at(self, trade: str, area: str) -> Callable[[float], float]:
         """The share of a market's hours sold at a wage, over the offers in it."""
         mine = [offer for offer in self.offers if offer.trade == trade and offer.area == area and offer.hours > 0.0]
         total = sum(offer.hours for offer in mine)
+        schedules = [self.sold_hours_schedule(offer) for offer in mine]
 
         def share(wage: float) -> float:
-            return sum(self.split(offer, wage)[0] for offer in mine) / total if total > 0.0 else 0.0
+            return sum(schedule(wage) for schedule in schedules) / total if total > 0.0 else 0.0
         return share
 
     def shares(self) -> Dict[Tuple[str, str], Callable[[float], float]]:
