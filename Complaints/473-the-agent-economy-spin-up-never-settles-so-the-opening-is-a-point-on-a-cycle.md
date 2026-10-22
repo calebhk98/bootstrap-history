@@ -531,3 +531,12 @@ Fix: a trade replaces a remembered quote whole (`year_goods.price_after_trade`; 
 weight is for blending traded prices. Tests: `test_economy_year_goods.py` `PriceAfterTradeTests`. Wheat at france_05 after, price at the year's plan, years 0 to 5:
 2.28, 2.17, 0.75, 0.46, 0.84 and 0.84 after; stock at the producer 76, 75, 48, 25, 0 million kg. `purchase_limited_by_offered_volume_scenario`,
 `price_over_making_cost_band_validation` green, quick tier green. The spin-up's own cobweb (a plant planned at capacity on the opening estimate) is this complaint.
+
+### Update 16 (entrants): a newcomer prices a site at its own use's rent (branch entrant-use-rent)
+
+Entrants (`entry_trial.recipes_by_cost`, `location._tile_part`, `entry.entry_plans` through `entry_year`) read the tile's mean rent; they now read
+`entrant_rent.site_rent_per_run`, which applies `land_market.use_rent_per_hectare` to the newcomer's expected value a hectare (its outputs at the prices
+the market shows it, times the site's yield, over the land a run takes). `settle_year` keeps the tile's mean value on `record.land_mean_value` for it.
+Tests: `sim/tests/test_economy_entrant_rent.py` (a grain entrant beside a mine pays its own rent; a use at the tile mean pays the tile rent; siting picks
+the tile where its own use's rent is lowest, and the mean-rent reading would pick another). Quick tier green; `firm_count_whole_game_scenario`,
+`firm_borrows_to_enter_scenario`, `purchase_limited_by_offered_volume_scenario` green with `--slow --jobs 1`.
