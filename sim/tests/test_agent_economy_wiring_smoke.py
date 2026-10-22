@@ -84,12 +84,15 @@ check("scenario: the other civilisations play a year on the agent economy with m
 # One owner for credit: the founder's room and the rate both come from the agent economy's market.
 credit_game = rome
 agent_market = credit_game.economy.agent.economy()
+# the market answers None until lenders have met (no savings on offer): then the engine's room is None too
+market_room = economy_api.credit_room(agent_market, credit_game.state.acting_seat)
+engine_room = credit_game.market_credit_room(credit_game.state.acting_seat)
 check("scenario: on the agent economy the credit room is the agent market's, in coin, as the rate is",
-      abs(credit_game.market_credit_room(credit_game.state.acting_seat)
-          - economy_api.credit_room(agent_market, credit_game.state.acting_seat) * agent_market.setup.coin_per_unit)
-      <= 1e-9 * abs(credit_game.market_credit_room(credit_game.state.acting_seat))
+      (engine_room is None if market_room is None
+       else engine_room is not None
+       and abs(engine_room - market_room * agent_market.setup.coin_per_unit) <= 1e-9 * abs(engine_room))
       and credit_game.market_rate() == economy_api.interest_rate(agent_market),
-      (credit_game.market_credit_room(credit_game.state.acting_seat), economy_api.credit_room(agent_market, credit_game.state.acting_seat)))
+      (engine_room, market_room))
 
 # The Norse game, already a year in, is the one saved and resumed (the smallest whole game to step twice).
 unbroken = played["norse_900ad"]
