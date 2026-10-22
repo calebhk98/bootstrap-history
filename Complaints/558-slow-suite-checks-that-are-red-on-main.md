@@ -41,6 +41,11 @@ entry below is updated as its group lands.
   `purchase_limited_by_offered_volume_scenario` and `economy_money_regimes_norse` are green. New: `carters_and_plumbers_exist_in_a_game_scenario`
   (no carters after the seed bound, 556, being fixed) and `economy_state_budget_validation` (printing more no longer raises the
   price level more; red at 3cb9c9a0 too, then green, now red again: 526).
+- Full run on bc727212 (after the chained level weights what trades, 526): carters are green. Three checks that read the first
+  years of the unsettled opening flipped back to red, each at or just past its bound: `economy_bronze_market_price` (bronze shows
+  just over the owner's order-of-magnitude bound in year one and falls below cost by year four), `price_over_making_cost_band_validation`
+  (the median a hair under one) and `staff_closure_reopening_scenario`. They have flipped between successive runs today; they
+  are 473's opening transient, and the bounds are kept.
 - `real_output_validation`: not new; the same output-per-head check `real_output` failed on 3cb9c9a0 (473).
 
 ## Honest validations of open problems (stay red until the owner closes)
