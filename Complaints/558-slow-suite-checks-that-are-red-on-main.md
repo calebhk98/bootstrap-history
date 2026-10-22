@@ -55,7 +55,8 @@ entry below is updated as its group lands.
 - `economy_state_budget_validation` (a balanced budget keeps the state's coin share; printing raises prices): 526 and 473.
 - `economy_tin_dearer_than_copper`: 511 (GitHub #65).
 - `economy_bronze_market_price`: passes at the owner's bound (an order of magnitude; 502 closed).
-- `occupational_distribution` (agriculture share below its band; services and state the largest non-farm group): 619 (GitHub #64).
+- `occupational_distribution`: reads people by main occupation since 619's fix; agriculture is inside its band, textiles,
+  building, food processing, transport and crafts are far below theirs (the non-farm trades are under-built; 609 to 618, 645).
 - `sited_ore_price_over_cost_validation`: the ratio bound holds for every common ore; the red line is the not-vacuous guard,
   because Rome's cassiterite market holds the opening stock unsold with no buyer (its smelters have not bought yet): 473.
   Silver and gold stay 519's.
