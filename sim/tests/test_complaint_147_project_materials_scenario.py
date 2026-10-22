@@ -86,23 +86,36 @@ scenario("scenario: `why` shows a row per material and the total the engine char
 
 # --- stock is drawn first; starting pays for the missing materials and delivers them; the bill is fixed at the start -----------
 _start = sim(capital=5e7)
-_cost_empty = _start.project_cost(_LEAD)
-_needed = {row["material"]: row["needed_tonnes"] for row in _start.project_material_bill(_LEAD)["rows"]}
+
+
+def _market_has_all_of(game, node_id):
+    """True when the project needs materials and the economy offers every one of them in full: buying them all is
+    then the rule's question, not whether this year's opening happens to leave an ore unmined."""
+    rows = game.project_material_bill(node_id)["rows"]
+    return bool(rows) and all((game.economy.agent_offered_tonnes(row["material"]) or 0.0) >= row["needed_tonnes"]
+                              for row in rows)
+
+
+_STOCKED = next((node_id for node_id in (_LEAD, _FIRST, _SECOND, _GUNPOWDER) if _market_has_all_of(_start, node_id)), None)
+check("a project whose every material the economy offers in full exists for the stock scenario", _STOCKED is not None, _STOCKED)
+_STOCKED = _STOCKED or _LEAD
+_cost_empty = _start.project_cost(_STOCKED)
+_needed = {row["material"]: row["needed_tonnes"] for row in _start.project_material_bill(_STOCKED)["rows"]}
 _cash_before = _start.capital
 _bought = {material: _start.buy_material_stock(material, tonnes) for material, tonnes in sorted(_needed.items())}
 _paid = _cash_before - _start.capital
-_cost_held = _start.project_cost(_LEAD)
-_held_bill = _start.project_material_bill(_LEAD)
+_cost_held = _start.project_cost(_STOCKED)
+_held_bill = _start.project_material_bill(_STOCKED)
 _start = sim(capital=5e7)   # a fresh game: the materials are missing at the start
-run_it(_start, *_start.nodes[_LEAD]["pre"])
+run_it(_start, *_start.nodes[_STOCKED]["pre"])
 _start.artisans = _start.scholars = 50.0
 _fuel_key = _start._material_tag(sorted(_needed)[0])[0]
 _stock_before = _start.material_stock_t(_fuel_key)
 _cash_before = _start.capital
-_started, _why_not = _start.start_project(_LEAD)
+_started, _why_not = _start.start_project(_STOCKED)
 _spent_at_start = _cash_before - _start.capital
 _stock_after = _start.material_stock_t(_fuel_key)
-_frozen = _start.project_cost(_LEAD)
+_frozen = _start.project_cost(_STOCKED)
 _path = os.path.join(tempfile.mkdtemp(), "bill.json")
 save_state(_start, _path)
 _reloaded = sim(capital=1.0)
@@ -114,5 +127,5 @@ scenario("scenario: holding the materials lowers the bill, starting delivers the
          with_everything_held_nothing_is_missing=_held_bill["cost_of_missing"] < 1e-6,
          the_project_starts=bool(_started),
          materials_are_paid_for_at_the_start=_spent_at_start > 0.0 and _stock_after > _stock_before,
-         the_bill_survives_save_and_load=abs(_reloaded.project_cost(_LEAD) - _frozen) < 1e-6 and _frozen > 0,
-         buying_stock_afterwards_leaves_a_running_bill_alone=abs(_start.project_cost(_LEAD) - _frozen) < 1e-6)
+         the_bill_survives_save_and_load=abs(_reloaded.project_cost(_STOCKED) - _frozen) < 1e-6 and _frozen > 0,
+         buying_stock_afterwards_leaves_a_running_bill_alone=abs(_start.project_cost(_STOCKED) - _frozen) < 1e-6)
