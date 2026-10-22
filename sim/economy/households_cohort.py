@@ -51,6 +51,9 @@ class Cohort:
     hired_work_per_person: float = 0.0  # hours of household work a person's share hires this year (household_work_year.py)
     milled_grains: Tuple[str, ...] = ()  # grains it buys milled rather than grinds by hand this year (household_grinding.py)
 
+    def __post_init__(self) -> None:
+        self.milled_grains = tuple(self.milled_grains)  # a saved tuple reads back from JSON as a list
+
 
 def cohort_id(tile: TileId, income_class: int) -> AgentId:
     return "household:%s:%d" % (tile, income_class)
