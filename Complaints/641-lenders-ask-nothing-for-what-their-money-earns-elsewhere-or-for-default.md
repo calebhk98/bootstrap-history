@@ -88,3 +88,11 @@ The ceiling was not the lenders' ask: households had no savings to offer, becaus
 servant's wage while they paid the service's price (645, last section), so the second clearing had funds of about a millionth of
 requests. With the rule reading the price, Rome's households offer savings and the opening rate is 0.016 (command in 645). The
 scarcity wage (8e354ebe) moved the rate only from 0.126 to 0.147; the wage bound in `sim/labour/market/scarcity.py` is not the cause.
+
+## Open after the household-service fix (PM, 2026-10-22)
+
+- Rome's `market_rate()` reads 0.016 after the fix, while the trace's own credit clearing showed rates of about 0.07 with
+  lenders asking a median of about 0.17. Which figure `market_rate()` reports (which clearing, nominal or real) and why it
+  sits below the lenders' ask is not yet checked.
+- The domestic service good priced at several times the servant's wage (about nine at 1cd50f79, about three at the tip,
+  against a wage under one half) is a seller's markup the ask band (643) or the opening (473) should explain.
