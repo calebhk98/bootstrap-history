@@ -196,8 +196,8 @@ def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, led
             if result.quantity > 0.0:
                 usual = record.memory.volume_weights.get(key, 0.0)
                 reference = memory_reference_volume(usual, wanted_at(bids, old))
-                signal = remembered_price(old, result.price, result.quantity, reference)
-                signal = price_after_resumed_trade(old, signal, quiet_years + dry_years)
+                signal = price_after_trade(old, key in record.memory.quote_kinds, result.price, result.quantity, reference,
+                                           quiet_years + dry_years)
                 if result.quantity < REPRESENTATIVE_TRADE_SHARE * usual:
                     if costs is None:
                         costs = making_costs(setup, record)
@@ -230,11 +230,20 @@ def clear_goods(setup, record, view, area_map, order_book: OrderBook, plans, led
     record.memory.note_trading(traded)
 
 
+def price_after_trade(old, old_was_quote, cleared, quantity, reference_volume, quiet_years):
+    """The price a market remembers after a year in which it traded: `remembered_price` and the resumed-trade rule
+    against the old price, unless the old price was a quote (a bid ceiling, an ask, a cost): no one paid it, so the
+    trade replaces it whole rather than being weighed against it."""
+    paid = None if old_was_quote else old
+    return price_after_resumed_trade(paid, remembered_price(paid, cleared, quantity, reference_volume), quiet_years)
+
+
 def remembered_price(old, cleared, quantity, usual_volume):
     """The price a market remembers after trading `quantity` at `cleared`: moved from the old price in
     proportion to the trade against `usual_volume` (the caller passes the larger of the market's usual
     volume and what buyers wanted at the old price), so a sliver of trade cleared at a price nobody
-    normally pays does not become the price everyone plans from."""
+    normally pays does not become the price everyone plans from. An `old` that is None (nothing remembered, or only a
+    quote no one paid) is replaced by the trade whole."""
     if old is None or usual_volume <= 0.0:
         return cleared
     return old + min(1.0, quantity / usual_volume) * (cleared - old)
