@@ -98,6 +98,7 @@ class Plan:
     bids: Tuple[Bid, ...] = ()
     expected_margin_per_run: float = 0.0    # before the capital charge; what an idle producer weighs
     wanted_runs: float = 0.0                # runs it wanted before the land it was granted capped them
+    wage_line: float = 0.0                  # cash the plan sets for the planned runs' labour
 
 
 def expected_price(producer: Producer, good: GoodId, view: MarketView) -> Optional[float]:
@@ -301,7 +302,7 @@ def plan(producer: Producer, recipe: Recipe, view: MarketView, cash: float) -> P
     live_variable = unit_cost.input_cost_per_run(recipe, {**inputs, **market_inputs}) + labour_cost + rent
     bids = _input_bids(producer, recipe, view, runs, market_inputs, max(cash, 0.0) - runs * labour_cost,
                        revenue / ratio - live_variable, live_variable, wages)
-    return Plan(runs, tuple(labour_bids), tuple(bids), margin, wanted)
+    return Plan(runs, tuple(labour_bids), tuple(bids), margin, wanted, runs * labour_cost)
 
 
 def within_a_years_change(producer: Producer, runs: float) -> float:

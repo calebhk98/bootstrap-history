@@ -10,7 +10,7 @@ from typing import Any, Dict, Mapping, Optional, Tuple
 
 from sim.world import capital_market
 
-from . import taxes, bondage, bondage_hours, bonded_purchase, banks, carriage_hours, credit, credit_lines, debt_relief, credit_claims, currency, equity, labour, land_market, lending, merchants_credit, producers, shares, sites, state_budget, tax_farming, titles_ground, titles_inheritance, titles_moves, titles_worked, unit_cost
+from . import outlay_room, taxes, bondage, bondage_hours, bonded_purchase, banks, carriage_hours, credit, credit_lines, debt_relief, credit_claims, currency, equity, labour, land_market, lending, merchants_credit, producers, shares, sites, state_budget, tax_farming, titles_ground, titles_inheritance, titles_moves, titles_worked, unit_cost
 from .credit_view import CreditView
 from .market_areas import AreaMap
 from .market_areas_follow import follow
@@ -186,6 +186,8 @@ class Economy:
         land_bid_year.take_up_own(setup, record, self._own_plot_options())
         everyone = labour_offers(setup, record, view, outside_option, inputs.labour_levy_hours_per_worker)
         context = labour_context(setup, record, view, self.carriage, inputs, self._own_plot_options(), outside_option)
+        context = dataclasses.replace(context, outlay_room=outlay_room.by_employer(
+            plans, setup.state_agent, record.state_budget, lambda employer: record.book.balance(employer, money)))
         held_placed = bondage_hours.place_held(
             record.bonded_held, lambda area, trade: people_by_trade(record.workforce, area).get(trade, 0.0), everyone, labour_bids,
             setup.working_hours_per_year, context.ask_floor_per_worker_year, labour_area)
@@ -201,7 +203,7 @@ class Economy:
         offers, kept = supply.sold, supply.kept
         self._leisure_hours = supply.leisure
         ledger.bonded_bought, ledger.bonded_paid, ledger.bonded_lots, bought_held = bonded_purchase.settle(
-            record.book, money, labour_report.bonded_lots, labour_bids)
+            record.book, money, labour_report.bonded_lots)
         bondage_hours.hold(record.bonded_held, bought_held)
         bondage_hours.deliver(ledger.hours_hired, placed)
         bondage_hours.deliver_held(ledger.hours_hired, held_placed)

@@ -50,3 +50,14 @@ sale records. See also 648.
    with a floor above zero, pooled spillover. `LEARNING_RATE` is sourced (Wright 1936 as stated on en.wikipedia.org/wiki/Learning_curve,
    opened; Thompson, econwpa 9712001, 12 to 24 per cent per doubling in shipbuilding). Tests: `test_learning_curve.py`.
 7. Data: `millwright` `taught_from: carpenter` with `taught_from_source` (Wikipedia 'Millwright', opened).
+8. Bonded purchase within the plan (`sim/labour/market/bonded_room.py`, `formation_bonded.py`, `sim/economy/outlay_room.py`,
+   `bonded_purchase.settle`): a purchase is a capital outlay, so an employer pays only from room its year plan leaves: the cash
+   its plan assigns to no line (`YearInputs.outlay_room`: a producer's cash less its wage line and input bids, `Plan.wage_line`;
+   the state's cash less its wage and goods budgets and what it holds back, `StateBudget.held_back`) and the wage line of the
+   hours it bid for and left vacant. The core shares a purchase between the employers with a vacancy by vacancy, cuts it where
+   any share would pass that employer's room, draws free cash down across markets, and names the payers on each lot
+   (`BondedLot.payers`); `settle` charges those payers and nobody else, so people are not delivered unpaid and the goods
+   lines keep their cash. The vacancy's wage line funds a part of a person (a person costs the present value of many years),
+   so a short trade buys fewer people than before; free cash is the only other way to pay. Tests:
+   `test_bonded_purchase_within_plan.py` (rules on built inputs). Measure: the people bought, printed per seed by
+   `python3 -m sim.tests --slow --only rome_bonded_share_baseline_validation`, against the same command on the commit before.

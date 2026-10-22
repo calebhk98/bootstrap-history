@@ -91,14 +91,12 @@ check("captives join the taker's bonded stratum",
       (before, stratum.record.members))
 check("a society with no bonded stratum takes none into bondage", add_captives(registry, "free", 25.0) == 0.0)
 
-# the economy side: employers bidding for the trade pay the price between them, as far as their cash goes
+# the economy side: the employers the core named pay the price between them, as far as their cash goes
 book = Book()
 for employer, cash in (("forge", 600.0), ("mill", 100.0)):
     book.transfer(Transfer(EDGE_MINT, employer, "coin", cash, "opening"))
-bids = [LabourBid("forge", "smith", "work@t1", 300.0, 1.0), LabourBid("mill", "smith", "work@t1", 100.0, 1.0),
-        LabourBid("forge", "smith", "work@t2", 50.0, 1.0)]
-lots = [BondedLot("work@t1", "smith", "work@t2", 4.0, 10.0, 2.0)]
-bought_here, paid, paid_lots, held = bonded_purchase.settle(book, "coin", lots, bids)
+lots = [BondedLot("work@t1", "smith", "work@t2", 4.0, 10.0, 2.0, payers=(("forge", 0.75), ("mill", 0.25)))]
+bought_here, paid, paid_lots, held = bonded_purchase.settle(book, "coin", lots)
 price = 4.0 * 12.0
 check("the economy reports the people bought by tile", bought_here == {("t1", "smith"): 4.0}, bought_here)
 check("the employers pay the price between them",
@@ -106,11 +104,12 @@ check("the employers pay the price between them",
 check("the lot is reported as paid: ask and carriage by origin",
       paid_lots == [{"origin": "t2", "destination": "t1", "trade": "smith", "people": 4.0, "ask": 40.0, "carriage": 8.0}],
       paid_lots)
-check("the people are held by the employers who bid, in proportion to their hours",
+check("the people are held by the employers who paid, in proportion to their shares",
       abs(held[("t1", "smith")]["forge"] - 3.0) < 1e-9 and abs(held[("t1", "smith")]["mill"] - 1.0) < 1e-9, held)
 check("the book still sums to nothing", abs(book.total("coin")) < 1e-9, book.total("coin"))
 book = Book()
 book.transfer(Transfer(EDGE_MINT, "forge", "coin", 12.0, "opening"))
-_, paid, paid_lots, _ = bonded_purchase.settle(book, "coin", lots, [LabourBid("forge", "smith", "work@t1", 300.0, 1.0)])
+lots = [BondedLot("work@t1", "smith", "work@t2", 4.0, 10.0, 2.0, payers=(("forge", 1.0),))]
+_, paid, paid_lots, _ = bonded_purchase.settle(book, "coin", lots)
 check("an employer short of cash pays what it has and the owners are paid that share",
       abs(paid - 12.0) < 1e-9 and abs(paid_lots[0]["ask"] - 10.0) < 1e-9, (paid, paid_lots))
