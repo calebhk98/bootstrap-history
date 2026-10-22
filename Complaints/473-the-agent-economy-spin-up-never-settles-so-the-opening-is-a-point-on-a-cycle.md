@@ -443,3 +443,11 @@ asking far above cost in a traded market (salted meat sells 2.5e3 kg of 9e8 want
 Slow topics (`--jobs 1`): `opening_floor_and_thin_trades` green before and after. `staff_closure_reopening_scenario` red before (1 closed concern left shut) and after (6),
 a cycle phase more than a rule. `price_over_making_cost_band_validation` green before and RED after (median 0.9905, the check's lower bound is one): the unsettled
 cycle (Update 11) lands a year lower. Not loosened; not resolved.
+
+## Update 13 (PM): the staple's producers cobweb with period two
+
+`sim/tests/test_complaint_651_wage_step_gain.py` `test_labourer_wage_does_not_sawtooth` is an expected failure naming this
+complaint: in that fixture the staple's output and price alternate year to year (producers' adaptive expectations,
+`producers.next_expectations` with `EXPECTATION_ADJUSTMENT_SHARE` and `OUTPUT_CHANGE_SHARE_PER_YEAR`), the leisure anchor and so
+the hours offered follow, and the labourer wage follows them. Trace in 641. It turns into an unexpected success when the
+producers' expectations stop alternating.
