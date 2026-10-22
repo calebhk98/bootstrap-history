@@ -1,5 +1,5 @@
 """A good's one price over its market areas."""
-from typing import Dict, Tuple
+from typing import Dict, Mapping, Set, Tuple
 
 
 def national_prices(record) -> Dict[str, float]:
@@ -20,3 +20,14 @@ def national_prices(record) -> Dict[str, float]:
         totals[good] = (value, quantity, plain)
     return {good: (value / quantity if quantity > 0.0 else plain)
             for good, (value, quantity, plain) in sorted(totals.items())}
+
+
+def traded_spending_weights(volumes: Mapping[str, float], prices: Mapping[str, float], goods: Set[str]) -> Dict[str, float]:
+    """What each of `goods` is spent on: its volume over its areas (`volumes` by market key) at `prices`. A good
+    without a price or a volume carries no weight."""
+    quantity: Dict[str, float] = {}
+    for key, volume in volumes.items():
+        good = key.split("|", 1)[0]
+        if good in goods and volume > 0.0:
+            quantity[good] = quantity.get(good, 0.0) + volume
+    return {good: amount * prices[good] for good, amount in sorted(quantity.items()) if prices.get(good, 0.0) > 0.0}

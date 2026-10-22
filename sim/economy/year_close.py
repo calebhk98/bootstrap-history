@@ -11,7 +11,7 @@ from . import (carried_book, carriage_fleet_book, tax_farming, merchants_transit
 from .household_work_year import basket_key, cohort_basket
 from .households_cohort import renewed
 from .market_memory import market_key
-from .national_prices import national_prices
+from .national_prices import national_prices, traded_spending_weights
 from .notional import recently_traded_goods
 from .setup import labour_area
 from .taxes_bases import YearFacts
@@ -313,7 +313,10 @@ def remember_basket_price_level(setup, record) -> float:
     prices = {good: price for good, price in national_prices(record).items() if good in recent}
     base = record.index_base_prices or setup.opening_prices
     level = currency.basket_price_level(prices, base, record.opening_basket)
-    spending = {good: quantity * base.get(good, 0.0) for good, quantity in record.opening_basket.items()}
+    # the median's weights are what the goods traded for last year; the opening basket's value stands in until they trade
+    spending = traded_spending_weights(record.memory.volume_weights or record.volumes,
+                                       record.memory.last_year_prices or prices, set(record.opening_basket)) \
+        or {good: quantity * base.get(good, 0.0) for good, quantity in record.opening_basket.items()}
     record.memory.note_basket_price_level(
         setup.currency_id, level, currency.price_inflation(prices, record.memory.last_year_prices, spending))
     record.memory.last_year_prices = dict(prices)
