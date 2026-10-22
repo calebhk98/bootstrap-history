@@ -156,3 +156,39 @@ What would let arrays pay: batching across goods and distinct price vectors in o
 reworking the merchants' sequential route commitment (each merchant's commits change what the next sees), and
 array-shaped data for `clear_goods`, `clear_labour`, `close_agents` and `open_entrants`. That is the model change of
 option 1 or 3 above, not a translation. A mod-swappable kernel for such a change is Complaint 661.
+
+## Round 8: the labour year's reads (after the fetch-cost search, bonded room and per-use rent merged)
+
+Branch `year-speed-after-merges`. All exact: `python3 -m sim.tests.fingerprint`'s `state_of` / `digest` of a `harness.sim()`
+game after 4 and after 12 stepped years is the same hash before and after (the full `--quick` fingerprint is four
+hundred game years, far over twenty minutes at this speed, so it was not run; the quick tier and the topics named below
+were).
+
+Profile (cProfile, three Rome years after one warm-up on `harness.sim()`; cProfile inflates about 2.5 times). Of the
+agent economy's year: labour clearing 47 s of 93 (the market core 43: `clear_all` 30, `form_trades` 7, `switch_trades` 3.5),
+goods clearing 11, closing 6.6, entry 4.7, credit 4.3, producers' planning about 2 (inside close/offers). Own time, top of
+the list: `dict.get` 9, `labour_supply.sold` 5.5 (3.3 million calls), `bonded_room.buyers_in` 3.1 (every call scanned all
+bids), `merchants._good_routes` 2.8, `import_cost._fills` and `hours_at` 4, `cheapest_carriage` 1.8, `share_at` 1.8 (every
+market scanned all offers), `plot_hours_kept` chain 3.6. A late year (eleven warm-ups) has the same shape with labour
+clearing a quarter, merchants' route search (orders and credit requests, 79 percent memo misses because each merchant's
+expectations differ) a quarter, `_lend` 8 of 75.
+
+Cuts, each beside a copy of the old path on random built inputs (`sim/tests/test_year_speed_labour_reads.py`):
+- `ImportCosts`: the spare hours of a source and the sum over a list of sources are kept for the year (the bisection asked
+  the same list every step); `hours_at`, `everyone` read the memo once.
+- `HourSupply.sold_hours_schedule` does the leisure test once per offer and inlines `leisure_share`; `shares()` groups the
+  offers by market once instead of scanning all of them per market; `household_hours_year.plot_schedule` replaces a
+  `functools.partial` over `plot_hours_kept` with a closure whose wage-free part is done once.
+- Bonded purchase: `bonded_room.hours_by_market` groups the bids once per year (`buyers_in` scanned every bid per call);
+  `bonded_worth.carriage_from` is one search per origin instead of one per (origin, destination); both live in the memo
+  `form_trades` hands to `formation_bonded.buy`.
+
+Measured (CPU seconds of `Sim.step()` on `harness.sim()`, two processes at once on four cores, old tree and new side by
+side, `python3 /tmp/.../yspeed_prof.py ROOT time 12`): second to fourth year 13.7, 10.9, 11.2 before and 9.9, 8.8, 9.8 after;
+tenth to twelfth year 10.2, 9.7, 10.0 before and 9.3, 9.5, 9.4 after. About fifteen percent early, about five late.
+
+Left: the fetch-cost search itself (`ImportCosts.wage`: each candidate source list is evaluated at its own wage, so the
+share schedules are computed afresh, about 1.1 million `hours_at` misses in three years; a binary search over the
+sorted sources would cut it but relies on the schedule being exactly monotone, which rounding does not promise); merchants'
+route searches for orders and credit requests (per-merchant expectations make the shared route memo miss); `switching`
+(`_carry_out`, `_odds`); `land_bid.owners_of_sellers` scans every producer per (good, tile).

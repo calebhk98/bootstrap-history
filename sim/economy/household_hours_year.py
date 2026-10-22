@@ -1,7 +1,6 @@
 """A cohort's hours kept for its own plot rather than offered (Complaints 473, 608): the choice of
 `households_hours_offered` against the wage it faced and what its plot yields at the prices of what it grows. The
 hours kept are added to those the own-plot plan and the household work already keep back (`labour_supply.HourSupply`)."""
-import functools
 from typing import Callable, Dict, Mapping, Optional, Sequence
 
 from . import households_hours_offered
@@ -54,14 +53,23 @@ def plot_schedules(setup, record, view, offers: Sequence[LabourOffer], options: 
         marginal = plot_return_per_hour(need_prices(basket, view, cohort.tile), options, tile.fertility, per_worker_hours,
                                         cohort.people / cohort.working_people, hectares_per_hour,
                                         held / cohort.working_people)
-        schedules[cohort_id] = functools.partial(_plot_hours_kept, per_worker_hours, marginal,
-                                                 usable / cohort.working_people, cohort.working_people)
+        schedules[cohort_id] = plot_schedule(per_worker_hours, marginal, usable / cohort.working_people, cohort.working_people)
     return schedules
 
 
-def _plot_hours_kept(per_worker_hours: float, marginal: float, usable_per_worker: float, workers: float,
-                     wage_per_hour: float) -> float:
-    return households_hours_offered.plot_hours_kept(per_worker_hours, wage_per_hour, marginal, usable_per_worker) * workers
+def plot_schedule(per_worker_hours: float, marginal: float, usable_per_worker: float, workers: float) -> Callable[[float], float]:
+    """Hours a cohort keeps for its plot at a wage (`households_hours_offered.plot_hours_kept` times its workers),
+    with what does not depend on the wage worked out once: it is asked at many wages."""
+    if per_worker_hours <= 0.0 or usable_per_worker <= 0.0 or marginal <= 0.0:
+        return lambda wage_per_hour: 0.0 * workers
+    usable = min(per_worker_hours, usable_per_worker)
+    exponent = 1.0 / (1.0 - households_hours_offered.LABOUR_OUTPUT_ELASTICITY)
+
+    def kept(wage_per_hour: float) -> float:
+        if wage_per_hour <= 0.0:
+            return usable * workers
+        return min(usable, per_worker_hours * (marginal / wage_per_hour) ** exponent) * workers
+    return kept
 
 
 def decide(setup, record, view, offers: Sequence[LabourOffer], options: Mapping[str, Sequence[Option]],

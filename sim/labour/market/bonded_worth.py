@@ -65,6 +65,22 @@ def cheapest_carriage(routes: Mapping[str, Sequence], origin: str, destination: 
     return None
 
 
+def carriage_from(routes: Mapping[str, Sequence], origin: str) -> Dict[str, float]:
+    """`cheapest_carriage` from one origin to every area a way leads to, in one search."""
+    best: Dict[str, float] = {origin: 0.0}
+    queue: List[Tuple[float, str]] = [(0.0, origin)]
+    while queue:
+        cost, area = heapq.heappop(queue)
+        if cost > best.get(area, float("inf")):
+            continue
+        for route in routes.get(area, ()):
+            step = cost + max(0.0, route.moving_cost)
+            if step < best.get(route.destination, float("inf")):
+                best[route.destination] = step
+                heapq.heappush(queue, (step, route.destination))
+    return best
+
+
 def buy_lots(destination: str, trade: str, wanted: float, bid_worth: float,
              for_sale: Dict[str, float], ask_by_origin: Mapping[str, float],
              carriage_by_origin: Mapping[str, Optional[float]]) -> List[BondedLot]:

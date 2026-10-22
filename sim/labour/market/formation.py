@@ -57,6 +57,7 @@ def form_trades(state: MarketState, inputs: YearInputs, clearings, report: YearR
     if hours_per_worker <= 0.0:
         return
     pool = {origin: dict(by_trade) for origin, by_trade in inputs.bonded_for_sale.items()}   # bonded people on offer, drawn down as bought
+    memo: Dict = {}   # the year's bids grouped by market and the carriage between areas, shared by every purchase
     unassigned = dict(inputs.outlay_room)   # each employer's free cash, drawn down as it pays
     empty: List[Tuple[str, str, float]] = []
     for (area, trade), clearing in sorted(index.items()):
@@ -82,8 +83,8 @@ def form_trades(state: MarketState, inputs: YearInputs, clearings, report: YearR
                 destination[band] += amount
             by_route = report.formed.setdefault(area, {}).setdefault(trade, {})
             by_route[kind] = by_route.get(kind, 0.0) + sum(taken)
-        formation_bonded.buy(state, inputs, index, area, trade, wanted - sum(people for _, _, people in takes), pool, report, unassigned)
+        formation_bonded.buy(state, inputs, index, area, trade, wanted - sum(people for _, _, people in takes), pool, report, unassigned, memo)
     first_formed = {(area, trade) for area, trade, _ in empty}
     for (area, trade), clearing in sorted(index.items()):
         if (area, trade) not in first_formed and clearing.vacant_hours > 0.0:
-            formation_bonded.buy(state, inputs, index, area, trade, clearing.vacant_hours / hours_per_worker, pool, report, unassigned)
+            formation_bonded.buy(state, inputs, index, area, trade, clearing.vacant_hours / hours_per_worker, pool, report, unassigned, memo)
