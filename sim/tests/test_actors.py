@@ -71,10 +71,14 @@ def valued_world(*nodes):
     return world
 
 
-def state_with(world):
+def state_with(world, aware=True):
+    """A government with a treasury; aware of every invention shown in `world` unless `aware` is False (an actor takes up
+    only what it knows exists, awareness.py)."""
     state_registry = ActorRegistry(ActorsState(home_country="home"))
     government = state_registry.ensure_government("home")
     government.money = 1.0e6
+    if aware:
+        government.record.aware.update({node_id: world.year for node_id in world.demonstrated()})
     return government
 
 
@@ -83,6 +87,9 @@ cartoons = make_node("test_cartoons", traits=["information"])
 faint = make_node("test_faint", gains={"military": 1e-12})
 modded = make_node("test_mod:cannon", gains={"military": 0.9})
 world = valued_world(gun, cartoons, faint, modded)
+unaware_government = state_with(world, aware=False)
+check("a government that has not come to know of a shown invention is not offered it",
+      not unaware_government.imitation_options(world), sorted(option.subject for option in unaware_government.imitation_options(world)))
 government = state_with(world)
 subjects = {option.subject: option for option in government.imitation_options(world)}
 check("a militarily valuable invention is on offer to the government", "test_gun" in subjects, sorted(subjects))
@@ -139,6 +146,7 @@ policy_world = valued_world(make_node("test_visible", traits=["military"]))
 policy_registry = ActorRegistry(ActorsState(home_country="home"))
 chooser = policy_registry.ensure_government("home")
 chooser.money = 1.0e6
+chooser.record.aware.update({node_id: policy_world.year for node_id in policy_world.demonstrated()})
 chooser.decision_policy = IdlePolicy()
 chooser.consider_imitation(policy_world)
 check("an idle policy copies nothing however valuable the invention", not chooser.works)
