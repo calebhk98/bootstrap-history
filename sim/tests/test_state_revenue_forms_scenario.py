@@ -7,7 +7,7 @@ sim = unopened_sim   # legacy: pins surplus grain sold into the engine's goods m
 
 
 from sim.engine.agents_port import SimWorld
-from sim.agents import budget_lines
+from sim.agents import authority, budget_lines
 from sim.agents.tuning_spending import GRANARY_LOSS_SHARE_PER_YEAR
 
 HARVEST_KG = 4.0e9
@@ -30,8 +30,11 @@ kind = sim()
 kind.state.holdings.farm_last_harvest_kg = HARVEST_KG
 treasury = kind.state_treasury()
 treasury.money = 0.0
-declared(kind, [LAND])
-tithe = 0.1 * HARVEST_KG / 1000.0
+kind_world = declared(kind, [LAND])
+due = 0.1 * HARVEST_KG / 1000.0
+# what the officials keep of what they collect is never the state's (authority.py), so the stores get the tithe less it
+kept = next(assessed.kept_by_officials for assessed in kind_world.revenue_assessments() if assessed.form == "land_tax")
+tithe = authority.after_leakage(due, kept)
 granary_target = 0.5 * tithe   # a reserve smaller than the harvest, so some grain is above it
 treasury.granary_target = lambda world: granary_target
 offered = []   # (seller, material, tonnes) the state puts to the agent economy's book
@@ -39,6 +42,7 @@ real_note_sale = kind.economy.note_actor_sale
 kind.economy.note_actor_sale = lambda seller, material, tonnes, from_concerns: (
     offered.append((seller, material, tonnes)), real_note_sale(seller, material, tonnes, from_concerns))[1]
 one_year(kind)
+check("the officials keep a share of the tithe, and not all of it", 0.0 < kept < authority.OFFICIAL_KEEP_CEILING, kept)
 check("a share of the harvest taken in kind is recorded as goods received, in tonnes",
       abs(treasury.record.in_kind_received.get("wheat_kg", 0.0) - tithe) < 1e-6 * tithe,
       treasury.record.in_kind_received)

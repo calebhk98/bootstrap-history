@@ -33,17 +33,25 @@ check("every line is priced from people at wages or goods at the market's price"
       all(line.money > 0.0 for line in lines.values()), {name: line.money for name, line in lines.items()})
 pristine_civ = copy.deepcopy(game.civ)   # the one game below is shared; each check restores what it changed
 pristine_population = {cohort: getattr(game.population, cohort) for cohort in ("children", "working_age", "elderly")}
-landlocked = game
-landlocked.civ.pop("home_tiles", None)
-landlocked.civ["home_regions"] = ["levant_mesopotamia"]
-dry = lines_of(landlocked)
+
+
+def with_tiles_released(count):
+    """A game whose home country has given `count` of its tiles to another country (all when None): territory is the
+    owner map's (`transfer_tile`), not the civilisation file's, once a game is running. They are given away, not released,
+    because a map with no owner at all is seeded afresh from the files."""
+    fresh = unopened_sim()
+    home = str(fresh.civ["id"])
+    held = fresh.tiles_owned_by(home)
+    for tile_id in held if count is None else held[:count]:
+        fresh.transfer_tile(tile_id, "another_country", cause="test")
+    return fresh
+
+
+partly_lost = lines_of(with_tiles_released(len(game.tiles_owned_by(str(game.civ["id"]))) // 2))
 check("a state's roads follow the tiles it holds",
-      "roads" in dry and dry["roads"].money != lines["roads"].money, (dry.get("roads"), lines["roads"].money))
-inland = game
-inland.civ.pop("home_tiles", None)
-inland.civ["home_regions"] = []
+      "roads" in partly_lost and partly_lost["roads"].money != lines["roads"].money, (partly_lost.get("roads"), lines["roads"].money))
 check("a state with no territory keeps no roads and no navy",
-      not {"roads", "navy"} & set(lines_of(inland)), sorted(lines_of(inland)))
+      not {"roads", "navy"} & set(lines_of(with_tiles_released(None))), sorted(lines_of(with_tiles_released(None))))
 game.civ = copy.deepcopy(pristine_civ)
 bigger_city = game
 for cohort in ("children", "working_age", "elderly"):
