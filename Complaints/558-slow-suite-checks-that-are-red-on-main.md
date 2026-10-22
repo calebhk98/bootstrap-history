@@ -53,7 +53,7 @@ entry below is updated as its group lands.
   are green but for two; eleven others went red (England's struck-coin price level in the tens of thousands, a rich founder deep
   in debt, the 467 glut back, a ventures crash, two display checks, stability and farm clearing near-ties), being fixed in two
   groups.
-- Full run on 2c0cdc6f.. (after the dust-spike and hired-by-others fixes): 22 red, of which nineteen are the long-standing entries
+- Full run on 7ea64858 (after the dust-spike and hired-by-others fixes): 22 red, of which nineteen are the long-standing entries
   above (473 family, the stale openings, 619, 511, 519, 513, firm expansion, 526). The three new ones: two were leftovers of
   the last merge (a fixture without `producers`; a log append behind a conditional the text guard reads as plain), fixed; the
   third, `household_capacity_and_literacy_scenario` "gaining a deputy is announced", reads log wording from a two-year whole game
