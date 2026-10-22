@@ -60,6 +60,22 @@ def cohort_basket(setup, record, cohort: Cohort):
     return basket
 
 
+def service_price_per_hour(setup, view, tile, wage_price: float) -> float:
+    """What an hour of household work costs a household that hires it: the market price of the goods that serve the
+    household-work need per need unit (the cheapest posted), else the servant's wage. The wage is only what the
+    servant is paid; the household pays the service's price, which departs from it where servants are scarce."""
+    area = view.area_of
+    prices = []
+    for need in setup.basket_for(tile).needs:
+        if need.need_id != WORK_NEED:
+            continue
+        for good, effect in need.goods:
+            posted = view.price(good, area(good, tile))
+            if posted is not None and posted > 0.0 and effect > 0.0:
+                prices.append(posted / effect)
+    return min(prices) if prices else wage_price
+
+
 def cohort_split(setup, record, view, cohort: Cohort, offers: Sequence[LabourOffer],
                  servant_price_fallback_per_hour: float) -> Tuple[float, float]:
     """(hours hired, hours done itself) for one cohort: an hour of its own labour at the wage it faces against the
@@ -79,7 +95,8 @@ def cohort_plan(setup, record, view, cohort: Cohort, offers: Sequence[LabourOffe
         [(offer.hours, view.wage(offer.trade, offer.area) or offer.reservation_wage) for offer in mine])
     milled, ground = grinding_plan(setup, record, view, cohort, value)
     needed = households_work.hours_needed(cohort.people, setup.household_work, has_hearth(record, cohort), ground)
-    price = view.wage(setup.servant_trade, labour_area(cohort.tile)) or servant_price_fallback_per_hour
+    wage_price = view.wage(setup.servant_trade, labour_area(cohort.tile)) or servant_price_fallback_per_hour
+    price = service_price_per_hour(setup, view, cohort.tile, wage_price)
     hired = households_work.hired_hours(needed, value, price)
     return hired, households_work.own_hours(needed, hired), milled
 

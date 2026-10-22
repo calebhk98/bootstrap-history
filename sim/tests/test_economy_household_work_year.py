@@ -28,8 +28,15 @@ NEED_DATA = {"needs": {"food": {"surplus_budget_share": 0.5, "subsistence_per_ca
 
 
 class View:
-    def __init__(self, wages):
+    def __init__(self, wages, prices=None):
         self.wages = wages
+        self.prices = prices or {}
+
+    def price(self, good, area):
+        return self.prices.get(good)
+
+    def area_of(self, good, tile):
+        return labour_area(tile)
 
     def wage(self, trade, area):
         return self.wages.get((trade, area))
@@ -70,6 +77,24 @@ class SplitTests(unittest.TestCase):
         hired, own = household_work_year.cohort_split(setup(), rec, view, poor, offers, 0.0)
         self.assertEqual(hired, 0.0)
         self.assertAlmostEqual(own, households_work.hours_needed(100.0, DATA))
+
+    def test_a_cohort_does_its_own_work_when_the_service_costs_more_than_its_hour(self):
+        # the servant's wage is low but the hour of service sells dear: the household pays the price, not the wage
+        worker, area = cohort("worker"), labour_area("t1")
+        rec = record({"t1": {"worker": 1.0}}, cohorts=[worker])
+        offers = [LabourOffer("worker", "smith", area, 500.0, 1.0)]
+        view = View({("smith", area): 3.0, ("servant", area): 1.0}, {"domestic_service_hour": 8.0})
+        hired, own = household_work_year.cohort_split(setup(), rec, view, worker, offers, 0.0)
+        self.assertEqual(hired, 0.0)
+        self.assertAlmostEqual(own, households_work.hours_needed(100.0, DATA))
+
+    def test_a_cohort_hires_when_the_service_costs_less_than_its_hour(self):
+        worker, area = cohort("worker"), labour_area("t1")
+        rec = record({"t1": {"worker": 1.0}}, cohorts=[worker])
+        offers = [LabourOffer("worker", "smith", area, 500.0, 1.0)]
+        view = View({("smith", area): 3.0, ("servant", area): 5.0}, {"domestic_service_hour": 2.0})
+        hired, _own = household_work_year.cohort_split(setup(), rec, view, worker, offers, 0.0)
+        self.assertAlmostEqual(hired, households_work.hours_needed(100.0, DATA))
 
     def test_the_servants_price_falls_back_when_no_servant_has_been_paid(self):
         worker, area = cohort("worker"), labour_area("t1")
