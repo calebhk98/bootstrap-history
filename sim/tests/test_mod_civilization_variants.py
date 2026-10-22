@@ -7,6 +7,7 @@ import unittest
 
 from sim.engine import data
 from sim.engine.mods import ModError
+from sim.engine.mods_civ import check_all_civilizations
 from sim.tests.test_mod_removal_and_civs import ModTestBase
 
 ACME = "test_acme_k3f9"
@@ -49,6 +50,14 @@ class VariantTests(ModTestBase):
         with self.assertRaises(ModError) as caught:
             self.load(VARIANT)
         self.assertIn("nowhere_1ad", str(caught.exception))
+
+    def test_the_start_check_skips_a_variant_whose_base_is_absent_and_still_checks_the_rest(self):
+        # a base civilisation file is optional data; a variant of an absent one is unavailable, not a failed game start
+        self.add_mod(ACME, civs={VARIANT: {"id": VARIANT, "variant_of": "nowhere_1ad"},
+                                 ACME + ":ok": {"id": ACME + ":ok", "variant_of": "rome_100ad"}})
+        with mock.patch.object(data, "MODDIR", str(self.mods_dir)):
+            check_all_civilizations(data.CIVDIR, data.get_ordered_mods(data.MODDIR))
+        self.test_a_variant_of_a_missing_civilisation_is_an_error_naming_it()
 
     def test_a_variant_of_a_variant_resolves_and_a_cycle_is_an_error(self):
         second = ACME + ":second"

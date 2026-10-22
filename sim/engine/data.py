@@ -28,6 +28,7 @@ from typing import Any, cast, Dict, FrozenSet, Iterable, List, Optional, Set, Tu
 from .identity_cache import IdentityCache
 from sim.geography.api import haversine_km, load_geography
 from .mods import ModError, get_ordered_mods, load_mod_tree
+from .mods_base import MissingVariantBase
 from .mod_world_data import load_starting_kits, load_win_condition_labels
 from .mods_world import merge_mod_map
 from .tree_source import load_base_tree
@@ -227,7 +228,7 @@ def _variant_base(base_id: str, chain: tuple) -> JSONDict:
     try:
         return load_civ(base_id, _chain=chain)
     except SystemExit:
-        raise ModError("civilisation %s is a variant of %r, which does not exist" % (chain[-1], base_id))
+        raise MissingVariantBase("civilisation %s is a variant of %r, which does not exist" % (chain[-1], base_id))
 
 
 def load_civ(name: Optional[str] = None, _chain: tuple = ()) -> JSONDict:
