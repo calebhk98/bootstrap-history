@@ -74,6 +74,7 @@ NOT_NUMERIC_KEYS = {
     "expected_lost_per_sacking", "failure_costs_hours", "interest_groups", "it_yields_per_hectare_per_year",
     "keep_pay_at_market",  # a yes/no option
     "max_cost", "max_total_cost", "pay_to_lower_the_risk", "reserve_cash", "revenue_and_upkeep_apply_only_once_opened",
+    "remembered_price", "cost_covering", "making_cost_estimate",  # price-note kinds: label text, not a sum
     "revenue_forecast_scope", "state_interest_trait_score", "sustainable_debt_means", "wage_foundation",
     "what_a_failure_costs", "what_it_costs_you", "where_the_money_comes_from", "worth_knowing_early",
     "you_could_pay_for", "your_hours_lost",
@@ -106,7 +107,9 @@ ROUND_NOT_A_UNIT_QUANTITY = {
     "price_index", "printing_adopted", "protection", "purchasing_power_of_the_coin", "raw",
     "reference_population_at_start", "reputation", "resource_throttle", "room_for_more_people", "scandal",
     "scandal_now", "scandal_room", "scholars", "scholars_including_you", "schooling_flow", "share_below_peak",
-    "society_price_level", "spare_hours_this_year", "spare_people_equivalent", "start", "the_town_there",
+    "society_price_level", "supply_state",  # the share of an army's need it is fed, 0 to 1
+    "soldiers", "free_soldiers",  # people
+    "spare_hours_this_year", "spare_people_equivalent", "start", "the_town_there",
     "throttle", "total_founder_hours", "transmission_capacity_kw", "units", "value", "wage_index",
     "work_runs_at_share_of_plan", "worker_housing_places", "worker_years_equivalent", "working_age", "years",
     "years_following_the_chain_alone", "years_of_supply_it_takes", "years_solvent", "years_staffed",
