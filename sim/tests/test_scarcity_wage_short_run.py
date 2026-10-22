@@ -156,6 +156,35 @@ class HoursWorkersKeepBackAreNotHandsInHand(unittest.TestCase):
         self.assertLessEqual(result.wage, fetch + 1e-9)
 
 
+class TheFetchCostAsksEachScheduleOncePerWage(unittest.TestCase):
+    """An hours schedule is a sum over an area's cohorts, so the search for a fetch cost asks it no more than it must."""
+
+    @staticmethod
+    def counted(asked):
+        def share(wage):
+            asked.append(wage)
+            return min(1.0, wage / 100.0)
+        return share
+
+    def test_a_wage_is_asked_of_an_areas_schedule_only_once(self):
+        asked = []
+        held = state(healers=1.0, hill_healers=5000.0)
+        year_inputs = inputs([hungry(hours=HOURS * 300.0)], {"vale": [Route("hill", 20.0)]},
+                             {("healer", "hill"): self.counted(asked)})
+        costs = ImportCosts(held, year_inputs)
+        costs.wage("vale", "healer")
+        self.assertTrue(asked)
+        self.assertEqual(len(asked), len(set(asked)))
+
+    def test_a_shortage_no_hands_in_reach_could_fill_asks_no_schedule(self):
+        asked = []
+        held = state(healers=1.0, hill_healers=5.0)
+        year_inputs = inputs([hungry(hours=HOURS * 3000.0)], {"vale": [Route("hill", 20.0)]},
+                             {("healer", "hill"): self.counted(asked)})
+        self.assertIsNone(ImportCosts(held, year_inputs).wage("vale", "healer"))
+        self.assertEqual(asked, [])
+
+
 class EntrantsExpectTheLongRunCap(unittest.TestCase):
 
     def test_graduation_income_stays_at_the_cap_while_today_pays_more(self):

@@ -347,6 +347,7 @@ check("scenario: clearing your debt by working does not make you insolvent, and 
 _pristine = pristine_game()
 # the dearest project whose calendar floor outlasts a step and that 30% of its bill, in cash, can start
 stopped = sim()
+stopped.market_credit_room = lambda actor_id: None    # the household's own standing sets the line; the opening's loan book is fully lent to others
 _candidates = sorted(((_pristine.project_cost(node_id), node_id) for node_id in NODES
                       if NODES[node_id]["yrs"] >= 2.0 and _pristine.start_reason(node_id)[0]), reverse=True)
 for _cost, PACED in _candidates:

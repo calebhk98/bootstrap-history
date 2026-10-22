@@ -11,11 +11,13 @@ check("scenario: a rich founder with auto_hire hires within a few years",
       sum(rich_sim.employees.values()) >= 1.0,
       "staff %.2f on %.0f" % (sum(rich_sim.employees.values()), rich_sim.capital))
 
-# The affordability reference for staffing must be what hiring costs now.
+# The affordability reference for staffing must be what hiring costs now: the median trade wage, so one scarce trade's
+# unscarce wage does not drag a mean away from what most hires cost.
 reference_sim = sim(civ="rome_100ad")
 labour = reference_sim.labour
-market_wages = [labour.market.unscarce_annual(trade) for trade in labour._world.wages
-                if trade not in labour._world.trades_absent]
+market_wages = sorted(labour.market.unscarce_annual(trade) for trade in labour._world.wages
+                         if trade not in labour._world.trades_absent)
+median_wage = (market_wages[(len(market_wages) - 1) // 2] + market_wages[len(market_wages) // 2]) / 2.0
 check("scenario: the staffing wage reference is in the money hiring is paid in",
-      0.5 <= labour.staff_wage_reference() / (sum(market_wages) / len(market_wages)) <= 2.0,
-      "%.1f against %.1f" % (labour.staff_wage_reference(), sum(market_wages) / len(market_wages)))
+      0.5 <= labour.staff_wage_reference() / median_wage <= 2.0,
+      "%.1f against %.1f" % (labour.staff_wage_reference(), median_wage))

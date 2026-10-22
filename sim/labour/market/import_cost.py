@@ -23,6 +23,8 @@ class ImportCosts:
         discounted_years = years if rate <= 0.0 else (1.0 - math.exp(-rate * years)) / rate
         self.career_hours = max(discounted_years * inputs.hours_per_worker_year, 1e-12)
         self._reach: Dict[str, List[Tuple[float, str]]] = {}
+        self._all: Dict[Tuple[str, str], float] = {}
+        self._sold: Dict[Tuple[str, str, float], float] = {}      # hours_at answers: the year's workers do not change while markets clear
         self.wanted: Dict[Tuple[str, str], float] = {}
         self.most: Dict[Tuple[str, str], float] = {}      # the highest wage any bid for the market would pay
         for bid in inputs.bids:
@@ -53,9 +55,43 @@ class ImportCosts:
     def hours_at(self, area: str, trade: str, wage: float) -> float:
         """The hours the trade's workers in an area sell at a wage: the hours they keep for plots and leisure are not
         for hire, so where the area has a schedule (`hours_share_at`) only its share of their hours counts."""
-        everyone = sum(self.state.workers.get(area, {}).get(trade, ())) * self.inputs.hours_per_worker_year
-        share = self.inputs.hours_share_at.get((trade, area))
-        return everyone if share is None else everyone * share(wage)
+        key = (area, trade, wage)
+        if key not in self._sold:
+            everyone = self.everyone(area, trade)
+            share = self.inputs.hours_share_at.get((trade, area))
+            self._sold[key] = everyone if share is None else everyone * share(wage)
+        return self._sold[key]
+
+    def everyone(self, area: str, trade: str) -> float:
+        """All the hours the trade's workers in an area have, whatever they are paid: no wage sells more."""
+        key = (area, trade)
+        if key not in self._all:
+            self._all[key] = sum(self.state.workers.get(area, {}).get(trade, ())) * self.inputs.hours_per_worker_year
+        return self._all[key]
+
+    def _spare_at_most(self, area: str, trade: str) -> float:
+        """The most hours an area can ever spare for another's bids, at any wage."""
+        return max(0.0, self.everyone(area, trade) - self.wanted.get((area, trade), 0.0))
+
+    def _fills(self, area: str, trade: str, sources: Sequence[str], wanted: float, wage: float) -> bool:
+        """Whether the hours sold here and fetched from `sources` at a wage reach `wanted`. The sources are added in
+        turn and the count stops as soon as the answer cannot change: filled, or short even if every source still to
+        come gave all it could."""
+        own = self.hours_at(area, trade, wage)
+        remaining = [self._spare_at_most(other, trade) for other in sources]
+        slack = 1e-9 * (1.0 + abs(wanted))
+        to_come = sum(remaining)
+        if own + to_come < wanted - slack:
+            return False
+        fetched = 0.0
+        for other, cap in zip(sources, remaining):
+            to_come -= cap
+            fetched += max(0.0, self.hours_at(other, trade, wage) - self.wanted.get((other, trade), 0.0))
+            if own + fetched >= wanted:
+                return True
+            if own + fetched + to_come < wanted - slack:
+                return False
+        return own + fetched >= wanted
 
     def _fetched(self, area: str, trade: str, sources: Sequence[str], wage: float) -> float:
         """The hours the trade's workers in the `sources` areas can spare for `area` at a wage: those they sell
@@ -86,15 +122,16 @@ class ImportCosts:
         sources: List[str] = []
         lowest = going
         for cost, other in sorted(offers):
-            if self.hours_at(area, trade, cost) + self._fetched(area, trade, sources, cost) >= wanted:
-                return self._lowest_filling(area, trade, sources, wanted, lowest, cost)
-            sources.append(other)
-            if self.hours_at(area, trade, cost) + self._fetched(area, trade, sources, cost) >= wanted:
+            # more sources never sell fewer hours, so the sources so far fill it only if they and the next do
+            if self._fills(area, trade, sources + [other], wanted, cost):
+                if self._fills(area, trade, sources, wanted, cost):
+                    return self._lowest_filling(area, trade, sources, wanted, lowest, cost)
                 return cost
+            sources.append(other)
             lowest = cost
         # past the dearest way in, a higher wage still draws more of the hours the workers keep back
         top = self.most.get((area, trade), 0.0)
-        if top > lowest and self.hours_at(area, trade, top) + self._fetched(area, trade, sources, top) >= wanted:
+        if top > lowest and self._fills(area, trade, sources, wanted, top):
             return self._lowest_filling(area, trade, sources, wanted, lowest, top)
         return None
 
@@ -104,7 +141,7 @@ class ImportCosts:
         found by bisection on a total that rises with the wage; `high` fills it."""
         for _step in range(BISECTION_STEPS):
             middle = (low + high) / 2.0
-            if self.hours_at(area, trade, middle) + self._fetched(area, trade, sources, middle) >= wanted:
+            if self._fills(area, trade, sources, wanted, middle):
                 high = middle
             else:
                 low = middle
