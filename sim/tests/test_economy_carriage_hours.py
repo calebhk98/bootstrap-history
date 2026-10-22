@@ -12,7 +12,7 @@ from sim.tests import economy_fixture as fixture
 from sim.tests.test_economy_merchants import SPECS, merchant, plan, world
 
 CREW_HOURS_PER_TONNE_KM = 0.05
-CART_RATE = 0.12                 # dear enough that the fixture's tiles trade ore now and then
+CART_RATE = 0.09                 # dear enough that the fixture's tiles trade ore now and then, cheap enough that they do inside the run
 
 
 def trading_setup(crew=True, carriage_wage=0.0):
