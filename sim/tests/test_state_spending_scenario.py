@@ -49,7 +49,7 @@ def with_tiles_released(count):
 
 partly_lost = lines_of(with_tiles_released(len(game.tiles_owned_by(str(game.civ["id"]))) // 2))
 check("a state's roads follow the tiles it holds",
-      "roads" in partly_lost and partly_lost["roads"].money != lines["roads"].money, (partly_lost.get("roads"), lines["roads"].money))
+      partly_lost.get("roads") is not None and partly_lost["roads"].money != lines["roads"].money, (partly_lost.get("roads"), lines["roads"].money))
 check("a state with no territory keeps no roads and no navy",
       not {"roads", "navy"} & set(lines_of(with_tiles_released(None))), sorted(lines_of(with_tiles_released(None))))
 game.civ = copy.deepcopy(pristine_civ)
