@@ -58,10 +58,16 @@ hours sold rise with the wage); no cap when the workers on the spot sell enough 
 `HoursWorkersKeepBackAreNotHandsInHand` in `sim/tests/test_scarcity_wage_short_run.py` (the thin-trade-above-cap tests
 there still hold).
 
-Not fixed: thin markets of one employer whose bid carries the whole surplus of a run (piped water: a plumber hour is worth
-about two hundred a hour against 0.3 unskilled, wage about sixty). Each trade of the run claims the run's surplus less the
-others' last wages, so the trades' claims add to more than the surplus; the water price is not the loop. A joint split of
-the surplus among an employer's trades is `sim/economy/producers._labour_bids`, outside this change.
+Fixed (Update 3): thin markets of one employer whose bid carried the whole surplus of a run (piped water). Each trade of the
+run claimed the run's surplus less the others' last wages, so the trades' claims added to more than the surplus. Now the
+maximum wages of one run's trades share its surplus jointly (`sim/economy/labour_ceilings.joint_labour_ceilings`, called by
+`sim/economy/producers._labour_bids`): each trade's maximum is its last wage scaled by the run's surplus over the last-wage
+bill, so the run's hours at their maxima cost exactly the surplus, a paying run leaves every trade at least its last wage, and
+a one-trade run keeps the whole surplus. Rule tests: `sim/tests/test_economy_joint_labour_ceilings.py`. The highest maximum wage
+bid for a mason fell several-fold in the first years of a Rome game; a plumber's and a furnaceman's barely moved (their highest
+bid comes from a recipe that is the trade's only labour or whose last wages already fill the surplus), so the plumber's wage
+in the thin piped-water market is not closed by this change alone. Measure with a probe wrapping
+`sim/labour/market/clearing.clear_one`.
 
 ## Left
 

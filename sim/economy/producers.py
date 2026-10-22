@@ -23,6 +23,7 @@ from typing import Dict, List, Mapping, Optional, Tuple
 from sim.constants import declare
 
 from . import ask_raise, inventory, tool_fallback, unit_cost
+from .labour_ceilings import joint_labour_ceilings
 from .protocols import MarketView
 from .types import (AgentId, Bid, EDGE_CONSUMPTION, EDGE_PRODUCTION, GoodId, GoodSpec, GoodsMove, LabourBid,
                     Offer, Recipe, TileId)
@@ -420,16 +421,12 @@ def runs_for_stock(producer: Producer, recipe: Recipe, view: MarketView, run_cos
 
 
 def _labour_bids(producer, recipe, view, runs, revenue, input_cost, wages) -> List[LabourBid]:
-    """Each trade's hours, at most what an hour is worth: the run's revenue less inputs and the other
-    trades' wages, shared over that trade's hours."""
-    bids = []
-    for trade in sorted(recipe.labour_hours):
-        hours_per_run = recipe.labour_hours[trade]
-        others = sum(hours * wages[other] for other, hours in recipe.labour_hours.items() if other != trade)
-        worth = max(0.0, (revenue - input_cost - others) / hours_per_run)
-        bids.append(LabourBid(producer.agent_id, trade, view.area_of(trade, producer.tile),
-                              runs * hours_per_run, worth))
-    return bids
+    """Each trade's hours, at most what an hour is worth: the run's revenue less inputs, shared among the
+    run's trades (`labour_ceilings.joint_labour_ceilings`)."""
+    ceilings = joint_labour_ceilings(recipe.labour_hours, wages, revenue - input_cost)
+    return [LabourBid(producer.agent_id, trade, view.area_of(trade, producer.tile),
+                      runs * recipe.labour_hours[trade], ceilings[trade])
+            for trade in sorted(recipe.labour_hours)]
 
 
 def input_ceiling(price: float, margin_per_run: float, variable_cost_per_run: float,
