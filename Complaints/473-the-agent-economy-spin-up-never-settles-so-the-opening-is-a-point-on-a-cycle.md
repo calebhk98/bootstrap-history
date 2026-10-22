@@ -633,3 +633,57 @@ input seed, and the final demand solved before the households' grinding and hiri
 for the household work the households hire (Complaint 645's decision postdates the opening solve), then carrying the intermediate stock only for what a
 cycle cannot buy in time. The input-seed removal wants a fix for the small fixture's dug-input cobweb first (the input's price swings once it is traded in
 year 0), which is the open item in `test_opening_input_stocks`.
+
+## Update 19: the opening solved with its households' first-year choices (branch opening-with-household-choices)
+
+The two disagreements Update 18 named between the opening and year one were the households' choices: which grains they buy milled and which hours of
+household work they hire. The opening (`opening.open_economy`) now solves to a fixed point with them (`opening_plans.py`): a solve is read by its own
+households (`household_work_year.plans`, at the solve's prices, wages and workforce), the plans are put on the cohorts (`hired_work_per_person`,
+`milled_grains`) and the opening is solved again, until the cohorts hold what they then plan (`opening_plans.settle`; bounded, a choice that cycles stops
+at the bound). The money-replacement solve is kept: the first solve gives the replacement, later solves reuse it.
+
+- Grain: a cohort that buys a grain milled no longer bids for it in the opening's final demand, so the wheat farmers are sized for the millers' wheat and the
+  starch maker, not for demand nobody bids.
+- Hired work: with the cohorts' hired hours as the floor of the household-work need, the final demand holds domestic service, which the input-output solve
+  covers like any good made from hours (a recipe of servants' hours), and the workforce is sized to it.
+- The hands: the earlier attempt dropped the bakers. The cause was placement, not the hours in total: the servants were placed first (a final good is placed
+  before the recipes that feed it), took their share of every tile's hands, and `location_inputs.place_oriented` then found no hands left for a processor
+  tied to its input's site (brick for the bakers' oven, then everything that cascades from it in `opening_runs.fit_to_supply`), so those producers were
+  dropped. Now a service made from hours alone is placed last (`opening._only_hands`), and the hours a market area's households would hire are held to the hands
+  its tiles have left after the other producers' expected hours (`opening_plans.hands_left_by_tile`). Where they would take more, the area's price of an hour
+  hired rises until hiring falls (`households_work.service_price_that_fits`: the household whose hour is worth least stops hiring first); the opening posts
+  that price in the service's market (`opening_plans.post_service_prices`), so year one's choice (`household_work_year.decide`) is the opening's. No producer
+  is dropped to fit. The area, not the tile, is the market (the service's market areas span several tiles).
+
+Tests: `sim/tests/test_economy_opening_household_plans.py` (a solved opening's grain demand is what its households buy at its prices, flour price high and
+low; its cohorts hold what its households choose; the hired hours are service demand, servant hours in the producers and servants in the workforce; where
+hands are short the posted price rises, hiring falls and no other producer is dropped; the rationing rule; the placement order; the fixed point on built
+callables, including a cycle). The four checks on a built economy fail with the opening solved once as before.
+
+Measured with the spin-up uncached (`ROME_CACHE_DIR` an empty directory; scratch probe, not committed, as in Update 18, `economy_api.blank_economy` +
+`begin_spin_up` + `step`, Rome, years 1 to 7), national figures, millions of kg:
+
+| year | wheat made before/after | sold | stock | price |
+|---|---|---|---|---|
+| 1 | 787 / 598 | 0 / 0 | 694 / 524 | 2.15 / 2.15 |
+| 2 | 1.1 / 15 | 250 / 522 | 411 / 34 | 0.25 / 1.63 |
+| 3 | 3.5 / 1.4 | 148 / 12 | 246 / 28 | 0.54 / 1.87 |
+| 4 | 3.4 / 0.05 | 0.8 / 0.02 | 229 / 26 | 0.92 / 2.60 |
+| 5 | 92 / 6.9 | 20 / 0.0005 | 270 / 30 | 1.81 / 2.34 |
+| 6 | 9.3 / 0.9 | 36 / 0.07 | 223 / 28 | 1.56 / 2.18 |
+| 7 | 0.01 / 0.002 | 52 / 4.0 | 158 / 23 | 0.90 / 2.13 |
+
+- The opening's household-work hours: before, none hired in the solve and up to 7.8e10 hours done by hand (all grain ground by hand); one step later every
+  cohort hires all 5.7e10 hours. After, the solve holds 5.6e10 hours hired and 1.5e9 done by the households themselves; the step's choice is the same.
+- Bread: the opening's demand (`record.opening_demand`) is 4.5e9 kg before and 9.3e9 after; bread sells in year 1 both ways (601 and 2100 million kg) and
+  after it the unmet floor stays of the same order, 2 to 3 thousand million kg a year, so the bakers are placed and still short in the later years.
+- Bronze shown over making cost, years 1 to 7: before 1.00, 6.34, 12.18, 30.08, 10.04, 7.91, 3.78; after 1.00, 4.28, 13.92, 0.42, 5.71, 7.80, 6.18. The 0.42 is
+  year 4's cost, not its price: the live copper price in the cost reads 208 that year (shown 87); the peak over the seven years is 13.9 against 30.1.
+
+Wheat no longer piles a year's surplus into a stock that then drains over decades (stock after year 2 is 34 million kg, not 411) and its price stays between
+1.6 and 2.6 instead of 0.25 and 2.15. Wheat sold is almost nothing from year 3 on (its only user in the opening is the starch maker, since the households'
+flour is milled from millet by the recipe the opening chose); the cause is not traced here, and the wheat made after year 2 is correspondingly small. The
+intermediate-input seed (`opening._stock_producers_with_inputs`) is left alone, as Update 18 asks, and the chains' cobweb after year one is still open.
+
+Topics: quick tier green; `economy_bronze_market_price`, `price_over_making_cost_band_validation`, `purchase_limited_by_offered_volume_scenario`,
+`opening_consistency`, `opening_basket_agrees_scenario`, `economy_vessel_price_fixture` green with `--slow --jobs 1 --topic-seconds 290`.
