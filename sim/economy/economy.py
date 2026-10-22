@@ -200,6 +200,7 @@ class Economy:
         people_before = flight_step.people_before(setup, record)
         labour_report = clear_labour(setup, record, labour_bids, everyone, ledger, context, supply=supply)
         flight_step.settle(setup, record, inputs, labour_report, people_before, context, self.carriage)
+        state_budget.lapse_unspent_wages(record.state_budget, state_budget.wages_paid(ledger.labour_results, setup.state_agent))
         offers, kept = supply.sold, supply.kept
         self._leisure_hours = supply.leisure
         ledger.bonded_bought, ledger.bonded_paid, ledger.bonded_lots, bought_held = bonded_purchase.settle(

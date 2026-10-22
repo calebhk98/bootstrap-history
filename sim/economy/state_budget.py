@@ -69,6 +69,23 @@ def plan_year(setup, record, view, labour_bids: List[LabourBid]) -> None:
     labour_bids.extend(wage_labour_bids(setup, record, view, budget.wage_budget))
 
 
+def wages_paid(labour_results, state) -> float:
+    """What the state paid for the hours it bought: its bought hours at their wage, over every trade's result."""
+    return math.fsum(fill.quantity * fill.price for result in labour_results for fill in result.fills
+                     if fill.agent == state and fill.side == "buy")
+
+
+def lapse_unspent_wages(budget: StateBudget, paid: float) -> None:
+    """A stated real programme that could not hire the hours it planned for (the labour market did not clear at its
+    bids) spends the rest on goods: a shortage of hired labour must not leave the coin it printed in the purse.
+    A budget that is not a programme keeps its unspent cash for the next year's plan."""
+    unspent = budget.wage_budget - paid
+    if not budget.real_programme or unspent <= 0.0:
+        return
+    budget.wage_budget = paid
+    budget.goods_budget += unspent
+
+
 def _trades(setup):
     trades = [trade for trade in setup.state_policy.trades if trade in setup.trades]
     return trades or [setup.unskilled_trade]
