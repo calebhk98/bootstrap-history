@@ -1,7 +1,8 @@
 """Small screen items: Complaints/92 (hazard hedge timing), 93 (four funding concepts), 86 (knowledge apart from held
 living stock). The timing rule is called on built hedges, the screens are rendered from replies built here (each such
-check is presentation: what the screen prints), and the funding parts are test_affordability_warning. What the
-engine's replies carry in a whole game is test_small_screen_items_scenario."""
+check is presentation: what the screen prints), and the funding parts are test_affordability_warning. The
+funding capacity, the fog rule for the stock a node brings and the order of the state screen's blocks are
+test_funding_and_stock_rows_rules."""
 
 QUICK_TOPIC = True
 
