@@ -114,7 +114,7 @@ money_replacement (sim/economy/baseline_checks.py) is struck net of melted, over
 
 ## Finding: the Norse baseline price level falls without any intervention
 
-Measured with `play("norse_900ad", 7)` from `sim/tests/money_regimes_play.py` (no mined metal), the basket price level
+Measured earlier with a seven-year Norse play (no mined metal), the basket price level
 by year is 1.07, 1.41, 0.96, 1.07, 0.96, 0.55, 0.46. Millet, about a third of the basket's weight, falls to about 0.4 of
 its base price by year five, and wheat is already about 0.37 of base in year 0. With 10% extra mined metal each year the
 level follows the same food collapse a year earlier (the money stock does double). So the slow validation "more metal
@@ -741,3 +741,8 @@ identity over a whole economy step and is measured by `spin-up-trace`'s `change`
 scenarios `staff_closure_reopening_scenario` (twelve years of twenty-five concerns, auto-hire reopening every closure free staff could
 run; red on main) and `sited_ore_price_over_cost_validation` (519) are deleted for the same reason: no command prints the
 reopening count over years; `python3 sim/simulator.py economy-check --civs norse_900ad --years 12` is the nearest measure.
+
+Test migration (rule-tests-04): `economy_money_regimes` and `economy_money_regimes_norse` are deleted. The price-level-rises-with-metal
+checks read this unsettled economy; `python3 sim/simulator.py spin-up-trace --civ norse_900ad --years 7` prints the basket price level
+by year. The money-stock and mint rules are `test_mint_settles_by_regime` and `test_economy_mint`; the transmission to prices is
+`test_money_reaches_prices`.
