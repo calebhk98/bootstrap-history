@@ -1,6 +1,5 @@
 """Complaint 185: money moves between actors through a ledger. The ledger's rules are tested between actors built here
-(no game); the household, the yearly life of the actors, the state's pressure on the founder and a save and load are
-the named scenarios in test_actor_treasury_scenario."""
+(no game); the household paying the state is in test_state_payment_wiring."""
 
 QUICK_TOPIC = True
 from .harness import *  # noqa: F401,F403

@@ -60,11 +60,10 @@ agriculture.py had.
 
 sim/world/shared_constants.py holds each shared physical fact once; catches re-duplication.
 """
+QUICK_TOPIC = True
+
 import ast
 import os
-import re
-import subprocess
-import sys
 import unittest
 
 _REPOSITORY_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(
@@ -88,29 +87,11 @@ _EQUIVALENCE_GROUPS = (
 )
 
 
-def _registry_after_importing_declaring_modules():
-    """The declare() REGISTRY, in a clean subprocess, after every module
-    that calls declare() has been imported - the same two-step
-    sim/tests/test_constants_burndown.py already uses (import, then adopt
-    the canonical copy), run here to fetch VALUES rather than a count.
-    """
-    script = (
-        "import json, sys; sys.path.insert(0, %r)\n"
-        "from sim import constants\n"
-        "constants._import_declaring_modules()\n"
-        "constants._adopt_the_canonical_registry()\n"
-        "print(json.dumps({name: entry['value']\n"
-        "                   for name, entry in constants.REGISTRY.items()}))\n"
-        % _REPOSITORY_ROOT)
-    result = subprocess.run([sys.executable, "-c", script],
-                            cwd=_REPOSITORY_ROOT, capture_output=True,
-                            text=True)
-    if result.returncode != 0:
-        raise AssertionError(
-            "could not import the declaring modules in a clean subprocess: "
-            "%s" % result.stderr)
-    import json
-    return json.loads(result.stdout.strip())
+def _registry_values():
+    """{name: declared value} once the world modules that declare the grouped quantities are imported."""
+    from sim import constants
+    from sim.world import demand, demography, military_logistics, shared_constants  # noqa: F401  (declare on import)
+    return {name: entry["value"] for name, entry in constants.REGISTRY.items()}
 
 
 class SingleSourceTests(unittest.TestCase):
@@ -224,11 +205,11 @@ class CrossModuleQuantityEquivalenceTests(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.registry = _registry_after_importing_declaring_modules()
+        cls.registry = _registry_values()
 
     def test_registry_is_not_empty(self):
         # Guards this test file's own plumbing, not the project: if the
-        # subprocess import silently found nothing, every group check below
+        # import silently found nothing, every group check below
         # would vacuously pass by finding no names to compare, which is a
         # worse failure than a slow test.
         self.assertGreater(len(self.registry), 0)

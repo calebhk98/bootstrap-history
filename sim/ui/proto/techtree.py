@@ -8,6 +8,7 @@ from sim.engine.ui_port import closure, critical_path, downstream_count, is_down
 from sim.engine.ui_port import mass_rate_text, strip_self_play_advice
 
 from . import available_economics, tree_filters
+from .heard_paging import heard_page
 from .nodes import _downstream_of, _unlocked_by
 from .state_waiting import _waiting_on
 from .why_benefit import benefit_block
@@ -486,8 +487,7 @@ def _heard_of_block(sim, nodes, fog, find, want_subject, _sort_fn, reverse, hear
         # note that it was truncated leaves a large heard-of list with no
         # way to see the rest. `heard_offset` pages it, the same way
         # `offset` pages the startable list.
-        heard = _heard_all[heard_offset:heard_offset + 25]
-        heard_more = max(0, len(_heard_all) - heard_offset - len(heard))
+        heard, heard_more = heard_page(_heard_all, heard_offset)
         heard_from = heard_offset
     heard_block = [{"id": node_id, "name": nodes[node_id]["name"],
                     "why_not": sim.start_reason(node_id)[1],

@@ -50,7 +50,7 @@ still two code paths, with the command that finds each (`python3 -m sim.tests --
    the credits by purpose beside the forecast); run it on `origin/main` and on the branch. The comparison and its meaning are in
    the branch report: the clearing paid several times what the estimate quoted for the one concern that survives staffing,
    which is the 510 opening question (do plants pay their way) showing up in the founder's books.
-   Rules: `sim/tests/test_seat_paid_from_sales.py`; whole game: `sim/tests/test_seat_paid_from_sales_scenario.py`.
+   Rules: `sim/tests/test_seat_paid_from_sales.py`; the book-sales methods on a stand-in game: `sim/tests/test_concern_book_sales_methods.py`.
    Not done: the settlement runs once the year's market has cleared, so the purse the money phase tests (credit line, insolvency,
    `shed_loss_makers`) does not yet hold the year's sales; the forecast stands in for them there.
 3. **The aggregate ceiling stays, for non-book concerns only.** Measured on the default Rome game (every concern the tree lets the

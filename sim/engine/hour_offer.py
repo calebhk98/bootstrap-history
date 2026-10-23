@@ -25,6 +25,12 @@ def hours_offered(remaining, pace_cap, directed_hours, throttle):
     return min(remaining, pace_cap) * throttle
 
 
+def work_order_shortfall(directive_hours, already_sold):
+    """The hours a standing work order still has to sell this year: the directive less what was already sold by
+    hand, so the order tops up and never sells the same hours twice; never negative."""
+    return max(0.0, directive_hours - already_sold)
+
+
 def unmet_directive_cause(directed_hours, offered, pace_cap, throttle, shortage_binding):
     """Why a standing directive was not met in full ('shortage_throttle', 'own_pace' or 'pool_claimed'), or None
     when it was met (to within an hour) or there is none."""

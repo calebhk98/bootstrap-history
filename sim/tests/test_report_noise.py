@@ -1,6 +1,6 @@
 """Complaints 70, 77, 78, 97, 100: a report says a thing once, as one event, with direction. The standing shortage, the
 disaster grouping, the fog kind hint and the first-screen help, each called on a stand-in game or a built reply (no
-game). The shortage on the state screen of a game is test_report_noise_scenario."""
+game). The shortage on the state screen is test_state_conditions_block."""
 import contextlib
 import io
 from types import SimpleNamespace

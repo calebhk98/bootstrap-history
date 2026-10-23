@@ -1,6 +1,6 @@
 """auto_hire_buys_room: a staffing closure with no room left reopens once the household can pay for room (Complaint 525).
-The room purchase is a rule on built inputs; the two scenarios that run the policy on a game are
-test_auto_hire_buys_room_scenario."""
+The room purchase is a rule on built inputs; its callers are in
+test_hire_buying_room_wiring."""
 QUICK_TOPIC = True
 
 from sim.labour.labour_staff_controls import housing_places_to_buy

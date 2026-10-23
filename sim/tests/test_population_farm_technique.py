@@ -3,7 +3,7 @@ literacy through the labour market rather than through side scalars.
 
 The technique is read by `Labour` over a stand-in world (the tree's own farming declarations), and the food, labour and
 literacy rules are called as functions; no game is built. The decades-long runs (food and mechanisation moving population and the
-farm share) are test_population_farm_technique_scenario."""
+farm share) are no longer a test: see Complaints 513 and 640."""
 QUICK_TOPIC = True
 
 import json

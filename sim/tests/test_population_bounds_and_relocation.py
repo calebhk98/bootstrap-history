@@ -2,8 +2,8 @@
 nation too small for a project simply cannot staff it.
 
 `Labour` runs on a small stand-in world (a real civilisation file and a real `Population`), and the invariant checker on a stub
-labour; no game is built. Moving the base, the reachable tradesmen on a game and hiring past the people who exist are
-test_population_bounds_and_relocation_scenario."""
+labour; no game is built. Moving the base is test_labour_move_base_rule; the bounds on the people who exist and on
+hiring are test_trade_supply_rules."""
 QUICK_TOPIC = True
 
 import unittest

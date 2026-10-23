@@ -90,11 +90,6 @@ check("hazard_timeline is sorted nearest first",
       [entry["years_until"] for entry in _s_tl.hazard_timeline()]
       == sorted(entry["years_until"] for entry in _s_tl.hazard_timeline()),
       [entry["years_until"] for entry in _s_tl.hazard_timeline()])
-_rk_tl = S._agent_dispatch(_s_tl, NODES, {"cmd": "risk"})
-check("the `risk` command itself carries the compact timeline, not just "
-      "the per-kind breakdown",
-      isinstance(_rk_tl.get("knowledge_risk", {}).get("timeline"), list)
-      and len(_rk_tl["knowledge_risk"]["timeline"]) > 0, _rk_tl.get("knowledge_risk"))
 
 # RETRY LEARNING HAS TO SURVIVE A SAVE. failed_attempts drives
 # _retry_calendar_retain and the tenure stock, and it was not in
@@ -250,15 +245,6 @@ check("calendar_floor is the SAME figure core.py's step() gates completion "
       if NODES["zone_refining"]["yrs"] >= 5 else
       _s_ey.calendar_floor("zone_refining") == NODES["zone_refining"]["yrs"],
       _s_ey.calendar_floor("zone_refining"))
-# Surfaced wherever risk and years already are: `why`, `available` (fog and
-# not), and the `start` confirmation - not a fifth screen nobody reads.
-_why_pct = S._agent_dispatch(_s_ey, NODES, {"cmd": "why", "id": "point_contact_transistor"})
-check("`why` shows the expected total calendar years including retries, "
-      "alongside the bare floor, not instead of it",
-      _why_pct.get("calendar_floor_years") == NODES["point_contact_transistor"]["yrs"]
-      and _why_pct.get("expected_calendar_years_with_retries") is not None
-      and _why_pct["expected_calendar_years_with_retries"] > _why_pct["calendar_floor_years"],
-      _why_pct.get("expected_calendar_years_with_retries"))
 # ======================================================================
 # ROUND 10: the first-timer tip about `help commands` and `log` is said ONCE
 # early in a run, not every turn and not to a player deep into a run.

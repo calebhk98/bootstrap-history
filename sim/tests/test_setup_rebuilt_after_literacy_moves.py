@@ -1,7 +1,6 @@
 """A setup rebuilt from the saved opening scales the needs by the opening's literacy, not the literacy the society has
 reached since: a resumed game then plays the same year the unbroken one does. The rule is `society_at_opening` and the
-basket's scaling by a civilisation field, called on built inputs; the whole-game check is
-test_setup_rebuilt_after_literacy_moves_scenario."""
+basket's scaling by a civilisation field, called on built inputs."""
 
 QUICK_TOPIC = True
 

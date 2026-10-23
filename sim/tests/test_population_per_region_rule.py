@@ -2,7 +2,7 @@
 
 The nation's population is the sum of the regions. Two regions of unequal food: the poor one loses more people to
 hunger and sends migrants to the fed one. Built populations and accounts; no game. The same rules in a played game are
-in test_population_per_region."""
+in test_population_per_region_smoke."""
 import unittest
 
 from sim.economy.year_accounts import CohortAccount, YearAccounts, _tiles

@@ -22,3 +22,9 @@ def output_lines(basket, traded, scale, introduction_prices, new_goods, volumes)
         if good in introduction_prices and volumes.get(good, 0.0) > 0.0:
             lines.append((good, volumes[good], introduction_prices[good]))
     return lines
+
+
+def share_producing(working_age, under_arms):
+    """The share of working people not under arms. TEMPORARY HEURISTIC (CLAUDE.md 4.4): the market's quantities do not
+    yet fall when people are drawn off to arms, so this share scales them. One when there are no working people."""
+    return max(0.0, working_age - under_arms) / working_age if working_age > 0.0 else 1.0

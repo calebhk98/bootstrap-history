@@ -1,8 +1,8 @@
 """Complaint 585: staff paid the going wage leave only at the rate the market moves workers; underpaid staff may go.
 
 The rules are plain functions: the market's own loss share (`on_the_job_loss_share`), the pay a person is on and how it
-settles and blends (sim/labour/staff_pay_rules.py), and the year's roll. (Replacement of lost staff and the played
-year: test_scenarios_batch3_staff.)"""
+settles and blends (sim/labour/staff_pay_rules.py), and the year's roll. (Replacement of lost staff:
+test_automation_modes.)"""
 QUICK_TOPIC = True
 
 import random

@@ -7,7 +7,7 @@ from .harness import *  # noqa: F401,F403
 from sim.labour import farm_intake
 from sim.world import agriculture
 
-from .test_population_farm_technique_scenario import _complete, _rome, _run_years
+from .farm_years_fixture import complete as _complete, rome as _rome, run_years as _run_years
 
 # Mechanisation frees the most hands per hectare, so the surplus is large enough to see within a few decades.
 FOOD_TECHNIQUE = ("horse_collar", "fud_heavy_mouldboard_plough_coulter", "fud_mechanical_reaper", "ag2_reaper")

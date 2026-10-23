@@ -1,8 +1,8 @@
 """Complaint 421: `auto_hire` has a replace-only mode that hires only for staff lost.
 
 The replace-only rule is tested on a stand-in for the household (`replace_lost_staff`) and the typed switch is parsed
-on its own. The mode on a game, the policy switch and the mine order id from audit row to working are the named
-scenarios in test_automation_modes_scenario."""
+on its own. The mode the staff phase takes, the policy switch and the mine order id from audit row to working are
+in test_automation_wiring."""
 
 QUICK_TOPIC = True
 from types import SimpleNamespace
