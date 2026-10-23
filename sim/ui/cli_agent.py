@@ -107,27 +107,7 @@ def cmd_agent(args):
             sys.stderr.write(json.dumps({"known_routes_carried": len(applied)}) + "\n")
 
     def emit(obj, command_name=None):
-        # THE JSON LINE IS UNCHANGED, ALWAYS, REGARDLESS OF --pretty. It is
-        # written first, so a script reading only stdout sees byte-identical
-        # output whether or not a human also asked for a readable view. The
-        # readable view - if asked for - is a SEPARATE line on stderr, alongside the JSON, never
-        # instead of it, so nothing that parses stdout has to change either.
-        #
-        # ALLOWED TO RAISE BrokenPipeError, on purpose. Every caller below
-        # saves the session BEFORE calling this, so a pipe that closes mid-write
-        # can only cost the reply, never the state change that produced it. See
-        # the save-before-emit comment on the stdin loop for why that ordering
-        # is load-bearing and not cosmetic.
-        sys.stdout.write(json.dumps(obj) + "\n")
-        sys.stdout.flush()
-        if pretty:
-            # the civilisation's display units shape the readable view only, never the JSON reply
-            units.set_civ_defaults(sim.civ)
-            try:
-                sys.stderr.write(render_pretty(command_name, obj) + "\n\n")
-            finally:
-                units.set_civ_defaults(None)
-            sys.stderr.flush()
+        emit_reply(obj, command_name, sim.civ, pretty)
 
     # A player who has been told nothing but the path to this file must still be
     # able to start. On a new game the first line out is the whole briefing,
@@ -149,6 +129,21 @@ def cmd_agent(args):
         return _agent_loop(sim, nodes, args, emit, policy)
     finally:
         policy.flush(sim)
+
+
+def emit_reply(obj, command_name, civ, pretty):
+    """Write one reply: the JSON line on stdout, always the same whatever `pretty` says, then, if asked, the
+    readable rendering on stderr (in the civilisation's display units) so a script reading only stdout never
+    sees the difference. Raises BrokenPipeError when stdout closes; callers save the session before calling."""
+    sys.stdout.write(json.dumps(obj) + "\n")
+    sys.stdout.flush()
+    if pretty:
+        units.set_civ_defaults(civ)
+        try:
+            sys.stderr.write(render_pretty(command_name, obj) + "\n\n")
+        finally:
+            units.set_civ_defaults(None)
+        sys.stderr.flush()
 
 
 def _agent_loop(sim, nodes, args, emit, policy):
