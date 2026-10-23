@@ -1,8 +1,8 @@
 """Actors: the shared base, the government's imitation, failure and stalling, policies, and a mod's declared gains.
 
 What a government values, copies and fails at is tested between actors built here on the agents' stand-in world
-(`agents_fake_world`). The household, the state's copying through the years, firms entering and leaving, and
-persistence on a game are the named scenarios in test_actors_scenario."""
+(`agents_fake_world`). The household as an actor and the save of the actors' records are in test_household_actor_save,
+the seeded cast in test_cast_seeding; firms entering and leaving are in test_firm_entry_capital and test_business_review."""
 
 QUICK_TOPIC = True
 import copy
