@@ -637,7 +637,8 @@ class MiningMixin(MineDepositsMixin):
                          if working.get("material") != mat]
         holdings.mine_tranches = [tranche for tranche in (holdings.mine_tranches or [])
                                  if tranche[0] != mat]
-        household.log.append((scenario.year, LogLine("workings_closed", "you close the %s workings" % mat)))
+        household.log.append((scenario.year, LogLine("workings_closed", "you close the %s workings" % mat,
+                                                     material=mat, saved_per_year=saved)))
         return True, ("the %s workings are closed. You stop paying %.0f a year. "
                       "What you spent sinking them is gone, and reopening means "
                       "sinking them again." % (mat, saved))
