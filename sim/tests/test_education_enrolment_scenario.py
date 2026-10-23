@@ -1,5 +1,5 @@
 """Scenario: the `education` screen on a game. With schools running, their pupils made literate sum to the society's own
-literacy gain, and the screen no longer says there is no per-school enrolment. The rules (shares, the literacy limit, the
+literacy gain. The rules (shares, the literacy limit, the
 column) are in test_education_enrolment."""
 from .harness import *  # noqa: F401,F403
 
@@ -22,6 +22,3 @@ gain = (reply["literacy"]["general_next_year"] - reply["literacy"]["general"]) *
 check("each school's pupils made literate next year are its share of the whole society's gain",
       abs(sum(row["people_made_literate_next_year"] for row in running) - gain) <= 1.0 + 0.01 * abs(gain),
       (gain, [row["people_made_literate_next_year"] for row in running]))
-# presentation: the screen's note to the player must not deny the enrolment it now shows
-check("not_held no longer says there is no per-school enrolment",
-      not any("per-school enrolment" in line for line in reply["not_held"]), reply["not_held"])

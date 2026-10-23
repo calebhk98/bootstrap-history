@@ -1,6 +1,7 @@
 """Endemic disease is a tile layer derived from climate and vegetation (Complaint 540): a tile in the tsetse belt
 cannot keep cattle or horses and offers no draught team, a temperate tile is unaffected, malaria raises mortality
 on a hot wet tile against a cool dry one, and no engine code names a region."""
+QUICK_TOPIC = True
 import os
 import re
 import types

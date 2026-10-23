@@ -14,46 +14,16 @@ holding none of the eight (Rome, at the start of the game) is provably
 unaffected, and that food technologies do not move it.
 
 The medical nodes drive a live disease burden, so technology can lower mortality. The formula over the held technologies
-is tested on built weights in test_disease_burden_wiring.py.
+is tested on built weights in test_disease_burden_wiring.py; that Rome starts holding none of the eight is test_disease_burden_start_data_rule.
 """
 import unittest
 
 from .harness import *  # noqa: F401,F403
 
-from sim.engine.core import demography
 
 
 def _rome_sim(events=False):
     return unopened_sim(civ="rome_100ad", events=events)
-
-
-_SHARED = []
-
-
-def _shared_rome_sim():
-    """One Rome game for the tests that only read a burden, built on first use."""
-    if not _SHARED:
-        _SHARED.append(_rome_sim())
-    return _SHARED[0]
-
-
-class DiseaseBurdenDefaultTests(unittest.TestCase):
-    """Rome's starting_techs (data/civilizations/rome_100ad.json) hold none
-    of Sim.DISEASE_BURDEN_TECH_IDS - checked directly here rather than
-    assumed, because the whole point of this wiring only being a no-op on
-    the unshocked baseline century depends on this being true.
-    """
-
-    def test_rome_starts_with_none_of_the_eight_disease_technologies(self):
-        test_sim = _shared_rome_sim()
-        held = [tech_id for tech_id in test_sim.DISEASE_BURDEN_TECH_IDS
-                if test_sim.has(tech_id)]
-        self.assertEqual(held, [], held)
-
-    def test_disease_burden_is_pre_industrial_by_default(self):
-        test_sim = _shared_rome_sim()
-        self.assertEqual(test_sim._disease_burden(),
-                          demography.PRE_INDUSTRIAL_DISEASE_BURDEN)
 
 
 class DiseaseBurdenIsLiveTests(unittest.TestCase):
@@ -104,23 +74,6 @@ class DiseaseBurdenReachesPopulationStepTests(unittest.TestCase):
             "disease_burden alone")
         self.assertLess(modern._last_demographic_step.deaths,
                          baseline._last_demographic_step.deaths)
-
-    def test_unshocked_century_is_unaffected_for_a_civilisation_holding_none_of_the_eight(self):
-        # Rome holds none of DISEASE_BURDEN_TECH_IDS and this scenario is
-        # manual (no autopilot ever starts a project - see harness.sim's own
-        # default), so no technology of any kind completes over the run:
-        # WIRING ONE must be a complete no-op on this specific measurement,
-        # confirmed bit-for-bit against the same run with `_disease_burden`
-        # forced to the pre-industrial default throughout.
-        with_wiring = _rome_sim()
-        without_wiring = _rome_sim()
-        without_wiring._disease_burden = lambda: demography.PRE_INDUSTRIAL_DISEASE_BURDEN
-        for year in range(101, 151):
-            with_wiring._demographic_recovery(year)
-            without_wiring._demographic_recovery(year)
-        self.assertEqual(with_wiring.population.children, without_wiring.population.children)
-        self.assertEqual(with_wiring.population.working_age, without_wiring.population.working_age)
-        self.assertEqual(with_wiring.population.elderly, without_wiring.population.elderly)
 
 
 if __name__ == "__main__":

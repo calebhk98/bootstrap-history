@@ -1,5 +1,6 @@
 """The economy package stays standalone: it imports sim.world, sim.constants and itself, never sim.engine,
 and only the port (sim/engine/economy_port*.py) imports it from the engine."""
+QUICK_TOPIC = True
 import ast
 import os
 import unittest

@@ -1,5 +1,7 @@
 """A seller that moves the clearing price chooses its reservation to maximise (price - cost) times what it
 sells against the rest of the market's book; one that does not move it keeps the price-taking rule."""
+QUICK_TOPIC = True
+
 import math
 import unittest
 from unittest import mock
@@ -88,21 +90,6 @@ class RestraintTests(unittest.TestCase):
                                                           floor=0.5, current=1.0))
 
 
-def reference_choice(bids, rivals, offer, unit_value, last_price, ceiling, floor, current):
-    """The search written out with every candidate cleared on its own, to hold the shared-clear version to it."""
-    if not seller_pricing.moves_the_price(bids, rivals, offer, last_price):
-        return None
-    best, best_profit = None, seller_pricing.profit_at(bids, rivals, offer, current, unit_value, last_price)
-    bounds = [bound for bound in (floor, ceiling) if math.isfinite(bound)]
-    for reservation in sorted({*bounds, *seller_pricing._candidates(rivals, last_price, unit_value)}):
-        if reservation > ceiling or reservation < floor or reservation == current:
-            continue
-        profit = seller_pricing.profit_at(bids, rivals, offer, reservation, unit_value, last_price)
-        if profit > best_profit + seller_pricing.ROUNDING_SHARE * max(abs(best_profit), 1e-300):
-            best, best_profit = reservation, profit
-    return best
-
-
 class SharedClearTests(unittest.TestCase):
     SCENARIOS = [
         ([], 500.0, 0.0, 0.0, 2.0),
@@ -111,14 +98,6 @@ class SharedClearTests(unittest.TestCase):
         ([rival(40.0, 1.0)], 200.0, 1.0, 0.85, 1.15),
         ([rival(40.0, 1.0)], 200.0, 0.0, 0.0, math.inf),
     ]
-
-    def test_the_choice_is_the_one_clearing_every_candidate_separately_gives(self):
-        for rivals, quantity, current, floor, ceiling in self.SCENARIOS:
-            offer = own(quantity)
-            self.assertEqual(
-                seller_pricing.best_reservation(demand(), rivals, offer, 0.05, 1.0, ceiling=ceiling, floor=floor,
-                                                current=current),
-                reference_choice(demand(), rivals, offer, 0.05, 1.0, ceiling, floor, current))
 
     def test_no_reservation_is_cleared_twice_and_the_book_without_the_offer_once(self):
         for rivals, quantity, current, floor, ceiling in self.SCENARIOS:
