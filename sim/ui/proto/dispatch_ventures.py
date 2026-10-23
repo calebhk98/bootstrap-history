@@ -23,6 +23,7 @@ from sim.engine.ui_port import purchase_budget, trades_the_project_waits_for
 from .nodes import _did_you_mean
 from .quantity_units import read_quantity
 from .start_refusal import refusal_fields
+from .staffing_ceiling import trades_beyond_ceiling
 from sim.engine.ui_port import money_text, plain_number
 from sim.ui.memory import load_state, save_state
 from .util import _flag
@@ -88,14 +89,10 @@ def _cmd_start(sim, nodes, cmd, ended):
     _impossible = []
     _impossible_trades = set()
     _n0 = nodes[node_id]
-    _frac0 = min(1.0, 1.0 / max(1.0, _n0["yrs"]))
-    for _trade, _want in (_n0["lab"] or {}).items():
-        _need = _want * _frac0
-        if _need > 0 and sim.labour.hours_you_can_call_on(_trade) < _need:
-            _impossible.append("%s (wants %.0f hours a year; this society can "
-                               "field %.0f at most)"
-                               % (_trade, _need, max(0.0, sim.labour.hours_you_can_call_on(_trade))))
-            _impossible_trades.add(_trade)
+    for _trade, _need, _ceiling in trades_beyond_ceiling(_n0["lab"], _n0["yrs"], sim.labour.hours_you_can_call_on):
+        _impossible.append("%s (wants %.0f hours a year; this society can "
+                           "field %.0f at most)" % (_trade, _need, _ceiling))
+        _impossible_trades.add(_trade)
     # OVERSUBSCRIBED IS NOT THE SAME AS IMPOSSIBLE. The society may be
     # able to field the trade this wants and STILL not have enough of
     # it left once your own OTHER active work is already drawing on it

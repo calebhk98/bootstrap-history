@@ -21,6 +21,7 @@ from sim.constants import declare
 from sim.refusal import LogLine, Refusal
 from . import cause_book, money_units
 from .units_prose import money_text
+from .venture_net_loss import flags_net_loss
 from sim.agents.api import business_crew_rule, edges
 
 
@@ -271,7 +272,7 @@ class VenturesMixin:
             "it is fully ramped up - that may be the right call for what it "
             "unlocks, but check 'why %s' if it is not what you meant."
             % (money_text(up_now - rev_now, self, grouped=True), node_id)
-            if up_now > rev_now and node_id not in self.CAPABILITY_INSTITUTIONS
+            if flags_net_loss(up_now, rev_now, node_id in self.CAPABILITY_INSTITUTIONS)
             else "")
         _staffing_note = (" (%s once fully staffed)"
                           % money_text(upkeep["at_full_staffing"], self, grouped=True)

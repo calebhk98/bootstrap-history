@@ -7,6 +7,7 @@ from sim.refusal import Refusal, cause_of
 
 from .data import WAGES
 from .save_fog import fog_mismatch
+from .rng_record import restore_rng, rng_record
 from sim.engine.state import (
     SAVE_FIELDS,  # noqa: F401 - compatibility export used by protocol.py
     serialize_state,
@@ -29,11 +30,7 @@ def state_text(sim):
 	sim.state._immortal = bool(sim.cfg.get("immortal", True))
 	sim.state._seed = getattr(sim, "seed", None)
 	sim.state._game_version = GAME_VERSION
-	try:
-		rng_state = sim.rng.getstate()
-		sim.state._rng = [rng_state[0], list(rng_state[1]), rng_state[2]]
-	except Exception:
-		sim.state._rng = None
+	sim.state._rng = rng_record(sim.rng)
 	if hasattr(sim, "population") and getattr(sim, "state", None) is not None and sim.state.population is not None:
 		sim.state.population.pop_children = float(sim.population.children)
 		sim.state.population.pop_working_age = float(sim.population.working_age)
@@ -383,8 +380,7 @@ def _apply_blob(sim, blob):
 	if state._seed is not None:
 		sim.seed = state._seed
 	if state._rng is not None:
-		rng_version, _keys, rng_gaussian = state._rng
-		sim.rng.setstate((rng_version, tuple(int(state_int) for state_int in _keys), rng_gaussian))
+		restore_rng(sim.rng, state._rng)
 	if state._weights:
 		sim.value_weights.update(state._weights)
 	if getattr(sim, "_economy_deferred", False):
