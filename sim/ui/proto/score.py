@@ -6,6 +6,7 @@ import math
 from sim.refusal import cause_of
 from sim.engine.ui_port import closure, critical_path, topo_order
 
+from .score_institutions import institutions_component
 from .score_total import score_total
 from .state_waiting import _agent_end_reason
 from .util import _fmt_num, _wrap
@@ -214,25 +215,7 @@ def _score_components(sim, nodes, reveal_tree_total):
     # achievements rather than a quantity (a patronage, a written corpus, a
     # power grid). sorted() because this sums floats over what would
     # otherwise be a frozenset, and PYTHONHASHSEED must not move the sum.
-    inst_keys = sorted(sim.CAPABILITY_INSTITUTIONS)
-    inst_vals = []
-    for institution_id in inst_keys:
-        if institution_id in sim.SCALABLE_INSTITUTIONS:
-            ceiling = max(1.0, sim.institution_unit_ceiling(institution_id))
-            inst_vals.append(min(1.0, sim.institution_units(institution_id) / ceiling))
-        else:
-            inst_vals.append(1.0 if sim.running(institution_id) else 0.0)
-    inst_norm = (sum(inst_vals) / len(inst_vals)) if inst_vals else 0.0
-    finished_but_closed = [institution_id for institution_id in inst_keys
-                           if sim.has(institution_id) and not sim.running(institution_id)]
-    out["institutions"] = {
-        "counts": ("the fixed list of capability institutions, each counted only while it is "
-                   "OPEN and running (those that scale count by units against a ceiling); "
-                   "finished knowledge and a finished but shut concern score nothing"),
-        "raw": sum(1 for value in inst_vals if value > 0.0),
-        "of_total": len(inst_vals), "normalized": inst_norm,
-        "counted": [institution_id for institution_id, value in zip(inst_keys, inst_vals) if value > 0.0],
-        "finished_but_closed": finished_but_closed}
+    out["institutions"] = institutions_component(sim)
 
     # RESILIENCE (10%) - an equally-weighted average of five fractions, each
     # a real, already-saved field read against a real threshold, none of
