@@ -135,7 +135,7 @@ def _stuck_shut_ventures(sim, nodes):
     if _really_openable:
         _best = max(_really_openable,
                    key=lambda k: sim.venture_real_earnings(k) - sim.venture_real_upkeep(k))
-        return {"what": "things you built and never opened", "kind": "closed",
+        return {"what": "things you built and never opened", "kind": "closed", "the_best_one": _best,
                 "why": "%d finished concern(s) are shut and "
                        "earning nothing. The best you could "
                        "actually open right now is %s, which "

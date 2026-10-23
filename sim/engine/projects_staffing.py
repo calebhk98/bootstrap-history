@@ -151,6 +151,7 @@ class StaffingMixin:
         reopened = self.state.projects.business.review_reopening(self.household, SimWorld(self))
         if reopened:
             self.record_staffing_reopenings(len(reopened))
+            still_shut = self.staffing_shut_count()
             household.log.append((year, LogLine("concerns_reopened", "you have the people again: %s reopen%s on "
                                  "their own, now that somebody is free to "
                                  "watch %s; %d still shut for want of staff"
@@ -158,7 +159,7 @@ class StaffingMixin:
                                 + (" and others" if len(reopened) > 4 else ""),
                                 "" if len(reopened) == 1 else "s",
                                 "it" if len(reopened) == 1 else "them",
-                                self.staffing_shut_count()))))
+                                still_shut), reopened=sorted(reopened), still_shut=still_shut)))
         return reopened
 
     # ---- A WARNING BEFORE THE DOOR SHUTS, NOT AN AUTOMATION THAT OPENS IT --
