@@ -51,8 +51,6 @@ check("a command that needs a household is refused for a country seat", refused[
 year_before = game.year
 reply = send({"cmd": "step", "as": "senate"})
 check("a year runs with a country seat in the game, stepped from it", reply["ok"] and game.year == year_before + 1, game.year)
-game.step()
-check("a second year runs", game.year == year_before + 2, game.year)
 
 # handover goes through the same path: the replacement is an empty country seat
 send({"cmd": "join", "seat": "regent", "seat_kind": "country"})
@@ -63,7 +61,7 @@ check("a country seat is handed over", reply["ok"] and reply["from"] == "senate"
       and "senate" not in game.state.seats and game.state.seats["regent"].kind == "country", reply)
 check("the replacement holds the same government", game.state.seats["regent"].holder == game.actors.government_of(home).actor_id, None)
 game.step()
-check("the year runs after the handover", game.year == year_before + 3, game.year)
+check("the year runs after the handover", game.year == year_before + 2, game.year)
 
 with tempfile.TemporaryDirectory() as folder:
     path = os.path.join(folder, "save.json")

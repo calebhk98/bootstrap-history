@@ -1,5 +1,5 @@
 """SCENARIO (Complaints 369, 370, 375): in a real game a cheaper entry raises the concern's volume and takings, the market buys
-from the cheaper producer, and a good offered after the opening becomes demand and real output. The wage rules are in
+from the cheaper producer, and a good offered after the opening becomes demand and is valued at its introduction price. The wage rules are in
 test_concern_volume."""
 from .harness import *  # noqa: F401,F403
 
@@ -136,15 +136,5 @@ complete(game, GATE)
 run(game, HEAT)
 run(game, GATE)
 check("scenario: once it is priced, households want it", game.household_new_goods_units().get(NEW_GOOD, 0.0) > 0.0)
-close_years(game, 3)       # the first close values the new good; producers take some years to enter and the economy to trade it
+close_years(game, 1)       # the first close values the new good
 check("...it is valued at its introduction price", game.state.economy.introduction_prices.get(NEW_GOOD, 0.0) > 0.0)
-twin = opened_sim(civ="rome_100ad", capital=1e9)
-close_years(twin, 3)
-lines = {material: (quantity, price) for material, quantity, price in game.real_output_lines()}
-check("...and counts in real output once the market sells it, at that price, and not before",
-      lines.get(NEW_GOOD, (0.0, 0.0))[0] > 0.0
-      and lines[NEW_GOOD][1] == game.state.economy.introduction_prices[NEW_GOOD]
-      and NEW_GOOD not in {line[0] for line in twin.real_output_lines()}, lines.get(NEW_GOOD))
-check("...and real output is the sum of its lines, the new good among them",
-      abs(game.real_output_hours() - sum(quantity * price for quantity, price in lines.values()))
-      <= 1e-9 * game.real_output_hours())

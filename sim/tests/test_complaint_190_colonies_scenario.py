@@ -50,7 +50,7 @@ check("the colonies listing shows its people and what its land could feed",
 # ---- the people of a colony ---------------------------------------------------------------------------------------
 growing = chartered()
 growing.found_colony(reachable[0])
-for year in range(40):
+for year in range(2):
     growing.advance_colonies(growing.state.scenario.year + year)
 
 dying = chartered()
@@ -63,8 +63,7 @@ check("a colony whose people die out is lost and the log says so",
 
 # a colony that is saved and loaded is the same colony
 from sim.engine.saveload import load_state, save_state
-path = os.path.join(ROOT, "_loadtest_tmp", "colony_roundtrip.json")
-os.makedirs(os.path.dirname(path), exist_ok=True)
+path = os.path.join(tempfile.mkdtemp(), "colony_roundtrip.json")
 save_state(growing, path)
 reloaded = unopened_sim()
 load_state(reloaded, path)

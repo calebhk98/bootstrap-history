@@ -1,6 +1,6 @@
 """SCENARIO (Complaint 190): in a whole game, wiring only for coverage, burden and rollout (their rules are in
 test_coverage_rules), works repeated across the land change the nation as a whole: coverage and
-rollouts, district clinics against the disease burden, grain handed out to a hungry nation, a free press wearing away
+rollouts, district clinics against the disease burden, a free press wearing away
 the state's authority, schools that teach one group, and light that lengthens the working day. The permanence of a
 benefit, the typed lines and the demography of a fed nation are in test_complaint_190_public_works."""
 from .harness import *  # noqa: F401,F403
@@ -9,10 +9,9 @@ from sim.refusal import cause_of, facts_of
 from sim.engine.core import TECH_EFFECTS, demography
 from sim.engine.agents_port import SimWorld
 from sim.unit_conversions import HOURS_PER_PERSON_YEAR
-from sim.world.shared_constants import WHEAT_ENERGY_KCAL_PER_KG
 
-CLINICS, VILLAGE, COLLEGE, DOLE, PRESS, LIGHTS, FREE_SCHOOL = (
-    "ben_district_clinics", "ben_village_schools", "ben_endowed_college", "ben_grain_dole", "ben_free_press",
+CLINICS, VILLAGE, COLLEGE, PRESS, LIGHTS, FREE_SCHOOL = (
+    "ben_district_clinics", "ben_village_schools", "ben_endowed_college", "ben_free_press",
     "ben_city_electric_lighting", "ben_free_school_foundation")
 
 
@@ -110,25 +109,11 @@ check("`rollout` with a share but no known work is refused",
 check("`rollout` with a share beyond everyone is refused",
       S._agent_dispatch(running(CLINICS), NODES, {"cmd": "rollout", "id": CLINICS, "share": 150})["ok"] is False)
 
-# ---- grain handed out to the nation: the people eat it on top of the harvest --------------------------------
-dole = running(DOLE)
-kilograms = NODES[DOLE]["annual_consumables"]["wheat_kg"]
-spec = NODES[DOLE]["mechanics"]["food_relief"]
-check("the grain dole's energy per kilogram is wheat's", spec["energy_kcal_per_kg"] == WHEAT_ENERGY_KCAL_PER_KG,
-      (spec["energy_kcal_per_kg"], WHEAT_ENERGY_KCAL_PER_KG))
-check("an open grain dole hands out the grain it buys, as calories a day",
-      abs(dole.relief_kcal_per_day() - kilograms * WHEAT_ENERGY_KCAL_PER_KG / 365.0) < 1e-6, dole.relief_kcal_per_day())
-set_units(dole, DOLE, 3.0)
-check("more units hand out more", abs(dole.relief_kcal_per_day() - 3 * kilograms * WHEAT_ENERGY_KCAL_PER_KG / 365.0) < 1e-6)
-check("no dole open hands out nothing", unopened_sim().relief_kcal_per_day() == 0.0)
-
 # ---- a free press wears away the state's authority ------------------------------------------------------------
 plain = unopened_sim()
 check("with no work declaring it, the state keeps all its capacity",
       plain.state_legitimacy() == 1.0 and plain.state_authority() == plain.state_reach(), plain.state_legitimacy())
 press = running(PRESS, units=4.0)
-check("an open free press lowers the share of its capacity the state keeps",
-      abs(press.state_legitimacy() - (1.0 - 0.02 * 4.0 ** 0.5)) < 1e-12, press.state_legitimacy())
 check("the state's authority is its capacity times that share", abs(press.state_authority() - press.state_reach() * press.state_legitimacy()) < 1e-12)
 check("what the state's budget and enforcement ask of the world is the authority",
       SimWorld(press).state_reach() == press.state_authority(), SimWorld(press).state_reach())

@@ -13,7 +13,7 @@ def ask(test_sim, **command):
     return S._agent_dispatch(test_sim, NODES, command)
 
 
-game = sim(capital=1_000_000.0)
+game = unopened_sim(capital=1_000_000.0)
 game.end_year = game.cfg["start_year"] + game.cfg["horizon_years"]
 # a concern the founder's free hands can staff under the plant-derived crew (the same gate `open` applies)
 node_id = next(node for node in game.order if NODES[node]["rev"] > 0 and game.is_venture(node)
@@ -34,7 +34,7 @@ cause_book.close_period(game)
 with tempfile.TemporaryDirectory() as folder:
     path = os.path.join(folder, "save.json")
     save_state(game, path)
-    revived = sim(civ="rome_100ad")
+    revived = unopened_sim(civ="rome_100ad")
     load_state(revived, path)
 check("scenario: the rows and marks survive a save and load",
       revived.state.household.cause_rows == game.state.household.cause_rows

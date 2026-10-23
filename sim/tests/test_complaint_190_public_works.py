@@ -2,6 +2,8 @@
 called permanent, the typed `rollout` lines read, and a hungry nation that is handed food loses fewer people, each on
 inputs built here. Coverage, rollouts, clinics against the disease burden, the grain dole, a free press, schools and
 light on a game are the scenario in test_complaint_190_public_works_scenario."""
+QUICK_TOPIC = True
+
 from .harness import *  # noqa: F401,F403
 
 from sim.engine.core import TECH_EFFECTS, demography

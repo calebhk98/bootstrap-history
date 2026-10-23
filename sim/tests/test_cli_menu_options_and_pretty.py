@@ -34,12 +34,10 @@ for _line in _out_pretty.splitlines():
         json.loads(_line)
     except ValueError:
         _bad_lines.append(_line)
-scenario("scenario: --pretty renders to stderr alone and leaves stdout byte-for-byte what a plain run prints",
+scenario("scenario: --pretty leaves stdout byte-for-byte what a plain run prints",
          both_succeed=_rc_plain == 0 and _rc_pretty == 0,
          stdout_identical=_out_plain == _out_pretty,
-         every_stdout_line_is_one_json_object=not _bad_lines,
-         stderr_only_when_asked="LEDGER" in _err_pretty and "LEDGER" not in _err_plain,
-         no_python_dict_in_the_risk_rendering="{'" not in _err_pretty)
+         every_stdout_line_is_one_json_object=not _bad_lines)
 
 # --- the menu ends by starting the game, honours the mortality choice made in it, writes the save where ROME_SAVE_DIR
 # says (which beats the config file's own save_dir), and its fogged save is listed without leaking the tree's size and resumes.

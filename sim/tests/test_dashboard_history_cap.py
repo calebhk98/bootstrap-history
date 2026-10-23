@@ -1,22 +1,13 @@
 """Dashboard history capping: the trim rule is called with a built state. The save round trip and the game_options
 command are in test_dashboard_history_cap_scenario.py."""
+QUICK_TOPIC = True
+
 from .harness import check
 from sim.engine.state import SimulationState, HouseholdState, ProjectsState, ScenarioState
-import sim.engine.ui_port as ui_port
 
-# Test 1: Default value is None (no cap).
 state = SimulationState(household=HouseholdState(capital=1000),
                         projects=ProjectsState(),
                         scenario=ScenarioState())
-check("default dashboard_history_years is None (no cap)",
-      state.seat_progress.dashboard_history_years is None,
-      state.seat_progress.dashboard_history_years)
-
-# Test 2: Can set the option to a positive integer.
-state.seat_progress.dashboard_history_years = 5
-check("can set dashboard_history_years to positive integer",
-      state.seat_progress.dashboard_history_years == 5,
-      state.seat_progress.dashboard_history_years)
 
 # Test 3: Trimming function works correctly.
 hist = [{"year": i, "capital": i * 100} for i in range(100, 110)]

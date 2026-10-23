@@ -1,5 +1,7 @@
 """The agent economy is the game's only economy and runs its markets on the tiles a civilisation holds, so a
 civilisation that holds none is refused when the game is built, with a message naming where to declare its claim."""
+QUICK_TOPIC = True
+
 import unittest
 
 from sim.engine.territory_required import require_territory

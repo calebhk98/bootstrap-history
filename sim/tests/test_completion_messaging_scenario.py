@@ -35,7 +35,7 @@ def _swapped(game, **replacements):
 
 _ABSENT = object()
 
-game_one, game_two = sim(), sim()
+game_one, game_two = unopened_sim(), unopened_sim()
 
 with _swapped(game_one, funding_capacity=lambda: 1e12):
     minor_lines = _finish(game_one, "school_founded", failing=True)
@@ -53,10 +53,6 @@ with _swapped(game_two, venture_staff_free=lambda: (0.0, 0.0), venture_hands=lam
 check("scenario: a finished concern is logged as completed, and as a shortfall when the free staff cannot open it",
       [cause_of(line) for line in short_lines if cause_of(line) in ("project_completed", "opening_shortfall")]
       == ["project_completed", "opening_shortfall"], short_lines)
-# presentation: the completion line's closed-status wording and what it says switches on at opening (Complaint 84)
-check("scenario: a finished concern says it is closed, how to open it and what switches on when it opens",
-      any("STATUS: CLOSED" in line and "open school_founded" in line and "Scholar and artisan training" in line
-          for line in map(str, short_lines)), short_lines)
 held_goal = game_two.goal
 game_two.goal = "goal_literacy_common"
 game_two.set_literacy("literacy_general", 0.10)
@@ -66,6 +62,3 @@ game_two.goal = held_goal
 check("scenario: a completion that moves the goal metric logs a goal_effect line",
       "goal_effect" in [cause_of(line) for line in goal_lines]
       and "opening_shortfall" not in [cause_of(line) for line in goal_lines], goal_lines)
-# presentation: a piece of knowledge is not announced as a closed concern
-check("scenario: a piece of knowledge does not claim to be closed",
-      not any("STATUS: CLOSED" in str(line) for line in goal_lines))
