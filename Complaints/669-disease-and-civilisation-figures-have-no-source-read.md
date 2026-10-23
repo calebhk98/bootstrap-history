@@ -1,6 +1,6 @@
 # Disease figures, civilisation starting figures and three deposit entries have no source that was read
 
-**Status:** open
+**Status:** partly - plague R0 and stage, smallpox immunity and the deposits are sourced; disease rows tagged unsourced or disputed and civilisation rows at confidence D remain (count: grep -rn '"unsourced"\|"disputed"' data/disease; grep -rn '"confidence": "D"' data/civilizations)
 
 Split from 646 (figures recalled rather than read; closed). A figure needs a source someone read (CLAUDE.md section 6);
 where none is found it is a labelled heuristic with a `retire`, never a "recalled" figure.

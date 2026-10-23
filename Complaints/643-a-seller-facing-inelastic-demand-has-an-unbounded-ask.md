@@ -1,6 +1,6 @@
 # A seller facing inelastic demand has an unbounded markup, and a sold-out seller's ask ratchets
 
-**Status:** partly fixed (asks are bounded and the sold-out raise stops at the band; within-year rounds where buyers switch sellers are not built)
+**Status:** partly - the ask band is built; the stock-against-target signal, within-year seller-switching rounds and the charcoal and glass asks remain
 
 - `seller_offers.py` gives the markup a seller that moves the price asks as elasticity over elasticity minus one, and
   infinity when demand is inelastic (the `math.inf` branch). Floors such as food are inelastic, so a seller that moves

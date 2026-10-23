@@ -1,6 +1,6 @@
 # Household work is not a need, so there are no servants, cooks or taverns
 
-**Status:** mostly done: the household chooses by the worth of its hour, own hours are kept out of the labour offered, a cohort with no hearth buys cooked food, and a hearth burns cooking fuel; land after the opening (473), a whole-game re-measure and an urban marker remain
+**Status:** partly - household choice, own-hours withholding, hearth and cooked food, grinding make-or-buy and full-cost hiring are built; land after the opening (473), a whole-game re-measure, an urban marker and servant indivisibility remain
 
 Owner decision (530, 2026-10-20): cooking, fetching water and fuel, cleaning, grinding and childcare take hours every
 household spends, and they are a need met by the household's own hours or by hiring. Religion as a need is out of scope;
