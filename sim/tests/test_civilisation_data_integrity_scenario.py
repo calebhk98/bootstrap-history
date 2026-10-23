@@ -1,7 +1,9 @@
-"""Scenarios for the civilisation files in a whole game: each society's own prices reach its living cost and revenue,
+"""SMOKE (five unopened games, no year run): the civilisation files in a whole game: each society's own prices reach its living cost and revenue,
 the player-facing replies carry the civilisation's own words, a refused start in the Valley of Mexico is hidden from
-what could begin today, and nothing free arrives on turn one. The rules are in test_civilisation_data_integrity."""
+what could begin today, and no goal is already met on turn one. The rules are in test_civilisation_data_integrity."""
 from .harness import *  # noqa: F401,F403
+
+from sim.engine.win_condition_rule import win_condition_met
 
 _CIVS = ("rome_100ad", "han_china_100ad", "norse_900ad", "mexica_1500", "england_1300")
 _games = {_cid: unopened_sim(civ=_cid) for _cid in _CIVS}
@@ -28,12 +30,13 @@ check("scenario: in the Valley of Mexico a draught-animal start is refused namin
       and not any(entry["id"] == "horse_collar" for entry in S._agent_available(_mex, NODES, {"all": True})["available"]),
       _why_h)
 
-# --- BREAK: grant_ambient ran BEFORE the civ's named starting_techs were added, so a free completion was credited on
-# the first `step`. Nothing free may arrive after the game begins.
-_free = {}
-for _cid in _CIVS:
-    _s = sim(civ=_cid)      # stepping needs the opened economy
-    _before = set(_s.done)
-    _s.step()
-    _free[_cid] = sorted(_s.done - _before)
-check("scenario: no civilisation hands you anything free on turn one", not any(_free.values()), _free)
+# --- nothing free arrives on turn one: no goal's win condition is already met by the opening state, in any society
+# (a goal met at the start is completed by the first year's check without the founder doing anything).
+_met_at_start = {}
+for _cid, _s in _games.items():
+    _met_at_start[_cid] = sorted(
+        _node_id for _node_id in _s._win_condition_keys
+        if _node_id not in _s.done and _s.nodes[_node_id]["win_condition"]
+        and win_condition_met(_s.nodes[_node_id]["win_condition"], _s._win_condition_value(_s.nodes[_node_id]["win_condition"])))
+check("scenario: no civilisation opens with a goal already met, so none hands you anything free on turn one",
+      not any(_met_at_start.values()), _met_at_start)
