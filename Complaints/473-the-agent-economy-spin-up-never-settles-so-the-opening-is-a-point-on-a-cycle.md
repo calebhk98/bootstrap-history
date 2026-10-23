@@ -731,3 +731,5 @@ The one-year Rome baseline of idle labour, wage over the unskilled floor and hun
 unsettled opening economy and is deleted; `python3 sim/simulator.py economy-check --civs rome_100ad --years 1` prints the same figures.
 
 Test migration (rule-tests-05): `firm_count_whole_game_scenario` is deleted (the count settling and not overshooting over 30 years read an unsettled economy; the rules are test_firm_count_from_costs and test_entry_gross_rule). No simulator command prints firm counts by market size; `python3 sim/simulator.py economy-check --years 30` is the nearest measure of the agent economy.
+
+Test migration (rule-tests-02): `complaint_467_trades_open_to_the_jobs` is deleted (the opening workforce of each skilled trade against the first year's producer, mint and state wage bids, with an unsourced three-times limit, read one year of an unsettled opening and could not name a function). No simulator command prints workforce hours against bid hours by trade yet; `python3 sim/simulator.py economy-check --civs rome_100ad --years 1` prints idle labour and the wage over the floor, the nearest measure.
