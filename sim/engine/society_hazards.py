@@ -580,7 +580,7 @@ class HazardsMixin:
         household.log.append((year, LogLine(
             "site_sacked", "%s: a site is sacked - %s"
             % (hazard.get("name", "crisis"), ", ".join(_took) or "you had nothing it could take"),
-            hazard=hazard.get("name", "crisis"), took_nothing=not _took)))
+            hazard=hazard.get("name", "crisis"), took_nothing=not _took, people_gone=round(_people0 - _people_after, 2))))
         # corpus_hedge (core.py) computes both the roll and the defense state.
         corpus_loss_probability, frac, _hedge_before = self.corpus_hedge()
         if rng.random() < corpus_loss_probability:
