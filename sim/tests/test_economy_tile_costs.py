@@ -1,7 +1,7 @@
 """Carriage between tiles: the economy prices hauls over geography's route graph, not a graph of its own.
 
-Synthetic tile grids (laid on a geography map of just those tiles) for the rules; the base map is read in
-test_economy_tile_costs_geography."""
+Synthetic tile grids (laid on a geography map of just those tiles) for the rules; the tiles a map gives are read in
+test_economy_tiles_from_map."""
 QUICK_TOPIC = True
 import math
 import os
