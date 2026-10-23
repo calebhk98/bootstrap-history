@@ -1,5 +1,7 @@
 """`simulator.py validate` reports bad production data and branch merges, and neither check reads
 the deleted price book."""
+
+QUICK_TOPIC = True
 import builtins
 import json
 import os

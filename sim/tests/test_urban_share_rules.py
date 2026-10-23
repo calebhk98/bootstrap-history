@@ -2,6 +2,8 @@
 
 Each test calls the rule on inputs built in the test: the farm surplus, the delivered share of a tonne, the ceilings of
 towns sharing a hinterland, the opening split of the typed share, and the saved shares' effect on the readers."""
+
+QUICK_TOPIC = True
 import unittest
 
 from sim.geography import api as geography_api

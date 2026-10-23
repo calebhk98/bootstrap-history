@@ -1,4 +1,6 @@
 """A stratum pays the floor of each need in turn, at the costs the world reports for them."""
+
+QUICK_TOPIC = True
 import unittest
 
 from sim.agents.api import ActorRegistry, ActorsState, CountryProfile

@@ -1,4 +1,6 @@
 """Trace metals are valued by a sole-output route or flagged as split by mass, and a zero-worth byproduct costs nothing."""
+
+QUICK_TOPIC = True
 import unittest
 import warnings
 

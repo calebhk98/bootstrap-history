@@ -1,5 +1,7 @@
 """Complaints 286 and 287: the map gives a state its frontier, its coast and its roads; the territory is called on tiles of named
 regions. The state's lines, army, revenue and patron funding on a game are in test_state_spending_scenario."""
+
+QUICK_TOPIC = True
 from .harness import check
 
 from sim.geography import api as geography_api, territory
