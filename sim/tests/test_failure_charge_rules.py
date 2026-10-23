@@ -75,10 +75,14 @@ class CoinGuardTests(unittest.TestCase):
 class FailingSim(CompletionMixin):
     """What `_fail_attempt` reads: a project record, a purse with a credit line, and the rules it calls."""
 
+    instrument_spec = None
+
     def __init__(self, capital, loss, claimed, credit_base=500.0):
-        self.nodes = {NODE_ID: {"name": "Kiln", "ph": 100.0, "risk": 0.2, "mat": {}, "lab": {}}}
+        self.nodes = {NODE_ID: {"name": "Kiln", "ph": 100.0, "risk": 0.2, "mat": {}, "lab": {}},
+                      "gauge": {"name": "Gauge"}}
         self.state = SimpleNamespace(
             projects=SimpleNamespace(
+                done=set(),
                 active={NODE_ID: {"yrs": 4.0, "ph_left": 0.0, "cost_left": 10.0}},
                 failed_attempts=collections.Counter(),
                 bountied={NODE_ID} if claimed else set()),
@@ -98,7 +102,7 @@ class FailingSim(CompletionMixin):
         self.state.household.capital -= amount
 
     def mechanic(self, node_id, name):
-        return None
+        return self.instrument_spec if name == "diagnosis_instrument" else None
 
     def learn_from_failed_attempt(self, node_id):
         self.learned.append(node_id)
@@ -174,6 +178,29 @@ class FailedAttemptChargeTests(unittest.TestCase):
         sim = FailingSim(capital=1000.0, loss=300.0, claimed=False)
         sim._fail_attempt(NODE_ID, 0.2)
         self.assertEqual(sim.learned, [NODE_ID])
+
+
+class FailureTeachesTests(unittest.TestCase):
+    SPEC = {"instrument": "gauge", "needed": 2.0, "quantity": "purity", "unit": "ppm", "needed_words": "purity"}
+
+    def fail(self, holds_instrument):
+        sim = FailingSim(capital=1000.0, loss=300.0, claimed=False)
+        sim.instrument_spec = self.SPEC
+        if holds_instrument:
+            sim.state.projects.done.add("gauge")
+        sim.rng = SimpleNamespace(uniform=lambda low, high: low)
+        sim._fail_attempt(NODE_ID, 0.2)
+        return sim
+
+    def test_a_failure_that_cannot_be_measured_teaches_nothing(self):
+        self.assertEqual(self.fail(holds_instrument=False).learned, [])
+
+    def test_the_same_failure_with_the_instrument_held_teaches(self):
+        self.assertEqual(self.fail(holds_instrument=True).learned, [NODE_ID])
+
+    def test_the_failure_is_counted_either_way(self):
+        for holds in (False, True):
+            self.assertEqual(self.fail(holds).state.projects.failed_attempts[NODE_ID], 1)
 
 
 if __name__ == "__main__":
