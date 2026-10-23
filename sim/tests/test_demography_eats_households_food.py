@@ -1,4 +1,4 @@
-"""Complaint 549: demography is fed what the agent economy's households ate, not the engine's own harvest.
+"""SCENARIO (Complaint 549): demography is fed what the agent economy's households ate, not the engine's own harvest.
 
 Population is one national record, so the hunger is national; a tile's own hunger waits on a population tracked
 by tile (Complaint 603). The economy half (the national figure) is test_national_food_eaten_rule; this half runs on a game whose
