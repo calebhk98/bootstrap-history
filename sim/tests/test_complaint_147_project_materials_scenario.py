@@ -26,12 +26,12 @@ def _own_held(game, node_id):
 
 
 # --- the bill reads the game: a year's supply, owned output shared between projects, owned supply, the market quote ------
-game = sim(capital=5e7)
+game = unopened_sim(capital=5e7)
 _nitre = next(row for row in game.project_material_bill(_GUNPOWDER)["rows"] if row["material"] == _NITRE)
 _spot = game.material_purchase_cost(_nitre["material"], 0.0)[1]
 _beyond = _nitre["missing_tonnes"] - _nitre["deliverable_now_tonnes"]
 _bare_charcoal = next(row for row in game.project_material_bill(_FIRST)["rows"] if row["material"] == _CHARCOAL)
-_owner = sim(capital=5e7)
+_owner = unopened_sim(capital=5e7)
 _owner.state.holdings.forest_ha += 500
 _owner_charcoal = next(row for row in _owner.project_material_bill(_FIRST)["rows"] if row["material"] == _CHARCOAL)
 _small_priced = []

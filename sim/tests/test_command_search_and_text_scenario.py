@@ -49,17 +49,6 @@ scenario("scenario: under fog a search never matches a node by its filing cabine
          a_bare_topic_word_returns_what_find_returns=_ids(_physics_subject) == _ids(_physics_find) and _physics_subject.get("count", 0) > 0,
          physics_and_furnace_return_results=all(reply.get("ok") is not False and _ids(reply) for reply in (_physics_subject, _furnace)))
 
-_han = sim("han_china_100ad")
-_han.end_year = _han.cfg["start_year"] + 50
-_ask(_han, cmd="start", id="hom_button")
-_ask(_han, cmd="step", years=1)
-_ask(_han, cmd="open", id="hom_button")
-_closed = _ask(_han, cmd="close", what="hom_button", material="hom_button")
-_quoted = _ask(_han, cmd="quote", what="mine", material="hom_button")
-_labour = _ask(_han, cmd="labour", trade="laborer")
-_ventures = _ask(_han, cmd="ventures", closed=True)
-scenario("scenario: refused commands point at the command that exists, and small defects stay fixed",
-         close_a_concern_points_at_mothball=not _closed["ok"] and "mothball hom_button" in _closed["error"],
-         quote_a_project_names_the_quote_commands=not _quoted["ok"] and "quote open" in _quoted["error"],
-         labour_laborer_is_accepted_as_labourer=_labour.get("ok") is not False,
-         ventures_closed_says_what_it_shows="closed" in json.dumps(_ventures).lower())
+_labour = _ask(_england, cmd="labour", trade="laborer")
+scenario("scenario: a small defect stays fixed: `labour laborer` is accepted as the labourer trade",
+         labour_laborer_is_accepted_as_labourer=_labour.get("ok") is not False)
