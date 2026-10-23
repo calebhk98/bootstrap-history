@@ -11,7 +11,7 @@ from .payroll_shed import shed_unpayable_staff
 from .payroll_trim import payroll_means
 from .staff_phase_rules import (approach, artisan_goal, can_afford_replacement, craft_headcount, directors_next, has_room_to_hire,
                                 hires_needed, scholar_goal)
-from .staff_replacement import REPLACE_ONLY, replace_lost_staff, replacement_wanted
+from .staff_replacement import GROW_STANCE, REPLACE_STANCE, hire_stance, replace_lost_staff, replacement_wanted
 from sim.agents.api import edges
 
 
@@ -95,10 +95,11 @@ class StaffPhaseMixin:
         # says nobody when there is nothing spare.
         _hire_room = has_room_to_hire(self.state.household.capital, self.credit_limit(), self.AUTO_HIRE_CREDIT_ROOM_SHARE)
         _hire_mode = self.state.founder.policy.get("auto_hire", not self.manual)
-        if _hire_mode == REPLACE_ONLY and _hire_room:
+        _hire_stance = hire_stance(_hire_mode, _hire_room)
+        if _hire_stance == REPLACE_STANCE:
             replace_lost_staff(self, _lost)
             self.labour.resync_pools()
-        if (_hire_mode and _hire_mode != REPLACE_ONLY and _hire_room):
+        if _hire_stance == GROW_STANCE:
             # Scaled by the SAME affordability figure staff_capacity() just
             # used for sc_cap/ar_cap (see the comment there): supervision-room
             # headroom is not a free six people, it is six people you still
