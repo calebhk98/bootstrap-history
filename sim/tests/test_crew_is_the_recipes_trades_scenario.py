@@ -2,7 +2,7 @@
 a firm hold the same number of people. The rules are in test_crew_is_the_recipes_trades.py."""
 import unittest
 
-from .harness import sim
+from .harness import unopened_sim
 
 from sim.engine.agents_port import SimWorld
 from sim.world import plant_figures
@@ -11,7 +11,7 @@ from sim.world import plant_figures
 class CrewIsTheRecipesTradesInAGame(unittest.TestCase):
 	@classmethod
 	def setUpClass(cls):
-		cls.game = sim(capital=1e9)
+		cls.game = unopened_sim(capital=1e9)
 		cls.world = SimWorld(cls.game)
 		cls.derived = {node_id: node for node_id, node in sorted(cls.game.nodes.items())
 					   if plant_figures.derived_crew_hours(node.get("_revenue_basis"), node.get("_labour_hours_per_year")) > 0.0}
