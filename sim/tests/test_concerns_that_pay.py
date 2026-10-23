@@ -1,6 +1,6 @@
 """Complaints 528 and 510: the scan of a business's plants for whether they pay their way returns structured figures that
-agree with what an entrant weighs, tested on a fake world and a built business; the scan on a real game is
-test_concerns_that_pay_scenario. Nothing here asserts that any share pays: the share is reported, not gated."""
+agree with what an entrant weighs, tested on a fake world and a built business; the scan over a game's concerns is
+test_concern_scan_run. Nothing here asserts that any share pays: the share is reported, not gated."""
 QUICK_TOPIC = True
 from .harness import *  # noqa: F401,F403
 

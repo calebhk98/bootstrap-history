@@ -20,7 +20,7 @@ from sim.ui.memory import load_state, save_state
 from .score import victory_report
 from .why_material import material_story
 from sim.refusal import Refusal, cause_of, facts_of
-from .refusal_cause import add_cause, event_codes
+from .refusal_cause import add_cause, event_codes, event_rows
 from .seat_address import run_as_seat
 from .state_waiting import _agent_end_reason
 from .state import _agent_state
@@ -284,8 +284,8 @@ def _cmd_step(sim, nodes, cmd, ended):
         _this_year = sim.log[before_log:]
         if getattr(sim, "disaster_this_year", None):
             disasters.append(sim.disaster_this_year)
+        events.extend(event_rows(_this_year))
         for year, message in _this_year:
-            events.append({"year": year, "message": message, **event_codes(message)})
             if cause_of(message) == "founder_dies":
                 _age_n = facts_of(message).get("aged")
                 founder_died_this_step = {"year": year, "aged_about": _age_n}

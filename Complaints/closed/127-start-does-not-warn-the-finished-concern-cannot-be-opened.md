@@ -1,6 +1,6 @@
 # Starting a project does not warn that its finished concern could not be opened
 
-**Status:** closed - test_start_opening_warning verifies the warning appears at start time for concerns with insufficient free staff to open
+**Status:** closed - test_completion_opening_shortfall (and test_completion_messaging for `staff_shortfall`) verify the shortfall behind the warning appears at start time for concerns with insufficient free staff to open
 
 **Source:** `reports/TOP_PROBLEMS.md` item 10 (build staffing versus operating staffing).
 

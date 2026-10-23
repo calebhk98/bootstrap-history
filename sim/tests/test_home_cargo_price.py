@@ -1,5 +1,5 @@
 """Cargo bound for home is sized by the home market's own price response (Complaints/115): the quote is a
-summarised book re-cleared with one more order. The whole-game wiring is in test_home_cargo_price_scenario."""
+summarised book re-cleared with one more order."""
 QUICK_TOPIC = True
 
 from .harness import *  # noqa: F401,F403
@@ -37,3 +37,5 @@ _taken_quotes = [market_curves.price_response(curve, "grain", None, 0.0, tonnes)
 check("more cargo landed pushes the quote down further, never below zero",
       _landed_quotes[0] >= _landed_quotes[1] >= _landed_quotes[2] > 0.0, _landed_quotes)
 check("more cargo taken pushes the quote up further", _taken_quotes[0] <= _taken_quotes[1] <= _taken_quotes[2], _taken_quotes)
+_no_cargo = market_curves.price_response(curve, "grain", None, 0.0, 0.0)
+check("with no extra cargo the quote is the market's price", _no_cargo is not None and abs(_no_cargo - 1.0) < 1e-9, _no_cargo)

@@ -1,4 +1,5 @@
-"""The suite must run from a checkout of any name, in any directory.
+"""The suite must run from a checkout of any name, in any directory. The run itself from a renamed root is
+test_suite_portability_smoke.
 
 WHY THIS FILE EXISTS. For as long as the split suite had existed, it imported
 itself as `rome.sim.tests` and put the checkout's PARENT on sys.path, so it
@@ -21,13 +22,11 @@ outside the repository. The checks below are structural rather than
 behavioural, and they are cheap, because the thing they protect is the ability
 to run every other check in this package at all.
 """
+QUICK_TOPIC = True
+
 import ast
 import os
 import re
-import shutil
-import subprocess
-import sys
-import tempfile
 
 from .harness import *
 from .harness import ROOT, HERE, _LOADTEST_DIR, _PLAY_DIR
@@ -127,12 +126,22 @@ check("no source file under sim/ addresses a path through a directory named "
 # never ran is worse than one that fails, because nothing ever draws attention
 # to it. This check exists so that it cannot happen a second time.
 _exiters = []
+_unparsable = []
+_tests_dir = os.path.join(ROOT, "sim", "tests")
 for _slug in TOPICS:
-    _p = os.path.join(ROOT, "sim", "tests", "test_%s.py" % _slug)
+    _p = os.path.join(_tests_dir, "test_%s.py" % _slug)
     if not os.path.exists(_p):
         _exiters.append("%s: registered in TOPICS but no such file" % _slug)
         continue
-    _tree = ast.parse(open(_p).read(), filename=_p)
+    with open(_p, encoding="utf-8") as _handle:
+        _source = _handle.read()
+    try:
+        _tree = ast.parse(_source, filename=_p)   # one parse serves the exit scan and the compile check
+    except SyntaxError as _err:
+        _unparsable.append("%s: %s" % (_slug, _err))
+        continue
+    if "exit" not in _source:
+        continue
     for _node in ast.walk(_tree):
         # Module level only: a sys.exit inside a def is never reached by the
         # import, and a topic module has no reason to define one anyway.
@@ -150,15 +159,6 @@ check("no topic module calls sys.exit at import time - a topic that exits "
       "a clean summary on its way out",
       not _exiters, _exiters)
 
-_tests_dir = os.path.join(ROOT, "sim", "tests")
-_unparsable = []
-for _slug in TOPICS:
-    _topic_path = os.path.join(_tests_dir, "test_%s.py" % _slug)
-    try:
-        with open(_topic_path, encoding="utf-8") as _handle:
-            compile(_handle.read(), _topic_path, "exec")
-    except SyntaxError as _err:
-        _unparsable.append("%s: %s" % (_slug, _err))
 check("every discovered topic compiles - a broken file would crash the run "
       "rather than be reported",
       not _unparsable, _unparsable)
@@ -172,48 +172,3 @@ _near_misses = sorted(
 check("no file in sim/tests looks like a test but escapes the test_*.py "
       "discovery pattern, and nothing is registered by hand",
       not _near_misses and TOPICS == sorted(TOPICS), _near_misses)
-
-
-# --- The end-to-end proof. Everything above is a claim about the source; this
-# one actually runs the suite through a differently-named root and checks it
-# comes back green.
-#
-# The alias is a real directory containing symlinks to the repository's own
-# subdirectories, rather than one symlink to the repository. os.path.abspath
-# does not resolve symlinks, so the child's harness computes ROOT as the alias
-# and writes its scratch directories there - a real, empty temp directory -
-# instead of into the checkout this very run is using them from.
-_alias_parent = tempfile.mkdtemp(prefix="suite_portability_")
-try:
-    _alias = os.path.join(_alias_parent, "definitely_not_called_rome")
-    os.makedirs(_alias)
-    # mods and .cache too, so the child's cache key matches and it reuses this checkout's solved prices.
-    for _sub in ("sim", "data", "docs", "mods", "playtest", ".cache"):
-        try:
-            os.symlink(os.path.join(ROOT, _sub), os.path.join(_alias, _sub))
-        except (OSError, AttributeError):
-            shutil.copytree(os.path.join(ROOT, _sub), os.path.join(_alias, _sub))
-
-    _run = subprocess.run(
-        [sys.executable, os.path.join(_alias, "sim", "tests", "__main__.py"),
-         "--only", "parallelism_note"],
-        capture_output=True, text=True, timeout=300, cwd=_alias_parent)
-
-    check("the whole suite runs from a checkout named something other than "
-          "'rome', from a working directory that is not the checkout",
-          _run.returncode == 0,
-          (_run.returncode, _run.stdout[-400:], _run.stderr[-400:]))
-
-    # presentation: the test runner's printed summary
-    check("...and it really ran checks there rather than exiting early with "
-          "nothing to do",
-          "0 failures" in _run.stdout and " 0 checks," not in _run.stdout,
-          _run.stdout[-300:])
-
-    check("...and that run left its scratch directories in its own root, not "
-          "in this checkout",
-          not any(os.path.exists(os.path.join(_alias_parent, directory))
-                  for directory in (_LOADTEST_DIR, _PLAY_DIR)),
-          sorted(os.listdir(_alias_parent)))
-finally:
-    shutil.rmtree(_alias_parent, ignore_errors=True)

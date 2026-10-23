@@ -1,6 +1,6 @@
 """Complaints 369, 370, 375: household income follows the wage and output per head. The wage rules are called with
-figures built here. The chain from a cheaper entry to the concern's volume and takings, the market buying from the
-cheaper producer, and a good offered after the opening becoming demand are in test_concern_volume_scenario; the volume,
+figures built here. A good offered after the opening becoming demand is test_household_new_goods, the market buying from the cheaper
+producer is test_producer_market; the volume,
 takings and real-income rules are in test_concern_volume_rules, the copying time in test_technique_spread."""
 QUICK_TOPIC = True
 

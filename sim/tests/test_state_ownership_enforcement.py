@@ -19,9 +19,12 @@ Enforces:
 """
 import ast
 import os
+import re
 from typing import List, Tuple
 from .harness import *  # noqa: F401,F403
 from .source_dirs import engine_side_dirs
+
+QUICK_TOPIC = True
 
 # Path to the simulation engine source code relative to repository root
 ENGINE_RELATIVE_PATH = os.path.join("sim", "engine")
@@ -122,6 +125,13 @@ class SubsystemOwnershipASTVisitor(ast.NodeVisitor):
 		self.generic_visit(node)
 
 
+def _could_violate(source: str) -> bool:
+	"""A cheap text pre-filter: a file with no `household.<field>` or `self.<pruned field>` text cannot hold a violation the visitor flags."""
+	household_fields = "|".join(sorted(NON_HOUSEHOLD_FIELDS))
+	pruned = "|".join(sorted(PRUNED_FORWARDING_PROPERTIES))
+	return re.search(r"\bhousehold\.(?:%s)\b|\b(?:self|sim|s)\.(?:%s)\b" % (household_fields, pruned), source) is not None
+
+
 def _scan_engine_codebase() -> List[Tuple[str, int, str]]:
 	"""Recursively scan sim/engine files for state ownership violations."""
 	violations: List[Tuple[str, int, str]] = []
@@ -136,7 +146,10 @@ def _scan_engine_codebase() -> List[Tuple[str, int, str]]:
 			file_path = os.path.join(root, file_name)
 			rel_path = os.path.relpath(file_path, repo_root)
 			with open(file_path, "r", encoding="utf-8") as source_fp:
-				syntax_tree = ast.parse(source_fp.read(), filename=rel_path)
+				source = source_fp.read()
+			if not _could_violate(source):
+				continue
+			syntax_tree = ast.parse(source, filename=rel_path)
 			visitor = SubsystemOwnershipASTVisitor(rel_path)
 			visitor.visit(syntax_tree)
 			violations.extend(visitor.violations)

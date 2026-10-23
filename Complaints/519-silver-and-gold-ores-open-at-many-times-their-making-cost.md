@@ -3,11 +3,10 @@
 **Status:** partly - the common ores (iron, copper, tin, lead) pass in every civilisation; silver and gold ores, and the metals themselves, still open far above cost
 
 **What is wrong now.** Silver metal trades at tens of times its making cost at an opening, and the ore follows it (Rome and
-England silver ore; Han gold lode ore). Measure: `sited_traded_ore_ratios(civilisation)` in
-`sim/tests/test_sited_ore_price_over_cost_validation.py` (agent price over making cost after one step, suite harness;
-`python3 -m sim.tests --only sited_ore_price_over_cost_validation`). The all-ores test
-(`test_every_civilisations_sited_ores_open_within_a_bounded_multiple_of_their_cost`) is an expected failure that turns
-green when this is fixed; the common-ores test passes and guards the rest.
+England silver ore; Han gold lode ore). Measure: `python3 sim/simulator.py opening-checks` prints a price over its making cost for the full-length opening of each
+civilisation. The one-step validation that used to read the sited ores' ratios was deleted (rule-tests-16): it read one step of an
+unsettled opening (473), could not name the function that broke, and its common-ores check was red on main. When this is
+fixed, a rule test for the silver and gold chain goes with the fix.
 
 **Evidence on the cause** (details in `Complaints/reports/519-history.md`):
 

@@ -140,6 +140,12 @@ class Government(CorveeMixin, CreditRecordMixin, FiscalMixin, CoinageMixin, Ente
 		state_works.wear(state_works.held(world), share, PUBLIC_BUILDING_LIFE_YEARS)
 		if any(line.name == "donative" for line in lines):
 			self.record.accession_due = False
+		self.spend_on_lines(lines, share, world)
+		return lines, share
+
+	def spend_on_lines(self, lines: List[budget.Line], share: float, world: Any) -> None:
+		"""Pay the funded `share` of each line: wages into the labour market, other money out to the spending edge, and its
+		materials as bids in the agent economy's book."""
 		for line in lines:
 			bought = line.material_cost if line.materials else 0.0   # its materials are bought with bids in the agent economy's book
 			if share > 0.0:
@@ -150,7 +156,6 @@ class Government(CorveeMixin, CreditRecordMixin, FiscalMixin, CoinageMixin, Ente
 			weight = sum(line.materials.values())
 			for commodity, tonnes in line.materials.items():
 				world.market_purchase(self.actor_id, commodity, tonnes * share, bought * share * tonnes / weight)
-		return lines, share
 
 	def pay_patron(self, share: float, world: Any) -> None:
 		"""Fund the founder as patron from what is left of the purse after the standing need.

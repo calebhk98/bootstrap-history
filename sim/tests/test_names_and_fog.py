@@ -1,12 +1,14 @@
 """Typed names resolve to ids, fog limits what is suggested, and `available` sorts and pages. The rules are called on the
-tree's names, on ids and sort keys the test states, and on a stand-in game that holds only what they read; the same
-commands through a running game are in test_names_and_fog_scenario."""
+tree's names, on ids and sort keys the test states, and on a stand-in game that holds only what they read; the
+name step of the command dispatch is called on a stand-in game too."""
 from types import SimpleNamespace
+from unittest import mock
 
 from .harness import *  # noqa: F401,F403
 
+from sim.ui.proto.dispatch import _agent_dispatch_inner
 from sim.ui.proto.name_candidates import candidates_the_player_may_see
-from sim.ui.proto.nodes import _resolve_by_name
+from sim.ui.proto.nodes import _did_you_mean, _resolve_by_name
 from sim.ui.proto.techtree import _SORT_KEYS, _available_params, _heard_all_sorted, _sort_startable_list
 
 QUICK_TOPIC = True
@@ -66,3 +68,33 @@ check("...and a search that does match a heard-of item still shows it",
       _heard_all_sorted(stand_in, tree, "atomic", "", None, False) == ["atomic_theory"])
 check("the heard-of list is nearest first: fewest missing prerequisites",
       _heard_all_sorted(stand_in, tree, "", "", None, False)[0] == "dyeing")
+
+# --- The dispatch step that turns a typed name into an id, on a stand-in game (the step runs before any handler reads the game).
+def _name_stand_in(fog, heard=()):
+    return SimpleNamespace(nodes=NODES, fog=fog, goal=GOAL, done=set(), active={}, revealed=set(heard), is_visible=lambda node_id, _memo=None: node_id in heard)
+
+
+def _name_reply(game, command, name):
+    with mock.patch("sim.ui.proto.dispatch.material_story", return_value=None):   # a material story reads the market
+        return _agent_dispatch_inner(game, NODES, {"cmd": command, "id": name})
+
+
+full_loom = _name_reply(_name_stand_in(False), "why", "loom")["error"]
+# not text: the refusal's cause code and its list of ids
+check("a typed name several nodes share is refused with cause ambiguous_name and the real ids to choose between",
+      full_loom.cause == "ambiguous_name" and "tex_horizontal_loom" in full_loom.choices and len(full_loom.choices) >= 2,
+      (full_loom.cause, full_loom.choices))
+two_heard = set(full_loom.choices[:2])
+fogged_two = _name_reply(_name_stand_in(True, two_heard), "why", "loom")["error"]
+check("under fog an ambiguous name offers only the candidates the player has heard of, fewer than full visibility",
+      fogged_two.cause == "ambiguous_name" and set(fogged_two.choices) == two_heard < set(full_loom.choices), fogged_two.choices)
+goal_start = _name_reply(_name_stand_in(True), "start", NODES[GOAL]["name"])["error"]
+check("under fog `start` on the goal's name is refused as never_heard_of", goal_start.cause == "never_heard_of", goal_start.cause)
+guess = _name_reply(_name_stand_in(True), "why", "transistor")["error"]
+check("under fog a vague guess is never_heard_of and offers no unheard-of node, the goal included",
+      guess.cause == "never_heard_of" and GOAL not in (guess.choices or ()), (guess.cause, guess.choices))
+did_you_mean_tree = {"aqueduct_survey": {}, "aqueduct_arch": {}, "aqueduct_lining": {}}
+check("a near miss under fog is answered only from what the player has heard of",
+      _did_you_mean("aqueduct_surve", did_you_mean_tree, sim=_name_stand_in(True, {"aqueduct_survey"})) == ["aqueduct_survey"])
+check("a near miss with fog off is answered from every node",
+      sorted(_did_you_mean("aqueduct_surve", did_you_mean_tree, sim=_name_stand_in(False))) == sorted(did_you_mean_tree))

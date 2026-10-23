@@ -1,7 +1,8 @@
 """The persistent price-solve cache: its key covers every input and simultaneous misses compute once.
 
 sim/engine/solve_cache.py: on-disk cache keyed on a hash of every solve input. A cold cache giving the same answer
-as a warm one, and a warm cache skipping the solver, run the real solver: test_solve_cache_cold_warm.
+as a warm one, a warm cache skipping the compute, and the warm start of an in-game solve are
+test_solve_cache_and_warm_start_rules.
 """
 
 QUICK_TOPIC = True

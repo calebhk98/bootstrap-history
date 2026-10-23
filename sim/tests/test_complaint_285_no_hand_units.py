@@ -9,6 +9,7 @@ A new sentence or reply field that breaks one fails here.
 """
 
 import ast
+import functools
 import os
 import re
 import unittest
@@ -24,7 +25,7 @@ NATIVE_LABEL = re.compile(r"\bden\b|\btonnes?\b|\bt/yr\b|\bha\b|\bhectares?\b|\b
 # Files whose literals may name a unit beside a placeholder, and why.
 EXEMPT_SENTENCE_FILES = {
     # Text-screen renderers print values from a reply that units_text.for_text already converted; the label
-    # they print is swapped by render_pretty. Held by complaint_285_text_screens and the key scans below.
+    # they print is swapped by render_pretty. Held by complaint_285_display_units and the key scans below.
     "sim/ui/proto/render_screens_economy.py": "text screen over a converted reply",
     "sim/ui/proto/render_screen_state_blocks.py": "text screen over a converted reply",
     "sim/ui/proto/render_screen_why.py": "text screen over a converted reply",
@@ -127,10 +128,30 @@ NOT_QUANTITY_KEYS = {
 
 def python_files(*roots):
     for root in roots:
-        for directory, _, names in os.walk(os.path.join(ROOT, root)):
+        for directory, directories, names in os.walk(os.path.join(ROOT, root)):
+            directories[:] = [name for name in directories if name != "tests"]
             for name in sorted(names):
                 if name.endswith(".py"):
                     yield os.path.join(directory, name)
+
+
+_NODES = {}
+
+
+@functools.lru_cache(maxsize=None)
+def parsed(path):
+    """(source text, tree, every node of the tree in walk order): each file is parsed once for all the scans."""
+    with open(path, encoding="utf-8") as source:
+        text = source.read()
+    tree = ast.parse(text)
+    nodes = tuple(ast.walk(tree))
+    _NODES[id(tree)] = nodes
+    return text, tree, nodes
+
+
+def all_nodes(tree):
+    """The nodes of a tree `parsed` returned, in walk order, walked once."""
+    return _NODES[id(tree)]
 
 
 def relative(path):
@@ -139,7 +160,7 @@ def relative(path):
 
 def docstring_ids(tree):
     found = set()
-    for node in ast.walk(tree):
+    for node in all_nodes(tree):
         if isinstance(node, (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)):
             if node.body and isinstance(node.body[0], ast.Expr) and isinstance(getattr(node.body[0], "value", None), ast.Constant):
                 found.add(id(node.body[0].value))
@@ -152,9 +173,9 @@ def hand_formatted_sentences():
         name = relative(path)
         if name.startswith("sim/tests/") or name in EXEMPT_SENTENCE_FILES:
             continue
-        tree = ast.parse(open(path, encoding="utf-8").read())
+        tree = parsed(path)[1]
         skipped = docstring_ids(tree)
-        for node in ast.walk(tree):
+        for node in all_nodes(tree):
             if (isinstance(node, ast.Constant) and isinstance(node.value, str) and id(node) not in skipped
                     and HAND_UNIT.search(node.value)):
                 found.append("%s:%d %s" % (name, node.lineno, node.value[:70].replace("\n", " ")))
@@ -167,7 +188,7 @@ def code_nodes(kinds):
         name = relative(path)
         if name.startswith("sim/tests/") or name in EXEMPT_FORMAT_FILES or name in EXEMPT_SENTENCE_FILES:
             continue
-        for node in ast.walk(ast.parse(open(path, encoding="utf-8").read())):
+        for node in parsed(path)[2]:
             if isinstance(node, kinds):
                 yield name, node
 
@@ -178,9 +199,9 @@ def hand_numbers():
         name = relative(path)
         if name.startswith("sim/tests/") or name in EXEMPT_FORMAT_FILES or name in EXEMPT_SENTENCE_FILES:
             continue
-        tree = ast.parse(open(path, encoding="utf-8").read())
+        tree = parsed(path)[1]
         skipped = docstring_ids(tree)
-        found += ["%s:%d" % (name, node.lineno) for node in ast.walk(tree)
+        found += ["%s:%d" % (name, node.lineno) for node in all_nodes(tree)
                   if isinstance(node, ast.Constant) and isinstance(node.value, str) and id(node) not in skipped
                   and HAND_NUMBER.search(node.value)]
     return found
@@ -211,7 +232,7 @@ def unconverted_money_arguments():
 
 def dict_keys(folder):
     for path in python_files(folder):
-        for node in ast.walk(ast.parse(open(path, encoding="utf-8").read())):
+        for node in parsed(path)[2]:
             if isinstance(node, ast.Dict):
                 for key in node.keys:
                     if isinstance(key, ast.Constant) and isinstance(key.value, str):
@@ -221,8 +242,8 @@ def dict_keys(folder):
 def keys_beside_native_labels(folder):
     """(file:line, key) for each reply key read in a statement whose string prints a native unit label."""
     for path in python_files(folder):
-        tree = ast.parse(open(path, encoding="utf-8").read())
-        for statement in ast.walk(tree):
+        tree = parsed(path)[1]
+        for statement in all_nodes(tree):
             if not isinstance(statement, ast.stmt) or isinstance(
                     statement, (ast.FunctionDef, ast.ClassDef, ast.If, ast.For, ast.While, ast.With, ast.Try)):
                 continue
@@ -270,9 +291,9 @@ class NoHandFormattedUnits(unittest.TestCase):
         for name in EXEMPT_SENTENCE_FILES:
             path = os.path.join(ROOT, name)
             self.assertTrue(os.path.isfile(path), name)
-            tree = ast.parse(open(path, encoding="utf-8").read())
+            tree = parsed(path)[1]
             skipped = docstring_ids(tree)
-            hits = [node for node in ast.walk(tree) if isinstance(node, ast.Constant) and isinstance(node.value, str)
+            hits = [node for node in all_nodes(tree) if isinstance(node, ast.Constant) and isinstance(node.value, str)
                     and id(node) not in skipped and HAND_UNIT.search(node.value)]
             self.assertTrue(hits, "%s no longer needs its exemption" % name)
 
@@ -290,7 +311,7 @@ class NoHandFormattedUnits(unittest.TestCase):
         tagged_names = set()
         rounded = {}
         for path in python_files("sim/ui/proto"):
-            for node in ast.walk(ast.parse(open(path, encoding="utf-8").read())):
+            for node in parsed(path)[2]:
                 if isinstance(node, ast.Call) and getattr(node.func, "id", "") == "tagged":
                     tagged_names.update(keyword.arg for keyword in node.keywords if keyword.arg)
                 if isinstance(node, ast.Dict):
@@ -317,7 +338,7 @@ class NoHandFormattedUnits(unittest.TestCase):
             self.assertTrue(rule and rule["dimension"] == "temperature", key)
         self.assertEqual(U.field_rule(self.registry, "furnace_temperature_c")["dimension"], "temperature")
         shown = [path for path in python_files("sim/ui")
-                 if re.search(r"(?i)\btemperature\b|\bcelsius\b", open(path, encoding="utf-8").read())
+                 if re.search(r"(?i)\btemperature\b|\bcelsius\b", parsed(path)[0])
                  and "units" not in os.path.basename(path)]
         self.assertEqual([relative(path) for path in shown], [],
                          "a screen now mentions temperature: format it with units_prose.temperature_text")
