@@ -1,5 +1,5 @@
 """Complaints 286 and 287: the map gives a state its frontier, its coast and its roads; the territory is called on tiles of named
-regions. The state's lines, army, revenue and patron funding on a game are in test_state_spending_scenario."""
+regions. The army wanted is test_budget_view_army, the lines are test_state_budget_lines, patron funding is test_country_patronage."""
 
 QUICK_TOPIC = True
 from .harness import check

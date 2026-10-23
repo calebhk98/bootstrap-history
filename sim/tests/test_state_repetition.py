@@ -1,6 +1,6 @@
 """Complaint 100, items 9 and 10: the closing-concerns pointer explains itself once, and a long run of
 active projects collapses to a bounded list plus a summary by what they wait on. Complaint 640: the once-only rule
-(`already_explained`) is called on a stand-in game; the two commands that use it are in test_state_repetition_scenario."""
+(`already_explained`) is called on a stand-in game; the `state` command's use of it is test_state_command_explains_once."""
 QUICK_TOPIC = True
 
 from types import SimpleNamespace
