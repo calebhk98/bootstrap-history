@@ -1,7 +1,7 @@
 """Complaint 321: what a project costs in materials does not depend on the firm pricing it, so a yearly turn computes
 each project's material bill once however many firms price it, and never serves a bill the market has since moved
 under. The rule is the shared-answer table of sim/engine/view_share.py, called on a stand-in world whose stamp the test
-moves. (That firms' copy pricing goes through it: test_scenarios_batch3_bills.)"""
+moves. (That firms' copy pricing goes through it: test_sim_world_copy_cost_scope.)"""
 QUICK_TOPIC = True
 
 import unittest

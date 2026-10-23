@@ -33,3 +33,5 @@ model and its `market_book` capacity and stock, and `GoodsMarket.add_stock` writ
 So one interface reports a different market from the one it trades in. Reports should be derived from
 the same clearing and settlement results as transactions; the cost-of-making answer stays, named as a
 cost estimate. This is the reviewer's suggested first slice of the migration: small and contained.
+
+`price_over_making_cost_band_validation` (the typical traded good sells at no less than its making cost and no more than a factor of three over it, half within the band, after four market years of an opened Rome) was deleted in the rule-test pass: it read the unsettled economy and could not name a function. The same relationship, on the full-length opening, is `python3 sim/simulator.py opening-checks` (the "prices over making cost" row).

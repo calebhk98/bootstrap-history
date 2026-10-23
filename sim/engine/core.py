@@ -44,6 +44,7 @@ from sim.unit_conversions import PERCENT_SCALE
 
 
 from .territory_required import require_territory
+from .win_condition_rule import win_condition_met
 from .starting_techs import declared_starting_techs, grant_starting_techs
 from .economy import EconomyMixin
 from .node_rederive import NodeRederiveMixin
@@ -1813,9 +1814,7 @@ class Sim(ModStoresMixin, RealPriceRatiosMixin, CoinRevaluationMixin, MechanicsM
             if not win_condition:
                 continue
             val = self._win_condition_value(win_condition)
-            comparison_op, target = win_condition["op"], win_condition["value"]
-            met = (val >= target) if comparison_op == ">=" else (val <= target) if comparison_op == "<=" else False
-            if not met:
+            if not win_condition_met(win_condition, val):
                 continue
             self.state.projects.done.add(node_id)
             self._done_changed()

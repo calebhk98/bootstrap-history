@@ -1,6 +1,5 @@
 """Complaints/583: a partial hire says how many were hired and why; the craft help reads the supervision trade data.
-The rules are plain functions (sim/labour/hire_outcome.py, sim/ui/proto/hire_reply.py), called on built numbers.
-(That `hire` and `ventures` call them: test_scenarios_batch3_hire.)"""
+The rules are plain functions (sim/labour/hire_outcome.py, sim/ui/proto/hire_reply.py), called on built numbers."""
 QUICK_TOPIC = True
 
 import unittest

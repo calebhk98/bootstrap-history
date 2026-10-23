@@ -11,6 +11,7 @@ from typing import Any, Dict, List, Optional, Set, Tuple
 from sim.agents.api import OBSERVATION_RANGE_KM, business_books, business_plant_books, SECRET_EXPOSURE, demand_answer, payroll, supply
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
+from . import real_output_measure
 from .agents_port_budget import BudgetView
 from .agents_port_capacity import CapacityView
 from .agents_port_capital import CapitalView
@@ -150,10 +151,7 @@ class SimWorld(BudgetView, SiteView, RevenueView, GroupView, PatronageView, Stak
 		(real_output.py), in this civilisation's money."""
 		sim = self._sim
 		def compute() -> float:
-			# TEMPORARY HEURISTIC (CLAUDE.md 4.4): the market's quantities do not yet fall when
-			# people are drawn off to arms, so the share of working people not under arms scales them
-			working = sim.population.working_age
-			producing = max(0.0, working - self.soldiers_under_arms()) / working if working > 0.0 else 1.0
+			producing = real_output_measure.share_producing(sim.population.working_age, self.soldiers_under_arms())
 			return sim.economy.output_value() * producing
 		return self._once("output", compute)
 

@@ -1,6 +1,5 @@
 """Complaint 420: the engine keeps (cause, amount) rows for wage changes, concern closures and state
-notice, bounded to a few years. The rules are tested on a stub game built here; the wiring (a closure writes its
-row, a save keeps the rows, `figures` and `causes` show them) is test_cause_book_scenario."""
+notice, bounded to a few years. The rules are tested on a stub game built here."""
 QUICK_TOPIC = True
 
 import types

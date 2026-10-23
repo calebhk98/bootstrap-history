@@ -1,6 +1,6 @@
 # Rome's bonded share has no ensemble check against its sourced range, and captives and imports are not a modelled supply
 
-**Status:** partly - the births drift is fixed; captives of battles and conquests and a merchants' trade of bonded people between areas are built; the ensemble check is written (slow); the share of the defeated taken and the age and sex of captives are labelled heuristics with no sourced figure, and the residence-driven mortality of item 3 is open
+**Status:** partly - the births drift is fixed; captives of battles and conquests and a merchants' trade of bonded people between areas are built; the ensemble check is a rule test on the declared share, the played-years share is measured by `baseline-ensemble`; the share of the defeated taken and the age and sex of captives are labelled heuristics with no sourced figure, and the residence-driven mortality of item 3 is open
 
 Found rewriting `rome_slave_stratum` (640). Rome seeds its bonded stratum at its declared share of the people; after two
 simulated years the share fell below the low end of the range its source note gives (Scheidel 2005, cited in
@@ -28,16 +28,16 @@ is fixed too (`true_up_keep`).
    plus carriage (the cheapest way along the migration routes, `bonded_worth.cheapest_carriage`) is lowest and under the buyer's bid,
    so people move from where the price is low to where it is high; the owner is paid the ask, the origin country's merchant stratum
    the carriage (`buy_bonded`). Tests: `test_bonded_worth.py`, `test_trade_formation_routes.py`, `test_bonded_purchase.py`.
-3. The ensemble check: `sim/tests/test_rome_bonded_share_baseline_validation.py`, BASELINE VALIDATION, slow. It plays `rome_100ad`
-   two market years under three seeds, reads the range from the civilisation file's own source note (8 to 15 per cent), asserts the
-   bonded stratum is non-empty, the years were played and the share is inside the range, and carries a rule test that the check can
-   fail. It prints the people bought and captives so a run shows whether the supply side acted.
+3. The ensemble check. The slow game test is deleted (it read an unsettled whole economy and named no rule). What remains as
+   a rule test is `sim/tests/test_rome_bonded_share_sourced_range.py`: the declared bonded share is inside the range the civilisation
+   file's own source note gives (8 to 15 per cent). The share after played years is measured by
+   `python3 sim/simulator.py baseline-ensemble --civ rome_100ad` (the bonded stratum's share is not in its distributions yet; add it there).
 
 **Measured (seeds 1 to 3, `rome_100ad`, two market years, one seed per run of about two minutes):** the bonded share went from 0.1000 to 0.0995
 under every seed (about 63,780 people bought out of the stratum into the employers' hands by vacancies; no captives, no war in a
 baseline). The seeds hardly differ because `follow_population` holds the strata in proportion to the people counted and the stratum
 has no seeded draws, so the ensemble is a weak test of the share; it would bite once wars (captives) or the stratum's own births and
-deaths vary by seed. Command: `python3 -m unittest sim.tests.test_rome_bonded_share_baseline_validation.BaselineValidation.test_validation_seed_1`.
+deaths vary by seed. The test that produced this is deleted; see item 3 for the measuring command.
 
 **What is left.**
 

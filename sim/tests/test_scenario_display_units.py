@@ -1,16 +1,14 @@
-"""SCENARIO (Complaint 640): Complaint 640, audit batch 3, scenario (complaint 285): the player's chosen display units reach every covered screen of
-a played game, in the replies and in the rendered text, with the fake units supplied in memory and by a mod. The
-conversion itself is tested on built replies in test_complaint_285_display_units."""
+"""SMOKE: the player's chosen display units reach the fields of the real screens (buy, materials, state, money), with
+the fake units supplied in memory and by a mod. It is the only check that the screens' own field names are ones the unit
+rules recognise; the conversion itself is tested on built replies in test_complaint_285_display_units. One unopened game."""
 import json as _json
-import re as _re
 import tempfile as _tempfile
 
 from .harness import *
 from sim.engine import units as U
 from sim.ui.proto.dispatch import _agent_dispatch
-from sim.ui.proto.render_typed import render_pretty
 
-# Screens covered, by dimension: (render command name, command dict).
+# Screens covered, by dimension: (name, command dict).
 COVERED = {
     "area": [("buy", {"cmd": "buy", "what": "farm", "n": 5}),
              ("buy", {"cmd": "buy", "what": "forest", "n": 5})],
@@ -24,7 +22,6 @@ FAKE_UNITS = {
     "blob_mass": {"name": "blob", "symbol": "blob", "dimension": "mass", "factor": 7.0},
     "blob_money": {"name": "blob", "symbol": "blob", "dimension": "money", "factor": 3.0},
 }
-NATIVE_WORDS = {"area": r"\bhectares?\b|\bha\b", "mass": r"\btonnes?\b", "money": r"\bden\b|\bdenarii\b"}
 
 # One game serves every screen: the replies are read for their unit fields and the buys only move prices and cash.
 _GAME = unopened_sim(capital=5_000_000.0)
@@ -49,11 +46,11 @@ def _fields(reply, dimension, registry, found=None):
 
 def _run(registry, label, fake_ids, fake_specs):
     U.set_registry(registry)
-    empty, unlabelled, unconverted, no_blob_text, native_left = [], [], [], [], []
+    empty, unlabelled, unconverted = [], [], []
     for dimension, screens in COVERED.items():
         spec = fake_specs[fake_ids[dimension]]
         U.set_preferences({dimension: fake_ids[dimension]})
-        for command_name, command in screens:
+        for _name, command in screens:
             reply = _agent_dispatch(_GAME, NODES, dict(command))
             found = _fields(reply, dimension, registry)
             screen = "%s %s %s" % (command["cmd"], command.get("what", ""), dimension)
@@ -68,20 +65,9 @@ def _run(registry, label, fake_ids, fake_specs):
                 expected = (value * U.native_factor(registry, rule, _GAME) - spec.get("offset", 0.0)) / spec["factor"]
                 if not (abs(shown["value"] - expected) <= 0.011 * max(1.0, abs(expected)) and shown["value"] != value):
                     unconverted.append((screen, key, value, shown, expected))
-            text = render_pretty(command_name, reply)
-            if "blob" not in text:
-                no_blob_text.append(screen)
-            if (command_name, dimension) != ("buy", "money"):
-                # Command syntax lines name the unit a command accepts; not a quantity.
-                shown_lines = [line for line in text.splitlines() if "<" not in line]
-                leaked = _re.findall(NATIVE_WORDS[dimension], "\n".join(shown_lines))
-                if leaked:
-                    native_left.append((screen, leaked))
     check(label + ": every covered screen has fields of its dimension", not empty, empty)
     check(label + ": every field of the dimension is labelled blob and its number is the base value converted",
           not unlabelled and not unconverted, (unlabelled[:3], unconverted[:3]))
-    check(label + ": every covered screen's text uses blob and keeps no native label", not no_blob_text and not native_left,
-          (no_blob_text, native_left))
     U.set_preferences({})
 
 

@@ -1,7 +1,6 @@
 """Complaint 172: trades whose population estimate rests on a placeholder (a `temporary_heuristic` constant) show an asterisk in the
 population screen, with a legend; trades on a cited estimate or derived from need do not. The screen runs on a reply the test
-builds, and which trades are placeholders on a `Labour` over a stand-in world (no game); the screen of a played session is
-test_population_placeholder_marks_scenario."""
+builds, and which trades are placeholders on a `Labour` over a stand-in world (no game)."""
 QUICK_TOPIC = True
 
 import unittest

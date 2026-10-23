@@ -1,5 +1,5 @@
 """Complaint 524: a household in arrears whose income does not cover its costs cannot keep every dependant, so
-debt stops growing past the credit limit. The rule is called on inputs the test builds; the money phase is in the scenario."""
+debt stops growing past the credit limit. The rule is called on inputs the test builds; the charge is test_living_cost_charge."""
 
 from .harness import *  # noqa: F401,F403
 

@@ -6,6 +6,7 @@ from sim.game_version import GAME_VERSION
 from sim.refusal import Refusal, cause_of
 
 from .data import WAGES
+from .save_fog import fog_mismatch
 from sim.engine.state import (
     SAVE_FIELDS,  # noqa: F401 - compatibility export used by protocol.py
     serialize_state,
@@ -359,11 +360,9 @@ def _apply_blob(sim, blob):
 	if bad:
 		raise ValueError(bad if cause_of(bad) else Refusal("save_invalid", bad))
 
-	if sim.fog and blob.get("_fog") is False:
-		raise ValueError(Refusal("save_fog_mismatch", "that save was played without fog of war and this "
-								 "game is being played with it. A save cannot turn the "
-								 "fog off; start a new game without it if that is what "
-								 "you want."))
+	fog_refusal = fog_mismatch(sim.fog, blob.get("_fog"))
+	if fog_refusal:
+		raise ValueError(fog_refusal)
 
 	old_revealed = set(sim.state.projects.revealed) if getattr(sim, "state", None) and getattr(sim.state, "projects", None) and sim.state.projects.revealed else set()
 	asked_fuzzy, asked_salt = sim.fuzzy_estimates, sim.state._fuzzy_salt

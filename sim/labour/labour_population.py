@@ -23,7 +23,7 @@ answers for craft hours.
 """
 from sim.constants import declare, REGISTRY
 
-from . import legacy_trade_defaults, trade_data
+from . import legacy_trade_defaults, trade_data, trade_supply_rules
 from .hands import contracted_hours_of, hands_available
 from .workforce_spinup import FARM_TRADE
 
@@ -359,7 +359,7 @@ class PopulationMixin:
         # firms and governments hire from the same pool, so what they employ is not on offer
         cap = max(0.0, cap - self._world.actor_staff_fte(trade) * self._world.HOURS_PER_PERSON_YEAR)
         hours = cap + self.employed(trade) * self._world.HOURS_PER_PERSON_YEAR + school_hours
-        return min(hours, self.people_who_exist(trade) * self._world.HOURS_PER_PERSON_YEAR)
+        return trade_supply_rules.supply_hours(hours, self.people_who_exist(trade), self._world.HOURS_PER_PERSON_YEAR)
 
     def reachable_trade_population(self, trade):
         """What this household's own labour market actually holds of this
@@ -396,8 +396,7 @@ class PopulationMixin:
     def people_who_exist(self, trade):
         """People in this trade who exist in the country, counting your own
         staff even if a collapse has left the estimate below them."""
-        return max(self.national_trade_population(trade),
-                   self.employed(trade))
+        return trade_supply_rules.people_who_exist(self.national_trade_population(trade), self.employed(trade))
 
     def available_trades(self):
         """Every trade this society has that the labour market can supply."""

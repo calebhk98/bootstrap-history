@@ -31,7 +31,7 @@ Reuses the colony stepping in `sim/engine/colonies.py`. Foreign countries need 5
 - The economy is handed the regions' people (`labour.settlement_tiles`), so a region that starves has fewer households next year.
 - The engine's demographic step moved from `core.py` to `sim/engine/demographic_recovery.py`; the per-region mechanism is in
   `sim/engine/regional_people.py`.
-- Tests: `sim/tests/test_population_per_region.py` (two regions of unequal food; the nation is the sum; one tile's food cut
+- Tests: `sim/tests/test_population_per_region_smoke.py` (two regions of unequal food; the nation is the sum; one tile's food cut
   lowers its nutrition and raises its mortality, other tiles unchanged).
 - Cost: `python3 -W ignore` six years of rome_100ad (88 tiles), CPU per year before and after: 7.23 s and 7.36 s (loaded
   machine); a region per tile is cheap.

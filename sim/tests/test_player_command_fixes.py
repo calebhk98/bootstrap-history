@@ -1,6 +1,6 @@
 """player_command_fixes: sort words, a quote handler for every buy target, the rush preview's wording, the school spellings.
 The parser, the sort and the dispatch tables run on inputs and stubs the test builds; the commands on a running game (a quote
-for every target, the rush preview, founding a school) are test_player_command_fixes_scenario."""
+for every target, the rush preview, founding a school) are test_player_commands_smoke."""
 QUICK_TOPIC = True
 
 from types import SimpleNamespace

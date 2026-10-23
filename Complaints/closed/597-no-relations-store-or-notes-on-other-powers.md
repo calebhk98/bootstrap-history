@@ -18,4 +18,4 @@ Seat-to-country comes from `core_seats.py` and `agents_port_seats.py`. Blocks 59
 
 ## Resolution
 
-`sim/agents/relations.py` over the declared `relations` actor-pair store (`data/world/stores.json`); commands in `sim/ui/proto/dispatch_relations.py`; stances in `data/world/relation_stances.json`; protocol in `sim/PROTOCOL.md`. Held by `sim/tests/test_relations_store.py` and `test_relations_save.py`. 598 writes tariff and embargo into the same record. Not done: a `country` option on the `note` command; the commands' typed forms are `relations [country]` and `set_relation <country> stance|note|term ...`.
+`sim/agents/relations.py` over the declared `relations` actor-pair store (`data/world/stores.json`); commands in `sim/ui/proto/dispatch_relations.py`; stances in `data/world/relation_stances.json`; protocol in `sim/PROTOCOL.md`. Held by `sim/tests/test_relations_store.py`. 598 writes tariff and embargo into the same record. Not done: a `country` option on the `note` command; the commands' typed forms are `relations [country]` and `set_relation <country> stance|note|term ...`.

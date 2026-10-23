@@ -1,8 +1,8 @@
 """Complaint 91: automation leaves a per-turn audit trail of what it did, why and at what cost.
 
 The trail's rules (a row's shape and cost, the years kept, the window the `automation` command reads, the
-screen) are tested on a stand-in for the household; two named scenarios (test_automation_audit_scenario) run automation on a game and reconcile
-the trail with what the engine really did."""
+screen) are tested on a stand-in for the household; the phases that write
+rows over stand-ins are in test_automation_wiring."""
 QUICK_TOPIC = True
 from types import SimpleNamespace
 

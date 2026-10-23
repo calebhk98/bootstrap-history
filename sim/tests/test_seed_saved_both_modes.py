@@ -1,6 +1,6 @@
 """Complaint 360: a seed is kept as the game keeps it, a number as the number and a word in lower case, and a saved
 state carries it back unchanged. The rules are called on the seed functions and a bare `SimulationState`; the CLI
-round trip of `play` and `agent` is test_seed_saved_both_modes_scenario."""
+choice of the seed a sitting starts with is test_resolve_seed."""
 
 QUICK_TOPIC = True
 

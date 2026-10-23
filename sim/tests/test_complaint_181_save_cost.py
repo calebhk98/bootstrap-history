@@ -1,8 +1,7 @@
 """Complaint 181: a command that changes nothing must not pay for rewriting the whole save, and writing a save must not
 go through the slow pure-Python JSON encoder. Counted work, not clock time. The rules are `save_state`'s skip of an
 unchanged game and `state_json` (sim/engine/saveload.py), and the scan's reads of the society's baseline knowledge
-(sim/agents/base.py), each called on inputs built here. (The play loop saving only what changed:
-test_scenarios_batch3_saves.)"""
+(sim/agents/base.py), each called on inputs built here. (The play loop asking the save policy once per command: test_play_run_one_command.)"""
 QUICK_TOPIC = True
 
 import json.encoder as json_encoder

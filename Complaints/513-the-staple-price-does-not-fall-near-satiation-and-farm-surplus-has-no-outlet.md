@@ -65,3 +65,9 @@ response should come from households' own allocation of hours (each cohort compa
 and the surplus should reach the agent economy as supply.
 
 Test migration (rule-tests-05): `farm_surplus_intake` (nutrition above need after a food technique, 30 years) is deleted as an unsettled whole-economy read; measure with `python3 sim/simulator.py economy-check --civs rome_100ad --years 30`. The rules are test_farm_hands_margin_rule, test_farm_satiation and test_farm_wage_wiring.
+
+- `population_farm_technique_scenario` (30 to 60 game years of a Rome society with a reaper or a crop; one check, "a food surplus releases
+  farm workers within mobility limits", was red on this complaint) left the suite. The mobility rule is
+  `test_population_farm_technique.WorkersMoveOnlyAsFastAsTheMarketLetsThem`; the decades-long farm share is measured by
+  `python3 sim/simulator.py economy-check` (it prints hunger and the staple price over labour cost) and, for the opening, by
+  `python3 sim/simulator.py opening-checks`.

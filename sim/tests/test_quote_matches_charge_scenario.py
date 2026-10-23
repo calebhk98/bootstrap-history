@@ -1,9 +1,9 @@
-"""Scenario: every command with a quote is charged what it quoted.
+"""SMOKE: every command with a quote is charged what it quoted (the stock bought from a partner is test_quote_equals_charge_stock).
 
 The subject is the agreement of two paths through the dispatcher (a quote handler and the action's handler), so it is
 read on running games, not on one function. Two scenarios: a parametrised table (each row is a quote command, the command
 that spends, and the reply key holding the quoted price; the rows share one game and run in turn), and the same comparison
-through the cash ledger (open, research and project bills, the hire wage, stock bought abroad and smuggled). The price
+through the cash ledger (open, research and project bills, the hire wage). The price
 rules each quote reads are in the tests of the module that prices it (test_purchase_reads_economy_price, test_physical_money_constants).
 """
 from .harness import *  # noqa: F401,F403
@@ -12,7 +12,7 @@ _CAPITAL = 4000000.0
 
 
 def _fresh():
-    return sim(capital=_CAPITAL)
+    return unopened_sim(capital=_CAPITAL)
 
 
 _TABLE_GAME = _fresh()
@@ -37,11 +37,6 @@ _ROWS = [
      "buy", {"what": "material", "material": "iron", "n": 0.5}, "to_buy_it"),
     ("mine", {"what": "mine", "material": "coal", "n": 50},
      "buy", {"what": "mine", "material": "coal", "n": 50}, "to_sink_it"),
-    ("living stock", {"what": "living_stock", "material": "ramie_stock_kg", "n": 100},
-     "buy", {"what": "living_stock", "material": "ramie_stock_kg", "n": 100}, "to_buy_it"),
-    # the carrying is paid whether or not the partner's state catches the smuggler; the catch is a separate draw
-    ("smuggled stock", {"what": "smuggled_stock", "material": "silkworm_eggs_kg", "n": 0.1},
-     "buy", {"what": "smuggled_stock", "material": "silkworm_eggs_kg", "n": 0.1}, "to_buy_it"),
     ("slaves", {"what": "slaves", "n": 3}, "buy", {"what": "slaves", "n": 3}, "to_buy_them"),
     ("hire", {"what": "hire", "trade": "smith", "n": 1},
      "hire", {"trade": "smith", "n": 1}, "paid_now"),
@@ -68,10 +63,10 @@ for _name, _quote_args, _action, _action_args, _key in _ROWS:
           abs(_charged - _quote.get(_key, -1.0)) <= 0.051,
           (_charged, _quote.get(_key)))
 
-# Every buy target is in the table (manumit costs nothing and is quoted as free).
+# Every buy target is in the table (manumit costs nothing and is quoted as free; the stock bought from a partner is in test_quote_equals_charge_stock).
 from sim.ui.proto.buy_targets import BUY_TARGETS as _BUY_TARGETS  # noqa: E402
 _covered = {row[3].get("what") for row in _ROWS if row[2] == "buy"}
-_uncovered = [target for target in _BUY_TARGETS if target not in _covered | {"manumit"}]
+_uncovered = [target for target in _BUY_TARGETS if target not in _covered | {"manumit", "living_stock", "smuggled_stock"}]
 check("every buy target has a row in the quote-equals-charge table",
       not _uncovered, _uncovered)
 
@@ -97,7 +92,7 @@ def _ledger_outflow(game, *causes):
 
 
 def _ledger_game():
-    game = sim(capital=_CAPITAL, surveyed=())
+    game = unopened_sim(capital=_CAPITAL, surveyed=())
     game.end_year = game.cfg["start_year"] + game.cfg["horizon_years"]
     game.LIVING_COST_STATUS_PER_CAPITAL = 0.0   # status spending follows cash, which a charge changes
     game.HOUSEHOLD_DEPENDANT_PEOPLE = 0.0   # a hire's takings carry some dependants, which would offset part of its wage
@@ -181,23 +176,3 @@ _hire_charged = (_ledger_outflow(_hired, "hiring fee and first year's wages")
 check("hire wage: the first year's charge through the ledger is the quoted yearly wage",
       abs(_hire_charged - _hire_quote["from_next_year_per_year"]) <= 0.11,
       (_hire_charged, _hire_quote["from_next_year_per_year"]))
-
-# Living stock: the ledger "stock bought abroad" outflow is exactly the quoted cost.
-_stock_args = {"what": "living_stock", "material": "ramie_stock_kg", "n": 100}
-_stocked = _PROBE
-_stock_quote = S._agent_dispatch(_stocked, NODES, dict(_stock_args, cmd="quote"))
-_stock_reply = S._agent_dispatch(_stocked, NODES, dict(_stock_args, cmd="buy"))
-check("living stock: the ledger shows exactly what was quoted",
-      _stock_reply.get("ok") and abs(_ledger_outflow(_stocked, "stock bought abroad")
-                                     - _stock_quote["to_buy_it"]) <= 0.051,
-      (_ledger_outflow(_stocked, "stock bought abroad"), _stock_quote.get("to_buy_it")))
-
-# Smuggled stock: the carrying is charged whether or not the taker is caught, and it is the quoted cost.
-_smuggle_args = {"what": "smuggled_stock", "material": "silkworm_eggs_kg", "n": 0.1}
-_smuggler = _PROBE
-_smuggle_quote = S._agent_dispatch(_smuggler, NODES, dict(_smuggle_args, cmd="quote"))
-_smuggle_reply = S._agent_dispatch(_smuggler, NODES, dict(_smuggle_args, cmd="buy"))
-check("smuggled stock: the ledger shows exactly what was quoted, caught or not",
-      _smuggle_reply.get("ok") and abs(_ledger_outflow(_smuggler, "stock smuggled")
-                                       - _smuggle_quote["to_buy_it"]) <= 0.051,
-      (_ledger_outflow(_smuggler, "stock smuggled"), _smuggle_quote.get("to_buy_it")))

@@ -1,6 +1,6 @@
 """Complaint 587: a year that raises leaves the game as it was, and the reply says so with a cause. The description of the
 failed year is `step_atomic.failed_year`, called with the restore stubbed out. (A whole game failing in a year, the retry
-running the year once, and a multi-year step keeping the years before the failure: test_scenario_atomic_year.)"""
+running the year once, and a multi-year step keeping the years before the failure: test_step_atomic_year.)"""
 QUICK_TOPIC = True
 
 import unittest

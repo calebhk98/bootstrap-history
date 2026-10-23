@@ -714,6 +714,10 @@ wage 0.726, 0.668, 0.635, 0.553, 0.422, 0.386, 0.380 then 0.719, 0.659, 0.630, 0
 bronze is thin and jumps): the income was never what set it. Still open: counting the demand that matches households'
 saving (607) would raise the income at which they stop saving.
 
+Measure the settling and the feasibility of the books with `python3 sim/simulator.py spin-up-trace` (Rome, whole length) and `python3 sim/simulator.py economy-check`; the slow tests that asserted them (baseline_fixture, baseline_rome, baseline_rome_full_length) were removed in Complaint 640's pass because a failure named a series, not a function. The rules they used are tested in test_baseline_checks_rules and test_series_settling_rule.
+
+Two whole-game validations were deleted in the rule-test pass (they read the unsettled opening and could not name a rule): `real_output_baseline` (output per head stays within a factor of two of the baseline year, and goods far from baseline carry at most a tenth of the basket) and `real_output_validation` (a 40 percent mortality shock leaves output per head within a quarter of an undisturbed run). The arithmetic and wiring they stood for are in `test_real_output_measure` and `test_real_output_wiring`. No simulator command measures either relationship yet; `python3 sim/simulator.py baseline-ensemble rome_100ad` stores the population and wage distributions only, so output per head belongs in it when 473 closes.
+
 ## Test migration (slow-test overhaul)
 
 `test_opening_floor_and_thin_trades` is deleted: it read one year of an unsettled economy and could not name the function that broke.
