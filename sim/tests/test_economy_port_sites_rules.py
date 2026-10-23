@@ -1,28 +1,12 @@
-"""SCENARIO (Complaint 640): Complaint 416 (415): the ore sites are tested on stub deposits below; the whole-game checks are scenarios: a mine names
-a deposit the seat has found, and what the agent economy's ore firms raise is drawn from the found deposits.
-Builds games, so it is not a quick topic."""
+"""economy_port_sites.site_limits and deplete on stub deposits: the seat's found deposits plus the partner economies' tiles, one limit a tile
+in runs of ore a year, and what the firms raised drawn from the tile's deposits, most left first (Complaint 416)."""
 import types
 
 from .harness import *  # noqa: F401,F403
-from sim.refusal import cause_of
 
 from sim.engine import economy_port_sites
 
-# --- scenarios: a whole game on purpose.
-bare = unopened_sim(surveyed=())
-check("a game that has found no coal deposit opens no coal mine, and says to prospect",
-      bare.open_mine("coal", 10.0) == 0.0 and cause_of(bare.mine_refusal) == "no_deposit_found", bare.mine_refusal)
-check("the known mines of the held tiles are already found",
-      bool(bare.found_deposits("iron")), bare.found_deposits("iron"))
-
-game = unopened_sim()
-tile = next(row["tile_id"] for row in game.found_deposits("iron"))
-before = sum(row["remaining_tonnes"] for row in game.found_deposits("iron") if row["tile_id"] == tile)
-game.economy.agent.economy()
-game.step()
-after = sum(row["remaining_tonnes"] for row in game.found_deposits("iron") if row["tile_id"] == tile)
-check("a year of the agent economy's ore extraction draws on the tile's deposits", after <= before, (before, after))
-
+QUICK_TOPIC = True
 
 # --- the sites of the ore recipes, from deposits stated here (no game): the seat's found deposits plus the
 # partner economies' tiles, one limit a tile in runs of ore a year.

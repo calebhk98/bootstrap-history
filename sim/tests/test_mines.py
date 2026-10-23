@@ -1,6 +1,6 @@
 """mines: depletion and the cost scale of a working (Complaint 640 audit: rules on a stub founder holding workings, no
-game). The land ceilings, the works technology, the quote, the determinism and the save round trip are
-test_mines_scenario."""
+game). The ceiling bound, the running cost, the quote and closing are test_mine_works_wiring; the ceiling
+arithmetic is test_mine_ceiling_rules."""
 import types
 
 from .harness import *  # noqa: F401,F403
