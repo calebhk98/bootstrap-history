@@ -10,6 +10,8 @@ from sim.economy.market_memory import market_key
 from sim.tests import economy_fixture
 from sim.tests.economy_fixture import FARMS, GRAIN, HILLS, TOWN
 
+QUICK_TOPIC = True
+
 
 def aged_economy(years=3):
     return economy_fixture.run(economy_fixture.small_setup(), years=years)[0]

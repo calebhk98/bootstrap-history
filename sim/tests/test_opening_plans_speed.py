@@ -12,6 +12,8 @@ from sim.economy.market_memory import YearView
 from sim.economy.setup import labour_area
 from sim.tests.test_economy_opening_household_plans import household_work_setup
 
+QUICK_TOPIC = True
+
 HIRED_HOURS = 0.5
 
 

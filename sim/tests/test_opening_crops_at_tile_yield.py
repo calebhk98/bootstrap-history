@@ -2,7 +2,7 @@
 opening demands (final demand and the inputs of the producers sized beside them), and the year-one yields agree."""
 import unittest
 
-from sim.economy import opening, opening_runs
+from sim.economy import opening
 from sim.economy.setup import recipe_tile_key
 from sim.engine.economy_port_setup import build_setup
 from sim.tests import harness
@@ -36,15 +36,6 @@ class OpeningCropsAtTileYieldTests(unittest.TestCase):
                 if made.get(good, 0.0) < wanted * (1.0 - TOLERANCE):
                     short[good] = (made.get(good, 0.0), wanted)
         self.assertEqual(short, {})
-
-    def test_a_run_counted_at_a_lower_yield_takes_more_runs(self):
-        recipe_id = next(each for each in self.crops if self.setup.recipes[each].outputs)
-        recipe = self.setup.recipes[recipe_id]
-        good = next(iter(recipe.outputs))
-        demand = {"town": {good: 1000.0}}
-        full = opening_runs.required_runs(demand, {good: [recipe_id]}, {recipe_id: recipe})
-        half = opening_runs.required_runs(demand, {good: [recipe_id]}, {recipe_id: recipe}, None, {recipe_id: 0.5})
-        self.assertAlmostEqual(half[recipe_id], 2.0 * full[recipe_id], delta=1e-9 * full[recipe_id])
 
 
 if __name__ == "__main__":

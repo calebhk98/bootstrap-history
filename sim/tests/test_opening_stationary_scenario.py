@@ -17,6 +17,8 @@ from sim.economy.setup import EconomySetup
 from sim.economy.settling import MAX_LOG_CHANGE_PER_YEAR, MAX_RATE_CHANGE_PER_YEAR
 from sim.tests import economy_fixture as fixture
 
+QUICK_TOPIC = True
+
 YEARS = 3
 
 

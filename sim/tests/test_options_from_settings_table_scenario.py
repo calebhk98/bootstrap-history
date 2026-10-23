@@ -6,6 +6,8 @@ from sim.tests import cli_in_process
 from sim.engine import settings as _settings
 from sim.engine import settings_table as _table
 
+QUICK_TOPIC = True
+
 _scratch = tempfile.mkdtemp()
 
 

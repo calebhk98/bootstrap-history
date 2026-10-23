@@ -4,6 +4,8 @@ from sim.ui.protocol import _agent_log as _AL, parse_typed as _PT
 from sim.refusal import LogLine
 from .test_player_log_lines import stand_in_game
 
+QUICK_TOPIC = True
+
 
 def ask(game, **command):
     return S._agent_dispatch(game, NODES, command)
