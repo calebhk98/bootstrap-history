@@ -47,7 +47,7 @@ sides would agree to.
   What it would take: the ceiling on the real rate (or removed, with rationing by quantity), expected inflation read from a
   settled index (473), and borrowers' caps bounded by what a loan can earn. `NicheEntry.found` should compare an entrant's
   return with the lenders' ask plus the loss premium, not the clamped rate. A default game in which no firm can ever enter is a defect, not a setting;
-  `test_firm_entry_default_game_scenario` checks placement without a founding.
+  `test_home_country_location_rule` checks placement without a founding.
 
 **What it would take.** Feed the two alternatives (titles at a price, a state bond reachable by households), re-measure the
 opening rate, and retire `RATE_FLOOR_SHARE` if the lenders' floor now does its job. Tests call the ask and clearing
