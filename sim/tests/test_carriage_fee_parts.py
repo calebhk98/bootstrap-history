@@ -1,6 +1,8 @@
 """Complaint 632: the parts of a carriage fee go to those who supply them. The crew is paid by the labour market, the
 carriers worn and the feed the animals eat are bought in the goods market, and the rest stays with the merchant that
 owns the carriers; none of it is paid to the poorest households of the source tile."""
+
+QUICK_TOPIC = True
 import dataclasses
 import unittest
 from unittest import mock
