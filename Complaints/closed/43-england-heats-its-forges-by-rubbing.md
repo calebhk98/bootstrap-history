@@ -130,3 +130,5 @@ on the shared `thermal_mj` pool at all. They charge `charcoal_kg` through
 `inputs` directly, which is the schema's own "usually 0 for pre-industrial
 processes, where the fuel IS the energy". A temperature requirement on them
 would be a no-op.
+
+Test migration (rule-tests-17): `temperature_caps` (real-data England and Rome solves, the 2500 C consumer on England's plaster price, convergence) is deleted: the same rules are held on built inputs by `test_temperature_caps_rule` (per-consumer grading, friction against a stated reach, friction below the universal floor, charcoal and coal above it). No simulator command prints the chosen thermal technique per civilisation.

@@ -1,5 +1,5 @@
 """Sugar and maize come from where they grow and what a society knows, not from every opening (Complaint 560). Rome's opened
-economy is in test_sugar_maize_knowledge_scenario."""
+diet has no rule test (Complaint 560)."""
 
 QUICK_TOPIC = True
 
@@ -45,6 +45,10 @@ class SugarAndMaizeTests(unittest.TestCase):
             self.assertNotIn(node, _read("data", "civilizations", civilisation_id + ".json")["starting_techs"],
                              civilisation_id)
         self.assertIn(node, _read("data", "civilizations", "mexica_1500.json")["starting_techs"])
+
+
+    def test_rendered_fat_serves_no_food_need(self):
+        self.assertEqual(_read("data", "world", "needs.json")["goods"]["fat_kg"]["satisfies"], {})
 
 
 if __name__ == "__main__":
