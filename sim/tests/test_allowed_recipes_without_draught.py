@@ -1,23 +1,21 @@
-"""allowed_entries: a society that holds no draught-animal capability is offered no recipe that holds a draught team."""
+"""allowed_entries: a society that holds no capability is offered no entry that requires one."""
 
 QUICK_TOPIC = True
 
 import unittest
 
-from sim.economy.recipes import recipes_from_production_data
 from sim.engine.economy_port_setup import allowed_entries
 from sim.world import demand
+
+PRODUCTION = demand.production_data()
 
 
 class AllowedWithoutDraught(unittest.TestCase):
 
-    def test_no_allowed_recipe_holds_a_draught_team_as_plant(self):
-        production = demand.production_data()
-        recipes = recipes_from_production_data(production)
-        allowed = allowed_entries(production, set())
+    def test_with_nothing_held_no_allowed_entry_requires_a_node(self):
+        allowed = allowed_entries(PRODUCTION, set())
         self.assertIn("wheat_hoe_kg", allowed)
-        holding_a_team = sorted(key for key in allowed if "draught_animal_kg" in recipes[key].plant_goods)
-        self.assertEqual(holding_a_team, [])
+        self.assertEqual(sorted(key for key in allowed if PRODUCTION[key].get("requires_node")), [])
 
 
 if __name__ == "__main__":

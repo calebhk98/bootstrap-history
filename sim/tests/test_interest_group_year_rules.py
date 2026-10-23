@@ -4,12 +4,13 @@
 
 QUICK_TOPIC = True
 
+import math
 import types
 import unittest
 
 from sim.agents.api import ActorRecord, Sector
-from sim.agents.group import InterestGroup, pull_of
-from sim.agents.group_tuning import GRIEVANCE_RETENTION
+from sim.agents.group import InterestGroup
+from sim.agents.group_tuning import GRIEVANCE_RETENTION, GROUP_PULL_SCALE
 from sim.engine.agents_port_groups import GroupView
 from sim.engine.interest_groups import InterestGroupsMixin, check_group_prohibition
 from sim.refusal import cause_of
@@ -67,8 +68,13 @@ def iron_sector(lost=2.0e5, base=3.0e5, blame_share=1.0):
     return sector
 
 
+SECTOR_KEY = "displaced_producers:iron"
+
+
 def group_for(sector):
-    return InterestGroup("group:displaced_producers:iron", ActorRecord(**InterestGroup.founded_by(sector)))
+    return InterestGroup("group:displaced_producers:iron", ActorRecord(
+        kind="interest_group", name=sector.name, group_kind=sector.kind, country=None, subject=sector.subject,
+        cause=sector.cause, members=sector.members, technique=sector.technique))
 
 
 class GroupYear(unittest.TestCase):
@@ -76,17 +82,17 @@ class GroupYear(unittest.TestCase):
     def test_a_loss_sets_the_grievance_the_pull_and_the_claim_from_the_state_it_faces(self):
         sector = iron_sector()
         group = group_for(sector)
-        group.advance(World({group.sector_key(): sector}))
+        group.advance(World({SECTOR_KEY: sector}))
         record = group.record
         self.assertIsNone(record.exited_year)
         self.assertAlmostEqual(record.grievance, 2.0e5 / 3.0e5)
-        self.assertAlmostEqual(record.strength, pull_of(2.0e5, REVENUE))
+        self.assertAlmostEqual(record.strength, 1.0 - math.exp(-2.0e5 / REVENUE / GROUP_PULL_SCALE))
         self.assertGreater(record.claim, 0.0)
 
     def test_a_petition_puts_blame_on_the_founder(self):
         sector = iron_sector()
         group = group_for(sector)
-        world = World({group.sector_key(): sector})
+        world = World({SECTOR_KEY: sector})
         group.advance(world)
         self.assertEqual(group.record.petitions, 1)
         self.assertGreater(world.blamed[0], 0.0)
@@ -96,14 +102,14 @@ class GroupYear(unittest.TestCase):
         strengths = []
         for sector in (small, big):
             group = group_for(sector)
-            group.advance(World({group.sector_key(): sector}))
+            group.advance(World({SECTOR_KEY: sector}))
             strengths.append(group.record.strength)
         self.assertLess(strengths[0], strengths[1])
 
     def test_a_loss_too_small_to_organise_over_disbands_the_group_at_once(self):
         sector = iron_sector(lost=1.0)
         group = group_for(sector)
-        world = World({group.sector_key(): sector})
+        world = World({SECTOR_KEY: sector})
         group.advance(world)
         self.assertEqual(group.record.exited_year, 100)
         self.assertEqual((group.record.strength, group.record.claim, group.record.demands), (0.0, 0.0, []))
@@ -112,7 +118,7 @@ class GroupYear(unittest.TestCase):
     def test_a_grievance_that_is_not_renewed_fades_by_the_retention_each_year_until_the_group_disbands(self):
         sector = iron_sector()
         group = group_for(sector)
-        group.advance(World({group.sector_key(): sector}))
+        group.advance(World({SECTOR_KEY: sector}))
         first = group.record.lost_income
         group.advance(World({}))
         self.assertAlmostEqual(group.record.lost_income, first * GRIEVANCE_RETENTION)
@@ -127,7 +133,7 @@ class GroupYear(unittest.TestCase):
         for reach in (0.2, 0.9):
             sector = iron_sector()
             group = group_for(sector)
-            group.advance(World({group.sector_key(): sector}, reach=reach))
+            group.advance(World({SECTOR_KEY: sector}, reach=reach))
             claims.append(group.record.claim)
         self.assertLess(claims[0], claims[1])
 
@@ -136,7 +142,7 @@ class GroupYear(unittest.TestCase):
         for deficit in (False, True):
             sector = iron_sector()
             group = group_for(sector)
-            group.advance(World({group.sector_key(): sector}, in_deficit=deficit))
+            group.advance(World({SECTOR_KEY: sector}, in_deficit=deficit))
             demands[deficit] = list(group.record.demands)
         self.assertTrue(demands[False])
         self.assertEqual(demands[True], [])
@@ -221,7 +227,7 @@ class StartGate(unittest.TestCase):
         self.assertIs(verdict[0], False)
 
     def test_protection_above_what_the_groups_pull_needs_lets_the_founder_build(self):
-        needed = Sector.protection_needed(0.6, 0.5)
+        needed = 0.5 + (1.0 - 0.5) * 0.6
         below = Prohibition(ban=("producers of iron", 0.6), protection=needed - 0.01)
         above = Prohibition(ban=("producers of iron", 0.6), protection=needed + 0.01)
         self.assertIsNotNone(check_group_prohibition(below, "press", {}, False, None, True))

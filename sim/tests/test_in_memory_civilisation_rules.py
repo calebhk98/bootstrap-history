@@ -9,7 +9,7 @@ from unittest import mock
 
 from sim.engine import data
 from sim.engine.incumbent_prices import IncumbentPricesMixin
-from sim.geography.api import regions_of_tiles, tiles_held
+from sim.geography.api import tiles_held
 
 
 class PricedGame(IncumbentPricesMixin):
@@ -49,7 +49,9 @@ class TerritoryOfAVariant(unittest.TestCase):
 
     def test_a_variant_with_regions_and_no_tiles_holds_those_regions(self):
         variant = {"id": "variant_with_no_file", "home_regions": ["scandinavia"]}
-        self.assertEqual(regions_of_tiles(tiles_held(variant)), ["scandinavia"])
+        tiles = tiles_held(variant)
+        self.assertTrue(tiles)
+        self.assertEqual(tiles, tiles_held({"home_regions": ["scandinavia"]}))
 
 
 if __name__ == "__main__":
