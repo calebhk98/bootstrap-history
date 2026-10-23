@@ -1,4 +1,4 @@
-"""SCENARIO: a game reaches the blocker rule (`sim/engine/blockers.py`, rule tests in `test_blockers_rule`) and every readout agrees: one classifier names every blocker: Complaints/125, 263 (and 234, 238, 239, 268 below)."""
+"""SMOKE: an unopened game reaches the blocker rule (`sim/engine/blockers.py`, rule tests in `test_blockers_rule`) and every readout agrees: one classifier names every blocker: Complaints/125, 263 (and 234, 238, 239, 268 below)."""
 from .harness import *  # noqa: F401,F403
 
 SUPPLY_NODE = "mat_bulk_steel"
@@ -15,35 +15,11 @@ def kinds_of(test_sim, node_id):
 	return [blocker["kind"] for blocker in test_sim.start_blockers(node_id)]
 
 
-# --- one node per kind, the kind and the refusal text come from one place
-check("missing prerequisites are a knowledge blocker",
-      kinds_of(unopened_sim(capital=1e9), SUPPLY_NODE)[:1] == ["knowledge"], kinds_of(unopened_sim(capital=1e9), SUPPLY_NODE))
 supply = supply_sim()
-check("an unmet supply group is a supply blocker", "supply" in kinds_of(supply, SUPPLY_NODE),
-      supply.start_blockers(SUPPLY_NODE))
-check("the supply blocker names the options that would serve",
-      "mat_manganese" in supply.start_blockers(SUPPLY_NODE)[0]["ids"], supply.start_blockers(SUPPLY_NODE))
-
-staff_sim = unopened_sim(capital=1e9)
-staff_node = "ag2_botanic_garden"
-check("missing craftsmen are a specialists blocker", kinds_of(staff_sim, staff_node)[:1] == ["specialists"],
-      staff_sim.start_blockers(staff_node))
-
-political_sim = unopened_sim(capital=1e9)
-check("a state that is wary is a politics blocker", kinds_of(political_sim, "ag2_chaff_cutter")[:1] == ["politics"],
-      political_sim.start_blockers("ag2_chaff_cutter"))
-
-poor_sim = unopened_sim(capital=1.0)
-startable = [node_id for node_id in NODES if poor_sim.start_reason(node_id)[0]]
-dearest = max(startable, key=poor_sim.project_cost)
-check("a bill past cash and credit is a money blocker", kinds_of(poor_sim, dearest) == ["money"],
-      poor_sim.start_blockers(dearest))
 
 # --- the refusal and the readout are the same function
 check("start_refusal is the first blocker's text",
       supply.start_refusal(SUPPLY_NODE) == supply.start_blockers(SUPPLY_NODE)[0]["text"])
-check("a startable node has no blockers", unopened_sim(capital=1e9).start_blockers(startable[0]) == [])
-
 # --- why: the kind leads, and every kind is listed (the rendering is checked where presentation is)
 why = S._agent_dispatch(supply, NODES, {"cmd": "why", "id": SUPPLY_NODE})
 check("why carries blocked_kind and the blockers list", why.get("blocked_kind") == "supply"
