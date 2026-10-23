@@ -9,7 +9,6 @@ from unittest import mock
 
 from sim.economy import households_orders, opening
 from sim.economy.economy import Economy
-from sim.economy.types import Transfer
 from sim.tests import economy_fixture as fixture
 
 SERVICE_LIFE_YEARS = 20.0
@@ -23,12 +22,6 @@ def household_stock(economy):
     book = economy.record.book
     return sum(quantity for agent in book.holders_of(fixture.METAL) if agent.startswith("household")
                for quantity in book.holdings(agent)["goods"][fixture.METAL].values())
-
-
-# The fixture opens with margins no competition has worked on; entry and the wage floor take them away over
-# decades, with incomes and the wanted stock swinging while they do (Complaint 398). The real game also
-# measures from a spun-up economy, so the durable path is read after the fixture has settled.
-SPIN_UP_YEARS = 60
 
 
 def economy_opening_empty(setup):
@@ -140,28 +133,8 @@ class BadYearTests(unittest.TestCase):
         for year in range(1, 14):
             self.assertGreater(rows[year][0], 0.8 * rows[year - 1][0], "year %d sells a fifth of the stock" % year)
 
-    def test_a_year_of_cash_shortage_sells_at_most_a_third_of_the_stock_and_rebuys_near_the_wear(self):
-        # the economy is read after the fixture has settled, as in the other settled tests: the stock then
-        # stands at the level its income wants, so a rise in what the households want is not mistaken for a
-        # rebuy after the shortage
-        setup = durable_setup()
-        economy = Economy(setup)
-        for _year in range(SPIN_UP_YEARS):
-            economy.step(fixture.quiet_year(setup))
-        before = household_stock(economy)
-        for cohort in economy.record.cohorts.values():          # households lose nine tenths of their cash
-            cash = economy.record.book.balance(cohort.agent_id, setup.currency_id)
-            economy.record.book.transfer(Transfer(cohort.agent_id, setup.state_agent, setup.currency_id,
-                                                  0.9 * cash, "levy"))
-        previous = before
-        for _year in range(4):
-            economy.step(fixture.quiet_year(setup))
-            wear = economy.record.book.goods_flow(fixture.METAL).get("wear", 0.0)
-            stock = household_stock(economy)
-            self.assertGreater(stock, 0.6 * before, "the stock is sold off")
-            self.assertLess(stock - previous + wear, 3.0 * wear, "the stock is bought again")
-            previous = stock
-
+    # A cash shortage's rule (the stock in use is never offered) is held by test_durable_cash_shock_rule.py, and
+    # the refill by DurablePurchaseRuleTests above.
 
 if __name__ == "__main__":
     unittest.main()
