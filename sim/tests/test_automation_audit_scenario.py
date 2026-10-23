@@ -79,7 +79,7 @@ check("scenario: every automatic hire, opening, reopening and commission of a pl
       and len(commission_rows) == len(commission_seen),
       (len(hired_rows), len(hired_seen), rows_match, [each["action"] for each in all_rows][:10]))
 
-manual = sim(capital=2_000_000.0)
+manual = unopened_sim(capital=2_000_000.0)
 manual.end_year = manual.cfg["start_year"] + manual.cfg["horizon_years"]
 play_year(manual)
 manual_audit_empty = ask(manual, cmd="automation")["rows"] == []
