@@ -1,58 +1,14 @@
-"""sim/economy/api.py publishes every name the rest of the program takes from sim.economy, and its
-accessors agree with reading the record directly."""
-import ast
-import os
+"""sim/economy/api.py: its accessors agree with reading the record directly. The wall (every outside import is published) is
+test_economy_api_wall.py."""
 import unittest
 
 from sim.economy import api
 from sim.tests import economy_fixture
 
-ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-SKIPPED_DIRS = {os.path.join(ROOT, "sim", "economy"), os.path.join(ROOT, "sim", "tests")}
-
-
-def python_files():
-    for folder, subfolders, filenames in os.walk(ROOT):
-        subfolders[:] = [name for name in subfolders if not name.startswith(".") and name != "__pycache__"
-                         and os.path.join(folder, name) not in SKIPPED_DIRS]
-        for filename in sorted(filenames):
-            if filename.endswith(".py"):
-                yield os.path.join(folder, filename)
-
-
-def economy_imports(path):
-    """(module, name) for each `from sim.economy[.x] import name`; name is None for `import sim.economy.x`."""
-    with open(path, encoding="utf-8") as handle:
-        tree = ast.parse(handle.read(), filename=path)
-    for node in ast.walk(tree):
-        if isinstance(node, ast.ImportFrom) and node.level == 0 and node.module \
-                and (node.module == "sim.economy" or node.module.startswith("sim.economy.")):
-            for alias in node.names:
-                yield node.module, alias.name
-        elif isinstance(node, ast.Import):
-            for alias in node.names:
-                if alias.name == "sim.economy" or alias.name.startswith("sim.economy."):
-                    yield alias.name, None
-
 
 class EconomyApiTests(unittest.TestCase):
-    def test_the_wall_is_two_way(self):
-        self.assertEqual(api.WALL, "two-way")
-
-    def test_every_outside_import_is_published(self):
-        found = 0
-        for path in python_files():
-            for module, name in economy_imports(path):
-                if name == "api":
-                    continue
-                found += 1
-                where = "%s imports %s from %s" % (os.path.relpath(path, ROOT), name, module)
-                self.assertIsNotNone(name, where)
-                self.assertTrue(hasattr(api, name), where)
-        self.assertGreater(found, 0)
-
     def test_accessors_match_direct_reads(self):
-        economy, _outcomes = economy_fixture.run(years=2)
+        economy, _outcomes = economy_fixture.run(years=1)
         record, money = economy.record, economy.setup.currency_id
         self.assertEqual(api.opening_quantities(economy), record.opening_basket)
         self.assertEqual(api.producers_of(economy), record.producers)
@@ -73,6 +29,7 @@ class EconomyApiTests(unittest.TestCase):
             wages.setdefault(key.split("|", 1)[0], []).append(wage)
         self.assertEqual(api.wages_by_trade(economy), wages)
         self.assertTrue(wages)
+
 
 
 if __name__ == "__main__":

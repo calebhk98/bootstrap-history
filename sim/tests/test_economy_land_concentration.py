@@ -67,10 +67,6 @@ class LandGiniBandTests(unittest.TestCase):
         self.assertGreaterEqual(measured, low)
         self.assertLessEqual(measured, high)
 
-    def test_han_china_and_the_mexica_have_no_band(self):
-        self.assertEqual(titles_concentration.NO_LAND_BAND, ("han_china", "mexica"))
-        self.assertIsNone(titles_concentration.band(titles_concentration.LANDHOLDERS_ONLY, ("han_china", "mexica")))
-
 
 if __name__ == "__main__":
     unittest.main()

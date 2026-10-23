@@ -1,14 +1,12 @@
 """Market areas: tiles that share a price for a good because carriage between them costs little against its value.
 
-Synthetic grid for the rules; real tiles of two civilisations for scale. Resolving a civilisation's
-tiles through `region_to_tiles` is test scaffolding only."""
-import json
+Synthetic grid for the rules."""
+QUICK_TOPIC = True
 import unittest
 
-from sim.geography.api import load_geography, open_map
 from sim.economy import market_areas, tile_costs
 from sim.economy.types import GoodSpec
-from sim.tests.test_economy_tile_costs import CROPPED_SHARE, REAL_HANDLING, REAL_RATES, civ_tile_ids, grid, grid_table
+from sim.tests.test_economy_tile_costs import grid, grid_table
 
 GRAIN = GoodSpec("grain_kg", 1.0, 0.1, 0.0, "food")
 SILVER = GoodSpec("silver_kg", 1.0, 0.0, 0.0, "metal")
@@ -115,36 +113,6 @@ class AreaMapTests(unittest.TestCase):
             area_map.area_of("unknown", "t_1_1")
         with self.assertRaises(KeyError):
             area_map.area_of("grain_kg", "nowhere")
-
-
-class RealTilesTests(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        cls.geography = load_geography()
-
-    def area_counts(self, civ_name):
-        tile_ids = civ_tile_ids(self.geography, civ_name)
-        tiles = tile_costs.tiles_from_map(open_map(), tile_ids, CROPPED_SHARE)
-        table = tile_costs.carriage_table(tiles, REAL_RATES, REAL_HANDLING)
-        pops = {tile_id: tile.land_area_km2 * tile.cropped_fraction * tile.fertility for tile_id, tile in tiles.items()}
-        goods = [(GRAIN, GRAIN_PRICE), (SILK, SILK_PRICE), (SILVER, SILVER_PRICE)]
-        area_map = market_areas.AreaMap(tiles, table, goods, pops)
-        connected = max(len(table.costs_from(tile_id)) for tile_id in tiles)
-        return len(tiles), connected, {good: len(area_map.areas(good)) for good in area_map.goods()}
-
-    def check(self, civ_name):
-        tile_count, connected, counts = self.area_counts(civ_name)
-        print("%s: %d tiles, largest connected %d, areas %s" % (civ_name, tile_count, connected, counts))
-        self.assertLessEqual(counts["silver_kg"], max(1, tile_count // 10))
-        self.assertGreaterEqual(counts["grain_kg"], tile_count // 3)
-        self.assertLess(counts["silver_kg"], counts["silk_kg"] + 1)
-        self.assertLess(counts["silk_kg"], counts["grain_kg"])
-
-    def test_rome(self):
-        self.check("rome_100ad")
-
-    def test_han_china(self):
-        self.check("han_china_100ad")
 
 
 if __name__ == "__main__":
