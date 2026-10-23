@@ -9,7 +9,6 @@ from unittest import mock
 
 from sim.economy import households_orders, opening
 from sim.economy.economy import Economy
-from sim.economy.types import Transfer
 from sim.tests import economy_fixture as fixture
 
 SERVICE_LIFE_YEARS = 20.0
@@ -25,16 +24,14 @@ def household_stock(economy):
                for quantity in book.holdings(agent)["goods"][fixture.METAL].values())
 
 
-# The fixture opens with margins no competition has worked on; entry and the wage floor take them away over
-# decades, with incomes and the wanted stock swinging while they do (Complaint 398). The real game also
-# measures from a spun-up economy, so the durable path is read after the fixture has settled.
-SPIN_UP_YEARS = 60
-
-
 def economy_opening_empty(setup):
     """An economy whose households open holding none of the durable, as when a good is new to a society:
-    the opening's seeding of in-use stocks (opening._seed_durable_stocks) is switched off."""
-    with mock.patch.object(opening, "_seed_durable_stocks", lambda *_arguments: None):
+    the opening's seeding of in-use stocks (opening._seed_durable_stocks) is switched off, and the opening sizes its
+    producers for building that stock rather than for replacing a seeded one."""
+    bids = opening._opening_bids
+    with mock.patch.object(opening, "_seed_durable_stocks", lambda *_arguments: None), \
+            mock.patch.object(opening, "_opening_bids",
+                              lambda *arguments, **options: bids(*arguments, **{**options, "stationary_durables": False})):
         return Economy(setup)
 
 
@@ -89,19 +86,19 @@ class ServiceLifeTests(unittest.TestCase):
         self.assertLess(bought_seeded, bought_empty)
 
     # The settled-run checks that read a year of the fixture (Complaint 640) are replaced by the rule they meant:
-    # `_durable_ratio` sizes a durable's purchase as the stock its expected flow wants less what is held, plus wear.
+    # `_durable_ratio` fills the gap from the post-wear holding to the serving stock.
 
 
 class DurablePurchaseRuleTests(unittest.TestCase):
-    """households_orders._durable_ratio: a held stock at the level its flow wants buys exactly the wear."""
+    """The post-wear holding buys the missing part of the serving stock."""
     SPECS = {"metal": types.SimpleNamespace(service_life_years=SERVICE_LIFE_YEARS)}
 
     def bought(self, flow, held, scale=1.0):
         return households_orders._durable_ratio("metal", flow, held, self.SPECS, scale) * flow
 
-    def test_a_stock_at_its_wanted_level_buys_exactly_the_wear(self):
-        held = 5.0 * SERVICE_LIFE_YEARS
-        self.assertAlmostEqual(self.bought(5.0, held), held / SERVICE_LIFE_YEARS)
+    def test_a_stock_after_year_end_wear_buys_exactly_the_missing_wear(self):
+        held = 5.0 * (SERVICE_LIFE_YEARS - 1.0)
+        self.assertAlmostEqual(self.bought(5.0, held), 5.0)
 
     def test_it_is_not_bought_again_in_full(self):
         held = 5.0 * SERVICE_LIFE_YEARS
@@ -126,7 +123,6 @@ class BadYearTests(unittest.TestCase):
         economy_fixture.households_with_a_surplus(self)
 
 
-    @unittest.expectedFailure       # cause: with the stated surplus income the wage no longer collapses and prices rise a few per cent a year (607); the holding then swings a quarter in year eight (468)
     def test_the_unspun_fixtures_income_crash_does_not_sell_the_stock(self):
         # the fixture's own income falls by a fifth in its seventh year as margins close; the holding
         # used to go from 33 thousand to 8 thousand units that year. A dip of a few per cent in a year that
@@ -137,28 +133,8 @@ class BadYearTests(unittest.TestCase):
         for year in range(1, 14):
             self.assertGreater(rows[year][0], 0.8 * rows[year - 1][0], "year %d sells a fifth of the stock" % year)
 
-    def test_a_year_of_cash_shortage_sells_at_most_a_third_of_the_stock_and_rebuys_near_the_wear(self):
-        # the economy is read after the fixture has settled, as in the other settled tests: the stock then
-        # stands at the level its income wants, so a rise in what the households want is not mistaken for a
-        # rebuy after the shortage
-        setup = durable_setup()
-        economy = Economy(setup)
-        for _year in range(SPIN_UP_YEARS):
-            economy.step(fixture.quiet_year(setup))
-        before = household_stock(economy)
-        for cohort in economy.record.cohorts.values():          # households lose nine tenths of their cash
-            cash = economy.record.book.balance(cohort.agent_id, setup.currency_id)
-            economy.record.book.transfer(Transfer(cohort.agent_id, setup.state_agent, setup.currency_id,
-                                                  0.9 * cash, "levy"))
-        previous = before
-        for _year in range(4):
-            economy.step(fixture.quiet_year(setup))
-            wear = economy.record.book.goods_flow(fixture.METAL).get("wear", 0.0)
-            stock = household_stock(economy)
-            self.assertGreater(stock, 0.6 * before, "the stock is sold off")
-            self.assertLess(stock - previous + wear, 3.0 * wear, "the stock is bought again")
-            previous = stock
-
+    # A cash shortage's rule (the stock in use is never offered) is held by test_durable_cash_shock_rule.py, and
+    # the refill by DurablePurchaseRuleTests above.
 
 if __name__ == "__main__":
     unittest.main()

@@ -29,6 +29,21 @@ def expected_flow_scale(expected_spending: float, spending: float) -> float:
     return expected_spending / spending
 
 
+def after_year_end_losses(serving_stock: float, spec: GoodSpec) -> float:
+    """Stock at the next planning date: wear and spoilage both read the year's serving stock."""
+    wear = min(1.0, 1.0 / spec.service_life_years) if spec.service_life_years > 0.0 else 0.0
+    spoilage = min(1.0, max(0.0, spec.spoilage_per_year))
+    return max(0.0, serving_stock * (1.0 - wear - spoilage))
+
+
+def replacement_for_flow(flow: float, spec: GoodSpec) -> float:
+    """Purchases that restore the serving stock from its solved year-end holding."""
+    if spec.service_life_years <= 0.0:
+        return flow
+    serving = flow * spec.service_life_years
+    return serving - after_year_end_losses(serving, spec)
+
+
 def in_use_stock(flow_by_good: Mapping[GoodId, float], specs: Mapping[GoodId, GoodSpec],
                  scale: float, band: float) -> Dict[GoodId, float]:
     """Stock of each durable the flow keeps in use (flow times service life, `band` added); the store

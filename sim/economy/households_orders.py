@@ -5,7 +5,7 @@ the needs (subsistence) are served first; what is left over is surplus spending,
 by their budget weights (Stone-Geary: a floor plus a marginal share of the surplus). Inside a need the
 spending goes to goods by cost per need unit. A need with a per-head limit stops taking money at it.
 A durable is demanded as replacement: the stock that serves the need's flow over the good's life, less
-what is held after this year's wear.
+what is held after the previous year's wear.
 
 The sum of every bid's budget never exceeds cash: floors are budgeted first (with room for a price
 rise), surplus spending only from what remains.
@@ -123,8 +123,7 @@ def _durable_ratio(good: GoodId, flow: float, held: float, specs: Mapping[GoodId
         return 1.0
     if flow <= 0.0:
         return 0.0
-    wear = held * min(1.0, 1.0 / spec.service_life_years)
-    return max(0.0, flow * scale * spec.service_life_years - held + wear) / flow
+    return max(0.0, flow * scale * spec.service_life_years - held) / flow
 
 
 def _smoothed_flow_by_good(cohort: Cohort, priced: List[PricedNeed], basket: Basket,
@@ -174,11 +173,12 @@ def _store_value_outside_use(cohort: Cohort, priced: List[PricedNeed], basket: B
 def goods_orders(cohort: Cohort, view: MarketView, cash: float, income_this_year: float,
                  basket: Basket, specs: Mapping[GoodId, GoodSpec],
                  priced: Optional[List[PricedNeed]] = None, smooth_rise: bool = True,
-                 shared_store: Optional[dict] = None) -> AgentOrders:
+                 shared_store: Optional[dict] = None, stationary_durables: bool = False) -> AgentOrders:
     """`priced` may be passed (from `need_prices`) to share the price work among a tile's classes.
     `smooth_rise` False lifts the bound on a rise in spending: an economy finding its level from an opening
     that holds more money than its households want to keep would otherwise approach it over years.
-    `shared_store` (empty to begin with) lets the cohorts of one pass share each tile's store prices."""
+    `shared_store` (empty to begin with) lets the cohorts of one pass share each tile's store prices.
+    `stationary_durables` sizes opening demand at replacement of the solved stock, before that stock is seeded."""
     priced = need_prices(basket, view, cohort.tile) if priced is None else priced
     cash = max(0.0, cash)
     if not priced or cohort.people <= 0.0:
@@ -237,6 +237,8 @@ def goods_orders(cohort: Cohort, view: MarketView, cash: float, income_this_year
             stock_flow = max(flow * scale, smoothed_flow.get(good, 0.0))
             ratio = _durable_ratio(good, flow, view.stock(cohort.agent_id, good, cohort.tile), specs,
                                    stock_flow / flow if flow > 0.0 else 1.0)
+            if stationary_durables and good in specs and specs[good].service_life_years > 0.0 and flow > 0.0:
+                ratio = durable_stock.replacement_for_flow(stock_flow, specs[good]) / flow
             if ratio > 0.0 and floor_quantity + flexible_quantity > 0.0:
                 rows.append((need.spec.subsistence_per_person > 0.0, good, price,
                              floor_quantity * ratio, flexible_quantity * ratio, ceiling))
