@@ -42,6 +42,14 @@ class CoinHoardMixin:
                 "keeping_cost_per_year": self.coin_keeping_cost_per_year(self.capital),
                 "basis": KEEPING_BASIS}
 
+    def coin_keeping_due(self, revenue, upkeep, living_cost, mine_cost):
+        """(what keeping the household's coin under guard costs this year, what the household pays of it): the
+        guard is paid from what the purse and the credit line can bear after the year's other costs, like any
+        other spending."""
+        room = max(0.0, self.state.household.capital + self.credit_limit() + revenue - upkeep - living_cost - mine_cost)
+        keeping_owed = self.coin_hoard()["keeping_cost_per_year"]
+        return keeping_owed, min(keeping_owed, room)
+
     def charge_actors_for_keeping_coin(self):
         """Every actor in business that holds money (a state, a firm) pays to keep it as coin. The founder's
         household is charged in its own money step. A foreign country's actor pays at its country's own pay level
