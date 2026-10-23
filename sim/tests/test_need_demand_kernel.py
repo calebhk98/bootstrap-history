@@ -1,4 +1,6 @@
 """The aggregate demand model reads the need-basket kernel: one price index, the economy's surplus split."""
+
+QUICK_TOPIC = True
 import unittest
 
 from sim.world import demand, need_basket, need_demand

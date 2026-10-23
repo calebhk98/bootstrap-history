@@ -4,7 +4,7 @@ from .harness import *  # noqa: F401,F403
 from sim.world import deposits
 
 # --- the engine derives capex from the same physics, and technology cuts it.
-_engine = sim(capital=1e9)
+_engine = unopened_sim(capital=1e9)
 _pool = deposits.load_deposits("silver")
 _effects = _engine.mine_works_effects()   # the running techniques change the works
 _expected = (_engine.labour.wage_per_hour(_engine.MINE_TRADE)
