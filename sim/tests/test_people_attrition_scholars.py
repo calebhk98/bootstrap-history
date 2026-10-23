@@ -2,8 +2,7 @@
 
 Staff are whole people; the scholar wall; the fog ratchet; the credit forecast and failure quote; the planner's
 closure and ordering; typed-line spellings. The rules are called on the numbers and stand-ins each check states; the
-played household, the save round trip, the closed pipe and the England start are in
-test_people_attrition_scholars_scenario."""
+agent loop's save before its reply and the start credit forecast are in test_agent_save_before_reply."""
 import math
 from types import SimpleNamespace
 

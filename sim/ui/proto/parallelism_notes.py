@@ -1,5 +1,6 @@
 """The two notes that teach parallel play: once on the first long calendar-floor project, and whenever the founder's
 free hours are going to waste."""
+from sim.engine import ui_port
 from sim.engine.ui_port import plain_number
 
 LONG_CALENDAR_FLOOR_YEARS = 2
@@ -39,3 +40,21 @@ def free_hours_note(founder_hours_left_by_project, spare_hours):
     return ("%s founder-hours this year are going into nothing at all: "
             "you have no work in hand. Hours do not carry to next year. "
             "'available' or 'stuck' says what you could begin today; 'idle' splits the hours and names the delay." % hours)
+
+
+KEY_CALENDAR_FLOOR = "a_calendar_floor_is_not_exclusive_research_time"
+
+
+def add_calendar_floor_note(reply, sim, name, years):
+    """Put the one-time calendar-floor note in a `start` reply when it has not been said in this game, and record that it was."""
+    note = calendar_floor_note(name, years, ui_port.said_parallelism(sim))
+    if note is not None:
+        ui_port.set_said_parallelism(sim, True)
+        reply[KEY_CALENDAR_FLOOR] = note
+
+
+def free_hours_going_unused(sim, active):
+    """The `state` field naming founder-hours going unused: the hours each active project still wants of the founder, against the
+    director pool left uncommitted."""
+    return free_hours_note([value["founder_hours_left"] for value in active.values()],
+                           max(0.0, sim.labour.director_pool() - sim.labour.director_hours_committed()))

@@ -1,4 +1,4 @@
-"""Scenario: a screen's question about a project's material throttle does not change the game: asking before a step leaves the
+"""SMOKE: a screen's question about a project's material throttle does not change the game: asking before a step leaves the
 year that follows as if nobody had asked (the multi-year step's warning asks, the single step's does not). The restoring is
 called on a stub in test_peek_resource_throttle."""
 from .harness import *  # noqa: F401,F403
