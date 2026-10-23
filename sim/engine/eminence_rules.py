@@ -20,6 +20,11 @@ def yearly_hazard(reputation, capital, familiarity, danger_weight, reputation_sc
     return hazard * (1.0 - familiarity_relief * familiarity)
 
 
+def settling_eminence(yearly_gain, decay_rate):
+    """Where eminence settles if nothing changes: it decays by `decay_rate` a year and gains `yearly_gain`."""
+    return yearly_gain / (1.0 - decay_rate)
+
+
 def chance_of_ruin(eminence, danger, hazard_scale):
     """The chance this year that prominence lands an event: nothing below the danger line, rising linearly above it."""
     return max(0.0, (eminence - danger) / hazard_scale)

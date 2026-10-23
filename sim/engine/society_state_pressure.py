@@ -577,7 +577,7 @@ class StatePressureMixin:
         # eminence decays self.EMINENCE_DECAY_RATE a year (see core.py's
         # step()) and gains `yearly`, so this is where it settles if
         # nothing changes.
-        settles = yearly / (1.0 - self.EMINENCE_DECAY_RATE)
+        settles = eminence_rules.settling_eminence(yearly, self.EMINENCE_DECAY_RATE)
         probability = eminence_rules.chance_of_ruin(self.state.household.eminence, danger, self.EMINENCE_HAZARD_SCALE)
         helps = []
         for node_id in self.nodes_with_mechanic("eminence_hazard_factor"):
