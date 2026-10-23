@@ -32,3 +32,5 @@ Tests: `sim/tests/test_producer_market.py`, `sim/tests/test_per_producer_supply.
 - Foreign partners offer through the trade module, priced at their own cost; they are not yet a producer in the same list.
 
 Related: 369, 370, 354, 338, 135, 102, 372, 380, 381.
+
+A whole-game check (a technique run by one producer leaves the incumbents' cost of every solved good alone) was removed with test_concern_volume_scenario; `python3 sim/simulator.py economy-check` prints the solved prices to compare before and after one producer runs a technique.

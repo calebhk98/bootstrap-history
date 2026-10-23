@@ -1,7 +1,7 @@
 """Complaint 496: the rules of a mod effect operation that hold before it touches the world: a mod's kinds and edges are
 forced into its namespace, every change needs a cause, an amount is a number of zero or more, a death share is a share, and a
 store is written only by the mod that declared it. Called with no game, or a host that holds only its stores. What the
-operations do to a two-country game is in `test_mod_effects_scenario`."""
+operations hand to the normal rules is in `test_mod_effect_operations`."""
 
 QUICK_TOPIC = True
 

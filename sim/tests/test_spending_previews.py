@@ -1,7 +1,7 @@
 """Money a player spends or is told about is previewed (Complaints 216, 218, 236, 248, 214). The rules that need no game are
 the typed `quote` lines (the preview is asked for the same way the charge is) and the last sliver of a project's bill
-(`settle_cost_tail`, Complaint 240), called on a stub game; that a preview equals the charge, in a whole game, is
-test_spending_previews_scenario."""
+(`settle_cost_tail`, Complaint 240), called on a stub game; that a preview shows the figure the charge pays is
+test_spending_quote_wiring, and the debt readings are test_start_bill_and_debt_rules."""
 
 QUICK_TOPIC = True
 

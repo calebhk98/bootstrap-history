@@ -20,12 +20,14 @@ import tempfile
 
 from sim.engine.ui_port import TRADE_FAMILY, downstream_count
 from sim.engine.ui_port import purchase_budget, trades_the_project_waits_for
+from .available_economics import specialist_foreman
 from .nodes import _did_you_mean
 from .quantity_units import read_quantity
 from .start_refusal import refusal_fields
 from sim.engine.ui_port import money_text, plain_number
 from sim.ui.memory import load_state, save_state
 from .util import _flag
+from .start_bill import bill_parts
 from .start_commitment import stacked_commitment
 from .rush_filters import parse_rush_filters, passes_rush_filters, rush_exposure
 from . import rush_loop
@@ -127,9 +129,8 @@ def _cmd_start(sim, nodes, cmd, ended):
     # earlier `why` figure is only a snapshot. The bill IS fixed at the
     # moment you start; this must state plainly what it was fixed AT.
     record = sim.active.get(node_id, {})
-    instalments = round(record.get("cost_left", sim.project_cost(node_id)), 1)
-    materials_paid_now = round(getattr(sim, "materials_paid_at_last_start", 0.0), 1)
-    bill = round(instalments + materials_paid_now, 1)
+    bill, materials_paid_now, instalments = bill_parts(record.get("cost_left", sim.project_cost(node_id)),
+                                                       getattr(sim, "materials_paid_at_last_start", 0.0))
     _warn_staff = ("started, but this society cannot supply the labour it "
                    "wants and it will crawl until you can: %s"
                    % "; ".join(_impossible)) if _impossible else None
@@ -641,7 +642,6 @@ def _cmd_ventures(sim, nodes, cmd, ended):
         # is a quarter of it, and it is the number the refusal actually
         # quotes.
         _sup_s, _sup_a = sim.venture_hands(node_id)
-        _foreman_trade, _foreman_fte = sim.venture_foreman(node_id)
         row = {"id": node_id, "name": node["name"],
                 "earns_a_year": round(sim.venture_real_earnings(node_id), 1),
                 "forecast_basis": sim.venture_forecast_basis(node_id),
@@ -651,9 +651,7 @@ def _cmd_ventures(sim, nodes, cmd, ended):
                     sim.venture_upkeep_quote(node_id)["at_full_staffing"], 1),
                 "needs": {"scholars": round(_sup_s, 2),
                           "craftsmen": round(_sup_a, 2)},
-                "specialist_foreman": (
-                    {"trade": _foreman_trade, "fte": round(_foreman_fte, 2)}
-                    if _foreman_trade else None)}
+                "specialist_foreman": specialist_foreman(sim, node_id)}
         # A CAPABILITY, NOT ONLY A BUSINESS: every other row here is a
         # straightforward earn-vs-cost decision; these are not, because
         # closing one loses scholars it supports, household places it

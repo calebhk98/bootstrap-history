@@ -1,6 +1,6 @@
 """Complaint 640: the credit warnings and the rule that lets a long step stop on them, one rule at a time: the warning
 band (`near_limit`), the halt of work in hand (`halt_active_projects`) and the table that says which lines interrupt a
-multi-year step (`stops_a_step`). The same rules in a real household's log are in test_credit_warning_rules_scenario.py."""
+multi-year step (`stops_a_step`). How a household's log and projects show them is test_credit_warning_wiring."""
 
 import types
 import unittest

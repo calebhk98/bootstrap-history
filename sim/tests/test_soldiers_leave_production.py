@@ -1,7 +1,7 @@
 """Complaint 314: people under arms leave the society's labour allocation, so the hours it can put into farm work and
 trades fall by their hours, the unskilled fallback trade is needed for their hours and its wage moves by tightness. The
-rules are called on a stub game over the real allocation mixin and on the allocation functions; the whole-game
-scenario is test_soldiers_leave_production_scenario."""
+rules are called on a stub game over the real allocation mixin and on the allocation functions; the nationwide count that
+includes the army is test_army_in_nationwide_staff."""
 
 QUICK_TOPIC = True
 

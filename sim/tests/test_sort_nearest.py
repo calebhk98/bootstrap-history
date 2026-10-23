@@ -1,7 +1,7 @@
 """Rules of the command and tree surface that need no game: the advertised sort keys, which nodes open as a going concern
 (`is_venture`, called on the real mixin over the tree), the commands the unknown-command refusal advertises, that no
 change-log marker is shipped in the prose a player reads, what needs a node (`_unlocked_by`, `_downstream_of`), and that the
-tree is acyclic on hard prerequisites. What the commands do in a whole game is test_sort_nearest_scenario."""
+tree is acyclic on hard prerequisites. `stuck` under fog is test_stuck_road_to_goal_rule, `rush` is test_rush_loop and the founder's death is test_founder_death_rules."""
 
 QUICK_TOPIC = True
 

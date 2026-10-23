@@ -1,6 +1,6 @@
 """Complaint 87: `state` lists the shut, profitable concerns held shut by a missing specialist, with what is missing and
 what to type to fix it, biggest earners first. The rows are built from a stub game (`done`, `operating`, the staffing
-shortfall of each concern) and the lines rendered from rows; the whole-game check is test_shut_for_staff_scenario."""
+shortfall of each concern) and the lines rendered from rows."""
 
 QUICK_TOPIC = True
 
