@@ -6,6 +6,9 @@ This review checked each item against the code on `main`. Five read-only audits 
 checks of the key claims. Findings are filed as Complaints 481 to 493; the mod hooks that would let a
 mod add systems like these are Complaints 494 to 496.
 
+The verdicts below were measured when the review was written and are not kept current: the Complaint column
+holds the live status (`ls Complaints Complaints/closed | grep -E '^48[1-9]|^49[0-6]'`).
+
 Verdicts: **yes** = simulated and usable by any actor; **home** = simulated for the home country or
 founder seat only; **partial** = some of it exists; **no** = missing.
 

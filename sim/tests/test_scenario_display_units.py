@@ -1,4 +1,4 @@
-"""Complaint 640, audit batch 3, scenario (complaint 285): the player's chosen display units reach every covered screen of
+"""SCENARIO (Complaint 640): Complaint 640, audit batch 3, scenario (complaint 285): the player's chosen display units reach every covered screen of
 a played game, in the replies and in the rendered text, with the fake units supplied in memory and by a mod. The
 conversion itself is tested on built replies in test_complaint_285_display_units."""
 import json as _json

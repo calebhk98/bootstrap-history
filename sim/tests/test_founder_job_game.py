@@ -1,4 +1,4 @@
-"""The founder's job on a whole Rome game (Complaint 518): the income line is the unspoken-for hours times the
+"""SCENARIO (Complaint 640): The founder's job on a whole Rome game (Complaint 518): the income line is the unspoken-for hours times the
 market wage of the trade the founder holds, and it moves with that wage and with the hours supervising take."""
 from .harness import *  # noqa: F401,F403
 
@@ -11,8 +11,12 @@ pay = game.labour.wage_for_hours(trade, hours)
 output_factor = game.state.economy.output_factor
 check("the founder's job pays the hours sold times the market wage of the trade",
       hours > 0 and pay > 0 and abs(game.founder_wage_income() - pay) < 1e-6 * pay, (hours, pay, game.founder_wage_income()))
+# the estimate passes through the market's saturating ceiling (`_compute_revenue_uncached`), which takes a share of the pay that
+# grows with it; the line is the pay after that, so the wage level of the opening does not move the check's meaning
+ceiling = game.REVENUE_CEILING_PER_POP_SCALE * game.pop_scale * game.real_output_per_head() * game.price_index
 check("it shows as one income line, the wages of the founder's own work, and no practice line",
-      abs(game.revenue_sources().get("_wages_for_your_own_work", 0.0) - round(pay * output_factor, 1)) < 0.11
+      abs(game.revenue_sources().get("_wages_for_your_own_work", 0.0)
+          - round(pay / (1.0 + pay / max(1.0, ceiling)) * output_factor, 1)) < 0.11
       and "_your_own_practice" not in game.revenue_sources(), game.revenue_sources())
 check("the practice income and its displacement are gone from the engine",
       not hasattr(game, "practice_income") and not hasattr(game.labour, "practice_income_displaced"), None)
@@ -42,10 +46,9 @@ game.state.household.supervision_hours_this_year = 0.0
 # a trade nobody hires pays what the market quotes for it, like any worker
 game.held_trade = lambda: "scribe"
 scribe_quote = game.labour.labour_market.quote_annual("scribe") / game.HOURS_PER_PERSON_YEAR
-reputation_bonus = 1.0 + min(game.labour.WAGE_REPUTATION_BONUS_CAP,
-                             game.state.household.reputation / game.labour.WAGE_REPUTATION_SCALE)
-check("a founder whose trade nobody hires earns the market's quote for it",
-      abs(game.founder_wage_income() - hours * scribe_quote * reputation_bonus) < 1e-6 * max(1.0, pay), (game.founder_wage_income(), scribe_quote))
+check("a founder whose trade nobody hires earns the market's quote for it (the reputation bonus is a rule in test_complaint_585_staff_pay_retention)",
+      abs(game.founder_wage_income() - game.labour.wage_for_hours("scribe", hours)) < 1e-6 * max(1.0, pay)
+      and game.labour.wage_for_hours("scribe", hours) > 0.0, (game.founder_wage_income(), scribe_quote))
 
 # selling hours in another trade takes them out of the standing job, and nothing is charged as a lost practice
 fresh = sim()

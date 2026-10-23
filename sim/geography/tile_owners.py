@@ -40,6 +40,18 @@ def settlement_level() -> str:
     return str(_data()["settlement_level"])
 
 
+def conquest_level(years_held: Optional[float] = None) -> str:
+    """The level a tile taken by an army is held at: `initial` when it has just been taken (`years_held` None or 0),
+    and each step's level once the owner has held it with an army that many years (the highest step reached)."""
+    conquest = _data()["conquest"]
+    level = str(conquest["initial"])
+    for step in sorted(conquest["steps"], key=lambda entry: entry["after_years"]):
+        if years_held is not None and years_held >= step["after_years"]:
+            level = str(step["level"])
+    _require_level(level)
+    return level
+
+
 def seed(claims: Mapping[str, Iterable[str]], level: Optional[str] = None) -> Tuple[OwnerMap, List[Dict[str, Any]]]:
     """(owner map, conflicts) from {actor: tiles it claims}. Claimants are read in order; the first to claim
     a tile keeps it and each later claim of it is reported as {tile, owner, claimant}."""

@@ -4,7 +4,7 @@ import unittest
 
 from .harness import *  # noqa: F401,F403
 
-from sim.labour import labour_allocation
+from sim.labour import farm_intake
 from sim.world import agriculture
 
 from .test_population_farm_technique_scenario import _complete, _rome, _run_years
@@ -32,24 +32,23 @@ class SurplusRaisesIntakeTests(unittest.TestCase):
         control_mean, control_population = run(())
         # Hands stay on the land while farming pays, so intake holds well above need after adoption,
         # not only during the lag while hands leave.
-        self.assertGreater(improved_mean, 1.25)
+        # Open: Complaint 513 (food is not yet cleared against farm effort). With the sourced hours per hectare
+        # (Complaint 646) the opening's cleared land is fully worked, so the technique frees too little to lift intake;
+        # the surplus premise of this check is unsettled, not met. Left red.
+        self.assertGreater(improved_mean, 1.25, "Complaint 513: no intake surplus after a food technique on fully worked land")
         self.assertGreater(improved_mean, control_mean)
         self.assertLessEqual(improved_mean, agriculture.MAXIMUM_INTAKE_MULTIPLE_OF_SUBSISTENCE + 1e-9)
         self.assertGreater(improved_population, control_population)
 
     def test_cheap_food_lets_farmers_leave(self):
-        kept = _rome()
-        cheap = _rome()
-        _complete(kept, FOOD_TECHNIQUE)
-        _complete(cheap, FOOD_TECHNIQUE)
-        cheap.labour._farm_hour_value_over_wage = lambda technique: 0.5
-        _run_years(kept, 12)
-        _run_years(cheap, 12)
-        hours = lambda game: game.state.economy.society_labour_hours
-        trade = labour_allocation.FARM_TRADE
-        self.assertLess(hours(cheap)[trade] / sum(hours(cheap).values()),
-                        hours(kept)[trade] / sum(hours(kept).values()))
-        self.assertLess(_nutrition_ratio(cheap), _nutrition_ratio(kept))
+        # The rule on built inputs: a farm hour worth less than the wage lets hands go; one worth more keeps today's.
+        current, satiation, land = 1000.0, 3000.0, 2000.0
+        elasticity = agriculture.LABOUR_OUTPUT_ELASTICITY
+        cheap = farm_intake.kept_farm_workers(current, satiation, land, 0.5, elasticity)
+        dear = farm_intake.kept_farm_workers(current, satiation, land, 1.5, elasticity)
+        self.assertLess(cheap, dear)
+        self.assertEqual(dear, current)
+        self.assertEqual(farm_intake.kept_farm_workers(current, satiation, land, None, elasticity), 0.0)
 
 
 if __name__ == "__main__":

@@ -226,7 +226,8 @@ class GoodsMarket(GoodsPricing, GoodsOffers):
         return {"material": material, "stock_key": emp_key,
                 "buy_per_tonne": self.purchase_cost(material, 0.0)[1],
                 "sell_per_tonne": self.sale_proceeds(material, 0.0, self.sold_tonnes(emp_key, self.acting_party_id))[1],
-                "price_at_tile_per_tonne": price, "carriage_per_tonne": carriage,
+                "price_at_tile_per_tonne": price, "price_kind": self.price_kind(material),
+                "carriage_per_tonne": carriage,
                 "making_cost_per_tonne": self.making_cost_per_tonne(material),
                 "market_available_tonnes_per_year": (
                     brought if brought is not None else
@@ -239,8 +240,23 @@ class GoodsMarket(GoodsPricing, GoodsOffers):
 
     @staticmethod
     def market_room_tonnes(quote, sold_so_far):
-        """Tonnes the market will still take this year, given what the seller has already sold into it."""
+        """Tonnes the market will still supply this year, given what the buyer has already taken from it."""
         return max(0.0, quote["market_available_tonnes_per_year"] - sold_so_far)
+
+    def _with_buyers(self, material, quote):
+        """The quote with the tonnes the economy's buyers took and still wanted last year of the good the material is
+        traded as, None where the economy does not trade it or a partner supplies it."""
+        good = self._economy_good(material)
+        record = None if good is None else self._sim.economy.agent_good_market_record(good)
+        return {**quote, "buyers_take_tonnes_per_year": None if record is None else record["sold"] + record["unmet"]}
+
+    @staticmethod
+    def sale_room_tonnes(quote, sold_so_far):
+        """Tonnes the market will still take from a seller this year: no more than the buyers took and still wanted last
+        year where the economy trades the good (Complaint 668), whatever the sellers hold."""
+        buyers_take = quote.get("buyers_take_tonnes_per_year")
+        room = quote["market_available_tonnes_per_year"] if buyers_take is None else buyers_take
+        return max(0.0, room - sold_so_far)
 
     def sale_limits(self, material, seller=None):
         """(held tonnes, market room tonnes) for a sale: the two figures `sell` cuts an order to."""
@@ -249,7 +265,7 @@ class GoodsMarket(GoodsPricing, GoodsOffers):
         if not quote:
             return 0.0, 0.0
         key = quote["stock_key"]
-        return seller.held(key), self.market_room_tonnes(quote, self.sold_tonnes(key, seller.party_id))
+        return seller.held(key), self.sale_room_tonnes(self._with_buyers(material, quote), self.sold_tonnes(key, seller.party_id))
 
     def quote_sell(self, material, tonnes, seller=None):
         """(stock key, tonnes the market takes now, money for them): the one figure `sell` pays
@@ -261,7 +277,7 @@ class GoodsMarket(GoodsPricing, GoodsOffers):
             return None, 0.0, 0.0
         key = quote["stock_key"]
         sold_so_far = self.sold_tonnes(key, seller.party_id)
-        sold = tonnes_sold(tonnes, seller.held(key), self.market_room_tonnes(quote, sold_so_far))
+        sold = tonnes_sold(tonnes, seller.held(key), self.sale_room_tonnes(self._with_buyers(material, quote), sold_so_far))
         if sold <= 0:
             return key, 0.0, 0.0
         return key, sold, self.sale_proceeds(material, sold, sold_so_far)[0]

@@ -1,4 +1,4 @@
-"""Complaint 597: a relation set through the commands survives a real save and load, and a joined seat of a partner
+"""SCENARIO (Complaint 640): Complaint 597: a relation set through the commands survives a real save and load, and a joined seat of a partner
 country reads and writes its own country's side. Slow topic: it builds a game."""
 import os
 import tempfile

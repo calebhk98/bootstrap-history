@@ -16,10 +16,10 @@ def unworn_sites(civ, world_map, cropped_share: float):
     return {tile_id: crop_site(tile_id, cropped_share, world_map) for tile_id in tiles_held(civ, world_map)}
 
 
-def manure_nitrogen_per_hectare(herd_kg: float, sites) -> float:
-    """Transitional: nitrogen of the draught herd's collected dung over the cropped hectares of `sites`, kg per hectare of holding."""
+def manure_nitrogen_per_hectare(manure_kg: float, sites) -> float:
+    """Transitional: nitrogen of `manure_kg` of collected dung spread over the cropped hectares of `sites`, kg per hectare of holding."""
     hectares = sum(site.cropped_hectares for site in sites.values())
-    return 0.0 if hectares <= 0.0 else soil_nutrients.herd_manure_nitrogen_kg(herd_kg) / hectares
+    return 0.0 if hectares <= 0.0 else soil_nutrients.manure_nitrogen_kg(manure_kg) / hectares
 
 
 def yield_factors(stock: Dict[str, float], held_tiles: Iterable[str], cropped_share: float,
@@ -33,9 +33,11 @@ def step_year(stock: Dict[str, float], sites, kg_per_cropped_hectare: float, leg
               reference_cropped_share: float, manure_per_hectare: float) -> None:
     """One year of cropping, legumes and manure on every site with cropland; writes the new shares into `stock`."""
     for tile_id, site in sites.items():
-        if site.arable_hectares <= 0.0 or site.cropped_hectares <= 0.0:
+        if site.cropped_hectares <= 0.0:
             continue
-        cropped_share = min(1.0, site.cropped_hectares / site.arable_hectares)
+        # River-watered land counts beyond the rainfed arable ground, so the holding is whichever is larger.
+        cropped_share = site.cropped_hectares / max(site.arable_hectares, site.cropped_hectares)
         stock[tile_id] = soil_nutrients.next_share(
             stock.get(tile_id, 1.0), cropped_share, kg_per_cropped_hectare * site.yield_factor,
-            legume_share, manure_per_hectare, reference_cropped_share)
+            legume_share, manure_per_hectare, reference_cropped_share,
+            flooded_share=min(1.0, site.flooded_hectares / max(site.arable_hectares, site.cropped_hectares)))

@@ -66,6 +66,18 @@ class World(Protocol):
 	def patron_ask(self) -> float:
 		...
 
+	def patron_clients(self, country: str) -> List[Tuple[float, float]]:
+		"""(governance, reputation factor) of the playing seats of a country whose techniques run the funding mechanic."""
+		...
+
+	def state_funding_terms(self, people: float) -> Dict[str, float]:
+		"""The terms a state funds a client on, for a country of `people` (agents/patronage.py)."""
+		...
+
+	def country_output_per_head(self, country: str, opening_people: float, people: float) -> Optional[float]:
+		"""A country's real output per person over its opening's; None while the economy has no record of it."""
+		...
+
 	def equipment_kg_per_soldier(self) -> float:
 		...
 
@@ -342,6 +354,10 @@ class World(Protocol):
 		and the free people it could take on."""
 		...
 
+	def research_trades(self, family: str) -> List[str]:
+		"""The trades whose people are hands of a trade family."""
+		...
+
 	def unsold_materials(self, actor: Any, node_id: str) -> List[str]:
 		"""Materials the node buys that no one in reach sells, sorted."""
 		...
@@ -360,6 +376,11 @@ class World(Protocol):
 
 	def knowledge_visibility(self, node_id: str, distance_km: float) -> float:
 		"""0..1: how much of a node an actor holds shows to an onlooker `distance_km` away."""
+		...
+
+	def contact_volume(self, place_a: Optional[str], place_b: Optional[str]) -> float:
+		"""How much news passes between two places in a year (neighbours, trade carried), 0 for none;
+		unit contact is what makes a technique known with the chance `awareness.hazard` gives."""
 		...
 
 	def exposure(self, node_id: str, location: Optional[str]) -> float:

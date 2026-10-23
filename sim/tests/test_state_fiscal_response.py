@@ -114,7 +114,7 @@ offered = {option.subject: option for option in menu.options}
 coin_state, coin_world = short_state(coin_form=True)
 coin_offered = {option.subject: option for option in fiscal_response.menu(coin_state, coin_world, lines(), NEED).options}
 check("the menu offers every response but a rate raise, which needs a form collected in coin",
-	  set(offered) == set(fiscal_response.RESPONSES) - {fiscal_response.RATE}, sorted(offered))
+	  set(offered) == set(fiscal_response.RESPONSES) - {fiscal_response.RATE, fiscal_response.LIABILITY, fiscal_response.AMNESTY, fiscal_response.REMISSION}, sorted(offered))
 check("a state with a form collected in coin is offered raising its rate, and the cost is the burden on its base",
 	  coin_offered[fiscal_response.RATE].detail["income_taken"] > 0.0
 	  and abs(coin_offered[fiscal_response.RATE].worth - COIN_STOCK * WEALTH_FORM["rate"] * RATE_RAISE_STEP) < 1e-9, coin_offered.get(fiscal_response.RATE))

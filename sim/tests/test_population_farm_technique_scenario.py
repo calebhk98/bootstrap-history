@@ -131,7 +131,10 @@ class MechanisationTests(unittest.TestCase):
         _run_years(test_sim, 9)
         after_ten_years = _farm_share(test_sim)
         _run_years(test_sim, 15)
-        self.assertLess(after_ten_years, before)
+        # Open: Complaint 513. The opening's cleared land is fully worked, so the reaper saves hours but leaves no
+        # food surplus and the farm share is the same with or without it; this stays red until 513 settles that.
+        self.assertLess(after_ten_years, before, "Complaint 513: a labour-saving technique releases no farm workers "
+                        "on the opening's fully worked land (farm share is identical with and without it)")
         self.assertLess(_farm_share(test_sim), after_ten_years)
         self.assertGreater(after_one_year, 0.5 * before)       # mobility bounds one year's move
 

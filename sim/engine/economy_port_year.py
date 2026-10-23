@@ -18,7 +18,7 @@ from sim.economy.api import (EDGE_EXTERNAL, EDGE_LEGACY, AgentOrders, Economy, G
                              YearInputs, expected_output_prices, external_orders, live_input_prices, live_wages,
                              trade_premium, variable_cost_per_run)
 
-from . import trade_duty, economy_port_bondage, economy_port_levy, economy_port_actors, economy_port_cargo, economy_port_cropland, economy_port_institutions, economy_port_land, economy_port_late, economy_port_sites, externalities, material_capacity, solve_cache
+from . import agents_port_stores, country_trade_years, trade_duty, economy_port_bondage, economy_port_levy, economy_port_actors, economy_port_cargo, economy_port_cropland, economy_port_flight, economy_port_institutions, economy_port_land, economy_port_late, economy_port_seats, economy_port_sites, externalities, material_capacity, solve_cache
 from .economy_port_key import spin_up_key
 from .economy_port_coin import priced_at_the_margin
 from .economy_port_setup import build_setup, opening_values
@@ -94,6 +94,7 @@ class AgentEconomy(TilePricesMixin):
         self._answers = None
         self._country_answers = {}
         self._stale = set()
+        self._kinds = None               # (the answers they belong to, {good: kind of its shown price})
         self._capacity_cache = material_capacity.ProducerCapacityCache()
         self._floor_costs = {}           # need floors by country scope, valid until the economy next changes
         self._floor_costs_of = None      # the economy object they were read from
@@ -115,6 +116,10 @@ class AgentEconomy(TilePricesMixin):
         if not self.opened():
             return []
         return [(producer.recipe_id, producer.capacity_runs) for producer in economy_api.all_producers(self.economy())]
+
+    def fugitive_share_by_tile(self):
+        """{tile: share of the people who belonged to it that are away having fled the state's take}; empty before the economy opens."""
+        return economy_api.fugitive_share_by_tile(self.economy()) if self.opened() else {}
 
     def opened(self) -> bool:
         return self._economy is not None or "record" in self.stored
@@ -233,7 +238,7 @@ class AgentEconomy(TilePricesMixin):
         self._settle_actor_trade(sales, purchases)
         self._settle_seats()
         self._sim.settle_trader_cargo(economy_port_cargo.close_cargo_accounts(economy, legs, tonnes_per_unit))
-        self._settle_foreign_coin()
+        self._note_off_map_trade(*self._settle_foreign_coin())
         self._answers = None
         self._country_answers = {}
         self._floor_costs = {}
@@ -274,7 +279,7 @@ class AgentEconomy(TilePricesMixin):
         if self.opened():
             economy_api.rename_agent(self.economy(), old, new)
             self._record_stale = True
-        for kind in ("seat_takings", "sales", "purchases"):
+        for kind in ("seat_takings", "seat_sales", "sales", "purchases"):
             if kind in self.stored:
                 rekey(self.stored[kind], old, new)
 
@@ -317,13 +322,18 @@ class AgentEconomy(TilePricesMixin):
     def _settle_actor_trade(self, sales, purchases):
         """What the actors' sales fetched and their budgets left over turn back into their coin; the goods unsold go
         back out. Bought capital assets stay with their buyer and materials are used up."""
-        proceeds, refunds, _bought = economy_port_actors.close(self._economy, sales, purchases)
+        proceeds, refunds, _bought, delivered = economy_port_actors.close(self._economy, sales, purchases)
+        self._keep_deliveries(delivered)
         coin = self._economy.setup.coin_per_unit
         purses, known = self._sim.actors.state.purses, self._sim.actors.actors
         for amounts, label in ((proceeds, "market sales"), (refunds, "market purchases returned")):
             for actor_id, units in sorted(amounts.items()):
                 purses.transfer(COIN_EXCHANGE, actor_id, units * coin, "exchange")
                 known[actor_id].note_income(label, units * coin)
+
+    def _keep_deliveries(self, delivered):
+        """Goods a buyer that keeps its purchases bought at the market join its stores, in tonnes."""
+        agents_port_stores.keep_deliveries(self._sim.actors.actors, delivered)
 
     def _strike_state_coin(self, economy):
         """The cut the home state decided on this year lowers the metal in the coin it issues."""
@@ -351,17 +361,15 @@ class AgentEconomy(TilePricesMixin):
         projects = sim.state.projects
         view = economy.view()
         moves, offers = [], []
+        offered = self.__dict__.setdefault("_seat_offered", {}).setdefault(agent_id, (tile, {}))[1]
+        inputs = self.__dict__.setdefault("_seat_inputs", {})
         for node_id in sorted(projects.operating):
-            if node_id in projects.granted or not sim.is_venture(node_id):
+            quantities = sim.concern_book_offer(node_id)
+            if not quantities:
                 continue
-            baskets = sim.concern_baskets_now(node_id)
-            if baskets is None:
-                continue
-            ramp = sim.venture_ramp(node_id)
-            for material, units in sorted(baskets.outputs.items()):
-                quantity = units * ramp
-                if quantity <= 0.0 or material not in area_map.goods():
-                    continue
+            inputs[agent_id] = inputs.get(agent_id, 0.0) + sim.concern_book_inputs_cost(node_id)
+            for material, quantity in sorted(quantities.items()):
+                offered[material] = offered.get(material, 0.0) + quantity
                 moves.append(GoodsMove(EDGE_LEGACY, agent_id, material, tile, quantity, "concern output"))
                 cost = self._concern_reservation(node_id, material, tile, view, agent_id)
                 offers.append(Offer(agent_id, material, area_map.area_of(material, tile), tile, quantity, cost))
@@ -474,7 +482,7 @@ class AgentEconomy(TilePricesMixin):
         sim, economy = self._sim, self._economy
         partners = sim.foreign_economies()
         if not partners:
-            return
+            return 0.0, 0.0
         coin = economy.setup.coin_per_unit
         paid_in = economy_api.external_trade_net(economy)            # exports less imports
         volume = economy_api.external_trade_volume(economy)
@@ -489,22 +497,38 @@ class AgentEconomy(TilePricesMixin):
                 sim._settle_flow(partner, 1.0, imports / len(partners), per_partner_coin)
             if exports > 0.0:
                 sim._settle_flow(partner, -1.0, exports / len(partners), per_partner_coin)
+        return imports, exports
+
+    def _note_off_map_trade(self, imports, exports):
+        """The year's trade over the external edge goes into the book of the country whose tile the port stands on."""
+        setup = self._economy.setup
+        country_trade_years.note(self.stored.setdefault("country_trade_by_year", {}), setup.country_of(setup.port_tile),
+                                 self._sim.state.scenario.year, imports, exports)
 
     def _settle_seats(self):
-        """What each seat's goods fetched goes back to the engine; what did not sell goes back too."""
-        coin = self._economy.setup.coin_per_unit
-        self.stored["seat_takings"] = {
-            seat_id: economy_api.settle_agent_takings(self._economy, seat_id, EDGE_LEGACY) * coin
-            for seat_id in sorted(self._sim.state.seats)}
+        """What each seat's goods fetched goes to its ledger, less what its concerns' inputs cost; what did not sell goes
+        back to the engine (economy_port_seats.settle_seats)."""
+        offered = self.__dict__.pop("_seat_offered", {})
+        inputs = self.__dict__.pop("_seat_inputs", {})
+        sold, takings = economy_port_seats.settle_seats(self._sim, self._economy, offered, inputs, EDGE_LEGACY)
+        self.stored["seat_sales"] = {**self.stored.get("seat_sales", {}), **sold}
+        self.stored["seat_takings"] = takings
+
+    def seat_sale_outlook(self, seat_id, material, quantity):
+        """What the seat may count as sold of `quantity` units of a material it makes: its last clearing's share and
+        price, else what the market's buyers took last year (concern_sales.outlook); None when the economy is not open."""
+        if not self.opened():
+            return None
+        return economy_port_seats.outlook(self.economy(), self.stored.get("seat_sales", {}), seat_id, material, quantity)
 
     def _inputs(self, engine_orders, border_accounts=((), ())) -> YearInputs:
         sim = self._sim
         population = sim.population
         total = float(population.total)
-        weather = sim._pooled_farm_weather_multiplier(sim.state.scenario.year)
+        weather = sim._pooled_farm_weather_multiplier(sim.state.scenario.year, harmed=False)   # harm is applied per producer below
         economy = self._economy
         harmed = externalities.yield_factors(sim, sim.state.scenario.year)
-        yields = economy_port_sites.crop_yields(economy, weather)
+        yields = economy_port_sites.crop_yields(economy, weather, sim.farm_weather_by_tile(sim.state.scenario.year))
         yields = economy_port_sites.harmed_yields(yields, harmed, economy_api.producers_of(economy))
         entrant_share, attrition_share = working_age_turnover(population)
         return YearInputs(year=sim.state.scenario.year, population_by_tile=sim.labour.settlement_tiles(),
@@ -514,9 +538,11 @@ class AgentEconomy(TilePricesMixin):
                           import_accounts=border_accounts[0], export_accounts=border_accounts[1],
                           labour_levy_hours_per_worker=economy_port_levy.levy_hours_per_worker(sim),
                           debt_relief_tiles=economy_port_land.debt_relief_tiles(sim, economy),
+                          title_moves=economy_port_land.title_moves(sim, economy),
                           farmed_forms=economy_port_land.farmed_forms(sim, economy),
                           tax_rates=economy_port_land.tax_rates(sim),
                           land_tax_share_of_rent=economy_port_land.land_tax_share_of_rent(sim),
+                          **economy_port_flight.flight_values(sim, economy),
                           institutions=economy_port_institutions.held(sim),
                           durable_users=tuple(economy_port_actors.held_account(buyer)
                                               for buyer in sorted(sim.actors.actors)),
@@ -673,6 +699,14 @@ class AgentEconomy(TilePricesMixin):
                              economy_api.interest_rate(self._economy))
         return self._answers
 
+    def price_kind(self, good):
+        """What the shown price of a good is (economy_api.shown_price_kinds_of): traded, a quote named by what it
+        is, or an estimate; None for a good the economy shows no price for. Built once a year."""
+        self.answers()
+        if self._kinds is None or self._kinds[0] is not self._answers:
+            self._kinds = (self._answers, economy_api.shown_price_kinds_of(self._economy))
+        return self._kinds[1].get(good)
+
     def stale_goods(self):
         """Goods whose shown price is not a market's: not cleared within notional.RECENT_TRADE_YEARS."""
         self.answers()
@@ -683,6 +717,12 @@ class AgentEconomy(TilePricesMixin):
         if self._economy is None and "record" not in self.stored:
             return None
         return economy_api.people_by_trade(self.economy())
+
+    def people_by_tile_and_trade(self):
+        """The labour core's people by tile and trade, or None before the economy has been opened."""
+        if self._economy is None and "record" not in self.stored:
+            return None
+        return economy_api.people_by_tile_and_trade(self.economy())
 
     def producer_capacity_tonnes(self, material):
         """Tonnes a year the economy's producers can make of a material at full capacity; zero before the
@@ -742,7 +782,9 @@ class AgentEconomy(TilePricesMixin):
         if country == economy.setup.civ_id or country not in economy.setup.countries():
             return None
         from .economy_port_country import CountryAnswers
-        answers = CountryAnswers(economy, country)
+        year = self._sim.state.scenario.year
+        book = self.stored.get("country_trade_by_year", {})
+        answers = CountryAnswers(economy, country, lambda direction: country_trade_years.value(book, country, year - 1, direction))
         return answers if answers.has_labour_market() else None
 
     def land_rent_per_hectare(self):

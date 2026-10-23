@@ -1,4 +1,4 @@
-"""Named scenarios for economic derived-state caching through a game (the version counters and invalidating containers
+"""SCENARIO (Complaint 640): named scenarios for economic derived-state caching through a game (the version counters and invalidating containers
 themselves are tested without a game in test_household_invalidation_containers).
 
 Proves that:

@@ -1,4 +1,4 @@
-"""Complaints 554 and 473, the short part: the first years of the Rome agent economy's hidden first stage (fixed
+"""BASELINE VALIDATION (CLAUDE.md 4.2, Complaint 640): Complaints 554 and 473, the short part: the first years of the Rome agent economy's hidden first stage (fixed
 people, no shocks) keep physically feasible accounts. A rule of the books, so a few years hold it. The checks that
 need the spin-up's whole length (the mint replaces wear, the economy settles) are in
 test_baseline_rome_full_length.py (Complaint 640)."""

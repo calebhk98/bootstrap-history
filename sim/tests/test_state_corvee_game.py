@@ -1,4 +1,4 @@
-"""Scenarios for Complaint 621 in a whole game: a civilisation that declares a corvee and a conscription takes the hours from its
+"""SCENARIO (Complaint 640): for Complaint 621 in a whole game: a civilisation that declares a corvee and a conscription takes the hours from its
 working-age people, staffs its works with them unpaid, fills its army with them, and hands the lost hours to the economy
 as the working time its households no longer offer. The rules are in test_state_corvee and test_levy_hours_per_worker;
 the worth of the corvee to the state's revenue and the cost of a conscript army are held by test_state_corvee."""

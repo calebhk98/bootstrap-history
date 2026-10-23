@@ -17,7 +17,8 @@ share = 1.0 - game.labour.farming_technique().rotation.fallow_share_of_holding
 held = economy_port_setup.civilisation_tiles(game.civ, game.world_map)[0]
 
 cropland = {tile_id: setup.tiles[tile_id].land_area_km2 * 100.0 * setup.tiles[tile_id].cropped_fraction for tile_id in held}
-sites = {tile_id: crop_site(tile_id, share, game.world_map) for tile_id in held}
+tillage = game.labour.farming_technique().toolkit.tillage_capacity
+sites = {tile_id: crop_site(tile_id, share, game.world_map, tillage_capacity=tillage) for tile_id in held}
 check("each tile's cropland is geography's cropped hectares",
       all(math.isclose(cropland[tile_id], (sites[tile_id].cropped_hectares if sites[tile_id].yield_factor > 0.0 else 0.0), rel_tol=1e-9, abs_tol=1e-9) for tile_id in held))
 check("the economy's cropland equals the farm model's ceiling",

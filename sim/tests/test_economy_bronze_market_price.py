@@ -12,7 +12,9 @@ from sim.economy.national_prices import national_prices
 TOPIC_SECONDS = 900
 GOOD = "bronze_kg"
 YEARS_PLAYED = 18
-MARKUP_BOUND = 3.0      # a melt's fuel and skilled hours are already in its recipe cost; a markup beyond this is a thin market
+# Owner decision (2026-10-21): the check catches a runaway thin-market price (the original defect read hundreds of times
+# the recipe cost); a few times cost while the opening does not settle (473) is accepted. An order of magnitude separates them.
+MARKUP_BOUND = 10.0
 
 
 def bronze_multiples(years):
@@ -41,5 +43,5 @@ def aged_bronze_is_priced_near_its_recipe():
                 worst_shown, worst_traded, [(year, round(shown, 2), round(traded, 2)) for year, shown, traded in rows]))
 
 
-slow_check("validation (declared band, reopens Complaint 502): bronze in an aged Rome game shows and trades within a bounded multiple of its recipe cost",
+slow_check("validation (declared band, Complaint 502): bronze in an aged Rome game shows and trades within a bounded multiple of its recipe cost",
            aged_bronze_is_priced_near_its_recipe)

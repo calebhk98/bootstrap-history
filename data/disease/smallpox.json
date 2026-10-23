@@ -44,8 +44,8 @@
    "source": "CDC smallpox overview, stacks.cdc.gov/view/cdc/26503: about 30 percent overall in variola major (first-contact fatality is disputed and is not this number)"
   },
   "immunity": {
-   "confidence": "unsourced",
-   "source": "No source found: the CDC smallpox overview (stacks.cdc.gov/view/cdc/26503) states no immunity duration after recovery; lifelong immunity is a labelled assumption"
+   "confidence": "read",
+   "source": "CDC clinical signs page (cdc.gov/smallpox/hcp/clinical-signs): 'Recovery from smallpox gives the patient prolonged immunity to re-infection with variola virus'; Vichniakov 1968, Bulletin of the WHO 39(3):433-437 (abstract opened, PMC2554405): most who recover have lifelong immunity to a second attack, but some lose it more or less quickly. Permanent is the majority case; the exceptions are not quantified in what was opened"
   },
   "stage.incubating": {
    "confidence": "read",

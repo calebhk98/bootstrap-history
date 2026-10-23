@@ -405,6 +405,11 @@ def cmd_validate(args):
     errs += validate_node_money.check_node_money(nodes, production)
     from sim.engine import validate_unlinked_producers
     print("\n".join(validate_unlinked_producers.report_lines(nodes, production)))
+    unlinked_errors, unlinked_stale = validate_unlinked_producers.check_unlinked_upkeep(
+        nodes, production, validate_unlinked_producers.load_allowed())
+    errs += unlinked_errors
+    warns += ["%s: no longer charges upkeep without a plant: remove it from data/unlinked_upkeep_nodes.txt" % node_id
+              for node_id in unlinked_stale]
     print("\n".join(_dead_end_lines(nodes, production)))
     errs += validate_copy_visibility.check_copy_visibility(nodes)
     from sim.engine import copy_visibility_defaults

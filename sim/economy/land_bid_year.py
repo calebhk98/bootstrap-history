@@ -4,16 +4,16 @@ become its title. The rules are in land_bid.py."""
 import dataclasses
 from typing import Dict, List, Mapping
 
-from . import land_bid, sites, titles_ground, titles_value, titles_worked
+from . import land_bid, land_market, sites, titles_ground, titles_value, titles_worked
 from .households_own import Option, plot_hectares
 from .protocols import AgentOrders
 from .setup import labour_area
 from .types import EDGE_CONSUMPTION, Bid, GoodsMove
 
 
-def _best_earning(setup, view, cohort, options: Mapping[str, List[Option]], tile_spec, rent: float):
-    """(earning per hectare, hours a hectare takes) for the recipe, of those it grows its needs with, that nets most, at the prices
-    and the wage it sees; the tile's rent is the floor on the earning."""
+def best_margin(setup, view, cohort, options: Mapping[str, List[Option]], tile_spec):
+    """(crop margin per hectare, hours a hectare takes, recipe id) of the recipe, of those the cohort grows its needs
+    with, that nets most at the prices and the wage it sees. The margin is net of the wage, so a rising wage lowers it."""
     wage = view.wage(setup.servant_trade, labour_area(cohort.tile)) or 0.0
     rows = []
     for recipe_id in sorted({rows_of_need[0][1] for rows_of_need in options.values() if rows_of_need}):   # the recipe it grows each need with
@@ -22,30 +22,59 @@ def _best_earning(setup, view, cohort, options: Mapping[str, List[Option]], tile
             continue
         prices = {good: view.price(good, view.area_of(good, cohort.tile)) or 0.0 for good in recipe.outputs}
         rows.append((land_bid.crop_margin_per_hectare(recipe, land, tile_spec.fertility, prices, wage),
-                     land_bid.hours_per_hectare(recipe, land)))
-    margin, hours = max(rows, default=(0.0, 0.0))
+                     land_bid.hours_per_hectare(recipe, land), recipe_id))
+    return max(rows, default=(0.0, 0.0, ""))
+
+
+def _best_earning(setup, view, cohort, options: Mapping[str, List[Option]], tile_spec, rent: float):
+    """(earning per hectare, hours a hectare takes): the best crop margin, with the tile's rent as the floor."""
+    margin, hours, _recipe_id = best_margin(setup, view, cohort, options, tile_spec)
     return land_bid.earning_per_hectare(margin, rent), hours
+
+
+def actor_bids(setup, record, view, buyer: str, tile_id: str, margin_per_hectare: float, hours_per_hectare: float,
+               spare_hours: float, cash: float) -> List[Bid]:
+    """Bids for ground on a tile from any actor (a household, a firm, a state, an institution): for the hectares its
+    spare hours can work, at no more than the better of its crop margin and the tile's rent capitalised. An actor with
+    no hands to work a hectare (`hours_per_hectare` zero) is limited by its cash alone, and buys only to let the ground
+    for its rent (a margin of zero). None for an actor that owns the land that is sold (it would buy from itself)."""
+    if setup.tiles.get(tile_id) is None or cash <= 0.0:
+        return []
+    bids = []
+    for good in land_bid.land_goods(setup.specs, setup.recipes):
+        sellers = land_bid.owners_of_sellers(record, setup.recipes, good, tile_id)
+        if not sellers or buyer in sellers:
+            continue
+        area = view.area_of(good, tile_id)
+        rate = view.interest_rate(view.currency_of(area))
+        bid = land_bid.hectare_bid(buyer, good, area, tile_id,
+                                   land_bid.earning_per_hectare(margin_per_hectare, record.land_rent.get(tile_id, 0.0)),
+                                   view.price(good, area), titles_value.capitalising_rate(rate, setup.opening_rate),
+                                   land_bid.workable_hectares(spare_hours, hours_per_hectare), cash)
+        if bid is not None:
+            bids.append(bid)
+    return bids
 
 
 def land_bids(setup, record, view, cohort, options, spare_hours: float, cash: float) -> List[Bid]:
     """The cohort's bids for ground on its tile: for the hectares its spare hours can work, at no more than the
-    earning capitalised. None for a cohort that owns the land that is sold (it would buy from itself)."""
+    earning capitalised (`actor_bids`)."""
     tile = setup.tiles.get(cohort.tile)
-    if tile is None or spare_hours <= 0.0 or cash <= 0.0:
+    if tile is None or spare_hours <= 0.0:
         return []
-    bids = []
-    for good in land_bid.land_goods(setup.specs, setup.recipes):
-        sellers = land_bid.owners_of_sellers(record, setup.recipes, good, cohort.tile)
-        if not sellers or cohort.agent_id in sellers:
-            continue
-        area = view.area_of(good, cohort.tile)
-        rate = view.interest_rate(view.currency_of(area))
-        earning, hours = _best_earning(setup, view, cohort, options, tile, record.land_rent.get(cohort.tile, 0.0))
-        bid = land_bid.hectare_bid(cohort.agent_id, good, area, cohort.tile, earning, view.price(good, area),
-                                   titles_value.capitalising_rate(rate, setup.opening_rate),
-                                   land_bid.workable_hectares(spare_hours, hours), cash)
-        if bid is not None:
-            bids.append(bid)
+    margin, hours, _recipe_id = best_margin(setup, view, cohort, options, tile)
+    return actor_bids(setup, record, view, cohort.agent_id, cohort.tile, margin, hours, spare_hours, cash)
+
+
+def firm_land_bids(setup, record, view, wanted_runs: Mapping[str, float], budgets: Mapping[str, float]) -> List[Bid]:
+    """Bids for ground by firms that farm: each producer whose recipe takes land bids at its margin per hectare (what
+    its runs fetch less their other costs; hired hands are in the cost, so none limits it) out of the cash it holds
+    beyond `budgets` (what its plan already set aside)."""
+    bids: List[Bid] = []
+    for demand in land_market.demands_of(setup, record, view, wanted_runs):
+        free = record.book.balance(demand.agent_id, setup.currency_id) - budgets.get(demand.agent_id, 0.0)
+        bids.extend(actor_bids(setup, record, view, demand.agent_id, demand.tile,
+                               demand.output_value_per_hectare - demand.other_cost_per_hectare, 0.0, 0.0, free))
     return bids
 
 
@@ -64,21 +93,23 @@ def with_land_bids(orders: AgentOrders, bids: List[Bid]) -> AgentOrders:
 
 
 def take_up_bought(setup, record) -> Dict[str, float]:
-    """Every cohort's ground bought this year becomes its title: new arable land on its tile (land_bid.take_up),
-    and the stock is consumed. Returns hectares titled by cohort."""
+    """Ground any actor bought this year becomes its title: new arable land on the tile it holds the ground on
+    (land_bid.take_up), and the stock is consumed. A clearer's own stock is not bought and stays in the stock until
+    it is sold or its owner keeps it. Returns hectares titled by actor."""
     titled: Dict[str, float] = {}
     for good in land_bid.land_goods(setup.specs, setup.recipes):
-        for cohort in sorted(record.cohorts.values(), key=lambda each: each.agent_id):
-            bought = record.book.stock(cohort.agent_id, good, cohort.tile)
-            tile = setup.tiles.get(cohort.tile)
-            if bought <= 0.0 or tile is None:
+        clearers = {producer_id for producer_id, producer in record.producers.items() if good in setup.recipes[producer.recipe_id].outputs}
+        for buyer in record.book.holders_of(good):
+            if buyer in clearers:
                 continue
-            added = land_bid.take_up(record, cohort.agent_id, cohort.tile, bought,
-                                     titles_ground.arable_hectares(record, cohort.tile, tile))
-            if added > 0.0:
-                record.book.move_many([GoodsMove(cohort.agent_id, EDGE_CONSUMPTION, good, cohort.tile, added,
-                                                 "ground taken up as a title")])
-                titled[cohort.agent_id] = titled.get(cohort.agent_id, 0.0) + added
+            for tile_id, bought in sorted(record.book.holdings(buyer)["goods"].get(good, {}).items()):
+                tile = setup.tiles.get(tile_id)
+                if bought <= 0.0 or tile is None:
+                    continue
+                added = land_bid.take_up(record, buyer, tile_id, bought, titles_ground.arable_hectares(record, tile_id, tile))
+                if added > 0.0:
+                    record.book.move_many([GoodsMove(buyer, EDGE_CONSUMPTION, good, tile_id, added, "ground taken up as a title")])
+                    titled[buyer] = titled.get(buyer, 0.0) + added
     return titled
 
 

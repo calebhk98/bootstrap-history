@@ -10,7 +10,7 @@ from typing import Any, Dict, Mapping, Optional, Tuple
 
 from sim.world import capital_market
 
-from . import taxes, bondage, bonded_purchase, banks, carriage_hours, credit, credit_lines, debt_relief, credit_claims, currency, equity, labour, land_market, lending, merchants_credit, producers, shares, sites, state_budget, tax_farming, titles_ground, titles_inheritance, titles_worked, unit_cost
+from . import outlay_room, taxes, bondage, bondage_hours, bonded_purchase, banks, carriage_hours, credit, credit_lines, debt_relief, credit_claims, currency, equity, labour, land_market, lending, merchants_credit, producers, shares, sites, state_budget, tax_farming, titles_ground, titles_inheritance, titles_moves, titles_worked, unit_cost
 from .credit_view import CreditView
 from .market_areas import AreaMap
 from .market_areas_follow import follow
@@ -20,20 +20,22 @@ from .mint_labour import close_year as close_mint_year, mint_agent
 from .money_audit import MoneyAudit, year_report
 from .flow_rates import flow_imbalance
 from .entry_year import close_idle_producers, open_entrants, restake_owners
-from . import household_work_year, land_bid_year
-from .households_own import (hours_for_own_plan, own_production, own_production_options, plot_hectares,
-                             withhold_hours)
+from . import capital_year, household_hours_year, household_work_year, land_bid_year, land_lease_year, opening_leisure
+from .households_own import (hours_for_own_plan, own_production, own_production_options, plot_hectares)
+from . import flight_step
 from .labour_inputs import labour_context
 from .labour_state import scale_people
 from .opening import open_economy
 from .protocols import YearInputs
 from .record import EconomyRecord
 from .setup import EconomySetup, labour_area
-from .types import Bid, EDGE_CONSUMPTION, GoodsMove, is_edge
+from .types import Bid, EDGE_CONSUMPTION, GoodsMove, Transfer, is_edge
 from .year_close import (check_money, close_agents, dispatch_merchants, money_taxes, national_prices,
                          remember_basket_price_level, wear_and_spoilage)
 from .year_goods import add_orders, clear_goods, cohort_orders, merchant_orders, state_orders
-from .year_labour import clear_labour, held_share_by_area, labour_offers, outside_option_by_tile
+from .labour_supply import HourSupply
+from .labour_state import people_by_trade
+from .year_labour import clear_labour, labour_offers, outside_option_by_tile
 from .year_accounts import YearAccounts, build as build_accounts, stocks as stocks_held
 from .standing_demand import with_standing_bids
 from .year_ledger import YearLedger
@@ -61,6 +63,7 @@ class YearOutcome:
     money_audit: Optional[MoneyAudit] = None       # where money entered and left this year
     bonded_bought: Dict[Tuple[str, str], float] = field(default_factory=dict)   # (tile, trade): bonded people bought this year
     bonded_paid: float = 0.0                       # money the buyers paid for them over the exchange edge
+    bonded_lots: list = field(default_factory=list)   # the lots bought: origin and destination tile, trade, people, the owners' ask and the carriage paid
     accounts: Optional[YearAccounts] = None        # production, use, consumption, investment, stocks; food eaten; real wage
 
 
@@ -78,7 +81,8 @@ def plant_worth_ratio(yearly_return: float, rate: float, life_years: float) -> f
 class Economy:
     def __init__(self, setup: EconomySetup, record: EconomyRecord = None) -> None:
         self.setup = setup
-        if record is None:
+        opening = record is None
+        if opening:
             record, area_map, carriage = open_economy(setup)
         else:
             carriage = setup.carriage_table(record.ways, record.area_imbalance)
@@ -90,6 +94,8 @@ class Economy:
         self.watched_tiles: Tuple[str, ...] = ()   # tiles whose market books are kept beside the port's and the capital's; not saved
         self._own_options = None
         self._own_hectares: Dict[str, float] = {}   # land households' own plots took this year, by tile
+        if opening:
+            opening_leisure.seed(self)
 
     def set_improvements(self, improvements: Mapping[str, Mapping[str, Any]]) -> bool:
         """Rebuild the carriage table over these built ways, partition the market areas again over it and
@@ -163,6 +169,7 @@ class Economy:
         view = self.view()
         money = setup.currency_id
         debt_relief.forgive(record, inputs.debt_relief_tiles)
+        titles_moves.apply(record, inputs.title_moves)
         tax_farming.run_auctions(setup, record, inputs.farmed_forms, record.memory.rates.get(setup.currency_id, 0.0))
         lending.lend_working_capital(setup, record, view)
         plans = {producer_id: producers.plan(producer, setup.recipes[producer.recipe_id], view,
@@ -175,14 +182,35 @@ class Economy:
         staff_mint(setup, record, view, labour_bids)
         labour_bids.extend(carriage_hours.bids(setup, record))    # merchants' carriers, from last year's shipments
         outside_option = outside_option_by_tile(setup, record, view)
+        land_lease_year.lease_in_market(setup, record, view, self._own_plot_options())
         land_bid_year.take_up_own(setup, record, self._own_plot_options())
         everyone = labour_offers(setup, record, view, outside_option, inputs.labour_levy_hours_per_worker)
-        offers, kept = withhold_hours(everyone, self._shortfall_hours(everyone, view, outside_option))
         context = labour_context(setup, record, view, self.carriage, inputs, self._own_plot_options(), outside_option)
-        labour_report = clear_labour(setup, record, labour_bids, offers, ledger, context, held_share_by_area(everyone, offers))
-        ledger.bonded_bought, ledger.bonded_paid = bonded_purchase.settle(
-            record.book, money, labour_report.formed, labour_bids, context.ask_floor_per_worker_year)
+        context = dataclasses.replace(context, outlay_room=outlay_room.by_employer(
+            plans, setup.state_agent, record.state_budget, lambda employer: record.book.balance(employer, money)))
+        held_placed = bondage_hours.place_held(
+            record.bonded_held, lambda area, trade: people_by_trade(record.workforce, area).get(trade, 0.0), everyone, labour_bids,
+            setup.working_hours_per_year, context.ask_floor_per_worker_year, labour_area)
+        record.book.transfer_many([Transfer(employer, cohort, money, amount, "keep of bonded") for employer, cohort, amount
+                                   in bondage_hours.payable_keep(held_placed.keep, lambda employer: record.book.balance(employer, money))])
+        placed = bondage_hours.place(record.bondage, held_placed.offers, held_placed.bids,
+                                     bondage_hours.works_of_producers(record), bondage.BONDED_HOURS_OWED_SHARE)
+        everyone, labour_bids = placed.offers, placed.bids
+        supply = self._hour_supply(everyone, view, outside_option)
+        people_before = flight_step.people_before(setup, record)
+        labour_report = clear_labour(setup, record, labour_bids, everyone, ledger, context, supply=supply)
+        flight_step.settle(setup, record, inputs, labour_report, people_before, context, self.carriage)
+        state_budget.lapse_unspent_wages(record.state_budget, state_budget.wages_paid(ledger.labour_results, setup.state_agent))
+        offers, kept = supply.sold, supply.kept
+        self._leisure_hours = supply.leisure
+        ledger.bonded_bought, ledger.bonded_paid, ledger.bonded_lots, bought_held = bonded_purchase.settle(
+            record.book, money, labour_report.bonded_lots)
+        bondage_hours.hold(record.bonded_held, bought_held)
+        bondage_hours.deliver(ledger.hours_hired, placed)
+        bondage_hours.deliver_held(ledger.hours_hired, held_placed)
+        capital_year.insure(setup, record, view, inputs.harvest_factor, view.year, inputs.institutions)     # cover is bought and the weather settles it
         self._grow_own(offers, ledger, inputs.harvest_factor, kept)
+        capital_year.note_exposure(setup, record, view, self.area_map, ledger, inputs.harvest_factor, inputs.institutions)
         order_book = {}
         funds = cohort_orders(setup, record, view, ledger, order_book, self._own_plot_options())
         state_orders(setup, record, view, self.area_map, order_book, {})
@@ -193,8 +221,14 @@ class Economy:
         for plan in plans.values():
             for bid in plan.bids:
                 order_book.setdefault((bid.good, bid.area), ([], []))[0].append(bid)
+        for bid in land_bid_year.firm_land_bids(setup, record, view, {producer_id: plan.wanted_runs for producer_id, plan in plans.items()},
+                                                {producer_id: sum(bid.budget for bid in plan.bids) for producer_id, plan in plans.items()}):
+            order_book.setdefault((bid.good, bid.area), ([], []))[0].append(bid)
+        funds = capital_year.before_lending(setup, record, view, ledger, funds, view.year, inputs.institutions)   # holders sell shares and loans; depositors run on banks
         funds, pledged = banks.intermediate(setup, record, funds, view.year, inputs.institutions)
+        kept = capital_year.snapshot(record, money, funds)
         plant_runs = self._lend(funds, view, order_book, ledger, pledged, inputs.credit_asks)
+        capital_year.invest_idle(setup, record, view, funds, kept, inputs.institutions)       # savings neither lent nor put in shares go into a fund
         merchant_orders(setup, record, view, self.area_map, self.carriage, order_book)
         for producer_id, runs in self._rebuild_worn_plant(view, order_book).items():
             plant_runs[producer_id] = plant_runs.get(producer_id, 0.0) + runs
@@ -204,9 +238,10 @@ class Economy:
         close_mint_year(setup, record)
         rent = land_market.settle_year(setup, record, view,
                                        {producer_id: plan.wanted_runs for producer_id, plan in plans.items()},
-                                       self._own_hectares, inputs.land_tax_share_of_rent)
+                                       self._own_hectares, inputs.land_tax_share_of_rent,
+                                       land_lease_year.asks(setup, record, view, self._own_plot_options()))
         interest = self._service_loans(view.year)
-        bonded = bondage.service(record, money, ledger.wages_in)
+        bonded = bondage.service(record, money, ledger.wages_in, placed.value_placed, placed.cash_share)
         record.book.transfer_many(bonded)
         for payment in bonded:
             interest[payment.payee] = interest.get(payment.payee, 0.0) + payment.amount
@@ -266,21 +301,28 @@ class Economy:
             self._own_options = own_production_options(setup.recipes, setup.land_per_run, setup.basket)
         return self._own_options
 
-    def _shortfall_hours(self, everyone=(), view=None, outside_option=None) -> Dict[str, float]:
-        """Hours each cohort keeps back for its own-plot plan, at the tile's usual fertility (it plants
-        before it knows the harvest), and for the household work it does itself (household_work_year.py)."""
-        hours, held = {}, self._hectares_held()
+    def _fixed_home_hours(self, everyone, view, outside_option) -> Tuple[Dict[str, float], Dict[str, float]]:
+        """(own-plot plan hours, household work hours) each cohort keeps back whatever the wage: the plan at the tile's
+        usual fertility (it plants before it knows the harvest), and the household work it does itself
+        (household_work_year.py)."""
+        plan, held = {}, self._hectares_held()
         for cohort_id, cohort in sorted(self.record.cohorts.items()):
             tile = self.setup.tiles.get(cohort.tile)
-            hours[cohort_id] = hours_for_own_plan(cohort, self._own_plot_options(),
-                                                  tile.fertility if tile else 0.0, self.setup.recipes,
-                                                  self.setup.land_per_run, held.get(cohort_id, 0.0))
-        self._work_hours = {}
-        if view is not None:
-            self._work_hours = household_work_year.decide(self.setup, self.record, view, everyone, outside_option or {})
-            for cohort_id, work in self._work_hours.items():
-                hours[cohort_id] = hours.get(cohort_id, 0.0) + work
-        return hours
+            plan[cohort_id] = hours_for_own_plan(cohort, self._own_plot_options(), tile.fertility if tile else 0.0,
+                                                 self.setup.recipes, self.setup.land_per_run, held.get(cohort_id, 0.0))
+        self._work_hours = household_work_year.decide(self.setup, self.record, view, everyone, outside_option or {})
+        return plan, self._work_hours
+
+    def _hour_supply(self, everyone, view, outside_option, anchors=None) -> HourSupply:
+        """The hours households sell as a schedule against the wage (labour_supply.py)."""
+        plan, work = self._fixed_home_hours(everyone, view, outside_option)
+        usable: Dict[str, float] = {}
+        plot = household_hours_year.plot_schedules(self.setup, self.record, view, everyone, self._own_plot_options(),
+                                                   self._hectares_held(), usable)
+        level = view.perceived_price_level(self.setup.currency_id)
+        anchor_wage = {trade: anchor * level for trade, anchor in (self.record.leisure_anchor_wage if anchors is None else anchors).items()}
+        faced = {(offer.trade, offer.area): view.wage(offer.trade, offer.area) or offer.reservation_wage for offer in everyone}
+        return HourSupply(everyone, plan, work, plot, usable, anchor_wage, faced)
 
     def _hectares_held(self) -> Dict[str, float]:
         """Hectares each cohort may work for itself: the land it holds or leases (titles, tenancies), cut to
@@ -307,7 +349,8 @@ class Economy:
             offered[offer.worker] = offered.get(offer.worker, 0.0) + offer.hours
         for cohort_id, cohort in sorted(record.cohorts.items()):
             idle = (offered.get(cohort_id, 0.0) + kept.get(cohort_id, 0.0) - ledger.hours_sold.get(cohort_id, 0.0)
-                    - min(kept.get(cohort_id, 0.0), getattr(self, "_work_hours", {}).get(cohort_id, 0.0)))   # household work is not spare hours
+                    - min(kept.get(cohort_id, 0.0), getattr(self, "_work_hours", {}).get(cohort_id, 0.0)
+                          + getattr(self, "_leisure_hours", {}).get(cohort_id, 0.0)))   # household work and leisure are not spare hours
             tile = setup.tiles.get(cohort.tile)
             hours_used: Dict[str, float] = {}
             moves, grown, units = own_production(cohort, idle, self._own_options, setup.recipes,
@@ -353,10 +396,12 @@ class Economy:
             return {}
         debt = credit_claims.principal_by_borrower(record.loans)
         offered = credit_lines.hold_reserve(funds, record.banks)     # the reserve is held out of every lender's offer
-        loans, rate, unmet = credit.clear(requests, offered, money, record.memory.rates.get(money), debt,
+        clearing = credit.clear_with_cause(requests, offered, money, record.memory.rates.get(money), debt,
                                            credit_claims.arrears_history(record.loans, record.remembered_defaults),
                                            year=view.year,
-                                           rate_ceiling=capital_market.RATE_CEILING_SHARE * setup.opening_rate)
+                                           rate_ceiling=capital_market.RATE_CEILING_SHARE * setup.opening_rate,
+                                           expected_inflation=lending.expected_inflation_of(record))
+        loans, unmet = clearing.loans, clearing.unmet
         every_loan = loans
         loans, record.credit_granted = credit_lines.split_lines(loans, [ask.borrower for ask in credit_asks])
         for ask in credit_asks:
@@ -366,7 +411,9 @@ class Economy:
         record.loans.extend(loans)
         for loan in every_loan:
             record.lent_by_borrower[loan.borrower] = record.lent_by_borrower.get(loan.borrower, 0.0) + loan.principal
-        record.memory.rates[money] = rate
+        if clearing.cause is None and clearing.rate is not None:
+            record.memory.rates[money] = clearing.rate      # a year in which nothing cleared leaves the last cleared rate
+        rate = record.memory.rates[money]       # the opening sets one
         # a plant request lenders left unmet is offered to the savers as shares (the money they raise is plant like a loan's)
         raised = shares.raise_equity(record, money, unmet, funds, every_loan, rate, shares.rate_floor_of(setup))
         merchants_credit.stake(record.merchants, {loan.borrower: loan.principal for loan in loans})
@@ -483,5 +530,5 @@ class Economy:
                            wage_floor_per_hour=ledger.wage_floor_per_hour, extraction=extraction,
                            conservation_residual=check_money(record), money_audit=year_report(record),
                            state_cash=record.book.balance(setup.state_agent, money),
-                           bonded_bought=dict(ledger.bonded_bought), bonded_paid=ledger.bonded_paid,
+                           bonded_bought=dict(ledger.bonded_bought), bonded_paid=ledger.bonded_paid, bonded_lots=list(ledger.bonded_lots),
                            accounts=build_accounts(setup, record, ledger, stocks_at_start, prices, mean_wages))

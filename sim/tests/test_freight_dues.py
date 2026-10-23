@@ -4,21 +4,26 @@ QUICK_TOPIC = True
 
 import unittest
 
+from sim.engine.route_dues import dues_money_per_tonne, handling_money_per_tonne
 from sim.geography import api as geography_api
 from sim.geography.api import dues_hours_per_tonne
 
 
 class FreightDues(unittest.TestCase):
 
-    def test_foreign_routes_charge_the_dues_in_wages(self):
-        from . import harness
-        game = harness.unopened_sim()
-        wage = game.labour.wage_per_hour(game.FREIGHT_DRIVER_WAGE_TRADE)
-        charges = game._freight_handling_costs()
-        dues = dues_hours_per_tonne()
-        self.assertAlmostEqual(charges["river_boat"], dues["river_boat"] * wage)
-        self.assertGreater(charges["sail"], dues["sail"] * wage)    # port handling comes on top
+    def test_dues_are_charged_in_wages_and_port_handling_comes_on_top(self):
+        dues = {"river_boat": 2.0, "sail": 3.0, "foot": 0.0}
+        charges = handling_money_per_tonne(dues, wage=5.0, port_mode="sail", port_handling_hours=1.5)
+        self.assertAlmostEqual(charges["river_boat"], 10.0)
+        self.assertAlmostEqual(charges["sail"], 3.0 * 5.0 + 1.5 * 5.0)
         self.assertNotIn("foot", charges)
+
+    def test_port_handling_is_charged_even_where_the_port_mode_levies_no_dues(self):
+        charges = handling_money_per_tonne({"sail": 0.0}, wage=4.0, port_mode="sail", port_handling_hours=2.0)
+        self.assertAlmostEqual(charges["sail"], 8.0)
+
+    def test_dues_alone_leave_out_modes_without_dues(self):
+        self.assertEqual(dues_money_per_tonne({"river_boat": 2.0, "foot": 0.0}, wage=3.0), {"river_boat": 6.0})
 
     def test_water_and_port_modes_state_dues_and_foot_porters_none(self):
         dues = dues_hours_per_tonne()

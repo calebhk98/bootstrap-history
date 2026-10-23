@@ -25,6 +25,9 @@ TRADER = "trader:test"
 def agent_game():
     game = S.Sim(NODES, ORDER, random.Random(1), events=True, manual=False, civ=S.load_civ("rome_100ad"))
     game.goal, game.done_year = GOAL, {}
+    # the rate a cargo must earn is a stated input: the credit market's own rate depends on where the opening's cycle
+    # stands (Complaint 473), and a cargo's gap with the partner is a smaller thing than that swing
+    game.market_rate = lambda: float(game.civ["starting_interest_rate"])
     return game
 
 
@@ -60,7 +63,9 @@ for _year in range(4):
     world.ship(TRADER, material, world.market_depth(material, PARTNER) * TRADER_DEPTH_SHARE, world._home_place(), PARTNER)
     game.close_partner_books()
 prices.append(SimWorld(game).price_at(material, PARTNER))
-check("the partner's price ends below where it began and never climbs above it (a glut is held in stock first)",
+# Complaint 673: the cargo asks its landed cost; where that is below the partner's producers' floor it sells first
+# and the partner's price gives way
+check("the partner's price ends below where it began and never climbs above it",
       prices[-1] < prices[0] and all(later <= prices[0] * (1.0 + 1e-6) for later in prices[1:]), prices)
 home_price = SimWorld(game).price_at(material, SimWorld(game)._home_place())
 check("...so the gap traders serve is narrower than it was",
@@ -159,14 +164,14 @@ def pays(cargo):
 
 
 check("the cargo always goes the way of the gap: it never flips sign", all(flow > 0.0 for flow in signed), signed)
-# the partner's market holds a glut in stock before its price gives way, so a steady cargo moves the price only once
-# the stock outgrows what the market takes up (the lag is checked in (a) above)
+# a steady cargo smaller than the partner's demand leaves its price at its producers' floor (checked in (a) above)
 check("the partner's price never climbs above where it began and stays above the home price it is bought at",
       all(home_price < price <= partner_prices[0] * (1.0 + 1e-6) for price in partner_prices[1:]), (partner_prices, home_price))
 check("...a quarter more cargo than the last year's would not pay at the prices it meets, and the cargo itself does",
       pays(taken_from_home[-1]) and not pays(taken_from_home[-1] * 1.25), taken_from_home)
 check("...and cargo taken from home raises the home price the trader pays", home_price_after > home_price,
       (home_price_after, home_price))
+# Complaint 672: idle capacity is idle, not stock, so a steady cargo gives a steady partner price.
 check("...and no longer swings from year to year",
       all(abs(later / earlier - 1.0) < 0.01 for earlier, later in zip(partner_prices[1:], partner_prices[2:])),
       partner_prices)

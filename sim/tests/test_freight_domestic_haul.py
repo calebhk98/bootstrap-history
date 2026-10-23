@@ -1,4 +1,5 @@
-"""Complaints/326: dues on domestic hauls, rivers from the tiles, a domestic flow ledger, droving of live animals."""
+"""Complaints/326: rivers from the tiles, a domestic flow ledger, droving of live animals, on built inputs. The haul as a game
+prices it (dues, the opposite flow, driven stock) is in test_freight_domestic_haul_scenario."""
 
 QUICK_TOPIC = True
 
@@ -134,6 +135,36 @@ class Droving(unittest.TestCase):
         self.assertGreater(len(reached), 1)
 
 
+class HaulArithmetic(unittest.TestCase):
+    """The class, mode and unjoined-haul rules (`haul_route`) and the herd's loss on the road, on given inputs."""
+
+    def test_stock_that_walks_is_living_stock_and_anything_else_is_goods(self):
+        from sim.engine.haul_route import cargo_class_of
+        self.assertEqual(cargo_class_of({"walks": True}), "living_stock")
+        self.assertEqual(cargo_class_of({"walks": False}), "goods")
+        self.assertEqual(cargo_class_of({}), "goods")
+        self.assertEqual(cargo_class_of(None), "goods")
+
+    def test_goods_go_by_the_cart_and_stock_by_the_first_walking_mode_else_the_cart(self):
+        from sim.engine.haul_route import domestic_haul_mode
+        self.assertEqual(domestic_haul_mode("goods", ["drove"], "cart"), "cart")
+        self.assertEqual(domestic_haul_mode("living_stock", ["drove", "foot"], "cart"), "drove")
+        self.assertEqual(domestic_haul_mode("living_stock", [], "cart"), "cart")
+
+    def test_an_unjoined_haul_is_one_leg_at_the_rate_plus_the_dues_once(self):
+        from sim.engine.haul_route import unjoined_haul_cost
+        self.assertAlmostEqual(unjoined_haul_cost(0.5, 200.0, 7.0), 107.0)
+        self.assertAlmostEqual(unjoined_haul_cost(0.5, 0.0, 7.0), 7.0)
+
+    def test_the_cargo_share_counts_a_herds_loss_on_the_road_over_interest_alone(self):
+        from sim.engine.haul_route import Leg, Route, domestic_cargo_cost_share
+        route = Route((Leg("a", "b", "drove", 400.0, 0.0, 20.0),))
+        interest_only = domestic_cargo_cost_share(0.0, {}, route, 0.05)
+        with_loss = domestic_cargo_cost_share(0.0, {"drove": 0.01}, route, 0.05)
+        self.assertGreater(with_loss, interest_only)
+        self.assertGreater(interest_only, 0.0)
+
+
 class Rivers(unittest.TestCase):
     """Rivers are edges between tiles derived from the tile layers, not reaches authored inside regions."""
 
@@ -150,93 +181,6 @@ class Rivers(unittest.TestCase):
                                 held_nodes={"lnd_ox_transport"})
         self.assertIsNotNone(found)
         self.assertEqual({leg["mode"] for leg in found["legs"]}, {"river_boat"})
-
-
-class DomesticHaul(unittest.TestCase):
-
-    @classmethod
-    def setUpClass(cls):
-        from . import harness
-        cls.game = harness.unopened_sim()
-
-    def setUp(self):
-        self.game.state.economy.agent_economy.pop("record", None)
-
-    def test_a_domestic_cart_haul_pays_the_modes_dues(self):
-        game = self.game
-        wage = game.labour.wage_per_hour(game.FREIGHT_DRIVER_WAGE_TRADE)
-        self.assertAlmostEqual(game.domestic_haul_dues_per_tonne("cart"), dues_hours_per_tonne()["cart"] * wage)
-        self.assertGreater(game.domestic_haul_dues_per_tonne("cart"), 0.0)
-
-    def _haul(self, cargo="goods", imbalance=None):
-        game = self.game
-        return game._haul_route([LAND_ONLY_TILE], game._domestic_flow_imbalance() if imbalance is None else imbalance, cargo)
-
-    def test_a_land_haul_is_the_cart_rate_over_its_legs_plus_dues(self):
-        game = self.game
-        route = self._haul()
-        self.assertEqual({leg.mode for leg in route.legs}, {"cart"})
-        floor = sum(game.land_freight_money_per_tonne_km() * leg.distance_km for leg in route.legs)
-        dues = game.domestic_haul_dues_per_tonne("cart")
-        self.assertGreater(dues, 0.0)
-        self.assertGreaterEqual(route.cost_per_tonne, floor + dues)
-
-    def test_the_opposite_flow_makes_the_return_cheaper(self):
-        game = self.game
-        empty = self._haul().cost_per_tonne
-        game.state.economy.agent_economy["record"] = {"carried": {"a": {"b": 10.0}, "b": {"a": 10.0}}}
-        self.assertEqual(game._domestic_flow_imbalance(), 0.0)
-        balanced = self._haul().cost_per_tonne
-        self.assertLess(balanced, empty)
-
-    def test_living_stock_is_driven_at_the_cost_of_its_own_feed(self):
-        from sim.engine.living_stock_yearly import stock_rates
-        game = self.game
-        stock = sorted(stock_rates())[0]
-        self.assertEqual(game._cargo_class(stock), "living_stock")
-        self.assertEqual(game._cargo_class("iron_kg"), "goods")
-        mode = game._domestic_haul_mode("living_stock")
-        self.assertEqual(mode, "drove")
-        driven, carted = self._haul("living_stock"), self._haul("goods")
-        self.assertEqual({leg.mode for leg in driven.legs}, {mode})
-        self.assertNotEqual(driven.cost_per_tonne, carted.cost_per_tonne)
-        inputs = game._carrier_models()[mode][0]
-        feed_price = game._material_price_per_kg(game.FREIGHT_FEED_PRICE_MATERIAL) or 0.0
-        wage = game.labour.wage_per_hour(game.FREIGHT_DRIVER_WAGE_TRADE)
-        floor = driven.distance_km * inputs.feed_kg_per_tonne_km * feed_price
-        self.assertGreater(driven.cost_per_tonne, floor)
-        self.assertEqual(game._carrier_models()[mode][1], freight_cost.CarrierPrices(0.0))
-        self.assertGreater(wage, 0.0)
-
-    def test_the_cargo_share_counts_a_herds_loss_on_the_road(self):
-        from sim.engine.foreign_routes import Leg, Route
-        from sim.engine.living_stock_yearly import stock_rates
-        game = self.game
-        stock = sorted(stock_rates())[0]
-        mode_loss = geography.cargo_loss_per_day()["drove"]
-        days = 400.0 / game._carrier_models()["drove"][0].distance_per_day_km
-        route = Route((Leg("a", "b", "drove", 400.0, 0.0, days),))
-        with_loss = game.domestic_cargo_cost_share(stock, route)
-        interest_only = game.market_rate() * days / 365.0
-        self.assertGreater(mode_loss, 0.0)
-        self.assertGreater(with_loss, interest_only)
-
-    def test_goods_modes_for_the_economy_leave_out_the_drove(self):
-        costs = self.game._freight_mode_costs(cargo="goods")
-        self.assertNotIn("drove", costs)
-        self.assertIn("cart", costs)
-        self.assertIn("drove", self.game._freight_mode_costs())
-
-    def test_a_partner_route_for_stock_uses_the_stock_modes(self):
-        from sim.engine.living_stock_yearly import stock_rates
-        game = self.game
-        goods_route = object()
-        self.assertIs(game._material_route({}, "iron_kg", goods_route), goods_route)
-        stock = sorted(stock_rates())[0]
-        called = []
-        game._foreign_route = lambda civilization, imbalance=None, cargo="goods": called.append(cargo) or "stock route"
-        self.assertEqual(game._material_route({}, stock, goods_route), "stock route")
-        self.assertEqual(called, ["living_stock"])
 
 
 class EconomyFlows(unittest.TestCase):

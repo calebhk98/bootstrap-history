@@ -1,5 +1,4 @@
-"""Scenario (Complaint 640: seed, accrual and save round trip are wiring on one game). Complaint 111, whole game: the opening industries are seeded once from the agent economy's producers,
-whatever is read first, and what the seed holds frees, speeds and steadies the concerns it should.
+"""Scenario (Complaint 640: the seed, its once-only guard and the accrual are rules in test_industry_experience_rules and test_industry_depth; this is wiring on one game). Complaint 111, whole game: the opening industries are seeded from the agent economy's producers, and what the seed holds frees, speeds and steadies the concerns it should.
 
 Slow topic: it builds a whole game (and an agent economy), so it is not in the quick tier.
 """
@@ -12,10 +11,6 @@ _ventures = [node_id for node_id in sorted(_game.state.projects.granted) if _gam
 check("set-up: the society runs some techniques at the opening", bool(_ventures), _ventures)
 
 _node = _ventures[0]
-_depth_first = _game.industry_depth(_node)
-_game.seed_opening_industry_experience()
-check("reading depth first or seeding first gives the same stock (the seed happens once)",
-      abs(_game.industry_depth(_node) - _depth_first) < 1e-12, (_depth_first, _game.industry_depth(_node)))
 # the seed and the yearly accrual are rules in test_industry_experience_rules; a year's accrual runs here on the whole game
 _game.accrue_industry_experience()
 _after = tenure_held(_game.state.projects.tenure, _node)

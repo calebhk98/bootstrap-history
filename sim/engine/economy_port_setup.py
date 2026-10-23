@@ -9,7 +9,7 @@ import json
 import os
 from typing import Dict
 
-from sim.economy.api import (EconomySetup, carriage_wear, SiteLimit, TradeSpec, currency_from_coin_standard, goods_specs, households, households_work,
+from sim.economy.api import (EconomySetup, carriage_wear, SiteLimit, TradeSpec, currency_from_coin_standard, goods_specs, household_grinding, households, households_work,
                              plant_builds, recipe_tile_key,
                              recipes_from_production_data, taxes, tile_costs, with_tool_wear)
 from sim.agents import api as agents_api
@@ -110,6 +110,7 @@ def opening_values(sim):
         "prices": prices,
         "wages": {trade: sim.economy.labour.quote(trade) for trade in labour_trades if trade in trades_data},
         "unskilled_trade": unskilled,
+        "need_shares": sim.labour.need_shares(),
         "rate": float(sim.economy.base_rate()),
         "carriage": dict(modes),
         "carriage_balanced": sim._freight_mode_costs(0.0, cargo="goods"),
@@ -184,8 +185,9 @@ def build_setup(sim, opening=None, production=None):
     tile_ids, world_map = civilisation_tiles(civ, sim.world_map)
     partners = opening.get("partners") or {}
     all_tile_ids = list(tile_ids) + [tile for opened in partners.values() for tile in opened["tiles"]]
-    cropped_share = 1.0 - sim.labour.farming_technique().rotation.fallow_share_of_holding
-    tiles = tile_costs.tiles_from_map(world_map, all_tile_ids, cropped_share)
+    technique = sim.labour.farming_technique()
+    cropped_share = 1.0 - technique.rotation.fallow_share_of_holding
+    tiles = tile_costs.tiles_from_map(world_map, all_tile_ids, cropped_share, technique.toolkit.tillage_capacity)
     for partner_id, opened in partners.items():
         for tile in opened["tiles"]:
             tiles[tile] = dataclasses.replace(tiles[tile], country=partner_id)
@@ -240,8 +242,10 @@ def build_setup(sim, opening=None, production=None):
         tax_forms=taxes.forms_from_civ_data(civ.get("state_revenue") or []),
         state_capacity=1.0,   # follows the officials: `run_year` sets it from `Sim.state_reach()` before each year
         hiding=agents_api.evasion.hidden_share,   # the one hiding rule the actor layer uses (Complaint 657)
+        flight=agents_api.flight,   # the actor layer's flight rules (Complaint 657)
         working_hours_per_year=float(sim.HOURS_PER_PERSON_YEAR), working_share=float(opening["working_share"]),
         gini=demand.GINI_COEFFICIENT_PREINDUSTRIAL_AGRARIAN, opening_population_by_tile=population_by_tile,
+        need_share_by_trade={trade: float(share) for trade, share in (opening.get("need_shares") or {}).items()},
         unskilled_trade=opening["unskilled_trade"], debt_bondage_years=sim.debt_bondage_term_years(), opening_prices=prices, opening_wages=wages, opening_rate=float(opening["rate"]),
         capital_tile=by_people[0], port_tile=(coastal or by_people)[0],
         land_per_run={recipe_id: float(production[recipe_id].get("land_hectare_years") or 0.0)
@@ -249,7 +253,7 @@ def build_setup(sim, opening=None, production=None):
         yield_factor_by_recipe_tile=cropland_yields(production, recipes, tiles),
         basket_by_tile=baskets_by_tile(basket, need_data, world_map, all_tile_ids), coin_per_unit=unit,
         household_work=households_work.load_household_work(), ready_to_eat=households_work.ready_to_eat_goods(need_data),
-        opening_income_per_head=opening.get("opening_income_per_head"),
+        milled_as=household_grinding.milled_as_map(need_data),
         recipes_by_country=recipes_by_country(str(civ["id"]), opening["recipes"], partners),
         tile_owners=sim.tile_owner_map(),
         world_map=world_map, improvements=dict(opening["ways"]),

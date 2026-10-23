@@ -15,14 +15,13 @@ def bonded_for_sale(sim, economy):
 
 
 def settle_purchases(sim, economy, outcome):
-    """Move the people the economy bought out of the bonded strata and pay their owners what the buyers paid
-    over the exchange edge (in coin). Returns the people moved."""
-    total = sum(outcome.bonded_bought.values())
-    if total <= 0.0:
-        return 0.0
-    price_per_person = outcome.bonded_paid * economy.setup.coin_per_unit / total
+    """Move the people the economy bought out of the bonded strata of the tiles they were bought on and pay, over the
+    exchange edge (in coin), their owners the ask and the merchants the carriage. Returns the people moved."""
     buyer = sim.edge(agents_api.edges.EDGE_ECONOMY)
+    coin = economy.setup.coin_per_unit
     moved = 0.0
-    for (tile, trade), people in sorted(outcome.bonded_bought.items()):
-        moved += agents_api.buy_bonded(sim.actors, buyer, tile, trade, people, price_per_person)
+    for lot in outcome.bonded_lots:
+        if lot["people"] > 0.0:
+            moved += agents_api.buy_bonded(sim.actors, buyer, lot["origin"], lot["trade"], lot["people"],
+                                           lot["ask"] * coin / lot["people"], lot["carriage"] * coin / lot["people"])
     return moved

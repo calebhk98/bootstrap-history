@@ -89,7 +89,22 @@ def _area_tiles(economy, good: str) -> Dict[str, Set[TileId]]:
 
 def prices(economy, country: Optional[str]) -> Dict[str, float]:
     """Each good's price over the market areas that touch the country's tiles, weighted by what each trades
-    (this year's volume before any is remembered)."""
+    (this year's volume before any is remembered). The answer is kept with copies of the prices and weights it
+    was read from and reused only while both compare equal to the live ones."""
+    record = economy.record
+    live_prices = record.memory.prices
+    live_weights = record.memory.volume_weights or record.volumes
+    kept = economy.__dict__.setdefault("_country_price_memo", {})
+    entry = kept.get(country)
+    if entry is not None and entry[0] == live_prices and entry[1] == live_weights:
+        return dict(entry[2])
+    result = scan_prices(economy, country)
+    kept[country] = (dict(live_prices), dict(live_weights), result)
+    return dict(result)
+
+
+def scan_prices(economy, country: Optional[str]) -> Dict[str, float]:
+    """`prices` read afresh from the record's markets."""
     tiles = country_tiles(economy, country)
     record = economy.record
     weights = record.memory.volume_weights or record.volumes
@@ -110,7 +125,19 @@ def prices(economy, country: Optional[str]) -> Dict[str, float]:
 
 def traded_volumes(economy, country: Optional[str]) -> Dict[str, float]:
     """Last year's traded quantity of each good over the market areas that touch the country's tiles (every
-    market for None)."""
+    market for None). Reused while the volumes it read compare equal to the live ones."""
+    live = economy.record.volumes
+    kept = economy.__dict__.setdefault("_country_volume_memo", {})
+    entry = kept.get(country)
+    if entry is not None and entry[0] == live:
+        return dict(entry[1])
+    result = scan_volumes(economy, country)
+    kept[country] = (dict(live), result)
+    return dict(result)
+
+
+def scan_volumes(economy, country: Optional[str]) -> Dict[str, float]:
+    """`traded_volumes` read afresh from the record's volumes."""
     tiles = country_tiles(economy, country)
     totals: Dict[str, float] = {}
     areas_of: Dict[str, Dict[str, Set[TileId]]] = {}

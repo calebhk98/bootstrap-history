@@ -17,6 +17,7 @@ from sim.constants import declare
 
 from . import unit_cost
 from .entry import EntryPlan, UnmetDemand
+from .entrant_rent import site_rent_per_run
 from .entry_sizing import ENTRY_SHARE_OF_UNTRADED_DEMAND
 from .producers import Producer, live_input_prices_at, live_wages_at
 from .types import AreaId, Bid, GoodId, Recipe
@@ -133,7 +134,7 @@ def recipes_by_cost(setup, record, view, good, tile, recipe_ids) -> List[Tuple[s
         recipe = setup.recipes[recipe_id]
         outputs = {each: view.price(each, view.area_of(each, tile)) for each in recipe.outputs}
         outputs = {each: price for each, price in outputs.items() if price is not None}
-        rent = record.land_rent.get(tile, 0.0) * setup.land_per_run.get(recipe_id, 0.0)
+        rent = site_rent_per_run(setup, record, view, recipe_id, tile)
         cost = full_cost_per_unit(recipe, good, outputs, live_input_prices_at(tile, recipe, view),
                                   live_wages_at(tile, recipe, view), rate, rent)
         if math.isfinite(cost) and cost > 0.0:

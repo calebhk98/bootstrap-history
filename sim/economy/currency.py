@@ -146,6 +146,25 @@ def update_expected_inflation(previous_expectation: float, observed_inflation: f
     return previous_expectation + EXPECTATION_ADJUSTMENT_SPEED * (observed_inflation - previous_expectation)
 
 
+def price_inflation(prices_now: Mapping[GoodId, float], prices_before: Mapping[GoodId, float],
+                    weights: Mapping[GoodId, float]) -> Optional[float]:
+    """The yearly rise in prices as the weighted median of the goods' price changes, so a few thin goods whose prices
+    run away do not set what households and lenders expect (a fixed-basket index follows them). `weights` are the
+    goods' shares of spending; a good without a price in both years or without weight is left out. None when no
+    good is left to compare."""
+    rows = sorted((prices_now[good] / prices_before[good], weight) for good, weight in weights.items()
+                  if weight > 0.0 and prices_now.get(good, 0.0) > 0.0 and prices_before.get(good, 0.0) > 0.0)
+    if not rows:
+        return None
+    half = sum(weight for _relative, weight in rows) / 2.0
+    reached = 0.0
+    for relative, weight in rows:
+        reached += weight
+        if reached >= half:
+            return relative - 1.0
+    return rows[-1][0] - 1.0
+
+
 def basket_price_level(prices_now: Mapping[GoodId, float], prices_base: Mapping[GoodId, float],
                 quantities_base: Mapping[GoodId, float]) -> float:
     """Fixed-basket (base-quantity weighted) index; goods missing in any of the three are skipped."""

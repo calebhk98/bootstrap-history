@@ -1,4 +1,4 @@
-"""Complaint 539: the felled-timber ledger is saved and, in a played year, firewood felling is drawn from it."""
+"""SCENARIO (Complaint 640): Complaint 539: the felled-timber ledger is saved and, in a played year, firewood felling is drawn from it."""
 import os
 import tempfile
 import unittest

@@ -1,4 +1,4 @@
-"""`--seed` actually reproduces a run: the same seed gives the same
+"""SCENARIO (Complaint 640): `--seed` actually reproduces a run: the same seed gives the same
 run twice in one process, and gives the same run under a different string
 hash seed too (PYTHONHASHSEED), which is what catches a float sum iterating
 an unsorted set - the bug class Complaints/27 was.

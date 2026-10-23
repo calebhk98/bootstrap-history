@@ -49,7 +49,8 @@ def lever_context(sim, country, government):
         people = sim.population.total
     else:
         people = sim.actors.state.countries[country].population
-    return government_levers.LeverContext(list(government.record.revenue_forms), set(material_prices(sim)), people)
+    return government_levers.LeverContext(list(government.record.revenue_forms), set(material_prices(sim)), people,
+                                          set(sim.nodes))
 
 
 def set_lever_reply(sim, cmd):
@@ -85,20 +86,25 @@ def _from_text(text):
          usage=["lever revenue <form> <rate>", "lever budget <line> <share>", "lever army <soldiers>", "lever navy <ships>",
                 "lever works <work> <m2>", "lever reserve <years>", "lever monopoly <good> true|false",
                 "lever subsidy <good> <money a year>", "lever mandate <good> <tonnes a year>",
+                "lever liability individual|collective", "lever amnesty <share of arrears waived>",
+                "lever immunity <years>", "lever remission <share of tax>",
                 '{"cmd":"lever","lever":"revenue","name":"land_tax","value":0.08,"as":"senate"}'],
-         options={"lever": "revenue, budget, army, navy, works, reserve, monopoly, subsidy or mandate",
+         options={"lever": "revenue, budget, army, navy, works, reserve, monopoly, subsidy, mandate, liability, amnesty, immunity or remission",
                   "name": "the revenue form (a new form also needs \"basis\"), budget line, work or good the lever is about; "
                           "army, navy and reserve have none",
                   "value": "revenue: share of the base (0 to 1; days a year for a labour due); budget: share of the line kept "
                            "(0 to 1); army: soldiers wanted; navy: ships wanted; works: m2 of the work wanted; reserve: years "
                            "of the standing need held before a surplus is spent; monopoly: true or false; subsidy: money a "
-                           "year to the good's producers; mandate: tonnes a year the state buys. null clears a setting",
+                           "year to the good's producers; mandate: tonnes a year the state buys; "
+                           "liability: individual or collective (the unit answers for those who left); amnesty: share of "
+                           "fugitives' arrears waived; immunity: years a taker of deserted land owes nothing; remission: "
+                           "share of every form's tax remitted. null clears a setting",
                   "basis": "a new revenue form's base (see the refusal's choices)",
                   "country": "only your own country is accepted"},
          description="Sets one lever of the government your country seat holds; the next year's budget and revenue read it. "
                      "A seat sets only its own country's levers. Refusals carry a cause: household_seat_has_no_government, "
                      "not_your_country, unknown_lever, unknown_name, unknown_basis, value_not_number, value_out_of_range, "
-                     "value_not_boolean, nothing_to_clear; choices lists what would be accepted. Until Complaints 625 and 626 land "
+                     "value_not_boolean, unknown_rule, nothing_to_clear; choices lists what would be accepted. Until Complaints 625 and 626 land "
                      "a rate may be any share the form's base allows.")
 def _cmd_lever(sim, nodes, cmd, ended):
     if cmd.get("text") and not cmd.get("lever"):

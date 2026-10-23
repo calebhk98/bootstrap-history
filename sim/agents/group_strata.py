@@ -26,9 +26,10 @@ def definite(name: str) -> str:
 
 
 def organisable(stratum: Any) -> bool:
-	"""A free stratum of the home country with people in it; the bonded and foreign cannot act on this state."""
+	"""A free stratum with people in it; the bonded cannot act on the state. Whose state is the caller's: it passes the strata of
+	one country."""
 	record = stratum.record
-	return record.country is None and record.members > 0.0 and not stratum.is_bonded()
+	return record.members > 0.0 and not stratum.is_bonded()
 
 
 def property_holders(strata: List[Any]) -> List[Any]:

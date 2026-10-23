@@ -12,6 +12,7 @@ from sim.labour.api import MarketState, market_state_from_plain, market_state_to
 
 from .accounts import Book
 from .banks import Bank
+from .capital_state import CapitalState
 from .households_cohort import Cohort
 from .market_memory import KEY_SEPARATOR, MarketMemory
 from .merchants import Merchant
@@ -25,7 +26,7 @@ from .types import AgentId, CurrencySpec, Loan, LoanRequest, TileId, TradeId
 # the record's fields whose annotation names an AgentId (a test reads the source and holds this list to it)
 AGENT_KEYED_FIELDS = ("cohorts", "producers", "merchants", "remembered_defaults", "credit_losses", "loss_rates", "losses_seen", "property_income",
                       "expansion_runs", "worn_runs", "titles", "bondage", "lent_by_borrower", "credit_granted", "banks", "shares",
-                      "last_dividends")
+                      "last_dividends", "capital", "bonded_held")
 
 # the stores `to_record` writes sorted by key, and so a load reads back in that order
 SAVED_SORTED_FIELDS = ("cohorts", "producers", "merchants", "titles", "tenancies", "bondage", "tax_history", "banks", "shares",
@@ -66,14 +67,17 @@ class EconomyRecord:
     worn_runs: Dict[AgentId, float] = field(default_factory=dict)        # plant that wore out last year, to rebuild
     state_budget: StateBudget = field(default_factory=StateBudget)       # the state's revenue and this year's plan
     land_rent: Dict[TileId, float] = field(default_factory=dict)         # rent per hectare producers paid, by tile
+    land_mean_value: Dict[TileId, float] = field(default_factory=dict)   # tile -> mean output value a hectare of the uses that set its rent (entrant_rent.py)
     titles: Dict[TileId, Dict[AgentId, float]] = field(default_factory=dict)   # tile -> holder -> share of its land (titles.py)
     tenancies: Dict[TileId, List[Dict[str, Any]]] = field(default_factory=dict)   # tile -> rows of tenant, lessor, share, arrears
     cleared_hectares: Dict[TileId, float] = field(default_factory=dict)   # tile -> ground cleared and taken up, added to its cropland (titles_ground.py)
     bondage: Dict[AgentId, Dict[str, Any]] = field(default_factory=dict)   # household cohort -> creditor, debt left, years left (bondage.py)
+    bonded_held: Dict[TileId, Dict[TradeId, Dict[AgentId, float]]] = field(default_factory=dict)   # tile -> trade -> employer -> bought bonded people it holds (bondage_hours.py)
     tax_history: Dict[str, Dict[str, float]] = field(default_factory=dict)   # form -> last year's base and the state's own take (tax_farming.py)
     tax_farms: Dict[str, Dict[str, Any]] = field(default_factory=dict)   # form -> this year's farmer and price; empty between years
     margin_years: Dict[str, int] = field(default_factory=dict)           # market_key -> years in a row the expected price stood above the entry price
     hours_hired: Dict[str, float] = field(default_factory=dict)          # labour market_key -> hours hired last year
+    hours_hired_by_others: Dict[str, float] = field(default_factory=dict)   # labour market_key -> hours hired last year by employers that are not producers (hours_hired_by_others.py)
     hours_idle: Dict[str, float] = field(default_factory=dict)           # labour market_key -> hours offered and not hired last year
     funds_offered: float = 0.0                                           # savings on offer at the last lending, home currency
     lent_by_borrower: Dict[AgentId, float] = field(default_factory=dict)  # what each borrower was lent at the last lending
@@ -81,6 +85,7 @@ class EconomyRecord:
     banks: Dict[AgentId, Bank] = field(default_factory=dict)             # the banks households deposit with (banks.py)
     shares: Dict[AgentId, Dict[AgentId, float]] = field(default_factory=dict)   # producer -> holder -> part of its equity the holder bought (shares.py)
     last_dividends: Dict[AgentId, float] = field(default_factory=dict)   # producer -> the dividend it paid at its last close
+    capital: CapitalState = field(default_factory=CapitalState)          # hazard records, insurers with their policies, and funds, keyed by AgentId (capital_state.py)
     curves: Dict[str, Any] = field(default_factory=dict)                 # market_key -> the book of the last clearing at the port (market_curves.py)
     ways: Dict[str, Dict[str, Any]] = field(default_factory=dict)        # the built ways the market areas are partitioned for
     area_imbalance: float = 1.0                                          # the return-trip emptiness the market areas were partitioned for (its memory is keyed by those areas)
@@ -88,6 +93,8 @@ class EconomyRecord:
     spin_up_result: Dict[str, Any] = field(default_factory=dict)         # how the hidden first stage ended: settled, years run, last gap (empty: no spin-up ran)
     carried: Dict[str, Dict[str, float]] = field(default_factory=dict)   # tonnes the merchants carried last year: origin tile -> destination tile (sim.geography.flow_ledger)
     carried_goods: Dict[str, Dict[str, Dict[str, List[float]]]] = field(default_factory=dict)   # the same flows by good: good -> origin -> destination -> [tonnes, value at origin's price, value at destination's price] (carried_book.py)
+    leisure_anchor_wage: Dict[TradeId, float] = field(default_factory=dict)   # trade -> the wage at which its workers keep half their free hours as leisure, at the opening's price level (opening_leisure.py)
+    fugitives: Dict[str, Dict[str, Any]] = field(default_factory=dict)   # labour area people fled from -> people still away, arrears owed per head, the area they went to (flight_year.py)
     output_by_tile: Dict[TileId, Dict[str, float]] = field(default_factory=dict)   # tile -> good -> units the home producers made last year
 
     @property
@@ -144,13 +151,17 @@ class EconomyRecord:
             "worn_runs": self.worn_runs,
             "state_budget": plain(self.state_budget),
             "land_rent": self.land_rent,
+            "land_mean_value": self.land_mean_value,
             "titles": {tile: dict(held) for tile, held in sorted(self.titles.items())},
             "tenancies": {tile: [dict(row) for row in rows] for tile, rows in sorted(self.tenancies.items())},
             "cleared_hectares": dict(sorted(self.cleared_hectares.items())),
+            "fugitives": {area: dict(row) for area, row in sorted(self.fugitives.items())},
             "bondage": {cohort: dict(bond) for cohort, bond in sorted(self.bondage.items())},
+            "bonded_held": plain(self.bonded_held),
             "tax_history": {form: dict(row) for form, row in sorted(self.tax_history.items())},
             "margin_years": self.margin_years,
             "hours_hired": self.hours_hired,
+            "hours_hired_by_others": self.hours_hired_by_others,
             "hours_idle": self.hours_idle,
             "funds_offered": self.funds_offered,
             "lent_by_borrower": self.lent_by_borrower,
@@ -158,9 +169,11 @@ class EconomyRecord:
             "banks": {key: plain(value) for key, value in sorted(self.banks.items())},
             "shares": {producer: dict(sorted(held.items())) for producer, held in sorted(self.shares.items())},
             "last_dividends": dict(sorted(self.last_dividends.items())),
+            "capital": self.capital.to_plain(),
             "curves": self.curves,
             "ways": {key: dict(built) for key, built in sorted(self.ways.items())},
             "area_imbalance": self.area_imbalance,
+            "leisure_anchor_wage": dict(sorted(self.leisure_anchor_wage.items())),
             "carried": {key: dict(row) for key, row in sorted(self.carried.items())},
             "carried_goods": self.carried_goods,
             "spin_up_result": dict(self.spin_up_result),
@@ -193,13 +206,17 @@ class EconomyRecord:
             worn_runs=dict(record["worn_runs"]),
             state_budget=StateBudget(**record["state_budget"]),
             land_rent=dict(record["land_rent"]),
+            land_mean_value=dict(record["land_mean_value"]),
             titles={tile: dict(held) for tile, held in record["titles"].items()},
             tenancies={tile: [dict(row) for row in rows] for tile, rows in record["tenancies"].items()},
             cleared_hectares=dict(record["cleared_hectares"]),
+            fugitives={area: dict(row) for area, row in record["fugitives"].items()},
             bondage={cohort: dict(bond) for cohort, bond in record["bondage"].items()},
+            bonded_held=plain(record["bonded_held"]),
             tax_history={form: dict(row) for form, row in record["tax_history"].items()},
             margin_years=dict(record["margin_years"]),
             hours_hired=dict(record["hours_hired"]),
+            hours_hired_by_others=dict(record["hours_hired_by_others"]),
             hours_idle=dict(record["hours_idle"]),
             funds_offered=record["funds_offered"],
             lent_by_borrower=dict(record["lent_by_borrower"]),
@@ -207,9 +224,11 @@ class EconomyRecord:
             banks={key: Bank(**value) for key, value in record["banks"].items()},
             shares={producer: dict(held) for producer, held in record["shares"].items()},
             last_dividends=dict(record["last_dividends"]),
+            capital=CapitalState.from_plain(record["capital"]),
             curves=dict(record["curves"]),
             ways={key: dict(built) for key, built in record["ways"].items()},
             area_imbalance=record["area_imbalance"],
+            leisure_anchor_wage=dict(record["leisure_anchor_wage"]),
             carried={key: dict(row) for key, row in record["carried"].items()},
             carried_goods=record["carried_goods"],
             spin_up_result=dict(record["spin_up_result"]),

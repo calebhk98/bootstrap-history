@@ -1,156 +1,107 @@
 # The opening's income leaks saving, so the economy opens at subsistence and its wage keeps falling
 
-**Status:** open - split into 606, 605, 608, 607 (closes when they do)
+**Status:** open - umbrella (stationary solver started, 473 Update 6); the plan is carried by 606, 605, 608, 607 (closes when they do); measurement history in `Complaints/reports/526-history.md`
 
-Found in 507 Stage 2 (merged). The opening sets household income as the fixed point of income and the demand it pays
-for (`sim/economy/opening_income.py`). Households save part of any surplus, and nothing in the fixed point spends
-that saving (no investment demand: producers building plant, lenders lending it on), so the fixed point falls to the
-cost of the households' floors: every opening is a stationary near-subsistence economy, and the old opening's
-surplus and growth are gone. Several fixtures now state a household income through a new setup input,
-`EconomySetup.opening_income_per_head`, to get households with a surplus.
-
-During the spin-up the labour market clears at the households' outside option, far below the cost-table wage, from
-the first year; prices follow the wage down slowly while employment grows into the gap, so the wage and the price
-level fall for decades and no civilisation's spin-up settles (`python3 sim/simulator.py opening-checks`; trace:
-`python3 sim/simulator.py spin-up-trace --civ rome_100ad --years 60`). Rome's unskilled wage ends below its floor.
-The opening wage still comes from `wage_schedule` (anchored on the coin metal's table cost), not from what labour
-can earn at the households' own work.
+**What is wrong now.** The opening sets household income as the fixed point of income and the demand it pays for
+(`sim/economy/opening_income.py`). Households save part of any surplus and nothing in the fixed point spends that saving
+(no investment demand), so the fixed point falls toward the cost of the households' floors: every opening is a stationary
+near-subsistence economy. Several fixtures state a household income through `EconomySetup.opening_income_per_head` to get
+households with a surplus. During the spin-up the labour market clears at the households' outside option, far below the
+cost-table wage, so wage and price level fall for decades and no spin-up settles. Measure:
+`python3 sim/simulator.py opening-checks`; `python3 sim/simulator.py spin-up-trace --civ rome_100ad --years 60`.
 
 Why it matters (CLAUDE.md 4.1, 4.2): a society's surplus over subsistence follows from its productivity, not from a
-stated income; and an opening that drifts for decades means every number a player sees depends on when the
-spin-up stopped.
+stated income; an opening that drifts for decades makes every number a player sees depend on when the spin-up stopped.
 
-What it would take: the opening's income is the value of what its workers produce at opening prices, with saving
-matched by investment (producers' plant and working capital, and lending) so the fixed point does not leak; the
-opening wage is the value of labour's marginal product, consistent with the households' outside option, so the
-labour market clears near the opening wage in year one. Then delete `opening_income_per_head` (a stated income is
-an outcome, CLAUDE.md 4.1) and remove the fixtures' use of it. Tests: realised year-0 income is within a band of
-the opening figure; the spin-up settles; a more productive technique set opens with a larger surplus.
+**Cause measured.** The savings wish in `households_orders.goods_orders`, not satiation: the wealth a cohort wants to keep is
+many times its income, so spending falls toward the floors and the rest goes to `funds_offers`. Counting held durables and
+land does not close it (land earns no capitalisable rent without plot titles, 538); the opening's firm equity lifts the
+settled income by about a third and no more. The wish is far larger than any wealth households hold.
 
-## Found fixing 546 and 547
+**What it would take** (order of work, each a child):
 
-Correct accounting moves the opening: with only principal no longer counted as income (547),
-`full_length_opening_checks` fails England's money against coin wear (by a small margin) and two sited-ore
-price checks; adding producers that run only what their cash pays for, with working-capital loans (546),
-clears the ore checks but leaves the Norse unskilled wage below its floor. Each change moves where the
-spin-up's drift stops, which is this issue and 473, not a defect in the change. Measure with
-`python3 -m sim.tests --slow --only full_length_opening_checks --topic-seconds 3000`. The shipped
-openings cannot be regenerated (`python3 sim/simulator.py openings` refuses failing checks) until the opening
-is fixed here, or the failure is shipped with `--allow-failing REASON`.
+1. 606: source or shrink the savings wish (a labelled figure with no source).
+2. 605: an `equity(agent)` on the market view, so the opening's wealth wish is set against what households own.
+3. 538: land and plot titles carry a value (the asset the probes found missing).
+4. 608: the opening wage is the value of labour's marginal product, consistent with the households' outside option, not the
+   coin metal's table cost.
+5. 607 and 545 land together (545 cannot land alone: own-plot growth in the fixed point drives the settled income to zero while
+   the leak stays); then delete `opening_income_per_head` and its fixtures. The wage drift is 473.
 
-545 cannot land alone: with own-plot growing in the opening's fixed point (branch
-`fix-545-opening-grows-its-own`), Rome's food floor is all grown at home, nothing left in market demand is a
-floor, and the leak this issue names drives the settled income toward zero. The two are one fix.
+Tests wanted: realised year-0 income within a band of the opening figure; the spin-up settles; a more productive technique
+set opens with a larger surplus.
 
-## Measured cause: the savings wish, not satiation
+**Tried and why it failed.**
 
-In `data/world/needs.json` only a few needs carry a satiation limit
-(ornament, seasoning, water, light, amusement); food, shelter, clothing, implements, warmth and the rest do not, and
-`apply_satiation` moves the freed spending to them by budget weight. On a Rome opening, for each cohort at the
-full-employment income, `need_basket.need_units` places spending equal to the whole income (spending over income is
-one, per need shares sum to one). So "wanted income" built from satiated spending is unbounded, and hours that
-follow it would not change.
+- An opening rate search (branch `fix-526-opening-rate`, not merged; `sim/economy/opening_rate.py` is not in main): lifted
+  settled income by about a third then flat, and the wage drifted lower than without it, so the rate is not what drives the wage.
+- Lowering `SAVINGS_RESPONSE_FLOOR`: only reaches the ceiling at a rate nobody lends at; the floor stays.
+- Counting durables and land as held wealth: settled income barely moved.
+- Correct accounting (546, 547) moved where the spin-up's drift stops; the shipped openings cannot be regenerated
+  (`python3 sim/simulator.py openings` refuses failing checks) until this is fixed or the failure is shipped with
+  `--allow-failing REASON`.
 
-What cuts the spending is the savings wish in `households_orders.goods_orders`: at the opening `_opening_bids`
-gives the cohort cash equal to its income, the wealth it wants to keep (cash buffer plus years of surplus income)
-is many times that, so the drawdown is negative and bounded only by income, and spending falls toward the floors
-while the rest goes to `funds_offers`. The share lost grows with the surplus (the richest cohorts spend least).
-Reproduce: build Rome as `probe526.py` does, set each cohort's `last_year_income` through
-`opening_income.with_income`, and compare `sum(bid.budget)` of `households.goods_orders(cohort, ..., cash,
-income, ...)` against income for `cash = income` and for larger cash; then trace
-`opening_income.settled_income_per_head` pass by pass (value of demand over income per head rises toward one only as
-income falls toward the floors). The fixed point therefore is the original leak of this issue (saving that nothing
-spends) acting through the savings target, not satiation, and a target-income hours rule has nothing to bite on
-unless needs get physical limits (food in calories) or the savings wish is matched by an investment demand.
-Directions that follow from this: open households holding the wealth they want (their savings wish already met, so
-the opening's bids spend income), and give saving a user (producers' plant and working capital, lending).
+## Update: does more money reach prices? (branch money-reaches-prices; `economy_state_budget_validation`, `state_debasement_prices_scenario`)
 
-## Measured: counting what households already hold does not close the leak
+Traced on the opened England economy (declared-length opening, fiat, `issue` only; the probes were throwaway scripts, not
+committed) and on the Rome two-game debasement scenario. Command for the validations:
+`python3 -m sim.tests --slow --only TOPIC --jobs 1 --topic-seconds 290`.
 
-Tested whether the wealth households already hold (durables in use, land) covers the wealth the savings wish wants.
-No command in the repo measures this (a throwaway probe built Rome, opened it and compared each cohort's wanted
-savings with what it holds; the probes are not kept). Findings on Rome without a spin-up:
+**Where the coin goes.** The state's programme is a stated real target of a multiple of the money stock a year; the economy's
+own goods sales are about a tenth of that stock a year. So a printing of four times the stock is about forty times the year's
+sales, bought as quantities at any price, and the coin reaches sellers of the few goods the state buys, not every seller.
+Households spend roughly their income (spending over cash held is about a tenth a year in every run, printed or not), so the
+stock they hold grows with the printing and does not come back as demand; velocity (goods sales over the money stock) is
+about a tenth to a third a year in the control and falls as the stock rises. Of the coin printed, the labour channel spent
+almost none of its plan: the state bids at most one and a half times last year's wage for at most a share of each tile's hours,
+and vacant hours stayed in the tens of millions per tile while the state hired a few million. The unspent wage plan stayed in
+the state's purse (about 45 percent of the money stock after four years at sixteen times).
 
-- Land is negligible. The opening pays no rent yet; clearing the land market for the producers the opening
-  sizes gives a rent whose capitalised value (rent over the opening rate) is a few hundredths of a year of
-  household income. Households pay no rent on their own plots, so the land they work earns nothing to
-  capitalise; counting it needs plot titles with an imputed value (538), not a rent stream.
-- Durables in use are real but uneven. Summed over cohorts they come near the wanted wealth, but cohort by
-  cohort most hold about a third of the savings wish and a few (the city tile) many times it, which a cap at the
-  savings target cannot use. Counting `min(savings, durables)` covers a bit over half of the wish in total.
-- Effect on the fixed point: with each pass counting the durables the cohort would hold (the stock wanted at
-  that pass), the settled income over the full-employment ceiling barely moves (from about 0.155 to about
-  0.166). The hypothesis is false: the savings wish is far larger than any wealth a household holds, and
-  counting held wealth does not remove it.
+**Why the levels were absurd** (measured, `opening_basket` value shares at base prices): `glass_raw_kg` is 77 percent of the
+basket's value (5.5 million kg at 2360 a kg, as the vessels need's floor is met mostly by glass), against about four percent of
+what the market actually trades in basket goods (`traded_spending_weights` on the opened record: ceramic 47 percent, piped water
+16, iron tools 6). The weighted median that chains the level (`currency.price_inflation`, read by the state's programme, the
+leisure anchor and the households' perceived level) is therefore glass's own price change alone, and the control already ran
+0.71, 1.28, 0.95, then 54 in four years on one thin good. At sixteen times the printing, flour and wheat rose over a hundredfold
+and bread tenfold while the level read 0.55, so the state's nominal budget (target times that level) fell as prices rose.
+The fixed-basket level (what the validation read) is carried by thin goods with a few tenths of a percent of the weight
+(brick walls 370 thousand times base, milk 49 thousand): 4342 for the smaller printing and 562460 for the larger in the run the
+task named, a different pair in each run, so it orders nothing. 473 Update 9 recorded both ("weights in `price_inflation` use each good's
+full opening quantity"; the fixed-basket level "still wanders over an order of magnitude").
 
-Not built. Direction that remains: give saving a user (producers' plant and working capital, lending), or make
-the opening's wish match what the opening households hold.
+**Fixed (rule tests on built inputs).**
+- `national_prices.traded_spending_weights`, used by `year_close.remember_basket_price_level`: the median's weights are last
+  year's traded volume times price over the basket goods, falling back to the opening basket only until goods trade.
+  Test: `sim/tests/test_price_inflation_weights.py` (a good that dominates the opening basket and barely trades does not set
+  the inflation).
+- `state_budget.lapse_unspent_wages`, called after the labour market clears: a stated real programme that could not hire what
+  it planned spends the remainder on goods (a shortage of hired labour must not leave printed coin in the purse). Test:
+  `sim/tests/test_state_unspent_wages.py`.
+- `economy_state_budget_validation` now reads the chained level (`memory.price_levels`) instead of the fixed-basket one. This
+  changes which reader is measured, not a bound: every threshold is as it was.
 
-## Built and measured: the opening finds its rate (branch `fix-526-opening-rate`); the drift remains
+**Measured after (same opened economy, hash seed fixed; control, four times, sixteen times the stock a year, years 0 to 3):**
+the chained level, control 0.98, 0.98, 0.90, 0.97; four times 2.75, 11.5, 10.1, 10.3; sixteen times 3.0, 13.5, 15.3, 11.9. Before
+(same reader weights, old rule): control 0.71, 1.28, 0.95, 54; four times 0.71, 1.37, 1.90, 1.39; sixteen times 0.71, 0.87, 0.71,
+0.55. Printing now raises the level about tenfold in four years; the larger printing raises it 1.16 times the smaller, not the 1.25 the
+check asks for, so `printing_more_raises_the_price_level_more_instead_of_saturating` is still red (11.94 against 12.92), and the
+runaway check misses its twentyfold bound narrowly (53.9 against 67.4, the first year already carrying a 2.7 times rise).
+Balanced-budget share check is green on this head (it was red on the base).
 
-`sim/economy/opening_rate.py` finds the rate at which households' funds offered (their goods orders at the
-full-employment income) equal the loans borrowers ask for (producers' working capital beyond the cash they
-hold, merchants' cargo credit, queued requests such as the state's). The civilisation's `rate` is the search's
-upper bound and starting guess; the lowest rate lenders accept (time preference plus expected inflation, and
-the credit market's floor) is its lower bound. `open_economy` opens once to measure, then opens again at the
-found rate. The result is kept in `record.opening_credit` (rate, whether it cleared, saving, requests).
-When saving exceeds requests at every rate the search covers, it reports `clears: false` and opens at the
-lowest rate; that is the case that needs an asset to buy (538). A stated income
-(`opening_income_per_head`) skips the search; the fixtures that state a surplus keep the data rate.
+**What is left, and what the premise needs.** The remaining saturation is physical or a stated heuristic, not a wrong
+reader: the state buys quantities in markets whose supply cannot respond (thin goods carry the rise, the median goods do not),
+its purse still holds about a fifth of the stock at sixteen times, and households hold what they receive (their spending follows
+income). The quantity theory (price level proportional to money at stable velocity and fixed output) holds in the long run once
+households' cash is back at its target; here households hold far more than the target of a quarter year of spending (the
+leak this complaint is about), so velocity is a tenth to a third and falls as money rises, and a four-year window is
+not long run. A validation that wants a proportional rise needs the money to arrive as income across households (a transfer or a
+wage bill the labour market can fill), not as a purchase programme of forty times the year's output.
+Tried and removed: scaling the households' smoothing band for the spending they may add in a year (`SPENDING_CUT_LIMIT`) by
+expected inflation. It made the unprinted control deflate to 0.40 in four years (the symmetric rule cuts spending when prices
+fall) and did not lift the printed levels.
 
-Measured (settled income over the full-employment ceiling, no spin-up; `PYTHONPATH=. python3 <probe>` building
-`build_setup(unopened_sim(civ="rome_100ad"))`, then `opening.open_economy`):
-
-- Rome: rate 0.12 (data) opens at 0.21 of the ceiling with the replacement pass counted as before; the
-  search finds a clearing rate of about 0.064 (saving and requests within 0.5%), where it opens at about 0.27
-  to 0.31 (the two probe runs differ in the replacement pass). Held at fixed rates: 0.12 gives 0.21, 0.08 gives
-  0.28, and 0.064, 0.05, 0.03, 0 give 0.27 each. The gain is about a third and then flat.
-- Small fixture: no clearing rate (saving at full employment is several times the requests at every rate),
-  opens at the lowest rate, settled income over the ceiling 0.0866 before and 0.0868 after.
-
-Why the rate cannot do more: `SAVINGS_RESPONSE_FLOOR` (1.0) holds the wish at the base (two years of surplus
-income) for every real rate below time preference, so below the lowest rate lenders accept the wish is flat and
-no rate there could clear. Lowering the floor was measured (Rome, rate held fixed): floor 0 gives 0.27 at 0.064
-and 0.05, 0.33 at 0.03, 1.00 only at rate 0; floor 0.5 gives 0.47 at rate 0. Rates under the lenders' lowest
-are not rates anyone lends at, so the floor stays; its stated reason (dearth, dowry, old age) is unchanged and
-nothing here supports a lower figure.
-
-The wage still drifts (Rome, `ROME_SPIN_UP_YEARS=2,1`, labourer wage per hour, opening 1.0, game years 1 to 8,
-spin-up cache bypassed for the "before" run): before 0.145, 0.129, 0.117, 0.113, 0.116, 0.136, 0.134, 0.119;
-after 0.129, 0.106, 0.090, 0.078, 0.069, 0.062, 0.056, 0.050. The wage is a tenth of its opening figure by
-year one in both, so the savings leak is not what drives it down; the remaining candidates are 473 (the wage
-schedule against the households' outside option) and the wish itself (two years of surplus per household).
-Small fixture, ten years, mean labourer wage: before 0.075 to 0.022, after 0.075 to 0.023; the rate path
-falls to near zero in both.
-
-Not merged: the opening rate search is on branch `fix-526-opening-rate`. It lifts the settled income by about
-a third and then no further, and Rome's labourer wage over the first years is no better and drifts lower than
-without it, so the savings wish is not what drives the wage collapse. Next to look at: the opening wage
-(`wage_schedule`, anchored on the coin metal's table cost) against what labour earns at the households' own work
-(473), and the size of the savings wish itself.
-
-## Measured: the wealth households want against the wealth the opening holds
-
-Rome without a spin-up (`build_setup(unopened_sim(civ="rome_100ad"))`, then `opening.open_economy`) settles at about a
-quarter of the full-employment ceiling. Against total household income, the opening holds producer cash of about a
-year, plant at replacement value of a few hundredths of a year and household cash of under a fifth of a year, while the
-savings wish asks for roughly four years. A throwaway probe added firm equity of K years of income to the wealth
-`goods_orders` sees, split by `ownership_share`: the settled ratio rose with K and reached the ceiling only near four
-years. The opening's real firm equity (about a year) lifts it by about a third, as the rate search did.
-
-So the leak closes only when households hold wealth near the wish, or the wish is smaller. Order of work:
-1. Land and plot titles carry a value (538), the asset the earlier probe found missing.
-2. A `view.equity(agent)` on the `MarketView` protocol (firm net worth and titles), read alike by `goods_orders` and
-   `_opening_bids`, so year-0 income matches the opening.
-3. Question the wish itself: two years of surplus income plus a cash buffer is a labelled figure; check it against
-   sources on pre-modern household saving before building assets to match it.
-4. Then 545 (own plots in the opening) can land, and `opening_income_per_head` can go. The wage drift is 473.
-
-## Split
-
-Children, in order of work:
-
-- 606: The households' savings wish (two years of surplus income plus a cash buffer) is a labelled figure with no source
-- 605: The market view has no `equity(agent)`, so the opening's wealth wish is never set against what households own
-- 608: The opening wage is anchored on the coin metal's table cost, not on what labour earns at the households' own work
-- 607: The opening's income is a fixed point that leaks saving, and fixtures state an income to avoid it
+**Debasement scenario.** The Rome pair (cut half the metal each year, three years), final head against its twin at year 3: coin in
+circulation 1.27 times, fixed-basket level 1.88 against 1.54 (1.22 times), chained level 2.24 against 1.00; the check's bound is 1.05 on
+the fixed-basket level and holds (220 s). On the base head the basket pair was 1.79 against 1.45 (1.24 times), chained 1.29 against
+0.92: the effect is well clear of the edge in either run, but it is one seed of a draw (the fixed-basket level moves several tens of
+percent between years on thin goods); the chained level, now weighted by trade, shows it more strongly.

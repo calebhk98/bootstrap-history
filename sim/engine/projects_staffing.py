@@ -15,7 +15,7 @@ and switched back on.
 These are methods of Sim; they are a mixin only so that they can live in a
 file of their own. Behaviour is unchanged and verified byte-identical.
 """
-from sim.refusal import LogLine
+from sim.refusal import LogLine, Refusal
 from sim.constants import declare
 from . import cause_book, category_traits
 from .agents_port import SimWorld
@@ -653,9 +653,9 @@ class StaffingMixin:
         # running, supervision time) rather than asking about money alone.
         sch_held, art_held = self.venture_hands(node_id) if node_id in projects.operating else (0.0, 0.0)
         if self.nodes[node_id]["up"] <= 0 and sch_held <= 0.005 and art_held <= 0.005:
-            return False, ("that has no money upkeep of yours to stop paying, and "
-                           "nobody of yours is tied up supervising it either; "
-                           "there is nothing to save")
+            return False, Refusal("nothing_to_save", "that has no money upkeep of yours to stop paying, and "
+                                  "nobody of yours is tied up supervising it either; "
+                                  "there is nothing to save")
         # A DELIBERATE SHUTDOWN IS NOT AN ABANDONMENT: never_abandon exists
         # to stop the ENGINE quietly deleting a step a player needs and then
         # refusing to fund rebuilding it. A player choosing to close

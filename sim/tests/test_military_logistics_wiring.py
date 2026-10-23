@@ -1,155 +1,94 @@
-"""test_military_logistics_wiring: the ONE crossing wiring sim/world/
-military_logistics.py into sim/engine/society.py, and only that crossing.
+"""The one crossing wiring sim/world/military_logistics.py into the engine: the per-soldier equipment burden follows
+the founder's military leverage between the melee floor and the modern-rifle ceiling, and leverage counts only the
+founder's own military nodes. Called on a stub over the real mixin. Soldier iron and ammunition supply is derived in
+kilograms and never converted to money.
 
-See sim/world/military_logistics.py's module docstring ("BUILT STANDALONE;
-NOW WIRED IN, ONE CROSSING ONLY") and SocietyMixin.military_equipment_
-burden_kg_per_soldier_per_year()'s own docstring in sim/engine/society.py
-for what was wired in, what was rejected, and why. This file checks that
-crossing specifically - not military_logistics.py's own arithmetic, which
-sim/tests/test_military_logistics.py already covers standalone.
+The notice that carries the figure, in a game, is in `test_military_logistics_wiring_scenario`."""
 
-Uses the full engine harness (sim/tests/harness.py), unlike test_military_
-logistics.py's plain unittest style, because this crossing lives in
-sim/engine/society.py and cannot be exercised without a real Sim.
+QUICK_TOPIC = True
 
-Soldier iron and ammunition supply is derived in kilograms and never converted to money.
-"""
-from .harness import *  # noqa: F401,F403
+import unittest
+from types import SimpleNamespace
 
+from sim.engine.society_state_pressure import StatePressureMixin
 from sim.world import military_logistics as logistics
 
-
-# --- the melee-tier floor: at zero military leverage, the reported burden is
-# exactly military_logistics.py's own melee-only figure - no firearm, no
-# ammunition, iron upkeep alone. Not re-derived here; read straight from the
-# module so a change to IRON_KG_PER_EQUIPPED_SOLDIER or ANNUAL_EQUIPMENT_
-# REPLACEMENT_FRACTION is still traceable through this test rather than past
-# it.
-_zero_lev = unopened_sim(civ="rome_100ad")
-check("at zero military leverage, the founder is out entirely",
-      _zero_lev.military_leverage() == 0.0, _zero_lev.military_leverage())
-check("...so the reported per-soldier burden is military_logistics.py's own "
-      "melee-only figure, exactly",
-      _zero_lev.military_equipment_burden_kg_per_soldier_per_year()
-      == logistics.annual_iron_and_ammunition_burden_kg_per_soldier(),
-      (_zero_lev.military_equipment_burden_kg_per_soldier_per_year(),
-       logistics.annual_iron_and_ammunition_burden_kg_per_soldier()))
-
-# --- the rifle-tier ceiling: at full military leverage (every military-trait
-# node done), the reported burden is exactly military_logistics.py's
-# MODERN_SERVICE_RIFLE figure at society.py's own declared campaign tempo -
-# again read from the module's functions, not a number typed into this test.
-_full_lev = unopened_sim(civ="rome_100ad")
-_all_military = [node_id for node_id in NODES if "military" in NODES[node_id].get("traits", ())]
-_full_lev.done.update(_all_military)
-_full_lev._done_changed()
-check("crediting every military-trait node saturates leverage at 1.0",
-      _full_lev.military_leverage() == 1.0, _full_lev.military_leverage())
-_expected_rifle_kg = logistics.annual_iron_and_ammunition_burden_kg_per_soldier(
-    firearm=logistics.MODERN_SERVICE_RIFLE,
-    engagements_per_year=_full_lev.MILITARY_EQUIPMENT_ERA_CAMPAIGN_TEMPO_ENGAGEMENTS_PER_YEAR)
-check("...so the reported per-soldier burden is military_logistics.py's own "
-      "modern-rifle figure at society.py's declared campaign tempo, exactly",
-      abs(_full_lev.military_equipment_burden_kg_per_soldier_per_year() - _expected_rifle_kg) < 1e-9,
-      (_full_lev.military_equipment_burden_kg_per_soldier_per_year(), _expected_rifle_kg))
-
-# --- monotone in between: THE STAKEHOLDER'S OWN SCENARIO ("give Rome guns")
-# run through the numbers - a founder who has built out more of the military
-# branch reports a heavier per-soldier physical claim, never a lighter one,
-# and never one outside [melee, rifle].
-_melee_kg = logistics.annual_iron_and_ammunition_burden_kg_per_soldier()
-_partial = unopened_sim(civ="rome_100ad")
-_partial.done.update(_all_military[:5])
-_partial._done_changed()
-_partial_burden = _partial.military_equipment_burden_kg_per_soldier_per_year()
-check("partial military leverage reports a burden strictly between the "
-      "melee floor and the rifle ceiling",
-      _melee_kg < _partial_burden < _expected_rifle_kg,
-      (_melee_kg, _partial_burden, _expected_rifle_kg))
-check("more military nodes done means a heavier reported burden, never a "
-      "lighter one - the crossing moves the SAME direction as leverage "
-      "itself, always",
-      _full_lev.military_equipment_burden_kg_per_soldier_per_year() > _partial_burden
-      > _zero_lev.military_equipment_burden_kg_per_soldier_per_year())
+MELEE_KG = logistics.annual_iron_and_ammunition_burden_kg_per_soldier()
 
 
-# --- the crossing changes the NOTICE TEXT, not the MONEY. state_pressure_
-# report()'s military_supply notice now carries this figure once eligible;
-# money the state asks of a household is its unfunded army need, priced by the
-# budget (actors/budget.py), not by this crossing's own "WHY NOT MONEY" figure.
-def _grown(civ, employees=300.0, capital=3000000.0, eminence=20.0):
-    """Same construction as test_scanners_and_scheduling.py's own _grown():
-    a household large enough to be past the general state-notice line, built
-    fresh here rather than imported so this file has no dependency on
-    another topic's private helper."""
-    grown_sim = unopened_sim(civ=civ, events=True)
-    grown_sim.employees["artisan"] = employees
-    grown_sim.labour._resync_pools()
-    grown_sim.capital = capital
-    grown_sim.eminence = eminence
-    grown_sim.update_protection()
-    return state_seeking(grown_sim)
+class StubFounder(StatePressureMixin):
+    """The real leverage and burden arithmetic over a set of nodes done, some granted free."""
+
+    def __init__(self, military_done=0, granted=0, other_done=0):
+        self.nodes = {}
+        done, granted_nodes = set(), set()
+        for index in range(military_done + granted):
+            node_id = "military_%d" % index
+            self.nodes[node_id] = {"traits": ("military",)}
+            done.add(node_id)
+            if index >= military_done:
+                granted_nodes.add(node_id)
+        for index in range(other_done):
+            node_id = "other_%d" % index
+            self.nodes[node_id] = {"traits": ("trade",)}
+            done.add(node_id)
+        self.state = SimpleNamespace(projects=SimpleNamespace(done=done, granted=granted_nodes))
 
 
-_no_mil = _grown("rome_100ad")
-check("a grown household with no military tech gets no military_supply "
-      "notice at all",
-      "military_supply" not in (_no_mil.state_pressure_report() or {}),
-      _no_mil.state_pressure_report())
-
-_one_mil = _grown("rome_100ad")
-_one_mil.done.update(_all_military[:1])
-_one_mil._done_changed()
-_notice = _one_mil.state_pressure_report()
-check("the first military-branch node is already enough to be asked for, "
-      "and the notice now names a physical figure, not just a warning "
-      "sentence",
-      _one_mil.military_demand_eligible() and "military_supply" in _notice
-      and ("kilogram" in _notice["military_supply"] or "kg" in _notice["military_supply"]),
-      _notice.get("military_supply"))
-
-_expected_one_kg = _one_mil.military_equipment_burden_kg_per_soldier_per_year()
-check("the number IN the notice text is the same number the crossing's own "
-      "method computes - not a second, independently-rounded copy",
-      ("%.1f" % _expected_one_kg) in _notice["military_supply"],
-      (_expected_one_kg, _notice["military_supply"]))
-
-_full_mil_grown = _grown("rome_100ad")
-_full_mil_grown.done.update(_all_military)
-_full_mil_grown._done_changed()
-check("the crossing's kilograms never become money on their own: a state that has "
-      "paid for its army asks even a full-leverage household for nothing - what it "
-      "asks is its unfunded army need (actors/budget.py)",
-      _full_mil_grown.state_military_ask(1.0e6, _full_mil_grown.household_scale()) == 0.0,
-      _full_mil_grown.state_military_ask(1.0e6, _full_mil_grown.household_scale()))
+def rifle_kg(founder):
+    return logistics.annual_iron_and_ammunition_burden_kg_per_soldier(
+        firearm=logistics.MODERN_SERVICE_RIFLE,
+        engagements_per_year=founder.MILITARY_EQUIPMENT_ERA_CAMPAIGN_TEMPO_ENGAGEMENTS_PER_YEAR)
 
 
-# --- dormant households are unaffected: state_pressure_report() still
-# returns None (not a dict with only "what_helps") when nothing else is
-# live and there is no military tech either - the crossing must not turn a
-# quiet household noisy.
-_dormant = unopened_sim(civ="rome_100ad")
-check("a fresh, dormant household still gets no state-pressure report at "
-      "all - this crossing does not add a floor sentence of its own",
-      _dormant.state_pressure_report() is None, _dormant.state_pressure_report())
+class Leverage(unittest.TestCase):
+
+    def test_a_founder_with_no_military_node_has_none(self):
+        self.assertEqual(StubFounder(other_done=5).military_leverage(), 0.0)
+
+    def test_leverage_saturates_at_one_however_much_more_is_built(self):
+        saturates = StatePressureMixin.MILITARY_LEVERAGE_SATURATES_AT
+        self.assertEqual(StubFounder(military_done=int(saturates)).military_leverage(), 1.0)
+        self.assertEqual(StubFounder(military_done=int(saturates) + 10).military_leverage(), 1.0)
+
+    def test_leverage_rises_with_each_military_node_built(self):
+        values = [StubFounder(military_done=count).military_leverage() for count in (0, 1, 5, 10)]
+        self.assertEqual(values, sorted(values))
+        self.assertEqual(len(set(values)), 4)
+
+    def test_nodes_the_society_already_had_do_not_count(self):
+        self.assertEqual(StubFounder(granted=10).military_leverage(), 0.0)
 
 
-# --- round-trips within the build: military_leverage() is computed fresh
-# from self.household.done every call (see its own docstring), and this
-# crossing adds no new persisted field of its own - nothing here needs a
-# SAVE_FIELDS entry, so nothing here can fail to round-trip. This check
-# confirms that by construction: the reported burden survives a save/load
-# because the DONE SET it is computed from already does.
-_save_check = _grown("rome_100ad")
-_save_check.done.update(_all_military[:3])
-_save_check._done_changed()
-_before_burden = _save_check.military_equipment_burden_kg_per_soldier_per_year()
-_saved_done = set(_save_check.done)
-_reloaded = _grown("rome_100ad")
-_reloaded.done.update(_saved_done)
-_reloaded._done_changed()
-check("the reported burden is a pure function of the done set, so it "
-      "round-trips through anything that round-trips `done` - no new "
-      "SAVE_FIELDS entry needed for this crossing",
-      _reloaded.military_equipment_burden_kg_per_soldier_per_year() == _before_burden,
-      (_reloaded.military_equipment_burden_kg_per_soldier_per_year(), _before_burden))
+class Burden(unittest.TestCase):
+
+    def test_at_zero_leverage_the_burden_is_the_melee_only_figure_exactly(self):
+        self.assertEqual(StubFounder().military_equipment_burden_kg_per_soldier_per_year(), MELEE_KG)
+
+    def test_at_full_leverage_the_burden_is_the_modern_rifle_figure_at_the_declared_tempo(self):
+        founder = StubFounder(military_done=int(StatePressureMixin.MILITARY_LEVERAGE_SATURATES_AT))
+        self.assertAlmostEqual(founder.military_equipment_burden_kg_per_soldier_per_year(), rifle_kg(founder), places=9)
+
+    def test_partial_leverage_lies_strictly_between_the_floor_and_the_ceiling(self):
+        founder = StubFounder(military_done=5)
+        self.assertLess(MELEE_KG, founder.military_equipment_burden_kg_per_soldier_per_year())
+        self.assertLess(founder.military_equipment_burden_kg_per_soldier_per_year(), rifle_kg(founder))
+
+    def test_more_military_nodes_never_report_a_lighter_burden(self):
+        burdens = [StubFounder(military_done=count).military_equipment_burden_kg_per_soldier_per_year()
+                   for count in (0, 1, 5, 25)]
+        self.assertEqual(burdens, sorted(burdens))
+        self.assertGreater(burdens[-1], burdens[0])
+
+    def test_an_army_s_own_adoption_stands_in_for_the_founder_s_leverage(self):
+        founder = StubFounder()
+        self.assertAlmostEqual(founder.military_equipment_burden_kg_per_soldier_per_year(adoption=1.0), rifle_kg(founder))
+
+    def test_the_burden_is_a_function_of_the_done_set_alone(self):
+        first, second = StubFounder(military_done=3), StubFounder(military_done=3)
+        self.assertEqual(first.military_equipment_burden_kg_per_soldier_per_year(),
+                         second.military_equipment_burden_kg_per_soldier_per_year())
+
+
+if __name__ == "__main__":
+    unittest.main()

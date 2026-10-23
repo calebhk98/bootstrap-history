@@ -60,6 +60,29 @@ def plan(workers, manager_hours_per_year, parameters, known_nodes):
             "order_fidelity": order_fidelity(len(layers), parameters, factors)}
 
 
+def founder_direct_reports(workers, span, hired):
+    """People the apex actor still directs itself when `hired` managers stand between it and `workers`: each manager
+    hired from the lowest layer up takes `span` reports off the apex and adds one."""
+    reports = math.ceil(workers)
+    for layer in managers_by_layer(workers, span):
+        covered = min(layer, hired)
+        hired -= covered
+        if covered < layer:
+            return max(1, reports - covered * (span - 1))
+        reports = layer
+    return reports
+
+
+def apex_overhead_hours(workers, manager_hours, parameters, known_nodes, hired):
+    """Hours a year the apex spends on its direct reports: reports times the coordination hours one costs."""
+    factors = channel_factors(parameters, known_nodes)
+    span = span_of_control(manager_hours, parameters, factors)
+    scale = 1.0
+    for factor, _node in factors.values():
+        scale *= factor
+    return founder_direct_reports(workers, span, hired) * parameters["coordination_hours_per_report_per_year"]["value"] * scale
+
+
 def technology_contributions(workers, manager_hours, parameters, known_nodes, in_tree):
     """For each listed technology that exists in the tree: span and managers needed with it known and without it."""
     rows = []
@@ -98,6 +121,11 @@ def register(api):
 
     def hired(sim):
         return int(api.state(sim.state.interface).get("managers_hired", 0))
+
+    @api.director_overhead
+    def overhead(sim):
+        workers, _source = _workers_from(sim, {}, hired(sim))
+        return apex_overhead_hours(workers, _manager_hours(sim), parameters, set(sim.done), hired(sim))
 
     @api.command("hierarchy", group="labour", aliases=("span", "orgchart"),
                  summary="the layers of managers a workforce needs, and what each technology contributes",
@@ -141,7 +169,7 @@ def register(api):
                  description="Opt in. Tops up the managers hired through this command to the number the hierarchy needs "
                              "for your staff, through the ordinary hire path (fee, first year's wage, the labour "
                              "market's own supply limits). With release it lets go the surplus. It does not run by "
-                             "itself and does not cut your directed hours (that needs an engine hook).")
+                             "itself; managers hired shrink the hours your own direct reports take from the pool.")
     def staff_managers(sim, nodes, cmd, ended):
         if ended:
             return {"ok": False, "error": "the run has ended (%s)" % ended}

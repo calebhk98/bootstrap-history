@@ -83,8 +83,9 @@ class UnsoldStockSearchTests(unittest.TestCase):
         self.assertEqual(sold(result, "a"), 0.0)
 
     def test_the_ask_stops_at_the_price_that_sells_not_at_the_floor(self):
-        final, _result = searched([buyer(100.0, 2.0 * COST)], [offer("a", 100.0, 5.0 * COST)])
-        self.assertGreater(final["a"].reservation_price, 1.5 * COST)
+        # three quarters of the cost is metal bought in, so the band above cost is 1.5 times it (ask_raise.band_edge)
+        final, _result = searched([buyer(100.0, 1.4 * COST)], [offer("a", 100.0, 5.0 * COST)])
+        self.assertGreater(final["a"].reservation_price, 1.2 * COST)
 
     def test_a_seller_that_sold_out_keeps_its_ask(self):
         setup, record = game("a")
@@ -106,7 +107,7 @@ class UnsoldStockSearchTests(unittest.TestCase):
     def test_a_seller_that_moves_the_price_and_holds_units_back_on_purpose_is_not_searched(self):
         final, result = searched([buyer(150.0, 4.0 * COST)],
                                  [offer("cheap", 100.0, 1.2 * COST), offer("dear", 100.0, 5.0 * COST)])
-        self.assertGreater(final["dear"].reservation_price, 2.0 * COST)
+        self.assertGreater(final["dear"].reservation_price, 1.2 * COST)
         self.assertLess(sold(result, "dear"), 100.0)
 
     def test_a_market_with_no_unsold_stock_is_left_as_chosen(self):

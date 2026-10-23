@@ -26,6 +26,7 @@ from sim.agents.api import demand_answer
 
 from sim.world import military_logistics
 
+from . import eminence_rules, state_notice_rules
 from .military_rules import leverage_of
 from .state_demand import answer_confiscation, answer_state_demand, settle_household_year
 
@@ -488,43 +489,48 @@ class StatePressureMixin:
         What you BUILT you keep: the floor under reputation is exactly the work
         that stands, so this takes away the novelty and leaves the corpus.
         """
-        if not self.state.founder.founder_alive:
+        household = self.state.household
+        floor = self.standing_floor()
+        danger = self.cfg["eminence_danger"]
+        refusal = eminence_rules.withdrawal_refusal(
+            self.state.founder.founder_alive, household.last_withdrawal, self.state.scenario.year, self.WITHDRAW_EVERY,
+            household.eminence, danger, self.WITHDRAW_MIN_EMINENCE_FRACTION, household.reputation, floor)
+        if refusal == eminence_rules.WITHDRAW_DEAD:
             return False, "there is nobody left to withdraw"
-        last = self.state.household.last_withdrawal
-        if last is not None and self.state.scenario.year - last < self.WITHDRAW_EVERY:
+        if refusal == eminence_rules.WITHDRAW_TOO_SOON:
+            last = household.last_withdrawal
             return False, ("you stepped back in %d; doing it again so soon is "
                            "not retirement, it is a performance, and nobody "
                            "would believe it. You could again in %d"
                            % (last, last + self.WITHDRAW_EVERY))
-        floor = self.standing_floor()
         # DO NOT LET THEM PAY FOR NOTHING. Same rule as `bribe`: work out
         # whether it would buy anything before taking anything. At an eminence
         # nobody has noticed, retiring is not modesty, it is throwing away the
         # standing that gets your work funded and staffed.
-        danger = self.cfg["eminence_danger"]
-        if self.state.household.eminence < danger * self.WITHDRAW_MIN_EMINENCE_FRACTION:
+        if refusal == eminence_rules.WITHDRAW_UNNOTICED:
             return False, ("nobody is watching you closely enough for this to "
                            "buy anything: prominence is %.1f against a danger "
                            "line of %.0f. Withdrawing now would only cost you "
                            "the standing that gets your work funded. Nothing "
-                           "was changed." % (self.state.household.eminence, danger))
-        if self.state.household.reputation <= floor + 0.5:
+                           "was changed." % (household.eminence, danger))
+        if refusal == eminence_rules.WITHDRAW_ALREADY_OBSCURE:
             return False, ("you are already as obscure as a man who has built "
                            "what you have built can be. What is left of your "
                            "standing is the work itself, and that does not go "
                            "away. Nothing was changed.")
-        self.state.household.last_withdrawal = self.state.scenario.year
-        rep_before, em_before = self.state.household.reputation, self.state.household.eminence
+        household.last_withdrawal = self.state.scenario.year
+        rep_before, em_before = household.reputation, household.eminence
         # Halfway to the floor, not to zero: the work stands.
-        self.state.household.reputation = floor + (self.state.household.reputation - floor) * self.WITHDRAW_REPUTATION_RETENTION
-        self.state.household.eminence *= self.WITHDRAW_EMINENCE_RETENTION
+        household.reputation, household.eminence = eminence_rules.after_withdrawal(
+            household.reputation, household.eminence, floor, self.WITHDRAW_REPUTATION_RETENTION,
+            self.WITHDRAW_EMINENCE_RETENTION)
         self.update_protection()
         msg = ("you withdraw from public life: reputation %.1f -> %.1f, "
                "eminence %.1f -> %.1f. What you built still stands, and that "
                "is the floor under your standing (%.1f). It costs you credit, "
                "protection and cheap labour until it grows back."
-               % (rep_before, self.state.household.reputation, em_before, self.state.household.eminence, floor))
-        self.state.household.log.append((self.state.scenario.year, LogLine("withdrew_from_public_life", msg)))
+               % (rep_before, household.reputation, em_before, household.eminence, floor))
+        household.log.append((self.state.scenario.year, LogLine("withdrew_from_public_life", msg)))
         return True, msg
 
     EMINENCE_HAZARD_SCALE = declare(
@@ -572,7 +578,7 @@ class StatePressureMixin:
         # step()) and gains `yearly`, so this is where it settles if
         # nothing changes.
         settles = yearly / (1.0 - self.EMINENCE_DECAY_RATE)
-        probability = max(0.0, (self.state.household.eminence - danger) / self.EMINENCE_HAZARD_SCALE)
+        probability = eminence_rules.chance_of_ruin(self.state.household.eminence, danger, self.EMINENCE_HAZARD_SCALE)
         helps = []
         for node_id in self.nodes_with_mechanic("eminence_hazard_factor"):
             spec = self.mechanic(node_id, "eminence_hazard_factor")
@@ -708,33 +714,17 @@ class StatePressureMixin:
         It feeds scandal rather than killing you outright, because the usual
         outcome is a bad year, a confiscation or a lost patron, not a death.
         """
-        weights = self.value_weights
-        rep = max(0.0, self.state.household.reputation) / self.EMINENCE_REPUTATION_SCALE
-        wealth = min(1.0, max(0.0, self.state.household.capital) / self.EMINENCE_WEALTH_VISIBLE_THRESHOLD)
-        hazard = (self.EMINENCE_HAZARD_BASE_SCALE
-                  * weights.get("w_eminence_danger", self.EMINENCE_DANGER_WEIGHT_DEFAULT)
-                  * (self.EMINENCE_HAZARD_REPUTATION_SHARE * rep * rep
-                     + self.EMINENCE_HAZARD_WEALTH_SHARE * wealth))
+        household = self.state.household
         # An imperial patron is nearest the throne (most exposed); a dispersed institution is harder to destroy.
-        hazard = self.effect_factor("eminence_hazard_factor", hazard)
-        # AND A CITY GETS USED TO YOU: familiarity, the model's own measure
-        # of how unsurprising you have become (it already decays the alarm
-        # your work causes), must apply here too, or eminence is the one
-        # defence that ignores it and a long, successful run is
-        # mechanically doomed regardless. A man who has been the great man
-        # of the city for ninety years is a fixture, not a novelty; he is
-        # still exposed, and he is not what he was in his first decade.
-        #
-        # A SIXTH, NOT A LARGER SHARE: familiarity relief must reduce the
-        # hazard without erasing it - a relief strong enough to drive every
-        # reported chance of ruin to exactly 0.00 makes eminence a
-        # mechanic that cannot reach you, which is scenery, not a hazard.
-        # At a sixth, a man who has been the city's fixture for ninety
-        # years settles just under the danger line, and a man who has also
-        # got himself next to the throne settles well over it, which is
-        # the shape the whole mechanic is about.
-        hazard *= (1.0 - self.EMINENCE_FAMILIARITY_RELIEF * self.state.household.familiarity)
-        return hazard
+        # AND A CITY GETS USED TO YOU: familiarity, the model's own measure of how unsurprising you have become,
+        # applies here too, or a long, successful run is mechanically doomed. A SIXTH, NOT A LARGER SHARE: the relief
+        # must reduce the hazard without erasing it (a third was measured to make every chance of ruin 0.00).
+        return eminence_rules.yearly_hazard(
+            household.reputation, household.capital, household.familiarity,
+            self.value_weights.get("w_eminence_danger", self.EMINENCE_DANGER_WEIGHT_DEFAULT),
+            self.EMINENCE_REPUTATION_SCALE, self.EMINENCE_WEALTH_VISIBLE_THRESHOLD, self.EMINENCE_HAZARD_BASE_SCALE,
+            self.EMINENCE_HAZARD_REPUTATION_SHARE, self.EMINENCE_HAZARD_WEALTH_SHARE, self.EMINENCE_FAMILIARITY_RELIEF,
+            lambda hazard: self.effect_factor("eminence_hazard_factor", hazard))
 
     # ---- THE STATE NOTICES YOU ----------------------------------------------
     # A household that reaches real scale - hundreds of employees, working
@@ -959,19 +949,14 @@ class StatePressureMixin:
         `settles_at` use for "starts at nothing right at the line and closes
         in on its ceiling", not a cliff the year the line is crossed.
         """
-        notice = self.state_notice()
-        if notice <= threshold:
-            return 0.0
-        return min(1.0, (notice - threshold) / (1.0 - threshold))
+        return state_notice_rules.share_past(self.state_notice(), threshold)
 
     def notice_over(self, scale, capacity=None):
         """0..1: how far past the notice line a taxpayer of this visible scale
         stands, as a share of the remaining distance to full notice. `capacity`
         is the state's (this one's when not given)."""
         notice = (self.state_reach() if capacity is None else capacity) * scale
-        if notice <= self.STATE_NOTICE_THRESHOLD:
-            return 0.0
-        return min(1.0, (notice - self.STATE_NOTICE_THRESHOLD) / (1.0 - self.STATE_NOTICE_THRESHOLD))
+        return state_notice_rules.share_past(notice, self.STATE_NOTICE_THRESHOLD)
 
     def levy_shares(self, scale, protection=0.0, state=None):
         """(requisition share, office share) of a year's revenue the state
@@ -989,15 +974,9 @@ class StatePressureMixin:
             requisition_rate, office_rate = self.state_levy_rates()
         else:
             capacity, tax_share, requisition_rate, office_rate = state
-        over = self.notice_over(scale, capacity)
-        if over <= 0.0:
-            return 0.0, 0.0
         # the share of income the whole society pays the state, then what the state's shortfall adds
-        ordinary_rate = tax_share * capacity
-        requisition = (ordinary_rate + requisition_rate) * over
-        if protection > 0:
-            requisition *= (1.0 - self.REQUISITION_PROTECTION_DISCOUNT * protection)
-        return max(0.0, requisition), max(0.0, office_rate * over)
+        return state_notice_rules.levy_shares_at(self.notice_over(scale, capacity), tax_share * capacity, requisition_rate,
+                                                 office_rate, protection, self.REQUISITION_PROTECTION_DISCOUNT)
 
     def requisition_report(self):
         """(share of this year's revenue, [why it is smaller than listed])
@@ -1065,8 +1044,8 @@ class StatePressureMixin:
         third reader does not get to define "militarily significant" its own
         way.
         """
-        return (self.military_leverage() >= self.MIL_LEVERAGE_FLOOR_FOR_DEMAND
-                and self.state_notice() > self.STATE_NOTICE_THRESHOLD_MILITARY)
+        return state_notice_rules.military_demand_eligible(
+            self.military_leverage(), self.MIL_LEVERAGE_FLOOR_FOR_DEMAND, self.state_notice(), self.STATE_NOTICE_THRESHOLD_MILITARY)
 
     def confiscation_risk(self):
         """(yearly probability, [what is holding it off]) of the tail risk at
@@ -1086,23 +1065,14 @@ class StatePressureMixin:
         over = self._notice_over(self.STATE_NOTICE_THRESHOLD_CONFISCATION)
         if over <= 0.0:
             return 0.0, []
-        probability = self.CONFISCATION_MAX_RATE * over
-        mitig, why = 1.0, []
-        if self.state.household.protection > 0:
-            mitig *= (1.0 - self.CONFISCATION_PROTECTION_DISCOUNT * self.state.household.protection)
-            why.append(self.CONFISCATION_PROTECTION_LABELS[0])
         dispersal = 0.0
         held = self.effect_best("confiscation_dispersal")
         if held is not None:
             dispersal = max(dispersal, held[1]["flat"])
-        if dispersal > 0:
-            mitig *= (1.0 - dispersal)
-            why.append(self.CONFISCATION_PROTECTION_LABELS[1])
-        lev = self.military_leverage()
-        if lev > 0:
-            mitig *= (1.0 - self.CONFISCATION_MILITARY_USEFULNESS_DISCOUNT * lev)
-            why.append(self.CONFISCATION_PROTECTION_LABELS[2])
-        return probability * mitig, why
+        chance, active = state_notice_rules.confiscation_chance(
+            over, self.CONFISCATION_MAX_RATE, self.state.household.protection, self.CONFISCATION_PROTECTION_DISCOUNT,
+            dispersal, self.military_leverage(), self.CONFISCATION_MILITARY_USEFULNESS_DISCOUNT)
+        return chance, [self.CONFISCATION_PROTECTION_LABELS[index] for index in active]
 
     CONFISCATION_PROTECTION_LABELS = (
         "a patron and standing high enough to matter",

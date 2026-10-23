@@ -27,7 +27,8 @@ from collections import deque
 from typing import Any, cast, Dict, FrozenSet, Iterable, List, Optional, Set, Tuple, TypedDict
 from .identity_cache import IdentityCache
 from sim.geography.api import haversine_km, load_geography
-from .mods import get_ordered_mods, load_mod_tree
+from .mods import ModError, get_ordered_mods, load_mod_tree
+from .mods_base import MissingVariantBase
 from .mod_world_data import load_starting_kits, load_win_condition_labels
 from .mods_world import merge_mod_map
 from .tree_source import load_base_tree
@@ -222,14 +223,22 @@ def money_short(civ: Optional[JSONDict]) -> str:
     return (civ.get("currency_words") or {}).get("short") or civ.get("currency") or "den"
 
 
-def load_civ(name: Optional[str] = None) -> JSONDict:
+def _variant_base(base_id: str, chain: tuple) -> JSONDict:
+    """The civilisation a `variant_of` names, loaded with its own mods applied; one that does not exist is an error."""
+    try:
+        return load_civ(base_id, _chain=chain)
+    except SystemExit:
+        raise MissingVariantBase("civilisation %s is a variant of %r, which does not exist" % (chain[-1], base_id))
+
+
+def load_civ(name: Optional[str] = None, _chain: tuple = ()) -> JSONDict:
     """A civilization is DATA, not code. Swapping Rome for Han China, Viking
     Norway, Mexica Tenochtitlan or somewhere invented is a different file, not a
     different simulator. See data/civilizations/_SCHEMA.md."""
     name = name or default_civilisation_id()
     path = os.path.join(CIVDIR, name + ".json")
     base_civ = json.load(open(path)) if os.path.exists(path) else None
-    civ = apply_mod_civilization(name, base_civ, get_ordered_mods(MODDIR))
+    civ = apply_mod_civilization(name, base_civ, get_ordered_mods(MODDIR), _variant_base, _chain)
     if civ is None:
         # "_"-prefixed files are schema and reference data, not playable
         # civilizations, so the listing below excludes them - the same

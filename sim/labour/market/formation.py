@@ -2,14 +2,15 @@
 
 Run after the year's switching and migration. For each (area, trade) where employers want hours and no
 one of the trade works or trains, the first people come from the routes that need no teacher: migrants from
-areas that hold the trade (up to their spare hands), then bonded people for sale where the area's
-civilisation allows it (`trade_formation.first_people_plan` orders the same routes for any caller). Conversion
+areas that hold the trade (up to their spare hands), then bonded people bought where the area's
+civilisation allows it, at the owners' ask and the buyers' bid (formation_bonded.py; `trade_formation.first_people_plan`
+orders the same routes for any caller). Any trade still short of hands after that may buy bonded people the same way. Conversion
 needs a teacher and a payer, so the caller's own verbs (training schools) carry it out. Any employer's
 vacancy counts, not one actor's.
 """
 from typing import Dict, List, Tuple
 
-from . import aptitude
+from . import formation_bonded
 from .expectations import index_clearings
 from .records import MarketState, YearInputs, YearReport
 
@@ -17,12 +18,6 @@ from .records import MarketState, YearInputs, YearReport
 def spare_people(workers: float, hours_wanted: float, hours_per_worker_year: float) -> float:
     """People of a trade an area could release: its workers less those its employers' bids still need."""
     return max(0.0, workers - max(0.0, hours_wanted) / max(hours_per_worker_year, 1e-12))
-
-
-def bonded_available(bondage_allowed: bool, bonded_for_sale: float) -> float:
-    """Bonded people of a trade an actor may buy: those for sale where the civilisation recognises bondage,
-    none where it does not."""
-    return max(0.0, bonded_for_sale) if bondage_allowed else 0.0
 
 
 def migration_takes(wanted: float, migrant_spare: Dict[str, float]) -> List[Tuple[str, float]]:
@@ -61,6 +56,9 @@ def form_trades(state: MarketState, inputs: YearInputs, clearings, report: YearR
     hours_per_worker = inputs.hours_per_worker_year
     if hours_per_worker <= 0.0:
         return
+    pool = {origin: dict(by_trade) for origin, by_trade in inputs.bonded_for_sale.items()}   # bonded people on offer, drawn down as bought
+    memo: Dict = {}   # the year's bids grouped by market and the carriage between areas, shared by every purchase
+    unassigned = dict(inputs.outlay_room)   # each employer's free cash, drawn down as it pays
     empty: List[Tuple[str, str, float]] = []
     for (area, trade), clearing in sorted(index.items()):
         wanted = clearing.vacant_hours / hours_per_worker
@@ -77,20 +75,16 @@ def form_trades(state: MarketState, inputs: YearInputs, clearings, report: YearR
             origin_clearing = index.get((origin, trade))
             bid_hours = origin_clearing.hours_wanted if origin_clearing is not None else 0.0
             spare[origin] = spare_people(held, bid_hours, hours_per_worker)
-        for_sale = inputs.bonded_for_sale.get(area, {}).get(trade, 0.0)
         takes = [("migration", origin, people) for origin, people in migration_takes(wanted, spare)]
-        bought = min(wanted - sum(people for _, _, people in takes),
-                     bonded_available(area in inputs.bondage_allowed, for_sale))
-        if bought > 0.0:
-            takes.append(("bonded", "", bought))
         for kind, origin, people in takes:
-            if kind == "migration":
-                taken = _take_from(state, origin, trade, people)
-            else:
-                count = aptitude.band_count()
-                taken = [people / count] * count   # the bought are not picked for ability
+            taken = _take_from(state, origin, trade, people)
             destination = state.workers.setdefault(area, {}).setdefault(trade, [0.0] * len(taken))
             for band, amount in enumerate(taken):
                 destination[band] += amount
             by_route = report.formed.setdefault(area, {}).setdefault(trade, {})
             by_route[kind] = by_route.get(kind, 0.0) + sum(taken)
+        formation_bonded.buy(state, inputs, index, area, trade, wanted - sum(people for _, _, people in takes), pool, report, unassigned, memo)
+    first_formed = {(area, trade) for area, trade, _ in empty}
+    for (area, trade), clearing in sorted(index.items()):
+        if (area, trade) not in first_formed and clearing.vacant_hours > 0.0:
+            formation_bonded.buy(state, inputs, index, area, trade, clearing.vacant_hours / hours_per_worker, pool, report, unassigned, memo)

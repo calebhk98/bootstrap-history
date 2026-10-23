@@ -30,7 +30,7 @@ def service_deposits(record, money: str, year: int) -> Dict[AgentId, float]:
                 record.credit_losses[lender] = record.credit_losses.get(lender, 0.0) + lost
             record.remembered_defaults = credit_claims.remember_defaults(record.remembered_defaults, defaults)
             if defaults and bank.failed_year < 0:
-                bank.failed_year = year
+                banks.fail(record, bank, year, money)
         if bank.failed_year < 0:
             _return_idle(record, bank, money)
             _pay_founder(record, bank, money)

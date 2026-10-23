@@ -10,7 +10,7 @@ import unittest
 
 from sim.engine.seat_defaults import default_policy
 from sim.labour.market.clearing import on_the_job_loss_share
-from sim.labour.staff_pay_rules import blended_pay, pay_of, roll_trade, settled_pay, wage_bill_of
+from sim.labour.staff_pay_rules import blended_pay, pay_of, roll_trade, settled_pay, wage_bill_of, wage_for_hours_of
 
 
 class MarketLossShareTests(unittest.TestCase):
@@ -86,6 +86,28 @@ class WageBillTests(unittest.TestCase):
         bill_before = wage_bill_of({"labourer": 40}, lambda trade: pay_of(100.0, True, 100.0))
         bill_after = wage_bill_of({"labourer": 40}, lambda trade: pay_of(300.0, True, 100.0))
         self.assertAlmostEqual(bill_after, 3.0 * bill_before)
+
+
+class FounderWageTests(unittest.TestCase):
+    """What the founder's own hours earn (Complaint 640): the trade's hourly rate and a capped bonus for reputation."""
+
+    def pay(self, hours=500.0, reputation=0.0):
+        return wage_for_hours_of(2000.0, 2000.0, hours, reputation, 0.5, 200.0)
+
+    def test_hours_pay_the_hourly_rate_of_the_yearly_wage(self):
+        self.assertAlmostEqual(self.pay(), 500.0)
+
+    def test_reputation_raises_the_rate_in_proportion_to_the_scale(self):
+        self.assertAlmostEqual(self.pay(reputation=50.0), 500.0 * 1.25)
+
+    def test_the_bonus_is_capped_however_famous_he_is(self):
+        self.assertAlmostEqual(self.pay(reputation=1.0e6), 500.0 * 1.5)
+
+    def test_twice_the_hours_pay_twice_as_much(self):
+        self.assertAlmostEqual(self.pay(hours=1000.0, reputation=50.0), 2.0 * self.pay(hours=500.0, reputation=50.0))
+
+    def test_no_hours_earn_nothing(self):
+        self.assertEqual(self.pay(hours=0.0, reputation=50.0), 0.0)
 
 
 class RollTests(unittest.TestCase):

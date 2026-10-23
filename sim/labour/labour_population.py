@@ -234,7 +234,7 @@ class PopulationMixin:
     NO_DEMAND_TRADE_SHARE = declare(
         "NO_DEMAND_TRADE_SHARE", 0.00005, kind="temporary_heuristic",
         unit="fraction of the town's working people", source=None,
-        confidence="D",
+        confidence="D", retire="Complaints/556: the labour core holds every trade's people and the estimate is a view of it",
         why="Floor share for a trade no available recipe puts need on (a "
             "specialist whose work is not in the household-demand graph yet): "
             "a few people always practise it. Also lifts a trade whose "
@@ -245,7 +245,7 @@ class PopulationMixin:
     UNSKILLED_POOL_TOWN_SHARE = declare(
         "UNSKILLED_POOL_TOWN_SHARE", 0.05, kind="temporary_heuristic",
         unit="fraction of the town's working people", source=None,
-        confidence="D",
+        confidence="D", retire="Complaints/556: the town's hiring cap reads the labour core's people by tile, not a share",
         why="Town people for hire from the unskilled pool (farm labour and "
             "the trades drawn from it, such as an army): the farm trade's "
             "hours are decided by the farm logic, not the non-farm need "
@@ -440,9 +440,10 @@ class PopulationMixin:
     def national_trade_population(self, trade):
         """A rough ESTIMATE of how many people ply this trade across the whole
         country - not this household's reach. Where the labour core holds people of the trade it is their
-        count (one source of people by trade); for a trade it holds nobody in, the same share of work
-        _town_people_of_trade reads, applied to the country's urban working
-        people instead of one town's. 0.0 for a trade this society does not
+        count (one source of people by trade; the core is seeded with every trade the society's need holds,
+        labour_state.seeded_hours); before the core opens, the same share of work _town_people_of_trade
+        reads, applied to the country's urban working people instead of one town's, so two labour-family
+        trades differ by their work (a porter's and a carter's counts follow their shares). 0.0 for a trade this society does not
         have (trade_available says so). Nobody has published an occupational
         census of the ancient world, so every figure is an estimate and the
         'population' command says so.
@@ -451,7 +452,7 @@ class PopulationMixin:
             return 0.0
         # The age-cohort model's running headcount is the actual population.
         pop = self._world.population.total
-        urban = pop * float(self._world.civ.get("urban_fraction", 0.0))
+        urban = pop * self._world.urban_fraction()
         working = self._world.population.working_age
         if trade_data.drawn_from_unskilled_pool(trade):
             return working   # any of the working age may be called up
@@ -467,8 +468,8 @@ class PopulationMixin:
         if in_core > 0.0:
             return in_core   # the labour core's headcount; the shares below stand in only where it holds nobody
         if trade == FARM_TRADE:
-            return working * (1.0 - float(self._world.civ.get("urban_fraction", 0.0)))
-        if self._is_unskilled_pool(trade):
+            return working * (1.0 - self._world.urban_fraction())
+        if trade_data.registry_of(self._world).get(trade, {}).get("fallback", False):   # the unskilled pool
             return urban * self._working_fraction() * self.UNSKILLED_POOL_TOWN_SHARE
         return (urban * self._working_fraction()
                 * max(self._share_of_town_work(trade), self.NO_DEMAND_TRADE_SHARE))
@@ -497,7 +498,7 @@ class PopulationMixin:
         reference_pop = float(self._world.civ.get("population", 0.0))
         pop = self._world.population.total
         scale_from_baseline = (pop / reference_pop) if reference_pop else 1.0
-        urban_frac = float(self._world.civ.get("urban_fraction", 0.0))
+        urban_frac = self._world.urban_fraction()
         trades = []
         for trade in sorted(self._world.wages):
             national = self.national_trade_population(trade)

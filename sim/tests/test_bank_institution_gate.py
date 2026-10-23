@@ -1,7 +1,9 @@
 """Complaint 106: a society founds banks only once it holds a node declaring the `deposit_banking` mechanic; the
 engine hands the economy the institutions the home state's society holds (a civilisation with no banking
-institution yet must not get banks). Rules on built inputs; one scenario of the wiring on a game."""
-from .harness import *  # noqa: F401,F403
+institution yet must not get banks). Rules on built inputs; the wiring on a game is in
+test_bank_institution_gate_scenario.py."""
+QUICK_TOPIC = True
+from .harness import NODES, check
 
 from sim.engine import economy_port_institutions
 from sim.engine.mechanics import nodes_declaring
@@ -14,11 +16,3 @@ check("a society holding no banking mechanic is told of no institution",
       economy_port_institutions.institutions_of(set()) == () and economy_port_institutions.institutions_of({"other"}) == ())
 check("a society holding the deposit_banking mechanic is told of the deposit banking institution",
       economy_port_institutions.institutions_of({"deposit_banking"}) == (economy_api.DEPOSIT_BANKING,))
-
-# scenario: the wiring from a state's knowledge to the economy's institutions, on a game
-game = sim()
-before = economy_port_institutions.held(game)
-game.state_treasury().knowledge.add(declaring[0][0])
-after = economy_port_institutions.held(game)
-check("scenario: Rome starts without the institution; a state that then holds the node gives the economy it",
-      before == () and after == (economy_api.DEPOSIT_BANKING,), (before, after))

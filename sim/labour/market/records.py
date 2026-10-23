@@ -6,7 +6,7 @@ dataclass of numbers, strings, lists and dicts, so `to_plain`/`from_plain` round
 field list.
 """
 import dataclasses
-from typing import Dict, List, Optional, Sequence
+from typing import Callable, Dict, List, Optional, Sequence, Tuple
 
 AreaId = str
 TradeId = str
@@ -57,6 +57,7 @@ class Route:
     """One way out of an area: where it leads and what moving there costs a person, in money."""
     destination: AreaId
     moving_cost: float
+    expected_penalty: float = 0.0    # what a leaver expects to pay if the state recaptures him (money; the caller's rule)
 
 
 @dataclasses.dataclass
@@ -77,6 +78,9 @@ class YearInputs:
     value_of_life_years_of_income: float = 0.0          # prices a trade's fatality risk into its ask
     bondage_allowed: frozenset = frozenset()            # areas whose civilisation recognises bondage; others buy none
     bonded_for_sale: Dict[AreaId, Dict[TradeId, float]] = dataclasses.field(default_factory=dict)   # bonded people of a trade on offer in an area
+    outlay_room: Dict[str, float] = dataclasses.field(default_factory=dict)   # money each employer's plan assigns to no line: with the wage line of its vacancies, all it may spend on bonded people (bonded_room.py)
+    taxed_share: Dict[AreaId, float] = dataclasses.field(default_factory=dict)   # share of a worker's income the state takes from those who stay in the area, liability included
+    hours_share_at: Dict[Tuple[TradeId, AreaId], Callable[[float], float]] = dataclasses.field(default_factory=dict)   # (trade, area) -> share of the workers' hours they sell at a wage an hour (rising); absent: all of them, at any wage
 
 
 @dataclasses.dataclass
@@ -136,6 +140,7 @@ class YearReport:
     graduated: Dict[AreaId, Dict[TradeId, float]] = dataclasses.field(default_factory=dict)
     left_work: Dict[AreaId, float] = dataclasses.field(default_factory=dict)
     formed: Dict[AreaId, Dict[TradeId, Dict[str, float]]] = dataclasses.field(default_factory=dict)   # first hands of an empty trade by route (formation.py)
+    bonded_lots: list = dataclasses.field(default_factory=list)   # BondedLot rows: bonded people bought, from where, at what ask and carriage (bonded_worth.py)
 
     def clearing(self, trade: TradeId, area: AreaId) -> Optional[Clearing]:
         for each in self.clearings:

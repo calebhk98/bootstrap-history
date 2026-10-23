@@ -1,4 +1,4 @@
-"""A handover in a whole game (slow: builds a game): the replacement gets the leaver's cash and knowledge, the
+"""SCENARIO (Complaint 640): A handover in a whole game (slow: builds a game): the replacement gets the leaver's cash and knowledge, the
 leaver is out of the year, and the game steps on and round-trips a save."""
 import os
 import tempfile

@@ -75,9 +75,9 @@ class SavingsWithNoBorrowersTests(unittest.TestCase):
 
 
 class BorrowersAgainstFundsTests(unittest.TestCase):
-    def test_borrowers_with_no_savings_pull_the_rate_up(self):
+    def test_borrowers_with_no_savings_are_no_price_so_the_rate_stays(self):
         economy = lend_once([], [request()])
-        self.assertGreater(economy.record.memory.rates[COIN], START_RATE)
+        self.assertEqual(economy.record.memory.rates[COIN], START_RATE)
 
     def test_borrowers_with_a_sky_high_ceiling_and_almost_no_funds_do_not_lift_the_rate_past_the_market_ceiling(self):
         economy = Economy(fixture.small_setup())

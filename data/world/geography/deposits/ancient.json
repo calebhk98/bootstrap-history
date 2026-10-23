@@ -724,7 +724,7 @@
    "deposit_type": "placer_gold",
    "status": "historic",
    "conf": "D",
-   "source": "The Han geography chapter (Hanshu, Dili zhi) notes gold collected in the hills of Poyang county, Yuzhang commandery (Jiangxi); recalled from the text, not re-read for this entry. Placer working in the Yangtze basin is the usual reading. Position is the county seat's modern coordinate, so a representative point, not a mine. No endowment and no grade: no source read gives either, so the entry is a known location of unknown size (working_unknown) and moves no modelled output.",
+   "source": "Hanshu ch. 28 (zh.wikisource.org/wiki/漢書/卷028上, opened) says of the Wu region 豫章出黃金，然菫菫物之所有，取之不足以更費: Yuzhang commandery (Jiangxi) produced gold, but so little that taking it did not cover the cost. The Poyang county entry in the same chapter, as opened, lists the county name only and carries no gold passage, so the county placement is not confirmed by a text read; it is a representative point inside the commandery. Placer working in the Yangtze basin is the usual reading. Position is the county seat's modern coordinate, so a representative point, not a mine. No endowment and no grade: no source read gives either, so the entry is a known location of unknown size (working_unknown) and moves no modelled output.",
    "working_unknown": "UNKNOWN (D): the sources named give the place, not a working date or a total endowment; not entered as first_worked or endowment, so the deposit is listed as unworked in the opening stores.",
    "order": 36
   },
@@ -750,7 +750,7 @@
    "deposit_type": "placer_gold",
    "status": "historic",
    "conf": "D",
-   "source": "The Codex Mendoza tribute lists record gold paid to Tenochtitlan by the provinces of Tlapa and of the Oaxaca highlands and coast (Berdan and Anawalt, The Essential Codex Mendoza, 1997), washed from river gravels; recalled, not re-read for this entry. Position is Tlapa (Guerrero), a representative point for the placer districts. No endowment and no grade: no source read gives either, so the entry is a known location of unknown size (working_unknown) and moves no modelled output.",
+   "source": "The Codex Mendoza tribute lists record gold paid to Tenochtitlan by the provinces of Tlapa and of the Oaxaca highlands and coast (Berdan and Anawalt, The Essential Codex Mendoza, 1997), washed from river gravels; no source found that was opened in this pass (the Codex Mendoza folios were not reached), so the entry stays a labelled place of unknown size. Position is Tlapa (Guerrero), a representative point for the placer districts. No endowment and no grade: no source read gives either, so the entry is a known location of unknown size (working_unknown) and moves no modelled output.",
    "working_unknown": "UNKNOWN (D): the sources named give the place, not a working date or a total endowment; not entered as first_worked or endowment, so the deposit is listed as unworked in the opening stores.",
    "order": 38
   },
@@ -763,7 +763,7 @@
    "deposit_type": "strata_bound_cinnabar",
    "status": "historic",
    "conf": "D",
-   "source": "Cinnabar used as a red pigment in Mesoamerica (elite burials, painted objects) is traced in the archaeological literature to prehispanic workings in the Sierra Gorda of Queretaro; recalled, not verified, and whether the Mexica drew on them directly or through tribute is not established here. Position is the range's rough centre, not a mine. No endowment and no grade: no source read gives either, so the entry is a known location of unknown size (working_unknown) and moves no modelled output.",
+   "source": "Mejia Perez Campos and Herrera Munoz 2013, Chungara 45(1):161-176 (redalyc.org/articulo.oa?id=32626321004, opened): the Sierra Gorda is the first region in Mexico where prehistoric underground cinnabar mining was recorded in modern times, its deposits were known and worked in prehispanic times, and cinnabar was used in Maya and Teotihuacan burials (Pakal, the Red Queen); whether the Mexica drew on them directly or through tribute is not established here. Position is the range's rough centre, not a mine. No endowment and no grade: no source read gives either, so the entry is a known location of unknown size (working_unknown) and moves no modelled output.",
    "working_unknown": "UNKNOWN (D): the sources named give the place, not a working date or a total endowment; not entered as first_worked or endowment, so the deposit is listed as unworked in the opening stores.",
    "order": 39
   }

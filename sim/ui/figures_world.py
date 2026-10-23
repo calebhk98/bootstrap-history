@@ -5,7 +5,7 @@ live drivers, and whatever the change leaves unexplained shows as its own line.
 """
 import sim.engine.ui_port as ui_port
 from .figures import figure
-from sim.engine.ui_port import cause_book, hazards_not_yet_past
+from sim.engine.ui_port import cause_book
 
 
 def _wage_causes(sim, year):
@@ -34,15 +34,14 @@ def _state_notice(sim):
                         "chance_of_ruin_this_year": report["chance_of_ruin_this_year"]}}
 
 
-@figure("epidemic", "share of staff an epidemic under way takes, after your defences",
+@figure("epidemic", "share of working-age people the epidemics under way are forecast to take this year, after your defences",
         unit="share", digits=4)
 def _epidemic(sim):
-    loss = 0.0
-    for hazard, _start, _end, in_progress in hazards_not_yet_past(sim.civ, sim.year):
-        if in_progress and hazard.get("staff_loss"):
-            loss = max(loss, sim.hazard_figure("staff_loss", hazard))
+    forecast = ui_port.epidemic_forecast(sim)
+    loss = forecast["expected_working_age_share"]
     last = ui_port.last_demographic_step(sim)
-    drivers = {"disease_burden": ui_port.disease_burden(sim)}
+    drivers = {"disease_burden": ui_port.disease_burden(sim), "expected_deaths": forecast["expected_deaths"],
+               "people_infected": sum(row["infected"] for row in forecast["by_pathogen"])}
     if last is not None and last.start_total:
         drivers["deaths_per_thousand_last_year"] = 1000 * last.deaths / last.start_total
         drivers["nutrition_ratio"] = last.nutrition_ratio

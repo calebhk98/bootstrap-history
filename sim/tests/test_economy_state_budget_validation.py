@@ -49,7 +49,9 @@ def resumed(policy=None, fiat=False, full_length=False) -> Economy:
 
 
 def run(economy: Economy, years: int):
-    """Year by year: (state's share of the coin, price level, mean expected inflation, money supply)."""
+    """Year by year: (state's share of the coin, price level, mean expected inflation, money supply). The price level
+    is the chained one the state and households read (the median of the goods' price changes, weighted by what traded);
+    the fixed-basket level is a reported statistic that a few thin goods carry to millions (Complaint 473, Update 9)."""
     rows = []
     money = economy.setup.currency_id
     for year in range(years):
@@ -60,7 +62,7 @@ def run(economy: Economy, years: int):
         people = sum(cohort.people for cohort in record.cohorts.values())
         expected = sum(cohort.expected_inflation * cohort.people for cohort in record.cohorts.values()) / people
         rows.append((record.book.balance(economy.setup.state_agent, money) / supply,
-                     record.memory.basket_price_levels.get(money, 1.0), expected, supply))
+                     record.memory.price_levels.get(money, 1.0), expected, supply))
     return rows
 
 

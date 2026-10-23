@@ -40,7 +40,7 @@ def split_dividend(record, payment: Transfer) -> List[Transfer]:
     if not held or payment.payer not in record.producers:
         return [payment]
     paid = [Transfer(payment.payer, holder, payment.currency, payment.amount * share, SHARE_DIVIDEND_PURPOSE)
-            for holder, share in sorted(held.items()) if share > EPSILON and holder in record.cohorts]
+            for holder, share in sorted(held.items()) if share > EPSILON and (holder in record.cohorts or holder in record.capital.funds)]
     rest = payment.amount - sum(transfer.amount for transfer in paid)
     if rest > EPSILON:
         paid.append(Transfer(payment.payer, payment.payee, payment.currency, rest, payment.purpose))

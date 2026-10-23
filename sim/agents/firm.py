@@ -16,6 +16,7 @@ from .tuning import EXIT_LOSS_YEARS, VALUE_HORIZON_YEARS
 class Firm(ExpansionMixin, RecordedActor):
 	kind = "firm"
 	researches = True
+	keeps_purchases = True   # what it buys at the market joins its stores (a state draws its purchases at once)
 	borrows_for_copies = True
 
 	# Set by the registry: how many other operators share a concern's market.
@@ -41,12 +42,12 @@ class Firm(ExpansionMixin, RecordedActor):
 
 	def on_copied(self, node_id: str, world: Any) -> None:
 		if node_id == self.record.target:
-			self.business.open_plant(node_id, world.year)
+			self.business.open_plant(node_id, world.year, self.location())
 
 	def accept_licence(self, node_id: str, chain: List[str], world: Any) -> None:
 		"""A licensed concern becomes the firm's own business."""
 		self.learn(chain, world)
-		self.business.open_plant(node_id, world.year)
+		self.business.open_plant(node_id, world.year, self.location())
 
 	def operate(self, world: Any, interest: float = 0.0) -> None:
 		for node_id in sorted(self.concerns):
@@ -77,6 +78,7 @@ class Firm(ExpansionMixin, RecordedActor):
 		super().default(world)
 
 	def act(self, world: Any) -> None:
+		self.prepare_bonds(world)
 		interest = self.pay_interest(world)
 		if self.record.exited_year is not None:
 			return

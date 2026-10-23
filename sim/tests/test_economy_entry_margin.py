@@ -92,10 +92,11 @@ class MarketTests(unittest.TestCase):
         economy.record.margin_years.clear()
         view = economy.view()
         area = economy.area_map.areas(TRINKET)[0]
-        bids = {(TRINKET, area.area_id): [Bid("buyer", TRINKET, area.area_id, area.anchor_tile, 0.0, 1e6, 1.0, 1e3, 1e6)]}
+        bids = {(TRINKET, area.area_id): [Bid("buyer", TRINKET, area.area_id, area.anchor_tile, 0.0, 1e6, 1e3, 1e3, 1e6)]}
         for key in list(economy.record.memory.usual_prices):
             if key.startswith(TRINKET):
                 economy.record.memory.usual_prices[key] = 1e3
+                economy.record.memory.prices[key] = 1e3       # last year's price stood high too, and so does what the buyer pays (bid below), whatever wage the year left
         counts = [len(entry_margin.margin_entry_plans(setup, economy.record, view, economy.area_map, bids))
                   for _year in range(LOSS_YEARS_BEFORE_EXIT)]
         self.assertEqual(counts[:-1], [0] * (LOSS_YEARS_BEFORE_EXIT - 1))

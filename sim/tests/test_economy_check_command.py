@@ -1,30 +1,10 @@
-"""`simulator.py economy-check` (Complaint 445): the command's loop and printing run on a literal health report; one named
-scenario plays a short game and reads the economy's health report."""
+"""`simulator.py economy-check` (Complaint 445): the command's loop and printing run on a literal health report. The
+played game is in test_economy_check_command_scenario.py."""
 import contextlib
 import io
-import random
 import unittest
 
-from sim.engine.ui_port import Sim, load, load_civ
-
-
-class EconomyCheckTests(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        _tree, _prices, nodes, _wages, _goods = load()
-        cls.game = Sim(nodes, [], random.Random(1), events=False, manual=True,
-                       civ=load_civ("rome_100ad"))
-        cls.game.done_year = {}
-        cls.game.step()
-
-    def test_scenario_the_port_reports_the_economys_health(self):
-        report = self.game.economy.health()
-        self.assertEqual(report["years"], 1)
-        self.assertTrue(report["staple"])
-        for figure in ("staple_volatility", "metal_volatility", "hired_share", "hunger_share", "staple_over_labour",
-                       "unskilled_wage", "wage_floor", "wage_over_floor"):
-            self.assertIn(figure, report["figures"])
-        self.assertTrue(0.0 <= report["figures"]["hunger_share"] <= 1.0)
+QUICK_TOPIC = True
 
 
 class EconomyCheckRendering(unittest.TestCase):

@@ -17,6 +17,7 @@ from sim.book import ROUNDING_SHARE
 from . import goods_market, inventory, seller_offers, titles_value
 from .types import Offer
 
+UNSOLD_BOUND_MARGIN = 1e-12    # float noise of two sums of the same demand, not a model number
 SEARCH_PRECISION = 1e-4     # numerical tolerance of the bisection on the ask level, not a model number
 
 
@@ -73,6 +74,21 @@ def _with_level(offers: Sequence[Offer], floors: dict, level: float) -> List[Off
             for index, each in enumerate(offers)]
 
 
+def unsold_above_the_floor(buyers: goods_market.Buyers, offers: Sequence[Offer], floors: dict) -> bool:
+    """True when every searched offer sharing one floor leaves some offer unsold at every level above that floor,
+    so the search ends at the floor: at any such level every searched ask is above the floor, hence at or above
+    the effective floor price, where the buyers want at most what they want there; when that is under what the
+    searched offers hold (each of a distinct seller and tile) they cannot all sell out."""
+    if len(set(floors.values())) != 1:
+        return False
+    keys = {(offers[index].seller, offers[index].tile) for index in floors}
+    if len(keys) != len(floors):
+        return False
+    wanted = buyers.schedule.total_at(max(next(iter(floors.values())), buyers.minimum_price))
+    held = math.fsum(offers[index].quantity for index in floors)
+    return wanted * (1.0 + UNSOLD_BOUND_MARGIN) < held * (1.0 - ROUNDING_SHARE)
+
+
 def clear_with_search(setup, record, view, bids, original: Sequence[Offer], offers: Sequence[Offer], good, area,
                       currency, last_price: Optional[float], costs: Optional[dict] = None) -> Tuple[List[Offer], object]:
     """(the offers after the search, the market's clearing with them). `original` are the offers before the
@@ -81,9 +97,15 @@ def clear_with_search(setup, record, view, bids, original: Sequence[Offer], offe
     buyers = goods_market.Buyers(bids, last_price)       # the same bids meet every trial book
     result = goods_market.clear(bids, offers, good, area, currency, last_price, buyers)
     floors = _floors(setup, record, view, offers, original, costs if costs is not None else {})
-    unsold = _unsold(_sold_by_offer(result, offers), offers, list(floors))
-    if not unsold:
+    if not floors or not _unsold(_sold_by_offer(result, offers), offers, list(floors)):
         return offers, result
+    return search_asks(bids, offers, floors, buyers, good, area, currency, last_price)
+
+
+def search_asks(bids, offers: Sequence[Offer], floors: dict, buyers: goods_market.Buyers, good, area, currency,
+                last_price: Optional[float]) -> Tuple[List[Offer], object]:
+    """(the offers with the searched asks (index -> floor) brought down to the highest common level at which
+    they sell out or sit at their floors, the market's clearing with them); some searched offer is unsold."""
     searched = list(floors)       # a seller undercut by a lower ask becomes unsold in turn: all are searched together
 
     def trial(level: float):
@@ -93,6 +115,9 @@ def clear_with_search(setup, record, view, bids, original: Sequence[Offer], offe
                            if candidate[index].reservation_price > floors[index]]
 
     low = min(floors[index] for index in searched)
+    if unsold_above_the_floor(buyers, offers, floors):    # the bisection would end at the floor: skip its trials
+        kept = _with_level(offers, floors, low)
+        return kept, goods_market.clear(bids, kept, good, area, currency, last_price, buyers)
     best = trial(low)         # every searched ask at its floor: nothing above a floor can stay unsold
     high = max(offers[index].reservation_price for index in searched)
     ceiling = high

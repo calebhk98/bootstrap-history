@@ -56,7 +56,7 @@ CATEGORY = sorted(S.Sim.GOODS_CATEGORIES)[0]
 NODE = make_node("zz_grow", CATEGORY, revenue=2.0e5, upkeep=5000.0, hours=50.0)
 
 
-def settled(rate=0.12, years=12):
+def settled(rate=0.12, years=24):     # since 679 the count and capacity come to rest more slowly: at 12 years capacity is still rising
 	game = actor_sim([NODE])
 	game.market_rate = lambda: rate
 	founder_runs(game, "zz_grow", opened_ago=10)
@@ -73,8 +73,10 @@ def market_grows(sim_game, times):
 	"""Demand for the good rises `times`-fold while the same hands tend it: a bigger market, not a
 	bigger economy, so what a concern must carry stays put (the economy index scales costs with takings)."""
 	hands = sim_game.venture_hands("zz_grow")
+	staff = sim_game.concern_staff_by_trade("zz_grow")       # the site rent and manager hours an added step carries read the crew
 	sim_game.nodes["zz_grow"]["rev"] *= times
 	sim_game.venture_hands = lambda node_id: hands
+	sim_game.concern_staff_by_trade = lambda node_id: staff
 
 
 game = settled()
@@ -117,7 +119,8 @@ check("the market's growth is served by capacity at least as much as by firm cou
       capacity_after / capacity_before >= firms_after / firms_before,
       (capacity_before, capacity_after, firms_before, firms_after))
 check("a firm ends larger than it was founded",
-      max(firm.capacity_of("zz_grow") for firm in game.actors.active_firms()) > 1.5)
+      max(firm.capacity_of("zz_grow") for firm in game.actors.active_firms()) > 1.5,
+      sorted(firm.capacity_of("zz_grow") for firm in game.actors.active_firms()))
 
 # capacity survives a save and load
 with tempfile.TemporaryDirectory() as folder:

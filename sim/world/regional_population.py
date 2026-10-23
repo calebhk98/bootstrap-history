@@ -31,18 +31,20 @@ def kcal_per_day_fed(population: Population, eaten_over_need: float) -> float:
 
 
 def kcal_per_day_by_region(regions: Mapping[str, Population], eaten_over_need_by_region: Mapping[str, float],
-                           national_eaten_over_need: Optional[float], farm_kcal_per_day: float,
-                           relief_kcal_per_day: float) -> Dict[str, float]:
-    """{region: calories a day it is fed}: its households' eaten over need where the economy has booked it, else
-    the nation's, else its share of the farm model's harvest; open works' relief is shared by need."""
+                           farm_kcal_per_day: float, relief_kcal_per_day: float,
+                           land_share_by_region: Mapping[str, float]) -> Dict[str, float]:
+    """{region: calories a day it is fed}: what its own households ate where the economy has booked it, else its land's
+    share of the farm model's harvest (never the nation's average, so a region's shortfall is its own); open works'
+    relief is shared by need."""
     need = {tile: adult_equivalents(region) for tile, region in regions.items()}
     total_need = sum(need.values())
+    total_land = sum(land_share_by_region.get(tile, 0.0) for tile in regions)
     fed = {}
     for tile, region in regions.items():
-        ratio = eaten_over_need_by_region.get(tile, national_eaten_over_need)
-        share = need[tile] / total_need if total_need > 0.0 else 0.0
-        base = kcal_per_day_fed(region, ratio) if ratio is not None else farm_kcal_per_day * share
-        fed[tile] = base + relief_kcal_per_day * share
+        ratio = eaten_over_need_by_region.get(tile)
+        land = land_share_by_region.get(tile, 0.0) / total_land if total_land > 0.0 else 0.0
+        base = kcal_per_day_fed(region, ratio) if ratio is not None else farm_kcal_per_day * land
+        fed[tile] = base + relief_kcal_per_day * (need[tile] / total_need if total_need > 0.0 else 0.0)
     return fed
 
 
@@ -70,9 +72,11 @@ def keep_to_nation(regions: Dict[str, Population], national: Population, tiles: 
 
 def step_regions(regions: Dict[str, Population], kcal_per_day_by_region: Mapping[str, float], disease_burden: float,
                  epidemic_deaths: Mapping[str, float], endemic_death_rates: Optional[Mapping[str, float]],
-                 emigration: Mapping[str, float], immigration: Mapping[str, float]) -> Dict[str, StepFlows]:
+                 emigration: Mapping[str, float], immigration: Mapping[str, float],
+                 urban_mortality_premium: Optional[Mapping[str, float]] = None) -> Dict[str, StepFlows]:
     """One year for every region, each fed its own calories. The nation's epidemic deaths fall on a region in the
-    share of the nation's band it holds; migrants leave and arrive in the working-age band. Returns each region's flows."""
+    share of the nation's band it holds; migrants leave and arrive in the working-age band; a region's urban mortality
+    premium (a share of its baseline death rate, absent for none) comes from the town providers. Returns each region's flows."""
     band_totals = {band: sum(getattr(region, band) for region in regions.values()) for band in BANDS}
     flows = {}
     for tile in sorted(regions):
@@ -81,7 +85,8 @@ def step_regions(regions: Dict[str, Population], kcal_per_day_by_region: Mapping
                     for band in BANDS if band_totals[band] > 0.0}
         flows[tile] = region.step(
             kcal_per_day_by_region[tile], immigration=immigration.get(tile, 0.0), emigration=emigration.get(tile, 0.0),
-            jitter=False, disease_burden=disease_burden, epidemic_deaths=epidemic, endemic_death_rates=endemic_death_rates)
+            jitter=False, disease_burden=disease_burden, epidemic_deaths=epidemic, endemic_death_rates=endemic_death_rates,
+            urban_mortality_premium=(urban_mortality_premium or {}).get(tile, 0.0))
     return flows
 
 

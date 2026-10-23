@@ -8,15 +8,19 @@ WALL = "two-way"  # nothing here reaches sim/engine/; the engine hands it what i
 
 import math
 
-from . import carried_book, carriage_wear, country_figures, diagnostics, late_recipes, opening_metal, households, households_work, labour_state, land_rents, market_curves, prices_at as tile_prices, taxes, tile_costs, workforce_settle, workforce_version
+from . import carried_book, carriage_wear, country_figures, diagnostics, late_recipes, opening_metal, household_grinding, households, households_work, labour_state, land_rents, market_curves, prices_at as tile_prices, taxes, tile_costs, workforce_settle, workforce_version
+from .bank_founding import found_from_outside
 from .banks import DEPOSIT_BANKING
+from .funds import POOLED_FUNDS
+from .insurance import INSURANCE_UNDERWRITING, RISK_POOLING
+from .secondary_trade import BOND_MARKET, SHARE_TRADING
 from .credit_lines import line_request as credit_line_request
 from .currency import currency_from_coin_standard
 from .economy import Economy
 from .foreign import external_orders
 from .market_memory import market_key
 from .metal_stock import COIN_WEAR_PER_YEAR
-from .notional import shown_prices
+from .notional import shown_prices, shown_prices_with_kinds
 from .producers import Producer, expected_output_prices, live_input_prices, live_wages
 from .protocols import AgentOrders, YearInputs
 from .recipes import recipes_from_production_data
@@ -31,6 +35,7 @@ from . import baseline_checks, settling, spin_up_sensitivity
 from .unit_cost import variable_cost_per_run
 from .titles_value import title_wealth
 from .debt_relief import indebted_tiles as record_indebted_tiles
+from .titles_moves import holdings as record_title_holdings
 from .spin_up_state import spin_up_state as year_spin_up_state
 from .year_close import rebase_basket_price_level
 from .year_labour import trade_premium
@@ -38,7 +43,7 @@ from sim.world import capital_market
 
 __all__ = [
     "YearAccounts", "baseline_checks", "settling", "spin_up_sensitivity",
-    "carriage_wear", "diagnostics", "households", "households_work", "taxes", "tile_costs", "currency_from_coin_standard", "Economy", "external_orders",
+    "carriage_wear", "diagnostics", "household_grinding", "households", "households_work", "taxes", "tile_costs", "currency_from_coin_standard", "Economy", "external_orders",
     "price_response", "prices_at", "offered_units", "watch_tiles",
     "shown_prices", "Producer", "expected_output_prices", "live_input_prices", "live_wages", "AgentOrders",
     "YearInputs", "recipe_tile_key", "recipes_from_production_data", "plant_builds", "with_tool_wear", "EconomyRecord", "EconomySetup", "TradeSpec", "SiteLimit",
@@ -46,12 +51,18 @@ __all__ = [
     "variable_cost_per_run", "rebase_basket_price_level", "trade_premium", "title_wealth",
     "traded_volumes", "country_traded_volumes", "country_opening_basket", "market_record", "opening_quantities", "opening_prices_in_hours", "wages_by_trade", "wages_by_trade_weighted", "interest_rate", "producers_of",
     "external_trade_net", "external_trade_volume", "account_balance", "account_holdings",
-    "credit_room", "credit_line_request", "economy_from_record", "blank_economy", "export_record", "economy_book", "economy_contracts", "finish_spin_up", "note_spin_up_result", "spin_up_state", "money_year_figures","shown_prices_of",
-    "settle_agent_takings", "indebted_tiles", "money_revenue_forms", "admit_recipes", "move_goods", "post_transfers", "cohort_incomes", "cohort_land_rents", "land_rent_per_hectare",
-    "land_rent_paid_by_tile", "land_rent_at_tile", "DEPOSIT_BANKING", "country_figures", "carried_book", "idle_hours_by_trade", "output_by_tile",
+    "credit_room", "credit_line_request", "economy_from_record", "blank_economy", "export_record", "economy_book", "economy_contracts", "finish_spin_up", "note_spin_up_result", "spin_up_state", "money_year_figures","shown_prices_of","shown_price_kinds_of",
+    "settle_agent_takings", "indebted_tiles", "fugitive_share_by_tile", "title_holdings", "money_revenue_forms", "admit_recipes", "move_goods", "post_transfers", "cohort_incomes", "cohort_land_rents", "land_rent_per_hectare",
+    "land_rent_paid_by_tile", "land_rent_at_tile", "DEPOSIT_BANKING", "POOLED_FUNDS", "INSURANCE_UNDERWRITING", "RISK_POOLING", "BOND_MARKET", "SHARE_TRADING", "country_figures", "carried_book", "idle_hours_by_trade", "output_by_tile",
 ]
 
 _KEY_SEPARATOR = "|"
+
+
+def found_bank_from_outside(economy, founder, capital_units, year, edge):
+    """A bank founded by an actor whose money the engine keeps: `capital_units` come in over `edge` to its account and into
+    the bank. The bank, or None when the capital is not positive."""
+    return found_from_outside(economy.record, economy.setup.currency_id, founder, capital_units, year, edge)
 
 
 def traded_volumes(economy):
@@ -108,6 +119,12 @@ def people_by_trade(economy, country=None):
             return labour_state.people_by_trade_everywhere(economy.record.workforce)
         return country_figures.people_by_trade(economy, scope)
     return workforce_version.cached(economy.record.workforce, ("people_by_trade", country), sum_people)
+
+
+def people_by_tile_and_trade(economy):
+    """Working people of the labour core by tile and trade, over every labour area (trainees are not counted)."""
+    return {labour_state.area_tile(area): labour_state.people_by_trade(economy.record.workforce, area)
+            for area in sorted(economy.record.workforce.workers)}
 
 
 def wages_by_trade(economy):
@@ -408,6 +425,14 @@ def shown_prices_of(economy, country=None):
     return shown_prices(economy.setup, economy.record, country_figures.prices(economy, scope))
 
 
+def shown_price_kinds_of(economy, country=None):
+    """What each shown price is, by good: PRICE_TRADED, a quote kind (QUOTE_*) or an estimate (`notional.KIND_*`).
+    Same scope as `shown_prices_of`."""
+    scope = country_figures.home_when_shared(economy, country)
+    market = None if scope is None else country_figures.prices(economy, scope)
+    return shown_prices_with_kinds(economy.setup, economy.record, market)[2]
+
+
 def move_goods(economy, moves):
     """Applies goods moves to the economy's book."""
     economy.record.book.move_many(moves)
@@ -421,6 +446,23 @@ def post_transfers(economy, transfers):
 def indebted_tiles(economy):
     """Tiles where households owe term loans, sorted: those a state could relieve of debt."""
     return record_indebted_tiles(economy.record)
+
+
+def title_holdings(economy, tiles):
+    """(holder -> share by tile, tenancy rows by tile) for the tiles: what a state plans a land decree from."""
+    return record_title_holdings(economy.record, tiles)
+
+
+def fugitive_share_by_tile(economy):
+    """{tile: share of the people who belonged to it that are away, having fled the state's take} (flight_year.py)."""
+    from .setup import area_tile
+    workforce = economy.record.workforce
+    shares = {}
+    for area, row in sorted(economy.record.fugitives.items()):
+        present = sum(sum(bands) for bands in workforce.workers.get(area, {}).values())
+        if row["people"] > 0.0:
+            shares[area_tile(area)] = row["people"] / (present + row["people"])
+    return shares
 
 
 def money_revenue_forms(economy):

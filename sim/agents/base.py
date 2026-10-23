@@ -13,7 +13,7 @@ from .business_plant import Plant
 from .business_review import Reviewable
 from .records import ActorRecord
 
-from . import imitation, ledger, research, research_choice
+from . import awareness, imitation, ledger, research, research_choice
 from .borrowing import Borrower
 from .ledger import Purpose
 from .purses import EDGE_OUTSIDE, Purses
@@ -23,6 +23,7 @@ from .tuning import ATTENTION_SPAN
 
 class Actor(Reviewable, Borrower):
 	kind = "actor"
+	keeps_purchases = False   # whether what the actor buys at the market joins its stores
 	researches = False   # whether the actor does research and takes part in knowledge spreading (`research.py`)
 	purses: Any = None   # the book of purses the actor keeps its account in, when it keeps one
 
@@ -179,7 +180,8 @@ class Actor(Reviewable, Borrower):
 		known = self.knowledge
 		baseline = world.baseline_knowledge()
 		for node_id in self.imitation_candidates(world):
-			if node_id in known or node_id in baseline or node_id in self.works:
+			if node_id in known or node_id in baseline or node_id in self.works \
+					or not awareness.knows_it_exists(self, node_id, world):
 				continue
 			worth = self.imitation_worth(node_id, world)
 			if worth > 0 and imitation.in_sight(self.location(), node_id, world):
@@ -348,6 +350,22 @@ class RecordedActor(Actor):
 	@property
 	def knowledge(self) -> Set[str]:
 		return self.record.knowledge
+
+	@property
+	def aware(self) -> Dict[str, int]:
+		return self.record.aware
+
+	@property
+	def adoption(self) -> Dict[str, Dict[str, Any]]:
+		return self.record.adoption
+
+	@property
+	def contacts(self) -> Dict[str, float]:
+		return self.record.contacts
+
+	def held_tonnes(self, material: str) -> float:
+		"""Tonnes of a material or tool the actor itself holds; a start gate counts them before the market."""
+		return float(self.record.stores.get(material, 0.0))
 
 	@property
 	def business(self) -> Business:

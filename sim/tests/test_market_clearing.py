@@ -117,11 +117,60 @@ class CapacityFollowsPriceTests(unittest.TestCase):
         self.assertGreater(prices[0], 1.5)
         self.assertLess(abs(prices[-1] - 1.0), 0.1)
 
-    def test_stock_carries_the_unsold_surplus(self):
+    def test_idle_capacity_is_not_carried_as_stock(self):
         outcome = market.clear_market(conditions(society_capacity_tonnes=1e6))
-        self.assertAlmostEqual(
-            market.stock_after_year(outcome), outcome.unsold_tonnes * market.STOCK_RETENTION,
-            places=6)
+        self.assertGreater(outcome.unsold_tonnes, 0.0)
+        self.assertEqual(market.stock_after_year(outcome), 0.0)
+
+    def test_goods_that_exist_and_did_not_sell_are_carried_less_what_spoils(self):
+        outcome = market.clear_market(conditions(society_capacity_tonnes=0.0, actor_supply_tonnes=1000.0))
+        self.assertGreater(outcome.held_over_tonnes, 0.0)
+        self.assertAlmostEqual(market.stock_after_year(outcome),
+                               outcome.held_over_tonnes * market.STOCK_RETENTION, places=6)
+
+
+def run_years(years, **changes):
+    """(price ratio, stock held at the start) of each year, carrying stock from one to the next."""
+    stock, rows = changes.pop("stock_tonnes", 0.0), []
+    for _year in range(years):
+        outcome = market.clear_market(conditions(stock_tonnes=stock, **changes))
+        rows.append((outcome.price_ratio, stock))
+        stock = market.stock_after_year(outcome)
+    return rows
+
+
+class StockIsHeldAtItsCarryingCostTests(unittest.TestCase):
+    def test_the_reservation_is_below_what_the_market_returns_to_and_above_nothing(self):
+        reservation = market.stock_reservation_ratio(conditions())
+        self.assertGreater(reservation, 0.0)
+        self.assertLess(reservation, 0.4)
+
+    def test_dearer_carrying_lowers_the_reservation(self):
+        cheap = market.stock_reservation_ratio(conditions(carrying_rate=0.05))
+        dear = market.stock_reservation_ratio(conditions(carrying_rate=0.5))
+        self.assertLess(dear, cheap)
+
+    def test_a_steady_demand_gives_a_steady_price(self):
+        rows = run_years(8, society_capacity_tonnes=1e3)
+        prices = [price for price, _stock in rows]
+        self.assertTrue(all(abs(price / prices[0] - 1.0) < 1e-9 for price in prices), prices)
+        self.assertTrue(all(stock == 0.0 for _price, stock in rows), rows)
+
+    def test_a_one_off_surplus_is_sold_down_over_years_above_its_carrying_floor(self):
+        floor = market.stock_reservation_ratio(conditions())
+        rows = run_years(12, society_capacity_tonnes=100.0, stock_tonnes=400.0)
+        prices = [price for price, _stock in rows]
+        stocks = [stock for _price, stock in rows]
+        self.assertTrue(all(price >= floor - 1e-9 for price in prices), prices)
+        self.assertTrue(all(later < earlier for earlier, later in zip(stocks, stocks[1:]) if earlier > 0.0), stocks)
+        self.assertTrue(all(later >= earlier - 1e-9 for earlier, later in zip(prices, prices[1:])), prices)
+        self.assertGreater(sum(1 for stock in stocks if stock > 0.0), 2)
+        self.assertEqual(stocks[-1], 0.0)
+
+    def test_stock_is_held_back_rather_than_sold_below_its_reservation(self):
+        outcome = market.clear_market(conditions(society_capacity_tonnes=0.0, stock_tonnes=1e6))
+        self.assertAlmostEqual(outcome.price_ratio, market.stock_reservation_ratio(conditions()), places=6)
+        self.assertGreater(outcome.held_over_tonnes, 0.0)
 
 
 if __name__ == "__main__":

@@ -1,6 +1,6 @@
 # Most tests check a rule through a whole game, so a failure cannot say which rule broke
 
-**Status:** open
+**Status:** partly - every test module that builds a whole game is declared a scenario, validation or smoke test or converted (the guard's leftover list is empty); open: rules still inside `Sim` methods whose checks can only run in a scenario until they are plain functions
 
 A large share of `sim/tests/test_*.py` builds a whole game (`harness.sim()`, `opened()`, `close_years`) and reads a
 value off it, to check a rule that is one function. Such a test passes only while the live game happens to hold the
@@ -282,3 +282,58 @@ scenarios each; `sited_ore_price_over_cost` is a baseline validation naming 519.
 compared against capital taken after it). `state_debasement_prices` was red after 625 (its hook no longer set the cut);
 it now drives `Government.apply_debasement`. Still Sim-only: `project_cost_now`, `venture_upkeep_quote`,
 `staffing_missing_to_open`.
+
+## Applied: the guard, and the declaration of whole-game modules
+
+New whole-game tests kept arriving as undeclared files. `python3 -m sim.tests --whole-game-checks` (`sim/tests/whole_game_checks.py`)
+reads each `test_*.py` syntax tree and lists the modules that build a whole game (`sim`, `unopened_sim`, `build_unopened`, `Sim`,
+the in-process CLI `proto` and `cli_in_process.run`, the `spin_up_*` helpers) and are not declared. A module is declared by a file
+name ending `_scenario`, `_validation` or `_smoke`, or by a docstring opening `SCENARIO`, `BASELINE VALIDATION` or `SMOKE`. The quick
+topic `whole_game_declared` fails on an undeclared builder that is not in `sim/tests/whole_game_leftovers.txt` and on a listed
+module that has since been declared, converted or deleted, so the list only shrinks. Its rule checks call the detector and the
+declaration test on source text built in the test.
+
+Declared by marker in this pass (their subject is a whole game: scenarios, the opening and spin-up checks, save and resume round
+trips, determinism, the CLI front end, baseline validations): 61 modules, found by reading each docstring against the checks in it.
+Split, the rule checks staying quick and the game-building checks moving to a `_scenario` file beside them: `arrears_hours`,
+`auto_hire_buys_room`, `bank_institution_gate`, `bearable_part_pure`, `complaints_17_24`, `completion_messaging`,
+`concerns_that_pay`, `dynamic_wages`, `demography_history`, `alerts_staffing_finish`, `automation_audit`. `concerns_that_pay`
+had been failing before this pass (its fake world lacked `plant_costs`, which the scan reads); the stub now has it.
+
+## Remaining: rules still checked only through a game
+
+The guard's leftover list (`sim/tests/whole_game_leftovers.txt`) is empty: `python3 -m sim.tests --whole-game-checks` lists no
+undeclared module, and the quick topic `whole_game_declared` fails on any new one. Some modules were declared rather than converted
+because their rule sits inline in a `Sim` mixin or a phase; their `_scenario` files hold rule checks until the rule is a plain
+function. What is left, after the rules named in the list below were pulled out (each with a quick rule test):
+
+- the state's year as a ledger: how a reserve finances a deficit and the rest is cut, and the founder paying the ordinary share
+  and the need-driven levy (`Government.pay_standing_need`, `Sim._state_pressure`; `state_budget_scenario`); the requisition,
+  office and confiscation reports that call the extracted functions stay as wiring in `state_notices_scenario`;
+- the expected calendar years of a risky project and the calendar floor (`Sim.expected_calendar_years`, `calendar_floor`;
+  `project_retry_and_risk_scenario`);
+- the rest of `_step_staff`: the `_grow_to` closure and the per-trade replacement loop (the arithmetic around them is plain);
+- the `Sim` methods that compose the domestic haul from prices (`_freight_mode_costs`, `_haul_route`), which only run in a game.
+
+Converted in the second round (rule now a plain function with a quick rule test, its checks moved out of the scenario):
+`state_notice_rules` (the notice line, the levy shares, protection bargaining, the confiscation chance and its mitigations,
+military demand), `budget.military_ask_of`, `budget.sack_pressure` and `budget.army_goal` (the army the threat asks for,
+shared by the home and country views), the standing lines (`test_state_budget_lines`) and the army, administration and army
+size rules (`test_state_budget_rules`); `risk_rules` (control relief and the compounding of the multipliers of a retried
+project); `haul_route.cargo_class_of`, `domestic_haul_mode` and `unjoined_haul_cost`; `colony_rules.best_settlement_work`,
+`outfit_cost` and `colony_people`, with the settlement geography rule-tested on built inputs; `public_works_rules` (the free
+press, the dole, the lit working day, schooling by group and printing); `industry_depth_rules.opening_seed` and the
+once-only guard of the seed; `staff_phase_rules` (smoothing toward a target, the craft headcount, the hiring goals, the
+deputies, replacement affordability); `labour/request_rules` (the preconditions of `train`, `fire` and `commission`, now
+refusals with a `cause`, and the teaching fee); `staff_pay_rules.wage_for_hours_of` (`work_for_wages`). Load validation
+(`test_save_refusal_rules`), the staffing gates of `open` and `start` and the hire advice sized to the deficit of
+`start_reason` (`test_founder_hours_rules`) were already plain functions with rule tests.
+
+Converted in this round (rule now a plain function with a quick rule test): `start_blockers` (`blockers.collect_blockers`), the
+automation start rule (`auto_start_rule.judge_start_candidate`), auto-mine sizing (`shortage_sizing.auto_mine_order_tonnes`),
+the colony rules (`colony_rules`), coverage and disease burden (`coverage_rules`, `disease_burden.burden_from_holdings`), route
+dues and handling, settlement owed, halting projects on exhausted credit, non-labour upkeep, project throttles, the nitre deficit,
+instantaneous projects, the eminence hazard rules, dependants beyond means, prerequisite names. `start_and_upkeep_quotes_scenario`'s
+`people_exist` refusal is gone (659, closed).
+
+The complaint closes when the rules above are plain functions and their checks have left the scenarios.

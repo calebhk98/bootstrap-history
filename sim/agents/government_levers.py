@@ -13,14 +13,20 @@ from typing import Any, Collection, Dict, List, Union
 from sim.refusal import Refusal
 
 from . import state_works
+from .government_levers_land import LAND_KINDS, set_land_lever
+from .government_levers_tax import TAX_KINDS, remission_share, set_tax_lever
 from .budget_line import Line, goods
 from .revenue_bases import BASES
 from .revenue_labour import BASIS as LABOUR_BASIS
 
 REVENUE, BUDGET, ARMY, NAVY, WORKS, RESERVE, MONOPOLY, SUBSIDY, MANDATE = (
 	"revenue", "budget", "army", "navy", "works", "reserve", "monopoly", "subsidy", "mandate")
-LEVER_KINDS = (REVENUE, BUDGET, ARMY, NAVY, WORKS, RESERVE, MONOPOLY, SUBSIDY, MANDATE)
-SCALAR_KINDS = (ARMY, NAVY, RESERVE)   # one figure, no name
+# technique levers (adoption.py pays them): money a year to each actor trying the technique, and a share of
+# production the state orders onto it
+TRIAL_SUBSIDY, TECH_MANDATE = "trial_subsidy", "tech_mandate"
+LEVER_KINDS = (REVENUE, BUDGET, ARMY, NAVY, WORKS, RESERVE, MONOPOLY, SUBSIDY, MANDATE,
+			   TRIAL_SUBSIDY, TECH_MANDATE) + TAX_KINDS + LAND_KINDS
+SCALAR_KINDS = (ARMY, NAVY, RESERVE) + TAX_KINDS + LAND_KINDS   # one figure (or a rule), no name
 DAYS_PER_YEAR = 365.0                  # the most days of labour a due can take
 
 # the standing lines a budget lever can cut; each work's upkeep line is named for the work
@@ -36,6 +42,7 @@ class LeverContext:
 	declared_forms: List[Dict[str, Any]] = field(default_factory=list)
 	materials: Collection[str] = ()
 	population: float = 0.0
+	techniques: Collection[str] = ()
 
 	def revenue_names(self) -> List[str]:
 		return [form["form"] for form in self.declared_forms]
@@ -130,16 +137,23 @@ def set_lever(record: Any, request: Dict[str, Any], context: LeverContext) -> Un
 		return _set_revenue(record, request, context)
 	if kind == MONOPOLY:
 		return _set_monopoly(record, request, context)
+	if kind in TAX_KINDS:
+		return set_tax_lever(record.levers, kind, request.get("value"), _number, _refuse)
+	if kind in LAND_KINDS:
+		return set_land_lever(record.levers, kind, request.get("value"), _number, _refuse)
 	name, value = request.get("name"), request.get("value")
 	if kind not in SCALAR_KINDS:
-		choices = {BUDGET: budget_line_names(), WORKS: [work.name for work in state_works.WORKS]}.get(kind, sorted(context.materials))
+		choices = {BUDGET: budget_line_names(), WORKS: [work.name for work in state_works.WORKS],
+				   TRIAL_SUBSIDY: sorted(context.techniques), TECH_MANDATE: sorted(context.techniques)}.get(kind, sorted(context.materials))
 		if name not in choices:
 			return _refuse("unknown_name", "%r is not a name for the %s lever." % (name, kind), choices, lever=kind)
 	if value is not None:
 		limits = {BUDGET: (0.0, 1.0, "a share of the line"), ARMY: (0.0, context.population, "an army"),
 				  NAVY: (0.0, context.population, "a navy (ships)"), WORKS: (0.0, math.inf, "a stock of works (m2)"),
 				  RESERVE: (0.0, math.inf, "a reserve (years of the standing need)"),
-				  SUBSIDY: (0.0, math.inf, "a subsidy (money a year)"), MANDATE: (0.0, math.inf, "a mandate (tonnes a year)")}
+				  SUBSIDY: (0.0, math.inf, "a subsidy (money a year)"), MANDATE: (0.0, math.inf, "a mandate (tonnes a year)"),
+				  TRIAL_SUBSIDY: (0.0, math.inf, "a trial subsidy (money a year to each actor trying it)"),
+				  TECH_MANDATE: (0.0, 1.0, "a mandated share of production")}
 		low, high, what = limits[kind]
 		value = _number(value, low, high, what)
 		if isinstance(value, Refusal):
@@ -167,8 +181,12 @@ def revenue_forms(record: Any) -> List[Dict[str, Any]]:
 	declared = record.revenue_forms
 	forms = [dict(form, rate=overrides[form["form"]]["rate"]) if form["form"] in overrides else form for form in declared]
 	known = {form["form"] for form in declared}
-	return forms + [{"form": name, "basis": slot["basis"], "rate": slot["rate"]}
-					for name, slot in sorted(overrides.items()) if name not in known]
+	forms += [{"form": name, "basis": slot["basis"], "rate": slot["rate"]}
+			  for name, slot in sorted(overrides.items()) if name not in known]
+	remitted = remission_share(record)
+	if remitted > 0.0:
+		forms = [dict(form, rate=float(form["rate"]) * (1.0 - remitted)) for form in forms]
+	return forms
 
 
 def army_target(record: Any, derived: float) -> float:

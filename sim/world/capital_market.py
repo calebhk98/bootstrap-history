@@ -43,10 +43,11 @@ def utilisation(demand: float, supply: float) -> float:
 
 
 
-def bounded_rate(starting_rate: float, rate: float) -> float:
+def bounded_rate(starting_rate: float, rate: float, expected_inflation: float = 0.0) -> float:
     """A market rate held under the ceiling: however keen the queue of borrowers, lenders' own risk and the
-    borrowers' turn to other means stop the rate there."""
-    return min(rate, starting_rate * RATE_CEILING_SHARE)
+    borrowers' turn to other means stop the rate there. The ceiling bounds the real rate, so the inflation
+    lenders expect is added to it for the nominal rate."""
+    return min(rate, starting_rate * RATE_CEILING_SHARE + max(0.0, expected_inflation))
 
 
 def market_rate_answered(starting_rate: float, agent_rate: Optional[float]) -> float:

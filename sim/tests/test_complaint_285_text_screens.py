@@ -1,4 +1,4 @@
-"""Complaint 285 (scenario): no text screen prints a quantity in a unit the player did not choose.
+"""SCENARIO (Complaint 640): Complaint 285 (scenario): no text screen prints a quantity in a unit the player did not choose.
 
 A short game is played (land bought, years stepped), non-default units are chosen for every dimension, and every
 read-only text screen is rendered. A screen fails when it still prints a native unit label (tonne, hectare, den), and a

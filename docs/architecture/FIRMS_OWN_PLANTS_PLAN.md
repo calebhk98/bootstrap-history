@@ -313,6 +313,11 @@ figure, for 3c; a firm has no staffing closure (it finds a share of its crew and
 the seat's staffing closure still ranks by node figures inside `concerns_to_close_for_staffing`. Tests:
 `test_business_review.py`, `test_firm_exit_debt.py`. Allowlist: four entries pruned.
 
+*Stage 5 groundwork done (branch `one-business-object`).* A node with upkeep and no entry is a `validate` error unless listed in
+`data/unlinked_upkeep_nodes.txt`, a list that only shrinks (`validate_unlinked_producers.check_unlinked_upkeep`,
+`test_unlinked_upkeep_ratchet.py`); the opening concern scan reads `Business` objects (`concern_scan.py`, `concern_scan_run.py`). The
+remainder of 3c, 4, 5a and 5b, and why the founder is not yet paid from its sale account, are written in Complaints 510 and 514.
+
 **Stage 3c: takings and upkeep through the kernel.** `economy_production.revenue`, `upkeep`, `concern_revenue`,
 `ledger_concern_rows`, `revenue_sources`, `venture_real_earnings`, `venture_upkeep_quote`, `concern_levy` and
 `agents_port.concern_takings`/`entry_gross` read `business.takings` and `business.upkeep` from the kernel at the economy's

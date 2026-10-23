@@ -335,19 +335,29 @@ check("...and you can still build the balloon without one",
 s = _no  # the persona-less England game, no longer needed untouched
 s.capital = hours_money(10100000, "england_1300")
 s.labour.hire("artisan", 6)
-_big = [node_id for node_id in NODES if hours_money(40300) <= NODES[node_id]["rev"] <= hours_money(181000)][:4]
+# concerns that need someone to watch them and earn at the economy's prices (the opening's prices decide what a concern's
+# goods fetch, so the book figure cannot choose them)
+_big = [node_id for node_id in sorted(NODES) if s.is_venture(node_id) and s.venture_hands(node_id)[0] > 0
+        and s.venture_real_earnings(node_id, fully_ramped=True) > 0][:4]
 for _k in _big:
     s.done.add(_k)
 s._done_changed()
 _opened = [node_id for node_id in _big if s.open_venture(node_id)[0]]
+def _concern_rows(game):
+    """The income lines that are concerns (the founder's own work and the market's gap are lines that start with `_`)."""
+    return {label: coin for label, coin in game.revenue_sources().items() if not label.startswith("_")}
+
+
 _rev_staffed = s.revenue()
+_rows_staffed = _concern_rows(s)
 s.labour.fire("artisan", 6)
 s._step_market = lambda: None     # the closure acts in the staff phase; the market close adds nothing to it
 s.step()
 check("a concern nobody is left to watch stops trading",
-      _opened and not s.operating and s.revenue() < _rev_staffed * 0.2,
-      "revenue %.0f -> %.0f, still running %d"
-      % (_rev_staffed, s.revenue(), len(s.operating)))
+      _opened and sum(_rows_staffed.values()) > 0.0 and not s.operating and not _concern_rows(s)
+      and s.revenue() < _rev_staffed,
+      "revenue %.0f -> %.0f, concern rows %s -> %s, still running %d"
+      % (_rev_staffed, s.revenue(), _rows_staffed, _concern_rows(s), len(s.operating)))
 check("...and the game says which ones closed and why",
       any(cause_of(message) == "concerns_closed_unstaffed" for _year, message in s.log),
       [message for _year, message in s.log][-2:])

@@ -8,7 +8,7 @@ founder either way. Nothing here names a trade, a commodity or a civilisation.
 """
 import math
 from sim.refusal import LogLine
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from sim.constants import declare
 
@@ -114,15 +114,21 @@ class InterestGroup(RecordedActor):
 			record.petitions += 1
 			world.lodge_blame(blame, self.words(world), GROUP_LOG_INTERVAL_YEARS, record)
 
-	def words(self, world: Any) -> str:
-		"""The log line a petition produces: who, how many, caused by what, asking what."""
+	def words(self, world: Any) -> LogLine:
+		"""The log line a petition produces: who, how many, caused by what, asking what. The sums are kept in
+		`facts["parts"]` so the log writes them in the unit the player chooses when the line is read."""
 		record = self.record
-		asks = ["to be made good (%s a year)" % world.money_text(record.claim, grouped=True)] if record.claim > 0.5 else []
-		asks.extend(record.demands)
-		return ("INTEREST GROUP %s petitions the state: about %s people out of pocket %s a year because %s; "
-				"they ask %s%s"
-				% (record.name, world.plain_number(record.members), world.money_text(record.lost_income, grouped=True),
-				   record.cause, " and ".join(asks) if asks else "to be heard", self.blame_words(record.blame_share)))
+		claims = record.claim > 0.5
+		pieces: List[Any] = ["INTEREST GROUP %s petitions the state: about %s people out of pocket " % (record.name, world.plain_number(record.members)),
+							{"money": record.lost_income}, " a year because %s; they ask " % record.cause]
+		if claims:
+			pieces.extend(["to be made good (", {"money": record.claim}, " a year)"])
+			pieces.extend(" and " + demand for demand in record.demands)
+		else:
+			pieces.append(" and ".join(record.demands) if record.demands else "to be heard")
+		pieces.append(self.blame_words(record.blame_share))
+		text = "".join(piece if isinstance(piece, str) else world.money_text(piece["money"], grouped=True) for piece in pieces)
+		return LogLine("group_petition", text, parts=pieces)
 
 	@staticmethod
 	def blame_words(blame_share: float) -> str:
@@ -132,7 +138,7 @@ class InterestGroup(RecordedActor):
 		return ". The blame lands on you (about %d%% of the cause is yours)" % round(100.0 * blame_share)
 
 	@classmethod
-	def founded_by(cls, sector: Sector) -> Dict[str, Any]:
-		"""The record fields of a group founded on this sector."""
-		return {"kind": "interest_group", "name": sector.name, "group_kind": sector.kind,
+	def founded_by(cls, sector: Sector, country: Optional[str] = None) -> Dict[str, Any]:
+		"""The record fields of a group founded on this sector, of `country` (None is the home country)."""
+		return {"kind": "interest_group", "name": sector.name, "group_kind": sector.kind, "country": country,
 				"subject": sector.subject, "cause": sector.cause, "members": sector.members, "technique": sector.technique}

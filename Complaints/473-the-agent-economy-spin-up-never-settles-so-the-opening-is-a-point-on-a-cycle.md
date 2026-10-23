@@ -1,6 +1,6 @@
 # The agent economy's spin-up never settles, so the opening is a point on a cycle
 
-**Status:** partly - the money stock is sustained (Update 4, `spin_up_money_supply` passes); the spin-up still does not settle: the price level and wage drift for decades because the labour market clears far below the cost table's wage (Update 4)
+**Status:** partly - a one-year closure test and the stationary quantities now exist (Update 6); the money stock is sustained (Update 4, `spin_up_money_supply` passes); the spin-up still does not settle: the price level and wage drift for decades because the labour market clears far below the cost table's wage (Update 4)
 
 Research on reference models for making the opening a steady state (issue #61): `Complaints/reports/research-reference-economy-models.md`.
 
@@ -58,617 +58,46 @@ small to move it. A founder who had borrowed at a normal rate to hire staff paid
 interest each year and went insolvent. Wages (and with them the workshop's revenue, which is a markup on
 wages) fell through the same years. Reproduce by stepping a year at a time and reading `money`.
 
-## Update (coin wear and the spin-up report)
+## Current state (Update 4, stage 2 of 507)
 
-Done:
-
-- **A measurement exists.** `python3 sim/simulator.py spin-up-trace --civ rome_100ad --years 60` prints the price
-  level, money stock, rate, coin worn, coin struck net and metal at the mint by year (`sim/engine/economy_port_trace.py`,
-  `economy_api.money_year_figures`, from each year's `YearOutcome.money_audit`). It runs the first stage on the
-  opening the game saved, without stopping at the tolerance. `sim/tests/test_spin_up_money_supply.py` (slow) reads
-  the same trace.
-- **The spin-up now says whether it settled.** The first stage returns `{settled, years, gap}`; it is saved in the
-  record (`EconomyRecord.spin_up_result`), read through `game.economy.spin_up_result()`, and `simulator.py openings`
-  prints "NOT SETTLED" for an opening that ran out of years with the cycle still moving.
-- **The drain is measured, and it is the wear sink with nothing replacing it.** Rome, 60 years (command above, the
-  harness game): the money stock goes 45.5 to 25.2 billion units (a fall of 45 per cent, still falling), decade means 43.4,
-  39.0, 35.5, 31.9, 28.6, 26.4; the mint's strikes over each decade are between minus 12 and plus 21 per cent of the
-  coin worn. The audit identity holds (stock change equals struck less worn, other edges about one per cent of wear), so
-  wear is the only steady sink and the mint is not a steady source.
-
-Cause, found by tracing the silver market and the chain behind it (not the mint's rule):
-
-1. The mint quotes both ways at one price (Rome's coin standard has no mint charge), so the coin metal's price is
-   pinned at the minted value and the mint buys every kilogram offered. Nothing in the mint's decision starves it. The
-   price of the metal in goods still follows coin scarcity through the price level; what fails is the supply that
-   should answer.
-2. Metal reaches the mint only from the producers of silver and from households selling bullion. Households' flows
-   are large both ways (hundreds of thousands of units a year bought from and sold to the mint, net melt about an eighth
-   of wear) and cancel. Producers supply almost nothing after the first two years: the opening's silver comes from
-   lead smelting (a joint product, 1.6 kg a tonne), about 15 per cent of the year's wear in year zero and next to nothing by year three.
-3. Lead smelting stops because its galena is never bought. The opening sizes lead capacity to the silver demand
-   households' store-of-wealth bids put into final demand (about a year of wear), but the galena deposits' declared
-   capacity can feed only about a quarter of that, and the smelters are placed by population, not beside the galena
-   (`opening._place_producers` places a sited input's users first). From year three smelters bid in tiles with no
-   galena offered, and mines in tiles with no smelter hold unsold stock (seven hundred million kilograms offered, none
-   traded, each market area being one tile). Galena, then lead, then the by-product silver stop.
-4. The dedicated silver chain (ore, jarosite, smelting) is a newcomer chain: entry builds the smelters (hundreds of runs
-   of capacity) before any ore is mined and at tiles with no ore, so by year twenty the smelters work a few runs of their
-   capacity and the ore mines about a seventh of theirs.
-
-Tried and not merged (each measured on the same 60-year trace, same opening): leaving the mint's standing bid out of the
-volume the remembered price is weighed against (`market_memory_asks.wanted_at`); charging a newcomer's tile for carrying
-its inputs from the nearest tile that makes them (`location.entry_siting`); placing processors beside where their
-heaviest input is made at the opening (`opening._place_producers`, sited recipes first). None moved the stock or the
-mint's strikes by more than a few per cent over 60 years; the first only matters if the metal's price memory is frozen,
-which it is not on the real opening. They are described here so the next attempt does not repeat them.
-
-What remains (in `test_spin_up_money_supply.test_the_money_stock_keeps_up_with_wear`, which fails on purpose: after
-forty years the stock is 0.74 of its first decade's, against the 0.90 that one decade of unreplaced wear leaves):
-
-- The silver chain has to be supplied from the opening: capacity that agrees with the deposits' limits (not a year of store
-  building), processors beside their sited inputs, and a smelter chain that does not outbuild its ore. That is the
-  opening's capacity/income mismatch above and waits on the owner decision in 507.
-- Do not weaken the test. Regenerate `openings/` (`simulator.py openings`) when this lands; the shipped entries are keyed
-  on the source and every source change leaves them unread.
-
-## Update 2 (material orientation; why the chain still cannot feed the mint)
-
-Answers to the three questions, each measured on the Rome opening (`harness.sim()`; no committed command prints these,
-they were read from the opening record and from each year's `YearOutcome.output` of an `Economy` stepped as
-`economy_port_trace.spin_up_trace` does):
-
-1. **Why ore did not reach a smelter in another area.** Nothing is broken in the merchants: they carry any good whose price
-   gap beats carriage, interest, spoilage and margin. The galena smelters were 104 tiles wide, 6 per cent of their capacity
-   on a galena tile and the rest a mean of thousands of money units a tonne from the nearest ore (the carriage of a tonne of
-   ore across the map is many times its value, so no gap can pay for it; the nearest pairs of tiles were marginal).
-   Galena's market areas are about a tile each. So the fault was siting, not trade: `opening._place_producers` put a
-   processor where its output is demanded and `location.entry_siting` priced only the carriage of the output.
-2. **Why entry built more than its input supply.** `entry_sizing.sized_runs` already holds a newcomer to the traded volume of
-   its inputs, but read it at the tile where the output is wanted, then `location.entry_siting` moved the newcomer to another
-   tile. It now reads the inputs at the tile where it is built (`works_at`).
-3. **Why the opening sized lead to silver demand.** Households' store-of-wealth demand for the coin metal is about one year
-   of wear, lead has no final demand, and the lead recipe makes silver as a by-product, so lead capacity is whatever makes
-   that silver. That sizing is the 507 question; it is left as it was.
-
-Built (general, no content ids): `sim/economy/location_inputs.py`. A processor whose input comes from a site-bound recipe with
-declared limits (the opening's `incumbents` name it) is placed only in market areas of that input that hold supply, on the
-tiles where the carriage of the run's inputs in plus its output out is least (each by the recipe's own masses, so a
-weight-losing run settles at its inputs and a weight-gaining one at its market), within each tile's spare hands; what the
-supply cannot feed is still built in proportion, so the shortage shows as the input's price (a cap at the supply removed the
-scarcity premium that `mine_supply_enters_clearing` asserts). Sited recipes are placed first in `_placement_order`.
-`location.entry_siting` adds the same input carriage for fixed-site inputs and considers the tiles holding them. Result at
-the opening: lead smelting on a galena tile went from 6 to 71 per cent of its capacity and the mean carriage from the nearest
-ore from thousands to single digits a tonne; the processors of countries with no ore in reach are no longer built.
-
-The earlier "input carriage in siting" try changed entry only, so the opening placement (smelters by demand, ore out of reach)
-still held; and a smelter placed beside ore alone does not help either, as below.
-
-**The finding that stops the test.** With the chain sited beside the ore the first year makes more silver (about 1.6 times the
-old figure) and the mint still strikes about nothing over the run: `last/first` of the money stock over 60 years is about 0.59
-(the earlier 40-year figure was 0.74, the new one 0.73; not a gain). The reasons, in order:
-
-- The declared deposits cap the silver the economy can ever make at roughly 0.3 of the first year's wear (galena capacity over
-  the ore a run takes, times the silver a run makes, plus the silver-only deposits; `SiteLimit`s of `galena_kg` and
-  `silver_ore_kg`). Wear is 1 per cent of a stock the opening derived from households' balances at the opening wage, which
-  falls several-fold in the first year (the 507 mismatch). Even a perfect chain therefore settles the stock near 0.3 of its
-  start: no supply-chain change can make `test_the_money_stock_keeps_up_with_wear` pass; that needs the opening stock and the
-  deposits to agree (507) or the data to change.
-- Within that cap the chain still dies in three years, now beside its ore: the lead each smelting run makes has no buyer
-  (no final demand), the unsold lead trips `producers.runs_for_stock`, which gates a joint recipe on its main output by
-  quantity (`producers.main_output`), and the silver that sells to the mint at its minted value stops with it. A joint recipe
-  whose by-product pays should be gated on the value of what is left unsold, not on the heaviest output. Not changed here;
-  worth a regression test of its own, and worth ~0.3 of wear at most.
-- `economy_no_offer_memory`'s final-year price check sits at its threshold on the old code (0.00402 against 0.004, swinging
-  between 0.00398 and 0.00456 in the preceding years) and flips with any change to siting; the haul term is restricted to
-  fixed-site inputs so that fixture is untouched.
-
-Not done: opening capacity/income sizing (507), the joint-recipe stock gate, regenerating `openings/`.
-
-## Update 3 (joint recipes gated on value)
-
-`producers.runs_for_stock` judged a joint recipe on the stock of its heaviest output (`main_output`), so unsold lead stopped
-a smelter whose silver sold. It now takes the run's cost and the outputs' prices (`plan` passes them): an output that is
-piling up is ignored while what a run makes of the others, at those prices, covers the run's cost; otherwise the largest
-pile limits the runs as before (a single-output recipe is unchanged). Readers: `producers.plan` (the one caller that passes
-the cost), `test_economy_producer_stale_ask` (no cost, old behaviour). `main_output` is untouched; its other readers are
-`year_close` (output worked, a producer's own figures) and the opening's placement.
-
-Effect on the Rome trace (`simulator.py spin-up-trace --civ rome_100ad --years 40`): the mint's strikes over wear by decade went
-from about nil to 0.17, 0.22, 0.34 after the first decade, and the stock ratio last/first from 0.73 to 0.78. The test still
-fails: the first years are not rescued, because the smelters' own bids push the ore price up until the silver alone does not
-cover a run (the chain is sized to silver demand, 507), and the deposits' ceiling above still applies.
-
-## Update 4 (stage 2 of 507: the opening seeded from costs)
-
-Built on `507-stage-2-opening-from-costs` (ONE_PRICE_OWNER_PLAN.md, Stage 2 "Done"): household income settled with the demand it pays for,
-plant sized to the share that works, workforce placed for the runs producers expect to sell, producers opening with their
-inputs, recipes ranked with deposit ceilings and demand-limited co-products, the metal the money loses a year as the mint's
-final demand, and the coin priced at the marginal cost of its metal.
+Built on `507-stage-2-opening-from-costs`: household income settled with the demand it pays for, plant sized to the share that
+works, workforce placed for the runs producers expect to sell, producers opening with their inputs, recipes ranked with
+deposit ceilings and demand-limited co-products, the metal the money loses a year as the mint's final demand, and the coin
+priced at the marginal cost of its metal.
 
 Fixed: the money stock follows from the transactions and the metal's cost, the chain behind the coin metal exists at the
-opening, and `test_the_money_stock_keeps_up_with_wear` passes unchanged (the mint's strikes are about wear over the
-last decades; `python3 sim/simulator.py spin-up-trace --civ rome_100ad --years 60`).
+opening, and `test_the_money_stock_keeps_up_with_wear` passes (the mint's strikes are about wear over the last decades;
+`python3 sim/simulator.py spin-up-trace --civ rome_100ad --years 60`).
 
 Not fixed (so this complaint stays open): the spin-up still reports not settled for every civilisation. The price level no
-longer cycles but falls for decades with the wage, while employment grows into the gap; realised income in the first year
-is a small share of the opening figure. The cause is the wage: the labour market clears at the households' outside option
-from the first year, and prices follow it down slowly. Seeding the wage at that level does not help because prices and the
-outside option scale together. What it needs is a settled model of how a labour glut passes into prices (the economy's rent
-and price search, stages 5 and 7), then a spin-up that runs until its tolerance is met.
-
-## Note (2026-10-15)
-
-`MONEY_LAG_YEARS` for England in `sim/tests/money_regimes_play.py` moved from three years to four in merge
-fix-round-regressions-3, because after the ore districts merge (520) extra metal overtakes the base series a year
-later while both series' price levels climb steeply. That loosens the check; restore it when the opening's money stock
-is fixed (507 Stage 2) and the price level stops climbing. Stage 2 (Update 4) moved it to five years: the price level still climbs.
-
-
-## Measured: the settling statistic on Rome, main against the in-year price search (507 Stage 7)
-
-`sim/economy/settling.py` over 60 years of the Rome first stage (`economy_port_trace.spin_up_trace(harness.sim(), 60)`,
-then `settling_report(rows)`; `python3 -m sim.tests --slow --only baseline_rome` runs the same check). On the integration
-branch before Stage 7 every series fails: the price level swings by up to half a log unit a year around a level that
-wanders over several times, the market rate reaches the ceiling `bounded_rate` sets, and the wage and the money stock
-trend down. With Stage 7 (branch `507-stage-7-price-search-within-year` (deleted unmerged; its code is lost)) the rate's yearly steps and the price level's
-swings shrink to a fraction of that and the money stock settles; the price level and the wage still fall steadily,
-which is the labour glut (608), not a cycle. Reproduce both with the command above on each branch (minutes each).
-
-## Measured: what made the integration branch's spin-up swing (fix-settling-regression-exit-and-trim)
-
-Probe: the Rome first stage, 21 years (`economy_port_trace.spin_up_trace(harness.sim(), 21)`): largest price level
-over years 5 to 20, largest and smallest market rate, wage at year 20. The trace builds a blank economy from the
-opening, so only data and the opening's workforce reach it; the post-spin-up trims (`workforce_settle`) and the
-`expected_hours` rule cannot.
-
-| head | max price level | max rate | min rate | wage 20 |
-|---|---|---|---|---|
-| pm-merge-staging before 556b | 2.610 | 0.276 | 0.063 | 0.107 |
-| plus 556b merged | 3.641 | 0.370 | 0.100 | 0.217 |
-| no second trim | 3.641 | 0.370 | 0.100 | 0.217 |
-| 467 data reverted (farmer training 1, no fallback flag, slaves and bonded as labourers) | 0.904 | 0.171 | 0.023 | 0.309 |
-| farmer training 0 and fallback flag only | 3.641 | 0.370 | 0.100 | 0.217 |
-| farmer training 1 with the fallback flag kept (final) | 0.904 | 0.171 | 0.023 | 0.309 |
-
-The swing comes from the farmer trade's training years being 0 (with the exit valuation of the earlier finding
-in place, so that change was not the cause on this head). The second trim, the `expected_hours` rule and the strata
-trades do not move the first stage. Farmer keeps its one year of training; the labourer's `fallback` flag stays so the
-two do not tie.
-
-The 467 check's purpose (no trade opens holding several times its jobs) now excludes the plot trade, whose people
-work their own land and wait on no bid, and trades with under one worker-year of jobs (glassblower holds about a
-millionth of a person against a few thousandths of an hour, a ratio of noise).
-
-## Measured: which merge tips the spin-up into cycling, and what the cycle is (branch 473-why-the-spin-up-tips-into-cycling)
-
-Probe as in the table above (Rome first stage, 21 years: max price level over years 5-20, max rate, min rate, wage 20), each
-first-parent merge with the farmer-training fix (the data and `strata_seed` part of merge 2d40eaa4's second parent) applied on top.
-
-| commit | max price level | max rate | min rate | wage 20 |
-|---|---|---|---|---|
-| 49896150 (556b) + fix | 0.904 | 0.171 | 0.023 | 0.309 |
-| d9551124 (621-623) + fix | 4.973 | 0.394 | 0.108 | 0.198 |
-| 73655a13 (619b recipes book their trades) + fix | 4.048 | 0.301 | 0.112 | 0.214 |
-| 2d40eaa4 (head) | 2.491 | 0.316 | - | - |
-| head + price level chained over what households bought (tried, not kept) | 1.380 | 0.184 | 0.053 | 0.105 |
-| 49896150 + fix + the same chained level | 1.222 | 0.258 | 0.033 | 0.608 |
-
-The tipping merge is 619b: a pure data rebook (brick, ceramic, wick and tar hours from the generic labourer to potter, spinner,
-charcoal burner). 537, 619c and 600 were not probed (619b already cycles).
-
-What the cycle is (per-year traces of the 619b and 556b configurations; the scripts were scratch, no committed command prints them):
-
-- Both configurations share one slump: producers' runs fall to under a tenth of capacity in year 2, the hired share of offered hours is
-  3 to 8 per cent throughout, the wage falls to a third, capacity halves in years 5-6. That is the labour glut (608), not the cycle.
-- The "price level" is a fixed basket of the opening's wanted quantities over goods that traded recently. At 619b the opening gives piped
-  water, iron bar and raw glass a few thousand runs of capacity; at 556b it gives them none, so they never trade and sit out of the index.
-  Once they trade, their basket quantities (piped water 781e9 kg against 23e9 made; iron bar 52e6 against 1e6 made, none bought by
-  households; glass 152e6 against 3e7) are far above supply, their prices climb two orders of magnitude (water x380, glass x400, iron x130
-  by year 13) and they carry most of the index while stone, brick and millet stay at or below base. Households' actual spending on piped
-  water is 5 to 9 per cent. Expected inflation, the savers' ask (the rate floor), cash targets and the state's real spending target read this
-  index, so the rate sits at 0.1 to 0.3 (against 0.03 to 0.17) and lending is several times larger.
-- Supply does not answer a 100-fold price: water capacity stays near 1.95e3 runs for fourteen years (loans for about a tenth of capacity are
-  funded each year, little plant arrives); glass plant lasts 3 years so expansion only replaces wear; the bloomery runs 0.1 to 5 per cent of capacity.
-- The opening decides by a threshold which thin goods have any capacity at all. That is the sensitivity: a few recipes' labour rebook moved
-  those goods across it, as farmer training years did earlier.
-
-Tried: a Tornqvist chained index weighted by households' spending shares. It lowers the head's swing (2.491 to 1.380; rate 0.316 to 0.184)
-but moves the calm configuration the other way (0.904 to 1.222; rate 0.171 to 0.258), so it does not make both calm and was not kept.
-The index is part of the loop, not all of it.
-
-Not tried: planning to the area's demand in single-area thin markets (the baker/flour overshoot reported by the coordinator). The traces show
-the opposite direction for the thin goods that dominate the index (runs far below capacity at high prices), so it is probably another mechanism; unmeasured.
-
-## The opening basket held to supply (merge 66da3cd3)
-
-The spin-up's tipping came from the opening household basket: it was the households' full final demand, never held
-to what the opening's producers could leave for them, so a thin good the opening supplied little of (bronze, brass,
-iron bar, piped water, silver, glass) entered the price level index with a wanted quantity many times its supply, and
-its price, rising by orders of magnitude, carried the index, expected inflation, the savers' ask and the state's real
-targets. `sim/economy/opening_basket.py` now holds each good's basket quantity to the supplied part (the raw demand is
-kept as `opening_demand` for the coin metal's marginal cost). Probe (`settle_probe.sh`: Rome, years 5 to 20) before and
-after on the same head: maximum price level and rate fall from cycling to calm, and the old destabiliser (the farm
-trade at no training years) no longer tips it. The labour glut remains: the wage still falls through the spin-up (608).
-Measure with the probe or `python3 -m sim.tests --slow --only baseline_rome`.
-
-## Measured: where the unhired hours are (branch 473-why-so-few-hours-are-hired)
-
-Rome first stage, years 0 to 11 (`economy_port_trace.spin_up_trace(harness.sim(), 12)` with the economy's `clear_labour`,
-`own_production` and `producers.plan` wrapped to add up hours; the wrappers were scratch, no committed command prints
-the split). Shares of the hours households offer (working people times the year's hours; the withheld share is nil, so
-all of it reaches the market):
-
-- Own-plot growing takes about a tenth (food floor at about two-tenths of an hour per unit; a cohort's floors need under
-  a twentieth of its hours). `households_own` caps it at the floors, so it is not idle and is not counted as hired.
-- Employers hire about 5 per cent after year 2 (about 18 per cent in year 0). Their bids are close to what is hired
-  (vacant hours under 5 per cent of hired), so there is no shortage at the cleared wage: the glut is on the demand side.
-- About 85 per cent of hours are offered, unhired and not needed by any floor. That is not an artefact of booking
-  (case a): own-plot work is already outside the market figures. But those hours are not idle in life: the model has no
-  household production beyond the floors' land-only goods (spinning, building, fuel, tools, cooking), so self-employed
-  time beyond the floors shows as unemployment.
-- Why producers hire so little (case c, plan side): of the hours the plant could work, in years 1 to 11 the limit that
-  binds is the stock gate (`producers.runs_for_stock`) for about three quarters of the lost hours, the yearly change
-  limit for most of the rest, land caps next; unprofitable runs and cash are each a few per cent. Producers sit on stock many
-  times their expected sales (year 6: millet stock about thirty times its expected sales; stone blocks, clay, firewood,
-  meat likewise), so the market for what they make is small, not their purse.
-- Why the market is small (case b): households grow their food floors on their own plots in year one and cut their floor
-  bids by it (`year_goods._less_what_it_grew`), while the opening sized millet, flour and the rest for households that buy
-  those floors (545). Capacity and opening stock are therefore many times the first year's sales.
-
-Tried and not kept: reading the opening's bids with the same cut (own-plot growing taken out of the floors producers are sized
-for, a small module beside `opening.py`, with a value test on the fixture). The test passed, but the Rome probe went from calm
-to a price level of about 650 (rate stuck at the ceiling): with flour not sized, its joint by-product bran has no maker while
-households still bid for it, and its price (times 10^12 by year 8) carries the price-level index. So the sizing fix needs the
-index and the joint by-products handled first (the same thin-good fragility as above); it is not a labour mechanism.
-The head's probe is unchanged by this branch.
-
-## Measured and not merged: expansion that replaces wear before it grows (branch `expansion-replaces-wear-then-grows` (deleted unmerged; its code is lost))
-
-Building each year's wear back before growing by the expansion share lets short-lived plant goods (lead) grow, and the
-20-year probe stays calm, but the 60-year trace surges earlier and higher than the head (price level about twice the
-head's by year 30, the rate at its ceiling after): more plant bought each year pulls more money and thin inputs into
-plant at once. The late surge on the head (years 30 to 43) is led by bricks and carts. Durables carry no age (wear
-removes a share of the holding each year, `inventory.wear_moves`), so there is no replacement wave: household brick
-bids stay steady while brick output falls far below wear within the first decade and nearly stops later, and cart
-output stops within the first years while replacement bids stand with no seller at any price. See the idle makers
-and no-seller price work. Reproduce with a 60-year `spin_up_trace` on each commit (about 10 minutes).
-
-## Measured: why makers with plant sit idle while their price climbs (branch fix-idle-makers-at-high-prices)
-
-Rome first stage, years 0 to 8 (`economy_port_trace.spin_up_trace(harness.sim(), 9)` with `producers.plan` and
-`producers.produce` wrapped to print each limit and each input and hour actually held; the wrappers were scratch, no committed
-command prints them). Across all cart, stone wall and bar-iron makers:
-
-- In `plan` the price is not the limit: `share_working` is near the whole capacity for carts after year 2, cash and land do not
-  bind. What binds is the yearly change from last year's runs (`within_a_years_change`) because `last_runs` is the runs
-  achieved, which are nil or tiny, so each year plans a quarter of capacity; the stock gate binds for walls and carts in years 2-3.
-- The plan's quarter is not what is run: carts plan and hire hours for it and achieve nothing (hours held in full, iron bar
-  held nil). Bar-iron makers (the bloomery recipe) are short of bloom and charcoal; walls of mortar and blocks. The input
-  bid ceilings sit at the live price plus the margin share, far below what the bar market clears at in years 2-5 (households
-  and other buyers with ceilings many times higher take the little there is), while the price memory the plan reads rose
-  slowly (the trade is a sliver of what buyers wanted at the old price, `market_memory_asks.memory_reference_volume`).
-- Bloom, the bloomery's input, has no maker in the Chinese market areas at all, and bloom makers elsewhere shrink as their
-  price stays under their cost. Experiment (not kept): weighing a trade against the usual volume alone left the cart and bloomery
-  runs at nil; the chain is short, not only mispriced.
-- A plan-side fix that lets a wide margin ramp faster would not move these runs (expected margins read from the memory price are
-  narrow), and would loosen the limit that stops chains from amplifying; not made. The plan's behaviour at a wide margin is pinned
-  by `sim/tests/test_economy_producer_wide_margin_plan.py`.
-
-Where the fix lies: entry of an input maker where buyers exist and no maker does (bloom in a market area with only ore far away),
-merchants carrying bloom and bar between areas, and the price memory under scarce supply. Not producers.py.
-
-## Measured: entry does fire for a bloom market with no maker; it is built where the ore is (branch entry-where-buyers-have-no-maker)
-
-Rome opening, first four spin-up years, `entry_trial.trial_entry_plans` wrapped to print each Chinese bloom market (scratch, no
-committed command): every Chinese market area has bids and no maker, its recipe costs under the bids' ceilings, and a trial plan
-is made each year in most of them (`entry_trial.demand_at` over the bids, a trial share of it). Nothing is missing from the
-entry rule: with the small fixture, bids under the recipe's entry price draw no maker and bids over it draw one sized by their
-quantity (`sim/tests/test_economy_entry_trial.py`, `UnmetBidsDrawAMakerTests`).
-
-What happens to the plan: `location.entry_siting` considers the area's tiles and the tiles that supply the recipe's fixed-site
-input. The opening has iron ore supply on six tiles (Italy, Spain, Syria, Tunisia, Turkey, United Kingdom) and none in China, so the
-newcomer is built on an ore tile, in the Mediterranean-and-Atlantic area that already holds four idle bloom makers
-(`last_runs` nil from year 2). The plan is a sliver of their capacity, so Chinese bloom stays unmade there and the Chinese
-buyers wait on carriage between areas. Fix lies with merchants carrying bloom (not entry) and with the makers' own
-input chain, as the section above says.
-
-## Measured: the late brick and cart surge is not a wear wave (branch 473-shelter-replacement-wave, no commit)
-
-The opening seeds each durable at about flow times service life (`opening._seed_durable_stocks`, `households_orders._durable_ratio`),
-a steady-state stock with no ages, and wear is exponential (`inventory.wear_moves`), so the stock cannot wear out at once.
-In one Rome run the household brick stock declines smoothly after its early build-up, brick bids stay steady, and the
-brick price does not run away; brick makers' output falls far below wear and nearly stops. Cart makers stop within the
-first years and the cart price climbs without bound against standing replacement bids. The open question is why brick
-and cart makers stop: carts lack iron bar (section above); bricks were not traced. Measured with scratch probes over
-`spin_up_trace` (stocks, flows, bids and prices by year); no committed command exists.
-
-## Measured: how the yearly rate is set, and what moves before it reaches its ceiling (branch 473-why-the-rate-hits-its-ceiling)
-
-**The rule.** `economy.Economy._lend` (`sim/economy/economy.py`) gathers the year's loan requests (producers' `expand` and
-`enter` plant, `state deficit`, households' `subsistence`, merchants' `trade`) and the funds on offer, and calls `credit.clear`
-(`sim/economy/credit.py`). Each lender offers at a lowest rate; each request can pay at most its `maximum_rate` less its
-risk premium. `labour.clearing_point` finds the rate where the two queues meet. The year's rate is then:
-
-1. `sticky_move` from last year's rate toward that target by `RATE_ADJUSTMENT_SHARE_PER_YEAR` of the gap;
-2. raised at once to the lowest lender ask if the sticky rate falls below it while some borrower would still pay it (the
-   `base_rate < lowest_ask` branch in `credit.clear`), so a rise is not step-limited and a fall is;
-3. held at `RATE_CEILING_SHARE` times the opening rate (`capital_market.py`), which is what the spike's 0.48 is.
-
-With funds on offer and no requests, `_lend` moves the rate toward the lowest ask by the same step. Nothing but the households
-offers funds in this run (no banks, firms or state), and a household offers its cash above its spending and cash target at
-`HOUSEHOLD_TIME_PREFERENCE + expected_inflation` (`households_orders.py`). Expected inflation is each cohort's smoothed
-year-on-year change of the basket price level (`households_close.close_year`, `currency.update_expected_inflation`).
-
-**What the early years show.** Probe `rate473b`-style (scratch: a wrapper over `credit.clear` printing supply, lowest ask,
-requests by purpose and unmet by purpose, one line a year, Rome first stage from the harness opening; not committed, no command
-prints it), years 0 to 33: funds offered are one to two orders of magnitude above everything asked (offers of the order
-1e10 against requests of the order 1e8 to 1e9 in money-supply units), the state asks for nothing, and the rate equals the
-lowest ask to the digit in nearly every year (for example years 24, 30 and 33 jumped straight to it). So in the first
-thirty-odd years the rate is not a clearing of plant, merchant or state credit against savings; it is the households' reservation
-rate, time preference plus the smoothed change of the basket price level. A fall in the price level (a dozen years of deflation
-from the opening) drove it to nil by year 9; a rise drives it up.
-
-**The spike is not explained by that alone.** The trace dump (`rows60_6f00.json`, `spin_up_trace`, head 6f0085da) has the rate at
-about 0.04 in year 45 and 0.48 in year 46, then 0.40, 0.33, 0.25, 0.22, 0.24, 0.20, 0.14, 0.10 by year 54. The price level
-that precedes it rises from about 0.26 (year 43) to 0.30, 0.38 and 0.41, and the money supply falls smoothly through the whole run.
-Smoothing those year-on-year changes at the declared speed gives an expected inflation under a quarter, not the 0.43 a lowest
-ask at the ceiling needs. And a jump from 0.04 to the ceiling in one year cannot come from the step limit unless the target is
-far above it. So either the cohorts' expected inflation differs from this reconstruction (the cohorts read the level at their own
-close), or at year 46 the clearing target is demand-driven: borrowers with very large `maximum_rate` (producers' yearly return on
-plant runs into the tens and hundreds in the early-year probe) outbidding a funds supply that has shrunk. The decay after the
-spike (about a quarter of the gap a year) is the step limit toward a target that itself falls.
-Unverified: which of the two; the probe stepping 46 years takes longer than the five minutes a subagent may run.
-
-**Probe for the next run.** `scratchpad/rate473_full.py` wraps `credit.clear` and prints, per year, the price level, rate, money,
-debt, cohorts' expected inflation (lowest and highest), supply, lowest ask, the unsmoothed clearing target, last rate, requests by
-purpose with the share able to pay the clearing rate, money lent and any state request. Run it for 60 years from the repo root.
-Reading it: `rate == lowest_ask` means the Fisher floor; `target` far above `lowest_ask` with demand able to pay exceeding
-supply means credit demand; `state` non-empty means the treasury.
-
-**Not changed.** No defect was proven, so no code changed. Candidate defects to judge once the probe is read: a rate that is
-the households' reservation rate while supply swamps demand makes the credit market inert (the funds pool is almost all of
-the money stock); the one-way step limit (instant rise to the lowest ask, slow fall) makes any one-year price jump a ratcheted
-spike; unbounded `maximum_rate` from `unit_cost.return_on_capital` lets one cheap plant sale set the clearing price when supply is short.
-
-## Measured: where the households' cash goes in the year of the rate spike (branch 473-where-household-cash-goes)
-
-**Finding.** Households' cash is lent out, not lost. Before the year's plans, `lending.lend_working_capital`
-(`sim/economy/lending.py`, called from `_run_year` in `sim/economy/economy.py`) lends every cohort's cash above its target to
-the merchants whose carriers' wage loans (`carriage_hours.wage_loans`, `sim/economy/carriage_hours.py`) were asked at the last
-close. In the spike year that single call moves households from about 2.1e10 to about 3.1e8; no other phase before
-`clear_labour` changes household money. The loans are repaid in `_service_loans` at the year's end, which is why the total
-is back (about 2.1e10) within the same year and the year-end figure of year 48 looks normal. So the drop is physical in the
-book (money really changes hands, nothing is mis-counted), but the loan size is a sizing defect.
-
-**Why the loan is that big.** `wage_loans` asked for the bill of every hour the merchant bid for, at the market's remembered
-wage. The thin labour markets of the Algerian tiles offer a few thousand hours against tens of millions bid, so they clear at
-the merchants' own reservation price, and the remembered wage runs away (it rises every year). The bill is wanted hours times
-that wage, about 5.6e10 in the spike year against about 4.9e9 the year before, while the wages actually paid by merchants in
-the year were about 6e8. The households' spare cash (about 2.1e10) is all taken, the funds left for the ordinary credit
-round are about nothing, subsistence borrowing finds no lender and the rate goes to its ceiling.
-
-**Command.** Load the year-45 pickle with the code of commit fed22775 and step twice; wrap `Book._record_money` (tally by
-purpose, payer class, payee class) and the `_run_year` phases (household money before and after each). Script:
-`scratchpad/a473/flow_probe.py` in the orchestrator's scratchpad.
-
-| Phase of year 46 | Household cash before | after |
-|---|---|---|
-| `lend_working_capital` | 2.10e10 | 3.1e08 |
-| `clear_labour` | 3.1e08 | 1.46e09 |
-| `clear_goods` | 1.46e09 | 1.30e09 |
-| `_service_loans` | 1.4e09 | 2.15e10 |
-| `money_taxes` | 2.15e10 | 2.09e10 |
-
-(Year 45 does the same at a smaller size: 2.14e10 to 1.64e10 in `lend_working_capital`.)
-
-**Changed.** `wage_loans` sizes a merchant that had a crew plan last year on the hours the labour markets sold it
-(`YearLedger.crew_hours_bought`, set in `dispatch_merchants`), shared among its keys of that market by their wanted hours.
-A merchant without a plan is sized on the hours wanted, to no more than the market's whole supply last year (hours hired plus
-idle, from `ledger.labour_results`); that bound is loose when several such merchants share one market. The runaway wage in the thin markets is a separate matter
-and remains: bids far beyond the area's offered hours clear at the bidders' reservation price. Regression tests:
-`WageLoanTests` in `sim/tests/test_economy_carriage_hours.py`.
-
-**Checked.** The fix applied to the fed22775 code and the same pickle: the wage loans asked at the close of year 45 fall
-from 5.6e10 to 1.9e09, `lend_working_capital` in year 46 moves households from 2.10e10 to 1.90e10 (it was 3.1e08), and the
-households keep about 1.9e10 into the credit round. Not run: the full spin-up to year 48 (longer than five minutes), so the
-rate and subsistence-borrowing figures of the later years are unmeasured.
-
-## Measured: is the steady deflation the mint failing to replace worn coin? (branch 473-steady-deflation-and-zero-rate)
-
-**Finding.** The money stock shrinks every year by about the coin wear, as the sections above say, but that shrinkage is far too small
-to be the deflation. In a 15-year trace from a short-spin-up opening the stock falls about 13 per cent while the price level falls
-about 55 per cent. What moves with the price level is the real economy contracting: hours employers take, producers' cash and real
-output fall by large factors in the first five years while the households' cash rises. No code changed; no small general defect
-was proven.
-
-**Command.** `ROME_SPIN_UP_YEARS=3,2` and a probe that steps `AgentEconomy` the way `economy_port_trace.spin_up_trace` does and prints,
-per year, the figures below (`scratchpad/p473_money.py` in the orchestrator's scratchpad; about 6 s a year, 15 years in under 100 s).
-Note the opening is the 3,2-year short spin-up, not the declared-length one, because building the declared-length opening cold took
-longer than five minutes; so the first-year contraction below may partly be the unsettled opening and the 60-year figures are
-not reproduced here.
-
-| Year | Price level | Money stock | Coin worn | Coin struck net | Households' cash | Cohorts' cash target | Producers' cash | Hours hired | Real output | Rate |
-|---|---|---|---|---|---|---|---|---|---|---|
-| 0 | 0.645 | 4.07e10 | 4.11e8 | 0 | 2.09e10 | 1.3e8 | 1.86e10 | 1.44e10 | 3.59e10 | 0.174 |
-| 1 | 0.686 | 4.04e10 | 4.08e8 | 1.1e8 | 2.43e10 | 9.5e8 | 1.46e10 | 5.99e9 | 1.22e10 | 0.050 |
-| 2 | 0.629 | 4.00e10 | 4.04e8 | 1.3e7 | 2.57e10 | 7.5e8 | 1.27e10 | 3.57e9 | 5.6e9 | 0 |
-| 4 | 0.502 | 3.91e10 | 3.95e8 | -2.0e7 | 2.78e10 | 6.6e8 | 9.0e9 | 2.81e9 | 1.4e9 | 0 |
-| 7 | 0.369 | 3.80e10 | 3.84e8 | -9.8e6 | 3.02e10 | 7.3e8 | 6.2e9 | 3.21e9 | 1.4e9 | 0 |
-| 10 | 0.334 | 3.68e10 | 3.72e8 | 3.8e6 | 3.09e10 | 1.14e9 | 3.6e9 | 3.56e9 | 1.7e9 | 0 |
-| 14 | 0.314 | 3.53e10 | 3.56e8 | -3.2e7 | 3.31e10 | not printed | not printed | 4.47e9 | not printed | 0.025 |
-
-Offered hours stay near 1.1e11 throughout, so about 97 per cent of the offered hours are idle after year 2. Cohorts' mean
-expected inflation runs between -0.03 and -0.18 from year 1.
-
-**Reading.**
-1. Mint: it does not replace wear. Struck net is between minus 7e7 and plus 1.1e8 against wear near 4e8 (share of wear
-   replaced about zero). The cause is the one already found above (Update 1 and 2): metal reaches the mint only from silver
-   producers, whose output the declared deposits cap at a fraction of wear. `mint.mint_orders` bids for all the metal offered
-   at the mint price; nothing in its decision starves it, so no change to `sim/economy/mint.py` is justified. Changing it to strike
-   without metal would be a money-supply target, which the design forbids.
-2. That shrinkage (1 per cent a year) cannot explain a price level falling 55 per cent in 14 years. The money is not lost
-   from circulation but sits with households: their holdings are about 30 times their own cash target while spending is limited to
-   income plus a capped drawdown (`households_orders.goods_orders`, `WEALTH_DRAWDOWN_LIMIT`), and producers' cash drains to
-   them as the wage bill and sales collapse. So the price level follows demand from a contracting income, not the stock.
-3. A reinforcing loop is visible but not isolated: `currency.cash_balance_target` takes the cost of holding money as
-   `max(0, rate + expected inflation)`; at a zero rate and expected inflation below zero the cost is zero and the target is
-   at its largest, so expected deflation raises the demand for cash exactly when the nominal rate cannot go below zero.
-   Whether it matters was not measured (cash is already far above target here).
-
-**Not found.** Why hours hired and real output fall by an order of magnitude after year 0 (producers' plans against falling prices
-and a wage floor are the candidates; the probe did not print wages or plans). Whether the same holds on the declared-length opening
-(the orchestrator's 60-year trace on the supply-curve labour cap shows the level recovering after about year 30). A one-year
-spike of the rate to its ceiling between years 30 and 60 is not explained by this probe, which stops at year 14; the 46th-year spike
-analysis above (wage-loan sizing, `lend_working_capital`) remains the lead.
-
-## Measured: why output falls tenfold after the opening (branch 473-why-output-collapses-after-the-opening, deleted unmerged)
-
-**Finding.** The producers and the labour market are not the cause; they follow sales. In the opening year the households
-spend about 1 per cent of their cash and the producers sell about 0.3 per cent of what the opening sized them for, so the
-whole of year 0's output goes into stock. From year 1 the stock gate (`producers.runs_for_stock`, `sim/economy/producers.py:367`)
-binds for most producers and cuts planned runs to expected sales less the excess stock. Expected sales are rebased each year on
-real sales, which are an order of magnitude below the opening's, so planned runs, hours hired and real output follow down. About
-two thirds of the fall in output value from year 0 to year 2 is food staples, whose floors the households grow on their own
-plots (Complaint 545). No small general defect was found, so no code changed beyond the cherry-picked drawdown fix.
-
-**Command (about 25 s a run of 5 years; the probes are scratch, not committed).**
-`ROME_SPIN_UP_YEARS=3,2 PYTHONPATH=. python3 <scratchpad>/p473_hh.py 5 out.json` wraps `producers.plan` and `producers.produce`
-(binding limit, runs achieved), `households.goods_orders` and `year_goods._less_what_it_grew` (budget before and after the
-own-plot cut), and captures the year's `YearLedger` (clearings, household bids). `p473_value.py out.json 22` prints the
-per-good table. All three are in the orchestrator's scratchpad (`p473_split2.py`, `p473_hh.py`, `p473_value.py`).
-
-**1. What falls (value of output at the first cleared price of each good; food staples dominate).**
-
-| Good | Output value y0 | y1 | y2 | y3 | Share of the y0-to-y2 fall |
-|---|---|---|---|---|---|
-| millet | 6.0e9 | 1.6e9 | 6.5e8 | 9e7 | 31.5% |
-| wheat | 2.9e9 | 7.7e8 | 3.8e8 | 9e7 | 14.7% |
-| flour | 2.7e9 | 1.5e9 | 6.2e8 | 1.4e8 | 12.2% |
-| starch | 1.3e9 | 7.2e8 | 1.8e8 | 8e5 | 6.7% |
-| mechanical energy | 1.1e9 | 5.8e8 | 2.4e7 | 0 | 6.6% |
-| stone blocks | 1.1e9 | 5.5e8 | 2.3e8 | 1.2e8 | 5.2% |
-| common wine | 9.8e8 | 5.5e8 | 2.9e8 | 7.7e7 | 4.0% |
-| olive oil | 1.0e9 | 6.5e8 | 3.8e8 | 1.7e8 | 3.9% |
-| vegetables | 6.5e8 | 2.5e8 | 6.7e7 | 1.7e5 | 3.4% |
-| total (all goods made) | 2.12e10 | 8.3e9 | 4.2e9 | 2.0e9 | 100% |
-
-Food staples (millet through vegetables, with bread) are about three quarters of the fall; wool, milk, brick, shoes, linen are
-about 1 to 2 per cent each. The by-products with no demand (manure, straw, nightsoil, clay) fall most in physical units but are
-priced near nothing.
-
-**2. What binds in `producers.plan`** (count of producers by the limit that sets the planned runs; hours lost = (capacity - plan) times hours per run).
-
-| Year | Stock gate | Yearly change step | Land cap | Share working (price under cost) | Cash |
-|---|---|---|---|---|---|
-| 0 | none (no sales record) | none | none | 1855 producers, 6.0e9 h | 3718 producers, 2.9e9 h |
-| 1 | 4841 producers, 5.8e9 h | 131, 1.2e9 h | 300, 9.7e9 h | 242, 8.4e8 h | 131, 1e8 h |
-| 2 | 3038, 1.45e10 h | 2161, 2.6e9 h | 15, 1.6e9 h | 484, 9e8 h | 141 |
-| 3 | 2684, 1.5e10 h | 2340, 2.4e9 h | 14, 1e9 h | 716, 6e8 h | 246 |
-
-Cash and price (share working) are small throughout; the stock gate takes the largest share of lost hours from year 2 on, the yearly step
-second. The land cap in year 1 is one block of 300 by-product and fuel producers (manure, straw, coal, wood).
-In year 0 the cash limit shows because the producers' cash is small against the opening's plans; it cuts hours, but the achieved output
-that year is still the highest.
-
-**3. Year 0's output builds the stock that gates years 1 to 3.** For every staple and processed good, the stock a producer
-holds when it plans year 1 equals its whole year-0 output: manure 8.07e10 held against 8.07e10 made, clay 8.8e9 against 8.8e9,
-flour 3.79e9 against 3.79e9, wine 9.0e9 against 9.7e9, starch 1.29e9 against 1.29e9. The stock does not fall afterwards
-(flour 3.8e9, 5.0e9, 5.9e9, 6.0e9 at the plan of years 1 to 4; wine 9.0e9, 1.2e10, 1.2e10, 1.1e10; starch 1.3e9 to 2.1e9),
-because their sales stay far below the stock; nightsoil, clay and manure decay only slowly.
-
-**4. The opening's assumed sales against the real ones.** Total traded value over all clearings, and the households' share:
-
-| Year | Expected sales at expected prices | Traded value (all buyers) | Households' purchases |
-|---|---|---|---|
-| 0 | 4.5e10 | 1.4e8 | 1.35e8 |
-| 1 | 1.4e10 | 4.9e9 | 3.4e9 |
-| 2 | 8.8e9 | 4.0e9 | 2.8e9 |
-| 3 | 5.5e9 | 4.5e9 | 3.4e9 |
-
-By good, the opening's expected sales (units) against units traded:
-
-| Good | Expected sales, year 0 | Traded y0 | y1 | y2 |
-|---|---|---|---|---|
-| common wine | 2.7e10 | 2.5e7 | 2.9e8 | 8.8e7 |
-| flour | 7.8e9 | 7.6e6 | 9.2e8 | 2.0e7 |
-| vegetables | 7.0e9 | 7e6 | 3.4e7 | 2.8e7 |
-| olive oil | 3.4e9 | 1.5e7 | 1.1e8 | 1.1e8 |
-| starch | 1.2e9 | 3.9e6 | 1.7e7 | 7.4e6 |
-| bread | 2.4e9 | 3.2e8 | 5.2e8 | 1.8e8 |
-
-Which assumption fails: it is Complaint 545, not 526 or 607. In year 0 the households' bids are all of their cash
-(1.15e10, `smooth_rise` off while settling); then `year_goods._less_what_it_grew` (`sim/economy/year_goods.py:59`) cuts each floor
-bid by the share of that floor grown on their plots, and the total bid budget falls from 1.15e10 to 3.9e8 (millet 1.76e9 to 1.1e7,
-olive oil 1.47e9 to 9.5e6, brick 1.21e9 to 6e4, wheat, wine, flour, bread, starch alike, each cut by more than 99 per cent). The
-opening (`sim/economy/opening.py:164`) sizes the same goods from the same function without that cut. In year 1 the cut is smaller
-(1.74e10 to 1.26e10) because the bids are less floor-dominated, but the money is still not spent. The cut money is not redirected: households end year 0
-with 2.1e10 in cash against a target of 1.3e8.
-
-**5. Why the households' hoard still does not come back, with the spend-down fix in.** Households bid 1.26e10, 1.7e10, 2.0e10, 2.0e10
-in years 1 to 4 after the cut, and buy 3.4e9, 2.8e9, 3.4e9, 4.3e9. The unspent budget by what happened at the market:
-
-| Year | Supply exhausted (everything offered was sold) | Supply left unsold (price or ceiling) | No offer at all |
-|---|---|---|---|
-| 1 | 6.3e9 | 1.9e9 | 9.6e8 |
-| 2 | 1.24e10 | 1.3e9 | 4.9e8 |
-| 3 | 1.43e10 | 1.5e9 | 9.4e8 |
-| 4 | 1.42e10 | 1.1e9 | 8.1e8 |
-
-So about 70 per cent of the budget goes to goods whose whole supply sold out (coal, noric steel, bronze, brass, leather, opium,
-firewood, brick, canvas, stone blocks, linen, timber: year 2 largest were coal 2.7e9, noric steel 2.3e9, bronze 1.4e9), while the
-food that the opening made in surplus has no buyers. The drawdown fix lets the budget exist; the hoard is not spent because the
-goods the budget names are thin (short chains for metals, land caps on fuel and timber, see the sections above), and the goods
-that exist are not wanted. Households' cash still rises (2.27e10, 2.41e10, 2.55e10 at the plan of years 1 to 3).
-
-**Not found / not checked.** I did not test whether re-sizing the opening's food by the own-plot share (tried and reverted above)
-changes year-1 output now that the drawdown fix is in; that needs the joint by-product (bran) handled first. The 'supply
-exhausted' classification compares the quantity traded with the quantity offered at the clearing price (`ClearingResult`), so it
-counts a good whose price sits at a bidder's ceiling the same as one with no producer. Whether the thin metal and fuel goods are short for a recipe-chain
-reason (inputs, land caps) or a plan reason was read only from the earlier sections, not re-measured here. The 15-year and
-declared-length runs were not repeated.
-
-**6. What stops makers from expanding to meet the spending** (same probe, `p473_short.py out.json <goods>`, makers grouped by main output; binding limit counted per maker in `producers.plan`).
-
-| Good | Year | Planned / capacity | Achieved / planned | Binding (makers) | Traded |
-|---|---|---|---|---|---|
-| coal | 1 | 0.18 | 1.0 | stock gate 66, land 30 | 6.6e9 |
-| coal | 2 | 0.28 | 1.0 | yearly step 100 of 104 | 2.6e9 |
-| coal | 3 | 0.46 | 1.0 | yearly step 103 | 3.75e9 |
-| canvas | 1, 2, 3 | 0.27, 0.45, 0.58 | 1.0, 0.95, 0.88 | stock gate 95, then step 100, 102 | 3.1e7, 2.2e7, 2.8e7 |
-| noric steel | 1, 2, 3 | 0.23, 0.31, 0.18 | 0.41, 0.007, 0.36 | stock gate 98, then step 81, step 68 / share working 35 | 3.1e6, 7.9e4, 6.4e5 |
-| bronze | 1, 2, 3 | 0.23, 0.43, 0.26 | 0.82, 0.45, 0.02 | stock gate 98, step 89, step 63 / share working 41 | 9.6e3, 3.9e3, 2.4e3 |
-| leather | 1, 2, 3 | 0.34, 0.53, 0.27 | 0.83, 0.04, 0.11 | stock gate 90, step 103, step 104 | 1.0e7, 2.9e5, 3.5e5 |
-| brick | 1, 2, 3 | 0.23, 0.02, 0.06 | 0.9, 0.8, 0.23 | stock gate 39, 38, 37 with share working 15, 35, 40 | 2.3e5, 5.1e5, 4.1e5 |
-| firewood, timber | 2, 3 | 0.31 to 0.41 | 1.0 | step 55 to 58 of 88 / 93, land 2 to 3 | |
-
-Reading, in the order a maker meets the limits:
-1. Year 1: the stock gate. Year 0's unsold output is the stock; year 1's sold-out goods are the ones whose year-0 stock the households
-   then bought (coal, canvas, steel, bronze, leather, stone blocks: traded in year 1 equals or exceeds the year's own output). The gate sees stock
-   and low expected sales (`producers.py:367`) and plans well under capacity.
-2. Years 2 to 3: the yearly change step (`within_a_years_change`, `producers.py:281`, `OUTPUT_CHANGE_SHARE_PER_YEAR`). The stock is gone, the
-   price is up and the maker would plan more, but it may move at most a quarter of capacity from last year's runs, and last year's runs were
-   the gated ones. With planned runs a third to a half of capacity in year 3, recovery to the demand takes several more years, over which
-   the unspent household money keeps bidding the price up.
-3. Metals and leather: planned runs are not reached. Noric steel achieves 0.7 per cent of its plan in year 2, bronze 2 per cent in year 3, leather 4 per cent
-   in year 2: inputs (ore, bloom, charcoal, hides) are short, as the earlier sections found. Widening the plan there changes nothing until
-   an input maker exists.
-4. Cash is not binding in these goods; share working binds for about 40 of 104 bronze, brass and steel makers by year 3 (price under cost at the expected price).
-
-The inflation the orchestrator saw over 60 years is consistent with this: the spend-down frees demand at the stock-adjustment pace while
-supply can move only a quarter of capacity a year and, for chains, only as fast as the input makers do. Not tested here: raising
-`OUTPUT_CHANGE_SHARE_PER_YEAR` (that would loosen the limit that stops chains from amplifying, per the earlier section) and the 60-year run.
-
-## Measured and not merged: the opening sized net of the own-plot cut (branch 545-opening-sizes-for-bought-food, deleted unmerged)
-
-Sizing the opening's producers with the year's own `_less_what_it_grew` (through a new `opening_own.less_what_it_grows`)
-makes opening and year agree by construction, but on the short opening it lowers traded value and output further and
-the stock gate still dominates later years. Settling income on the cut demand collapses the economy toward nothing (the
-526 collapse). The root is the year's own-plot rule: every unhired hour goes onto a plot with unlimited free land, so
-households grow nearly all their staples and buy almost none. Land-limited own plots (Complaint 551, branch
-`551-households-farm-the-plots-they-hold` (deleted unmerged; its code is lost)) are needed before the opening can be sized sensibly. Measured with
-`ROME_SPIN_UP_YEARS=3,2 PYTHONPATH=. python3 <scratch probe p473_hh.py> 5 out.json` on each commit; the probe is not
-committed.
+longer cycles but falls for decades with the wage, while employment grows into the gap; realised income in the first year is a
+small share of the opening figure. The cause is the wage: the labour market clears at the households' outside option from
+the first year, and prices follow it down slowly. Seeding the wage at that level does not help because prices and the outside
+option scale together. What it needs is a settled model of how a labour glut passes into prices (the economy's rent and price
+search, stages 5 and 7 of 507), then a spin-up that runs until its tolerance is met. Do not weaken the settling tests.
+Regenerate `openings/` (`python3 sim/simulator.py openings`) when this lands; the shipped entries are keyed on the source and
+every source change leaves them unread. The owner's decision on 507 (one price owner, 2026-10-14) is made, so this does not wait on it.
+
+## Measured sections and what each found (full text in `Complaints/reports/473-history.md`)
+
+- Coin wear and the spin-up report: `spin-up-trace` exists; the money stock sinks by coin wear and the mint struck nearly nothing to replace it.
+- Update 2, material orientation: answers three questions on why the chain cannot feed the mint; the haul term is restricted to fixed-site inputs.
+- Update 3, joint recipes gated on value: `producers.runs_for_stock` judges a joint run on the outputs' prices; the mint's strikes over wear rose, the test still failed then.
+- Note 2026-10-15: England's `MONEY_LAG_YEARS` check was loosened while the price level climbs; restore it when the price level stops climbing.
+- Settling statistic, main against the in-year price search (507 Stage 7): the within-year price search (branch deleted unmerged) shrank rate and level swings and settled the money stock; the level and wage still fell (608).
+- What made the integration branch's spin-up swing (probe table by change; the 467 check now excludes the plot trade and trades under one worker-year of jobs).
+- Which merge tips the spin-up into cycling (table by commit): the price-level index is part of the loop, not all of it; planning to the area's demand in single-area thin markets was not tried.
+- The opening basket held to supply (merge 66da3cd3): the household basket was never held to what producers could leave; fixing it took the 20-year probe from cycling to calm; the labour glut remains.
+- Where the unhired hours are: the sizing fix needs the price index and joint by-products (bran) handled first; not a labour mechanism.
+- Expansion that replaces wear before it grows (branch deleted unmerged): calm at 20 years, an earlier and higher surge at 60; not merged.
+- Why makers with plant sit idle while their price climbs: not `producers.py`; the fix lies in entry of an input maker where buyers exist, merchants carrying bloom and bar, and price memory under scarce supply.
+- Entry does fire for a bloom market with no maker, but builds where the ore is; the fix lies with merchants and the makers' input chain.
+- The late brick and cart surge is not a wear wave (stocks are steady-state with no ages); carts lack iron bar; why bricks stop was not traced.
+- How the yearly rate is set: no defect proven, no code changed; candidates are an inert credit market, the one-way step limit and unbounded `maximum_rate`.
+- Where the households' cash goes in the year of the rate spike: lent out by `lending.lend_working_capital` to merchants whose wage loans were over-asked; the wage-loan sizing fix cut the loans sharply (later years unmeasured).
+- Is the steady deflation the mint failing to replace worn coin: no, the stock shrinks far less than the price level; the real economy contracts; no code changed.
+- Why output falls tenfold after the opening: producers follow sales; the stock gate (`producers.runs_for_stock`) binds from year 1 and supply moves only a quarter of capacity a year.
+- Opening sized net of the own-plot cut (branch deleted unmerged): lowers traded value further; the root is the year's own-plot rule, and land-limited plots (551) are needed first.
 
 ## Design comparison (2026-10-20)
 
@@ -691,3 +120,596 @@ its base price by year five, and wheat is already about 0.37 of base in year 0. 
 level follows the same food collapse a year earlier (the money stock does double). So the slow validation "more metal
 raises the price level" (`check_more_metal_raises_price_level`) is drowned by the unsettled economy for Norse; the
 transmission rules are held by `test_money_reaches_prices`.
+
+## Update 6: a one-year closure test on the small fixture, and the movers it finds (branch opening-stationary-state)
+
+What is built: `sim/economy/opening_stationary.py` (a plain function: the runs that meet a final demand by the
+input-output solve in `opening_runs`, the hours they hire, and the incomes they pay, so wages plus profit equal the
+value of final demand), `economy_fixture.stationary_setup` (the fixture with each worker offering the hours its runs
+hire plus a stated slack), and `sim/tests/test_opening_stationary_scenario.py` (a stepped year against the settling
+bounds in `sim/economy/settling.py`). The opening does not yet seed its producers from the solver. Run:
+`python3 -m unittest sim.tests.test_opening_stationary_scenario sim.tests.test_opening_input_stocks`; the red parts are
+marked `expectedFailure`, so an unexpected success shows when one of them is fixed. The figures below came from throwaway
+probes (no committed command prints the year-by-year table).
+
+Movers, in the order they bite:
+
+1. **Hours offered against hours hired; the wage is a unit root.** The stated fixture offers many times the hours its
+   runs hire, so year 1 clears the wage at the workers' survival wage (`labour_ask_floor`), an order of magnitude below
+   the stated wage, and grain follows it down because sellers price at cost. The stated wage is not a clearing wage
+   (608). Scaling every price and wage down does not help: the survival wage is the floors' cost over the hours, so it
+   scales with the prices. The nominal level has no restoring force: with hours short of demand wage and price jump
+   once and stay; with hours in excess they drift down a few per cent a year; only the knife edge where hours offered
+   equal hours demanded rests. The stationary opening therefore has to fix the hours offered or the wage jointly with
+   the runs (`opening_stationary.hours_offered_over_demanded`), not take the cost table's wage.
+2. **Seeded inputs the same year's market also supplies** (`opening._stock_producers_with_inputs`). Producers produce
+   and clear in input-depth order, so a user buys its input from an earlier maker in year 0 and works it the same year; the
+   seed makes year 0 buy none, the maker's year piles up unsold, its sales estimate halves and the stock gate
+   (`producers.runs_for_stock`) plans it down the next year. Built and measured (year 0 then trades the input), then not
+   landed: the dug input's cobweb moves a year earlier and two fixed-bound tests fail (`economy_vessel_price_fixture`
+   year-to-year swing, `economy_no_offer_memory` price floor). Bounds were not widened. The rule's test is kept as an
+   expected failure (`test_opening_input_stocks`).
+3. **Input bids reach the buyer's whole run margin** (`producers._input_bids`: price plus margin per run over the input
+   per run). With the coin metal's price pinned by the mint, the smelters' margin grows as wages fall and the ore price
+   climbs to the cap; the sellers' own ask is bounded at a multiple of unit cost (`ask_raise.ASK_BAND_CEILING`, retire
+   643), so a buyer-side cap at the input's cost would only restate that band. Not changed.
+4. **The mint strikes less than the coin wears** (14 per cent short in year 1 on the stationary fixture): the metal
+   demand the opening sizes (`opening_metal.yearly_replacement`) is met by capacity the chain places with the opening's
+   spare share, then the smelters' expansion swings it. Owned by mint/entry work.
+5. **The rate moves by several points in year 3** on the stationary fixture (credit clearing; owned by the credit work).
+6. **Expected inflation read the basket index.** Fixed: `currency.price_inflation` (weighted median of the goods' price
+   changes) feeds the households' expectation (`households_close.close_year`) and the memory's
+   (`MarketMemory.note_basket_price_level`); rule tests in `test_economy_price_inflation`. On the fixture the heavy good
+   moves, so the median follows it and the fixture's figures do not change; it matters where thin goods run away.
+
+Not reproducible on the fixture: 545 (the fixture has no land per run, so households grow nothing for themselves);
+the stock gate is not the first mover once the seed is gone (the gate binds in year 1 only on the seeded run).
+
+Orchestrator commands (minutes each, shared cores; not run here): `python3 sim/simulator.py spin-up-trace --civ rome_100ad --years 60`
+and the settling statistic over its rows (`sim.economy.settling.settling_report`, as `economy_port_trace.spin_up_trace` feeds it).
+
+## Update 7: hours offered are a choice against the plot; the stationary fixture rests (branch opening-labour-supply-and-seed)
+
+Built: `households_hours_offered.py` (a household keeps hours for its plot down to where the next hour adds no more
+than the wage it faces; no land or nothing the land grows serving a need means all hours offered; hours nobody hired go
+back to own production, `own_production`), `household_hours_year.py` (the rule per cohort, wired into
+`Economy._shortfall_hours` beside the own-plot plan and household work, so the kept hours leave the offer and the
+clearing's workforce), tests in `test_economy_households_hours_offered`. The hours kept at a wage do not depend on the
+hours a worker has (the marginal hour is in absolute hours on the plot), so the fixture's hours are the hours its runs
+hire plus the hours kept at the stated wage (`economy_fixture.stationary_setup`, now with a plot: `land_per_run` on the
+farm recipe, and no slack by default).
+
+Measured (python3, seconds, throwaway probe): stated fixture, hours offered over hired 11.6, wage 1.0 to 0.075 in year 1,
+grain 0.3 to 0.045. Stationary fixture before (no plot, 10 per cent slack): wage 0.795 in year 1, grain 0.294 then 0.249.
+Stationary fixture now (plot, no slack): log changes in year 1 wage +0.03, grain -0.05; year 2 wage -0.02, grain -0.08;
+year 3 wage -0.03, grain +0.02; with 10 per cent slack the wage still drops by a third in year 1 (the knife edge:
+only offered equal to hired rests). Closure checks now plain: wage, grain, metal price and money within the bound each
+year; the rate within its bound. Still expectedFailure with causes named: the stated fixture's one-year check (it has no
+plot, so 2000 hours a worker cannot be used at home; leisure and household work do not exist in it), the ore price (year 3,
+log +0.5, the smelters' bids against the ask band, mover 3) and the mint (strikes about 30 per cent less than wears, mover 4).
+Hired hours still fall in later years (0.68 to 0.53 million over 3 years, demand side). Not done: seeding the engine's
+opening wage and `opening_income_per_head` from `opening_stationary` (Rome offers 2000 hours a worker against what its
+recipes hire; the household-work hours (645) are what should take the difference, unmeasured).
+
+## Measured (2026-10-21, 60-year Rome trace at 3d05ffbe)
+
+`python3 sim/simulator.py spin-up-trace --civ rome_100ad --years 60` in a checkout pinned to the merge of the robust inflation
+index and the real-rate credit bound (before the households' plot-hours choice). Output: `Complaints/reports/473-trace-3d05ffbe.txt`.
+The price level still runs away after the first decade and hired hours fall many-fold; the wage rises with prices. Expected
+inflation no longer follows one thin good, so the run-up is real: it is the supply collapse traced on #61 (year-0 overproduction,
+the stock gate planning zero runs, idle capacity decaying, food running out) and the input-bid ratchet (a buyer's cap is the
+input's price plus its whole run margin, so a scarce input is bid up without bound). Next: the stock gate eases instead of
+zeroing plans when stock will clear; capacity is not shed while expected sales cover cost; an input bid is bounded by what the
+input is worth in use against its substitutes, with rationing by bid only when supply is short. Re-run the same command after.
+
+## Update 8: the supply collapse and the input-bid ratchet, each link as a rule (branch supply-collapse-and-bid-ratchet)
+
+Rules (each with a rule test that builds producers and views, not a game):
+
+1. Planning (`producers.runs_for_stock`, `STOCK_CLEARING_YEARS`, test_economy_stock_drawdown): excess stock over the target
+   is worked off over several years (runs are expected sales less excess over those years), so a producer with a positive
+   margin whose stock clears in them keeps working; it plans none only for stock that cannot clear.
+2. Capacity (`producers_close.close_year`, `idle_capacity.py`, test_economy_idle_capacity_life): idle plantless capacity
+   wears at the one over its tools' service life (`IDLE_CAPACITY_DECAY_SHARE` retired); a producer sheds workplaces
+   in the first year its expected sales do not cover running cost, not after three loss years, and not so many that the
+   workplaces that pay would make less than it expects to sell (short supply lifts the price). `LOSS_YEARS_BEFORE_EXIT`
+   stays only as entry's wait (`entry_margin`). The bare removal of the count was measured to be worse on the fixture
+   (the model re-draws the workplaces' cost spread each year, so shedding to the paying share repeats), hence the
+   expected-sales floor.
+3. Input bids (`producers.input_ceiling`, `tool_fallback.value_in_use`, test_economy_input_ceiling_share): a ceiling is the
+   price plus the run's margin shared by the input's cost share (not the whole run margin), and for a tool never more than
+   it saves against the cheapest substitute in the basket (wooden tools, then by hand). The old wide-margin test that
+   pinned a ceiling of ten times the price now pins the margin share.
+4. Ask band (`ask_raise.band_edge`, `seller_offers.input_share_of_cost`, test_economy_ask_band_chain): the band multiple
+   applies to what a seller adds; inputs it buys pass through. On a three-stage chain the old ceilings were 3, 12, 39
+   times a stage's value added, now 3, 6, 9. `ASK_BAND_CEILING` (retire 643) is unchanged; the Caiani check (markup on
+   unit cost, moved with inventory) holds, with the markup bounded per stage.
+
+Fixture (stationary_setup, 8 years, throwaway probe, same seed): grain price year 5 0.224 (was 0.230), wage 0.916 (was
+0.886); year 7 grain runs summed over the three producers 857 (was 510), real wage (wage over grain price) 5.1 (was 3.9);
+staple runs after five years 72 per cent of the first year's (66 before; `test_economy_supply_collapse_scenario`). The
+price still falls in later years: the wage unit root (mover 1) and the demand side are not touched here.
+
+Not done: a Rome trace (orchestrator: `python3 sim/simulator.py spin-up-trace --civ rome_100ad --years 60`, then the
+settling statistic). Left: the cost spread is re-drawn each year; the ore price and mint movers (3, 4 above).
+
+## Measured (2026-10-21, 60-year Rome trace at 72e81e68, after Update 8)
+
+Same command, checkout pinned to the merge of the supply-collapse fixes (stock drawn down over a horizon, idle capacity worn by
+tool life, plant shed by margin, input bids bounded, ask band on value added). Output: `Complaints/reports/473-trace-72e81e68.txt`.
+Against the 3d05ffbe trace: hired hours no longer collapse (they hold within a few-fold of the opening instead of falling
+twenty-fold), and the price level's peak is an order of magnitude lower. It still rises by about two orders of magnitude between
+the first and third decades and then wanders; not settled. Next: decompose the run-up by good (probe in the session's notes,
+per-good contributions to `basket_price_level`) and fix the rule that moves the leading goods.
+
+## Update 8: hours sold are a schedule against the wage; the opening splits time so offered equals hired (branch opening-elastic-hours-and-seed)
+
+Cause of the knife edge found: the labour core cleared a market with all offered hours at the ask floor (`clearing_target`:
+bids taken highest first, and when the bids' hours fall short of the offered hours the target is the ask itself), so a sliver
+of excess hours took the wage to the floor. Built:
+
+- `households_hours_offered.leisure_share / leisure_hours_kept / leisure_anchor_wage`: of the hours the plot and household
+  work leave, a share falls to leisure, one half at an anchor wage, falling smoothly as the wage rises. The elasticity is a
+  labelled heuristic (`LEISURE_ELASTICITY`, retire 675).
+- `labour_supply.HourSupply`: a cohort's hours sold as a function of the wage (own-plot plan and household work fixed, plot by
+  `plot_hours_kept`, leisure by the above). `Clearing` in the labour core takes it (`YearInputs.hours_share_at`) and finds the
+  wage where hours sold meet the hours wanted (`clearing.supply_target`); hours kept, sold and at leisure are then read at the
+  wage the market cleared at, and `_grow_own` no longer counts leisure as spare hours.
+- `opening_leisure.seed`: at the opening, each trade's anchor wage is solved so the hours sold at the opening wage equal the hours
+  the opening's producers hire (Eurace initialises so labour demand equals supply; Caiani et al. 2016). Stored in
+  `EconomyRecord.leisure_anchor_wage` (real, at the opening's price level). Where the free hours do not exceed the hours hired
+  there is no leisure.
+- Tests: rules in `test_economy_households_hours_offered` (LeisureTests) and `test_labour_core_supply_schedule`; the fixture in
+  `test_opening_stationary_scenario` (OpeningHoursTests, KnifeEdgeTests).
+
+Measured (throwaway probes over `economy_fixture.stationary_setup`, year 1 to 6): hours the households have beyond the opening's
+split (given after the opening, `KnifeEdgeTests`): first-year log wage change -0.07 for three per cent more hours and -0.22 for ten
+per cent, where before it was -0.35 and -0.41 (the wage fell to the ask floor for any excess); with the excess fitted into the
+fixture's hours the opening's leisure absorbs it, and year-by-year wage over six years is 1.00 0.99 0.97 0.95 0.93 0.90 (three per
+cent) against 0.70 0.70 0.67 0.64 0.53 0.46 before. The stated fixture (2000 hours a worker, plot) opens with offered over hired 1.01
+and the wage 1.0 in year one, where the earlier fixture's wage fell to 0.075 and offered over hired was 11.6. The wage moves about
+twice the excess: the plot alone makes hours sold rise by half a per cent for each per cent of wage; leisure adds to that only where
+the opening found hours to spare.
+
+The decline of hired hours is not gone (stationary fixture, slack none: 0.68 0.59 0.56 0.55 0.50 0.43 million hours, was 0.68 0.57
+0.53 0.50 0.44 0.36). Traced: the grain farms' planned runs are the cash they hold over the cost of a run (`producers.plan`,
+`affordable`), and their cash falls every year by what the households add to their own cash (about 41 thousand in year one, 76
+thousand in year two, on a wage bill of 680 thousand): spending is below income and no lender takes the difference (607, 606). Year
+one's revenue is also below its wage bill because the price falls to clear (the opening prices leave no margin). Not a defect of
+the hours rules, so not changed here.
+
+Rome is not measured here. Commands to run: `python3 sim/simulator.py spin-up-trace --civ
+rome_100ad --years 60`; `python3 -m sim.tests --slow --only baseline_fixture,baseline_rome_full_length,real_output_baseline,spin_up_money_supply_full_length --jobs 1`;
+`python3 sim/simulator.py opening-checks`.
+
+Leisure is limited to hours the plot could not still use (`HourSupply.parts`): without that limit Rome's one-year hunger share rose to
+0.49 (`labour_margins_baseline_validation`), since hours that used to grow food became leisure. Now, Rome one year: hired share 0.33
+(was 0.04), wage over floor 4.8 (was 3.4), hunger share 0.17 (was 0.15). `baseline_fixture` passes whole.
+
+## Measured (2026-10-21, 60-year Rome trace at 9eb35921: hour supply schedule plus supply fixes)
+
+Output: `Complaints/reports/473-trace-9eb35921.txt`. The first four decades are calmer than at 72e81e68 (the price level near
+a hundred at year forty instead of nearer two hundred, hired hours steady), then the economy explodes after year forty: the
+price level, the wage and the rate run away together within a few years (the rate far above one, the wage thousands of
+times its opening). A per-good decomposition of years 35 to 52 is running (`decomp.py` probe, the same as for 72e81e68).
+
+Decomposition of the late runaway (years 35 to 51 at 9eb35921, `Complaints/reports/473-decomposition-9eb35921.txt`; the probe
+is `Complaints/reports/473-decomposition-probe.py.txt`, run from a checkout root with `FROM_YEAR=35 python3 <probe> 52`): wheat,
+starch, leather and iron tools carry the index at hundreds to thousands of times base through year 43; thin goods spike in
+year 44 (felt, milk, bricks); from year 45 nearly every good jumps at once while the wage rises many-fold, which points at the
+unit of account (a real figure turned nominal with an index that thin goods spike) rather than one good's market. Being
+traced as an indexation spiral (the leisure anchor and other real figures converted with `basket_price_level`).
+
+## Update 9: real figures were turned nominal with the fixed-basket index (branch late-indexation-spiral)
+
+Hypothesis from the year-44 to 50 trace: an indexation spiral. Conversion sites that used `basket_price_level` (the fixed basket over
+recently traded goods at their remembered prices): `Economy._hour_supply` (the leisure anchor wage, economy.py), `state_budget.py`
+(the real spending target and the state's wage fallback, and its inflation expectation), `mint_labour.py` (the wage fallback),
+`opening_leisure.seed` (equal to one at the opening). A thin good's remembered ask spiking moves that index, so the nominal anchor
+wage moved with it: built input in `sim/tests/test_price_level_indexation.py` (stationary fixture, anchor of one in real terms, the
+thin `metal_kg` price multiplied by a million): the anchor wage was the basket level, about ten thousand; it is now 0.94.
+
+Fix: `MarketMemory.price_levels` chains the opening's one by each year's observed inflation (the weighted median `price_inflation`),
+read through `MarketView.chained_price_level`; the four sites use it, and `rebase_basket_price_level` resets it. `basket_price_level`
+stays a reported statistic (outcome, trace, cohorts' cash target comparison). Not changed: weights in `price_inflation` use each
+good's full opening quantity, so a sliver-trade good still weighs fully in the median; the cohorts' reservation wages and survival
+wage were not found to use the index. Whether the late explosion goes away needs the 60-year Rome trace
+(`python3 sim/simulator.py spin-up-trace --civ rome_100ad --years 60`), not run here.
+
+## Measured (2026-10-21, 60-year Rome trace at 5306f780: after the chained price level, Update 9)
+
+Output: `Complaints/reports/473-trace-5306f780.txt`. The late runaway is gone: the wage stays within a narrow band from the
+fourth decade on (it had run to thousands of times its opening), hired hours hold steady for the whole run, and the rate stays
+below its old ceiling. The fixed-basket price level (now a reported statistic only, read by nothing that sets a wage or a
+target) still wanders over an order of magnitude and more, carried by thin goods' remembered asks (decomposition at 9eb35921).
+Left for the settling check: the fixed-basket level's wander (drop thin goods' asks from it, or weight by what traded), the
+rate's year-to-year steps against `settling_report`'s bound, and the slow baseline validations (`baseline_rome_full_length`,
+`spin_up_money_supply_full_length`, `baseline_fixture`, `real_output_baseline`) re-run on this head.
+
+## Update 9: the wheat run-up decomposed by year; it follows the iron chain starved of furnaceman hours (branch wheat-price-runaway)
+
+Throwaway probes (per-good price multiple, `market_record`, producers' capacity, runs and expected sales; a wrapper on `producers.produce`
+printing planned runs against the input and hour limits), 18 to 22 years after the cached spin-up, at 72e81e68 and again at 221bb02e.
+No committed command prints the tables. No wheat rule was landed (last paragraphs).
+
+Before the merge (72e81e68), wheat price multiple of base, years 0 to 17: 1.0, 0.72, 0.76, 0.74, 0.72, 0.73, 0.77, 0.79, 0.85, 0.92, 0.92,
+1.0, 2.5, 3.5, 7.8, 14, 13.5, 13.5. Wheat producers' capacity falls from 3.06 million runs to 17 thousand; runs worked 2.5 million
+(year 0), 0.3 million (1), 4 thousand (2), then hundreds, while unmet demand stays at 1 to 25 million kg. After the merge the path
+changed: wheat sits low first (0.22, 0.19, 0.17, 0.15, 0.14, 0.11, 0.11, 0.10, 0.09, 0.09, 0.10, 0.12 in year 12) with runs zero or
+hundreds in years 5 to 12 under a stock overhang of 1.5e8 kg; capacity falls to 3.6e4 runs by year 13; then wheat rises 0.42, 0.70,
+1.0, 1.5, 3.5, 8.4 (years 14 to 19), 20 in year 20.
+
+Which side moved first: supply, upstream of wheat. Leaders after the merge: bread (240 times base in year 5), thermal energy, mortar
+and flint (170 times in year 9), then iron bar (3 in year 5, 10 in 11, 25 in 13, 47 in 14), iron tools (0.8 in year 10, 3 in 12, 19 in
+14, 62 in 15, 210 in 16, 1000 in 20), and wheat follows iron tools. Wheat's recipe takes `iron_tools_kg` as a tool; by year 20 a
+run's tool bill is 745 against a run revenue of 7900, so it is the shortage of hours that holds wheat output down: farmer hours hired
+fall from 3.0e9 (year 0) to 4e7 (year 10) with 3e9 idle in other areas, and wheat producers in several areas get zero farmer hours in
+years 17 to 19 (china_32, spain_03: planned 856 and 758 runs, hour limit 0.0).
+
+The tool chain, from the produce wrapper: iron tools need iron bar (hard input), iron bar needs iron bloom and charcoal, and bloom is
+made in four areas only. In year 12 the bloom makers plan 498, 4090, 1340 and 2150 runs and achieve 2.3, 1130, 10.6 and 35.7: the
+limit is furnaceman hours (italy_02 hired 2.9e4 hours against 3.6e5 a year earlier), not ore or charcoal (held at three to ten times
+the run's need), not cash and not the plan. Furnaceman hours are fully taken (idle 0) at a wage of 0.05 to 0.09 while the employers'
+bids carry a worth of 3.6 to 8.6 an hour. The wage is held down by `sim/labour/market/clearing.py` `ceiling` (the trained
+substitute wage, the unskilled wage times a training premium, then the import cost), and the trade's people shrink while the
+vacancy stands (furnaceman hours in italy_02 for years 10 to 13: 6.8e5, 3.6e5, 2.9e4, 3.5e4). Owner: the labour work.
+
+Tried and not landed: a producer's expected sales are what it sold (`year_close._with_sales`), so a seller that sells out in a market
+with unmet demand expects only its own shrunken sales and its exit and shedding (`producers_close.close_year`) read that. A rule
+adding a sold-out seller's share of the unmet demand (pure function, tested on built numbers) kept ten times the wheat capacity in
+year 12 (3.8e5 against 4.6e4 runs) but wheat still falls to 3.6e4 runs in year 13 and reaches 8.4 times base in year 19, and it
+failed `economy_service_lives` (a cash shortage sells more of the stock than the fixed bound allows). Not committed, bound not widened.
+
+The slow baseline failure "stocks are not eaten through" on grain is not this runaway: on the fixture grain price drifts 0.36 to 0.40
+over 60 years with the wage (1.0 to 1.29), and the grain stock is float dust (1e-10 kg) against sales of 1.8e6 kg a year. The check
+`baseline_checks.stock_depletion` counted a start-of-window dust stock as a stock and its disappearance as a draw-down of 1.0. It now
+skips a stock under `FEASIBILITY_TOLERANCE` of the good's largest flow (test_baseline_stock_depletion). The fixture's own drift (price
+level up 0.4 per cent a year with the wage) remains, and is the settling failure above, not a runaway.
+
+## Update 10: the scarce skilled trade's wage clears against bids (branch scarcity-wage, Complaint 678)
+
+`clear_one` no longer caps this year's wage at the training cost; the cap stays on what entrants expect. Probe (`probe10.py` with the
+shortened hidden spin-up, 5 years; a full spin-up exceeds five minutes): wheat price multiple years 0 to 4 was 1, 0.21, 0.19, 0.17, 0.16 and
+is 1, 0.75, 0.73, 0.74, 0.72; iron bar year 4 was 3.2 and is 1.4; furnaceman hours hired hold at 2.5e8 to 2.7e8 (were 1.7e8 to 2.4e8). The
+run-up after year 12 is not yet re-measured; command: `ROME_SPIN_UP_YEARS` unset, `python3 probe10.py 20` from the worktree root.
+
+## Update 11: the below-cost reading after the sourced household day is a phase of the cycle, not a rule (branch opening-below-making-cost)
+
+`price_over_making_cost_band_validation` (558) went red at e72b36c0, which changed only `data/world/household_work.json` and
+`data/world/needs.json`. Putting those two files back to their 1cd50f79 content on the e72b36c0 tree restores the earlier numbers
+digit for digit, so the data is the whole cause. The two sides of the check read the same wages: `economy_cost_book` takes
+`agent_wage_per_hour` (the economy's hours-weighted wage by trade), and the price is the goods market's. No rule reads the wage
+before household work on one side and after on the other.
+
+Probe (not committed; `sim(civ="rome_100ad", capital=1e9)`, then `_step_market()` a year at a time, the check's own median of
+price over `CostBook.cheapest_cost` for goods the economy traded), median ratio by year, years 0 to 8:
+
+- 1cd50f79: 1.13, 1.12, 1.02, 1.06, 1.12, 1.08, 1.15, 1.52, 1.41.
+- e72b36c0: 1.12, 1.11, 1.02, 1.02, 0.90, 1.00, 1.00, 1.01, 1.24.
+
+The opening itself (year 0) is the same at both. The household day does enter the hour supply: hours offered for sale at year 0 are
+about a tenth fewer and a third fewer at year 1 (`labour_supply.HourSupply` keeps the household's own work out of the offer), while
+hours hired differ little. What differs is where the unsettled cycle (this complaint) carries the price level afterwards: it stays
+low through year 2 at e72b36c0 and rises a year later, and at year 4 the farmer and vine-and-olive wages the cost side reads are
+spikes from markets that hired few hours (farmer 1.2 coin an hour at e72b36c0 against 0.14, unskilled 0.09), which the price
+follows only the next year. So the median at year 4 sits in a dip of a series that otherwise hovers about one. The check reads
+one year of a cycle that does not settle, which is this complaint, not a mispriced opening; the check and its bounds are left
+as they are, and it should go green when the cycle settles. Open question for whoever settles it: an hours-weighted wage over
+markets that hired few hours (`wages_by_trade_weighted`) lets a thin market set a trade's cost; not changed here.
+
+## Update 12 (PM): runs whose surplus is worth thousands of coin an hour
+
+After the joint labour bids (678), the highest maximum wage any run bids for plumbers, masons and furnacemen in a Rome game is
+still in the thousands of coin an hour in years 0 to 5, against an unskilled wage under one: the run's output is priced far
+above what its inputs and hours cost. Which recipes set those maxima is not yet isolated; it is the price side of this
+complaint (an output whose price is many times its making cost). Probe: wrap `sim/labour/market/clearing.clear_one` and
+record the highest `maximum_wage` per trade and the recipe behind it.
+
+### Update 12 result: the outsized surpluses are mostly planning on quotes from markets that did not trade (branch outsized-run-surplus)
+
+Probe (not committed; `sim(civ="rome_100ad", capital=1e9)`, `ROME_SPIN_UP_YEARS=3,2`, wrapping `producers._labour_bids`, years 0 to 5, every country's
+producers since the game runs the partners too; 25 thousand plans). Highest surplus an hour (`revenue / working_cost_ratio - inputs`), one row per output, years 0 to 5:
+
+- cooked meal, china_29, year 4: 9.2e3 an hour; expected price 367 a kg against a making cost of 0.93; 4 hours-trade (domestic servant); 59 makers; sold 1.5e8 kg of 1.1e8 more wanted, stock 6e9; the price was a `best_unfilled_bid` quote.
+- salted meat, china_02 and twenty more china tiles, year 3: 8.4e3; expected 448 against 2.2; 98 makers; sold 2.5e4 kg, 1.1e9 wanted, stock 7.5e3; `best_unfilled_bid`.
+- water, china_40, year 0: 6.6e3 for half an hour a run; expected 3.3 against 0.0002; 104 makers; sold 2e11, stock 1.5e11; `best_unfilled_bid`.
+- bread, china_54, year 5: 4.3e3; expected 262 against 5.8; 88 makers; `traded` (the year after a quote).
+- gold, spain_03, year 4: 3.3e3 an hour; expected 5.8e3 against 2.5e3 (2.3 times; two makers; sold 4e3 kg, stock 1.1e5): a genuine ratio, the hours are a thousandth of the run's cost, so the whole surplus per hour is large; `traded`.
+- piped water, turkey_05, year 5: 2.3e3; plumber maximum 7.9e3, last wage 13; expected 0.016 a kg against 2.6e-5 (the run's labour is its only cost); 70 makers; sold 1.3e10, wanted 9.5e10 more, stock 3.2e10; `traded`.
+- timber, china_55, year 5: 2.0e3; 5.8 times its cost; 102 makers; `traded`.
+- cattle, china_43, year 2: 1.9e3; 65 times; 19 makers; `traded`.
+- glass, france_01, years 0 to 3: 1.4e3; 105 times; 6 makers; `lowest_unfilled_ask`.
+- timber frame, china_55, year 4: 1.4e3 though price is 0.4 of cost (the working-cost ratio multiplies the revenue of a run that barely pays).
+
+Cause. `producers.next_expectations` moves a maker's expected price toward `view.price`, which for a market that did not trade is a quote:
+the best unfilled bid (the largest maximum any one buyer would pay, not a price anyone paid) or the lowest unfilled ask (a seller's own ask coming
+back). In the first rows above the market had sold nothing; the quote (a household's ceiling of hundreds a kg for a floor good) moved the expectation
+from 1.5 to 206 to 448 in two years, the maker's ask and its labour ceiling followed, and the next year a thin sale at that ask became a traded
+price. Of the 200 plans with the highest surplus a hour, 80 read a `best_unfilled_bid`, 7 a `lowest_unfilled_ask`, 95 a traded price (mostly the next year's echo), 16 the opening estimate.
+Not the cause: the ask band (643) bounds a seller's ask from the break-even price, but the break-even was the expected price's own scale; the founder and
+the state buy none of these goods.
+
+Fix (`sim/economy/planning_price.py`, called from `producers.next_expectations`): an output whose latest price is a bare quote lifts the expectation
+no further than `ask_raise.band_edge` around the unit's cost-covering price (and never cuts an existing expectation). Gating the quote out
+altogether was tried and broke `economy_vessel_price_fixture`: a market with buyers and no seller shows only that quote, and a maker needs it to start. Tests:
+`sim/tests/test_economy_planning_price.py` (pure `held_to_band`, and `next_expectations` on a built view).
+
+Measured, same probe, plans with positive runs: top five surplus an hour in year 3 were 8.4e3 x5, now 1.6e3 to 1.5e3; year 4 9.2e3, 7.9e3 now 2.6e3, 2.2e3;
+year 5 7.7e3 now 2.7e3; plans more than 100 times their making cost, years 3 to 5: 39, 57, 110 before and 14, 30, 48 after. Highest furnaceman maximum 2.6e3, 3.3e3, 2.4e3 before and
+1.5e3, 2.1e3, 1.9e3 after. Not closed: the plumber's maximum (thin piped water; a traded price, 8e3 before and 1.1e4 after in year 5, the market sells 1.3e10 of 1.1e11 wanted,
+and the trade needs years of training: a real scarcity rent with entry blocked by training, whose rule is 678's short-run wage and the training lag), and thin sellers
+asking far above cost in a traded market (salted meat sells 2.5e3 kg of 9e8 wanted at 55 times cost; the ask band is about the seller's ask from the expectation, which has no quote now; the remaining chain is the ask side, 643).
+
+Slow topics (`--jobs 1`): `opening_floor_and_thin_trades` green before and after. `staff_closure_reopening_scenario` red before (1 closed concern left shut) and after (6),
+a cycle phase more than a rule. `price_over_making_cost_band_validation` green before and RED after (median 0.9905, the check's lower bound is one): the unsettled
+cycle (Update 11) lands a year lower. Not loosened; not resolved.
+
+## Update 13 (PM): the staple's producers cobweb with period two
+
+`sim/tests/test_complaint_651_wage_step_gain.py` `test_labourer_wage_does_not_sawtooth` is an expected failure naming this
+complaint: in that fixture the staple's output and price alternate year to year (producers' adaptive expectations,
+`producers.next_expectations` with `EXPECTATION_ADJUSTMENT_SHARE` and `OUTPUT_CHANGE_SHARE_PER_YEAR`), the leisure anchor and so
+the hours offered follow, and the labourer wage follows them. Trace in 641. It turns into an unexpected success when the
+producers' expectations stop alternating.
+
+## Update 14: the staple's period-two cycle is the hours households sell, not the producers' expectations (branch producer-expectations-stable)
+
+Measured on the 651 fixture (`economy_fixture.small_setup()`, one `Economy.step` a year; probes not committed): the staple
+producers' plans do not alternate. Planned runs and expected prices move monotonically (`producers.plan` and the expectation
+after `next_expectations`, years 0 to 70), while the runs achieved alternate, because the hours hired alternate: hours wanted
+exceed hours offered every year, so output is the hours offered over the hours a run takes. The hours offered alternate with
+the leisure anchor, `record.leisure_anchor_wage` times the chained price level (`Economy._hour_supply`). That level is last
+year's reading, and the staple's price follows the hours worked the same year (income, then demand), so: a high level, fewer
+hours offered, less income, a low price and a low level, more hours, and so on. Holding the level at one removed the wage
+sawtooth (4 flips in 46 years). Producers on the fixture: price elasticity of supply (plan against a one per cent move of the
+expected price, year 20) was 1.7 for the hills farm and 0 for the other two, which plan at what their cash affords; the market
+curve (`api.price_response`) gave a price elasticity of demand near 1.8 at a one per cent change in units landed. A plan from
+price alone is stable here by Nerlove's condition (the share of last year's surprise folded in is 0.5, and the regressive weight
+adds damping); unsold stock and unmet demand enter only through `runs_for_stock` (excess stock) and `ask_raise` (sold out).
+
+Fix: households scale the leisure anchor by a perceived level, the chained level moved part of the way each year
+(`market_memory.PERCEIVED_PRICE_LEVEL_SHARE`, a labelled heuristic that retires here; its value equals the producers' share and was
+not tuned). Tests: `sim/tests/test_complaint_473_expectation_damping.py` (producer rule on built inputs: an alternating price and a
+step; the perceived level on alternating inflation; the anchor reads it). `test_labourer_wage_does_not_sawtooth` is now a plain
+test. Before: 10 sign flips of the wage change in the town's labourer market (limit 8.55); after: passes (4 of 56 flips from
+year 12; staple price still changes sign most years but the swing is about a third of what it was). Not closed: the ore cycle of
+`baseline_fixture` (period near seven years) is not re-measured; `baseline_fixture` `test stocks are not eaten through` fails before
+(metal_kg) and after (ore_kg), unrelated to this change.
+
+## Update 15 (PM): no one grows wheat at Rome's opening
+
+`purchase_limited_by_offered_volume_scenario` "the economy offers the staple on the founder's tile" is red: at france_05 no
+wheat is offered for five years while its price climbs. The wheat producer stays idle because a run's planned labour and rent
+cost more than its revenue, while most farmer hours sit idle and millet and flour supply the grain. Before the held rate (641)
+the check passed only on leftover stock. A staple whose producers cannot cover labour and rent at the opening, with farm
+hours idle, is the opening's prices and wages failing to meet (this complaint); the check stays red. Command:
+`python3 -m sim.tests --slow --only purchase_limited_by_offered_volume_scenario --jobs 1`.
+
+## Update 16: the idle wheat producer was charged the rent a mine bids the tile up to (branch wheat-at-the-opening)
+
+Probe (not committed; `sim(civ="rome_100ad", capital=1e12)`, `_step_market()` a year at a time, wrapping `producers.plan`, the wheat producer at
+france_05, years 0 to 5; a second wrap of `land_market.clear_land` printed the tile's demands). Before the fix, plan margin per run was
+negative every year because of rent, not wages or price:
+
+- Expected wheat price 1.17 rising to 1.50, traded 0.71 to 1.18 (a traded price, not a quote; the expectation sits above it, so no cap holds it down).
+- Farmer wage the plan reads, 0.91 falling to 0.61 (the labourer's 0.47 to 0.57): the wage side does move with the idle hours. Labour a run 431 falling to 292
+  against revenue 557 rising to 711, so a run pays its labour at every year; with no rent the margin is positive from year 0.
+- Rent a run 247 rising to 595; margin -122, -159, -207, -201, -196, -180. Millet, hemp and vegetables were idle for the same reason; opium (a dearer crop a hectare) ran.
+- Cause: `land_market.clear_land` charges every use on a tile the tile's differential rent at the hectare-weighted mean value a hectare gives its uses. At
+  france_05 year 0 the demands were 229 thousand hectares at a mean value of 3.6 thousand a hectare, of which coal (2.7 thousand hectares at 221 thousand a
+  hectare) alone carried the mean: the rent clears at 507 a hectare, and about 140 without coal. Wheat earns about 450 a hectare. A use that earns little a
+  hectare was charged what the use that earns most bids the tile up to, and an idle producer asks for no land, so it reads that tile figure.
+
+Fix (`sim/economy/land_market.py`, `land_rents.py`): a use pays the tile's rent in proportion to its own value a hectare over the tile's mean
+(`use_rent_per_hectare`); the tile's total, `record.land_rent` and the tenancy and title readers are unchanged. Producers that ask no land this year are
+priced at the value their runs would fetch at the prices they expect. `rent_paid_by_tile` now sums each producer's rent a run times its runs. Tests:
+`sim/tests/test_economy_land_rent_by_use.py` (the pure rule on built demands: proportion, the mean-valued use pays the tile rent, totals conserved, nothing
+asked; `settle_year` on a built record with an idle grain producer next to a mine); `test_state_land_revenue.py` fixtures carry each producer's rent a run.
+
+After (same probe): the wheat producer plans 22 thousand runs in year 0 (rent a run 183), the economy offers 94 thousand tonnes of wheat on the tile and
+`purchase_limited_by_offered_volume_scenario` is green. Not settled: the opening now holds 76 million kg of wheat stock at the producer, which
+`runs_for_stock` works off (no runs in years 1 to 5 although the margin is positive), and the price of wheat there is 92 falling 30 per cent a year to 17
+while millet is 0.3 and bread 0.12; a price that high for a good whose labour cost is about a coin a kg is the sold-out ask raise and the spin-up cycle (this
+complaint), not a price the rent produces. Entrants (`entry_trial`, `location`) still read the tile rent, not a use's share.
+
+Slow topics (`--jobs 2`): `farm_land_quality_scenario`, `opening_floor_and_thin_trades`, `opening_consistency`, `opening_basket_agrees_scenario`,
+`price_over_making_cost_band_validation` (red after Update 12, now green) and `land_tile_partition_invariance` green. `baseline_fixture` "stocks are not eaten
+through" (ore_kg) fails before and after, as noted in Update 14.
+
+### Update 16 (later): the 92 a kg was a remembered bid ceiling blended with a sliver of trade
+
+Traced with the spin-up uncached (probe not committed: `economy_port_year.SPIN_UP_CACHE_DIRECTORY` set to a temporary directory, wrapping `producers.plan`
+and `unsold_search.clear_with_search` for wheat at france_05). The parent's 0.71 was a `cost_covering` quote on a market where nothing traded and the
+producer held no stock, not a price. With wheat running, the spin-up cobwebs: year 1 plans the plant's whole capacity at the opening estimate (238 million kg
+held after it), the price falls to 0.1, no one plans in year 4 (stock gone), a buyer's ceiling of 130 is remembered as a `best_unfilled_bid`, year 5 plans
+231 thousand runs. The opening year then cleared 1.5 thousand kg of 94 million at 13 a kg, and the remembered price moved from the ceiling toward 13 by the
+share of a usual volume that sliver was (`year_goods.remembered_price`): 92, then 65 and 48 in the next years, while the market itself cleared at 13, 8.7 and 3.3.
+The ask path is not a raise: the producer holds stock, `ask_raise.sold_out_outputs` is empty for it, its reservation is the holding reservation and the unsold
+search brings it to its queue-held floor.
+
+Fix: a trade replaces a remembered quote whole (`year_goods.price_after_trade`; `record.memory.quote_kinds` says which), since no one paid a quote and the volume
+weight is for blending traded prices. Tests: `test_economy_year_goods.py` `PriceAfterTradeTests`. Wheat at france_05 after, price at the year's plan, years 0 to 5:
+2.28, 2.17, 0.75, 0.46, 0.84 and 0.84 after; stock at the producer 76, 75, 48, 25, 0 million kg. `purchase_limited_by_offered_volume_scenario`,
+`price_over_making_cost_band_validation` green, quick tier green. The spin-up's own cobweb (a plant planned at capacity on the opening estimate) is this complaint.
+
+### Update 16 (entrants): a newcomer prices a site at its own use's rent (branch entrant-use-rent)
+
+Entrants (`entry_trial.recipes_by_cost`, `location._tile_part`, `entry.entry_plans` through `entry_year`) read the tile's mean rent; they now read
+`entrant_rent.site_rent_per_run`, which applies `land_market.use_rent_per_hectare` to the newcomer's expected value a hectare (its outputs at the prices
+the market shows it, times the site's yield, over the land a run takes). `settle_year` keeps the tile's mean value on `record.land_mean_value` for it.
+Tests: `sim/tests/test_economy_entrant_rent.py` (a grain entrant beside a mine pays its own rent; a use at the tile mean pays the tile rent; siting picks
+the tile where its own use's rent is lowest, and the mean-rent reading would pick another). Quick tier green; `firm_count_whole_game_scenario`,
+`firm_borrows_to_enter_scenario`, `purchase_limited_by_offered_volume_scenario` green with `--slow --jobs 1`.
+
+## Update 17: the first year's plan starts from the stationary runs, not the plant (branch spin-up-plans-from-demand)
+
+Where capacity was read: `producers.plan` bounds a producer's runs by `capacity_runs * share_working` and `within_a_years_change`, which for a producer
+with `last_runs < 0` (its first year) returned the runs unchanged, so only the plant, cash and `runs_for_stock` bound them. The opening sizes the plant at
+the stationary runs times the spare share over the share that works (`opening._add_producers`) and keeps the stationary runs in `expected_sales`, but
+nothing in the first plan read them.
+
+Fix (`producers.within_a_years_change`): a producer in its first year plans at most its `expected_sales` (the stationary runs) when it has one; with
+none it plans from its expectation as before. Tests: `sim/tests/test_economy_first_year_plans_from_stationary.py` (a stationary quantity below capacity is
+planned; none plans from expectation; one above capacity does not lift the plant; after the first year the cap is gone).
+
+Measured with the spin-up uncached (`ROME_CACHE_DIR` empty; probe not committed, `economy_api.blank_economy` + `begin_spin_up` + `step`, Rome, years 1 to 6),
+national figures, runs last year / price:
+- wheat: the first plan was already under the stationary runs (1.98 million of 3.0 million; the 1.26 million of Update 16 was before the rent fix), so the
+  cap does not bind and wheat is unchanged: stock after year 1 is 694 million kg before and 698 million after, price 2.15 and 2.49, then 0.25 and 0.23 in year 2.
+  The stock is not planned capacity: year 1 sells nothing (goods made in a year are offered in the next) and years 2 and 3 sell 172 and 42 million kg
+  against an opening demand of 660 million, so the transient is the households' settling spend, not the plan.
+- bronze: year 1 runs 13.5 thousand before, 12.3 thousand after (the stationary runs; capacity 24 thousand); stock 13.5 and 12.3 million kg; shown over cost
+  1.00, 6.38, 12.37, 30.6, 8.6, 7.6 before and 1.00, 8.12, 14.77, 33.4, 8.85, 8.28 after. The opening's first-year price over making cost is 1.00 both ways.
+- iron bar: year 1 runs 27.1 thousand both ways (stationary 44 thousand); price 5.44 and 5.90.
+
+So the premise that the first year plans capacity does not hold at this commit for these goods; the cap is correct and tested but moves bronze by a tenth.
+The cobweb comes from the demand side of the spin-up. Slow topics: `economy_bronze_market_price`, `price_over_making_cost_band_validation`,
+`staff_closure_reopening_scenario`, `purchase_limited_by_offered_volume_scenario` green; `baseline_fixture` "stocks are not eaten through" red before (ore_kg)
+and after (metal_kg). Quick tier: `economy_service_lives` "a year of cash shortage sells at most a third of the stock" goes red; it is phase-sensitive
+(spin-up lengths 56, 58, 60, 62, 64 and 70 years: base fails at 56 and 62, with the change at 56, 58, 60, 62 and 70) because the fixture swings for decades (398).
+
+PM note on Update 17: the first-year cap on stationary quantities (branch `spin-up-plans-from-demand`, commit 7175c621) was
+not merged. It barely binds at this commit, so it does not move the transient, and it shifts the phase of a fixture that
+swings for decades. The lead to follow is the demand side named above: nothing sells in the first year because goods made in
+a year are offered the next, and the households' settling spend is what the cobweb starts from.
+
+## Update 18: the first year's demand side, measured; two opening rules disagree with year one and no fix lands yet (branch spin-up-demand-side)
+
+Measured with the spin-up uncached (`ROME_CACHE_DIR` an empty directory; scratch probe, not committed: `economy_api.blank_economy` + `begin_spin_up` + `step`
+for seven years, wrapping `households_orders.goods_orders`, `producers.plan` and the ledger's clearings), Rome, national figures, millions of kg
+unless stated. Each year, wheat: made, sold, stock at the year's end, price.
+
+| year | made | sold | stock | price |
+|---|---|---|---|---|
+| 1 | 787 | 0 | 694 | 2.15 |
+| 2 | 1 | 250 | 411 | 0.23 |
+| 3 | 3 | 131 | 262 | 0.38 |
+| 4 | 3 | 2.5 | 242 | 0.41 |
+| 5 | 92 | 4.9 | 296 | 1.83 |
+| 6 | 9 | 176 | 118 | 0.78 |
+| 7 | 0 | 23 | 88 | 1.25 |
+
+**The households' spend is not what is short.** Household income swings by half and back (year 1 about 2.7e10 coin, year 2 1.4e10, year 3 3.5e10, year 4
+1.3e10) because wages follow the producers' plans, which follow last year's prices; but households hold cash of the order of a year's income and their
+bids sum to all of that cash, while wheat is a few percent of what they would spend. The spending band does not bind (`expected_spending` is zero in year
+1, and `smooth_rise` is off in the spin-up), no food is met from own plots (`grown_own` is zero), and the bids are not under the asks (the one buyer's
+ceiling is above the reservation). The wheat buyers are not households at all.
+
+**Who buys wheat.** Households bid for no wheat in years 1 and 2: every cohort's `milled_grains` holds wheat and millet, so its food bids go to flour and
+bread. The only user of wheat that works is the starch maker, and in year 1 it opens holding a year of wheat (`opening._stock_producers_with_inputs`),
+so it bids for none: the farmers' whole year piles up unsold (694 of 787). In year 2 the starch maker plans from a lagging expectation (runs fall to about
+half its first year's) and buys 250 million kg.
+
+**Timing rule (item 2).** A good made in a year is offered the same year (`year_goods._produce_and_offer` produces, then offers the stock), and goods clear in
+input-depth order, so an input is bought and used in the year it is made. "Made in a year, offered the next" is true only of an input the user already
+holds at the opening, which is the seed above: the opening carries a year of inputs *and* the makers make a year, a year of the intermediate goods more
+than the stationary solve has (that solve has each year's output meet the year's use, nothing in store at the start). Households eat in year 1 from what is
+made in year 1 (flour and bread sold, from the seeded stock of inputs), so the first year's food is not the problem.
+
+**Opening against year one, found by reading the opening.** The opening's final demand is solved with every cohort's `milled_grains` empty and no household
+work hired (`opening._opening_bids` takes `cohort_basket` before `opening_leisure.seed`, via `household_work_year.decide`, sets them). Opening demand for
+wheat is 660 million kg and for millet 1.2e10 kg (households grinding by hand), with no hired domestic service; one economy-step later every cohort buys
+both grains milled and hires 468 hours a person. So the wheat farmers are sized for 660 million kg that no household bids for, and the whole of the
+household-work hiring (over half of year 1's household budget) is demand the opening never sized labour for.
+
+Tried and not landed (patches kept in the scratchpad, not committed):
+- Dropping the input seed for an input whose maker is opened and clears before the user works (a plain function over recipes and the clearing order; its
+  rule test passes, the existing expected-failure test `test_a_smelter_does_not_open_holding_ore_the_miners_sell_it_in_year_zero` turns green). Rome year 1:
+  wheat made falls to 319 million and the wheat market leaves 113 million kg unmet (the chain's later stages are not ready), then wheat sold is 303, 32, 10; the
+  quick tier fails four checks of the small fixture (`economy_vessel_price_fixture` twice, `complaint_651_wage_step_gain`, `economy_tax_farming`): the
+  fixture's dug input cobwebs once it is bought in year 0 (the vessel price reaches more than two orders of magnitude above its opening price in year 23).
+- Solving the opening's second pass with the cohorts' year-one plans (`household_work_year.plans` read from the first pass, put on the cohorts before the
+  income and demand solve). With both the milled grains and the hired work: the hired work asks for more hours than there are, the opening's labour fit
+  drops the bakers (bread demand 9 billion kg, no bread producer opened), year 1 bread is not sold. With the milled grains alone (quick tier green, rule
+  tests pass): wheat demand at the opening is zero, bread is sold in year 1, wheat price stays between 0.84 and 2.15 instead of 0.23 and 2.15, but wheat
+  sold is 0, 402, 37, 39, 2.6, 7.9, 10.8 with stock 462, 102, 174, 200, 182, 165, 142. Bronze over cost: 1.0, 7.8, 13.7, 31.0, 9.3, 7.6, 4.0 before and
+  1.0, 11.4, 20.1, 50.2, 4.0, 2.4, 1.05 after. Slow topics (`--slow --only economy_bronze_market_price,price_over_making_cost_band_validation,baseline_fixture,purchase_limited_by_offered_volume_scenario --jobs 1`):
+  at the parent `baseline_fixture` (stocks are not eaten through, ore), the bronze band (`price_over_making_cost_band_validation`, shown over cost worst 11.1)
+  and "the typical traded good sells at no less than its cost of making" (0.9987) are red; with the grain plan the same band check is red at worst 32.7, the
+  typical-good check is green, baseline_fixture stays red. The band is worse, not better, so it was not committed.
+
+What this leaves: the cobweb's starting point is not the households' settling spend but two opening rules that disagree with the first year (the intermediate
+input seed, and the final demand solved before the households' grinding and hiring choices). Both need the opening solved together with them: sizing labour
+for the household work the households hire (Complaint 645's decision postdates the opening solve), then carrying the intermediate stock only for what a
+cycle cannot buy in time. The input-seed removal wants a fix for the small fixture's dug-input cobweb first (the input's price swings once it is traded in
+year 0), which is the open item in `test_opening_input_stocks`.
+
+## Update 19: the opening solved with its households' first-year choices (branch opening-with-household-choices)
+
+The two disagreements Update 18 named between the opening and year one were the households' choices: which grains they buy milled and which hours of
+household work they hire. The opening (`opening.open_economy`) now solves to a fixed point with them (`opening_plans.py`): a solve is read by its own
+households (`household_work_year.plans`, at the solve's prices, wages and workforce), the plans are put on the cohorts (`hired_work_per_person`,
+`milled_grains`) and the opening is solved again, until the cohorts hold what they then plan (`opening_plans.settle`; bounded, a choice that cycles stops
+at the bound). The money-replacement solve is kept: the first solve gives the replacement, later solves reuse it.
+
+- Grain: a cohort that buys a grain milled no longer bids for it in the opening's final demand, so the wheat farmers are sized for the millers' wheat and the
+  starch maker, not for demand nobody bids.
+- Hired work: with the cohorts' hired hours as the floor of the household-work need, the final demand holds domestic service, which the input-output solve
+  covers like any good made from hours (a recipe of servants' hours), and the workforce is sized to it.
+- The hands: the earlier attempt dropped the bakers. The cause was placement, not the hours in total: the servants were placed first (a final good is placed
+  before the recipes that feed it), took their share of every tile's hands, and `location_inputs.place_oriented` then found no hands left for a processor
+  tied to its input's site (brick for the bakers' oven, then everything that cascades from it in `opening_runs.fit_to_supply`), so those producers were
+  dropped. Now a service made from hours alone is placed last (`opening._only_hands`), and the hours a market area's households would hire are held to the hands
+  its tiles have left after the other producers' expected hours (`opening_plans.hands_left_by_tile`). Where they would take more, the area's price of an hour
+  hired rises until hiring falls (`households_work.service_price_that_fits`: the household whose hour is worth least stops hiring first); the opening posts
+  that price in the service's market (`opening_plans.post_service_prices`), so year one's choice (`household_work_year.decide`) is the opening's. No producer
+  is dropped to fit. The area, not the tile, is the market (the service's market areas span several tiles).
+
+Tests: `sim/tests/test_economy_opening_household_plans.py` (a solved opening's grain demand is what its households buy at its prices, flour price high and
+low; its cohorts hold what its households choose; the hired hours are service demand, servant hours in the producers and servants in the workforce; where
+hands are short the posted price rises, hiring falls and no other producer is dropped; the rationing rule; the placement order; the fixed point on built
+callables, including a cycle). The four checks on a built economy fail with the opening solved once as before.
+
+Measured with the spin-up uncached (`ROME_CACHE_DIR` an empty directory; scratch probe, not committed, as in Update 18, `economy_api.blank_economy` +
+`begin_spin_up` + `step`, Rome, years 1 to 7), national figures, millions of kg:
+
+| year | wheat made before/after | sold | stock | price |
+|---|---|---|---|---|
+| 1 | 787 / 598 | 0 / 0 | 694 / 524 | 2.15 / 2.15 |
+| 2 | 1.1 / 15 | 250 / 522 | 411 / 34 | 0.25 / 1.63 |
+| 3 | 3.5 / 1.4 | 148 / 12 | 246 / 28 | 0.54 / 1.87 |
+| 4 | 3.4 / 0.05 | 0.8 / 0.02 | 229 / 26 | 0.92 / 2.60 |
+| 5 | 92 / 6.9 | 20 / 0.0005 | 270 / 30 | 1.81 / 2.34 |
+| 6 | 9.3 / 0.9 | 36 / 0.07 | 223 / 28 | 1.56 / 2.18 |
+| 7 | 0.01 / 0.002 | 52 / 4.0 | 158 / 23 | 0.90 / 2.13 |
+
+- The opening's household-work hours: before, none hired in the solve and up to 7.8e10 hours done by hand (all grain ground by hand); one step later every
+  cohort hires all 5.7e10 hours. After, the solve holds 5.6e10 hours hired and 1.5e9 done by the households themselves; the step's choice is the same.
+- Bread: the opening's demand (`record.opening_demand`) is 4.5e9 kg before and 9.3e9 after; bread sells in year 1 both ways (601 and 2100 million kg) and
+  after it the unmet floor stays of the same order, 2 to 3 thousand million kg a year, so the bakers are placed and still short in the later years.
+- Bronze shown over making cost, years 1 to 7: before 1.00, 6.34, 12.18, 30.08, 10.04, 7.91, 3.78; after 1.00, 4.28, 13.92, 0.42, 5.71, 7.80, 6.18. The 0.42 is
+  year 4's cost, not its price: the live copper price in the cost reads 208 that year (shown 87); the peak over the seven years is 13.9 against 30.1.
+
+Wheat no longer piles a year's surplus into a stock that then drains over decades (stock after year 2 is 34 million kg, not 411) and its price stays between
+1.6 and 2.6 instead of 0.25 and 2.15. Wheat sold is almost nothing from year 3 on (its only user in the opening is the starch maker, since the households'
+flour is milled from millet by the recipe the opening chose); the cause is not traced here, and the wheat made after year 2 is correspondingly small. The
+intermediate-input seed (`opening._stock_producers_with_inputs`) is left alone, as Update 18 asks, and the chains' cobweb after year one is still open.
+
+Topics: quick tier green; `economy_bronze_market_price`, `price_over_making_cost_band_validation`, `purchase_limited_by_offered_volume_scenario`,
+`opening_consistency`, `opening_basket_agrees_scenario`, `economy_vessel_price_fixture` green with `--slow --jobs 1 --topic-seconds 290`.
+
+## Update 20 (PM): after the opening solved with household choices, markets thin out
+
+Two fix groups after 31b70bc5 found the same pattern: coal sells almost nothing in nearly every market area after the opening
+(producers fell by about a fifth while coal demand rose about fourfold), wheat sells almost nothing from year three (Update 19's
+table), and skilled pay rose several times (the mint's furnacemen and engravers). Several founder scenarios now pick a good
+or project the opening still trades so their own subject stays testable. The leading suspect is the household-service hiring
+(645, last section): domestic service near half the opening basket draws hands and income away from goods. Re-measure coal and
+wheat volumes after 645's hiring fix before tracing further.
+
+## Update 21: the opening's income is where households stop saving, not where a pass bound stops (branch opening-income-fixed-point)
+
+The income the opening pays was whatever 60 passes of income-into-demand reached (about 0.99 to the 60th of the ceiling).
+Measured on Rome: demand over income is one below a kink at about 0.48 of the ceiling (first solve, no replacement) and
+falls above it, because households' saving has no user in the final demand (607). The income is now the largest at which
+households save nothing net (`opening_income.settled_income_per_head`, a root find; 497 Round 10). First solve: 443 a head
+(0.477 of the ceiling) against 467 (about 0.50) from the pass bound; the final solve, which carries the coin metal's
+replacement as demand that is not from households' income, 748 against 752 (0.806 against 0.810 of the ceiling).
+
+Spin-up years 1 to 7 (scratch probe, not committed; unskilled wage, wheat, coal, bronze price), before then after:
+wage 0.726, 0.668, 0.635, 0.553, 0.422, 0.386, 0.380 then 0.719, 0.659, 0.630, 0.511, 0.414, 0.379, 0.374; wheat 2.139, 1.511,
+1.685, 1.433, 1.404, 1.321, 1.280 then 2.152, 1.424, 1.683, 1.421, 1.383, 1.292, 1.314; coal 0.0146, 0.0323, 0.0652, 0.1230,
+0.1528, 0.1592, 0.1731 then 0.0146, 0.0319, 0.0632, 0.1161, 0.1427, 0.1787, 0.1984; bronze 4.79, 43.8, 121.3, 96.3, 113.0,
+135.4, 132.6 then 4.79, 29.0, 35.3, 44.5, 77.7, 137.6, 140.9. The drift is unchanged in kind (wage falls by half over the years,
+bronze is thin and jumps): the income was never what set it. Still open: counting the demand that matches households'
+saving (607) would raise the income at which they stop saving.

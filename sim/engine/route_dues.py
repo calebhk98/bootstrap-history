@@ -7,13 +7,25 @@ from sim.agents.api import pay_dues, treasury_of
 from sim.geography.api import dues_hours_per_tonne, route_dues_by_holder
 
 
+def dues_money_per_tonne(dues_hours, wage):
+    """{mode: money per tonne} of the modes that levy dues, the hours per tonne paid at the carrier's wage."""
+    return {mode: hours * wage for mode, hours in dues_hours.items() if hours > 0.0}
+
+
+def handling_money_per_tonne(dues_hours, wage, port_mode, port_handling_hours):
+    """{mode: money per tonne} charged once per leg: each mode's dues, and port handling on top at `port_mode`."""
+    costs = dues_money_per_tonne(dues_hours, wage)
+    costs[port_mode] = costs.get(port_mode, 0.0) + port_handling_hours * wage
+    return costs
+
+
 class RouteDuesMixin:
     """Mixed into `Sim`."""
 
     def route_dues_per_tonne_by_mode(self):
         """{mode: home money per tonne} of tolls and port dues alone (the carriers' wage on the geography's hours)."""
         wage = self.labour.wage_per_hour(self.FREIGHT_DRIVER_WAGE_TRADE)
-        return {mode: hours * wage for mode, hours in dues_hours_per_tonne(self.world_map).items() if hours > 0.0}
+        return dues_money_per_tonne(dues_hours_per_tonne(self.world_map), wage)
 
     def route_dues_treasury(self, holder):
         """The account a country's or seat's dues are paid into."""

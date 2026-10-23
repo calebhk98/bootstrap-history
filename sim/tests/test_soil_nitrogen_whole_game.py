@@ -1,4 +1,4 @@
-"""Scenarios for Complaint 543 in a whole game: the yearly step of a Rome game moves the soil nitrogen stock of its held
+"""SCENARIO (Complaint 640): for Complaint 543 in a whole game: the yearly step of a Rome game moves the soil nitrogen stock of its held
 cropland, and a worn stock lowers what the society can feed. The rules and the save round trip are in
 test_soil_nitrogen_held_land."""
 import unittest

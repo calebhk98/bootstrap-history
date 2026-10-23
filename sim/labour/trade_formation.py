@@ -17,7 +17,7 @@ from typing import AbstractSet, Any, Dict, FrozenSet, List, Mapping, Optional, S
 
 from sim.constants import declare
 
-from .market.formation import bonded_available, migration_takes, spare_people
+from .market.formation import migration_takes, spare_people
 
 TaskShares = Dict[str, float]
 

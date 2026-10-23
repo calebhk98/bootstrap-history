@@ -1,19 +1,11 @@
-"""Regression coverage for playtest complaints 17 through 24: each rule is called with inputs built here; one scenario
-check keeps the mortality shock wired to the displayed population."""
+"""Regression coverage for playtest complaints 17 through 24: each rule is called with inputs built here; the scenario
+that keeps the mortality shock wired to the displayed population is test_complaints_17_24_scenario."""
+QUICK_TOPIC = True
+
 from .harness import *  # noqa: F401,F403
 
 from sim.engine.staff_loss_waves import wave_exposure
 from sim.ui.proto import tree_filters
-
-# --- SCENARIO (wiring): a mortality shock reaches the displayed population at once. The wage half is held by
-# demographics_and_plague ("wage_index > normal * 1.2" after a shock) and the share removed by cross_system_invariants.
-_plague = sim(civ="rome_100ad")
-_plague._apply_population_mortality_shock(0.28)
-_plague._refresh_demographic_indexes(_plague.year)
-_population = _plague.labour.population_report()
-check("scenario: plague mortality immediately lowers displayed current population",
-      _population["population"] <
-      _population["reference_population_before_simulated_changes"], _population)
 
 # --- the staff-loss wave exposure over the years left (the rule behind the `risk` reply)
 _wave = 0.32

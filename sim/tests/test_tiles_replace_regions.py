@@ -121,6 +121,7 @@ class NoModuleReadsRegionLabelsForTileDataTests(unittest.TestCase):
         def stand_in(civilisation):
             game = SimpleNamespace(civ=civilisation, world_map=None)
             game._cap_pooled_farm_weather_cells = lambda cells: Sim._cap_pooled_farm_weather_cells(game, cells)
+            game._raw_farm_weather_cells = lambda: Sim._raw_farm_weather_cells(game)
             return game
 
         labelled, tiled = self._civilisation(False), self._civilisation(True)

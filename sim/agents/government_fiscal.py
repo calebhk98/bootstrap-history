@@ -4,6 +4,7 @@ from typing import Any, Dict, List
 from . import arrears, budget, fiscal_response, government_levers
 from .government_coinage import debasement_decision
 from .budget_line import Line
+from .liability import COLLECTIVE
 from .tuning_fiscal import KIND_DEMAND_RATE_STEP, RATE_RAISE_STEP
 
 
@@ -24,7 +25,27 @@ class FiscalMixin:
 			self.demand_in_kind(kind, world)
 		if raised > 0.0:
 			self.raise_coin_rates(raised, world)
+		self.pull_tax_response_levers(choice, world)
 		return budget.share_paid(need, self.money, choice.get(fiscal_response.BORROW, 0.0))  # type: ignore[attr-defined]
+
+	def pull_tax_response_levers(self, choice: Dict[str, float], world: Any) -> Dict[str, Any]:
+		"""Set the tax-response levers the choice covered money with (the same levers a player pulls): collective liability, a
+		full amnesty, and a remission of a step of the rate in the share of its yield the choice took. The levers it set."""
+		context = government_levers.LeverContext(declared_forms=world.revenue_forms())
+		wanted = {}
+		if choice.get(fiscal_response.LIABILITY, 0.0) > 0.0:
+			wanted[fiscal_response.LIABILITY] = COLLECTIVE
+		if choice.get(fiscal_response.AMNESTY, 0.0) > 0.0:
+			wanted[fiscal_response.AMNESTY] = 1.0
+		capacity = fiscal_response.rate_cut_yield(world) if choice.get(fiscal_response.REMISSION, 0.0) > 0.0 else 0.0
+		if capacity > 0.0:
+			wanted[fiscal_response.REMISSION] = RATE_RAISE_STEP * min(1.0, choice[fiscal_response.REMISSION] / capacity)
+		set_levers = {}
+		for lever, value in wanted.items():
+			change = government_levers.set_lever(self.record, {"lever": lever, "value": value}, context)  # type: ignore[attr-defined]
+			if not hasattr(change, "cause"):
+				set_levers[lever] = value
+		return set_levers
 
 	def apply_debasement(self, amount: float, world: Any) -> float:
 		"""Cut the metal in the coin as far as covering `amount` of the shortfall takes; the cut, recorded."""
@@ -37,7 +58,8 @@ class FiscalMixin:
 		"""Share of the pay left unpaid that the state's choice defers as owed (the rest is cut and never owed)."""
 		choice = self.record.fiscal_response  # type: ignore[attr-defined]
 		owing = sum(choice.get(name, 0.0) for name in (fiscal_response.ARREARS, fiscal_response.DEBASE,
-														fiscal_response.LEVY, fiscal_response.KIND, fiscal_response.RATE))
+														fiscal_response.LEVY, fiscal_response.KIND, fiscal_response.RATE,
+														fiscal_response.LIABILITY, fiscal_response.AMNESTY, fiscal_response.REMISSION))
 		pay_unpaid = sum(line.money * (1.0 - share) for line in lines if line.name in arrears.PAY_LINES)
 		return min(1.0, owing / pay_unpaid) if pay_unpaid > 0.0 else 0.0
 

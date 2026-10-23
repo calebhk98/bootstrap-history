@@ -8,7 +8,7 @@ from types import SimpleNamespace
 from sim.agents import budget, budget_works, revenue, state_works
 from sim.agents.api import Government
 from sim.agents.records import ActorRecord
-from sim.agents.tuning_spending import (ACCESSION_PROBABILITY_PER_YEAR, GRANARY_LOSS_SHARE_PER_YEAR,
+from sim.agents.tuning_spending import (GRANARY_LOSS_SHARE_PER_YEAR,
 										MASONRY_PERSON_YEARS_PER_M2, PUBLIC_BUILDING_LIFE_YEARS)
 from sim.tests.agents_fake_world import FakeWorld
 
@@ -176,7 +176,7 @@ for year in range(400):
 	world.state.record.accession_due = False
 	world.state.accede(world)
 	accessions += world.state.record.accession_due
-check("accessions are a chance each year", 0.0 < accessions / 400.0 < 3.0 * ACCESSION_PROBABILITY_PER_YEAR, accessions)
+check("accessions follow the ruler's mortality: some in four centuries, far fewer than one a year", 0 < accessions < 400 // 5, accessions)
 
 # ---- all of them are standing lines of the budget --------------------------------------------------------
 world = WorksWorld(threat=0.05)

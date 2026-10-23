@@ -1,6 +1,21 @@
 # Bronze is priced by one thin market, far above its inputs, and tin is cheaper than copper
 
-**Status:** closed
+**Status:** closed - the runaway price is gone; the aged-game validation holds bronze within an order of magnitude of its recipe cost (owner decision 2026-10-21)
+
+## Closed (2026-10-21)
+
+Owner decision: the concern was a price hundreds of times the recipe cost. The full slow run on 3cb9c9a0 read the worst aged-game
+year at a few times cost, which is accepted while the opening does not settle (473). The validation's bound is now an order of
+magnitude (`MARKUP_BOUND` in `sim/tests/test_economy_bronze_market_price.py`), so it catches a runaway and passes thin-market
+noise. Measure: `python3 -m sim.tests --slow --only economy_bronze_market_price --jobs 1`.
+
+## Reopened (earlier the same day)
+
+The original opening-price defect was fixed, but the aged-game check that names this complaint fails on main: bronze shows and
+trades above a bounded multiple of its recipe cost in some years, and the worst multiple grew between the last two full slow
+runs (`Complaints/558`). Find which years overshoot and which part of the price causes it (the ask, the budget bids, a thin
+market's memory) on the current code; fix the rule, or show with the measurement that the cause is the unsettled opening (473)
+and let this close with it. Do not widen `MARKUP_BOUND`.
 
 On the `market` screen of a Rome game (`play --civ rome_100ad --kit merchant --seed real25`), bronze sells
 for about ninety times what its recipe's inputs cost. The recipe (`bronze_kg` in

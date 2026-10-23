@@ -4,8 +4,10 @@ import collections, copy, os, random, sys
 from sim.constants import declare
 from sim.refusal import LogLine
 from . import money_units
+from . import externalities
 from . import automation_audit
 from .mortality_shock import cut_cohorts
+from .disease_burden import burden_from_holdings
 from .wage_scarcity import wage_index_of
 from sim.engine.state import SimulationState, ActiveProjectState
 from sim.engine.state_seat import bind_seat
@@ -50,6 +52,7 @@ from .foreign_economies import ForeignEconomiesMixin
 from .food_eaten import FoodEatenMixin
 from .demographic_recovery import DemographicRecoveryMixin
 from .regional_people import RegionalPeopleMixin
+from .urban_share import UrbanShareMixin
 from .food_supply import FoodSupplyMixin
 from .soil_nitrogen_year import SoilNitrogenMixin
 from .living_stock import LivingStockMixin
@@ -61,9 +64,14 @@ from .living_stock_smuggling import LivingStockSmugglingMixin
 from .living_stock_trade import LivingStockTradeMixin
 from .living_stock_yearly import LivingStockYearlyMixin
 from .defence_stores import DefenceStoresMixin
+from .campaign_actors import CampaignActorsMixin
+from .campaign_year import CampaignYearMixin
+from .revolt_year import RevoltYearMixin
+from .captives import CaptivesMixin
 from .market_demand import MarketDemandMixin
 from .real_output import RealOutputMixin
 from .concern_volume import ConcernVolumeMixin
+from .concern_book_sales import ConcernBookSalesMixin
 from .techniques_in_use import TechniquesInUseMixin
 from .industry_concern import IndustryConcernMixin
 from .industry_depth import IndustryDepthMixin
@@ -92,6 +100,7 @@ from .society_actors import ActorsMixin
 from .society_disclosure import DisclosureMixin
 from .founder_sales import FounderSalesMixin
 from .seat_dealings import SeatDealingsMixin
+from .seat_bank import SeatBankMixin
 from .interest_groups import InterestGroupsMixin
 from .benefactions import BenefactionsMixin
 from .route_dues import RouteDuesMixin
@@ -209,10 +218,10 @@ FARM_WEATHER_POOLED_CELL_CAP = declare(
 
 
 
-class Sim(ModStoresMixin, RealPriceRatiosMixin, CoinRevaluationMixin, MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMixin, MarketDemandMixin, RealOutputMixin, ConcernVolumeMixin, TechniquesInUseMixin, IndustryDepthMixin, IndustryConcernMixin, IncumbentPricesMixin, ProducerCostsMixin, FogMixin, GeographyPortMixin, DiseasePortMixin, LabourPortMixin,
-          ProjectsMixin, SeatMixin, SeatRunMixin, SeatBuildsMixin, SeatSightMixin, ShockYearMixin, WaysMixin, WorksMixin, HeldWorksMixin, SocietyMixin, ActorsMixin, DisclosureMixin, FounderSalesMixin, SeatDealingsMixin, InterestGroupsMixin, BenefactionsMixin, RouteDuesMixin, ForwardingPropertiesMixin, GoalsMixin,
+class Sim(ModStoresMixin, RealPriceRatiosMixin, CoinRevaluationMixin, MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMixin, MarketDemandMixin, RealOutputMixin, ConcernVolumeMixin, ConcernBookSalesMixin, TechniquesInUseMixin, IndustryDepthMixin, IndustryConcernMixin, IncumbentPricesMixin, ProducerCostsMixin, FogMixin, GeographyPortMixin, DiseasePortMixin, LabourPortMixin,
+          ProjectsMixin, SeatMixin, SeatRunMixin, SeatBuildsMixin, SeatSightMixin, ShockYearMixin, WaysMixin, WorksMixin, HeldWorksMixin, SocietyMixin, ActorsMixin, DisclosureMixin, FounderSalesMixin, SeatDealingsMixin, SeatBankMixin, InterestGroupsMixin, BenefactionsMixin, RouteDuesMixin, ForwardingPropertiesMixin, GoalsMixin,
           StepPhasesMixin, LivingStockMixin, LivingStockOpeningMixin, CoinHoardMixin, CoinCarriageMixin, TheftChargeMixin,
-          LivingStockTradeMixin, LivingStockSmugglingMixin, LivingStockYearlyMixin, FoodSupplyMixin, SoilNitrogenMixin, FoodEatenMixin, DemographicRecoveryMixin, RegionalPeopleMixin, DefenceStoresMixin, EconomyPortMixin, NodeRederiveMixin):
+          LivingStockTradeMixin, LivingStockSmugglingMixin, LivingStockYearlyMixin, FoodSupplyMixin, SoilNitrogenMixin, FoodEatenMixin, DemographicRecoveryMixin, RegionalPeopleMixin, UrbanShareMixin, DefenceStoresMixin, CampaignActorsMixin, CampaignYearMixin, RevoltYearMixin, CaptivesMixin, EconomyPortMixin, NodeRederiveMixin):
     DEFAULT_POPULATION_100AD = declare(
         "DEFAULT_POPULATION_100AD", 65e6, kind="initial_condition",
         unit="people", source="Widely cited estimate of the Roman Empire's "
@@ -383,6 +392,7 @@ class Sim(ModStoresMixin, RealPriceRatiosMixin, CoinRevaluationMixin, MechanicsM
         self._farm_weather_cells = self._compute_farm_weather_cells()
         self._farm_weather_correlation_cholesky = (
             self._compute_farm_weather_correlation_cholesky(self._farm_weather_cells))
+        self._farm_tile_arable_share = self._compute_farm_tile_arable_share()
         # THE GRANARY (Complaints/44-no-granary-so-the-baseline-collapses.md).
         # Started at zero, not at some invented reserve: this is an INITIAL
         # CONDITION (CLAUDE.md SS3.1's own allowed category, same as
@@ -799,6 +809,39 @@ class Sim(ModStoresMixin, RealPriceRatiosMixin, CoinRevaluationMixin, MechanicsM
     # BE a region key - it only needs to uniquely name what is being drawn
     # weather for, which a tile id does exactly as well as a region key did.
 
+    def _raw_farm_weather_cells(self):
+        """One `_WeatherCell` per held land tile with its raw arable km2 as the weight (before any merging or normalising)."""
+        held_tiles = tiles_held(self.civ, self.world_map)
+        if not held_tiles:
+            return []
+        # Loaded directly here, NOT via `self.geo` (set later in
+        # `__init__`, after this method's own call site - see that call
+        # site's comment): a second, independent `load_geography()` call is
+        # a second cheap JSON parse, not a second SOURCE OF TRUTH, and
+        # costs far less than reordering `__init__` while other agents are
+        # concurrently editing this same method (this task's own file-
+        # ownership note).
+        geography = load_geography(self.world_map)
+        land_tiles = geography.get("land_tiles") or {}
+        tiles_by_id = land_tiles.get("tiles") or {}
+        raw_cells = []
+        for tile_id in held_tiles:
+            tile = tiles_by_id.get(tile_id)
+            if not tile:
+                continue
+            arable_km2 = (tile.get("land_area_km2", 0.0)
+                          * tile.get("arable_fraction", 0.0))
+            raw_cells.append(Sim._WeatherCell(
+                cell_id=tile_id, lat=tile["lat"], lon=tile["lon"],
+                weight=arable_km2))
+        return raw_cells
+
+    def _compute_farm_tile_arable_share(self):
+        """{tile id: share of the civilisation's arable land}, summing to 1.0; the weights the tile-level harm to the
+        pooled harvest (`_pooled_farm_weather_multiplier`) is averaged with."""
+        raw_cells = self._raw_farm_weather_cells()
+        return weather_pooling.tile_shares(raw_cells)
+
     def _compute_farm_weather_cells(self):
         """[Sim._WeatherCell(cell_id, lat, lon, weight), ...] over this
         civilisation's own `home_regions`, broken into the geography data's
@@ -858,29 +901,7 @@ class Sim(ModStoresMixin, RealPriceRatiosMixin, CoinRevaluationMixin, MechanicsM
         `_pooled_farm_weather_multiplier` below reads as "fall back to one
         civilisation-wide draw" (see that method's own docstring).
         """
-        held_tiles = tiles_held(self.civ, self.world_map)
-        if not held_tiles:
-            return []
-        # Loaded directly here, NOT via `self.geo` (set later in
-        # `__init__`, after this method's own call site - see that call
-        # site's comment): a second, independent `load_geography()` call is
-        # a second cheap JSON parse, not a second SOURCE OF TRUTH, and
-        # costs far less than reordering `__init__` while other agents are
-        # concurrently editing this same method (this task's own file-
-        # ownership note).
-        geography = load_geography(self.world_map)
-        land_tiles = geography.get("land_tiles") or {}
-        tiles_by_id = land_tiles.get("tiles") or {}
-        raw_cells = []
-        for tile_id in held_tiles:
-            tile = tiles_by_id.get(tile_id)
-            if not tile:
-                continue
-            arable_km2 = (tile.get("land_area_km2", 0.0)
-                          * tile.get("arable_fraction", 0.0))
-            raw_cells.append(Sim._WeatherCell(
-                cell_id=tile_id, lat=tile["lat"], lon=tile["lon"],
-                weight=arable_km2))
+        raw_cells = self._raw_farm_weather_cells()
         if not raw_cells:
             return []
         # STAKEHOLDER ITEM 7: cap cell count independently of how finely
@@ -1045,7 +1066,7 @@ class Sim(ModStoresMixin, RealPriceRatiosMixin, CoinRevaluationMixin, MechanicsM
         """
         return weather_pooling.correlation_cholesky(cells, GROWING_SEASON_WEATHER_DECORRELATION_LENGTH_KM)
 
-    def _pooled_farm_weather_multiplier(self, year, weather_stdev_fraction=None):
+    def _pooled_farm_weather_multiplier(self, year, weather_stdev_fraction=None, harmed=True):
         """This year's harvest weather multiplier, pooled across this
         civilisation's own growing-season weather cells instead of one
         draw for the whole territory (Complaints/46-one-weather-draw-for-
@@ -1143,9 +1164,29 @@ class Sim(ModStoresMixin, RealPriceRatiosMixin, CoinRevaluationMixin, MechanicsM
             .gauss(0.0, 1.0)
             for cell in cells]
         cholesky_lower = self._farm_weather_correlation_cholesky
-        return weather_pooling.pooled_multiplier(
+        pooled = weather_pooling.pooled_multiplier(
             cells, cholesky_lower, independent_draws, stdev,
             self._agriculture.WEATHER_FLOOR_MULTIPLIER, self._agriculture.WEATHER_CEILING_MULTIPLIER)
+        if not harmed:
+            return pooled
+        # Harm to a tile's land that externality providers report (sim/engine/externalities.py) takes its share of the
+        # pooled harvest, weighted by the tile's share of the arable land.
+        return pooled * weather_pooling.harm_multiplier(self._farm_tile_arable_share, externalities.yield_factors(self, year))
+
+    def farm_weather_by_tile(self, year):
+        """{tile id: this year's harvest multiplier on that tile's own weather cell}, from the same correlated draws the
+        pooled multiplier averages (`_pooled_farm_weather_multiplier`, unharmed). A tile merged into a pooled cell, or with no
+        cell, is absent; callers give it the pooled multiplier."""
+        cells = self._farm_weather_cells
+        if not cells:
+            return {}
+        independent_draws = [random.Random(self._farm_year_weather_seed(year, region=cell.cell_id)).gauss(0.0, 1.0)
+                             for cell in cells]
+        multipliers = weather_pooling.cell_multipliers(
+            cells, self._farm_weather_correlation_cholesky, independent_draws,
+            self._agriculture.DEFAULT_SOIL.weather_stdev_fraction,
+            self._agriculture.WEATHER_FLOOR_MULTIPLIER, self._agriculture.WEATHER_CEILING_MULTIPLIER)
+        return {cell.cell_id: multiplier for cell, multiplier in zip(cells, multipliers)}
 
     def _disease_burden(self):
         """WIRING ONE (Complaints/closed/47-technology-cannot-stop-people-dying-
@@ -1174,15 +1215,10 @@ class Sim(ModStoresMixin, RealPriceRatiosMixin, CoinRevaluationMixin, MechanicsM
         weights' sum should not be able to hand `self._demography.Population.
         step` a burden outside the range it declares valid).
         """
-        unlocked_weight = sum(
-            self._tech_effects[tech_id].get("population", 0.0) * self.disease_burden_held(tech_id)
-            for tech_id in self.DISEASE_BURDEN_TECH_IDS)
-        total_weight = sum(
-            self._tech_effects[tech_id].get("population", 0.0)
-            for tech_id in self.DISEASE_BURDEN_TECH_IDS)
-        if total_weight <= 0.0:
-            return self._demography.PRE_INDUSTRIAL_DISEASE_BURDEN
-        return max(0.0, min(1.0, 1.0 - unlocked_weight / total_weight))
+        tech_ids = self.DISEASE_BURDEN_TECH_IDS
+        return burden_from_holdings(
+            {tech_id: self._tech_effects[tech_id].get("population", 0.0) for tech_id in tech_ids},
+            {tech_id: self.disease_burden_held(tech_id) for tech_id in tech_ids})
 
     def _refresh_demographic_indexes(self, year):
         """Say why the wage bill moved, if it moved enough to be worth

@@ -1,10 +1,8 @@
 """Complaint 660: order against theft and the mine ceiling follow the guards and inspectors a state employs and pays,
-not the share its officials collect. The rules are called on built inputs; one named scenario checks the home game."""
+not the share its officials collect. The rules are called on built inputs; the home game is in test_state_guards_and_inspectors_scenario."""
 from .harness import *  # noqa: F401,F403
 
 QUICK_TOPIC = True
-
-sim = unopened_sim
 
 from sim.agents import budget, collection, order
 from sim.engine.mine_ceiling import mine_ceiling_tonnes
@@ -80,34 +78,3 @@ check("the inspectors line pays the inspectors kept at the going wage",
       abs(by_name["inspectors"].wages - inspectors * 10.0) < 1e-6
       and abs(sum(by_name["inspectors"].labour.values()) - inspectors) < 1e-9, by_name["inspectors"])
 check("both are staff the state hires, not a transfer", by_name["guards"].transfer == 0.0 and by_name["inspectors"].transfer == 0.0)
-
-# ---- the game: unpaid staff weaken only the thing they staff, whatever the collection share is --------------------
-from sim.engine.agents_port import SimWorld
-
-fed, no_guards, no_inspectors, no_foresters = (sim(civ="rome_100ad") for _ in range(4))
-
-
-def leave_unpaid(game, line, share=0.999):
-    record = SimWorld(game).government().record
-    record.need = dict(record.need, **{line: 1.0})
-    record.unfunded = dict(record.unfunded, **{line: share})
-
-
-leave_unpaid(no_guards, "guards")
-leave_unpaid(no_inspectors, "inspectors")
-leave_unpaid(no_foresters, "foresters")
-for each in (fed, no_guards, no_inspectors, no_foresters):
-    each.household.capital = 1.0e6
-    each.state_reach = lambda: 0.5   # the collection share is fixed: only the staff may move the answers below
-stolen = {name: each.plunder_founder(0.2, "bandits", True)
-          for name, each in (("fed", fed), ("guards", no_guards), ("inspectors", no_inspectors))}
-ceiling = {name: each.mine_land_ceiling("iron") for name, each in (("fed", fed), ("guards", no_guards), ("inspectors", no_inspectors))}
-check("guards left unpaid raise what thieves take from the founder", stolen["guards"] > stolen["fed"], stolen)
-check("inspectors left unpaid lower the mine ceiling", ceiling["inspectors"] < ceiling["fed"], ceiling)
-check("guards left unpaid leave the mine ceiling alone", abs(ceiling["guards"] - ceiling["fed"]) < 1e-9, ceiling)
-check("inspectors left unpaid leave theft alone", abs(stolen["inspectors"] - stolen["fed"]) < 1e-9, stolen)
-forest = {name: each.forest_land_ceiling() for name, each in (("fed", fed), ("guards", no_guards), ("foresters", no_foresters))}
-check("foresters left unpaid lower the forest ceiling", forest["foresters"] < forest["fed"], forest)
-check("guards left unpaid leave the forest ceiling alone", abs(forest["guards"] - forest["fed"]) < 1e-9, forest)
-check("foresters left unpaid leave the mine ceiling alone",
-      abs(no_foresters.mine_land_ceiling("iron") - ceiling["fed"]) < 1e-9)

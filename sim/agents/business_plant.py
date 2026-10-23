@@ -11,6 +11,8 @@ class Plant:
 	"""What a business keeps about one plant it runs. Everything else (crew by trade, upkeep, takings) is derived
 	from the entry. `entry_key` is a tech node id until entries are keyed on their own (transitional)."""
 	entry_key: str = ""
+	# the tile it stands on, whose country taxes what it earns; None means where its owner is
+	tile: Optional[str] = None
 	# how many times the entry's founding size the plant runs at
 	size: float = 1.0
 	# the year it began operating; None when nobody recorded one

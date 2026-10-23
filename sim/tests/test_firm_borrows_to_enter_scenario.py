@@ -82,10 +82,13 @@ def run(ceiling=None, credit_rate=None, years=6):
 	return game, counts, deepest_debt, stakes
 
 
+opening_firms = len(actor_sim().actors.active_firms())
 _funded_game, funded_counts, _debt, funded_stakes = run()
 whole_stake = max(funded_stakes)
-check("a founder who can put up the whole stake founds firms beyond the opening ones",
-      max(funded_counts) > funded_counts[0] and whole_stake > 0.0, (funded_counts, whole_stake))
+# Every niche may be filled in the first round (it is the purses and the niches that set the pace, not this check), so
+# the claim is that founders found firms where the game opened with none.
+check("a founder who can put up the whole stake founds firms where the game opened with none",
+      max(funded_counts) > opening_firms and whole_stake > 0.0, (opening_firms, funded_counts, whole_stake))
 
 short = 1.05 * ENTRY_EQUITY_SHARE * whole_stake   # more than lenders' share of the stake, so little over it that the entrant must borrow
 unfunded, short_counts, borrowed, short_stakes = run(ceiling=short)

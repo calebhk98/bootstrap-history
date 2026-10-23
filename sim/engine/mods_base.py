@@ -8,6 +8,10 @@ class ModError(ValueError):
     """A mod cannot be loaded without making an ambiguous choice."""
 
 
+class MissingVariantBase(ModError):
+    """A civilisation variant names a base civilisation that is not present (a base file is optional data)."""
+
+
 @dataclass(frozen=True)
 class ModManifest:
     id: str

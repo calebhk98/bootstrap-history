@@ -321,6 +321,17 @@ check("the group asks the state to ban that technique, not a commodity",
       group.record.demands)
 check("a commodity prohibition is not made of it", registry.prohibitions() == {})
 check("the petition's words name the cause", "hours go unhired" in group.words(group_world), group.words(group_world))
+# the petition's sums are facts, so the log can write them in the unit chosen after the line was logged
+from sim.refusal import cause_of, facts_of, rendered
+group.record.lost_income, group.record.claim = 5000.0, 1200.0
+petition = group.words(group_world)
+check("a petition is a log line of its own kind that keeps its sums", cause_of(petition) == "group_petition"
+      and [part["money"] for part in facts_of(petition)["parts"] if not isinstance(part, str)] == [5000.0, 1200.0],
+      facts_of(petition))
+check("a petition is written again in the unit chosen later", rendered(petition, lambda amount: "<%d>" % amount).count("<") == 2
+      and "<5000>" in rendered(petition, lambda amount: "<%d>" % amount) and "5000 a year" not in rendered(petition, lambda amount: "<%d>" % amount),
+      rendered(petition, lambda amount: "<%d>" % amount))
+check("a line that states no sums is written as it is", rendered("plain", lambda amount: "x") == "plain")
 
 # ---- the economy's labour clearing keeps the hours it left unhired -----------------------------------------------------------------
 from sim.economy.api import country_figures

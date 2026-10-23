@@ -1,10 +1,10 @@
 # The opening's income is a fixed point that leaks saving, and fixtures state an income to avoid it
 
-**Status:** open - households now count their firms' equity (605), which lifts spending and lending a little; the leak is not closed
+**Status:** partly - `opening_income_per_head` is deleted; the settled income still leaks saving (households' cash rises, producers' cash and runs fall) and eight test modules state a surplus through `surplus_households`
 
 Part of Complaint 526 (The opening's income leaks saving, so the economy opens at subsistence and its wage keeps falling).
 
-Depends on 605, 606, 538 and 545 (545 cannot land alone). The unmerged rate search is on branch `fix-526-opening-rate` (`sim/economy/opening_rate.py`) and may be revived here.
+Depends on 606, 538 and 545 (545 cannot land alone; 605 is closed). The unmerged rate search is on branch `fix-526-opening-rate` (`sim/economy/opening_rate.py`) and may be revived here.
 
 **What is wrong.** The opening sets household income as the fixed point of income and the demand it pays for. Households save part of any surplus and nothing spends it (no producer plant, working capital or lending demand), so the fixed point falls to the households' floors. Fixtures state an income through `EconomySetup.opening_income_per_head` to get a surplus.
 
@@ -30,7 +30,7 @@ Three ways to give saving a use were weighed against the code:
    The tests use `plant_setup()` (plant on the farm and the mine). Working-capital and entrant requests are the
    only other demand for funds and they are small against the stock on offer.
 3. The opening holding households at the wealth they want. The opening's firms are worth little against a wish
-   of years of surplus income (`opening_equity.py` counts them in the settlement); the settled income over the
+   of years of surplus income (an `opening_equity.py` counted them in the settlement; it is no longer in `sim/economy`); the settled income over the
    ceiling moves by about a hundredth of itself. The wealth the wish asks for does not exist in the opening, so
    only a smaller wish (606) or assets that do (538, land) can meet it.
 
@@ -60,3 +60,22 @@ plant as the default so saving has a user.
 
 **Direction (2026-10-20).** With 606's sourced wealth figures, the opening's households should hold their wealth
 mostly as land titles; the leak closes by giving saving that asset (538, 551) before any change to the wish.
+
+## Update: not deleted
+
+`opening_income_per_head` is still used by the engine's opening and by `surplus_game_openings`; deleting it waits for the
+opening to seed its wage and runs from `opening_stationary` (473 Update 7). The stationary fixture states no income.
+
+## Update: `opening_income_per_head` deleted (473 Update 8)
+
+The field was set only by `surplus_game_openings`, which no test called; it, the branch in `opening._settle_income`, the
+engine port's read of it and `EconomySetup.opening_income_per_head` are gone (`test_opening_stationary_scenario`,
+`test_no_scenario_states_the_incomes_of_its_households`). What still states an income: `economy_fixture.surplus_households`
+(eight test modules) patches the settled income to the full-employment ceiling; replacing it needs the opening to hold what
+its households want (606, 538). Seeding the real opening from `opening_stationary` is done for the hours (producers' runs are
+the solved runs; the households' time split makes offered equal hired) and not for the income, which stays the fixed point of
+`opening_income`.
+
+Measured cause of the leak, on the stationary fixture: households' cash rises by 41, 76, 24 and 52 thousand in years one to
+four while the producers' cash falls by the same amounts (throwaway probe of `record.book` balances), so savings are not
+returned to producers: this is the leak this complaint is about, and it is what cuts runs year on year (473 Update 8).

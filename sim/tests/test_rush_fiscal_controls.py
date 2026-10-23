@@ -1,126 +1,83 @@
-"""rush_fiscal_controls: regression checks, run with `--only rush_fiscal_controls`."""
-from .harness import *  # noqa: F401,F403
-from sim.engine.purchase_rule import purchase_budget as _purchase_budget
-from sim.engine.state import serialize_state
+"""Rush fiscal controls: a bulk start can be capped by total cost, yearly draw and a cash reserve, and refuses option values it
+cannot read. The cap reader, the cap test and the typed spellings are called on inputs the test builds; the command on a game
+(preview, rollback, agreement with the real run) is in test_rush_fiscal_controls_scenario."""
+import unittest
+from types import SimpleNamespace
 
-_START_CAPITAL = 20000.0
+from sim.ui.proto.dispatch_ventures import _rush_cap_refusal, _rush_caps
+from sim.ui.protocol import parse_typed
 
+QUICK_TOPIC = True
 
-def _rush(sim_state, **options):
-    return S._agent_dispatch(sim_state, NODES, dict({"cmd": "rush"}, **options))
-
-
-def _annual_draw(sim_state, node_id):
-    return sim_state.project_cost(node_id) / max(1.0, NODES[node_id]["yrs"])
-
-
-def _snapshot(sim_state):
-    return (sorted(sim_state.active), sim_state.capital, len(sim_state.log))
+GAME = SimpleNamespace(civ={"id": "rome_100ad"})
+BUDGET = 1000.0
 
 
-# --- a total cost cap is never exceeded
-capped = unopened_sim(capital=_START_CAPITAL)
-_cap_costs = {node_id: capped.project_cost(node_id) for node_id in capped.order
-              if capped.can_start(node_id)}
-_total_cap = 1000.0
-_result = _rush(capped, limit=50, max_total_cost=_total_cap)
-_rush_capped = _result
-_spent = sum(_cap_costs[row["id"]] for row in _result["started"])
-check("rush max_total_cost starts something", _result["count_started"] > 0, _result)
-check("rush max_total_cost never commits more than the cap",
-      _spent <= _total_cap + 1e-6, (_spent, _total_cap))
-check("rush max_total_cost explains what the cap skipped",
-      any("max_total_cost" in row.get("why", "") for row in _result["not_started"]),
-      _result["not_started"][:3])
-
-# --- an annual draw cap is never exceeded
-drawn = unopened_sim(capital=_START_CAPITAL)
-_draw_cap = 300.0
-_result = _rush(drawn, limit=50, max_annual_draw=_draw_cap)
-_draw = sum(_annual_draw(drawn, row["id"]) for row in _result["started"])
-check("rush max_annual_draw starts something", _result["count_started"] > 0, _result)
-check("rush max_annual_draw never commits a bigger yearly draw than the cap",
-      _draw <= _draw_cap + 1e-6, (_draw, _draw_cap))
-
-# --- a cash reserve is left uncommitted
-reserved = unopened_sim(capital=_START_CAPITAL)
-_reserve = _purchase_budget(reserved) - 800.0
-_result = _rush(reserved, limit=50, reserve_cash=_reserve)
-_spent = sum(row["cost"] for row in _result["started"])
-check("rush reserve_cash keeps the reserve out of the purchase budget",
-      _spent <= 800.0 + 1e-6, _spent)
-
-# --- preview changes no state and matches the real run
-previewed = unopened_sim(capital=_START_CAPITAL)
-_before = _snapshot(previewed)
-_preview = _rush(previewed, limit=50, max_total_cost=1000.0, preview=True)
-check("rush preview changes no state", _snapshot(previewed) == _before,
-      (_before, _snapshot(previewed)))
-check("rush preview says nothing was changed",
-      _preview.get("preview") is True and _preview.get("nothing_changed") is True, _preview)
-check("rush preview reports totals",
-      _preview.get("total_cost") is not None and _preview.get("total_annual_draw") is not None
-      and _preview["count_would_start"] == len(_preview["would_start"]), _preview)
-_capped_run = _rush_capped
-check("rush preview lists exactly what the real run starts",
-      [row["id"] for row in _preview["would_start"]] == [row["id"] for row in _capped_run["started"]],
-      (_preview["would_start"][:3], _capped_run["started"][:3]))
-
-# --- bad option values are refused, not ignored
-refused = unopened_sim(capital=_START_CAPITAL)
-for _option in ("max_total_cost", "max_annual_draw", "reserve_cash"):
-    _result = _rush(refused, limit=3, **{_option: "lots"})
-    check("rush refuses a non-numeric %s and starts nothing" % _option,
-          _result.get("ok") is False and not refused.active, _result)
-_result = _rush(refused, limit=3, max_total_cost=-5)
-check("rush refuses a negative cap", _result.get("ok") is False and not refused.active, _result)
-
-# --- with no options, behaviour is unchanged
-plain = unopened_sim(capital=_START_CAPITAL)
-_result = _rush(plain, limit=5)
-check("plain rush limit still starts exactly that many",
-      _result["count_started"] == 5 and "preview" not in _result, _result)
-_unbounded = _rush(previewed)
-check("unbounded rush with no options still only previews",
-      _unbounded.get("preview") is True and _unbounded.get("nothing_changed") is True)
-
-# --- typed spellings
-_parsed, _error = _PT("rush limit:5 max_total_cost:20000 max_annual_draw:5,000 reserve_cash:10000 preview")
-check("typed rush parses every fiscal option",
-      _error is None and _parsed.get("max_total_cost") == 20000
-      and _parsed.get("max_annual_draw") == 5000 and _parsed.get("reserve_cash") == 10000
-      and _parsed.get("preview") is True and _parsed.get("limit") == 5, (_parsed, _error))
-_parsed, _error = _PT("rush max_total_cost:abc")
-check("typed rush refuses an unparseable cap", _parsed is None and _error, (_parsed, _error))
-_parsed, _error = _PT("start all max_total_cost:500")
-check("'start all' is the rush alias and keeps its options",
-      _error is None and _parsed.get("cmd") == "rush" and _parsed.get("max_total_cost") == 500,
-      (_parsed, _error))
-_parsed, _error = _PT("start scientific_method")
-check("'start <id>' is unchanged", (_parsed or {}).get("cmd") == "start", (_parsed, _error))
-
-# --- preview and a real run agree near the credit margin
-for _margin_capital in (150.0, 400.0, 900.0, 2500.0):
-    _margin_sim = unopened_sim(capital=_margin_capital)
-    _preview_ids = [row["id"] for row in _rush(_margin_sim, limit=50, preview=True)["would_start"]]
-    _real_ids = [row["id"] for row in _rush(_margin_sim, limit=50)["started"]]
-    check("rush preview matches the real run at capital %d" % _margin_capital,
-          _preview_ids == _real_ids and len(_real_ids) > 0, (_preview_ids, _real_ids))
-
-# --- preview rolls back everything, including the priority order and the saved state
-_roll = previewed
-_order_before = list(_roll.order)
+def refusal(caps, cost, draw=0.0, cost_so_far=0.0, draw_so_far=0.0, budget=BUDGET):
+    return _rush_cap_refusal(GAME, _rush_caps(caps, GAME)[0], budget, cost, draw, cost_so_far, draw_so_far)
 
 
-def _sections(sim_state):
-    """The serialised game sections, without the metadata a save stamps on."""
-    blob = serialize_state(sim_state.state)
-    return json.dumps({key: value for key, value in blob.items() if not key.startswith("_")},
-                      sort_keys=True, default=str)
+class CapTests(unittest.TestCase):
+    def test_no_caps_refuse_nothing(self):
+        self.assertIsNone(refusal({}, 1.0e9, 1.0e9))
+
+    def test_a_total_cost_cap_refuses_what_would_pass_it_and_says_which_cap(self):
+        self.assertIsNone(refusal({"max_total_cost": 100}, 40.0, cost_so_far=60.0))
+        reason = refusal({"max_total_cost": 100}, 41.0, cost_so_far=60.0)
+        self.assertIn("max_total_cost", reason)
+
+    def test_a_yearly_draw_cap_refuses_what_would_pass_it_and_says_which_cap(self):
+        self.assertIsNone(refusal({"max_annual_draw": 30}, 500.0, draw=10.0, draw_so_far=20.0))
+        self.assertIn("max_annual_draw", refusal({"max_annual_draw": 30}, 500.0, draw=11.0, draw_so_far=20.0))
+
+    def test_a_cash_reserve_stays_out_of_the_budget(self):
+        self.assertIsNone(refusal({"reserve_cash": 200}, 300.0, cost_so_far=500.0))
+        self.assertIn("reserve_cash", refusal({"reserve_cash": 200}, 301.0, cost_so_far=500.0))
+
+    def test_each_cap_is_checked_beside_the_others(self):
+        caps = {"max_total_cost": 1000, "max_annual_draw": 10}
+        self.assertIn("max_annual_draw", refusal(caps, 50.0, draw=11.0))
 
 
-_blob_before = _sections(_roll)
-_rush(_roll, limit=50, preview=True)
-check("rush preview leaves the priority order untouched", _roll.order == _order_before)
-check("rush preview leaves the serialised game state identical",
-      _sections(_roll) == _blob_before)
+class ReadingTests(unittest.TestCase):
+    def test_a_cap_not_given_is_none(self):
+        self.assertEqual(_rush_caps({}, GAME)[0]["max_total_cost"], None)
+
+    def test_caps_are_numbers_and_may_be_text(self):
+        caps, error = _rush_caps({"max_total_cost": "20000", "reserve_cash": 5}, GAME)
+        self.assertIsNone(error)
+        self.assertEqual((caps["max_total_cost"], caps["reserve_cash"]), (20000.0, 5.0))
+
+    def test_a_non_numeric_cap_is_refused_for_each_option(self):
+        for option in ("max_total_cost", "max_annual_draw", "reserve_cash"):
+            caps, error = _rush_caps({option: "lots"}, GAME)
+            self.assertIsNone(caps, option)
+            self.assertIn(option, error)
+
+    def test_a_negative_cap_is_refused(self):
+        self.assertIsNone(_rush_caps({"max_total_cost": -5}, GAME)[0])
+
+
+class TypedTests(unittest.TestCase):
+    def test_typed_rush_parses_every_fiscal_option(self):
+        parsed, error = parse_typed("rush limit:5 max_total_cost:20000 max_annual_draw:5,000 reserve_cash:10000 preview")
+        self.assertIsNone(error)
+        self.assertEqual((parsed.get("max_total_cost"), parsed.get("max_annual_draw"), parsed.get("reserve_cash"),
+                          parsed.get("preview"), parsed.get("limit")), (20000, 5000, 10000, True, 5))
+
+    def test_typed_rush_refuses_an_unparseable_cap(self):
+        parsed, error = parse_typed("rush max_total_cost:abc")
+        self.assertIsNone(parsed)
+        self.assertTrue(error)
+
+    def test_start_all_is_the_rush_alias_and_keeps_its_options(self):
+        parsed, error = parse_typed("start all max_total_cost:500")
+        self.assertIsNone(error)
+        self.assertEqual((parsed.get("cmd"), parsed.get("max_total_cost")), ("rush", 500))
+
+    def test_start_of_one_id_is_still_start(self):
+        self.assertEqual((parse_typed("start scientific_method")[0] or {}).get("cmd"), "start")
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -25,7 +25,7 @@ The year (`economy.Economy.step`), one civilisation's economy:
 Every movement of money or goods is a `Transfer` or `GoodsMove` booked through `accounts.Book`.
 An agent's purse never goes below zero except an edge account's (types.EDGE_*).
 """
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Mapping, Optional, Protocol, Sequence, Tuple
 
 from .types import (AgentId, AreaId, Bid, CurrencyId, FundsOffer, GoodId, LabourBid, LabourOffer,
@@ -74,8 +74,17 @@ class MarketView(Protocol):
     def basket_price_level(self, currency: CurrencyId) -> float:
         """Last year's price level against the opening year (1.0 at the opening)."""
 
+    def chained_price_level(self, currency: CurrencyId) -> float:
+        """The level real figures (anchor wages, spending targets) are turned nominal with: the opening's 1.0 chained by
+        each year's observed inflation, the weighted median of the goods' price changes. Unlike `basket_price_level`
+        (a reported statistic) a few thin goods whose asks run away do not move it."""
+
     def expected_inflation(self, currency: CurrencyId) -> float:
         """Adaptive expectation of next year's rise in the price level, as a share."""
+
+    def observed_inflation(self, currency: CurrencyId) -> Optional[float]:
+        """Last year's rise in prices, the weighted median of the goods' changes; None before there is one. A view
+        may omit it; holders then read the change in the price level."""
 
     def cash(self, agent: AgentId, currency: CurrencyId) -> float:
         """The agent's money now."""
@@ -113,9 +122,14 @@ class YearInputs:
     attrition_share: float = 0.0                            # share of working people a year dying or retiring
     labour_levy_hours_per_worker: float = 0.0               # hours of each working person's year the state takes (a corvee, conscripts)
     debt_relief_tiles: Tuple[TileId, ...] = ()              # tiles whose households' debts the state cancels this year (debt_relief.py)
+    title_moves: Tuple[Tuple[TileId, str, str, float], ...] = ()    # (tile, giver, receiver, share) the state decrees: confiscation, land reform (titles_moves.py)
     farmed_forms: Tuple[str, ...] = ()                      # money revenue forms the state lets to the best bidder this year (tax_farming.py)
     tax_rates: Tuple[Tuple[str, float], ...] = ()           # (form, rate) the state holds this year; a form not named keeps its rate (taxes.with_rates)
     land_tax_share_of_rent: float = 0.0                     # share of a rent the state's land forms take from the owner (land_market.settle_year)
+    taxed_share_by_tile: Mapping[TileId, float] = field(default_factory=dict)   # share of a stayer's income the state takes on each tile, liability rule included (flight_routes.py)
+    state_reach_by_tile: Mapping[TileId, float] = field(default_factory=dict)   # share of the people on each tile the state's officials reach: the chance a leaver is recaptured there
+    amnesty_share: float = 0.0                              # share of a fugitive's arrears the state waives (government_levers_tax.amnesty_share)
+    immunity_years: float = 0.0                             # years a taker-up of deserted land owes nothing (government_levers_tax.immunity_years)
     institutions: Tuple[str, ...] = ()                      # the credit institutions the society holds (banks.DEPOSIT_BANKING): without one its households found none
     durable_users: Tuple[AgentId, ...] = ()                 # outside actors' asset accounts whose durables are in use
     bondage_tiles: Tuple[TileId, ...] = ()                  # tiles whose society recognises bondage: bonded people may be bought there (Complaint 644)

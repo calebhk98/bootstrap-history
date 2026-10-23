@@ -41,7 +41,7 @@ class ActorTradeInTheBook(unittest.TestCase):
         moves, orders = actors_port.sale_orders(economy, sales, per_unit, tile_of, reservation_of)
         economy_api.move_goods(economy, moves)
         run_with(economy, orders)
-        proceeds, refunds, bought = actors_port.close(economy, sales, [])
+        proceeds, refunds, bought, delivered = actors_port.close(economy, sales, [])
         self.assertGreater(proceeds["firm:a"], 0.0)
         self.assertEqual(refunds, {})
         self.assertEqual(bought, {})
@@ -70,9 +70,10 @@ class ActorTradeInTheBook(unittest.TestCase):
         currency = economy.setup.currency_id
         self.assertEqual(book.balance("buy:state:a", currency), funding[0][2])
         run_with(economy, orders)
-        proceeds, refunds, bought = actors_port.close(economy, [], purchases)
+        proceeds, refunds, bought, delivered = actors_port.close(economy, [], purchases)
         self.assertEqual(proceeds, {})
         self.assertGreater(bought.get("state:a", 0.0), 0.0)                       # it got some grain, now used up
+        self.assertAlmostEqual(sum(delivered["state:a"].values()), bought["state:a"])   # what was bought, by good
         self.assertLessEqual(refunds.get("state:a", 0.0), funding[0][2])
         spent = funding[0][2] - refunds.get("state:a", 0.0)
         self.assertGreater(spent, 0.0)

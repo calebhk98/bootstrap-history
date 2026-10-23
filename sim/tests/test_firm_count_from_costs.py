@@ -101,12 +101,12 @@ class Economy:
 		return self.by_tile.get(tile, self.mean)
 
 
-class Sim:
+class StandInSim:
 	economy = Economy()
 
 
 class Site(SiteView):
-	_sim = Sim()
+	_sim = StandInSim()
 	nodes = {"ag2_sugar_voyage": {"annual_output_t": 120.0}, "workshop": {}}
 	engine_land_price = 7.0
 

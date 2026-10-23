@@ -19,6 +19,7 @@ from sim.refusal import LogLine
 from . import value_weight
 from .literacy_census_phrase import census_phrase
 from .literacy_rules import common_ceiling
+from .public_works_rules import printing_boosted_flow, schooling_flow
 from .data import (TECH_EFFECTS, TRADES_ABSENT)
 from .literacy_effect import literacy_after_effect
 from .trade_absorption import (BECOME_ENDEMIC, GROW, RECORD_INTRODUCTION, absorption_step, absorption_years,
@@ -213,17 +214,10 @@ class AdoptionMixin:
         model is something a society is TAUGHT into, not something that
         drifts upward for free while nobody is teaching anybody.
         """
-        for node_id, spec in self._effect_terms("schooling_flow"):
-            if spec.get("required") and not self.running(node_id):
-                return 0.0
-        if field is None:
-            return self.effect_sum("schooling_flow")
+        shut = any(spec.get("required") and not self.running(node_id) for node_id, spec in self._effect_terms("schooling_flow"))
         # a school declares `reaches`, the literacy fields it teaches; one that names none teaches them all
-        total = 0.0
-        for node_id, value in self.effect_values("schooling_flow"):
-            if field in self.mechanic(node_id, "schooling_flow").get("reaches", (field,)):
-                total += value
-        return total
+        return schooling_flow([(value, self.mechanic(node_id, "schooling_flow").get("reaches"))
+                               for node_id, value in self.effect_values("schooling_flow")], field, shut)
 
 
     # HOW FAST LITERACY CLOSES THE GAP TO ITS CEILING, per unit of
@@ -281,8 +275,7 @@ class AdoptionMixin:
         flow = self._schooling_flow(field)
         if flow <= 0.0:
             return 0.0
-        return flow * (1.0 + self.PRINTING_DIFFUSION_SCHOOLING_BOOST
-                       * self.information_diffusion_index())
+        return printing_boosted_flow(flow, self.PRINTING_DIFFUSION_SCHOOLING_BOOST, self.information_diffusion_index())
 
     def literacy_next_year(self):
         """The next schooling year's reading shares, without changing any stratum."""

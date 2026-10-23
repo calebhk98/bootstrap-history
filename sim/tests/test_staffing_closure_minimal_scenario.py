@@ -1,0 +1,127 @@
+"""SCENARIO: the yearly staff check on a real game with crowded concerns closes the smith concerns a smith shortfall forces, and
+what `open` refuses stays shut; reopening keeps the ramp; `open` and `mothball` quote the same earnings and reopening price.
+Which concerns close (fewest, lowest net value first, only holders of the short resource, none that `open` would accept) is
+rule-tested in test_staffing_choice_rules (closures_for_shortfall)."""
+from .harness import *  # noqa: F401,F403
+
+
+def concerns_with_foreman(test_sim, trade, count, give_earnings=False):
+	# Cheapest-to-hold concerns whose supervision needs a foreman of this trade. A node earns only from its
+	# production output, so few carry an earning; the smith concerns are given a distinct one for this set-up
+	# (undone at the end of the file) so that the supervision rule is what the checks exercise.
+	if not hasattr(concerns_with_foreman, "foremen"):
+		concerns_with_foreman.foremen = {}
+		for node_id in sorted(NODES):
+			node = NODES[node_id]
+			if not test_sim.is_venture(node_id) or node_id in test_sim.CAPABILITY_INSTITUTIONS:
+				continue
+			lab = node.get("lab") or {}
+			skilled = [(hours, skill) for skill, hours in lab.items()
+				if skill not in ("artisan", "labourer", "slave") and hours > 0]
+			if lab.get("artisan", 0) > 0 and skilled:
+				concerns_with_foreman.foremen[node_id] = max(skilled)[1]
+	found = [node_id for node_id, foreman in concerns_with_foreman.foremen.items() if foreman == trade
+		and (give_earnings or NODES[node_id]["rev"] > NODES[node_id]["up"])][:count]
+	for rank, node_id in enumerate(found if give_earnings else []):
+		if NODES[node_id]["rev"] <= NODES[node_id]["up"]:
+			_given_earnings.setdefault(node_id, NODES[node_id]["rev"])
+			NODES[node_id]["rev"] = NODES[node_id]["up"] * (1.5 + 0.1 * rank)
+	return found
+
+
+_given_earnings = {}
+
+
+def crowded_sim(smith_concerns, other_concerns):
+	test_sim = unopened_sim(capital=10_000_000.0)
+	for node_id in smith_concerns + other_concerns:
+		test_sim.done.update(NODES[node_id]["pre"])
+	test_sim._done_changed()
+	test_sim.employees["artisan"] = 500.0
+	test_sim.employees["smith"] = len(smith_concerns) * test_sim.VENTURE_FOREMAN_SHARE
+	test_sim.employees["scholar"] = 50.0
+	test_sim.employees["carpenter"] = 50.0
+	test_sim.employees["machinist"] = 50.0
+	test_sim.labour._resync_pools()
+	run_it(test_sim, *(smith_concerns + other_concerns))
+	return test_sim
+
+
+probe = unopened_sim()
+smiths = concerns_with_foreman(probe, "smith", 6, give_earnings=True)
+others = concerns_with_foreman(probe, "carpenter", 3) + concerns_with_foreman(probe, "machinist", 3)
+
+# --- losing part of the smiths closes only smith concerns, only as many as needed
+crowded = crowded_sim(smiths, others)
+check("set-up: everything is covered, nothing closes",
+      crowded.close_unstaffed_ventures(crowded.year) == [])
+crowded.employees["smith"] -= 2 * crowded.VENTURE_FOREMAN_SHARE
+crowded.labour._resync_pools()
+closed = crowded.close_unstaffed_ventures(crowded.year)
+check("a smith shortfall of two concerns' worth closes exactly two concerns",
+      len(closed) == 2, closed)
+check("only concerns drawing on smiths close",
+      all(crowded.venture_foreman(node_id)[0] == "smith" for node_id in closed), closed)
+check("concerns needing other trades stay open",
+      all(node_id in crowded.operating for node_id in others))
+check("open is refused for what the check closed, with the same staff",
+      all(not crowded.open_venture(node_id, pay=False)[0] for node_id in closed))
+check("the closure is recorded as a staffing closure",
+      all(crowded.staff_closure_age(node_id) == 0 for node_id in closed))
+
+# --- reopening after a closure does not restart the revenue ramp
+ramp = crowded_sim(smiths, others)
+ramp.state.scenario.year += 10
+first = smiths[0]
+ramp.state.projects.business.set_opened_year(first, ramp.year - 5)
+before_ramp = ramp.venture_ramp(first)
+ramp.close_work(first, ramp.CLOSED_FOR_STAFF)
+ramp.open_venture(first, pay=False)
+check("reopening keeps the original opening year for the ramp",
+      ramp.venture_ramp(first) == before_ramp, (before_ramp, ramp.venture_ramp(first)))
+_, reopen_message = (ramp.close_work(first, ramp.CLOSED_FOR_STAFF), ramp.open_venture(first, pay=False))[1]
+# presentation: the wording of a reopen reply
+check("a reopen reply does not promise a ramp it will not get",
+      "over the first" not in reopen_message, reopen_message)
+
+# --- one earnings figure: open and mothball quote what `ventures` shows
+def figure_in(message, phrase):
+	match = re.search(phrase + r" ([\d,]+)", message)
+	return float(match.group(1).replace(",", "")) if match else None
+
+
+quoted = crowded_sim([], others)
+quoted.state.economy.output_factor *= 1.4
+quoted.price_index *= 1.3
+node_id = others[0]
+quoted.operating.add(node_id)
+quoted.state.scenario.year += 10
+quoted.state.projects.business.set_opened_year(node_id, quoted.year - 10)
+real_earnings = quoted.venture_real_earnings(node_id)
+check("the real earnings figure differs from the tree's base figure in this set-up",
+      abs(real_earnings - NODES[node_id]["rev"]) > 1.0, (real_earnings, NODES[node_id]["rev"]))
+_ok, shut_message = quoted.mothball_work(node_id)
+check("mothball quotes the real earnings figure, not the base one",
+      figure_in(shut_message, "earning the") == round(real_earnings), (shut_message, real_earnings))
+_ok, open_message = quoted.open_venture(node_id, pay=False)
+check("open quotes the real fully-ramped earnings and upkeep",
+      figure_in(open_message, "it earns") == round(quoted.venture_real_earnings(node_id, fully_ramped=True))
+      and figure_in(open_message, "and costs") == round(quoted.venture_real_upkeep(node_id)), open_message)
+
+# --- one reopening price after a deliberate shutdown, stated when shutting
+priced = crowded_sim([], others)
+priced.state.projects.business.set_opened_year(node_id, priced.year)
+_ok, priced_message = priced.mothball_work(node_id)
+stated = figure_in(priced_message, "for")
+before_capital = priced.capital
+priced.restore_work(node_id)
+restore_paid = before_capital - priced.capital
+priced.mothball_work(node_id)
+before_capital = priced.capital
+priced.open_venture(node_id)
+open_paid = before_capital - priced.capital
+check("open and restore charge the same after a mothball", abs(restore_paid - open_paid) < 0.01, (restore_paid, open_paid))
+check("the mothball reply states that price", stated == round(open_paid), (priced_message, open_paid))
+
+for _node_id, _original_earning in _given_earnings.items():
+	NODES[_node_id]["rev"] = _original_earning

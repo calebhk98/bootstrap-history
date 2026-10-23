@@ -1,4 +1,4 @@
-"""A country seat (slow: builds a game, because the holder is a government actor the cast seeds): join reads back the
+"""SCENARIO (Complaint 640): A country seat (slow: builds a game, because the holder is a government actor the cast seeds): join reads back the
 seat's holder, it has no founder or household, a year runs with it, a household seat's reply is unchanged, and a
 country seat is handed over by the same path."""
 import os

@@ -163,30 +163,39 @@ check("a failed bounty finishes on a later attempt", _bounty_id in _bounty_sim.d
 
 # --- 253: selling stock faces the same market limits as buying ----------------
 _sell = sim(capital=5e7)
-_quote = _sell.material_trade_quote("coal")
+# a material the economy's market at the founder's tile trades and has a book for (a good no seller there offers has no
+# price to fall, which the opening decides)
+_SOLD = next(material for material in ("coal", "iron", "timber_m3", "copper")
+             if _sell.material_trade_quote(material) is not None
+             and _sell.economy.agent_price_response(_sell.goods_market._economy_good(material), 1.0, 0.0,
+                                                    _sell.economy.acting_tile()) is not None)
+_quote = _sell.material_trade_quote(_SOLD)
 _absorbed = _quote["market_available_tonnes_per_year"]
-_sell._material_stock()["coal"] += 50 * _absorbed
-_sell._material_opening_stock()["coal"] = _sell.material_stock_t("coal")
+_sell._material_stock()[_SOLD] += 50 * _absorbed
+_sell._material_opening_stock()[_SOLD] = _sell.material_stock_t(_SOLD)
 _cash = _sell.capital
-_sold_small = _sell.sell_material_stock("coal", 1.0)
+_sold_small = _sell.sell_material_stock(_SOLD, 1.0)
 _small_price = _sell.capital - _cash
 check("a one tonne sale is paid at about the quoted sell price",
       _sold_small == 1.0 and abs(_small_price - _quote["sell_per_tonne"]) < 0.02 * _quote["sell_per_tonne"],
       (_small_price, _quote["sell_per_tonne"]))
 _cash = _sell.capital
-_sold_big = _sell.sell_material_stock("coal", 40 * _absorbed)
-check("a sale is cut to what the market absorbs in a year", _sold_big <= _absorbed + 1e-6,
-      (_sold_big, _absorbed))
+_room = _sell.goods_market.sale_limits(_SOLD)[1]   # the buyers' take last year, less what this seat sold (Complaint 668)
+_sell._material_stock()[_SOLD] += 2 * _room          # more than the buyers take, so the market and not the stock binds
+_sold_big = _sell.sell_material_stock(_SOLD, 3 * _room)
+check("a sale is cut to what the market's buyers take in a year", abs(_sold_big - _room) <= 1e-6 * _room,
+      (_sold_big, _room))
 _big_average = (_sell.capital - _cash) / max(_sold_big, 1e-9)
 # the fall is the economy's own: its book cleared again with the tonnes sold as one more offer (stage 3 of Complaint 507);
 # how deep that is follows how many tonnes the engine's year of market is until stage 4 reads the offered quantity there
-_fall = _sell.economy.agent_price_response(_sell.goods_market._economy_good("coal"), _sold_big, 0.0, _sell.economy.acting_tile())
-check("selling a year's market at once pays less per tonne than one tonne",
-      _big_average < _small_price, (_big_average, _small_price))
+_fall = _sell.economy.agent_price_response(_sell.goods_market._economy_good(_SOLD), _sold_big, 0.0, _sell.economy.acting_tile())
+check("selling a year's market at once pays no more per tonne than one tonne, and less unless the economy's sellers give way",
+      _big_average <= _small_price * (1.0 + 1e-6) and (_big_average < _small_price or (_fall is not None and _fall >= 1.0 - 1e-6)),
+      (_big_average, _small_price, _fall))
 check("...and no less than the economy's price after all of it is on offer",
       _fall is not None and _big_average >= _small_price * _fall * (1.0 - 1e-3), (_big_average, _small_price, _fall))
 _cash = _sell.capital
-_sold_more = _sell.sell_material_stock("coal", _absorbed)
+_sold_more = _sell.sell_material_stock(_SOLD, _absorbed)
 check("selling more in the same year is cut to nothing or to a lower price",
       _sold_more < 1e-6 or (_sell.capital - _cash) / _sold_more < _big_average,
       (_sold_more, _sell.capital - _cash))

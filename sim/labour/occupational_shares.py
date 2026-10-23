@@ -21,18 +21,48 @@ def group_of_trade(groups: Mapping) -> Dict[str, str]:
     return {trade: group_id for group_id, group in groups.items() for trade in group["trades"]}
 
 
-def hours_by_trade_of_all_employers(labour, society_hours: Mapping[str, float]) -> Dict[str, float]:
-    """The society's hours by trade, plus what the other employers hold that the society's split leaves out:
-    a trade's hours are the larger of the society's and those of the people the founder, firms and states keep
-    on staff (the army counted whole, which the society's hours have already given up), so a trade the state
-    or a merchant house hires reads at its hours, and nothing the society already counts is counted twice."""
+def hours_by_trade(society_hours: Mapping[str, float], held_hours: Mapping[str, float],
+                   outside_trades, pool_trade: str) -> Dict[str, float]:
+    """Every kind of work in one table: the society's hours (own-plot farming, household and hired work, the
+    unskilled pool), plus what employers hold on staff. A trade an employer holds above the society's hours for
+    it is people the society's split left in the unskilled `pool_trade`, so those hours move out of the pool
+    into the trade (never past what the pool has); the trades in `outside_trades` (the standing army) are
+    people the society's total already gave up, so their held hours are added whole. The total is then each
+    person's hours once."""
     hours = dict(society_hours)
-    for group in groups_data()["groups"].values():
-        for trade in group["trades"]:
-            held = labour.reserved_hours(trade)
-            if held > hours.get(trade, 0.0):
-                hours[trade] = held
+    for trade in sorted(held_hours):
+        held = held_hours[trade]
+        if trade in outside_trades:
+            hours[trade] = hours.get(trade, 0.0) + held
+            continue
+        extra = held - hours.get(trade, 0.0)
+        if extra <= 0.0 or trade == pool_trade:
+            continue
+        moved = min(extra, hours.get(pool_trade, 0.0))
+        hours[pool_trade] = hours.get(pool_trade, 0.0) - moved
+        hours[trade] = hours.get(trade, 0.0) + moved
     return hours
+
+
+def hours_by_trade_of_all_employers(labour, society_hours: Mapping[str, float]) -> Dict[str, float]:
+    """`hours_by_trade` for a running game: what the founder, firms and states keep on staff, by trade."""
+    data = groups_data()
+    held = {trade: labour.reserved_hours(trade) for group in data["groups"].values() for trade in group["trades"]}
+    return hours_by_trade(society_hours, held, frozenset(data["outside_society_trades"]), labour.unskilled_trade())
+
+
+def people_by_trade_of_all_employers(labour):
+    """Working people by main occupation: the labour core's people in each trade, with what employers hold on
+    staff counted once as in `hours_by_trade` (the standing army whole). The sources the bands rest on count
+    the labour force by occupation, so a household that farms its own plot and spends the rest of its year on
+    other work is counted in farming here, as a head count and not by the hours it spent in the field. None
+    while the agent economy has not opened."""
+    core = labour.core_people_by_trade()
+    if core is None:
+        return None
+    data = groups_data()
+    held = {trade: labour.reserved_people(trade) for group in data["groups"].values() for trade in group["trades"]}
+    return hours_by_trade(core, held, frozenset(data["outside_society_trades"]), labour.unskilled_trade())
 
 
 def shares_by_group(hours_by_trade: Mapping[str, float]) -> Dict[str, float]:

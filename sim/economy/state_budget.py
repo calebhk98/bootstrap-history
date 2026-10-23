@@ -34,6 +34,7 @@ class StateBudget:
     financed: Dict[str, float] = field(default_factory=dict)   # what each method supplied this year
     issued_total: float = 0.0
     unplanned_cash: float = 0.0          # cash left after the plan and the reserve: what the store may buy with
+    held_back: float = 0.0               # cash the plan keeps off its lines: the reserve and the unplanned cash
     need_wanted: Dict[str, float] = field(default_factory=dict)   # goods the lines bid for, so the rest bought is store
     expected_inflation: float = 0.0      # what the treasury expects of prices, as households do
     last_price_level: float = 0.0        # the basket price level when it last updated that expectation
@@ -50,9 +51,10 @@ def plan_year(setup, record, view, labour_bids: List[LabourBid]) -> None:
     spendable = min(cash, budget.revenue + policy.cash_spend_share * max(0.0, cash - budget.revenue - reserve))
     planned = spendable
     budget.unplanned_cash = max(0.0, cash - spendable - reserve)
+    budget.held_back = reserve + budget.unplanned_cash
     if policy.real_spending_target > 0.0:
         # a stated programme is paid from every coin on hand first, then financed
-        planned = policy.real_spending_target * view.basket_price_level(money)
+        planned = policy.real_spending_target * view.chained_price_level(money)
         budget.real_programme = True
         spendable = min(cash, planned)
     deficit = max(0.0, planned - spendable)
@@ -64,7 +66,24 @@ def plan_year(setup, record, view, labour_bids: List[LabourBid]) -> None:
     budget.deficit = deficit
     budget.financed = supplied
     budget.issued_total += supplied.get("issue", 0.0) + supplied.get("debase", 0.0)
-    labour_bids.extend(_labour_bids(setup, record, view, budget.wage_budget))
+    labour_bids.extend(wage_labour_bids(setup, record, view, budget.wage_budget))
+
+
+def wages_paid(labour_results, state) -> float:
+    """What the state paid for the hours it bought: its bought hours at their wage, over every trade's result."""
+    return math.fsum(fill.quantity * fill.price for result in labour_results for fill in result.fills
+                     if fill.agent == state and fill.side == "buy")
+
+
+def lapse_unspent_wages(budget: StateBudget, paid: float) -> None:
+    """A stated real programme that could not hire the hours it planned for (the labour market did not clear at its
+    bids) spends the rest on goods: a shortage of hired labour must not leave the coin it printed in the purse.
+    A budget that is not a programme keeps its unspent cash for the next year's plan."""
+    unspent = budget.wage_budget - paid
+    if not budget.real_programme or unspent <= 0.0:
+        return
+    budget.wage_budget = paid
+    budget.goods_budget += unspent
 
 
 def _trades(setup):
@@ -72,7 +91,7 @@ def _trades(setup):
     return trades or [setup.unskilled_trade]
 
 
-def _labour_bids(setup, record, view, wage_budget: float) -> List[LabourBid]:
+def wage_labour_bids(setup, record, view, wage_budget: float) -> List[LabourBid]:
     if wage_budget <= 0.0:
         return []
     working: Dict[str, float] = {}
@@ -82,7 +101,7 @@ def _labour_bids(setup, record, view, wage_budget: float) -> List[LabourBid]:
     if total_working <= 0.0:
         return []
     trades = _trades(setup)
-    level = view.basket_price_level(setup.currency_id)
+    level = view.chained_price_level(setup.currency_id)
     bids = []
     for trade in trades:
         for tile, people in sorted(working.items()):
@@ -154,7 +173,7 @@ def close_year(setup, record, ledger, tax_received: float) -> None:
             moves.append(GoodsMove(state, EDGE_CONSUMPTION, good, tile, used, "state purchases used"))
     record.book.move_many(moves)
     record.state_budget.revenue = tax_received + ledger.sales_in.get(state, 0.0)
-    level = record.memory.basket_price_levels.get(setup.currency_id)
+    level = record.memory.price_levels.get(setup.currency_id)
     budget = record.state_budget
     if level and budget.last_price_level > 0.0:
         budget.expected_inflation = currency.update_expected_inflation(budget.expected_inflation,

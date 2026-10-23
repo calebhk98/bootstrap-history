@@ -1,4 +1,4 @@
-"""Complaint 640, audit batch 3, scenario: firms pricing a chain of projects share its material bills, and a bill is
+"""SCENARIO (Complaint 640): Complaint 640, audit batch 3, scenario: firms pricing a chain of projects share its material bills, and a bill is
 not served after the market moved. The rule (the shared-answer table) has tests of its own:
 test_complaint_321_shared_project_bills."""
 from .harness import *  # noqa: F401,F403

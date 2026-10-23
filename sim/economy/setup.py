@@ -62,6 +62,7 @@ class EconomySetup:
     port_tile: TileId
     unskilled_trade: TradeId = "labourer"
     hiding: Any = None  # (rate, reach) -> share of its base a payer hides; the port hands in the actor layer's rule, None: none
+    flight: Any = None  # the actors' flight rules (expected_penalty_of_leaving, arrears_owed_by_fugitive, share_after_immunity), handed in by the port; None: no flight
     debt_bondage_years: float = 0.0               # term of service a landless household in default owes its creditor; 0: the society has no debt bondage (bondage.py)
     import_duty_share: Dict[GoodId, float] = field(default_factory=dict)   # per good, the share of its landed price that is the state's tariff; the port sets it as the year's imports are offered
     carriage_rates_balanced: Dict[str, float] = field(default_factory=dict)   # likewise with the opposite flow filling every return; none: same
@@ -69,6 +70,7 @@ class EconomySetup:
     carriage_handling: Dict[str, float] = field(default_factory=dict)   # mode id -> hours of handling a tonne each time a haul changes to the mode, for the modes whose handling the rates price
     carriage_handling_trade: Dict[str, str] = field(default_factory=dict)   # mode id -> the trade that works those handling hours (geography's `handling_trade`); a mode with none is handled by the unskilled trade
     carriage_carriers: Dict[str, Tuple[float, Tuple[Tuple[str, float], ...]]] = field(default_factory=dict)   # mode id -> (tonne-km a team moves a day, ((carrier good, units worn per tonne-km),)): what a tonne-km wears (carriage_wear); none: carriage wears nothing
+    need_share_by_trade: Dict[str, float] = field(default_factory=dict)   # trade -> its share of the society's non-farm labour need (recipes and carriage), seeds the trades no producer's runs staff
     carriage_wage: float = 0.0     # the wage an hour (unskilled trade) the land carriage rates were priced at; 0: they follow no wage
     fuel_need: str = "warmth"           # the basket need fuel meets; a hearth's cooking fuel is added to its floor
     hunger_need: str = "food"           # the basket need whose unmet floor counts as hunger
@@ -77,6 +79,7 @@ class EconomySetup:
     basket_by_tile: Dict[TileId, Any] = field(default_factory=dict)   # floors that follow the tile's climate
     household_work: Dict[str, Any] = field(default_factory=dict)      # hours of household work by task (data/world/household_work.json); empty: none is modelled
     ready_to_eat: frozenset = frozenset()                             # goods a household with no hearth can eat as bought
+    milled_as: Dict[str, str] = field(default_factory=dict)           # per grain, the good it is milled into (needs.json); a household weighs grinding it against buying that
     servant_trade: str = "domestic_servant"                           # the trade whose wage is the price of an hour of household work
     state_policy: StatePolicy = field(default_factory=StatePolicy)   # how the state budgets and finances a deficit
     site_limits: Tuple[SiteLimit, ...] = ()     # where site-bound recipes can run, and how much (sites.py)
@@ -88,7 +91,6 @@ class EconomySetup:
     opening_store_output: Dict[GoodId, Tuple[Tuple[float, float, float], ...]] = field(default_factory=dict)
     # per durable good, its past workings (kg a year, years worked, years since the last output) from the deposits
     opening_store_gaps: Dict[GoodId, str] = field(default_factory=dict)   # why a good has no workings, for audit
-    opening_income_per_head: Optional[float] = None   # income a head a year the scenario states; None: the demand it pays for
     # country -> the recipes its producers can run (what its society's techniques allow); empty: every recipe anywhere
     recipes_by_country: Dict[str, Tuple[str, ...]] = field(default_factory=dict)
     # tile -> {owner, control} (geography's tile_owners), shared with the game's state; empty: the tiles' own countries

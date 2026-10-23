@@ -1,5 +1,6 @@
-"""A trade with few hands cannot quote above what training a substitute costs: the unskilled wage times the
-trade's training premium (Complaint 434). Plain records, no game."""
+"""A trade with few hands is expected to pay at most what training a substitute costs: the unskilled wage times the
+trade's training premium (Complaints 434, 678). That is the wage's heading (what entrants weigh); this year's wage may
+pass it while trainees are still on their way. Plain records, no game."""
 
 QUICK_TOPIC = True
 
@@ -42,25 +43,26 @@ def settle(held, bids, years=40):
 
 class SubstituteWageTests(unittest.TestCase):
 
-    def test_a_trade_with_one_pair_of_hands_quotes_at_most_the_trained_substitute(self):
+    def test_a_trade_with_one_pair_of_hands_is_expected_to_pay_at_most_the_trained_substitute(self):
         ceiling = 1.0 * wages.training_premium(5.0, DISCOUNT, CAREER)
         result = settle(state(healers=1.0), [hungry_bid()])
-        self.assertLessEqual(result.wage, ceiling + 1e-9)
-        self.assertGreater(result.wage, 1.0)
+        self.assertLessEqual(result.heading_wage, ceiling + 1e-9)
+        self.assertGreater(result.heading_wage, 1.0)
+        self.assertGreater(result.wage, ceiling)
 
     def test_a_longer_training_commands_a_dearer_substitute(self):
-        healer = settle(state(healers=1.0), [hungry_bid("healer")]).wage
+        healer = settle(state(healers=1.0), [hungry_bid("healer")]).heading_wage
         held = state(healers=1.0)
         held.workers["vale"]["sage"] = [1.0, 0.0, 0.0, 0.0, 0.0]
         held.wages["vale"]["sage"] = 1.0
-        sage = settle(held, [hungry_bid("sage")]).wage
+        sage = settle(held, [hungry_bid("sage")]).heading_wage
         self.assertGreater(sage, healer)
 
     def test_the_ceiling_follows_the_unskilled_wage(self):
         def holding(wage):    # farms keep bidding, so the unskilled wage stays where it is
             return [hungry_bid(), Bid("farm", "digger", "vale", 99999.0, wage)]
-        low = settle(state(healers=1.0, digger_wage=1.0), holding(1.0)).wage
-        high = settle(state(healers=1.0, digger_wage=3.0), holding(3.0)).wage
+        low = settle(state(healers=1.0, digger_wage=1.0), holding(1.0)).heading_wage
+        high = settle(state(healers=1.0, digger_wage=3.0), holding(3.0)).heading_wage
         self.assertAlmostEqual(high / low, 3.0, places=6)
 
     def test_the_unskilled_trade_itself_is_not_capped(self):

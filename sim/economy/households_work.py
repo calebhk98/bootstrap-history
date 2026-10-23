@@ -21,18 +21,25 @@ def load_household_work(path: str = _DATA_PATH) -> Dict[str, Any]:
         return json.load(handle)
 
 
-def hours_per_person_per_year(data: Mapping[str, Any], has_hearth: bool = True) -> float:
+def hours_per_person_per_year(data: Mapping[str, Any], has_hearth: bool = True, ground_share: float = 1.0,
+                              only_grinding: bool = False) -> float:
     """Hours of household work one person's share takes a year. A household with no hearth does no
-    cooking of its own (its cooking task is left out: it buys cooked food, see `without_hearth_basket`)."""
+    cooking of its own (its cooking task is left out: it buys cooked food, see `without_hearth_basket`). A task
+    that scales with ground grain (grinding) takes the sourced hours times the share of its food the household
+    grinds itself. `only_grinding` counts that task alone."""
     days = float(data["days_per_year"])
     total = 0.0
     for task in data["tasks"].values():
         if task.get("needs_hearth") and not has_hearth:
             continue
+        grinding = bool(task.get("scales_with_ground_grain"))
+        if only_grinding and not grinding:
+            continue
+        scale = max(0.0, ground_share) if grinding else 1.0
         if "hours_per_person_per_day" in task:
-            total += float(task["hours_per_person_per_day"]) * days
+            total += float(task["hours_per_person_per_day"]) * days * scale
         else:
-            total += float(task["hours_per_adult_woman_per_day"]) * float(task["adult_women_per_person"]) * days
+            total += float(task["hours_per_adult_woman_per_day"]) * float(task["adult_women_per_person"]) * days * scale
     return total
 
 
@@ -55,9 +62,9 @@ def with_cooking_fuel(basket: Basket, fuel_per_person: float, fuel_need: str = "
         if need.need_id == fuel_need else need for need in basket.needs))
 
 
-def hours_needed(people: float, data: Mapping[str, Any], has_hearth: bool = True) -> float:
+def hours_needed(people: float, data: Mapping[str, Any], has_hearth: bool = True, ground_share: float = 1.0) -> float:
     """Hours of household work a cohort's people need done in the year."""
-    return max(0.0, people) * hours_per_person_per_year(data, has_hearth)
+    return max(0.0, people) * hours_per_person_per_year(data, has_hearth, ground_share)
 
 
 def hour_value(hours_and_wages) -> float:
@@ -68,6 +75,24 @@ def hour_value(hours_and_wages) -> float:
     return sum(hours * wage for hours, wage in rows) / total if total > 0.0 else 0.0
 
 
+def supervision_share(data: Mapping[str, Any]) -> float:
+    """Hours of the household's own that each hour of hired work takes to direct (data file; none when it gives no figure)."""
+    return max(0.0, float(data.get("supervision_hours_per_hired_hour", 0.0)))
+
+
+def net_hour_value(own_hour_value: float, supervision: float) -> float:
+    """What an hour hired is worth to the household for the hours it frees: of every hour hired the household
+    spends `supervision` hours directing it, so only the rest are freed to sell at the worth of its hour."""
+    return own_hour_value * max(0.0, 1.0 - supervision)
+
+
+def sold_share(hours_hired: float, hours_idle: float) -> float:
+    """Share of the hours offered in a labour market that found a buyer last year; all of them when none were offered
+    (no history is no evidence that hours go unsold)."""
+    offered = max(0.0, hours_hired) + max(0.0, hours_idle)
+    return max(0.0, hours_hired) / offered if offered > 0.0 else 1.0
+
+
 def hired_hours(needed_hours: float, own_hour_value: float, service_price_per_hour: float) -> float:
     """Hours of the work a household hires: all of it when an hour of its own labour is worth more at the market
     than the servant's price (it would rather sell the hour and pay), none otherwise. Never more than the work
@@ -75,6 +100,22 @@ def hired_hours(needed_hours: float, own_hour_value: float, service_price_per_ho
     if needed_hours <= 0.0 or service_price_per_hour <= 0.0:
         return 0.0
     return needed_hours if own_hour_value > service_price_per_hour else 0.0
+
+
+def service_price_that_fits(households, room_hours: float) -> float:
+    """The price of an hour hired at which the households that still hire need no more hours than `room_hours`: the
+    servants there are not more than that, so where households would hire more the price rises until hiring falls
+    (the one whose hour is worth least of those hiring drops out first). `households` are (worth of an hour, hours
+    it would hire, price an hour costs it) rows; the price is the worth of the dearest hour that no longer hires,
+    zero where every household that hires fits."""
+    hiring = sorted(((value, hours) for value, hours, price in households if hours > 0.0 and value > price),
+                    key=lambda row: -row[0])
+    total = 0.0
+    for value, hours in hiring:
+        total += hours
+        if total > room_hours:
+            return value
+    return 0.0
 
 
 def own_hours(needed_hours: float, hired: float) -> float:

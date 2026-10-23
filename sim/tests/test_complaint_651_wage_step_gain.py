@@ -48,6 +48,8 @@ class StepAroundTheMargin(unittest.TestCase):
 
 
 class SmallEconomy(unittest.TestCase):
+    # Complaint 473: the hours households offer swung year to year with the level their leisure anchor is scaled by, and the
+    # wage step follows those hours; the anchor now follows the level households perceive (market_memory.py).
     def test_labourer_wage_does_not_sawtooth(self):
         series = {}
         original = clearing.clear_one

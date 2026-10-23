@@ -12,7 +12,7 @@ from sim.tests import economy_fixture as fixture
 from sim.tests.test_economy_merchants import SPECS, merchant, plan, world
 
 CREW_HOURS_PER_TONNE_KM = 0.05
-CART_RATE = 0.12                 # dear enough that the fixture's tiles trade ore now and then
+CART_RATE = 0.09                 # dear enough that the fixture's tiles trade ore now and then, cheap enough that they do inside the run
 
 
 def trading_setup(crew=True, carriage_wage=0.0):
@@ -36,7 +36,7 @@ def run_watching(setup, years):
         market = sum(hours for key, hours in record.hours_hired.items() if key.startswith(trade + "|"))
         others = market - sum(each["hours"] for each in hired.values())
         watched.append({"planned": before, "hired": hired, "wanted_after": after, "others_hired": others})
-    with mock.patch.object(economy, "dispatch_merchants", watch):
+    with mock.patch.object(economy, "dispatch_merchants", watch), fixture.surplus_households():   # goods are carried out of a surplus
         done, _outcomes = fixture.run(setup, years)
     return done, watched
 
@@ -113,7 +113,7 @@ def hours_hired_by_farm(merchant_bid_hours):
     for employer in ("farm", "merchant"):
         book.transfer(Transfer(EDGE_MINT, employer, "coin", 1e9, "opening"))
     area = "labour:t1"
-    record = types.SimpleNamespace(book=book, memory=MarketMemory(),
+    record = types.SimpleNamespace(book=book, memory=MarketMemory(), producers={},
                                    workforce=MarketState(workers={area: {"plough": split_evenly(0.05)}}))
     setup = types.SimpleNamespace(currency_id="coin", trades={}, unskilled_trade="plough")
     bids = [LabourBid("farm", "plough", area, 100.0, 5.0)]
@@ -223,11 +223,13 @@ class CrewTests(unittest.TestCase):
         self.assertEqual(list(hours), [fixture.LABOURER])
         self.assertAlmostEqual(hours[fixture.LABOURER], fee / CART_RATE * CREW_HOURS_PER_TONNE_KM * 2.0)   # carriers return empty: two legs of crew
 
-    def test_the_modes_own_crew_trade_is_not_hired_while_carriage_is_bid_in_the_unskilled_trade(self):
+    def test_the_modes_own_crew_trade_is_the_one_hired(self):
         setup = fixture.small_setup(carriage_rates={"cart": CART_RATE}, carriage_crew={"cart": ("carter", 0.1)})
-        self.assertEqual(carriage_hours.crew_trades(setup, "carter"), ((fixture.LABOURER, 1.0),))
-        with mock.patch.object(carriage_hours, "CARRIAGE_CREW_UNSKILLED_SHARE", 0.25):
-            self.assertEqual(carriage_hours.crew_trades(setup, "carter"), (("carter", 0.75), (fixture.LABOURER, 0.25)))
+        self.assertEqual(carriage_hours.crew_trades(setup, "carter"), (("carter", 1.0),))
+
+    def test_a_mode_that_names_no_crew_trade_is_crewed_by_the_unskilled_trade(self):
+        setup = fixture.small_setup(carriage_rates={"cart": CART_RATE}, carriage_crew={"cart": ("carter", 0.1)})
+        self.assertEqual(carriage_hours.crew_trades(setup, ""), ((fixture.LABOURER, 1.0),))
 
     def test_a_merchant_that_shipped_nothing_has_no_plan_and_bids_nothing(self):
         record = type("Record", (), {"merchants": {"m": Merchant("m", "a", "owner", 1.0)}, "cohorts": {}, "area_imbalance": 1.0})()
@@ -304,7 +306,7 @@ class LoanTimingTests(unittest.TestCase):
                      if request.borrower in record.merchants}
             wanted = {request.borrower: request.amount for request in carriage_hours.wage_loans(setup, record)}
             seen.append((asked, wanted))
-        with mock.patch.object(economy, "close_agents", watch):
+        with mock.patch.object(economy, "close_agents", watch), fixture.surplus_households():
             fixture.run(trading_setup(), 20)
         self.assertTrue(any(wanted for _asked, wanted in seen), "no merchant needed a loan, so the scenario shows nothing")
         for asked, wanted in seen:

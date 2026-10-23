@@ -11,7 +11,7 @@ from . import (carried_book, carriage_fleet_book, tax_farming, merchants_transit
 from .household_work_year import basket_key, cohort_basket
 from .households_cohort import renewed
 from .market_memory import market_key
-from .national_prices import national_prices
+from .national_prices import national_prices, traded_spending_weights
 from .notional import recently_traded_goods
 from .setup import labour_area
 from .taxes_bases import YearFacts
@@ -194,6 +194,7 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage) ->
     property_income: Dict[str, float] = {}
     traded = {(result.good, result.area): result.quantity for result in ledger.clearings}
     prepared_buyers: Dict = {}
+    service_lives = {good: spec.service_life_years for good, spec in setup.specs.items()}
     cohorts_by_tile: Dict = {}           # the tiles' cohorts, unchanged until the households close below
     for producer_id, producer in sorted(record.producers.items()):
         recipe = setup.recipes[producer.recipe_id]
@@ -205,7 +206,8 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage) ->
         price_share = expansion_price.price_share_of(ledger.bids_by_market, traded, area_map.area_of, producer.tile,
                                                    prepared_buyers)
         closed = producers_close.close_year(producer, recipe, revenue, costs, view, worked, price_share,
-                                            [good for good in recipe.outputs if good in setup.specs and not setup.specs[good].portable])
+                                            [good for good in recipe.outputs if good in setup.specs and not setup.specs[good].portable],
+                                            service_lives)
         shares.note_dividend(record, producer_id, closed.transfers)
         if closed.exited:
             paid = producer_exit.exit_producer(record, producer_id, list(closed.transfers))
@@ -248,7 +250,7 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage) ->
             received[good] = received.get(good, 0.0) + quantity
         income = ledger.wages_in.get(cohort_id, 0.0) + record.property_income.get(cohort_id, 0.0)
         spent = ledger.money_out.get(cohort_id, 0.0)
-        closed, moves = households.close_year(cohort, received, view, setup.specs, cohort_basket(setup, record, cohort),
+        closed, moves = households.close_year(cohort, received, view, setup.specs, cohort_basket(setup, record, cohort, buying=False),
                                                    income, spent)
         record.book.move_many(held_only(moves, record.book))
         record.cohorts[cohort_id] = closed
@@ -309,8 +311,15 @@ def remember_basket_price_level(setup, record) -> float:
     stay those of the opening; which goods are priced follows trade."""
     recent = recently_traded_goods(record.memory)
     prices = {good: price for good, price in national_prices(record).items() if good in recent}
-    level = currency.basket_price_level(prices, record.index_base_prices or setup.opening_prices, record.opening_basket)
-    record.memory.note_basket_price_level(setup.currency_id, level)
+    base = record.index_base_prices or setup.opening_prices
+    level = currency.basket_price_level(prices, base, record.opening_basket)
+    # the median's weights are what the goods traded for last year; the opening basket's value stands in until they trade
+    spending = traded_spending_weights(record.memory.volume_weights or record.volumes,
+                                       record.memory.last_year_prices or prices, set(record.opening_basket)) \
+        or {good: quantity * base.get(good, 0.0) for good, quantity in record.opening_basket.items()}
+    record.memory.note_basket_price_level(
+        setup.currency_id, level, currency.price_inflation(prices, record.memory.last_year_prices, spending))
+    record.memory.last_year_prices = dict(prices)
     return level
 
 
@@ -321,6 +330,8 @@ def rebase_basket_price_level(setup, record) -> None:
     money = setup.currency_id
     record.index_base_prices = national_prices(record)
     record.memory.basket_price_levels[money] = 1.0
+    record.memory.price_levels[money] = 1.0
+    record.memory.perceived_price_levels[money] = 1.0
     record.cohorts = {agent: renewed(cohort, last_basket_price_level=1.0)
                       for agent, cohort in record.cohorts.items()}
 

@@ -8,9 +8,30 @@ Run with `python3 -m sim.engine.validate_unlinked_producers`.
 import os
 import sys
 from collections import Counter
-from typing import Any, List, Mapping
+from typing import Any, Iterable, List, Mapping, Set, Tuple
 
 from sim.engine.node_output import entries_gated_by
+
+ALLOWED_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+                            "data", "unlinked_upkeep_nodes.txt")
+
+
+def load_allowed(path: str = ALLOWED_PATH) -> List[str]:
+    """The nodes still allowed to charge upkeep with no plant (Complaint 510), one id per line, sorted."""
+    with open(path, encoding="utf-8") as handle:
+        return [line.strip() for line in handle if line.strip()]
+
+
+def check_unlinked_upkeep(nodes: Mapping[str, Mapping[str, Any]], production: Mapping[str, Any],
+                          allowed: Iterable[str]) -> Tuple[List[str], List[str]]:
+    """(errors, stale): a node that charges upkeep, gates or operates no entry and is not allowed is an error; an allowed
+    node that no longer offends is stale, to be pruned from the list. Upkeep belongs to plants, not to knowledge."""
+    allowed_ids: Set[str] = set(allowed)
+    offenders = {node["id"] for node in unlinked_nodes(nodes, production)}
+    errors = ["%s: charges upkeep but gates or operates no production entry (a node is knowledge; upkeep belongs to the "
+              "plant of an entry that names it in operated_by; Complaint 510)" % node_id
+              for node_id in sorted(offenders - allowed_ids)]
+    return errors, sorted(allowed_ids - offenders)
 
 
 def unlinked_nodes(nodes: Mapping[str, Mapping[str, Any]], production: Mapping[str, Any]) -> List[Mapping[str, Any]]:

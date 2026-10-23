@@ -37,8 +37,8 @@ class WoodenToolFactor(unittest.TestCase):
     def test_the_unsourced_wooden_figures_still_name_their_retirement(self):
         with open(os.path.join(_ROOT, "data", "production", "96_wooden_tools.json"), encoding="utf-8") as handle:
             entry = json.load(handle)["materials"]["wooden_tools_kg"]
-        self.assertEqual((entry["conf"], entry["retire"]), ("D", "Complaint 659"))
-        self.assertIn("retire: Complaints/659", _farmer()["tool_fallback_source"])
+        self.assertEqual((entry["conf"], entry["retire"]), ("D", "Complaint 650"))
+        self.assertIn("retire: Complaints/650", _farmer()["tool_fallback_source"])
 
 
 if __name__ == "__main__":

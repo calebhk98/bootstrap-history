@@ -11,6 +11,7 @@ import math
 from dataclasses import dataclass
 from typing import Callable, Dict, List, Mapping, Optional, Sequence, Tuple
 
+from .entrant_rent import site_rent_per_run
 from . import labour_state, location_inputs, sites, unit_cost
 from .market_areas import MarketArea
 from .producers import Producer, live_input_prices
@@ -189,7 +190,7 @@ def _tile_part(setup, record, view, carriage, recipe, by_recipe, supplies, capac
         wages = {trade: _wage(setup, view, trade, tile) for trade in recipe.labour_hours}
         variable = unit_cost.variable_cost_per_run(
             recipe, live_input_prices(probe, recipe, view), wages,
-            record.land_rent.get(tile, 0.0) * setup.land_per_run.get(recipe.recipe_id, 0.0))
+            site_rent_per_run(setup, record, view, recipe.recipe_id, tile, factor))
     input_haul = location_inputs.input_haul_cost(recipe, setup.specs, carriage, supplies, tile)
     spare = spare_hours(labour_state.people_by_trade(record.workforce, labour_area(tile)), setup.working_hours_per_year,
                         committed.get(tile, 0.0))

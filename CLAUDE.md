@@ -233,6 +233,9 @@ Tooling: `python3 -m pylint sim/ | grep C0103` (worklist). Plan:
   the rule that broke, on the current code, with no bisect over merges; one that
   cannot is rewritten. Whole-game tests are kept only as named scenario or smoke
   tests. Where a rule needs the whole `Sim`, pull it into a plain function first.
+  A module that builds a whole game must say so: file name ending `_scenario`, `_validation` or `_smoke`, or a docstring
+  opening `SCENARIO`, `BASELINE VALIDATION` or `SMOKE`. `python3 -m sim.tests --whole-game-checks` lists the rest, and the
+  quick topic `whole_game_declared` fails on any not in `sim/tests/whole_game_leftovers.txt` (a list that only shrinks).
 - **Sources are read, not recalled.** A figure, in data, a constant or a design
   note, cites a source someone opened (author, work, page or URL). A research
   agent cites only what it opened in that session and writes "no source found"

@@ -161,7 +161,8 @@ class TradeView:
 		if destination == home:
 			sim.note_actor_home_trade(material, tonnes, True)
 		if destination != home:
-			sim.note_actor_trade(destination, material, tonnes, True)
+			sim.note_actor_trade(destination, material, tonnes, True, sim.landed_cost(
+				paid, self.freight_between(source, destination, material, tonnes)))
 		if source != home:
 			sim.note_actor_trade(source, material, tonnes, False)
 		sim.note_cargo_leg(trader_id, material, tonnes, source, destination, paid, received,

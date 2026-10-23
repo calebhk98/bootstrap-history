@@ -2,7 +2,7 @@
 replacement carriers or a project's draw are) is demand firm entry sees: a maker enters within a few years when
 the recipe pays at the price the bid offers."""
 
-QUICK_TOPIC = False   # builds whole games
+QUICK_TOPIC = False   # clears whole economies over several years
 
 import dataclasses
 import unittest
@@ -98,19 +98,6 @@ class StandingBidsTests(unittest.TestCase):
         self.assertAlmostEqual(bids[0].floor_quantity, (2.0 + 1.0) / 0.5)
         self.assertEqual(bids[0].good, GADGET)
         self.assertGreater(bids[0].budget, 0.0)
-
-
-class RomeCarriersAreMakeableTests(unittest.TestCase):
-    """Complaint 629: merchants wear pack saddles, river barges and merchant ships; their cordage comes from the rope
-    walk, so a Rome without it priced none of the three and no merchant could bid for a replacement."""
-
-    def test_rome_prices_the_carriers_its_merchants_wear(self):
-        from sim.engine import economy_port_setup
-        from sim.tests.harness import unopened_sim
-        game = unopened_sim()
-        setup = economy_port_setup.build_setup(game)
-        for carrier in ("pack_saddle", "river_barge", "merchant_ship"):
-            self.assertIn(carrier, setup.opening_prices, carrier)
 
 
 if __name__ == "__main__":

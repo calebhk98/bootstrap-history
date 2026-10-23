@@ -1,4 +1,4 @@
-"""Scenarios for the human front end, each a real run of the CLI: the --pretty rendering, the main menu and New Game
+"""SCENARIO (Complaint 640): for the human front end, each a real run of the CLI: the --pretty rendering, the main menu and New Game
 wizard, in-game and application options. Every check here reads text a player reads, so each is presentation; the
 rules behind them (the money word, the screens, the display width) are called on built replies in
 test_pretty_render_built_replies."""

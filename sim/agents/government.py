@@ -24,8 +24,10 @@ from .government_markets import MarketsMixin
 from .government_stores import StoresMixin
 from .edges import EDGE_PATRONAGE, EDGE_STATE_SPENDING
 from .government_surplus import SurplusMixin
+from .no_country_economy import NoCountryEconomy
+from . import ruler
 from .tuning import GOVERNMENT_WORTH_SHARE_PER_GAIN
-from .tuning_spending import ACCESSION_PROBABILITY_PER_YEAR, PUBLIC_BUILDING_LIFE_YEARS
+from .tuning_spending import PUBLIC_BUILDING_LIFE_YEARS
 from .values import invention_gains, weighted_gain
 
 
@@ -35,7 +37,7 @@ class Government(CorveeMixin, CreditRecordMixin, FiscalMixin, CoinageMixin, Ente
 	@property
 	def researches(self) -> bool:  # type: ignore[override]
 		"""Only the founder's country's state originates research: it spends the founder's research hands. A
-		country's state copies what it sees (retire: Complaint 649, research hands by country)."""
+		country's state copies what it sees; its research would be priced at the founder's figures (retire: Complaint 676)."""
 		return self.record.country is None
 
 	def imitation_worth(self, node_id: str, world: Any) -> float:
@@ -98,11 +100,7 @@ class Government(CorveeMixin, CreditRecordMixin, FiscalMixin, CoinageMixin, Ente
 	def military_ask(self, taxable: float, scale: float, world: Any) -> float:
 		"""What the state asks of a militarily useful taxpayer in arms: its unfunded army need,
 		in proportion to the taxpayer's part of the visible income, never past the ceiling."""
-		unfunded = self.record.unfunded.get("army", 0.0)
-		if unfunded <= 0.0 or self.record.levy_base <= 0.0:
-			return 0.0
-		own = world.notice_over(scale) * max(0.0, taxable)
-		return min(budget.LEVY_RATE_CEILING * max(0.0, taxable), unfunded * own / self.record.levy_base)
+		return budget.military_ask_of(self.record.unfunded.get("army", 0.0), self.record.levy_base, world.notice_over(scale), taxable)
 
 	def arrears_owed(self) -> float:
 		"""Pay the state owes its army and officials from earlier years."""
@@ -156,8 +154,12 @@ class Government(CorveeMixin, CreditRecordMixin, FiscalMixin, CoinageMixin, Ente
 
 	def pay_patron(self, share: float, world: Any) -> None:
 		"""Fund the founder as patron from what is left of the purse after the standing need.
-		A state that left any of its need unpaid funds nobody."""
-		ask = world.patron_ask() if share >= 1.0 else 0.0
+		A state that left any of its need unpaid funds nobody, and nor does one whose country the economy keeps no pay or output
+		for (it cannot say what to give)."""
+		try:
+			ask = world.patron_ask() if share >= 1.0 else 0.0
+		except NoCountryEconomy:
+			ask = 0.0
 		grant = min(ask, max(0.0, self.money))
 		self.record.patron_grant = grant
 		if grant > 0.0:
@@ -178,10 +180,21 @@ class Government(CorveeMixin, CreditRecordMixin, FiscalMixin, CoinageMixin, Ente
 			self.levy_sought(), kinds, self.record.levy_base)
 
 	def accede(self, world: Any) -> None:
-		"""A new ruler accedes with a yearly chance, and owes the army a donative until it is paid."""
-		draw = world.rng_for("accession", self.actor_id, world.year).random()
-		if draw < ACCESSION_PROBABILITY_PER_YEAR:
-			self.record.accession_due = True
+		"""The ruler ages a year and may die at his age band's mortality; his heir accedes, backed by the strongest faction
+		and owing the army a donative until it is paid. Where the two strongest factions are evenly matched the runner-up
+		may dispute the accession by arms (settled at the seat in the revolt phase)."""
+		record = self.record
+		record.ruler_age = ruler.opening_age() if record.ruler_age is None else record.ruler_age + 1.0
+		rng = world.rng_for("accession", self.actor_id, world.year)
+		if not ruler.dies(record.ruler_age, 1.0, rng.random()):
+			return
+		backing = world.faction_backing() if hasattr(world, "faction_backing") else {}
+		leader, challenger = ruler.contenders(backing)
+		record.ruler_age = ruler.heir_age(record.ruler_age)
+		record.ruler_backer = leader or ""
+		record.accession_due = True
+		disputed = challenger is not None and rng.random() < ruler.dispute_probability(backing)
+		record.succession_challenger = challenger if disputed and challenger else ""
 
 	def advance(self, world: Any) -> None:
 		held = dict(self.workforce)

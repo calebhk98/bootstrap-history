@@ -285,7 +285,7 @@
        "service_life_years": 18,
        "alternative_basis": "LABELLED HEURISTIC, conf D, no source found for the build bill or life of this fitted-out plant without iron; the fleshing beams, hooks and pegs the iron bar would make are wooden, of the same mass, a fifth more carpenter hours, and they wear out in about two thirds of the time. Retire: Complaint 666.",
        "conf": "D",
-       "retire": "Complaint 666"
+       "retire": "Complaint 671"
       }
      ],
      "capital_basis": "A tan-yard of about twelve hands is a row of stone- or timber-lined pits for lime, bate and bark liquors, a beam-house and a loft. Capacity is the staff's: the output a yard of that size makes at the entry's own six hours of labour a kilogram. Pit and building masses are order-of-magnitude figures.",
@@ -506,7 +506,7 @@
        "service_life_years": 10,
        "alternative_basis": "LABELLED HEURISTIC, conf D, no source found for the build bill or life of this fitted-out plant without iron; the rakes and bars that tend the kiln are wooden, of the same mass, and wear out in two thirds of the time. Retire: Complaint 666.",
        "conf": "D",
-       "retire": "Complaint 666"
+       "retire": "Complaint 671"
       }
      ],
      "capital_basis": "Bone is burned white in a small reverberatory or pot kiln; a kiln of some five thousand bricks charged every few days calcines on the order of seventy tonnes of bone to fifty tonnes of ash a year at the entry's yield. Masses are order-of-magnitude figures for a small kiln and shed. The plant is taken at the size the node's own crew can run at the entry's labour hours, a smaller plant of the same kind, so the figures are scaled down from the full-size works.",

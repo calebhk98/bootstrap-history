@@ -598,9 +598,10 @@
   },
   "wage_index": 0.5,
   "imported_ores": {
-    "silver": "the Taxco silver mines are dated by their catalogue entry to the 1530s, after this start, so no silver deposit in the catalogue was being worked; silver in Mexica hands came by tribute and trade as worked objects from West Mexican and Oaxacan metalworkers; recalled, not a figure from a source read for this entry"
+    "silver": "the Taxco silver mines are dated by their catalogue entry to the 1530s, after this start, so no silver deposit in the catalogue was being worked; silver in Mexica hands came by tribute and trade as worked objects from West Mexican and Oaxacan metalworkers; a note on where the metal came from, with no figure to source"
   },
   "unsupplied_basket_goods": {
+    "lard_kg": "No pigs are held and no partner supplies them: its households cook with other fats and oils.",
     "bronze_kg": "the bronze gate is held but its input tin_kg is gated on a node this society does not hold and no partner supplies tin; implements are met by stone and obsidian tools instead",
     "cheese_kg": "cheese needs milk_kg, and with no milking animals in the Americas the herd nodes are not held",
     "dyed_cloth_kg": "the dyed-cloth recipe is gated on the madder dyeing node, which this society does not hold (it is listed among its gated nodes), and no partner supplies the dyed cloth; the recipe set has no other dye gate for it (Complaints/533)",

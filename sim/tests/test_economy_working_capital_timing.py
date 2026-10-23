@@ -29,6 +29,8 @@ def short_producer_economy():
 
 
 class WorkingCapitalTimingTests(unittest.TestCase):
+    def setUp(self):
+        fixture.households_with_a_surplus(self)       # a loan is made out of savings, which only a surplus leaves
     def test_the_loan_is_struck_before_the_plan_and_falls_due_at_the_end_of_the_year_it_funds(self):
         economy, producer_id = short_producer_economy()
         year = economy.view().year

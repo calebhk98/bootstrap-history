@@ -8,6 +8,9 @@ from typing import Any, Callable, Dict, List, Optional
 
 from sim.refusal import Refusal
 
+from . import awareness
+from .no_country_economy import NoCountryEconomy
+
 SCHOLAR_FAMILY = "scholar"
 SCHOLAR_TRADE = "scholar"
 CRAFT_FAMILY = "craft"
@@ -39,6 +42,14 @@ def unserved_substitute_group(node: Dict[str, Any], has_option: Callable[[str], 
 	return None
 
 
+def materials_short_of_stock(needs_tonnes: Dict[str, float], buyable: Callable[[str], bool],
+							 held_tonnes: Callable[[str], float]) -> List[str]:
+	"""Materials the researcher cannot get: not for sale in reach and not held in enough tonnes by the researcher
+	itself (its own stock, not the founder's), sorted."""
+	return [material for material in sorted(needs_tonnes)
+			if not buyable(material) and held_tonnes(material) < needs_tonnes[material]]
+
+
 def hands_short(needed: float, available: float) -> float:
 	"""How many trained people short the researcher is of a node's requirement (0 when it has them)."""
 	return max(0.0, float(needed) - float(available))
@@ -54,6 +65,8 @@ def refusals(actor: Any, node_id: str, world: Any) -> List[Refusal]:
 	if node_id in actor.works:
 		return [Refusal("already_being_researched", "already being researched")]
 	found: List[Refusal] = []
+	if not awareness.knows_it_exists(actor, node_id, world):
+		found.append(Refusal("unaware", "has not yet learned that this exists"))
 	missing = unmet_prerequisites(node, lambda prerequisite: actor.knows(prerequisite, world))
 	if missing:
 		found.append(Refusal("prerequisites_unknown", "prerequisites unknown: " + ", ".join(sorted(missing)),
@@ -67,7 +80,13 @@ def refusals(actor: Any, node_id: str, world: Any) -> List[Refusal]:
 								  (CRAFT_FAMILY, node.get("art") or 0, "craft_staff")):
 		if needed <= 0:
 			continue
-		short = hands_short(needed, world.research_hands(actor, family))
+		try:
+			hands = world.research_hands(actor, family)
+		except NoCountryEconomy as error:     # the actor's country keeps no record of its people: it cannot start the work
+			found.append(Refusal("no_country_hands", "the actor's country keeps no record of its %s hands" % family,
+								 country=error.country, family=family))
+			continue
+		short = hands_short(needed, hands)
 		if short > 0.0:
 			found.append(Refusal(cause, "needs %d trained %s, and only %.1f can be put on it" % (
 				needed, "scholars" if family == SCHOLAR_FAMILY else "craftsmen", needed - short), needed=needed, short=short))

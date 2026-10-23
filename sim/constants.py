@@ -338,6 +338,7 @@ def _import_declaring_modules():
                    "sim.engine.core",
                    "sim.engine.society",
                    "sim.labour.labour",
+                   "sim.labour.learning_curve",
                    "sim.disease.numerics",
                    "sim.disease.nation_tuning",
                    "sim.engine.disease_port",

@@ -13,7 +13,7 @@ from sim.economy.types import EDGE_CONSUMPTION, EDGE_PRODUCTION, GoodsMove
 from sim.economy.year_close import held_only, learned_prices, national_prices
 from sim.economy import market_quote
 from sim.economy.types import QUOTE_BEST_UNFILLED_BID, QUOTE_COST_COVERING
-from sim.economy.year_goods import remembered_price
+from sim.economy.year_goods import price_after_trade, remembered_price
 
 
 def bid(maximum_price):
@@ -45,6 +45,26 @@ class RememberedPriceTests(unittest.TestCase):
 
     def test_a_market_with_no_history_takes_the_price(self):
         self.assertEqual(remembered_price(None, 2.0, 1.0, 0.0), 2.0)
+
+
+class PriceAfterTradeTests(unittest.TestCase):
+    def test_a_sliver_of_trade_replaces_a_remembered_quote_whole(self):
+        # a bid ceiling of 130 was remembered where nothing traded; a few units then clear at 13: the ceiling was never paid
+        self.assertEqual(price_after_trade(130.0, True, 13.0, 1.0, 1000.0, 0), 13.0)
+
+    def test_a_sliver_of_trade_still_moves_a_remembered_traded_price_a_sliver(self):
+        self.assertAlmostEqual(price_after_trade(130.0, False, 13.0, 10.0, 1000.0, 0), 130.0 + 0.01 * (13.0 - 130.0))
+
+    def test_a_sliver_cleared_above_a_remembered_quote_moves_it_a_sliver(self):
+        # thin supply meets the highest bid, so a sliver can only overstate the price: it may lower a quote whole but
+        # raises it only in proportion to its share of the usual volume
+        self.assertAlmostEqual(price_after_trade(3.0, True, 17e6, 1e-9, 5e4, 0), 3.0 + 1e-9 / 5e4 * (17e6 - 3.0))
+
+    def test_a_representative_trade_above_a_remembered_quote_replaces_it_whole(self):
+        self.assertEqual(price_after_trade(3.0, True, 5.0, 100.0, 100.0, 0), 5.0)
+
+    def test_a_trade_after_quiet_years_replaces_a_quote_too(self):
+        self.assertEqual(price_after_trade(130.0, True, 13.0, 1.0, 1000.0, 2), 13.0)
 
 
 class NationalPriceTests(unittest.TestCase):

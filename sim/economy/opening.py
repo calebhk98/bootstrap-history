@@ -11,9 +11,9 @@ import math
 from typing import Dict, List, Mapping, Tuple
 
 from sim.constants import declare
+from sim.refusal import Refusal
 
-from .household_work_year import basket_key, cohort_basket
-from . import carriage_fleet_book, currency, goods_market, opening_basket, opening_income, opening_metal, opening_runs, households, households_store, labour_state, location, location_inputs, mint, opening_stores, ownership, sites, titles, unit_cost
+from . import carriage_fleet_book, currency, goods_market, opening_basket, opening_bid_memory, opening_income, opening_metal, opening_plans, opening_runs, households, households_store, labour_state, location, location_inputs, mint, opening_stores, ownership, sites, titles, unit_cost
 from .accounts import Book
 from .market_areas import AreaMap
 from .market_memory import MarketMemory, YearView, market_key
@@ -45,15 +45,52 @@ MERCHANT_CAPITAL_SHARE_OF_OUTPUT = declare(
         "different estimate of the same thing.")
 
 
+class OpeningIncomeRefused(ValueError):
+    """The opening has no income at which its households save nothing; `refusal` says why (its `cause` and `facts`)."""
+    def __init__(self, refusal: Refusal):
+        super().__init__(str(refusal))
+        self.refusal = refusal
+
+
 def open_economy(setup: EconomySetup) -> Tuple[EconomyRecord, AreaMap, CarriageTable]:
-    """The opening in two passes: the first leaves a money stock, whose yearly loss of its metal is the demand
-    (the mint's) the second sizes the producers of the backing good to, along with everyone else's."""
+    """The opening solved to a fixed point with its households' first-year choices. A first solve leaves a money stock,
+    whose yearly loss of its metal is the demand (the mint's) the later solves size the producers of the backing good
+    to, along with everyone else's. Each solve is read by the households (what they hire, which grains they buy
+    milled, at its prices and wages) and solved again with those plans in final demand, until they stop changing
+    (opening_plans.py): the producers of what the households then buy are sized to it, and labour to the household
+    work they hire, as far as the hands left by the other producers go (past that the service price rises)."""
     first = _open(setup, 0.0)
     replacement = opening_metal.yearly_replacement(setup, first[0])
-    return _open(setup, replacement) if replacement > 0.0 else first
+    cache: Dict[str, Tuple[EconomyRecord, AreaMap, CarriageTable]] = {}
+
+    def open_with(plans):
+        if plans is None:
+            if "bare" not in cache:
+                cache["bare"] = first if replacement <= 0.0 else _open(setup, replacement)
+            return cache["bare"]
+        return _open(setup, replacement, plans)
+
+    def choose(opened):
+        if "room" not in cache:
+            bare = open_with(None)[0]
+            per_hour = _servant_hours_per_hired_hour(setup)
+            cache["room"] = {tile: hands / per_hour if per_hour > 0.0 else math.inf
+                             for tile, hands in opening_plans.hands_left_by_tile(setup, bare).items()}
+        return opening_plans.household_plans(setup, opened[0], opened[1], cache["room"])
+    settled = opening_plans.settle(open_with, choose, lambda opened: opened[0].cohorts)
+    opening_plans.post_service_prices(settled[0].memory, settled[1], setup, choose(settled).service_price_by_tile)
+    return settled
 
 
-def _open(setup: EconomySetup, replacement: float) -> Tuple[EconomyRecord, AreaMap, CarriageTable]:
+def _servant_hours_per_hired_hour(setup: EconomySetup) -> float:
+    """Hours of labour a year the producers of an hour of household work hire per hour hired: what a unit of the
+    service takes (the dearest way, where several make it)."""
+    return max([math.fsum(recipe.labour_hours.values()) / made
+                for good in opening_plans.service_goods(setup, setup.capital_tile)
+                for recipe in setup.recipes.values() for made in [recipe.outputs.get(good, 0.0)] if made > 0.0] or [0.0])
+
+
+def _open(setup: EconomySetup, replacement: float, plans=None) -> Tuple[EconomyRecord, AreaMap, CarriageTable]:
     carriage = setup.carriage_table()
     priced_goods = {good: price for good, price in setup.opening_prices.items()
                     if good in setup.specs and price > 0.0}
@@ -63,6 +100,8 @@ def _open(setup: EconomySetup, replacement: float) -> Tuple[EconomyRecord, AreaM
                            ways={key: dict(built) for key, built in setup.improvements.items()})
     view = YearView(memory, record.book, area_map, setup.currency_id, labour_area)
     _open_cohorts(setup, record)
+    if plans is not None:
+        record.cohorts.update(opening_plans.with_plans(record.cohorts, plans))
     _settle_income(setup, record, view, priced_goods, replacement)
     _seed_durable_stocks(setup, record, view)
     final_by_tile = _final_demand(setup, record, view, replacement)
@@ -111,7 +150,7 @@ def _store_goods(setup, view, area_map, priced_goods) -> set:
 
 def _opening_memory(setup, area_map, priced_goods) -> MarketMemory:
     memory = MarketMemory(year=0, rates={setup.currency_id: setup.opening_rate},
-                          basket_price_levels={setup.currency_id: 1.0})
+                          basket_price_levels={setup.currency_id: 1.0}, last_year_prices=dict(priced_goods))
     for good, price in priced_goods.items():
         for area in area_map.areas(good):
             memory.prices[market_key(good, area.area_id)] = price
@@ -139,37 +178,39 @@ def _settle_income(setup, record, view, priced_goods, replacement) -> None:
     """Households' opening income is the value of the final demand it pays for, not the full-employment ceiling
     (opening_income.py): the producers sized to that demand then pay out the income the households received.
     Workers are paid alike out of the labour share of it; owners receive the rest by what they own."""
-    if setup.opening_income_per_head is not None:      # the scenario states its households' income
-        record.cohorts.update(opening_income.with_income(record.cohorts, setup.opening_income_per_head, 0.0))
-        return
     people = math.fsum(cohort.people for cohort in record.cohorts.values())
     recipes = setup.recipes
     ceilings = opening_runs.run_ceilings(recipes, sites.limits_by_recipe(setup.site_limits))
     yields = opening_runs.mean_yields(setup, recipes)
     ranked = opening_runs.ranked_recipes(recipes, priced_goods, setup.opening_wages, setup.opening_rate, None, yields)
     share = {"labour": 0.0}
+    memory = opening_bid_memory.BidMemory()
 
     def demand_at(per_head):
         record.cohorts.update(opening_income.with_income(record.cohorts, per_head, share["labour"]))
-        final = _final_demand(setup, record, view, replacement)
+        final = _final_demand(setup, record, view, replacement, memory)
         value = opening_income.value_of(final, priced_goods)
         runs = opening_runs.required_runs(final, ranked, recipes, ceilings, yields)
         share["labour"] = opening_income.labour_share_of(runs, recipes, setup.opening_wages, value)
         return value, share["labour"]
 
-    per_head, labour_share = opening_income.settled_income_per_head(_full_employment_income_per_head(setup), people, demand_at)
+    settled = opening_income.settled_income_per_head(_full_employment_income_per_head(setup), people, demand_at)
+    if isinstance(settled, Refusal):
+        raise OpeningIncomeRefused(settled)
+    per_head, labour_share = settled
     record.cohorts.update(opening_income.with_income(record.cohorts, per_head, labour_share))
 
 
-def _opening_bids(setup, record, view):
-    """(cohort, bid, price) for what each cohort would buy at the opening prices with the opening income."""
-    priced_by_tile = {}
+def _opening_bids(setup, record, view, memory=None):
+    """(cohort, bid, price) for what each cohort would buy at the opening prices with the opening income. A `memory`
+    (opening_bid_memory.py) kept across calls that change only incomes spares the work that does not depend on them."""
+    memory = opening_bid_memory.BidMemory() if memory is None else memory
     for cohort in sorted(record.cohorts.values(), key=lambda each: each.agent_id):
-        basket = cohort_basket(setup, record, cohort)
-        priced = priced_by_tile.setdefault(basket_key(record, cohort), households.need_prices(basket, view, cohort.tile))
+        basket = memory.basket(setup, record, cohort)
+        priced = memory.priced(setup, record, view, cohort, basket)
         income = cohort.last_year_income
         orders = households.goods_orders(cohort, view, income, income, basket, setup.specs,
-                                         priced)
+                                         priced, shared_store=memory.stores(record, cohort))
         for bid in orders.bids:
             price = view.price(bid.good, bid.area)
             if price:
@@ -194,11 +235,11 @@ def _seed_durable_stocks(setup, record, view) -> None:
         record.book.move_many(moves)
 
 
-def _final_demand(setup, record, view, replacement=0.0) -> Dict[TileId, Dict[GoodId, float]]:
+def _final_demand(setup, record, view, replacement=0.0, memory=None) -> Dict[TileId, Dict[GoodId, float]]:
     """What each tile's households buy at the opening prices with the opening income, and the metal the mint
     buys to replace what the money loses (at the capital)."""
     final: Dict[TileId, Dict[GoodId, float]] = {}
-    for cohort, bid, price in _opening_bids(setup, record, view):
+    for cohort, bid, price in _opening_bids(setup, record, view, memory):
         demand = final.setdefault(cohort.tile, {})
         demand[bid.good] = demand.get(bid.good, 0.0) + goods_market.quantity_at(bid, price)
     if replacement > 0.0:
@@ -224,14 +265,23 @@ def _placement_order(runs, recipes, setup) -> List[str]:
     produced = {recipe_id: _main_output(recipes[recipe_id], setup.opening_prices) for recipe_id in runs}
     by_limits = sites.limits_by_recipe(getattr(setup, "site_limits", ()))
     ordered: List[str] = [recipe_id for recipe_id in sorted(runs) if sites.is_sited(recipes[recipe_id], by_limits)]
-    waiting = [recipe_id for recipe_id in sorted(runs) if recipe_id not in ordered]
+    hands_only = [recipe_id for recipe_id in sorted(runs) if recipe_id not in ordered and _only_hands(recipes[recipe_id], setup)]
+    waiting = [recipe_id for recipe_id in sorted(runs) if recipe_id not in ordered and recipe_id not in hands_only]
     while waiting:
         ready = [recipe_id for recipe_id in waiting
                  if all(user in ordered or user == recipe_id for user in users.get(produced[recipe_id], ()))]
         step = ready or waiting[:1]
         ordered.extend(step)
         waiting = [recipe_id for recipe_id in waiting if recipe_id not in step]
-    return ordered
+    return ordered + hands_only
+
+
+def _only_hands(recipe: Recipe, setup) -> bool:
+    """A service made from hours alone (nothing bought, no plant, flagged a service in data or with nothing to carry): it is made where it is wanted by
+    whoever has hands left, so it is placed after the producers that need a place for their inputs."""
+    spec = getattr(setup, "specs", {}).get(_main_output(recipe, setup.opening_prices))
+    return (bool(recipe.labour_hours) and not recipe.inputs and not recipe.plant_goods
+            and (recipe.service or (spec is not None and not spec.portable)))
 
 
 def _within(area, tiles):

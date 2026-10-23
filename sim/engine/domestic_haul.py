@@ -9,7 +9,7 @@ import json
 
 from sim.geography.api import flow_ledger, freight_cost, walking_cargo_modes
 
-from .haul_route import Leg, Route
+from .haul_route import Leg, Route, cargo_class_of, domestic_haul_mode, unjoined_haul_cost
 from .living_stock_yearly import stock_rates
 
 DOMESTIC_CART_MODE = "cart"
@@ -20,7 +20,7 @@ class DomesticHaulMixin:
 
     def _cargo_class(self, material):
         """"living_stock" for stock the living-stock data says walks (animals), else "goods" (seed, cuttings, eggs)."""
-        return "living_stock" if stock_rates().get(material, {}).get("walks") else "goods"
+        return cargo_class_of(stock_rates().get(material))
 
     def _domestic_flow_ledger(self):
         """Last year's goods carried between the economy's tiles, {origin: {destination: tonnes}}; empty
@@ -34,10 +34,7 @@ class DomesticHaulMixin:
     def _domestic_haul_mode(self, cargo):
         """The mode a domestic haul of this class of cargo goes by: the cart for goods, the first mode
         whose cargo walks for living stock."""
-        if cargo == "living_stock":
-            walking = walking_cargo_modes(self.world_map)
-            return walking[0] if walking else DOMESTIC_CART_MODE
-        return DOMESTIC_CART_MODE
+        return domestic_haul_mode(cargo, walking_cargo_modes(self.world_map) if cargo == "living_stock" else (), DOMESTIC_CART_MODE)
 
     def domestic_haul_dues_per_tonne(self, mode=DOMESTIC_CART_MODE):
         """Home money in tolls and dues a haul pays when it changes to the mode (the geography's hours of
@@ -72,8 +69,8 @@ class DomesticHaulMixin:
         if distance_km is None:
             return None
         mode = self._domestic_haul_mode(self._cargo_class(material))
-        cost = (self._freight_mode_costs(imbalance, (mode,))[mode] * distance_km
-                + self.domestic_haul_dues_per_tonne(mode))
+        cost = unjoined_haul_cost(self._freight_mode_costs(imbalance, (mode,))[mode], distance_km,
+                                  self.domestic_haul_dues_per_tonne(mode))
         days = freight_cost.days_on_leg(distance_km, self._carrier_models()[mode][0])
         return self._with_carried_provisions(Route((Leg("source", "home", mode, distance_km, cost, days),)))
 

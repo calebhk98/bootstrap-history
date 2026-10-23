@@ -2,8 +2,8 @@
 
 `close_year(producer, recipe, revenue, costs, view)` -> `YearClose`
     pays the owner the cash above the producer's target, applies wear to the plant, counts a loss
-    year when revenue did not cover the costs paid plus the plant's charge at the live rate, exits
-    after enough of them, and asks for a loan to rebuild and grow when new plant would earn more than
+    year when revenue did not cover the costs paid plus the plant's charge at the live rate, sheds
+    workplaces whose expected sales do not cover running cost (all of them, so it exits, when none would), and asks for a loan to rebuild and grow when new plant would earn more than
     the live rate. A funded loan becomes capacity through `producers.with_capacity`.
 `entrants(recipes, view, sites, occupied)` -> new `Producer`s where the expected return beats the live
     rate, best first, at most a declared number a year. Owners and sites come from the caller.
@@ -14,7 +14,7 @@ from typing import Callable, Collection, List, Mapping, Optional, Sequence, Tupl
 
 from sim.constants import declare
 
-from . import inventory, unit_cost
+from . import credit, idle_capacity, inventory, unit_cost
 from .producers import (OUTPUT_CHANGE_SHARE_PER_YEAR, Producer, expected_output_prices, live_input_prices,
                         live_wages, next_expectations, share_working, within_a_years_change)
 from .protocols import MarketView
@@ -24,16 +24,9 @@ from .replaced import replaced
 LOSS_YEARS_BEFORE_EXIT = declare(
     "LOSS_YEARS_BEFORE_EXIT", 3, kind="temporary_heuristic", unit="consecutive years",
     source=None, confidence="D",
-    why="An owner keeps a losing producer going for a while on hope, reserves and the cost of "
-        "closing. How long follows the owner's wealth and credit, which are not yet tied to the "
-        "decision; one count for every producer.")
-IDLE_CAPACITY_DECAY_SHARE = declare(
-    "IDLE_CAPACITY_DECAY_SHARE", 0.25, kind="temporary_heuristic",
-    unit="share of the gap between capacity and runs worked that is given up in a year", source=None,
-    confidence="D",
-    why="Capacity with no plant is hands and tools kept for work: unused while its runs would not pay, "
-        "the hands leave and the workings fall in. How fast follows hiring contracts and the cost of reopening a working, "
-        "which are not modelled; one share for every plantless recipe.")
+    why="Entry (entry_margin.py) waits this many years of a standing margin before newcomers come. A producer's own "
+        "exit no longer waits on it: plant is shed when expected sales do not cover running cost. How long newcomers "
+        "wait follows their credit and the time to build, which are not yet tied to the decision.")
 WORKING_CAPITAL_YEARS_OF_VARIABLE_COST = declare(
     "WORKING_CAPITAL_YEARS_OF_VARIABLE_COST", 1.0, kind="temporary_heuristic",
     unit="years of full-capacity variable cost", source=None, confidence="D",
@@ -73,11 +66,12 @@ def working_capital_target(recipe: Recipe, capacity_runs: float, input_prices, w
 def close_year(producer: Producer, recipe: Recipe, revenue: float, costs: float, view: MarketView,
                worked_runs: Optional[float] = None,
                price_share_after: Optional[Callable[[GoodId, float], float]] = None,
-               ground_goods: Collection[GoodId] = ()) -> YearClose:
+               ground_goods: Collection[GoodId] = (), service_lives: Optional[Mapping[GoodId, float]] = None) -> YearClose:
     """`worked_runs` is what the producer ran this year (all its capacity when not given). Idle plant is
     sunk, so the year's capital charge falls only on the capacity worked. `price_share_after(good, added)` is
     the share of a good's price that remains when the producer adds that much output a year (expansion_price.py);
-    without it the producer expects the price it sees."""
+    without it the producer expects the price it sees. `service_lives` maps a good to the years it lasts: idle
+    capacity with tools wears at theirs (idle_capacity.py)."""
     first_output = min(recipe.outputs)
     currency = view.currency_of(view.area_of(first_output, producer.tile))
     rate = view.interest_rate(currency)
@@ -93,8 +87,10 @@ def close_year(producer: Producer, recipe: Recipe, revenue: float, costs: float,
     revenue_per_run, cost_per_run = _expected_run(producer, recipe, view, expectations, inputs, wages, ground_goods)
     margin = revenue_per_run - cost_per_run
     paying = share_working(revenue_per_run, cost_per_run) if math.isfinite(margin) else 0.0
-    shedding = losses >= LOSS_YEARS_BEFORE_EXIT and margin <= 0.0
-    if shedding and paying < CLOSED_CAPACITY_SHARE:
+    shedding = margin <= 0.0      # expected sales do not cover running cost, whatever the years behind
+    # it leaves at once only when no workplace pays and the market no longer calls for its output: while it still
+    # expects sales, buyers with no other seller lift the price, and the shed below goes no faster than workplaces change
+    if shedding and paying < CLOSED_CAPACITY_SHARE and producer.expected_sales <= CLOSED_CAPACITY_SHARE * producer.capacity_runs:
         payout = _dividend(producer, currency, cash)
         gone = replaced(producer, capacity_runs=0.0, years_of_loss=losses, expected_prices=expectations,
                        cash_target=0.0)
@@ -104,14 +100,18 @@ def close_year(producer: Producer, recipe: Recipe, revenue: float, costs: float,
         capacity = producer.capacity_runs - wear
     else:
         wear = 0.0
-        # hands are let go when their work would not pay; a workshop waiting on inputs or buyers keeps them
+        # idle tools wear when the work would not pay; a workshop waiting on inputs or buyers keeps them
         idle = producer.capacity_runs - worked if margin <= 0.0 else 0.0
-        capacity = producer.capacity_runs - IDLE_CAPACITY_DECAY_SHARE * idle
+        capacity = producer.capacity_runs - idle_capacity.wear_share_per_year(recipe, service_lives or {}) * idle
     if shedding:
         # one producer stands for every workplace in its market: those whose cost the price does not cover
-        # close, no faster than workplaces open (OUTPUT_CHANGE_SHARE_PER_YEAR), and those that pay stay
-        capacity = min(capacity, max(paying * producer.capacity_runs,
-                                     (1.0 - OUTPUT_CHANGE_SHARE_PER_YEAR) * producer.capacity_runs))
+        # close, no faster than workplaces open (OUTPUT_CHANGE_SHARE_PER_YEAR), and those that pay stay. Not so many
+        # close that the ones that pay (the share `paying`) would make less than it expects to sell: short supply
+        # would lift the price until more of them paid, so workplaces its sales still need are not shed
+        shed = min(capacity, max(paying * producer.capacity_runs,
+                                 (1.0 - OUTPUT_CHANGE_SHARE_PER_YEAR) * producer.capacity_runs))
+        needed = producer.expected_sales / paying if paying > 0.0 else producer.capacity_runs
+        capacity = max(shed, min(capacity, needed))
     target = working_capital_target(recipe, capacity, inputs, wages)
     request, rebuilt = _expansion(producer, recipe, view, currency, rate, capacity, worked, inputs, wages,
                                   price_share_after)
@@ -127,7 +127,7 @@ def close_year(producer: Producer, recipe: Recipe, revenue: float, costs: float,
 def _expected_run(producer, recipe, view, expectations, inputs, wages, ground_goods=()) -> Tuple[float, float]:
     """(expected revenue, variable cost) of one run at expected prices; plant already built is sunk and left
     out. A cost or price that cannot be known counts as no margin: (0, infinity)."""
-    prices = {good: expectations.get(good, view.price(good, view.area_of(good, producer.tile)))
+    prices = {good: expectations[good] if good in expectations else view.price(good, view.area_of(good, producer.tile))
               for good in recipe.outputs}
     if any(price is None for price in prices.values()):
         return 0.0, math.inf
@@ -165,7 +165,7 @@ def _working_capital(producer, recipe, currency, worked, capacity, cash_kept, pa
     if short_runs <= 0.0:
         return None
     amount = short_runs * paid_now
-    return LoanRequest(producer.agent_id, currency, amount, (revenue_per_run - paid_now) / paid_now, 1.0, amount,
+    return LoanRequest(producer.agent_id, currency, amount, credit.earnable_rate(revenue_per_run - paid_now, paid_now), 1.0, amount,
                        WORKING_CAPITAL_PURPOSE)
 
 
@@ -199,5 +199,5 @@ def _expansion(producer, recipe, view, currency, rate, capacity, worked, inputs,
     if yearly_return <= rate:
         return None, 0.0
     amount = runs * value
-    return LoanRequest(producer.agent_id, currency, amount, yearly_return, recipe.plant_life_years,
+    return LoanRequest(producer.agent_id, currency, amount, credit.earnable_rate(yearly_return), recipe.plant_life_years,
                        amount, "expand"), runs

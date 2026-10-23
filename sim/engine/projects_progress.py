@@ -21,7 +21,9 @@ from sim.constants import declare
 from .completion_schedule import calendar_floor_years, earliest_completion_years, payment_schedule_years
 from .failure_diagnosis import failure_teaches
 from .industry_depth import depth_risk_multiplier
+from .retry_calendar import retry_calendar_retain
 from .trade_demand import trade_demand_table
+from .risk_rules import control_relief_multiplier, effective_risk_of
 from .projects_precaution import chosen as precaution_chosen, relief_multiplier as precaution_relief, quote as precaution_quote
 
 
@@ -317,9 +319,7 @@ class ProgressMixin:
         # `attempt_index` only lets a projection ask about a hypothetical one.
         if attempt_index is None:
             attempt_index = self.state.projects.failed_attempts.get(node_id, 0)
-        if attempt_index <= 0:
-            return 0.0
-        return self.RETRY_CALENDAR_CAP * (1.0 - self.RETRY_CALENDAR_DECAY ** attempt_index)
+        return retry_calendar_retain(self.RETRY_CALENDAR_CAP, self.RETRY_CALENDAR_DECAY, attempt_index)
 
     # CONTROL RELIEF: Process controller cuts risk by 35% for process-control nodes.
     # Earned once, independent of failed_attempts. Nodes opt in via tree data.
@@ -341,12 +341,9 @@ class ProgressMixin:
             "figure for early control systems.")
 
     def _control_relief_multiplier(self, node_id):
-        failure_kind = self.nodes[node_id].get("failure_kind")
-        for relief_id in self.nodes_with_mechanic("failure_relief"):
-            if (self.mechanic(relief_id, "failure_relief")["failure_kind"] == failure_kind
-                    and relief_id in self.state.projects.done):
-                return self.CONTROL_RELIEF_FACTOR
-        return 1.0
+        in_force = [self.mechanic(relief_id, "failure_relief")["failure_kind"]
+                    for relief_id in self.nodes_with_mechanic("failure_relief") if relief_id in self.state.projects.done]
+        return control_relief_multiplier(self.nodes[node_id].get("failure_kind"), in_force, self.CONTROL_RELIEF_FACTOR)
 
     def effective_risk(self, node_id, precaution=None):
         """This node's actual chance of failing on its NEXT attempt, after
@@ -365,9 +362,8 @@ class ProgressMixin:
         bought = precaution_chosen(self, node_id) if precaution is None else precaution
         # Running the technique and failing at it are one stock of experience (industry_depth.py).
         learned = depth_risk_multiplier(self.industry_depth(node_id))
-        return (self.nodes[node_id]["risk"] * learned
-                * self._control_relief_multiplier(node_id)
-                * precaution_relief(self, node_id, bought))
+        return effective_risk_of(self.nodes[node_id]["risk"], learned, self._control_relief_multiplier(node_id),
+                                 precaution_relief(self, node_id, bought))
 
     def precaution_quote(self, node_id):
         """What the node's pilot plant or redundant team would cost and buy, or None."""

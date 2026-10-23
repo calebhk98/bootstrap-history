@@ -1,7 +1,8 @@
 """Complaints 79, 125, 201, 229, 231, 237: blocker kinds declared, luckless nodes, alert tiers and stop reasons.
 
-Rules are tested on the data, on built alerts and on a stand-in for the labour's world; two named scenarios read
+Rules are tested on the data, on built alerts and on a stand-in for the labour's world; two named scenarios (test_alerts_staffing_finish_scenario) read
 the `labour` reply and the staff step's departures off a game."""
+QUICK_TOPIC = True
 from types import SimpleNamespace
 
 from .harness import *  # noqa: F401,F403
@@ -76,29 +77,3 @@ stopping = departures("death", {"artisan": 1}, stops=["smithy"])
 check("a loss that leaves a concern the staffing rule will shut is its own kind of event",
       cause_of(stopping[0]) == "staff_lost_stops_concerns" and stopping[0].facts["stops"] == ["smithy"], stopping)
 check("nobody lost is no line", departures("death", {"artisan": 0}) == [])
-
-# --- scenario: the `labour` reply carries a per-trade ceiling label and the workforce block, and the screen renders it
-from sim.ui.protocol import _agent_dispatch
-from sim.ui.proto.render_screens_economy import render_labour
-live = sim()
-labour_reply = _agent_dispatch(live, NODES, {"cmd": "labour"})
-label = labour_reply.get("and_how_many_of_the_lettered_trades_this_society_supplies", "")
-workforce = labour_reply.get("workforce") or {}
-# presentation: the label says each trade has its own ceiling
-check("scenario: the labour reply's ceiling label is per trade, not one shared total, and it carries a workforce block "
-      "that the screen renders",
-      "own ceiling" in label and "scholar" in label and "in total" not in label
-      and {"depends_on_one_person", "expected_losses_per_year", "in_training"} <= set(workforce)
-      and "WORKFORCE RISK" in render_labour(labour_reply), (label, workforce))
-
-# --- scenario: the staff step labels its departures by cause
-staffed = sim(capital=10000000.0, events=False)
-staffed.employees["scholar"] = 8.0
-staffed.employees["artisan"] = 40.0
-staffed.labour._resync_pools()
-for _ in range(12):
-    staffed._step_staff()
-loss_lines = [message for _, message in staffed.log if cause_of(message) in ("staff_lost", "staff_lost_stops_concerns")]
-check("scenario: over twelve years the staff step logs departures, each of one cause: death or better offers",
-      loss_lines and all(line.facts["reason"] in ("death", "better_offers") for line in loss_lines),
-      [str(line) for line in loss_lines[:3]])

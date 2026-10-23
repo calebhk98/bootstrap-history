@@ -53,8 +53,10 @@ def close_year(cohort: Cohort, received_by_good: Mapping[GoodId, float], view: M
     if first_good is not None:
         money = view.currency_of(view.area_of(first_good, cohort.tile))
         level = view.basket_price_level(money)
-        expected = currency.update_expected_inflation(
-            cohort.expected_inflation, level / cohort.last_basket_price_level - 1.0)
+        observed = getattr(view, "observed_inflation", lambda _money: None)(money)
+        if observed is None:
+            observed = level / cohort.last_basket_price_level - 1.0
+        expected = currency.update_expected_inflation(cohort.expected_inflation, observed)
         target = currency.cash_balance_target(spent or income_received, view.interest_rate(money), expected)
     return renewed(cohort, expected_inflation=expected, last_basket_price_level=level, cash_target=target,
                    last_year_income=income_received, last_year_spending=spent,

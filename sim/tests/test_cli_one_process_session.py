@@ -1,4 +1,4 @@
-"""One live process playing many commands leaves the same save as one process per command."""
+"""SCENARIO (Complaint 640): One live process playing many commands leaves the same save as one process per command."""
 from .harness import *  # noqa: F401,F403
 from . import cli_in_process
 

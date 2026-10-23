@@ -34,6 +34,7 @@ class ContinuityTests(unittest.TestCase):
 class FixtureFlickerTests(unittest.TestCase):
     def test_posted_rent_on_a_land_binding_tile_never_drops_to_nothing(self):
         # with stepped bands the rent flipped between nothing and a share of the output value
+        economy_fixture.households_with_a_surplus(self)
         setup = economy_fixture.small_setup(land_per_run={economy_fixture.FARM: 5.0})
         economy = economy_fixture.Economy(setup)
         posted = []

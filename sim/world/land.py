@@ -817,7 +817,9 @@ def load_region_lands(geography: Optional[Dict[str, Any]] = None) -> Dict[str, R
         out[region_key] = RegionLand(
             region=region_key, land_area_km2=land_area_km2,
             arable_fraction=arable_km2 / land_area_km2 if land_area_km2 else 0.0,
-            fertility_quality_multiplier=(weighted_fertility / arable_km2 if arable_km2 > 0.0 else 0.0),
+            fertility_quality_multiplier=(weighted_fertility / arable_km2 if arable_km2 > 0.0 else
+                                          sum(tiles[tile_id]["land_area_km2"] * tiles[tile_id]["fertility_quality_multiplier"]
+                                              for tile_id in tile_ids) / land_area_km2),   # no arable ground: the plain mean
             arable_hectares=arable_km2 * _KM2_TO_HECTARES)
     return out
 

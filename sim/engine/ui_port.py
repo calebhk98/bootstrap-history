@@ -16,7 +16,7 @@ from sim.engine.data import (  # noqa: F401
     topo_order, trade_family, TRADE_FAMILY, TRADE_NOTES, TRADES_ABSENT, WAGES,
     win_condition_describe)
 from sim.engine.default_civilisation import default_civilisation_id  # noqa: F401
-from sim.engine.fog import strip_self_play_advice  # noqa: F401
+from sim.engine.fog import prerequisite_names, strip_self_play_advice  # noqa: F401
 from sim.engine.mod_code import COMMAND_REGISTRATIONS, code_report, run_mod_code  # noqa: F401
 from sim.engine.mod_code import allow as allow_mod_code  # noqa: F401
 from sim.engine import mod_stores  # noqa: F401
@@ -26,7 +26,7 @@ from sim.engine.foreign_economy_data import foreign_economy_document  # noqa: F4
 from sim.engine.hazard_window import hazards_not_yet_past  # noqa: F401
 from sim.engine.identity_cache import IdentityCache  # noqa: F401
 from sim.engine.mods import get_ordered_mods  # noqa: F401
-from sim.labour.api import format_occupational_report, hours_by_trade_of_all_employers, occupational_report  # noqa: F401
+from sim.labour.api import format_occupational_report, hours_by_trade_of_all_employers, occupational_report, people_by_trade_of_all_employers  # noqa: F401
 from sim.engine.knowledge_warning import knowledge_loss_warning, warning_lines  # noqa: F401
 from sim.engine.permanent_benefit import permanent_parts  # noqa: F401
 from sim.engine.projects_completion import FAILED_PREFIX, goal_movement, MINOR_MARK  # noqa: F401
@@ -104,6 +104,11 @@ def electricity_demand_kw(sim):
 
 def disease_burden(sim):
     return sim._disease_burden()
+
+
+def epidemic_forecast(sim):
+    """The disease model's forecast of the coming year (see `DiseasePortMixin.epidemic_forecast`)."""
+    return sim.epidemic_forecast()
 
 
 def last_demographic_step(sim):

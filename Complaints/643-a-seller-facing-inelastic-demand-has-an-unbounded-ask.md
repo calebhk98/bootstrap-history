@@ -41,3 +41,16 @@ the band and stops; an inelastic book does not give an unbounded ask.
   is cut by the unsold search, not by a stock target.
 - Within-year rounds where buyers switch sellers (Lengnick, Caiani).
 - Re-measure the spin-up: `python3 sim/simulator.py spin-up-trace --civ rome_100ad --years 60`.
+
+## Charcoal's home ask far above its long-run price (PM, 2026-10-22)
+
+`business_review_scenario`'s trace found charcoal's home ask at many times its long-run cost-covering price both before and
+after the held rate (641), enough to drive a consumer concern's market factor to zero. The ask band should bound it. Measure
+with `goods_market.home_unit_price('charcoal_kg')` against the long-run price on a default Rome game.
+
+## Glass opens at many times ceramic's price (PM, 2026-10-22)
+
+526's trace found `glass_raw_kg` opening in England at a price per kilogram tens of times ceramic's, which made it most of the
+opening basket's value while it is a small share of what trades. A raw glass ask that high against its making cost is the ask
+band failing to bound it, or the opening solve pricing it from a thin quote. Measure with `economy_api.agent_prices` against
+`_material_prices` on an opened England game.

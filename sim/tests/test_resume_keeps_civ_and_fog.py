@@ -1,4 +1,4 @@
-"""A save says what game it is: resuming `play --session` needs no --civ, keeps fog of war on,
+"""SCENARIO (Complaint 640): A save says what game it is: resuming `play --session` needs no --civ, keeps fog of war on,
 and a contradicting --civ is refused rather than started over the top of the save."""
 
 from . import cli_in_process

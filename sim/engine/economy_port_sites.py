@@ -71,13 +71,15 @@ def deplete(sim, extraction, outputs_by_recipe):
                 break
 
 
-def crop_yields(economy, weather=1.0):
-    """{producer id: yield factor} for the producers whose recipe takes land: the year's weather times the tile's
-    soil, climate and water for a recipe that crops (setup.yield_factor_by_recipe_tile), the weather alone for
-    pasture and forest."""
+def crop_yields(economy, weather=1.0, weather_by_tile=None):
+    """{producer id: yield factor} for the producers whose recipe takes land: the weather of the producer's own tile
+    (`weather_by_tile`, else the pooled `weather`) times the tile's soil, climate and water for a recipe that crops
+    (setup.yield_factor_by_recipe_tile), the weather alone for pasture and forest."""
     setup = economy.setup
     site_yield = setup.yield_factor_by_recipe_tile
-    return {producer_id: weather * site_yield.get(recipe_tile_key(producer.recipe_id, producer.tile), 1.0)
+    weather_by_tile = weather_by_tile or {}
+    return {producer_id: weather_by_tile.get(producer.tile, weather)
+            * site_yield.get(recipe_tile_key(producer.recipe_id, producer.tile), 1.0)
             for producer_id, producer in economy_api.producers_of(economy).items()
             if setup.land_per_run.get(producer.recipe_id, 0.0) > 0.0}
 

@@ -13,4 +13,6 @@ HIDING_MARGINAL_COST_AT_CEILING = declare(
 	source=None, confidence="D", retire=_RETIRE,
 	why="What hiding the last unit of income costs (go-betweens, goods held out of the market, false books) when a payer "
 		"already hides all it can; the cost of each unit before it rises in proportion to the share already hidden. "
-		"No source found; stands in for a model of the price of secrecy.")
+		"No source found; stands in for a model of the price of secrecy. With a penalty in proportion to the tax unpaid the "
+		"rate has no effect on hiding except through this curve (Yitzhaki 1974; evasion.py), so it also sets the "
+		"size of the whole rate response.")

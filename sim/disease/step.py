@@ -54,13 +54,13 @@ def step_groups(pathogen, patches, step_length_in_days=None, fatality_scale=None
                      fatality=min(1.0, pathogen.case_fatality * (fatality_scale or {}).get(key, 1.0) * care))
 
 
-def _advance_one(pathogen, patch, stages, exits, force, step, fatality):
+def _advance_one(pathogen, patch, stages, exits, force, step, fatality, draw=binomial):
     counts, rng = patch.counts, patch.rng
-    infections = binomial(rng, counts[network.SUSCEPTIBLE], chance_within(force, step))
-    deaths = binomial(rng, exits[-1], fatality)
+    infections = draw(rng, counts[network.SUSCEPTIBLE], chance_within(force, step))
+    deaths = draw(rng, exits[-1], fatality)
     waned = 0
     if not pathogen.immunity_permanent and pathogen.immunity_duration_in_days:
-        waned = binomial(rng, counts[network.RECOVERED], chance_within(1.0 / pathogen.immunity_duration_in_days, step))
+        waned = draw(rng, counts[network.RECOVERED], chance_within(1.0 / pathogen.immunity_duration_in_days, step))
     counts[network.SUSCEPTIBLE] += waned - infections
     counts[network.RECOVERED] += exits[-1] - deaths - waned
     previous_entry = infections

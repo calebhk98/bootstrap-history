@@ -1,4 +1,4 @@
-"""Complaint 595 through the protocol (slow: builds a game): a country seat's lever command changes the seat's own
+"""SCENARIO (Complaint 640): Complaint 595 through the protocol (slow: builds a game): a country seat's lever command changes the seat's own
 government, the reply states the change in fields, and a household seat or another country is refused with a cause."""
 from .harness import *  # noqa: F401,F403
 from sim.engine.agents_port import SimWorld

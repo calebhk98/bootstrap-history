@@ -1,6 +1,6 @@
 # Add deeper capital markets
 
-**Status:** partly - the agent economy has a pooled household-funded credit market; banks, deposits, bonds, equity, insurance and crises remain (design note: Complaints/reports/agent-economy-capital-markets.md)
+**Status:** partly - pooled credit, shares, banks, state bonds, secondary trading, bank runs, insurance, funds, firm bonds and a found-bank command are built; what remains is listed under Remainder (design note: Complaints/reports/agent-economy-capital-markets.md)
 
 **Source:** playtest findings document, LATE-004. **Type:** Major
 roadmap-sized feature recommendation. Genuinely new; not currently named in
@@ -55,25 +55,15 @@ as a follow-on to those two rather than a parallel track.
 
 ## Cross-references
 
-`Complaints/closed/103` (LATE-001, independent firms) and `Complaints/105`
+`Complaints/closed/103` (LATE-001, independent firms) and `Complaints/closed/105`
 (LATE-003, state fiscal model) are the natural prerequisites in practice,
 even though nothing formally blocks starting this first.
 
-## First increment (built)
-
-Each civilisation has one loanable-funds market (`sim/world/capital_market.py` pure functions, `sim/engine/economy_capital_market.py` the yearly meeting, `CapitalMarketRecord` in the actors state). Supply is what households save (the income above subsistence, spread by the civilisation's inequality), what firms and the founder hold, and part of the state's spare reserve. Demand is what the founder, firms and the state owe plus the borrowing of the economy the simulation does not model actor by actor. The market rate is the civilisation's starting rate (initial condition) scaled by how the balance has moved from its value at the first meeting. Every borrower pays that rate plus a premium for the share of its own ceiling used, less a discount that only removes premium, never below the market rate (`sim/agents/borrowing.py`: firms, the state; the founder through `debt_interest_rate` with the same pure functions). Credit limits are bounded by what lenders still hold beyond everyone else's loans, and the years of earning a lender will carry shrink when money is dearer than at the start but do not grow when it is cheaper: a limit rests on the borrower's own earning, standing and collateral. The state borrows to cover a deficit up to its ceiling before it cuts every line by the same share, and pays interest as an outlay (`interest`). Tests: `sim/tests/test_capital_market.py`; the screen is `money` (`loanable_funds_market`, `sim/PROTOCOL.md`).
-
-Every constant that is not derived is declared a `temporary_heuristic` (`RATE_ELASTICITY`, `RATE_FLOOR_SHARE`, `RATE_CEILING_SHARE`, `ARREARS_PREMIUM_AT_CEILING`, `LENDER_RESERVE_SHARE`, `SAVING_SHARE_OF_SURPLUS`, `LENDING_HORIZON_YEARS`, `BACKGROUND_BORROWING_SHARE`, `LENDABLE_RESERVE_SHARE`, `STANDING_DISCOUNT_CAP`, `TRACK_RECORD_YEARS`); `python3 sim/constants.py --burndown` lists them. Measure the series with a 150-year game printing `market_rate()`, `debt_interest_rate()` and `credit_limit()` each decade.
-
-Still open: firms raising capital on purpose (308), the state reserve that dominates supply (307), and everything in the original finding beyond a pooled loan market: banks and deposits, bonds, equity and joint-stock firms, insurance, investment funds, crises.
-
-Related: 332.
-
 ## Agent economy (current)
 
-The first increment above describes the old engine market, which the game no longer runs. The agent economy has pooled credit with household lenders only (`sim/economy/credit.py`, `credit_claims.py`, `lending.py`); no banks, bonds, equity or insurance. What exists, what is missing, a first step (a bank as an ordinary agent, deposits and loans as claims in `credit_claims`) and the heuristics it needs are in `Complaints/reports/agent-economy-capital-markets.md`. Complaint 307 no longer applies there (the state offers no funds).
+The agent economy has pooled credit with household lenders (`sim/economy/credit.py`, `credit_claims.py`, `lending.py`). What exists, what is missing and the heuristics needed are in `Complaints/reports/agent-economy-capital-markets.md`. Complaint 307 no longer applies there (the state offers no funds); the retired engine loan market (`sim/engine/economy_capital_market.py`) is not described here.
 
-Owner decision (2026-10-09): lower priority; it should come when it can, and a civilisation that has no banking institution yet must not get banks.
+Priority: lower than the work that makes the opening settle (473); it is picked up when that allows. Banks must not exist before a society holds a banking institution; that is already built (step 2 below gates on the `deposit_banking` node).
 
 ## Built on the agent economy
 
@@ -118,3 +108,55 @@ Owner decision (2026-10-09): lower priority; it should come when it can, and a c
   costs the named depositors what they paid. Still open: bonds changing hands after issue (a holder's wealth
   marked to the price), insurance and investment funds, the term chosen by the issuer, and non-state issuers.
   On Rome no state borrowing occurs in the first years, so the series is unchanged.
+
+- **Secondary market (step 4).** Once a year, before lending, the holders of shares and of loans sell to savers
+  (`sim/economy/secondary_market.py` clears one price per claim; `secondary_trade.py` builds the asks and bids from the
+  record; `capital_year.before_lending` calls it). A holder asks the claim's present value at the lowest rate it takes as a
+  lender plus the issuer's premium; a household short of cash (it asked for a subsistence loan) asks the worth at the rate
+  it would pay to borrow, so it sells for less rather than borrow dearer; a saver bids the worth at its own ask plus the
+  premium, with the funds it offered. A sale of a loan is a change of lender (split when partly sold); a household's own
+  debt and a loan pledging land are not traded. Gated: `share_trading` (node `fin_stock_exchange`) for shares,
+  `bond_market` (`fin_bond`) for loans. In the economy record a bond is a loan its lender may sell: the state's deficit
+  loans trade the same way. Measure: `python3 -m sim.tests --only secondary_market,secondary_trade`.
+
+- **Bank runs (step 5).** `sim/economy/bank_runs.py`: a depositor stays while the interest it asked covers the loss the
+  bank's record puts beyond its capital (loss rate times loans out, less capital, over what is owed) and withdraws
+  otherwise, so those who asked least run first. The bank pays from cash, sells loans at the secondary price when short
+  (its cost of cash is its depositors' rate plus the loss they expect; without `bond_market` it cannot sell), and fails
+  when it still cannot pay (`banks.fail`): it pays in proportion, its other deposits fall due, the depositors bear the
+  rest through the one default rule, and a founder whose bank is short of its deposits loses its capital
+  (`Bank.owner_loss`). Test: `--only bank_runs`.
+
+- **Insurance (step 6).** `sim/economy/insurance.py`: the hazard is the poor harvest, read as an index from the year's
+  weather (`harvest_factor`); its record (`record.capital.hazards`) is kept every year whatever the society holds. A
+  company (`insurance_underwriting`, node `fin_marine_insurance`) charges the mean share lost plus the market rate on the
+  capital held for the worst year seen; a mutual (`risk_pooling`, node `fin_collegium`) charges nothing in advance and its
+  members pay the year's claims in proportion to what each insured. A household buys when its cash would not bear the
+  worst year and the premium is below that loss. A company that cannot pay fails and its policies end. Test:
+  `--only insurance`; the wiring: `--slow --only capital_markets_year_scenario`.
+
+- **Funds (step 7).** `sim/economy/funds.py`: a fund is an agent with a purse that holds shares and loans; households
+  put savings they offered and did not lend into the fund with the highest expected yield at or above their ask, buy at
+  the worth of cash plus holdings marked as a saver would price them, and redeem for cash when short (a fund short of
+  cash sells holdings in the secondary market). Gated: `pooled_funds` (`fin_stock_exchange`). Test: `--only funds`.
+
+- **Firm bonds (step 8).** `Borrower.prepare_bonds` (`sim/agents/borrowing.py`): an actor whose society holds `bond_market`
+  sells bonds for the cash it lacks at the going rate as coupon and its own borrowing rate as the yield, as a state does;
+  `Firm.act` calls it. Test: `--only firm_bonds`.
+
+- **Found a bank (step 9).** `found bank <amount>` (`sim/ui/proto/dispatch_bank.py`, `sim/engine/seat_bank.py`): a seat
+  that knows a node declaring `deposit_banking` puts its money into a bank of the economy; its earnings above the capital
+  go back to it. Test: `--only seat_bank`, `--slow --only seat_bank_scenario`.
+
+## Remainder
+
+- Bonds the agents-world pool buys (`sim/agents/bonds.py`, state and firm) have no individual holder, so they have no
+  secondary price and no mark in a holder's wealth; the economy-record loans do.
+- No town or other sub-national agent exists, so none issues bonds; `prepare_bonds` serves any actor that does.
+- Ship loss is not a realised event in the economy (transit loss is a deterministic share priced into the margin), so
+  only the harvest hazard is insured; marine cover needs a drawn loss on a route.
+- A producer's unsold equity (the owner tile's) is not tradable, a fund does not bid in a new share issue, and a firm does
+  not choose equity over debt on cost.
+- Depositors choose among banks by cover only; credit creation, lender of last resort and deposit insurance are not built.
+- Temporary heuristics this adds name 106 as their retirement; they are `INSURER_FOUNDING_SHARE_OF_CASH` and the two
+  earlier bank ones. The insurer's loading, the fund's choice and the bank's cost of cash are derived, not declared.

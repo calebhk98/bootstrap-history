@@ -51,6 +51,9 @@ class UnhiredTradeWageTests(unittest.TestCase):
 
 
 class CreditRoomUnitsTests(unittest.TestCase):
+    def setUp(self):
+        economy_fixture.households_with_a_surplus(self)       # savings are on offer only where households have a surplus
+
     def test_credit_room_is_in_coin_not_economy_units(self):
         economy, _outcomes = economy_fixture.run(years=3)
         units = api.credit_room(economy, "borrower:a")

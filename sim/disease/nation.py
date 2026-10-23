@@ -9,7 +9,8 @@ import random
 from . import year as year_step
 from .nation_tuning import (AGE_FATALITY_FROM_STARVATION_VULNERABILITY, AGE_VULNERABILITY, AGEING, BANDS,
                             CAREGIVER_BANDS, DISEASE_CARE_COLLAPSE_SENSITIVITY, DISEASE_EMERGENCE_ANNUAL_CHANCE,
-                            DISEASE_CONTACT_INFECTED_PEOPLE, DISEASE_TRAVELLER_ANNUAL_CHANCE, DISEASE_TRAVEL_DECAY_DAYS, DISEASE_URBAN_DENSITY_RATIO, INTRODUCTION_BAND)
+                            DISEASE_CONTACT_INFECTED_PEOPLE, DISEASE_TRAVELLER_ANNUAL_CHANCE, DISEASE_TRAVEL_DECAY_DAYS, DISEASE_URBAN_DENSITY_RATIO, INTRODUCTION_BAND,
+                            SURVIVING_SHARE_FLOOR)
 from sim.world import demography
 
 
@@ -103,3 +104,10 @@ def run_year(known, records, introduced, deaths, people, nutrition_ratio, urban_
 	for pathogen_id, band_deaths in result.deaths_by_pathogen.items():
 		deaths[pathogen_id] = deaths.get(pathogen_id, 0) + sum(band_deaths.values())
 	return {band: float(count) for band, count in result.deaths_by_band.items()}
+
+
+def provisioning_factor(disease_loss):
+    """The multiple of a party (settlers outfitted, soldiers kept in the field) that a place's yearly disease loss
+    (the share of working-age people it takes, from the endemic rate and the model's forecast) makes necessary for
+    the stated number to be there at the end of the year."""
+    return 1.0 / max(1.0 - max(float(disease_loss), 0.0), SURVIVING_SHARE_FLOOR)

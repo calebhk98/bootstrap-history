@@ -12,7 +12,7 @@ def stand_in_world(civ_id="rome_100ad", total=None):
     if total is not None:
         shrink(population, total)
     return SimpleNamespace(
-        civ=civ, home_tiles_held=lambda: geography.tiles_held(civ), people_by_tile=lambda: None, pop_scale=1.0,
+        civ=civ, urban_fraction=lambda: float(civ.get("urban_fraction", 0.0)), home_tiles_held=lambda: geography.tiles_held(civ), people_by_tile=lambda: None, pop_scale=1.0,
         population=population, state=SimpleNamespace(household=SimpleNamespace(base_tile=None, employees={}, trades_created=set(),
                                                                                   trade_schools={}),
                                                      economy=SimpleNamespace(improvements={}, society_labour_hours={}),

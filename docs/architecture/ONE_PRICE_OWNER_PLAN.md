@@ -436,7 +436,7 @@ Files: `sim/engine/market_clearing.py`, `market_demand.py`, `goods_market_api.py
 `agents_port_stakes.py`, `agents_port_cast.py`, `foreign_capacity.py`, `core.py` (mixin list), `sim/world/market.py`.
 
 Deletes: `MEAN_INCOME_HOURS_PER_CAPITA`, and the book's constants in `sim/world/market.py`
-(`DEFAULT_DEMAND_PRICE_ELASTICITY`, `SHORT_RUN_SUPPLY_PRICE_ELASTICITY`, `STOCK_FLOOR_RATIO`, `DEFAULT_CEILING_RATIO`,
+(`DEFAULT_DEMAND_PRICE_ELASTICITY`, `SHORT_RUN_SUPPLY_PRICE_ELASTICITY`, `CARRYING_RATE_PER_YEAR`, `DEFAULT_CEILING_RATIO`,
 `CAPACITY_ADJUSTMENT_RATE`, `CAPACITY_MAXIMUM_STEP`, `STOCK_RETENTION`) unless partner books still use them.
 
 ### Stage 7: price search for unsold stock

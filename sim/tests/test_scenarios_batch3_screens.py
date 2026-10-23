@@ -1,4 +1,4 @@
-"""Complaint 640, audit batch 3, scenario: the commands behind the small display fixes of complaint 506 answer from a
+"""SCENARIO (Complaint 640): Complaint 640, audit batch 3, scenario: the commands behind the small display fixes of complaint 506 answer from a
 game. The functions behind them have tests of their own: test_complaint_506_display_bugs."""
 import copy as _copy
 import random as _random

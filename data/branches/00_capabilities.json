@@ -626,6 +626,10 @@
    "power_tier": {
     "rank": 0,
     "label": "muscle and animal power"
+   },
+   "farming_technique": {
+    "axis": "toolkit",
+    "entry": "ARD_AND_OX_WITH_SICKLE"
    }
   }
  },

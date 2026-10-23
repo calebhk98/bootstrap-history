@@ -1,5 +1,5 @@
 """What limits a scarce skilled trade's hours when employers bid above the training-cost ceiling
-(`clearing.trained_substitute_wage`, Complaints 511 and 659): the ceiling caps the quoted wage, not the hours
+(`clearing.trained_substitute_wage`, Complaints 511, 659 and 678): the ceiling caps the expected wage, not the hours
 hired, and new hands arrive as trainees through the trade's own places, not through the wage. Plain records, no game."""
 
 QUICK_TOPIC = True
@@ -55,29 +55,31 @@ def trainees_of(state):
     return math.fsum(math.fsum(cohort[1]) for cohort in state.trainees.get("vale", {}).get("smith", []))
 
 
-class CeilingCapsTheWageNotTheHours(unittest.TestCase):
+class CeilingCapsTheExpectationNotTheHours(unittest.TestCase):
+    """The long-run ceiling bounds what entrants expect (the clearing's heading wage), not the hours hired; this
+    year's wage may pass it (Complaint 678, test_scarcity_wage_short_run.py)."""
 
-    def test_employers_far_above_the_ceiling_are_quoted_the_ceiling(self):
+    def test_employers_far_above_the_ceiling_are_expected_to_pay_the_ceiling(self):
         state, report = years(start(), inputs(smith_maximum=1e6), 30)
-        self.assertAlmostEqual(smith_clearing(report).wage, ceiling_of(state, inputs(1e6)), places=9)
+        self.assertAlmostEqual(smith_clearing(report).heading_wage, ceiling_of(state, inputs(1e6)), places=9)
 
-    def test_every_hand_there_is_hired_at_the_capped_wage_while_hours_stay_wanted(self):
+    def test_every_hand_there_is_hired_while_hours_stay_wanted(self):
         _state, report = years(start(), inputs(smith_maximum=1e6), 30)
         result = smith_clearing(report)
         self.assertGreater(result.hours_wanted, result.hours_offered)
         self.assertAlmostEqual(result.hours_hired / result.hours_offered, 1.0, places=3)
 
-    def test_a_higher_maximum_changes_neither_wage_nor_hours(self):
+    def test_a_higher_maximum_changes_neither_the_expectation_nor_the_hours(self):
         _state, high = years(start(), inputs(smith_maximum=1e6), 30)
         _state, higher = years(start(), inputs(smith_maximum=1e9), 30)
-        self.assertEqual(smith_clearing(high).wage, smith_clearing(higher).wage)
+        self.assertEqual(smith_clearing(high).heading_wage, smith_clearing(higher).heading_wage)
         self.assertEqual(smith_clearing(high).hours_hired, smith_clearing(higher).hours_hired)
 
-    def test_without_the_ceiling_the_wage_rises_but_a_year_s_hours_hired_do_not(self):
+    def test_without_the_ceiling_the_expectation_rises_but_a_year_s_hours_hired_do_not(self):
         _state, capped = year.run_year(start(), inputs(smith_maximum=1e6))
         with mock.patch.object(clearing, "trained_substitute_wage", lambda *args, **kwargs: math.inf):
             _state, free = year.run_year(start(), inputs(smith_maximum=1e6))
-        self.assertGreater(smith_clearing(free).wage, smith_clearing(capped).wage)
+        self.assertGreater(smith_clearing(free).heading_wage, smith_clearing(capped).heading_wage)
         self.assertEqual(smith_clearing(free).hours_hired, smith_clearing(capped).hours_hired)
 
 

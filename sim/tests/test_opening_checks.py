@@ -1,4 +1,4 @@
-"""Complaint 523: the opening checks are plain functions with structured results, and the `openings` gate
+"""SCENARIO (Complaint 640): Complaint 523: the opening checks are plain functions with structured results, and the `openings` gate
 refuses an opening that fails them unless a reason is given."""
 QUICK_TOPIC = True
 

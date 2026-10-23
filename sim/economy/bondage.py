@@ -2,12 +2,13 @@
 creditor, where the society has debt bondage (`EconomySetup.debt_bondage_years`, the same rule and term the
 founder's default follows: sim/engine/economy_credit.py).
 
-For the term, a share of the hours of the cohort's working people is owed to the creditor. The cohort still
-sells its hours in the labour market; the creditor takes that share of what they fetched (the product of the
-hours), as far as the cohort holds the cash, and it comes off the debt and off the creditor's credit loss. The
-bond ends when the debt is worked off or the term is served; what is left was already written off as the loss.
+For the term, a share of the hours of the cohort's working people is owed to the creditor. Owed hours the
+creditor's own works can use are worked there, off the market (bondage_hours.py); the rest the cohort still sells
+in the labour market, and the creditor takes that share of what they fetched, as far as the cohort holds the
+cash. Both come off the debt and off the creditor's credit loss. The bond ends when the debt is worked off or the
+term is served; what is left was already written off as the loss.
 """
-from typing import Dict, Iterable, List, Mapping
+from typing import Dict, Iterable, List, Mapping, Optional
 
 from sim.constants import declare
 
@@ -44,12 +45,20 @@ def enter(record, defaults: Iterable, term_years: float) -> List[str]:
     return entered
 
 
-def service(record, currency: CurrencyId, wages: Mapping[str, float]) -> List[Transfer]:
-    """One year of bonded labour: each bonded cohort pays its creditor the owed share of its wages, no more than
-    the debt left or the cash it holds. Returns the payments (the caller books them)."""
+def service(record, currency: CurrencyId, wages: Mapping[str, float], worked_value: Optional[Mapping[str, float]] = None,
+            cash_share: Optional[Mapping[str, float]] = None) -> List[Transfer]:
+    """One year of bonded labour. Hours worked in the creditor's own works (bondage_hours.py; `worked_value`, the cohort's
+    value of them) come off the debt and off the creditor's credit loss. For the hours that stayed in the market each
+    bonded cohort pays its creditor `cash_share` (the owed share when none is given) of its wages, no more than the
+    debt left or the cash it holds. Returns the payments (the caller books them)."""
     payments: List[Transfer] = []
     for cohort_id, bond in sorted(record.bondage.items()):
-        owed = min(bond["debt"], BONDED_HOURS_OWED_SHARE * wages.get(cohort_id, 0.0))
+        worked = min(bond["debt"], max(0.0, (worked_value or {}).get(cohort_id, 0.0)))
+        if worked > 0.0:
+            bond["debt"] -= worked
+            record.credit_losses[bond["creditor"]] = max(0.0, record.credit_losses.get(bond["creditor"], 0.0) - worked)
+        share = BONDED_HOURS_OWED_SHARE if cash_share is None else cash_share.get(cohort_id, BONDED_HOURS_OWED_SHARE)
+        owed = min(bond["debt"], share * wages.get(cohort_id, 0.0))
         paid = min(owed, max(0.0, record.book.balance(cohort_id, currency)))
         if paid > 0.0:
             payments.append(Transfer(cohort_id, bond["creditor"], currency, paid, "bonded_labour"))

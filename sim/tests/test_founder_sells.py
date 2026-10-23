@@ -1,4 +1,4 @@
-"""Scenario (Complaint 640): selling in a running game; the typed forms of `sell` parse in test_typed_front_end.py.
+"""SCENARIO (Complaint 640): selling in a running game; the typed forms of `sell` parse in test_typed_front_end.py.
 
 Complaint 288: the founder sells a built concern to another actor through the exchange, and sells
 farmland back to the land market at the value `buy farm` uses."""

@@ -13,13 +13,12 @@ def rent_of_site(hectares: float, rent_per_hectare: Optional[float]) -> Optional
 
 
 def gross_at_country_prices(book_takings_at_full_ramp: float, cost_scale: float, market_factor: float,
-							shares_goods_market: bool) -> Optional[float]:
-	"""Yearly takings of a ramped-up concern at the country's cost scale and market factor; None for a concern in a goods
-	category, whose demand is the home households'. TEMPORARY HEURISTIC (CLAUDE.md 4.4): no hazard or war factor applies
-	abroad (retire: Complaint 649)."""
+							shares_goods_market: bool, output_factor: float) -> Optional[float]:
+	"""Yearly takings of a ramped-up concern at the country's cost scale and market factor, less what its own hazards and
+	wars take (`output_factor`); None for a concern in a goods category, whose demand is the home households'."""
 	if shares_goods_market:
 		return None
-	return book_takings_at_full_ramp * cost_scale * market_factor
+	return book_takings_at_full_ramp * cost_scale * market_factor * output_factor
 
 
 def costs_at_country_prices(book_upkeep: float, staff: Mapping[str, float], cost_scale: float, span_factor: float,
@@ -36,6 +35,9 @@ class CountrySiteView:
 
 	profile: Any
 	_shared: Any
+
+	def output_factor(self) -> float:
+		raise NotImplementedError
 
 	def _own_economy(self) -> Any:
 		raise NotImplementedError
@@ -68,7 +70,8 @@ class CountrySiteView:
 			return None
 		shared = self._shared
 		return gross_at_country_prices(shared.book_takings_at_full_ramp(node_id), self.profile.price_index,
-									   shared.market_factor_at(node_id, economy.price_per_unit), shared.in_goods_category(node_id))
+									   shared.market_factor_at(node_id, economy.price_per_unit), shared.in_goods_category(node_id),
+									   self.output_factor())
 
 	def plant_costs(self, node_id: str) -> Optional[Tuple[float, float]]:
 		"""(upkeep, wage bill) of a plant at its founding size in the country; None when it cannot be read."""

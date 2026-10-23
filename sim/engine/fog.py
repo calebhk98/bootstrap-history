@@ -14,6 +14,17 @@ from .hazard_window import hazards_not_yet_past
 from .staff_loss_waves import wave_exposure
 from .hazard_hedge_timing import add_timing_to_steps
 
+def prerequisite_label(nodes, prereq_id):
+    """The id with the node's name beside it, so the id is identifiable."""
+    name = nodes.get(prereq_id, {}).get("name")
+    return "%s (%s)" % (prereq_id, name) if name and name != prereq_id else prereq_id
+
+
+def prerequisite_names(nodes, prerequisite_ids):
+    """{id: name} for each prerequisite the tree knows, in the words of the civilisation the nodes were built for."""
+    return {prereq_id: nodes[prereq_id]["name"] for prereq_id in prerequisite_ids if prereq_id in nodes}
+
+
 # What a node id the player has not heard of is replaced with.
 HIDDEN_ID_PLACEHOLDER = "something you have not heard of"
 
@@ -142,8 +153,7 @@ class FogMixin:
 
     def prerequisite_label(self, prereq_id: str) -> str:
         """The id with the node's name beside it, so the id is identifiable."""
-        name = self.nodes.get(prereq_id, {}).get("name")
-        return "%s (%s)" % (prereq_id, name) if name and name != prereq_id else prereq_id
+        return prerequisite_label(self.nodes, prereq_id)
 
     def missing_prereq_message(self, missing: List[str],
                                _memo: Optional[Dict[str, bool]] = None) -> Optional[str]:
@@ -256,6 +266,12 @@ class FogMixin:
         # thirty entries in a list, is most of the reply.
         return note if len(note) <= 110 else note[:107].rstrip(" ,;") + "..."
 
+    def _epidemic_risk(self) -> Dict[str, Any]:
+        """What the disease model forecasts for the coming year (infections now, contact between tiles, and the
+        chance each pathogen reaches the nation): the risk of epidemics read from the model, not from a dated list."""
+        forecast = self.epidemic_forecast()
+        return {key: value for key, value in forecast.items() if key != "expected_deaths_by_tile"}
+
     def knowledge_risk(self, advice: bool = True, chronology: bool = True) -> Dict[str, Any]:
         """How exposed your finished work is to being forgotten, and to what.
 
@@ -350,6 +366,7 @@ class FogMixin:
         can_be_sacked = any(entry.get("sacks_a_site") for entry in upcoming)
         if not can_be_sacked:
             return {
+                "epidemic_forecast": self._epidemic_risk(),
                 "technologies_at_risk": at_risk,
                 "loss_chance_if_a_site_is_sacked": round(chance, 2),
                 "fraction_lost_when_it_happens": round(frac, 2),
@@ -363,6 +380,7 @@ class FogMixin:
                 "timeline": timeline,
             }
         return {
+            "epidemic_forecast": self._epidemic_risk(),
             "technologies_at_risk": at_risk,
             "loss_chance_if_a_site_is_sacked": round(chance, 2),
             "fraction_lost_when_it_happens": round(frac, 2),

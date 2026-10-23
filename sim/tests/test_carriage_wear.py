@@ -114,7 +114,7 @@ class CarriageWearsCarriers(unittest.TestCase):
                 "held_after": {each.agent_id: sum(record.book.holdings(carriage_wear.account(each.agent_id))["goods"].get(CART, {}).values())
                                for each in record.merchants.values()},
                 "tonne_km": dict(record.carried)})
-        with mock.patch.object(economy, "dispatch_merchants", watch):
+        with mock.patch.object(economy, "dispatch_merchants", watch), fixture.surplus_households():   # goods are carried out of a surplus
             cls.economy, cls.outcomes = fixture.run(cls.setup, 25)
 
     def test_carrying_goods_wears_the_carrier_stock_by_the_tonne_km(self):

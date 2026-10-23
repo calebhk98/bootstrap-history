@@ -30,13 +30,24 @@ ASK_BAND_CEILING = declare(
         "alternative way to meet the need, priced from the recipes) is not yet built, so a stated multiple stands in.")
 
 
-def raised_within_band(expected_price: float, break_even_price: Optional[float], ceiling_multiple: float = ASK_BAND_CEILING) -> float:
-    """`expected_price` raised one step for a sold-out seller, stopping at the band's edge: the price that
-    just covers a unit's cost (`break_even_price`) times the band. A seller already above the edge is left
-    where it is, not cut here (unsold stock does that); one with no cost to anchor on does not raise."""
+def band_edge(break_even_price: float, input_share: float = 0.0, ceiling_multiple: float = ASK_BAND_CEILING) -> float:
+    """The top of the band: the multiple applies to what the seller adds (its labour, rent and plant), and the inputs it
+    buys pass through at their cost. A multiple of the whole unit cost would compound along a chain of makers, each
+    marking up inputs already marked up (a multiple to the power of the stages); this adds one multiple of each
+    stage's own cost, so a chain's ceiling grows by a sum."""
+    share = min(1.0, max(0.0, input_share))
+    return break_even_price * (share + ceiling_multiple * (1.0 - share))
+
+
+def raised_within_band(expected_price: float, break_even_price: Optional[float], ceiling_multiple: float = ASK_BAND_CEILING,
+                       input_share: float = 0.0) -> float:
+    """`expected_price` raised one step for a sold-out seller, stopping at the band's edge (`band_edge`): the price
+    that just covers a unit's cost (`break_even_price`), `input_share` of which is bought inputs. A seller already
+    above the edge is left where it is, not cut here (unsold stock does that); one with no cost to anchor on does
+    not raise."""
     if break_even_price is None or not math.isfinite(break_even_price) or break_even_price <= 0.0:
         return expected_price
-    edge = break_even_price * ceiling_multiple
+    edge = band_edge(break_even_price, input_share, ceiling_multiple)
     return max(expected_price, min(expected_price * (1.0 + SOLD_OUT_ASK_RAISE_SHARE), edge))
 
 

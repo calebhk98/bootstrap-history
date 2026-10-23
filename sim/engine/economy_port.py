@@ -49,11 +49,23 @@ class EconomyPort:
         agent = self._answering_agent()
         return None if agent is None else agent.prices_at(self.acting_tile() if tile is None else tile)
 
+    def agent_price_kind(self, good):
+        """What the agent economy's shown price of a good is (traded, a named quote or an estimate); None while it
+        opens or when the economy shows none."""
+        agent = self._answering_agent()
+        return None if agent is None else agent.price_kind(good)
+
     def agent_offered_tonnes(self, material, tile=None):
         """Tonnes the sellers of a material in the tile's market area held at the last clearing; None while the
         economy opens or when the area has no book for it."""
         agent = self._answering_agent()
         return None if agent is None else agent.offered_tonnes(material, self.acting_tile() if tile is None else tile)
+
+    def agent_seat_sale_outlook(self, seat_id, material, quantity):
+        """What a seat may count as sold of `quantity` units of a material its concerns make (concern_sales.outlook):
+        its last clearing's share and price, else what buyers took last year; None while the economy opens."""
+        agent = self._answering_agent()
+        return None if agent is None else agent.seat_sale_outlook(seat_id, material, quantity)
 
     def agent_prices(self):
         """The agent economy's prices by good in coin, or None to use the engine's."""
@@ -120,6 +132,11 @@ class EconomyPort:
         agent = self.agent
         return None if agent is None or self._opening else agent.people_by_trade()
 
+    def agent_people_by_tile_and_trade(self):
+        """Working people by tile and trade in the agent economy's labour core; None while it opens."""
+        agent = self.agent
+        return None if agent is None or self._opening else agent.people_by_tile_and_trade()
+
     def agent_rate(self):
         agent = self._answering_agent()
         return None if agent is None else agent.rate()
@@ -153,6 +170,14 @@ class EconomyPort:
         if agent is None or material is None:
             return None
         return agent.market_record(material)
+
+    def agent_good_market_record(self, good):
+        """{sold, unsold, unmet} tonnes the agent economy's markets of a good the economy trades had last year; None
+        while the economy opens or when it has no market for the good."""
+        agent = self._answering_agent()
+        if agent is None or not agent.trades_good(good):
+            return None
+        return agent.market_record(good)
 
     def agent_producers_by_good(self):
         """{good: [(tile, recipe id)]} of the producers the agent economy runs; None while it opens."""
@@ -376,7 +401,7 @@ class EconomyPort:
         """Yearly upkeep of a concern at a given capacity, without its crew's pay: an actor that runs a concern
         hires the crew through the labour market and pays wages there."""
         node = self._sim.nodes[node_id]
-        return node["up"] * node_upkeep.non_labour_share(node) * (self.cost_scale() if cost_scale is None else cost_scale) * capacity
+        return node_upkeep.non_labour_upkeep_money(node["up"], node, capacity, self.cost_scale() if cost_scale is None else cost_scale)
 
     def project_cost(self, node_id):
         """What a project costs to carry out now."""

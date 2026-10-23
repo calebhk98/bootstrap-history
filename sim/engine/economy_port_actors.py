@@ -141,10 +141,19 @@ def standing_bids(economy, flows: dict, seats, tile: str, tonnes_per_unit: Calla
         good = good_for(economy, commodity, materials_in)
         units = tonnes / tonnes_per_unit(good) if good is not None and tonnes > 0.0 else 0.0
         area = economy.area_map.area_of(good, tile) if units > 0.0 else None
-        price = (view.price(good, area) or economy.setup.opening_prices.get(good, 0.0)) if units > 0.0 else 0.0
-        if units > 0.0 and price > 0.0:
+        price = standing_price(view.price(good, area), economy.setup.opening_prices.get(good)) if units > 0.0 else None
+        if price is not None:
             found.append(Bid("standing:founder", good, area, tile, units, 0.0, price, 0.0, units * price))
     return tuple(found)
+
+
+def standing_price(planning_price, opening_price):
+    """The price a standing bid is placed at: the market's planning price (traded or a named quote), else the
+    opening's; None when neither is a price, so no bid stands where there is none."""
+    for price in (planning_price, opening_price):
+        if price is not None and price > 0.0:
+            return price
+    return None
 
 
 def fund(economy, funding: Sequence[Tuple[str, float, float]]) -> None:
@@ -157,7 +166,7 @@ def fund(economy, funding: Sequence[Tuple[str, float, float]]) -> None:
 def close(economy, sales: Sequence[dict], purchases: Sequence[dict]):
     """Close every account after the clear. Unsold goods go back out; bought capital assets are retained; the money each
     account holds goes to the exchange edge. Returns ({seller: units of money its sales fetched}, {buyer: units of
-    its budget left unspent}, {buyer: units of goods it bought})."""
+    its budget left unspent}, {buyer: units of goods it bought}, {buyer: {good: units}} delivered)."""
     book, currency = economy_api.economy_book(economy), economy.setup.currency_id
     accounts = ([(sale_account(actor), actor, EDGE_LEGACY, "unsold actor output")
                  for actor in sorted({sale["seller"] for sale in sales})]
@@ -166,6 +175,7 @@ def close(economy, sales: Sequence[dict], purchases: Sequence[dict]):
     proceeds: Dict[str, float] = {}
     refunds: Dict[str, float] = {}
     bought: Dict[str, float] = {}
+    delivered: Dict[str, Dict[str, float]] = {}
     moves, transfers = [], []
     for account, actor, outflow, label in accounts:
         for good, tiles in book.holdings(account)["goods"].items():
@@ -178,10 +188,12 @@ def close(economy, sales: Sequence[dict], purchases: Sequence[dict]):
                                            "durable purchase" if receiver != outflow else label))
                     if outflow == EDGE_CONSUMPTION:
                         bought[actor] = bought.get(actor, 0.0) + quantity
+                        by_good = delivered.setdefault(actor, {})
+                        by_good[good] = by_good.get(good, 0.0) + quantity
         money = max(0.0, book.balance(account, currency))
         if money > 0.0:
             transfers.append(Transfer(account, EDGE_EXCHANGE, currency, money, "exchange"))
             (proceeds if outflow == EDGE_LEGACY else refunds)[actor] = money
     economy_api.move_goods(economy, moves)
     economy_api.post_transfers(economy, transfers)
-    return proceeds, refunds, bought
+    return proceeds, refunds, bought, delivered

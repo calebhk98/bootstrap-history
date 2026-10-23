@@ -68,7 +68,7 @@ class HerdRecipesMakeProductsTogether(unittest.TestCase):
         for key, (stock, _products) in HERDS.items():
             row, entry = self.rows[stock], self.production[key]
             outputs = entry["outputs"]
-            slaughtered = HERD_HEAD * row["offtake_per_head_year"]
+            slaughtered = HERD_HEAD * row["offtake_per_head_year"] * (1.0 - row.get("draught_share_of_offtake", 0.0))
             carcass = row["live_weight_kg_per_head"] * row["dressing_fraction"]
             fat = carcass * row["fat_share_of_carcass"]
             self.assertAlmostEqual(outputs["fat_kg"], slaughtered * fat, places=3)

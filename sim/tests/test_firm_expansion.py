@@ -60,6 +60,19 @@ class ExpandTests(unittest.TestCase):
 		firm.expand(world)
 		self.assertEqual(firm.capacity_of("shop"), 1.0)
 
+	def test_a_step_whose_site_rent_and_management_outrun_its_margin_is_not_built(self):
+		# Complaint 679: the books charge a plant's site and a manager's hours on the whole of its size, so a step
+		# is weighed after what it adds to them, as an entrant weighs them
+		class DearSiteWorld(ReturnWorld):
+			def site_rent(self, node_id, capacity=1.0, tile=None):
+				return 2000.0 * capacity
+
+		world = DearSiteWorld(return_on_step=0.5)
+		world.rate = 0.12
+		_registry, firm = make_firm(world)
+		firm.expand(world)
+		self.assertEqual(firm.capacity_of("shop"), 1.0)
+
 	def test_a_firm_with_no_margin_does_not_expand(self):
 		world = ReturnWorld()
 		_registry, firm = make_firm(world, margin=-1.0)

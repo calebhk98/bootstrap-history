@@ -31,6 +31,9 @@ class _Economy:
     def agent_prices_at(self, tile=None):
         return dict(TILE_PRICE_PER_UNIT) if self.opened else None
 
+    def agent_price_kind(self, good):
+        return "traded" if self.opened and good in TILE_PRICE_PER_UNIT else None
+
     def agent_offered_tonnes(self, material, tile=None):
         return OFFERED_TONNES.get(material) if self.opened else None
 
@@ -91,6 +94,13 @@ class TilePriceTests(unittest.TestCase):
     def test_a_good_the_economy_does_not_trade_but_a_technique_makes_costs_what_it_costs_to_make(self):
         _game, market = stub_game()
         self.assertAlmostEqual(market.quote("alum_kg")["buy_per_tonne"], TABLE_PRICE_PER_UNIT["alum_kg"] * 1000.0)
+
+    def test_the_quote_names_what_the_price_is(self):
+        game, market = stub_game()
+        self.assertEqual(market.quote("wheat_kg")["price_kind"], "traded")
+        self.assertEqual(market.quote("alum_kg")["price_kind"], "making_cost_table")
+        game.economy.opened = False
+        self.assertEqual(market.quote("wheat_kg")["price_kind"], "making_cost_table")
 
     def test_a_good_no_seller_offers_has_no_price(self):
         _game, market = stub_game()

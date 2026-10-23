@@ -1,4 +1,4 @@
-"""Complaint 640, audit batch 3, scenario: a household that borrows to start work is told the credit forecast in full
+"""SCENARIO (Complaint 640): Complaint 640, audit batch 3, scenario: a household that borrows to start work is told the credit forecast in full
 once in a year, and `full` asks for it again. The rules are plain functions with tests of their own:
 test_complaint_173_credit_forecast_once."""
 from .harness import *  # noqa: F401,F403
@@ -16,8 +16,8 @@ def _run(sim_state, text):
 # enough cash for the first start only: what it pays at once plus its bill, read off a household with cash to spare.
 # What is left after it is less than either later bill, so both draw on credit.
 FIRST_START = "tr_lateen_sail"
-SECOND_START = "cn_damp_proof_course"
-THIRD_START = "mt2_sintering_process"
+SECOND_START = "prc_straightedge"
+THIRD_START = "lnd_wheelbarrow"
 
 
 def cash_for_one_start():
@@ -33,6 +33,7 @@ CASH_FOR_ONE_START = cash_for_one_start()
 def borrower_after_two_starts():
     """A household whose cash covered the first start and nothing after it, with the first two starts made."""
     household = sim(capital=1.0e6)
+    household.market_credit_room = lambda actor_id: None     # the forecast is under test, not the opening's loan book (fully lent to others): the household's own standing sets the line
     household.state.household.capital = CASH_FOR_ONE_START
     first = _run(household, "start " + FIRST_START)
     household.state.household.capital = 0.0      # no cash after the first start, so every later start's materials are borrowed

@@ -1,56 +1,180 @@
 {
-  "_doc": "Plausibility bands for the occupational distribution of a no-intervention baseline (Complaint 619, DESIGN 4.2). Each trade belongs to one group; each band is the range of the group's share of all working hours that a pre-industrial agrarian economy plausibly shows. The bands are deliberately wide: they say 'not absurd', they are not a fit, and they are not set from any dated year. Shares of the labour force stand in for shares of hours (hours per worker differ by trade; that difference is smaller than the width of the bands). Every figure below is RECALLED from the named literature, not looked up in this session; check against the source before narrowing a band. 'unattributed' holds the unskilled labourer pool whose hours recipes do not assign to an occupation; its band caps how much of the economy may stay unclassified.",
+  "_doc": "Plausibility bands for the occupational distribution of a no-intervention baseline (Complaint 619, DESIGN 4.2). Each trade belongs to one group; each band is the range of the group's share of all working hours that a pre-industrial agrarian economy plausibly shows. The bands are deliberately wide: they say 'not absurd', they are not a fit, and they are not set from any dated year. The bands are shares of the labour force by main occupation (people), the basis of every opened source, so the check reads head counts from the labour core (sim/labour/occupational_shares.py people_by_trade_of_all_employers); hours worked are printed beside them and are not what the bands describe, because a farming household spends part of its year off the field. Each group carries 'band_status': 'sourced' (an edge was read in an opened source, named in 'band_source'), 'recalled' (no opened source supports the group on its own) or 'cap'. See Complaints/reports/research-occupation-bands-and-porters.md. The opened sources give only three aggregates for England (agriculture; industry as a whole; services as a whole). No opened source splits industry into textiles, building, food and crafts, or gives Roman occupational shares beyond 'about four fifths in agriculture' (Erdkamp, a commonplace). 'unattributed' holds the unskilled labourer pool whose hours recipes do not assign to an occupation; its band caps how much of the economy may stay unclassified.",
   "sources": {
-    "scheidel_friesen_2009": "Scheidel and Friesen, 'The Size of the Economy and the Distribution of Income in the Roman Empire', Journal of Roman Studies 99 (2009). Recalled: the large majority of the empire's people lived and worked on the land; the urban share was roughly one tenth to one sixth.",
-    "allen_2000": "Allen, 'Economic structure and agricultural productivity in Europe, 1300-1800', European Review of Economic History 4 (2000). Recalled: agriculture takes well over half of the labour force in pre-industrial European economies, four fifths or more in the poorest.",
-    "bairoch_1988": "Bairoch, Cities and Economic Development (1988). Recalled: pre-industrial economies keep roughly two thirds to nine tenths of the labour force in agriculture.",
-    "broadberry_2015": "Broadberry, Campbell, Klein, Overton, van Leeuwen, British Economic Growth 1270-1870 (2015). Recalled: textiles are the largest single industrial employer, from a low single-digit share of all workers up to the mid-teens; building a few percent.",
-    "wilson_2002": "Wilson, 'Machines, Power and the Ancient Economy', Journal of Roman Studies 92 (2002), and Wilson and Flohr (eds), The Economy of Roman Italy (2016). Recalled, qualitative only: cloth, building and food processing were the main non-farm trades."
+    "scheidel_friesen_2009": "Scheidel and Friesen, 'The Size of the Economy and the Distribution of Income in the Roman Empire', Journal of Roman Studies 99 (2009), 61-91 (OPENED, piketty.pse.ens.fr/files/Scheidel2009.pdf). Gives no occupational shares. Says subsistence farmers formed 'the overwhelming majority of the population' and, as an illustration only ('if some 15 per cent of the total population resided in towns'), a town share of 15 per cent.",
+    "allen_2000": "Allen, 'Economic structure and agricultural productivity in Europe, 1300-1800', European Review of Economic History 4 (2000), 1-25 (OPENED, Oxford ORA version of record). Table 2: England 1300 total 5.0m, agricultural 3.82m (0.76 of population); Italy 1300 total 11.0m, agricultural 6.97m (0.63). Table 4: England 1500 0.74, Italy 1500 0.62 agricultural. The rural non-agricultural share is a stipulation (0.8 of rural people farm in 1500 and earlier), so these are population shares resting on an assumption, not counts.",
+    "bairoch_1988": "Bairoch, Cities and Economic Development (1988). NOT OPENED; known only as a table source cited by Allen 2000. No figure from it is used.",
+    "broadberry_2015": "Broadberry, Campbell, Klein, Overton, van Leeuwen, British Economic Growth 1270-1870 (2015). NOT OPENED (book); its labour-force figures are the 2013 paper under bcvl_2013. No textile or building share was read.",
+    "wilson_2002": "Wilson, 'Machines, Power and the Ancient Economy', Journal of Roman Studies 92 (2002), 1-32. SNIPPET ONLY (abstract: water-lifting, water mills, mining). About technology; gives no occupational shares and supports no band here.",
+    "bcvl_2013": "Broadberry, Campbell and van Leeuwen, 'When did Britain industrialise? The sectoral distribution of the labour force and labour productivity in Britain, 1381-1851', Explorations in Economic History 50 (2013), 16-27 (OPENED, accepted manuscript). Table 1 (1381 Poll Tax): total labour force agriculture 57.2, industry 19.2, services 23.6 per cent (males 67.0, 15.2, 17.8; females 34.5, 28.4, 37.1; industry includes mining and building; females assumed 30 per cent of employment). Table 2 (1522 Muster Rolls): total 58.1, 22.7, 19.2. Table 9: Clark's alternative for 1381 is 56 to 59 per cent in agriculture.",
+    "erdkamp_2005": "Erdkamp, The Grain Market in the Roman Empire (2005), chapter 1 summary (SNIPPET ONLY, Cambridge Core page; page not shown): 'about 80 per cent of the population were engaged in agriculture, leaving only 20 per cent for all other sectors', called a commonplace and 'generally about right'."
   },
   "groups": {
     "agriculture": {
-      "trades": ["farmer", "vine_and_olive_tender", "herder", "fisher", "hunter"],
-      "band": [0.55, 0.92],
-      "sources": ["scheidel_friesen_2009", "allen_2000", "bairoch_1988"]
+      "trades": [
+        "farmer",
+        "vine_and_olive_tender",
+        "herder",
+        "fisher",
+        "hunter"
+      ],
+      "band": [
+        0.55,
+        0.9
+      ],
+      "sources": [
+        "bcvl_2013",
+        "allen_2000",
+        "erdkamp_2005",
+        "scheidel_friesen_2009"
+      ],
+      "band_status": "sourced",
+      "band_source": "Low edge: England 1381 total labour force 57.2 per cent, Clark 56 per cent (bcvl_2013 Tables 1 and 9). High edge: Roman commonplace of 80 per cent (erdkamp_2005, snippet) widened to 90 for the poorest cases; no opened source gives 90. Allen 2000 Table 2: England 1300 0.76, Italy 1300 0.63 of population."
     },
     "textiles": {
-      "trades": ["spinner", "weaver", "fuller"],
-      "band": [0.02, 0.16],
-      "sources": ["broadberry_2015", "wilson_2002"]
+      "trades": [
+        "spinner",
+        "weaver",
+        "fuller"
+      ],
+      "band": [
+        0.02,
+        0.16
+      ],
+      "sources": [
+        "broadberry_2015",
+        "wilson_2002"
+      ],
+      "band_status": "recalled",
+      "band_source": "No source found for a textile share. Only England's whole industry (19.2 per cent in 1381, 22.7 in 1522, bcvl_2013) was read; it bounds the sum of textiles, building, food and other crafts."
     },
     "building": {
-      "trades": ["mason", "carpenter", "plumber", "lime_burner", "millwright"],
-      "band": [0.01, 0.08],
-      "sources": ["broadberry_2015", "wilson_2002"]
+      "trades": [
+        "mason",
+        "carpenter",
+        "plumber",
+        "lime_burner",
+        "millwright"
+      ],
+      "band": [
+        0.01,
+        0.08
+      ],
+      "sources": [
+        "broadberry_2015",
+        "wilson_2002"
+      ],
+      "band_status": "recalled",
+      "band_source": "No source found. The industrial total in bcvl_2013 includes it."
     },
     "food_processing": {
-      "trades": ["miller", "baker", "salt_worker"],
-      "band": [0.01, 0.08],
-      "sources": ["wilson_2002"]
+      "trades": [
+        "miller",
+        "baker",
+        "salt_worker"
+      ],
+      "band": [
+        0.01,
+        0.08
+      ],
+      "sources": [
+        "wilson_2002"
+      ],
+      "band_status": "recalled",
+      "band_source": "No source found."
     },
     "transport": {
-      "trades": ["carter", "sailor", "porter", "dockworker"],
-      "band": [0.005, 0.06],
-      "sources": ["allen_2000", "wilson_2002"]
+      "trades": [
+        "carter",
+        "sailor",
+        "porter",
+        "dockworker"
+      ],
+      "band": [
+        0.005,
+        0.06
+      ],
+      "sources": [
+        "allen_2000",
+        "wilson_2002"
+      ],
+      "band_status": "recalled",
+      "band_source": "No source found for transport alone; see services_state for the combined edge."
     },
     "other_crafts": {
-      "trades": ["potter", "smith", "furnaceman", "glassblower", "engraver", "artisan", "charcoal_burner", "tanner", "leatherworker", "miner", "optician", "machinist", "engineer", "chemist", "electrician", "shipwright", "knapper"],
-      "band": [0.01, 0.10],
-      "sources": ["allen_2000", "broadberry_2015"]
+      "trades": [
+        "potter",
+        "smith",
+        "furnaceman",
+        "glassblower",
+        "engraver",
+        "artisan",
+        "charcoal_burner",
+        "tanner",
+        "leatherworker",
+        "miner",
+        "optician",
+        "machinist",
+        "engineer",
+        "chemist",
+        "electrician",
+        "shipwright",
+        "knapper"
+      ],
+      "band": [
+        0.01,
+        0.1
+      ],
+      "sources": [
+        "allen_2000",
+        "broadberry_2015"
+      ],
+      "band_status": "recalled",
+      "band_source": "No source found. The industrial total in bcvl_2013 includes it."
     },
     "services_state": {
-      "trades": ["soldier", "scribe", "merchant", "scholar", "master", "domestic_servant"],
-      "band": [0.01, 0.10],
-      "sources": ["scheidel_friesen_2009", "allen_2000"]
+      "trades": [
+        "soldier",
+        "scribe",
+        "merchant",
+        "scholar",
+        "master",
+        "domestic_servant"
+      ],
+      "band": [
+        0.01,
+        0.2
+      ],
+      "sources": [
+        "bcvl_2013",
+        "scheidel_friesen_2009"
+      ],
+      "band_status": "sourced",
+      "band_source": "High edge: England services 23.6 per cent of the labour force in 1381 and 19.2 in 1522 (bcvl_2013 Tables 1 and 2); that class also holds retail, domestic service, church and probably transport (Wrigley scheme, not checked), and transport is a separate group here, so 0.20 is the edge for the two together. Low edge: no source found."
     },
     "unattributed": {
-      "trades": ["labourer"],
-      "band": [0.0, 0.10],
-      "sources": []
+      "trades": [
+        "labourer"
+      ],
+      "band": [
+        0.0,
+        0.1
+      ],
+      "sources": [],
+      "band_status": "cap",
+      "band_source": "A cap the model's classification must meet, not a literature figure."
     }
   },
-  "ordering": {
-    "_doc": "Textiles or building is expected to be the largest non-farm group among those classified (Complaint 619).",
-    "largest_non_farm_among": ["textiles", "building"]
+  "outside_society_trades": ["soldier"],
+  "industry_total": {
+    "_doc": "Sum of textiles, building, food_processing and other_crafts: the one industrial aggregate read in an opened source. Not yet checked by a test.",
+    "band": [
+      0.1,
+      0.3
+    ],
+    "sources": [
+      "bcvl_2013"
+    ],
+    "band_source": "England: industry 19.2 per cent of the labour force in 1381 and 22.7 in 1522 (bcvl_2013 Tables 1 and 2), including mining and building and female work; males alone 15.2 and 20.2. Widened to 10 to 30 per cent because no Roman figure was found and the England values rest on stated weighting assumptions (urban 10, semi-rural 10, rural 80 per cent)."
   }
 }

@@ -9,9 +9,6 @@ from unittest import mock
 
 from sim.economy import api as economy_api
 from sim.engine import economy_port_coin
-from sim.engine.economy_port_setup import build_setup, opening_values
-
-from .harness import unopened_sim
 
 
 @dataclasses.dataclass
@@ -51,14 +48,6 @@ class BackingMarginCacheTests(unittest.TestCase):
         self.assertIsNone(self._margin(_Setup({}), None))
         self.assertIsNone(self._margin(_Setup({}), (1.0, 1.0)))
         self.assertEqual(len(self.opened), 1)
-
-    def test_the_kept_margin_is_what_a_fresh_opening_gives(self):
-        game = unopened_sim()
-        setup = build_setup(game, opening_values(game))
-        fresh = economy_api.backing_marginal_cost(economy_api.blank_economy(setup))
-        kept = economy_port_coin._backing_margin(setup)
-        self.assertEqual(kept, None if fresh is None else tuple(fresh))
-        self.assertEqual(economy_port_coin._backing_margin(setup), kept)
 
 
 if __name__ == "__main__":

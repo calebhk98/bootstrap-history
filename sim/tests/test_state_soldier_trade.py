@@ -48,7 +48,7 @@ check("conscripts serve a labour due and draw no pay", abs(conscripted.wages - 6
 # ---- soldiers come from the whole working age, as unskilled labour does -------------------------------
 WORKING_AGE = 1.0e6
 labour_world = types.SimpleNamespace(
-    population=types.SimpleNamespace(total=4.0e6, working_age=WORKING_AGE), civ={"urban_fraction": 0.1},
+    population=types.SimpleNamespace(total=4.0e6, working_age=WORKING_AGE), civ={"urban_fraction": 0.1}, urban_fraction=lambda: 0.1,
     literacy=lambda field: 0.1)
 population = types.SimpleNamespace(trade_available=lambda trade: True, _world=labour_world)
 check("a trade drawn from the unskilled pool has the whole working age to call on",

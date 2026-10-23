@@ -3,7 +3,7 @@ here, with the labour core's tenure record, no game."""
 QUICK_TOPIC = True
 
 from .harness import *  # noqa: F401,F403
-from sim.engine.industry_depth_rules import firm_worker_years, opening_rates, seed_stock, society_worker_years
+from sim.engine.industry_depth_rules import firm_worker_years, opening_rates, opening_seed, seed_stock, society_worker_years
 from sim.labour.api import add_tenure, fade_tenure, tenure_held
 
 CONCERNS = {"mill", "forge", "kiln"}
@@ -32,6 +32,10 @@ check("producers of a technique nobody holds seed nothing", opening_rates(set(),
 check("the seeded stock is the yearly worker-years over the yearly fade", abs(seed_stock(6.0, 0.03) - 200.0) < 1e-9)
 check("a fade of nothing reads as the whole stock fading each year", seed_stock(6.0, 0.0) == 6.0)
 check("a faster fade seeds a smaller stock", seed_stock(6.0, 0.06) < seed_stock(6.0, 0.03))
+plan = opening_seed({"mill", "forge", "chapel"}, is_concern, {"mill": 6.0}, founding, 0.03)
+check("the opening seed pairs each held concern's yearly rate with the stock it seeds",
+      sorted(plan) == ["forge", "mill"] and plan["mill"][0] == 6.0 and abs(plan["mill"][1] - 200.0) < 1e-9
+      and plan["forge"] == (3.0, seed_stock(3.0, 0.03)), plan)
 
 # --- the seeded stock holds from year to year while the producers keep running
 leavers, rate = 0.04, 5.0

@@ -37,6 +37,7 @@ import os
 import unittest
 
 from sim.engine import data, prices as engine_prices
+from sim.world import grain_yield
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 CIVDIR = os.path.join(ROOT, "data", "civilizations")
@@ -92,12 +93,13 @@ class RentIsWiredInTests(unittest.TestCase):
             _starting_techs("rome_100ad"), self.prices_json,
             civilization_id="rome_100ad")
         self.assertIn("hectare_land", result.prices_in_labour_hours)
-        # Moves with tile fertility (arable-weighted, Complaints/130) and with
-        # the farmer trade's training years (they price the labour hour the
-        # rent is paid in); re-read from this test's own failure message when
-        # either moves.
-        self.assertAlmostEqual(
-            result.prices_in_labour_hours["hectare_land"], 164.81, places=2)
+        # Rule, not a recorded value (the figure moves with every sourced farm-labour or yield figure): rent is
+        # positive and cannot exceed the value of the net grain a hectare yields.
+        rent = result.prices_in_labour_hours["hectare_land"]
+        net_grain_value = (grain_yield.net_yield_kg_per_hectare(grain_yield.SEED_KG_PER_HECTARE, grain_yield.FOLD_RETURN)
+                           * result.prices_in_labour_hours["wheat_kg"])
+        self.assertGreater(rent, 0.0)
+        self.assertLess(rent, net_grain_value)
 
     def test_omitting_civilization_id_defaults_to_rome(self):
         with_default = engine_prices.solved_prices(

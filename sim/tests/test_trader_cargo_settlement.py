@@ -45,7 +45,10 @@ class Stub(TraderCargoMixin):
     def _record_lift(self, partner, route, flow_tonnes, unmet_tonnes):
         self.lifts.append((partner, flow_tonnes))
 
-    def note_actor_trade(self, partner, material, tonnes, to_partner):
+    def landed_cost(self, paid, carriage):
+        return paid + carriage
+
+    def note_actor_trade(self, partner, material, tonnes, to_partner, landed_cost=0.0):
         self.tallies.append((partner, material, tonnes, to_partner))
 
     @property

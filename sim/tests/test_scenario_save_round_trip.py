@@ -1,4 +1,4 @@
-"""Complaint 640, audit batch 3, scenario: a saved and loaded game plays on exactly as the unbroken one would. The rules
+"""SCENARIO (Complaint 640): Complaint 640, audit batch 3, scenario: a saved and loaded game plays on exactly as the unbroken one would. The rules
 have tests of their own: test_complaint_320_save_round_trip (serialising state, the demand key)."""
 from .harness import *  # noqa: F401,F403
 from sim.engine.saveload import save_state, load_state

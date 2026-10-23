@@ -9,6 +9,13 @@ being found times what that costs, equals the cost of hiding it:
     share_hidden = hideable_share * saving / marginal_cost_at_ceiling      (within 0..hideable_share)
 
 so a higher rate hides more and a state whose officials reach more of the payers hides less. Any state, any payer.
+
+The penalty is proportional to the tax unpaid, so on the risk-neutral result (Yitzhaki 1974, as summarised in Pickhardt and
+Seibold, arXiv 1112.0233 s.2.1) the rate alone would not change the share hidden: the gain per unit hidden is the rate times a
+factor (the chance found and the penalty) that does not contain it. Here the rate moves hiding only through the cost curve,
+which is in units of income and not of tax (`HIDING_MARGINAL_COST_AT_CEILING`, labelled, no source), so the size of the
+response to a rate is a property of that curve and must not be read as evidence about pre-modern payers. With a cost that
+scales with the rate (`hidden_share_at_cost`) the share hidden is the same at every rate.
 Nothing here names a civilisation, a form or a stratum.
 """
 from .demand_answer import enforcement_chance
@@ -23,11 +30,16 @@ def saving_per_unit_hidden(rate: float, collectible: float) -> float:
 	return max(0.0, rate) * (1.0 - chance_found * (1.0 + capacity * REFUSAL_PENALTY_MULTIPLE))
 
 
+def hidden_share_at_cost(rate: float, collectible: float, marginal_cost_at_ceiling: float) -> float:
+	"""The share hidden when hiding the last unit costs `marginal_cost_at_ceiling` of income."""
+	wanted = HIDEABLE_SHARE_OF_INCOME * saving_per_unit_hidden(rate, collectible) / marginal_cost_at_ceiling
+	return max(0.0, min(HIDEABLE_SHARE_OF_INCOME, wanted))
+
+
 def hidden_share(rate: float, collectible: float) -> float:
 	"""0..HIDEABLE_SHARE_OF_INCOME: the share of its income a payer keeps off the rolls under `rate`, when the
 	state's officials reach `collectible` of the payers."""
-	wanted = HIDEABLE_SHARE_OF_INCOME * saving_per_unit_hidden(rate, collectible) / HIDING_MARGINAL_COST_AT_CEILING
-	return max(0.0, min(HIDEABLE_SHARE_OF_INCOME, wanted))
+	return hidden_share_at_cost(rate, collectible, HIDING_MARGINAL_COST_AT_CEILING)
 
 
 def declared_income(income: float, rate: float, collectible: float) -> float:

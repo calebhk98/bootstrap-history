@@ -2,8 +2,8 @@
 
 **Status:** open - owner decision 2026-10-21: wanted, lower priority than the opening (473) and year speed (497)
 
-A mod's code can add commands, actor kinds, policies, spawners, phases of the year and three providers (towns,
-externalities, harvest), and changes the world only through `api.effects` (`sim/engine/mod_code.py`, `mods/README.md`
+A mod's code can add commands, actor kinds, policies, spawners, phases of the year and two providers (town size and
+externalities, which carry deaths and a harvest factor), and changes the world only through `api.effects` (`sim/engine/mod_code.py`, `mods/README.md`
 "Mod code"). It has no way to replace how the engine computes something already in the year: the goods clearing, the
 price root-finds, the merchants' route search. A speed mod (for example one using numpy, or a compiled extension)
 can only do it today by overwriting a module function from `register(api)`. That is unsupported:

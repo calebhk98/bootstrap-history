@@ -76,8 +76,9 @@ class ConservationTests(unittest.TestCase):
 class DemandTests(unittest.TestCase):
     def test_demand_raises_the_wage_and_pulls_people_in(self):
         state = records.MarketState(workers={"vale": town(digger=1000, carver=20)})
-        year_inputs = inputs([bid("farm", "digger", "vale", 1000), bid("yard", "carver", "vale", 120)],
-                             entrants=25.0, attrition=0.02)
+        # the yard wants no more carvers than the trade can come to hold, so the shortage ends and the wage falls
+        year_inputs = inputs([bid("farm", "digger", "vale", 1000), bid("yard", "carver", "vale", 60)],
+                             entrants=60.0, attrition=0.02)
         state, report = run(state, year_inputs, 3)
         early_wage = report.clearing("carver", "vale").wage
         self.assertGreater(early_wage, report.clearing("digger", "vale").wage)

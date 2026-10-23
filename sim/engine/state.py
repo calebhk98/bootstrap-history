@@ -306,6 +306,8 @@ class EconomyState:
 	tile_owners: Dict[str, Dict[str, str]] = field(default_factory=dict)
 	# claims the seeding refused because another civilisation file already held the tile: {tile, owner, claimant}
 	tile_claim_conflicts: List[Dict[str, Any]] = field(default_factory=list)
+	# armies, the food they took from tiles this year and the tiles an army took: {armies, drawn, held_since, next_id} (campaign_actors.py)
+	campaigns: Dict[str, Any] = field(default_factory=dict)
 	# dated records of what changed in the world and why, shared by every seat (world_events.py)
 	world_events: List[Dict[str, Any]] = field(default_factory=list)
 	# tile -> {construction node id: capacity built there} (works.py)
@@ -405,6 +407,8 @@ class PopulationState:
 	# the same by tile, and the people by tile as [children, working_age, elderly] (regional_people.py)
 	regional_eaten_over_need: Dict[str, float] = field(default_factory=dict)
 	regions: Dict[str, List[float]] = field(default_factory=dict)
+	# the share of each region's people living in town, seeded at the opening from the civilisation's typed urban share (urban_share.py)
+	urban_share_of_people: Dict[str, float] = field(default_factory=dict)
 	# one dict per simulated year: year, population, births, deaths, nutrition_ratio
 	yearly_record: List[Any] = field(default_factory=list)
 

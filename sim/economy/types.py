@@ -138,6 +138,7 @@ class Recipe:
     plant_life_years: float = 0.0
     plant_parts: Tuple[PlantPart, ...] = ()   # the plant's parts with their alternative builds; plant_goods etc. are the folded first builds
     climate_classes: Tuple[str, ...] = ()   # climates it can be worked in, from data; empty: any
+    service: bool = False            # a good made from hours and used where it is made (data: "service"); the opening places it after the producers that need a site
     site_bound: bool = False         # runs only where a site is declared (sites.py); the economy knows nothing else of it
     tool_wear: Mapping[GoodId, float] = field(default_factory=dict)   # per run: the part of `inputs` that is its workers' tools wearing out
     tool_fallbacks: Mapping[GoodId, Tuple[ToolFallback, ...]] = field(default_factory=dict)   # per wear good: what is drawn, in order, when it is short
@@ -217,6 +218,7 @@ class Fill:
 QUOTE_BEST_UNFILLED_BID = "best_unfilled_bid"          # the most any buyer would have paid, below every ask
 QUOTE_LOWEST_UNFILLED_ASK = "lowest_unfilled_ask"      # the least any seller would have taken, with nobody bidding
 QUOTE_COST_COVERING = "cost_covering"                  # what a maker would have to ask to cover a unit's cost
+QUOTE_OPENING_ESTIMATE = "opening_estimate"            # the opening's figure, which no clearing has replaced yet
 
 
 @dataclass(frozen=True)

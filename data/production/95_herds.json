@@ -4,9 +4,9 @@
   "wool_kg": {
    "outputs": {
     "wool_kg": 100.0,
-    "meat_kg": 276.0,
-    "hide_kg": 48.0,
-    "fat_kg": 24.0,
+    "meat_kg": 287.04,
+    "hide_kg": 49.92,
+    "fat_kg": 24.96,
     "manure_kg": 14454.0
    },
    "inputs": {
@@ -20,20 +20,33 @@
    "extracted_from": "pasture",
    "unit_dimension": "mass",
    "basis": "per herd of 100 head kept for a year (sheep_kg)",
-   "yield_basis": "SHEEP FLOCK, wool and mutton. A shepherd tends 100 head (Varro, De re rustica 2.2.20, LacusCurtius, opened: Atticus keeps \"not less than one shepherd to the hundred rough-fleeced sheep\"; 2.10.11, Cossinius: \"a herdsman to every eighty wool-bearing sheep, while Atticus has one to every hundred\"); shearing takes 0.4 hour a head with hand shears; 3 hours to slaughter, flay and joint a carcass. The products come together from one animal-year: a herd cannot give more wool without more hides and meat. Each figure is the species row's in data/world/living_stock.json times 100 head (its source names what was read and what has no source): the stocking rate sets the land, offtake share x live weight x dressing percentage is the carcass, of which rendered fat is split off as fat_kg and the rest is meat_kg (bone-in), the raw skin is a share of live weight, salt is the lick. The herd is a held living stock that the gate node holds, so a society without the animal cannot make any of this; the herd is not charged as capital because the stock has no production entry yet (Complaints/365, 366). Labour is herding at 2400 hours a herder-year (8 hours, 300 days; no source found, a labelled heuristic) shared among the head a herder tends, plus the work named here. Meat is valued as food at 0.4 of wheat a kilogram in data/world/needs.json (see Complaints/532). Conf D throughout; the cost is split among the outputs by mass, because no sole-output route gives a reference price (sim/engine/joint_allocation.py, retire: Complaints/507). herd_stock is the live weight of the 100 head one run keeps, which is what the engine's opening ledger holds for the runs the opening gives the recipe. DUNG AND FODDER: the herd drops dung and eats a winter ration. Collected dung is the share of the day in fold or byre of the species row's fresh excreta, gathered at 3.0 hours a tonne with fork and barrow (assumed, conf D); the straw and bran are the winter ration and supplement of the row (all in data/world/living_stock.json, 'dung_and_fodder_source'). Dung is a joint output with no reference price, a recorded waste; its consumer is the nitre bed (60_nitrogen.json), and straw and bran come from the grain and milling recipes.",
+   "yield_basis": "SHEEP FLOCK, wool and mutton. A shepherd tends 100 head (Varro, De re rustica 2.2.20, LacusCurtius, opened: Atticus keeps \"not less than one shepherd to the hundred rough-fleeced sheep\"; 2.10.11, Cossinius: \"a herdsman to every eighty wool-bearing sheep, while Atticus has one to every hundred\"); shearing takes 0.4 hour a head with hand shears; 3 hours to slaughter, flay and joint a carcass. The products come together from one animal-year: a herd cannot give more wool without more hides and meat. Each figure is the species row's in data/world/living_stock.json times 100 head (its source names what was read and what has no source): the stocking rate sets the land, offtake share x live weight x dressing percentage is the carcass, of which rendered fat is split off as fat_kg and the rest is meat_kg (bone-in), the raw skin is a share of live weight, salt is the lick. The herd is a held living stock that the gate node holds, so a society without the animal cannot make any of this; the herd is not charged as capital because the stock has no production entry yet (Complaints/365, 366). Labour is herding at 2400 hours a herder-year (8 hours, 300 days; no source found, a labelled heuristic) shared among the head a herder tends, plus the work named here. Meat is valued as food at 0.4 of wheat a kilogram in data/world/needs.json (see Complaints/532). Conf D throughout; the cost is split among the outputs by mass, because no sole-output route gives a reference price (sim/engine/joint_allocation.py, retire: Complaints/507). herd_stock is the live weight of the 100 head one run keeps, which is what the engine's opening ledger holds for the runs the opening gives the recipe. DUNG AND FODDER: the herd drops dung and eats a winter ration. Collected dung is the share of the day in fold or byre of the species row's fresh excreta, gathered at 3.0 hours a tonne with fork and barrow (assumed, conf D); the straw and bran are the winter ration and supplement of the row (all in data/world/living_stock.json, 'dung_and_fodder_source'). Dung is a joint output with no reference price, a recorded waste; its consumer is the nitre bed (60_nitrogen.json), and straw and bran come from the grain and milling recipes. CAPITAL: the herd held is charged as capital (see capital).",
    "conf": "D",
    "requires_node": "fud_sheep_flock",
    "herd_stock": {
     "sheep_kg": 3000.0
-   }
+   },
+   "capital": [
+    {
+     "good": "the breeding herd held (sheep_kg)",
+     "build_materials": {
+      "sheep_kg": 3000.0
+     },
+     "build_labour_hours": {},
+     "service_life_years": 12.5,
+     "annual_output_at_basis": 14454.0,
+     "capital_basis": "The herd is a stock the producer holds: it wears by deaths at the species row's annual_loss in data/world/living_stock.json (service life is one over that loss) and is replaced by buying or breeding stock, priced at the live-weight recipe sheep_kg. The bill is the herd's live weight (herd_stock); annual_output_at_basis is the batch's largest output, so the whole yearly share is charged to the batch.",
+     "conf": "D"
+    }
+   ]
   },
   "milk_kg": {
    "outputs": {
     "milk_kg": 5000.0,
-    "meat_kg": 256.5,
-    "hide_kg": 48.0,
-    "fat_kg": 13.5,
-    "horn_kg": 2.4,
+    "meat_kg": 228.7125,
+    "hide_kg": 42.8,
+    "fat_kg": 12.0375,
+    "horn_kg": 2.14,
     "manure_kg": 12045.0
    },
    "inputs": {
@@ -48,21 +61,35 @@
    "extracted_from": "pasture",
    "unit_dimension": "mass",
    "basis": "per herd of 100 head kept for a year (goat_kg)",
-   "yield_basis": "GOAT HERD, milk and kid meat. A herder tends about 150 goats (no source found; Varro 2.3.10, opened, calls a flock of about fifty large enough, which is a flock size, not a herder's charge); the half of the herd in milk is milked twice a day for 200 days at 0.08 hour a goat; 3 hours to slaughter, flay and joint a carcass. The products come together from one animal-year: a herd cannot give more wool without more hides and meat. Each figure is the species row's in data/world/living_stock.json times 100 head (its source names what was read and what has no source): the stocking rate sets the land, offtake share x live weight x dressing percentage is the carcass, of which rendered fat is split off as fat_kg and the rest is meat_kg (bone-in), the raw skin is a share of live weight, salt is the lick. The herd is a held living stock that the gate node holds, so a society without the animal cannot make any of this; the herd is not charged as capital because the stock has no production entry yet (Complaints/365, 366). Labour is herding at 2400 hours a herder-year (8 hours, 300 days; no source found, a labelled heuristic) shared among the head a herder tends, plus the work named here. Meat is valued as food at 0.4 of wheat a kilogram in data/world/needs.json (see Complaints/532). Conf D throughout; the cost is split among the outputs by mass, because no sole-output route gives a reference price (sim/engine/joint_allocation.py, retire: Complaints/507). herd_stock is the live weight of the 100 head one run keeps, which is what the engine's opening ledger holds for the runs the opening gives the recipe. DUNG AND FODDER: the herd drops dung and eats a winter ration. Collected dung is the share of the day in fold or byre of the species row's fresh excreta, gathered at 3.0 hours a tonne with fork and barrow (assumed, conf D); the straw and bran are the winter ration and supplement of the row (all in data/world/living_stock.json, 'dung_and_fodder_source'). Dung is a joint output with no reference price, a recorded waste; its consumer is the nitre bed (60_nitrogen.json), and straw and bran come from the grain and milling recipes.",
+   "yield_basis": "GOAT HERD, milk and kid meat. A herder tends about 150 goats (no source found; Varro 2.3.10, opened, calls a flock of about fifty large enough, which is a flock size, not a herder's charge); the half of the herd in milk is milked twice a day for 200 days at 0.08 hour a goat; 3 hours to slaughter, flay and joint a carcass. The products come together from one animal-year: a herd cannot give more wool without more hides and meat. Each figure is the species row's in data/world/living_stock.json times 100 head (its source names what was read and what has no source): the stocking rate sets the land, offtake share x live weight x dressing percentage is the carcass, of which rendered fat is split off as fat_kg and the rest is meat_kg (bone-in), the raw skin is a share of live weight, salt is the lick. The herd is a held living stock that the gate node holds, so a society without the animal cannot make any of this; the herd is not charged as capital because the stock has no production entry yet (Complaints/365, 366). Labour is herding at 2400 hours a herder-year (8 hours, 300 days; no source found, a labelled heuristic) shared among the head a herder tends, plus the work named here. Meat is valued as food at 0.4 of wheat a kilogram in data/world/needs.json (see Complaints/532). Conf D throughout; the cost is split among the outputs by mass, because no sole-output route gives a reference price (sim/engine/joint_allocation.py, retire: Complaints/507). herd_stock is the live weight of the 100 head one run keeps, which is what the engine's opening ledger holds for the runs the opening gives the recipe. DUNG AND FODDER: the herd drops dung and eats a winter ration. Collected dung is the share of the day in fold or byre of the species row's fresh excreta, gathered at 3.0 hours a tonne with fork and barrow (assumed, conf D); the straw and bran are the winter ration and supplement of the row (all in data/world/living_stock.json, 'dung_and_fodder_source'). Dung is a joint output with no reference price, a recorded waste; its consumer is the nitre bed (60_nitrogen.json), and straw and bran come from the grain and milling recipes. CAPITAL: the herd held is charged as capital (see capital).",
    "conf": "D",
    "requires_node": "fud_goat_herd",
    "herd_stock": {
     "goat_kg": 2500.0
-   }
+   },
+   "capital": [
+    {
+     "good": "the breeding herd held (goat_kg)",
+     "build_materials": {
+      "goat_kg": 2500.0
+     },
+     "build_labour_hours": {},
+     "service_life_years": 12.5,
+     "annual_output_at_basis": 12045.0,
+     "capital_basis": "The herd is a stock the producer holds: it wears by deaths at the species row's annual_loss in data/world/living_stock.json (service life is one over that loss) and is replaced by buying or breeding stock, priced at the live-weight recipe goat_kg. The bill is the herd's live weight (herd_stock); annual_output_at_basis is the batch's largest output, so the whole yearly share is charged to the batch.",
+     "conf": "D"
+    }
+   ]
   },
   "meat_kg": {
    "outputs": {
-    "meat_kg": 1128.0,
+    "meat_kg": 789.6,
     "milk_kg": 7337.5,
-    "hide_kg": 175.0,
-    "fat_kg": 72.0,
-    "horn_kg": 5.0,
-    "manure_kg": 189708.75
+    "hide_kg": 122.5,
+    "fat_kg": 50.4,
+    "horn_kg": 3.5,
+    "manure_kg": 189708.75,
+    "draught_animal_kg": 750.0
    },
    "inputs": {
     "salt_kg": 1100.0,
@@ -76,12 +103,25 @@
    "extracted_from": "pasture",
    "unit_dimension": "mass",
    "basis": "per herd of 100 head kept for a year (cattle_kg)",
-   "yield_basis": "CATTLE HERD, beef, milk and hides. A herder tends about 80 head (no source found); the cows that calve (0.5 x 0.587 of the herd) are milked twice a day for 210 days at 0.1 hour a cow; 8 hours to slaughter, flay and joint a carcass. The products come together from one animal-year: a herd cannot give more wool without more hides and meat. Each figure is the species row's in data/world/living_stock.json times 100 head (its source names what was read and what has no source): the stocking rate sets the land, offtake share x live weight x dressing percentage is the carcass, of which rendered fat is split off as fat_kg and the rest is meat_kg (bone-in), the raw skin is a share of live weight, salt is the lick. The herd is a held living stock that the gate node holds, so a society without the animal cannot make any of this; the herd is not charged as capital because the stock has no production entry yet (Complaints/365, 366). Labour is herding at 2400 hours a herder-year (8 hours, 300 days; no source found, a labelled heuristic) shared among the head a herder tends, plus the work named here. Meat is valued as food at 0.4 of wheat a kilogram in data/world/needs.json (see Complaints/532). Conf D throughout; the cost is split among the outputs by mass, because no sole-output route gives a reference price (sim/engine/joint_allocation.py, retire: Complaints/507). herd_stock is the live weight of the 100 head one run keeps, which is what the engine's opening ledger holds for the runs the opening gives the recipe. DUNG AND FODDER: the herd drops dung and eats a winter ration. Collected dung is the share of the day in fold or byre of the species row's fresh excreta, gathered at 3.0 hours a tonne with fork and barrow (assumed, conf D); the straw and bran are the winter ration and supplement of the row (all in data/world/living_stock.json, 'dung_and_fodder_source'). Dung is a joint output with no reference price, a recorded waste; its consumer is the nitre bed (60_nitrogen.json), and straw and bran come from the grain and milling recipes.",
+   "yield_basis": "CATTLE HERD, beef, milk and hides. A herder tends about 80 head (no source found); the cows that calve (0.5 x 0.587 of the herd) are milked twice a day for 210 days at 0.1 hour a cow; 8 hours to slaughter, flay and joint a carcass. The products come together from one animal-year: a herd cannot give more wool without more hides and meat. Each figure is the species row's in data/world/living_stock.json times 100 head (its source names what was read and what has no source): the stocking rate sets the land, offtake share x live weight x dressing percentage is the carcass, of which rendered fat is split off as fat_kg and the rest is meat_kg (bone-in), the raw skin is a share of live weight, salt is the lick. The herd is a held living stock that the gate node holds, so a society without the animal cannot make any of this; the herd is not charged as capital because the stock has no production entry yet (Complaints/365, 366). Labour is herding at 2400 hours a herder-year (8 hours, 300 days; no source found, a labelled heuristic) shared among the head a herder tends, plus the work named here. Meat is valued as food at 0.4 of wheat a kilogram in data/world/needs.json (see Complaints/532). Conf D throughout; the cost is split among the outputs by mass, because no sole-output route gives a reference price (sim/engine/joint_allocation.py, retire: Complaints/507). herd_stock is the live weight of the 100 head one run keeps, which is what the engine's opening ledger holds for the runs the opening gives the recipe. DUNG AND FODDER: the herd drops dung and eats a winter ration. Collected dung is the share of the day in fold or byre of the species row's fresh excreta, gathered at 3.0 hours a tonne with fork and barrow (assumed, conf D); the straw and bran are the winter ration and supplement of the row (all in data/world/living_stock.json, 'dung_and_fodder_source'). Dung is a joint output with no reference price, a recorded waste; its consumer is the nitre bed (60_nitrogen.json), and straw and bran come from the grain and milling recipes. DRAUGHT: draught_share_of_offtake of the year's offtake is castrated, reared and kept to work instead of slaughtered, so oxen are a joint product of the herd (draught_animal_kg) and the carcass goods fall by the same share (Complaints/532). CAPITAL: the herd held is charged as capital (see capital).",
    "conf": "D",
    "requires_node": "fud_cattle_herd",
    "herd_stock": {
     "cattle_kg": 25000.0
-   }
+   },
+   "capital": [
+    {
+     "good": "the breeding herd held (cattle_kg)",
+     "build_materials": {
+      "cattle_kg": 25000.0
+     },
+     "build_labour_hours": {},
+     "service_life_years": 15.873,
+     "annual_output_at_basis": 189708.75,
+     "capital_basis": "The herd is a stock the producer holds: it wears by deaths at the species row's annual_loss in data/world/living_stock.json (service life is one over that loss) and is replaced by buying or breeding stock, priced at the live-weight recipe cattle_kg. The bill is the herd's live weight (herd_stock); annual_output_at_basis is the batch's largest output, so the whole yearly share is charged to the batch.",
+     "conf": "D"
+    }
+   ]
   },
   "sheep_kg": {
    "outputs": {
@@ -130,6 +170,61 @@
    "yield_basis": "GROWN. A hectare carries the species' head per hectare at its live weight, and the herd adds its natural increase in a year (rates and sources in data/world/living_stock.json; the products it gives meanwhile are in the herd recipes of this file). Labour is the herder's year (2400 hours, no source found, a labelled heuristic) shared among the 80 head a herder tends, for the head on the hectare. LAND: the batch is one hectare-year, converted to hectare_land's unit as in wheat_kg's LAND note. Conf D. Made only where the herd is already held, so the stock cannot be had without a society that holds it.",
    "conf": "D",
    "requires_node": "fud_cattle_herd"
+  },
+  "lard_kg": {
+   "outputs": {
+    "lard_kg": 1080.0,
+    "meat_kg": 2520.0,
+    "hide_kg": 192.0,
+    "manure_kg": 28908.0
+   },
+   "inputs": {
+    "salt_kg": 600.0,
+    "straw_kg": 6000.0,
+    "bran_kg": 6000.0
+   },
+   "labour_hours": {
+    "herder": 2640.0
+   },
+   "land_hectare_years": 50.0,
+   "extracted_from": "pasture",
+   "unit_dimension": "mass",
+   "basis": "per herd of 100 head kept for a year (pig_kg)",
+   "yield_basis": "PIG HERD, pork, lard and hides. Each figure is the species row's in data/world/living_stock.json (pig_kg) times 100 head, by the same arithmetic as the sheep, goat and cattle recipes: offtake x live weight x dressing is the carcass, of which 0.3 is rendered as lard (lard_kg, an edible fat) and the rest is meat_kg, the raw skin is 4 percent of live weight, salt is the lick, dung and straw follow the sheep rule. Bran is the grain-offal ration of the row. Labour: one herder to 100 head at 2400 hours a year (no source found; labelled heuristic) plus 3 hours to slaughter and joint a carcass (the sheep figure, assumed). Sources for the breeding figures (Varro 2.4, the Uganda smallholder survey) are in the row; the rest has no source and is a labelled heuristic (retire: Complaints/670). The cost is split among the outputs by mass, because no sole-output route gives a reference price (sim/engine/joint_allocation.py, retire: Complaints/507). Bristle, a real pig product, is not made: nothing consumes it. The herd held is charged as capital (see capital).",
+   "conf": "D",
+   "requires_node": "fud_pig_herd",
+   "herd_stock": {
+    "pig_kg": 6000.0
+   },
+   "capital": [
+    {
+     "good": "the breeding herd held (pig_kg)",
+     "build_materials": {
+      "pig_kg": 6000.0
+     },
+     "build_labour_hours": {},
+     "service_life_years": 10.0,
+     "annual_output_at_basis": 28908.0,
+     "capital_basis": "The herd is a stock the producer holds: it wears by deaths at the species row's annual_loss in data/world/living_stock.json (service life is one over that loss) and is replaced by buying or breeding stock, priced at the live-weight recipe pig_kg. The bill is the herd's live weight (herd_stock); annual_output_at_basis is the batch's largest output, so the whole yearly share is charged to the batch.",
+     "conf": "D"
+    }
+   ]
+  },
+  "pig_kg": {
+   "outputs": {
+    "pig_kg": 127.8
+   },
+   "inputs": {},
+   "labour_hours": {
+    "herder": 48.0
+   },
+   "land_hectare_years": 1.0,
+   "extracted_from": "pasture",
+   "unit_dimension": "mass",
+   "basis": "per hectare of breeding pasture per year, output as kg of live weight added to a herd",
+   "yield_basis": "GROWN. A hectare carries 2 pigs at 60 kg and the herd adds its natural increase in a year (row pig_kg in data/world/living_stock.json). Labour is the herder's year (2400 hours, no source found, a labelled heuristic) shared among the 100 head a herder tends, for the head on the hectare. LAND: the batch is one hectare-year, converted to hectare_land's unit as in wheat_kg's LAND note. Conf D. Made only where the herd is already held.",
+   "conf": "D",
+   "requires_node": "fud_pig_herd"
   }
  }
 }

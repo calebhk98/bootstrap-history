@@ -39,6 +39,9 @@ class FakeGovernment:
 		self.asked.append(takings)
 		return 0.0
 
+	def assess(self, payer: Any, taxable: float, world: Any) -> Any:
+		return 0.0, {}
+
 
 def make_node(node_id: str, prerequisites=(), hours: float = 100.0, years: float = 1.0,
 			  revenue: float = 0.0, upkeep: float = 0.0, makes=()) -> Dict[str, Any]:
@@ -98,6 +101,9 @@ class FakeWorld:
 	def research_hands(self, actor: Any, family: str) -> float:
 		return self.hands.get(family, 0.0)
 
+	def research_trades(self, family: str) -> List[str]:
+		return list(getattr(self, "trades_of_family", {}).get(family, ()))
+
 	def unsold_materials(self, actor: Any, node_id: str) -> List[str]:
 		return list(self.unsold.get(node_id, ()))
 
@@ -112,6 +118,9 @@ class FakeWorld:
 
 	def knowledge_visibility(self, node_id: str, distance_km: float) -> float:
 		return 1.0
+
+	def contact_volume(self, place_a: Optional[str], place_b: Optional[str]) -> float:
+		return 0.0
 
 	def distance_km(self, place_a: Optional[str], place_b: Optional[str]) -> float:
 		return 0.0
@@ -145,6 +154,9 @@ class FakeWorld:
 		return random.Random(repr((self.seed,) + parts))
 
 	# ---- money and credit
+	def nodes_with_mechanic(self, mechanic: str) -> Any:
+		return ()
+
 	def market_rate(self) -> float:
 		return self.rate
 

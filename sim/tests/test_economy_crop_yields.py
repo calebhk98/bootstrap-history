@@ -53,6 +53,27 @@ class CropYieldsTests(unittest.TestCase):
         self.assertAlmostEqual(economy_port_sites.crop_yields(economy())["farm_good"], 1.4)
 
 
+class TileWeatherTests(unittest.TestCase):
+    """Complaint 537: a producer takes the weather of its own tile when the year has one, the pooled weather otherwise."""
+    def setUp(self):
+        self.yields = economy_port_sites.crop_yields(economy(), WEATHER, {"good": 1.1, "poor": 0.5})
+
+    def test_a_crop_producer_takes_its_own_tiles_weather_times_its_tiles_factor(self):
+        self.assertAlmostEqual(self.yields["farm_good"], 1.1 * 1.4)
+        self.assertAlmostEqual(self.yields["farm_poor"], 0.5 * 0.6)
+
+    def test_pasture_on_a_tile_takes_that_tiles_weather_too(self):
+        self.assertAlmostEqual(self.yields["herd"], 1.1)
+
+    def test_a_tile_without_a_weather_cell_takes_the_pooled_weather(self):
+        self.assertAlmostEqual(self.yields["farm_unsited"], WEATHER)
+
+    def test_two_tiles_with_one_soil_differ_only_by_their_weather(self):
+        both = economy_port_sites.crop_yields(economy(), WEATHER, {"good": 0.7, "poor": 1.2})
+        self.assertAlmostEqual(both["farm_good"] / 1.4, 0.7)
+        self.assertAlmostEqual(both["farm_poor"] / 0.6, 1.2)
+
+
 class HarmedYieldsTests(unittest.TestCase):
     def setUp(self):
         self.economy = economy()

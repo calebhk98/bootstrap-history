@@ -1,4 +1,6 @@
-"""Complaints/541: the money rate per tonne-km by mode (feed, crew, carrier capital, hull loss, return leg),
+"""BASELINE VALIDATION (CLAUDE.md 4.2): the money freight ratios of a Rome opening against the Edict of Diocletian.
+
+Complaints/541: the money rate per tonne-km by mode (feed, crew, carrier capital, hull loss, return leg),
 as a Rome opening's freight function charges it, keeps the order and rough proportions of the Edict of
 Diocletian's grain rates (about 1 sea : 5 river : 28-40 land by wagon).
 

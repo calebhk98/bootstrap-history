@@ -1,4 +1,4 @@
-"""Complaint 640, audit batch 3: the scenarios the rule tests leave to a whole game.
+"""SCENARIO (Complaint 640): Complaint 640, audit batch 3: the scenarios the rule tests leave to a whole game.
 
 Each rule that used to be checked here through a game is now a test of its own function (the files named in each
 scenario's comment). What stays is wiring: that the screens, the commands and the engine call the one function, and
@@ -8,6 +8,7 @@ from unittest import mock
 from .harness import *  # noqa: F401,F403
 from .harness import _mk_loom_sim
 from sim.engine.data import closure as _closure
+from sim.engine import revenue_ledger
 from sim.refusal import cause_of, facts_of
 from sim.ui.proto.typed import parse_typed
 from .agent_command_helpers import ask_agent
@@ -130,7 +131,7 @@ _money = _run(_crowded, "money")
 _why = _run(_crowded, "why " + _loom)
 check("scenario earnings figure: ventures, money and why quote the same earnings and upkeep",
       _close(_ventures_row["earns_a_year"], _real_earnings) and _close(_ventures_row["costs_a_year"], _real_upkeep)
-      and _close(_money["where_the_money_comes_from"].get(_loom), _real_earnings)
+      and _close(_money["where_the_money_comes_from"].get(_loom) or 0.0, _real_earnings)   # a row earning nothing is not listed
       and _close(_why.get("revenue"), _real_earnings) and _close(_why.get("upkeep"), _real_upkeep),
       (_ventures_row, _money["where_the_money_comes_from"].get(_loom), _why.get("revenue"), _why.get("upkeep"),
        _real_earnings, _real_upkeep))
@@ -195,11 +196,26 @@ check("scenario cash book: once it sells, its goods have a market price and the 
       _book.venture_forecast_basis(_NODE) == "market", _book.venture_forecast_basis(_NODE))
 _quote = _book.venture_real_earnings(_NODE)
 _itemised_again = ask_agent(_book, cmd="money")["where_the_money_comes_from"]
+_estimate_again = _book.estimated_revenue()
 ask_agent(_book, cmd="step", years=1)
-_booked_again = ask_agent(_book, cmd="money")["cash_book"]["earlier_years"][-1]["causes"].get("venture revenue")
-check("scenario cash book: a running concern's forecast is within the year's price change of its takings",
-      abs(_itemised_again[_NODE] - _quote) < 0.11 and abs(_booked_again - sum(_itemised_again.values())) < 0.2,
-      (_quote, _itemised_again, _booked_again))
+_causes_again = ask_agent(_book, cmd="money")["cash_book"]["earlier_years"][-1]["causes"]
+_booked_again = _causes_again.get("venture revenue", 0.0)
+_estimated_rows = sum(row for node_id, row in _itemised_again.items() if not _book.concern_sells_on_book(node_id))
+# the revenue's saturating ceiling lowers the estimated total a little below the sum of its parts; the ledger pushes a gap it
+# does not show (at most GAP_SHOWN_ABOVE) into its largest row, so the row sits below the quote by no more than that
+check("scenario cash book: a running concern's forecast is within the year's price change of its takings, the ledger "
+      "residue aside",
+      0.0 <= _quote - _itemised_again[_NODE] <= revenue_ledger.GAP_SHOWN_ABOVE, (_quote, _itemised_again))
+# a concern the clearing pays is credited what the clearing paid (gross) less its inputs, as its own cash book lines; the
+# line `venture revenue` is the estimate alone: the engine's estimate read before the year, to the booking's rounding (the
+# shown rows are rounded and carry the ledger's residue, so their sum is not the estimate to the cent)
+check("scenario cash book: the revenue line is the itemised rows the engine estimates, and a concern sold in the book is "
+      "credited the clearing's proceeds beside the inputs it bought",
+      abs(_booked_again - _estimate_again) < 0.06
+      and abs(_causes_again.get("concern sales", 0.0)
+              - _book.economy.agent.stored["seat_takings"][_book.state.acting_seat]) < 0.2
+      and _causes_again.get("inputs of concerns sold in the book", 0.0) <= 0.0,
+      (_booked_again, _estimated_rows, _causes_again))
 
 
 # ---- scenario: `sell` reports the holding and market room the next sale draws on, and refuses more than is held -----

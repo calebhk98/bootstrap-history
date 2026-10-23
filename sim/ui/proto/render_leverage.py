@@ -12,7 +12,7 @@ def _figure_text(value):
     return str(value)
 
 
-@renders("leverage", "levers")
+@renders("leverage")
 def render_leverage(out):
     lines = ["LEVERAGE: " + (out.get("note") or "")]
     for point in out.get("leverage_points") or []:

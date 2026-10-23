@@ -1,6 +1,6 @@
 # Production chains stop at raw materials, so crafts have no products and farms buy no tools
 
-**Status:** open (stages 1 and 2 done; later stages below)
+**Status:** open (stages 1, 2 and 3 done; remainder listed under Done (stage 3))
 
 Reference (an outside table of ancient supply chains, not code-aware): each trade bought inputs from
 named trades and sold finished goods to named ones, for example the smith sells ploughshares, sickles
@@ -20,9 +20,10 @@ Measured by walking `inputs` and `outputs` of `data/production/*.json` and the g
   the only iron a grain field draws is in the plough-team capital of one wheat technique. Fishers,
   carters and soldiers have no tool basket either. Farms take no manure or storage jars, and seed is
   netted out of the yield (`sim/world/agriculture.py` docstring says the physical form lists it).
-- **Dead ends.** Nothing consumes `dye_kg`, so dyers make a good nobody uses and cloth is never dyed.
-  `cloth_kg` (fulling) takes no fuller's earth or urine. `wine_common_kg` and `olive_oil_kg` need no
-  press and travel without jars. Millstone wear is not charged (`data/production/95_grain_milling.json`).
+- **Dead ends.** Nothing consumes some produced goods; `python3 sim/simulator.py validate` lists them (see Done, stage 1).
+  Still open from the original list: `cloth_kg` (fulling) takes no fuller's earth or urine; millstone wear is not charged
+  (`data/production/95_grain_milling.json`). Jars and presses for wine and oil, amphorae, ships and bread are now 616, 617
+  and 614 (closed).
 
 ## Why it matters
 
@@ -33,11 +34,11 @@ business to improve. It also hides the crafts from the non-farm need shares (530
 
 ## What it would take
 
-- Finished goods with their own recipes and wear lives (`data/world/service_lives.json`): iron tools,
-  nails, amphorae, tiles, ships, carts, footwear; needs and the army buy these instead of materials.
+- Finished goods with their own recipes and wear lives (`data/world/service_lives.json`): nails, tiles, carts, footwear,
+  and the army's equipment; needs and the army buy these instead of materials (iron tools, amphorae, ships and bread are
+  done or filed as 614, 616, 617).
 - Tool baskets for the farm, fishing, carting and soldiering trades, so field work consumes iron.
-- Close the dead ends: dyed cloth from cloth and `dye_kg`; fulling inputs; jars as an input or
-  carriage cost of wine and oil; a press as capital.
+- Close the remaining dead ends: fulling inputs; millstone wear.
 - A check in `simulator.py validate` listing produced goods nothing consumes, so a new dead end shows.
 
 ## Done (stage 1)
@@ -64,3 +65,18 @@ A tool is no longer a hard input. A trade's `tool_basket` names alternatives in 
 a recipe is never zeroed by a tool shortage alone (`Recipe.tool_fallbacks`, `Recipe.hard_inputs`,
 `sim/economy/tool_fallback.py`). The opening no longer cuts users of a deposit-bound tool. The stage 2 note "Left out"
 still holds: employers hold no tool stock. See Complaints/659 for the measurements.
+
+## Done (stage 3)
+
+- **Nails.** `nails_kg` (`data/production/95_chain_goods.json`): bar and smith hours. Users: `cart` (3 of its 15 kg of iron are now nails) and `timber_frame_m3` (2 kg a cubic metre). Source opened: ANU Classics Museum, five Roman nails, https://slll.cass.anu.edu.au/classics-museum/catalogue/objects/five-roman-nails-201214 (Inchtuthil, 875,400 nails, about seven tonnes, so a mean nail is about 8 g). Bar per kilogram, smith hours, nails per frame and the cart split are labelled heuristics (retire: this complaint).
+- **Roof tiles.** `roof_tile_kg`: fired ware and potter hours; user: `brick_wall_m3` and `stone_wall_m3` take 100 kg a cubic metre of wall (house shape and tile weight assumed). No whole-tile weight was found (the Wessex Archaeology Dorchester report, opened, gives sherd counts and weights only). Labelled heuristics.
+- **Already there (the list above was stale).** Footwear is `shoes_pair`, carts are `cart` (`99_carriers.json`), harness is `harness_set`.
+- **Tests.** `sim/tests/test_herds_pigs_draught_capital_and_chain_goods.py` (maker and user per good, cart iron mass kept).
+
+**Remainder, exact.**
+
+- Fisher and carter tool baskets: no tool source was found, and no recipe hires either trade (fishers gather food by hours in `sim/labour/food_gathering.py`, carters work through carrier wear), so a basket would charge nothing. Needs a recipe that hires them first.
+- Army bar iron: `EQUIPMENT_MATERIAL` in `sim/agents/budget.py` (not edited here; another stream owns agents). Needs a good the army wears (tools, arms) with its own recipe.
+- Fulling: `cloth_kg` has urine but no fuller's earth; there is no fuller's earth material or deposit and no source for the quantity (Pliny 35.57 not read).
+- Millstone wear (`95_grain_milling.json`), and employers holding a tool stock instead of buying the yearly wear (engine change in producers, not made).
+- Footwear, carts and nails are not yet wear-modelled as household durables beyond their service lives.

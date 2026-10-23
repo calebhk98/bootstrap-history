@@ -1,9 +1,9 @@
 """What a state asks the simulated world when it budgets: its people, its prices, its taxpayers."""
 from typing import Any, List, Optional, Tuple
 
-from sim.agents.api import DOLE_MATERIAL, THREAT_ARMY_RESPONSE, Hands
+from sim.agents.api import DOLE_MATERIAL, Hands, army_goal, sack_pressure, taxpayer_income
 from sim.world import agriculture, demand
-from sim.geography.api import territory, tiles_held
+from sim.geography.api import territory
 
 
 class BudgetView:
@@ -19,7 +19,11 @@ class BudgetView:
 
 	def territory(self) -> Any:
 		"""Frontier, coast and road length of the tiles the state holds."""
-		return territory.holdings(tiles_held(self._sim.civ))
+		return territory.holdings(self._sim.home_tiles_held())
+
+	def frontier_disease_loss(self) -> float:
+		"""The share of working-age people the diseases of the tiles on the frontier take in a year."""
+		return self._sim.frontier_disease_loss()
 
 	def country_strata(self) -> List[Any]:
 		"""The bodies of people (strata actors) of the state's own country, in id order."""
@@ -32,7 +36,7 @@ class BudgetView:
 		return self._sim.research_productivity(country)
 
 	def urban_population(self) -> float:
-		return self.population_total() * float(self._sim.civ.get("urban_fraction", 0.0))
+		return self.population_total() * self._sim.urban_fraction()
 
 	def subsistence_kg_per_person_year(self) -> float:
 		return demand.FOOD_SUBSISTENCE_QUANTITY_KG_PER_CAPITA_PER_YEAR
@@ -48,15 +52,13 @@ class BudgetView:
 	def threat_pressure(self) -> float:
 		"""Probability a year of the civilisation's own hazards sack a site: the declared
 		sack chances of those running now, before any relief the founder has bought."""
-		year = self.year
-		return sum(float(hazard.get("sack_chance", 0.0)) for hazard in self._sim.civ.get("hazards", [])
-				   if hazard.get("years") and hazard["years"][0] <= year <= hazard["years"][1])
+		return sack_pressure(self._sim.civ.get("hazards", []), self.year)
 
 	def army_wanted(self) -> float:
 		"""Soldiers the state wants: the opening force the civilisation starts with, raised by the
 		threat its hazards describe. The garrison follows the frontier, not the head count."""
 		opening = float(self._sim.civ.get("standing_army", 0.0))
-		return max(0.0, opening * (1.0 + THREAT_ARMY_RESPONSE * self.threat_pressure()))
+		return army_goal(opening, self.threat_pressure())
 
 	def soldiers_under_arms(self) -> float:
 		"""Soldiers the state keeps now: what it paid for last year, else the force it wants."""
@@ -134,12 +136,13 @@ class BudgetView:
 		return payers
 
 	def firm_taxpayers(self, country: Optional[str]) -> List[Tuple[float, float]]:
-		"""(visible scale, taxable income) of the firms that answer to `country`; a firm with no country answers to the
-		home country. A firm has one country (it does not split its income across the countries it trades in)."""
+		"""(visible scale, taxable income) of the firms with a plant earning in `country`; the income is the part of the firm's
+		that its plants on the country's tiles took (a firm with no plant placed elsewhere earns in the country it answers to)."""
 		actors = self._sim.actors
 		home = actors.state.home_country
-		return [(self.visible_scale_of(firm), max(0.0, firm.record.last_margin))  # type: ignore[attr-defined]
-				for firm in actors.active_firms() if actors.country_of(firm) == (country or home)]
+		return [(self.visible_scale_of(firm), income)  # type: ignore[attr-defined]
+				for firm, income in taxpayer_income.firm_incomes_in(actors.active_firms(), country or home, actors.country_of,
+																	actors.country_of_tile)]
 
 	def visible_taxpayers(self) -> List[Tuple[float, float]]:
 		"""(visible scale, taxable income) of every actor the home state can see: the home country's playing seats and the firms that answer to it."""

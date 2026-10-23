@@ -1,18 +1,32 @@
-"""On a real default game (agent economy on) the household wage floor stays near the food floor and no trade
+"""BASELINE VALIDATION (CLAUDE.md 4.2): on a real default game (agent economy on) the household wage floor stays near the food floor and no trade
 quotes above what training a substitute costs (Complaint 434). Builds a game, so it is a slow topic."""
 import statistics
 import unittest
+from unittest import mock
 
 from .harness import *  # noqa: F401,F403
 from sim.economy import households_basket
 from sim.world.need_basket import subsistence_cost_per_person
 import sim.economy.api as economy_api
 from sim.labour import wages
+from sim.economy import economy as economy_module
 
 FLOOR_OVER_FOOD_FLOOR = 8.0      # a small multiple: clothing, shelter, fuel, water and vessels together cost a few foods
 SUBSTITUTE_SLACK = 1.5           # room for the one-year lag of the unskilled wage the ceiling reads
 MASON_SHARE_OF_WORKERS = 0.06       # well under the building boom this guards against (a tenth), with room for budgets that move when a good cannot be bought
 GOOD_PRICE_DRIFT = 20.0          # times the good's price against wheat at the opening
+
+clearing_reports = []
+
+
+def _recording(reports):
+    """The economy's labour clearing, keeping the report it returns."""
+    real = economy_module.clear_labour
+
+    def clear_and_keep(*arguments, **keywords):
+        reports.append(real(*arguments, **keywords))
+        return reports[-1]
+    return clear_and_keep
 
 
 def _game():
@@ -40,19 +54,24 @@ class OpeningFloorTests(unittest.TestCase):
                              "Complaint 473 (open): median over %d tiles of all floors over the food floor" % len(ratios))
 
     def test_no_trade_pays_much_above_the_trained_substitute_of_the_unskilled_wage(self):
-        # Each area clears against last year's unskilled wage, so a year's lag shows; the people-weighted
-        # mean of a trade's wage over its unskilled wage must still sit near its training premium.
-        _game_, _economy, setup, record, _view = _game()
+        # A scarce trade's wage this year may pass its long-run cap (scarcity-wage rule, Complaint 678); what the
+        # market is heading to, which entrants and bonded purchases weigh, stays under it. So the people-weighted
+        # mean of a trade's heading wage over the unskilled heading wage must still sit near its training premium.
+        # Each area clears against last year's unskilled wage, so a year's lag shows.
+        game, _economy, setup, record, _view = _game()
+        with mock.patch.object(economy_module, "clear_labour", _recording(clearing_reports)):
+            game.economy.agent.run_year()
+        heading = {(each.trade, each.area): each.heading_wage for each in clearing_reports[-1].clearings}
         state = record.workforce
         for trade, spec in setup.trades.items():
             if trade == setup.unskilled_trade:
                 continue
             weighted = people = 0.0
-            for area, by_trade in state.wages.items():
-                unskilled = by_trade.get(setup.unskilled_trade)
+            for area in state.wages:
+                unskilled = heading.get((setup.unskilled_trade, area))
                 held = sum(state.workers.get(area, {}).get(trade, []))
-                if unskilled and trade in by_trade and held > 0.0:
-                    weighted += held * by_trade[trade] / unskilled
+                if unskilled and (trade, area) in heading and held > 0.0:
+                    weighted += held * heading[(trade, area)] / unskilled
                     people += held
             if people > 0.0:
                 premium = wages.training_premium(spec.training_years, setup.opening_rate)

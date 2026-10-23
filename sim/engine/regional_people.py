@@ -8,9 +8,11 @@ working-age people to a bordering region where people ate better, by the labour 
 from typing import Dict
 
 from sim.geography.api import settlement
-from sim.labour.api import moves_between_regions
+from sim.labour.api import migrant_pairs, totals_of_pairs
 from sim.world import regional_population
 from sim.world.demography import Population
+
+from . import contact_events
 
 
 class RegionalPeopleMixin:
@@ -27,23 +29,25 @@ class RegionalPeopleMixin:
         return settlement.people_by_tile(self.state.population.regions, self.population.total, self.home_tiles_held())
 
     def regional_kcal_per_day(self, regions, farm_kcal_per_day):
-        """{region: calories a day it is fed}: its households' eaten over need where the economy has booked it, else
-        the nation's, else its share of the farm model's harvest; open works' relief is shared by need."""
-        state = self.state.population
+        """{region: calories a day it is fed}: its own households' eaten over need where the economy has booked it, else
+        its land's share of the farm model's harvest; open works' relief is shared by need."""
         return regional_population.kcal_per_day_by_region(
-            regions, state.regional_eaten_over_need, state.food_eaten_over_need, farm_kcal_per_day,
-            self.relief_kcal_per_day())
+            regions, self.state.population.regional_eaten_over_need, farm_kcal_per_day, self.relief_kcal_per_day(),
+            settlement.population_shares(self.home_tiles_held()))
 
     def step_regions_of_people(self, regions, kcal_by_region, year):
         """Step every region a year and return the nation's flows; the nation's `Population` becomes their sum."""
-        leaving, arriving = moves_between_regions(
-            regions, self.state.population.regional_eaten_over_need, self.geography.borders_among(list(regions)),
-            settlement.distance_between_tiles_km)
+        borders = self.geography.borders_among(list(regions))
+        pairs = migrant_pairs(regions, self.state.population.regional_eaten_over_need, borders,
+                              settlement.distance_between_tiles_km)
+        contact_events.after_migration(self, pairs)
+        leaving, arriving = totals_of_pairs(pairs)
         food = sum(kcal_by_region.values())
         epidemic_deaths, disease_burden, endemic_death_rates = self.epidemic_year(food, year)
         ratio = self.population.nutrition_ratio(food)
         flows = regional_population.step_regions(
-            regions, kcal_by_region, disease_burden, epidemic_deaths, endemic_death_rates, leaving, arriving)
+            regions, kcal_by_region, disease_burden, epidemic_deaths, endemic_death_rates, leaving, arriving,
+            self.labour.town_mortality_premium_by_tile())
         for band in regional_population.BANDS:
             setattr(self.population, band, sum(getattr(region, band) for region in regions.values()))
         self.state.population.regions = regional_population.to_stored(regions)

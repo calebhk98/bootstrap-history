@@ -18,14 +18,15 @@ from sim.economy.types import HECTARES_PER_SQUARE_KILOMETRE, TileId, TileSpec
 from sim.geography.api import crop_site, map_of_tiles, open_map, route, route_costs, tile_facts
 
 
-def tiles_from_map(world_map, tile_ids: Iterable[TileId], open_field_cropped_share: float) -> Dict[TileId, TileSpec]:
+def tiles_from_map(world_map, tile_ids: Iterable[TileId], open_field_cropped_share: float,
+                   tillage_capacity: float = 1.0) -> Dict[TileId, TileSpec]:
     """TileSpecs for the named tiles read through geography's api from `world_map`; borders are kept whole.
     A tile's land is geography's cropland under a rotation that crops `open_field_cropped_share` of open fields
     each year, and its fertility the yield factor of a cropped hectare (soil, climate, river water)."""
     result = {}
     for tile_id in tile_ids:
         facts = tile_facts(tile_id, world_map)
-        site = crop_site(tile_id, open_field_cropped_share, world_map)
+        site = crop_site(tile_id, open_field_cropped_share, world_map, tillage_capacity=tillage_capacity)
         result[tile_id] = following_site(TileSpec(
             tile_id=tile_id, latitude=facts["lat"], longitude=facts["lon"],
             land_area_km2=facts["land_area_km2"], coastal=facts["coastal"],

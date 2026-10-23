@@ -19,11 +19,12 @@ ProductionMixin is composed into EconomyMixin (economy.py) alongside the
 other economy sub-mixins; see that file for the composition and for the
 grouping evidence, and for why this lives in a separate file.
 """
+from sim.agents.api import patronage
 from .bondage_workshop_rules import workshop_craft_wages, workshop_output_value
 from .concern_earnings import ledger_row, output_market_factor, takings_at
 from .data import trade_family
 from sim.constants import declare
-from . import category_traits, money_units, node_revenue_market, node_upkeep
+from . import category_traits, concern_sales, money_units, node_revenue_market, node_upkeep
 from .readable import readable
 from .revenue_ledger import assemble_ledger
 from sim.world import plant_figures
@@ -67,17 +68,41 @@ class ProductionMixin:
         """What a patron state would give the founder in a year if its treasury could spare it."""
         if not self.running_with_mechanic("state_funding"):
             return 0.0
-        return (self.STATE_FUNDING_BASE * self.real_output_per_head() * self.state_reach()
-                * self.pop_scale ** self.STATE_FUNDING_POP_SCALE_EXPONENT
-                * (1.0 + max(0.0, self.state.governance.gov) / self.STATE_FUNDING_GOV_QUALITY_SCALE)
-                * self.rep_factor())
+        return patronage.ask(self.STATE_FUNDING_BASE, self.real_output_per_head(), self.state_reach(), self.pop_scale,
+                             self.STATE_FUNDING_POP_SCALE_EXPONENT, self.state.governance.gov,
+                             self.STATE_FUNDING_GOV_QUALITY_SCALE, self.rep_factor())
+
+    def patron_clients(self, country):
+        """(seat id, governance, reputation factor) of the playing seats of `country` whose techniques run the
+        `state_funding` mechanic: the clients its state is asked to fund (a seat with no country is the home country's)."""
+        home = str(self.civ.get("id"))
+        clients = []
+        for seat_id in self.playing_seats():
+            if (self.state.seats[seat_id].country or home) != country:
+                continue
+            with self.act_as(seat_id):
+                if self.running_with_mechanic("state_funding"):
+                    clients.append((seat_id, max(0.0, self.state.governance.gov), self.rep_factor()))
+        return clients
 
     def state_funding(self):
         """What the treasury has paid the founder this year; the government decides it
-        (Government.pay_patron) from its purse after its standing need."""
+        (Government.pay_patron) from its purse after its standing need. A seat of another country is paid by that
+        country's state, its grant shared among the seats that state funds."""
         state = self.state.actors
-        record = None if state is None else state.records.get("government:" + str(self.civ.get("id")))
-        return 0.0 if record is None else record.patron_grant
+        if state is None:
+            return 0.0
+        home = str(self.civ.get("id"))
+        acting = self.state.acting_seat
+        seat = self.state.seats.get(acting)
+        country = (None if seat is None else seat.country) or home
+        record = state.records.get("government:" + country)
+        if record is None:
+            return 0.0
+        if country == home:
+            return record.patron_grant
+        clients = self.patron_clients(country)
+        return record.patron_grant / len(clients) if any(seat_id == acting for seat_id, _gov, _rep in clients) else 0.0
 
     def venture_ramp(self, node_id):
         """How much of its full takings a concern is making, 0..1.
@@ -167,20 +192,25 @@ class ProductionMixin:
             self.state_funding(),
             self.home_price_level(),
         )
-        if getattr(self.household, "_revenue_cache_key", None) == key:
-            return self.household._revenue_cache_val
+        if getattr(self.household, "_revenue_cache_key", None) != key:
+            self.household._revenue_cache_val = self._compute_revenue_uncached()
+            self.household._revenue_cache_key = key
+        return sum(self.household._revenue_cache_val)
 
-        value = self._compute_revenue_uncached()
-        self.household._revenue_cache_key = key
-        self.household._revenue_cache_val = value
-        return value
+    def estimated_revenue(self):
+        """The part of `revenue` the engine credits as an estimate: everything but the concerns the clearing pays
+        (concern_book_sales.py). The year's ledger credits this; those concerns are credited by the clearing."""
+        self.revenue()
+        return self.household._revenue_cache_val[0]
 
     def concern_revenue(self, node_id):
         """What one open concern earns in a year before the output factor: the figure the screens quote."""
         return self.venture_real_earnings(node_id, with_output_factor=False)
 
     def _compute_revenue_uncached(self):
+        """(the estimate, the forecast of the concerns the clearing pays), both after the output factor."""
         total_revenue = 0.0
+        book_forecast = 0.0
         practice_set = self._practice_set()
         projects = self.state.projects
         granted = projects.granted
@@ -203,8 +233,11 @@ class ProductionMixin:
             node = self.nodes[node_id]
             # a held skill earns through the founder's own hours (founder_wage_income), not through the node
             if node["rev"] and not practice:
-                total_revenue += self.concern_revenue(node_id)
-        # THERE IS ONLY SO MUCH MARKET. Uncapped, this compounds: every venture
+                if self.concern_sells_on_book(node_id):
+                    book_forecast += self.concern_revenue(node_id)    # last year's sale record, as the clearing paid it
+                else:
+                    total_revenue += self.concern_revenue(node_id)
+        # THERE IS ONLY SO MUCH MARKET for what the clearing does not pay. Uncapped, this compounds: every venture
         # pays back quickly, so its income buys the next one, and nothing
         # stops a run's capital from growing far past what a real market this
         # size could absorb - it cannot sell more inns than the town wants.
@@ -223,21 +256,19 @@ class ProductionMixin:
         ceiling = self.REVENUE_CEILING_PER_POP_SCALE * self.pop_scale \
             * self.real_output_per_head() * self.price_index
         gross = gross / (1.0 + gross / max(1.0, ceiling))
-        return (gross + self.state_funding()) * economy.output_factor
+        return (gross + self.state_funding()) * economy.output_factor, book_forecast * economy.output_factor
 
     REVENUE_CEILING_LABOUR_HOURS_PER_POP_SCALE = declare(
         "REVENUE_CEILING_LABOUR_HOURS_PER_POP_SCALE", 18100000.0, kind="temporary_heuristic",
         unit="labour hours/year at pop_scale=1, output_per_head=1", source=None,
         confidence="D",
-        why="Amount of labour, not of coin: it was a book-denarii figure and now follows what labour costs. "
-            "The saturating ceiling on how much revenue a single founder's "
-            "ventures can pull out of one civilisation's whole market - "
-            "invented specifically to stop a run compounding into billions "
-            "against an empire whose own annual product is not separately "
-            "modelled (see this method's own comment on the tester who held "
-            "three billion denarii). A real ceiling needs an actual GDP "
-            "figure for the civilisation to compare against, which this "
-            "engine does not compute.")
+        retire="Complaint 514",
+        why="Amount of labour, not of coin. The saturating ceiling on what the engine's estimate of a founder's "
+            "concerns may add up to against one civilisation's market. Concerns whose goods the economy trades are "
+            "paid by the clearing and no longer pass through it; it still bounds the concerns nobody clears "
+            "(services, institutions, workshop output). Measured not to bind in an ordinary run (Complaint 514). "
+            "It is kept because the money screen's market deduction (Complaint 216) is read from it; retire both "
+            "when those concerns are paid from a clearing or a stated demand.")
     REVENUE_CEILING_PER_POP_SCALE = money_units.PricedInLabourHours("REVENUE_CEILING_LABOUR_HOURS_PER_POP_SCALE")
 
     SLAVE_LABOUR_PRODUCTIVITY_SHARE = declare(
@@ -369,13 +400,32 @@ class ProductionMixin:
             return True
         return all(self._priced_key(material, paid) is not None for material in baskets.outputs)
 
-    def node_output_market_factor(self, node):
-        """This year's market over long-run prices for what an output-derived node sells and buys; one otherwise."""
+    def node_output_market_factor(self, node, selling_seat=None):
+        """This year's market over long-run prices for what an output-derived node sells and buys; one otherwise.
+        `selling_seat` names the seat whose concern it is: only the share its output sold in the clearing counts, at
+        the price it cleared at (concern_sales.py); without it every unit sells at the sellers' ask."""
         baskets = self.concern_baskets_now(node["id"])
+        outlook = None if selling_seat is None else (
+            lambda material, quantity: self.economy.agent_seat_sale_outlook(selling_seat, material, quantity))
         return output_market_factor(
             baskets is not None and self.concern_goods_have_market(node["id"]),
             lambda: node_revenue_market.basket_market_factor(
-                baskets.outputs, baskets.purchases, self._material_prices(), self.goods_market.home_unit_price))
+                baskets.outputs, baskets.purchases, self._material_prices(), self.goods_market.home_unit_price, outlook))
+
+    def concern_sale_basis(self, node_id):
+        """What the share of a founder concern's output counted as sold stands on: `cleared_last_year` (its own sales
+        in the last clearing), `buyers_last_year` (what the market's buyers took and still wanted, before it has sold),
+        or `no_market_yet` (nobody trades its goods, so every unit is counted at long-run cost)."""
+        baskets = self.concern_baskets_now(node_id)
+        if baskets is None or not self.concern_goods_have_market(node_id):
+            return concern_sales.NO_MARKET_YET
+        seat = self.state.acting_seat
+        bases = [taken.basis for material, units in sorted(baskets.outputs.items()) if units > 0.0
+                 for taken in [self.economy.agent_seat_sale_outlook(seat, material, units)] if taken is not None]
+        if not bases:
+            return concern_sales.NO_MARKET_YET
+        return concern_sales.CLEARED_LAST_YEAR if all(basis == concern_sales.CLEARED_LAST_YEAR for basis in bases) \
+            else concern_sales.BUYERS_LAST_YEAR
 
     def concern_takings(self, node_id, ramp, with_output_factor=True, cost_scale=None):
         """Yearly takings of one concern at a given ramp, before market saturation: its loaded figure

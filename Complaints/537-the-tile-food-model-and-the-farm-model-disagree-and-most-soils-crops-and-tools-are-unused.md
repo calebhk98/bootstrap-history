@@ -1,14 +1,14 @@
 # The tile food model and the farm model disagree, and most soils, crops and tools are unused
 
-**Status:** partly done. The tile crop capacity and the farm model's land and quality now read one yield (stage 1 and 2 below); the economy's land base, soils, crops and tile weather are still apart (what is left, below).
+**Status:** partly done. The tile crop capacity, the farm model's land and quality and the economy's farm producers read one yield per tile; each tile's own weather, a hand-hoe toolkit and a tillage limit on heavy ground now reach it. What remains ("What is left") is the national farm path's readers, per-tile crops (rice, maize), separate land-class supplies and `land.py`'s rent margin.
 
 Reference (an outside design note, not code-aware): carrying capacity is arable land times the
 planted share (fallow by rotation, none under flood silt) times gross yield (soil and crop) net of
 seed and storage loss, in calories; tools set the hectares one farmer works, not the yield per hectare.
 
-## What the code does
+## What the code did before the stages below (historical; "What is left" is the current state)
 
-There are two models, and they do not read each other:
+There were two models, and they did not read each other (re-check each bullet before acting; stages 1 to 3 changed the tile and farm yield, land and quality):
 
 - **Tile model** (`sim/geography/food_capacity.py`, `food_crops.py`, parameters in
   `data/world/geography/parameters/food.json`): a calorie ceiling per tile from arable area, a fixed
@@ -25,7 +25,7 @@ Within the farm model:
 - Rotations: `NILE_FLOOD_RECESSION` (near-zero fallow) is defined in `agriculture.py`, but outside
   tests nothing selects it, and nothing ties it to floodplain land. The tile model gives river land no
   fallow on its own. Each model handles the Nile its own way.
-- Crops: `RICE` is defined but no tree node adopts it; there is no maize (Complaint 489) and no
+- Crops: `RICE` is defined but no tree node adopts it; there is no maize and no
   irrigated wheat separate from dry wheat.
 - Tools: yield per hectare and hectares per worker are separate (`agriculture_yield.py`,
   `agriculture_labour.py`), which is right. The toolkits run from the ard and oxen to the mechanical
@@ -40,7 +40,7 @@ Within the farm model:
 - Soils from map data with a heavy-clay class that only a heavy plough opens.
 - Crops adopted by the tree for rice and maize; a hoe toolkit.
 - Tile weather applied to the tile's own harvest.
-- Related: 489 (population national, food check partial), 513 (farm labour sized exactly).
+- Related: 603 (population per region), 513 (staple price near satiation).
 
 ## Second note from the same source
 
@@ -48,7 +48,7 @@ Within the farm model:
   `data/world/geography/parameters/food.json`); no canals silt up or need clearing labour, so a
   state that stops maintaining them loses nothing.
 
-## Measured before the change (rome_100ad, `PYTHONPATH=. python3 -W ignore` probe of the opened game)
+## Measured before the change (historical; rome_100ad, `PYTHONPATH=. python3 -W ignore` probe of the opened game)
 
 - Tile view, crops, over the 88 held tiles: about 115 thousand giga-kcal a year. Farm model's gross harvest on its own cleared
   land: about 57 thousand giga-kcal. Per tile, the tile view over the farm model's harvest on the same arable hectares
@@ -114,15 +114,43 @@ Within the farm model:
 
 ## What is left
 
-- `land.py`'s rent margin (`margin_outcome_for_civilization`, `cultivable_land_for_civilization`) is still a third land ladder on raw
-  arable ground. It is not dead: `sim/engine/rent_standin.py` uses it for the price solver's opening stand-in rent, and about seven
-  test topics pin it. Moving the stand-in to `territory_cropland` changes the opening prices of every civilisation, so it is its own step.
-- The land market pools arable, pasture and forest producers on one cropland supply per tile; separate supplies per land class need
-  pasture and timber hectares from geography.
-- Soils beyond the climate-class fertility (heavy clay a plough cannot open, podzol, alluvium: Complaint 543), the engine's
-  single `DEFAULT_SOIL`, rice and maize adoption, a hoe toolkit, per-tile weather applied to each tile's harvest (the economy
-  and farm still take one pooled draw), irrigation as a work that silts up.
-- The farm model still runs nationally for labour, clearing and the granary; demography eats what households ate (Complaint 549).
+Each item names the code that holds it (re-measure before acting; `grep` the names).
+
+- **The national farm path still runs and has four readers.** `farm_land`, `_farm_ladder`, `_farm_arable_ceiling` and `run_farm_year`
+  (`sim/world/farm_year.py`) feed: the labour split (`sim/labour/labour_allocation.py`: `_expected_year_farm_need`,
+  `_food_balance_step`, `farm_share_of_hours`, the granary reserve at the baseline workforce); land clearing
+  (`cleared_hectares`, `_clearable_hectares`, `hours_spent_clearing`, same file); the state's grain revenue and granary exposure
+  (`sim/agents/country_farm.py`, `government_granary.py`, `agents_port_budget.py`); and the pre-first-year nutrition
+  (`sim/engine/demographic_recovery.py`). Deleting it needs those four to read the economy's farms (producers' hectares worked and
+  yield by tile, the economy's stores for the granary), and the labour split's food-balance iteration to read the economy's wage and
+  price instead of a national harvest. Not started: it is a design change to the labour package and the state's budget, not an edit.
+- **A crop per tile.** The farm model has one national `Crop` blended by adoption (`sim/world/farming_technique.py`), so `RICE`
+  (defined, unadopted) and a maize crop cannot be adopted without moving every tile to them. The economy already has `maize_kg`,
+  `millet_kg`, `wheat_kg` and `wheat_hoe_kg` recipes with a tile yield factor each; the missing piece is geography choosing, per tile,
+  the crop its water and warmth suit (an envelope per crop, as `food_crop_water_envelope` is for the reference grain) and
+  the farm model reading that crop's seed, fold and labour for the tile. No rice recipe exists in `data/production/`.
+- **Separate land-class supplies** (arable, pasture, woodland) per tile: the land market still pools them on one cropland supply.
+- **`land.py` rent margin** (`margin_outcome_for_civilization`, `cultivable_land_for_civilization`) is still the third ladder, read by
+  `sim/engine/rent_standin.py` for the price solver's stand-in rent and by about seven test topics. Moving it to `territory_cropland`
+  changes every civilisation's opening prices, so it is its own step.
+- **Irrigation as a work** that silts up or needs clearing labour: river strips are still free and permanent
+  (`food_irrigation_*` in `data/world/geography/parameters/food.json`). Silt now feeds the nitrogen stock, but a canal's upkeep does not exist.
+- Norse opening: a first version closed heavy ground to the ard outright and pinned the labour split (the best Swedish tile lost a fifth of its
+  ground). The arable share is the ground the reference ard ploughs (`soil_reference_tillage_capacity`), so the ard loses nothing, a heavier
+  toolkit opens heavy ground beyond it and a lighter one less (`food_crops._tillable_scale`); `test_norse_opening_scenario`. Norse is still poor in crops
+  (most tiles yield next to nothing); pasture, dairy and fishing are not read by the crop-only farm path.
+
+## Done: tile weather, the hand hoe and tillage (this round)
+
+- Each land producer's yield takes its own tile's weather cell (`Sim.farm_weather_by_tile`, `sim/engine/core.py`; read by
+  `economy_port_sites.crop_yields`); a tile merged into a pooled cell, or with no cell, takes the pooled multiplier. The cells' own
+  multipliers are `weather_pooling.cell_multipliers`; the pooled one is their weighted mean. Tests: `test_weather_cells`,
+  `test_economy_crop_yields` (TileWeatherTests), `test_tile_weather_scenario`. The national path and demography still read the pooled draw.
+- A hand-hoe toolkit (`agriculture.HAND_HOE`, hours from `data/world/farm_labour.json` through `WHEAT_HOE_HOURS_PER_HECTARE`, the same
+  figure the `wheat_hoe_kg` recipe carries) is the base toolkit of a society that does not hold the draught-animal capability; that
+  capability (`cap_power_muscle`) declares the ard. The economy's `tool_fallback` for the plough team is the same fact on the recipe side.
+- Heavy ground opens only to a toolkit that can pull it: `Toolkit.tillage_capacity` (ard, hoe and mouldboard; labelled heuristics),
+  threaded through `crop_site(..., tillage_capacity)` to the farm's ladder, the tile view and the economy's cropland (Complaint 543).
 
 ## Done: the economy follows the rotation and the soil (item 3)
 

@@ -48,6 +48,64 @@ def missing_retirement(registry, baseline):
             if name not in known and not has_retirement(registry[name])]
 
 
+COMPLAINTS_PATH = os.path.join(os.path.dirname(BASELINE_PATH), "..", "..", "Complaints")
+_CITED_COMPLAINT = re.compile(r"Complaints?(?:/closed)?[/ ](\d+)")
+
+
+def cited_complaints(retire):
+    """Complaint numbers a `retire` text cites as `Complaints/N` or `Complaint N`."""
+    return {int(number) for number in _CITED_COMPLAINT.findall(retire or "")}
+
+
+def open_complaint_numbers(path=COMPLAINTS_PATH):
+    """Numbers of the issue files in Complaints/ (closed ones live in Complaints/closed/)."""
+    return {int(match.group(1)) for name in os.listdir(path) for match in [re.match(r"(\d+)-", name)] if match}
+
+
+def closed_retirements(registry, open_numbers):
+    """Promises whose `retire` cites complaints and none of them is open: the retirement points nowhere."""
+    return [name for name in promise_names(registry)
+            if cited_complaints(registry[name].get("retire")) and
+            not cited_complaints(registry[name].get("retire")) & set(open_numbers)]
+
+
+def closed_data_retirements(data, open_numbers, path=""):
+    """Paths, sorted, of `retire` texts in a parsed data file that cite complaints and none of them open."""
+    found = []
+    if isinstance(data, dict):
+        for key, value in data.items():
+            child = "%s.%s" % (path, key) if path else str(key)
+            if key == "retire" and isinstance(value, str):
+                cited = cited_complaints(value)
+                if cited and not cited & set(open_numbers):
+                    found.append(child)
+            else:
+                found.extend(closed_data_retirements(value, open_numbers, child))
+    elif isinstance(data, list):
+        for index, value in enumerate(data):
+            found.extend(closed_data_retirements(value, open_numbers, "%s[%d]" % (path, index)))
+    return sorted(found)
+
+
+def closed_data_retirements_in_tree(open_numbers, data_root=None):
+    """`file:path` of every data-row `retire` under data/ that cites only closed complaints."""
+    import json
+    data_root = data_root or os.path.dirname(BASELINE_PATH).rsplit(os.sep, 1)[0]
+    found = []
+    for folder, _subfolders, names in os.walk(data_root):
+        for name in sorted(names):
+            if name.endswith(".json"):
+                full = os.path.join(folder, name)
+                with open(full, encoding="utf-8") as handle:
+                    try:
+                        parsed = json.load(handle)
+                    except ValueError:
+                        continue
+                found.extend("%s:%s" % (os.path.relpath(full, data_root), path)
+                             for path in closed_data_retirements(parsed, open_numbers))
+    return sorted(found)
+
+
 def stale_baseline(registry, baseline):
     """Baseline names that are no longer declared as a promise."""
     current = set(promise_names(registry))

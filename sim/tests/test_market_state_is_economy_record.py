@@ -1,4 +1,4 @@
-"""Complaint 508 / 507 stage 6: what a screen or an interest group reads as a market's sales, unsold stock and
+"""SCENARIO (Complaint 640): Complaint 508 / 507 stage 6: what a screen or an interest group reads as a market's sales, unsold stock and
 unmet demand is the agent economy's record of that market, not the engine's static commodity book.
 
 Builds a whole game, so it is not in the quick tier."""
