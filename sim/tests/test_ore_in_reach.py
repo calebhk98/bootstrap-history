@@ -10,6 +10,8 @@ from sim.engine.catalog import load_production_catalog
 from sim.engine.data import MODDIR, ROOT
 from sim.geography import api as geography
 
+QUICK_TOPIC = True
+
 BASE_METALS = ("copper", "tin", "lead", "iron")
 CIVILISATIONS = load_civilisations(ROOT)
 

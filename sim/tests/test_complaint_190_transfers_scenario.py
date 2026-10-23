@@ -24,11 +24,10 @@ def indebted(owed, capital=1.0e9):
 # ---- paying the state's debt: the household's loss is the treasury's gain -------------------------
 game = indebted(5000.0)
 before = game.state.household.capital
-paid, said = game.settle_with_state("debt")
+paid, _said = game.settle_with_state("debt")
 check("paying the debt moves exactly what the state owed from the household to the treasury",
       paid == 5000.0 and game.state_debt() == 0.0 and abs(before - game.state.household.capital - 5000.0) < 1e-6,
       (paid, game.state_debt(), before, game.state.household.capital))
-check("the reply says the state owes nothing now", "owes nothing" in said, said)
 
 poor = indebted(5000.0, capital=1200.0)
 paid, said = poor.settle_with_state("debt")

@@ -33,7 +33,7 @@ from sim.geography import api as geography_api
 # territory costs nothing extra to haul, regardless of how far that region
 # is from the tiles it holds.
 # =============================================================================
-s_rome = sim(capital=1.0)
+s_rome = unopened_sim(capital=1.0)
 for _mat in ("iron", "copper", "coal"):
     check("Rome already mines %s somewhere in its own provinces, so freight "
           "distance is zero" % _mat,
@@ -54,7 +54,7 @@ for _mat in ("iron", "copper", "coal"):
 # is the clean case: americas_carib (mexica_1500's only home region) is the
 # one region in the whole table with zero coal abundance of its own.
 # =============================================================================
-s_mexica = sim(civ="mexica_1500", capital=1.0)
+s_mexica = unopened_sim(civ="mexica_1500", capital=1.0)
 _mexica_coal_km = s_mexica.material_freight_distance_km("coal")
 check("Mesoamerica has no coal of its own anywhere in its home territory, "
       "so coal has a real, positive freight distance",

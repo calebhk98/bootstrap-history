@@ -5,7 +5,7 @@ import unittest
 from sim.geography import queries, routes_modes, routes_search, routes_seasons
 from sim.tests.test_geography_routes import small_map
 
-QUICK_TOPIC = False
+QUICK_TOPIC = True
 LANE = {"id": "winter_sea", "edge_classes": ["coast"], "closed_days_per_year": 120, "wait_span_km": 500,
         "kind": "heuristic", "conf": "D", "source": "test", "why": "test"}
 PASS = {"id": "snow", "edge_classes": ["land"], "closed_days_per_year": 150, "wait_span_km": 500,

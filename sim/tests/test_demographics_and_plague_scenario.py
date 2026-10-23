@@ -4,9 +4,10 @@ round trip of the cohort state they depend on.
 The rules are called with figures in test_mortality_shock_rules (the exposure a hedge leaves, the wage premium, the
 recovery shape, the classification and wording of a wave) and test_cross_system_invariants (the cohort cut). Three named
 scenarios remain: a hazard fired through the engine (the society's loss, the wage premium that follows, the logged
-cascade), a shocked game through a real save and resume, and the hazard line's structured facts at three levels of
-defence.
+cascade), a shocked game through a real save and resume, and the hazard line's structured facts with no defence (the held-off and softened wording is test_mortality_shock_rules).
 """
+import tempfile
+
 from .harness import *  # noqa: F401,F403
 from sim.refusal import cause_of, facts_of
 from .plague_fixture import ANTONINE, BLACK_DEATH, with_hazard
@@ -95,7 +96,7 @@ _shocked_working_age = s7.population.working_age
 _shocked_elderly = s7.population.elderly
 check("scenario: the save/load round trip below exercises a real shock, not a no-op",
       s7.population.total < _pop7_before * 0.99, s7.population.total)
-_save7 = os.path.join(HERE, "_test_wiring_milestone4_pop_save.json")
+_save7 = os.path.join(tempfile.mkdtemp(), "pop_save.json")
 S.save_state(s7, _save7)
 # A FRESH Sim, built the way cli.py's --session resume really does it
 # (Sim(...) from the civilisation file, THEN load_state over it) - not the
@@ -105,7 +106,6 @@ s7_fresh = S.Sim(NODES, ORDER, random.Random(1), events=False, manual=True,
                  civ=S.load_civ("england_1300"))
 s7_fresh.goal, s7_fresh.done_year = GOAL, {}
 S.load_state(s7_fresh, _save7)
-os.remove(_save7)
 check("a demographic shock's cohort counts survive a real save/reconstruct/"
       "load cycle bit-for-bit - the exact failure mode the OLD pop_deficit/"
       "wage_index/pop-scale trio had, live, because none of the nine "
@@ -139,21 +139,7 @@ def _plague_line(mitigated_nodes):
                 if getattr(message, "kind", None) == "hazard_hit" and message.facts.get("hazard") == "Antonine plague")
 
 
-_HEAVY = ["sanitation_antisepsis", "med_quarantine_sanitation", "germ_theory",
-          "md2_isolation_hospital", "med_vaccination_progression",
-          "md2_vaccine_smallpox", "md2_vaccine_plague", "md2_vaccine_typhoid",
-          "md2_sand_filtration", "soap_hard", "med_nursing_profession",
-          "plague_preparedness", "crop_rotation", "ag2_silage_silo",
-          "fud_canning_appert_method"]
 _line_none = _plague_line([])
-_line_heavy = _plague_line(_HEAVY)
-_line_some = _plague_line(["sanitation_antisepsis", "med_quarantine_sanitation"])
 check("scenario: an unmitigated plague is told with no defence, and the empire-wide toll as a separate fact",
       _line_none.kind == "hazard_hit" and _line_none.facts["defence"] == "plain"
       and _line_none.facts["national_toll_percent"] == 28, _line_none.facts)
-check("scenario: a heavily mitigated plague is told as held off, and the toll is still the empire's",
-      _line_heavy.facts["defence"] == "held_off" and _line_heavy.facts["national_toll_percent"] == 28,
-      _line_heavy.facts)
-check("scenario: a partly mitigated plague is told as softened, and the toll is still the empire's",
-      _line_some.facts["defence"] == "softened" and _line_some.facts["national_toll_percent"] == 28,
-      _line_some.facts)

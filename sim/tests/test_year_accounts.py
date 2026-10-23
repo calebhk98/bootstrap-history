@@ -1,5 +1,7 @@
 """The agent economy's yearly accounts (Complaint 554): what was made, used up in making, eaten, built and left in
 stock, per good, and food eaten against need per cohort. Built on the engine-free fixture; the identity is the test."""
+
+QUICK_TOPIC = True
 import math
 import unittest
 

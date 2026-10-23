@@ -6,7 +6,7 @@ from sim.ui.proto import command_registry
 from sim.ui.proto import dispatch  # noqa: F401  (registers every command)
 from sim.ui.proto.seat_address import run_as_seat
 
-game = sim(civ="rome_100ad", capital=1000.0, events=True)
+game = unopened_sim(civ="rome_100ad", capital=1000.0, events=True)
 handlers = command_registry.handlers()
 
 

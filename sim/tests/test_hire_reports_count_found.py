@@ -10,7 +10,7 @@ from sim.labour.labour_market_api import LabourMarket
 
 ASKED, FOUND = 5, 2
 
-game = sim(capital=5_000_000.0)
+game = unopened_sim(capital=5_000_000.0)
 headcount_before = game.employees.get("artisan", 0.0)
 with mock.patch.object(LabourMarket, "whole_recruits", return_value=FOUND):
     reply = S._agent_dispatch(game, NODES, {"cmd": "hire", "trade": "artisan", "n": ASKED})

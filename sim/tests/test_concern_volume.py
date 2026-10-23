@@ -2,6 +2,8 @@
 figures built here. The chain from a cheaper entry to the concern's volume and takings, the market buying from the
 cheaper producer, and a good offered after the opening becoming demand are in test_concern_volume_scenario; the volume,
 takings and real-income rules are in test_concern_volume_rules, the copying time in test_technique_spread."""
+QUICK_TOPIC = True
+
 from .harness import *  # noqa: F401,F403
 
 import copy

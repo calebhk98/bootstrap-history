@@ -6,7 +6,7 @@ from sim.agents import imitation
 from sim.agents.api import ActorRecord, Firm, Player
 from sim.engine.agents_port import SimWorld
 
-game = sim()
+game = unopened_sim()
 baseline = SimWorld(game).baseline_knowledge()
 node_id = next(node for node in sorted(game.nodes) if node not in baseline and not game.nodes[node].get("win_condition")
 			   and all(pre in baseline for pre in game.nodes[node]["pre"]))

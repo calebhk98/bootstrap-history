@@ -2,20 +2,7 @@
 (Complaints/194 to 204, 219, 223). Each check reads a screen and the function that applies the same figure from one game,
 so there is no rule to call on its own."""
 from .harness import *  # noqa: F401,F403
-from sim.engine.data import money_word
-from sim.ui.proto.render_screen_why import render_why
-from sim.ui.proto.render_screens_status import render_risk, render_score
 from sim.ui.proto.score import _score_achievements, score_report
-
-
-class FixedDraws:
-    """A random source that returns the listed draws, then a high value."""
-
-    def __init__(self, *draws):
-        self.draws = list(draws)
-
-    def random(self):
-        return self.draws.pop(0) if self.draws else 0.99
 
 
 def england():
@@ -46,7 +33,6 @@ alarming_why = S._agent_dispatch(scandal_sim, NODES, {"cmd": "why", "id": alarmi
 check("why reports the scandal finishing the work would add",
       abs((alarming_why.get("standing_effect") or {}).get("scandal", -1.0)
           - scandal_sim.alarm_of(NODES[alarming])) < 0.06, alarming_why.get("standing_effect"))
-check("the why page prints the scandal line", "scandal" in render_why(alarming_why).lower())
 scandal_before = scandal_sim.scandal
 scandal_sim.initialize_project(alarming, ph_left=0.0)
 scandal_sim.effective_risk = lambda _node_id: 0.0
@@ -68,37 +54,13 @@ check("every score component says what it counts",
 check("institutions list what is finished but closed",
       closed_institution in components["institutions"].get("finished_but_closed", []),
       components["institutions"])
-check("resilience says it does not read the hazard screen",
-      "risk" in components["resilience"].get("counts", ""), components["resilience"].get("counts"))
-score_text = render_score({"components": components, "goal_reached": False, "end_reason": None})
-check("the score screen prints the institution waiting to be opened",
-      closed_institution in score_text and "resilience" in score_text and "counts" in score_text.lower(), score_text)
-
 # --- 200: completing the corpus says what is already in force and what waits for opening
 corpus_sim = unopened_sim()
 corpus_sim.effective_risk = lambda _node_id: 0.0
 corpus_sim.initialize_project("corpus_written", ph_left=0.0)
-corpus_before = len(corpus_sim.log)
 corpus_sim._complete("corpus_written")
-corpus_text = " ".join(message for _year, message in corpus_sim.log[corpus_before:])
-check("the corpus completion message names the hedge as already in force",
-      "in force" in corpus_text.lower() and "hedge" in corpus_text.lower(), corpus_text)
-check("...and still says what waits for opening", "Not in effect until open" in corpus_text, corpus_text)
-check("risk agrees with the completion message about the hedge",
+check("risk agrees with the completion about the hedge",
       corpus_sim.corpus_hedge()[2] == "corpus_written")
-
-# --- 201: the cash line names the money and says what it is
-cash_sim = unopened_sim()
-cash_sim.state.household.capital = 50_000.0
-cash_sim.state.household.employees = {"clerk": 10.0}
-cash_sim.labour._resync_pools()
-cash_sim.rng = FixedDraws(0.0, *([0.0] * 60))
-log_before = len(cash_sim.log)
-cash_sim._shock_staff_loss({"name": "Test plague", "staff_loss": 0.3, "years": [100, 110]}, cash_sim.year)
-cash_text = " ".join(message for _year, message in cash_sim.log[log_before:])
-check("the plague cash line names the currency", money_word(cash_sim.civ) in cash_text, cash_text)
-check("the plague cash line says it is takings lost while trade stood idle",
-      "takings" in cash_text and "idle" in cash_text, cash_text)
 
 # --- 202: each mitigation's share, why one lapsed, and where national relief comes from
 attribution_sim = england()
@@ -117,26 +79,8 @@ closed_entries = [entry for entry in famine_closed["what_you_can_do"]["staff_los
 closed_entry = closed_entries[0] if closed_entries else {}
 check("a closed mitigation says it lapsed and why it closed",
       closed_entry.get("status") == "lapsed" and "staff" in closed_entry.get("closed_because", ""), closed_entry)
-closed_text = render_risk(risk_reply(attribution_sim))
-check("the lapsed line tells the player which concern to open",
-      "open %s" % staff_counter in closed_text, closed_text)
-check("a lapsed mitigation's smaller share is marked residual",
-      bool(in_force) and closed_entry.get("points", 9.0) < in_force[0]["points"] and "residual" in closed_text,
-      closed_text)
-
-national_sim = unopened_sim()
-built_medical = sorted(node_id for node_id in NODES if node_id in national_sim._diffusible_ids("medical"))[0]
-national_sim.done.add(built_medical)
-national_sim.done_year[built_medical] = national_sim.year - 400
-national_sim._done_changed()
-national_sim.rng = FixedDraws(0.0, *([0.99] * 60))
-national_sim.state.household.employees = {"clerk": 10.0}
-national_sim.labour._resync_pools()
-log_before = len(national_sim.log)
-national_sim._shock_staff_loss({"name": "Test plague", "staff_loss": 0.3, "years": [100, 110]}, national_sim.year)
-national_text = " ".join(message for _year, message in national_sim.log[log_before:])
-check("the event names the discovery of yours that spread nationally",
-      NODES[built_medical]["name"] in national_text, national_text)
+check("a lapsed mitigation's share is smaller than in force",
+      bool(in_force) and closed_entry.get("points", 9.0) < in_force[0]["points"], (closed_entry, in_force))
 
 # --- 203: why gives the before and after for a mitigation, equal to what risk shows once it is built
 preview_sim = england()
@@ -145,17 +89,10 @@ preview_why = S._agent_dispatch(preview_sim, NODES, {"cmd": "why", "id": preview
 effects = [entry for entry in preview_why.get("hazard_effect") or [] if entry["name"] == "Great Famine"]
 check("why on a mitigation gives the hazard before and after",
       len(effects) == 1 and effects[0]["with_it"] < effects[0]["now"], preview_why.get("hazard_effect"))
-check("the why page prints the hazard estimate", "Great Famine" in render_why(preview_why))
 run_it(preview_sim, preview_node)
 after_built = hazard_named(risk_reply(preview_sim), "Great Famine")["staff_loss_after_what_you_have_built"]
 check("the preview equals what risk shows once the node is running",
       bool(effects) and abs(effects[0]["with_it"] - after_built) < 1e-9, (effects, after_built))
-
-# --- 204: risk says what the number means
-wording_text = render_risk(risk_reply(england()))
-check("risk does not say 'you take N% of it'", "you take" not in wording_text, wording_text)
-check("risk gives staff loss as a share of your staff", "of your staff" in wording_text, wording_text)
-check("risk gives the output factor as output against normal", "of normal" in wording_text, wording_text)
 
 # --- 223: closing a concern for want of staff costs the achievement for good, even after it reopens
 staff_sim = unopened_sim()

@@ -1,7 +1,7 @@
 """capacity_remedies: the capacity screen offers the commands that would end each shortage (Complaints 90, 189).
 
 The rules are tested on plain inputs: the remedy rows (a stub game stands in for the household and the remedy plan),
-the sizing of a mine or a nitre bed, and the rendering. The whole-game scenario is test_capacity_remedies_scenario."""
+the sizing of a mine or a nitre bed, and the rendering."""
 QUICK_TOPIC = True
 
 from .harness import *  # noqa: F401,F403

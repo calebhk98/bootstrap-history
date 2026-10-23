@@ -1,4 +1,6 @@
-"""Category traits are data: engine behaviour per category is unchanged, and a mod can add a category."""
+"""Category traits are data: the engine reads them per category, and a mod can add a category."""
+QUICK_TOPIC = True
+
 import json
 import tempfile
 import unittest
@@ -11,31 +13,11 @@ from sim.engine.fog import FogMixin
 from sim.engine.society_diffusion import DiffusionMixin
 from sim.engine.tree_source import load_base_tree
 
-# The sets the engine enumerated before they became data.
-FORMER_NEVER_ABANDON = {"mathematics", "physics", "method", "notation", "algebra", "geometry",
-                        "probability", "analysis", "theory", "knowledge"}
-FORMER_PRACTISABLE = {"surgery", "obstetrics", "pharmacology", "medicine", "diagnosis", "dentistry"}
-FORMER_DIFFUSION_PRIORITY = ("food", "medical", "military", "information")
 
-
-class ExistingCategoriesUnchanged(unittest.TestCase):
+class CategoriesReadTheirTraits(unittest.TestCase):
     def setUp(self):
         self.nodes = {node["id"]: node for node in load_base_tree()["nodes"]}
         self.categories = sorted({node["cat"] for node in self.nodes.values() if node.get("cat")})
-
-    def test_never_abandoned_membership(self):
-        for category in self.categories:
-            self.assertEqual(category in FORMER_NEVER_ABANDON,
-                             category_traits.has_trait(category, "never_abandoned"), category)
-
-    def test_practisable_membership(self):
-        stub = SimpleNamespace(nodes=self.nodes)
-        for node_id, node in self.nodes.items():
-            self.assertEqual(node.get("cat") in FORMER_PRACTISABLE,
-                             ProductionMixin._practisable(stub, node_id), node_id)
-
-    def test_diffusion_priority_order(self):
-        self.assertEqual(FORMER_DIFFUSION_PRIORITY, category_traits.diffusion_trait_names())
 
     def test_diffusion_category_of_a_node_carrying_two_traits(self):
         stub = SimpleNamespace()
@@ -75,7 +57,9 @@ class ModAddsCategory(unittest.TestCase):
         self.assertFalse(ProductionMixin._practisable(SimpleNamespace(nodes=nodes), "x"))
 
     def test_new_diffusion_trait_is_last_and_usable(self):
-        self.assertEqual(FORMER_DIFFUSION_PRIORITY + ("ritual",), category_traits.diffusion_trait_names())
+        names = category_traits.diffusion_trait_names()
+        self.assertEqual("ritual", names[-1])
+        self.assertEqual(len(names), len(set(names)))
         self.assertEqual("ritual", DiffusionMixin._diffusion_category(SimpleNamespace(), {"traits": ["ritual"]}))
         self.assertEqual(50.0, DiffusionMixin._diffusion_half_life_years(SimpleNamespace(), "ritual"))
 

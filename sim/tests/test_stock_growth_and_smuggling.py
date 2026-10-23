@@ -2,6 +2,8 @@
 robbed at a risk (Complaints/366). The engine mixins run on a small stand-in for the game: a ledger, a purse, a
 labour market that prices an hour, and the real partner data; no whole game is built."""
 
+QUICK_TOPIC = True
+
 import collections
 import os
 import types
@@ -156,20 +158,22 @@ check("...and the hours press on the labour market",
 
 # ---- pasture limits the increase ------------------------------------------------------------------
 _shipped_capacity = stock_land.pasture_capacity_kg
-stock_land.pasture_capacity_kg = lambda tile, wild, world_map: 10500.0 if tile == place else 0.0
-tight = Game()
-tight.grant_stock(HERD, 10000.0)
-tight.step_living_stock()
-check("a pasture that carries 500 kg more lets the herd grow by 500 kg less its loss",
-      abs(tight.stock_held(HERD) - (10500.0 - 10000.0 * rates["annual_loss"])) < 1e-6, tight.stock_held(HERD))
-stock_land.pasture_capacity_kg = lambda tile, wild, world_map: 9000.0 if tile == place else 0.0
-full = Game()
-full.grant_stock(HERD, 10000.0)
-full.step_living_stock()
-check("a herd on pasture with no room gains nothing and still suffers its loss",
-      abs(full.stock_held(HERD) - 10000.0 * (1.0 - rates["annual_loss"])) < 1e-6, full.stock_held(HERD))
-check("...and buys no labour for growth it did not make", not full.purse.paid, full.purse.paid)
-stock_land.pasture_capacity_kg = _shipped_capacity
+try:
+    stock_land.pasture_capacity_kg = lambda tile, wild, world_map: 10500.0 if tile == place else 0.0
+    tight = Game()
+    tight.grant_stock(HERD, 10000.0)
+    tight.step_living_stock()
+    check("a pasture that carries 500 kg more lets the herd grow by 500 kg less its loss",
+          abs(tight.stock_held(HERD) - (10500.0 - 10000.0 * rates["annual_loss"])) < 1e-6, tight.stock_held(HERD))
+    stock_land.pasture_capacity_kg = lambda tile, wild, world_map: 9000.0 if tile == place else 0.0
+    full = Game()
+    full.grant_stock(HERD, 10000.0)
+    full.step_living_stock()
+    check("a herd on pasture with no room gains nothing and still suffers its loss",
+          abs(full.stock_held(HERD) - 10000.0 * (1.0 - rates["annual_loss"])) < 1e-6, full.stock_held(HERD))
+    check("...and buys no labour for growth it did not make", not full.purse.paid, full.purse.paid)
+finally:
+    stock_land.pasture_capacity_kg = _shipped_capacity
 
 # ---- the purse limits it too ----------------------------------------------------------------------
 poor = Game(capital=0.0)
@@ -188,22 +192,24 @@ sugar = stock_rates()[SUGAR]
 check("the cane row is raised on arable land and no longer capped at a doubling",
       sugar.get("grows_on") == "arable" and sugar["natural_increase"] > 1.0, sugar)
 _shipped_arable = stock_land.arable_hectares
-stock_land.arable_hectares = lambda tile, world_map: 0.01
-small = Game()
-small.grant_stock(SUGAR, 5000.0)
-small.step_living_stock()
-sett = living_stock_growth.stock_entry(SUGAR)
-room = 0.01 * sett["outputs"][SUGAR] / sett["land_hectare_years"]
-check("a hundredth of a hectare of land raises only what its output per hectare allows",
-      abs(small.stock_held(SUGAR) - (5000.0 + room - 5000.0 * sugar["annual_loss"])) < 1e-6, small.stock_held(SUGAR))
-stock_land.arable_hectares = lambda tile, world_map: 1e9
-wide = Game()
-wide.grant_stock(SUGAR, 5000.0)
-wide.step_living_stock()
-check("with land enough the cane multiplies by its sourced rate",
-      abs(wide.stock_held(SUGAR) - 5000.0 * (1.0 + sugar["natural_increase"] - sugar["annual_loss"])) < 1e-6,
-      wide.stock_held(SUGAR))
-stock_land.arable_hectares = _shipped_arable
+try:
+    stock_land.arable_hectares = lambda tile, world_map: 0.01
+    small = Game()
+    small.grant_stock(SUGAR, 5000.0)
+    small.step_living_stock()
+    sett = living_stock_growth.stock_entry(SUGAR)
+    room = 0.01 * sett["outputs"][SUGAR] / sett["land_hectare_years"]
+    check("a hundredth of a hectare of land raises only what its output per hectare allows",
+          abs(small.stock_held(SUGAR) - (5000.0 + room - 5000.0 * sugar["annual_loss"])) < 1e-6, small.stock_held(SUGAR))
+    stock_land.arable_hectares = lambda tile, world_map: 1e9
+    wide = Game()
+    wide.grant_stock(SUGAR, 5000.0)
+    wide.step_living_stock()
+    check("with land enough the cane multiplies by its sourced rate",
+          abs(wide.stock_held(SUGAR) - 5000.0 * (1.0 + sugar["natural_increase"] - sugar["annual_loss"])) < 1e-6,
+          wide.stock_held(SUGAR))
+finally:
+    stock_land.arable_hectares = _shipped_arable
 eggs = Game()
 eggs.grant_stock(EGGS, 1.0)
 eggs.step_living_stock()

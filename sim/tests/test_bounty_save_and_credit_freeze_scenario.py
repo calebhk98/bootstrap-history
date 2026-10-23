@@ -14,7 +14,7 @@ def _bounty_node(test_sim):
 
 # --- scenario: a posted bounty round-trips through the save file, carries no version stamp, and draws none of the
 # poster's hours (it is paid for)
-target = sim(capital=1.0)          # the game that receives the load
+target = unopened_sim(capital=1.0)          # the game that receives the load
 bounty_sim = sim(capital=1e9)
 bounty_id = _bounty_node(bounty_sim)
 hours_before = bounty_sim.state.founder.director_hours_spent_founder
@@ -40,7 +40,7 @@ check("scenario: a posted bounty asks for no founder hours, loads back from a sa
        bounty_sim.state.founder.director_hours_spent_founder - hours_before))
 
 # --- scenario: a credit freeze refuses a start that needs credit and allows one that cash covers
-frozen = sim(capital=1e9)
+frozen = unopened_sim(capital=1e9)
 cheap_id = next(node_id for node_id in ORDER
                 if node_id not in frozen.done and frozen.can_start(node_id)
                 and 0 < frozen.project_cost(node_id) < 5000)

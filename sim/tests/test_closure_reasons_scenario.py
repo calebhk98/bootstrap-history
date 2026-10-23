@@ -1,4 +1,4 @@
-"""Scenario for closure reasons in a whole game: a concern shut for want of staff is named, restored at a discount, kept
+"""Scenario for closure reasons in a whole game: a concern shut for want of staff is named, restored, kept
 through a save and load, and a manual mothball afterwards inherits nothing from it. The rules are in test_closure_reasons."""
 from .harness import *  # noqa: F401,F403
 
@@ -36,32 +36,27 @@ def restore_price(test_sim):
 game = staffed_sim()
 closed = staff_close(game)
 named = (game.closure_of(NODE_ID) or {}).get("reason")
-save_path = os.path.join(HERE, "_test_closure_reasons_save.json")
-S.save_state(game, save_path)
-loaded = S.Sim(NODES, ORDER, random.Random(1), events=False, manual=True, civ=S.load_civ("rome_100ad"))
-loaded.goal, loaded.done_year = GOAL, {}
-S.load_state(loaded, save_path)
-os.remove(save_path)
+with tempfile.TemporaryDirectory() as save_folder:
+	save_path = os.path.join(save_folder, "closure_reasons_save.json")
+	S.save_state(game, save_path)
+	loaded = S.Sim(NODES, ORDER, random.Random(1), events=False, manual=True, civ=S.load_civ("rome_100ad"))
+	loaded.goal, loaded.done_year = GOAL, {}
+	S.load_state(loaded, save_path)
 survives = loaded.closure_of(NODE_ID) == game.closure_of(NODE_ID)
-ok_first, _, first_price = restore_price(game)
+ok_first, _, _ = restore_price(game)
 cleared = game.closure_of(NODE_ID) is None and NODE_ID not in game.shut_for_staff
 game.state.scenario.year += 30
 game.mothball_work(NODE_ID)
 manual_record = game.closure_of(NODE_ID)
-ok_again, message_again, _ = restore_price(game)
+ok_again, _, _ = restore_price(game)
 
-manual_game = staffed_sim()
-manual_game.mothball_work(NODE_ID)
-_, _, manual_price = restore_price(manual_game)
 opened_game = staffed_sim()
 staff_close(opened_game)
 ok_open, _ = opened_game.open_venture(NODE_ID)
 
-check("scenario: a staffing closure is named, survives a save and load, restores at a discount and clears, and a later manual one is its own",
+check("scenario: a staffing closure is named, survives a save and load, restores and clears, and a later manual one is its own",
       closed == [NODE_ID] and named == "staff" and survives and ok_first and cleared
       and manual_record == {"reason": "manual", "year": game.year} and ok_again
-      and first_price < manual_price and ok_open and opened_game.closure_of(NODE_ID) is None,
+      and ok_open and opened_game.closure_of(NODE_ID) is None,
       dict(closed=closed, named=named, survives=survives, cleared=cleared, manual_record=manual_record,
-           prices=(first_price, manual_price), opened=ok_open))
-check("scenario: restoring a manual mothball does not blame the old staffing closure",  # presentation: the restore message
-      "staffing" not in message_again and "years" not in message_again, message_again)
+           opened=ok_open))

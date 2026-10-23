@@ -12,7 +12,7 @@ def _rows(out):
     return out.get("rows") if "rows" in out else out.get("available")
 
 
-plain = sim(capital=1_000_000.0)
+plain = unopened_sim(capital=1_000_000.0)
 startable_out = _ask(plain, state="startable", limit=5)
 startable_ids = [row["id"] for row in _rows(startable_out)]
 check("state:startable lists nodes the game itself says can start",
@@ -24,7 +24,7 @@ check("state:blocked lists nodes the game says cannot start, each with the reaso
       blocked_rows and all(not plain.can_start(row["id"]) and row["why_not"] == plain.start_reason(row["id"])[1]
                            for row in blocked_rows) and blocked_out["state"] == "blocked", blocked_out.get("error"))
 
-fogged = sim(capital=1_000_000.0)
+fogged = unopened_sim(capital=1_000_000.0)
 fogged.fog = True
 fog_startable = [node_id for node_id in fogged.order if fogged.can_start(node_id)]
 fog_heard = [node_id for node_id in fogged.order if node_id not in fog_startable and node_id not in fogged.done][:60]

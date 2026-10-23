@@ -5,15 +5,15 @@ from .harness import *
 from sim.ui.proto.dispatch_money import _cmd_buy
 from sim.ui.proto.economy import _agent_mines
 
-_buy_sim = sim(capital=5_000_000.0)
+_buy_sim = unopened_sim(capital=5_000_000.0)
 _reply = _cmd_buy(_buy_sim, NODES, {"what": "mine", "material": "coal", "n": 10}, None)
 
-_screen_sim = sim(capital=5_000_000.0)
+_screen_sim = unopened_sim(capital=5_000_000.0)
 _screen_sim.open_mine("coal", 10.0)
 _pending = _agent_mines(_screen_sim)["still_being_sunk"]
 
 _commission_year = _reply.get("commissions_during_year")
-_ready_sim = sim(capital=5_000_000.0)
+_ready_sim = unopened_sim(capital=5_000_000.0)
 _ready_sim.open_mine("coal", 10.0)
 _ready_sim.state.scenario.year = _commission_year
 _ready_sim.commission_mines()

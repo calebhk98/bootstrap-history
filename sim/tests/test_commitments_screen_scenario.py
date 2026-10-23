@@ -2,7 +2,7 @@
 literacy, reserve and institution figures other screens use. The figures themselves are in test_commitments_screen."""
 from .harness import *  # noqa: F401,F403
 
-game = sim()
+game = unopened_sim()
 institution = next(node_id for node_id, node in sorted(NODES.items()) if node.get("kind") == "INSTITUTION")
 game.done.add(institution)
 game.operating.add(institution)

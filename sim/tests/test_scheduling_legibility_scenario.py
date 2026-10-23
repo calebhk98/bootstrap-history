@@ -8,7 +8,7 @@ from sim.ui.protocol import _agent_portfolio as _APORT
 # --- 1. per-project allocation, read from the allocator itself. Two founder-hours-only institutions share one pool:
 # the doctorate started second and so sits at the front of `order` (priority 1, offered its 150 hours against the whole
 # pool); the curriculum is priority 2, offered its 120 against what was left after the first one's share.
-_s_alloc = sim(civ="rome_100ad", capital=5_000_000.0, surveyed=())
+_s_alloc = unopened_sim(civ="rome_100ad", capital=5_000_000.0, surveyed=())
 _s_alloc.done.update({"school_founded", "fin_university", "sc2_institution_examination"})
 _s_alloc._done_changed()
 _s_alloc.end_year = _s_alloc.cfg["start_year"] + _s_alloc.cfg["horizon_years"]

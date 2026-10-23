@@ -11,7 +11,7 @@ YEAR = 100
 class TileWeatherInAGame(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.game = sim(civ="rome_100ad")
+        cls.game = unopened_sim(civ="rome_100ad")
 
     def test_the_arable_weighted_mean_of_the_tiles_is_the_pooled_multiplier(self):
         by_tile = self.game.farm_weather_by_tile(YEAR)

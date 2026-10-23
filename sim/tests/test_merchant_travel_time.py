@@ -2,6 +2,8 @@
 carries the goods meanwhile), the merchant prices that into the trade, and a distant market's price reaches
 it with a lag that grows with distance."""
 
+QUICK_TOPIC = True
+
 import json
 import unittest
 
@@ -10,9 +12,10 @@ from sim.economy.accounts import Book
 from sim.economy.market_areas import AreaMap
 from sim.economy.merchants import Merchant
 from sim.economy.record import EconomyRecord
+from sim.economy.market_memory import MarketMemory
+from sim.economy.types import CurrencySpec
 from sim.economy.store_return import STORE_STORAGE_COST_PER_KG_YEAR
 from sim.economy.types import EDGE_PRODUCTION, EDGE_SPOILAGE, Fill, GoodsMove, GoodSpec
-from sim.tests import economy_fixture as fixture
 from sim.tests.test_economy_merchants import INTEREST_RATE, SPECS, View
 from sim.tests.test_economy_tile_costs import star_tiles, unit_cost_table
 
@@ -147,9 +150,9 @@ class StorageAtStagesTests(unittest.TestCase):
 
 class SaveTests(unittest.TestCase):
     def test_a_save_made_while_goods_are_in_transit_loads_with_them_in_transit(self):
-        economy, _outcomes = fixture.run(fixture.small_setup(), 1)
-        record = economy.record
-        merchant = sorted(record.merchants.values(), key=lambda each: each.agent_id)[0]
+        record = EconomyRecord(book=Book(), memory=MarketMemory(), currency=CurrencySpec("coin", "fiat", None, 0.0, None))
+        merchant = Merchant("m1", "a", "owner", 100.0)
+        record.merchants["m1"] = merchant
         merchant.in_transit = [merchants_transit.Shipment("ore", 3.5, merchant.home_tile, 2)]
         record.book.move(GoodsMove(EDGE_PRODUCTION, merchants_transit.EDGE_TRANSIT, "ore", merchant.home_tile, 3.5, "stock"))
         loaded = EconomyRecord.from_record(json.loads(json.dumps(record.to_record())))

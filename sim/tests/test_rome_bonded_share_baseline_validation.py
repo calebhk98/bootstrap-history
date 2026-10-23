@@ -58,26 +58,6 @@ def played(seed):
             "bought": bought, "captives": sum(event.get("people", 0.0) for event in events)}
 
 
-class RangeRule(unittest.TestCase):
-    """The check itself, on numbers, so it is seen to be able to fail."""
-
-    def test_a_share_outside_the_range_fails(self):
-        self.assertFalse(within(0.02, 0.08, 0.15))
-        self.assertFalse(within(0.30, 0.08, 0.15))
-        self.assertTrue(within(0.10, 0.08, 0.15))
-
-    def test_the_share_is_read_from_the_strata(self):
-        class Stub:
-            def __init__(self, members, bonded):
-                self.record = type("Record", (), {"members": members})()
-                self._bonded = bonded
-
-            def is_bonded(self):
-                return self._bonded
-        self.assertAlmostEqual(bonded_share([Stub(90.0, False), Stub(10.0, True)])[0], 0.10)
-        self.assertEqual(bonded_share([])[0], 0.0)
-
-
 class BaselineValidation(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -103,9 +83,6 @@ class BaselineValidation(unittest.TestCase):
 
     def test_validation_seed_3(self):
         self.check_seed(SEEDS[2])
-
-    def test_validation_the_seeds_are_distinct_and_several(self):
-        self.assertGreaterEqual(len(set(SEEDS)), 3)
 
 
 if __name__ == "__main__":

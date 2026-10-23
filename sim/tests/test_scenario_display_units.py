@@ -27,7 +27,7 @@ FAKE_UNITS = {
 NATIVE_WORDS = {"area": r"\bhectares?\b|\bha\b", "mass": r"\btonnes?\b", "money": r"\bden\b|\bdenarii\b"}
 
 # One game serves every screen: the replies are read for their unit fields and the buys only move prices and cash.
-_GAME = sim(capital=5_000_000.0)
+_GAME = unopened_sim(capital=5_000_000.0)
 
 
 def _fields(reply, dimension, registry, found=None):

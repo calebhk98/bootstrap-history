@@ -9,7 +9,7 @@ def _zero_lab(node):
 
 
 # --- scenario: the real allocator gives a directed project its hours first, and `portfolio` reads them back
-s = sim(capital=1e7)
+s = unopened_sim(capital=1e7)
 _kA, _kB = "academy_network", "corpus_written"
 s.order = [_kA, _kB]
 s.project_resource_throttle = lambda node_id: 1.0   # the order of hours is under test, not what the market has in stock
@@ -30,11 +30,13 @@ s = unopened_sim(capital=1e7)
 s.hour_allocations["academy_network"] = 321.0
 s.hour_allocations["work"] = 77.0
 s.work_trade = "scribe"
-_save_path = os.path.join(tempfile.gettempdir(), "rome_allocate_save_test.json")
+_save_dir = tempfile.mkdtemp()
+_save_path = os.path.join(_save_dir, "rome_allocate_save_test.json")
 _protocol.save_state(s, _save_path)
 s2 = unopened_sim(capital=1e7)
 _protocol.load_state(s2, _save_path)
 os.remove(_save_path)
+os.rmdir(_save_dir)
 check("scenario: standing project and work-for-wages directives, and the work trade, survive a save and a load",
       s2.hour_allocations.get("academy_network") == 321.0 and s2.hour_allocations.get("work") == 77.0
       and s2.work_trade == "scribe", (s2.hour_allocations, s2.work_trade))

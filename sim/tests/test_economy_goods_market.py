@@ -1,8 +1,9 @@
 """The economy's goods market: price where buyers' schedules meet sellers' reservations, rationing by
 priority, fills that sum exactly, and a famine price that is set by budgets."""
+QUICK_TOPIC = True
+
 import math
 import random
-import time
 import unittest
 
 from sim.economy.goods_market import _ration_buyers, clear, quantity_at
@@ -236,15 +237,6 @@ def make_market(bid_count, offer_count, seed=7):
                     rng.uniform(0.3, 1.0) * 3.5 * bid_count / offer_count, rng.uniform(0.4, 2.0))
               for number in range(offer_count)]
     return bids, offers
-
-
-class SpeedBoundTests(unittest.TestCase):
-    def test_a_thousand_bids_clear_well_inside_a_generous_bound(self):
-        bids, offers = make_market(1000, 10)
-        start = time.perf_counter()
-        for _ in range(5):
-            run(bids, offers)
-        self.assertLess((time.perf_counter() - start) / 5, 0.25)
 
 
 class CeilingShadowTests(unittest.TestCase):

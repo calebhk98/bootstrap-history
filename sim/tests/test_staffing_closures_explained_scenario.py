@@ -1,49 +1,16 @@
-"""Scenarios in a whole game for the staffing closures explained: the staffing rule closes and reopens a concern and says so
-(233), `stuck` recommends only what `open` would accept (219), and a project starved of directed hours is told the command
-that reserves them (205). The tally, the summary, the lines and the sentences are in test_staffing_closures_explained."""
+"""Scenarios in a whole game for the staffing closures explained: `stuck` recommends only what `open` would accept (219),
+and a project starved of directed hours is told the command that reserves them (205). The closure and reopening lines, the
+tally, the summary and the sentences are in test_staffing_closures_explained."""
 import re
 
 from .harness import *  # noqa: F401,F403
-
-CLOSING_NODE = concern_needing_craftsmen_to_supervise()
-
-
-def staffed_sim():
-    test_sim = sim(capital=1_000_000.0)
-    test_sim.done.update(NODES[CLOSING_NODE]["pre"])
-    test_sim.done.add(CLOSING_NODE)
-    test_sim._done_changed()
-    test_sim.employees["artisan"] = 6.0
-    test_sim.labour._resync_pools()
-    test_sim.open_venture(CLOSING_NODE)
-    return test_sim
-
 
 def new_messages(test_sim, start):
     return [message for _year, message in test_sim.log[start:]]
 
 
-# --- 233: no craftsmen left closes the concern, with the line and the summary; the people back reopen it
-closing_sim = staffed_sim()
-closing_sim.employees["artisan"] = 0.0
-closing_sim.labour._resync_pools()
-log_start = len(closing_sim.log)
-closed = closing_sim.close_unstaffed_ventures(closing_sim.year)
-closure_text = " ".join(new_messages(closing_sim, log_start))
-summary = closing_sim.staffing_closure_summary()
-check("the staffing rule closes the concern, the line names the craftsmen short and the remedies, and the summary counts it",
-      closed == [CLOSING_NODE] and "craftsm" in closure_text and all(remedy in closure_text for remedy in ("keep", "reserve", "auto_replace_foreman"))
-      and summary is not None and re.search(r"closed 1\b", summary) and re.search(r"still shut 1\b", summary), (closed, closure_text, summary))
-closing_sim.employees["artisan"] = 6.0
-closing_sim.labour._resync_pools()
-log_start = len(closing_sim.log)
-closing_sim.reopen_restaffed_ventures(closing_sim.year)
-check("with the people back the concern reopens, the line says how many are still shut and the summary reflects it",
-      "still shut" in " ".join(new_messages(closing_sim, log_start))
-      and re.search(r"reopened 1\b", closing_sim.staffing_closure_summary() or ""), closing_sim.staffing_closure_summary())
-
 # --- 219: stuck recommends only what open accepts
-recommend_sim = sim(capital=1e7)
+recommend_sim = unopened_sim(capital=1e7)
 for node_id in ("en_undershot_wheel", "mirror_amalgam"):
     recommend_sim.done.update(NODES[node_id]["pre"])
     recommend_sim.done.add(node_id)

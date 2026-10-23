@@ -7,7 +7,7 @@ from .harness import *  # noqa: F401,F403
 
 
 # --- scenario: the Rome opening starts two foundations on a poor purse; `money` and `available` read the same numbers
-s = sim(capital=400.0, surveyed=())
+s = unopened_sim(capital=400.0, surveyed=())
 S._agent_dispatch(s, NODES, {"cmd": "start", "id": "scientific_method"})
 S._agent_dispatch(s, NODES, {"cmd": "start", "id": "mt2_sintering_process"})
 _money = S._agent_dispatch(s, NODES, {"cmd": "money"})
@@ -23,11 +23,11 @@ check("scenario: `money` states committed_spend() and the real financing ceiling
 
 # The Rome opening: scientific_method then mt2_sintering_process on a purse that covers the second alone only just
 # short. on_credit prices the second start alone; the warning also counts the first's unpaid cost.
-_probe = sim(surveyed=())
+_probe = unopened_sim(surveyed=())
 _sci_cost = _probe.project_cost("scientific_method")
 _units_cost = _probe.project_cost("mt2_sintering_process")
 _purse = round(_units_cost) - 44.0     # just short of the second project alone
-s = sim(surveyed=())
+s = unopened_sim(surveyed=())
 s.market_credit_room = lambda actor_id: None    # the household's own standing sets the line; the opening's loan book is fully lent to others
 s.capital = _purse      # in the game's own money, the unit project_cost is quoted in
 r_sci = S._agent_dispatch(s, NODES, {"cmd": "start", "id": "scientific_method"})
@@ -48,7 +48,7 @@ check("scenario: starting a second foundation on a purse just short of it warns,
 # Every candidate's project_cost() is pinned to one number, so whether anything starts is governed purely by whether
 # the pinned room (funding_capacity() less committed_spend()) clears the pinned price.
 def _start_room(funding_capacity, committed_spend, project_cost=9000.0, whole_year=False):
-    household = sim(capital=1e7, manual=False, surveyed=())
+    household = unopened_sim(capital=1e7, manual=False, surveyed=())
     household.project_cost = lambda node_id: project_cost
     household.funding_capacity = lambda: funding_capacity
     household.committed_spend = lambda: committed_spend
@@ -57,7 +57,7 @@ def _start_room(funding_capacity, committed_spend, project_cost=9000.0, whole_ye
     return household
 
 
-_room_clears = _start_room(funding_capacity=10000.0, committed_spend=0.0, whole_year=True)
+_room_clears = _start_room(funding_capacity=10000.0, committed_spend=0.0)
 _room_short_on_capacity = _start_room(funding_capacity=8000.0, committed_spend=0.0)
 _room_short_on_committed = _start_room(funding_capacity=1e7, committed_spend=1e7 - 5000.0)
 check("scenario: a household whose funding_capacity() less committed_spend() clears every candidate's pinned cost starts "

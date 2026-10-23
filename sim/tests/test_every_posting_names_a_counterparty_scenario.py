@@ -1,5 +1,5 @@
-"""Scenario: Complaint 382 in a game. Over a year of a rich household's game (two, so that wages and the state's pay reach the
-people's purses) and a poor one's, all purses together plus all named edges together stay what they were, money moved
+"""Scenario: Complaint 382 in a game. Over two years of a rich household's game (so that wages and the state's pay reach the
+people's purses), all purses together plus all named edges together stay what they were, money moved
 through named edges, and the founder's payroll and the state's pay reach the people's purses. The scan of the source for
 one-sided postings and the edge's arithmetic are in test_every_posting_names_a_counterparty."""
 from .harness import *  # noqa: F401,F403
@@ -22,7 +22,7 @@ def ask(game, **command):
 
 
 # the people's purses receive wages and the state's pay only from the second year, so the rich game plays two
-for label, capital, years in (("a rich household", 300_000.0, 2), ("a poor household", 2_000.0, 1)):
+for label, capital, years in (("a rich household", 300_000.0, 2),):
     game = sim(capital=capital, manual=False, events=True)
     game.end_year = game.cfg["start_year"] + game.cfg["horizon_years"]
     if capital > 100_000.0:

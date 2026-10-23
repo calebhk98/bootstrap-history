@@ -4,7 +4,7 @@ nearest of its places, as a tracked mineral is."""
 import unittest
 
 from sim.geography import api as geography_api
-from sim.tests.harness import sim
+from sim.tests.harness import unopened_sim
 
 GOOD = "pozzolana_kg"
 
@@ -14,8 +14,8 @@ class LocatedMaterialFreightTests(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.norse = sim(civ="norse_900ad", capital=1.0)
-        cls.rome = sim(capital=1.0)
+        cls.norse = unopened_sim(civ="norse_900ad", capital=1.0)
+        cls.rome = unopened_sim(capital=1.0)
 
     def test_located_goods_are_placed_by_their_entry(self):
         s = self.norse

@@ -8,7 +8,7 @@ from sim.refusal import cause_of, facts_of
 
 # --- the stall, on a game stepped by years: the cold store (no engineer anywhere) and logarithms (more scribe-hours wanted than the
 # society can field) are stepped together.
-s_dl = sim(capital=20000000.0, surveyed=())
+s_dl = unopened_sim(capital=20000000.0, surveyed=())
 _need_eng = "ag2_cold_store"
 s_dl.active[_need_eng] = dict(ph_left=float(NODES[_need_eng]["ph"]), yrs=0.0,
                               spent=0.0, cost_left=s_dl.project_cost(_need_eng))

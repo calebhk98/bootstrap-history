@@ -2,8 +2,8 @@
 for them from the terrain, and routes over them.
 
 Geography's own rules (what a way costs, which edges can be built, that a built road beats a track) are in
-test_geography_ways_build.py and test_geography_routes.py, and the saved state round trip is in test_built_ways; here
-the engine's wiring to the labour market, the purse, the routes and the command is checked on a game."""
+test_geography_ways_build.py and test_geography_routes.py, and building, refusal and crew are in test_built_ways_rule
+and test_ways_crew_and_works; here the engine's wiring to the routes and the command is checked on a game."""
 import random
 import unittest
 
@@ -38,32 +38,6 @@ def _finish_building(sim):
 
 class BuiltWaysTests(unittest.TestCase):
 
-    def test_scenario_building_a_road_records_it_charges_labour_and_stone_and_is_what_routes_use(self):
-        sim = _fresh_sim()
-        tile_a, tile_b = _buildable_pair(sim)
-        sim.state.household.capital = 1e12
-        quote = sim.way_quote(tile_a, tile_b, "road")
-        self.assertGreater(quote["money"], 0.0)
-        before = sim.state.household.capital
-        ok, message = sim.build_way(tile_a, tile_b, "road")
-        self.assertTrue(ok, message)
-        self.assertNotIn(geography.edge_key(tile_a, tile_b), sim.state.economy.improvements)
-        _finish_building(sim)
-        self.assertTrue(sim.state.economy.improvements[geography.edge_key(tile_a, tile_b)]["road"])
-        # a balance near 1e12 carries rounding far coarser than 1e-4, so compare by share of the quote
-        self.assertAlmostEqual(before - sim.state.household.capital, quote["money"], delta=1e-9 * quote["money"])
-        self.assertIn(geography.edge_key(tile_a, tile_b), sim.ways_built())
-
-    def test_scenario_building_is_refused_without_the_money_the_technology_or_a_border(self):
-        sim = _fresh_sim()
-        tile_a, tile_b = _buildable_pair(sim)
-        sim.state.household.capital = 0.0
-        self.assertFalse(sim.build_way(tile_a, tile_b, "road")[0])
-        sim.state.household.capital = 1e12
-        self.assertFalse(sim.build_way(tile_a, "no_such_tile", "road")[0])
-        self.assertFalse(sim.build_way(tile_a, tile_b, "rail")[0])
-        self.assertEqual(sim.state.economy.improvements, {})
-
     def test_scenario_roads_along_the_cheapest_route_lower_its_cost_and_never_slow_the_household(self):
         sim = _fresh_sim()
         sim.state.household.capital = 1e12
@@ -81,19 +55,6 @@ class BuiltWaysTests(unittest.TestCase):
         built = geography.route([base], [far], modes, sim.ways_built(), held_nodes=held)
         self.assertLess(built["cost_per_tonne"], route["cost_per_tonne"])
         self.assertLessEqual(sim.labour.travel_days_to_tile(far), days_before + 1e-9)
-
-    def test_scenario_a_way_takes_its_crew_from_the_labour_market_until_it_opens(self):
-        sim = _fresh_sim()
-        tile_a, tile_b = _buildable_pair(sim)
-        sim.state.household.capital = 1e12
-        market = sim.labour.labour_market
-        before = market.pressure("labourer")
-        ok, message = sim.build_way(tile_a, tile_b, "road")
-        self.assertTrue(ok, message)
-        self.assertGreater(market.pressure("labourer"), before)
-        pressed = market.pressure("labourer")
-        _finish_building(sim)
-        self.assertLess(market.pressure("labourer"), pressed)
 
     def test_scenario_the_command_previews_and_builds(self):
         from sim.ui.proto.dispatch import _agent_dispatch

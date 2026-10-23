@@ -5,7 +5,7 @@ from .harness import *  # noqa: F401,F403
 
 GOAL_NODE = "point_contact_transistor"
 
-game = sim()
+game = unopened_sim()
 foreman_node = next(node_id for node_id in sorted(NODES) if game.venture_foreman(node_id)[0] is not None)
 trade, share = game.venture_foreman(foreman_node)
 why_out = S._agent_dispatch(game, NODES, {"cmd": "why", "id": foreman_node})
@@ -14,8 +14,8 @@ check("why carries the specialist foreman trade and share open enforces",
       trade is not None and foreman.get("trade") == trade and abs(foreman.get("fte", -1.0) - share) < 0.01,
       (trade, share, foreman))
 
-fresh = S._agent_dispatch(sim(), NODES, {"cmd": "why", "id": GOAL_NODE})
-progressed = sim()
+fresh = S._agent_dispatch(unopened_sim(), NODES, {"cmd": "why", "id": GOAL_NODE})
+progressed = unopened_sim()
 progressed.done.update(S.closure(NODES, GOAL_NODE) - {GOAL_NODE})
 after = S._agent_dispatch(progressed, NODES, {"cmd": "why", "id": GOAL_NODE})
 check("why floor left shrinks once the chain is built",

@@ -3,7 +3,7 @@ auto_open_ventures takes one of the concerns that clear the most a year for what
 off by default. The refusal wording and the screens are test_refusal_wording_and_screens."""
 from .harness import *  # noqa: F401,F403
 
-game = sim(civ="england_1300")
+game = unopened_sim(civ="england_1300")
 # the concerns the household's free hands can staff (the gate `open` applies) that clear the most a year for the money
 # to open them; their takings come from what they make
 pays_best = sorted((node_id for node_id, node in game.nodes.items()

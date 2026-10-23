@@ -3,6 +3,9 @@
 The same state (debt past the ceiling, nothing paying it down) must reach default after the same
 number of years in arrears for both, and each year the unpaid interest is arrears, not more debt.
 """
+
+QUICK_TOPIC = True
+
 from .harness import *  # noqa: F401,F403
 
 from sim.agents import borrowing_arrears

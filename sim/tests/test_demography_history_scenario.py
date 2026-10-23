@@ -12,7 +12,8 @@ def _demography(game):
     return S._agent_dispatch(game, NODES, {"cmd": "demography"})
 
 # --- SCENARIO: a stepped game keeps a yearly record, a save carries it, and the screen reads it back
-game = sim()
+game = unopened_sim()
+game._step_market = lambda: None     # the year's market close is not what the record reads
 for _ in range(2):
     game.step()
 yearly = game.state.population.yearly_record
@@ -23,7 +24,7 @@ check("scenario: each step appends a yearly population record holding that step'
 with tempfile.TemporaryDirectory(dir=os.getcwd()) as folder:
     path = os.path.join(folder, "save.json")
     save_state(game, path)
-    loaded = sim()
+    loaded = unopened_sim()
     load_state(loaded, path)
 check("scenario: a loaded game keeps the yearly record", loaded.state.population.yearly_record == yearly,
       loaded.state.population.yearly_record)

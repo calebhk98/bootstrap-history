@@ -1,6 +1,8 @@
 """Complaints/627: a haul's crew hours follow the modes the haul travels (a sea leg hires sailor hours), a
 handled port adds handling hours, and the hours are bid and paid at the area the goods leave."""
 
+QUICK_TOPIC = True
+
 import unittest
 from unittest import mock
 

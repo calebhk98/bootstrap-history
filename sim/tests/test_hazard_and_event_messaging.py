@@ -1,5 +1,5 @@
 """What a hazard tells the player and how a patron's death is rolled: no internal jargon in hazard notes, and a patron
-cannot die twice inside the cooling-off period (wording of a running game: test_hazard_and_event_messaging_scenario.py)."""
+cannot die twice inside the cooling-off period (the debasement quote in a running game: test_hazard_and_event_messaging_scenario.py)."""
 from .harness import *  # noqa: F401,F403
 
 from sim.engine.patron_death import patron_dies

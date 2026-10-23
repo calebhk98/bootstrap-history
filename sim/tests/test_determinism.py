@@ -28,9 +28,11 @@ Guards the id()-reuse hazard behind non-determinism; structural, so it catches t
 """
 import ast
 import os
+import unittest
 
-from .harness import *
-from .harness import ROOT
+from .source_dirs import engine_side_dirs
+
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
 # --- THE STRUCTURAL GUARD.
@@ -56,9 +58,9 @@ def _id_aliases(source):
             and isinstance(node.ctx, ast.Load) and id(node) not in called]
 
 
-def _id_call_report(path):
-    """(allowed, suspect) line numbers for id() calls in one file."""
-    tree = ast.parse(open(path).read())
+def _id_call_report_of(source):
+    """(allowed, suspect) line numbers for id() calls in one source text."""
+    tree = ast.parse(source)
     allowed_calls = set()
     for node in ast.walk(tree):
         if (isinstance(node, ast.Subscript) and isinstance(node.slice, ast.Call)
@@ -79,58 +81,72 @@ def _id_call_report(path):
     return allowed, suspect
 
 
-_engine_files = []
-from .source_dirs import engine_side_dirs
-for _dirpath, _dirnames, _filenames in (_entry for _directory in engine_side_dirs() for _entry in os.walk(_directory)):
-    _dirnames[:] = [dirname for dirname in _dirnames if dirname != "__pycache__"]
-    for _filename in sorted(_filenames):
-        if _filename.endswith(".py"):
-            _engine_files.append(os.path.join(_dirpath, _filename))
-
-_suspects = []
-_id_keyed_caches = 0
-for _path in _engine_files:
-    _allowed, _suspect = _id_call_report(_path)
-    _id_keyed_caches += len(_allowed)
-    for _line in _suspect:
-        _suspects.append("%s:%d" % (os.path.relpath(_path, ROOT), _line))
-
-check("no engine code compares or stores a bare id() - an address is not an "
-      "identity, and trusting one is what made this simulation "
-      "non-deterministic",
-      not _suspects, _suspects)
-
-check("the alias check sees `id` passed or stored as a value",
-      [len(_id_aliases(src)) for src in
-       ("key = id\n", "list(map(id, xs))\n", "sorted(xs, key=id)\n", "ok = id(x)\n")]
-      == [1, 1, 1, 0])
-_aliases = []
-for _path in _engine_files:
-    for _line in _id_aliases(open(_path).read()):
-        _aliases.append("%s:%d" % (os.path.relpath(_path, ROOT), _line))
-check("no engine code passes or stores the builtin `id` as a value, which "
-      "would hide an address-as-identity from the call check",
-      not _aliases, _aliases)
-
-check("...and the id()-keyed caches that remain are still there, so the check "
-      "above is guarding something rather than passing because nobody uses "
-      "id() any more",
-      _id_keyed_caches >= 2, _id_keyed_caches)
+def _engine_files():
+    files = []
+    for directory in engine_side_dirs():
+        for dirpath, dirnames, filenames in os.walk(directory):
+            dirnames[:] = [dirname for dirname in dirnames if dirname != "__pycache__"]
+            for filename in sorted(filenames):
+                if filename.endswith(".py"):
+                    files.append(os.path.join(dirpath, filename))
+    return files
 
 
-# --- Every id()-keyed cache must keep the object itself, not only its address.
-# Checked by reading the source of the enclosing function for an `is`
-# comparison: crude, but it fails loudly if someone reintroduces a cache that
-# looks up by id() and then trusts the hit.
-for _path in _engine_files:
-    _allowed, _ = _id_call_report(_path)
-    if not _allowed:
-        continue
-    _source = open(_path).read()
-    _rel = os.path.relpath(_path, ROOT)
-    check("%s looks up by id() and confirms the hit with `is`, so a recycled "
-          "address cannot pass as a match" % _rel,
-          " is nodes" in _source or " is demand" in _source
-          or "is not None and hit[0] is" in _source
-          or "entry[0] is" in _source,
-          _rel)
+def _read(path):
+    with open(path, encoding="utf-8") as handle:
+        return handle.read()
+
+
+class IdCallReportTests(unittest.TestCase):
+    """The scan, called on snippets built here."""
+
+    def test_an_id_as_a_dict_key_is_allowed(self):
+        for source in ("CACHE[id(x)] = 1\n", "CACHE.get(id(x))\n", "CACHE.setdefault(id(x), [])\n", "CACHE.pop(id(x), None)\n"):
+            self.assertEqual(_id_call_report_of(source), ([1], []), source)
+
+    def test_an_id_compared_or_stashed_is_suspect(self):
+        for source in ("same = id(a) == id(b)\n", "seen = (id(a), 3)\n", "last = id(a)\n"):
+            allowed, suspect = _id_call_report_of(source)
+            self.assertEqual(allowed, [], source)
+            self.assertTrue(suspect, source)
+
+    def test_the_alias_check_sees_id_passed_or_stored_as_a_value(self):
+        self.assertEqual([len(_id_aliases(source)) for source in
+                          ("key = id\n", "list(map(id, xs))\n", "sorted(xs, key=id)\n", "ok = id(x)\n")], [1, 1, 1, 0])
+
+
+class EngineIdUseTests(unittest.TestCase):
+    """The scan, over every engine-side file."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.files = _engine_files()
+        cls.reports = {path: _id_call_report_of(_read(path)) for path in cls.files}
+
+    def test_no_engine_code_compares_or_stores_a_bare_id(self):
+        suspects = ["%s:%d" % (os.path.relpath(path, ROOT), line)
+                    for path, (_allowed, suspect) in self.reports.items() for line in suspect]
+        self.assertEqual(suspects, [])
+
+    def test_no_engine_code_passes_or_stores_the_builtin_id_as_a_value(self):
+        aliases = ["%s:%d" % (os.path.relpath(path, ROOT), line)
+                   for path in self.files for line in _id_aliases(_read(path))]
+        self.assertEqual(aliases, [])
+
+    def test_the_id_keyed_caches_that_remain_are_still_there(self):
+        # so the checks above guard something rather than pass because nobody uses id() any more
+        self.assertGreaterEqual(sum(len(allowed) for allowed, _suspect in self.reports.values()), 2)
+
+    def test_every_id_keyed_lookup_confirms_the_hit_with_is(self):
+        # Reads the file for an `is` comparison: crude, but it fails loudly if someone reintroduces a cache that
+        # looks up by id() and then trusts the hit.
+        for path, (allowed, _suspect) in self.reports.items():
+            if not allowed:
+                continue
+            source = _read(path)
+            self.assertTrue(" is nodes" in source or " is demand" in source or "is not None and hit[0] is" in source
+                            or "entry[0] is" in source, os.path.relpath(path, ROOT))
+
+
+if __name__ == "__main__":
+    unittest.main()

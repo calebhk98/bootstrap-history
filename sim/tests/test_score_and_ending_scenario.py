@@ -26,7 +26,7 @@ def _score_snapshot(seed_env):
     return proc.stdout.strip()
 
 
-_score_game = sim(capital=5_000_000.0)
+_score_game = unopened_sim(capital=5_000_000.0)
 _reply = S._agent_dispatch(_score_game, NODES, {"cmd": "score"})
 check("`score` answers through the command dispatcher with its components",
       _reply.get("ok") and set(_reply["components"]) >= {"technology_coverage", "literacy", "standing"}, _reply)

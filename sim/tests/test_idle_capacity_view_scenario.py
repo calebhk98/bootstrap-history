@@ -7,7 +7,7 @@ def ask(test_sim, **command):
     return S._agent_dispatch(test_sim, NODES, command)
 
 
-test_sim = sim(capital=1_000_000.0)
+test_sim = unopened_sim(capital=1_000_000.0)
 idle = ask(test_sim, cmd="idle")
 check("idle answers", idle.get("ok"), idle)
 check("directed capacity is the engine's director pool",

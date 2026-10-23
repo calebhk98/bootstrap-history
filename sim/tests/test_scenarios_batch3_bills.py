@@ -19,7 +19,7 @@ def _chain_with_materials(game, length=4):
 
 def _bill_computations(firm_count):
     """How many material purchases the bill code prices when `firm_count` firms price one chain."""
-    game = sim(capital=1e9)
+    game = unopened_sim(capital=1e9)
     chain = _chain_with_materials(game)
     world = SimWorld(game)
     purchases = [0]
@@ -45,7 +45,7 @@ check("scenario shared bills: pricing one chain for forty firms computes no more
       _few_count > 0 and _many_count == _few_count
       and all(plan["total"] == _many_plans[0]["total"] for plan in _many_plans), (_few_count, _many_count))
 
-_game = sim(capital=1e9)
+_game = unopened_sim(capital=1e9)
 _chain = _chain_with_materials(_game)
 _world = SimWorld(_game)
 _first = _world.copy_cost(_chain[0])

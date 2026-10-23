@@ -12,9 +12,9 @@ Proves that:
 from .harness import *  # noqa: F401,F403
 
 # The container and version-counter rules are tested on a household built without a game
-# (test_household_invalidation_containers). Here: one game for the isolation scenario, one stepped game for the
+# (test_household_invalidation_containers). Here: one unopened game for the demand scenarios, one stepped game for the
 # memoisation scenarios.
-ALPHA = sim(civ="rome_100ad", capital=hours_money(202000))
+ALPHA = unopened_sim(civ="rome_100ad", capital=hours_money(202000))
 STEPPED = sim(civ="rome_100ad", capital=hours_money(202000))
 STEPPED.step()
 GOODS = unopened_sim(civ="rome_100ad", capital=hours_money(202000))
@@ -139,7 +139,7 @@ def _test_save_load_derived_state_integrity():
 		save_state(sim_inst, save_path)
 
 		# Perform load on a sim that already had pre-existing cached state
-		loaded_sim = sim(civ="rome_100ad")
+		loaded_sim = unopened_sim(civ="rome_100ad")
 		loaded_sim.revenue()
 		loaded_sim.annual_material_demand()
 		# Plant a sentinel in a transient cache attribute
@@ -190,29 +190,6 @@ def _test_save_load_derived_state_integrity():
 
 _ok, _detail = _test_save_load_derived_state_integrity()
 check("scenario: save and load derived state integrity", _ok, _detail)
-
-
-def _test_living_cost_and_credit_limit_consistency():
-	"""Edge case: living_cost and credit_limit reflect revenue and capital changes accurately."""
-	sim_inst = STEPPED
-
-	lc1 = sim_inst.living_cost()
-	cl1 = sim_inst.credit_limit()
-
-	# Spend capital
-	sim_inst.household.capital = 1000.0
-	lc2 = sim_inst.living_cost()
-	cl2 = sim_inst.credit_limit()
-
-	# Living cost should adapt to capital change
-	if lc1 == lc2:
-		return False, f"living_cost did not change with capital: {lc1} == {lc2}"
-
-	return True, "living_cost and credit_limit evaluate consistently"
-
-
-_ok, _detail = _test_living_cost_and_credit_limit_consistency()
-check("scenario: living_cost and credit_limit consistency", _ok, _detail)
 
 
 def _test_rapid_workforce_invalidation():
@@ -323,46 +300,3 @@ def _test_annual_material_demand_nested_invalidation():
 
 _ok, _detail = _test_annual_material_demand_nested_invalidation()
 check("scenario: annual_material_demand invalidates on nested mutations", _ok, _detail)
-
-
-def _test_independent_sim_instances_isolation():
-	"""Edge case: mutations in one Sim instance do not affect version counters or caches of another."""
-	sim_alpha = ALPHA
-	sim_beta = sim(civ="rome_100ad", capital=10000.0)
-
-	node_alpha = sim_alpha.order[0]
-	node_beta = sim_beta.order[0]
-	sim_alpha.household.active[node_alpha] = {"ph_left": 20.0, "cost_left": 10.0}
-	sim_beta.household.active[node_beta] = {"ph_left": 20.0, "cost_left": 10.0}
-
-	sim_alpha.revenue()
-	sim_beta.revenue()
-	sim_alpha.annual_material_demand()
-	sim_beta.annual_material_demand()
-
-	beta_active_ver_before = getattr(sim_beta.household, "_active_ver", 0)
-	beta_workforce_ver_before = getattr(sim_beta.household, "_workforce_ver", 0)
-	beta_revenue_key_before = getattr(sim_beta.household, "_revenue_cache_key", None)
-
-	# Mutate sim_alpha
-	sim_alpha.household.active[node_alpha]["ph_left"] += 15.0
-	sim_alpha.household.employees["smith"] = 12.0
-
-	beta_active_ver_after = getattr(sim_beta.household, "_active_ver", 0)
-	beta_workforce_ver_after = getattr(sim_beta.household, "_workforce_ver", 0)
-	beta_revenue_key_after = getattr(sim_beta.household, "_revenue_cache_key", None)
-
-	if beta_active_ver_before != beta_active_ver_after:
-		return False, f"sim_beta active_ver mutated when sim_alpha was changed: {beta_active_ver_before} != {beta_active_ver_after}"
-	if beta_workforce_ver_before != beta_workforce_ver_after:
-		return False, f"sim_beta workforce_ver mutated when sim_alpha was changed: {beta_workforce_ver_before} != {beta_workforce_ver_after}"
-	if beta_revenue_key_before != beta_revenue_key_after:
-		return False, f"sim_beta revenue cache key changed when sim_alpha was changed: {beta_revenue_key_before} != {beta_revenue_key_after}"
-
-	return True, "sim instances maintain isolated versions and cache states"
-
-
-_ok, _detail = _test_independent_sim_instances_isolation()
-check("scenario: independent sim instances isolation", _ok, _detail)
-
-

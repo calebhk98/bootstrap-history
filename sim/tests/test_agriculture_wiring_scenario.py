@@ -36,12 +36,8 @@ rather than a module:
     the actual causal chain (land -> harvest -> calories -> mortality/
     fertility) exercised end to end, and the direct answer to this
     milestone's acceptance question.
-  - DeterminismTests: two identically-constructed Sims fed the same years
-    produce bit-identical population trajectories - the weather draw is a
-    pure function of (civilisation id, year), not a sequentially-advanced
-    generator, specifically so nothing about this wiring depends on how
-    many times a --session game was saved and reloaded before reaching a
-    given year (see Sim._farm_year_weather_seed's own docstring).
+  - The weather seed being a pure function of (civilisation id, region,
+    year, salt) is test_farm_weather_seed_rule.
 
 The seam where Sim demographic recovery feeds the real harvest to Population.step, so famine falls out of land, labour and weather. Needs sim/engine (unittest-style).
 
@@ -106,24 +102,6 @@ def _first_year_after_land_loss():
     shocked._demographic_recovery(101)
     record = {"ratio": shocked._last_demographic_step.nutrition_ratio}
     _FIRST_YEAR_LOSS.append(record)
-    return record
-
-
-_REPLAY = []
-
-
-def _replayed_ten_years():
-    """A second, independently built Rome played years 101-110 once, recording the ratio and the cohorts at year 110."""
-    if _REPLAY:
-        return _REPLAY[0]
-    replayed = _rome_sim(events=False)  # a fresh Sim(), like a reload
-    record = {}
-    for year in range(101, 111):
-        replayed._demographic_recovery(year)
-    record["ratio_at_110"] = replayed._last_demographic_step.nutrition_ratio
-    record["cohorts_at_110"] = (replayed.population.children, replayed.population.working_age,
-                                replayed.population.elderly)
-    _REPLAY.append(record)
     return record
 
 
@@ -291,37 +269,6 @@ class FamineHasAPhysicalCauseTests(unittest.TestCase):
         shocked_loss = 1.0 - shocked_end / shocked_start
         self.assertGreater(shocked_loss, control_loss + 0.05,
                            (control_loss, shocked_loss))
-
-
-class DeterminismTests(unittest.TestCase):
-    """The weather feeding this wiring is a pure function of (civilisation
-    id, year) - see Sim._farm_year_weather_seed's own docstring for why:
-    no random.Random is advanced sequentially year over year and left
-    unsaved, so nothing about the trajectory can depend on how the years
-    were reached (one unbroken run, or many separate --session commands).
-    Checked directly: two independently constructed Sims, fed the same
-    years, must land on bit-identical population counts.
-    """
-
-    def test_scenario_two_independent_sims_reach_the_same_population(self):
-        # The shared century run is the first sim; one fresh sim is the second.
-        first_children, first_working_age, first_elderly = _unshocked_century()["cohorts_after"][110]
-        second_children, second_working_age, second_elderly = _replayed_ten_years()["cohorts_at_110"]
-        self.assertEqual(first_children, second_children)
-        self.assertEqual(first_working_age, second_working_age)
-        self.assertEqual(first_elderly, second_elderly)
-
-    def test_scenario_a_forced_shortfall_year_reproduces_exactly_on_replay(self):
-        # Same idea as the whole-run check above, but specifically across
-        # the one operation this milestone's own brief singled out as the
-        # historical trap for exactly this kind of state (WIRING_MILESTONE_
-        # 4.md SS3): reconstructing a fresh Sim mid-run (standing in for a
-        # --session reload) and continuing must retrace the SAME weather.
-        reference_ratio = _unshocked_century()["ratios"][9]
-
-        replayed_ratio = _replayed_ten_years()["ratio_at_110"]
-
-        self.assertEqual(reference_ratio, replayed_ratio)
 
 
 if __name__ == "__main__":

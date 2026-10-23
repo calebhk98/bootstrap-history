@@ -1,4 +1,6 @@
 """The need-basket kernel: one price index, floors and surplus, read by the economy and the aggregate model."""
+
+QUICK_TOPIC = True
 import unittest
 
 from sim.economy import households_basket

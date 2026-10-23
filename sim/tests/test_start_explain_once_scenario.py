@@ -4,7 +4,7 @@ from .harness import *  # noqa: F401,F403
 
 from sim.ui.proto.render_screens_start import render_start
 
-test_sim = sim(capital=1_000_000)
+test_sim = unopened_sim(capital=1_000_000)
 first = S._agent_dispatch(test_sim, NODES, {"cmd": "start", "id": "tx2_shed"})
 second = S._agent_dispatch(test_sim, NODES, {"cmd": "start", "id": "tx2_retting"})
 third = S._agent_dispatch(test_sim, NODES, {"cmd": "start", "id": "tx2_count_standard"})
@@ -20,7 +20,7 @@ again = S._agent_dispatch(test_sim, NODES, {"cmd": "start", "id": "tx2_bleaching
 check("`full` shows the fixed-price paragraph again", "Quotes move with prices" in again.get("note", ""), again.get("note"))
 
 # The untrained-trade warning keeps its trade names but loses its instructions after the first showing.
-untrained_sim = sim(capital=1_000_000)
+untrained_sim = unopened_sim(capital=1_000_000)
 untrained_sim.labour.market_supply = lambda trade: 0.0
 untrained_sim.start_project = lambda node_id, precaution=False: (True, "")
 one = S._agent_dispatch(untrained_sim, NODES, {"cmd": "start", "id": "ag2_composting"})

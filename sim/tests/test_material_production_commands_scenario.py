@@ -10,7 +10,7 @@ from .harness import *  # noqa: F401,F403
 # --- BREAK: `buy nitre`. Saltpetre is made, not mined, and there was no
 # command that made any: only step(), which took 5% of a MANUAL player's
 # capital every year they were short, silently.
-s_ni = sim(capital=hours_money(2020000))
+s_ni = unopened_sim(capital=hours_money(2020000))
 _cash_before_laying = s_ni.capital   # after the opening outfit has been paid for
 _laid = s_ni.build_nitre(20000)
 check("nitre beds can be laid by hand, and cost what the quote says",

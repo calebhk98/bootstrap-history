@@ -3,6 +3,8 @@
 The screens print what the project's state carries (checked on built replies) and the log kind is a failure. The three
 replies read off a game whose project carries the funding rule's verdict are the scenario in
 test_arrears_visibility_scenario."""
+
+QUICK_TOPIC = True
 from .harness import *  # noqa: F401,F403
 from sim.refusal import LogLine, cause_of, facts_of
 from sim.engine import project_funding

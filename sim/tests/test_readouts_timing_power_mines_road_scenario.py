@@ -10,7 +10,7 @@ SLOW_NODE = "civ_sewer_separate"
 
 
 def stepped_completion(reputation):
-	test_sim = sim(capital=1e12)
+	test_sim = unopened_sim(capital=1e12)
 	test_sim.state.household.reputation = reputation
 	saved_risk = test_sim.nodes[SLOW_NODE]["risk"]
 	test_sim.nodes[SLOW_NODE]["risk"] = 0.0
@@ -35,7 +35,7 @@ def stepped_completion(reputation):
 quoted_years, real_steps = stepped_completion(80)
 check("the quoted earliest completion matches the steps a clean run takes",
       real_steps is not None and real_steps - 1 < quoted_years <= real_steps, (quoted_years, real_steps))
-reputation_sim = sim(capital=1e12)
+reputation_sim = unopened_sim(capital=1e12)
 reputation_sim.state.household.reputation = 80
 why_timing = S._agent_dispatch(reputation_sim, NODES, {"cmd": "why", "id": SLOW_NODE})
 check("why quotes the earliest completion year count and calendar year",

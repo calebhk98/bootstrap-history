@@ -1,9 +1,9 @@
 """SCENARIO (Stage 3b of docs/architecture/FIRMS_OWN_PLANTS_PLAN.md): on a game the founder's seat reviews its loss rule
-as a firm does, a creditor's seizure takes the plant and leaves the knowledge, and `open` and `stuck` refuse a shut
-concern for the same cause. The loss rule on a built world is in test_business_review."""
+as a firm does, and `open` and `stuck` refuse a shut concern for the same cause. The loss rule on a built world is in
+test_business_review and the seizure of a plant in test_seat_creditors_rule."""
 import unittest
 
-from .harness import NODES, sim
+from .harness import NODES, unopened_sim
 
 from sim.agents import business_review
 from sim.engine.agents_port import SimWorld
@@ -45,48 +45,11 @@ class LossRuleOnASeat(unittest.TestCase):
 		self.assertEqual(kept.state.projects.business.state_of(kept_id), "operating")
 
 
-def at_long_run_prices(game):
-	"""The game with the market's price factor on a concern's takings held at one: the seizure rule is asked about the
-	plant's own book, not about whatever this year's asks for its inputs and output happen to be."""
-	game.node_output_market_factor = lambda node, selling_seat=None: 1.0
-	return game
-
-
-class SeizureTakesTheBusiness(unittest.TestCase):
-	def test_scenario_creditors_take_a_plant_that_does_not_pay_and_leave_one_that_does(self):
-		game, node_id = founder_running_an_artisan_concern()
-		at_long_run_prices(game)
-		node = game.nodes[node_id]
-		saved = (node["rev"], node["up"])
-		node["rev"], node["up"] = 0.0, max(node["up"], 1000.0)
-		try:
-			game.state.household.capital = -(game.credit_limit() + 10 * node["up"])
-			before = game.state.household.capital
-			game.answer_exhausted_credit(game.year)
-			self.assertEqual(game.state.projects.business.state_of(node_id), "mothballed")
-			self.assertEqual(game.closure_of(node_id)["reason"], game.CLOSED_CREDITOR_SEIZURE)
-			self.assertIn(node_id, game.done)
-			self.assertGreater(game.state.household.capital, before)   # the creditors' proceeds
-		finally:
-			node["rev"], node["up"] = saved
-		paying, paying_id = founder_running_an_artisan_concern()
-		at_long_run_prices(paying)
-		node = paying.nodes[paying_id]
-		saved = (node["rev"], node["up"])
-		node["rev"], node["up"] = 10.0 * max(node["up"], 1.0), max(node["up"], 1.0)
-		try:
-			paying.state.household.capital = -(paying.credit_limit() + 1.0)
-			paying.answer_exhausted_credit(paying.year)
-			self.assertEqual(paying.state.projects.business.state_of(paying_id), "operating")
-		finally:
-			node["rev"], node["up"] = saved
-
-
 class OpenAndStuckRefuseForOneCause(unittest.TestCase):
 	CONCERN = "mirror_amalgam"   # earns from its output and needs a glassblower foreman to run
 
 	def setUp(self):
-		self.game = sim(capital=1e6)
+		self.game = unopened_sim(capital=1e6)
 		self.game.done.add(self.CONCERN)
 		self.game._done_changed()
 		self.game.state.household.artisans = 50.0
@@ -104,16 +67,6 @@ class OpenAndStuckRefuseForOneCause(unittest.TestCase):
 		self.assertIn(refusal.facts["trade"], rows[self.CONCERN]["missing"])
 		again = self.game.open_refusal(self.CONCERN, self.game.opening_fee(self.CONCERN)[1], with_advice=False)
 		self.assertEqual((refusal.cause, refusal.facts), (again.cause, again.facts))
-
-	def test_scenario_a_running_gate_is_a_coded_refusal(self):
-		gated = [node_id for node_id in sorted(NODES) if self.game.is_venture(node_id) and NODES[node_id].get("requires_running")]
-		self.assertTrue(gated, "no concern in the data requires another work running")
-		for node_id in gated:
-			if self.game.unmet_running_gates(node_id):
-				refusal = self.game.open_refusal(node_id)
-				self.assertEqual(refusal.cause, "running_gate")
-				return
-		self.fail("every gate in the data is met at the start")
 
 
 if __name__ == "__main__":

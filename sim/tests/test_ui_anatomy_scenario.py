@@ -1,7 +1,7 @@
 """Scenarios (Complaint 69 and 640): the `anatomy` command on one played game. The rules are in test_ui_anatomy."""
 from .harness import *  # noqa: F401,F403
 
-game = sim()
+game = unopened_sim()
 _measured = sorted(node_id for node_id, node in NODES.items()
                    if (node.get("win_condition") or {}).get("metric") == "literacy_general")
 

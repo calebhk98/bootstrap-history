@@ -29,7 +29,7 @@ from sim.engine.state import (
 
 def _test_live_simulation_state_structure():
 	"""Verify Sim owns a live authoritative SimulationState with typed child objects."""
-	s = sim(civ="rome_100ad", capital=1000.0)
+	s = unopened_sim(civ="rome_100ad", capital=1000.0)
 	if not hasattr(s, "state") or not isinstance(s.state, SimulationState):
 		return False, f"s.state is not SimulationState: {type(getattr(s, 'state', None))}"
 
@@ -57,7 +57,7 @@ check("sim.state live structure", _ok, _detail)
 
 def _test_household_finances_single_storage():
 	"""Verify capital and financial fields share single storage across sim, household, and state."""
-	s = sim(civ="rome_100ad", capital=1000.0)
+	s = unopened_sim(civ="rome_100ad", capital=1000.0)
 	if s.capital != s.state.household.capital or s.household.capital != s.state.household.capital:
 		return False, f"Capital mismatch initially: sim={s.capital}, hh={s.household.capital}, state={s.state.household.capital}"
 
@@ -85,7 +85,7 @@ check("household finances single storage", _ok, _detail)
 
 def _test_projects_state_synchronization():
 	"""Verify active, done, and operating projects are backed by ProjectsState."""
-	s = sim(civ="rome_100ad", capital=10000.0)
+	s = unopened_sim(civ="rome_100ad", capital=10000.0)
 
 	# Mutate active through sim.state.projects
 	s.state.projects.active["test_proj"] = {"ph_left": 42.0, "cost_left": 10.0}
@@ -118,7 +118,7 @@ check("projects state single storage", _ok, _detail)
 
 def _test_cache_invalidation_attached_to_owners():
 	"""Verify invalidation version counters live on the owning state objects."""
-	s = sim(civ="rome_100ad", capital=10000.0)
+	s = unopened_sim(civ="rome_100ad", capital=10000.0)
 
 	# ProjectsState owns _active_ver, _done_ver, _operating_ver
 	init_active_ver = getattr(s.state.projects, "_active_ver", 0)
@@ -156,7 +156,7 @@ check("cache invalidation version owners", _ok, _detail)
 
 def _test_economy_and_founder_and_scenario_state():
 	"""Verify economy, founder, scenario, and population state live on state subsystems."""
-	s = sim(civ="rome_100ad", capital=1000.0)
+	s = unopened_sim(civ="rome_100ad", capital=1000.0)
 
 	# ScenarioState
 	if s.year != s.state.scenario.year:
@@ -188,7 +188,7 @@ check("subsystem state synchronization", _ok, _detail)
 
 def _test_governance_and_population_bidirectional_sync():
 	"""Verify governance and population subsystems sync bidirectionally."""
-	s = sim(civ="rome_100ad", capital=1000.0)
+	s = unopened_sim(civ="rome_100ad", capital=1000.0)
 
 	# 1. A plant's size lives on the seat's business and the household proxy reads the same one
 	s.state.projects.business.open_plant("senate", s.year)
@@ -218,7 +218,7 @@ check("governance and population bidirectional sync", _ok, _detail)
 
 def _test_all_subsystems_full_coverage_sync():
 	"""Verify deep bidirectional sync across projects, economy, founder, and scenario."""
-	s = sim(civ="rome_100ad", capital=1000.0)
+	s = unopened_sim(civ="rome_100ad", capital=1000.0)
 
 	# 1. ProjectsState additional collections
 	s.revealed.add("concrete_vaulting")

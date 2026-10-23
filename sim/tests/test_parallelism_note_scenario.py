@@ -2,7 +2,7 @@
 test_parallelism_note."""
 from .harness import *  # noqa: F401,F403
 
-game = sim(capital=1_000_000.0)
+game = unopened_sim(capital=1_000_000.0)
 target = next((node_id for node_id in game.order if NODES[node_id]["yrs"] >= 2 and game.can_start(node_id)), None)
 check("a real startable multi-year project exists to test the note against", target is not None, target)
 if target:
@@ -13,7 +13,7 @@ if target:
           "a_calendar_floor_is_not_exclusive_research_time" in first
           and "a_calendar_floor_is_not_exclusive_research_time" not in second, (list(first), list(second)))
 
-spare = sim(capital=1_000_000.0)
+spare = unopened_sim(capital=1_000_000.0)
 long_target = next((node_id for node_id in spare.order
                     if NODES[node_id]["yrs"] >= 3 and NODES[node_id]["ph"] > 0 and spare.can_start(node_id)), None)
 check("a startable project with real founder-hours and a real calendar floor exists", long_target is not None, long_target)

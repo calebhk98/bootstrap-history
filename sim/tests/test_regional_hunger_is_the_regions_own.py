@@ -7,6 +7,8 @@ import unittest
 from sim.world import regional_population
 from sim.world.demography import Population
 
+QUICK_TOPIC = True
+
 
 def _regions():
     return {"fertile": Population.stationary(100000.0), "barren": Population.stationary(100000.0)}

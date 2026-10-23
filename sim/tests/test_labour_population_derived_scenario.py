@@ -8,7 +8,7 @@ from .harness import *  # noqa: F401,F403
 class DerivedPopulationTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.game = sim(capital=1e9)
+        cls.game = unopened_sim(capital=1e9)
         cls.labour = cls.game.labour
 
     def _with_shares(self, shares):

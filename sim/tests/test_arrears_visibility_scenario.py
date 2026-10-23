@@ -9,7 +9,7 @@ _reason = project_funding.WHY_IN_ARREARS
 # put in the state the yearly step leaves it in (`fund_year`'s verdict), not run through the step: a founder who
 # commits hours to a project loses standing income and with it the credit line, so a year in arrears ends in
 # CREDIT EXHAUSTED and the project is dropped before the replies could be read.
-s = sim(capital=1000.0)
+s = unopened_sim(capital=1000.0)
 _af_k = next(node_id for node_id in NODES
              if NODES[node_id]["yrs"] >= 3 and NODES[node_id]["ph"] > 500)
 _af_n = NODES[_af_k]

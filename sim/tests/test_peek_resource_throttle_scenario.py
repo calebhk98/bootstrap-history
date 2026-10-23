@@ -15,7 +15,7 @@ def dump(game):
 
 
 def made():
-	game = sim(events=True, surveyed=())
+	game = unopened_sim(events=True, surveyed=())
 	for node_id in ("tx2_bleaching_sun", "tx2_count_standard", "clock_mechanical_escapement"):
 		game.start_project(node_id)
 	return game

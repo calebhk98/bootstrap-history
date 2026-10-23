@@ -11,6 +11,8 @@ import unittest
 from sim.economy import opening
 from sim.tests import economy_fixture as fixture
 
+QUICK_TOPIC = True
+
 # plant dear enough that the firms are worth many years of the households' income
 PLANT_METAL_FARM = 80.0
 PLANT_METAL_MINE = 20.0
