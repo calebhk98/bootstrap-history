@@ -1,11 +1,12 @@
 """Scenarios in a whole game for commands that took the sort-key work with them: `stuck` under fog, `rush` (a bulk start, capped
-by hours and by limit, fog-safe), the founder's death (its own field, the age, the step stopping, the save and load, the log)
-and the announcement of staff lost. The rules that need no game are in test_sort_nearest."""
+by hours and by limit, fog-safe), the founder's death (its own field, the age, the step stopping, the save and load, the log).
+The rules that need no game are in test_sort_nearest; the announcement of staff lost is test_complaint_579_staff_loss_events
+and, through the yearly staff step, test_staff_ledger_and_idle_trades_scenario."""
 from .harness import *  # noqa: F401,F403
 from sim.refusal import cause_of, facts_of
 
 # One game serves the fog, venture and rush checks.
-shared = sim(capital=5_000_000.0)
+shared = unopened_sim(capital=5_000_000.0)
 
 # `stuck` says outright, under fog, that it cannot check the goal's route.
 shared.fog = True
@@ -85,17 +86,3 @@ check("...and the programme dissolving is counted down where a player sees it",
           and facts_of(message)["run_ends_after_years"] == mortal.DISSOLUTION_YEARS_UNTIL_END
           for _, message in mortal.log),
       [message for _, message in mortal.log if "DISSOLVING" in message][:1])
-
-# Losing people to death and better offers is announced, not silent.
-attrition = without_market(sim(capital=10_000_000.0, events=False))
-run_it(attrition, "workshop_first", "school_founded", "freedman_staff")
-attrition.labour.hire("scholar", 8)
-for _ in range(12):
-    attrition.step()
-    if any(cause_of(message) == "staff_lost" and "scholar" in facts_of(message)["trades"] for _, message in attrition.log):
-        break
-check("losing people to death and better offers is announced, not silent",
-      any(cause_of(message) == "staff_lost" and "scholar" in facts_of(message)["trades"]
-          for _, message in attrition.log),
-      [message for _, message in attrition.log if "lose" in message][:2])
-

@@ -1,5 +1,5 @@
 """The opening's price solves are shipped for the other interest-rate bands under the keys a game computes,
-and a shipped solve is the solve a game would compute."""
+and a shipped solve is the solve a game would compute. Which rates are banded is test_shipped_rate_band_range_rule."""
 import os
 import tempfile
 import unittest
@@ -8,33 +8,12 @@ from unittest import mock
 from sim.tests import harness  # noqa: F401  (shortens the spin-up for the suite)
 from sim.engine import prices, shipped_openings, shipped_rate_bands, solve_cache
 from sim.engine.data import calculated_goods_table, load_civ
-from sim.world import capital_market
 
 CIVILISATION_ID = "rome_100ad"
 
 
 def _table_at(civ, rate):
     return calculated_goods_table(frozenset(), civilization=civ, interest_rate=rate)
-
-
-class BandRangeTests(unittest.TestCase):
-    def test_bands_are_bounded_distinct_banded_and_not_above_the_ceiling(self):
-        for starting_rate in (0.05, 0.1, 0.12, 0.2):
-            rates = shipped_rate_bands.banded_rates(starting_rate)
-            self.assertLessEqual(len(rates), shipped_rate_bands.MAX_BANDS)
-            self.assertEqual(len(set(rates)), len(rates))
-            self.assertNotIn(starting_rate, rates)
-            for rate in rates:
-                self.assertGreaterEqual(rate, 0.0)
-                self.assertLessEqual(rate, starting_rate * capital_market.RATE_CEILING_SHARE)
-                self.assertEqual(prices.band_interest_rate(rate, starting_rate), rate)
-
-    def test_every_band_from_nil_to_the_start_is_covered_and_the_nearest_come_first(self):
-        starting_rate = 0.12
-        rates = shipped_rate_bands.banded_rates(starting_rate)
-        self.assertIn(0.0, [prices.band_interest_rate(rate, starting_rate) for rate in rates][:0] or rates)
-        self.assertEqual(set(rates[:2]), {prices.band_interest_rate(starting_rate + prices.INTEREST_RATE_BAND, starting_rate),
-                                          prices.band_interest_rate(starting_rate - prices.INTEREST_RATE_BAND, starting_rate)})
 
 
 class ShippedBandTests(unittest.TestCase):

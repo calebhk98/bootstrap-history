@@ -1,16 +1,9 @@
 """SCENARIO (Complaints 484 and 486): the stability phase in a real game. A state's grievances, hunger and liability burden
 become unrest on its tiles; where the discontented, armed, would beat the garrison they rise and fight it; a won rising takes
-the tile from the state; a disputed accession is settled at the seat. The rules are in test_stability_rules."""
-import os
+the tile from the state; a disputed accession is settled at the seat. The rules are in test_stability_rules; the phase order and the saved fields are test_stability_phase_and_save_rule."""
 import random
-import tempfile
 
 from .harness import *  # noqa: F401,F403
-
-from sim.engine import year_phases
-from sim.engine.saveload import save_state
-
-TOPIC_SECONDS = 900
 
 game = S.Sim(NODES, list(ORDER), random.Random(1), events=False, manual=True, civ=S.load_civ("rome_100ad"))
 game.state.scenario.year += 1
@@ -18,8 +11,6 @@ game.advance_actors(game.state.scenario.year)
 rome = str(game.civ["id"])
 world = game.owner_world(rome)
 record = world.government().record
-names = [phase.name for phase in year_phases.SHIPPED]
-check("scenario: the stability phase runs right after the campaigns", names.index("revolts") == names.index("campaigns") + 1)
 
 # ---- a quiet year: the opening take is the custom, so no one rises
 game.step_revolts()
@@ -53,11 +44,3 @@ check("scenario: each rising is a structured world event with its outcome and th
 record.succession_challenger = "no_such_faction"
 game.step_revolts()
 check("scenario: a challenger no faction backs raises no army", record.succession_challenger == "")
-
-# ---- the new fields survive a save and a load
-with tempfile.TemporaryDirectory() as folder:
-    path = os.path.join(folder, "save.json")
-    save_state(game, path)
-    saved = open(path, encoding="utf-8").read()
-check("scenario: a saved game carries the unrest, hold, risings and land taken",
-      all('"%s"' % field in saved for field in ("unrest_by_tile", "hold_by_tile", "risings", "land_taken_by_tile", "registered_people")))

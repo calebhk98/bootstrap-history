@@ -19,7 +19,7 @@ def _start(mode, seed, name):
 for _mode in ("play", "agent"):
     for _seed, _expected in ((7, 7), ("Dragon", "dragon")):
         _path = _start(_mode, _seed, "%s-%s" % (_mode, _seed))
-        _loaded = sim()
+        _loaded = unopened_sim()
         _loaded.seed = None
         try:
             load_state(_loaded, _path)

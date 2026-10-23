@@ -12,7 +12,7 @@ def _ask(test_sim, **command):
 
 
 # --- 500: the parts of the start reply sum to the total `why` quoted ---------
-start_sim = sim(capital=1e7)
+start_sim = unopened_sim(capital=1e7)
 total_quoted = start_sim.project_cost_now("horse_collar")
 capital_before = start_sim.capital
 reply = _ask(start_sim, cmd="start", id="horse_collar")
@@ -28,7 +28,7 @@ check("start's text screen names both parts",
       and "instalments still owed" in render_start(reply).lower().replace("_", " "), render_start(reply))
 
 # --- 501: one running cost, labelled, on every screen -----------------------
-upkeep_sim = sim(capital=1e7)
+upkeep_sim = unopened_sim(capital=1e7)
 concern_id = next(node_id for node_id in ORDER
                   if upkeep_sim.is_venture(node_id) and node_id in upkeep_sim.CAPABILITY_INSTITUTIONS
                   and node_id not in upkeep_sim.done and NODES[node_id]["up"] > 0)

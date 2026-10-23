@@ -8,7 +8,7 @@ from .harness import *  # noqa: F401,F403
 _concern = "mirror_amalgam"   # earns from its output and needs a glassblower foreman to run
 foreman_trade, foreman_share = None, 0.0
 
-test_sim = sim(capital=1e6)
+test_sim = unopened_sim(capital=1e6)
 foreman_trade, foreman_share = test_sim.venture_foreman(_concern)
 test_sim.done.add(_concern)
 test_sim._done_changed()

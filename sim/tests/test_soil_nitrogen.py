@@ -1,7 +1,11 @@
 """Complaint 543: a tile's soil nitrogen is a stock that harvests draw down and fallow, legumes and manure restore.
 
 The pure stock (sim/geography/soil_nutrients.py) is tested on its own; the tile's yield factor reading it is tested
-through geography's crop_site; the save round trip and the yearly step are tested on a whole game (slow)."""
+through geography's crop_site; the save round trip and the yearly step are tested in test_soil_nitrogen_held_land (no game) and
+test_soil_nitrogen_whole_game."""
+
+QUICK_TOPIC = True
+
 import unittest
 
 from sim.geography.api import crop_site, open_map, tiles_held

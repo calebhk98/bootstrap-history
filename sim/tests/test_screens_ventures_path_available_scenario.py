@@ -6,7 +6,7 @@ from .harness import *  # noqa: F401,F403
 from sim.ui.proto import available_economics
 
 # --- (1) ventures pages through a game's shut concerns
-many = sim(capital=1_000_000.0)
+many = unopened_sim(capital=1_000_000.0)
 shut_ids = [node_id for node_id in NODES if many.is_venture(node_id)][:70]
 many.done.update(shut_ids)
 many._done_changed()
@@ -35,7 +35,7 @@ check("ventures' default screen stays short; paging lists every shut concern exa
       (len(seen), shut_total))
 
 # --- (2) path prints the nearest blocker itself
-blocked = sim(capital=1_000_000.0)
+blocked = unopened_sim(capital=1_000_000.0)
 route = S._agent_dispatch(blocked, NODES, {"cmd": "path", "id": "ag2_botanic_garden"})
 blockers = route.get("nearest_blockers")
 check("nothing on this route is startable, and path carries the nearest blocker with the same text start_reason (and so stuck) gives",
@@ -44,7 +44,7 @@ check("nothing on this route is startable, and path carries the nearest blocker 
       and blockers[0]["why"] == blocked.start_reason("ag2_botanic_garden")[1], blockers)
 
 # --- (3) available rows carry foreman, net and payback; the sorts order them
-rows_sim = sim(capital=1_000_000.0)
+rows_sim = unopened_sim(capital=1_000_000.0)
 _foreman_node = min((node_id for node_id in sorted(NODES)
                      if rows_sim.is_venture(node_id) and rows_sim.venture_foreman(node_id)[0] is not None
                      and rows_sim.venture_real_earnings(node_id, fully_ramped=True) > 0),

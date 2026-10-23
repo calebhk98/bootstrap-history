@@ -1,8 +1,9 @@
 """SCENARIO (Complaint 640): Complaint 640, audit batch 3, scenarios: games saved and played on.
 
-The rules have tests of their own: test_complaint_181_save_cost (when a save is written) and
-test_complaint_188_fuzzy_estimates (the estimates). What stays here is that a played game carries them: the play loop
-saves only what changed, and the estimates option survives a save and answers `start` with the real needs."""
+The rules have tests of their own: test_complaint_181_save_cost (when a save is written),
+test_complaint_188_fuzzy_estimates (the estimates) and test_fuzzy_estimates_saved_rule (the option survives a save).
+What stays here is that a played game carries them: the play loop saves only what changed, and a refused `start`
+states the real need."""
 import io
 import contextlib
 
@@ -48,7 +49,7 @@ with _CountReplaces() as _counted:
 check("scenario save cost: refusals and a bare state rewrite the save zero times", _counted.replaces == 0, _counted.replaces)
 with _CountReplaces() as _counted:
     _play(_venture_game, {"cmd": "step", "years": 1}, _session)
-_check_game = sim(capital=1.0)
+_check_game = unopened_sim(capital=1.0)
 load_state(_check_game, _session)
 check("scenario save cost: a step rewrites the save once, and what it wrote is the stepped game",
       _counted.replaces == 1 and _check_game.state.scenario.year == _venture_game.state.scenario.year,
@@ -64,32 +65,11 @@ def _why_of(sim_state, node_id=NODE):
 
 
 def _fuzzy_game():
-    fuzzy = sim(capital=1_000_000)
+    fuzzy = unopened_sim(capital=1_000_000)
     fuzzy.fuzzy_estimates = True
     return fuzzy
 
 
-_fuzzy = _fuzzy_game()
-_before = _why_of(_fuzzy)
-_path = os.path.join(tempfile.mkdtemp(), "fuzzy.json")
-save_state(_fuzzy, _path)
-_fuzzy_reloaded = sim(capital=1_000_000)
-load_state(_fuzzy_reloaded, _path)
-_after = _why_of(_fuzzy_reloaded)
-check("scenario fuzzy estimates: the option survives save and load and the same figures are shown",
-      bool(getattr(_fuzzy_reloaded, "fuzzy_estimates", False)) and _before["figures_are_estimates"]
-      and _after["founder_hours"] == _before["founder_hours"] and _after["staff_needed"] == _before["staff_needed"]
-      and _after["hired_labour"] == _before["hired_labour"],
-      (_before["founder_hours"], _after["founder_hours"]))
-_started = S._agent_dispatch(_fuzzy, NODES, {"cmd": "start", "id": NODE})
-_started_why = _why_of(_fuzzy)
-check("scenario fuzzy estimates: start succeeds on the real check and shows the estimate why shows, not the exact hours",
-      _started.get("ok") is True and _started["founder_hours_needed"] == _started_why["founder_hours"]
-      and _started["founder_hours_needed"] != NODES[NODE]["ph"], _started)
-_rows = S._agent_dispatch(_fuzzy_game(), NODES, {"cmd": "available", "limit": 200})["available"]
-_row = next((row for row in _rows if row["id"] == NODE), None)
-check("scenario fuzzy estimates: the available row lists the node with the hours why shows",
-      _row is not None and _row["founder_hours"] == _why_of(_fuzzy_game())["founder_hours"], _row)
 _refused_game = _fuzzy_game()
 _refused = S._agent_dispatch(_refused_game, NODES, {"cmd": "start", "id": "ag2_botanic_garden"})
 _real_art = NODES["ag2_botanic_garden"]["art"]

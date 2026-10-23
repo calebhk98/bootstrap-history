@@ -2,24 +2,22 @@
 only the taught trades something draws on, `state` shows idle specialists and the single-person dependency, logged
 losses reconcile with the headcount over years of stepping, and the policy gates the foreman's replacement. The rules are in
 test_staff_ledger_and_idle_trades."""
-import re
-
 from .harness import *  # noqa: F401,F403
+from sim.refusal import facts_of
 
 
 def _lost_from_log(log, first_line=0):
-    """Total people named in 'you lose ...' lines, by trade."""
+    """Total people named in the staff-lost lines, by trade, read from their facts."""
     totals = collections.Counter()
-    for _year, message in log[first_line:]:
-        if message.startswith("you lose "):
-            for count, trade in re.findall(r"(\d+(?:\.\d+)?) ([a-z_]+?)s?(?:,| to )",
-                                           message.split(" to ")[0] + " to "):
-                totals[trade] += float(count)
+    for _year, line in log[first_line:]:
+        if str(getattr(line, "kind", "")).startswith("staff_lost"):
+            for trade, people in facts_of(line)["trades"].items():
+                totals[trade] += float(people)
     return totals
 
 
 def _machinist_sim():
-    s = sim(capital=5_000_000, manual=False)
+    s = unopened_sim(capital=5_000_000, manual=False)
     s.trades_created.add("machinist")
     s.employees.pop("machinist", None)
     s.labour._resync_pools()
@@ -36,7 +34,7 @@ check("the staff step replaces a taught trade an open concern draws on, and not 
       s.employees.get("glassblower", 0.0) >= 0.5 and s.employees.get("machinist", 0.0) < 0.5, dict(s.employees))
 
 # 171, 180: state shows idle specialists, and warns when an open concern hangs on one specialist.
-s = sim(capital=5_000_000)
+s = unopened_sim(capital=5_000_000)
 s.employees["machinist"] = 2.0
 s.done.add("mirror_amalgam")
 s.operating.add("mirror_amalgam")
@@ -50,7 +48,7 @@ check("state shows the idle machinists and not the foreman an open concern draws
       (state.get("idle_specialists"), state.get("depends_on_one_person")))
 
 # 168: logged artisan losses reconcile with the labour headcount over years of stepping.
-s = sim(capital=5_000_000, events=False)
+s = unopened_sim(capital=5_000_000, events=False)
 s.labour.hire("artisan", 10)
 start = s.employees["artisan"]
 mark = len(s.log)
@@ -62,7 +60,7 @@ check("logged artisan losses reconcile with the labour headcount over years of s
       (start, s.employees.get("artisan"), lost_total))
 
 # 180: the policy gates the yearly replacement of a lost foreman, and `policy` lists it.
-s = sim(capital=5_000_000)
+s = unopened_sim(capital=5_000_000)
 s.trades_created.add("glassblower")
 s.done.add("mirror_amalgam")
 s.operating.add("mirror_amalgam")

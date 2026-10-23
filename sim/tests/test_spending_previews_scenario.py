@@ -9,7 +9,7 @@ def _ask(test_sim, **command):
 
 
 # --- 220, 248: quote hire / commission / open / bounty equal what is then charged
-hire_sim = sim(capital=1e7)
+hire_sim = unopened_sim(capital=1e7)
 net_before_hire = _ask(hire_sim, cmd="money")["net_per_year"]
 capital_before_quote = hire_sim.capital
 hire_quote = _ask(hire_sim, cmd="quote", what="hire", trade="smith", n=2)
@@ -89,7 +89,7 @@ tail_sim.step()
 check("a few cash units left after the final instalment do not cost another year", tail_id in tail_sim.done, project_state)
 
 # --- 214: sustainable debt beside the formal ceiling
-debt_sim = sim(capital=2e4)
+debt_sim = unopened_sim(capital=2e4)
 debt_sim.market_credit_room = lambda actor_id: None    # the household's own standing sets the line; the opening's loan book is fully lent to others
 debt_money = _ask(debt_sim, cmd="money")
 check("money shows the debt the recurring surplus can carry, from the shared method",
@@ -98,7 +98,7 @@ expensive_id = max((node_id for node_id in ORDER if node_id not in debt_sim.done
                     and debt_sim.project_cost(node_id) < 0.5 * debt_sim.funding_capacity()),
                    key=lambda node_id: (debt_sim.project_cost(node_id), node_id))
 # the materials are bought from cash at the start, so the cash held must cover them and fall short of the instalments
-probe_sim = sim(capital=2e4)
+probe_sim = unopened_sim(capital=2e4)
 probe_sim.capital = 100 * probe_sim.project_cost(expensive_id)
 probe_reply = _ask(probe_sim, cmd="start", id=expensive_id)
 debt_sim.capital = probe_reply["of_which_materials_paid_now"] + 0.5 * probe_reply["of_which_instalments_still_owed"]
