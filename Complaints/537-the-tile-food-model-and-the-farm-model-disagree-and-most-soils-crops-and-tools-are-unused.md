@@ -173,3 +173,5 @@ Each item names the code that holds it (re-measure before acting; `grep` the nam
 - Effect on rome_100ad (probe: open the economy, hidden years included): wheat price 0.0870 to 0.0911 (economy units), farm share
   of worker-years 0.1033 to 0.0867. `opening_floor_and_thin_trades` "household floors cost a small multiple of the food floor"
   fails before this change (10.36) and after (11.40).
+
+Measure the century of an unshocked Rome (mean nutrition ratio and the population left; the slow `agriculture_wiring_scenario` baseline validations removed in Complaint 640's pass, a century run that named no function) with `python3 sim/simulator.py baseline-ensemble`. The farm-year-to-people seam is rule-tested in test_demographic_recovery_wiring.
