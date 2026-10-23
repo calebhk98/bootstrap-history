@@ -57,8 +57,7 @@ class DuesOnATraderCargo(unittest.TestCase):
         partner = "han_china_100ad"
         facts = game._foreign_economy_facts(partner)
         route = facts["route"]
-        if route is None:
-            self.skipTest("no route joins the partner")
+        self.assertIsNotNone(route, "no route joins the partner")
         paid = {}
         for tonnes in (10.0, 20.0):
             paid[tonnes] = world.pay_route_dues(game.household, world._home_place(), partner, "grain", tonnes)
