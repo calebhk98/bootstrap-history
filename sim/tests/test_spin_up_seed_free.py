@@ -1,6 +1,6 @@
 """The agent economy's hidden spin-up draws nothing from the game's seed: the economy package holds no random source
-(Complaints/closed/400). The opening it is cached on being the same for every seed is
-test_spin_up_seed_free_scenario."""
+(Complaints/closed/400). The modules that build the opening it is cached on are scanned in
+test_opening_values_seed_free."""
 
 QUICK_TOPIC = True
 

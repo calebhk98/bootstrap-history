@@ -1,6 +1,5 @@
 """Complaint 76: a long explanation is shown once per game, then a pointer; a command's `full` flag shows it again. The
-rule (`already_explained`) is called on a stub game holding a seat's progress record; `start` through a whole game is
-test_start_explain_once_scenario."""
+rule (`already_explained`) is called on a stub game holding a seat's progress record."""
 
 QUICK_TOPIC = True
 
