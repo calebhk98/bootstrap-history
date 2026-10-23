@@ -1,15 +1,12 @@
-"""Scenario: clearing in a game. A short civilisation clears more ground over the years, the new ground follows the
-best-first ladder, a fed civilisation does not clear, the cleared area survives a save and load, and the rent the solver
-prices and the incumbent price tables follow it. The rules (the ladder, the hands clearing is paid in, the ceiling, the
-rent's margin) are in test_farm_clearing."""
-import os
-import tempfile
+"""Scenario: clearing in a game. A short civilisation clears more ground over the years, and the rent the solver prices
+and the incumbent price tables follow it. The rules (the ladder, the hands clearing is paid in, the ceiling, the rent's
+margin, a fed farm not clearing) are in test_farm_clearing; the cleared area's save and load is the generic state round
+trip."""
 import unittest
 
 from .harness import *  # noqa: F401,F403
 from sim.labour import labour_allocation
 from sim.geography.api import crop_site, tiles_held
-from sim.engine import saveload
 from sim.world import agriculture, land
 
 
@@ -21,7 +18,7 @@ def _ladder(civ_id):
 
 class ClearingTests(unittest.TestCase):
     def _run(self, civ_id, years, scale=1.0):
-        test_sim = sim(civ_id, events=False)
+        test_sim = unopened_sim(civ_id, events=False)
         test_sim.farm_land.hectares *= scale
         history = []
         for year in range(101, 101 + years):
@@ -33,41 +30,6 @@ class ClearingTests(unittest.TestCase):
     def test_a_short_civilisation_clears_more_ground(self):
         test_sim, history = self._run("norse_900ad", 30)
         self.assertGreater(test_sim.farm_land.hectares, history[0][0] * 1.05)
-
-    def test_new_ground_is_worse_than_the_ground_already_farmed(self):
-        test_sim = sim("norse_900ad", events=False)
-        quality_before = test_sim.farm_land.quality
-        for year in range(101, 131):
-            test_sim._demographic_recovery(year)
-        # Cleared ground comes from the best-first ladder, so quality never rises.
-        self.assertLessEqual(test_sim.farm_land.quality, quality_before)
-        # the ladder is the one the game farms: its sites carry the toolkit's tillage capacity and the soil nitrogen stock
-        expected = land.ladder_quality(land.territory_cropland(test_sim.farm_sites()).ladder,
-                                       test_sim.farm_land.hectares)
-        self.assertAlmostEqual(test_sim.farm_land.quality, expected, places=9)
-
-    def test_a_fed_civilisation_does_not_clear(self):
-        test_sim = sim("rome_100ad", events=False)
-        test_sim.farm_land.quality = 1.5
-        test_sim.farm_land.hectares *= 1.5
-        start = test_sim.farm_land.hectares
-        test_sim._demographic_recovery(101)
-        self.assertAlmostEqual(test_sim.farm_land.hectares, start, delta=start * 1e-9)
-
-    def test_cleared_area_survives_save_and_load(self):
-        test_sim = sim("norse_900ad", events=False)
-        for year in range(101, 111):
-            test_sim._demographic_recovery(year)
-        path = tempfile.mktemp(suffix=".json")
-        try:
-            saveload.save_state(test_sim, path)
-            fresh = sim("norse_900ad", events=False)
-            saveload.load_state(fresh, path)
-        finally:
-            if os.path.exists(path):
-                os.remove(path)
-        self.assertAlmostEqual(fresh.farm_land.hectares, test_sim.farm_land.hectares, places=6)
-        self.assertAlmostEqual(fresh.farm_land.quality, test_sim.farm_land.quality, places=9)
 
 
 class PriceCacheFollowsClearingTests(unittest.TestCase):
@@ -87,7 +49,7 @@ class PriceCacheFollowsClearingTests(unittest.TestCase):
         self.assertNotAlmostEqual(small, large, places=6)
 
     def test_the_incumbent_price_tables_follow_the_cleared_area(self):
-        test_sim = sim("han_china_100ad", events=False)
+        test_sim = unopened_sim("han_china_100ad", events=False)
         before = test_sim._price_tables()[0]["hectare_land"]
         test_sim.farm_land.hectares *= 3.0
         after = test_sim._price_tables()[0]["hectare_land"]
