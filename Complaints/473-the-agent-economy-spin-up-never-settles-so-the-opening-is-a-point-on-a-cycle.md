@@ -731,3 +731,7 @@ The one-year Rome baseline of idle labour, wage over the unskilled floor and hun
 unsettled opening economy and is deleted; `python3 sim/simulator.py economy-check --civs rome_100ad --years 1` prints the same figures.
 
 Test migration (rule-tests-05): `firm_count_whole_game_scenario` is deleted (the count settling and not overshooting over 30 years read an unsettled economy; the rules are test_firm_count_from_costs and test_entry_gross_rule). No simulator command prints firm counts by market size; `python3 sim/simulator.py economy-check --years 30` is the nearest measure of the agent economy.
+
+Test migration (rule-tests-07): `home_cargo_price_scenario` is deleted (after one year of the Rome agent economy the zero-cargo quote disagrees with the market price for one good, which reads the unsettled opening and cannot name a function; the quote arithmetic is in `test_home_cargo_price`, the ship booking in `test_trader_cargo_settlement`). `python3 sim/simulator.py economy-check --civs rome_100ad --years 1` prints the home prices to compare against.
+
+Test migration (rule-tests-07): `granary_persistence_validation` is deleted (an unshocked Rome century ending above half its start population, and a mean nutrition ratio between 0.9 and 1.1, read one seed of the unsettled opening and could not name a rule; the granary rules are in `test_granary_persistence`). `python3 sim/simulator.py baseline-ensemble rome_100ad` stores the population distribution for the same century; it does not yet store the mean nutrition ratio.

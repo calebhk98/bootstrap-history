@@ -1,6 +1,5 @@
 """The hour pool and priority rank a screen shows come from the live active list, not from the record written
-when hours were last allocated (Complaint 640: rules on a stub game; the whole-game screen checks are in
-test_hour_pool_standing_is_live_scenario)."""
+when hours were last allocated (Complaint 640: rules on a stub game)."""
 QUICK_TOPIC = True
 
 import types

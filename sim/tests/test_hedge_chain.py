@@ -1,7 +1,7 @@
 """hedge_chain: the calendar floor of a hedge is what its chain still needs, so a player partway through sees what is left.
 
 The strongest hedge against being sacked (the copies of your work kept somewhere else) sits behind a long chain; its floor
-comes from the tree and from what is done. The advice built from it is in test_hedge_chain_scenario.py."""
+comes from the tree and from what is done. The lead time the advice states is in test_hedge_lead_time."""
 from .harness import *  # noqa: F401,F403
 
 from sim.engine.data import critical_path
