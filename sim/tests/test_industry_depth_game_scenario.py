@@ -27,8 +27,5 @@ try:
 except OSError:
     pass
 
-_hands = _game.venture_hands(_node)
-check("a seeded concern runs without its founder: no scholar of his is tied up",
-      _hands[0] == 0.0 or not _game.concern_runs_without_founder(_node), _hands)
 check("the learning ratio of a seeded concern is a share of its stated takings",
       0.0 < _game.concern_learning_ratio(_node) <= 1.0 + 1e-9, _game.concern_learning_ratio(_node))

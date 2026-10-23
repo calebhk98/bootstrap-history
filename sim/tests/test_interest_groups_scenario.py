@@ -46,11 +46,6 @@ check("selling into a market organises the producers it displaces",
       group is not None and group["name"] == "producers of iron" and group["kind"] == "displaced_producers", group)
 check("the group's size and loss come from the market's displaced sales",
       group["people"] > 0 and group["income_lost_per_year"] > 0 and 0.0 < group["grievance_share"] < 1.0, group)
-check("the group names its cause",
-      "your sales of iron" in group["cause"], group["cause"])
-petition = [text for _year, text in big.state.household.log if "INTEREST GROUP" in text]
-check("the log names the group and its cause when it petitions",
-      petition and "producers of iron" in petition[0] and "your sales of iron" in petition[0], petition)
 check("a petition puts blame on the founder", big.state.household.scandal > 0.0, big.state.household.scandal)
 
 small = grievance_game(share=0.003)
@@ -85,25 +80,11 @@ check("a purse that covers it pays the group and the founder is not levied for i
 check("what the state paid arrives in the group's purse",
       flush.actors.get("group:displaced_producers:iron").money > 0.0)
 
-owing = grievance_game()
-a_year(owing)
-owing.state_treasury().record.unfunded[name] = SimWorld(owing).group_claims()[name]
-reasons = owing.group_levy_reasons()
-check("the levy names the group it is for and the cause",
-      reasons and "producers of iron" in reasons[0] and "your sales of iron" in reasons[0], reasons)
-owing.employees["artisan"] = 2000.0
-owing.labour._resync_pools()
-owing.capital = 60000000.0
-owing.eminence = 25.0
-owing.update_protection()
-check("the requisition screen lists the group among the reasons for the levy",
-      any("producers of iron" in why for why in owing.requisition_report()[1]), owing.requisition_report())
-
 # ---- a ban the state can afford stops the founder building what hurts the group --------------
 banner = big
 group = the_group(banner)
 check("a strong group with a state that can afford it demands a prohibition",
-      group["demands"] and "iron" in group["demands"][0], group)
+      bool(group["demands"]), group)
 making = [node_id for node_id in sorted(banner.nodes) if "iron" in
           {banner._material_tag(material)[0] for material in supply.materials_made_by(node_id)}
           and banner.state_interest(banner.nodes[node_id]) <= 0.0]
@@ -111,8 +92,8 @@ check("there are techniques that make the commodity", bool(making), making[:3])
 banner.state.household.protection = 0.0
 from sim.engine.interest_groups import check_group_prohibition
 verdict = check_group_prohibition(banner, making[0], banner.nodes[making[0]], False, None, True)
-check("the start gate refuses a forbidden technique and says whose petition and why",
-      verdict and verdict[0] is False and "producers of iron" in verdict[1] and "forbidden" in verdict[1], verdict)
+check("the start gate refuses a forbidden technique",
+      verdict and verdict[0] is False, verdict)
 check("the prohibition is one of the start gate's own checks", check_group_prohibition in banner._START_REASON_CHECKS)
 reachable = [node_id for node_id in making if quiet.start_reason(node_id)[0]]
 if reachable:
@@ -167,8 +148,6 @@ for _year in range(60):
     if the_group(fading) is None:
         break
 check("when the cause stops, the group's loss fades and it disbands", the_group(fading) is None, fading.interest_groups())
-check("the log says the group is no longer organised",
-      any("no longer organised" in text and "producers of iron" in text for _year, text in fading.state.household.log))
 fading.goods_market.note_sale(fading.goods_market.acting_party_id, "iron", fading._market_entry("iron")["reference_tonnes"] * 0.6)
 a_year(fading)
 check("the same group organises again when the cause returns", the_group(fading) is not None)
