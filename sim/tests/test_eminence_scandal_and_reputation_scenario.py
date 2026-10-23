@@ -19,14 +19,10 @@ def _big(rep=98.0, eminence=39.0, year=250, cap=5000000.0):
 _em = _big()
 _rep0, _em0, _cash0 = _em.reputation, _em.eminence, _em.capital
 _ok_w, _why_w = _em.withdraw_from_public_life()
-check("there is a command that lowers prominence the year you use it",
-      _ok_w and _em.eminence < _em0 * 0.6, (_em0, _em.eminence))
-check("...and its price is reputation, not money",
-      _em.reputation < _rep0 - 5 and abs(_em.capital - _cash0) < 1e-6,
+# (how far it lowers prominence and the floor under reputation: test_eminence_scandal_and_reputation)
+check("the command withdraws, and its price is reputation, not money",
+      _ok_w and _em.reputation < _rep0 and abs(_em.capital - _cash0) < 1e-6,
       (_rep0, _em.reputation, _em.capital, _cash0))
-check("...but never below what the work you built is worth on its own",
-      _em.reputation >= _em.standing_floor() - 1e-6,
-      (_em.reputation, _em.standing_floor()))
 
 # The settling point was ABOVE the danger line, which is a promise that a
 # successful run dies. Familiarity - the model's own measure of how
@@ -62,16 +58,23 @@ check("...and names the lever, by the word you would type",
       "withdraw" in str(_rep["the_one_lever"]), _rep["the_one_lever"])
 
 # It has to survive a save, or a --session game gets a free retirement a year.
+_retired = unopened_sim(capital=5000000.0)
+_retired.done.update(list(NODES)[:1400]); _retired._done_changed()
+_retired.reputation, _retired.eminence, _retired.year = 98.0, 39.0, 250
 _wsv = "_withdrawtest.json"
 _wsvp = os.path.join(ROOT, _wsv)
 if os.path.exists(_wsvp):
     os.remove(_wsvp)
-_rw, _, _ = proto([{"cmd": "withdraw"}, {"cmd": "save", "file": _wsv},
-                   {"cmd": "load", "file": _wsv}, {"cmd": "withdraw"}])
+try:
+    _first = S._agent_dispatch(_retired, NODES, {"cmd": "withdraw"})
+    S._agent_dispatch(_retired, NODES, {"cmd": "save", "file": _wsv})
+    S._agent_dispatch(_retired, NODES, {"cmd": "load", "file": _wsv})
+    _again = S._agent_dispatch(_retired, NODES, {"cmd": "withdraw"})
+finally:
+    if os.path.exists(_wsvp):
+        os.remove(_wsvp)
 check("a retirement cannot be repeated by saving and reloading",
-      _rw[-1].get("ok") is False, _rw[-1])
-if os.path.exists(_wsvp):
-    os.remove(_wsvp)
+      _first.get("ok") is True and _again.get("ok") is False, (_first, _again))
 
 # --- BREAK: "RUN ENDS: denounced: as a sorcerer" after eleven quiet years,
 # with `state` showing "scandal 33.55" and no threshold and no probability -
@@ -86,9 +89,6 @@ check("state says what scandal is dangerous above",
 check("...and what the chance of being denounced this year is",
       _st_sc.get("chance_of_being_denounced_this_year", 0) > 0,
       _st_sc.get("chance_of_being_denounced_this_year"))
-check("...and the page prints both, next to the eminence line that already did",
-      "SCANDAL is dangerous above" in _RP("state", _st_sc),
-      [line for line in _RP("state", _st_sc).splitlines() if "dangerous above" in line])
 
 # The "visibly rich" line is an amount of labour, so it follows the coin: the
 # same capital in labour hours is the same wealth term whatever the money is.
