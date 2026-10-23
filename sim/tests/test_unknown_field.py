@@ -1,4 +1,4 @@
-"""Complaint 574: a field no command reads is refused with `unknown_field`, not accepted as a no-op. The refusal rule is
+"""SCENARIO (Complaint 574): a field no command reads is refused with `unknown_field`, not accepted as a no-op. The refusal rule is
 `field_check.unknown_field_refusal` (test_field_check_rule); this is the wiring that dispatch refuses before the handler runs."""
 from .harness import *  # noqa: F401,F403
 from .agent_command_helpers import ask_agent
