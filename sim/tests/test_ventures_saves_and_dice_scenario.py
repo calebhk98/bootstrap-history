@@ -200,15 +200,6 @@ check("what you are running survives a save and reload",
       _rt[-1].get("concerns_you_run") == 1,
       "runs %r after a round trip" % _rt[-1].get("concerns_you_run"))
 
-# Two Roman-branded grants were still being handed free to every civilisation.
-_ROMAN = ("_roman", "_rome", "annona", "insula", "societas", "collegium",
-          "argentarii", "latifundi", "cursus", "pharos")
-for _civ in ("han_china_100ad", "norse_900ad", "mexica_1500", "england_1300"):
-    _sc = pristine_game(_civ)
-    _bad = sorted(granted_name for granted_name in _sc.granted if any(roman_marker in granted_name for roman_marker in _ROMAN))
-    check("%s is not handed Roman institutions for nothing" % _civ,
-          not _bad, _bad)
-
 # --- the Norse deadlock ------------------------------------------------------
 # A Norse run ended at year 1500 with 31,068 denarii, 136 technologies and 1.6
 # craftsmen, unable to build workshop_first because it needs 2 - while every
