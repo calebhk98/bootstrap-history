@@ -1,8 +1,7 @@
 """Growing-season weather is correlated by distance (Complaints/49-one-label-draws-one-coin.md): weather agrees with itself
 over a distance, so two nearby cells draw nearly the same year and two cells continents apart draw independently, and a
 territory spread over many cells pools to a steadier harvest than one cell would. The rules, on cells the test builds
-(`sim/world/weather_pooling.py`); the cells a running game derives from its geography are in
-test_growing_season_weather_correlation_scenario.py."""
+(`sim/world/weather_pooling.py`); the cell weights are in test_weather_cells_rule."""
 import collections
 import math
 import random

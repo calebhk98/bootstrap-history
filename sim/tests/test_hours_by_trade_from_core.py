@@ -1,6 +1,5 @@
 """The engine's hours by trade have one owner: the labour core's people when the agent economy runs, the recipe
-graph's need when it does not (Complaint 640: rules on built inputs; the whole-game checks are in
-test_hours_by_trade_from_core_scenario). There is no separate workforce that moves hours between trades."""
+graph's need when it does not (Complaint 640: rules on built inputs). There is no separate workforce that moves hours between trades."""
 QUICK_TOPIC = True
 
 import unittest

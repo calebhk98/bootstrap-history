@@ -1,6 +1,6 @@
 """What `load` refuses (Complaint 640): the validation called on saves built here and a stand-in game that holds only the tree
 and civilisation id it reads. A refusal is a clear message, never a crash, and leaves the game untouched. The same refusals
-through the protocol command are one check in test_ventures_saves_and_dice_scenario."""
+through the protocol command are test_save_command_reply."""
 QUICK_TOPIC = True
 
 import json

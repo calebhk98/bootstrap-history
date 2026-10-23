@@ -1,6 +1,6 @@
 """The wage floor comes from the solved cost of food in labour hours, and
 money is anchored to the civilisation's coin, not to a book price. Complaint 640: every check calls the wage schedule on
-inputs built here; the played-game check that the smallest kit affords a hire is in test_wage_floor_and_coin_standard_scenario."""
+inputs built here; that the smallest kit affords a hire is test_starting_kit_skilled_hire."""
 QUICK_TOPIC = True
 import copy
 import json

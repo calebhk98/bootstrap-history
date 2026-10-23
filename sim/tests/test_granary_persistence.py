@@ -6,8 +6,7 @@
      is a physical structure, not an unlimited ledger, and a debt in seed corn does not pass on as a negative stock.
   3. The farm workforce share does not respond to famine: it is computed from crop, soil and technique constants only.
 
-The save round trip of the stock is in test_granary_persistence_scenario.py; the century measurement is the slow validation
-in test_granary_persistence_validation.py."""
+The century measurement of the granary is in Complaints/473 (test migration, rule-tests-07)."""
 import inspect
 import unittest
 

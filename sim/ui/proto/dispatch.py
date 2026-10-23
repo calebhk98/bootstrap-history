@@ -34,6 +34,7 @@ from .event_kinds import stops_a_step
 from .event_severity import tag_events
 from .step_alerts import step_alerts
 from .step_stops import newly_startable_goal, severe_stop_reason
+from .step_automation import rows_of_years_stepped
 from .programme import programme_before_year
 from .step_problems import route_nodes, route_startable, stalled_projects, step_problems
 from .util import (_clean, _localise_money, _localise_words, _unsafe_path)
@@ -329,8 +330,7 @@ def _cmd_step(sim, nodes, cmd, ended):
         stopped_early, stopped_kind, out["year_failed"] = step_atomic.partial_step_failure(failure, ran, years)
     if programme_log:
         out["programme"] = programme_log
-    automation_rows = [row for row in ui_port.automation_audit.rows(sim, years)
-                       if row["year"] >= first_year_stepped]
+    automation_rows = rows_of_years_stepped(ui_port.automation_audit.rows(sim, years), first_year_stepped)
     if automation_rows:
         out["automation"] = automation_rows
     if years > 1 and lone_dependencies:

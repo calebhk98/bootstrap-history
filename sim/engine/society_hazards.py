@@ -26,7 +26,7 @@ from .data import closure, critical_path
 from . import event_causes
 from .hazard_condition import hazard_given_condition
 from .hazard_window import hazards_not_yet_past
-from .hazard_hedge_timing import remaining_floor_years
+from .hazard_hedge_timing import lead_time_range, remaining_floor_years
 from .patron_death import patron_dies
 from .capital_loss import capital_lost
 from .hazard_toll import sack_toll
@@ -203,16 +203,14 @@ class HazardsMixin:
             # years; three dispersed academies are not), and the range is
             # the honest shape of the answer: some of this is fast, and
             # the slowest part is not.
-            floors = sorted(
+            lead_time = lead_time_range(
                 floor_years for node, _share, _label in self.HAZARD_COUNTERS.get(kind, ())
                 if not node.startswith("_") and node in self.nodes
                 and not self.has(node)
                 for floor_years in [self._calendar_floor_remaining(node)]
                 if floor_years is not None)
-            if floors:
-                out["even_started_today_the_real_hedges_here_take_years"] = (
-                    {"quickest": floors[0], "slowest": floors[-1]}
-                    if floors[0] != floors[-1] else floors[0])
+            if lead_time is not None:
+                out["even_started_today_the_real_hedges_here_take_years"] = lead_time
         return out
 
     def hedge_first_steps(self, kind, limit=4):

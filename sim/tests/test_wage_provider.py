@@ -1,6 +1,6 @@
 """The labour market is the wage provider: prices, payroll, hiring and the
 price solver all read one wage vector, and nothing reads the book's wages. Complaint 640: every check calls the wage
-schedule on inputs built here; the checks that need a built game are in test_wage_provider_scenario."""
+schedule on inputs built here; the wiring is test_wage_provider_wiring."""
 QUICK_TOPIC = True
 import json
 import os

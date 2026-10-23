@@ -1,6 +1,6 @@
 """The step screen says what automation and the standing programme did (Complaints 91, 74). Complaint 640: the line, the
-screen and the audit window are called on rows built here; the step reply of a played game is in
-test_ui_step_automation_line_scenario."""
+screen and the audit window are called on rows built here; which rows the step reply carries is
+test_step_automation_rows."""
 QUICK_TOPIC = True
 
 import types

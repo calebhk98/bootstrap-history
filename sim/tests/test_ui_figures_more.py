@@ -1,6 +1,6 @@
 """Complaint 95: figures for wages, state notice, epidemics and project throughput, and the per-year `cashbook` screen that
 reconciles cash. Complaint 640: the figures are read from a stand-in game, the cash book's rows are built from a book made
-here, and the screens are rendered from hand-written replies; the played-game checks are in test_ui_figures_more_scenario."""
+here, and the screens are rendered from hand-written replies; there are no played-game checks."""
 QUICK_TOPIC = True
 
 import types

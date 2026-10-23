@@ -1,9 +1,11 @@
 """Complaint 574: each command takes the fields its own handler reads, not any field some command reads. The refusal rule is
 called on built commands in test_field_check_rule; this lint holds the command literals the tests write out to it."""
+QUICK_TOPIC = True
+
 import ast
 import os
 
-from .harness import *  # noqa: F401,F403
+from .harness import check
 from sim.ui.proto import command_registry, field_check
 
 
@@ -14,7 +16,10 @@ def command_literals():
         if not name.endswith(".py") or name.startswith(("test_unknown_field", "test_field_check_rule")):   # those write the refusals out
             continue
         with open(os.path.join(folder, name), encoding="utf-8") as source:
-            tree = ast.parse(source.read())
+            text = source.read()
+        if "cmd" not in text:
+            continue
+        tree = ast.parse(text)
         for node in ast.walk(tree):
             if isinstance(node, ast.Call):
                 named = {keyword.arg: keyword.value for keyword in node.keywords}
@@ -29,10 +34,13 @@ def command_literals():
 
 refused = []
 common = field_check.common_fields()
+allowed_by_command = {}   # the handler's fields are read from its source once per command
 for name, line, word, fields in command_literals():
     entry = command_registry.resolve(word) if isinstance(word, str) else None
     if entry is None:
         continue
-    allowed = field_check.accepted_fields(entry) | common | {"as"}
+    if word not in allowed_by_command:
+        allowed_by_command[word] = field_check.accepted_fields(entry) | common | {"as"}
+    allowed = allowed_by_command[word]
     refused += ["%s:%d %s %s" % (name, line, word, field) for field in fields if field not in allowed]
 check("every command literal in the tests passes the per-command field check", not refused, sorted(set(" ".join(item.split()[1:]) for item in refused)))

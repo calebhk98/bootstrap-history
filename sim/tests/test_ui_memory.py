@@ -1,5 +1,5 @@
 """The UI's own memory (sim/ui/memory.py) lives in the save's `interface` slot. Complaint 640: the slot's rules are called on
-a stand-in game; the save, load and fork round trips of played games are in test_ui_memory_scenario."""
+a stand-in game; the slot in the save is test_interface_slot_in_save."""
 QUICK_TOPIC = True
 
 import os

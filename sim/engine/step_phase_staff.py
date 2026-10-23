@@ -10,8 +10,9 @@ from .units_prose import plain_number
 from .payroll_shed import shed_unpayable_staff
 from .payroll_trim import payroll_means
 from .staff_phase_rules import (approach, artisan_goal, can_afford_replacement, craft_headcount, directors_next, has_room_to_hire,
-                                hires_needed, scholar_goal)
-from .staff_replacement import GROW_STANCE, REPLACE_STANCE, hire_stance, replace_lost_staff, replacement_wanted
+                                scholar_goal)
+from .staff_replacement import (GROW_STANCE, REPLACE_STANCE, grow_trade_toward, hire_stance, replace_lost_staff,
+                                replacement_wanted)
 from sim.agents.api import edges
 
 
@@ -151,28 +152,7 @@ class StaffPhaseMixin:
             # A refusal here is not an error - it is the same wall a
             # player hits - so it is simply not acted on.
             def _grow_to(trade, want, closure_need=0.0):
-                have = self.state.household.employees.get(trade, 0.0)
-                change = hires_needed(have, self.labour.stochastic_round(want))
-                if change > 0:
-                    _before = self.state.household.capital
-                    _hired, _why = self.labour.hire_buying_room(trade, change)
-                    if not _hired and closure_need >= 1.0:
-                        automation_audit.record_skip(
-                            self, "auto_hire", "hire %d %s" % (change, trade),
-                            "concerns shut for want of staff need %.1f more: %s" % (closure_need, _why))
-                    if _hired:
-                        # the people the market found, which can be fewer than sought
-                        _found = round(self.state.household.employees.get(trade, 0.0) - have)
-                        automation_audit.record(
-                            self, "auto_hire", "hire", "%d %s" % (_found, trade),
-                            "staff target %.1f against %.1f held, with %.1f supervision room"
-                            % (want, have, self.labour.supervision_room()), _before)
-                elif change < 0:
-                    _before = self.state.household.capital
-                    self.labour.fire(trade, -change)
-                    automation_audit.record(
-                        self, "auto_hire", "release", "%d %s" % (-change, trade),
-                        "staff target %.1f is below the %.1f held" % (want, have), _before)
+                grow_trade_toward(self, trade, want, closure_need)
             # THE HANDS A SHUT CONCERN NEEDS, within the affordability scale the extra room uses; hire() then
             # applies the cash, room and literacy rules, and a refusal is recorded as a skip with its reason.
             _closed_sc, _closed_ar = self.staffing_closed_hand_shortfall()

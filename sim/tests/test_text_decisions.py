@@ -1,4 +1,7 @@
-"""text_decisions: no code under sim/ decides on a log line's or a refusal's text (Complaint 521)."""
+"""text_decisions: the scanners that find code deciding on a log line or refusal text (Complaint 521), called on source built here.
+The whole-tree scan is `python3 -m sim.tests --text-decisions`."""
+QUICK_TOPIC = True
+
 from .harness import check
 from sim.tests import text_decisions
 
@@ -43,12 +46,3 @@ for label, (source, expected) in APPENDS.items():
 for label, (source, expected) in SNIPPETS.items():
     found = text_decisions.scan_source(source)
     check(label, len(found) == expected, found)
-
-_found = text_decisions.scan()
-check("no code under sim/ decides on a log line's or refusal's text (python3 -m sim.tests --text-decisions)",
-      _found == [], _found[:5])
-
-_plain = text_decisions.scan_appends()
-check("every append to a log under sim/ is a LogLine with a kind", _plain == [], _plain[:5])
-_unlisted = text_decisions.unlisted_kinds()
-check("every kind a LogLine is given is listed in sim/ui/proto/event_kinds.py", _unlisted == [], _unlisted)

@@ -1,4 +1,7 @@
-"""text_checks: the list of behaviour checks that read player text stays empty (Complaint 515)."""
+"""text_checks: the scanner that finds behaviour checks reading player text (Complaint 515), called on source built here.
+The whole-tree list staying empty is `python3 -m sim.tests --text-checks`."""
+QUICK_TOPIC = True
+
 from .harness import check
 from sim.tests import text_checks
 
@@ -28,7 +31,3 @@ for label, (source, expected) in SNIPPETS.items():
     else:
         passed = len(found) == 1 and found[0][2] == expected
     check(label, passed, found)
-
-_behaviour_rows = text_checks.classify()[0]
-check("no check of a behaviour topic reads player text (python3 -m sim.tests --text-checks)",
-      _behaviour_rows == [], _behaviour_rows[:5])

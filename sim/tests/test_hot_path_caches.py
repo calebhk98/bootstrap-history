@@ -1,6 +1,6 @@
 """hot_path_caches: the per-year hot paths do not repeat work whose answer cannot have changed.
 
-The whole-game checks are in test_hot_path_caches_scenario.
+The cache of the material stock and of the mining works effects is in test_material_stock_capacity_keys and test_mine_works_effects_cache.
 
 Complaint 141: a year got slower as more was built because every concern's
 output looked up the production catalog through a path-resolving call.
