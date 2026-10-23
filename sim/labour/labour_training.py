@@ -20,7 +20,7 @@ import math
 
 from sim.constants import declare
 from sim.refusal import Refusal
-from . import trade_data, trade_first_hands, trade_formation
+from . import trade_data, trade_first_hands, trade_formation, trade_supply_rules
 from .hands import contracted_hours_of, hands_available
 from .hire_outcome import hire_result, unfound_note
 from .request_rules import (commission_request_refusal, fire_refusal, teaching_fee, teaching_hours_refusal,
@@ -234,7 +234,7 @@ class TrainingMixin:
             exist = self.people_who_exist(trade)
             on_books = self.employed(trade)
             rivals = self._world.actor_staff_fte(trade)
-            if on_books + rivals + count > exist + 1e-6:
+            if trade_supply_rules.hire_leaves_nobody(on_books, rivals, count, exist):
                 return None, None, Refusal("nobody_left", "only about %.1f %ss exist in this country and you "
                                            "already employ %.1f%s: there is nobody left to hire."
                                            % (exist, trade, on_books,
