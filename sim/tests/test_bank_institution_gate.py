@@ -1,7 +1,7 @@
 """Complaint 106: a society founds banks only once it holds a node declaring the `deposit_banking` mechanic; the
 engine hands the economy the institutions the home state's society holds (a civilisation with no banking
-institution yet must not get banks). Rules on built inputs; the wiring on a game is in
-test_bank_institution_gate_scenario.py."""
+institution yet must not get banks). Rules on built inputs; the wiring to the economy is in
+test_institutions_held.py."""
 QUICK_TOPIC = True
 from .harness import NODES, check
 

@@ -1,5 +1,5 @@
-"""Scenario: pursue and programme on a running game. Pursue starts only what is on the goal's route, within the rush caps, and a
-preview changes nothing; a programme persists across save and load and acts in the next step. The route, caps, pause conditions
+"""SMOKE: pursue and programme on an unopened game. Pursue starts only what is on the goal's route, within the rush caps, and a
+preview changes nothing; a programme persists across save and load (its year is test_pursue_programme). The route, caps, pause conditions
 and handlers are in test_pursue_programme."""
 from .harness import *  # noqa: F401,F403
 from sim.engine.ui_port import closure
@@ -34,9 +34,3 @@ with tempfile.TemporaryDirectory() as folder:
     load_state(game, path)
 check("programme survives save and load", _run(game, cmd="programme")["programme"] is not None)
 
-_active_before = set(game.active)
-_step = _run(game, cmd="step")
-_rows = _step.get("programme") or []
-check("programme acts in the next step", len(_rows) == 1 and _rows[0]["year"] is not None, _step.get("programme"))
-check("programme row is self-describing", all(key in _rows[0] for key in ("what", "started", "spent")), _rows)
-check("programme starts stay on the route", all(node_id in route for node_id in set(game.active) - _active_before), sorted(game.active))

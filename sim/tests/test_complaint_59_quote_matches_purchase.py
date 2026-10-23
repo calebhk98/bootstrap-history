@@ -1,7 +1,7 @@
 """Complaints/59: a quoted affordable amount must be purchasable as quoted.
 
 Every quote of an affordable amount and every purchase gate asks sim/engine/purchase_rule.py, so the rule is tested
-here on an actor built for the purpose. (That each buy kind's quote and purchase call it: test_scenarios_batch3.)"""
+here on an actor built for the purpose."""
 QUICK_TOPIC = True
 
 import unittest

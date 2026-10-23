@@ -24,6 +24,7 @@ from dataclasses import dataclass
 from sim.refusal import LogLine
 from sim.unit_conversions import PERCENT_SCALE
 from . import automation_audit
+from .hour_offer import work_order_shortfall
 from .units_prose import money_text, plain_number
 from .bondage_workshop_rules import bondage_repayment, serve_bondage_year
 from .state_demand import answer_confiscation
@@ -298,7 +299,7 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, ProjectStartPhaseMixin, 
         _wd = self.state.household.hour_allocations.get("work")
         if _wd and _wd > 0 and self.state.household.work_trade:
             _already = self.state.household.wage_hours_this_year
-            _want = max(0.0, _wd - _already)
+            _want = work_order_shortfall(_wd, _already)
             if _want > 0.5:
                 _room = max(0.0, self.labour.director_pool() - self.labour.director_hours_committed())
                 _take = min(_want, _room)

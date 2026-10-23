@@ -1,6 +1,5 @@
 """Readouts agree with the engine's own checks: Complaints/230, 234, 235, 264. Each rule runs on inputs or a stub the test
-builds; the readouts on a running game (the quoted finish against a stepped run, `why`, `available`) are
-test_readouts_timing_power_mines_road_scenario."""
+builds; the expected years against the earliest finish are test_expected_calendar_years_floor."""
 QUICK_TOPIC = True
 
 import unittest

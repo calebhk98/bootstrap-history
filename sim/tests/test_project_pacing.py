@@ -4,8 +4,7 @@ selling hours would starve a project, and the hour pace the material brake is ap
 Regrouped from test_round8_fixes.py, test_round9.py, test_round10.py and test_round12_naive15.py. Each rule runs on a stub game
 or inputs the test builds: what a project is waiting on (`_waiting_on`), why a trade is short (`trade_shortage_kind`), the stall
 gate's countdown and its abandonment, `stop_project`'s kept money and the credit on a restart, `why`'s cost block, the sale-of-hours
-warning, and `project_hour_pace`. A project stepped through the years of a stall and a stop-and-restart on a running game are
-test_project_pacing_scenario; a start refused for the gross price of a nearly paid project is `cash_covers_start` below."""
+warning, and `project_hour_pace`. The crawl of a project short of a trade is test_project_crawl_rules; a start refused for the gross price of a nearly paid project is `cash_covers_start` below."""
 QUICK_TOPIC = True
 
 from types import SimpleNamespace

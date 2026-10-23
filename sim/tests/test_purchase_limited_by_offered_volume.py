@@ -1,7 +1,6 @@
 """Complaint 507, stage 4: the founder cannot buy more of a material in a year than the sellers on his tile's market
 offered at the last clearing; the quote's figure is the economy's own, not the engine's reference tonnes.
-`GoodsMarket.quote` and `buy` run on a market whose price, partner and economy reads are stubbed; the live economy's offer
-is test_purchase_limited_by_offered_volume_scenario."""
+`GoodsMarket.quote` and `buy` run on a market whose price, partner and economy reads are stubbed."""
 QUICK_TOPIC = True
 
 import math

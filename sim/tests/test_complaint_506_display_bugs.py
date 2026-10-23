@@ -1,6 +1,5 @@
 """Complaint 506: small display and wording bugs found in a Rome playtest. Each is a function of its inputs (a reply, a
-name, a list of known materials) called on values built here; the subject of most is presentation, and says so. (The
-commands that produce these replies from a game: test_scenarios_batch3_screens.)"""
+name, a list of known materials) called on values built here; the subject of most is presentation, and says so."""
 QUICK_TOPIC = True
 
 import unittest

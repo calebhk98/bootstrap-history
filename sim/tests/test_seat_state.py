@@ -1,6 +1,6 @@
 """A seat holds one player's household, projects, founder and goal; the root fields alias the acting seat. The rules are
-called on a `SimulationState` and on the real `SeatMixin` over a stub (no household facade is built); the checks on a
-whole Rome game's save and load are test_seat_state_scenario."""
+called on a `SimulationState` and on the real `SeatMixin` over a stub (no household facade is built); the save and load of the
+seats are the state's own serialisation."""
 
 QUICK_TOPIC = True
 

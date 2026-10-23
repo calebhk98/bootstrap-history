@@ -1,5 +1,5 @@
 """Complaints 225, 226, 228, 229, 232: the tree data offers routes a player can choose without the one they refuse.
-Read straight off the tree; what a game does with them is in `test_player_choice_routes_scenario`.
+Read straight off the tree; what a game does with exclusions is test_player_commands_smoke.
 
 229: the school has a paid-labour alternative to buying and freeing people.
 232: lens_grinding and patron_local no longer promise each other."""

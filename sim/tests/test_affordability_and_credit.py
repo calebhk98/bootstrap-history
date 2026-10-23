@@ -2,7 +2,7 @@
 
 What could be raised for each kind of spend, the warning before the line, appearances, a concern's payback and the
 reputation an insolvency takes are tested on built numbers (`affordability`, `capital_market`). The game's commands,
-screens and yearly step running them are the named scenarios in test_affordability_and_credit_scenario."""
+callers over stand-ins are test_credit_wiring, test_cash_gates_wiring and test_auto_open_gates."""
 
 QUICK_TOPIC = True
 from .harness import *  # noqa: F401,F403

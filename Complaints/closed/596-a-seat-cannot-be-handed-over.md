@@ -18,4 +18,4 @@ Notes keyed to a country (597) should survive a handover the same way.
 
 **What was done.** `hand_over_seat` renames the leaver's id to the replacement's in the actors' book and contract registry (facility draws, term loans as borrower and lender, deposits, bonds, named lenders), the economy record's agent-keyed stores (`AGENT_KEYED_FIELDS` in `sim/economy/record.py`), the other seats' offers, shares, licences and disclosures, the other actors' records and the year's market flows (`sim/engine/seat_handover_rekey.py`, `sim/rekey.py`). Nothing is paid, so no total moves. A loan between the leaver and the replacement ends, since it would be owed to itself.
 
-**Tests.** `sim/tests/test_seat_handover_accounts.py` (debt, claims, goods, stores, refusals), `sim/tests/test_seat_handover_whole_game.py` (slow: debt carried in a real game, the save names the leaver nowhere).
+**Tests.** `sim/tests/test_seat_handover_accounts.py` (debt, claims, goods, stores, refusals), `sim/tests/test_seat_handover.py`.

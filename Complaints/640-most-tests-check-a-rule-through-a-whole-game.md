@@ -337,3 +337,21 @@ instantaneous projects, the eminence hazard rules, dependants beyond means, prer
 `people_exist` refusal is gone (659, closed).
 
 The complaint closes when the rules above are plain functions and their checks have left the scenarios.
+
+## Applied: rule-tests batch 12 (people_by_trade_cache_year through portfolio_scale_stuck_advice)
+
+Rules called on stand-ins; the slow whole-game checks are gone or are SMOKE modules that build unopened games and run no years.
+Extractions: `sim/engine/payroll_shed.py` (`shed_unpayable_staff`: staff a household cannot pay leave and the loss is logged),
+`sim/labour/trade_supply_rules.py` (people who exist, the hours a market offers, when a hire leaves nobody), `sim/ui/proto/heard_paging.py`
+(the "heard of" page). New rule tests: `test_payroll_shed`, `test_trade_supply_rules`, `test_labour_move_base_rule`, `test_heard_paging`,
+`test_short_of_staff_marker`, `test_stuck_reasons`, `test_exclusion_rules`, `test_policy_screen_rules`, `test_start_gate_rules`,
+`test_epidemic_seats_and_knowledge`, `test_port_sync_ways`. SMOKE modules: `game_port_and_portfolio_smoke`, `player_available_smoke`,
+`player_report_and_path_smoke`, `player_commands_smoke`, `han_reply_words_smoke`, `population_per_region_smoke`.
+Deleted as held elsewhere: `people_by_trade_cache_year_scenario` (every writer drops the cache), `perf_optimizations_scenario` (the
+fingerprint tool itself), `physical_money_constants_scenario` (hours by deposit are held; the product with the wage is one line),
+`plague_mitigation_realism_scenario` and `plague_no_double_count_scenario` (`spread_share`, `medical_relief` and the exposure tests),
+`population_placeholder_marks_scenario`, `population_farm_technique_scenario` (see 513), `plagues_from_contact_validation` (see 490).
+Not carried over: the start-refusal "training is a warning, not a refusal" check (dispatch `start` with a trade being taught), the
+`available` speed-under-fog bound (a wall-clock assertion), and the whole-game tests of insolvency shedding and creditor seizure
+(the plant rules are `test_business_review`). The founder-hours accounting identity and the refund proportionality of a three-year run
+are `project_funding.fund_year` (`test_arrears_hours`); the hours summary itself has no test.

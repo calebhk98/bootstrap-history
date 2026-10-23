@@ -7,10 +7,11 @@ from sim.labour.api import scholar_target
 from sim.world import demography
 from . import automation_audit
 from .units_prose import plain_number
-from .payroll_trim import payroll_means, staff_to_let_go
+from .payroll_shed import shed_unpayable_staff
+from .payroll_trim import payroll_means
 from .staff_phase_rules import (approach, artisan_goal, can_afford_replacement, craft_headcount, directors_next, has_room_to_hire,
                                 hires_needed, scholar_goal)
-from .staff_replacement import REPLACE_ONLY, replace_lost_staff, replacement_wanted
+from .staff_replacement import GROW_STANCE, REPLACE_STANCE, hire_stance, replace_lost_staff, replacement_wanted
 from sim.agents.api import edges
 
 
@@ -82,26 +83,7 @@ class StaffPhaseMixin:
         # is not a decision the game is making on your behalf, it is the world
         # answering one you already made, the same as the arrears bleed below.
         # The `policy` reply says so in as many words.
-        if payroll > can_pay and self.state.household.employees:
-            gone = 0.0
-            _before_shed = self.labour.staff_snapshot()
-            # shed, dearest first, whole people, until the wages you are left with fit
-            for trade_id, cut in staff_to_let_go(payroll, can_pay, dict(self.state.household.employees),
-                                                 self.labour.market.quote_annual).items():
-                self.labour.add_employed(trade_id, -cut)
-                gone += cut
-                if self.labour.employed(trade_id) < 0.5:
-                    self.labour.set_employed(trade_id, 0.0)
-            self.labour.resync_pools()
-            self.labour.log_staff_reduction("a payroll you cannot meet", _before_shed)
-            # ALWAYS, not only when it worked. Losing the staff you paid to hire
-            # is more consequential than any of the flavour events that do get
-            # logged, and a player who is not told has to notice their own wage
-            # bill hit zero to find out.
-            if gone > 0.005:
-                self.state.household.log.append((self.state.scenario.year, LogLine(
-                    "staff_left_unpaid", "you cannot pay everyone: %.1f of your staff "
-                    "leave for work that pays" % gone, staff_gone=gone)))
+        shed_unpayable_staff(self, payroll, can_pay)
         # NOT `capital > 0`: gating hiring on a strictly positive balance
         # creates a catch-22, where a household in arrears could never take
         # on the people whose work is the only way out of arrears. A run
@@ -113,10 +95,11 @@ class StaffPhaseMixin:
         # says nobody when there is nothing spare.
         _hire_room = has_room_to_hire(self.state.household.capital, self.credit_limit(), self.AUTO_HIRE_CREDIT_ROOM_SHARE)
         _hire_mode = self.state.founder.policy.get("auto_hire", not self.manual)
-        if _hire_mode == REPLACE_ONLY and _hire_room:
+        _hire_stance = hire_stance(_hire_mode, _hire_room)
+        if _hire_stance == REPLACE_STANCE:
             replace_lost_staff(self, _lost)
             self.labour.resync_pools()
-        if (_hire_mode and _hire_mode != REPLACE_ONLY and _hire_room):
+        if _hire_stance == GROW_STANCE:
             # Scaled by the SAME affordability figure staff_capacity() just
             # used for sc_cap/ar_cap (see the comment there): supervision-room
             # headroom is not a free six people, it is six people you still

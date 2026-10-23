@@ -2,7 +2,7 @@
 
 The screens print what the project's state carries (checked on built replies) and the log kind is a failure. The three
 replies read off a game whose project carries the funding rule's verdict are the scenario in
-test_arrears_visibility_scenario."""
+test_arrears_wiring."""
 
 QUICK_TOPIC = True
 from .harness import *  # noqa: F401,F403

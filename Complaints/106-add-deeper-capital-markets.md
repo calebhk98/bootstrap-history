@@ -146,7 +146,7 @@ Priority: lower than the work that makes the opening settle (473); it is picked 
 
 - **Found a bank (step 9).** `found bank <amount>` (`sim/ui/proto/dispatch_bank.py`, `sim/engine/seat_bank.py`): a seat
   that knows a node declaring `deposit_banking` puts its money into a bank of the economy; its earnings above the capital
-  go back to it. Test: `--only seat_bank`, `--slow --only seat_bank_scenario`.
+  go back to it. Test: `--only seat_bank`, `--only seat_bank`.
 
 ## Remainder
 

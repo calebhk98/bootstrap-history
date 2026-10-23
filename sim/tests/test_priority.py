@@ -1,6 +1,5 @@
 """Complaint 89: a player can say which active project gets founder hours first. The `priority` handler runs on a stub game
-(master order, active projects, standing allocations) the test builds; that the next step applies the displayed rank is
-test_priority_scenario."""
+(master order, active projects, standing allocations) the test builds; the step takes its ranks from that queue (`hour_priority_queue`)."""
 QUICK_TOPIC = True
 
 from types import SimpleNamespace

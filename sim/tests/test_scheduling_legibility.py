@@ -1,8 +1,8 @@
 """Project scheduling made legible: what a project is waiting on (five precise reasons), the portfolio's demand against
 each trade's supply, the note when a start would oversubscribe a trade, and the warning before a multi-year step wastes
 hours. Each rule runs on tables or a stand-in game the test builds (no game): the real `_waiting_on` and the real
-`trade_shortage_kind` over a stand-in of trades, money and queue. The allocator's stored shares and the commands
-through a game are test_scheduling_legibility_scenario."""
+`trade_shortage_kind` over a stand-in of trades, money and queue. The allocator's stored shares are
+test_step_progress_pool_standing."""
 from types import SimpleNamespace
 
 from .harness import check
