@@ -1,4 +1,6 @@
 """The base merge and the mod overlay fill the same defaults for a bare node."""
+
+QUICK_TOPIC = True
 import unittest
 
 from sim.engine import mods, tree_merge
