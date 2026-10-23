@@ -1,6 +1,6 @@
 """Eminence and prominence, one rule at a time on built figures (Complaint 640): the yearly hazard and its familiarity relief, the
-chance of ruin, and when and how far withdrawing from public life lowers prominence. The same through a real game (the
-command, the report, the saved withdrawal, the scandal screen) is in test_eminence_scandal_and_reputation_scenario."""
+chance of ruin, and when and how far withdrawing from public life lowers prominence. The command, the report and the saved
+withdrawal on a stand-in `self` are in test_eminence_wiring."""
 QUICK_TOPIC = True
 
 import unittest
