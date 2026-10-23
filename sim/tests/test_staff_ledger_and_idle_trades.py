@@ -1,7 +1,7 @@
 """Complaints 167, 164 and the auto_replace_foreman part of 180: idle specialists are surfaced with their wage bill, auto_hire
 replaces only the taught trades something draws on, every staff reduction is logged with its cause, and an open concern that
 hangs on one person is named. The rules are called on a stub over the real `StaffLedgerMixin` (no game) and on
-`replacement_wanted`; the checks through a whole game are test_staff_ledger_and_idle_trades_scenario."""
+`replacement_wanted`; that the lines name the people who left is test_staff_reduction_facts."""
 
 QUICK_TOPIC = True
 

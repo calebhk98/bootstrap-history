@@ -7,7 +7,7 @@ import hashlib
 from sim.engine.ui_port import closure, critical_path, downstream_count, is_downstream
 from sim.engine.ui_port import mass_rate_text, strip_self_play_advice
 
-from . import available_economics, tree_filters
+from . import available_economics, stock_gate_rows, tree_filters
 from .heard_paging import heard_page
 from .nodes import _downstream_of, _unlocked_by
 from .state_waiting import _waiting_on
@@ -1430,8 +1430,8 @@ def _explain_status(sim, nodes, node_id, node):
         # in someone else's sentence either.
         "start_blocked_reason": None if started else sim.fog_scrub(sim.start_reason(node_id)[1]),
         **_blocker_fields(sim, node_id, started),
-        "living_stock": [dict(gate, brought_by=gate["brought_by"] if ui_port.visible_to_player(sim, gate["brought_by"])
-                              else None) if gate["brought_by"] else gate for gate in sim.stock_gates(node_id)],
+        "living_stock": stock_gate_rows.rows_for_player(sim.stock_gates(node_id),
+                                                        lambda brought_by: ui_port.visible_to_player(sim, brought_by)),
     }
 
 

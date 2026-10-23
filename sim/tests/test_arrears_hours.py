@@ -1,8 +1,8 @@
 """arrears_hours: a household in arrears must not lose the hours of a project that owes nothing further (Complaint:
 "in arrears freezes ALL founder-hour progress even on fully-paid projects"), and a concern shut on purpose must
 never reappear on its own. The rules are tested on built inputs (`project_funding`, `business_review.reopen`);
-the afford gate that runs the first is in test_arrears_wiring (the staffing-closure scenario
-is in test_staff_closure_reopening_scenario)."""
+the afford gate that runs the first is in test_arrears_wiring (what the yearly reopening does with
+the plants brought back is in test_reopen_restaffed_wiring)."""
 QUICK_TOPIC = True
 
 from .harness import check

@@ -1,6 +1,6 @@
 """The rates the opening's price solves are shipped for: bounded, distinct, banded, within the ceiling, covering nil
-up to the start, and the nearest first. The rule is `banded_rates`, called on starting rates; that a shipped band equals
-the solve a game computes is test_shipped_rate_bands."""
+up to the start, and the nearest first. The rule is `banded_rates`, called on starting rates; how the solves are
+replayed at those rates is test_shipped_rate_band_replay_rule."""
 
 QUICK_TOPIC = True
 
