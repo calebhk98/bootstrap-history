@@ -4,7 +4,7 @@ A research node declares only quantities. The bill (`compute_material_bill`) tak
 founder's own output covers over the build, and prices the rest at the market quote, the part beyond a year's market
 supply at today's spot quote. It is called here on a stub game whose stock, output, supply and quotes are set by the test,
 and `project_material_parts`, `project_own_output_claim`, `project_material_needs` and `bounty_price` on stubs too.
-The whole-game wiring (starting a project, `why`, `quote material`) is test_complaint_147_project_materials_scenario."""
+The wiring (starting a project, `why`, `quote material`) is test_complaint_147_bill_wiring."""
 QUICK_TOPIC = True
 
 import os

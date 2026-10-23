@@ -732,6 +732,8 @@ unsettled opening economy and is deleted; `python3 sim/simulator.py economy-chec
 
 Test migration (rule-tests-05): `firm_count_whole_game_scenario` is deleted (the count settling and not overshooting over 30 years read an unsettled economy; the rules are test_firm_count_from_costs and test_entry_gross_rule). No simulator command prints firm counts by market size; `python3 sim/simulator.py economy-check --years 30` is the nearest measure of the agent economy.
 
+Test migration (rule-tests-02): `complaint_467_trades_open_to_the_jobs` is deleted (the opening workforce of each skilled trade against the first year's producer, mint and state wage bids, with an unsourced three-times limit, read one year of an unsettled opening and could not name a function). No simulator command prints workforce hours against bid hours by trade yet; `python3 sim/simulator.py economy-check --civs rome_100ad --years 1` prints idle labour and the wage over the floor, the nearest measure.
+
 Test migration (rule-tests-16): `spin_up_money_supply_full_length` (the money stock keeping up with wear over forty spun-up years)
 is deleted: it read an unsettled economy, was red on main by design and could not name the function that broke. `python3
 sim/simulator.py opening-checks` (money against coin wear) and `python3 sim/simulator.py spin-up-trace` print the same relationship.

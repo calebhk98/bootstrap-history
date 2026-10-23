@@ -45,6 +45,7 @@ from sim.engine.ui_port import money_text, units
 from . import cli_options, cli_units_options, replay
 from sim.engine.ui_port import normal_seed, valid_seed_text
 from sim.ui.memory import save_session
+from sim.ui.fuzzy_choice import fuzzy_estimates_wanted, turn_fuzzy_estimates_on
 from sim.ui.wizard_answers import remember_answers
 from sim.ui.save_policy import SESSION_WORDS, SavePolicy
 from sim.ui.proto import step_progress
@@ -257,11 +258,9 @@ def _play_build_sim(args, defer_economy=False):
     sim.fog = bool(getattr(args, "fog", False))
     # Flag or menu choice first; only a fresh game (no save on disk yet) falls
     # back to the settings default, so resuming never switches it on unasked.
-    asked_fuzzy = getattr(args, "fuzzy_estimates", None)
-    if asked_fuzzy is None:
-        fresh_game = not (session and os.path.exists(session))
-        asked_fuzzy = fresh_game and bool(app_cfg.get("default_fuzzy_estimates", False))
-    sim.fuzzy_estimates = bool(asked_fuzzy)
+    sim.fuzzy_estimates = fuzzy_estimates_wanted(getattr(args, "fuzzy_estimates", None),
+                                                 bool(session and os.path.exists(session)),
+                                                 app_cfg.get("default_fuzzy_estimates", False))
     sim.revealed = set()
     # known routes are applied in _play_resolve_session, after any save is loaded
     # The reader is a person typing words, so the worked examples inside every
@@ -820,14 +819,7 @@ def _ingame_options(sim, session):
             # One-way like mortality, unlike fog: turning it on only hides
             # detail from now on, but turning it off would reveal exact
             # figures the player was told to treat as uncertain.
-            print(_wrap("From now on the needs of unfinished work are shown as "
-                        "estimates that tighten as you start and finish it. "
-                        "This cannot be turned off again in this game."))
-            if _ask("   Turn fuzzy estimates on now? [y/N] ", ["y", "n"], "n") == "y":
-                sim.fuzzy_estimates = True
-                print("   -- done. Fuzzy estimates are on.")
-            else:
-                print("   -- unchanged.")
+            turn_fuzzy_estimates_on(sim, _ask, print, lambda text: print(_wrap(text)))
 
         elif word in ("3", "move", "movesave") and session:
             try:

@@ -1,5 +1,5 @@
-"""Regression coverage for playtest complaints 17 through 24: each rule is called with inputs built here; the scenario
-that keeps the mortality shock wired to the displayed population is test_complaints_17_24_scenario."""
+"""Regression coverage for playtest complaints 17 through 24: each rule is called with inputs built here; the wiring
+that keeps the mortality shock reaching the displayed population is test_mortality_shock_wiring."""
 QUICK_TOPIC = True
 
 from .harness import *  # noqa: F401,F403
