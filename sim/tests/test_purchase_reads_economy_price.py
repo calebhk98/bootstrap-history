@@ -1,7 +1,6 @@
 """Complaint 507, stage 3: what the founder pays and is paid is the agent economy's price on the founder's tile plus
 carriage, a larger order costs more a tonne, a good no one sells has no price, and the coin metal is one number wherever the
-game counts it. The market runs on a stub sim (its economy's prices, book and carriage set by the test); the same wiring in a
-live Rome game is test_purchase_reads_economy_price_scenario. The project bill (tonnes times the founder's price) is
+game counts it. The market runs on a stub sim (its economy's prices, book and carriage set by the test). The project bill (tonnes times the founder's price) is
 test_complaint_147_project_materials::test_the_missing_part_is_priced_at_the_market_quote."""
 QUICK_TOPIC = True
 
