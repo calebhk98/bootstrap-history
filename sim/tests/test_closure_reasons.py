@@ -1,15 +1,17 @@
 """closure_reasons: a closed work records why and since when, and only its own cause clears it.
 
 The rules are called on a business built here (`Business`, `business_review.reopen`) and on a stub game for the
-staffing-closure age and the discounted reopening fee. The whole-game scenario is test_closure_reasons_scenario.
+staffing-closure age and the discounted reopening fee. The staffing closure kept through a save is test_closure_reasons_scenario.
 The loss-making and creditor-seizure closures (reasons "loss_making" and "creditor_seizure") are held by
 test_business_review (LossRuleIsOneRule, the seizure tests)."""
 QUICK_TOPIC = True
 
 import types
 import unittest
+from unittest import mock
 
 from sim.agents import business_review
+from sim.engine import cause_book
 from sim.agents.api import Business
 from sim.engine.projects import ProjectsMixin
 from sim.engine.projects_staffing import StaffingMixin
@@ -121,6 +123,33 @@ class StaffingClosureDiscount(unittest.TestCase):
 
 	def test_a_manual_closure_is_never_discounted_however_young(self):
 		self.assertAlmostEqual(self.fee(MANUAL, 40, 41), 1000.0)
+
+
+class CloseWorkRecordsTheReason(unittest.TestCase):
+	"""StaffingMixin.close_work on a stub game: the business keeps the record, a staffing closure is remembered, and a
+	later manual closure is its own record."""
+
+	def game(self, year):
+		business = a_business_running("mill")
+		projects = types.SimpleNamespace(business=business, ever_closed_for_staff=set())
+		game = types.SimpleNamespace(state=types.SimpleNamespace(scenario=types.SimpleNamespace(year=year), projects=projects),
+		                             CLOSED_FOR_STAFF=StaffingMixin.CLOSED_FOR_STAFF, close_lapsed_dependents=lambda year: None)
+		return game, business
+
+	def test_closing_for_staff_records_reason_and_year_and_remembers_it(self):
+		game, business = self.game(40)
+		with mock.patch.object(cause_book, "record_concern"):
+			StaffingMixin.close_work(game, "mill", STAFF)
+		self.assertEqual(business.closures()["mill"], {"reason": STAFF, "year": 40})
+		self.assertEqual(game.state.projects.ever_closed_for_staff, {"mill"})
+
+	def test_a_manual_closure_after_a_restored_staffing_one_is_dated_afresh(self):
+		game, business = self.game(40)
+		with mock.patch.object(cause_book, "record_concern"):
+			StaffingMixin.close_work(game, "mill", STAFF)
+			business.restore("mill")
+			StaffingMixin.close_work(game, "mill", MANUAL, year=70)
+		self.assertEqual(business.closures()["mill"], {"reason": MANUAL, "year": 70})
 
 
 if __name__ == "__main__":
