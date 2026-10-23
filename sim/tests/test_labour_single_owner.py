@@ -1,8 +1,7 @@
 """Complaint 556: who can work and who is hired by whom has one owner, the labour package.
 
 Rule tests (Complaint 640): the founder's book accessors and the reservation arithmetic run on a stub world, and the
-wall keeps every write of the founder's book inside the owner. The whole-game agreement of the estimate with the
-labour core is test_labour_single_owner_scenario."""
+wall keeps every write of the founder's book inside the owner."""
 import ast
 import os
 import re
@@ -51,6 +50,55 @@ check("reserved hours are people times hours a person-year", book.reserved_hours
 check("unreserved people are the supply less every reservation", book.unreserved_people("artisan") == 4.0, book.unreserved_people("artisan"))
 book.set_employed("labourer", 9.0)
 check("unreserved people are never negative", book.unreserved_people("labourer") == 0.0)
+
+# ---- a hire is taken out of the core's people at the base tile, and the estimate reads the core ----
+class _CoreBook(StaffBookMixin):
+    def __init__(self, core, staff):
+        self._world = SimpleNamespace(state=SimpleNamespace(household=SimpleNamespace(employees=dict(staff))))
+        self._core = core
+
+    def core_people_by_tile_and_trade(self):
+        return self._core
+
+    def base_tile(self):
+        return "home"
+
+
+core_book = _CoreBook({"home": {"labourer": 5.0}, "away": {"labourer": 2.0}}, {"labourer": 3.0})
+check("the founder's hire is taken from the core at the base tile, not counted free for another employer",
+      core_book.free_core_people("labourer") == 4.0, core_book.free_core_people("labourer"))
+check("hires within the core's people at their tile are not over-reserved", core_book.reservations_over_core() == [])
+over_book = _CoreBook({"home": {"labourer": 2.0}}, {"labourer": 3.0})
+check("a hire the core's people at its tile do not cover is listed",
+      over_book.reservations_over_core() == [("home", "labourer", 3.0, 2.0)], over_book.reservations_over_core())
+check("with no core yet nothing is free to count and nothing is over-reserved",
+      _CoreBook(None, {}).free_core_people("labourer") is None and _CoreBook(None, {}).reservations_over_core() == [])
+
+from unittest import mock
+from sim.labour import labour_population
+
+
+class _Estimate(labour_population.PopulationMixin):
+    def __init__(self, in_core):
+        self._world = SimpleNamespace(population=SimpleNamespace(total=1000.0, working_age=600.0),
+                                      urban_fraction=lambda: 0.2, trades_absent=())
+        self._in_core = in_core
+
+    def trade_available(self, trade):
+        return True
+
+    def core_people_by_trade(self):
+        return self._in_core
+
+
+with mock.patch.object(labour_population.trade_data, "drawn_from_unskilled_pool", lambda trade: False), \
+        mock.patch.object(labour_population.trade_data, "scholar_trade", lambda: "scholar"), \
+        mock.patch.object(labour_population.trade_data, "literate_trades", lambda registry, trades: []), \
+        mock.patch.object(labour_population.trade_data, "registry_of", lambda world: {}):
+    check("the national estimate of a trade is the core's headcount where the core holds people of it",
+          _Estimate({"smith": 42.0}).national_trade_population("smith") == 42.0)
+    check("a farm trade the core holds nobody of falls back to the rural share of the working age",
+          abs(_Estimate({}).national_trade_population(labour_population.FARM_TRADE) - 600.0 * 0.8) < 1e-9)
 
 # ---- the wall: nothing outside the owner writes the founder's book ----
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
