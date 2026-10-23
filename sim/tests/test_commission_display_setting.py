@@ -1,6 +1,5 @@
 """Complaint 64: the mine commission display setting controls whether the mines screen shows when a mine is
-commissioned, when it is ready, or both (the default). The rendering and the setting are called on a built reply;
-the mine purchase and the mines screen of a game are test_commission_display_setting_scenario."""
+commissioned, when it is ready, or both (the default). The rendering and the setting are called on a built reply."""
 QUICK_TOPIC = True
 
 from .harness import *

@@ -1,6 +1,6 @@
 """commitments_screen: the screen's figures are called on a stub game (the goal, literacy against its ceiling, the staff
-reserve, the institutions open or closed); the rendering on a built reply. The whole-game wiring is
-test_commitments_screen_scenario."""
+reserve, the institutions open or closed); the rendering on a built reply. The game methods the screen calls are
+checked to exist on `Sim`."""
 QUICK_TOPIC = True
 
 import types
@@ -59,3 +59,9 @@ check("under fog an institution the player has not heard of is left out",
       {row["id"] for row in report(stub_game(fog=True))["institutions"]} == {"school"}, report(stub_game(fog=True))["institutions"])
 check("the text screen has the sections",  # presentation: the screen's headings
       all(word in _render_pretty("commitments", reply) for word in ("GOAL", "RESERVE", "INSTITUTIONS")))
+
+check("every game method the screen reads exists on Sim",
+      all(callable(getattr(S.Sim, name, None)) for name in
+          ("is_visible", "running", "institution_units", "literacy", "literacy_ceiling_general", "literacy_ceiling_elite")),
+      [name for name in ("is_visible", "running", "institution_units", "literacy", "literacy_ceiling_general",
+                         "literacy_ceiling_elite") if not callable(getattr(S.Sim, name, None))])

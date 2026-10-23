@@ -1,67 +1,50 @@
-"""Complaints/131 and 132: the game runs with any civilisation file absent. The source scans that no engine code names a
+"""Complaints/131 and 132: the game runs with any civilisation file absent. The default is the preferred civilisation
+or, if its file is absent, the first one present; nothing else names it. The source scans that no engine code names a
 civilisation are in test_civilisation_independence_scans.
 
-Unittest style so importing it does not pull in the engine; the harness imports the default civilisation at module
-load, which is the very thing under test.
+Unittest style so importing it does not pull in the engine.
 """
-import os
-import re
-import subprocess
-import sys
-import tempfile
+QUICK_TOPIC = True
+
 import unittest
+from unittest import mock
 
-TESTS_DIR = os.path.dirname(os.path.abspath(__file__))
-SIM_DIR = os.path.dirname(TESTS_DIR)
-ROOT = os.path.dirname(SIM_DIR)
-CIVILISATION_DIR = os.path.join(ROOT, "data", "civilizations")
+from sim import default_civilisation
+from sim.default_civilisation import PREFERRED_DEFAULT_CIVILISATION
 
-SCRIPT = r'''
-import os, random
-from sim import simulator as S
-from sim.engine import data
-tree, prices, nodes, wages, goods = S.load()
-goal = tree["meta"]["goal_node"]
-_, order, _ = S.load_strategy("recommended", nodes, goal)
-ids = sorted(name[:-5] for name in os.listdir(data.CIVDIR)
-             if name.endswith(".json") and not name.startswith("_"))
-assert ids and "%(hidden)s" not in ids
-for civ_id in ids:
-    S.load_civ(civ_id)
-sim = S.Sim(nodes, order, random.Random(1), events=False, manual=False,
-            civ=S.load_civ(ids[0]))
-sim.goal, sim.done_year = goal, {}
-sim.step()
-print("ok", len(ids))
-'''
+# the function without its cache, so each case reads the files it is given
+default_civilisation_id = default_civilisation.default_civilisation_id.__wrapped__
 
 
-class GameStartsWithoutTheDefaultCivilisation(unittest.TestCase):
-    """A copy of the repository whose data directory lacks the default
-    civilisation, built from symlinks so it costs nothing to make."""
+def with_files(file_ids):
+    return mock.patch.object(default_civilisation, "_file_ids", return_value=file_ids)
 
-    def test_game_starts_and_steps_without_the_default_civilisation_file(self):
-        with open(os.path.join(SIM_DIR, "default_civilisation.py"), encoding="utf-8") as handle:
-            hidden = re.search(r'PREFERRED_DEFAULT_CIVILISATION = "([^"]+)"', handle.read()).group(1)
-        with tempfile.TemporaryDirectory() as scratch:
-            for entry in os.listdir(ROOT):
-                if entry not in (".git", "data", ".claude"):
-                    os.symlink(os.path.join(ROOT, entry), os.path.join(scratch, entry))
-            os.mkdir(os.path.join(scratch, "data"))
-            for entry in os.listdir(os.path.join(ROOT, "data")):
-                if entry != "civilizations":
-                    os.symlink(os.path.join(ROOT, "data", entry),
-                               os.path.join(scratch, "data", entry))
-            os.mkdir(os.path.join(scratch, "data", "civilizations"))
-            for entry in os.listdir(CIVILISATION_DIR):
-                if entry != hidden + ".json":
-                    os.symlink(os.path.join(CIVILISATION_DIR, entry),
-                               os.path.join(scratch, "data", "civilizations", entry))
-            result = subprocess.run([sys.executable, "-c", SCRIPT % {"hidden": hidden}],
-                                    cwd=scratch, env=dict(os.environ, PYTHONPATH=scratch),
-                                    capture_output=True, text=True, timeout=900)
-        self.assertEqual(result.returncode, 0, result.stderr[-2000:])
-        self.assertIn("ok", result.stdout)
+
+class DefaultCivilisation(unittest.TestCase):
+
+    def test_the_preferred_civilisation_is_the_default_when_its_file_is_present(self):
+        with with_files(["a_first", PREFERRED_DEFAULT_CIVILISATION, "z_last"]):
+            self.assertEqual(default_civilisation_id(), PREFERRED_DEFAULT_CIVILISATION)
+
+    def test_the_first_civilisation_present_is_the_default_when_the_preferred_file_is_absent(self):
+        with with_files(["b_second", "a_first"]):
+            self.assertEqual(default_civilisation_id(), "b_second")
+
+    def test_with_no_civilisation_file_at_all_the_preferred_name_is_still_answered(self):
+        with with_files([]):
+            self.assertEqual(default_civilisation_id(), PREFERRED_DEFAULT_CIVILISATION)
+
+    def test_the_files_listed_are_sorted_json_files_without_the_reference_data(self):
+        with mock.patch.object(default_civilisation.os, "listdir",
+                               return_value=["rome.json", "_TECH_EFFECTS.json", "han.json", "notes.txt"]):
+            self.assertEqual(default_civilisation._file_ids(), ["han", "rome"])
+
+    def test_every_civilisation_file_loads_without_the_preferred_one(self):
+        from sim.engine import data
+        ids = default_civilisation._file_ids()
+        self.assertTrue(ids)
+        for civilisation_id in ids:
+            self.assertEqual(data.load_civ(civilisation_id)["id"], civilisation_id)
 
 
 if __name__ == "__main__":
