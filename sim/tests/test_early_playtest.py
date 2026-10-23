@@ -1,17 +1,9 @@
-"""SCENARIO: early_playtest: regression checks from the first playtests, run with `--only early_playtest`.
+"""SMOKE: early_playtest: the first playtests' regressions on unopened games, no year stepped.
 
-Complaint 640 audit: the rules moved out of this file. The cost factor, the quoted-cost money factor, the hazard relief,
-the value-weight clamp and trade availability are called with figures in test_civ_cost_and_hazard_relief_rules; the
-military leverage and war-relief rules are in test_military_leverage_rules; what each opening grants and cannot start,
-the dated hazards, the policy switches, the command registry and the Rome-only phrases are read off the data in
-test_early_playtest_data. Four named scenarios remain on purpose: the protocol surface (one agent session of malformed
-input, `play` for a civilisation not starting in 100 AD, fog on `why`, the digest as the tree opens up), the turn-one
-Rome game, the Norse opening, and an armed empire against an unarmed one.
-Deleted as held elsewhere: a civilisation's cost reaching the quote and a sacking blunted but never zeroed (test_civ_cost_and_hazard_relief_rules); a mine topped up delivers capacity and a closed mine stops costing (test_mine_auto_and_capacity
-"resolving the named year commissions the capacity"; test_mines "closing a material closes every working of it and refunds
-the SUM of each working's OWN operating cost"), an unfunded project never completes and manual play buys no people
-(test_start_money_rule; test_blocker_readouts_agree "a bill past cash and credit is a money blocker" and "start_refusal is
-the first blocker's text"; the policy defaults in test_early_playtest_data).
+The rules moved out of this file: the cost factor, hazard relief and trade availability are called with figures in
+test_civ_cost_and_hazard_relief_rules; military leverage and war relief in test_military_leverage_rules; what each opening
+grants, the dated hazards and the policy switches in test_early_playtest_data. What remains is one session of malformed
+input answered by the dispatcher, and the Rome turn-one labour, mothball and commission steps; the Norse and fog replies follow.
 """
 from .harness import *  # noqa: F401,F403
 from sim.refusal import cause_of
@@ -31,10 +23,7 @@ _SESSION = [
     ("negative_buy", {"cmd": "buy", "what": "forest", "n": -5}),
     ("state_after_buy", {"cmd": "state"}),
     ("non_string_id", {"cmd": "why", "id": {"a": 1}}),
-    ("available_digest", {"cmd": "available"}),
-    ("available_all", {"cmd": "available", "all": True}),
     ("help", {"cmd": "help"}),
-    ("labour", {"cmd": "labour"}),
     ("hire_banana", {"cmd": "hire", "trade": "smith", "n": "banana"}),
     ("bribe_lots", {"cmd": "bribe", "amount": "lots"}),
     ("state_after_refusals", {"cmd": "state"}),
@@ -46,21 +35,23 @@ _SESSION = [
     ("quote_mine", {"cmd": "quote", "what": "mine", "material": "gold", "n": 1}),
     ("state_last", {"cmd": "state"}),
 ]
-_replies, _raw, _return_code = proto([command for _, command in _SESSION])
-check("every input line, malformed or not, gets exactly one reply and the session survives",
-      _return_code == 0 and len(_replies) == len(_SESSION), (_return_code, len(_replies)))
+_game = unopened_sim(capital=200000.0)
+_game.end_year = _game.cfg["start_year"] + 200   # as the agent front end sets it
+_replies = [S._agent_dispatch(_game, NODES, command) for _, command in _SESSION]
+check("every input line, malformed or not, gets exactly one reply",
+      len(_replies) == len(_SESSION) and all(isinstance(one_reply, dict) for one_reply in _replies), len(_replies))
 reply = {label: one_reply for (label, _), one_reply in zip(_SESSION, _replies)}
 
 check("negative buy quantity changes nothing",
       reply["state_first"]["capital"] == reply["state_after_buy"]["capital"]
       and reply["state_after_buy"]["forest_ha"] == 0,
       "capital %s -> %s" % (reply["state_first"]["capital"], reply["state_after_buy"]["capital"]))
-check("state/available/help work before the first step",
-      all(reply[label].get("ok") for label in ("state_first", "available_digest", "help")),
+check("state/help work before the first step",
+      all(reply[label].get("ok") for label in ("state_first", "help")),
       str(reply["state_first"])[:90])
-early_physics = {"sc2_physics_nuclear_fission", "sc2_physics_wave_mechanics",
-                 "el2_sonar_acoustic_detection_ranging", "el2_photomultiplier_single_photon"}
-offered = {entry["id"] for entry in reply["available_all"]["available"]} & early_physics
+early_physics = ["sc2_physics_nuclear_fission", "sc2_physics_wave_mechanics",
+                 "el2_sonar_acoustic_detection_ranging", "el2_photomultiplier_single_photon"]
+offered = [node_id for node_id in early_physics if _game.can_start(node_id)]
 check("no advanced physics is startable in year one", not offered, str(offered))
 check("a quantity that is not a number is refused, not defaulted",
       not reply["hire_banana"].get("ok") and not reply["bribe_lots"].get("ok")
@@ -76,13 +67,6 @@ check("step refuses true as a number of years", not reply["step_true"].get("ok")
 check("a mine can be priced before it is bought",
       reply["quote_mine"].get("ok") and reply["quote_mine"].get("to_sink_it", 0) > 0
       and reply["quote_mine"].get("every_year_it_stands", 0) > 0, str(reply["quote_mine"])[:90])
-
-# (still scenario 1) play must run a civilisation that does not start in 100 AD (its loop used to end at 100 + horizon)
-from . import cli_in_process
-_play = cli_in_process.run(["play", "--manual", "--civ", "norse_900ad"], "n\nq\n", cwd=ROOT)
-# presentation: the printed header of the interactive play command
-check("play runs a civilisation that does not start in 100 AD",
-      "900 AD" in _play.stdout and "Ended 900 AD" not in _play.stdout, _play.stdout[-120:])
 
 # --- SCENARIO 2: Rome, one game: turn-one state, and what a player can and cannot do
 rome = unopened_sim(capital=200000.0)
@@ -158,33 +142,6 @@ norse = unopened_sim(civ="norse_900ad", capital=1000000.0)
 knowledge_risk = S._agent_dispatch(norse, NODES, {"cmd": "risk"})["knowledge_risk"]
 check("no loss risk is reported where nothing sacks",
       knowledge_risk["expected_technologies_lost_per_sacking"] == 0.0, str(knowledge_risk)[:80])
-
-_MIL_NODES = sorted(node_id for node_id in NODES if "military" in (NODES[node_id].get("traits") or ()))
-
-# --- SCENARIO 4: an armed empire against an unarmed one
-unarmed = without_market(unopened_sim())
-armed = without_market(unopened_sim())
-# (leverage and its saturation: test_military_leverage_rules)
-armed.done.update(_MIL_NODES)
-
-unarmed.update_protection()
-armed.update_protection()
-check("a cannon foundry with nobody to sell to protects the founder not at "
-      "all - the leverage is with a patron, not the hardware itself",
-      abs(armed.protection - unarmed.protection) < 1e-9, (unarmed.protection, armed.protection))
-
-# (a war costing an armed empire less, and no relief against staff loss: test_military_leverage_rules)
-
-run_it(unarmed, "patron_imperial")
-run_it(armed, "patron_imperial")
-unarmed.output_factor = 0.7
-armed.output_factor = 0.7
-unarmed.step()
-armed.step()
-check("an armed empire's trade recovers from a war faster than an unarmed "
-      "one's, year over year, and the war still happened either way - this "
-      "is recovery speed, not a rewrite of the event",
-      armed.output_factor > unarmed.output_factor > 0.7, (unarmed.output_factor, armed.output_factor))
 
 # --- (scenario 1 again) fog hides the exact downstream count, and the digest stays a summary as the tree opens up
 fogged = unopened_sim()

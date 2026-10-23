@@ -1,6 +1,6 @@
 """Complaint 564: the founder's household buys its needs through the economy's need basket and floors, so its living
 cost is a read of that bill and a household of the same size pays the same. The rules are called on stubs that hold only
-what each reads; the economy's floors against a running game are in test_one_living_cost_model_scenario."""
+what each reads; the floors at the seat are in test_one_living_cost_floors."""
 from types import SimpleNamespace
 
 from .harness import *  # noqa: F401,F403

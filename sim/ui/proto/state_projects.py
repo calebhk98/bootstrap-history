@@ -1,6 +1,6 @@
 """State-reply builders for active projects, money, operations, spending and training hours."""
 
-from .parallelism_notes import free_hours_note
+from .parallelism_notes import free_hours_going_unused
 from sim.refusal import cause_of
 from .state_waiting import _agent_end_reason, _waiting_on, _worth_knowing_early
 from .state_shut_staffing import shut_for_want_of_staff
@@ -260,9 +260,7 @@ def _agent_state_training_and_hours(sim, active, full):
         # spent paying that screen's byte budget, and it still fires on the
         # very next ordinary `state` or `step` instead.
         **({"worth_knowing_early": _worth_knowing_early(sim)} if not full else {}),
-        "free_hours_going_unused": free_hours_note(
-            [value["founder_hours_left"] for value in active.values()],
-            max(0.0, sim.labour.director_pool() - sim.labour.director_hours_committed())),
+        "free_hours_going_unused": free_hours_going_unused(sim, active),
         "founder_hours_sold_for_wages_this_year": round(
             sim.wage_hours_this_year, 1),
         # WHERE THE HOURS COME FROM: the pool can grow well past a single
