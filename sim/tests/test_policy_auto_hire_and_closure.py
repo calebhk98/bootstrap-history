@@ -1,8 +1,7 @@
 """Policies, creditors and hazard value shifts: what a business review spares and closes, the log naming what a seat shed or
 creditors took, the payroll a household lets go, the default policy, a switch that cannot act, the stall diagnosis, the fee to
-bring a shut work back and a hazard's gradual values delta. Each rule runs on inputs or a stub the test builds. The states of a
-running game (a mothballed or forgotten work, the start gates, the year's hours, auto-hire on a rich household) are
-test_policy_auto_hire_and_closure_scenario. That knowledge categories are never abandoned is test_category_traits; the loss rule
+bring a shut work back and a hazard's gradual values delta. Each rule runs on inputs or a stub the test builds. The start gates and
+restoring a shut work are test_start_gate_rules, the staff a household cannot pay is test_payroll_shed. That knowledge categories are never abandoned is test_category_traits; the loss rule
 and the seizure of a plant are test_business_review; the cap on work in hand is test_start_money_rule."""
 QUICK_TOPIC = True
 

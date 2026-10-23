@@ -1,5 +1,5 @@
 """Complaint 446: the economy port takes the unskilled trade from the trade registry, not from a name in code.
-The shipped data's setup is in test_port_unskilled_trade_scenario."""
+The shipped data's setup is in test_game_port_and_portfolio_smoke."""
 QUICK_TOPIC = True
 
 from .harness import *  # noqa: F401,F403

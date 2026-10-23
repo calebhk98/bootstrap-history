@@ -2,9 +2,9 @@
 
 No game is built (`disease_stand_in.StandInSim`). The rules here: a civilisation with no contact to a pathogen's source never
 gets it, contact weight follows the routes a carrier mode opens and falls with distance, the deaths handed to the population
-are the model's own count, and no civilisation file carries a dated plague. The ensemble gates (Rome's epidemics are drawn,
-not dated; ships bring the pathogen in every run) are test_plagues_from_contact_validation; the founder's staff losing the
-working-age share is test_plagues_from_contact_scenario.
+are the model's own count, and no civilisation file carries a dated plague. The founder's staff losing the working-age share is
+test_epidemic_seats_and_knowledge; ships bringing the pathogen in every seed is test_disease_arrival_draw. The five-century Rome
+ensemble is no longer a test (Complaint 490).
 """
 
 QUICK_TOPIC = True
