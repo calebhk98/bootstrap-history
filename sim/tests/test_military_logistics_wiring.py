@@ -1,9 +1,7 @@
 """The one crossing wiring sim/world/military_logistics.py into the engine: the per-soldier equipment burden follows
 the founder's military leverage between the melee floor and the modern-rifle ceiling, and leverage counts only the
 founder's own military nodes. Called on a stub over the real mixin. Soldier iron and ammunition supply is derived in
-kilograms and never converted to money.
-
-The notice that carries the figure, in a game, is in `test_military_logistics_wiring_scenario`."""
+kilograms and never converted to money."""
 
 QUICK_TOPIC = True
 

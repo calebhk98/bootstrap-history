@@ -1,5 +1,4 @@
-"""mine_stock_accounting: complaint 148, the mines screen columns (Complaint 640: rows built from stub workings, no game;
-the banked stock through a game year is test_mine_stock_accounting_scenario)."""
+"""mine_stock_accounting: complaint 148, the mines screen columns (Complaint 640: rows built from stub workings, no game)."""
 import types
 
 from .harness import check
