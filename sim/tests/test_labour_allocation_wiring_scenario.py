@@ -7,7 +7,7 @@ from sim.labour import labour_allocation
 
 
 def _rome_sim():
-    return sim(civ="rome_100ad", events=False)
+    return unopened_sim(civ="rome_100ad", events=False)
 
 
 def _farm_hours(test_sim):

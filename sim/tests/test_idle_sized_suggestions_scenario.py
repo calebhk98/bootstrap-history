@@ -7,7 +7,7 @@ def ask(test_sim, **command):
     return S._agent_dispatch(test_sim, NODES, command)
 
 
-test_sim = sim(capital=1_000_000.0)
+test_sim = unopened_sim(capital=1_000_000.0)
 idle = ask(test_sim, cmd="idle")
 uses = idle.get("potential_uses", {})
 program = uses.get("development_program")
@@ -26,7 +26,7 @@ check("the sized suggestion is the trade's, with the command to teach it",
       sized[0]["trade"] == "machinist" and sized[0]["command"].startswith("train machinist"), sized)
 
 # the pre-step warning names the delay kind
-waiting = sim(capital=1_000_000.0)
+waiting = unopened_sim(capital=1_000_000.0)
 target = next((node_id for node_id in waiting.order
                if NODES[node_id]["yrs"] >= 3 and NODES[node_id]["ph"] > 0 and waiting.can_start(node_id)), None)
 waiting.end_year = waiting.cfg["start_year"] + waiting.cfg["horizon_years"]

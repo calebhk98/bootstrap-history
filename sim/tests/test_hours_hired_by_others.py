@@ -1,4 +1,6 @@
 """Rule tests (Complaint 556): the hours other employers hired are counted apart from the producers' own."""
+QUICK_TOPIC = True
+
 import unittest
 
 from sim.economy import hours_hired_by_others, workforce_settle

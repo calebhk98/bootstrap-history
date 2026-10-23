@@ -1,5 +1,6 @@
 """Scenario (Complaint 640): the weather cells and pooled draw of running games, from the geography data. The correlation
-factor and the pooling arithmetic are in test_growing_season_weather_correlation.py.
+factor and the pooling arithmetic are in test_growing_season_weather_correlation.py; the cell weights and the single-draw
+fallback are in test_weather_cells_rule.py.
 
 growing_season_weather_correlation: does the harvest weather draw actually
 answer Complaints/49-one-label-draws-one-coin.md's own question - "over what
@@ -27,7 +28,6 @@ from .harness import *  # noqa: F401,F403
 
 from sim.engine.core import agriculture
 from sim.geography import api as geography_api
-from sim.tests.weather_test_helpers import assert_single_draw_fallback
 
 
 def _rome_sim(events=False):
@@ -104,9 +104,6 @@ class PooledWeatherMultiplierTests(unittest.TestCase):
     """`Sim._pooled_farm_weather_multiplier` - the correlated-cell weighted
     average that replaces WIRING TWO's independent-per-region average.
     """
-
-    def test_falls_back_to_the_old_single_draw_when_there_are_no_cells(self):
-        assert_single_draw_fallback(self, _rome_sim(), agriculture)
 
     def test_han_china_gets_real_diversification_from_being_spread_out(self):
         # THE ACTUAL BUG Complaints/49 reports: WIRING TWO gave a

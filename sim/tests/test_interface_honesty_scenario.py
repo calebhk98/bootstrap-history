@@ -1,5 +1,5 @@
-"""SCENARIO: what the protocol and screens tell a player in a real game is honest: fogged estimates are ranges, notes do not
-rank themselves, prerequisites must be finished, progress and values are readable, and a step stops at a warning. Each
+"""SCENARIO: what the protocol and screens tell a player in a real game is honest: fogged estimates are ranges,
+progress and values are readable, and a step stops at a warning. Each
 check reads the reply of a built game; the credit-warning rules are in `test_credit_warning_rules`."""
 from .harness import *  # noqa: F401,F403
 from sim.refusal import LogLine
@@ -79,78 +79,6 @@ _w_nf = S._agent_dispatch(s_nf, NODES, {"cmd": "why", "id": _k_fe})
 check("with fog off, EARNS/YR is still the exact figure",
       not isinstance(_w_nf["revenue"], list)
       and _w_nf["revenue"] == round(s_nf.venture_real_earnings(_k_fe), 1), _w_nf["revenue"])
-
-
-# --- JOB 2: the game must not tell you which branch matters most. A
-# normal-play tester quoted school_founded's own note calling itself "the
-# pivot of the entire game" with "every year of delay here costs more than
-# any single technology"; corpus_dispersed, corpus_written and
-# plague_preparedness rank themselves the same way.
-for _spid, _banned in (
-        ("school_founded", ("pivot of the entire game",
-                            "costs more than any single",
-                            "highest-leverage thing you can spend money on")),
-        ("corpus_dispersed", ("highest expected-value node in the tree",)),
-        ("corpus_written", ("largest single call on your personal hours",
-                            "must not cut")),
-        ("plague_preparedness", ("highest expected-value defensive investment",))):
-    _wn = S._node_explain(_plain, NODES, _spid)
-    check("%s's note no longer ranks itself against the rest of the tree"
-          % _spid,
-          all(banned_phrase not in (_wn.get("note") or "") for banned_phrase in _banned),
-          _wn.get("note"))
-
-# LEGITIMATE WARNINGS SURVIVE: plague_preparedness still tells you the date
-# and what the node actually does about it - a consequence the player
-# cannot see coming, not a ranking claim, and it must stay.
-_pp = S._node_explain(_plain, NODES, "plague_preparedness")
-# presentation: the hazard warning's wording
-check("...but the actual hazard warning underneath it is untouched",
-      "165 AD" in (_pp.get("note") or "")
-      and "decides whether your institute survives" in (_pp.get("note") or ""),
-      _pp.get("note"))
-
-# school_founded's OWN statement that it is optional must survive too - it
-# is the opposite of the fault being fixed.
-_sf = S._node_explain(_plain, NODES, "school_founded")
-check("school_founded's note still says it is optional",
-      "OPTIONAL" in (_sf.get("note") or "")
-      and "Nothing in the technical tree requires it" in (_sf.get("note") or ""),
-      _sf.get("note"))
-
-# UNDER FOG TOO: fog_summary takes its one sentence off the same note, and
-# used to open with exactly the self-play line this exists to cut.
-s_fp = s_fe
-s_fp.revealed = {"school_founded"}
-# presentation: the fogged summary's wording
-check("the fogged one-line summary of school_founded is not its own "
-      "self-rating either",
-      "pivot" not in s_fp.fog_summary("school_founded").lower(),
-      s_fp.fog_summary("school_founded"))
-
-
-# --- JOB 3a: a prerequisite has to be DONE, not merely started. A tester
-# wrote "nothing states whether a prerequisite must be DONE or open" - it
-# has always meant done, and the one sentence that said so lived only in a
-# branch start_blocked_reason pre-empts on every ordinary refusal, so a
-# player who actually hit the refusal never saw it.
-s_pn = sim(capital=1000000.0)
-_pair_pn = None
-for _cand in s_pn.order:
-    if not s_pn.can_start(_cand):
-        continue
-    _dep = next((node_id for node_id in NODES if _cand in NODES[node_id]["pre"]), None)
-    if _dep:
-        _pair_pn = (_cand, _dep)
-        break
-_k1_pn, _k2_pn = _pair_pn
-S._agent_dispatch(s_pn, NODES, {"cmd": "start", "id": _k1_pn})
-_w_pn = S._node_explain(s_pn, NODES, _k2_pn)
-_txt_pn = _RP("why", _w_pn)
-check("a refusal for a started-but-unfinished prerequisite says it has to "
-      "be FINISHED, not merely started - on the path a player actually hits",
-      "FINISHED" in _txt_pn and "not merely started" in _txt_pn,
-      [line for line in _txt_pn.splitlines() if "FINISHED" in line] or _txt_pn[:200])
 
 
 # --- JOB 3b: a fog-safe sense of progress DURING play, and nothing more

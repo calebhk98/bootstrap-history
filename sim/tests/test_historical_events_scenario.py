@@ -5,7 +5,7 @@ from sim.refusal import cause_of, facts_of
 
 _rome_crossing = next(hazard for hazard in S.load_civ("rome_100ad")["hazards"] if hazard["name"] == "The crossings, and the sack of Rome")
 
-_unmet_game = sim(civ="rome_100ad")
+_unmet_game = unopened_sim(civ="rome_100ad")
 _unmet = _unmet_game._resolve_hazard_condition(dict(_rome_crossing), 406, 406)
 check("Rome, dependent on the African grain fleet: the hazard fires as written and the player is told why",
       _unmet.get("output_factor") == _rome_crossing["output_factor"]
@@ -13,7 +13,7 @@ check("Rome, dependent on the African grain fleet: the hazard fires as written a
       and facts_of(_unmet_game.log[0][1])["hazard"] == _rome_crossing["name"],
       _unmet_game.log)
 
-_met_game = sim(civ="rome_100ad")
+_met_game = unopened_sim(civ="rome_100ad")
 run_it(_met_game, "endowment_land", "crop_rotation")
 _met = _met_game._resolve_hazard_condition(dict(_rome_crossing), 406, 406)
 check("a household that feeds itself has the output hit averted and is told with the real cause",

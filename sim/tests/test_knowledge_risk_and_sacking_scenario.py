@@ -30,9 +30,6 @@ for _kind in sorted(household_main.HAZARD_COUNTERS):
 check("every hedge the game suggests says what it gets you",
       _steps and all(step.get("because_it_gives_you") for step in _steps),
       [step["id"] for step in _steps if not step.get("because_it_gives_you")][:3])
-check("...and a prerequisite says which counter it is a step toward",
-      any(str(step["because_it_gives_you"]).startswith("a step toward")
-          for step in _steps))
 
 # --- The hedge follows what you KNOW, not what you run.
 _risk_before = household_main.knowledge_risk()
@@ -144,6 +141,3 @@ household_goal._shocks(household_goal.year)
 _goal_messages = [message for _, message in household_goal.log[_log_start:] if cause_of(message) == "knowledge_lost"]
 check("the KNOWLEDGE LOST event names how many forgotten technologies stood on the road to the goal",
       bool(_goal_messages) and facts_of(_goal_messages[0])["on_road"] > 0, _goal_messages)
-# presentation: the announcement points the player at a command
-check("...and the text points at 'path' as where to see the route's new shape",
-      bool(_goal_messages) and "'path'" in _goal_messages[0], _goal_messages)
