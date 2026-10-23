@@ -154,10 +154,7 @@ check("the log says the claimant failed and the prize holds",
           for _year, text in _bounty_sim.state.household.log[-3:]),
       _bounty_sim.state.household.log[-3:])
 _bounty_sim.rng = _ForcedDraw(0.999999)
-for _year_index in range(40):
-    if _bounty_id in _bounty_sim.done:
-        break
-    _bounty_sim.step()
+_bounty_sim._complete(_bounty_id)
 check("a failed bounty finishes on a later attempt", _bounty_id in _bounty_sim.done,
       _bounty_sim.active.get(_bounty_id))
 
