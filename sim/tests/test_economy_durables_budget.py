@@ -20,16 +20,16 @@ class DurableRatioTests(unittest.TestCase):
     def test_nothing_held_wants_the_stock_for_the_whole_life(self):
         self.assertAlmostEqual(_durable_ratio("plough", 10.0, 0.0, SPECS), PLOUGH_LIFE)
 
-    def test_at_the_serving_stock_only_the_wear_is_replaced(self):
+    def test_after_year_end_wear_only_the_missing_stock_is_replaced(self):
         flow = 10.0
-        self.assertAlmostEqual(_durable_ratio("plough", flow, flow * PLOUGH_LIFE, SPECS), 1.0)
+        self.assertAlmostEqual(_durable_ratio("plough", flow, flow * (PLOUGH_LIFE - 1.0), SPECS), 1.0)
 
     def test_beyond_the_serving_stock_nothing_is_bought(self):
         self.assertEqual(_durable_ratio("plough", 10.0, 1e6, SPECS), 0.0)
 
-    def test_between_it_is_the_gap_plus_the_wear_over_the_flow(self):
+    def test_between_it_is_the_gap_over_the_flow(self):
         specs = {"plough": GoodSpec("plough", 10.0, 0.0, 4.0, "tool")}
-        self.assertAlmostEqual(_durable_ratio("plough", 10.0, 20.0, specs), (40.0 - 20.0 + 5.0) / 10.0)
+        self.assertAlmostEqual(_durable_ratio("plough", 10.0, 20.0, specs), (40.0 - 20.0) / 10.0)
 
 
 class DurableBudgetTests(unittest.TestCase):
