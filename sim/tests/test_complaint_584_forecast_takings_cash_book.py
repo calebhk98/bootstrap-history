@@ -1,7 +1,7 @@
 """Complaints/584: a concern's forecast says what it stands on. Goods nobody has sold have no market price, so the
 forecast is the long-run figure and says so; once sold, the market's price applies. The rule is
-`concern_earnings.forecast_basis`; the forecast, the year's takings and the cash book reading one function is the
-scenario in test_scenarios_batch3."""
+`concern_earnings.forecast_basis`; that the forecast, the year's takings and the cash book read one function is not
+tested through a game."""
 QUICK_TOPIC = True
 
 import unittest

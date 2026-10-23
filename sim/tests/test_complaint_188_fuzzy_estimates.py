@@ -1,7 +1,7 @@
 """Complaint 188: labour needs shown as uncertain estimates while something is unknown (option `fuzzy_estimates`, off by
 default). Only the display is fuzzy. The rules are the functions of sim/engine/fuzzy_estimates.py, called on a stand-in
-for the game that holds only what they read (salt, done and active work, nodes). Whether a saved game keeps the option and
-the start check keeps the real needs: test_scenarios_batch3_saves."""
+for the game that holds only what they read (salt, done and active work, nodes). Whether a saved game keeps the option:
+test_fuzzy_estimates_saved_rule."""
 QUICK_TOPIC = True
 
 import copy

@@ -57,7 +57,7 @@ class AdviceOrderTests(unittest.TestCase):
 
 
 class HousingPriceTests(unittest.TestCase):
-    """`buy housing`, `quote housing` and the advice all read this one function (wiring: test_scenarios_batch3)."""
+    """`buy housing`, `quote housing` and the advice all read this one function."""
 
     def test_a_place_costs_the_base_cost_times_the_price_level(self):
         world = SimpleNamespace(HOUSING_COST_PER_PLACE=40.0, price_index=1.5)

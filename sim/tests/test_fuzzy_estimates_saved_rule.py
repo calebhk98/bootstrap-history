@@ -1,6 +1,6 @@
 """The estimates option and its salt are saved state: a state that has them on still has them, with the same salt (so
 the same figures are drawn), after a save and a load. The rule is the state's own serialisation, called on a bare
-`SimulationState`; that a refused `start` still states the real need is test_scenarios_batch3_saves."""
+`SimulationState`; the start reply's estimate is test_complaint_188_fuzzy_estimates."""
 
 QUICK_TOPIC = True
 
