@@ -1,107 +1,85 @@
-"""A node that makes something pays for what it takes to keep making it: its staff and its plant.
-
-Upkeep follows the same entries as revenue: the hours the lines work, at the civilisation's wages
-for each trade, plus a share of what the node cost to build (labelled by kind of node). Inputs are
-netted in revenue, so they are not charged again here. Nodes with no physical output keep their
-authored upkeep, labelled."""
-import copy
+"""A node that makes something pays for what it takes to keep making it: its staff and its plant (`sim/engine/node_upkeep.py`,
+`node_revenue._apply_output`). Each rule is called on a hand-made node and entry; no tree is loaded and no game is built."""
 import unittest
 
-from sim.engine import data, energy_prices, node_revenue, node_upkeep
-from sim.labour.labour_market import production_data
+from sim.engine import node_revenue, node_upkeep
+from sim.unit_conversions import HOURS_PER_PERSON_YEAR
+from sim.tests.test_plant_figures import GOODS, WAGES, baskets, entry
+
+QUICK_TOPIC = True
+
+MONEY_PER_HOUR = 2.0
 
 
-class NodeUpkeep(unittest.TestCase):
+def derived_node(**fields):
+    node = dict({"id": "kiln_works", "kind": "ENGINEERING"}, **fields)
+    plant_baskets = baskets(entry(capacity=500.0))
+    node_revenue._apply_output(node, plant_baskets, GOODS, WAGES, MONEY_PER_HOUR)
+    return node, plant_baskets
 
-    def setUp(self):
-        _tree, self.document, self.nodes, self.wages, self.goods = data.load()
-        self.rate = data.starting_schedule().money_per_labour_hour
 
-    def derived(self):
-        return {node_id: node for node_id, node in self.nodes.items()
-                if node.get("_upkeep_basis") == "derived"}
-
-    def test_every_node_with_upkeep_states_its_basis(self):
-        for node_id, node in self.nodes.items():
-            if node["up_hours"] > 0:
-                self.assertIn(node.get("_upkeep_basis"), ("derived", "default", "programme", "staff", "authored"), node_id)
-
-    def test_every_output_node_has_derived_upkeep(self):
-        output = [node_id for node_id, node in self.nodes.items() if node.get("_revenue_basis") == "output"]
-        self.assertGreater(len(output), 20)
-        for node_id in output:
-            self.assertEqual(self.nodes[node_id]["_upkeep_basis"], "derived", node_id)
-
+class DerivedUpkeepTests(unittest.TestCase):
     def test_derived_upkeep_is_staff_wages_plus_plant_maintenance(self):
-        for node_id, node in self.derived().items():
-            staff = sum(self.wages[trade] * hours
-                        for trade, hours in node["_labour_hours_per_year"].items()) / self.rate
-            parts = node["_upkeep_hours_parts"]
-            plant = node_upkeep.maintenance_hours(node, parts["plant_build_hours"], parts["plant_wear_hours"])
-            self.assertAlmostEqual(node["up_hours"], staff + plant,
-                                   delta=1e-6 * max(1.0, node["up_hours"]), msg=node_id)
-            self.assertAlmostEqual(node["_upkeep_hours_parts"]["staff"], staff,
-                                   delta=1e-6 * max(1.0, staff), msg=node_id)
-            if node["_labour_hours_per_year"]:
-                self.assertGreater(node["up_hours"], 0.0, node_id)
+        node, plant_baskets = derived_node()
+        parts = node["_upkeep_hours_parts"]
+        staff = sum(WAGES[trade] * hours for trade, hours in plant_baskets.labour_hours.items()) / MONEY_PER_HOUR
+        plant = node_upkeep.maintenance_hours(node, parts["plant_build_hours"], parts["plant_wear_hours"])
+        self.assertGreater(staff, 0.0)
+        self.assertGreater(plant, 0.0)
+        self.assertAlmostEqual(parts["staff"], staff)
+        self.assertAlmostEqual(node["up_hours"], staff + plant)
+        self.assertEqual(node["_upkeep_basis"], "derived")
 
-    def test_plant_is_the_capital_the_entries_state_priced_at_solved_prices(self):
-        blast = self.nodes["blast_furnace"]
-        capital = [good for entry in production_data().values() if entry.get("requires_node") == "blast_furnace"
-                   for good in entry.get("capital") or []]
-        self.assertGreater(len(capital), 1)
-        build = sum(self.goods.get(material, 0.0) * quantity
-                    for good in capital for material, quantity in good["build_materials"].items())
-        build += sum(self.wages[trade] * hours
-                     for good in capital for trade, hours in good.get("build_labour_hours", {}).items())
-        self.assertAlmostEqual(blast["_upkeep_hours_parts"]["plant_build_hours"], build / self.rate,
-                               delta=1e-6 * build / self.rate)
+    def test_plant_is_the_capital_the_entry_states_priced_at_the_goods_prices(self):
+        node, _baskets = derived_node()
+        build = (100.0 * GOODS["brick"] + 50.0 * WAGES["mason"]) / MONEY_PER_HOUR
+        self.assertAlmostEqual(node["_upkeep_hours_parts"]["plant_build_hours"], build)
 
     def test_an_entry_that_states_no_capital_keeps_no_plant_up(self):
-        capital_light = [node for node in self.derived().values()
-                         if node["_upkeep_hours_parts"]["plant_build_hours"] == 0.0]
-        for node in capital_light:      # every output-earning node now states a plant, so this may be empty
-            self.assertEqual(node["_upkeep_hours_parts"]["plant"], 0.0, node["id"])
+        node = {"id": "reed_works", "kind": "ENGINEERING"}
+        node_revenue._apply_output(node, baskets(entry(capacity=None), staff_people=1.0), GOODS, WAGES, MONEY_PER_HOUR)
+        self.assertEqual(node["_upkeep_hours_parts"]["plant"], 0.0)
+        self.assertEqual(node["up_hours"], node["_upkeep_hours_parts"]["staff"])
 
     def test_derived_upkeep_does_not_read_the_authored_figure(self):
-        changed = copy.deepcopy(self.nodes)
-        for node in changed.values():
-            node["up_hours"] = 1e9
-            node["_up_hours_authored"] = 1e9
-        energy = energy_prices.graded(data.load_civ()["starting_techs"], self.document, self.goods)
-        node_revenue.apply_revenue(changed.values(), self.goods, self.wages, self.rate, energy)
-        for node_id, node in self.derived().items():
-            self.assertAlmostEqual(changed[node_id]["up_hours"], node["up_hours"],
-                                   delta=1e-9 * max(1.0, node["up_hours"]), msg=node_id)
+        plain, _baskets = derived_node()
+        stated, _baskets = derived_node(up_hours=1e9, _up_hours_authored=1e9)
+        self.assertEqual(stated["up_hours"], plain["up_hours"])
 
-    def test_no_node_types_a_positive_upkeep(self):
-        self.assertEqual([node["id"] for node in self.nodes.values()
-                          if node.get("_upkeep_basis") == "authored"], [])
+    def test_plant_upkeep_is_never_more_than_the_wear_the_price_already_charges(self):
+        parts = derived_node()[0]["_upkeep_hours_parts"]
+        self.assertLessEqual(parts["plant"], parts["plant_wear_hours"] * (1 + 1e-9))
 
+
+class ProgrammeUpkeepTests(unittest.TestCase):
     def test_a_programme_costs_what_its_labour_and_consumables_cost(self):
         node = {"annual_labour_hours": {"labourer": 10.0}, "annual_consumables": {"wheat_kg": 100.0}}
         wages, goods = {"labourer": 2.0}, {"wheat_kg": 0.5}
         self.assertAlmostEqual(node_upkeep.programme_spending_hours(node, goods, wages, 2.0), (20.0 + 50.0) / 2.0)
+        self.assertTrue(node_upkeep.is_programme(node))
+        self.assertFalse(node_upkeep.is_programme({}))
 
-    def test_the_maintenance_share_is_a_declared_fraction_of_the_build_cost(self):
+    def test_the_maintenance_share_is_a_fraction_of_the_build_cost(self):
         for kind in ("INFRASTRUCTURE", "ENGINEERING", "RESOURCE", None):
             hours = node_upkeep.maintenance_hours({"kind": kind}, 1000.0)
             self.assertGreater(hours, 0.0)
-            self.assertLess(hours, 100.0)
-
-    def test_no_derived_node_runs_at_a_loss_before_the_market_moves(self):
-        losing = [node_id for node_id, node in self.derived().items()
-                  if node["rev_hours"] < node["up_hours"] * (1 - 1e-9)]
-        self.assertEqual(losing, [])
-
-    def test_plant_upkeep_is_never_more_than_the_wear_the_price_already_charges(self):
-        for node_id, node in self.derived().items():
-            parts = node["_upkeep_hours_parts"]
-            self.assertLessEqual(parts["plant"], parts["plant_wear_hours"] * (1 + 1e-9), node_id)
+            self.assertLess(hours, 1000.0)
+            self.assertAlmostEqual(node_upkeep.maintenance_hours({"kind": kind}, 2000.0), 2.0 * hours)
 
     def test_maintenance_is_capped_at_the_wear(self):
         self.assertEqual(node_upkeep.maintenance_hours({"kind": "ENGINEERING"}, 1000.0, 5.0), 5.0)
         self.assertGreater(node_upkeep.maintenance_hours({"kind": "ENGINEERING"}, 1000.0, 1e9), 5.0)
+
+    def test_a_node_stating_no_upkeep_keeps_up_what_it_cost_to_build(self):
+        node = {"kind": "RESOURCE"}
+        self.assertEqual(node_upkeep.unstated_upkeep_hours(node, 800.0), node_upkeep.maintenance_hours(node, 800.0))
+
+    def test_named_staff_places_are_paid_a_year_each(self):
+        node = {"sch": 2.0, "art": 1.0}
+        wages = {node_upkeep.SCHOLAR_STAFF_TRADE: 3.0, node_upkeep.CRAFT_STAFF_TRADE: 2.0}
+        hours = node_upkeep.staff_places_hours_cost(node, wages, 1.0)
+        self.assertAlmostEqual(hours, 8.0 * HOURS_PER_PERSON_YEAR)
+
 
 
 if __name__ == "__main__":

@@ -1,7 +1,7 @@
 """Complaints 358 and 356: every employer asks the one labour market. Whoever asks is quoted the same rate for the same
 trade at the same moment; hiring records pressure and releasing eases it; and no module outside the labour market
 computes a wage. The market is called over a stand-in for the household and the world it reads; the employers reaching it
-in a running game are in test_one_labour_market_scenario."""
+are in test_one_labour_market_wiring."""
 import ast
 import os
 from types import SimpleNamespace

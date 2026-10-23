@@ -389,10 +389,10 @@ def _apply_blob(sim, blob):
 	if state._weights:
 		sim.value_weights.update(state._weights)
 	if getattr(sim, "_economy_deferred", False):
-		figure = state.economy.nodes_money_per_labour_hour if state.economy.money_from_economy else None
+		from .opening_money import reprice_tree, saved_tree_pricing
+		figure = saved_tree_pricing(state.economy)
 		if figure is None:
 			raise EconomyNotOpened("a game built to load a save without opening its economy needs the save's tree pricing")
-		from .opening_money import reprice_tree
 		sim._economy_deferred = False
 		reprice_tree(sim, figure)
 	sim.refresh_derived_nodes()

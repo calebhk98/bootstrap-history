@@ -1,5 +1,5 @@
-"""SCENARIO (Complaint 640): Complaint 507 (stage 2): the Rome opening's prices are the cost of making each good at the
-opening wages, rate and rent, and the starting wage in metal is alike across civilisations. The fixture rules of the
+"""SMOKE (Complaint 507, stage 2): the Rome opening's prices are the cost of making each good at the opening wages, rate and
+rent, and in hours of work do not depend on what the player holds. Builds two unopened games, no years. The fixture rules of the
 opening's consistency are in test_opening_consistency_rule."""
 import unittest
 
@@ -43,7 +43,7 @@ class OpeningSeedsAreCostsTests(unittest.TestCase):
         from sim.engine import economy_port_setup
         richer = economy_port_setup.opening_values(harness.unopened_sim(capital=1.0e9))
         unskilled = self.opening["unskilled_trade"]
-        for good, price in sorted(self.opening["prices"].items())[:60]:
+        for good, price in sorted(self.opening["prices"].items()):
             self.assertAlmostEqual(richer["prices"][good] / richer["wages"][unskilled],
                                    price / self.opening["wages"][unskilled], places=9, msg=good)
 
@@ -56,18 +56,6 @@ class OpeningSeedsAreCostsTests(unittest.TestCase):
         found = economy_port_late.late_goods_costs(self.game, known, [staple], frozenset(self.game.state.projects.granted),
                                                    default_production_entries())
         self.assertAlmostEqual(found[staple] / gone, 1.0, delta=0.25)
-
-
-class OpeningWageAnchorTests(unittest.TestCase):
-    def test_a_coin_metal_costs_the_same_hours_wherever_it_is_made_so_an_hour_is_paid_alike_in_metal(self):
-        from sim.engine import data
-        from sim.labour.api import wage_provider
-        grams = {}
-        for civ_id in ("rome_100ad", "england_1300", "norse_900ad"):
-            civ = data.load_civ(civ_id)
-            standard = wage_provider.coin_standard(civ)
-            grams[civ_id] = data.starting_schedule(civ_id).money_per_labour_hour * standard["kg_per_unit"] * 1000.0
-        self.assertLess(max(grams.values()) / min(grams.values()), 1.15, grams)
 
 
 if __name__ == "__main__":

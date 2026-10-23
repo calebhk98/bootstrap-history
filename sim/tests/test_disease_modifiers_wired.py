@@ -1,6 +1,6 @@
 """The care-collapse and density modifiers reach the nation's yearly disease step (Complaint 471), on the stand-in sim
 (`disease_stand_in.StandInSim`, no game). The rules inside the model are in test_disease_wiring (`CareCollapseAndDensityTest`);
-these two check the port hands the tuned constants to them, and that the immunity a first wave leaves is still in the nation's records for a second. The sourced-band gates are test_disease_century."""
+these two check the port hands the tuned constants to them, and that the immunity a first wave leaves is still in the nation's records for a second. The sourced-band check is a measurement, not a test: Complaints/closed/386 gives the command."""
 
 QUICK_TOPIC = True
 

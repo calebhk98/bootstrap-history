@@ -173,3 +173,8 @@ Each item names the code that holds it (re-measure before acting; `grep` the nam
 - Effect on rome_100ad (probe: open the economy, hidden years included): wheat price 0.0870 to 0.0911 (economy units), farm share
   of worker-years 0.1033 to 0.0867. `opening_floor_and_thin_trades` "household floors cost a small multiple of the food floor"
   fails before this change (10.36) and after (11.40).
+
+Test migration (slow-test overhaul): `test_norse_opening_scenario` is deleted. The cause it guarded is the rule test
+`test_tillage_and_silt`, and the farm share of hours is `LabourAllocationMixin.farm_share_of_hours` (`test_farm_share_of_hours`). The
+Norse opening's farm share against its ceiling is measured by `python3 sim/simulator.py economy-check --civs norse_900ad --years 1`
+(hunger and hired share) and `python3 sim/simulator.py opening-checks`. The crop-yield wiring is `test_opening_fixture_supply`.
