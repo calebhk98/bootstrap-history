@@ -9,7 +9,7 @@ from sim.engine.saveload import load_state, save_state
 from sim.engine.state_seat import FIRST_SEAT_ID
 
 # save: the aliased root fields are not written; seats are, and a load rebinds the aliases
-other = sim(civ="rome_100ad", capital=1000.0)
+other = unopened_sim(civ="rome_100ad", capital=1000.0)
 other.goal = "point_contact_transistor"
 saved_capital = other.household.capital
 with tempfile.TemporaryDirectory() as folder:
