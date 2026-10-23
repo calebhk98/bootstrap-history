@@ -3,8 +3,8 @@
 Endowments, public works, patronage and display, commerce and finance, grants to the state and expeditions are ordinary
 works declared in data (data/branches/56_benefactions.json). Each acts only through mechanics channels the engine already
 reads (data/branches/MECHANICS.md), costs from its labour and materials, and keeps costing upkeep for as long as it is
-open. This file validates what the branch declares, in the tree as built; that the engine opens them and moves the
-channels they declare is test_scenario_benefactions."""
+open. This file validates what the branch declares, in the tree as built; that the engine moves the
+channels they declare is test_effect_channels."""
 QUICK_TOPIC = True
 
 import json
