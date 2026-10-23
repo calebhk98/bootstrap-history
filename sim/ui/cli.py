@@ -44,6 +44,7 @@ from sim.engine.ui_port import Sim
 from . import protocol as _protocol
 from sim.engine.ui_port import settings, units
 from . import cli_mods, cli_units_options, validate_map
+from .founder_budget import founder_budget, path_is_feasible_alone
 # civ_of_save/goal_of_save are the only names this file reads from
 # .protocol; `cmd_agent` and everything else that needs
 # _agent_available, _agent_dispatch, _agent_end_reason, _agent_help,
@@ -550,10 +551,7 @@ def _founder_lifetime_hours(cfg=None):
     this function may re-derive or re-type either input: that duplication
     is exactly what lets two figures that should agree drift apart.
     """
-    cfg = cfg or {}
-    hours_per_year = cfg.get("founder_hours_per_year", DEFAULTS["founder_hours_per_year"])
-    expected_working_years = cfg.get("founder_life_mean", DEFAULTS["founder_life_mean"])
-    return hours_per_year * expected_working_years
+    return founder_budget(DEFAULTS, cfg)[2]
 
 
 def cmd_path(args):
@@ -582,14 +580,12 @@ def cmd_path(args):
     # Complaints/37: the printed budget and the feasibility judgement below
     # both come from one call (_founder_lifetime_hours), so they say the
     # same thing about the same DEFAULTS whatever those are.
-    lifetime_hours = _founder_lifetime_hours()
+    hours_per_year, working_years, lifetime_hours = founder_budget(DEFAULTS)
     print("\nFounder-hours available in one lifetime at %s/yr for %s yrs: %s" %
-          (f"{DEFAULTS['founder_hours_per_year']:,.0f}",
-           f"{DEFAULTS['founder_life_mean']:,.0f}",
-           f"{lifetime_hours:,.0f}"))
+          (f"{hours_per_year:,.0f}", f"{working_years:,.0f}", f"{lifetime_hours:,.0f}"))
     print("Founder-hours demanded by this path                          : %s" % f"{cum_ph:,.0f}")
     print("=> %s" % ("feasible alone in principle, but not with the calendar floors"
-                     if cum_ph < lifetime_hours else
+                     if path_is_feasible_alone(cum_ph, lifetime_hours) else
                      "IMPOSSIBLE for one person. You must convert your hours into other people's hours."))
 
 
