@@ -1,6 +1,6 @@
 """Complaint 345: a concern whose data states its lines' hours is crewed by those hours over a person-year, whatever its
 takings. Rule: business_crew_rule.hands and staff_by_trade on built crew figures. The firm count that follows the
-market is test_firm_count_whole_game_scenario."""
+market is a measure of the whole economy (Complaint 473)."""
 QUICK_TOPIC = True
 
 import unittest

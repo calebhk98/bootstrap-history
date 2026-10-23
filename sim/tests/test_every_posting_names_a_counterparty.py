@@ -3,7 +3,7 @@
 Money changes a purse only through `ledger.transfer`; where the other side is not an actor the simulation models, it is a
 named edge, an account outside the actors in the purses' book (`state.actors.purses`). A new one-sided posting fails the
 scan of the source below, and `ledger.transfer` against an edge is called on built purses. That all purses together plus
-all edges together stay what they were over a year of a game is `test_every_posting_names_a_counterparty_scenario`."""
+all edges together stay what they were is `ledger.transfer`'s arithmetic above; wages reaching the people's purses is test_payroll_rules."""
 QUICK_TOPIC = True
 
 import os
