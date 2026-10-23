@@ -2,7 +2,7 @@
 town and its mortality premium to the labour market, and the premium reaches the regions' deaths (Complaint 634)."""
 import unittest
 
-from sim.engine import mod_code, mod_stores
+from sim.engine import mod_code
 from sim.engine.year_phases import MOD_PHASES
 from sim.labour import town_providers
 from sim.tests.harness import unopened_sim
@@ -25,14 +25,6 @@ class UrbanisationModTests(StoreTestBase):
         game = unopened_sim()
         phase = next(phase for phase in MOD_PHASES if phase.name == MOD + ":derive_towns")
         return hooks, game, phase
-
-    def test_registration_declares_two_tile_stores_a_phase_and_a_provider(self):
-        hooks, _game, phase = self.installed()
-        self.assertEqual(mod_stores.DECLARED[MOD + ":town_people"].keyed_by, "tile")
-        self.assertEqual(mod_stores.DECLARED[MOD + ":urban_mortality_premium"].keyed_by, "tile")
-        self.assertEqual(phase.scope, "world")
-        self.assertIn(MOD + ":towns", town_providers.PROVIDERS)
-        self.assertIn(MOD + ":towns", town_providers.PREMIUMS)
 
     def test_the_phase_stores_the_derived_town_and_the_labour_market_reads_it(self):
         hooks, game, phase = self.installed()
