@@ -80,6 +80,7 @@ def _name_reply(game, command, name):
 
 
 full_loom = _name_reply(_name_stand_in(False), "why", "loom")["error"]
+# not text: the refusal's cause code and its list of ids
 check("a typed name several nodes share is refused with cause ambiguous_name and the real ids to choose between",
       full_loom.cause == "ambiguous_name" and "tex_horizontal_loom" in full_loom.choices and len(full_loom.choices) >= 2,
       (full_loom.cause, full_loom.choices))
