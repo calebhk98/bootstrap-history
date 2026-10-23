@@ -1,8 +1,8 @@
 """The state's budget survives a save: a year's `state_budget` (revenue, the wage and goods budgets, what it financed) comes
 back equal from `EconomyRecord.to_record` / `from_record`, and an economy resumed from it plans the same year. Called on
 the engine-free fixture economy. The financing order, debasing, bids for hours and goods and conservation are rules in
-test_economy_agent_state; how the budget behaves over years on an opened England is
-`test_economy_state_budget_validation`."""
+test_economy_agent_state; how the budget behaves over years on an opened England is measured by
+`python3 sim/simulator.py economy-check --civs england_1300 --years 8`."""
 QUICK_TOPIC = True
 
 import unittest

@@ -105,3 +105,8 @@ circulation 1.27 times, fixed-basket level 1.88 against 1.54 (1.22 times), chain
 the fixed-basket level and holds (220 s). On the base head the basket pair was 1.79 against 1.45 (1.24 times), chained 1.29 against
 0.92: the effect is well clear of the edge in either run, but it is one seed of a draw (the fixed-basket level moves several tens of
 percent between years on thin goods); the chained level, now weighted by trade, shows it more strongly.
+
+Test migration (rule-tests-04): `economy_state_budget_validation` is deleted (the state's coin share steadying, printing raising the chained price level
+and expectations, more printing raising it further: each read the opened England economy over years and could not name a rule). Printing adds exactly the
+deficit to the supply and the state's purse in `test_economy_agent_state`. `python3 sim/simulator.py economy-check --civs england_1300 --years 8` prints
+the price level and money supply by year.
