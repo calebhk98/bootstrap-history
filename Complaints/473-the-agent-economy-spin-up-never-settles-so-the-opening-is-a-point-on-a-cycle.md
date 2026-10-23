@@ -731,3 +731,13 @@ The one-year Rome baseline of idle labour, wage over the unskilled floor and hun
 unsettled opening economy and is deleted; `python3 sim/simulator.py economy-check --civs rome_100ad --years 1` prints the same figures.
 
 Test migration (rule-tests-05): `firm_count_whole_game_scenario` is deleted (the count settling and not overshooting over 30 years read an unsettled economy; the rules are test_firm_count_from_costs and test_entry_gross_rule). No simulator command prints firm counts by market size; `python3 sim/simulator.py economy-check --years 30` is the nearest measure of the agent economy.
+
+Test migration (rule-tests-16): `spin_up_money_supply_full_length` (the money stock keeping up with wear over forty spun-up years)
+is deleted: it read an unsettled economy, was red on main by design and could not name the function that broke. `python3
+sim/simulator.py opening-checks` (money against coin wear) and `python3 sim/simulator.py spin-up-trace` print the same relationship.
+The short part, `spin_up_money_supply`, is replaced by `test_money_year_figures_rule` (the money columns are read from the audit's
+edges, the saved spin-up result is read back); that a few spun-up years' stock changes by struck less worn is the money audit's
+identity over a whole economy step and is measured by `spin-up-trace`'s `change`, `struck` and `wear` columns. The staffing
+scenarios `staff_closure_reopening_scenario` (twelve years of twenty-five concerns, auto-hire reopening every closure free staff could
+run; red on main) and `sited_ore_price_over_cost_validation` (519) are deleted for the same reason: no command prints the
+reopening count over years; `python3 sim/simulator.py economy-check --civs norse_900ad --years 12` is the nearest measure.

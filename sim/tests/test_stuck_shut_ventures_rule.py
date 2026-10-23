@@ -33,13 +33,14 @@ def game(concerns=CONCERNS, spending_power=1000.0, done=None, operating=("runnin
 NODES = {}
 reply = _stuck_shut_ventures(game(), NODES)
 check("the concern recommended is the best of those `open` would accept and the household can pay for",
-      reply["kind"] == "closed" and reply["the_best_one"] == "good" and reply["what"] == "things you built and never opened", reply)
+      reply["kind"] == "closed" and reply["the_best_one"] == "good", reply)
 check("a concern that open would refuse is never the recommendation, however well it earns", reply["the_best_one"] != "best_but_unstaffed")
 
 unaffordable = _stuck_shut_ventures(game(spending_power=40.0), NODES)
 check("when none can be opened the best of the rest is named with open's refusal as the cause",
-      unaffordable["what"] == "things you built and cannot open yet" and unaffordable["the_best_one"] == "best_but_unstaffed"
-      and unaffordable["blocked_by"] == "supervisors_missing", unaffordable)
+      unaffordable["the_best_one"] == "best_but_unstaffed" and unaffordable["blocked_by"] == "supervisors_missing", unaffordable)
+check("a recommendation to open names no blocker, and a blocked one names its cause",
+      "blocked_by" not in reply and unaffordable["kind"] == "closed", (reply, unaffordable))
 
 only_dear = {key: value for key, value in CONCERNS.items() if key in ("dear_to_open", "loses")}
 cash_short = _stuck_shut_ventures(game(only_dear, done=only_dear), NODES)

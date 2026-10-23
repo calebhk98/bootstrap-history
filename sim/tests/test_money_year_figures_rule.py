@@ -15,6 +15,9 @@ from sim.economy.types import EDGE_MINT, EDGE_WEAR
 from sim.engine.economy_port import EconomyPort
 from sim.engine.economy_port_year import AgentEconomy
 
+read_saved_result = AgentEconomy.spin_up_result
+read_game_result = EconomyPort.spin_up_result
+
 
 def stand_in(edge_net, supply_change, backing_good=""):
     spec = SimpleNamespace(currency_id="denarius", backing_good=backing_good)
@@ -42,9 +45,9 @@ check("the metal the mint holds sums the positive holdings of the backing good",
 check("the holdings are those of the mint", holdings.call_args.args[1] == EDGE_MINT, holdings.call_args)
 
 saved = {"settled": True, "years": 12, "gap": 0.01}
-read = AgentEconomy.spin_up_result(SimpleNamespace(stored={"record": {"spin_up_result": saved}}))
+read = read_saved_result(SimpleNamespace(stored={"record": {"spin_up_result": saved}}))
 check("the agent economy reads the saved first-stage result as a copy", read == saved and read is not saved, read)
-check("before the opening is saved the result is empty", AgentEconomy.spin_up_result(SimpleNamespace(stored={})) == {})
-check("a game with no agent economy has no spin-up result", EconomyPort.spin_up_result(SimpleNamespace(agent=None)) == {})
+check("before the opening is saved the result is empty", read_saved_result(SimpleNamespace(stored={})) == {})
+check("a game with no agent economy has no spin-up result", read_game_result(SimpleNamespace(agent=None)) == {})
 check("a game reports what its agent economy saved",
-      EconomyPort.spin_up_result(SimpleNamespace(agent=SimpleNamespace(spin_up_result=lambda: saved))) == saved)
+      read_game_result(SimpleNamespace(agent=SimpleNamespace(spin_up_result=lambda: saved))) == saved)
