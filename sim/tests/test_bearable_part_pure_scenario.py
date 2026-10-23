@@ -8,7 +8,7 @@ from unittest import mock
 from sim.engine.economy_credit import bearable_part
 
 # scenario: the method on an unopened game
-game = sim()
+game = unopened_sim()
 household = game.state.household
 household.capital = 5000.0
 amount = 3000.0

@@ -4,6 +4,8 @@ The rules are tested on built inputs: the queue the hours are drawn in (`hour_of
 project is offered and why a directive can go unmet (`hour_offer`), and the `allocate` command on a stand-in for the
 household. The real allocator, a save and load, and the standing work order on a game are the named scenarios in
 test_allocate_scenario."""
+
+QUICK_TOPIC = True
 from types import SimpleNamespace
 
 from .harness import *  # noqa: F401,F403

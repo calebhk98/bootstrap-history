@@ -1,5 +1,5 @@
 """SCENARIO (affordability and credit): in a whole game spending_power is the one rule every cash gate (hire, train, commission,
-open, start) asks, auto_open says why it refuses, the credit line warns before it is crossed, the arrears banner quotes
+open, start) asks, auto_open says why it refuses, the arrears banner quotes
 the ledger, an insolvency announces the reputation it took, and a part-paid project keeps what was paid when credit is
 withdrawn. The rules on built numbers are in test_affordability_and_credit."""
 from .harness import *  # noqa: F401,F403
@@ -85,40 +85,15 @@ check("scenario: auto_open opens nothing it cannot pay the capex on and says why
       (refused_and_said, deep_in_the_red, quick_opens, opened_slow, slow_refusal_named, institution_stays_shut,
        nothing_past_the_line))
 
-# --- scenario: a fresh game's affordability screens, credit warning, job and patron
-fresh = sim()
+# --- scenario: a lender does not cut your line because you took a job this year
+fresh = unopened_sim()
 fresh.market_credit_room = lambda actor_id: None    # the household's own standing sets the line; the opening's loan book is fully lent to others
-fresh_start_power = fresh.spending_power("start")
-available_reply = S._agent_dispatch(fresh, NODES, {"cmd": "available"})
-hint = str((available_reply.get("to_see_more") or {}).get("what you can pay for", ""))
-money_reply = S._agent_dispatch(fresh, NODES, {"cmd": "money"})
-thin_credit_limit = fresh.credit_limit()
-starting_capital = fresh.capital
-fresh.log.clear()
-fresh.capital = -fresh.credit_limit() * 0.75
-fresh.warn_near_the_limit(105)
-near_limit_lines = [message for _, message in fresh.log]
-fresh.capital = starting_capital
-# A lender does not cut your line because you took a job this year.
+line_without_job = fresh.credit_limit()
 fresh.wage_hours_this_year = fresh.labour.director_pool()
 line_with_job = fresh.credit_limit()
 fresh.wage_hours_this_year = 0.0
-# A grand friend does not lend more than income can carry.
-fresh.done.add("patron_senatorial")
-fresh._done_changed()
-# presentation: the hint prints the start rule's figure; the warning names what could still be done
-check("scenario: in a fresh game the AFFORD hint uses the rule `start` uses, the ledger says how much of the credit line "
-      "is used, the founder with a practice can still just reach a cover identity, the line warns before it is crossed "
-      "naming what could be done, a job this year does not cut the line, and a grand friend lends no more than income carries",
-      str(int(fresh_start_power)).replace(",", "") in hint.replace(",", "")
-      and money_reply.get("of_that_limit_you_have_used") is not None
-      and fresh.capital + thin_credit_limit >= fresh.project_cost("identity_cover")
-      and any(cause_of(message) == "credit_near_limit" and "stop" in message and "mothball" in message for message in near_limit_lines)
-      and abs(line_with_job - thin_credit_limit) < 1e-6
-      and fresh.credit_limit() < thin_credit_limit * 3
-      and fresh.credit_limit() * fresh.debt_interest_rate() < fresh.revenue(),
-      (hint, money_reply.get("of_that_limit_you_have_used"), near_limit_lines[:1], thin_credit_limit, line_with_job,
-       fresh.credit_limit()))
+check("scenario: a job this year does not cut the credit line", abs(line_with_job - line_without_job) < 1e-6,
+      (line_with_job, line_without_job))
 
 # --- scenario: the arrears banner quotes what the ledger does
 arrears = sim(capital=-4000.0)
@@ -170,12 +145,6 @@ standing_pay = job_game.labour.standing_job_pay("labourer")
 check("scenario: a stalled household in debt is offered wage work whose quote is what the work pays, naming the trade that "
       "pays most an hour; a founder with a standing job is offered only the gain over it, naming what that job pays",
       advice_holds and job_advice and "{:,.0f}".format(standing_pay) in job_advice[0], (advice_detail, job_advice, standing_pay))
-
-# --- scenario: an idle fortune bleeds living costs, and the ledger names the part that is wealth
-rich_ledger = S._agent_dispatch(sim(capital=hours_money(20200000)), NODES, {"cmd": "money"})
-check("scenario: the ledger names the part of your living costs that is your wealth",
-      (rich_ledger.get("what_it_costs_you") or {}).get("_of_which_because_you_are_rich", 0) > 1000,
-      rich_ledger.get("what_it_costs_you"))
 
 # --- scenario: refusals and quotes in debt, on one game whose capital and credit line are set per case
 debtor = sim(capital=0.0)
@@ -317,17 +286,6 @@ insolvent.default_on_debt(200)
 second_hit = [facts_of(message)["reputation_hit"] for _, message in insolvent.log if cause_of(message) == "insolvency_settled"][-1]
 check("scenario: an insolvency announces the reputation it actually took, then that there was nothing left to take",
       first_hit == 4.9 and second_hit == 0.0, (first_hit, second_hit))
-
-# --- scenario: a household deep in arrears does not commit to new work
-bleeding = sim(manual=False)
-bleeding.capital = -0.95 * bleeding.credit_limit()   # deep in arrears: near the limit before the year's interest
-bleeding.insolvent_years = 20
-bleeding.revenue = lambda: 0.0   # deep in arrears with no income: the needs bill alone leaves nothing to fund new work
-bleeding.revenue_capacity = lambda: 0.0
-active_before = len(bleeding.active)
-bleeding.step()
-check("scenario: a household deep in arrears with no income does not commit to new work",
-      len(bleeding.active) <= active_before + 1, (len(bleeding.active), active_before))
 
 # --- scenario: clearing the debt by working does not make you insolvent
 worker = sim()

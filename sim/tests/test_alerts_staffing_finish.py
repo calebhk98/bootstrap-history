@@ -1,7 +1,6 @@
 """Complaints 79, 125, 201, 229, 231, 237: blocker kinds declared, luckless nodes, alert tiers and stop reasons.
 
-Rules are tested on the data, on built alerts and on a stand-in for the labour's world; two named scenarios (test_alerts_staffing_finish_scenario) read
-the `labour` reply and the staff step's departures off a game."""
+Rules are tested on the data, on built alerts and on a stand-in for the labour's world."""
 QUICK_TOPIC = True
 from types import SimpleNamespace
 

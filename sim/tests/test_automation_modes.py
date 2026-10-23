@@ -3,6 +3,8 @@
 The replace-only rule is tested on a stand-in for the household (`replace_lost_staff`) and the typed switch is parsed
 on its own. The mode on a game, the policy switch and the mine order id from audit row to working are the named
 scenarios in test_automation_modes_scenario."""
+
+QUICK_TOPIC = True
 from types import SimpleNamespace
 
 from .harness import *  # noqa: F401,F403

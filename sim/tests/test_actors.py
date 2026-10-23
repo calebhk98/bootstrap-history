@@ -3,6 +3,8 @@
 What a government values, copies and fails at is tested between actors built here on the agents' stand-in world
 (`agents_fake_world`). The household, the state's copying through the years, firms entering and leaving, and
 persistence on a game are the named scenarios in test_actors_scenario."""
+
+QUICK_TOPIC = True
 import copy
 import json
 import os

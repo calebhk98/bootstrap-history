@@ -9,7 +9,7 @@ from sim.engine.staff_replacement import REPLACE_ONLY
 
 # ---- scenario: the mode on a game
 def hire_game(mode, underpaid):
-    game = sim(capital=2_000_000.0, manual=False)
+    game = unopened_sim(capital=2_000_000.0, manual=False)
     game.state.founder.policy["keep_pay_at_market"] = not underpaid
     game.state.founder.policy["auto_hire"] = mode
     game.state.household.automation_audit = []
@@ -54,7 +54,7 @@ check("scenario: the policy command sets the replace-only mode, and off is still
       (set_reply, off_reply))
 
 # ---- scenario: a mine's tranche is tied to the row that ordered it
-mined = sim(capital=5_000_000_000_000.0, manual=False)
+mined = unopened_sim(capital=5_000_000_000_000.0, manual=False)
 mined.state.founder.policy["auto_mine"] = True
 mined.annual_material_demand = lambda: {"coal_kg": 1_000_000.0}
 mined.resource_throttle = lambda: 0.3
@@ -65,7 +65,7 @@ tranches = [tranche for tranche in mined.state.holdings.mine_tranches if tranche
 mined.state.scenario.year = tranches[0][2]
 mined.commission_mines()
 working = [each for each in mined.state.holdings.mines if each["material"] == "coal"]
-by_hand = sim(capital=5_000_000_000_000.0, manual=True)
+by_hand = unopened_sim(capital=5_000_000_000_000.0, manual=True)
 by_hand.open_mine("coal", 10.0)
 check("scenario: a mine ordered by automation carries one order id from its audit row to the tranche sunk and the working "
       "it became; a mine ordered by hand has none",

@@ -1,6 +1,8 @@
 """Freight prices the cargo as well as the carrier, for foreign and domestic routes alike
 (Complaints/326, 340): interest on the cargo's value over the voyage, spoilage by duration,
 expected loss at sea, and domestic freight that includes the carrier's capital and empty return."""
+
+QUICK_TOPIC = True
 from .harness import *  # noqa: F401,F403
 
 from sim.world import trader_response

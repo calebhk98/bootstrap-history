@@ -1,6 +1,8 @@
 """affordability_warning: the aggregate affordability warning's rule (`stacked_commitment`) and the parts of the funding
 capacity (`funding_parts`), tested on built numbers. Three named scenarios run the Rome opening through `start`, `money`
 and `available`, and the director's project start gate, in test_affordability_warning_scenario."""
+
+QUICK_TOPIC = True
 from .harness import *  # noqa: F401,F403
 
 from sim.engine.project_funding import funding_parts

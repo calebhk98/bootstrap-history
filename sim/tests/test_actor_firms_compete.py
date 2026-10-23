@@ -1,6 +1,8 @@
 """Complaint 185: the state assesses every actor by one rule. Tested between actors built here with a stand-in for the
 world's levy rule; the labour pool, the wage, the market and the shared category are the named scenarios in
 test_actor_firms_compete_scenario."""
+
+QUICK_TOPIC = True
 from types import SimpleNamespace
 
 from .harness import *  # noqa: F401,F403

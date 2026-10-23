@@ -1,13 +1,8 @@
-"""Complaint 554, classified under Complaint 640. Two kinds of test live here.
-
-Rules: `SeriesStatisticTests` calls `series_settling` (sim/economy/settling.py) on built series, so a failure names
-the statistic.
-
-Baseline validations (CLAUDE.md 4.2): `BaselineValidationFixtureRunTests` runs the small three-tile fixture economy
+"""Complaint 554, classified under Complaint 640. Baseline validations (CLAUDE.md 4.2): `BaselineValidationFixtureRunTests` runs the small three-tile fixture economy
 (fixed people, no shocks, no engine orders) and asserts relationships a quiet economy must show: every year's accounts
 are physically feasible, stocks are not eaten through, food is eaten in every tile, and the price level, wage, money
 supply and rate settle. They read the whole economy, so they are slow-only; a failure names the series, not a rule.
-The Rome run is in test_baseline_rome."""
+The Rome run is in test_baseline_rome; the statistic's rules are in test_series_settling_rule."""
 import math
 import unittest
 
@@ -34,36 +29,6 @@ def controlled_run(years=YEARS):
         row.update(economy_api.money_year_figures(economy, outcome))
         rows.append(row)
     return economy, outcomes, rows
-
-
-class SeriesStatisticTests(unittest.TestCase):
-    def test_a_constant_series_is_settled(self):
-        item = series_settling("flat", [2.0] * 30, as_ratio=True)
-        self.assertEqual(item.trend_per_year, 0.0)
-        self.assertTrue(item.settled)
-
-    def test_a_steady_climb_is_drift_with_a_trend_equal_to_its_log_growth(self):
-        item = series_settling("climb", [math.exp(0.03 * year) for year in range(40)], as_ratio=True)
-        self.assertAlmostEqual(item.trend_per_year, 0.03, places=9)
-        self.assertEqual(item.monotone_share, 1.0)
-        self.assertTrue(item.drifting)
-        self.assertFalse(item.settled)
-
-    def test_a_cycle_around_a_level_is_not_drift_but_a_large_swing_is_not_bounded(self):
-        small = series_settling("cycle", [1.0 + 0.02 * (-1) ** year for year in range(40)], as_ratio=True)
-        self.assertFalse(small.drifting)
-        self.assertTrue(small.settled)
-        large = series_settling("swing", [1.0 + 0.6 * (-1) ** year for year in range(40)], as_ratio=True)
-        self.assertFalse(large.steps_bounded)
-
-    def test_only_the_window_is_judged(self):
-        values = [math.exp(0.2 * year) for year in range(20)] + [5.0] * 40
-        self.assertTrue(series_settling("late", values, as_ratio=True).settled)
-
-    def test_the_interest_rate_is_judged_by_differences(self):
-        item = series_settling("rate", [0.05 + 0.005 * year for year in range(30)], as_ratio=False)
-        self.assertAlmostEqual(item.trend_per_year, 0.005, places=9)
-        self.assertTrue(item.drifting)
 
 
 class BaselineValidationFixtureRunTests(unittest.TestCase):

@@ -1,6 +1,9 @@
 """Complaint 629: carriers are durable goods. Carts, pack saddles, barges, ships and the animals that pull them have
 recipes and service lives, a tonne-km wears the carrier stock of the mode that carried it, and carriage buys carriers
 through the goods market."""
+
+QUICK_TOPIC = True
+
 import dataclasses
 import json
 import os

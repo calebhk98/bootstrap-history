@@ -37,7 +37,7 @@ def actor_sim(extra_nodes):
 
 def grown(civ, employees=2000.0, capital=1.0e10, eminence=100.0, events=False):
     """A household large enough that the state has noticed it."""
-    game = sim(civ=civ, events=events)
+    game = unopened_sim(civ=civ, events=events)
     game.employees["artisan"] = employees
     game.labour._resync_pools()
     game.capital = capital
@@ -109,7 +109,7 @@ req_share, _why = levied.requisition_report()
 off_share, _name = levied.office_report()
 levied._state_pressure(levied.year)
 paid = capital_before - levied.capital
-quiet = sim(civ="rome_100ad")
+quiet = unopened_sim(civ="rome_100ad")
 quiet_treasury = government_of(quiet)
 quiet._state_pressure(quiet.year)
 check("scenario: the founder is charged requisition and the pressed office, the government receives exactly that and "
@@ -145,7 +145,7 @@ before = copy.deepcopy(game.state.actors.records)
 with tempfile.TemporaryDirectory() as folder:
     path = os.path.join(folder, "save.json")
     save_state(game, path)
-    revived = sim(civ="rome_100ad")
+    revived = unopened_sim(civ="rome_100ad")
     load_state(revived, path)
 check("scenario: the income and outlay ledgers round-trip through save and load",
       revived.state.actors.records == before and bool(

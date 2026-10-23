@@ -8,7 +8,7 @@ from .harness import *  # noqa: F401,F403
 class CartersAndPlumbersInAGameTests(unittest.TestCase):
 
     def test_rome_has_carters_and_plumbers_the_household_can_reach(self):
-        report = sim(civ="rome_100ad", events=False).labour.population_report()
+        report = unopened_sim(civ="rome_100ad", events=False).labour.population_report()
         by_trade = {row["trade"]: row for row in report["trades"]}
         for trade in ("carter", "plumber"):
             self.assertTrue(by_trade[trade]["exists_here"], trade)

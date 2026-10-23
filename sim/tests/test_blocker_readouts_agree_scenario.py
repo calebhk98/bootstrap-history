@@ -1,8 +1,6 @@
 """SCENARIO: a game reaches the blocker rule (`sim/engine/blockers.py`, rule tests in `test_blockers_rule`) and every readout agrees: one classifier names every blocker: Complaints/125, 263 (and 234, 238, 239, 268 below)."""
 from .harness import *  # noqa: F401,F403
 
-from sim.ui.proto.render_screen_why import render_why
-
 SUPPLY_NODE = "mat_bulk_steel"
 
 
@@ -46,11 +44,10 @@ check("start_refusal is the first blocker's text",
       supply.start_refusal(SUPPLY_NODE) == supply.start_blockers(SUPPLY_NODE)[0]["text"])
 check("a startable node has no blockers", unopened_sim(capital=1e9).start_blockers(startable[0]) == [])
 
-# --- why: the kind leads, and every kind is listed
+# --- why: the kind leads, and every kind is listed (the rendering is checked where presentation is)
 why = S._agent_dispatch(supply, NODES, {"cmd": "why", "id": SUPPLY_NODE})
 check("why carries blocked_kind and the blockers list", why.get("blocked_kind") == "supply"
       and [blocker["kind"] for blocker in why.get("blockers", [])] == kinds_of(supply, SUPPLY_NODE), why.get("blockers"))
-check("the why screen leads the refusal with its kind", "SUPPLY" in render_why(why), render_why(why)[:600])
 
 # --- compact why: the supply gate is in blocked_by, with its kind
 compact = S._agent_dispatch(supply, NODES, {"cmd": "why", "id": SUPPLY_NODE, "compact": True})
