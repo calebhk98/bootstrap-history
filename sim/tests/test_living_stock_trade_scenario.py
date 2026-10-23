@@ -72,6 +72,11 @@ check("stored eggs are lost to spoilage and not multiplied", eggs.stock_held(EGG
 empty = unopened_sim(civ=HOME, capital=1e6)
 empty.step_living_stock()
 check("a society holding no stock gains none", empty.stock_held(HERD) == 0.0, None)
+stepped = unopened_sim(civ=HOME, capital=1e6)
+stepped.grant_stock(HERD, 10000.0)
+stepped.step()
+check("a year of the game turns the held stock", abs(stepped.stock_held(HERD) - 10000.0) > 1.0,
+      stepped.stock_held(HERD))
 
 # --- held stock on the screens (Complaints/86): `state` and `available` show it, small.
 from sim.ui.proto.render_screen_state import render_state  # noqa: E402
