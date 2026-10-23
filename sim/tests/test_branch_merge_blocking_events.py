@@ -4,6 +4,8 @@ Complaints/52. The merge refuses to write while any event would drop a
 requirement. Unknown trades, unresolvable prerequisites, dependency cycles and
 undeclared materials must all be zero.
 """
+
+QUICK_TOPIC = True
 import collections
 import re
 import unittest

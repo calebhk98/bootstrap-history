@@ -9,7 +9,7 @@ from sim.economy import api as economy_api
 declaring = nodes_declaring(NODES, "deposit_banking")
 
 # scenario: the wiring from a state's knowledge to the economy's institutions, on a game
-game = sim()
+game = unopened_sim()
 before = economy_port_institutions.held(game)
 game.state_treasury().knowledge.add(declaring[0][0])
 after = economy_port_institutions.held(game)
