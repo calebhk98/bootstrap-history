@@ -2,6 +2,17 @@
 from . import automation_audit
 
 REPLACE_ONLY = "replace"
+REPLACE_STANCE = "replace"
+GROW_STANCE = "grow"
+
+
+def hire_stance(hire_mode, has_room):
+    """What the yearly staff phase does with the auto_hire setting: REPLACE_STANCE (rehire what was lost, nothing
+    more), GROW_STANCE (smooth the staff toward capacity) or None (nothing: the setting is off or the credit line
+    leaves no room to hire)."""
+    if not hire_mode or not has_room:
+        return None
+    return REPLACE_STANCE if hire_mode == REPLACE_ONLY else GROW_STANCE
 
 
 def replace_lost_staff(sim, lost):
