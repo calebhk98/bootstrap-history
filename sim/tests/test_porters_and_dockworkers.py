@@ -13,6 +13,8 @@ from sim.labour.api import occupation_groups
 from sim.tests import economy_fixture as fixture
 from sim.tests.test_carriage_hours_by_route import Hauls
 
+QUICK_TOPIC = True
+
 FOOT_RATE = 0.1
 FOOT_HOURS = 0.5
 PORT_HOURS = 2.0
