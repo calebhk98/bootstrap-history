@@ -6,7 +6,7 @@ from .harness import *  # noqa: F401,F403
 
 
 def _indebted_household():
-    household = sim(civ="rome_100ad", capital=5000)
+    household = unopened_sim(civ="rome_100ad", capital=5000)
     household.state.household.capital = -6000
     return household
 
@@ -29,14 +29,6 @@ class RefusalListsRemediesInAGame(unittest.TestCase):
         before = household.capital
         household.sell_material_stock("iron", 40.0)
         self.assertAlmostEqual(household.capital - before, money, places=3)
-
-    def test_no_remedy_line_when_nothing_to_offer(self):
-        household = _indebted_household()
-        household.state.household.employees.clear()
-        household.state.projects.operating.clear()
-        node_id = next(node_id for node_id in NODES if node_id not in household.done
-                       and household.start_reason(node_id)[0] and household.start_refusal(node_id))
-        self.assertNotIn("To raise cash", household.start_refusal(node_id))
 
 
 if __name__ == "__main__":

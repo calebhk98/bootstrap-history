@@ -1,11 +1,14 @@
-"""Replay carry-over (Complaint 267), wiring scenario: the `again` command of `play` starts a new game with the built routes (the rules are in test_replay_known_routes)."""
+"""Replay carry-over (Complaint 267): the `again` command of `play` starts a new game with the built routes. The game is a stub holding what the command reads: the done set, the granted set and the reason it ended."""
 import contextlib
 import io
 import os
 import tempfile
+from types import SimpleNamespace
 
-from .harness import *  # noqa: F401,F403
+from .harness import check
 from sim.ui import cli_interactive, replay
+
+QUICK_TOPIC = True
 
 
 def _again(game, session):
@@ -27,13 +30,16 @@ def _again(game, session):
     return reply, handed.get("routes"), printed.getvalue()
 
 
-_game = sim()
-_built = sorted(set(NODES) - set(_game.done))[0]
-_game.done.add(_built)
+_built = "built_route"
+_game = SimpleNamespace(done={_built, "granted_route"}, granted={"granted_route"}, dead_reason=None,
+                        fog=False, revealed=set(), capital=100.0, state=SimpleNamespace(interface={}),
+                        cfg={"start_year": 0, "horizon_years": 100}, year=0)
 
 _reply, _routes, _text = _again(_game, None)
 check("again before the game ends does nothing but explain", _reply == (True, None, False, None) and _routes is None
-      and "once this game has ended" in _text, (_reply, _routes, _text))
+      and _text, (_reply, _routes, _text))
+# presentation: the explanation says the new game waits for the end of this one
+check("...and says why", "once this game has ended" in _text, _text)
 
 _game.dead_reason = "the founder died"
 with tempfile.TemporaryDirectory() as folder:

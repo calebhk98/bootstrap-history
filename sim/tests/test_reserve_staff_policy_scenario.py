@@ -15,11 +15,11 @@ def _hired_for_reserve(test_sim):
     return any(facts_of(message).get("policy") == "reserve_staff" for _year, message in test_sim.log)
 
 
-idle = sim(capital=5_000_000)
+idle = unopened_sim(capital=5_000_000)
 check("reserve_staff is listed by policy and off by default; a year with it off hires no reserve",
       idle.policy.get("reserve_staff") is False and not (idle._step_staff() or _hired_for_reserve(idle)), sorted(idle.policy))
 
-kept = sim(capital=5_000_000)
+kept = unopened_sim(capital=5_000_000)
 _dispatch(kept, "reserve craftsmen 5")
 _dispatch(kept, "reserve scholars 1")
 _dispatch(kept, "policy reserve_staff on")
@@ -30,7 +30,7 @@ check("after a year the free craftsmen and scholars cover the reserve and the lo
       craftsmen_free >= 5 - 0.01 and scholars_free >= 1 - 0.01 and _hired_for_reserve(kept),
       (craftsmen_free, scholars_free, kept.log[-6:]))
 
-big = sim(capital=5_000_000)
+big = unopened_sim(capital=5_000_000)
 places_before = big.state.household.worker_housing_places or 0.0
 _dispatch(big, "reserve craftsmen 40")
 _dispatch(big, "policy reserve_staff on")

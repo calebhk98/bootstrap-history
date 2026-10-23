@@ -4,7 +4,7 @@ from .harness import *  # noqa: F401,F403
 
 _ids = ["academy_network", "corpus_written", "school_founded"]
 
-game = sim(capital=1e7)
+game = unopened_sim(capital=1e7)
 game.order = list(_ids)
 game.active.clear()
 game.hour_allocations.clear()

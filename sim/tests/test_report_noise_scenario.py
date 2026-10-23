@@ -5,7 +5,7 @@ from sim.engine import shortage_conditions
 from sim.ui.protocol import _agent_dispatch
 from sim.ui.proto.render_screen_state import render_state
 
-game = sim()
+game = unopened_sim()
 shortage_conditions.note_shortage(game, "charcoal", 0.46)
 state_reply = _agent_dispatch(game, NODES, {"cmd": "state"})
 check("state carries the standing conditions", bool(state_reply.get("conditions")), list(state_reply)[:10])
