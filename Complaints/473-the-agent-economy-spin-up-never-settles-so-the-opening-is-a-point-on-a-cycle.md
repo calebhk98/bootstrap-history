@@ -713,3 +713,5 @@ wage 0.726, 0.668, 0.635, 0.553, 0.422, 0.386, 0.380 then 0.719, 0.659, 0.630, 0
 135.4, 132.6 then 4.79, 29.0, 35.3, 44.5, 77.7, 137.6, 140.9. The drift is unchanged in kind (wage falls by half over the years,
 bronze is thin and jumps): the income was never what set it. Still open: counting the demand that matches households'
 saving (607) would raise the income at which they stop saving.
+
+Measure the settling and the feasibility of the books with `python3 sim/simulator.py spin-up-trace` (Rome, whole length) and `python3 sim/simulator.py economy-check`; the slow tests that asserted them (baseline_fixture, baseline_rome, baseline_rome_full_length) were removed in Complaint 640's pass because a failure named a series, not a function. The rules they used are tested in test_baseline_checks_rules and test_series_settling_rule.
