@@ -1,6 +1,5 @@
 """Complaint 293: portfolio also groups startable-but-blocked work, and sets last year's hours against this year's.
-`waiting_to_start` and `_add_last_year_hours` are called on stubs the test builds; the whole-game portfolio is
-test_portfolio_waiting_and_last_year_scenario."""
+`waiting_to_start` and `_add_last_year_hours` are called on stubs the test builds."""
 QUICK_TOPIC = True
 
 from types import SimpleNamespace

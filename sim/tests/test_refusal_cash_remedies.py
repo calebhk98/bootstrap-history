@@ -1,6 +1,6 @@
 """An unaffordable purchase's refusal lists the commands that raise cash, with the amounts those commands themselves
 charge or pay. `cash_remedies`, `remedies_text` and `refusal_text` run on a stand-in actor holding stock, concerns,
-mines and staff (no game). The refusal reached through `start` is test_refusal_cash_remedies_scenario."""
+mines and staff (no game). What a sale pays is `GoodsMarket.sell` in test_quote_equals_charge_stock."""
 from types import SimpleNamespace
 
 from .harness import check
