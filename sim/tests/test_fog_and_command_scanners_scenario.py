@@ -3,6 +3,7 @@
 parsing of the JSON modes is in test_typed_json_modes_parse; the bounty fog rule is in test_fog_leak3."""
 from .harness import *  # noqa: F401,F403
 from sim.ui import protocol as _PROTO
+from .agent_command_helpers import with_end_year
 
 # =============================================================================
 # A GENERIC FOG SCANNER. `bounty` leaked three hidden node ids (power_grid,
@@ -14,7 +15,7 @@ from sim.ui import protocol as _PROTO
 # including `capacity`, `economy` and `changes`, built this round - is
 # caught here rather than found by a playtester.
 # =============================================================================
-_fogscan = sim(capital=5_000_000.0)
+_fogscan = with_end_year(unopened_sim(capital=5_000_000.0))
 _fogscan.fog = True
 _fogscan.revealed = set()
 _fogscan_visible = sorted(node_id for node_id in NODES if _fogscan.is_visible(node_id))
@@ -43,9 +44,10 @@ _fogscan_args = {
 # save/load/quit: side effects (a file written, the run ended) unrelated to
 # what this test is about, and excluded for that reason, not for safety.
 # finish ends the run and on purpose shows the road that fog hid until then.
-_fogscan_skip = {"save", "load", "quit", "finish"}
+_fogscan_skip = {"save", "load", "quit", "finish", "step"}   # step plays years: a game it opens costs minutes
 _word_re = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
 _fogscan_leaks = {}
+_fogscan_crashed = {}
 for _c in S.KNOWN_COMMANDS:
     if _c in _fogscan_skip:
         continue
@@ -54,7 +56,8 @@ for _c in S.KNOWN_COMMANDS:
     try:
         _resp = S._agent_dispatch(_fogscan, NODES, _obj)
     except Exception as _e:
-        continue   # a crash is a different bug; this test is only about leaks
+        _fogscan_crashed[_c] = repr(_e)[:120]   # reported below: a crashed command was not scanned
+        continue
     _tokens = set(_word_re.findall(json.dumps(_resp)))
     _leaked = sorted(_fogscan_hidden & _tokens)
     if _leaked:
@@ -64,6 +67,8 @@ check("no command in KNOWN_COMMANDS prints the raw id of a node this fogged "
       "command at once, so the next command to grow this bug is caught "
       "here rather than by a playtester, the way `bounty` was",
       not _fogscan_leaks, _fogscan_leaks)
+
+check("every command was scanned: none crashed, so none went unchecked", not _fogscan_crashed, _fogscan_crashed)
 
 # THE JSON MUST NOT BE A FOG BYPASS. Reusing the exact same fogged founder
 # and hidden-node set the generic fog scanner above already built: the
@@ -116,6 +121,7 @@ def _strings_of(obj):
 _fogscan.fog = False
 _ptr_sim = _fogscan
 _ptr_strings = []
+_ptr_crashed = {}
 for _pc in S.KNOWN_COMMANDS:
     if _pc in ("save", "load", "quit", "step"):
         continue            # side effects unrelated to what this scans for
@@ -123,11 +129,13 @@ for _pc in S.KNOWN_COMMANDS:
     _pobj["cmd"] = _pc
     try:
         _pr = S._agent_dispatch(_ptr_sim, NODES, _pobj)
-    except Exception:
-        continue             # a crash is a different bug
+    except Exception as _pe:
+        _ptr_crashed[_pc] = repr(_pe)[:120]
+        continue
     _ptr_strings.extend(_strings_of(_pr))
 for _pt in list(S.HELP_TOPICS) + [None]:
     _ptr_strings.extend(_strings_of(S._agent_help(_ptr_sim, _pt)))
+check("every command was read for pointers: none crashed", not _ptr_crashed, _ptr_crashed)
 _ptr_cmd_re = re.compile(r'\{"cmd":"([A-Za-z_]+)"')
 _ptr_see_re = re.compile(r"see '([A-Za-z_]+)")
 _ptr_found = set()

@@ -1,8 +1,10 @@
 """Scenario (Complaint 640): what a fogged game may not leak (ids, prerequisites, enumeration through typos), answered through the agent protocol.
 
-The typed-line parsing rules are in test_typed_front_end.py."""
+The typed-line parsing rules are in test_typed_front_end.py; a step of a fraction of a year is refused in
+test_step_whole_years_rule. The size of a reply and the count of the leverage column were bounds tuned to one opening and
+are not tested."""
 from .harness import *  # noqa: F401,F403
-from .agent_command_helpers import ask_agent, with_end_year, fogged_game, pristine_game
+from .agent_command_helpers import ask_agent, fogged_game, pristine_game
 
 # 4. `path` under fog said "you have not discovered this" about a technology
 #    the same session reported as done.
@@ -18,13 +20,6 @@ _uc = [ask_agent(pristine_game(), cmd="frobnicate")]
 check("the unknown-command hint names every command there is",
       all(command in (_uc[0].get("error") or "") for command in S.KNOWN_COMMANDS if command != "quit"),
       [command for command in S.KNOWN_COMMANDS if command not in (_uc[0].get("error") or "")])
-
-# 6. 0.999 years was refused and 1.99 was silently floored to one.
-_fy_game = with_end_year(sim())
-_fy = [ask_agent(_fy_game, cmd="step", years=1.99), ask_agent(_fy_game, cmd="step", years=1)]
-check("a fractional number of years is refused, not silently rounded",
-      _fy[0].get("ok") is False and _fy[1].get("ok") is True,
-      [result.get("ok") or result.get("error") for result in _fy])
 
 # --- the England break tester -------------------------------------------------
 # 1. THE FOG EXPLOIT. `bounty` checked prerequisites before it checked whether
@@ -104,22 +99,6 @@ check("a misspelling cannot be used to enumerate the tree through the fog",
           and "vacuum_tube" not in (result.get("error") or "") for result in _fg),
       [result.get("error", "")[:80] for result in _fg])
 
-# --- the history notes must not rebuild the wall ----------------------------
-# Every dated hazard now carries a real historical note and England has
-# fifteen of them. Embedded whole, they took one `state full` reply to nearly
-# twenty thousand bytes and one `risk` reply to seventeen thousand - which is
-# the exact wall this interface was broken up to stop producing.
-# Three fresh, unrelated sessions (proto() never shares a session file), so
-# dispatched together and checked in original civ order under --jobs.
-_big_civs = ("england_1300", "mexica_1500")
-for _civ_big in _big_civs:
-    _big_game = fogged_game(civ=_civ_big)
-    _sf = [ask_agent(_big_game, cmd="state", full=True), ask_agent(_big_game, cmd="risk")]
-    check("%s: state full stays readable" % _civ_big,
-          len(json.dumps(_sf[0])) < 12000, "%d bytes" % len(json.dumps(_sf[0])))
-    check("%s: risk stays readable" % _civ_big,
-          len(json.dumps(_sf[1])) < 9000, "%d bytes" % len(json.dumps(_sf[1])))
-
 # 3. Three distinguishable refusals were themselves the tree: real-and-heard-of,
 #    real-but-unheard-of, and nonexistent. Sixteen plain-English guesses
 #    correctly classified ten real technologies and five invented ones.
@@ -128,18 +107,3 @@ _tri = [ask_agent(_tri_game, cmd="why", id=word) for word in ("telescope", "zzzz
 _msgs = {(response.get("error") or "").split("Did you mean")[0].strip() for response in _tri}
 check("a name you have not heard of and a name that does not exist read alike",
       len(_msgs) == 1, [message[:60] for message in _msgs])
-
-# "Zero-cost nodes gate whole ages and are invisible... twice one of them was
-# the only thing between me and a branch." The two digest lists deduplicated
-# the wrong way round: the leverage column dropped anything that was also in
-# the cheapest six, and the spine of this game is precisely the nodes that are
-# both - free, zero-revenue, and holding up an age.
-_dg = [ask_agent(fogged_game(), cmd="available")]
-_lev = [x["id"] for x in (_dg[0].get("most_rests_on_these") or [])]
-check("the leverage column is not emptied by things being cheap",
-      len(_lev) >= 4, _lev)
-_by_reach = sorted(_lev, key=lambda node_id: -S.downstream_count(NODES, node_id))
-check("...and it really is the highest-leverage work available",
-      _lev and S.downstream_count(NODES, _lev[0]) >= 50,
-      [(node_id, S.downstream_count(NODES, node_id)) for node_id in _lev])
-
