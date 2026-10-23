@@ -9,7 +9,7 @@ from .harness import *  # noqa: F401,F403
 FORBIDDEN = re.compile(r"denari|\bRom(?:e|an)\b|iuger", re.IGNORECASE)
 REPLY_COMMANDS = ("status", "money", "help", "land", "labour", "population", "economy")
 
-han_sim = sim(civ="han_china_100ad", capital=50)
+han_sim = unopened_sim(civ="han_china_100ad", capital=50)
 
 
 def _ask(**command):

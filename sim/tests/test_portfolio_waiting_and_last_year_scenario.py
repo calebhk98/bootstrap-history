@@ -7,7 +7,7 @@ def ask(test_sim, **command):
     return S._agent_dispatch(test_sim, NODES, command)
 
 
-poor = sim(capital=2_000.0)
+poor = unopened_sim(capital=2_000.0)
 poor.end_year = poor.cfg["start_year"] + poor.cfg["horizon_years"]
 screen = ask(poor, cmd="portfolio")
 waiting = screen.get("waiting_to_start")

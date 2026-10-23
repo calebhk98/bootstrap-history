@@ -7,7 +7,7 @@ def ask(test_sim, **command):
     return S._agent_dispatch(test_sim, NODES, command)
 
 
-crowded = sim(capital=5_000_000.0)
+crowded = unopened_sim(capital=5_000_000.0)
 crowded.end_year = crowded.cfg["start_year"] + crowded.cfg["horizon_years"]
 for node_id in list(crowded.order):
     if len(crowded.active) >= 6:

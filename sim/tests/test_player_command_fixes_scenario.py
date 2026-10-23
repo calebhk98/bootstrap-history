@@ -19,7 +19,7 @@ def _ids(rows):
 
 
 # --- 147: quote works for the target the charge table leaves out, and changes nothing
-rich = sim(capital=1_000_000)
+rich = unopened_sim(capital=1_000_000)
 reply = _run(rich, "quote manumit 1")
 check("quote works for buy target manumit", reply.get("ok"), reply)
 capital_before = rich.capital
@@ -27,7 +27,7 @@ _run(rich, "quote farm 20")
 check("quote changes nothing", rich.capital == capital_before)
 
 # --- 155: rush preview lists what rush would start
-rush_game = sim(capital=20000.0)
+rush_game = unopened_sim(capital=20000.0)
 preview = _run(rush_game, "rush preview limit:3")
 check("rush preview limit starts nothing", not rush_game.active, rush_game.active)
 bare = _run(rush_game, "rush preview")

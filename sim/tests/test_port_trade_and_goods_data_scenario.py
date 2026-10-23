@@ -11,7 +11,7 @@ DATA = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.absp
 trades_file = json.load(open(os.path.join(DATA, "trades.json")))["trades"]
 lives = json.load(open(os.path.join(DATA, "service_lives.json")))["years"]
 
-game = sim()
+game = unopened_sim()
 setup = economy_port_setup.build_setup(game)
 check("the port passes each trade's risk into the economy",
       all(setup.trades[name].fatality_risk_per_year == trades_file[name]["fatality_risk_per_year"] for name in trades_file))

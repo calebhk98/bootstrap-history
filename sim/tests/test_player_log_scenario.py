@@ -7,7 +7,7 @@ def ask(game, **command):
 
 
 # --- The automatic behaviours are approximations, and every switch says what it does.
-game = sim()
+game = unopened_sim()
 _policy = ask(game, cmd="policy")
 check("the policy screen says these are approximations, not optimal play",
       bool(_policy.get("these_are_approximations_not_optimal_play")), _policy.keys())
@@ -16,7 +16,7 @@ check("...and every switch the game offers says what it does",
       [name for name in _policy["policy"] if not (_policy.get("what_each_does") or {}).get(name)])
 
 # --- The ledger's parts add up to the total, with an aged loom among the concerns.
-ledger = sim(civ="rome_100ad", capital=500000.0)
+ledger = unopened_sim(civ="rome_100ad", capital=500000.0)
 ledger.done.add("tex_power_loom")
 ledger.done_year["tex_power_loom"] = 100
 ledger._done_changed()

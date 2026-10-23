@@ -6,7 +6,7 @@ from .harness import *  # noqa: F401,F403
 from sim.engine import economy_port_setup
 from sim.geography import api as geography_api
 
-game = sim()
+game = unopened_sim()
 setup = economy_port_setup.build_setup(game)
 check("a game with nothing built hands the economy no ways", setup.improvements == {}, setup.improvements)
 

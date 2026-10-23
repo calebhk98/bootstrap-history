@@ -4,7 +4,7 @@ from .harness import *  # noqa: F401,F403
 
 from sim.engine import economy_port_setup
 
-game = sim()
+game = unopened_sim()
 setup = economy_port_setup.build_setup(game)
 check("the shipped data's setup carries the trade the registry names",
       setup.unskilled_trade == economy_port_setup.opening_values(game)["unskilled_trade"]
