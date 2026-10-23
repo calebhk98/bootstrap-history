@@ -12,6 +12,7 @@ from .state_projects import (
 import sim.engine.ui_port as ui_port
 from sim.engine.ui_port import shortage_conditions
 from sim.engine.ui_port import knowledge_loss_warning
+from .scandal_trend import years_until_scandal_crosses_the_line
 from .step_alerts import demographic_emergency
 from .state_succession import succession_block
 
@@ -198,12 +199,8 @@ def _agent_state_risk_and_pressure(sim, full=True):
         "scandal_rose_by_last_year": (
             round(sim.scandal - sim.scandal_last_year, 1)
             if getattr(sim, "scandal_last_year", None) is not None else None),
-        "years_until_scandal_crosses_the_line": (
-            int(max(0.0, (sim.cfg["suspicion_danger"] - sim.scandal))
-                / (sim.scandal - sim.scandal_last_year)) + 1
-            if (getattr(sim, "scandal_last_year", None) is not None
-                and sim.scandal - sim.scandal_last_year > 0.05
-                and sim.scandal < sim.cfg["suspicion_danger"]) else None),
+        "years_until_scandal_crosses_the_line": years_until_scandal_crosses_the_line(
+            sim.scandal, getattr(sim, "scandal_last_year", None), sim.cfg["suspicion_danger"]),
         "resource_throttle": round(sim.throttle, 3), "throttle_binding": sim.binding,
         "forest_ha": round(sim.forest_ha, 1),
         "mine_capacity": {material: round(value, 1) for material, value in sim.mine_capacity.items()},
