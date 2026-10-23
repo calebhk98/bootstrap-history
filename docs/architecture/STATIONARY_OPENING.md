@@ -118,7 +118,7 @@ and test an invariant distribution rather than quietly claiming an exact
 per-agent fixed point.
 
 ```bash
-python3 -m sim.tests --slow --only baseline_fixture,baseline_rome,baseline_rome_full_length,real_output_baseline
+python3 -m sim.tests --slow --only real_output_baseline
 python3 sim/simulator.py spin-up-trace --civ rome_100ad --years 60
 python3 sim/simulator.py spin-up-trace --civ england_1300 --years 60
 python3 sim/simulator.py spin-up-trace --civ mexica_1500 --years 60

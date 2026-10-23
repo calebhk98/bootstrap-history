@@ -1,7 +1,7 @@
 """Refusal wording and screens: the patronage refusal never leaks an id nor recommends a refusal, the policy screen
 groups what is running from what is not, and "nothing else rests on this" means zero. The start rule is the real mixin
 over a stand-in game (stage of the patron, interest and fog set by the test); the screens are rendered from built
-replies (no game). The auto_open policy through a game is test_refusal_wording_and_screens_scenario."""
+replies (no game). The concerns auto_open considers are test_auto_open_candidates."""
 import collections
 from types import SimpleNamespace
 

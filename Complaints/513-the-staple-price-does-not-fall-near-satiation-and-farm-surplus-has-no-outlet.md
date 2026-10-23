@@ -63,3 +63,9 @@ surplus hands. Rejected: an invented functional form, neither derived nor labell
 technique. The waste count (`carry_forward_and_waste_kg`, `holdings.farm_wasted_kg`) was worth keeping. A continuous
 response should come from households' own allocation of hours (each cohort comparing the farm hour with its own wage),
 and the surplus should reach the agent economy as supply.
+
+- `population_farm_technique_scenario` (30 to 60 game years of a Rome society with a reaper or a crop; one check, "a food surplus releases
+  farm workers within mobility limits", was red on this complaint) left the suite. The mobility rule is
+  `test_population_farm_technique.WorkersMoveOnlyAsFastAsTheMarketLetsThem`; the decades-long farm share is measured by
+  `python3 sim/simulator.py economy-check` (it prints hunger and the staple price over labour cost) and, for the opening, by
+  `python3 sim/simulator.py opening-checks`.

@@ -2,8 +2,7 @@
 
 The rules are tested on built inputs: the queue the hours are drawn in (`hour_offer.priority_queue`), what one
 project is offered and why a directive can go unmet (`hour_offer`), and the `allocate` command on a stand-in for the
-household. The real allocator, a save and load, and the standing work order on a game are the named scenarios in
-test_allocate_scenario."""
+household. The allocator's callers, the standing work order and a save are in test_allocate_wiring."""
 
 QUICK_TOPIC = True
 from types import SimpleNamespace

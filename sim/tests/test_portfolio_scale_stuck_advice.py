@@ -1,5 +1,5 @@
 """Complaints 88 and 98: portfolio paging, readouts and group drill-down; stuck on a calendar-bound goal path.
-The replies of a running game are test_portfolio_scale_stuck_advice_scenario."""
+The stuck reply of a game is test_player_available_smoke."""
 QUICK_TOPIC = True
 
 from types import SimpleNamespace
