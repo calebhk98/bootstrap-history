@@ -4,14 +4,14 @@ from .harness import *  # noqa: F401,F403
 from .agent_command_helpers import ask_agent
 
 PROJECT = "mfg_cutting_fluid"      # owes hours to the machinist, a trade Rome lacks at the start
-game = sim(civ="rome_100ad", capital=500000)
+game = unopened_sim(civ="rome_100ad", capital=500000)
 ask_agent(game, cmd="train", trade="machinist", n=1)
 reply = ask_agent(game, cmd="start", id=PROJECT)
 waits = reply.get("waits_for_trades") or {}
 check("a start whose trade is still in training is accepted and names the trade and the wait",
       reply.get("ok") is True and set(waits) == {"machinist"} and waits["machinist"] > 0, reply)
 
-late = sim(civ="rome_100ad", capital=500000)
+late = unopened_sim(civ="rome_100ad", capital=500000)
 ask_agent(late, cmd="train", trade="machinist", n=1)
 late.state.household.training[0][1] = late.state.scenario.year + 10
 late_reply = ask_agent(late, cmd="start", id=PROJECT)
