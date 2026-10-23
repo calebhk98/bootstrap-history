@@ -1,8 +1,8 @@
 """Complaint 475: collection is a modest part of the state's coin revenue; unpaid army and office pay is arrears the
 state owes, paid first from later revenue, and a mutinous army takes what it is owed. A state short of its own need
 lends nothing (the lending rule: test_state_surplus_rules). How a shortfall becomes arrears is
-test_state_fiscal_response. The rules are called on a government and a stub world built here; the whole-game
-scenario is test_state_arrears_scenario."""
+test_state_fiscal_response. The rules are called on a government and a stub world built here; what the money
+screen reports the state owes is test_state_owes."""
 
 QUICK_TOPIC = True
 

@@ -2,8 +2,7 @@
 weight puts more coin into the economy; the price level it clears at rises against a twin economy that did not
 debase. No price is set: the only difference between the two economies is the cut the state decides on each year
 (`Economy.strike_lighter_coin`, which `economy_port_year._strike_state_coin` calls with the cut the state's fiscal
-response chose, Complaint 625). Built on the engine-free fixture; the whole-game scenario is
-test_state_debasement_prices_scenario."""
+response chose, Complaint 625). Built on the engine-free fixture."""
 
 QUICK_TOPIC = True
 

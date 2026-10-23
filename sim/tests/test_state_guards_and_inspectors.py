@@ -1,5 +1,5 @@
 """Complaint 660: order against theft and the mine ceiling follow the guards and inspectors a state employs and pays,
-not the share its officials collect. The rules are called on built inputs; the home game is in test_state_guards_and_inspectors_scenario."""
+not the share its officials collect. The rules are called on built inputs; the staff readers are test_collection_view_staff and test_staff_reach_wiring."""
 from .harness import *  # noqa: F401,F403
 
 QUICK_TOPIC = True

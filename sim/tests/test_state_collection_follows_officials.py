@@ -1,6 +1,6 @@
 """Complaint 620: what a state collects on a tile follows from the officials it employs, their literacy and the road
 from its seat, not from a typed state capacity. The home world's reading is in
-test_state_collection_follows_officials_scenario."""
+test_collection_view_staff."""
 from .harness import *  # noqa: F401,F403
 
 from sim.agents import collection
