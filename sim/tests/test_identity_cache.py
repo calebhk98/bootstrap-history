@@ -4,6 +4,8 @@ Complaints/303. `id()` is only unique among live objects, so an address-keyed ca
 that does not confirm the hit replays a stale result under a recycled address. The
 cache class confirms every hit with `is`, and engine code keys on an address nowhere else.
 """
+QUICK_TOPIC = True
+
 import ast
 import os
 
@@ -19,7 +21,10 @@ for _dirpath, _dirnames, _filenames in (_entry for _directory in engine_side_dir
         if not _filename.endswith(".py") or _filename == "identity_cache.py":
             continue
         _path = os.path.join(_dirpath, _filename)
-        for _node in ast.walk(ast.parse(open(_path).read())):
+        _source = open(_path).read()
+        if "id(" not in _source:
+            continue
+        for _node in ast.walk(ast.parse(_source)):
             if (isinstance(_node, ast.Call) and isinstance(_node.func, ast.Name)
                     and _node.func.id == "id"):
                 _outside.append("%s:%d" % (os.path.relpath(_path, ROOT), _node.lineno))

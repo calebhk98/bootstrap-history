@@ -41,3 +41,12 @@ def remaining_floor_years(nodes, chain, done):
     remaining = sum(max(nodes[node_id]["yrs"], nodes[node_id]["ph"] / 2000.0)
                     for node_id in chain if node_id not in done)
     return round(remaining, 1)
+
+
+def lead_time_range(floors):
+    """The calendar floors of the hedges still open as one answer: {quickest, slowest} when they differ, the one
+    figure when they agree, None when there are none."""
+    floors = sorted(floors)
+    if not floors:
+        return None
+    return {"quickest": floors[0], "slowest": floors[-1]} if floors[0] != floors[-1] else floors[0]
