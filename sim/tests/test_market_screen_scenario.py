@@ -32,7 +32,7 @@ check("offset and limit page the materials table",
       [row["material"] for row in _page2["materials"]["rows"]]
       == list(_priceable)[len(_rows):len(_rows) + 5],
       _page2["materials"]["rows"])
-_mine_sim = sim()
+_mine_sim = unopened_sim()
 _mine_sim.state.holdings.forest_ha = 10.0
 _all = S._agent_dispatch(_mine_sim, NODES, {"cmd": "market", "limit": 1000})
 _charcoal = next(row for row in _all["materials"]["rows"] if row["material"] == "charcoal_kg")

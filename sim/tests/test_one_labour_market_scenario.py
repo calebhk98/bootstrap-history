@@ -11,7 +11,7 @@ TRADE = "artisan"
 
 def stressed_game():
     """A game with a non-unit price level, a non-unit demographic wage index and a scarcity premium."""
-    game = sim()
+    game = unopened_sim()
     game.price_index = 1.5
     game._wage_index_base = 1.3
     game.labour.market.press(TRADE, game.labour.market_supply(TRADE) * 0.8)

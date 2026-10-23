@@ -8,7 +8,7 @@ _RATED = 280.0
 
 
 def _mine_fixture():
-    test_sim = sim(capital=500000.0)
+    test_sim = unopened_sim(capital=500000.0)
     test_sim.open_mine(_MATERIAL, _RATED, partial=False)
     return test_sim
 
@@ -49,7 +49,7 @@ check("selling 1 t twenty-five times in one year removes 25 t and banks nothing 
 from sim.engine.saveload import save_state, load_state
 save_path = os.path.join(tempfile.mkdtemp(), "mine_stock.json")
 save_state(mine_sim, save_path)
-reloaded = sim(capital=1.0)
+reloaded = unopened_sim(capital=1.0)
 load_state(reloaded, save_path)
 stock_saved = reloaded.material_stock_t(_KEY)
 reloaded.resource_throttle()
