@@ -3,8 +3,7 @@ households spend on.
 
 The founder, a firm and the state all deal with `Sim.goods_market`; the same sale moves the clearing price the same way
 whoever makes it, and a good no home technique in reach and no partner offers draws no household spending. The rules are
-called on a `GoodsMarket` over a stand-in game that holds only what each reads; the running game (firm output as supply,
-the real Han as the partner) is in test_one_goods_market_scenario."""
+called on a `GoodsMarket` over a stand-in game that holds only what each reads; the sales and takings wiring is in test_one_goods_market_wiring."""
 from types import SimpleNamespace
 from unittest import mock
 
