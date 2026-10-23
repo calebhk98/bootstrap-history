@@ -1,5 +1,6 @@
 """The two figures every screen quotes (Complaint 640): the cost of a project started today and the yearly running cost of a
-concern, called on numbers built here. The same figures through the dispatcher are test_start_and_upkeep_quotes_scenario."""
+concern, called on numbers built here. The bill a `start` reply states is test_start_bill_and_debt_rules
+and the quote of opening a concern is test_spending_quote_wiring."""
 QUICK_TOPIC = True
 
 from .harness import check

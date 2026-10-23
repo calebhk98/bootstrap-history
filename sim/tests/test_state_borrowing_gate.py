@@ -1,7 +1,7 @@
 """Complaint 316: a state borrows only once it holds the technology of public debt (a node declaring the
 `state_credit` mechanic, in its own knowledge or its society's baseline). Without one it has no credit ceiling, its
 shortfall menu offers no loan, and a policy that names borrowing has nothing covered by it. The rules are called on a
-government and a stub world built here; the whole-game scenario is test_state_borrowing_gate_scenario."""
+government and a stub world built here."""
 
 QUICK_TOPIC = True
 

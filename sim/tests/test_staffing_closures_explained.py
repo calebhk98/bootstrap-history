@@ -1,7 +1,6 @@
 """Staffing closures explained: Complaints 229, 215, 201, 202, 231, 242, 233, 205, 206, 235, 246. The rules are called on
 stubs over the real mixins (the year's tally and summary, the unused-hours notes) and on the plain functions behind the
-log lines and the sentences; the closure, the recommendation of `stuck` and the starved allocation through a whole game are
-test_staffing_closures_explained_scenario. The spare-number arithmetic (held, in use, allowance) is
+log lines and the sentences; the recommendation of `stuck` is test_stuck_shut_ventures_rule. The spare-number arithmetic (held, in use, allowance) is
 test_staffing_warnings."""
 
 QUICK_TOPIC = True
