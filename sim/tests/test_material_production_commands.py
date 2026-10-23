@@ -1,5 +1,5 @@
 """`build nitre` and the shortage remedies that point at commands like it (Complaint 640: rules on a stub founder,
-no game; the whole-game wiring is test_material_production_commands_scenario)."""
+no game)."""
 import types
 import unittest
 
@@ -97,6 +97,20 @@ class ShortageRemedies(unittest.TestCase):
 
     def test_no_binding_good_needs_no_remedy(self):
         self.assertEqual(_Founder(cash=0.0).shortage_remedy_plan(None), {"text": "", "commands": []})
+
+
+
+
+class AutomaticPolicyTests(unittest.TestCase):
+    def test_an_unset_automatic_policy_is_on_for_an_automatic_game_and_off_for_a_manual_one(self):
+        from sim.engine.shortage_sizing import automatic_policy_on
+        self.assertTrue(automatic_policy_on({}, "auto_mine", manual=False))
+        self.assertFalse(automatic_policy_on({}, "auto_mine", manual=True))
+
+    def test_what_the_actor_set_overrides_the_default(self):
+        from sim.engine.shortage_sizing import automatic_policy_on
+        self.assertFalse(automatic_policy_on({"auto_mine": False}, "auto_mine", manual=False))
+        self.assertTrue(automatic_policy_on({"auto_mine": True}, "auto_mine", manual=True))
 
 
 if __name__ == "__main__":
