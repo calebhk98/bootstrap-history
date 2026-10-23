@@ -1,6 +1,6 @@
 """ui_anatomy: the `anatomy` command (Complaint 69). Complaint 640: the rules (the target and gap, the rows, the goal and
 named forms, the fog) are called on a stand-in game that holds only what the command reads; the check that the
-literacy anatomy is the education screen's number in a played game is in test_ui_anatomy_scenario."""
+literacy anatomy reads the education screen's numbers is `test_the_literacy_rows_are_the_education_reports_numbers` here."""
 QUICK_TOPIC = True
 
 import types
