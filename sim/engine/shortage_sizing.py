@@ -2,6 +2,11 @@
 import math
 
 
+def automatic_policy_on(policy, name, manual):
+    """Whether the automatic policy `name` runs: what the actor set, else on for an automatic game and off for a manual one."""
+    return policy.get(name, not manual)
+
+
 def nitre_bed_square_metres(deficit_tonnes, safety_buffer, yield_tonnes_per_square_metre):
     """Nitre bed to lay so the deficit, with headroom, is covered, in whole hundreds of square metres (never under one hundred)."""
     return max(100, int(math.ceil(deficit_tonnes * safety_buffer / max(yield_tonnes_per_square_metre, 1e-12) / 100.0)) * 100)

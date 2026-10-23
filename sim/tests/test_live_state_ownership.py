@@ -1,5 +1,5 @@
-"""The household's own mutation methods (Complaint 640 audit: a HouseholdState built here, no game; the live state
-ownership of a whole game is test_live_state_ownership_scenario).
+"""The household's own mutation methods (Complaint 640 audit: a HouseholdState built here, no game;
+the facade is test_live_state_facade).
 
 cost_capital, costCapital, add_capital, add_reputation, deduct_reputation and add_scandal update the household's
 state, and the edge cases (zero, a refund, a negative delta) do the plain arithmetic."""

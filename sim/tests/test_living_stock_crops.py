@@ -11,7 +11,7 @@ from sim.engine.data import ROOT
 
 QUICK_TOPIC = True
 
-# Complaint 640: the reach of a grant into the ledger and the yearly rate are test_living_stock_scenario and
+# Complaint 640: the reach of a grant into the ledger and the yearly rate are test_living_stock_rules and
 # test_living_stock_trade (the year turns the held stock); this file reads the data only.
 WIRING = {
     "pepper_vine_stock_kg": "fud_pepper_cultivation",

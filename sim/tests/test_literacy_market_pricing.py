@@ -1,5 +1,5 @@
 """Labour price pressure and the commodity framework (Complaint 640 audit: rules on a stub market and a ledger built
-here, no game; literacy, hiring and material prices through a game are test_literacy_market_pricing_scenario)."""
+here, no game; the literate ceiling and the material price factor are test_literacy_and_material_price_rules)."""
 import types
 import unittest
 

@@ -1,43 +1,41 @@
-"""Complaint 637: a map overlay's `places` catalogue names the places on a tile, and `map` and `move` carry them."""
+"""Complaint 637: a map overlay's `places` catalogue names the places on a tile; the tile fields every screen shows
+(`map`, `move`) carry them."""
+QUICK_TOPIC = True
+
+import types
 import unittest
 
-from sim.geography import map_source, tile_names
-from sim.tests.test_missing_screens_scenario import _ask, _fresh_sim
+from sim.geography import tile_names
+from sim.ui.proto.screen_map import tile_place
 
 
-def with_places(sim, places):
-    """The sim's merged map plus a `places` catalogue, as a mod overlay would add."""
-    base = sim.world_map
-    catalogues = dict(base.catalogues, places={entry["id"]: entry for entry in places})
-    sim.__dict__["_world_map"] = map_source.WorldMap(
-        base.map_id, base.tiles, base.layers, catalogues, base.folders, base.properties)
-    return sim
+def map_with_places(places):
+    return types.SimpleNamespace(catalogue=lambda name: {entry["id"]: entry for entry in places} if name == "places" else {})
+
+
+PLACES = [{"id": "a", "name": "Small", "tile": "here_01", "rank": 1},
+          {"id": "b", "name": "Great", "tile": "here_01", "rank": 9},
+          {"id": "c", "name": "Elsewhere", "tile": "nowhere_01"}]
 
 
 class PlaceNameTests(unittest.TestCase):
 
     def test_places_on_a_tile_come_highest_rank_first(self):
-        sim = _fresh_sim()
-        tile = sim.labour.base_tile()
-        with_places(sim, [{"id": "a", "name": "Small", "tile": tile, "rank": 1},
-                          {"id": "b", "name": "Great", "tile": tile, "rank": 9},
-                          {"id": "c", "name": "Elsewhere", "tile": "nowhere_01"}])
-        self.assertEqual(tile_names.places_on(sim.world_map, tile), ["Great", "Small"])
+        self.assertEqual(tile_names.places_on(map_with_places(PLACES), "here_01"), ["Great", "Small"])
+
+    def test_equal_ranks_come_in_name_order(self):
+        places = [{"id": "x", "name": "Zed", "tile": "t"}, {"id": "y", "name": "Abe", "tile": "t"}]
+        self.assertEqual(tile_names.places_on(map_with_places(places), "t"), ["Abe", "Zed"])
+
+    def test_a_tile_with_no_place_has_none(self):
+        self.assertEqual(tile_names.places_on(map_with_places(PLACES), "empty_01"), [])
+
+    def test_a_tile_row_carries_the_places_the_map_names(self):
+        self.assertEqual(tile_place("here_01", map_with_places(PLACES))["places"], ["Great", "Small"])
 
     def test_a_map_without_places_changes_no_row(self):
-        reply = _ask(_fresh_sim(), "map")
-        self.assertNotIn("places", reply["you_are_based_at"])
-
-    def test_map_and_move_carry_the_places(self):
-        sim = _fresh_sim()
-        tile = sim.labour.base_tile()
-        people = sim.labour.settlement_tiles()
-        other = next(name for name in people
-                     if name != tile and people[name] >= 1.0 and sim.labour.relocation_quote(name) is not None)
-        with_places(sim, [{"id": "a", "name": "Here", "tile": tile}, {"id": "b", "name": "There", "tile": other}])
-        self.assertEqual(_ask(sim, "map")["you_are_based_at"]["places"], ["Here"])
-        rows = {row["tile"]: row for row in _ask(sim, "move_base")["tiles"]}
-        self.assertEqual(rows[other]["places"], ["There"])
+        self.assertNotIn("places", tile_place("here_01", map_with_places([])))
+        self.assertNotIn("places", tile_place("here_01"))
 
 
 if __name__ == "__main__":

@@ -7,6 +7,7 @@ import os
 import unittest
 
 from sim.geography import crop_climate
+from sim.world import need_basket
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -84,6 +85,23 @@ def _read(*parts):
 
 def _start(civilisation_id):
     return _read("data", "civilizations", civilisation_id + ".json")["starting_techs"]
+
+
+def _light_shares(prices):
+    spec = need_basket.NeedSpec("light", 1.0, 1.0, (("oil_lamp_x", 1.0), ("candle_x", 1.0)))
+    basket = need_basket.Basket((spec,), 2.0, {})
+    (light,) = need_basket.need_prices(basket, prices.get)
+    return {good: share for good, _price, _effect, share in light.goods}
+
+
+class LightSpendingShares(unittest.TestCase):
+    def test_a_good_with_no_price_takes_none_of_the_light_spending(self):
+        self.assertEqual(_light_shares({"candle_x": 3.0}), {"candle_x": 1.0})
+
+    def test_the_cheaper_light_takes_the_bigger_share(self):
+        shares = _light_shares({"oil_lamp_x": 1.0, "candle_x": 3.0})
+        self.assertGreater(shares["oil_lamp_x"], shares["candle_x"])
+        self.assertAlmostEqual(sum(shares.values()), 1.0)
 
 
 if __name__ == "__main__":

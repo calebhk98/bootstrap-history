@@ -1,5 +1,5 @@
 """How a material reaches the founder (material_reach.py): imports count as market supply, and a good with
-no supply says why. Small fixtures only; the whole-game reading is test_material_reach_whole_game.py."""
+no supply says why. Small fixtures only."""
 
 QUICK_TOPIC = True
 
