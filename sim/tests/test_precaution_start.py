@@ -1,10 +1,13 @@
 """Complaint 120: starting a project with the precaution adds the quoted cost to its bill and the quoted hours to its founder
 hours and marks it; one a node does not offer is refused before anything starts. `begin_seat_project` and `start_project`
-called on a stand-in game that holds one declared node (no game is built). The figures themselves are test_risk_precaution."""
+called once each on a stand-in game written out here, with the precaution's figures (extra cost, extra hours, whether a node offers
+one) replaced by recorders. The figures themselves are test_risk_precaution."""
 import unittest
 from types import SimpleNamespace
 
-from sim.engine import projects_precaution as rules
+from unittest import mock
+
+from sim.engine import projects_starting
 from sim.engine.projects_starting import StartingMixin
 
 QUICK_TOPIC = True
@@ -50,9 +53,14 @@ class _Game(StartingMixin):
         return None
 
 
+EXTRA_COST, EXTRA_HOURS = 50.0, 7.0
+
+
 def begun(precaution):
     game = _Game()
-    outcome = game.begin_seat_project("declared", precaution)
+    with mock.patch.object(projects_starting, "precaution_extra_cost", lambda sim, node_id, bill: EXTRA_COST), \
+            mock.patch.object(projects_starting, "precaution_extra_hours", lambda sim, node_id: EXTRA_HOURS):
+        outcome = game.begin_seat_project("declared", precaution)
     return game, outcome, game.state.projects.active["declared"]
 
 
@@ -66,10 +74,8 @@ class BeginSeatProject(unittest.TestCase):
 
     def test_the_bought_start_adds_the_quoted_cost_to_the_bill_and_the_quoted_hours_to_the_founder_hours(self):
         game, _outcome, record = begun(True)
-        self.assertAlmostEqual(record["bill"] - BILL, rules.extra_cost(game, "declared", BILL))
-        self.assertAlmostEqual(record["ph_left"] - HOURS, rules.extra_hours(game, "declared"))
-        self.assertGreater(record["bill"], BILL)
-        self.assertGreater(record["ph_left"], HOURS)
+        self.assertEqual(record["bill"], BILL + EXTRA_COST)
+        self.assertEqual(record["ph_left"], HOURS + EXTRA_HOURS)
 
     def test_the_bought_start_is_marked_so_the_dice_use_the_lowered_chance(self):
         _game, _outcome, record = begun(True)
@@ -88,7 +94,8 @@ class StartProjectRefusesAnUnofferedPrecaution(unittest.TestCase):
 
     def test_a_node_that_offers_none_is_refused_and_nothing_starts(self):
         game = _Game()
-        started, why = game.start_project("plain", precaution=True)
+        with mock.patch.object(projects_starting, "precaution_spec", lambda sim, node_id: None):
+            started, why = game.start_project("plain", precaution=True)
         self.assertFalse(started)
         self.assertTrue(why)
         self.assertEqual(game.state.projects.active, {})

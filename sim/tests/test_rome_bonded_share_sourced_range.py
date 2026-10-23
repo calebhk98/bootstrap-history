@@ -1,12 +1,19 @@
 """Rome's declared bonded share sits inside the range its own source note gives (Scheidel 2005, JRS 95: 64-79). The range is
 read from the civilisation file's note, never typed here. Pure data: no game is built. The share after played years is
 Complaints/648 (measured by the command named there)."""
+import json
+import os
 import re
 import unittest
 
-from sim import simulator
+from sim.tests.harness import ROOT
 
 QUICK_TOPIC = True
+
+
+def _civ():
+    with open(os.path.join(ROOT, "data", "civilizations", "rome_100ad.json")) as handle:
+        return json.load(handle)
 
 
 def sourced_range(civ):
@@ -20,11 +27,11 @@ def sourced_range(civ):
 class DeclaredBondedShareAgreesWithItsSource(unittest.TestCase):
 
     def test_the_note_states_a_range_with_low_under_high(self):
-        low, high = sourced_range(simulator.load_civ("rome_100ad"))
+        low, high = sourced_range(_civ())
         self.assertTrue(0.0 < low < high < 1.0, (low, high))
 
     def test_the_declared_bonded_share_is_inside_the_sourced_range(self):
-        civ = simulator.load_civ("rome_100ad")
+        civ = _civ()
         low, high = sourced_range(civ)
         bonded = [entry for entry in civ["cast"]["strata"] if entry.get("bonded")]
         self.assertEqual(len(bonded), 1)

@@ -1,7 +1,7 @@
-"""The effect channels a work declares in its `mechanics` (Complaint 190's benefactions use them): `MechanicsMixin`'s
-`effect_values`, `effect_sum` and `effect_factor` over a stand-in that holds nodes, which are running and how many units; and
-the readers that ask a channel (`standing_floor`, `goods_reach_factor`, `_schooling_flow`) called on that stand-in. No game is
-built. What the benefactions branch declares is test_complaint_190_benefactions."""
+"""The effect channels a work declares in its `mechanics` (Complaint 190's benefactions use them). Each method is called once on a
+stand-in `self` whose attributes are written out and whose collaborators are plain lambdas: `MechanicsMixin.effect_value`,
+`effect_values`, `effect_sum`, `effect_factor`; the readers `standing_floor`, `goods_reach_factor`, `_schooling_flow`; and
+`institution_unit_cost`. No game is built. What the benefactions branch declares is test_complaint_190_benefactions."""
 import unittest
 from types import SimpleNamespace
 
@@ -10,98 +10,144 @@ from sim.engine.mechanics import MechanicsMixin
 
 QUICK_TOPIC = True
 
-NODES = {
-    "school_a": {"mechanics": {"schooling_flow": {"per_unit": 0.5, "order": 1, "required": True, "reaches": ["general"]}}},
-    "school_b": {"mechanics": {"schooling_flow": {"flat": 0.25, "order": 2}}},
-    "patron_a": {"mechanics": {"standing": {"flat": 1.0, "order": 1, "group": "patron"}}},
-    "patron_b": {"mechanics": {"standing": {"flat": 2.0, "order": 2, "group": "patron"}}},
-    "charter": {"mechanics": {"standing": {"flat": 4.0, "order": 3, "gate": "has"}}},
-    "road": {"mechanics": {"reach": {"factor": 1.5}}},
-    "canal": {"mechanics": {"reach": {"factor": 1.6}}},
-    "hall": {"mechanics": {"supervision_room": {"per_unit": 3.0}}},
-}
 
+class EffectValue(unittest.TestCase):
 
-class Channels(MechanicsMixin):
-    """What the channel readers ask of a game: the nodes, which are running or built, the units of each, and a household."""
+    def value(self, spec, units=4.0, money_per_hour=2.0):
+        game = SimpleNamespace(institution_units=lambda node_id: units, labour=SimpleNamespace(money_per_labour_hour=lambda: money_per_hour))
+        return MechanicsMixin.effect_value(game, "school", spec)
 
-    REACH_CEILING = Sim.REACH_CEILING
+    def test_a_flat_effect_is_its_flat_value(self):
+        self.assertEqual(self.value({"flat": 1.5}), 1.5)
 
-    def __init__(self, running=(), built=(), units=1.0, scandal=0.0):
-        self.nodes = NODES
-        self.labour = SimpleNamespace(money_per_labour_hour=lambda: 1.0)
-        self._running, self._built, self._units = set(running), set(built) | set(running), units
-        self.state = SimpleNamespace(projects=SimpleNamespace(done=set(), granted=set()),
-                                     household=SimpleNamespace(scandal=scandal))
+    def test_a_per_unit_effect_scales_with_the_units(self):
+        self.assertEqual(self.value({"per_unit": 3.0}, units=4.0), 12.0)
 
-    def running(self, node_id):
-        return node_id in self._running
+    def test_a_per_sqrt_unit_effect_scales_with_the_square_root_of_the_units(self):
+        self.assertEqual(self.value({"per_sqrt_unit": 3.0}, units=4.0), 6.0)
 
-    def has(self, node_id):
-        return node_id in self._built
-
-    def institution_units(self, node_id):
-        return self._units
+    def test_a_labour_hour_effect_is_scaled_by_the_money_a_labour_hour_is_worth(self):
+        self.assertEqual(self.value({"flat": 1.5, "labour_hours": True}, money_per_hour=2.0), 3.0)
 
 
 class EffectValues(unittest.TestCase):
 
-    def test_a_closed_work_contributes_nothing_and_an_open_one_its_declared_value(self):
-        self.assertEqual(Channels().effect_values("schooling_flow"), [])
-        self.assertEqual(Channels(running=["school_b"]).effect_values("schooling_flow"), [("school_b", 0.25)])
+    def values(self, terms, holds):
+        game = SimpleNamespace(_effect_terms=lambda channel: terms, effect_holds=lambda node_id, spec: node_id in holds,
+                               effect_value=lambda node_id, spec: spec["flat"])
+        return MechanicsMixin.effect_values(game, "standing")
 
-    def test_a_per_unit_work_scales_with_its_units(self):
-        self.assertEqual(Channels(running=["hall"], units=1.0).effect_sum("supervision_room"), 3.0)
-        self.assertEqual(Channels(running=["hall"], units=4.0).effect_sum("supervision_room"), 12.0)
+    def test_a_work_that_does_not_hold_contributes_nothing(self):
+        self.assertEqual(self.values([("a", {"flat": 1.0})], holds=()), [])
 
-    def test_the_sum_starts_from_the_base_and_adds_each_open_work(self):
-        self.assertEqual(Channels(running=["school_a", "school_b"]).effect_sum("schooling_flow", 10.0), 10.75)
+    def test_a_work_that_holds_contributes_its_value(self):
+        self.assertEqual(self.values([("a", {"flat": 1.0})], holds=("a",)), [("a", 1.0)])
 
     def test_a_group_counts_once_for_its_first_holder_in_declared_order(self):
-        both = Channels(running=["patron_a", "patron_b"]).effect_values("standing")
-        self.assertEqual(both, [("patron_a", 1.0)])
-        self.assertEqual(Channels(running=["patron_b"]).effect_values("standing"), [("patron_b", 2.0)])
+        terms = [("a", {"flat": 1.0, "group": "patron"}), ("b", {"flat": 2.0, "group": "patron"})]
+        self.assertEqual(self.values(terms, holds=("a", "b")), [("a", 1.0)])
 
-    def test_a_has_gated_work_counts_when_built_though_not_running(self):
-        self.assertEqual(Channels(built=["charter"]).effect_sum("standing"), 4.0)
+    def test_a_group_whose_first_member_does_not_hold_is_counted_by_the_next(self):
+        terms = [("a", {"flat": 1.0, "group": "patron"}), ("b", {"flat": 2.0, "group": "patron"})]
+        self.assertEqual(self.values(terms, holds=("b",)), [("b", 2.0)])
+
+
+class EffectHolds(unittest.TestCase):
+
+    def holds(self, spec, running, built):
+        game = SimpleNamespace(running=lambda node_id: running, has=lambda node_id: built)
+        return MechanicsMixin.effect_holds(game, "x", spec)
+
+    def test_an_ordinary_effect_needs_the_work_running(self):
+        self.assertFalse(self.holds({}, running=False, built=True))
+        self.assertTrue(self.holds({}, running=True, built=True))
+
+    def test_a_has_gated_effect_needs_the_work_only_built(self):
+        self.assertTrue(self.holds({"gate": "has"}, running=False, built=True))
+
+
+class EffectSumAndFactor(unittest.TestCase):
+
+    def test_the_sum_starts_from_the_base_and_adds_each_value(self):
+        game = SimpleNamespace(effect_values=lambda channel: [("a", 0.5), ("b", 0.25)])
+        self.assertEqual(MechanicsMixin.effect_sum(game, "schooling_flow", 10.0), 10.75)
+
+    def test_the_sum_of_nothing_is_the_base(self):
+        self.assertEqual(MechanicsMixin.effect_sum(SimpleNamespace(effect_values=lambda channel: []), "x", 3.0), 3.0)
 
     def test_factors_multiply(self):
-        self.assertAlmostEqual(Channels(running=["road", "canal"]).effect_factor("reach"), 2.4)
-        self.assertEqual(Channels().effect_factor("reach"), 1.0)
+        game = SimpleNamespace(_effect_terms=lambda channel: [("a", {"factor": 1.5}), ("b", {"factor": 1.6})],
+                               effect_holds=lambda node_id, spec: True)
+        self.assertAlmostEqual(MechanicsMixin.effect_factor(game, "reach"), 2.4)
+
+    def test_a_factor_of_a_work_that_does_not_hold_is_left_out(self):
+        game = SimpleNamespace(_effect_terms=lambda channel: [("a", {"factor": 1.5}), ("b", {"factor": 1.6})],
+                               effect_holds=lambda node_id, spec: node_id == "b")
+        self.assertAlmostEqual(MechanicsMixin.effect_factor(game, "reach"), 1.6)
 
 
-class ReadersAskTheirChannel(unittest.TestCase):
+def standing_game(extra, scandal=0.0):
+    asked = []
 
-    def test_standing_rises_by_the_open_works_declared_amount(self):
-        shut = Sim.standing_floor(Channels())
-        opened = Sim.standing_floor(Channels(running=["patron_a"]))
-        self.assertAlmostEqual(opened - shut, 1.0)
+    def effect_sum(channel, start=0.0):
+        asked.append(channel)
+        return start + extra
+    return SimpleNamespace(effect_sum=effect_sum, asked=asked,
+                           state=SimpleNamespace(projects=SimpleNamespace(done=set(), granted=set()),
+                                                 household=SimpleNamespace(scandal=scandal)))
 
-    def test_standing_is_lower_with_scandal(self):
-        self.assertLess(Sim.standing_floor(Channels(scandal=3.0)), Sim.standing_floor(Channels()))
 
-    def test_goods_reach_widens_with_an_open_work_and_is_capped(self):
-        self.assertEqual(Sim.goods_reach_factor(Channels()), 1.0)
-        self.assertAlmostEqual(Sim.goods_reach_factor(Channels(running=["road"])), 1.5)
-        many = Channels(running=["road", "canal"])
-        many.REACH_CEILING = 2.0
-        self.assertEqual(Sim.goods_reach_factor(many), 2.0)
+class StandingFloor(unittest.TestCase):
 
-    def test_schooling_flow_is_nothing_with_no_school_and_grows_with_an_open_one(self):
-        self.assertEqual(Sim._schooling_flow(Channels()), 0.0)
-        self.assertGreater(Sim._schooling_flow(Channels(running=["school_a"])), 0.0)
+    def test_it_asks_the_standing_channel(self):
+        game = standing_game(1.0)
+        Sim.standing_floor(game)
+        self.assertEqual(game.asked, ["standing"])
 
-    def test_schooling_flow_is_nothing_when_the_required_school_is_shut(self):
-        self.assertEqual(Sim._schooling_flow(Channels(running=["school_b"])), 0.0)
+    def test_it_rises_by_what_the_channel_adds(self):
+        self.assertAlmostEqual(Sim.standing_floor(standing_game(1.0)) - Sim.standing_floor(standing_game(0.0)), 1.0)
+
+    def test_scandal_lowers_it(self):
+        self.assertLess(Sim.standing_floor(standing_game(0.0, scandal=3.0)), Sim.standing_floor(standing_game(0.0)))
+
+
+class GoodsReach(unittest.TestCase):
+
+    def reach(self, factor, ceiling=3.0):
+        asked = []
+        game = SimpleNamespace(effect_factor=lambda channel, start=1.0: asked.append(channel) or factor, REACH_CEILING=ceiling)
+        return Sim.goods_reach_factor(game), asked
+
+    def test_it_asks_the_reach_channel_and_returns_the_factor(self):
+        self.assertEqual(self.reach(1.5), (1.5, ["reach"]))
+
+    def test_it_is_capped_at_the_ceiling(self):
+        self.assertEqual(self.reach(5.0, ceiling=3.0)[0], 3.0)
+
+
+def school_game(running, values, reaches=None):
+    return SimpleNamespace(running=lambda node_id: running, _effect_terms=lambda channel: [("school", {"required": True})],
+                           effect_values=lambda channel: values, mechanic=lambda node_id, name: {"reaches": reaches})
+
+
+class SchoolingFlow(unittest.TestCase):
+
+    def test_it_is_nothing_when_the_required_school_is_shut(self):
+        self.assertEqual(Sim._schooling_flow(school_game(False, [("school", 0.5)])), 0.0)
+
+    def test_it_is_the_open_schools_flow(self):
+        self.assertEqual(Sim._schooling_flow(school_game(True, [("school", 0.5)])), 0.5)
+
+    def test_it_is_nothing_with_no_school(self):
+        self.assertEqual(Sim._schooling_flow(school_game(True, [])), 0.0)
 
     def test_a_school_that_names_fields_teaches_only_those(self):
-        game = Channels(running=["school_a"])
-        self.assertGreater(Sim._schooling_flow(game, "general"), 0.0)
+        game = school_game(True, [("school", 0.5)], reaches=["general"])
+        self.assertEqual(Sim._schooling_flow(game, "general"), 0.5)
         self.assertEqual(Sim._schooling_flow(game, "scientific"), 0.0)
 
 
-class FurtherUnitsCostMore(unittest.TestCase):
-    """`institution_unit_cost` over a stand-in that holds the founding cost and the convexity."""
+class InstitutionUnitCost(unittest.TestCase):
 
     def cost(self, have_units, add_units, convexity=0.5, capex=1000.0):
         game = SimpleNamespace(venture_capex=lambda node_id: capex, INSTITUTION_EXPANSION_CONVEXITY=convexity)
