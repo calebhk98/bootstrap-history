@@ -45,6 +45,7 @@ from sim.engine.ui_port import money_text, units
 from . import cli_options, cli_units_options, replay
 from sim.engine.ui_port import normal_seed, valid_seed_text
 from sim.ui.memory import save_session
+from sim.ui.wizard_answers import remember_answers
 from sim.ui.save_policy import SESSION_WORDS, SavePolicy
 from sim.ui.proto import step_progress
 from sim.ui.proto import util as proto_util
@@ -1008,13 +1009,7 @@ def _new_game(civs, cfg, known_routes=None):
     # and nothing else cfg might hold (display width, rows per page, the
     # welcome toggle) - those are the player's, set from Options, and this
     # wizard has no business overwriting them.
-    cfg["default_civ"] = civ["id"]
-    cfg["default_kit"] = kit
-    cfg["default_fog"] = (fog == "y")
-    cfg["default_fuzzy_estimates"] = (fuzzy == "y")
-    cfg["default_mortal"] = (mortal == "y")
-    cfg["default_goal"] = goal
-    cfg["default_horizon"] = horizon
+    remember_answers(cfg, civ["id"], kit, fog, fuzzy, mortal, goal, horizon)
     settings.save_config(cfg)
 
     # PICK, THEN JUMP IN: everything above this point is a choice about WHAT

@@ -1,8 +1,8 @@
 """Complaint 438: a failure cannot take the purse past the credit limit; the part the purse and the credit line cannot bear
 is billed to the project to redo. `CreditMixin.bearable_part_of` is called on a stub household whose credit limit reads
-the capital left (a status term shrinks as positive capital goes). The failure charge being the quoted figure (247, 214),
-a failed bounty not being orphaned (248) and selling stock facing the market's limits (249) are played through a game in
-`test_failure_and_bounty_money_scenario`."""
+the capital left (a status term shrinks as positive capital goes). The failure charge, a failed bounty and the coin guard are in `test_failure_charge_rules`; selling stock at the market's limits
+is in `test_sale_price_climb` and `test_complaint_578_sell_stock_left`.
+"""
 QUICK_TOPIC = True
 
 import unittest

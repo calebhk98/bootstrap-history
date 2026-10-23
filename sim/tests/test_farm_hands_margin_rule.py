@@ -1,6 +1,6 @@
 """Complaint 513: the hands kept on the land fall continuously with the value of a farm hour against the wage, and do not
 grow past today's when farming pays more. Rule: farm_intake.kept_farm_workers on built inputs. The bounds (satiation, land,
-no price) are in test_farm_satiation; the farm's hours in a game are test_farm_effort_follows_price."""
+no price) are in test_farm_satiation; the wage reaching the hands kept is test_farm_wage_wiring."""
 QUICK_TOPIC = True
 
 import unittest

@@ -28,6 +28,7 @@ from sim.ui.memory import load_state, save_state
 from .util import _flag
 from .start_commitment import stacked_commitment
 from .rush_filters import parse_rush_filters, passes_rush_filters, rush_exposure
+from . import rush_loop
 from .ventures import _VENTURE_SUPERVISION_NOTE
 
 
@@ -469,49 +470,28 @@ def _cmd_rush(sim, nodes, cmd, ended):
     _hours_room = max(0.0, sim.labour.director_pool() - sim.labour.director_hours_committed())
     _HORIZON_YEARS = 2.0
     _budget = sim.labour.director_pool() * _HORIZON_YEARS
-    started, not_started = [], []
-    _owed = 0.0
-    total_cost = total_draw = 0.0
     # budget fixed up front from the shared purchase rule, so the reserve holds as projects start
     budget = purchase_budget(sim)
-    for node_id in _ok:
-        if limit is not None and len(started) >= limit:
-            break
-        cost_left = _rush_cost_left(sim, node_id)
-        annual_draw = cost_left / max(1.0, nodes[node_id]["yrs"])
-        cap_reason = _rush_cap_refusal(sim, caps, budget, cost_left, annual_draw,
-                                       total_cost, total_draw, nodes[node_id]["ph"], _owed)
-        if cap_reason:
-            not_started.append({"id": node_id, "name": nodes[node_id]["name"],
-                                "why": cap_reason})
-            continue
-        if started and _owed + nodes[node_id]["ph"] > _budget:
-            not_started.append({
-                "id": node_id, "name": nodes[node_id]["name"],
-                "why": "not begun: the %d things already started this turn "
-                       "owe %s of your hours, and you have about %s a year. "
-                       "Beginning more would not make them go faster, only "
-                       "leave them all standing still"
-                       % (len(started), plain_number(_owed),
-                          plain_number(sim.labour.director_pool()))})
-            continue
-        ok2, why = sim.start_project(node_id)
-        if ok2:
-            _owed += nodes[node_id]["ph"]
-            total_cost += cost_left
-            total_draw += annual_draw
-            node = nodes[node_id]
-            # SAY SO, for the same reason the single-id `start` does: a
-            # player reading `log` back should see every begun-work as a
-            # choice they made, not a completion that appeared unasked.
-            if sim.active.get(node_id, {}).get("spent", 0.0) <= 0.5:
-                sim.log.append((sim.year, LogLine("project_started", "started: %s" % node["name"])))
-            started.append({"id": node_id, "name": node["name"],
-                            "cost": round(sim.active.get(node_id, {}).get(
-                                "cost_left", sim.project_cost(node_id)), 1),
-                            "annual_draw": round(annual_draw, 1)})
-        else:
-            not_started.append({"id": node_id, "why": why})
+
+    def begin(node_id, annual_draw):
+        began, why = sim.start_project(node_id)
+        if not began:
+            return False, why
+        node = nodes[node_id]
+        # SAY SO, for the same reason the single-id `start` does: a
+        # player reading `log` back should see every begun-work as a
+        # choice they made, not a completion that appeared unasked.
+        if sim.active.get(node_id, {}).get("spent", 0.0) <= 0.5:
+            sim.log.append((sim.year, LogLine("project_started", "started: %s" % node["name"])))
+        return True, {"id": node_id, "name": node["name"],
+                      "cost": round(sim.active.get(node_id, {}).get("cost_left", sim.project_cost(node_id)), 1),
+                      "annual_draw": round(annual_draw, 1)}
+
+    started, not_started, _owed, total_cost, total_draw = rush_loop.begin_in_order(
+        _ok, nodes, limit, _budget, sim.labour.director_pool(), lambda node_id: _rush_cost_left(sim, node_id),
+        lambda cost, draw, cost_so_far, draw_so_far, hours, hours_so_far: _rush_cap_refusal(
+            sim, caps, budget, cost, draw, cost_so_far, draw_so_far, hours, hours_so_far),
+        begin)
     bottlenecks, risk_exposure = rush_exposure(sim, nodes, started)
     return {"ok": True, "started": started, "count_started": len(started),
             "trade_bottlenecks": bottlenecks, "risk_exposure": risk_exposure,

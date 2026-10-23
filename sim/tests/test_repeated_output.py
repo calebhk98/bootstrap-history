@@ -1,6 +1,6 @@
 """repeated_output: Complaints/173 and 157 - long explanations shown once, completions printed once, one household-wide
-staffing line and wrapped names, each on a built reply or a stand-in game (no game). Through a game: the `why`
-paragraph and the Options menu are test_repeated_output_scenario."""
+staffing line and wrapped names, each on a built reply or a stand-in game (no game). The `why`
+paragraph is already_explained and the saved record (test_state_save_fixed_point); the Options menu is test_options_menu_pushback."""
 from types import SimpleNamespace
 
 from .harness import check, NODES

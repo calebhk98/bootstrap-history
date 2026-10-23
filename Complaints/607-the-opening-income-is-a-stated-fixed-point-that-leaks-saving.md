@@ -34,8 +34,9 @@ Three ways to give saving a use were weighed against the code:
    ceiling moves by about a hundredth of itself. The wealth the wish asks for does not exist in the opening, so
    only a smaller wish (606) or assets that do (538, land) can meet it.
 
-Measured, fixture with plant, 40 quiet years, years 5 on (`python3 -m sim.tests --slow --only saving_finds_a_use`
-holds the bounds; the figures below came from a throwaway probe that is not kept):
+Measured, fixture with plant, 40 quiet years, years 5 on (the figures below came from a throwaway probe that is not kept; the slow
+test that held a bound on the lent share is deleted, its rule is the `goods_orders` test in `test_saving_finds_a_use_rule.py`; the
+whole-economy lent share is measured by `python3 sim/simulator.py economy-check`):
 
 - household spending over income: 0.885 before, 0.92 after;
 - the share of the savings on offer that was lent to a producer: 0.04 before, 0.10 after;

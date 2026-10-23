@@ -1,6 +1,6 @@
 """Complaint 292: every change to the founder's cash goes through the household's ledger with a
-cause (Complaint 95). The rules are tested on a household built here; the whole-game scenarios are in
-test_cash_ledger_scenario."""
+cause (Complaint 95). The rules are tested on a household built here; no code path writes the purse around the ledger (a source scan), so
+every player action reconciles by construction."""
 QUICK_TOPIC = True
 
 import os
@@ -95,3 +95,18 @@ check("causes since a year add the closed periods after it to the open one",
 book = cash_book.book(game)
 check("the book shows opening plus causes equal to closing",
       abs(book["opening"] + sum(book["causes"].values()) - book["closing"]) < 0.1, book)
+
+
+# --- the cash figure reads its causes from the ledger: explain_figure on a written-out year
+from sim.ui import figures as figure_registry
+from sim.ui import figures_headline  # noqa: F401  (registers the cash figure)
+
+this_year_household = types.SimpleNamespace(capital=1300.0, cash_periods=[],
+                                            cash_flow={"venture revenue": 500.0, "living costs": -200.0})
+this_year_game = types.SimpleNamespace(capital=1300.0, year=101, state=types.SimpleNamespace(household=this_year_household))
+last_year = [{"year": 100, "figures": {"cash": {"value": 1000.0, "components": {}, "flows": {}, "drivers": {}}}}]
+explained = figure_registry.explain_figure(this_year_game, "cash", last_year)
+check("the cash figure's change is this year's movement of the purse", explained["change"] == 300.0, explained)
+check("...its causes come from the ledger and add up to the change with nothing not itemised",
+      {cause["cause"]: cause["contribution"] for cause in explained["causes"]} == {"venture revenue": 500.0, "living costs": -200.0},
+      explained["causes"])

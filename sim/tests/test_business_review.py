@@ -1,8 +1,7 @@
 """Stage 3b of docs/architecture/FIRMS_OWN_PLANTS_PLAN.md: the yearly rules are one `Business.review`.
 
 The loss rule of a firm is tested on a built world: a business that loses money for consecutive years closes. The
-founder's seat, the creditors' seizure and the refusals of `open` and `stuck` are the named scenarios in
-test_business_review_scenario."""
+founder's seat and the creditors' seizure are test_seat_creditors_rule."""
 
 QUICK_TOPIC = True
 import unittest

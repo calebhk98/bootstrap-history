@@ -4,8 +4,8 @@ A node that declares `diagnosis_instrument` lets its failures improve the retry 
 the failure report names the figure needed and, without the instrument, which instrument would measure it.
 
 Rules, called on a stub game: `failure_diagnosis.failure_teaches` and `note_failure`. The tree's data (the instrument is
-not a prerequisite, so it can be lacked) is read as data. The failures played through a game are
-`test_failure_needs_instrument_scenario`."""
+not a prerequisite, so it can be lacked) is read as data. That `_fail_attempt` learns only from
+a failure that teaches is in test_failure_charge_rules; the learning itself is test_industry_depth."""
 QUICK_TOPIC = True
 
 import random

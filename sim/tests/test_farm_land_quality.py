@@ -11,7 +11,7 @@ Rules, each called on inputs built from geography's tiles or by the test, with n
 4. `labour_allocation.farm_workers_needed`: poorer soil calls for more hands, and the hands are capped by the farm's
    area plus what is clearable.
 
-How a game sizes its farm from these, and the years of food balance, are `test_farm_land_quality_scenario`."""
+How the farm takes its quality from the ladder is test_farm_area_rule."""
 QUICK_TOPIC = True
 
 import unittest

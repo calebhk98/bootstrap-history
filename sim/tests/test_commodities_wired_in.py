@@ -1,6 +1,5 @@
 """commodities_wired_in: copper_wire_kg, wire_drawn_kg and gold_kg are real material keys that many nodes draw, and are
-tracked by the material checks (COMMODITIES.md section 0/7.1). The rules are called on a ledger and on a stub game; the
-throttle wiring on a whole game is test_commodities_wired_in_scenario."""
+tracked by the material checks (COMMODITIES.md section 0/7.1). The rules are called on a ledger and on a stub game."""
 QUICK_TOPIC = True
 
 import types

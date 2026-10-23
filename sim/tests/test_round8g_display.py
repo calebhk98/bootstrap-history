@@ -1,7 +1,7 @@
 """round8g_display: a five-report playtest sweep of the display. The rules run on built inputs, with no game:
 the repeated window of a hazard on `risk`, the money warnings of a `path`, the substitution gate, the society's
 `needs_first` gates, and the data findings of the sweep (the tree's req_any, notes, risks, and which institutions are
-capabilities). The commands through a game are test_round8g_display_scenario."""
+capabilities). The commands over a stand-in are test_capability_and_train_handlers."""
 import copy
 import re
 from types import SimpleNamespace

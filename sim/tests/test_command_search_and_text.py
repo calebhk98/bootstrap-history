@@ -1,8 +1,7 @@
 """Regression coverage for complaints 192, 193, 206, 213, 217 and 232: finding things
 and reading replies. Searches never reach beyond what a player may see.
 
-The typed grammar and the search filters are called on plain inputs here; the replies of a fogged game are
-test_command_search_and_text_scenario."""
+The typed grammar and the search filters are called on plain inputs here."""
 QUICK_TOPIC = True
 
 from .harness import *  # noqa: F401,F403

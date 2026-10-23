@@ -8,7 +8,7 @@ with a tree of a few nodes, no game):
    for ineligibility, not with advice to "stop it first".
 3. The typed parser reads `reverse:true`, `failures:true` and the bare-flag words of `log` as flags, not as subjects.
 
-The wiring through a fogged game is `test_fog_and_command_scanners_scenario`."""
+Every other command's fog filter is its own (the filters are not central); the pointer scan is test_command_pointer_scan."""
 QUICK_TOPIC = True
 
 import unittest

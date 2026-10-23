@@ -1,7 +1,7 @@
 """The Endless horizon: a game whose end year comes from ENDLESS_HORIZON_YEARS is still running where a standard horizon
 has ended the run, and the `--horizon` flag of run, compare, play and agent keeps the standard default. Rules:
-`_agent_end_reason` on a stand-in game (`score_game.ScoreGame`) and the parsed arguments of `cli.main`. The wizard that
-writes the horizon into a save is test_five_things_winner_scenario."""
+`_agent_end_reason` on a stand-in game (`score_game.ScoreGame`) and the parsed arguments of `cli.main`. The wizard's Endless choice and the sidecar
+that keeps the horizon are in test_session_checkpoint_rules."""
 QUICK_TOPIC = True
 
 import sys
