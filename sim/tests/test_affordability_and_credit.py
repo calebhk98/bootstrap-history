@@ -3,6 +3,8 @@
 What could be raised for each kind of spend, the warning before the line, appearances, a concern's payback and the
 reputation an insolvency takes are tested on built numbers (`affordability`, `capital_market`). The game's commands,
 screens and yearly step running them are the named scenarios in test_affordability_and_credit_scenario."""
+
+QUICK_TOPIC = True
 from .harness import *  # noqa: F401,F403
 from sim.engine import affordability
 from sim.engine.economy_credit import calculate_credit_ceiling

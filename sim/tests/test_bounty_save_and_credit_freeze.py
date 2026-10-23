@@ -3,6 +3,8 @@
 
 What cash pays for during a freeze is tested on built numbers (`cash_covers_start`). The bounty through a save, a load
 and a year, and a start through a freeze, are the named scenarios in test_bounty_save_and_credit_freeze_scenario."""
+
+QUICK_TOPIC = True
 from .harness import *  # noqa: F401,F403
 from sim.engine.project_funding import cash_covers_start
 import sim.engine.saveload as _saveload_module

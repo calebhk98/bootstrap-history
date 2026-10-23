@@ -2,6 +2,8 @@
 which costs a whole opening; it is kept on disk under the setup's digest, so a game built twice on the same
 setup opens the economy once. The kept answer must be the one a fresh opening gives, and a different setup must
 not read it."""
+
+QUICK_TOPIC = True
 import dataclasses
 import tempfile
 import unittest
