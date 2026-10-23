@@ -73,15 +73,21 @@ def keep_to_nation(regions: Dict[str, Population], national: Population, tiles: 
 def step_regions(regions: Dict[str, Population], kcal_per_day_by_region: Mapping[str, float], disease_burden: float,
                  epidemic_deaths: Mapping[str, float], endemic_death_rates: Optional[Mapping[str, float]],
                  emigration: Mapping[str, float], immigration: Mapping[str, float],
-                 urban_mortality_premium: Optional[Mapping[str, float]] = None) -> Dict[str, StepFlows]:
-    """One year for every region, each fed its own calories. The nation's epidemic deaths fall on a region in the
-    share of the nation's band it holds; migrants leave and arrive in the working-age band; a region's urban mortality
+                 urban_mortality_premium: Optional[Mapping[str, float]] = None,
+                 epidemic_deaths_by_tile: Optional[Mapping[str, Mapping[str, float]]] = None) -> Dict[str, StepFlows]:
+    """One year for every region, each fed its own calories. A region takes the epidemic deaths that happened on its
+    tile (`epidemic_deaths_by_tile`, None when unknown); the nation's deaths no tile accounts for (other causes, or a
+    tile not tracked) fall on a region in the share of the nation's band it holds, and with no deaths by tile that is
+    all of them. Migrants leave and arrive in the working-age band; a region's urban mortality
     premium (a share of its baseline death rate, absent for none) comes from the town providers. Returns each region's flows."""
     band_totals = {band: sum(getattr(region, band) for region in regions.values()) for band in BANDS}
+    own = {tile: (epidemic_deaths_by_tile or {}).get(tile) or {} for tile in regions}
+    unaccounted = {band: max(0.0, epidemic_deaths.get(band, 0.0) - sum(own[tile].get(band, 0.0) for tile in sorted(own)))
+                   for band in BANDS}
     flows = {}
     for tile in sorted(regions):
         region = regions[tile]
-        epidemic = {band: epidemic_deaths.get(band, 0.0) * getattr(region, band) / band_totals[band]
+        epidemic = {band: own[tile].get(band, 0.0) + unaccounted[band] * getattr(region, band) / band_totals[band]
                     for band in BANDS if band_totals[band] > 0.0}
         flows[tile] = region.step(
             kcal_per_day_by_region[tile], immigration=immigration.get(tile, 0.0), emigration=emigration.get(tile, 0.0),

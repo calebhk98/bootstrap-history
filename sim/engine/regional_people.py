@@ -47,7 +47,7 @@ class RegionalPeopleMixin:
         ratio = self.population.nutrition_ratio(food)
         flows = regional_population.step_regions(
             regions, kcal_by_region, disease_burden, epidemic_deaths, endemic_death_rates, leaving, arriving,
-            self.labour.town_mortality_premium_by_tile())
+            self.labour.town_mortality_premium_by_tile(), epidemic_deaths_by_tile=self.epidemic_deaths_by_tile() or None)
         for band in regional_population.BANDS:
             setattr(self.population, band, sum(getattr(region, band) for region in regions.values()))
         self.state.population.regions = regional_population.to_stored(regions)
