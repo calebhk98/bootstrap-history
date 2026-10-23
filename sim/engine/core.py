@@ -45,7 +45,7 @@ from sim.unit_conversions import PERCENT_SCALE
 
 from .territory_required import require_territory
 from .win_condition_rule import win_condition_met
-from .starting_techs import declared_starting_techs
+from .starting_techs import declared_starting_techs, grant_starting_techs
 from .economy import EconomyMixin
 from .node_rederive import NodeRederiveMixin
 from .market_clearing import MarketClearingMixin
@@ -521,10 +521,7 @@ class Sim(ModStoresMixin, RealPriceRatiosMixin, CoinRevaluationMixin, MechanicsM
         # raise ValueError on an unknown starting technology) - state this
         # class deliberately does not hold a reference to.
         starting_techs = declared_starting_techs(self.civ, self.nodes)
-        for tech_id in starting_techs:
-            self.state.projects.done.add(tech_id)
-            self._done_changed()
-            self.state.projects.granted.add(tech_id)
+        grant_starting_techs(self.state.projects, starting_techs, self._done_changed)
         self.grant_opening_stock()
         # Starting ownership is deliberately exhausted by starting_techs.
         # Tier and zero cost describe a node's position in the universal graph;

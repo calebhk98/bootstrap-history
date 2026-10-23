@@ -1,6 +1,6 @@
 """Complaint 514 open question 6: a firm's crew is paid once, as wages through the labour market. A node's upkeep is
 derived as its staff's pay plus plant wear, so the upkeep a firm pays is the non-labour part only
-(`node_upkeep.non_labour_upkeep_money`). The year's charge in a running game is in test_firm_crew_paid_once_scenario.py."""
+(`node_upkeep.non_labour_upkeep_money`). The year's charge is in test_plant_year_pays_crew_once."""
 QUICK_TOPIC = True
 
 import unittest

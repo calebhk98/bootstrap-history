@@ -26,6 +26,7 @@ engine, regardless of which file a method lives in.
 """
 from sim.constants import declare
 from . import money_units
+from .goods_seller_share import seller_revenue_factor
 from sim.unit_conversions import PERCENT_SCALE
 from sim.agents.api import edges
 
@@ -700,10 +701,7 @@ class GoodsMixin:
         if ratios is None:
             bucket[cat] = 1.0
             return 1.0
-        price_ratio, qty_ratio, n_active = ratios
-        factor = price_ratio * qty_ratio / n_active
-        if cat not in self.ESSENTIAL_CATEGORIES:
-            factor *= self.income_factor()
+        factor = seller_revenue_factor(*ratios, 1.0 if cat in self.ESSENTIAL_CATEGORIES else self.income_factor())
         bucket[cat] = factor
         return factor
 
@@ -714,8 +712,4 @@ class GoodsMixin:
         ratios = self._goods_category_ratios(cat, extra=entrants)
         if ratios is None:
             return 1.0
-        price_ratio, qty_ratio, n_active = ratios
-        factor = price_ratio * qty_ratio / n_active
-        if cat not in self.ESSENTIAL_CATEGORIES:
-            factor *= self.income_factor()
-        return factor
+        return seller_revenue_factor(*ratios, 1.0 if cat in self.ESSENTIAL_CATEGORIES else self.income_factor())

@@ -1,7 +1,7 @@
 """The farm model at its edges, the rules that need no game: unfarmable ground on the clearing ladder, and the allocator
 sizing the farm from the harvest of an extra hour net of the seed that hour's hectares need. Each is pinned as a property
-(direction and bounds), never an exact number. The game runs (barren land, land below subsistence, the technology that
-rescues it, surplus farm labour) are `test_farm_edges_scenario`."""
+(direction and bounds), never an exact number. Barren land, land below subsistence, the technology that rescues it
+and surplus farm labour are in test_farm_subsistence_rules."""
 QUICK_TOPIC = True
 
 import unittest

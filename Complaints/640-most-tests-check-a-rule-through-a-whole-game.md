@@ -338,6 +338,8 @@ instantaneous projects, the eminence hazard rules, dependants beyond means, prer
 
 The complaint closes when the rules above are plain functions and their checks have left the scenarios.
 
+Test migration (rule-tests-05): the generic fog scanner over every command (`fog_and_command_scanners_scenario`, about 9 s, six commands scan the whole tree) is deleted; each command filters its own reply and no quick form exists. No simulator command runs it. The command-pointer half is now the static scan test_command_pointer_scan.
+
 ## Applied: rule-tests batch 12 (people_by_trade_cache_year through portfolio_scale_stuck_advice)
 
 Rules called on stand-ins; the slow whole-game checks are gone or are SMOKE modules that build unopened games and run no years.
