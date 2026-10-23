@@ -20,6 +20,7 @@ import tempfile
 
 from sim.engine.ui_port import TRADE_FAMILY, downstream_count
 from sim.engine.ui_port import purchase_budget, trades_the_project_waits_for
+from .available_economics import specialist_foreman
 from .nodes import _did_you_mean
 from .quantity_units import read_quantity
 from .start_refusal import refusal_fields
@@ -641,7 +642,6 @@ def _cmd_ventures(sim, nodes, cmd, ended):
         # is a quarter of it, and it is the number the refusal actually
         # quotes.
         _sup_s, _sup_a = sim.venture_hands(node_id)
-        _foreman_trade, _foreman_fte = sim.venture_foreman(node_id)
         row = {"id": node_id, "name": node["name"],
                 "earns_a_year": round(sim.venture_real_earnings(node_id), 1),
                 "forecast_basis": sim.venture_forecast_basis(node_id),
@@ -651,9 +651,7 @@ def _cmd_ventures(sim, nodes, cmd, ended):
                     sim.venture_upkeep_quote(node_id)["at_full_staffing"], 1),
                 "needs": {"scholars": round(_sup_s, 2),
                           "craftsmen": round(_sup_a, 2)},
-                "specialist_foreman": (
-                    {"trade": _foreman_trade, "fte": round(_foreman_fte, 2)}
-                    if _foreman_trade else None)}
+                "specialist_foreman": specialist_foreman(sim, node_id)}
         # A CAPABILITY, NOT ONLY A BUSINESS: every other row here is a
         # straightforward earn-vs-cost decision; these are not, because
         # closing one loses scholars it supports, household places it
