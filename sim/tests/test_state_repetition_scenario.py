@@ -9,7 +9,7 @@ def ask(test_sim, **command):
 
 
 # item 9: the shut-concerns explanation is marked seen after the first time, and not on `full`
-game = sim(capital=1_000_000.0)
+game = unopened_sim(capital=1_000_000.0)
 shut = next(node_id for node_id in NODES if NODES[node_id]["rev"] > 0)
 game.done.add(shut)
 first = ask(game, cmd="state")
@@ -21,7 +21,7 @@ check("a later state marks the pointer as already explained", second.get("shut_c
 check("`full` explains it again", not forced.get("shut_concerns_pointer_seen"))
 
 # item 4: the staffing-as-a-share explanation is shown once, then again on `full`
-staffed = sim(capital=1_000_000.0)
+staffed = unopened_sim(capital=1_000_000.0)
 staffed.done.add(shut)
 first_ventures = ask(staffed, cmd="ventures")
 second_ventures = ask(staffed, cmd="ventures")
