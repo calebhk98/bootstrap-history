@@ -92,6 +92,7 @@ class KeepingPaidFromWhatTheHouseholdCanBear(unittest.TestCase):
 
     def test_the_guard_is_paid_from_what_is_left_after_the_years_other_costs(self):
         game = keeping_game(1000.0, 500.0)
+        game.capital = 1.0e6    # a hoard whose keeping dwarfs the room left
         owed = CoinHoardMixin.coin_keeping_due(game, 0.0, 0.0, 0.0, 0.0)[0]
         # room = capital 1000 + credit line 500 + revenue 100 - upkeep 20 - living 1560 - mines 10
         owed_again, paid = CoinHoardMixin.coin_keeping_due(game, 100.0, 20.0, 1560.0, 10.0)
