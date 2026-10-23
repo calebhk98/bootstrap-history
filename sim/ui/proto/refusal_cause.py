@@ -19,3 +19,8 @@ def event_codes(message):
     if not kind:
         return {}
     return {"event_kind": kind, "facts": facts_of(message)}
+
+
+def event_rows(log_rows):
+    """The reply's event rows, one per `(year, message)` log row in order, each with its own year and codes."""
+    return [{"year": year, "message": message, **event_codes(message)} for year, message in log_rows]
