@@ -1,17 +1,12 @@
 """Scenarios (Complaint 640): the wage provider in a built game: solver and payroll read one wage, tightness and pressure
-survive a save and load, the start is at equilibrium, and the engine runs with no wage book on disk. The wage rules are in
-test_wage_provider (a tight trade paying more is test_need_above_hours_raises_the_wage_every_year there)."""
-import json
+survive a save and load, and the start is at equilibrium. That no source outside the wage document names the wage key is in
+test_wage_provider; the wage rules are there too (a tight trade paying more is test_need_above_hours_raises_the_wage_every_year there)."""
 import os
-import subprocess
-import sys
 import tempfile
 import unittest
 
 from sim.engine import prices as engine_prices
 from sim.engine.solve_prices_core import wage_ratios_by_trade
-
-ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
 class EngineWageTests(unittest.TestCase):
@@ -62,28 +57,6 @@ class EngineWageTests(unittest.TestCase):
         for trade, factor in engine.state.economy.wage_tightness_factors.items():
             if hours.get(trade, 0.0) > 0.01 * total:
                 self.assertAlmostEqual(factor, 1.0, places=3, msg=trade)
-
-
-_RUNNER = """
-import json, random
-from sim import simulator as S
-tree, prices, nodes, wages, goods = S.load()
-_lab, order, _b = S.load_strategy("recommended", nodes, tree["meta"]["goal_node"])
-engine = S.Sim(nodes, order, random.Random(1), events=False, manual=True, civ=S.load_civ("rome_100ad"))
-print(json.dumps({"labourer": engine.labour.wage_per_hour("labourer"),
-                  "smith": engine.labour.wage_per_hour("smith"), "annual": engine.labour.market.quote_annual("smith")}))
-"""
-
-
-class NoBookWagesTests(unittest.TestCase):
-
-    def test_engine_runs_with_no_wage_book_on_disk(self):
-        result = subprocess.run([sys.executable, "-c", _RUNNER], capture_output=True, text=True,
-                                timeout=600, cwd=ROOT)
-        self.assertEqual(result.returncode, 0, result.stderr[-800:])
-        figures = json.loads(result.stdout.strip().splitlines()[-1])
-        self.assertGreater(figures["smith"], figures["labourer"])
-        self.assertGreater(figures["annual"], 0)
 
 
 if __name__ == "__main__":
