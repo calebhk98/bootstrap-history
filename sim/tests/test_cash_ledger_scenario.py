@@ -33,10 +33,7 @@ for label, action in (
         ("a start", lambda: rich.start_project(next(
             node_id for node_id in rich.order if NODES[node_id]["rev"] > 0 and rich.can_start(node_id)))),
 ):
-    try:
-        action()
-    except Exception:  # an action the scenario refuses is not a ledger fault
-        pass
+    action()    # a refusal is returned, not raised; anything raised is a fault the run must show
     if not reconciles(rich):
         unreconciled.append(label)
 check("scenario: a new game's book reconciles after each kind of player action", not unreconciled, unreconciled)
