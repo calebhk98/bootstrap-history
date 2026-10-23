@@ -5,7 +5,7 @@ from sim.refusal import LogLine
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 from . import automation_audit, shortage_conditions
 from .auto_start_rule import judge_start_candidate
-from .shortage_sizing import auto_mine_affordable_tonnes, auto_mine_order_tonnes, nitre_bed_yearly_spend
+from .shortage_sizing import automatic_policy_on, auto_mine_affordable_tonnes, auto_mine_order_tonnes, nitre_bed_yearly_spend
 from sim.agents.api import edges
 from sim.constants import declare
 from . import money_units
@@ -197,7 +197,7 @@ class ProjectStartPhaseMixin:
         # because buy_forest refuses what you cannot pay for.
         _can_raise = self.spending_power("buy")
         if (thr < 0.9 and _can_raise > self.FOREST_COST_PER_HA * self.price_index
-                and (self.state.founder.policy.get("auto_mine", not self.manual)
+                and (automatic_policy_on(self.state.founder.policy, "auto_mine", self.manual)
                      or self.state.founder.policy.get("auto_forest", not self.manual))):
             # Charcoal is GROWN, so the answer is woodland. Everything else in
             # this list is DUG, so the answer is a mine, and the old model had
@@ -226,7 +226,7 @@ class ProjectStartPhaseMixin:
                             % (area_text(_hectares_before, self),
                                mass_rate_text(max(0.0, _need_t), self, short=False)), _before)
             elif (self.state.holdings.binding in self.MINE_OPEX_MATERIALS
-                    and self.state.founder.policy.get("auto_mine", not self.manual)):
+                    and automatic_policy_on(self.state.founder.policy, "auto_mine", self.manual)):
                 # Size the mine from ALL the material keys that feed this
                 # bucket, not one of them. The throttle counted iron ore AND
                 # iron bar against "iron"; the investment response looked only
@@ -281,7 +281,7 @@ class ProjectStartPhaseMixin:
                 if self.state.holdings.binding in ("iron", "copper", "lead"):
                     self.buy_forest(min(200.0, self.state.household.capital / self.AUTO_FOREST_CAPITAL_PER_HA))
             elif (self.state.holdings.binding == "saltpetre"
-                    and self.state.founder.policy.get("auto_mine", not self.manual)):
+                    and automatic_policy_on(self.state.founder.policy, "auto_mine", self.manual)):
                 # GATED, like every other automatic purchase: ungated, this
                 # branch would take five per cent of a manual player's
                 # capital every year they were short of nitre, without a
