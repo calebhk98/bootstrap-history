@@ -1,7 +1,6 @@
 """Complaints 145 and 154: `why` prints the specialist foreman `open` will demand, and its serial floor counts only what
 is still unbuilt. Complaint 640: the floor is `remaining_critical_path_years` on the real tree and the screen text is
-rendered from replies built here; the checks that `why` fills those replies from a played game are in
-test_why_foreman_and_remaining_floor_scenario."""
+rendered from replies built here; the reply's foreman field is test_offers_unit_price_and_foreman_reply."""
 QUICK_TOPIC = True
 
 import unittest

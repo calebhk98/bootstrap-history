@@ -1,6 +1,6 @@
 """The need each trade carries comes from household demand through the recipe graph, not from
 authored shares; the yearly split of hours is plain arithmetic on the numbers handed in (Complaint 640: the
-whole-game checks are in test_workforce_spinup_scenario)."""
+the opening's determinism is held by test_deterministic_for_a_given_input)."""
 QUICK_TOPIC = True
 
 import copy
