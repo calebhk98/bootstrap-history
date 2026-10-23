@@ -1,0 +1,198 @@
+{
+  "status": "Partial implementation; not ready to merge; issues 61 and 62 remain open",
+  "base_commit": "3cb9c9a0c4d6c488370632d5c8190fc486779902",
+  "speed_only_commit": "4010cc5b3f0abd4e8422bd81e2fb0ddf7dd34be2",
+  "durable_change_commit": "8de9ac805b52b2eb282167a5ad27f8fa41681d3e",
+  "tests_and_design_commit": "a49b6e843c5a2da5173cae4898fdbfc66ae86afe",
+  "provenance": "Measurements observed in this task. Session restores removed some raw logs and checkpoints. Surviving results are also recorded on issues 61, 62 and PR 67. Interrupted runs are not counted as complete.",
+  "quick_suite": {
+    "command": "python3 -m sim.tests --jobs 1",
+    "checks": 8471,
+    "failures": 0,
+    "slow_checks_skipped": 4,
+    "slow_topics_skipped": 456,
+    "total_topics": 1178
+  },
+  "isolated_speed_benchmark": {
+    "method": "harness.sim(); exclude first step, time next three steps with time.process_time; alternate main/speed/speed/main",
+    "main_cpu_seconds": [
+      5.232144833,
+      6.460329597,
+      4.911480118,
+      5.510052817,
+      6.72797491,
+      6.335619012
+    ],
+    "speed_cpu_seconds": [
+      4.167516427,
+      5.538560435,
+      5.237751259,
+      4.958953868,
+      6.561010084,
+      6.231819895
+    ],
+    "main_mean": 5.862933547833333,
+    "speed_mean": 5.449268661333333,
+    "reduction_percent": 7.055595686443894,
+    "interpretation": "Modest noisy reduction for speed-only commit; not the combined model patch and not the two-second target",
+    "complete_sorted_key_saves_equal": true,
+    "canonical_save_sha256": "62999e675ce68cb89443671b44139528ae86f2a0513e5e86c20bd0a41a08d27c",
+    "canonical_save_bytes": 20273768
+  },
+  "combined_patch_followup": {
+    "method": "One candidate/main pair during concurrent validation; not controlled ABBA or comparable to the earlier timing environment",
+    "candidate_cpu_seconds": [
+      10.620165157,
+      12.579058857,
+      11.610088766
+    ],
+    "main_cpu_seconds": [
+      13.196471756,
+      15.886902109,
+      12.795197063
+    ],
+    "candidate_mean": 11.60310426,
+    "main_mean": 13.95952364266667,
+    "interpretation": "No precise combined-patch speedup claim; two-second target unmet"
+  },
+  "heuristics": {
+    "main": 991,
+    "candidate": 991,
+    "delta": 0,
+    "with_retirement_main": 133,
+    "with_retirement_candidate": 133
+  },
+  "slow_suite": {
+    "method": "Pinned detached worktrees; recovery of per-topic JSON followed by missing-topic runs with --slow --timing",
+    "main_topics_attempted": 1176,
+    "main_total_topics": 1176,
+    "main_failed_topics": 47,
+    "main_timeout_topics": 24,
+    "candidate_last_observed_completed_topics": 1119,
+    "candidate_total_topics": 1178,
+    "candidate_complete": false,
+    "full_before_after_wall_time": null,
+    "reason": "Repeated session interruption and workspace rollback; resumed subsets differ and their wall times are not comparable"
+  },
+  "validations": {
+    "baseline_fixture": "Fails settling identically on main and candidate for price, wage, money and rate; other fixture checks pass",
+    "baseline_rome": "Short physical-account check passes on both",
+    "baseline_rome_full_length_main": {
+      "settled": false,
+      "money_replacement": 0.049699687919870124,
+      "money_replacement_minimum": 0.9
+    },
+    "real_output_baseline": {
+      "main_share_far": [
+        0.0,
+        0.561457913427468,
+        0.4793272699346393,
+        0.15231914042359235
+      ],
+      "candidate_share_far": [
+        0.0,
+        0.20649176095290153,
+        0.27168713369295,
+        0.2603024581133842
+      ],
+      "maximum_allowed_share": 0.1,
+      "both_fail": true
+    },
+    "new_failures": {
+      "complaint_467_trades_open_to_the_jobs": {
+        "main": "pass",
+        "candidate": "fail",
+        "leatherworker_hours_over_bids": 3.961107996154536,
+        "maximum": 3.0
+      },
+      "price_over_making_cost_band_validation": {
+        "main": "pass",
+        "candidate": "fail on completed targeted rerun",
+        "share_within_factor_three": 0.46534653465346537,
+        "minimum": 0.5
+      },
+      "state_borrowing_gate_scenario": {
+        "main": "pass",
+        "candidate": "four failed assertions",
+        "ending_treasury": 220579380.15173322,
+        "outlays_with_and_without_borrowing": 58578572.75651447,
+        "interpretation": "Scenario assumes a deficit, but candidate has a positive balance. Separate direct borrowing-rule checks pass. This does not establish a borrowing-rule defect."
+      }
+    },
+    "new_timing_failure": {
+      "topic": "policy_auto_hire_and_closure_scenario",
+      "available_wall_seconds": 5.54,
+      "interpretation": "Timing assertion under concurrent load; no semantic regression established"
+    },
+    "preexisting_targeted_failures": [
+      "one_goods_market_scenario: identical stock-sale values on both trees",
+      "population_farm_technique_scenario: identical values on both trees"
+    ]
+  },
+  "candidate_60_year_traces": {
+    "method": "Fixed population/weather/technology; blank economy in spin-up; unchanged settling_report thresholds",
+    "england_1300": {
+      "years": 60,
+      "rounded_statistics": true,
+      "series": {
+        "price_level": {
+          "largest_step": 1.135,
+          "trend": 0.0716,
+          "settled": false
+        },
+        "wage": {
+          "largest_step": 0.107,
+          "trend": -0.0247,
+          "settled": false
+        },
+        "money_supply": {
+          "largest_step": 0.011,
+          "trend": -0.0106,
+          "settled": false
+        },
+        "rate": {
+          "largest_step": 0.728,
+          "trend": -0.0031,
+          "settled": false
+        }
+      }
+    },
+    "mexica_1500": {
+      "years": 60,
+      "rounded_statistics": true,
+      "series": {
+        "price_level": {
+          "largest_step": 0.398,
+          "trend": -0.0009,
+          "settled": false
+        },
+        "wage": {
+          "largest_step": 1.783,
+          "trend": -0.0437,
+          "settled": false
+        },
+        "money_supply": {
+          "largest_step": 0.001,
+          "trend": -0.0001,
+          "settled": true
+        },
+        "rate": {
+          "largest_step": 0.0,
+          "trend": 0.0,
+          "settled": true
+        }
+      }
+    },
+    "rome_100ad": {
+      "status": "Rerun in progress; previous run interrupted before completion"
+    }
+  },
+  "unfinished": [
+    "Coupled stationary opening solver",
+    "Removal of opening_income_per_head",
+    "Passing whole-economy settling validations",
+    "Regeneration of shipped openings after settling",
+    "Two-second warm game year",
+    "Complete candidate slow-suite result and comparable full-suite wall times"
+  ]
+}
