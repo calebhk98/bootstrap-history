@@ -1,28 +1,17 @@
-"""Complaint 574: each command takes the fields its own handler reads, not any field some command reads."""
+"""Complaint 574: each command takes the fields its own handler reads, not any field some command reads. The refusal rule is
+called on built commands in test_field_check_rule; this lint holds the command literals the tests write out to it."""
 import ast
 import os
 
 from .harness import *  # noqa: F401,F403
-from .agent_command_helpers import ask_agent, pristine_game
 from sim.ui.proto import command_registry, field_check
-
-game = pristine_game()
-
-stray = ask_agent(game, cmd="policy", id="x")
-check("policy given another command's field is refused as unknown",
-      stray.get("ok") is False and getattr(stray.get("error"), "cause", None) == "unknown_field", stray)
-check("...naming the field and the fields policy takes",
-      stray.get("field") == "id" and stray.get("accepted_fields") == ["set"], stray)
-check("why still takes id", getattr(ask_agent(game, cmd="why", id="x").get("error"), "cause", None) != "unknown_field")
-check("another command's field is refused on a command that reads none",
-      ask_agent(game, cmd="state", id="x").get("field") == "id")
 
 
 def command_literals():
     """(file, line, command, fields) for each command written out in the tests: cmd="x", f=... or {"cmd": "x", ...}."""
     folder = os.path.dirname(__file__)
     for name in sorted(os.listdir(folder)):
-        if not name.endswith(".py") or name.startswith("test_unknown_field"):   # those write the refusals out
+        if not name.endswith(".py") or name.startswith(("test_unknown_field", "test_field_check_rule")):   # those write the refusals out
             continue
         with open(os.path.join(folder, name), encoding="utf-8") as source:
             tree = ast.parse(source.read())
