@@ -79,10 +79,14 @@ game, opened = works(known=False)
 check("a work not yet known is refused", CoverageMixin.roll_out(game, CLINICS, 0.5) == (False, "you have not worked out how to do that yet") and opened == [], None)
 
 # ---- the rollout command
-game = SimpleNamespace(coverage_nodes=lambda: [CLINICS], done={CLINICS}, coverage_row=lambda work: {"id": work}, roll_out=lambda node_id, share: (True, "ok %g" % share),
+rolled = []
+game = SimpleNamespace(coverage_nodes=lambda: [CLINICS], done={CLINICS}, coverage_row=lambda work: {"id": work},
+                       roll_out=lambda node_id, share: rolled.append((node_id, share)) or (True, "opened"),
                        coverage_share=lambda node_id: 0.5, institution_units=lambda node_id: 5.0)
 check("rollout with no work lists the works known", _cmd_rollout(game, {}, {}, None)["rollouts"] == [{"id": CLINICS}], None)
-check("rollout with a share above one is a percentage", _cmd_rollout(game, {}, {"id": CLINICS, "share": 50}, None)["message"] == "ok 0.5", None)
+reply = _cmd_rollout(game, {}, {"id": CLINICS, "share": 50}, None)
+check("rollout with a share above one is a percentage, and answers what it now covers", rolled == [(CLINICS, 0.5)] and reply["ok"] and reply["covered"] == 0.5
+      and reply["units"] == 5.0, (rolled, reply))
 check("rollout with a share beyond everyone is refused", _cmd_rollout(game, {}, {"id": CLINICS, "share": 150}, None)["ok"] is False, None)
 check("rollout with a work and no share is refused", _cmd_rollout(game, {}, {"id": CLINICS}, None)["ok"] is False, None)
 

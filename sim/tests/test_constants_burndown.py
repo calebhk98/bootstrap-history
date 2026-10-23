@@ -97,11 +97,15 @@ for package in ("world", "geography", "labour"):
             with open(os.path.join(directory, name)) as source:
                 if "declare(" in source.read():
                     declaring.add("sim.%s.%s" % (package, name[:-3]))
-script = ("import sys, json; sys.path.insert(0, %r)\nfrom sim import constants\nconstants._import_declaring_modules()\n"
-          "constants._adopt_the_canonical_registry()\nprint(json.dumps(sorted(set(entry['declared_in'] for entry in constants.REGISTRY.values()))))\n"
+# the import loop prints once for each module it cannot import, so the prints made are the failures
+script = ("import builtins, sys, json; sys.path.insert(0, %r)\nfrom sim import constants\nreport = builtins.print\nfailures = []\n"
+          "builtins.print = lambda *arguments, **keywords: failures.append(arguments)\nconstants._import_declaring_modules()\n"
+          "builtins.print = report\nconstants._adopt_the_canonical_registry()\n"
+          "report(json.dumps({'failures': len(failures), 'registered': sorted(set(entry['declared_in'] for entry in constants.REGISTRY.values()))}))\n"
           % REPOSITORY_ROOT)
 clean = subprocess.run([sys.executable, "-c", script], cwd=REPOSITORY_ROOT, capture_output=True, text=True)
-registered = set(json.loads(clean.stdout.strip() or "[]"))
-check("the burndown's import of its list imports without a failure", clean.returncode == 0 and "could not import" not in clean.stderr, clean.stderr[-300:])
+payload = json.loads(clean.stdout.strip() or '{"failures": -1, "registered": []}')
+registered = set(payload["registered"])
+check("the burndown's import of its list imports without a failure", clean.returncode == 0 and payload["failures"] == 0, (payload["failures"], clean.stderr[-300:]))
 check("every sim/world, geography and labour module that calls declare() reaches the registry from the burndown's list",
       sorted(declaring - registered) == [], sorted(declaring - registered))
