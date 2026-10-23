@@ -17,7 +17,7 @@ _foreign_module.foreign_economy_records = lambda: tuple(
     dict(record, enabled=True) for record in _shipped_records())
 
 # --- the home holds no eggs and cannot take sericulture; the route node is no way round.
-home = sim(civ=HOME, capital=1e9)
+home = unopened_sim(civ=HOME, capital=1e9)
 home.state.projects.done.discard("sea_monsoon_route")
 home._done_changed()
 check("a society without eggs holds none", home.stock_held(EGGS) == 0.0, home.stock_held(EGGS))
@@ -42,7 +42,7 @@ check("...and then sericulture, with no route node",
       home.start_reason("tx2_sericulture"))
 
 # --- the partner starts holding eggs; its sericulture rests on them.
-han = sim(civ=PARTNER, capital=1e9)
+han = unopened_sim(civ=PARTNER, capital=1e9)
 check("the partner opens holding eggs", han.stock_held(EGGS) > 0.0, han.stock_held(EGGS))
 check("so no node of its own is missing a stock",
       not han.stock_missing("tx2_sericulture") and not han.stock_missing("tx2_silk_fibre"), None)
@@ -77,14 +77,14 @@ from sim.engine.saveload import load_state, save_state
 with tempfile.TemporaryDirectory() as _folder:
     _path = os.path.join(_folder, "save.json")
     save_state(buyer, _path)
-    _revived = sim(civ=HOME, capital=1e9)
+    _revived = unopened_sim(civ=HOME, capital=1e9)
     load_state(_revived, _path)
 check("held stock round-trips through save and load",
       abs(_revived.stock_held(EGGS) - buyer.stock_held(EGGS)) < 1e-12 and _revived.stock_held(EGGS) > 0.0,
       (_revived.stock_held(EGGS), buyer.stock_held(EGGS)))
 
 # --- a draught-animal gate is lifted by holding the animals, however they came.
-_mexica = sim(civ="mexica_1500", capital=1e9)
+_mexica = unopened_sim(civ="mexica_1500", capital=1e9)
 _gate, _because = _mexica.needs_first("horse_collar")
 check("a society holding no draught animals is gated", _gate == "exp_import_draught_animals", _gate)
 _mexica.grant_stock("draught_animal_kg", 2000.0)
@@ -93,4 +93,7 @@ check("holding draught animals lifts the gate with no research",
 
 # --- one crop seed stock: ramie propagation stock, held by the partner, bought by others.
 check("the partner opens holding ramie stock",
-      sim(civ=PARTNER).stock_held("ramie_stock_kg") > 0.0, None)
+      unopened_sim(civ=PARTNER).stock_held("ramie_stock_kg") > 0.0, None)
+
+# the module-level patch above is undone so later topics in this process see the shipped records
+_foreign_module.foreign_economy_records = _shipped_records
