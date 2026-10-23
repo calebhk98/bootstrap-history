@@ -174,10 +174,10 @@ class GoodsOrderTests(unittest.TestCase):
         self.assertGreater(none_held.flexible_quantity, 0.0)
         self.assertIsNone(full)                                   # a stock beyond target needs no more
 
-    def test_durable_at_target_is_replaced_at_its_wear_rate(self):
+    def test_durable_after_wear_is_replaced_at_its_wear_rate(self):
         orders = self.orders(cash=60000.0, income=60000.0)
         flow = bid_for(orders, "plough").flexible_quantity / 5.0   # target stock is five years of flow
-        view = View(stocks={("household:t:0", "plough", "t"): 5.0 * flow})
+        view = View(stocks={("household:t:0", "plough", "t"): 4.0 * flow})
         steady = bid_for(self.orders(cash=60000.0, income=60000.0, view=view), "plough")
         self.assertAlmostEqual(steady.flexible_quantity, flow, places=6)
 

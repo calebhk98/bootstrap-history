@@ -73,6 +73,19 @@ def _with_level(offers: Sequence[Offer], floors: dict, level: float) -> List[Off
             for index, each in enumerate(offers)]
 
 
+def all_at_floor(buyers, offers: Sequence[Offer], floors: dict) -> bool:
+    """Every higher trial must leave stock unsold when even demand at a common floor cannot absorb it."""
+    if (not floors or len(floors) != len(offers) or len(set(floors.values())) != 1
+            or len({(offer.seller, offer.tile) for offer in offers}) != len(offers)):
+        return False
+    if any(bid.elasticity < 0.0 or bid.floor_quantity < 0.0 or bid.flexible_quantity < 0.0 for bid in buyers.bids):
+        return False
+    floor = max(next(iter(floors.values())), buyers.minimum_price)
+    wanted = math.fsum(buyers.schedule.each_at(floor))
+    stock = math.fsum(offer.quantity for offer in offers)
+    return wanted < stock * (1.0 - 2.0 * ROUNDING_SHARE)
+
+
 def clear_with_search(setup, record, view, bids, original: Sequence[Offer], offers: Sequence[Offer], good, area,
                       currency, last_price: Optional[float], costs: Optional[dict] = None) -> Tuple[List[Offer], object]:
     """(the offers after the search, the market's clearing with them). `original` are the offers before the
@@ -85,6 +98,9 @@ def clear_with_search(setup, record, view, bids, original: Sequence[Offer], offe
     if not unsold:
         return offers, result
     searched = list(floors)       # a seller undercut by a lower ask becomes unsold in turn: all are searched together
+    if all_at_floor(buyers, offers, floors):
+        final = _with_level(offers, floors, min(floors.values()))
+        return final, goods_market.clear(bids, final, good, area, currency, last_price, buyers)
 
     def trial(level: float):
         candidate = _with_level(offers, {index: floors[index] for index in searched}, level)

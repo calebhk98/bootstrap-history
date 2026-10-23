@@ -77,8 +77,7 @@ def strategic_offers(setup, record, view, bids: Sequence[Bid], offers: Sequence[
     if not bids or not offers:
         return offers
     good = offers[0].good
-    book = merged_bids(bids, good)
-    buyers = goods_market.Buyers(book, last_price)
+    book = buyers = None
     for index in sorted(range(len(offers)), key=lambda each: (offers[each].seller, offers[each].tile)):
         offer = offers[index]
         if offer.quantity <= 0.0:
@@ -93,6 +92,9 @@ def strategic_offers(setup, record, view, bids: Sequence[Bid], offers: Sequence[
         ask = max(offer.reservation_price, 0.0)
         if stands_for_many(record, offer):
             continue     # a crowd of price takers keeps its reservation; unsold_search.py lowers it to what sells
+        if buyers is None:
+            book = merged_bids(bids, good)
+            buyers = goods_market.Buyers(book, last_price)
         limit = cost * ask_band_multiple(setup, offer) if math.isfinite(cost) else math.inf
         step = SOLD_OUT_ASK_RAISE_SHARE * (ask if ask > 0.0 else max(last_price or 0.0, 0.0))
         choice = seller_pricing.best_reservation(
