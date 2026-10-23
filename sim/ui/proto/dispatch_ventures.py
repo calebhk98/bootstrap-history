@@ -27,6 +27,7 @@ from .start_refusal import refusal_fields
 from sim.engine.ui_port import money_text, plain_number
 from sim.ui.memory import load_state, save_state
 from .util import _flag
+from .start_bill import bill_parts
 from .start_commitment import stacked_commitment
 from .rush_filters import parse_rush_filters, passes_rush_filters, rush_exposure
 from . import rush_loop
@@ -128,9 +129,8 @@ def _cmd_start(sim, nodes, cmd, ended):
     # earlier `why` figure is only a snapshot. The bill IS fixed at the
     # moment you start; this must state plainly what it was fixed AT.
     record = sim.active.get(node_id, {})
-    instalments = round(record.get("cost_left", sim.project_cost(node_id)), 1)
-    materials_paid_now = round(getattr(sim, "materials_paid_at_last_start", 0.0), 1)
-    bill = round(instalments + materials_paid_now, 1)
+    bill, materials_paid_now, instalments = bill_parts(record.get("cost_left", sim.project_cost(node_id)),
+                                                       getattr(sim, "materials_paid_at_last_start", 0.0))
     _warn_staff = ("started, but this society cannot supply the labour it "
                    "wants and it will crawl until you can: %s"
                    % "; ".join(_impossible)) if _impossible else None

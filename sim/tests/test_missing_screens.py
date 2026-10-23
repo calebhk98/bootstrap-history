@@ -1,6 +1,6 @@
 """Complaints 239, 94 and 266: the map, education, demography and divergence screens are registered commands with
 help, and their aliases reach them (Complaint 640: the registry, no game; the figures on each screen are
-test_missing_screens_scenario)."""
+test_screen_rules)."""
 import unittest
 
 from sim.ui.proto import command_registry

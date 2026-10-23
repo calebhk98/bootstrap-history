@@ -50,7 +50,7 @@ soils resist tillage until the tool and team can pull hard enough.
 - Manure is a transitional rule (`MANURE_COLLECTED_SHARE`, `sim/geography/soil_nutrients.py`): the society's draught herd's collected
   dung is spread over the held cropland. Dung is made by herd and draught recipes (544, closed: `data/production/95_herds.json`) but the only
   recipe that takes it as an input is the nitre bed (`data/production/60_nitrogen.json`); no farm recipe buys it.
-- Tests: `sim/tests/test_soil_nitrogen.py`, `test_soil_nitrogen_whole_game.py`.
+- Tests: `sim/tests/test_soil_nitrogen.py`, `test_soil_nitrogen_held_land.py`.
 
 ## Done: the farm model reads the stock
 

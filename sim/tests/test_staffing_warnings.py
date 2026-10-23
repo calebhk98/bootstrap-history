@@ -1,7 +1,7 @@
 """A warning before the staffing door shuts: which running concern the staffing rule would close next and how much slack stands
 between (`staffing_warning_rows`, the arithmetic `Sim.staffing_closure_warnings` gathers its numbers for), and the sentences
-the state screen makes of them. The rows are built from numbers handed in here; what the game feeds them and that every
-screen renders on a rich game is test_staffing_warnings_scenario."""
+the state screen makes of them. The rows are built from numbers handed in here; what the game feeds them and that the
+state screen shows a row is test_staffing_warning_wiring."""
 
 QUICK_TOPIC = True
 

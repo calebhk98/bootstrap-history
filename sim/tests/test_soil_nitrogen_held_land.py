@@ -1,6 +1,6 @@
 """Complaint 543: the soil nitrogen stock of a civilisation's held cropland is saved with the game, a year of cropping
 draws the held cropland down, and a worn tile feeds fewer people. The rules are called on the held tiles of a civilisation
-and the map (no game); the same through a whole game is test_soil_nitrogen_whole_game."""
+and the map (no game)."""
 
 QUICK_TOPIC = True
 
