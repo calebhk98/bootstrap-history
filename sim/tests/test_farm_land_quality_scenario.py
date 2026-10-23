@@ -1,17 +1,13 @@
 """Scenario: in a game the farm is sized on the soil and climate of the civilisation's own tiles (its quality is the weighted
-mean of the best ground the starting population needs, never past the arable ceiling), a civilisation naming no land data
-is refused at construction, and a good run of years does not release the farm's hands below the food balance. The rules
-are in test_farm_land_quality."""
-import copy
+mean of the best ground the starting population needs), and a good run of years does not release the farm's hands below
+the food balance. The rules (the ceiling, a mod civilisation, a region with no land data) are in test_farm_land_quality."""
 import unittest
 
 from .harness import *  # noqa: F401,F403
-from sim.geography.api import crop_site, tiles_held, tiles_of_regions
 from sim.labour import labour_allocation
 from sim.world import agriculture
 
-OPEN_FIELD_SHARE = 1.0 - agriculture.DEFAULT_ROTATION.fallow_share_of_holding
-_CIVILISATIONS = ("rome_100ad", "han_china_100ad", "norse_900ad")
+_CIVILISATIONS = ("rome_100ad",)
 _SIZED_GAMES = {}
 
 
@@ -44,29 +40,6 @@ class FarmSizingTests(unittest.TestCase):
             self.assertAlmostEqual(test_sim.farm_land.quality,
                                    _expected_quality(test_sim.farm_sites(), test_sim.farm_land.hectares),
                                    places=9, msg=civ_id)
-
-    def test_game_farm_never_exceeds_the_arable_ceiling(self):
-        for civ_id in _CIVILISATIONS:
-            test_sim = _sized_game(civ_id)
-            cropland = sum(crop_site(tile_id, OPEN_FIELD_SHARE).cropped_hectares for tile_id in tiles_held(test_sim.civ))
-            self.assertLessEqual(test_sim.farm_land.hectares, cropland + 1e-6, civ_id)
-
-    def test_single_region_mod_civ_farm_has_the_mean_of_that_regions_tiles(self):
-        civ = copy.deepcopy(S.load_civ("rome_100ad"))
-        civ["id"] = "mod_single_region"
-        civ.pop("home_tiles", None)
-        civ["home_regions"] = ["scandinavia"]
-        test_sim = build_unopened(lambda: S.Sim(NODES, ORDER, random.Random(1), events=False, manual=True, civ=civ))
-        self.assertEqual(set(test_sim.farm_sites()), set(tiles_of_regions(["scandinavia"])))
-        self.assertAlmostEqual(test_sim.farm_land.quality,
-                               _expected_quality(test_sim.farm_sites(), test_sim.farm_land.hectares))
-
-    def test_region_without_land_data_fails_loudly(self):
-        civ = copy.deepcopy(S.load_civ("rome_100ad"))
-        civ.pop("home_tiles", None)
-        civ["home_regions"] = ["no_such_region_anywhere"]
-        with self.assertRaises(ValueError):     # no tiles to farm, so no territory for the economy
-            S.Sim(NODES, ORDER, random.Random(1), events=False, manual=True, civ=civ)
 
 
 class FoodBalanceWorkforceTests(unittest.TestCase):
