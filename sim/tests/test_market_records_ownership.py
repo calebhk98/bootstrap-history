@@ -5,6 +5,8 @@ alone. A seller or buyer (the founder, a firm, the state, a trader) asks `Sim.go
 never reaches into the records. The scan finds writes made straight through the record's name;
 a record copied into a local first is not seen, so the modules that hold records stay few.
 """
+QUICK_TOPIC = True
+
 import ast
 import os
 
@@ -79,7 +81,9 @@ def outside_the_market():
                 if name.endswith(".py") and name not in MARKET_MODULES:
                     path = os.path.join(folder, name)
                     with open(path, encoding="utf-8") as handle:
-                        found.extend(writes_in(handle.read(), os.path.relpath(path, root)))
+                        text = handle.read()
+                    if any(record in text for record in RECORDS):    # a write names its record, so others need no parse
+                        found.extend(writes_in(text, os.path.relpath(path, root)))
     return found
 
 
