@@ -7,7 +7,7 @@ def ask(test_sim, **command):
     return S._agent_dispatch(test_sim, NODES, command)
 
 
-saver = sim(capital=2_000.0)
+saver = unopened_sim(capital=2_000.0)
 cheapest = min((node_id for node_id in NODES if node_id not in saver.done and saver.start_reason(node_id)[0]),
                key=saver.project_cost)
 before = ask(saver, cmd="stuck")

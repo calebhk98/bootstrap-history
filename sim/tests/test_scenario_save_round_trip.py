@@ -8,7 +8,7 @@ from sim.refusal import LogLine, Refusal, cause_of, choices_of, facts_of
 def _round_trip(game):
     path = os.path.join(tempfile.mkdtemp(), "save.json")
     save_state(game, path)
-    reloaded = sim(capital=1.0)
+    reloaded = unopened_sim(capital=1.0)
     load_state(reloaded, path)
     return reloaded
 
@@ -26,7 +26,7 @@ def _two_projects_with_different_materials(game):
     raise AssertionError("no two projects with different materials")
 
 
-_game = sim(capital=1e9)
+_game = unopened_sim(capital=1e9)
 _first_id, _second_id = _two_projects_with_different_materials(_game)
 _game.initialize_project(_first_id)
 _game.resource_throttle()
@@ -39,7 +39,7 @@ check("scenario save round trip: a reloaded game reads the same material demand 
       and _reloaded.household_demand_ratios() == _game.household_demand_ratios(),
       (_reloaded._cached_material_demand(), _game._cached_material_demand()))
 
-_log_game = sim(civ="rome_100ad", capital=1e5)
+_log_game = unopened_sim(civ="rome_100ad", capital=1e5)
 _log_game.end_year = _log_game.cfg["start_year"] + 50
 _log_game.state.household.log.append((_log_game.year, LogLine("probe_kind", "a probe line", amount=3, names=["a", "b"])))
 _log_game.state.household.log.append((_log_game.year, Refusal("probe_cause", "a probe refusal", choices=["x", "y"], figure=2.5)))

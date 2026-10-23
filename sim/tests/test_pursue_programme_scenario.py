@@ -10,7 +10,7 @@ def _run(sim_state, **command):
     return S._agent_dispatch(sim_state, NODES, command)
 
 
-game = sim(capital=20000.0)
+game = unopened_sim(capital=20000.0)
 game.end_year = game.cfg["start_year"] + 50
 route = closure(NODES, GOAL)
 _preview = _run(game, cmd="pursue", preview=True, limit=50)

@@ -21,7 +21,7 @@ THIRD_START = "lnd_wheelbarrow"
 
 
 def cash_for_one_start():
-    rich = sim(capital=1.0e9)
+    rich = unopened_sim(capital=1.0e9)
     before = rich.capital
     reply = _run(rich, "start " + FIRST_START)
     return before - rich.capital + reply["of_which_instalments_still_owed"] + 1.0
@@ -32,7 +32,7 @@ CASH_FOR_ONE_START = cash_for_one_start()
 
 def borrower_after_two_starts():
     """A household whose cash covered the first start and nothing after it, with the first two starts made."""
-    household = sim(capital=1.0e6)
+    household = unopened_sim(capital=1.0e6)
     household.market_credit_room = lambda actor_id: None     # the forecast is under test, not the opening's loan book (fully lent to others): the household's own standing sets the line
     household.state.household.capital = CASH_FOR_ONE_START
     first = _run(household, "start " + FIRST_START)
