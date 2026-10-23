@@ -15,7 +15,7 @@ from sim.engine.economy_production import ProductionMixin
 from sim.engine.goods_seller_share import seller_revenue_factor
 from sim.engine.projects_venture_quotes import VentureQuotesMixin
 
-NODE = {"up": 5000.0, "_upkeep_hours_parts": None, "_upkeep_basis": None}
+NODE = {"up": 5000.0, "_upkeep_hours_parts": {"staff": 3.0, "plant": 1.0}, "_upkeep_basis": None}   # a quarter of the upkeep is not crew
 
 
 class Founder(ProductionMixin, VentureQuotesMixin):
@@ -34,20 +34,14 @@ class Founder(ProductionMixin, VentureQuotesMixin):
 
 class UpkeepTests(unittest.TestCase):
     def test_upkeep_is_the_stated_figure_times_the_non_crew_share_the_scale_and_the_capacity(self):
-        share = node_upkeep.non_labour_share(NODE)
-        self.assertAlmostEqual(node_upkeep.non_labour_upkeep_money(5000.0, NODE, 2.0, 1.5), 5000.0 * share * 1.5 * 2.0)
+        self.assertAlmostEqual(node_upkeep.non_labour_upkeep_money(5000.0, NODE, 2.0, 1.5), 5000.0 * 0.25 * 1.5 * 2.0)
 
-    def test_the_founder_and_an_actor_pay_the_same_upkeep_for_the_same_concern(self):
-        price_index = 1.7
-        founder = Founder(price_index)
-        port = EconomyPort(SimpleNamespace(nodes={"shop": NODE}, price_index=price_index))
-        self.assertAlmostEqual(founder.venture_real_upkeep("shop"), port.concern_upkeep("shop"), places=9)
+    def test_an_actors_concern_upkeep_is_the_non_crew_part_at_the_price_level(self):
+        port = EconomyPort(SimpleNamespace(nodes={"shop": NODE}, price_index=1.7))
+        self.assertAlmostEqual(port.concern_upkeep("shop"), 5000.0 * 0.25 * 1.7)
 
-    def test_a_dearer_price_level_raises_both_alike(self):
-        self.assertAlmostEqual(Founder(2.0).venture_real_upkeep("shop"), 2.0 * Founder(1.0).venture_real_upkeep("shop"))
-        low = EconomyPort(SimpleNamespace(nodes={"shop": NODE}, price_index=1.0)).concern_upkeep("shop")
-        high = EconomyPort(SimpleNamespace(nodes={"shop": NODE}, price_index=2.0)).concern_upkeep("shop")
-        self.assertAlmostEqual(high, 2.0 * low)
+    def test_the_founders_quote_of_the_same_concern_is_the_non_crew_part_at_the_price_level(self):
+        self.assertAlmostEqual(Founder(1.7).venture_real_upkeep("shop"), 5000.0 * 0.25 * 1.7)
 
 
 class CategoryShareTests(unittest.TestCase):

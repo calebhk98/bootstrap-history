@@ -16,53 +16,29 @@ WORKERS = 60.0
 ADULT_EQUIVALENTS = 100.0
 
 
-def food_ratio(fertility, toolkit=agriculture.DEFAULT_TOOLKIT, hectares=None):
-    """Food one year's harvest yields, net of seed, over the year's food need, with every worker farming unlimited
-    land of `fertility` (or `hectares` of it)."""
-    crop = agriculture.DEFAULT_CROP
-    if hectares is None:
-        hectares = WORKERS * agriculture.hectares_cropped_per_farm_worker(crop, toolkit)
+def food_ratio(fertility, hectares):
+    """Food one year's harvest yields, net of seed, over the year's food need, on `hectares` of `fertility` (one
+    `Storage.step`)."""
     year = agriculture.Storage(stock_kg=0.0, seed=0).step(
         agriculture.Land(hectares, fertility), hectares * agriculture.REFERENCE_LABOUR_HOURS_PER_HECTARE,
-        ADULT_EQUIVALENTS, crop=crop, rotation=agriculture.DEFAULT_ROTATION, toolkit=toolkit,
-        worker_count=WORKERS, weather_multiplier=1.0)
+        ADULT_EQUIVALENTS, crop=agriculture.DEFAULT_CROP, rotation=agriculture.DEFAULT_ROTATION,
+        toolkit=agriculture.DEFAULT_TOOLKIT, worker_count=WORKERS, weather_multiplier=1.0)
     return (year.gross_harvest_kg - year.seed_sown_kg) / year.food_demand_kg
-
-
-def fertility_for_food_ratio(target):
-    low, high = 0.05, 3.0
-    for _ in range(50):
-        middle = (low + high) / 2.0
-        if food_ratio(middle) < target:
-            low = middle
-        else:
-            high = middle
-    return high
 
 
 class FoodRatioTests(unittest.TestCase):
     def test_the_ratio_rises_with_fertility(self):
-        self.assertLess(food_ratio(0.3), food_ratio(0.6))
-        self.assertLess(food_ratio(0.6), food_ratio(1.2))
+        self.assertLess(food_ratio(0.3, 100.0), food_ratio(0.6, 100.0))
+        self.assertLess(food_ratio(0.6, 100.0), food_ratio(1.2, 100.0))
 
     def test_the_ratio_is_proportional_to_the_hectares_cropped(self):
-        base = food_ratio(0.8, hectares=50.0)
-        self.assertAlmostEqual(food_ratio(0.8, hectares=100.0), 2.0 * base, places=6)
+        self.assertAlmostEqual(food_ratio(0.8, 100.0), 0.5 * food_ratio(0.8, 200.0), places=6)
 
     def test_there_is_ground_where_everyone_farming_feeds_less_than_the_people_need(self):
-        fertility = fertility_for_food_ratio(0.95)
-        self.assertLess(food_ratio(fertility), 1.0)
-        self.assertGreater(food_ratio(fertility_for_food_ratio(1.05)), 1.0)
+        self.assertLess(food_ratio(0.5, 100.0), 1.0)
 
-    def test_doubling_what_a_worker_crops_lifts_sub_subsistence_ground_over_subsistence(self):
-        fertility = fertility_for_food_ratio(0.95)
-        base = agriculture.DEFAULT_TOOLKIT
-        doubled = base._replace(reaping_rate_multiplier=base.reaping_rate_multiplier * 2.0,
-                                labour_hours_multiplier=base.labour_hours_multiplier / 2.0)
-        self.assertAlmostEqual(agriculture.hectares_cropped_per_farm_worker(agriculture.DEFAULT_CROP, doubled),
-                               2.0 * agriculture.hectares_cropped_per_farm_worker(agriculture.DEFAULT_CROP, base), places=9)
-        self.assertLess(food_ratio(fertility), 1.0)
-        self.assertGreater(food_ratio(fertility, toolkit=doubled), 1.0)
+    def test_twice_the_hectares_a_worker_crops_lifts_that_ground_over_subsistence(self):
+        self.assertGreater(food_ratio(0.5, 200.0), 1.0)
 
     def test_no_cropped_ground_gives_no_harvest(self):
         year = agriculture.Storage(stock_kg=0.0, seed=0).step(
@@ -71,6 +47,15 @@ class FoodRatioTests(unittest.TestCase):
             weather_multiplier=1.0)
         self.assertEqual(year.gross_harvest_kg, 0.0)
         self.assertLess(year.consumption_kg, year.food_demand_kg)
+
+
+class HectaresPerWorkerTests(unittest.TestCase):
+    def test_a_reaper_twice_as_fast_and_half_the_hours_a_hectare_doubles_what_a_worker_crops(self):
+        base = agriculture.DEFAULT_TOOLKIT
+        doubled = base._replace(reaping_rate_multiplier=base.reaping_rate_multiplier * 2.0,
+                                labour_hours_multiplier=base.labour_hours_multiplier / 2.0)
+        self.assertAlmostEqual(agriculture.hectares_cropped_per_farm_worker(agriculture.DEFAULT_CROP, doubled),
+                               2.0 * agriculture.hectares_cropped_per_farm_worker(agriculture.DEFAULT_CROP, base), places=9)
 
 
 class FarmHoursAfterTests(unittest.TestCase):

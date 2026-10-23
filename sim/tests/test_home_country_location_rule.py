@@ -9,8 +9,6 @@ import unittest
 from types import SimpleNamespace
 
 from sim.agents.cast import cast_from_civilisations, profile_from_civilisation
-from sim.geography import settlement
-from sim.geography.api import tiles_held
 from sim.labour.labour_settlement import SettlementMixin
 
 TILES = ["algeria_01", "algeria_02", "algeria_03"]
@@ -20,7 +18,7 @@ class HomeLocationTests(unittest.TestCase):
     def test_a_country_with_no_stated_location_sits_at_the_default_base_tile_of_its_land(self):
         profile = profile_from_civilisation({"id": "alpha", "home_tiles": TILES})
         self.assertIsNotNone(profile.location)
-        self.assertEqual(profile.location, settlement.default_base_tile(tiles_held({"id": "alpha", "home_tiles": TILES})))
+        self.assertEqual(profile.location, "algeria_01")
 
     def test_a_stated_location_overrides_the_default(self):
         profile = profile_from_civilisation({"id": "alpha", "home_tiles": TILES, "cast": {"location": "algeria_03"}})
@@ -43,8 +41,7 @@ class FounderBase(SettlementMixin):
 
 class FounderBaseTileTests(unittest.TestCase):
     def test_a_founder_who_has_chosen_no_base_works_from_the_tile_the_home_country_sits_at(self):
-        home = profile_from_civilisation({"id": "alpha", "home_tiles": TILES}).location
-        self.assertEqual(FounderBase(None).base_tile(), home)
+        self.assertEqual(FounderBase(None).base_tile(), "algeria_01")
 
     def test_a_chosen_held_tile_is_the_base(self):
         self.assertEqual(FounderBase("algeria_03").base_tile(), "algeria_03")

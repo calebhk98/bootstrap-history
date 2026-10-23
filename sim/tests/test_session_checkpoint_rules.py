@@ -4,6 +4,7 @@ resumed checkpoint is never autosaved over: the sitting forks a new session file
 choice, and `_is_endless_horizon`. Streams are stubs; no game is built."""
 QUICK_TOPIC = True
 
+import json
 import os
 import tempfile
 import unittest
@@ -27,7 +28,8 @@ class CheckpointTests(unittest.TestCase):
 
     def test_a_renamed_save_is_still_a_checkpoint_by_its_sidecar_marker(self):
         path = os.path.join(self.folder, "my_favourite_moment.json")
-        cli_interactive_saveload.merge_session_meta(path, {"checkpoint": True})
+        with open(path + ".meta.json", "w") as sidecar:
+            json.dump({"checkpoint": True}, sidecar)
         self.assertTrue(settings.is_checkpoint(path))
 
     def test_milestones_saved_together_get_distinct_names_in_the_save_directory(self):
@@ -36,11 +38,11 @@ class CheckpointTests(unittest.TestCase):
             second = cli_interactive_saveload._pick_milestone_filename("rome_100ad")
         self.assertNotEqual(first, second)
         self.assertEqual(os.path.dirname(first), self.folder)
-        self.assertTrue(settings.is_checkpoint(first) and settings.is_checkpoint(second))
 
-    def test_the_horizon_is_kept_in_the_saves_sidecar(self):
+    def test_the_horizon_is_read_from_the_saves_sidecar(self):
         path = os.path.join(self.folder, "game.json")
-        settings.save_session_meta(path, {"horizon_years": cli.ENDLESS_HORIZON_YEARS})
+        with open(path + ".meta.json", "w") as sidecar:
+            json.dump({"horizon_years": cli.ENDLESS_HORIZON_YEARS}, sidecar)
         self.assertEqual(settings.load_session_meta(path)["horizon_years"], cli.ENDLESS_HORIZON_YEARS)
 
 

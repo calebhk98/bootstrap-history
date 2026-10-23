@@ -60,5 +60,12 @@ class EntryGrossTests(unittest.TestCase):
         self.assertLess(world.entry_gross("school", 6.0, 1), world.entry_gross("school", 1.0, 1))
 
 
+class EntrantsRateTests(unittest.TestCase):
+    def test_the_entrants_cost_of_capital_is_the_capital_markets_rate(self):
+        game = StandInSim(0.5)
+        game.economy = type("Economy", (), {"base_rate": staticmethod(lambda: 0.0731)})()
+        self.assertEqual(SimWorld(game).market_rate(), 0.0731)
+
+
 if __name__ == "__main__":
     unittest.main()

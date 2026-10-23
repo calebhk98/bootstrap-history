@@ -722,3 +722,5 @@ making cost), `python3 sim/simulator.py economy-check --civs rome_100ad --years 
 `python3 sim/simulator.py spin-up-trace`: household floors over the food floor, a trade's heading wage over its trained substitute, a
 good's price drift against wheat, and the mason share of the opening workforce (the opening-stock rules are in
 `test_economy_service_lives` and `test_durable_stationary_state`). The ceiling rule is in `test_labour_core_skilled_ceiling`.
+
+Test migration (rule-tests-05): `firm_count_whole_game_scenario` is deleted (the count settling and not overshooting over 30 years read an unsettled economy; the rules are test_firm_count_from_costs and test_entry_gross_rule). No simulator command prints firm counts by market size; `python3 sim/simulator.py economy-check --years 30` is the nearest measure of the agent economy.

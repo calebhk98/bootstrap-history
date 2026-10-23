@@ -111,3 +111,5 @@ Test migration (slow-test overhaul): the whole-game band test is deleted from `t
 lint only). The shares are measured against the bands by
 `python3 sim/simulator.py economy-check --civs rome_100ad,england_1300,han_china_100ad --years 1 --occupations`; the rules that
 build them are `test_occupational_hours_rule`.
+
+Test migration (rule-tests-05): the farm share baseline check of `farm_edges_scenario` is deleted; the same share is measured by `python3 sim/simulator.py economy-check --civs rome_100ad --years 1 --occupations`.

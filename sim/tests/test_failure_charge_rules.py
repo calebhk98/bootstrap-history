@@ -10,7 +10,6 @@ from types import SimpleNamespace
 
 from sim.agents.api import edges
 from sim.engine.coin_guard_rule import coin_guard_paid, room_under_credit_line
-from sim.engine.economy_credit import CreditMixin
 from sim.engine.project_materials import ProjectMaterialsMixin
 from sim.engine.projects_completion import CompletionMixin
 
@@ -77,7 +76,9 @@ class FailingSim(CompletionMixin):
 
     instrument_spec = None
 
-    def __init__(self, capital, loss, claimed, credit_base=500.0):
+    can_bear = 1e18
+
+    def __init__(self, capital, loss, claimed):
         self.nodes = {NODE_ID: {"name": "Kiln", "ph": 100.0, "risk": 0.2, "mat": {}, "lab": {}},
                       "gauge": {"name": "Gauge"}}
         self.state = SimpleNamespace(
@@ -88,14 +89,13 @@ class FailingSim(CompletionMixin):
                 bountied={NODE_ID} if claimed else set()),
             household=SimpleNamespace(capital=capital, log=[]),
             scenario=SimpleNamespace(year=-100))
-        self.loss, self.credit_base = loss, credit_base
+        self.loss = loss
         self.paid = []
         self.learned = []
 
-    def credit_limit(self, _capital=None):
-        return self.credit_base
-
-    bearable_part_of = CreditMixin.bearable_part_of
+    def bearable_part_of(self, amount):
+        self.asked_to_bear = amount
+        return min(amount, self.can_bear)
 
     def pay_edge(self, edge_name, amount, purpose):
         self.paid.append((edge_name, amount))
@@ -139,13 +139,13 @@ class FailedAttemptChargeTests(unittest.TestCase):
         self.assertEqual(sim.paid, [(edges.EDGE_DESTROYED, 300.0)])
         self.assertEqual(sim.state.projects.active[NODE_ID]["cost_left"], 10.0)
 
-    def test_a_loss_past_the_credit_line_is_borne_to_the_line_and_the_rest_billed_to_the_project(self):
+    def test_the_part_the_purse_cannot_bear_is_billed_to_the_project_to_redo(self):
         sim = FailingSim(capital=0.0, loss=5000.0, claimed=False)
+        sim.can_bear = 1200.0
         sim._fail_attempt(NODE_ID, 0.2)
-        borne = sim.paid[0][1]
-        self.assertLess(borne, 5000.0)
-        self.assertGreaterEqual(sim.state.household.capital, -sim.credit_limit() - 1e-9)
-        self.assertAlmostEqual(sim.state.projects.active[NODE_ID]["cost_left"], 10.0 + 5000.0 - borne)
+        self.assertEqual(sim.asked_to_bear, 5000.0)
+        self.assertEqual(sim.paid, [(edges.EDGE_DESTROYED, 1200.0)])
+        self.assertEqual(sim.state.projects.active[NODE_ID]["cost_left"], 10.0 + 5000.0 - 1200.0)
 
     def test_the_attempt_is_counted_the_hours_reset_and_part_of_the_calendar_banked(self):
         sim = FailingSim(capital=1000.0, loss=300.0, claimed=False)

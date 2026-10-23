@@ -1,6 +1,6 @@
 """Complaint 543: the national farm model reads the soil nitrogen stock each year, so continuous cropping lowers the
 national harvest, and a rotation's legumes raise it through the stock alone (the rotation has no yield multiplier). The
-rules are called on the held tiles of a civilisation and the map; the same through a game is test_farm_follows_soil_scenario."""
+rules are called on the held tiles of a civilisation and the map; the farm following the tiles is test_refresh_farm_territory_rule."""
 QUICK_TOPIC = True
 
 import unittest

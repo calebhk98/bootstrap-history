@@ -9,8 +9,8 @@ Rules, each called on inputs the test builds:
    what the farm can crop, never passes the arable ceiling, and the new ground is no better than the old.
 3. `land.margin_outcome_for_civilization` and `prices.band_farmed_hectares`: rent reads the farmed area.
 
-The years of clearing in a game, the save round trip and the price tables following the area are
-`test_farm_clearing_scenario`."""
+The farm's area and quality, and its clearing, are test_farm_area_rule; the price tables following the area are
+test_price_tables_follow_clearing."""
 QUICK_TOPIC = True
 
 import json

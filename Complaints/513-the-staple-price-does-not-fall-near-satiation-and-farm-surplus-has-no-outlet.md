@@ -63,3 +63,5 @@ surplus hands. Rejected: an invented functional form, neither derived nor labell
 technique. The waste count (`carry_forward_and_waste_kg`, `holdings.farm_wasted_kg`) was worth keeping. A continuous
 response should come from households' own allocation of hours (each cohort comparing the farm hour with its own wage),
 and the surplus should reach the agent economy as supply.
+
+Test migration (rule-tests-05): `farm_surplus_intake` (nutrition above need after a food technique, 30 years) is deleted as an unsettled whole-economy read; measure with `python3 sim/simulator.py economy-check --civs rome_100ad --years 30`. The rules are test_farm_hands_margin_rule, test_farm_satiation and test_farm_wage_wiring.

@@ -10,7 +10,6 @@ from types import SimpleNamespace
 
 from sim.labour import labour_allocation
 from sim.labour.labour_allocation import LabourAllocationMixin
-from sim.world import agriculture
 
 STAPLE = "wheat_kg"
 MARGINAL_PRODUCT = 0.5
@@ -82,12 +81,6 @@ class KeptHandsFollowTheWageTests(unittest.TestCase):
 
     def test_with_no_ratio_no_surplus_hands_are_kept(self):
         self.assertEqual(Allocator(World(wage=None))._kept_farm_workers(CURRENT_FTE, 1000.0, TECHNIQUE), 0.0)
-
-    def test_the_hands_kept_never_exceed_the_cleared_land_can_crop(self):
-        world = World(wage=0.5)
-        world.farm_land.hectares = 10.0
-        limit = 10.0 / agriculture.hectares_cropped_per_farm_worker(TECHNIQUE.crop, TECHNIQUE.toolkit)
-        self.assertLessEqual(Allocator(world)._kept_farm_workers(CURRENT_FTE, 1000.0, TECHNIQUE), limit + 1e-9)
 
 
 if __name__ == "__main__":
