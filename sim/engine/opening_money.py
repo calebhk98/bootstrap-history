@@ -42,3 +42,9 @@ def priced_nodes(sim, nodes, schedule, money_per_labour_hour=None):
                                       else money_per_labour_hour)
     return money_units.rebased_nodes(nodes, schedule.wages_per_hour(), schedule.money_per_labour_hour)
 
+
+
+def saved_tree_pricing(economy_state):
+    """The money an hour of work was worth when a save's tree was priced, or None when the save never priced it
+    (a game that resumes it without opening its economy cannot count the tree's money fields)."""
+    return economy_state.nodes_money_per_labour_hour if economy_state.money_from_economy else None

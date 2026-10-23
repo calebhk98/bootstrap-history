@@ -1,5 +1,7 @@
 """sim/economy/api.py: its accessors agree with reading the record directly. The wall (every outside import is published) is
 test_economy_api_wall.py."""
+QUICK_TOPIC = True
+
 import unittest
 
 from sim.economy import api
