@@ -189,5 +189,51 @@ class CommandAndSaveTests(unittest.TestCase):
         self.assertEqual(copy.improvements, economy.improvements)
 
 
+class RoutesAndCommandTests(unittest.TestCase):
+    """What the engine keeps of built ways reaches the routes and the build_way command."""
+
+    def setUp(self):
+        self.world_map = geography.open_map()
+        self.edge = _flat(self.world_map)
+
+    def _route_cost(self, builder):
+        from sim.engine.data import load_civ
+        from sim.engine.starting_techs import declared_starting_techs
+        from sim.tests.harness import NODES
+        held = set(declared_starting_techs(load_civ("rome_100ad"), NODES))
+        route = geography.route([self.edge.tile_a], [self.edge.tile_b], geography.usable_modes([held]),
+                                builder.ways_built(), held_nodes=held)
+        return route["cost_per_tonne"]
+
+    def test_a_road_the_engine_has_built_lowers_the_cost_of_a_haul_over_that_edge(self):
+        builder = _builder_for(self.edge)
+        before = self._route_cost(builder)
+        self.assertTrue(builder.build_way(self.edge.tile_a, self.edge.tile_b, "road")[0])
+        _open(builder, 10 ** 6)
+        self.assertLess(self._route_cost(builder), before)
+
+    def test_the_command_previews_without_building_then_builds(self):
+        from sim.ui.proto.dispatch_ways import _cmd_build_way
+        builder = _builder_for(self.edge)
+        command = {"cmd": "build_way", "way": "road", "from": self.edge.tile_a, "to": self.edge.tile_b, "preview": True}
+        builder.capital = 1e12
+        preview = _cmd_build_way(builder, {}, command, None)
+        self.assertTrue(preview["ok"] and preview["preview"], preview)
+        self.assertEqual(builder.state.economy.improvements, {})
+        self.assertEqual(builder.state.economy.ways_under_construction, {})
+        built = _cmd_build_way(builder, {}, dict(command, preview=False), None)
+        self.assertTrue(built["ok"], built)
+        _open(builder, 10 ** 6)
+        self.assertIn(geography.edge_key(self.edge.tile_a, self.edge.tile_b), builder.ways_built())
+
+    def test_the_command_refuses_with_a_cause_where_the_way_cannot_be_built(self):
+        from sim.ui.proto.dispatch_ways import _cmd_build_way
+        builder = _builder_for(self.edge)
+        reply = _cmd_build_way(builder, {}, {"cmd": "build_way", "way": "bridge", "from": self.edge.tile_a,
+                                             "to": self.edge.tile_b, "preview": True}, None)
+        self.assertFalse(reply["ok"])
+        self.assertTrue(reply["cause"])
+
+
 if __name__ == "__main__":
     unittest.main()
