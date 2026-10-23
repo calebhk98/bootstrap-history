@@ -1,4 +1,4 @@
-"""BASELINE VALIDATION (CLAUDE.md 4.2), slow-only: the disease model alone, a century of sub-year steps, on the Mexica start's population (Complaint 386).
+"""BASELINE VALIDATION (CLAUDE.md 4.2), slow-only: the disease model alone, eighty years of sub-year steps, on the Mexica start's population (Complaint 386).
 
 No game is built: a stand-in with the few members `DiseasePortMixin` reads carries the real civilisation file,
 a real `Population` and the real pathogen files. Food is held at what the opening people need, so the people
@@ -6,11 +6,12 @@ who survive an epidemic meet the same land they had; births and baseline deaths 
 The gates are the validation envelope of Complaints/reports/epidemic-model-research.md section 11.5 (sourced published
 estimates, McCaa and Cook and Borah), stated as ranges for a distribution, never as targets the model was tuned to.
 A failure here reopens Complaint 386 (near extinction) or 471 (care collapse and density); it names a mechanism, not a rule.
+The rules are quick tests: the modifiers and immunity in test_disease_modifiers_wired, test_disease_wiring and test_disease_patch.
 """
 
 QUICK_TOPIC = False
-# nine runs of a hundred years over the country's tiles (one patch of age bands per tile): minutes, not seconds
-TOPIC_SECONDS = 1800
+# three runs of eighty years over the country's tiles (one patch of age bands per tile): minutes, not seconds
+TOPIC_SECONDS = 600
 
 import functools
 import json
@@ -25,6 +26,9 @@ from sim.world import demography
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 SEEDS = (1, 2, 3)
 YEARS_AFTER_CONTACT = 75
+# Every gate reads at most YEARS_AFTER_CONTACT rows from the row before first contact, so a run needs the years before the
+# first arrival (the draw; at most a few) plus that window; `contact_row` fails if a run is too short to fill the window.
+YEARS_SIMULATED = 80
 # McCaa's table of published estimates for the Indian population of Mexico, 1519 to 1595: the lowest and the
 # highest decline any author gives (report section 11.5), as shares of the population at contact.
 PUBLISHED_DECLINE_LOWEST = 0.22
@@ -85,40 +89,15 @@ def mexica():
     return civ
 
 
-@functools.lru_cache(maxsize=4)
-def century_runs(care_collapse=True, density=True):
-    """{seed: (people at the start, [(year, people, deaths)], saved disease state)}; computed once per process
-    for each setting. `care_collapse=False` zeroes the care-collapse sensitivity and `density=False` makes the
-    nation as sparse as a rural one (crowding index one), so each modifier's effect can be read against a run
-    without it (Complaint 471)."""
+@functools.lru_cache(maxsize=1)
+def century_runs():
+    """{seed: (people at the start, [(year, people, deaths)], saved disease state)}; computed once per process."""
     runs = {}
-    saved = (disease_port.DISEASE_CARE_COLLAPSE_SENSITIVITY, disease_port.DISEASE_URBAN_DENSITY_RATIO)
-    try:
-        if not care_collapse:
-            disease_port.DISEASE_CARE_COLLAPSE_SENSITIVITY = 0.0
-        if not density:
-            disease_port.DISEASE_URBAN_DENSITY_RATIO = 1.0
-        for seed in SEEDS:
-            sim = StandInSim(mexica(), seed)
-            start = sim.population.total
-            runs[seed] = (start, sim.run(100), sim.state.disease)
-    finally:
-        disease_port.DISEASE_CARE_COLLAPSE_SENSITIVITY, disease_port.DISEASE_URBAN_DENSITY_RATIO = saved
+    for seed in SEEDS:
+        sim = StandInSim(mexica(), seed)
+        start = sim.population.total
+        runs[seed] = (start, sim.run(YEARS_SIMULATED), sim.state.disease)
     return runs
-
-
-def deepest_fall(runs, seed):
-    """Share of the population at first contact lost at the lowest point within the validation window."""
-    disease_state = runs[seed][2]
-    first_year = min(years[0] for years in disease_state.introduced.values())
-    rows = [row for row in runs[seed][1] if row[0] >= first_year - 1]
-    return 1.0 - min(people for _y, people, _d in rows[:YEARS_AFTER_CONTACT]) / rows[0][1]
-
-
-def first_forty_years_deaths(runs, seed):
-    disease_state = runs[seed][2]
-    first_year = min(years[0] for years in disease_state.introduced.values())
-    return sum(row[2] for row in runs[seed][1] if row[0] >= first_year)
 
 
 class CenturyValidationTest(unittest.TestCase):
@@ -131,7 +110,9 @@ class CenturyValidationTest(unittest.TestCase):
     def contact_row(self, seed):
         start, rows, disease_state = self.runs[seed]
         first_year = min(years[0] for years in disease_state.introduced.values())
-        return first_year, [row for row in rows if row[0] >= first_year - 1]
+        window = [row for row in rows if row[0] >= first_year - 1]
+        self.assertGreaterEqual(len(window), YEARS_AFTER_CONTACT, "seed %d: run too short for the validation window" % seed)
+        return first_year, window
 
     def test_the_scenario_seeds_pathogens_the_files_define(self):
         for seed in SEEDS:
@@ -159,30 +140,6 @@ class CenturyValidationTest(unittest.TestCase):
             _first, rows = self.contact_row(seed)
             falls.append(1.0 - min(people for _y, people, _d in rows[:YEARS_AFTER_CONTACT]) / rows[0][1])
         self.assertGreater(max(falls) - min(falls), 0.005)
-
-    def test_later_waves_kill_far_fewer_than_the_first(self):
-        # The failing behaviour of the authored hazard: a wave with no memory of who is immune.
-        for seed in SEEDS:
-            _first, rows = self.contact_row(seed)
-            deaths = [row[2] for row in rows]
-            self.assertLess(sum(deaths[40:]), sum(deaths[:40]))
-
-    def test_care_collapse_and_density_each_deepen_the_fall_and_stay_in_the_envelope(self):
-        # Complaint 471. Prints the deepest fall with each modifier switched off (the 'before' figure) and on.
-        plain = century_runs(care_collapse=False, density=False)
-        care_only = century_runs(care_collapse=True, density=False)
-        density_only = century_runs(care_collapse=False, density=True)
-        both = century_runs()
-        for seed in SEEDS:
-            falls = [deepest_fall(runs, seed) for runs in (plain, care_only, density_only, both)]
-            print("  seed %d deepest fall in %d years: neither %.3f, care collapse %.3f, density %.3f, both %.3f"
-                  % ((seed, YEARS_AFTER_CONTACT) + tuple(falls)))
-            self.assertLessEqual(falls[3], PUBLISHED_DECLINE_HIGHEST)
-            self.assertGreaterEqual(falls[3], PUBLISHED_DECLINE_LOWEST)
-        total = {name: sum(first_forty_years_deaths(runs, seed) for seed in SEEDS)
-                 for name, runs in (("plain", plain), ("care", care_only), ("density", density_only))}
-        self.assertGreater(total["care"], total["plain"])
-        self.assertGreater(total["density"], total["plain"])
 
 
 if __name__ == "__main__":

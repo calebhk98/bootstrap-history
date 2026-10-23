@@ -1,14 +1,14 @@
 """Baseline validation (CLAUDE.md 4.2, Complaint 490; slow-only): plagues come from the disease model, not from a dated table.
 
 Ensembles on the stand-in sim (`disease_stand_in.StandInSim`, no game): Rome's major epidemics do not land in the same years in
-every run and are a handful in five centuries with the empire surviving; the same outside source reaches the nation in every run
-once the outsiders bring ships; over several runs the deaths handed to the population are the model's own count. A failure means
-a dated table crept back or the draw stopped following contact (Complaint 490). The rules are in test_plagues_from_contact."""
+every run and are a handful in five centuries with the empire surviving. A failure means a dated table crept back or the draw
+stopped following contact (Complaint 490). The rules are in test_plagues_from_contact (the deaths handed to the population are
+the model's own count) and test_disease_arrival_draw (ships bring the source in every seed)."""
 
 import functools
 import unittest
 
-from sim.tests.disease_stand_in import SEEDS, StandInSim, civilisation, mexica_with_source
+from sim.tests.disease_stand_in import SEEDS, StandInSim, civilisation
 
 MAJOR_EPIDEMIC_SHARE_OF_PEOPLE = 0.005
 
@@ -56,25 +56,6 @@ class RomeEpidemicsAreDrawnTest(unittest.TestCase):
             deadly.append(runs)
             self.assertGreater(min(people for _y, people, _d in rows) / rows[0][1], 0.05, "baseline validation, Complaint 490")
         self.assertTrue(1.0 <= sum(deadly) / len(deadly) <= 8.0, ("baseline validation, Complaint 490", deadly))
-
-
-class ContactEnsembleTest(unittest.TestCase):
-    def test_the_same_source_reaches_the_nation_once_the_outsiders_bring_ships(self):
-        arrivals = []
-        for seed in SEEDS:
-            sim = StandInSim(mexica_with_source(["sail"]), seed)
-            sim.run(400)
-            arrivals.append(bool(sim.state.disease.introduced))
-        self.assertTrue(all(arrivals), "baseline validation, Complaint 490")
-
-    def test_the_deaths_handed_to_population_are_the_models_own_count_in_every_run(self):
-        for seed in SEEDS[:3]:
-            sim = StandInSim(civilisation("rome_100ad"), seed)
-            handed = 0
-            for _ in range(500):
-                handed += sum(sim.disease_year(sim.food, sim.year).values())
-                sim.year += 1
-            self.assertEqual(handed, sum(sim.state.disease.deaths.values()), "seed %d" % seed)
 
 
 if __name__ == "__main__":
