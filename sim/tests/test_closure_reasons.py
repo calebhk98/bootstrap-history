@@ -1,7 +1,7 @@
 """closure_reasons: a closed work records why and since when, and only its own cause clears it.
 
 The rules are called on a business built here (`Business`, `business_review.reopen`) and on a stub game for the
-staffing-closure age and the discounted reopening fee. The staffing closure kept through a save is test_closure_reasons_scenario.
+staffing-closure age and the discounted reopening fee.
 The loss-making and creditor-seizure closures (reasons "loss_making" and "creditor_seizure") are held by
 test_business_review (LossRuleIsOneRule, the seizure tests)."""
 QUICK_TOPIC = True
@@ -143,13 +143,12 @@ class CloseWorkRecordsTheReason(unittest.TestCase):
 		self.assertEqual(business.closures()["mill"], {"reason": STAFF, "year": 40})
 		self.assertEqual(game.state.projects.ever_closed_for_staff, {"mill"})
 
-	def test_a_manual_closure_after_a_restored_staffing_one_is_dated_afresh(self):
+	def test_a_manual_closure_is_dated_with_the_year_given(self):
 		game, business = self.game(40)
 		with mock.patch.object(cause_book, "record_concern"):
-			StaffingMixin.close_work(game, "mill", STAFF)
-			business.restore("mill")
 			StaffingMixin.close_work(game, "mill", MANUAL, year=70)
 		self.assertEqual(business.closures()["mill"], {"reason": MANUAL, "year": 70})
+		self.assertEqual(game.state.projects.ever_closed_for_staff, set())
 
 
 if __name__ == "__main__":

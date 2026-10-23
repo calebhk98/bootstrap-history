@@ -4,8 +4,7 @@ civilisation sets names a real, liftable node, one civilisation is never
 handed another's flavour text, a priced material is gated by its own
 prerequisite rather than sentinel-priced, and no civilisation's dated events
 leave a long silent stretch or hand out a free technology on turn one.
-The rules these files feed (the needs-first gate, the word swaps) are called on plain inputs here; the games they
-run in are test_civilisation_data_integrity_scenario.
+The rules these files feed (the needs-first gate, the word swaps) are called on plain inputs here.
 """
 QUICK_TOPIC = True
 

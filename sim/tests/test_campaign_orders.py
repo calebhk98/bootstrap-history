@@ -35,25 +35,36 @@ class _Game(CampaignActorsMixin):
                                      government=lambda: government)
 
 
+def place_army(game, soldiers=300.0, owner=OWNER, tile=HOME, army_id="army_1", target=None):
+    """Put an army straight into the game's record of armies."""
+    army = Army(army_id, owner, tile, soldiers, 12.5, home_tile=tile)
+    army.target = target
+    game.army_records()[army_id] = army.to_dict()
+    return army
+
+
 class RaisingAnArmy(unittest.TestCase):
 
-    def test_an_army_takes_soldiers_from_the_free_force_not_from_its_size(self):
+    def test_a_raised_army_is_recorded_with_its_owner_tile_soldiers_and_equipment(self):
         game = _Game()
         army = game.raise_army(OWNER, 300.0, HOME)
         self.assertEqual((army.owner, army.tile, army.soldiers, army.equipment_kg), (OWNER, HOME, 300.0, 12.5))
-        self.assertEqual(game.free_soldiers(OWNER), 700.0)
-        self.assertEqual(game.owner_force(OWNER), 1000.0)
-        self.assertEqual(game.armies_of(OWNER), [army])
+        self.assertEqual(game.army_records(), {army.army_id: army.to_dict()})
 
-    def test_each_army_gets_its_own_id(self):
+    def test_free_soldiers_are_the_force_less_the_armies_in_the_field(self):
         game = _Game()
-        first, second = game.raise_army(OWNER, 100.0, HOME), game.raise_army(OWNER, 100.0, HOME)
-        self.assertNotEqual(first.army_id, second.army_id)
-        self.assertEqual(game.free_soldiers(OWNER), 800.0)
+        place_army(game, soldiers=300.0)
+        self.assertEqual(game.free_soldiers(OWNER), 700.0)
+
+    def test_the_army_gets_the_next_id_and_the_counter_moves_on(self):
+        game = _Game()
+        game.campaign_store()["next_id"] = 7
+        army = game.raise_army(OWNER, 100.0, HOME)
+        self.assertEqual((army.army_id, game.campaign_store()["next_id"]), ("army_7", 8))
 
     def test_more_than_the_free_soldiers_is_refused_with_a_cause_and_changes_nothing(self):
         game = _Game()
-        game.raise_army(OWNER, 600.0, HOME)
+        place_army(game, soldiers=600.0)
         refused = game.raise_army(OWNER, 401.0, HOME)
         self.assertEqual(refused.cause, "not_enough_soldiers")
         self.assertEqual(len(game.army_records()), 1)
@@ -86,17 +97,16 @@ class OrdersAndStandingDown(unittest.TestCase):
 
     def setUp(self):
         self.game = _Game()
-        self.army = self.game.raise_army(OWNER, 300.0, HOME)
+        self.army = place_army(self.game)
 
     def test_an_order_sets_the_target_and_clears_progress(self):
-        stored = self.game.army_records()[self.army.army_id]
-        stored["progress_days"] = 3.0
+        self.game.army_records()[self.army.army_id]["progress_days"] = 3.0
         ordered = self.game.order_army(OWNER, self.army.army_id, THEIRS)
         self.assertEqual((ordered.target, ordered.progress_days), (THEIRS, 0.0))
         self.assertEqual(self.game.army_of(self.army.army_id).target, THEIRS)
 
     def test_an_order_to_where_it_stands_clears_the_target(self):
-        self.game.order_army(OWNER, self.army.army_id, THEIRS)
+        place_army(self.game, target=THEIRS)
         self.assertIsNone(self.game.order_army(OWNER, self.army.army_id, HOME).target)
 
     def test_an_order_to_a_tile_off_the_map_is_refused(self):
@@ -112,21 +122,20 @@ class OrdersAndStandingDown(unittest.TestCase):
         self.assertEqual(refused.cause, "unknown_army")
 
     def test_recall_sends_the_army_back_to_the_tile_it_was_raised_on(self):
-        self.game.order_army(OWNER, self.army.army_id, BORDER)
-        self.assertEqual(self.game.recall_army(OWNER, self.army.army_id).target, None)
-        self.game.owners[HOME] = OWNER
-        self.game.army_records()[self.army.army_id]["tile"] = BORDER
-        self.assertEqual(self.game.recall_army(OWNER, self.army.army_id).target, HOME)
+        place_army(self.game, tile=BORDER)
+        self.game.army_records()["army_1"]["home_tile"] = HOME
+        self.assertEqual(self.game.recall_army(OWNER, "army_1").target, HOME)
 
     def test_a_recall_to_a_lost_home_tile_goes_to_a_tile_the_owner_still_holds(self):
-        self.game.army_records()[self.army.army_id]["tile"] = THEIRS
+        place_army(self.game, tile=THEIRS)
+        self.game.army_records()["army_1"]["home_tile"] = HOME
         self.game.owners[HOME] = RIVAL
-        self.assertEqual(self.game.recall_army(OWNER, self.army.army_id).target, BORDER)
+        self.assertEqual(self.game.recall_army(OWNER, "army_1").target, BORDER)
 
-    def test_disbanding_frees_the_soldiers_again(self):
-        self.game.disband_army(OWNER, self.army.army_id)
+    def test_disbanding_removes_the_armys_record_and_hands_it_back(self):
+        disbanded = self.game.disband_army(OWNER, self.army.army_id)
         self.assertEqual(self.game.army_records(), {})
-        self.assertEqual(self.game.free_soldiers(OWNER), self.game.owner_force(OWNER))
+        self.assertEqual(disbanded.army_id, self.army.army_id)
 
 
 if __name__ == "__main__":

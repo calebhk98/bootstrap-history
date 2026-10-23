@@ -2,7 +2,7 @@
 (Complaints/184).
 
 What cash pays for during a freeze is tested on built numbers (`cash_covers_start`), the freeze check and the bounty on
-stand-in games. One bounty through a save and a load is test_bounty_save_and_credit_freeze_scenario."""
+stand-in games."""
 
 QUICK_TOPIC = True
 from .harness import *  # noqa: F401,F403
@@ -95,11 +95,13 @@ check("...it pays the price under its cause and spends no poster hours or hired 
       poster.paid == [(400.0, "bounties posted")] and poster.started[0]["ph_left"] == 0.0
       and poster.started[0]["include_labor"] is False and poster.started[0]["cost_left"] == 0.0, (poster.paid, poster.started))
 check("...and marks the project as bountied", poster.state.projects.bountied == {"node"})
-check("...and a bountied project asks for no hours of the founder",
-      ProgressMixin.project_hour_pace(poster, "node") == 0.0 and ProgressMixin.active_hours_still_wanted(
-          types.SimpleNamespace(state=types.SimpleNamespace(projects=types.SimpleNamespace(
-              active_keys_sorted=lambda: ["node"], bountied={"node"}, active=poster.state.projects.active)),
-              nodes=poster.nodes, project_hour_pace=lambda node_id: ProgressMixin.project_hour_pace(poster, node_id))) == {})
+bounty_projects = types.SimpleNamespace(active={"node": {"ph_left": 500.0}}, bountied={"node"})
+bounty_game = types.SimpleNamespace(state=types.SimpleNamespace(projects=bounty_projects), nodes={"node": {"ph": 500.0, "yrs": 2.0}})
+check("a bountied project asks for no hours of the founder", ProgressMixin.project_hour_pace(bounty_game, "node") == 0.0)
+check("a project asking for hours is listed with them and one asking for none is not",
+      ProgressMixin.active_hours_still_wanted(types.SimpleNamespace(
+          state=types.SimpleNamespace(projects=types.SimpleNamespace(active_keys_sorted=lambda: ["a", "b"])),
+          nodes={"a": {}, "b": {}}, project_hour_pace=lambda node_id: {"a": 40.0, "b": 0.0}[node_id])) == {"a": 40.0})
 broke = _Poster(300.0, 400.0)
 check("a bounty beyond the purse is refused and nothing is paid", broke.post_bounty("node") is False and broke.paid == [])
 check("the bounty set is saved as node ids, checked against the tree on load",

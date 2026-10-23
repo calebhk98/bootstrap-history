@@ -97,21 +97,15 @@ check("the book shows opening plus causes equal to closing",
       abs(book["opening"] + sum(book["causes"].values()) - book["closing"]) < 0.1, book)
 
 
-# --- the cash figure reads its causes from the ledger: they add up to the change and name the flows
+# --- the cash figure reads its causes from the ledger: explain_figure on a written-out year
 from sim.ui import figures as figure_registry
 from sim.ui import figures_headline  # noqa: F401  (registers the cash figure)
 
-game = household_game(capital=1000.0, year=100)
-household = game.state.household
-household.cash_mark = 1000.0
-cash_book.close_period(game)
-last_year_game = types.SimpleNamespace(capital=household.capital, year=100)
-history = [{"year": 100, "figures": {"cash": figure_registry.read_figure(last_year_game, "cash")}}]
-game.year = 101
-household.credit(500.0, "venture revenue")
-household.debit(200.0, "living costs")
-this_year_game = types.SimpleNamespace(capital=household.capital, year=101, state=game.state)
-explained = figure_registry.explain_figure(this_year_game, "cash", history)
+this_year_household = types.SimpleNamespace(capital=1300.0, cash_periods=[],
+                                            cash_flow={"venture revenue": 500.0, "living costs": -200.0})
+this_year_game = types.SimpleNamespace(capital=1300.0, year=101, state=types.SimpleNamespace(household=this_year_household))
+last_year = [{"year": 100, "figures": {"cash": {"value": 1000.0, "components": {}, "flows": {}, "drivers": {}}}}]
+explained = figure_registry.explain_figure(this_year_game, "cash", last_year)
 check("the cash figure's change is this year's movement of the purse", explained["change"] == 300.0, explained)
 check("...its causes come from the ledger and add up to the change with nothing not itemised",
       {cause["cause"]: cause["contribution"] for cause in explained["causes"]} == {"venture revenue": 500.0, "living costs": -200.0},

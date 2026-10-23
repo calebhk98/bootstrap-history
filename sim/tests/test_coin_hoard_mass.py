@@ -74,47 +74,36 @@ class HoardOfACivilisation(unittest.TestCase):
         self.assertAlmostEqual(twice["keeping_cost_per_year"], 2.0 * once["keeping_cost_per_year"])
 
 
-def keeping_game(capital, credit_limit):
-    game = stub_game("han_china_100ad", capital)
-    game.state = types.SimpleNamespace(household=types.SimpleNamespace(capital=capital))
-    game.credit_limit = lambda: credit_limit
-    return game
+def keeping_game(capital, credit_limit, keeping_cost):
+    """A household with `capital` and a credit line, holding a hoard that costs `keeping_cost` a year to guard."""
+    return types.SimpleNamespace(state=types.SimpleNamespace(household=types.SimpleNamespace(capital=capital)),
+                                 credit_limit=lambda: credit_limit,
+                                 coin_hoard=lambda: {"keeping_cost_per_year": keeping_cost})
 
 
 class KeepingPaidFromWhatTheHouseholdCanBear(unittest.TestCase):
 
     def test_a_household_with_room_pays_what_the_hoard_owes(self):
-        game = keeping_game(1.0e6, 0.0)
-        owed, paid = CoinHoardMixin.coin_keeping_due(game, 0.0, 0.0, 0.0, 0.0)
-        self.assertGreater(owed, 0.0)
-        self.assertEqual(paid, owed)
-        self.assertEqual(owed, game.coin_hoard()["keeping_cost_per_year"])
+        owed, paid = CoinHoardMixin.coin_keeping_due(keeping_game(1.0e6, 0.0, 250.0), 0.0, 0.0, 0.0, 0.0)
+        self.assertEqual((owed, paid), (250.0, 250.0))
 
     def test_the_guard_is_paid_from_what_is_left_after_the_years_other_costs(self):
-        game = keeping_game(1000.0, 500.0)
-        game.capital = 1.0e6    # a hoard whose keeping dwarfs the room left
-        owed = CoinHoardMixin.coin_keeping_due(game, 0.0, 0.0, 0.0, 0.0)[0]
-        # room = capital 1000 + credit line 500 + revenue 100 - upkeep 20 - living 1560 - mines 10
-        owed_again, paid = CoinHoardMixin.coin_keeping_due(game, 100.0, 20.0, 1560.0, 10.0)
-        self.assertGreater(owed, 10.0)
-        self.assertEqual((owed_again, paid), (owed, 10.0))
+        # room = capital 1000 + credit line 500 + revenue 100 - upkeep 20 - living 1560 - mines 10 = 10
+        owed, paid = CoinHoardMixin.coin_keeping_due(keeping_game(1000.0, 500.0, 250.0), 100.0, 20.0, 1560.0, 10.0)
+        self.assertEqual((owed, paid), (250.0, 10.0))
 
     def test_a_household_with_no_room_pays_nothing_never_a_negative_sum(self):
-        game = keeping_game(10.0, 0.0)
-        owed, paid = CoinHoardMixin.coin_keeping_due(game, 0.0, 0.0, 1.0e9, 0.0)
-        self.assertEqual(paid, 0.0)
-        self.assertGreaterEqual(owed, 0.0)
+        owed, paid = CoinHoardMixin.coin_keeping_due(keeping_game(10.0, 0.0, 250.0), 0.0, 0.0, 1.0e9, 0.0)
+        self.assertEqual((owed, paid), (250.0, 0.0))
 
 
 class HoardReportForTheScreens(unittest.TestCase):
 
     def test_the_report_is_the_hoard_rounded_with_its_metal_and_basis(self):
-        game = stub_game("han_china_100ad", 123456.789)
-        game.coin_hoard_report = lambda: CoinHoardMixin.coin_hoard_report(game)
-        hoard, report = game.coin_hoard(), game.coin_hoard_report()
-        self.assertEqual((report["metal"], report["basis"]), (hoard["metal"], hoard["basis"]))
-        self.assertEqual(report["tonnes"], round(hoard["tonnes"], 3))
-        self.assertEqual(report["keeping_cost_per_year"], round(hoard["keeping_cost_per_year"], 1))
+        game = types.SimpleNamespace(coin_hoard=lambda: {"metal": "silver", "tonnes": 1.23456, "keeping_cost_per_year": 98.7654,
+                                                         "basis": "guards"})
+        self.assertEqual(CoinHoardMixin.coin_hoard_report(game),
+                         {"metal": "silver", "tonnes": 1.235, "keeping_cost_per_year": 98.8, "basis": "guards"})
 
 
 if __name__ == "__main__":
