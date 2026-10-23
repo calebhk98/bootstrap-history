@@ -1,6 +1,6 @@
 """Complaint 88: portfolio groups running work by what blocks it, in the shared blocker kinds.
-`bottleneck_groups` and `_portfolio_rows` are called on rows and stubs the test builds; the whole-game portfolio is
-test_portfolio_bottlenecks_scenario."""
+`bottleneck_groups` and `_portfolio_rows` are called on rows and stubs the test builds;
+the portfolio reply of a game is test_game_port_and_portfolio_smoke."""
 QUICK_TOPIC = True
 
 from types import SimpleNamespace

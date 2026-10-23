@@ -1,6 +1,6 @@
 """Constants that are really physical quantities are declared in labour hours
 (or derived from the deposits) and priced in a coin only when read.
-Nothing here builds a game; the miner's wage applied to the live deposits is test_physical_money_constants_scenario."""
+Nothing here builds a game; the mining opex is these hours times the miner's wage."""
 QUICK_TOPIC = True
 
 import inspect

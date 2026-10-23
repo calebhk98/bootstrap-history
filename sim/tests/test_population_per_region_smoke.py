@@ -1,4 +1,4 @@
-"""Complaint 603: the Rome game keeps people by region (a tile the nation holds), each fed what its own households ate:
+"""SMOKE (Complaint 603): the Rome game keeps people by region (a tile the nation holds), each fed what its own households ate:
 the nation is the sum of its regions, removing one tile's food lowers that tile's nutrition and raises its mortality and
 no other tile's, and the economy is handed the regions' people. The rules on built populations are in
 test_population_per_region_rule."""

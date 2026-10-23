@@ -18,3 +18,9 @@ What was done (rules in `sim/disease/metapopulation.py` and `sim/disease/endemic
   contact, not dated hazards. Deaths are kept by tile (`epidemic_deaths_by_tile`).
 
 Remainder is filed as 677.
+
+- `test_plagues_from_contact_validation` (six seeds of Rome over five centuries on the stand-in, about 1100 s) left the test suite. The
+  checks it held (some seed has a major epidemic; epidemic years and the first arrival differ between seeds; no year is an epidemic in
+  every seed; 1 to 8 pandemics per five centuries with the empire surviving) are reproduced by
+  `StandInSim(civilisation("rome_100ad"), seed).run(500)` from `sim/tests/disease_stand_in.py` over seeds 1 to 6; no simulator
+  command measures it yet. The seed-independence of the arrival draw stays in `test_disease_arrival_draw`.

@@ -1,6 +1,5 @@
 """Conservative performance optimizations: the fingerprint tool's quick scenarios cover the cases the speed-ups could
-break. The boolean-only `start_reason` and the fingerprint's state toggle, which need a game, are in
-test_perf_optimizations_scenario. (The afford gate's funding arithmetic is held by test_arrears_hours.)"""
+break. (The afford gate's funding arithmetic is held by test_arrears_hours.)"""
 
 QUICK_TOPIC = True
 
