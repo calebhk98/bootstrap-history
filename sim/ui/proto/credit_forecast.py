@@ -52,3 +52,9 @@ def borrowing_forecast(instalments, materials_paid_now, capital, credit_limit_of
             "take and sell what you are running - including things you "
             "built long ago and had no debt against.",
     }
+
+
+def start_credit_forecast(sim, instalments, materials_paid_now):
+    """`borrowing_forecast` for a `start` on `sim`: its cash, credit line, going rate and the forecast of servicing a debt."""
+    return borrowing_forecast(instalments, materials_paid_now, sim.capital, sim.credit_limit, sim.debt_interest_rate,
+                              sim.debt_service_forecast)

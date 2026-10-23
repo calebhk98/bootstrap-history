@@ -106,3 +106,8 @@ food processing, transport and other crafts are well below their bands in all th
 little demand, 609 to 618, 645), services_state is below its band for England and Han, and the unattributed pool is
 just over its cap for Rome and Han. Caution: the farmer head count is the residual after the other trades take the people
 their work needs, so a high farm share by head count follows from under-built non-farm trades and is weak evidence by itself.
+
+Test migration (slow-test overhaul): the whole-game band test is deleted from `test_occupational_distribution` (now the group-data
+lint only). The shares are measured against the bands by
+`python3 sim/simulator.py economy-check --civs rome_100ad,england_1300,han_china_100ad --years 1 --occupations`; the rules that
+build them are `test_occupational_hours_rule`.
