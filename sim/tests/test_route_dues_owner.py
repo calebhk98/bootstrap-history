@@ -1,5 +1,5 @@
 """Complaint 599: a route's dues belong to the holder of the tile where they are levied, are charged per tonne
-carried. The settlement into a treasury is in test_route_dues_owner_scenario."""
+carried. The settlement into a treasury is test_route_dues_settlement."""
 
 import unittest
 
