@@ -25,7 +25,7 @@ NATIVE_LABEL = re.compile(r"\bden\b|\btonnes?\b|\bt/yr\b|\bha\b|\bhectares?\b|\b
 # Files whose literals may name a unit beside a placeholder, and why.
 EXEMPT_SENTENCE_FILES = {
     # Text-screen renderers print values from a reply that units_text.for_text already converted; the label
-    # they print is swapped by render_pretty. Held by complaint_285_text_screens and the key scans below.
+    # they print is swapped by render_pretty. Held by complaint_285_display_units and the key scans below.
     "sim/ui/proto/render_screens_economy.py": "text screen over a converted reply",
     "sim/ui/proto/render_screen_state_blocks.py": "text screen over a converted reply",
     "sim/ui/proto/render_screen_why.py": "text screen over a converted reply",

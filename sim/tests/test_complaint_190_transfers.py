@@ -1,6 +1,6 @@
 """Complaint 190: a one-off transfer to the state is declared by works as data (`transfer`, knowledge with no upkeep), the
 typed `pay` lines read, and two concerns declare the state's share of their takings. The payments, the `pay` command and
-the levy on a game are the scenario in test_complaint_190_transfers_scenario."""
+the levy are test_state_transfers_wiring on stand-ins."""
 QUICK_TOPIC = True
 
 from .harness import *  # noqa: F401,F403

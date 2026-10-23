@@ -1,6 +1,5 @@
 """Complaint 190: the light and amusement needs that the late-game works lean on, read from the data, and the typed
-`settle` lines. Settled colonies on a game (founding, refusals, growth, save and load, commands) are the scenario in
-test_complaint_190_colonies_scenario."""
+`settle` lines. Settled colonies (founding, the yearly step, save and load, commands) are test_colony_wiring on stand-ins."""
 QUICK_TOPIC = True
 
 from .harness import *  # noqa: F401,F403
