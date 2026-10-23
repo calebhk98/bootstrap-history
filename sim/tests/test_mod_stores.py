@@ -1,6 +1,6 @@
 """Complaint 495: mods declare saved values per tile, per actor and per ordered actor pair: a store is declared once, in
 the declaring mod's own namespace, and only its mod writes it. Called on a stub host over the real `ModStoresMixin`; the
-stores in a running game (save, read commands, the map, the base control store) are in `test_mod_stores_scenario`."""
+stores as the player and the base game reach them (read commands, the map, tile control) are in `test_mod_store_reads`."""
 
 QUICK_TOPIC = True
 
