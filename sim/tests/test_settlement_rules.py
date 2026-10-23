@@ -6,6 +6,8 @@ import types
 import unittest
 from unittest import mock
 
+from sim.refusal import facts_of
+
 from sim.engine import economy_credit
 from sim.engine.economy_credit import CreditMixin
 
@@ -58,6 +60,15 @@ class SettleInsolvency(unittest.TestCase):
         self.assertEqual(line.kind, "insolvency_settled")
         self.assertAlmostEqual(line.facts["reputation_hit"], debtor.SETTLEMENT_REPUTATION_HIT)
         self.assertEqual(debtor.state.household.reputation, 50.0 - debtor.SETTLEMENT_REPUTATION_HIT)
+
+    def test_settling_inside_an_earlier_freeze_pushes_the_date_out_and_records_both_dates(self):
+        debtor = Debtor()
+        debtor.state.household.credit_frozen_until = 110
+        settle(debtor, year=105)
+        (_year, line), = debtor.state.household.log
+        self.assertEqual(debtor.state.household.credit_frozen_until, 105 + debtor.SETTLEMENT_CREDIT_FREEZE_YEARS)
+        self.assertTrue(facts_of(line)["freeze_moved"])
+        self.assertEqual(facts_of(line)["frozen_before"], 110)
 
 
 if __name__ == "__main__":
