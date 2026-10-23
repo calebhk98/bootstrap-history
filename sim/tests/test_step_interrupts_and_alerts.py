@@ -1,5 +1,5 @@
 """Step replies carry a short ALERTS block, capped and shown first on the step screen. The alert lines and the step screen are
-called on events the test builds; the multi-year step on a game is in test_step_interrupts_and_alerts_scenario."""
+called on events the test builds. The per-year hook is in test_step_progress_hook."""
 from sim.ui.proto.step_alerts import step_alerts, alert_lines
 from sim.ui.proto import render_screen_step as _render_big
 

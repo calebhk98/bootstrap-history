@@ -1,6 +1,6 @@
 """Complaint 658: what a state enforces, lends against, notices and answers follows its reach, the share its paid officials
 collect over its roads (620), not a typed capacity. Each reader is called with a reach the test sets and moves the way its rule
-says; the home game's reach under unpaid officials is in test_state_reach_readers_scenario."""
+says; the home world's reach under unpaid officials is in test_collection_view_staff and test_staff_reach_wiring."""
 from types import SimpleNamespace
 
 from .harness import *  # noqa: F401,F403

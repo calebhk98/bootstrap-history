@@ -1,4 +1,7 @@
 """Complaints/432: the grain behind the wage floor is the civilisation's own, not wheat for everyone."""
+
+QUICK_TOPIC = True
+
 import copy
 import unittest
 

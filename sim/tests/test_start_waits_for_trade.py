@@ -1,6 +1,5 @@
 """Complaint 572: when a trade a project needs will first have hands. The start gate, the start reply and the stall gate read
-one rule (`projects_trade_wait`), called here on a stub game with trainees in training; the `start` command through a whole
-game is test_start_waits_for_trade_scenario."""
+one rule (`projects_trade_wait`), called here on a stub game with trainees in training."""
 
 QUICK_TOPIC = True
 
