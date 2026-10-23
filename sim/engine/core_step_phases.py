@@ -27,6 +27,7 @@ from . import automation_audit
 from .hour_offer import work_order_shortfall
 from .units_prose import money_text, plain_number
 from .bondage_workshop_rules import bondage_repayment, serve_bondage_year
+from .reteach_rules import past_cooldown, teaching_budget, trade_is_gone, PROJECT_IN_HAND_SCORE
 from .state_demand import answer_confiscation
 from .invariants import check_labour_market_invariants, check_yearly_invariants
 from .eminence_warning import eminence_band_to_announce
@@ -170,7 +171,7 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, ProjectStartPhaseMixin, 
             for node_id in self.state.projects.active_keys_sorted():
                 for trade_id in self.nodes[node_id]["lab"]:
                     if _market_supply(trade_id) <= 0.0:
-                        want[trade_id] = want.get(trade_id, 0) + 500
+                        want[trade_id] = want.get(trade_id, 0) + PROJECT_IN_HAND_SCORE
             # WORK THE PLAYER COULD START TODAY, not the whole tree. The old
             # test was "direct prerequisites satisfied", which is not "wanted":
             # it looked past cost, staff, state approval and every OTHER trade
@@ -222,10 +223,8 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, ProjectStartPhaseMixin, 
             def _is_gone(trade):
                 value = _gone_memo.get(trade)
                 if value is None:
-                    value = _gone_memo[trade] = (
-                        not _trade_avail(trade)
-                        or (_market_supply(trade) <= 0.0
-                            and self.labour.trade_headcount_pending(trade) <= 0.0))
+                    value = _gone_memo[trade] = trade_is_gone(
+                        _trade_avail(trade), _market_supply(trade), self.labour.trade_headcount_pending(trade))
                 return value
             for node_id in self.order:
                 if node_id in self.state.projects.done or node_id in self.state.projects.active:
@@ -245,8 +244,7 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, ProjectStartPhaseMixin, 
             # output. A trade is worth restoring; it is not worth half of
             # every year for ever.
             _taught = self.state.household.last_taught
-            want = {trade_id: value for trade_id, value in want.items()
-                    if self.state.scenario.year - _taught.get(trade_id, -999) >= self.RETEACH_EVERY}
+            want = past_cooldown(want, _taught, self.state.scenario.year, self.RETEACH_EVERY)
             # AND ONLY IF YOU CAN PAY THEM: train() checks hours, literacy and
             # household room but nothing here about money, so teaching a
             # trade a household cannot actually afford to keep paid turns
@@ -264,8 +262,7 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, ProjectStartPhaseMixin, 
             _spare_tr = _tr_rev - _tr_upkeep - self.living_cost(_rev=_tr_rev, _upkeep=_tr_upkeep)
             for trade_id, _score in sorted(want.items(), key=lambda kv: (-kv[1], kv[0]))[:1]:
                 _wages = 2.0 * self.labour.market.quote_annual(trade_id)
-                _budget = (max(0.0, _spare_tr) + max(0.0, self.state.household.capital) * 0.10
-                           if _score >= 500 else max(0.0, _spare_tr) * 0.5)
+                _budget = teaching_budget(_score, _spare_tr, self.state.household.capital)
                 if _wages > _budget:
                     continue
                 _first = trade_id not in self.state.household.trades_created
