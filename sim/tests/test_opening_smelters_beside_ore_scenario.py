@@ -14,8 +14,8 @@ FAR_CARRIAGE_SHARE_OF_ORE_VALUE = 0.5     # a smelter farther than this share of
 class OpeningSmeltersBesideOreTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        game = harness.unopened_sim()
-        cls.setup = build_setup(game)
+        game = harness.sim()
+        cls.setup = build_setup(game, game.state.economy.agent_economy["opening"])
         cls.economy = economy_api.blank_economy(cls.setup)
         by_limits = sites.limits_by_recipe(cls.setup.site_limits)
         cls.fixed = {}

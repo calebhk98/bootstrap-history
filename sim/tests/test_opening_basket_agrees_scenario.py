@@ -10,8 +10,8 @@ from sim.tests.test_opening_basket_agrees import goods_over_supply
 class RomeOpeningBasketTests(unittest.TestCase):
     def test_no_good_in_the_rome_basket_exceeds_its_supply_and_the_index_starts_at_one(self):
         from sim.engine.economy_port_setup import build_setup
-        game = harness.unopened_sim()
-        setup = build_setup(game)
+        game = harness.sim()
+        setup = build_setup(game, game.state.economy.agent_economy["opening"])
         economy = economy_api.blank_economy(setup)
         self.assertEqual(goods_over_supply(setup, economy.record), {})
         weights = economy.record.opening_basket
