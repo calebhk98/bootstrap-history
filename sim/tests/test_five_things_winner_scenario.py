@@ -1,8 +1,8 @@
 """SCENARIO: session commands typed mid-game, the frozen manual checkpoint, and the
-Endless difficulty horizon: regressions from a player who won the game."""
+Endless difficulty horizon: regressions from a player who won the game. The horizon rule and the `--horizon` default are
+in test_endless_horizon_rule."""
 from .harness import *  # noqa: F401,F403
 
-from sim.ui.proto.state_waiting import _agent_end_reason
 from sim.tests import cli_in_process
 
 
@@ -21,50 +21,12 @@ check("choosing Endless carries exactly ENDLESS_HORIZON_YEARS into the save's me
       _endless_written and json.load(open(os.path.join(
           _endless_saves, _endless_written[0] + ".meta.json"))).get("horizon_years") == _CLI.ENDLESS_HORIZON_YEARS,
       (_endless_written, _endless_wizard.stdout[-800:]))
-# Behaviour, not just the sidecar: a game whose end year comes from that horizon is still
-# running 600 years in, where the same game under the standard horizon has ended.
-_endless_meta = (json.load(open(os.path.join(_endless_saves, _endless_written[0] + ".meta.json")))
-                 if _endless_written else {})
-_horizon_game = unopened_sim()
-_horizon_game.year = _horizon_game.cfg["start_year"] + 600
-_horizon_game.end_year = _horizon_game.cfg["start_year"] + _endless_meta.get("horizon_years", 0)
-_endless_reason = _agent_end_reason(_horizon_game)
-_horizon_game.end_year = _horizon_game.cfg["start_year"] + 500
-_standard_reason = _agent_end_reason(_horizon_game)
-check("choosing Endless lets a game cross where a 500-year Standard horizon has already ended the run",
-      _endless_reason is None and _standard_reason is not None,
-      (_endless_meta.get("horizon_years"), _endless_reason, _standard_reason))
 _endless_options = (_play(["play", "--session", os.path.join(_endless_saves, _endless_written[0])],
                           "options\nb\nquit\n", os.environ.copy())
                     if _endless_written else None)
 check("...and the in-game 'options' screen reads 'none - Endless' for that horizon",
       _endless_options is not None and "none - Endless" in _endless_options.stdout,
       _endless_options.stdout[-1200:] if _endless_options else None)
-
-# The --horizon flag keeps its own default; Endless is reached only through the
-# wizard or 'options'. Checked on argparse's parsed value, in-process.
-_horizon_seen = {}
-def _capture_horizon(which):
-    def _handler(args):
-        _horizon_seen[which] = getattr(args, "horizon", None)
-        return 0
-    return _handler
-_original_argv = sys.argv
-_original_handlers = {name: getattr(_CLI, name) for name in
-                      ("cmd_run", "cmd_compare", "cmd_play", "cmd_agent")}
-try:
-    for _name in _original_handlers:
-        setattr(_CLI, _name, _capture_horizon(_name))
-    for _command_name in ("run", "compare", "play", "agent"):
-        sys.argv = ["simulator.py", _command_name]
-        _CLI.main()
-finally:
-    sys.argv = _original_argv
-    for _name, _handler in _original_handlers.items():
-        setattr(_CLI, _name, _handler)
-check("run/compare/play/agent's --horizon flag still defaults to the standard horizon",
-      len(_horizon_seen) == 4 and all(value == 500 for value in _horizon_seen.values()),
-      _horizon_seen)
 
 # --- Session commands typed mid-game, without backing out through menus.
 _session_saves = tempfile.mkdtemp()

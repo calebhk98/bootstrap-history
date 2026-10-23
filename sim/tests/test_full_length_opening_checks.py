@@ -10,6 +10,8 @@ A check that fails today is marked `expectedFailure` against the complaint that 
 the topic is green, and reports an unexpected success when that complaint's work makes it pass: remove the entry
 then. A check not in the table must pass. This topic holds the table's own checks.
 """
+QUICK_TOPIC = True
+
 import unittest
 
 from .full_length_opening_support import CHECK_NAMES, CIVILISATIONS, EXPECTED_FAILURES
