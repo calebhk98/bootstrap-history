@@ -10,7 +10,7 @@ def skip_rows(test_sim):
 
 
 def fresh():
-    test_sim = sim(capital=2_000_000.0, manual=False)
+    test_sim = unopened_sim(capital=2_000_000.0, manual=False)
     test_sim.state.household.automation_audit = []
     return test_sim
 
@@ -40,7 +40,7 @@ capped._step_start_projects()
 rows = skip_rows(capped)
 check("scenario: hitting the active-project cap is recorded once", len(rows) == 1 and rows[0].get("reason_kind") == "active_project_cap", rows)
 
-poor = sim(capital=0.0, manual=False)
+poor = unopened_sim(capital=0.0, manual=False)
 poor.state.household.automation_audit = []
 poor.state.founder.policy["auto_mine"] = True
 poor.annual_material_demand = lambda: {"coal_kg": 1_000_000.0}
