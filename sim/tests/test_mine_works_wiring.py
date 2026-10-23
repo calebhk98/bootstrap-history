@@ -61,6 +61,9 @@ check("a quote names the ground's ceiling and the room left under it",
 check("a quote states the share of day-one yield the workings have left", quoted["current_yield_is_this_fraction_of_day_one"] == 0.8, quoted)
 check("a quote's price to sink is tonnes times capex times the price index times the scale",
       quoted["to_sink_it"] == round(10.0 * 10.0 * quoting.price_index * 1.0, 1), quoted)
+check("a quote's yearly cost is what a new working of that size is charged",
+      quoted["every_year_it_stands"] == round(quoting.mine_operating_cost_for(
+          {"material": NO_DEPOSIT_MATERIAL, "capacity": 10.0, "intensity_yrs": 0.0}), 1), quoted)
 quoting.open_mine(NO_DEPOSIT_MATERIAL, 15.0)
 check("a quote's room is what the ceiling leaves after what is on order",
       quoting.mine_quote(NO_DEPOSIT_MATERIAL, 10.0)["room_left_before_geology_stops_you"] == 25.0)
