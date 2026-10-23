@@ -4,7 +4,7 @@ stops gaining capacity.
 
 Rules, each called on the fake world: `Firm.expand` (the return on a step against the rate, the margin gate, the
 scale ceiling, the outlay it books) and `ActorRegistry.rivals_of` (an expanded incumbent leaves an entrant a smaller
-share). The whole-game wiring is `test_firm_expansion_scenario`."""
+share). What an entrant expects is test_entry_gross_rule."""
 QUICK_TOPIC = True
 
 import unittest

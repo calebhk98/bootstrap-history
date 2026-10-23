@@ -11,3 +11,8 @@ def control_relief_multiplier(failure_kind, relief_kinds_in_force: Iterable, rel
 def effective_risk_of(bare_risk: float, depth_multiplier: float, control_multiplier: float, precaution_multiplier: float) -> float:
     """The chance of failing the next attempt: the bare risk times each multiplier, which compound rather than override."""
     return bare_risk * depth_multiplier * control_multiplier * precaution_multiplier
+
+
+def attempt_fails(draw: float, risk: float) -> bool:
+    """One draw in [0, 1) against the chance of failing: the attempt fails when the draw falls under the risk."""
+    return draw < risk

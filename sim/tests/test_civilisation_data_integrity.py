@@ -4,8 +4,7 @@ civilisation sets names a real, liftable node, one civilisation is never
 handed another's flavour text, a priced material is gated by its own
 prerequisite rather than sentinel-priced, and no civilisation's dated events
 leave a long silent stretch or hand out a free technology on turn one.
-The rules these files feed (the needs-first gate, the word swaps) are called on plain inputs here; the games they
-run in are test_civilisation_data_integrity_scenario.
+The rules these files feed (the needs-first gate, the word swaps) are called on plain inputs here.
 """
 QUICK_TOPIC = True
 
@@ -166,3 +165,15 @@ for _cf in sorted(glob.glob(os.path.join(ROOT, "data", "civilizations", "*.json"
         check("%s: its events reach close to the end of a 700-year run, "
               "not just the first half of it" % _cid,
               (_start + 700) - _prev <= 90, (_start, _prev))
+
+
+# --- a win condition is met on the right side of its target for its comparison, and an unknown comparison never is
+from sim.engine.win_condition_rule import win_condition_met
+
+check("a >= condition is met at its target and above, not below",
+      win_condition_met({"op": ">=", "value": 0.2}, 0.2) and win_condition_met({"op": ">=", "value": 0.2}, 0.9)
+      and not win_condition_met({"op": ">=", "value": 0.2}, 0.1999))
+check("a <= condition is met at its target and below, not above",
+      win_condition_met({"op": "<=", "value": 5}, 5) and win_condition_met({"op": "<=", "value": 5}, 0)
+      and not win_condition_met({"op": "<=", "value": 5}, 5.01))
+check("any other comparison is never met", not win_condition_met({"op": "==", "value": 1}, 1))

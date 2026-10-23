@@ -1,6 +1,6 @@
 """Complaint 120: money can buy a lower chance of failing, at a stated cost. The precaution's resolution, cost, hours,
-relief and quote, each on a stand-in game holding one declared node (no game). The start through the dispatcher is
-test_risk_precaution_scenario."""
+relief and quote, each on a stand-in game holding one declared node (no game). The start is
+test_precaution_start."""
 from types import SimpleNamespace
 
 from .harness import check, NODES

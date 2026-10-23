@@ -1,6 +1,6 @@
 """The score and the ending: the weights, the goal gate, fog, the achievements and the points scale, each called on a
-stand-in game with the values the test sets (`score_game.ScoreGame`, no game is run). The dispatcher and hash-seed
-wiring are in test_score_and_ending_scenario."""
+stand-in game with the values the test sets (`score_game.ScoreGame`, no game is run). The institutions component, whose sum must not
+depend on set order, is test_score_institutions."""
 from .harness import check, NODES, GOAL, S
 
 from sim.refusal import cause_of

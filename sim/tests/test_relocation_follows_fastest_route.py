@@ -1,7 +1,6 @@
 """Complaints/416: moving the household's base takes the days of the fastest route over the modes its people hold, not
 a straight-line pace and not the cheapest haul. The route search runs on the small fixture map, the quote on a
-stand-in labour over the real settlement mixin (no game). The same through a game on the real map is
-test_relocation_follows_fastest_route_scenario."""
+stand-in labour over the real settlement mixin (no game)."""
 import itertools
 from types import SimpleNamespace
 

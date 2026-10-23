@@ -1,7 +1,6 @@
 """Complaint 173: the credit forecast block that `start` prints is shown in full once per game year; later starts that
 year show a one-line summary on screen, and the figures stay in the JSON reply. The rule is
-sim/ui/proto/credit_forecast.py, called on built replies; the screen is `render_start`. (A real run of starts:
-test_scenarios_batch3_saves.)"""
+sim/ui/proto/credit_forecast.py, called on built replies; the screen is `render_start`."""
 QUICK_TOPIC = True
 
 import copy

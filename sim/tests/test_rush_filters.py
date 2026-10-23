@@ -1,6 +1,6 @@
 """Rush filters: a bulk start can be limited by subject, per-project cost, founder hours and a list of ids. The filter parser,
-the filter test and the exposure sum are called on nodes and a stand-in game the test builds; the command is in
-test_rush_filters_scenario."""
+the filter test and the exposure sum are called on nodes and a stand-in game the test builds; the loop that applies them is
+test_rush_loop."""
 import unittest
 from types import SimpleNamespace
 

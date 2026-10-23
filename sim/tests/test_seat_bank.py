@@ -1,6 +1,6 @@
 """Complaint 106: a seat founds a bank when it holds a node declaring `deposit_banking` and has the capital; the capital
 comes from outside the book into a bank the economy treats like any other. Rules on built inputs; the command on a game
-is in test_seat_bank_scenario.py."""
+is not tested through a game."""
 
 QUICK_TOPIC = True
 

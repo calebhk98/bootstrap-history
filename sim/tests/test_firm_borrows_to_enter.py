@@ -7,9 +7,7 @@ Rules, each called on built inputs (no game):
 1. `firm_entry.stake_split`: what a founder puts up, what is left to borrow, and the refusal below lenders' share.
 2. `ActorRegistry.consider_entry` on the fake world: a founder short of the whole stake founds on credit, one
    putting up less than lenders' share founds none, and dearer credit leaves fewer entrants on credit.
-3. `Firm.copy_budget`: counts what the firm's earning lets it borrow.
-
-The whole-game wiring is `test_firm_borrows_to_enter_scenario`."""
+3. `Firm.copy_budget`: counts what the firm's earning lets it borrow."""
 QUICK_TOPIC = True
 
 import unittest

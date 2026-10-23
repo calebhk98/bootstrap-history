@@ -1,7 +1,6 @@
 """Complaints/579: each departure and each closure is an event with a kind, its cause and what it stops. The lines are
 built by `staff_lost_line` (sim/labour/staff_events.py) and `unstaffed_closure_line` (sim/engine/staffing_events.py)
-from plain facts; how the protocol treats the kinds is sim/ui/proto/event_kinds.py. (That a played year logs them and
-a multi-year step stops on them: test_scenarios_batch3.)"""
+from plain facts; how the protocol treats the kinds is sim/ui/proto/event_kinds.py."""
 QUICK_TOPIC = True
 
 import unittest

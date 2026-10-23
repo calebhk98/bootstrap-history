@@ -1,6 +1,6 @@
 """Rush fiscal controls: a bulk start can be capped by total cost, yearly draw and a cash reserve, and refuses option values it
-cannot read. The cap reader, the cap test and the typed spellings are called on inputs the test builds; the command on a game
-(preview, rollback, agreement with the real run) is in test_rush_fiscal_controls_scenario."""
+cannot read. The cap reader, the cap test and the typed spellings are called on inputs the test builds; the loop and the preview
+(preview, rollback) is test_rush_loop."""
 import unittest
 from types import SimpleNamespace
 

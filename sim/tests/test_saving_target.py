@@ -1,6 +1,6 @@
 """Complaint 294: an actor can mark a planned project and savings target. The plan, the year it becomes affordable,
 the command's refusals and the typed forms, each on a stand-in game (cash, income, year and a household record, no
-game). `stuck` respecting the target is test_saving_target_scenario."""
+game). `stuck` respecting the target is test_stuck_while_saving."""
 from types import SimpleNamespace
 
 from .harness import check, NODES

@@ -1,6 +1,6 @@
 """Complaint 273: a treasury of coin has a mass from its coin metal and a guard-and-vault cost from that mass. The
 rules are `coin_metal` (plain arithmetic) and `CoinHoardMixin.coin_hoard` on a stub game. The screens that show the hoard
-and the step that charges for it are test_coin_keeping_charged."""
+is rounded for them by `coin_hoard_report`; the step's charge is `coin_keeping_due`, both on a stub game."""
 QUICK_TOPIC = True
 
 import types
@@ -72,6 +72,38 @@ class HoardOfACivilisation(unittest.TestCase):
         once, twice = stub_game("han_china_100ad", 1.0e6).coin_hoard(), stub_game("han_china_100ad", 2.0e6).coin_hoard()
         self.assertAlmostEqual(twice["tonnes"], 2.0 * once["tonnes"])
         self.assertAlmostEqual(twice["keeping_cost_per_year"], 2.0 * once["keeping_cost_per_year"])
+
+
+def keeping_game(capital, credit_limit, keeping_cost):
+    """A household with `capital` and a credit line, holding a hoard that costs `keeping_cost` a year to guard."""
+    return types.SimpleNamespace(state=types.SimpleNamespace(household=types.SimpleNamespace(capital=capital)),
+                                 credit_limit=lambda: credit_limit,
+                                 coin_hoard=lambda: {"keeping_cost_per_year": keeping_cost})
+
+
+class KeepingPaidFromWhatTheHouseholdCanBear(unittest.TestCase):
+
+    def test_a_household_with_room_pays_what_the_hoard_owes(self):
+        owed, paid = CoinHoardMixin.coin_keeping_due(keeping_game(1.0e6, 0.0, 250.0), 0.0, 0.0, 0.0, 0.0)
+        self.assertEqual((owed, paid), (250.0, 250.0))
+
+    def test_the_guard_is_paid_from_what_is_left_after_the_years_other_costs(self):
+        # room = capital 1000 + credit line 500 + revenue 100 - upkeep 20 - living 1560 - mines 10 = 10
+        owed, paid = CoinHoardMixin.coin_keeping_due(keeping_game(1000.0, 500.0, 250.0), 100.0, 20.0, 1560.0, 10.0)
+        self.assertEqual((owed, paid), (250.0, 10.0))
+
+    def test_a_household_with_no_room_pays_nothing_never_a_negative_sum(self):
+        owed, paid = CoinHoardMixin.coin_keeping_due(keeping_game(10.0, 0.0, 250.0), 0.0, 0.0, 1.0e9, 0.0)
+        self.assertEqual((owed, paid), (250.0, 0.0))
+
+
+class HoardReportForTheScreens(unittest.TestCase):
+
+    def test_the_report_is_the_hoard_rounded_with_its_metal_and_basis(self):
+        game = types.SimpleNamespace(coin_hoard=lambda: {"metal": "silver", "tonnes": 1.23456, "keeping_cost_per_year": 98.7654,
+                                                         "basis": "guards"})
+        self.assertEqual(CoinHoardMixin.coin_hoard_report(game),
+                         {"metal": "silver", "tonnes": 1.235, "keeping_cost_per_year": 98.8, "basis": "guards"})
 
 
 if __name__ == "__main__":

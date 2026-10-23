@@ -189,5 +189,46 @@ class CommandAndSaveTests(unittest.TestCase):
         self.assertEqual(copy.improvements, economy.improvements)
 
 
+class BuiltWaysAndCommandTests(unittest.TestCase):
+    """What the engine keeps of built ways is what geography's routes take, and the build_way command calls the
+    engine's quote and build."""
+
+    def test_ways_built_is_the_improvements_record_geographys_routes_take(self):
+        record = {"a|b": {"road": True}}
+        game = types.SimpleNamespace(state=types.SimpleNamespace(economy=types.SimpleNamespace(improvements=record)))
+        self.assertIs(ways.WaysMixin.ways_built(game), record)
+
+    def _command(self, **keywords):
+        return dict({"cmd": "build_way", "way": "road", "from": "a", "to": "b"}, **keywords)
+
+    def test_a_preview_quotes_without_building(self):
+        from sim.ui.proto.dispatch_ways import _cmd_build_way
+        built = []
+        quote = {"km": 12.34, "labour_hours": 1000.4, "materials": {"stone": 55.5}, "money": 999.9, "years": 2.26,
+                 "engineered": False}
+        game = types.SimpleNamespace(way_quote=lambda a, b, way: quote, build_way=lambda a, b, way: built.append(way))
+        reply = _cmd_build_way(game, {}, self._command(preview=True), None)
+        self.assertEqual((reply["ok"], reply["preview"], reply["km"], reply["labour_hours"], reply["materials_tonnes"],
+                          reply["money"], reply["years"]), (True, True, 12.3, 1000, {"stone": 56}, 1000, 2.3))
+        self.assertEqual(built, [])
+
+    def test_a_preview_of_a_way_that_cannot_be_built_is_refused_with_the_cause(self):
+        from sim.ui.proto.dispatch_ways import _cmd_build_way
+        from sim.refusal import Refusal
+        game = types.SimpleNamespace(way_quote=lambda a, b, way: None,
+                                     way_refusal=lambda a, b, way: Refusal("no_river", "no river to bridge"))
+        reply = _cmd_build_way(game, {}, self._command(way="bridge", preview=True), None)
+        self.assertEqual((reply["ok"], reply["cause"]), (False, "no_river"))
+
+    def test_a_build_command_builds_the_named_way_between_the_named_tiles(self):
+        from sim.ui.proto.dispatch_ways import _cmd_build_way
+        calls = []
+        game = types.SimpleNamespace(way_quote=lambda a, b, way: {}, capital=123.45,
+                                     build_way=lambda a, b, way: (calls.append((a, b, way)) or (True, "started")))
+        reply = _cmd_build_way(game, {}, self._command(), None)
+        self.assertEqual(calls, [("a", "b", "road")])
+        self.assertEqual((reply["ok"], reply["built"], reply["capital"]), (True, "started", 123.5))
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -10,3 +10,11 @@ def declared_starting_techs(civ, nodes):
         raise ValueError("civilization %r lists unknown starting technologies: %s"
                          % (civ.get("id", "?"), ", ".join(missing)))
     return starting_techs
+
+
+def grant_starting_techs(projects, starting_techs, done_changed):
+    """Everything declared is done and granted (not earned), and `done_changed` is told after each is added."""
+    for tech_id in starting_techs:
+        projects.done.add(tech_id)
+        done_changed()
+        projects.granted.add(tech_id)

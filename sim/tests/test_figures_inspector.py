@@ -1,7 +1,7 @@
 """Complaint 95: a figure registers its components once, and `explain_figure` shows last year, this year and the named causes.
 `figures.register_figure` and `explain_figure` are called on a stub game with figures the test registers; the headline
-figures are checked to be registered. The `figures` and `why` commands on a game are
-`test_figures_inspector_scenario`."""
+figures are checked to be registered. The headline figures reading the engine and the `figures` and `why` commands are
+in test_figures_headline_rules."""
 QUICK_TOPIC = True
 
 import unittest

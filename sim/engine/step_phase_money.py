@@ -5,6 +5,7 @@ from sim.refusal import LogLine
 from . import automation_audit
 from sim.constants import declare
 from sim.agents.api import edges
+from .living_cost_charge import living_cost_charged
 
 
 class MoneyPhaseMixin:
@@ -37,18 +38,15 @@ class MoneyPhaseMixin:
         # advance off here, a smith at 281 a year would cost 566 in his
         # first year - the advance, then the identical year again at the
         # next step.
-        living_cost -= self.dependants_beyond_means(living_cost, self.revenue(), self.upkeep(), self.mine_operating_cost())
-        prepaid = min(living_cost, self.state.household.wages_prepaid)
-        living_cost -= prepaid
+        living_cost = living_cost_charged(
+            living_cost, self.dependants_beyond_means(living_cost, self.revenue(), self.upkeep(), self.mine_operating_cost()),
+            self.state.household.wages_prepaid)
         self.state.household.wages_prepaid = 0.0
         self.state.founder.living_cost_paid += living_cost
         mine_cost = self.mine_operating_cost()
         self.state.holdings.mine_cost_paid += mine_cost
         revenue, upkeep = self.revenue(), self.upkeep()
-        # The guard is paid from what the purse and the credit line can bear, like any other spending.
-        room = max(0.0, self.state.household.capital + self.credit_limit() + revenue - upkeep - living_cost - mine_cost)
-        keeping_owed = self.coin_hoard()["keeping_cost_per_year"]
-        keeping = min(keeping_owed, room)
+        keeping_owed, keeping = self.coin_keeping_due(revenue, upkeep, living_cost, mine_cost)
         # the concerns the clearing pays are credited when it clears (economy_port_year `_settle_seats`)
         self.receive_from_edge(edges.EDGE_CUSTOMERS, self.estimated_revenue(), "venture revenue")
         self.pay_edge(edges.EDGE_SUPPLIERS, upkeep, "running costs of concerns")
