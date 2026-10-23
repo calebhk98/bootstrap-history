@@ -2,7 +2,7 @@
 return-trip emptiness the areas are partitioned for only at the start of the next year; a record saved between
 carries the memory keyed by the old areas, so the resume must partition them as the unbroken game had, then
 follow them at the next year's start exactly as the unbroken game does."""
-QUICK_TOPIC = False
+QUICK_TOPIC = True
 
 import json
 import unittest

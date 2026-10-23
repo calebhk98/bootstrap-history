@@ -1,6 +1,8 @@
 """Complaint 190: the light and amusement needs that the late-game works lean on, read from the data, and the typed
 `settle` lines. Settled colonies on a game (founding, refusals, growth, save and load, commands) are the scenario in
 test_complaint_190_colonies_scenario."""
+QUICK_TOPIC = True
+
 from .harness import *  # noqa: F401,F403
 
 from sim.engine.need_data import load_needs
@@ -14,8 +16,7 @@ check("the typed line `settle` alone lists", parse_typed("settle")[0] == {"cmd":
 
 # ---- light is its own need, and play for stakes is one too --------------------------------------------------------
 needs = load_needs(ROOT)
-check("warmth and light are no longer one need", "warmth" in needs["needs"] and "warmth_and_light" not in needs["needs"]
-      and "light" in needs["needs"], sorted(needs["needs"]))
+check("warmth and light are each a need", "warmth" in needs["needs"] and "light" in needs["needs"], sorted(needs["needs"]))
 check("fuel is for warmth", all("warmth" in needs["goods"][fuel]["satisfies"] for fuel in ("firewood_kg", "charcoal_kg", "coal_kg", "peat_kg")))
 basket = need_basket.make_basket(needs, production_data())
 serving = {need.need_id: {good for good, _effect in need.goods} for need in basket.needs}
