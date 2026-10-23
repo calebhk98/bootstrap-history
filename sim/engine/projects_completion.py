@@ -21,6 +21,7 @@ from .data import closure
 from .failure_cause import failure_cause
 from .failure_diagnosis import failure_teaches, note_failure
 from .permanent_benefit import permanent_parts
+from .risk_rules import attempt_fails
 from .units_prose import money_text, plain_number
 from sim.agents.api import edges
 
@@ -186,7 +187,7 @@ class CompletionMixin:
         scenario = self.state.scenario
         governance = self.state.governance
         _risk_this_attempt = self.effective_risk(node_id)
-        if self.rng.random() < _risk_this_attempt:
+        if attempt_fails(self.rng.random(), _risk_this_attempt):
             self._fail_attempt(node_id, _risk_this_attempt)
             return
         goal_before = self.goal_snapshot()
