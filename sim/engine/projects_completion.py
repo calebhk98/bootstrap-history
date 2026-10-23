@@ -187,85 +187,7 @@ class CompletionMixin:
         governance = self.state.governance
         _risk_this_attempt = self.effective_risk(node_id)
         if self.rng.random() < _risk_this_attempt:
-            _yrs_before = projects.active[node_id]["yrs"]
-            projects.failed_attempts[node_id] += 1
-            _diagnosis = note_failure(self, node_id)
-            if failure_teaches(self, node_id):
-                self.learn_from_failed_attempt(node_id)
-            claimed = node_id in projects.bountied
-            # A bounty's claimant redoes the work: the poster's prize holds and
-            # no hours or money fall on the poster.
-            projects.active[node_id]["ph_left"] = (
-                0.0 if claimed else
-                node["ph"] * self.rebuild_work_factor(node_id) * self.FAILURE_RESET_SHARE)
-            # THE CALENDAR CLOCK IS NOT WIPED: a failed attempt must not
-            # reset the multi-year diffusion clock to zero, restarting the
-            # whole process from nothing. Even ONE failed attempt already
-            # does real social groundwork (workshops retooled, a workforce
-            # that has seen it once, a regulator who already sat through
-            # the pitch), so the first failure already banks a real share
-            # of the elapsed clock, not zero - it is the risk term above,
-            # not this one, that has nothing to show after only one
-            # failure. What this banks keeps growing, with diminishing
-            # returns, as failed_attempts[node_id] grows, and is capped well
-            # short of the whole clock (RETRY_CALENDAR_CAP) so a retried
-            # programme is only ever readier, never instantly ready.
-            _retain = self._retry_calendar_retain(node_id)
-            projects.active[node_id]["yrs"] = _yrs_before * _retain
-            _lost = 0.0 if claimed else self.failure_loss(node_id)
-            _severity = self.failure_severity(node_id, max(0.0, _lost), self.funding_capacity())
-            # What the purse and the credit line left cannot bear is not forgiven: it is added to what the project still costs, paid through the gated instalments.
-            _borne = self.bearable_part_of(_lost)
-            self.pay_edge(edges.EDGE_DESTROYED, _borne, "failure losses")
-            if not claimed:
-                for _loss_line in self.lose_what_was_risked(node_id):
-                    household.log.append((scenario.year, LogLine("failure_loss", "%s: %s" % (node["name"], _loss_line))))
-            projects.active[node_id]["cost_left"] = (projects.active[node_id].get("cost_left") or 0.0) + (_lost - _borne)
-            # A failure always announces itself; its size sets how loudly.
-            _next_risk = self.effective_risk(node_id)
-            _banked = projects.active[node_id]["yrs"]
-            if claimed:
-                household.log.append((scenario.year, LogLine(
-                    "project_failed",
-                    "%s %s: the claimant's attempt failed. The prize you posted holds "
-                    "and they try again (attempt %d, chance of failing %d%%); nothing "
-                    "more falls on you."
-                    % (FAILED_PREFIX, node["name"],
-                       projects.failed_attempts[node_id] + 1, round(_next_risk * 100)),
-                    project=node_id, severity="claimed", lost=0.0)))
-                return
-            if _severity == "minor":
-                household.log.append((scenario.year, LogLine(
-                    "project_failed",
-                    "%s %s %s: lost %s, %d%% of the hours to redo; "
-                    "attempt %d, next attempt's live chance of failing %d%%."
-                    % (FAILED_PREFIX, node["name"], MINOR_MARK,
-                       money_text(max(0.0, _lost), self, grouped=True),
-                       round(self.FAILURE_RESET_SHARE * 100),
-                       projects.failed_attempts[node_id] + 1,
-                       round(_next_risk * 100)) + (" " + _diagnosis if _diagnosis else ""),
-                    project=node_id, severity="minor", lost=max(0.0, _lost))))
-                return
-            household.log.append((scenario.year, LogLine(
-                             "project_failed", FAILED_PREFIX + " %s: it did not work. What failed: %s. "
-                             "%d%% of the hours "
-                             "are to do again (%s of your own) and %s is gone. "
-                             "Attempt %d. %s the next attempt's live chance of failing "
-                             "(the figure `risk`, `why` and `portfolio` now quote) "
-                             "is %d%%, down from the %d%% this attempt "
-                             "just faced, and %.1f of the %.1f years already "
-                             "spent count toward next time's wait. %s"
-                             % (node["name"], failure_cause(self, node_id),
-                                round(self.FAILURE_RESET_SHARE * 100),
-                                plain_number(node["ph"] * self.FAILURE_RESET_SHARE),
-                                money_text(max(0.0, _lost), self, grouped=True),
-                                projects.failed_attempts[node_id] + 1,
-                                "What went wrong is now understood well enough that"
-                                if failure_teaches(self, node_id) else "Nothing was learned, so",
-                                round(_next_risk * 100),
-                                round(_risk_this_attempt * 100),
-                                _banked, _yrs_before, _diagnosis),
-                             project=node_id, severity="major", lost=max(0.0, _lost))))
+            self._fail_attempt(node_id, _risk_this_attempt)
             return
         goal_before = self.goal_snapshot()
         del projects.active[node_id]
@@ -375,6 +297,94 @@ class CompletionMixin:
         unit="fraction of real-erosion hazard removed",
         source="your own silver", confidence="D", why=_HAZARD_COUNTER_WHY)
     # HAZARD_COUNTERS: {kind: [(node, share, label)]} from each node's `hazard_counters` (MechanicsMixin).
+
+    def _fail_attempt(self, node_id, _risk_this_attempt):
+        """A project's roll failed: count the attempt, bank part of the calendar, charge the loss within what the
+        purse and credit line bear, and log it. A bounty's claimant redoes the work at no cost to the poster."""
+        node = self.nodes[node_id]
+        projects = self.state.projects
+        household = self.state.household
+        scenario = self.state.scenario
+        _yrs_before = projects.active[node_id]["yrs"]
+        projects.failed_attempts[node_id] += 1
+        _diagnosis = note_failure(self, node_id)
+        if failure_teaches(self, node_id):
+            self.learn_from_failed_attempt(node_id)
+        claimed = node_id in projects.bountied
+        # A bounty's claimant redoes the work: the poster's prize holds and
+        # no hours or money fall on the poster.
+        projects.active[node_id]["ph_left"] = (
+            0.0 if claimed else
+            node["ph"] * self.rebuild_work_factor(node_id) * self.FAILURE_RESET_SHARE)
+        # THE CALENDAR CLOCK IS NOT WIPED: a failed attempt must not
+        # reset the multi-year diffusion clock to zero, restarting the
+        # whole process from nothing. Even ONE failed attempt already
+        # does real social groundwork (workshops retooled, a workforce
+        # that has seen it once, a regulator who already sat through
+        # the pitch), so the first failure already banks a real share
+        # of the elapsed clock, not zero - it is the risk term above,
+        # not this one, that has nothing to show after only one
+        # failure. What this banks keeps growing, with diminishing
+        # returns, as failed_attempts[node_id] grows, and is capped well
+        # short of the whole clock (RETRY_CALENDAR_CAP) so a retried
+        # programme is only ever readier, never instantly ready.
+        _retain = self._retry_calendar_retain(node_id)
+        projects.active[node_id]["yrs"] = _yrs_before * _retain
+        _lost = 0.0 if claimed else self.failure_loss(node_id)
+        _severity = self.failure_severity(node_id, max(0.0, _lost), self.funding_capacity())
+        # What the purse and the credit line left cannot bear is not forgiven: it is added to what the project still costs, paid through the gated instalments.
+        _borne = self.bearable_part_of(_lost)
+        self.pay_edge(edges.EDGE_DESTROYED, _borne, "failure losses")
+        if not claimed:
+            for _loss_line in self.lose_what_was_risked(node_id):
+                household.log.append((scenario.year, LogLine("failure_loss", "%s: %s" % (node["name"], _loss_line))))
+        projects.active[node_id]["cost_left"] = (projects.active[node_id].get("cost_left") or 0.0) + (_lost - _borne)
+        # A failure always announces itself; its size sets how loudly.
+        _next_risk = self.effective_risk(node_id)
+        _banked = projects.active[node_id]["yrs"]
+        if claimed:
+            household.log.append((scenario.year, LogLine(
+                "project_failed",
+                "%s %s: the claimant's attempt failed. The prize you posted holds "
+                "and they try again (attempt %d, chance of failing %d%%); nothing "
+                "more falls on you."
+                % (FAILED_PREFIX, node["name"],
+                   projects.failed_attempts[node_id] + 1, round(_next_risk * 100)),
+                project=node_id, severity="claimed", lost=0.0)))
+            return
+        if _severity == "minor":
+            household.log.append((scenario.year, LogLine(
+                "project_failed",
+                "%s %s %s: lost %s, %d%% of the hours to redo; "
+                "attempt %d, next attempt's live chance of failing %d%%."
+                % (FAILED_PREFIX, node["name"], MINOR_MARK,
+                   money_text(max(0.0, _lost), self, grouped=True),
+                   round(self.FAILURE_RESET_SHARE * 100),
+                   projects.failed_attempts[node_id] + 1,
+                   round(_next_risk * 100)) + (" " + _diagnosis if _diagnosis else ""),
+                project=node_id, severity="minor", lost=max(0.0, _lost))))
+            return
+        household.log.append((scenario.year, LogLine(
+                         "project_failed", FAILED_PREFIX + " %s: it did not work. What failed: %s. "
+                         "%d%% of the hours "
+                         "are to do again (%s of your own) and %s is gone. "
+                         "Attempt %d. %s the next attempt's live chance of failing "
+                         "(the figure `risk`, `why` and `portfolio` now quote) "
+                         "is %d%%, down from the %d%% this attempt "
+                         "just faced, and %.1f of the %.1f years already "
+                         "spent count toward next time's wait. %s"
+                         % (node["name"], failure_cause(self, node_id),
+                            round(self.FAILURE_RESET_SHARE * 100),
+                            plain_number(node["ph"] * self.FAILURE_RESET_SHARE),
+                            money_text(max(0.0, _lost), self, grouped=True),
+                            projects.failed_attempts[node_id] + 1,
+                            "What went wrong is now understood well enough that"
+                            if failure_teaches(self, node_id) else "Nothing was learned, so",
+                            round(_next_risk * 100),
+                            round(_risk_this_attempt * 100),
+                            _banked, _yrs_before, _diagnosis),
+                         project=node_id, severity="major", lost=max(0.0, _lost))))
+        return
 
     def lose_what_was_risked(self, node_id):
         """Take the crew, hull and cargo a failed attempt put at risk. Returns the log lines saying what went."""
