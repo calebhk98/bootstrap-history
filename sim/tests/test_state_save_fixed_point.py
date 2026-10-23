@@ -33,6 +33,12 @@ class SaveIsAFixedPoint(unittest.TestCase):
         self.assertEqual((loaded.household.capital, loaded.scenario.year, loaded.projects.done),
                          (1250.0, 115, {"stone_cutting", "bronze"}))
 
+    def test_the_record_of_what_has_been_explained_once_survives(self):
+        state = built_state()
+        state.seat_progress._said_explanations = {"staffing_share": 100}
+        loaded = deserialize_state(json.loads(json.dumps(serialize_state(state))))
+        self.assertEqual(loaded.seat_progress._said_explanations, {"staffing_share": 100})
+
 
 if __name__ == "__main__":
     unittest.main()
