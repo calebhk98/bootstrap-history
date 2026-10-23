@@ -1,6 +1,6 @@
 """The rules behind the Mexica, England, Rome and break testers' findings on a project's accounting, hazard advice, the
 revenue ledger and how hazards are reported (Complaint 640: each rule is called on inputs built here; the checks that
-need a played game are in test_training_ledger_and_hazard_reports_scenario).
+need a played game are rule tests in test_bondage_training_lag, test_staffing_ceiling and test_explain_cost_factors).
 
 Held elsewhere: a project can never be given back more hours than it has spent, and says it is in arrears when it is
 (`fund_year`, test_arrears_hours); a failed attempt is announced as one project_failed line (test_completion_messaging);

@@ -2,6 +2,11 @@
 from collections import Counter
 
 
+def rows_of_years_stepped(rows, first_year_stepped):
+    """The audit rows from the years this step played: an older year's row is not repeated in the next step."""
+    return [row for row in rows if row["year"] >= first_year_stepped]
+
+
 def automation_lines(rows):
     """One line per policy and action with its count and capital; `automation` has the detail."""
     if not rows:
