@@ -1,4 +1,4 @@
-"""Scenario, Complaint 345 in a game (the rules are in test_firm_count_from_costs): the number of firms in a niche follows what a firm carries (site rent from the
+"""Scenario, Complaint 345 in a game (the rules are in test_firm_count_from_costs; a derived concern's crew is test_firm_crew_rule): the number of firms in a niche follows what a firm carries (site rent from the
 engine's land price while the economy opens, a manager's hours) against what the market pays, with no
 cap on entrants a year. Slow topic: it builds games and runs decades.
 
@@ -81,17 +81,6 @@ check("a market at least twice the size never holds fewer firms",
       all(final_counts[large] >= final_counts[small] for small in MARKET_REVENUES for large in MARKET_REVENUES
           if large >= 2.0 * small), final_counts)
 check("the largest market holds more firms than the smallest", final_counts[MARKET_REVENUES[-1]] > final_counts[MARKET_REVENUES[0]], final_counts)
-
-# a concern whose data states a plant is crewed by what its lines ask of staff, whatever its takings
-derived_id = next(node_id for node_id in sorted(big_game.nodes)
-                  if big_game.nodes[node_id].get("_revenue_basis") == "output"
-                  and sum(big_game.nodes[node_id]["_labour_hours_per_year"].values()) > 0.0)
-derived_world = SimWorld(big_game)
-crew_before = sum(derived_world.concern_staff(derived_id).values())
-expected_crew = sum(big_game.nodes[derived_id]["_labour_hours_per_year"].values()) / big_game.HOURS_PER_PERSON_YEAR
-big_game.nodes[derived_id]["rev"] *= 3.0
-check("a derived concern's crew is its plant's hours over a person-year", abs(crew_before - expected_crew) < 1e-9, (crew_before, expected_crew))
-check("...and does not move with its takings", sum(derived_world.concern_staff(derived_id).values()) == crew_before)
 
 # entrants act on what the market pays now, not on a stale expectation that ignores the firms already
 # in: the count rises to what the market holds and stays near it, rather than overshooting and collapsing
