@@ -127,7 +127,50 @@
     "preexisting_targeted_failures": [
       "one_goods_market_scenario: identical stock-sale values on both trees",
       "population_farm_technique_scenario: identical values on both trees"
-    ]
+    ],
+    "candidate_40_year_trace_prefix": {
+      "method": "Apply the baseline settling and money-replacement rules to the first 40 rows of the completed 60-year trace; not a separate full-suite run",
+      "settling": [
+        {
+          "name": "price_level",
+          "largest_step": 1.3163948885293815,
+          "trend_per_year": 0.0743262847622549,
+          "monotone_share": 0.5,
+          "step_bound": 0.15,
+          "trend_bound": 0.01,
+          "settled": false
+        },
+        {
+          "name": "wage",
+          "largest_step": 0.6011042696682776,
+          "trend_per_year": 0.05680859854436497,
+          "monotone_share": 0.8,
+          "step_bound": 0.15,
+          "trend_bound": 0.01,
+          "settled": false
+        },
+        {
+          "name": "money_supply",
+          "largest_step": 0.022085508520895303,
+          "trend_per_year": -0.009436200969506989,
+          "monotone_share": 0.9,
+          "step_bound": 0.15,
+          "trend_bound": 0.01,
+          "settled": true
+        },
+        {
+          "name": "rate",
+          "largest_step": 0.24671676663138706,
+          "trend_per_year": 0.004159345683962398,
+          "monotone_share": 0.2,
+          "step_bound": 0.02,
+          "trend_bound": 0.002,
+          "settled": false
+        }
+      ],
+      "money_replacement": 0.007655644642568902,
+      "money_replacement_bound": 0.9
+    }
   },
   "candidate_60_year_traces": {
     "method": "Fixed population/weather/technology; blank economy in spin-up; unchanged settling_report thresholds",
@@ -184,7 +227,47 @@
       }
     },
     "rome_100ad": {
-      "status": "Rerun in progress; previous run interrupted before completion"
+      "years": 60,
+      "method": "economy_port_trace.spin_up_trace(harness.sim(), 60); progress logging only",
+      "settling": [
+        {
+          "name": "price_level",
+          "largest_step": 1.2574376020140114,
+          "trend_per_year": 0.10998279934748303,
+          "monotone_share": 0.5,
+          "step_bound": 0.15,
+          "trend_bound": 0.01,
+          "settled": false
+        },
+        {
+          "name": "wage",
+          "largest_step": 1.744945464549937,
+          "trend_per_year": 0.006868246864208492,
+          "monotone_share": 0.7,
+          "step_bound": 0.15,
+          "trend_bound": 0.01,
+          "settled": false
+        },
+        {
+          "name": "money_supply",
+          "largest_step": 0.017754405181314326,
+          "trend_per_year": -0.010850158717665119,
+          "monotone_share": 1.0,
+          "step_bound": 0.15,
+          "trend_bound": 0.01,
+          "settled": false
+        },
+        {
+          "name": "rate",
+          "largest_step": 0.11219518923183719,
+          "trend_per_year": -0.0024137725356191894,
+          "monotone_share": 0.0,
+          "step_bound": 0.02,
+          "trend_bound": 0.002,
+          "settled": false
+        }
+      ],
+      "raw_rows": "economy-stationarity-clearing-rome-trace.json"
     }
   },
   "unfinished": [
