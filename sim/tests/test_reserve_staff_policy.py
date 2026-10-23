@@ -1,7 +1,7 @@
 """reserve_staff: the keep-N-spare part of complaint 176. `hold_staff_reserve` runs over the real labour mixin on a
 stand-in world (free hands, room, cash, a recorder for hires and housing, no game); the `reserve` command and its typed
-forms run on a household record. Years of play, housing bought and the save round trip are in
-test_reserve_staff_policy_scenario. The housing sum itself is held by test_auto_hire_buys_room."""
+forms run on a household record. The default and the save round trip are in
+test_reserve_staff_saved. The housing sum itself is held by test_auto_hire_buys_room."""
 from types import SimpleNamespace
 
 from .harness import check

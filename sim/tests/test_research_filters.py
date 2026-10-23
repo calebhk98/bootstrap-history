@@ -1,7 +1,6 @@
 """research_filters: the `available` state and tag filters and the search under fog, each called on the tree's own nodes
 with a stand-in game holding the done, active, startable and revealed sets (no game, and no sweep of can_start over
-the tree: Complaint 557). Tags are data and mods extend them. The command through a game is
-test_research_filters_scenario."""
+the tree: Complaint 557). Tags are data and mods extend them."""
 from types import SimpleNamespace
 
 from .harness import check, NODES, ROOT

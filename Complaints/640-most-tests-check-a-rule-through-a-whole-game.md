@@ -37,7 +37,7 @@ a plain function first (508). Start with the failing topics above, then the rest
   111 s "a technology that improves no entry" check is deleted (held by `test_engine_prices` gate tests); the file is the wiring
   scenario plus one named validation.
 - `saving_finds_a_use`: the paired whole-run "lent share doubles" is deleted (the two runs no longer differ); the rule is the
-  `goods_orders` test that an owner offers less idle cash. One validation remains.
+  `goods_orders` test that an owner offers less idle cash. The one validation (some savings are lent to producers in a fixture economy) is deleted: it asserted only a positive share; `economy-check` measures it.
 - `baseline_fixture`, `real_output_baseline`: kept as baseline validations (4.2), named so, failing on 473 with that message.
 - `spin_up_sensitivity`: now `simulator.py spin-up-sensitivity` (a measurement); its rules are `test_spin_up_sensitivity_rules.py`.
 
