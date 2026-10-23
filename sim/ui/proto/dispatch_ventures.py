@@ -13,7 +13,7 @@ import sim.engine.ui_port as ui_port
 from sim.refusal import LogLine
 from . import credit_forecast, venture_paging
 from .command_registry import command
-from .parallelism_notes import calendar_floor_note
+from .parallelism_notes import add_calendar_floor_note
 from .explain_once import already_explained
 import os
 import tempfile
@@ -174,10 +174,7 @@ def _cmd_start(sim, nodes, cmd, ended):
     # calendar floor is long enough that it cannot be the only thing in
     # hand for a while - not every multi-year start, which would be noise
     # by the fifth one.
-    _floor_note = calendar_floor_note(node["name"], node["yrs"], ui_port.said_parallelism(sim))
-    if _floor_note is not None:
-        ui_port.set_said_parallelism(sim, True)
-        out["a_calendar_floor_is_not_exclusive_research_time"] = _floor_note
+    add_calendar_floor_note(out, sim, node["name"], node["yrs"])
     if _warn_staff:
         out["but"] = _warn_staff
     # trade -> years until its first hands (None when nobody is on the way)
@@ -220,9 +217,7 @@ def _cmd_start(sim, nodes, cmd, ended):
     # would contradict `money`'s own "(none used)" reading of the same
     # moment.
     # Cash already has the materials paid at start taken out, so the gap is the instalments against it.
-    _borrowing = credit_forecast.borrowing_forecast(
-        instalments, materials_paid_now, sim.capital, sim.credit_limit, sim.debt_interest_rate,
-        sim.debt_service_forecast)
+    _borrowing = credit_forecast.start_credit_forecast(sim, instalments, materials_paid_now)
     if _borrowing is not None:
         out["on_credit"] = _borrowing
     # THE AGGREGATE ANSWER, NOT A SECOND ONE. `on_credit` just above
