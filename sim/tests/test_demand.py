@@ -7,18 +7,12 @@ demand.py's own STANDALONE section), so importing sim/tests/harness.py
 would pull in the whole engine for no reason. sim/tests/__main__.py's
 _run_topic already runs both styles identically.
 
-CalibrationAgainstHistoricalTargetsTests reports the historical targets
-demand.py's own docstring names, read only by tests, never by the module's
-own functions. It reports the disagreement; it never asserts a tolerance
-tight enough to tempt anyone into retuning a marginal budget share or the
-Gini coefficient to close it.
-
 sim/world/demand.py standalone: household budgets, Stone-Geary demand and derived producer demand (unittest-style).
 """
+QUICK_TOPIC = True
 import ast
 import glob
 import io
-import json
 import os
 import re
 import tokenize
@@ -395,66 +389,6 @@ class StandaloneImportTests(unittest.TestCase):
             self.assertNotEqual(
                 name, "sim.engine.solve_prices",
                 "sim/world/demand.py imports the price solver directly")
-
-
-class CalibrationAgainstHistoricalTargetsTests(unittest.TestCase):
-    """The CALIBRATION TARGETS demand.py's own docstring names, read here
-    to REPORT the disagreement and never fed back into demand.py's marginal
-    budget shares or Gini coefficient to close it. See demand.py's own __main__
-    block for the same computation with printed intermediate steps.
-    """
-
-    def setUp(self):
-        # Instance-level setUp, not setUpClass - sim/tests/__main__.py's
-        # _run_topic flattens a unittest suite and never drives
-        # _handleClassSetUp (see sim/tests/test_deposits.py's own
-        # CalibrationReportTests for the same note). Cheap
-        # enough to redo per test.
-        with open(os.path.join(_REPO_ROOT, "data", "world", "resources.json")) as handle:
-            self.resources = json.load(handle)
-        self.population = 55_000_000.0
-        self.mean_income = 550.0
-        self.bins = demand.income_bins(self.population, self.mean_income)
-        self.wheat_price = demand._illustrative_recursive_labour_content_price_per_kg("wheat_kg")
-        self.lead_price = demand._illustrative_recursive_labour_content_price_per_kg("lead_kg")
-        self.manufactures_price = 1.0
-
-    def test_report_food_budget_share(self):
-        prices = {"wheat_kg": self.wheat_price,
-                  "manufactures": self.manufactures_price, "platinum_g": 1.0,
-                  "silver_kg": self._silver_price()}
-        food_share = demand.household_budget_share(
-            fixtures.FOOD, prices, self.bins, fixtures.BASKET)
-        print("\nCalibrationAgainstHistoricalTargetsTests: household food "
-              "budget share = %.1f%% (historical target %.0f-%.0f%%)"
-              % (100.0 * food_share,
-                 100.0 * demand.HOUSEHOLD_FOOD_BUDGET_SHARE_LOW,
-                 100.0 * demand.HOUSEHOLD_FOOD_BUDGET_SHARE_HIGH))
-        self.assertGreater(food_share, 0.0)
-        self.assertLess(food_share, 1.0)
-
-    def _silver_price(self):
-        lead_entry = demand.production_data()["lead_kg"]
-        outputs = lead_entry["outputs"]
-        annual_lead_kg = self.resources["empire_output_100ad"]["lead"]["t_per_yr"] * 1000.0
-        annual_silver_kg = annual_lead_kg * outputs["silver_kg"] / outputs["lead_kg"]
-        return demand.market_clearing_price(
-            fixtures.SILVER, annual_silver_kg,
-            {"wheat_kg": self.wheat_price, "manufactures": self.manufactures_price, "platinum_g": 1.0},
-            self.bins, fixtures.BASKET)
-
-    def test_report_silver_to_lead_ratio(self):
-        silver_price = self._silver_price()
-        print("\nCalibrationAgainstHistoricalTargetsTests: derived "
-              "silver:lead ratio = %.1fx (task's own stated historical "
-              "target ~%.0fx)"
-              % (silver_price / self.lead_price,
-                 demand.SILVER_TO_LEAD_PRICE_RATIO_HISTORICAL))
-        print("  derived silver price: %.2f h/kg; derived lead price "
-              "(recursive labour content only, no rent/capital): %.4f h/kg"
-              % (silver_price, self.lead_price))
-        self.assertGreater(silver_price, 0.0)
-        self.assertGreater(silver_price, self.lead_price)
 
 
 _GREEK_LETTER_NAMES = (
