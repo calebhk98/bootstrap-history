@@ -6,7 +6,7 @@ from .harness import *  # noqa: F401,F403
 from sim.ui.proto.render_screen_state import render_state
 
 # --- 92: the risk reply carries the timing the rule works out for each hedge with a calendar floor
-england = sim(civ="england_1300", capital=1e6)
+england = unopened_sim(civ="england_1300", capital=1e6)
 risk = S._agent_dispatch(england, NODES, {"cmd": "risk"})
 timed = []
 for hazard in risk["knowledge_risk"]["known_hazards_ahead"]:
@@ -20,7 +20,7 @@ check("every hedge with a calendar floor carries its timing against the window i
       [step.get("timing") for _hazard, step in timed][:2])
 
 # --- 93: the money reply carries the four funding figures, and the capacity shown is the engine's
-funded = sim(civ="rome_100ad", capital=1e5)
+funded = unopened_sim(civ="rome_100ad", capital=1e5)
 money = S._agent_dispatch(funded, NODES, {"cmd": "money"})
 funding = money.get("funding") or {}
 check("money carries the four funding figures apart, and the capacity shown is the engine's",
@@ -30,7 +30,7 @@ check("money carries the four funding figures apart, and the capacity shown is t
       and abs(funding.get("already_committed", -1) - funded.committed_spend()) < 0.2, funding)
 
 # --- 86: why lists the living stock a node rests on, held beside needed, and a herd not held is a supply blocker
-mexica = sim(civ="mexica_1500", capital=1e6)
+mexica = unopened_sim(civ="mexica_1500", capital=1e6)
 treadmill = S._agent_dispatch(mexica, NODES, {"cmd": "why", "id": "pwr_animal_treadmill"})
 gate = (treadmill.get("living_stock") or [{}])[0]
 check("why lists the living stock a node rests on, held beside needed, brought by its node, as a supply blocker",
@@ -47,7 +47,7 @@ check("once the animals are held the same line shows them held and no supply blo
       (herd_held["living_stock"], herd_held["blockers"]))
 
 # --- 97: the opening state reads situation, goal, risks, then the detail
-opening = sim(civ="rome_100ad")
+opening = unopened_sim(civ="rome_100ad")
 opening_text = render_state(S._agent_dispatch(opening, NODES, {"cmd": "state", "full": True})).splitlines()
 
 

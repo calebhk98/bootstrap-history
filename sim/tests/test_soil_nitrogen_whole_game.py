@@ -9,7 +9,7 @@ from sim.geography.api import crop_site, tiles_held
 
 class SoilNitrogenWholeGameTests(unittest.TestCase):
     def test_a_year_of_cropping_draws_the_held_cropland_down(self):
-        game = sim(civ="rome_100ad", events=False)
+        game = unopened_sim(civ="rome_100ad", events=False)
         self.assertEqual(game.state.economy.soil_nitrogen, {})
         game.step_soil_nitrogen()
         cropped = [tile for tile in tiles_held(game.civ, game.world_map)
@@ -19,7 +19,7 @@ class SoilNitrogenWholeGameTests(unittest.TestCase):
         self.assertTrue(all(0.0 < stock[tile] < 1.0 for tile in cropped))
 
     def test_a_worn_tile_feeds_fewer_people(self):
-        game = sim(civ="rome_100ad", events=False)
+        game = unopened_sim(civ="rome_100ad", events=False)
         before = game.society_food_potential()
         game.state.economy.soil_nitrogen = {tile: 0.3 for tile in tiles_held(game.civ, game.world_map)}
         after = game.society_food_potential()
