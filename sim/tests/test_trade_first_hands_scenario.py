@@ -5,7 +5,7 @@ from sim.engine.projects_trade_wait import STALL_YEARS_BEFORE_ABANDONMENT, years
 from .agent_command_helpers import ask_agent
 
 COUNT = 2
-game = sim(civ="rome_100ad", capital=500000)
+game = unopened_sim(civ="rome_100ad", capital=500000)
 ask_agent(game, cmd="train", trade="machinist", n=COUNT)
 rows = [row for row in game.state.household.training if row[2] == "machinist"]
 check("the cohort is written as an early slice and the rest", len(rows) == 2, rows)

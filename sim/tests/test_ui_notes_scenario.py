@@ -12,7 +12,7 @@ def ask(**fields):
     return S._agent_dispatch(game, NODES, fields)
 
 
-game = sim()
+game = unopened_sim()
 visible = next(node_id for node_id in sorted(NODES) if game.is_visible(node_id))
 added = ask(cmd="note", text="%s because grain is short" % visible)["added"]
 check("a note written to a played game carries the year and the attached project",

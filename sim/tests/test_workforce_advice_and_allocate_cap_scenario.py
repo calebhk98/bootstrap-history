@@ -9,7 +9,7 @@ from .harness import *  # noqa: F401,F403
 class AllocateUseful(unittest.TestCase):
 
     def _household_with_small_project(self):
-        household = sim(civ="rome_100ad", capital=1e7)
+        household = unopened_sim(civ="rome_100ad", capital=1e7)
         node_id = next(iter(NODES))
         node = NODES[node_id]
         household.active[node_id] = dict(ph_left=360.0, yrs=0.0, spent=0.0, cost_left=0.0,
