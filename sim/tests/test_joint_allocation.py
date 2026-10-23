@@ -3,6 +3,8 @@
 The split reads no demand: a reference price comes from the caller, else from the cheapest sole-output route
 that makes the good, else the output is valued by its mass.
 """
+QUICK_TOPIC = True
+
 import functools
 import unittest
 import warnings

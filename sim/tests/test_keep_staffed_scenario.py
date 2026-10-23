@@ -10,7 +10,7 @@ CONCERN = "mirror_amalgam"   # needs a glassblower foreman
 
 def _lost_foreman_sim():
     """A household running CONCERN whose only glassblower has just died."""
-    test_sim = sim(capital=5_000_000)
+    test_sim = unopened_sim(capital=5_000_000)
     test_sim.trades_created.add("glassblower")
     test_sim.done.add(CONCERN)
     test_sim.operating.add(CONCERN)
