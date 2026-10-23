@@ -4,9 +4,11 @@ The typed `urban_fraction` seeds the opening's split among the regions; afterwar
 bounds it. Every reader goes through `Sim.urban_fraction`."""
 import json
 import os
+import tempfile
 import unittest
 from unittest import mock
 
+from sim.engine.saveload import load_state, save_state
 from sim.tests.harness import unopened_sim
 from sim.tests.urban_share_opening import BANDS_PATH
 from sim.world import urban_share
@@ -59,7 +61,14 @@ class OpeningTests(unittest.TestCase):
     def test_the_share_survives_a_save(self):
         game = unopened_sim("rome_100ad")
         game.urban_fraction()
-        self.assertEqual(sorted(game.state.population.urban_share_of_people), sorted(game._people_for_urban_share()))
+        shares = dict(game.state.population.urban_share_of_people)
+        self.assertTrue(shares)
+        path = os.path.join(tempfile.mkdtemp(), "save.json")
+        save_state(game, path)
+        reloaded = unopened_sim("rome_100ad")
+        load_state(reloaded, path)
+        self.assertEqual(reloaded.state.population.urban_share_of_people, shares)
+        self.assertEqual(reloaded.urban_fraction(), game.urban_fraction())
 
 
 if __name__ == "__main__":

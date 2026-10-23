@@ -11,7 +11,7 @@ def ask(**fields):
     return S._agent_dispatch(game, NODES, fields)
 
 
-game = sim()
+game = unopened_sim()
 report = ask(cmd="goals")
 other = report["choices"][0]
 reply = ask(cmd="goals", action="watch", goal=other["name"])

@@ -4,11 +4,11 @@ test_ui_step_automation_line."""
 from sim.ui.proto.render_screen_step import render_step
 from sim.ui.protocol import _agent_dispatch
 
-from .harness import NODES, check, sim
+from .harness import NODES, check, unopened_sim
 
 def _game():
     """A game whose year skips the market clearing (most of a step's cost): these checks read the step reply, not prices."""
-    test_sim = sim(surveyed=())
+    test_sim = unopened_sim(surveyed=())
     test_sim._step_market = lambda: None
     return test_sim
 

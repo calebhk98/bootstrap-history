@@ -3,7 +3,7 @@ a standing order. The remedy and the money text are in test_wage_work_ledger."""
 from .harness import *  # noqa: F401,F403
 
 # --- complaint 144: one-off wage work -------------------------------------
-_game = sim()
+_game = unopened_sim()
 
 
 def _ask(**command):

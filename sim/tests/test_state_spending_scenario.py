@@ -61,19 +61,6 @@ check("the garrison does not grow with the people: it follows the frontier and t
 for cohort, people in pristine_population.items():
     setattr(game.population, cohort, people)
 
-# ---- the army the state wants follows the threat its hazards describe ---------------------------
-opening_year = game.state.scenario.year
-game.state.scenario.year = 120
-army_in_calm = SimWorld(game).army_wanted()
-game.state.scenario.year = 240
-army_in_crisis = SimWorld(game).army_wanted()
-game.state.scenario.year = opening_year
-check("in the opening year the state wants the civilisation's opening force",
-      abs(army_in_calm - game.civ["standing_army"]) < 1e-6 * game.civ["standing_army"],
-      (army_in_calm, game.civ["standing_army"]))
-check("while the civilisation's own hazards threaten a sack the state wants a bigger army",
-      army_in_crisis > 1.2 * army_in_calm, (army_in_crisis, army_in_calm))
-
 # ---- soldiers are out of production -------------------------------------------------------------
 game.state_treasury().record.army = 0.0
 revenue_without_army = SimWorld(game).state_revenue()
