@@ -7,7 +7,7 @@
 Owner decision: the concern was a price hundreds of times the recipe cost. The full slow run on 3cb9c9a0 read the worst aged-game
 year at a few times cost, which is accepted while the opening does not settle (473). The validation's bound is now an order of
 magnitude (`MARKUP_BOUND` in `sim/tests/test_economy_bronze_market_price.py`), so it catches a runaway and passes thin-market
-noise. Measure: `python3 -m sim.tests --slow --only economy_bronze_market_price --jobs 1`.
+noise. Measure: `python3 sim/simulator.py opening-checks --civs rome_100ad` (prices over making cost); the rules are held by `test_economy_thin_market_price`, `test_economy_dead_market_memory`, `test_economy_seller_markup_limit` and `test_economy_state_need_bids_substitute`.
 
 ## Reopened (earlier the same day)
 

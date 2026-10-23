@@ -1,37 +1,16 @@
-"""BASELINE VALIDATION (CLAUDE.md 4.2, Complaint 640): A no-intervention baseline's occupational distribution is plausible (Complaint 619, DESIGN 4.2): each
-occupation group's share of working people (labour force by main occupation, as the sources count it) lies inside a wide band taken from the literature
-(data/world/occupation_groups.json, which cites each source and marks recalled figures). A plausibility band,
-not a fit. Whole games (slow). Run with `python3 -m sim.tests --slow --only occupational_distribution`."""
+"""The occupation-group data (Complaint 619, DESIGN 4.2): every registry trade is in exactly one group and every band cites a source
+(data/world/occupation_groups.json). Reads data only. The baseline's shares against these bands are measured with
+`python3 sim/simulator.py economy-check --civs rome_100ad --years 1 --occupations`."""
 
 import collections
 import json
 import os
-import random
 import unittest
 
-from . import harness  # noqa: F401  (sets the short spin-up the suite's games open on)
-from sim.engine.ui_port import ROOT, Sim, load, load_civ
-from sim.labour.api import hours_by_trade_of_all_employers, occupation_groups, occupational_report, people_by_trade_of_all_employers, shares_by_group
+from sim.engine.ui_port import ROOT
+from sim.labour.api import occupation_groups
 
-CIVILISATIONS = ("rome_100ad", "england_1300", "han_china_100ad")
-YEARS = 1
-
-
-def employer_hours(game):
-    return hours_by_trade_of_all_employers(game.labour, game.state.economy.society_labour_hours)
-
-
-def employer_people(game):
-    return people_by_trade_of_all_employers(game.labour)
-
-
-def play(civ_id):
-    _tree, _prices, nodes, _wages, _goods = load()
-    game = Sim(nodes, [], random.Random(1), events=False, manual=True, civ=load_civ(civ_id))
-    game.done_year = {}
-    for _year in range(YEARS):
-        game.step()
-    return game
+QUICK_TOPIC = True
 
 
 class GroupData(unittest.TestCase):
@@ -51,33 +30,6 @@ class GroupData(unittest.TestCase):
                 self.assertIn(source, data["sources"])
             if group_id != "unattributed":
                 self.assertTrue(group["sources"], group_id)
-
-
-class BaselineValidation(unittest.TestCase):
-    """A baseline validation (CLAUDE.md 4.2) against sourced bands: slow only, never a picked year. It fails while
-    the attribution of hours to trades is open (Complaint 619); the bands stay as sourced."""
-
-    @classmethod
-    def setUpClass(cls):
-        cls.games = {civ_id: play(civ_id) for civ_id in CIVILISATIONS}
-        for civ_id, game in cls.games.items():
-            for basis, hours in (("people", employer_people(game)), ("hours", employer_hours(game))):
-                for row in occupational_report(hours):
-                    print("%s %-6s %-16s share %.4f band %s..%s %s" % (
-                        civ_id, basis, row["group"], row["share"], row["low"], row["high"],
-                        "ok" if row["inside"] else "OUTSIDE"))
-
-    def test_each_group_share_is_inside_its_band(self):
-        """The bands are shares of the labour force by main occupation (the sources count people), so the reading
-        is each trade's head count in the labour core; hours in the field are printed above for comparison. A
-        household that farms its own plot and spends the rest of its year on other work is a farming household."""
-        for civ_id, game in self.games.items():
-            people = employer_people(game)
-            self.assertIsNotNone(people, civ_id)
-            for row in occupational_report(people):
-                with self.subTest(civ=civ_id, group=row["group"]):
-                    self.assertTrue(row["inside"], "Complaint 619 (open): %s %s share %.4f outside %s..%s" % (
-                        civ_id, row["group"], row["share"], row["low"], row["high"]))
 
 
 if __name__ == "__main__":

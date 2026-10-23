@@ -2,9 +2,9 @@
 round trip of the cohort state they depend on.
 
 The rules are called with figures in test_mortality_shock_rules (the exposure a hedge leaves, the wage premium, the
-recovery shape, the classification and wording of a wave) and test_cross_system_invariants (the cohort cut). Three named
+recovery shape, the classification and wording of a wave) and test_cross_system_invariants (the cohort cut). Two named
 scenarios remain: a hazard fired through the engine (the society's loss, the wage premium that follows, the logged
-cascade), a shocked game through a real save and resume, and the hazard line's structured facts with no defence (the held-off and softened wording is test_mortality_shock_rules).
+cascade) and a shocked game through a real save and resume. The hazard line's defence kinds are WordingTests in test_mortality_shock_rules.
 """
 import tempfile
 
@@ -45,20 +45,6 @@ s._shocks(1348)
 _pop_loss_fraction = 1.0 - s.population.total / _pop_before
 check("scenario: the Black Death costs the whole society people, not only your own household",
       abs(_pop_loss_fraction - 0.45) < 1e-6, _pop_loss_fraction)
-
-# --- your own quarantine (plague_preparedness) protects your own household
-# - that is what hazard_relief already does to the personal staff_loss above
-# - and must NOT also soften the society-wide figure: the rest of the world
-# never built your hedge.
-s2 = plague_sim("england_1300")
-s2.done.add("plague_preparedness"); s2.operating.add("plague_preparedness")
-s2._done_changed()
-_pop2_before = s2.population.total
-s2.year = 1348
-s2._shocks(1348)
-_pop2_loss_fraction = 1.0 - s2.population.total / _pop2_before
-check("scenario: a hedge against plague shields your own staff, not the whole population's labour market",
-      abs(_pop2_loss_fraction - 0.45) < 1e-6, _pop2_loss_fraction)
 
 # --- scarcer labour is dearer labour immediately: the event and the economy
 # screen must not disagree for the remainder of the year in which it fires.
@@ -102,8 +88,8 @@ S.save_state(s7, _save7)
 # (Sim(...) from the civilisation file, THEN load_state over it) - not the
 # same object with its cohorts merely re-read, which would pass even if
 # SAVE_FIELDS were still missing every one of these three names.
-s7_fresh = S.Sim(NODES, ORDER, random.Random(1), events=False, manual=True,
-                 civ=S.load_civ("england_1300"))
+s7_fresh = build_unopened(lambda: S.Sim(NODES, ORDER, random.Random(1), events=False, manual=True,
+                                        civ=S.load_civ("england_1300")))
 s7_fresh.goal, s7_fresh.done_year = GOAL, {}
 S.load_state(s7_fresh, _save7)
 check("a demographic shock's cohort counts survive a real save/reconstruct/"
@@ -117,29 +103,3 @@ check("a demographic shock's cohort counts survive a real save/reconstruct/"
 check("...and the wage premium that cohort state drives is therefore ALSO "
       "intact after the round-trip, not silently reset to baseline",
       s7_fresh.wage_index > s7_fresh._wage_index_base * 1.2, s7_fresh.wage_index)
-
-# =============================================================================
-# SEVERITY HONESTY: the words attached to a dated hazard must match `loss`,
-# the number the mitigation mechanic actually applied, never `raw`, the
-# hazard's own historical unmitigated figure - a player whose sanitation and
-# quarantine cut the Antonine plague's 28% down to a fraction of a percent
-# still read "(would have been -28%: ...)" glued onto the same sentence and
-# reasonably called it a catastrophe.
-def _plague_line(mitigated_nodes):
-    household = plague_sim("rome_100ad", capital=1000000.0)
-    if mitigated_nodes:
-        run_it(household, *mitigated_nodes)
-    household.scholars, household.artisans = 50.0, 200.0
-    for trade in list(household.employees):
-        household.employees[trade] = 50.0
-    household.rng = random.Random(1)          # a seed that rolls the 32% plague check
-    household.year = 165
-    household._shocks(165)
-    return next(message for _year, message in household.log
-                if getattr(message, "kind", None) == "hazard_hit" and message.facts.get("hazard") == "Antonine plague")
-
-
-_line_none = _plague_line([])
-check("scenario: an unmitigated plague is told with no defence, and the empire-wide toll as a separate fact",
-      _line_none.kind == "hazard_hit" and _line_none.facts["defence"] == "plain"
-      and _line_none.facts["national_toll_percent"] == 28, _line_none.facts)

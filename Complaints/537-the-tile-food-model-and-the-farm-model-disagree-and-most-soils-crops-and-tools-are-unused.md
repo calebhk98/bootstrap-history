@@ -175,3 +175,8 @@ Each item names the code that holds it (re-measure before acting; `grep` the nam
   fails before this change (10.36) and after (11.40).
 
 Measure the century of an unshocked Rome (mean nutrition ratio and the population left; the slow `agriculture_wiring_scenario` baseline validations removed in Complaint 640's pass, a century run that named no function) with `python3 sim/simulator.py baseline-ensemble`. The farm-year-to-people seam is rule-tested in test_demographic_recovery_wiring.
+
+Test migration (slow-test overhaul): `test_norse_opening_scenario` is deleted. The cause it guarded is the rule test
+`test_tillage_and_silt`, and the farm share of hours is `LabourAllocationMixin.farm_share_of_hours` (`test_farm_share_of_hours`). The
+Norse opening's farm share against its ceiling is measured by `python3 sim/simulator.py economy-check --civs norse_900ad --years 1`
+(hunger and hired share) and `python3 sim/simulator.py opening-checks`. The crop-yield wiring is `test_opening_fixture_supply`.

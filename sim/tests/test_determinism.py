@@ -26,8 +26,11 @@ milliseconds, and catches the whole class rather than the one instance hit.
 
 Guards the id()-reuse hazard behind non-determinism; structural, so it catches the class.
 """
+QUICK_TOPIC = True
+
 import ast
 import os
+import re
 import unittest
 
 from .source_dirs import engine_side_dirs
@@ -92,6 +95,10 @@ def _engine_files():
     return files
 
 
+# A file whose text has no bare `id` token cannot hold an `id` name, so only the rest are parsed.
+BARE_ID = re.compile(r"(?<![\w.])id\b")
+
+
 def _read(path):
     with open(path, encoding="utf-8") as handle:
         return handle.read()
@@ -120,8 +127,10 @@ class EngineIdUseTests(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.files = _engine_files()
-        cls.reports = {path: _id_call_report_of(_read(path)) for path in cls.files}
+        sources = {path: _read(path) for path in _engine_files()}
+        cls.files = [path for path, source in sources.items() if BARE_ID.search(source)]
+        cls.sources = sources
+        cls.reports = {path: _id_call_report_of(sources[path]) for path in cls.files}
 
     def test_no_engine_code_compares_or_stores_a_bare_id(self):
         suspects = ["%s:%d" % (os.path.relpath(path, ROOT), line)
@@ -130,7 +139,7 @@ class EngineIdUseTests(unittest.TestCase):
 
     def test_no_engine_code_passes_or_stores_the_builtin_id_as_a_value(self):
         aliases = ["%s:%d" % (os.path.relpath(path, ROOT), line)
-                   for path in self.files for line in _id_aliases(_read(path))]
+                   for path in self.files for line in _id_aliases(self.sources[path])]
         self.assertEqual(aliases, [])
 
     def test_the_id_keyed_caches_that_remain_are_still_there(self):
@@ -143,7 +152,7 @@ class EngineIdUseTests(unittest.TestCase):
         for path, (allowed, _suspect) in self.reports.items():
             if not allowed:
                 continue
-            source = _read(path)
+            source = self.sources[path]
             self.assertTrue(" is nodes" in source or " is demand" in source or "is not None and hit[0] is" in source
                             or "entry[0] is" in source, os.path.relpath(path, ROOT))
 

@@ -1,6 +1,6 @@
 """Complaints/532: the engine's opening herds are the head the agent economy's herd producers keep (one figure). The
-arithmetic is called on producers and pasture the test states; the running game is in
-test_opening_herds_follow_producers_scenario."""
+arithmetic is called on producers and pasture the test states; the credit to the ledger is in
+test_opening_herds_grant."""
 import json
 import os
 
