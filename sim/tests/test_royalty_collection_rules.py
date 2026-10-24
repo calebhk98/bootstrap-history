@@ -7,7 +7,7 @@ from types import SimpleNamespace
 
 from sim.agents.licence import collect_patent_royalty, royalty_due
 from sim.engine.agents_port_disclosure import DisclosureView
-from sim.engine.seat_royalty import seat_royalties_due
+from sim.engine.seat_royalty import seat_royalties_due, seat_royalties_paid
 from sim.engine.state import ProjectsState
 from sim.tests.harness import check
 
@@ -114,6 +114,15 @@ check("seat_royalties_due: a seat that never disclosed it owes and is owed nothi
       seat_royalties_due({"alpha": seat(["loom"])}, "loom", "firm:2", 1000.0) == [])
 
 
+# ---- seat_royalties_paid: what the licensee's purse can pay of what the seats are owed
+check("seat_royalties_paid: a purse that covers every seat pays each in full",
+      seat_royalties_paid([("alpha", 100.0), ("beta", 250.0)], 1000.0) == [("alpha", 100.0), ("beta", 250.0)])
+check("seat_royalties_paid: a short purse pays the seats in joining order until it is empty",
+      seat_royalties_paid([("alpha", 100.0), ("beta", 250.0)], 150.0) == [("alpha", 100.0), ("beta", 50.0)])
+check("seat_royalties_paid: an empty purse pays nobody", seat_royalties_paid([("alpha", 100.0)], 0.0) == [])
+check("seat_royalties_paid: a licensee in debt pays nobody", seat_royalties_paid([("alpha", 100.0)], -5.0) == [])
+
+
 # ---- DisclosureView.collect_royalty: seats and the patent holder together, through the ledger
 def view_over(seats, parties, year=100):
 	seat_parties = {seat_id: Party(seat_id, 0.0) for seat_id in seats}
@@ -137,3 +146,10 @@ check("collect_royalty: with no seats and no holder there is nothing to collect"
 firm = firm_owing(0.1)
 view, _ = view_over({}, [holder_with(110)])
 check("collect_royalty: a patent holder alone is paid", DisclosureView.collect_royalty(view, firm, "loom", 1000.0) == 100.0 and firm.money == 900.0)
+firm = Party("firm:2", 150.0)
+two_seats = {"alpha": seat(["loom"], [], {"firm:2": {"royalty": 0.1}}), "beta": seat(["loom"], [], {"firm:2": {"royalty": 0.25}})}
+view, seat_parties = view_over(two_seats, [])
+paid = DisclosureView.collect_royalty(view, firm, "loom", 1000.0)
+check("collect_royalty: a firm short of money pays the seats only what its purse holds and never goes below zero",
+      paid == 150.0 and seat_parties["alpha"].money == 100.0 and seat_parties["beta"].money == 50.0 and firm.money == 0.0,
+      (paid, seat_parties["alpha"].money, seat_parties["beta"].money, firm.money))
