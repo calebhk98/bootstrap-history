@@ -3,13 +3,13 @@
 QUICK_TOPIC = True
 
 import math
+import types
 import unittest
+from unittest import mock
 
 from sim.economy import entry_trial
-from sim.economy.economy import Economy
 from sim.economy.producers import Producer
 from sim.economy.types import Bid, Recipe
-from sim.tests import economy_fixture as fixture
 
 SMELT = Recipe("smelt", {"metal": 10.0, "slag": 90.0}, {"ore": 100.0}, {"smith": 5.0},
                plant_goods={"stone": 2.0}, plant_life_years=10.0)
@@ -63,53 +63,79 @@ class CapacityTests(unittest.TestCase):
         self.assertEqual(totals[0], totals[1])
 
 
+GOOD, MAKE = "metal", "smelt_metal"
+MAKE_RECIPE = Recipe(MAKE, {GOOD: 1.0}, {"ore": 1000.0}, {"smith": 30.0})
+ANCHOR = "town"
+
+
+def market(makers=False, price=None):
+    """(setup, record, view, area_map) for a metal market of one area and one tile; `makers` puts a smelter there."""
+    setup = types.SimpleNamespace(recipes={MAKE: MAKE_RECIPE})
+    producers = {"smelter": Producer("smelter", "owner", MAKE, ANCHOR, 3.0)} if makers else {}
+    record = types.SimpleNamespace(producers=producers, expansion_runs={})
+    area = types.SimpleNamespace(area_id="area", anchor_tile=ANCHOR, tiles=(ANCHOR,))
+    area_map = types.SimpleNamespace(goods=lambda: [GOOD], areas=lambda good: [area])
+    return setup, record, types.SimpleNamespace(price=lambda good, area_id: price), area_map
+
+
+def trial_plans(bids, makers=False, siting=None, cost=80.0):
+    """trial_entry_plans for `bids` in the metal market, the cheapest recipe costing `cost` a unit (recipes_by_cost is tested above)."""
+    setup, record, view, area_map = market(makers)
+    with mock.patch.object(entry_trial, "recipes_by_cost", lambda *_args: [(MAKE, cost)]):
+        return entry_trial.trial_entry_plans(setup, record, view, area_map, {(GOOD, "area"): bids}, siting=siting)
+
+
+def metal_bid(floor, ceiling=1000.0):
+    return Bid("buyer", GOOD, "area", ANCHOR, floor, 0.0, 95.0, 1.0, 1e9, 0, ceiling)
+
+
+class RecipesByCostTests(unittest.TestCase):
+    def ranked(self, recipes, input_prices):
+        setup = types.SimpleNamespace(recipes=recipes, currency_id="coin")
+        view = types.SimpleNamespace(interest_rate=lambda currency: 0.05, price=lambda good, area: 100.0, area_of=lambda good, tile: "area")
+        with mock.patch.object(entry_trial, "site_rent_per_run", lambda *_args: 0.0), \
+                mock.patch.object(entry_trial, "live_input_prices_at", lambda *_args: input_prices), \
+                mock.patch.object(entry_trial, "live_wages_at", lambda *_args: {"smith": 1.0}):
+            return entry_trial.recipes_by_cost(setup, None, view, GOOD, ANCHOR, sorted(recipes))
+
+    def test_recipes_come_cheapest_first_at_their_full_cost_a_unit(self):
+        dear = Recipe("dear", {GOOD: 1.0}, {"ore": 2000.0}, {"smith": 30.0})
+        found = self.ranked({MAKE: MAKE_RECIPE, "dear": dear}, {"ore": 0.05})
+        self.assertEqual([recipe_id for recipe_id, _cost in found], [MAKE, "dear"])
+        self.assertAlmostEqual(found[0][1], 1000.0 * 0.05 + 30.0)
+
+    def test_a_recipe_with_an_unpriced_input_is_left_out(self):
+        self.assertEqual(self.ranked({MAKE: MAKE_RECIPE}, {}), [])
+
+
 class TrialPlanTests(unittest.TestCase):
     def test_no_newcomer_where_no_buyer_bid(self):
-        setup = fixture.small_setup()
-        economy = Economy(setup)
-        economy.step(fixture.quiet_year(setup))
-        bids = {(fixture.GRAIN, area.area_id): [] for area in economy.area_map.areas(fixture.GRAIN)}
-        self.assertEqual(entry_trial.trial_entry_plans(setup, economy.record, economy.view(), economy.area_map, bids), [])
+        self.assertEqual(trial_plans([]), [])
 
     def test_no_trial_newcomer_where_the_area_has_a_maker(self):
-        setup = fixture.small_setup()
-        economy = Economy(setup)
-        economy.step(fixture.quiet_year(setup))
-        bids = {(fixture.GRAIN, area.area_id): [bid(1000.0, 1e9)] for area in economy.area_map.areas(fixture.GRAIN)}
-        self.assertEqual(entry_trial.trial_entry_plans(setup, economy.record, economy.view(), economy.area_map, bids), [])
+        self.assertEqual(trial_plans([metal_bid(1000.0)], makers=True), [])
 
 
 class UnmetBidsDrawAMakerTests(unittest.TestCase):
     """Complaint 473: entry follows the bids' ceilings and quantities against the recipe's computed cost, for any good."""
 
-    def setUp(self):
-        self.setup = fixture.small_setup()
-        economy = Economy(self.setup)
-        economy.step(fixture.quiet_year(self.setup))
-        for producer_id in [each for each, producer in economy.record.producers.items()
-                            if producer.recipe_id == fixture.SMELT]:
-            del economy.record.producers[producer_id]
-        self.economy = economy
-        self.area = economy.area_map.areas(fixture.METAL)[0]
-
-    def plans(self, floor, ceiling, siting=None):
-        bid = Bid("buyer", fixture.METAL, self.area.area_id, self.area.anchor_tile, floor, 0.0, 95.0, 1.0, 1e9, 0, ceiling)
-        return entry_trial.trial_entry_plans(self.setup, self.economy.record, self.economy.view(), self.economy.area_map,
-                                             {(fixture.METAL, self.area.area_id): [bid]}, siting=siting)
-
     def test_bids_with_a_ceiling_under_the_recipes_entry_price_draw_no_maker(self):
-        self.assertEqual(self.plans(50.0, 1.0), [])
+        self.assertEqual(trial_plans([metal_bid(50.0, ceiling=1.0)]), [])
 
     def test_bids_that_meet_the_entry_price_draw_a_maker_sized_by_their_quantity(self):
-        small, large = self.plans(50.0, 1000.0), self.plans(100.0, 1000.0)
+        small, large = trial_plans([metal_bid(50.0)]), trial_plans([metal_bid(100.0)])
         self.assertEqual(len(small), 1)
-        self.assertEqual(small[0].tile, self.area.anchor_tile)
+        self.assertEqual(small[0].tile, ANCHOR)
         self.assertAlmostEqual(large[0].runs, 2.0 * small[0].runs)
 
     def test_a_trial_newcomer_is_built_where_the_siting_puts_it(self):
         # beside its inputs, which can be another market area: the area's buyers then wait on carriage (Complaint 473)
-        plans = self.plans(50.0, 1000.0, siting=lambda recipe_id, demand, runs: ("hills", runs))
+        plans = trial_plans([metal_bid(50.0)], siting=lambda recipe_id, demand, runs: ("hills", runs))
         self.assertEqual([plan.tile for plan in plans], ["hills"])
+
+    def test_a_maker_is_planned_only_when_the_bids_ceiling_is_over_its_cost_with_the_entry_margin(self):
+        dear = 1000.0 / (1.0 + entry_trial.ENTRY_PRICE_MARGIN_SHARE) + 1.0       # entry price just over the ceiling
+        self.assertEqual(trial_plans([metal_bid(50.0)], cost=dear), [])
 
 
 if __name__ == "__main__":
