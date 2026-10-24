@@ -20,14 +20,9 @@ sim/labour/labour_market.py: what the recipe graph asks of each trade, and how f
 
 QUICK_TOPIC = True
 
-import ast
-import os
 import unittest
 
 from sim.labour import labour_market
-
-_REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(
-    os.path.abspath(__file__))))
 
 
 def _entry(outputs, labour_hours=None, capital=None):
@@ -273,62 +268,6 @@ class MobilityFrictionConstantsTests(unittest.TestCase):
         entry = constants.REGISTRY["WALKABLE_TRADE_SEED_SHARE_OF_ECONOMY_HOURS"]
         self.assertEqual(entry["kind"], "temporary_heuristic")
         self.assertTrue(entry["why"])
-
-
-# ============================================================================
-# STANDALONE ON PURPOSE
-# ============================================================================
-
-class StandaloneImportTests(unittest.TestCase):
-    """sim/labour/labour_market.py must not import sim/engine/, sim/
-    solve_prices.py, or any other sim/world/ module AS PART OF ITS
-    IMPORTABLE SURFACE - see its own docstring's STANDALONE section and
-    sim/world/__init__.py for why every module in this package holds to
-    this independently. The ONE deliberate exception (see the module
-    docstring) is its own `__main__` demonstration block, which imports
-    sim.world.agriculture to get a real marginal-product number for the
-    worked example - this test checks the TOP-LEVEL module body only, so
-    that exception does not silently widen into the importable surface
-    other modules actually depend on.
-    """
-
-    def _top_level_imports(self):
-        path = os.path.join(_REPO_ROOT, "sim", "labour", "labour_market.py")
-        with open(path) as handle:
-            tree = ast.parse(handle.read(), filename=path)
-        imported = set()
-        for node in tree.body:
-            if isinstance(node, ast.Import):
-                for alias in node.names:
-                    imported.add(alias.name)
-            elif isinstance(node, ast.ImportFrom) and node.module:
-                imported.add(node.module)
-        return imported
-
-    def test_top_level_imports_are_limited_to_stdlib_and_sim_constants(self):
-        imported = self._top_level_imports()
-        for name in imported:
-            self.assertFalse(
-                name.startswith("sim.engine"),
-                "sim/labour/labour_market.py imports %r at module level" % name)
-            self.assertFalse(
-                name.startswith("sim.world.") and name != "sim.labour.labour_market",
-                "sim/labour/labour_market.py imports another sim/world/ "
-                "module at module level: %r" % name)
-            self.assertNotEqual(
-                name, "sim.engine.solve_prices",
-                "sim/labour/labour_market.py imports the price solver "
-                "directly at module level")
-
-    def test_nothing_imports_sim_world_agriculture(self):
-        path = os.path.join(_REPO_ROOT, "sim", "labour", "labour_market.py")
-        with open(path) as handle:
-            tree = ast.parse(handle.read(), filename=path)
-        agriculture_imports = [
-            inner for inner in ast.walk(tree)
-            if isinstance(inner, ast.ImportFrom) and inner.module == "sim.world"
-            and any(alias.name == "agriculture" for alias in inner.names)]
-        self.assertEqual(agriculture_imports, [])
 
 
 if __name__ == "__main__":

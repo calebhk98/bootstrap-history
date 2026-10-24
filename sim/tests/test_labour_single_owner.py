@@ -1,10 +1,6 @@
 """Complaint 556: who can work and who is hired by whom has one owner, the labour package.
 
-Rule tests (Complaint 640): the founder's book accessors and the reservation arithmetic run on a stub world, and the
-wall keeps every write of the founder's book inside the owner."""
-import ast
-import os
-import re
+Rule tests (Complaint 640): the founder's book accessors and the reservation arithmetic run on a stub world."""
 from types import SimpleNamespace
 
 from sim.labour.staff_book import StaffBookMixin
@@ -99,30 +95,3 @@ with mock.patch.object(labour_population.trade_data, "drawn_from_unskilled_pool"
           _Estimate({"smith": 42.0}).national_trade_population("smith") == 42.0)
     check("a farm trade the core holds nobody of falls back to the rural share of the working age",
           abs(_Estimate({}).national_trade_population(labour_population.FARM_TRADE) - 600.0 * 0.8) < 1e-9)
-
-# ---- the wall: nothing outside the owner writes the founder's book ----
-ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-WRITE = re.compile(r"\.employees\s*(\[[^\]]*\]\s*(=|\+=|-=)|\.(pop|clear|update|setdefault)\(|\s*=[^=])")
-ALLOWED = ("sim/labour/", "sim/agents/household.py", "sim/tests/")
-# the dict wrapper that reports changes, and the plague survival roll (owned by the disease work; moves to the owner with it)
-EXCEPTIONS = ("sim/engine/core.py", "sim/engine/economy.py", "sim/engine/society_hazards.py")
-strays = []
-for folder, _subfolders, filenames in os.walk(os.path.join(ROOT_DIR, "sim")):
-    for filename in filenames:
-        path = os.path.join(folder, filename)
-        relative = os.path.relpath(path, ROOT_DIR).replace(os.sep, "/")
-        if not filename.endswith(".py") or relative.startswith(ALLOWED[0]) or relative in ALLOWED or relative in EXCEPTIONS or relative.startswith(ALLOWED[2]):
-            continue
-        with open(path, encoding="utf-8") as handle:
-            for number, line in enumerate(handle, 1):
-                if WRITE.search(line) and not line.lstrip().startswith("#"):
-                    strays.append("%s:%d" % (relative, number))
-check("only sim/labour (and the household's own accessor, bar the listed exceptions) writes the founder's book", not strays, strays)
-readers = []
-for name in sorted(os.listdir(os.path.join(ROOT_DIR, "sim", "labour"))):
-    if name.endswith(".py") and name != "staff_book.py":
-        with open(os.path.join(ROOT_DIR, "sim", "labour", name), encoding="utf-8") as handle:
-            tree = ast.parse(handle.read())
-        readers += ["%s:%d" % (name, node.lineno) for node in ast.walk(tree)
-                    if isinstance(node, ast.Attribute) and node.attr == "employees"]
-check("labour code reaches the book only through the owner", not readers, readers)

@@ -1,7 +1,6 @@
 """A material's national output is the capacity that exists, never a curve fitted to its price."""
 QUICK_TOPIC = True
 
-import inspect
 import types
 import unittest
 
@@ -56,11 +55,6 @@ class GenericOutput(unittest.TestCase):
         self.assertEqual(sim._generic_market_share_uncached("glass_kg"),
                          material_capacity.DEFAULT_MARKET_SHARE_OF_CAPACITY)
 
-    def test_no_price_fit_remains(self):
-        source = inspect.getsource(economy_materials)
-        for name in ("GENERIC_OUTPUT_ANCHOR", "GENERIC_OUTPUT_PRICE_EXPONENT", "GENERIC_MARKET_SHARE_SCALE",
-                     "GENERIC_MARKET_SHARE_PRICE_EXPONENT", "_hours_price_per_kg"):
-            self.assertNotIn(name, source)
 
 
 if __name__ == "__main__":

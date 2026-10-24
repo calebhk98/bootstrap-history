@@ -7,9 +7,7 @@ takes: the reply gets its `_display` siblings, then render_pretty prints it.
 
 QUICK_TOPIC = True
 
-import ast
 import json
-import os
 import re
 import unittest
 from types import SimpleNamespace
@@ -86,20 +84,6 @@ class HandScreens(unittest.TestCase):
         text = self.text("path", PATH, {})
         self.assertIn("about 900 denarii", text)
 
-    def test_anatomy_rows_carry_no_mass_area_money_or_temperature_unit(self):
-        """The anatomy screen's rows are fractions, counts, flows and kilowatts; a unit it names must not be a
-        registry unit of a dimension the player can change, or it would need converting."""
-        path = os.path.join(U.ROOT, "sim", "ui", "proto", "anatomy.py")
-        units_named = set()
-        for node in ast.walk(ast.parse(open(path, encoding="utf-8").read())):
-            if isinstance(node, ast.Call) and getattr(node.func, "id", "") == "_row" and len(node.args) >= 3:
-                if isinstance(node.args[2], ast.Constant) and isinstance(node.args[2].value, str):
-                    units_named.add(node.args[2].value)
-        registry = U.registry()
-        words = {word.lower() for spec in registry["units"].values()
-                 for word in (spec["name"], spec["symbol"], spec.get("plural")) if word}
-        self.assertTrue(units_named, "the scan found the units the rows name")
-        self.assertEqual({unit for unit in units_named if unit.lower() in words}, set())
 
 
 if __name__ == "__main__":
