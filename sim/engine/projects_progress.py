@@ -18,7 +18,8 @@ file of their own. Behaviour is unchanged and verified byte-identical.
 """
 
 from sim.constants import declare
-from .completion_schedule import calendar_floor_years, earliest_completion_years, payment_schedule_years
+from .completion_schedule import (calendar_floor_years, earliest_completion_years, expected_years_to_succeed,
+                                 payment_schedule_years)
 from .failure_diagnosis import failure_teaches
 from .industry_depth import depth_risk_multiplier
 from .retry_calendar import retry_calendar_retain
@@ -480,31 +481,21 @@ class ProgressMixin:
         teaches = failure_teaches(self, node_id)
         _had_key = node_id in projects.failed_attempts
         _active = projects.active.get(node_id) if node_id in projects.active else None
-        total = 0.0
-        survive = 1.0
-        attempt_index = initial_failed_attempts
+
+        def risk_after(attempt_index):
+            # Stand in for i failures, read effective_risk (restored in the finally below).
+            projects.failed_attempts[node_id] = attempt_index
+            # Failures nobody can diagnose add nothing to the learning.
+            with self.after_failed_attempts(node_id, attempt_index - initial_failed_attempts if teaches else 0):
+                return self.effective_risk(node_id)
+
         try:
-            while True:
-                if attempt_index == initial_failed_attempts and _active is not None:
-                    # Mid-attempt: use real elapsed clock, not recomputed fraction.
-                    years_this_attempt = max(0.0, floor - _active.get("yrs", 0.0))
-                elif attempt_index == initial_failed_attempts:
-                    # Not active: start_project zeroes yrs, so pay full floor.
-                    years_this_attempt = floor
-                else:
-                    years_this_attempt = floor * (1.0 - self._retry_calendar_retain(node_id, attempt_index))
-                total += survive * years_this_attempt
-                # Stand in for i failures, read effective_risk, restore in finally.
-                projects.failed_attempts[node_id] = attempt_index
-                # Failures nobody can diagnose add nothing to the learning.
-                with self.after_failed_attempts(node_id, attempt_index - initial_failed_attempts if teaches else 0):
-                    survive *= self.effective_risk(node_id)
-                attempt_index += 1
-                if survive < 1e-12 or attempt_index - initial_failed_attempts > _max_extra_attempts:
-                    break
+            return expected_years_to_succeed(
+                floor, _active.get("yrs", 0.0) if _active is not None else None, initial_failed_attempts,
+                lambda attempt_index: self._retry_calendar_retain(node_id, attempt_index), risk_after,
+                _max_extra_attempts)
         finally:
             if _had_key:
                 projects.failed_attempts[node_id] = initial_failed_attempts
             else:
                 projects.failed_attempts.pop(node_id, None)
-        return total

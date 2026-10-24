@@ -1,46 +1,59 @@
-"""A state keeps part of the cash it does not spend in the durable stores households use, by the same rule."""
+"""A state keeps part of the cash it does not spend in the durable stores households use, by the same rule: the rule
+(`state_store.orders`) is called on a stand-in setup, record and market view written out here."""
 
 QUICK_TOPIC = True
 
+import types
 import unittest
 
-from sim.economy.types import EDGE_PRODUCTION, GoodsMove
+from sim.economy import state_store
 from sim.tests import economy_fixture as fixture
+from sim.tests.economy_store_view import BASKET, SPECS, View
+
+STATE = "state:fixture"
 
 
-def run_years(years, service_lives=None):
-    setup = fixture.small_setup(specs=fixture.specs(service_lives))
-    economy, _outcomes = fixture.run(setup, years)
-    return economy
+class Book:
+    def __init__(self, cash):
+        self.cash = cash
+
+    def balance(self, agent, currency):
+        return self.cash
 
 
-def state_metal(economy):
-    setup, book = economy.setup, economy.record.book
-    return sum(book.holdings(setup.state_agent)["goods"].get(fixture.METAL, {}).values())
+def setup_with(specs):
+    return types.SimpleNamespace(state_agent=STATE, capital_tile=fixture.TOWN, currency_id="coin", specs=specs,
+                                 basket_for=lambda tile: BASKET)
+
+
+def record_with(unplanned_cash, cash=None, deficit=0.0):
+    budget = types.SimpleNamespace(expected_inflation=0.0, unplanned_cash=unplanned_cash, deficit=deficit)
+    return types.SimpleNamespace(state_budget=budget, book=Book(unplanned_cash if cash is None else cash))
+
+
+def metal_stock(kilograms):
+    return {(STATE, fixture.METAL, fixture.TOWN): kilograms}
 
 
 class StateStoreTests(unittest.TestCase):
-    def test_a_state_with_cash_beyond_its_plan_buys_a_durable_store(self):
-        economy = run_years(3, {fixture.METAL: 20})
-        self.assertGreater(state_metal(economy), 0.0)
-        self.assertTrue(economy.record.book.check_conservation(1e-9).ok)
+    def test_a_state_with_cash_beyond_its_plan_bids_for_a_durable_store(self):
+        bids, offers, kept = state_store.orders(setup_with(SPECS), record_with(1.0e6), View())
+        self.assertEqual([bid.good for bid in bids], [fixture.METAL])
+        self.assertGreater(bids[0].budget, 0.0)
+        self.assertEqual((offers, kept), ([], {}))
 
     def test_a_state_holds_nothing_when_no_good_qualifies_as_a_store(self):
-        self.assertEqual(state_metal(run_years(3)), 0.0)
+        self.assertEqual(state_store.orders(setup_with(fixture.specs()), record_with(1.0e6), View()), ([], [], {}))
 
-    def test_the_store_is_not_used_up_as_a_purchase_for_the_lines(self):
-        economy = run_years(3, {fixture.METAL: 20})
-        self.assertGreater(state_metal(economy), 0.0)
+    def test_the_store_the_state_holds_is_reported_as_kept_for_its_other_lines_to_leave_alone(self):
+        _bids, _offers, kept = state_store.orders(setup_with(SPECS), record_with(0.0), View(stocks=metal_stock(5.0)))
+        self.assertEqual(kept, {fixture.METAL: 5.0})
 
     def test_a_state_holding_far_more_than_it_wants_offers_the_excess(self):
-        economy = run_years(3, {fixture.METAL: 20})
-        setup, record = economy.setup, economy.record
-        before = state_metal(economy)
-        record.book.move_many([GoodsMove(EDGE_PRODUCTION, setup.state_agent, fixture.METAL, setup.capital_tile,
-                                         100.0 * max(before, 1.0), "test hoard")])
-        hoard = state_metal(economy)
-        economy.step(fixture.quiet_year(setup, year=3))
-        self.assertLess(state_metal(economy), hoard)
+        held = 1.0e6
+        _bids, offers, _kept = state_store.orders(setup_with(SPECS), record_with(0.0), View(stocks=metal_stock(held)))
+        self.assertEqual([offer.good for offer in offers], [fixture.METAL])
+        self.assertTrue(0.0 < offers[0].quantity < held)
 
 
 if __name__ == "__main__":

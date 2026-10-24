@@ -89,7 +89,7 @@ from sim.agents.api import supply
 from sim.world import merchant_terms
 
 
-class Economy:
+class LandMarket:
 	"""The agent economy's land market: a rent per hectare on each tile where land was let."""
 	mean = 40.0
 	by_tile = {"coast": 100.0, "hills": 10.0}
@@ -102,7 +102,7 @@ class Economy:
 
 
 class StandInSim:
-	economy = Economy()
+	economy = LandMarket()
 
 
 class Site(SiteView):
@@ -130,9 +130,9 @@ check("rent is the hectares at the rent of the tile the concern stands on",
 	and abs(site.site_rent("workshop", tile="hills") - 10.0 * plot) < 1e-9)
 check("a tile where no land was let pays the mean rent of the land let", abs(site.site_rent("workshop", tile="moor") - 40.0 * plot) < 1e-9)
 check("a dearer tile costs more", site.site_rent("workshop", tile="coast") > site.site_rent("workshop", tile="hills"))
-Economy.on = False
+LandMarket.on = False
 check("while the economy opens the rent is the engine's land price", abs(site.site_rent("workshop", tile="coast") - 7.0 * plot) < 1e-9)
-Economy.on = True
+LandMarket.on = True
 
 # ---- where a firm stands: its own tile, else the home country's
 registry = ActorRegistry(ActorsState(home_country="home"))
