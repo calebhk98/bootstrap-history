@@ -17,3 +17,16 @@ def seat_royalties_due(seats: Mapping[str, Any], node_id: str, licensee_id: str,
 		if due > 0.0:
 			owed.append((seat_id, due))
 	return owed
+
+
+def seat_royalties_paid(owed: List[Tuple[str, float]], purse: float) -> List[Tuple[str, float]]:
+	"""(seat id, amount) the licensee pays of what each seat is owed, in the order given, from a purse of `purse`:
+	never more than the purse holds, so a firm short of money pays the first seats and the rest go unpaid."""
+	left = max(0.0, purse)
+	paid = []
+	for seat_id, due in owed:
+		amount = min(due, left)
+		if amount > 0.0:
+			paid.append((seat_id, amount))
+			left -= amount
+	return paid

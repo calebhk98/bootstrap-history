@@ -887,7 +887,7 @@ A regression looks different in kind: it shows up in a civilisation or a
 quantity this stage's own description does not touch at all (freight
 distances moving when only land rent was supposed to change, for instance),
 or it shows up as a crash/exception rather than a numeric drift, or the
-`sim/tests/test_determinism.py` guard against `id()`-based caching (CLAUDE.
+`sim/tests/test_hash_seed_order.py` check on iteration order (CLAUDE.
 md §6) starts failing, which none of these stages have any reason to touch.
 "The number I expected to move, moved" is not a finding; "a number I did
 not expect to move, moved" is.

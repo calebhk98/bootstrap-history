@@ -23,5 +23,5 @@ the work scholar hours accomplish and the progress of another player's research,
 changing the purchased hours. The ratio remains a labour-model approximation rather than
 an independently measured research productivity law.
 
-Run `python3 -m sim.tests --only country_literacy_totals,country_literacy` for the
+Run `python3 -m sim.tests --only country_literacy_totals,country_literacy_wiring` for the
 ownership, country isolation, migration, save round-trip and research regressions.

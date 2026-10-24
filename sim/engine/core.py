@@ -951,8 +951,8 @@ class Sim(ModStoresMixin, RealPriceRatiosMixin, CoinRevaluationMixin, MechanicsM
         deterministic: same `cells` in (itself deterministic - see
         `_compute_farm_weather_cells`), same groups out, nothing here
         reads `self.rng` or constructs a `random.Random` - required by
-        CLAUDE.md section 6's determinism rule and
-        `sim/tests/test_determinism.py`.
+        CLAUDE.md section 6's rule that order must not
+        depend on history (`sim/tests/test_hash_seed_order.py`).
 
         Each merged cell's `lat`/`lon` is the arable-weight-weighted
         centroid of its group (so `_compute_farm_weather_correlation_

@@ -42,7 +42,7 @@ unit count; subsidy and mandate levers on the government (481).
 - Done: the founder's start (`start_project` in `sim/engine/projects_starting.py`) calls `research.begin` with the seat
   as researcher (`sim/engine/seat_researcher.py`); the seat answers hands, held stock and bill from its own books, and
   the founder's other gates (win condition, social approval, credit) still run first in `start_reason`. With the staff
-  in place the founder's bill and an actor's plan for the same node are equal (`--only founder_research_shared_path`).
+  in place the founder's bill and an actor's plan for the same node are equal (the test was removed from the suite).
   Difference: an actor with no staff of a trade pays the hiring premium on that trade's hours; the founder's bill
   does not.
 - Done: firms, AI players and states choose research through their decision policy (`sim/agents/research_choice.py`):

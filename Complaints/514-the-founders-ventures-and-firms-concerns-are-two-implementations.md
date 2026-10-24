@@ -31,7 +31,7 @@ what to build and run, and one production machinery runs every plant.
 Read again against the code: the crew rule (`business_crew_rule`), the takings product (`business_books.takings_of_size`), the ramp
 (`plant_figures.ramp`), mothball and restore and the closing rules (`Business.review`) are one implementation for every owner, and the
 founder's `projects_ventures.py`, `projects_venture_quotes.py` and `agents_port.py` are adapters that read the node and call them. What is
-still two code paths, with the command that finds each (`python3 -m sim.tests --only business_wall` lists the allowlist that must shrink):
+still two code paths, with a grep that finds each (the allowlist test was removed):
 
 1. **Takings and upkeep at the economy's prices.** `economy_production.concern_takings`/`institution_upkeep`/`concern_revenue` (founder) and
    `economy_port.concern_upkeep`/`concern_takings`, `agents_port.entry_gross`/`concern_takings` (firms) each read the node's `rev` and `up`.
@@ -64,4 +64,4 @@ still two code paths, with the command that finds each (`python3 -m sim.tests --
 4. **The founder hires (plan stage 4).** `venture_staff_free`, `venture_staff_used`, `venture_foreman_free`,
    `venture_staff_who_is_watching_what` are the household's supervision hands; delete them when the founder's business hires its crew through
    `sim.labour.market`. The opening fee (`venture_capex`) stays a share of the project cost until entries carry `capital` for every node.
-5. **The wall test.** Items 1 and 4 empty most of `sim/tests/business_wall_allowlist.txt`; stage 5b empties the rest.
+5. **The wall test.** Items 1 and 4 move most of the wall's offenders behind the object (the allowlist test was removed; grep for them); stage 5b moves the rest.

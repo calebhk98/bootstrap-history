@@ -60,4 +60,4 @@ sale records. See also 648.
    lines keep their cash. The vacancy's wage line funds a part of a person (a person costs the present value of many years),
    so a short trade buys fewer people than before; free cash is the only other way to pay. Tests:
    `test_bonded_purchase_within_plan.py` (rules on built inputs). Measure: the people bought, printed per seed by
-   `python3 -m sim.tests --slow --only rome_bonded_share_baseline_validation`, against the same command on the commit before.
+   (the test was removed from the suite), against the same command on the commit before.

@@ -109,7 +109,7 @@ worker is worth less than the first.
 
 ## Status and what is outside this folder
 
-The core is complete and tested (`python3 -m sim.tests --only labour_core_training,labour_core_clearing,labour_core_entrants,labour_core_switching,labour_core_migration,labour_core_opening,labour_core_year,labour_core_walls`).
+The core is complete and tested (`python3 -m sim.tests --only labour_core_training,labour_core_clearing,labour_core_entrants,labour_core_switching,labour_core_migration,labour_core_opening,labour_core_year,labour_core_bid_ranking,labour_core_import_cost,labour_core_seed_and_reservations,labour_core_skilled_ceiling,labour_core_substitute_wage,labour_core_supply_schedule`).
 The agent economy (on by default) calls it every year (`sim/economy/year_labour.py`) and keeps its state
 in its record, so the core sets the wage every employer is quoted. The engine's hours by trade are
 the core's people by trade (`sim/labour/labour_allocation.py`); until the agent economy has opened they follow

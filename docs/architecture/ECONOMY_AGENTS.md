@@ -13,7 +13,7 @@ Owner decision (2026-10-09, later): retire the agent-economy-off mode; the agent
 orders, and the money they pay with. It imports `sim.world`, `sim.constants` and the walled packages' `api.py` (geography, labour), never `sim.engine`.
 The engine reaches it only through `sim/engine/economy_port*.py`; the tech tree, the founder, projects
 and screens ask the port questions (a price, a wage, a rate, what a concern takes) and post
-transactions. `sim/tests/test_economy_imports.py` holds both rules.
+transactions. Both rules are kept by review.
 
 Contracts: `sim/economy/types.py` (records) and `sim/economy/protocols.py` (the year order and what
 each module offers). Outside code imports only `sim/economy/api.py`, the package's published surface

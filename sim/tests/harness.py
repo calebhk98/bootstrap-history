@@ -26,17 +26,8 @@ os.environ.setdefault("ROME_DEFAULT_SEED", "1")
 # from full games' (sim/engine/economy_port_year.py); a cold full spin-up costs many minutes per start.
 os.environ.setdefault("ROME_SPIN_UP_YEARS", "3,2")
 
-# ruff reports collections, copy, glob and re (from the combined import just
-# above) and tempfile as unused in THIS file - correctly, harness.py itself
-# never calls them. They stay because other topic modules use them bare
-# (collections.Counter, copy.deepcopy, glob.glob, re.compile, tempfile.*)
-# without importing them locally, relying on `from .harness import *` to put
-# the name in scope, exactly as this file's own docstring above describes.
-# Confirmed by checking every topic module for a bare use with no local
-# import of its own: collections -> test_scanners_and_scheduling.py; copy ->
-# test_explicit_starting_techs.py, test_round8g_display.py; glob ->
-# test_civilisation_data_integrity.py; re -> test_mines.py and others;
-# tempfile -> test_round2_policy_hazards_options.py and others.
+# collections, copy, glob, re and tempfile are not used in this file; topic modules use them bare and rely on
+# `from .harness import *` to put them in scope.
 
 # HERE is this repository's sim/ directory; ROOT is the repository itself.
 #
@@ -495,44 +486,7 @@ def _mk_loom_sim(n_looms, age_years):
     return loom_sim, chosen
 
 
-# --- mid-file "from engine.X import Y as Z" aliases: pure, side-effect-free
-# imports the original flat file did inline, at first use, then relied on
-# again in what is now a different topic module. Collected here so every
-# topic module sees the same names via `from .harness import *`, regardless
-# of which one first imports them; each one is also still imported (harmlessly,
-# redundantly) inline at its original spot, verbatim.
-#
-# ruff's F401 pass flags every name below as unused, because none of them is
-# called from harness.py's own body - each exists only so that a LATER topic
-# module can use it without importing it again itself, via `from .harness
-# import *` (harness.py's __all__ near the end of this file is computed from
-# globals(), which ruff cannot follow statically, so it cannot see the
-# re-export either). Checked one by one, over every file in this package, for
-# a bare use with no local import of its own, before deciding which of these
-# to keep:
-#   _CLI            -> test_five_things_winner.py
-#   _protocol       -> test_scanners_and_scheduling.py, test_five_things_winner.py,
-#                      test_affordability_and_credit.py, test_sort_nearest.py,
-#                      test_parallelism_note.py, test_labour_hiring_and_wages.py,
-#                      test_allocate.py
-#   _RP             -> test_scanners_and_scheduling.py, test_interface_honesty.py,
-#                      test_names_and_fog.py, test_industrial_dashboard.py,
-#                      test_player_log.py, test_project_pacing.py,
-#                      test_eminence_scandal_and_reputation.py, test_ventures_lifecycle.py
-#   _WO             -> test_scanners_and_scheduling.py, test_affordability_and_credit.py
-#   _FRPT, _RF      -> test_scanners_and_scheduling.py
-#   _PT             -> test_scanners_and_scheduling.py, test_people_attrition_scholars.py,
-#                      test_complaints_17_24.py, test_fog_leak3.py
-#   _RSTATE         -> test_scanners_and_scheduling.py
-#   _RWHY           -> test_arrears_visibility.py
-#   _PROTO, _RPORT  -> test_arrears_visibility.py
-# Everything else in this block (_SETTINGS, _short_of_staff, _sp_labour,
-# _sp_projects, _closure, _AL, _UB, _DS, _RRISK, _RVENT, _RPATH, _ACAP, _AECO,
-# _ACHG, _AMINES, _RCAP, _REECO, _RCHG, _PT2, _TYPED_ALIASES, _SCORE, _RSCORE,
-# _SW, _APORT, _PCON, plus the stdlib re-imports as _insp_sp/_insp2/_insp3/
-# _re_rem/_re_names/_shutil/_coll/_IL/_IO/_CTX/_time and the bare hashlib and
-# duplicate shutil) had no such consumer anywhere in sim/tests - genuinely
-# dead, not a re-export, so removed rather than kept "just in case".
+# --- aliases that topic modules use bare through `from .harness import *`; harness.py's own body does not call them.
 from sim.ui import cli as _CLI
 from sim.ui import protocol as _protocol
 from sim.ui.protocol import render_pretty as _RP

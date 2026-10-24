@@ -284,7 +284,7 @@ it now drives `Government.apply_debasement`. Still Sim-only: `project_cost_now`,
 
 ## Applied: the guard, and the declaration of whole-game modules
 
-New whole-game tests kept arriving as undeclared files. `python3 -m sim.tests --whole-game-checks` (`sim/tests/whole_game_checks.py`)
+(Deleted later; see "Guards removed" below. The command no longer exists.) New whole-game tests kept arriving as undeclared files. `python3 -m sim.tests --whole-game-checks` (`sim/tests/whole_game_checks.py`)
 reads each `test_*.py` syntax tree and lists the modules that build a whole game (`sim`, `unopened_sim`, `build_unopened`, `Sim`,
 the in-process CLI `proto` and `cli_in_process.run`, the `spin_up_*` helpers) and are not declared. A module is declared by a file
 name ending `_scenario`, `_validation` or `_smoke`, or by a docstring opening `SCENARIO`, `BASELINE VALIDATION` or `SMOKE`. The quick
@@ -301,7 +301,7 @@ had been failing before this pass (its fake world lacked `plant_costs`, which th
 
 ## Remaining: rules still checked only through a game
 
-The guard's leftover list (`sim/tests/whole_game_leftovers.txt`) is empty: `python3 -m sim.tests --whole-game-checks` lists no
+(The guard and its list were deleted later; see "Guards removed" below.) The guard's leftover list (`sim/tests/whole_game_leftovers.txt`) was empty: `python3 -m sim.tests --whole-game-checks` lists no
 undeclared module, and the quick topic `whole_game_declared` fails on any new one. Some modules were declared rather than converted
 because their rule sits inline in a `Sim` mixin or a phase; their `_scenario` files hold rule checks until the rule is a plain
 function. What is left, after the rules named in the list below were pulled out (each with a quick rule test):
