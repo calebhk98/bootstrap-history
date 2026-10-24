@@ -72,6 +72,9 @@ check("quote bounty for what the craft cannot recognise says it is not eligible 
       refused["eligible"] is False and refused["refusal"].cause == "not_bounty_eligible", refused)
 
 
+charge_hire = TrainingMixin.hire   # the method under test, called on the stand-in below
+
+
 class Payer(TrainingMixin):
     """The labour side of a Sim that a hire or commission charge touches, recording the money paid."""
 
@@ -109,7 +112,7 @@ class Payer(TrainingMixin):
 
 
 payer = Payer(412.34)
-done, message = payer.hire("Smith", 2)
+done, message = charge_hire(payer, "Smith", 2)
 check("hire pays the workers' edge exactly the fee hire_check returned, and carries it as prepaid wages",
       done and payer.paid == [("workers", 412.34, "hiring fee and first year's wages")]
       and payer._world.state.household.wages_prepaid == 412.34, payer.paid)
