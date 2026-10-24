@@ -5,6 +5,7 @@ shortfall and what stopped earning; `opening_fee` is `reopen_fee` at the size re
 reopened keeps its first opening year, so the revenue ramp does not restart. Each runs on a stand-in carrying only what it reads."""
 
 QUICK_TOPIC = True
+UNDER_TEST = {"open_plant"}   # the method this module tests
 
 from types import SimpleNamespace
 from unittest import mock
@@ -114,11 +115,10 @@ check("a starter founding of a scalable institution is charged at the size asked
       Opener().opening_fee("school", 0.5) == (500.0, 0.5) and Opener().opening_fee("school", 0.1) == (250.0, 0.25))
 check("units asked of what is not scalable are ignored", Opener().opening_fee("mill", 3) == (800.0, 0.8))
 
-reopen_plant = Business.open_plant   # the method under test
 business = Business(plants=[Plant(entry_key="mill", opened_year=100, state=MOTHBALLED, since_year=105, reason="staff_short")])
-reopen_plant(business, "mill", 115)
+business.open_plant("mill", 115)
 check("a plant reopened after a closure keeps its first opening year and its size, so the ramp does not restart",
       business.opened_year_of("mill", None) == 100 and business.state_of("mill") == "operating" and business.size_of("mill") == 1.0)
 running = Business(plants=[Plant(entry_key="mill", opened_year=100)])
-reopen_plant(running, "mill", 120)
+running.open_plant("mill", 120)
 check("a plant already running that is opened again is restarted from that year", running.opened_year_of("mill", None) == 120)

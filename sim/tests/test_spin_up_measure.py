@@ -8,7 +8,10 @@ import unittest
 from unittest import mock
 
 from sim.engine import economy_port_year, spin_up_gap
-from sim.tests import economy_fixture
+from sim.book import Book, GoodsMove
+from sim.economy import year_close
+from sim.economy.spin_up_state import spin_up_state as year_state_of   # a pure read of a record, not a builder
+from sim.economy.households_cohort import Cohort
 
 FULL_GAME = {key: value for key, value in os.environ.items() if key != economy_port_year.SPIN_UP_YEARS_ENV}
 TOLERANCE = economy_port_year.SPIN_UP_TOLERANCE
@@ -124,29 +127,33 @@ class OrderTests(unittest.TestCase):
 
 class StateTests(unittest.TestCase):
     def test_a_year_state_carries_output_employment_inventory_and_unmet_need(self):
-        from sim.economy import api
-        economy, outcomes = economy_fixture.run(years=2)
-        state = api.spin_up_state(economy, outcomes[-1])
+        book = Book()
+        book.move(GoodsMove("edge:production", "producer:a", "wheat_kg", "farms", 40.0, "production"))
+        setup = types.SimpleNamespace(opening_prices={"wheat_kg": 2.0})
+        record = types.SimpleNamespace(producers={"producer:a": None}, book=book)
+        outcome = types.SimpleNamespace(output={"wheat_kg": 100.0}, hired_hours=900.0, idle_hours=100.0,
+                                        hunger_by_tile={"farms": 3.0, "town": 1.5})
+        state = year_state_of(setup, record, outcome)
         self.assertEqual(sorted(state), ["hired_hours", "idle_hours", "inventory_value", "real_output", "unmet_need"])
-        self.assertGreater(state["real_output"], 0.0)
-        self.assertGreater(state["hired_hours"], 0.0)
-        self.assertGreaterEqual(state["inventory_value"], 0.0)
-        self.assertEqual(state["unmet_need"], sum(outcomes[-1].hunger_by_tile.values()))
+        self.assertEqual(state["real_output"], 200.0)           # at the opening prices
+        self.assertEqual(state["hired_hours"], 900.0)
+        self.assertEqual(state["inventory_value"], 80.0)
+        self.assertEqual(state["unmet_need"], 4.5)
 
 
 class RebaseTests(unittest.TestCase):
     def test_rebasing_keeps_what_households_and_the_market_expect_of_inflation(self):
-        import dataclasses
-        from sim.economy import api
-        economy, _outcomes = economy_fixture.run(years=2)
-        record, money = economy.record, economy.setup.currency_id
-        record.memory.expected_inflation[money] = 0.07
-        record.cohorts = {agent: dataclasses.replace(cohort, expected_inflation=0.07)
-                          for agent, cohort in record.cohorts.items()}
-        self.assertTrue(record.cohorts)
-        api.finish_spin_up(economy)
-        self.assertEqual(record.memory.basket_price_levels[money], 1.0)
-        self.assertEqual(record.memory.expected_inflation[money], 0.07)
+        money = "coin"
+        memory = types.SimpleNamespace(
+            prices={"wheat_kg|area": 1.5}, volume_weights={}, quote_kinds={}, basket_price_levels={money: 1.8},
+            price_levels={money: 1.7}, perceived_price_levels={money: 1.6}, expected_inflation={money: 0.07})
+        cohorts = {"household:a": Cohort("household:a", "farms", 0, 10.0, 5.0, 0.2, expected_inflation=0.07,
+                                         last_basket_price_level=1.8)}
+        record = types.SimpleNamespace(memory=memory, volumes={"wheat_kg|area": 10.0}, cohorts=cohorts, index_base_prices={})
+        year_close.rebase_basket_price_level(types.SimpleNamespace(currency_id=money), record)
+        self.assertEqual(record.index_base_prices, {"wheat_kg": 1.5})
+        self.assertEqual(memory.basket_price_levels[money], 1.0)
+        self.assertEqual(memory.expected_inflation[money], 0.07)
         for cohort in record.cohorts.values():
             self.assertEqual(cohort.expected_inflation, 0.07)
             self.assertEqual(cohort.last_basket_price_level, 1.0)

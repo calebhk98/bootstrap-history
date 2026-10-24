@@ -4,6 +4,7 @@ would clear; a capability that is done and not operating is named with the benef
 covers it; reopening costs the grace fee after a staffing closure and the whole fee otherwise; mothball frees a concern held
 by staff time alone and refuses one with nothing to save; a ramp counts from the year the concern opened."""
 QUICK_TOPIC = True
+UNDER_TEST = {"open_venture"}   # called on the stand-in `Opening`, for the refusals before any money moves
 
 import types
 import unittest

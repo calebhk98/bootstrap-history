@@ -15,14 +15,13 @@ PEOPLE = (30000.0, 60000.0, 10000.0)
 
 
 FOOD_AT_SUBSISTENCE = 183700000.0   # calories a day that feed these people exactly: nutrition ratio of one
-advance_one_year = Population.step   # the function under test, called on a population built here
 
 
 def one_year(premium=None):
     people = Population(*PEOPLE, seed=1)
     if premium is None:
-        return advance_one_year(people, FOOD_AT_SUBSISTENCE)
-    return advance_one_year(people, FOOD_AT_SUBSISTENCE, urban_mortality_premium=premium)
+        return people.step(FOOD_AT_SUBSISTENCE)
+    return people.step(FOOD_AT_SUBSISTENCE, urban_mortality_premium=premium)
 
 
 class PopulationStep(unittest.TestCase):

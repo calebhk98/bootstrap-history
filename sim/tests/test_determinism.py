@@ -17,8 +17,8 @@ cache replayed a stale answer under a fresh year. That path feeds
 `project_cost()`, which is why it surfaced as last-bit float drift in a
 project's `ph_left` two centuries later.
 
-The behavioural guard (two runs of one seed in one process agree) lives in
-test_run_reproducibility.py. This file holds the structural one: rather than
+The behavioural guard (two runs of one seed agree, under any hash seed) is
+`python3 -m sim.tests.fingerprint record` then `check` (Complaint 27). This file holds the structural one: rather than
 sampling for the symptom it forbids the shape. An `id()` may be used as a dict
 key for speed, and the entry it finds must then be validated by identity
 against a strong reference to the object itself. It is deterministic, costs

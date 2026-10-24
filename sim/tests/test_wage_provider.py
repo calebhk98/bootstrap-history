@@ -23,23 +23,21 @@ def _schedule(training_years, floor=1.0, tightness=None):
     return wages.WageSchedule(training_years, floor, 1.0, 0.10, tightness_factors=tightness)
 
 
-advance_one_year = wages.WageSchedule.step   # the function under test, called on schedules built here
-
-
 class TightnessTests(unittest.TestCase):
 
     def test_need_above_hours_raises_a_trades_tightness_and_slack_lowers_it(self):
         schedule = _schedule({"short": 3.0, "slack": 3.0, "level": 3.0})
         schedule.tightness_factors.update({"short": 1.0, "slack": 1.0, "level": 1.0})
-        advance_one_year(schedule, {"short": 200.0, "slack": 50.0, "level": 100.0},
-                         {"short": 100.0, "slack": 100.0, "level": 100.0})
+        schedule.step({"short": 200.0, "slack": 50.0, "level": 100.0},
+                      {"short": 100.0, "slack": 100.0, "level": 100.0})
         self.assertGreater(schedule.tightness_factors["short"], 1.0)
         self.assertLess(schedule.tightness_factors["slack"], 1.0)
         self.assertEqual(schedule.tightness_factors["level"], 1.0)
 
     def test_a_trade_with_no_hours_asked_or_offered_is_left_alone(self):
         schedule = _schedule({"smith": 5.0})
-        advance_one_year(schedule, {}, {})
+        schedule.step({},
+                      {})
         self.assertEqual(schedule.tightness_factors["smith"], 1.0)
 
     def test_slack_lowers_a_skilled_wage_but_not_below_the_subsistence_floor(self):
