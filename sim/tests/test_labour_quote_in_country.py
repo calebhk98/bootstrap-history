@@ -13,13 +13,13 @@ class Answers:
         return {"labourer": 250.0}.get(trade)
 
 
-class Economy:
+class Partners:
     def agent_country(self, country):
         return Answers() if country == "han" else None
 
 
 class World:
-    economy = Economy()
+    economy = Partners()
 
 
 class Labour:

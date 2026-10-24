@@ -24,11 +24,10 @@ check("the typed line `rollout <id> 50` reads",
       parse_typed("rollout %s 50" % CLINICS)[0] == {"cmd": "rollout", "id": CLINICS, "share": 50.0}, parse_typed("rollout %s 50" % CLINICS))
 check("the typed line `rollout` alone lists", parse_typed("rollout")[0] == {"cmd": "rollout"})
 
+population_step = demography.Population.step   # the function under test, called by name
 people = demography.Population.stationary(1.0e6)
 hungry_food = 0.6 * people._subsistence_food()
-without = people.copy()
-flows_without = without.step(hungry_food, jitter=False)
-with_relief = people.copy()
-flows_with = with_relief.step(hungry_food + 0.2 * people._subsistence_food(), jitter=False)
+flows_without = population_step(people.copy(), hungry_food, jitter=False)
+flows_with = population_step(people.copy(), hungry_food + 0.2 * people._subsistence_food(), jitter=False)
 check("a hungry nation that is handed food loses fewer people", flows_with.deaths < flows_without.deaths,
       (flows_with.deaths, flows_without.deaths))

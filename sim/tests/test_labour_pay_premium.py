@@ -2,12 +2,14 @@
 hires from rivals rather than idle hands. Stub world, no Sim; invented trade ids."""
 
 QUICK_TOPIC = True
+UNDER_TEST = {"hire"}
 
 from types import SimpleNamespace
 
 from .harness import *  # noqa: F401,F403
 
 from sim.labour.labour_market_api import LabourMarket
+from sim.labour.market.clearing import FIRM_LABOUR_SUPPLY_ELASTICITY
 
 HOURS = 2000.0
 FALLBACK = "gleaner"
@@ -58,14 +60,26 @@ check("recruits never exceed the people asked for", all(market.recruitable("weav
                                                          for count in (1.0, 100.0, 1e6) for premium in (0.0, 1.0, 9.0)))
 check("asking for nobody finds nobody", market.recruitable("weaver", 0.0) == 0.0)
 
-premium_market = stub_market()
-hired_rate = premium_market.hire("firm", "weaver", 1000.0, pay_premium=0.5)
-check("hire returns the premium-inclusive rate", abs(hired_rate - plain * 1.5) < 1e-9 * plain, (hired_rate, plain))
-plain_market = stub_market()
-check("a zero-premium hire records the full hours and returns the plain rate",
-      plain_market.hire("firm", "weaver", 1000.0) == plain and plain_market.recent_pressure("weaver") == 1000.0)
-check("a hire with a premium leaves less pressure",
-      0.0 < premium_market.recent_pressure("weaver") < plain_market.recent_pressure("weaver"))
+# hire on a stand-in market whose quote and press are recorders
+pressed = []
+quotes = []
+
+
+def recording_market():
+    pressed.clear()
+    quotes.clear()
+    return SimpleNamespace(
+        quote=lambda trade, hours, employer, premium: quotes.append((trade, hours, employer, premium)) or 7.0 * (1.0 + premium),
+        press=lambda trade, hours: pressed.append((trade, hours)))
+
+
+hired_rate = LabourMarket.hire(recording_market(), "firm", "weaver", 1000.0, pay_premium=0.5)
+check("hire returns the premium-inclusive rate the market quoted", hired_rate == 7.0 * 1.5 and quotes == [("weaver", 0.0, "firm", 0.5)], quotes)
+check("a hire with a premium presses the hours scaled down by the premium's supply elasticity",
+      pressed == [("weaver", 1000.0 / 1.5 ** FIRM_LABOUR_SUPPLY_ELASTICITY)], pressed)
+LabourMarket.hire(recording_market(), "firm", "weaver", 1000.0)
+check("a zero-premium hire presses the full hours", pressed == [("weaver", 1000.0)], pressed)
+check("a hire with a premium leaves less pressure than one without", 1000.0 / 1.5 ** FIRM_LABOUR_SUPPLY_ELASTICITY < 1000.0)
 
 check("standing draw falls on the fallback trade only",
       market.standing_draw("weaver") == 0.0 and market.standing_draw(FALLBACK) == 10.0 * HOURS)

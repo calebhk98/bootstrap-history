@@ -13,6 +13,7 @@ from unittest import mock
 from sim.agents import business_review
 from sim.engine import cause_book
 from sim.agents.api import Business
+from sim.agents.business_plant import MOTHBALLED, Plant
 from sim.engine.projects import ProjectsMixin
 from sim.engine.projects_staffing import StaffingMixin
 from sim.engine.projects_venture_quotes import VentureQuotesMixin
@@ -60,9 +61,9 @@ class ClosureRecord(unittest.TestCase):
 		self.assertNotIn("mill", business.closures())
 
 	def test_opening_a_shut_plant_brings_it_back_and_clears_its_record(self):
-		business = a_business_running("mill")
-		business.mothball("mill", 40, STAFF)
-		business.open_plant("mill", 50)
+		business = Business(plants=[Plant("mill", state=MOTHBALLED, since_year=40, reason=STAFF)])
+		open_the_plant = Business.open_plant   # the function under test, called by name
+		open_the_plant(business, "mill", 50)
 		self.assertEqual(business.state_of("mill"), "operating")
 		self.assertNotIn("mill", business.closures())
 

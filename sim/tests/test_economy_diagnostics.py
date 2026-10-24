@@ -30,21 +30,26 @@ class DiagnosticsTests(unittest.TestCase):
         outcome.wage_floor_per_hour = 0.0          # a plot that feeds the household leaves no floor to compare with
         self.assertTrue(math.isnan(diagnostics.wage_over_floor(outcome, setup)))
 
-    def test_decomposition_gives_the_three_shares_of_labour_and_margins(self):
+    def test_summary_takes_medians_of_the_years_figures_and_the_mean_hunger_share(self):
         setup = economy_fixture.small_setup()
-        _economy, outcomes = economy_fixture.run(setup, years=6)
-        figures = diagnostics.summary(outcomes, setup, economy_fixture.GRAIN, [economy_fixture.METAL])
-        for key in ("hired_share", "wage_over_floor", "staple_over_labour", "unskilled_wage", "wage_floor"):
-            self.assertIn(key, figures)
-        self.assertGreaterEqual(outcomes[-1].wage_floor_per_hour, 0.0)
+        grain, metal, labourer = economy_fixture.GRAIN, economy_fixture.METAL, economy_fixture.LABOURER
 
-    def test_summary_of_a_fixture_run(self):
-        setup = economy_fixture.small_setup()
-        _economy, outcomes = economy_fixture.run(setup, years=6)
-        figures = diagnostics.summary(outcomes, setup, economy_fixture.GRAIN, [economy_fixture.METAL])
-        self.assertTrue(0.0 < figures["hired_share"] <= 1.0)
-        self.assertTrue(0.0 <= figures["hunger_share"] <= 1.0)
-        self.assertGreater(figures["staple_over_labour"], 0.0)
+        def year(grain_price, wage, hunger):
+            return types.SimpleNamespace(prices={grain: grain_price, metal: 90.0}, wages={labourer: wage},
+                                         hired_hours=75.0, idle_hours=25.0, wage_floor_per_hour=0.5,
+                                         hunger_by_tile={"farms": hunger})
+        outcomes = [year(0.3, 1.0, 0.0), year(0.6, 2.0, 100.0), year(0.3, 3.0, 200.0)]
+        figures = diagnostics.summary(outcomes, setup, grain, [metal])
+        people = sum(setup.opening_population_by_tile.values())
+        floor = people * 250.0
+        self.assertAlmostEqual(figures["hired_share"], 0.75)
+        self.assertAlmostEqual(figures["unskilled_wage"], 2.0)
+        self.assertAlmostEqual(figures["wage_floor"], 0.5)
+        self.assertAlmostEqual(figures["wage_over_floor"], 4.0)
+        self.assertAlmostEqual(figures["hunger_share"], 100.0 / floor)
+        self.assertAlmostEqual(figures["staple_volatility"], math.log(2.0))
+        self.assertAlmostEqual(figures["metal_volatility"], 0.0)
+        self.assertAlmostEqual(figures["staple_over_labour"], 1.0)
 
 
 if __name__ == "__main__":

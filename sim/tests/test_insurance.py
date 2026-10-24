@@ -8,22 +8,26 @@ QUICK_TOPIC = True
 import unittest
 
 from sim.economy import insurance
-from sim.economy.economy import Economy
+from sim.economy.accounts import Book
 from sim.economy.insurance import HARVEST
+from sim.economy.market_memory import MarketMemory
 from sim.economy.record import EconomyRecord
-from sim.economy.types import Transfer
-from sim.tests import economy_fixture as fixture
+from sim.economy.types import CurrencySpec, Transfer
 
 MARKET_RATE = 0.05
+MONEY = "coin"
+AGENTS = ("agent:a", "agent:b", "agent:c")      # the founder, a holder and another holder, each with cash in the book
+CASH = 1000.0
 
 
 class InsuranceFixture(unittest.TestCase):
     def setUp(self):
-        self.economy = Economy(fixture.small_setup())
-        self.record = self.economy.record
+        self.record = EconomyRecord(book=Book(), memory=MarketMemory(), currency=CurrencySpec(MONEY, "fiat", None, 0.0, None))
         self.state = self.record.capital
-        self.money = self.economy.setup.currency_id
-        self.founder, self.holder, self.other = sorted(self.record.cohorts)[:3]
+        self.money = MONEY
+        self.founder, self.holder, self.other = AGENTS
+        for agent in AGENTS:
+            self.record.book.transfer(Transfer("edge:legacy", agent, MONEY, CASH, "opening"))
         self.supply = self.record.book.money_supply(self.money)
 
     def balance(self, agent):

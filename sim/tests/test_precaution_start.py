@@ -11,6 +11,7 @@ from sim.engine import projects_starting
 from sim.engine.projects_starting import StartingMixin
 
 QUICK_TOPIC = True
+UNDER_TEST = {"start_project"}
 
 BILL = 1000.0
 HOURS = 200.0

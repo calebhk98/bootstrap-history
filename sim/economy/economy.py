@@ -10,7 +10,7 @@ from typing import Any, Dict, Mapping, Optional, Tuple
 
 from sim.world import capital_market
 
-from . import outlay_room, taxes, bondage, bondage_hours, bonded_purchase, banks, carriage_hours, credit, credit_lines, debt_relief, credit_claims, currency, equity, labour, land_market, lending, merchants_credit, producers, shares, sites, state_budget, tax_farming, titles_ground, titles_inheritance, titles_moves, titles_worked, unit_cost
+from . import outlay_room, taxes, bondage, bondage_hours, bonded_purchase, banks, carriage_hours, credit, credit_idle_rate, credit_lines, debt_relief, credit_claims, currency, equity, land_market, lending, merchants_credit, producers, shares, sites, state_budget, tax_farming, titles_ground, titles_inheritance, titles_moves, titles_worked, unit_cost
 from .credit_view import CreditView
 from .market_areas import AreaMap
 from .market_areas_follow import follow
@@ -33,7 +33,7 @@ from .types import Bid, EDGE_CONSUMPTION, GoodsMove, Transfer, is_edge
 from .year_close import (check_money, close_agents, dispatch_merchants, money_taxes, national_prices,
                          remember_basket_price_level, wear_and_spoilage)
 from .year_goods import add_orders, clear_goods, cohort_orders, merchant_orders, state_orders
-from .labour_supply import HourSupply
+from .labour_supply import HourSupply, anchor_wage_in_prices
 from .labour_state import people_by_trade
 from .year_labour import clear_labour, labour_offers, outside_option_by_tile
 from .year_accounts import YearAccounts, build as build_accounts, stocks as stocks_held
@@ -320,7 +320,7 @@ class Economy:
         plot = household_hours_year.plot_schedules(self.setup, self.record, view, everyone, self._own_plot_options(),
                                                    self._hectares_held(), usable)
         level = view.perceived_price_level(self.setup.currency_id)
-        anchor_wage = {trade: anchor * level for trade, anchor in (self.record.leisure_anchor_wage if anchors is None else anchors).items()}
+        anchor_wage = anchor_wage_in_prices(self.record.leisure_anchor_wage if anchors is None else anchors, level)
         faced = {(offer.trade, offer.area): view.wage(offer.trade, offer.area) or offer.reservation_wage for offer in everyone}
         return HourSupply(everyone, plan, work, plot, usable, anchor_wage, faced)
 
@@ -387,12 +387,8 @@ class Economy:
         record.credit_granted = {}
         if not requests:
             record.expansion_runs = {}      # a working-capital loan struck ahead of the year left no plant to wait for
-            if funds:
-                # savings on offer and nobody borrowing: lenders compete the rate down toward the lowest
-                # they will lend at, at the market's usual pace
-                floor = min(offer.minimum_rate for offer in funds)
-                record.memory.rates[money] = labour.sticky_move(record.memory.rates.get(money), floor,
-                                                                credit.RATE_ADJUSTMENT_SHARE_PER_YEAR)
+            if funds:       # savings on offer and nobody borrowing
+                record.memory.rates[money] = credit_idle_rate.rate_with_no_borrowers(record.memory.rates.get(money), funds)
             return {}
         debt = credit_claims.principal_by_borrower(record.loans)
         offered = credit_lines.hold_reserve(funds, record.banks)     # the reserve is held out of every lender's offer
