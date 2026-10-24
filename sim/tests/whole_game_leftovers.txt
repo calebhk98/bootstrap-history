@@ -1,2 +1,0 @@
-# Undeclared test modules that build a whole game (Complaint 640). Convert one to a rule test or declare it, then delete its line.
-# `python3 -m sim.tests --whole-game-checks` fails when this list and the tree disagree.
