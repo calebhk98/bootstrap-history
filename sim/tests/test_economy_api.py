@@ -1,37 +1,68 @@
-"""sim/economy/api.py: its accessors agree with reading the record directly. The wall (every outside import is published) is
-test_economy_api_wall.py."""
+"""sim/economy/api.py: each accessor agrees with reading the record it is given. The wall (every outside import is
+published) is test_economy_api_wall.py."""
 QUICK_TOPIC = True
 
+import types
 import unittest
 
 from sim.economy import api
-from sim.tests import economy_fixture
+
+
+class StubBook:
+    def edge_net(self, edge, money):
+        return ("net", edge, money)
+
+    def edge_volume(self, edge, money):
+        return ("volume", edge, money)
+
+    def balance(self, agent, money):
+        return ("balance", agent, money)
+
+    def holdings(self, agent):
+        return ("holdings", agent)
+
+
+def stand_in(**record_fields):
+    setup = types.SimpleNamespace(currency_id="coin", civ_id="home", unskilled_trade="labourer",
+                                  countries=lambda: ("home",))
+    return types.SimpleNamespace(setup=setup, record=types.SimpleNamespace(book=StubBook(), **record_fields))
 
 
 class EconomyApiTests(unittest.TestCase):
-    def test_accessors_match_direct_reads(self):
-        economy, _outcomes = economy_fixture.run(years=1)
-        record, money = economy.record, economy.setup.currency_id
-        self.assertEqual(api.opening_quantities(economy), record.opening_basket)
-        self.assertEqual(api.producers_of(economy), record.producers)
-        self.assertEqual(api.interest_rate(economy), record.memory.rates.get(money))
-        self.assertEqual(api.external_trade_net(economy), record.book.edge_net(api.EDGE_EXTERNAL, money))
-        self.assertEqual(api.external_trade_volume(economy), record.book.edge_volume(api.EDGE_EXTERNAL, money))
-        for agent in sorted(record.producers):
-            self.assertEqual(api.account_balance(economy, agent), record.book.balance(agent, money))
-            self.assertEqual(api.account_holdings(economy, agent), record.book.holdings(agent))
-        volumes = {}
-        for key, volume in record.volumes.items():
-            good = key.split("|", 1)[0]
-            volumes[good] = volumes.get(good, 0.0) + volume
-        self.assertEqual(api.traded_volumes(economy), volumes)
-        self.assertTrue(volumes)
-        wages = {}
-        for key, wage in record.memory.wages.items():
-            wages.setdefault(key.split("|", 1)[0], []).append(wage)
-        self.assertEqual(api.wages_by_trade(economy), wages)
-        self.assertTrue(wages)
+    def test_opening_quantities_is_a_copy_of_the_opening_basket(self):
+        basket = {"grain": 3.0, "ore": 1.0}
+        economy = stand_in(opening_basket=basket)
+        self.assertEqual(api.opening_quantities(economy), basket)
+        self.assertIsNot(api.opening_quantities(economy), basket)
 
+    def test_producers_of_lists_every_producer_when_one_country_is_held(self):
+        producers = {"a": types.SimpleNamespace(tile="x"), "b": types.SimpleNamespace(tile="y")}
+        self.assertEqual(api.producers_of(stand_in(producers=producers)), producers)
+
+    def test_interest_rate_reads_the_currencys_rate_and_is_none_without_one(self):
+        economy = stand_in(memory=types.SimpleNamespace(rates={"coin": 0.07}))
+        self.assertEqual(api.interest_rate(economy), 0.07)
+        self.assertIsNone(api.interest_rate(stand_in(memory=types.SimpleNamespace(rates={}))))
+
+    def test_external_trade_net_reads_the_external_edge(self):
+        self.assertEqual(api.external_trade_net(stand_in()), ("net", api.EDGE_EXTERNAL, "coin"))
+
+    def test_external_trade_volume_reads_the_external_edge(self):
+        self.assertEqual(api.external_trade_volume(stand_in()), ("volume", api.EDGE_EXTERNAL, "coin"))
+
+    def test_account_balance_reads_the_currency_balance(self):
+        self.assertEqual(api.account_balance(stand_in(), "agent"), ("balance", "agent", "coin"))
+
+    def test_account_holdings_reads_the_books_holdings(self):
+        self.assertEqual(api.account_holdings(stand_in(), "agent"), ("holdings", "agent"))
+
+    def test_traded_volumes_sum_each_good_over_its_markets(self):
+        economy = stand_in(volumes={"grain|north": 2.0, "grain|south": 3.0, "ore|north": 5.0})
+        self.assertEqual(api.traded_volumes(economy), {"grain": 5.0, "ore": 5.0})
+
+    def test_wages_by_trade_lists_each_trades_market_wages(self):
+        economy = stand_in(memory=types.SimpleNamespace(wages={"smith|north": 2.0, "smith|south": 3.0, "miner|north": 1.0}))
+        self.assertEqual(api.wages_by_trade(economy), {"smith": [2.0, 3.0], "miner": [1.0]})
 
 
 if __name__ == "__main__":

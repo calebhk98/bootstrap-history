@@ -3,9 +3,11 @@
 QUICK_TOPIC = True
 
 import dataclasses
+import types
 import unittest
 
-from sim.economy import labour
+from sim.economy import diagnostics, labour
+from sim.economy.households_basket import NeedSpec
 from sim.economy.setup import EconomySetup, TradeSpec
 
 
@@ -17,16 +19,13 @@ class SetupContentIdTests(unittest.TestCase):
 
 
 class HungerNeedTests(unittest.TestCase):
-    def test_hunger_counts_the_need_the_setup_names(self):
-        from sim.tests import economy_fixture
-        basket = economy_fixture.basket()
-        famine = dataclasses.replace(basket, needs=tuple(  # a floor no harvest can meet
-            dataclasses.replace(need, subsistence_per_person=100.0 * need.subsistence_per_person) for need in basket.needs))
-        _economy, named_food = economy_fixture.run(economy_fixture.small_setup(basket=famine), years=3)
-        _economy, named_other = economy_fixture.run(
-            economy_fixture.small_setup(basket=famine, hunger_need=economy_fixture.ORNAMENT), years=3)
-        self.assertGreater(sum(named_food[-1].hunger_by_tile.values()), 0.0)
-        self.assertEqual(sum(named_other[-1].hunger_by_tile.values()), 0.0)
+    def test_hunger_share_counts_the_floor_of_the_need_the_setup_names(self):
+        needs = (NeedSpec("food", 250.0, 0.6, (("grain_kg", 1.0),)), NeedSpec("ornament", 10.0, 0.05, (("metal_kg", 1.0),)))
+        outcome = types.SimpleNamespace(hunger_by_tile={"farms": 500.0, "town": 500.0})
+        names_food = types.SimpleNamespace(basket=types.SimpleNamespace(needs=needs), hunger_need="food")
+        names_ornament = types.SimpleNamespace(basket=types.SimpleNamespace(needs=needs), hunger_need="ornament")
+        self.assertAlmostEqual(diagnostics.hunger_share(outcome, names_food, 10.0), 1000.0 / 2500.0)
+        self.assertAlmostEqual(diagnostics.hunger_share(outcome, names_ornament, 10.0), 1000.0 / 100.0)
 
 
 class DangerPayTests(unittest.TestCase):
