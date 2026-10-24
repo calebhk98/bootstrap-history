@@ -1,5 +1,4 @@
-"""Dashboard history capping: the trim rule is called with a built state. The save round trip and the game_options
-command are in test_dashboard_history_cap_scenario.py."""
+"""Dashboard history capping: the trim rule is called with a built state. The game_options command is in test_game_options_command.py."""
 QUICK_TOPIC = True
 
 from .harness import check
