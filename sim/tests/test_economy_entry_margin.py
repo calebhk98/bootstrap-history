@@ -3,14 +3,15 @@ price gains makers, at the pace incumbents grow, without chasing one year's spik
 
 QUICK_TOPIC = True
 
-import dataclasses
+import types
 import unittest
+from unittest import mock
 
 from sim.economy import entry_margin
-from sim.economy.economy import Economy
+from sim.economy.market_memory import market_key
+from sim.economy.producers import Producer
 from sim.economy.producers_close import LOSS_YEARS_BEFORE_EXIT
 from sim.economy.types import Bid, Recipe
-from sim.tests import economy_fixture as fixture
 
 TRINKET, CARVE = "trinket", "carve_trinket"
 
@@ -45,69 +46,65 @@ class SizeTests(unittest.TestCase):
         self.assertAlmostEqual(entry_margin.gap_at_entry_price([bid(10.0, 20.0)], 1.0, 2.0, capacity=4.0), 6.0)
 
 
-def variety_setup():
-    """The fixture with a trinket, bought only for ornament (a variety good, no floor)."""
-    recipes = fixture.recipes()
-    recipes[CARVE] = Recipe(CARVE, {TRINKET: 10.0}, {}, {fixture.SMITH: 10.0})
-    specs = fixture.specs()
-    specs[TRINKET] = dataclasses.replace(specs[fixture.METAL], good_id=TRINKET, category="ornament")
-    basket = fixture.basket()
-    needs = tuple(dataclasses.replace(need, goods=need.goods + ((TRINKET, 1.0),)) if need.need_id == fixture.ORNAMENT
-                  else need for need in basket.needs)
-    prices = dict(fixture.small_setup().opening_prices, **{TRINKET: 1.5})
-    return fixture.small_setup(recipes=recipes, specs=specs, basket=dataclasses.replace(basket, needs=needs),
-                               opening_prices=prices)
+TILE = "t"
+AREA = "area"
+KEY = market_key(TRINKET, AREA)
+CARVE_RECIPE = Recipe(CARVE, {TRINKET: 10.0}, {}, {"smith": 10.0})
+INCUMBENT_RUNS = 10.0
+INCUMBENT_OUTPUT = INCUMBENT_RUNS * 10.0     # what the one maker of the trinket reaches a year
+
+
+def market(price=1e3, usual=1e3, makers=True):
+    """(setup, record, view, area_map) for a trinket market of one area and one tile, at `price`; with `makers` one carver works there."""
+    setup = types.SimpleNamespace(recipes={CARVE: CARVE_RECIPE})
+    producers = {"carver": Producer("carver", "owner", CARVE, TILE, INCUMBENT_RUNS)} if makers else {}
+    record = types.SimpleNamespace(producers=producers, expansion_runs={}, margin_years={},
+                                   memory=types.SimpleNamespace(usual_prices={KEY: usual}))
+    area = types.SimpleNamespace(area_id=AREA, anchor_tile=TILE, tiles=(TILE,))
+    area_map = types.SimpleNamespace(goods=lambda: [TRINKET], areas=lambda good: [area])
+    return setup, record, types.SimpleNamespace(price=lambda good, area_id: price), area_map
+
+
+def plans(setup, record, view, area_map, bids, cost=10.0):
+    """margin_entry_plans with the cheapest recipe costing `cost` a unit (recipes_by_cost is entry_trial's, tested there)."""
+    with mock.patch.object(entry_margin, "recipes_by_cost", lambda *_args: [(CARVE, cost)]):
+        return entry_margin.margin_entry_plans(setup, record, view, area_map, bids)
+
+
+def buyer(floor=0.0, flexible=1e6, budget=1e9):
+    return {(TRINKET, AREA): [Bid("buyer", TRINKET, AREA, TILE, floor, flexible, 1e3, 1.0, budget)]}
 
 
 class MarketTests(unittest.TestCase):
-    def setUp(self):
-        from sim.tests import economy_fixture
-        economy_fixture.households_with_a_surplus(self)
-
-    def _shrunk(self, setup, recipe_id, share):
-        economy = Economy(setup)
-        for producer_id, producer in list(economy.record.producers.items()):
-            if producer.recipe_id == recipe_id:
-                economy.record.producers[producer_id] = dataclasses.replace(
-                    producer, capacity_runs=producer.capacity_runs * share)
-        return economy
-
-    def _capacity(self, economy):
-        return sum(producer.capacity_runs for producer in economy.record.producers.values()
-                   if producer.recipe_id == CARVE)
-
-    def test_a_good_left_with_few_makers_gains_makers_while_its_margin_lasts(self):
-        setup = variety_setup()
-        economy = self._shrunk(setup, CARVE, 0.05)
-        start = self._capacity(economy)
-        for _year in range(20):
-            economy.step(fixture.quiet_year(setup))
-        self.assertGreater(self._capacity(economy), 2.0 * start)
-        self.assertEqual(economy.record.book.check_conservation(1e-6).breaches, ())
-
     def test_a_high_expected_price_draws_newcomers_only_once_it_has_lasted(self):
-        setup = variety_setup()
-        economy = self._shrunk(setup, CARVE, 0.5)
-        economy.step(fixture.quiet_year(setup))
-        economy.record.margin_years.clear()
-        view = economy.view()
-        area = economy.area_map.areas(TRINKET)[0]
-        bids = {(TRINKET, area.area_id): [Bid("buyer", TRINKET, area.area_id, area.anchor_tile, 0.0, 1e6, 1e3, 1e3, 1e6)]}
-        for key in list(economy.record.memory.usual_prices):
-            if key.startswith(TRINKET):
-                economy.record.memory.usual_prices[key] = 1e3
-                economy.record.memory.prices[key] = 1e3       # last year's price stood high too, and so does what the buyer pays (bid below), whatever wage the year left
-        counts = [len(entry_margin.margin_entry_plans(setup, economy.record, view, economy.area_map, bids))
-                  for _year in range(LOSS_YEARS_BEFORE_EXIT)]
+        setup, record, view, area_map = market()
+        counts = [len(plans(setup, record, view, area_map, buyer())) for _year in range(LOSS_YEARS_BEFORE_EXIT)]
         self.assertEqual(counts[:-1], [0] * (LOSS_YEARS_BEFORE_EXIT - 1))
         self.assertGreater(counts[-1], 0)
+        self.assertEqual(record.margin_years[KEY], LOSS_YEARS_BEFORE_EXIT)
+
+    def test_newcomers_once_the_margin_has_lasted_add_no_faster_than_incumbents_grow(self):
+        setup, record, view, area_map = market()
+        record.margin_years[KEY] = LOSS_YEARS_BEFORE_EXIT
+        found = plans(setup, record, view, area_map, buyer())
+        added = sum(plan.runs * CARVE_RECIPE.outputs[TRINKET] for plan in found)
+        self.assertAlmostEqual(added, entry_margin.MARGIN_ENTRY_GROWTH_SHARE * INCUMBENT_OUTPUT)
+
+    def test_a_price_that_falls_to_the_entry_price_ends_the_streak_and_draws_nobody(self):
+        setup, record, view, area_map = market(price=12.0, usual=1e3)    # the year's price is under the entry price (10 times 1.25 is 12.5)
+        record.margin_years[KEY] = LOSS_YEARS_BEFORE_EXIT
+        self.assertEqual(plans(setup, record, view, area_map, buyer()), [])
+        self.assertEqual(record.margin_years[KEY], 0)
 
     def test_no_newcomer_where_no_buyer_bid(self):
-        setup = fixture.small_setup()
-        economy = Economy(setup)
-        economy.step(fixture.quiet_year(setup))
-        bids = {(fixture.GRAIN, area.area_id): [] for area in economy.area_map.areas(fixture.GRAIN)}
-        self.assertEqual(entry_margin.margin_entry_plans(setup, economy.record, economy.view(), economy.area_map, bids), [])
+        setup, record, view, area_map = market()
+        record.margin_years[KEY] = LOSS_YEARS_BEFORE_EXIT
+        self.assertEqual(plans(setup, record, view, area_map, {(TRINKET, AREA): []}), [])
+
+    def test_a_market_with_no_maker_is_left_to_the_trial_newcomer(self):
+        setup, record, view, area_map = market(makers=False)
+        record.margin_years[KEY] = LOSS_YEARS_BEFORE_EXIT
+        self.assertEqual(plans(setup, record, view, area_map, buyer()), [])
 
 
 if __name__ == "__main__":

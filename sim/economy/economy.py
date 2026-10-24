@@ -10,7 +10,7 @@ from typing import Any, Dict, Mapping, Optional, Tuple
 
 from sim.world import capital_market
 
-from . import outlay_room, taxes, bondage, bondage_hours, bonded_purchase, banks, carriage_hours, credit, credit_lines, debt_relief, credit_claims, currency, equity, labour, land_market, lending, merchants_credit, producers, shares, sites, state_budget, tax_farming, titles_ground, titles_inheritance, titles_moves, titles_worked, unit_cost
+from . import outlay_room, taxes, bondage, bondage_hours, bonded_purchase, banks, carriage_hours, credit, credit_idle_rate, credit_lines, debt_relief, credit_claims, currency, equity, land_market, lending, merchants_credit, producers, shares, sites, state_budget, tax_farming, titles_ground, titles_inheritance, titles_moves, titles_worked, unit_cost
 from .credit_view import CreditView
 from .market_areas import AreaMap
 from .market_areas_follow import follow
@@ -387,12 +387,8 @@ class Economy:
         record.credit_granted = {}
         if not requests:
             record.expansion_runs = {}      # a working-capital loan struck ahead of the year left no plant to wait for
-            if funds:
-                # savings on offer and nobody borrowing: lenders compete the rate down toward the lowest
-                # they will lend at, at the market's usual pace
-                floor = min(offer.minimum_rate for offer in funds)
-                record.memory.rates[money] = labour.sticky_move(record.memory.rates.get(money), floor,
-                                                                credit.RATE_ADJUSTMENT_SHARE_PER_YEAR)
+            if funds:       # savings on offer and nobody borrowing
+                record.memory.rates[money] = credit_idle_rate.rate_with_no_borrowers(record.memory.rates.get(money), funds)
             return {}
         debt = credit_claims.principal_by_borrower(record.loans)
         offered = credit_lines.hold_reserve(funds, record.banks)     # the reserve is held out of every lender's offer

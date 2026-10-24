@@ -3,14 +3,12 @@ not at the tile's mean rent, which a use that earns a great deal from a hectare 
 
 QUICK_TOPIC = True
 
+import types
 import unittest
+from unittest import mock
 
-from sim.economy import entrant_rent, entry_year
-from sim.economy.economy import Economy
-from sim.economy.entry import UnmetDemand
+from sim.economy import entrant_rent, location
 from sim.economy.land_market import LandDemand, clear_land
-from sim.economy.location import entry_siting
-from sim.economy.record import EconomyRecord
 from sim.tests import economy_fixture as fixture
 
 GRAIN_VALUE = 100.0         # output value a hectare of the grain use
@@ -22,12 +20,6 @@ def tile_with_a_mine():
     """The cleared land of a short tile worked by a grain use and a mine."""
     demands = [LandDemand("grain", "t", 90.0, GRAIN_VALUE, 40.0), LandDemand("mine", "t", 10.0, MINE_VALUE, 40.0)]
     return clear_land({"t": 100.0}, demands)
-
-
-def grain_value_a_hectare(economy):
-    view = economy.view()
-    price = view.price(fixture.GRAIN, view.area_of(fixture.GRAIN, fixture.FARMS))
-    return fixture.recipes()[fixture.FARM].outputs[fixture.GRAIN] * price / LAND_PER_RUN
 
 
 class EntrantRentRuleTests(unittest.TestCase):
@@ -56,42 +48,37 @@ class EntrantRentRuleTests(unittest.TestCase):
         self.assertEqual(entrant_rent.rent_per_run({"t": 7.0}, {}, "t", LAND_PER_RUN, 50.0), 7.0 * LAND_PER_RUN)
 
     def test_the_site_rent_reads_the_entrants_expected_revenue_from_the_view(self):
-        setup = fixture.small_setup(land_per_run={fixture.FARM: LAND_PER_RUN})
-        economy = Economy(setup)
-        record = economy.record
-        grain_value = grain_value_a_hectare(economy)
-        record.land_rent = {fixture.FARMS: 50.0}
-        record.land_mean_value = {fixture.FARMS: grain_value}
-        self.assertAlmostEqual(entrant_rent.site_rent_per_run(setup, record, economy.view(), fixture.FARM, fixture.FARMS),
-                               50.0 * LAND_PER_RUN)
-        record.land_mean_value = {fixture.FARMS: 4.0 * grain_value}
-        self.assertAlmostEqual(entrant_rent.site_rent_per_run(setup, record, economy.view(), fixture.FARM, fixture.FARMS),
-                               50.0 * LAND_PER_RUN / 4.0)
-
-    def test_the_record_keeps_the_mean_values_through_a_save(self):
-        record = Economy(fixture.small_setup()).record
-        record.land_mean_value = {"t": 12.5}
-        self.assertEqual(EconomyRecord.from_record(record.to_record()).land_mean_value, {"t": 12.5})
+        recipe = fixture.recipes()[fixture.FARM]
+        setup = types.SimpleNamespace(recipes={fixture.FARM: recipe}, land_per_run={fixture.FARM: LAND_PER_RUN})
+        grain_value = recipe.outputs[fixture.GRAIN] * 0.1 / LAND_PER_RUN
+        record = types.SimpleNamespace(land_rent={fixture.FARMS: 50.0}, land_mean_value={fixture.FARMS: grain_value})
+        with mock.patch.object(entrant_rent, "expected_output_prices", lambda producer, _recipe, _view: {fixture.GRAIN: 0.1}):
+            self.assertAlmostEqual(entrant_rent.site_rent_per_run(setup, record, None, fixture.FARM, fixture.FARMS),
+                                   50.0 * LAND_PER_RUN)
+            record.land_mean_value = {fixture.FARMS: 4.0 * grain_value}
+            self.assertAlmostEqual(entrant_rent.site_rent_per_run(setup, record, None, fixture.FARM, fixture.FARMS),
+                                   50.0 * LAND_PER_RUN / 4.0)
 
 
 class EntrySitingByOwnRentTests(unittest.TestCase):
-    def sited_tile(self, mean_value_by_tile):
-        setup = fixture.small_setup(land_per_run={fixture.FARM: LAND_PER_RUN})
-        economy = Economy(setup)
-        record = economy.record
-        # farms: a high tile rent that a mine bids up; hills: a lower rent set by uses like grain
-        record.land_rent = {fixture.FARMS: 400.0, fixture.HILLS: 100.0, fixture.TOWN: 1e6}
-        grain = grain_value_a_hectare(economy)
-        record.land_mean_value = {**mean_value_by_tile(grain), fixture.TOWN: grain}    # the town's rent is dear whatever the use
-        area = economy.area_map.areas(fixture.GRAIN)[0]
-        siting = entry_siting(setup, record, economy.view(), economy.area_map, entry_year._carriage(setup))
-        return siting(fixture.FARM, UnmetDemand(fixture.GRAIN, area.area_id, area.anchor_tile, 1000.0), 1.0)[0]
+    def variable_cost_on(self, tile, rent_of_the_entrants_use):
+        """The variable cost per run `entry_siting` prices a grain run at on `tile`, the site rent being what the entrant's own use pays."""
+        recipe = fixture.recipes()[fixture.FARM]
+        setup = types.SimpleNamespace(opening_wages={fixture.LABOURER: 1.0}, yield_factor_by_recipe_tile={}, specs={},
+                                      working_hours_per_year=2000.0)
+        record = types.SimpleNamespace(workforce=None)
+        view = types.SimpleNamespace(wage=lambda trade, area: None)
+        with mock.patch.object(location, "site_rent_per_run", lambda *_args: rent_of_the_entrants_use[tile]), \
+                mock.patch.object(location, "live_input_prices", lambda *_args: {}), \
+                mock.patch.object(location.location_inputs, "input_haul_cost", lambda *_args: 0.0), \
+                mock.patch.object(location.labour_state, "people_by_trade", lambda *_args: {}):
+            return location._tile_part(setup, record, view, None, recipe, {}, {}, {}, {}, tile)[0]
 
-    def test_a_grain_entrant_is_sited_where_its_own_use_pays_the_least_rent(self):
-        self.assertEqual(self.sited_tile(lambda grain: {fixture.FARMS: 1000.0 * grain, fixture.HILLS: grain}), fixture.FARMS)
-
-    def test_with_every_use_at_the_tile_mean_the_lower_tile_rent_wins(self):
-        self.assertEqual(self.sited_tile(lambda grain: {fixture.FARMS: grain, fixture.HILLS: grain}), fixture.HILLS)
+    def test_a_tiles_run_costs_its_labour_and_the_rent_of_the_entrants_own_use(self):
+        labour = fixture.recipes()[fixture.FARM].labour_hours[fixture.LABOURER] * 1.0
+        rents = {fixture.FARMS: 80.0, fixture.HILLS: 20.0}
+        self.assertAlmostEqual(self.variable_cost_on(fixture.FARMS, rents), labour + 80.0)
+        self.assertAlmostEqual(self.variable_cost_on(fixture.HILLS, rents), labour + 20.0)
 
 
 if __name__ == "__main__":

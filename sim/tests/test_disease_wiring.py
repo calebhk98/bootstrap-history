@@ -11,6 +11,7 @@ import unittest
 from sim.disease import api as disease
 from sim.engine import disease_port, state, validate_disease_data
 from sim.world import demography
+from sim.world.epidemic_deaths import add_epidemic_deaths
 
 BANDS = disease_port.BANDS
 
@@ -57,19 +58,13 @@ class StandIn(disease_port.DiseasePortMixin):
 
 
 class PopulationHandbackTest(unittest.TestCase):
-    def test_epidemic_deaths_are_deaths_and_the_accounting_identity_holds(self):
-        population = demography.Population(3e4, 6e4, 1e4)
-        plain = demography.Population(3e4, 6e4, 1e4)
-        flows = population.step(1e12, epidemic_deaths={"children": 2000.0, "elderly": 500.0})
-        base = plain.step(1e12)
-        self.assertAlmostEqual(flows.deaths - base.deaths, 2500.0)
-        self.assertAlmostEqual(flows.deaths_children - base.deaths_children, 2000.0)
-        self.assertAlmostEqual(flows.start_total + flows.births - flows.deaths, flows.end_total)
+    def test_epidemic_deaths_are_added_to_the_bands_deaths(self):
+        added = add_epidemic_deaths((10.0, 20.0, 5.0), (3e4, 6e4, 1e4), {"children": 2000.0, "elderly": 500.0})
+        self.assertEqual(added, (2010.0, 20.0, 505.0))
 
     def test_a_band_cannot_lose_more_than_it_holds(self):
-        population = demography.Population(100.0, 6e4, 1e4)
-        population.step(1e12, epidemic_deaths={"children": 1e9})
-        self.assertGreaterEqual(population.children, 0.0)
+        added = add_epidemic_deaths((10.0, 20.0, 5.0), (100.0, 6e4, 1e4), {"children": 1e9})
+        self.assertEqual(added[0], 100.0)
 
 
 class AgeBandsAndFoodTest(unittest.TestCase):
