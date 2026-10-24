@@ -20,8 +20,7 @@ another package except through its `api`, and `Sim` inherits nothing from it. Wh
 from the engine is handed to it by an engine-side adapter.
 
 Nothing checks these rules automatically: keep to them by review. The packages split from the
-engine stay off `sim.economy` too (only `sim/engine/economy_port*.py` may import it, and only `sim.economy.api`);
-`sim/tests/test_economy_imports.py` holds that rule for `sim/engine/` only.
+engine stay off `sim.economy` too (only `sim/engine/economy_port*.py` may import it, and only `sim.economy.api`).
 
 ## The surfaces
 

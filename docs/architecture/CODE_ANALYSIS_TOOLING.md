@@ -17,62 +17,11 @@ tools." What follows is the answer, tool by tool.
 `sim/code_health.py` (naming, duplication, complexity and miscellaneous
 scans) and `sim/prove_rename_safe.py` were removed. Recover them with
 `git show 97473f1:sim/code_health.py` and
-`git show 97473f1:sim/prove_rename_safe.py`. What remains is `ruff`,
-`pylint` and `rope`, described below.
+`git show 97473f1:sim/prove_rename_safe.py`. What remains is `pylint` and `rope`, described below.
 
 ---
 
-## 2. `ruff.toml`: what changed and why
-
-`ruff.toml` now enables four more rules beyond `F`: `B905`
-(zip-without-explicit-strict, 19 findings), `B007`
-(unused-loop-control-variable, 16), `SIM115`
-(open-file-with-context-handler, 52), `RUF100` (unused-noqa, 84 real /
-85 measured under `--isolated`, see below). Each is selected individually,
-not by family, and the file's own comments carry the full reasoning
-alongside each one, per CLAUDE.md section 6. Counts:
-`python3 -m ruff check sim/ --statistics` (uses the real, non-isolated
-config).
-
-Rejected, and why, recorded in `ruff.toml` itself so the next agent does not
-re-propose them blind: `N*` (checks casing, not length - `pylint` in section 3 is
-the real answer to the naming problem), `PL*` (627 findings, 627 of them
-`PLR2004` - one deliberate decision, comparing computed quantities to
-thresholds is this simulation's whole job), `ARG*` (178 findings, dominated
-by the CLI dispatcher's uniform `cmd_something(a)` signature - another one
-deliberate decision, the same shape already recorded for `F403`/`F405`),
-`PERF401` (54 findings, an unmeasured micro-optimisation with no evidence
-this codebase's loops are a bottleneck), `C90` (complexity is not gated here). Also rejected:
-the REST of `B` and `SIM` beyond the two rules taken from each -
-`SIM300` (yoda-conditions) in particular actively fights this codebase's own
-convention of writing numeric bounds checks as `0.0 < value`
-(interval-notation order, used throughout `sim/world/`), so family-level
-selection was rejected in favour of naming the two rules worth having from
-each family individually.
-
-**One caveat on the `RUF100` count.** `RUF100`'s answer depends on which
-OTHER rules are actually enabled, because it reports a `noqa` comment as
-unused only when nothing selected would have fired there.
-`ruff check --isolated --select RUF100` (ignoring this repo's real config)
-reports 85 - inflated, because under `--isolated` nothing else is enabled
-either, so every `# noqa: F401` in the tree looks unused regardless of
-whether it is really guarding something. The number that matters is under
-the real config, where `F` (which includes `F401`) is also active:
-`python3 -m ruff check --select F,RUF100 sim/ --statistics` → 84 (`F401`'s
-own 78 alongside it, `F811`'s 2 pre-existing). `ruff.toml`'s comment states
-this explicitly so nobody re-quotes the isolated number as the real one.
-
-**Effect on the suite.** `sim/tests/test_static_checks.py` (the
-`static_checks` topic) hardcodes `--isolated --select F821` and does not
-read `ruff.toml`'s `[lint] select` at all, so none of these four additions
-change what that topic checks or its pass/fail. Verified:
-`python3 -m sim.tests --only static_checks` → `2 checks,
-0 failures`, both before and after this change. The only thing this change affects is what a person or agent sees running
-plain `ruff check sim/` by hand.
-
----
-
-## 3. `.pylintrc`: the naming-sweep worklist
+## 2. `.pylintrc`: the naming-sweep worklist
 
 New file, repository root. Enables only `invalid-name` (`C0103`) - every
 other `pylint` check is off, on purpose, so a naming sweep is not also
@@ -92,7 +41,7 @@ Run it: `python3 -m pylint sim/`; it lists a `file:line` for every short name.
 
 ---
 
-## 4. Renaming: `rope`, tried and adopted as the pipeline
+## 3. Renaming: `rope`, tried and adopted as the pipeline
 
 CLAUDE.md section 7 and this repository's own history are emphatic that
 regex-based renaming corrupts this codebase (it is 30-50% prose by line; an

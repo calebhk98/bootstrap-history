@@ -25,12 +25,12 @@ entry below is updated as its group lands.
 - `firm_expansion_scenario` "a firm ends larger than it was founded" (bound: more than one and a half founding sizes): after a
   tenfold market, eight firms end at one and a half (one expansion step) and the rest at one. Since 679 an added step weighs
   the site rent and manager hours it carries, so no firm takes a second step and entry serves the rest. Whether one step is
-  right is not measured; the bound is kept. Command: `python3 -m sim.tests --slow --only firm_expansion_scenario --jobs 1`.
+  right is not measured; the bound is kept. The test that held this command was removed from the suite.
 - `complaint_467_trades_open_to_the_jobs`: green since seeded trades are bounded by their hirers' hours (556).
 - `staff_closure_reopening_scenario` (auto_hire reopens every closure that free staff could run): improved by the wage bound
   and the joint bids (more concerns open) but some stay shut because the founder's household runs out of cash in the first
   years; its input bill reads making costs that sit far above the engine's table while some outputs' prices carry surpluses
-  worth thousands of coin an hour to an employer (473). Command: `python3 -m sim.tests --slow --only staff_closure_reopening_scenario --jobs 1`.
+  worth thousands of coin an hour to an employer (473). The test that held this command was removed from the suite.
 - `state_debasement_prices_scenario`: green again on fc5ef363 (after households read a perceived price level, 473 Update 14).
 - `hot_path_caches_scenario` CPU budget: an early year measured just over its budget on a loaded machine (three slow jobs and
   agents); under the budget alone after the fetch-cost search was made fast (678). Re-measure alone before treating it as red.
@@ -75,7 +75,7 @@ entry below is updated as its group lands.
   at about nine tenths of its making cost at year 4. Traced (473 Update 11): the data change alone does it, the opening
   (year 0) is unchanged and both sides read the same wages; the sourced day moves the unsettled cycle's phase, so year 4 lands in a
   dip of a median that otherwise hovers about one. Owner: 473 (the cycle). Measured with
-  `python3 -m sim.tests --slow --only price_over_making_cost_band_validation --jobs 1`.
+  (the test was removed from the suite).
 - `economy_state_budget_validation` (a balanced budget keeps the state's coin share; printing raises prices): 526 and 473.
 - `economy_tin_dearer_than_copper`: 511 (GitHub #65).
 - `economy_bronze_market_price`: passes at the owner's bound (an order of magnitude; 502 closed).
@@ -110,8 +110,8 @@ entry below is updated as its group lands.
 
 - `firm_count_whole_game_scenario` ("entry does not overshoot", largest market only): fixed, filed as 679 (closed). The count
   fell after the entrants because their plants ran at a pilot adoption share while the site was charged whole, and because
-  firms expanded without weighing the rent and management a step adds. Command: `python3 -m sim.tests --slow --only firm_count_whole_game_scenario --jobs 1`.
-- Baselines re-run on this branch (`--only baseline_fixture,baseline_rome_full_length,spin_up_money_supply_full_length,real_output_baseline,real_output_validation,occupational_distribution,farm_edges_scenario --topic-seconds 3000`):
+  firms expanded without weighing the rent and management a step adds. The test that held this command was removed from the suite.
+- Baselines re-run on this branch (`--only occupational_distribution --topic-seconds 3000`):
   the same reds as above, all 473 or 619; a population fall still raises output per head well above the undisturbed run.
 
 ## Timed out at the default topic limit

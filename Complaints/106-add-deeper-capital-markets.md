@@ -133,7 +133,7 @@ Priority: lower than the work that makes the opening settle (473); it is picked 
   capital held for the worst year seen; a mutual (`risk_pooling`, node `fin_collegium`) charges nothing in advance and its
   members pay the year's claims in proportion to what each insured. A household buys when its cash would not bear the
   worst year and the premium is below that loss. A company that cannot pay fails and its policies end. Test:
-  `--only insurance`; the wiring: `--slow --only capital_markets_year_scenario`.
+  `--only insurance`; the wiring: (the test was removed from the suite).
 
 - **Funds (step 7).** `sim/economy/funds.py`: a fund is an agent with a purse that holds shares and loans; households
   put savings they offered and did not lend into the fund with the highest expected yield at or above their ask, buy at

@@ -49,10 +49,7 @@ from sim.ui.proto.compact import compact_stuck as _compact_stuck
 # --- the three commands that already had their own hand-rolled 'json' scan
 # must still parse exactly as they always have - this is the regression the
 # task called out by name: "if you have to change an existing message, that
-# is a red flag". These three exact-equality checks are the ones
-# test_scanners_and_scheduling.py already made; repeated here because this
-# file is what a reviewer of THIS change should be able to read start to
-# finish without cross-referencing another topic module.
+# is a red flag". These three are exact-equality checks.
 check("'state json' still parses exactly as before",
       _PT("state json")[0] == {"cmd": "state", "full": False, "json": True},
       _PT("state json"))

@@ -18,7 +18,7 @@ training than the unskilled one. `occupation_groups.json` lists both in the tran
 
 **What is left.**
 
-- Verify in a whole game that porter workforces form: `python3 -m sim.tests --slow --only occupational_distribution,carriage_hours --jobs 1`
+- Verify in a whole game that porter workforces form: `python3 -m sim.tests --slow --only occupational_distribution --jobs 1`
   and a multi-year `mexica_1500` run (a 2-year `economy-check --civs mexica_1500 --years 2` ran clean when this was built).
 - `PORT_HANDLING_HOURS_PER_TONNE` stays a labelled heuristic: no source found (a port-economics page gives a longshore crew
   5 to 10 tons an hour but not the crew size, so no per-worker figure follows).

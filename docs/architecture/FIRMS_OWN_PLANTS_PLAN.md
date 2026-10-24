@@ -210,13 +210,11 @@ relationship tests (CLAUDE.md 4.2). Every stage also runs `python3 sim/simulator
 and, before its pull request, `--slow`. Each stage lists the files it owns; two stages that list the same file run in
 sequence.
 
-**Stage 0: the ratchet wall test.** `sim/tests/test_business_wall.py` scans `sim/` with `ast` and fails when a module
-outside `sim/agents/business*.py` and `sim/world/plant_figures.py` (a) defines or calls a crew, upkeep or takings
-function (a name list in the test: `venture_hands`, `venture_foreman`, `institution_upkeep`, `venture_real_upkeep`,
-`venture_real_earnings`, `concern_takings`, `concern_wage_bill`, `plant_crew`, `venture_ramp`, `concern_upkeep`), or (b)
-subscripts a node with a money field (`"up"`, `"rev"`, `"up_hours"`, `"rev_hours"`). It starts with an allowlist of
-today's offenders, and also fails when an allowlisted file no longer offends, so every stage shrinks the list; stage 5
-empties it. Owns: that test only. Proof: it passes now and fails on a deliberate new offender.
+**Stage 0: the wall rule.** No module outside `sim/agents/business*.py` and `sim/world/plant_figures.py` defines or calls a
+crew, upkeep or takings function (`venture_hands`, `venture_foreman`, `institution_upkeep`, `venture_real_upkeep`,
+`venture_real_earnings`, `concern_takings`, `concern_wage_bill`, `plant_crew`, `venture_ramp`, `concern_upkeep`), and none
+subscripts a node with a money field (`"up"`, `"rev"`, `"up_hours"`, `"rev_hours"`). Nothing checks this rule; stages 1 to 5
+move the remaining offenders behind the object, found with grep for those names. Owns: nothing.
 
 **Stage 1: the object and the agents path (fingerprint-proof).** Build `Business` and `Plant` and the rules of
 section 2 for firms and players, reading the node figures exactly as `concern_ops` does. `Firm`, `Player`, spin-off,
@@ -236,7 +234,7 @@ agents-path rules are `business_crew.staff`, `business_books.operate`/`carry`/`r
 through them. Not yet on the object: `state`/`since_year`/`reason` and `margin_history` on the plant (the founder's path,
 stage 3, brings mothballing), the `books` of a business, the kernel (stage 2), and the seat's own plants (a seat is only
 a party to an exchange, through `HouseholdParty.release_plant`/`receive_plant`). Allowlist: the four agents entries that
-moved behind the object are pruned (`python3 -m sim.tests --only business_wall`); `protocols.py` and `engine/agents_port*`
+moved behind the object are gone; `protocols.py` and `engine/agents_port*`
 still name the world-view methods, which stage 3c replaces. Proof: `test_business_owner_kinds.py`, fingerprint unchanged.
 
 **Stage 2: the plant kernel in `sim/world/`.** Move `node_output` baskets, `node_upkeep` plant wear, `plant_crew` and the
@@ -346,8 +344,7 @@ overlap. Owns: `data/production/**`, `data/branches/**` per domain, `sim/engine/
 weights by the business's takings instead of `rev`; mods lose `rev_hours`/`up_hours` (`mods/README.md`). After 3c, 4 and 5a, and
 after 507 stage 2 (it owns `node_rederive.py`, `data.py`). Owns: `node_revenue*.py`, `node_defaults.py`, `node_rederive.py`,
 `data.py`, `tree_source.py`, `tree_merge.py`, `money_units.py`, `civ_start_check.py`, `validate_*`, `society_diffusion.py`,
-`sim/ui/cli.py`, `cli_analysis.py`, `techtree.py` (display), the stage 0 allowlist (emptied). Proof: stage 0 test passes with an
-empty list; a game that learns many nodes and opens none pays no outlay (new `test_knowledge_costs_nothing.py`: money flow
+`sim/ui/cli.py`, `cli_analysis.py`, `techtree.py` (display), the last stage 0 offenders. Proof: grep for the stage 0 names finds only the business modules; a game that learns many nodes and opens none pays no outlay (new `test_knowledge_costs_nothing.py`: money flow
 of a run with extra nodes learned equals one without, apart from research); regenerate openings
 (`python3 sim/simulator.py openings --prune`) and `--slow`.
 

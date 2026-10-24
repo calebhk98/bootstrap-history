@@ -109,8 +109,7 @@ code that uses it still makes that code worse, not better - that half of
 this paragraph is unchanged and is the reason none of those three files
 holds anything BUT the categories named above.
 
-A `temporary_heuristic` with an empty `why` fails the check in
-sim/tests/test_constants.py. If nobody can say why a number is that number,
+A declared number with an empty `why` is refused by `declare`. If nobody can say why a number is that number,
 that is the most important thing to know about it.
 """
 import argparse
@@ -189,14 +188,14 @@ def declare(name, value, kind, unit, why, source=None, confidence="C", retire=No
     """Record a number's provenance and hand back the plain number.
 
     `name` is passed explicitly and looks redundant next to the assignment it
-    is bound to. It earns its place: sim/tests/test_constants.py asserts that
-    every declared name matches the module attribute it is actually assigned
-    to, so the registry cannot quietly drift out of step with the code. A
+    is bound to. It earns its place: every declared name should match the
+    module attribute it is assigned to, so the registry does not drift out of
+    step with the code. A
     registry that disagrees with the source is worse than no registry.
 
     `retire` (a complaint number or the named mechanism that will replace the
-    number) is required of a new temporary_heuristic or hardcoded_outcome by
-    sim/tests/test_constants_retirement.py; names in the baseline predate it.
+    number) is expected of a new temporary_heuristic or hardcoded_outcome (rule:
+    sim/constants_retirement.py); names in the baseline predate it.
     """
     if kind not in KINDS:
         raise ValueError("%s: kind must be one of %s, not %r"

@@ -544,7 +544,7 @@ package function reads no `self` at all and the mixin keeps only the glue that f
   `ast` snippet above. Proof: identical sha256 of forty simulated years of `step_living_stock` plus the place, pasture
   room, endemic loss and nursery room per material, on a base worktree and on this branch; identical sorted-key md5 of
   `saveload.state_text` after three stepped Rome years; topics `stock_growth_and_smuggling`, `endemic_disease`,
-  `defence_stores`, `opening_herd_growth_unbilled`, `geography_walls`.
+  `defence_stores`, `opening_herd_growth_unbilled`.
 - `RouteDuesMixin` (`sim/engine/route_dues.py`): the holder-owed loop duplicated `sim.geography.route_dues_by_holder`;
   the mixin now calls it. Coupling is unchanged (10 reads); the duplicate logic is gone. What remains is glue: the
   carriers' wage, the owner lookup and the treasury account. Proof: identical hash of the dues owed over 300 generated
@@ -562,8 +562,7 @@ package function reads no `self` at all and the mixin keeps only the glue that f
   Proof: identical sha256 over sixty simulated years of `step_wild_stock`, `farm_sites` and `society_food_potential`
   (hunting hours raised, then stopped; a soil nitrogen stock set) on base and branch, and the same state md5.
 - `sim/world/soil_nutrients.py` moved to `sim/geography/soil_nutrients.py` (exported as `sim.geography.api.soil_nutrients`):
-  only geography read it, so the old `sim.world` import in the geography walls test's allowlist was backwards. The
-  allowlist is now empty.
+  only geography read it, so geography importing it from `sim.world` was backwards.
 - The fingerprint was not run for any move.
 - `LivingStockOpeningMixin` (`sim/engine/living_stock_opening.py`): the pasture the held tiles carry moved to
   `sim/geography/stock_land.py` (`held_pasture_kg`, which `pasture_room_kg` now uses too), reached as

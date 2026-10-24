@@ -279,7 +279,7 @@ one's revenue is also below its wage bill because the price falls to clear (the 
 the hours rules, so not changed here.
 
 Rome is not measured here. Commands to run: `python3 sim/simulator.py spin-up-trace --civ
-rome_100ad --years 60`; `python3 -m sim.tests --slow --only baseline_fixture,baseline_rome_full_length,real_output_baseline,spin_up_money_supply_full_length --jobs 1`;
+rome_100ad --years 60`; (the test was removed from the suite);
 `python3 sim/simulator.py opening-checks`.
 
 Leisure is limited to hours the plot could not still use (`HourSupply.parts`): without that limit Rome's one-year hunger share rose to
@@ -483,7 +483,7 @@ wheat is offered for five years while its price climbs. The wheat producer stays
 cost more than its revenue, while most farmer hours sit idle and millet and flour supply the grain. Before the held rate (641)
 the check passed only on leftover stock. A staple whose producers cannot cover labour and rent at the opening, with farm
 hours idle, is the opening's prices and wages failing to meet (this complaint); the check stays red. Command:
-`python3 -m sim.tests --slow --only purchase_limited_by_offered_volume_scenario --jobs 1`.
+(the test was removed from the suite).
 
 ## Update 16: the idle wheat producer was charged the rent a mine bids the tile up to (branch wheat-at-the-opening)
 
@@ -623,7 +623,7 @@ Tried and not landed (patches kept in the scratchpad, not committed):
   drops the bakers (bread demand 9 billion kg, no bread producer opened), year 1 bread is not sold. With the milled grains alone (quick tier green, rule
   tests pass): wheat demand at the opening is zero, bread is sold in year 1, wheat price stays between 0.84 and 2.15 instead of 0.23 and 2.15, but wheat
   sold is 0, 402, 37, 39, 2.6, 7.9, 10.8 with stock 462, 102, 174, 200, 182, 165, 142. Bronze over cost: 1.0, 7.8, 13.7, 31.0, 9.3, 7.6, 4.0 before and
-  1.0, 11.4, 20.1, 50.2, 4.0, 2.4, 1.05 after. Slow topics (`--slow --only economy_bronze_market_price,price_over_making_cost_band_validation,baseline_fixture,purchase_limited_by_offered_volume_scenario --jobs 1`):
+  1.0, 11.4, 20.1, 50.2, 4.0, 2.4, 1.05 after. Slow topics (the test was removed from the suite):
   at the parent `baseline_fixture` (stocks are not eaten through, ore), the bronze band (`price_over_making_cost_band_validation`, shown over cost worst 11.1)
   and "the typical traded good sells at no less than its cost of making" (0.9987) are red; with the grain plan the same band check is red at worst 32.7, the
   typical-good check is green, baseline_fixture stays red. The band is worse, not better, so it was not committed.

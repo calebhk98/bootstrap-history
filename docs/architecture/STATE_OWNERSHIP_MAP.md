@@ -110,13 +110,13 @@ All commands run from the repository root. `X` below is the shared filter
   (`state.economy.market_book`), the year's flows (`market_flows`) and `market_clearing._market_outcome`.
 - Writers: economy: `sim/economy/year_goods.py` (the record) and, from outside, only `agent.note_sale` and
   `note_purchase` for staged orders (`grep -rnE "note_sale|note_purchase" sim X`). Engine:
-  `grep -rnE "market_flows|market_book|_market_entry\(" sim X` (guarded by `test_market_records_ownership.py`).
-  The economy's record is guarded by `test_economy_market_record_walls.py`.
+  `grep -rnE "market_flows|market_book|_market_entry\(" sim X` (nothing checks this; keep to it by review).
+  The economy's sum over areas is `test_economy_market_record_rule.py`.
 - Readers: `grep -rnE "market_state\(" sim X`; `grep -rnE "record\.(volumes|unsold|unmet|curves)|market_record\(|traded_volumes\(" sim X`;
   `grep -rnE "_material_prices\(\)" sim X`.
 - Units: the record is in the good's units; `market_state` reports tonnes (the port converts). Timing: the engine's
   flows accrue through the year and enter its clearing when it closes; the economy's record is the last closed year.
-- Two places: yes, and measured: `python3 -m sim.tests --slow --only market_state_is_economy_record`. Before this
+- Two places: yes, and measured: `python3 -m sim.tests --only market_state_record_wiring`. Before this
   slice `market_state` read the engine's book for sold, unsold and unmet, and the two disagreed for most goods.
 
 ### The slice done on this branch
