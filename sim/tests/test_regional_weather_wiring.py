@@ -2,7 +2,7 @@
 civilisation's own territory and pooled by cultivable-land share, and the seed of a draw is a pure function of
 (civilisation, cell, year, the game's weather salt). Each rule is called on the real method over a stand-in holding a
 civilisation's data, a salt and a dice (no game is built). Determinism across two games and a save is
-test_weather_multiplier_ignores_dice; the century bar is test_regional_weather_century_validation."""
+test_weather_multiplier_ignores_dice; the century bar (population above its start) is `python3 sim/simulator.py baseline-ensemble`."""
 import collections
 import random
 import statistics

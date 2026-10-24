@@ -1,20 +1,25 @@
 """A seat that belongs to a partner country deals in that country's own markets and answers to its government:
-the same question gives a different, correct answer for a home seat and a partner seat (the hand-built
+the same question gives a different, correct answer for a home seat and a partner seat (stand-ins
 two-country economy and stand-ins, no game)."""
 
 QUICK_TOPIC = True
 
+from types import SimpleNamespace
+from unittest import mock
+
 from .harness import check
 
-from sim.economy import country_figures
-from sim.engine import society_actors
+from sim.engine import economy_port_year, society_actors
 from sim.engine.economy_port_year import AgentEconomy
 from sim.engine.seat_run import SeatRunMixin
 from sim.engine.society_actors import ActorsMixin
-from sim.tests import economy_fixture as fixture
 
-setup = fixture.two_country_setup()
-economy, _outcomes = fixture.run(setup, years=4)
+COIN_PER_UNIT = 2.0
+HOME, NORTH = "home", "north"
+LABOURER = "labourer"
+# what the economy's own readers return for a market scope: the home country's, then the north's
+WAGES = {None: {LABOURER: 10.0}, NORTH: {LABOURER: 15.0}}
+PRICES = {None: {"grain": 3.0}, NORTH: {"grain": 5.0, "salt": 7.0}}
 
 
 class Stored(dict):
@@ -27,38 +32,61 @@ class FakeState:
 
 
 class FakeSim:
-    civ = {"id": setup.civ_id}
+    civ = {"id": HOME}
     state = FakeState
 
 
-agent = AgentEconomy.__new__(AgentEconomy)
-agent._sim = FakeSim()
-agent._economy = economy
-agent._answers = None
-agent._country_answers = {}
-agent._stale = set()
-agent._built_from = FakeState.economy.agent_economy
+def seat_economy():
+    """An `AgentEconomy` over a stand-in economy whose figures `answers` reads through the economy's readers."""
+    agent = AgentEconomy.__new__(AgentEconomy)
+    agent._sim = FakeSim()
+    agent._economy = SimpleNamespace(setup=SimpleNamespace(coin_per_unit=COIN_PER_UNIT, countries=lambda: [HOME, NORTH],
+                                                           unskilled_trade=LABOURER, civ_id=HOME))
+    agent._answers = None
+    agent._country_answers = {}
+    agent._stale = set()
+    agent._built_from = FakeState.economy.agent_economy
+    agent.economy = lambda: agent._economy
+    return agent
 
-home_wage_before = agent.wage_per_hour(fixture.LABOURER)
-agent._answers, agent._country_answers = None, {}
-# the north's labour markets pay half as much again as the home ones did
-for key in list(economy.record.memory.wages):
-    if key.endswith("work@" + fixture.NORTH_FARMS) or key.endswith("work@" + fixture.NORTH_PORT):
-        economy.record.memory.wages[key] *= 1.5
-home_wage = agent.wage_per_hour(fixture.LABOURER)
-north_wage = agent.wage_per_hour(fixture.LABOURER, fixture.NORTH)
-coin = setup.coin_per_unit
-check("a home seat is paid the home labour markets' wage", home_wage > 0.0, home_wage)
-check("a partner country's seat is paid that country's own wage", north_wage > 0.0 and north_wage != home_wage, (home_wage, north_wage))
-set_by_markets = country_figures.wages_per_hour(economy, fixture.NORTH)[fixture.LABOURER]
-check("the partner wage is the one its labour markets set", abs(north_wage - set_by_markets * coin) < 1e-9, None)
-home_prices, north_prices = agent.answers()[0], agent.answers(fixture.NORTH)[0]
+
+def answers_over_readers(call):
+    """`call(agent)` with the economy's readers replaced by the figures above."""
+    readers = {"wages_by_trade_weighted": lambda economy, country=None: WAGES[country],
+               "shown_prices_of": lambda economy, country=None: (PRICES[country], set()),
+               "interest_rate": lambda economy: 0.05}
+    with mock.patch.multiple(economy_port_year.economy_api, **readers):
+        return call(seat_economy())
+
+
+home_wage = answers_over_readers(lambda agent: agent.wage_per_hour(LABOURER))
+north_wage = answers_over_readers(lambda agent: agent.wage_per_hour(LABOURER, NORTH))
+check("a home seat is paid the home labour markets' wage", home_wage == WAGES[None][LABOURER] * COIN_PER_UNIT, home_wage)
+check("a partner country's seat is paid that country's own wage, in the same coin",
+      north_wage == WAGES[NORTH][LABOURER] * COIN_PER_UNIT, (home_wage, north_wage))
+home_prices = answers_over_readers(lambda agent: agent.answers()[0])
+north_prices = answers_over_readers(lambda agent: agent.answers(NORTH)[0])
 check("a partner country's seat buys at the prices of the markets its tiles trade in",
-      north_prices[fixture.GRAIN] > 0.0 and set(north_prices) <= set(home_prices) | set(north_prices), None)
-check("the home answers are not moved by the other country's wages", abs(home_wage - home_wage_before) < 1e-9, (home_wage, home_wage_before))
-check("a country the economy does not hold is answered as the home country",
-      agent.answers("elsewhere") == agent.answers() and agent.wage_per_hour(fixture.LABOURER, "elsewhere") == home_wage, None)
-check("the home answer is the same whether or not the country is named", agent.answers(setup.civ_id) is agent.answers(), None)
+      north_prices == {good: price * COIN_PER_UNIT for good, price in PRICES[NORTH].items()}, north_prices)
+check("the home answers are the home markets' prices", home_prices == {"grain": 3.0 * COIN_PER_UNIT}, home_prices)
+
+
+def after_naming_the_north(agent):
+    agent.answers(NORTH)
+    return agent.wage_per_hour(LABOURER)
+
+
+check("the home answers are not moved by the other country's wages",
+      answers_over_readers(after_naming_the_north) == home_wage, None)
+
+
+def elsewhere(agent):
+    return agent.answers("elsewhere") is agent.answers() and agent.wage_per_hour(LABOURER, "elsewhere") == agent.wage_per_hour(LABOURER)
+
+
+check("a country the economy does not hold is answered as the home country", answers_over_readers(elsewhere), None)
+check("the home answer is the same whether or not the country is named",
+      answers_over_readers(lambda agent: agent.answers(HOME) is agent.answers()), None)
 
 
 class Seat:

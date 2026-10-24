@@ -248,8 +248,8 @@ elsewhere: the weather cell and pooled-draw checks of `regional_weather_wiring` 
 and its scenario), the housing sum of `reserve_staff_policy` (`test_auto_hire_buys_room`), the cheapest-route relocation
 check (now a rule on the small fixture map). Found vacuous and rewritten: the two "does not claim nothing rests on it" checks of
 `refusal_wording_and_screens` read the band from an unfogged game, where the field is empty, and passed whatever the rule
-did; they now run on a fogged stand-in. Baseline validation: `test_regional_weather_century_validation` (slow-only, naming Complaint 46).
-Kept as scenarios: `run_reproducibility` (determinism), the save round trips and two-game match of the weather, the
+did; they now run on a fogged stand-in. The century baseline validation was later deleted (Complaint 46 names the measuring command).
+Kept as scenarios: `run_reproducibility` (determinism; later deleted, see Complaint 27 for the command), the save round trips and two-game match of the weather, the
 `again` command, the Options menu, the starting grants per civilisation.
 
 
@@ -310,7 +310,7 @@ function. What is left, after the rules named in the list below were pulled out 
   and the need-driven levy (`Government.pay_standing_need`, `Sim._state_pressure`; `state_budget_scenario`); the requisition,
   office and confiscation reports that call the extracted functions stay as wiring in `state_notices_scenario`;
 - the expected calendar years of a risky project and the calendar floor (`Sim.expected_calendar_years`, `calendar_floor`;
-  `project_retry_and_risk_scenario`);
+  `project_retry_and_risk_scenario`, now rule tests on stand-ins in `test_project_retry_and_risk_rules`);
 - the rest of `_step_staff`: the `_grow_to` closure and the per-trade replacement loop (the arithmetic around them is plain);
 - the `Sim` methods that compose the domestic haul from prices (`_freight_mode_costs`, `_haul_route`), which only run in a game.
 
@@ -364,6 +364,17 @@ Rules are called on stand-ins, one function per test. New quick modules: `test_s
 Deleted as held elsewhere: `state_debasement_prices_scenario` (`test_state_debasement_prices`), `state_arrears_scenario` and `state_borrowing_gate_scenario` (`test_state_arrears`, `test_state_borrowing_gate`), `state_corvee_game` (`test_state_corvee`, `test_levy_hours_per_worker`), `state_revenue_forms_scenario` (`test_state_taxes_in_kind`, `test_state_works`), `state_spending_scenario` (`test_state_budget_lines`, `test_state_budget_rules`, `test_country_patronage`, `test_state_works`), `temperature_caps` (`test_temperature_caps_rule`), `start_waits_for_trade_scenario` (`test_start_waits_for_trade`), `step_reply_severity_scenario` (`test_event_severity`).
 
 Deleted with no replacement, because the claim lives only in a long dispatch or phase function or reads the unsettled opening, and no simulator command measures it: the `step` command calling the per-year hook and an interrupt keeping the saved years (`_agent_dispatch`); `_agent_state` adding the `demographic_emergency` field; `start` adding `today_you_could_not_open_this_when_it_is_done` and `waits_for_trades` to its reply; `ventures` shortening its staffing-share note on the second ask; `Sim._state_pressure` charging the founder the levy and its dice being gated on `events` and fog never leaking a node id; the save round trip of the state's books; the pre-modern diet bands of Rome's opening basket (Complaint 560: no command prints the opening's food shares). The remaining `Government.pay_standing_need` and `_state_pressure` flows are worth extracting further when 473 closes.
+
+## Applied: one-function batch 4 (purses_share_the_economy_book through year_accounts)
+
+Each module now calls one function on written-out inputs (stand-in economies, books, records and `self`s). Deleted as whole-game claims, with
+their measure: `regional_weather_century_validation` (Complaint 46), `state_debasement_prices` (624), `run_reproducibility` (27), the cargo
+price and customs checks of `trader_cargo_book` (115), the hull-production and durable-wear year of `ship_purchases` (617). From
+`project_retry_and_risk_scenario` (now `test_project_retry_and_risk_rules`) three checks have no replacement: the save round trip of the
+retry counts (every `--session` command saves then loads), `start_reason` letting `point_contact_transistor` start once its listed
+prerequisites are met (tree data is pinned in `round8g_display`), and the fog scrub of the free-prerequisite hint (`fog_scrub`, `names_and_fog`).
+The detector flags a stand-in call of the method under test by name (`hire`, `open_plant`, `open_venture`) and two pure readers that share a
+builder's name (`spin_up_state`, `spin_up_years`, `spin_up_line`): the first group is declared `UNDER_TEST`, the second imported under another name.
 
 The multi-decade recovery claims (the wage premium after a mortality cut of nearly half is substantial fifty years on, does not grow without bound a century later, and does not rise as decades pass) read a population stepped for 150 years, not one rule; they left `sim/tests/test_mortality_shock_rules.py`. Measure them with `python3 sim/simulator.py baseline-ensemble` on a civilisation with a plague year.
 

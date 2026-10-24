@@ -9,6 +9,7 @@ import unittest
 from unittest import mock
 
 from sim.engine import economy_port_key, economy_port_year
+from sim.engine.economy_port_year import spin_up_years as years_from_environment   # reads the environment; runs no years
 
 FULL_GAME = {key: value for key, value in os.environ.items() if key != economy_port_year.SPIN_UP_YEARS_ENV}
 
@@ -83,12 +84,12 @@ class SettledReportTests(unittest.TestCase):
 
 class OpeningsReportTests(unittest.TestCase):
     def test_openings_says_plainly_when_the_opening_did_not_settle(self):
-        from sim.ui import cli_openings
-        unsettled = cli_openings.spin_up_line({"settled": False, "years": 30, "gap": 0.3})
-        settled = cli_openings.spin_up_line({"settled": True, "years": 12, "gap": 0.01})
+        from sim.ui.cli_openings import spin_up_line as describe_result   # formats a result; builds nothing
+        unsettled = describe_result({"settled": False, "years": 30, "gap": 0.3})
+        settled = describe_result({"settled": True, "years": 12, "gap": 0.01})
         self.assertIn("NOT SETTLED", unsettled)
         self.assertNotIn("NOT SETTLED", settled)
-        self.assertIn("no result", cli_openings.spin_up_line({}))
+        self.assertIn("no result", describe_result({}))
 
 
 class ShortenedSpinUpTests(unittest.TestCase):
@@ -96,12 +97,12 @@ class ShortenedSpinUpTests(unittest.TestCase):
 
     def test_a_game_without_the_variable_runs_the_declared_bounds(self):
         with mock.patch.dict(os.environ, FULL_GAME, clear=True):
-            self.assertEqual(economy_port_year.spin_up_years(),
+            self.assertEqual(years_from_environment(),
                              (int(economy_port_year.SPIN_UP_MAXIMUM_YEARS), int(economy_port_year.SPIN_UP_TRIMMED_YEARS)))
 
     def test_the_variable_names_both_stages(self):
         with mock.patch.dict(os.environ, {economy_port_year.SPIN_UP_YEARS_ENV: "4,1"}):
-            self.assertEqual(economy_port_year.spin_up_years(), (4, 1))
+            self.assertEqual(years_from_environment(), (4, 1))
 
     def test_a_shortened_spin_up_is_cached_apart_from_a_full_one(self):
         setup = {"civ_id": "rome_100ad"}
