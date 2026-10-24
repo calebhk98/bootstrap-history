@@ -746,3 +746,10 @@ Test migration (rule-tests-04): `economy_money_regimes` and `economy_money_regim
 checks read this unsettled economy; `python3 sim/simulator.py spin-up-trace --civ norse_900ad --years 7` prints the basket price level
 by year. The money-stock and mint rules are `test_mint_settles_by_regime` and `test_economy_mint`; the transmission to prices is
 `test_money_reaches_prices`.
+
+Test migration (rule-tests-04): `economy_innovator_pricing` (a near-zero-cost entrant: price starts near the incumbents', falls as the entrant grows, the
+entrant's takings within the demand ceiling; two further bounds were expected failures) and `economy_supply_collapse_scenario` (a stationary fixture's
+staple runs not falling by more than a bound over five years) are deleted: each read a year loop of the whole fixture economy and could not name the function
+that moved. No simulator command prints either; `python3 sim/simulator.py economy-check --civs rome_100ad --years 6` prints the staple and metal price
+volatility from the opening. The rules the supply-collapse test joined are `test_economy_stock_drawdown`, `test_economy_idle_capacity_life`,
+`test_economy_input_ceiling_share` and `test_economy_ask_band_chain`.
