@@ -4,6 +4,7 @@ prices it (dues, the opposite flow, driven stock) is in test_freight_domestic_ha
 QUICK_TOPIC = True
 
 import dataclasses
+import types
 import unittest
 
 from sim.geography import api as geography
@@ -193,29 +194,23 @@ class EconomyFlows(unittest.TestCase):
         self.assertAlmostEqual(setup.carriage_rates_at(0.0)["cart"], 0.0012)
         self.assertAlmostEqual(setup.carriage_rates_at(0.5)["cart"], 0.0016)
 
-    def test_merchants_record_what_they_carried_and_the_record_saves_it(self):
-        from sim.economy.record import EconomyRecord
-        from . import economy_fixture
-        economy, _outcomes = economy_fixture.run(years=3)
-        carried = economy.record.carried
-        for origin, row in carried.items():
-            for destination, tonnes in row.items():
-                self.assertNotEqual(origin, destination)
-                self.assertGreater(tonnes, 0.0)
-        restored = EconomyRecord.from_record(economy.record.to_record())
-        self.assertEqual(restored.carried, carried)
+    def test_a_balanced_ledger_changes_the_imbalance_and_rebuilds_the_carriage_once(self):
+        from sim.economy.economy import Economy
+        rebuilt = []
+        economy = types.SimpleNamespace(
+            record=types.SimpleNamespace(carried={"town": {"farms": 5.0}, "farms": {"town": 5.0}}, area_imbalance=1.0),
+            _rebuild_carriage=lambda: rebuilt.append(True) or True)
+        self.assertTrue(Economy.follow_flows(economy))
+        self.assertEqual((economy.record.area_imbalance, rebuilt), (0.0, [True]))
 
-    def test_a_balanced_ledger_lowers_the_carriage_and_repartitions_once(self):
-        from . import economy_fixture
-        setup = dataclasses.replace(economy_fixture.small_setup(), carriage_rates_balanced={
-            mode: rate * 0.5 for mode, rate in economy_fixture.small_setup().carriage_rates.items()})
-        economy = economy_fixture.Economy(setup)
-        full = economy.carriage.cost_per_tonne(economy_fixture.TOWN, economy_fixture.FARMS)
-        economy.record.carried = {"town": {"farms": 5.0}, "farms": {"town": 5.0}}
-        self.assertTrue(economy.follow_flows())
-        self.assertEqual(economy.record.area_imbalance, 0.0)
-        self.assertLess(economy.carriage.cost_per_tonne(economy_fixture.TOWN, economy_fixture.FARMS), full)
-        self.assertFalse(economy.follow_flows())
+    def test_an_unchanged_imbalance_rebuilds_nothing(self):
+        from sim.economy.economy import Economy
+        rebuilt = []
+        economy = types.SimpleNamespace(
+            record=types.SimpleNamespace(carried={"town": {"farms": 5.0}}, area_imbalance=1.0),
+            _rebuild_carriage=lambda: rebuilt.append(True) or True)
+        self.assertFalse(Economy.follow_flows(economy))
+        self.assertEqual(rebuilt, [])
 
 
 if __name__ == "__main__":

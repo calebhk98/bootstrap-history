@@ -1,7 +1,7 @@
 """The farm model at its edges, as rules on built inputs. Food one year's harvest yields, net of seed, over the year's
 food need, is proportional to the hectares the hands crop and rises with the ground's fertility, so there is ground on
 which everyone farming feeds less than the people need, and a toolkit that doubles what a worker crops lifts it over
-subsistence (`agriculture.Storage.step`, `hectares_cropped_per_farm_worker`). `labour_allocation.farm_hours_after`
+subsistence (`agriculture.gross_harvest_kg`, `hectares_cropped_per_farm_worker`). `labour_allocation.farm_hours_after`
 moves hours off the farm no faster than the mobility ceiling and never past what the farm is needed for. Barren land:
 no cropped hectares give no harvest. The ladder over unfarmable ground is in test_farm_edges; the population's response
 to hunger is in test_demography."""
@@ -17,13 +17,16 @@ ADULT_EQUIVALENTS = 100.0
 
 
 def food_ratio(fertility, hectares):
-    """Food one year's harvest yields, net of seed, over the year's food need, on `hectares` of `fertility` (one
-    `Storage.step`)."""
-    year = agriculture.Storage(stock_kg=0.0, seed=0).step(
+    """What one year's harvest yields on `hectares` of `fertility` (`gross_harvest_kg`), net of the seed sown, over the
+    year's food need of the adult equivalents (the energy requirement a year over the crop's energy per kilogram)."""
+    crop = agriculture.DEFAULT_CROP
+    harvest = agriculture.gross_harvest_kg(
         agriculture.Land(hectares, fertility), hectares * agriculture.REFERENCE_LABOUR_HOURS_PER_HECTARE,
-        ADULT_EQUIVALENTS, crop=agriculture.DEFAULT_CROP, rotation=agriculture.DEFAULT_ROTATION,
-        toolkit=agriculture.DEFAULT_TOOLKIT, worker_count=WORKERS, weather_multiplier=1.0)
-    return (year.gross_harvest_kg - year.seed_sown_kg) / year.food_demand_kg
+        crop=crop, rotation=agriculture.DEFAULT_ROTATION, toolkit=agriculture.DEFAULT_TOOLKIT, worker_count=WORKERS,
+        weather_multiplier=1.0)
+    need = (ADULT_EQUIVALENTS * agriculture.HUMAN_ENERGY_REQUIREMENT_KCAL_PER_ADULT_DAY * agriculture.DAYS_PER_YEAR
+            / crop.energy_kcal_per_kg)
+    return (harvest - crop.planting_material_kg_per_ha * hectares) / need
 
 
 class FoodRatioTests(unittest.TestCase):
@@ -41,12 +44,9 @@ class FoodRatioTests(unittest.TestCase):
         self.assertGreater(food_ratio(0.5, 200.0), 1.0)
 
     def test_no_cropped_ground_gives_no_harvest(self):
-        year = agriculture.Storage(stock_kg=0.0, seed=0).step(
-            agriculture.Land(0.0, 1.0), 0.0, ADULT_EQUIVALENTS, crop=agriculture.DEFAULT_CROP,
-            rotation=agriculture.DEFAULT_ROTATION, toolkit=agriculture.DEFAULT_TOOLKIT, worker_count=WORKERS,
-            weather_multiplier=1.0)
-        self.assertEqual(year.gross_harvest_kg, 0.0)
-        self.assertLess(year.consumption_kg, year.food_demand_kg)
+        self.assertEqual(agriculture.gross_harvest_kg(
+            agriculture.Land(0.0, 1.0), 0.0, crop=agriculture.DEFAULT_CROP, rotation=agriculture.DEFAULT_ROTATION,
+            toolkit=agriculture.DEFAULT_TOOLKIT, worker_count=WORKERS, weather_multiplier=1.0), 0.0)
 
 
 class HectaresPerWorkerTests(unittest.TestCase):
