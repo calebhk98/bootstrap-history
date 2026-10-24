@@ -734,6 +734,10 @@ class CapacityMixin:
             rows.append({"source": "your deputies", "people":
                          round(self.SUPERVISION_ROOM_PER_DIRECTOR_EXTRA * household.directors_extra, 2),
                          "what_it_is": "people you have trained to direct work"})
+        housing = max(0.0, household.worker_housing_places or 0.0)
+        if housing > 0.0:
+            rows.append({"source": "worker housing", "people": housing,
+                         "what_it_is": "places you have bought to house the people you employ"})
         for key, spec in self._world.effect_terms("supervision_room"):
             if self._world.effect_holds(key, spec):
                 rows.append({"source": key,

@@ -1,6 +1,6 @@
 """Complaint 493: base-rate world hazards hit every country, a dated world event log keeps a bounded number of years, and
 the yearly checks run in a game of several countries. Complaint 640: each rule is called on a stand-in game; the checks in
-a built game of two countries are in test_world_events_and_hazards_scenario."""
+the `world_events` command is test_world_events_command_and_save."""
 QUICK_TOPIC = True
 
 import types

@@ -20,9 +20,11 @@ import tempfile
 
 from sim.engine.ui_port import TRADE_FAMILY, downstream_count
 from sim.engine.ui_port import purchase_budget, trades_the_project_waits_for
+from .available_economics import specialist_foreman
 from .nodes import _did_you_mean
 from .quantity_units import read_quantity
 from .start_refusal import refusal_fields
+from .staffing_ceiling import trades_beyond_ceiling
 from sim.engine.ui_port import money_text, plain_number
 from sim.ui.memory import load_state, save_state
 from .util import _flag
@@ -89,14 +91,10 @@ def _cmd_start(sim, nodes, cmd, ended):
     _impossible = []
     _impossible_trades = set()
     _n0 = nodes[node_id]
-    _frac0 = min(1.0, 1.0 / max(1.0, _n0["yrs"]))
-    for _trade, _want in (_n0["lab"] or {}).items():
-        _need = _want * _frac0
-        if _need > 0 and sim.labour.hours_you_can_call_on(_trade) < _need:
-            _impossible.append("%s (wants %.0f hours a year; this society can "
-                               "field %.0f at most)"
-                               % (_trade, _need, max(0.0, sim.labour.hours_you_can_call_on(_trade))))
-            _impossible_trades.add(_trade)
+    for _trade, _need, _ceiling in trades_beyond_ceiling(_n0["lab"], _n0["yrs"], sim.labour.hours_you_can_call_on):
+        _impossible.append("%s (wants %.0f hours a year; this society can "
+                           "field %.0f at most)" % (_trade, _need, _ceiling))
+        _impossible_trades.add(_trade)
     # OVERSUBSCRIBED IS NOT THE SAME AS IMPOSSIBLE. The society may be
     # able to field the trade this wants and STILL not have enough of
     # it left once your own OTHER active work is already drawing on it
@@ -641,7 +639,6 @@ def _cmd_ventures(sim, nodes, cmd, ended):
         # is a quarter of it, and it is the number the refusal actually
         # quotes.
         _sup_s, _sup_a = sim.venture_hands(node_id)
-        _foreman_trade, _foreman_fte = sim.venture_foreman(node_id)
         row = {"id": node_id, "name": node["name"],
                 "earns_a_year": round(sim.venture_real_earnings(node_id), 1),
                 "forecast_basis": sim.venture_forecast_basis(node_id),
@@ -651,9 +648,7 @@ def _cmd_ventures(sim, nodes, cmd, ended):
                     sim.venture_upkeep_quote(node_id)["at_full_staffing"], 1),
                 "needs": {"scholars": round(_sup_s, 2),
                           "craftsmen": round(_sup_a, 2)},
-                "specialist_foreman": (
-                    {"trade": _foreman_trade, "fte": round(_foreman_fte, 2)}
-                    if _foreman_trade else None)}
+                "specialist_foreman": specialist_foreman(sim, node_id)}
         # A CAPABILITY, NOT ONLY A BUSINESS: every other row here is a
         # straightforward earn-vs-cost decision; these are not, because
         # closing one loses scholars it supports, household places it

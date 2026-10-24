@@ -1,4 +1,6 @@
 """Complaints/416: what a road or railway costs to build comes from the terrain it crosses."""
+QUICK_TOPIC = True
+
 import unittest
 
 from sim.geography import api, routes_graph

@@ -1,72 +1,148 @@
-"""SCENARIO (Complaint 640): A country seat (slow: builds a game, because the holder is a government actor the cast seeds): join reads back the
-seat's holder, it has no founder or household, a year runs with it, a household seat's reply is unchanged, and a
-country seat is handed over by the same path."""
-import os
-import tempfile
+"""Complaint 640: a country seat holds a government, not a household. Each rule is called on built inputs: the join command
+on a stand-in game, the addressing and refusal rules on built seats, the seat-run rules, the handover rules and the save."""
 
-from .harness import *  # noqa: F401,F403
-from sim.engine.saveload import load_state, save_state
+QUICK_TOPIC = True
+
+import types
+
+from .harness import check
+
+from sim.engine.seat_handover import handover_refusal, move_seat_fields
+from sim.engine.seat_run import run_is_over, seats_playing
+from sim.engine.state import SimulationState, deserialize_state, serialize_state
+from sim.engine.state_seat import COUNTRY_SEAT, FIRST_SEAT_ID, seat_from_template
+from sim.refusal import cause_of
 from sim.ui.proto import command_registry
-from sim.ui.proto import dispatch  # noqa: F401  (registers every command)
-from sim.ui.proto.seat_address import run_as_seat
+import sim.ui.proto.dispatch  # noqa: F401  (registers every command)
+from sim.ui.proto.seat_address import country_seat_refusal, run_as_seat
 
-game = sim(civ="rome_100ad", capital=1000.0, events=True)
-game.end_year = game.cfg["start_year"] + game.cfg["horizon_years"]
+HOME = "rome_100ad"
+GOVERNMENT = "gov_rome"
 handlers = command_registry.handlers()
 
 
-def send(cmd):
-    return run_as_seat(game, cmd, lambda command: handlers[command["cmd"]](game, game.nodes, command, None))
+def household_seat():
+    return seat_from_template({"starting_techs": ["fire"]}, 100.0, 1e9, {})
 
 
-household_reply = send({"cmd": "join", "seat": "merchant"})
+def country_seat(holder=GOVERNMENT):
+    seat = seat_from_template({"kind": COUNTRY_SEAT, "country": None}, 0.0, 1e9, {})
+    seat.holder = holder
+    return seat
+
+
+class JoinGame:
+    """What the join command reads: the seats, the countries with a government, and a join_seat that adds the seat."""
+
+    def __init__(self):
+        self.state = types.SimpleNamespace(seats={FIRST_SEAT_ID: household_seat()}, acting_seat=FIRST_SEAT_ID)
+        self.civ = {"id": HOME}
+        self.cfg = {"start_kit": "poor_scholar"}
+        self.nodes = {"fire": {}}
+        self.joined = []
+
+    def ended_seats(self):
+        return []
+
+    def society_techs_now(self):
+        return {"fire"}
+
+    def governed_countries(self):
+        return [HOME, "han_china_100ad"]
+
+    def join_seat(self, seat_id, template):
+        seat = country_seat() if template.get("kind") == COUNTRY_SEAT else household_seat()
+        self.state.seats[seat_id] = seat
+        self.joined.append((seat_id, template))
+        return seat
+
+
+def join(game, **fields):
+    return handlers["join"](game, {}, dict({"cmd": "join"}, **fields), None)
+
+
+# ---- the join command
+game = JoinGame()
+reply = join(game, seat="merchant")
+row = next(row for row in reply["seats"] if row["seat"] == "merchant")
 check("a household seat's join reply has its own fields and no country-seat ones",
-      household_reply["ok"] and household_reply["joined"] == "merchant"
-      and not {"kind", "holder", "founder", "household"} & set(household_reply), sorted(household_reply))
-merchant_row = next(row for row in household_reply["seats"] if row["seat"] == "merchant")
-check("a household seat's row has no kind or holder", "kind" not in merchant_row and "holder" not in merchant_row, merchant_row)
+      reply["ok"] and reply["joined"] == "merchant" and not {"kind", "holder", "founder", "household"} & set(reply), sorted(reply))
+check("a household seat's row has no kind or holder", "kind" not in row and "holder" not in row, row)
 
-reply = send({"cmd": "join", "seat": "senate", "seat_kind": "country"})
-home = game.civ["id"]
-check("a country seat joins", reply["ok"] and reply["joined"] == "senate" and reply["kind"] == "country", reply)
-check("its holder is the country's government", reply["holder"] == game.actors.government_of(home).actor_id
-      and reply["country"] == home, reply)
-check("it has no founder and no household", reply["founder"] is None and reply["household"] is None
-      and game.state.seats["senate"].founder is None and not game.state.seats["senate"].holds_household, reply)
+game = JoinGame()
+reply = join(game, seat="senate", seat_kind="country")
 row = next(row for row in reply["seats"] if row["seat"] == "senate")
-check("its row names the kind and holder", row["kind"] == "country" and row["holder"] == reply["holder"] and "capital" not in row, row)
-check("it is not among the household seats the year runs, and the game is not over with it",
-      "senate" not in game.playing_seats() and "senate" not in game.ended_seats() and not game.run_over(), game.playing_seats())
+check("a country seat joins, holding the government the engine gave it",
+      reply["ok"] and reply["joined"] == "senate" and reply["kind"] == "country" and reply["holder"] == GOVERNMENT
+      and reply["country"] == HOME, reply)
+check("a country seat's reply has no founder and no household", reply["founder"] is None and reply["household"] is None
+      and game.state.seats["senate"].founder is None and not game.state.seats["senate"].holds_household, reply)
+check("a country seat's row names the kind and holder and shows no purse", row["kind"] == "country" and row["holder"] == GOVERNMENT
+      and "capital" not in row, row)
+check("the join asks the engine for a country template", game.joined == [("senate", {"kind": "country", "country": HOME})], game.joined)
 
-refused = send({"cmd": "join", "seat": "nowhere", "seat_kind": "country", "country": "atlantis"})
-check("a country with no government is refused with its choices", refused["ok"] is False and refused["cause"] == "unknown_country"
-      and home in refused["choices"] and "nowhere" not in game.state.seats, refused)
-refused = send({"cmd": "join", "seat": "odd", "seat_kind": "island"})
+game = JoinGame()
+refused = join(game, seat="nowhere", seat_kind="country", country="atlantis")
+check("a country with no government is refused with its choices and no seat is added",
+      refused["ok"] is False and refused["cause"] == "unknown_country" and refused["choices"] == [HOME, "han_china_100ad"]
+      and "nowhere" not in game.state.seats, refused)
+refused = join(game, seat="odd", seat_kind="island")
 check("an unknown seat kind is refused", refused["cause"] == "unknown_seat_kind" and "odd" not in game.state.seats, refused)
-refused = send({"cmd": "join", "seat": "kitted", "seat_kind": "country", "kit": "poor_scholar"})
+refused = join(game, seat="kitted", seat_kind="country", kit="poor_scholar")
 check("a country seat takes no kit", refused["cause"] == "country_seat_has_no_kit" and "kitted" not in game.state.seats, refused)
-refused = send({"cmd": "state", "as": "senate"})
+
+# ---- which commands a country seat may run
+seats = {FIRST_SEAT_ID: household_seat(), "senate": country_seat()}
+stand_in = types.SimpleNamespace(state=types.SimpleNamespace(seats=seats))
+refused = country_seat_refusal(stand_in, "senate", {"cmd": "state"})
 check("a command that needs a household is refused for a country seat", refused["cause"] == "country_seat_has_no_household", refused)
+check("a command a country seat may run is not refused", country_seat_refusal(stand_in, "senate", {"cmd": "levers"}) is None, None)
+check("a household seat is never refused for lacking a household", country_seat_refusal(stand_in, FIRST_SEAT_ID, {"cmd": "state"}) is None, None)
 
-year_before = game.year
-reply = send({"cmd": "step", "as": "senate"})
-check("a year runs with a country seat in the game, stepped from it", reply["ok"] and game.year == year_before + 1, game.year)
+# ---- the year runs for household seats; a country seat steps it through the first of them
+class Runner:
+    def __init__(self, playing):
+        self.state = types.SimpleNamespace(seats=seats)
+        self.acted = []
+        self.playing = playing
 
-# handover goes through the same path: the replacement is an empty country seat
-send({"cmd": "join", "seat": "regent", "seat_kind": "country"})
+    def playing_seats(self):
+        return self.playing
+
+    def act_as(self, seat_id):
+        self.acted.append(seat_id)
+        import contextlib
+        return contextlib.nullcontext()
+
+
+runner = Runner([FIRST_SEAT_ID])
+reply = run_as_seat(runner, {"cmd": "step", "as": "senate"}, lambda command: {"ok": True, "command": command})
+check("a step from a country seat runs as the first playing household seat", reply["ok"] and runner.acted == [FIRST_SEAT_ID]
+      and reply["command"] == {"cmd": "step"}, (reply, runner.acted))
+reply = run_as_seat(Runner([]), {"cmd": "step", "as": "senate"}, lambda command: {"ok": True})
+check("with no household seat playing a step is refused with its cause", reply["ok"] is False and reply["cause"] == "no_household_seat", reply)
+
+# ---- the seat-run rules
+check("a country seat is not among the playing seats", seats_playing(seats) == [FIRST_SEAT_ID], seats_playing(seats))
+check("a country seat alone does not end the run", run_is_over({"senate": country_seat()}) is False, None)
+ended = household_seat()
+ended.founder.dead_reason = "denounced"
+check("a run is over when every household seat ended, whatever a country seat does",
+      run_is_over({FIRST_SEAT_ID: ended, "senate": country_seat()}) is True, None)
+
+# ---- handover
 check("a country seat cannot be handed to a household seat",
-      send({"cmd": "handover", "to": "merchant", "as": "senate"})["cause"] == "replacement_wrong_kind", None)
-reply = send({"cmd": "handover", "to": "regent", "as": "senate"})
-check("a country seat is handed over", reply["ok"] and reply["from"] == "senate" and reply["to"] == "regent"
-      and "senate" not in game.state.seats and game.state.seats["regent"].kind == "country", reply)
-check("the replacement holds the same government", game.state.seats["regent"].holder == game.actors.government_of(home).actor_id, None)
-game.step()
-check("the year runs after the handover", game.year == year_before + 2, game.year)
+      cause_of(handover_refusal(seats, "senate", FIRST_SEAT_ID)) == "replacement_wrong_kind", None)
+seats_two = {"senate": country_seat(), "regent": country_seat(holder=None)}
+check("a country seat can be handed to an empty country seat", handover_refusal(seats_two, "senate", "regent") is None, None)
+moved = move_seat_fields(seats_two, "senate", "regent")
+check("a country seat is handed over with its kind and holder", moved["from"] == "senate" and moved["to"] == "regent"
+      and "senate" not in seats_two and seats_two["regent"].kind == "country" and seats_two["regent"].holder == GOVERNMENT, moved)
 
-with tempfile.TemporaryDirectory() as folder:
-    path = os.path.join(folder, "save.json")
-    save_state(game, path)
-    load_state(game, path)
+# ---- save and load
+state = SimulationState(household=household_seat().household, projects=household_seat().projects, founder=household_seat().founder)
+state.seats["regent"] = country_seat()
+loaded = deserialize_state(serialize_state(state))
 check("a save keeps the country seat, its kind and holder",
-      game.state.seats["regent"].kind == "country" and game.state.seats["regent"].holder is not None
-      and game.state.seats["regent"].founder is None, list(game.state.seats))
+      loaded.seats["regent"].kind == "country" and loaded.seats["regent"].holder == GOVERNMENT
+      and loaded.seats["regent"].founder is None, list(loaded.seats))

@@ -19,7 +19,7 @@ from sim.constants import declare
 from sim.geography.api import layer_value, settlement, tiles_held
 from sim.world import demand, need_basket, need_demand
 
-from . import goods_market_offers
+from . import goods_market_offers, household_new_goods
 from .household_demand_key import demand_key, population_of_key
 from .static_book_basket import StaticBookBasketMixin
 
@@ -142,9 +142,10 @@ class MarketDemandMixin(StaticBookBasketMixin):
         # the opening's goods and any the home society now makes, so a need a new good serves can turn to
         # it; a good only a partner offers is not the home market's
         seller_at_home = goods_market_offers.HOME_SELLER
-        prices_in_hours = {material: price / per_hour for material, price in prices.items()
-                           if price > 0.0 and (material in basket["prices"]
-                                               or self.goods_market.offered_by(material) == seller_at_home)}
+        prices_in_hours = household_new_goods.prices_in_hours(
+            prices, per_hour, basket["prices"],
+            {material: self.goods_market.offered_by(material) == seller_at_home
+             for material, price in prices.items() if price > 0.0 and material not in basket["prices"]})
         now = household_demand_by_material(prices_in_hours, population_of_key(key, self._opening_population()), key[1],
                                        self.civ, self.world_map)
         opening_by_commodity, now_by_commodity = {}, {}
@@ -154,9 +155,7 @@ class MarketDemandMixin(StaticBookBasketMixin):
             now_by_commodity[commodity] = now_by_commodity.get(commodity, 0.0) + now.get(material, 0.0)
         ratios = {commodity: now_by_commodity[commodity] / total
                   for commodity, total in sorted(opening_by_commodity.items()) if total > 0.0}
-        new_units = {material: wanted for material, wanted in sorted(now.items())
-                     if wanted > 0.0 and material not in basket["units"]
-                     and material in prices_in_hours}  # derived demand reaches inputs of recipes the society cannot price
+        new_units = household_new_goods.new_goods_units(now, basket["units"], prices_in_hours)
         self.household._household_demand_cache = (key, prices, ratios, new_units)
         return ratios, new_units
 

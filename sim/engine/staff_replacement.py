@@ -1,5 +1,6 @@
 """The replace-only mode of `auto_hire`: hire back the people lost this year, never grow the staff."""
 from . import automation_audit
+from .staff_phase_rules import hires_needed
 
 REPLACE_ONLY = "replace"
 REPLACE_STANCE = "replace"
@@ -30,6 +31,34 @@ def replace_lost_staff(sim, lost):
         found = round(household.employees.get(trade, 0.0) - have)
         automation_audit.record(sim, "auto_hire", "replace", "%d %s" % (found, trade),
                                 "replace-only mode: %d lost this year, none hired beyond that" % people, before)
+
+
+def grow_trade_toward(sim, trade, want, closure_need=0.0):
+    """Hire a trade up to (or release it down to) the whole-person target drawn from `want`, through `hire_buying_room`
+    so every rule a player meets applies. A refusal is not an error: it is recorded as a skip when shut concerns need
+    the hands. A hire's audit row names the people the market found, which can be fewer than sought."""
+    household = sim.state.household
+    have = household.employees.get(trade, 0.0)
+    change = hires_needed(have, sim.labour.stochastic_round(want))
+    if change > 0:
+        before = household.capital
+        hired, why = sim.labour.hire_buying_room(trade, change)
+        if not hired and closure_need >= 1.0:
+            automation_audit.record_skip(
+                sim, "auto_hire", "hire %d %s" % (change, trade),
+                "concerns shut for want of staff need %.1f more: %s" % (closure_need, why))
+        if hired:
+            found = round(household.employees.get(trade, 0.0) - have)
+            automation_audit.record(
+                sim, "auto_hire", "hire", "%d %s" % (found, trade),
+                "staff target %.1f against %.1f held, with %.1f supervision room"
+                % (want, have, sim.labour.supervision_room()), before)
+    elif change < 0:
+        before = household.capital
+        sim.labour.fire(trade, -change)
+        automation_audit.record(
+            sim, "auto_hire", "release", "%d %s" % (-change, trade),
+            "staff target %.1f is below the %.1f held" % (want, have), before)
 
 
 GENERIC_STAFF = ("artisan", "scholar")

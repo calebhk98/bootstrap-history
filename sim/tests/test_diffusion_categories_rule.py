@@ -1,4 +1,4 @@
-"""Rule checks for the diffusion categories (SCENARIO wiring is in test_craftsmen_wording): the share of a technology
+"""Rule checks for the diffusion categories (the wiring is test_society_diffusion_wiring): the share of a technology
 spread after an age, the medical relief a spread and a capable state give, and the data the categories key off. Every figure is
 built here or read from the data; no game is built."""
 QUICK_TOPIC = True
