@@ -236,6 +236,11 @@ Tooling: `python3 -m pylint sim/ | grep C0103` (worklist). Plan:
   A module that builds a whole game must say so: file name ending `_scenario`, `_validation` or `_smoke`, or a docstring
   opening `SCENARIO`, `BASELINE VALIDATION` or `SMOKE`. `python3 -m sim.tests --whole-game-checks` lists the rest, and the
   quick topic `whole_game_declared` fails on any not in `sim/tests/whole_game_leftovers.txt` (a list that only shrinks).
+  A test calls one function, the one under test, on inputs it writes out: setup never builds a game or an economy
+  or runs a command to reach that state (`A = [5, 4, 8, 9, 3]; sort(A)`, not `A = []; other(A); sort(A)`). A module
+  whose function under test is itself a command names it in `UNDER_TEST = {...}`. `python3 -m sim.tests
+  --one-function-checks` lists the rest, and the quick topic `one_function_declared` fails on any not in
+  `sim/tests/one_function_leftovers.txt` (a list that only shrinks).
 - **Sources are read, not recalled.** A figure, in data, a constant or a design
   note, cites a source someone opened (author, work, page or URL). A research
   agent cites only what it opened in that session and writes "no source found"

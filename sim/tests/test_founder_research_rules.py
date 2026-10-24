@@ -2,6 +2,7 @@
 hands the seat to `research.begin` and carries its refusal back, and the seat answers the shared path's questions from its
 own books (`SeatResearcher`). Each is called on a stand-in that holds only what it reads."""
 QUICK_TOPIC = True
+UNDER_TEST = {"start_project"}
 
 import unittest
 from types import SimpleNamespace
