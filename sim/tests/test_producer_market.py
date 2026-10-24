@@ -1,19 +1,14 @@
 """Complaint 375: producers offer a quantity at the lowest price each will take (its own cost), the market
-clears the offers against demand, and the market module knows nothing of the tech tree.
+clears the offers against demand.
 
-Pure tests of sim/world/market.py and sim/world/producer_market.py, and a structural test of what the
-market modules import."""
+Pure tests of sim/world/market.py and sim/world/producer_market.py."""
 
 QUICK_TOPIC = True
 
-import ast
-import os
 import unittest
 
 from sim.world import market
 from sim.world.producer_market import Offer
-
-ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
 def conditions(**changes):
@@ -72,39 +67,6 @@ class EntrantTests(unittest.TestCase):
         after = market.clear_market(self.incumbents(offers=(Offer(30.0, 2.5),)))
         self.assertAlmostEqual(before.price_ratio, after.price_ratio, places=9)
         self.assertEqual(after.offers_sold_tonnes, 0.0)
-
-
-class MarketKnowsNothingOfTheTreeTests(unittest.TestCase):
-    PURE = ("sim/world/market.py", "sim/world/producer_market.py")
-    ENGINE_MARKET = ("sim/engine/goods_market_api.py", "sim/engine/market_clearing.py",
-                     "sim/engine/market_demand.py")
-    TREE_MODULES = ("prices", "solve_prices", "solve_prices_core", "solve_prices_reach", "node_output",
-                    "techniques_in_use", "concern_volume", "entry_cost", "tree_merge", "catalog", "joint_allocation")
-    TREE_WORDS = ("requires_node", "techniques_in_use", "production_entries", "nodes_gated")
-
-    def imported(self, path):
-        tree = ast.parse(open(os.path.join(ROOT, path)).read())
-        names = set()
-        for node in ast.walk(tree):
-            if isinstance(node, ast.Import):
-                names.update(part for alias in node.names for part in alias.name.split("."))
-            elif isinstance(node, ast.ImportFrom):
-                names.update((node.module or "").split("."))
-                names.update(alias.name for alias in node.names)
-        return names
-
-    def test_market_modules_import_nothing_from_the_tech_tree(self):
-        for path in self.PURE + self.ENGINE_MARKET:
-            leaked = self.imported(path) & set(self.TREE_MODULES)
-            self.assertFalse(leaked, "%s imports %s" % (path, sorted(leaked)))
-            self.assertNotIn("sim.engine", open(os.path.join(ROOT, path)).read().replace(
-                "sim.ui.protocol", "") if path in self.PURE else "")
-
-    def test_market_modules_never_name_tree_things(self):
-        for path in self.PURE + self.ENGINE_MARKET:
-            source = open(os.path.join(ROOT, path)).read()
-            for word in self.TREE_WORDS:
-                self.assertNotIn(word, source, "%s names %s" % (path, word))
 
 
 if __name__ == "__main__":

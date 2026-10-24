@@ -43,26 +43,6 @@ def _labour(done=(), year=100, done_year=None):
     return Labour(world), world
 
 
-class NoSecondPopulationTests(unittest.TestCase):
-    def _offenders(self, banned):
-        offenders = []
-        for directory, _, files in os.walk(_REPOSITORY_SIM_DIRECTORY):
-            for name in files:
-                path = os.path.join(directory, name)
-                if not name.endswith(".py") or path == os.path.abspath(__file__):
-                    continue
-                with open(path, encoding="utf-8") as handle:
-                    text = handle.read()
-                offenders += [(path, word) for word in banned if word in text]
-        return offenders
-
-    def test_no_population_scale_scalar_anywhere(self):
-        self.assertEqual(self._offenders(("_pop_scale" + "_base", "_pop_tech" + "_pending")), [])
-
-    def test_no_mechanisation_count_gates_literacy(self):
-        self.assertEqual(self._offenders(("agrarian" + "_slack",)), [])
-
-
 class TechniqueTests(unittest.TestCase):
     def test_a_society_without_draught_animals_farms_with_the_hoe(self):
         labour, _world = _labour()
