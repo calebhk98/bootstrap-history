@@ -10,7 +10,7 @@ from typing import Any, Dict, List
 from sim.agents.api import army_raising
 from sim.geography.api import (endemic_people_loss, food_potential, layer_value, reach, route, settlement,
                                tile_owners, usable_modes)
-from sim.world import campaign_contest, campaign_supply, military_logistics
+from sim.world import campaign_contest, campaign_supply, campaign_year_rules, military_logistics
 from sim.world.army_record import Army
 
 from . import contact_events, world_events
@@ -61,10 +61,7 @@ class CampaignYearMixin:
         self._draw_down(army.tile, site.drawn_kcal - before)
         if source is not None and result["taken_carriage_kg"] > 0.0:
             self._draw_down(source, campaign_supply.kcal_of(result["taken_carriage_kg"]))
-        for cause in ("hunger", "disease", "desertion"):
-            lost[army.owner] = lost.get(army.owner, 0.0) + result[cause]
-            if result[cause] >= 1.0:
-                army.log.append({"kind": cause, "tile": army.tile, "soldiers": round(result[cause])})
+        campaign_year_rules.book_losses(army, result, lost)
 
     def _pay_years(self, army: Army) -> float:
         world = self.owner_world(army.owner)
@@ -102,12 +99,11 @@ class CampaignYearMixin:
         for owner in owners:
             fielded = sum(float(record["soldiers"]) for record in records.values() if record["owner"] == owner)
             force = self.owner_force(owner)
-            if fielded > force + 1e-9:
-                share = max(0.0, force) / fielded
+            share = campaign_year_rules.share_of_force_kept(fielded, force)
+            if share < 1.0:
                 for record in records.values():
                     if record["owner"] == owner:
-                        for key in ("soldiers", "food_kg", "animals", "pay_owed"):
-                            record[key] *= share
+                        campaign_year_rules.scale_army_record(record, share)
         store = self.campaign_store()
         store["armies"] = {army_id: record for army_id, record in store["armies"].items() if record["soldiers"] >= 1.0}
 
@@ -144,13 +140,11 @@ class CampaignYearMixin:
                 army.log.append({"kind": "no_route", "tile": army.tile, "target": army.target})
                 army.target = None
             else:
-                steps, army.progress_days, used = campaign_contest.march(
+                camps, army.progress_days, used = campaign_year_rules.march_camps(
                     campaign_contest.legs_of(found), army.progress_days, days_left)
-                for tile, days in steps:
-                    army.tile = tile
+                for tile, days in camps:
+                    army.tile = tile or army.tile
                     self._camp(army, days, modes, pay_years, lost)
-                if used > sum(days for _, days in steps):
-                    self._camp(army, used - sum(days for _, days in steps), modes, pay_years, lost)
                 days_left -= used
                 moved = True
                 if army.tile == army.target:
@@ -172,7 +166,7 @@ class CampaignYearMixin:
         on the tile with the state's equipment and no food of its own: it eats the tile's stores."""
         owned = self.tiles_owned_by(defender)
         share = settlement.population_share(owned, tile) if tile in owned else 0.0
-        free = self.free_soldiers(defender) * share
+        free = campaign_year_rules.garrison_strength(self.free_soldiers(defender), share)
         equipment = float(self.owner_world(defender).equipment_kg_per_soldier()) if self.owner_has_state(defender) else 0.0
         return Army("garrison", defender, tile, free, equipment)
 
@@ -214,14 +208,15 @@ class CampaignYearMixin:
                     self.take_captives_from_battle(defender, army.owner, turn["outcome"].attacker_lost, tile)
             if result != "continues":
                 break
-        if result in ("attacker_won", "defenders_gone"):
+        action = campaign_year_rules.contest_action(result)
+        if action == "take":
             self._take(army, defender, armies)
-        elif result in ("attacker_lost", "attacker_withdraws"):
+        elif action == "withdraw":
             self._withdraw(army, result)
         for member in side:
             if member is not garrison and member.soldiers < 1.0:
                 armies.pop(member.army_id, None)
-        if result in ("attacker_won", "defenders_gone"):
+        if action == "take":
             for member in field:
                 if member.army_id in armies:
                     self._rout(member, armies)
@@ -236,24 +231,20 @@ class CampaignYearMixin:
         tile = army.tile
         self.take_captives_from_conquest(army.owner, defender, tile)   # before the tile changes hands (648; engine/captives.py)
         previous = self.transfer_tile(tile, army.owner, tile_owners.conquest_level(0.0), cause="conquest")
-        self.campaign_store()["held_since"][tile] = {"year": int(self.state.scenario.year), "by": army.owner,
-                                                      "from": previous}
+        self.campaign_store()["held_since"][tile] = campaign_year_rules.conquest_entry(
+            int(self.state.scenario.year), army.owner, previous)
         army.log.append({"kind": "conquest", "tile": tile, "from": previous})
         contact_events.after_conquest(self, army.owner, previous, tile)
 
     def _withdraw(self, army: Army, why: str) -> None:
-        owned_home = army.home_tile and self.tile_owner(army.home_tile) == army.owner
-        army.log.append({"kind": RETREAT_NOTE, "tile": army.tile, "why": why})
-        army.target, army.progress_days = None, 0.0
-        if owned_home:
-            army.tile = army.home_tile
+        owned_home = bool(army.home_tile) and self.tile_owner(army.home_tile) == army.owner
+        campaign_year_rules.withdraw(army, why, owned_home, RETREAT_NOTE)
 
     def _rout(self, army: Army, armies: Dict[str, Army]) -> None:
         """A defending army beaten on its own ground falls back to the tile it was raised at, if that is still its
         owner's and not this one, else its men go home and it is stood down."""
-        if army.home_tile and army.home_tile != army.tile and self.tile_owner(army.home_tile) == army.owner:
-            army.tile, army.target, army.progress_days = army.home_tile, None, 0.0
-        else:
+        owned_home = bool(army.home_tile) and self.tile_owner(army.home_tile) == army.owner
+        if campaign_year_rules.rout(army, owned_home):
             armies.pop(army.army_id, None)
 
     def _consolidate_conquests(self) -> None:
@@ -263,10 +254,11 @@ class CampaignYearMixin:
         year = int(self.state.scenario.year)
         levels = tile_owners.control_levels()
         for tile, entry in sorted(held_since.items()):
-            if self.tile_owner(tile) != entry["by"]:
+            garrisoned = any(record["owner"] == entry["by"] and record["tile"] == tile
+                             for record in self.army_records().values())
+            keep, level = campaign_year_rules.consolidation(entry, self.tile_owner(tile), garrisoned, year,
+                                                            controls.get(tile), levels, tile_owners.conquest_level)
+            if not keep:
                 del held_since[tile]
-                continue
-            if any(record["owner"] == entry["by"] and record["tile"] == tile for record in self.army_records().values()):
-                level = tile_owners.conquest_level(year - entry["year"])
-                if levels[level]["rank"] > levels.get(controls.get(tile), {"rank": 0})["rank"]:
-                    controls.set(tile, level)
+            elif level is not None:
+                controls.set(tile, level)
