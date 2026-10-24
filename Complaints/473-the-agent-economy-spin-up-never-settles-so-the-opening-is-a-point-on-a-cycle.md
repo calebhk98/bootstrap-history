@@ -741,3 +741,5 @@ identity over a whole economy step and is measured by `spin-up-trace`'s `change`
 scenarios `staff_closure_reopening_scenario` (twelve years of twenty-five concerns, auto-hire reopening every closure free staff could
 run; red on main) and `sited_ore_price_over_cost_validation` (519) are deleted for the same reason: no command prints the
 reopening count over years; `python3 sim/simulator.py economy-check --civs norse_900ad --years 12` is the nearest measure.
+
+Whole-game relationship checks deleted (Complaint 640): the five `full_length_opening_checks_<civilisation>` topics (red on main) asserted price over making cost, wage over floor, money against wear and spin-up settled on each full-length opening, which cannot name a function. `python3 sim/simulator.py opening-checks` prints the same relationships for every civilisation; the known failures stay tabled in `sim/tests/full_length_opening_support.py` (`EXPECTED_FAILURES`).
