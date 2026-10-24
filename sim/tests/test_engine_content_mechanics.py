@@ -1,0 +1,142 @@
+"""CLAUDE.md 4.7: the engine reads node `mechanics`, never node ids. A node of an id no engine code has seen gets an effect by
+declaring the mechanic, and a node that does not declare it gets nothing. Each rule is called on a stand-in `self` holding a
+few hand-written nodes; no game. The scan for node ids in the engine's source is `test_engine_content_ids`."""
+QUICK_TOPIC = True
+
+import types
+import unittest
+from unittest import mock
+
+from sim.engine import core
+from sim.engine.core import Sim
+from sim.engine.core_step_phases import StepPhasesMixin
+from sim.engine.mechanics import MechanicsMixin
+
+MODDED = "mod_x:hall"
+
+
+def node(mechanics):
+    return {"mechanics": mechanics}
+
+
+class Standin(MechanicsMixin):
+    """The mechanics lookups over hand-written nodes, with `running` and `has` read from two sets."""
+    def __init__(self, nodes, running=(), held=()):
+        self.nodes = nodes
+        self._running, self._held = set(running), set(held)
+
+    def running(self, node_id):
+        return node_id in self._running
+
+    def has(self, node_id):
+        return node_id in self._held
+
+    def institution_units(self, node_id):
+        return 1.0
+
+
+class EffectSumTests(unittest.TestCase):
+    def test_a_node_of_any_id_declaring_an_effect_adds_its_flat_value(self):
+        standin = Standin({MODDED: node({"standing": {"flat": 7.0}})}, running=[MODDED])
+        self.assertAlmostEqual(standin.effect_sum("standing", 10.0), 17.0)
+
+    def test_the_credit_line_channel_is_read_the_same_way(self):
+        standin = Standin({MODDED: node({"credit_line": {"flat": 1234.0}})}, running=[MODDED])
+        self.assertAlmostEqual(standin.effect_sum("credit_line", 100.0), 1334.0)
+
+    def test_a_node_whose_data_no_longer_declares_the_effect_adds_nothing(self):
+        standin = Standin({"patron_imperial": node({})}, running=["patron_imperial"])
+        self.assertEqual(standin.effect_sum("standing", 10.0), 10.0)
+
+    def test_a_node_that_is_not_running_adds_nothing(self):
+        standin = Standin({MODDED: node({"standing": {"flat": 7.0}})})
+        self.assertEqual(standin.effect_sum("standing", 10.0), 10.0)
+
+
+class RunningWithMechanicTests(unittest.TestCase):
+    def test_it_lists_the_running_nodes_declaring_the_mechanic(self):
+        nodes = {"a": node({"founder_life_extension": True}), "b": node({"founder_life_extension": True}), "c": node({})}
+        standin = Standin(nodes, running=["a", "c"])
+        self.assertEqual(standin.running_with_mechanic("founder_life_extension"), ["a"])
+
+
+class FounderLifeExtensionTests(unittest.TestCase):
+    def mortality(self, running_with_mechanic):
+        standin = types.SimpleNamespace(
+            state=types.SimpleNamespace(founder=types.SimpleNamespace(founder_alive=True, life_left=10),
+                                    projects=types.SimpleNamespace(stalled=0)),
+            deputies_carry_the_work=lambda: False,
+            running_with_mechanic=running_with_mechanic, SANITATION_LIFE_EXTENSION_YEARS=3)
+        StepPhasesMixin._step_founder_mortality(standin)
+        return standin.state.founder.life_left
+
+    def test_a_running_node_declaring_the_mechanic_extends_the_founders_life(self):
+        asked = []
+        left = self.mortality(lambda name: asked.append(name) or [MODDED])
+        self.assertEqual(asked, ["founder_life_extension"])
+        self.assertEqual(left, 10 - 1 + 3)
+
+    def test_with_no_such_node_running_the_founder_ages_a_year(self):
+        self.assertEqual(self.mortality(lambda name: []), 9)
+
+
+class CorpusTests(unittest.TestCase):
+    CORPUS = {"rank": 9, "dispersed": True, "loss_chance": 0.01, "fraction_lost": 0.02, "diffusion_pace": 2.0}
+    LOWER = {"rank": 1, "dispersed": False, "loss_chance": 0.5, "fraction_lost": 0.6, "diffusion_pace": 1.0}
+
+    def standin(self, held=()):
+        return Standin({MODDED: node({"corpus": self.CORPUS}), "plain_library": node({"corpus": self.LOWER})}, held=held)
+
+    def test_the_best_corpus_node_is_the_highest_ranked_declaring_one(self):
+        self.assertEqual(self.standin().best_corpus_node(), MODDED)
+
+    def test_the_hedge_tiers_follow_the_declared_ranks_strongest_first(self):
+        self.assertEqual(self.standin().corpus_hedge_tiers(), [(MODDED, 0.01, 0.02), ("plain_library", 0.5, 0.6)])
+
+    def test_the_hedge_a_sacking_faces_is_the_strongest_held_tier(self):
+        standin = types.SimpleNamespace(
+            corpus_hedge_tiers=lambda: [(MODDED, 0.01, 0.02), ("plain_library", 0.5, 0.6)],
+            has=lambda node_id: node_id in {MODDED, "plain_library"},
+            CORPUS_HEDGE_LOSS_CHANCE_NONE=0.9, CORPUS_HEDGE_FRACTION_LOST_NONE=0.8)
+        self.assertEqual(Sim.corpus_hedge(standin), (0.01, 0.02, MODDED))
+
+    def test_with_no_corpus_held_the_unhedged_figures_apply_and_no_hedge_is_named(self):
+        standin = types.SimpleNamespace(
+            corpus_hedge_tiers=lambda: [(MODDED, 0.01, 0.02)], has=lambda node_id: False,
+            CORPUS_HEDGE_LOSS_CHANCE_NONE=0.9, CORPUS_HEDGE_FRACTION_LOST_NONE=0.8)
+        self.assertEqual(Sim.corpus_hedge(standin), (0.9, 0.8, None))
+
+
+class CapabilityInstitutionTests(unittest.TestCase):
+    def setUp(self):
+        self.standin = Standin({MODDED: node({"capability": {"scalable": "population", "lost_benefit": "Guild pay"}}),
+                                "fixed": node({"capability": {}}), "other": node({})})
+
+    def test_every_node_declaring_capability_is_a_capability_institution(self):
+        self.assertEqual(self.standin.CAPABILITY_INSTITUTIONS, frozenset({MODDED, "fixed"}))
+
+    def test_only_those_declaring_a_scalable_unit_are_scalable(self):
+        self.assertEqual(self.standin.SCALABLE_INSTITUTIONS, frozenset({MODDED}))
+
+    def test_the_lost_benefit_text_is_the_declared_one(self):
+        self.assertEqual(self.standin.NOT_OPERATING_BENEFIT, {MODDED: "Guild pay"})
+
+
+class DiseaseBurdenTests(unittest.TestCase):
+    def test_the_disease_technologies_are_exactly_the_nodes_declaring_the_burden(self):
+        standin = Standin({"germ": node({"disease_burden": {}}), "well": node({"disease_burden": {}}), "plain": node({})})
+        self.assertEqual(standin.DISEASE_BURDEN_TECH_IDS, ("germ", "well"))
+
+    def test_the_burden_is_worked_from_those_nodes_weights_and_holdings(self):
+        standin = types.SimpleNamespace(
+            DISEASE_BURDEN_TECH_IDS=("germ", "well"),
+            _tech_effects={"germ": {"population": 0.05}, "well": {}},
+            disease_burden_held=lambda tech_id: {"germ": 1.0, "well": 0.25}[tech_id])
+        with mock.patch.object(core, "burden_from_holdings", return_value=0.4) as worked:
+            burden = Sim._disease_burden(standin)
+        worked.assert_called_once_with({"germ": 0.05, "well": 0.0}, {"germ": 1.0, "well": 0.25})
+        self.assertEqual(burden, 0.4)
+
+
+if __name__ == "__main__":
+    unittest.main()
