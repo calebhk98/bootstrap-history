@@ -1,4 +1,4 @@
-"""SCENARIO (Complaint 629): the Rome game's economy setup prices the carriers its merchants wear. The entry rules for standing
+"""SMOKE (Complaint 629): the Rome game's economy setup prices the carriers its merchants wear. The entry rules for standing
 bids are in test_economy_entry_for_standing_bids.py."""
 import unittest
 
