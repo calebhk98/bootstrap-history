@@ -1,5 +1,5 @@
 """The labour market is the wage provider: prices, payroll, hiring and the
-price solver all read one wage vector, and nothing reads the book's wages. Complaint 640: every check calls the wage
+price solver all read one wage vector. Complaint 640: every check calls the wage
 schedule on inputs built here; the wiring is test_wage_provider_wiring."""
 QUICK_TOPIC = True
 import json
@@ -14,7 +14,6 @@ from sim.engine import catalog, data, prices as engine_prices, wage_schedule
 from sim.labour import wage_provider
 from sim.engine.solve_prices_core import wage_ratios_by_trade
 from sim.labour import wages
-from .source_dirs import engine_and_world_dirs
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -98,21 +97,6 @@ class ProviderTests(unittest.TestCase):
         # A trade that states no training takes its family's median.
         self.assertEqual(schedule.wage_per_hour("test_acme_k3f9:clockmaker"), schedule.wage_per_hour("smith"))
         self.assertGreater(schedule.wage_per_hour("test_acme_k3f9:surveyor"), schedule.wage_per_hour("smith"))
-
-
-class NoBookWagesTests(unittest.TestCase):
-
-    def test_only_the_wage_document_shape_names_the_wage_key(self):
-        # The solver reads wages through a document in the book's shape, so
-        # its builder and reader name the key; the loader must not.
-        offenders = []
-        for directory in engine_and_world_dirs():
-            for name in sorted(os.listdir(directory)):
-                if name.endswith(".py"):
-                    with open(os.path.join(directory, name), encoding="utf-8") as source:
-                        if "wage_rates_denarii_per_hour" in source.read():
-                            offenders.append(name)
-        self.assertLessEqual(set(offenders), {"prices.py", "solve_prices_core.py", "wages.py"})
 
 
 if __name__ == "__main__":

@@ -1,5 +1,5 @@
 """SMOKE: the suite, run from a differently named root and a working directory that is not the checkout, comes back green and
-leaves its scratch directories in that root. The structural rules are in test_suite_portability. The child run is one cheap topic."""
+leaves its scratch directories in that root. The path rules are in test_suite_portability. The child run is one cheap topic."""
 import os
 import shutil
 import subprocess
@@ -9,8 +9,7 @@ import tempfile
 from .harness import check
 from .harness import ROOT, _LOADTEST_DIR, _PLAY_DIR
 
-# --- The end-to-end proof. Everything above is a claim about the source; this
-# one actually runs the suite through a differently-named root and checks it
+# --- The end-to-end proof: this runs the suite through a differently-named root and checks it
 # comes back green.
 #
 # The alias is a real directory containing symlinks to the repository's own
@@ -31,7 +30,7 @@ try:
 
     _run = subprocess.run(
         [sys.executable, os.path.join(_alias, "sim", "tests", "__main__.py"),
-         "--only", "state_ownership_enforcement"],
+         "--only", "ui_render_registry"],
         capture_output=True, text=True, timeout=300, cwd=_alias_parent)
 
     check("the whole suite runs from a checkout named something other than "

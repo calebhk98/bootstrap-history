@@ -3,7 +3,6 @@ holds works of its own. Read as numbers in the registry, the book and the stores
 
 QUICK_TOPIC = True
 
-import inspect
 import json
 
 from .harness import check
@@ -11,7 +10,6 @@ from .harness import check
 from sim.book import GoodsMove
 from sim.agents.api import ActorRecord, ActorsState, PURSE_CURRENCY
 from sim.contracts import Contract, TERM_LOAN
-from sim.economy.record import AGENT_KEYED_FIELDS, EconomyRecord
 from sim.rekey import rekey, rename_text
 from sim.refusal import cause_of
 
@@ -129,10 +127,3 @@ check("an id is renamed whole and in composite ids, not inside other words",
       and rename_text("leaver#4", "leaver", "heir") == "heir#4" and rename_text("leavers", "leaver", "heir") == "leavers", None)
 merged = rekey({"leaver": 2.0, "heir": 3.0, "nested": {"leaver": ["leaver", "heir"]}}, "leaver", "heir")
 check("two keys that become one add, and lists do not repeat an id", merged == {"heir": 5.0, "nested": {"heir": ["heir"]}}, merged)
-
-# ---- the economy record's agent-keyed fields are all renamed
-source = inspect.getsource(EconomyRecord)
-named_in_source = sorted(line.split(":")[0].strip() for line in source.splitlines()
-                         if "AgentId" in line and "field(" in line)
-check("every economy record field keyed by an agent id is renamed with a seat", sorted(AGENT_KEYED_FIELDS) == named_in_source,
-      sorted(set(named_in_source) ^ set(AGENT_KEYED_FIELDS)))

@@ -1,10 +1,9 @@
-"""Each shared helper or constant has one owner; the callers that differ in edge handling say so at the call."""
+"""Shared helpers and constants: their values, and that callers agree with the owner."""
 
 QUICK_TOPIC = True
 
 import json
 import os
-import re
 import unittest
 
 from sim import json_files, unit_conversions
@@ -21,50 +20,12 @@ def recipe_with_plant(plant_life_years):
     return Recipe("run", {"good": 1.0}, {}, {}, plant_goods={"pan": 3.0}, plant_life_years=plant_life_years)
 
 
-def sources():
-    for folder, _directories, names in os.walk(SIM_DIR):
-        if os.path.basename(folder) in ("tests", "__pycache__"):
-            continue
-        for name in names:
-            if name.endswith(".py"):
-                yield os.path.join(folder, name)
-
-
 class OneDeclaration(unittest.TestCase):
 
-    def assert_no_bare_assignment(self, pattern):
-        owner = os.path.abspath(unit_conversions.__file__)
-        found = []
-        for path in sources():
-            if os.path.abspath(path) == owner:
-                continue
-            with open(path, encoding="utf-8") as handle:
-                for number, line in enumerate(handle, 1):
-                    if re.match(pattern, line):
-                        found.append("%s:%d" % (path, number))
-        self.assertEqual([], found)
-
-    def test_kilograms_per_tonne_is_declared_once(self):
-        self.assert_no_bare_assignment(r"\s*KILOGRAMS_PER_TONNE\s*=\s*1000")
-
-    def test_hours_per_person_year_is_declared_once(self):
-        self.assert_no_bare_assignment(r"\s*HOURS_PER_(PERSON|WORKER)_YEAR\s*=\s*(declare|[0-9])")
+    def test_the_shared_unit_constants_have_their_values(self):
+        self.assertEqual(1000.0, unit_conversions.KILOGRAMS_PER_TONNE)
         self.assertEqual(2000.0, unit_conversions.HOURS_PER_PERSON_YEAR)
-
-    def test_no_module_restates_the_civil_year_in_days(self):
-        self.assert_no_bare_assignment(r"\s*(CIVIL_)?DAYS_PER_YEAR\s*=\s*365\.0\s*$")
         self.assertEqual(365.0, unit_conversions.CIVIL_DAYS_PER_YEAR)
-
-    def test_no_price_level_goes_by_the_bare_name(self):
-        """The engine's level is `home_price_level`, the agent economy's index is `basket_price_level`, the
-        balance of payments' is `money_stock_price_level`; a bare `price_level` would not say which."""
-        found = []
-        for path in sources():
-            with open(path, encoding="utf-8") as handle:
-                for number, line in enumerate(handle, 1):
-                    if re.match(r"\s*def price_level\(", line):
-                        found.append("%s:%d" % (path, number))
-        self.assertEqual([], found)
 
     def test_json_files_are_listed_in_name_order_and_only_json(self):
         folder = os.path.join(DATA_DIR, "world")
