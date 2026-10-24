@@ -113,3 +113,5 @@ under 5% of pre-1800 English deaths and famine under 10% of that, so the most
 the baseline could double-count ordinary harvest mortality is about 0.5% of
 it - over an order of magnitude too small to explain a drag of 0.0788. Real
 in direction, negligible in size, and correctly left alone.
+
+Baseline bar (an unshocked rome_100ad century ends above its starting population) is not a unit test: it ran the whole demography for a century. Measure it with `python3 sim/simulator.py baseline-ensemble --help` (population by year across games).

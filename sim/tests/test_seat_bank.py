@@ -5,11 +5,12 @@ is not tested through a game."""
 QUICK_TOPIC = True
 
 import unittest
+from types import SimpleNamespace
 
 from sim.economy import api as economy_api
-from sim.economy.economy import Economy
+from sim.economy.accounts import Book
+from sim.economy.types import EDGE_MINT, Transfer
 from sim.engine import economy_port_bank, seat_bank
-from sim.tests import economy_fixture as fixture
 from sim.ui.proto import command_registry
 from sim.ui.proto import dispatch_bank, typed  # noqa: F401  (registers the command and its parser)
 
@@ -34,9 +35,10 @@ class Refusals(unittest.TestCase):
 
 class TheBank(unittest.TestCase):
     def setUp(self):
-        self.economy = Economy(fixture.small_setup())
-        self.record = self.economy.record
-        self.money = self.economy.setup.currency_id
+        self.record = SimpleNamespace(book=Book(), banks={})
+        self.economy = SimpleNamespace(record=self.record, setup=SimpleNamespace(currency_id="coin", coin_per_unit=2.0))
+        self.money = "coin"
+        self.record.book.transfer(Transfer(EDGE_MINT, "holder", self.money, 7000.0, "opening"))
         self.supply = self.record.book.money_supply(self.money)
 
     def test_the_capital_comes_in_from_outside_and_is_the_banks_own_and_the_seat_is_its_founder(self):

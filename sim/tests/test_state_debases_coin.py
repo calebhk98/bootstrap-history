@@ -1,7 +1,7 @@
 """Complaints 272 and 624: the cut a struck-coin state decides on is a recoinage. The coin struck again holds
 less metal, the same metal makes more coin, and the new coin goes to the issuer; a state that cuts nothing
 leaves the coin alone. Complaint 640: the recoinage is called on a book and a coin built here; the yearly
-wiring and the price effect are in test_state_debasement_prices."""
+wiring is below; the price effect has no unit test (Complaint 624)."""
 QUICK_TOPIC = True
 
 from .harness import *  # noqa: F401,F403

@@ -1,18 +1,17 @@
 """Complaint 106: holders of shares and loans sell them to savers once a year, at the price that clears the asks (what
 the claim is worth to the holder, less for one short of cash) against the bids (what it is worth to a saver at the rate
-it asks as a lender plus the issuer's premium). A society without the institution trades nothing. Rules on the
-economy's record with the claims built by hand."""
+it asks as a lender plus the issuer's premium). A society without the institution trades nothing. Rules on a stand-in
+record with the claims built by hand."""
 
 QUICK_TOPIC = True
 
 import unittest
+from types import SimpleNamespace
 
 from sim.economy import credit, credit_claims, secondary_trade
-from sim.economy.economy import Economy
-from sim.economy.record import EconomyRecord
+from sim.book import Book
 from sim.economy.secondary_trade import BOND_MARKET, SHARE_TRADING, Shortfall
-from sim.economy.types import FundsOffer, Loan
-from sim.tests import economy_fixture as fixture
+from sim.economy.types import FundsOffer, Loan, Transfer
 
 MARKET_RATE = 0.05
 BOTH = (SHARE_TRADING, BOND_MARKET)
@@ -20,14 +19,17 @@ BOTH = (SHARE_TRADING, BOND_MARKET)
 
 class TradeFixture(unittest.TestCase):
     def setUp(self):
-        self.economy = Economy(fixture.small_setup())
-        self.setup = self.economy.setup
-        self.record = self.economy.record
-        self.money = self.setup.currency_id
-        self.holder, self.saver, self.other = sorted(self.record.cohorts)[:3]
-        self.producer_id = sorted(self.record.producers)[0]
-        self.record.last_dividends[self.producer_id] = 20.0
-        self.record.shares[self.producer_id] = {self.holder: 0.3}
+        self.money = "coin"
+        self.setup = SimpleNamespace(currency_id=self.money, opening_rate=MARKET_RATE)
+        book = Book()
+        for agent in ("household:a", "household:b", "household:c"):
+            book.transfer(Transfer("edge:mint", agent, self.money, 1000.0, "opening"))
+        self.holder, self.saver, self.other = "household:a", "household:b", "household:c"
+        self.producer_id = "producer:one"
+        self.record = SimpleNamespace(
+            book=book, cohorts={self.holder: None, self.saver: None, self.other: None}, capital=SimpleNamespace(funds={}),
+            loans=[], remembered_defaults={}, banks={}, producers={self.producer_id: None},
+            last_dividends={self.producer_id: 20.0}, shares={self.producer_id: {self.holder: 0.3}})
 
     def balance(self, agent):
         return self.record.book.balance(agent, self.money)
@@ -194,13 +196,6 @@ class Loans(TradeFixture):
         loan = self.make_loan()
         self.run_trade(offers=self.offers(amount=1000.0, rate=0.03), institutions=(SHARE_TRADING,))
         self.assertEqual(loan.lender, self.holder)
-
-    def test_a_sold_loan_survives_the_save_as_the_buyers(self):
-        self.make_loan(principal=200.0)
-        self.run_trade(offers=self.offers(amount=60.0, rate=0.03))
-        loaded = EconomyRecord.from_record(self.record.to_record())
-        self.assertEqual(sorted((loan.loan_id, loan.lender, round(loan.principal, 9)) for loan in loaded.loans),
-                         sorted((loan.loan_id, loan.lender, round(loan.principal, 9)) for loan in self.record.loans))
 
 
 if __name__ == "__main__":

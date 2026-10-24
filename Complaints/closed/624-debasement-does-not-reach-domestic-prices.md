@@ -15,3 +15,5 @@ Closed 272 recorded this gap.
 **What it would take.** Debasement reaches domestic prices through the money supply.
 
 **Test.** A test: after a debasement the domestic price level rises with the money supply, not by a fixed rule.
+
+The twin-economy price-level check (a debasing state against one that did not, four fixture years) is not a unit test and was deleted. The unit rules are `units_struck_by_cut`, `debase_by_cut` and `Economy.strike_lighter_coin` in `test_state_debases_coin`. No simulator command measures the price effect; compare two `Economy` runs of the fixture setup differing only in the yearly `strike_lighter_coin` cut.

@@ -248,7 +248,7 @@ elsewhere: the weather cell and pooled-draw checks of `regional_weather_wiring` 
 and its scenario), the housing sum of `reserve_staff_policy` (`test_auto_hire_buys_room`), the cheapest-route relocation
 check (now a rule on the small fixture map). Found vacuous and rewritten: the two "does not claim nothing rests on it" checks of
 `refusal_wording_and_screens` read the band from an unfogged game, where the field is empty, and passed whatever the rule
-did; they now run on a fogged stand-in. Baseline validation: `test_regional_weather_century_validation` (slow-only, naming Complaint 46).
+did; they now run on a fogged stand-in. The century baseline validation was later deleted (Complaint 46 names the measuring command).
 Kept as scenarios: `run_reproducibility` (determinism), the save round trips and two-game match of the weather, the
 `again` command, the Options menu, the starting grants per civilisation.
 
