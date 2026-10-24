@@ -75,6 +75,7 @@ import random
 from typing import Mapping, Optional
 
 from sim.constants import declare
+from .epidemic_deaths import add_epidemic_deaths
 
 # ============================================================================
 # AGE BAND BOUNDARIES
@@ -1102,10 +1103,9 @@ class Population(object):
                               self.elderly * endemic.get("elderly", 0.0) * disease_burden)
 
         # Deaths an epidemic model already counted (sim/disease), by band; never more than the band's survivors.
-        epidemic = epidemic_deaths or {}
-        deaths_children += min(self.children - deaths_children, epidemic.get("children", 0.0))
-        deaths_working_age += min(self.working_age - deaths_working_age, epidemic.get("working_age", 0.0))
-        deaths_elderly += min(self.elderly - deaths_elderly, epidemic.get("elderly", 0.0))
+        deaths_children, deaths_working_age, deaths_elderly = add_epidemic_deaths(
+            (deaths_children, deaths_working_age, deaths_elderly), (self.children, self.working_age, self.elderly),
+            epidemic_deaths or {})
 
         births = (self.working_age * FEMALE_SHARE_OF_WORKING_AGE_POPULATION
                   * ANNUAL_FERTILITY_RATE_PER_WOMAN
