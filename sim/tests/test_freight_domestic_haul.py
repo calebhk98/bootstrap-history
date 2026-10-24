@@ -1,5 +1,5 @@
 """Complaints/326: rivers from the tiles, a domestic flow ledger, droving of live animals, on built inputs. The haul as a game
-prices it (dues, the opposite flow, driven stock) is in test_freight_domestic_haul_scenario."""
+prices it (dues, the opposite flow, driven stock) is in test_foreign_freight_wiring_rules."""
 
 QUICK_TOPIC = True
 

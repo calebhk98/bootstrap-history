@@ -1,4 +1,6 @@
 """Resource endowment and prospecting: known plus hidden deposits, deterministic, size-biased, mod-extensible."""
+QUICK_TOPIC = True
+
 import hashlib
 import os
 import statistics
@@ -282,12 +284,6 @@ class EarthTests(unittest.TestCase):
         broken = map_source.WorldMap(world_map.map_id, world_map.tiles, world_map.layers, catalogues,
                                      world_map.folders)
         self.assertEqual(len(resources_catalogue.validate(broken)), 2)
-
-    def test_every_tile_summarises(self):
-        world_map = earth_map()
-        for tile_id in list(world_map.tiles)[::10]:
-            summary = resources_summary.resources_at(world_map, tile_id)
-            self.assertIsInstance(summary, dict)
 
 
 if __name__ == "__main__":

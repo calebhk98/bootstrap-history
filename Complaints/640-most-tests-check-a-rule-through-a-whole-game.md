@@ -93,7 +93,7 @@ Extractions, behaviour unchanged: `hours_spent_clearing`, `cleared_hectares`, `q
 elsewhere: the state budget's debasing, borrowing-first and hours-and-goods runs (`test_economy_agent_state`), the firm
 count and expansion dynamics repeated across the firm scenarios (`test_firm_count_from_costs`, `test_firm_expansion`).
 The state budget's runs over years on an opened England are `test_economy_state_budget_validation` (baseline validations,
-4.2, naming Complaint 526); `economy_tin_dearer_than_copper` stays the slow validation naming Complaint 511.
+4.2, naming Complaint 526); `economy_tin_dearer_than_copper` was deleted (Complaint 511 names the command).
 
 ## Applied: audit batch 10 (test_physical_money_constants through test_readouts_timing_power_mines_road)
 

@@ -1,75 +1,74 @@
-"""sim/engine/prices.py against the real tree: the engine's default (`sim.engine.data.load()` with no arguments)
-prices every material from the solver with no price book behind it, and a real civilisation's starting techs give a
-solved and a gated split. The cache keying, the conversion and the solver's rules on synthetic entries are
+"""sim/engine/data.py and prices.py against the real tree, one call each: `data.load` prices goods from the solver alone with no
+price book behind it (the solver is a recorder), every material a node asks for is one the production data makes, and a real
+civilisation's starting techs give a solved and a gated split in `goods_provenance` and positive prices from
+`calculated_goods_prices`. The cache keying, the conversion and the solver's rules on synthetic entries are
 test_engine_prices_rule."""
+QUICK_TOPIC = True
+
 import json
 import os
 import unittest
+from unittest import mock
 
 from sim.engine import data, prices as engine_prices
 
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-class EngineDefaultIsSolvedTests(unittest.TestCase):
+
+def starting_techs(civilization_id):
+    with open(os.path.join(ROOT, "data", "civilizations", civilization_id + ".json"), encoding="utf-8") as source:
+        return json.load(source)["starting_techs"]
+
+
+class LoadPricesFromTheSolverTests(unittest.TestCase):
     """`load()` with no arguments prices goods from the solver alone."""
 
-    def test_default_goods_are_the_solved_table(self):
-        _tree, document, nodes, _wages, goods = data.load()
-        rate = data.starting_schedule().money_per_labour_hour
-        reference_techs = data.load_civ()["starting_techs"]
-        solved, _provenance = engine_prices.priced_goods_table(reference_techs, document)
-        for material, price in solved.items():
-            self.assertAlmostEqual(goods[material], price, msg=material)
-        self.assertAlmostEqual(document["money_per_labour_hour"], rate)
-        required = {material for node in nodes.values() for material in node["mat"]}
-        # a material whose every technique needs a heat the society cannot reach has no price (it cannot be bought),
-        # but it must be one the production data makes, not a misspelt name
-        made = {material for entry in engine_prices._default_production_entries().values() for material in entry["outputs"]}
-        self.assertEqual(sorted(required - set(goods) - made), [])
+    def load(self):
+        with mock.patch.object(engine_prices, "priced_goods_table", return_value=({"sentinel_kg": 2.5}, {})) as solver:
+            result = data.load()
+        return result, solver
+
+    def test_the_goods_are_the_solvers_table(self):
+        (_tree, _document, _nodes, _wages, goods), _solver = self.load()
+        self.assertEqual(goods, {"sentinel_kg": 2.5})
+
+    def test_the_solver_prices_the_reference_civilisations_starting_techs_against_the_wage_document(self):
+        (_tree, document, _nodes, _wages, _goods), solver = self.load()
+        self.assertEqual(list(solver.call_args.args[0]), starting_techs(data.default_civilisation_id()))
+        self.assertIs(solver.call_args.args[1], document)
+
+    def test_the_wage_document_states_what_an_hour_of_labour_is_worth(self):
+        (_tree, document, _nodes, _wages, _goods), _solver = self.load()
+        self.assertGreater(document["money_per_labour_hour"], 0.0)
 
 
-class RealDataIntegrationTests(unittest.TestCase):
-    """One light check against the committed data/production/ and
-    data/civilizations/, so the wiring is proven against the real tree and
-    not only synthetic examples. Kept to a single gated solve (the
-    expensive part), consistent with solve_prices.py's own measurement of a
-    few tenths of a second per solve."""
+class MaterialsTheTreeAsksForTests(unittest.TestCase):
+    def test_every_material_a_node_requires_is_one_the_production_data_makes(self):
+        required = {material for node in data.load_base_tree()["nodes"] for material in node["mat"]}
+        production = data.load_production_catalog(data.ROOT, data.MODDIR)
+        made = {material for entry in production.values() for material in entry["outputs"]}
+        self.assertEqual(sorted(required - made), [])
 
-    def test_a_real_civilizations_starting_techs_produce_a_measurable_split(self):
+
+class RealCivilisationTests(unittest.TestCase):
+    """One light check each against the committed data/production/ and data/civilizations/."""
+
+    def setUp(self):
         engine_prices.reset_caches_for_tests()
         self.addCleanup(engine_prices.reset_caches_for_tests)
-        with open(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(
-                os.path.abspath(__file__)))), "data", "civilizations",
-                "rome_100ad.json")) as source:
-            starting_techs = json.load(source)["starting_techs"]
 
-        provenance = data.goods_provenance(starting_techs)
-        solved_count = sum(1 for source in provenance.values() if source == "solved")
-        gated_count = sum(1 for source in provenance.values() if source == "gated")
-        self.assertGreater(gated_count, 0,
-                           "nothing came back 'gated', so era gating is not "
-                           "reaching this table at all")
-        self.assertGreater(solved_count, 0,
-                           "the solver resolved nothing under Rome's own "
-                           "starting technologies - the gate or the wiring "
-                           "is broken, not merely incomplete")
-        self.assertEqual(solved_count + gated_count, len(provenance))
+    def test_a_real_civilisations_starting_techs_give_both_solved_and_gated_goods(self):
+        provenance = data.goods_provenance(starting_techs("rome_100ad"))
+        solved = sum(1 for source in provenance.values() if source == "solved")
+        gated = sum(1 for source in provenance.values() if source == "gated")
+        self.assertGreater(gated, 0)
+        self.assertGreater(solved, 0)
+        self.assertEqual(solved + gated, len(provenance))
 
-    def test_runtime_price_provider_uses_the_calculator_result(self):
-        with open(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(
-                os.path.abspath(__file__)))), "data", "civilizations",
-                "rome_100ad.json")) as source:
-            starting_techs = json.load(source)["starting_techs"]
-
-        calculated = data.calculated_goods_prices(
-            starting_techs, civilization_id="rome_100ad")
-        provenance = data.goods_provenance(
-            starting_techs, civilization_id="rome_100ad")
-        gated = next(material for material, source in sorted(provenance.items())
-                     if source == "gated")
-        solved = next(material for material, source in sorted(provenance.items())
-                      if source == "solved")
-        self.assertGreater(calculated[solved], 0.0)
-        self.assertGreater(calculated[gated], 0.0)
+    def test_the_runtime_price_provider_prices_every_good_above_nothing(self):
+        calculated = data.calculated_goods_prices(starting_techs("rome_100ad"), civilization_id="rome_100ad")
+        self.assertTrue(calculated)
+        self.assertEqual([material for material, price in sorted(calculated.items()) if not price > 0.0], [])
 
 
 if __name__ == "__main__":
