@@ -3,6 +3,7 @@ country's trade book is read off them. The rules are called on built inputs."""
 
 QUICK_TOPIC = True
 
+import types
 import unittest
 
 from sim.economy import carried_book, country_figures
@@ -10,8 +11,6 @@ from sim.economy.accounts import Book
 from sim.economy.market_memory import MarketMemory
 from sim.economy.types import CurrencySpec
 from sim.economy.record import EconomyRecord
-from sim.tests import economy_fixture as fixture
-from sim.tests.test_economy_carriage_hours import trading_setup
 
 COUNTRY_OF = {"a1": "home", "a2": "home", "b1": "north"}.get
 
@@ -63,9 +62,11 @@ class CarriedBookTests(unittest.TestCase):
         self.assertEqual(again.carried_goods, record.carried_goods)
 
     def test_no_country_means_no_border(self):
-        economy = fixture.run(fixture.two_country_setup(), years=1)[0]
+        economy = types.SimpleNamespace(record=types.SimpleNamespace(carried_goods={"grain": {"a1": {"b1": [2.0, 30.0, 50.0]}}}),
+                                        setup=types.SimpleNamespace(country_of=COUNTRY_OF))
         self.assertEqual(country_figures.trade_book(economy, None), {})
         self.assertEqual(country_figures.trade_book(economy, "nowhere"), {})
+        self.assertEqual(country_figures.trade_book(economy, "north")["grain"]["in_value"], 50.0)
 
 
 if __name__ == "__main__":
