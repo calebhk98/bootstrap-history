@@ -24,6 +24,8 @@ Taxes, rent and banditry drive abandonment of marginal land. The full log of wha
   anything opened); no source gives a land top-decile share, so it is printed, not checked. A full game over a century
   where borrowing households default is still not run; print the fixture's path with
   `python3 -m sim.tests --slow --only economy_land_concentration`.
+  That a single failed harvest is carried by borrowing and moves no title, and that more households hit means a higher Gini,
+  are claims about the multi-year fixture, not one function: they are no longer unit tests; measure them with the same command.
 - **The fixture lands in the band only with partible inheritance on** (default `PARTIBLE_ESTATE_SHARE`); with estates that
   stay whole every history ends with the lender holding nearly everything (Gini near one), above every sourced row. The
   share is a labelled heuristic (retire: per-civilisation inheritance rule in data), so which side of the band a

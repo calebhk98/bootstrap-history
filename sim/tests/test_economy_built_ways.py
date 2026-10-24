@@ -7,9 +7,12 @@ sim/economy/tile_costs.py, sim/economy/setup.py, sim/economy/economy.py, sim/eng
 QUICK_TOPIC = True
 
 import dataclasses
+import types
 import unittest
+from unittest import mock
 
-from sim.economy import api as economy_api
+from sim.economy import economy as economy_module
+from sim.economy.economy import Economy
 from sim.economy import tile_costs
 from sim.economy.setup import EconomySetup
 from sim.engine import economy_port_key
@@ -61,11 +64,28 @@ class SetupAndEconomyTests(unittest.TestCase):
                         self.setup.carriage_table().cost_per_tonne(*self.pair))
 
     def test_the_live_economy_rebuilds_its_carriage_table_when_a_way_is_finished(self):
-        economy = economy_api.blank_economy(self.setup)
-        before = economy.carriage.cost_per_tonne(*self.pair)
-        self.assertTrue(economy_api.set_improvements(economy, self.edge))
-        self.assertLess(economy.carriage.cost_per_tonne(*self.pair), before)
-        self.assertFalse(economy_api.set_improvements(economy, self.edge))
+        rebuilt = []
+        stand_in = types.SimpleNamespace(improvements={}, record=types.SimpleNamespace(ways={}),
+                                         _rebuild_carriage=lambda: rebuilt.append(True) or True)
+        self.assertTrue(Economy.set_improvements(stand_in, self.edge))
+        self.assertEqual((stand_in.improvements, stand_in.record.ways, rebuilt), (self.edge, self.edge, [True]))
+
+    def test_the_same_ways_again_change_nothing(self):
+        rebuilt = []
+        stand_in = types.SimpleNamespace(improvements=dict(self.edge), record=types.SimpleNamespace(ways={}),
+                                         _rebuild_carriage=lambda: rebuilt.append(True) or True)
+        self.assertFalse(Economy.set_improvements(stand_in, self.edge))
+        self.assertEqual(rebuilt, [])
+
+    def test_the_rebuilt_carriage_table_is_the_setups_over_the_current_ways(self):
+        asked = []
+        stand_in = types.SimpleNamespace(
+            improvements=self.edge, record=types.SimpleNamespace(area_imbalance=1.5), area_map="old",
+            setup=types.SimpleNamespace(carriage_table=lambda ways, imbalance: asked.append((ways, imbalance)) or "table",
+                                        area_map=lambda carriage: ("areas", carriage)))
+        with mock.patch.object(economy_module, "follow"):
+            self.assertTrue(Economy._rebuild_carriage(stand_in))
+        self.assertEqual((stand_in.carriage, stand_in.area_map, asked), ("table", ("areas", "table"), [(self.edge, 1.5)]))
 
     def test_the_spin_up_key_sees_the_ways(self):
         self.assertIn("improvements", {field.name for field in dataclasses.fields(EconomySetup)})
