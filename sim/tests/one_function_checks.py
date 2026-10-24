@@ -19,8 +19,7 @@ from sim.tests.discovery import TESTS_DIR, discover_topics
 
 # Building a game or an economy, or running it: each stands for many functions at once.
 GAME_AND_ECONOMY_BUILDERS = {"sim", "unopened_sim", "build_unopened", "Sim", "proto", "Economy", "blank_economy",
-                             "years_of", "spin_up", "spin_up_trace", "spin_up_settled", "spin_up_state", "spin_up_result",
-                             "spin_up_years", "spin_up_line"}
+                             "years_of", "spin_up", "spin_up_trace"}
 # Commands that change a game's state: a test that needs their result builds that result instead.
 # A unit's own `step` (a population's, a store's) is a function under test like any other; stepping a game or an
 # economy needs one built first, and the builders above are what is flagged.
