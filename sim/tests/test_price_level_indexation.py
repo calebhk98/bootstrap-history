@@ -5,24 +5,8 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.economy import year_labour
-from sim.economy.economy import Economy
+from sim.economy.labour_supply import anchor_wage_in_prices
 from sim.economy.market_memory import MarketMemory
-from sim.economy.year_close import remember_basket_price_level
-from sim.tests import economy_fixture as fixture
-
-THIN_GOOD_KEY = "metal_kg|town@b9"
-SPIKE = 1.0e6
-
-
-def spiked_economy():
-    setup = fixture.stationary_setup()
-    economy = Economy(setup)
-    economy.step(fixture.quiet_year(setup))
-    economy.record.leisure_anchor_wage = {fixture.LABOURER: 1.0}
-    economy.record.memory.prices[THIN_GOOD_KEY] *= SPIKE
-    remember_basket_price_level(setup, economy.record)
-    return setup, economy
 
 
 class ChainedLevelTests(unittest.TestCase):
@@ -40,15 +24,15 @@ class ChainedLevelTests(unittest.TestCase):
 
 
 class IndexationTests(unittest.TestCase):
-    def test_a_thin_good_spike_moves_the_reported_basket_level_but_not_the_nominal_anchor_wage(self):
-        setup, economy = spiked_economy()
-        view = economy.view()
-        self.assertGreater(view.basket_price_level(setup.currency_id), 100.0)
-        outside = year_labour.outside_option_by_tile(setup, economy.record, view)
-        offers = year_labour.labour_offers(setup, economy.record, view, outside)
-        supply = economy._hour_supply(offers, view, outside)
-        self.assertAlmostEqual(supply.anchor_wage[fixture.LABOURER], view.perceived_price_level(setup.currency_id))
-        self.assertLess(supply.anchor_wage[fixture.LABOURER], 10.0)
+    def test_a_thin_good_spike_moves_the_reported_basket_level_but_not_the_perceived_level_wages_are_scaled_by(self):
+        memory = MarketMemory()
+        memory.note_basket_price_level("coin", 1.0e6, observed_inflation=0.0)
+        self.assertEqual(memory.basket_price_levels["coin"], 1.0e6)
+        self.assertEqual(memory.price_levels["coin"], 1.0)
+        self.assertEqual(memory.perceived_price_levels["coin"], 1.0)
+
+    def test_the_anchor_wage_is_the_opening_anchor_in_this_years_prices(self):
+        self.assertEqual(anchor_wage_in_prices({"labourer": 1.0, "smith": 2.0}, 1.25), {"labourer": 1.25, "smith": 2.5})
 
 
 if __name__ == "__main__":

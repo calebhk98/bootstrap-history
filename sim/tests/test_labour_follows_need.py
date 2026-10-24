@@ -13,10 +13,6 @@ FARM = labour_allocation.FARM_TRADE
 TOTAL_HOURS = 1000.0
 
 
-def _needs(smith_hours, potter_hours):
-    return {FARM: 500.0, "smith": smith_hours, "potter": potter_hours}
-
-
 class HoursFollowNeedTests(unittest.TestCase):
 
     def test_farm_hours_move_toward_need_within_the_mobility_limit(self):
@@ -44,21 +40,15 @@ class HoursFollowNeedTests(unittest.TestCase):
         self.assertEqual(hours, {FARM: 600.0, "smith": 100.0, "potter": 300.0})
         self.assertAlmostEqual(sum(hours.values()), TOTAL_HOURS)
 
-    def test_a_wage_rises_while_a_trade_is_short_and_eases_back_once_it_is_not(self):
-        schedule = wages.WageSchedule({"smith": 5.0, "potter": 5.0}, 1.0, 1.0, 0.10)
-        baseline = schedule.wage_per_hour("smith")
-        needs = _needs(300.0, 200.0)
-        short = {FARM: 500.0, "smith": 50.0, "potter": 450.0}
-        met = {FARM: 500.0, "smith": 300.0, "potter": 200.0}
-        series = []
+    def test_a_tightness_factor_rises_while_a_trade_is_short_and_eases_back_once_it_is_not(self):
+        factor = 1.0
         for _year in range(20):
-            schedule.step(needs, short)
-            series.append(schedule.wage_per_hour("smith"))
-        peak = series[-1]
-        self.assertGreater(peak, baseline)
+            factor = wages.adjusted_tightness_factor(factor, 300.0, 50.0)
+        peak = factor
+        self.assertGreater(peak, 1.0)
         for _year in range(400):
-            schedule.step(needs, met)
-        self.assertLess(schedule.wage_per_hour("smith"), peak)
+            factor = wages.adjusted_tightness_factor(factor, 300.0, 300.0)
+        self.assertLess(factor, peak)
 
     def test_one_function_gives_the_need_to_allocation_and_wages(self):
         needed = labour_allocation.hours_needed_by_trade(

@@ -5,6 +5,7 @@ from .harness import *  # noqa: F401,F403
 from sim.tests.test_mine_names_a_deposit import _Host
 
 QUICK_TOPIC = True
+UNDER_TEST = {"open_mine"}
 
 NO_DEPOSIT_MATERIAL = "aluminium_kg"   # no deposit data: bounded by the ceiling alone
 
@@ -38,8 +39,10 @@ class _Mining(_Host):
 # --- open_mine delivers only the room under the ceiling.
 host = _Mining(ceiling=40.0)
 check("asking for far more than the ceiling allows opens only the ceiling", host.open_mine(NO_DEPOSIT_MATERIAL, 5000.0, partial=False) == 40.0)
-check("...and what is on order counts against the ceiling, so a second ask opens nothing",
-      host.open_mine(NO_DEPOSIT_MATERIAL, 5000.0, partial=False) == 0.0)
+on_order = _Mining(ceiling=40.0)
+on_order.holdings.mine_pending = {NO_DEPOSIT_MATERIAL: 40.0}
+check("what is on order counts against the ceiling, so an ask with the ceiling on order opens nothing",
+      on_order.open_mine(NO_DEPOSIT_MATERIAL, 5000.0, partial=False) == 0.0)
 check("a ceiling of nothing opens nothing", _Mining(ceiling=0.0).open_mine(NO_DEPOSIT_MATERIAL, 5.0) == 0.0)
 
 # --- a working's running cost is capacity times the material's opex times the price index times its own depletion scale.
@@ -64,7 +67,7 @@ check("a quote's price to sink is tonnes times capex times the price index times
 check("a quote's yearly cost is what a new working of that size is charged",
       quoted["every_year_it_stands"] == round(quoting.mine_operating_cost_for(
           {"material": NO_DEPOSIT_MATERIAL, "capacity": 10.0, "intensity_yrs": 0.0}), 1), quoted)
-quoting.open_mine(NO_DEPOSIT_MATERIAL, 15.0)
+quoting.holdings.mine_pending = {NO_DEPOSIT_MATERIAL: 15.0}
 check("a quote's room is what the ceiling leaves after what is on order",
       quoting.mine_quote(NO_DEPOSIT_MATERIAL, 10.0)["room_left_before_geology_stops_you"] == 25.0)
 

@@ -9,6 +9,7 @@ from sim.engine import opening_money
 from sim.engine.economy_port import EconomyPort
 
 QUICK_TOPIC = True
+UNDER_TEST = {"open_agent"}
 
 OPENING_FIGURE = 0.7
 
