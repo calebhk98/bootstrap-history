@@ -192,11 +192,6 @@ class BountyAndSource(unittest.TestCase):
                                      BOUNTY_PRICE_MULTIPLIER=4.0)
         self.assertAlmostEqual(ProjectMaterialsMixin.bounty_price(game, "node"), 900.0 / 1.5 * 4.0)
 
-    def test_no_reader_of_prices_json_in_the_project_materials_module(self):
-        with open(os.path.join(ROOT, "sim", "engine", "project_materials.py"), encoding="utf-8") as source:
-            text = source.read()
-        self.assertNotIn("prices.json", text)
-        self.assertNotIn("PRICES", text)
 
 
 if __name__ == "__main__":

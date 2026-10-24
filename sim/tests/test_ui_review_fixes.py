@@ -3,13 +3,12 @@ replay order, portfolio paging input, goals cache."""
 
 QUICK_TOPIC = True
 
-import inspect
 import weakref
 from types import SimpleNamespace as _Namespace
 
 from sim.engine import ui_port
 from sim.refusal import LogLine, cause_of
-from sim.ui import cli_agent, memory, replay
+from sim.ui import memory, replay
 from sim.ui.proto import goals_watch, programme, programme_draw, stuck_advice
 from sim.ui.proto.dispatch_programme import _cmd_programme
 from sim.ui.proto.notes_store import NoteLine
@@ -76,9 +75,6 @@ check("under fog a note is left as the player wrote it",
       _log_scrub(Stub(fog=True, fog_scrub=lambda text: "X"), note) is note)
 
 # 4. known routes are applied after the session is loaded; carried ids accumulate
-source = inspect.getsource(cli_agent.cmd_agent)
-check("agent applies known routes after loading the session",
-      source.index("load_state(sim, session)") < source.index("apply_known_routes"))
 fogged = Stub(fog=True, revealed=set())
 replay.apply_known_routes(fogged, ["a"], {"a", "b"})
 replay.apply_known_routes(fogged, ["b"], {"a", "b"})

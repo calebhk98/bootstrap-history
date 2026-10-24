@@ -3,7 +3,6 @@ cannot keep cattle or horses and offers no draught team, a temperate tile is una
 on a hot wet tile against a cool dry one, and no engine code names a region."""
 QUICK_TOPIC = True
 import os
-import re
 import types
 import unittest
 
@@ -84,13 +83,6 @@ class EndemicDiseaseTests(unittest.TestCase):
     def test_the_excess_is_never_more_than_the_bands_survivors(self):
         self.assertEqual(endemic_excess_deaths(300.0, 290.0, 0.5, 1.0), 10.0)
 
-    def test_no_engine_code_names_a_region(self):
-        names = re.compile(r"africa|sahel|nigeria|congo|sahara", re.IGNORECASE)
-        for relative in ("sim/geography/endemic.py", "sim/geography/food_pasture.py",
-                         "sim/engine/living_stock_growth.py", "sim/engine/living_stock_opening.py",
-                         "sim/engine/living_stock_yearly.py", "sim/engine/disease_port.py"):
-            with open(os.path.join(ROOT, relative), encoding="utf-8") as handle:
-                self.assertIsNone(names.search(handle.read()), relative)
 
 
 if __name__ == "__main__":

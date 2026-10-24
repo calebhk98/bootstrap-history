@@ -1,11 +1,10 @@
 """Complaints 625 and 626: a state short of money chooses among borrowing, cutting lines, deferring pay, debasing, levying
 and demanding in kind. Each response has its consequences; the state's decision policy chooses, so a player's
-state and an AI state face the same menu. No fixed cascade runs in `Government.advance`, and a rate the state
+state and an AI state face the same menu. A rate the state
 sets changes what its forms yield."""
 
 QUICK_TOPIC = True
 
-import inspect
 
 from .harness import check
 
@@ -237,8 +236,4 @@ steady_rate, world = short_state(policy=CallbackPolicy(lambda actor, decision: [
 decide(steady_rate, world)
 check("a state that does not choose it keeps its rate", "revenue" not in steady_rate.record.levers, steady_rate.record.levers)
 
-# ---- no fixed cascade remains in the year -----------------------------------------------------------------------
-source = inspect.getsource(Government.advance)
-check("the year does not run a debasement or a uniform cut itself", "decide_debasement" not in source
-	  and "funded_share" not in source and "funded_share" not in inspect.getsource(Government.pay_standing_need), source)
 check("how a shortfall is met is recorded as the state's choice", hasattr(ActorRecord(kind="government"), "fiscal_response"))

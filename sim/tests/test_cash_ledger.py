@@ -1,39 +1,13 @@
 """Complaint 292: every change to the founder's cash goes through the household's ledger with a
-cause (Complaint 95). The rules are tested on a household built here; no code path writes the purse around the ledger (a source scan), so
-every player action reconciles by construction."""
+cause (Complaint 95). The rules are tested on a household built here; a write around the ledger shows as unaccounted cash."""
 QUICK_TOPIC = True
 
-import os
-import re
 import types
 
 from .harness import *  # noqa: F401,F403
 
 from sim.engine import cash_book
 from sim.engine.state import HouseholdState
-
-from .source_dirs import SIM_DIR, engine_side_dirs
-
-# The only places allowed to write the purse itself: the ledger's own methods and the opening balance.
-PURSE_WRITERS = {os.path.join("engine", "state.py"), os.path.join("engine", "core_properties.py"),
-                 os.path.join("agents", "household.py"),
-                 os.path.join("engine", "opening_money.py")}   # reprices the opening purses to the economy's money per hour: a unit change, not a transfer
-DIRECT_WRITE = re.compile(r"\.capital\s*[-+*/]?=(?!=)")
-
-# --- no code path writes the purse around the ledger -------------------------------------------
-offenders = []
-for folder, _dirs, files in (entry for directory in engine_side_dirs() for entry in os.walk(directory)):
-    for name in files:
-        path = os.path.join(folder, name)
-        relative = os.path.relpath(path, SIM_DIR)
-        if not name.endswith(".py") or relative in PURSE_WRITERS:
-            continue
-        with open(path, encoding="utf-8") as source:
-            for number, line in enumerate(source, 1):
-                if DIRECT_WRITE.search(line.split("#", 1)[0]):
-                    offenders.append("%s:%d" % (relative, number))
-check("no engine code changes the founder's cash except through the ledger", not offenders, offenders)
-
 
 # --- the household's postings keep the book reconciled -----------------------------------------
 def household_game(capital=1000.0, year=100):

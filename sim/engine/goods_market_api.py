@@ -222,10 +222,13 @@ class GoodsMarket(GoodsPricing, GoodsOffers):
         emp_key = sim._material_tag(material)[0]
         brought = self.import_tonnes_available(material)      # a partner's good: its supply and the carriers' lift
         offered = None if brought is not None else sim.economy.agent_offered_tonnes(material)
+        proceeds = self.sale_proceeds(material, 0.0, self.sold_tonnes(emp_key, self.acting_party_id))
+        if proceeds is None:
+            return None
         carriage = self._carriage_per_tonne(material, price)
         return {"material": material, "stock_key": emp_key,
                 "buy_per_tonne": self.purchase_cost(material, 0.0)[1],
-                "sell_per_tonne": self.sale_proceeds(material, 0.0, self.sold_tonnes(emp_key, self.acting_party_id))[1],
+                "sell_per_tonne": proceeds[1],
                 "price_at_tile_per_tonne": price, "price_kind": self.price_kind(material),
                 "carriage_per_tonne": carriage,
                 "making_cost_per_tonne": self.making_cost_per_tonne(material),
@@ -280,7 +283,10 @@ class GoodsMarket(GoodsPricing, GoodsOffers):
         sold = tonnes_sold(tonnes, seller.held(key), self.sale_room_tonnes(self._with_buyers(material, quote), sold_so_far))
         if sold <= 0:
             return key, 0.0, 0.0
-        return key, sold, self.sale_proceeds(material, sold, sold_so_far)[0]
+        proceeds = self.sale_proceeds(material, sold, sold_so_far)
+        if proceeds is None:
+            return None, 0.0, 0.0
+        return key, sold, proceeds[0]
 
     # ---- orders -----------------------------------------------------------------------
 

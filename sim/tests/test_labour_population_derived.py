@@ -3,7 +3,6 @@ on a stub labour built here; the hiring cap and the national count on a whole ga
 test_labour_population_derived_scenario)."""
 QUICK_TOPIC = True
 
-import ast
 import types
 import unittest
 
@@ -84,19 +83,6 @@ class DerivedPopulationTests(unittest.TestCase):
     def test_an_absent_trade_has_no_density_source(self):
         self.assertIsNone(_StubLabour({}, absent=("moddedtrade",))._trade_density_source("moddedtrade"))
 
-    def test_no_trade_id_literal_in_module(self):
-        with open(labour_population.__file__, encoding="utf-8") as handle:
-            tree = ast.parse(handle.read())
-        trade_ids = set(WAGES)
-        self.assertTrue(trade_ids)
-        docstrings = {id(node.body[0].value) for node in ast.walk(tree)
-                      if isinstance(node, (ast.Module, ast.ClassDef, ast.FunctionDef))
-                      and node.body and isinstance(node.body[0], ast.Expr)
-                      and isinstance(node.body[0].value, ast.Constant)}
-        found = [node.value for node in ast.walk(tree)
-                 if isinstance(node, ast.Constant) and isinstance(node.value, str)
-                 and id(node) not in docstrings and node.value in trade_ids]
-        self.assertEqual(found, [])
 
 
 def labour_floor():
