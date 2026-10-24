@@ -2,7 +2,7 @@
 from the game (the labour and capital as authored, the civilisation, price-level, geography and opposition factors) and the
 total as the game bills it; `project_cost_without_materials` is labour and capital times the price-level, civilisation and
 rebuild factors. Each is called on a stand-in game with the factors written out; nothing is multiplied by the test. The
-breakdown does not name the rebuild factor `project_cost_without_materials` multiplies in, so while a lost node is rebuilt its factors do not multiply out to its total (an open gap)."""
+breakdown names the rebuild factor too, so while a lost node is rebuilt its factors still multiply out to its total."""
 QUICK_TOPIC = True
 
 import types
@@ -53,8 +53,8 @@ class ProjectCostWithoutMaterialsTests(unittest.TestCase):
 
 
 class ExplainCostTests(unittest.TestCase):
-    def explained(self):
-        return _explain_cost(Game(), {}, "clock", NODE)
+    def explained(self, rebuild=1.0):
+        return _explain_cost(Game(rebuild=rebuild), {}, "clock", NODE)
 
     def test_the_authored_parts_and_the_missing_materials_are_reported(self):
         cost = self.explained()
@@ -64,6 +64,9 @@ class ExplainCostTests(unittest.TestCase):
         cost = self.explained()
         self.assertEqual((cost["civ_domain_factor"], cost["price_index"], cost["material_distance_factor"],
                           cost["opposition_factor"]), (0.8, 1.5, 1.25, 1.1))
+
+    def test_a_rebuild_names_the_share_left_to_do(self):
+        self.assertEqual(self.explained(rebuild=0.4)["rebuild_factor"], 0.4)
 
     def test_the_total_is_what_the_game_bills(self):
         self.assertEqual(self.explained()["total"], 123.4)
