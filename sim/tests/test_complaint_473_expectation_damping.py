@@ -10,12 +10,11 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.economy import producers, year_labour
-from sim.economy.economy import Economy
+from sim.economy import producers
+from sim.economy.labour_supply import anchor_wage_in_prices
 from sim.economy.market_memory import MarketMemory
 from sim.economy.replaced import replaced
 from sim.economy.types import Recipe
-from sim.tests import economy_fixture as fixture
 
 RECIPE = Recipe("make", {"grain": 10.0}, {}, {"hand": 5.0})
 MIDDLE_PRICE = 0.5          # a run's labour costs 5 at the wage below, its output sells for 5 at this price
@@ -116,18 +115,7 @@ class HouseholdsPerceiveTheLevelWithALag(unittest.TestCase):
         self.assertAlmostEqual(memory.perceived_price_levels["coin"] / memory.price_levels["coin"], 1.0, delta=0.05)
 
     def test_the_leisure_anchor_is_scaled_by_the_perceived_level(self):
-        setup = fixture.stationary_setup()
-        economy = Economy(setup)
-        economy.step(fixture.quiet_year(setup))
-        economy.record.leisure_anchor_wage = {fixture.LABOURER: 1.0}
-        economy.record.memory.price_levels[setup.currency_id] = 2.0
-        economy.record.memory.perceived_price_levels[setup.currency_id] = 1.5
-        view = economy.view()
-        outside = year_labour.outside_option_by_tile(setup, economy.record, view)
-        offers = year_labour.labour_offers(setup, economy.record, view, outside)
-        supply = economy._hour_supply(offers, view, outside)
-        self.assertAlmostEqual(supply.anchor_wage[fixture.LABOURER], 1.5)
-
+        self.assertEqual(anchor_wage_in_prices({"labourer": 1.0, "smith": 2.0}, 1.5), {"labourer": 1.5, "smith": 3.0})
 
 if __name__ == "__main__":
     unittest.main()

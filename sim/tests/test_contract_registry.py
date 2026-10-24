@@ -11,7 +11,7 @@ from sim.agents.api import ActorRecord, ActorsState
 from sim.agents.firm import Firm
 from sim.agents.purses import COIN, POOL, Purses
 from sim.contracts import DEPOSIT, FACILITY, STATE_DEBT, TERM_LOAN, Contract, Contracts
-from sim.economy import api as economy_api
+from sim.economy.accounts import Book
 from sim.economy.types import Loan
 
 
@@ -79,19 +79,16 @@ class OneRegistry(unittest.TestCase):
         self.assertEqual(restored.debt("firm:a", COIN), registry.debt("firm:a", COIN))
 
     def test_adopting_the_economys_registry_carries_the_drawn_facilities_over(self):
-        from sim.tests import economy_fixture
         state = ActorsState()
         firm = Firm("firm:a", ActorRecord(kind="firm", money=10.0))
         other = Firm("firm:b", ActorRecord(kind="firm"))
         for actor in (firm, other):
             actor.attach(state.purses)
         ledger.transfer(firm, other, 25.0, "buy")
-        economy, _outcomes = economy_fixture.run(years=1)
-        registry = economy_api.economy_contracts(economy)
-        state.purses.adopt_book(economy_api.economy_book(economy), registry)
+        registry = Contracts()
+        state.purses.adopt_book(Book(), registry)
         self.assertIs(state.purses.contracts, registry)
         self.assertEqual(registry.debt("firm:a", COIN), 15.0)
-
 
 if __name__ == "__main__":
     unittest.main()

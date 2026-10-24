@@ -5,7 +5,7 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.economy.labour_supply import anchor_wages_at
+from sim.economy.labour_supply import anchor_wage_in_prices
 from sim.economy.market_memory import MarketMemory
 
 
@@ -32,7 +32,7 @@ class IndexationTests(unittest.TestCase):
         self.assertEqual(memory.perceived_price_levels["coin"], 1.0)
 
     def test_the_anchor_wage_is_the_opening_anchor_in_this_years_prices(self):
-        self.assertEqual(anchor_wages_at({"labourer": 1.0, "smith": 2.0}, 1.25), {"labourer": 1.25, "smith": 2.5})
+        self.assertEqual(anchor_wage_in_prices({"labourer": 1.0, "smith": 2.0}, 1.25), {"labourer": 1.25, "smith": 2.5})
 
 
 if __name__ == "__main__":

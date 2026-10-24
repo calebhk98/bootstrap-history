@@ -1,4 +1,4 @@
-"""The hand-built three-tile economy opens, steps and conserves money and goods, fast."""
+"""SMOKE: the hand-built three-tile economy opens, steps and conserves money and goods, fast."""
 
 QUICK_TOPIC = True
 

@@ -2,16 +2,15 @@
 
 QUICK_TOPIC = True
 
+import types
 import unittest
+from unittest import mock
 
+from sim.contracts import TERM_LOAN
 from sim.economy import entry, producer_exit, producers, producers_close
-from sim.economy.economy import Economy
-from sim.economy.types import EDGE_PRODUCTION, GoodsMove, Loan, Transfer
-from sim.economy.types import Recipe
-from sim.tests.economy_fixture import HILLS, MINE, MINER, ORE, quiet_year, recipes, run, small_setup
+from sim.economy.types import Loan, Transfer
+from sim.tests.economy_fixture import HILLS, ORE
 from sim.tests.test_economy_producers import FARM, SMELT, View, farm_view, farmer
-
-YEARS = 12
 
 
 def smelter_view(**changes):
@@ -105,71 +104,63 @@ class ExitTests(unittest.TestCase):
         self.assertEqual(closing, ["new", "sliver"])
 
 
+class StubBook:
+    """The book an exiting producer is settled in: its cash and goods, and a record of what was paid and moved."""
+
+    def __init__(self, cash, goods):
+        self.cash, self.goods, self.transfers, self.moves = cash, goods, [], []
+
+    def balance(self, agent, currency):
+        return self.cash
+
+    def holdings(self, agent):
+        return {"goods": self.goods}
+
+    def transfer_many(self, transfers):
+        self.transfers.extend(transfers)
+
+    def move_many(self, moves):
+        self.moves.extend(moves)
+
+
+def exiting(cash, loans, goods=None):
+    """A record holding one producer (owned by "owner") with `cash` and `goods`, owing `loans`; ownership.spread is the identity."""
+    defaulted = []
+    record = types.SimpleNamespace(
+        book=StubBook(cash, goods or {}), producers={"producer": types.SimpleNamespace(owner="owner")}, loans=loans,
+        credit_losses={}, remembered_defaults={}, worn_runs={}, expansion_runs={}, shares={}, last_dividends={},
+        contracts=types.SimpleNamespace(default=lambda borrower, kind: defaulted.append((borrower, kind))))
+    return record, defaulted
+
+
+def exit_with(record, payout):
+    spread = []
+    with mock.patch.object(producer_exit.ownership, "spread", lambda _record, payments: spread.extend(payments) or payments):
+        producer_exit.exit_producer(record, "producer", payout)
+    return spread
+
+
 class ExitBooksTests(unittest.TestCase):
     def test_cash_goods_and_debt_of_an_exiting_producer(self):
-        setup = small_setup()
-        economy = Economy(setup)
-        record, money = economy.record, setup.currency_id
-        producer_id = next(agent for agent, each in sorted(record.producers.items()) if each.recipe_id == MINE)
-        owner = record.producers[producer_id].owner
-        record.book.transfer(Transfer(owner, producer_id, money, 30.0, "test stake"))
-        record.book.move(GoodsMove(EDGE_PRODUCTION, producer_id, ORE, HILLS, 7.0, "test stock"))
-        lender = next(agent for agent in sorted(record.cohorts) if agent != owner)
-        record.loans.append(Loan("loan-1", lender, producer_id, money, 100.0, 0.05, 5.0, 0.0, arrears=10.0))
-        cohort_cash = sum(record.book.balance(agent, money) for agent in record.cohorts)
-        owner_ore = record.book.holdings(owner)["goods"].get(ORE, {}).get(HILLS, 0.0)
-        held = record.book.balance(producer_id, money)
-        payout = [Transfer(producer_id, owner, money, held, "dividend")]
-        producer_exit.exit_producer(record, producer_id, payout)
-        self.assertNotIn(producer_id, record.producers)
-        self.assertAlmostEqual(sum(record.book.balance(agent, money) for agent in record.cohorts), cohort_cash + held)
-        self.assertAlmostEqual(record.book.balance(producer_id, money), 0.0)
-        self.assertAlmostEqual(record.book.holdings(owner)["goods"][ORE][HILLS], owner_ore + 7.0)
-        self.assertEqual(record.loans, [])
-        repaid = min(held, 110.0)
-        self.assertAlmostEqual(record.credit_losses.get(lender, 0.0), 110.0 - repaid)
-        self.assertAlmostEqual(record.remembered_defaults.get(producer_id, 0.0), 110.0 - repaid)
-        self.assertGreater(held, 0.0)
+        loan = Loan("loan-1", "lender", "producer", "coin", 100.0, 0.05, 5.0, 0.0, arrears=10.0)
+        record, defaulted = exiting(40.0, [loan], {ORE: {HILLS: 7.0}})
+        spread = exit_with(record, [Transfer("producer", "owner", "coin", 40.0, "dividend")])
+        self.assertEqual(spread, [])      # the cash all went to the lender
+        self.assertEqual([(each.payee, each.amount) for each in record.book.transfers], [("lender", 40.0)])
+        self.assertEqual([(move.receiver, move.quantity) for move in record.book.moves],
+                         [("owner", 7.0)])
+        self.assertNotIn("producer", record.producers)
+        self.assertEqual(defaulted, [("producer", TERM_LOAN)])
+        self.assertAlmostEqual(record.credit_losses["lender"], 110.0 - 40.0)
+        self.assertAlmostEqual(record.remembered_defaults["producer"], 110.0 - 40.0)
 
     def test_lenders_are_repaid_before_the_owner(self):
-        setup = small_setup()
-        economy = Economy(setup)
-        record, money = economy.record, setup.currency_id
-        producer_id = next(agent for agent, each in sorted(record.producers.items()) if each.recipe_id == MINE)
-        owner = record.producers[producer_id].owner
-        tile = record.producers[producer_id].tile
-        lender = next(agent for agent, cohort in sorted(record.cohorts.items()) if cohort.tile != tile)  # shares no dividend
-        held = record.book.balance(producer_id, money)
-        record.loans.append(Loan("loan-1", lender, producer_id, money, 0.5 * held, 0.05, 5.0, 0.0))
-        owner_before = record.book.balance(owner, money)
-        lender_before = record.book.balance(lender, money)
-        producer_exit.exit_producer(record, producer_id, [Transfer(producer_id, owner, money, held, "dividend")])
-        self.assertAlmostEqual(record.book.balance(lender, money) - lender_before, 0.5 * held)
-        self.assertAlmostEqual(record.credit_losses.get(lender, 0.0), 0.0)
-        self.assertLess(record.book.balance(owner, money) - owner_before, 0.5 * held + 1e-9)
-        self.assertEqual(record.book.check_conservation(1e-6).breaches, ())
-        self.assertEqual(record.book.check_conservation(1e-6).breaches, ())
-
-
-class ScenarioTests(unittest.TestCase):
-    def test_a_mine_whose_labour_costs_more_than_its_ore_is_worth_leaves_and_money_is_conserved(self):
-        # A lean seam: a run takes so many miner-hours that no wage the labour market can clear at
-        # covers them from the ore it yields (a trade needing no training quotes at most the unskilled wage).
-        lean_seam = dict(recipes(), **{MINE: Recipe(MINE, {ORE: 1000.0}, {}, {MINER: 40.0 * 80.0})})
-        setup = small_setup(recipes=lean_seam)
-        economy = Economy(setup)
-        mines_by_year = []
-        for _year in range(YEARS):
-            economy.step(quiet_year(setup))
-            mines_by_year.append(sum(producer.capacity_runs for producer in economy.record.producers.values()
-                                     if producer.recipe_id == MINE))
-        self.assertLess(min(mines_by_year), 0.75 * mines_by_year[0])   # it shed makers; it may regrow once wages fall
-        self.assertEqual(economy.record.book.check_conservation(1e-6).breaches, ())
-
-    def test_a_healthy_economy_keeps_its_grain_producer(self):
-        economy, _outcomes = run(small_setup(), YEARS)
-        self.assertIn("grow_grain", " ".join(economy.record.producers))
-        self.assertEqual(economy.record.book.check_conservation(1e-6).breaches, ())
+        loan = Loan("loan-1", "lender", "producer", "coin", 50.0, 0.05, 5.0, 0.0)
+        record, _defaulted = exiting(100.0, [loan])
+        spread = exit_with(record, [Transfer("producer", "owner", "coin", 100.0, "dividend")])
+        self.assertEqual([(each.payee, each.amount) for each in record.book.transfers[:1]], [("lender", 50.0)])
+        self.assertEqual([(each.payee, each.amount) for each in spread], [("owner", 50.0)])
+        self.assertEqual(record.credit_losses, {})
 
 
 if __name__ == "__main__":

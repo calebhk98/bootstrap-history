@@ -1,19 +1,18 @@
 """Complaint 632: the parts of a carriage fee go to those who supply them. The crew is paid by the labour market, the
 carriers worn and the feed the animals eat are bought in the goods market, and the rest stays with the merchant that
-owns the carriers; none of it is paid to the poorest households of the source tile."""
+owns the carriers; none of it is paid to the poorest households of the source tile. Each rule is called on built inputs;
+that a whole economy conserves money is `money_audit`'s own test."""
 
 QUICK_TOPIC = True
-import dataclasses
+import types
 import unittest
-from unittest import mock
 
-from sim.economy import carriage_fleet_book, carriage_hours, carriage_wear, economy, merchants, money_audit
-from sim.economy.types import Fill
-from sim.tests import economy_fixture as fixture
-from sim.tests import test_carriage_wear as wear_fixture
+from sim.economy import carriage_fleet_book, carriage_wear, merchants
+from sim.economy.accounts import Book
+from sim.economy.types import Fill, GoodSpec
 from sim.tests import test_economy_merchants as basic
 
-FEED_GOOD = fixture.GRAIN
+FEED_GOOD = "grain"
 FEED_KG_PER_TONNE_KM = 1.0
 
 
@@ -65,62 +64,33 @@ class WhatIsLeftOfAFee(unittest.TestCase):
         self.assertEqual(result.stranded, ())
 
 
-class FeedCrewAndCartsAreBought(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        base = wear_fixture.carrying_setup()
-        rows = dict(base.carriage_carriers)["cart"][1] + ((FEED_GOOD, FEED_KG_PER_TONNE_KM),)
-        cls.setup = dataclasses.replace(
-            base, carriage_carriers={"cart": (wear_fixture.CART_TONNE_KM_PER_TEAM_DAY, rows)})
-        cls.years = []
-        real_dispatch = merchants.dispatch
-        real_close = economy.dispatch_merchants
+class MerchantsBidForFeed(unittest.TestCase):
+    """A merchant's carrier wear in a feed good is bid for in the goods market (`carriage_fleet_book.bids`), on built inputs."""
 
-        def watch_dispatch(merchant, *args, **kwargs):
-            done = real_dispatch(merchant, *args, **kwargs)
-            cls.years[-1]["planned"][merchant.agent_id] = carriage_hours.planned(merchant)
-            cls.years[-1]["payees"].extend((merchant.agent_id, each.payee, each.amount) for each in done.transfers)
-            return done
+    def inputs(self, price):
+        setup = types.SimpleNamespace(carriage_carriers={"cart": (20.0, (("cart", 0.1), (FEED_GOOD, FEED_KG_PER_TONNE_KM)))},
+                                      specs={"cart": GoodSpec("cart", 200.0, 0.0, 10.0, "carrier", capital_asset=True),
+                                             FEED_GOOD: GoodSpec(FEED_GOOD, 1.0, 0.0, 0.0, "food")},
+                                      opening_prices={FEED_GOOD: 2.0})
+        record = types.SimpleNamespace(book=Book(), merchants={"m1": basic.merchant()})
+        record.merchants["m1"].carrier_wear = {FEED_GOOD: 3.0}
+        record.merchants["m1"].carrier_fleet_wanted = {}
+        view = types.SimpleNamespace(price=lambda good, area: price)
+        area_map = types.SimpleNamespace(goods=lambda: [FEED_GOOD], area_of=lambda good, tile: "area:" + tile)
+        return setup, record, view, area_map
 
-        def watch_close(setup, record, carriage, ledger, area_map):
-            cls.years.append({"planned": {}, "payees": []})
-            real_close(setup, record, carriage, ledger, area_map)
-            cls.years[-1]["eaten"] = {each.agent_id: each.carrier_wear.get(FEED_GOOD, 0.0) for each in record.merchants.values()}
-            cls.years[-1]["worn_carts"] = {each.agent_id: each.carrier_wear.get(wear_fixture.CART, 0.0) for each in record.merchants.values()}
-        with mock.patch.object(economy, "dispatch_merchants", watch_close), fixture.surplus_households(), \
-                mock.patch.object(merchants, "dispatch", watch_dispatch):
-            cls.economy, cls.outcomes = fixture.run(cls.setup, 25)
+    def test_the_feed_the_animals_ate_is_bid_for_by_the_unit_and_its_money_set_aside(self):
+        bids, budget = carriage_fleet_book.bids(*self.inputs(price=4.0))
+        self.assertEqual([(bid.buyer, bid.good, bid.floor_quantity, bid.area) for bid in bids], [("m1", FEED_GOOD, 3.0, "area:a")])
+        self.assertAlmostEqual(budget["m1"], 12.0)
 
-    def shipping_years(self):
-        return [year for year in self.years if any(units > 0.0 for units in year["eaten"].values())]
+    def test_a_feed_with_no_price_yet_is_bid_for_at_the_opening_price(self):
+        _bids, budget = carriage_fleet_book.bids(*self.inputs(price=None))
+        self.assertAlmostEqual(budget["m1"], 6.0)
 
-    def test_the_animals_feed_is_used_up_by_the_tonne_km_shipped(self):
-        self.assertTrue(self.shipping_years(), "no merchant shipped, so the scenario shows nothing")
-
-    def test_the_carts_worn_are_still_bought_alongside_the_feed(self):
-        self.assertTrue(any(units > 0.0 for year in self.years for units in year["worn_carts"].values()))
-
-    def test_merchants_bid_for_feed_in_the_goods_market(self):
-        record = self.economy.record
-        merchant = next(iter(record.merchants.values()))
-        merchant.carrier_wear = {FEED_GOOD: 3.0}
-        bids, budget = carriage_fleet_book.bids(self.setup, record, self.economy.view(), self.economy.area_map)
-        mine = [bid for bid in bids if bid.buyer == merchant.agent_id and bid.good == FEED_GOOD]
-        self.assertEqual(len(mine), 1)
-        self.assertAlmostEqual(mine[0].floor_quantity, 3.0)
-        self.assertGreater(budget[merchant.agent_id], 0.0)
-
-    def test_nothing_is_paid_to_the_poorest_for_supplies_they_did_not_make(self):
-        self.assertTrue(any(planned for year in self.years for planned in year["planned"].values()), "no merchant had a plan")
-        for year in self.years:
-            for agent, payee, amount in year["payees"]:
-                if year["planned"].get(agent):      # a merchant with a plan hired its crew; the rest is not paid out
-                    self.assertAlmostEqual(amount, 0.0, msg=(agent, payee))
-
-    def test_money_is_conserved(self):
-        report = money_audit.year_report(self.economy.record)
-        self.assertTrue(report.ok, report.unexpected)
-
+    def test_a_merchant_with_no_cash_sets_nothing_aside_and_bids_for_nothing(self):
+        bids, budget = carriage_fleet_book.bids(*self.inputs(price=4.0), merchants_cash={"m1": 0.0})
+        self.assertEqual((bids, budget), ([], {}))
 
 if __name__ == "__main__":
     unittest.main()

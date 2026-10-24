@@ -748,6 +748,8 @@ scenarios `staff_closure_reopening_scenario` (twelve years of twenty-five concer
 run; red on main) and `sited_ore_price_over_cost_validation` (519) are deleted for the same reason: no command prints the
 reopening count over years; `python3 sim/simulator.py economy-check --civs norse_900ad --years 12` is the nearest measure.
 
+- Whole-economy claims no longer unit tests (one function per test): more money against the same goods raises the price level, a state that prints raises prices, money is conserved year after year, and a lean-seam mine leaves. Measure them with `python3 sim/simulator.py economy-check` and `python3 sim/simulator.py spin-up-trace`.
+
 Test migration (rule-tests-04): `economy_money_regimes` and `economy_money_regimes_norse` are deleted. The price-level-rises-with-metal
 checks read this unsettled economy; `python3 sim/simulator.py spin-up-trace --civ norse_900ad --years 7` prints the basket price level
 by year. The money-stock and mint rules are `test_mint_settles_by_regime` and `test_economy_mint`; the transmission to prices is

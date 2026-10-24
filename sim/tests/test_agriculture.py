@@ -27,6 +27,8 @@ import unittest
 
 from sim.world import agriculture
 
+step_storage = agriculture.Storage.step   # the function under test, called by name
+
 
 def _reference_land(hectares=10.0):
     return agriculture.Land(hectares=hectares, quality=1.0)
@@ -42,7 +44,7 @@ class ConservationTests(unittest.TestCase):
     def test_single_year_balances_exactly(self):
         land = _reference_land(hectares=8.0)
         storage = agriculture.Storage(stock_kg=5000.0, seed=1)
-        flows = storage.step(land, labour_hours=8.0 * 150.0, population=20.0)
+        flows = step_storage(storage, land, labour_hours=8.0 * 150.0, population=20.0)
 
         implied_stock_after = (
             flows.stock_before_kg + flows.gross_harvest_kg - flows.seed_sown_kg
@@ -60,7 +62,7 @@ class ConservationTests(unittest.TestCase):
             storage = agriculture.Storage(stock_kg=2000.0, seed=seed)
             population = 10.0 + seed
             for _year in range(15):
-                flows = storage.step(land, labour_hours=6.0 * 150.0,
+                flows = step_storage(storage, land, labour_hours=6.0 * 150.0,
                                      population=population)
                 implied_stock_after = (
                     flows.stock_before_kg + flows.gross_harvest_kg
@@ -78,7 +80,7 @@ class ConservationTests(unittest.TestCase):
         # code path (CLAUDE.md SS3.1/SS3.3: no bespoke outcome branches).
         land = _reference_land(hectares=20.0)
         storage = agriculture.Storage(stock_kg=10.0, seed=7)
-        flows = storage.step(land, labour_hours=1.0, population=500.0)
+        flows = step_storage(storage, land, labour_hours=1.0, population=500.0)
         self.assertLess(flows.stock_after_kg, 0.0)
         implied_stock_after = (
             flows.stock_before_kg + flows.gross_harvest_kg - flows.seed_sown_kg
@@ -192,12 +194,12 @@ class WeatherTests(unittest.TestCase):
             # and draw_weather_multiplier) - accept and ignore it here.
             agriculture.draw_weather_multiplier = lambda rng, weather_stdev_fraction=None: 1.0
             good_storage = agriculture.Storage(stock_kg=1000.0, seed=3)
-            good_flows = good_storage.step(land, labour_hours=6.0 * 150.0,
+            good_flows = step_storage(good_storage, land, labour_hours=6.0 * 150.0,
                                            population=population)
 
             agriculture.draw_weather_multiplier = lambda rng, weather_stdev_fraction=None: 0.4
             bad_storage = agriculture.Storage(stock_kg=1000.0, seed=3)
-            bad_flows = bad_storage.step(land, labour_hours=6.0 * 150.0,
+            bad_flows = step_storage(bad_storage, land, labour_hours=6.0 * 150.0,
                                          population=population)
         finally:
             agriculture.draw_weather_multiplier = original_draw
@@ -241,7 +243,7 @@ class DeterminismTests(unittest.TestCase):
         storage = agriculture.Storage(stock_kg=3000.0, seed=seed)
         results = []
         for _year in range(5):
-            results.append(storage.step(land, labour_hours=7.0 * 150.0,
+            results.append(step_storage(storage, land, labour_hours=7.0 * 150.0,
                                         population=18.0))
         return results, storage.stock_kg
 

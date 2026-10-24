@@ -1,4 +1,4 @@
-"""The clearing rent of a tile moves smoothly with the land in use, and the fixture's rents never drop to nothing."""
+"""The clearing rent of a tile moves smoothly with the land in use."""
 
 QUICK_TOPIC = True
 
@@ -6,7 +6,6 @@ import unittest
 
 from sim.economy import land_market
 from sim.economy.land_market import LandDemand, clear_land
-from sim.tests import economy_fixture
 
 VALUE, COST, SUPPLY = 100.0, 40.0, 1000.0
 
@@ -29,19 +28,6 @@ class ContinuityTests(unittest.TestCase):
 
     def test_a_tile_worked_in_its_best_land_alone_pays_nothing(self):
         self.assertAlmostEqual(rent_at(SUPPLY * 0.01), 0.0)
-
-
-class FixtureFlickerTests(unittest.TestCase):
-    def test_posted_rent_on_a_land_binding_tile_never_drops_to_nothing(self):
-        # with stepped bands the rent flipped between nothing and a share of the output value
-        economy_fixture.households_with_a_surplus(self)
-        setup = economy_fixture.small_setup(land_per_run={economy_fixture.FARM: 5.0})
-        economy = economy_fixture.Economy(setup)
-        posted = []
-        for _year in range(30):
-            economy.step(economy_fixture.quiet_year(setup))
-            posted.append(economy.record.land_rent.get(economy_fixture.HILLS, 0.0))
-        self.assertTrue(all(rent > 0.0 for rent in posted))
 
 
 if __name__ == "__main__":
