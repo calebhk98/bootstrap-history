@@ -3,8 +3,8 @@
 The tree, the founder, projects, actors and screens ask this port about prices, wages, rates, money
 and what a concern takes, and post their purchases, sales and hires through it. They do not read
 the price tables, the coin stock or the market book directly, so the model behind the port can
-change without them knowing. This is the only engine module that may import `sim.economy`
-(sim/tests/test_economy_imports.py); the agent economy answers, and the engine's own opening figures answer
+change without them knowing. This is the only engine module that may import `sim.economy`;
+the agent economy answers, and the engine's own opening figures answer
 while it opens.
 """
 from . import node_upkeep, opening_money

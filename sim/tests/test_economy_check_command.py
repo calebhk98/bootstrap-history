@@ -1,5 +1,4 @@
-"""`simulator.py economy-check` (Complaint 445): the command's loop and printing run on a literal health report. The
-played game is in test_economy_check_command_scenario.py."""
+"""`simulator.py economy-check` (Complaint 445): the command's loop and printing run on a literal health report."""
 import contextlib
 import io
 import unittest

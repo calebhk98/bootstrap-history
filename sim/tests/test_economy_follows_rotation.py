@@ -1,6 +1,5 @@
 """Complaint 537: the economy's cropland and tile yields follow the farm's sites (the society's rotation and soil as they
-become), not as the setup found them: `follow_farm_sites` on built tiles and sites. The same in a real game is in
-test_economy_follows_rotation_scenario.py."""
+become), not as the setup found them: `follow_farm_sites` on built tiles and sites."""
 QUICK_TOPIC = True
 
 import types

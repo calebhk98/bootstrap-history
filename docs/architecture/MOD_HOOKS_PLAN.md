@@ -335,10 +335,9 @@ measurement worth keeping becomes a `simulator.py` subcommand, see the audit com
 match for it in `sim/`); treat the complaint's point 8 as partly stale.
 
 How to check the owner's rule after each stage: the end-to-end test cannot prove that no engine file changed, so the guard is the audit itself.
-Add `simulator.py validate --audit-enumerations`, which lists module-level collections of quoted
-ids against a checked-in allowlist (mechanisms and physical constants are allowed with a reason),
-so a new enumeration is reported when it is added. Until it exists, the grep patterns above are the
-check.
+A possible `simulator.py validate --audit-enumerations` would list module-level collections of quoted
+ids (mechanisms and physical constants allowed with a reason). It does not exist; the grep patterns
+above are the check.
 
 ## 4. Staged plan
 
