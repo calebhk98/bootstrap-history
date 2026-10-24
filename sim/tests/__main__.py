@@ -4,11 +4,7 @@
 module-level `QUICK_TOPIC = True`. `--slow` runs every topic (the full suite) and every
 slow_check. Topics are discovered from disk (nothing is registered) and run in sorted order.
 `--only economy,labour` (comma-separated topic names, as `--list` prints them) runs just those
-modules whatever their tier. `--list` prints the topic names and exits. `--text-checks` lists the checks
-that read player text (`sim/tests/text_checks.py`); `--text-decisions` lists the code under sim/ that decides on a
-log line's or refusal's text (`sim/tests/text_decisions.py`). `--whole-game-checks` lists the test modules that
-build a whole game and are not declared scenarios, validations or smoke tests (`sim/tests/whole_game_checks.py`).
-`--one-function-checks` lists the modules that reach their function through other engine functions (`sim/tests/one_function_checks.py`).
+modules whatever their tier. `--list` prints the topic names and exits.
 
 A topic belongs in the quick tier when it runs in well under a second inside an already
 started process: it tests functions or small fixtures, not a whole game over years. New topics
@@ -572,21 +568,6 @@ def main(argv=None):
         for slug in TOPICS:
             print(slug)
         return 0
-
-    if "--text-checks" in argv:
-        from sim.tests import text_checks
-        return 1 if text_checks.report("--all" in argv, "--conditions" in argv) else 0
-
-    if "--whole-game-checks" in argv:
-        from sim.tests import whole_game_checks
-        return 1 if whole_game_checks.report() else 0
-    if "--one-function-checks" in argv:
-        from sim.tests import one_function_checks
-        return 1 if one_function_checks.report() else 0
-
-    if "--text-decisions" in argv:
-        from sim.tests import text_decisions
-        return 1 if text_decisions.report() else 0
 
     if "--worker" in argv:
         position = argv.index("--worker")

@@ -141,7 +141,7 @@ maintenance. Dragons are agents with calorie needs. None get a bespoke branch.
 **4.4 Label every heuristic you cannot yet derive.** Transitional shortcuts
 are allowed while the deeper mechanism does not exist; unlabelled ones are
 not. Tag them so the migration queue is measurable.
-A new temporary heuristic names its retirement (a complaint or mechanism) in `retire`; a test enforces it.
+A new temporary heuristic names its retirement (a complaint or mechanism) in `retire`; `python3 sim/constants.py --burndown` lists them.
 
 **4.5 Prices are calculated, not looked up.** There is no price table (the
 old `data/prices.json` is deleted); do not add one back. A production yield is
@@ -228,19 +228,15 @@ Tooling: `python3 -m pylint sim/ | grep C0103` (worklist). Plan:
   guessing.
 - **Every bug becomes a regression test** with the smallest reproducing
   scenario. Resolved complaints move to `Complaints/closed/`.
-- **A test of a rule calls the rule.** Build the inputs in the test and call the
-  function; do not build a whole game to reach one rule. A failing test must name
-  the rule that broke, on the current code, with no bisect over merges; one that
-  cannot is rewritten. Whole-game tests are kept only as named scenario or smoke
-  tests. Where a rule needs the whole `Sim`, pull it into a plain function first.
-  A module that builds a whole game must say so: file name ending `_scenario`, `_validation` or `_smoke`, or a docstring
-  opening `SCENARIO`, `BASELINE VALIDATION` or `SMOKE`. `python3 -m sim.tests --whole-game-checks` lists the rest, and the
-  quick topic `whole_game_declared` fails on any not in `sim/tests/whole_game_leftovers.txt` (a list that only shrinks).
-  A test calls one function, the one under test, on inputs it writes out: setup never builds a game or an economy
-  or runs a command to reach that state (`A = [5, 4, 8, 9, 3]; sort(A)`, not `A = []; other(A); sort(A)`). A module
-  whose function under test is itself a command names it in `UNDER_TEST = {...}`. `python3 -m sim.tests
-  --one-function-checks` lists the rest, and the quick topic `one_function_declared` fails on any not in
-  `sim/tests/one_function_leftovers.txt` (a list that only shrinks).
+- **A test calls one function.** The test writes out the inputs and calls the one function under test; setup
+  never builds a game or an economy or runs a command to reach that state (`A = [5, 4, 8, 9, 3]; sort(A)`, not
+  `A = []; other(A); sort(A)`). A failing test must name the function that broke, on the current code, with no
+  bisect over merges; one that cannot is rewritten. Where a rule sits inside a `Sim` method, pull it into a plain
+  function first. A test that builds a whole game is an integration test: keep them rare, slow-tier only, and
+  declared `SMOKE`.
+- **The suite tests what the code does, not the code.** Checks of the source itself (what imports what, which
+  module may compute a figure, file or function length, comment counts, how a test is written) are not tests and
+  do not belong in the suite.
 - **Sources are read, not recalled.** A figure, in data, a constant or a design
   note, cites a source someone opened (author, work, page or URL). A research
   agent cites only what it opened in that session and writes "no source found"
@@ -249,8 +245,7 @@ Tooling: `python3 -m pylint sim/ | grep C0103` (worklist). Plan:
   values: the engine's numbers, the reply's fields, a refusal's `cause`, a log line's `kind` and `facts`
   (`sim/refusal.py`). Only a test whose subject is presentation (units, wording, rounding, layout) asserts on
   text, and it says so with a `# presentation: <reason>` comment. When the fact exists only as prose, add the
-  field to the reply and render the text from it. `python3 -m sim.tests --text-checks` lists the checks that
-  read text and are not marked presentation; the list should stay empty.
+  field to the reply and render the text from it.
 - **Measure, don't remember.** Claims about the codebase are measured. Every
   number in prose was computed by the simulator, and carries the command that
   produced it.

@@ -1,3 +1,0 @@
-# Test modules that reach their function through other engine functions. Build the inputs and call the one
-# function, then delete the line. `python3 -m sim.tests --one-function-checks` fails when this list and the tree disagree.
-economy_land_concentration   # BASELINE VALIDATION of a distribution over shock histories on the land fixture
