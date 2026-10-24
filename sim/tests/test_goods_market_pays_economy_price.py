@@ -203,9 +203,9 @@ class SaleTests(unittest.TestCase):
         fetched = market.sale_proceeds("silver_kg", 1.0)[0]
         self.assertLess(fetched, paid)
 
-    def test_a_good_with_no_price_fetches_nothing(self):
+    def test_a_good_with_no_price_has_no_sale_proceeds(self):
         _game, market = stub_game()
-        self.assertEqual(market.sale_proceeds("cobalt_kg", 5.0), (0.0, 0.0))
+        self.assertIsNone(market.sale_proceeds("cobalt_kg", 5.0))
 
 
 class CoinMetalTests(unittest.TestCase):

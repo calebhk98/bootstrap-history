@@ -270,6 +270,8 @@ def _cmd_sell(sim, nodes, cmd, ended):
     quantity, err = read_target_quantity(cmd, "n", 0, "material", sim)
     if err or quantity <= 0:
         return {"ok": False, "error": err or "n must be greater than zero"}
+    if sim.goods_market.quote(material) is None:
+        return {"ok": False, "error": sale_orders.no_price_refusal(material)}
     held, market_room = sim.goods_market.sale_limits(material)
     if sale_orders.asks_more_than_held(quantity, held):
         return {"ok": False, "error": sale_orders.not_enough_held_refusal(material, held, quantity)}
