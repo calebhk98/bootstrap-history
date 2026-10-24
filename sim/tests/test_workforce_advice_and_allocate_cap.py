@@ -1,6 +1,6 @@
 """Workforce advice sized to the real deficit, and
-`allocate ... useful` capped at the useful work. Complaint 640: each rule is called on numbers built here; the checks in a
-built game are in test_workforce_advice_and_allocate_cap_scenario."""
+`allocate ... useful` capped at the useful work. Complaint 640: each rule is called on numbers built here; the command's wiring is
+test_allocate_useful_wiring."""
 QUICK_TOPIC = True
 
 import json

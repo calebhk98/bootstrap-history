@@ -145,7 +145,7 @@ Each item names the code that holds it (re-measure before acting; `grep` the nam
 - Each land producer's yield takes its own tile's weather cell (`Sim.farm_weather_by_tile`, `sim/engine/core.py`; read by
   `economy_port_sites.crop_yields`); a tile merged into a pooled cell, or with no cell, takes the pooled multiplier. The cells' own
   multipliers are `weather_pooling.cell_multipliers`; the pooled one is their weighted mean. Tests: `test_weather_cells`,
-  `test_economy_crop_yields` (TileWeatherTests), `test_tile_weather_scenario`. The national path and demography still read the pooled draw.
+  `test_economy_crop_yields` (TileWeatherTests), `test_tile_weather_wiring`. The national path and demography still read the pooled draw.
 - A hand-hoe toolkit (`agriculture.HAND_HOE`, hours from `data/world/farm_labour.json` through `WHEAT_HOE_HOURS_PER_HECTARE`, the same
   figure the `wheat_hoe_kg` recipe carries) is the base toolkit of a society that does not hold the draught-animal capability; that
   capability (`cap_power_muscle`) declares the ard. The economy's `tool_fallback` for the plough team is the same fact on the recipe side.

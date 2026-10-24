@@ -1,6 +1,6 @@
 """completion_messaging: the rules behind failure severity, goal deltas and the opening shortfall are called with figures
-built here; the summary-first wave is rendered from a built reply. The three scenarios that finish a project in a game
-and read the log lines' kinds and facts are test_completion_messaging_scenario."""
+built here; the summary-first wave is rendered from a built reply. The log lines a finish writes, by kind, are
+test_completion_wiring."""
 QUICK_TOPIC = True
 
 from .harness import check

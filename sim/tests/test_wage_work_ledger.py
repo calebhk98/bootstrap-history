@@ -1,6 +1,6 @@
 """Wage work shows in the `money` text; the shortage remedy tells the truth about the player's own workings (complaints 144
 and 171). Complaint 640: the remedy is called on a stub founder and the text is rendered from a hand-written reply; the
-played-game wage work is in test_wage_work_ledger_scenario."""
+books and the command are test_wage_work_books."""
 QUICK_TOPIC = True
 
 import unittest

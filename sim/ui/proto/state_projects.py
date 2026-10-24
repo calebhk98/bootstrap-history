@@ -4,6 +4,7 @@ from .parallelism_notes import free_hours_going_unused
 from sim.refusal import cause_of
 from .state_waiting import _agent_end_reason, _waiting_on, _worth_knowing_early
 from .state_shut_staffing import shut_for_want_of_staff
+from .shut_concerns import shut_concerns_yearly_value
 
 
 def _agent_state_active_projects(sim, nodes):
@@ -131,10 +132,9 @@ def _agent_state_operations(sim, nodes):
         # per-completion log line saying "open it" is easily lost among
         # many others, and a count of shut shops is not a reason to act.
         # A yearly figure is.
-        "shut_concerns_would_earn_a_year": round(sum(
-            sim.venture_real_earnings(node_id) - sim.venture_real_upkeep(node_id) for node_id in sim.done
-            if sim.is_venture(node_id) and node_id not in sim.operating
-            and sim.venture_real_earnings(node_id) > sim.venture_real_upkeep(node_id)), 0) or None,
+        "shut_concerns_would_earn_a_year": shut_concerns_yearly_value(
+            [(sim.venture_real_earnings(node_id), sim.venture_real_upkeep(node_id)) for node_id in sim.done
+             if sim.is_venture(node_id) and node_id not in sim.operating]),
         # THE SAME GAP, for the handful of capabilities whose running()-gated
         # payout is not revenue at all - protection, standing, credit, a
         # staff ceiling - and so never showed up in shut_concerns above. This

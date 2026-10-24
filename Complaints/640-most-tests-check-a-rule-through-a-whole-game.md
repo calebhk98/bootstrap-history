@@ -268,10 +268,9 @@ traded price and a named quote; import volume bounds), `why_foreman_and_remainin
 effective-hours checks (`test_arrears_hours`), the failed-attempt announcement (`test_completion_messaging`), the
 tight-trade wage check (`test_wage_provider`). Found vacuous: the "every household material has a seller" check
 (true by construction) and the import bounds in the Rome game (it opens with no partner-sold material); both dropped, the
-bounds are now `import_tonnes_left` rule tests. Baseline validation: `test_whole_game_gold_silver_ratio_validation`
-(Complaint 442). Still to pull out of `Sim` methods: load validation, the staffing gates of `open` and `start`,
-`work_for_wages`, and the `Sim.start_reason` deficit sizing (all kept whole in `test_ventures_saves_and_dice_scenario` and
-`test_workforce_advice_and_allocate_cap_scenario`). `test_two_seats_whole_game` is wholly a scenario and `test_year_phases`
+bounds are now `import_tonnes_left` rule tests. The gold-to-silver baseline validation was vacuous at zero stepped years and is deleted; the nearest measure is
+`python3 sim/simulator.py economy-check --civs all --years 0`. Still to pull out of `Sim` methods: load validation, the staffing gates of `open` and `start`,
+`work_for_wages`, and the `Sim.start_reason` deficit sizing (kept whole in `test_ventures_saves_and_dice_scenario`; the `allocate useful` wiring is `test_allocate_useful_wiring`). `test_two_seats_whole_game` is wholly a scenario and `test_year_phases`
 already runs on a stand-in.
 
 ## Applied: audit batch 12

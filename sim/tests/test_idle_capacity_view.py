@@ -1,5 +1,4 @@
-"""Complaint 99: the explanation of why directed hours wait (Complaint 640: rules on built inputs; the `idle`
-reply on a whole game is in test_idle_capacity_view_scenario)."""
+"""Complaint 99: the explanation of why directed hours wait (Complaint 640: rules on built inputs)."""
 QUICK_TOPIC = True
 
 from .harness import *  # noqa: F401,F403

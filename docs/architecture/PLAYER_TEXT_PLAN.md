@@ -255,7 +255,7 @@ A new test topic `sim/tests/test_player_text_in_engine.py`, with the scanner as
 - A new `message("legacy.text", ...)` counts like a new sentence and fails the same way.
 
 Tests that already guard text (`test_ui_mod_neutral_text`, `test_player_text_names_own_civilisation`,
-`test_complaint_285_text_screens`) stay and also run over the catalogue files.
+`test_complaint_285_display_units`) stay and also run over the catalogue files.
 
 ### 3.5 Rules the migration follows
 
@@ -300,7 +300,7 @@ with `python3 -m sim.tests --only ...`; `--slow` runs before each PR.
 | 4 | `society_*` (hazards, state pressure, adoption, disclosure), `interest_groups.py`, `step_phase_*`, `core_step_phases.py`. Event text with many quantities and names. | medium | `hazard_messages_match_mechanics`, `player_text_names_own_civilisation`, society tests, fingerprint |
 | 5 | `projects_*` (starting, staffing, ventures, progress, precaution, completion): the densest area and the refusal path agents read. Migrate `start_reason` one `_check_*` at a time, keeping `start_refusal` rendering identical. | medium-high | `refusal_*`, `alerts_staffing_finish`, `affordability_*`, `complaint_96_schooling_message`; golden JSON `error` and `why` replies recorded before the step |
 | 6 | Developer text: `validate_*`, `civ_start_check.py`, `civ_basket_check.py`, `tree_merge.py`, `saveload.py`, `invariants.py`, `mods_*.py`, `settings_table.py`, `constants.py`: moved under `sim/ui/` (or declared developer tools in the allow-list), English only, no catalogue. | low | `simulator.py validate` output diff before and after; the tests that call them |
-| 7 | Number formatting sweep: remaining files that format numbers for players without a message, converted with the same constructors. | low-medium | `complaint_285_text_screens` extended so the fake-unit test also renders migrated messages (closes the 285 "prose built inside the engine" remainder) |
+| 7 | Number formatting sweep: remaining files that format numbers for players without a message, converted with the same constructors. | low-medium | `complaint_285_display_units` extended so the fake-unit test also renders migrated messages (closes the 285 "prose built inside the engine" remainder) |
 | 8 | Walled packages after their in-flight work merges: `sim/economy/`, `sim/agents/`, `sim/labour/`, `sim/geography/`. The package returns messages through its `api.py` objects, the engine adapter passes them up unchanged, `sim/ui` renders. Packages import only `sim/messages.py`, never `sim.ui` (two-way wall). | medium | each package's tests and text tests; wall import tests |
 | 9 | Retire `legacy.text`: allow-list at zero for engine modules, fallback dropped, catalogue documented for modders in `mods/README.md`. | low | the 3.4 check with an empty list |
 

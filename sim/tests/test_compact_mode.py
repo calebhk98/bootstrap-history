@@ -1,5 +1,5 @@
-"""The agent-oriented compact mode (the parser, the enrichers on synthetic replies, and the help text; the replies
-of a live game are test_compact_mode_scenario): Complaints/reports/playthrough-review-han-china-100-to-400ad.md section 1.
+"""The agent-oriented compact mode (the parser, the enrichers on synthetic replies, and the help text; no live game is read):
+Complaints/reports/playthrough-review-han-china-100-to-400ad.md section 1.
 
 A player of this game who is itself an AI agent asked for "an explicit
 agent-oriented compact mode that can return highly structured state without

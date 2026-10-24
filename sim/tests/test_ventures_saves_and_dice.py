@@ -1,6 +1,6 @@
 """The identity_cover prerequisite (Complaint 640: read off the tree, no game). Writing down zero does not require a
-respectable persona, but being received by a patron and publishing still do. The played-game checks are in
-test_ventures_saves_and_dice_scenario."""
+respectable persona, but being received by a patron and publishing still do. The wiring that used to be played in a game is
+test_venture_lifecycle_rules, test_rng_record and test_save_trade_names."""
 QUICK_TOPIC = True
 
 import unittest

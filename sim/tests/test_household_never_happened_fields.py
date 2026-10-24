@@ -1,6 +1,5 @@
 """household_never_happened_fields: Complaints/55. "Never happened" is a declared None (or a real zero for a
-counter), never an absent attribute read through getattr. The save round trip is in
-test_household_never_happened_fields_scenario."""
+counter), never an absent attribute read through getattr."""
 QUICK_TOPIC = True
 
 import re

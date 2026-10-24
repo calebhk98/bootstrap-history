@@ -1,7 +1,7 @@
 """Complaints 38 and 642: a price needs a seller and a trade. A market where buyers bid and nobody offers shows no traded
 price, only a quote named as what it is (a cost-covering quote when a maker could make the good, else the best unfilled
 bid); an import is bounded by what the partner makes and the carriers lift. Complaint 640: the rules are called on
-books and numbers built here; the played-game checks are in test_whole_game_no_seller_no_price_scenario."""
+books and numbers built here; the unit-price wiring is in test_offers_unit_price_and_foreman_reply."""
 QUICK_TOPIC = True
 
 import unittest

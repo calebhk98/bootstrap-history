@@ -1,6 +1,6 @@
 """The founder's crew is paid once: a derived upkeep is staff pay plus plant wear, and the staff's pay is already in
 the payroll, so the share of a node's upkeep that is charged as upkeep is its plant part (`node_upkeep.non_labour_share`).
-The charge a running game makes is in test_founder_crew_paid_once_scenario.py."""
+The charge the founder is made is in test_founder_income_rules.py."""
 import unittest
 
 from sim.engine import node_upkeep

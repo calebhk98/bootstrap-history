@@ -1,7 +1,6 @@
 """How many people a household can staff at all: the ceiling literacy puts on lettered trades
 (`literate_capacity`), the household room (`household_room`) and the advice that points at what would widen it
-(`_room_advice`). Complaint 640: the rules are called on a stub world built here; the whole-game checks are in
-test_household_capacity_and_literacy_scenario."""
+(`_room_advice`). Complaint 640: the rules are called on a stub world built here."""
 QUICK_TOPIC = True
 
 import types

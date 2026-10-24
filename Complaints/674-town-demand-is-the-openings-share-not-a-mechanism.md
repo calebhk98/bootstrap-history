@@ -14,3 +14,8 @@ the countryside (`sim/labour/market/migration.py` `move_shares`), with the urban
 graveyard effect. Then the typed figure is only a validation. Depends on 536 and 634 (a tile's town), 590 (foreign countries).
 
 **Heuristic to retire.** A region's opening share of its people in town is held for the whole game.
+
+Test migration (slow-test overhaul): `test_urban_share_scenario` is deleted. Whether a civilisation's computed opening share sits inside its sourced
+band (`data/world/urban_share_bands.json`) and whether coastal towns feed more than inland ones are read off the opening by
+`python3 -m sim.tests.urban_share_opening [civilisation_id ...]` (the `inside_band` field); the rules are `test_urban_share_rules`, and the
+typed-figure-read-once and shrinking-ceiling wiring is `test_urban_share_wiring`.

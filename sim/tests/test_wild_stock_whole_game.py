@@ -1,6 +1,6 @@
 """The game keeps the wild stock between years (Complaint 411): a year's step regrows a drawn-down stock when nobody
 hunts, and leaves a full one alone. Complaint 640: the yearly step is called on a stand-in game over the small fixture
-map; the regrowth rule itself is test_geography_wild_stock, and the save round trip is test_wild_stock_whole_game_scenario."""
+map; the regrowth rule itself is test_geography_wild_stock, and the save round trip is test_wild_stock_save_and_phase."""
 QUICK_TOPIC = True
 
 import types

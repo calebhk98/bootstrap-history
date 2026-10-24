@@ -1,5 +1,5 @@
 """ui_notes: the note and notes commands (Complaint 207). Complaint 640: the rules are called on a stand-in game that holds
-the real tree and an interface slot; the save and load of notes in a played game is in test_ui_notes_scenario."""
+the real tree and an interface slot; the slot in the save is test_interface_slot_in_save."""
 QUICK_TOPIC = True
 
 import types

@@ -1,6 +1,6 @@
 """ui_goals_watch: the in-game goals view and watched goals (Complaint 268). Complaint 640: the rules are called on a
 stand-in game holding a small tree; the save round trip and the `commitments` wiring of a played game are in
-test_ui_goals_watch_scenario."""
+test_commitments_report_wiring and test_interface_slot_in_save."""
 QUICK_TOPIC = True
 
 import types

@@ -4,7 +4,7 @@ A concern whose crew mixes generic artisans with a skilled trade needs a foreman
 oversees a bounded number of concerns, and the open gate refuses without one. The rules are called on a stub game
 (`venture_foreman_free`, `OpenGateMixin.staffing_open_refusal`; who is the foreman is `business_crew_rule.foreman`, tested in
 test_business_crew_rule) and the screen on a built
-reply; the whole-game wiring is test_complaint_13_specialist_supervision_scenario."""
+reply; the ventures row's specialist field is test_craftsmen_wording_rules."""
 QUICK_TOPIC = True
 
 import types

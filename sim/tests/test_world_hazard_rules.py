@@ -1,6 +1,6 @@
 """World hazards, transfers, famine and the yearly checks (Complaints 493 and 640): each rule is called on a stand-in game
-built here from the strata, actors, tile owners and cohort shock it reads. The checks in a built game of two countries, and the
-protocol that a second seat reads the log through, are in test_world_events_and_hazards_scenario."""
+built here from the strata, actors, tile owners and cohort shock it reads. The `world_events` command and the
+log's save are in test_world_events_command_and_save."""
 QUICK_TOPIC = True
 
 import types

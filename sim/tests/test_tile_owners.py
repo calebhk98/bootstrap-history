@@ -1,6 +1,6 @@
 """Complaint 483: an owner map (tile -> owner and control level) seeded from the civilisation files, read by
 `tiles_held`, `country_of` and the ways record, changed only by one transfer, with one owner per tile. Each rule is called on
-an owner map and stand-ins the test builds; the game wiring is in test_tile_owners_scenario."""
+an owner map and stand-ins the test builds; the colony and transfer wiring is test_tile_owner_wiring."""
 import glob
 import json
 from types import SimpleNamespace
