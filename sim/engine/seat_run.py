@@ -7,6 +7,7 @@ still playing has reached its goal."""
 from typing import Iterable, List, Mapping
 
 from .data import kit_capital
+from .seat_country import partner_country_of_seat
 from .seat_handover import SeatHandoverMixin
 from .state_seat import COUNTRY_SEAT, SeatState, seat_from_template
 
@@ -72,8 +73,7 @@ class SeatRunMixin(SeatHandoverMixin):
 	def acting_country(self):
 		"""The partner country the acting seat belongs to, or None for the game's own country: the markets,
 		wages and prices the seat deals in are that country's own."""
-		country = self.state.seats[self.state.acting_seat].country
-		return None if country in (None, self.civ.get("id")) else country
+		return partner_country_of_seat(self.state.seats, self.state.acting_seat, self.civ.get("id"))
 
 	def governed_countries(self) -> List[str]:
 		"""The countries that have a government a country seat can hold, the game's own first."""

@@ -1,0 +1,19 @@
+"""What a licensed firm's takings owe the seats that licensed it an invention."""
+from typing import Any, List, Mapping, Tuple
+
+from sim.agents.api import licence
+
+from . import seat_builds
+
+
+def seat_royalties_due(seats: Mapping[str, Any], node_id: str, licensee_id: str, takings: float) -> List[Tuple[str, float]]:
+	"""(seat id, amount) for each seat that built `node_id` and licensed it to `licensee_id` with a royalty on its
+	takings, in the order the seats joined; a seat whose licence carries no royalty, or takings that are not
+	positive, owe nothing and are left out."""
+	owed = []
+	for seat_id in seat_builds.licensors_of(seats, node_id, licensee_id):
+		record = seats[seat_id].projects.disclosures[node_id]["licensees"][licensee_id]
+		due = licence.royalty_due(takings, record)
+		if due > 0.0:
+			owed.append((seat_id, due))
+	return owed
