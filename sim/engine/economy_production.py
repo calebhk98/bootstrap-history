@@ -27,6 +27,7 @@ from sim.constants import declare
 from . import category_traits, concern_sales, money_units, node_revenue_market, node_upkeep
 from .readable import readable
 from .revenue_ledger import assemble_ledger
+from .seat_country import patron_grant_share
 from sim.world import plant_figures
 from .industry_depth import RAMP_SHARE_AT_FULL_DEPTH
 
@@ -92,17 +93,7 @@ class ProductionMixin:
         state = self.state.actors
         if state is None:
             return 0.0
-        home = str(self.civ.get("id"))
-        acting = self.state.acting_seat
-        seat = self.state.seats.get(acting)
-        country = (None if seat is None else seat.country) or home
-        record = state.records.get("government:" + country)
-        if record is None:
-            return 0.0
-        if country == home:
-            return record.patron_grant
-        clients = self.patron_clients(country)
-        return record.patron_grant / len(clients) if any(seat_id == acting for seat_id, _gov, _rep in clients) else 0.0
+        return patron_grant_share(state.records, self.state.seats, self.state.acting_seat, str(self.civ.get("id")), self.patron_clients)
 
     def venture_ramp(self, node_id):
         """How much of its full takings a concern is making, 0..1.

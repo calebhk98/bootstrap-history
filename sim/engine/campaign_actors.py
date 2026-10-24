@@ -12,6 +12,8 @@ from sim.refusal import Refusal
 from sim.world import campaign_supply
 from sim.world.army_record import Army, fielded_soldiers
 
+from .seat_country import owner_of_seat
+
 
 class CampaignActorsMixin:
 
@@ -35,8 +37,7 @@ class CampaignActorsMixin:
 
     def acting_owner(self) -> str:
         """The actor the acting seat raises armies for: the country it plays, else the game's own."""
-        seat = self.state.seats[self.state.acting_seat]
-        return seat.country or str(self.civ["id"])
+        return owner_of_seat(self.state.seats, self.state.acting_seat, str(self.civ["id"]))
 
     def owner_has_state(self, owner: str) -> bool:
         """Whether the owner is a country with a state (a seat's colony or a bare owner has no soldiers to raise)."""

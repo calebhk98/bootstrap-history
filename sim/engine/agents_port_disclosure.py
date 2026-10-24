@@ -4,6 +4,7 @@ from typing import Any
 from sim.agents.api import PROOF_YEARS, SECRET_EXPOSURE, ledger, licence
 
 from . import seat_builds
+from .seat_royalty import seat_royalties_due
 from .visibility import base_visibility, most_open_mode, years_to_be_believed
 
 
@@ -59,10 +60,7 @@ class DisclosureView:
 		"""The royalty a licensed firm's takings owe each seat that licensed it the invention; the amount paid."""
 		sim = self._sim
 		paid = 0.0
-		for seat_id in seat_builds.licensors_of(sim.state.seats, node_id, firm.actor_id):
-			record = sim.state.seats[seat_id].projects.disclosures[node_id]["licensees"][firm.actor_id]
-			due = licence.royalty_due(takings, record)
-			if due > 0.0:
-				ledger.transfer(firm, sim.seat_party(seat_id), due, "licence")
-				paid += due
+		for seat_id, due in seat_royalties_due(sim.state.seats, node_id, firm.actor_id, takings):
+			ledger.transfer(firm, sim.seat_party(seat_id), due, "licence")
+			paid += due
 		return paid + licence.collect_patent_royalty(self, self._holder, firm, node_id, takings)
