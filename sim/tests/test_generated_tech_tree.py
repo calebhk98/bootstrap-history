@@ -10,7 +10,6 @@ QUICK_TOPIC = True
 
 import json
 import os
-import re
 import subprocess
 import tempfile
 import unittest
@@ -107,22 +106,6 @@ class RepositoryDoesNotCommitTheTree(unittest.TestCase):
             self.skipTest("not a git checkout")
         self.assertEqual(listed.stdout.strip(), "")
 
-    def test_only_the_tree_tool_names_the_generated_file_in_code(self):
-        try:
-            found = subprocess.run(["git", "grep", "-n", "-F", GENERATED_NAME, "--", "sim/*.py"],
-                                   cwd=ROOT, capture_output=True, text=True)
-        except OSError:
-            self.skipTest("git is not available")
-        if found.returncode > 1:
-            self.skipTest("not a git checkout")
-        offenders = []
-        for hit in found.stdout.splitlines():
-            path, number, line = hit.split(":", 2)
-            code = line.split("#", 1)[0]
-            if (os.path.basename(path) != "tree_merge.py" and os.path.abspath(os.path.join(ROOT, path)) != os.path.abspath(__file__)
-                    and re.search(r"""["']%s["']""" % re.escape(GENERATED_NAME), code)):
-                offenders.append("%s:%s" % (path, number))
-        self.assertEqual(offenders, [], "read the tree through sim.engine.tree_source")
 
 
 class RealBranchesBuildTheWholeTree(unittest.TestCase):

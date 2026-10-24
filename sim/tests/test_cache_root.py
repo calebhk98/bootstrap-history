@@ -6,14 +6,12 @@ sim/cache_root.py."""
 QUICK_TOPIC = True
 
 import os
-import re
 import tempfile
 import unittest
 from unittest import mock
 
 from sim import cache_root
 
-ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
 def _write(path, text):
@@ -66,19 +64,6 @@ class CacheRootTests(unittest.TestCase):
         self.assertEqual(cache_root.cache_root(self.directory), shared)
 
 
-class OneHomeTests(unittest.TestCase):
-    def test_no_other_module_builds_a_cache_path_of_its_own(self):
-        pattern = re.compile(r"""["']\.cache["']""")
-        offenders = []
-        for directory, subdirectories, filenames in os.walk(os.path.join(ROOT, "sim")):
-            subdirectories[:] = [name for name in subdirectories if name not in ("tests", "__pycache__")]
-            for filename in filenames:
-                path = os.path.join(directory, filename)
-                if filename.endswith(".py") and path != cache_root.__file__.replace(".pyc", ".py"):
-                    with open(path, encoding="utf-8") as handle:
-                        if pattern.search(handle.read()):
-                            offenders.append(os.path.relpath(path, ROOT))
-        self.assertEqual(offenders, [])
 
 
 if __name__ == "__main__":

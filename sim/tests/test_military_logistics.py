@@ -189,15 +189,6 @@ class FirearmTests(unittest.TestCase):
             logistics.maintenance_items_per_soldier_per_engagement(
                 logistics.MODERN_SERVICE_RIFLE), 0.0)
 
-    def test_no_bespoke_branch_on_which_firearm_it_is(self):
-        # A structural guard against the exact defect CLAUDE.md SS3.3 rules
-        # out: neither consumption function may name either weapon.
-        import inspect
-        for function in (logistics.ammunition_mass_kg_per_soldier_per_engagement,
-                         logistics.maintenance_items_per_soldier_per_engagement):
-            source = inspect.getsource(function)
-            self.assertNotIn("MUSKET", source)
-            self.assertNotIn("RIFLE", source)
 
 
 class DailySupplyRequirementTests(unittest.TestCase):

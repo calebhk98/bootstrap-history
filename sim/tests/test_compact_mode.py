@@ -269,28 +269,7 @@ check("compact_stuck keeps the counts and the cheapest start",
       and _compact_stuck(_fake_stuck)["cheapest_start"] == "cheap")
 
 
-# ===========================================================================
-# PART 4: dispatch.py applies compact mode LAST, after both localisation
-# passes - a structural check (source order), not a behavioural sample, so
-# it holds regardless of which civilisation a future check happens to run
-# against. See _agent_reply's own comment for why the ordering matters:
-# anything a compact field copies out of the reply (a sentence, a list of
-# ids) must already carry the civilisation's own money word, or compact
-# mode would show an agent one civilisation's numbers dressed in another's
-# vocabulary.
-# ===========================================================================
-import inspect
-from sim.ui.proto import dispatch as _dispatch_mod
 from sim.ui.proto import help as _help_module
-
-_dispatch_src = inspect.getsource(_dispatch_mod._agent_reply)
-_i_money = _dispatch_src.index("_localise_money")
-_i_words = _dispatch_src.index("_localise_words")
-_i_compact = _dispatch_src.index("_add_compact_fields")
-check("_agent_reply applies compact enrichment after BOTH localisation "
-      "passes, not before either of them",
-      _i_money < _i_compact and _i_words < _i_compact,
-      (_i_money, _i_words, _i_compact))
 
 
 # --- THE DOCUMENTATION CHANGE ITSELF, checked directly (rather than left

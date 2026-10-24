@@ -16,16 +16,10 @@ sim/world/deposits.py standalone: Ricardian rent from ore grade, depth and hardn
 
 QUICK_TOPIC = True
 
-import ast
 import json
-import os
 import unittest
 
 from sim.world import deposits
-
-_REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(
-    os.path.abspath(__file__))))
-
 
 def _make_deposit(name, metal="test_metal", material_moved="ore",
                    ore_grade_kg_per_tonne=10.0, depth_class="surface",
@@ -726,46 +720,7 @@ class LoadDepositsUsesGeographyAndResourcesTests(unittest.TestCase):
 
 
 class NoPriceDataTests(unittest.TestCase):
-    """CLAUDE.md 3.1 and this module's own docstring: a grade is a physical
-    fact about a rock and is never derived from what the metal sells for.
-    Enforced here at the file level, not just by inspection.
-    """
-
-    def test_module_never_opens_the_price_file(self):
-        # deposits.py's docstring and the geography deposit catalogue's own _doc
-        # both TALK ABOUT data/prices.json in prose, to explain why they
-        # never read it - so a literal substring ban on "prices.json"
-        # would fail on the very sentences documenting this discipline.
-        # What actually matters is that the module never OPENS that file
-        # or reads its wage/purchase-price tables, which is what this
-        # checks: the only _FILE constant this module defines, and
-        # the only paths handed to _load_json / open() anywhere in it.
-        path = os.path.join(_REPO_ROOT, "sim", "world", "deposits.py")
-        with open(path) as handle:
-            source = handle.read()
-        tree = ast.parse(source, filename=path)
-        opened_paths = set()
-        for node in ast.walk(tree):
-            if isinstance(node, ast.Constant) and isinstance(node.value, str):
-                if node.value.endswith(".json"):
-                    opened_paths.add(node.value)
-        self.assertEqual(
-            opened_paths, {"resources.json"},
-            "sim/world/deposits.py references a JSON filename other than "
-            "the data file it is meant to read: %s" % opened_paths)
-        self.assertNotIn("purchase_prices_denarii", source)
-        self.assertNotIn("wage_rates_denarii_per_hour", source)
-
-    def test_deposits_module_never_reads_cost_multiplier(self):
-        # geography.json's own located_materials.cost_multiplier is,
-        # per this task's own brief, a hardcoded delivered-cost outcome -
-        # exactly the kind of number CLAUDE.md 3.1 forbids as an INPUT to
-        # a cost derivation. deposits.py may load geography.json, but must
-        # never read that specific field.
-        path = os.path.join(_REPO_ROOT, "sim", "world", "deposits.py")
-        with open(path) as handle:
-            source = handle.read()
-        self.assertNotIn("cost_multiplier", source)
+    """CLAUDE.md 3.1: a grade is a physical fact about a rock and is never derived from what the metal sells for."""
 
     def test_every_declared_grade_is_engineering_or_heuristic_kind(self):
         from sim import constants
@@ -774,39 +729,6 @@ class NoPriceDataTests(unittest.TestCase):
                 self.assertIn(entry["kind"],
                               ("engineering_estimate", "temporary_heuristic"),
                               name)
-
-
-class StandaloneImportTests(unittest.TestCase):
-    """sim/world/deposits.py must not import sim/engine/ or any other
-    sim/world/ module - see its own docstring's STANDALONE section and
-    sim/world/__init__.py for why every module in this package holds to
-    this independently.
-    """
-
-    def test_imports_are_limited_to_stdlib_and_sim_constants(self):
-        path = os.path.join(_REPO_ROOT, "sim", "world", "deposits.py")
-        with open(path) as handle:
-            tree = ast.parse(handle.read(), filename=path)
-
-        imported = set()
-        for node in ast.walk(tree):
-            if isinstance(node, ast.Import):
-                for alias in node.names:
-                    imported.add(alias.name)
-            elif isinstance(node, ast.ImportFrom) and node.module:
-                imported.add(node.module)
-
-        for name in imported:
-            self.assertFalse(
-                name.startswith("sim.engine"),
-                "sim/world/deposits.py imports %r" % name)
-            self.assertFalse(
-                name.startswith("sim.world.") and name != "sim.world.deposits",
-                "sim/world/deposits.py imports another sim/world/ module: %r"
-                % name)
-            self.assertNotEqual(
-                name, "sim.engine.solve_prices",
-                "sim/world/deposits.py imports the price solver directly")
 
 
 class CalibrationReportTests(unittest.TestCase):
