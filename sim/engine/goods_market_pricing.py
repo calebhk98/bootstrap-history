@@ -109,9 +109,12 @@ class GoodsPricing:
     def sale_proceeds(self, material, tonnes, already=0.0):
         """(money, mean money per tonne) for selling `tonnes` more after `already` tonnes sold this year: the
         price on the acting tile falling as the sale adds to what is offered there (the economy's response). The
-        seller is not charged carriage, so there is no fixed spread between buying and selling."""
+        seller is not charged carriage, so there is no fixed spread between buying and selling. None when the
+        material has no price."""
         price = self.price_at_tile_per_tonne(material)
-        if price is None or tonnes < 0.0:
+        if price is None:
+            return None
+        if tonnes < 0.0:
             return 0.0, 0.0
         mean = price * self._climb(material, already, tonnes, selling=True)
         return mean * tonnes, mean
