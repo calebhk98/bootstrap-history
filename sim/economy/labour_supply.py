@@ -14,6 +14,11 @@ from . import households_hours_offered
 from .types import AgentId, LabourOffer
 
 
+def anchor_wages_at(anchors: Mapping[str, float], price_level: float) -> Dict[str, float]:
+    """Each trade's leisure anchor wage, set at the opening's prices, in the prices of a year at `price_level`."""
+    return {trade: anchor * price_level for trade, anchor in anchors.items()}
+
+
 @dataclasses.dataclass
 class HourSupply:
     offers: Sequence[LabourOffer]                       # every offer, with the cohort's whole year of hours
