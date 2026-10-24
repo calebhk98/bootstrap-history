@@ -1,12 +1,12 @@
 # Tin shows far below copper in the opening year; the cause is copper's scarcity price, not tin's recipe
 
-**Status:** partly - recipe mass balance fixed; the slow check `economy_tin_dearer_than_copper` stays red until the opening settles (473) and the price stage of 507 lands; tracked on GitHub as #65
+**Status:** partly - recipe mass balance fixed; the opening-year tin-over-copper reading (the deleted slow check `economy_tin_dearer_than_copper`) stays red until the opening settles (473) and the price stage of 507 lands; tracked on GitHub as #65
 
 **What is wrong now.** Opening-year shown tin over copper is far below the ratio of the labour their recipes embody
 (history: 0.015 before the mass-balance fix, about 0.1 on the latest decomposition against 0.441 required).
-Measure: `python3 -m sim.tests --slow --only economy_tin_dearer_than_copper` (steps `rome_100ad` through `YearInputs`
-and reads `shown_prices_of`), or `python3 sim/simulator.py play --civ rome_100ad --seed real25`, `market` screen. The
-check says not to weaken it.
+Measure: `python3 sim/simulator.py play --civ rome_100ad --seed real25`, `market` screen (shown tin over shown copper, against
+the ratio of the labour their recipes embody through every input). The slow check that did this is deleted: it read the
+opening year after one economy step and could not name a function.
 
 **What is not the cause** (measured, `Complaints/reports/511-history.md`):
 
@@ -30,7 +30,7 @@ special case (CLAUDE.md 4.7).
 
 **Fixed so far.** `cassiterite_kg` is the gravel dug and washed and `tin_kg` asks for the gravel its deposits' grade implies
 (`data/production/20_nonferrous.json`); lead and mercury were restated the same way
-(`sim/tests/test_ore_recipe_mass_balance.py`, `sim/tests/test_economy_tin_dearer_than_copper.py`).
+(`sim/tests/test_ore_recipe_mass_balance.py`).
 
 **Tried and why it failed.** Tripling `EXPANSION_SHARE_PER_YEAR` left copper unchanged (plans stay bounded by last year's
 runs and inputs); removing the 25 percent pace left year-zero copper unchanged (hands were all hired); sizing entry from

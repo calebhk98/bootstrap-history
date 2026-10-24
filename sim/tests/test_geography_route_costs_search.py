@@ -1,15 +1,17 @@
-"""The cost-only search behind `route_costs` finds the costs the full search finds, whole or stopped early."""
-import random
+"""The cost-only search behind `route_costs` finds the costs the full search finds, whole or stopped early (called on the small
+fixture map, every tile as an origin)."""
+QUICK_TOPIC = True
+
 import unittest
 
-from sim.geography import queries, routes_compile, routes_modes, routes_search
+from sim.geography import routes_compile, routes_modes, routes_search
 
-QUICK_TOPIC = False
+from .test_geography_routes import small_map
 
 
 class RouteCostsSearchTests(unittest.TestCase):
     def setUp(self):
-        self.world_map = queries._map(None)
+        self.world_map = small_map()
         self.tiles = sorted(self.world_map.tiles)
         self.mode_ids = list(routes_modes.modes(self.world_map))
         self.rates = {mode: 1.0 + 0.37 * index for index, mode in enumerate(self.mode_ids)}
@@ -17,13 +19,13 @@ class RouteCostsSearchTests(unittest.TestCase):
         self.compiled = routes_compile.compiled_for(self.world_map, self.mode_ids, {}, self.rates, self.handling, [])
 
     def test_cost_search_matches_the_full_search(self):
-        for origin in random.Random(1).sample(self.tiles, 8):
+        for origin in self.tiles:
             full = routes_search._tree(self.compiled, frozenset([origin]), False)[0]
             self.assertEqual(routes_search._cost_tree(self.compiled, frozenset([origin])), full)
 
     def test_stopping_early_leaves_the_asked_tiles_unchanged(self):
-        chosen = random.Random(2).sample(self.tiles, 40)
-        for origin in chosen[:5]:
+        chosen = self.tiles[::2]
+        for origin in self.tiles:
             whole = routes_search.costs_from(self.world_map, [origin], self.mode_ids, {}, self.rates, self.handling, [])
             early = routes_search.costs_from(self.world_map, [origin], self.mode_ids, {}, self.rates, self.handling, [],
                                              within=chosen)

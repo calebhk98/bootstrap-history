@@ -13,6 +13,12 @@ def hectares_worked(farm_land, technique, farm_workers_fte):
     return min(farm_land.hectares, farm_workers_fte * per_worker)
 
 
+def carried_stock_kg(carry_forward_kg, capacity_kg):
+    """The stock a farm year hands on: capped at what the granary can hold, and never below nothing (seed sown beyond
+    the stock is not a debt that passes on)."""
+    return max(0.0, min(carry_forward_kg, capacity_kg))
+
+
 def run_farm_year(farm_land, technique, farm_stock_kg, adult_equivalent_population, farm_workers_fte, storage_seed,
                   weather_multiplier):
     """Sow, harvest, eat and store one year. Seed is charged on the hectares worked, not the whole endowment. The
@@ -33,5 +39,4 @@ def run_farm_year(farm_land, technique, farm_stock_kg, adult_equivalent_populati
         worker_count=crop_workers_fte, reserve_target_kg=reserve_target_kg, weather_multiplier=weather_multiplier)
     capacity_kg = agriculture.granary_capacity_kg(farm_year.food_demand_kg)
     # a granary cannot hold less than nothing: seed sown beyond the stock is not a debt
-    carried = max(0.0, min(agriculture.stock_to_carry_forward_kg(farm_year), capacity_kg))
-    return FarmYear(farm_year, carried)
+    return FarmYear(farm_year, carried_stock_kg(agriculture.stock_to_carry_forward_kg(farm_year), capacity_kg))

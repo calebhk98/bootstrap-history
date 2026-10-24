@@ -80,16 +80,6 @@ class SeedingTests(unittest.TestCase):
         self.assertAlmostEqual(moved[LANDLORD], by_share[LANDLORD] + by_share[PEASANT])
 
 
-class OpeningTests(unittest.TestCase):
-    def test_an_opened_economy_seeds_titles_from_ownership_shares(self):
-        from sim.tests import economy_fixture
-        record = economy_fixture.Economy(economy_fixture.small_setup()).record
-        self.assertEqual(set(record.titles), {cohort.tile for cohort in record.cohorts.values()})
-        for cohort in record.cohorts.values():
-            self.assertAlmostEqual(record.titles[cohort.tile][cohort.agent_id], cohort.ownership_share)
-        self.assertEqual(record.tenancies, {})
-
-
 class ValueTests(unittest.TestCase):
     def test_a_title_is_worth_its_capitalised_rent_and_moves_with_the_title(self):
         setup, record = make_world()

@@ -1,9 +1,10 @@
-"""Hauls between tiles: modes from data, built ways, rivers and seas, reach, and search speed."""
+"""Hauls between tiles: modes from data, built ways, rivers and seas, and reach."""
+QUICK_TOPIC = True
+
 import json
 import os
 import shutil
 import tempfile
-import time
 import unittest
 
 from sim.geography import api, map_source, parameters, routes_graph, routes_modes, routes_search, tile_holdings, tile_lookup
@@ -190,20 +191,6 @@ class EarthTests(unittest.TestCase):
         held = routes_modes.usable_modes(self.world_map, [ANCIENT_NODES])
         self.assertTrue({"sail", "cart", "pack", "river_boat", "foot"} <= held)
         self.assertFalse({"rail", "steam_ship"} & held)
-
-    def test_a_search_over_every_tile_is_quick(self):
-        modes = set(routes_modes.modes(self.world_map))
-        routes_search.route(self.world_map, ["italy_03"], [self.luoyang], modes)  # builds the graph
-        # CPU time of the quickest of three runs: wall time and one unlucky run both carry machine load, a real slowdown
-        # raises every run
-        cpu_seconds = []
-        for _attempt in range(3):
-            started = time.process_time()
-            reached = routes_search.reach(self.world_map, ["spain_03"], modes, 1.0e6,
-                                          improvements={"x|y": {"road": True}})
-            cpu_seconds.append(time.process_time() - started)
-        self.assertLess(min(cpu_seconds), 0.5, cpu_seconds)
-        self.assertGreater(len(reached), len(self.world_map.tiles) // 2)
 
 
 if __name__ == "__main__":

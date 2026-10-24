@@ -5,6 +5,7 @@ QUICK_TOPIC = True
 import math
 import unittest
 
+from sim.engine import node_output
 from sim.labour.labour_market import production_data
 
 CIRCULAR_MIL_SQUARE_METRES = 5.0671e-10
@@ -82,6 +83,10 @@ class DeliveryData(unittest.TestCase):
             self.assertGreater(capital["annual_output_at_basis"], 0.0, key)
             self.assertTrue(math.isfinite(capital["annual_output_at_basis"]), key)
 
+    def test_the_three_wire_node_gates_the_three_wire_entry(self):
+        node_id = self.production[THREE_WIRE]["requires_node"]
+        self.assertEqual(node_id, "el2_three_wire_distribution_system")
+        self.assertIn(self.production[THREE_WIRE], node_output.entries_gated_by(node_id, self.production))
 
 
 if __name__ == "__main__":

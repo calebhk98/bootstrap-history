@@ -1,186 +1,91 @@
-"""Checks the fix this round made to `sim/engine/prices.py`: `solved_prices`
-now actually calls `solve_prices.rent_hours_per_kg_by_ore_material` and
-`solve_prices.land_rent_hours_per_hectare`, which it did not before - see
-RENT WAS MISSING FROM THIS FILE in that module's own docstring, and
-Complaints/42's own update sections for the finding this closes (the switch
-would have made land free the moment it was flipped, even though
-`sim/engine/solve_prices.py`'s own CLI had already fixed that).
+"""Land rent is per civilisation (RENT NEEDS A CIVILIZATION in sim/engine/prices.py). `solved_prices_at_wages` keys its cache on
+the civilisation as well as the gate nodes held, so two civilisations holding the same gate nodes never share a land price,
+and an unset civilisation is the default one; `_solve_to_json` charges the opening's stand-in rent for that civilisation unless
+the caller names a rent. The solver and the rent stand-in are recorders; no price solve. The rent rule itself is in
+test_price_solver_land."""
+QUICK_TOPIC = True
 
-Three things pinned here, because getting any of them wrong silently
-reintroduces the bug or introduces a new one of the same shape:
-
-  - `solved_prices` (and `priced_goods_table`, and `sim.engine.data.load`/
-    `goods_provenance` above it) actually price `hectare_land` above zero
-    once a civilization holds any territory - the CLI already proved this
-    is possible; this file proves the ENGINE'S OWN wiring does it too, not
-    only the standalone tool sitting next to it.
-  - Land rent is genuinely PER CIVILIZATION - two civilizations holding the
-    exact same gate-node set (easy to arrange with synthetic data, since
-    gate nodes have nothing to do with territory) must not share a cached
-    land price, because `sim/world/land.py` prices a civilization's own
-    held regions, not its technology.
-  - Leaving `civilization_id` unset behaves exactly as
-    `solve_prices.DEFAULT_LAND_CIVILIZATION` (Rome) would, matching the
-    CLI's own no-`--civ` default, so every EXISTING call site (which knows
-    nothing of this new parameter) keeps behaving the way it always has.
-
-Written against the real data/production/ and data/civilizations/, like
-`test_engine_prices.py`'s own `RealDataIntegrationTests`, because the
-thing being pinned - land actually differing by civilization - has no
-useful synthetic analogue: land.py reads real geography.
-
-Engine price solving includes the per-civilisation rent tables.
-"""
-
-import json
-import os
+import types
 import unittest
+from unittest import mock
 
-from sim.engine import data, prices as engine_prices
-from sim.world import grain_yield
+from sim.engine import prices
 
-ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-CIVDIR = os.path.join(ROOT, "data", "civilizations")
-
-
-def _starting_techs(civilization_id):
-    with open(os.path.join(CIVDIR, civilization_id + ".json")) as source:
-        return json.load(source)["starting_techs"]
+DEFAULT_CIVILISATION = "default_civ"
+STORED = {"prices_in_labour_hours": {"hectare_land": 1.0}, "resolvable_materials": ["hectare_land"],
+          "chosen_recipe_by_material": {}, "converged": True, "iterations_run": 3}
+ENTRIES = {"entry": {}}
 
 
-class RentIsWiredInTests(unittest.TestCase):
-    """The headline fix: the engine's own switch no longer implies
-    RENT_IS_ZERO the way it silently did before this round."""
+class SolveCacheKeyTests(unittest.TestCase):
+    def solve(self, *civilization_ids, held=("gate",)):
+        """The results of solving once per id on one cache, and the civilisation ids the solver was run for."""
+        asked = []
 
-    def setUp(self):
-        engine_prices.reset_caches_for_tests()
-        self.addCleanup(engine_prices.reset_caches_for_tests)
-        self.prices_json = data.starting_schedule().document()
+        def solved(entries, gates, civilization_id, *rest):
+            asked.append(civilization_id)
+            return dict(STORED)
 
-    def test_hectare_land_is_no_longer_zero_for_rome(self):
-        # UPDATE (stakeholder maintainability item 6, the two map
-        # systems): this number is measured from Rome's 88 real
-        # `land_tiles` (data/world/geography.json), which is what
-        # sim/world/land.py's extensive margin reads (see that module's own
-        # docstring, UPDATE (stakeholder maintainability item 6...)
-        # section), not the seven hand-drawn `regions` records. The
-        # tile-grain figure is lower than the old region-grain one (55.779
-        # hours/hectare, Complaints/42's own
-        # measurement of a Roman gated solve)
-        # for two measured, physically sensible reasons, not because
-        # anything here broke:
-        #   1. north_africa's own single blended fertility_quality_
-        #      multiplier (1.35 - Complaints/45's own "96% Sahara, rated on
-        #      the strength of the Nile") does not survive contact with
-        #      its own 47 real tiles: they range 0.546-0.935 (measured
-        #      directly off data/world/geography.json's land_tiles), so
-        #      even the BEST of them is below the old blended 1.35 - the
-        #      extensive margin's own ceiling fertility fell.
-        #   2. Rome's own total arable endowment, summed over real tiles
-        #      rather than one book arable_fraction per region, came out
-        #      about 13% LARGER (measured directly against sim/world/
-        #      land.py's own cultivable_land_for_civilization, region-grain
-        #      vs tile-grain), which thins the intensive margin's own
-        #      labour-per-hectare figure and so its own rent contribution.
-        # Both effects push the price DOWN, which is what happened: this
-        # task's own report has the full before/after account, including
-        # the same measurement for Han China. This is exactly the kind of
-        # deliberate baseline shift CLAUDE.md SS3.2 describes ("every step
-        # toward endogeneity costs historical match in the short run") -
-        # the number the test pins is UPDATED to match the new, more
-        # physically grounded mechanism, not reverted to the old one.
-        result = engine_prices.solved_prices(
-            _starting_techs("rome_100ad"), self.prices_json,
-            civilization_id="rome_100ad")
-        self.assertIn("hectare_land", result.prices_in_labour_hours)
-        # Rule, not a recorded value (the figure moves with every sourced farm-labour or yield figure): rent is
-        # positive and cannot exceed the value of the net grain a hectare yields.
-        rent = result.prices_in_labour_hours["hectare_land"]
-        net_grain_value = (grain_yield.net_yield_kg_per_hectare(grain_yield.SEED_KG_PER_HECTARE, grain_yield.FOLD_RETURN)
-                           * result.prices_in_labour_hours["wheat_kg"])
-        self.assertGreater(rent, 0.0)
-        self.assertLess(rent, net_grain_value)
+        standin = types.SimpleNamespace(DEFAULT_LAND_CIVILIZATION=DEFAULT_CIVILISATION,
+                                        load_starting_interest_rate=lambda civilization_id: 0.1)
+        with mock.patch.object(prices, "_SOLVE_CACHE", {}), mock.patch.object(prices, "solve_prices", standin), \
+                mock.patch.object(prices, "all_gate_nodes", return_value=frozenset({"gate"})), \
+                mock.patch.object(prices, "_solve_to_json", side_effect=solved):
+            results = [prices.solved_prices_at_wages(held, {"smith": 2.0}, ENTRIES, civilization_id=civilization_id)
+                       for civilization_id in civilization_ids]
+        return results, asked
 
-    def test_omitting_civilization_id_defaults_to_rome(self):
-        with_default = engine_prices.solved_prices(
-            _starting_techs("rome_100ad"), self.prices_json)
-        with_explicit_rome = engine_prices.solved_prices(
-            _starting_techs("rome_100ad"), self.prices_json,
-            civilization_id="rome_100ad")
-        self.assertIs(with_default, with_explicit_rome,
-                      "omitting civilization_id must hit the same cache "
-                      "entry as explicitly naming solve_prices."
-                      "DEFAULT_LAND_CIVILIZATION")
-
-
-class LandRentIsPerCivilizationTests(unittest.TestCase):
-    """Two civilizations must not share a land price just because they
-    happen to hold the same gate nodes - see RENT NEEDS A CIVILIZATION in
-    sim/engine/prices.py's module docstring."""
-
-    def setUp(self):
-        engine_prices.reset_caches_for_tests()
-        self.addCleanup(engine_prices.reset_caches_for_tests)
-        self.prices_json = data.starting_schedule().document()
-
-    def test_rome_and_han_china_get_different_land_rents(self):
-        # Real starting_techs for two real civilizations - if their gate
-        # intersections happened to coincide, a cache keyed on gate nodes
-        # ALONE would silently hand one of them the other's land price.
-        rome = engine_prices.solved_prices(
-            _starting_techs("rome_100ad"), self.prices_json,
-            civilization_id="rome_100ad")
-        han = engine_prices.solved_prices(
-            _starting_techs("han_china_100ad"), self.prices_json,
-            civilization_id="han_china_100ad")
-        self.assertIn("hectare_land", rome.prices_in_labour_hours)
-        self.assertIn("hectare_land", han.prices_in_labour_hours)
-        self.assertNotAlmostEqual(
-            rome.prices_in_labour_hours["hectare_land"],
-            han.prices_in_labour_hours["hectare_land"], places=2)
-
-    def test_same_gate_nodes_different_civilization_id_is_a_cache_miss(self):
-        # Fabricate the hazard directly rather than hoping two real
-        # civilizations' gate intersections happen to collide: same held
-        # technology set, same production_entries object, different
-        # civilization_id only. If the cache key were gate-nodes-only,
-        # these would incorrectly share one cached SolvedPrices.
-        held = set(_starting_techs("rome_100ad"))
-        rome = engine_prices.solved_prices(
-            held, self.prices_json, civilization_id="rome_100ad")
-        han = engine_prices.solved_prices(
-            held, self.prices_json, civilization_id="han_china_100ad")
+    def test_the_same_gate_nodes_for_another_civilisation_is_a_cache_miss(self):
+        (rome, han), asked = self.solve("rome", "han")
         self.assertIsNot(rome, han)
-        self.assertNotAlmostEqual(
-            rome.prices_in_labour_hours["hectare_land"],
-            han.prices_in_labour_hours["hectare_land"], places=2)
+        self.assertEqual(asked, ["rome", "han"])
 
-    def test_result_records_which_civilization_it_was_solved_for(self):
-        result = engine_prices.solved_prices(
-            _starting_techs("mexica_1500"), self.prices_json,
-            civilization_id="mexica_1500")
-        self.assertEqual(result.civilization_id, "mexica_1500")
+    def test_the_same_gate_nodes_for_the_same_civilisation_is_a_cache_hit(self):
+        (first, second), asked = self.solve("rome", "rome")
+        self.assertIs(first, second)
+        self.assertEqual(asked, ["rome"])
+
+    def test_an_unset_civilisation_is_the_default_one_and_hits_its_cache_entry(self):
+        (unset, named), asked = self.solve(None, DEFAULT_CIVILISATION)
+        self.assertIs(unset, named)
+        self.assertEqual(asked, [DEFAULT_CIVILISATION])
+
+    def test_the_result_records_which_civilisation_it_was_solved_for(self):
+        (result,), _asked = self.solve("mexica")
+        self.assertEqual(result.civilization_id, "mexica")
 
 
-class GoodsProvenanceCivilizationTests(unittest.TestCase):
-    """`sim.engine.data.goods_provenance` and `load` thread civilization_id
-    through to the same place - the caller-facing surface of the fix."""
+class SolveToJsonRentTests(unittest.TestCase):
+    def run_solve(self, rent=None, civilization_id="rome"):
+        stand_in = mock.Mock(return_value={"hectare_land": 12.0})
+        solver = mock.Mock(return_value=({"hectare_land": 1.0}, 3, 0.0, {}, set()))
+        solve_prices = types.SimpleNamespace(
+            techniques_available_to=lambda entries, gates: ({"entry": {}}, [], []),
+            build_producers_index=lambda entries: {}, compute_resolvable_materials=mock.Mock(return_value=set()),
+            CONVERGENCE_TOLERANCE=1e-9)
+        with mock.patch.object(prices, "solve_prices", solve_prices), \
+                mock.patch.object(prices, "rent_standin", types.SimpleNamespace(stand_in_rent=stand_in)), \
+                mock.patch.object(prices, "solve_prices_reach", types.SimpleNamespace(solve_priced_materials=solver)), \
+                mock.patch.object(prices, "solver_wage_ratios", return_value={"smith": 2.0}):
+            prices._solve_to_json(ENTRIES, frozenset(), civilization_id, {"smith": 2.0},
+                                  rent_hours_per_kg_by_material=rent)
+        return stand_in, solver, solve_prices.compute_resolvable_materials
 
-    def setUp(self):
-        engine_prices.reset_caches_for_tests()
-        self.addCleanup(engine_prices.reset_caches_for_tests)
+    def test_with_no_rent_named_the_standin_for_that_civilisation_is_charged(self):
+        stand_in, solver, resolvable = self.run_solve()
+        self.assertEqual(stand_in.call_args.kwargs["civilization_id"], "rome")
+        self.assertEqual(solver.call_args.kwargs["rent_hours_per_kg_by_material"], {"hectare_land": 12.0})
+        self.assertEqual(resolvable.call_args.kwargs["rent_hours_per_kg_by_material"], {"hectare_land": 12.0})
 
-    def test_goods_provenance_prices_hectare_land_as_solved(self):
-        provenance = data.goods_provenance(
-            _starting_techs("rome_100ad"), civilization_id="rome_100ad")
-        self.assertEqual(provenance.get("hectare_land"), "solved")
+    def test_a_rent_the_caller_names_replaces_the_standin(self):
+        stand_in, solver, _resolvable = self.run_solve(rent={"hectare_land": 3.0})
+        stand_in.assert_not_called()
+        self.assertEqual(solver.call_args.kwargs["rent_hours_per_kg_by_material"], {"hectare_land": 3.0})
 
-    def test_load_produces_a_nonzero_land_price(self):
-        _tree, prices_json, _nodes, _wages, goods = data.load(
-            held_technology_ids=_starting_techs("rome_100ad"),
-            civilization_id="rome_100ad")
-        self.assertIn("hectare_land", goods)
-        self.assertGreater(goods["hectare_land"], 0.0)
+    def test_an_empty_rent_charges_none_at_all(self):
+        stand_in, solver, _resolvable = self.run_solve(rent={})
+        stand_in.assert_not_called()
+        self.assertEqual(solver.call_args.kwargs["rent_hours_per_kg_by_material"], {})
 
 
 if __name__ == "__main__":

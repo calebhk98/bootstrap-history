@@ -1,7 +1,7 @@
 """The `education` screen's enrolment (Complaint 94): each running school shows its share of the schooling flow, its pupils
 made literate next year are that share of the whole society's literacy gain, and the limit on literacy is named by an
 enumerated field. `screen_education._enrolment` and `_limited_by` are called on a stub society, and the screen's
-rendering on a built reply. The screen on a game is `test_education_enrolment_scenario`."""
+rendering on a built reply."""
 QUICK_TOPIC = True
 
 import unittest

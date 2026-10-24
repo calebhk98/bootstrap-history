@@ -1,8 +1,12 @@
 """The geography package's walls: outside code reaches it only through its api, and it reaches
 nothing above it (engine, ui, economy, labour, agents). Its reads of sim.world are an allowlist
 that only shrinks."""
+QUICK_TOPIC = True
+
 import ast
+import functools
 import os
+import subprocess
 import unittest
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -12,9 +16,17 @@ FORBIDDEN_PACKAGES = ("sim.engine", "sim.ui", "sim.economy", "sim.labour", "sim.
 WORLD_IMPORTS_ALLOWED = {}
 
 
-def imported_modules(path):
+@functools.lru_cache(maxsize=None)
+def imported_modules(path, mentioning=""):
+    """The modules a file imports; a file whose text lacks `mentioning` cannot import a module with that name and is not parsed."""
     with open(path, encoding="utf-8") as handle:
-        tree = ast.parse(handle.read(), filename=path)
+        text = handle.read()
+    if mentioning not in text:
+        return ()
+    return tuple(_imports_of(ast.parse(text, filename=path)))
+
+
+def _imports_of(tree):
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
             for alias in node.names:
@@ -32,6 +44,18 @@ def python_files(directory):
         for filename in sorted(filenames):
             if filename.endswith(".py"):
                 yield os.path.join(folder, filename)
+
+
+def files_mentioning_geography(packages):
+    """Python files of the packages whose text says "geography" (one git grep; every file when git is not there)."""
+    try:
+        found = subprocess.run(["git", "grep", "-l", "--untracked", "-F", "geography", "--"] + ["sim/%s/*.py" % package for package in packages],
+                               cwd=ROOT, capture_output=True, text=True)
+        if found.returncode <= 1:
+            return [os.path.join(ROOT, name) for name in sorted(found.stdout.split())]
+    except OSError:
+        pass
+    return [path for package in packages for path in python_files(os.path.join(ROOT, "sim", package))]
 
 
 def under(module, package):
@@ -53,12 +77,10 @@ class GeographyWallTests(unittest.TestCase):
                     self.assertIn(module, allowed, "%s imports %s" % (os.path.relpath(path, ROOT), module))
 
     def test_game_code_outside_the_package_uses_only_the_api(self):
-        for package in ("engine", "ui", "economy", "labour", "agents", "world"):
-            for path in python_files(os.path.join(ROOT, "sim", package)):
-                for module in imported_modules(path):
-                    if under(module, "sim.geography"):
-                        self.assertEqual(module, "sim.geography.api",
-                                         "%s imports %s" % (os.path.relpath(path, ROOT), module))
+        for path in files_mentioning_geography(("engine", "ui", "economy", "labour", "agents", "world")):
+            for module in imported_modules(path, mentioning="geography"):
+                if under(module, "sim.geography"):
+                    self.assertEqual(module, "sim.geography.api", "%s imports %s" % (os.path.relpath(path, ROOT), module))
 
 
 if __name__ == "__main__":

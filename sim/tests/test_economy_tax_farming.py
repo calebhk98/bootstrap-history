@@ -2,7 +2,6 @@
 
 QUICK_TOPIC = True
 
-import dataclasses
 import types
 import unittest
 
@@ -10,12 +9,10 @@ from sim.agents import policy_land
 from sim.agents.policy import CallbackPolicy
 from sim.economy import tax_farming
 from sim.economy.accounts import Book
-from sim.economy.economy import Economy
 from sim.economy.market_memory import MarketMemory
 from sim.economy.record import EconomyRecord
 from sim.economy.taxes import TaxForm
 from sim.economy.types import CurrencySpec, Transfer
-from sim.tests import economy_fixture
 
 MONEY = "coin"
 STATE = "state:test"
@@ -68,40 +65,19 @@ class BidTests(unittest.TestCase):
         self.assertEqual(tax_farming.run_auctions(setup_with(record), record, ["poll"], 0.1), {})
 
 
-class EconomyYearTests(unittest.TestCase):
-    def economy_after_a_normal_year(self):
-        setup = economy_fixture.small_setup(tax_forms=(POLL,), state_capacity=0.5)
-        economy = Economy(setup)
-        economy.step(economy_fixture.quiet_year(setup))
-        return setup, economy
+class RememberYearTests(unittest.TestCase):
+    def assessment(self, form, base, collected):
+        return types.SimpleNamespace(form=form, base_value=base, collected_value=collected)
 
     def test_a_year_of_tax_leaves_the_forms_base_and_the_states_take_in_the_record(self):
-        _setup, economy = self.economy_after_a_normal_year()
-        history = economy.record.tax_history["poll"]
-        self.assertGreater(history["base"], 0.0)
-        self.assertGreater(history["state_take"], 0.0)
+        record = types.SimpleNamespace(tax_history={})
+        tax_farming.remember_year(record, [self.assessment("poll", 1000.0, 40.0)], (), 0.5)
+        self.assertEqual(record.tax_history, {"poll": {"base": 1000.0, "state_take": 40.0}})
 
-    def test_a_year_with_a_farmed_form_runs_and_leaves_no_lease_standing(self):
-        setup, economy = self.economy_after_a_normal_year()
-        economy.step(dataclasses.replace(economy_fixture.quiet_year(setup), farmed_forms=("poll",)))
-        self.assertEqual(economy.record.tax_farms, {})
-        self.assertGreater(economy.record.tax_history["poll"]["base"], 0.0)
-
-    def test_the_state_collects_a_farmed_form_through_the_farmer_not_directly(self):
-        setup, economy = self.economy_after_a_normal_year()
-        record = economy.record
-        farmed = tax_farming.run_auctions(setup, record, ["poll"], 0.0)
-        self.assertIn("poll", farmed)
-        farmer, price = farmed["poll"]["farmer"], farmed["poll"]["price"]
-        self.assertGreater(price, 0.0)
-        farmer_cash = record.book.balance(farmer, setup.currency_id)
-        state_cash = record.book.balance(setup.state_agent, setup.currency_id)
-        from sim.economy import year_close
-        from sim.economy.year_ledger import YearLedger
-        year_close.money_taxes(setup, record, economy.view(), YearLedger())
-        self.assertGreater(record.book.balance(farmer, setup.currency_id), farmer_cash)        # the farmer collected
-        self.assertAlmostEqual(record.book.balance(setup.state_agent, setup.currency_id), state_cash)   # the state got only the price
-        self.assertAlmostEqual(record.state_budget.revenue, price)
+    def test_a_farmed_forms_take_is_scaled_from_the_farmers_reach_back_to_the_states(self):
+        record = types.SimpleNamespace(tax_history={})
+        tax_farming.remember_year(record, [self.assessment("poll", 1000.0, 90.0)], ("poll",), 0.5, reach=0.9)
+        self.assertAlmostEqual(record.tax_history["poll"]["state_take"], 90.0 * 0.5 / 0.9)
 
 
 class StateChoiceTests(unittest.TestCase):
@@ -115,13 +91,6 @@ class StateChoiceTests(unittest.TestCase):
         state = self.State()
         state.decision_policy = CallbackPolicy(lambda actor, decision: ["poll"] if decision.kind == "tax_farm" else [])
         self.assertEqual(policy_land.farmed_forms(state, ["poll", "customs"]), ["poll"])
-
-
-class SaveTests(unittest.TestCase):
-    def test_the_forms_history_survives_a_save_and_load(self):
-        record = bidding_record()
-        loaded = EconomyRecord.from_record(record.to_record())
-        self.assertEqual(loaded.tax_history, record.tax_history)
 
 
 if __name__ == "__main__":

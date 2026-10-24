@@ -1,68 +1,85 @@
-"""Complaint 546: a working-capital loan asked at a year's close must reach the producer before that year's
-plan, or it pays for nothing it was asked for. Its money arrived after the plan, sat through the year, and
-left as a dividend at the close."""
+"""Complaint 546: a working-capital loan asked at a year's close must reach the producer before that year's plan, or it pays
+for nothing it was asked for. `lending.lend_working_capital` strikes only those requests, dated to the last close so the one
+payment falls due at this year's end, out of the households' cash above their targets. Called on a hand-built record; the
+credit market and the lenders' asking rates are recorders. No game."""
+QUICK_TOPIC = True
+
+import types
 import unittest
 from unittest import mock
 
-from sim.economy import lending, producers, producers_close
-from sim.economy.economy import Economy
-from sim.economy.types import LoanRequest, Transfer
-from sim.tests import economy_fixture as fixture
+from sim.economy import lending, producers_close
+from sim.economy.types import LoanRequest
 
+MONEY = "coin"
+YEAR = 7
 ASKED = 50.0
 
 
-def short_producer_economy():
-    """A year in, with one producer's cash drained to the households and a working-capital request on file."""
-    setup = fixture.small_setup()
-    economy = Economy(setup)
-    economy.step(fixture.quiet_year(setup))
-    record = economy.record
-    producer_id = sorted(record.producers)[0]
-    cohort_id = sorted(record.cohorts)[0]
-    drained = record.book.balance(producer_id, setup.currency_id)
-    record.book.transfer(Transfer(producer_id, cohort_id, setup.currency_id, drained, "test"))
-    record.loan_requests.clear()               # only the request this test files
-    record.loan_requests.append(LoanRequest(producer_id, setup.currency_id, ASKED, 0.5, 1.0, ASKED,
-                                            producers_close.WORKING_CAPITAL_PURPOSE))
-    return economy, producer_id
+def request(purpose, amount=ASKED, borrower="firm"):
+    return LoanRequest(borrower, MONEY, amount, 0.5, 1.0, amount, purpose)
 
 
-class WorkingCapitalTimingTests(unittest.TestCase):
-    def setUp(self):
-        fixture.households_with_a_surplus(self)       # a loan is made out of savings, which only a surplus leaves
-    def test_the_loan_is_struck_before_the_plan_and_falls_due_at_the_end_of_the_year_it_funds(self):
-        economy, producer_id = short_producer_economy()
-        year = economy.view().year
-        loans_before = len(economy.record.loans)
-        before = economy.record.book.balance(producer_id, economy.setup.currency_id)
-        lending.lend_working_capital(economy.setup, economy.record, economy.view())
-        loans = [loan for loan in economy.record.loans[loans_before:] if loan.borrower == producer_id]
-        self.assertAlmostEqual(sum(loan.principal for loan in loans), ASKED)
-        self.assertTrue(all(loan.issued_year == year - 1 for loan in loans))     # first payment due this year's end
-        self.assertAlmostEqual(economy.record.book.balance(producer_id, economy.setup.currency_id) - before, ASKED)
-        self.assertEqual([request for request in economy.record.loan_requests
-                          if request.purpose == producers_close.WORKING_CAPITAL_PURPOSE], [])
+def record(requests, balances):
+    """Two households whose cash targets are 200 each, holding `balances`; the book answers balances and records transfers."""
+    book = types.SimpleNamespace(balance=lambda agent, money: balances[agent], transfer_many=mock.Mock())
+    cohorts = {name: types.SimpleNamespace(cash_target=200.0, expected_inflation=0.0) for name in sorted(balances)}
+    return types.SimpleNamespace(
+        loan_requests=list(requests), loans=[], book=book, cohorts=cohorts, merchants={}, loss_rates={},
+        remembered_defaults={}, memory=types.SimpleNamespace(rates={MONEY: 0.05}))
 
-    def test_other_requests_wait_for_the_year_s_ordinary_lending(self):
-        economy, producer_id = short_producer_economy()
-        other = LoanRequest(producer_id, economy.setup.currency_id, 5.0, 0.5, 5.0, 5.0, "plant")
-        economy.record.loan_requests.append(other)
-        lending.lend_working_capital(economy.setup, economy.record, economy.view())
-        self.assertEqual(economy.record.loan_requests, [other])
 
-    def test_the_plan_sees_the_cash_the_loan_brought(self):
-        economy, producer_id = short_producer_economy()
-        seen = {}
-        real_plan = producers.plan
+def lend(the_record, loans=()):
+    setup = types.SimpleNamespace(currency_id=MONEY, opening_rate=0.1)
+    clear = mock.Mock(return_value=(list(loans), 0.05, []))
+    with mock.patch.object(lending, "credit", types.SimpleNamespace(
+            clear=clear, disbursements=lambda made: ["paid:%s" % loan.borrower for loan in made])), \
+            mock.patch.object(lending, "lender_ask", types.SimpleNamespace(lowest_ask=lambda *a, **k: 0.02, loss_rate=lambda x: 0.0)), \
+            mock.patch.object(lending, "credit_claims", types.SimpleNamespace(
+                principal_by_borrower=lambda loans: {}, arrears_history=lambda *a: {})), \
+            mock.patch.object(lending, "merchants_credit") as merchants, \
+            mock.patch.object(lending, "expected_inflation_of", return_value=0.0):
+        lending.lend_working_capital(setup, the_record, types.SimpleNamespace(year=YEAR))
+    return clear, merchants
 
-        def watching(producer, recipe, view, cash):
-            seen[producer.agent_id] = cash
-            return real_plan(producer, recipe, view, cash)
 
-        with mock.patch.object(producers, "plan", watching):
-            economy.step(fixture.quiet_year(economy.setup))
-        self.assertGreaterEqual(seen[producer_id], ASKED - 1e-9)
+class LendWorkingCapitalTests(unittest.TestCase):
+    def test_only_the_working_capital_requests_go_to_the_credit_market(self):
+        plant = request("plant", 5.0)
+        the_record = record([request(producers_close.WORKING_CAPITAL_PURPOSE), plant], {"a": 500.0, "b": 100.0})
+        clear, _merchants = lend(the_record)
+        self.assertEqual([each.purpose for each in clear.call_args.args[0]], [producers_close.WORKING_CAPITAL_PURPOSE])
+        self.assertEqual(the_record.loan_requests, [plant])
+
+    def test_the_loan_is_dated_to_the_last_close_so_its_payment_falls_due_at_the_end_of_this_year(self):
+        clear, _merchants = lend(record([request(producers_close.WORKING_CAPITAL_PURPOSE)], {"a": 500.0, "b": 100.0}))
+        self.assertEqual(clear.call_args.kwargs["year"], YEAR - 1)
+
+    def test_lenders_are_the_households_cash_above_their_targets(self):
+        clear, _merchants = lend(record([request(producers_close.WORKING_CAPITAL_PURPOSE)], {"a": 500.0, "b": 100.0}))
+        offers = clear.call_args.args[1]
+        self.assertEqual([(offer.lender, offer.amount) for offer in offers], [("a", 300.0)])
+
+    def test_the_loans_made_are_booked_paid_out_and_staked_to_a_merchant_borrower(self):
+        loan = types.SimpleNamespace(borrower="firm", principal=ASKED)
+        the_record = record([request(producers_close.WORKING_CAPITAL_PURPOSE)], {"a": 500.0, "b": 100.0})
+        _clear, merchants = lend(the_record, [loan])
+        self.assertEqual(the_record.loans, [loan])
+        the_record.book.transfer_many.assert_called_once_with(["paid:firm"])
+        merchants.stake.assert_called_once_with({}, {"firm": ASKED})
+
+    def test_with_no_working_capital_request_nothing_is_cleared(self):
+        plant = request("plant", 5.0)
+        the_record = record([plant], {"a": 500.0, "b": 100.0})
+        clear, _merchants = lend(the_record)
+        clear.assert_not_called()
+        self.assertEqual(the_record.loan_requests, [plant])
+
+    def test_with_no_household_cash_above_target_the_requests_are_asked_of_nobody(self):
+        the_record = record([request(producers_close.WORKING_CAPITAL_PURPOSE)], {"a": 100.0, "b": 100.0})
+        clear, _merchants = lend(the_record)
+        clear.assert_not_called()
+        self.assertEqual(the_record.loan_requests, [])
 
 
 if __name__ == "__main__":

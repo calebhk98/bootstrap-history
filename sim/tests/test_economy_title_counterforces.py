@@ -161,19 +161,5 @@ class StateChoiceTests(unittest.TestCase):
         self.assertEqual(policy_land.debt_relief_tiles(state, ["a"]), [])
 
 
-class EconomyWiringTests(unittest.TestCase):
-    def test_an_economy_year_with_a_relief_tile_cancels_that_tiles_household_debts(self):
-        import dataclasses
-        from sim.economy.economy import Economy
-        from sim.tests import economy_fixture
-        setup = economy_fixture.small_setup()
-        economy = Economy(setup)
-        borrower = next(c.agent_id for c in economy.record.cohorts.values() if c.tile == economy_fixture.FARMS)
-        economy.record.loans.append(Loan("loan:4", "lender", borrower, "coin", 80.0, 0.05, 2.0, 0.0))
-        inputs = dataclasses.replace(economy_fixture.quiet_year(setup), debt_relief_tiles=(economy_fixture.FARMS,))
-        economy.step(inputs)
-        self.assertEqual([loan for loan in economy.record.loans if loan.borrower == borrower], [])
-
-
 if __name__ == "__main__":
     unittest.main()

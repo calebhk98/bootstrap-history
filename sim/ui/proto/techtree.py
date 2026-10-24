@@ -939,6 +939,7 @@ def _explain_cost(sim, nodes, node_id, node):
                  "civ_domain_factor": round(sim.civ_cost_factor(node_id), 3),
                  "material_distance_factor": round(sim.geography.material_cost_factor(node_id), 3),
                  "opposition_factor": round(sim.opposition_factor(node_id), 3),
+                 "rebuild_factor": round(sim.rebuild_work_factor(node_id), 3),   # the share left to do of a lost node
                  # THE FACTOR ACTUALLY MULTIPLIED IN, not a decoy:
                  # project_cost multiplies by cost_money_factor()
                  # (price_index), so this field must report THAT, not
