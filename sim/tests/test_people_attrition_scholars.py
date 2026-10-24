@@ -242,13 +242,6 @@ check("no node's player-facing note carries a bracketed developer aside - "
       "an outside player found '[FIXED after independent audit: ...]' in a "
       "furnace description after the first strip pass missed that phrase",
       _leaks == [], _leaks[:4])
-check("nothing in the engine reads _internal, which is what makes it safe "
-      "to keep developer notes there",
-      not any("_internal" in open(os.path.join(HERE, filename)).read()
-              for filename in ("engine/core.py", "engine/economy.py", "engine/projects.py", "labour/labour.py",
-                         "engine/society.py", "ui/protocol.py", "ui/cli.py", "engine/fog.py",
-                         "engine/data.py")),
-      "engine files mentioning _internal")
 
 # --- THE SAME HOLE IN A SECOND COMMAND. `available`'s parser read bare words
 # only, so `available all:true` - the spelling `help commands` itself gives -

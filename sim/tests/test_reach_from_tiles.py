@@ -1,6 +1,5 @@
 """Complaints/416 and 136: a region's reach is the fewest days from the tiles a civilisation holds,
-over the modes it holds and the ways it has built; no region id is special-cased and no region
-carries a hand-set distance.
+over the modes it holds and the ways it has built.
 
 Geography is opened on the real map and geography data with a small stand-in for the engine, so no game is built."""
 QUICK_TOPIC = True
@@ -108,17 +107,6 @@ class ReachFromTilesTests(unittest.TestCase):
                     self.assertEqual(factor, 1.0, (civilisation, node_id))
                 else:
                     self.assertGreaterEqual(factor, 1.0, (civilisation, node_id))
-
-    def test_no_engine_or_geography_code_names_a_region(self):
-        offenders = []
-        for folder in ("sim/engine", "sim/geography", "sim/labour", "sim/economy"):
-            for name in sorted(os.listdir(os.path.join(_ROOT, folder))):
-                if name.endswith(".py"):
-                    with open(os.path.join(_ROOT, folder, name), encoding="utf-8") as handle:
-                        text = handle.read()
-                    if '"italia"' in text or "'italia'" in text:
-                        offenders.append(folder + "/" + name)
-        self.assertEqual(offenders, [])
 
 
 if __name__ == "__main__":

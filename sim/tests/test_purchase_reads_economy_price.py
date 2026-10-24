@@ -115,7 +115,7 @@ check("...and buying then selling the same tonne never makes the founder money",
 # a good no seller offers has no price
 check("a good no seller offers has no price and cannot be bought",
       market.quote("cobalt_kg") is None and market.purchase_cost("cobalt_kg", 1.0) is None
-      and market.sale_proceeds("cobalt_kg", 1.0) == (0.0, 0.0) and not market.can_be_bought("cobalt_kg"))
+      and market.sale_proceeds("cobalt_kg", 1.0) is None and not market.can_be_bought("cobalt_kg"))
 
 # the coin metal is one number in the mint, in cargo and in the partners' payments
 metal_price = market.home_unit_price(COIN_METAL)
