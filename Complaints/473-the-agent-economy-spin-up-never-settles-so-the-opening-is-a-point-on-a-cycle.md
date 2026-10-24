@@ -747,3 +747,5 @@ identity over a whole economy step and is measured by `spin-up-trace`'s `change`
 scenarios `staff_closure_reopening_scenario` (twelve years of twenty-five concerns, auto-hire reopening every closure free staff could
 run; red on main) and `sited_ore_price_over_cost_validation` (519) are deleted for the same reason: no command prints the
 reopening count over years; `python3 sim/simulator.py economy-check --civs norse_900ad --years 12` is the nearest measure.
+
+- Whole-economy claims no longer unit tests (one function per test): more money against the same goods raises the price level, a state that prints raises prices, money is conserved year after year, and a lean-seam mine leaves. Measure them with `python3 sim/simulator.py economy-check` and `python3 sim/simulator.py spin-up-trace`.
