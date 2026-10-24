@@ -1,5 +1,5 @@
 """Endogenous wage foundations: food, housing, tools, skill, and scarcity. The wage arithmetic (sim/labour/wage_factors.py)
-is called with prices built here, so a failure names the line of arithmetic; the three scenarios that read a game are test_dynamic_wages_scenario."""
+is called with prices built here, so a failure names the line of arithmetic; the wage foundation the labour command shows is test_labour_command_wage_foundation."""
 QUICK_TOPIC = True
 from .harness import *
 

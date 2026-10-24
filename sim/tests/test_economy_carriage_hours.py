@@ -1,10 +1,11 @@
 """Carriage is hired labour (Complaints/552): a merchant bids for the crew hours its shipments need in the
-year's labour market, before the goods move; what is hired limits what is carried, and the money still adds up."""
+year's labour market, before the goods move; what is hired limits what is carried."""
+QUICK_TOPIC = True
 
+import types
 import unittest
-from unittest import mock
 
-from sim.economy import carriage_hours, economy, merchants, money_audit
+from sim.economy import carriage_hours, merchants
 from sim.economy.merchants import CrewHire, Merchant
 from sim.economy.market_memory import market_key
 from sim.economy.types import Fill
@@ -12,7 +13,7 @@ from sim.tests import economy_fixture as fixture
 from sim.tests.test_economy_merchants import SPECS, merchant, plan, world
 
 CREW_HOURS_PER_TONNE_KM = 0.05
-CART_RATE = 0.09                 # dear enough that the fixture's tiles trade ore now and then, cheap enough that they do inside the run
+CART_RATE = 0.09
 
 
 def trading_setup(crew=True, carriage_wage=0.0):
@@ -21,65 +22,45 @@ def trading_setup(crew=True, carriage_wage=0.0):
     return fixture.small_setup(carriage_rates=rates, carriage_crew=crew_modes, carriage_wage=carriage_wage)
 
 
-def run_watching(setup, years):
-    """Run the fixture economy; return it and, per year, what the merchants wanted and were hired for just
-    before they dispatched, with the hours the labour market gave to every other employer of the trade."""
-    watched = []
-    real = economy.dispatch_merchants
-
-    def watch(setup_, record, carriage, ledger, area_map):
-        trade = fixture.LABOURER
-        before = {each.agent_id: dict(each.carriage_hours_wanted or {}) for each in record.merchants.values()}
-        hired = {agent: carriage_hours.hired(ledger, agent, [trade]) for agent in record.merchants}
-        real(setup_, record, carriage, ledger, area_map)
-        after = {each.agent_id: dict(each.carriage_hours_wanted or {}) for each in record.merchants.values()}
-        market = sum(hours for key, hours in record.hours_hired.items() if key.startswith(trade + "|"))
-        others = market - sum(each["hours"] for each in hired.values())
-        watched.append({"planned": before, "hired": hired, "wanted_after": after, "others_hired": others})
-    with mock.patch.object(economy, "dispatch_merchants", watch), fixture.surplus_households():   # goods are carried out of a surplus
-        done, _outcomes = fixture.run(setup, years)
-    return done, watched
+def crew_ledger():
+    """A year's labour clearing: m1 bought 30 hours of labourer at 1.0 and 10 at 2.0, m2 bought 5 and a farm 100."""
+    def fill(agent, quantity, price, side="buy"):
+        return types.SimpleNamespace(agent=agent, quantity=quantity, price=price, side=side)
+    results = [types.SimpleNamespace(trade=fixture.LABOURER, area="work@town",
+                                     fills=[fill("m1", 30.0, 1.0), fill("m1", 10.0, 2.0), fill("m2", 5.0, 1.0),
+                                            fill("farm", 100.0, 1.0), fill("family", 145.0, 1.0, "sell")]),
+               types.SimpleNamespace(trade="smith", area="work@town", fills=[fill("m1", 7.0, 9.0)])]
+    return types.SimpleNamespace(labour_results=results,
+                                 hours_hired={"m1": {fixture.LABOURER: 40.0, "smith": 7.0}, "m2": {fixture.LABOURER: 5.0}})
 
 
 class CarriageHireTests(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        cls.hiring_economy, cls.hiring = run_watching(trading_setup(), 20)
-        _plain, cls.plain = run_watching(trading_setup(crew=False), 20)
+    def test_hired_reports_the_hours_and_the_average_pay_of_the_merchants_carriers(self):
+        found = carriage_hours.hired(crew_ledger(), "m1", [fixture.LABOURER])
+        self.assertAlmostEqual(found["hours"], 40.0)
+        self.assertAlmostEqual(found["wage"], (30.0 * 1.0 + 10.0 * 2.0) / 40.0)
 
-    def planned_years(self):
-        return [year for year in self.hiring
-                if any(sum(plan_.values()) > 0.0 for plan_ in year["planned"].values())]
+    def test_hired_counts_only_the_trades_asked_for(self):
+        found = carriage_hours.hired(crew_ledger(), "m1", ["smith"])
+        self.assertEqual((found["hours"], found["wage"]), (7.0, 9.0))
 
-    def test_the_merchants_shipments_are_planned_in_hours(self):
-        self.assertTrue(self.planned_years(), "no merchant shipped, so the scenario shows nothing")
+    def test_a_merchant_that_hired_nobody_is_paid_no_wage(self):
+        self.assertEqual(carriage_hours.hired(crew_ledger(), "nobody", [fixture.LABOURER]), {"hours": 0.0, "wage": 0.0})
 
-    def test_the_carrier_trade_hires_hours_for_the_plan_and_no_more(self):
-        # a year can hire nothing (see EntrantInAHeldMarketTests); what is hired never passes the plan
-        for year in self.planned_years():
-            for agent, plan_ in year["planned"].items():
-                self.assertLessEqual(year["hired"][agent]["hours"], sum(plan_.values()) + 1e-9)
+    def test_the_hired_index_sums_each_employers_purchases_by_trade_and_area(self):
+        index = carriage_hours.hired_index(crew_ledger())
+        self.assertEqual(index[("m1", fixture.LABOURER, "work@town")], (40.0, 50.0))
+        self.assertEqual(index[("farm", fixture.LABOURER, "work@town")], (100.0, 100.0))
+        self.assertNotIn(("family", fixture.LABOURER, "work@town"), index)
 
-    def test_some_planned_year_hires_carriers(self):
-        self.assertTrue(any(year["hired"][agent]["hours"] > 0.0
-                            for year in self.planned_years() for agent in year["planned"]))
-
-    def test_a_plan_the_market_can_fill_is_hired_in_full(self):
-        full = [year for year in self.planned_years()
-                if all(abs(year["hired"][agent]["hours"] - sum(plan_.values())) < 1e-6
-                       for agent, plan_ in year["planned"].items() if sum(plan_.values()) > 0.0)]
-        self.assertTrue(full)
-
-    def test_hired_carriers_are_paid_the_labour_markets_wage(self):
-        for year in self.hiring:
-            for hire_ in year["hired"].values():
-                if hire_["hours"] > 0.0:
-                    self.assertGreater(hire_["wage"], 0.0)
-
-    def test_money_is_still_conserved(self):
-        report = money_audit.year_report(self.hiring_economy.record)
-        self.assertTrue(report.ok, report.unexpected)
-        self.assertAlmostEqual(self.hiring_economy.record.book.check_conservation(1e-9).money["coin"], 0.0)
+    def test_keys_that_share_a_labour_market_share_the_hours_hired_in_proportion_to_their_hours(self):
+        who = Merchant("m1", "town", "owner", 1.0)
+        who.carriage_hours_wanted = {market_key(fixture.LABOURER, "hills"): 30.0, market_key(fixture.LABOURER, "town"): 10.0}
+        record = types.SimpleNamespace(cohorts={"c": types.SimpleNamespace(tile="town")})   # nobody lives on the hills: both bid at home
+        hours, wages = carriage_hours.engaged(record, who, {("m1", fixture.LABOURER, "work@town"): (20.0, 50.0)})
+        self.assertAlmostEqual(hours[market_key(fixture.LABOURER, "hills")], 15.0)
+        self.assertAlmostEqual(hours[market_key(fixture.LABOURER, "town")], 5.0)
+        self.assertAlmostEqual(wages[market_key(fixture.LABOURER, "town")], 2.5)
 
 
 class EntrantInAHeldMarketTests(unittest.TestCase):
@@ -279,38 +260,9 @@ class OneWageTests(unittest.TestCase):
         self.assertLess(self.priced(0.5, wage_elsewhere=3.0)[0], 1.0)
 
     def test_a_wage_far_below_the_priced_wage_never_makes_carriage_pay_the_shipper(self):
-        scales = []
-        original = carriage_hours.wage_scale
-        with mock.patch.object(carriage_hours, "wage_scale", lambda *args: scales.append(original(*args)) or scales[-1]):
-            run_watching(trading_setup(carriage_wage=3.0), 20)
-        self.assertTrue(scales)
-        self.assertGreaterEqual(min(scales), 0.0)
-
-    def test_money_still_balances_when_the_market_wage_differs_from_the_priced_wage(self):
-        done, _years = run_watching(trading_setup(carriage_wage=3.0), 20)
-        self.assertTrue(money_audit.year_report(done.record).ok)
-
-
-class LoanTimingTests(unittest.TestCase):
-    def test_the_wage_loan_is_sized_on_the_cash_left_after_the_owners_took_their_profit(self):
-        seen = []
-        real = economy.close_agents
-
-        def watch(setup, record, view, ledger, area_map, *rest):
-            before = len(record.loan_requests)
-            for each in record.merchants.values():
-                if carriage_hours.planned(each):
-                    each.capital_base = 0.0     # all its cash is profit, which goes to the owner at the close
-            real(setup, record, view, ledger, area_map, *rest)
-            asked = {request.borrower: request.amount for request in record.loan_requests[before:]
-                     if request.borrower in record.merchants}
-            wanted = {request.borrower: request.amount for request in carriage_hours.wage_loans(setup, record)}
-            seen.append((asked, wanted))
-        with mock.patch.object(economy, "close_agents", watch), fixture.surplus_households():
-            fixture.run(trading_setup(), 20)
-        self.assertTrue(any(wanted for _asked, wanted in seen), "no merchant needed a loan, so the scenario shows nothing")
-        for asked, wanted in seen:
-            self.assertEqual(asked, wanted)
+        scale = self.priced(1e-6)[0]
+        self.assertGreaterEqual(scale, 0.0)
+        self.assertLess(scale, 1.0)
 
 
 class BidAreaTests(unittest.TestCase):

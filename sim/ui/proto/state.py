@@ -188,7 +188,7 @@ def _agent_state_risk_and_pressure(sim, full=True):
         # already explains itself. See step() 6.
         "scandal_danger": sim.cfg["suspicion_danger"],
         "chance_of_being_denounced_this_year": round(
-            max(0.0, (sim.scandal - sim.cfg["suspicion_danger"]) / 60.0), 4),
+            max(0.0, (sim.scandal - sim.cfg["suspicion_danger"]) / sim.SCANDAL_HAZARD_SCALE), 4),
         # AND WHICH WAY IT IS GOING: the chance above is computed from where
         # scandal stands now, and the roll happens after a year in which it
         # moves, so the figure alone is honest about today and blind to the

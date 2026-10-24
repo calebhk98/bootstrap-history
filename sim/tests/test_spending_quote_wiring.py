@@ -5,6 +5,7 @@ what it reads, with the sim's cost functions returning figures written out here.
 `open_venture`, which this does not stand in for."""
 
 QUICK_TOPIC = True
+UNDER_TEST = {"hire"}   # the method this module tests, called on a stand-in
 
 from types import SimpleNamespace
 

@@ -272,3 +272,5 @@ repriced to it when the economy opens (`sim/engine/opening_money.py`). `python3 
 one_money_per_labour_hour` prints both and checks they are equal.
 
 Owner decision (2026-10-10): item 5 is satisfied by trading with the economy's merchants: the founder sells into and buys from the market at their own tile, and the merchants carry goods between tiles. No separate player-run domestic trader is wanted.
+
+The cargo tests that ran a fixture economy a year were replaced by rule tests of `cargo_orders`, `close_cargo_accounts` and `border_accounts` on a stand-in economy. Not tested any more: that a landing cargo lowers the cleared home price, that customs take their share of its takings, and that the book conserves and audits with cargo in it. No unit test holds them; compare a fixture year with and without a landing leg.

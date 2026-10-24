@@ -175,30 +175,6 @@ class StrikeCapacity(unittest.TestCase):
         self.assertAlmostEqual(currency.mint_price(charged), 0.98 * currency.mint_parity(charged))
 
 
-class InTheYearLoop(unittest.TestCase):
-    """The small fixture economy steps with and without a minting recipe."""
-
-    def run_years(self, recipe):
-        from sim.tests import economy_fixture
-        setup = economy_fixture.small_setup(mint_recipe=recipe)
-        economy, outcomes = economy_fixture.run(setup, years=2)
-        return setup, economy, outcomes
-
-    def test_a_mint_with_a_recipe_hires_its_trade_and_leaves_no_wage_money_behind(self):
-        from sim.tests import economy_fixture
-        from sim.economy.types import Recipe
-        recipe = Recipe("strike_coin", {"strike_coin": 100.0}, {}, {economy_fixture.SMITH: 50.0})
-        _setup, economy_without, _without = self.run_years(None)
-        setup, economy, with_mint = self.run_years(recipe)
-        # the opening workforce already holds the mint's staff, so its hiring shows in hours, not in a scarcer wage
-        def smith_hours(held):
-            return sum(hours for key, hours in held.record.hours_hired.items()
-                       if key.startswith(economy_fixture.SMITH + "|"))
-        self.assertGreater(smith_hours(economy), smith_hours(economy_without))
-        self.assertEqual(economy.record.book.balance(mint_labour.mint_agent(setup), "coin"), 0.0)
-        self.assertTrue(economy.record.book.check_conservation(1e-6).ok)
-
-
 class ShippedData(unittest.TestCase):
     def production(self):
         entries = {}

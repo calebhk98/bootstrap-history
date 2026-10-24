@@ -14,12 +14,14 @@ from sim.world.demography import Population
 PEOPLE = (30000.0, 60000.0, 10000.0)
 
 
+FOOD_AT_SUBSISTENCE = 183700000.0   # calories a day that feed these people exactly: nutrition ratio of one
+
+
 def one_year(premium=None):
     people = Population(*PEOPLE, seed=1)
-    food = people._subsistence_food()
     if premium is None:
-        return people.step(food)
-    return people.step(food, urban_mortality_premium=premium)
+        return people.step(FOOD_AT_SUBSISTENCE)
+    return people.step(FOOD_AT_SUBSISTENCE, urban_mortality_premium=premium)
 
 
 class PopulationStep(unittest.TestCase):

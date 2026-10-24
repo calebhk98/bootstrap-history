@@ -1,8 +1,7 @@
 """Complaint 537 and the externality door: the year's yield of a land-bound producer is the pooled weather times the
 soil, climate and water of its tile for a recipe that crops, the weather alone for pasture and forest, and a harm factor
 on its tile scales it further (`economy_port_sites.crop_yields` and `harmed_yields`). Called on a built economy, with no
-game. The tile figures in a game's setup and the producers' factors after the opening are
-`test_economy_reads_tile_yield_scenario`."""
+game. The tile figures a setup carries are `test_economy_tiles_from_map` and `test_economy_port_cropland_yields`."""
 QUICK_TOPIC = True
 
 import unittest

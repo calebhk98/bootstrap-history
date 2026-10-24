@@ -11,7 +11,7 @@ can only do it today by overwriting a module function from `register(api)`. That
 - it breaks silently when the patched function is renamed or split, which happens often (`min_game_version` is a
   floor, not a match);
 - nothing checks the replacement gives the same answers, and a float sum in another order changes a run
-  (`sim/tests/test_run_reproducibility.py` exists for that bug class);
+  (`python3 -m sim.tests.fingerprint record before.json` then `check before.json`, under two `PYTHONHASHSEED` values, measures that bug class; Complaint 27);
 - the functions worth replacing take `Sim` or large mutable records, so a replacement depends on the god object's
   shape rather than on a stated input and output.
 

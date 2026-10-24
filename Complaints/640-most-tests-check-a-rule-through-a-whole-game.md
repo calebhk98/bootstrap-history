@@ -93,7 +93,7 @@ Extractions, behaviour unchanged: `hours_spent_clearing`, `cleared_hectares`, `q
 elsewhere: the state budget's debasing, borrowing-first and hours-and-goods runs (`test_economy_agent_state`), the firm
 count and expansion dynamics repeated across the firm scenarios (`test_firm_count_from_costs`, `test_firm_expansion`).
 The state budget's runs over years on an opened England are `test_economy_state_budget_validation` (baseline validations,
-4.2, naming Complaint 526); `economy_tin_dearer_than_copper` stays the slow validation naming Complaint 511.
+4.2, naming Complaint 526); `economy_tin_dearer_than_copper` was deleted (Complaint 511 names the command).
 
 ## Applied: audit batch 10 (test_physical_money_constants through test_readouts_timing_power_mines_road)
 
@@ -248,8 +248,8 @@ elsewhere: the weather cell and pooled-draw checks of `regional_weather_wiring` 
 and its scenario), the housing sum of `reserve_staff_policy` (`test_auto_hire_buys_room`), the cheapest-route relocation
 check (now a rule on the small fixture map). Found vacuous and rewritten: the two "does not claim nothing rests on it" checks of
 `refusal_wording_and_screens` read the band from an unfogged game, where the field is empty, and passed whatever the rule
-did; they now run on a fogged stand-in. Baseline validation: `test_regional_weather_century_validation` (slow-only, naming Complaint 46).
-Kept as scenarios: `run_reproducibility` (determinism), the save round trips and two-game match of the weather, the
+did; they now run on a fogged stand-in. The century baseline validation was later deleted (Complaint 46 names the measuring command).
+Kept as scenarios: `run_reproducibility` (determinism; later deleted, see Complaint 27 for the command), the save round trips and two-game match of the weather, the
 `again` command, the Options menu, the starting grants per civilisation.
 
 
@@ -310,7 +310,7 @@ function. What is left, after the rules named in the list below were pulled out 
   and the need-driven levy (`Government.pay_standing_need`, `Sim._state_pressure`; `state_budget_scenario`); the requisition,
   office and confiscation reports that call the extracted functions stay as wiring in `state_notices_scenario`;
 - the expected calendar years of a risky project and the calendar floor (`Sim.expected_calendar_years`, `calendar_floor`;
-  `project_retry_and_risk_scenario`);
+  `project_retry_and_risk_scenario`, now rule tests on stand-ins in `test_project_retry_and_risk_rules`);
 - the rest of `_step_staff`: the `_grow_to` closure and the per-trade replacement loop (the arithmetic around them is plain);
 - the `Sim` methods that compose the domestic haul from prices (`_freight_mode_costs`, `_haul_route`), which only run in a game.
 
@@ -364,3 +364,24 @@ Rules are called on stand-ins, one function per test. New quick modules: `test_s
 Deleted as held elsewhere: `state_debasement_prices_scenario` (`test_state_debasement_prices`), `state_arrears_scenario` and `state_borrowing_gate_scenario` (`test_state_arrears`, `test_state_borrowing_gate`), `state_corvee_game` (`test_state_corvee`, `test_levy_hours_per_worker`), `state_revenue_forms_scenario` (`test_state_taxes_in_kind`, `test_state_works`), `state_spending_scenario` (`test_state_budget_lines`, `test_state_budget_rules`, `test_country_patronage`, `test_state_works`), `temperature_caps` (`test_temperature_caps_rule`), `start_waits_for_trade_scenario` (`test_start_waits_for_trade`), `step_reply_severity_scenario` (`test_event_severity`).
 
 Deleted with no replacement, because the claim lives only in a long dispatch or phase function or reads the unsettled opening, and no simulator command measures it: the `step` command calling the per-year hook and an interrupt keeping the saved years (`_agent_dispatch`); `_agent_state` adding the `demographic_emergency` field; `start` adding `today_you_could_not_open_this_when_it_is_done` and `waits_for_trades` to its reply; `ventures` shortening its staffing-share note on the second ask; `Sim._state_pressure` charging the founder the levy and its dice being gated on `events` and fog never leaking a node id; the save round trip of the state's books; the pre-modern diet bands of Rome's opening basket (Complaint 560: no command prints the opening's food shares). The remaining `Government.pay_standing_need` and `_state_pressure` flows are worth extracting further when 473 closes.
+
+## Applied: one-function batch 4 (purses_share_the_economy_book through year_accounts)
+
+Each module now calls one function on written-out inputs (stand-in economies, books, records and `self`s). Deleted as whole-game claims, with
+their measure: `regional_weather_century_validation` (Complaint 46), `state_debasement_prices` (624), `run_reproducibility` (27), the cargo
+price and customs checks of `trader_cargo_book` (115), the hull-production and durable-wear year of `ship_purchases` (617). From
+`project_retry_and_risk_scenario` (now `test_project_retry_and_risk_rules`) three checks have no replacement: the save round trip of the
+retry counts (every `--session` command saves then loads), `start_reason` letting `point_contact_transistor` start once its listed
+prerequisites are met (tree data is pinned in `round8g_display`), and the fog scrub of the free-prerequisite hint (`fog_scrub`, `names_and_fog`).
+The detector flags a stand-in call of the method under test by name (`hire`, `open_plant`, `open_venture`) and two pure readers that share a
+builder's name (`spin_up_state`, `spin_up_years`, `spin_up_line`): the first group is declared `UNDER_TEST`, the second imported under another name.
+
+The multi-decade recovery claims (the wage premium after a mortality cut of nearly half is substantial fifty years on, does not grow without bound a century later, and does not rise as decades pass) read a population stepped for 150 years, not one rule; they left `sim/tests/test_mortality_shock_rules.py`. Measure them with `python3 sim/simulator.py baseline-ensemble` on a civilisation with a plague year.
+
+## Applied: one-function-02 (economy_location through industry_learning)
+
+Each test calls the one function under test on inputs written out in the test; none builds an `Economy`, runs `fixture.run`, or steps a population or a storage. Extractions (behaviour unchanged): `sim/world/endemic_deaths.py:endemic_excess_deaths` (called from `Population.step`), `sim/engine/completion_schedule.py:expected_years_to_succeed` (called from `expected_calendar_years`), `sim/world/farm_year.py:carried_stock_kg` (called from `run_farm_year`). Rewritten on stand-ins: `economy_port_actors`, `economy_port_health_rule`, `economy_shares`, `economy_state_store`, `economy_tax_farming` (`remember_year`), `funds`, `firms_work_found_deposits`, `firm_income_by_country`, `industry_learning` (`producers_by_good`), `freight_domestic_haul` (`Economy.follow_flows` on a stand-in self), `farm_subsistence_rules` (`gross_harvest_kg`), `expected_calendar_years_floor`, `endemic_disease`, `granary_persistence`.
+
+Deleted as held elsewhere: `economy_no_offer_markets` (`entry.entry_plans` and `market_quote.no_trade_quote` are in `test_economy_entry` and `test_economy_no_offer_memory`), the `Economy`-built record in `economy_market_record_rule` (the record is written out), the record save round trips of `economy_market_record_rule`, `economy_shares`, `economy_tax_farming`, `economy_titles` and `funds` (the record's round trip is one function, `EconomyRecord.to_record` / `from_record`, and is held by the save tests), `economy_service_lives` whole-economy durable runs (`inventory.wear_moves` is in `test_economy_inventory`, the purchase rule is `households_orders._durable_ratio`), `economy_store_sales` conservation and no-durables-unchanged runs (`households_store.store_candidates` returns nothing without service lives, which stays), `economy_title_counterforces` `debt_relief_tiles` wiring (`debt_relief.forgive` is tested; `Economy._run_year` is too long to stand in for), `economy_titles` opening seeds titles (`titles.seed` is tested), `freight_domestic_haul` merchants record carried (`test_carried_book`), `economy_sites` six-year siting run (`sites.apply_site_limits` and `open_economy` are tested).
+
+Deleted with no replacement, because the claim is about a whole multi-year economy or a long phase function: `economy_location` (opening spreads producers over tiles; people off the anchor tile find work and food over ten years), `economy_no_offer_memory` (a food nobody sells stops starving households; a forgotten price is remembered again; see 473 mover 1 and 608), `economy_state_budget` (the state budget saved and an economy resumed from the save plans the same year), `economy_vessel_price_fixture` (a cheap durable made from a dug input stays within a small multiple of its opening price over forty years; the dug input's price does not swing between years), `economy_state_store` and `economy_tax_farming` year runs (a farmed form is collected through the farmer: `year_close.money_taxes`), `economy_shares` (a request lenders leave unmet is built from shares: `Economy._lend`), `granary_persistence` (the naive carry loses a season's seed every year over ten years; the corrected carry stays above a floor over thirty; the carried stock stays under capacity over sixty good years). The measurement of each is `python3 sim/simulator.py economy-check` (the settled economy) and `python3 sim/simulator.py spin-up-trace`; the granary century is in this file's 473 note above.

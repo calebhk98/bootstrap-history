@@ -15,6 +15,7 @@ from sim.labour.wage_factors import annual_wage
 from .source_dirs import engine_side_dirs
 
 QUICK_TOPIC = True
+UNDER_TEST = {"hire"}
 
 TRADE = "artisan"
 HOURS_PER_YEAR = 2000.0
@@ -72,14 +73,14 @@ check("no employer reaches a wage through the engine's own methods",
                                                 "labour_pressure", "_add_labour_pressure", "labour_pay_scale")))
 
 # ---- hire and release record and ease the pressure
-fresh = market()
-pressure_before = fresh.pressure(TRADE)
-quoted_before = fresh.quote(TRADE, 0.0)
-paid_rate = fresh.hire("a firm", TRADE, 2 * HOURS_PER_YEAR)
-check("hiring returns the rate it paid, the one quoted before it", paid_rate == quoted_before and paid_rate > 0)
-check("hiring records the pressure", fresh.pressure(TRADE) > pressure_before + 1.9 * HOURS_PER_YEAR)
-fresh.release("a firm", TRADE, 2 * HOURS_PER_YEAR)
-check("releasing eases the pressure", fresh.pressure(TRADE) < 1.0, fresh.pressure(TRADE))
+pressed = []
+recorder = SimpleNamespace(quote=lambda trade, hours, employer, premium: 12.5, press=lambda trade, hours: pressed.append((trade, hours)))
+paid_rate = LabourMarket.hire(recorder, "a firm", TRADE, 2 * HOURS_PER_YEAR)
+check("hiring returns the rate the market quoted", paid_rate == 12.5)
+check("hiring records the hours as pressure", pressed == [(TRADE, 2 * HOURS_PER_YEAR)], pressed)
+leaned_on = market({TRADE: (2 * HOURS_PER_YEAR, 0)})
+leaned_on.release("a firm", TRADE, 2 * HOURS_PER_YEAR)
+check("releasing eases the pressure", leaned_on.pressure(TRADE) < 1.0, leaned_on.pressure(TRADE))
 FALLBACK.stop()
 
 # ---- no module outside the labour market computes a wage -------------------------------------------

@@ -209,3 +209,5 @@ but an `id()` collision explains that.
   was failing two of nine.
 - Full suite green; `validate` clean.
 - `sim/tests/test_determinism.py` now fails if it returns.
+
+The whole-game reproducibility test (`test_run_reproducibility`: one seed twice in a process, and under two PYTHONHASHSEED values) was deleted: it built whole games. Measure it with `python3 -m sim.tests.fingerprint record before.json` and `PYTHONHASHSEED=1234567 python3 -m sim.tests.fingerprint check before.json`. The class is held by rules: `test_determinism` (structural) and `test_hash_seed_order` (functions under several hash seeds).

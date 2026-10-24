@@ -1,40 +1,50 @@
-"""A state that prints a bigger real programme gets a higher price level and a bigger money supply than one that prints
-a smaller one, with money conserved. Fiat fixture economy, engine-free; the figures compared are the two runs' own, never a
-fixed magnitude."""
+"""A state with a bigger stated real programme prints more money to pay for it than one with a smaller programme, and one
+with no programme prints none. `state_budget.plan_year` is called on a book, a policy and a view built here, no year is run;
+what the extra money does to prices is measured by `python3 sim/simulator.py economy-check` (Complaint 389)."""
 QUICK_TOPIC = True
 import unittest
+from types import SimpleNamespace
 
-from sim.tests import economy_fixture as fixture
-from sim.tests.test_economy_agent_state import COIN, opened
+from sim.economy import state_budget
+from sim.economy.accounts import Book
+from sim.economy.state_policy import StatePolicy
+from sim.economy.types import CurrencySpec, EDGE_MINT, Transfer
 
-YEARS = 4
+COIN = "coin"
+STATE = "state:test"
+OPENING_SUPPLY = 10000.0
+REVENUE = 1000.0
 
 
-def printed(times_the_opening_supply):
-    supply = opened().record.book.money_supply(COIN)
-    economy = opened(("issue",), real_spending_target=times_the_opening_supply * supply)
-    levels = [economy.step(fixture.quiet_year(economy.setup)).basket_price_level for _ in range(YEARS)]
-    return economy, levels
+def planned_by(real_spending_target):
+    """The state's budget and the money supply after it plans a year with the given real programme."""
+    book = Book()
+    book.transfer(Transfer(EDGE_MINT, "holder", COIN, OPENING_SUPPLY, "opening"))
+    book.transfer(Transfer(EDGE_MINT, STATE, COIN, REVENUE, "opening"))
+    record = SimpleNamespace(book=book, currency=CurrencySpec(COIN, "fiat", None, 0.0, STATE, 0.0), cohorts={}, loans=[],
+                             loan_requests=[], state_budget=state_budget.StateBudget(revenue=REVENUE))
+    setup = SimpleNamespace(currency_id=COIN, state_agent=STATE, trades=(), unskilled_trade="labour",
+                            state_policy=StatePolicy(financing_order=("issue",), real_spending_target=real_spending_target))
+    view = SimpleNamespace(chained_price_level=lambda money: 1.0, interest_rate=lambda money: 0.05)
+    state_budget.plan_year(setup, record, view, [])
+    return record.state_budget, book.money_supply(COIN)
 
 
 class PrintingScaleTests(unittest.TestCase):
-    def test_printing_more_leaves_a_higher_price_level_and_more_money(self):
-        smaller, smaller_levels = printed(0.5)
-        bigger, bigger_levels = printed(2.0)
-        self.assertGreater(bigger_levels[-1], smaller_levels[-1])
-        self.assertGreater(bigger.record.book.money_supply(COIN), smaller.record.book.money_supply(COIN))
-        self.assertGreater(bigger.record.state_budget.issued_total, smaller.record.state_budget.issued_total)
+    def test_a_bigger_programme_prints_more_and_leaves_more_money(self):
+        smaller_budget, smaller_supply = planned_by(0.5 * OPENING_SUPPLY)
+        bigger_budget, bigger_supply = planned_by(2.0 * OPENING_SUPPLY)
+        self.assertGreater(bigger_budget.issued_total, smaller_budget.issued_total)
+        self.assertGreater(bigger_supply, smaller_supply)
 
-    def test_printing_at_either_scale_raises_the_level_above_a_state_that_prints_nothing(self):
-        _control, control_levels = printed(0.0)
+    def test_a_programme_of_either_size_prints_something_and_none_prints_nothing(self):
+        self.assertEqual(planned_by(0.0)[0].issued_total, 0.0)
         for scale in (0.5, 2.0):
-            economy, levels = printed(scale)
-            self.assertGreater(levels[-1], control_levels[-1])
-            self.assertGreater(economy.record.state_budget.issued_total, 0.0)
+            self.assertGreater(planned_by(scale * OPENING_SUPPLY)[0].issued_total, 0.0)
 
-    def test_money_is_conserved_when_the_state_prints(self):
-        economy, _levels = printed(2.0)
-        self.assertTrue(economy.record.book.check_conservation(1e-9).ok)
+    def test_the_money_printed_is_the_money_added_to_the_supply(self):
+        budget, supply = planned_by(2.0 * OPENING_SUPPLY)
+        self.assertAlmostEqual(supply - OPENING_SUPPLY - REVENUE, budget.issued_total)
 
 
 if __name__ == "__main__":

@@ -10,6 +10,7 @@ from sim.labour import labour_market_api
 from sim.labour.labour_market_api import LabourMarket
 
 QUICK_TOPIC = True
+UNDER_TEST = {"hire"}
 
 TRADE = "artisan"
 HOURS_PER_YEAR = 2000.0
@@ -17,10 +18,10 @@ SUPPLY = 10_000.0
 RATES = {"artisan": 0.9, "labourer": 0.4, "scribe": 1.1}
 
 
-def real_market():
-    employed = {}
+def real_market(pressure=None, employed=None):
+    employed = dict(employed or {})
     world = types.SimpleNamespace(
-        state=types.SimpleNamespace(household=types.SimpleNamespace(labour_pressure_records={}),
+        state=types.SimpleNamespace(household=types.SimpleNamespace(labour_pressure_records=dict(pressure or {})),
                                     scenario=types.SimpleNamespace(year=0)),
         HOURS_PER_PERSON_YEAR=HOURS_PER_YEAR, price_index=1.5, wage_index=1.3,
         economy=types.SimpleNamespace(agent_wage_per_hour=lambda trade: None), real_output_per_head=lambda: 1.1,
@@ -42,14 +43,19 @@ class HireQuoteTests(unittest.TestCase):
         self.addCleanup(patcher.stop)
 
     def test_the_wage_quoted_from_next_year_is_what_the_market_quotes_once_the_hire_is_on_the_books(self):
-        market, labour = real_market()
-        market.press(TRADE, SUPPLY * 0.8)
         people = 3.0
+        market, _labour = real_market(pressure={TRADE: (SUPPLY * 0.8, 0)})
         promised = market.quote_annual(TRADE, people)
         self.assertGreater(promised, market.quote_annual(TRADE))
-        market.hire("a firm", TRADE, people * HOURS_PER_YEAR)
-        labour.set_employed(TRADE, people)
-        self.assertAlmostEqual(market.quote_annual(TRADE), promised, delta=0.001 * promised)
+        on_the_books, _labour = real_market(pressure={TRADE: (SUPPLY * 0.8 + people * HOURS_PER_YEAR, 0)}, employed={TRADE: people})
+        self.assertAlmostEqual(on_the_books.quote_annual(TRADE), promised, delta=0.001 * promised)
+
+    def test_a_hire_asks_the_market_for_its_rate_and_presses_the_hours(self):
+        pressed = []
+        recorder = types.SimpleNamespace(quote=lambda trade, hours, employer, premium: 3.0,
+                                         press=lambda trade, hours: pressed.append((trade, hours)))
+        self.assertEqual(LabourMarket.hire(recorder, "a firm", TRADE, 4000.0), 3.0)
+        self.assertEqual(pressed, [(TRADE, 4000.0)])
 
 
 class WorldReadsTheOneMarketTests(unittest.TestCase):

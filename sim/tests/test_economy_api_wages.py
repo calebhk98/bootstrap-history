@@ -2,40 +2,29 @@
 
 QUICK_TOPIC = True
 
+import types
 import unittest
 
 from sim.economy import api
-from sim.economy.api import Economy, EconomyRecord
-from sim.tests import economy_fixture
+
+
+def stand_in(wages, hired, idle):
+    setup = types.SimpleNamespace(unskilled_trade="labourer", countries=lambda: ("home",), civ_id="home", tiles={"a": None, "b": None})
+    record = types.SimpleNamespace(memory=types.SimpleNamespace(wages=wages), hours_hired=hired, hours_idle=idle)
+    return types.SimpleNamespace(setup=setup, record=record)
 
 
 class WeightedWageTests(unittest.TestCase):
-    def setUp(self):
-        self.economy, self.outcomes = economy_fixture.run(years=3)
+    def test_weighted_wage_is_the_hours_hired_mean_of_the_trades_market_wages(self):
+        economy = stand_in({"smith|work@a": 2.0, "smith|work@b": 4.0},
+                           {"smith|work@a": 100.0, "smith|work@b": 300.0},
+                           {"smith|work@a": 10.0, "smith|work@b": 0.0})
+        self.assertAlmostEqual(api.wages_by_trade_weighted(economy)["smith"], 3.5)
 
-    def test_weighted_wage_lies_within_the_trades_tile_wages(self):
-        weighted = api.wages_by_trade_weighted(self.economy)
-        tile_wages = api.wages_by_trade(self.economy)
-        self.assertTrue(weighted)
-        for trade, wage in weighted.items():
-            self.assertGreaterEqual(wage, min(tile_wages[trade]) - 1e-9, trade)
-            self.assertLessEqual(wage, max(tile_wages[trade]) + 1e-9, trade)
-
-    def test_weighted_wage_equals_the_years_outcome_for_trades_that_hired(self):
-        weighted = api.wages_by_trade_weighted(self.economy)
-        checked = 0
-        for trade, wage in self.outcomes[-1].wages.items():
-            hired = sum(hours for key, hours in self.economy.record.hours_hired.items()
-                        if key.split("|", 1)[0] == trade)
-            if hired > 0.0:
-                checked += 1
-                self.assertAlmostEqual(weighted[trade], wage, places=9, msg=trade)
-        self.assertGreater(checked, 0)
-
-    def test_weighted_wage_survives_a_record_round_trip(self):
-        resumed = Economy(self.economy.setup, EconomyRecord.from_record(self.economy.record.to_record()))
-        self.assertEqual(resumed.record.hours_hired, self.economy.record.hours_hired)
-        self.assertEqual(api.wages_by_trade_weighted(resumed), api.wages_by_trade_weighted(self.economy))
+    def test_a_trade_that_hired_no_hours_is_left_out_except_the_unskilled_trade(self):
+        economy = stand_in({"smith|work@a": 2.0, "labourer|work@a": 1.0}, {"smith|work@a": 0.0},
+                           {"smith|work@a": 50.0, "labourer|work@a": 5.0})
+        self.assertEqual(api.wages_by_trade_weighted(economy), {"labourer": 1.0})
 
 
 if __name__ == "__main__":

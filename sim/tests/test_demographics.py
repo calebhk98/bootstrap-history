@@ -1,6 +1,5 @@
 """demographics: the labour market was sized for a village; the reachable pool for a trade is a real town's worth. `Labour`
-runs on a stand-in world (a real civilisation file and a real `Population`); the price curve, the `population` command and
-the hire refusal through a game are in test_demographics_scenario."""
+runs on a stand-in world (a real civilisation file and a real `Population`); the `population` report's rows are in test_population_report_rows and the hire refusal in test_cash_gates_wiring."""
 QUICK_TOPIC = True
 
 import types

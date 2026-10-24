@@ -22,3 +22,22 @@ def earliest_completion_years(calendar_floor, payment_schedule, served_years=Non
     attempt has already served (`served_years` None when none is running)."""
     earliest = max(calendar_floor, payment_schedule)
     return earliest if served_years is None else max(0.0, earliest - served_years)
+
+
+def expected_years_to_succeed(floor, served_years, first_attempt, retain_share_of, risk_of, max_extra_attempts):
+    """Expected calendar years to succeed, summed over "the first i attempts all failed". The first attempt takes the
+    floor less what a running attempt has served (`served_years` None when none runs); a retry takes the floor less the
+    share `retain_share_of(attempt_index)` of it that a failure leaves banked. `risk_of(attempt_index)` is the chance
+    that attempt fails."""
+    total, survive, attempt_index = 0.0, 1.0, first_attempt
+    while True:
+        if attempt_index != first_attempt:
+            years_this_attempt = floor * (1.0 - retain_share_of(attempt_index))
+        else:
+            years_this_attempt = floor if served_years is None else max(0.0, floor - served_years)
+        total += survive * years_this_attempt
+        survive *= risk_of(attempt_index)
+        attempt_index += 1
+        if survive < 1e-12 or attempt_index - first_attempt > max_extra_attempts:
+            break
+    return total

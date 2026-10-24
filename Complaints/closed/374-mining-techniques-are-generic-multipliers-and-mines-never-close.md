@@ -25,3 +25,5 @@ The agent economy's producers exit after their loss years when they have no vari
 Overlapping issues closed into this one; each closed file keeps its full text.
 
 - 54 (`closed/54-a-shaft-that-costs-nothing-to-sink.md`): a shaft that costs nothing to sink: derive reserve and shaft bill from ore-body volume.
+
+The mint year-loop claim (a mint with a minting recipe hires its trade for hours and leaves no wage money behind, over a two-year fixture economy) was a whole-economy test and was dropped in favour of the rule tests of `mint_labour.staff` and `close_year` in `sim/tests/test_mint_labour.py`. Measure it on a real game with `python3 sim/simulator.py economy-check`.

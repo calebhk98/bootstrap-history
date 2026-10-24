@@ -114,7 +114,7 @@ money_replacement (sim/economy/baseline_checks.py) is struck net of melted, over
 
 ## Finding: the Norse baseline price level falls without any intervention
 
-Measured with `play("norse_900ad", 7)` from `sim/tests/money_regimes_play.py` (no mined metal), the basket price level
+Measured earlier with a seven-year Norse play (no mined metal), the basket price level
 by year is 1.07, 1.41, 0.96, 1.07, 0.96, 0.55, 0.46. Millet, about a third of the basket's weight, falls to about 0.4 of
 its base price by year five, and wheat is already about 0.37 of base in year 0. With 10% extra mined metal each year the
 level follows the same food collapse a year earlier (the money stock does double). So the slow validation "more metal
@@ -126,9 +126,9 @@ transmission rules are held by `test_money_reaches_prices`.
 What is built: `sim/economy/opening_stationary.py` (a plain function: the runs that meet a final demand by the
 input-output solve in `opening_runs`, the hours they hire, and the incomes they pay, so wages plus profit equal the
 value of final demand), `economy_fixture.stationary_setup` (the fixture with each worker offering the hours its runs
-hire plus a stated slack), and `sim/tests/test_opening_stationary_scenario.py` (a stepped year against the settling
+hire plus a stated slack), and `sim/tests/test_opening_stationary_rules.py` (a stepped year against the settling
 bounds in `sim/economy/settling.py`). The opening does not yet seed its producers from the solver. Run:
-`python3 -m unittest sim.tests.test_opening_stationary_scenario sim.tests.test_opening_input_stocks`; the red parts are
+`python3 -m unittest sim.tests.test_opening_stationary_rules sim.tests.test_opening_input_stocks`; the red parts are
 marked `expectedFailure`, so an unexpected success shows when one of them is fixed. The figures below came from throwaway
 probes (no committed command prints the year-by-year table).
 
@@ -260,7 +260,7 @@ of excess hours took the wage to the floor. Built:
   `EconomyRecord.leisure_anchor_wage` (real, at the opening's price level). Where the free hours do not exceed the hours hired
   there is no leisure.
 - Tests: rules in `test_economy_households_hours_offered` (LeisureTests) and `test_labour_core_supply_schedule`; the fixture in
-  `test_opening_stationary_scenario` (OpeningHoursTests, KnifeEdgeTests).
+  `test_opening_stationary_rules` (OpeningHoursTests, KnifeEdgeTests).
 
 Measured (throwaway probes over `economy_fixture.stationary_setup`, year 1 to 6): hours the households have beyond the opening's
 split (given after the opening, `KnifeEdgeTests`): first-year log wage change -0.07 for three per cent more hours and -0.22 for ten
@@ -747,3 +747,21 @@ identity over a whole economy step and is measured by `spin-up-trace`'s `change`
 scenarios `staff_closure_reopening_scenario` (twelve years of twenty-five concerns, auto-hire reopening every closure free staff could
 run; red on main) and `sited_ore_price_over_cost_validation` (519) are deleted for the same reason: no command prints the
 reopening count over years; `python3 sim/simulator.py economy-check --civs norse_900ad --years 12` is the nearest measure.
+
+- Whole-economy claims no longer unit tests (one function per test): more money against the same goods raises the price level, a state that prints raises prices, money is conserved year after year, and a lean-seam mine leaves. Measure them with `python3 sim/simulator.py economy-check` and `python3 sim/simulator.py spin-up-trace`.
+
+Test migration (rule-tests-04): `economy_money_regimes` and `economy_money_regimes_norse` are deleted. The price-level-rises-with-metal
+checks read this unsettled economy; `python3 sim/simulator.py spin-up-trace --civ norse_900ad --years 7` prints the basket price level
+by year. The money-stock and mint rules are `test_mint_settles_by_regime` and `test_economy_mint`; the transmission to prices is
+`test_money_reaches_prices`.
+
+Test migration (rule-tests-04): `economy_innovator_pricing` (a near-zero-cost entrant: price starts near the incumbents', falls as the entrant grows, the
+entrant's takings within the demand ceiling; two further bounds were expected failures) and `economy_supply_collapse_scenario` (a stationary fixture's
+staple runs not falling by more than a bound over five years) are deleted: each read a year loop of the whole fixture economy and could not name the function
+that moved. No simulator command prints either; `python3 sim/simulator.py economy-check --civs rome_100ad --years 6` prints the staple and metal price
+volatility from the opening. The rules the supply-collapse test joined are `test_economy_stock_drawdown`, `test_economy_idle_capacity_life`,
+`test_economy_input_ceiling_share` and `test_economy_ask_band_chain`.
+
+Whole-game relationship checks deleted (Complaint 640): the five `full_length_opening_checks_<civilisation>` topics (red on main) asserted price over making cost, wage over floor, money against wear and spin-up settled on each full-length opening, which cannot name a function. `python3 sim/simulator.py opening-checks` prints the same relationships for every civilisation; the known failures stay tabled in `sim/tests/full_length_opening_support.py` (`EXPECTED_FAILURES`).
+
+The whole-economy stepped-year checks of the stationary fixture (every year within the settling bounds, hours hired holding, ore price, the mint against wear, the first-year wage move against excess hours, households' cash against producers') left the unit tests with `test_opening_stationary_rules`, which now holds only the rules (`opening_stationary.solve`, `opening_leisure.anchors`). Measure the settling claims with `python3 sim/simulator.py spin-up-trace`.

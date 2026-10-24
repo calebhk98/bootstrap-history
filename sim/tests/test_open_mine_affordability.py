@@ -2,6 +2,7 @@
 `partial=False` refuses a mine its purse cannot pay for and spends nothing; with `partial=True` (the automatic policy) it
 sinks the most the purse buys. Called on the stand-in host of test_mine_names_a_deposit with the budget set here."""
 QUICK_TOPIC = True
+UNDER_TEST = {"open_mine"}
 
 import unittest
 

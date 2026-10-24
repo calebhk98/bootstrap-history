@@ -6,7 +6,6 @@ import dataclasses
 import unittest
 
 from sim.economy import recipes, sites
-from sim.economy.economy import Economy
 from sim.tests import economy_fixture as fixture
 
 
@@ -23,18 +22,11 @@ class ClimateGateTests(unittest.TestCase):
         self.assertFalse(sites.climate_allows(recipe, dataclasses.replace(tiles[fixture.TOWN], climate_class="BWh")))
         self.assertTrue(sites.climate_allows(recipe, dataclasses.replace(tiles[fixture.TOWN], climate_class="Cfb")))
 
-    def test_grain_is_grown_only_where_its_climate_is(self):
+    def test_grain_is_placed_only_on_tiles_of_its_climate(self):
         tiles = {tile: dataclasses.replace(spec, climate_class="Cfb" if tile == fixture.FARMS else "BWh")
                  for tile, spec in fixture.tiles().items()}
-        the_recipes = fixture.recipes()
-        the_recipes[fixture.FARM] = dataclasses.replace(the_recipes[fixture.FARM], climate_classes=("Cfb",),
-                                                        site_bound=True)
-        setup = fixture.small_setup(tiles=tiles, recipes=the_recipes)
-        economy, _outcomes = fixture.run(setup, years=6)
-        grain_tiles = {producer.tile for producer in economy.record.producers.values()
-                       if producer.recipe_id == fixture.FARM}
-        self.assertEqual(grain_tiles, {fixture.FARMS})
-        self.assertEqual(economy.record.book.check_conservation(1e-6).breaches, ())
+        recipe = dataclasses.replace(fixture.recipes()[fixture.FARM], climate_classes=("Cfb",), site_bound=True)
+        self.assertEqual(sites.suited_tiles(recipe, tiles, sorted(tiles)), (fixture.FARMS,))
 
 
 if __name__ == "__main__":

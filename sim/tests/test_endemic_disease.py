@@ -13,7 +13,7 @@ from sim.engine.living_stock_yearly import stock_rates
 from sim.geography import api as geography
 from sim.geography.api import Geography
 from sim.geography import endemic, food_pasture
-from sim.world.demography import Population
+from sim.world.endemic_deaths import endemic_excess_deaths
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 BELT_TILE = "nigeria_03"       # hot, wet, wooded savanna
@@ -70,21 +70,19 @@ class EndemicDiseaseTests(unittest.TestCase):
         cool = geography.endemic_people_loss([COOL_DRY_TILE], self.world_map)
         self.assertGreater(hot["children"], 0.0)
         self.assertEqual(cool.get("children", 0.0), 0.0)
-        food = 2500.0 * 1000.0
 
-        def deaths(rates):
-            people = Population(children=300.0, working_age=600.0, elderly=100.0)
-            return people.step(food, endemic_death_rates=rates).deaths
-
-        self.assertGreater(deaths(hot), deaths(cool))
-        self.assertEqual(deaths(cool), deaths(None))
+    def test_a_band_dies_at_the_endemic_rate_cut_by_the_disease_burden(self):
+        self.assertAlmostEqual(endemic_excess_deaths(300.0, 10.0, 0.1, 1.0), 30.0)
+        self.assertAlmostEqual(endemic_excess_deaths(300.0, 10.0, 0.1, 0.5), 15.0)
 
     def test_a_removed_disease_burden_removes_the_excess_death_rate(self):
-        people = Population(children=300.0, working_age=600.0, elderly=100.0)
-        other = Population(children=300.0, working_age=600.0, elderly=100.0)
-        rates = {"children": 0.1}
-        with_rates = people.step(2500.0 * 1000.0, disease_burden=0.0, endemic_death_rates=rates).deaths
-        self.assertEqual(with_rates, other.step(2500.0 * 1000.0, disease_burden=0.0).deaths)
+        self.assertEqual(endemic_excess_deaths(300.0, 10.0, 0.1, 0.0), 0.0)
+
+    def test_no_endemic_rate_adds_no_deaths(self):
+        self.assertEqual(endemic_excess_deaths(300.0, 10.0, 0.0, 1.0), 0.0)
+
+    def test_the_excess_is_never_more_than_the_bands_survivors(self):
+        self.assertEqual(endemic_excess_deaths(300.0, 290.0, 0.5, 1.0), 10.0)
 
     def test_no_engine_code_names_a_region(self):
         names = re.compile(r"africa|sahel|nigeria|congo|sahara", re.IGNORECASE)

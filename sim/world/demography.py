@@ -75,6 +75,8 @@ import random
 from typing import Mapping, Optional
 
 from sim.constants import declare
+from sim.world.endemic_deaths import endemic_excess_deaths
+from .epidemic_deaths import add_epidemic_deaths
 
 # ============================================================================
 # AGE BAND BOUNDARIES
@@ -1094,18 +1096,15 @@ class Population(object):
         # Excess death rate per band from endemic disease of the place (a vector's tile layer), cut by the same
         # disease burden the nation has not yet removed; never more than the band's survivors.
         endemic = endemic_death_rates or {}
-        deaths_children += min(self.children - deaths_children,
-                               self.children * endemic.get("children", 0.0) * disease_burden)
-        deaths_working_age += min(self.working_age - deaths_working_age,
-                                  self.working_age * endemic.get("working_age", 0.0) * disease_burden)
-        deaths_elderly += min(self.elderly - deaths_elderly,
-                              self.elderly * endemic.get("elderly", 0.0) * disease_burden)
+        deaths_children += endemic_excess_deaths(self.children, deaths_children, endemic.get("children", 0.0), disease_burden)
+        deaths_working_age += endemic_excess_deaths(self.working_age, deaths_working_age,
+                                                    endemic.get("working_age", 0.0), disease_burden)
+        deaths_elderly += endemic_excess_deaths(self.elderly, deaths_elderly, endemic.get("elderly", 0.0), disease_burden)
 
         # Deaths an epidemic model already counted (sim/disease), by band; never more than the band's survivors.
-        epidemic = epidemic_deaths or {}
-        deaths_children += min(self.children - deaths_children, epidemic.get("children", 0.0))
-        deaths_working_age += min(self.working_age - deaths_working_age, epidemic.get("working_age", 0.0))
-        deaths_elderly += min(self.elderly - deaths_elderly, epidemic.get("elderly", 0.0))
+        deaths_children, deaths_working_age, deaths_elderly = add_epidemic_deaths(
+            (deaths_children, deaths_working_age, deaths_elderly), (self.children, self.working_age, self.elderly),
+            epidemic_deaths or {})
 
         births = (self.working_age * FEMALE_SHARE_OF_WORKING_AGE_POPULATION
                   * ANNUAL_FERTILITY_RATE_PER_WOMAN

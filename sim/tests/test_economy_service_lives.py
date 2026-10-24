@@ -1,92 +1,14 @@
-"""A durable good households buy is held, wears by one service life's share a year, and is not
-bought again in full."""
+"""A durable good households buy is not bought again in full: the post-wear holding buys the missing part of the
+serving stock. Wear itself is `inventory.wear_moves` (test_economy_inventory)."""
 
 QUICK_TOPIC = True
 
 import types
 import unittest
-from unittest import mock
 
-from sim.economy import households_orders, opening
-from sim.economy.economy import Economy
-from sim.tests import economy_fixture as fixture
+from sim.economy import households_orders
 
 SERVICE_LIFE_YEARS = 20.0
-
-
-def durable_setup():
-    return fixture.small_setup(specs=fixture.specs({fixture.METAL: SERVICE_LIFE_YEARS}))
-
-
-def household_stock(economy):
-    book = economy.record.book
-    return sum(quantity for agent in book.holders_of(fixture.METAL) if agent.startswith("household")
-               for quantity in book.holdings(agent)["goods"][fixture.METAL].values())
-
-
-def economy_opening_empty(setup):
-    """An economy whose households open holding none of the durable, as when a good is new to a society:
-    the opening's seeding of in-use stocks (opening._seed_durable_stocks) is switched off, and the opening sizes its
-    producers for building that stock rather than for replacing a seeded one."""
-    bids = opening._opening_bids
-    with mock.patch.object(opening, "_seed_durable_stocks", lambda *_arguments: None), \
-            mock.patch.object(opening, "_opening_bids",
-                              lambda *arguments, **options: bids(*arguments, **{**options, "stationary_durables": False})):
-        return Economy(setup)
-
-
-def years_of(setup, years, spin_up=0, empty=False):
-    """(household stock after the year, wear that year, units sold that year, households' income that
-    year) for each of `years` years after `spin_up` years that are not reported. Households open holding
-    the stock they keep in use, unless `empty`."""
-    economy = economy_opening_empty(setup) if empty else Economy(setup)
-    rows = []
-    for year in range(spin_up + years):
-        economy.step(fixture.quiet_year(setup))
-        if year < spin_up:
-            continue
-        flow = economy.record.book.goods_flow(fixture.METAL)
-        income = sum(cohort.last_year_income for cohort in economy.record.cohorts.values())
-        rows.append((household_stock(economy), flow.get("wear", 0.0), flow.get("output", 0.0), income))
-    return rows
-
-
-class ServiceLifeTests(unittest.TestCase):
-    def setUp(self):
-        from sim.tests import economy_fixture
-        economy_fixture.households_with_a_surplus(self)
-
-    def test_a_durable_bought_is_held_into_the_next_year(self):
-        rows = years_of(durable_setup(), 3)
-        self.assertGreater(rows[1][0], 0.0)
-        self.assertGreater(rows[2][0], 0.0)
-
-    def test_it_wears_by_one_service_life_share_of_what_is_in_use(self):
-        stock, wear, _sold, _income = years_of(durable_setup(), 3)[2]
-        self.assertAlmostEqual(wear, (stock + wear) / SERVICE_LIFE_YEARS, delta=1e-6 * (stock + wear))
-
-    def test_a_good_without_a_service_life_is_not_held(self):
-        rows = years_of(fixture.small_setup(), 3)
-        self.assertEqual(rows[2][0], 0.0)
-
-    def test_the_stock_is_filled_over_years_of_income(self):
-        # a durable new to a society starts from no stock and is built up by many times the wear
-        rows = years_of(durable_setup(), 3, empty=True)
-        self.assertGreater(rows[1][0] - rows[0][0] + rows[1][1], 8.0 * rows[1][1])
-
-    def test_households_open_holding_the_stock_they_keep_in_use_and_so_build_less(self):
-        # the real opening seeds the in-use stock, so the first year builds less than from nothing; the
-        # fixture's income still grows while its margins close, so what is bought is not just the wear
-        # (the settled tests below hold it to that), but it is never the stock built from scratch
-        seeded = years_of(durable_setup(), 3)
-        empty = years_of(durable_setup(), 3, empty=True)
-        self.assertGreater(seeded[0][0], 0.0)
-        bought_seeded = seeded[1][0] - seeded[0][0] + seeded[1][1]
-        bought_empty = empty[1][0] - empty[0][0] + empty[1][1]
-        self.assertLess(bought_seeded, bought_empty)
-
-    # The settled-run checks that read a year of the fixture (Complaint 640) are replaced by the rule they meant:
-    # `_durable_ratio` fills the gap from the post-wear holding to the serving stock.
 
 
 class DurablePurchaseRuleTests(unittest.TestCase):
@@ -114,27 +36,6 @@ class DurablePurchaseRuleTests(unittest.TestCase):
     def test_a_good_used_up_in_the_year_is_bought_whole(self):
         self.assertEqual(households_orders._durable_ratio("bread", 5.0, 0.0, self.SPECS), 1.0)
 
-
-class BadYearTests(unittest.TestCase):
-    """One bad year must not sell the durable stock off and then rebuy it (Complaint 468's swing): the
-    stock is sized on smoothed spending and a smoothed surplus, not on what one year's floors leave."""
-    def setUp(self):
-        from sim.tests import economy_fixture
-        economy_fixture.households_with_a_surplus(self)
-
-
-    def test_the_unspun_fixtures_income_crash_does_not_sell_the_stock(self):
-        # the fixture's own income falls by a fifth in its seventh year as margins close; the holding
-        # used to go from 33 thousand to 8 thousand units that year. A dip of a few per cent in a year that
-        # income rises is the fixture's own noise (the opening's plant is larger than the runs it works, so
-        # output swings more while margins close, and more since producers run only what their cash pays for);
-        # the bound is a fifth, against the three quarters of the crash
-        rows = years_of(durable_setup(), 14)
-        for year in range(1, 14):
-            self.assertGreater(rows[year][0], 0.8 * rows[year - 1][0], "year %d sells a fifth of the stock" % year)
-
-    # A cash shortage's rule (the stock in use is never offered) is held by test_durable_cash_shock_rule.py, and
-    # the refill by DurablePurchaseRuleTests above.
 
 if __name__ == "__main__":
     unittest.main()

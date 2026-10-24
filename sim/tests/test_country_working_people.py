@@ -1,6 +1,6 @@
 """Complaint 649: the people unskilled labour can draw on in a country are the working people its own labour markets hold,
 not its profile's working age; a country whose labour markets hold nobody (or that has no part in the economy) refuses with
-a cause. The rule is called on the hand-built two-country economy and on a stand-in world."""
+a cause. The rule is called on the written-out two-country economy and on a stand-in world."""
 
 QUICK_TOPIC = True
 
@@ -10,16 +10,15 @@ from sim.agents.api import ActorRegistry, ActorsState, CastEntry, CountryProfile
 from sim.agents.no_country_economy import NoCountryEconomy
 from sim.economy import country_figures
 from sim.engine.economy_port_country import CountryAnswers
-from sim.tests import economy_fixture as fixture
+from sim.tests.country_stand_in import HOME, NORTH, two_country_economy
 
 from .country_state_world import StateWorld
 
-setup = fixture.two_country_setup()
-economy, _outcomes = fixture.run(setup, years=4)
+economy = two_country_economy()
 
-north = CountryAnswers(economy, fixture.NORTH, off_map_trade=lambda direction: 0.0)
-home = CountryAnswers(economy, setup.civ_id, off_map_trade=lambda direction: 0.0)
-north_by_trade = country_figures.people_by_trade(economy, fixture.NORTH)
+north = CountryAnswers(economy, NORTH, off_map_trade=lambda direction: 0.0)
+home = CountryAnswers(economy, HOME, off_map_trade=lambda direction: 0.0)
+north_by_trade = country_figures.people_by_trade(economy, NORTH)
 check("a country's working people are the people its labour markets hold, over every trade",
 	  abs(north.working_people() - sum(north_by_trade.values())) < 1e-6 and north.working_people() > north_by_trade["labourer"] - 1e-9,
 	  (north.working_people(), north_by_trade))

@@ -1,8 +1,8 @@
 """Complaints/507 stage 5: what an entry costs a producer is the calculator at the economy's prices, wages, rate and rent.
 A plant that exists offers at its running cost, a new one is judged at its full cost, and the cost moves with the economy's
 input prices and wages (not with the long-run table). `CostBook` is called with price and wage functions the test builds,
-and `ProducerCostsMixin.entry_cost_ratio` on a stub game; the cost book of a real game is
-`test_entry_cost_at_economy_prices_scenario`."""
+and `ProducerCostsMixin.entry_cost_ratio` on a stub game; the cost book a game builds from the economy's prices is
+`test_economy_cost_book_wiring`."""
 QUICK_TOPIC = True
 
 import unittest

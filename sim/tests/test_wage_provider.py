@@ -19,39 +19,37 @@ from .source_dirs import engine_and_world_dirs
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
-def _schedule(training_years, floor=1.0):
-    return wages.WageSchedule(training_years, floor, 1.0, 0.10)
+def _schedule(training_years, floor=1.0, tightness=None):
+    return wages.WageSchedule(training_years, floor, 1.0, 0.10, tightness_factors=tightness)
 
 
 class TightnessTests(unittest.TestCase):
 
-    def test_need_above_hours_raises_the_wage_every_year(self):
-        schedule = _schedule({"short": 3.0, "slack": 3.0})
-        history = []
-        for _year in range(5):
-            schedule.step({"short": 200.0, "slack": 50.0}, {"short": 100.0, "slack": 100.0})
-            history.append((schedule.wage_per_hour("short"), schedule.wage_per_hour("slack")))
-        short_series = [pair[0] for pair in history]
-        self.assertEqual(short_series, sorted(short_series))
-        self.assertLess(len(set(short_series)), len(short_series) + 1)
-        self.assertGreater(short_series[-1], short_series[0])
-        # Slack lowers the wage, but never below the untightened floor share.
-        self.assertLessEqual(history[-1][1], history[0][1])
+    def test_need_above_hours_raises_a_trades_tightness_and_slack_lowers_it(self):
+        schedule = _schedule({"short": 3.0, "slack": 3.0, "level": 3.0})
+        schedule.tightness_factors.update({"short": 1.0, "slack": 1.0, "level": 1.0})
+        schedule.step({"short": 200.0, "slack": 50.0, "level": 100.0},
+                      {"short": 100.0, "slack": 100.0, "level": 100.0})
+        self.assertGreater(schedule.tightness_factors["short"], 1.0)
+        self.assertLess(schedule.tightness_factors["slack"], 1.0)
+        self.assertEqual(schedule.tightness_factors["level"], 1.0)
+
+    def test_a_trade_with_no_hours_asked_or_offered_is_left_alone(self):
+        schedule = _schedule({"smith": 5.0})
+        schedule.step({},
+                      {})
+        self.assertEqual(schedule.tightness_factors["smith"], 1.0)
 
     def test_slack_lowers_a_skilled_wage_but_not_below_the_subsistence_floor(self):
-        schedule = _schedule({"idle": 6.0})
-        start = schedule.wage_per_hour("idle")
-        for _year in range(200):
-            schedule.step({"idle": 0.0}, {"idle": 100.0})
-        self.assertLess(schedule.wage_per_hour("idle"), start)
-        self.assertGreaterEqual(schedule.wage_per_hour("idle"), schedule.floor_per_hour)
+        untightened = _schedule({"idle": 6.0})
+        slack = _schedule({"idle": 6.0}, tightness={"idle": 0.9})
+        idle_for_ages = _schedule({"idle": 6.0}, tightness={"idle": 1e-6})
+        self.assertLess(slack.wage_per_hour("idle"), untightened.wage_per_hour("idle"))
+        self.assertEqual(idle_for_ages.wage_per_hour("idle"), idle_for_ages.floor_per_hour)
 
-    def test_equal_need_and_hours_leave_the_wage_alone(self):
-        schedule = _schedule({"smith": 5.0})
-        start = schedule.wage_per_hour("smith")
-        for _year in range(10):
-            schedule.step({"smith": 100.0}, {"smith": 100.0})
-        self.assertEqual(schedule.wage_per_hour("smith"), start)
+    def test_a_tight_trade_pays_more_than_an_untightened_one(self):
+        self.assertGreater(_schedule({"smith": 5.0}, tightness={"smith": 1.2}).wage_per_hour("smith"),
+                           _schedule({"smith": 5.0}).wage_per_hour("smith"))
 
 
 class TrainingPremiumTests(unittest.TestCase):

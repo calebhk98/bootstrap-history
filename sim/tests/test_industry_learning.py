@@ -124,15 +124,17 @@ class PortListing(unittest.TestCase):
 
     def test_the_port_lists_each_good_with_the_tiles_and_recipes_that_make_it(self):
         from sim.engine.economy_port_year import AgentEconomy
-        from sim.tests import economy_fixture
-        economy, _outcomes = economy_fixture.run(years=1)
+        from sim.economy.producers import Producer
+        from sim.economy.types import Recipe
+        recipes = {"dig": Recipe("dig", {"ore": 1000.0}, {}, {"miner": 40.0}),
+                   "smelt": Recipe("smelt", {"metal": 1.0, "slag": 5.0}, {"ore": 1000.0}, {"smith": 30.0})}
+        producers = {"p2": Producer("p2", "o", "smelt", "town", 1.0), "p1": Producer("p1", "o", "dig", "hills", 1.0),
+                     "p3": Producer("p3", "o", "unknown", "town", 1.0)}
+        economy = types.SimpleNamespace(
+            record=types.SimpleNamespace(producers=producers),
+            setup=types.SimpleNamespace(recipes=recipes, countries=lambda: ["home"]))
         listing = AgentEconomy.producers_by_good(types.SimpleNamespace(economy=lambda: economy))
-        self.assertTrue(listing)
-        for good, found in listing.items():
-            for tile, recipe_id in found:
-                self.assertIn(good, economy.setup.recipes[recipe_id].outputs)
-                self.assertIn(tile, economy.setup.tiles)
-        self.assertIn(economy_fixture.METAL, listing)
+        self.assertEqual(listing, {"ore": [("hills", "dig")], "metal": [("town", "smelt")], "slag": [("town", "smelt")]})
 
 
 class HaulDays(unittest.TestCase):

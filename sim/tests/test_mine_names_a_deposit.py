@@ -1,6 +1,7 @@
 """Complaints/416 (415): a mine names a deposit its seat has found and its output is bounded by that deposit;
 prospecting finds hidden deposits and the finds are kept; a worked-out deposit closes its workings."""
 QUICK_TOPIC = True
+UNDER_TEST = {"open_mine", "commission_mines"}
 
 import json
 import os
@@ -75,10 +76,6 @@ class _Host(MiningMixin):
     def _farm_year_weather_seed(self, year, region=None):
         return 17
 
-    def _ready(self):
-        self.state.scenario.year += 10
-        self.commission_mines()
-
 
 class MineNamesADepositTests(unittest.TestCase):
 
@@ -102,9 +99,16 @@ class MineNamesADepositTests(unittest.TestCase):
 
     def test_a_second_mine_on_a_deposit_gets_only_the_room_the_first_left(self):
         row = self.host.found_deposits("iron")[0]
-        self.host.open_mine("iron", row["room_tonnes_per_year"] / 2.0, deposit=row["id"])
+        half = row["room_tonnes_per_year"] / 2.0
+        self.host.holdings.mine_tranches = [["iron", half, 110, 0.0, "", row["id"]]]
+        self.host.holdings.mine_pending = {"iron": half}
         again = self.host.open_mine("iron", 1e12, deposit=row["id"])
-        self.assertAlmostEqual(again, row["room_tonnes_per_year"] / 2.0)
+        self.assertAlmostEqual(again, half)
+
+    def test_a_deposit_whose_room_is_all_taken_opens_nothing(self):
+        row = self.host.found_deposits("iron")[0]
+        self.host.holdings.mine_tranches = [["iron", row["room_tonnes_per_year"], 110, 0.0, "", row["id"]]]
+        self.host.holdings.mine_pending = {"iron": row["room_tonnes_per_year"]}
         self.assertEqual(self.host.open_mine("iron", 1.0, deposit=row["id"]), 0.0)
 
     def test_nothing_opens_where_no_deposit_is_known_and_the_refusal_says_to_prospect(self):
@@ -138,13 +142,13 @@ class DrawDownTests(unittest.TestCase):
         self.host = _Host()
         row = self.host.found_deposits("iron")[0]
         self.row = row
-        self.host.open_mine("iron", row["room_tonnes_per_year"] / 2.0, deposit=row["id"])
-        self.host._ready()
+        self.host.holdings.mines = [{"material": "iron", "capacity": row["room_tonnes_per_year"] / 2.0, "opened_year": 100,
+                                     "capex_paid": 0.0, "order": "", "intensity_yrs": 0.0, "deposit": row["id"]}]
+        self.host.state.scenario.year = 110
 
-    def test_a_commissioned_working_names_its_deposit_and_each_year_draws_its_yield(self):
+    def test_each_year_a_working_draws_its_yield_from_its_deposit(self):
         working = self.host.holdings.mines[0]
-        self.assertEqual(working["deposit"], self.row["id"])
-        before = self.host.holdings.deposit_drawn[self.row["id"]]
+        before = self.host.holdings.deposit_drawn.get(self.row["id"], 0.0)
         expected = self.host.mine_yield_t_for(working)
         self.host.commission_mines()
         self.assertAlmostEqual(self.host.holdings.deposit_drawn[self.row["id"]] - before, expected)
@@ -174,14 +178,10 @@ class ProspectingTests(unittest.TestCase):
         tiles = geography.tiles_held(self.host.civ, self.host.world_map)
         self.tile = max(tiles, key=lambda tile: geography.endowment(tile, "coal", self.host.world_map)["undiscovered_expected"])
 
-    def test_prospecting_finds_deposits_that_are_kept_and_can_then_be_named(self):
+    def test_prospecting_finds_deposits_that_are_kept(self):
         ok, message = self.host.prospect_deposits(self.tile, "coal", 1e9)
         self.assertTrue(ok, message)
-        found = self.host.holdings.deposits_found
-        self.assertTrue(found, message)
-        rows = self.host.found_deposits("coal")
-        self.assertTrue(rows)
-        self.assertGreater(self.host.open_mine("coal", 1e12), 0.0)
+        self.assertTrue(self.host.holdings.deposits_found, message)
 
     def test_more_effort_finds_a_superset_and_repeats_add_nothing_twice(self):
         self.host.prospect_deposits(self.tile, "coal", 1e5)

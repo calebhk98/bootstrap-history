@@ -25,3 +25,5 @@ replacement wear until carrier-capital maintenance is separated in 629.
 `python3 -m sim.tests --only ship_purchases` checks the bid-to-shipyard value
 chain, shipwright hiring, delivered stock, wear, conservation and save/load.
 See `sim/agents/NAVY.md` for the data fields and mechanism.
+
+Two whole-economy checks of `ship_purchases` were deleted as not unit tests: a state hull bid is filled by shipwright production over a year, and a bought durable wears and survives a save. The bid rule is `purchase_orders` (`test_economy_port_actors`) and the retention rule is `actors_port.close` (`test_ship_purchases`). No simulator command measures hull production; measure by running the fixture economy a year with `purchase_orders` bids for a recipe-made capital good.

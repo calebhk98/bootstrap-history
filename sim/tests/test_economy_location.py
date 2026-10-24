@@ -93,29 +93,5 @@ class EntrySitingTests(unittest.TestCase):
         self.assertEqual([plan.tile for plan in self.plans(None)], ["anchor"])
 
 
-class FixtureScenarioTests(unittest.TestCase):
-    def setUp(self):
-        from sim.tests import economy_fixture
-        economy_fixture.households_with_a_surplus(self)
-
-    def test_the_opening_spreads_producers_over_the_tiles(self):
-        economy, _outcomes = fixture.run(years=0)
-        tiles = {producer.tile for producer in economy.record.producers.values() if producer.recipe_id == fixture.FARM}
-        self.assertGreater(len(tiles), 1)
-
-    def test_people_off_the_anchor_tile_find_work_and_food(self):
-        # with every producer on the town tile, farms and hills households earned nothing and went hungry
-        setup = fixture.small_setup()
-        economy, outcomes = fixture.run(setup, years=10)
-        floor = sum(setup.opening_population_by_tile[tile] for tile in (fixture.FARMS, fixture.HILLS)) * next(
-            need.subsistence_per_person for need in setup.basket.needs if need.need_id == setup.hunger_need)
-        hunger = sum(outcome.hunger_by_tile.get(tile, 0.0) for outcome in outcomes[1:]
-                     for tile in (fixture.FARMS, fixture.HILLS))
-        self.assertLess(hunger, 0.01 * floor * (len(outcomes) - 1))
-        tiles = {producer.tile for producer in economy.record.producers.values()}
-        self.assertIn(fixture.FARMS, tiles)
-        self.assertEqual(economy.record.book.check_conservation(1e-6).breaches, ())
-
-
 if __name__ == "__main__":
     unittest.main()

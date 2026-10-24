@@ -3,63 +3,75 @@ money commodity that is cheap to make does not flood the money stock (and the la
 
 QUICK_TOPIC = True
 
-import dataclasses
+import types
 import unittest
 
 from sim.economy import mint
-from sim.economy.economy import Economy
-from sim.economy.types import CurrencySpec, Recipe
-from sim.tests import economy_fixture as fixture
+from sim.economy.types import CurrencySpec, GoodSpec
+
+METAL = "metal_kg"
+SUPPLY = 1000.0
+SPOILAGE = 0.02
 
 
-def cheap_money_setup(regime):
-    """The fixture's metal made twenty times cheaper than its parity, as the money of `regime`."""
-    recipes = fixture.recipes()
-    recipes[fixture.SMELT] = dataclasses.replace(recipes[fixture.SMELT], outputs={fixture.METAL: 20.0})
+class StandInBook:
+    """What the mint reads of the book: a money supply and no metal in the mint's hands."""
+
+    def money_supply(self, currency_id):
+        return SUPPLY
+
+    def holdings(self, agent):
+        return {"goods": {}}
+
+    def edge_net(self, edge, currency_id):
+        return 0.0
+
+
+def setup_and_record(regime, cash_target=40.0):
+    """Two cohorts, a producer and a merchant with cash targets, whose money is `regime` made of METAL."""
     issuer = "state:fixture" if regime == "struck_coin" else None
-    money = CurrencySpec("coin", regime, fixture.METAL, 0.01, issuer, 0.05 if regime == "struck_coin" else 0.0)
-    return fixture.small_setup(recipes=recipes, currency=money)
+    spec = CurrencySpec("coin", regime, METAL, 0.01, issuer, 0.05 if regime == "struck_coin" else 0.0)
+    setup = types.SimpleNamespace(specs={METAL: GoodSpec(METAL, 1.0, SPOILAGE, 0.0, "metal")}, tiles={"town": None}, currency_id="coin")
+    record = types.SimpleNamespace(
+        currency=spec, book=StandInBook(),
+        cohorts={name: types.SimpleNamespace(cash_target=cash_target) for name in ("a", "b")},
+        producers={"p": types.SimpleNamespace(cash_target=cash_target)},
+        merchants={"m": types.SimpleNamespace(capital_base=cash_target)})
+    return setup, record
+
+
+def bid_capacity(setup, record):
+    area = types.SimpleNamespace(area_id="area", anchor_tile="town", tiles=("town",))
+    area_map = types.SimpleNamespace(goods=lambda: [METAL], areas=lambda good: [area], area_of=lambda good, tile: "area")
+    order_book = {}
+    mint.mint_orders(setup, record, area_map, order_book)
+    return sum(each.flexible_quantity for bids, _offers in order_book.values() for each in bids if each.buyer == mint.EDGE_MINT)
 
 
 class MonetisationTests(unittest.TestCase):
     def test_a_commodity_money_takes_in_what_holders_want_plus_what_spoils(self):
-        setup = cheap_money_setup("commodity")
-        economy = Economy(setup)
-        record = economy.record
-        supply = record.book.money_supply(setup.currency_id)
-        wanted = (sum(cohort.cash_target for cohort in record.cohorts.values())
-                  + sum(producer.cash_target for producer in record.producers.values())
-                  + sum(merchant.capital_base for merchant in record.merchants.values()))
-        expected = max(0.0, wanted - supply) + setup.specs[fixture.METAL].spoilage_per_year * supply
-        self.assertAlmostEqual(mint.yearly_monetisation(setup, record), expected)
+        setup, record = setup_and_record("commodity", cash_target=400.0)
+        wanted = 4 * 400.0
+        self.assertAlmostEqual(mint.yearly_monetisation(setup, record), (wanted - SUPPLY) + SPOILAGE * SUPPLY)
+
+    def test_a_commodity_money_whose_holders_want_no_more_takes_in_only_what_spoils(self):
+        setup, record = setup_and_record("commodity", cash_target=10.0)
+        self.assertAlmostEqual(mint.yearly_monetisation(setup, record), SPOILAGE * SUPPLY)
 
     def test_struck_coin_and_weighed_metal_keep_the_mint_capacity(self):
         for regime in ("struck_coin", "weighed_metal"):
-            setup = cheap_money_setup(regime)
-            record = Economy(setup).record
-            self.assertAlmostEqual(mint.yearly_monetisation(setup, record),
-                                   mint.MINT_YEARLY_STRIKE_SHARE * record.book.money_supply(setup.currency_id))
+            setup, record = setup_and_record(regime)
+            self.assertAlmostEqual(mint.yearly_monetisation(setup, record), mint.MINT_YEARLY_STRIKE_SHARE * SUPPLY)
 
+
+class MintOrderTests(unittest.TestCase):
     def test_the_mint_bids_no_more_than_holders_want_when_their_cash_is_full(self):
-        setup = cheap_money_setup("commodity")
-        economy = Economy(setup)
-        record = economy.record
-        supply = record.book.money_supply(setup.currency_id)
-        for cohort_id, cohort in list(record.cohorts.items()):
-            record.cohorts[cohort_id] = dataclasses.replace(cohort, cash_target=0.0)
-        order_book = {}
-        mint.mint_orders(setup, record, economy.area_map, order_book)
-        bid = sum(each.flexible_quantity for bids, _offers in order_book.values() for each in bids
-                  if each.buyer == mint.EDGE_MINT)
-        loss = setup.specs[fixture.METAL].spoilage_per_year * supply * setup.currency.backing_per_unit
-        self.assertLessEqual(bid, loss + 1e-9)
-        coin_book = {}
-        coin = cheap_money_setup("struck_coin")
-        coined = Economy(coin)
-        mint.mint_orders(coin, coined.record, coined.area_map, coin_book)
-        struck = sum(each.flexible_quantity for bids, _offers in coin_book.values() for each in bids
-                     if each.buyer == mint.EDGE_MINT)
-        self.assertGreater(struck, bid)
+        setup, record = setup_and_record("commodity", cash_target=0.0)
+        self.assertLessEqual(bid_capacity(setup, record), SPOILAGE * SUPPLY * record.currency.backing_per_unit + 1e-9)
+
+    def test_a_struck_coin_mint_bids_for_its_whole_capacity(self):
+        setup, record = setup_and_record("struck_coin", cash_target=0.0)
+        self.assertAlmostEqual(bid_capacity(setup, record), mint.MINT_YEARLY_STRIKE_SHARE * SUPPLY * record.currency.backing_per_unit)
 
 
 if __name__ == "__main__":

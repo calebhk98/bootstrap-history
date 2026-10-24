@@ -2,6 +2,7 @@
 miner's wage over the works' build hours, and a quote charges its price level. Each test calls one method on a stand-in
 carrying only what it reads (the deposit physics is test_mine_build_cost, the sizing test_mine_auto_and_capacity)."""
 QUICK_TOPIC = True
+UNDER_TEST = {"commission_mines"}
 
 import types
 import unittest

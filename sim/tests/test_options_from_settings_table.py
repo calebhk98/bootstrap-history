@@ -1,5 +1,5 @@
 """options_from_settings_table: the settings table describes every setting; the agent `options` command and the
-play dice read it (Complaint 363). The Options screen through the menu is in `test_options_from_settings_table_scenario`."""
+play dice read it (Complaint 363). The Options screen through the menu is in `test_options_edit_setting`."""
 import os
 import tempfile
 from types import SimpleNamespace

@@ -63,8 +63,9 @@ check("soldier is a trade the labour market can supply here",
 class SoldierMarket(LabourMarket):
     """A labour market over a stub labour whose standing staff are `soldiers`; its quote is not under test."""
 
-    def __init__(self, soldiers=0.0, supply=WORKING_AGE * HOURS):
-        state = types.SimpleNamespace(household=types.SimpleNamespace(labour_pressure_records={}),
+    def __init__(self, soldiers=0.0, supply=WORKING_AGE * HOURS, soldier_hours_hired=0.0):
+        records = {"soldier": (soldier_hours_hired, 100)} if soldier_hours_hired else {}   # what hiring them recorded this year
+        state = types.SimpleNamespace(household=types.SimpleNamespace(labour_pressure_records=records),
                                       scenario=types.SimpleNamespace(year=100))
         world = types.SimpleNamespace(
             state=state, HOURS_PER_PERSON_YEAR=HOURS, wages={"labourer": 1.0, "soldier": 1.0, "smith": 1.0},
@@ -89,12 +90,10 @@ check("a larger army raises it further", large.price_factor("labourer") > small.
 check("the soldiers' own trade is not leaned on by the standing draw", large.pressure("soldier") == 0.0)
 
 before = idle.price_factor("soldier")
-idle.hire(None, "soldier", 0.002e6 * HOURS)
-modest = idle.price_factor("soldier")
-bigger = SoldierMarket()
-bigger.hire(None, "soldier", 0.2e6 * HOURS)
+modest = SoldierMarket(soldier_hours_hired=0.002e6 * HOURS).price_factor("soldier")
+bigger = SoldierMarket(soldier_hours_hired=0.2e6 * HOURS).price_factor("soldier")
 check("soldiers hired by the state raise the soldier wage", modest > before, (modest, before))
-check("a larger levy raises it further", bigger.price_factor("soldier") > modest, (bigger.price_factor("soldier"), modest))
+check("a larger levy raises it further", bigger > modest, (bigger, modest))
 
 
 # ---- the state hires its soldiers through that market -----------------------------------------------------
