@@ -1,49 +1,58 @@
-"""A recipe whose makers start too small grows when buyers keep bidding above its cost, though the market
-traded little (Complaint 559). Margin and trial entry are taken out so only the sized entry is measured."""
+"""Complaint 559: a market starved by makers too small to supply it trades little, so the year's unfilled demand a newcomer's
+full cost would meet is counted with the trade. `entry_backed.unfilled_at_cost` hands entry sizing, per recipe and market,
+the bids a recipe's full cost per unit would still meet beyond what the market traded. The recipe's full cost is a recorder;
+how entry sizes a newcomer from that figure is test_economy_entrant_sizing. No game."""
+QUICK_TOPIC = True
 
-QUICK_TOPIC = False   # builds whole games
-
-import dataclasses
+import types
 import unittest
 from unittest import mock
 
-from sim.economy import entry_year
-from sim.economy.economy import Economy
-from sim.tests import economy_fixture as fixture
+from sim.economy import entry_backed
+from sim.economy.types import Bid
 
-YEARS = 6
-SHRUNK_SHARE = 0.05
+COST = 1.0
 
 
-def grown_capacity(unfilled_counts):
-    """Smelter capacity, with plant to come, after the years; `unfilled_counts` False sizes entry to the trade alone."""
-    setup = fixture.small_setup()
-    economy = Economy(setup)
-    for producer_id, producer in list(economy.record.producers.items()):
-        if producer.recipe_id == fixture.SMELT:
-            economy.record.producers[producer_id] = dataclasses.replace(
-                producer, capacity_runs=producer.capacity_runs * SHRUNK_SHARE)
-    with mock.patch.object(entry_year, "margin_entry_plans", return_value=[]), \
-            mock.patch.object(entry_year, "trial_entry_plans", return_value=[]):
-        if not unfilled_counts:
-            with mock.patch.object(entry_year, "unfilled_at_cost", return_value=None):
-                return _run(economy, setup)
-        return _run(economy, setup)
+def bid(floor, maximum_price):
+    return Bid("buyer", "salt", "area", "tile", floor, 0.0, 1.0, 1.0, 1e9, maximum_price=maximum_price)
 
 
-def _run(economy, setup):
-    for _year in range(YEARS):
-        economy.step(fixture.quiet_year(setup))
-    return sum(producer.capacity_runs + economy.record.expansion_runs.get(producer_id, 0.0)
-               for producer_id, producer in economy.record.producers.items() if producer.recipe_id == fixture.SMELT)
+def unfilled(bids_by_market, traded_volume=200.0, costed=(("pan", COST),)):
+    """The unfilled-at-cost function for a market whose bids are given, asked for the recipe "pan" at the market's tile."""
+    view = types.SimpleNamespace(area_of=lambda good, tile: "area")
+    with mock.patch.object(entry_backed, "recipes_by_cost", return_value=list(costed)) as by_cost:
+        found = entry_backed.unfilled_at_cost(object(), object(), view, object(), bids_by_market,
+                                              lambda good, tile: traded_volume)
+        quantity = found("pan", "salt", "tile") if found is not None else None
+    return quantity, by_cost
 
 
-class StarvedMakersGrowTests(unittest.TestCase):
-    def setUp(self):
-        fixture.households_with_a_surplus(self)
+class UnfilledAtCostTests(unittest.TestCase):
+    BIDS = {("salt", "area"): [bid(500.0, 3.0), bid(400.0, 0.5)]}
 
-    def test_makers_too_small_grow_faster_when_unfilled_bids_count(self):
-        self.assertGreater(grown_capacity(True), grown_capacity(False))
+    def test_with_no_bids_at_all_there_is_no_function(self):
+        self.assertIsNone(entry_backed.unfilled_at_cost(None, None, None, None, {}, None))
+
+    def test_the_bids_that_meet_the_recipes_cost_less_what_traded_are_unfilled(self):
+        quantity, _by_cost = unfilled(self.BIDS)
+        self.assertAlmostEqual(quantity, 300.0)
+
+    def test_the_recipe_is_costed_at_the_markets_tile_for_that_good(self):
+        _quantity, by_cost = unfilled(self.BIDS)
+        self.assertEqual(by_cost.call_args.args[3:], ("salt", "tile", ["pan"]))
+
+    def test_a_market_with_no_bids_has_none_unfilled(self):
+        quantity, _by_cost = unfilled({("salt", "elsewhere"): [bid(500.0, 3.0)]})
+        self.assertEqual(quantity, 0.0)
+
+    def test_a_recipe_that_cannot_be_costed_backs_nothing(self):
+        quantity, _by_cost = unfilled(self.BIDS, costed=())
+        self.assertEqual(quantity, 0.0)
+
+    def test_a_market_that_traded_nothing_is_unfilled_by_every_bid_at_the_cost(self):
+        quantity, _by_cost = unfilled(self.BIDS, traded_volume=0.0)
+        self.assertAlmostEqual(quantity, 500.0)
 
 
 if __name__ == "__main__":
