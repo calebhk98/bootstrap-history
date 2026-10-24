@@ -6,7 +6,7 @@ QUICK_TOPIC = True
 
 from .harness import check
 
-from sim.agents.api import ActorRecord, ActorRegistry, ActorsState
+from sim.agents.api import ActorRecord, ActorRegistry, ActorsState, Business
 from sim.agents import enforcement, exchange_commands, patent, spinoff  # noqa: F401
 
 from .agents_fake_world import FakeWorld, make_node, total_money
@@ -87,9 +87,8 @@ check("nothing patented, nothing expected", enforcement.expected_damages(world, 
 # ---- a spin-off is no longer blocked by a patent -----------------------------------------------------
 world, registry, holder, infringer, licensed = setup(0.0)
 world.output = 1.0e9
-parent = registry.add("firm:7", ActorRecord(kind="firm", money=1000.0, founded_year=50))
+parent = registry.add("firm:7", ActorRecord(kind="firm", money=1000.0, founded_year=50, business=Business.running(["mill"], 80)))
 parent.knowledge.update({"mill"})
-parent.business.open_plant("mill", 80)
 parent.workforce["labourer"] = 500.0
 original = spinoff.SPINOFF_CHANCE_PER_STAFF_YEAR
 spinoff.SPINOFF_CHANCE_PER_STAFF_YEAR = 1.0

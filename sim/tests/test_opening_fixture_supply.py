@@ -1,54 +1,69 @@
-"""The opening sizes crop producers at their tile's yield factor, and every input the sized producers take is made in the quantity
-they take. Opened on the fixture economy through `economy_api.blank_economy`; no game, no data."""
+"""The opening sizes crop producers at their tile's yield factor, and the runs it asks for make every good in the quantity
+demanded, inputs included. Each rule is called on figures written out here: `opening._add_producers` places a producer at its
+tile's yield, `opening_runs.mean_yields` turns the tiles' yields into the factor runs are sized at, and
+`opening_runs.required_runs` sizes the runs; no economy is opened."""
+import types
 import unittest
+from unittest import mock
 
-from sim.economy import api as economy_api
+from sim.economy import opening, opening_runs
 from sim.economy.setup import recipe_tile_key
 from sim.tests import economy_fixture as fixture
-from sim.tests.test_fit_to_supply_chain_rule import flows
 
 QUICK_TOPIC = True
 
 TOLERANCE = 1e-6      # share of the demand the float sums may miss by
 YIELD_BY_TILE = {fixture.TOWN: 0.5, fixture.FARMS: 0.8, fixture.HILLS: 0.4}
+PEOPLE = {fixture.TOWN: 100.0, fixture.FARMS: 200.0, fixture.HILLS: 50.0}
 
 
-def opened(yield_by_tile):
-    setup = fixture.small_setup(yield_factor_by_recipe_tile={
-        recipe_tile_key(fixture.FARM, tile): factor for tile, factor in yield_by_tile.items()})
-    return setup, economy_api.blank_economy(setup).record
+def yields_keyed(factor_scale=1.0):
+    return {recipe_tile_key(fixture.FARM, tile): factor * factor_scale for tile, factor in YIELD_BY_TILE.items()}
+
+
+def setup_with(yield_factor_by_recipe_tile):
+    return types.SimpleNamespace(
+        recipes=fixture.recipes(), opening_prices={fixture.GRAIN: 1.0}, opening_wages={fixture.LABOURER: 1.0},
+        yield_factor_by_recipe_tile=yield_factor_by_recipe_tile, opening_population_by_tile=dict(PEOPLE),
+        tiles={tile: None for tile in PEOPLE}, recipe_allowed=lambda recipe_id, tile: True)
 
 
 class OpeningCropsAtTileYieldTests(unittest.TestCase):
-    def setUp(self):
-        self.setup, self.record = opened(YIELD_BY_TILE)
-
     def test_crop_producers_carry_their_tiles_yield(self):
-        crop_producers = [producer for producer in self.record.producers.values() if producer.recipe_id == fixture.FARM]
-        self.assertTrue(crop_producers)
-        for producer in crop_producers:
-            self.assertEqual(producer.yield_factor, YIELD_BY_TILE[producer.tile])
-
-    def test_crop_goods_are_made_in_the_quantity_the_opening_demands(self):
-        made, taken = flows(self.setup, self.record)
-        wanted = self.record.opening_basket.get(fixture.GRAIN, 0.0) + taken.get(fixture.GRAIN, 0.0)
-        self.assertGreater(wanted, 0.0)
-        self.assertGreaterEqual(made[fixture.GRAIN], wanted * (1.0 - TOLERANCE))
+        setup = setup_with(yields_keyed())
+        record = types.SimpleNamespace(producers={}, cohorts={tile: types.SimpleNamespace(tile=tile) for tile in PEOPLE})
+        with mock.patch.object(opening, "_richest_class", return_value=0):
+            opening._add_producers(setup, record, setup.recipes[fixture.FARM], {tile: 10.0 for tile in PEOPLE}, {}, {})
+        self.assertEqual({producer.tile: producer.yield_factor for producer in record.producers.values()}, YIELD_BY_TILE)
 
     def test_a_lower_yield_takes_more_runs_to_make_the_same_grain(self):
-        _setup, poor = opened({tile: 0.5 * factor for tile, factor in YIELD_BY_TILE.items()})
-        runs = lambda record: sum(p.expected_sales for p in record.producers.values() if p.recipe_id == fixture.FARM)
-        self.assertGreater(runs(poor), runs(self.record))
+        recipes = fixture.recipes()
+        better = opening_runs.mean_yields(setup_with(yields_keyed()), recipes)[fixture.FARM]
+        poorer = opening_runs.mean_yields(setup_with(yields_keyed(0.5)), recipes)[fixture.FARM]
+        self.assertAlmostEqual(poorer, 0.5 * better)
+        demand = {fixture.TOWN: {fixture.GRAIN: 5000.0}}
+        ranked = {fixture.GRAIN: [fixture.FARM]}
+        runs = lambda yield_factor: opening_runs.required_runs(demand, ranked, recipes, None, {fixture.FARM: yield_factor})[fixture.FARM]
+        self.assertGreater(runs(poorer), runs(better))
 
 
-class OpeningInputsHaveSuppliersTests(unittest.TestCase):
-    def test_every_input_is_made_in_the_quantity_the_producers_take(self):
-        setup, record = opened(YIELD_BY_TILE)
-        made, taken = flows(setup, record)
-        self.assertGreater(taken[fixture.ORE], 0.0)
-        short = {good: (made.get(good, 0.0), wanted) for good, wanted in taken.items()
-                 if made.get(good, 0.0) < wanted * (1.0 - TOLERANCE)}
-        self.assertEqual(short, {})
+class RunsMeetDemandTests(unittest.TestCase):
+    def test_crop_goods_are_made_in_the_quantity_demanded_at_the_yield_runs_are_sized_at(self):
+        recipes = fixture.recipes()
+        yield_factor = 0.6
+        runs = opening_runs.required_runs({fixture.TOWN: {fixture.GRAIN: 5000.0}}, {fixture.GRAIN: [fixture.FARM]}, recipes,
+                                          None, {fixture.FARM: yield_factor})
+        made = runs[fixture.FARM] * recipes[fixture.FARM].outputs[fixture.GRAIN] * yield_factor
+        self.assertGreaterEqual(made, 5000.0 * (1.0 - TOLERANCE))
+
+    def test_every_input_is_made_in_the_quantity_the_runs_that_take_it_need(self):
+        recipes = fixture.recipes()
+        ranked = {fixture.METAL: [fixture.SMELT], fixture.ORE: [fixture.MINE]}
+        runs = opening_runs.required_runs({fixture.TOWN: {fixture.METAL: 7.0}}, ranked, recipes)
+        taken = runs[fixture.SMELT] * recipes[fixture.SMELT].inputs[fixture.ORE]
+        made = runs[fixture.MINE] * recipes[fixture.MINE].outputs[fixture.ORE]
+        self.assertGreater(taken, 0.0)
+        self.assertGreaterEqual(made, taken * (1.0 - TOLERANCE))
 
 
 if __name__ == "__main__":

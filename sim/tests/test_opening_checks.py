@@ -10,6 +10,8 @@ from unittest import mock
 from sim.economy.metal_stock import COIN_WEAR_PER_YEAR
 from sim.engine import opening_checks, opening_checks_gate, opening_checks_table, shipped_openings_build
 
+spin_up_settled_check = opening_checks.spin_up_settled
+
 
 def _trace(first, last, years=30):
     """A trace whose money stock is `first` for the first decade, `last` for the last, and flat between."""
@@ -58,11 +60,11 @@ class WageAndSettlingTests(unittest.TestCase):
         self.assertFalse(opening_checks.wage_over_floor(None, 0.2).passed)
 
     def test_spin_up_settled_reads_the_result(self):
-        self.assertTrue(opening_checks.spin_up_settled({"settled": True, "years": 9, "gap": 0.01}, 0.02).passed)
-        unsettled = opening_checks.spin_up_settled({"settled": False, "years": 30, "gap": 0.3}, 0.02)
+        self.assertTrue(spin_up_settled_check({"settled": True, "years": 9, "gap": 0.01}, 0.02).passed)
+        unsettled = spin_up_settled_check({"settled": False, "years": 30, "gap": 0.3}, 0.02)
         self.assertFalse(unsettled.passed)
         self.assertEqual(unsettled.value, 0.3)
-        self.assertFalse(opening_checks.spin_up_settled({}, 0.02).passed)
+        self.assertFalse(spin_up_settled_check({}, 0.02).passed)
 
 
 class GateTests(unittest.TestCase):

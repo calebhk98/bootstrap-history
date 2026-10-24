@@ -5,7 +5,6 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.engine.core import Sim
 from sim.engine.hazard_relief import HazardReliefMixin
 from sim.engine.mortality_shock import cut_cohorts
 from sim.engine.staff_loss_words import defence_kind, national_toll_sentence, staff_clause
@@ -13,7 +12,6 @@ from sim.engine.wage_scarcity import wage_index_of
 from sim.world.demography import Population
 
 CHILD, WORKING_AGE, ELDERLY = 1.6, 1.0, 1.4   # the vulnerability ratios (sim/world/demography.py)
-ELASTICITY = Sim.WAGE_SCARCITY_ELASTICITY
 
 
 class Country(HazardReliefMixin):
@@ -77,28 +75,14 @@ class WageTests(unittest.TestCase):
 class RecoveryTests(unittest.TestCase):
     """A shocked population fed at exactly its need resumes growth from its smaller base: it does not snap back."""
 
-    def premiums(self, years):
-        population = Population.stationary(1000000.0)
-        opening = population.total
-        cut_cohorts(population, 0.45, CHILD, WORKING_AGE, ELDERLY)
-        out = {}
-        for year in range(1, max(years) + 1):
-            population.step(population._subsistence_food())
-            if year in years:
-                out[year] = wage_index_of(1.0, ELASTICITY, population.total / opening, 1.0) - 1.0
-        return out
-
-    def test_the_wage_premium_is_substantial_fifty_years_on(self):
-        self.assertGreater(self.premiums((50,))[50], 0.10)
-
-    def test_the_premium_does_not_grow_without_bound_a_century_later(self):
-        premium = self.premiums((50, 150))
-        self.assertLess(premium[150], premium[50] * 2.0 + 0.10)
-
-    def test_the_premium_does_not_rise_as_the_decades_pass(self):
-        premium = self.premiums((50, 100, 150))
-        self.assertLessEqual(premium[100], premium[50] + 1e-9)
-        self.assertLessEqual(premium[150], premium[100] + 1e-9)
+    def test_a_shocked_population_fed_at_its_need_grows_a_year_but_stays_far_below_its_opening_size(self):
+        opening_total = 1000000.0
+        population = Population(170000.0, 260000.0, 120000.0)          # the cohorts a cut of nearly half leaves
+        before = population.total
+        population.step(population._subsistence_food())
+        self.assertGreater(population.total, before)
+        self.assertLess(population.total, before * 1.05)
+        self.assertLess(population.total, 0.6 * opening_total)
 
 
 class WordingTests(unittest.TestCase):

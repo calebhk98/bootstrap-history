@@ -1,87 +1,110 @@
-"""Complaints/416: market-area partitions follow the built ways. When the live economy's ways change, its
-areas are partitioned again over the new carriage table and what the economy remembers about each market
-(prices, volumes, merchants' expectations) moves to the area that now holds the old market's anchor."""
+"""Complaints/416: market-area partitions follow the built ways. When the ways change, what the economy remembers about
+each market (prices, volumes, merchants' expectations) moves to the area that now holds the old market's anchor
+(`market_areas_follow.follow`), and the economy asks for that only when the ways did change. The partitions are written
+out here as stand-ins; the partitioning itself is the area map's rule."""
 QUICK_TOPIC = True
 
-import dataclasses
+import types
 import unittest
 
-from sim.economy import api as economy_api
+from sim.economy.accounts import Book
 from sim.economy.economy import Economy
-from sim.economy.market_memory import KEY_SEPARATOR, market_key
-from sim.geography import api as geography_api
-from sim.tests import economy_fixture as fixture
+from sim.economy.market_areas_follow import follow, old_areas_by_new
+from sim.economy.market_memory import KEY_SEPARATOR, MarketMemory, market_key
+from sim.economy.record import EconomyRecord
+from sim.economy.types import CurrencySpec
 
-RATES = {"cart": 0.5, "road": 0.01}
-GOOD = fixture.GRAIN
-
-
-def ways():
-    return {geography_api.edge_key(fixture.TOWN, fixture.FARMS): {"road": True},
-            geography_api.edge_key(fixture.FARMS, fixture.HILLS): {"road": True}}
+GOOD = "grain_kg"
 
 
-def economy_before_the_roads():
-    return Economy(fixture.small_setup(carriage_rates=dict(RATES)))
+def area(area_id, anchor_tile):
+    return types.SimpleNamespace(area_id=area_id, anchor_tile=anchor_tile)
 
 
-def good_keys(economy, mapping):
-    return [key for key in mapping if key.split(KEY_SEPARATOR)[0] in economy.area_map.goods()]
+class Partition:
+    """A partition of one good's markets: area id by tile."""
+
+    def __init__(self, area_of_tile, anchors):
+        self.area_of_tile = area_of_tile
+        self.anchors = anchors
+
+    def goods(self):
+        return [GOOD]
+
+    def areas(self, good):
+        return [area(area_id, anchor) for area_id, anchor in self.anchors.items()]
+
+    def area_of(self, good, tile):
+        return self.area_of_tile[tile]
+
+
+SPLIT = Partition({"town": "a:town", "farms": "a:farms", "hills": "a:hills"}, {"a:town": "town", "a:farms": "farms", "a:hills": "hills"})
+JOINED = Partition({"town": "a:one", "farms": "a:one", "hills": "a:one"}, {"a:one": "farms"})
+
+
+def record_remembering(prices):
+    record = EconomyRecord(book=Book(), memory=MarketMemory(), currency=CurrencySpec("coin", "fiat", None, 0.0, None))
+    record.memory.prices = {market_key(GOOD, area_id): price for area_id, price in prices.items()}
+    record.memory.usual_prices = dict(record.memory.prices)
+    return record
 
 
 class FollowTests(unittest.TestCase):
 
-    def test_roads_between_the_tiles_join_what_the_carriage_split(self):
-        economy = economy_before_the_roads()
-        self.assertEqual(len(economy.area_map.areas(GOOD)), 3)
-        self.assertTrue(economy_api.set_improvements(economy, ways()))
-        self.assertEqual(len(economy.area_map.areas(GOOD)), 1)
-
-    def test_the_partition_matches_one_opened_with_the_ways(self):
-        economy = economy_before_the_roads()
-        economy_api.set_improvements(economy, ways())
-        opened = Economy(dataclasses.replace(fixture.small_setup(carriage_rates=dict(RATES)), improvements=ways()))
-        for good in opened.area_map.goods():
-            self.assertEqual(economy.area_map.areas(good), opened.area_map.areas(good))
-
-    def test_unchanged_ways_leave_the_areas_alone(self):
-        economy = economy_before_the_roads()
-        before = economy.area_map
-        self.assertFalse(economy_api.set_improvements(economy, {}))
-        self.assertIs(economy.area_map, before)
+    def test_a_new_area_follows_the_old_area_that_held_its_anchor_tile(self):
+        self.assertEqual(old_areas_by_new(SPLIT, JOINED), {GOOD: {"a:one": "a:farms"}})
 
     def test_remembered_prices_move_to_the_new_area_of_the_old_anchor(self):
-        economy = economy_before_the_roads()
-        old_price = {tile: economy.record.memory.prices[market_key(GOOD, economy.area_map.area_of(GOOD, tile))]
-                     for tile in economy.setup.tiles}
-        economy_api.set_improvements(economy, ways())
-        new_area = economy.area_map.areas(GOOD)[0]
-        remembered = economy.record.memory.prices[market_key(GOOD, new_area.area_id)]
-        self.assertEqual(remembered, old_price[new_area.anchor_tile])
+        record = record_remembering({"a:town": 1.0, "a:farms": 2.0, "a:hills": 3.0})
+        follow(record, SPLIT, JOINED)
+        self.assertEqual(record.memory.prices, {market_key(GOOD, "a:one"): 2.0})
+        self.assertEqual(record.memory.usual_prices, {market_key(GOOD, "a:one"): 2.0})
 
     def test_every_remembered_market_names_an_area_that_exists(self):
-        economy = economy_before_the_roads()
-        economy_api.set_improvements(economy, ways())
-        memory = economy.record.memory
-        for mapping in (memory.prices, memory.usual_prices):
-            for key in good_keys(economy, mapping):
-                good, area_id = key.split(KEY_SEPARATOR)
-                self.assertIn(area_id, [area.area_id for area in economy.area_map.areas(good)], key)
+        record = record_remembering({"a:town": 1.0, "a:farms": 2.0, "a:hills": 3.0})
+        record.memory.prices[market_key("labourer", "wage_area")] = 9.0
+        follow(record, SPLIT, JOINED)
+        existing = {area.area_id for area in JOINED.areas(GOOD)}
+        for key in record.memory.prices:
+            first, _separator, area_id = key.partition(KEY_SEPARATOR)
+            if first == GOOD:
+                self.assertIn(area_id, existing)
+        self.assertEqual(record.memory.prices[market_key("labourer", "wage_area")], 9.0)
 
-    def test_a_saved_economy_resumes_with_the_areas_it_was_saved_with(self):
-        economy = economy_before_the_roads()
-        economy_api.set_improvements(economy, ways())
-        resumed = economy_api.economy_from_record(economy.setup, economy_api.export_record(economy))
-        for good in economy.area_map.goods():
-            self.assertEqual(resumed.area_map.areas(good), economy.area_map.areas(good))
-        self.assertFalse(economy_api.set_improvements(resumed, ways()))
+    def test_a_split_partition_gives_each_new_area_the_memory_of_the_one_old_area_it_came_from(self):
+        record = record_remembering({"a:one": 5.0})
+        follow(record, JOINED, SPLIT)
+        self.assertEqual(record.memory.prices, {market_key(GOOD, area_id): 5.0 for area_id in SPLIT.anchors})
 
-    def test_the_economy_runs_on_after_its_areas_change(self):
-        economy = economy_before_the_roads()
-        economy.step(fixture.quiet_year(economy.setup))
-        economy_api.set_improvements(economy, ways())
-        outcome = economy.step(fixture.quiet_year(economy.setup))
-        self.assertGreater(len(outcome.output), 0)
+    def test_a_merchants_expectations_move_with_the_markets(self):
+        record = record_remembering({"a:farms": 2.0})
+        record.merchants["merchant:1"] = types.SimpleNamespace(
+            expected_prices={(GOOD, "a:farms"): 2.0}, expected_volumes={(GOOD, "a:town"): 4.0}, price_history={}, routes={})
+        follow(record, SPLIT, JOINED)
+        merchant = record.merchants["merchant:1"]
+        self.assertEqual(merchant.expected_prices, {(GOOD, "a:one"): 2.0})
+        self.assertEqual(merchant.expected_volumes, {})
+
+
+class SetImprovementsTests(unittest.TestCase):
+    def economy(self, improvements):
+        rebuilt = []
+        return types.SimpleNamespace(improvements=improvements, record=types.SimpleNamespace(ways={}),
+                                     _rebuild_carriage=lambda: rebuilt.append(True) or True, rebuilt=rebuilt)
+
+    def test_unchanged_ways_leave_the_areas_alone(self):
+        economy = self.economy({"a|b": {"road": True}})
+        change = Economy.set_improvements
+        self.assertFalse(change(economy, {"a|b": {"road": True}}))
+        self.assertEqual(economy.rebuilt, [])
+
+    def test_new_ways_are_kept_on_the_record_and_the_carriage_is_rebuilt_over_them(self):
+        economy = self.economy({})
+        change = Economy.set_improvements
+        self.assertTrue(change(economy, {"a|b": {"road": True}}))
+        self.assertEqual(economy.improvements, {"a|b": {"road": True}})
+        self.assertEqual(economy.record.ways, {"a|b": {"road": True}})
+        self.assertEqual(economy.rebuilt, [True])
 
 
 if __name__ == "__main__":

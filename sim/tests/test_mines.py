@@ -8,6 +8,7 @@ from sim.engine import purchase_rule  # noqa: F401  (first: the engine modules i
 from sim.engine.economy_mining import MiningMixin
 
 QUICK_TOPIC = True
+UNDER_TEST = {"commission_mines"}
 
 
 class _Founder(MiningMixin):
@@ -34,7 +35,7 @@ class _Founder(MiningMixin):
     def pass_years(self, years):
         for _ in range(years):
             self.state.scenario.year += 1
-            self.commission_mines()
+            self._advance_mine_depletion()
 
 
 # --- yield falls as a working is worked hard relative to what the ground can support, never below the floor.
@@ -71,8 +72,9 @@ check("a year adds the working's capacity over the ceiling to its intensity",
 # --- a working is a thing: two workings of one material keep their own clocks.
 two = _Founder(ceiling=100.0)
 older = two.add_working(capacity=40.0, opened_year=1)
-two.holdings.mine_tranches = [("coal", 20.0, 51)]
 two.pass_years(50)
+two.holdings.mine_tranches = [("coal", 20.0, 51)]
+two.commission_mines()
 newer = two.holdings.mines[1]
 two.pass_years(50)
 check("a tranche that comes on stream later becomes its own working, not merged into the older one",

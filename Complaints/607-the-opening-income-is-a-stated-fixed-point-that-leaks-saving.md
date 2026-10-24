@@ -70,7 +70,7 @@ opening to seed its wage and runs from `opening_stationary` (473 Update 7). The 
 ## Update: `opening_income_per_head` deleted (473 Update 8)
 
 The field was set only by `surplus_game_openings`, which no test called; it, the branch in `opening._settle_income`, the
-engine port's read of it and `EconomySetup.opening_income_per_head` are gone (`test_opening_stationary_scenario`,
+engine port's read of it and `EconomySetup.opening_income_per_head` are gone (`test_opening_stationary_rules`,
 `test_no_scenario_states_the_incomes_of_its_households`). What still states an income: `economy_fixture.surplus_households`
 (eight test modules) patches the settled income to the full-employment ceiling; replacing it needs the opening to hold what
 its households want (606, 538). Seeding the real opening from `opening_stationary` is done for the hours (producers' runs are
