@@ -1,6 +1,6 @@
 """The disease burden a civilisation lives under is 1.0 less the share of the disease technologies' weight it holds
 (`burden_from_holdings`): tested on built weights. The seam through a real game (that the burden reaches the population
-step) is in test_disease_burden_wiring_scenario.py."""
+step) is in test_disease_burden_reaches_the_step.py."""
 QUICK_TOPIC = True
 
 import unittest

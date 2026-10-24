@@ -1,5 +1,5 @@
 """demography_history: the shock and recovery rules are called with records built here and the screen is rendered from a
-built reply; the scenario that steps a game, keeps its yearly record and carries it through a save is test_demography_history_scenario."""
+built reply; the screen's last year from the record is test_demography_screen_last_year."""
 QUICK_TOPIC = True
 import os
 import tempfile

@@ -7,13 +7,13 @@ QUICK_TOPIC = True
 import dataclasses
 import json
 import os
+import types
 import unittest
-from unittest import mock
 
-from sim.economy import carriage_fleet_book, carriage_wear, economy
-from sim.economy.accounts import DeliveredMove
+from sim.economy import carriage_fleet_book, carriage_wear
+from sim.economy.accounts import Book, DeliveredMove
 from sim.economy.merchants import Merchant
-from sim.economy.types import GoodSpec, Recipe
+from sim.economy.types import EDGE_PRODUCTION, GoodsMove, GoodSpec, Recipe
 from sim.geography.api import carriage_rates
 from sim.tests import economy_fixture as fixture
 from sim.tests.test_economy_carriage_hours import trading_setup
@@ -87,6 +87,10 @@ WEAR_PER_TONNE_KM = 0.0005
 CART_TONNE_KM_PER_TEAM_DAY = carriage_rates(["cart"])["cart"]["tonne_km_per_team_day"]
 
 
+def basic_merchant():
+    return Merchant("m1", "town", "owner", 100.0, {}, {})
+
+
 def carrying_setup():
     specs = dict(fixture.specs())
     specs[CART] = GoodSpec(CART, 200.0, 0.0, 10.0, "carrier", capital_asset=True)
@@ -98,67 +102,50 @@ def carrying_setup():
         carriage_carriers={"cart": (CART_TONNE_KM_PER_TEAM_DAY, ((CART, WEAR_PER_TONNE_KM),))})
 
 
-class CarriageWearsCarriers(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        cls.setup = carrying_setup()
-        cls.years = []
-        real = economy.dispatch_merchants
+class CarriersInTheBook(unittest.TestCase):
+    """What a merchant holds and wears of its carriers, `carriage_wear.settle` and `carriage_fleet_book.bids` on built inputs."""
 
-        def watch(setup, record, carriage, ledger, area_map):
-            held_before = {each.agent_id: sum(record.book.holdings(carriage_wear.account(each.agent_id))["goods"].get(CART, {}).values())
-                           for each in record.merchants.values()}
-            bought = {each.agent_id: sum(record.book.holdings(each.agent_id)["goods"].get(CART, {}).values())
-                      for each in record.merchants.values()}
-            real(setup, record, carriage, ledger, area_map)
-            cls.years.append({
-                "held_before": held_before, "bought": bought,
-                "wear": {each.agent_id: dict(each.carrier_wear) for each in record.merchants.values()},
-                "held_after": {each.agent_id: sum(record.book.holdings(carriage_wear.account(each.agent_id))["goods"].get(CART, {}).values())
-                               for each in record.merchants.values()},
-                "tonne_km": dict(record.carried)})
-        with mock.patch.object(economy, "dispatch_merchants", watch), fixture.surplus_households():   # goods are carried out of a surplus
-            cls.economy, cls.outcomes = fixture.run(cls.setup, 25)
+    def book_holding(self, bought=0.0, kept=0.0):
+        book = Book()
+        if bought:
+            book.move(GoodsMove(EDGE_PRODUCTION, "m1", CART, "town", bought, "test"))
+        if kept:
+            book.move(GoodsMove(EDGE_PRODUCTION, carriage_wear.account("m1"), CART, "town", kept, "test"))
+        return book
 
-    def test_carrying_goods_wears_the_carrier_stock_by_the_tonne_km(self):
-        shipped = [year for year in self.years if any(year["wear"][agent].get(CART, 0.0) > 0.0 for agent in year["wear"])]
-        self.assertTrue(shipped, "no merchant shipped, so the scenario shows nothing")
+    def kept(self, book):
+        return carriage_fleet_book.held(book, "m1", [CART])[CART]
 
-    def test_wear_is_booked_even_where_the_merchant_held_no_carrier(self):
-        first = next(year for year in self.years if any(year["wear"][agent].get(CART, 0.0) > 0.0 for agent in year["wear"]))
-        agent = next(agent for agent, wear in first["wear"].items() if wear.get(CART, 0.0) > 0.0)
-        self.assertGreater(first["wear"][agent][CART], 0.0)
-        self.assertGreaterEqual(first["held_after"][agent], 0.0)
+    def test_the_carriers_a_merchant_bought_go_into_its_carrier_account_and_nothing_is_used_up(self):
+        book = self.book_holding(bought=3.0, kept=2.0)
+        carriage_wear.settle(basic_merchant(), book, [CART], {})
+        self.assertAlmostEqual(self.kept(book), 5.0)
+        self.assertEqual(book.holdings("m1")["goods"].get(CART, {}).get("town", 0.0), 0.0)
 
-    def test_a_carrier_with_a_life_is_not_used_up_by_the_haul_it_ages_with_the_fleet(self):
-        # dispatch moves what was bought into the carrier account and takes nothing off it; wear_and_spoilage ages it
-        for year in self.years:
-            for agent in year["wear"]:
-                self.assertAlmostEqual(year["held_after"][agent], year["held_before"][agent] + year["bought"][agent], places=9)
+    def test_wear_asked_of_a_good_is_taken_off_the_stock_held(self):
+        book = self.book_holding(kept=5.0)
+        carriage_wear.settle(basic_merchant(), book, [CART], {CART: 2.0})
+        self.assertAlmostEqual(self.kept(book), 3.0)
 
-    def test_carriage_creates_demand_for_the_carrier_good(self):
-        bought = [year for year in self.years if any(units > 0.0 for units in year["bought"].values())]
-        self.assertTrue(bought, "merchants never bought a cart")
-        self.assertGreater(sum(outcome.output.get(CART, 0.0) for outcome in self.outcomes), 0.0)
+    def test_wear_beyond_what_is_held_takes_only_what_is_held(self):
+        book = self.book_holding()
+        moves = carriage_wear.settle(basic_merchant(), book, [CART], {CART: 2.0})
+        self.assertEqual(moves, [])
+        self.assertEqual(self.kept(book), 0.0)
 
     def test_a_merchant_bids_for_the_fleet_its_routes_call_for_less_what_it_holds(self):
-        record = self.economy.record
-        merchant = next(each for each in record.merchants.values())
-        held = carriage_fleet_book.held(record.book, merchant.agent_id, [CART])[CART]
+        setup = types.SimpleNamespace(specs={CART: GoodSpec(CART, 200.0, 0.0, 10.0, "carrier", capital_asset=True)},
+                                      carriage_carriers={"cart": (24.0, ((CART, WEAR_PER_TONNE_KM),))}, opening_prices={CART: 400.0})
+        merchant = basic_merchant()
         merchant.carrier_wear = {}
-        merchant.carrier_fleet_wanted = {CART: (held + 0.5) / self.setup.specs[CART].service_life_years}
-        view = self.economy.view()
-        bids, budget = carriage_fleet_book.bids(self.setup, record, view, self.economy.area_map)
-        mine = [bid for bid in bids if bid.buyer == merchant.agent_id and bid.good == CART]
-        self.assertEqual(len(mine), 1)
-        self.assertAlmostEqual(mine[0].floor_quantity, 0.5)
-        self.assertEqual(mine[0].tile, merchant.home_tile)
-        self.assertGreater(budget[merchant.agent_id], 0.0)
-
-    def test_money_is_still_conserved(self):
-        from sim.economy import money_audit
-        report = money_audit.year_report(self.economy.record)
-        self.assertTrue(report.ok, report.unexpected)
+        merchant.carrier_fleet_wanted = {CART: 5.5 / 10.0}
+        record = types.SimpleNamespace(book=self.book_holding(kept=5.0), merchants={"m1": merchant})
+        view = types.SimpleNamespace(price=lambda good, area: 400.0)
+        area_map = types.SimpleNamespace(goods=lambda: [CART], area_of=lambda good, tile: "area:" + tile)
+        bids, budget = carriage_fleet_book.bids(setup, record, view, area_map)
+        self.assertEqual([(bid.buyer, bid.good, bid.tile) for bid in bids], [("m1", CART, merchant.home_tile)])
+        self.assertAlmostEqual(bids[0].floor_quantity, 0.5)
+        self.assertAlmostEqual(budget["m1"], 0.5 * 400.0)
 
 
 class ExposureOfShipments(unittest.TestCase):

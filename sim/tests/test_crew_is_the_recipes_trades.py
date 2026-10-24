@@ -1,5 +1,4 @@
-"""A business's crew is the trades its plant's recipe names, for the founder and for a firm alike, on built crew figures.
-The same over every plant of a real game is in test_crew_is_the_recipes_trades_scenario.py."""
+"""A business's crew is the trades its plant's recipe names, for the founder and for a firm alike, on built crew figures."""
 QUICK_TOPIC = True
 
 import unittest

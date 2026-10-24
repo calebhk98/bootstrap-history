@@ -1,49 +1,59 @@
-"""SCENARIO (Complaint 549): demography is fed what the agent economy's households ate, not the engine's own harvest.
+"""Complaint 549: demography is fed what the agent economy's households ate, not the engine's own harvest.
 
-Population is one national record, so the hunger is national; a tile's own hunger waits on a population tracked
-by tile (Complaint 603). The economy half (the national figure) is test_national_food_eaten_rule; this half runs on a game whose
-economy has not opened, since the demographic step needs no economy year."""
-import copy
+The economy half (the national figure) is test_national_food_eaten_rule. This half calls the engine methods that book the
+figure and hand it to the regions, on a stand-in `self`; a region fed its own booked figure is test_regional_hunger_is_the_regions_own."""
+QUICK_TOPIC = True
+
 import unittest
+from types import SimpleNamespace
+from unittest import mock
 
-from sim.tests.harness import unopened_sim
+from sim.engine import regional_people
+from sim.engine.food_eaten import FoodEatenMixin
+from sim.engine.regional_people import RegionalPeopleMixin
 from sim.tests.test_national_food_eaten_rule import _accounts
 
 
-class DemographyReadsTheHouseholdsTests(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        cls.game = unopened_sim(civ="rome_100ad")
-        cls.start_population = copy.deepcopy(cls.game.population)
+def population_state(**fields):
+    return SimpleNamespace(**{"food_eaten_over_need": None, "regional_eaten_over_need": {}, **fields})
 
-    def _step_when_households_ate(self, eaten_over_need):
-        game = self.game
-        game.population = copy.deepcopy(self.start_population)
-        game.state.population.food_eaten_over_need = eaten_over_need
-        # each region is fed what its own households ate (regional_people.py, Complaint 603); the nation's figure is the record beside
-        game.state.population.regional_eaten_over_need = {tile: eaten_over_need for tile in game.home_tiles_held()}
-        game._demographic_recovery(game.state.scenario.year)
-        return game._last_demographic_step
 
-    def test_a_national_food_shortfall_in_the_economys_book_raises_mortality(self):
-        fed = self._step_when_households_ate(1.0)
-        hungry = self._step_when_households_ate(0.6)
-        self.assertLess(hungry.nutrition_ratio, fed.nutrition_ratio)
-        self.assertGreater(hungry.deaths, fed.deaths)
+class BookingTheFigure(unittest.TestCase):
+    def test_the_economys_year_books_the_national_and_each_tiles_figure(self):
+        game = SimpleNamespace(state=SimpleNamespace(population=population_state()))
+        FoodEatenMixin.record_food_eaten(game, SimpleNamespace(accounts=_accounts({"town": 90.0, "farms": 100.0})))
+        self.assertAlmostEqual(game.state.population.food_eaten_over_need, 0.95, places=9)
+        self.assertEqual(game.state.population.regional_eaten_over_need, {"town": 0.9, "farms": 1.0})
 
-    def test_the_nutrition_is_the_households_not_the_farm_models(self):
-        step = self._step_when_households_ate(0.6)
-        self.assertAlmostEqual(step.nutrition_ratio, 0.6, delta=0.05)
+    def test_an_outcome_without_accounts_books_nothing(self):
+        game = SimpleNamespace(state=SimpleNamespace(population=population_state(food_eaten_over_need=0.8,
+                                                                                  regional_eaten_over_need={"town": 0.8})))
+        FoodEatenMixin.record_food_eaten(game, SimpleNamespace())
+        self.assertIsNone(game.state.population.food_eaten_over_need)
+        self.assertEqual(game.state.population.regional_eaten_over_need, {})
 
-    def test_the_figure_is_recorded_when_the_economys_year_closes(self):
-        self.game.state.population.food_eaten_over_need = None
-        outcome = type("Outcome", (), {"accounts": _accounts({"town": 90.0})})()
-        self.game.record_food_eaten(outcome)
-        self.assertIsNotNone(self.game.state.population.food_eaten_over_need)
 
+class ReadingTheFigure(unittest.TestCase):
     def test_before_an_economy_year_has_closed_the_farm_model_feeds_demography(self):
-        self.game.state.population.food_eaten_over_need = None
-        self.assertIsNone(self.game.household_food_kcal_per_day(1000.0))
+        game = SimpleNamespace(state=SimpleNamespace(population=population_state()))
+        self.assertIsNone(FoodEatenMixin.household_food_kcal_per_day(game, 1000.0))
+
+    def test_after_one_the_calories_follow_the_booked_figure(self):
+        hungry = SimpleNamespace(state=SimpleNamespace(population=population_state(food_eaten_over_need=0.6)))
+        fed = SimpleNamespace(state=SimpleNamespace(population=population_state(food_eaten_over_need=1.0)))
+        self.assertAlmostEqual(FoodEatenMixin.household_food_kcal_per_day(hungry, 1000.0),
+                               0.6 * FoodEatenMixin.household_food_kcal_per_day(fed, 1000.0), places=6)
+
+    def test_each_region_is_fed_from_its_booked_figure_with_the_harvest_as_the_fallback(self):
+        game = SimpleNamespace(state=SimpleNamespace(population=population_state(regional_eaten_over_need={"town": 0.6})),
+                               relief_kcal_per_day=lambda: 7.0, home_tiles_held=lambda: ["town", "farms"])
+        recorded = []
+        with mock.patch.object(regional_people.regional_population, "kcal_per_day_by_region",
+                               lambda *arguments: recorded.append(arguments) or {"town": 1.0}), \
+                mock.patch.object(regional_people.settlement, "population_shares", lambda tiles: {tile: 0.5 for tile in tiles}):
+            fed = RegionalPeopleMixin.regional_kcal_per_day(game, {"town": "region"}, 4000.0)
+        self.assertEqual(fed, {"town": 1.0})
+        self.assertEqual(recorded, [({"town": "region"}, {"town": 0.6}, 4000.0, 7.0, {"town": 0.5, "farms": 0.5})])
 
 
 if __name__ == "__main__":

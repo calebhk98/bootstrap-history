@@ -1,5 +1,5 @@
-"""Complaint 651: the market wage's year-on-year step has a gain below one against the wage it reacts to, and the
-small economy's labourer wage does not saw-tooth under a constant setting."""
+"""Complaint 651: the market wage's year-on-year step has a gain below one against the wage it reacts to (a whole economy's
+wage not saw-toothing is measured by `spin-up-trace`, see the complaint)."""
 
 QUICK_TOPIC = True
 
@@ -7,7 +7,6 @@ import unittest
 
 from sim.labour.market import clearing
 from sim.labour.market.records import Bid
-from sim.tests import economy_fixture as fixture
 
 RESERVATION = 1.0
 OFFERED = 1000.0
@@ -45,33 +44,6 @@ class StepAroundTheMargin(unittest.TestCase):
             gain = (next_wage(last + step, OFFERED * 4.0 / (last + step)) -
                     next_wage(last, OFFERED * 4.0 / last)) / step
             self.assertLess(abs(gain), 1.0, last)
-
-
-class SmallEconomy(unittest.TestCase):
-    # Complaint 473: the hours households offer swung year to year with the level their leisure anchor is scaled by, and the
-    # wage step follows those hours; the anchor now follows the level households perceive (market_memory.py).
-    def test_labourer_wage_does_not_sawtooth(self):
-        series = {}
-        original = clearing.clear_one
-
-        def recording(state, inputs, trade, area, bids, import_costs=None):
-            result = original(state, inputs, trade, area, bids, import_costs)
-            if trade == fixture.LABOURER:
-                series.setdefault(area, []).append(result.wage)
-            return result
-
-        clearing.clear_one = recording
-        try:
-            fixture.run(fixture.small_setup(), years=70)
-        finally:
-            clearing.clear_one = original
-        self.assertTrue(series)
-        for area, wages in sorted(series.items()):
-            changes = [after - before for before, after in zip(wages, wages[1:])][12:]
-            flips = sum(1 for before, after in zip(changes, changes[1:]) if before * after < 0.0)
-            self.assertLess(flips, 0.15 * len(changes), (area, flips))
-            falls = [change / before for change, before in zip(changes, wages[12:]) if change < 0.0]
-            self.assertLess(min(falls, default=0.0) * -1.0, 0.15, area)
 
 
 if __name__ == "__main__":

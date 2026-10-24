@@ -14,6 +14,11 @@ from . import households_hours_offered
 from .types import AgentId, LabourOffer
 
 
+def anchor_wage_in_prices(anchors: Mapping[str, float], perceived_price_level: float) -> Dict[str, float]:
+    """Each trade's leisure anchor wage scaled by the price level households perceive (not the chained level)."""
+    return {trade: anchor * perceived_price_level for trade, anchor in anchors.items()}
+
+
 @dataclasses.dataclass
 class HourSupply:
     offers: Sequence[LabourOffer]                       # every offer, with the cohort's whole year of hours

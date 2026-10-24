@@ -31,7 +31,8 @@ the fixture, and own-plot withholding did not move.
 Fix: the share of the gap closed is scaled by the imbalance at last year's wage (`pressure`: the share of offered
 hours unwanted or wanted beyond them, capped at one), so the step is continuous across balance. Test:
 `sim/tests/test_complaint_651_wage_step_gain.py` (continuity of the step, gain of next wage on last wage below one
-when demand follows the wage, no saw-tooth in the fixture). The scaling stands in the same temporary heuristic as
+when demand follows the wage). The fixture's 70-year saw-tooth check ran a whole economy and was removed from the suite; the same
+measure is `python3 sim/simulator.py spin-up-trace --civ rome_100ad --years 60` (below) or `python3 sim/simulator.py economy-check`. The scaling stands in the same temporary heuristic as
 `WAGE_SHARE_CLOSED_PER_YEAR`; the derived response is a supply curve that slopes (workers' asks spread), not built.
 
 

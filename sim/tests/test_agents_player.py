@@ -5,6 +5,7 @@ QUICK_TOPIC = True
 
 from .harness import check
 
+from sim.agents.business_plant import Plant
 from sim.agents.api import ActorRecord, Firm, ledger
 from sim.agents import firm_entry, registry as registry_module
 from sim.agents.player import Player
@@ -200,7 +201,7 @@ check("a concern running at a loss is not", operator.proven_concerns(world) == [
 # ---- the firm runs through the same rule ----------------------------------------------------
 world = make_world()
 firm = Firm("firm:1", ActorRecord(kind="firm", money=1000.0, founded_year=90))
-firm.business.open_plant("shop", 95)
+firm.business.adopt(Plant("shop", opened_year=95))
 firm.rivals_of = lambda node_id, asking_id: 1.0
 firm.operate(world)
 managing = firm_entry.management_cost(world, "shop")

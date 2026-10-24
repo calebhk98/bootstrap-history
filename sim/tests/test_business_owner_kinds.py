@@ -9,6 +9,7 @@ import json
 from .harness import check
 
 from sim.agents import business_books, business_closing
+from sim.agents.business_plant import Plant
 from sim.agents.api import ActorRecord, ActorRegistry, ActorsState, Business
 from sim.engine.state import _deserialize_typed, serialize_state
 
@@ -32,8 +33,7 @@ def owners_of_one_business():
 	owners = {}
 	for kind in OWNER_KINDS:
 		owner = registry.add("%s:1" % kind, ActorRecord(kind=kind, money=OPENING_MONEY, founded_year=90))
-		owner.business.open_plant("shop", OPENED)
-		owner.business.set_size("shop", SIZE)
+		owner.business.adopt(Plant("shop", opened_year=OPENED, size=SIZE))
 		owners[kind] = owner
 	return owners
 
