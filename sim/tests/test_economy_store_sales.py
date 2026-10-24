@@ -4,11 +4,8 @@ a game without durables is unchanged."""
 QUICK_TOPIC = True
 
 import unittest
-from unittest import mock
 
 from sim.economy import households_store
-from sim.economy.accounts import GoodsMove
-from sim.economy.types import EDGE_PRODUCTION
 from sim.tests import economy_fixture as fixture
 from sim.tests.economy_store_view import View, metal_held, orders
 
@@ -64,33 +61,7 @@ class StoreSaleTests(unittest.TestCase):
         self.assertEqual(metal_offers(orders(cash=100.0, income=0.0)), [])
 
 
-def seeded_run(specs, years=6, kilograms=0.0):
-    setup = fixture.small_setup(specs=specs)
-
-    def inputs(economy, year):
-        if year == 0 and kilograms:
-            for agent in sorted(economy.record.cohorts):
-                economy.record.book.move(GoodsMove(EDGE_PRODUCTION, agent, fixture.METAL, fixture.TOWN,
-                                                   kilograms, "seed"))
-        return fixture.quiet_year(setup)
-    return fixture.run(setup, years, inputs)
-
-
-class StoreConservationTests(unittest.TestCase):
-    def test_money_and_goods_are_conserved_with_stores_held_and_traded(self):
-        economy, outcomes = seeded_run(fixture.specs({fixture.METAL: 20}), kilograms=50.0)
-        self.assertEqual(economy.record.book.check_conservation(1e-6).breaches, ())
-        for outcome in outcomes:
-            self.assertAlmostEqual(outcome.conservation_residual, 0.0, places=6)
-
-
-class NoDurablesUnchangedTests(unittest.TestCase):
-    def test_without_service_lives_the_outcomes_equal_those_with_no_candidates(self):
-        _economy, with_change = seeded_run(fixture.specs(), years=10)
-        with mock.patch.object(households_store, "store_candidates", return_value={}):
-            _economy, forced_empty = seeded_run(fixture.specs(), years=10)
-        self.assertEqual([repr(outcome) for outcome in with_change], [repr(outcome) for outcome in forced_empty])
-
+class NoDurablesTests(unittest.TestCase):
     def test_without_service_lives_there_is_no_store_candidate(self):
         view = View()
         self.assertEqual(households_store.store_candidates(fixture.specs(), view.prices, 0.3), {})

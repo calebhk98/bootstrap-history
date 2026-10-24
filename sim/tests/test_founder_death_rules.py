@@ -1,7 +1,7 @@
 """The founder's death: the yearly mortality step (`StepPhasesMixin._step_founder_mortality`) logs it with the age and whether the
 deputies carry the work, counts the programme's dissolution in the years after, and the step stops on the line; the state reads the
 age from what the step saved, else from the log (`_founder_death_info`). The mixin runs on a stand-in game carrying only what it
-reads. The ending after a dispersed corpus and the forgetting are in test_founder_death_and_victory_ending."""
+reads. The ending after a dispersed corpus and the forgetting are in test_founder_ending_rules."""
 
 QUICK_TOPIC = True
 

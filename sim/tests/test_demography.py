@@ -26,6 +26,8 @@ import unittest
 
 from sim.world import demography
 
+step_population = demography.Population.step   # the function under test, called by name
+
 
 def _stationary(total=1_000_000.0, seed=1):
     return demography.Population.stationary(total, seed=seed)
@@ -52,28 +54,28 @@ class AccountingClosureTests(unittest.TestCase):
     def test_closes_at_subsistence(self):
         population = _stationary()
         for _year in range(50):
-            flows = population.step(population._subsistence_food())
+            flows = step_population(population, population._subsistence_food())
             self._assert_closes(flows)
 
     def test_closes_under_famine(self):
         population = _stationary()
         food = population._subsistence_food()
         for _year in range(50):
-            flows = population.step(food * 0.4)
+            flows = step_population(population, food * 0.4)
             self._assert_closes(flows)
 
     def test_closes_under_surplus(self):
         population = _stationary()
         food = population._subsistence_food()
         for _year in range(50):
-            flows = population.step(food * 2.0)
+            flows = step_population(population, food * 2.0)
             self._assert_closes(flows)
 
     def test_closes_with_migration(self):
         population = _stationary()
         food = population._subsistence_food()
         for year in range(50):
-            flows = population.step(food, immigration=500.0 + year,
+            flows = step_population(population, food, immigration=500.0 + year,
                                      emigration=200.0)
             self._assert_closes(flows)
 
@@ -86,7 +88,7 @@ class AccountingClosureTests(unittest.TestCase):
         # are not recomputed consistently with it.
         population = demography.Population(100.0, 100.0, 100.0, seed=7)
         for _year in range(80):
-            flows = population.step(0.0, jitter=True)
+            flows = step_population(population, 0.0, jitter=True)
             self._assert_closes(flows)
         self.assertGreaterEqual(population.children, 0.0)
         self.assertGreaterEqual(population.working_age, 0.0)
@@ -119,7 +121,7 @@ class StationarityTests(unittest.TestCase):
         start = population.total
         low = high = start
         for _year in range(300):
-            population.step(population._subsistence_food())
+            step_population(population, population._subsistence_food())
             low = min(low, population.total)
             high = max(high, population.total)
         self.assertGreater(population.total, start * 0.5, "population collapsed")
@@ -139,7 +141,7 @@ class StationarityTests(unittest.TestCase):
         total_births = total_deaths = 0.0
         years = 300
         for _year in range(years):
-            flows = population.step(population._subsistence_food())
+            flows = step_population(population, population._subsistence_food())
             total_births += flows.births
             total_deaths += flows.deaths
         average_population = (start + population.total) / 2.0
@@ -376,9 +378,9 @@ class MortalityDragDecompositionTests(unittest.TestCase):
         steady_food = steady._subsistence_food()
 
         for year in range(100):
-            steady.step(steady_food)
+            step_population(steady, steady_food)
             spread_multiplier = 1.3 if year % 2 == 0 else 0.7
-            varying.step(steady_food * spread_multiplier)
+            step_population(varying, steady_food * spread_multiplier)
 
         self.assertLess(varying.total, steady.total)
         # Not a rounding error - a real, measurable divergence over a
@@ -412,7 +414,7 @@ class ZeroVarianceSubsistenceTests(unittest.TestCase):
         population = demography.Population.stationary(1_000_000.0, seed=1)
         start = population.total
         for _year in range(100):
-            population.step(population._subsistence_food(), jitter=False)
+            step_population(population, population._subsistence_food(), jitter=False)
         # The acceptance bar: flat or growing, never shrinking, with
         # nothing bad happening and no variance for Jensen's inequality to
         # exploit. Slow growth, not exact flatness, is what the historical
@@ -432,7 +434,7 @@ class ZeroVarianceSubsistenceTests(unittest.TestCase):
         # class docstring's claim, checked directly rather than only via
         # the 100-year compounded outcome above.
         population = demography.Population.stationary(1_000_000.0, seed=1)
-        flows = population.step(population._subsistence_food())
+        flows = step_population(population, population._subsistence_food())
         self.assertGreaterEqual(flows.births, flows.deaths, flows)
 
     def test_double_count_correction_factor_is_applied_to_child_and_working_age(self):
@@ -523,7 +525,7 @@ class GrowthCeilingTests(unittest.TestCase):
         population = demography.Population.stationary(65_000_000.0, seed=1)
         start = population.total
         for _year in range(100):
-            population.step(population._subsistence_food() * 1000.0,
+            step_population(population, population._subsistence_food() * 1000.0,
                              jitter=False)
         end = population.total
         annual_growth_rate = (end / start) ** (1.0 / 100.0) - 1.0
@@ -552,8 +554,8 @@ class GrowthCeilingTests(unittest.TestCase):
         # point of wiring agriculture in, and must survive fixing the
         # response-side floor's asymmetry.
         population = demography.Population.stationary(65_000_000.0, seed=2)
-        fed_flows = population.copy().step(population._subsistence_food())
-        famine_flows = population.copy().step(
+        fed_flows = step_population(population.copy(), population._subsistence_food())
+        famine_flows = step_population(population.copy(), 
             population._subsistence_food() * 0.5)
 
         _assert_famine_age_pattern(self, population, fed_flows, famine_flows)
@@ -573,12 +575,12 @@ class FoodShockAndRecoveryTests(unittest.TestCase):
     def test_halving_food_raises_mortality_lowers_fertility_and_population_falls(self):
         population = _stationary()
         base_food = population._subsistence_food()
-        full_food_flows = population.copy().step(base_food)
+        full_food_flows = step_population(population.copy(), base_food)
 
         shocked = demography.Population(
             population.children, population.working_age, population.elderly,
             seed=3)
-        shocked_flows = shocked.step(base_food * 0.5)
+        shocked_flows = step_population(shocked, base_food * 0.5)
 
         self.assertGreater(shocked_flows.deaths, full_food_flows.deaths)
         self.assertLess(shocked_flows.births, full_food_flows.births)
@@ -589,7 +591,7 @@ class FoodShockAndRecoveryTests(unittest.TestCase):
         # started, not merely down by one year's noise.
         trajectory = [shocked.total]
         for _year in range(10):
-            shocked.step(base_food * 0.5)
+            step_population(shocked, base_food * 0.5)
             trajectory.append(shocked.total)
         self.assertLess(trajectory[-1], trajectory[0] * 0.8)
         # And monotonically worse while the shortfall continues - this is a
@@ -613,13 +615,13 @@ class FoodShockAndRecoveryTests(unittest.TestCase):
             population.children, population.working_age, population.elderly,
             seed=4)
         for _year in range(10):
-            shocked.step(base_food * 0.5)
+            step_population(shocked, base_food * 0.5)
         trough = shocked.total
         self.assertLess(trough, population.total * 0.7)
 
         recovery_trajectory = [trough]
         for _year in range(100):
-            shocked.step(base_food)
+            step_population(shocked, base_food)
             recovery_trajectory.append(shocked.total)
 
         # It grows back from the trough - genuine recovery, not merely "the
@@ -680,8 +682,8 @@ class FoodShockAndRecoveryTests(unittest.TestCase):
         spares_trajectory = [spares_working_age.total]
         hits_trajectory = [hits_working_age.total]
         for _year in range(100):
-            spares_working_age.step(spares_working_age._subsistence_food())
-            hits_working_age.step(hits_working_age._subsistence_food())
+            step_population(spares_working_age, spares_working_age._subsistence_food())
+            step_population(hits_working_age, hits_working_age._subsistence_food())
             spares_trajectory.append(spares_working_age.total)
             hits_trajectory.append(hits_working_age.total)
 
@@ -740,8 +742,8 @@ class WorkingAgePopulationTests(unittest.TestCase):
             fed.children, fed.working_age, fed.elderly, seed=6)
         base_food = fed._subsistence_food()
         for _year in range(40):
-            fed_twin.step(base_food)
-            starved_twin.step(base_food * 0.6)
+            step_population(fed_twin, base_food)
+            step_population(starved_twin, base_food * 0.6)
         self.assertLess(starved_twin.working_age,
                          fed_twin.working_age)
 
@@ -763,7 +765,7 @@ class DeterminismTests(unittest.TestCase):
             totals = []
             for _year in range(60):
                 food = population._subsistence_food() * 0.9
-                population.step(food, jitter=True)
+                step_population(population, food, jitter=True)
                 totals.append(population.total)
             return totals
 
@@ -780,7 +782,7 @@ class DeterminismTests(unittest.TestCase):
             population = demography.Population(
                 500_000.0, 700_000.0, 300_000.0, seed=seed)
             for _year in range(60):
-                population.step(population._subsistence_food(), jitter=True)
+                step_population(population, population._subsistence_food(), jitter=True)
             return population.total
 
         results = {run_final_total(seed) for seed in range(5)}
@@ -813,8 +815,8 @@ class DiseaseAndSanitationTests(unittest.TestCase):
         # PRE_INDUSTRIAL_DISEASE_BURDEN explicitly, not merely close to it.
         left = demography.Population(500_000.0, 700_000.0, 300_000.0, seed=3)
         right = demography.Population(500_000.0, 700_000.0, 300_000.0, seed=3)
-        left_flows = left.step(left._subsistence_food() * 0.7)
-        right_flows = right.step(
+        left_flows = step_population(left, left._subsistence_food() * 0.7)
+        right_flows = step_population(right, 
             right._subsistence_food() * 0.7,
             disease_burden=demography.PRE_INDUSTRIAL_DISEASE_BURDEN)
         self.assertEqual(left_flows, right_flows)
@@ -908,7 +910,7 @@ class DiseaseAndSanitationTests(unittest.TestCase):
         population = demography.Population.stationary(65_000_000.0, seed=11)
         start = population.total
         for _year in range(100):
-            population.step(population._subsistence_food() * 1000.0,
+            step_population(population, population._subsistence_food() * 1000.0,
                              jitter=False,
                              disease_burden=demography.PRE_INDUSTRIAL_DISEASE_BURDEN)
         annual_growth_rate = (population.total / start) ** (1.0 / 100.0) - 1.0
@@ -930,7 +932,7 @@ class DiseaseAndSanitationTests(unittest.TestCase):
         population = demography.Population.stationary(65_000_000.0, seed=12)
         start = population.total
         for _year in range(100):
-            population.step(population._subsistence_food() * 1000.0,
+            step_population(population, population._subsistence_food() * 1000.0,
                              jitter=False,
                              disease_burden=demography.FULLY_MODERN_DISEASE_BURDEN)
         annual_growth_rate = (population.total / start) ** (1.0 / 100.0) - 1.0
@@ -947,10 +949,10 @@ class DiseaseAndSanitationTests(unittest.TestCase):
         # the nutrition response.
         population = demography.Population.stationary(
             65_000_000.0, seed=13, disease_burden=demography.FULLY_MODERN_DISEASE_BURDEN)
-        fed_flows = population.copy().step(
+        fed_flows = step_population(population.copy(), 
             population._subsistence_food(),
             disease_burden=demography.FULLY_MODERN_DISEASE_BURDEN)
-        famine_flows = population.copy().step(
+        famine_flows = step_population(population.copy(), 
             population._subsistence_food() * 0.5,
             disease_burden=demography.FULLY_MODERN_DISEASE_BURDEN)
 
@@ -964,7 +966,7 @@ class DiseaseAndSanitationTests(unittest.TestCase):
         population = _stationary()
         start = population.total
         for _year in range(300):
-            population.step(population._subsistence_food(), jitter=False)
+            step_population(population, population._subsistence_food(), jitter=False)
         annual_growth_rate = (population.total / start) ** (1.0 / 300.0) - 1.0
         self.assertGreaterEqual(annual_growth_rate, 0.0)
         self.assertAlmostEqual(annual_growth_rate, 0.00086, delta=0.0005)

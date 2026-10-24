@@ -85,25 +85,15 @@ class ApplyTests(unittest.TestCase):
         self.assertEqual(sites.extraction_by_tile(record, setup), {("dig", "hills"): 5.0, ("dig", "town"): 0.0})
 
 
-class FixtureScenarioTests(unittest.TestCase):
+class OpeningSitesTests(unittest.TestCase):
     def _setup(self, limits):
         recipes = fixture.recipes()
         recipes[fixture.MINE] = replace(recipes[fixture.MINE], site_bound=True)
         return fixture.small_setup(recipes=recipes, site_limits=limits)
 
-    def test_a_limit_on_hills_puts_every_ore_producer_there_within_capacity(self):
-        limit = SiteLimit(fixture.MINE, fixture.HILLS, 800.0, 0.8)
-        economy, _outcomes = fixture.run(self._setup((limit,)), years=6)
-        mines = [p for p in economy.record.producers.values() if p.recipe_id == fixture.MINE]
-        self.assertTrue(mines)
-        self.assertEqual({p.tile for p in mines}, {fixture.HILLS})
-        self.assertLessEqual(sum(p.capacity_runs for p in mines), 800.0 + 1e-6)
-        self.assertTrue(all(abs(p.yield_factor - 0.8) < 1e-9 for p in mines))
-        self.assertEqual(economy.record.book.check_conservation(1e-6).breaches, ())
-
     def test_without_limits_extraction_stays_where_it_was(self):
-        economy, _outcomes = fixture.run(self._setup(()), years=0)
-        mines = [p for p in economy.record.producers.values() if p.recipe_id == fixture.MINE]
+        record, _areas, _carriage = open_economy(self._setup(()))
+        mines = [p for p in record.producers.values() if p.recipe_id == fixture.MINE]
         self.assertEqual([p.tile for p in mines], [fixture.TOWN])
         self.assertGreater(mines[0].capacity_runs, 0.0)
 

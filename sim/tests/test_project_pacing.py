@@ -162,6 +162,7 @@ def explained(paid, done=(), active=()):
     game = SimpleNamespace(
         project_material_bill=lambda node_id: {"cost_of_missing": 0.0, "rows": []}, civ_cost_factor=lambda node_id: 1.0,
         geography=SimpleNamespace(material_cost_factor=lambda node_id: 1.0), opposition_factor=lambda node_id: 1.0,
+        rebuild_work_factor=lambda node_id: 1.0,
         cost_money_factor=lambda: 1.0, money_real=1.0, project_cost=lambda node_id: 1000.0, year=100,
         paid_towards={"p": paid} if paid else {}, done=set(done), active=set(active))
     return _explain_cost(game, {"p": NODE}, "p", dict(NODE, _labour_cost=800.0, cap=200.0))

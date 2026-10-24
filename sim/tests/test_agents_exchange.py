@@ -7,6 +7,7 @@ from .harness import check
 from sim.refusal import cause_of
 
 from sim.agents.api import ActorRecord, ActorRegistry, ActorsState
+from sim.agents.business_plant import Plant
 from sim.agents import exchange, exchange_commands, player  # noqa: F401  (player registers its kind)
 from sim.agents import registry as registry_module
 from sim.agents.player_commands import CommandRejected, run_orders
@@ -94,9 +95,7 @@ check("a node the giver does not know cannot be offered",
 # ---- a concern moves with its opened year and size ----------------------------------------
 a.concerns.add("forge")
 a.knowledge.add("forge")
-a.business.open_plant("forge", 60)
-a.business.set_size("forge", 2.5)
-a.business.note_margin("forge", 12.0)
+a.business.adopt(Plant("forge", opened_year=60, size=2.5, margin=12.0))
 offer = exchange.make_offer(a, b, {"concern": "forge"}, {"money": 50.0}, world)
 check("a buyer who cannot know the concern is refused",
 	  cause_of(rejection(lambda: exchange.accept(b, offer["id"], registry.get, world))) == "taker_cannot_make"
