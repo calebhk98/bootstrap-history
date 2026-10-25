@@ -25,7 +25,7 @@ one employer cannot also be given to another (551 is one case: own-plot hours an
 
 ## Progress
 
-Measured on an opened Rome game (`python3 -m sim.tests --slow --only labour_single_owner,labour_single_owner_scenario`):
+Measured on an opened Rome game (`python3 -m sim.tests --slow --only labour_single_owner`):
 
 - The labour core's people by trade and the town-supply estimate (`national_trade_population`) are two
   copies that disagree: the core holds the unskilled pool as nearly all working people while the estimate
@@ -43,7 +43,7 @@ Done (behaviour preserving, quick tier and the labour, staffing, firm and save t
 - Still outside the owner: the plague survival roll in `sim/engine/society_hazards.py` (listed as a test
   exception until the disease work lands), and the dict wrapper in `core.py` / `economy.py`.
 
-Done (behaviour change; the figures below are one measurement on an opened Rome game, re-measure with this command: `python3 -m sim.tests --slow --only labour_single_owner,labour_single_owner_scenario`):
+Done (behaviour change; the figures below are one measurement on an opened Rome game, re-measure with this command: `python3 -m sim.tests --slow --only labour_single_owner`):
 
 - Cause of the split: the opening placed only the people producers' expected sales need and sent everyone else to
   the unskilled trade, and the post-spin-up trim sent every cut worker there too. Farm people mostly work their
@@ -80,7 +80,7 @@ Done (seeding and reservations; rule tests in `test_labour_core_seed_and_reserva
 `complaint_467_trades_open_to_the_jobs` is red: the opening seeds glassblowers, knappers, plumbers and merchants by need share
 (`labour_state.seeded_hours`), for example about eighteen thousand merchants against about a hundred and fifty worker-years of
 producer bids, so they wait for carriage crews and recipes no producer runs. A seed by need share should be bounded by the work
-the opening's producers, carriers and state will hire. Command: `python3 -m sim.tests --slow --only complaint_467_trades_open_to_the_jobs --jobs 1`.
+the opening's producers, carriers and state will hire. The test that held this command was removed from the suite.
 
 Done: the trim after the spin-up keeps a seeded trade only as far as its hirers' hours go (`workforce_settle.hours_kept`: what
 producers plan and others hired last year, plus the state's bids; `trade_seed.bound_by_hirers`); the people beyond that join the
@@ -94,7 +94,7 @@ trades: at the trim the producers' plans and last year's hires (`expected_hours`
 neither), and the state does not bid them, so every carter seed went to the fallback. The merchants' planned carriage hours
 (`carriage_hours.bids`, summed by `workforce_settle.carriage_plan_hours`) are now a hirer in `hours_kept`, as producers' plans are. A seeded
 trade nobody plans for or hires is still bounded to nothing. Rule tests: `SeedBoundedByHirersTests`. Re-measure the counts with
-`python3 -m sim.tests --slow --only carters_and_plumbers_exist_in_a_game_scenario,complaint_467_trades_open_to_the_jobs`.
+(the test was removed from the suite).
 
 ## Two readers disagree on the merchant count (PM, 2026-10-22)
 

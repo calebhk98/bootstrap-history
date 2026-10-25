@@ -1,5 +1,4 @@
-"""sim/economy/api.py: each accessor agrees with reading the record it is given. The wall (every outside import is
-published) is test_economy_api_wall.py."""
+"""sim/economy/api.py: each accessor agrees with reading the record it is given."""
 QUICK_TOPIC = True
 
 import types

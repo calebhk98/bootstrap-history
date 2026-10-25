@@ -1,7 +1,7 @@
 """The trade ids the labour package still names in code: roles its bookkeeping counts (scholars, generic
 craftsmen, the bonded, an army under arms) rather than facts about a trade. Per-trade facts (literacy,
 teacher, tools, staffing resource, fatality risk) are read from the registry in data/world/trades.json.
-sim/tests/test_labour_core_walls.py pins this file as the only labour module that names trades.
+This file is the only labour module that names trades.
 """
 
 TAUGHT_FROM_DEFAULT = "smith"   # TRANSITIONAL heuristic: the teacher of a trade that names none

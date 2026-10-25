@@ -750,9 +750,8 @@ class WorkingAgePopulationTests(unittest.TestCase):
 
 class DeterminismTests(unittest.TestCase):
     """Same seed, same answer, run repeatedly in one process - see
-    Complaints/closed/27-nondeterministic-simulation.md and sim/tests/
-    test_determinism.py for why this project checks this explicitly rather
-    than assuming it. Population holds its own random.Random by direct
+    Complaints/closed/27-nondeterministic-simulation.md for why this project
+    checks this explicitly rather than assuming it. Population holds its own random.Random by direct
     reference (never by id()), so this also serves as a demonstration that
     the module cannot reproduce that bug's shape: nothing here is ever
     cached or compared by an object's address.

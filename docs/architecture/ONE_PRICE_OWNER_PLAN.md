@@ -222,8 +222,7 @@ What it showed (the hypothesis that seeding from costs stops the cycling is only
    spend below one the only income at which a household spends all it is paid is the cost of its floors. The opening
    is therefore a stationary subsistence economy and the surplus the old opening gave (and the growth it started) is gone.
    Fixtures that need a household with a surplus say so (`economy_fixture.households_with_a_surplus`).
-4. The opening costs about twice what it did to build (several openings of one economy; `python3 -m sim.tests --slow
-   --only shipped_opening_game`), not a year's step.
+4. The opening costs about twice what it did to build (several openings of one economy; `python3 sim/simulator.py opening-checks`), not a year's step.
 
 Acceptance measure (`python3 sim/simulator.py opening-checks`, before and after on the full-length openings): the money
 against wear passes for Rome and England now, the English wage over floor passes, and the sited ores of Mexica and the Norse pass.
@@ -343,7 +342,7 @@ Files: `sim/engine/real_output.py`, `market_clearing.py` (`_follow_cleared_volum
   that year (`test_purchase_limited_by_offered_volume`).
 - What it showed. (1) The economy's own volumes are not stationary: in a no-intervention run output per head reads
   one, 0.86, 0.72, 0.73 over the first four years, and goods carrying up to 0.29 of the baseline year's value sit beyond
-  a factor of three of it in the third year (`test_real_output_baseline.py`, bound stated from the subject and expected to fail while the spin-up is unsettled; `python3 -m sim.tests --slow --only real_output_baseline`). This is the unsettled spin-up of stage 2 (473), not
+  a factor of three of it in the third year (a baseline check that has since been removed). This is the unsettled spin-up of stage 2 (473), not
   the measure. (2) A fall in people without a technique does not leave output per head put: output falls less than
   the people, since food volumes rise (the survivors eat more of the same land's food) while construction falls; per
   head read 1.34, 1.26, 1.32, 1.58 over four years after forty in a hundred of the people went. The plan's "a population

@@ -41,7 +41,7 @@ cannot be recovered; `sim/economy/opening_own.py` does not exist. It passed the 
 `agent_economy_wiring` on Rome: after the opening, households offered no savings at all (`record.funds_offered` zero, so
 `economy_api.credit_room` is None). That is the collapse recorded in 526: with the food floor grown at home, the saving leak drives
 the settled income toward zero. So the work lands together with 526 (607), with `agent_economy_wiring` and
-`full_length_opening_checks` green. Reproduce the symptom on any rebuilt attempt: `python3 -m sim.tests --slow --only agent_economy_wiring --topic-seconds 900`.
+`full_length_opening_checks` green. Reproduce the symptom on any rebuilt attempt: (the test was removed from the suite).
 
 ## Update: the fixture now has plots
 

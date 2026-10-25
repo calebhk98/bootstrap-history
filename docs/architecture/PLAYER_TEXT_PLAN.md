@@ -28,7 +28,7 @@ The scanner in the appendix walks every `.py` file under `sim/` except `sim/ui/`
 means a plain sentence. Fixed sentences are only counted in the sinks above (docstrings, raised
 developer errors, and the long rationale strings of parameter declarations are skipped).
 
-Command (the appendix holds the source; the proposed home is `sim/tests/player_text_scan.py`):
+Command (the appendix holds the source; it is not in the repository):
 
 ```
 python3 player_text_scan.py sim            # table by module
@@ -172,7 +172,7 @@ display name, never chooses a unit symbol.
 
 Where a call site still returns a string, the same record carries it as the code `legacy.text` with
 one `text` parameter. This keeps migration incremental (section 4): the UI renders `legacy.text`
-verbatim, the allow-list counts legacy sites, and each replacement by a real code shrinks the list.
+verbatim, the scanner counts legacy sites, and each replacement by a real code shrinks the list.
 
 ### 3.2 The catalogue in sim/ui
 
@@ -233,29 +233,12 @@ dict and no longer need `units_text.for_text` to rewrite finished prose.
 Nothing in the engine reads a rendered string back. Code that tests text today (`FAILED_PREFIX`,
 `MINOR_MARK`, `startswith`) tests `code` or `severity` once its module migrates.
 
-### 3.4 The check that fails on new sentence-building
+### 3.4 Keeping new sentence-building out of the engine
 
-A new test topic `sim/tests/test_player_text_in_engine.py`, with the scanner as
-`sim/tests/player_text_scan.py` and the allow-list as `sim/tests/player_text_allowlist.json`
-(owned by `sim/tests`):
-
-- The scanner counts hits per file outside `sim/ui/`, `sim/tests/` and declared developer tools.
-- The allow-list maps each file to a ceiling. The test fails when a file has more hits than its
-  ceiling, or has any hit and is not listed. It also fails when a ceiling is above the measured count,
-  so a migration lowers the number in the same change. The report mode prints what remains, as the
-  worklist. One line per file, sorted, keeps merge conflicts rare.
-- This ratchet only blocks growth. It is not a burndown target in the sense of the owner decision
-  of 2026-10-02 (do not drive this with a burndown test): no deadline, and no failure for legacy
-  that is still there.
-- `test_message_catalogue` loads the English catalogue and checks that every `message("code", ...)`
-  call found by `ast` has an entry, its parameters match the declared dimensions, and every entry is
-  used (or marked `mod_api`). It also renders every entry with sample values in a fake language and
-  fake units (the technique of the `blob` unit test of Complaint 285), proving no template hardcodes
-  a unit or a currency word.
-- A new `message("legacy.text", ...)` counts like a new sentence and fails the same way.
-
-Tests that already guard text (`test_ui_mod_neutral_text`, `test_player_text_names_own_civilisation`,
-`test_complaint_285_display_units`) stay and also run over the catalogue files.
+No test scans the source for sentence-building any more, so this is kept by review: a new player-facing
+sentence in the engine is a `message(code, ...)` in the catalogue, not a built string, and a new
+`message("legacy.text", ...)` counts like a new sentence. The scanner in the appendix measures what remains,
+as the worklist. Behaviour tests read the `code` and parameters, not the wording.
 
 ### 3.5 Rules the migration follows
 
@@ -293,7 +276,7 @@ with `python3 -m sim.tests --only ...`; `--slow` runs before each PR.
 
 | Step | Scope | Risk | Test |
 |---|---|---|---|
-| 0 | This plan, the scanner moved to `sim/tests/player_text_scan.py`, the allow-list at the measured counts, the check of 3.4. No engine edit. | none | the new topic; suite unchanged |
+| 0 | This plan, the scanner kept as a worklist tool (appendix). No engine edit. | none | suite unchanged |
 | 1 | `sim/messages.py` (record, constructors, severity set), the renderer and catalogue loader in `sim/ui/messages/`, code `legacy.text`, the `language` setting, JSON `<field>_code` and `<field>_parameters`, the `sim/PROTOCOL.md` rule. No engine call site migrated; `ui_port` exports the renderer. | low | catalogue test; a sample mod adds a code and a language; existing reply keys unchanged |
 | 2 | Consumers that parse text: `event_severity.py`, `projects_completion.FAILED_PREFIX` and `MINOR_MARK`, blocker entries (`text` becomes a message beside `kind`). Log entries become message dicts, still `legacy.text`. | medium (event stream) | `hazard_messages_match_mechanics`, `blocker_readouts_agree`, `screen_text_defects`, event protocol tests; fingerprint |
 | 3 | Small, least shared engine modules: `fog.py`, `purchase_rule.py`, `cash_remedies.py`, `founder_sales.py`, `hazard_hedge_timing.py`, `projects_exclusions.py`, `blockers.py`, `failure_cause.py`, `planner.py`, `path_search.py`. Mostly fixed sentences and a few quantities; the first real codes. | low | `refusal_cash_remedies`, `small_text_remains`, `command_search_and_text`, plus a rendering test per site |
@@ -302,7 +285,7 @@ with `python3 -m sim.tests --only ...`; `--slow` runs before each PR.
 | 6 | Developer text: `validate_*`, `civ_start_check.py`, `civ_basket_check.py`, `tree_merge.py`, `saveload.py`, `invariants.py`, `mods_*.py`, `settings_table.py`, `constants.py`: moved under `sim/ui/` (or declared developer tools in the allow-list), English only, no catalogue. | low | `simulator.py validate` output diff before and after; the tests that call them |
 | 7 | Number formatting sweep: remaining files that format numbers for players without a message, converted with the same constructors. | low-medium | `complaint_285_display_units` extended so the fake-unit test also renders migrated messages (closes the 285 "prose built inside the engine" remainder) |
 | 8 | Walled packages after their in-flight work merges: `sim/economy/`, `sim/agents/`, `sim/labour/`, `sim/geography/`. The package returns messages through its `api.py` objects, the engine adapter passes them up unchanged, `sim/ui` renders. Packages import only `sim/messages.py`, never `sim.ui` (two-way wall). | medium | each package's tests and text tests; wall import tests |
-| 9 | Retire `legacy.text`: allow-list at zero for engine modules, fallback dropped, catalogue documented for modders in `mods/README.md`. | low | the 3.4 check with an empty list |
+| 9 | Retire `legacy.text`: the scanner reports zero for engine modules, fallback dropped, catalogue documented for modders in `mods/README.md`. | low | the scanner with nothing left to report |
 
 ### Work in flight
 
