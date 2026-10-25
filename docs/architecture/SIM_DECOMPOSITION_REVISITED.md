@@ -7,6 +7,9 @@ does not exist is not, so this document argues with that decision's own
 reasons rather than working around them. It recommends action in section 7.
 It changes no code.
 
+**Superseded:** stage 1 is built (`sim/engine/year_phases.py`); the direction is now `MODULE_REGISTRY_PLAN.md`.
+The line counts in sections 2 to 5 describe `core.py` before that work.
+
 Every number below either came from a command run against this checkout, or
 is quoted from a named file with a line number, so the next person can
 re-check it rather than trust it.

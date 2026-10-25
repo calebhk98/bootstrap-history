@@ -17,6 +17,7 @@ is now. None of this is an approved plan yet.
 | `NAMING_PLAN.md` | The short identifiers, what they mean, and how to rename them safely. Tiered by risk. | Ours |
 | `STATE_OF_THE_PROJECT.md` | The milestones in `ENDOGENOUS_COSTS_AND_DOMAINS.md` and what to do next, each with the command that measures it. The issue table is not kept here: list `Complaints/` and read each `**Status:**` line. | Ours |
 | `SIM_DECOMPOSITION_REVISITED.md` | Reopens, on the stakeholder's request, the "no full decomposition" decision in `sim/ARCHITECTURE.md`; checks which of that decision's reasons still hold and recommends a staged, partial alternative. | Ours |
+| `MODULE_REGISTRY_PLAN.md` | How `Sim` stops being a god object and every feature becomes swappable by a mod: modules behind typed contracts, assembled per game from one registry (add, replace, extend one method, remove, extension points, kernels). Measures the current coupling, weighs each earlier suggestion, stages the work. Supersedes the recommendation of `SIM_DECOMPOSITION_REVISITED.md`. | Ours |
 | `WIRING_MILESTONE_4.md` | What wiring demography and agriculture into the engine actually broke and fixed, commit by commit. Feeds Milestone 4 in `STATE_OF_THE_PROJECT.md`. | Ours |
 | `DEMAND_AT_SCALE.md` | Whether `sim/world/demand.py`'s household-demand model holds outside Roman Egypt, against the stakeholder's own critique. | Ours |
 | `MAP_AND_WEATHER.md` | Why the map and the weather model are two disconnected systems, and what it would take to join them. | Ours |
