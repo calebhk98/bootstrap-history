@@ -1,111 +1,118 @@
 # Module `disease`
 
-Epidemics and endemic disease: the disease package, burden, forecasts and medical coverage.
+Epidemics and endemic disease in the nation: the infection records, the yearly step that kills by band and tile, the forecast the
+risk screens print, the disease burden the technologies leave, and what an epidemic does to each playing seat.
 
-**Status:** draft for task 1.5 of `MODULE_MIGRATION_TASKS.md`, read-only analysis of `e8b004c` (the head of `sim-module-registry-plan`). No code changed. The tables are generated from the static analysis in `README.md` ("How the numbers were made") and then edited by hand. No committed command reproduces the counts; the scripts were kept outside the repository, so re-measure before acting on one. Names this draft did not open in the source are marked in its hard spots.
+**Status:** moved, on branch `mr/disease` (package `sim/disease/`, bridge `sim/engine/bridge_disease.py`, forwarders
+`sim/engine/forward_disease.py`). The draft of task 1.5 (a read-only analysis of `e8b004c`) is replaced by what the move found;
+"What the move changed in this draft" lists each correction. Re-measure counts with `python3 -c "import sys; sys.path.insert(0,'.');
+from sim.disease import module_spec as m; s=m.MODULE_SPECS[0]; print(len(s.publishes), len(s.applies), len(s.reads), len(s.sends))"`.
+
+## What the move changed in this draft
+
+- **Coverage is not here.** The draft put `CoverageMixin` (`coverage_nodes`, `coverage_share`, `coverage_row`, `units_for_coverage`,
+  `roll_out`) in this module. Only `disease_burden_held` is a disease rule (what share of a technology's weight counts); the rest is
+  how many people a repeated work serves, which production's institution units and the UI read. It stays in `coverage.py` and the
+  module reads the `coverage` and `coverage_share` views the engine bridge publishes (`bridge_diffusion.py`, `bridge_disease.py`). `RollOut`
+  and the `coverage` view go to whoever takes `coverage.py`.
+- **`contact_events.py` is not disease.** It tells the agents' awareness model that a conquest or a migration put people in touch
+  (`awareness.record_contact`); the name is the only link. It stays in the engine for the agents' owner.
+- **Views: eight, not three.** `disease_burden`, `disease_burden_held` (keyed by node), `disease_burden_weights` (were published by the
+  diffusion bridge), `endemic_death_rates`, `epidemic_deaths_by_tile`, `epidemic_forecast` and `regional_disease_loss` (quotes: they take a
+  food figure or a tile), `frontier_disease_loss`. The draft's `coverage` view is not published here.
+- **Commands applied: two, with another shape.** `RunEpidemicYear(food_kcal_per_day, year)` answers the deaths by band, and
+  `HitSeatsWithEpidemic(deaths_by_band, year)` cuts each playing seat's staff, deputies and takings and answers the share. They are
+  two because the engine adds the externality providers' deaths (`externalities.add_deaths`, a mod door that is handed the whole
+  game) between them, and the seats are cut by the sum. `RollOut` is not here (see above).
+- **The yearly step stays inside demography's year.** `epidemic_year` is called from `step_regions_of_people`, which reads the deaths,
+  the burden and the endemic rates straight away, so it is not a phase: `forward_disease.py` keeps `epidemic_year` (run the year,
+  add the externalities, hit the seats, read the burden and the rates) until demography sends the commands itself.
+- **Caches are the module's, not views.** The entry-days table (`_disease_entry`), the deaths by tile, the names of the killers and
+  the forecast were kept in `Sim.__dict__`; they are attributes of the module, empty after a load as before. The deaths by tile
+  are a cached view on the `epidemics` channel (written only by `RunEpidemicYear`); the forecast is a quote that keeps its last
+  answer until the next disease year, as it did.
+- **State: `DiseaseWorld` (records, introduced, deaths), world scope**, in `state.modules["disease"]`; the engine's `DiseaseState` and
+  `state.disease` are gone. Relocations are in `sim/tests/equiv_fields.py`.
 
 ## At a glance
 
 | Measure | Value |
 |---|---|
-| Views / commands proposed | 3 / 2 |
-| Old methods and properties owned (after regrouping) | 17 |
-| Of those, referenced from another module's mixin code | 9 (8 classed read-only or pure by Appendix B, 1 classed writers) |
-| Names used by other modules or by code outside the mixins (ui, agents, ports, mods, function modules) | 12 (9 from mixins, 3 only from outside) |
-| Views per used name | 0.25 |
-| Views that replace exactly one referenced method and no field (one-to-one) | 0 of 3 |
-| Views of other modules it reads | 11, from 8 modules |
-| Commands of other modules it sends | 5 |
-
-**Existing surface and files.** Existing: `sim/disease/` (14 files; `api.py` 23 lines; `WALL = two-way`; draws only from its own seeded generators, never `Sim.rng`). Engine: `DiseasePortMixin` (8), `CoverageMixin` (8), `Sim._disease_burden`, `disease_burden.py`, `mortality_shock.py`.
+| Views published | 8 (see (c)) |
+| Commands applied / sent | 2 / 5 |
+| Views read | 25, from 11 owners (see (e)); 9 are bridged for demography, land and coverage |
+| Forwarders left in the engine | 6 (`forward_disease.py`) |
 
 ## (a) Mixin classes and files absorbed
 
-| Class | File | Methods here | Referenced from other modules |
-|---|---|---|---|
-| `Sim` | `sim/engine/core.py` | 1 | 1 |
-| `DiseasePortMixin` | `sim/engine/disease_port.py` | 8 | 4 |
-| `CoverageMixin` | `sim/engine/coverage.py` | 8 | 4 |
+| Class or file | Became |
+|---|---|
+| `DiseasePortMixin` and `DiseaseWorld` (`sim/engine/disease_port.py`) | `sim/disease/module.py` (`Disease`) over `people.py` (the nation's people and the traffic between tiles), `contact.py` (sources, routes, arrivals, technology scales), `epidemics.py` (the yearly step), `forecast.py`, `seats_hit.py`, `burden.py`; rules in `rules.py` |
+| `Sim._disease_burden` (`core.py`) | `Disease.disease_burden` |
+| `CoverageMixin.disease_burden_held` | `Disease.disease_burden_held` |
+| `sim/engine/disease_burden.py` | `sim/disease/burden_rules.py` (`burden_from_holdings`, exported by `api.py`) |
 
-Methods that stay inside the module (referenced by no other module's mixin code and by nothing outside the mixins): `disease_year`, `endemic_death_rates`, `epidemic_hits_seats`, `people_per_unit`, `people_who_can_use`.
+`validate_disease_data.py` stays an engine validator: it checks the data files, not a running game.
 
 ## (b) State owned
 
-Paths are today's. Seat-scoped fields live on `state.<section>` as the acting seat's alias (`bind_seat`, `sim/engine/state_seat.py`) and are saved once per seat in `state.seats[seat_id]`; world fields live once on the state. Counts are access sites found by the field scan: a mixin method of another module counts under that module, code in a function module, `sim/ui`, `sim/agents` and the like counts under `<area>`.
-
-Proposed slot: a world dataclass `DiseaseWorld`, no per-seat state.
-
-| Today's path | Scope | Read by (outside the owner) | Written by (outside the owner) |
-|---|---|---|---|
-| `state.disease.deaths` | world | - | - |
-| `state.disease.introduced` | world | - | - |
-| `state.disease.records` | world | - | - |
+| Field | Scope | Was |
+|---|---|---|
+| `records` | world | `state.disease.records` |
+| `introduced` | world | `state.disease.introduced` |
+| `deaths` | world | `state.disease.deaths` |
 
 ## (c) Views
 
-Kind is table (one value), keyed (one value per key, computed on first read of the key) or quote (a question with arguments, never cached). Channels are the version channels the owner bumps; `inputs` are other views the value is derived from (a name without a dot is this module's own).
-
-| View | Kind | Seat | Answers | Replaces (old methods) | Replaces (fields) | Inputs | Channels | Callers today |
-|---|---|---|---|---|---|---|---|---|
-| `disease_burden` | keyed | no | Endemic burden and death rates by tile; the burden held by techniques. | `_disease_burden`, `disease_burden_held`, `endemic_death_rates` | `disease.records`, `disease.introduced`, `disease.deaths` | `demography.people_by_tile`, `land.tile_facts` | `disease` | 3 |
-| `epidemic_forecast` | keyed | no | Forecast and deaths by tile; regional and frontier loss. | `epidemic_forecast`, `epidemic_deaths_by_tile`, `regional_disease_loss`, `frontier_disease_loss` | - | `demography.people_by_tile`, `disease_burden` | `disease` | 5 |
-| `coverage` | keyed | no | Who can use a technique, the share covered, units for coverage, the row for a node. | `coverage_nodes`, `coverage_share`, `coverage_row`, `units_for_coverage`, `people_per_unit`, `people_who_can_use` | - | `demography.population`, `production.institution_units`, `mechanics.capability_sets` | `coverage` | 4 |
-
-**Coverage.** 9 methods are referenced from other modules' mixin code: 8 are replaced by a view here, 1 by a command. 3 more names are used only from outside the mixins (ui, agents, ports, mods). Of all 12 used names, 12 are covered by a view or command through the method itself, 0 through a field alias, 0 are year-phase hooks and 0 are package handle members.
+| View | Kind | Answers | Cached |
+|---|---|---|---|
+| `disease_burden` | table | 1.0 is the full pre-industrial infectious environment, 0.0 every disease technology fully held | no: reads what is held and what coverage serves, written outside any command |
+| `disease_burden_held` | keyed | The share of a node's weight that counts | no, likewise |
+| `disease_burden_weights` | table | {node: weight} of the technologies that make up the burden, in tree order | no |
+| `endemic_death_rates` | table | {band: excess deaths per head per year} from the endemic diseases of the land held | no |
+| `epidemic_deaths_by_tile` | table | {tile: {band: deaths}} the last disease year killed | yes, channel `epidemics` |
+| `epidemic_forecast` | quote | Expected deaths, infected and arrival chances for the coming year | no: the module keeps its last answer until the next disease year |
+| `regional_disease_loss` | quote | The share of a working-age person on a tile the diseases take in a year | no |
+| `frontier_disease_loss` | table | The mean of it over the tiles held that border one not held | no |
 
 ## (d) Commands
 
-| Command | Fields | Replaces | Write sites cited | Refusal causes | Owned fields it writes |
-|---|---|---|---|---|---|
-| `RunEpidemicYear` | year | `epidemic_year`, `disease_year`: advances the package and sends deaths. Methods: `epidemic_year`, `disease_year`, `epidemic_hits_seats` | `sim/engine/disease_port.py`, `sim/engine/shock_year.py` | none: always applies | `disease.records`, `disease.introduced`, `disease.deaths` |
-| `RollOut` | seat, node, units | `roll_out`: put coverage units into use. Methods: `roll_out` | `sim/ui/proto/ (roll_out)`, `sim/engine/coverage.py` | `no_units`, `not_known` | - |
+| Command | Fields | Answers | Sent by |
+|---|---|---|---|
+| `RunEpidemicYear` | food_kcal_per_day, year | {band: deaths} | `forward_disease.epidemic_year` |
+| `HitSeatsWithEpidemic` | deaths_by_band, year | the working-age share killed (zero below the share a seat notices) | `forward_disease.epidemic_year` |
 
-## (e) Reads and sends
+Sent to others: workforce `SurviveStaff`, `ScaleDeputies`, `ReportStaffReduction`; hazards `LoseCapital`; reporting `RecordEvent`.
+Deaths go to demography as the answer of `RunEpidemicYear`, which the population step takes; no `KillPeople` is sent, because the
+deaths enter the step by band and tile, not as a share (a change to that is demography's).
 
-Reads (views of other modules), by provider:
+## (e) Reads
 
-- `demography`: `demography.people_by_tile` (input of disease.disease_burden, input of disease.epidemic_forecast); `demography.population` (input of disease.coverage)
-- `knowledge`: `knowledge.techniques_held` (has, projects.done)
-- `land`: `land.tile_facts` (input of disease.disease_burden, world_map)
-- `mechanics`: `mechanics.capability_sets` (DISEASE_BURDEN_TECH_IDS, input of disease.coverage); `mechanics.mechanic` (mechanic, nodes_with_mechanic)
-- `production`: `production.institution_units` (input of disease.coverage, institution_unit_ceiling, institution_units); `production.running` (running)
-- `reporting`: `reporting.event_log` (household.log)
-- `seats`: `seats.seat_list` (playing_seats)
-- `workforce`: `workforce.staff` (household.artisans, household.employees, household.scholars, labour ...)
-
-Sends (commands of other modules):
-
-- `hazards`: `RunRandomEvents`
-- `reporting`: `RecordEvent`
-- `ventures`: `OpenVenture`
-- `workforce`: `Fire`, `Hire`
+- core: `year`, `civilisation`, `legacy_world_map`, `legacy_act_as`, `money_text`
+- agriculture: `weather_seed`
+- demography (bridged in `bridge_disease.py` until it moves, named as its catalogue names them where one exists): `people_by_band`,
+  `nutrition_ratio`, `working_age`, `legacy_regions_of_people` (raw state, a debt), `urban_fraction`, `regional_flows_last_year`
+- land (bridged): `home_tiles_held`
+- freight: `goods_carried_last_year`
+- knowledge: `techniques_held`, `held_techniques`
+- mechanics: `effect_terms`, `mechanic`
+- diffusion: `civ_diffusion`, `tech_effects`
+- coverage (bridged): `coverage`, `coverage_share`
+- seats: `seat_list`; workforce: `staff`, `staff_snapshot`
 
 ## (f) Year phases
 
-Phases of `sim/engine/year_phases.py` `SHIPPED` it takes part in; where a phase is shared with other modules the sub-steps it owns are named (see "The year's shared phases" in the README):
+None. The step runs inside the population step (see above).
 
-- inside `_refresh_demographic_indexes`/`step_regions_of_people` (`regional_people.py:46` calls `epidemic_year`); the package steps at sub-year resolution inside one call
+## (g) Callers outside the module
 
-## (g) Callers outside the engine mixins that read its views
+`sim/ui` and `sim/engine/ui_port.py` (`epidemic_forecast`, `disease_burden`), `fog.py` (`epidemic_forecast`), `colonies.py`
+(`regional_disease_loss`, `_disease_burden`), `agents_port_budget.py` (`frontier_disease_loss`), the diffusion module (`disease_burden`,
+`disease_burden_held`, `disease_burden_weights`, through the views), `regional_people.py` (`epidemic_year`, `epidemic_deaths_by_tile`).
+`sim/agents/country_disease.py` and `budget_works.py` use `disease.nation` through the package's `api.py` and are unchanged.
 
-| Caller group | Uses | Most-used names |
-|---|---|---|
-| ui | 4 | `coverage_row`, `coverage_nodes`, `roll_out`, `coverage_share` |
-| engine/ui* | 2 | `_disease_burden`, `epidemic_forecast` |
-| engine/agents_port* | 1 | `frontier_disease_loss` |
+## (h) Hard spots
 
-The scan matches `sim.`, `s.`, `world.` prefixes, so a few counts include unrelated locals; treat them as orders of magnitude.
-
-sim/ui: `coverage_row`, `coverage_nodes`, `roll_out`, `coverage_share`; engine ui: `_disease_burden`, `epidemic_forecast`; agents_port: `frontier_disease_loss`.
-
-## (h) Hard spots and caches
-
-- `epidemic_year` writes deaths by directly mutating population, directors_extra, artisans and the log: it becomes KillPeople, LoseStaff and RecordEvent.
-- `disease_port` caches entries, deaths by tile, forecast and names in `Sim.__dict__` (`disease_port.py:107,194,208,253`), keyed by year; they are view caches.
-- `_disease_burden` (in `Sim`) is called by diffusion and land: reads of a computation that depends on techniques held (`coverage`).
-
-Caches and version counters held today (feed for task 1.2):
-
-- `__dict__['_disease_entry']`, `_epidemic_deaths_by_tile`, `_epidemic_names`, `_epidemic_forecast` (`disease_port.py`)
-
-Detected by the cache scan in this module's mixin files: `engine/disease_port.py:107 __dict__[_disease_entry]`, `engine/disease_port.py:194 __dict__[_epidemic_deaths_by_tile]`, `engine/disease_port.py:253 __dict__[_epidemic_forecast]`, `engine/disease_port.py:208 __dict__[_epidemic_names]`.
+- `endemic_death_rates` reads the civilisation's own tiles (`tiles_held(civ, map)`), while the step reads the tiles the owner map gives
+  the home country (`home_tiles_held`). They differ after a conquest. Kept as it was; whether the endemic rate should follow
+  the owner map is a question for the land owner.
