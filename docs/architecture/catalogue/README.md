@@ -34,7 +34,7 @@ This directory has one file per proposed module (`<module>.md`), `core.md` (what
 | 7 | [`disease`](disease.md) | Epidemics and endemic disease: the disease package, burden, forecasts and medical coverage. | 3 | 2 | 17 | 9 |
 | 8 | [`finance`](finance.md) | Debt: credit limits, interest, arrears, insolvency, bondage and the capital market. | 7 | 7 | 50 | 7 |
 | 9 | [`foreign_trade`](foreign_trade.md) | Trade with partner countries: their economies, supply, payments in coin, lift capacity, actors' trade books. | 4 | 5 | 40 | 13 |
-| 10 | [`freight`](freight.md) | Transport: freight modes and costs, carriers, traders' economics, route dues. | 4 | 1 | 50 | 10 |
+| 10 | [`freight`](freight.md) | Carriage of goods at home and abroad: carriers and their costs, routes, what merchants add, route dues. **Moved** (`sim/freight/`). | 15 | 1 | 50 | 10 |
 | 11 | [`hazards`](hazards.md) | Disasters and shocks: random events, dated shocks, world hazards, famine watch, relief and the output factor. | 4 | 2 | 52 | 7 |
 | 12 | [`knowledge`](knowledge.md) | What each seat knows and can see: techniques held, forgotten, revealed (fog), and the tree itself. | 3 | 3 | 19 | 8 |
 | 13 | [`land`](land.md) | Land and the map: tile ownership, claims, roads and ports, works, colonies, and the geography package. | 7 | 4 | 37 | 12 |

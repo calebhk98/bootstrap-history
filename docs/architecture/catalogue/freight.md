@@ -1,111 +1,125 @@
 # Module `freight`
 
-Transport: freight modes and costs, carriers, traders' economics, route dues.
+Carriage of goods at home and abroad: carriers and their costs, the cheapest route over the map's tiles, what merchants add on a foreign route, and the dues of a haul.
 
-**Status:** draft for task 1.5 of `MODULE_MIGRATION_TASKS.md`, read-only analysis of `e8b004c` (the head of `sim-module-registry-plan`). No code changed. The tables are generated from the static analysis in `README.md` ("How the numbers were made") and then edited by hand. No committed command reproduces the counts; the scripts were kept outside the repository, so re-measure before acting on one. Names this draft did not open in the source are marked in its hard spots.
+**Status:** moved (branch `mr/freight`). The package is `sim/freight/`; this file now describes what shipped, not the draft
+proposal. Where the draft differed, "What changed from the draft" says how. Counts below come from the module spec
+(`python3 -c "import sys; sys.path.insert(0,'.'); from sim.freight.module_spec import MODULE_SPECS as s; print(len(s[0].publishes), len(s[0].applies), len(s[0].reads))"`).
+
+## What changed from the draft
+
+- **Views:** 15 instead of 4, and no `route_cost`, `trader_economics` or `route_dues`. The draft's `route_cost` was one
+  quote over twelve old methods that take five different argument lists (a partner record, two tiles, a material, an
+  imbalance, a cargo class); a caller asks one of those questions, so the views are the questions: `foreign_route`,
+  `route_freight_per_tonne`, `material_route`, `tile_haul_cost`, `partner_route_cost`, `freight_mode_costs`,
+  `freight_handling_costs`, `material_carriage_per_tonne`, `material_freight_factor`. `trader_economics` (a keyed view
+  over six methods) is four quotes plus the composite `trader_cost_share`: the merchants' margin, cycle, agent cost
+  and cargo loss take different arguments (some a demand, some a price flexibility) and a caller reads two or three of
+  them, so one record would compute terms nobody asked for, and a route of no legs makes some of them undefined that
+  the old callers never evaluated. `route_dues` had no reader at all (the draft's own floor flag): the dues are paid by
+  the command `PayRouteDues`, and the per-holder sums are the module's own methods.
+- **`carrier_models` stays a view** (draft: under the three-caller floor). Its readers are the module's own rules and
+  foreign trade's lift arithmetic (`_route_lift_years_per_tonne`, `_route_capital_per_lift_tonne`), which reads each
+  leg's carrier by mode; foreign trade reads it through the forwarder until it moves.
+- **Three views already existed under bridge names and are now freight's:** `tile_haul_cost` (coin's carriage
+  surcharge), `partner_route_cost` (coin's keeping of coin held abroad) and, for living stock's landed price and carry,
+  the trader quotes. `partner_route_cost` reads the route the partner's facts hold (`partner_route`, bridged to
+  foreign trade's `_foreign_economy_facts`) rather than searching again: the facts remember the route for the year and a
+  fresh search could answer differently after the market's flows changed.
+- **Dropped as dead code:** `land_freight_money_per_tonne_km`, `material_freight_cost_per_kg`,
+  `domestic_haul_money_per_tonne` and `domestic_haul_dues_per_tonne` had no caller outside the tests.
+- **`route_dues_treasury` is not a method.** The account a holder's dues go into is the view `holder_treasury` (an id);
+  the payment is the ledger command `PayActor(payer, payee, amount, purpose)` (new, in `sim/ledger/commands.py`, applied
+  by the bridge). A government the cast does not hold yet is opened by that command, as `treasury_of` opened it.
+- **Not freight's:** `trader_cargo.py` (`TraderCargoMixin`) settles trader cargo legs into the agent economy and the
+  partners' coin; it stays for `foreign_trade`. The merchant-house arithmetic is `sim/world/merchant_house.py` and
+  `merchant_terms.py`, already plain.
+- **Cycles in the view graph** (draft: `freight` and `foreign_trade` read each other): `freight` reads foreign trade's
+  `route_lift_years_per_tonne`, `route_capital_per_lift_tonne`, `lift_capacity_tonnes` and
+  `opening_carriers_per_route`; foreign trade's lift arithmetic reads freight's `carrier_models`. Per view the graph is
+  acyclic (`carrier_models` -> the lift views -> the trader quotes).
 
 ## At a glance
 
 | Measure | Value |
 |---|---|
-| Views / commands proposed | 4 / 1 |
-| Old methods and properties owned (after regrouping) | 50 |
-| Of those, referenced from another module's mixin code | 10 (1 classed read-only or pure by Appendix B, 9 classed writers) |
-| Names used by other modules or by code outside the mixins (ui, agents, ports, mods, function modules) | 14 (10 from mixins, 4 only from outside) |
-| Views per used name | 0.29 |
-| Views that replace exactly one referenced method and no field (one-to-one) | 1 of 4 |
-| Views of other modules it reads | 15, from 8 modules |
-| Commands of other modules it sends | 0 |
+| Views / commands | 15 / 1 (+ the ledger's new `PayActor`, sent) |
+| Views of other modules it reads | 27, none cached (see the spec's `READS_BY_OWNER`) |
+| Commands of other modules it sends | `PayActor` (the ledger's) |
+| `legacy_*` reads (debts) | `legacy_world_map` (the handle the geography package's searches take) |
+| State | none; the module remembers a carrier table, the routes of hauled materials and the year's tile-to-tile cost, all rebuilt on demand and never saved |
+| Log lines written | none |
+| Plain modules moved | `haul_route.py` -> `sim/freight/route.py`; `foreign_route_choice.py` -> `route_choice.py`; `freight_markup` -> `rules.freight_markup`; `dues_money_per_tonne`, `handling_money_per_tonne` -> `rules.py` |
 
-**Existing surface and files.** Existing: `sim/geography/freight_cost.py`, `sea_freight.py`, `route_dues.py`; `sim/agents/trader.py`, `route_dues_pay.py`. Engine: `ForeignRoutesMixin`, `DomesticHaulMixin`, `ForeignTradersMixin`, `RouteDuesMixin`, material freight in `FreightMixin`.
+## Mixin classes absorbed
 
-## (a) Mixin classes and files absorbed
-
-| Class | File | Methods here | Referenced from other modules |
-|---|---|---|---|
-| `FreightMixin` | `sim/engine/economy_freight.py` | 6 | 0 |
-| `ForeignRoutesMixin` | `sim/engine/foreign_routes.py` | 17 | 6 |
-| `DomesticHaulMixin` | `sim/engine/domestic_haul.py` | 9 | 1 |
-| `ForeignTradersMixin` | `sim/engine/foreign_traders.py` | 14 | 3 |
-| `RouteDuesMixin` | `sim/engine/route_dues.py` | 4 | 0 |
-
-Methods that stay inside the module (referenced by no other module's mixin code and by nothing outside the mixins): `_build_carrier_models`, `_capital_per_merchant`, `_cargo_class`, `_carrier_feed_material`, `_carriers_per_house`, `_domestic_flow_imbalance`, `_domestic_flow_ledger`, `_domestic_haul_mode`, `_foreign_flow_imbalance`, `_haul_route`, `_households_loanable_funds`, `_land_freight_physical_inputs`, `_material_source_tiles`, `_merchant_own_capital`, `_restock_days`, `_route_cargo_loss_share`, `_route_cargo_tonnes`, `_route_carriers`, `_route_houses`, `_route_voyage_years`, `_sea_crew`, `_share_delivered_on`, `_share_in_rate`, `_train_carrier`, `_unjoined_haul`, `domestic_cargo_cost_share`, `domestic_haul_dues_per_tonne`, `domestic_haul_money_per_tonne`, `land_freight_money_per_tonne_km`, `material_freight_cost_per_kg`, `material_freight_distance_km`, `material_freight_factor`, `material_haul_route`, `route_dues_by_holder`, `route_dues_per_tonne_by_mode`, `route_dues_treasury`.
-
-## (b) State owned
-
-Paths are today's. Seat-scoped fields live on `state.<section>` as the acting seat's alias (`bind_seat`, `sim/engine/state_seat.py`) and are saved once per seat in `state.seats[seat_id]`; world fields live once on the state. Counts are access sites found by the field scan: a mixin method of another module counts under that module, code in a function module, `sim/ui`, `sim/agents` and the like counts under `<area>`.
-
-Proposed slot: no world state, no per-seat state.
-
-| Today's path | Scope | Read by (outside the owner) | Written by (outside the owner) |
-|---|---|---|---|
-| none: this module owns derived values only, no stored field | | | |
-
-## (c) Views
-
-Kind is table (one value), keyed (one value per key, computed on first read of the key) or quote (a question with arguments, never cached). Channels are the version channels the owner bumps; `inputs` are other views the value is derived from (a name without a dot is this module's own).
-
-| View | Kind | Seat | Answers | Replaces (old methods) | Replaces (fields) | Inputs | Channels | Callers today |
-|---|---|---|---|---|---|---|---|---|
-| `route_cost` | quote | no | Freight cost and handling per tonne for a route and mode, domestic and foreign; the carriage of a material. | `_foreign_route`, `_haul_route`, `_material_route`, `_route_freight_per_tonne`, `_freight_mode_costs`, `_freight_handling_costs`, `_with_carried_provisions`, `material_carriage_per_tonne`, `material_freight_cost_per_kg`, `material_freight_distance_km`, `domestic_haul_money_per_tonne`, `land_freight_money_per_tonne_km` | - | `land.transport`, `land.tile_facts`, `workforce.wage`, `prices.material_price`, `finance.market_rate` | - | 5 |
-| `carrier_models` | table | no | The carrier models (animals, ships, crews) and their feed. | `_carrier_models`, `_train_carrier`, `_sea_crew` | - | `prices.material_price` | `freight` | 1 |
-| `trader_economics` | keyed | no | A route's trader cost, margin, cycle, cargo loss. | `_agent_cost_per_tonne`, `_cargo_lost_share`, `_trader_cost_share`, `_trader_margin_share`, `_trader_cycle_years`, `_route_cargo_loss_share` | - | `route_cost`, `finance.market_rate` | `freight` | 3 |
-| `route_dues` | table | no | Dues per tonne by mode, the treasury's take and by holder. | `route_dues_per_tonne_by_mode`, `route_dues_treasury`, `route_dues_by_holder`, `domestic_haul_dues_per_tonne` | - | `land.tile_owner` | `freight` | 0 |
-
-**Under the three-caller floor** (task 1.5: a view serves at least 3 callers or is a quote): `carrier_models`, `route_dues`. Each needs a second consumer found, a merge into a neighbouring view, or a change to a quote.
-
-**Coverage.** 10 methods are referenced from other modules' mixin code: 10 are replaced by a view here, 0 by a command. 4 more names are used only from outside the mixins (ui, agents, ports, mods). Of all 14 used names, 14 are covered by a view or command through the method itself, 0 through a field alias, 0 are year-phase hooks and 0 are package handle members.
-
-**Published as views but still classed as writers** after discounting the lazy creation of `state.actors` (which is what made most of Appendix B's writers; see README). Each is either a read that also fills a cache or lazily creates something, or a real write that must be split into a quote and a command before the view is allowed: `_cargo_lost_share`, `_trader_cost_share`, `_trader_cycle_years`, `_trader_margin_share`, `route_dues_treasury`.
-
-## (d) Commands
-
-| Command | Fields | Replaces | Write sites cited | Refusal causes | Owned fields it writes |
-|---|---|---|---|---|---|
-| `PayRouteDues` | payer, route, tonnes | `pay_route_dues`. Methods: `pay_route_dues` | `sim/agents/route_dues_pay.py`, `sim/engine/route_dues.py` | none: always applies | - |
-
-## (e) Reads and sends
-
-Reads (views of other modules), by provider:
-
-- `actors`: `actors.cast` (actors, actors.state)
-- `finance`: `finance.market_rate` (input of freight.route_cost, input of freight.trader_economics, market_rate)
-- `foreign_trade`: `foreign_trade.lift` (_route_capital_per_lift_tonne, _route_lift_years_per_tonne, foreign_lift_capacity_tonnes); `foreign_trade.partners` (economy.foreign_market_book, foreign_economies)
-- `land`: `land.tile_facts` (geography, geography.route_km_to, geography.source_tiles, input of freight.route_cost ...); `land.tile_owner` (input of freight.route_dues, tile_owner); `land.transport` (economy.improvements, held_and_running, input of freight.route_cost)
-- `markets`: `markets.agent_economy` (economy, economy.agent)
-- `prices`: `prices.material_price` (_material_price_per_kg, input of freight.carrier_models, input of freight.route_cost); `prices.material_prices` (_material_prices)
-- `seats`: `seats.seat_party` (seat_party)
-- `workforce`: `workforce.labour_market` (labour.market, labour.national_trade_population); `workforce.living_cost` (HOURS_PER_PERSON_YEAR); `workforce.staff` (labour); `workforce.wage` (input of freight.route_cost, labour.wage_per_hour)
-
-Sends: none.
-
-## (f) Year phases
-
-Phases of `sim/engine/year_phases.py` `SHIPPED` it takes part in; where a phase is shared with other modules the sub-steps it owns are named (see "The year's shared phases" in the README):
-
-- none of its own
-
-## (g) Callers outside the engine mixins that read its views
-
-| Caller group | Uses | Most-used names |
+| Class | File | Where it went |
 |---|---|---|
-| engine/(function modules) | 6 | `material_carriage_per_tonne`, `_trader_margin_share`, `_cargo_lost_share`, `_trader_cycle_years`, `_foreign_route`, `_agent_cost_per_tonne` |
-| engine/economy_port* | 2 | `_freight_mode_costs` |
-| agents | 1 | `pay_route_dues` |
-| engine/agents_port* | 1 | `pay_route_dues` |
+| `ForeignRoutesMixin` | `foreign_routes.py` (deleted) | `sim/freight/models.py` (carriers, mode costs), `routes.py` (the route search), `rules.py` |
+| `DomesticHaulMixin` | `domestic_haul.py` (deleted) | `sim/freight/haul.py` |
+| `ForeignTradersMixin` | `foreign_traders.py` (deleted) | `sim/freight/traders.py` |
+| `RouteDuesMixin` | `route_dues.py` (deleted) | `sim/freight/dues.py` |
+| `FreightMixin` | `economy_freight.py` | its freight half (the cart's physical inputs, the source tiles, the distance, the markup, the carriage per tonne, the team size and the feed and wage constants) moved to `haul.py` and `constants.py`; the price factor, the demand grouping, the nitre and shortage methods stay for `materials` and `resources` |
+| `scarcity_factor` | `freight_markup.py` (renamed) | `sim/engine/material_scarcity.py`, for `materials` |
 
-The scan matches `sim.`, `s.`, `world.` prefixes, so a few counts include unrelated locals; treat them as orders of magnitude.
+## Views
 
-sim/agents: `pay_route_dues`; economy_port: `_freight_mode_costs` 2; engine functions: `material_carriage_per_tonne`, `_trader_margin_share`, `_cargo_lost_share`, `_trader_cycle_years`, `_foreign_route`, `_agent_cost_per_tonne`.
+| View | Kind | Answers | Old name |
+|---|---|---|---|
+| `carrier_models` | table | `{mode: (physical inputs, carrier prices, working days a year, hull loss per 1000 km)}`, kept while the price table, the sea crew's wage, the map and the team size hold. | `_carrier_models` |
+| `freight_mode_costs` | quote (imbalance, modes, cargo) | Home money per tonne-km by mode: feed and crew, the carrier's capital at the market rate, hull losses, the return leg. | `_freight_mode_costs` |
+| `freight_handling_costs` | table | Money per tonne charged once per leg of a mode: port handling and the geography's dues at the carriers' wage. | `_freight_handling_costs` |
+| `foreign_route` | quote (partner record, imbalance, cargo) | The cheapest `Route` from a partner's tiles to this society's, or None. | `_foreign_route` |
+| `route_freight_per_tonne` | quote (partner record, imbalance) | Its cost per tonne; infinite when no route joins. | `_route_freight_per_tonne` |
+| `material_route` | quote (partner record, material, goods route) | The route a partner's material travels: the goods route, or the stock route for animals. | `_material_route` |
+| `tile_haul_cost` | quote (origin, destination) | Home money per tonne over the cheapest route between two tiles, zero where none joins them; remembered for the year. | `tile_haul_cost` (was bridged) |
+| `partner_route_cost` | keyed | Home money per tonne over the route the partner's facts hold; None when none. | `partner_route_cost` (was bridged) |
+| `material_carriage_per_tonne` | quote (material, price per tonne) | Money per tonne to carry a hauled material, on top of its price where sold. | `material_carriage_per_tonne` |
+| `material_freight_factor` | keyed | Markup on a material's book price for its haul. | `material_freight_factor` |
+| `trader_margin_share`, `trader_cycle_years`, `trader_agent_cost`, `cargo_lost_share`, `trader_cost_share` | quote | What merchants add to a route: markup, years money is tied up, agents' pay per tonne, share lost, and the merchants' cost over freight. | `_trader_margin_share`, `_trader_cycle_years`, `_agent_cost_per_tonne`, `_cargo_lost_share`, `_trader_cost_share` |
 
-## (h) Hard spots and caches
+None is cached: the prices, wages, ways and ledgers they are worked from are still written outside their owners'
+commands. The route searches are the hot part; the module keeps the same caches the mixins kept (the carrier table,
+the hauled materials' routes by everything they were priced from, the year's tile-to-tile cost).
 
-- Private (underscore) methods are the real interface here (`_foreign_route`, `_agent_cost_per_tonne` are called from living_stock, coin and the economy port): they become the QUOTE views.
-- Route choice reads the foreign flow imbalance (`_foreign_flow_imbalance`, `_domestic_flow_imbalance`), a ledger of tonnes moved each year in `geography.flow_ledger`: write path from foreign_trade to freight.
+## Commands
 
-Caches and version counters held today (feed for task 1.2):
+| Command | Does |
+|---|---|
+| `PayRouteDues(payer, route, tonnes, limit)` | The payer (a cast actor, by id) pays each holder of the tiles the dues are levied at, scaled down so the total stays within `limit`; sends the ledger's `PayActor` per holder in sorted order. Answers the money paid. |
 
-- `_carrier_models_cache` (`foreign_routes.py:101`)
-- `__dict__['_material_haul_routes']` (`domestic_haul.py:56`)
+## Reads it needs, by the owner that will publish them
 
-Detected by the cache scan in this module's mixin files: `engine/domestic_haul.py:56 __dict__[_material_haul_routes]`, `engine/foreign_routes.py:101 _carrier_models_cache`.
+Bridged in `sim/engine/bridge_freight.py` under the name the owner will publish: `techniques_with_results`, `wage`,
+`trade_population`, `market_rate`, `households_loanable_funds`, `material_prices`, `material_price`, `held_techniques`,
+`built_ways`, `material_source_tiles`, `route_km_to`, `goods_carried_last_year`, `working_age`, `partner_market_book`,
+`partner_route`, `route_lift_years_per_tonne`, `route_capital_per_lift_tonne`, `lift_capacity_tonnes`,
+`opening_carriers_per_route`, `holder_treasury`, and the debt `legacy_world_map`. Reused: `civilisation`, `year`,
+`hour_wage`, `hours_per_person_year`, `foreign_economies`, `tile_owner`. The ledger's `PayActor` is applied there too.
+
+`wage` is the wage schedule's money for an hour of a trade (`labour.wage_per_hour`); the labour market's quote is the
+existing `hour_wage`. They differ, and the freight rates read the first.
+
+## Year phases
+
+None of its own.
+
+## Callers outside the module that still use a forwarder
+
+`_foreign_route`, `_route_freight_per_tonne` (foreign economies' facts, goods market offers), `_freight_mode_costs`
+(economy port setup), `_carrier_models` (foreign payments), `material_carriage_per_tonne` (goods market pricing),
+`_trader_margin_share`, `_cargo_lost_share`, `_trader_cycle_years`, `_agent_cost_per_tonne` (goods market offers),
+`_domestic_flow_ledger` (disease port), `pay_route_dues` (the agents' trade view) and the two constants
+`FREIGHT_DRIVER_WAGE_TRADE`, `FREIGHT_FEED_PRICE_MATERIAL` (economy port setup). All in `sim/engine/forward_freight.py`.
+`FreightMixin.material_price_factor` reads `material_freight_factor` as a view.
+
+## Hard spots that remain
+
+- The route a partner's facts hold (`partner_route`) is foreign trade's cache; freight's `partner_route_cost` can go
+  only when the facts do.
+- `foreign_economies._foreign_economy_facts` searches the same route twice (`_foreign_route`, then
+  `_route_freight_per_tonne`); kept, since removing it is not a move.
+- A partner is passed to `foreign_route` as its civilisation record (the old method also took an id and loaded it;
+  no caller did).
+- Route choice reads the domestic flow ledger of the economy and the foreign market book, both still written by their
+  owners' unmoved code.
