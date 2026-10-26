@@ -7,7 +7,7 @@ test_arrears_wiring."""
 QUICK_TOPIC = True
 from .harness import *  # noqa: F401,F403
 from sim.refusal import LogLine, cause_of, facts_of
-from sim.engine import project_funding
+from sim.projects.api import funding as project_funding
 from sim.engine.arrears_hours_line import arrears_hours_line
 from sim.ui.proto import event_kinds, render_portfolio_rows, render_screen_why
 

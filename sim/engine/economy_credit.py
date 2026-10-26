@@ -27,7 +27,7 @@ from .units_prose import money_text
 from sim.world import capital_market
 from sim.agents.api import business_review, edges, ledger
 from .agents_port import SimWorld
-from .project_funding import funding_parts
+from sim.projects.api import funding as project_funding
 from .affordability import appearances_spending, near_limit, reputation_hit_taken, spending_power_of
 
 
@@ -228,7 +228,7 @@ class CreditMixin:
         rev = self.revenue()
         upkeep_amount = self.upkeep()
         capital = self.state.household.capital
-        return funding_parts(
+        return project_funding.funding_parts(
             capital, rev, upkeep_amount + self.living_cost(_rev=rev, _upkeep=upkeep_amount) + self.mine_operating_cost(),
             self.debt_interest_rate() if capital < 0 else 0.0, self.credit_limit(_rev=rev, _upkeep=upkeep_amount),
             self.SPENDING_DRAW_SHARE_ORDINARY, self.CREDIT_SURPLUS_YEARS_MULTIPLE, self.committed_spend())

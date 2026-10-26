@@ -1,10 +1,11 @@
-"""The yearly phases that start projects and supply their materials.
+"""The yearly phase that supplies the materials the economy is short of: woodland, mines and nitre beds.
 
-A part of the year's phases (core_step_phases.py); Sim inherits it through StepPhasesMixin."""
+A part of the year's phases (core_step_phases.py); Sim inherits it through StepPhasesMixin. It ran beside the start
+of projects in one step; the start is the projects module's phase now (sim/projects/start_phase.py), and this one
+belongs to the resources and materials topics."""
 from sim.refusal import LogLine
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 from . import automation_audit, shortage_conditions
-from .auto_start_rule import judge_start_candidate
 from .shortage_sizing import automatic_policy_on, auto_mine_affordable_tonnes, auto_mine_order_tonnes, nitre_bed_yearly_spend
 from sim.agents.api import edges
 from sim.constants import declare
@@ -12,7 +13,7 @@ from . import money_units
 from .units_prose import area_text, mass_rate_text, money_text
 
 
-class ProjectStartPhaseMixin:
+class MaterialsPhaseMixin:
 
     AUTO_FOREST_CAPITAL_LABOUR_HOURS_PER_HA = declare(
         "AUTO_FOREST_CAPITAL_LABOUR_HOURS_PER_HA", 36300.0, kind="temporary_heuristic",
@@ -27,154 +28,6 @@ class ProjectStartPhaseMixin:
         why="Yearly ceiling on the optimizer's automatic nitre-bed spending, a flat amount of work "
             "rather than a share of the shortfall that beds cannot close. Tuned, not measured.")
     NITRE_BED_SPEND_CEILING = money_units.PricedInLabourHours("NITRE_BED_SPEND_CEILING_LABOUR_HOURS")
-
-    def _step_start_projects(self):
-        # 4b. start new projects
-        pool = max(0.0, self.labour.director_pool() - self.labour.director_hours_committed())
-        hired_left = self.labour.hired_cap()
-        # MANUAL MODE STOPS HERE. This loop is "the optimizer": it walks
-        # `order` and starts whatever it judges best, which is exactly the
-        # behaviour a free-choice player must NOT get. The old `play` command
-        # let you type a node id, but that only did `order.remove/insert(0)`
-        # a few lines above this loop's own input; the loop then ran anyway
-        # and started other things you never asked for. `self.manual` cuts
-        # that off at the root: nothing is ever added to `self.state.projects.active` here,
-        # so the only way anything starts is start_project(), called by a
-        # human or a script. Everything below this block (materials, staff,
-        # money, hazards, the calendar) is untouched by `manual` and keeps
-        # running exactly as before.
-        if not self.manual and self.state.scenario.year >= self.state.household.credit_frozen_until:
-            # More directors means more things in hand at once, and a big trained staff
-            # lets routine work proceed without the founder watching it.
-            # How many things can be in hand at once: doubling this would let
-            # more projects divide the same purse into smaller annual
-            # payments, so everything crawls and nothing finishes. Spreading
-            # a fixed budget across more work is not more work.
-            max_active = int(self.MAX_ACTIVE_PROJECTS_BASE
-                             + self.labour.director_pool() / self.MAX_ACTIVE_PROJECTS_PER_DIRECTOR_HOURS
-                             + self.state.household.scholars / self.MAX_ACTIVE_PROJECTS_PER_SCHOLAR
-                             + self.state.household.artisans / self.MAX_ACTIVE_PROJECTS_PER_ARTISAN)
-            # EARN A LIVING FIRST: now that a project must actually be paid
-            # for, a founder who arrives with 400 denarii and walks the
-            # goal-ordered list starves, so when the surplus is thin, the
-            # optimizer has to prefer whatever pays best for what it costs
-            # the same way a human player hunting for cheap revenue nodes
-            # would; the goal order resumes the moment there is money to
-            # pursue it with.
-            _upkeep0 = self.upkeep()
-            _rev0 = self.revenue()
-            fixed0 = _upkeep0 + self.living_cost(_rev=_rev0, _upkeep=_upkeep0) + self.mine_operating_cost()
-            candidates = self.order
-            if _rev0 - fixed0 < max(400.0, fixed0 * 0.25):
-                earners = [node_id for node_id in self.order
-                           if self.nodes[node_id]["rev"] - self.nodes[node_id]["up"] > 0]
-                earners.sort(key=lambda k: self.project_cost(k)
-                             / max(1.0, self.nodes[k]["rev"] - self.nodes[k]["up"]))
-                # `set(earners)` HOISTED OUT OF THE COMPREHENSION. Written
-                # inline as `if k not in set(earners)`, this rebuilt the set
-                # from scratch on every one of the 2,833 iterations of the
-                # walk over self.order - one throwaway set per node, an
-                # O(|order| x |earners|) rebuild for what a single set
-                # covers in O(|order|). Profiling a 300-year single-seed run
-                # found this one line costing 0.81s of self time over just
-                # 21 calls - a tight-money branch, but each call did the
-                # equivalent of an extra multi-hundred-thousand-item pass.
-                # See PERFORMANCE.md.
-                _earner_set = set(earners)
-                candidates = earners + [node_id for node_id in self.order if node_id not in _earner_set]
-            # INCREMENTAL COUNT, NOT A SET REBUILT PER ITERATION. Written as
-            # `len(self.state.projects.active) - len(self.state.projects.bountied & set(self.state.projects.active))`
-            # inside the loop below, this rebuilt `set(self.state.projects.active)` from
-            # scratch on every one of the 2,849 iterations of `candidates` -
-            # the identical mistake `_earner_set` (above) had already been
-            # fixed for, 30 lines earlier in this same function. Unlike
-            # `earners`, `self.state.projects.active` IS mutated inside this loop (a normal
-            # start at the bottom, or post_bounty() below, which adds to both
-            # `self.state.projects.active` and `self.state.projects.bountied` at once), so the fix cannot
-            # be "hoist one set outside the loop" - it has to track the two
-            # mutations as they happen instead:
-            #   - post_bounty(node_id) succeeding adds node_id to self.state.projects.active AND to
-            #     self.state.projects.bountied together, so a bountied project never counts
-            #     against max_active: _non_bountied_active is left unchanged.
-            #   - a normal start only adds node_id to self.state.projects.active, so
-            #     _non_bountied_active goes up by one.
-            # Nothing else in this loop's body (can_start, project_cost,
-            # funding_capacity, committed_spend, bounty_eligible) touches
-            # self.state.projects.active or self.state.projects.bountied - checked in projects.py and
-            # economy.py - so these two increments are the only places the
-            # tracked count can move, and it is computed once up front
-            # (O(active), not O(order)) rather than every iteration.
-            _non_bountied_active = len(self.state.projects.active) - len(self.state.projects.bountied & set(self.state.projects.active))
-            _room = self.funding_capacity() - self.committed_spend()
-            _said_blocked = False
-            _too_dear = []
-            for node_id in candidates:
-                verdict = judge_start_candidate(_non_bountied_active, max_active, lambda: self.can_start(node_id),
-                                                lambda: self.project_cost(node_id), _room)
-                if verdict == "cap":
-                    automation_audit.record_skip(
-                        self, "auto_start", "further projects",
-                        "%d projects already active; the cap is %d" % (_non_bountied_active, max_active),
-                        reason_kind="active_project_cap", active=_non_bountied_active, cap=max_active)
-                    break
-                if verdict == "blocked":
-                    # one row a year, for the highest-priority candidate; the rest would flood the trail
-                    if not _said_blocked:
-                        _said_blocked = True
-                        automation_audit.record_skip(
-                            self, "auto_start", self.nodes[node_id]["name"],
-                            self.start_refusal(node_id) or "cannot start yet")
-                    continue
-                # do not start something we cannot plausibly fund this decade.
-                # material_cost_factor is the geography data's contribution: a
-                # located material (mat_gutta_percha and the like) costs more
-                # or less to reach depending on how far THIS civ actually is
-                # from it, not on Rome's distance to it.
-                # Do not begin what you cannot pay for: `room` must reflect
-                # what the household can actually fund, net of committed
-                # spend, because a project started on unaffordable capacity
-                # gets its bill left unpaid - creditors halt everything, and
-                # the spend already made is lost.
-                #
-                # INTEREST IS A FIXED COST here too: leaving it out is how a
-                # household already in arrears would compute a surplus that
-                # is not really there, commit spend against it, and deepen
-                # the arrears it was already in.
-                #
-                # funding_capacity()/committed_spend() (economy.py), NOT A
-                # SECOND COPY OF THIS FORMULA: the player-facing aggregate
-                # warning in `start` (protocol.py) answers the identical
-                # question by calling the same two functions, so the two
-                # cannot drift apart.
-                if verdict == "too_dear":
-                    _too_dear.append((node_id, _room))
-                    continue
-                _before = self.state.household.capital
-                if node_id in self.bounty_set and self.bounty_eligible(node_id) and self.post_bounty(node_id):
-                    automation_audit.record(
-                        self, "auto_start", "bounty", self.nodes[node_id]["name"],
-                        "on the bounty list and eligible, so a bounty was posted instead of starting it", _before)
-                    # post_bounty() just added node_id to both self.state.projects.active and
-                    # self.state.projects.bountied - the count of NON-bountied active
-                    # projects is unchanged.
-                    _room = self.funding_capacity() - self.committed_spend()
-                    continue
-                # lab_left starts full here too, for the same reason
-                # start_project (projects.py) sets it at creation rather than
-                # leaving lab_year_draw to guess it from ph_left the first
-                # time it runs - see the comment there.
-                self.initialize_project(node_id)
-                _non_bountied_active += 1
-                _room = self.funding_capacity() - self.committed_spend()
-            if _too_dear:
-                # one row a year: the highest-priority candidate and how many more were dearer than their room
-                first, room = _too_dear[0]
-                automation_audit.record_skip(
-                    self, "auto_start", self.nodes[first]["name"],
-                    "costs %.0f and the room left to commit is %.0f; %d candidates in all cost more than the room"
-                    % (self.project_cost(first), room, len(_too_dear)),
-                    reason_kind="cost_over_room", cost=self.project_cost(first), room=room, candidates=len(_too_dear))
-        return pool, hired_left
 
     def _step_materials(self):
         # 4c. materials. Buy the woodland and dig the beds BEFORE the shortage

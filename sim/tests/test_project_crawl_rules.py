@@ -7,7 +7,8 @@ from types import SimpleNamespace
 
 from .harness import check
 
-from sim.engine.project_funding import year_bill
+from sim.projects.api import funding
+year_bill = funding.year_bill
 from sim.engine.projects_progress import ProgressMixin
 
 NODE = {"name": "Logarithms", "yrs": 10, "ph": 500, "lab": {"scribe": 1000.0}, "cat": "x"}

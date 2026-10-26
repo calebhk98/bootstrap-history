@@ -11,7 +11,8 @@ from types import SimpleNamespace
 
 from .harness import check
 
-from sim.engine.project_funding import cash_covers_start, paid_credit
+from sim.projects.api import funding
+cash_covers_start, paid_credit = funding.cash_covers_start, funding.paid_credit
 from sim.engine.projects_progress import ProgressMixin
 from sim.engine.projects_starting import StartingMixin
 from sim.engine.projects_trade_wait import STALL_YEARS_BEFORE_ABANDONMENT

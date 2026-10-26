@@ -55,7 +55,7 @@ already gives for keeping its own cross-cutting constants on ITS
 composition point rather than in one of ITS four sub-mixins - so these stay
 here, on the composition point all six inherit from, instead.
 """
-from .blockers import BlockersMixin
+from .forward_projects import ProjectsForwardsMixin
 from .projects_capability import CapabilityMixin
 from .projects_ventures import VenturesMixin
 from .projects_running_gates import RunningGatesMixin
@@ -66,7 +66,6 @@ from .projects_open_gate import OpenGateMixin
 from .allocation_notes import AllocationNotesMixin
 from .projects_venture_quotes import VentureQuotesMixin
 from .projects_hour_queue import HourQueueMixin
-from .projects_starting import StartingMixin
 from .projects_exclusions import ExclusionsMixin
 from .projects_progress import ProgressMixin
 from .projects_completion import CompletionMixin
@@ -75,7 +74,7 @@ from sim.constants import declare
 
 
 class ProjectsMixin(
-        BlockersMixin,
+        ProjectsForwardsMixin,
         CapabilityMixin,
         VenturesMixin,
         RunningGatesMixin,
@@ -86,7 +85,6 @@ class ProjectsMixin(
         AllocationNotesMixin,
         VentureQuotesMixin,
         HourQueueMixin,
-        StartingMixin,
         ExclusionsMixin,
         ProgressMixin,
         CompletionMixin,

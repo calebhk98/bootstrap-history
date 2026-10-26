@@ -1,17 +1,13 @@
-"""When a trade a project needs will first have hands: the start gate, the start reply and the stall gate read one rule."""
+"""When a trade a project needs will first have hands: the start gate, the start reply and the stall gate read one rule
+(sim/projects/start_rules.py `trade_wait_years`, `trade_wait_outlasts`)."""
+from sim.projects.api import start_rules
 
-# A project with no hands in a trade it owes hours to is abandoned on this stalled year.
-STALL_YEARS_BEFORE_ABANDONMENT = 4
+STALL_YEARS_BEFORE_ABANDONMENT = start_rules.STALL_YEARS_BEFORE_ABANDONMENT
 
 
 def years_until_trade_has_hands(sim, trade):
     """0 when hands exist now; else years until the soonest trainees join; None when nobody is on the way."""
-    if sim.labour.market_supply(trade) > 0.0:
-        return 0.0
-    year = sim.state.scenario.year
-    waits = [max(0.0, row[1] - year) for row in sim.state.household.training
-             if len(row) > 3 and row[2] == trade and row[3] > 0]
-    return min(waits) if waits else None
+    return start_rules.trade_wait_years(sim.labour.market_supply(trade), sim.state.scenario.year, sim.state.household.training, trade)
 
 
 def trades_the_project_waits_for(sim, node_id):
@@ -26,5 +22,4 @@ def trades_the_project_waits_for(sim, node_id):
 
 def trade_wait_outlasts_the_project(sim, trade):
     """True when no hands exist and none arrive before the stall gate would abandon the project."""
-    wait = years_until_trade_has_hands(sim, trade)
-    return wait is None or wait >= STALL_YEARS_BEFORE_ABANDONMENT - 1
+    return start_rules.trade_wait_outlasts(years_until_trade_has_hands(sim, trade), STALL_YEARS_BEFORE_ABANDONMENT)

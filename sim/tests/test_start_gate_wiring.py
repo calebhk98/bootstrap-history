@@ -5,11 +5,9 @@ QUICK_TOPIC = True
 
 import types
 import unittest
-from unittest import mock
 
-from sim.engine import step_phase_project_start
 from sim.engine.economy_credit import CreditMixin
-from sim.engine.step_phase_project_start import ProjectStartPhaseMixin
+from sim.tests import projects_host
 from sim.ui.proto.techtree import _digest_stack_caution
 
 
@@ -37,64 +35,29 @@ class CommittedSpend(unittest.TestCase):
         self.assertEqual(Purse({}).committed_spend(), 0.0)
 
 
-class Director(ProjectStartPhaseMixin):
-    MAX_ACTIVE_PROJECTS_BASE = 5.0
-    MAX_ACTIVE_PROJECTS_PER_DIRECTOR_HOURS = 2000.0
-    MAX_ACTIVE_PROJECTS_PER_SCHOLAR = 12.0
-    MAX_ACTIVE_PROJECTS_PER_ARTISAN = 40.0
+def director(funding_capacity, committed_spend, project_cost=9000.0, manual=False):
+    """The projects module, its start phase ready to run: every candidate can start, and the room is what is given."""
+    state = projects_host.projects_state()
+    module = projects_host.build(
+        legacy_projects=state, tree=lambda node_id: {"name": node_id, "rev": 0.0, "up": 0.0}, legacy_order=["a", "b"],
+        funding_capacity=funding_capacity, committed_cost=committed_spend, project_cost=lambda node_id: project_cost,
+        automation={"manual": manual, "bounty_set": set()}, revenue_estimate=1e6, acting_balance=1e7, year=0,
+        start_check=lambda *arguments: (True, None),
+        project_limits={"base": 5.0, "per_director_hours": 2000.0, "per_scholar": 12.0, "per_artisan": 40.0})
+    module.started = []
 
-    def __init__(self, funding_capacity, committed_spend, project_cost=9000.0):
-        self.manual = False
-        self.state = types.SimpleNamespace(
-            scenario=types.SimpleNamespace(year=0),
-            household=types.SimpleNamespace(credit_frozen_until=0, scholars=0.0, artisans=0.0, capital=1e7),
-            projects=Projects({}))
-        self.labour = types.SimpleNamespace(director_pool=lambda: 0.0, director_hours_committed=lambda: 0.0,
-                                            hired_cap=lambda: 0.0)
-        self.nodes = {"a": {"name": "a", "rev": 0.0, "up": 0.0}, "b": {"name": "b", "rev": 0.0, "up": 0.0}}
-        self.order = ["a", "b"]
-        self.bounty_set = set()
-        self.audit = []
-        self._funding = funding_capacity
-        self._committed = committed_spend
-        self._cost = project_cost
-        self.started = []
-
-    def upkeep(self):
-        return 0.0
-
-    def revenue(self):
-        return 1e6
-
-    def living_cost(self, _rev=None, _upkeep=None):
-        return 0.0
-
-    def mine_operating_cost(self):
-        return 0.0
-
-    def can_start(self, node_id):
-        return True
-
-    def project_cost(self, node_id):
-        return self._cost
-
-    def funding_capacity(self):
-        return self._funding
-
-    def committed_spend(self):
-        return self._committed
-
-    def initialize_project(self, node_id):
-        self.started.append(node_id)
-        self.state.projects.active[node_id] = {}
+    def initialize_project(node_id):
+        module.started.append(node_id)
+        state.active[node_id] = {}
+    module.initialize_project = initialize_project
+    return module
 
 
 class StartPhase(unittest.TestCase):
     def _started(self, funding_capacity, committed_spend):
-        director = Director(funding_capacity, committed_spend)
-        with mock.patch.object(step_phase_project_start, "automation_audit"):
-            director._step_start_projects()
-        return director.started
+        module = director(funding_capacity, committed_spend)
+        module.start_projects_phase("founder")
+        return module.started
 
     def test_room_that_clears_the_cost_starts_work(self):
         self.assertTrue(self._started(funding_capacity=1e5, committed_spend=0.0))
@@ -106,10 +69,9 @@ class StartPhase(unittest.TestCase):
         self.assertEqual(self._started(funding_capacity=1e7, committed_spend=1e7 - 5000.0), [])
 
     def test_a_manual_game_starts_nothing(self):
-        director = Director(1e9, 0.0)
-        director.manual = True
-        director._step_start_projects()
-        self.assertEqual(director.started, [])
+        module = director(1e9, 0.0, manual=True)
+        module.start_projects_phase("founder")
+        self.assertEqual(module.started, [])
 
 
 class StackCaution(unittest.TestCase):

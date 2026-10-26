@@ -8,7 +8,8 @@ from types import SimpleNamespace
 from .harness import check
 from sim.refusal import cause_of, facts_of
 from sim.engine.society_adoption import AdoptionMixin
-from sim.engine.staff_gate import craftsmen_gate_text, scholar_gate_text
+from sim.projects.api import staff_gate
+craftsmen_gate_text, scholar_gate_text = staff_gate.craftsmen_gate_text, staff_gate.scholar_gate_text
 from sim.labour.buy_cap import over_room_refusal
 from sim.labour.founder_hours import hours_committed, hours_free, hours_pool
 from sim.labour.hands import contracted_hours_of, hands_available

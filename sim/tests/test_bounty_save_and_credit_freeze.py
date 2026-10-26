@@ -6,7 +6,8 @@ stand-in games."""
 
 QUICK_TOPIC = True
 from .harness import *  # noqa: F401,F403
-from sim.engine.project_funding import cash_covers_start
+from sim.projects.api import funding
+cash_covers_start = funding.cash_covers_start
 import sim.engine.saveload as _saveload_module
 
 # --- 150: a credit freeze allows what cash in hand covers
