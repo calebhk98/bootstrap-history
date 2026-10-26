@@ -54,6 +54,9 @@ def attach(sim: Any) -> None:
 	"""Point every module at this game's state: the world slots, and the acting seat's. A slot a new game or a new seat
 	does not have yet is built fresh; a loaded save already carries all of them (revive checked it)."""
 	assembly, state = sim.assembly, sim.state
+	from .bridge import BRIDGE_ID
+	if BRIDGE_ID in assembly.modules:
+		assembly.modules[BRIDGE_ID].sim = sim
 	for module_id, slot in assembly_api.new_slots(assembly, assembly_api.WORLD).items():
 		state.modules.setdefault(module_id, slot)
 	for seat in state.seats.values():

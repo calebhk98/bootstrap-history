@@ -25,9 +25,16 @@ class Assembly:
 		self.command_owner: Dict[type, str] = {}
 		self.handlers: Dict[type, Callable] = {}
 		self.unstable: Dict[str, List[Tuple[str, str]]] = {}     # module id -> (mod id, method) overrides outside the spec
+		self._phase_handlers: Optional[Dict[str, Callable]] = None
 
 	def provider_of(self, name: str) -> Optional[str]:
 		return self.view_owner.get(name) or self.point_owner.get(name)
+
+	def phase_handler(self, name: str) -> Callable:
+		"""The bound method that runs the year's phase `name`; KeyError when no module runs it."""
+		if self._phase_handlers is None:
+			self._phase_handlers = self.phase_handlers()
+		return self._phase_handlers[name]
 
 	def phase_handlers(self) -> Dict[str, Callable]:
 		handlers: Dict[str, Callable] = {}

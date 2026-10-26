@@ -25,6 +25,16 @@ class Phase:
 	before: Sequence[str] = ()
 
 
+def module_seat_phase(name: str) -> Callable:
+	"""A seat phase a module runs: its declared method is called with the seat id."""
+	return lambda sim, seat_id: sim.assembly.phase_handler(name)(seat_id)
+
+
+def module_world_phase(name: str) -> Callable:
+	"""A world phase a module runs: its declared method is called with the seats still in play."""
+	return lambda sim, seats: sim.assembly.phase_handler(name)(seats)
+
+
 def _still_playing(sim, seats):
 	return [seat_id for seat_id in seats if seat_id not in sim.ended_seats()]
 
