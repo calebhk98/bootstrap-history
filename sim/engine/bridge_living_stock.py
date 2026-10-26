@@ -42,7 +42,7 @@ def producer_capacities(sim):
 @bridge_view("stock_land")
 def stock_land(sim):
     """{place: the tile the held stock stands on, pasture_kg: live weight the held tiles' grass carries}."""
-    return {"place": sim.geography.stock_place(), "pasture_kg": sim.geography.held_pasture_kg(sim.state.economy.wild_stock)}
+    return {"place": sim.geography.stock_place(), "pasture_kg": sim.geography.held_pasture_kg(sim.view("wild_stock")())}
 
 
 @bridge_view("endemic_stock_loss", kind=QUOTE)

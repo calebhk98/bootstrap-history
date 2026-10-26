@@ -253,8 +253,8 @@ as the atomic parcel would make a civilization's own numbers depend on how
 many boxes its territory happens to be filed under, rather than on how much
 land, of what quality, it actually holds - the same defect Complaints/45
 found in `forest_land_ceiling` (`sim/engine/economy_mining.py`) and
-Complaints/49 found in weather pooling (`sim/engine/core.py` - see that
-file's `_compute_farm_weather_cells`). `north_africa` (5,750,000 km2, one
+Complaints/49 found in weather pooling (`sim/agriculture/` - see
+`rules.pooled_cells`). `north_africa` (5,750,000 km2, one
 `fertility_quality_multiplier` of 1.35, "96% Sahara, rated on the strength
 of the Nile" per Complaints/45) is the concrete case: one region record
 cannot show a margin between its own good land and its own bad land,

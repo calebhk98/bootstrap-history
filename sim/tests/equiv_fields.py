@@ -30,6 +30,9 @@ RELOCATIONS = [
     ("/modules/foreign_trade/trade_by_year", "/economy/foreign_trade_by_year"),
     ("/seats/*/modules/reporting/log", "/seats/*/household/log"),
     ("/seats/*/modules/reporting/automation_audit", "/seats/*/household/automation_audit"),
+    ("/modules/agriculture/wild_stock", "/economy/wild_stock"),
+    ("/modules/agriculture/soil_nitrogen", "/economy/soil_nitrogen"),
+    ("/modules/agriculture/weather_salt", "/scenario/weather_salt"),
 ]
 
 IGNORED = [

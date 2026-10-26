@@ -101,7 +101,6 @@ class Game:
         self.goods_market = type("GoodsMarket", (), {"acting": self.purse, "acting_party_id": "founder"})()
         self.state = type("State", (), {
             "scenario": type("Scenario", (), {"year": 100})(),
-            "economy": type("Economy", (), {"wild_stock": {}})(),
             "household": type("Household", (), {})()})()
         self.actors = ActorRegistry(ActorsState())
         self.economy = StubEconomy()
@@ -162,6 +161,10 @@ class Game:
 
     def partner_refusal(self, civilization_id, material):
         return self.trade.partner_refusal(civilization_id, material)
+
+    def view(self, name):
+        """The views the bridge reads of a game: the wild stock (whole here)."""
+        return {"wild_stock": lambda: {}}[name]
 
 
 # ---- the stock stands on a tile of the holder's -----------------------------------------------

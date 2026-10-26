@@ -16,7 +16,6 @@ from sim.unit_conversions import KILOGRAMS_PER_TONNE
 from sim.world import deposits
 
 PHYSICAL_COSTS = {
-    "FARM_COST_PER_HA": "FARM_LABOUR_HOURS_PER_HA",
     "FOREST_COST_PER_HA": "FOREST_LABOUR_HOURS_PER_HA",
     "HOUSING_COST_PER_PLACE": "HOUSING_LABOUR_HOURS_PER_PLACE",
     "TRADE_SCHOOL_COST_PER_SEAT": "TRADE_SCHOOL_LABOUR_HOURS_PER_SEAT",
@@ -31,6 +30,7 @@ PHYSICAL_COSTS = {
     "PATRON_DEATH_COURTING_GIFT": "PATRON_DEATH_COURTING_GIFT_LABOUR_HOURS",
 }
 SLAVE_PRICE = ("SLAVE_BASE_PRICE", "SLAVE_BASE_PRICE_LABOUR_HOURS")
+FARM_PRICE = ("FARM_LAND_PRICE", "FARM_LABOUR_HOURS_PER_HA")   # priced by the agriculture module's `farm_land_price`
 
 
 def _deposit(name, grade, depth="surface"):
@@ -42,7 +42,7 @@ def _deposit(name, grade, depth="surface"):
 class PhysicalConstantsAreInHours(unittest.TestCase):
 
     def test_each_is_declared_in_labour_hours(self):
-        for money_name, hours_name in list(PHYSICAL_COSTS.items()) + [SLAVE_PRICE]:
+        for money_name, hours_name in list(PHYSICAL_COSTS.items()) + [SLAVE_PRICE, FARM_PRICE]:
             self.assertTrue(hours_name in REGISTRY, hours_name)
             self.assertIn("labour hour", REGISTRY[hours_name]["unit"], hours_name)
 

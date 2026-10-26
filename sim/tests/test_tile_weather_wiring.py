@@ -1,48 +1,34 @@
-"""Complaint 537: `Sim.farm_weather_by_tile` and `Sim._pooled_farm_weather_multiplier` read the same draws from the
-civilisation's weather cells, so the weight-average of the per-tile values is the pooled multiplier the national path reads.
-Each method is called on a stand-in `self` carrying only the cells, the seed rule and the agriculture constants; the
-arithmetic is test_weather_cells."""
+"""Complaint 537: the agriculture module's `farm_weather` and `harvest_weather` read the same draws from the civilisation's
+weather cells, so the weight-average of the per-tile values is the pooled multiplier the national path reads. Both are called
+on the module built over written-out tiles; the arithmetic is test_weather_cells."""
 QUICK_TOPIC = True
 
 import unittest
-from types import SimpleNamespace
 
-from sim.engine.core import Sim
-from sim.world import agriculture
-from sim.world.weather_pooling import correlation_cholesky
+from sim.tests import agriculture_stand_in
 
 YEAR = 100
 
-
-def stand_in_game():
-    cells = [SimpleNamespace(cell_id="near_a", lat=40.0, lon=10.0, weight=0.5),
-             SimpleNamespace(cell_id="near_b", lat=40.5, lon=10.0, weight=0.3),
-             SimpleNamespace(cell_id="far", lat=10.0, lon=80.0, weight=0.2)]
-    return SimpleNamespace(
-        _farm_weather_cells=cells,
-        _farm_weather_correlation_cholesky=correlation_cholesky(cells, 500.0),
-        _farm_year_weather_seed=lambda year, region=None: "%s/%s" % (year, region),
-        _agriculture=agriculture)
+# a pair of near tiles and a far one; weights are land area times arable fraction: 500, 300 and 200
+ROWS = [("near_a", 40.0, 10.0, 1000.0, 0.5), ("near_b", 40.5, 10.0, 1000.0, 0.3), ("far", 10.0, 80.0, 1000.0, 0.2)]
 
 
 class TileWeatherWiring(unittest.TestCase):
     def test_the_weighted_mean_of_the_tiles_is_the_pooled_multiplier(self):
-        game = stand_in_game()
-        by_tile = Sim.farm_weather_by_tile(game, YEAR)
-        weights = {cell.cell_id: cell.weight for cell in game._farm_weather_cells}
+        farm = agriculture_stand_in.build(ROWS)
+        by_tile = farm.farm_weather(YEAR)
+        weights = {cell.cell_id: cell.weight for cell in farm.weather_cells()}
         mean = sum(weights[tile_id] * value for tile_id, value in by_tile.items())
-        self.assertAlmostEqual(mean, Sim._pooled_farm_weather_multiplier(game, YEAR, harmed=False), places=9)
+        self.assertAlmostEqual(mean, farm.harvest_weather(YEAR, harmed=False), places=9)
 
     def test_a_year_repeats_and_the_next_year_draws_again(self):
-        game = stand_in_game()
-        first = Sim.farm_weather_by_tile(game, YEAR)
-        self.assertEqual(first, Sim.farm_weather_by_tile(game, YEAR))
-        self.assertNotEqual(first, Sim.farm_weather_by_tile(game, YEAR + 1))
+        farm = agriculture_stand_in.build(ROWS)
+        first = farm.farm_weather(YEAR)
+        self.assertEqual(first, farm.farm_weather(YEAR))
+        self.assertNotEqual(first, farm.farm_weather(YEAR + 1))
 
     def test_a_civilisation_with_no_cells_has_no_per_tile_weather(self):
-        game = stand_in_game()
-        game._farm_weather_cells = []
-        self.assertEqual(Sim.farm_weather_by_tile(game, YEAR), {})
+        self.assertEqual(agriculture_stand_in.build([]).farm_weather(YEAR), {})
 
 
 if __name__ == "__main__":
