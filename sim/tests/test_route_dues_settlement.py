@@ -1,71 +1,70 @@
 """Complaint 599: a route's dues are paid into the treasury of the holder of each tile, and a trader's cargo to a partner pays them
-without passing the freight. `pay_dues`, `route_dues_by_holder` and the two `pay_route_dues` methods, each called once on a
-stand-in with its collaborators replaced by recorders (no game). Who is owed what is test_route_dues_owner."""
+without passing the freight. `dues_payments` is a plain rule; the freight module's `PayRouteDues` is read on plain views (the
+holders of the tiles, the wage, the treasuries) and the `PayActor` commands it sends; the trade view hands the partner route
+and its freight to the sim's `pay_route_dues`. Who is owed what is test_route_dues_owner."""
 import unittest
 from types import SimpleNamespace
-from unittest import mock
 
+from sim.agents.api import DUES_CAUSE
 from sim.engine.agents_port_trade import TradeView
-from sim.engine.haul_route import Leg, Route
-from sim.agents import route_dues_pay
-from sim.engine import route_dues
-from sim.engine.route_dues import RouteDuesMixin
+from sim.freight import rules
+from sim.freight.commands import PayRouteDues
+from sim.freight.module import Freight
+from sim.freight.route import Leg, Route
+from sim.geography.api import dues_hours_per_tonne
+from sim.ledger.api import PayActor
+from sim.tests import module_harness
 
 QUICK_TOPIC = True
 
 ROUTE = Route((Leg("a", "b", "river_boat", 10.0, 1.0), Leg("b", "c", "sail", 50.0, 1.0)))
-DUES = {"river_boat": 2.0, "sail": 3.0}
+WAGE = 5.0
 
 
-class PayDues(unittest.TestCase):
-    """`pay_dues` with the ledger's transfer replaced by a recorder."""
+class DuesPayments(unittest.TestCase):
 
-    def pay(self, owed, limit=None):
-        transfers = []
-        with mock.patch.object(route_dues_pay.ledger, "transfer", lambda payer, payee, amount, cause: transfers.append((payee, amount))):
-            paid = route_dues_pay.pay_dues("payer", owed, lambda holder: "treasury of " + holder, limit)
-        return paid, transfers
-
-    def test_each_holder_is_paid_its_dues_into_its_own_treasury_in_sorted_order(self):
-        paid, transfers = self.pay({"rome": 20.0, "carthage": 30.0})
-        self.assertEqual(transfers, [("treasury of carthage", 30.0), ("treasury of rome", 20.0)])
-        self.assertEqual(paid, 50.0)
+    def test_each_holder_is_paid_its_dues_in_sorted_order(self):
+        self.assertEqual(rules.dues_payments({"rome": 20.0, "carthage": 30.0}, None), [("carthage", 30.0), ("rome", 20.0)])
 
     def test_a_limit_scales_every_holders_share_down_together(self):
-        paid, transfers = self.pay({"rome": 20.0, "carthage": 30.0}, limit=25.0)
-        self.assertEqual(paid, 25.0)
-        self.assertEqual(transfers, [("treasury of carthage", 15.0), ("treasury of rome", 10.0)])
+        self.assertEqual(rules.dues_payments({"rome": 20.0, "carthage": 30.0}, 25.0), [("carthage", 15.0), ("rome", 10.0)])
 
     def test_a_limit_above_the_total_changes_nothing(self):
-        self.assertEqual(self.pay({"rome": 20.0}, limit=1000.0)[0], 20.0)
+        self.assertEqual(rules.dues_payments({"rome": 20.0}, 1000.0), [("rome", 20.0)])
+
+    def test_a_limit_of_nothing_pays_nobody(self):
+        self.assertEqual(rules.dues_payments({"rome": 20.0}, 0.0), [])
 
     def test_a_holder_owed_nothing_is_not_paid(self):
-        self.assertEqual(self.pay({"rome": 0.0})[1], [])
+        self.assertEqual(rules.dues_payments({"rome": 0.0}, None), [])
 
 
-class RouteDuesByHolder(unittest.TestCase):
-    """`RouteDuesMixin.route_dues_by_holder` with the geography rule replaced by a recorder."""
+class PayRouteDuesCommand(unittest.TestCase):
+    """`Freight.pay_route_dues` on plain views: who holds the tiles, the carriers' wage, where each holder's dues go."""
 
-    def test_the_legs_modes_dues_owners_and_tonnes_are_handed_to_the_rule(self):
-        asked = []
-        game = SimpleNamespace(route_dues_per_tonne_by_mode=lambda: DUES, tile_owner="owner function")
-        with mock.patch.object(route_dues, "route_dues_by_holder", lambda *args: asked.append(args) or {"rome": 1.0}):
-            result = RouteDuesMixin.route_dues_by_holder(game, ROUTE, 10.0)
-        legs = [{"from": "a", "mode": "river_boat"}, {"from": "b", "mode": "sail"}]
-        self.assertEqual(asked, [(legs, DUES, "owner function", 10.0)])
-        self.assertEqual(result, {"rome": 1.0})
+    def freight(self, owners):
+        return module_harness.build(Freight, views={
+            "legacy_world_map": lambda: None, "wage": lambda trade: WAGE, "tile_owner": owners,
+            "holder_treasury": lambda holder: "government:" + holder})
 
+    def test_the_payer_pays_each_holder_its_dues_into_the_holders_treasury(self):
+        module = self.freight({"a": "rome", "b": "carthage"})
+        paid = module.pay_route_dues(PayRouteDues("trader", ROUTE, 10.0))
+        per_tonne = rules.dues_money_per_tonne(dues_hours_per_tonne(), WAGE)
+        self.assertEqual(module_harness.sent(module), [
+            PayActor("trader", "government:carthage", per_tonne["sail"] * 10.0, DUES_CAUSE),
+            PayActor("trader", "government:rome", per_tonne["river_boat"] * 10.0, DUES_CAUSE)])
+        self.assertEqual(paid, (per_tonne["sail"] + per_tonne["river_boat"]) * 10.0)
 
-class PayRouteDues(unittest.TestCase):
-    """`RouteDuesMixin.pay_route_dues` with the dues sum and the payment replaced by recorders."""
+    def test_the_limit_caps_the_money_paid(self):
+        module = self.freight({"a": "rome", "b": "carthage"})
+        self.assertAlmostEqual(module.pay_route_dues(PayRouteDues("trader", ROUTE, 10.0, limit=5.0)), 5.0)
+        self.assertAlmostEqual(sum(command.amount for command in module_harness.sent(module)), 5.0)
 
-    def test_the_payer_pays_what_the_route_owes_into_the_treasury_lookup_with_the_limit(self):
-        asked = []
-        game = SimpleNamespace(route_dues_by_holder=lambda route, tonnes: {"rome": tonnes}, route_dues_treasury="treasury function")
-        with mock.patch.object(route_dues, "pay_dues", lambda *args: asked.append(args) or 7.0):
-            paid = RouteDuesMixin.pay_route_dues(game, "payer", ROUTE, 10.0, limit=5.0)
-        self.assertEqual(asked, [("payer", {"rome": 10.0}, "treasury function", 5.0)])
-        self.assertEqual(paid, 7.0)
+    def test_a_route_over_untaken_tiles_pays_nothing(self):
+        module = self.freight(lambda tile: None)
+        self.assertEqual(module.pay_route_dues(PayRouteDues("trader", ROUTE, 10.0)), 0.0)
+        self.assertEqual(module_harness.sent(module), [])
 
 
 class Cargo(TradeView):

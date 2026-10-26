@@ -94,7 +94,7 @@ from .seat_dealings import SeatDealingsMixin
 from .seat_bank import SeatBankMixin
 from .interest_groups import InterestGroupsMixin
 from .benefactions import BenefactionsMixin
-from .route_dues import RouteDuesMixin
+from .forward_freight import ForwardFreightMixin
 from .mod_stores import ModStoresMixin
 from .core_properties import ForwardingPropertiesMixin
 from .goals import GoalsMixin
@@ -210,8 +210,8 @@ FARM_WEATHER_POOLED_CELL_CAP = declare(
 
 
 class Sim(ModStoresMixin, RealPriceRatiosMixin, MechanicsMixin, EconomyMixin, MarketClearingMixin, ForeignEconomiesMixin, MarketDemandMixin, RealOutputMixin, ConcernVolumeMixin, ConcernBookSalesMixin, TechniquesInUseMixin, IndustryDepthMixin, IndustryConcernMixin, IncumbentPricesMixin, ProducerCostsMixin, FogMixin, GeographyPortMixin, DiseasePortMixin, LabourPortMixin,
-          ProjectsMixin, SeatMixin, SeatRunMixin, SeatBuildsMixin, SeatSightMixin, ShockYearMixin, WaysMixin, WorksMixin, HeldWorksMixin, SocietyMixin, ActorsMixin, DisclosureMixin, FounderSalesMixin, SeatDealingsMixin, SeatBankMixin, InterestGroupsMixin, BenefactionsMixin, RouteDuesMixin, ForwardingPropertiesMixin, GoalsMixin,
-          StepPhasesMixin, ForwardLivingStockMixin, ForwardCoinMixin,
+          ProjectsMixin, SeatMixin, SeatRunMixin, SeatBuildsMixin, SeatSightMixin, ShockYearMixin, WaysMixin, WorksMixin, HeldWorksMixin, SocietyMixin, ActorsMixin, DisclosureMixin, FounderSalesMixin, SeatDealingsMixin, SeatBankMixin, InterestGroupsMixin, BenefactionsMixin, ForwardingPropertiesMixin, GoalsMixin,
+          StepPhasesMixin, ForwardLivingStockMixin, ForwardCoinMixin, ForwardFreightMixin,
           FoodSupplyMixin, SoilNitrogenMixin, FoodEatenMixin, DemographicRecoveryMixin, RegionalPeopleMixin, UrbanShareMixin, ForwardCampaignsMixin, EconomyPortMixin, NodeRederiveMixin):
     DEFAULT_POPULATION_100AD = declare(
         "DEFAULT_POPULATION_100AD", 65e6, kind="initial_condition",

@@ -10,7 +10,8 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.engine import foreign_routes
+from sim.freight import rules
+from sim.freight.route import Leg, Route
 from sim.geography import freight_cost, provisions, sea_freight, transport
 
 # Stated prices in one unit of money: grain per kg, the hourly wage, the market rate.
@@ -133,32 +134,28 @@ class LegPricingTests(unittest.TestCase):
         self.assertGreater(freight_cost.leg_money_per_tonne(1.0, CART, 200.0), 200.0)
 
 
-class _StubEconomy(foreign_routes.ForeignRoutesMixin):
-    def _carrier_models(self):
-        return {"cart": (CART, CART_PRICES, 250.0, 0.0), "sail": (HULL, HULL_PRICES, 150.0, 0.0)}
-
-    def _freight_handling_costs(self):
-        return {"sail": 5.0}
+MODELS = {"cart": (CART, CART_PRICES, 250.0, 0.0), "sail": (HULL, HULL_PRICES, 150.0, 0.0)}
+HANDLING = {"sail": 5.0}
 
 
 class RoutePricingTests(unittest.TestCase):
 
     def test_a_route_leg_costs_more_per_tonne_for_the_carried_provisions(self):
-        legs = (foreign_routes.Leg("a", "b", "cart", 200.0, 200.0, 11.0),
-                foreign_routes.Leg("b", "c", "sail", 1000.0, 20.0, 9.0))
-        priced = _StubEconomy()._with_carried_provisions(foreign_routes.Route(legs))
+        legs = (Leg("a", "b", "cart", 200.0, 200.0, 11.0),
+                Leg("b", "c", "sail", 1000.0, 20.0, 9.0))
+        priced = rules.route_with_provisions(Route(legs), MODELS, HANDLING)
         self.assertGreater(priced.legs[0].cost_per_tonne, 200.0)
         self.assertGreater(priced.legs[1].cost_per_tonne, 20.0)
         self.assertGreater(priced.legs[0].cost_per_tonne / 200.0, priced.legs[1].cost_per_tonne / 20.0)
 
     def test_the_handling_fee_is_not_scaled(self):
-        legs = (foreign_routes.Leg("b", "c", "sail", 1000.0, 5.0, 9.0),)
-        priced = _StubEconomy()._with_carried_provisions(foreign_routes.Route(legs))
+        legs = (Leg("b", "c", "sail", 1000.0, 5.0, 9.0),)
+        priced = rules.route_with_provisions(Route(legs), MODELS, HANDLING)
         self.assertEqual(priced.legs[0].cost_per_tonne, 5.0)
 
     def test_a_mode_without_a_model_is_left_as_found(self):
-        legs = (foreign_routes.Leg("a", "b", "teleport", 10.0, 7.0, 1.0),)
-        self.assertEqual(_StubEconomy()._with_carried_provisions(foreign_routes.Route(legs)).legs, legs)
+        legs = (Leg("a", "b", "teleport", 10.0, 7.0, 1.0),)
+        self.assertEqual(rules.route_with_provisions(Route(legs), MODELS, HANDLING).legs, legs)
 
     def test_a_searched_leg_counts_the_provisions_once(self):
         # Complaint 569: the search rates already carry the provisions, so pricing the found leg must not
@@ -166,9 +163,9 @@ class RoutePricingTests(unittest.TestCase):
         base_rate, distance = 1.0, 200.0
         restock_days = provisions.RESTOCK_INTERVAL_DAYS
         searched_rate = base_rate / provisions.restocked_share(CART, distance, restock_days)
-        legs = (foreign_routes.Leg("a", "b", "cart", distance, searched_rate * distance, 11.0),)
-        priced = _StubEconomy()._with_carried_provisions(
-            foreign_routes.Route(legs), {"cart": base_rate}, {"cart": searched_rate})
+        legs = (Leg("a", "b", "cart", distance, searched_rate * distance, 11.0),)
+        priced = rules.route_with_provisions(
+            Route(legs), MODELS, HANDLING, {"cart": base_rate}, {"cart": searched_rate})
         expected = freight_cost.leg_money_per_tonne(base_rate, CART, distance, restock_days)
         self.assertAlmostEqual(priced.legs[0].cost_per_tonne, expected)
 
@@ -176,9 +173,9 @@ class RoutePricingTests(unittest.TestCase):
         base_rate, distance = 1.0, 20.0
         restock_days = provisions.RESTOCK_INTERVAL_DAYS
         searched_rate = base_rate / provisions.restocked_share(CART, 200.0, restock_days)
-        legs = (foreign_routes.Leg("a", "b", "cart", distance, searched_rate * distance, 1.0),)
-        priced = _StubEconomy()._with_carried_provisions(
-            foreign_routes.Route(legs), {"cart": base_rate}, {"cart": searched_rate})
+        legs = (Leg("a", "b", "cart", distance, searched_rate * distance, 1.0),)
+        priced = rules.route_with_provisions(
+            Route(legs), MODELS, HANDLING, {"cart": base_rate}, {"cart": searched_rate})
         self.assertAlmostEqual(priced.legs[0].cost_per_tonne,
                                freight_cost.leg_money_per_tonne(base_rate, CART, distance, restock_days))
 

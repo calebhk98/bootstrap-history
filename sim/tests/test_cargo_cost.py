@@ -7,7 +7,7 @@ from .harness import *  # noqa: F401,F403
 
 from sim.world import trader_response
 from sim.geography import cargo_cost, freight_cost, transport
-from sim.engine.haul_route import Leg, Route, domestic_cargo_cost_share
+from sim.freight.route import Leg, Route, domestic_cargo_cost_share
 
 RATE = 0.1
 check("a longer voyage charges more interest on the same cargo value",

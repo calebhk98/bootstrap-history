@@ -25,8 +25,6 @@ from .foreign_actor_trade import ForeignActorTradeMixin
 from .trader_cargo import TraderCargoMixin
 from .foreign_capacity import ForeignCapacityMixin
 from .foreign_payments import ForeignPaymentsMixin
-from .foreign_routes import ForeignRoutesMixin
-from .foreign_traders import ForeignTradersMixin
 
 @functools.lru_cache(maxsize=None)
 def foreign_economy_records():
@@ -60,8 +58,7 @@ def _foreign_prices_in_own_coin(civilization_id):
         money_per_labour_hour=starting_schedule(civilization_id).money_per_labour_hour)
 
 
-class ForeignEconomiesMixin(ForeignRoutesMixin, ForeignCapacityMixin, ForeignPaymentsMixin,
-                            ForeignTradersMixin, ForeignActorTradeMixin, TraderCargoMixin):
+class ForeignEconomiesMixin(ForeignCapacityMixin, ForeignPaymentsMixin, ForeignActorTradeMixin, TraderCargoMixin):
 
     def partner_civ(self, civilization_id):
         """The civilisation `civilization_id` as `load_civ` returns it, loaded once (mods applied, checked) and

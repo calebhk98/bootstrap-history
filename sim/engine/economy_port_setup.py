@@ -19,7 +19,7 @@ from sim.labour import api as labour_api
 
 from . import economy_port_closure, economy_port_costs, economy_port_sites
 from .economy_port_stores import opening_store_values
-from .foreign_routes import SEA_MODE
+from sim.freight.api import SEA_MODE
 
 ARABLE_SOURCE = "arable land"   # the production entries' `extracted_from` for crops (some add a note after it)
 DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "data")

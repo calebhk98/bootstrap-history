@@ -3,6 +3,7 @@ stand-in with its inputs written out (Complaints 640; FINDINGS_ROUND2 sections Q
 test_literacy_market_pricing, the scarcity curve is test_material_freight, the wall is test_staff_moves_rules."""
 QUICK_TOPIC = True
 
+import collections
 import types
 import unittest
 from unittest import mock
@@ -79,8 +80,9 @@ class _Market(FreightMixin):
     def _own_material_supply(self, tag):
         return self.own_supply
 
-    def material_freight_factor(self, key):
-        return self.freight
+    def view(self, name):
+        assert name == "material_freight_factor"
+        return collections.defaultdict(lambda: self.freight)
 
 
 class MaterialPriceFactor(unittest.TestCase):

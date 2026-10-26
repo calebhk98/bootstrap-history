@@ -3,13 +3,10 @@
 Each view answers through `Sim` as the old mixin methods did; when its owner moves it publishes the same name and the
 entry is deleted. `legacy_agent_world` is raw state the module still reads in place (the agent economy's world)."""
 from sim.assembly.api import KEYED, QUOTE
-from sim.geography.api import route as route_over_tiles
-from sim.geography.api import usable_modes as usable_route_modes
 from sim.ledger.api import STORE_ACTOR, STORE_GRANARY, STORE_STOCK, TakeGoods
 
 from .bridge import bridge_command, bridge_view
 from .data import load_civ, starting_schedule
-from .foreign_routes import route_from_geography
 
 
 # ---- workforce and markets ----
@@ -65,15 +62,6 @@ def partner_opening_facts(sim, civilization_id):
     return {"population": load_civ(civilization_id).get("population"),
             "money_per_labour_hour": starting_schedule(civilization_id).money_per_labour_hour}
 
-
-@bridge_view("partner_route_cost", kind=KEYED)
-def partner_route_cost(sim, civilization_id):
-    """Home money to carry a tonne over the route to a partner; None where no route is known."""
-    route = sim._foreign_economy_facts(civilization_id)["route"]
-    return None if route is None else route.cost_per_tonne
-
-
-# ---- reporting ----
 
 @bridge_view("coin_value_ratio", kind=KEYED)
 def coin_value_ratio(sim, metal):
@@ -133,28 +121,6 @@ def home_country(sim):
 @bridge_view("tile_known", kind=KEYED)
 def tile_known(sim, tile):
     return tile in sim.world_map.tiles
-
-
-@bridge_view("tile_haul_cost", kind=QUOTE)
-def tile_haul_cost(sim, origin, destination):
-    """Home money to haul a tonne over the cheapest route between two tiles; nothing where none joins them. Remembered
-    for the year."""
-    cache = sim.__dict__.setdefault("_home_carriage_cache", {})
-    year = sim.state.scenario.year
-    if cache.get("year") != year:
-        cache.clear()
-        cache["year"] = year
-    key = (origin, destination)
-    if key not in cache:
-        home_techs = sim.held_and_running(include_starting=False)
-        mode_costs = sim._freight_mode_costs(0.0)
-        modes = [mode for mode in usable_route_modes((home_techs,), sim.world_map) if mode in mode_costs]
-        found = route_over_tiles([origin], [destination], modes, mode_costs=mode_costs,
-                                 handling_costs=sim._freight_handling_costs(), held_nodes=home_techs,
-                                 world_map=sim.world_map)
-        cache[key] = 0.0 if found is None else sim._with_carried_provisions(
-            route_from_geography(found)).cost_per_tonne
-    return cache[key]
 
 
 # ---- actors ----
