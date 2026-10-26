@@ -6,7 +6,7 @@ import json
 import os
 import types
 
-from . import solve_cache
+from sim.prices.api import solve_cache
 
 # The spin-up runs the port's year module and, through it, the economy package; the interface never loads.
 SPIN_UP_SOURCE_MODULES = ("sim.engine.economy_port_year",)

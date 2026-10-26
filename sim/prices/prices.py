@@ -1,7 +1,7 @@
 """Ask the price solver for a price.
 
 Prices are calculated from recipes, land rent, wages and transport by
-`sim/engine/solve_prices.py`, gated to what a civilization has reached
+`sim/prices/solve_prices.py`, gated to what a civilization has reached
 (Complaints/38). This module is the engine's one call into the solver. It is
 thin: it imports the solver rather than re-implementing it. There is no price
 book; a material nothing can make has no price.
@@ -79,7 +79,7 @@ before trusting it. A caller that hands in a DIFFERENT `production_entries`
 object (a test building synthetic data, mainly) can never collide with a
 real one that happens to reuse the same gate-node ids.
 
-LABOUR-HOURS TO DENARII. `sim/engine/solve_prices.py` prices everything in
+LABOUR-HOURS TO DENARII. `sim/prices/solve_prices.py` prices everything in
 labour-hours - one hour of `labourer`, its numeraire, equals 1.0 - because a
 recipe graph can produce relative amounts of unskilled effort. Money enters
 only here, at the edge: the wage document carries `money_per_labour_hour`,
@@ -100,7 +100,7 @@ kind of downstream question.
 
 RENT IS AN ARGUMENT (Complaints/507). `solved_prices` takes
 `rent_hours_per_kg_by_material` and charges exactly that (empty: none). A
-caller with none takes the opening's stand-in from `sim/engine/rent_standin.py`,
+caller with none takes the opening's stand-in from `sim/prices/rent_standin.py`,
 computed once per solve and threaded through `compute_resolvable_materials` and
 `solve`; it is the only place a demanded quantity still reaches a price.
 
@@ -155,11 +155,11 @@ REPO_ROOT = os.path.dirname(SIMDIR)                             # repo root
 if REPO_ROOT not in sys.path:
     sys.path.insert(0, REPO_ROOT)
 
-from sim.engine import disposal_cost, rent_standin, solve_prices, solve_prices_reach  # noqa: E402
-from sim.engine.validate_production import load_production             # noqa: E402
+from sim.prices import disposal_cost, rent_standin, solve_prices, solve_prices_reach  # noqa: E402
+from sim.prices.engine_seam import load_production             # noqa: E402
 from sim.labour.api import wages                                     # noqa: E402
 from sim.labour.api import wage_provider                # noqa: E402
-from sim.engine import solve_cache                              # noqa: E402
+from sim.prices import solve_cache                              # noqa: E402
 from sim.constants import declare                                # noqa: E402
 from sim.geography.api import tiles_held                    # noqa: E402
 
@@ -276,7 +276,7 @@ def all_gate_nodes(production_entries: Optional[ProductionEntries] = None) -> Fr
 
 def solver_trade_registry(production_entries: ProductionEntries) -> Dict[str, Any]:
     """The trade registry, checked against the loaded technologies as well as recipes."""
-    from .catalog import load_mod_tree_nodes, load_trade_registry
+    from .engine_seam import load_mod_tree_nodes, load_trade_registry
     root = os.path.dirname(os.path.dirname(HERE))
     return load_trade_registry(root, production_entries, nodes=load_mod_tree_nodes(root))
 
@@ -455,7 +455,7 @@ def solved_prices(held_technology_ids: Iterable[str],
 
     `rent_hours_per_kg_by_material` is the rent the caller charges, in hours per unit of each extracted
     good and per hectare of land; empty charges none. `None` takes the opening's stand-in
-    (`sim/engine/rent_standin.py`, the only place a demanded quantity still enters a price).
+    (`sim/prices/rent_standin.py`, the only place a demanded quantity still enters a price).
     """
     return solved_prices_at_wages(
         held_technology_ids, solve_prices.wage_ratios_by_trade(prices_json), production_entries, civilization_id,
@@ -540,13 +540,13 @@ def solved_prices_at_wages(held_technology_ids: Iterable[str],
 
 
 # The solve reads only its inputs and the code this module imports, so only that source keys the cache.
-_SOLVER_SOURCE = ("sim.engine.prices",)
+_SOLVER_SOURCE = ("sim.prices.prices",)
 
 
 def _tree_nodes() -> Dict[str, Any]:
     """The tech tree by node id, read once per process."""
     if _TREE_NODES.get("nodes") is None:
-        from .catalog import load_mod_tree_nodes
+        from .engine_seam import load_mod_tree_nodes
         root = os.path.dirname(os.path.dirname(HERE))
         _TREE_NODES["nodes"] = {node["id"]: node for node in load_mod_tree_nodes(root)}
     return _TREE_NODES["nodes"]
@@ -567,7 +567,7 @@ def _requirements_of(nodes: Dict[str, Any], node_id: str) -> FrozenSet[str]:
         cached.clear()
         cached["tree"] = nodes
     if node_id not in cached:
-        from .data import closure
+        from .engine_seam import closure
         cached[node_id] = frozenset(closure(nodes, node_id))
     return cached[node_id]
 
@@ -628,7 +628,7 @@ def _climate_allows(entry, civilization_id, held_tiles=None):
         return True
     from sim.geography.api import crop_climate
     if held_tiles is None:
-        from .data import load_civ
+        from .engine_seam import load_civ
         held_tiles = tiles_held(load_civ(civilization_id))
     return crop_climate.entry_grows_in(entry, held_tiles)
 

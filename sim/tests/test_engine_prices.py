@@ -10,8 +10,9 @@ import os
 import unittest
 from unittest import mock
 
-from sim.engine import data, prices as engine_prices
+from sim.prices import prices as engine_prices
 
+from sim.engine import data
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 

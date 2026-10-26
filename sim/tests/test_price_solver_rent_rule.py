@@ -1,7 +1,7 @@
 """Rent in the price solver's recipe costing, on synthetic entries (no data, no game)."""
 import unittest
 
-from sim.engine import solve_prices
+from sim.prices import solve_prices
 
 QUICK_TOPIC = True
 

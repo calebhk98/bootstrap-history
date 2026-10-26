@@ -3,7 +3,7 @@ only unique among live objects, so the cache class confirms every hit with `is`.
 QUICK_TOPIC = True
 
 from .harness import *  # noqa: F401,F403
-from sim.engine.identity_cache import IdentityCache
+from sim.prices.identity_cache import IdentityCache
 
 _cache = IdentityCache()
 _first = {"tree": 1}

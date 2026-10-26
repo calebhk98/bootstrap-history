@@ -1,39 +1,33 @@
-"""Complaints/507 stage 5, wiring on stand-ins: `economy_cost_book` hands the cost calculator the economy's input prices,
-wages, lending rate and land rent as they stand, and `ProducerCostsMixin._cost_book` remembers the book while the economy's
-prices stand. The calculator is a recorder; its own rules are in test_entry_cost_at_economy_prices. No game."""
+"""Complaints/507 stage 5, wiring on stand-ins: the prices module's `economy_cost_book` hands the cost calculator the economy's
+input prices, wages, lending rate and land rent as they stand, and `cost_book` remembers the book while the economy's prices
+stand. The calculator is a recorder; its own rules are in test_entry_cost_at_economy_prices. No game."""
 QUICK_TOPIC = True
 
-import types
 import unittest
 from unittest import mock
 
-from sim.engine import economy_cost_book as cost_book_module
-from sim.engine import producer_costs
-from sim.engine.making_cost import LAND_MATERIAL
-from sim.engine.producer_costs import ProducerCostsMixin
+from sim.prices import cost_books
+from sim.prices.making_cost import LAND_MATERIAL
+from sim.tests import prices_stand_in
 
-CIV = {"id": "somewhere"}
-
-
-def standin(prices, wage_of_trade, rent=3.5, rate=0.07):
-    return types.SimpleNamespace(
-        goods_market=types.SimpleNamespace(household_prices=lambda: prices),
-        economy=types.SimpleNamespace(agent_wage_per_hour=wage_of_trade, agent_land_rent_per_hectare=lambda: rent),
-        labour=types.SimpleNamespace(market=types.SimpleNamespace(quote=lambda trade: 9.0)),
-        market_rate=lambda: rate, civ=CIV)
+CIV = {"id": "somewhere", "starting_interest_rate": 0.05}
 
 
-def recorded_arguments(sim, production=None):
+def module(prices, wage_of_trade, rent=3.5, rate=0.07):
+    return prices_stand_in.build(civilisation=CIV, household_prices=lambda: prices, agent_wage=wage_of_trade,
+                                 agent_land_rent=lambda: rent, hour_wage=lambda trade: 9.0, market_rate=lambda: rate)
+
+
+def recorded_arguments(prices_module):
     """The positional and keyword arguments `economy_cost_book` hands to `CostBook`."""
-    with mock.patch.object(cost_book_module, "CostBook") as calculator:
-        cost_book_module.economy_cost_book(sim, production)
+    with mock.patch.object(cost_books, "CostBook") as calculator:
+        prices_module.economy_cost_book()
     return calculator.call_args
 
 
 class EconomyCostBookTests(unittest.TestCase):
     def setUp(self):
-        self.call = recorded_arguments(standin({"ore_kg": 4.0, "free_kg": 0.0}, lambda trade: {"smith": 2.5}.get(trade)),
-                                       production={"entry": {}})
+        self.call = recorded_arguments(module({"ore_kg": 4.0, "free_kg": 0.0}, lambda trade: {"smith": 2.5}.get(trade)))
         self.input_price_of, self.wage_of, self.rate = self.call.args
 
     def test_an_input_costs_the_economys_price_for_it(self):
@@ -54,48 +48,40 @@ class EconomyCostBookTests(unittest.TestCase):
     def test_a_trade_the_economy_pays_nobody_is_quoted_by_the_labour_market(self):
         self.assertEqual(self.wage_of("carter"), 9.0)
 
-    def test_the_lending_rate_civilisation_and_catalogue_are_passed_on(self):
+    def test_the_lending_rate_and_civilisation_are_passed_on(self):
         self.assertEqual(self.rate, 0.07)
         self.assertEqual(self.call.kwargs["civilization"], CIV)
-        self.assertEqual(self.call.kwargs["production"], {"entry": {}})
+        self.assertIsNone(self.call.kwargs["production"])
 
     def test_no_land_rent_means_land_is_charged_nothing(self):
-        call = recorded_arguments(standin({}, lambda trade: 1.0, rent=None))
+        call = recorded_arguments(module({}, lambda trade: 1.0, rent=None))
         self.assertEqual(call.kwargs["rent_of"](LAND_MATERIAL), 0.0)
 
 
 class CostBookMemoTests(unittest.TestCase):
-    def game(self, prices, rate=0.07, year=0, techniques=None):
-        game = types.SimpleNamespace(
-            goods_market=types.SimpleNamespace(household_prices=lambda: prices), market_rate=lambda: rate,
-            state=types.SimpleNamespace(scenario=types.SimpleNamespace(year=year)),
-            techniques_in_use=lambda: techniques)
-        return game
-
-    def books(self, *games):
-        """Each game's `_cost_book`, in turn on one shared cache, with the number of books built."""
+    def books(self, *situations):
+        """Each situation's `cost_book`, in turn on one module, with the number of books built."""
         built = []
-        shared = types.SimpleNamespace()
-        with mock.patch.object(producer_costs, "economy_cost_book", side_effect=lambda game: built.append(game) or object()):
-            for game in games:
-                shared.goods_market, shared.market_rate, shared.state = game.goods_market, game.market_rate, game.state
-                shared.techniques_in_use = game.techniques_in_use
-                ProducerCostsMixin._cost_book(shared)
+        current = {}
+        shared = prices_stand_in.build(household_prices=lambda: current["prices"], market_rate=lambda: current["rate"],
+                                       year=lambda: current["year"], techniques_in_use=lambda: current["techniques"])
+        with mock.patch.object(shared, "economy_cost_book", side_effect=lambda: built.append(1) or object()):
+            for prices, rate, year, techniques in situations:
+                current.update(prices=prices, rate=rate, year=year, techniques=techniques)
+                shared.cost_book()
         return len(built)
 
     def test_the_book_is_kept_while_the_economys_prices_stand(self):
         prices, techniques = {"ore_kg": 1.0}, ("a",)
-        self.assertEqual(self.books(self.game(prices, techniques=techniques), self.game(prices, techniques=techniques)), 1)
+        self.assertEqual(self.books((prices, 0.07, 0, techniques), (prices, 0.07, 0, techniques)), 1)
 
     def test_a_new_price_table_makes_a_new_book(self):
         techniques = ("a",)
-        self.assertEqual(self.books(self.game({"ore_kg": 1.0}, techniques=techniques),
-                                    self.game({"ore_kg": 2.0}, techniques=techniques)), 2)
+        self.assertEqual(self.books(({"ore_kg": 1.0}, 0.07, 0, techniques), ({"ore_kg": 2.0}, 0.07, 0, techniques)), 2)
 
     def test_a_new_year_makes_a_new_book(self):
         prices, techniques = {"ore_kg": 1.0}, ("a",)
-        self.assertEqual(self.books(self.game(prices, year=0, techniques=techniques),
-                                    self.game(prices, year=1, techniques=techniques)), 2)
+        self.assertEqual(self.books((prices, 0.07, 0, techniques), (prices, 0.07, 1, techniques)), 2)
 
 
 if __name__ == "__main__":

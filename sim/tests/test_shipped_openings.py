@@ -8,9 +8,9 @@ import tempfile
 import unittest
 from unittest import mock
 
-from sim.engine import economy_port_year, shipped_openings, shipped_openings_build, solve_cache
+from sim.prices import solve_cache
 
-
+from sim.engine import economy_port_year, shipped_openings, shipped_openings_build
 class ShippedEntryTests(unittest.TestCase):
     def setUp(self):
         self._shipped = tempfile.TemporaryDirectory()

@@ -8,9 +8,9 @@ population, income or demand; the same wages, rate and rent give the same table.
 from dataclasses import dataclass
 from typing import Any, Callable, Dict, Iterable, Mapping, Optional
 
-from sim.engine import prices as price_engine
-from sim.engine import rent_standin, solve_prices
-from sim.engine.making_cost import LAND_MATERIAL
+from sim.prices import prices as price_engine
+from sim.prices import rent_standin, solve_prices
+from sim.prices.making_cost import LAND_MATERIAL
 
 
 @dataclass(frozen=True)

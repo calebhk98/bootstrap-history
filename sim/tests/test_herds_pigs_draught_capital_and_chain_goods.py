@@ -7,9 +7,9 @@ import os
 import unittest
 
 from sim.engine import civ_start_check as start_check
-from sim.engine import solve_prices_core as core
+from sim.prices import solve_prices_core as core
 from sim.engine.catalog import load_production_catalog
-from sim.engine.joint_allocation import allocate_joint_cost
+from sim.prices.joint_allocation import allocate_joint_cost
 from sim.engine.need_data import load_needs
 from sim.engine.tree_source import load_base_tree
 

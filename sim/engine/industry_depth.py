@@ -20,7 +20,7 @@ from sim.labour.api import add_tenure, fade_tenure, outflow_shares, tenure_by_tr
 from sim.world.demography_turnover import working_age_turnover
 
 from .industry_depth_rules import firm_worker_years, opening_seed, society_worker_years
-from .prices import default_production_entries
+from sim.prices.api import prices as price_solver
 
 YEARS_STAFF_TAKE_TO_MASTER = declare(
     "YEARS_STAFF_TAKE_TO_MASTER", 5.0, kind="temporary_heuristic",
@@ -131,7 +131,7 @@ class IndustryDepthMixin:
         by_recipe = self.economy.agent_worker_years_by_recipe()
         if by_recipe is None:
             return None
-        gate = {key: entry.get("requires_node") for key, entry in default_production_entries().items()}
+        gate = {key: entry.get("requires_node") for key, entry in price_solver.default_production_entries().items()}
         years = {}
         for recipe_id, worker_years in by_recipe.items():
             node_id = gate.get(recipe_id)

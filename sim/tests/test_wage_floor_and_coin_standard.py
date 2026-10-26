@@ -7,7 +7,9 @@ import json
 import os
 import unittest
 
-from sim.engine import catalog, data, prices as engine_prices, wage_schedule
+from sim.prices import prices as engine_prices
+
+from sim.engine import catalog, data, wage_schedule
 from sim.labour import wage_provider
 from sim.engine.validate_production import load_production
 

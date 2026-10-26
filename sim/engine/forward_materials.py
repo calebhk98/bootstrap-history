@@ -2,7 +2,7 @@
 
 Each goes when its last caller reads the view (`sim.view(name)`) or sends the command (`sim.send(command)`) itself.
 `wire_chain_report` is not a forwarder: it needs the commodity catalogue's propagation, which stays in the engine."""
-from . import commodities as _commod
+from sim.prices.api import commodities as _commod
 
 
 class ForwardMaterialsMixin:

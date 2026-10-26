@@ -1,6 +1,6 @@
 """Solve for the price of every material from physical structure, not a book.
 
-READ-ONLY. This module computes prices; `sim/engine/prices.py` is the engine's
+READ-ONLY. This module computes prices; `sim/prices/prices.py` is the engine's
 one call into it, and every price in play comes from there.
 
 THE MECHANISM, from docs/architecture/ENDOGENOUS_COSTS_AND_DOMAINS.md Part 2:
@@ -56,7 +56,7 @@ THE SOLVER CHARGES THE RENT IT IS HANDED (Complaints/507). Ricardian rent is
 circular by construction: which deposit is marginal depends on how much is
 demanded, and how much is demanded depends on the price. The solver has no
 demand, so it takes rent as an argument (`rent_hours_per_kg_by_material`).
-`sim/engine/rent_standin.py` holds the stand-in a caller uses when it has none:
+`sim/prices/rent_standin.py` holds the stand-in a caller uses when it has none:
 quantity demanded fixed at `data/world/resources.json`'s `empire_output_100ad`
 figure for each metal, and the margin of cultivation sized to the population or
 the farmed area. TAG: TEMPORARY HEURISTIC (CLAUDE.md 4.4), declared there with
@@ -600,7 +600,7 @@ that cost across its outputs in proportion to each output's value (reference pri
 times quantity). The reference price of an output is the caller's, else the cheapest
 sole-output route's price this round (what making it alone costs), else nothing if the
 data records a waste heap for it (it is tipped when nobody takes it), else its mass at
-the batch's mean cost per kilogram (sim/engine/joint_allocation.py). No demand is read.
+the batch's mean cost per kilogram (sim/prices/joint_allocation.py). No demand is read.
 A single-output recipe is just the case
 where one output holds 100% of the value share. Where a material has several
 candidate recipes, its price is the CHEAPEST of what each recipe implies for
@@ -660,7 +660,7 @@ The fix is a gate, not a deletion. Each entry may carry `requires_node`: the
 tech-tree node that has to be reached before anyone can run that technique
 (see WHEN A TECHNIQUE BECOMES AVAILABLE in `data/production/_SCHEMA.md`).
 A civilisation's `starting_techs` is a set of exactly those ids, so a
-gated solve (`sim/engine/prices.py`'s `solved_prices` with that civilisation)
+gated solve (`sim/prices/prices.py`'s `solved_prices` with that civilisation)
 filters the entries down to what Rome can actually do and then solves that
 smaller system. The whole rest of the mechanism is unchanged: the same
 resolvability pass, the same fixed point, the same choice of technique -
@@ -724,12 +724,12 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT = os.path.dirname(os.path.dirname(HERE))
 if REPO_ROOT not in sys.path:
     sys.path.insert(0, REPO_ROOT)
-from sim.engine.validate_production import load_production, materials_the_tree_consumes  # noqa: E402
+from sim.prices.engine_seam import load_production, materials_the_tree_consumes  # noqa: E402
 
 # The price algebra lives in sim/engine/solve_prices_core.py; this module
 # re-exports it so `solve_prices.<name>` call sites and the mechanism essay
 # above stay in one place.
-from sim.engine.solve_prices_core import (                  # noqa: E402
+from sim.prices.solve_prices_core import (                  # noqa: E402
     CAPABILITY_CAP_FIELDS,
     CONVERGENCE_TOLERANCE,
     DAMPING_FACTOR,
@@ -765,7 +765,7 @@ from sim.engine.solve_prices_core import (                  # noqa: E402
 
 # The rent the opening carries when a caller supplies none (a temporary stand-in, Complaints/507); the solver
 # itself charges only the rent it is handed.
-from sim.engine.rent_standin import (                       # noqa: E402,F401
+from sim.prices.rent_standin import (                       # noqa: E402,F401
     DEFAULT_LAND_CIVILIZATION,
     land_rent_hours_per_hectare,
     rent_hours_per_kg_by_ore_material,

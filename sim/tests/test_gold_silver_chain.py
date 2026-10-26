@@ -6,7 +6,7 @@ import json
 import os
 import unittest
 
-from sim.engine.prices import _default_production_entries, solved_prices
+from sim.prices.prices import _default_production_entries, solved_prices
 
 GRAMS_PER_KILOGRAM = 1000.0
 

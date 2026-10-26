@@ -5,8 +5,9 @@ import contextlib
 import os
 import unittest
 
-from sim.engine import opening_checks_run, shipped_openings, solve_cache
+from sim.prices import solve_cache
 
+from sim.engine import opening_checks_run, shipped_openings
 # Set to compute a stale opening instead of failing (tens of minutes per civilisation).
 COMPUTE_STALE_ENV = "ROME_COMPUTE_STALE_OPENINGS"
 # The cache namespaces whose miss is a spin-up or a margin solve, minutes each; the rest are cheap to solve.

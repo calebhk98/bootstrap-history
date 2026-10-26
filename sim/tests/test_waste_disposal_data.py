@@ -5,7 +5,9 @@ QUICK_TOPIC = True
 import json
 import unittest
 
-from sim.engine import disposal_cost, validate_production
+from sim.prices import disposal_cost
+
+from sim.engine import validate_production
 from sim.geography import api as geography
 from sim.world import demand
 

@@ -2,7 +2,7 @@
 
 The calculator (`making_cost.cost_of_making`) costs one entry with its inputs, labour, plant and land priced by
 the functions handed in: the economy's input prices, its wages, the lending rate and the land rent it lets at.
-The market receives the result as a reservation price (producer_costs.py).
+The market receives the result as a reservation price (sim/prices/cost_books.py).
 """
 from typing import Any, Callable, FrozenSet, Mapping, Optional
 

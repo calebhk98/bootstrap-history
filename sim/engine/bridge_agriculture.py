@@ -91,11 +91,6 @@ def trade_registry(sim):
     return {trade_id: {"family": trade.family, **trade.extra} for trade_id, trade in TRADE_REGISTRY.items()}
 
 
-@bridge_view("price_index")
-def price_index(sim):
-    return sim.price_index
-
-
 @bridge_view("externality_yield_factors", kind=QUOTE)
 def externality_yield_factors(sim, year):
     """{tile: factor} the mods' externalities agree on for the year's harvest, each clamped to 0..1."""

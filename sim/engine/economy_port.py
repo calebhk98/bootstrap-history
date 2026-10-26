@@ -225,8 +225,8 @@ class EconomyPort:
         if agent is not None:
             return agent.fleet_goods(buyer)
         from .economy_port_setup import _load, allowed_entries
-        from .prices import default_production_entries
-        production = default_production_entries()
+        from sim.prices.api import prices as price_solver
+        production = price_solver.default_production_entries()
         lives = _load("world", "service_lives.json").get("years", {})
         allowed = allowed_entries(production, set(self._sim.state.projects.granted))
         return [{"material": good, "life": float(lives.get(good, {}).get("years", 0.0)),
@@ -339,9 +339,9 @@ class EconomyPort:
                            if group == commodity)
         if materials:
             return materials
-        from .prices import default_production_entries
+        from sim.prices.api import prices as price_solver
         return ([commodity] if any(commodity in entry.get("outputs", {})
-                                   for entry in default_production_entries().values()) else [])
+                                   for entry in price_solver.default_production_entries().values()) else [])
 
     def trade_quote(self, material):
         """The market's quote for a material (buy and sell terms), or None if it has no price."""

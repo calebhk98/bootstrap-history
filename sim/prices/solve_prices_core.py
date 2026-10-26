@@ -2,7 +2,7 @@
 capital and energy cost terms, choice of technique, and the damped
 fixed-point `solve` loop itself.
 
-sim/engine/solve_prices.py is the thin composition point every import
+sim/prices/solve_prices.py is the thin composition point every import
 names, and ITS module docstring - not this file's - is what every "see the
 module docstring" comment below actually means:
 that essay is the design reasoning for the whole tool (rent, energy,
@@ -24,14 +24,15 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT = os.path.dirname(os.path.dirname(HERE))
 if REPO_ROOT not in sys.path:
     sys.path.insert(0, REPO_ROOT)
-from sim.engine import capital_builds, disposal_cost  # noqa: E402
-from sim.engine.joint_allocation import allocate_joint_cost, outputs_split_by_mass  # noqa: E402
-from sim.engine.price_change import relative_price_change  # noqa: E402
+from sim.world import capital_builds
+from sim.prices import disposal_cost  # noqa: E402
+from sim.prices.joint_allocation import allocate_joint_cost, outputs_split_by_mass  # noqa: E402
+from sim.prices.price_change import relative_price_change  # noqa: E402
 from sim.world.capital_market import stand_yearly_share  # noqa: E402  (CAPITAL)
 # DAMPING_FACTOR, MAXIMUM_ITERATIONS, CONVERGENCE_TOLERANCE, INITIAL_PRICE_
 # GUESS_HOURS and GROWTH_BOUND_HOURS live in sim/algorithm_parameters.py and
 # are imported back here under their original names, so every existing
-# `solve_prices_core.NAME` reference - including sim/engine/solve_prices.py's
+# `solve_prices_core.NAME` reference - including sim/prices/solve_prices.py's
 # own `from solve_prices_core import (..., DAMPING_FACTOR, ...)` - keeps
 # resolving unchanged.
 # See that module's own docstring for the full reasoning, including the
@@ -313,7 +314,7 @@ def load_starting_interest_rate(civilization_id):
     if os.path.exists(path):
         with open(path) as handle:
             return float(json.load(handle)["starting_interest_rate"])
-    from sim.engine.data import load_civ        # a civilisation a mod defines is not a file of its own
+    from sim.prices.engine_seam import load_civ        # a civilisation a mod defines is not a file of its own
     return float(load_civ(civilization_id)["starting_interest_rate"])
 
 
@@ -903,7 +904,7 @@ def recipe_cost_and_allocation(recipe_id, entry, current_prices, wage_by_trade,
     productiveness test and any other caller that has no opinion about rent
     is not forced to pass an empty dict everywhere.
 
-    The split is value allocation (see sim/engine/joint_allocation.py): an output
+    The split is value allocation (see sim/prices/joint_allocation.py): an output
     in `reference_price_by_material` is valued at that price, the rest by mass.
     This is the standard answer to "how much of a joint process's cost belongs
     to this one output" and it is why a single-output recipe needs no special
@@ -1061,7 +1062,7 @@ def solve(production_entries, producers_of, resolvable_materials, wage_by_trade,
     final_residual = float("inf")
     iterations_run = 0
     joint_materials = disposal_cost.joint_output_materials(production_entries)
-    from sim.engine import solve_prices_round  # imports this module, so only once it is loaded
+    from sim.prices import solve_prices_round  # imports this module, so only once it is loaded
     plans = solve_prices_round.build_plans(
         production_entries, recipe_ids_in_order, resolvable_materials, wage_by_trade,
         rent_hours_per_kg_by_material or {}, interest_rate, floor_by_carrier)
@@ -1100,7 +1101,7 @@ def minor_joint_byproducts_split_by_mass(production_entries, chosen_recipe_by_ma
 
     A joint output is valued at a reference price when the caller gave one or when a sole-output route
     makes it (what making it alone costs); a recorded waste with neither is worth nothing; any other is
-    valued by mass (the labelled fallback of sim/engine/joint_allocation.py). Those prices are a real lower bound on cost, not a real relative
+    valued by mass (the labelled fallback of sim/prices/joint_allocation.py). Those prices are a real lower bound on cost, not a real relative
     price, and every caller that prints one must be able to say so next to it.
     """
     direct = {material for entry in production_entries.values()

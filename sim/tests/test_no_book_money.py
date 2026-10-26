@@ -7,8 +7,8 @@ import unittest
 
 from sim.constants import REGISTRY
 import sim.engine.core  # noqa: F401  (declares the engine constants)
-from sim.engine import commodities, money_units
-
+from sim.prices import commodities
+from sim.engine import money_units
 QUICK_TOPIC = True
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 

@@ -2,7 +2,7 @@
 import os
 from typing import Any, Dict, Iterable, Mapping
 
-from sim.engine import capital_builds
+from sim.world import capital_builds
 from sim.json_files import json_files, read_json
 
 from .mods_base import ModError, ModManifest

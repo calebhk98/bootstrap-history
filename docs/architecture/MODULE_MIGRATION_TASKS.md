@@ -37,7 +37,9 @@ Each row merged with the micro equivalence tier identical to the base and the pr
 
 Full equivalence tier identical at the knowledge merge (`877cff82`). Micro and stress tiers identical at `c4ed5848`.
 
-In progress: seats, prices, polity. Next: prices (after materials), polity, actors; then the walled packages (workforce, land, markets, disease); then finance, production, ventures, the rest of projects.
+| seats | `sim/seats/` | joining, ending, handover, sight, dealings, goals and win conditions, founder death (`EndRun`); the registry and `act_as` stay on `Sim` |
+
+In progress: prices, polity, demography. `stores` (mod stores) is a framework service and moves with phase 7. Next: prices (after materials), polity, actors; then the walled packages (workforce, land, markets, disease); then finance, production, ventures, the rest of projects.
 
 ## Task list
 

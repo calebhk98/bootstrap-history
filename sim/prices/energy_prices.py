@@ -9,10 +9,10 @@ energy it sells, the way the solver charged the goods it makes.
 """
 from typing import Any, Callable, Dict, Iterable, Mapping, Optional, Tuple
 
-from sim.engine import solve_prices
+from sim.prices import solve_prices
 from sim.world import plant_baskets
-from sim.engine.solve_prices_core import CAPABILITY_CAP_FIELDS, capability_required_grades, recipe_cost_and_allocation
-from sim.engine.identity_cache import IdentityCache
+from sim.prices.solve_prices_core import CAPABILITY_CAP_FIELDS, capability_required_grades, recipe_cost_and_allocation
+from sim.prices.identity_cache import IdentityCache
 
 ENERGY_CARRIERS = plant_baskets.ENERGY_CARRIERS
 

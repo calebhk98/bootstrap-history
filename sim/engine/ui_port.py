@@ -24,7 +24,8 @@ from sim.engine.mods_constants import constant_overrides  # noqa: F401
 from sim.engine.ui_commands import load_command_specs  # noqa: F401
 from sim.engine.foreign_economy_data import foreign_economy_document  # noqa: F401
 from sim.hazards.api import hazards_not_yet_past  # noqa: F401
-from sim.engine.identity_cache import IdentityCache  # noqa: F401
+from sim.prices.api import identity_cache
+IdentityCache = identity_cache.IdentityCache  # noqa: F401
 from sim.engine.mods import get_ordered_mods  # noqa: F401
 from sim.labour.api import format_occupational_report, hours_by_trade_of_all_employers, occupational_report, people_by_trade_of_all_employers  # noqa: F401
 from sim.engine.knowledge_warning import knowledge_loss_warning, warning_lines  # noqa: F401

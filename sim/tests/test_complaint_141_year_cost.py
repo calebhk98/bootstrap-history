@@ -3,13 +3,10 @@ whole-set scans. Counted work, not seconds. Each rule is called on the object th
 fixture world, and the incumbent price cache on a stub game."""
 QUICK_TOPIC = True
 
-import types
-
 from .harness import *  # noqa: F401,F403
 
 from sim.agents.api import ActorRecord, ActorRegistry, ActorsState, Business, Firm
-from sim.engine.incumbent_prices import IncumbentPricesMixin
-
+from .prices_stand_in import build as build_prices
 from .agents_fake_world import FakeWorld, make_node
 
 FIRM_COUNT = 150
@@ -86,15 +83,15 @@ def counting_tables():
 
 
 per_hour = [10.0]
-stub = types.SimpleNamespace(_price_tables=counting_tables,
-                             labour=types.SimpleNamespace(money_per_labour_hour=lambda: per_hour[0]))
-first = IncumbentPricesMixin._material_prices(stub)
+stub = build_prices(money_per_labour_hour=lambda: per_hour[0])
+stub.price_tables = counting_tables
+first = stub.material_prices()
 for _ in range(3000):
-    again = IncumbentPricesMixin._material_prices(stub)
+    again = stub.material_prices()
 check("repeated price lookups return the one cached table", again is first and first == {"iron_kg": 20.0, "wheat_kg": 5.0}, first)
 per_hour[0] = 20.0
 check("the cached table is rebuilt when the money per hour moves",
-      IncumbentPricesMixin._material_prices(stub) == {"iron_kg": 40.0, "wheat_kg": 10.0}, "stale prices")
+      stub.material_prices() == {"iron_kg": 40.0, "wheat_kg": 10.0}, "stale prices")
 hours = {"iron_kg": 3.0}
-stub._price_tables = lambda: (hours, {})
-check("...and when the solved table is replaced", IncumbentPricesMixin._material_prices(stub) == {"iron_kg": 60.0}, "stale prices")
+stub.price_tables = lambda: (hours, {})
+check("...and when the solved table is replaced", stub.material_prices() == {"iron_kg": 60.0}, "stale prices")

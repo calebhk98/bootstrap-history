@@ -8,7 +8,7 @@ from typing import Any, Callable, Dict, List, Tuple
 
 from sim.world import capital_market
 
-from . import prices
+from sim.prices.api import prices
 
 # The market rate starts a game at the starting rate and swings in the early years from near nil (lenders'
 # funds build; bounded_rate only caps it) to well above the start (a queue of borrowers). So the bands from nil

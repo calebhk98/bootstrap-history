@@ -8,7 +8,8 @@ in the same order using only the price lookups that move. The results are identi
 """
 import collections
 
-from sim.engine import capital_builds, solve_prices_core as core
+from sim.world import capital_builds
+from sim.prices import solve_prices_core as core
 from sim.world.capital_market import stand_yearly_share
 
 
