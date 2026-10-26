@@ -21,6 +21,9 @@ class _Game:
     wage_index, pop_scale, price_index = 1.25, 0.9, 1.1
     throttle = 0.8
 
+    def view(self, name):
+        return {"material_throttle": lambda: self.throttle}[name]
+
     def state_reach(self):
         return 0.4
     year = 100

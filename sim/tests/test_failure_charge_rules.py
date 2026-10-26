@@ -10,32 +10,23 @@ from types import SimpleNamespace
 
 from sim.agents.api import edges
 from sim.coin.rules import coin_guard_paid, room_under_credit_line
-from sim.engine.project_materials import ProjectMaterialsMixin
 from sim.engine.projects_completion import CompletionMixin
-from sim.tests import event_stand_in
+from sim.tests import event_stand_in, materials_stand_in
 
 NODE_ID = "kiln"
 
 
-class BillSim(ProjectMaterialsMixin):
+class BillSim:
     """The reads `failure_bill` and `failure_loss` make: the running project's frozen cost, the cost a start today
     would have, and the part of it that is up-front materials."""
 
-    FAILURE_RESET_SHARE = 0.4
-
     def __init__(self, risk, running_cost, cost_now, up_front, running):
-        self.nodes = {NODE_ID: {"risk": risk}}
-        self.state = SimpleNamespace(projects=SimpleNamespace(active={NODE_ID: {}} if running else {}))
-        self._running_cost, self._cost_now, self._up_front = running_cost, cost_now, up_front
-
-    def project_cost(self, node_id):
-        return self._running_cost
-
-    def project_cost_now(self, node_id):
-        return self._cost_now
-
-    def _up_front_materials_money(self, node_id):
-        return self._up_front
+        module = materials_stand_in.build(
+            tree_nodes={NODE_ID: {"risk": risk}}, failure_reset_share=0.4,
+            legacy_projects=materials_stand_in.projects(active={NODE_ID: {}} if running else {}),
+            project_cost=lambda node_id: running_cost, project_cost_now=lambda node_id: cost_now)
+        module.up_front_materials_money = lambda node_id: up_front
+        self.failure_loss = module.failure_loss
 
 
 class FailureLossTests(unittest.TestCase):

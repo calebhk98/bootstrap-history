@@ -13,6 +13,7 @@ from sim.agents.api import ActorRecord, ActorsState
 from sim.contracts import FACILITY, Contract
 from sim.diffusion.api import DiffusionSeat
 from sim.engine.economy import _InvalidatingSet
+from sim.materials.state import MaterialsSeat
 from sim.engine.state import (ActiveProjectState, EconomyState, FounderState, HoldingsState, HouseholdState, ProjectsState,
                               SimulationState, serialize_state, verbatim)
 from sim.engine.state_seat import SeatState
@@ -106,8 +107,8 @@ mines = ResourcesSeat(
 	mines=[{"id": "m1", "ore": "iron", "capex": 500.0, "open": None}], mine_pending={"m2": 2.0}, mine_ready={"m1": 104},
 	mine_cost_paid=500.0, mine_tranches=[["iron", 3, 2.5], ["tin", 1, 0.5]], deposits_found=[{"id": "d1", "tile": "t1"}],
 	deposit_drawn={"d1": 12.0}, forest_ha=120.0)
+materials = MaterialsSeat(shortages=collections.Counter({"charcoal": 3}), binding=None)
 holdings = HoldingsState(
-	shortages=collections.Counter({"charcoal": 3}), binding=None,
 	_material_stock_ledger={"iron": 4.0}, patents={"loom": {"granted": 1, "expires": 20, "licensees": ["firm:2"]}},
 	shares_held={"guild": 0.1}, offers=[{"id": "x#1", "from": "x", "to": "y", "give": {}, "take": {}, "expires": 9}], offer_serial=1)
 blob = serialize_state(mines)
@@ -117,10 +118,10 @@ check("serialize_state: mine stock, in the order the mines were opened, with Non
 check("serialize_state: mine tranches are lists in the order held", blob["mine_tranches"] == [["iron", 3, 2.5], ["tin", 1, 0.5]], blob["mine_tranches"])
 check("serialize_state: a tranche list that is None means none (never an empty list)", serialize_state(ResourcesSeat())["mine_tranches"] is None)
 check("serialize_state: found deposits and the tonnes drawn", blob["deposits_found"] == [{"id": "d1", "tile": "t1"}] and blob["deposit_drawn"] == {"d1": 12.0}, None)
+check("serialize_state: shortages", serialize_state(materials)["shortages"] == {"charcoal": 3})
 blob = serialize_state(holdings)
-check("serialize_state: shortages, patents, shares and offers",
-      blob["shortages"] == {"charcoal": 3}
-      and blob["patents"] == {"loom": {"granted": 1, "expires": 20, "licensees": ["firm:2"]}} and blob["shares_held"] == {"guild": 0.1}
+check("serialize_state: patents, shares and offers",
+      blob["patents"] == {"loom": {"granted": 1, "expires": 20, "licensees": ["firm:2"]}} and blob["shares_held"] == {"guild": 0.1}
       and blob["offers"] == [{"id": "x#1", "from": "x", "to": "y", "give": {}, "take": {}, "expires": 9}] and blob["offer_serial"] == 1, None)
 check("serialize_state: underscore-led fields that are not `_on_change` plumbing are saved", blob["_material_stock_ledger"] == {"iron": 4.0})
 

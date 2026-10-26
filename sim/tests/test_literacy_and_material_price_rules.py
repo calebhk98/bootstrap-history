@@ -9,7 +9,7 @@ import unittest
 from unittest import mock
 
 from sim.tests import resources_stand_in
-from sim.engine.economy_freight import FreightMixin
+from sim.tests import materials_stand_in
 from sim.labour import labour_capacity
 from sim.labour.labour_capacity import CapacityMixin
 
@@ -64,25 +64,15 @@ class LiterateCapacity(unittest.TestCase):
         self.assertEqual(self.capacity(_Society(1.0, existing=3.0)), 3.0)
 
 
-class _Market(FreightMixin):
-    MATERIAL_PRICE_DEMAND_SHARE_CAP = 1.5
-    MATERIAL_PRICE_PRESSURE_SCALE = 0.9
+class _Market:
+    """The materials module with the market's tonnes, the demands on the commodity and the own supply written out."""
 
     def __init__(self, market_tonnes, demands, own_supply, freight=1.0):
-        self.market_tonnes, self.demands, self.own_supply, self.freight = market_tonnes, demands, own_supply, freight
-
-    def _material_market_tonnes(self, key):
-        return self.market_tonnes
-
-    def _demand_by_emp_key(self):
-        return {"saltpetre": self.demands}
-
-    def _own_material_supply(self, tag):
-        return self.own_supply
-
-    def view(self, name):
-        assert name == "material_freight_factor"
-        return collections.defaultdict(lambda: self.freight)
+        module = materials_stand_in.build(material_freight_factor=lambda commodity: freight)
+        module.market_tonnes = lambda commodity: market_tonnes
+        module.demand_by_commodity = lambda: {"saltpetre": demands}
+        module.own_material_supply = lambda tag: own_supply
+        self.material_price_factor = module.material_price_factor
 
 
 class MaterialPriceFactor(unittest.TestCase):

@@ -25,7 +25,7 @@ class ViewShareMixin:
     def _view_world_stamp(self):
         """(objects compared by identity, values compared by equality) for what every shared
         answer reads beyond its own inputs; None when the world has no demand table to compare."""
-        demand = getattr(self.household, "_material_demand_cache", None)
+        demand = self.view("material_demand_held")()
         if demand is None:
             return None
         projects = self.state.projects

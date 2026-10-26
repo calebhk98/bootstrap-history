@@ -8,9 +8,10 @@ import types
 import unittest
 
 from sim.engine.economy_goods import GoodsMixin
-from sim.engine.economy_materials import MaterialSupplyMixin
 from sim.labour.labour_capacity import CapacityMixin
 from sim.labour.labour_population import PopulationMixin
+from sim.ledger.api import rules as ledger_rules
+from sim.tests import materials_stand_in
 from sim.ui.proto.render import render_pretty
 
 
@@ -84,22 +85,23 @@ class PopulationReportTests(unittest.TestCase):
 
 class MaterialsReportTests(unittest.TestCase):
     def stand_in(self):
-        stock = {"iron": 50.0}
-        return types.SimpleNamespace(
-            _demand_by_emp_key=lambda: {"iron": [("tag", 10.0)]}, _material_stock=lambda: stock,
-            MATERIAL_CHECKS={}, mine_capacity={}, _own_production_tags=lambda: [("iron", "mine:iron")],
-            _own_material_supply=lambda tag: 3.0, material_stock_t=lambda material: stock.get(material, 0.0),
-            material_trade_quote=lambda material: {"material": material, "buy_per_tonne": 9.0, "sell_per_tonne": 7.0})
+        module = materials_stand_in.build(
+            held_goods=ledger_rules.StockLedger({"iron": 50.0}), goods_stock=lambda material: {"iron": 50.0}.get(material, 0.0),
+            goods_quote=lambda material: {"material": material, "buy_per_tonne": 9.0, "sell_per_tonne": 7.0} if material == "iron" else None)
+        module.demand_by_commodity = lambda: {"iron": [("tag", 10.0)]}
+        module.own_production_tags = lambda: [("iron", "mine:iron")]
+        module.own_material_supply = lambda tag: 3.0
+        return module
 
     def test_a_row_reports_stock_flow_demand_and_cover(self):
-        rows = MaterialSupplyMixin.materials_report(self.stand_in())
+        rows = self.stand_in().materials_report()
         self.assertEqual(rows, [{"material": "iron", "buy_per_tonne": 9.0, "sell_per_tonne": 7.0, "stock_on_hand_tonnes": 50.0,
                                  "own_production_tonnes_per_year": 3.0, "current_demand_tonnes_per_year": 10.0,
                                  "stock_covers_years_at_current_demand": 5.0}])
 
     def test_the_readable_screen_carries_its_heading(self):
         # presentation: the materials screen's heading
-        self.assertIn("MATERIAL STOCKS", render_pretty("materials", {"ok": True, "materials": MaterialSupplyMixin.materials_report(self.stand_in())}))
+        self.assertIn("MATERIAL STOCKS", render_pretty("materials", {"ok": True, "materials": self.stand_in().materials_report()}))
 
 
 if __name__ == "__main__":

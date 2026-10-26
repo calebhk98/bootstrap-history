@@ -9,7 +9,8 @@ import unittest
 
 from sim.engine.household_demand_key import demand_key, population_of_key
 from sim.reporting.api import ReportingSeat
-from sim.engine.state import HoldingsState, HouseholdState, ProjectsState, deserialize_state, serialize_state
+from sim.materials.state import MaterialsSeat
+from sim.engine.state import HouseholdState, ProjectsState, deserialize_state, serialize_state
 from sim.refusal import LogLine, Refusal, cause_of, choices_of, facts_of
 
 
@@ -48,12 +49,12 @@ class SavedStateTests(unittest.TestCase):
         self.assertEqual(list(round_trip(projects).done_year), order)
 
     def test_the_material_demand_the_last_throttle_left_is_in_the_save(self):
-        holdings = HoldingsState(material_demand_at_last_throttle={"iron_kg": 3.5, "coal_kg": 1.25})
+        holdings = MaterialsSeat(material_demand_at_last_throttle={"iron_kg": 3.5, "coal_kg": 1.25})
         self.assertEqual(round_trip(holdings).material_demand_at_last_throttle, {"iron_kg": 3.5, "coal_kg": 1.25})
         self.assertEqual(list(round_trip(holdings).material_demand_at_last_throttle), ["iron_kg", "coal_kg"])
 
     def test_no_held_demand_stays_none(self):
-        self.assertIsNone(round_trip(HoldingsState()).material_demand_at_last_throttle)
+        self.assertIsNone(round_trip(MaterialsSeat()).material_demand_at_last_throttle)
 
 
 class LogRoundTripTests(unittest.TestCase):

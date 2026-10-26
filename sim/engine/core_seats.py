@@ -50,8 +50,8 @@ class SeatMixin:
 	def _switch_seat(self, seat_id: str) -> None:
 		bind_seat(self.state, seat_id)
 		self.household = self._seat_facades[seat_id]
+		game_assembly.switch_seat(self, seat_id)     # the modules answer for the new seat before its caches are forgotten
 		self._reset_economic_caches()
-		game_assembly.switch_seat(self, seat_id)
 
 	@contextlib.contextmanager
 	def act_as(self, seat_id: str):

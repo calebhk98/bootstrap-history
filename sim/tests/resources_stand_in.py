@@ -11,6 +11,7 @@ from typing import Any, Dict, List, Optional
 
 from sim.geography import api as geography
 from sim.ledger.api import PayEdge
+from sim.materials.api import ApplyThrottle
 from sim.resources.module import Resources
 from sim.resources.state import ResourcesSeat, ResourcesWorld
 from sim.tests import module_harness
@@ -34,7 +35,7 @@ def build(budget: float = 1e18, year: int = 100, seat: Optional[ResourcesSeat] =
         "money_per_labour_hour": 1.0, "normalized_material": lambda material: material, "material_demand": {},
         "material_checks": {}, "charcoal_per_hectare": 1.0, "material_shortfall": lambda material, by_tag=None: 0.0,
         "material_market_tonnes": lambda material: 0.0, "material_unsupplied_sentence": lambda material: None,
-        "material_binding": None, "resource_throttle": lambda: 1.0, "goods_stock": lambda commodity: 0.0,
+        "material_binding": None, "goods_stock": lambda commodity: 0.0,
         "acting_balance": 1e15, "can_pay": lambda cost: cost <= budget, "purchase_budget": budget,
         "spending_power": lambda kind="buy": budget,
         "affordable_units": lambda unit_cost, decimals=1: budget / max(unit_cost, 1e-9), "afford_means": "cash",
@@ -47,6 +48,7 @@ def build(budget: float = 1e18, year: int = 100, seat: Optional[ResourcesSeat] =
         "mass_rate_text": lambda amount, **keywords: "%g t/year" % amount,
         "mass_per_area_text": lambda amount, **keywords: "%g t per area" % amount}
     plain.update(views or {})
+    answers = {ApplyThrottle: 1.0, **(answers or {})}      # the materials module reads full pace unless a test says otherwise
     return module_harness.build(Resources, views=plain, answers=answers, world=world or ResourcesWorld(),
                                 seat=seat or ResourcesSeat(), module_id="resources")
 

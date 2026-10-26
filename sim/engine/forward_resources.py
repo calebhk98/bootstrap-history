@@ -1,8 +1,8 @@
 """One-line forwarders from `Sim` to the resources module, for callers not yet in a module.
 
 Each goes when its last caller reads the view (`sim.view(name)`) or sends the command (`sim.send(command)`) itself.
-`_running_kept` is engine infrastructure the materials topic still calls; it keeps tables that hold while what is built,
-granted and operating does not change, and goes with materials."""
+`_running_kept_stamp` is engine infrastructure: what is built, granted and operating, which the resources and materials
+modules key their tables on."""
 from sim.resources.api import DrawDeposit, MothballMines, base_mine_catalog_hint
 
 
@@ -60,11 +60,3 @@ class ForwardResourcesMixin:
         return (projects, (self.household.done_version, self.household.operating_version,
                            len(projects.done), len(projects.granted), len(projects.operating)), self.nodes)
 
-    def _running_kept(self, name):
-        """A dict for derived values that depend only on which nodes are built, granted and operating (what `running`
-        reads); it starts empty whenever that changes."""
-        projects, stamp, nodes = self._running_kept_stamp()
-        kept = self.__dict__.get("_running_kept_tables")
-        if kept is None or kept[0] is not projects or kept[1] != stamp or kept[2] is not nodes:
-            kept = self.__dict__["_running_kept_tables"] = (projects, stamp, nodes, {})
-        return kept[3].setdefault(name, {})

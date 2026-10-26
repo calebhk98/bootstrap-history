@@ -6,7 +6,7 @@ state the module still mutates in place; they go when that state moves."""
 from sim.ledger.api import NoteSpend
 from sim.polity.api import RecordBribe
 from sim.assembly.api import KEYED, QUOTE
-from sim.projects.needed_commands import (ClearMothball, CompleteProject, SettleProjectMaterials)
+from sim.projects.needed_commands import (ClearMothball, CompleteProject)
 
 from . import purchase_rule, projects_precaution
 from .agents_port import SimWorld
@@ -26,8 +26,6 @@ def closures(sim):
 @bridge_view("reopen_fee", kind=QUOTE)
 def reopen_fee(sim, node_id):
     return sim.reopen_fee(node_id, sim.reopen_units(node_id))
-
-
 
 
 @bridge_view("running", kind=KEYED)
@@ -104,37 +102,6 @@ def start_gate_running(sim, node_id, node, ignore_trade, memo, why):
 
 
 # ---- materials ------------------------------------------------------------------------------------------------------
-
-@bridge_view("own_output_claim", kind=QUOTE)
-def own_output_claim(sim, node_id):
-    return sim.project_own_output_claim(node_id)
-
-
-@bridge_view("bounty_price", kind=QUOTE)
-def bounty_price(sim, node_id):
-    return sim.bounty_price(node_id)
-
-
-@bridge_view("material_upfront_refusal", kind=QUOTE)
-def material_upfront_refusal(sim, node_id):
-    return sim.project_material_upfront_refusal(node_id)
-
-
-@bridge_view("material_pool", kind=KEYED)
-def material_pool(sim, material):
-    return sim._material_tag(material)
-
-
-@bridge_view("generation", seat_scoped=True)
-def generation(sim):
-    return sim.generation_capacity_kw()
-
-
-@bridge_view("start_gate_material_seller", kind=QUOTE)
-def start_gate_material_seller(sim, node_id, node, ignore_trade, memo, why):
-    from .material_availability import check_materials_have_a_seller
-    return check_materials_have_a_seller(sim, node_id, node, ignore_trade, memo, why)
-
 
 # ---- finance --------------------------------------------------------------------------------------------------------
 
@@ -233,8 +200,6 @@ def money_per_labour_hour(sim):
     return sim.labour.money_per_labour_hour()
 
 
-
-
 # ---- living stock -----------------------------------------------------------------------------------------------------
 
 @bridge_view("start_gate_unheld_stock", kind=QUOTE)
@@ -270,8 +235,6 @@ def society_name(sim):
     return sim.civ.get("name", "this society")
 
 
-
-
 @bridge_view("horizon_end_year")
 def horizon_end_year(sim):
     return getattr(sim, "end_year", None) or (sim.cfg["start_year"] + sim.cfg["horizon_years"])
@@ -301,11 +264,6 @@ def change_standing(sim, command):
     household.bribes_ytd = command.bribes_year_to_date
     household.scandal = command.scandal
     sim.update_protection()
-
-
-@bridge_command(SettleProjectMaterials)
-def settle_project_materials(sim, command):
-    return sim.settle_project_materials(command.node_id)
 
 
 @bridge_command(ClearMothball)

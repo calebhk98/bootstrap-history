@@ -6,7 +6,6 @@ from sim.geography.api import flow_ledger
 
 from . import visibility as visibility_of
 
-from .material_availability import materials_without_a_seller
 
 
 class ResearchView:
@@ -34,8 +33,8 @@ class ResearchView:
 		"""Materials no one in reach sells, against what the actor itself holds (nothing, unless it says)."""
 		holding = getattr(actor, "held_tonnes", None)
 		if holding is None:
-			return materials_without_a_seller(self._sim, node_id, held_tonnes=lambda material: 0.0)
-		return materials_without_a_seller(self._sim, node_id, held_tonnes=holding)
+			return self._sim.view("materials_without_a_seller")(node_id, lambda material: 0.0)
+		return self._sim.view("materials_without_a_seller")(node_id, holding)
 
 	def contact_volume(self, place_a: Optional[str], place_b: Optional[str]) -> float:
 		"""News passing between two places in a year: neighbours see each other's work (the range an onlooker

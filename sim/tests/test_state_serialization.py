@@ -43,10 +43,7 @@ def _test_automatic_field_persistence():
 		businesses=[Business.running(["stone_cutting"], opened_year=100)],
 	)
 	econ = EconomyState()
-	holdings = HoldingsState(
-		farm_stock_kg=120.0,
-		shortages={"charcoal": 3},
-	)
+	holdings = HoldingsState(farm_stock_kg=120.0)
 	gov = GovernanceState(gov=0.5)
 	founder = FounderState(founder_alive=True, life_left=28.0)
 	scenario = ScenarioState(year=115)
@@ -81,8 +78,10 @@ def _test_automatic_field_persistence():
 		return False, f"Projects active missing 'arch': {restored.projects.active}"
 	if restored.projects.active["arch"].ph_left != 80.0:
 		return False, f"Active project ph_left mismatch: {restored.projects.active['arch'].ph_left}"
-	if restored.holdings.shortages.get("charcoal") != 3:
-		return False, f"Shortages mismatch: {restored.holdings.shortages}"
+	from sim.materials.state import MaterialsSeat
+	seat = deserialize_state(serialize_state(MaterialsSeat(shortages=collections.Counter({"charcoal": 3}))), MaterialsSeat)
+	if seat.shortages.get("charcoal") != 3:
+		return False, f"Shortages mismatch: {seat.shortages}"
 
 	return True, "Automatic field persistence verified"
 
@@ -149,7 +148,7 @@ def _test_runtime_type_reconstruction():
 		failed_attempts=collections.defaultdict(int, {"steam_engine": 2}),
 	)
 	econ = EconomyState()
-	holdings = HoldingsState(shortages=collections.Counter({"iron": 4}))
+	holdings = HoldingsState()
 
 	state = SimulationState(
 		household=hh,
@@ -170,8 +169,10 @@ def _test_runtime_type_reconstruction():
 		return False, f"the business did not round trip: {restored.projects.business}"
 	if not isinstance(restored.projects.failed_attempts, collections.defaultdict):
 		return False, f"failed_attempts is not defaultdict: {type(restored.projects.failed_attempts)}"
-	if not isinstance(restored.holdings.shortages, collections.Counter):
-		return False, f"shortages is not Counter: {type(restored.holdings.shortages)}"
+	from sim.materials.state import MaterialsSeat
+	seat = deserialize_state(serialize_state(MaterialsSeat(shortages=collections.Counter({"iron": 4}))), MaterialsSeat)
+	if not isinstance(seat.shortages, collections.Counter):
+		return False, f"shortages is not Counter: {type(seat.shortages)}"
 	if not isinstance(restored.projects.active["loom"], ActiveProjectState):
 		return False, f"active['loom'] is not ActiveProjectState: {type(restored.projects.active['loom'])}"
 
@@ -237,12 +238,15 @@ def _test_cache_reset_after_load():
 	from types import SimpleNamespace
 	from sim.engine.economy import EconomyMixin
 
-	caches = ("_done_seq", "_cap_factor", "_revenue_cache_key", "_revenue_cache_val", "_annual_mat_demand_cache",
+	from sim.materials.api import ForgetReadings
+
+	caches = ("_done_seq", "_cap_factor", "_revenue_cache_key", "_revenue_cache_val",
 	          "_rev_up_candidates_cache", "_practice_cache", "_goods_cat_state_cache", "_goods_category_ratios_cache",
-	          "_income_factor_cache", "_goods_mkt_op_factor_cache", "_material_demand_cache", "_demand_by_tag_cache")
+	          "_income_factor_cache", "_goods_mkt_op_factor_cache")
 	household = SimpleNamespace(**{name: 1.7 for name in caches})
 	rewrapped = []
-	game = SimpleNamespace(household=household, _done_changed=lambda: rewrapped.append("done"),
+	sent = []
+	game = SimpleNamespace(household=household, send=sent.append, _done_changed=lambda: rewrapped.append("done"),
 	                       _reset_operating=lambda: rewrapped.append("operating"),
 	                       _reset_active=lambda: rewrapped.append("active"),
 	                       _reset_workforce=lambda: rewrapped.append("workforce"))
@@ -252,6 +256,8 @@ def _test_cache_reset_after_load():
 		return False, f"caches still held after the reset: {held}"
 	if rewrapped != ["done", "operating", "active", "workforce"]:
 		return False, f"containers not re-wrapped: {rewrapped}"
+	if sent != [ForgetReadings()]:
+		return False, f"the materials module was not told to forget its demand tables: {sent}"
 	return True, "Cache reset after load verified"
 
 

@@ -188,7 +188,7 @@ def _stuck_nothing_or_money(sim, _startable, _afford):
 
 
 def _stuck_raw_material(sim):
-    if not sim.binding:
+    if not sim.view("material_binding")():
         return None
     throttle, binding = sim.peek_resource_throttle()
     if binding and throttle < 0.95:

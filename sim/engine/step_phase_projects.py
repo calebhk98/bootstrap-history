@@ -9,6 +9,7 @@ from .arrears_hours_line import arrears_hours_line
 from sim.projects.api import funding as project_funding, start_rules
 from .hour_offer import hours_offered, unmet_directive_cause
 from sim.reporting.api import RecordEvent
+from sim.materials.api import ApplyThrottle
 
 
 class ProjectProgressPhaseMixin:
@@ -160,7 +161,7 @@ class ProjectProgressPhaseMixin:
         # for it to have.
         _dir_hours = self.state.household.hour_allocations.get(node_id)
         _pace_cap = self.project_hour_pace(node_id)
-        _project_throttle = self.project_resource_throttle(node_id)
+        _project_throttle = self.send(ApplyThrottle(node_id))
         per = hours_offered(remaining, _pace_cap, _dir_hours, _project_throttle)
         remaining -= per
         # WHAT WAS ACTUALLY TAKEN OFF, which is not the same as what was
@@ -201,13 +202,13 @@ class ProjectProgressPhaseMixin:
         # what is left to do, or its calendar floor - could not use
         # that many hours even with the whole pool behind it. Either
         # is a real, nameable reason; "it disappeared" is not.
-        _unmet = unmet_directive_cause(_dir_hours, per, _pace_cap, _project_throttle, self.state.holdings.binding)
+        _unmet = unmet_directive_cause(_dir_hours, per, _pace_cap, _project_throttle, self.view("material_binding")())
         if _unmet == "shortage_throttle":
             _directed_hours_unused.append((node_id, round(_dir_hours - per, 0),
                 Refusal("shortage_throttle", "a shortage of %s has every project (this one "
                         "included) running at %d%% of the pace its "
                         "hours alone would allow"
-                        % (self.state.holdings.binding, round(_project_throttle * 100)))))
+                        % (self.view("material_binding")(), round(_project_throttle * 100)))))
         elif _unmet == "own_pace":
             _directed_hours_unused.append((node_id, round(_dir_hours - per, 0),
                 Refusal("own_pace", "its own pace this year - at most %s hours, set "

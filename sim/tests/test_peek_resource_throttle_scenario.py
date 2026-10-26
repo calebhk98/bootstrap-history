@@ -1,9 +1,11 @@
 """SMOKE: a screen's question about a project's material throttle does not change the game: asking before a step leaves the
 year that follows as if nobody had asked (the multi-year step's warning asks, the single step's does not). The restoring is
-called on a stub in test_peek_resource_throttle."""
+That the quote
+changes nothing is called on the module in test_peek_resource_throttle."""
 from .harness import *  # noqa: F401,F403
 
 from sim.engine.saveload import save_state, read_save_text
+from sim.materials.api import ApplyThrottle
 import json
 import tempfile
 
@@ -36,5 +38,5 @@ def differences(a, b, path=""):
 left = differences(dump(asked), dump(untouched))
 check("asking leaves the stock, the year's draws and the holdings as they were", not left, left[:10])
 # a step would work the throttle out (and keep what it banks): the same figures, asked of the untouched twin
-check("the peek answers what the project's throttle is", factor == untouched.project_resource_throttle(node_id), factor)
-check("...and which pool binds it", binding == untouched.state.holdings.binding, binding)
+check("the peek answers what the project's throttle is", factor == untouched.send(ApplyThrottle(node_id)), factor)
+check("...and which pool binds it", binding == untouched.view("material_binding")(), binding)

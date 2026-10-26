@@ -30,7 +30,6 @@ from .state_demand import answer_confiscation
 from .invariants import check_labour_market_invariants, check_yearly_invariants
 from .eminence_warning import eminence_band_to_announce
 from .step_phase_money import MoneyPhaseMixin
-from .step_phase_materials import MaterialsPhaseMixin
 from .step_phase_projects import ProjectProgressPhaseMixin
 from .step_phase_staff import StaffPhaseMixin
 from sim.agents.api import edges, ledger
@@ -45,7 +44,7 @@ class StepContext:
     invariant_checker: object
 
 
-class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, MaterialsPhaseMixin, ProjectProgressPhaseMixin):
+class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, ProjectProgressPhaseMixin):
     """Composition point for the named phases Sim.step() calls, in order. The staff, money,
     materials and project-progress phases live in step_phase_*.py (the start of projects is the projects module's
     phase) and come in through the
