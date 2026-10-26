@@ -2,7 +2,7 @@
 
 Each view answers through `Sim` as the old mixin methods did; when its owner moves it publishes the same name and the
 entry is deleted. `legacy_agent_world` is raw state the module still reads in place (the agent economy's world)."""
-from sim.assembly.api import KEYED, QUOTE
+from sim.assembly.api import KEYED
 from sim.demography.api import TakeFromGranary
 from sim.ledger.api import STORE_ACTOR, STORE_GRANARY, STORE_STOCK, TakeGoods
 
@@ -37,21 +37,6 @@ def goods_quote(sim, material):
 @bridge_view("lent_share")
 def lent_share(sim):
     return sim.lent_share()
-
-
-@bridge_view("visible_scale", kind=QUOTE)
-def visible_scale(sim, headcount_of_holder, wealth, eminence_of_holder):
-    return sim.visible_scale(headcount_of_holder, wealth, eminence_of_holder)
-
-
-@bridge_view("order_reach")
-def order_reach(sim):
-    return sim.order_reach()
-
-
-@bridge_view("eminence", seat_scoped=True)
-def eminence(sim):
-    return sim.state.household.eminence
 
 
 # ---- land ----

@@ -26,11 +26,11 @@ class TheGameTracksRegionsTests(unittest.TestCase):
             setattr(world, field.name, copy.deepcopy(getattr(self.start_world, field.name)))
         game.record_food_eaten(type("Outcome", (), {"accounts": _accounts(eaten_over_need_by_tile)})())
         game.send(StepPopulation(game.state.scenario.year))
-        return dict(game.view("regional_flows")())
+        return dict(game.view("regional_flows_last_year")())
 
     def test_the_nation_is_the_sum_of_its_regions_and_each_region_is_stored(self):
         self._year({tile: 1.0 for tile in self.tiles})
-        stored = self.game.view("regional_people")()
+        stored = self.game.view("legacy_regions_of_people")()
         self.assertEqual(sorted(stored), sorted(self.game.labour.settlement_tiles()))
         self.assertAlmostEqual(sum(sum(bands) for bands in stored.values()), self.game.population.total, delta=1.0)
 

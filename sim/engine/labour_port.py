@@ -24,6 +24,9 @@ class LabourWorld:
         """Apply a command through the module that owns it."""
         return self._sim.send(command)
 
+    def reputation(self):
+        """The acting seat's reputation."""
+        return self._sim.view("standing")()["reputation"]
     @property
     def founder_alive(self):
         """Whether the acting seat's founder lives."""

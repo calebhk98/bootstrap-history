@@ -48,7 +48,7 @@ of those will lower the founder's share as a side effect; that is the point,
 and it is not a licence to shrink the economy directly.
 
 Existing wealth-responsive mechanisms (state notice and prominence hazard in
-`sim/engine/society_state_pressure.py`) already react to wealth; their
+`sim/polity/notice.py`, `eminence.py`) already react to wealth; their
 saturation at extreme fortunes is a separate defect (`Complaints/114`).
 Read together with `Complaints/113` (snowball difficulty).
 

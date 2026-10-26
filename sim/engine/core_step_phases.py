@@ -17,22 +17,18 @@ each phase's state to a specific domain mixin is a distinct, harder job
 that this file does not attempt - do not assume a phase here can be moved
 into a domain file without first working out its self.* footprint.
 """
-import math
 import random
 from dataclasses import dataclass
 
-from sim.unit_conversions import PERCENT_SCALE
 from .hour_offer import work_order_shortfall
-from .units_prose import money_text, plain_number
+from .units_prose import plain_number
 from .bondage_workshop_rules import bondage_repayment, serve_bondage_year
 from .reteach_rules import past_cooldown, teaching_budget, trade_is_gone, PROJECT_IN_HAND_SCORE
-from .state_demand import answer_confiscation
+from sim.polity.api import CloseStandingYear, RenewStanding
 from .invariants import check_labour_market_invariants, check_yearly_invariants
-from .eminence_warning import eminence_band_to_announce
 from .step_phase_money import MoneyPhaseMixin
 from .step_phase_projects import ProjectProgressPhaseMixin
 from .step_phase_staff import StaffPhaseMixin
-from sim.agents.api import edges, ledger
 from sim.reporting.api import RecordEvent
 
 
@@ -91,12 +87,6 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, ProjectProgressPhaseMixi
             # was still on it cost a whole extra year of everybody's time.
             self.state.household.training = still
             self.labour.resync_pools()
-
-    def begin_seat_year(self):
-        """What the acting seat notes before its year starts."""
-        # WHERE SCANDAL STOOD WHEN THE PLAYER LAST LOOKED: `state` prints the chance of being denounced from
-        # the CURRENT scandal, and scandal moves DURING the step, so the direction needs the year's opening mark.
-        self.state.household.scandal_last_year = self.state.household.scandal
 
     def begin_world_year(self):
         """What the society notes before the year starts."""
@@ -351,21 +341,8 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, ProjectProgressPhaseMixi
     def _step_reputation(self, pool, remaining, remaining_after_projects, hours_effective_total):
         # 6. reputation, familiarity, protection, scandal
         #
-        # Reputation DECAYS TOWARD WHAT YOU ARE ACTUALLY KNOWN FOR, not toward
-        # zero: a physician with a practice, a school and a written corpus
-        # does not become a man nobody has heard of because thirty quiet
-        # years passed. What fades is novelty; what remains is the work.
-        floor = self.standing_floor()
-        self.state.household.reputation = floor + (self.state.household.reputation - floor) * self.REPUTATION_DECAY_TOWARD_FLOOR
-        # ADAPTATION. Every year the world has known you, and every visible thing
-        # you have already done, makes the next one less astonishing.
-        pub = sum(1 for node_id in self.state.projects.done
-                  if set(self.nodes[node_id].get("traits", [])) & {"spectacle", "inexplicable"})
-        self.state.household.familiarity = min(
-            self.FAMILIARITY_CEILING,
-            1.0 - math.exp(-self.value_weights["adaptation_rate"]
-                           * (self.FAMILIARITY_PUBLICATION_WEIGHT * pub
-                              + self.FAMILIARITY_TENURE_WEIGHT * (self.state.scenario.year - 100))))
+        # reputation decays toward what the household is known for, and familiarity is renewed: the polity module's
+        self.send(RenewStanding())
         # WHERE THE YEAR'S HOURS WENT: captured here, before the tallies
         # below reset for the next year, the same way spend_last_year
         # already captures the year's spending, so a player can see the
@@ -400,110 +377,8 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, ProjectProgressPhaseMixi
         self._spend_this_year = 0.0
         # Sellers restock, so the pressure your buying put on the market fades.
         self.state.holdings.market_pressure = max(0.0, self.state.holdings.market_pressure * self.MARKET_PRESSURE_DECAY - self.MARKET_PRESSURE_ANNUAL_FADE)
-        # WARN BEFORE IT KILLS YOU: eminence can end the run outright on a
-        # roll with no escalation and nothing in the log ever mentioning
-        # it beforehand. It is the one hazard that cannot be bribed away,
-        # so the player must be told it is closing in.
-        _danger = self.cfg["eminence_danger"]
-        _band = eminence_band_to_announce(self.state.household.eminence, _danger, self.state.household._said_eminence)
-        if _band is not None:
-            self.state.household._said_eminence = _band
-            self.send(RecordEvent.of("eminence_warning", "YOU ARE BECOMING CONSPICUOUS: eminence %.0f "
-                                 "against a danger line of %.0f. This is the "
-                                 "one thing no patron and no bribe protects "
-                                 "you from, and it grows with reputation and "
-                                 "visible wealth. A wide, dispersed "
-                                 "institution is what survives you"
-                             % (self.state.household.eminence, _danger)))
-        self.update_protection()
-        # THE STATE NOTICES YOU. Requisition, the pressed office, a demand
-        # for military supply, and the tail confiscation risk at the top of
-        # the same scale - see SocietyMixin's own "THE STATE NOTICES YOU"
-        # section (society.py) for the whole mechanic. Run after
-        # update_protection() so this year's patronage and office standing
-        # are what requisition/confiscation actually bargain against, and
-        # before scandal/eminence below so a confiscation this mechanic
-        # causes and the eminence-driven one further down are never
-        # resolved in the same breath as two unrelated draws on the same
-        # stale numbers.
-        self._state_pressure(self.state.scenario.year)
-        self.pay_concern_levies(self.state.scenario.year)
-        self.state.household.scandal *= self.SCANDAL_DECAY_RATE
-        # Eminence accumulates in a SEPARATE pool, because bribery does not
-        # touch it. You can buy a magistrate, an accuser and a jury. You cannot
-        # buy an emperor's judgement that you have grown too large, and the
-        # attempt is itself evidence against you.
-        self.state.household.eminence = self.state.household.eminence * self.EMINENCE_DECAY_RATE + self.prominence_hazard()
-        # you can buy your way out of trouble, and a sane player does
-        if (self.state.household.scandal > self.AUTO_BRIBE_SCANDAL_THRESHOLD
-                and self.state.household.capital > self.AUTO_BRIBE_CAPITAL_THRESHOLD
-                and self.state.founder.policy.get("auto_bribe", not self.manual)):
-            spend = min(self.state.household.capital * self.AUTO_BRIBE_CAPITAL_SHARE,
-                        self.state.household.scandal * self.AUTO_BRIBE_COST_PER_SCANDAL_POINT)
-            self.pay_edge(edges.EDGE_OFFICIALS, spend, "bribes")
-            self.state.household.bribes_ytd = self.BRIBES_YTD_DECAY * self.state.household.bribes_ytd + spend
-            self.state.household.scandal -= (spend / self.BRIBE_SCANDAL_REDUCTION_SCALE
-                                       * self.value_weights["bribability"])
-        else:
-            self.state.household.bribes_ytd *= self.BRIBES_YTD_DECAY
-        self.state.household.scandal = max(0.0, self.state.household.scandal)
-        # WARN, THE WAY EMINENCE DOES: denunciation ends the run outright,
-        # and a scandal figure with no threshold, no probability and no
-        # note is not legible the way eminence's own warning already is.
-        # Two hazards of the same shape must both be legible.
-        _sd = self.cfg["suspicion_danger"]
-        if self.state.household.scandal > _sd * 0.75:
-            _band = int(self.state.household.scandal / max(1.0, _sd * 0.15))
-            if _band > self.state.seat_progress._said_scandal:
-                self.state.seat_progress._said_scandal = _band
-                self.send(RecordEvent.of("scandal_warning", "YOU ARE BEING TALKED ABOUT: scandal %.0f "
-                                     "against a line of %.0f. Past it you may be "
-                                     "denounced, and that ends the run - about "
-                                     "%.0f%% a year at this level. 'bribe' buys "
-                                     "advocacy and piety; it falls a tenth a "
-                                     "year on its own"
-                                 % (self.state.household.scandal, _sd,
-                                    PERCENT_SCALE * max(0.0, (self.state.household.scandal - _sd) / self.SCANDAL_HAZARD_SCALE))))
-        elif self.state.household.scandal < _sd * 0.5:
-            self.state.seat_progress._said_scandal = 0
-        if self.events and self.state.household.scandal > self.cfg["suspicion_danger"]:
-            probability = (self.state.household.scandal - self.cfg["suspicion_danger"]) / self.SCANDAL_HAZARD_SCALE
-            if self.rng.random() < probability:
-                self._catastrophe("denounced: %s" % ("as a sorcerer"
-                                  if self.value_weights["w_magic_fear"] > 0.5
-                                                     else "as a subversive"))
-        # The eminence hazard is separate and unbribable. Its usual outcome is a
-        # bad year rather than a death: a confiscation, a patron destroyed in
-        # someone else's quarrel, a forced withdrawal from public life.
-        if self.events and self.state.household.eminence > self.cfg["eminence_danger"]:
-            probability = (self.state.household.eminence - self.cfg["eminence_danger"]) / self.EMINENCE_HAZARD_SCALE
-            if self.rng.random() < probability:
-                roll = self.rng.random()
-                if roll < self.EMINENCE_OUTCOME_CONFISCATION_SHARE:
-                    # a demand the household answers like any other (comply, refuse, negotiate, conceal)
-                    _answer, _demanded, take = answer_confiscation(self, self.EMINENCE_CONFISCATION_CAPITAL_LOSS,
-                                                                   "confiscation by the state")
-                    if take > 0.0:
-                        self.state.household.reputation = max(0.0, self.state.household.reputation - self.EMINENCE_CONFISCATION_REPUTATION_LOSS)
-                        self.send(RecordEvent.of("prominence_confiscated", "PROMINENCE: property confiscated, %s lost, "
-                                             "and you withdraw from public life for a while"
-                                             % money_text(take, self, short=True)))
-                    else:
-                        self.send(RecordEvent.of("prominence_demand_kept", "PROMINENCE: the court demanded your "
-                                             "property and you kept it, but you withdraw from public life for a while"))
-                    self.state.household.eminence *= self.EMINENCE_CONFISCATION_RETENTION
-                elif roll < (self.EMINENCE_OUTCOME_CONFISCATION_SHARE + self.EMINENCE_OUTCOME_PATRON_LOST_SHARE):
-                    for pat in self.patrons_lost_to_eminence():
-                        if pat in self.state.projects.done:
-                            self.send(ForgetTechnique((pat,)))
-                            self.send(RecordEvent.of("prominence_patron_destroyed", "PROMINENCE: your patron is destroyed in "
-                                                 "someone else's quarrel and you lose %s" % pat))
-                            break
-                    self.state.household.eminence *= self.EMINENCE_PATRON_LOSS_RETENTION
-                    self.state.household.reputation = max(0.0, self.state.household.reputation - self.EMINENCE_PATRON_LOSS_REPUTATION_LOSS)
-                else:
-                    self._catastrophe("too eminent: brought down not for what you built "
-                                      "but for how large you had become")
+        # eminence's warning, protection, the state's pressure, scandal, bribery and the two hazards that end a run: the polity module's
+        self.send(CloseStandingYear())
 
     def _step_bondage(self):
         # 6b. serving out a debt. The hours you owe go to the creditor and the

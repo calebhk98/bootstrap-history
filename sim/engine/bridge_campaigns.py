@@ -3,12 +3,9 @@
 Each view answers through `Sim` as the old mixin methods did; when its owner moves it publishes the same name and the entry
 is deleted. Each command is applied the way the old campaign code did the write."""
 from sim.actors.api import RecordConquestContact
-from sim.agents.api import army_raising
 from sim.assembly.api import KEYED, QUOTE
 from sim.geography.api import (endemic_people_loss, food_potential, layer_value, reach, route, usable_modes)
 from sim.land.api import TransferTile
-from sim.polity.api import (CloseSuccessionDispute, RecordRising, RegisterPeople, ReplaceRuler, ResetStateUnrest,
-                            SetGrievanceReference, SetLandTakenMemory, SetTileReading, StrikeFromForce)
 from sim.stores.api import WriteStore
 
 from . import contact_events
@@ -18,10 +15,6 @@ from .bridge import bridge_command, bridge_view
 def _country_world(sim, owner):
     from .agents_port import SimWorld
     return sim.actors.world_of_country(owner, SimWorld(sim))
-
-
-def _government_record(sim, owner):
-    return _country_world(sim, owner).government().record
 
 
 # ---- land ----
@@ -117,56 +110,3 @@ def record_conquest_contact(sim, command):
     contact_events.after_conquest(sim, command.conqueror, command.previous, command.tile)
 
 
-@bridge_command(StrikeFromForce)
-def strike_from_force(sim, command):
-    world = _country_world(sim, command.owner)
-    world.government().record.army = army_raising.struck_from_force(float(world.soldiers_under_arms()), command.killed)
-
-
-@bridge_command(SetLandTakenMemory)
-def set_land_taken_memory(sim, command):
-    _government_record(sim, command.owner).land_taken_by_tile = command.by_tile
-
-
-@bridge_command(RegisterPeople)
-def register_people(sim, command):
-    registered = _government_record(sim, command.owner).registered_people
-    for tile, count in command.by_tile.items():
-        registered[tile] = max(registered.get(tile, 0.0), count)
-
-
-@bridge_command(SetGrievanceReference)
-def set_grievance_reference(sim, command):
-    _government_record(sim, command.owner).grievance_reference = command.reference
-
-
-@bridge_command(ResetStateUnrest)
-def reset_state_unrest(sim, command):
-    record = _government_record(sim, command.owner)
-    record.unrest_by_tile, record.hold_by_tile = {}, {}
-
-
-@bridge_command(SetTileReading)
-def set_tile_reading(sim, command):
-    record = _government_record(sim, command.owner)
-    record.unrest_by_tile[command.tile] = command.unrest
-    record.hold_by_tile[command.tile] = command.hold
-
-
-@bridge_command(RecordRising)
-def record_rising(sim, command):
-    record = _government_record(sim, command.owner)
-    record.risings = (record.risings + [command.entry])[-command.kept:]
-
-
-@bridge_command(ReplaceRuler)
-def replace_ruler(sim, command):
-    record = _government_record(sim, command.owner)
-    record.ruler_age = command.age
-    record.ruler_backer = command.backer
-    record.accession_due = True
-
-
-@bridge_command(CloseSuccessionDispute)
-def close_succession_dispute(sim, command):
-    _government_record(sim, command.owner).succession_challenger = ""

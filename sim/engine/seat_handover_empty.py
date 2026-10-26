@@ -8,9 +8,9 @@ goal record) it adds itself.
 import dataclasses
 from typing import List
 
-from sim.engine.state import GovernanceState
 from sim.engine.state_holdings import HoldingsState, SeatProgressState
 from sim.materials.state import MaterialsSeat
+from sim.polity.state import PolitySeat
 from sim.resources.state import ResourcesSeat
 
 STAFF_FIELDS = ("scholars", "artisans", "directors_extra", "slaves", "freedmen", "reserve_craftsmen", "reserve_scholars")
@@ -59,7 +59,7 @@ def holds_that_would_be_lost(seat) -> List[str]:
 	if (holdings_in_use(seat.holdings) or module_state_in_use(seat.modules.get("resources") or ResourcesSeat())
 			or module_state_in_use(seat.modules.get("materials") or MaterialsSeat())):
 		found.append("holdings")
-	if seat.governance != GovernanceState():
+	if (seat.modules.get("polity") or PolitySeat()).gov != 0.0:
 		found.append("institutions")
 	if seat.seat_progress != SeatProgressState():
 		found.append("goal record")

@@ -7,7 +7,8 @@ QUICK_TOPIC = True
 import unittest
 from unittest import mock
 
-from sim.engine import disease_port
+from sim.disease import api as disease
+from sim.disease.module import Disease
 from sim.tests.disease_stand_in import StandInSim, mexica_with_source
 
 YEARS = 3
@@ -19,8 +20,8 @@ def deaths_with(seed, care_sensitivity):
     """Deaths from a smallpox arrival in the first year, over YEARS years, with the port's care-collapse sensitivity replaced."""
     sim = StandInSim(mexica_with_source(["sail"]), seed)
     first_year = sim.year
-    with mock.patch.object(disease_port, "DISEASE_CARE_COLLAPSE_SENSITIVITY", care_sensitivity), mock.patch.object(
-            disease_port.DiseaseWorld, "introductions", lambda world, records, year: ["smallpox"] if year == first_year else []):
+    with mock.patch.object(disease.nation_tuning, "DISEASE_CARE_COLLAPSE_SENSITIVITY", care_sensitivity), mock.patch.object(
+            Disease, "introductions", lambda module, records, year: ["smallpox"] if year == first_year else []):
         rows = sim.run(YEARS)
     return sum(deaths for _year, _people, deaths in rows)
 
@@ -29,16 +30,16 @@ class ModifiersReachTheNationsYearTest(unittest.TestCase):
     def test_care_collapse_raises_the_deaths_of_the_same_arrival(self):
         for seed in SEEDS_USED:
             without = deaths_with(seed, 0.0)
-            with_collapse = deaths_with(seed, disease_port.DISEASE_CARE_COLLAPSE_SENSITIVITY)
-            self.assertGreater(disease_port.DISEASE_CARE_COLLAPSE_SENSITIVITY, 0.0)
+            with_collapse = deaths_with(seed, disease.nation_tuning.DISEASE_CARE_COLLAPSE_SENSITIVITY)
+            self.assertGreater(disease.nation_tuning.DISEASE_CARE_COLLAPSE_SENSITIVITY, 0.0)
             self.assertGreater(without, 0.0, "seed %d" % seed)
             self.assertGreater(with_collapse, without, "seed %d" % seed)
 
     def test_the_urban_density_ratio_raises_the_crowding_of_every_populated_tile(self):
         sim = StandInSim(mexica_with_source(["sail"]), 1)
-        world = disease_port.DiseaseWorld(sim)
+        world = sim.module
         people = world.people_by_tile()
-        with mock.patch.object(disease_port, "DISEASE_URBAN_DENSITY_RATIO", 1.0):
+        with mock.patch.object(disease.nation_tuning, "DISEASE_URBAN_DENSITY_RATIO", 1.0):
             rural = world.crowding_by_tile(people)
         crowded = world.crowding_by_tile(people)
         self.assertGreater(sim.urban_fraction(), 0.0)
@@ -52,12 +53,12 @@ class ImmunityCarriesBetweenYearsTest(unittest.TestCase):
         sim = StandInSim(mexica_with_source(["sail"]), 1)
         first_year = sim.year
         arrivals = (first_year, first_year + SECOND_ARRIVAL_AFTER_YEARS)
-        with mock.patch.object(disease_port.DiseaseWorld, "introductions",
-                               lambda world, records, year: ["smallpox"] if year in arrivals else []):
+        with mock.patch.object(Disease, "introductions",
+                               lambda module, records, year: ["smallpox"] if year in arrivals else []):
             rows = sim.run(SECOND_ARRIVAL_AFTER_YEARS + YEARS)
         deaths = [row[2] for row in rows]
         first_wave, second_wave = sum(deaths[:YEARS]), sum(deaths[SECOND_ARRIVAL_AFTER_YEARS:])
-        self.assertEqual(sim.state.disease.introduced["smallpox"], list(arrivals))
+        self.assertEqual(sim.module.world.introduced["smallpox"], list(arrivals))
         self.assertGreater(first_wave, 0.0)
         self.assertLess(second_wave, 0.5 * first_wave)
 

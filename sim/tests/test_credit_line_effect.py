@@ -23,8 +23,8 @@ class FakeSim(CreditMixin):
         self.price_index = 1.0
         self.civ = {"starting_interest_rate": STARTING_RATE}
         self.labour = SimpleNamespace(money_per_labour_hour=lambda: MONEY_PER_LABOUR_HOUR)
-        self.state = SimpleNamespace(acting_seat=acting_seat, household=SimpleNamespace(reputation=reputation),
-                                     )
+        self.reputation = reputation
+        self.state = SimpleNamespace(acting_seat=acting_seat, household=SimpleNamespace())
         self.room = room
 
     def view(self, name):   # no woodland held

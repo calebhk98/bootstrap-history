@@ -34,10 +34,6 @@ class ForwardDemographyMixin:
         return self.view("demographic_flows")()
 
     @property
-    def _last_regional_step(self):
-        return self.view("regional_flows")()
-
-    @property
     def farm_stock_kg(self):
         return self.view("farm_holdings")()["stock_kg"]
 

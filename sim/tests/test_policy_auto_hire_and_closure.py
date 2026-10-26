@@ -18,7 +18,7 @@ from sim.engine.payroll_trim import payroll_means, staff_to_let_go
 from sim.engine.projects_review import SeatReview
 from sim.engine.projects_venture_quotes import VentureQuotesMixin
 from sim.engine.seat_defaults import default_policy
-from sim.engine import bridge_diffusion
+from sim.tests import polity_host
 from sim.polity.api import ShiftValueWeight
 from sim.reporting.api import RecordEvent
 from sim.tests import hazards_host, module_harness
@@ -304,7 +304,7 @@ class HazardValuesLandGradually(unittest.TestCase):
 
     def _host(self, weights):
         game = SimpleNamespace(value_weights=dict(weights))
-        module = hazards_host.build(answers={ShiftValueWeight: lambda command: bridge_diffusion.shift_value_weight(game, command)})
+        module = hazards_host.build(answers={ShiftValueWeight: polity_host.shifting(game.value_weights)})
         return game, module
 
     def _run(self, hazard, weights, years):

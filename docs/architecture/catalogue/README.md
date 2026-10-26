@@ -43,7 +43,7 @@ This directory has one file per proposed module (`<module>.md`), `core.md` (what
 | 16 | [`markets`](markets.md) | Orders and market outcomes: goods market quotes, clearing, household demand, goods-category factors, the agent economy record. | 8 | 5 | 33 | 5 |
 | 17 | [`materials`](materials.md) | Material supply and demand, the resource throttle, electricity and the materials a project consumes. | 6 | 1 | 63 | 22 |
 | 18 | [`mechanics`](mechanics.md) | What the tree's effects add up to: an index over tech-tree mechanics and effect lookups. **Moved** (`sim/mechanics/`). | 22 | 0 | 32 | 24 |
-| 19 | [`polity`](polity.md) | The state and the household's standing with it: reputation, scandal, eminence, protection, levies, reach, interest groups. | 7 | 4 | 58 | 13 |
+| 19 | [`polity`](polity.md) | The state and the household's standing with it: reputation, scandal, eminence, protection, levies, reach, interest groups. **Moved** (`sim/polity/`: 28 views, 25 commands applied, sends 4; see the file). | 28 | 25 | 58 | 13 |
 | 20 | [`prices`](prices.md) | Calculated prices: the material price table, cost books, entry cost ratios. | 4 | 0 | 15 | 5 |
 | 21 | [`production`](production.md) | What runs: operating techniques and capability, revenue and upkeep of concerns, industry experience, techniques in use. | 7 | 4 | 74 | 31 |
 | 22 | [`projects`](projects.md) | The lifecycle of a project: can it start, what it costs, progress, completion and failure. | 8 | 7 | 96 | 15 |
@@ -105,7 +105,7 @@ A class split across modules is listed with the number of its methods each modul
 | `ProducerCostsMixin` | `sim/engine/producer_costs.py` | `prices` (8) |
 | `FogMixin` | `sim/engine/fog.py` | `knowledge` (10, moved), `hazards` (2) |
 | `GeographyPortMixin` | `sim/engine/geography_port.py` | `land` (2) |
-| `DiseasePortMixin` | `sim/engine/disease_port.py` | `disease` (8) |
+| `DiseasePortMixin` (moved, `sim/engine/disease_port.py` is gone) | `sim/disease/` | `disease` (8) |
 | `LabourPortMixin` | `sim/engine/labour_port.py` | `workforce` (1) |
 | `ProjectsMixin` | `sim/engine/projects.py` | `projects` (0) |
 | `BlockersMixin` | `sim/engine/blockers.py` | `projects` (6) |

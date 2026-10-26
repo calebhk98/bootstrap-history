@@ -8,6 +8,7 @@ import math
 from sim.constants import declare
 import sim.geography.api as geography
 from sim.geography.api import settlement
+from sim.polity.api import ScaleFamiliarity, ScaleProtection
 from sim.labour import town_providers
 
 
@@ -198,8 +199,8 @@ class SettlementMixin:
         household.commissioned = {}
         household.contract_hours = {}
         self.labour_market.clear_pressure()
-        household.familiarity *= self.RELOCATION_STANDING_RETAINED
-        household.protection *= self.RELOCATION_STANDING_RETAINED
+        self._world.send(ScaleFamiliarity(self.RELOCATION_STANDING_RETAINED))
+        self._world.send(ScaleProtection(self.RELOCATION_STANDING_RETAINED))
         household.base_tile = tile
         self._resync_pools()
         return True, ("moved to %s after about %d days on the road: %s in wages "

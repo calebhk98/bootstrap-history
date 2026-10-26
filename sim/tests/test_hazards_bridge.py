@@ -8,7 +8,6 @@ from types import SimpleNamespace
 
 from sim.engine import bridge_hazards
 from sim.projects.api import ShutForgotten
-from sim.polity.api import ScaleProtection
 from sim.projects.api import ResetProjectProgress
 from sim.reporting.api import RecordEvent
 from sim.workforce import rules as workforce_rules
@@ -31,11 +30,10 @@ class SurvivingPeople(unittest.TestCase):
 
 
 class Writes(unittest.TestCase):
-    def test_deputies_and_protection_are_multiplied_by_the_share(self):
-        game = SimpleNamespace(state=SimpleNamespace(household=SimpleNamespace(directors_extra=4.0, protection=0.8)))
+    def test_deputies_are_multiplied_by_the_share(self):
+        game = SimpleNamespace(state=SimpleNamespace(household=SimpleNamespace(directors_extra=4.0)))
         bridge_hazards.scale_deputies(game, ScaleDeputies(0.5))
-        bridge_hazards.scale_protection(game, ScaleProtection(0.5))
-        self.assertEqual((game.state.household.directors_extra, game.state.household.protection), (2.0, 0.4))
+        self.assertEqual(game.state.household.directors_extra, 2.0)
 
     def test_works_of_forgotten_techniques_are_no_longer_running_or_shut(self):
         projects = SimpleNamespace(operating={"a", "b", "c"}, mothballed={"a", "c"})

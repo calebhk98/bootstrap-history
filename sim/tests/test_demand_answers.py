@@ -12,7 +12,8 @@ from .harness import check
 from sim.agents.api import ActorRecord, Government, Player, demand_answer
 from sim.agents import demand_commands, demand_year  # noqa: F401
 from sim.agents.player_commands import run_orders
-from sim.engine.state_demand import answer_confiscation, answer_state_demand, set_household_stance, settle_household_year
+from sim.polity.state import PolitySeat
+from sim.tests import polity_host
 
 from .agents_fake_world import FakeWorld
 
@@ -163,25 +164,20 @@ class Household(SimpleNamespace):
 
 
 def founder_game(capital=1000.0, capacity=0.9, protection=0.0, seed=1, stance="comply"):
-    household = Household(demand_stance=stance, protection=protection, service_offer=0.0, concealed=0.0, defiance=0.0,
-                          scandal=0.0, capital=capital, log=[])
-    game = SimpleNamespace(state=SimpleNamespace(household=household, scenario=SimpleNamespace(year=100)),
-                           state_reach=lambda: capacity, rng=random.Random(seed), treasury=Treasury(), paid_edges=[])
-
-    def lose_capital(fraction, cause="losses", taker=None):
-        lost = household.capital * fraction
-        household.capital -= lost
-        taker.money += lost
-        return lost
-    game.lose_capital = lose_capital
-    game.state_treasury = lambda: game.treasury
-    game.pay_edge = lambda name, amount, why: (game.paid_edges.append((name, amount)), setattr(household, "capital", household.capital - amount))
-    return game
+    """The polity module over a household purse, a treasury that receives, one seat's answers and a dice."""
+    purse = Household(capital=capital)
+    treasury = Treasury()
+    rng = random.Random(seed)
+    module = polity_host.build(seat=PolitySeat(demand_stance=stance, protection=protection), legacy_dice=rng,
+                               acting_balance=lambda: purse.capital, legacy_acting_household=purse, state_treasury=treasury)
+    module.state_reach = lambda: capacity
+    module.treasury, module.purse, module.rng = treasury, purse, rng
+    return module
 
 
 game = founder_game()
 before = game.rng.getstate()
-_answer, demanded, taken = answer_confiscation(game, 0.4, "confiscation")
+_answer, demanded, taken = game.answer_confiscation(0.4, "confiscation")
 check("a founder who complies has the confiscation taken as before, and draws no random number",
       abs(taken - 400.0) < 1e-9 and abs(demanded - 400.0) < 1e-9 and game.rng.getstate() == before, (taken, demanded))
 check("the treasury receives what was taken", abs(game.treasury.money - 400.0) < 1e-9, game.treasury.money)
@@ -189,34 +185,34 @@ check("the treasury receives what was taken", abs(game.treasury.money - 400.0) <
 refusals = []
 for seed in range(60):
     each = founder_game(seed=seed, stance="refuse")
-    refusals.append(answer_confiscation(each, 0.4, "c") + (each,))
+    refusals.append(each.answer_confiscation(0.4, "c") + (each,))
 spared = [each for each in refusals if each[2] == 0.0]
 seized = [each for each in refusals if each[2] > 0.0]
 check("a refused confiscation is sometimes enforced and sometimes not", spared and seized, (len(spared), len(seized)))
 check("an enforced refusal costs more than complying would have", all(each[2] > 400.0 - 1e-9 for each in seized),
       [each[2] for each in seized][:3])
 check("a refusal, enforced or not, marks the household and puts blame on it",
-      all(each[3].state.household.defiance > 0.0 and each[3].state.household.scandal > 0.0 for each in refusals))
+      all(each[3].seat.defiance > 0.0 and each[3].seat.scandal > 0.0 for each in refusals))
 
 negotiations = []
 for seed in range(60):
     each = founder_game(seed=seed, stance="negotiate")
-    negotiations.append(answer_confiscation(each, 0.4, "c"))
+    negotiations.append(each.answer_confiscation(0.4, "c"))
 check("a negotiated confiscation is sometimes taken at the smaller sum",
       any(abs(each[2] - 200.0) < 1e-6 for each in negotiations), sorted({round(each[2]) for each in negotiations}))
 check("and otherwise the state insists on the whole", any(abs(each[2] - 400.0) < 1e-6 for each in negotiations))
 
 hidden_game = founder_game(seed=2, stance="conceal")
-settle_household_year(hidden_game)
+hidden_game.settle_household_year()
 check("a founder who conceals has part of his capital out of the state's sight",
-      hidden_game.state.household.concealed > 0.0, hidden_game.state.household.concealed)
-if hidden_game.state.household.concealed > 0.0:
-    _a, demanded_hidden, _t = answer_confiscation(hidden_game, 0.4, "c")
+      hidden_game.seat.concealed > 0.0, hidden_game.seat.concealed)
+if hidden_game.seat.concealed > 0.0:
+    _a, demanded_hidden, _t = hidden_game.answer_confiscation(0.4, "c")
     check("the state can demand only a share of what it can see", demanded_hidden < 400.0, demanded_hidden)
 check("the household's visible wealth falls by what it hides",
       demand_answer.visible_wealth(1000.0, 500.0) < demand_answer.visible_wealth(1000.0, 0.0))
-note = set_household_stance(founder_game(), "negotiate", 30.0)
+note = founder_game().set_household_stance("negotiate", 30.0)
 check("the founder's reply names the odds of the offer", "chance" in note and "service" in note, note)
-note = set_household_stance(founder_game(), "conceal")
+note = founder_game().set_household_stance("conceal")
 # presentation: the answer note's wording
 check("and of hiding wealth", "conceal" in note and "penalty" in note, note)

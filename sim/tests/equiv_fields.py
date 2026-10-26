@@ -12,6 +12,7 @@ This is test tooling, not a save migration.
 """
 
 RELOCATIONS = [
+    ("/seats/*/governance", "/seats/*/emptied_governance"),   # first: it must see only the current build's own paths
     ("/modules/living_stock/society_herds", "/economy/society_herds"),
     ("/modules/coin/metal_ratios", "/economy/coin_metal_ratios"),
     ("/modules/campaigns/armies", "/economy/campaigns/armies"),
@@ -86,10 +87,34 @@ RELOCATIONS = [
     ("/seats/*/modules/demography/farm_last_harvest_kg", "/seats/*/holdings/farm_last_harvest_kg"),
     ("/seats/*/modules/demography/farm_last_marginal_product", "/seats/*/holdings/farm_last_marginal_product"),
     ("/seats/*/modules/demography/farm_hours_needed", "/seats/*/holdings/farm_hours_needed"),
+    ("/seats/*/modules/polity/reputation", "/seats/*/household/reputation"),
+    ("/seats/*/modules/polity/scandal", "/seats/*/household/scandal"),
+    ("/seats/*/modules/polity/scandal_last_year", "/seats/*/household/scandal_last_year"),
+    ("/seats/*/modules/polity/eminence", "/seats/*/household/eminence"),
+    ("/seats/*/modules/polity/familiarity", "/seats/*/household/familiarity"),
+    ("/seats/*/modules/polity/protection", "/seats/*/household/protection"),
+    ("/seats/*/modules/polity/gov", "/seats/*/governance/gov"),
+    ("/seats/*/modules/polity/demand_stance", "/seats/*/household/demand_stance"),
+    ("/seats/*/modules/polity/service_offer", "/seats/*/household/service_offer"),
+    ("/seats/*/modules/polity/concealed", "/seats/*/household/concealed"),
+    ("/seats/*/modules/polity/defiance", "/seats/*/household/defiance"),
+    ("/seats/*/modules/polity/bribes_ytd", "/seats/*/household/bribes_ytd"),
+    ("/seats/*/modules/polity/atrocity", "/seats/*/household/atrocity"),
+    ("/seats/*/modules/polity/last_withdrawal", "/seats/*/household/last_withdrawal"),
+    ("/seats/*/modules/polity/last_military_demand", "/seats/*/household/last_military_demand"),
+    ("/seats/*/modules/polity/said_eminence", "/seats/*/household/_said_eminence"),
+    ("/seats/*/modules/polity/said_scandal", "/seats/*/seat_progress/_said_scandal"),
+    ("/seats/*/modules/polity/said_requisition", "/seats/*/household/_said_requisition"),
+    ("/seats/*/modules/polity/said_notice_approach", "/seats/*/household/_said_notice_approach"),
+    ("/seats/*/modules/polity/said_confiscation_band", "/seats/*/household/_said_confiscation_band"),
+    ("/modules/disease/records", "/disease/records"),
+    ("/modules/disease/introduced", "/disease/introduced"),
+    ("/modules/disease/deaths", "/disease/deaths"),
 ]
 
 IGNORED = [
     ("/modules", "module world slots: empty until a module owns state, then each moved field is relocated"),
     ("/seats/*/modules", "module seat slots, likewise"),
     ("/assembly_record", "which modules wrote the game; bookkeeping, not simulation"),
+    ("/seats/*/emptied_governance", "the seat's governance section holds no field since `gov` moved to polity; delete the section with the seat state"),
 ]

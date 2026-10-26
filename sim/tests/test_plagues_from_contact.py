@@ -13,7 +13,7 @@ import os
 import unittest
 from unittest import mock
 
-from sim.engine import disease_port
+from sim.disease.module import Disease
 from sim.tests.disease_stand_in import ROOT, SEEDS, StandInSim, civilisation, mexica_with_source, world_map
 
 PLAGUE_HAZARD_NAMES = ("Antonine plague", "Plague of Cyprian", "The Justinianic plague", "Recurrent plague", "Black Death",
@@ -25,7 +25,7 @@ def source_of(carrier_modes):
 
 
 def weight(sim, source):
-    return disease_port.DiseaseWorld(sim).contact_weight(
+    return sim.module.contact_weight(
         dict(source, tiles=tuple(source["tiles"]), pathogens=tuple(source["pathogens"]),
              carrier_modes=tuple(source["carrier_modes"]), first_year=None, last_year=None))
 
@@ -35,8 +35,8 @@ class NoContactTest(unittest.TestCase):
         for seed in SEEDS:
             sim = StandInSim(mexica_with_source([]), seed)
             sim.run(400)
-            self.assertEqual(sim.state.disease.introduced, {}, "seed %d" % seed)
-            self.assertEqual(sim.state.disease.deaths, {}, "seed %d" % seed)
+            self.assertEqual(sim.module.world.introduced, {}, "seed %d" % seed)
+            self.assertEqual(sim.module.world.deaths, {}, "seed %d" % seed)
 
     def test_the_same_source_has_no_weight_without_a_carrier_and_some_with_ships(self):
         sim = StandInSim(mexica_with_source([]), 1)
@@ -48,7 +48,7 @@ class NoContactTest(unittest.TestCase):
         near = {"tiles": ("iran_01",), "carrier_modes": (), "circulating": False, "first_year": None, "last_year": None,
                 "pathogens": ("smallpox",)}
         far = dict(near, tiles=("china_60",))
-        self.assertGreater(disease_port.DiseaseWorld(sim).contact_weight(near), disease_port.DiseaseWorld(sim).contact_weight(far))
+        self.assertGreater(sim.module.contact_weight(near), sim.module.contact_weight(far))
 
 
 class DeathsComeFromTheModelTest(unittest.TestCase):
@@ -57,13 +57,13 @@ class DeathsComeFromTheModelTest(unittest.TestCase):
         pathogen_id = sorted(civilisation("rome_100ad")["disease_exposure"]["outside_contact"][0]["pathogens"])[0]
         handed, sim_start = 0, sim.year
         # The epidemic arrives in the first year, so a few years show the hand-off without waiting for a draw.
-        with mock.patch.object(disease_port.DiseaseWorld, "introductions",
-                               lambda world, records, year: [pathogen_id] if year == sim_start else []):
+        with mock.patch.object(Disease, "introductions",
+                               lambda module, records, year: [pathogen_id] if year == sim_start else []):
             for _ in range(5):
                 handed += sum(sim.disease_year(sim.food, sim.year).values())
                 sim.year += 1
         self.assertGreater(handed, 0)
-        self.assertEqual(handed, sum(sim.state.disease.deaths.values()))
+        self.assertEqual(handed, sum(sim.module.world.deaths.values()))
 
     def test_no_civilisation_file_carries_a_dated_plague(self):
         directory = os.path.join(ROOT, "data", "civilizations")

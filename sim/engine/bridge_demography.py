@@ -4,21 +4,14 @@ Each view carries the name its owner will publish, asks the engine exactly as th
 command applies what the yearly demographic step did inline, in the same order."""
 from sim.actors.api import RecordMigrantContact, ScaleStrata
 from sim.assembly.api import QUOTE
-from sim.disease.api import RunEpidemicYear
 from sim.land.api import AdvanceColonies
 from sim.workforce.api import AllocateFarmWorkforce, ApplyLandClearing, UpdateWages
 
-from . import contact_events, mod_effects
+from . import contact_events, externalities, mod_effects
 from .bridge import bridge_command, bridge_view
 
 
 # ---- land ----
-
-@bridge_view("home_tiles_held")
-def home_tiles_held(sim):
-    """The tiles the home country owns."""
-    return sim.home_tiles_held()
-
 
 @bridge_view("borders_among", kind=QUOTE)
 def borders_among(sim, tiles):
@@ -75,13 +68,12 @@ def farm_technique_this_year(sim):
     return sim._farm_technique_this_year
 
 
-# ---- disease and the actors ----
+# ---- the mods' externalities and the actors ----
 
-@bridge_command(RunEpidemicYear)
-def run_epidemic_year(sim, command):
-    deaths, burden, endemic_death_rates = sim.epidemic_year(command.food_kcal_per_day, command.year)
-    return {"deaths": deaths, "burden": burden, "endemic_death_rates": endemic_death_rates,
-            "deaths_by_tile": sim.epidemic_deaths_by_tile()}
+@bridge_view("externality_deaths", kind=QUOTE)
+def externality_deaths(sim, deaths_by_band, year):
+    """`deaths_by_band` plus what the mods' externalities add to the year's deaths."""
+    return externalities.add_deaths(deaths_by_band, sim, year)
 
 
 @bridge_command(RecordMigrantContact)

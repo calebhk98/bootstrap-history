@@ -14,6 +14,7 @@ from sim.contracts import FACILITY, Contract
 from sim.diffusion.api import DiffusionSeat
 from sim.engine.economy import _InvalidatingSet
 from sim.materials.state import MaterialsSeat
+from sim.polity.state import PolitySeat
 from sim.engine.state import (ActiveProjectState, EconomyState, FounderState, HoldingsState, HouseholdState, ProjectsState,
                               SimulationState, serialize_state, verbatim)
 from sim.engine.state_seat import SeatState
@@ -60,7 +61,7 @@ with verbatim(plain_record):
 check("serialize_state: outside `verbatim` a dict is copied", serialize_state({"record": plain_record})["record"] is not plain_record)
 
 # ---- dataclasses: the household (None-means-never fields, nested containers, tuples)
-household = HouseholdState(capital=50.0, wages_earned=None, last_withdrawal=None, scandal_last_year=0.0,
+household = HouseholdState(capital=50.0, wages_earned=None,
                            trades_created={"mason", "baker"}, trade_introduced_year={"mason": 95}, employees={"mason": 2.0},
                            training=[["mason", 2]], cash_flow={"wages": -12.5}, cash_mark=None,
                            cash_periods=[{"year": 99, "net": 3.0}], cause_mark={"wage": 1.0}, granted_staff=None,
@@ -68,8 +69,11 @@ household = HouseholdState(capital=50.0, wages_earned=None, last_withdrawal=None
 blob = serialize_state(household)
 check("serialize_state: a dataclass is a dict of its fields in declaration order", list(blob) == saved_field_names(HouseholdState), list(blob)[:5])
 check("serialize_state: None-means-never fields stay None, and a zero stays zero",
-      blob["wages_earned"] is None and blob["last_withdrawal"] is None and blob["cash_mark"] is None and blob["granted_staff"] is None
-      and blob["scandal_last_year"] == 0.0 and blob["last_settlement"] == -999, None)
+      blob["wages_earned"] is None and blob["cash_mark"] is None and blob["granted_staff"] is None
+      and blob["last_settlement"] == -999, None)
+standing = serialize_state(PolitySeat(last_withdrawal=None, scandal_last_year=0.0))
+check("serialize_state: a polity seat keeps its None-means-never fields None and a zero zero",
+      standing["last_withdrawal"] is None and standing["scandal_last_year"] == 0.0 and standing["said_scandal"] == 0, None)
 check("serialize_state: a dataclass's sets, dicts, lists and tuples inside",
       blob["trades_created"] == {"__set__": ["baker", "mason"]} and blob["trade_introduced_year"] == {"mason": 95}
       and blob["employees"] == {"mason": 2.0} and blob["training"] == [["mason", 2]]

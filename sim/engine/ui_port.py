@@ -116,7 +116,7 @@ def disease_burden(sim):
 
 
 def epidemic_forecast(sim):
-    """The disease model's forecast of the coming year (see `DiseasePortMixin.epidemic_forecast`)."""
+    """The disease model's forecast of the coming year (see the disease module's `epidemic_forecast`)."""
     return sim.epidemic_forecast()
 
 

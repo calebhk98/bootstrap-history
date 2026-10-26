@@ -90,9 +90,8 @@ def standing_game(extra, scandal=0.0):
     def effect_sum(channel, start=0.0):
         asked.append(channel)
         return start + extra
-    return SimpleNamespace(effect_sum=effect_sum, asked=asked,
-                           state=SimpleNamespace(projects=SimpleNamespace(done=set(), granted=set()),
-                                                 household=SimpleNamespace(scandal=scandal)))
+    return SimpleNamespace(effect_sum=effect_sum, asked=asked, scandal=scandal,
+                           state=SimpleNamespace(projects=SimpleNamespace(done=set(), granted=set())))
 
 
 class StandingFloor(unittest.TestCase):

@@ -4,7 +4,6 @@ Each view carries the name its owner will publish (docs/architecture/catalogue),
 did, and is never cached. Each command applies what the old hazard code did inline, in the same order. The `legacy_*`
 views are raw state or the engine's own switches the module still needs; they go when that state moves."""
 from sim.assembly.api import KEYED, QUOTE
-from sim.polity.api import ScaleProtection
 from sim.projects.api import ResetProjectProgress, ShutForgotten
 from sim.reporting.api import RecordEvent
 from sim.workforce.api import NoteWageShock, ReportStaffReduction, ScaleDeputies, SurviveStaff, rules as workforce_rules
@@ -82,12 +81,6 @@ def closed_by_choice(sim):
 
 # ---- polity, workforce, resources, actors ---------------------------------------------------------------------------
 
-@bridge_view("military_leverage", seat_scoped=True)
-def military_leverage(sim):
-    """0..1: how much of the military branch the founder can put in a patron's hands."""
-    return sim.military_leverage()
-
-
 @bridge_view("staff_snapshot", seat_scoped=True)
 def staff_snapshot(sim):
     """Headcount by trade now, to diff against after something trims it."""
@@ -150,10 +143,5 @@ def reset_project_progress(sim, command):
     for node_id in sorted(projects.active):
         projects.active[node_id]["ph_left"] = sim.nodes[node_id]["ph"]
         projects.active[node_id]["yrs"] = 0.0
-
-
-@bridge_command(ScaleProtection)
-def scale_protection(sim, command):
-    sim.state.household.protection *= command.share
 
 

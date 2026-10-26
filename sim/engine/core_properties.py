@@ -122,46 +122,6 @@ class ForwardingPropertiesMixin:
 		setattr(self.state.household, "bondage_years_left", value)
 
 	@property
-	def protection(self):
-		return getattr(self.state.household, "protection")
-
-	@protection.setter
-	def protection(self, value):
-		setattr(self.state.household, "protection", value)
-
-	@property
-	def reputation(self):
-		return getattr(self.state.household, "reputation")
-
-	@reputation.setter
-	def reputation(self, value):
-		setattr(self.state.household, "reputation", value)
-
-	@property
-	def eminence(self):
-		return getattr(self.state.household, "eminence")
-
-	@eminence.setter
-	def eminence(self, value):
-		setattr(self.state.household, "eminence", value)
-
-	@property
-	def scandal(self):
-		return getattr(self.state.household, "scandal")
-
-	@scandal.setter
-	def scandal(self, value):
-		setattr(self.state.household, "scandal", value)
-
-	@property
-	def scandal_last_year(self):
-		return getattr(self.household, "scandal_last_year", None)
-
-	@scandal_last_year.setter
-	def scandal_last_year(self, value):
-		setattr(self.household, "scandal_last_year", value)
-
-	@property
 	def artisans(self):
 		return getattr(self.state.household, "artisans")
 
@@ -336,14 +296,6 @@ class ForwardingPropertiesMixin:
 	@training.setter
 	def training(self, value):
 		setattr(self.state.household, "training", value)
-
-	@property
-	def familiarity(self):
-		return getattr(self.state.household, "familiarity")
-
-	@familiarity.setter
-	def familiarity(self, value):
-		setattr(self.state.household, "familiarity", value)
 
 	@property
 	def last_taught(self):
@@ -610,14 +562,6 @@ class ForwardingPropertiesMixin:
 	@_said_parallelism.setter
 	def _said_parallelism(self, value):
 		self.state.seat_progress._said_parallelism = value
-
-	@property
-	def _said_scandal(self):
-		return self.state.seat_progress._said_scandal
-
-	@_said_scandal.setter
-	def _said_scandal(self, value):
-		self.state.seat_progress._said_scandal = value
 
 	@property
 	def goal_year(self):

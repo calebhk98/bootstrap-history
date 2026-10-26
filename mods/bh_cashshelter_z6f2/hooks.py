@@ -267,7 +267,7 @@ def register(api):
     def theft_rows(sim, strength, order_holds):
         from sim.coin.api import COIN_GUARD_HOURS_PER_TONNE_YEAR, theft_exposure
         household = sim.state.household
-        capacity, protection = (sim.state_capacity, household.protection) if order_holds else (0.0, 0.0)
+        capacity, protection = (sim.state_capacity, sim.view("standing")()["protection"]) if order_holds else (0.0, 0.0)
         exposure = sim.view("household_exposure")()
         loss = theft_exposure.theft_loss_by_kind(
             exposure.values, {"coin": COIN_GUARD_HOURS_PER_TONNE_YEAR}, sim.view("household_visible_scale")(), capacity,
@@ -356,7 +356,7 @@ def register(api):
                 taken += paid
         return taken
 
-    from sim.engine import state_demand
-    hook = getattr(state_demand, "register_wealth_claims", None)   # absent until the engine counts claims
+    from sim.polity import api as polity_api
+    hook = getattr(polity_api, "register_wealth_claims", None)   # absent until the engine counts claims
     if hook is not None:
         hook(claims_owed, seize_claims)

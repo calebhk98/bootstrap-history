@@ -19,7 +19,6 @@ class HoldingsState:
 class SeatProgressState:
 	"""A seat's dashboard cap, score reading and the one-time notes shown to its player."""
 	dashboard_history_years: Optional[int] = None  # cap dashboard history to N most recent years; None = no cap
-	_said_scandal: int = 0
 	_said_parallelism: Optional[bool] = None
 	_said_command_index: Optional[bool] = None
 	_said_explanations: Optional[Dict[str, int]] = None

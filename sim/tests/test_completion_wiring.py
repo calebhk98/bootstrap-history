@@ -12,8 +12,9 @@ from .harness import check
 from sim.engine.projects_completion import CompletionMixin
 from sim.knowledge.api import KnowledgeSeat, LearnTechnique, RefreshDoneCaches
 from sim.knowledge.module import Knowledge
+from sim.polity.api import AddGovernance, AddScandal, CarryOutTransfers, GainReputation
 from sim.refusal import cause_of
-from sim.tests import event_stand_in, module_harness
+from sim.tests import event_stand_in, module_harness, polity_host
 
 NODE = "school"
 
@@ -28,13 +29,23 @@ class Finishing:
     def send(self, command):
         if isinstance(command, LearnTechnique):
             return self.knowledge.learn_technique(command)
+        if isinstance(command, CarryOutTransfers):
+            self.transfers.append(command.node_id)
+            return None
+        if isinstance(command, GainReputation):
+            return self.polity.gain_reputation(command)
+        if isinstance(command, AddScandal):
+            return self.polity.add_scandal(command)
+        if isinstance(command, AddGovernance):
+            return self.polity.add_governance(command)
         return event_stand_in.send(self, command)
 
     def __init__(self, fails=False, venture=True, auto_open=False, shortfall=None, goal_lines=(), snapshot=None, hire_mode=False):
-        household = SimpleNamespace(log=[], hour_allocations={"school": 1.0}, reputation=0.0, scandal=0.0)
+        household = SimpleNamespace(log=[], hour_allocations={"school": 1.0})
         self.state = SimpleNamespace(
             projects=SimpleNamespace(active={NODE: {}}, bountied={NODE}, done=set(), done_year=None, failed_attempts=Counter()),
-            household=household, scenario=SimpleNamespace(year=100), governance=SimpleNamespace(gov=0.0))
+            household=household, scenario=SimpleNamespace(year=100))
+        self.polity = polity_host.build(legacy_constant=lambda name: {"REPUTATION_CEILING": 100.0}[name])
         self.knowledge = module_harness.build(Knowledge, views={"legacy_projects": self.state.projects},
                                               answers={RefreshDoneCaches: None}, seat=KnowledgeSeat())
         self.nodes = {NODE: {"name": "A school"}}
@@ -56,9 +67,6 @@ class Finishing:
 
     def goal_snapshot(self):
         return self.snapshot
-
-    def carry_out_transfers(self, node_id):
-        self.transfers.append(node_id)
 
     def alarm_of(self, node):
         return 2.0
@@ -121,8 +129,8 @@ game = complete(Finishing(goal_lines=["goal effect: literacy 10% -> 15%"]))
 check("a completion that moves the goal logs a goal_effect line after the completion", kinds(game) == ["project_completed", "goal_effect"], kinds(game))
 check("the goal reached is recorded for the project and year", game.goal_reached == (NODE, 100), None)
 game = complete(Finishing())
-check("the founder's reputation rises, and the alarm and the state's interest are booked", game.state.household.reputation == 3.0
-      and game.state.household.scandal == 2.0 and game.state.governance.gov == 1.0, None)
+check("the founder's reputation rises, and the alarm and the state's interest are booked", game.polity.seat.reputation == 5.0 + 3.0
+      and game.polity.seat.scandal == 2.0 and game.polity.seat.gov == 1.0, None)
 game = complete(Finishing(hire_mode=False))
 check("without automatic hiring the work's staff grant is given", game.granted_staff == [{"scholars": 1.0}], game.granted_staff)
 game = complete(Finishing(hire_mode=True))

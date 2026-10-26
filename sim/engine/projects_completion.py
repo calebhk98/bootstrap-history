@@ -24,6 +24,7 @@ from .risk_rules import attempt_fails
 from .units_prose import money_text, plain_number
 from sim.agents.api import edges
 from sim.knowledge.api import LearnTechnique
+from sim.polity.api import AddGovernance, AddScandal, CarryOutTransfers, GainReputation
 from sim.reporting.api import RecordEvent
 
 FAILED_PREFIX = "FAILED at"
@@ -186,7 +187,6 @@ class CompletionMixin:
         projects = self.state.projects
         household = self.state.household
         scenario = self.state.scenario
-        governance = self.state.governance
         _risk_this_attempt = self.effective_risk(node_id)
         if attempt_fails(self.rng.random(), _risk_this_attempt):
             self._fail_attempt(node_id, _risk_this_attempt)
@@ -204,7 +204,7 @@ class CompletionMixin:
         self.send(LearnTechnique(node_id, year=scenario.year))
         for material, units in (node.get("grants") or {}).items():
             self.grant_stock(material, units)
-        self.carry_out_transfers(node_id)
+        self.send(CarryOutTransfers(node_id))
         # A technology changes the society that built it. Only for work YOU
         # completed: a society is not altered by owning something it always had.
         # The alarm is read before the work's own effects apply, which is
@@ -215,10 +215,9 @@ class CompletionMixin:
         # Visible, useful, State-approved work builds standing. Obscure laboratory
         # work does not, however important it is, which is a real and annoying fact
         # about how credibility actually accrues.
-        household.reputation = min(self.REPUTATION_CEILING,
-                                   household.reputation + self.reputation_gain_of(node))
-        household.scandal += alarm
-        governance.gov += self.state_interest(node)
+        self.send(GainReputation(self.reputation_gain_of(node)))
+        self.send(AddScandal(alarm))
+        self.send(AddGovernance(self.state_interest(node)))
         # _grant_staff, NOT a bare += on household.scholars/household.artisans:
         # _resync_pools(), which step() calls unconditionally every year,
         # always treats household.scholars and household.artisans

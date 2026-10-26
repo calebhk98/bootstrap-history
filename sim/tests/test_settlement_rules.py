@@ -10,15 +10,25 @@ from sim.refusal import facts_of
 
 from sim.engine import economy_credit
 from sim.engine.economy_credit import CreditMixin
+from sim.polity.api import SetReputation
 from sim.tests import event_stand_in
 
 
 class Debtor(CreditMixin):
     """The parts of a Sim that settling touches; `lines` records what the ledger is told."""
-    send = event_stand_in.send
+    def send(self, command):
+        if isinstance(command, SetReputation):
+            self.standing = command.value
+            return None
+        return event_stand_in.send(self, command)
+
+    @property
+    def reputation(self):
+        return self.standing
 
     def __init__(self):
         self.lines = []
+        self.standing = 50.0
         self.state = types.SimpleNamespace(
             household=types.SimpleNamespace(capital=-3000.0, reputation=50.0, log=[], credit_frozen_until=0),
             projects=types.SimpleNamespace(done={"identity_cover", "civ_road_paved"}, granted=set()),
@@ -62,7 +72,7 @@ class SettleInsolvency(unittest.TestCase):
         (_year, line), = debtor.state.household.log
         self.assertEqual(line.kind, "insolvency_settled")
         self.assertAlmostEqual(line.facts["reputation_hit"], debtor.SETTLEMENT_REPUTATION_HIT)
-        self.assertEqual(debtor.state.household.reputation, 50.0 - debtor.SETTLEMENT_REPUTATION_HIT)
+        self.assertEqual(debtor.standing, 50.0 - debtor.SETTLEMENT_REPUTATION_HIT)
 
     def test_settling_inside_an_earlier_freeze_pushes_the_date_out_and_records_both_dates(self):
         debtor = Debtor()

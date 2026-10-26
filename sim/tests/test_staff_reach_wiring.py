@@ -1,6 +1,6 @@
 """Which staff a state's reach reads: the guards' reach goes to theft, the inspectors' to the mine ceiling, the foresters' to the
-forest ceiling, each by its own line's unfunded share and no other (Complaint 660). Each method is called on a stand-in `self`
-that carries only the reach it should read, so a read of any other reach fails the test."""
+forest ceiling, each by its own line's unfunded share and no other (Complaint 660). Each method is asked of the polity module
+whose world answers only the reach it should read, so a read of any other reach fails the test."""
 
 QUICK_TOPIC = True
 
@@ -11,7 +11,7 @@ from unittest import mock
 from sim.engine.agents_port_budget import BudgetView
 from sim.resources import constants as resource_constants
 from sim.tests import resources_stand_in
-from sim.engine.legitimacy import LegitimacyMixin
+from sim.tests import polity_host
 from sim.engine.bridge_living_stock import partner_catch_chance
 from sim.coin.commands import PlunderHousehold
 from sim.coin.module import Coin
@@ -21,70 +21,67 @@ from sim.world import stock_dynamics
 
 
 def reach_stand_in(unfunded, shares, year=100):
-    """A game whose government record holds `unfunded` by line, and whose SimWorld answers `shares` by share name."""
+    """The polity module whose government record holds `unfunded` by line, and whose agents' world answers `shares` by share name."""
     calls = []
     world_shares = {name: (lambda value=value, name=name: calls.append(name) or value) for name, value in shares.items()}
     world = SimpleNamespace(government=lambda: SimpleNamespace(record=SimpleNamespace(unfunded=unfunded)), **world_shares)
-    game = SimpleNamespace(year=year, household=SimpleNamespace(done_version=1, operating_version=1),
-                           population=SimpleNamespace(total=1000.0))
-    return game, world, calls
+    module = polity_host.build(legacy_agent_world=world, year=year, legacy_done_versions=(1, 1), population_total=1000.0)
+    return module, world, calls
 
 
 class StaffReach(unittest.TestCase):
-    def reach(self, game, world, line, share):
-        with mock.patch("sim.engine.agents_port.SimWorld", lambda sim: world):
-            return LegitimacyMixin._staff_reach(game, line, share)
+    def reach(self, module, line, share):
+        return module._staff_reach(line, share)
 
     def test_the_line_reads_its_own_share_from_the_world(self):
-        game, world, calls = reach_stand_in({}, {"order_share": 0.6, "inspection_share": 0.2})
-        self.assertEqual(self.reach(game, world, "guards", "order_share"), 0.6)
-        self.assertEqual(self.reach(game, world, "inspectors", "inspection_share"), 0.2)
+        module, world, calls = reach_stand_in({}, {"order_share": 0.6, "inspection_share": 0.2})
+        self.assertEqual(self.reach(module, "guards", "order_share"), 0.6)
+        self.assertEqual(self.reach(module, "inspectors", "inspection_share"), 0.2)
         self.assertEqual(calls, ["order_share", "inspection_share"])
 
     def test_a_repeat_with_nothing_changed_is_remembered(self):
-        game, world, calls = reach_stand_in({"guards": 0.1}, {"order_share": 0.6})
-        self.reach(game, world, "guards", "order_share")
-        self.reach(game, world, "guards", "order_share")
+        module, world, calls = reach_stand_in({"guards": 0.1}, {"order_share": 0.6})
+        self.reach(module, "guards", "order_share")
+        self.reach(module, "guards", "order_share")
         self.assertEqual(calls, ["order_share"])
 
     def test_more_of_the_lines_pay_left_unpaid_is_read_again(self):
-        game, world, calls = reach_stand_in({"guards": 0.1}, {"order_share": 0.6})
-        self.reach(game, world, "guards", "order_share")
+        module, world, calls = reach_stand_in({"guards": 0.1}, {"order_share": 0.6})
+        self.reach(module, "guards", "order_share")
         world.government().record.unfunded["guards"] = 0.5
-        self.reach(game, world, "guards", "order_share")
+        self.reach(module, "guards", "order_share")
         self.assertEqual(calls, ["order_share", "order_share"])
 
     def test_another_lines_unpaid_pay_does_not_make_it_read_again(self):
-        game, world, calls = reach_stand_in({"guards": 0.1}, {"order_share": 0.6})
+        module, world, calls = reach_stand_in({"guards": 0.1}, {"order_share": 0.6})
         record = world.government().record
-        self.reach(game, world, "guards", "order_share")
+        self.reach(module, "guards", "order_share")
         record.unfunded["inspectors"] = 0.9
-        self.reach(game, world, "guards", "order_share")
+        self.reach(module, "guards", "order_share")
         self.assertEqual(calls, ["order_share"])
 
     def test_each_reach_names_its_line_and_share(self):
         asked = []
-        stand_in = SimpleNamespace(_staff_reach=lambda line, share: asked.append((line, share)))
-        LegitimacyMixin.order_reach(stand_in)
-        LegitimacyMixin.inspection_reach(stand_in)
-        LegitimacyMixin.forest_reach(stand_in)
+        module = polity_host.build()
+        module._staff_reach = lambda line, share: asked.append((line, share))
+        module.order_reach()
+        module.inspection_reach()
+        module.forest_reach()
         self.assertEqual(asked, [("guards", "order_share"), ("inspectors", "inspection_share"), ("foresters", "forest_share")])
 
 
 class StateReach(unittest.TestCase):
     def test_the_home_reach_is_the_share_the_paid_officials_collect_and_is_remembered(self):
-        game, world, calls = reach_stand_in({"administration": 0.0}, {"collectible_share": 0.8})
-        with mock.patch("sim.engine.agents_port.SimWorld", lambda sim: world):
-            first = LegitimacyMixin.state_reach(game)
-            second = LegitimacyMixin.state_reach(game)
+        module, world, calls = reach_stand_in({"administration": 0.0}, {"collectible_share": 0.8})
+        first = module.state_reach()
+        second = module.state_reach()
         self.assertEqual((first, second, calls), (0.8, 0.8, ["collectible_share"]))
 
     def test_officials_left_unpaid_make_the_reach_be_read_again(self):
-        game, world, calls = reach_stand_in({"administration": 0.0}, {"collectible_share": 0.8})
-        with mock.patch("sim.engine.agents_port.SimWorld", lambda sim: world):
-            LegitimacyMixin.state_reach(game)
-            world.government().record.unfunded["administration"] = 100.0
-            LegitimacyMixin.state_reach(game)
+        module, world, calls = reach_stand_in({"administration": 0.0}, {"collectible_share": 0.8})
+        module.state_reach()
+        world.government().record.unfunded["administration"] = 100.0
+        module.state_reach()
         self.assertEqual(calls, ["collectible_share", "collectible_share"])
 
     def test_the_agents_view_of_the_state_reads_the_games_authority(self):

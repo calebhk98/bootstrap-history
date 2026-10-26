@@ -39,8 +39,8 @@ class RevenueStandIn(ProductionMixin):
         self.founder_alive = True
         self.labour = types.SimpleNamespace(director_hours_committed=lambda: 0.0, wage_signature=lambda: 0)
 
-    def view(self, name):
-        return lambda: {"hectares": self.farm_hectares}
+    def view(self, name):   # the polity module's standing, and the demography module's farm
+        return lambda: {"governance": 0.0, "reputation": 0.0, "hectares": self.farm_hectares}
 
     def state_funding(self):
         return 0.0
@@ -159,7 +159,7 @@ class GoodsStandIn(GoodsMixin):
         self.farm_hectares = 0.0
 
     def view(self, name):
-        return lambda: {"hectares": self.farm_hectares}
+        return lambda: {"governance": 0.0, "reputation": 0.0, "hectares": self.farm_hectares}
 
     def actor_market_version(self):
         return self.market_version

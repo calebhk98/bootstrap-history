@@ -4,7 +4,6 @@ Each view answers through `Sim` as the old mixin methods did; when its owner mov
 entry is deleted. The `partner_*` views carry the foreign-trade and polity arithmetic that used to sit in the
 living-stock mixins (a partner's landed price, the carriage of a smuggled load, a state's chance to catch it)."""
 from sim.agents.api import GOVERNMENT_PREFIX
-from sim.polity.api import RaiseScandal
 from sim.workforce.api import PressLabour
 from sim.assembly.api import KEYED, QUOTE
 from sim.world import stock_dynamics
@@ -67,13 +66,6 @@ def hours_per_person_year(sim):
 @bridge_command(PressLabour)
 def press_labour(sim, command):
     sim.labour.market.press(command.trade, command.hours)
-
-
-@bridge_command(RaiseScandal)
-def raise_scandal(sim, command):
-    sim.scandal += command.scandal
-    if sim.scandal_last_year is not None:
-        sim.scandal_last_year += command.scandal
 
 
 # ---- partners ----

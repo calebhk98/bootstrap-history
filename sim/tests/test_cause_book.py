@@ -15,6 +15,7 @@ class StubGame:
 
     def __init__(self):
         self.year = 100
+        self.standing = {"concealed": 0.0, "eminence": 0.0, "defiance": 0.0}
         self.state = types.SimpleNamespace(household=HouseholdState(capital=1000.0))
         self.nodes = {"mill": {"rev": 40.0, "up": 15.0}}
         self.reach = 2.0
@@ -28,13 +29,16 @@ class StubGame:
     def state_reach(self):
         return self.reach
 
+    def view(self, name):   # the polity module's standing
+        return lambda: self.standing
+
     def visible_scale(self, headcount, wealth, eminence, defiance):
         return 1.0 + headcount / 1000.0 + wealth / 100000.0 + eminence / 10.0 + defiance
 
     def notice(self):
         household = self.state.household
-        return self.reach * self.visible_scale(self.headcount_now, household.capital, household.eminence,
-                                                        household.defiance)
+        return self.reach * self.visible_scale(self.headcount_now, household.capital, self.standing["eminence"],
+                                                        self.standing["defiance"])
 
 
 game = StubGame()
@@ -56,7 +60,7 @@ check("a wage shock row names its cause with the signed index change",
 # --- closing a period adds the unnamed remainder, so the causes sum to the change ----------------
 game.wage_index_now = 0.8   # 0.1 more than the shock named
 game.state.household.capital += 500000.0
-game.state.household.eminence += 3.0
+game.standing["eminence"] += 3.0
 game.headcount_now = 80
 game.reach = 2.5
 game.year = 101

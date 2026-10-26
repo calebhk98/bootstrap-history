@@ -4,7 +4,7 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.engine.disease_burden import burden_from_holdings
+from sim.disease.api import burden_from_holdings
 from sim.world import demography
 
 from sim.engine import coverage_rules as rules

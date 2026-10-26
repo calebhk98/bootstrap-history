@@ -1,6 +1,6 @@
 """The disease model wired to the engine's side (Complaint 386, stage 2): the yearly step over age bands, deaths handed
 to `Population`, the saved state, the contact heuristic and technology scales. No game is built; the stand-in
-carries only what `DiseasePortMixin` reads."""
+carries only what the module's views answer."""
 
 QUICK_TOPIC = True
 
@@ -9,11 +9,14 @@ import types
 import unittest
 
 from sim.disease import api as disease
-from sim.engine import disease_port, state, validate_disease_data
+from sim.disease.module import Disease
+from sim.disease.state import DiseaseWorld
+from sim.engine import state, validate_disease_data
+from sim.tests import module_harness
 from sim.world import demography
 from sim.world.epidemic_deaths import add_epidemic_deaths
 
-BANDS = disease_port.BANDS
+BANDS = disease.nation_tuning.BANDS
 
 
 def pathogen_plain(case_fatality=0.3, permanent=True, immunity_days=None):
@@ -36,25 +39,16 @@ def year_with(records, fatality_scale=None, introductions=("test_pathogen",), pe
                                 introduction_band="working_age", introduction_size=20, fatality_scale=fatality_scale)
 
 
-class StandIn(disease_port.DiseasePortMixin):
-    def __init__(self, civ=None, effects=(), diffusion=1.0, children=3e4, working_age=6e4, elderly=1e4):
-        self.civ = civ or {"id": "stand_in"}
-        self.year = 1500
-        self.state = types.SimpleNamespace(disease=state.DiseaseState())
-        self.population = demography.Population(children, working_age, elderly)
-        self._effects, self._diffusion = effects, diffusion
-
-    def _farm_year_weather_seed(self, year, region=None):
-        return 12345 + year
-
-    def urban_fraction(self):
-        return float(self.civ.get("urban_fraction", 0.0))
-
-    def _effect_terms(self, channel):
-        return list(self._effects) if channel == "disease_effects" else []
-
-    def civ_diffusion(self, node_id):
-        return self._diffusion
+def StandIn(civ=None, effects=(), diffusion=1.0, children=3e4, working_age=6e4, elderly=1e4):
+    """A disease module reading a nation of these people and technologies, with the views it needs answered by plain values."""
+    civ = civ or {"id": "stand_in"}
+    population = demography.Population(children, working_age, elderly)
+    return module_harness.build(Disease, world=DiseaseWorld(), views={
+        "year": 1500, "civilisation": civ, "weather_seed": lambda year, region=None: 12345 + year,
+        "people_by_band": {band: float(getattr(population, band)) for band in BANDS},
+        "urban_fraction": float(civ.get("urban_fraction", 0.0)),
+        "effect_terms": lambda channel: list(effects) if channel == "disease_effects" else [],
+        "civ_diffusion": lambda node_id: diffusion})
 
 
 class PopulationHandbackTest(unittest.TestCase):
@@ -69,7 +63,7 @@ class PopulationHandbackTest(unittest.TestCase):
 
 class AgeBandsAndFoodTest(unittest.TestCase):
     def test_children_and_the_old_die_more_than_working_age_and_the_mean_stays_the_pathogens(self):
-        scale = disease_port.DiseaseWorld(StandIn()).fatality_scale_by_band(1.0)
+        scale = (StandIn()).fatality_scale_by_band(1.0)
         self.assertGreater(scale["children"], scale["working_age"])
         self.assertGreater(scale["elderly"], scale["working_age"])
         people = PEOPLE
@@ -77,7 +71,7 @@ class AgeBandsAndFoodTest(unittest.TestCase):
         self.assertAlmostEqual(mean, 1.0)
 
     def test_hunger_raises_every_bands_fatality(self):
-        world = disease_port.DiseaseWorld(StandIn())
+        world = (StandIn())
         fed, hungry = world.fatality_scale_by_band(1.0), world.fatality_scale_by_band(0.7)
         for band in BANDS:
             self.assertGreater(hungry[band], fed[band])
@@ -113,8 +107,8 @@ class YearStepTest(unittest.TestCase):
 
     def test_a_nation_without_exposure_pays_nothing_and_stores_nothing(self):
         sim = StandIn()
-        self.assertEqual(sim.disease_year(1e12), {})
-        self.assertEqual(sim.state.disease.records, {})
+        self.assertEqual(sim.run_epidemic_year(disease.RunEpidemicYear(1e12, 1500)), {})
+        self.assertEqual(sim.world.records, {})
 
     def test_immunity_ages_with_the_people_who_carry_it(self):
         records = {}
@@ -157,9 +151,9 @@ class SavedStateTest(unittest.TestCase):
         straight, resumed = {}, {}
         year_with(straight)
         year_with(resumed)
-        disease_state = state.DiseaseState(records=resumed, introduced={"test_pathogen": [1500]}, deaths={"test_pathogen": 7})
+        disease_state = DiseaseWorld(records=resumed, introduced={"test_pathogen": [1500]}, deaths={"test_pathogen": 7})
         blob = json.loads(json.dumps(state.serialize_state(disease_state)))
-        loaded = state.deserialize_state(blob, state.DiseaseState)
+        loaded = state.deserialize_state(blob, DiseaseWorld)
         self.assertEqual(loaded.introduced, {"test_pathogen": [1500]})
         for _ in range(3):
             year_with(straight, introductions=())
@@ -167,14 +161,14 @@ class SavedStateTest(unittest.TestCase):
         self.assertEqual(straight, loaded.records)
 
     def test_a_game_without_epidemics_saves_an_empty_record(self):
-        self.assertEqual(state.serialize_state(state.DiseaseState())["records"], {})
+        self.assertEqual(state.serialize_state(DiseaseWorld())["records"], {})
 
 
 class ContactHeuristicTest(unittest.TestCase):
     CIV = {"id": "stand_in", "disease_exposure": {"outside_contact": [{"pathogens": ["smallpox"], "years": [1520, 1600], "circulating": True}]}}
 
     def arrivals(self, sim, years, records=None):
-        world = disease_port.DiseaseWorld(sim)
+        world = sim
         return [year for year in years if world.introductions(records or {}, year)]
 
     def test_nothing_arrives_outside_the_window_or_without_a_listing(self):
@@ -188,8 +182,8 @@ class ContactHeuristicTest(unittest.TestCase):
         first = self.arrivals(sim, years)
         self.assertEqual(first, self.arrivals(StandIn(self.CIV), years))
         share = len(first) / len(years)
-        self.assertGreater(share, disease_port.DISEASE_TRAVELLER_ANNUAL_CHANCE / 3)
-        self.assertLess(share, disease_port.DISEASE_TRAVELLER_ANNUAL_CHANCE * 2)
+        self.assertGreater(share, disease.nation_tuning.DISEASE_TRAVELLER_ANNUAL_CHANCE / 3)
+        self.assertLess(share, disease.nation_tuning.DISEASE_TRAVELLER_ANNUAL_CHANCE * 2)
 
     def test_a_pathogen_already_circulating_is_not_introduced_again(self):
         records = {"smallpox": {"working_age": {"counts": {"susceptible": 5, "infectious.0": 3}}}}
@@ -220,20 +214,20 @@ class TechnologyScaleTest(unittest.TestCase):
 
     def test_effects_multiply_by_how_far_the_country_has_taken_them_up(self):
         effects = [("quarantine", self.spec("transmission", 0.5)), ("nursing", self.spec("case_fatality", 0.8))]
-        fatality, transmission = disease_port.DiseaseWorld(StandIn(effects=effects, diffusion=1.0)).technology_scales(["a", "b"])
+        fatality, transmission = (StandIn(effects=effects, diffusion=1.0)).technology_scales(["a", "b"])
         self.assertEqual((fatality["a"], transmission["a"]), (0.8, 0.5))
-        fatality, transmission = disease_port.DiseaseWorld(StandIn(effects=effects, diffusion=0.5)).technology_scales(["a"])
+        fatality, transmission = (StandIn(effects=effects, diffusion=0.5)).technology_scales(["a"])
         self.assertAlmostEqual(transmission["a"], 0.75)
         self.assertAlmostEqual(fatality["a"], 0.9)
 
     def test_an_effect_that_names_a_pathogen_leaves_the_others_alone(self):
         effects = [("vaccine", self.spec("transmission", 0.4, ["a"]))]
-        _fatality, transmission = disease_port.DiseaseWorld(StandIn(effects=effects)).technology_scales(["a", "b"])
+        _fatality, transmission = (StandIn(effects=effects)).technology_scales(["a", "b"])
         self.assertEqual((transmission["a"], transmission["b"]), (0.4, 1.0))
 
     def test_technology_nobody_has_taken_up_does_nothing(self):
         effects = [("quarantine", self.spec("transmission", 0.5))]
-        _fatality, transmission = disease_port.DiseaseWorld(StandIn(effects=effects, diffusion=0.0)).technology_scales(["a"])
+        _fatality, transmission = (StandIn(effects=effects, diffusion=0.0)).technology_scales(["a"])
         self.assertEqual(transmission["a"], 1.0)
 
     def test_a_vaccine_in_force_means_fewer_infected_in_the_same_year(self):
@@ -284,10 +278,10 @@ class CareCollapseAndDensityTest(unittest.TestCase):
         self.assertGreater(immune(crowded), immune(sparse))
 
     def test_crowding_rises_with_the_urban_share_and_is_one_when_rural(self):
-        index = lambda urban: disease_port.DiseaseWorld(StandIn(civ={"id": "x", "urban_fraction": urban})).crowding_index()
+        index = lambda urban: (StandIn(civ={"id": "x", "urban_fraction": urban})).crowding_index()
         self.assertEqual(index(0.0), 1.0)
         self.assertLess(index(0.1), index(0.3))
-        self.assertEqual(disease_port.DiseaseWorld(StandIn()).crowding_index(), 1.0)
+        self.assertEqual((StandIn()).crowding_index(), 1.0)
 
     def test_every_pathogen_file_declares_a_density_exponent_between_the_poles(self):
         for pathogen in disease.load_pathogens().values():

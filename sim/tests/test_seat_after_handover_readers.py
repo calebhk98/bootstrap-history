@@ -26,7 +26,7 @@ DISCLOSED = {"heir": {"wheel": {"mode": "license", "licensees": {"firm:7": {"fee
 def post_handover_state():
 	"""Seats "third" and "heir", "heir" acting; the heir carries the leaver's household, nodes, holdings, goal and country."""
 	heir = SeatState(
-		household=HouseholdState(capital=40.0, scholars=2.0, reputation=7.0),
+		household=HouseholdState(capital=40.0, scholars=2.0),
 		projects=ProjectsState(done={"fire", "wheel"}, granted={"fire"}),
 		founder=FounderState(living_cost_paid=30.0),
 		holdings=HoldingsState(), seat_progress=SeatProgressState(),
@@ -115,4 +115,4 @@ check("serialize_state: the heir's saved seat carries the household, nodes, goal
       and blob["seats"]["heir"]["modules"]["seats"]["shares_held"] == {"guild": 3.0}, None)
 check("acting_seat_of: the save's acting seat is the heir's record", acting_seat_of(blob) is blob["seats"]["heir"])
 check("goal_of_blob: the heir's goal", goal_of_blob(blob) == "steam_engine")
-check("_get_field: a field of the acting seat is the heir's", _get_field(blob, "living_cost_paid") == 30.0 and _get_field(blob, "reputation") == 7.0)
+check("_get_field: a field of the acting seat is the heir's", _get_field(blob, "living_cost_paid") == 30.0 and _get_field(blob, "scholars") == 2.0)

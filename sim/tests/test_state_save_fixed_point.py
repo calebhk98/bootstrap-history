@@ -14,7 +14,7 @@ def state(fog=False, civ=None, reserve=(0, 0), policy=None, said=None):
     built = SimulationState(
         household=HouseholdState(capital=1250.0, reserve_craftsmen=reserve[0], reserve_scholars=reserve[1]),
         projects=ProjectsState(done={"stone_cutting", "bronze"}), economy=EconomyState(), holdings=HoldingsState(),
-        governance=GovernanceState(gov=0.5), founder=FounderState(policy=policy or {}), scenario=ScenarioState(year=115))
+        governance=GovernanceState(), founder=FounderState(policy=policy or {}), scenario=ScenarioState(year=115))
     built._fog, built._civ = fog, civ
     built.seat_progress._said_explanations = said
     return built

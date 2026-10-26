@@ -32,7 +32,6 @@ def _test_automatic_field_persistence():
 	proj = ActiveProjectState(ph_left=80.0, cost_left=300.0, yrs=1.0, spent=100.0, lab_left={"mason": 15.0})
 	hh = HouseholdState(
 		capital=1250.0,
-		reputation=7.5,
 		trades_created={"mason", "carpenter"},
 		employees={"carpenter": 2.0},
 	)
@@ -43,7 +42,7 @@ def _test_automatic_field_persistence():
 	)
 	econ = EconomyState()
 	holdings = HoldingsState(market_pressure=120.0)
-	gov = GovernanceState(gov=0.5)
+	gov = GovernanceState()
 	founder = FounderState(living_cost_paid=28.0)
 	scenario = ScenarioState(year=115)
 
@@ -67,8 +66,8 @@ def _test_automatic_field_persistence():
 		return False, "serialized state carries a version stamp"
 
 	restored = deserialize_state(blob)
-	if restored.household.capital != 1250.0 or restored.household.reputation != 7.5:
-		return False, f"Household capital/reputation mismatch: {restored.household.capital}, {restored.household.reputation}"
+	if restored.household.capital != 1250.0:
+		return False, f"Household capital mismatch: {restored.household.capital}"
 	if restored.projects.done != {"stone_cutting"}:
 		return False, f"Projects done mismatch: {restored.projects.done}"
 	if "arch" not in restored.projects.active:
@@ -220,7 +219,7 @@ def _valid_save():
 	)
 	state = SimulationState(
 		household=HouseholdState(capital=1250.0), projects=ProjectsState(done={"stone_cutting"}), economy=EconomyState(),
-		holdings=HoldingsState(), governance=GovernanceState(gov=0.5), founder=FounderState(), scenario=ScenarioState(year=115))
+		holdings=HoldingsState(), governance=GovernanceState(), founder=FounderState(), scenario=ScenarioState(year=115))
 	state._goal = "aqueduct"
 	blob = serialize_state(state)
 	blob.update({"_civ": "rome_100ad", "_weights": {}, "_fog": False, "_immortal": True,

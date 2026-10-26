@@ -1,5 +1,5 @@
 """An epidemic year cuts each playing seat's staff by the working-age share the disease model killed, a quiet year takes
-nothing (`DiseasePortMixin.epidemic_hits_seats`), and a node with neither revenue nor upkeep is knowledge, not a venture
+nothing (the disease module's `hit_seats`), and a node with neither revenue nor upkeep is knowledge, not a venture
 (`CapabilityMixin.is_venture`). Each rule is called on a stand-in carrying only what it reads."""
 QUICK_TOPIC = True
 
@@ -7,52 +7,46 @@ import contextlib
 import types
 import unittest
 
-from sim.engine.disease_port import DiseasePortMixin
+from sim.disease.api import HitSeatsWithEpidemic
+from sim.disease.module import Disease
 from sim.engine.projects_capability import CapabilityMixin
-from sim.tests import event_stand_in
+from sim.hazards.api import LoseCapital
+from sim.reporting.api import RecordEvent
+from sim.tests import module_harness
+from sim.workforce.api import ScaleDeputies, SurviveStaff
 
 
-class _Seat(DiseasePortMixin):
-    """The members `epidemic_hits_seats` reads from the game, recording the survival it is told to apply."""
-    send = event_stand_in.send
-    PLAGUE_CASH_LOSS_SHARE = 0.0
+@contextlib.contextmanager
+def _act_as(seat_id):
+    yield
 
-    def __init__(self, working_age):
-        self.population = types.SimpleNamespace(working_age=working_age)
-        self.state = types.SimpleNamespace(household=types.SimpleNamespace(
-            scholars=5000.0, artisans=5000.0, employees={}, directors_extra=2.0, log=[]))
-        self.labour = types.SimpleNamespace(staff_snapshot=lambda: {}, log_staff_reduction=lambda name, before: None)
-        self.survival_applied = []
 
-    def playing_seats(self):
-        return ["founder"]
-
-    @contextlib.contextmanager
-    def act_as(self, seat_id):
-        yield
-
-    def apply_staff_survival(self, survival):
-        self.survival_applied.append(survival)
-
-    def lose_capital(self, amount, reason):
-        return 0.0
+def _module(working_age):
+    """The disease module over one seat of 10000 people, its views answered by plain values; it loses no cash."""
+    return module_harness.build(Disease, views={
+        "working_age": working_age, "seat_list": {"playing": ["founder"]}, "legacy_act_as": _act_as,
+        "staff": {"scholars": 5000.0, "artisans": 5000.0, "employees": {}}, "staff_snapshot": {}},
+        answers={LoseCapital: 0.0})
 
 
 class EpidemicHitsSeatsTest(unittest.TestCase):
     def test_an_epidemic_year_applies_the_survival_of_the_working_age_share_killed(self):
-        seat = _Seat(working_age=7500.0)
-        share = seat.epidemic_hits_seats({"working_age": 2500.0}, 100)
+        module = _module(7500.0)
+        share = module.hit_seats(HitSeatsWithEpidemic({"working_age": 2500.0}, 100))
         self.assertAlmostEqual(share, 0.25, places=12)
-        self.assertEqual(len(seat.survival_applied), 1)
-        self.assertAlmostEqual(seat.survival_applied[0], 0.75, places=12)
-        self.assertAlmostEqual(seat.state.household.directors_extra, 2.0 * 0.75, places=12)
+        sent = module_harness.sent(module)
+        survival = [command for command in sent if isinstance(command, SurviveStaff)]
+        self.assertEqual(len(survival), 1)
+        self.assertAlmostEqual(survival[0].survival_share, 0.75, places=12)
+        deputies = [command for command in sent if isinstance(command, ScaleDeputies)]
+        self.assertAlmostEqual(deputies[0].share, 0.75, places=12)
+        events = [command for command in sent if isinstance(command, RecordEvent)]
+        self.assertEqual((len(events), events[0].kind, events[0].facts["took_nothing"]), (1, "hazard_hit", False))
 
     def test_a_quiet_year_takes_nothing(self):
-        seat = _Seat(working_age=7500.0)
-        self.assertEqual(seat.epidemic_hits_seats({}, 100), 0.0)
-        self.assertEqual(seat.survival_applied, [])
-        self.assertEqual(seat.state.household.directors_extra, 2.0)
-        self.assertEqual(seat.state.household.log, [])
+        module = _module(7500.0)
+        self.assertEqual(module.hit_seats(HitSeatsWithEpidemic({}, 100)), 0.0)
+        self.assertEqual(module_harness.sent(module), [])
 
 
 class KnowledgeIsNotAVentureTest(unittest.TestCase):

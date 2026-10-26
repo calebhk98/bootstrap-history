@@ -5,22 +5,22 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.engine import eminence_rules
-from sim.engine.society_state_pressure import StatePressureMixin as Pressure
+from sim.polity import eminence_rules
+from sim.polity import constants
 
 DANGER = 30.0
 FLOOR = 20.0
 YEAR = 250
-WAIT = Pressure.WITHDRAW_EVERY
-MIN_FRACTION = Pressure.WITHDRAW_MIN_EMINENCE_FRACTION
-RETENTION = Pressure.WITHDRAW_REPUTATION_RETENTION, Pressure.WITHDRAW_EMINENCE_RETENTION
+WAIT = constants.WITHDRAW_EVERY
+MIN_FRACTION = constants.WITHDRAW_MIN_EMINENCE_FRACTION
+RETENTION = constants.WITHDRAW_REPUTATION_RETENTION, constants.WITHDRAW_EMINENCE_RETENTION
 
 
 def hazard(familiarity=0.0, reputation=98.0, capital=5.0e6, effect_factor=lambda value: value):
     return eminence_rules.yearly_hazard(
-        reputation, capital, familiarity, Pressure.EMINENCE_DANGER_WEIGHT_DEFAULT, Pressure.EMINENCE_REPUTATION_SCALE,
-        1.0e6, Pressure.EMINENCE_HAZARD_BASE_SCALE, Pressure.EMINENCE_HAZARD_REPUTATION_SHARE,
-        Pressure.EMINENCE_HAZARD_WEALTH_SHARE, Pressure.EMINENCE_FAMILIARITY_RELIEF, effect_factor)
+        reputation, capital, familiarity, constants.EMINENCE_DANGER_WEIGHT_DEFAULT, constants.EMINENCE_REPUTATION_SCALE,
+        1.0e6, constants.EMINENCE_HAZARD_BASE_SCALE, constants.EMINENCE_HAZARD_REPUTATION_SHARE,
+        constants.EMINENCE_HAZARD_WEALTH_SHARE, constants.EMINENCE_FAMILIARITY_RELIEF, effect_factor)
 
 
 def refusal(alive=True, last=None, eminence=39.0, reputation=98.0):
@@ -51,15 +51,15 @@ class HazardShape(unittest.TestCase):
 
 class ChanceOfRuin(unittest.TestCase):
     def test_nothing_below_the_danger_line_and_rising_above_it(self):
-        scale = Pressure.EMINENCE_HAZARD_SCALE
+        scale = constants.EMINENCE_HAZARD_SCALE
         self.assertEqual(eminence_rules.chance_of_ruin(DANGER - 1.0, DANGER, scale), 0.0)
         self.assertAlmostEqual(eminence_rules.chance_of_ruin(DANGER + 9.0, DANGER, scale), 9.0 / scale)
 
     def test_the_outcomes_a_ruin_can_take_account_for_all_of_it_and_the_run_ends_in_a_part(self):
-        shares = (Pressure.EMINENCE_OUTCOME_CONFISCATION_SHARE, Pressure.EMINENCE_OUTCOME_PATRON_LOST_SHARE,
-                  Pressure.EMINENCE_OUTCOME_RUN_ENDS_SHARE)
+        shares = (constants.EMINENCE_OUTCOME_CONFISCATION_SHARE, constants.EMINENCE_OUTCOME_PATRON_LOST_SHARE,
+                  constants.EMINENCE_OUTCOME_RUN_ENDS_SHARE)
         self.assertAlmostEqual(sum(shares), 1.0)
-        self.assertLess(Pressure.EMINENCE_OUTCOME_RUN_ENDS_SHARE, 1.0)
+        self.assertLess(constants.EMINENCE_OUTCOME_RUN_ENDS_SHARE, 1.0)
 
 
 class WithdrawalRefusal(unittest.TestCase):

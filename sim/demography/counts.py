@@ -31,6 +31,15 @@ class Counts:
         """The nation's people in the three age bands (`total`, `adult_equivalents`, `nutrition_ratio(food)`)."""
         return self._bands()
 
+    def people_by_band(self):
+        """{band: people} of the nation's three age bands."""
+        people = self._bands()
+        return {band: float(getattr(people, band)) for band in ("children", "working_age", "elderly")}
+
+    def nutrition_ratio(self, food_kcal_per_day):
+        """How far the food (kcal per day) meets what the nation's people need: 1.0 is exactly enough."""
+        return self._bands().nutrition_ratio(food_kcal_per_day)
+
     def population_total(self):
         return self._bands().total
 

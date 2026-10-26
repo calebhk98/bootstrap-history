@@ -2,7 +2,7 @@
 
 from .command_registry import command
 from .economy import (_agent_values)
-from sim.engine.state_demand import set_household_stance
+from sim.polity.api import AnswerStateDemands
 
 
 @command("risk", group="society", aliases=("hazards", "risks"),
@@ -50,12 +50,12 @@ def _cmd_groups(sim, nodes, cmd, ended):
 def _cmd_answer(sim, nodes, cmd, ended):
     what = cmd.get("what") or cmd.get("id")
     if what is None:
-        return {"ok": True, "stance": sim.state.household.demand_stance}
+        return {"ok": True, "stance": sim.view("standing")()["demand_stance"]}
     try:
-        note = set_household_stance(sim, str(what).strip().lower(), float(cmd.get("service") or 0.0))
+        note = sim.send(AnswerStateDemands(str(what).strip().lower(), float(cmd.get("service") or 0.0)))
     except (TypeError, ValueError) as reason:
         return {"ok": False, "error": str(reason)}
-    return {"ok": True, "stance": sim.state.household.demand_stance, "note": note}
+    return {"ok": True, "stance": sim.view("standing")()["demand_stance"], "note": note}
 
 
 @command("values", shape="bare", group="society", aliases=("beliefs", "traits", "society"),

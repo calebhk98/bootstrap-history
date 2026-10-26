@@ -19,7 +19,6 @@ check("the root holdings, governance and seat progress are the acting seat's obj
       and state.seat_progress is first.seat_progress, None)
 
 state.holdings.market_pressure = 12.0
-state.governance.gov = 0.25
 state.seat_progress.dashboard_history_years = 150
 state.economy.market_book["grain"] = {"price_ratio": 1.0}
 
@@ -27,13 +26,13 @@ second = SeatState(household=HouseholdState(capital=5.0), projects=ProjectsState
 state.seats["second"] = second
 bind_seat(state, "second")
 check("a second seat starts with empty holdings, governance and progress",
-      state.holdings.market_pressure == 0.0 and state.governance.gov == 0.0
+      state.holdings.market_pressure == 0.0
       and state.seat_progress.dashboard_history_years is None, None)
 check("the world economy is the same object for both seats", state.economy.market_book.get("grain") is not None, None)
 state.holdings.market_pressure = 3.0
 bind_seat(state, FIRST_SEAT_ID)
 check("the first seat's holdings are untouched by the second's",
-      state.holdings.market_pressure == 12.0 and state.governance.gov == 0.25 and state.seat_progress.dashboard_history_years == 150, None)
+      state.holdings.market_pressure == 12.0 and state.seat_progress.dashboard_history_years == 150, None)
 
 blob = json.loads(json.dumps(serialize_state(state)))
 check("the save holds holdings, governance and progress inside each seat and not at the root",
@@ -45,7 +44,7 @@ check("the world economy section no longer carries holder-owned fields",
 loaded = deserialize_state(blob, SimulationState)
 check("a round trip keeps each seat's own holdings",
       loaded.seats[FIRST_SEAT_ID].holdings.market_pressure == 12.0 and loaded.seats["second"].holdings.market_pressure == 3.0
-      and loaded.seats[FIRST_SEAT_ID].governance.gov == 0.25 and loaded.seats["second"].seat_progress.dashboard_history_years is None,
+      and loaded.seats["second"].seat_progress.dashboard_history_years is None,
       None)
 check("a load binds the root holdings to the acting seat",
       loaded.holdings is loaded.seats[FIRST_SEAT_ID].holdings and loaded.governance is loaded.seats[FIRST_SEAT_ID].governance, None)

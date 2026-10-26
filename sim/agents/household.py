@@ -37,22 +37,13 @@ _SUBSYSTEM_MAP: Dict[str, str] = {
 	"cash_flow": "household",
 	"cash_mark": "household",
 	"cash_periods": "household",
-	"reputation": "household",
-	"scandal": "household",
-	"scandal_last_year": "household",
-	"eminence": "household",
-	"familiarity": "household",
-	"protection": "household",
-	"bribes_ytd": "household",
 	"slaves": "household",
 	"freedmen": "household",
 	"manumitted_total": "household",
-	"atrocity": "household",
 	"bondage_years_left": "household",
 	"bondage_debt": "household",
 	"credit_frozen_until": "household",
 	"insolvent_years": "household",
-	"last_withdrawal": "household",
 	"last_settlement": "household",
 	"interest_arrears": "household",
 	"arrears_years": "household",
@@ -85,11 +76,6 @@ _SUBSYSTEM_MAP: Dict[str, str] = {
 	"_said_deputies": "household",
 	"_said_near_limit": "household",
 	"_said_autoopen": "household",
-	"_said_eminence": "household",
-	"_said_requisition": "household",
-	"_said_notice_approach": "household",
-	"last_military_demand": "household",
-	"_said_confiscation_band": "household",
 
 	# ProjectsState
 	"active": "projects",
@@ -114,9 +100,6 @@ _SUBSYSTEM_MAP: Dict[str, str] = {
 	"society_labour_hours": "economy",
 	"_dashboard_history": "holdings",
 
-	# GovernanceState
-	"gov": "governance",
-
 	# FounderState
 	"director_hours_spent_founder": "founder",
 	"living_cost_paid": "founder",
@@ -126,7 +109,6 @@ _SUBSYSTEM_MAP: Dict[str, str] = {
 
 	# ScenarioState
 	"year": "scenario",
-	"_said_scandal": "seat_progress",
 	"_said_parallelism": "seat_progress",
 	"_said_command_index": "seat_progress",
 	"_said_explanations": "seat_progress",
@@ -247,20 +229,25 @@ class Household(FounderReview, FounderBorrowing, Actor):
 	def debit(self, amount: float, purpose: Any) -> None:
 		self._state.household.debit(amount, purpose)
 
+	def _polity(self) -> Any:
+		"""The acting seat's polity slot: the founder's answers to the state's demands live in it (a debt: the founder's
+		household is not yet an actor the polity module serves through its views)."""
+		return self._state.seats[self._state.acting_seat].modules["polity"]
+
 	def service_worth(self) -> float:
-		return float(self._state.household.service_offer)
+		return float(self._polity().service_offer)
 
 	def concealed_wealth(self) -> float:
-		return float(self._state.household.concealed)
+		return float(self._polity().concealed)
 
 	def defiance(self) -> float:
-		return float(self._state.household.defiance)
+		return float(self._polity().defiance)
 
 	def set_concealed_wealth(self, amount: float) -> None:
-		self._state.household.concealed = max(0.0, amount)
+		self._polity().concealed = max(0.0, amount)
 
 	def set_defiance(self, level: float) -> None:
-		self._state.household.defiance = level
+		self._polity().defiance = level
 
 	@property
 	def workforce(self) -> Any:

@@ -4,7 +4,6 @@ Each view carries the name its owner will publish (docs/architecture/catalogue),
 code did, and is never cached. Each command applies what the old code did inline. The `legacy_*` views are raw
 state the module still mutates in place; they go when that state moves."""
 from sim.ledger.api import NoteSpend
-from sim.polity.api import RecordBribe
 from sim.assembly.api import KEYED, QUOTE
 from sim.projects.needed_commands import (ClearMothball, CompleteProject)
 
@@ -127,28 +126,6 @@ def purchase_remedies_text(sim):
 
 # ---- polity -------------------------------------------------------------------------------------------
 
-@bridge_view("standing", seat_scoped=True)
-def standing(sim):
-    household = sim.state.household
-    return {"protection": household.protection, "scandal": household.scandal, "bribes_year_to_date": household.bribes_ytd}
-
-
-@bridge_view("state_interest", kind=QUOTE)
-def state_interest(sim, node):
-    return sim.state_interest(node)
-
-
-@bridge_view("value_weight", kind=KEYED)
-def value_weight(sim, key):
-    return sim.value_weights[key]
-
-
-@bridge_view("start_gate_group_prohibition", kind=QUOTE)
-def start_gate_group_prohibition(sim, node_id, node, ignore_trade, memo, why):
-    from .interest_groups import check_group_prohibition
-    return check_group_prohibition(sim, node_id, node, ignore_trade, memo, why)
-
-
 # ---- workforce ------------------------------------------------------------------------------------------------------
 
 @bridge_view("hours_available", kind=KEYED, seat_scoped=True)
@@ -245,14 +222,6 @@ def research_world(sim):
 @bridge_command(NoteSpend)
 def note_spend(sim, command):
     sim.state.household.total_spend += command.amount
-
-
-@bridge_command(RecordBribe)
-def change_standing(sim, command):
-    household = sim.state.household
-    household.bribes_ytd = command.bribes_year_to_date
-    household.scandal = command.scandal
-    sim.update_protection()
 
 
 @bridge_command(ClearMothball)

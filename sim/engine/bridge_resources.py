@@ -60,18 +60,6 @@ def afford_means(sim):
 	return purchase_rule.afford_means()
 
 
-@bridge_view("inspection_reach")
-def inspection_reach(sim):
-	"""The share of the home people whose claims and workings its employed inspectors check."""
-	return sim.inspection_reach()
-
-
-@bridge_view("forest_reach")
-def forest_reach(sim):
-	"""The share of the home people whose woodland tenure its employed foresters keep."""
-	return sim.forest_reach()
-
-
 @bridge_view("automatic_policy", kind=QUOTE, seat_scoped=True)
 def automatic_policy(sim, name):
 	"""Whether the automatic policy `name` runs: what the acting seat set, else on for an automatic game and off for a manual one."""

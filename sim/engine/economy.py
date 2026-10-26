@@ -134,11 +134,11 @@ class EconomyMixin(GoodsMixin, MaterialSupplyMixin,
         standing = self.effect_sum("standing", standing)
         # Scandal is the one thing that eats into standing rather than sitting
         # alongside it: being notorious is not the same as being unknown.
-        return max(0.0, standing - STANDING_SCANDAL_PENALTY_PER_POINT * self.state.household.scandal)
+        return max(0.0, standing - STANDING_SCANDAL_PENALTY_PER_POINT * self.scandal)
 
     def rep_factor(self):
         """How much easier reputation makes everything. 1.0 at zero reputation."""
-        return 1.0 + self.state.household.reputation / REPUTATION_EASE_SCALE
+        return 1.0 + self.reputation / REPUTATION_EASE_SCALE
 
     def cost_money_factor(self):
         """What a denarius of QUOTED cost means, for spending purposes.

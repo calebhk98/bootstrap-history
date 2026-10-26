@@ -11,7 +11,7 @@ has closed (a game just opened, or a game whose economy never ran) nothing is re
 from typing import Dict
 
 from sim.actors.api import RecordMigrantContact
-from sim.disease.api import RunEpidemicYear
+from sim.disease.api import HitSeatsWithEpidemic, RunEpidemicYear
 from sim.geography.api import settlement
 from sim.labour.api import migrant_pairs, totals_of_pairs
 from sim.world import regional_population
@@ -31,7 +31,7 @@ class Regions:
         """{tile: people} once the regions cover the tiles held, else None (the caller spreads the nation by share)."""
         return settlement.people_by_tile(self.world.regions, self._bands().total, self.needs.home_tiles_held())
 
-    def regional_people(self):
+    def legacy_regions_of_people(self):
         """{tile: [children, working_age, elderly]} the regions the module tracks (empty until they are first kept)."""
         return self.world.regions
 
@@ -43,7 +43,7 @@ class Regions:
         """The nation's flows of the last yearly step (births, deaths, nutrition ratio), None before the first."""
         return self._last_demographic_step
 
-    def regional_flows(self):
+    def regional_flows_last_year(self):
         """{tile: flows} of the last yearly step by region, None before the first."""
         return self._last_regional_step
 
@@ -66,11 +66,13 @@ class Regions:
         self.needs.send(RecordMigrantContact(tuple(pairs)))
         leaving, arriving = totals_of_pairs(pairs)
         food = sum(kcal_by_region.values())
-        epidemic = self.needs.send(RunEpidemicYear(food, year))
+        deaths = self.needs.externality_deaths(self.needs.send(RunEpidemicYear(food, year)), year)
+        self.needs.send(HitSeatsWithEpidemic(deaths, year))
+        burden, endemic_death_rates = self.needs.disease_burden(), self.needs.endemic_death_rates()
         ratio = self._bands().nutrition_ratio(food)
         flows = regional_population.step_regions(
-            regions, kcal_by_region, epidemic["burden"], epidemic["deaths"], epidemic["endemic_death_rates"], leaving, arriving,
-            self.needs.town_mortality_premium_by_tile(), epidemic_deaths_by_tile=epidemic["deaths_by_tile"] or None)
+            regions, kcal_by_region, burden, deaths, endemic_death_rates, leaving, arriving,
+            self.needs.town_mortality_premium_by_tile(), epidemic_deaths_by_tile=self.needs.epidemic_deaths_by_tile() or None)
         self._store(*(sum(getattr(region, band) for region in regions.values()) for band in regional_population.BANDS))
         self.world.regions = regional_population.to_stored(regions)
         self._last_regional_step = flows
