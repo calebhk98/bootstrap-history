@@ -44,6 +44,15 @@ class Relocate(unittest.TestCase):
 
 
 class DropIgnored(unittest.TestCase):
+    def test_a_wildcard_segment_matches_any_seat_and_is_carried_into_the_base_path(self):
+        leaves = {"/seats/second/modules/ledger/capital": "5"}
+        moved = equiv_core.relocate(leaves, [("/seats/*/modules/ledger/capital", "/seats/*/household/capital")])
+        self.assertEqual(moved, {"/seats/second/household/capital": "5"})
+
+    def test_a_wildcard_ignored_prefix_drops_every_seats_slot(self):
+        leaves = {"/seats/founder/modules/x": "1", "/seats/second/modules": "{}", "/seats/second/goal": "g"}
+        self.assertEqual(equiv_core.drop_ignored(leaves, [("/seats/*/modules", "new")]), {"/seats/second/goal": "g"})
+
     def test_paths_under_an_ignored_prefix_are_dropped_and_siblings_kept(self):
         leaves = {"/modules/x": "1", "/modules": "{}", "/modules_kept": "2", "/seats/founder/modules/y": "3"}
         kept = equiv_core.drop_ignored(leaves, [("/modules", "new section"), ("/seats/founder/modules", "new")])

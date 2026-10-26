@@ -33,19 +33,47 @@ def flatten(node, path="", leaves=None):
     return leaves
 
 
+WILDCARD = "*"   # in a prefix, matches any one path segment (a seat id, an actor id)
+
+
+def _match(path, prefix):
+    """The segments `*` matched and the rest of the path, or None when `path` is not under `prefix`."""
+    if WILDCARD not in prefix:
+        if path == prefix or path.startswith(prefix + SEPARATOR):
+            return [], path[len(prefix):]
+        return None
+    path_parts, prefix_parts = path.split(SEPARATOR), prefix.split(SEPARATOR)
+    if len(path_parts) < len(prefix_parts):
+        return None
+    captured = []
+    for part, wanted in zip(path_parts, prefix_parts):
+        if wanted == WILDCARD:
+            captured.append(part)
+        elif part != wanted:
+            return None
+    rest = path_parts[len(prefix_parts):]
+    return captured, (SEPARATOR + SEPARATOR.join(rest)) if rest else ""
+
+
 def under(path, prefix):
-    return path == prefix or path.startswith(prefix + SEPARATOR)
+    return _match(path, prefix) is not None
 
 
 def relocate(leaves, relocations):
-    """Leaves with every path rewritten by each (old_prefix, new_prefix) in order."""
+    """Leaves with every path rewritten by each (current_prefix, base_prefix) in order; a `*` in the current prefix
+    matches one segment and fills the `*` in the same position of the base prefix."""
     if not relocations:
         return leaves
     moved = {}
     for path, value in leaves.items():
-        for old_prefix, new_prefix in relocations:
-            if under(path, old_prefix):
-                path = new_prefix + path[len(old_prefix):]
+        for current_prefix, base_prefix in relocations:
+            matched = _match(path, current_prefix)
+            if matched is not None:
+                captured, rest = matched
+                target = base_prefix
+                for segment in captured:
+                    target = target.replace(WILDCARD, segment, 1)
+                path = target + rest
         moved[path] = value
     return moved
 
