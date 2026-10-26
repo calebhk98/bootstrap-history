@@ -57,6 +57,17 @@ class PayEdgeFrom(Command):
 	purpose: Any
 
 
+@dataclass(frozen=True)
+class PayActor(Command):
+	"""An actor of the cast (named by its id) pays another party: an actor of the cast, or a seat (named by its seat id,
+	paid as that seat's party). A payee that is the government of a country the cast does not hold yet is opened.
+	Applied by the engine bridge (the cast and the seats' parties are not the ledger's state yet)."""
+	payer: str
+	payee: str
+	amount: float
+	purpose: Any
+
+
 # where TakeGoods takes from
 STORE_ACTOR = "actor store"       # a material in an actor's own stores (`actor` names it)
 STORE_STOCK = "stock ledger"      # a commodity in the acting seat's tonnes ledger
