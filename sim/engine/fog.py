@@ -86,7 +86,7 @@ class FogMixin:
     # assignments only grow what is already known.
 
     # Type annotations only (no runtime binding); provided by Sim and sibling
-    # mixins (core.py, projects_starting.py, society_hazards.py,
+    # mixins (core.py, forward_projects.py, society_hazards.py,
     # projects_capability.py). See geography.py for the same pattern.
     household: Household
     state: Any

@@ -9,7 +9,7 @@ hours and how much of a hired trade's time it draws; _retry_calendar_retain, _co
 how likely THIS attempt is to fail, given how many times it already has; and
 calendar_floor/expected_calendar_years answer how many years, at best and on
 average across retries, an attempt of this kind takes. None of this decides
-whether a project may start (that is projects_starting.py's start_reason)
+whether a project may start (that is the projects module's start_check)
 or what happens once it succeeds or fails (that is projects_completion.py's
 _complete); it is what happens to it in between.
 
