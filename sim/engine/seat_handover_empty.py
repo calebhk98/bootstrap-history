@@ -1,8 +1,9 @@
-"""What a replacement seat already holds that a handover would overwrite.
+"""What a replacement seat already holds in the engine's state that a handover would overwrite.
 
 A handover gives the replacement the leaver's household, works, holdings and institutions as they stand. Cash,
-debts and known techniques of the replacement merge with the leaver's (see seat_handover.py); anything else it holds
-would be lost, so a replacement that holds some is refused.
+debts and known techniques of the replacement merge with the leaver's (sim/seats/handover_rules.py); anything else it holds
+would be lost, so a replacement that holds some is refused. What the seats module keeps (disclosures, dealings, the
+goal record) it adds itself.
 """
 import dataclasses
 from typing import List
@@ -32,12 +33,12 @@ def holdings_in_use(holdings) -> bool:
 	return False
 
 
-def holds_that_would_be_lost(seat, has_disclosures: bool) -> List[str]:
-	"""What `seat` holds beyond cash, debts and known techniques, named for the player; empty for an empty seat.
-	`has_disclosures` says whether it has chosen what to do with an invention."""
+def holds_that_would_be_lost(seat) -> List[str]:
+	"""What `seat` holds in the engine's state beyond cash, debts and known techniques, named for the player; empty for
+	an empty seat."""
 	household, projects = seat.household, seat.projects
 	found = []
-	if projects.active or len(projects.business.entry_keys()) or has_disclosures:
+	if projects.active or len(projects.business.entry_keys()):
 		found.append("works")
 	if any(getattr(household, name, 0) for name in STAFF_FIELDS) or household.employees:
 		found.append("staff")

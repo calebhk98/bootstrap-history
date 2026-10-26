@@ -7,7 +7,7 @@ from types import SimpleNamespace
 
 from sim.agents.licence import collect_patent_royalty, royalty_due
 from sim.engine.agents_port_disclosure import DisclosureView
-from sim.engine.seat_royalty import seat_royalties_due, seat_royalties_paid
+from sim.seats.api import seat_royalties_due, seat_royalties_paid
 from sim.engine.state import ProjectsState
 from sim.tests.harness import check
 

@@ -152,7 +152,6 @@ _SUBSYSTEM_MAP: Dict[str, str] = {
 
 	# ScenarioState
 	"year": "scenario",
-	"goal_year": "seat_progress",
 	"_said_debasement": "scenario",
 	"_said_output": "scenario",
 	"_said_scandal": "seat_progress",

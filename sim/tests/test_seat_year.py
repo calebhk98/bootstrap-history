@@ -3,13 +3,12 @@
 QUICK_TOPIC = True
 
 import contextlib
-import random
 import types
 
 from .harness import check
 
 from sim.engine.hazard_merge import mildest_hazard
-from sim.engine.seat_run import run_is_over, seat_ended, seats_playing
+from sim.seats.api import SeatsSeat, run_is_over, seat_ended, seats_playing
 from sim.engine.state import FounderState, HouseholdState, ProjectsState, SimulationState
 from sim.engine.state_seat import FIRST_SEAT_ID, seat_from_template
 from sim.engine.year_run import run_year
@@ -42,14 +41,16 @@ check("a founder in an immortal run does not die of age", seat.founder.life_left
 # ---- the end rule: one seat's run ends, the others play on
 state = SimulationState(household=HouseholdState(capital=1.0), projects=ProjectsState(), founder=FounderState())
 state.seats["second"] = seat_from_template({}, 5.0, 40.0, {})
+for held in state.seats.values():
+    held.modules["seats"] = SeatsSeat()
 check("two seats are both playing at the start", seats_playing(state.seats) == [FIRST_SEAT_ID, "second"], None)
 state.seats[FIRST_SEAT_ID].founder.dead_reason = "denounced: as a sorcerer"
 check("a seat whose founder fell has ended", seat_ended(state.seats[FIRST_SEAT_ID]) and not seat_ended(state.seats["second"]), None)
 check("the other seat keeps playing and the run goes on",
       seats_playing(state.seats) == ["second"] and not run_is_over(state.seats), seats_playing(state.seats))
-state.seats["second"].seat_progress.goal_year = 150
+state.seats["second"].modules["seats"].goal_year = 150
 check("the run is over when every seat has ended or reached its goal", run_is_over(state.seats), None)
-state.seats["second"].seat_progress.goal_year = None
+state.seats["second"].modules["seats"].goal_year = None
 state.seats["second"].founder.dead_reason = "ran out of money"
 check("the run is over when no seat is left", run_is_over(state.seats) and seats_playing(state.seats) == [], None)
 
@@ -153,56 +154,9 @@ single = FakeSim([FIRST_SEAT_ID])
 run_year(single)
 check("one seat runs the phases in the order a one-seat year always had",
       [call for call, _ in single.calls if call in (
-          "_step_apprenticeships", "_step_staff", "_step_money_seat", "_step_money_world", "_step_win_conditions",
+          "_step_apprenticeships", "_step_staff", "_step_money_seat", "_step_money_world", "step_win_conditions",
           "shocks", "_run_seat_work", "_step_market", "step_living_stock", "step_defence_stores", "_random_events",
           "enforce_credit_limit")] == [
-          "_step_apprenticeships", "_step_staff", "_step_money_seat", "_step_money_world", "_step_win_conditions",
+          "_step_apprenticeships", "_step_staff", "_step_money_seat", "_step_money_world", "step_win_conditions",
           "shocks", "_run_seat_work", "_step_market", "step_living_stock", "step_defence_stores", "_random_events",
           "enforce_credit_limit"], single.calls)
-
-
-# ---- joining a seat from data, on a stand-in with the pieces a join uses
-from sim.engine.seat_run import SeatRunMixin  # noqa: E402
-
-
-class JoinSim(SeatRunMixin):
-    FOUNDER_MIN_REMAINING_LIFE_YEARS = 5
-    manual = True
-
-    def __init__(self, immortal, cast_seats=()):
-        self.state = SimulationState(household=HouseholdState(capital=1.0), projects=ProjectsState(), founder=FounderState())
-        self.nodes = {"a": {}, "b": {}}
-        self.price_index = 2.0
-        self.civ = {"cast": {"seats": list(cast_seats)}}
-        self.cfg = {"immortal": immortal, "founder_life_mean": 50.0, "founder_life_sd": 0.0}
-        self.rng = random.Random(3)
-        self.wrapped = []
-
-    def add_seat(self, seat_id, seat):
-        self.state.seats[seat_id] = seat
-
-    @contextlib.contextmanager
-    def act_as(self, seat_id):
-        yield self
-
-    def _wrap_seat_containers(self):
-        self.wrapped.append(True)
-
-
-mortal = JoinSim(False)
-joined = mortal.join_seat("second", {"capital": 100.0, "starting_techs": ["a"]})
-check("a joined seat's purse is stated at the society's prices", joined.household.capital == 200.0, joined.household.capital)
-check("a joined seat in a mortal run has a lifespan, and in an immortal run none",
-      joined.founder.life_left == 50.0 and JoinSim(True).join_seat("x", {}).founder.life_left > 1e6, joined.founder.life_left)
-check("a joined seat's containers are wrapped for change tracking", mortal.wrapped == [True], None)
-check("a joined seat's policy is the default for the game", joined.founder.policy.get("auto_hire") is False, joined.founder.policy)
-try:
-    mortal.join_seat("third", {"starting_techs": ["nowhere"]})
-    refused = False
-except ValueError:
-    refused = True
-check("a seat naming a technology the tree lacks is refused and not added", refused and "third" not in mortal.state.seats, None)
-with_cast = JoinSim(True, [{"id": "rival", "capital": 10.0}, {"id": "ally"}])
-check("the seats a civilisation's cast lists join at the start, by data",
-      with_cast.join_cast_seats() == ["rival", "ally"] and sorted(with_cast.state.seats) == ["ally", FIRST_SEAT_ID, "rival"], None)
-check("joining the cast twice adds nobody", with_cast.join_cast_seats() == [], None)

@@ -1,12 +1,12 @@
 """Two or three seats on the real root state, with the alias rebinding a handover needs (shared by the handover tests)."""
 from sim.engine import game_assembly
 from sim.engine.mod_stores import StoreBook
-from sim.engine.seat_handover import SeatHandoverMixin
 from sim.engine.state import FounderState, HouseholdState, ProjectsState, SimulationState
 from sim.engine.state_seat import FIRST_SEAT_ID, bind_seat, seat_from_template
+from sim.seats.api import HandOverSeat
 
 
-class Game(SeatHandoverMixin):
+class Game:
     """Two or three seats on the real root state, with the alias rebinding the handover needs."""
 
     def __init__(self, seat_ids):
@@ -29,6 +29,9 @@ class Game(SeatHandoverMixin):
 
     def send(self, command):
         return self.assembly.handlers[type(command)](command)
+
+    def hand_over_seat(self, from_id, to_id):
+        return self.send(HandOverSeat(from_id, to_id))
 
     def _switch_seat(self, seat_id):
         bind_seat(self.state, seat_id)

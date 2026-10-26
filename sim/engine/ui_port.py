@@ -179,7 +179,7 @@ def set_goal_closure(sim, closure_set):
 
 
 def goal_years(sim):
-    return dict(sim.state.seat_progress.goal_years)
+    return dict(sim.view("goal")()["years"])
 
 
 def set_goal(sim, node_id):

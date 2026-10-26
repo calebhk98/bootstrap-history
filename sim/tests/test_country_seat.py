@@ -7,8 +7,8 @@ import types
 
 from .harness import check
 
-from sim.engine.seat_handover import handover_refusal, move_seat_fields
-from sim.engine.seat_run import run_is_over, seats_playing
+from sim.engine.seat_move import move_seat_fields
+from sim.seats.api import handover_refusal, run_is_over, seats_playing
 from sim.engine.state import SimulationState, deserialize_state, serialize_state
 from sim.engine.state_seat import COUNTRY_SEAT, FIRST_SEAT_ID, seat_from_template
 from sim.refusal import cause_of
@@ -132,9 +132,9 @@ check("a run is over when every household seat ended, whatever a country seat do
 
 # ---- handover
 check("a country seat cannot be handed to a household seat",
-      cause_of(handover_refusal(seats, "senate", FIRST_SEAT_ID, False)) == "replacement_wrong_kind", None)
+      cause_of(handover_refusal(seats, "senate", FIRST_SEAT_ID, [])) == "replacement_wrong_kind", None)
 seats_two = {"senate": country_seat(), "regent": country_seat(holder=None)}
-check("a country seat can be handed to an empty country seat", handover_refusal(seats_two, "senate", "regent", False) is None, None)
+check("a country seat can be handed to an empty country seat", handover_refusal(seats_two, "senate", "regent", []) is None, None)
 moved = move_seat_fields(seats_two, "senate", "regent")
 check("a country seat is handed over with its kind and holder", moved["from"] == "senate" and moved["to"] == "regent"
       and "senate" not in seats_two and seats_two["regent"].kind == "country" and seats_two["regent"].holder == GOVERNMENT, moved)

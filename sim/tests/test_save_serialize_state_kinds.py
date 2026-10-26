@@ -100,23 +100,20 @@ check("serialize_state: the founder's business is a nested record", blob["busine
 check("serialize_state: nested dicts of floats and sets of exclusions", blob["tenure"] == {"mason": {"arch": 4.5}} and blob["excluded"] == {"__set__": ["category:war"]}, None)
 check("serialize_state: the project fields come in declaration order", list(blob) == saved_field_names(ProjectsState))
 
-# ---- mine stock and tranches, held goods, offers
+# ---- mine stock and tranches, held goods
 holdings = HoldingsState(
 	mines=[{"id": "m1", "ore": "iron", "capex": 500.0, "open": None}], mine_pending={"m2": 2.0}, mine_ready={"m1": 104},
 	mine_cost_paid=500.0, mine_tranches=[["iron", 3, 2.5], ["tin", 1, 0.5]], deposits_found=[{"id": "d1", "tile": "t1"}],
 	deposit_drawn={"d1": 12.0}, shortages=collections.Counter({"charcoal": 3}), binding=None, forest_ha=120.0,
-	_material_stock_ledger={"iron": 4.0}, patents={"loom": {"granted": 1, "expires": 20, "licensees": ["firm:2"]}},
-	shares_held={"guild": 0.1}, offers=[{"id": "x#1", "from": "x", "to": "y", "give": {}, "take": {}, "expires": 9}], offer_serial=1)
+	_material_stock_ledger={"iron": 4.0})
 blob = serialize_state(holdings)
 check("serialize_state: mine stock, in the order the mines were opened, with None inside",
       blob["mines"] == [{"id": "m1", "ore": "iron", "capex": 500.0, "open": None}] and blob["mine_pending"] == {"m2": 2.0}
       and blob["mine_ready"] == {"m1": 104} and blob["mine_cost_paid"] == 500.0, None)
 check("serialize_state: mine tranches are lists in the order held", blob["mine_tranches"] == [["iron", 3, 2.5], ["tin", 1, 0.5]], blob["mine_tranches"])
 check("serialize_state: a tranche list that is None means none (never an empty list)", serialize_state(HoldingsState())["mine_tranches"] is None)
-check("serialize_state: found deposits, shortages, patents, shares and offers",
-      blob["deposits_found"] == [{"id": "d1", "tile": "t1"}] and blob["deposit_drawn"] == {"d1": 12.0} and blob["shortages"] == {"charcoal": 3}
-      and blob["patents"] == {"loom": {"granted": 1, "expires": 20, "licensees": ["firm:2"]}} and blob["shares_held"] == {"guild": 0.1}
-      and blob["offers"] == [{"id": "x#1", "from": "x", "to": "y", "give": {}, "take": {}, "expires": 9}] and blob["offer_serial"] == 1, None)
+check("serialize_state: found deposits and shortages",
+      blob["deposits_found"] == [{"id": "d1", "tile": "t1"}] and blob["deposit_drawn"] == {"d1": 12.0} and blob["shortages"] == {"charcoal": 3}, None)
 check("serialize_state: underscore-led fields that are not `_on_change` plumbing are saved", blob["_material_stock_ledger"] == {"iron": 4.0})
 
 # ---- the economy's stored record, with its held stock and late recipes

@@ -78,16 +78,13 @@ check("deserialize_state: nested floats", projects.tenure == {"mason": {"arch": 
 holdings = deserialize_state({
 	"mines": [{"id": "m1", "ore": "iron", "capex": 500.0, "open": None}], "mine_pending": {"m2": 2}, "mine_ready": {"m1": 104},
 	"mine_tranches": [["iron", 3, 2.5], ["tin", 1, 0.5]], "deposit_drawn": {"d1": 12}, "shortages": {"charcoal": "3"},
-	"patents": {"loom": {"granted": 1, "expires": 20, "licensees": ["firm:2"]}}, "shares_held": {"guild": 0.1},
-	"offers": [{"id": "x#1", "expires": 9}], "offer_serial": 1, "_material_stock_ledger": {"iron": 4.0}}, HoldingsState)
+	"_material_stock_ledger": {"iron": 4.0}}, HoldingsState)
 check("deserialize_state: mine stock keeps its entries and order, None inside", holdings.mines == [{"id": "m1", "ore": "iron", "capex": 500.0, "open": None}]
       and holdings.mine_pending == {"m2": 2.0} and holdings.mine_ready == {"m1": 104}, None)
 check("deserialize_state: mine tranches are the saved lists, in order", holdings.mine_tranches == [["iron", 3, 2.5], ["tin", 1, 0.5]], holdings.mine_tranches)
 check("deserialize_state: tranches the save holds as None stay None", deserialize_state({"mine_tranches": None}, HoldingsState).mine_tranches is None)
 check("deserialize_state: shortages are a counter of integers", type(holdings.shortages) is collections.Counter and holdings.shortages == {"charcoal": 3}, holdings.shortages)
-check("deserialize_state: patents, shares, offers and underscore-led fields",
-      holdings.patents == {"loom": {"granted": 1, "expires": 20, "licensees": ["firm:2"]}} and holdings.shares_held == {"guild": 0.1}
-      and holdings.offers == [{"id": "x#1", "expires": 9}] and holdings.offer_serial == 1 and holdings._material_stock_ledger == {"iron": 4.0}, None)
+check("deserialize_state: underscore-led fields", holdings._material_stock_ledger == {"iron": 4.0}, None)
 check("deserialize_state: a holdings blob with nothing in it is the defaults", deserialize_state({}, HoldingsState) == HoldingsState())
 
 # ---- the economy's stored record, tile-keyed stores

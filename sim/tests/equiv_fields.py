@@ -38,6 +38,13 @@ RELOCATIONS = [
     ("/modules/diffusion/literacy_said", "/scenario/_literacy_said"),
     ("/seats/*/modules/diffusion/disclosures", "/seats/*/projects/disclosures"),
     ("/seats/*/modules/knowledge/forgotten", "/seats/*/projects/forgotten"),
+    ("/seats/*/modules/seats/goal_year", "/seats/*/seat_progress/goal_year"),
+    ("/seats/*/modules/seats/goal_years", "/seats/*/seat_progress/goal_years"),
+    ("/seats/*/modules/seats/patents", "/seats/*/holdings/patents"),
+    ("/seats/*/modules/seats/shares_held", "/seats/*/holdings/shares_held"),
+    ("/seats/*/modules/seats/shares_issued", "/seats/*/holdings/shares_issued"),
+    ("/seats/*/modules/seats/offers", "/seats/*/holdings/offers"),
+    ("/seats/*/modules/seats/offer_serial", "/seats/*/holdings/offer_serial"),
 ]
 
 IGNORED = [

@@ -730,11 +730,7 @@ class ForwardingPropertiesMixin:
 
 	@property
 	def goal_year(self):
-		return getattr(self.state.seat_progress, "goal_year")
-
-	@goal_year.setter
-	def goal_year(self, value):
-		setattr(self.state.seat_progress, "goal_year", value)
+		return self.view("goal")()["year"]
 
 	@property
 	def year(self):

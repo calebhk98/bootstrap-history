@@ -1,12 +1,12 @@
 """Complaint 103: the founder deals as an actor. A seat applies for a patent, makes and answers offers (patents,
 licences with a royalty, shares) and issues shares, through the same exchange every actor uses (small fixture:
 a real household facade and seat state, no game)."""
-import contextlib
-
 from .harness import *  # noqa: F401,F403
 from sim.agents import exchange_commands, joint_stock, patent  # noqa: F401
 from sim.agents.api import ActorRecord, ActorRegistry, ActorsState, Household, HouseholdParty
-from sim.engine import seat_dealings
+from sim.seats.api import AnswerOffer, ApplyForPatent, MakeOffer, SeatsSeat
+from sim.seats.module import Seats
+from . import module_harness
 from sim.engine.agents_port_household import HouseholdPort
 from sim.engine.state_seat import FIRST_SEAT_ID
 
@@ -18,12 +18,13 @@ QUICK_TOPIC = True
 class DealWorld(FakeWorld):
     registry = None
     facade = None
+    slot = None
 
     def state_grants_patents(self, actor):
         return True
 
     def patent_entry(self, node_id):
-        holders = list(self.registry.actors.values()) + [HouseholdParty(self.facade, seat_id=FIRST_SEAT_ID)]
+        holders = list(self.registry.actors.values()) + [HouseholdParty(self.facade, seat_id=FIRST_SEAT_ID, dealings=self.slot)]
         return patent.entry_among(holders, node_id, self.year)
 
     def proof_years(self, node_id):
@@ -36,30 +37,45 @@ class DealWorld(FakeWorld):
         return 0.0
 
 
-class StubSim(seat_dealings.SeatDealingsMixin):
-    """Just what the mixin reads: the state with its seats, the registry, the year and the seat's party."""
+class Game:
+    """The facade, the registry and the seat's stored dealings, and the seats module reading them through plain views."""
 
     def __init__(self):
         self.facade = Household(starting_capital=1000.0, port=HouseholdPort())
         self.state = self.facade._state
         self.actors = ActorRegistry(ActorsState(home_country="home"))
-        self.year = 100
+        self.slot = SeatsSeat()
+        self.module = None
 
     def seat_party(self, seat_id, margins=None):
-        return HouseholdParty(self.facade, margins, seat_id)
+        return HouseholdParty(self.facade, margins, seat_id, dealings=self.slot)
 
-    @contextlib.contextmanager
-    def act_as(self, seat_id):
-        yield self
+    def build(self, world):
+        self.module = module_harness.build(
+            Seats, seat=self.slot,
+            views={"legacy_agent_world": lambda: world, "legacy_projects": self.state.projects, "seat_party_with_margins": self.seat_party,
+                   "seat_party": self.seat_party, "legacy_seats": self.state.seats, "legacy_actor_registry": self.actors, "year": 100})
+
+    def seat_patent(self, node_id):
+        return self.module.apply_for_patent(ApplyForPatent(node_id))
+
+    def seat_offer(self, to, give, take):
+        return self.module.make_offer(MakeOffer(to, give, take))
+
+    def seat_answer(self, offer_id, accept):
+        return self.module.answer_offer(AnswerOffer(offer_id, accept))
+
+    def dealings_listing(self):
+        return self.module.dealings_listing()
 
 
-sim = StubSim()
+sim = Game()
 world = DealWorld(year=100)
-world.registry, world.facade = sim.actors, sim.facade
+world.registry, world.facade, world.slot = sim.actors, sim.facade, sim.slot
 world.nodes["loom"] = make_node("loom")
 world.baseline = set()
-seat_dealings.SimWorld = lambda _sim: world
-seat = sim.state.seats[FIRST_SEAT_ID]
+sim.build(world)
+seat = sim.slot
 world.seat_parties = lambda: {FIRST_SEAT_ID: sim.seat_party(FIRST_SEAT_ID)}
 finder = exchange_commands.finder(sim.actors, world)
 
@@ -70,7 +86,7 @@ sim.facade.done.add("loom")
 
 # ---- the founder applies for a patent --------------------------------------------------------------------
 reply = sim.seat_patent("loom")
-check("the founder is granted a patent on what it holds", reply["ok"] and "loom" in seat.holdings.patents, reply)
+check("the founder is granted a patent on what it holds", reply["ok"] and "loom" in seat.patents, reply)
 check("a second claim is refused", not sim.seat_patent("loom")["ok"])
 check("an invention it does not hold is refused", not sim.seat_patent("nothing")["ok"])
 
@@ -78,20 +94,20 @@ check("an invention it does not hold is refused", not sim.seat_patent("nothing")
 reply = sim.seat_offer("firm:1", {"patent": ["loom"]}, {"money": 4000.0})
 check("an offer to a firm is made", reply["ok"] and len(firm.record.offers) == 1, reply)
 exchange_commands.answer_offers(firm, finder, world)
-check("the firm took the patent and paid for it", "loom" in firm.record.patents and "loom" not in seat.holdings.patents
+check("the firm took the patent and paid for it", "loom" in firm.record.patents and "loom" not in seat.patents
       and abs(sim.facade.money - 5000.0) < 1e-6, (sim.facade.money, firm.record.patents))
 
 # ---- an offer made to the founder waits in its holdings and is answered by command -------------------------
 reply = sim.seat_offer("firm:1", {"patent": ["loom"]}, {"money": 100.0})
 check("the firm now holds it, so the founder may not offer it", not reply["ok"], reply)
 made = exchange_commands.exchange.make_offer(firm, sim.seat_party(FIRST_SEAT_ID), {"patent": ["loom"]}, {"money": 200.0}, world)
-check("an offer to the founder is kept on the seat", [offer["id"] for offer in seat.holdings.offers] == [made["id"]])
+check("an offer to the founder is kept on the seat", [offer["id"] for offer in seat.offers] == [made["id"]])
 check("it is listed", sim.dealings_listing()["offers"][0]["id"] == made["id"])
 reply = sim.seat_answer(made["id"], True)
-check("accepting moves the patent to the founder and the money to the firm", reply["ok"] and "loom" in seat.holdings.patents
-      and abs(sim.facade.money - 4800.0) < 1e-6 and not seat.holdings.offers, (reply, sim.facade.money))
+check("accepting moves the patent to the founder and the money to the firm", reply["ok"] and "loom" in seat.patents
+      and abs(sim.facade.money - 4800.0) < 1e-6 and not seat.offers, (reply, sim.facade.money))
 made = exchange_commands.exchange.make_offer(firm, sim.seat_party(FIRST_SEAT_ID), {"money": 1.0}, {"money": 0.0}, world)
-check("declining drops the offer", sim.seat_answer(made["id"], False)["ok"] and not seat.holdings.offers)
+check("declining drops the offer", sim.seat_answer(made["id"], False)["ok"] and not seat.offers)
 check("an unknown offer is refused", not sim.seat_answer("nope", True)["ok"])
 
 # ---- a licence with a royalty, then the royalty flows ------------------------------------------------------

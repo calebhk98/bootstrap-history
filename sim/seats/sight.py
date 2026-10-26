@@ -1,0 +1,34 @@
+"""One seat hearing of what another has built (the rule is sight_rules.py)."""
+from typing import Set
+
+from sim.knowledge.api import RevealNodes
+
+from .sight_rules import nodes_heard_of
+
+
+class Sight:
+
+    def hear_of_other_seats(self, seat_id: str = None) -> Set[str]:
+        """The acting seat reveals what other seats have built that it can see enough of; returns what it heard of."""
+        seats = self.needs.legacy_seats()
+        if not self.needs.legacy_fog() or len(seats) < 2:
+            return set()
+        observer_id = self.clock.acting_seat
+        observer = self.needs.legacy_projects()
+        heard = set()
+        for builder_id, builder in seats.items():
+            if builder_id == observer_id or not (builder.projects.done - builder.projects.granted):
+                continue
+            distance = self.distance_between_seats(builder_id, observer_id)
+            heard |= nodes_heard_of(builder.projects, self.needs.disclosures[builder_id], observer, distance,
+                                    self.needs.copy_difficulty.__getitem__)
+        self.needs.send(RevealNodes(tuple(sorted(heard))))
+        return heard
+
+    def distance_between_seats(self, first_id: str, second_id: str) -> float:
+        """Great-circle kilometres between two seats' places."""
+        return float(self.needs.legacy_agent_world().distance_km(self.seat_place(first_id), self.seat_place(second_id)))
+
+    def seat_place(self, seat_id: str) -> str:
+        """Where a seat works from: its base tile."""
+        return str(self.needs.seat_base_tile[seat_id])

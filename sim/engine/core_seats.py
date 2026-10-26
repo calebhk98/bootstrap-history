@@ -41,7 +41,8 @@ class SeatMixin:
 
 	def seat_party(self, seat_id: str, margins=None) -> HouseholdParty:
 		"""`seat_id` as an actor an exchange can deal with: it holds patents and shares, pays and is paid."""
-		return HouseholdParty(self._seat_facades[seat_id], margins, seat_id, self.act_as)
+		return HouseholdParty(self._seat_facades[seat_id], margins, seat_id, self.act_as,
+		                      dealings=self.state.seats[seat_id].modules["seats"])
 
 	def seat_parties(self) -> dict:
 		"""Every seat as an actor, by seat id."""
