@@ -129,3 +129,14 @@ Caches and version counters held today (feed for task 1.2):
 - `_stock_throttle_sig` (`living_stock_yearly.py:76`)
 
 Detected by the cache scan in this module's mixin files: `engine/living_stock_yearly.py:76 _stock_throttle_sig`.
+
+## As built (task 2.1)
+
+Changes from the draft above, and why:
+
+- Two modules, not one: `sim/living_stock/` (herds, growth, opening, purchase, smuggling) and `sim/defence_stores/` (magazines, garrisons, banked output, and the grain relief). One module read too many views; the split gives each a short read list and the defence side reads only `stock_held` from the herds.
+- `partner_quote_per_tonne` and `partner_state_reach` are not living stock's: they are a partner's landed price and a state's chance to catch a taking. They are bridge views (`partner_landed_price`, `partner_catch_chance`) for foreign_trade and polity to publish.
+- `GrantStock` and `ChangeHeld` were one rule (a grant is a positive change), so there is one command, `ChangeHeld`. `BuyStock` and `SmuggleStock` carry the quoted terms, so the charge is the quote. `DrawDefenceStores` has no sender outside the module's own phase and is not a command.
+- The geography queries the draft put under `stock_status` (place, pasture, endemic loss, nursery room) are land's: read as `stock_land`, `endemic_stock_loss`, `nursery_room_units`.
+- `buy_stock_from_partner` and `smuggle_stock_from_partner` had no caller outside tests and are gone.
+- Views are narrow (`stock_held`, `stock_status`, `stock_holds_met`, `held_living_stock`, the two quotes, `society_herds`; `venture_garrison`, `counter_supply_gap`, `relief_kcal_per_day`); each follows what the ledger holds, so none is cached yet.
