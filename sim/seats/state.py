@@ -5,6 +5,10 @@ from typing import Any, Dict, List, Optional
 
 @dataclass
 class SeatsSeat:
+    # whether the seat's founder lives, the years the founder has left, and why the seat's run ended (None while it plays)
+    founder_alive: bool = True
+    life_left: float = 40.0
+    dead_reason: Optional[str] = None
     # the year the seat's formal goal was reached, and the year each goal id was reached as the formal goal
     goal_year: Optional[int] = None
     goal_years: Dict[str, int] = field(default_factory=dict)

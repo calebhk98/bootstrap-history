@@ -80,8 +80,9 @@ def founder_life_terms(sim):
 def register_seat(sim, command):
     if command.seat_id in sim.state.seats:
         return Refusal("seat_exists", "seat %r already exists" % (command.seat_id,), seat=command.seat_id)
-    seat = seat_from_template(command.template, command.capital, command.founder_years, default_policy(sim.manual))
+    seat = seat_from_template(command.template, command.capital, default_policy(sim.manual))
     sim.add_seat(command.seat_id, seat)
+    seat.modules["seats"].life_left = command.founder_years
     with sim.act_as(command.seat_id):
         sim._wrap_seat_containers()
         if seat.kind == COUNTRY_SEAT:
@@ -97,6 +98,29 @@ def apply_move_seat(sim, command):
 @bridge_command(ForgetGoalCaches)
 def forget_goal_caches(sim, command):
     sim.forget_goal_caches()
+
+
+# ---- the founder's death ----
+
+@bridge_view("patronage", seat_scoped=True)
+def patronage(sim):
+    """The founder's age and the deputies the programme could go on with: {founder_age, deputies, deputy_hours,
+    deputies_carry_the_work}."""
+    return {"founder_age": sim.founder_age(), "deputies": sim.state.household.directors_extra, "deputy_hours": sim.deputy_hours(),
+            "deputies_carry_the_work": sim.deputies_carry_the_work()}
+
+
+@bridge_view("dissolution_terms")
+def dissolution_terms(sim):
+    """The heuristics of a programme left without its founder (declared on `Sim`)."""
+    return {"life_extension_years": sim.SANITATION_LIFE_EXTENSION_YEARS, "years_before_forgetting": sim.DISSOLUTION_YEARS_BEFORE_FORGETTING,
+            "forget_fraction_divisor": sim.DISSOLUTION_FORGET_FRACTION_DIVISOR, "years_until_end": sim.DISSOLUTION_YEARS_UNTIL_END}
+
+
+@bridge_view("losable_node_ids", kind=QUOTE, seat_scoped=True)
+def losable_node_ids(sim, keep_dispersed=True):
+    """Sorted built nodes a loss event may take: not inherited, not a measured goal, and by default not a dispersed corpus."""
+    return sim.losable_node_ids(keep_dispersed)
 
 
 # ---- goals and what they read ----

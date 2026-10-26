@@ -597,7 +597,7 @@ class TrainingMixin:
         # and a Norse run that could field one could never build the place
         # craftsmen work, so it ended six hundred years later with 136
         # technologies and no staff at all.
-        return hands_available(household.artisans, self._world.state.founder.founder_alive, contracted,
+        return hands_available(household.artisans, self._world.founder_alive, contracted,
                                self._world.HOURS_PER_PERSON_YEAR)
 
     COMMISSION_PREMIUM_MULTIPLIER = declare(

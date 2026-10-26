@@ -28,12 +28,12 @@ def post_handover_state():
 	heir = SeatState(
 		household=HouseholdState(capital=40.0, scholars=2.0, reputation=7.0),
 		projects=ProjectsState(done={"fire", "wheel"}, granted={"fire"}),
-		founder=FounderState(life_left=30.0),
+		founder=FounderState(living_cost_paid=30.0),
 		holdings=HoldingsState(), seat_progress=SeatProgressState(),
 		goal="steam_engine", country="han",
 		modules={"seats": SeatsSeat(patents={"loom": {"granted": 1, "expires": 20, "licensees": ["third"]}}, shares_held={"guild": 3.0})})
 	third = SeatState(household=HouseholdState(capital=5.0), projects=ProjectsState(done={"fire"}, granted={"fire"}),
-	                  founder=FounderState(life_left=50.0), goal="printing_press", modules={"seats": SeatsSeat()})
+	                  founder=FounderState(living_cost_paid=50.0), goal="printing_press", modules={"seats": SeatsSeat()})
 	return SimulationState(seats={"third": third, "heir": heir}, acting_seat="heir", actors=ActorsState(home_country="rome"))
 
 
@@ -48,7 +48,7 @@ bind_seat(state, "heir")
 check("bind_seat: the root aliases are the heir's own objects",
       state.acting_seat == "heir" and state.household is heir.household and state.projects is heir.projects
       and state.founder is heir.founder and state.holdings is heir.holdings and state.seat_progress is heir.seat_progress
-      and state.household.scholars == 2.0 and state.founder.life_left == 30.0, None)
+      and state.household.scholars == 2.0 and state.founder.living_cost_paid == 30.0, None)
 check("SimulationState._goal: reads the heir's goal", post_handover_state()._goal == "steam_engine")
 state = post_handover_state()
 state._goal = "radio"
@@ -115,4 +115,4 @@ check("serialize_state: the heir's saved seat carries the household, nodes, goal
       and blob["seats"]["heir"]["modules"]["seats"]["shares_held"] == {"guild": 3.0}, None)
 check("acting_seat_of: the save's acting seat is the heir's record", acting_seat_of(blob) is blob["seats"]["heir"])
 check("goal_of_blob: the heir's goal", goal_of_blob(blob) == "steam_engine")
-check("_get_field: a field of the acting seat is the heir's", _get_field(blob, "life_left") == 30.0 and _get_field(blob, "reputation") == 7.0)
+check("_get_field: a field of the acting seat is the heir's", _get_field(blob, "living_cost_paid") == 30.0 and _get_field(blob, "reputation") == 7.0)

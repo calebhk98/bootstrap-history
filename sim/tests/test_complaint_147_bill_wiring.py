@@ -117,7 +117,7 @@ check("a started project records the own output it claims and the labour it need
       and record["lab_left"] == {"smith": 4.0} and record["ph_left"] == 10.0, record)
 
 # ---- a save keeps the bill
-seat = seat_from_template({}, 10.0, 1e9, {})
+seat = seat_from_template({}, 10.0, {})
 state = SimulationState(household=seat.household, projects=seat.projects, founder=seat.founder)
 state.projects.active["node"] = dict(record)
 loaded = deserialize_state(serialize_state(state))

@@ -53,6 +53,7 @@ from .labour_port import LabourPortMixin
 from .projects import ProjectsMixin
 from .core_seats import SeatMixin
 from .year_run import run_year
+from sim.seats.api import SetFounderLife
 from .forward_seats import ForwardSeatsMixin
 from .shock_year import ShockYearMixin
 from .seat_defaults import default_policy
@@ -354,14 +355,11 @@ class Sim(
         # design against, what death, personal hours or a patron mean for a
         # firm or a government; that is a real design question and this
         # extraction does not answer it by default.
-        self.state.founder.founder_alive = True
-        self.state.founder.dead_reason = None
         self.state.founder.director_hours_spent_founder = 0.0
         # founder remaining lifespan, elite male already aged 35
-        self.state.founder.life_left = (1e9 if self.cfg["immortal"]
-                          else max(self.FOUNDER_MIN_REMAINING_LIFE_YEARS,
-                                    rng.gauss(self.cfg["founder_life_mean"],
-                                              self.cfg["founder_life_sd"])))
+        self.send(SetFounderLife(1e9 if self.cfg["immortal"]
+                                 else max(self.FOUNDER_MIN_REMAINING_LIFE_YEARS,
+                                          rng.gauss(self.cfg["founder_life_mean"], self.cfg["founder_life_sd"]))))
         self.state.founder.living_cost_paid = 0.0
         self._spend_this_year = 0.0
         # WORLD state: monetary and real facts about the whole civilisation,

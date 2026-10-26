@@ -22,6 +22,11 @@ class LabourWorld:
         """Apply a command through the module that owns it."""
         return self._sim.send(command)
 
+    @property
+    def founder_alive(self):
+        """Whether the acting seat's founder lives."""
+        return self._sim.founder_alive
+
     def logged_events(self):
         """How many lines the acting seat's log holds now."""
         return len(self._sim.view("event_log")())

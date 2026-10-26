@@ -27,31 +27,30 @@ check("merging does not change a seat's own hazard", plague["staff_loss"] == 0.4
 
 # ---- a seat from data
 template = {"starting_techs": ["a", "b"], "scholars": 2, "artisans": 3, "base_tile": "t1", "goal": "g", "country": "han"}
-seat = seat_from_template(template, 500.0, 1e9, {"auto_hire": False})
+seat = seat_from_template(template, 500.0, {"auto_hire": False})
 check("a template builds a seat with its own purse, knowledge, staff, place and goal",
       seat.household.capital == 500.0 and seat.projects.done == {"a", "b"} and seat.projects.granted == {"a", "b"}
       and seat.household.scholars == 2 and seat.household.artisans == 3 and seat.household.base_tile == "t1"
       and seat.goal == "g" and seat.country == "han", None)
-other = seat_from_template(template, 500.0, 1e9, {})
+other = seat_from_template(template, 500.0, {})
 check("two seats from one template share no container",
       other.projects.done is not seat.projects.done and other.household.employees is not seat.household.employees
       and other.founder.policy is not seat.founder.policy, None)
-check("a founder in an immortal run does not die of age", seat.founder.life_left > 1e6 and seat.founder.founder_alive, None)
 
 # ---- the end rule: one seat's run ends, the others play on
 state = SimulationState(household=HouseholdState(capital=1.0), projects=ProjectsState(), founder=FounderState())
-state.seats["second"] = seat_from_template({}, 5.0, 40.0, {})
+state.seats["second"] = seat_from_template({}, 5.0, {})
 for held in state.seats.values():
     held.modules["seats"] = SeatsSeat()
 check("two seats are both playing at the start", seats_playing(state.seats) == [FIRST_SEAT_ID, "second"], None)
-state.seats[FIRST_SEAT_ID].founder.dead_reason = "denounced: as a sorcerer"
+state.seats[FIRST_SEAT_ID].modules["seats"].dead_reason = "denounced: as a sorcerer"
 check("a seat whose founder fell has ended", seat_ended(state.seats[FIRST_SEAT_ID]) and not seat_ended(state.seats["second"]), None)
 check("the other seat keeps playing and the run goes on",
       seats_playing(state.seats) == ["second"] and not run_is_over(state.seats), seats_playing(state.seats))
 state.seats["second"].modules["seats"].goal_year = 150
 check("the run is over when every seat has ended or reached its goal", run_is_over(state.seats), None)
 state.seats["second"].modules["seats"].goal_year = None
-state.seats["second"].founder.dead_reason = "ran out of money"
+state.seats["second"].modules["seats"].dead_reason = "ran out of money"
 check("the run is over when no seat is left", run_is_over(state.seats) and seats_playing(state.seats) == [], None)
 
 

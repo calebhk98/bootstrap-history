@@ -34,6 +34,7 @@ from .hedge_steps import hedge_wants, startable_first
 from sim.agents.api import edges, ledger
 from sim.knowledge.api import ForgetTechnique
 from sim.reporting.api import RecordEvent
+from sim.seats.api import EndRun
 
 
 class HazardsMixin:
@@ -778,5 +779,4 @@ class HazardsMixin:
         return money_text(lost, self, grouped=True)
 
     def _catastrophe(self, why):
-        self.state.founder.dead_reason = why
-        self.send(RecordEvent.of("run_ends", "RUN ENDS: " + why))
+        self.send(EndRun(why))

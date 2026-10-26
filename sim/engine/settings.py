@@ -541,15 +541,15 @@ def list_saves(save_dir: str) -> List[SaveSummary]:
             scenario = blob.get("scenario") or {}
             seat = acting_seat_of(blob)
             household = seat.get("household") or {}
-            founder = seat.get("founder") or {}
+            seats_slot = (seat.get("modules") or {}).get("seats") or {}
             projects = seat.get("projects") or {}
             row.update({
                 "readable": True,
                 "civ_id": blob.get("_civ"),
                 "year": scenario.get("year"),
                 "fog": bool(blob.get("_fog", False)),
-                "founder_alive": founder.get("founder_alive", True),
-                "dead_reason": founder.get("dead_reason"),
+                "founder_alive": seats_slot.get("founder_alive", True),
+                "dead_reason": seats_slot.get("dead_reason"),
                 "goal_year": scenario.get("goal_year"),
                 "goal": seat.get("goal"),
                 "reputation": household.get("reputation"),

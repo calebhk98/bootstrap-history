@@ -10,6 +10,7 @@ from .harness import check
 
 from sim.engine.state import FounderState, HouseholdState, ProjectsState, SimulationState
 from sim.engine.state_seat import FIRST_SEAT_ID, bind_seat, seat_from_template
+from sim.seats.api import SeatsSeat, seats_ended
 from sim.ui.proto import command_registry
 import sim.ui.proto.dispatch  # noqa: F401  (registers every command)
 from sim.ui.proto.dispatch_seats import seat_rows
@@ -34,7 +35,9 @@ class Game:
 
     def __init__(self):
         self.state = SimulationState(household=HouseholdState(capital=100.0), projects=ProjectsState(), founder=FounderState())
-        self.state.seats["second"] = seat_from_template({}, 50.0, 1e9, {})
+        self.state.seats["second"] = seat_from_template({}, 50.0, {})
+        for held in self.state.seats.values():
+            held.modules["seats"] = SeatsSeat()
         self.session_seat = None
         self.year = 100
         self.civ = {"id": "home"}
@@ -56,7 +59,11 @@ class Game:
         return 0.0
 
     def ended_seats(self):
-        return [seat_id for seat_id, held in self.state.seats.items() if held.founder.dead_reason]
+        return seats_ended(self.state.seats)
+
+    def view(self, name):
+        assert name == "dead_reasons"
+        return lambda: {seat_id: self.state.seats[seat_id].modules["seats"].dead_reason for seat_id in self.ended_seats()}
 
 
 game = Game()
@@ -87,7 +94,7 @@ check("a session seat takes the commands that name no seat", second.household.sa
 rows = seat_rows(game)
 check("the seats list names each seat and shows the addressed seat's purse only",
       [row["seat"] for row in rows] == [FIRST_SEAT_ID, "second"] and "capital" in rows[0] and "capital" not in rows[1], rows)
-second.founder.dead_reason = "denounced: as a sorcerer"
+second.modules["seats"].dead_reason = "denounced: as a sorcerer"
 check("a seat whose run ended says why", seat_rows(game)[1]["ended"] == "denounced: as a sorcerer" and seat_rows(game)[0]["ended"] is None, None)
 reply = handlers["seats"](game, nodes, {"cmd": "seats"}, None)
 check("the seats command answers ok with the seats and the year", reply["ok"] and len(reply["seats"]) == 2 and reply["year"] == 100, reply)

@@ -112,7 +112,7 @@ with mock.patch.object(colonies_module, "advance_colony", lambda colony, food, p
 check("a colony that lives on is kept, stepped at the nation's disease burden", len(game.seat.holdings.colonies) == 1 and seen == [0.5] and game.transfers == [], seen)
 
 # ---- a colony survives a save
-seat = seat_from_template({}, 10.0, 1e9, {})
+seat = seat_from_template({}, 10.0, {})
 state = SimulationState(household=seat.household, projects=seat.projects, founder=seat.founder)
 state.holdings.colonies.append({"tile": "t1", "founded_year": 100, "by": CHARTER, "children": 3.0, "working_age": 18.0, "elderly": 1.0})
 loaded = deserialize_state(serialize_state(state))

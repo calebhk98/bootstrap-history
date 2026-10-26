@@ -7,7 +7,10 @@ import unittest
 from types import SimpleNamespace
 from unittest import mock
 
-from sim.engine.core_step_phases import StepPhasesMixin
+from sim.seats import founder_rules
+from sim.seats.api import SeatsSeat
+from sim.seats.module import Seats
+from sim.tests import module_harness
 from sim.ui.proto import dispatch, dispatch_inspection, score, state
 
 
@@ -29,16 +32,17 @@ class FounderAgeTests(unittest.TestCase):
 
 
 class DissolutionSurvivorsTests(unittest.TestCase):
-    def game(self, dispersed):
-        projects = SimpleNamespace(done={"corpus_dispersed", "plain"}, granted={"plain"})
-        return SimpleNamespace(state=SimpleNamespace(projects=projects),
-                               corpus_is_dispersed=lambda node_id: node_id in dispersed)
-
     def test_a_dispersed_corpus_changes_what_the_ending_says_survived(self):
-        survived = StepPhasesMixin._what_survived_the_dissolution(self.game({"corpus_dispersed"}))
-        forgotten = StepPhasesMixin._what_survived_the_dissolution(self.game(set()))
+        survived = founder_rules.what_survived(True, 1)
+        forgotten = founder_rules.what_survived(False, 1)
         self.assertNotEqual(survived, forgotten)  # presentation: the ending sentence is the only exposure of the branch taken
         self.assertIn("1 works", survived)  # presentation: the count of the founder's works named
+
+    def test_the_module_counts_only_the_works_the_founder_built(self):
+        module = module_harness.build(Seats, seat=SeatsSeat(), views={
+            "techniques_held": {"corpus_dispersed", "plain"}, "techniques_granted": {"plain"},
+            "corpus_dispersed": lambda node_id: node_id == "corpus_dispersed"})
+        self.assertEqual(module._survivors(), founder_rules.what_survived(True, 1))
 
 
 class VictoryReportTests(unittest.TestCase):

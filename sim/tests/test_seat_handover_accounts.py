@@ -90,6 +90,16 @@ record = game.state.actors.records["firm:1"]
 check("another actor's records name the replacement", record.holdings == {"heir": 0.3} and record.spun_off_from == "heir"
       and record.royalty_owed["loom"]["holder"] == "heir", record)
 
+# ---- the replacement keeps its own founder: whether it lives, its years and why its run ended stay the replacement's
+game = build()
+game.state.seats["leaver"].modules["seats"].dead_reason = "ran out of money"
+game.state.seats["leaver"].modules["seats"].life_left = 3.0
+game.state.seats["heir"].modules["seats"].life_left = 12.0
+game.hand_over_seat("leaver", "heir")
+kept = game.state.seats["heir"].modules["seats"]
+check("the replacement keeps its own founder's life, not the leaver's", (kept.founder_alive, kept.life_left, kept.dead_reason) == (True, 12.0, None),
+      (kept.founder_alive, kept.life_left, kept.dead_reason))
+
 # ---- goods and money held across holders
 game = build()
 purses = game.state.actors.purses

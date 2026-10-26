@@ -49,7 +49,7 @@ def _test_automatic_field_persistence():
 		shortages={"charcoal": 3},
 	)
 	gov = GovernanceState(gov=0.5)
-	founder = FounderState(founder_alive=True, life_left=28.0)
+	founder = FounderState(living_cost_paid=28.0)
 	scenario = ScenarioState(year=115)
 	pop = PopulationState(pop_children=20e6, pop_working_age=35e6, pop_elderly=10e6)
 

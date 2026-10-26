@@ -46,7 +46,7 @@ class HeldTradeRule(unittest.TestCase):
 
 class Job(StandingJobMixin):
     def __init__(self, alive=True, pool=2000.0, committed=500.0, rate=2.0):
-        self._world = types.SimpleNamespace(state=types.SimpleNamespace(founder=types.SimpleNamespace(founder_alive=alive)))
+        self._world = types.SimpleNamespace(founder_alive=alive)
         self.pool, self.committed, self.rate = pool, committed, rate
 
     def director_pool(self):
@@ -90,7 +90,7 @@ class Seller(WagesMixin):
         self.received = []
         self.logged = []
         self._world = types.SimpleNamespace(
-            state=types.SimpleNamespace(founder=types.SimpleNamespace(founder_alive=True), household=household),
+            founder_alive=True, state=types.SimpleNamespace(household=household),
             wages={"scribe": 1}, EDGE_EMPLOYERS="employers", revenue=lambda: 1000.0, active_hours_still_wanted=lambda: 0.0,
             money_text=lambda amount, grouped=False: "%d" % amount,
             receive_from_edge=lambda edge, pay, text: self.received.append(pay))

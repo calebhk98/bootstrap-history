@@ -27,7 +27,11 @@ class Handover:
         refusal = handover_rules.handover_refusal(seats, from_id, to_id, holds)
         if refusal:
             return refusal
+        heir = self.seat_of(to_id)
+        founder_life = (heir.founder_alive, heir.life_left, heir.dead_reason)   # the replacement keeps its own founder
         moved = self.needs.send(MoveSeat(from_id, to_id))
+        kept = self.seat_of(to_id)
+        kept.founder_alive, kept.life_left, kept.dead_reason = founder_life
         for seat_id in seats:
             slot = self.seat_of(seat_id)
             for name in DEALING_FIELDS:

@@ -331,10 +331,7 @@ class GovernanceState:
 
 @dataclass
 class FounderState:
-	"""Founder biology, lifespan, and personal capacity."""
-	founder_alive: bool = True
-	life_left: float = 40.0
-	dead_reason: Optional[str] = None
+	"""The founder's personal capacity and standing policy (whether the founder lives is the seats module's)."""
 	director_hours_spent_founder: float = 0.0
 	living_cost_paid: float = 0.0
 	policy: Dict[str, Any] = field(default_factory=dict)

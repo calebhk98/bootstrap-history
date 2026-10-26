@@ -45,6 +45,9 @@ RELOCATIONS = [
     ("/seats/*/modules/seats/shares_issued", "/seats/*/holdings/shares_issued"),
     ("/seats/*/modules/seats/offers", "/seats/*/holdings/offers"),
     ("/seats/*/modules/seats/offer_serial", "/seats/*/holdings/offer_serial"),
+    ("/seats/*/modules/seats/founder_alive", "/seats/*/founder/founder_alive"),
+    ("/seats/*/modules/seats/life_left", "/seats/*/founder/life_left"),
+    ("/seats/*/modules/seats/dead_reason", "/seats/*/founder/dead_reason"),
 ]
 
 IGNORED = [

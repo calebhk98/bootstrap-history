@@ -15,7 +15,7 @@ class Game:
         self.state.seats[first] = self.state.seats.pop(FIRST_SEAT_ID)
         self.state.acting_seat = first
         for seat_id in seat_ids[1:]:
-            self.state.seats[seat_id] = seat_from_template({}, 5.0, 1e9, {})
+            self.state.seats[seat_id] = seat_from_template({}, 5.0, {})
         bind_seat(self.state, first)
         self._seat_facades = {seat_id: None for seat_id in self.state.seats}
         self.session_seat = None

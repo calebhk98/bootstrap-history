@@ -8,13 +8,14 @@ from sim.assembly.api import Module
 
 from . import builds
 from .dealings import Dealings
+from .founder import Founder
 from .goals import Goals
 from .handover import Handover
 from .run import Run
 from .sight import Sight
 
 
-class Seats(Run, Handover, Sight, Dealings, Goals, Module):
+class Seats(Run, Handover, Sight, Dealings, Goals, Founder, Module):
 
     def setup(self) -> None:
         self._conditioned: Optional[List[str]] = None   # node ids that carry a win_condition, built on first ask

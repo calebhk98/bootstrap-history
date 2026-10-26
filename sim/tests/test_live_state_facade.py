@@ -12,8 +12,6 @@ from sim.engine.state import (EconomyState, FounderState, HouseholdState, Popula
 SCALARS = {
     "capital": (1250.0, "household.capital"),
     "year": (150, "scenario.year"),
-    "founder_alive": (False, "founder.founder_alive"),
-    "life_left": (22.5, "founder.life_left"),
     "farm_hectares": (45.0, "holdings.farm_hectares"),
     "forest_ha": (12.5, "holdings.forest_ha"),
     "output_factor": (1.15, "economy.output_factor"),

@@ -159,7 +159,6 @@ class ProductionMixin:
         projects = self.state.projects
         household = self.state.household
         governance = self.state.governance
-        founder = self.state.founder
         key = (
             scenario.year,
             self.pop_scale,
@@ -179,7 +178,7 @@ class ProductionMixin:
             getattr(governance, "gov", 0.0) or 0.0,
             economy.output_factor,
             household.reputation,
-            founder.founder_alive,
+            self.founder_alive,
             self.state_funding(),
             self.home_price_level(),
         )

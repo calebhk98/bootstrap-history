@@ -16,9 +16,8 @@ TREE = {"a": {"name": "A"}, "b": {"name": "B"}}
 
 
 def seat(kind="household", country=None, goal=None, dead_reason=None, goal_year=None):
-    founder = None if kind == "country" else SimpleNamespace(dead_reason=dead_reason)
-    return SimpleNamespace(kind=kind, country=country, goal=goal, founder=founder, holds_household=kind != "country",
-                           modules={"seats": SeatsSeat(goal_year=goal_year)})
+    return SimpleNamespace(kind=kind, country=country, goal=goal, holds_household=kind != "country",
+                           modules={"seats": SeatsSeat(goal_year=goal_year, dead_reason=dead_reason)})
 
 
 def seats_over(registry, acting="founder", civilisation=None, answers=None, **views):

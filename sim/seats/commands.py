@@ -81,3 +81,16 @@ class MoveSeat(Command):
 @dataclass(frozen=True)
 class ForgetGoalCaches(Command):
     """Drop everything the engine derived from the acting seat's goal (applied by the engine)."""
+
+
+@dataclass(frozen=True)
+class EndRun(Command):
+    """The acting seat's run ends for `reason` (None clears it). Announced in the seat's log unless `announce` is False."""
+    reason: Optional[str]
+    announce: bool = True
+
+
+@dataclass(frozen=True)
+class SetFounderLife(Command):
+    """The acting seat's founder is alive with `years` left."""
+    years: float

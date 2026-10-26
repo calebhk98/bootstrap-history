@@ -1,7 +1,7 @@
 """Which seats are still in the run, and the end rule for several seats.
 
 A seat's run ends for that seat alone: its founder dies with no deputies to carry the work, is denounced, or
-is brought down (`founder.dead_reason`). The other seats keep playing. In an immortal-founder run no founder
+is brought down (the seat's `dead_reason`). The other seats keep playing. In an immortal-founder run no founder
 dies, so the rule never fires. The run is over for the session when no seat is left playing, or every seat
 still playing has reached its goal."""
 from typing import Any, List, Mapping
@@ -16,7 +16,7 @@ def goal_year_of(seat: Any) -> Any:
 
 def seat_ended(seat: Any) -> bool:
 	"""Whether this seat's run has ended (its founder's death, a denunciation or a fall)."""
-	return bool(seat.founder is not None and seat.founder.dead_reason)
+	return bool(seat.modules[MODULE_ID].dead_reason)
 
 
 def seat_finished(seat: Any) -> bool:

@@ -34,7 +34,6 @@ from .step_phase_materials import MaterialsPhaseMixin
 from .step_phase_projects import ProjectProgressPhaseMixin
 from .step_phase_staff import StaffPhaseMixin
 from sim.agents.api import edges, ledger
-from sim.knowledge.api import ForgetTechnique
 from sim.reporting.api import RecordEvent
 
 
@@ -137,7 +136,6 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, MaterialsPhaseMixin, Pro
         # 6. reputation, familiarity, protection, scandal
         self._step_reputation(pool, remaining, remaining_after_projects, hours_effective_total)
         self._step_bondage()                   # 6b. serving out a debt
-        self._step_founder_mortality()          # 7. founder mortality
 
     def _step_teach_trades(self):
         # 4a2. TEACH THE TRADES THIS SOCIETY DOES NOT HAVE. The optimizer has to
@@ -535,60 +533,3 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, MaterialsPhaseMixin, Pro
                 self.send(RecordEvent.of("bondage_served", "your term is served and the debt is discharged; "
                                      "you are your own man again"))
 
-    def _deputy_hours_sentence(self):
-        if self.state.household.directors_extra <= 0:
-            return "You trained no deputy to take over."
-        return ("Your deputies carry about %d hours a year, which is not enough "
-                "to take over." % round(self.deputy_hours()))
-
-    def _deputy_consequence(self):
-        if self.deputies_carry_the_work():
-            return ("Your %.1f deputies direct the work in your name and the "
-                    "programme goes on without you." % self.state.household.directors_extra)
-        return (self._deputy_hours_sentence() + " Nothing that needs your hours "
-                "can be begun again, and what you built will be forgotten over "
-                "the next twelve years unless deputies grow to carry the work.")
-
-    def _what_survived_the_dissolution(self):
-        kept = [node_id for node_id in self.state.projects.done
-                if self.corpus_is_dispersed(node_id)]
-        if kept:
-            return ("the school dispersed, but its codices survive in other "
-                    "hands (%d works of yours with them)"
-                    % len(self.state.projects.done - self.state.projects.granted))
-        return "the school dispersed and the work was forgotten"
-
-    def _step_founder_mortality(self):
-        # 7. founder mortality
-        if self.state.founder.founder_alive:
-            self.state.founder.life_left -= 1
-            if self.running_with_mechanic("founder_life_extension"):
-                self.state.founder.life_left += self.SANITATION_LIFE_EXTENSION_YEARS      # you at least do not die of a septic cut
-            if self.state.founder.life_left <= 0:
-                self.state.founder.founder_alive = False
-                self.send(RecordEvent.of("founder_dies", "THE FOUNDER DIES, aged about %d. %s"
-                        % (self.founder_age(), self._deputy_consequence()), aged=self.founder_age(), deputies_carry_the_work=bool(self.deputies_carry_the_work())))
-        # a programme with no director is not paused, it is dissolving
-        if not self.state.founder.founder_alive and not self.deputies_carry_the_work():
-            self.state.projects.stalled += 1
-            if self.state.projects.stalled >= self.DISSOLUTION_YEARS_BEFORE_FORGETTING:
-                losable = self.losable_node_ids()
-                # sorted() matters: self.state.projects.done is a SET, and a set iterates in an
-                # order that depends on PYTHONHASHSEED, so feeding it unsorted to
-                # rng.sample made the same --seed give a different answer on every
-                # invocation. Every figure this project has reported was, strictly,
-                # unreproducible.
-                if losable:
-                    for node_id in self.rng.sample(losable, max(1, len(losable) // self.DISSOLUTION_FORGET_FRACTION_DIVISOR)):
-                        self.state.projects.operating.discard(node_id)
-                        self.send(ForgetTechnique((node_id,)))
-            if self.state.projects.stalled in (3, 6, 9, 11):
-                self.send(RecordEvent.of("programme_dissolving", "THE PROGRAMME IS DISSOLVING: %d year(s) "
-                    "since the founder died. %s What you built is being "
-                    "forgotten. The run ends at twelve."
-                    % (self.state.projects.stalled, self._deputy_hours_sentence()), years_since_death=self.state.projects.stalled, run_ends_after_years=self.DISSOLUTION_YEARS_UNTIL_END))
-            if self.state.projects.stalled >= self.DISSOLUTION_YEARS_UNTIL_END:
-                self._catastrophe("the founder died without training successors; "
-                                  + self._what_survived_the_dissolution())
-        else:
-            self.state.projects.stalled = 0
