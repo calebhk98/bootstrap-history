@@ -21,6 +21,11 @@ applies throughout (names spelled out, short comments, a test calls one function
 - Use the view names in `catalogue/<owner>.md`. If the owner has not moved yet, publish the view from the engine
   in `sim/engine/bridge_<your module>.py` with `@bridge_view` (never cached: legacy code writes the state behind
   it directly). When the owner moves, it publishes the same name and the bridge entry is deleted.
+- A view's name and shape are set by its first publisher. Before adding one, look for it:
+  `grep -rn "bridge_view(\"<name>\"\|ViewSpec(\"<name>\"" sim`. Reuse an existing view rather than adding a near
+  copy with another name or shape; if the existing one does not answer your question, say so in your report.
+- The scenario facts every module needs (the year, the civilisation, the tree, the acting seat) come from the
+  `scenario` views; the acting seat is also `self.clock.acting_seat`.
 - A raw state object you must still mutate in place (a purse, a ledger dict) is a `legacy_<name>` bridge view. These
   are debts: list them in your report; they go when that state moves.
 
@@ -28,6 +33,10 @@ applies throughout (names spelled out, short comments, a test calls one function
 
 - Send the owner's command (`self.needs.send(Command(...))`). If the owner has not moved yet, apply the command
   in your bridge file with `@bridge_command`, calling the engine exactly as the old code did.
+- A command class lives with its owner: `sim/<owner>/commands.py`, exported by `sim/<owner>/api.py`, even while
+  the owner has not moved (the package then holds only those two files, and the bridge applies the command).
+- A command's handler returns its outcome: a value, or a `Refusal` with a cause. A refusal is a string and so is
+  truthy: test `isinstance(answer, Refusal)`, never the answer's truth.
 - Engine code not yet in a module sends with `sim.send(command)` and reads with `sim.view(name)`.
 
 ## Your own state
