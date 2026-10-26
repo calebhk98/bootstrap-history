@@ -14,6 +14,13 @@ PRICE = 1000.0
 LINE = 600.0
 
 
+class _SameKey:
+    """A keyed view whose commodity key for a material is the material's own name."""
+
+    def __getitem__(self, material):
+        return material
+
+
 class StartGame(StartingMixin):
     """A game that holds a cash balance, a credit line, work in hand and a bill for each node; only the money rule is real."""
 
@@ -39,6 +46,9 @@ class StartGame(StartingMixin):
 
     def _material_stock(self):
         return {}
+
+    def view(self, name):
+        return {"material_commodity": _SameKey()}[name]
 
     def start_reason(self, node_id):
         return (node_id != "locked", "")
