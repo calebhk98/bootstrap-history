@@ -11,7 +11,8 @@ from sim.engine import core
 from sim.engine.core import Sim
 from sim.engine.core_step_phases import StepPhasesMixin
 from sim.mechanics.module import Mechanics
-from sim.tests import module_harness
+from sim.hazards import constants
+from sim.tests import hazards_host, module_harness
 
 MODDED = "mod_x:hall"
 
@@ -86,17 +87,13 @@ class CorpusTests(unittest.TestCase):
         self.assertEqual(self.module().corpus_hedge_tiers(), [(MODDED, 0.01, 0.02), ("plain_library", 0.5, 0.6)])
 
     def test_the_hedge_a_sacking_faces_is_the_strongest_held_tier(self):
-        standin = types.SimpleNamespace(
-            corpus_hedge_tiers=lambda: [(MODDED, 0.01, 0.02), ("plain_library", 0.5, 0.6)],
-            has=lambda node_id: node_id in {MODDED, "plain_library"},
-            CORPUS_HEDGE_LOSS_CHANCE_NONE=0.9, CORPUS_HEDGE_FRACTION_LOST_NONE=0.8)
-        self.assertEqual(Sim.corpus_hedge(standin), (0.01, 0.02, MODDED))
+        module = hazards_host.build(corpus_hedge_tiers=[(MODDED, 0.01, 0.02), ("plain_library", 0.5, 0.6)],
+                                    techniques_held={MODDED, "plain_library"})
+        self.assertEqual(module.corpus_hedge(), (0.01, 0.02, MODDED))
 
     def test_with_no_corpus_held_the_unhedged_figures_apply_and_no_hedge_is_named(self):
-        standin = types.SimpleNamespace(
-            corpus_hedge_tiers=lambda: [(MODDED, 0.01, 0.02)], has=lambda node_id: False,
-            CORPUS_HEDGE_LOSS_CHANCE_NONE=0.9, CORPUS_HEDGE_FRACTION_LOST_NONE=0.8)
-        self.assertEqual(Sim.corpus_hedge(standin), (0.9, 0.8, None))
+        module = hazards_host.build(corpus_hedge_tiers=[(MODDED, 0.01, 0.02)])
+        self.assertEqual(module.corpus_hedge(), (constants.CORPUS_HEDGE_LOSS_CHANCE_NONE, constants.CORPUS_HEDGE_FRACTION_LOST_NONE, None))
 
 
 class CapabilityInstitutionTests(unittest.TestCase):

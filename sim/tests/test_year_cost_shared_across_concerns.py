@@ -193,6 +193,9 @@ class StandInWorld(ViewShareMixin, TileOwnershipMixin):
     def tile_owner_map(self):
         return self.state.economy.tile_owners
 
+    def send(self, command):
+        return None   # the world event log is the hazards module's
+
 
 class StandaloneAnswers(unittest.TestCase):
 
@@ -231,9 +234,7 @@ class HomeTilesHeld(unittest.TestCase):
     def test_the_owner_map_is_read_once_until_a_tile_changes_hands(self):
         world, reads = StandInWorld(), []
         original = tile_ownership.tiles_held
-        with mock.patch.object(tile_ownership, "tiles_held",
-                               lambda *arguments: reads.append(1) or original(*arguments)), \
-                mock.patch.object(tile_ownership.world_events, "record", lambda *_arguments, **_keywords: None):
+        with mock.patch.object(tile_ownership, "tiles_held", lambda *arguments: reads.append(1) or original(*arguments)):
             for _call in range(30):
                 self.assertEqual(world.home_tiles_held(), ["t1"])
                 self.assertEqual(world.tiles_owned_by("gaul"), ["t2"])

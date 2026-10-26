@@ -97,9 +97,9 @@ def check_capacity_invariants(sim):
     """Assert counts stay within production limits: a plant's size is finite and not negative, the share of its
     crew found lies in 0..1, no actor's workforce is negative or larger than the people of its country, and each
     commodity's society capacity is finite and not negative."""
-    from .world_hazards import countries_in_game, people_of
+    from .mod_effects import people_of
     registry = sim.actors
-    people = {country: people_of(sim, country) for country in countries_in_game(sim)}
+    people = {country: people_of(sim, country) for country in sim.view("countries_in_game")()}
     home = sim.civ["id"]
     for actor in registry.actors.values():
         business = getattr(actor.record, "business", None)

@@ -17,7 +17,7 @@ class ConcernLevyMixin:
             if node_id not in operating:
                 continue   # a trade the society already has is not the household's concern to levy
             share = self.mechanic(node_id, "state_levy")["share"]
-            takings = self.concern_revenue(node_id) * self.state.economy.output_factor
+            takings = self.concern_revenue(node_id) * self.output_factor
             if share > 0.0 and takings > 0.0:
                 due[node_id] = share * takings
         return due

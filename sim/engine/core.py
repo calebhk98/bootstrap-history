@@ -56,7 +56,7 @@ from .year_run import run_year
 from .seat_run import SeatRunMixin
 from .seat_builds import SeatBuildsMixin
 from .seat_sight import SeatSightMixin
-from .shock_year import ShockYearMixin
+from .forward_hazards import HazardsForwardsMixin
 from .seat_defaults import default_policy
 from .ways import WaysMixin
 from .held_works import HeldWorksMixin
@@ -104,7 +104,7 @@ class Sim(
         SeatRunMixin,
         SeatBuildsMixin,
         SeatSightMixin,
-        ShockYearMixin,
+        HazardsForwardsMixin,
         WaysMixin,
         WorksMixin,
         HeldWorksMixin,
@@ -386,11 +386,6 @@ class Sim(
                                               self.cfg["founder_life_sd"])))
         self.state.founder.living_cost_paid = 0.0
         self._spend_this_year = 0.0
-        # WORLD state: monetary and real facts about the whole civilisation,
-        # not about this household. output_factor is the health of the whole imperial
-        # economy relative to 100 AD, crushed by war and plague, not by any
-        # one household's fortunes.
-        self.output_factor = 1.0  # real output, crushed by war and plague, not by debasement
         # --- RAW MATERIAL QUANTITIES -------------------------------------
         # How much of each material physically exists: a material's
         # existence somewhere does not mean an unlimited quantity of it is
@@ -703,45 +698,6 @@ class Sim(
     def has(self, node_id):
         return node_id in self.state.projects.done
 
-    # THE ONE PLACE that answers "what is my corpus worth against a
-    # sacking" - called from both SocietyMixin._shocks (the sack itself)
-    # and FogMixin.knowledge_risk (the player-facing `risk` reply), never
-    # re-derived in either place. A corpus that is written and dispersed
-    # does not stop existing because the scriptorium that produced it
-    # closed - copies already in other people's hands are still in other
-    # people's hands - so this table's hedge-state logic (`has()` vs
-    # `running()`, and which of the loss-chance/fraction-lost pairs below
-    # applies) is genuinely easy to get subtly different between two
-    # independent copies. Calling this from both places is the only way to
-    # make the two screens unable to disagree with each other.
-    CORPUS_HEDGE_LOSS_CHANCE_NONE = declare(
-        "CORPUS_HEDGE_LOSS_CHANCE_NONE", 0.80, kind="temporary_heuristic",
-        unit="dimensionless (probability a sack takes any corpus at all)",
-        source=None, confidence="D",
-        why="Chance a sack takes any of the corpus with no written hedge "
-            "at all - the founder's own head and workshop are the only "
-            "copy. Tuned to make an unhedged corpus genuinely dangerous "
-            "to hold; not measured.")
-    CORPUS_HEDGE_FRACTION_LOST_NONE = declare(
-        "CORPUS_HEDGE_FRACTION_LOST_NONE", 0.40, kind="temporary_heuristic",
-        unit="dimensionless (fraction of losable technologies taken)",
-        source=None, confidence="D",
-        why="If a sack does take from an unhedged corpus, how much of "
-            "what is still losable it takes - largest of the three "
-            "states. Tuned, not measured.")
-
-    def corpus_hedge(self):
-        """(loss_chance, fraction_lost, hedge_name) a sacking faces right now.
-
-        `has`, not `running`: see the comment above `has` itself and
-        FogMixin.knowledge_risk for the fuller argument. `hedge_name` is
-        None if neither corpus exists yet.
-        """
-        for node_id, loss_chance, fraction_lost in self.corpus_hedge_tiers():
-            if self.has(node_id):
-                return loss_chance, fraction_lost, node_id
-        return self.CORPUS_HEDGE_LOSS_CHANCE_NONE, self.CORPUS_HEDGE_FRACTION_LOST_NONE, None
-
     # ---- GEOGRAPHY: reach and material cost, FOR THE CIVILIZATION IN PLAY --
     # Reach must be computed from the ACTUAL civilization's own home
     # ground, never hard-coded from one fixed point such as Italy: a
@@ -832,17 +788,6 @@ class Sim(
         why="How large a bite auto-manumission takes when it fires - "
             "roughly a quarter of current slaves, at least one. Tuned, "
             "not measured.")
-    OUTPUT_RECOVERY_RATE = declare(
-        "OUTPUT_RECOVERY_RATE", 0.006, kind="temporary_heuristic",
-        unit="dimensionless per year (base recovery toward output_factor "
-             "1.0)", source=None, confidence="D",
-        why="Base yearly recovery rate of output_factor after a war or "
-            "other output shock, doubled at full military leverage (see "
-            "comment above) - an armed empire recovers roughly twice as "
-            "fast as an unarmed one, not instantly. Tuned to make a war's "
-            "damage linger for decades, not measured against any attested "
-            "postwar recovery rate.")
-
     INSOLVENCY_FLOOR_MIN_LABOUR_HOURS = declare(
         "INSOLVENCY_FLOOR_MIN_LABOUR_HOURS", 80600.0, kind="temporary_heuristic",
         unit="labour hours", source=None, confidence="D",

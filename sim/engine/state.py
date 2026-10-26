@@ -300,8 +300,6 @@ class EconomyState:
 	tile_owners: Dict[str, Dict[str, str]] = field(default_factory=dict)
 	# claims the seeding refused because another civilisation file already held the tile: {tile, owner, claimant}
 	tile_claim_conflicts: List[Dict[str, Any]] = field(default_factory=list)
-	# dated records of what changed in the world and why, shared by every seat (world_events.py)
-	world_events: List[Dict[str, Any]] = field(default_factory=list)
 	# tile -> {construction node id: capacity built there} (works.py)
 	works: Dict[str, Dict[str, float]] = field(default_factory=dict)
 	# tile -> {construction node id: [year it is finished, capacity]} of works paid for and being built (works.py)
@@ -309,7 +307,6 @@ class EconomyState:
 	# tile -> tonnes of standing timber felled below the tile's full stock; a missing tile is untouched (economy_port_timber.py)
 	forest_felled: Dict[str, float] = field(default_factory=dict)
 	agent_economy: Dict[str, Any] = field(default_factory=dict)   # the agent economy's record (economy_port_year.py)
-	output_factor: float = 1.0
 	# commodity -> society capacity, stock and last price ratio (market_clearing.py)
 	market_book: Dict[str, Dict[str, float]] = field(default_factory=dict)
 	# the year's purchases and sales by commodity and party, and the founder's draws (goods_market_api.py)
@@ -339,7 +336,6 @@ class FounderState:
 	director_hours_spent_founder: float = 0.0
 	living_cost_paid: float = 0.0
 	policy: Dict[str, Any] = field(default_factory=dict)
-	last_patron_death: Optional[int] = None
 	_founder_death_aged: Optional[int] = None
 	_founder_death_year: Optional[int] = None
 
@@ -348,8 +344,6 @@ class FounderState:
 class ScenarioState:
 	"""Simulation scenario configuration and timeline."""
 	year: int = 100
-	_said_debasement: Optional[int] = None
-	_said_output: Optional[Dict[str, int]] = None
 	_said_wage_cascade: int = -999    # last year a wage-cascade note was printed
 	_said_condition: Set[str] = field(default_factory=set)  # hazard-condition messages already printed once
 

@@ -11,7 +11,6 @@ from sim.world import stock_dynamics
 
 from . import purchase_rule
 from .bridge import bridge_command, bridge_view
-from .hazard_window import hazards_not_yet_past
 from sim.coin.api import visibility_factor
 
 
@@ -120,8 +119,3 @@ def institution_units(sim, node_id):
     return sim.institution_units(node_id)
 
 
-@bridge_view("live_hazard_kinds", kind=QUOTE)
-def live_hazard_kinds(sim, year_now):
-    """The kinds of hazard in progress in `year_now`."""
-    return {kind for hazard, _start, _end, in_progress in hazards_not_yet_past(sim.civ, year_now)
-            if in_progress for kind in hazard}

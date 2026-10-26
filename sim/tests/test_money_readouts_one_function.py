@@ -68,7 +68,7 @@ check("state reads sustainable_debt from the sim method, rounded to one place",
 class _Absorbing(MarketAbsorptionMixin):
     def __init__(self):
         self.nodes = {"mill": {"cat": "textiles"}, "loom": {"cat": "textiles"}, "forge": {"cat": "metals"}}
-        self.state = SimpleNamespace(economy=SimpleNamespace(output_factor=1.0))
+        self.output_factor = 1.0
 
     def ledger_concern_rows(self):
         return {"mill": 300.0, "loom": 100.0, "forge": 600.0}

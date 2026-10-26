@@ -37,6 +37,11 @@ RELOCATIONS = [
     ("/modules/diffusion/technique_record_started", "/economy/technique_record_started"),
     ("/modules/diffusion/literacy_said", "/scenario/_literacy_said"),
     ("/seats/*/modules/diffusion/disclosures", "/seats/*/projects/disclosures"),
+    ("/modules/hazards/output_factor", "/economy/output_factor"),
+    ("/modules/hazards/world_events", "/economy/world_events"),
+    ("/modules/hazards/said_output", "/scenario/_said_output"),
+    ("/modules/hazards/said_debasement", "/scenario/_said_debasement"),
+    ("/seats/*/modules/hazards/last_patron_death", "/seats/*/founder/last_patron_death"),
 ]
 
 IGNORED = [

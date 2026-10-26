@@ -27,9 +27,9 @@ PHYSICAL_COSTS = {
     "REVENUE_CEILING_PER_POP_SCALE": "REVENUE_CEILING_LABOUR_HOURS_PER_POP_SCALE",
     "STATE_FUNDING_BASE": "STATE_FUNDING_BASE_LABOUR_HOURS",
     "REVENUE_SCALE_DENARII": "REVENUE_SCALE_LABOUR_HOURS",
-    "PATRON_DEATH_COURTING_GIFT": "PATRON_DEATH_COURTING_GIFT_LABOUR_HOURS",
 }
 SLAVE_PRICE = ("SLAVE_BASE_PRICE", "SLAVE_BASE_PRICE_LABOUR_HOURS")
+PATRON_GIFT = ("a patron's courting gift", "PATRON_DEATH_COURTING_GIFT_LABOUR_HOURS")   # priced in the coin by the hazards module
 FARM_PRICE = ("FARM_LAND_PRICE", "FARM_LABOUR_HOURS_PER_HA")   # priced by the agriculture module's `farm_land_price`
 
 
@@ -42,7 +42,7 @@ def _deposit(name, grade, depth="surface"):
 class PhysicalConstantsAreInHours(unittest.TestCase):
 
     def test_each_is_declared_in_labour_hours(self):
-        for money_name, hours_name in list(PHYSICAL_COSTS.items()) + [SLAVE_PRICE, FARM_PRICE]:
+        for money_name, hours_name in list(PHYSICAL_COSTS.items()) + [SLAVE_PRICE, FARM_PRICE, PATRON_GIFT]:
             self.assertTrue(hours_name in REGISTRY, hours_name)
             self.assertIn("labour hour", REGISTRY[hours_name]["unit"], hours_name)
 

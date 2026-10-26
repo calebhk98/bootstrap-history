@@ -93,19 +93,6 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, MaterialsPhaseMixin, Pro
             self.state.household.training = still
             self.labour.resync_pools()
 
-    def _step_dated_shocks(self, seats=None):
-        # 3. dated shocks: the world is hit once, each seat in `seats` meets them with its own works
-        self.disaster_this_year = None
-        if self.events:
-            year = self.state.scenario.year
-            logged_before = len(self.log)
-            self._shocks(year, seats)
-            names = [hazard.get("name", "a hazard") for hazard in self.civ.get("hazards", [])
-                     if hazard.get("years", [0, 0])[0] <= year <= hazard.get("years", [0, 0])[-1]]
-            if names:
-                self.disaster_this_year = {"name": ", ".join(names),
-                                           "messages": [message for _, message in self.log[logged_before:]]}
-
     def begin_seat_year(self):
         """What the acting seat notes before its year starts."""
         # WHERE SCANDAL STOOD WHEN THE PLAYER LAST LOOKED: `state` prints the chance of being denounced from

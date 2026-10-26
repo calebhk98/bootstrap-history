@@ -5,7 +5,7 @@ comes from the tree and from what is done. The lead time the advice states is in
 from .harness import *  # noqa: F401,F403
 
 from sim.engine.data import critical_path
-from sim.engine.hazard_hedge_timing import remaining_floor_years
+from sim.hazards.hedge_timing import remaining_floor_years
 
 QUICK_TOPIC = True
 

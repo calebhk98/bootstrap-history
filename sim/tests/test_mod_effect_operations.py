@@ -6,7 +6,9 @@ from types import SimpleNamespace
 from unittest import mock
 
 from sim.agents.api import edges
-from sim.engine import bridge_campaigns, mod_effects, world_hazards
+from sim.demography.api import KillPeople
+from sim.engine import mod_effects
+from sim.tests import hazards_host, module_harness
 from sim.engine.mod_effects import ModEffects
 from sim.engine.mods import ModError
 from sim.refusal import cause_of
@@ -67,30 +69,31 @@ def _death_game(home_total=1000.0):
     strata = [SimpleNamespace(record=SimpleNamespace(members=400.0, country="partner")), SimpleNamespace(record=SimpleNamespace(members=100.0, country="partner")),
               SimpleNamespace(record=SimpleNamespace(members=7.0, country="other"))]
     game = SimpleNamespace(civ={"id": "home"}, population=SimpleNamespace(total=home_total), shocks=shocks,
+                           state=SimpleNamespace(scenario=SimpleNamespace(year=100)),
                            actors=SimpleNamespace(of_kind=lambda kind: strata), strata=strata)
     game._apply_population_mortality_shock = shocks.append
     return attach_send(game)
 
 
-with mock.patch.object(bridge_campaigns.world_events, "record", side_effect=lambda game, kind, **fields: dict(kind=kind, **fields)) as recorded:
-    partner_game = _death_game()
-    entry = effects.kill_people(partner_game, "partner", 0.25, "a curse")
-    home_game = _death_game()
-    effects.kill_people(home_game, "home", 0.1, "a curse")
+partner_game = _death_game()
+entry = effects.kill_people(partner_game, "partner", 0.25, "a curse")
+home_game = _death_game()
+effects.kill_people(home_game, "home", 0.1, "a curse")
 check("a death share cuts each of a partner's strata by that share and leaves another country's alone",
       [stratum.record.members for stratum in partner_game.strata] == [300.0, 75.0, 7.0] and partner_game.shocks == [], partner_game.strata)
 check("the event is the mod's kind, names the country and the cause, and states how many died",
-      entry["kind"] == ACME + ":deaths" and entry["actors"] == ["partner"] and entry["cause"] == "a curse" and abs(entry["died"] - 125.0) < 1e-9, entry)
+      entry["kind"] == ACME + ":deaths" and entry["actors"] == ["partner"] and entry["cause"] == "a curse" and abs(entry["facts"]["died"] - 125.0) < 1e-9, entry)
 check("a death share in the home society is applied to its cohorts as a mortality shock and not to the strata", home_game.shocks == [0.1]
       and [stratum.record.members for stratum in home_game.strata] == [400.0, 100.0, 7.0], home_game.shocks)
-with mock.patch.object(bridge_campaigns.world_events, "record") as unrecorded:
-    refused_shares = []
-    for share, cause in ((0.1, ""), (1.5, "too many")):
-        try:
-            effects.kill_people(_death_game(), "partner", share, cause)
-        except ModError:
-            refused_shares.append(share)
-check("a missing cause or a share above one is refused before anyone dies or any event is written", refused_shares == [0.1, 1.5] and not unrecorded.called)
+refused_shares, untouched = [], []
+for share, cause in ((0.1, ""), (1.5, "too many")):
+    refusing = _death_game()
+    try:
+        effects.kill_people(refusing, "partner", share, cause)
+    except ModError:
+        refused_shares.append(share)
+    untouched.append(refusing.world_event_log.world.world_events == [])
+check("a missing cause or a share above one is refused before anyone dies or any event is written", refused_shares == [0.1, 1.5] and all(untouched))
 
 # --- a tile transfer goes through the game's own transfer with the cause.
 transfers = []
@@ -104,13 +107,11 @@ except ModError:
 check("a transfer with no cause is refused and the game is not asked", transfers[-1] == "refused" and len(transfers) == 2, transfers)
 
 # --- the base game's hazards use the same operation, with their kind and loss, and tell every playing seat.
-seat_log = []
-hazard_game = event_stand_in.stood_in(SimpleNamespace(
-    playing_seats=lambda: ["seat"],
-    state=SimpleNamespace(seats={"seat": SimpleNamespace(household=SimpleNamespace(log=seat_log))}, scenario=SimpleNamespace(year=100))))
-with mock.patch.object(mod_effects.BASE_EFFECTS, "kill_people", return_value={"year": 100, "facts": {"died": 321.0}}) as kill:
-    world_hazards.hit(hazard_game, "partner", {"kind": "flood", "cause": "a flood", "population_loss": 0.1})
-check("a hazard's hit is a kill_people call by the base game with the hazard's loss, cause and kind",
-      kill.call_args.args == (hazard_game, "partner", 0.1, "a flood") and kill.call_args.kwargs["kind"] == "flood" and kill.call_args.kwargs["population_loss"] == 0.1, kill.call_args)
+hazard_module = hazards_host.build(seat_list={"joined": ["seat"], "playing": ["seat"]},
+                                   answers={KillPeople: lambda command: {"year": 100, "facts": {"died": 321.0}}})
+hazard_module.hit_country("partner", {"kind": "flood", "cause": "a flood", "population_loss": 0.1})
+killed, told = module_harness.sent(hazard_module)
+check("a hazard's hit is a KillPeople command with the hazard's loss, cause and kind",
+      (killed.country, killed.share, killed.cause, killed.kind, killed.facts) == ("partner", 0.1, "a flood", "flood", {"population_loss": 0.1}), killed)
 check("each playing seat gets a world_hazard line stating the hazard, country and the number who died",
-      len(seat_log) == 1 and cause_of(seat_log[0][1]) == "world_hazard" and seat_log[0][1].facts == {"hazard": "flood", "country": "partner", "died": 321.0}, seat_log)
+      told.seat == "seat" and told.kind == "world_hazard" and told.facts == {"hazard": "flood", "country": "partner", "died": 321.0}, told)

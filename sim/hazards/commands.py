@@ -1,4 +1,4 @@
-"""Commands to the owner of the world event log (`state.economy.world_events`, shared by every seat)."""
+"""Commands to hazards: the owner of the world event log and the world's output factor."""
 from dataclasses import dataclass, field
 from typing import Any, Dict, Tuple
 
@@ -13,3 +13,16 @@ class RecordWorldEvent(Command):
 	tiles: Tuple[str, ...] = ()
 	cause: str = ""
 	facts: Dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
+class LoseCapital(Command):
+	"""A catastrophe destroys `fraction` of what the acting household holds, never of what it owes. Answers the money
+	destroyed."""
+	fraction: float
+	cause: str = "losses"
+
+
+@dataclass(frozen=True)
+class RecoverOutput(Command):
+	"""The year's recovery of the world's output factor toward normal, faster the stronger the state's military."""

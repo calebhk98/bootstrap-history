@@ -1,1 +1,1 @@
-"""Hazards: the commands other modules send it until its module moves (api.py)."""
+"""Hazards: dated shocks and world hazards, and what counters them."""

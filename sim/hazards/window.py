@@ -1,6 +1,6 @@
 """When a civilisation's hazards land, and which ones are still ahead.
 
-ONE PLACE, NOT TWO. `FogMixin.knowledge_risk` and `SocietyMixin.hazard_timeline`
+ONE PLACE, NOT TWO. `knowledge_risk` (the fog screen) and the hazards module's `hazard_timeline`
 each need to open `civ["hazards"]`, read the `years` list, widen a
 one-element list into a start and an end, and skip anything the player
 has already lived past - identical window arithmetic apart from the name
@@ -47,3 +47,9 @@ def hazards_not_yet_past(
         if current_year > year_end:
             continue                      # already survived, or missed
         yield hazard, year_start, year_end, year_start <= current_year <= year_end
+
+
+def kinds_in_progress(civilization: Dict[str, Any], current_year: int) -> set:
+    """The kinds of hazard (the fields of a hazard, as `sack_chance` or `staff_loss`) whose window is open in `current_year`."""
+    return {kind for hazard, _start, _end, in_progress in hazards_not_yet_past(civilization, current_year)
+            if in_progress for kind in hazard}

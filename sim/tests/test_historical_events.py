@@ -3,7 +3,7 @@ hazards; the telling is in test_resolve_hazard_condition_telling)."""
 QUICK_TOPIC = True
 
 from .harness import *  # noqa: F401,F403
-from sim.engine.hazard_condition import hazard_given_condition
+from sim.hazards.condition import hazard_given_condition
 
 
 def _hazard(condition=None, **fields):

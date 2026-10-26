@@ -1,6 +1,6 @@
 """Commands to the owner of the labour market and its people."""
 from dataclasses import dataclass
-from typing import Optional
+from typing import Dict, Optional
 
 from sim.assembly.api import Command
 
@@ -26,3 +26,32 @@ class NoteTradeSpread(Command):
 	trade: str
 	introduced_year: Optional[int] = None
 	endemic: bool = False
+
+
+@dataclass(frozen=True)
+class SurviveStaff(Command):
+	"""Each person on the acting seat's books survives with probability `survival_share`, rolled one by one so
+	headcounts stay whole; a trade left with nobody is dropped. Draws from the game's dice."""
+	survival_share: float
+
+
+@dataclass(frozen=True)
+class ScaleDeputies(Command):
+	"""The acting seat's pool of deputy directors is multiplied by `share`."""
+	share: float
+
+
+@dataclass(frozen=True)
+class ReportStaffReduction(Command):
+	"""The acting seat's log says which trades have fewer people than the headcount `before` ({trade: headcount}), and
+	that `cause` is why."""
+	cause: str
+	before: Dict[str, float]
+
+
+@dataclass(frozen=True)
+class NoteWageShock(Command):
+	"""The acting seat's cause book records that a shock named `cause` moved the wage index from `index_before` to what
+	it is now."""
+	cause: str
+	index_before: float

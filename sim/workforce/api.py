@@ -1,5 +1,6 @@
-"""The workforce package's only door. Only its commands exist here; the engine bridge applies them until the module moves."""
+"""The workforce package's only door. Only its commands and rules exist here; the engine bridge applies the commands until the module moves."""
 
 WALL = "two-way"  # nothing here imports sim/engine/
 
-from .commands import NoteTradeSpread, PressLabour, SetEmployed
+from .commands import NoteTradeSpread, NoteWageShock, PressLabour, ReportStaffReduction, ScaleDeputies, SetEmployed, SurviveStaff
+from . import rules

@@ -121,7 +121,7 @@ class FoundersJobTests(unittest.TestCase):
     def test_revenue_sources_carry_the_wages_once_after_the_output_factor_and_no_practice_line(self):
         seen = {}
         game = SimpleNamespace(
-            state=SimpleNamespace(economy=SimpleNamespace(output_factor=0.5)), state_funding=lambda: 0.0,
+            output_factor=0.5, state_funding=lambda: 0.0,
             ledger_concern_rows=lambda: {"inn": 10.0}, workshop_output=lambda: 4.0, founder_wage_income=lambda: 20.0,
             revenue=lambda: 99.0)
         with mock.patch.object(economy_production, "assemble_ledger",
@@ -137,10 +137,10 @@ class RevenueCacheTests(unittest.TestCase):
                                     wage_hours_this_year=0.0, directors_extra=0.0, bondage_years_left=0, reputation=1.0,
                                     freedmen=0, slaves=0)
         state = SimpleNamespace(
-            scenario=SimpleNamespace(year=100), economy=SimpleNamespace(output_per_head=1.0, output_factor=1.0),
+            scenario=SimpleNamespace(year=100), economy=SimpleNamespace(output_per_head=1.0),
             holdings=SimpleNamespace(farm_hectares=0.0), projects=None, household=household,
             governance=SimpleNamespace(gov=0.0), founder=SimpleNamespace(founder_alive=True))
-        game = SimpleNamespace(state=state, household=household, pop_scale=1.0, real_output_per_head=lambda: 1.0, state_funding=lambda: 0.0, home_price_level=lambda: 1.0,
+        game = SimpleNamespace(state=state, household=household, output_factor=1.0, pop_scale=1.0, real_output_per_head=lambda: 1.0, state_funding=lambda: 0.0, home_price_level=lambda: 1.0,
                                signature=1.0, committed=0.0, computed=[], _compute_revenue_uncached=None)
         game.labour = SimpleNamespace(director_hours_committed=lambda: game.committed, wage_signature=lambda: game.signature)
         game._compute_revenue_uncached = lambda: game.computed.append(1) or (10.0 * len(game.computed), 0.0)

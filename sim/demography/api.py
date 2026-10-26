@@ -2,4 +2,4 @@
 
 WALL = "two-way"  # nothing here imports sim/engine/
 
-from .commands import AddCaptives
+from .commands import AddCaptives, CutPopulation, KillPeople, RefreshDemographicIndexes

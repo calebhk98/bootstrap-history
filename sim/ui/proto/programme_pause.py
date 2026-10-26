@@ -1,6 +1,6 @@
 """The conditions a player sets under which a programme stops acting: debt, war risk, a resource shortage."""
 
-from sim.engine.hazard_window import hazards_not_yet_past
+from sim.hazards.api import hazards_not_yet_past
 from sim.engine.ui_port import money_text
 from sim.engine.shortage_conditions import condition_rows
 

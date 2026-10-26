@@ -3,7 +3,7 @@
 WALL = "two-way"  # nothing here imports sim/engine/; the engine bridge hands it the legacy state it still needs
 
 from sim.polity.api import RecordBribe
-from .commands import Bribe, PostBounty, StartProject, StopProject
+from .commands import Bribe, PostBounty, ResetProjectProgress, StartProject, StopProject
 from .needed_commands import (ClearMothball, CompleteProject, SettleProjectMaterials)
 from sim.reporting.api import RecordAutomation, RecordAutomationSkip, RecordEvent
 from .blocker_rules import BLOCKER_KINDS, BLOCKER_MEANING, RUNNING_CONSTRAINT_KIND, START_CHECKS

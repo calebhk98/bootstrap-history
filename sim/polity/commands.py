@@ -99,3 +99,9 @@ class ShiftValueWeight(Command):
 class GainReputation(Command):
 	"""The acting seat's reputation rises by `amount`, never above the top of the reputation scale."""
 	amount: float
+
+
+@dataclass(frozen=True)
+class ScaleProtection(Command):
+	"""The acting household's protection is multiplied by `share` (a patron dies and takes part of his cover with him)."""
+	share: float

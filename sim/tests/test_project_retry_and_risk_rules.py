@@ -9,10 +9,10 @@ import types
 import unittest
 from unittest import mock
 
-from sim.engine import society_hazards
+from sim.hazards import advice
+from sim.tests import hazards_host
 from sim.engine.fog import FogMixin
 from sim.engine.projects_progress import ProgressMixin
-from sim.engine.society_hazards import HazardsMixin
 from sim.tests.test_industry_depth import world
 from sim.ui import protocol
 from sim.ui.proto import state_waiting
@@ -99,14 +99,11 @@ class ControllerRelief(unittest.TestCase):
 def timeline_for(hazards, year, relief=1.0, hedge_years=None):
     """`hazard_timeline` over hazards written out as (name, start year, in progress), unhedged unless `relief` is low."""
     rows = [({"name": name, "staff_loss": 0.4}, start, start + 5, in_progress) for name, start, in_progress in hazards]
-    stand_in = types.SimpleNamespace(
-        civ={}, year=year, HAZARD_TIMELINE_BEGIN_NOW_MULT=1.5, HAZARD_TIMELINE_WARN_TAGS=HazardsMixin.HAZARD_TIMELINE_WARN_TAGS,
-        _yr_words=HazardsMixin._yr_words, hazard_relief=lambda kind: (relief, "why"),
-        hazard_advice=lambda kind: {"even_started_today_the_real_hedges_here_take_years":
-                                    hedge_years or {"quickest": 3, "slowest": 10}})
-    with mock.patch.object(society_hazards, "hazards_not_yet_past", return_value=rows), \
-            mock.patch.object(society_hazards.event_causes, "effective_hazard", return_value=("holds", "")):
-        return HazardsMixin.hazard_timeline(stand_in)
+    module = hazards_host.build(year=year, effective_hazard=lambda hazard: ("holds", ""))
+    module.hazard_relief = lambda kind: (relief, "why")
+    module.hazard_advice = lambda kind: {"even_started_today_the_real_hedges_here_take_years": hedge_years or {"quickest": 3, "slowest": 10}}
+    with mock.patch.object(advice, "hazards_not_yet_past", return_value=rows):
+        return module.hazard_timeline()
 
 
 class HazardTimeline(unittest.TestCase):

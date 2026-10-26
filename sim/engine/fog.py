@@ -10,9 +10,8 @@ from sim.agents.api import Household
 from . import category_traits
 from .data import closure, JSONDict, Nodes
 from . import event_causes
-from .hazard_window import hazards_not_yet_past
+from sim.hazards.api import add_timing_to_steps, hazards_not_yet_past
 from .staff_loss_waves import wave_exposure
-from .hazard_hedge_timing import add_timing_to_steps
 
 def prerequisite_label(nodes, prereq_id):
     """The id with the node's name beside it, so the id is identifiable."""

@@ -11,10 +11,10 @@ from types import SimpleNamespace
 
 from sim.engine import tree_merge, validate_action_results
 from sim.engine.projects_completion import CompletionMixin
-from sim.engine.society_hazards import HazardsMixin
+from sim.engine.forward_hazards import HazardsForwardsMixin
 
 
-class _Host(HazardsMixin):
+class _Host(HazardsForwardsMixin):
     lose_what_was_risked = CompletionMixin.lose_what_was_risked
 
     def __init__(self, risks, employees=None, stock=None, seed=1):

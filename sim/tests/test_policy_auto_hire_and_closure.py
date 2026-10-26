@@ -13,12 +13,15 @@ from sim.agents.api import Business
 from sim.constants import REGISTRY
 from sim.engine import data as engine_data
 from sim.engine.economy_credit import CreditMixin
-from sim.engine.hazard_window import hazards_not_yet_past
+from sim.hazards.window import hazards_not_yet_past
 from sim.engine.payroll_trim import payroll_means, staff_to_let_go
 from sim.engine.projects_review import SeatReview
 from sim.engine.projects_venture_quotes import VentureQuotesMixin
 from sim.engine.seat_defaults import default_policy
-from sim.engine.shock_year import ShockYearMixin
+from sim.engine import bridge_diffusion
+from sim.polity.api import ShiftValueWeight
+from sim.reporting.api import RecordEvent
+from sim.tests import hazards_host, module_harness
 from sim.refusal import cause_of, facts_of
 from sim.ui.proto.dispatch_ventures import _cmd_policy
 from sim.ui.proto.state_waiting import _staff_fraction_note
@@ -300,50 +303,50 @@ class HazardValuesLandGradually(unittest.TestCase):
     START, END = 995, 1100
 
     def _host(self, weights):
-        household = SimpleNamespace(log=[])
-        host = SimpleNamespace(value_weights=dict(weights), VALUE_WEIGHT_FLOOR=-5.0, VALUE_WEIGHT_CEILING=5.0,
-                               state=SimpleNamespace(seats={"seat": SimpleNamespace(household=household)},
-                                                     scenario=SimpleNamespace(year=self.START)))
-        return event_stand_in.stood_in(host), household
+        game = SimpleNamespace(value_weights=dict(weights))
+        module = hazards_host.build(answers={ShiftValueWeight: lambda command: bridge_diffusion.shift_value_weight(game, command)})
+        return game, module
 
     def _run(self, hazard, weights, years):
-        host, household = self._host(weights)
+        game, module = self._host(weights)
+        log = []
         for year in years:
-            host.state.scenario.year = year
-            ShockYearMixin._shock_values_seats(host, {"seat": hazard}, year, hazard["years"][0], hazard["years"][1])
-        return host, household
+            before = len(module_harness.sent(module))
+            module.values_seats({"seat": hazard}, year, hazard["years"][0], hazard["years"][1])
+            log += [(year, command) for command in module_harness.sent(module)[before:] if isinstance(command, RecordEvent)]
+        return game, log
 
     def test_one_year_moves_a_fraction_of_the_total_not_the_whole_amount(self):
         hazard = {"name": "Christianisation", "years": [self.START, self.END], "values": {"w_religious_rigidity": 1.06}}
-        host, _household = self._run(hazard, {"w_religious_rigidity": 0.0}, [self.START])
+        host, _log = self._run(hazard, {"w_religious_rigidity": 0.0}, [self.START])
         self.assertGreater(host.value_weights["w_religious_rigidity"], 0.0)
         self.assertLess(host.value_weights["w_religious_rigidity"], 0.5 * 1.06)
 
     def test_the_full_delta_has_landed_by_the_last_year(self):
         hazard = {"name": "Christianisation", "years": [self.START, self.END], "values": {"w_religious_rigidity": 1.06}}
-        host, _household = self._run(hazard, {"w_religious_rigidity": 0.0}, range(self.START, self.END + 1))
+        host, _log = self._run(hazard, {"w_religious_rigidity": 0.0}, range(self.START, self.END + 1))
         self.assertAlmostEqual(host.value_weights["w_religious_rigidity"], 1.06, places=6)
 
     def test_it_is_logged_at_the_start_every_ten_years_and_at_the_end_not_only_once(self):
         hazard = {"name": "Christianisation", "years": [self.START, self.END], "values": {"w_religious_rigidity": 1.06}}
-        _host, household = self._run(hazard, {"w_religious_rigidity": 0.0}, range(self.START, self.END + 1))
-        years = [year for year, _line in household.log]
+        _host, log = self._run(hazard, {"w_religious_rigidity": 0.0}, range(self.START, self.END + 1))
+        years = [year for year, _command in log]
         self.assertIn(self.START, years)
         self.assertIn(self.END, years)
         self.assertTrue(any(self.START < year < self.END for year in years))
         self.assertGreaterEqual(len(years), 3)
-        self.assertTrue(all(cause_of(line) == "hazard_values_shift" for _year, line in household.log))
+        self.assertTrue(all(command.kind == "hazard_values_shift" for _year, command in log))
 
     def test_a_hazard_that_carries_only_a_values_delta_still_moves_the_society(self):
         hazard = {"name": "values-only test hazard", "values": {"w_novelty": -0.2}, "years": [900, 909]}
-        host, _household = self._run(hazard, {"w_novelty": 0.5}, range(900, 910))
+        host, _log = self._run(hazard, {"w_novelty": 0.5}, range(900, 910))
         self.assertAlmostEqual(host.value_weights["w_novelty"], 0.3, places=6)
 
     def test_a_field_the_society_does_not_have_is_ignored(self):
         hazard = {"name": "x", "values": {"w_unknown": 1.0}, "years": [900, 909]}
-        host, household = self._run(hazard, {"w_novelty": 0.5}, range(900, 910))
+        host, log = self._run(hazard, {"w_novelty": 0.5}, range(900, 910))
         self.assertEqual(host.value_weights, {"w_novelty": 0.5})
-        self.assertEqual(household.log, [])
+        self.assertEqual(log, [])
 
 
 class ChristianisationIsData(unittest.TestCase):

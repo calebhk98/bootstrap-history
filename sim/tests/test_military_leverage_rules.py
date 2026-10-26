@@ -5,30 +5,26 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.engine.hazard_relief import HazardReliefMixin
-from sim.engine.military_rules import leverage_of, war_relief
+from sim.engine.military_rules import leverage_of
+from sim.hazards import constants
+from sim.hazards.rules import war_relief
+from sim.tests import hazards_host
 
 SATURATES_AT = 25.0
-CAP = 0.30
+CAP = constants.MILITARY_WAR_RELIEF_CAP
 
 
-class ArmedFounder(HazardReliefMixin):
-    """Just what hazard_relief_entries reads: no node counters, no state weapons, a founder with built military nodes."""
-    HAZARD_COUNTERS = {}
-    STATE_MIL_RELIEF_PER_WEAPON_OUTPUT = 0.04
-    STATE_MIL_RELIEF_PER_WEAPON_SACK = 0.06
+class ArmedFounder:
+    """The hazards module for a founder with built military nodes: no node counters, no state weapons."""
 
     def __init__(self, military_nodes):
-        self.military_nodes = military_nodes
+        self.module = hazards_host.build(military_leverage=leverage_of(military_nodes, SATURATES_AT))
 
-    def _military_war_relief(self):
-        return war_relief(leverage_of(self.military_nodes, SATURATES_AT), CAP)
+    def hazard_relief(self, kind):
+        return self.module.hazard_relief(kind)
 
-    def _state_military_diffusion_relief(self, per_weapon):
-        return 1.0, None
-
-    def _entry_words(self, entry):
-        return entry["label"]
+    def hazard_relief_entries(self, kind):
+        return self.module.hazard_relief_entries(kind)
 
 
 class LeverageTests(unittest.TestCase):

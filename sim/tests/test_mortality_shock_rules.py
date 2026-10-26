@@ -5,44 +5,35 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.engine.hazard_relief import HazardReliefMixin
 from sim.engine.mortality_shock import cut_cohorts
-from sim.engine.staff_loss_words import defence_kind, national_toll_sentence, staff_clause
+from sim.hazards import rules
+from sim.hazards.staff_loss_words import defence_kind, national_toll_sentence, staff_clause
 from sim.engine.wage_scarcity import wage_index_of
 from sim.world.demography import Population
 
 CHILD, WORKING_AGE, ELDERLY = 1.6, 1.0, 1.4   # the vulnerability ratios (sim/world/demography.py)
 
 
-class Country(HazardReliefMixin):
-    """Just what staff_loss_exposure reads: the country's own medical relief, and the household's relief and what did it."""
-
-    def __init__(self, national_relief=0.0, household_relief=1.0, why=()):
-        self.national_relief, self.household_relief, self.why = national_relief, household_relief, list(why)
-
-    def medical_diffusion_relief(self):
-        return self.national_relief
-
-    def hazard_relief_detail(self, kind, beyond_national=False, assume_running=()):
-        return self.household_relief, self.why, []
+def exposure(historical, national_relief=0.0, household_relief=1.0):
+    """The staff a household loses to one wave, from the historical rate, the country's own relief and the household's."""
+    return rules.staff_exposure(historical, national_relief, household_relief)
 
 
 class ExposureTests(unittest.TestCase):
     def test_a_country_without_public_health_takes_the_historical_rate(self):
-        self.assertAlmostEqual(Country().staff_loss_exposure(0.45)["before_defences"], 0.45)
+        self.assertAlmostEqual(exposure(0.45)["before_defences"], 0.45)
 
     def test_the_countrys_public_health_lowers_the_rate_the_whole_society_takes(self):
-        self.assertAlmostEqual(Country(national_relief=0.2).staff_loss_exposure(0.45)["before_defences"], 0.36)
+        self.assertAlmostEqual(exposure(0.45, national_relief=0.2)["before_defences"], 0.36)
 
     def test_the_households_own_hedge_lowers_its_loss_but_not_the_societys(self):
-        hedged = Country(household_relief=0.1, why=["plague quarantine"]).staff_loss_exposure(0.45)
-        bare = Country().staff_loss_exposure(0.45)
+        hedged = exposure(0.45, household_relief=0.1)
+        bare = exposure(0.45)
         self.assertAlmostEqual(hedged["loss"], 0.045)
         self.assertAlmostEqual(hedged["before_defences"], bare["before_defences"])
 
     def test_a_milder_wave_costs_less_both_to_the_household_and_to_the_society(self):
-        milder, severer = Country(household_relief=0.5).staff_loss_exposure(0.28), \
-            Country(household_relief=0.5).staff_loss_exposure(0.45)
+        milder, severer = exposure(0.28, household_relief=0.5), exposure(0.45, household_relief=0.5)
         self.assertLess(milder["loss"], severer["loss"])
         self.assertLess(milder["before_defences"], severer["before_defences"])
 
