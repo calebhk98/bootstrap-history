@@ -8,7 +8,7 @@ from types import SimpleNamespace
 
 from sim.refusal import Refusal
 from sim.seats import join_rules
-from sim.seats.api import (JoinCastSeats, JoinSeat, RecordGoalReached, RegisterSeat, SeatsSeat, SetGoal, ForgetGoalCaches)
+from sim.seats.api import (EndRun, JoinCastSeats, JoinSeat, RecordGoalReached, RegisterSeat, SeatsSeat, SetGoal, ForgetGoalCaches)
 from sim.seats.module import Seats
 from sim.tests import module_harness
 
@@ -129,6 +129,21 @@ class JoinRules(unittest.TestCase):
 
     def test_a_mortal_founders_years_never_fall_below_the_minimum(self):
         self.assertEqual(join_rules.founder_years(False, 5, 2.0, 0.0, lambda mean, spread: mean), 5)
+
+
+class EndingARun(unittest.TestCase):
+
+    def test_a_run_ends_with_its_reason_and_says_so_in_the_log(self):
+        module = seats_over({"founder": seat()})
+        module.end_run(EndRun("denounced"))
+        self.assertEqual(module.seat.dead_reason, "denounced")
+        (event,) = module_harness.sent(module)
+        self.assertEqual((event.kind, event.text), ("run_ends", "RUN ENDS: denounced"))
+
+    def test_an_end_that_is_not_announced_logs_nothing(self):
+        module = seats_over({"founder": seat()})
+        module.end_run(EndRun("asked for the score", announce=False))
+        self.assertEqual((module.seat.dead_reason, module_harness.sent(module)), ("asked for the score", []))
 
 
 class Goals(unittest.TestCase):

@@ -7,8 +7,8 @@ import types
 import unittest
 
 from sim.engine.economy_goods import GoodsMixin
-from sim.engine.economy_materials import MaterialSupplyMixin
 from sim.engine.economy_production import ProductionMixin
+from sim.tests import materials_stand_in
 
 
 def household(**versions):
@@ -31,8 +31,9 @@ class RevenueStandIn(ProductionMixin):
         self.computed = 0
         self.year = 100
         self.price_level = 1.0
+        self.output_factor = 1.0
         self.state = types.SimpleNamespace(
-            scenario=types.SimpleNamespace(year=100), economy=types.SimpleNamespace(output_per_head=1.0, output_factor=1.0),
+            scenario=types.SimpleNamespace(year=100), economy=types.SimpleNamespace(output_per_head=1.0),
             holdings=types.SimpleNamespace(farm_hectares=0.0), projects=types.SimpleNamespace(),
             household=self.household, governance=types.SimpleNamespace(gov=0.0))
         self.founder_alive = True
@@ -65,7 +66,7 @@ class RevenueMemoTest(unittest.TestCase):
             "year": lambda sim: setattr(sim.state.scenario, "year", 101),
             "farmland": lambda sim: setattr(sim.state.holdings, "farm_hectares", 5.0),
             "price level": lambda sim: setattr(sim, "price_level", 1.5),
-            "output factor": lambda sim: setattr(sim.state.economy, "output_factor", 0.5),
+            "output factor": lambda sim: setattr(sim, "output_factor", 0.5),
         }
         for name, change in sorted(changes.items()):
             sim = RevenueStandIn()
@@ -85,20 +86,19 @@ class RevenueMemoTest(unittest.TestCase):
         self.assertEqual(sim.computed, 3)
 
 
-class MaterialDemandStandIn(MaterialSupplyMixin):
-    COKE_PER_CHARCOAL = 0.5
+class MaterialDemandStandIn:
+    """The materials module over a tree, a set of active projects and the version counters that say they changed."""
 
     def __init__(self, nodes, active):
-        self.nodes = nodes
         self.household = household()
         self.active = list(active)
-        self.state = types.SimpleNamespace(projects=types.SimpleNamespace(active_keys_sorted=lambda: sorted(self.active)))
+        projects = types.SimpleNamespace(done=set(), active={}, active_keys_sorted=lambda: sorted(self.active))
+        self.module = materials_stand_in.build(
+            tree_nodes=nodes, legacy_projects=projects,
+            project_versions=lambda: (self.household.active_version, self.household.done_version))
 
-    def chosen_fuel(self, node_id):
-        return "charcoal"
-
-    def _standing_material_terms(self):
-        return []
+    def annual_material_demand(self):
+        return self.module.annual_material_demand()
 
 
 NODES = {"smelter": {"build_yrs": 2.0, "mat": {"iron_kg": 4000.0}}, "kiln": {"yrs": 1.0, "mat": {"clay_kg": 1000.0}}}

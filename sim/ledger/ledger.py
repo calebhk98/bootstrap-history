@@ -45,16 +45,29 @@ class Ledger(Module):
 		self.bump_seat(MONEY)
 
 	def change_stock(self, command: Any) -> None:
+		stock = self.needs.legacy_stock_ledger()
 		if command.legacy_snapshot_after_change:
-			stock = self.needs.legacy_stock_ledger()
 			stock[command.commodity] += command.tonnes
 			opening = self.needs.legacy_opening_stock()
 			opening[command.commodity] = opening.get(command.commodity, 0.0) + command.tonnes
 		else:
 			opening = self.needs.legacy_opening_stock()      # first: the year's snapshot is taken before the change
-			rules.add_tonnes(self.needs.legacy_stock_ledger(), opening, command.commodity, command.tonnes)
-		self.needs.legacy_acting_household()._stock_throttle_sig = None
+			rules.add_tonnes(stock, opening, command.commodity, command.tonnes)
+		stock.writes += 1
 		self.bump_seat(STOCK)
+
+	def bank_stock(self, command: Any) -> None:
+		self.needs.legacy_opening_stock()      # first: the year's snapshot is taken before the change
+		stock = self.needs.legacy_stock_ledger()
+		for commodity, tonnes in command.tonnes:
+			stock[commodity] = tonnes
+		stock.writes += 1
+		self.bump_seat(STOCK)
+
+	def goods_stock_opening(self) -> Any:
+		"""The acting seat's tonnes by commodity key as they stood when this year's accounting began, as the books stand now:
+		read it, never write it. Nothing is recorded by asking."""
+		return rules.year_opening_record(self.needs.legacy_opening_record(), self.needs.year(), self.held_goods())["tonnes"]
 
 	def goods_stock(self, commodity: str) -> float:
 		return self.needs.legacy_stock_ledger().get(commodity, 0.0)

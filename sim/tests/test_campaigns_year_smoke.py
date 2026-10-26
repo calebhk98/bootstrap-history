@@ -36,7 +36,7 @@ class ACampaignInAWholeGame(unittest.TestCase):
         self.game.send(OrderArmy(self.home, army.army_id, self.target))
         self.game.step()
         self.assertEqual(self.game.view("tile_owner")[self.target], self.home)
-        causes = [(event["kind"], event["cause"]) for event in self.game.state.economy.world_events]
+        causes = [(event["kind"], event["cause"]) for event in self.game.view("world_events")()]
         self.assertIn(("tile_transfer", "conquest"), causes)
         self.assertIn(self.target, self.game.assembly.modules["campaigns"].world.held_since)
 

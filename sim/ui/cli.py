@@ -799,7 +799,7 @@ def _summarise_year_reached(results, finished, success_count, run_count):
 def _summarise_shortages(results, run_count):
     shortage_counter = collections.Counter()
     for run in results:
-        shortage_counter.update(run.shortages)
+        shortage_counter.update(run.view("material_shortages")())
     if shortage_counter:
         # RELABELLED, NOT RECOMPUTED: this is a SUM across every run, not a
         # median of anything, so the label must say so. A true per-material

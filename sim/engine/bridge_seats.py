@@ -117,12 +117,6 @@ def dissolution_terms(sim):
             "forget_fraction_divisor": sim.DISSOLUTION_FORGET_FRACTION_DIVISOR, "years_until_end": sim.DISSOLUTION_YEARS_UNTIL_END}
 
 
-@bridge_view("losable_node_ids", kind=QUOTE, seat_scoped=True)
-def losable_node_ids(sim, keep_dispersed=True):
-    """Sorted built nodes a loss event may take: not inherited, not a measured goal, and by default not a dispersed corpus."""
-    return sim.losable_node_ids(keep_dispersed)
-
-
 # ---- goals and what they read ----
 
 @bridge_view("win_condition_text", kind=QUOTE)
@@ -142,19 +136,3 @@ def game_attribute(sim, path):
     return getattr(sim, path, None)
 
 
-@bridge_view("generation_breakdown", seat_scoped=True)
-def generation_breakdown(sim):
-    """What the civilisation can generate and transmit now, by source: {sources_kw, total_kw, ...}."""
-    return sim.generation_breakdown_kw()
-
-
-@bridge_view("hazard_relief", kind=QUOTE, seat_scoped=True)
-def hazard_relief(sim, kind):
-    """(multiplier, [what did it]): how much of one kind of harm the things the seat has built take off."""
-    return sim.hazard_relief(kind)
-
-
-@bridge_view("hazard_relief_entries", kind=QUOTE, seat_scoped=True)
-def hazard_relief_entries(sim, kind):
-    """One record per defence that takes something off `kind` of harm."""
-    return sim.hazard_relief_entries(kind)

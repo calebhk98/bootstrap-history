@@ -12,7 +12,9 @@ from .harness import check
 
 from sim.engine.economy import EconomyMixin
 from sim.engine.goods_market_api import GoodsMarket
-from sim.engine.project_materials import ProjectMaterialsMixin
+from sim.engine.economy_materials import MaterialSupplyMixin
+from sim.materials.api import SettleProjectMaterials as SettleCommand
+from sim.tests import materials_stand_in
 from sim.engine.state import SimulationState, deserialize_state, serialize_state
 from sim.engine.state_seat import seat_from_template
 from sim.projects.api import SettleProjectMaterials
@@ -67,7 +69,7 @@ check("a material nobody sells is refused", _quote_material(unpriced, {"material
 # ---- the material cost reaches the market's quote
 asked = []
 game = SimpleNamespace(goods_market=SimpleNamespace(quote_buy=lambda material, tonnes, already: asked.append((material, tonnes, already)) or (1.0, 1.0)))
-ProjectMaterialsMixin.material_purchase_cost(game, "coal_kg", 3.0, 2.0)
+MaterialSupplyMixin.material_purchase_cost(game, "coal_kg", 3.0, 2.0)
 check("the bill's price of an order is the goods market's quote for it", asked == [("coal_kg", 3.0, 2.0)], asked)
 
 # ---- why shows the engine's cost
@@ -96,15 +98,17 @@ check("starting today costs labour, capital and missing materials times the dist
 # ---- starting pays for the materials and fixes the bill
 def settling(up_front, paid):
     bought = []
-    return SimpleNamespace(project_cost_now=lambda node_id: 1000.0, _up_front_materials_money=lambda node_id: up_front,
-                           buy_project_materials=lambda node_id: bought.append(node_id) or paid), bought
+    module = materials_stand_in.build(project_cost_now=lambda node_id: 1000.0)
+    module.up_front_materials_money = lambda node_id: up_front
+    module.buy_project_materials = lambda node_id: bought.append(node_id) or paid
+    return module, bought
 
 
 game, bought = settling(up_front=300.0, paid=300.0)
 check("starting pays the up-front materials and leaves the rest of the cost to pay in instalments",
-      ProjectMaterialsMixin.settle_project_materials(game, "node") == (700.0, 300.0) and bought == ["node"], bought)
+      game.settle_project_materials(SettleCommand("node")) == (700.0, 300.0) and bought == ["node"], bought)
 game, bought = settling(up_front=0.0, paid=0.0)
-check("with no materials to buy up front nothing is bought and the whole cost is left", ProjectMaterialsMixin.settle_project_materials(game, "node") == (1000.0, 0.0)
+check("with no materials to buy up front nothing is bought and the whole cost is left", game.settle_project_materials(SettleCommand("node")) == (1000.0, 0.0)
       and bought == [], bought)
 
 module = projects_host.build(

@@ -10,7 +10,7 @@ from .state_projects import (
     _agent_state_training_and_hours,
 )
 import sim.engine.ui_port as ui_port
-from sim.engine.ui_port import shortage_conditions
+from sim.engine.ui_port import shortage_condition_rows
 from sim.engine.ui_port import knowledge_loss_warning
 from .scandal_trend import years_until_scandal_crosses_the_line
 from .step_alerts import demographic_emergency
@@ -201,7 +201,7 @@ def _agent_state_risk_and_pressure(sim, full=True):
             if getattr(sim, "scandal_last_year", None) is not None else None),
         "years_until_scandal_crosses_the_line": years_until_scandal_crosses_the_line(
             sim.scandal, getattr(sim, "scandal_last_year", None), sim.cfg["suspicion_danger"]),
-        "resource_throttle": round(sim.throttle, 3), "throttle_binding": sim.binding,
+        "resource_throttle": round(sim.view("material_throttle")(), 3), "throttle_binding": sim.view("material_binding")(),
         "forest_ha": round(sim.view("forest_hectares")(), 1),
         "mine_capacity": {material: round(value, 1) for material, value in sim.view("mine_capacity")().items()},
         "slaves": sim.slaves, "freedmen": sim.freedmen,
@@ -312,7 +312,7 @@ def _agent_state(sim, nodes, cmd=None):
     emergency = demographic_emergency(sim.state.population.population_change_last_year)
     if emergency:
         out["demographic_emergency"] = emergency
-    conditions = shortage_conditions.condition_rows(sim)
+    conditions = shortage_condition_rows(sim)
     if conditions:
         out["conditions"] = conditions
     living_stock = sim.held_living_stock()

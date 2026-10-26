@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Prove a refactor kept the game the same, year by year, and say where it did not.
 
-    python3 -m sim.tests.equiv record PATH --tier micro|full|long
-    python3 -m sim.tests.equiv check PATH --tier micro|full|long [--base-checkout DIR]
+    python3 -m sim.tests.equiv record PATH --tier micro|full|long|stress
+    python3 -m sim.tests.equiv check PATH --tier micro|full|long|stress [--base-checkout DIR]
     python3 -m sim.tests.equiv record PATH --tier micro --hash-seeds 0,1     # same bytes under both hash seeds?
 
 Each year after `sim.step()` the whole saved state (`saveload.state_text`) is parsed and flattened to
@@ -32,6 +32,17 @@ from sim.tests import equiv_core
 VALUE_WIDTH = 100
 
 
+def scenario_name(scenario):
+    """Fingerprint's name, plus the stress tier's marks so its scenarios do not share one."""
+    from sim.tests import fingerprint
+    name = fingerprint.name_of(scenario)
+    if scenario.get("stress"):
+        name += "+stress"
+    if scenario.get("seats", 1) > 1:
+        name += "+%dseats" % scenario["seats"]
+    return name
+
+
 def tier_scenarios(tier):
     """The scenarios of a tier; the scenario definitions are fingerprint's."""
     from sim.tests import fingerprint
@@ -42,6 +53,8 @@ def tier_scenarios(tier):
         return [dict(scenario, years=40) for scenario in quick]
     if tier == "micro":
         return [dict(quick[0], years=15), dict(quick[1], civ="han_china_100ad", seed=2, years=15)]
+    if tier == "stress":   # sim/tests/equiv_stress.py: every hazard kind and the rare events, one seat and two
+        return [dict(quick[0], years=12, stress=True), dict(quick[0], years=12, stress=True, seats=2)]
     raise SystemExit("unknown tier %r" % tier)
 
 
@@ -118,7 +131,7 @@ def record(path, tier, jobs, spin_up=None):
     results = _map(_record_worker, [(scenario, spin_up) for scenario in scenarios], jobs or default_jobs(len(scenarios)))
     output = {"meta": {"tier": tier, "spin_up": spin_up}, "scenarios": {}}
     for scenario, (years, seconds) in zip(scenarios, results):
-        name = fingerprint.name_of(scenario)
+        name = scenario_name(scenario)
         output["scenarios"][name] = {"scenario": scenario, "years": years}
         print("  %-42s %4d years  %7.1fs" % (name, len(years), seconds))
     with open(path, "w") as handle:
@@ -216,7 +229,7 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description="Year-by-year whole-state equivalence of two builds.")
     parser.add_argument("mode", choices=["record", "check"])
     parser.add_argument("path")
-    parser.add_argument("--tier", required=True, choices=["micro", "full", "long"])
+    parser.add_argument("--tier", required=True, choices=["micro", "full", "long", "stress"])
     parser.add_argument("--jobs", "-j", type=int, default=None, help="parallel scenarios (default min(scenarios, cores))")
     parser.add_argument("--base-checkout", default=None, help="worktree of the base commit, for leaf-level diffs")
     parser.add_argument("--hash-seeds", default=None, help="record: comma list of PYTHONHASHSEED values to compare")

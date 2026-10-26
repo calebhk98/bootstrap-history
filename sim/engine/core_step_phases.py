@@ -30,7 +30,6 @@ from .state_demand import answer_confiscation
 from .invariants import check_labour_market_invariants, check_yearly_invariants
 from .eminence_warning import eminence_band_to_announce
 from .step_phase_money import MoneyPhaseMixin
-from .step_phase_materials import MaterialsPhaseMixin
 from .step_phase_projects import ProjectProgressPhaseMixin
 from .step_phase_staff import StaffPhaseMixin
 from sim.agents.api import edges, ledger
@@ -44,7 +43,7 @@ class StepContext:
     invariant_checker: object
 
 
-class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, MaterialsPhaseMixin, ProjectProgressPhaseMixin):
+class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, ProjectProgressPhaseMixin):
     """Composition point for the named phases Sim.step() calls, in order. The staff, money,
     materials and project-progress phases live in step_phase_*.py (the start of projects is the projects module's
     phase) and come in through the
@@ -92,19 +91,6 @@ class StepPhasesMixin(StaffPhaseMixin, MoneyPhaseMixin, MaterialsPhaseMixin, Pro
             # was still on it cost a whole extra year of everybody's time.
             self.state.household.training = still
             self.labour.resync_pools()
-
-    def _step_dated_shocks(self, seats=None):
-        # 3. dated shocks: the world is hit once, each seat in `seats` meets them with its own works
-        self.disaster_this_year = None
-        if self.events:
-            year = self.state.scenario.year
-            logged_before = len(self.log)
-            self._shocks(year, seats)
-            names = [hazard.get("name", "a hazard") for hazard in self.civ.get("hazards", [])
-                     if hazard.get("years", [0, 0])[0] <= year <= hazard.get("years", [0, 0])[-1]]
-            if names:
-                self.disaster_this_year = {"name": ", ".join(names),
-                                           "messages": [message for _, message in self.log[logged_before:]]}
 
     def begin_seat_year(self):
         """What the acting seat notes before its year starts."""

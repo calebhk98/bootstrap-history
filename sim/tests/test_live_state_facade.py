@@ -13,7 +13,6 @@ SCALARS = {
     "capital": (1250.0, "household.capital"),
     "year": (150, "scenario.year"),
     "farm_hectares": (45.0, "holdings.farm_hectares"),
-    "output_factor": (1.15, "economy.output_factor"),
     "fog": (True, "_fog"),
     "goal": ("test_goal", "_goal"),
 }

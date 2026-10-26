@@ -9,6 +9,7 @@ import unittest
 
 from sim.engine.staff_replacement import GROW_STANCE, REPLACE_ONLY, REPLACE_STANCE, hire_stance
 from sim.ledger.api import PayEdge
+from sim.materials.api import ApplyThrottle
 from sim.reporting.api import RecordAutomation, RecordAutomationSkip
 from sim.tests import module_harness, projects_host, resources_stand_in
 from sim.ui.proto.dispatch_ventures import _cmd_policy
@@ -84,8 +85,8 @@ class StartPhaseSkips(unittest.TestCase):
 
 def phase_module(capital=1e9, binding="coal", demand_key="coal_kg", policies=("auto_mine", "auto_forest"), throttle=0.3):
     """The resources module with the materials phase's reads written out; mining itself is recorded, not run."""
-    module = resources_stand_in.build(budget=1e12, views={
-        "acting_balance": capital, "resource_throttle": lambda: throttle, "material_binding": binding,
+    module = resources_stand_in.build(budget=1e12, answers={ApplyThrottle: throttle}, views={
+        "acting_balance": capital, "material_binding": binding,
         "automatic_policy": lambda name: name in policies, "material_demand": {demand_key: 1_000_000.0},
         "material_checks": {"coal_kg": ("coal", "coal")}, "charcoal_per_hectare": 1.0, "year": 100})
     module.opened = []
@@ -139,7 +140,7 @@ class OtherMaterialOrders(unittest.TestCase):
     def test_a_manual_game_with_no_policy_set_records_nothing(self):
         module = phase_module(policies=())
         module.step_materials()
-        self.assertEqual(module_harness.sent(module), [])
+        self.assertEqual([command for command in module_harness.sent(module) if not isinstance(command, ApplyThrottle)], [])
         self.assertEqual(module.opened, [])
 
 

@@ -8,13 +8,12 @@ from sim.agents.api import army_raising
 from sim.assembly.api import KEYED, QUOTE
 from sim.demography.api import AddCaptives
 from sim.geography.api import (endemic_people_loss, food_potential, layer_value, reach, route, usable_modes)
-from sim.hazards.api import RecordWorldEvent
 from sim.land.api import TransferTile
 from sim.polity.api import (CloseSuccessionDispute, RecordRising, RegisterPeople, ReplaceRuler, ResetStateUnrest,
                             SetGrievanceReference, SetLandTakenMemory, SetTileReading, StrikeFromForce)
 from sim.stores.api import WriteStore
 
-from . import contact_events, world_events
+from . import contact_events
 from .bridge import bridge_command, bridge_view
 
 
@@ -114,12 +113,6 @@ def store(sim, name):
 @bridge_command(TransferTile)
 def transfer_tile(sim, command):
     return sim.transfer_tile(command.tile, command.to_actor, command.control, cause=command.cause)
-
-
-@bridge_command(RecordWorldEvent)
-def record_world_event(sim, command):
-    return world_events.record(sim, command.kind, actors=list(command.actors), tiles=list(command.tiles), cause=command.cause,
-                               **command.facts)
 
 
 @bridge_command(WriteStore)

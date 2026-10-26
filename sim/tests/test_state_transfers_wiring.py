@@ -23,7 +23,8 @@ class State:
 
     def __init__(self, capital=1000.0, debt=0.0, claims=0.0, per_hour=2.0):
         self.state = SimpleNamespace(household=SimpleNamespace(capital=capital, log=[]), scenario=SimpleNamespace(year=100, _said_condition=set()),
-                                     economy=SimpleNamespace(output_factor=0.5), projects=SimpleNamespace(operating=set()))
+                                     projects=SimpleNamespace(operating=set()))
+        self.output_factor = 0.5
         self.debt, self.claims = debt, claims
         self.nodes = {"work": {"name": "A work"}, "house": {"name": "Gambling house"}}
         self.labour = SimpleNamespace(money_per_labour_hour=lambda: per_hour)

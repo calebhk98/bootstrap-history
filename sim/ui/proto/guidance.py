@@ -37,7 +37,7 @@ def leverage_points(sim):
          "figures": {"technologies_at_risk": risk.get("technologies_at_risk"),
                      "expected_lost_per_sacking": risk.get("expected_technologies_lost_per_sacking")}},
         {"lever": "materials", "why_it_matters": "supply chains cap how fast anything physical can be built",
-         "figures": {"work_runs_at_share_of_plan": round(sim.throttle, 3), "binding_material": sim.binding}},
+         "figures": {"work_runs_at_share_of_plan": round(sim.view("material_throttle")(), 3), "binding_material": sim.view("material_binding")()}},
     ]
 
 

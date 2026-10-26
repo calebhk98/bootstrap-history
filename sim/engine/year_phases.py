@@ -39,11 +39,6 @@ def _still_playing(sim, seats):
 	return [seat_id for seat_id in seats if seat_id not in sim.ended_seats()]
 
 
-def _random_events(sim, seats):
-	if sim.events:
-		sim._random_events(sim.state.scenario.year, _still_playing(sim, seats))
-
-
 def _advance_year(sim, seats):
 	sim.state.scenario.year += 1
 
@@ -58,12 +53,12 @@ SHIPPED: List[Phase] = [
 	Phase("money_seat", SEAT, lambda sim, seat_id: sim._step_money_seat()),
 	Phase("money_world", WORLD, lambda sim, seats: sim._step_money_world()),
 	Phase("win_conditions", SEAT, module_seat_phase("win_conditions")),
-	Phase("dated_shocks", WORLD, lambda sim, seats: sim._step_dated_shocks(seats)),
+	Phase("dated_shocks", WORLD, module_world_phase("dated_shocks")),
 	Phase("drop_ended_seats", WORLD, _still_playing),
 	Phase("seat_prelude", SEAT, lambda sim, seat_id: sim._run_seat_prelude()),
 	Phase("start_projects", SEAT, module_seat_phase("start_projects")),
 	Phase("materials", SEAT, module_seat_phase("materials")),
-	Phase("material_shortage_notes", SEAT, lambda sim, seat_id: sim._step_material_shortage_notes()),
+	Phase("material_shortage_notes", SEAT, module_seat_phase("material_shortage_notes")),
 	Phase("seat_work", SEAT, lambda sim, seat_id: sim._run_seat_work()),
 	Phase("founder_mortality", SEAT, module_seat_phase("founder_mortality")),
 	Phase("market", WORLD, lambda sim, seats: sim._step_market()),
@@ -73,11 +68,11 @@ SHIPPED: List[Phase] = [
 	Phase("soil_nitrogen", WORLD, module_world_phase("soil_nitrogen")),
 	Phase("living_stock", SEAT, module_seat_phase("living_stock")),
 	Phase("defence_stores", SEAT, module_seat_phase("defence_stores")),
-	Phase("random_events", WORLD, _random_events),
-	Phase("world_hazards", WORLD, lambda sim, seats: sim.step_world_hazards(seats)),
+	Phase("random_events", WORLD, module_world_phase("random_events")),
+	Phase("world_hazards", WORLD, module_world_phase("world_hazards")),
 	Phase("campaigns", WORLD, module_world_phase("campaigns")),
 	Phase("revolts", WORLD, module_world_phase("revolts")),
-	Phase("famine_watch", WORLD, lambda sim, seats: sim.step_famine_watch(seats)),
+	Phase("famine_watch", WORLD, module_world_phase("famine_watch")),
 	Phase("credit_limit", SEAT, lambda sim, seat_id: sim.enforce_credit_limit(sim.state.scenario.year)),
 	Phase("advance_year", WORLD, _advance_year),
 ]

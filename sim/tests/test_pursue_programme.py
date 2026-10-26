@@ -28,13 +28,14 @@ STARTABLE = {"root", "long_root", "side"}
 
 
 def a_game(capital=1000.0, startable=STARTABLE, fog=False, hazards=(), done=()):
-    return SimpleNamespace(
+    game = SimpleNamespace(
         nodes=NODES, done=set(done), active={}, can_start=lambda node_id, _memo=None: node_id in startable,
         project_cost=lambda node_id: {"root": 10.0, "long_root": 30.0, "side": 5.0}.get(node_id, 100.0),
         capital=capital, year=1000, civ={"hazards": list(hazards)}, fog=fog, goal="goal",
-        state=SimpleNamespace(interface={}, holdings=SimpleNamespace(shortage_condition=None),
-                              scenario=SimpleNamespace(year=1000)),
+        state=SimpleNamespace(interface={}, scenario=SimpleNamespace(year=1000)), shortage_rows=[],
         hazard_figure=lambda name, hazard: hazard.get(name, 0.0), material_shortfall_t=lambda material: 0.0)
+    game.view = lambda name: (lambda: game.shortage_rows)      # the standing material shortage, as rows
+    return game
 
 
 def ask(game, **command):
@@ -190,13 +191,13 @@ check("an auto_resume programme resumes when the risk clears",
 
 game = a_game()
 ask(game, action="set", target="goal", pause_shortage=0.2, auto_resume=True)
-game.state.holdings.shortage_condition = {"material": "iron", "since": game.year, "reported": 0.5, "previous": 0.5, "latest": 0.5}
+game.shortage_rows = [{"material": "iron", "throughput": 0.5, "years": 1, "trend": "steady"}]
 row = row_of(game)
 check("a shortage past the threshold pauses and names the material",
       row.get("did_nothing_kind") == "shortage_over_limit" and row.get("did_nothing_material") == "iron", row)
-game.state.holdings.shortage_condition = None
+game.shortage_rows = []
 check("an auto_resume programme resumes when the shortage clears", pause_kind(game) is None)
-game.state.holdings.shortage_condition = {"material": "iron", "since": game.year, "reported": 0.9, "previous": 0.9, "latest": 0.9}
+game.shortage_rows = [{"material": "iron", "throughput": 0.9, "years": 1, "trend": "steady"}]
 check("a shortage under the threshold does not pause", programme_pause.tripped(game, {"pause_shortage": 0.2}) is None)
 
 # --- the typed line

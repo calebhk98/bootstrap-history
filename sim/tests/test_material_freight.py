@@ -1,8 +1,8 @@
-"""The price rules of a bought material (sim/freight/rules.py, sim/engine/material_scarcity.py): the freight markup on the book price and
+"""The price rules of a bought material (sim/freight/rules.py, sim/materials/rules.py): the freight markup on the book price and
 the scarcity factor from how hard demand leans on the supply. Complaint 640: rules on inputs built here, no game."""
 import unittest
 
-from sim.engine.material_scarcity import scarcity_factor
+from sim.materials.rules import scarcity_factor
 from sim.freight.rules import freight_markup
 
 QUICK_TOPIC = True

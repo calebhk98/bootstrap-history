@@ -5,7 +5,7 @@ time it is read; every later change goes through `transfer_tile`, whoever the ac
 """
 from sim.geography.api import tile_owners, tiles_held
 
-from . import world_events
+from sim.hazards.api import RecordWorldEvent
 
 
 def _follow_in_country_profiles(sim, tile_id, previous, to_actor):
@@ -85,9 +85,9 @@ class TileOwnershipMixin:
         self.__dict__["_tile_transfers"] = self.__dict__.get("_tile_transfers", 0) + 1
         previous = tile_owners.transfer(self.tile_owner_map(), tile_id, to_actor, control, self.world_map, controls)
         _follow_in_country_profiles(self, tile_id, previous, to_actor)
-        world_events.record(self, "tile_transfer", actors=[actor for actor in (previous, to_actor) if actor],
-                            tiles=[tile_id], cause=cause, from_owner=previous, to_owner=to_actor,
-                            control=tile_owners.control_of(controls, tile_id))
+        self.send(RecordWorldEvent("tile_transfer", actors=tuple(actor for actor in (previous, to_actor) if actor), tiles=(tile_id,),
+                                   cause=cause, facts=dict(from_owner=previous, to_owner=to_actor,
+                                                           control=tile_owners.control_of(controls, tile_id))))
         return previous
 
     def way_owners(self):

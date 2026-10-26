@@ -31,8 +31,8 @@ def state_leaves(sim, current=True):
 
 def run_years(scenario, on_year, current=True, stop_after=None):
     """Step the scenario; call `on_year(index, leaves, rng_hash)` after each year; a False return stops the run."""
-    from sim.tests import fingerprint
-    sim = fingerprint.build(scenario)
+    from sim.tests import equiv_stress, fingerprint
+    sim = equiv_stress.build(scenario) if scenario.get("stress") else fingerprint.build(scenario)
     years = scenario["years"] if stop_after is None else stop_after + 1
     for index in range(years):
         if sim.dead_reason:

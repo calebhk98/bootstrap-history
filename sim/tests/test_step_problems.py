@@ -5,7 +5,7 @@ QUICK_TOPIC = True
 from types import SimpleNamespace
 
 from .harness import *  # noqa: F401,F403
-from sim.engine.hazard_relief import HazardReliefMixin
+from sim.tests import hazards_host
 from sim.engine.society_state_pressure import StatePressureMixin
 from sim.ui.proto import render_screen_step as _render_big
 from sim.ui.proto.dispatch_inspection_society import _cmd_risk
@@ -47,27 +47,22 @@ check("a game with no goal has no route", route_nodes(SimpleNamespace(goal=None,
 
 
 # ---- a lapsed hedge names the concern whose closure lapsed it ----------------------------------------------
-class HedgeGame(HazardReliefMixin):
-    HAZARD_COUNTERS = {"staff_loss": [("sanitation_antisepsis", 0.5, "Sand filter")]}
+class HedgeGame:
+    """The hazards module with one sanitation hedge built, running or shut."""
 
-    def __init__(self, strength):
-        self.nodes = {"sanitation_antisepsis": {"name": "Antiseptic sanitation"}}
-        self.state = SimpleNamespace(projects=SimpleNamespace(closures={}))
-        self.strength = strength
+    def __init__(self, running):
+        self.module = hazards_host.build(
+            hazard_counter_rows={"staff_loss": [(0, "sanitation_antisepsis", 0.5, "Sand filter")]},
+            tree=lambda node: {"name": "Antiseptic sanitation"}, techniques_held={"sanitation_antisepsis"},
+            running=lambda node: running)
 
-    def _counter_strength(self, node):
-        return self.strength
-
-    def _counter_requirements(self, node, kind, label):
-        return ()
-
-    def counter_supply_gap(self, node, kind, label):
-        return 1.0, None
+    def hazard_relief_detail(self, kind):
+        return self.module.hazard_relief_detail(kind)
 
 
-_multiplier, _why, lapsed_names = HedgeGame(0.5).hazard_relief_detail("staff_loss")
+_multiplier, _why, lapsed_names = HedgeGame(False).hazard_relief_detail("staff_loss")
 check("a lapsed hedge names the concern whose closure lapsed it", lapsed_names == ["Antiseptic sanitation"], lapsed_names)
-running = HedgeGame(1.0).hazard_relief_detail("staff_loss")
+running = HedgeGame(True).hazard_relief_detail("staff_loss")
 check("a hedge that is running lapses nothing and takes its full share off", running[2] == [] and abs(running[0] - 0.5) < 1e-12, running)
 
 # ---- the risk reply carries the confiscation block ----------------------------------------------------------

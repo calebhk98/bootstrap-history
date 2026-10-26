@@ -8,13 +8,6 @@ from sim.assembly.api import Command
 
 
 @dataclass(frozen=True)
-class SettleProjectMaterials(Command):
-    """Materials: buy the materials the market can deliver now for the project (when the money can be raised) and
-    bank them. Answers (what is left to pay in instalments, the materials money paid now)."""
-    node_id: str
-
-
-@dataclass(frozen=True)
 class ClearMothball(Command):
     """Ventures: forget a stale mothball entry for a work that is being built again."""
     node_id: str

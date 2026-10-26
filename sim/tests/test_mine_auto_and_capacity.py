@@ -1,11 +1,12 @@
 """Complaints 65 and 67: the automatic mining order counts shafts still being sunk, and a material fed by two supply
-tags shows both demands in one capacity row. The rules are called on given numbers and a stub over the real mixin."""
+tags shows both demands in one capacity row. The rules are called on given numbers."""
 
 QUICK_TOPIC = True
 
 import unittest
 
-from sim.engine.economy_materials import MaterialSupplyMixin
+from sim.materials import rules
+from sim.materials.constants import FIREWOOD_PER_CHARCOAL_MASS_RATIO
 from sim.resources.sizing import auto_mine_affordable_tonnes, auto_mine_order_tonnes
 
 RICH = 1e12
@@ -38,18 +39,18 @@ class AutoMineOrder(unittest.TestCase):
         self.assertGreater(auto_mine_affordable_tonnes(10_000.0, 0.0), 0.0)
 
 
-class StubSupply(MaterialSupplyMixin):
+class StubSupply:
     """The real shared-land arithmetic over given own supply by tag."""
 
     def __init__(self, own_by_tag):
         self.own_by_tag = own_by_tag
 
-    def _own_material_supply(self, tag):
-        return self.own_by_tag.get(tag, 0.0)
+    def demand_and_own_supply_by_material(self, by_tag):
+        return rules.demand_and_own_supply(by_tag, lambda tag: self.own_by_tag.get(tag, 0.0))
 
 
 class SharedForestRow(unittest.TestCase):
-    RATIO = MaterialSupplyMixin.FIREWOOD_PER_CHARCOAL_MASS_RATIO
+    RATIO = FIREWOOD_PER_CHARCOAL_MASS_RATIO
 
     def test_charcoal_and_firewood_demands_add_in_one_row(self):
         supply = StubSupply({"forest": 100.0, "forest4": 100.0 / self.RATIO})

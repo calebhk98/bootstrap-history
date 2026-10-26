@@ -1,138 +1,152 @@
 # Module `hazards`
 
-Disasters and shocks: random events, dated shocks, world hazards, famine watch, relief and the output factor.
+Dated shocks and world hazards, and what counters them: the dated catastrophes of a civilisation's file, the yearly chances that need
+no date, the base-rate shocks every country draws for, famine watch, the relief that built defences give, the advice and timeline the
+screens print, the world event log and the world's output factor.
 
-**Status:** draft for task 1.5 of `MODULE_MIGRATION_TASKS.md`, read-only analysis of `e8b004c` (the head of `sim-module-registry-plan`). No code changed. The tables are generated from the static analysis in `README.md` ("How the numbers were made") and then edited by hand. No committed command reproduces the counts; the scripts were kept outside the repository, so re-measure before acting on one. Names this draft did not open in the source are marked in its hard spots.
+**Status:** moved, on branch `mr/hazards` (package `sim/hazards/`, bridge `sim/engine/bridge_hazards.py`, forwarders
+`sim/engine/forward_hazards.py`). The draft of task 1.5 (a read-only analysis of `e8b004c`) is replaced by what the move found; "What
+the move changed in this draft" lists each correction. Re-measure counts with `python3 -c "import sys; sys.path.insert(0,'.'); from
+sim.hazards import module_spec as m; s=m.MODULE_SPECS[0]; print(len(s.publishes), len(s.applies), len(s.reads), len(s.sends))"`.
 
-## At a glance
+## What the move changed in this draft
 
-| Measure | Value |
-|---|---|
-| Views / commands proposed | 4 / 2 |
-| Old methods and properties owned (after regrouping) | 52 |
-| Of those, referenced from another module's mixin code | 8 (3 classed read-only or pure by Appendix B, 5 classed writers) |
-| Names used by other modules or by code outside the mixins (ui, agents, ports, mods, function modules) | 16 (8 from mixins, 8 only from outside) |
-| Views per used name | 0.25 |
-| Views that replace exactly one referenced method and no field (one-to-one) | 0 of 4 |
-| Views of other modules it reads | 25, from 14 modules (over the 15-read limit of task 2.4) |
-| Commands of other modules it sends | 12 |
+- **Views: fourteen quotes and tables, not four.** The draft grouped the figures into `hazard_figures`, `hazard_relief`, `knowledge_risk`
+  and `output_factor`. Callers ask for one figure with arguments (the kind of harm, the hazard, the nodes to assume running), so
+  each is a quote (`hazard_figure`, `hazard_relief_entries`, `hazard_relief`, `hazard_relief_detail`, `hazard_effect_preview`,
+  `hazard_advice`, `hazard_timeline`, `staff_loss_exposure`, `national_public_health_sources`), which never needs a cache and
+  clears the three-caller floor by being a quote. Tables: `output_factor`, `disaster_this_year`, `countries_in_game`;
+  quotes of the log and the calendar: `world_events`, `live_hazard_kinds` (was published by the living-stock bridge, now here).
+- **`knowledge_risk` and `_epidemic_risk` stay in `fog.py`** (the knowledge module owns that file). Nothing in this module calls
+  them: the screens and `knowledge_warning` call `sim.knowledge_risk`, which reads this module's figures through the forwarders. They
+  go to whichever module takes `fog.py`; `losable_node_ids` was their other input; `corpus_hedge` is the knowledge module's (it moved there first).
+- **Commands applied: three, not two.** `RecordWorldEvent` (the log's one writer; was applied by the campaigns bridge),
+  `LoseCapital` (a catastrophe destroys a share of what the acting household holds; the epidemic step and the state's demands still
+  call `lose_capital`) and `RecoverOutput` (the year's recovery of the output factor, sent by the money phase). `SetOutputFactor` is
+  not a command: the factor falls only inside this module's shocks and rises only by `RecoverOutput`. `RunRandomEvents` is the
+  phase `random_events`, not a command.
+- **Commands sent: seventeen, of which eleven are new classes** in the owners' packages and applied by `bridge_hazards.py`: workforce
+  `SurviveStaff`, `ScaleDeputies`, `ReportStaffReduction`, `NoteWageShock`; demography `CutPopulation`, `RefreshDemographicIndexes`,
+  `KillPeople`; polity `ScaleProtection`; projects `ResetProjectProgress`, `ShutForgotten`; seats `FounderDies`; the knowledge module's `ForgetTechnique` carries the lost nodes.
+  The draft's `ChangeStanding` is not one command (the invented command meant different things in two prototypes): scandal is
+  `RaiseScandal` (existing), protection is `ScaleProtection`. `LearnTechnique`, `StartProject`, `SetOperating`, `Hire`, `Fire`,
+  `CloseWork`, `ChargeTheft` and `PayEdge` as listed in the draft are not sent: the old code never hired, fired or started anything,
+  and `ChargeTheft` is `PlunderHousehold`.
+- **A sack sends `ShutForgotten` (the works stop running or sit shut) and then one `ForgetTechnique` with all the nodes.** The old
+  loop told the caches once; the knowledge module bumps once per command, so one command keeps the saved counter identical.
+- **State: four world fields and one seat field, not two world fields.** `HazardsWorld`: `output_factor`, `world_events`,
+  `said_output`, `said_debasement` (the last two were `ScenarioState._said_output` and `_said_debasement`); `HazardsSeat`:
+  `last_patron_death` (was `FounderState.last_patron_death`). `_said_condition` stays in `ScenarioState`: the concern levy writes to
+  it as well (`legacy_said_once`, a debt). Relocations are in `sim/tests/equiv_fields.py`.
+- **`_catastrophe` is not hazards'.** Nothing in this module calls it; the three callers are in `core_step_phases.py` (denounced, too
+  eminent, no successors). It is the seats' command `FounderDies`; `Sim._catastrophe` forwards.
+- **Constants moved with the module** (`sim/hazards/constants.py`): the seventeen declared numbers of the three mixins, the
+  output recovery rate from `core.py` (the corpus hedge pair went to knowledge), and the two own-mine counter shares from `projects_completion.py`
+  (20 `declare` calls, `grep -c "= declare(" sim/hazards/constants.py`).
+  `PATRON_DEATH_COURTING_GIFT` (a descriptor pricing the hours in the coin) is gone: the module multiplies the hours by
+  `money_per_labour_hour` and the price index itself, in the old order.
+- **Pure helpers moved in** (`git mv`): `hazard_condition`, `hazard_window`, `hazard_hedge_timing`, `hazard_merge`, `hazard_toll`,
+  `hedge_steps`, `patron_death`, `capital_loss`, `staff_loss_words`, `world_hazard_data` (now `window.py`, `condition.py`, ...).
+  `war_relief` moved from `military_rules.py` to `rules.py`; `leverage_of` stays there (polity's).
+- **The 25 reads from 14 modules are 50 views from 20 owners**, because the old code reached further than the catalogue's scan: the
+  seat switch (`legacy_act_as`), the dice (`legacy_dice`), the event-cause evaluator (`effective_hazard`), the tree's critical path
+  and closure, the founder's policy, the goal, the wage index, the mines, the strata. Which are bridged is in "Reads" below.
+- **The draft's "needs a second consumer" for `hazard_relief`** no longer applies: it is a quote.
 
-**Existing surface and files.** Existing: `sim/world/` hazard data (`world_hazard_data.py`, `hazard_condition.py`, `hazard_window.py`, `hazard_toll.py`, `hazard_merge.py`). Engine: `HazardsMixin` (21), `HazardReliefMixin` (12), `WorldHazardsMixin`, `ShockYearMixin` (11), `_step_dated_shocks`, `Fog._epidemic_risk/knowledge_risk`, `Sim.corpus_hedge`.
+## Mixin classes and files absorbed
 
-## (a) Mixin classes and files absorbed
-
-| Class | File | Methods here | Referenced from other modules |
-|---|---|---|---|
-| `Sim` | `sim/engine/core.py` | 1 | 1 |
-| `FogMixin` | `sim/engine/fog.py` | 2 | 0 |
-| `ShockYearMixin` | `sim/engine/shock_year.py` | 11 | 0 |
-| `HazardReliefMixin` | `sim/engine/hazard_relief.py` | 12 | 2 |
-| `HazardsMixin` | `sim/engine/society_hazards.py` | 21 | 4 |
-| `WorldHazardsMixin` | `sim/engine/world_hazards.py` | 3 | 0 |
-| `ForwardingPropertiesMixin` | `sim/engine/core_properties.py` | 2 | 2 |
-| `StepPhasesMixin` | `sim/engine/core_step_phases.py` | 1 | 0 |
-
-Methods that stay inside the module (referenced by no other module's mixin code and by nothing outside the mixins): `_apply_event_causes`, `_calendar_floor_remaining`, `_closure_words`, `_counter_requirements`, `_counter_strength`, `_entry_words`, `_epidemic_risk`, `_log_corpus_loss`, `_loss_words`, `_military_war_relief`, `_national_sources_words`, `_random_events_for_seat`, `_resolve_hazard_condition`, `_sack_corpus_loss`, `_sack_site`, `_shock_output_factor`, `_shock_output_factor_seats`, `_shock_real_erosion`, `_shock_real_erosion_seats`, `_shock_sack_chance`, `_shock_staff_loss`, `_shock_staff_loss_seats`, `_shock_values`, `_shock_values_seats`, `_shocks`, `_staff_loss_message`, `_staff_loss_of_seat`, `_yr_words`, `hazard_advice`, `hazard_relief_detail`, `hazard_timeline`, `hedge_first_steps`, `mitigation_table`, `national_public_health_sources`, `output_floor`, `staff_loss_exposure`.
-
-## (b) State owned
-
-Paths are today's. Seat-scoped fields live on `state.<section>` as the acting seat's alias (`bind_seat`, `sim/engine/state_seat.py`) and are saved once per seat in `state.seats[seat_id]`; world fields live once on the state. Counts are access sites found by the field scan: a mixin method of another module counts under that module, code in a function module, `sim/ui`, `sim/agents` and the like counts under `<area>`.
-
-Proposed slot: a world dataclass `HazardsWorld`, no per-seat state.
-
-| Today's path | Scope | Read by (outside the owner) | Written by (outside the owner) |
-|---|---|---|---|
-| `state.economy.output_factor` | world | production 7, finance 2, <agents> 2, markets 1, polity 1 | core 1, finance 1 |
-| `state.economy.world_events` | world | <engine-functions> 3 | - |
-
-## (c) Views
-
-Kind is table (one value), keyed (one value per key, computed on first read of the key) or quote (a question with arguments, never cached). Channels are the version channels the owner bumps; `inputs` are other views the value is derived from (a name without a dot is this module's own).
-
-| View | Kind | Seat | Answers | Replaces (old methods) | Replaces (fields) | Inputs | Channels | Callers today |
-|---|---|---|---|---|---|---|---|---|
-| `hazard_figures` | keyed | yes | Annual chance, toll and counter of a hazard; advice, hedge steps, timeline, mitigation table and effect preview. | `hazard_figure`, `hazard_effect_preview`, `hazard_advice`, `hedge_first_steps`, `hazard_timeline`, `_calendar_floor_remaining`, `_counter_strength`, `_counter_requirements`, `mitigation_table`, `output_floor`, `staff_loss_exposure` | `economy.world_events` | `mechanics.corpus`, `knowledge.techniques_held`, `production.running`, `workforce.staff` | `hazards` | 3 |
-| `hazard_relief` | table | yes | Relief entries and detail: what each held technique takes off a hazard; public health sources. | `hazard_relief_entries`, `hazard_relief`, `hazard_relief_detail`, `national_public_health_sources` | - | `mechanics.effect`, `production.running`, `diffusion.diffusion_relief` | `hazards` | 2 |
-| `knowledge_risk` | quote | yes | The risk of losing knowledge (staff, epidemic, corpus hedge). | `knowledge_risk`, `_epidemic_risk`, `corpus_hedge`, `_surviving_people` | - | `mechanics.corpus`, `disease.epidemic_forecast` | - | 3 |
-| `output_factor` | table | no | The year's multiplier on output from shocks (read by revenue, credit, markets). | `output_factor` | `economy.output_factor` | - | `shocks` | 6 |
-
-**Under the three-caller floor** (task 1.5: a view serves at least 3 callers or is a quote): `hazard_relief`. Each needs a second consumer found, a merge into a neighbouring view, or a change to a quote.
-
-**Coverage.** 8 methods are referenced from other modules' mixin code: 5 are replaced by a view here, 3 by a command. 8 more names are used only from outside the mixins (ui, agents, ports, mods). Of all 16 used names, 12 are covered by a view or command through the method itself, 0 through a field alias, 4 are year-phase hooks and 0 are package handle members.
-
-**Published as views but still classed as writers** after discounting the lazy creation of `state.actors` (which is what made most of Appendix B's writers; see README). Each is either a read that also fills a cache or lazily creates something, or a real write that must be split into a quote and a command before the view is allowed: `hazard_advice`, `hazard_effect_preview`, `hazard_figure`, `hazard_relief`, `hazard_relief_detail`, `hazard_relief_entries`, `hazard_timeline`, `hedge_first_steps`, `knowledge_risk`, `mitigation_table`, `staff_loss_exposure`.
-
-## (d) Commands
-
-| Command | Fields | Replaces | Write sites cited | Refusal causes | Owned fields it writes |
-|---|---|---|---|---|---|
-| `RunRandomEvents` | year, seats | `_random_events`, `_catastrophe`, `_resolve_hazard_condition`: draws in a fixed order and sends losses to owners. Methods: `_catastrophe`, `lose_capital`, `apply_staff_survival`, `_random_events` | `sim/engine/year_phases.py:_random_events`, `sim/engine/society_hazards.py` | none: always applies | `economy.world_events` |
-| `SetOutputFactor` | factor | `_shock_output_factor`, `_shock_output_factor_seats`, money-phase decay. | `sim/engine/shock_year.py:134`, `sim/engine/step_phase_money.py:175`, `sim/engine/core.py:507` | none: always applies | `economy.output_factor` |
-
-**Direct write sites of owned fields outside this module's mixin files** (AST scan; includes the module's own function modules, and writes made through a forwarding property are marked `alias`). Each becomes a command above.
-
-- `economy.output_factor`: 2 sites: `sim/engine/step_phase_money.py:175`, `sim/engine/core.py:507` (assign (alias))
-
-## (e) Reads and sends
-
-Reads (views of other modules), by provider:
-
-- `diffusion`: `diffusion.diffusion_index` (_diffusible_ids, civ_diffusion); `diffusion.diffusion_relief` (_state_military_diffusion_relief, input of hazards.hazard_relief, medical_diffusion_relief)
-- `disease`: `disease.epidemic_forecast` (epidemic_forecast, input of hazards.knowledge_risk)
-- `knowledge`: `knowledge.techniques_held` (has, input of hazards.hazard_figures, projects.done, projects.forgotten ...); `knowledge.visibility` (fog, is_visible)
-- `ledger`: `ledger.acting_balance` (household.capital)
-- `living_stock`: `living_stock.garrison` (counter_supply_gap)
-- `mechanics`: `mechanics.capability_sets` (HAZARD_COUNTERS); `mechanics.corpus` (best_corpus_node, corpus_hedge_tiers, input of hazards.hazard_figures, input of hazards.knowledge_risk ...); `mechanics.effect` (input of hazards.hazard_relief); `mechanics.mechanic` (nodes_with_mechanic)
-- `polity`: `polity.standing` (household.protection, household.scandal_last_year); `polity.state_treasury` (military_leverage)
-- `production`: `production.running` (capability_gaps, input of hazards.hazard_figures, input of hazards.hazard_relief, projects.operating ...)
-- `projects`: `projects.active_projects` (projects.active); `projects.project_cost` (project_cost); `projects.start_check` (start_reason)
-- `reporting`: `reporting.event_log` (household.log, log)
-- `resources`: `resources.mine_output` (mine_capacity)
-- `seats`: `seats.founder` (founder.last_patron_death, founder.policy, policy); `seats.goal` (goal); `seats.seat_list` (playing_seats)
-- `ventures`: `ventures.closures` (projects.closures, projects.mothballed)
-- `workforce`: `workforce.staff` (household.artisans, household.employees, household.scholars, input of hazards.hazard_figures ...); `workforce.wage_index` (wage_index)
-
-Sends (commands of other modules):
-
-- `coin`: `ChargeTheft`
-- `demography`: `KillPeople`
-- `knowledge`: `LearnTechnique`
-- `ledger`: `PayEdge`
-- `polity`: `ChangeStanding`
-- `production`: `SetOperating`
-- `projects`: `StartProject`
-- `reporting`: `RecordEvent`
-- `seats`: `FounderDies`
-- `ventures`: `CloseWork`
-- `workforce`: `Fire`, `Hire`
-
-## (f) Year phases
-
-Phases of `sim/engine/year_phases.py` `SHIPPED` it takes part in; where a phase is shared with other modules the sub-steps it owns are named (see "The year's shared phases" in the README):
-
-- `dated_shocks`
-- `random_events`
-- `world_hazards`
-- `money_world`: the output-factor decay (`step_phase_money.py:175-176`)
-- `famine_watch`
-
-## (g) Callers outside the engine mixins that read its views
-
-| Caller group | Uses | Most-used names |
+| Old class | Old file | Now |
 |---|---|---|
-| ui | 10 | `hazard_figure`, `knowledge_risk`, `hazard_relief_entries`, `hazard_effect_preview`, `hazard_relief` |
-| engine/(function modules) | 7 | `_random_events`, `_step_dated_shocks`, `step_world_hazards`, `step_famine_watch`, `check_yearly_world`, `lose_capital`, `knowledge_risk` |
+| `ShockYearMixin` | `sim/engine/shock_year.py` | `sim/hazards/shocks.py` (`Shocks`) |
+| `HazardsMixin` | `sim/engine/society_hazards.py` | `sim/hazards/random_events.py`, `sack.py`, `advice.py`, `shocks.py` (the condition and cause steps), `constants.py` |
+| `HazardReliefMixin` | `sim/engine/hazard_relief.py` | `sim/hazards/relief.py` (`Relief`) |
+| `WorldHazardsMixin` and the functions around it | `sim/engine/world_hazards.py`, `world_events.py` | `sim/hazards/world.py`, `events.py` |
+| `Sim.corpus_hedge`, `OUTPUT_RECOVERY_RATE`, the output factor property | `sim/engine/core.py`, `core_properties.py` | `relief.py`, `events.py`, forwarders |
+| `StepPhasesMixin._step_dated_shocks` | `sim/engine/core_step_phases.py` | `Shocks.step_dated_shocks` |
 
-The scan matches `sim.`, `s.`, `world.` prefixes, so a few counts include unrelated locals; treat them as orders of magnitude.
+The plain rules are in `sim/hazards/rules.py` (counter strength, the product of reliefs, the output floor, exposure, the corpus a sack
+faces, the output factor's fall and recovery, the timeline's urgency, the log's records, the famine reading), the data readers in
+`world_data.py`.
 
-sim/ui: `hazard_figure` 3, `knowledge_risk` 3, `hazard_relief_entries` 2, `hazard_effect_preview`, `hazard_relief`; engine: `_random_events`, `step_world_hazards`, `step_famine_watch`, `lose_capital`.
+## State owned
 
-## (h) Hard spots and caches
+`HazardsWorld`: `output_factor` (1.0 to leave output whole), `world_events` (dated records, `{year, kind, actors, tiles, cause,
+facts}`, the last `event_log_years_kept` years), `said_output`, `said_debasement`. `HazardsSeat`: `last_patron_death`.
 
-- Hazards today write directly into eight other modules' fields (`society_hazards.py`: artisans, employees, scholars, directors_extra, projects.active/done/mothballed/operating, founder.last_patron_death, protection, scandal, dead_reason): each becomes a command (LoseStaff, ForgetTechnique, SetOperating, CloseWork, ResetProgress, ChangeStanding, FounderDies, ChargeTheft). This is the single biggest writer fan-out.
-- Random draws must keep their order: `_random_events` iterates seats under `act_as`; the command sequence per event must match the old write sequence or the stream diverges (equivalence tool, random state).
-- `hazard_figures` for the UI previews effects without applying them; same pure-quote versus commit split as materials.
+## Views published
 
-Caches and version counters held today (feed for task 1.2):
+| View | Kind | Seat | Answers | Channels |
+|---|---|---|---|---|
+| `output_factor` | table | no | the economy's share of normal real output | `output_factor` (cached: written only here) |
+| `world_events` | quote | no | the log's records, by kind, from a year on, or involving an actor | - |
+| `hazard_figure` | quote | yes | the harm a hazard does of one kind after what is built | - |
+| `hazard_relief_entries` | quote | yes | one record per defence in force against a kind | - |
+| `hazard_relief`, `hazard_relief_detail` | quote | yes | the multiplier (and what did it, and what lapsed) | - |
+| `hazard_effect_preview` | quote | yes | what building a node would do to each hazard ahead | - |
+| `hazard_advice`, `hazard_timeline` | quote | yes | what kind of thing helps, with first steps and lead time; one line per hazard ahead | - |
+| `staff_loss_exposure` | quote | yes | the staff a household loses to one wave | - |
+| `national_public_health_sources` | quote | yes | the medical work that has spread through the country | - |
+| `live_hazard_kinds` | quote | no | the kinds of hazard in progress in a year | - |
+| `disaster_this_year` | table | no | this year's dated hazards and what the acting seat's log said of them | no |
+| `countries_in_game` | table | no | the home country and the partners whose people live in the agent economy | no |
 
-- none of its own
+## Commands applied
+
+| Command | Fields | Answers |
+|---|---|---|
+| `RecordWorldEvent` | kind, actors, tiles, cause, facts | the record written |
+| `LoseCapital` | fraction, cause | the money destroyed (0.0 for a debt or an empty purse) |
+| `RecoverOutput` | - | nothing |
+
+## Phases
+
+`dated_shocks`, `random_events`, `world_hazards`, `famine_watch` are `PhaseHook`s; their `SHIPPED` entries are
+`module_world_phase(...)`. The output factor's recovery inside `money_world` stays in that phase as a `RecoverOutput` it sends.
+`check_yearly_world` (the multi-country invariants) is engine auditing that reads `countries_in_game`; it stays a forwarder.
+
+## Commands sent to other owners
+
+`PayEdge` (ledger), `PlunderHousehold` (coin), `ErodeMoney`, `RecordEvent` (reporting), `RaiseScandal`, `ScaleProtection`,
+`ShiftValueWeight` (polity), `SurviveStaff`, `ScaleDeputies`, `ReportStaffReduction`, `NoteWageShock` (workforce), `CutPopulation`,
+`RefreshDemographicIndexes`, `KillPeople` (demography), `ForgetTechnique` (knowledge), `ResetProjectProgress`, `ShutForgotten` (projects).
+
+## Reads
+
+Views of finished modules: `year`, `civilisation`, `seat_list`, `techniques_held`, `techniques_granted`, `tree`, `tree_nodes`, `running`,
+`start_check`, `project_cost`, `visible_to_player`, `hazard_counter_rows`, `corpus_hedge_tiers`, `corpus_nodes`, `mechanic`,
+`running_mechanics`, `civ_diffusion`, `diffusible_ids`, `diffusion_relief`, `counter_supply_gap`, `standing`, `automation`,
+`money_per_labour_hour`, `price_index`, `money_text`, `money_real`, `event_log`, `acting_balance`, `staff`, `partners_in_agent_economy`,
+`weather_seed`, `legacy_dice`.
+
+Published by `bridge_hazards.py` under the name the owner will publish (each is deleted when its owner moves): `events_enabled`,
+`ended_seats`, `founder`, `goal` (seats); `losable_node_ids`, `critical_path`, `tree_closure` (knowledge and the tree); `active_projects`,
+`closure_record`, `closed_by_choice` (projects and ventures); `military_leverage` (polity); `staff_snapshot`, `wage_index`
+(workforce); `country_strata` (actors); `effective_hazard` (the event-cause evaluator, which reads a
+dozen owners and stays in the engine).
+
+Debts, raw objects or switches the module cannot do without: `legacy_act_as` (the module has no way to switch seats; the world
+phases act as each seat in turn), `legacy_said_once` (the `_said_condition` set the levy shares), and the reused `legacy_dice`.
+
+## Forwarders left (`sim/engine/forward_hazards.py`)
+
+`hazard_figure`, `hazard_relief_entries`, `hazard_relief`, `hazard_effect_preview`, `hazard_advice`, `hazard_timeline`,
+`staff_loss_exposure`, `national_public_health_sources`, `output_floor`, the properties `output_factor` and
+`disaster_this_year`, `check_yearly_world`, `lose_capital`, `apply_staff_survival`, `_surviving_people`, `_catastrophe`, and ten
+constants other code and mods still read off the game. Callers: the screens (`sim/ui`), `fog.py`, `goals.py`,
+`disease_port.py`, `state_demand.py`, `projects_completion.py`, `projects_rebuild.py`, `core.py`, `core_step_phases.py` and the
+`bh_cashshelter_z6f2` mod.
+
+## Hard spots, as resolved
+
+- **Dice order.** The module draws in the old order, once per call: the yearly chance of a wave, the attack averted and the sack
+  chance, the corpus roll and its sample, then the patron, fire and banditry. `SurviveStaff` rolls one die per person in the bridge
+  with the game's dice, in the old order (scholars, artisans, then each trade sorted). The micro equivalence check hashes the
+  generator every year.
+- **A hazard writes into eight owners' fields**: each is now a command above. The sack's four writes (plunder, staff, deputies,
+  projects) keep the old order, and the staff-loss wave keeps the deputies before the log (the log's staffing check reads them).
+- **Quirks kept on purpose**: the staff-loss message is built outside `act_as`, so its national-sources sentence reads the acting
+  (first) seat's techniques; the goal's closure is computed once for the module and reused for every seat. Both were in the
+  old code.
+- **Reads that write.** `hazard_effect_preview` and the figures only read. The remaining writers are the phases and the three
+  commands.
+- **The `risk` screen** (`fog.knowledge_risk`) still calls the quotes through the forwarders; moving it is the knowledge module's.

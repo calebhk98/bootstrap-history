@@ -7,8 +7,7 @@ from types import SimpleNamespace
 
 from sim.tests import projects_host
 from sim.engine.completion_schedule import calendar_floor_years, earliest_completion_years, payment_schedule_years
-from sim.engine.economy_electricity import ElectricityMixin
-from sim.tests import resources_stand_in
+from sim.tests import materials_stand_in, resources_stand_in
 from sim.engine.fog import FogMixin
 from sim.ui.proto.economy import _power_tiers
 
@@ -64,15 +63,11 @@ class PowerCapabilityReadouts(unittest.TestCase):
         "power_line": {"mechanics": {"power_generation": {"tier": "cap_power_grid", "role": "transmission"}}},
     }
 
-    def _generation_host(self, done):
-        nodes = self.NODES
-        return SimpleNamespace(
-            state=SimpleNamespace(projects=SimpleNamespace(done=set(done))), nodes=nodes,
-            nodes_with_mechanic=lambda mechanic: [node_id for node_id, node in nodes.items() if mechanic in node["mechanics"]],
-            mechanic=lambda node_id, mechanic: nodes[node_id]["mechanics"][mechanic])
-
     def _installed(self, done):
-        return ElectricityMixin.installed_generation_kw_by_tier(self._generation_host(done))
+        mechanic = {name: {node_id: node["mechanics"][name] for node_id, node in self.NODES.items() if name in node["mechanics"]}
+                    for name in ("power_tier", "power_generation")}
+        module = materials_stand_in.build(legacy_projects=materials_stand_in.projects(done=done), mechanic=mechanic)
+        return module.installed_generation_kw_by_tier()
 
     def test_a_grid_capability_with_no_station_has_no_installed_generation(self):
         self.assertEqual(self._installed({"cap_power_grid"}), {})

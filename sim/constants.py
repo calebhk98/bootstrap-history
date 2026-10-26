@@ -49,7 +49,7 @@ THE KINDS, and the two that matter for different reasons
                              measurement, but not a distinct kind of their
                              own: see sim/unit_conversions.py's own module
                              docstring for why. HOURS_PER_YEAR (sim/
-                             engine/economy_electricity.py) and DAYS_PER_YEAR
+                             materials/constants.py) and DAYS_PER_YEAR
                              (sim/world/demand.py) are declared the same way,
                              at confidence "A".
     biological_parameter     facts about living things. Calories, gestation,
@@ -332,6 +332,8 @@ def _import_declaring_modules():
     # (see either module's own NOT PART OF THE REGISTRY / kind section for
     # why).
     for module in ("sim.engine.data",
+                   "sim.materials.constants",
+                   "sim.materials.capacity",
                    "sim.engine.economy",
                    "sim.ui.cli",
                    "sim.engine.core",

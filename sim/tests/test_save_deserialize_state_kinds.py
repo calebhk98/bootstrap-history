@@ -9,6 +9,7 @@ import collections
 from sim.agents.api import ActorsState, Business
 from sim.contracts import FACILITY, Contract
 from sim.diffusion.api import DiffusionSeat
+from sim.materials.state import MaterialsSeat
 from sim.engine.state import (ActiveProjectState, EconomyState, FounderState, HoldingsState, HouseholdState, ProjectsState,
                               SimulationState, deserialize_state)
 from sim.foreign_trade.api import ForeignTradeWorld
@@ -79,14 +80,14 @@ check("deserialize_state: nested floats", projects.tenure == {"mason": {"arch": 
 mines = deserialize_state({
 	"mines": [{"id": "m1", "ore": "iron", "capex": 500.0, "open": None}], "mine_pending": {"m2": 2}, "mine_ready": {"m1": 104},
 	"mine_tranches": [["iron", 3, 2.5], ["tin", 1, 0.5]], "deposit_drawn": {"d1": 12}}, ResourcesSeat)
+materials = deserialize_state({"shortages": {"charcoal": "3"}}, MaterialsSeat)
 holdings = deserialize_state({
-	"shortages": {"charcoal": "3"},
 	"_material_stock_ledger": {"iron": 4.0}}, HoldingsState)
 check("deserialize_state: mine stock keeps its entries and order, None inside", mines.mines == [{"id": "m1", "ore": "iron", "capex": 500.0, "open": None}]
       and mines.mine_pending == {"m2": 2.0} and mines.mine_ready == {"m1": 104}, None)
 check("deserialize_state: mine tranches are the saved lists, in order", mines.mine_tranches == [["iron", 3, 2.5], ["tin", 1, 0.5]], mines.mine_tranches)
 check("deserialize_state: tranches the save holds as None stay None", deserialize_state({"mine_tranches": None}, ResourcesSeat).mine_tranches is None)
-check("deserialize_state: shortages are a counter of integers", type(holdings.shortages) is collections.Counter and holdings.shortages == {"charcoal": 3}, holdings.shortages)
+check("deserialize_state: shortages are a counter of integers", type(materials.shortages) is collections.Counter and materials.shortages == {"charcoal": 3}, materials.shortages)
 check("deserialize_state: underscore-led fields", holdings._material_stock_ledger == {"iron": 4.0}, None)
 check("deserialize_state: a holdings blob with nothing in it is the defaults", deserialize_state({}, HoldingsState) == HoldingsState())
 
@@ -94,12 +95,11 @@ check("deserialize_state: a holdings blob with nothing in it is the defaults", d
 economy = deserialize_state({
 	"agent_economy": {"opening": {"recipes": ["bread", "brick"]}, "record": {"loans": [{"contract_id": "l1"}]}, "cargo": {"leg:1": {"tonnes": 2.0}}},
 	"tile_owners": {"t1": {"owner": "rome", "control": "high"}}, "works_under_construction": {"t1": {"mill": [105, 1]}},
-	"output_factor": "2", "market_flows": None, "nodes_money_per_labour_hour": None}, EconomyState)
+	"market_flows": None, "nodes_money_per_labour_hour": None}, EconomyState)
 check("deserialize_state: the stored agent economy (opening with its recipes, record, cargo) is as saved",
       economy.agent_economy == {"opening": {"recipes": ["bread", "brick"]}, "record": {"loans": [{"contract_id": "l1"}]}, "cargo": {"leg:1": {"tonnes": 2.0}}}, None)
 check("deserialize_state: tile-keyed stores, with their numbers typed", economy.tile_owners == {"t1": {"owner": "rome", "control": "high"}}
-      and economy.works_under_construction == {"t1": {"mill": [105.0, 1.0]}}
-      and economy.output_factor == 2.0, None)
+      and economy.works_under_construction == {"t1": {"mill": [105.0, 1.0]}}, None)
 check("deserialize_state: a module's world state types its nested numbers",
       deserialize_state({"trade_by_year": {"100": {"in": 4, "out": 3}}}, ForeignTradeWorld).trade_by_year == {"100": {"in": 4.0, "out": 3.0}})
 check("deserialize_state: unset optional economy fields stay None", economy.market_flows is None and economy.nodes_money_per_labour_hour is None)

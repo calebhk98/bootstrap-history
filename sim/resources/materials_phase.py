@@ -7,6 +7,7 @@ from typing import Any
 
 from sim.agents.api import edges
 from sim.ledger.api import PayEdge
+from sim.materials.api import ApplyThrottle
 from sim.reporting.api import RecordAutomation, RecordAutomationSkip, RecordEvent, order_id
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
@@ -22,14 +23,14 @@ CHARCOAL_SMELTED_METALS = ("iron", "copper", "lead")   # smelted with charcoal, 
 
 
 class MaterialsPhase:
-    """Needs: resource_throttle, spending_power, automatic_policy, material_binding, material_demand, material_checks,
+    """Needs: spending_power, automatic_policy, material_binding, material_demand, material_checks,
     charcoal_per_hectare, price_index, money_per_labour_hour, acting_balance, area_text, mass_rate_text, money_text.
-    Sends PayEdge, RecordAutomation, RecordAutomationSkip, RecordEvent."""
+    Sends ApplyThrottle, PayEdge, RecordAutomation, RecordAutomationSkip, RecordEvent."""
 
     def step_materials(self, seat_id: Any = None) -> None:
         needs = self.needs
         self.commission_mines()
-        throttle = needs.resource_throttle()
+        throttle = needs.send(ApplyThrottle())
         # What coppice is gated on is whether the seat can raise the price of some, which is what spending power says;
         # below that `buy_forest` refuses what cannot be paid for anyway.
         can_raise = needs.spending_power("buy")

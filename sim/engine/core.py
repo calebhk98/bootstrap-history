@@ -1,5 +1,5 @@
 """The simulation itself: what one year does, and the loop over years."""
-import collections, copy, os, sys
+import copy, os, sys
 
 from sim.constants import declare
 from sim.living_stock.api import GrantOpeningHerds, GrantOpeningStock
@@ -55,7 +55,7 @@ from .core_seats import SeatMixin
 from .year_run import run_year
 from sim.seats.api import SetFounderLife
 from .forward_seats import ForwardSeatsMixin
-from .shock_year import ShockYearMixin
+from .forward_hazards import HazardsForwardsMixin
 from .seat_defaults import default_policy
 from .ways import WaysMixin
 from .held_works import HeldWorksMixin
@@ -68,6 +68,7 @@ from .interest_groups import InterestGroupsMixin
 from .benefactions import BenefactionsMixin
 from .forward_freight import ForwardFreightMixin
 from .forward_resources import ForwardResourcesMixin
+from .forward_materials import ForwardMaterialsMixin
 from .mod_stores import ModStoresMixin
 from .core_properties import ForwardingPropertiesMixin
 from .core_step_phases import StepContext, StepPhasesMixin
@@ -77,6 +78,7 @@ from .invariants import check_simulation_invariants
 from sim.agents.api import Household
 from .agents_port_household import HouseholdPort
 from sim.reporting.api import RecordEvent
+from sim.materials.api import RestoreReadings
 
 
 class Sim(
@@ -101,7 +103,7 @@ class Sim(
         ProjectsMixin,
         SeatMixin,
         ForwardSeatsMixin,
-        ShockYearMixin,
+        HazardsForwardsMixin,
         WaysMixin,
         WorksMixin,
         HeldWorksMixin,
@@ -120,6 +122,7 @@ class Sim(
         ForwardCoinMixin,
         ForwardAgricultureMixin,
         ForwardResourcesMixin,
+        ForwardMaterialsMixin,
         FoodEatenMixin,
         DemographicRecoveryMixin,
         RegionalPeopleMixin,
@@ -364,11 +367,6 @@ class Sim(
                                           rng.gauss(self.cfg["founder_life_mean"], self.cfg["founder_life_sd"]))))
         self.state.founder.living_cost_paid = 0.0
         self._spend_this_year = 0.0
-        # WORLD state: monetary and real facts about the whole civilisation,
-        # not about this household. output_factor is the health of the whole imperial
-        # economy relative to 100 AD, crushed by war and plague, not by any
-        # one household's fortunes.
-        self.output_factor = 1.0  # real output, crushed by war and plague, not by debasement
         # --- RAW MATERIAL QUANTITIES -------------------------------------
         # How much of each material physically exists: a material's
         # existence somewhere does not mean an unlimited quantity of it is
@@ -453,8 +451,7 @@ class Sim(
         from . import game_assembly
         game_assembly.attach(self)
         # the demand the last throttle saw is read before the next one, so it is carried
-        held_demand = self.state.holdings.material_demand_at_last_throttle
-        self.household._material_demand_cache = None if held_demand is None else collections.Counter(held_demand)
+        self.send(RestoreReadings())
 
     def _wrap_seat_containers(self):
         """Wrap the bound seat's mutation-aware containers and start its version counters."""
@@ -769,17 +766,6 @@ class Sim(
         why="How large a bite auto-manumission takes when it fires - "
             "roughly a quarter of current slaves, at least one. Tuned, "
             "not measured.")
-    OUTPUT_RECOVERY_RATE = declare(
-        "OUTPUT_RECOVERY_RATE", 0.006, kind="temporary_heuristic",
-        unit="dimensionless per year (base recovery toward output_factor "
-             "1.0)", source=None, confidence="D",
-        why="Base yearly recovery rate of output_factor after a war or "
-            "other output shock, doubled at full military leverage (see "
-            "comment above) - an armed empire recovers roughly twice as "
-            "fast as an unarmed one, not instantly. Tuned to make a war's "
-            "damage linger for decades, not measured against any attested "
-            "postwar recovery rate.")
-
     INSOLVENCY_FLOOR_MIN_LABOUR_HOURS = declare(
         "INSOLVENCY_FLOOR_MIN_LABOUR_HOURS", 80600.0, kind="temporary_heuristic",
         unit="labour hours", source=None, confidence="D",

@@ -3,7 +3,7 @@
 Each operation goes through the normal rules: money moves through the ledger against a named edge, goods through the
 economy's book against a named edge (so the conservation checks see them), people through the population and strata,
 a tile through `transfer_tile`, a store through `sim.stores.write`. Every operation that changes the world needs a
-cause and writes it to the world event log (sim/engine/world_events.py). A mod reaches these as `api.effects`; its
+cause and writes it to the world event log (the hazards module). A mod reaches these as `api.effects`; its
 kinds and edge names are forced into its `<mod_id>:` namespace. The base game uses `BASE_EFFECTS`."""
 from typing import Any, Iterable, Optional
 

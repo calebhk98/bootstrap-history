@@ -8,6 +8,7 @@ from unittest import mock
 from sim.engine import mod_stores, tile_ownership
 from sim.engine.mod_stores import StoreBook, StoreSpec
 from sim.engine.tile_ownership import TileOwnershipMixin
+from sim.hazards.api import RecordWorldEvent
 from sim.ui.proto import mod_commands, screen_map
 
 from .harness import *  # noqa: F401,F403
@@ -48,12 +49,12 @@ check("the base game declares control as a tile store with no owning mod", mod_s
 
 # --- a tile transfer writes the change to the world event log with its cause.
 events = []
-transfer_game = SimpleNamespace(stores=SimpleNamespace(view=lambda name: controls), world_map=None, tile_owner_map=lambda: {}, __dict__={})
+transfer_game = SimpleNamespace(stores=SimpleNamespace(view=lambda name: controls), world_map=None, tile_owner_map=lambda: {}, __dict__={},
+                                send=events.append)
 with mock.patch.object(tile_ownership.tile_owners, "transfer", return_value="rome"), \
-        mock.patch.object(tile_ownership, "_follow_in_country_profiles"), \
-        mock.patch.object(tile_ownership.world_events, "record", side_effect=lambda sim, kind, **fields: events.append((kind, fields))):
+        mock.patch.object(tile_ownership, "_follow_in_country_profiles"):
     previous = TileOwnershipMixin.transfer_tile(transfer_game, "tile_a", "han", "garrisoned", cause="a treaty")
 check("a transfer returns the previous owner", previous == "rome")
 check("a transfer's event names both owners, the tile, the cause and the control the tile now has",
-      events == [("tile_transfer", {"actors": ["rome", "han"], "tiles": ["tile_a"], "cause": "a treaty", "from_owner": "rome", "to_owner": "han",
-                                    "control": "garrisoned"})], events)
+      events == [RecordWorldEvent("tile_transfer", actors=("rome", "han"), tiles=("tile_a",), cause="a treaty",
+                                  facts={"from_owner": "rome", "to_owner": "han", "control": "garrisoned"})], events)

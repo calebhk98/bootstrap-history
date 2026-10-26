@@ -1,8 +1,8 @@
 """The conditions a player sets under which a programme stops acting: debt, war risk, a resource shortage."""
 
-from sim.engine.hazard_window import hazards_not_yet_past
+from sim.hazards.api import hazards_not_yet_past
 from sim.engine.ui_port import money_text
-from sim.engine.shortage_conditions import condition_rows
+from sim.engine.ui_port import shortage_condition_rows
 
 PAUSE_KEYS = ("pause_debt", "pause_war_risk", "pause_shortage")
 
@@ -16,7 +16,7 @@ def war_risk(sim):
 
 def shortage_loss(sim):
     """(share of planned work lost, material) for the standing shortage, or (0, None)."""
-    rows = condition_rows(sim)
+    rows = shortage_condition_rows(sim)
     if not rows:
         return 0.0, None
     return 1.0 - rows[0]["throughput"], rows[0]["material"]

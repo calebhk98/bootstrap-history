@@ -12,8 +12,11 @@ from .commands import EndRun, SetFounderLife
 class Founder:
 
     def founder(self) -> Dict[str, Any]:
-        """The acting seat's founder: {alive, life_left, dead_reason (None while the seat plays)}."""
-        return {"alive": self.seat.founder_alive, "life_left": self.seat.life_left, "dead_reason": self.seat.dead_reason}
+        """The acting seat's founder: {alive, life_left, dead_reason (None while the seat plays), policy (the standing
+        policy object, still kept on the seat's founder record; None for a country seat)}."""
+        held = self.needs.legacy_seats()[self.clock.acting_seat].founder
+        return {"alive": self.seat.founder_alive, "life_left": self.seat.life_left, "dead_reason": self.seat.dead_reason,
+                "policy": None if held is None else held.policy}
 
     def dead_reasons(self) -> Dict[str, str]:
         """Why each ended seat's run ended, by seat id, in joining order."""

@@ -11,9 +11,8 @@ from .harness import check
 from sim.diffusion import constants
 from sim.diffusion.diffusion_rules import weapons_relief
 from sim.diffusion.module import Diffusion
-from sim.engine import seat_builds
-from sim.engine.hazard_relief import HazardReliefMixin
-from sim.tests import module_harness
+from sim.seats import api as seat_builds
+from sim.tests import hazards_host, module_harness
 
 MILITARY = ["bronze_sword", "crossbow", "cannon", "rifle"]
 KINDS = ("output_factor", "sack_chance")
@@ -24,10 +23,9 @@ class Armed(Diffusion):
         return tuple(MILITARY) if category == "military" else ()
 
 
-class Game(HazardReliefMixin):
+class Game:
     """Holds only what the relief reads: the founder's finished nodes, the government's knowledge, the military ids."""
 
-    HAZARD_COUNTERS = {}
     STATE_MIL_RELIEF_PER_WEAPON_OUTPUT = constants.STATE_MIL_RELIEF_PER_WEAPON_OUTPUT
     STATE_MIL_RELIEF_PER_WEAPON_SACK = constants.STATE_MIL_RELIEF_PER_WEAPON_SACK
 
@@ -38,18 +36,13 @@ class Game(HazardReliefMixin):
         self.diffusion = module_harness.build(Armed, views={
             "state_knowledge": lambda: self.held,
             "built_by_any_seat": lambda among: seat_builds.built_by_any(self.state.seats, among)})
+        self.hazards = hazards_host.build(diffusion_relief=lambda kind, per_weapon=0.0: self.diffusion.diffusion_relief(kind, per_weapon))
 
-    def _diffusible_ids(self, category):
-        return self.diffusion.diffusible_ids(category)
+    def hazard_relief_entries(self, kind):
+        return self.hazards.hazard_relief_entries(kind)
 
     def state_military_diffusion(self):
         return self.diffusion.diffusion_index("military")
-
-    def _state_military_diffusion_relief(self, per_weapon):
-        return self.diffusion.diffusion_relief("military", per_weapon)
-
-    def _military_war_relief(self):
-        return 1.0, None
 
 
 def relief(game):

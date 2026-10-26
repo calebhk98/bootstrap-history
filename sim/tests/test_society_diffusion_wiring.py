@@ -12,7 +12,8 @@ from .harness import check
 from sim.diffusion import constants
 from sim.diffusion.module import Diffusion
 from sim.diffusion.state import DiffusionWorld
-from sim.engine import category_traits, seat_builds
+from sim.engine import category_traits
+from sim.seats import api as seat_builds
 from sim.knowledge import rules as knowledge_rules
 from sim.tests import module_harness
 

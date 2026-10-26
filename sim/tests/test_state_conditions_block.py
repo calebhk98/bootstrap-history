@@ -1,9 +1,8 @@
-"""Complaint 79: a standing shortage is a row of the `state` reply (`condition_rows`) and the state screen prints rows as one
+"""Complaint 79: a standing shortage is a row of the `state` reply (`condition_row`) and the state screen prints rows as one
 block (`_state_conditions`). Each called once on a stand-in or reply written out here. The shortage rules are test_report_noise."""
 import unittest
-from types import SimpleNamespace
 
-from sim.engine import shortage_conditions
+from sim.materials.rules import condition_row
 from sim.ui.proto.render_screen_state_blocks import _state_conditions
 
 QUICK_TOPIC = True
@@ -11,24 +10,17 @@ QUICK_TOPIC = True
 ROW = {"material": "charcoal", "throughput": 0.46, "years": 1, "trend": "steady"}
 
 
-def game(condition, shortfall=0.0):
-    return SimpleNamespace(state=SimpleNamespace(scenario=SimpleNamespace(year=100), holdings=SimpleNamespace(shortage_condition=condition)),
-                           material_shortfall_t=lambda material: shortfall)
-
-
 class ConditionRows(unittest.TestCase):
 
     def test_a_standing_shortage_is_one_row_with_its_material_throughput_and_years(self):
-        rows = shortage_conditions.condition_rows(
-            game({"material": "charcoal", "since": 100, "reported": 0.46, "previous": 0.46, "latest": 0.46}))
+        rows = condition_row({"material": "charcoal", "since": 100, "reported": 0.46, "previous": 0.46, "latest": 0.46}, 100, 0.0)
         self.assertEqual([(row["material"], row["throughput"], row["years"]) for row in rows], [("charcoal", 0.46, 1)])
 
     def test_no_shortage_gives_no_rows(self):
-        self.assertEqual(shortage_conditions.condition_rows(game(None)), [])
+        self.assertEqual(condition_row(None, 100, 0.0), [])
 
     def test_a_deficit_is_added_to_the_row(self):
-        rows = shortage_conditions.condition_rows(
-            game({"material": "charcoal", "since": 100, "reported": 0.5, "previous": 0.5, "latest": 0.5}, shortfall=12.34))
+        rows = condition_row({"material": "charcoal", "since": 100, "reported": 0.5, "previous": 0.5, "latest": 0.5}, 100, 12.34)
         self.assertEqual(rows[0]["deficit_tonnes_per_year"], 12.3)
 
 

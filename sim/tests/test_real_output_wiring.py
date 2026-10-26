@@ -54,7 +54,7 @@ check("a population that falls without a technique lowers output with the people
 
 # --- society output: real output in money, less the share under arms
 port = SimpleNamespace(_sim=SimpleNamespace(real_output_hours=lambda: 40.0, labour=SimpleNamespace(money_per_labour_hour=lambda: 3.0),
-                                            state=SimpleNamespace(economy=SimpleNamespace(output_factor=0.5))))
+                                            output_factor=0.5))
 check("output value is the real output in labour hours, in this civilisation's money, times the output factor",
       EconomyPort.output_value(port) == 60.0, EconomyPort.output_value(port))
 check("the share producing is the working people not under arms",

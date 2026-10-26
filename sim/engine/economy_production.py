@@ -154,7 +154,6 @@ class ProductionMixin:
         Serialized: no
         """
         scenario = self.state.scenario
-        economy = self.state.economy
         holdings = self.state.holdings
         projects = self.state.projects
         household = self.state.household
@@ -176,7 +175,7 @@ class ProductionMixin:
             getattr(household, "freedmen", 0.0) or 0.0,
             getattr(household, "slaves", 0.0) or 0.0,
             getattr(governance, "gov", 0.0) or 0.0,
-            economy.output_factor,
+            self.output_factor,
             household.reputation,
             self.founder_alive,
             self.state_funding(),
@@ -241,12 +240,11 @@ class ProductionMixin:
         # workshop_first matters and why it is cheap.
         total_revenue += self.workshop_output()
         total_revenue += self.founder_wage_income()
-        economy = self.state.economy
         gross = total_revenue
         ceiling = self.REVENUE_CEILING_PER_POP_SCALE * self.pop_scale \
             * self.real_output_per_head() * self.price_index
         gross = gross / (1.0 + gross / max(1.0, ceiling))
-        return (gross + self.state_funding()) * economy.output_factor, book_forecast * economy.output_factor
+        return (gross + self.state_funding()) * self.output_factor, book_forecast * self.output_factor
 
     REVENUE_CEILING_LABOUR_HOURS_PER_POP_SCALE = declare(
         "REVENUE_CEILING_LABOUR_HOURS_PER_POP_SCALE", 18100000.0, kind="temporary_heuristic",
@@ -422,8 +420,7 @@ class ProductionMixin:
         carried to the techniques held now (concern_volume.py); callers apply the market's price.
         `with_output_factor` False leaves out the hazard and war factor `revenue` applies to its total;
         `cost_scale` is the scale on the tree's book coin (the home society's when none is given)."""
-        economy = self.state.economy
-        return takings_at(self.nodes[node_id]["rev"], ramp, economy.output_factor if with_output_factor else 1.0,
+        return takings_at(self.nodes[node_id]["rev"], ramp, self.output_factor if with_output_factor else 1.0,
                           self.price_index if cost_scale is None else cost_scale, self.concern_value_ratio(node_id), self.concern_learning_ratio(node_id))
 
     def ledger_concern_rows(self):
@@ -466,12 +463,11 @@ class ProductionMixin:
         employed in a trade they hold - which is otherwise invisible
         anywhere else in the interface.
         """
-        economy = self.state.economy
         funding = self.state_funding()
         return assemble_ledger(
-            self.ledger_concern_rows(), self.workshop_output() * economy.output_factor,
-            self.founder_wage_income() * economy.output_factor,
-            funding * economy.output_factor if funding > 0.5 else None, self.revenue())
+            self.ledger_concern_rows(), self.workshop_output() * self.output_factor,
+            self.founder_wage_income() * self.output_factor,
+            funding * self.output_factor if funding > 0.5 else None, self.revenue())
 
     # A granted node whose category is flagged practisable is a skill the founder holds and works with their own
     # hands; the held skills choose the trade the founder's hours are sold in (held_trade). A granted fleet of

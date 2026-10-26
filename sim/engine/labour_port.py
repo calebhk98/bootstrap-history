@@ -281,7 +281,7 @@ class LabourWorld:
         return self._sim.view("last_market_price_ratio")[material]
 
     def material_price_factor(self, emp_key):
-        return self._sim.material_price_factor(emp_key)
+        return self._sim.view("material_price_factor")[emp_key]
 
     def mechanic(self, node_id, name):
         return self._sim.mechanic(node_id, name)

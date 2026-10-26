@@ -32,3 +32,16 @@ class Bribe(Command):
     """The acting seat buys down scandal and buys protection for a stated sum, never taking more than that can
     use. Answers (True, text) or (False, text) with the reason."""
     amount: float
+
+
+@dataclass(frozen=True)
+class ResetProjectProgress(Command):
+    """Every project the acting seat has in hand goes back to the beginning: all its work left, none of its years
+    done (a sack burns the site). Not applied by the projects module yet: the engine bridge applies it."""
+
+
+@dataclass(frozen=True)
+class ShutForgotten(Command):
+    """The acting seat's works for `node_ids`, techniques it has just lost, are no longer running or shut for a time.
+    Not applied by the projects module yet: the engine bridge applies it."""
+    node_ids: tuple

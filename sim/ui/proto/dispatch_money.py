@@ -421,7 +421,7 @@ def _cmd_quote(sim, nodes, cmd, ended):
                 "you_can_afford_about": purchase_rule.affordable_units(sim, per),
                 "afford_means": purchase_rule.afford_means(),
                 "it_yields_per_hectare_per_year":
-                    "%s of charcoal, sustainably" % mass_per_area_text(sim.CHARCOAL_PER_HA, sim, digits=2, area="hectare"),
+                    "%s of charcoal, sustainably" % mass_per_area_text(sim.view("charcoal_per_hectare")(), sim, digits=2, area="hectare"),
                 "note": "Coppice is bought once and yields every year after. "
                         "There is no market to sell it back into."}
     if what == "nitre":

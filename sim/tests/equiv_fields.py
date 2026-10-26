@@ -37,6 +37,11 @@ RELOCATIONS = [
     ("/modules/diffusion/technique_record_started", "/economy/technique_record_started"),
     ("/modules/diffusion/literacy_said", "/scenario/_literacy_said"),
     ("/seats/*/modules/diffusion/disclosures", "/seats/*/projects/disclosures"),
+    ("/modules/hazards/output_factor", "/economy/output_factor"),
+    ("/modules/hazards/world_events", "/economy/world_events"),
+    ("/modules/hazards/said_output", "/scenario/_said_output"),
+    ("/modules/hazards/said_debasement", "/scenario/_said_debasement"),
+    ("/seats/*/modules/hazards/last_patron_death", "/seats/*/founder/last_patron_death"),
     ("/seats/*/modules/knowledge/forgotten", "/seats/*/projects/forgotten"),
     ("/seats/*/modules/seats/goal_year", "/seats/*/seat_progress/goal_year"),
     ("/seats/*/modules/seats/goal_years", "/seats/*/seat_progress/goal_years"),
@@ -59,6 +64,11 @@ RELOCATIONS = [
     ("/seats/*/modules/resources/prospected_person_days", "/seats/*/holdings/prospected_person_days"),
     ("/seats/*/modules/resources/forest_ha", "/seats/*/holdings/forest_ha"),
     ("/seats/*/modules/resources/nitre_bed_m2", "/seats/*/holdings/nitre_bed_m2"),
+    ("/seats/*/modules/materials/shortages", "/seats/*/holdings/shortages"),
+    ("/seats/*/modules/materials/throttle", "/seats/*/holdings/throttle"),
+    ("/seats/*/modules/materials/binding", "/seats/*/holdings/binding"),
+    ("/seats/*/modules/materials/shortage_condition", "/seats/*/holdings/shortage_condition"),
+    ("/seats/*/modules/materials/material_demand_at_last_throttle", "/seats/*/holdings/material_demand_at_last_throttle"),
 ]
 
 IGNORED = [

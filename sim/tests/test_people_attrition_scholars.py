@@ -13,7 +13,7 @@ from sim.agents.household import Household
 from sim.engine.economy_credit import CreditMixin
 from sim.mechanics.module import Mechanics
 from sim.tests import module_harness
-from sim.engine.project_materials import ProjectMaterialsMixin
+from sim.tests import materials_stand_in
 from sim.resources.sizing import nitre_bed_yearly_spend
 from sim.diffusion.rules import staff_sources
 from sim.labour.labour_bondage import BondageMixin
@@ -209,20 +209,20 @@ check("a project you can pay for outright says nothing about credit",
 
 
 def failure_stand_in(risk, cost_now, up_front, active=False):
-    return SimpleNamespace(
-        nodes={"work": {"risk": risk}}, FAILURE_RESET_SHARE=0.4, state=SimpleNamespace(projects=SimpleNamespace(
-            active={"work": {}} if active else {})),
-        project_cost=lambda node_id: cost_now, project_cost_now=lambda node_id: cost_now,
-        _up_front_materials_money=lambda node_id: up_front)
+    module = materials_stand_in.build(
+        tree_nodes={"work": {"risk": risk}}, failure_reset_share=0.4,
+        legacy_projects=materials_stand_in.projects(active={"work": {}} if active else {}),
+        project_cost=lambda node_id: cost_now, project_cost_now=lambda node_id: cost_now)
+    module.up_front_materials_money = lambda node_id: up_front
+    return module
 
 
 stand_in = failure_stand_in(0.1, 1000.0, 300.0)
-stand_in.failure_bill = lambda node_id: ProjectMaterialsMixin.failure_bill(stand_in, node_id)
-loss = ProjectMaterialsMixin.failure_loss(stand_in, "work")
+loss = stand_in.failure_loss("work")
 check("a failure costs the reset share of the money bill at risk, which is never more than that share of the total",
       abs(loss - 0.4 * (1000.0 - 300.0)) < 1e-9 and loss <= 0.4 * 1000.0, loss)
 check("...and a work that cannot fail is not given an imaginary danger",
-      ProjectMaterialsMixin.failure_loss(failure_stand_in(0, 1000.0, 300.0), "work") == 0.0)
+      failure_stand_in(0, 1000.0, 300.0).failure_loss("work") == 0.0)
 
 # --- DEVELOPER MARKERS IN PLAYER PROSE, THE SECOND TIME. A strip pass removed
 # 1,108 `[AUDIT: ...]` markers from node notes after a first-time tester found

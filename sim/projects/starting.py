@@ -12,7 +12,8 @@ from sim.ledger.api import PayEdge
 
 from . import bribe_rules, constants, funding, instantaneous, record_rules, start_rules
 from .commands import Bribe, PostBounty, StartProject, StopProject
-from .needed_commands import (ClearMothball, CompleteProject, SettleProjectMaterials)
+from sim.materials.api import SettleProjectMaterials
+from .needed_commands import (ClearMothball, CompleteProject)
 from sim.reporting.api import RecordEvent
 from .researcher import SeatResearcher
 

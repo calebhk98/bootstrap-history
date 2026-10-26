@@ -10,7 +10,8 @@ from sim.agents.group import InterestGroup
 from sim.agents.group_strata import definite
 from sim.engine.blockers import BLOCKER_MEANING
 from sim.tests.harness import NODES
-from sim.engine.shortage_conditions import material_words, slowed_projects
+from sim.materials.rules import material_words
+from sim.tests import materials_stand_in
 from sim.ui import market_report
 from sim.ui.cli_interactive import _civ_title
 from sim.ui.proto.help import example_node_id
@@ -152,17 +153,18 @@ class MarketReportTests(unittest.TestCase):
 class ShortageLineTests(unittest.TestCase):
     @staticmethod
     def game(throttles):
-        return SimpleNamespace(state=SimpleNamespace(projects=SimpleNamespace(active_keys_sorted=lambda: list(throttles))),
-                               peek_project_resource_throttle=lambda node_id: (throttles[node_id], None))
+        module = materials_stand_in.build(legacy_projects=materials_stand_in.projects(active=throttles))
+        module.throttle_quote = lambda node_id=None: (throttles[node_id], None)
+        return module
 
     def test_with_no_project_running_nothing_is_slowed_by_a_shortage(self):
-        self.assertEqual(slowed_projects(self.game({})), [])
+        self.assertEqual(self.game({}).slowed_projects(), [])
 
     def test_a_project_the_shortage_does_not_touch_is_not_slowed(self):
-        self.assertEqual(slowed_projects(self.game({"a": 1.0, "b": 1.0})), [])
+        self.assertEqual(self.game({"a": 1.0, "b": 1.0}).slowed_projects(), [])
 
     def test_only_the_projects_it_slows_are_named_in_id_order(self):
-        self.assertEqual(slowed_projects(self.game({"c": 0.2, "a": 0.5, "b": 1.0})), ["a", "c"])
+        self.assertEqual(self.game({"c": 0.2, "a": 0.5, "b": 1.0}).slowed_projects(), ["a", "c"])
 
 
 if __name__ == "__main__":

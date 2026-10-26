@@ -1,8 +1,7 @@
 """Bridge entries the resources module reads until the owners behind them move into modules.
 
 Each view carries the name its owner will publish (docs/architecture/catalogue), asks the engine exactly as the old code
-did, and is never cached. `resource_throttle` also settles the stock the year's flows bank, as the old call did; it is
-the materials owner's to split into a reading and a command when materials moves."""
+did, and is never cached."""
 from sim.assembly.api import KEYED, QUOTE
 
 from . import purchase_rule
@@ -29,60 +28,6 @@ def mineral_scale(sim, material):
 
 
 # ---- materials ----
-
-@bridge_view("normalized_material", kind=KEYED)
-def normalized_material(sim, material):
-	"""The material key a name means: the short curated name, or the exact key the tree uses."""
-	return sim._normalize_material_name(material)
-
-
-@bridge_view("material_demand")
-def material_demand(sim):
-	"""Tonnes a year of the materials that bind, from the work in hand, by material key (a copy)."""
-	return sim.annual_material_demand()
-
-
-@bridge_view("material_checks")
-def material_checks(sim):
-	"""{material key: (bucket it counts against, supply tag)}."""
-	return sim.MATERIAL_CHECKS
-
-
-@bridge_view("charcoal_per_hectare")
-def charcoal_per_hectare(sim):
-	"""Tonnes of charcoal a year a hectare of coppice yields."""
-	return sim.CHARCOAL_PER_HA
-
-
-@bridge_view("material_shortfall", kind=QUOTE)
-def material_shortfall(sim, material, by_tag=None):
-	"""Tonnes a year of `material` demand that neither the seat's own workings nor the market cover."""
-	return sim.material_shortfall_t(material, by_tag)
-
-
-@bridge_view("material_market_tonnes", kind=KEYED)
-def material_market_tonnes(sim, material):
-	"""Tonnes a year of a material the market would sell the seat."""
-	return sim._material_market_tonnes(material)
-
-
-@bridge_view("material_unsupplied_sentence", kind=KEYED)
-def material_unsupplied_sentence(sim, material):
-	"""A sentence on why nothing supplies a material, or None."""
-	return sim.material_unsupplied_sentence(material)
-
-
-@bridge_view("material_binding", seat_scoped=True)
-def material_binding(sim):
-	"""The material pool that limits the seat's work this year (set by the last throttle reading), or None."""
-	return sim.state.holdings.binding
-
-
-@bridge_view("resource_throttle", kind=QUOTE)
-def resource_throttle(sim):
-	"""The share of this year's planned work the materials support; the reading banks the year's unused own output."""
-	return sim.resource_throttle()
-
 
 @bridge_view("running_stamp")
 def running_stamp(sim):

@@ -13,12 +13,13 @@ import unittest
 from unittest import mock
 
 from sim.engine import purchase_rule  # noqa: F401  (first: the engine modules import each other in a fixed order)
-from sim.engine import material_availability, prices as engine_prices, solve_prices
+from sim.engine import prices as engine_prices, solve_prices
 from sim.engine.goods_market_offers import GoodsOffers, HOME_SELLER
 from sim.foreign_trade.constants import FOREIGN_OUTPUT_PER_POPULATION_SHARE
 from sim.foreign_trade.module import ForeignTrade
 from sim.foreign_trade.state import ForeignTradeWorld
-from sim.tests import module_harness
+from sim.projects.api import START_CHECKS
+from sim.tests import materials_stand_in, module_harness
 
 
 def _wage_document():
@@ -260,43 +261,37 @@ class PartnerSupplyTests(unittest.TestCase):
 
 class ProjectNeedsASellerTests(unittest.TestCase):
 
+    NODE = {"mat": {"cobalt_kg": 100.0, "wheat_kg": 10.0}}
+
     def _project(self, offers, stock_tonnes=0.0):
-        node = {"mat": {"cobalt_kg": 100.0, "wheat_kg": 10.0}}
-        game = types.SimpleNamespace(
-            nodes={"alloy_works": node}, goods_market=offers,
-            project_material_needs=lambda node_id: dict(node["mat"]),
-            _material_tag=lambda material: (material, material),
-            material_stock_t=lambda key: stock_tonnes)
-        return game
+        return materials_stand_in.build(tree_nodes={"alloy_works": self.NODE}, can_be_bought=offers.can_be_bought,
+                                        goods_stock=lambda key: stock_tonnes)
+
+    def _verdict(self, game, why):
+        return game.start_gate_material_seller("alloy_works", self.NODE, False, None, why)
 
     def test_a_project_needing_an_unsold_material_cannot_start_and_says_why(self):
         offers = _Offers(_fake_sim({"wheat_kg": 4.0}, set(), {}))
-        game = self._project(offers)
-        verdict = material_availability.check_materials_have_a_seller(game, "alloy_works", game.nodes["alloy_works"],
-                                                                      False, None, True)
+        verdict = self._verdict(self._project(offers), True)
         self.assertFalse(verdict[0])
         self.assertIn("cobalt_kg", verdict[1])
         self.assertNotIn("wheat_kg", verdict[1])
-        self.assertTrue(material_availability.check_materials_have_a_seller.blocker_kind == "supply")
+
+    def test_the_gate_reports_the_blocker_of_supply(self):
+        (check,) = [check for check in START_CHECKS if check.source == "start_gate_material_seller"]
+        self.assertEqual((check.cause, check.kind), ("materials_have_a_seller", "supply"))
 
     def test_the_boolean_answer_needs_no_sentence(self):
         offers = _Offers(_fake_sim({"wheat_kg": 4.0}, set(), {}))
-        game = self._project(offers)
-        verdict = material_availability.check_materials_have_a_seller(game, "alloy_works", game.nodes["alloy_works"],
-                                                                      False, None, False)
-        self.assertEqual(verdict, (False, None))
+        self.assertEqual(self._verdict(self._project(offers), False), (False, None))
 
     def test_a_partner_that_sells_it_lets_the_project_start(self):
         offers = _Offers(_fake_sim({"wheat_kg": 4.0}, {"cobalt_kg"}, {"cobalt_kg": 20.0}))
-        game = self._project(offers)
-        self.assertIsNone(material_availability.check_materials_have_a_seller(
-            game, "alloy_works", game.nodes["alloy_works"], False, None, True))
+        self.assertIsNone(self._verdict(self._project(offers), True))
 
     def test_stock_already_held_needs_no_seller(self):
         offers = _Offers(_fake_sim({"wheat_kg": 4.0}, set(), {}))
-        game = self._project(offers, stock_tonnes=math.inf)
-        self.assertIsNone(material_availability.check_materials_have_a_seller(
-            game, "alloy_works", game.nodes["alloy_works"], False, None, True))
+        self.assertIsNone(self._verdict(self._project(offers, stock_tonnes=math.inf), True))
 
 
 class AlternativeEnergyCycleTests(unittest.TestCase):

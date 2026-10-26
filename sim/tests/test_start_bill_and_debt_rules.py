@@ -8,26 +8,21 @@ QUICK_TOPIC = True
 from .harness import check
 
 from sim.engine.economy_debt_service import DebtServiceMixin
-from sim.engine.project_materials import ProjectMaterialsMixin
+from sim.materials.api import SettleProjectMaterials
+from sim.tests import materials_stand_in
 from sim.ui.proto.start_bill import bill_parts
 
 
-class Materials(ProjectMaterialsMixin):
-    """The parts of a Sim that settling a project's materials reads."""
+class Materials:
+    """The materials module with what settling a project's materials reads: the whole bill, the up-front money and what
+    the market delivers."""
 
     def __init__(self, whole, up_front, delivered):
-        self.whole, self.up_front, self.delivered = whole, up_front, delivered
         self.bought = []
-
-    def project_cost_now(self, node_id):
-        return self.whole
-
-    def _up_front_materials_money(self, node_id):
-        return self.up_front
-
-    def buy_project_materials(self, node_id):
-        self.bought.append(node_id)
-        return self.delivered
+        module = materials_stand_in.build(project_cost_now=lambda node_id: whole)
+        module.up_front_materials_money = lambda node_id: up_front
+        module.buy_project_materials = lambda node_id: self.bought.append(node_id) or delivered
+        self.settle_project_materials = lambda node_id: module.settle_project_materials(SettleProjectMaterials(node_id))
 
 
 everything = Materials(1000.0, 300.0, 300.0)

@@ -8,13 +8,13 @@ QUICK_TOPIC = True
 import types
 import unittest
 
-from sim.engine.project_materials import ProjectMaterialsMixin
+from sim.tests import materials_stand_in
 from sim.ui.proto.techtree import _explain_cost
 
 NODE = {"_labour_cost": 60.0, "cap": 10.0, "_material_cost": 30.0, "_total_cost": 100.0}
 
 
-class Game(ProjectMaterialsMixin):
+class Game:
     """The factors a project's cost is made of."""
 
     def __init__(self, rebuild=1.0):
@@ -24,6 +24,9 @@ class Game(ProjectMaterialsMixin):
         self.done, self.active, self.paid_towards = set(), {}, {}
         self.money_real = 1.0
         self.geography = types.SimpleNamespace(material_cost_factor=lambda node_id: 1.25)
+        self.project_cost_without_materials = materials_stand_in.build(
+            tree_nodes={"clock": NODE}, cost_money_factor=1.5, civ_cost_factor=lambda node_id: 0.8,
+            rebuild_work_factor=lambda node_id: rebuild).project_cost_without_materials
 
     def cost_money_factor(self):
         return 1.5

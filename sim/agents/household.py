@@ -14,7 +14,6 @@ authoritative `SimulationState` and its subsystem owners (`HouseholdState`,
 `ScenarioState`, `PopulationState`). There is NO duplicate storage: every
 persistent read and write delegates directly to the underlying typed state.
 """
-import collections
 from collections import defaultdict
 from typing import (Any, Callable, DefaultDict, Dict, Iterable, List,
 					 Optional, Set, Tuple)
@@ -110,11 +109,7 @@ _SUBSYSTEM_MAP: Dict[str, str] = {
 	"ever_closed_for_staff": "projects",
 
 	# EconomyState
-	"shortages": "holdings",
-	"throttle": "holdings",
-	"binding": "holdings",
 	"market_pressure": "holdings",
-	"output_factor": "economy",
 	"_material_stock_ledger": "holdings",
 	"farm_hectares": "holdings",
 	"farm_stock_kg": "holdings",
@@ -133,14 +128,11 @@ _SUBSYSTEM_MAP: Dict[str, str] = {
 	"director_hours_spent_founder": "founder",
 	"living_cost_paid": "founder",
 	"policy": "founder",
-	"last_patron_death": "founder",
 	"_founder_death_aged": "founder",
 	"_founder_death_year": "founder",
 
 	# ScenarioState
 	"year": "scenario",
-	"_said_debasement": "scenario",
-	"_said_output": "scenario",
 	"_said_scandal": "seat_progress",
 	"_said_parallelism": "seat_progress",
 	"_said_command_index": "seat_progress",
@@ -229,17 +221,12 @@ class Household(FounderReview, FounderBorrowing, Actor):
 		self._spend_this_year: float = 0.0
 		self._revenue_cache_key: Any = None
 		self._revenue_cache_val: Any = None
-		self._annual_mat_demand_cache: Any = None
 		self._rev_up_candidates_cache: Any = None
 		self._practice_cache: Any = None
 		self._goods_cat_state_cache: Any = None
 		self._goods_category_ratios_cache: Any = None
 		self._income_factor_cache: Any = None
 		self._goods_mkt_op_factor_cache: Any = None
-		self._material_demand_cache: Any = None
-		self._demand_by_tag_cache: Any = None
-		self._demand_by_emp_key_cache: Any = None
-		self._stock_throttle_sig: Any = None
 		self._last_buy_refusal: Any = None
 		self._said_stack_caution: Any = None
 
@@ -346,17 +333,6 @@ class Household(FounderReview, FounderBorrowing, Actor):
 	@employees.setter
 	def employees(self, value: Any) -> None:
 		self._state.household.employees = value
-
-	@property
-	def shortages(self) -> Any:
-		if self._state.economy is None:
-			return collections.Counter()
-		return self._state.holdings.shortages
-
-	@shortages.setter
-	def shortages(self, value: Any) -> None:
-		if self._state.economy is not None:
-			self._state.holdings.shortages = value
 
 	@property
 	def failed_attempts(self) -> Any:
@@ -501,7 +477,6 @@ class Household(FounderReview, FounderBorrowing, Actor):
 				or name.startswith("_spend_this_year")
 				or name.endswith("_cache")
 				or name.startswith("_revenue_cache")
-				or name.startswith("_stock_throttle")
 				or name == "_last_buy_refusal"
 				or name == "_said_stack_caution"
 				or name == "_done_seq"):

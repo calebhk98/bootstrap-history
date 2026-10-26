@@ -74,15 +74,17 @@ class Offer(ProjectProgressPhaseMixin):
     def __init__(self, directive):
         self.state = types.SimpleNamespace(
             household=types.SimpleNamespace(hour_allocations={"b": directive} if directive else {}),
-            founder=types.SimpleNamespace(director_hours_spent_founder=0.0),
-            holdings=types.SimpleNamespace(binding=None))
+            founder=types.SimpleNamespace(director_hours_spent_founder=0.0))
         self.founder_alive = True
 
     def project_hour_pace(self, node_id):
         return 3000.0
 
-    def project_resource_throttle(self, node_id):
-        return 1.0
+    def send(self, command):
+        return 1.0          # the materials module: the project runs at full pace
+
+    def view(self, name):
+        return lambda: None     # no pool binds
 
 
 class OfferHours(unittest.TestCase):

@@ -1,69 +1,46 @@
-"""How a material reaches the founder (material_reach.py): imports count as market supply, and a good with
-no supply says why. Small fixtures only."""
+"""How a material reaches the founder (sim/materials/supply.py): imports count as market supply, and a good with
+no supply says why. The module over small fixtures."""
 
 QUICK_TOPIC = True
 
-import types
 import unittest
 
-from sim.engine import purchase_rule  # noqa: F401  (first: the engine modules import each other in a fixed order)
-from sim.engine.goods_market_imports import HOME_SELLER
-from sim.engine.material_reach import MaterialReachMixin
+from sim.tests import materials_stand_in
+
+HOME = "home"
 
 
-class _Market:
-    def __init__(self, seller, left, priced=True):
-        self._seller, self._left, self._priced = seller, left, priced
-
-    def offered_by(self, material):
-        return self._seller
-
-    def import_tonnes_available(self, material, partner=None):
-        return self._left
-
-    def can_be_bought(self, material):
-        return self._priced
+def _Market(seller, left, priced=True):
+    """What the module reads of the market: who sells (None for the home society or no one) and how many tonnes more."""
+    return {"partner_import": lambda material: (None, None) if seller in (None, HOME) else (seller, left),
+            "can_be_bought": lambda material: priced}
 
 
-class _Founder(MaterialReachMixin):
-    def __init__(self, market, stock=0.0, own=0.0, market_tonnes=0.0, makers=(), done=(), visible=None):
-        self.goods_market = market
-        self._visible = visible
-        self.nodes = {node_id: {"_output_per_year": {"alum_kg": 1.0}} for node_id in makers}
-        self.state = types.SimpleNamespace(projects=types.SimpleNamespace(done=set(done)))
-        self._stock, self._own, self._market = stock, own, market_tonnes
+def _Founder(market, stock=0.0, own=0.0, market_tonnes=0.0, makers=(), done=(), visible=None):
+    module = materials_stand_in.build(
+        tree_nodes={node_id: {"_output_per_year": {"alum_kg": 1.0}} for node_id in makers},
+        legacy_projects=materials_stand_in.projects(done=done), goods_stock=lambda commodity: stock,
+        mine_capacity={"alum_kg": own}, foreign_supply_tonnes=lambda partner, material: 7.0,
+        visibility=lambda node_id, memo=None: visible is None or node_id in visible, **market)
+    module.market_tonnes = lambda commodity: market_tonnes + module.import_tonnes(commodity)
+    return module
 
-    def is_visible(self, node_id):
-        return self._visible is None or node_id in self._visible
 
-    def _material_tag(self, material):
-        return material, "mine:" + material
-
-    def material_stock_t(self, emp_key):
-        return self._stock
-
-    def _own_material_supply(self, tag):
-        return self._own
-
-    def _material_market_tonnes(self, emp_key):
-        return self._market + self._material_import_tonnes(emp_key)
-
-    def foreign_supply_tonnes(self, partner, material):
-        return 7.0
+HOME_SELLER = HOME
 
 
 class ImportTests(unittest.TestCase):
     def test_a_partners_tonnes_are_what_comes(self):
-        self.assertEqual(_Founder(_Market("partner", 12.0))._material_import_tonnes("alum_kg"), 12.0)
+        self.assertEqual(_Founder(_Market("partner", 12.0)).import_tonnes("alum_kg"), 12.0)
 
     def test_the_home_society_as_seller_brings_no_import(self):
-        self.assertEqual(_Founder(_Market(HOME_SELLER, 12.0))._material_import_tonnes("alum_kg"), 0.0)
+        self.assertEqual(_Founder(_Market(HOME_SELLER, 12.0)).import_tonnes("alum_kg"), 0.0)
 
     def test_no_seller_brings_no_import(self):
-        self.assertEqual(_Founder(_Market(None, None))._material_import_tonnes("alum_kg"), 0.0)
+        self.assertEqual(_Founder(_Market(None, None)).import_tonnes("alum_kg"), 0.0)
 
     def test_a_route_with_no_lift_limit_brings_what_the_partner_makes(self):
-        self.assertEqual(_Founder(_Market("partner", float("inf")))._material_import_tonnes("alum_kg"), 7.0)
+        self.assertEqual(_Founder(_Market("partner", float("inf"))).import_tonnes("alum_kg"), 7.0)
 
 
 class RouteTests(unittest.TestCase):
