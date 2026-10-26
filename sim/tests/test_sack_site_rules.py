@@ -9,6 +9,7 @@ import unittest
 
 from sim.engine.society_hazards import HazardsMixin
 from sim.refusal import cause_of, facts_of
+from sim.reporting.api import RecordEvent
 from sim.tests import event_stand_in
 
 
@@ -25,8 +26,6 @@ class AlternatingDice:
 
 class SackedHousehold(HazardsMixin):
     """Only what a sack reads: the household, the projects, the labour book and the corpus hedge."""
-    send = event_stand_in.send
-
     def __init__(self, corpus_chance=0.0):
         self.rng = AlternatingDice()
         self.civ = {}
@@ -40,7 +39,9 @@ class SackedHousehold(HazardsMixin):
         self.labour = types.SimpleNamespace(staff_snapshot=lambda: {}, log_staff_reduction=lambda name, before: None)
 
     def send(self, command):
-        pass   # the coin module's PlunderHousehold
+        if isinstance(command, RecordEvent):
+            return event_stand_in.send(self, command)
+        return None   # the coin module's PlunderHousehold
 
     def corpus_hedge(self):
         return self.corpus_chance, 0.5, "corpus_written"
