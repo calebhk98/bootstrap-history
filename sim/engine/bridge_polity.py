@@ -2,25 +2,19 @@
 
 Each view carries the name its owner will publish (docs/architecture/catalogue), asks the engine exactly as the old code did, and
 is never cached. The `legacy_*` views are raw state or the engine's own objects the module still needs; they go when that state
-moves: the actors (`legacy_actor_registry`, `legacy_actors_state`, `state_treasury`), the household's purse and facade, and the constants `Sim` still declares (`legacy_constant`)."""
+moves: the actors (`legacy_actor_registry`, `legacy_actors_state`, `state_treasury`) and the household's purse and facade."""
 from sim.assembly.api import KEYED
 
 from . import need_substitutes
 from .bridge import bridge_view
 
 
-# ---- core: the game and what it still declares ----------------------------------------------------------------------------
+# ---- core: the game ----------------------------------------------------------------------------------------------
 
 @bridge_view("legacy_game")
 def legacy_game(sim):
 	"""The game itself: a mod's wealth-claim readers and seizers (sim.polity.api.register_wealth_claims) take it."""
 	return sim
-
-
-@bridge_view("legacy_constant", kind=KEYED)
-def legacy_constant(sim, name):
-	"""A number `Sim` still declares (reputation decay, scandal and bribery rates, eminence retention), read as the game has it."""
-	return getattr(sim, name)
 
 
 @bridge_view("danger_lines")

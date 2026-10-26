@@ -45,7 +45,7 @@ class Finishing:
         self.state = SimpleNamespace(
             projects=SimpleNamespace(active={NODE: {}}, bountied={NODE}, done=set(), done_year=None, failed_attempts=Counter()),
             household=household, scenario=SimpleNamespace(year=100))
-        self.polity = polity_host.build(legacy_constant=lambda name: {"REPUTATION_CEILING": 100.0}[name])
+        self.polity = polity_host.build()
         self.knowledge = module_harness.build(Knowledge, views={"legacy_projects": self.state.projects},
                                               answers={RefreshDoneCaches: None}, seat=KnowledgeSeat())
         self.nodes = {NODE: {"name": "A school"}}

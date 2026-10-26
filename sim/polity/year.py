@@ -4,7 +4,7 @@ pressure, scandal, bribery and the two hazards that can end a run (denunciation 
 The engine's `_step_reputation` runs `renew_standing` first, then the hours and spending it tallies for other owners, then
 `close_standing_year`, so the order of the old single step is kept.
 
-Needs: standing_floor, techniques_held, tree_nodes, year, danger_lines, legacy_constant, acting_balance,
+Needs: standing_floor, techniques_held, tree_nodes, year, danger_lines, acting_balance,
 founder, automation, events_enabled, legacy_dice, patrons_lost_to_eminence, money_text, send (PayEdge, ForgetTechnique, EndRun,
 RecordEvent)."""
 from sim.agents.api import edges
@@ -30,20 +30,18 @@ class Year:
 		seat = self.seat
 		needs = self.needs
 		floor = needs.standing_floor()
-		constant = needs.legacy_constant
-		seat.reputation = rules.reputation_toward_floor(seat.reputation, floor, constant["REPUTATION_DECAY_TOWARD_FLOOR"])
+		seat.reputation = rules.reputation_toward_floor(seat.reputation, floor, constants.REPUTATION_DECAY_TOWARD_FLOOR)
 		nodes = needs.tree_nodes()
 		publications = sum(1 for node_id in needs.techniques_held() if set(nodes[node_id].get("traits", [])) & {"spectacle", "inexplicable"})
 		seat.familiarity = rules.familiarity_after(self.world.value_weights["adaptation_rate"], publications, needs.year() - 100,
-		                                           constant["FAMILIARITY_CEILING"], constant["FAMILIARITY_PUBLICATION_WEIGHT"],
-		                                           constant["FAMILIARITY_TENURE_WEIGHT"])
+		                                           constants.FAMILIARITY_CEILING, constants.FAMILIARITY_PUBLICATION_WEIGHT,
+		                                           constants.FAMILIARITY_TENURE_WEIGHT)
 
 	def close_standing_year(self):
 		"""Warn of eminence, work out protection, let the state press, then scandal, bribery and the hazards of denunciation and
 		prominence."""
 		needs = self.needs
 		seat = self.seat
-		constant = needs.legacy_constant
 		year = needs.year()
 		weights = self.world.value_weights
 		danger = needs.danger_lines()["eminence"]
@@ -59,25 +57,25 @@ class Year:
 		# against, and before scandal and eminence so two unrelated draws are not resolved in one breath
 		self.state_pressure(year)
 		self.pay_concern_levies(year)
-		seat.scandal *= constant["SCANDAL_DECAY_RATE"]
+		seat.scandal *= constants.SCANDAL_DECAY_RATE
 		# eminence accumulates in a separate pool because bribery does not touch it: you cannot buy an emperor's judgement
-		seat.eminence = seat.eminence * constant["EMINENCE_DECAY_RATE"] + self.prominence_hazard()
+		seat.eminence = seat.eminence * constants.EMINENCE_DECAY_RATE + self.prominence_hazard()
 		# you can buy your way out of trouble, and a sane player does
 		capital = needs.acting_balance()
-		if (seat.scandal > constant["AUTO_BRIBE_SCANDAL_THRESHOLD"] and capital > constant["AUTO_BRIBE_CAPITAL_THRESHOLD"]
+		if (seat.scandal > constants.AUTO_BRIBE_SCANDAL_THRESHOLD and capital > self.priced(constants.AUTO_BRIBE_CAPITAL_THRESHOLD_LABOUR_HOURS)
 				and needs.founder()["policy"].get("auto_bribe", not needs.automation()["manual"])):
-			spend = min(capital * constant["AUTO_BRIBE_CAPITAL_SHARE"], seat.scandal * constant["AUTO_BRIBE_COST_PER_SCANDAL_POINT"])
+			spend = min(capital * constants.AUTO_BRIBE_CAPITAL_SHARE, seat.scandal * self.priced(constants.AUTO_BRIBE_COST_LABOUR_HOURS_PER_SCANDAL_POINT))
 			needs.send(PayEdge(edges.EDGE_OFFICIALS, spend, "bribes"))
-			seat.bribes_ytd = constant["BRIBES_YTD_DECAY"] * seat.bribes_ytd + spend
-			seat.scandal -= (spend / constant["BRIBE_SCANDAL_REDUCTION_SCALE"] * weights["bribability"])
+			seat.bribes_ytd = constants.BRIBES_YTD_DECAY * seat.bribes_ytd + spend
+			seat.scandal -= (spend / self.priced(constants.BRIBE_SCANDAL_REDUCTION_LABOUR_HOURS_PER_POINT) * weights["bribability"])
 		else:
-			seat.bribes_ytd *= constant["BRIBES_YTD_DECAY"]
+			seat.bribes_ytd *= constants.BRIBES_YTD_DECAY
 		seat.scandal = max(0.0, seat.scandal)
-		self.warn_and_roll_scandal(constant, weights)
-		self.roll_eminence(constant)
+		self.warn_and_roll_scandal(weights)
+		self.roll_eminence()
 		self.bump("standing")
 
-	def warn_and_roll_scandal(self, constant, weights):
+	def warn_and_roll_scandal(self, weights):
 		"""Denunciation ends the run outright, so a scandal figure with no threshold, no probability and no note would not be
 		legible the way eminence's own warning is: two hazards of the same shape must both be legible."""
 		needs = self.needs
@@ -89,13 +87,13 @@ class Year:
 			                          "you may be denounced, and that ends the run - about %.0f%% a year at this level. 'bribe' buys "
 			                          "advocacy and piety; it falls a tenth a year on its own"
 			                          % (seat.scandal, danger,
-			                             PERCENT_SCALE * max(0.0, (seat.scandal - danger) / constant["SCANDAL_HAZARD_SCALE"]))))
+			                             PERCENT_SCALE * max(0.0, (seat.scandal - danger) / constants.SCANDAL_HAZARD_SCALE))))
 		if needs.events_enabled() and seat.scandal > needs.danger_lines()["suspicion"]:
-			probability = (seat.scandal - needs.danger_lines()["suspicion"]) / constant["SCANDAL_HAZARD_SCALE"]
+			probability = (seat.scandal - needs.danger_lines()["suspicion"]) / constants.SCANDAL_HAZARD_SCALE
 			if needs.legacy_dice().random() < probability:
 				needs.send(EndRun("denounced: %s" % ("as a sorcerer" if weights["w_magic_fear"] > 0.5 else "as a subversive")))
 
-	def roll_eminence(self, constant):
+	def roll_eminence(self):
 		"""The eminence hazard is separate and unbribable. Its usual outcome is a bad year rather than a death: a confiscation,
 		a patron destroyed in someone else's quarrel, a forced withdrawal from public life."""
 		needs = self.needs
@@ -110,16 +108,16 @@ class Year:
 		roll = dice.random()
 		if roll < constants.EMINENCE_OUTCOME_CONFISCATION_SHARE:
 			# a demand the household answers like any other (comply, refuse, negotiate, conceal)
-			_answer, _demanded, take = self.answer_confiscation(constant["EMINENCE_CONFISCATION_CAPITAL_LOSS"],
+			_answer, _demanded, take = self.answer_confiscation(constants.EMINENCE_CONFISCATION_CAPITAL_LOSS,
 			                                                    "confiscation by the state")
 			if take > 0.0:
-				seat.reputation = max(0.0, seat.reputation - constant["EMINENCE_CONFISCATION_REPUTATION_LOSS"])
+				seat.reputation = max(0.0, seat.reputation - constants.EMINENCE_CONFISCATION_REPUTATION_LOSS)
 				needs.send(RecordEvent.of("prominence_confiscated", "PROMINENCE: property confiscated, %s lost, and you withdraw from "
 				                          "public life for a while" % needs.money_text(take, short=True)))
 			else:
 				needs.send(RecordEvent.of("prominence_demand_kept", "PROMINENCE: the court demanded your property and you kept it, "
 				                          "but you withdraw from public life for a while"))
-			seat.eminence *= constant["EMINENCE_CONFISCATION_RETENTION"]
+			seat.eminence *= constants.EMINENCE_CONFISCATION_RETENTION
 		elif roll < (constants.EMINENCE_OUTCOME_CONFISCATION_SHARE + constants.EMINENCE_OUTCOME_PATRON_LOST_SHARE):
 			for patron in needs.patrons_lost_to_eminence():
 				if patron in needs.techniques_held():
@@ -127,7 +125,7 @@ class Year:
 					needs.send(RecordEvent.of("prominence_patron_destroyed", "PROMINENCE: your patron is destroyed in someone else's "
 					                          "quarrel and you lose %s" % patron))
 					break
-			seat.eminence *= constant["EMINENCE_PATRON_LOSS_RETENTION"]
-			seat.reputation = max(0.0, seat.reputation - constant["EMINENCE_PATRON_LOSS_REPUTATION_LOSS"])
+			seat.eminence *= constants.EMINENCE_PATRON_LOSS_RETENTION
+			seat.reputation = max(0.0, seat.reputation - constants.EMINENCE_PATRON_LOSS_REPUTATION_LOSS)
 		else:
 			needs.send(EndRun("too eminent: brought down not for what you built but for how large you had become"))

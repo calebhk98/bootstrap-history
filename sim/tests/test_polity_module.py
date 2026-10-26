@@ -6,6 +6,7 @@ QUICK_TOPIC = True
 import unittest
 from types import SimpleNamespace
 
+from sim.polity import constants as polity_constants
 from sim.polity import constants, rules
 from sim.polity.api import (AddGovernance, AddReputation, AddScandal, GainReputation, RaiseScandal, RecordBribe, RecordRising,
                             RegisterPeople, ReplaceRuler, ResetStateUnrest, ScaleFamiliarity, ScaleProtection, SetReputation,
@@ -33,12 +34,13 @@ class SeatCommands(unittest.TestCase):
         self.assertEqual((seat.protection, seat.familiarity), (0.4, 0.25))
 
     def test_reputation_gain_stops_at_the_ceiling_and_a_plain_addition_does_not(self):
-        seat = PolitySeat(reputation=9.5)
-        module = polity_host.build(seat=seat, legacy_constant=lambda name: {"REPUTATION_CEILING": 10.0}[name])
+        ceiling = polity_constants.REPUTATION_CEILING
+        seat = PolitySeat(reputation=ceiling - 0.5)
+        module = polity_host.build(seat=seat)
         module.gain_reputation(GainReputation(2.0))
-        self.assertEqual(seat.reputation, 10.0)
+        self.assertEqual(seat.reputation, ceiling)
         module.add_reputation(AddReputation(2.0))
-        self.assertEqual(seat.reputation, 12.0)
+        self.assertEqual(seat.reputation, ceiling + 2.0)
         module.set_reputation(SetReputation(1.0))
         self.assertEqual(seat.reputation, 1.0)
 
@@ -113,24 +115,26 @@ class YearOfStanding(unittest.TestCase):
         seat = PolitySeat(reputation=60.0)
         module = polity_host.build(seat=seat, standing_floor=20.0, year=140)
         module.renew_standing()
-        self.assertEqual(seat.reputation, 20.0 + 40.0 * polity_host.CONSTANTS["REPUTATION_DECAY_TOWARD_FLOOR"])
+        self.assertEqual(seat.reputation, 20.0 + 40.0 * polity_constants.REPUTATION_DECAY_TOWARD_FLOOR)
         self.assertGreater(seat.familiarity, 0.0)
 
     def test_a_year_that_closes_without_trouble_decays_scandal_and_bribes_and_sends_no_event(self):
         seat = PolitySeat(scandal=10.0, bribes_ytd=8.0)
         module = polity_host.build(seat=seat, standing_floor=0.0, events_enabled=False, revenue_estimate=1.0)
         module.close_standing_year()
-        self.assertEqual(seat.scandal, 10.0 * polity_host.CONSTANTS["SCANDAL_DECAY_RATE"])
-        self.assertEqual(seat.bribes_ytd, 8.0 * polity_host.CONSTANTS["BRIBES_YTD_DECAY"])
+        self.assertEqual(seat.scandal, 10.0 * polity_constants.SCANDAL_DECAY_RATE)
+        self.assertEqual(seat.bribes_ytd, 8.0 * polity_constants.BRIBES_YTD_DECAY)
         self.assertEqual([c for c in module_harness.sent(module) if isinstance(c, RecordEvent)], [])
 
     def test_scandal_past_the_line_with_the_means_is_bribed_down_and_paid_for(self):
         seat = PolitySeat(scandal=50.0)
-        module = polity_host.build(seat=seat, acting_balance=10000.0, events_enabled=False, revenue_estimate=1.0)
+        threshold = polity_constants.AUTO_BRIBE_CAPITAL_THRESHOLD_LABOUR_HOURS   # money at one money a labour hour
+        module = polity_host.build(seat=seat, acting_balance=2.0 * threshold, money_per_labour_hour=1.0, events_enabled=False,
+                                   revenue_estimate=1.0)
         module.close_standing_year()
         spent = [c for c in module_harness.sent(module) if c.__class__.__name__ == "PayEdge"]
         self.assertEqual(len(spent), 1)
-        self.assertLess(seat.scandal, 50.0 * polity_host.CONSTANTS["SCANDAL_DECAY_RATE"])
+        self.assertLess(seat.scandal, 50.0 * polity_constants.SCANDAL_DECAY_RATE)
         self.assertGreater(seat.bribes_ytd, 0.0)
 
 

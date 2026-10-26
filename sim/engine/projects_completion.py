@@ -174,13 +174,6 @@ class CompletionMixin:
             "method's own comment), captured here as a flat bonus rather "
             "than a function of the revenue's actual size. Tuned, not "
             "measured.")
-    REPUTATION_CEILING = declare(
-        "REPUTATION_CEILING", 100.0, kind="temporary_heuristic",
-        unit="reputation points", source=None, confidence="D",
-        why="The top of the reputation scale this engine uses throughout "
-            "(REPUTATION_EASE_SCALE in economy.py reads reputation "
-            "against this same implicit ceiling). A scale choice, not a "
-            "measured social fact.")
 
     def _complete(self, node_id):
         node = self.nodes[node_id]

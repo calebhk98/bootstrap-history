@@ -18,13 +18,6 @@ from sim.tests import module_harness
 
 VALUE_WEIGHTS = {"w_magic_fear": 0.5, "w_religious_rigidity": 0.5, "w_labour_saving": 0.0, "w_novelty": 0.0, "w_military": 0.0,
                  "w_information": 0.0, "w_commerce": 0.0, "patronage_weight": 1.0, "bribability": 0.5, "adaptation_rate": 0.1}
-CONSTANTS = {"REPUTATION_DECAY_TOWARD_FLOOR": 0.9, "FAMILIARITY_CEILING": 0.9, "FAMILIARITY_PUBLICATION_WEIGHT": 0.05,
-             "FAMILIARITY_TENURE_WEIGHT": 0.01, "SCANDAL_DECAY_RATE": 0.9, "EMINENCE_DECAY_RATE": 0.9,
-             "AUTO_BRIBE_SCANDAL_THRESHOLD": 30.0, "AUTO_BRIBE_CAPITAL_THRESHOLD": 1000.0, "AUTO_BRIBE_CAPITAL_SHARE": 0.1,
-             "AUTO_BRIBE_COST_PER_SCANDAL_POINT": 10.0, "BRIBES_YTD_DECAY": 0.5, "BRIBE_SCANDAL_REDUCTION_SCALE": 100.0,
-             "SCANDAL_HAZARD_SCALE": 100.0, "EMINENCE_CONFISCATION_CAPITAL_LOSS": 0.3, "EMINENCE_CONFISCATION_REPUTATION_LOSS": 10.0,
-             "EMINENCE_CONFISCATION_RETENTION": 0.5, "EMINENCE_PATRON_LOSS_RETENTION": 0.6,
-             "EMINENCE_PATRON_LOSS_REPUTATION_LOSS": 5.0, "REPUTATION_CEILING": 100.0}
 
 
 @contextmanager
@@ -44,7 +37,7 @@ def defaults(seed: int) -> Dict[str, Any]:
 		"year": 100, "civilisation": {"id": "rome", "starting_tax_share": 0.1}, "events_enabled": True,
 		"automation": {"manual": False, "bounty_set": set()}, "acting_seat": "founder",
 		"danger_lines": {"eminence": 100.0, "suspicion": 100.0}, "legacy_dice": random.Random(seed), "legacy_said_once": set(),
-		"legacy_game": SimpleNamespace(), "legacy_constant": lambda name: CONSTANTS[name],
+		"legacy_game": SimpleNamespace(),
 		"legacy_act_as": _same_seat, "money_text": lambda amount, grouped=False, short=False: "%d money" % round(amount),
 		"mass_text": lambda amount, digits=0, grouped=False, short=False, unit="tonne": "%.1f %s" % (amount, unit),
 		"state_treasury": _government(), "legacy_actor_registry": SimpleNamespace(home_actors=lambda kind: [],

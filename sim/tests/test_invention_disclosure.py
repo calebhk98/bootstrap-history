@@ -9,6 +9,7 @@ from .harness import *  # noqa: F401,F403
 from sim.diffusion.api import Disclose, copy_difficulty_of
 from sim.diffusion.module import Diffusion
 from sim.diffusion.state import DiffusionSeat
+from sim.polity import constants as polity_constants
 from sim.polity.state import PolitySeat
 from sim.tests import polity_host
 from sim.seats.api import years_to_be_believed
@@ -71,8 +72,8 @@ check("publishing is accepted, raises the publisher's reputation and notes the y
       (_published, _game.reputation_gained()))
 check("publishing cannot be taken back", not _game.disclose("alpha", "secret")["ok"] and _game.disclosure_of("alpha")["mode"] == "publish")
 check("publishing again earns nothing more", not _game.disclose("alpha", "publish")["ok"] and _game.reputation_gained() == [2.0])
-_standing = PolitySeat(reputation=9.5)
-polity_host.build(seat=_standing, legacy_constant=lambda name: {"REPUTATION_CEILING": 10.0}[name]).gain_reputation(GainReputation(2.0))
-check("reputation from publishing stops at the ceiling", _standing.reputation == 10.0, _standing.reputation)
+_standing = PolitySeat(reputation=polity_constants.REPUTATION_CEILING - 0.5)
+polity_host.build(seat=_standing).gain_reputation(GainReputation(2.0))
+check("reputation from publishing stops at the ceiling", _standing.reputation == polity_constants.REPUTATION_CEILING, _standing.reputation)
 check("the listing carries every invention of the founder's with its mode",
       [(row["id"], row["mode"]) for row in _game.module.disclosure_listing()] == [("alpha", "publish")], _game.module.disclosure_listing())
