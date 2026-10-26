@@ -23,8 +23,6 @@ def advance_colonies(sim, command):
     sim.advance_colonies(command.year)
 
 
-# ---- workforce ----
-
 # ---- agriculture: the farm land and the year's technique, which the farm workforce keeps on the engine ----
 
 @bridge_view("farm_land")

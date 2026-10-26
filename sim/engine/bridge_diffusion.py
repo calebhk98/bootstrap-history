@@ -68,8 +68,6 @@ def reputation_gain_of(sim, node_id):
 
 # ---- mechanics (delete each when the mechanics module publishes it) ----
 
-# ---- workforce ----
-
 # ---- public works and the state ----
 
 @bridge_view("coverage")
@@ -77,5 +75,3 @@ def coverage(sim):
     """Ids of the works that declare `coverage`."""
     return sim.coverage_nodes()
 
-
-# ---- commands ----
