@@ -69,6 +69,9 @@ RELOCATIONS = [
     ("/seats/*/modules/materials/binding", "/seats/*/holdings/binding"),
     ("/seats/*/modules/materials/shortage_condition", "/seats/*/holdings/shortage_condition"),
     ("/seats/*/modules/materials/material_demand_at_last_throttle", "/seats/*/holdings/material_demand_at_last_throttle"),
+    ("/modules/disease/records", "/disease/records"),
+    ("/modules/disease/introduced", "/disease/introduced"),
+    ("/modules/disease/deaths", "/disease/deaths"),
 ]
 
 IGNORED = [

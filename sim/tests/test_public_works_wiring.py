@@ -10,7 +10,6 @@ from .harness import check
 
 from sim.diffusion import literacy_rules
 from sim.diffusion.module import Diffusion
-from sim.engine.core import Sim
 from sim.engine.coverage import CoverageMixin
 from sim.engine.projects_capability import CapabilityMixin
 from sim.engine.working_day import BASE_WORKING_DAY_HOURS, WorkingDayMixin
@@ -47,22 +46,6 @@ check("the units that serve half the people are asked of the people and the unit
 check("the most units the nation can fill is the units that serve everyone",
       CapabilityMixin.institution_unit_ceiling(SimpleNamespace(
           SCALABLE_INSTITUTIONS={CLINICS}, coverage_nodes=lambda: [CLINICS], units_for_coverage=lambda node_id, share: 10.0 * share), CLINICS) == 10.0, None)
-
-# ---- the disease burden
-def burden_game(held):
-    return SimpleNamespace(DISEASE_BURDEN_TECH_IDS=("germ_theory", CLINICS), _tech_effects={"germ_theory": {"population": 1.0}, CLINICS: {"population": 3.0}},
-                           disease_burden_held=lambda node_id: held.get(node_id, 0.0))
-
-
-check("clinics reaching half the people take half their weight off the burden", abs(Sim._disease_burden(burden_game({CLINICS: 0.5})) - (1.0 - 1.5 / 4.0)) < 1e-12, None)
-check("clinics built but shut take nothing off", Sim._disease_burden(burden_game({})) == 1.0, None)
-check("every technology held leaves no burden", Sim._disease_burden(burden_game({"germ_theory": 1.0, CLINICS: 1.0})) == 0.0, None)
-
-game = SimpleNamespace(has=lambda node_id: node_id == CLINICS, coverage_nodes=lambda: [CLINICS], coverage_share=lambda node_id: 0.4)
-check("a work that declares coverage counts as the share it serves", CoverageMixin.disease_burden_held(game, CLINICS) == 0.4, None)
-game.coverage_nodes = lambda: []
-check("a technology that declares no coverage counts whole once held", CoverageMixin.disease_burden_held(game, CLINICS) == 1.0, None)
-check("a technology not held counts nothing", CoverageMixin.disease_burden_held(game, "germ_theory") == 0.0, None)
 
 # ---- the roll-out
 game, opened = works()

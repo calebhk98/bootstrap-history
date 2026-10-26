@@ -5,7 +5,7 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.engine.disease_burden import burden_from_holdings
+from sim.disease.api import burden_from_holdings
 from sim.world import demography
 
 WEIGHTS = {"water": 0.05, "sanitation": 0.05, "germ_theory": 0.03, "vaccine": 0.02}

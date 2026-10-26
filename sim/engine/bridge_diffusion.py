@@ -102,28 +102,12 @@ def trade_spread(sim):
             "introduced_year": household.trade_introduced_year}
 
 
-# ---- disease and the state ----
+# ---- public works and the state ----
 
 @bridge_view("coverage")
 def coverage(sim):
     """Ids of the works that declare `coverage`."""
     return sim.coverage_nodes()
-
-
-@bridge_view("disease_burden")
-def disease_burden(sim):
-    return sim._disease_burden()
-
-
-@bridge_view("disease_burden_held", kind=KEYED)
-def disease_burden_held(sim, node_id):
-    return sim.disease_burden_held(node_id)
-
-
-@bridge_view("disease_burden_weights")
-def disease_burden_weights(sim):
-    """{node id: its population weight} for the technologies that make up the disease burden, in tree order."""
-    return {tech_id: sim._tech_effects[tech_id].get("population", 0.0) for tech_id in sim.DISEASE_BURDEN_TECH_IDS}
 
 
 @bridge_view("state_reach")
