@@ -1,6 +1,6 @@
 """The ledger's commands: every change of a balance is one of these, sent to the ledger."""
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Optional
 
 from sim.assembly.api import Command
 
@@ -46,3 +46,30 @@ class NoteSpend(Command):
 	"""The acting seat's household counts `amount` in the year's spending, beside the payment that moved it
 	(accounting only; applied by the engine bridge until the cash book moves into the ledger)."""
 	amount: float
+
+
+@dataclass(frozen=True)
+class PayEdgeFrom(Command):
+	"""An actor of the cast (named by its id) pays a named edge. Never refused for lack of money."""
+	actor: str
+	edge: str
+	amount: float
+	purpose: Any
+
+
+# where TakeGoods takes from
+STORE_ACTOR = "actor store"       # a material in an actor's own stores (`actor` names it)
+STORE_STOCK = "stock ledger"      # a commodity in the acting seat's tonnes ledger
+STORE_GRANARY = "granary"         # the acting seat's farm stock, counted in tonnes by the caller
+
+
+@dataclass(frozen=True)
+class TakeGoods(Command):
+	"""Tonnes of a good leave a holder's stock (never below zero) and are added to the goods a named edge holds, as
+	thieves take them. The holder's opening-stock snapshot is not touched. Applied by the engine bridge (the granary
+	and the actors' stores are not the ledger's state yet)."""
+	store: str
+	good: str
+	tonnes: float
+	edge: str
+	actor: Optional[str] = None
