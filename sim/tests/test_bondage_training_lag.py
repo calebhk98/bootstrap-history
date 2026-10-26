@@ -18,7 +18,7 @@ class Bondage(BondageMixin):
     """The household, holdings and money that buying and freeing people touch."""
 
     def __init__(self, cash=1000.0, room=100.0, employees=None):
-        self.cash, self.room, self.paid = cash, room, []
+        self.cash, self.room, self.paid, self.sent = cash, room, [], []
         self.staff = employees or {}
         self.household = types.SimpleNamespace(slaves=0, freedmen=0, manumitted_total=0, artisans=0.0, scholars=0.0, training=[],
                                                reputation=0.0)
@@ -26,7 +26,7 @@ class Bondage(BondageMixin):
         self._world = types.SimpleNamespace(
             state=types.SimpleNamespace(household=self.household, holdings=self.holdings, scenario=types.SimpleNamespace(year=YEAR)),
             household=self.household, can_pay=lambda price: price <= self.cash, EDGE_SLAVE_TRADERS="slave_traders",
-            pay_edge=lambda edge, price, text: self.paid.append(price),
+            pay_edge=lambda edge, price, text: self.paid.append(price), send=self.sent.append,
             refusal_text=lambda what, price: "cannot afford %s" % what)
 
     def household_room(self):

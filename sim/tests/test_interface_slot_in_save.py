@@ -16,7 +16,7 @@ REMEMBERED = {"notes": {"next": 2, "rows": [{"n": 1, "year": 100, "text": "aqued
 def state(interface=None):
     built = SimulationState(
         household=HouseholdState(capital=1250.0), projects=ProjectsState(done={"bronze"}), economy=EconomyState(),
-        holdings=HoldingsState(), governance=GovernanceState(gov=0.5), founder=FounderState(policy={}),
+        holdings=HoldingsState(), governance=GovernanceState(), founder=FounderState(policy={}),
         scenario=ScenarioState(year=115), population=PopulationState())
     if interface is not None:
         built.interface = interface

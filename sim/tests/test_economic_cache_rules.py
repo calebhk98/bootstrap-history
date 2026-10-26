@@ -25,6 +25,9 @@ class RevenueStandIn(ProductionMixin):
     def real_output_per_head(self):
         return self.state.economy.output_per_head
 
+    def view(self, name):   # the polity module's standing
+        return lambda: {"governance": 0.0, "reputation": 0.0}
+
     def __init__(self):
         self.pop_scale = 1.0
         self.household = household()

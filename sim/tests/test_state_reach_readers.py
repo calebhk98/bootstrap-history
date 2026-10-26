@@ -1,8 +1,6 @@
 """Complaint 658: what a state enforces, lends against, notices and answers follows its reach, the share its paid officials
 collect over its roads (620), not a typed capacity. Each reader is called with a reach the test sets and moves the way its rule
 says; the home world's reach under unpaid officials is in test_collection_view_staff and test_staff_reach_wiring."""
-from types import SimpleNamespace
-
 from .harness import *  # noqa: F401,F403
 
 from sim.agents import enforcement
@@ -10,8 +8,7 @@ from sim.agents.api import Government
 from sim.agents.records import ActorRecord
 from sim.engine.data import load_civ
 from sim.diffusion.diffusion_rules import medical_relief
-from sim.engine.legitimacy import LegitimacyMixin
-from sim.engine.society_state_pressure import StatePressureMixin
+from sim.tests import polity_host
 from .agents_fake_world import FakeWorld
 
 QUICK_TOPIC = True
@@ -52,8 +49,10 @@ check("public-health guidance is followed less where the state reaches less",
 
 
 def notice(reach, scale):
-    """The home state's notice of a household of this scale, from the real method over a stand-in game."""
-    return StatePressureMixin.state_notice(SimpleNamespace(state_reach=lambda: reach, household_scale=lambda: scale))
+    """The home state's notice of a household of this scale, from the real method over the polity module."""
+    module = polity_host.build()
+    module.state_reach, module.household_scale = (lambda: reach), (lambda: scale)
+    return module.state_notice()
 
 
 check("a state that reaches less notices a household less", notice(LOW_REACH, 0.5) < notice(FULL_REACH, 0.5))
@@ -61,7 +60,9 @@ check("the same reach notices a larger household more", notice(FULL_REACH, 0.2) 
 
 
 def authority(reach, consent):
-    return LegitimacyMixin.state_authority(SimpleNamespace(state_reach=lambda: reach, state_legitimacy=lambda: consent))
+    module = polity_host.build()
+    module.state_reach, module.state_legitimacy = (lambda: reach), (lambda: consent)
+    return module.state_authority()
 
 
 check("authority is the reach worn by consent", authority(0.8, 0.5) == 0.4 and authority(0.4, 0.5) < authority(0.8, 0.5))

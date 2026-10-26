@@ -12,7 +12,7 @@ from sim.agents import patronage
 from sim.agents.api import ActorRegistry, ActorsState, CastEntry, CountryProfile, CountryWorld, seed_cast
 from sim.agents.no_country_economy import NoCountryEconomy
 from sim.engine.agents_port_patronage import PatronageView
-from sim.engine.economy_production import ProductionMixin
+from sim.tests import polity_host
 
 from .country_state_world import StateWorld
 
@@ -163,24 +163,19 @@ check("...nor one with no people", output_per_head(FakeEconomy(*basket, {}, {}),
 
 
 # ---- the seat of another country is paid by that country's state ---------------------------------------------
-class Funding:
-	"""What `state_funding` reads: the acting seat's country, the governments' records and the seats a state funds."""
-	state_funding = ProductionMixin.state_funding
-
-	def __init__(self, acting, seats_funded, grant):
-		self.civ = {"id": "home"}
-		self.state = SimpleNamespace(
-			acting_seat=acting, seats={"founder": SimpleNamespace(country=None), "visitor": SimpleNamespace(country="far"),
-									   "friend": SimpleNamespace(country="far")},
-			actors=SimpleNamespace(records={"government:home": SimpleNamespace(patron_grant=500.0),
-											"government:far": SimpleNamespace(patron_grant=grant)}))
-		self._funded = seats_funded
-
-	def patron_clients(self, country):
-		return [(seat, 0.0, 1.0) for seat in self._funded]
+def funding(acting, seats_funded, grant):
+	"""The polity module over the acting seat's country, the governments' records and the seats a state funds."""
+	module = polity_host.build(
+		civilisation={"id": "home"}, acting_seat=acting,
+		legacy_seats={"founder": SimpleNamespace(country=None), "visitor": SimpleNamespace(country="far"),
+		              "friend": SimpleNamespace(country="far")},
+		legacy_actors_state=SimpleNamespace(records={"government:home": SimpleNamespace(patron_grant=500.0),
+		                                             "government:far": SimpleNamespace(patron_grant=grant)}))
+	module.patron_clients = lambda country: [(seat, 0.0, 1.0) for seat in seats_funded]
+	return module
 
 
-check("the home seat is paid the home state's grant", Funding("founder", [], 90.0).state_funding() == 500.0)
+check("the home seat is paid the home state's grant", funding("founder", [], 90.0).state_funding() == 500.0)
 check("a seat of another country is paid that country's grant, shared among the seats its state funds",
-	  Funding("visitor", ["visitor", "friend"], 90.0).state_funding() == 45.0)
-check("a seat of another country its state does not fund is paid nothing", Funding("visitor", ["friend"], 90.0).state_funding() == 0.0)
+	  funding("visitor", ["visitor", "friend"], 90.0).state_funding() == 45.0)
+check("a seat of another country its state does not fund is paid nothing", funding("visitor", ["friend"], 90.0).state_funding() == 0.0)

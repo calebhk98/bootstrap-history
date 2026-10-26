@@ -17,6 +17,7 @@ class Household(CreditMixin):
 
     def __init__(self, capital=0.0, line=0.0):
         self.line = line
+        self.reputation = 0.0
         self.price_index = 1.0
         self.civ = {"starting_interest_rate": 0.1}
         self.state = types.SimpleNamespace(

@@ -5,8 +5,8 @@ QUICK_TOPIC = True
 from types import SimpleNamespace
 
 from .harness import *  # noqa: F401,F403
-from sim.tests import hazards_host
-from sim.engine.society_state_pressure import StatePressureMixin
+from sim.tests import hazards_host, polity_host
+from sim.polity import constants as polity_constants
 from sim.ui.proto import render_screen_step as _render_big
 from sim.ui.proto.dispatch_inspection_society import _cmd_risk
 from sim.ui.proto.render_screens_status import render_risk, render_score
@@ -66,17 +66,16 @@ running = HedgeGame(True).hazard_relief_detail("staff_loss")
 check("a hedge that is running lapses nothing and takes its full share off", running[2] == [] and abs(running[0] - 0.5) < 1e-12, running)
 
 # ---- the risk reply carries the confiscation block ----------------------------------------------------------
-LABELS = ("a patron", "standing", "being useful to the state")
+LABELS = polity_constants.CONFISCATION_PROTECTION_LABELS
 
 
-class PressureGame(StatePressureMixin):
-    CONFISCATION_PROTECTION_LABELS = LABELS
+def pressure_module():
+    module = polity_host.build()
+    module.confiscation_risk = lambda: (0.123456, [LABELS[0]])
+    return module
 
-    def confiscation_risk(self):
-        return 0.123456, [LABELS[0]]
 
-
-status = PressureGame().confiscation_status()
+status = pressure_module().confiscation_status()
 check("the confiscation status gives the chance, what holds it off and what is not yet in force",
       status == {"chance_this_year": 0.1235, "held_off_by": [LABELS[0]], "not_yet_in_force": list(LABELS[1:])}, status)
 risk_game = SimpleNamespace(knowledge_risk=lambda: {}, year=100, confiscation_status=lambda: status, interest_groups=lambda: [])

@@ -4,14 +4,13 @@ are called on the diffusion module over views and plain nodes built here; licens
 test_invention_disclosure_scenario."""
 QUICK_TOPIC = True
 
-import types
-
 from .harness import *  # noqa: F401,F403
 
 from sim.diffusion.api import Disclose, copy_difficulty_of
 from sim.diffusion.module import Diffusion
 from sim.diffusion.state import DiffusionSeat
-from sim.engine import bridge_diffusion
+from sim.polity.state import PolitySeat
+from sim.tests import polity_host
 from sim.engine.visibility import years_to_be_believed
 from sim.polity.api import GainReputation
 from sim.tests import module_harness
@@ -72,9 +71,8 @@ check("publishing is accepted, raises the publisher's reputation and notes the y
       (_published, _game.reputation_gained()))
 check("publishing cannot be taken back", not _game.disclose("alpha", "secret")["ok"] and _game.disclosure_of("alpha")["mode"] == "publish")
 check("publishing again earns nothing more", not _game.disclose("alpha", "publish")["ok"] and _game.reputation_gained() == [2.0])
-_household = types.SimpleNamespace(reputation=9.5)
-bridge_diffusion.gain_reputation(types.SimpleNamespace(state=types.SimpleNamespace(household=_household), REPUTATION_CEILING=10.0),
-                                 GainReputation(2.0))
-check("reputation from publishing stops at the ceiling", _household.reputation == 10.0, _household.reputation)
+_standing = PolitySeat(reputation=9.5)
+polity_host.build(seat=_standing, legacy_constant=lambda name: {"REPUTATION_CEILING": 10.0}[name]).gain_reputation(GainReputation(2.0))
+check("reputation from publishing stops at the ceiling", _standing.reputation == 10.0, _standing.reputation)
 check("the listing carries every invention of the founder's with its mode",
       [(row["id"], row["mode"]) for row in _game.module.disclosure_listing()] == [("alpha", "publish")], _game.module.disclosure_listing())

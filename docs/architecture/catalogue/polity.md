@@ -1,167 +1,157 @@
 # Module `polity`
 
-The state and the household's standing with it: reputation, scandal, eminence, protection, levies, reach, interest groups.
+A seat's standing with its society and its state, and the state's pressure on it: reputation, scandal, eminence, familiarity,
+protection, how the household answers the state's demands, the state's notice, requisition, office and confiscation, how far its
+officials reach, the interest groups, the one-off transfers and levies the household pays the state, and what a patron state funds.
+It also applies the commands that change the records of a country's state (its army's losses, its tiles' unrest, its risings and
+its ruler) and the society's value weights.
 
-**Status:** draft for task 1.5 of `MODULE_MIGRATION_TASKS.md`, read-only analysis of `e8b004c` (the head of `sim-module-registry-plan`). No code changed. The tables are generated from the static analysis in `README.md` ("How the numbers were made") and then edited by hand. No committed command reproduces the counts; the scripts were kept outside the repository, so re-measure before acting on one. Names this draft did not open in the source are marked in its hard spots.
+**Status:** moved, on branch `mr/polity` (package `sim/polity/`, bridge `sim/engine/bridge_polity.py`, forwarders
+`sim/engine/forward_polity.py`). The draft of task 1.5 (a read-only analysis of `e8b004c`) is replaced by what the move found; "What
+the move changed in this draft" lists each correction. Re-measure counts with `python3 -c "import sys; sys.path.insert(0,'.'); from
+sim.polity import module_spec as m; s=m.MODULE_SPECS[0]; print(len(s.publishes), len(s.applies), len(s.reads), len(s.sends))"`.
 
-## At a glance
+## What the move changed in this draft
 
-| Measure | Value |
-|---|---|
-| Views / commands proposed | 7 / 4 |
-| Old methods and properties owned (after regrouping) | 58 |
-| Of those, referenced from another module's mixin code | 13 (10 classed read-only or pure by Appendix B, 3 classed writers) |
-| Names used by other modules or by code outside the mixins (ui, agents, ports, mods, function modules) | 32 (13 from mixins, 19 only from outside) |
-| Views per used name | 0.22 |
-| Views that replace exactly one referenced method and no field (one-to-one) | 1 of 7 |
-| Views of other modules it reads | 25, from 14 modules (over the 15-read limit of task 2.4) |
-| Commands of other modules it sends | 9 |
+- **Views: not the draft's seven.** Callers ask one question each, so the draft's `standing` kept the name and shape the projects
+  prototype published (`protection`, `scandal`, `bribes_year_to_date`) and gained the rest of the seat's figures; `eminence` stays its own
+  view (the coin module reads it alone). The state's questions are published under the names callers already used: `state_reach`,
+  `order_reach`, `inspection_reach`, `forest_reach`, `state_authority`, `visible_scale` (a quote), `military_leverage`,
+  `state_interest`, `value_weight`, `start_gate_group_prohibition`. The draft's `state_treasury` table, which mixed the government actor
+  with the state's asks, is not one view: the government actor is the cast's (the actors module), published by the bridge as
+  `state_treasury`; the asks are `levy_shares`, `notice_over`, `household_scale`, `state_notice`, `state_pressure_report`.
+  `state_account` and `interest_groups` stayed under the three-caller floor and are tables of the screens (`state_debt`,
+  `interest_groups`, `interest_groups_report`): the screens are the callers.
+- **Commands applied: twenty-five.** The fourteen the stability, hazards, projects, diffusion and living-stock modules already sent
+  (`RaiseScandal`, `RecordBribe`, `ScaleProtection`, `GainReputation`, `ShiftValueWeight`, `StrikeFromForce` and the eight records of
+  a country's state, applied by four bridge files until now), and eleven new ones for what other code wrote straight into the seat's
+  fields: `AddScandal` (a finished work's alarm; a group's blame), `AddReputation` (a manumission's standing), `SetReputation` (the
+  trial figure the settlement sets and puts back; a finance debt), `ScaleFamiliarity` (a move leaves part of the city behind),
+  `AddGovernance` (a work the state values), `AnswerStateDemands`, `WithdrawFromPublicLife`, `SettleWithState` (the screens),
+  `CarryOutTransfers` (a finished work that declares a transfer), and the two halves of the year (`RenewStanding`,
+  `CloseStandingYear`). The draft's `ChangeStanding` and `RunStatePressure` are not commands: nothing sends them. `PayState` is
+  `Polity.pay_state`, used only inside the module.
+- **`_step_reputation` is split in the order it ran.** The first part (reputation toward its floor, familiarity) is
+  `RenewStanding`; the hours tallied for workforce, `spend_last_year` for the ledger and the market pressure stay in the engine's
+  step, in between; the rest (eminence's warning, protection, the state's pressure and the concern levies, scandal, bribery, the two
+  hazards that end a run) is `CloseStandingYear`. `begin_seat_year` (the scandal mark) was wholly polity's and is the `PhaseHook`
+  `begin_seat_year`.
+- **State: one seat dataclass `PolitySeat`, no world state.** The fields: `reputation`, `scandal`, `scandal_last_year`, `eminence`,
+  `familiarity`, `protection`, `gov` (the whole of `GovernanceState`), `demand_stance`, `service_offer`, `concealed`, `defiance`,
+  `bribes_ytd`, `atrocity` (written and read by nobody), `last_withdrawal`, `last_military_demand`, and the warn-once marks
+  `said_eminence`, `said_scandal` (was `SeatProgressState._said_scandal`, which only this step used), `said_requisition`,
+  `said_notice_approach`, `said_confiscation_band`. The relocations are in `sim/tests/equiv_fields.py`. `HouseholdState`'s
+  `add_reputation`, `deduct_reputation` and `add_scandal` went (no caller outside one test).
+- **`value_weights` is taken in part.** Polity applies `ShiftValueWeight` and publishes `value_weight`, but the dict itself is still
+  `Sim.value_weights` (the civilisation's own `values`, saved as `state._weights`): moving it needs edits to `core.py` and
+  `saveload.py`, which this task did not own. It is the debt `legacy_value_weights`.
+- **The household's answers to the state are the module's, `state_demand.py` is not an engine function module any more.** The
+  claims a mod registers for a confiscation (`register_wealth_claims`, `sim.polity.api`) still take the game: `legacy_game` hands it
+  over (a debt until a mod can provide the claims as an extension point).
+- **Constants moved** (`sim/polity/constants.py`, `grep -c "= declare(" sim/polity/constants.py`): those of the pressure, legitimacy
+  and patron-funding mixins; the two priced in labour hours (`EMINENCE_WEALTH_VISIBLE_THRESHOLD`, `STATE_FUNDING_BASE`) are hours there and
+  money by `Polity.priced`, and descriptors on `Sim` for readers that remain. Those `core.py` still declares and the year's step reads
+  (`SCANDAL_DECAY_RATE`, `EMINENCE_DECAY_RATE`, the bribery and eminence-outcome figures, `REPUTATION_DECAY_TOWARD_FLOOR`, the familiarity
+  weights, `REPUTATION_CEILING` in `projects_completion.py`) are read through the keyed view `legacy_constant`.
+- **Pure rules moved in** (`git mv`): `eminence_rules`, `state_notice_rules`, `eminence_warning`, `military_rules` (`leverage_of`),
+  `value_weight`, `state_demand` (now the claims registry and `describe_stance`); `legitimacy_share` moved from `public_works_rules.py`
+  into `rules.py`, with the new rules (alarm, protection, visible scale, familiarity, the scandal warning band, transfer size, the
+  levy sum, the patron's grant share).
+- **`patron_grant_share` is copied, not moved.** `sim/engine/seat_country.py` (the seats' file) still holds its own copy and a test
+  imports it; the seats owner deletes it.
 
-**Existing surface and files.** Existing: `sim/agents/government*.py`, `authority.py`, `unrest.py`, `taxpayer_income.py`, `patronage.py` (state-side actors). Engine: `StatePressureMixin` (22 methods; `society_state_pressure.py` is over 1,300 lines), `LegitimacyMixin`, `InterestGroupsMixin`, `TransfersMixin`, `ConcernLevyMixin`, `BenefactionsMixin` and `SocietyMixin` (both empty shells), the state methods of `ActorsMixin`, `_step_reputation`; function modules `state_demand.py`, `state_notice_rules.py`, `eminence_rules.py`, `eminence_warning.py`, `military_rules.py`.
+## Mixin classes and files absorbed
 
-## (a) Mixin classes and files absorbed
-
-| Class | File | Methods here | Referenced from other modules |
-|---|---|---|---|
-| `ProductionMixin` | `sim/engine/economy_production.py` | 3 | 0 |
-| `StatePressureMixin` | `sim/engine/society_state_pressure.py` | 22 | 5 |
-| `ActorsMixin` | `sim/engine/society_actors.py` | 4 | 1 |
-| `InterestGroupsMixin` | `sim/engine/interest_groups.py` | 7 | 0 |
-| `TransfersMixin` | `sim/engine/transfers.py` | 6 | 1 |
-| `ConcernLevyMixin` | `sim/engine/concern_levy.py` | 2 | 0 |
-| `LegitimacyMixin` | `sim/engine/legitimacy.py` | 7 | 4 |
-| `ForwardingPropertiesMixin` | `sim/engine/core_properties.py` | 12 | 4 |
-| `StepPhasesMixin` | `sim/engine/core_step_phases.py` | 1 | 0 |
-
-Methods that stay inside the module (referenced by no other module's mixin code and by nothing outside the mixins): `_banned_materials`, `_group_records`, `_notice_over`, `_staff_reach`, `_state_pressure`, `_step_reputation`, `_technique_bans`, `concern_levy_due`, `confiscation_risk`, `group_levy_reasons`, `group_prohibition_of`, `military_demand_eligible`, `office_report`, `patron_clients`, `patron_funding_ask`, `pay_concern_levies`, `pay_state`, `pay_state_sum`, `prominence_hazard`, `requisition_report`, `state_claims`, `state_funding`, `state_legitimacy`, `state_levy_rates`, `state_military_ask`, `transfer_size`.
-
-## (b) State owned
-
-Paths are today's. Seat-scoped fields live on `state.<section>` as the acting seat's alias (`bind_seat`, `sim/engine/state_seat.py`) and are saved once per seat in `state.seats[seat_id]`; world fields live once on the state. Counts are access sites found by the field scan: a mixin method of another module counts under that module, code in a function module, `sim/ui`, `sim/agents` and the like counts under `<area>`.
-
-Proposed slot: no world state and a per-seat dataclass `PolitySeat`.
-
-| Today's path | Scope | Read by (outside the owner) | Written by (outside the owner) |
-|---|---|---|---|
-| `state.governance.gov` | seat | - | projects 1 |
-| `state.household.atrocity` | seat | - | - |
-| `state.household.bribes_ytd` | seat | projects 4 | projects 1 |
-| `state.household.concealed` | seat | <engine-functions> 3 | <engine-functions> 1 |
-| `state.household.defiance` | seat | <engine-functions> 4 | <engine-functions> 2 |
-| `state.household.demand_stance` | seat | <engine-functions> 3, <ui> 2 | <engine-functions> 1 |
-| `state.household.eminence` | seat | <ui> 3, coin 1, <engine-functions> 1 | - |
-| `state.household.familiarity` | seat | <ui> 1 | - |
-| `state.household.last_military_demand` | seat | - | - |
-| `state.household.last_withdrawal` | seat | - | - |
-| `state.household.protection` | seat | projects 5, hazards 3, <engine-functions> 3, coin 2, <ui> 2 | hazards 1 |
-| `state.household.reputation` | seat | <ui> 6, finance 5, projects 3, production 1, diffusion 1 | finance 3, <engine-functions> 2, projects 1, diffusion 1 |
-| `state.household.scandal` | seat | <ui> 7, projects 5, core 1 | <engine-functions> 3, projects 2, hazards 1, living_stock 1 |
-| `state.household.scandal_last_year` | seat | hazards 1, living_stock 1, <ui> 1 | core 1, hazards 1, living_stock 1 |
-| `state.household.service_offer` | seat | <engine-functions> 2 | <engine-functions> 1 |
-
-## (c) Views
-
-Kind is table (one value), keyed (one value per key, computed on first read of the key) or quote (a question with arguments, never cached). Channels are the version channels the owner bumps; `inputs` are other views the value is derived from (a name without a dot is this module's own).
-
-| View | Kind | Seat | Answers | Replaces (old methods) | Replaces (fields) | Inputs | Channels | Callers today |
-|---|---|---|---|---|---|---|---|---|
-| `standing` | table | yes | The seat's reputation, scandal (this and last year), eminence, familiarity, protection, demand stance, concealment; the state's interest, alarm, notice and the confiscation risk and status. Replaces forwarding properties `reputation`, `scandal`, `scandal_last_year`, `protection`, `eminence`. | `scandal`, `scandal_last_year`, `state_interest`, `alarm_of`, `state_notice`, `notice_over`, `_notice_over`, `eminence_report`, `prominence_hazard`, `confiscation_risk`, `confiscation_status`, `state_pressure_report`, `state_trait_weights` | `household.reputation`, `household.scandal`, `household.scandal_last_year`, `household.eminence`, `household.familiarity`, `household.protection`, `household.demand_stance`, `household.service_offer`, `household.concealed`, `household.defiance`, `household.bribes_ytd`, `household.atrocity` | `actors.cast`, `mechanics.effect` | `standing` | 14 |
-| `visible_scale` | quote | yes | How visible a holder's wealth is to the state. | `visible_scale`, `household_scale` | - | `ledger.balance`, `standing` | - | 5 |
-| `patronage_funding` | quote | yes | What the state and patrons fund, and the clients a patron has. | `patron_funding_ask`, `patron_clients` | - | `actors.cast` | `state` | 0 |
-| `state_reach` | keyed | no | How far the state's order, inspection, forest rules and authority reach. | `state_reach`, `order_reach`, `inspection_reach`, `forest_reach`, `state_authority`, `state_legitimacy`, `_staff_reach` | - | `actors.cast`, `workforce.staff`, `demography.population` | `state` | 9 |
-| `state_treasury` | table | yes | The state's treasury and its asks: levy rates, military ask and leverage, equipment burden, requisition and office reports, levy shares, eligibility. | `state_treasury`, `state_levy_rates`, `state_military_ask`, `military_leverage`, `military_equipment_burden_kg_per_soldier_per_year`, `levy_shares`, `requisition_report`, `office_report`, `military_demand_eligible`, `concern_levy_due`, `state_funding` | `governance.gov` | `actors.cast`, `standing` | `state` | 9 |
-| `state_account` | table | yes | What the seat owes the state and what the state owes the seat; the size of a transfer. | `state_debt`, `state_claims`, `transfer_size` | - | `ledger.acting_balance` | `state` | 1 |
-| `interest_groups` | table | no | Interest groups, their levies, bans and what a group prohibits. | `interest_groups`, `interest_groups_report`, `group_levy_reasons`, `group_prohibition_of`, `_banned_materials`, `_technique_bans`, `_group_records` | - | `actors.cast` | `groups` | 1 |
-
-**Under the three-caller floor** (task 1.5: a view serves at least 3 callers or is a quote): `state_account`, `interest_groups`. Each needs a second consumer found, a merge into a neighbouring view, or a change to a quote.
-
-**Coverage.** 13 methods are referenced from other modules' mixin code: 11 are replaced by a view here, 2 by a command. 19 more names are used only from outside the mixins (ui, agents, ports, mods). Of all 32 used names, 28 are covered by a view or command through the method itself, 4 through a field alias, 0 are year-phase hooks and 0 are package handle members.
-
-**Published as views but still classed as writers** after discounting the lazy creation of `state.actors` (which is what made most of Appendix B's writers; see README). Each is either a read that also fills a cache or lazily creates something, or a real write that must be split into a quote and a command before the view is allowed: `concern_levy_due`, `patron_clients`, `state_funding`.
-
-## (d) Commands
-
-| Command | Fields | Replaces | Write sites cited | Refusal causes | Owned fields it writes |
-|---|---|---|---|---|---|
-| `ChangeStanding` | seat, deltas (reputation, scandal, eminence, protection, ...) | Direct writes to the household's standing fields from many modules. | `sim/engine/economy_credit.py (reputation)`, `sim/engine/projects_completion.py (reputation, scandal)`, `sim/engine/society_disclosure.py (reputation)`, `sim/engine/society_hazards.py (protection, scandal)`, `sim/engine/projects_starting.py (bribes_ytd, scandal)`, `sim/engine/living_stock_smuggling.py (scandal)`, `sim/engine/core_step_phases.py (reputation, eminence, familiarity)` | none: always applies | `household.reputation`, `household.scandal`, `household.scandal_last_year`, `household.eminence`, `household.familiarity`, `household.protection`, `household.bribes_ytd`, `household.demand_stance`, `household.service_offer`, `household.concealed`, `household.defiance`, `household.last_withdrawal`, `household.last_military_demand`, `household.atrocity`, `governance.gov` |
-| `RunStatePressure` | year | `_state_pressure`: the yearly step that sets protection, last military demand and withdrawal; the report builders only read what it left. Methods: `_state_pressure` | `sim/engine/society_state_pressure.py (_state_pressure)` | none: always applies | - |
-| `PayState` | seat, amount, purpose | `pay_state`: a levy, office or requisition, then sends PayEdge to the ledger. Methods: `pay_state`, `carry_out_transfers`, `update_protection` | `sim/engine/society_state_pressure.py:1218,1265`, `sim/engine/concern_levy.py:30`, `sim/engine/transfers.py:40` | `unknown_government` | - |
-| `SettleWithState` | seat, kind | `settle_with_state`, `withdraw_from_public_life`. Methods: `settle_with_state`, `withdraw_from_public_life` | `sim/ui/proto/ (settle_with_state 2)` | `nothing_owed` | - |
-
-**Direct write sites of owned fields outside this module's mixin files** (AST scan; includes the module's own function modules, and writes made through a forwarding property are marked `alias`). Each becomes a command above.
-
-- `governance.gov`: 1 site: `sim/engine/projects_completion.py:224`
-- `household.bribes_ytd`: 3 sites: `sim/engine/core_step_phases.py:461`, `sim/engine/core_step_phases.py:465`, `sim/engine/projects_starting.py:168`
-- `household.concealed`: 2 sites: `sim/agents/household.py:307`, `sim/engine/state_demand.py:82`
-- `household.defiance`: 3 sites: `sim/agents/household.py:310`, `sim/engine/state_demand.py:28`, `sim/engine/state_demand.py:84`
-- `household.demand_stance`: 1 site: `sim/engine/state_demand.py:112`
-- `household.eminence`: 3 sites: `sim/engine/core_step_phases.py:453`, `sim/engine/core_step_phases.py:511`, `sim/engine/core_step_phases.py:520`
-- `household.familiarity`: 2 sites: `sim/labour/labour_settlement.py:201`, `sim/engine/core_step_phases.py:381`
-- `household.protection`: 2 sites: `sim/labour/labour_settlement.py:202`, `sim/engine/society_hazards.py:748`
-- `household.reputation`: 11 sites: `sim/labour/labour_bondage.py:359`, `sim/engine/society_disclosure.py:46`, `sim/engine/core_step_phases.py:376`, `sim/engine/core_step_phases.py:504`, `sim/engine/core_step_phases.py:521`, `sim/engine/state.py:177` (assign (alias)), `sim/engine/state.py:181` (assign (alias)), `sim/engine/projects_completion.py:221`, `sim/engine/economy_credit.py:523`, `sim/engine/economy_credit.py:525` and 1 more
-- `household.scandal`: 10 sites: `sim/engine/living_stock_smuggling.py:122` (assign (alias)), `sim/engine/society_hazards.py:743`, `sim/engine/core_step_phases.py:448`, `sim/engine/core_step_phases.py:466`, `sim/engine/core_step_phases.py:462`, `sim/engine/projects_starting.py:169`, `sim/engine/state.py:185` (assign (alias)), `sim/engine/agents_port_groups.py:147`, `sim/engine/state_demand.py:29`, `sim/engine/projects_completion.py:223`
-- `household.scandal_last_year`: 3 sites: `sim/engine/living_stock_smuggling.py:124` (assign (alias)), `sim/engine/society_hazards.py:746`, `sim/engine/core_step_phases.py:114`
-- `household.service_offer`: 1 site: `sim/engine/state_demand.py:113`
-
-## (e) Reads and sends
-
-Reads (views of other modules), by provider:
-
-- `actors`: `actors.cast` (actors, actors.ensure_government, actors.government_of, actors.home_actors ...)
-- `coin`: `coin.coin_carriage` (coin_carriage_listening)
-- `demography`: `demography.population` (input of polity.state_reach, pop_scale)
-- `hazards`: `hazards.output_factor` (economy.output_factor)
-- `knowledge`: `knowledge.techniques_held` (projects.done, projects.granted)
-- `ledger`: `ledger.acting_balance` (household.capital, input of polity.state_account); `ledger.balance` (input of polity.visible_scale)
-- `markets`: `markets.agent_economy` (holdings.market_pressure)
-- `materials`: `materials.material_pool` (_material_tag)
-- `mechanics`: `mechanics.effect` (effect_best, effect_factor, effect_sum, effect_values ...); `mechanics.mechanic` (mechanic, nodes_with_mechanic); `mechanics.patronage` (patrons_lost_to_eminence)
-- `production`: `production.revenue_estimate` (concern_revenue, revenue); `production.running` (projects.operating, running, running_with_mechanic)
-- `projects`: `projects.project_cost` (rep_factor, standing_floor)
-- `reporting`: `reporting.event_log` (household.log, seat_progress._said_scandal); `reporting.real_output` (real_output_per_head)
-- `seats`: `seats.acting_seat` (acting_country); `seats.founder` (founder.founder_alive, founder.policy); `seats.seat_list` (playing_seats)
-- `workforce`: `workforce.hour_commitments` (hours_this_year, household.relocation_hours_this_year, household.supervision_hours_this_year, household.teaching_hours_this_year ...); `workforce.hours_available` (labour.director_pool); `workforce.labour_market` (labour.STATE_WEIGHTS, labour.money_per_labour_hour); `workforce.staff` (input of polity.state_reach, labour, labour.headcount); `workforce.wage` (labour.base_annual_wage)
-
-Sends (commands of other modules):
-
-- `hazards`: `RunRandomEvents`
-- `knowledge`: `LearnTechnique`
-- `ledger`: `NoteSpend`, `PayEdge`
-- `markets`: `ClearYear`
-- `reporting`: `NoteOnce`, `RecordEvent`
-- `workforce`: `CommitHours`, `NotePay`
-
-## (f) Year phases
-
-Phases of `sim/engine/year_phases.py` `SHIPPED` it takes part in; where a phase is shared with other modules the sub-steps it owns are named (see "The year's shared phases" in the README):
-
-- `begin_seat_year`: the scandal mark (`core_step_phases.py:110-116`)
-- `seat_work`: the polity part of `_step_reputation` (`update_protection`, `pay_concern_levies`, `core_step_phases.py:375-447`)
-
-## (g) Callers outside the engine mixins that read its views
-
-| Caller group | Uses | Most-used names |
+| Old class | Old file | Now |
 |---|---|---|
-| ui | 34 | `scandal`, `reputation`, `eminence`, `eminence_report`, `settle_with_state`, `protection`, `state_notice`, `state_reach` |
-| engine/(function modules) | 13 | `state_treasury`, `state_reach`, `state_interest`, `visible_scale` |
-| agents | 11 | `state_reach`, `notice_over`, `levy_shares` |
-| engine/agents_port* | 8 | `military_equipment_burden_kg_per_soldier_per_year`, `state_authority`, `notice_over`, `state_trait_weights`, `visible_scale`, `levy_shares`, `state_treasury` |
-| engine/economy_port* | 2 | `state_reach`, `state_treasury` |
-| mods | 2 | `visible_scale`, `confiscation_status` |
+| `StatePressureMixin` | `sim/engine/society_state_pressure.py` | `sim/polity/notice.py`, `protection.py`, `eminence.py`, `pressure.py`, `demands.py` (with `state_demand.py`), `constants.py` |
+| `LegitimacyMixin` | `sim/engine/legitimacy.py` | `sim/polity/reach.py` |
+| `InterestGroupsMixin` | `sim/engine/interest_groups.py` | `sim/polity/groups.py` (the `politics` blocker is the projects start check `group_prohibition`) |
+| `TransfersMixin`, `ConcernLevyMixin` | `sim/engine/transfers.py`, `concern_levy.py` | `sim/polity/transfers.py` |
+| `ProductionMixin.patron_funding_ask`, `patron_clients`, `state_funding` | `sim/engine/economy_production.py` | `sim/polity/patronage.py` |
+| `ActorsMixin.pay_state`, `state_levy_rates`, `state_military_ask` | `sim/engine/society_actors.py` | `transfers.py`, `notice.py` (`state_treasury` stays the cast's: the actors module) |
+| `ForwardingPropertiesMixin` reputation, scandal, scandal_last_year, protection, eminence, familiarity | `sim/engine/core_properties.py` | read-only properties in `forward_polity.py` |
+| `StepPhasesMixin._step_reputation`, `begin_seat_year` | `sim/engine/core_step_phases.py` | `sim/polity/year.py` (`RenewStanding`, `CloseStandingYear`, the phase) |
+| `SocietyMixin` | `sim/engine/society.py` | deleted (it held only `StatePressureMixin`); `BenefactionsMixin` keeps coverage, the working day, colonies and tile ownership |
 
-The scan matches `sim.`, `s.`, `world.` prefixes, so a few counts include unrelated locals; treat them as orders of magnitude.
+## State owned
 
-sim/ui: `scandal` 7, `reputation` 6, `eminence` 3, `eminence_report` 2, `settle_with_state` 2; sim/agents: `state_reach` 7, `notice_over` 3, `levy_shares`; agents_port: `military_equipment_burden_kg_per_soldier_per_year` 2, `state_authority`, `state_trait_weights`; mods: `visible_scale`, `confiscation_status`.
+`PolitySeat` (above). Saved with the seat in `seats[id].modules["polity"]`; a handover carries it with the seat.
 
-## (h) Hard spots and caches
+## Views published
 
-- `StatePressureMixin` is the largest single class (22 methods, about 1,300 lines of one file); it reads `household.*`, `value_weights`, `cfg`, and the state's records, and writes protection, withdrawal, military demand and reputation: split into standing (household-side), the state's asks (government-side) and the report builders (reporting).
-- `state_reach` and `_staff_reach` cache per year by key (`legitimacy.py:44,64`).
-- `_step_reputation` (`core_step_phases.py:368-420`) writes three owners' fields: reputation, familiarity and protection (this module), the hour tallies and `hours_this_year` (workforce) and `spend_last_year` (ledger); only the first part stays here.
-- Several writes to `scandal` happen through the forwarding property setter (`self.scandal =`), so the write site is invisible to a field grep; list them by the property name.
+All are `cached=False` today: the module's own figures are written only by its commands, but most views also read the techniques
+held, the cast, the purse and the labour market, which other code writes directly.
 
-Caches and version counters held today (feed for task 1.2):
+| View | Kind | Seat | Answers |
+|---|---|---|---|
+| `standing` | table | yes | reputation, scandal (this and last year), eminence, familiarity, protection, bribes, the answer to the state's demands, concealed wealth, defiance, last withdrawal, governance |
+| `eminence` | table | yes | the seat's eminence alone (coin reads it) |
+| `state_reach`, `order_reach`, `inspection_reach`, `forest_reach`, `state_authority` | table | no | how far the state's officials, guards, inspectors and foresters reach; its authority is reach worn by consent |
+| `visible_scale` | quote | no | how visible a holder's staff, wealth and eminence are to the state |
+| `household_scale`, `state_notice` | table | yes | the seat's visible scale, and the state's notice of it |
+| `notice_over`, `levy_shares` | quote | no | how far past the notice line a taxpayer stands; the requisition and office it is assessed |
+| `military_leverage`, `military_equipment_burden` | table, quote | yes, no | how much of the military branch the founder can put in a patron's hands; the kilograms an equipped soldier costs the state |
+| `state_interest`, `alarm_of`, `state_trait_weights` | quote, quote, table | no, yes, no | what the state values in a technique; how alarming it is; the weights |
+| `eminence_report`, `confiscation_status`, `state_pressure_report` | table | yes | the screens' reports |
+| `interest_groups`, `interest_groups_report` | table | no | the organised groups, and what the state does about each |
+| `state_debt`, `patron_funding_ask`, `state_funding` | table | yes | what the state owes; what a patron would give; what the treasury paid |
+| `patron_clients` | keyed | no | the playing seats of a country whose techniques run the `state_funding` mechanic |
+| `start_gate_group_prohibition` | quote | yes | the start check: a group has the state forbid the node |
+| `value_weight` | keyed | no | one of the society's value weights |
 
-- `_state_reach_memo`, `_staff_reach_memo` (`legitimacy.py:44,64`), `_banned_materials_cache` (`interest_groups.py:80`)
+## Commands applied
 
-Detected by the cache scan in this module's mixin files: `engine/interest_groups.py:80 __dict__[_banned_materials_cache]`, `engine/legitimacy.py:64 __dict__[_staff_reach_memo]`, `engine/legitimacy.py:44 __dict__[_state_reach_memo]`.
+`RaiseScandal`, `AddScandal`, `RecordBribe`, `ScaleProtection`, `ScaleFamiliarity`, `GainReputation`, `AddReputation`,
+`SetReputation`, `AddGovernance`, `AnswerStateDemands` (answers what the stance risks), `WithdrawFromPublicLife` (answers (done, text)),
+`SettleWithState` (answers (paid, text)), `CarryOutTransfers`, `RenewStanding`, `CloseStandingYear`, `ShiftValueWeight` (answers (before,
+after) or a refusal `not_a_value_weight`), and the state's records: `StrikeFromForce`, `SetLandTakenMemory`, `RegisterPeople`,
+`SetGrievanceReference`, `ResetStateUnrest`, `SetTileReading`, `RecordRising`, `ReplaceRuler`, `CloseSuccessionDispute`. Their
+bridge appliers (in `bridge_campaigns`, `bridge_diffusion`, `bridge_hazards`, `bridge_living_stock`, `bridge_projects`) are deleted.
+
+## Phases
+
+`begin_seat_year` is a `PhaseHook`; its `SHIPPED` entry is `module_seat_phase("begin_seat_year")`. The year's standing inside `seat_work`
+is two commands the engine's `_step_reputation` sends around the hours and spending it tallies for other owners.
+
+## Commands sent to other owners
+
+`PayEdge` (ledger), `RecordEvent` (reporting), `ForgetTechnique` (knowledge), `FounderDies` (seats).
+
+## Reads
+
+Views of finished modules: `effect_sum`, `effect_values`, `effect_factor`, `effect_best`, `running_mechanics`, `mechanic`,
+`patrons_lost_to_eminence`, `techniques_held`, `techniques_granted`, `tree`, `tree_nodes`, `acting_balance`, `transfer_listening`,
+`material_pool`, `real_output_per_head`, `output_factor`, `country_world`, `legacy_agent_world`, `legacy_actor_registry`,
+`legacy_acting_household`, `legacy_dice`, `legacy_said_once`, `legacy_act_as`, `seat_list`, `legacy_seats`, `founder`, `automation`,
+`acting_seat`, `headcount`, `money_per_labour_hour`, `pop_scale`, `population_total`, `running`, `revenue_estimate`, `operating`,
+`civilisation`, `year`, `events_enabled`, `money_text`, `mass_text`.
+
+Published by `bridge_polity.py` under the name the owner will publish: `state_treasury` (actors), `standing_floor`, `rep_factor`
+(projects), `concern_revenue` (production), `base_annual_wage`, `labour_state_weights` (workforce), `material_substitutes` (materials),
+`danger_lines` (the eminence and suspicion figures of the settings). Debts: `legacy_game`, `legacy_value_weights`, `legacy_constant`,
+`legacy_actors_state` (the cast's state, `None` before any actor: reading it must not make one), `legacy_household_actor` (the
+household facade a payment names), `legacy_done_versions` (what the reach memo is keyed by).
+
+## Forwarders left (`sim/engine/forward_polity.py`)
+
+The properties `reputation`, `scandal`, `scandal_last_year`, `protection`, `eminence`, `familiarity` (read-only; every write is a command),
+`state_trait_weights`, `state_interest`, `alarm_of`, `military_leverage`, `military_equipment_burden_kg_per_soldier_per_year`,
+`eminence_report`, `household_scale`, `visible_scale`, `state_notice`, `notice_over`, `levy_shares`, `confiscation_status`,
+`state_pressure_report`, `state_authority`, `state_reach`, `order_reach`, `inspection_reach`, `forest_reach`, `interest_groups`,
+`interest_groups_report`, `state_debt`, `patron_funding_ask`, `patron_clients`, `state_funding`, `settle_with_state`,
+`withdraw_from_public_life`, `carry_out_transfers`, and every declared constant as a class attribute. Callers: the screens, the agents'
+world (`agents_port*.py`), the cost and credit mixins, `cause_book.py` and the `bh_cashshelter_z6f2` mod.
+
+## Hard spots, as resolved
+
+- **`Household` (the actor facade in `sim/agents/household.py`) answers `concealed_wealth`, `defiance` and `service_worth` from the
+  seat's polity slot** (`_polity`): a debt until the founder's household is served by views like any other actor.
+- **Reads that wrote.** `state_reach`'s memo and the banned-materials cache are module attributes, never saved; the cast's state is
+  read through `legacy_actors_state` so that no read creates it. The settlement's trial reputation (`SetReputation` set and put back) is
+  a write-and-restore that finance must replace with a quote of the credit limit at a stated reputation.
+- **Order.** The year's two commands keep the old order: reputation and familiarity, then the hours and spending, then the eminence
+  warning, protection, the state's pressure (settling concealment first), the concern levies, scandal decay, eminence, bribery, the two
+  warning bands, the denunciation roll and the eminence roll. The equivalence check's micro tier is identical to the base.
+- **`GovernanceState` is empty** (its one field moved); the equivalence tool carries the empty section aside
+  (`emptied_governance`). Delete the section with the seat state.

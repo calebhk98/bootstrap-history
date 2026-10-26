@@ -1,26 +1,29 @@
 """Complaint 640 (the identity_cover persona): a persona makes the same strange work less alarming, and is not needed to build it.
-`alarm_of` is called on a stand-in with the weights and the household's standing written out and the persona's effect as a
+`alarm_of` is asked of the polity module with the weights and the household's standing written out and the persona's effect as a
 factor that is applied last; the persona's own declaration (an alarm factor under one, protection, no prerequisite on the work it
 calms) is read from the tree."""
 QUICK_TOPIC = True
 
-import types
 import unittest
 
-from sim.engine.society_state_pressure import (ALARM_PROTECTION_FLOOR, ALARM_WEIGHT_INEXPLICABLE, StatePressureMixin)
+from sim.polity.constants import ALARM_PROTECTION_FLOOR, ALARM_WEIGHT_INEXPLICABLE
+from sim.polity.state import PolitySeat
+from sim.tests import polity_host
 from sim.tests.harness import NODES
 
 WEIGHTS = {"w_magic_fear": 1.0, "w_religious_rigidity": 1.0, "w_labour_saving": 0.0, "w_novelty": 0.0}
 
 
-class Society(StatePressureMixin):
-    def __init__(self, protection=0.0, familiarity=0.0, persona_factor=1.0):
-        self.value_weights = WEIGHTS
-        self.state = types.SimpleNamespace(household=types.SimpleNamespace(protection=protection, familiarity=familiarity))
-        self.persona_factor = persona_factor
+class Society:
+    """The polity module with the weights and the household's standing written out and the persona's effect as a factor."""
 
-    def effect_factor(self, channel, start=1.0, exponent=None):
-        return start * self.persona_factor if channel == "alarm_factor" else start
+    def __init__(self, protection=0.0, familiarity=0.0, persona_factor=1.0):
+        self.module = polity_host.build(
+            seat=PolitySeat(protection=protection, familiarity=familiarity), legacy_value_weights=WEIGHTS,
+            effect_factor=lambda channel, start=1.0, exponent=None: start * persona_factor if channel == "alarm_factor" else start)
+
+    def alarm_of(self, node):
+        return self.module.alarm_of(node)
 
 
 STRANGE = {"traits": ["inexplicable"]}

@@ -866,7 +866,7 @@ def _ingame_options(sim, session):
             return session
 
 
-# THE SAME DEFAULT engine/society.py DECLARES AS EMINENCE_DANGER_WEIGHT_DEFAULT
+# THE SAME DEFAULT sim/polity/constants.py DECLARES AS EMINENCE_DANGER_WEIGHT_DEFAULT
 # (0.5) - kept as its own name because this file has no Sim/SocietyMixin
 # instance to read that constant from (cmd_civs works from the raw civ JSON
 # files directly, before any game has started), same shape as
@@ -877,7 +877,7 @@ CIVS_EMINENCE_DANGER_DEFAULT = declare(
     why="What this screen shows for 'eminence is dangerous' when a "
         "civilisation's own JSON does not set w_eminence_danger - a mid-scale "
         "default rather than a claim about any specific civilisation. "
-        "Matches engine/society.py's EMINENCE_DANGER_WEIGHT_DEFAULT, which "
+        "Matches sim/polity/constants.py's EMINENCE_DANGER_WEIGHT_DEFAULT, which "
         "is the value actually used if a live game hits the same missing "
         "field; declared separately here so the two can be told apart if "
         "they are ever retuned independently, and so a reader of this file "

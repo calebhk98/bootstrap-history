@@ -9,8 +9,8 @@ from unittest import mock
 
 from sim.diffusion.api import ApplyTechEffects
 from sim.diffusion.module import Diffusion
-from sim.engine import bridge_diffusion
-from sim.engine import bridge_living_stock
+from sim.polity.state import PolitySeat
+from sim.tests import polity_host
 from sim.hazards import constants
 from sim.polity.api import RaiseScandal, ScaleProtection
 from sim.polity.api import ShiftValueWeight
@@ -69,10 +69,10 @@ class PatronDies(unittest.TestCase):
 
     def test_the_scandal_jump_moves_last_years_mark_with_it_so_the_jump_is_no_trend(self):
         for last_year, expected in ((10.0, 10.0 + constants.PATRON_DEATH_SCANDAL), (None, None)):
-            game = types.SimpleNamespace(scandal=10.0, scandal_last_year=last_year)
-            bridge_living_stock.raise_scandal(game, RaiseScandal(constants.PATRON_DEATH_SCANDAL))
-            self.assertEqual(game.scandal, 10.0 + constants.PATRON_DEATH_SCANDAL)
-            self.assertEqual(game.scandal_last_year, expected)
+            seat = PolitySeat(scandal=10.0, scandal_last_year=last_year)
+            polity_host.build(seat=seat).raise_scandal(RaiseScandal(constants.PATRON_DEATH_SCANDAL))
+            self.assertEqual(seat.scandal, 10.0 + constants.PATRON_DEATH_SCANDAL)
+            self.assertEqual(seat.scandal_last_year, expected)
 
     def test_protection_falls_by_the_retention_share_and_the_death_is_logged_with_its_kind(self):
         game = PatronDeath()
@@ -124,11 +124,10 @@ class Society:
         class Taught(Diffusion):
             def literacy_ceiling(self, field):
                 return ceilings[field]
-        weights_world = types.SimpleNamespace(value_weights=self.value_weights)
         self.module = module_harness.build(Taught, views={
             "tech_effects": {"press": effects}.get, "legacy_country_literacy": lambda country: self.reading,
             "tree": {"press": {"name": "Press"}}.get, "coverage": lambda: set()},
-            answers={ShiftValueWeight: lambda command: bridge_diffusion.shift_value_weight(weights_world, command)})
+            answers={ShiftValueWeight: polity_host.shifting(self.value_weights)})
 
     def events(self):
         return [command for command in module_harness.sent(self.module) if isinstance(command, RecordEvent)]

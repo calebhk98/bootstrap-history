@@ -1,34 +1,22 @@
 """Complaint 185, Complaint 640: the founder's household pays the state through the ledger: the loss is the treasury's
-gain, booked by purpose, and a debt the household cannot cover is still paid (the purse goes negative). The ledger's
-own rules are in test_actor_treasury."""
+gain, booked by purpose, and a debt the household cannot cover is still paid (the purse goes negative). The polity module's
+`pay_state` over a registry of actors; the ledger's own rules are in test_actor_treasury."""
 QUICK_TOPIC = True
 
-import types
 import unittest
 from contextlib import nullcontext
 
 from sim.agents.api import ActorRegistry, ActorsState
-from sim.engine.society_actors import ActorsMixin
 from sim.engine.state import ActorRecord
-
-
-class Society(ActorsMixin):
-    def __init__(self, treasury, household):
-        self._treasury = treasury
-        self.household = household
-
-    def view(self, name):
-        return lambda: nullcontext()   # the ledger's transfer_listening
-
-    def state_treasury(self):
-        return self._treasury
+from sim.tests import polity_host
 
 
 def society(household_money):
     registry = ActorRegistry(ActorsState(home_country="rome_100ad"))
     treasury = registry.ensure_government("rome_100ad")
     household = registry.add("household", ActorRecord(kind="firm", money=household_money))
-    return Society(treasury, household), treasury, household
+    module = polity_host.build(state_treasury=treasury, legacy_household_actor=household, transfer_listening=nullcontext)
+    return module, treasury, household
 
 
 class PayState(unittest.TestCase):

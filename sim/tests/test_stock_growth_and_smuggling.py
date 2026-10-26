@@ -17,6 +17,8 @@ from sim.unit_conversions import HOURS_PER_PERSON_YEAR
 
 from sim.agents.api import ActorRegistry, ActorsState, cast_from_civilisations, seed_cast
 from sim.engine import bridge_living_stock as bridge
+from sim.polity.state import PolitySeat
+from sim.tests import polity_host
 from sim.engine.data import load_civ
 from sim.ledger.api import ChangeStock, PayEdge
 from sim.living_stock.api import ChangeHeld, SmuggleStock, stock_entry, stock_rates
@@ -95,7 +97,8 @@ class Game:
         self.world_map = open_map()
         self.geography = Geography(types.SimpleNamespace(civ=self.civ, world_map=self.world_map))
         self.ledger, self.opening = collections.defaultdict(float), {}
-        self.scandal, self.scandal_last_year = 0.0, 0.0
+        self.standing = PolitySeat(scandal=0.0, scandal_last_year=0.0)
+        self.polity = polity_host.build(seat=self.standing)
         self.purse = Purse(capital, self)
         self.labour = type("Labour", (), {"market": Market()})()
         self.goods_market = type("GoodsMarket", (), {"acting": self.purse, "acting_party_id": "founder"})()
@@ -128,11 +131,19 @@ class Game:
             ChangeStock: lambda command: apply_to_own_stock(self, command),
             PayEdge: lambda command: self.purse.pay(command.amount, command.purpose),
             PressLabour: lambda command: bridge.press_labour(self, command),
-            RaiseScandal: lambda command: bridge.raise_scandal(self, command),
+            RaiseScandal: self.polity.raise_scandal,
             CloseMarketsTo: self.trade.apply_close_markets_to,
             RecordStockTaken: self.trade.apply_record_stock_taken}
         self.module = module_harness.build(LivingStock, views=views, answers=answers, world=LivingStockWorld())
         self.module.clock.act_as("founder")
+
+    @property
+    def scandal(self):
+        return self.standing.scandal
+
+    @property
+    def scandal_last_year(self):
+        return self.standing.scandal_last_year
 
     def grant(self, material, units):
         self.module.change_held(ChangeHeld(material, units))
