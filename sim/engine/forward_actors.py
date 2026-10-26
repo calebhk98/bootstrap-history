@@ -49,13 +49,3 @@ class ActorsForwardsMixin:
     def receive_from_edge(self, edge_name, amount, purpose):
         """A named edge pays the acting seat's household."""
         self.send(ReceiveFromEdge(edge_name, amount, purpose))
-
-    # these two are the goods market's figures, not the actors': they go to the markets module with `others_trade`
-    def actor_supply(self, material):
-        """Tonnes of `material` that firms and governments sold into the market this year, summed
-        over every actor; the founder's own sales are not included."""
-        return self.goods_market.others_sold_tonnes(self._material_tag(material)[0])
-
-    def actor_demand(self, commodity):
-        """Tonnes of a commodity that governments bought on the market this year."""
-        return self.goods_market.others_bought_tonnes(commodity)

@@ -60,12 +60,6 @@ def route_km_to(sim, tiles):
     return sim.geography.route_km_to(tiles)
 
 
-@bridge_view("goods_carried_last_year")
-def goods_carried_last_year(sim):
-    """Last year's goods carried between the economy's tiles, {origin: {destination: tonnes}}."""
-    return sim.economy.agent.carried_last_year()
-
-
 # ---- polity and the ledger ----
 
 @bridge_view("holder_treasury", kind=KEYED)

@@ -9,19 +9,6 @@ from sim.ledger.api import STORE_ACTOR, STORE_GRANARY, STORE_STOCK, TakeGoods
 from .bridge import bridge_command, bridge_view
 
 
-# ---- workforce and markets ----
-
-@bridge_view("opening_population")
-def opening_population(sim):
-    return sim._opening_population()
-
-
-@bridge_view("goods_quote", kind=KEYED)
-def goods_quote(sim, material):
-    """The market's buy and sell terms for a tonne of a material, or None when it has no price."""
-    return sim.goods_market.quote(material)
-
-
 # ---- finance, polity, resources ----
 
 @bridge_view("lent_share")

@@ -1,4 +1,4 @@
-"""Commands to the owner of the goods market's year (markets, not moved yet: the bridge applies them)."""
+"""Commands to the owner of the goods market and the agent economy's orders (the markets module)."""
 from dataclasses import dataclass
 from typing import Any
 

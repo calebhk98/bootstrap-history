@@ -132,22 +132,6 @@ def harvest_share_taken(sim, material):
     return tax_burden.harvest_share_taken(sim.view("actor_world")(), material)
 
 
-@bridge_view("agent_people_by_trade")
-def agent_people_by_trade(sim):
-    return sim.economy.agent_people_by_trade()
-
-
-@bridge_view("agent_people_by_tile_and_trade")
-def agent_people_by_tile_and_trade(sim):
-    return sim.economy.agent_people_by_tile_and_trade()
-
-
-@bridge_view("agent_unskilled_wage")
-def agent_unskilled_wage(sim):
-    """Money one hour of the unskilled trade is paid in the agent economy; None until the game's money is priced at it."""
-    return sim.economy.unskilled_wage()
-
-
 @bridge_view("concern_rows_stopped", kind=QUOTE)
 def concern_rows_stopped(sim, node_ids):
     """The yearly value of the concerns among `node_ids` that stand stopped."""

@@ -6,7 +6,7 @@ markets module owns that record."""
 from sim.assembly.api import KEYED, QUOTE
 
 from . import foreign_economy_data, partner_demand
-from .bridge import bridge_command, bridge_view
+from .bridge import bridge_view
 from .data import load_civ, starting_schedule
 
 
@@ -37,21 +37,6 @@ def partner_own_economy(sim, civilization_id):
 def partner_household_demand(sim, civilization_id):
     """{material: tonnes a year} a civilisation's households buy at its own solved prices."""
     return partner_demand.household_tonnes_by_material(civilization_id)
-
-
-# ---- the home market ----
-
-@bridge_view("home_unit_price", kind=KEYED)
-def home_unit_price(sim, material):
-    """Money per unit the home society's sellers ask for a material (or a curated commodity, by the material it is priced as);
-    None when no home seller offers it."""
-    return sim.goods_market.home_unit_price(material)
-
-
-@bridge_view("market_floor_ratio", kind=KEYED)
-def market_floor_ratio(sim, commodity):
-    """The lowest price over the incumbents' cost their producers sell a commodity at."""
-    return sim._floor_ratio(commodity)
 
 
 # ---- the map ----

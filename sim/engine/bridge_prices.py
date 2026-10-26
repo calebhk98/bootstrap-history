@@ -6,24 +6,6 @@ from sim.assembly.api import KEYED
 from .bridge import bridge_view
 
 
-@bridge_view("material_seller", kind=KEYED)
-def material_seller(sim, material):
-    """Who sells a material to the home society: the home society's own id, a trading partner, or None when no one does."""
-    return sim.goods_market.offered_by(material)
-
-
-@bridge_view("agent_wage", kind=KEYED)
-def agent_wage(sim, trade):
-    """The wage in the acting seat's own labour markets, or None while the agent economy opens."""
-    return sim.economy.agent_wage_per_hour(trade)
-
-
-@bridge_view("agent_land_rent")
-def agent_land_rent(sim):
-    """Mean rent per hectare-year of the agent economy's land market, in coin; None while it opens."""
-    return sim.economy.agent_land_rent_per_hectare()
-
-
 @bridge_view("concern_baskets_now", kind=KEYED)
 def concern_baskets_now(sim, node_id):
     """What a concern makes and buys in a year with the techniques held now; None for a node whose revenue is not derived
